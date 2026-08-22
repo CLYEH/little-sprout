@@ -328,18 +328,41 @@ create table public.blocked_users (
 --   2. families.storage_used_bytes / storage_quota_bytes 是成本防線（§10-A）。RLS 無法限制欄位，
 --      所以用 column-level grant：使用者只能改 name，額度與用量只有 trigger（definer）與
 --      service_role 能動。否則「硬防線」只要一句 UPDATE 就沒了。
---
--- 注意：後續 migration 新增資料表時要自己補 grant（default privileges 給的是 ALL，等於沒收斂）。
+--      同理，INSERT 與 media 的 UPDATE 也必須逐欄列舉——防線只擋 UPDATE 不擋 INSERT，
+--      或只擋 families 不擋 media，都等於沒擋。
 -- ---------------------------------------------------------------------------
 revoke all on all tables in schema public from anon, authenticated;
 
+-- 上面那句只收得回「已經存在的表」。Supabase 的 default privileges 對未來新增的表一樣是全開，
+-- 所以下一個 migration 建的表會在 CREATE 完成的瞬間就對 anon/authenticated 全開，
+-- 而新表預設沒有 RLS——等於整張表對未登入者可讀可寫，直到有人記得補 grant。收斂掉。
+--
+-- 【部署檢查項】ALTER DEFAULT PRIVILEGES 只影響「由指定角色建立」的物件。本機／CI 的
+-- migration 由 postgres 執行，這一句就夠；真實 Supabase 專案上 public schema 的 default
+-- privileges 可能掛在 postgres 或 supabase_admin 名下，上線時要用 `\ddp` 覆核，
+-- 必要時對每個 owner 角色各下一次 `alter default privileges for role <role> ...`。
+alter default privileges in schema public revoke all on tables from anon, authenticated;
+
 grant select, insert, update on public.profiles to authenticated;
-grant select, insert on public.families to authenticated;
+
+grant select on public.families to authenticated;
+-- INSERT 只給這兩欄：全欄位 INSERT 等於讓任何人在「建立家庭」的那一刻自帶 storage_quota_bytes，
+-- §10-A 的成本防線只擋 UPDATE 是擋不住的（實測：自帶 1 TiB 額度可以建立成功）。
+-- id / created_at / 額度 / 用量一律走預設值。
+grant insert (name, created_by) on public.families to authenticated;
 grant update (name) on public.families to authenticated;
+
 grant select, insert, update, delete on public.family_members to authenticated;
 grant select, insert, update, delete on public.invites to authenticated;
 grant select, insert, update, delete on public.children to authenticated;
-grant select, insert, update, delete on public.media to authenticated;
+
+grant select, insert, delete on public.media to authenticated;
+-- UPDATE 同樣逐欄列舉：全欄位 UPDATE 讓上傳者把自己照片的 byte_size 改成 0，
+-- 一句 UPDATE 就能把整個家庭的用量歸零（storage_used_bytes 是 trigger 依 byte_size 算出來的）。
+-- 允許改的只有這四欄：deleted_at（soft delete 與還原）、taken_at 與 width/height（EXIF 補正）。
+-- family_id / storage_path / uploaded_by / byte_size 一旦可改，歸屬、檔案位置與用量都不可信。
+grant update (taken_at, deleted_at, width, height) on public.media to authenticated;
+
 grant select, insert, update, delete on public.albums to authenticated;
 grant select, insert, update, delete on public.album_media to authenticated;
 grant select, insert, update, delete on public.diaries to authenticated;
@@ -348,5 +371,10 @@ grant select, insert, update, delete on public.comments to authenticated;
 grant select, insert, delete on public.reactions to authenticated;
 grant select, insert, update, delete on public.device_tokens to authenticated;
 grant select on public.feed_items to authenticated;
-grant select, insert, update on public.content_reports to authenticated;
+
+grant select, insert on public.content_reports to authenticated;
+-- 只給 status：檢舉的內容（reason／reporter_id／target）是稽核紀錄，處理者不該改得動它，
+-- 否則「被檢舉的 owner 自己處理檢舉」可以連檢舉理由一起改掉。
+grant update (status) on public.content_reports to authenticated;
+
 grant select, insert, delete on public.blocked_users to authenticated;
