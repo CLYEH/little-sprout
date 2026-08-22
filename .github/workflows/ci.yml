@@ -57,6 +57,13 @@ jobs:
                 exit 1
               fi
               bad=0
+              # LS-10：排除已經在任一保護分支上的 commit（--not origin/main
+              # origin/development origin/test）。工作分支若曾把保護分支 merge
+              # 回來（例如解衝突），base_sha..HEAD 會連帶包含保護分支自己的歷史
+              # commit；這些 commit 已經在它們原本的 PR 驗過格式，且可能是格式
+              # 規約生效之前的舊 commit（例如 harness bootstrap）。不排除的話，
+              # 一旦保護分支上出現一個不合規的歷史 commit，往後每一個把該分支
+              # merge 回來的 feature PR 都會被這裡永久卡死。
               while IFS= read -r line; do
                 case "$line" in
                   Merge\ *|Revert\ *|fixup!*|squash!*) continue ;;
@@ -65,7 +72,7 @@ jobs:
                   echo "::error::commit message 不符規約：$line"
                   bad=1
                 fi
-              done < <(git log --format=%s "$base_sha..HEAD")
+              done < <(git log "$base_sha..HEAD" --not origin/main origin/development origin/test --format=%s)
               [ "$bad" -eq 0 ]
               ;;
           esac
@@ -73,7 +80,15 @@ jobs:
           git diff "$base_sha"...HEAD | grep '^+' | grep -v '^+++' \
             | bash scripts/gates/scan-secrets.sh
 
+      # LS-10：Migration rules 與 Design gate 這兩段內容檢查改比照上面的
+      # commit-message 檢查，只在工作分支（feature|fix|hotfix）head 執行。
+      # promote（development→test、test→main）與 back-merge 的累積 diff 會
+      # 重複觸發已經在來源 feature PR 驗過的內容（且 DESTRUCTIVE-APPROVED／
+      # Design: 這類 PR body 標記不會隨 promote PR 自動携帶，會被誤擋——
+      # PR #10 promote 實測撞過 Design gate）。secrets 掃描沒有這個問題
+      # （掃描本身不依賴 PR body 標記），維持對全部 PR 執行。
       - name: Migration rules
+        if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
         run: |
           base_sha=$(git merge-base "origin/$BASE" HEAD)
           mig=$(git diff --name-only "$base_sha"...HEAD -- supabase/migrations/ || true)
@@ -91,6 +106,7 @@ jobs:
           fi
 
       - name: Design gate（新增 SwiftUI View 需附設計稿標記）
+        if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
         run: |
           base_sha=$(git merge-base "origin/$BASE" HEAD)
           # 掃所有變更 Swift 檔的「新增行」，涵蓋新檔與寫進既有檔的新 View；
@@ -146,7 +162,16 @@ jobs:
       - name: RLS／owner 不變量／trigger／併發測試（supabase/tests/run.sh）
         if: steps.detect.outputs.skip == 'false'
         run: |
-          SUPABASE_DB_URL="$(supabase status -o env | grep '^DB_URL=' | head -n1 | cut -d= -f2- | tr -d '"')"
+          # LS-10（PR #15 review）：run: 區塊在 pipefail 下，`grep '^DB_URL='` 若
+          # 沒命中（例如 `supabase status -o env` 輸出格式改了）會讓整段管線非 0
+          # 結束，而賦值語句在 -e 下會直接讓 job 中止、只留一段看不懂的通用錯誤。
+          # 加 `|| true` 讓擷取失敗時能往下走到明確的非空檢查，印出好懂的
+          # ::error:: 訊息再中止，不要讓 pipefail 直接吃掉診斷資訊。
+          SUPABASE_DB_URL="$(supabase status -o env | grep '^DB_URL=' | head -n1 | cut -d= -f2- | tr -d '"' || true)"
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::supabase status -o env 未能取得 DB_URL，SUPABASE_DB_URL 為空——中止，避免用空連線字串誤跑測試"
+            exit 1
+          fi
           export SUPABASE_DB_URL
           bash supabase/tests/run.sh
 
@@ -181,7 +206,12 @@ jobs:
           fi
           brew install xcodegen
           xcodegen generate
-          git diff --exit-code -- LittleSprout.xcodeproj || {
+          # LS-10：先 git add -A 再對 staged 內容 diff，涵蓋 xcodegen 產生的全新
+          # untracked 檔（例如新 target 的 .xcscheme）。單純 `git diff --exit-code`
+          # 只比對「已追蹤檔案」的工作目錄與 index 差異，看不到全新的 untracked
+          # 檔——這是原本的盲區（PR #6 review 實測重現）。
+          git add -A -- LittleSprout.xcodeproj
+          git diff --cached --exit-code -- LittleSprout.xcodeproj || {
             echo "::error::project.yml 與 LittleSprout.xcodeproj 不同步——改 project.yml 後須重跑 xcodegen generate 一併 commit；若是在 Xcode GUI 改了設定，請把改動搬回 project.yml"
             exit 1
           }
@@ -195,5 +225,5 @@ jobs:
           dest=$(bash scripts/gates/detect-simulator.sh)
           xcodebuild test \
             -scheme LittleSprout \
-            -destination "platform=iOS Simulator,name=${dest}" \
+            -destination "$dest" \
             CODE_SIGNING_ALLOWED=NO
