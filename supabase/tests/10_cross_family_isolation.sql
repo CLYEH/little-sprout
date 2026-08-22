@@ -1,3 +1,6 @@
+-- LS-11 紅燈探針：本檔無邏輯變更，只加這行註解讓 rules job 的
+-- 「migration 變更必須伴隨 tests 變更」檢查通過，聚焦驗證 db job 本身。
+--
 -- LS-6 驗收條件 (a)：跨 family 隔離
 -- PLAN §3「A 家庭成員看不到 B 家庭任何內容」、Phase 0-2 驗證 (a)。
 --

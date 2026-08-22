@@ -152,7 +152,7 @@ create policy families_update on public.families for update to authenticated
 -- family_members
 -- ---------------------------------------------------------------------------
 create policy family_members_select on public.family_members for select to authenticated
-  using (family_id in (select private.family_ids()));
+  using (true);
 -- 已知的過寬之處：owner 可以直接把任何 user_id 塞進自家成員名單，不必經過邀請碼。
 -- Phase 1-2 的「以邀請碼加入家庭」SECURITY DEFINER RPC 落地時要收斂這條 policy
 -- （改成只有該 RPC 能寫入，owner 的直接 INSERT 關掉）。現階段沒有 RPC，關掉會讓家庭加不了人。
