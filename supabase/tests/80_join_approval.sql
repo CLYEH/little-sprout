@@ -1052,50 +1052,15 @@ $$;
 -- ---------------------------------------------------------------------------
 -- 11. per-RPC 授權（LS-15 的慣例）：七支 RPC 只有 authenticated 可執行
 --
--- 依據：本票逐支的 revoke/grant。anon 那一側同時也受 LS-15 的全域 default
--- privileges 保護，所以「anon 不能執行」這條在拿掉本票的 revoke 之後仍會通過
--- （已實測，見 PR 的 mutation 對照表）——真正只由本票保證的是 authenticated 那一側。
---
--- 這個清單就是「新增 public RPC 必須登記」的那道 gate：60_default_privileges.sql
--- 的列舉式檢查只涵蓋 schema private 的函式（第 3 段）與新建函式的預設授權（第 5 段），
--- 不會逐支列舉 public 的 RPC。漏掉一支的話它會因為 LS-15 的全域 default privileges
--- 而對 authenticated 不可執行——呼叫端會炸，但沒有任何測試會指出「你忘了 grant」。
+-- LS-34 review（F2）：授權面（anon 不可／authenticated 可／PUBLIC 不可）與 definer／
+-- search_path 硬化，已統一併入 supabase/tests/60_default_privileges.sql 第 8 段的
+-- public SECURITY DEFINER RPC 白名單列舉——那裡現在逐支登記全部 8 支 public RPC
+-- （本票這 7 支＋既有的 register_device_token），單一清單、單一斷言，不再兩處各自
+-- 維護、互相漂移（原本這裡的清單沒有 register_device_token，那支的 definer／
+-- search_path 因此零測試覆蓋，是 60_ §8 統一後才補上的洞）。
+-- 這裡不再重複斷言；本檔其餘段落驗的是這 7 支 RPC 的「行為」（request_join／
+-- approve_join／……各自的驗收條件），60_ §8 管的只是授權面。
 -- ---------------------------------------------------------------------------
-do $$
-declare
-  v_fn text;
-begin
-  foreach v_fn in array array[
-    'public.create_invite(uuid, text, timestamptz, integer)',
-    'public.request_join(text)',
-    'public.approve_join(uuid)',
-    'public.reject_join(uuid)',
-    'public.withdraw_join(uuid)',
-    'public.list_join_requests()',
-    'public.get_my_join_request()'
-  ] loop
-    if has_function_privilege('anon', v_fn, 'execute') then
-      raise exception 'FAIL：anon 可以執行 %（未登入者能操作家庭成員資格）', v_fn;
-    end if;
-    if not has_function_privilege('authenticated', v_fn, 'execute') then
-      raise exception 'FAIL：authenticated 不能執行 %，整條加入家庭的路徑不存在', v_fn;
-    end if;
-    if exists (select 1 from pg_proc p, aclexplode(p.proacl) a
-                where p.oid = v_fn::regprocedure and a.grantee = 0
-                  and a.privilege_type = 'EXECUTE') then
-      raise exception 'FAIL：% 仍對 PUBLIC 開放 EXECUTE', v_fn;
-    end if;
-
-    -- definer 函式的兩個標準防護：以擁有者身分執行 + search_path 收斂
-    if not exists (select 1 from pg_proc p
-                    where p.oid = v_fn::regprocedure and p.prosecdef
-                      and p.proconfig @> array['search_path=""']) then
-      raise exception 'FAIL：% 不是 SECURITY DEFINER 或沒有 set search_path = ''''', v_fn;
-    end if;
-  end loop;
-  raise notice 'ok：七支 RPC 都是 SECURITY DEFINER + search_path 收斂，且只有 authenticated 可執行';
-end;
-$$;
 
 -- ---------------------------------------------------------------------------
 -- 12. 兩支唯讀 RPC：審核清單看得到申請人姓名、等待畫面看得到家庭名稱

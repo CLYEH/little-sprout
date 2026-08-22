@@ -8,12 +8,22 @@
 -- 盯著它（見 supabase/migrations/20260823010000_join_approval.sql 第 114-121 行
 -- 的三段註解；commit 47f6970 的說明裡也承認「F5 沒有對應的 mutation」）。
 --
--- 判準：外鍵參照欄位（conkey）必須是某個「非 partial」索引最前面幾欄的「集合」——
--- 不要求索引欄位順序與外鍵宣告順序相同，等值查找（= $1 and = $2 ...）不看順序，
--- 只要求這些欄位都在索引的最前段。排除 partial index：本 schema 的軟刪除表
--- （media／albums／diaries／comments…… 的 deleted_at）常見「WHERE deleted_at is null」
--- 的部分索引，那只覆蓋一部分列；RI 檢查要對「所有」列都成立（含已軟刪除的列），
--- 部分索引用不上。
+-- 判準（LS-34 review F5 加固過三處，都是實測過的潛伏誤判）：
+--   - 外鍵參照欄位（conkey）必須是某個索引「鍵欄位」（不含 INCLUDE payload 欄）最前面
+--     幾欄的「集合」——不要求索引欄位順序與外鍵宣告順序相同，等值查找不看順序。
+--   - `indnkeyatts >= FK 欄位數` 這條 guard 是必要的：indkey 裡鍵欄位之後接著的是
+--     INCLUDE 欄，兩者的 attnum 混在同一個陣列裡，沒有這條 guard 會把「鍵欄位不夠、
+--     靠 INCLUDE 湊數」的索引誤判成可用（INCLUDE 欄不在索引的搜尋鍵裡，不能拿來做
+--     等值查找）——已用假造的 `(family_id) include (invite_id)` 索引實測重現這個
+--     誤判，加上 guard 後才被正確判為不可用。
+--   - 排除 partial index（`indpred is null`）：本 schema 的軟刪除表（media／albums／
+--     diaries／comments…… 的 deleted_at）常見「WHERE deleted_at is null」的部分索引，
+--     只覆蓋一部分列；RI 檢查要對「所有」列都成立（含已軟刪除的列），部分索引用不上。
+--   - 排除失效／正在被同時刪除的索引（`indisvalid and indislive`）：`CREATE INDEX
+--     CONCURRENTLY` 失敗會留下 `indisvalid=false` 的殘骸，`DROP INDEX CONCURRENTLY`
+--     進行中會有 `indislive=false` 的過渡態，兩者都不是「可用」的索引。
+--   - 限定存取方法為 btree／hash（`am.amname`）：RI 檢查是單純的等值查找，GIN／GiST／
+--     BRIN 即使剛好蓋到那些欄位也不是為這種查找設計的，不應該算數。
 --
 -- 範圍只掃 public schema：auth／storage／_realtime／extensions 是 Supabase 平台自己
 -- 佈建的 migration，我們不擁有也改不動，不是這道 gate 該管的範圍（本機掃描實測
@@ -23,8 +33,15 @@
 -- 期間陸續加表時留下的技術債，這裡掃描第一次跑就會挑出來。列出來而不是悄悄放過——
 -- PLAN.md §5 對 comments／reactions 的多型關聯已有「代價可接受但要知道它存在」的
 -- 先例，這裡比照辦理：明確記錄、待開票逐一補索引，不能只靠一句「可接受」帶過。
--- 這份清單只能變短，不能變長：新增的外鍵沒有索引，不能靠加進這裡過關——第二段
--- 「白名單反向對照」會在清單內的項目其實已經補了索引時報錯，逼著清單保持誠實。
+-- 這份清單只能變短，不能變長，且只能登記「目前真的存在」的外鍵：
+--   - 清單內的項目其實已經有索引了 → 過期沒清掉（第 2 段擋）。
+--   - 清單內的項目根本找不到對應的外鍵了（表／約束改名或刪除）→ 殭屍條目；
+--     不擋的話，日後若有人重建一個同名外鍵，會被這個殭屍條目無聲豁免、繞過檢查
+--     （LS-34 review F4）（第 3 段擋）。
+--
+-- 判定式只寫一次（LS-34 review F6）：一支查詢把 (label, has_index) 算好存進兩個
+-- 平行陣列，後面三段檢查各自用 unnest 過濾這兩個陣列，不會出現「同一段 SQL 複製
+-- 三份、改一處忘改另一處」的漂移風險。
 \set ON_ERROR_STOP on
 
 begin;
@@ -44,31 +61,45 @@ declare
     'media.media_uploaded_by_fkey',
     'reactions.reactions_user_id_fkey'
   ];
+  v_labels text[];
+  v_has_index boolean[];
   v_missing text;
   v_stale text;
+  v_zombie text;
 begin
-  -- 真正缺索引、且不在已知缺口清單內的：FAIL，指名 table.constraint
-  select string_agg(x.label, '、' order by x.label)
-    into v_missing
+  -- 單一判定式：每個外鍵是否有可用的反向索引，結果存進兩個平行陣列（依 label 排序）
+  select array_agg(x.label order by x.label), array_agg(x.has_index order by x.label)
+    into v_labels, v_has_index
     from (
-      select t.relname || '.' || c.conname as label
+      select t.relname || '.' || c.conname as label,
+             exists (
+               select 1
+                 from pg_index i
+                 join pg_class ic on ic.oid = i.indexrelid
+                 join pg_am am on am.oid = ic.relam
+                where i.indrelid = c.conrelid
+                  and i.indpred is null                          -- 排除 partial index
+                  and i.indisvalid and i.indislive                -- 排除失效／過渡態索引
+                  and am.amname in ('btree', 'hash')              -- 等值查找限定存取方法
+                  and i.indnkeyatts >= array_length(c.conkey, 1)  -- 鍵欄位數要夠，INCLUDE 欄不算數
+                  and (
+                    select array_agg(k order by k)
+                      from unnest((i.indkey::int2[])[0:array_length(c.conkey,1)-1]) as k
+                  ) = (
+                    select array_agg(k order by k) from unnest(c.conkey) as k
+                  )
+             ) as has_index
         from pg_constraint c
         join pg_class t on t.oid = c.conrelid
        where c.contype = 'f'
          and t.relnamespace = 'public'::regnamespace
-         and not exists (
-           select 1 from pg_index i
-            where i.indrelid = c.conrelid
-              and i.indpred is null  -- partial index 不保證涵蓋所有列，不算數
-              and (
-                select array_agg(k order by k)
-                  from unnest((i.indkey::int2[])[0:array_length(c.conkey,1)-1]) as k
-              ) = (
-                select array_agg(k order by k) from unnest(c.conkey) as k
-              )
-         )
-    ) x
-   where x.label <> all(v_known_gaps);
+    ) x;
+
+  -- 1) 真正缺索引、且不在已知缺口清單內的：FAIL，指名 table.constraint
+  select string_agg(u.label, '、' order by u.label)
+    into v_missing
+    from unnest(v_labels, v_has_index) as u(label, has_index)
+   where not u.has_index and u.label <> all(v_known_gaps);
 
   if v_missing is not null then
     raise exception
@@ -76,33 +107,29 @@ begin
       v_missing;
   end if;
 
-  -- 白名單反向對照：清單內的項目如果其實已經有索引了，代表清單過期沒清掉
-  select string_agg(x.label, '、' order by x.label)
+  -- 2) 白名單反向對照：清單內的項目如果其實已經有索引了，代表清單過期沒清掉
+  select string_agg(u.label, '、' order by u.label)
     into v_stale
-    from (
-      select t.relname || '.' || c.conname as label
-        from pg_constraint c
-        join pg_class t on t.oid = c.conrelid
-       where c.contype = 'f'
-         and t.relnamespace = 'public'::regnamespace
-         and exists (
-           select 1 from pg_index i
-            where i.indrelid = c.conrelid
-              and i.indpred is null
-              and (
-                select array_agg(k order by k)
-                  from unnest((i.indkey::int2[])[0:array_length(c.conkey,1)-1]) as k
-              ) = (
-                select array_agg(k order by k) from unnest(c.conkey) as k
-              )
-         )
-    ) x
-   where x.label = any(v_known_gaps);
+    from unnest(v_labels, v_has_index) as u(label, has_index)
+   where u.has_index and u.label = any(v_known_gaps);
 
   if v_stale is not null then
     raise exception
       'FAIL：白名單裡的這些外鍵其實已經有索引了，清單過期——請把它們從 v_known_gaps 移除：%',
       v_stale;
+  end if;
+
+  -- 3) 白名單第三向對照（F4）：清單項目對應的外鍵已經不存在了——殭屍條目，
+  --    不清掉的話日後同名外鍵被重建會無聲繼承這份豁免，不再受檢查
+  select string_agg(g, '、' order by g)
+    into v_zombie
+    from unnest(v_known_gaps) as g
+   where g <> all(v_labels);
+
+  if v_zombie is not null then
+    raise exception
+      'FAIL：白名單裡的這些條目找不到對應的外鍵了（表／約束已改名或刪除）——把殭屍條目從 v_known_gaps 清掉：%',
+      v_zombie;
   end if;
 
   raise notice

@@ -328,33 +328,30 @@ $$;
 -- 沒有任何測試會指出「你忘了 grant」（LS-33 review 觀察，見票面追加事項）。
 --
 -- 這裡反過來做「白名單」而不是逐支挑著測：
---   - 清單內的 RPC：authenticated 必須可 EXECUTE、anon 與 PUBLIC 都不可。
+--   - 清單內的 RPC：authenticated 必須可 EXECUTE、anon 與 PUBLIC 都不可，且必須是
+--     SECURITY DEFINER＋search_path 收斂（LS-34 review F2：這兩條防護原本只在
+--     80_join_approval.sql §11 驗過，且只涵蓋那裡的 7 支——register_device_token
+--     的 definer／search_path 至今零測試覆蓋。統一併到這裡，白名單內每一支都驗，
+--     不再兩份清單各管各的、互相漂移；80_ §11 已縮成指路註解）。
 --   - 出現清單外的 public definer 函式：直接 FAIL——新增 public RPC 必須先來這裡
 --     登記，否則這道 gate 抓不到「忘了收斂授權」這件事，形同虛設。
 --
--- 白名單（8 支，行為各自已由對應 ticket 的測試逐支驗證過；這裡只驗授權面）：
+-- 白名單（8 支，行為各自已由對應 ticket 的測試逐支驗證過；這裡只驗授權面＋definer 硬化）：
 --   register_device_token          LS-6／LS-15（70_device_token_handover.sql、本檔第 7 段）
---   其餘 7 支（create_invite…）    LS-33（80_join_approval.sql §11）
+--   其餘 7 支（create_invite…）    LS-33（80_join_approval.sql，行為驗收）
 --
 -- 排除 public.rls_auto_enable()：Supabase 平台自帶的 event trigger 支撐函式（見第 6 段），
 -- 不是本專案的 API RPC，本機開發映像沒有它，其收權已由第 6 段獨立驗證，不重複登記。
+--
+-- 單一清單來源（LS-34 review F3）：v_rpcs 是唯一手寫的白名單，oid 版本（給「清單外
+-- 函式」那段用）在 begin 之後由它 cast 導出——原本 oid[] 與 text[] 各自宣告一份，
+-- 漏改其中一份會讓兩段檢查看到不同的清單而悄悄漏測（fail-open）。若清單裡寫錯函式
+-- 簽名或該函式不存在，下面 array_agg 那句 cast 會直接噴出含函式簽名的錯誤，訊息可讀。
 -- ---------------------------------------------------------------------------
 do $$
 declare
   v_fn text;
-  v_whitelist oid[] := array[
-    'public.create_invite(uuid, text, timestamptz, integer)'::regprocedure::oid,
-    'public.request_join(text)'::regprocedure::oid,
-    'public.approve_join(uuid)'::regprocedure::oid,
-    'public.reject_join(uuid)'::regprocedure::oid,
-    'public.withdraw_join(uuid)'::regprocedure::oid,
-    'public.list_join_requests()'::regprocedure::oid,
-    'public.get_my_join_request()'::regprocedure::oid,
-    'public.register_device_token(text, text)'::regprocedure::oid
-  ];
-  v_unknown text;
-begin
-  foreach v_fn in array array[
+  v_rpcs text[] := array[
     'public.create_invite(uuid, text, timestamptz, integer)',
     'public.request_join(text)',
     'public.approve_join(uuid)',
@@ -363,7 +360,13 @@ begin
     'public.list_join_requests()',
     'public.get_my_join_request()',
     'public.register_device_token(text, text)'
-  ] loop
+  ];
+  v_whitelist oid[];
+  v_unknown text;
+begin
+  select array_agg(f::regprocedure::oid) into v_whitelist from unnest(v_rpcs) as f;
+
+  foreach v_fn in array v_rpcs loop
     if not has_function_privilege('authenticated', v_fn, 'execute') then
       raise exception 'FAIL：authenticated 不能執行白名單 RPC %，呼叫端會炸卻沒有測試指出原因', v_fn;
     end if;
@@ -375,8 +378,17 @@ begin
                   and a.privilege_type = 'EXECUTE') then
       raise exception 'FAIL：白名單 RPC % 仍對 PUBLIC 開放 EXECUTE', v_fn;
     end if;
+    -- definer 函式的兩個標準防護：以擁有者身分執行 + search_path 收斂（F2：原本只在
+    -- 80_join_approval.sql §11 驗、且不含 register_device_token，統一併到這裡）
+    if not exists (select 1 from pg_proc p
+                    where p.oid = v_fn::regprocedure and p.prosecdef
+                      and p.proconfig @> array['search_path=""']) then
+      raise exception 'FAIL：白名單 RPC % 不是 SECURITY DEFINER 或沒有 set search_path = ''''', v_fn;
+    end if;
   end loop;
-  raise notice 'ok：白名單內的 8 支 public SECURITY DEFINER RPC 授權皆正確（authenticated 可執行、anon／PUBLIC 不可）';
+  raise notice
+    'ok：白名單內的 % 支 public SECURITY DEFINER RPC 授權與 definer／search_path 硬化皆正確（authenticated 可執行、anon／PUBLIC 不可）',
+    array_length(v_rpcs, 1);
 
   -- 白名單外的 public definer 函式：直接 FAIL（新 RPC 必須先來這裡登記）
   select string_agg(p.oid::regprocedure::text, '、' order by p.oid::regprocedure::text)

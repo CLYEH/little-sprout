@@ -145,9 +145,11 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- 偵測器自我驗證：內嵌 aggregate／correlated 子查詢（PLAN §5 明文禁止的寫法——引用外層
--- 資料列欄位且包在聚合函式內，無法被拉平成 join；等值形 IN/EXISTS 不在此列，見 PLAN §5）
--- 必須被抓到
+-- 偵測器自我驗證：內嵌 aggregate／correlated 子查詢（PLAN §5 稱為必定逐列重算的形狀——
+-- 子查詢引用外層資料列欄位且包在聚合函式內，規劃器無法拉平成 join）必須被抓到。
+-- 偵測器判的是 plan 形狀，不是 SQL 寫法：等值形 IN/EXISTS 只有在被規劃器拉平成
+-- hashed SubPlan 時才會過關，資料量大到超過 work_mem 時一樣會退化成逐列 SubPlan
+-- 而被這裡擋下（見 PLAN §5）。
 -- ---------------------------------------------------------------------------
 do $$
 declare
@@ -203,7 +205,7 @@ select kind, ref_id, occurred_at from public.feed_items
  order by occurred_at desc, ref_id desc limit 30;
 
 \echo ''
-\echo '=== 對照組：PLAN §5 禁止的內嵌 aggregate／correlated 子查詢寫法（loops 會等於掃描列數）==='
+\echo '=== 對照組：PLAN §5 稱為必定逐列重算的內嵌 aggregate／correlated 子查詢寫法（loops 會等於掃描列數）==='
 explain (analyze)
 select m.id from public.media m
  where m.deleted_at is null
