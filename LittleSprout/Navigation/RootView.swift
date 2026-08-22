@@ -9,10 +9,10 @@ struct RootView: View {
     @State private var selection: AppSection = .timeline
 
     var body: some View {
-        if horizontalSizeClass == .compact {
-            SectionTabView(selection: $selection)
-        } else {
+        if horizontalSizeClass == .regular {
             SectionSplitView(selection: $selection)
+        } else {
+            SectionTabView(selection: $selection)
         }
     }
 }
@@ -45,6 +45,8 @@ private struct SectionSplitView: View {
             }
             .navigationTitle("Little Sprout")
         } detail: {
+            // 已知債：detail 欄共用單一 NavigationStack；第一張含 push destination 的票
+            // 需處理「iPad 切換 section 重置 detail stack」（可用 .id(selection)）。
             NavigationStack {
                 SectionContentView(section: selection)
             }
@@ -53,6 +55,7 @@ private struct SectionSplitView: View {
 
     /// `List` 的單選 API 只接受 optional binding；取消選取（nil）時保持原區塊，
     /// 否則 detail 會變成空白畫面。
+    /// 本 binding 僅在 regular 寬度成立；collapsed split view 需要 nil 才能返回。
     private var sidebarSelection: Binding<AppSection?> {
         Binding(
             get: { selection },

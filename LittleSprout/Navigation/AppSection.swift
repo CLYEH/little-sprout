@@ -5,7 +5,7 @@ import Foundation
 /// 這是導航 selection 的**單一來源**：compact 的 `TabView` 與 regular 的
 /// `NavigationSplitView` 共用同一份 case 清單、標題與圖示，避免兩套版面各自
 /// 維護一份分頁定義而漂移（PLAN §4：導航層事後重寫會牽動每個畫面）。
-enum AppSection: String, CaseIterable, Identifiable {
+enum AppSection: CaseIterable, Identifiable {
     case timeline
     case albums
     case children
