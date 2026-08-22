@@ -1050,7 +1050,7 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- 11. per-RPC 授權（LS-15 的慣例）：七支 RPC 只有 authenticated 可執行
+-- 11.（授權斷言已移至 60_ §8）per-RPC 授權（LS-15 的慣例）
 --
 -- LS-34 review（F2）：授權面（anon 不可／authenticated 可／PUBLIC 不可）與 definer／
 -- search_path 硬化，已統一併入 supabase/tests/60_default_privileges.sql 第 8 段的

@@ -336,6 +336,11 @@ $$;
 --   - 出現清單外的 public definer 函式：直接 FAIL——新增 public RPC 必須先來這裡
 --     登記，否則這道 gate 抓不到「忘了收斂授權」這件事，形同虛設。
 --
+-- 哪條斷言真正吃重（LS-33 mutation 觀察，原記在 80_ §11、隨該段縮成指路註解一併
+-- 帶過來）：anon 那一側同時也受 LS-15 的全域 default privileges 保護，所以「anon
+-- 不能執行」這條就算拿掉本票各支 RPC 自己的 revoke 也仍會通過（已實測）——這裡
+-- 真正單獨保證的是 authenticated 那一側；漏 grant 時炸的正是這一側。
+--
 -- 白名單（8 支，行為各自已由對應 ticket 的測試逐支驗證過；這裡只驗授權面＋definer 硬化）：
 --   register_device_token          LS-6／LS-15（70_device_token_handover.sql、本檔第 7 段）
 --   其餘 7 支（create_invite…）    LS-33（80_join_approval.sql，行為驗收）
