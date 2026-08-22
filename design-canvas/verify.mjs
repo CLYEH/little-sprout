@@ -135,14 +135,40 @@ if (M.err) {
     M.err.filter((e) => Math.round(e.h) !== FIX.errBar).map((e) => `${e.file}=${e.h}`).join(' '));
 } else need('err', 'G9 錯誤幾何');
 
-/* ══ G10  呼吸帶（分欄）與裁切 ══════════════════════════════════ */
+/* ══ G10  呼吸帶（兩句規則）、板高、裁切 ══════════════════════════
+   ①「內容首末之間，任何一段連續空白 ≤120px（手機 iPad 同一條）」——
+      超過的必須掛 data-pause="理由"，未掛牌一律 FAIL（意圖 gate，不是門檻放寬）。
+   ②「內容末端到板底不設上限，但主按鈕中心須落在畫面 70% 以內」——
+      落地範圍：尾段空白 >120px 的流程板（交付板／壓力板不是畫面）。理由印在 Tokens 板上。 */
 if (M.voids) {
-  const badPh = M.voids.filter((v) => !v.pad && v.interior > 120);
-  const badPad = M.voids.filter((v) => v.pad && v.interior > 200);
-  ok(badPh.length === 0, `G10 呼吸帶（手機）：最大 ${M.maxVoid}px（${M.maxVoidFile}），門檻 120`,
-    badPh.map((v) => `${v.file}/${v.col}=${v.interior}`).join(' '));
-  ok(badPad.length === 0, `G10 呼吸帶（iPad，分欄量）：最大 ${M.maxVoidPad}px（${M.maxVoidPadFile}），門檻 200`,
-    badPad.map((v) => `${v.file}/${v.col}=${v.interior}`).join(' '));
+  const PAUSE = 120, FLOW = (f) => !/Tokens|Notes|Stress/.test(f);
+  ok(M.pauseBad.length === 0,
+    `G10 呼吸帶①：內容之間 >${PAUSE}px 的空白共 ${M.pauses.length} 段，全部掛了 data-pause 說明理由（手機 iPad 同一條門檻）`,
+    M.pauseBad.map((v) => `${v.file}/${v.col}=${v.len}px@${v.at} 未掛牌`).join(' '));
+  ok(M.pauses.every((p) => p.why.length >= 8),
+    `G10 呼吸帶①：掛牌的理由都是句子不是敷衍`, M.pauses.filter((p) => p.why.length < 8).map((p) => p.file).join(' '));
+  {
+    const tails = new Set(M.boards.filter((b) => FLOW(b.file) && b.trail > PAUSE).map((b) => b.file));
+    const rows = M.mainBtn.filter((b) => tails.has(b.file));
+    const bad = rows.filter((b) => b.pct > 70);
+    ok(bad.length === 0,
+      `G10 呼吸帶②：尾段空白 >${PAUSE}px 的 ${tails.size} 張流程板，主按鈕中心最低 ${rows.length ? Math.max(...rows.map((b) => b.pct)) : '-'}%（門檻 70）`,
+      bad.map((b) => `${b.file}=${b.pct}%`).join(' '));
+    ok([...tails].every((f) => rows.some((b) => b.file === f)),
+      `G10 呼吸帶②：有尾段的板都量得到主按鈕（沒有主按鈕就沒有豁免這回事）`,
+      [...tails].filter((f) => !rows.some((b) => b.file === f)).join(' '));
+  }
+  /* 板高只有兩種合法值：內容連同安全區放得下 → 844；放不下 → 長高（會捲動的畫面）。
+     內容末端＝有字有圖的最後一列，不是背景畫到哪裡（歡迎頁的卡紙本來就畫到板底）。 */
+  {
+    const phones = M.boards.filter((b) => FLOW(b.file) && !/IPad/.test(b.file));
+    const bad = phones.filter((b) => {
+      const need = (b.h - b.trail) + FIX.safeBottom;
+      return need <= 844 ? b.h !== 844 : b.h < need;
+    });
+    ok(bad.length === 0, `G10 板高：${phones.length} 張手機板，放得下的一律 844、放不下的才長高（${phones.filter((b) => b.h > 844).map((b) => `${b.file} ${b.h}`).join(' ')}）`,
+      bad.map((b) => `${b.file} h=${b.h} 需要 ${(b.h - b.trail) + FIX.safeBottom}`).join(' '));
+  }
   ok(M.clipped.length === 0, 'G10 裁切：沒有任何板的內容被框裁掉', M.clipped.join(' '));
 } else need('voids', 'G10 呼吸帶');
 
@@ -238,6 +264,43 @@ if (M.approve) {
   ok(dups.length === 0, 'G16 沒有重複的 CSS 宣告（font-weight 等）', [...new Set(dups)].slice(0, 8).join(' | '));
   ok(semis.length === 0, 'G16 沒有雙分號', semis.join(' '));
 }
+
+/* ══ G18  Tokens 板印的常數 ＝ tokens.mjs 的常數 ══════════════════
+   第 3 輪 R1：板上印 capAlign 27、實際建出來的是 39 —— 印的規格與建的規格是兩份東西。
+   現在 FIX 表整張改成內插，這一項逐個 key 斷言「有印出來，而且值一樣」。
+   （能過這一關，ios-dev 抄板上的數字就等於抄 tokens.mjs。） */
+{
+  const sheet = read('Tokens.dc.html');
+  const miss = [], wrong = [];
+  for (const [k, v] of Object.entries(FIX)) {
+    const any = new RegExp(`${k}\\s+(-?\\d+)`, 'g');
+    const hits = [...sheet.matchAll(any)].map((m) => +m[1]);
+    if (!hits.length) miss.push(k);
+    else if (!hits.includes(v)) wrong.push(`${k} 板上印 ${hits.join('/')}、tokens.mjs 是 ${v}`);
+  }
+  ok(miss.length === 0 && wrong.length === 0,
+    `G18 常數同源：tokens.mjs 的 ${Object.keys(FIX).length} 個 FIX 全部印在 Tokens 板上，值一致`,
+    [...miss.map((k) => `${k} 沒印`), ...wrong].join(' · '));
+}
+
+/* ══ G19  唇邊與開關列（第 3 輪 R1 / R4）══════════════════════════ */
+if (M.lips) {
+  const w = new Set(Object.keys(M.lips).map((k) => k.split('@')[1]));
+  ok([...w].join() === String(FIX.lip), `G19 唇邊一律 ${FIX.lip}pt：${Object.entries(M.lips).map(([k, v]) => `${k}×${v}`).join(' ')}`, [...w].join('/'));
+  ok(Object.keys(M.lips).every((k) => /^(ctaDeep|edge|wine)@/.test(k)),
+    'G19 唇邊只有三種顏色，而且都是該表面的深一階（陶土→ctaDeep、卡紙→edge、危險→wine）',
+    Object.keys(M.lips).filter((k) => !/^(ctaDeep|edge|wine)@/.test(k)).join(' '));
+  ok(M.lipNoneWho.every((s) => /:(button|switch)$/.test(s)) && M.lipNone === 7,
+    `G19 沒有唇邊的浮起面只有兩種、共 ${M.lipNone} 個：Apple 鍵（HIG 不可改外觀）與審核開關 ON 的軌道（膠囊軌道，唇邊會壓到把手行程）—— 例外印在 Tokens 板上`,
+    M.lipNoneWho.join(' '));
+} else need('lips', 'G19 唇邊');
+
+if (M.toggles) {
+  const ys = [...new Set(M.toggles.map((t) => t.top))];
+  ok(M.toggles.length >= 5 && ys.length === 1,
+    `G19 開關列固定在票根正下方：${M.toggles.length} 張板（空／產生中／已產生／審核關閉／深色）全部在 y=${ys.join('／')}`,
+    ys.length > 1 ? M.toggles.map((t) => `${t.file}@${t.top}`).join(' ') : '');
+} else need('toggles', 'G19 開關列');
 
 /* ══ G17  截圖與重渲染的底部 40px 一致（_shot.mjs 寫回）══════════ */
 if (M.shot) {

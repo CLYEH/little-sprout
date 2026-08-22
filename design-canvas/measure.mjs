@@ -38,6 +38,14 @@ for (const [g, list] of Object.entries(H1_GROUPS)) {
 const insetCount = {};
 for (const r of R.inset) insetCount[r || '(無 role)'] = (insetCount[r || '(無 role)'] || 0) + 1;
 
+/* ── 尾段空白最大的板；主按鈕中心位置最低（％最大）的板；以及其中「尾段 >120px」的板 ── */
+const pct = (b) => (b ? Math.round((b.mid / b.h) * 1000) / 10 : null);
+const trail = R.boards.reduce((a, b) => (b.trail > a.trail ? b : a), R.boards[0]);
+const tailBoards = new Set(R.boards.filter((b) => b.trail > 120).map((b) => b.file));
+const lowest = (rows) => rows.reduce((a, b) => (b.mid / b.h > a.mid / a.h ? b : a), rows[0] || null);
+const btnTop = lowest(R.mainBtn);
+const btnTail = lowest(R.mainBtn.filter((b) => tailBoards.has(b.file)));
+
 const out = {
   ...prev,
   count: R.boards.length,
@@ -48,6 +56,25 @@ const out = {
   voids: R.voids,
   maxVoid: wPh.interior, maxVoidFile: `${wPh.file}`,
   maxVoidPad: wPad.interior, maxVoidPadFile: `${wPad.file}/${wPad.col}`,
+  pauses: R.pauses, pauseBad: R.pauseBad,
+
+  /* 尾段空白與主按鈕：呼吸帶規則 ② 用的兩個數 */
+  maxTrail: trail.trail, maxTrailFile: trail.file,
+  btnMaxPct: pct(btnTop), btnMaxFile: btnTop ? btnTop.file : '-',
+  btnTailPct: btnTail ? pct(btnTail) : null, btnTailFile: btnTail ? btnTail.file : '-',
+  mainBtn: R.mainBtn.map((b) => ({ ...b, pct: pct(b) })),
+
+  lips: R.lips, lipNone: R.lipNone.length, lipNoneWho: R.lipNone, lipTotal: R.lipTotal,
+  toggles: R.toggles,
+  photos: R.photos,
+  focus: R.photos.filter((p) => /^(Main|WelcomeIPad)$/.test(p.file)).map((p) => ({
+    name: p.file === 'Main' ? '手機' : 'iPad',
+    bw: p.bw, bh: p.bh,
+    axis: p.cropX >= p.cropY ? '橫向' : '縱向',
+    crop: Math.round(Math.max(p.cropX, p.cropY)),
+    pos: p.pos,
+    clamped: /(^|\s)(0%|100%)/.test(p.pos),
+  })),
 
   insetUse: insetCount, insetTotal: R.inset.length, insetBad: R.insetBad,
   cta: R.cta, ctaMax: Math.max(...Object.entries(R.cta).filter(([k]) => !/Tokens|Notes|Stress/.test(k)).map(([, v]) => v)),
@@ -72,3 +99,5 @@ writeFileSync(new URL('measured.json', import.meta.url), JSON.stringify(out, nul
 console.log(`measured ${out.count} boards · 呼吸帶 手機 ${out.maxVoid}px (${out.maxVoidFile}) / iPad ${out.maxVoidPad}px (${out.maxVoidPadFile})`);
 console.log(`  對比節點 ${out.contrastNodes}（最低 ${out.contrastMin} @ ${out.contrastWorst}，未達 AAA ${out.contrastFails.length}）· 照片上文字 ${out.textOverPhoto}`);
 console.log(`  inset 使用點 ${out.insetTotal}（白名單外 ${out.insetBad.length}）· 陶土最多 ${out.ctaMax}/板 · 孤兒斷行 ${out.orphans.length} · 裁切 ${out.clipped.length}`);
+console.log(`  >120px 空白 ${out.pauses.length} 段掛牌 / ${out.pauseBad.length} 段未掛牌 · 尾段最大 ${out.maxTrail}px (${out.maxTrailFile}) · 主按鈕最低 ${out.btnMaxPct}% (${out.btnMaxFile})`);
+console.log(`  唇邊 ${JSON.stringify(out.lips)} · 無唇邊 ${out.lipNone}（${out.lipNoneWho.join(' ')}）· 開關列 ${out.toggles.map((t) => `${t.file}@${t.top}`).join(' ')}`);

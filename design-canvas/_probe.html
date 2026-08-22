@@ -9,9 +9,12 @@
 (async () => {
   const CAP = 0.72;
   const INSET_OK = ['field','cell','photo','avatar','codeslot','choiceSel','switchOff','seam'];
+  const PAUSE = 120;   // 呼吸帶門檻：手機與 iPad 同一條
   const R = { boards: [], inset: [], insetBad: [], cta: {}, h1: [], voids: [], err: [],
               contrast: { n: 0, min: 99, worst: '', fails: [], overPhoto: 0 },
-              orphans: [], approve: [], taps: [], darkMotifs: {}, motifs: {} };
+              orphans: [], approve: [], taps: [], darkMotifs: {}, motifs: {},
+              pauses: [], pauseBad: [], lips: {}, lipNone: [], lipTotal: 0,
+              toggles: [], mainBtn: [], photos: [] };
 
   const cv = await (await fetch('canvas.json')).json();
 
@@ -30,6 +33,9 @@
     holder.appendChild(d.querySelector('x-dc > div').cloneNode(true));
     document.body.appendChild(holder);
     const el = holder.lastElementChild, base = el.getBoundingClientRect();
+    // 照片要等它真的載進來才量得到 naturalWidth（沒等的話裁切量會是 0，等於白量）
+    await Promise.all([...el.querySelectorAll('img')].map((im) => (im.complete && im.naturalWidth
+      ? null : new Promise((res) => { im.onload = im.onerror = res; }))));
     const name = file.replace('.dc.html', '');
     const isDark = /Dark$/.test(name);
     const rel = (n) => { const r = n.getBoundingClientRect(); return { t: r.top-base.top, b: r.bottom-base.top, l: r.left-base.left, r: r.right-base.left, w: r.width, h: r.height }; };
@@ -68,6 +74,7 @@
            （底色會把整欄塗滿，全幅量測因此看不見欄內空白）── */
     const cols = [...el.querySelectorAll('[data-col]')];
     const regions = cols.length ? cols : [el];
+    let boardLast = 0;
     for (const region of regions) {
       const rr = rel(region), key = region.getAttribute('data-col') || 'frame';
       /* 算「內容」的規則：字、圖，加上「空的元件本身」——
@@ -99,9 +106,59 @@
         for (let y = Math.max(top, Math.floor(a)); y < Math.min(bot, Math.ceil(b)); y++) cov[y] = 1;
       }
       first = Math.max(top, Math.floor(first)); last = Math.min(bot, Math.ceil(last));
-      let best = 0, at = 0, cur = 0, cs2 = 0;
-      for (let y = first; y < last; y++) { if (!cov[y]) { if (!cur) cs2 = y; cur++; if (cur > best) { best = cur; at = cs2; } } else cur = 0; }
-      R.voids.push({ file: name, col: key, interior: best, at, lead: first - top, trail: bot - last, pad: /IPad/.test(name) });
+      boardLast = Math.max(boardLast, last);
+      /* 每一段連續空白都要記，不是只記最長的那一段 ——
+         第 3 輪的規則是「每一段 >120px 都要掛牌」，只看最大值會漏掉第二段。 */
+      const runs = [];
+      let cur = 0, cs2 = 0;
+      for (let y = first; y <= last; y++) {
+        if (y < last && !cov[y]) { if (!cur) cs2 = y; cur++; }
+        else if (cur) { runs.push([cs2, cur]); cur = 0; }
+      }
+      const best = runs.reduce((a, r) => (r[1] > a[1] ? r : a), [0, 0]);
+      /* 掛牌規則：>120px 的空白，必須有一個帶 data-pause 的元素「在這段空白裡開始」
+         ——「這一塊之前的留白是刻意的，理由是…」。標在外層容器上不算數（那會變成
+         一張牌赦免整欄），所以比對的是元素自己的上緣落點。 */
+      const marks = [...region.querySelectorAll('[data-pause]')].map((n) => ({ t: rel(n).t, why: n.getAttribute('data-pause') }));
+      for (const [at, len] of runs) {
+        if (len <= PAUSE) continue;
+        const m = marks.find((mk) => mk.t >= at - 4 && mk.t <= at + len + 4);
+        const row = { file: name, col: key, len, at, why: m ? m.why : '' };
+        if (m) R.pauses.push(row); else R.pauseBad.push(row);
+      }
+      R.voids.push({ file: name, col: key, interior: best[1], at: best[0], lead: first - top, trail: bot - last, pad: /IPad/.test(name) });
+    }
+
+    /* ── 5b. 唇邊：3pt＝該表面的深一階。逐個浮起「表面」量 computed border-bottom
+           （底線連結不是表面，不算）。沒有唇邊的一律列名，例外必須自己現形。 ── */
+    const rootVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    const cssRgb = (v) => { const p = document.createElement('span'); p.style.color = v; document.body.appendChild(p); const c = getComputedStyle(p).color; p.remove(); return c; };
+    const lipNames = { ctaDeep: cssRgb(rootVar('--ls-cta-deep')), edge: cssRgb(rootVar('--ls-edge')), wine: cssRgb(rootVar('--ls-wine')) };
+    for (const n of el.querySelectorAll('[data-s="raise"]')) {
+      if (n.getAttribute('data-role') === 'link') continue;
+      R.lipTotal++;
+      const cs = getComputedStyle(n), w = Math.round(parseFloat(cs.borderBottomWidth));
+      if (!w) { R.lipNone.push(name + ':' + (n.getAttribute('data-role') || '?')); continue; }
+      const hit = Object.entries(lipNames).find(([, v]) => v === cs.borderBottomColor);
+      const key = (hit ? hit[0] : cs.borderBottomColor) + '@' + w;
+      R.lips[key] = (R.lips[key] || 0) + 1;
+    }
+
+    /* ── 5c. 開關列的位置（R4：四個狀態同一條線）＋ 主按鈕中心 ── */
+    for (const n of el.querySelectorAll('[data-role="toggleRow"]')) R.toggles.push({ file: name, top: Math.round(rel(n).t) });
+    // 主按鈕＝該板被推薦的那個動作：陶土的按鈕或陶土的選項卡（三岔路的主要那條路）。
+    const btns = [...el.querySelectorAll('[data-role="button"],[data-role="choice"]')];
+    const main = btns.find((n) => n.hasAttribute('data-cta')) || btns.find((n) => n.getAttribute('data-role') === 'button');
+    if (main) { const r = rel(main); R.mainBtn.push({ file: name, mid: Math.round(r.t + r.h / 2), h: FH, cta: main.hasAttribute('data-cta') }); }
+
+    /* ── 5d. 照片的實際裁切：量框、量原圖，算出哪一軸真的被裁 ── */
+    for (const im of el.querySelectorAll('img')) {
+      const r = rel(im), cs = getComputedStyle(im);
+      const nw = im.naturalWidth, nh = im.naturalHeight;
+      const s = Math.max(r.w / nw, r.h / nh);
+      R.photos.push({ file: name, bw: Math.round(r.w), bh: Math.round(r.h), nw, nh,
+                      cropX: Math.round((nw * s - r.w) * 10) / 10, cropY: Math.round((nh * s - r.h) * 10) / 10,
+                      pos: cs.objectPosition, fit: cs.objectFit });
     }
 
     /* ── 6. 裁切 ── */
@@ -111,7 +168,8 @@
       const paints = cs.backgroundColor !== 'rgba(0, 0, 0, 0)' || cs.borderBottomWidth !== '0px' || n.tagName === 'IMG' || n.tagName.toLowerCase() === 'svg' || [...n.childNodes].some(c => c.nodeType === 3 && c.textContent.trim());
       if (paints && r.h > 0 && r.w > 0) lastPaint = Math.max(lastPaint, r.b);
     }
-    R.boards.push({ file: name, lastPaint: Math.round(lastPaint), h: FH, clipped: Math.max(0, Math.round(lastPaint) - FH) });
+    R.boards.push({ file: name, lastPaint: Math.round(lastPaint), h: FH, clipped: Math.max(0, Math.round(lastPaint) - FH),
+                    trail: Math.round(FH - boardLast) });
 
     /* ── 7. 錯誤幾何 vs 可按幾何 ── */
     const lips = [...el.querySelectorAll('[data-s="raise"]')].map(rel);

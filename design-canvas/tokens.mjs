@@ -48,7 +48,10 @@ export const FIX = {
   padPad: 56,       // iPad 版心（直）
   padPadX: 64,      // iPad 版心（橫）
   padSheet: 48,     // 交付板（Tokens／Notes／壓力板）版心
-  capAlign: 39,     // iPad 跨欄 cap-height 對齊補償（左欄 42/50 標題 vs 右欄卡內 28/34 標題，卡上緣內距 44）
+  btnMax: 360,      // iPad 主按鈕寬度上限
+  codeLine: 64,     // 票根數字帶的高度（＝60pt 的行高）；空票根用同一個值，兩者外框才會等高
+  capAlign: 29,     // iPad 跨欄 cap-height 對齊補償（右欄選項卡往下推，讓右欄首卡標題 28/34
+  //                   的 cap 對齊左欄 H1 42/50 的 cap；左欄 H1 上方有帳號列 44＋間距 24）
   navOpt: 6,        // 返回鍵圖示的視覺左對齊（負值外推）
   seam: 20,         // iPad 卡紙壓過照片的重疊
   seamPhone: 34,    // 手機卡紙壓過照片的重疊

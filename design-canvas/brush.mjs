@@ -64,13 +64,17 @@ const YA = [
 ].join('');
 
 /* 兩字並排：手寫的字不會排得像表格 —— 第二個字微微下沉、微微轉一點，
-   是筆跡自然的參差。 */
+   是筆跡自然的參差。字距收到 93（原 100）：兩字之間的白比字內的白小，
+   才會讀成「小芽」一個詞，而不是兩個各自站著的字（第 3 輪目視項）。 */
 // viewBox 貼著墨跡的外框（不是 0–202 見方）—— 這樣字標的左緣可以跟標題切齊，
-// 不會因為第一筆是細鋒而看起來內縮。
+// 不會因為第一筆是細鋒而看起來內縮。四個數字是 bbox 量出來的，不是估的：
+// 墨跡 x 21.48–185.72、y 8.88–95.06，四邊各留 1.5 的抗鋸齒餘裕。
+const VB = { x: 19.98, y: 7.38, w: 167.24, h: 89.18 };
+
 export const inkMark = (size, color, title = '小芽') => {
-  const h = Math.round(size), w = Math.round(size * 182 / 94);
-  return `<svg width="${w}" height="${h}" viewBox="13 4 182 94" fill="${color}" role="img" aria-label="${title}">
+  const h = Math.round(size), w = Math.round(size * VB.w / VB.h);
+  return `<svg width="${w}" height="${h}" viewBox="${VB.x} ${VB.y} ${VB.w} ${VB.h}" fill="${color}" role="img" aria-label="${title}">
     <g transform="translate(2 2) rotate(-1.4 50 50) scale(.95)">${XIAO}</g>
-    <g transform="translate(100 -1) rotate(.9 50 50)">${YA}</g>
+    <g transform="translate(93 -1) rotate(.9 50 50)">${YA}</g>
   </svg>`;
 };
