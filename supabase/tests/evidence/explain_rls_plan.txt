@@ -1,0 +1,108 @@
+# LS-6 RLS plan 證據 —— 由 supabase/tests/run.sh 產生
+# 產生時間：2026-08-22T07:06:38Z（UTC）
+# 連線：docker exec ls6-verify-pg psql
+# Server：PostgreSQL 16.13 (Debian 16.13-1.pgdg12+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+# 資料量：public.media 5 萬列（家庭 fc000000-0000-4000-8000-000000000001）
+# 判準：plan 不得出現 (SubPlan N) 形式的 qual 引用，且所有節點 loops=1
+
+NOTICE:  ok：已灌入 5 萬列 media，feed_items 由 trigger 同步產生 5 萬列
+                              set_config                               
+-----------------------------------------------------------------------
+ {"sub":"c0000000-0000-4000-8000-000000000001","role":"authenticated"}
+(1 row)
+
+NOTICE:  ok 效能：主查詢 1：相簿格狀清單（帶 family_id） —— 無 correlated SubPlan，所有節點 loops=1
+NOTICE:  ok 效能：主查詢 2：只靠 RLS 過濾家庭（最嚴苛的情況） —— 無 correlated SubPlan，所有節點 loops=1
+NOTICE:  ok 效能：主查詢 3：時間軸 keyset 分頁 —— 無 correlated SubPlan，所有節點 loops=1
+
+=== EXPLAIN 證據 1：media 清單（authenticated，5 萬列，帶 family_id）===
+NOTICE:  ok 偵測器自我驗證：內嵌 correlated 子查詢被抓到（correlated SubPlan=t，最大 loops=50）
+                                                                      QUERY PLAN                                                                      
+------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=8.18..27.10 rows=50 width=91) (actual time=0.118..0.130 rows=50 loops=1)
+   Output: media.id, media.storage_path, media.taken_at, media.created_at
+   Buffers: shared hit=6
+   ->  Index Scan using media_family_created_idx on public.media  (cost=8.18..9469.33 rows=24999 width=91) (actual time=0.117..0.127 rows=50 loops=1)
+         Output: media.id, media.storage_path, media.taken_at, media.created_at
+         Index Cond: (media.family_id = 'fc000000-0000-4000-8000-000000000001'::uuid)
+         Filter: (hashed SubPlan 1)
+         Buffers: shared hit=6
+         SubPlan 1
+           ->  ProjectSet  (cost=0.00..5.27 rows=1000 width=16) (actual time=0.096..0.101 rows=1 loops=1)
+                 Output: private.family_ids()
+                 Buffers: shared hit=1
+                 ->  Result  (cost=0.00..0.01 rows=1 width=0) (actual time=0.001..0.001 rows=1 loops=1)
+ Planning Time: 0.203 ms
+ Execution Time: 0.149 ms
+(15 rows)
+
+
+=== EXPLAIN 證據 2：media 清單（只靠 RLS 過濾家庭）===
+                                                          QUERY PLAN                                                           
+-------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=2575.35..2575.48 rows=50 width=83) (actual time=21.179..21.185 rows=50 loops=1)
+   Output: media.id, media.storage_path, media.created_at
+   Buffers: shared hit=1113
+   ->  Sort  (cost=2575.35..2637.86 rows=25002 width=83) (actual time=21.178..21.181 rows=50 loops=1)
+         Output: media.id, media.storage_path, media.created_at
+         Sort Key: media.created_at DESC, media.id DESC
+         Sort Method: top-N heapsort  Memory: 31kB
+         Buffers: shared hit=1113
+         ->  Seq Scan on public.media  (cost=7.77..1744.80 rows=25002 width=83) (actual time=0.057..14.620 rows=50000 loops=1)
+               Output: media.id, media.storage_path, media.created_at
+               Filter: ((media.deleted_at IS NULL) AND (hashed SubPlan 1))
+               Rows Removed by Filter: 3
+               Buffers: shared hit=1113
+               SubPlan 1
+                 ->  ProjectSet  (cost=0.00..5.27 rows=1000 width=16) (actual time=0.048..0.051 rows=1 loops=1)
+                       Output: private.family_ids()
+                       Buffers: shared hit=1
+                       ->  Result  (cost=0.00..0.01 rows=1 width=0) (actual time=0.000..0.000 rows=1 loops=1)
+ Planning Time: 0.031 ms
+ Execution Time: 21.201 ms
+(20 rows)
+
+
+=== EXPLAIN 證據 3：feed_items keyset 分頁 ===
+                                                                                                 QUERY PLAN                                                                                                  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=8.18..17.90 rows=30 width=28) (actual time=0.473..0.480 rows=30 loops=1)
+   Output: feed_items.kind, feed_items.ref_id, feed_items.occurred_at
+   Buffers: shared hit=5
+   ->  Index Scan using feed_items_family_occurred_idx on public.feed_items  (cost=8.18..8105.10 rows=24999 width=28) (actual time=0.473..0.478 rows=30 loops=1)
+         Output: feed_items.kind, feed_items.ref_id, feed_items.occurred_at
+         Index Cond: ((feed_items.family_id = 'fc000000-0000-4000-8000-000000000001'::uuid) AND (ROW(feed_items.occurred_at, feed_items.ref_id) < ROW(now(), 'ffffffff-ffff-ffff-ffff-ffffffffffff'::uuid)))
+         Filter: (hashed SubPlan 1)
+         Buffers: shared hit=5
+         SubPlan 1
+           ->  ProjectSet  (cost=0.00..5.27 rows=1000 width=16) (actual time=0.441..0.452 rows=1 loops=1)
+                 Output: private.family_ids()
+                 Buffers: shared hit=1
+                 ->  Result  (cost=0.00..0.01 rows=1 width=0) (actual time=0.000..0.000 rows=1 loops=1)
+ Planning Time: 0.082 ms
+ Execution Time: 0.500 ms
+(15 rows)
+
+
+=== 對照組：PLAN §5 禁止的內嵌 correlated 子查詢寫法（loops 會等於掃描列數）===
+                                                                                                                                        QUERY PLAN                                                                                                                                         
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=7.77..2724.13 rows=50 width=16) (actual time=0.380..0.563 rows=50 loops=1)
+   ->  Seq Scan on media m  (cost=7.77..452771.86 rows=8334 width=16) (actual time=0.379..0.559 rows=50 loops=1)
+         Filter: ((deleted_at IS NULL) AND (hashed SubPlan 3) AND ((SubPlan 2) > 0))
+         Rows Removed by Filter: 3
+         SubPlan 3
+           ->  ProjectSet  (cost=0.00..5.27 rows=1000 width=16) (actual time=0.152..0.161 rows=1 loops=1)
+                 ->  Result  (cost=0.00..0.01 rows=1 width=0) (actual time=0.000..0.001 rows=1 loops=1)
+         SubPlan 2
+           ->  Aggregate  (cost=9.01..9.02 rows=1 width=8) (actual time=0.006..0.006 rows=1 loops=50)
+                 ->  Seq Scan on family_members fm  (cost=7.77..9.01 rows=1 width=0) (actual time=0.005..0.005 rows=1 loops=50)
+                       Filter: ((hashed SubPlan 1) AND (family_id = m.family_id) AND (user_id = (COALESCE(NULLIF(current_setting('request.jwt.claim.sub'::text, true), ''::text), ((NULLIF(current_setting('request.jwt.claims'::text, true), ''::text))::jsonb ->> 'sub'::text)))::uuid))
+                       Rows Removed by Filter: 5
+                       SubPlan 1
+                         ->  ProjectSet  (cost=0.00..5.27 rows=1000 width=16) (actual time=0.125..0.132 rows=1 loops=1)
+                               ->  Result  (cost=0.00..0.01 rows=1 width=0) (actual time=0.000..0.001 rows=1 loops=1)
+ Planning Time: 0.286 ms
+ Execution Time: 0.641 ms
+(17 rows)
+
