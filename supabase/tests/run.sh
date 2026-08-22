@@ -2,9 +2,13 @@
 # LS-6 — 本地 DB 測試 runner（RLS 隔離／owner 不變量／trigger／RLS plan 效能）
 #
 # 用法：
-#   supabase start
+#   supabase start（或只要 DB：supabase db start）
 #   supabase db reset          # 套用 supabase/migrations
 #   bash supabase/tests/run.sh
+#
+# LS-11：CI（.github/workflows/ci.yml 的 db job）額外帶 SUPABASE_DB_URL＝
+# `supabase status -o env` 印出的 DB_URL，走 host psql 那條路；本機／QA 備援沿用
+# 既有離散參數（SUPABASE_DB_HOST/PORT/USER/NAME）或 SUPABASE_DB_CONTAINER。
 #
 # fail loud：任何一個測試檔非 0 結束就立刻中止並回傳非 0，不會有「跳過等於通過」。
 # 測試檔本身用 DO 區塊斷言，失敗時 RAISE EXCEPTION，psql 帶 ON_ERROR_STOP 直接非 0 結束。
@@ -22,12 +26,23 @@ db_name="${SUPABASE_DB_NAME:-postgres}"
 export PGPASSWORD="${PGPASSWORD:-postgres}"
 container="${SUPABASE_DB_CONTAINER:-supabase_db_little-sprout}"
 
+# LS-11：CI（supabase CLI local stack）用這條——直接吃 `supabase status -o env` 印出的
+# DB_URL，不用假設 host/port 剛好對得上 config.toml，換 port 也不必回頭改這個腳本或 CI。
+# 沒帶就留空、走下面離散參數那條路：兩者預設值等價，都是 supabase CLI local stack 的
+# 標準連線（postgres:postgres@127.0.0.1:54322/postgres），只是給法不同。
+db_url="${SUPABASE_DB_URL:-}"
+
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$evidence_dir"
 
 # psql 不一定裝在 host 上；沒有的話就借用 supabase 的 DB container 裡那一份。
-if command -v psql >/dev/null 2>&1; then
+if command -v psql >/dev/null 2>&1 && [ -n "$db_url" ]; then
+  channel="host psql → SUPABASE_DB_URL"
+  run_sql() {
+    psql "$db_url" -v ON_ERROR_STOP=1 --no-psqlrc -q -f "$1"
+  }
+elif command -v psql >/dev/null 2>&1; then
   channel="host psql → ${db_host}:${db_port}/${db_name}"
   run_sql() {
     psql -h "$db_host" -p "$db_port" -U "$db_user" -d "$db_name" \
