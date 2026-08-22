@@ -1,0 +1,72 @@
+# XcodeGen 專案定義（`xcodegen generate` 產生 LittleSprout.xcodeproj）。
+#
+# project.yml 與生成的 .xcodeproj 都進 repo：CI 與 push gate 直接對
+# `LittleSprout.xcodeproj` 跑 `xcodebuild test -scheme LittleSprout`，
+# 不會在 runner 上另外安裝 XcodeGen。
+# 改動專案結構時請改本檔並重跑 `xcodegen generate`，兩邊一起 commit。
+
+name: LittleSprout
+
+options:
+  bundleIdPrefix: com.leoyeh
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    # iPhone + iPad universal（PLAN §9-C3 已定案）
+    TARGETED_DEVICE_FAMILY: "1,2"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  LittleSprout:
+    type: application
+    platform: iOS
+    sources:
+      - path: LittleSprout
+    settings:
+      base:
+        # 佔位 bundle ID：須與 LS-8（Apple Developer 註冊）建立的 App ID 對齊後才定案。
+        PRODUCT_BUNDLE_IDENTIFIER: com.leoyeh.littlesprout
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_CFBundleDisplayName: Little Sprout
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: >-
+          UIInterfaceOrientationPortrait
+          UIInterfaceOrientationLandscapeLeft
+          UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: >-
+          UIInterfaceOrientationPortrait
+          UIInterfaceOrientationPortraitUpsideDown
+          UIInterfaceOrientationLandscapeLeft
+          UIInterfaceOrientationLandscapeRight
+
+  LittleSproutTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: LittleSproutTests
+    dependencies:
+      - target: LittleSprout
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+
+schemes:
+  # CI（.github/workflows/ci.yml）與 push gate 都寫死 -scheme LittleSprout，
+  # 且 XcodeGen 產生的 scheme 一律是 shared，runner 才找得到。
+  LittleSprout:
+    build:
+      targets:
+        LittleSprout: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - LittleSproutTests
