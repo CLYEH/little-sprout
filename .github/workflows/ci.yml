@@ -1,5 +1,5 @@
-# Merge gate 的 CI 面（另一半是 merge-reviewer 的 code review），規約見 CLAUDE.md §4。
-# 注意:macOS runner 計費倍率高,只在 PR 與保護分支 push 觸發。
+# Merge gate 的 CI 面（另一半是 merge-reviewer 的 code review）。
+# rules job 是「前饋必有反饋」原則的機械 gate（docs/COLLABORATION.md §0、§7）。
 name: CI
 
 on:
@@ -9,32 +9,92 @@ on:
     branches: [development, test, main]
 
 jobs:
+  # 規約檢查：PR 方向矩陣、migration 規約、design gate（ubuntu，快且免費）
+  rules:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      BASE: ${{ github.base_ref }}
+      HEAD: ${{ github.head_ref }}
+      PR_BODY: ${{ github.event.pull_request.body }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: PR direction matrix
+        run: |
+          ok=false
+          case "$BASE" in
+            development)
+              case "$HEAD" in feature/LS-*|fix/LS-*|hotfix/LS-*|main) ok=true ;; esac ;;
+            test)
+              case "$HEAD" in development|main) ok=true ;; esac ;;
+            main)
+              case "$HEAD" in test|hotfix/LS-*) ok=true ;; esac ;;
+          esac
+          if [ "$ok" != true ]; then
+            echo "::error::PR 方向違規：$HEAD → $BASE。合法方向：feature|fix|hotfix→development、development|main→test、test|hotfix/*→main"
+            exit 1
+          fi
+
+      - name: Migration rules
+        run: |
+          base_sha=$(git merge-base "origin/$BASE" HEAD)
+          mig=$(git diff --name-only "$base_sha"...HEAD -- supabase/migrations/ || true)
+          if [ -n "$mig" ]; then
+            tests=$(git diff --name-only "$base_sha"...HEAD -- supabase/tests/ || true)
+            if [ -z "$tests" ]; then
+              echo "::error::migration 變更必須伴隨 supabase/tests/ 的 RLS 測試變更（DB migration gate）"
+              exit 1
+            fi
+            destructive=$(git diff "$base_sha"...HEAD -- supabase/migrations/ | grep '^+' | grep -icE 'DROP TABLE|DROP COLUMN|ALTER (TABLE|COLUMN).* TYPE ' || true)
+            if [ "${destructive:-0}" -gt 0 ] && ! printf '%s' "$PR_BODY" | grep -q 'DESTRUCTIVE-APPROVED'; then
+              echo "::error::偵測到破壞性 migration；需使用者本人核可（在 PR body 加 DESTRUCTIVE-APPROVED），agent 不得代寫"
+              exit 1
+            fi
+          fi
+
+      - name: Design gate（新增 SwiftUI View 需附設計稿標記）
+        run: |
+          base_sha=$(git merge-base "origin/$BASE" HEAD)
+          new_views=""
+          for f in $(git diff --name-only --diff-filter=A "$base_sha"...HEAD -- '*.swift'); do
+            if grep -qE 'struct +[A-Za-z0-9_]+ *: *(some +)?View' "$f"; then
+              new_views="$new_views $f"
+            fi
+          done
+          if [ -n "$new_views" ] && ! printf '%s' "$PR_BODY" | grep -qE 'Design:[[:space:]]*[^[:space:]]'; then
+            echo "::error::PR 新增了 SwiftUI View（$new_views）但 body 的 Design: 欄位是空的——新畫面必須先有 ui-designer 的 .pen 設計稿並填上 frame 名稱"
+            exit 1
+          fi
+
+  lint:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: SwiftLint（有 Swift 檔就跑，不綁 Xcode 專案存在與否）
+        run: |
+          if [ -z "$(git ls-files '*.swift')" ]; then
+            echo "無 Swift 檔，略過"
+            exit 0
+          fi
+          brew install swiftlint
+          swiftlint lint --strict
+
   ci:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-
-      - name: Detect Xcode project
-        id: detect
-        run: |
-          if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1; then
-            echo "has_project=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_project=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::尚未建立 Xcode 專案,本次 CI 略過 build/test(Phase 0-1 完成後生效)"
-          fi
-
-      - name: SwiftLint
-        if: steps.detect.outputs.has_project == 'true'
-        run: |
-          brew install swiftlint
-          swiftlint lint --strict
-
-      # Phase 0 建立 Xcode 專案時,如 scheme 名稱不是 LittleSprout,同步更新這裡與 scripts/gates/push-gate.sh
       - name: Build & Test
-        if: steps.detect.outputs.has_project == 'true'
         run: |
+          if ! ls -d ./*.xcodeproj >/dev/null 2>&1 && ! ls -d ./*.xcworkspace >/dev/null 2>&1; then
+            echo "::warning::尚未建立 Xcode 專案，略過 build/test（Phase 0-1 完成後生效）"
+            exit 0
+          fi
+          # 動態選 runner 上第一台可用 iPhone 模擬器（與 scripts/gates/push-gate.sh 同邏輯）
+          dest=$(xcrun simctl list devices available | grep -oE 'iPhone [^(]+' | head -1 | sed 's/ *$//')
           xcodebuild test \
             -scheme LittleSprout \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination "platform=iOS Simulator,name=${dest}" \
             CODE_SIGNING_ALLOWED=NO
