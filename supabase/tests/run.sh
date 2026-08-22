@@ -82,6 +82,65 @@ for f in "$here"/[0-9][0-9]_*.sql; do
   fi
 done
 
+# ---------------------------------------------------------------------------
+# 併發測試：owner 不變量在 READ COMMITTED 下的序列化
+#
+# 為什麼不能寫成上面那種單檔 SQL：要重現的時序需要「兩個交易同時開著」，
+# 一個 session 內做不到。這裡開兩個真的並行的 psql，用時間差對齊時序：
+#   S1  BEGIN → 降級/移除 owner1 →（壓住 3 秒不 commit）→ COMMIT
+#   S2  等 1.2 秒 → 降級/移除 owner2 → 必須被阻塞、解除阻塞後必須噴 LS001
+# 斷言寫在 S2 與 verify 的 SQL 裡（等待秒數、LS001、最終 owner 數 ≥1）。
+# ---------------------------------------------------------------------------
+cc_dir="$here/concurrency"
+
+run_sql_bg() {  # $1=sql 檔 $2=輸出檔；結束碼寫到 $2.rc
+  # set +e：失敗的結束碼是這裡的觀測目標，不能讓 errexit 把 subshell 直接帶走
+  ( set +e; run_sql "$1" > "$2" 2>&1; echo "$?" > "$2.rc" ) &
+}
+
+owner_guard_case() {  # $1=場景名 $2=S1 檔名 $3=S2 檔名
+  local label="$1" s1="$cc_dir/$2" s2="$cc_dir/$3"
+  local s1_out="$tmp/$2.out" s2_out="$tmp/$3.out" setup_out="$tmp/owner_guard_setup.out"
+  echo "→ 併發：$label"
+
+  if ! run_sql "$cc_dir/owner_guard_setup.sql" > "$setup_out" 2>&1; then
+    echo "  ✗ 併發場景資料建立失敗：" >&2; sed 's/^/    /' "$setup_out" >&2; exit 1
+  fi
+
+  run_sql_bg "$s1" "$s1_out"
+  run_sql_bg "$s2" "$s2_out"
+  wait
+
+  local rc1 rc2 failed=0
+  rc1="$(cat "$s1_out.rc")"; rc2="$(cat "$s2_out.rc")"
+  sed 's/^/    S1 /' "$s1_out"
+  sed 's/^/    S2 /' "$s2_out"
+  [ "$rc1" = 0 ] || { echo "  ✗ S1 非 0 結束（rc=$rc1）" >&2; failed=1; }
+  [ "$rc2" = 0 ] || { echo "  ✗ S2 非 0 結束（rc=$rc2）" >&2; failed=1; }
+
+  if ! run_sql "$cc_dir/owner_guard_verify.sql" > "$tmp/owner_guard_verify.out" 2>&1; then
+    sed 's/^/    /' "$tmp/owner_guard_verify.out" >&2; failed=1
+  else
+    sed 's/^/    /' "$tmp/owner_guard_verify.out"
+  fi
+
+  [ "$failed" = 0 ] || { echo "  ✗ 併發：$label 失敗" >&2; exit 1; }
+  echo "  ✓ 併發：$label"
+}
+
+owner_guard_case "同時降級兩位 owner" owner_guard_s1_demote.sql owner_guard_s2_demote.sql
+owner_guard_case "同時移除兩位 owner" owner_guard_s1_delete.sql owner_guard_s2_delete.sql
+
+cleanup="$tmp/cc_cleanup.sql"
+cat > "$cleanup" <<'SQL'
+delete from public.families where id = 'fd000000-0000-4000-8000-000000000001';
+delete from auth.users where id in (
+  'd0000000-0000-4000-8000-000000000001',
+  'd0000000-0000-4000-8000-000000000002'
+);
+SQL
+run_sql "$cleanup" > /dev/null
+
 # EXPLAIN 證據存檔（驗收條件 c 要求留存）
 perf_out="$tmp/50_rls_plan_no_percall_subquery.sql.out"
 if [ -f "$perf_out" ]; then

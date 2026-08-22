@@ -45,8 +45,8 @@ begin
   values (v_family, 'a0000000-0000-4000-8000-000000000001', '補寫的日記', date '2020-01-01')
   returning id into v_diary;
   select occurred_at into v_at from public.feed_items where kind = 'diary' and ref_id = v_diary;
-  if v_at is distinct from (date '2020-01-01')::timestamptz then
-    raise exception 'FAIL：diary 的 feed occurred_at 應為 entry_date，實際 %', v_at;
+  if v_at is distinct from (timestamp '2020-01-01' at time zone 'utc') then
+    raise exception 'FAIL：diary 的 feed occurred_at 應為 entry_date 的 UTC 午夜，實際 %', v_at;
   end if;
   raise notice 'ok feed：album/media/diary 新增都會進時間軸，occurred_at 取法正確';
 
@@ -77,6 +77,52 @@ begin
                        where m.storage_path like v_family || '/2026/08/bulk-%');
   if v_n <> 5 then raise exception 'FAIL：一次插 5 列只產生 % 列 feed_items', v_n; end if;
   raise notice 'ok feed：一句 INSERT 5 列 → 5 列時間軸項目';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- diary 的 occurred_at 口徑必須固定，不能吃呼叫端 session 的 TimeZone
+--
+-- entry_date 是 date，轉 timestamptz 時若不指定時區，同一篇日記由台北與紐約的連線寫入
+-- 會得到相差十幾個小時的 occurred_at——時間軸的排序與「補寫昨天的日記出現在昨天」都會不穩定，
+-- 而且錯誤只在跨時區時才顯現（本機測試永遠是綠的）。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_author uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_date date := date '2020-03-05';
+  v_expected timestamptz := timestamp '2020-03-05' at time zone 'utc';
+  v_diary_tpe uuid;
+  v_diary_nyc uuid;
+  v_at_tpe timestamptz;
+  v_at_nyc timestamptz;
+begin
+  perform set_config('timezone', 'Asia/Taipei', true);
+  insert into public.diaries (family_id, author_id, body, entry_date)
+  values (v_family, v_author, '在 Asia/Taipei 這個 session 寫的', v_date)
+  returning id into v_diary_tpe;
+  select occurred_at into v_at_tpe from public.feed_items
+   where kind = 'diary' and ref_id = v_diary_tpe;
+
+  perform set_config('timezone', 'America/New_York', true);
+  insert into public.diaries (family_id, author_id, body, entry_date)
+  values (v_family, v_author, '在 America/New_York 這個 session 寫的', v_date)
+  returning id into v_diary_nyc;
+  select occurred_at into v_at_nyc from public.feed_items
+   where kind = 'diary' and ref_id = v_diary_nyc;
+
+  perform set_config('timezone', 'UTC', true);
+
+  if v_at_tpe is distinct from v_at_nyc then
+    raise exception
+      'FAIL：同一個 entry_date 在不同 session TimeZone 下產生不同的 occurred_at（% vs %）',
+      v_at_tpe, v_at_nyc;
+  end if;
+  if v_at_tpe is distinct from v_expected then
+    raise exception 'FAIL：diary 的 occurred_at 應固定為 UTC 午夜 %，實際 %', v_expected, v_at_tpe;
+  end if;
+  raise notice 'ok feed：diary 的 occurred_at 固定在 entry_date 的 UTC 午夜，不隨 session TimeZone 變動';
 end;
 $$;
 

@@ -50,15 +50,28 @@ set search_path = ''
 as $$
 declare
   v_family_id uuid;
+  v_lock uuid;
 begin
-  for v_family_id in select distinct family_id from removed_members loop
-    -- 家庭本身被刪除時（cascade 掉全部成員）不該報錯，只有家庭還在才需要 owner
-    if exists (select 1 from public.families f where f.id = v_family_id)
-       and not exists (
-         select 1 from public.family_members m
-         where m.family_id = v_family_id and m.role = 'owner'
-       )
-    then
+  -- order by：本函式會取列鎖，兩個交易若以相反順序處理同一組家庭就會死鎖。
+  -- 固定成 family_id 遞增，同一組家庭的鎖取得順序就一致。
+  for v_family_id in select distinct family_id from removed_members order by 1 loop
+    -- 先鎖住家庭列，再檢查 owner —— 這一行是正確性的關鍵，不是效能調整：
+    -- READ COMMITTED 下「A 降級」與「B 降級」動到的是 family_members 的不同列，彼此不衝突，
+    -- 若只讀不鎖，兩個交易都會看到「還有另一位 owner」而各自放行，commit 之後家庭剩 0 位 owner。
+    -- 0 owner 的家庭沒有任何自救路徑（加人／改角色／刪內容／處理檢舉的 policy 全都要求 owner），
+    -- 等於永久磚化。鎖住 families 列讓同一個家庭的降級／移除排隊，後到的那個才會讀到真實狀態。
+    -- 序列化的範圍只有「同一個家庭的成員異動」，不同家庭之間互不影響。
+    select f.id into v_lock from public.families f where f.id = v_family_id for update;
+
+    -- 找不到家庭 = 家庭本身被刪除（成員是 cascade 掉的），此時不需要 owner，不該報錯
+    if v_lock is null then
+      continue;
+    end if;
+
+    if not exists (
+      select 1 from public.family_members m
+      where m.family_id = v_family_id and m.role = 'owner'
+    ) then
       raise exception '家庭 % 必須至少保留一位 owner（請先指派新 owner，再移除或降級原 owner）', v_family_id
         using errcode = 'LS001';
     end if;
@@ -164,8 +177,12 @@ begin
       where f.kind = 'diary' and f.ref_id = o.id;
   end if;
   if tg_op <> 'DELETE' then
+    -- entry_date 是 date，轉 timestamptz 一定要指定時區口徑。
+    -- 直接 `::timestamptz` 會吃呼叫端 session 的 TimeZone：同一篇日記由台北與倫敦的連線寫入，
+    -- occurred_at 會差 8 小時，時間軸的排序與「補寫昨天的日記」語意就不穩定。
+    -- 固定用 UTC 午夜，讓 occurred_at 只由 entry_date 決定。
     insert into public.feed_items (family_id, kind, ref_id, occurred_at)
-      select n.family_id, 'diary', n.id, n.entry_date::timestamptz
+      select n.family_id, 'diary', n.id, (n.entry_date::timestamp at time zone 'utc')
         from new_rows n where n.deleted_at is null;
   end if;
   return null;
