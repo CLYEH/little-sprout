@@ -16,10 +16,14 @@ fi
 # 2) Unit tests（Xcode 專案存在才跑；Phase 0 建專案時如 scheme 不同請更新此處與 CI）
 XCODE_SCHEME="${XCODE_SCHEME:-LittleSprout}"
 if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1; then
-  echo "→ push gate：執行 unit tests（scheme: ${XCODE_SCHEME}）…"
+  dest_name=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/detect-simulator.sh") || {
+    echo "✗ push gate：模擬器偵測失敗。" >&2
+    exit 1
+  }
+  echo "→ push gate：執行 unit tests（scheme: ${XCODE_SCHEME}, sim: ${dest_name}）…"
   xcodebuild test \
     -scheme "$XCODE_SCHEME" \
-    -destination 'platform=iOS Simulator,name=iPhone 16' \
+    -destination "platform=iOS Simulator,name=${dest_name}" \
     -quiet
 else
   echo "⚠ push gate：尚未建立 Xcode 專案，跳過 unit tests（Phase 0-1 完成後自動生效）"
