@@ -1,0 +1,214 @@
+<!doctype html><meta charset="utf-8">
+<body style="margin:0;font:12px monospace;background:#fff">
+<div id="out" style="padding:8px;white-space:pre"></div>
+<script>
+/* 在真的瀏覽器裡把設計稿上的每一句宣稱量一次。
+   結果丟給 measure.mjs 寫進 measured.json，verify.mjs 再對它下判斷。
+   —— 第 2 輪三盞燈接錯線（grep helper 定義、只掃 gap、全幅量死帶），
+      所以這一輪全部改成「掃使用點的 computed style」。 */
+(async () => {
+  const CAP = 0.72;
+  const INSET_OK = ['field','cell','photo','avatar','codeslot','choiceSel','switchOff','seam'];
+  const R = { boards: [], inset: [], insetBad: [], cta: {}, h1: [], voids: [], err: [],
+              contrast: { n: 0, min: 99, worst: '', fails: [], overPhoto: 0 },
+              orphans: [], approve: [], taps: [], darkMotifs: {}, motifs: {} };
+
+  const cv = await (await fetch('canvas.json')).json();
+
+  const hexToRgb = (s) => { const m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(s); return m ? [+m[1], +m[2], +m[3], m[4] === undefined ? 1 : +m[4]] : null; };
+  const lum = (c) => { const s = c.slice(0,3).map(v => { v /= 255; return v <= .03928 ? v/12.92 : ((v+.055)/1.055)**2.4; }); return .2126*s[0] + .7152*s[1] + .0722*s[2]; };
+  const cr = (a, b) => { const l1 = lum(a), l2 = lum(b); const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1]; return (hi+.05)/(lo+.05); };
+  const over = (fg, bg) => fg.map((v,i) => i<3 ? v*fg[3] + bg[i]*(1-fg[3]) : 1);
+
+  for (const ab of cv.artboards) {
+    const file = ab.file, W = ab.w, FH = ab.h;
+    const html = await (await fetch(file)).text();
+    const d = new DOMParser().parseFromString(html, 'text/html');
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:absolute;left:0;top:0;width:' + W + 'px';
+    const st = d.querySelector('helmet style'); if (st) holder.appendChild(st.cloneNode(true));
+    holder.appendChild(d.querySelector('x-dc > div').cloneNode(true));
+    document.body.appendChild(holder);
+    const el = holder.lastElementChild, base = el.getBoundingClientRect();
+    const name = file.replace('.dc.html', '');
+    const isDark = /Dark$/.test(name);
+    const rel = (n) => { const r = n.getBoundingClientRect(); return { t: r.top-base.top, b: r.bottom-base.top, l: r.left-base.left, r: r.right-base.left, w: r.width, h: r.height }; };
+
+    /* ── 1. inset 的使用點（不是 helper 定義）── */
+    for (const n of el.querySelectorAll('*')) {
+      const cs = getComputedStyle(n);
+      if (!cs.boxShadow.includes('inset')) continue;
+      const role = n.getAttribute('data-role') || '';
+      R.inset.push(role);
+      if (!INSET_OK.includes(role)) R.insetBad.push(name + ':' + (role || n.tagName.toLowerCase() + '.' + (n.className||'')) + ' ' + cs.boxShadow.slice(0, 48));
+    }
+
+    /* ── 2. 陶土：只算「最外層」的陶土區塊 ── */
+    const ctaEls = [...el.querySelectorAll('[data-cta]')];
+    R.cta[name] = ctaEls.filter(n => !n.parentElement.closest('[data-cta]')).length;
+
+    /* ── 3. 母題指紋 ── */
+    const ms = new Set([...el.querySelectorAll('[data-m]')].map(n => n.getAttribute('data-m')));
+    R.motifs[name] = [...ms];
+    if (isDark) for (const m of ms) R.darkMotifs[m] = (R.darkMotifs[m] || 0) + 1;
+
+    /* ── 4. H1 cap-height 起跑線 ── */
+    for (const hEl of el.querySelectorAll('h1')) {
+      const cs = getComputedStyle(hEl), fs = parseFloat(cs.fontSize), lh = parseFloat(cs.lineHeight) || fs*1.2;
+      const capTop = rel(hEl).t + (lh - fs)/2 + fs*(1-CAP);
+      R.h1.push({ file: name, y: Math.round(capTop*10)/10, fs, rail: !!el.querySelector('[data-rail]'),
+                  cap: hEl.getAttribute('data-cap') || '' });
+    }
+    for (const cEl of el.querySelectorAll('[data-cap]:not(h1)')) {
+      const cs = getComputedStyle(cEl), fs = parseFloat(cs.fontSize), lh = parseFloat(cs.lineHeight) || fs*1.2;
+      R.h1.push({ file: name, y: Math.round((rel(cEl).t + (lh-fs)/2 + fs*(1-CAP))*10)/10, fs, rail: false, cap: cEl.getAttribute('data-cap') });
+    }
+
+    /* ── 5. 呼吸帶：分欄，而且只算「有字或有圖」的帶
+           （底色會把整欄塗滿，全幅量測因此看不見欄內空白）── */
+    const cols = [...el.querySelectorAll('[data-col]')];
+    const regions = cols.length ? cols : [el];
+    for (const region of regions) {
+      const rr = rel(region), key = region.getAttribute('data-col') || 'frame';
+      /* 算「內容」的規則：字、圖，加上「空的元件本身」——
+         六個還沒填數字的驗證碼格是內容，不是空白；
+         但容器的底色不算，否則整欄被塗滿就量不到欄內的空白（第 2 輪就是這樣被遮蔽的）。
+         所以只認「葉子級」的表面：它自己是宣告過的表面，而且裡面沒有別的內容。 */
+      const spans = [];
+      const walk = (root) => {
+        const it = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        for (let t = it.nextNode(); t; t = it.nextNode()) {
+          if (!t.textContent.trim()) continue;
+          const rg = document.createRange(); rg.selectNodeContents(t);
+          for (const r of rg.getClientRects()) if (r.height > 0) spans.push([r.top-base.top, r.bottom-base.top]);
+        }
+        for (const n of root.querySelectorAll('img,svg')) { const r = rel(n); if (r.h > 1) spans.push([r.t, r.b]); }
+        for (const n of root.querySelectorAll('[data-s],[data-err]')) {
+          if (n.querySelector('img,svg,[data-s],[data-err]')) continue;
+          if ((n.textContent || '').trim()) continue;
+          const r = rel(n); if (r.h > 0) spans.push([r.t, r.b]);
+        }
+      };
+      walk(region);
+      if (!spans.length) continue;
+      const top = Math.max(0, Math.round(rr.t)), bot = Math.min(FH, Math.round(rr.b));
+      const cov = new Uint8Array(FH + 2);
+      let first = 1e9, last = -1;
+      for (const [a, b] of spans) {
+        first = Math.min(first, a); last = Math.max(last, b);
+        for (let y = Math.max(top, Math.floor(a)); y < Math.min(bot, Math.ceil(b)); y++) cov[y] = 1;
+      }
+      first = Math.max(top, Math.floor(first)); last = Math.min(bot, Math.ceil(last));
+      let best = 0, at = 0, cur = 0, cs2 = 0;
+      for (let y = first; y < last; y++) { if (!cov[y]) { if (!cur) cs2 = y; cur++; if (cur > best) { best = cur; at = cs2; } } else cur = 0; }
+      R.voids.push({ file: name, col: key, interior: best, at, lead: first - top, trail: bot - last, pad: /IPad/.test(name) });
+    }
+
+    /* ── 6. 裁切 ── */
+    let lastPaint = 0;
+    for (const n of el.querySelectorAll('*')) {
+      const r = rel(n), cs = getComputedStyle(n);
+      const paints = cs.backgroundColor !== 'rgba(0, 0, 0, 0)' || cs.borderBottomWidth !== '0px' || n.tagName === 'IMG' || n.tagName.toLowerCase() === 'svg' || [...n.childNodes].some(c => c.nodeType === 3 && c.textContent.trim());
+      if (paints && r.h > 0 && r.w > 0) lastPaint = Math.max(lastPaint, r.b);
+    }
+    R.boards.push({ file: name, lastPaint: Math.round(lastPaint), h: FH, clipped: Math.max(0, Math.round(lastPaint) - FH) });
+
+    /* ── 7. 錯誤幾何 vs 可按幾何 ── */
+    const lips = [...el.querySelectorAll('[data-s="raise"]')].map(rel);
+    for (const e of el.querySelectorAll('[data-err]')) {
+      const er = rel(e);
+      let min = 1e9, hit = false;
+      for (const lp of lips) {
+        const lipBand = { t: lp.b - 3, b: lp.b, l: lp.l, r: lp.r };
+        const xo = Math.min(er.r, lipBand.r) - Math.max(er.l, lipBand.l);
+        if (xo <= 0) continue;
+        const yo = Math.min(er.b, lipBand.b) - Math.max(er.t, lipBand.t);
+        if (yo > 0) hit = true;
+        min = Math.min(min, yo > 0 ? 0 : Math.min(Math.abs(er.t - lipBand.b), Math.abs(lipBand.t - er.b)));
+      }
+      R.err.push({ file: name, h: Math.round(er.h*10)/10, gap: min === 1e9 ? 999 : Math.round(min*10)/10, overlap: hit });
+    }
+
+    /* ── 8. 節點級對比（含「有沒有字壓在照片上」）── */
+    const bgOf = (n) => {
+      let cur = n, acc = [0,0,0,1], got = false;
+      while (cur && cur !== document.body) {
+        const c = hexToRgb(getComputedStyle(cur).backgroundColor);
+        if (c && c[3] > 0) { acc = got ? over(acc, c) : c; got = true; if (c[3] === 1) return acc; }
+        cur = cur.parentElement;
+      }
+      return got ? acc : [255,255,255,1];
+    };
+    const photoRects = [...el.querySelectorAll('img')].map(rel);
+    const it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let t = it.nextNode(); t; t = it.nextNode()) {
+      const txt = t.textContent.trim();
+      if (!txt) continue;
+      const p = t.parentElement, cs = getComputedStyle(p);
+      const fg = hexToRgb(cs.color); if (!fg) continue;
+      const bg = bgOf(p);
+      const v = cr(fg[3] < 1 ? over(fg, bg) : fg, bg);
+      R.contrast.n++;
+      const rg = document.createRange(); rg.selectNodeContents(t);
+      const rects = [...rg.getClientRects()];
+      for (const rc of rects) {
+        const tr = { t: rc.top-base.top, b: rc.bottom-base.top, l: rc.left-base.left, r: rc.right-base.left };
+        for (const pr of photoRects) {
+          if (tr.l < pr.r && tr.r > pr.l && tr.t < pr.b && tr.b > pr.t) {
+            let opaque = false, cur = p;
+            while (cur && cur !== el) { const c = hexToRgb(getComputedStyle(cur).backgroundColor); if (c && c[3] === 1) { opaque = true; break; } cur = cur.parentElement; }
+            if (!opaque) R.contrast.overPhoto++;
+          }
+        }
+      }
+      if (v < R.contrast.min) { R.contrast.min = v; R.contrast.worst = name + ' 「' + txt.slice(0,14) + '」'; }
+      if (v < 7) R.contrast.fails.push(name + ' 「' + txt.slice(0,16) + '」 ' + v.toFixed(2));
+    }
+
+    /* ── 9. 孤兒斷行：以「一個文字區塊」為單位，不是以文字節點為單位 ——
+           <wbr> 會把一段 Email 切成好幾個文字節點，逐節點量就看不見整段的末行。 */
+    for (const blk of el.querySelectorAll('*')) {
+      if (getComputedStyle(blk).display === 'inline') continue;
+      if (!(blk.textContent || '').trim()) continue;
+      if ([...blk.querySelectorAll('*')].some((c) => (c.textContent || '').trim() && getComputedStyle(c).display !== 'inline')) continue;
+      const chars = [];
+      const it2 = document.createTreeWalker(blk, NodeFilter.SHOW_TEXT);
+      for (let t = it2.nextNode(); t; t = it2.nextNode()) {
+        for (let i = 0; i < t.length; i++) {
+          if (!t.textContent[i].trim()) continue;
+          const rg2 = document.createRange(); rg2.setStart(t, i); rg2.setEnd(t, i + 1);
+          const rl = rg2.getClientRects()[0];
+          if (rl) chars.push([Math.round(rl.top), t.textContent[i]]);
+        }
+      }
+      if (chars.length < 4) continue;
+      const tops = [...new Set(chars.map((c) => c[0]))];
+      if (tops.length < 2) continue;
+      const lastTop = Math.max(...tops);
+      const lastLine = chars.filter((c) => c[0] === lastTop);
+      const cjk = /[　-鿿＀-￯]/.test(lastLine.map((c) => c[1]).join(''));
+      if (lastLine.length < (cjk ? 2 : 3))
+        R.orphans.push(name + ' 「' + (blk.textContent || '').trim().slice(0, 20) + '」 末行 ' + lastLine.length + ' 字「' + lastLine.map((c) => c[1]).join('') + '」');
+    }
+
+    /* ── 10. 核准↔拒絕、底線連結命中盒（原 _tap2）── */
+    const aps = [...el.querySelectorAll('*')].filter(n => /^核准加入$/.test((n.textContent||'').trim()) && n.children.length === 1);
+    const rjs = [...el.querySelectorAll('*')].filter(n => /^拒絕這個申請$/.test((n.textContent||'').trim()) && !n.children.length);
+    for (let i = 0; i < Math.min(aps.length, rjs.length); i++) {
+      const a = rel(aps[i]), r = rel(rjs[i]);
+      R.approve.push({ file: name, gap: Math.round(r.t - a.b), rejectW: Math.round(r.w), approveW: Math.round(a.w) });
+    }
+    for (const n of el.querySelectorAll('*')) {
+      const cs = getComputedStyle(n), r = rel(n);
+      if (cs.textDecorationLine.includes('underline') && r.h > 0 && r.h < 44 && r.w > 24 && (n.textContent||'').trim())
+        R.taps.push(name + ':' + Math.round(r.h) + 'px 「' + (n.textContent||'').trim().slice(0,14) + '」');
+    }
+
+    holder.remove();
+  }
+
+  R.contrast.min = Math.round(R.contrast.min*100)/100;
+  document.getElementById('out').textContent = 'JSON>>' + JSON.stringify(R) + '<<JSON';
+})();
+</script>
+</body>
