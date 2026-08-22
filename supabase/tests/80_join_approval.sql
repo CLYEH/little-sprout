@@ -942,11 +942,16 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- 11. per-RPC 授權（LS-15 的慣例）：五支 RPC 只有 authenticated 可執行
+-- 11. per-RPC 授權（LS-15 的慣例）：七支 RPC 只有 authenticated 可執行
 --
 -- 依據：本票逐支的 revoke/grant。anon 那一側同時也受 LS-15 的全域 default
 -- privileges 保護，所以「anon 不能執行」這條在拿掉本票的 revoke 之後仍會通過
 -- （已實測，見 PR 的 mutation 對照表）——真正只由本票保證的是 authenticated 那一側。
+--
+-- 這個清單就是「新增 public RPC 必須登記」的那道 gate：60_default_privileges.sql
+-- 的列舉式檢查只涵蓋 schema private 的函式（第 3 段）與新建函式的預設授權（第 5 段），
+-- 不會逐支列舉 public 的 RPC。漏掉一支的話它會因為 LS-15 的全域 default privileges
+-- 而對 authenticated 不可執行——呼叫端會炸，但沒有任何測試會指出「你忘了 grant」。
 -- ---------------------------------------------------------------------------
 do $$
 declare
@@ -957,7 +962,9 @@ begin
     'public.request_join(text)',
     'public.approve_join(uuid)',
     'public.reject_join(uuid)',
-    'public.withdraw_join(uuid)'
+    'public.withdraw_join(uuid)',
+    'public.list_join_requests()',
+    'public.get_my_join_request()'
   ] loop
     if has_function_privilege('anon', v_fn, 'execute') then
       raise exception 'FAIL：anon 可以執行 %（未登入者能操作家庭成員資格）', v_fn;
@@ -978,8 +985,250 @@ begin
       raise exception 'FAIL：% 不是 SECURITY DEFINER 或沒有 set search_path = ''''', v_fn;
     end if;
   end loop;
-  raise notice 'ok：五支 RPC 都是 SECURITY DEFINER + search_path 收斂，且只有 authenticated 可執行';
+  raise notice 'ok：七支 RPC 都是 SECURITY DEFINER + search_path 收斂，且只有 authenticated 可執行';
 end;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- 12. 兩支唯讀 RPC：審核清單看得到申請人姓名、等待畫面看得到家庭名稱
+--
+-- 依據：本票的 list_join_requests／get_my_join_request。這兩支是刻意開出來的
+-- 「跨界讀取」窗口（申請人與家庭在核准前沒有成員關係，RLS 兩邊互相看不到），
+-- 所以測試的重點不只是「看得到」，更是「只看得到該看的那幾欄、只有該看的人看得到」。
+--
+-- 場景重建：A 家在第 9 段被 owner 關掉審核，這裡先開回來（順帶驗開關可以雙向切），
+-- 讓乙重新提出一筆 pending 申請；另外以 postgres 身分在 B 家也放一筆 pending，
+-- 用來驗「多家庭的 owner 只看得到自家那筆」——沒有這一筆的話，
+-- 「B 家 owner 看不到 A 家申請」也可能只是因為函式對誰都回空集合。
+-- ---------------------------------------------------------------------------
+select set_config('request.jwt.claims',
+  '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare
+  v_n int;
+begin
+  update public.families set require_approval = true
+   where id = 'fa000000-0000-4000-8000-000000000001';
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then
+    raise exception 'FAIL：owner 應能把審核開關切回 true，實際影響 % 列', v_n;
+  end if;
+  raise notice 'ok：owner 把 A 家的審核開關切回 true（開關可雙向切）';
+end;
+$$;
+reset role;
+
+select set_config('request.jwt.claims',
+  '{"sub":"e0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare
+  r record;
+begin
+  select * into r from public.request_join(current_setting('ls33.code_dup'));
+  if r.status <> 'pending' then
+    raise exception 'FAIL：審核開回來之後應該回 pending，實際 %', r.status;
+  end if;
+  perform set_config('ls33.req_yi3', r.request_id::text, true);
+end;
+$$;
+reset role;
+
+-- B 家的待審申請（postgres 身分直接建，這是 setup 不是被測路徑）。
+-- 順便把乙那筆 pending 的 created_at 往前挪一小時：整個測試檔在同一個交易裡，
+-- now() 對每一列都相同，不動時間的話「pending 優先」這條規則會和「最近一筆」
+-- 這條規則永遠給出相同答案，等於沒驗到。挪完之後乙有一筆「較舊的 pending」
+-- 與兩筆「較新的已處理」，只有 pending 優先的規則才會回傳前者。
+insert into public.join_requests (id, family_id, invite_id, applicant_id, status) values
+  ('9a000000-0000-4000-8000-000000000012', 'fb000000-0000-4000-8000-000000000001',
+   '1b000000-0000-4000-8000-000000000001', 'e0000000-0000-4000-8000-000000000003', 'pending');
+
+update public.join_requests set created_at = now() - interval '1 hour'
+ where id = current_setting('ls33.req_yi3')::uuid;
+
+-- 正向：A 家 owner 看得到申請人的顯示名稱與邀請碼角色
+select set_config('request.jwt.claims',
+  '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare
+  r record;
+  v_n int;
+begin
+  select count(*) into v_n from public.list_join_requests();
+  if v_n <> 1 then
+    raise exception 'FAIL：A 家 owner 應看到 1 筆待審申請，實際 % 筆（B 家那筆不該出現）', v_n;
+  end if;
+
+  select * into r from public.list_join_requests();
+  if r.request_id <> current_setting('ls33.req_yi3')::uuid then
+    raise exception 'FAIL：待審清單回的不是乙那筆申請';
+  end if;
+  if r.family_id <> 'fa000000-0000-4000-8000-000000000001'::uuid then
+    raise exception 'FAIL：待審清單的 family_id 不對（%）', r.family_id;
+  end if;
+  if r.applicant_id <> 'e0000000-0000-4000-8000-000000000002'::uuid then
+    raise exception 'FAIL：待審清單的 applicant_id 不對（%）', r.applicant_id;
+  end if;
+  if r.display_name is distinct from '申請人乙' then
+    raise exception 'FAIL：owner 看不到申請人的顯示名稱（實際 %）—— 審核畫面只剩一串 uuid', r.display_name;
+  end if;
+  if r.role is distinct from 'member' then
+    raise exception 'FAIL：待審清單的 role 應取自邀請碼（member），實際 %', r.role;
+  end if;
+  if r.created_at is null then
+    raise exception 'FAIL：待審清單沒有申請時間，UI 排不出「等最久的在前面」';
+  end if;
+  raise notice 'ok：A 家 owner 的待審清單看得到申請人姓名（%）與邀請碼角色（%）', r.display_name, r.role;
+end;
+$$;
+reset role;
+
+-- 正向對照：B 家 owner 看得到的是 B 家那筆，不是 A 家那筆
+select set_config('request.jwt.claims',
+  '{"sub":"b0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare
+  r record;
+  v_n int;
+begin
+  select count(*) into v_n from public.list_join_requests();
+  if v_n <> 1 then
+    raise exception 'FAIL：B 家 owner 應看到自家那 1 筆，實際 % 筆', v_n;
+  end if;
+  select * into r from public.list_join_requests();
+  if r.family_id <> 'fb000000-0000-4000-8000-000000000001'::uuid then
+    raise exception 'FAIL：B 家 owner 竟然拿到別家的申請（family_id=%）', r.family_id;
+  end if;
+  raise notice 'ok 正向對照：B 家 owner 只看得到 B 家那筆（函式不是對誰都回空集合）';
+end;
+$$;
+reset role;
+
+-- 負向：不是 owner 的人一律拿到空集合（含申請人本人與同家庭的 member／viewer）
+do $$
+declare
+  v_actor text;
+  v_n int;
+begin
+  foreach v_actor in array array[
+    'a0000000-0000-4000-8000-000000000002',  -- A 家 member
+    'a0000000-0000-4000-8000-000000000003',  -- A 家 viewer
+    'e0000000-0000-4000-8000-000000000001',  -- A 家 member（本檔第 6 段核准進來的甲）
+    'e0000000-0000-4000-8000-000000000003',  -- A 家 viewer（第 9 段直接入家的丙）
+    'e0000000-0000-4000-8000-000000000002',  -- 申請人本人
+    'e0000000-0000-4000-8000-000000000004'   -- 完全的外人（丁）
+  ] loop
+    perform set_config('request.jwt.claims',
+      format('{"sub":"%s","role":"authenticated"}', v_actor), true);
+    set local role authenticated;
+    select count(*) into v_n from public.list_join_requests();
+    reset role;
+    if v_n <> 0 then
+      raise exception
+        'FAIL：% 不是任何家庭的 owner，卻從 list_join_requests 拿到 % 筆申請（含申請人的姓名與頭像）',
+        v_actor, v_n;
+    end if;
+  end loop;
+  raise notice 'ok：非 owner 一律拿到空集合（member／viewer／申請人本人／外人）';
+end;
+$$;
+reset role;
+
+-- 正向：申請人的等待畫面拿得到家庭名稱，且「pending 優先」勝過「最近一筆」
+select set_config('request.jwt.claims',
+  '{"sub":"e0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare
+  r record;
+  v_n int;
+begin
+  select count(*) into v_n from public.get_my_join_request();
+  if v_n <> 1 then
+    raise exception 'FAIL：get_my_join_request 應回傳 1 列，實際 % 列', v_n;
+  end if;
+
+  select * into r from public.get_my_join_request();
+  -- 先驗「這是不是我的申請」再驗「挑對了哪一筆」：兩種壞法的診斷訊息要分得開。
+  -- （mutation M14 拿掉 applicant_id 過濾時，乙會拿到丙對 B 家那筆——若只有下面
+  --  那條 request_id 斷言，測試雖然一樣會紅，訊息卻會誤指「pending 優先沒生效」。）
+  if r.family_id <> 'fa000000-0000-4000-8000-000000000001'::uuid then
+    raise exception
+      'FAIL：get_my_join_request 回了別人的申請（family_id=%）—— applicant_id = auth.uid() 的過濾沒有生效',
+      r.family_id;
+  end if;
+  if r.request_id <> current_setting('ls33.req_yi3')::uuid then
+    raise exception 'FAIL：回的不是待審那筆 —— 乙另外兩筆（rejected／withdrawn）的 created_at 比較新，「pending 優先」沒有生效';
+  end if;
+  if r.status <> 'pending' then
+    raise exception 'FAIL：狀態應為 pending，實際 %', r.status;
+  end if;
+  if r.family_name is distinct from 'A 家' then
+    raise exception 'FAIL：申請人拿不到家庭名稱（實際 %）—— 等待畫面寫不出「等待〈家庭名〉核准」', r.family_name;
+  end if;
+  if r.resolved_at is not null then
+    raise exception 'FAIL：pending 的申請不該有 resolved_at';
+  end if;
+  raise notice 'ok：申請人看得到「等待 % 核准」，且 pending 優先於較新的已處理申請', r.family_name;
+end;
+$$;
+reset role;
+
+-- 已處理之後的行為要明確：仍然回傳最近一筆，狀態照實回（UI 才能顯示「已被拒絕」）
+select set_config('request.jwt.claims',
+  '{"sub":"e0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare
+  r record;
+begin
+  select * into r from public.get_my_join_request();
+  if r.status <> 'approved' then
+    raise exception 'FAIL：甲的申請已核准，get_my_join_request 應回 approved，實際 %', r.status;
+  end if;
+  if r.resolved_at is null then
+    raise exception 'FAIL：已處理的申請應有 resolved_at';
+  end if;
+  if r.family_name is distinct from 'A 家' then
+    raise exception 'FAIL：已處理的申請也該回得出家庭名稱，實際 %', r.family_name;
+  end if;
+  raise notice 'ok：已核准的申請仍回得到（status=approved），UI 不會突然變成空白畫面';
+end;
+$$;
+reset role;
+
+-- 負向：看不到別人的申請；從未申請過的人拿到空集合
+do $$
+declare
+  v_n int;
+  v_fam uuid;
+begin
+  -- 丁從未申請過任何家庭 → 0 列（同時證明這支函式不是「回全表第一筆」）
+  perform set_config('request.jwt.claims',
+    '{"sub":"e0000000-0000-4000-8000-000000000004","role":"authenticated"}', true);
+  set local role authenticated;
+  select count(*) into v_n from public.get_my_join_request();
+  reset role;
+  if v_n <> 0 then
+    raise exception 'FAIL：從未申請過的人竟然拿到 % 列別人的申請', v_n;
+  end if;
+
+  -- 丙只申請過 B 家 → 只能拿到 B 家那筆，拿不到乙對 A 家那筆
+  perform set_config('request.jwt.claims',
+    '{"sub":"e0000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+  set local role authenticated;
+  select family_id into v_fam from public.get_my_join_request();
+  reset role;
+  if v_fam is distinct from 'fb000000-0000-4000-8000-000000000001'::uuid then
+    raise exception 'FAIL：丙應只拿得到自己對 B 家的申請，實際 family_id=%', v_fam;
+  end if;
+
+  raise notice 'ok：get_my_join_request 只回呼叫者本人的申請（沒申請過就是空集合）';
+end;
+$$;
+reset role;
 
 rollback;

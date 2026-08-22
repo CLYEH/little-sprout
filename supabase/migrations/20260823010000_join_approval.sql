@@ -522,3 +522,106 @@ $$;
 
 revoke execute on function public.withdraw_join(uuid) from public, anon;
 grant execute on function public.withdraw_join(uuid) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 8. 兩支唯讀 RPC：審核畫面與等待畫面需要的「跨界」資料
+--
+-- 為什麼需要它們：加入申請在成立的那一刻，申請人與該家庭還沒有任何成員關係，
+-- 而 RLS 的可見範圍正是以成員關係畫的。於是兩邊都看不到對方最基本的資訊——
+--   - owner 的審核清單只有申請人的 uuid（profiles_select 只讓同家庭成員互看），
+--     等於要 owner 對著一串 uuid 決定要不要讓人進家門；
+--   - 申請人的等待畫面只有 family_id（families_select 同理），寫不出「等待〈家庭名〉核准」。
+--
+-- 採「窄 RPC」而不是放寬 profiles_select／families_select 的 policy（orchestrator 裁定）：
+-- 放寬 policy 會讓「所有欄位、所有查詢路徑」都跟著打開，而這裡只需要
+-- display_name／avatar_url 與家庭 name 這三個欄位、只在有 pending 申請這個前提下。
+-- definer 函式把暴露面收斂成「這兩支函式的回傳欄位」，是可以逐欄審查的範圍。
+--
+-- 兩支都是唯讀（language sql + stable），授權寫在查詢的 WHERE／JOIN 裡：
+--   - list_join_requests：以 inner join family_members(role='owner') 限定呼叫者是該家 owner
+--   - get_my_join_request：以 applicant_id = auth.uid() 限定只看得到自己那筆
+-- 因此未登入（auth.uid() 為 NULL）自然得到 0 列，不需要另外 raise——這與前面五支
+-- 會寫入資料的 RPC 不同：那些若在 uid 為 NULL 時往下走會寫出沒有主體的資料列，
+-- 所以必須當場擋；這兩支不會寫任何東西，空集合就是正確答案。
+-- ---------------------------------------------------------------------------
+
+-- list_join_requests：owner 的待審清單（含申請人的顯示名稱與頭像）。
+--
+-- 不帶 family_id 參數：一個帳號可能是多個家庭的 owner（PLAN §1），一次拿回所有
+-- 待審申請才做得出「有 N 件待審」這種跨家庭的提示；回傳欄位帶 family_id，
+-- UI 要分家庭顯示自己分組即可。
+--
+-- profiles 只投影 display_name 與 avatar_url 兩欄——這是這支函式對「非同家庭的人」
+-- 開放的全部個人資料，逐欄列舉讓它可以被審查，日後 profiles 加欄位也不會被順帶帶出去。
+-- applicant_id 照樣回傳：那本來就在申請人自己那一列，owner 經 join_requests_select
+-- 早就看得到，不是這支函式新增的暴露。
+--
+-- 排序用最舊的在前：這是一條審核佇列，等最久的人應該排在最上面。
+create or replace function public.list_join_requests()
+returns table (
+  request_id uuid,
+  family_id uuid,
+  applicant_id uuid,
+  display_name text,
+  avatar_url text,
+  role text,
+  created_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select r.id, r.family_id, r.applicant_id, p.display_name, p.avatar_url,
+         i.role::text, r.created_at
+    from public.join_requests r
+    join public.invites i on i.id = r.invite_id
+    join public.profiles p on p.id = r.applicant_id
+    -- 這個 join 就是授權檢查本身：呼叫者不是該家庭的 owner 就沒有對應的成員列，
+    -- 那一筆申請也就不會出現在結果裡。
+    join public.family_members m
+      on m.family_id = r.family_id
+     and m.user_id = auth.uid()
+     and m.role = 'owner'
+   where r.status = 'pending'
+   order by r.created_at, r.id;
+$$;
+
+revoke execute on function public.list_join_requests() from public, anon;
+grant execute on function public.list_join_requests() to authenticated;
+
+-- get_my_join_request：申請人自己的那一筆申請（含家庭名稱）。
+--
+-- 只投影 families.name 一欄：等待畫面要寫「等待〈家庭名〉核准」，除此之外
+-- 申請人在被核准前不該看到這個家庭的任何東西。
+--
+-- 挑哪一筆（回傳最多一列，這條規則要明確，否則 UI 的行為會隨資料而飄）：
+--   1. 有 pending 就一定回 pending 那筆——這個畫面的用途是「我在等什麼」，
+--      待審永遠比歷史重要（一個人可能同時對 A 家有待審、剛被 B 家拒絕）。
+--   2. 都沒有 pending 才回最近一筆已處理的，狀態照實回（approved／rejected／withdrawn），
+--      UI 才有辦法顯示「你的申請已被拒絕」而不是安靜地變成空白畫面。
+--   3. 從未申請過 → 0 列。
+create or replace function public.get_my_join_request()
+returns table (
+  request_id uuid,
+  family_id uuid,
+  family_name text,
+  status text,
+  created_at timestamptz,
+  resolved_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select r.id, r.family_id, f.name, r.status::text, r.created_at, r.resolved_at
+    from public.join_requests r
+    join public.families f on f.id = r.family_id
+   where r.applicant_id = auth.uid()
+   order by (r.status = 'pending') desc, r.created_at desc, r.id desc
+   limit 1;
+$$;
+
+revoke execute on function public.get_my_join_request() from public, anon;
+grant execute on function public.get_my_join_request() to authenticated;
