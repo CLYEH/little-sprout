@@ -55,7 +55,11 @@ elif docker exec "$container" true >/dev/null 2>&1; then
       psql -U "$db_user" -d "$db_name" -v ON_ERROR_STOP=1 --no-psqlrc -q < "$1"
   }
 else
-  echo "✗ 找不到 psql，也連不到 DB container（$container）。請先執行 supabase start。" >&2
+  # ${container} 的大括號是必要的，不是風格：macOS 內建的 bash 3.2 會把緊接在後面的
+  # 全形括號「）」的位元組當成變數名稱的一部分，`$container）` 於是變成查一個不存在的
+  # 變數，在 set -u 下直接以「unbound variable」中止——正好發生在「連不到 DB、
+  # 要印出診斷訊息」的那條路徑上，把真正的失敗原因蓋掉（LS-34 開發時實際踩到）。
+  echo "✗ 找不到 psql，也連不到 DB container（${container}）。請先執行 supabase start。" >&2
   exit 1
 fi
 
@@ -130,8 +134,12 @@ owner_guard_case() {  # $1=場景名 $2=S1 檔名 $3=S2 檔名
   rc1="$(cat "$s1_out.rc")"; rc2="$(cat "$s2_out.rc")"
   sed 's/^/    S1 /' "$s1_out"
   sed 's/^/    S2 /' "$s2_out"
-  [ "$rc1" = 0 ] || { echo "  ✗ S1 非 0 結束（rc=$rc1）" >&2; failed=1; }
-  [ "$rc2" = 0 ] || { echo "  ✗ S2 非 0 結束（rc=$rc2）" >&2; failed=1; }
+  # ${rc1}／${rc2} 的大括號是必要的，不是風格：macOS 內建的 bash 3.2 會把緊接在後面的
+  # 全形括號「）」的位元組當成變數名稱的一部分，`$rc1）` 於是變成查一個不存在的
+  # 變數，在 set -u 下直接以「unbound variable」中止——正好發生在「測試失敗、
+  # 要印出診斷訊息」的那條路徑上，把真正的失敗原因蓋掉（LS-34 開發時實際踩到）。
+  [ "$rc1" = 0 ] || { echo "  ✗ S1 非 0 結束（rc=${rc1}）" >&2; failed=1; }
+  [ "$rc2" = 0 ] || { echo "  ✗ S2 非 0 結束（rc=${rc2}）" >&2; failed=1; }
 
   if ! run_sql "$cc_dir/owner_guard_verify.sql" > "$tmp/owner_guard_verify.out" 2>&1; then
     sed 's/^/    /' "$tmp/owner_guard_verify.out" >&2; failed=1
@@ -146,12 +154,78 @@ owner_guard_case() {  # $1=場景名 $2=S1 檔名 $3=S2 檔名
 owner_guard_case "同時降級兩位 owner" owner_guard_s1_demote.sql owner_guard_s2_demote.sql
 owner_guard_case "同時移除兩位 owner" owner_guard_s1_delete.sql owner_guard_s2_delete.sql
 
+# ---------------------------------------------------------------------------
+# LS-33 併發測試：邀請碼名額競態、同一筆申請同時核准與拒絕
+#
+# 作法與上面的 owner_guard_case 相同（兩個真的並行的 psql，用時間差對齊時序），
+# 差別在於這兩個場景的資料與最終狀態斷言各自不同，所以把 setup/s1/s2/verify
+# 四個檔案參數化。owner_guard_case 維持原樣不動——它的 setup 與 verify 是寫死的。
+# ---------------------------------------------------------------------------
+race_case() {  # $1=場景名 $2=setup $3=s1 $4=s2 $5=verify
+  local label="$1" setup="$cc_dir/$2" s1="$cc_dir/$3" s2="$cc_dir/$4" verify="$cc_dir/$5"
+  local setup_out="$tmp/$2.out" s1_out="$tmp/$3.out" s2_out="$tmp/$4.out" verify_out="$tmp/$5.out"
+  echo "→ 併發：$label"
+
+  if ! run_sql "$setup" > "$setup_out" 2>&1; then
+    echo "  ✗ 併發場景資料建立失敗：" >&2; sed 's/^/    /' "$setup_out" >&2; exit 1
+  fi
+  sed 's/^/    setup /' "$setup_out"
+
+  run_sql_bg "$s1" "$s1_out"
+  run_sql_bg "$s2" "$s2_out"
+  wait
+
+  local rc1 rc2 failed=0
+  rc1="$(cat "$s1_out.rc")"; rc2="$(cat "$s2_out.rc")"
+  sed 's/^/    S1 /' "$s1_out"
+  sed 's/^/    S2 /' "$s2_out"
+  # ${rc1} 的大括號是必要的，不是風格：macOS 內建的 bash 3.2 會把緊接在後面的
+  # 全形括號「）」的位元組當成變數名稱的一部分，`$rc1）` 於是變成查一個不存在的
+  # 變數，在 set -u 下直接以「unbound variable」中止——正好發生在「測試失敗、
+  # 要印出診斷訊息」的那條路徑上，把真正的失敗原因蓋掉（本票開發時實際踩到）。
+  [ "$rc1" = 0 ] || { echo "  ✗ S1 非 0 結束（rc=${rc1}）" >&2; failed=1; }
+  [ "$rc2" = 0 ] || { echo "  ✗ S2 非 0 結束（rc=${rc2}）" >&2; failed=1; }
+
+  if ! run_sql "$verify" > "$verify_out" 2>&1; then
+    sed 's/^/    /' "$verify_out" >&2; failed=1
+  else
+    sed 's/^/    /' "$verify_out"
+  fi
+
+  [ "$failed" = 0 ] || { echo "  ✗ 併發：$label 失敗" >&2; exit 1; }
+  echo "  ✓ 併發：$label"
+}
+
+race_case "兩人同搶邀請碼最後一個名額" \
+  join_race_setup.sql join_race_s1.sql join_race_s2.sql join_race_verify.sql
+
+# 核准／拒絕的競態要跑兩個方向：先動的那一邊反正會在自己的 UPDATE 上取得列鎖，
+# 所以單一方向只證明得了「後動的那支 RPC」有鎖。兩個方向合起來才涵蓋
+# approve_join 與 reject_join 各自的 `for update`（mutation test 逼出來的結論：
+# 只有方向 A 時，拿掉 approve_join 的鎖，整組測試仍然全綠）。
+race_case "同一筆申請：核准先動，拒絕必須被擋下" \
+  approve_reject_race_setup.sql approve_reject_race_s1_approve.sql \
+  approve_reject_race_s2_reject.sql approve_reject_race_verify_approved.sql
+race_case "同一筆申請：拒絕先動，核准必須被擋下" \
+  approve_reject_race_setup.sql approve_reject_race_s1_reject.sql \
+  approve_reject_race_s2_approve.sql approve_reject_race_verify_rejected.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
-delete from public.families where id = 'fd000000-0000-4000-8000-000000000001';
+delete from public.families where id in (
+  'fd000000-0000-4000-8000-000000000001',
+  'fe000000-0000-4000-8000-000000000001',
+  'ff000000-0000-4000-8000-000000000001'
+);
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
-  'd0000000-0000-4000-8000-000000000002'
+  'd0000000-0000-4000-8000-000000000002',
+  'ea000000-0000-4000-8000-000000000001',
+  'ea000000-0000-4000-8000-000000000002',
+  'ea000000-0000-4000-8000-000000000003',
+  'eb000000-0000-4000-8000-000000000001',
+  'eb000000-0000-4000-8000-000000000002',
+  'eb000000-0000-4000-8000-000000000003'
 );
 SQL
 run_sql "$cleanup" > /dev/null
@@ -165,8 +239,8 @@ if [ -f "$perf_out" ]; then
     # 連線通道與 server 版本一起記下來：證據要能自己說明它是在哪裡跑出來的
     echo "# 連線：$channel"
     echo "# Server：$(printf 'select version();' > "$tmp/ver.sql"; run_sql "$tmp/ver.sql" 2>/dev/null | sed -n '3p' | sed 's/^ *//')"
-    echo "# 資料量：public.media 5 萬列（家庭 fc000000-0000-4000-8000-000000000001）"
-    echo "# 判準：plan 不得出現 (SubPlan N) 形式的 qual 引用，且所有節點 loops=1"
+    echo "# 資料量：public.media 5 萬列、public.join_requests 2 千列（家庭 fc000000-0000-4000-8000-000000000001）"
+    echo "# 判準：plan 不得出現 (SubPlan N) 形式的 qual 引用（hashed SubPlan 不命中此判準，不算違規），且所有節點 loops=1"
     echo
     cat "$perf_out"
   } > "$evidence_dir/explain_rls_plan.txt"
