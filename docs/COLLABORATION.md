@@ -14,6 +14,7 @@
 - **merge-reviewer subagent**：merge gate 的 code review（四維度，見 §4）。
 - **qa subagent**：在 `test` branch 上依驗收條件驗收，UI 票必做視覺驗收（模擬器實際渲染，優先用 mobile-mcp，備援 `xcrun simctl` 截圖）。
 - **dead-code-sweeper subagent**：feature 收尾時巡檢該 feature 引入的死碼與殘留物（只報告不刪改）。
+- **visual-reviewer subagent**：對抗性視覺審查。**任何設計稿在送 orchestrator／使用者核可之前必須先過它**——以極嚴視覺標準獵殺 AI slop 與模板感，預設 REQUEST_CHANGES，設計須自證三個記憶點才能通過。只審查不動檔。
 
 **Agent model 政策**（agent 定義檔的 `model:` 為預設；orchestrator 派工時得以 Agent 工具的 `model` 參數覆寫升級）：
 
@@ -24,6 +25,7 @@
 | merge-reviewer | opus | 預設即最高——review 是安全網；純文件 diff 可降 sonnet |
 | qa | sonnet | 驗收含併發時序或安全（RLS）判斷時 |
 | dead-code-sweeper | sonnet | 大型 feature 批次或跨模組重構後的巡檢 |
+| visual-reviewer | opus | 預設即最高——視覺判斷是對抗審查的核心能力 |
 
 降級同理：機械性小任務（批次改名、跑腳本回報）可用 haiku。升降級都要在派工訊息中註明理由。
 
@@ -79,7 +81,7 @@ Ticket：LS-<n>
 
 | Gate | 時點 | 內容 | 執行者 |
 |---|---|---|---|
-| **Design gate** | ticket 含 UI 時，開發前 | ui-designer 完成 .pen 畫面並經 orchestrator（重大畫面：使用者本人）核可 | ui-designer |
+| **Design gate** | ticket 含 UI 時，開發前 | ① ui-designer 完成 .pen 畫面 → ② **visual-reviewer 對抗審查（REQUEST_CHANGES 即退回重做，不送人核）** → ③ orchestrator（重大畫面：使用者本人）核可 | ui-designer + visual-reviewer |
 | **Commit gate** | pre-commit hook | 禁止直接 commit 保護分支；branch 命名格式；secrets 掃描；staged Swift 檔過 SwiftLint | 自動（`scripts/gates/commit-gate.sh`） |
 | **Commit-msg gate** | commit-msg hook | commit message 第一行格式（type + LS-n） | 自動（`scripts/gates/commit-msg-gate.sh`） |
 | **Push gate** | pre-push hook | unit tests（xcodebuild test，動態選模擬器）＋全 repo SwiftLint | 自動（`scripts/gates/push-gate.sh`） |
@@ -136,6 +138,7 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 | 破壞性 migration 需本人核可 | CI 偵測 DROP／TRUNCATE／DISABLE RLS 等關鍵字（機械，LS-10 起限定 feature|fix|hotfix head 執行——promote PR body 不會自動携帶來源 PR 的 `DESTRUCTIVE-APPROVED` 標記，內容已在來源 feature PR 驗過）；`DESTRUCTIVE-APPROVED` 寫在 PR body，**agent 技術上寫得進去**——核可真實性靠規約禁止＋orchestrator 把關 | ⚠️ 混合 |
 | 安裝 extension／新 schema 函式必須顯式 grant | `supabase/tests/60_default_privileges.sql` 逐支列舉 schema `private` 的每一支函式＋對任意新 schema 建探針函式，證明 `harden_default_privileges.sql` 的全域 default privileges 收斂對任何新函式一律套用，不管它從哪個 schema／哪個 extension 冒出來；忘記替需要對外的 RPC 補 `grant execute` 只會讓該 RPC 直接呼叫失敗（fail loud、功能面立刻可見），不是安全外洩——真正的安全風險（忘記收斂）已由全域 revoke 機械保證（LS-10，來源 PR #17 review F2） | ✅（fail loud 設計） |
 | 新畫面必有 .pen 設計稿 | CI 掃 diff 新增行的 View 宣告＋驗 body `Design:` 欄（換行式 conformance 掃不到，LS-10 起限定 feature|fix|hotfix head 執行——promote／back-merge 的內容已在來源 feature PR 驗過，PR body 標記也不會隨 promote 携帶）；設計稿真偽由 orchestrator 核 | ⚠️ 混合 |
+| 設計稿須過 visual-reviewer 對抗審查才送人核 | 掛在 Design 狀態出口：ticket 須有 visual-reviewer APPROVE 記錄，orchestrator 轉換狀態時把關 | ⚠️ 人工（狀態機承載） |
 | project.yml ↔ .xcodeproj 同步（XcodeGen 雙來源） | CI：重跑 `xcodegen generate` 後 `git add -A -- LittleSprout.xcodeproj && git diff --cached --exit-code`（涵蓋 xcodegen 產生的全新 untracked 檔，LS-10 補上原本只比對已追蹤檔案的盲區；生成物 byte-identical，不 flaky；雙向漂移皆攔） | ✅ |
 | 雲端 DB 不得繞過 migration 直改 | supabase MCP 鎖 `read_only=true`（機械）；dashboard 路徑靠規約 | ⚠️ 混合 |
 | harness 檔 back-merge 到 test／development | 無機械 gate——orchestrator 在 LS ticket 驗收條件中列入並人工確認 | ⚠️ 人工 |
