@@ -34,8 +34,18 @@ $$;
 
 -- ---------------------------------------------------------------------------
 -- 2. sequences 的 default privileges（前一個 migration 沒涵蓋的洞）
+--
+-- 收回 anon/authenticated 之後，補一句把 service_role 的權限明確釘住（不是
+-- 「以防萬一」的裝飾）：PR #17 CI 的 db job 在官方 supabase CLI 本機開發映像上
+-- 實測到，那份映像的佈建根本沒有把 sequences 的 default 權限給 service_role
+-- （run 32566229308：60_ 的 service_role 正向對照撞 FAIL——雲端 vs 官方本機映像
+-- 對 sequences 的佈建不一樣，這是繼 rls_auto_enable 之後第二個「雲端有、官方
+-- 本機映像沒有」的落差）。與其讓測試的正向對照依賴一個會因環境而異的平台假設，
+-- 這裡直接由我們自己的 migration 保證 service_role 拿得到——測出來的行為只跟這行
+-- 有沒有下有關，不跟你在哪個環境測有關。
 -- ---------------------------------------------------------------------------
 alter default privileges in schema public revoke all on sequences from anon, authenticated;
+alter default privileges in schema public grant all on sequences to service_role;
 
 -- ---------------------------------------------------------------------------
 -- 3. functions 的 default privileges——採「per-RPC 顯式 grant」慣例
