@@ -121,6 +121,23 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+
+      # 前饋規則「改 project.yml 須重跑 xcodegen 一併 commit」的機械 gate（§7）；
+      # 生成物 byte-identical（LS-5 review 實證），不會 flaky。反向漂移（GUI 改
+      # .xcodeproj 沒回填 project.yml）同樣會被抓到。
+      - name: XcodeGen 漂移檢查（project.yml ↔ .xcodeproj）
+        run: |
+          if [ ! -f project.yml ]; then
+            echo "無 project.yml，略過"
+            exit 0
+          fi
+          brew install xcodegen
+          xcodegen generate
+          git diff --exit-code -- LittleSprout.xcodeproj || {
+            echo "::error::project.yml 與 LittleSprout.xcodeproj 不同步——改 project.yml 後須重跑 xcodegen generate 一併 commit；若是在 Xcode GUI 改了設定，請把改動搬回 project.yml"
+            exit 1
+          }
+
       - name: Build & Test
         run: |
           if ! ls -d ./*.xcodeproj >/dev/null 2>&1 && ! ls -d ./*.xcworkspace >/dev/null 2>&1; then
