@@ -38,7 +38,7 @@
 
 流向：`feature/* → development → test → main`。development→test 由 orchestrator 批次 promote；test→main 即 release（打 tag `vX.Y.Z`）。
 
-**GitHub 端強制**（三條保護分支皆已設定）：必須走 PR、required status checks `ci`＋`lint`＋`rules`、enforce_admins（admin 也不能繞）、禁 force-push 與刪除。
+**GitHub 端強制**（三條保護分支皆已設定）：必須走 PR、required status checks `ci`＋`lint`＋`rules`＋`db`、enforce_admins（admin 也不能繞）、禁 force-push 與刪除。
 
 **Worktree 規約（平行分工）**：
 - 位置 `.claude/worktrees/LS-<n>`（已 gitignore）。一張 ticket 一個 worktree 一條 branch。
@@ -91,6 +91,7 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 
 - Team key：`LS`（workspace `little-sprout-app`）。**Linear 是唯一的任務狀態來源**；每個狀態的離開就是一個 gate，由 orchestrator 執行轉換並在 ticket 留 comment 記錄 gate 證據。
 - MCP 設定在專案 `.mcp.json`；session 重啟後用 `/mcp` 完成 OAuth。
+- **開票結構**：Project＝epic；Milestone＝feature 群（同一 epic 底下相關的一批 issue）；Issue＝story，必須帶可驗證的驗收條件（同 §1 的 Spec 狀態離開條件）；Sub-issue＝task，**只有在單一 story 需要多個 agent 接力完成**（例如設計→實作→審查分屬不同派工、無法一個 agent 一次做完）時才拆，拆分依據與各 task 的範圍寫在該 story 的 ticket scope 裡，不預先拆。
 
 | 狀態 | 離開條件（gate） |
 |---|---|
@@ -129,7 +130,7 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 | branch 命名格式 | pre-commit hook＋CI（同一條 regex） | ✅ hook＋CI |
 | PR 只能開向合法 base | CI `rules` job：base/head 方向矩陣（`revert-*` 合法） | ✅ |
 | secrets 不進 repo | pre-commit＋CI 共用 `scan-secrets.sh`（private key／JWT／sb_secret／DB 連線字串／各家 token；pattern 自身免疫寫法，無路徑盲區）＋.gitignore | ✅ hook＋CI |
-| migration 必附 RLS 測試 | CI：`supabase/migrations` 變更必須伴隨 `supabase/tests` 變更（僅驗「有動」，內容品質靠 review） | ✅ 弱 |
+| migration 必附 RLS 測試 | CI `rules` job：`supabase/migrations` 變更必須伴隨 `supabase/tests` 變更（僅驗「有動」）＋ CI `db` job：`supabase db start` → `supabase db reset` → 實跑 `supabase/tests/run.sh`（RLS 隔離／owner 不變量／trigger／併發／RLS plan 效能），任一測試檔失敗即紅（LS-11） | ✅（CI 實際執行 run.sh） |
 | 破壞性 migration 需本人核可 | CI 偵測 DROP／TRUNCATE／DISABLE RLS 等關鍵字（機械）；`DESTRUCTIVE-APPROVED` 寫在 PR body，**agent 技術上寫得進去**——核可真實性靠規約禁止＋orchestrator 把關 | ⚠️ 混合 |
 | 新畫面必有 .pen 設計稿 | CI 掃 diff 新增行的 View 宣告＋驗 body `Design:` 欄（換行式 conformance 掃不到）；設計稿真偽由 orchestrator 核 | ⚠️ 混合 |
 | project.yml ↔ .xcodeproj 同步（XcodeGen 雙來源） | CI：重跑 `xcodegen generate` 後 `git diff --exit-code`（生成物 byte-identical，不 flaky；雙向漂移皆攔） | ✅ |
