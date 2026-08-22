@@ -141,7 +141,20 @@ begin
     end loop;
   end loop;
 
-  raise notice 'ok default privileges：新建的 sequence 對 anon/authenticated 沒有任何權限';
+  -- 正向對照（reviewer 點名）：驗證環境若整組角色權限剛好都是空的（例如漏跑
+  -- Supabase 的 default privileges 佈建），上面的斷言會「假綠」——因為 anon/
+  -- authenticated 本來就沒有任何權限，不是被本 migration 收回的。這裡反過來
+  -- 確認 service_role（migration 沒有動它）仍保有預設權限，證明探針量到的是
+  -- 「真的有一份 default privileges 存在、只是 anon/authenticated 被拿掉了」。
+  foreach v_priv in array array['usage', 'select', 'update'] loop
+    if not has_sequence_privilege('service_role', 'public.ls15_default_priv_probe_seq', v_priv) then
+      raise exception
+        'FAIL 正向對照：新建的 sequence 對 service_role 應仍有 % 權限，卻沒有——驗證環境可能整組空白，上面 anon/authenticated 的斷言可能是假綠',
+        v_priv;
+    end if;
+  end loop;
+
+  raise notice 'ok default privileges：新建的 sequence 對 anon/authenticated 沒有任何權限、service_role 權限不受影響';
 end;
 $$;
 
@@ -166,7 +179,47 @@ begin
     end if;
   end loop;
 
-  raise notice 'ok default privileges：新建的 function 對 anon/authenticated 沒有 EXECUTE';
+  -- 正向對照（同上一段的理由）：service_role 的 EXECUTE 是本 migration 特意保留
+  -- （見 harden_default_privileges.sql 的 `grant execute on functions to
+  -- service_role`），驗證環境若整組空白會讓這裡也假綠，故一併確認。
+  if not has_function_privilege('service_role', 'public.ls15_default_priv_probe_fn()', 'execute') then
+    raise exception
+      'FAIL 正向對照：新建的 function 對 service_role 應仍有 EXECUTE，卻沒有——驗證環境可能整組空白，上面 anon/authenticated 的斷言可能是假綠';
+  end if;
+
+  raise notice 'ok default privileges：新建的 function 對 anon/authenticated 沒有 EXECUTE、service_role 不受影響';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 5b. LS-15 F2 回歸：public 以外的 schema，service_role 的預設 EXECUTE 不因
+-- 全域 revoke 而消失
+--
+-- harden_default_privileges.sql 對 functions 的收斂用了不指定 schema 的全域
+-- revoke（見該檔案第 3 段註解）；這連帶拿掉了 service_role 過去「經由 PUBLIC」
+-- 拿到的隱式執行權，因此該檔案補了一句同樣不指定 schema 的
+-- `grant execute on functions to service_role`。這裡在 public 以外新建一個
+-- schema 驗證：新函式對 service_role 仍可執行、對 anon/authenticated 仍不可執行。
+-- ---------------------------------------------------------------------------
+do $$
+begin
+  drop schema if exists ls15_other_schema_probe cascade;
+  create schema ls15_other_schema_probe;
+
+  create function ls15_other_schema_probe.probe_fn()
+  returns void language sql as $body$ select 1 $body$;
+
+  if has_function_privilege('anon', 'ls15_other_schema_probe.probe_fn()', 'execute') then
+    raise exception 'FAIL：public 以外的 schema，新函式對 anon 仍有 EXECUTE';
+  end if;
+  if has_function_privilege('authenticated', 'ls15_other_schema_probe.probe_fn()', 'execute') then
+    raise exception 'FAIL：public 以外的 schema，新函式對 authenticated 仍有 EXECUTE';
+  end if;
+  if not has_function_privilege('service_role', 'ls15_other_schema_probe.probe_fn()', 'execute') then
+    raise exception 'FAIL：public 以外的 schema，新函式對 service_role 失去了 EXECUTE——全域 revoke 的副作用沒有被 service_role 的全域 grant 蓋回去';
+  end if;
+
+  raise notice 'ok：public 以外的 schema，新函式對 service_role 仍可執行、對 anon/authenticated 仍不可執行';
 end;
 $$;
 
@@ -175,11 +228,18 @@ $$;
 --
 -- 這是 LS-14 雲端 security advisors 點名的 WARN：它只是 event trigger 的內部支撐函式，
 -- 不該有任何 API 呼叫者（anon／authenticated），也不該對 PUBLIC 開放。
+--
+-- 條件式斷言：這支函式只存在於雲端 Supabase 專案，官方 `supabase` CLI 的本機開發
+-- 映像（CI db job 用的那份）沒有它（PR #17 CI 實測撞 42883：
+-- run https://github.com/CLYEH/little-sprout/actions/runs/32565795483）。
+-- 本機不存在時只能誠實跳過（notice，不是斷言通過）；雲端側的收權由 LS-15
+-- 部署後的 advisors 複掃驗證，不是這裡的斷言範圍。
 -- ---------------------------------------------------------------------------
 do $$
 begin
   if to_regprocedure('public.rls_auto_enable()') is null then
-    raise exception 'FAIL：public.rls_auto_enable() 不存在——本機驗證環境未正確重現雲端前提';
+    raise notice '略過：public.rls_auto_enable() 在本驗證環境不存在（官方 supabase CLI 本機開發映像沒有這支函式，只存在於雲端專案）——收權斷言留待雲端部署後的 advisors 複掃';
+    return;
   end if;
 
   if has_function_privilege('anon', 'public.rls_auto_enable()', 'execute') then

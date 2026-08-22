@@ -15,8 +15,22 @@
 
 -- ---------------------------------------------------------------------------
 -- 1. rls_auto_enable：event trigger 的支撐函式，收回三個角色的 EXECUTE
+--
+-- 這支函式只存在於雲端 Supabase 專案（LS-14 advisors 實查看到它）；官方
+-- `supabase` CLI 的本機開發映像（`supabase db start` 用的那份）沒有這支函式——
+-- 用 guard 包起來，函式不存在時整段跳過，migration chain 才能在兩種環境都套用。
+-- 沒有 guard 直接 revoke 會撞 42883（PR #17 的 CI db job 實測過：
+-- run https://github.com/CLYEH/little-sprout/actions/runs/32565795483，
+-- `ERROR: function public.rls_auto_enable() does not exist (SQLSTATE 42883)`）。
+-- REVOKE 語法本身沒有 IF EXISTS，只能用動態 SQL 包一層條件判斷。
 -- ---------------------------------------------------------------------------
-revoke execute on function public.rls_auto_enable() from public, anon, authenticated;
+do $$
+begin
+  if to_regprocedure('public.rls_auto_enable()') is not null then
+    execute 'revoke execute on function public.rls_auto_enable() from public, anon, authenticated';
+  end if;
+end;
+$$;
 
 -- ---------------------------------------------------------------------------
 -- 2. sequences 的 default privileges（前一個 migration 沒涵蓋的洞）
@@ -44,6 +58,26 @@ alter default privileges in schema public revoke all on sequences from anon, aut
 --   這正是「per-RPC 顯式 grant」慣例要的效果，且不影響已用個別 grant 開放的既有函式
 --   （register_device_token 是既有物件的個別 ACL，與這裡收斂的「未來新函式」default ACL
 --   是兩份獨立資料，回歸驗證見 supabase/tests/60_default_privileges.sql）。
+--
+--   全域寫法有兩個明確的副作用，記在這裡不是「順便一提」，是要讓下一個踩到的人知道
+--   去哪裡查：
+--     i)  未來若有 migration 以 postgres 身分安裝 extension（例如 pg_trgm／unaccent），
+--         該 extension 帶來的函式一樣會落入這份全域預設——對 public/anon/authenticated
+--         都不可執行。這不是本 migration 能一併處理的事：安裝 extension 的那個 migration
+--         必須自己比照 register_device_token 的慣例，對它會被 app 呼叫的函式逐一
+--         `grant execute ... to <角色>`。
+--     ii) public 以外的 schema（含未來新增的 schema）由 postgres 身分建立的函式，
+--         同樣會失去 PUBLIC 這份內建預設——連帶讓 service_role 原本「經由 PUBLIC」
+--         拿到的隱式執行權一起消失。下面這句 `grant execute on functions to
+--         service_role`（同樣不指定 schema）就是為了把 service_role 的預設可執行權
+--         明確地釘在 global default ACL 上，不再依賴 PUBLIC baseline。
 -- ---------------------------------------------------------------------------
 alter default privileges revoke execute on functions from public;
 alter default privileges in schema public revoke execute on functions from anon, authenticated;
+
+-- 承上 (ii)：把 service_role 的預設 EXECUTE 從「PUBLIC baseline 帶來的隱式權限」
+-- 改成「明確的 global default ACL 項目」，讓 public 以外的 schema 未來新函式
+-- 也不會因為上面兩句 revoke 而連帶失去 service_role 的預設存取——
+-- 已用 60_default_privileges.sql 的探針證實：任意 schema 新函式對 service_role
+-- 仍可執行、對 anon/authenticated 仍不可執行。
+alter default privileges grant execute on functions to service_role;
