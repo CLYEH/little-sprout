@@ -13,6 +13,7 @@
 - **ios-dev subagent**：功能實作。一張 ticket＝一個 worktree＝一條 branch。
 - **merge-reviewer subagent**：merge gate 的 code review（四維度，見 §4）。
 - **qa subagent**：在 `test` branch 上依驗收條件驗收，UI 票必做視覺驗收（模擬器實際渲染，優先用 mobile-mcp，備援 `xcrun simctl` 截圖）。
+- **dead-code-sweeper subagent**：feature 收尾時巡檢該 feature 引入的死碼與殘留物（只報告不刪改）。
 
 **Agent model 政策**（agent 定義檔的 `model:` 為預設；orchestrator 派工時得以 Agent 工具的 `model` 參數覆寫升級）：
 
@@ -22,6 +23,7 @@
 | ios-dev | sonnet | 併發或架構性的票（背景上傳佇列、導航骨架、RLS 設計）、同一票 sonnet 兩次未過 gate、hotfix |
 | merge-reviewer | opus | 預設即最高——review 是安全網；純文件 diff 可降 sonnet |
 | qa | sonnet | 驗收含併發時序或安全（RLS）判斷時 |
+| dead-code-sweeper | sonnet | 大型 feature 批次或跨模組重構後的巡檢 |
 
 降級同理：機械性小任務（批次改名、跑腳本回報）可用 haiku。升降級都要在派工訊息中註明理由。
 
@@ -81,6 +83,7 @@ Ticket：LS-<n>
 | **Push gate** | pre-push hook | unit tests（xcodebuild test，動態選模擬器）＋全 repo SwiftLint | 自動（`scripts/gates/push-gate.sh`） |
 | **Merge gate** | 每個 PR | CI 綠燈（rules＋lint＋build/test）＋ merge-reviewer 四維度審查：**race condition、運算效能、平行優化、scope** | CI + merge-reviewer |
 | **QA gate** | 併入 test 之後 | qa subagent 逐條驗證 ticket 驗收條件＋回歸冒煙（登入／時間軸／上傳／留言）＋RLS 冒煙＋**視覺驗收**（UI 票：模擬器渲染截圖比對 .pen 設計稿） | qa |
+| **收尾 gate** | QA 過後、Done 之前 | ① dead-code-sweeper 巡檢 feature 引入的死碼（findings 開 fix 票或併入下票）② orchestrator 的 **lesson learning review**：gate 攔截／漏接、返工原因、harness 與設定改善項（開票）、工具缺口、model 政策調整。兩者記於 ticket comment，缺一不得進 Done | dead-code-sweeper + orchestrator |
 
 Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。gate 工具缺失（如有 Swift 檔但 SwiftLint 未裝）→ 直接 fail，不得靜默跳過。
 
@@ -97,7 +100,7 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 | Ready | worktree＋branch 已建、指派給 agent |
 | In Progress | push gate 過、PR 開出 |
 | In Review | merge gate 過、併入 development |
-| QA | QA gate 過（在 test branch） |
+| QA | QA gate 過（在 test branch）**且收尾 gate 完成**（dead-code 巡檢＋retro 記錄在案） |
 | Done | 已併入 main（隨 release） |
 | Canceled | 記錄取消原因 |
 
@@ -110,6 +113,7 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 - **回滾**：正式站問題以 revert PR 處理（GitHub Revert 按鈕產生的 `revert-*` head 在 CI 方向矩陣中對三條保護分支皆合法）；保護分支禁止 force-push。
 - **雲端資料庫只透過 migration 變更**：schema／policy 變更一律走 `supabase/migrations`＋PR，**禁止用 Supabase MCP 或 dashboard 直接改正式專案**。機械面：`.mcp.json` 的 supabase MCP 已鎖 `read_only=true`，需要寫入時由使用者本人臨時解鎖。`project_ref` 視為公開資訊（本來就會出現在 app 的 API URL），安全性完全依賴 RLS＋key 管理。
 - **Checkpoint**：每張 ticket 完成，orchestrator 把 handoff 訊息留在 Linear ticket comment，讓狀態可還原、可交接。
+- **Feature 收尾儀式**：「feature」的粒度由 orchestrator 判斷並記錄——單張 feature 票，或同批 promote 的票群共用一次。① dead-code-sweeper 巡檢（範圍＝該 feature 的累積 diff）；② orchestrator retro（lesson learning review）——固定檢視：各 gate 的攔截／漏接記錄、review 輪數與返工原因、agent 派工與 model 選擇是否恰當、需要補的工具或 MCP、規約與 gate script 的改善項。改善項一律開票（harness 票走 hotfix 流程），不留口頭。純 harness 票可免 dead-code 巡檢，retro 照做（輕量版）。
 - **模擬器驗不了的項目**（推播、Sign in with Apple 完整流程）：QA 標註「需實機驗證」，不得記為 PASS。
 - **CI 成本**：public repo 的 Actions 免費，但仍只在 PR 與保護分支 push 觸發，勿加無謂矩陣。
 
@@ -133,3 +137,4 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 | harness 檔 back-merge 到 test／development | 無機械 gate——orchestrator 在 LS ticket 驗收條件中列入並人工確認 | ⚠️ 人工 |
 | scope 不越界、worktree 隔離 | 無法全機械化——merge-reviewer 的 scope 維度人工兜底 | ⚠️ 人工 |
 | QA 不得把跳過寫成 PASS | 無法機械化——orchestrator 驗 handoff 證據（截圖／輸出）兜底 | ⚠️ 人工 |
+| feature 收尾必經 dead-code 巡檢＋retro | 掛在狀態機：兩者的 ticket comment 是進 Done 的前置條件，orchestrator 執行狀態轉換時把關 | ⚠️ 人工（狀態機承載） |
