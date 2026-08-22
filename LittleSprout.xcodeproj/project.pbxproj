@@ -15,6 +15,7 @@
 		54686C08900304A03BBC33F0 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF988A929E58294A2FD895A6 /* TimelineView.swift */; };
 		6EFC06689B8E4216F5308FDA /* AppSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9530233ED3E9B6D3A43AD99 /* AppSection.swift */; };
 		B32E3D152F36E50526D8E1B7 /* ChildrenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCAE2B57E7D3907D0578AC21 /* ChildrenView.swift */; };
+		C64DB3C766D868B50D0C5055 /* DeliberateFailureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD0B5D71C83D6E64BA3B70EE /* DeliberateFailureTests.swift */; };
 		F90747ADA6446C8F7FA27137 /* LittleSproutApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ADE9B28C92582D4C51FF485 /* LittleSproutApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -36,6 +37,7 @@
 		8351A5DED54BE71EBD0A9161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A9530233ED3E9B6D3A43AD99 /* AppSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSection.swift; sourceTree = "<group>"; };
 		B7011C61D613644C595C9208 /* LittleSproutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LittleSproutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BD0B5D71C83D6E64BA3B70EE /* DeliberateFailureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliberateFailureTests.swift; sourceTree = "<group>"; };
 		C5291088D9B29980248B2BCF /* AlbumsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsView.swift; sourceTree = "<group>"; };
 		C608A0E7AB49C7BAF3669796 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		DCAE2B57E7D3907D0578AC21 /* ChildrenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenView.swift; sourceTree = "<group>"; };
@@ -57,6 +59,7 @@
 			children = (
 				09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */,
 				694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */,
+				BD0B5D71C83D6E64BA3B70EE /* DeliberateFailureTests.swift */,
 			);
 			path = LittleSproutTests;
 			sourceTree = "<group>";
@@ -190,6 +193,7 @@
 			files = (
 				13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */,
 				32824AF2CC5F64CE44CBB595 /* AppSectionUniquenessTests.swift in Sources */,
+				C64DB3C766D868B50D0C5055 /* DeliberateFailureTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
