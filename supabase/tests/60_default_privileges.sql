@@ -118,4 +118,107 @@ begin
 end;
 $$;
 
+-- ---------------------------------------------------------------------------
+-- 4. LS-15：新建的 sequence 對 anon / authenticated 不得有任何權限
+--
+-- init_schema.sql 的 default privileges 收斂只涵蓋 tables；本測試證明
+-- 20260822120300_harden_default_privileges.sql 把 sequences 這個洞也補上了。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_role text;
+  v_priv text;
+begin
+  create sequence public.ls15_default_priv_probe_seq;
+
+  foreach v_role in array array['anon', 'authenticated'] loop
+    foreach v_priv in array array['usage', 'select', 'update'] loop
+      if has_sequence_privilege(v_role, 'public.ls15_default_priv_probe_seq', v_priv) then
+        raise exception
+          'FAIL default privileges：migration 之後新建的 sequence 對 % 仍有 % 權限',
+          v_role, v_priv;
+      end if;
+    end loop;
+  end loop;
+
+  raise notice 'ok default privileges：新建的 sequence 對 anon/authenticated 沒有任何權限';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 5. LS-15：新建的 function 對 anon / authenticated 不得有 EXECUTE
+--
+-- 收斂後採「per-RPC 顯式 grant」慣例：新函式預設不可執行，要開放給前端呼叫
+-- 必須像 public.register_device_token() 一樣逐支明確 grant（下一段回歸驗證）。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_role text;
+begin
+  create function public.ls15_default_priv_probe_fn()
+  returns void language sql as $body$ select 1 $body$;
+
+  foreach v_role in array array['anon', 'authenticated'] loop
+    if has_function_privilege(v_role, 'public.ls15_default_priv_probe_fn()', 'execute') then
+      raise exception
+        'FAIL default privileges：migration 之後新建的 function 對 % 仍有 EXECUTE 權限',
+        v_role;
+    end if;
+  end loop;
+
+  raise notice 'ok default privileges：新建的 function 對 anon/authenticated 沒有 EXECUTE';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 6. LS-15：public.rls_auto_enable()（event trigger 支撐函式）對三者皆不可執行
+--
+-- 這是 LS-14 雲端 security advisors 點名的 WARN：它只是 event trigger 的內部支撐函式，
+-- 不該有任何 API 呼叫者（anon／authenticated），也不該對 PUBLIC 開放。
+-- ---------------------------------------------------------------------------
+do $$
+begin
+  if to_regprocedure('public.rls_auto_enable()') is null then
+    raise exception 'FAIL：public.rls_auto_enable() 不存在——本機驗證環境未正確重現雲端前提';
+  end if;
+
+  if has_function_privilege('anon', 'public.rls_auto_enable()', 'execute') then
+    raise exception 'FAIL：anon 可以執行 public.rls_auto_enable()';
+  end if;
+  if has_function_privilege('authenticated', 'public.rls_auto_enable()', 'execute') then
+    raise exception 'FAIL：authenticated 可以執行 public.rls_auto_enable()';
+  end if;
+  if exists (
+    select 1 from pg_proc p, aclexplode(p.proacl) a
+     where p.oid = 'public.rls_auto_enable()'::regprocedure
+       and a.grantee = 0  -- 0 = PUBLIC
+       and a.privilege_type = 'EXECUTE'
+  ) then
+    raise exception 'FAIL：public.rls_auto_enable() 仍對 PUBLIC 開放 EXECUTE';
+  end if;
+
+  raise notice 'ok：public.rls_auto_enable() 對 anon/authenticated/PUBLIC 都不可執行';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 7. 回歸：既有 RPC public.register_device_token() 的顯式 grant 不受本次收斂影響
+--
+-- LS-15 的 functions default privileges 收斂只管「未來新函式」；這支函式是
+-- 20260822120200_rls_policies.sql 已經逐支 grant 過的既有函式，兩者是獨立的 ACL。
+-- （supabase/tests/70_device_token_handover.sql 也驗過這件事；這裡是直接對照。）
+-- ---------------------------------------------------------------------------
+do $$
+begin
+  if not has_function_privilege('authenticated',
+       'public.register_device_token(text, text)', 'execute') then
+    raise exception 'FAIL 回歸：authenticated 應仍可執行 register_device_token，卻沒有——functions default privileges 收斂波及了既有的顯式 grant';
+  end if;
+  if has_function_privilege('anon', 'public.register_device_token(text, text)', 'execute') then
+    raise exception 'FAIL：anon 不該可以執行 register_device_token';
+  end if;
+  raise notice 'ok 回歸：register_device_token 對 authenticated 仍可執行、anon 仍不可執行';
+end;
+$$;
+
 rollback;
