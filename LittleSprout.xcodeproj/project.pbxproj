@@ -1,0 +1,443 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */; };
+		1D03D9D4C76C029973315865 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C608A0E7AB49C7BAF3669796 /* RootView.swift */; };
+		32824AF2CC5F64CE44CBB595 /* AppSectionUniquenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */; };
+		38FACDC15B0DA2AF7A373639 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8351A5DED54BE71EBD0A9161 /* SettingsView.swift */; };
+		486C91604E18A60B2E5A0A87 /* AlbumsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5291088D9B29980248B2BCF /* AlbumsView.swift */; };
+		54686C08900304A03BBC33F0 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF988A929E58294A2FD895A6 /* TimelineView.swift */; };
+		6EFC06689B8E4216F5308FDA /* AppSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9530233ED3E9B6D3A43AD99 /* AppSection.swift */; };
+		B32E3D152F36E50526D8E1B7 /* ChildrenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCAE2B57E7D3907D0578AC21 /* ChildrenView.swift */; };
+		F90747ADA6446C8F7FA27137 /* LittleSproutApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ADE9B28C92582D4C51FF485 /* LittleSproutApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1E675F4B2F57735C0E5CF9BC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3FD113F87A60C4A70D92B16B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F2C05988D2849D562345990D;
+			remoteInfo = LittleSprout;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSectionTests.swift; sourceTree = "<group>"; };
+		3ADE9B28C92582D4C51FF485 /* LittleSproutApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LittleSproutApp.swift; sourceTree = "<group>"; };
+		64398867FF6A776CAD323AB7 /* LittleSprout.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LittleSprout.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSectionUniquenessTests.swift; sourceTree = "<group>"; };
+		8351A5DED54BE71EBD0A9161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A9530233ED3E9B6D3A43AD99 /* AppSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSection.swift; sourceTree = "<group>"; };
+		B7011C61D613644C595C9208 /* LittleSproutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LittleSproutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C5291088D9B29980248B2BCF /* AlbumsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsView.swift; sourceTree = "<group>"; };
+		C608A0E7AB49C7BAF3669796 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		DCAE2B57E7D3907D0578AC21 /* ChildrenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenView.swift; sourceTree = "<group>"; };
+		EF988A929E58294A2FD895A6 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		2EAF9B3EA49C21C14C5F57EE = {
+			isa = PBXGroup;
+			children = (
+				7FBBA188103B61D6C48AA664 /* LittleSprout */,
+				51FBBB4E3BA4ACB67A77A695 /* LittleSproutTests */,
+				89C4C5B26A276CA79F42EF35 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		51FBBB4E3BA4ACB67A77A695 /* LittleSproutTests */ = {
+			isa = PBXGroup;
+			children = (
+				09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */,
+				694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */,
+			);
+			path = LittleSproutTests;
+			sourceTree = "<group>";
+		};
+		616C205FC36548C87FABD96E /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+				A9530233ED3E9B6D3A43AD99 /* AppSection.swift */,
+				C608A0E7AB49C7BAF3669796 /* RootView.swift */,
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
+		7FBBA188103B61D6C48AA664 /* LittleSprout */ = {
+			isa = PBXGroup;
+			children = (
+				3ADE9B28C92582D4C51FF485 /* LittleSproutApp.swift */,
+				C8659333F128C336F0E65D3A /* Features */,
+				616C205FC36548C87FABD96E /* Navigation */,
+			);
+			path = LittleSprout;
+			sourceTree = "<group>";
+		};
+		89C4C5B26A276CA79F42EF35 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				64398867FF6A776CAD323AB7 /* LittleSprout.app */,
+				B7011C61D613644C595C9208 /* LittleSproutTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C8659333F128C336F0E65D3A /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				C5291088D9B29980248B2BCF /* AlbumsView.swift */,
+				DCAE2B57E7D3907D0578AC21 /* ChildrenView.swift */,
+				8351A5DED54BE71EBD0A9161 /* SettingsView.swift */,
+				EF988A929E58294A2FD895A6 /* TimelineView.swift */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A3ABC308E1641A4D5ED6EA51 /* LittleSproutTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D77F09B9CA5863DC966210C6 /* Build configuration list for PBXNativeTarget "LittleSproutTests" */;
+			buildPhases = (
+				FA33D78060E320305125EE35 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F3D0E1D21D208DBD7194B72D /* PBXTargetDependency */,
+			);
+			name = LittleSproutTests;
+			packageProductDependencies = (
+			);
+			productName = LittleSproutTests;
+			productReference = B7011C61D613644C595C9208 /* LittleSproutTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		F2C05988D2849D562345990D /* LittleSprout */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D275162D36D215C3FB0ECC37 /* Build configuration list for PBXNativeTarget "LittleSprout" */;
+			buildPhases = (
+				4264715F4DE92769B3E41C51 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LittleSprout;
+			packageProductDependencies = (
+			);
+			productName = LittleSprout;
+			productReference = 64398867FF6A776CAD323AB7 /* LittleSprout.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3FD113F87A60C4A70D92B16B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 704A5E765DFC6DD74D9C2202 /* Build configuration list for PBXProject "LittleSprout" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 2EAF9B3EA49C21C14C5F57EE;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 89C4C5B26A276CA79F42EF35 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F2C05988D2849D562345990D /* LittleSprout */,
+				A3ABC308E1641A4D5ED6EA51 /* LittleSproutTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4264715F4DE92769B3E41C51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				486C91604E18A60B2E5A0A87 /* AlbumsView.swift in Sources */,
+				6EFC06689B8E4216F5308FDA /* AppSection.swift in Sources */,
+				B32E3D152F36E50526D8E1B7 /* ChildrenView.swift in Sources */,
+				F90747ADA6446C8F7FA27137 /* LittleSproutApp.swift in Sources */,
+				1D03D9D4C76C029973315865 /* RootView.swift in Sources */,
+				38FACDC15B0DA2AF7A373639 /* SettingsView.swift in Sources */,
+				54686C08900304A03BBC33F0 /* TimelineView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FA33D78060E320305125EE35 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */,
+				32824AF2CC5F64CE44CBB595 /* AppSectionUniquenessTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F3D0E1D21D208DBD7194B72D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F2C05988D2849D562345990D /* LittleSprout */;
+			targetProxy = 1E675F4B2F57735C0E5CF9BC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0569F249C29FC89A2E713D6C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Little Sprout";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.leoyeh.littlesprout;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		29421F3A7D52CBE65B449F86 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.leoyeh.LittleSproutTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LittleSprout.app/LittleSprout";
+			};
+			name = Release;
+		};
+		2B44BAB0C35D3928E44ED5F1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4D2113961DAF6684CBDBF44D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Little Sprout";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.leoyeh.littlesprout;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AE6F54C34120FA25665F9003 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B34E3B7944621B1ADD3450F6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.leoyeh.LittleSproutTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LittleSprout.app/LittleSprout";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		704A5E765DFC6DD74D9C2202 /* Build configuration list for PBXProject "LittleSprout" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2B44BAB0C35D3928E44ED5F1 /* Debug */,
+				AE6F54C34120FA25665F9003 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D275162D36D215C3FB0ECC37 /* Build configuration list for PBXNativeTarget "LittleSprout" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4D2113961DAF6684CBDBF44D /* Debug */,
+				0569F249C29FC89A2E713D6C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D77F09B9CA5863DC966210C6 /* Build configuration list for PBXNativeTarget "LittleSproutTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B34E3B7944621B1ADD3450F6 /* Debug */,
+				29421F3A7D52CBE65B449F86 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 3FD113F87A60C4A70D92B16B /* Project object */;
+}
