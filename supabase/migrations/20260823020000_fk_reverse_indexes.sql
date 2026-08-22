@@ -36,24 +36,24 @@ create index if not exists media_uploaded_by_idx on public.media (uploaded_by);
 create index if not exists albums_created_by_idx on public.albums (created_by);
 
 -- diaries.diaries_author_id_fkey：某人寫的所有日記；作者刪帳號時的 set null 反查
-create index if not exists diaries_author_id_idx on public.diaries (author_id);
+create index if not exists diaries_author_idx on public.diaries (author_id);
 
 -- comments.comments_family_id_fkey：family 被刪除時 cascade 必須找出（含已軟刪除的）
 -- 全部留言；comments_target_idx 是部分索引，覆蓋不到這個路徑
-create index if not exists comments_family_id_idx on public.comments (family_id);
+create index if not exists comments_family_idx on public.comments (family_id);
 
 -- comments.comments_author_id_fkey：某人的所有留言；作者刪帳號時的 set null 反查
-create index if not exists comments_author_id_idx on public.comments (author_id);
+create index if not exists comments_author_idx on public.comments (author_id);
 
 -- reactions.reactions_user_id_fkey：某人按過的所有讚；使用者刪帳號時的 cascade 反查
-create index if not exists reactions_user_id_idx on public.reactions (user_id);
+create index if not exists reactions_user_idx on public.reactions (user_id);
 
 -- content_reports.content_reports_reporter_id_fkey：某人送出的所有檢舉；
 -- 檢舉人刪帳號時的 set null 反查
-create index if not exists content_reports_reporter_id_idx on public.content_reports (reporter_id);
+create index if not exists content_reports_reporter_idx on public.content_reports (reporter_id);
 
 -- blocked_users.blocked_users_blocker_id_fkey：我封鎖的人；封鎖者刪帳號時的 cascade 反查
-create index if not exists blocked_users_blocker_id_idx on public.blocked_users (blocker_id);
+create index if not exists blocked_users_blocker_idx on public.blocked_users (blocker_id);
 
 -- blocked_users.blocked_users_blocked_id_fkey：封鎖我的人；被封鎖者刪帳號時的 cascade 反查
-create index if not exists blocked_users_blocked_id_idx on public.blocked_users (blocked_id);
+create index if not exists blocked_users_blocked_idx on public.blocked_users (blocked_id);
