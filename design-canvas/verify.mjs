@@ -4,14 +4,17 @@
 // 所以 G1–G12 全部進管線，reviewer 拒絕管線外自證。
 // Run: node measure.mjs && node verify.mjs
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
-import { T, GAPS, SIZES, FIX, AX, H1_GROUPS, H1_EXCLUDED } from './tokens.mjs';
+import { T, GAPS, SIZES, FIX, AX, RULE, H1_GROUPS, H1_EXCLUDED, hash12 } from './tokens.mjs';
 
 const files = readdirSync(new URL('.', import.meta.url)).filter((f) => f.endsWith('.dc.html')).sort();
 const read = (f) => readFileSync(new URL(f, import.meta.url), 'utf8');
 const src = readFileSync(new URL('build.mjs', import.meta.url), 'utf8');
 let fail = 0;
 const MJ = new URL('measured.json', import.meta.url);
-const M = existsSync(MJ) ? JSON.parse(readFileSync(MJ, 'utf8')) : {};
+/* G21 用：現行 measured.json 的原文與指紋。verify 跑到最後會把 G1/G2 的統計寫回這個檔，
+   所以指紋一律取「verify 開跑時讀到的那一份」—— 與 build 讀到的是同一個狀態。 */
+const MEAS_RAW = existsSync(MJ) ? readFileSync(MJ, 'utf8') : '';
+const M = MEAS_RAW ? JSON.parse(MEAS_RAW) : {};
 const ok = (pass, label, detail = '') => {
   if (!pass) fail++;
   console.log(`${pass ? 'PASS' : 'FAIL'}  ${label}${detail ? `  ${detail}` : ''}`);
@@ -104,7 +107,11 @@ if (M.contrastNodes) {
   ok(M.textOverPhoto === 0, `G6 照片上文字：${M.textOverPhoto} 個（壓在照片上的對比無法定義，所以一個都不能有）`);
 } else need('contrastNodes', 'G6 對比');
 
-/* ══ G7  六位數字的兩種正典 ＋ 3+3 分格 ══════════════════════════ */
+/* ══ G7  六位數字的兩種正典 ＋ 3+3 分格 ＋ 兩種分組怎麼分開 ══════
+   第 3 輪的「、」斷言量錯東西：/、/.test(join) 連畫面下方那句散文
+   「念的時候是『七四二、九三六』。」都算數 —— 把真正的分隔 span 刪掉也不會叫，
+   而且與下一行的散文檢查重複。第 4 輪 R11：兩種分隔各自量自己的元素 ——
+   輸入格量分隔 span，票根量組間距（印刷品用間距不用標點）。 */
 {
   const faces = new Set();
   for (const f of files) {
@@ -113,10 +120,36 @@ if (M.contrastNodes) {
   }
   ok([...faces].sort((a, b) => a - b).join() === '36,60', `G7 六位數字只有兩種正典：${[...faces].sort((a, b) => b - a).join(' / ')}pt`);
   const join = read('JoinCode.dc.html'), otp = read('Otp.dc.html');
-  const cells = (s) => [...s.matchAll(/height:80px/g)].length;
+  const cells = (s) => [...s.matchAll(new RegExp(`height:${FIX.cell}px`, 'g'))].length;
   ok(cells(join) === 6 && cells(otp) === 6, `G7 3+3 六格：JoinCode ${cells(join)} 格 · Otp ${cells(otp)} 格（同一個元件）`);
-  ok(/、/.test(join) && !/、<\/span>/.test(otp), 'G7 邀請碼在兩組中間印「、」，OTP 沒有（畫面的分組＝嘴巴唸的分組）');
-  ok(/念的時候是「七四二、九三六」。/.test(join), 'G7 「念的時候是「七四二、九三六」。」還在');
+
+  // ① 輸入格：真的有一個分隔元素（不是散文裡的頓號）。刪掉它就 FAIL。
+  const SEP = /flex:none">、<\/span>/g;
+  const seps = (s) => [...s.matchAll(SEP)].length;
+  ok(seps(join) === 1 && seps(otp) === 0,
+    `G7 分隔（輸入格）：JoinCode 的分格帶中間有 ${seps(join)} 個分隔 span、Otp ${seps(otp)} 個 —— 量的是元素，不是散文裡的「、」`,
+    `join=${seps(join)} otp=${seps(otp)}`);
+
+  /* ② 票根：兩組數字之間「什麼字元都沒有」，分組靠的是它們共同容器的組間距。
+        插一個「、」進去 → 兩個 span 不再相鄰，這裡就找不到 3＋3；
+        把組間距拿掉 → 找不到級距內的 gap。兩種破壞都會叫。 */
+  const GROUPS = /<span[^>]*>(\d{3})<\/span>\s*<span[^>]*>(\d{3})<\/span>/;
+  const tickets = files.filter((f) => /data-m="ticket"/.test(read(f)));
+  const badT = [];
+  for (const f of tickets) {
+    const s = read(f), i = s.indexOf('data-m="ticket"');
+    const m = GROUPS.exec(s.slice(i));
+    if (!m) { badT.push(`${f} 找不到相鄰的 3＋3 兩組（中間被塞了東西？）`); continue; }
+    const before = s.slice(i, i + m.index);
+    const gaps = [...before.matchAll(/gap:(\d+)px/g)];
+    const gap = gaps.length ? +gaps[gaps.length - 1][1] : null;
+    if (!gap || !GAPS.includes(gap)) badT.push(`${f} 兩組之間沒有級距內的組間距（gap=${gap}）`);
+  }
+  ok(tickets.length >= 3 && badT.length === 0,
+    `G7 分隔（票根）：${tickets.length} 張票根板的號碼是相鄰的 3＋3 兩組、中間一個字元都沒有，分組靠組間距（印刷品用間距不用標點）`,
+    badT.join(' | '));
+
+  ok(/念的時候是「七四二、九三六」。/.test(join), 'G7 「念的時候是「七四二、九三六」。」還在（畫面的分組＝嘴巴唸的分組）');
 }
 
 /* ══ G8  陶土：每張流程板最多一個最外層陶土區塊 ══════════════════ */
@@ -141,7 +174,7 @@ if (M.err) {
    ②「內容末端到板底不設上限，但主按鈕中心須落在畫面 70% 以內」——
       落地範圍：尾段空白 >120px 的流程板（交付板／壓力板不是畫面）。理由印在 Tokens 板上。 */
 if (M.voids) {
-  const PAUSE = 120, FLOW = (f) => !/Tokens|Notes|Stress/.test(f);
+  const PAUSE = RULE.pause, FLOW = (f) => !/Tokens|Notes|Stress/.test(f);
   ok(M.pauseBad.length === 0,
     `G10 呼吸帶①：內容之間 >${PAUSE}px 的空白共 ${M.pauses.length} 段，全部掛了 data-pause 說明理由（手機 iPad 同一條門檻）`,
     M.pauseBad.map((v) => `${v.file}/${v.col}=${v.len}px@${v.at} 未掛牌`).join(' '));
@@ -150,9 +183,9 @@ if (M.voids) {
   {
     const tails = new Set(M.boards.filter((b) => FLOW(b.file) && b.trail > PAUSE).map((b) => b.file));
     const rows = M.mainBtn.filter((b) => tails.has(b.file));
-    const bad = rows.filter((b) => b.pct > 70);
+    const bad = rows.filter((b) => b.pct > RULE.btnPct);
     ok(bad.length === 0,
-      `G10 呼吸帶②：尾段空白 >${PAUSE}px 的 ${tails.size} 張流程板，主按鈕中心最低 ${rows.length ? Math.max(...rows.map((b) => b.pct)) : '-'}%（門檻 70）`,
+      `G10 呼吸帶②：尾段空白 >${PAUSE}px 的 ${tails.size} 張流程板，主按鈕中心位置最低 ${rows.length ? Math.max(...rows.map((b) => b.pct)) : '-'}%（門檻 ${RULE.btnPct}）`,
       bad.map((b) => `${b.file}=${b.pct}%`).join(' '));
     ok([...tails].every((f) => rows.some((b) => b.file === f)),
       `G10 呼吸帶②：有尾段的板都量得到主按鈕（沒有主按鈕就沒有豁免這回事）`,
@@ -301,6 +334,108 @@ if (M.toggles) {
     `G19 開關列固定在票根正下方：${M.toggles.length} 張板（空／產生中／已產生／審核關閉／深色）全部在 y=${ys.join('／')}`,
     ys.length > 1 ? M.toggles.map((t) => `${t.file}@${t.top}`).join(' ') : '');
 } else need('toggles', 'G19 開關列');
+
+/* ══ G20  畫布註記的數值同源（G18 的守備範圍擴到 canvas.json）══════
+   第 3 輪 R1 只治了 Tokens 板，canvas.json 的 10 則註記沒跟著對帳：capAlign 印 27
+   （實建 29）、開關「移到畫面最上面」（已否決的行為）、板高 1140（實為 1280）、
+   呼吸帶整句過期 —— ios-dev 照抄註記就會實作出錯規格。三道檢查：
+   ①「來源＋數字」的鍵值比對（FIX 名稱、板高、measured.json 的具名量）；
+   ② 門檻只有 tokens.mjs 一個出處；
+   ③ build.mjs 的註記模板不得手打規格數字（阿拉伯數字一律出自 ${}）。 */
+{
+  const cv = JSON.parse(read('canvas.json'));
+  const notes = cv.annotations;
+  const all = notes.map((a) => a.text).join('\n');
+
+  // ① FIX 名稱後面接的數字必須等於 tokens.mjs（與 G18 同一套判法）
+  {
+    const wrong = [], hits = [];
+    for (const [k, v] of Object.entries(FIX)) {
+      for (const m of all.matchAll(new RegExp(`${k}\\s+(-?\\d+)`, 'g'))) {
+        hits.push(`${k}=${m[1]}`);
+        if (+m[1] !== v) wrong.push(`${k} 註記印 ${m[1]}、tokens.mjs 是 ${v}`);
+      }
+    }
+    ok(wrong.length === 0 && hits.length > 0,
+      `G20 註記同源（FIX）：註記裡具名的 FIX 常數 ${hits.join(' ') || '（一個都沒有 —— 這張檢查沒在守東西）'} 等於 tokens.mjs`,
+      wrong.join(' · '));
+  }
+
+  // ② 具名量 → 出處。左邊是註記上的說法，右邊是它唯一的來源。
+  const hOf = (f) => (cv.artboards.find((a) => a.file === f) || {}).h;
+  const cite = [
+    ['板高 (\\d+)px', (n) => n === hOf('InviteRequestsMany.dc.html'), () => `canvas.json 的 InviteRequestsMany 板高 ${hOf('InviteRequestsMany.dc.html')}`],
+    ['放不下 (\\d+) 才長高', (n) => n === hOf('InviteRequests.dc.html'), () => `canvas.json 的手機板高 ${hOf('InviteRequests.dc.html')}`],
+    ['其餘待核板一律 (\\d+)', (n) => n === hOf('InviteRequests.dc.html'), () => `canvas.json 的手機板高 ${hOf('InviteRequests.dc.html')}`],
+    ['≤(\\d+)px', (n) => n === RULE.pause, () => `RULE.pause=${RULE.pause}`],
+    ['尾段 >(\\d+)px', (n) => n === RULE.pause, () => `RULE.pause=${RULE.pause}`],
+    ['落在畫面 (\\d+)% 以內', (n) => n === RULE.btnPct, () => `RULE.btnPct=${RULE.btnPct}`],
+    ['y=(\\d+)', (n) => (M.toggles || []).every((t) => t.top === n), () => `measured.toggles=[${(M.toggles || []).map((t) => t.top).join(',')}]`],
+    ['(\\d+) 個使用點', (n) => n === M.insetTotal, () => `measured.insetTotal=${M.insetTotal}`],
+    ['白名單有 (\\d+) 個角色', (n) => n === Object.keys(M.insetUse || {}).length, () => `measured.insetUse 有 ${Object.keys(M.insetUse || {}).length} 個 key`],
+    ['(\\d+) 道錯誤線', (n) => n === M.errCount, () => `measured.errCount=${M.errCount}`],
+    ['距離最小 (\\d+)px', (n) => n === M.errGap, () => `measured.errGap=${M.errGap}`],
+    ['重合 (\\d+) 處', (n) => n === M.errOverlap, () => `measured.errOverlap=${M.errOverlap}`],
+    ['(\\d+) 段掛牌', (n) => n === (M.pauses || []).length, () => `measured.pauses=${(M.pauses || []).length}`],
+    ['(\\d+) 段未掛牌', (n) => n === (M.pauseBad || []).length, () => `measured.pauseBad=${(M.pauseBad || []).length}`],
+    ['欄內最大 (\\d+)px', (n) => n === M.maxVoidPad, () => `measured.maxVoidPad=${M.maxVoidPad}`],
+  ];
+  {
+    const wrong = [], unseen = [];
+    for (const [re, test, why] of cite) {
+      const hits = [...all.matchAll(new RegExp(re, 'g'))];
+      if (!hits.length) { unseen.push(re); continue; }
+      for (const m of hits) if (!test(+m[1])) wrong.push(`「${m[0]}」≠ ${why()}`);
+    }
+    ok(wrong.length === 0 && unseen.length === 0,
+      `G20 註記同源（具名量）：${cite.length} 條「說法→出處」全部對得上（板高、呼吸帶門檻、開關 y、實測量）`,
+      [...wrong, ...unseen.map((r) => `${r} 在註記裡找不到（改了文案就要改這張表）`)].join(' · '));
+  }
+
+  // ③ build.mjs 的註記模板不得手打規格數字。例外只有三個，都印在這裡。
+  {
+    const start = src.indexOf('annotations: [');
+    const end = src.indexOf('  pages: [', start);
+    const block = src.slice(start, end);
+    const LIT_OK = [/AX[35]/g, /H1/g, /第 2 輪/g];   // 級名（AX3／AX5／H1）與歷史敘述，不是規格數字
+    const bad = [];
+    for (const m of block.matchAll(/text: `/g)) {
+      let i = m.index + m[0].length, depth = 0, lit = '';
+      for (; i < block.length; i++) {
+        const c = block[i];
+        if (depth === 0 && c === '`') break;
+        if (depth === 0 && c === '$' && block[i + 1] === '{') { depth = 1; i++; continue; }
+        if (depth > 0) { if (c === '{') depth++; else if (c === '}') depth--; continue; }
+        lit += c;
+      }
+      let rest = lit;
+      for (const re of LIT_OK) rest = rest.replace(re, '');
+      const digits = rest.match(/\d/g);
+      if (digits) bad.push(`…${rest.slice(Math.max(0, rest.search(/\d/) - 12), rest.search(/\d/) + 8)}…`);
+    }
+    ok(bad.length === 0,
+      `G20 註記無手打數字：${notes.length} 則註記的模板裡，阿拉伯數字一律出自 \${}（例外只有 AX3／AX5 級名與「第 2 輪」）`,
+      bad.join(' | '));
+  }
+}
+
+/* ══ G21  產物與量測同版（防 build↔measure 的一輪陳舊窗口）══════
+   第 4 輪 reviewer 實測重現：改了畫面後只跑一輪，板上印著上一版的實測句
+   （板印 96.8%／實測 91.1），G1–G19 卻全部通過 —— 因為沒有人比對「板上的數字
+   是哪一次量的」。build.mjs 現在把當次讀到的 measured.json 指紋蓋進每一張產物，
+   這裡拿現行 measured.json 的指紋比對。不一致＝再跑一次 build（要跑到收斂）。 */
+{
+  const stamps = files.map((f) => [f, (/<!-- ls-measured:([a-z0-9-]+) -->/.exec(read(f)) || [])[1]]);
+  const missing = stamps.filter(([, s]) => !s).map(([f]) => f);
+  const uniq = [...new Set(stamps.map(([, s]) => s))];
+  const now = MEAS_RAW ? hash12(MEAS_RAW) : 'no-measurement';
+  ok(missing.length === 0 && uniq.length === 1,
+    `G21 產物同版：${files.length} 張板都蓋了量測指紋，而且是同一次 build 的（${uniq.join('/')}）`,
+    [...missing.map((f) => `${f} 沒蓋章`), uniq.length > 1 ? `指紋不只一種：${uniq.join(' ')}` : ''].filter(Boolean).join(' '));
+  ok(uniq.length === 1 && uniq[0] === now,
+    `G21 產物同版：板上印的實測句出自現行 measured.json（#${now}）`,
+    uniq[0] !== now ? `板上是 #${uniq[0]}、現行是 #${now} —— 板上的實測數字是上一版的，重跑 node build.mjs` : '');
+}
 
 /* ══ G17  截圖與重渲染的底部 40px 一致（_shot.mjs 寫回）══════════ */
 if (M.shot) {

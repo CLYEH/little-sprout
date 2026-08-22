@@ -1,5 +1,6 @@
 // Little Sprout M1 — 單一 token 來源。build.mjs 與 verify.mjs 都從這裡讀，
 // 所以「宣稱的值」與「畫出來的值」不可能再漂移。
+import { createHash } from 'node:crypto';
 
 /* ── 色 ──────────────────────────────────────────────
    規則：文字只有兩級（ink / ink2）。陶土、酒紅、芽綠只當底色或線，
@@ -103,3 +104,16 @@ export const CAP = 0.72;
 /* AX5 ≈ 310%。壓力板用，是推導值不是新階。 */
 export const AX = 3.1;
 export const ax = (px) => Math.round(px * AX);
+
+/* ── 呼吸帶兩條規則的門檻：一個數字一個出處 ──────────
+   pause  ①「內容首末之間，任何一段連續空白 ≤120px」的門檻
+   btnPct ②「主按鈕中心須落在畫面 70% 以內」的門檻
+   板上印的、measure.mjs 分流用的、verify.mjs 判定用的，全部讀這裡。
+   刻意不放進 FIX：FIX 的值同時是 G1 允許的間距白名單，門檻不是間距。 */
+export const RULE = { pause: 120, btnPct: 70 };
+
+/* ── 產物與量測資料的綁定（G21）──────────────────────
+   build.mjs 把它「當次讀到的 measured.json」的指紋寫進每一張產物，
+   verify.mjs 拿現行 measured.json 的指紋比對 —— 不一致＝板上印的實測句是上一版的。
+   兩邊算法必須是同一份，所以定義在這裡。 */
+export const hash12 = (s) => createHash('sha256').update(s).digest('hex').slice(0, 12);

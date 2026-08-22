@@ -1,7 +1,7 @@
 // Little Sprout — M1 (LS-17 登入 / LS-18 家庭) design canvas.
 // tokens.mjs 是唯一 token 來源 -> 30 .dc.html artboards。Run: node build.mjs
 import { writeFileSync, readFileSync, existsSync } from 'node:fs';
-import { T, SP, FIX, TY, FONT, MONO, CAP, H1_GROUPS, H1_EXCLUDED, ax } from './tokens.mjs';
+import { T, SP, FIX, TY, FONT, MONO, CAP, H1_GROUPS, H1_EXCLUDED, RULE, AX, ax, hash12 } from './tokens.mjs';
 import { inkMark } from './brush.mjs';
 
 /* ── 給自驗管線的標記 ──────────────────────────────────
@@ -288,10 +288,13 @@ const helmet = (t) => `<style>
       mix-blend-mode:multiply}
   </style>`;
 
+/* 每一張產物都蓋上「這一次 build 讀到的 measured.json 指紋」。不渲染、不影響版面，
+   但 verify 的 G21 靠它判定「板上印的實測句」與現行量測是不是同一版（第 4 輪 R10）。 */
 const doc = (t, body) => `<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
+  <!-- ls-measured:${MEAS_HASH} -->
   <script src="./support.js"></script>
 </head>
 <body>
@@ -323,7 +326,7 @@ const HH = {
   'InviteEmpty.dc.html': 880, 'InviteGenerating.dc.html': 880,
   'InviteRequestsMany.dc.html': 1280, 'StressType.dc.html': 1700,
   'StressCodeAX.dc.html': 2060,
-  'Tokens.dc.html': 3420, 'Notes.dc.html': 2080, 'StressContent.dc.html': 960,
+  'Tokens.dc.html': 3560, 'Notes.dc.html': 2080, 'StressContent.dc.html': 960,
 };
 const h = (f) => HH[f] || 844;
 
@@ -883,6 +886,7 @@ const tokensSheet = (measured) => {
       ${inkMark(INK.sheet, t.ink)}
     </div>
     <p style="${TY.b};color:${t.ink2};margin:0;max-width:640px">整個 app 是一塊暖色卡紙。<b style="color:${t.ink}">凹進去＝可以填東西進去</b>、<b style="color:${t.ink}">浮起來＝可以按</b>、<b style="color:${t.ink}">平印上去＝只能讀</b>。三種表面，一種一個意思。<b style="color:${t.ink}">例外只有下面列出來的那幾個 —— 沒印在這張板上的例外，就是 bug。</b></p>
+    <span style="font-family:${MONO};${TY.cap};color:${t.ink2}">實測資料 #${MEAS_HASH}（量於 ${M.measuredAt || '尚未量測'}）—— 這張板上每一句「實測」都出自這一份 measured.json。產物與量測不同版時管線 FAIL（G21），所以板上的數字不可能是上一版的。</span>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:${FIX.gutter}px;margin-bottom:${SP.xxl}px">
@@ -1008,8 +1012,8 @@ const tokensSheet = (measured) => {
   <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:${FIX.gutter}px;margin-top:${FIX.gutter}px">
     ${ruleCard(t, '量得出來的規則（每一條都有實測句，不是宣言）', [
       `<b>H1 起跑線</b>：${Object.keys(H1_GROUPS).length} 組畫面，每組內部同一條線，逐張量 cap-height（cap 比例 ${CAP}）。${measured.h1Line}`,
-      `<b>呼吸帶 ①</b>：<b>內容首末之間，任何一段連續空白 ≤120px（手機 iPad 同一條，沒有 iPad 例外）。</b>超過的必須掛 <code>data-pause="理由"</code>，掛不出理由的就是版面破了；管線掃到未掛牌的一律 FAIL。`,
-      `<b>呼吸帶 ②</b>：<b>內容末端到板底不設上限，但主按鈕中心須落在畫面 70% 以內。</b>（本稿的落地：尾段空白 >120px 的板才受 70% 約束 —— 底部主按鈕貼安全區是 iOS 的正解，見下方實測與 Notes。）${measured.voidLine}`,
+      `<b>呼吸帶 ①</b>：<b>內容首末之間，任何一段連續空白 ≤${RULE.pause}px（手機 iPad 同一條，沒有 iPad 例外）。</b>超過的必須掛 <code>data-pause="理由"</code>，掛不出理由的就是版面破了；管線掃到未掛牌的一律 FAIL。`,
+      `<b>呼吸帶 ②</b>：<b>內容末端到板底不設上限，但主按鈕中心須落在畫面 ${RULE.btnPct}% 以內。</b>兩條規則是<b>分工</b>，不是同一條的寬嚴兩版：<b>①管內部</b> —— 用 spacer 把按鈕推到板底，必然在內容之間造出 >${RULE.pause}px 的空白，①就抓得到（拔掉掛牌會 FAIL，突變測過）；<b>②是「尾段不設上限」這個豁免的對價</b> —— 底部主按鈕貼安全區是 iOS 的正解（<code>safeAreaInset</code>，見 Notes），所以尾段放行，但只要用到這個豁免（尾段 >${RULE.pause}px），就要付 ${RULE.btnPct}% 這筆價。沒用到豁免的板不收費。${measured.voidLine}`,
       `<b>錯誤幾何不得與可按幾何重合</b>：錯誤線 ${FIX.errBar}pt、距離輸入面 ${SP.s}pt；可按的唇邊 ${FIX.lip}pt、貼著元件下緣。兩者不同寬、不同位置、最近距離 ≥${SP.xs}pt。${measured.errLine}`,
       `<b>${FIX.lip}pt 唇邊＝該表面的深一階</b>：陶土→ctaDeep、卡紙→edge、危險→wine。${measured.lipLine}`,
     ])}
@@ -1124,6 +1128,7 @@ const hex = (h) => { h = h.replace('#', ''); return [0, 2, 4].map((i) => parseIn
 const lum = (c) => { const s = c.map((v) => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * s[0] + .7152 * s[1] + .0722 * s[2]; };
 const CR = (a, b) => { const l1 = lum(a), l2 = lum(b); const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1]; return (hi + .05) / (lo + .05); };
 const cr = (a, b) => CR(hex(a), hex(b)).toFixed(2);
+const ratio = (a, b) => `${cr(a, b)}:1`;   // 註記裡的對比一律用這個，":1" 才不是手打的數字
 const mix = (fg, bg, al) => fg.map((v, i) => v * al + bg[i] * (1 - al));
 const crMix = (fg, bg, al) => CR(mix(hex(fg), hex(bg), al), hex(bg)).toFixed(2);
 const tag = (v) => (v >= 7 ? 'AAA' : v >= 4.5 ? 'AA' : v >= 3 ? '3:1 過' : 'FAIL');
@@ -1165,7 +1170,12 @@ const measured = {
 /* verify.mjs / measure.mjs 會重新掃描產出並回填實測句子；
    設計稿上印的每一句都是從 measured.json 讀的，不是手寫的。 */
 const MJ = new URL('measured.json', import.meta.url);
-const M = existsSync(MJ) ? JSON.parse(readFileSync(MJ, 'utf8')) : {};
+const MEAS_RAW = existsSync(MJ) ? readFileSync(MJ, 'utf8') : '';
+const M = MEAS_RAW ? JSON.parse(MEAS_RAW) : {};
+/* 這一次 build 讀到的 measured.json 指紋。每一張產物都蓋上它（見 doc()），
+   verify 的 G21 拿現行 measured.json 的指紋比對 —— 板上印的實測句是不是上一版，
+   從此是 gate 判的，不是人記得跑第二輪。 */
+const MEAS_HASH = MEAS_RAW ? hash12(MEAS_RAW) : 'no-measurement';
 const say = (v, f) => (v === undefined ? '（尚未量測：node measure.mjs && node verify.mjs）' : f(v));
 
 measured.gaps = say(M.gapCount, () => `實測（${M.measuredAt || '本次'}）：${M.count} 張板共 ${M.gapCount} 個 gap，全部落在這七階。`);
@@ -1174,7 +1184,9 @@ measured.pads = say(M.padCount, () => `實測：${M.padCount} 個 padding/margin
 measured.insetLine = say(M.insetUse, () => `實測：${M.insetTotal} 個帶 inset 的使用點，全部落在這八個角色（第 2 輪只 grep helper 定義，實測 49 個非可填元件帶 inset）。`);
 measured.ctaLine = say(M.ctaMax, () => `實測：${M.ctaBoards} 張流程板，最外層陶土區塊最多 ${M.ctaMax} 個／板。`);
 measured.h1Line = say(M.h1 && M.h1.groups, () => `實測：${Object.entries(M.h1.groups).map(([g, v]) => `${g} ${v.n} 張同在 ${v.ys.join('／')}px`).join('；')}。排除 ${H1_EXCLUDED.length} 張（iPad 走跨欄基線、AX 壓力板、板中板、交付板）。`);
-measured.voidLine = say(M.maxVoid, () => `實測：手機最大 ${M.maxVoid}px（${M.maxVoidFile}）；iPad 欄內最大 ${M.maxVoidPad}px（${M.maxVoidPadFile}）；超過 120 的 ${M.pauses ? M.pauses.length : 0} 段全部掛了 data-pause，未掛牌的 ${M.pauseBad ? M.pauseBad.length : 0} 段。尾段空白最大 ${M.maxTrail}px（${M.maxTrailFile}）；主按鈕中心位置最高 ${M.btnMaxPct}%（${M.btnMaxFile}），其中尾段 >120px 的板最高 ${M.btnTailPct === null ? '無此板' : `${M.btnTailPct}%（${M.btnTailFile}）`}。`);
+/* 措辭統一（第 4 輪 R10）：主按鈕的位置一律講「最低」＝畫面上最靠下的那一張＝百分比最大的那一張。
+   measure.mjs 的 console、verify.mjs 的 G10、這一句，三處同一個詞。 */
+measured.voidLine = say(M.maxVoid, () => `實測：手機最大 ${M.maxVoid}px（${M.maxVoidFile}）；iPad 欄內最大 ${M.maxVoidPad}px（${M.maxVoidPadFile}）；超過 ${RULE.pause} 的 ${M.pauses ? M.pauses.length : 0} 段全部掛了 data-pause，未掛牌的 ${M.pauseBad ? M.pauseBad.length : 0} 段。尾段空白最大 ${M.maxTrail}px（${M.maxTrailFile}）；主按鈕中心<b>位置最低</b>（＝百分比最大）的是 ${M.btnMaxPct}%（${M.btnMaxFile}），其中尾段 >${RULE.pause}px 的板位置最低 ${M.btnTailPct === null ? '無此板' : `${M.btnTailPct}%（${M.btnTailFile}）`}。`);
 measured.errLine = say(M.errGap, () => `實測：${M.errCount} 道錯誤線，與最近的唇邊距離最小 ${M.errGap}px。`);
 measured.lipLine = say(M.lips, () => {
   const n = (k) => M.lips[`${k}@${FIX.lip}`] || 0;
@@ -1248,48 +1260,60 @@ const sheets = [
   { file: 'Notes.dc.html', x: 2 * (P + GX) + 980 + GX, y: h('StressContent.dc.html') + GY, w: 980, h: h('Notes.dc.html'), page: 'page-2' },
 ];
 
+/* ── 畫布上的註記（第 4 輪 R8）──────────────────────────────────
+   註記是 ios-dev 在畫布上第一眼看到的規格，第 3 輪它們沒跟著對帳，四則帶假話
+   （capAlign 印 27／已否決的「開關移到最上面」／過期的呼吸帶單句／板高 1140）。
+   現在規格數字一律內插，來源就是建畫面用的那一份：FIX／RULE／TY／INK／PHOTO／
+   h() 板高／measured.json。<b>禁止手打規格數字</b>——歷史敘述（「第 2 輪是四個」）
+   用中文數字，阿拉伯數字一律出自 ${}，由 verify 的 G20 掃描斷言。 */
+const A = (v, f) => (v === undefined || v === null ? '（尚未量測）' : f(v));
+const ty2 = (s) => `${/font-size:(\d+)px/.exec(s)[1]}/${/line-height:(\d+)px/.exec(s)[1]}`;
+const fs1 = (s) => /font-size:(\d+)px/.exec(s)[1];
+const padCol = (file, col) => (M.voids || []).find((v) => v.file === file && v.col === col);
+const capPair = (M.h1 && M.h1.padPair) || [];
+
 const canvas = {
   artboards: [...artboards, ...sheets],
   annotations: [
     {
       id: 'motif', x: 0, y: -320, w: 640, page: 'page-1',
-      text: '母題：卡紙開窗。三種表面，一種一個意思 —— 凹進去＝可以填東西進去；浮起來＝可以按（兩層：3pt 唇邊＋落影，沒有第三層 inset）；平印上去＝只能讀。凹的白名單有八個角色，全部印在 Tokens 板上；沒印在那張板上的例外就是 bug。',
+      text: `母題：卡紙開窗。三種表面，一種一個意思 —— 凹進去＝可以填東西進去；浮起來＝可以按（兩層：${FIX.lip}pt 唇邊＋落影，沒有第三層 inset）；平印上去＝只能讀。凹的白名單有 ${A(M.insetUse, (u) => Object.keys(u).length)} 個角色（實測 ${A(M.insetTotal, (n) => n)} 個使用點全部落在裡面），全部印在 Tokens 板上；沒印在那張板上的例外就是 bug。`,
     },
     {
       id: 'ink-note', x: 700, y: -320, w: 620, page: 'page-1',
-      text: '手寫字標「小芽」是全稿唯一的非系統線條，也是歡迎頁的溫度來源 —— 不是暖色底、不是粗體字。每一筆是中線貝茲＋起筆／收筆寬＋中段提按推出來的填色外框。它在三個地方再現：歡迎頁、信件明細的「寄件人」、建立家庭的即時預覽 —— 你在畫面上看到的筆跡，信箱裡會看到同一支。它刻意不壓在照片上（照片上的對比無法定義）。',
+      text: `手寫字標「小芽」是全稿唯一的非系統線條，也是歡迎頁的溫度來源 —— 不是暖色底、不是粗體字。每一筆是中線貝茲＋起筆／收筆寬＋中段提按推出來的填色外框。三個使用點，字高各自不同：歡迎頁（手機 ${INK.phone}pt／iPad ${INK.pad}pt）、信件明細的「寄件人」（${INK.mail}pt）、建立家庭的即時預覽（${INK.preview}pt）—— 你在畫面上看到的筆跡，信箱裡會看到同一支。它刻意不壓在照片上（照片上的對比無法定義），在卡紙上實測 ${ratio(L.ink, L.board)}。`,
     },
     {
       id: 'photo-note', x: 1400, y: -320, w: 600, page: 'page-1',
-      text: '照片位（未定稿，需要人決定）：歡迎頁上的是佔位圖，畫面上不再印任何規格註記 —— 攝影 brief 只在 Notes 板。要換成的真照片條件：清晰（模糊＝沒有內容）、至少兩個人、看得到臉、主體落在三分線、有生活雜訊、沒有人背對鏡頭走開。本管線試了 8 版都做不到可用的人臉品質，這是刻意的取捨。',
+      text: `照片位（未定稿，需要人決定）：歡迎頁上的是佔位圖，畫面上不再印任何規格註記 —— 攝影 brief 只在 Notes 板。焦點寫成影像座標比例 (${Math.round(PHOTO.fx * 100)}%, ${Math.round(PHOTO.fy * 100)}%)，object-position 由各斷點自己換算：${A(M.focus, (f) => f.map((x) => `${x.name} ${x.bw}×${x.bh} 只裁${x.axis} ${x.crop}px → ${x.pos}`).join('；'))}（另一軸寫什麼都沒有作用）。卡紙上緣壓過照片 ${FIX.seamPhone}pt、iPad ${FIX.seam}pt。要換的真照片條件：清晰（模糊＝沒有內容）、至少兩個人、看得到臉、主體落在三分線、有生活雜訊、沒有人背對鏡頭走開。合成人臉做不到可用品質，所以用佔位圖 —— 刻意的取捨，不是遺漏。`,
     },
     {
       id: 'void-note', x: 0, y: PH + GY - 300, w: 620, page: 'page-1',
-      text: '呼吸帶：手機任何一段連續無字無圖的縱向區間 ≤120px。輸入畫面不用 spacer 把按鈕推到最底，由上往下讀完就結束；鍵盤升起時主按鈕靠 safeAreaInset 貼在鍵盤上緣。設計稿一律不畫假鍵盤、也不畫假狀態列。',
+      text: `呼吸帶是兩條規則，分工不是寬嚴兩版。①內容首末之間，任何一段連續無字無圖的縱向區間 ≤${RULE.pause}px —— 手機 iPad 同一條，沒有 iPad 例外；超過的必須掛 data-pause 寫出理由，掛不出理由就是版面破了（本稿 ${A(M.pauses, (p) => p.length)} 段掛牌、${A(M.pauseBad, (p) => p.length)} 段未掛牌，未掛牌一律 FAIL）。②內容末端到板底不設上限 —— 底部主按鈕貼安全區是 iOS 的正解（safeAreaInset）—— 但用到這個豁免的板（尾段 >${RULE.pause}px）要付對價：主按鈕中心得落在畫面 ${RULE.btnPct}% 以內。設計稿一律不畫假鍵盤、也不畫假狀態列。`,
     },
     {
       id: 'err-note', x: 700, y: PH + GY - 300, w: 620, page: 'page-1',
-      text: '錯誤的幾何刻意脫離「可以按」的幾何：錯誤是一道獨立的 2pt 酒紅線，離輸入面 8pt；可以按的唇邊是 3pt、貼著元件下緣。第 2 輪這兩者同寬同位置 —— 出錯的欄位長得像按鈕。四張錯誤板由同一個元件產生。出錯時明細表收成一行，讓「欄位→錯誤句→下一步」擠成一群。',
+      text: `錯誤的幾何刻意脫離「可以按」的幾何：錯誤是一道獨立的 ${FIX.errBar}pt 酒紅線，離輸入面 ${SP.s}pt；可以按的唇邊是 ${FIX.lip}pt、貼著元件下緣。第 2 輪這兩者同寬同位置 —— 出錯的欄位長得像按鈕。全稿 ${A(M.errCount, (n) => n)} 道錯誤線出自同一個元件，實測與最近的唇邊距離最小 ${A(M.errGap, (g) => g)}px、重合 ${A(M.errOverlap, (n) => n)} 處。出錯時明細表收成一行，讓「欄位→錯誤句→下一步」擠成一群。`,
     },
     {
       id: 'ipad-note', x: 490, y: 2 * (PH + GY) + 40 - 300, w: 700, page: 'page-1',
-      text: 'iPad 兩板不再垂直置中：改三段式（上錨／中／下錨），呼吸帶均分。三岔路兩欄同 y 起跑 —— 左欄 H1 的 cap-height 對齊右欄首卡標題的 cap-height（42/50 對 28/34，補 27pt），說明欄的帳號列與右欄卡 3 齊底。死帶改成分欄量測：全幅量測會被欄位底色遮蔽，量不到欄內的空白。',
+      text: `iPad 兩板不再垂直置中：改三段式（上錨／中／下錨）。三岔路兩欄的第一行字同高 —— 左欄 H1（${ty2(TY.dPad)}）的 cap-height 對齊右欄首卡標題（${ty2(TY.h)}）的 cap-height，右欄整體下推 capAlign ${FIX.capAlign}pt，實測兩欄差 ${A(capPair.length === 2 ? capPair : null, (p) => Math.abs(p[0].y - p[1].y).toFixed(1))}px。兩欄「不齊底」是刻意的：說明欄排完就停，欄底剩 ${A(padCol('ForkIPad', 'desc'), (v) => v.trail)}px；選項欄剩 ${A(padCol('ForkIPad', 'options'), (v) => v.trail)}px —— 齊底不是目標，欄內不留大洞才是。死帶改成分欄量測：全幅量測會被欄位底色遮蔽，量不到欄內的空白（iPad 欄內最大 ${A(M.maxVoidPad, (n) => n)}px，${A(M.maxVoidPadFile, (s) => s)}，已掛 data-pause）。`,
     },
     {
       id: 'approval-note', x: 0, y: 4 * (PH + GY) + 80 - 300, w: 700, page: 'page-1',
-      text: '兩段式審核。審核開關 ON 的軌道是芽綠（綠＝門禁開著、目前安全）—— 這是芽綠在全稿的第二個也是最後一個使用點，例外印在 Tokens 板。關掉時：開關移到畫面最上面（焦點位）、唇邊換酒紅、補一行後果，而且整張沒有陶土色主按鈕（沒有值得推薦的動作），「傳給家人」降成次要並改成「還是要傳給家人」。',
+      text: `兩段式審核。審核開關 ON 的軌道是芽綠（綠＝門禁開著、目前安全）—— 這是芽綠在全稿的第二個也是最後一個使用點，例外印在 Tokens 板。關掉時開關不移位：五張板（空／產生中／已產生／審核關閉／深色）的開關列都固定在票根正下方 y=${A(M.toggles, (g) => [...new Set(g.map((x) => x.top))].join('／'))} —— 空號碼位與票根是同一個外框，四態等高，所以位置是結構保證的，不是事後對齊。示警改用三件不移動版面的事：整列 ${FIX.lip}pt 唇邊換酒紅、補一行後果、撤掉陶土色主按鈕（沒有值得推薦的動作），「傳給家人」降成次要的「還是要傳給家人」。讓長輩重新找一次開關才是更糟的設計。`,
     },
     {
       id: 'queue-note', x: 0, y: 5 * (PH + GY) + 80 - 300, w: 700, page: 'page-1',
-      text: '待核清單：等最久的排最上面並攤開，其餘收成一列（頭像＋名＋Email＋等多久＋「查看 ›」）。一次只有一張攤開 —— 陶土色因此每畫面仍然只有一個（第 2 輪是四個），板高從 2030 降到 1140，而且順序天然就是「先處理等最久的」。',
+      text: `待核清單：等最久的排最上面並攤開，其餘收成一列（頭像＋名＋Email＋等多久＋「查看 ›」）。一次只有一張攤開 —— 陶土色因此每畫面仍然只有一個（第 2 輪是四個），而且順序天然就是「先處理等最久的」。這張板高 ${h('InviteRequestsMany.dc.html')}px：內容連同安全區放不下 ${PH} 才長高（＝這張會捲動），其餘待核板一律 ${PH}。`,
     },
     {
       id: 'ax-note', x: 0, y: -280, w: 480, page: 'page-2',
-      text: 'AX5（310%）：17pt→53pt。版面不重排、只長高。按鈕裡的 icon 在 AX3 以上一律拿掉只留字；長 Email 在 @ 後面斷行，不切在字中間也不掉孤兒字元。',
+      text: `AX5（${Math.round(AX * 100)}%）：內文 ${fs1(TY.b)}pt → ${ax(+fs1(TY.b))}pt。版面不重排、只長高。按鈕裡的 icon 在 AX3 以上一律拿掉只留字；長 Email 在 @ 後面斷行，不切在字中間也不掉孤兒字元。`,
     },
     {
       id: 'axcode-note', x: P + GX, y: -280, w: 480, page: 'page-2',
-      text: '邀請碼在 AX5：六格改兩排三格（不橫向壓縮）；票根的 60pt 不跟著放大 —— 60×3.1 = 186pt 一行排不下三碼，鎖在分格那一階的推導值 112pt 並拆成兩排。Notes 上寫了這兩條規則，這張板把它們畫出來。',
+      text: `邀請碼在 AX5：六格改兩排三格（不橫向壓縮）；票根的 ${fs1(TY.n1)}pt 不跟著放大 —— ${fs1(TY.n1)}×${AX} = ${ax(+fs1(TY.n1))}pt，一行排不下三碼，鎖在分格那一階（${fs1(TY.n2)}pt）的推導值 ${ax(+fs1(TY.n2))}pt 並拆成兩排。Notes 上寫了這兩條規則，這張板把它們畫出來。`,
     },
   ],
   pages: [

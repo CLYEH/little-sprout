@@ -3,7 +3,7 @@
 // Run: node measure.mjs   （需要本機 http server：python3 -m http.server 8731）
 import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { H1_GROUPS } from './tokens.mjs';
+import { H1_GROUPS, RULE } from './tokens.mjs';
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const URLBASE = process.env.LS_URL || 'http://localhost:8731';
@@ -38,10 +38,13 @@ for (const [g, list] of Object.entries(H1_GROUPS)) {
 const insetCount = {};
 for (const r of R.inset) insetCount[r || '(無 role)'] = (insetCount[r || '(無 role)'] || 0) + 1;
 
-/* ── 尾段空白最大的板；主按鈕中心位置最低（％最大）的板；以及其中「尾段 >120px」的板 ── */
+/* ── 尾段空白最大的板；主按鈕中心「位置最低」的板；以及其中用到尾段豁免的板 ──
+   措辭統一（第 4 輪 R10）：位置最低＝畫面上最靠下＝百分比最大。measure 的 console、
+   Tokens 板的實測句、verify 的 G10，三處同一個詞。btnMaxPct 這個 key 名裡的 Max
+   指的是百分比最大，也就是位置最低的那一張。 */
 const pct = (b) => (b ? Math.round((b.mid / b.h) * 1000) / 10 : null);
 const trail = R.boards.reduce((a, b) => (b.trail > a.trail ? b : a), R.boards[0]);
-const tailBoards = new Set(R.boards.filter((b) => b.trail > 120).map((b) => b.file));
+const tailBoards = new Set(R.boards.filter((b) => b.trail > RULE.pause).map((b) => b.file));
 const lowest = (rows) => rows.reduce((a, b) => (b.mid / b.h > a.mid / a.h ? b : a), rows[0] || null);
 const btnTop = lowest(R.mainBtn);
 const btnTail = lowest(R.mainBtn.filter((b) => tailBoards.has(b.file)));
@@ -99,5 +102,5 @@ writeFileSync(new URL('measured.json', import.meta.url), JSON.stringify(out, nul
 console.log(`measured ${out.count} boards · 呼吸帶 手機 ${out.maxVoid}px (${out.maxVoidFile}) / iPad ${out.maxVoidPad}px (${out.maxVoidPadFile})`);
 console.log(`  對比節點 ${out.contrastNodes}（最低 ${out.contrastMin} @ ${out.contrastWorst}，未達 AAA ${out.contrastFails.length}）· 照片上文字 ${out.textOverPhoto}`);
 console.log(`  inset 使用點 ${out.insetTotal}（白名單外 ${out.insetBad.length}）· 陶土最多 ${out.ctaMax}/板 · 孤兒斷行 ${out.orphans.length} · 裁切 ${out.clipped.length}`);
-console.log(`  >120px 空白 ${out.pauses.length} 段掛牌 / ${out.pauseBad.length} 段未掛牌 · 尾段最大 ${out.maxTrail}px (${out.maxTrailFile}) · 主按鈕最低 ${out.btnMaxPct}% (${out.btnMaxFile})`);
+console.log(`  >${RULE.pause}px 空白 ${out.pauses.length} 段掛牌 / ${out.pauseBad.length} 段未掛牌 · 尾段最大 ${out.maxTrail}px (${out.maxTrailFile}) · 主按鈕中心位置最低 ${out.btnMaxPct}% (${out.btnMaxFile})`);
 console.log(`  唇邊 ${JSON.stringify(out.lips)} · 無唇邊 ${out.lipNone}（${out.lipNoneWho.join(' ')}）· 開關列 ${out.toggles.map((t) => `${t.file}@${t.top}`).join(' ')}`);
