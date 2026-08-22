@@ -128,6 +128,7 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 | migration 必附 RLS 測試 | CI：`supabase/migrations` 變更必須伴隨 `supabase/tests` 變更（僅驗「有動」，內容品質靠 review） | ✅ 弱 |
 | 破壞性 migration 需本人核可 | CI 偵測 DROP／TRUNCATE／DISABLE RLS 等關鍵字（機械）；`DESTRUCTIVE-APPROVED` 寫在 PR body，**agent 技術上寫得進去**——核可真實性靠規約禁止＋orchestrator 把關 | ⚠️ 混合 |
 | 新畫面必有 .pen 設計稿 | CI 掃 diff 新增行的 View 宣告＋驗 body `Design:` 欄（換行式 conformance 掃不到）；設計稿真偽由 orchestrator 核 | ⚠️ 混合 |
+| project.yml ↔ .xcodeproj 同步（XcodeGen 雙來源） | CI：重跑 `xcodegen generate` 後 `git diff --exit-code`（生成物 byte-identical，不 flaky；雙向漂移皆攔） | ✅ |
 | 雲端 DB 不得繞過 migration 直改 | supabase MCP 鎖 `read_only=true`（機械）；dashboard 路徑靠規約 | ⚠️ 混合 |
 | harness 檔 back-merge 到 test／development | 無機械 gate——orchestrator 在 LS ticket 驗收條件中列入並人工確認 | ⚠️ 人工 |
 | scope 不越界、worktree 隔離 | 無法全機械化——merge-reviewer 的 scope 維度人工兜底 | ⚠️ 人工 |
