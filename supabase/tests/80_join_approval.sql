@@ -84,16 +84,83 @@ begin
     raise exception 'FAIL：四支邀請碼出現重複（distinct=%）', v_distinct;
   end if;
 
-  -- 到期時間在過去 → 22023（建得起來但兌換不了的碼是純粹的支援案件）
-  begin
-    perform public.create_invite('fa000000-0000-4000-8000-000000000001', 'member',
-                                 now() - interval '1 minute', 1);
-    raise exception 'FAIL：竟然能建立一支「建立當下就已過期」的邀請碼';
-  exception when invalid_parameter_value then
-    raise notice 'ok：到期時間在過去被擋下 (22023)';
-  end;
-
   raise notice 'ok：owner 產碼成功，四支碼皆為 8 碼、字元集不含 0/O/1/I';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 1b. create_invite 的參數邊界（LS017）
+--
+-- 依據：本票 create_invite 裡的兩段驗證。RPC 是安全邊界不是 UI 的輔助——UI 的
+-- 下拉選單擋得住手滑，擋不住直接打 /rest/v1/rpc/create_invite 的人，而
+-- expires_at／max_uses 正是 PLAN §5、§8 用來限制邀請碼外洩後果的那兩個旋鈕。
+-- 五種壞參數共用 LS017 一個錯誤碼（同一類失敗只給 UI 一種形狀）。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  c record;
+begin
+  for c in
+    select * from (values
+      ('到期時間在過去（建得起來但兌換不了，純粹的支援案件）', '-1 minute'::interval, 1),
+      ('到期時間超過 30 天上限（外流一次就長期開放）',        '31 days'::interval,   1),
+      ('可用次數 0',                                          '7 days'::interval,    0),
+      ('可用次數 21（超過上限）',                             '7 days'::interval,   21),
+      ('可用次數 NULL（原本裸噴 23502，UI 認不得）',          '7 days'::interval, null)
+    ) as t(label, offs, uses)
+  loop
+    begin
+      perform public.create_invite('fa000000-0000-4000-8000-000000000001', 'member',
+                                   now() + c.offs, c.uses);
+      raise exception 'FAIL：% —— 竟然建得起來', c.label;
+    exception when sqlstate 'LS017' then
+      raise notice 'ok：% → LS017', c.label;
+    end;
+  end loop;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 1c. 邀請碼的熵：每一個位置都必須抽得到整個 32 字元的字元集
+--
+-- 依據：create_invite 挑選「完全隨機的那幾個位元組」那行（c_random_bytes）。
+-- 這條不是形式主義：UUID v4 的 byte 6 高 nibble 固定是版本碼 0x4，直接取
+-- byte 0..7 的話第 7 碼只抽得到半個字元集（16 種），整支碼少掉 1 bit
+-- （40 → 39，PR #36 review 抓到）。少 1 bit 等於暴力破解成本砍半，
+-- 而破解成功的後果是陌生人進到別人家的相簿。
+--
+-- 判準取 >16 而不是 =32：200 次抽樣下某個字元一次都沒出現的機率約 0.2%，
+-- 要求 32 種全出現會偶爾假紅；而壞掉的版本在該位置最多只有 16 種，
+-- 兩者之間差得夠遠，不會有模稜兩可的結果。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  c_samples constant int := 200;
+  v_code text;
+  v_i int;
+  v_pos int;
+  v_seen text[] := array_fill(''::text, array[8]);
+  v_distinct int;
+begin
+  for v_i in 1..c_samples loop
+    v_code := public.create_invite('fa000000-0000-4000-8000-000000000001', 'member',
+                                   now() + interval '7 days', 1);
+    for v_pos in 1..8 loop
+      v_seen[v_pos] := v_seen[v_pos] || substr(v_code, v_pos, 1);
+    end loop;
+  end loop;
+
+  for v_pos in 1..8 loop
+    select count(distinct ch) into v_distinct
+      from regexp_split_to_table(v_seen[v_pos], '') as ch
+     where ch <> '';
+    if v_distinct <= 16 then
+      raise exception
+        'FAIL 熵：邀請碼第 % 碼在 % 次抽樣中只出現 % 種字元（字元集有 32 種）—— 這一碼的亂數來源不是滿的 5 bits',
+        v_pos, c_samples, v_distinct;
+    end if;
+  end loop;
+  raise notice 'ok 熵：% 次抽樣下 8 個位置每一個都出現 >16 種字元（每碼都是滿的 5 bits）', c_samples;
 end;
 $$;
 reset role;
@@ -860,6 +927,8 @@ select set_config('request.jwt.claims',
   '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 set local role authenticated;
 do $$
+declare
+  v_n int;
 begin
   begin
     insert into public.family_members (family_id, user_id, role)
@@ -869,6 +938,29 @@ begin
   exception when insufficient_privilege then
     raise notice 'ok 驗收：owner 無法直接 INSERT 成員 (42501)';
   end;
+
+  -- 同一件事的另一條路：不新增列，改寫既有列的 user_id。
+  -- family_id 沒變，family_members_update policy 兩側都會通過——擋住它的只有
+  -- column-level grant（PR #36 review 的 F1，實測可把陌生人塞進家庭並讀到全家照片）。
+  begin
+    update public.family_members set user_id = 'e0000000-0000-4000-8000-000000000002'
+     where family_id = 'fa000000-0000-4000-8000-000000000001'
+       and user_id = 'a0000000-0000-4000-8000-000000000003';
+    raise exception 'FAIL 驗收：owner 改寫既有成員列的 user_id，把陌生人塞進了家庭（INSERT 關了但 UPDATE 沒關）';
+  exception when insufficient_privilege then
+    raise notice 'ok 驗收：owner 無法改寫成員列的 user_id (42501)';
+  end;
+
+  -- 正向對照：該能改的兩件事仍然能改，否則「收斂」就變成把功能一起關掉
+  -- （PLAN §3：owner 可升降角色、可逐人關閉上傳）
+  update public.family_members set role = 'viewer', can_upload = false
+   where family_id = 'fa000000-0000-4000-8000-000000000001'
+     and user_id = 'a0000000-0000-4000-8000-000000000003';
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then
+    raise exception 'FAIL 正向對照：owner 改不動成員的 role／can_upload（影響 % 列）', v_n;
+  end if;
+  raise notice 'ok 正向對照：owner 仍改得動 role 與 can_upload';
 end;
 $$;
 reset role;
@@ -877,10 +969,26 @@ do $$
 declare
   v_check text;
   v_others int;
+  v_col text;
 begin
   if has_table_privilege('authenticated', 'public.family_members', 'insert') then
     raise exception 'FAIL：authenticated 還有 family_members 的 INSERT grant（收斂只做了 policy 那一層）';
   end if;
+
+  -- UPDATE 的 column grant 必須逐欄列舉：這三欄是「這一列在講誰、屬於哪一家、何時加入」，
+  -- 可改的話等於可以把任何一列的歸屬換掉，policy 完全攔不到（它只看 family_id）。
+  foreach v_col in array array['user_id', 'family_id', 'created_at'] loop
+    if has_column_privilege('authenticated', 'public.family_members', v_col, 'update') then
+      raise exception
+        'FAIL：authenticated 可以 UPDATE family_members.% —— owner 能改寫既有列的歸屬，把陌生人塞進家庭', v_col;
+    end if;
+  end loop;
+  -- 正向對照：該給的兩欄要還在，否則角色升降與上傳開關就沒了（PLAN §3）
+  foreach v_col in array array['role', 'can_upload'] loop
+    if not has_column_privilege('authenticated', 'public.family_members', v_col, 'update') then
+      raise exception 'FAIL 正向對照：authenticated 失去 family_members.% 的 UPDATE 權限', v_col;
+    end if;
+  end loop;
 
   select p.with_check into v_check from pg_policies p
    where p.schemaname = 'public' and p.tablename = 'family_members'
@@ -898,7 +1006,7 @@ begin
     raise exception 'FAIL 回歸：family_members 的 select/update/delete policy 少了（實際 % 條）', v_others;
   end if;
 
-  raise notice 'ok 驗收：family_members 的直接 INSERT 兩層都關（grant 收回 + policy WITH CHECK false）';
+  raise notice 'ok 驗收：family_members 的直接寫入兩層都關——INSERT（grant 收回 + policy WITH CHECK false）、UPDATE（column grant 只剩 role/can_upload）';
 end;
 $$;
 

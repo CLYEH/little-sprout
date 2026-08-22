@@ -16,8 +16,10 @@
 --
 -- 三條設計上的硬決定，先寫在這裡，細節在各段落：
 --   1. **成員寫入的唯一路徑是 SECURITY DEFINER RPC**：family_members_insert policy 收斂成
---      WITH CHECK (false) 並收回 authenticated 的 INSERT grant（LS-6 review m2 的技術債）。
---      owner 不能再繞過邀請直接把任何 user_id 塞進自家名單。
+--      WITH CHECK (false) 並收回 authenticated 的 INSERT grant（LS-6 review m2 的技術債），
+--      同時把 UPDATE 的整表 grant 收成只有 (role, can_upload) 兩欄（見第 6b 段——
+--      只關 INSERT 的話，owner 改寫既有列的 user_id 一樣能把陌生人塞進來，後果完全相同）。
+--      owner 不能再繞過邀請把任何 user_id 弄進自家名單，不論是新增一列還是改寫一列。
 --   2. **used_count 在「申請成立」時就消耗**，不是核准時。核准時才扣的話，一支邀請碼可以被
 --      無限多人同時申請占用（申請不需要任何人同意），owner 面對一長串待審清單而額度形同虛設。
 --      代價：拒絕／撤回不退還次數（退還會讓「申請→撤回」變成免費的無限迴圈，且退還本身
@@ -113,6 +115,11 @@ create index join_requests_applicant_idx
 -- 沒有這個索引就是每撤銷一次碼掃一次全表，而這張表是全站共用（不是每家一張）。
 create index join_requests_invite_idx on public.join_requests (family_id, invite_id);
 
+-- resolved_by 也是外鍵（on delete set null），RI 檢查走的是同一條「以父鍵找子列」的路徑：
+-- 使用者刪帳號（§9-A2）時 Postgres 要找出所有 resolved_by = 該帳號的申請列。
+-- 其餘三個外鍵都有索引可用，只有這個沒有——補上，理由與上面那條相同。
+create index join_requests_resolved_by_idx on public.join_requests (resolved_by);
+
 -- ---------------------------------------------------------------------------
 -- 5. join_requests 的 RLS
 --
@@ -158,6 +165,34 @@ alter policy family_members_insert on public.family_members with check (false);
 revoke insert on public.family_members from authenticated;
 
 -- ---------------------------------------------------------------------------
+-- 6b. family_members 的 UPDATE 也要收斂——只收 INSERT 是攔不住的
+--
+-- 光關掉 INSERT 並不能讓「成員寫入的唯一路徑是 RPC」成立：UPDATE 的 grant 是整表的，
+-- 而 family_members_update policy 只約束 family_id（USING 與 WITH CHECK 都是
+-- `family_id in owned_family_ids()`）。於是 owner 可以拿自家「既有的」任何一列——
+-- 例如一位 viewer——把它的 user_id 改成任意帳號：
+--
+--   update public.family_members set user_id = '<陌生人>'
+--    where family_id = '<我的家庭>' and user_id = '<我家的 viewer>';
+--
+-- family_id 沒變，policy 兩側都通過，影響 1 列。那個陌生人立刻取得該家庭的成員資格，
+-- 全家的照片、日記、留言都看得到（PR #36 review 實測重現，本檔的測試也照樣打一發）。
+-- 換句話說，被關掉的 INSERT 只是「新增一列」這條路，「改寫既有列的歸屬」這條路仍然開著，
+-- 而兩條路的後果完全相同。
+--
+-- 修法沿用 init_schema 對 families／media 的既有慣例：column-level grant 逐欄列舉。
+-- owner 該能改的只有兩件事——角色升降（role）與逐人開關上傳（can_upload，PLAN §3）；
+-- user_id／family_id／created_at 是「這一列在講誰、屬於哪一家、何時加入」，
+-- 三者都不是「修改」語意的東西，要改就是新增或移除成員，那兩條路都只走 RPC 與既有的
+-- DELETE policy（退出家庭／owner 移除成員）。
+--
+-- 注意 REVOKE 的順序：先整表收回再逐欄發放。反過來寫（先 grant 欄位再 revoke 整表）
+-- 會把剛發下去的欄位權限一起收掉——REVOKE 整表會連帶拿掉該表的欄位授權。
+-- ---------------------------------------------------------------------------
+revoke update on public.family_members from authenticated;
+grant update (role, can_upload) on public.family_members to authenticated;
+
+-- ---------------------------------------------------------------------------
 -- 7. RPC
 --
 -- 全部 SECURITY DEFINER + `set search_path = ''` + 全名限定（definer 的標準防護，
@@ -167,7 +202,12 @@ revoke insert on public.family_members from authenticated;
 -- 錯誤碼（沿用 LS001／LS002 的自訂 SQLSTATE 慣例，UI 要能分文案）：
 --   LS010 邀請碼不存在      LS011 已過期        LS012 次數用罄
 --   LS013 你已經是成員      LS014 已有待審申請  LS015 申請不存在或已被處理
---   LS016 產碼連續撞碼      42501 未登入／權限不足   22023 參數不合理
+--   LS016 產碼連續撞碼      LS017 邀請碼參數不合法   42501 未登入／權限不足
+--
+-- create_invite 的參數驗證一律用 LS017（到期時間與可用次數共用一個碼）：對 UI 而言
+-- 這是同一件事——「你送來的邀請設定不合法」，訊息本文說明是哪一項；分成兩個碼只會
+-- 讓前端多寫一個 case 卻說不出更有用的話。原本到期時間用的是 Postgres 內建的 22023，
+-- 與另一項的 LS017 併存等於同一類失敗有兩種形狀，已統一。
 -- ---------------------------------------------------------------------------
 
 -- create_invite：只有 owner 能為自己的家庭產碼。
@@ -189,10 +229,22 @@ security definer
 set search_path = ''
 as $$
 declare
-  -- 32 個字元剛好是 2 的冪：亂數位元組 mod 32 沒有取模偏差（256 = 8 × 32），
-  -- 8 碼 ＝ 40 bits 的熵，且亂數來源是 gen_random_uuid()（pg_strong_random，
-  -- 不是 random()）——邀請碼可被預測等於陌生人進家庭。
+  -- 32 個字元剛好是 2 的冪：亂數位元組 mod 32 沒有取模偏差（256 = 8 × 32）。
   c_alphabet constant text := '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+  -- 亂數來源是 gen_random_uuid()（底層 pg_strong_random，不是 random()——
+  -- 可被預測的邀請碼等於陌生人進家庭），但 **不能拿它的 16 個位元組隨便用**：
+  -- UUID v4 有兩個位元組不是亂數（RFC 9562 §5.4）——
+  --   byte 6 的高 nibble 固定是版本碼 0x4（值域只剩 0x40–0x4F，mod 32 只有 16 種結果）
+  --   byte 8 的高 2 bits 固定是 variant 0b10
+  -- 原本的寫法直接取 byte 0..7，第 7 碼因此只抽得到半個字元集，整支碼的熵是 39 bits
+  -- 而不是註解宣稱的 40（PR #36 review 抓到）。這裡改成明確挑 8 個完全隨機的位元組，
+  -- 每碼都是滿的 5 bits。byte 8 雖然低 6 bits 也是亂數，但取模後不均勻，一併避開。
+  -- （不用 pgcrypto 的 gen_random_bytes：那需要假設 extension 裝在哪個 schema，
+  --  而 LS-14／LS-15 已經兩次被「雲端有、官方本機映像沒有」的佈建落差咬到。
+  --  gen_random_uuid() 是 PG13+ 的內建函式，沒有這個問題。）
+  c_random_bytes constant int[] := array[0, 1, 2, 3, 4, 5, 7, 9];
+
   v_uid uuid := auth.uid();
   v_code text;
   v_bytes bytea;
@@ -210,17 +262,36 @@ begin
     raise exception '只有該家庭的 owner 能建立邀請碼' using errcode = '42501';
   end if;
 
-  -- 已經過期的碼建得起來但兌換不了，是純粹的支援案件（多半是時區算錯）。當場擋掉。
-  if p_expires_at is null or p_expires_at <= now() then
-    raise exception '邀請碼的到期時間必須在未來' using errcode = '22023';
+  -- 參數上下限：RPC 是安全邊界，不是 UI 的輔助。UI 的下拉選單擋得住手滑，擋不住
+  -- 直接打 /rest/v1/rpc/create_invite 的人——一支「100 年後到期、可用 100000 次」的碼
+  -- 外流一次，這個家庭就永久對外開放，而 max_uses／expires_at 正是 PLAN §5、§8
+  -- 用來限制外洩後果的那兩個旋鈕。
+  --
+  -- 30 天：邀請家人加入是一次性的動作，不是長期開放的入口；真的過期了重發一支即可。
+  -- 20 次：私密家庭相簿的成員數量級是「一家人」（PLAN §1），一支碼要用超過 20 次，
+  --        代表在做的是別的事情。
+  -- 兩者都刻意訂在「明顯夠用」而不是「剛剛好」，避免為了正常用途而反覆撞牆。
+  --
+  -- 例外記錄：PLAN §9-C 的審核用 demo 帳號需要「長期有效邀請碼」。那條路徑不受這裡
+  -- 影響——平台方用 service_role／dashboard 直接寫 invites（本 RPC 是給 app 使用者的
+  -- 邊界），只要照 create_invite 的字元集產碼即可（見檔頭決定 3）。
+  if p_expires_at is null
+     or p_expires_at <= now()
+     or p_expires_at > now() + interval '30 days' then
+    raise exception '邀請碼的到期時間必須在未來 30 天內' using errcode = 'LS017';
   end if;
 
-  -- p_max_uses <= 0 由 invites 的 CHECK 擋（invites_max_uses_check），不在這裡重複判斷。
+  -- p_max_uses 為 NULL 時，invites 的 NOT NULL 會噴 23502（裸的 DB 錯誤，UI 認不得）；
+  -- 上限則沒有任何 CHECK 擋。兩者都在這裡收進錯誤碼體系。
+  if p_max_uses is null or p_max_uses < 1 or p_max_uses > 20 then
+    raise exception '邀請碼的可用次數必須介於 1 到 20 之間' using errcode = 'LS017';
+  end if;
+
   for attempt in 1..5 loop
     v_bytes := decode(replace(gen_random_uuid()::text, '-', ''), 'hex');
     v_code := '';
-    for k in 0..7 loop
-      v_code := v_code || substr(c_alphabet, (get_byte(v_bytes, k) % 32) + 1, 1);
+    for k in 1..8 loop
+      v_code := v_code || substr(c_alphabet, (get_byte(v_bytes, c_random_bytes[k]) % 32) + 1, 1);
     end loop;
 
     begin
@@ -329,7 +400,11 @@ begin
   select f.require_approval into v_require_approval
     from public.families f where f.id = v_invite.family_id;
 
-  if v_require_approval then
+  -- coalesce(..., true)：這是一個安全開關，讀不到值時必須倒向嚴格側（建待審申請），
+  -- 而不是「直接讓人進家門」。以現在的 schema 這個 NULL 取不到（欄位 NOT NULL，
+  -- 且 invites 對 families 有外鍵，家庭一定存在），所以這不是在修一個現存的洞——
+  -- 是讓「哪一天這個查詢因為別的改動而回不出列」的後果變成 fail-closed 而不是 fail-open。
+  if coalesce(v_require_approval, true) then
     begin
       insert into public.join_requests (family_id, invite_id, applicant_id)
       values (v_invite.family_id, v_invite.id, v_uid)
