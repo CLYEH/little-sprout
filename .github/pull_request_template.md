@@ -16,6 +16,9 @@ LS-
 
 ## 截圖(UI 變更必附)
 
+<!-- 新增畫面必填 .pen frame 名稱,CI 會驗;非 UI 票留空即可 -->
+Design:
+
 ---
 
 - [ ] push gate 已通過(unit tests + SwiftLint)
