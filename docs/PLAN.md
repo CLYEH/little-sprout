@@ -44,7 +44,7 @@
 
 ### 客戶端：Swift + SwiftUI（原生 iOS）
 
-- 最低支援 iOS 17，用 SwiftUI + Swift Concurrency（async/await）。
+- 最低支援 iOS 17，用 SwiftUI + Swift Concurrency（async/await）。Swift 6 語言模式（strict concurrency）——LS-12 核定，資料競態於編譯期攔截。
 - **iPhone + iPad 通用（universal）** ✅ 已定。**第一天就用適配式版面**：`NavigationSplitView` + size class，不要先做 iPhone 單層 stack 再回頭塞 iPad —— 導航層事後重寫是本專案少數「agent 也救不了」的返工，因為它會牽動每一個畫面。
 - 照片選取用 `PhotosPicker`；上傳前在裝置端壓縮（照片轉 HEIC/JPEG ~2048px 長邊、影片用 `AVAssetExportSession` 壓到 1080p），大幅省儲存費用與上傳時間。
 - 圖片快取：縮圖 + 原圖分開存，列表只載縮圖。
@@ -95,7 +95,7 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 
 **`feed_items` 為什麼第一天就要有**：時間軸要混排相簿/照片/日記，跨三張表 union 再排序，用 OFFSET 分頁在資料長大後會慢且會跳項。用一張由 trigger 維護的扁平表配 keyset 分頁（`WHERE occurred_at < $cursor ORDER BY occurred_at DESC LIMIT n`）。事後補要重寫整個首頁查詢，所以不列為優化項。
 
-**RLS**：所有內容表都帶 `family_id`，policy 一律檢查 `family_id IN (使用者所屬家庭)`。但**不要直接內嵌子查詢** —— `family_id IN (SELECT ... FROM family_members WHERE user_id = auth.uid())` 會對每一列重算。包成 `STABLE SECURITY DEFINER` 函式（或把 family 清單放進 JWT custom claim）。
+**RLS**：所有內容表都帶 `family_id`，policy 一律檢查 `family_id IN (使用者所屬家庭)`。**不要直接內嵌子查詢**——一律包成 `STABLE SECURITY DEFINER` 函式（或把 family 清單放進 JWT custom claim）。必定逐列重算、必慢的形狀是 **aggregate／correlated 子查詢**（子查詢裡引用了外層資料列的欄位，且包在聚合函式內，規劃器無法拉平成 join，只能逐列跑一次 SubPlan），例如 `(SELECT count(*) FROM family_members fm WHERE fm.family_id = m.family_id AND fm.user_id = auth.uid()) > 0`。**等值形**（如 `family_id IN (SELECT family_id FROM family_members WHERE user_id = auth.uid())`，子查詢不引用外層欄位）規劃器通常會拉平成 hashed SubPlan／semi-join 一次求值，但那是規劃器依估計列數與 `work_mem` 做的選擇，**不是保證**——雜湊表放不進 `work_mem` 時一樣會退化成逐列的 `(SubPlan N)`，一樣會被 `supabase/tests/50_rls_plan_no_percall_subquery.sql` 的偵測器擋下（判的是 plan 形狀，不是 SQL 寫法）。這正是規則寫成「一律包函式」而不是「等值形可以裸寫」的原因：包函式不必賭資料量會不會超過 `work_mem`。
 
 **其他約束**：
 - `invites` 的 `max_uses` / `used_count` 是隱私要求不是便利功能 —— 可無限重用的邀請碼一旦外流就是陌生人進家庭，與「私密」定位直接衝突。
