@@ -102,6 +102,54 @@ jobs:
             exit 1
           fi
 
+  # DB migration gate 的執行面（LS-11）：CI 實際跑 supabase/tests/run.sh（RLS 隔離／owner
+  # 不變量／trigger／併發／RLS plan 效能），把 §7 對照表「migration 必附 RLS 測試」從
+  # 「有沒有動測試檔」的弱驗證，補強成「測試真的綠」。
+  #
+  # 這個 job 必須無條件跑到有結論——若在 job 層用 if: 整包跳過，它一旦被列為 required
+  # check，GitHub 永遠等不到這個 job 的結果，PR 會卡死。所以「這個 repo 有沒有 supabase/」
+  # 的判斷放在 job 內的第一個 step（用 step outputs 讓後面 step 決定要不要跑），job 本身一律執行。
+  db:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 偵測 supabase/ 目錄
+        id: detect
+        run: |
+          if [ ! -d supabase ]; then
+            echo "無 supabase/ 目錄，略過"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 安裝 supabase CLI（鎖版本）
+        if: steps.detect.outputs.skip == 'false'
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.115.0
+
+      - name: 安裝 psql client
+        if: steps.detect.outputs.skip == 'false'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: supabase db start（只起 DB，比 supabase start 快；測試資料直接灌 auth.users，不需要 Auth/Storage service）
+        if: steps.detect.outputs.skip == 'false'
+        run: supabase db start
+
+      - name: supabase db reset（套用 supabase/migrations）
+        if: steps.detect.outputs.skip == 'false'
+        run: supabase db reset
+
+      - name: RLS／owner 不變量／trigger／併發測試（supabase/tests/run.sh）
+        if: steps.detect.outputs.skip == 'false'
+        run: |
+          SUPABASE_DB_URL="$(supabase status -o env | grep '^DB_URL=' | head -n1 | cut -d= -f2- | tr -d '"')"
+          export SUPABASE_DB_URL
+          bash supabase/tests/run.sh
+
   lint:
     runs-on: macos-15
     timeout-minutes: 15
