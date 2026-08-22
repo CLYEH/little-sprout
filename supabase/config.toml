@@ -39,6 +39,10 @@ shadow_port = 54320
 health_timeout = "2m"
 # The database major version to use. This has to be the same as your remote database's. Run `SHOW
 # server_version;` on the remote database to check.
+#
+# LS-6 待覆核：本機 Docker 拉不到 supabase 的映像，migration 與測試是在拋棄式的
+# PostgreSQL 16（pgvector/pgvector:pg16）容器上跑的，與這裡宣告的 17 不同。
+# supabase start 可用之後要在 PG17 上覆跑一次 `supabase db reset && bash supabase/tests/run.sh`。
 major_version = 17
 
 [db.pooler]
@@ -64,11 +68,9 @@ enabled = true
 schema_paths = []
 
 [db.seed]
-# If enabled, seeds the database after migrations during a db reset.
-enabled = true
-# Specifies an ordered list of seed files to load during db reset.
-# Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql"]
+# LS-6：本專案沒有 seed 檔（測試資料由 supabase/tests/00_fixtures.sql 自己建立並自我檢查），
+# 預設值 sql_paths = ["./seed.sql"] 指向一個不存在的檔案，關掉以免 db reset 時出現假警訊。
+enabled = false
 
 [db.network_restrictions]
 # Enable management of network restrictions.
