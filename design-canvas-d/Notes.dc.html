@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- ls-measured:aeeb7eef2602 -->
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>
+    /* ── Little Sprout M1 tokens（值即實作值，ios-dev 直接抄）── */
+    :root{
+      --ls-board:#EFE3D0; --ls-board-2:#E3D2B8; --ls-board-3:#D9C7AB; --ls-lit:#FBF4E8;
+      --ls-ink:#241A12; --ls-ink-2:#413327;
+      --ls-cta:#8A3016; --ls-cta-deep:#6B2410; --ls-on-cta:#FFFFFF;
+      --ls-wine:#6E1424; --ls-sprout:#1F5230; --ls-edge:#7D6342;
+      --ls-r-window:12px; --ls-r-control:14px; --ls-r-card:18px;
+      --ls-sp-1:4px; --ls-sp-2:8px; --ls-sp-3:12px; --ls-sp-4:16px;
+      --ls-sp-5:24px; --ls-sp-6:32px; --ls-tap-min:44px;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Helvetica Neue", sans-serif;-webkit-font-smoothing:antialiased;background:#EFE3D0;color:#241A12;text-wrap:pretty}
+    a{color:#241A12;text-decoration:underline} a:hover{color:#8A3016}
+    /* 紙的紋理：卡紙不是純色。全稿唯一用到透明度的地方。 */
+    .g::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.055;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+      mix-blend-mode:multiply}
+  </style></helmet>
+
+<div class="g" style="position:relative;width:980px;height:2080px;background:#EFE3D0;overflow:hidden;padding:48px">
+  <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:24px">
+    <span style="font-size:13px;line-height:18px;font-weight:500;color:#413327;letter-spacing:.14em">給 ios-dev · LS-17 / LS-18</span>
+    <h1 style="font-size:28px;line-height:34px;font-weight:700;letter-spacing:-.01em;color:#241A12;margin:0">實作註記</h1>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:16px">
+    
+  <div data-s="flat" style="border:1px solid #7D6342;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#241A12;text-shadow:0 1px 0 rgba(255,250,238,.75)">三種表面 = 三個規則</span>
+    <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">凹（<code>win</code>）只給白名單上的八個角色：輸入框、驗證碼格、照片位／等待窗、頭像、還沒產生的號碼位、身分選項選中、開關關閉的軌道、卡紙接縫。<b>白名單印在 Tokens 板上。</b></li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">浮（<code>raise</code>）<b>只有兩層</b>：3pt 下緣唇邊 ＋ 落影。唇邊用 <code>.overlay(alignment:.bottom)</code> 畫，不要用 shadow 假裝。第 2 輪的 inset topLight 是第三層、也是「有 inset＝可以填」的無聲例外，已移除。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">平印（<code>flat</code>）給「只能讀」的：票根、明細表、說明框、待核卡片。沒有 inset、沒有 lift，只有 1px edge 與字的 letterpress。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">iOS 17 沒有 inner shadow API：用兩層 stroke（上緣深、下緣亮）或 <code>.stroke(gradient).blur().mask()</code>。</li>
+    </ul>
+  </div>
+    
+  <div data-s="flat" style="border:1px solid #7D6342;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#241A12;text-shadow:0 1px 0 rgba(255,250,238,.75)">色彩落地</span>
+    <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">把 Tokens 板的 hex 建成 Asset Catalog color set，每一個都給 Any 與 Dark 兩個外觀值；View 裡只用語意名，例如 <code>Color.lsBoard</code>。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">陶土與酒紅<b>只當底色</b>（酒紅的錯誤句是唯一的文字用法）。任何「陶土色文字」都是 bug —— 它在卡紙上只有 6.59:1。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>文字一律不加 opacity。</b>placeholder 用實色 <code>lsInk2</code>；步驟條未走的段用實色 <code>lsEdge</code>。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>芽綠＝把關的機制正在生效</b>：「申請已送出」（等人放行）與審核開關 ON 的軌道（要核准才能進來）。<b>第三個綠色就是 bug。</b></li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>3pt 唇邊＝該表面的深一階</b>：陶土→<code>ctaDeep</code>、卡紙→<code>edge</code>、危險→<code>wine</code>。用 <code>.overlay(alignment:.bottom)</code> 畫，顏色跟著表面走，不要各自寫死。</li>
+    </ul>
+  </div>
+    
+  <div data-s="flat" style="border:1px solid #7D6342;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#241A12;text-shadow:0 1px 0 rgba(255,250,238,.75)">Dynamic Type</span>
+    <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">全部用 <code>Font.largeTitle/title/title3/body/subheadline/footnote</code>，不要 <code>.system(size:)</code>。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">按鈕用 <code>minHeight: 56</code>，字級長大時按鈕跟著長。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>AX3 以上，按鈕裡的 icon 一律拿掉只留字</b> —— 放大的 icon 會把按鈕撐爆（見 AX5 壓力板）。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>驗證碼六格在 AX3 以上改成兩排三格</b>（<code>ViewThatFits</code>），不要橫向壓縮。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>票根的 60pt 不跟著放大</b>：60×3.1 = 186pt，一行排不下三碼。鎖在分格那一階的 AX 推導值 112pt 並拆成兩排 —— 見 AX5 邀請碼板。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">外層一律 <code>ScrollView</code>，底部按鈕用 <code>safeAreaInset(edge:.bottom)</code>。</li>
+    </ul>
+  </div>
+    
+  <div data-s="flat" style="border:1px solid #7D6342;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#241A12;text-shadow:0 1px 0 rgba(255,250,238,.75)">點擊目標</span>
+    <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>連結本身就是 44pt 命中盒</b>，不是外面包一層：<code>.padding(.horizontal,8).frame(minHeight:44).contentShape(Rectangle())</code>。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">「使用條款」「隱私權政策」是<b>兩個獨立</b>的 44pt 盒，不是一段文字裡的兩段 range。「換帳號」同理。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">拒絕／換號碼這類次要動作用<b>不滿版</b>的連結（<code>fixedSize</code>），跟主按鈕隔 32pt。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">圖示一律配文字標籤，沒有純圖示按鈕 —— 包含返回鍵、包含待核列右邊的「查看 ›」。</li>
+    </ul>
+  </div>
+    
+  <div data-s="flat" style="border:1px solid #7D6342;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#241A12;text-shadow:0 1px 0 rgba(255,250,238,.75)">狀態：空 / 載入 / 錯誤</span>
+    <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>載入就地轉態</b>：按鈕原地換成 <code>ProgressView</code> ＋文案，底色換 cta-deep。不用全螢幕遮罩。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>空狀態</b>是邀請動作：邀請家人空狀態直接指向「產生邀請碼」，而且把號碼的用途講完。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>錯誤只有兩個紅</b>：輸入面下方 8pt 處一道<b>獨立的</b> 2pt 酒紅線 ＋ 一行酒紅訊息。它刻意不是 border-bottom —— 3pt 貼邊的線是「可以按」的唇邊，兩者不可以撞衫。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>出錯時明細表收成一行</b>：讓「欄位 → 錯誤句 → 下一步」擠成一群，中間不卡一張三行的表。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>驗證碼輸錯</b>：六格全部清空、焦點回第 1 格，訊息說明已經清空。主按鈕<b>不要</b> disable。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">過期與次數用盡是<b>兩段不同文案</b>，不可合併成「邀請碼無效」。</li>
+    </ul>
+  </div>
+    
+  <div data-s="flat" style="border:1px solid #7D6342;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#241A12;text-shadow:0 1px 0 rgba(255,250,238,.75)">邀請碼</span>
+    <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>一律 6 位純數字</b>，顯示與輸入都切 3＋3。理由：長輩會在電話裡念號碼，英數混合會有 0/O、1/l 誤聽。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">只有<b>兩種正典</b>：票根 60pt（顯示）、分格 36pt（輸入）。OTP 與邀請碼共用同一個分格元件。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>輸入邀請碼那一版，兩組中間印一個「、」</b>：畫面上的分組就是嘴巴唸出來的分組（「七四二、九三六」）。OTP 那一版沒有這句話，所以只用 24pt 的組間距。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">期限與剩餘次數<b>永遠跟著號碼</b>（票根下緣那條）。<b>還沒產生的號碼位就是一張空票根</b>：外框、數字帶高（<code>codeLine 64</code>）、騎縫線、下緣帶全部一樣，只有表面從平印換成凹（可以填）—— 所以四個狀態的高度一致，開關列不會跳位。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">有人在等核准時，票根降成一行 —— 畫面的主詞是人，不是號碼。</li>
+    </ul>
+  </div>
+    
+  <div data-s="flat" style="border:1px solid #7D6342;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#241A12;text-shadow:0 1px 0 rgba(255,250,238,.75)">兩段式審核（LS-18 使用者核定）</span>
+    <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">輸碼 → <code>request_join(code)</code> → 等待核准；核准前 RLS 一律查不到內容，UI 不要樂觀寫入。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">Owner 待核清單：<b>等最久的排最上面並攤開</b>，其餘收成一列（頭像＋名＋Email＋等多久＋「查看 ›」），點開才展開。一次只有一張攤開，所以陶土色每畫面仍然只有一個。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">身分選項是<b>可按的（浮起）</b>；選中＝下沉＋打勾＋<b>更亮</b>。選中不可以用「更暗」表示。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">核准是陶土主按鈕、拒絕是不滿版的墨色底線連結，<b>相隔 ≥32pt 且不並排</b>。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>開關列固定在票根正下方</b>，四個狀態（空／產生中／已產生／審核關閉）同一條線 —— 它管的就是「誰能進來」，<b>不隨狀態移位</b>。空的號碼位與票根是同一個外框（凹／平印兩種表面），所以四態等高。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>審核開關關掉時</b>：整列的 3pt 唇邊換酒紅（不是再加一圈描邊——那會變成第三個紅）＋補一行「任何拿到號碼的人都能直接看到照片」＋<b>撤掉陶土主按鈕</b>，主動作降級成次要的「還是要傳給家人」。示警靠這三件事，不靠版面跳動。</li>
+    </ul>
+  </div>
+    
+  <div data-s="flat" style="border:1px solid #7D6342;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#241A12;text-shadow:0 1px 0 rgba(255,250,238,.75)">iPad</span>
+    <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">登入是全螢幕流程，照片吃左邊 55%（657/1194）。內容欄<b>不垂直置中</b>，改三段式：字標貼上緣、標題組居中、按鈕與法律行貼欄底。兩段間隔各掛 <code>data-pause</code> 說明理由。按鈕<b>寬度上限 360pt</b>。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">三岔路 iPad <b>不放照片</b>（照片在登入頁出場過了）：雙欄。說明欄<b>比照手機版，帳號列貼上緣</b>，往下 24 → H1 → 8 → 副標 → 32 → 說明框，<b>排完就停</b>（沒有 <code>space-between</code>），剩餘空白落在欄底。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">兩欄的第一行字仍然視覺同高：左欄 H1（42/50）的 cap-height 對齊右欄首卡標題（28/34、卡內距 44）的 cap-height —— 右欄整體下推 <b>29pt</b>（＝44+24 的帳號列高度差與兩級字 cap 差的合計，管線逐張量）。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>iPad 內文一律 19pt 起跳</b>；iPad 歡迎頁標題用 60pt（與票根同一階，不是新階）。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">進到家庭之後才切 <code>NavigationSplitView</code>（M2）。</li>
+    </ul>
+  </div>
+    
+  <div data-s="flat" style="border:1px solid #7D6342;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#241A12;text-shadow:0 1px 0 rgba(255,250,238,.75)">照片（未解決，需要人決定）</span>
+    <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>歡迎頁的照片位是佔位圖，不是主視覺完稿。</b>畫面上<b>不再印任何規格註記</b>——攝影 brief 只在這張板上（第 2 輪：「把 backlog 當設計」）。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">要換成真實家庭照：至少兩個人、看得到臉（可局部或失焦）、主體落在三分線不在正中、有生活雜訊（鞋／玩具／碗）、<b>沒有人背對鏡頭走開</b>、<b>清晰</b>（模糊＝沒有內容）。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">比例 4:5、長邊 ≥1600、暖調逆光。卡紙上緣壓過照片 34pt（iPad 是 20pt）並帶 1pt 切邊 —— 這個交界是整套語言的出處，不要拉平。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>焦點規格（各斷點自己一組值，不要共用一組）</b>：焦點寫成影像座標比例 <b>(70%, 53%)</b>，<code>object-position</code> 由它推。<b>手機 390×420</b>：cover 後只裁縱向（49px），<code>object-position:50% 79%</code>；<b>iPad 657×834</b>：cover 後只裁橫向（37px），<code>object-position:100% 50%</code>（焦點超出可及範圍，已鎖到極值）。另一軸寫什麼都沒有作用，不要照抄兩軸數字。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>alt 寫「看得到什麼」</b>（誰、在哪、在做什麼），不寫用途、不寫攝影指示 —— brief 不可以藏在 alt 裡。目前的 alt 描述的就是佔位圖本身：「暖光斜照的室內一角，木頭色的背景前有一塊淺色織品，右邊放著一個小小的木圈」。換上真照片時，alt 跟著改寫。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">照片上<b>不放任何文字</b>（壓在照片上的對比無法定義）。歡迎頁的溫度來源改成手寫字標，它在卡紙上，對比量得出來。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">本管線（手寫 SVG 合成）試了 8 版都做不到可用的人臉品質，因此改用佔位圖。這是<b>刻意的取捨，不是遺漏</b>。</li>
+    </ul>
+  </div>
+    
+  <div data-s="flat" style="border:1px solid #7D6342;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#241A12;text-shadow:0 1px 0 rgba(255,250,238,.75)">Sign in with Apple</span>
+    <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">黑底白字、官方字串「透過 Apple 登入」、圓角 14 —— <b>顏色與字樣不可改</b>（HIG）。它是全稿唯一沒有唇邊的浮起表面，因為唇邊會改到它的外觀。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327">本專案把 Email OTP 排在 Apple 之上：Email 是第一方登入，不是第三方社群登入。送審前請再確認當時的 Review Guidelines。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#413327"><b>已固化的決定</b>：深色下 Apple 鍵依 HIG 為<b>白底</b>，視覺重量高於 Email 鍵；本專案<b>接受</b>這個反轉，<b>順序（Email 在上）是唯一的優先訊號</b>。不要為了扳回重量去改 Apple 鍵的色、加描邊、或把 Email 鍵放大。</li>
+    </ul>
+  </div>
+  </div>
+  <p style="font-size:13px;line-height:18px;font-weight:500;color:#413327;margin:24px 0 0">尚未決定、需要人核可：① 歡迎頁照片素材（目前是佔位圖）；② Email 排在 Apple 之上（送審風險）；③ 邀請碼改純數字 6 碼（影響 <code>invites.code</code> 產生器與碰撞率，且與軌 A／LS-33 現行實作衝突）；④ 待核清單的身分選擇是否放在核准當下。</p>
+</div>
+</x-dc>
+</body>
+</html>
