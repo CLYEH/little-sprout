@@ -61,7 +61,10 @@ begin
     -- 0 owner 的家庭沒有任何自救路徑（加人／改角色／刪內容／處理檢舉的 policy 全都要求 owner），
     -- 等於永久磚化。鎖住 families 列讓同一個家庭的降級／移除排隊，後到的那個才會讀到真實狀態。
     -- 序列化的範圍只有「同一個家庭的成員異動」，不同家庭之間互不影響。
-    select f.id into v_lock from public.families f where f.id = v_family_id for update;
+    -- FOR NO KEY UPDATE 而非 FOR UPDATE：FOR UPDATE 與子表 FK 檢查取的 FOR KEY SHARE 互斥，
+    -- 「先插子表、再動成員」的兩個併發交易會互相死鎖（reviewer 實測重現）；
+    -- NO KEY UPDATE 不與 FOR KEY SHARE 衝突，但仍與自身互斥，序列化效果不變（reviewer 實測驗證）。
+    select f.id into v_lock from public.families f where f.id = v_family_id for no key update;
 
     -- 找不到家庭 = 家庭本身被刪除（成員是 cascade 掉的），此時不需要 owner，不該報錯
     if v_lock is null then
