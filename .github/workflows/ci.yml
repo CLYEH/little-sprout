@@ -1,0 +1,40 @@
+# Merge gate 的 CI 面（另一半是 merge-reviewer 的 code review），規約見 CLAUDE.md §4。
+# 注意:macOS runner 計費倍率高,只在 PR 與保護分支 push 觸發。
+name: CI
+
+on:
+  pull_request:
+    branches: [development, test, main]
+  push:
+    branches: [development, test, main]
+
+jobs:
+  ci:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect Xcode project
+        id: detect
+        run: |
+          if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1; then
+            echo "has_project=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_project=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::尚未建立 Xcode 專案,本次 CI 略過 build/test(Phase 0-1 完成後生效)"
+          fi
+
+      - name: SwiftLint
+        if: steps.detect.outputs.has_project == 'true'
+        run: |
+          brew install swiftlint
+          swiftlint lint --strict
+
+      # Phase 0 建立 Xcode 專案時,如 scheme 名稱不是 LittleSprout,同步更新這裡與 scripts/gates/push-gate.sh
+      - name: Build & Test
+        if: steps.detect.outputs.has_project == 'true'
+        run: |
+          xcodebuild test \
+            -scheme LittleSprout \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            CODE_SIGNING_ALLOWED=NO

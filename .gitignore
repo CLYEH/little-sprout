@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.ipa
+
+# Secrets(規約見 CLAUDE.md §6)
+.env
+Secrets.xcconfig
+
+# Claude Code
+.claude/worktrees/
+.claude/settings.local.json
