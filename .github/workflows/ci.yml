@@ -1,5 +1,7 @@
 # Merge gate 的 CI 面（另一半是 merge-reviewer 的 code review）。
 # rules job 是「前饋必有反饋」原則的機械 gate（docs/COLLABORATION.md §0、§7）。
+# hooks 隨分支內容走、且可被 --no-verify 繞過，所以 commit message／branch 命名／
+# secrets 在此都有伺服器端兜底——本機 hook 只是快速回饋，CI 才是強制。
 name: CI
 
 on:
@@ -8,11 +10,16 @@ on:
   push:
     branches: [development, test, main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  # 規約檢查：PR 方向矩陣、migration 規約、design gate（ubuntu，快且免費）
+  # 規約檢查（ubuntu，快且免費）
   rules:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       BASE: ${{ github.base_ref }}
       HEAD: ${{ github.head_ref }}
@@ -27,16 +34,44 @@ jobs:
           ok=false
           case "$BASE" in
             development)
-              case "$HEAD" in feature/LS-*|fix/LS-*|hotfix/LS-*|main) ok=true ;; esac ;;
+              case "$HEAD" in feature/*|fix/*|hotfix/*|main|revert-*) ok=true ;; esac ;;
             test)
-              case "$HEAD" in development|main) ok=true ;; esac ;;
+              case "$HEAD" in development|main|revert-*) ok=true ;; esac ;;
             main)
-              case "$HEAD" in test|hotfix/LS-*) ok=true ;; esac ;;
+              case "$HEAD" in test|hotfix/*|revert-*) ok=true ;; esac ;;
           esac
           if [ "$ok" != true ]; then
-            echo "::error::PR 方向違規：$HEAD → $BASE。合法方向：feature|fix|hotfix→development、development|main→test、test|hotfix/*→main"
+            echo "::error::PR 方向違規：$HEAD → $BASE。合法方向：feature|fix|hotfix→development、development|main→test、test|hotfix/*→main、revert-* 允許回各保護分支"
             exit 1
           fi
+
+      - name: Branch naming / commit messages / secrets（hooks 的伺服器端兜底）
+        run: |
+          base_sha=$(git merge-base "origin/$BASE" HEAD)
+          # 工作分支才驗命名與逐筆 commit message（back-merge/promote/revert 的
+          # commit 已在先前 PR 驗過，且含 harness bootstrap 等歷史 commit）
+          case "$HEAD" in
+            feature/*|fix/*|hotfix/*)
+              if ! printf '%s' "$HEAD" | grep -qE '^(feature|fix|hotfix)/LS-[1-9][0-9]*-[a-z0-9][a-z0-9-]*$'; then
+                echo "::error::branch 名稱「$HEAD」不符 (feature|fix|hotfix)/LS-<n>-<slug> 規約"
+                exit 1
+              fi
+              bad=0
+              while IFS= read -r line; do
+                case "$line" in
+                  Merge\ *|Revert\ *|fixup!*|squash!*) continue ;;
+                esac
+                if ! printf '%s' "$line" | grep -qE '^(feat|fix|chore|docs|refactor|test|perf|design)(\([a-z0-9-]+\))?: LS-[1-9][0-9]* .+'; then
+                  echo "::error::commit message 不符規約：$line"
+                  bad=1
+                fi
+              done < <(git log --format=%s "$base_sha..HEAD")
+              [ "$bad" -eq 0 ]
+              ;;
+          esac
+          # secrets 掃描（所有 PR 都掃，pattern 與 pre-commit hook 共用）
+          git diff "$base_sha"...HEAD | grep '^+' | grep -v '^+++' \
+            | bash scripts/gates/scan-secrets.sh
 
       - name: Migration rules
         run: |
@@ -48,9 +83,9 @@ jobs:
               echo "::error::migration 變更必須伴隨 supabase/tests/ 的 RLS 測試變更（DB migration gate）"
               exit 1
             fi
-            destructive=$(git diff "$base_sha"...HEAD -- supabase/migrations/ | grep '^+' | grep -icE 'DROP TABLE|DROP COLUMN|ALTER (TABLE|COLUMN).* TYPE ' || true)
+            destructive=$(git diff "$base_sha"...HEAD -- supabase/migrations/ | grep '^+' | grep -icE 'DROP TABLE|DROP COLUMN|DROP POLICY|DROP FUNCTION|DROP TRIGGER|DROP INDEX|DROP SCHEMA|DROP CONSTRAINT|DROP NOT NULL|TRUNCATE|DISABLE ROW LEVEL SECURITY|ALTER (TABLE|COLUMN).* TYPE ' || true)
             if [ "${destructive:-0}" -gt 0 ] && ! printf '%s' "$PR_BODY" | grep -q 'DESTRUCTIVE-APPROVED'; then
-              echo "::error::偵測到破壞性 migration；需使用者本人核可（在 PR body 加 DESTRUCTIVE-APPROVED），agent 不得代寫"
+              echo "::error::偵測到破壞性 migration。此類變更需使用者本人依規約核可（docs/COLLABORATION.md §6）；agent 遇此錯誤必須停下回報使用者，不得自行處理"
               exit 1
             fi
           fi
@@ -58,19 +93,18 @@ jobs:
       - name: Design gate（新增 SwiftUI View 需附設計稿標記）
         run: |
           base_sha=$(git merge-base "origin/$BASE" HEAD)
-          new_views=""
-          for f in $(git diff --name-only --diff-filter=A "$base_sha"...HEAD -- '*.swift'); do
-            if grep -qE 'struct +[A-Za-z0-9_]+ *: *(some +)?View' "$f"; then
-              new_views="$new_views $f"
-            fi
-          done
-          if [ -n "$new_views" ] && ! printf '%s' "$PR_BODY" | grep -qE 'Design:[[:space:]]*[^[:space:]]'; then
-            echo "::error::PR 新增了 SwiftUI View（$new_views）但 body 的 Design: 欄位是空的——新畫面必須先有 ui-designer 的 .pen 設計稿並填上 frame 名稱"
+          # 掃所有變更 Swift 檔的「新增行」，涵蓋新檔與寫進既有檔的新 View；
+          # 已知限制：換行式 conformance 掃不到（COLLABORATION §7 標為混合 gate）
+          new_views=$(git diff "$base_sha"...HEAD -- '*.swift' | grep '^+' \
+            | grep -cE 'struct +[A-Za-z0-9_]+(<[^>]*>)? *: *([A-Za-z0-9_]+ *, *)*(some +)?View\b' || true)
+          if [ "${new_views:-0}" -gt 0 ] && ! printf '%s' "$PR_BODY" | grep -qE 'Design:[[:space:]]*[^[:space:]]'; then
+            echo "::error::PR 新增了 SwiftUI View 但 body 的 Design: 欄位是空的——新畫面必須先有 ui-designer 的 .pen 設計稿並填上 frame 名稱"
             exit 1
           fi
 
   lint:
     runs-on: macos-15
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - name: SwiftLint（有 Swift 檔就跑，不綁 Xcode 專案存在與否）
@@ -84,6 +118,7 @@ jobs:
 
   ci:
     runs-on: macos-15
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - name: Build & Test
@@ -92,8 +127,7 @@ jobs:
             echo "::warning::尚未建立 Xcode 專案，略過 build/test（Phase 0-1 完成後生效）"
             exit 0
           fi
-          # 動態選 runner 上第一台可用 iPhone 模擬器（與 scripts/gates/push-gate.sh 同邏輯）
-          dest=$(xcrun simctl list devices available | grep -oE 'iPhone [^(]+' | head -1 | sed 's/ *$//')
+          dest=$(bash scripts/gates/detect-simulator.sh)
           xcodebuild test \
             -scheme LittleSprout \
             -destination "platform=iOS Simulator,name=${dest}" \

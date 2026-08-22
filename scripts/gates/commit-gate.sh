@@ -17,25 +17,16 @@ case "$branch" in
     # rebase／cherry-pick 進行中，跳過命名檢查
     ;;
   *)
-    if ! printf '%s' "$branch" | grep -qE '^(feature|fix|hotfix)/LS-[0-9]+-[a-z0-9][a-z0-9-]*$'; then
+    if ! printf '%s' "$branch" | grep -qE '^(feature|fix|hotfix)/LS-[1-9][0-9]*-[a-z0-9][a-z0-9-]*$'; then
       echo "✗ commit gate：branch 名稱「${branch}」不符 (feature|fix|hotfix)/LS-<n>-<slug> 規約。" >&2
       exit 1
     fi
     ;;
 esac
 
-# Secrets 掃描（staged 新增行；排除 gate 腳本自身，否則掃描 pattern 會自我誤判）
-added_lines=$(git diff --cached --diff-filter=ACM --unified=0 -- . ':(exclude)scripts/gates/' ':(exclude).githooks/' | grep '^+' | grep -v '^+++' || true)
-if [ -n "$added_lines" ]; then
-  # 只抓實際金鑰素材（private key 區塊、JWT、雲端金鑰格式），不抓裸關鍵字——
-  # 「service_role」等字詞會出現在文件敘述裡，真 key 是 JWT、由 eyJhbGciOi 涵蓋
-  secret_hits=$(printf '%s' "$added_lines" | grep -nE 'BEGIN (RSA|EC|OPENSSH|PGP) PRIVATE KEY|eyJhbGciOi|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9_-]{20,}' || true)
-  if [ -n "$secret_hits" ]; then
-    echo "✗ commit gate：staged 內容疑似含金鑰（規約：secrets 永不進 repo）：" >&2
-    printf '%s\n' "$secret_hits" | head -5 >&2
-    exit 1
-  fi
-fi
+# Secrets 掃描（staged 新增行；pattern 與 CI 共用 scan-secrets.sh，無路徑盲區）
+git diff --cached --diff-filter=ACM --unified=0 | grep '^+' | grep -v '^+++' \
+  | bash "$(git rev-parse --show-toplevel)/scripts/gates/scan-secrets.sh"
 
 # staged Swift 檔 lint（fail loud：有 Swift 變更但沒裝 SwiftLint 就擋下，不靜默跳過）
 staged_swift=$(git diff --cached --name-only --diff-filter=ACM | grep '\.swift$' || true)

@@ -16,12 +16,10 @@ fi
 # 2) Unit tests（Xcode 專案存在才跑；Phase 0 建專案時如 scheme 不同請更新此處與 CI）
 XCODE_SCHEME="${XCODE_SCHEME:-LittleSprout}"
 if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1; then
-  # 動態選第一台可用 iPhone 模擬器（本機與 CI 的 Xcode 版本不同，不可寫死機型）
-  dest_name=$(xcrun simctl list devices available | grep -oE 'iPhone [^(]+' | head -1 | sed 's/ *$//')
-  if [ -z "$dest_name" ]; then
-    echo "✗ push gate：找不到可用的 iPhone 模擬器。" >&2
+  dest_name=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/detect-simulator.sh") || {
+    echo "✗ push gate：模擬器偵測失敗。" >&2
     exit 1
-  fi
+  }
   echo "→ push gate：執行 unit tests（scheme: ${XCODE_SCHEME}, sim: ${dest_name}）…"
   xcodebuild test \
     -scheme "$XCODE_SCHEME" \

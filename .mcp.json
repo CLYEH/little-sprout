@@ -7,11 +7,11 @@
     "mobile-mcp": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@mobilenext/mobile-mcp@latest"]
+      "args": ["-y", "@mobilenext/mobile-mcp@1.0.2"]
     },
     "supabase": {
       "type": "http",
-      "url": "https://mcp.supabase.com/mcp?project_ref=mzkkkzbiejgvhwjyiokf"
+      "url": "https://mcp.supabase.com/mcp?project_ref=mzkkkzbiejgvhwjyiokf&read_only=true"
     }
   }
 }

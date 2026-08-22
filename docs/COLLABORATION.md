@@ -36,7 +36,7 @@
 
 流向：`feature/* → development → test → main`。development→test 由 orchestrator 批次 promote；test→main 即 release（打 tag `vX.Y.Z`）。
 
-**GitHub 端強制**（三條保護分支皆已設定）：必須走 PR、required status check `ci`、enforce_admins（admin 也不能繞）、禁 force-push 與刪除。
+**GitHub 端強制**（三條保護分支皆已設定）：必須走 PR、required status checks `ci`＋`lint`＋`rules`、enforce_admins（admin 也不能繞）、禁 force-push 與刪除。
 
 **Worktree 規約（平行分工）**：
 - 位置 `.claude/worktrees/LS-<n>`（已 gitignore）。一張 ticket 一個 worktree 一條 branch。
@@ -107,24 +107,28 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 - **Release**：test→main 合併後打 tag `vX.Y.Z`（semver），TestFlight 上傳由 orchestrator 執行並在對應 ticket 記錄 build 號。
 - **DB migration gate**：`supabase/migrations` 的變更必附 RLS 測試（CI 強制）；**破壞性 migration（DROP、縮欄、改型）需使用者本人核可**——核可方式：使用者本人在 PR body 加上 `DESTRUCTIVE-APPROVED`，agent 不得代寫。
 - **Secrets**：金鑰一律不進 repo。Client 端用 gitignored 的 `Secrets.xcconfig`；CI 用 GitHub Secrets；`service_role` key 永不出現在 client 或 repo。
-- **回滾**：正式站問題以 revert PR 處理；保護分支禁止 force-push。
+- **回滾**：正式站問題以 revert PR 處理（GitHub Revert 按鈕產生的 `revert-*` head 在 CI 方向矩陣中對三條保護分支皆合法）；保護分支禁止 force-push。
+- **雲端資料庫只透過 migration 變更**：schema／policy 變更一律走 `supabase/migrations`＋PR，**禁止用 Supabase MCP 或 dashboard 直接改正式專案**。機械面：`.mcp.json` 的 supabase MCP 已鎖 `read_only=true`，需要寫入時由使用者本人臨時解鎖。`project_ref` 視為公開資訊（本來就會出現在 app 的 API URL），安全性完全依賴 RLS＋key 管理。
 - **Checkpoint**：每張 ticket 完成，orchestrator 把 handoff 訊息留在 Linear ticket comment，讓狀態可還原、可交接。
 - **模擬器驗不了的項目**（推播、Sign in with Apple 完整流程）：QA 標註「需實機驗證」，不得記為 PASS。
 - **CI 成本**：public repo 的 Actions 免費，但仍只在 PR 與保護分支 push 觸發，勿加無謂矩陣。
 
 ## 7. 前饋↔反饋對照表（§0 的落地清單）
 
+hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-verify` 繞過，所以**本機 hook 只是快速回饋，CI `rules` job 才是強制層**——凡標「hook＋CI」者兩層皆有。
+
 | 前饋規則 | 機械反饋 gate | 狀態 |
 |---|---|---|
 | 保護分支禁直接 commit | pre-commit hook＋GitHub branch protection（enforce_admins） | ✅ |
-| 測試／lint 過了才能合併 | pre-push hook；CI required check `ci`（本機繞過 hook 仍被擋在 merge） | ✅ |
-| commit message 格式 | commit-msg hook（regex；merge/revert/fixup 豁免） | ✅ |
-| branch 命名格式 | pre-commit hook | ✅ |
-| PR 只能開向合法 base | CI `rules` job：base/head 方向矩陣 | ✅ |
-| secrets 不進 repo | pre-commit secrets 掃描（private key／JWT／API key pattern）＋.gitignore | ✅ |
-| migration 必附 RLS 測試 | CI：`supabase/migrations` 變更必須伴隨 `supabase/tests` 變更 | ✅ |
-| 破壞性 migration 需本人核可 | CI：偵測 DROP／型別變更關鍵字，PR body 無 `DESTRUCTIVE-APPROVED` 即 fail | ✅ |
-| 新畫面必有 .pen 設計稿 | CI：PR 新增含 SwiftUI View 的檔案時，body 必須有 `Design:` 行 | ✅ |
+| 測試／lint 過了才能合併 | pre-push hook＋CI required checks（`ci`＋`lint`） | ✅ |
+| commit message 格式 | commit-msg hook＋CI 逐筆驗工作分支 PR 的 commit（merge/revert/fixup 豁免） | ✅ hook＋CI |
+| branch 命名格式 | pre-commit hook＋CI（同一條 regex） | ✅ hook＋CI |
+| PR 只能開向合法 base | CI `rules` job：base/head 方向矩陣（`revert-*` 合法） | ✅ |
+| secrets 不進 repo | pre-commit＋CI 共用 `scan-secrets.sh`（private key／JWT／sb_secret／DB 連線字串／各家 token；pattern 自身免疫寫法，無路徑盲區）＋.gitignore | ✅ hook＋CI |
+| migration 必附 RLS 測試 | CI：`supabase/migrations` 變更必須伴隨 `supabase/tests` 變更（僅驗「有動」，內容品質靠 review） | ✅ 弱 |
+| 破壞性 migration 需本人核可 | CI 偵測 DROP／TRUNCATE／DISABLE RLS 等關鍵字（機械）；`DESTRUCTIVE-APPROVED` 寫在 PR body，**agent 技術上寫得進去**——核可真實性靠規約禁止＋orchestrator 把關 | ⚠️ 混合 |
+| 新畫面必有 .pen 設計稿 | CI 掃 diff 新增行的 View 宣告＋驗 body `Design:` 欄（換行式 conformance 掃不到）；設計稿真偽由 orchestrator 核 | ⚠️ 混合 |
+| 雲端 DB 不得繞過 migration 直改 | supabase MCP 鎖 `read_only=true`（機械）；dashboard 路徑靠規約 | ⚠️ 混合 |
+| harness 檔 back-merge 到 test／development | 無機械 gate——orchestrator 在 LS ticket 驗收條件中列入並人工確認 | ⚠️ 人工 |
 | scope 不越界、worktree 隔離 | 無法全機械化——merge-reviewer 的 scope 維度人工兜底 | ⚠️ 人工 |
 | QA 不得把跳過寫成 PASS | 無法機械化——orchestrator 驗 handoff 證據（截圖／輸出）兜底 | ⚠️ 人工 |
-| UI 一定出自 ui-designer | 部分機械（CI 驗 `Design:` 行）；設計稿真偽由 orchestrator 核 | ⚠️ 混合 |

@@ -10,7 +10,7 @@ case "$first_line" in
   Merge\ *|Revert\ *|fixup!*|squash!*) exit 0 ;;
 esac
 
-if ! printf '%s' "$first_line" | grep -qE '^(feat|fix|chore|docs|refactor|test|perf|design)(\([a-z0-9-]+\))?: LS-[0-9]+ .+'; then
+if ! printf '%s' "$first_line" | grep -qE '^(feat|fix|chore|docs|refactor|test|perf|design)(\([a-z0-9-]+\))?: LS-[1-9][0-9]* .+'; then
   cat >&2 <<'MSG'
 ✗ commit-msg gate：第一行須為「<type>(<scope>): LS-<n> <摘要>」
   type ∈ feat|fix|chore|docs|refactor|test|perf|design；scope 可省略
