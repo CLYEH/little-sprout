@@ -319,4 +319,81 @@ begin
 end;
 $$;
 
+-- ---------------------------------------------------------------------------
+-- 8. LS-34：public schema 的 SECURITY DEFINER RPC 逐支登記授權（白名單列舉）
+--
+-- 第 3 段只列舉 schema private 的函式，管的是「trigger 函式不對外」；public 的
+-- SECURITY DEFINER RPC 是給前端呼叫的 API 邊界，授權方式不同（LS-15 定下的
+-- per-RPC 顯式 grant 慣例），漏 grant 的後果也不同：呼叫端會直接炸掉，但目前
+-- 沒有任何測試會指出「你忘了 grant」（LS-33 review 觀察，見票面追加事項）。
+--
+-- 這裡反過來做「白名單」而不是逐支挑著測：
+--   - 清單內的 RPC：authenticated 必須可 EXECUTE、anon 與 PUBLIC 都不可。
+--   - 出現清單外的 public definer 函式：直接 FAIL——新增 public RPC 必須先來這裡
+--     登記，否則這道 gate 抓不到「忘了收斂授權」這件事，形同虛設。
+--
+-- 白名單（8 支，行為各自已由對應 ticket 的測試逐支驗證過；這裡只驗授權面）：
+--   register_device_token          LS-6／LS-15（70_device_token_handover.sql、本檔第 7 段）
+--   其餘 7 支（create_invite…）    LS-33（80_join_approval.sql §11）
+--
+-- 排除 public.rls_auto_enable()：Supabase 平台自帶的 event trigger 支撐函式（見第 6 段），
+-- 不是本專案的 API RPC，本機開發映像沒有它，其收權已由第 6 段獨立驗證，不重複登記。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_fn text;
+  v_whitelist oid[] := array[
+    'public.create_invite(uuid, text, timestamptz, integer)'::regprocedure::oid,
+    'public.request_join(text)'::regprocedure::oid,
+    'public.approve_join(uuid)'::regprocedure::oid,
+    'public.reject_join(uuid)'::regprocedure::oid,
+    'public.withdraw_join(uuid)'::regprocedure::oid,
+    'public.list_join_requests()'::regprocedure::oid,
+    'public.get_my_join_request()'::regprocedure::oid,
+    'public.register_device_token(text, text)'::regprocedure::oid
+  ];
+  v_unknown text;
+begin
+  foreach v_fn in array array[
+    'public.create_invite(uuid, text, timestamptz, integer)',
+    'public.request_join(text)',
+    'public.approve_join(uuid)',
+    'public.reject_join(uuid)',
+    'public.withdraw_join(uuid)',
+    'public.list_join_requests()',
+    'public.get_my_join_request()',
+    'public.register_device_token(text, text)'
+  ] loop
+    if not has_function_privilege('authenticated', v_fn, 'execute') then
+      raise exception 'FAIL：authenticated 不能執行白名單 RPC %，呼叫端會炸卻沒有測試指出原因', v_fn;
+    end if;
+    if has_function_privilege('anon', v_fn, 'execute') then
+      raise exception 'FAIL：anon 可以執行白名單 RPC %（未登入者能操作這支 RPC）', v_fn;
+    end if;
+    if exists (select 1 from pg_proc p, aclexplode(p.proacl) a
+                where p.oid = v_fn::regprocedure and a.grantee = 0
+                  and a.privilege_type = 'EXECUTE') then
+      raise exception 'FAIL：白名單 RPC % 仍對 PUBLIC 開放 EXECUTE', v_fn;
+    end if;
+  end loop;
+  raise notice 'ok：白名單內的 8 支 public SECURITY DEFINER RPC 授權皆正確（authenticated 可執行、anon／PUBLIC 不可）';
+
+  -- 白名單外的 public definer 函式：直接 FAIL（新 RPC 必須先來這裡登記）
+  select string_agg(p.oid::regprocedure::text, '、' order by p.oid::regprocedure::text)
+    into v_unknown
+    from pg_proc p
+   where p.pronamespace = 'public'::regnamespace
+     and p.prosecdef
+     and p.oid <> all(v_whitelist)
+     and p.oid is distinct from to_regprocedure('public.rls_auto_enable()');
+
+  if v_unknown is not null then
+    raise exception
+      'FAIL：public schema 出現清單外的 SECURITY DEFINER RPC —— %（新增 public RPC 必須先到本檔第 8 段的白名單登記授權，否則漏 grant 時呼叫端會炸但沒有測試指出原因）',
+      v_unknown;
+  end if;
+  raise notice 'ok：public schema 沒有清單外的 SECURITY DEFINER RPC';
+end;
+$$;
+
 rollback;

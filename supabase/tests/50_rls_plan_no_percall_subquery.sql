@@ -145,7 +145,9 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- 偵測器自我驗證：內嵌 correlated 子查詢（PLAN §5 明文禁止的寫法）必須被抓到
+-- 偵測器自我驗證：內嵌 aggregate／correlated 子查詢（PLAN §5 明文禁止的寫法——引用外層
+-- 資料列欄位且包在聚合函式內，無法被拉平成 join；等值形 IN/EXISTS 不在此列，見 PLAN §5）
+-- 必須被抓到
 -- ---------------------------------------------------------------------------
 do $$
 declare
@@ -201,7 +203,7 @@ select kind, ref_id, occurred_at from public.feed_items
  order by occurred_at desc, ref_id desc limit 30;
 
 \echo ''
-\echo '=== 對照組：PLAN §5 禁止的內嵌 correlated 子查詢寫法（loops 會等於掃描列數）==='
+\echo '=== 對照組：PLAN §5 禁止的內嵌 aggregate／correlated 子查詢寫法（loops 會等於掃描列數）==='
 explain (analyze)
 select m.id from public.media m
  where m.deleted_at is null

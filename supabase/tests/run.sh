@@ -55,7 +55,11 @@ elif docker exec "$container" true >/dev/null 2>&1; then
       psql -U "$db_user" -d "$db_name" -v ON_ERROR_STOP=1 --no-psqlrc -q < "$1"
   }
 else
-  echo "✗ 找不到 psql，也連不到 DB container（$container）。請先執行 supabase start。" >&2
+  # ${container} 的大括號是必要的，不是風格：macOS 內建的 bash 3.2 會把緊接在後面的
+  # 全形括號「）」的位元組當成變數名稱的一部分，`$container）` 於是變成查一個不存在的
+  # 變數，在 set -u 下直接以「unbound variable」中止——正好發生在「連不到 DB、
+  # 要印出診斷訊息」的那條路徑上，把真正的失敗原因蓋掉（LS-34 開發時實際踩到）。
+  echo "✗ 找不到 psql，也連不到 DB container（${container}）。請先執行 supabase start。" >&2
   exit 1
 fi
 
@@ -130,8 +134,12 @@ owner_guard_case() {  # $1=場景名 $2=S1 檔名 $3=S2 檔名
   rc1="$(cat "$s1_out.rc")"; rc2="$(cat "$s2_out.rc")"
   sed 's/^/    S1 /' "$s1_out"
   sed 's/^/    S2 /' "$s2_out"
-  [ "$rc1" = 0 ] || { echo "  ✗ S1 非 0 結束（rc=$rc1）" >&2; failed=1; }
-  [ "$rc2" = 0 ] || { echo "  ✗ S2 非 0 結束（rc=$rc2）" >&2; failed=1; }
+  # ${rc1}／${rc2} 的大括號是必要的，不是風格：macOS 內建的 bash 3.2 會把緊接在後面的
+  # 全形括號「）」的位元組當成變數名稱的一部分，`$rc1）` 於是變成查一個不存在的
+  # 變數，在 set -u 下直接以「unbound variable」中止——正好發生在「測試失敗、
+  # 要印出診斷訊息」的那條路徑上，把真正的失敗原因蓋掉（LS-34 開發時實際踩到）。
+  [ "$rc1" = 0 ] || { echo "  ✗ S1 非 0 結束（rc=${rc1}）" >&2; failed=1; }
+  [ "$rc2" = 0 ] || { echo "  ✗ S2 非 0 結束（rc=${rc2}）" >&2; failed=1; }
 
   if ! run_sql "$cc_dir/owner_guard_verify.sql" > "$tmp/owner_guard_verify.out" 2>&1; then
     sed 's/^/    /' "$tmp/owner_guard_verify.out" >&2; failed=1

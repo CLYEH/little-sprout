@@ -95,7 +95,7 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 
 **`feed_items` 為什麼第一天就要有**：時間軸要混排相簿/照片/日記，跨三張表 union 再排序，用 OFFSET 分頁在資料長大後會慢且會跳項。用一張由 trigger 維護的扁平表配 keyset 分頁（`WHERE occurred_at < $cursor ORDER BY occurred_at DESC LIMIT n`）。事後補要重寫整個首頁查詢，所以不列為優化項。
 
-**RLS**：所有內容表都帶 `family_id`，policy 一律檢查 `family_id IN (使用者所屬家庭)`。但**不要直接內嵌子查詢** —— `family_id IN (SELECT ... FROM family_members WHERE user_id = auth.uid())` 會對每一列重算。包成 `STABLE SECURITY DEFINER` 函式（或把 family 清單放進 JWT custom claim）。
+**RLS**：所有內容表都帶 `family_id`，policy 一律檢查 `family_id IN (使用者所屬家庭)`。但**不要直接內嵌會逐列重算的子查詢**——真正危險的形狀是 **aggregate／correlated 子查詢**（子查詢裡引用了外層資料列的欄位，且包在聚合函式內，規劃器無法拉平成 join，只能逐列跑一次 SubPlan），例如 `(SELECT count(*) FROM family_members fm WHERE fm.family_id = m.family_id AND fm.user_id = auth.uid()) > 0`。相對地，**等值形**（如 `family_id IN (SELECT family_id FROM family_members WHERE user_id = auth.uid())`，子查詢不引用外層欄位）PG17 會把它拉平成 hashed SubPlan／semi-join 一次求值，不是實害。仍建議一律包成 `STABLE SECURITY DEFINER` 函式（或把 family 清單放進 JWT custom claim）——作法簡單、不必逐條判斷子查詢是不是等值形，也是本專案既有 policy 的慣例（見 `supabase/tests/50_rls_plan_no_percall_subquery.sql`）。
 
 **其他約束**：
 - `invites` 的 `max_uses` / `used_count` 是隱私要求不是便利功能 —— 可無限重用的邀請碼一旦外流就是陌生人進家庭，與「私密」定位直接衝突。
