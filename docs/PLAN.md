@@ -44,7 +44,7 @@
 
 ### 客戶端：Swift + SwiftUI（原生 iOS）
 
-- 最低支援 iOS 17，用 SwiftUI + Swift Concurrency（async/await）。
+- 最低支援 iOS 17，用 SwiftUI + Swift Concurrency（async/await）。Swift 6 語言模式（strict concurrency）——LS-12 核定，資料競態於編譯期攔截。
 - **iPhone + iPad 通用（universal）** ✅ 已定。**第一天就用適配式版面**：`NavigationSplitView` + size class，不要先做 iPhone 單層 stack 再回頭塞 iPad —— 導航層事後重寫是本專案少數「agent 也救不了」的返工，因為它會牽動每一個畫面。
 - 照片選取用 `PhotosPicker`；上傳前在裝置端壓縮（照片轉 HEIC/JPEG ~2048px 長邊、影片用 `AVAssetExportSession` 壓到 1080p），大幅省儲存費用與上傳時間。
 - 圖片快取：縮圖 + 原圖分開存，列表只載縮圖。
