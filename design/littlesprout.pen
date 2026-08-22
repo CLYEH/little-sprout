@@ -5726,7 +5726,7 @@
               "name": "Footer",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": "$sp-group",
+              "gap": 8,
               "padding": [
                 0,
                 0,
@@ -5780,47 +5780,92 @@
                   ]
                 },
                 {
-                  "id": "i6GbI",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Join Button",
+                  "type": "frame",
+                  "id": "KPP1V",
+                  "name": "Join Wrap",
                   "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "refresh-cw"
-                    },
-                    "w7CUP": {
-                      "content": "請家人重新產生"
+                  "layout": "vertical",
+                  "padding": [
+                    16,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "i6GbI",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Join Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "refresh-cw"
+                        },
+                        "w7CUP": {
+                          "content": "請家人重新產生"
+                        }
+                      }
                     }
-                  }
+                  ]
                 },
                 {
-                  "id": "MVPcg",
-                  "type": "ref",
-                  "ref": "XggYA",
-                  "name": "Paste Link Button",
+                  "type": "frame",
+                  "id": "UbMe9",
+                  "name": "Paste Wrap",
                   "width": "fill_container",
-                  "descendants": {
-                    "G4R75k": {
-                      "icon": "link"
-                    },
-                    "yxwnz": {
-                      "content": "改用貼上邀請連結"
+                  "layout": "vertical",
+                  "padding": [
+                    4,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "MVPcg",
+                      "type": "ref",
+                      "ref": "XggYA",
+                      "name": "Paste Link Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "G4R75k": {
+                          "icon": "link"
+                        },
+                        "yxwnz": {
+                          "content": "改用貼上邀請連結"
+                        }
+                      }
                     }
-                  }
+                  ]
                 },
                 {
-                  "type": "text",
-                  "id": "hMLgZ",
-                  "name": "Footer Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
+                  "type": "frame",
+                  "id": "EEBWR",
+                  "name": "Note Wrap",
                   "width": "fill_container",
-                  "content": "送出後由管理者核准。邀請碼有期限也有使用次數，這是為了保護家庭隱私。",
-                  "lineHeight": 1.55,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-meta",
-                  "fontWeight": "normal"
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "hMLgZ",
+                      "name": "Footer Note",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "送出後由管理者核准。邀請碼有期限也有使用次數，這是為了保護家庭隱私。",
+                      "lineHeight": 1.55,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
                 }
               ]
             }
@@ -6162,7 +6207,7 @@
               "name": "Footer",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": "$sp-group",
+              "gap": 8,
               "padding": [
                 0,
                 0,
@@ -6216,47 +6261,92 @@
                   ]
                 },
                 {
-                  "id": "vdla8",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Join Button",
+                  "type": "frame",
+                  "id": "kPELQ",
+                  "name": "Join Wrap",
                   "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "refresh-cw"
-                    },
-                    "w7CUP": {
-                      "content": "請家人重新產生"
+                  "layout": "vertical",
+                  "padding": [
+                    16,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "vdla8",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Join Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "refresh-cw"
+                        },
+                        "w7CUP": {
+                          "content": "請家人重新產生"
+                        }
+                      }
                     }
-                  }
+                  ]
                 },
                 {
-                  "id": "rKwmz",
-                  "type": "ref",
-                  "ref": "XggYA",
-                  "name": "Paste Link Button",
+                  "type": "frame",
+                  "id": "LHLhy",
+                  "name": "Paste Wrap",
                   "width": "fill_container",
-                  "descendants": {
-                    "G4R75k": {
-                      "icon": "link"
-                    },
-                    "yxwnz": {
-                      "content": "改用貼上邀請連結"
+                  "layout": "vertical",
+                  "padding": [
+                    4,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "rKwmz",
+                      "type": "ref",
+                      "ref": "XggYA",
+                      "name": "Paste Link Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "G4R75k": {
+                          "icon": "link"
+                        },
+                        "yxwnz": {
+                          "content": "改用貼上邀請連結"
+                        }
+                      }
                     }
-                  }
+                  ]
                 },
                 {
-                  "type": "text",
-                  "id": "REcRR",
-                  "name": "Footer Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
+                  "type": "frame",
+                  "id": "gUlAt",
+                  "name": "Note Wrap",
                   "width": "fill_container",
-                  "content": "送出後由管理者核准。邀請碼有期限也有使用次數，這是為了保護家庭隱私。",
-                  "lineHeight": 1.55,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-meta",
-                  "fontWeight": "normal"
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "REcRR",
+                      "name": "Footer Note",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "送出後由管理者核准。邀請碼有期限也有使用次數，這是為了保護家庭隱私。",
+                      "lineHeight": 1.55,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
                 }
               ]
             }
