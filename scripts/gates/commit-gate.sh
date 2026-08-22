@@ -25,8 +25,9 @@ case "$branch" in
 esac
 
 # Secrets 掃描（staged 新增行；pattern 與 CI 共用 scan-secrets.sh，無路徑盲區）
-git diff --cached --diff-filter=ACM --unified=0 | grep '^+' | grep -v '^+++' \
-  | bash "$(git rev-parse --show-toplevel)/scripts/gates/scan-secrets.sh"
+# grep 需 || true 守衛：純刪除的 commit 沒有新增行，pipefail 下會靜默炸掉整個 gate
+added=$(git diff --cached --diff-filter=ACM --unified=0 | grep '^+' | grep -v '^+++' || true)
+printf '%s\n' "$added" | bash "$(git rev-parse --show-toplevel)/scripts/gates/scan-secrets.sh"
 
 # staged Swift 檔 lint（fail loud：有 Swift 變更但沒裝 SwiftLint 就擋下，不靜默跳過）
 staged_swift=$(git diff --cached --name-only --diff-filter=ACM | grep '\.swift$' || true)
