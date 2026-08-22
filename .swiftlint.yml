@@ -1,0 +1,19 @@
+# SwiftLint 設定。
+# push gate（scripts/gates/push-gate.sh）與 CI lint job 都以 --strict 執行：
+# 任何 warning 都會讓 gate 失敗，所以這裡只列真正要遵守的規則。
+
+included:
+  - LittleSprout
+  - LittleSproutTests
+
+# 生成物與工具目錄：LittleSprout.xcodeproj 由 XcodeGen 產生，
+# .claude/worktrees 是平行 ticket 的 worktree（各自有自己的 lint 執行）。
+excluded:
+  - LittleSprout.xcodeproj
+  - .claude
+  - DerivedData
+  - build
+
+line_length:
+  warning: 120
+  error: 160
