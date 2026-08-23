@@ -8,12 +8,12 @@
       所以這一輪全部改成「掃使用點的 computed style」。 */
 (async () => {
   const CAP = 0.72;
-  const INSET_OK = ['field','cell','photo','avatar','codeslot','switchOff','seam'];
+  const INSET_OK = ['field','cell','photo','avatar','codeslot','switchOff','seam','tray'];
   const PAUSE = 120;   // 呼吸帶門檻：手機與 iPad 同一條
   const R = { boards: [], inset: [], insetBad: [], cta: {}, h1: [], voids: [], err: [],
               contrast: { n: 0, min: 99, worst: '', fails: [], overPhoto: 0,
                           grainMin: 99, grainWorst: '', grainFails: [], onGrad: 0 },
-              grads: [], gradBad: [],
+              grads: [], gradBad: [], flatBad: [], flatOk: [], trayDelta: [], trays: [],
               orphans: [], approve: [], taps: [], darkMotifs: {}, motifs: {},
               pauses: [], pauseBad: [], lips: {}, lipNone: [], lipTotal: 0,
               toggles: [], mainBtn: [], photos: [] };
@@ -25,6 +25,17 @@
   const cr = (a, b) => { const l1 = lum(a), l2 = lum(b); const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1]; return (hi+.05)/(lo+.05); };
   const over = (fg, bg) => fg.map((v,i) => i<3 ? v*fg[3] + bg[i]*(1-fg[3]) : 1);
   const mul = (c, k) => [c[0]*k, c[1]*k, c[2]*k, c.length > 3 ? c[3] : 1];
+  /* CIELAB（D65／sRGB）—— 與 tokens.mjs 的 lab() 是同一條算式，這裡量的是
+     **畫面上算出來的顏色**（漸層取樣後的），所以不能直接用 token 值算。 */
+  const lab76 = (c) => {
+    const f = (t) => (t > 216/24389 ? Math.cbrt(t) : (841/108)*t + 4/29);
+    const [r,g,b] = c.slice(0,3).map(v => { v /= 255; return v <= .04045 ? v/12.92 : ((v+.055)/1.055)**2.4; });
+    const x = f((.4124564*r + .3575761*g + .1804375*b)/.95047);
+    const y = f(.2126729*r + .7151522*g + .0721750*b);
+    const z = f((.0193339*r + .1191920*g + .9503041*b)/1.08883);
+    return [116*y - 16, 500*(x - y), 200*(y - z)];
+  };
+  const dE76 = (a, b) => { const p = lab76(a), q = lab76(b); return Math.hypot(p[0]-q[0], p[1]-q[1], p[2]-q[2]); };
 
   /* ── 漸層：解析、方向判定、任一高度取色 ───────────────────────────────
      這一稿每一張紙、每一個可按的面、每一個開窗都帶漸層，所以「文字對比」不再是
@@ -228,7 +239,11 @@
       if (n.getAttribute('data-role') === 'link') continue;
       R.lipTotal++;
       const cs = getComputedStyle(n), w = Math.round(parseFloat(cs.borderBottomWidth));
-      if (!w) { R.lipNone.push(name + ':' + (n.getAttribute('data-role') || '?')); continue; }
+      /* 唇邊是「只有下緣有」的那一道實體邊 —— 四邊等寬的是**描邊**，不是唇邊
+         （第 1 輪 R6：上一稿讓 Google 的 1px 規範描邊兼差當 3px 唇邊，
+         這裡的判準改成幾何的，那種事就再也算不進來）。 */
+      const bt = Math.round(parseFloat(cs.borderTopWidth) || 0);
+      if (!w || w <= bt) { R.lipNone.push(name + ':' + (n.getAttribute('data-role') || '?') + (n.getAttribute('data-brand') ? '/' + n.getAttribute('data-brand') : '')); continue; }
       const hit = Object.entries(lipNames).find(([, v]) => v === cs.borderBottomColor);
       const key = (hit ? hit[0] : cs.borderBottomColor) + '@' + w;
       R.lips[key] = (R.lips[key] || 0) + 1;
@@ -287,6 +302,44 @@
       R.grads.push({ file: name, kind, css: grad.css, vertical: grad.vertical, repeating,
                      tag: (n.getAttribute('data-s') || '') + '/' + (n.getAttribute('data-role') || '') });
       if (!grad.vertical && !repeating) R.gradBad.push(name + ' ' + grad.css.slice(0, 70));
+    }
+
+    /* ── 8c. 平印面上不准有漸層（G23②）──
+           規則「平印＝只能讀＝不接光＝沒有漸層」以前只寫在註解裡，沒有任何一項在掃它 ——
+           上一輪 reviewer 把台紙漸層加到平印面上，71 項 gate 沒有一項會叫。
+           現在掃的是**使用點與它所有後代**的 computed background-image：
+           平印元素底下出現 linear-gradient，除非它自己掛了 data-grad 而且是
+           號碼帶（stub*）或騎縫線（perf），否則一律進 flatBad。 */
+    for (const fl of el.querySelectorAll('[data-s="flat"]')) {
+      // 掃的是這個平印面**自己的皮**：從它往下走，遇到另一個宣告過的表面
+      //（data-s：凹窗、浮起面、另一張平印卡）就停 —— 別人坐在我上面不算我的皮。
+      const skin = [fl];
+      const walkSkin = (node) => {
+        for (const c of node.children) { if (c.hasAttribute('data-s')) continue; skin.push(c); walkSkin(c); }
+      };
+      walkSkin(fl);
+      for (const n of skin) {
+        const bi = getComputedStyle(n).backgroundImage;
+        if (!bi || bi === 'none' || !/gradient/.test(bi)) continue;
+        const k = n.getAttribute('data-grad') || '';
+        if (/^(stub\d|perf)$/.test(k)) { R.flatOk.push(name + ':' + k); continue; }
+        R.flatBad.push(name + ':' + (n.getAttribute('data-role') || n.tagName.toLowerCase()) + (k ? '[' + k + ']' : '[沒掛牌]') + ' ' + bi.slice(0, 56));
+      }
+    }
+
+    /* ── 8d. 登入鍵與它坐的那個面之間的 ΔE（R5 的證據）──
+           第 1 輪：歡迎頁最重的兩塊是別人的品牌（Apple 對台紙 ΔE 81.7、Google 14.5、
+           我們自己的 0），而深色 Email 鍵對台紙只有 2.5（在可辨識門檻邊緣）。
+           這一輪三顆鍵坐進凹下去的托盤，所以量的是「鍵的面 vs 托盤的面」。 */
+    for (const tray of el.querySelectorAll('[data-role="tray"]')) {
+      const tr = rel(tray);
+      for (const b of tray.querySelectorAll('[data-role="button"]')) {
+        const r = rel(b), y = r.t + r.h / 2;
+        const own = bgAt(b, y, base.top, el), back = bgAt(tray, y, base.top, el);
+        R.trayDelta.push({ file: name, who: b.getAttribute('data-brand') || 'email',
+                           dE: Math.round(dE76(own, back) * 100) / 100 });
+      }
+      R.trays.push({ file: name, w: Math.round(tr.w), h: Math.round(tr.h) });
     }
 
     /* ── 8b. 節點級對比：以「字蓋到的那一段漸層裡最不利的一點」計 ──

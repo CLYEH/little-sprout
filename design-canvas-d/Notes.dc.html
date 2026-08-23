@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <!-- ls-measured:4dc7510b1fc0 -->
+  <!-- ls-measured:1e5850fcb42a -->
   <script src="./support.js"></script>
 </head>
 <body>
@@ -20,7 +20,10 @@
       --ls-g-win3:linear-gradient(180deg, #D8B9B1 0%, #E6C9C1 100%);
       --ls-g-face:linear-gradient(180deg, #E9CFC7 0%, #DBBDB5 100%);
       --ls-g-cta:linear-gradient(180deg, #901F49 0%, #7C1236 100%);
-      --ls-g-stub:linear-gradient(180deg, #FAEADE 0%, #ECD0D6 100%);
+      --ls-g-stub3:linear-gradient(180deg, #FAEADE 0%, #EFD3D6 35%, #ECD0D6 100%);
+      --ls-g-stub2:linear-gradient(180deg, #F9EBE0 0%, #F2DAD8 35%, #F1D8D7 100%);
+      --ls-g-stub1:linear-gradient(180deg, #F8EBE1 0%, #F5E1DB 35%, #F4E0DB 100%);
+      --ls-g-stub0:linear-gradient(180deg, #F7ECE3 0%, #F6E8E1 35%, #F6E8E0 100%);
       --ls-g-seam:linear-gradient(180deg, rgba(42,18,25,0) 0%, rgba(42,18,25,.42) 100%);
       --ls-r-window:12px; --ls-r-control:14px; --ls-r-card:18px;
       --ls-sp-1:4px; --ls-sp-2:8px; --ls-sp-3:12px; --ls-sp-4:16px;
@@ -35,7 +38,7 @@
       mix-blend-mode:multiply}
   </style></helmet>
 
-<div class="g" data-grad="paper" style="position:relative;width:980px;height:2480px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;padding:48px">
+<div class="g" data-grad="paper" style="position:relative;width:980px;height:3160px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;padding:48px">
   <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:24px">
     <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B;letter-spacing:.14em">給 ios-dev · LS-17 / LS-18</span>
     <h1 style="font-size:28px;line-height:34px;font-weight:700;letter-spacing:-.01em;color:#2A1219;margin:0">實作註記</h1>
@@ -43,16 +46,23 @@
   <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:16px">
     
   <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)">對齊 Apple 官方 design kit（iOS／iPadOS 27）—— 哪些照做、哪些刻意不照做</span>
+    <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>分層是刻意的</b>：系統控件（開關、sheet、nav bar、按鈕族譜）的<b>解剖與行為</b>照官方 kit；<b>識別層</b>（凹／浮／平印三種表面、台紙、票根、褪色階）是我們的，只作用在我們自己畫的表面上。長輩在別的 app 學會的東西，在這裡要一模一樣。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>照做並且已改</b>：系統開關的解剖 —— 軌道 <code>51×31</code>、把手 <code>27</code>、間隙 <code>2</code>。第 1 輪自己畫的是 56×32／26／3，長得像但不是系統那一個；把手的行程差幾 pt，長輩的肌肉記憶就對不上。SwiftUI 用 <code>Toggle</code> 本體，我們只換 <code>.tint(lsSprout)</code> 與整列的表面。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>照做</b>：字級全部落在官方文字樣式（largeTitle 34／title1 28／title3 22／body 17／subheadline 15／footnote 13），AX1–AX5 由系統推，我們不自己算級距。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>刻意不照做（理由）</b>：① 官方有四級標籤色（Label／Secondary／Tertiary／Quaternary），我們<b>只用兩級</b>並且兩級都 AAA —— 給長輩的 app 不需要「更淡的三種淡」，第三級以下在 7:1 底下根本活不下來。② 官方按鈕族譜每一族都有 <b>disabled</b> 態，我們<b>整套不 disable</b>：按鈕永遠可按，按下去用錯誤或說明回話 —— disabled 的按鈕對長輩是「壞掉了」不是「還不能按」。③ 不用 <code>.glassEffect()</code>：Liquid Glass 是系統的材質語言，我們的凹凸是紙的厚度，疊起來會變成兩套光。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>App icon</b>：分層與網格照官方 App Icon Template（1024 見方、系統套 squircle、中央安全圓），生產走 Icon Composer。見 AppIcon 板。</li>
+    </ul>
+  </div>
+    
+  <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
     <span style="font-size:15px;line-height:21px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)">三種表面 = 三個規則</span>
     <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
-      <li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">凹（<code>win</code>）只給白名單上的七個角色：輸入框、六格、照片位／等待窗、頭像、還沒產生的號碼位、開關關閉的軌道、台紙接縫。<b>白名單印在 Tokens 板上。</b></li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>三種表面各多一個判準：漸層方向。</b>凹＝上暗下亮、浮＝上亮下暗、平印＝沒有漸層。SwiftUI 用 <code>LinearGradient(colors:startPoint:.top,endPoint:.bottom)</code>，兩端都從 Asset Catalog 取，不要在 View 裡算。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">浮（<code>raise</code>）<b>只有兩層</b>：3pt 下緣唇邊 ＋ 落影。唇邊用 <code>.overlay(alignment:.bottom)</code> 畫，不要用 shadow 假裝。第 2 輪的 inset topLight 是第三層、也是「有 inset＝可以填」的無聲例外，已移除。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">平印（<code>flat</code>）給「只能讀」的：票根、明細表、說明框、待核卡片、警語條。沒有 inset、沒有 lift、<b>沒有漸層</b>，只有 1px edge 與字的 letterpress。唯一的例外是票根的號碼帶（褪色，不是光）。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">iOS 17 沒有 inner shadow API：用兩層 stroke（上緣深、下緣亮）或 <code>.stroke(gradient).blur().mask()</code>。</li>
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">凹（<code>win</code>）只給白名單上的七個角色：輸入框、六格、照片位／等待窗、頭像、還沒產生的號碼位、開關關閉的軌道、台紙接縫。<b>白名單印在 Tokens 板上。</b></li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>三種表面各多一個判準：漸層方向。</b>凹＝上暗下亮、浮＝上亮下暗、平印＝沒有漸層。SwiftUI 用 <code>LinearGradient(colors:startPoint:.top,endPoint:.bottom)</code>，兩端都從 Asset Catalog 取，不要在 View 裡算。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">浮（<code>raise</code>）<b>只有兩層</b>：3pt 下緣唇邊 ＋ 落影。唇邊用 <code>.overlay(alignment:.bottom)</code> 畫，不要用 shadow 假裝。第 2 輪的 inset topLight 是第三層、也是「有 inset＝可以填」的無聲例外，已移除。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">平印（<code>flat</code>）給「只能讀」的：票根、明細表、說明框、待核卡片、警語條。沒有 inset、沒有 lift、<b>沒有漸層</b>，只有 1px edge 與字的 letterpress。唯一的例外是票根的號碼帶（褪色，不是光）。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">SwiftUI 到現行世代（iOS 26／27）仍然沒有第一級的 inner shadow：用兩層 stroke（上緣深、下緣亮）或 <code>.stroke(gradient).blur().mask()</code>。<b>不要用 Liquid Glass 的 <code>.glassEffect()</code> 代替凹凸</b> —— 那是系統的材質語言（它自己會反光、會跟著背景動），我們的凹凸是紙的厚度，兩者疊在一起會變成兩套光。系統控件（開關、sheet、nav bar）該長什麼樣就長什麼樣，識別層只作用在我們自己畫的表面上。</li>
     </ul>
   </div>
     
   <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
     <span style="font-size:15px;line-height:21px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)">色彩落地</span>
     <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
-      <li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">把 Tokens 板的 hex 建成 Asset Catalog color set，每一個都給 Any 與 Dark 兩個外觀值；View 裡只用語意名，例如 <code>Color.lsBoard</code>。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>粉的來源要一起帶進 code review</b>：四階台紙不是同一支粉的四個明度，而是四種老化狀態（新紙／本體／偏冷的陰影／偏暖的手澤）。改色時不要只調明度，會把溫度層次抹平。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">濃玫瑰與朱<b>只當底色與線</b>（朱的錯誤句與警語條是唯一的文字用法）。任何「濃玫瑰色文字」都是 bug —— 它在台紙上只有 7.41:1。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>文字一律不加 opacity。</b>placeholder 用實色 <code>lsInk2</code>；步驟條未走的段用實色 <code>lsEdge</code>。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>芽綠＝把關的機制正在生效</b>：「申請已送出」（等人放行）與審核開關 ON 的軌道（要核准才能進來）。<b>第三個綠色就是 bug。</b></li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>3pt 唇邊＝該表面的深一階</b>：濃玫瑰→<code>ctaDeep</code>、台紙→<code>edge</code>、朱→<code>pen</code>、Google→<code>googleLine</code>。用 <code>.overlay(alignment:.bottom)</code> 畫，顏色跟著表面走，不要各自寫死。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>深色是鏡像不是變暗</b>：光源翻到下方，所以 letterpress 的亮邊、以及七種漸層的兩端<b>全部一起對調</b>。只有 seam 不翻 —— 它由「紙壓在照片上」的幾何決定。</li>
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">把 Tokens 板的 hex 建成 Asset Catalog color set，每一個都給 Any 與 Dark 兩個外觀值；View 裡只用語意名，例如 <code>Color.lsBoard</code>。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>粉的來源要一起帶進 code review</b>：四階台紙不是同一支粉的四個明度，而是四種老化狀態（新紙／本體／偏冷的陰影／偏暖的手澤）。改色時不要只調明度，會把溫度層次抹平。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">濃玫瑰與朱<b>只當底色與線</b>（朱的錯誤句與警語條是唯一的文字用法）。任何「濃玫瑰色文字」都是 bug —— 它在台紙上只有 7.41:1。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>文字一律不加 opacity。</b>placeholder 用實色 <code>lsInk2</code>；步驟條未走的段用實色 <code>lsEdge</code>。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>芽綠＝把關的機制正在生效</b>：「申請已送出」（等人放行）與審核開關 ON 的軌道（要核准才能進來）。<b>第三個綠色就是 bug。</b></li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>3pt 唇邊＝該表面的深一階</b>：濃玫瑰→<code>ctaDeep</code>、台紙→<code>edge</code>、朱→<code>pen</code>。<b>兩顆品牌鍵沒有唇邊</b>（第 2 輪改；連把 Google 規範的 1px 描邊加粗成 3px 都算改它的外觀）。用 <code>.overlay(alignment:.bottom)</code> 畫，顏色跟著表面走，不要各自寫死。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>深色是鏡像不是變暗</b>：光源翻到下方，所以 letterpress 的亮邊、以及七種漸層的兩端<b>全部一起對調</b>。只有 seam 不翻 —— 它由「紙壓在照片上」的幾何決定。</li>
     </ul>
   </div>
     
@@ -108,7 +118,7 @@
   <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
     <span style="font-size:15px;line-height:21px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)">三顆登入鍵（順序為使用者核定）</span>
     <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
-      <li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>順序：Apple → Google → Email。</b>三顆同高、同圓角、同間距、直排，每顆 ≥56pt。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>已改寫的固化決定</b>：上一稿是「Email 在上，順序是唯一的優先訊號，接受深色下 Apple 白底的重量反轉」。現在<b>順序與視覺重量同向</b>——Apple 在最上，而它在兩種模式下都自動是全頁最重的一塊（淺色純黑 16.42:1、深色純白 17.59:1）。<b>所以那條讓步不再需要。</b></li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>Email 這一顆從主按鈕降級成一般浮起面</b>：歡迎頁因此一顆濃玫瑰都沒有 —— 色彩不再與順序打架。不要為了「讓 Email 明顯一點」把它改回濃玫瑰。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">Apple：黑底白字（深色反白）、官方字串、圓角 14 —— <b>顏色與字樣不可改</b>（HIG）。它是全稿唯一沒有唇邊的浮起面，因為連唇邊都算改到它的外觀。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">Google：白底（深色 #131314）、官方四色 G、指定描邊 <code>#747775</code>（深色 #8E918F）。<b>四色 G 是商標不是裝飾性 icon —— AX 放大時不可以拿掉，只能跟著長大</b>（我們自己的 icon 在 AX3 以上才拿掉）。它<b>不是</b>唇邊規則的例外：它自己指定的描邊色就是「該表面的深一階」。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">深色下三鍵的重量順序是 Apple（純白）→ Email（台紙浮起）→ Google（近黑＋描邊）。<b>Google 在深色下比 Email 輕，是第三方規範的必然</b>，不要改它的色去扳回順序；它的邊界由描邊撐住（5.53:1，門檻 3:1）。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">送審前請再確認當時的 Review Guidelines（第三方登入並存時 Apple 的呈現要求）。</li>
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>順序：Apple → Google → Email。</b>三顆同高、同圓角、同間距、直排，每顆 ≥56pt。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>已改寫的固化決定</b>：上一稿是「Email 在上，順序是唯一的優先訊號，接受深色下 Apple 白底的重量反轉」。現在<b>順序與視覺重量同向</b>——Apple 在最上，而它在兩種模式下都自動是全頁最重的一塊（淺色純黑 16.42:1、深色純白 17.59:1）。<b>所以那條讓步不再需要。</b></li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>Email 這一顆從主按鈕降級成一般浮起面</b>：歡迎頁因此一顆濃玫瑰都沒有 —— 色彩不再與順序打架。不要為了「讓 Email 明顯一點」把它改回濃玫瑰。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">Apple：黑底白字（深色反白）、官方字串、圓角 14 —— <b>顏色與字樣不可改</b>（HIG）。它是全稿唯一沒有唇邊的浮起面，因為連唇邊都算改到它的外觀。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">Google：白底（深色 #131314）、官方四色 G、指定描邊 <code>#747775</code>（深色 #8E918F）。<b>四色 G 是商標不是裝飾性 icon —— AX 放大時不可以拿掉，只能跟著長大</b>（我們自己的 icon 在 AX3 以上才拿掉）。它與 Apple 鍵一樣<b>不加唇邊、不加漸層</b> —— 我們只借幾何（同高、同圓角、同間距、同命中盒），不借光也不改邊。<b>AX5 空間不夠時換官方短標題「登入」，版式不動</b>；不要自己把標誌堆到字的上方。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">深色下三鍵的重量順序是 Apple（純白）→ Email（台紙浮起）→ Google（近黑＋描邊）。<b>Google 在深色下比 Email 輕，是第三方規範的必然</b>，不要改它的色去扳回順序；它的邊界由描邊撐住（5.52:1，門檻 3:1）。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">送審前請再確認當時的 Review Guidelines（第三方登入並存時 Apple 的呈現要求）。</li>
     </ul>
   </div>
   </div>

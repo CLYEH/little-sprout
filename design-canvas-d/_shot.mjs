@@ -6,14 +6,25 @@
 // 這一版：① 開機先量出視窗與視區的差 ② 視窗開高，再把 PNG 的列裁回板高
 //          ③ 讀 PNG 檔頭確認像素尺寸 ④ 把「板的最後 40px」單獨重渲染一次，
 //             跟截圖的最後 40 列逐像素比對 —— 一致才算截到底。
-// Run: node _shot.mjs   （需要本機 http server：python3 -m http.server 8731）
+// Run: node _shot.mjs   （需要本機 http server：python3 -m http.server 8741）
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { inflateSync, deflateSync, crc32 } from 'node:zlib';
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const URLBASE = process.env.LS_URL || 'http://localhost:8731';
+/* 第 1 輪 R9 說的是 measure.mjs 的預設埠指向軌 B —— 但同一個洞在這裡也有一份，
+   而且更危險：截圖是要送給人看的東西。同樣兩道：埠改本軌的 8741，
+   而且開跑前拿 server 上的 _root.json 與本地比對，不一致就 exit 1。 */
+const URLBASE = process.env.LS_URL || 'http://localhost:8741';
 const here = (f) => new URL(f, import.meta.url);
+const localRoot = existsSync(here('_root.json')) ? JSON.parse(readFileSync(here('_root.json'), 'utf8')) : null;
+if (!localRoot) { console.error('_shot: 找不到 _root.json —— 先跑 node build.mjs'); process.exit(1); }
+const servedRoot = await fetch(`${URLBASE}/_root.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+if (!servedRoot) { console.error(`_shot: ${URLBASE}/_root.json 抓不到 —— server 沒開，或根目錄不是這一軌。`); process.exit(1); }
+if (servedRoot.track !== localRoot.track || servedRoot.fp !== localRoot.fp) {
+  console.error(`_shot: ${URLBASE} 服務的是 ${servedRoot.track} #${servedRoot.fp}，本地是 ${localRoot.track} #${localRoot.fp} —— 截下去會是別軌的畫面，停在這裡。`);
+  process.exit(1);
+}
 const cv = JSON.parse(readFileSync(here('canvas.json')));
 const TAIL = 40;
 

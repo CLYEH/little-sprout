@@ -7,6 +7,8 @@ import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import {
   T, GAPS, SIZES, FIX, AX, RULE, H1_GROUPS, H1_EXCLUDED, hash12,
   GRAD_KEYS, GRAD_WHY, NO_GRAD_WHY, CONTRAST, gradCss, perfCss,
+  TRACK, TEMP, TEMP_TOL, HUE_MIN, LIGHT_DH, TIME_DH, LIGHT_KEYS, STUB_KEYS, STUB_KNEE,
+  lch, dHue, dE,
 } from './tokens.mjs';
 
 const files = readdirSync(new URL('.', import.meta.url)).filter((f) => f.endsWith('.dc.html')).sort();
@@ -195,7 +197,9 @@ if (M.contrastNodes) {
     for (const k of [...GRAD_KEYS, 'perf']) {
       if (!sheet.includes(GRAD_WHY[k])) missWhy.push(k);
       if (k === 'perf') continue;
-      for (const th of [T.light, T.dark]) for (const hex of th.grad[k]) if (!sheet.includes(hex)) missHex.push(`${k}:${hex}`);
+      for (const th of [T.light, T.dark]) {
+        for (const [hex, pos] of th.grad[k]) if (!sheet.includes(`${hex} ${pos}%`)) missHex.push(`${k}:${hex}@${pos}%`);
+      }
     }
     ok(missWhy.length === 0 && missHex.length === 0,
       `G22③ 漸層理由：${GRAD_KEYS.length + 1} 種漸層的理由與兩端 hex（淺／深各一組）全部印在 Tokens 板上`,
@@ -214,13 +218,150 @@ if (M.contrastNodes) {
       return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
     const bad = [];
     for (const k of GRAD_KEYS) {
-      const l = T.light.grad[k].map(L6), d = T.dark.grad[k].map(L6);
+      const l = [T.light.grad[k].at(0)[0], T.light.grad[k].at(-1)[0]].map(L6);
+      const d = [T.dark.grad[k].at(0)[0], T.dark.grad[k].at(-1)[0]].map(L6);
       if (l[0] === null || d[0] === null) continue;            // seam 是 rgba，本來就不比明度
       const sl = Math.sign(l[0] - l[1]), sd = Math.sign(d[0] - d[1]);
       if (sl !== -sd) bad.push(`${k} 淺色 ${sl > 0 ? '上亮' : '上暗'}、深色 ${sd > 0 ? '上亮' : '上暗'}`);
     }
     ok(bad.length === 0,
       `G22④ 深色是鏡像：${GRAD_KEYS.length - 1} 種帶明度的漸層，深色兩端與淺色相反（seam 是 rgba 的「有無」漸層，由幾何決定、不隨光源翻面）`,
+      bad.join(' · '));
+  }
+}
+
+/* ══ G23  色彩語意（第 2 輪新增）════════════════════════════════
+   第 1 輪的病：管線守著「漸層有沒有登記、字壓在上面對比夠不夠」，卻沒有一項在守
+   **色彩自己說的那套意思**。證據是 reviewer 的兩發突變全綠通過：
+     M1  把四階台紙的溫度極性整個倒轉（凹變暖、手澤變冷）→ 71 項全綠
+     M2b 把台紙漸層加到平印面上（違反「平印不接光」）→ 全綠，而且 G22③ 自己印 PASS
+   兩發都不是漏抓，是**根本沒有那條檢查**。G23 補四條：
+     ① 溫度階梯：四階與染料相對台紙的 LCh 色相角 ＝ 宣告的 TEMP（淺深各驗，容差 ±3°）；
+        再加漸層層級的排序 h(win) < h(paper) < h(win3/face) 與三個實測下限。
+        **深色套同一條** —— 第 1 輪的深色四階全落 6.5° 內，這一條會直接 FAIL；
+        本輪的深色是「固定 L*、只轉色相」修出來的，所以對比一位元都沒動。
+     ② 平印不接光：掃平印**使用點與它自己的皮**的 computed background-image，
+        出現漸層一律 FAIL，除非掛牌且是號碼帶（stub*）或騎縫線（perf）。
+     ③ L* 與 C* 階梯：淺色 C* 隨老化上升（紙會染上顏色）、深色 C* 隨 L* 上升
+        （暗處的彩度被明度綁住）—— 兩條方向相反的階梯**各自**要成立。
+     ④ 光與時間分家：光的漸層只改明度（|Δh| ≤ LIGHT_DH）、時間的漸層會改色相
+        （≥TIME_DH）；而且只有號碼帶是三色停的非等速漸層，褪色階三個量單調衰減。 */
+{
+  const modes = [['淺色', T.light], ['深色', T.dark]];
+  const gm = (th, k) => { const s = th.grad[k].filter(([c]) => /^#/.test(c)); const a = lch(s[0][0]), b = lch(s.at(-1)[0]); return a.h + dHue(b.h, a.h) / 2; };
+
+  // ① 溫度：宣告的 TEMP 對實測的 LCh 色相角
+  {
+    const bad = [], seen = [];
+    for (const [name, th] of modes) {
+      const base = lch(th.board).h;
+      for (const [k, want] of Object.entries(TEMP)) {
+        const got = dHue(lch(th[k]).h, base);
+        seen.push(`${name}${k} ${got > 0 ? '+' : ''}${got.toFixed(1)}°`);
+        if (Math.abs(got - want) > TEMP_TOL) bad.push(`${name} ${k} 實測 ${got.toFixed(1)}°、宣告 ${want}°（容差 ±${TEMP_TOL}）`);
+      }
+    }
+    ok(bad.length === 0,
+      `G23① 溫度階梯：四階台紙與染料相對台紙本體的色相角，淺色與深色都等於宣告的 TEMP（${seen.join(' · ')}）`,
+      bad.join(' · '));
+  }
+
+  // ①b 漸層層級的排序與下限（凹偏冷 < 台紙 < 次要面偏暖）
+  {
+    const bad = [], seen = [];
+    for (const [name, th] of modes) {
+      const p = gm(th, 'paper'), w = dHue(gm(th, 'win'), p), w3 = dHue(gm(th, 'win3'), p), f = dHue(gm(th, 'face'), p);
+      seen.push(`${name} win ${w.toFixed(1)}° / win3 +${w3.toFixed(1)}° / face +${f.toFixed(1)}°`);
+      if (!(w < 0 && w3 > 0 && f > 0)) bad.push(`${name} 排序破了：win ${w.toFixed(1)}、win3 ${w3.toFixed(1)}、face ${f.toFixed(1)}（要 win < 台紙 < win3/face）`);
+      if (-w < HUE_MIN.cool) bad.push(`${name} 凹只比台紙冷 ${(-w).toFixed(1)}°，下限 ${HUE_MIN.cool}°`);
+      if (Math.min(w3, f) < HUE_MIN.warm) bad.push(`${name} 次要面只比台紙暖 ${Math.min(w3, f).toFixed(1)}°，下限 ${HUE_MIN.warm}°`);
+      if (w3 - w < HUE_MIN.span) bad.push(`${name} 四階溫度跨距只有 ${(w3 - w).toFixed(1)}°，下限 ${HUE_MIN.span}°（跨距太小＝「一個色相的四個明度」，正是這一稿說自己不是的東西）`);
+    }
+    ok(bad.length === 0, `G23① 溫度排序：凹偏冷 < 台紙 < 次要面偏暖，兩個模式都成立且跨距達標（${seen.join('；')}）`, bad.join(' · '));
+  }
+
+  // ② 平印不接光（掃使用點的 computed background）
+  if (M.flatBad) {
+    ok(M.flatBad.length === 0,
+      `G23② 平印不接光：${files.length} 張板的平印使用點（連同它自己的皮）上，只有掛牌的號碼帶與騎縫線帶漸層 —— 實際掛出來的 ${(M.flatOk || []).length} 處`,
+      M.flatBad.slice(0, 5).join(' | '));
+  } else need('flatBad', 'G23② 平印不接光');
+
+  // ③ L* 與 C* 的兩條階梯
+  {
+    const bad = [], seen = [];
+    const Lv = (th, k) => lch(th[k]).L, Cv = (th, k) => lch(th[k]).C;
+    for (const [name, th] of modes) {
+      // 跨模式不變式：亮面永遠比台紙亮；凹永遠比台紙暗（洞就是洞，不隨光源翻面）
+      if (!(Lv(th, 'lit') > Lv(th, 'board'))) bad.push(`${name} 亮面沒有比台紙亮`);
+      if (!(Lv(th, 'board2') < Lv(th, 'board'))) bad.push(`${name} 凹沒有比台紙暗（陰影不隨光源翻面）`);
+      if (Math.abs(Lv(th, 'board3') - Lv(th, 'board')) < 5) bad.push(`${name} 次要面與台紙的明度只差 ${Math.abs(Lv(th, 'board3') - Lv(th, 'board')).toFixed(1)} L*，下限 5`);
+      seen.push(`${name} L* lit ${Lv(th, 'lit').toFixed(1)} / board ${Lv(th, 'board').toFixed(1)} / b2 ${Lv(th, 'board2').toFixed(1)} / b3 ${Lv(th, 'board3').toFixed(1)}`);
+    }
+    // 次要面是浮起面，它與台紙的明度方向在兩個模式必須相反（深色的光從下面來）
+    const s = (th) => Math.sign(Lv(th, 'board3') - Lv(th, 'board'));
+    if (s(T.light) === s(T.dark)) bad.push('次要面與台紙的明度方向兩個模式同號 —— 深色沒有鏡像');
+    // 淺色：越老彩度越高（紙會染上顏色）；深色：彩度隨明度（暗處畫不出高彩度）
+    const asc = (arr) => arr.every((v, i) => i === 0 || v > arr[i - 1]);
+    const cl = ['lit', 'board', 'board2', 'board3'].map((k) => Cv(T.light, k));
+    const cd = ['board2', 'board', 'board3', 'lit'].map((k) => Cv(T.dark, k));
+    if (!asc(cl)) bad.push(`淺色 C* 不是隨老化遞增：${cl.map((v) => v.toFixed(1)).join(' → ')}`);
+    if (!asc(cd)) bad.push(`深色 C* 不是隨 L* 遞增：${cd.map((v) => v.toFixed(1)).join(' → ')}`);
+    ok(bad.length === 0,
+      `G23③ 明度與彩度階梯：${seen.join('；')}；淺色 C* 隨老化遞增 ${cl.map((v) => v.toFixed(1)).join('→')}、深色 C* 隨明度遞增 ${cd.map((v) => v.toFixed(1)).join('→')}（兩條方向相反的階梯各自成立）`,
+      bad.join(' · '));
+  }
+
+  // ④ 光與時間分家 ＋ 褪色階單調衰減
+  {
+    const bad = [], seen = [];
+    const dh = (th, k) => Math.abs(dHue(lch(th.grad[k].at(0)[0]).h, lch(th.grad[k].at(-1)[0]).h));
+    for (const [name, th] of modes) {
+      for (const k of LIGHT_KEYS) {
+        if (dh(th, k) > LIGHT_DH) bad.push(`${name} ${k} 是「光」，兩端色相差 ${dh(th, k).toFixed(1)}° > ${LIGHT_DH}°（光只改明度）`);
+      }
+      for (const k of ['paper', 'stub3']) {
+        if (dh(th, k) < TIME_DH) bad.push(`${name} ${k} 是「時間」，兩端色相差只有 ${dh(th, k).toFixed(1)}° < ${TIME_DH}°（時間會改色相，不然它就只是一支光）`);
+      }
+      seen.push(`${name} 光最大 ${Math.max(...LIGHT_KEYS.map((k) => dh(th, k))).toFixed(1)}° / 時間最小 ${Math.min(dh(th, 'paper'), dh(th, 'stub3')).toFixed(1)}°`);
+      // 停點形狀：只有號碼帶是三色停、非等速
+      for (const k of GRAD_KEYS) {
+        const st = th.grad[k], isStub = STUB_KEYS.includes(k);
+        if (!isStub && !(st.length === 2 && st[0][1] === 0 && st[1][1] === 100)) bad.push(`${name} ${k} 不是等速的兩色停（光是等速的）`);
+        if (isStub && !(st.length === 3 && st[1][1] === STUB_KNEE)) bad.push(`${name} ${k} 不是「三色停、膝點 ${STUB_KNEE}%」`);
+        if (isStub) {
+          const r = dE(st[0][0], st[1][0]) / Math.max(.01, dE(st[1][0], st[2][0]));
+          if (r < 3) bad.push(`${name} ${k} 的膝點沒有邊緣加權：0→${STUB_KNEE}% 與 ${STUB_KNEE}→100% 的 ΔE 只差 ${r.toFixed(1)} 倍，下限 3`);
+        }
+      }
+      // 褪色階：三個量一起單調衰減，褪完了就沒有方向
+      const q = (k) => { const s = th.grad[k]; return { h: dh(th, k), l: Math.abs(lch(s[0][0]).L - lch(s[2][0]).L), c: (lch(s[0][0]).C + lch(s[2][0]).C) / 2 }; };
+      const seq = STUB_KEYS.map(q);
+      for (const key of ['h', 'l', 'c']) {
+        const v = seq.map((x) => x[key]);
+        if (!v.every((x, i) => i === 0 || x < v[i - 1])) bad.push(`${name} 褪色階的 ${key} 沒有單調衰減：${v.map((x) => x.toFixed(2)).join(' → ')}`);
+      }
+    }
+    ok(bad.length === 0,
+      `G23④ 光與時間分家：${seen.join('；')}；${GRAD_KEYS.length - STUB_KEYS.length} 種等速兩色停 vs ${STUB_KEYS.length} 階號碼帶（三色停、膝點 ${STUB_KNEE}%、邊緣加權），褪色階的色相位移／明度差／彩度三個量一起單調衰減到零`,
+      bad.join(' · '));
+  }
+
+  // ⑤ 褪色階 ＝ 剩餘次數：板上畫的階數要等於板上寫的次數（設計自己的對帳）
+  {
+    const bad = [], seen = [];
+    for (const f of files) {
+      const s = read(f);
+      const lv = [...new Set([...s.matchAll(/data-grad="stub(\d)"/g)].map((m) => +m[1]))];
+      const say = [...new Set([...s.matchAll(/還可以用 (\d) 次/g)].map((m) => +m[1]))];
+      if (!lv.length && !say.length) continue;
+      if (/Tokens/.test(f)) { seen.push(`${f.replace('.dc.html', '')} 印了全部 ${lv.length} 階`); continue; }
+      if (lv.length !== 1 || say.length !== 1 || lv[0] !== say[0]) {
+        bad.push(`${f} 畫的是 stub${lv.join('/')}、寫的是「還可以用 ${say.join('/')} 次」`);
+      } else seen.push(`${f.replace('.dc.html', '')} ${lv[0]}`);
+    }
+    ok(bad.length === 0,
+      `G23⑤ 褪色階＝剩餘次數：${seen.length} 張有號碼帶的板，畫出來的階數等於印在上面的次數（${seen.join(' · ')}）`,
       bad.join(' · '));
   }
 }
@@ -315,7 +456,9 @@ if (M.err) {
    ②「內容末端到板底不設上限，但主按鈕中心須落在畫面 70% 以內」——
       落地範圍：尾段空白 >120px 的流程板（交付板／壓力板不是畫面）。理由印在 Tokens 板上。 */
 if (M.voids) {
-  const PAUSE = RULE.pause, FLOW = (f) => !/Tokens|Notes|Stress/.test(f);
+  // 交付板不是畫面（Tokens／Notes／壓力板／AppIcon），呼吸帶與板高的兩條規則不適用；
+  // 排除清單明講在這裡，不是靠 verify 靜靜跳過（AppIcon 板上也印了它自己的豁免清單）。
+  const PAUSE = RULE.pause, FLOW = (f) => !/Tokens|Notes|Stress|AppIcon/.test(f);
   ok(M.pauseBad.length === 0,
     `G10 呼吸帶①：內容之間 >${PAUSE}px 的空白共 ${M.pauses.length} 段，全部掛了 data-pause 說明理由（手機 iPad 同一條門檻）`,
     M.pauseBad.map((v) => `${v.file}/${v.col}=${v.len}px@${v.at} 未掛牌`).join(' '));
@@ -417,10 +560,18 @@ if (M.approve) {
   const missing = claims.filter(([, f]) => !files.includes(f));
   ok(missing.length === 0, `G15 Notes 要求的 ${claims.length} 種版式，每一種都有板畫出來`, missing.map(([c]) => c).join(' '));
   // 手寫字標的三個使用點
-  const inkBoards = files.filter((f) => /aria-label="小芽"/.test(read(f)));
-  ok(inkBoards.length >= 8, `G15 手寫字標出現在 ${inkBoards.length} 張板（歡迎×4、信件明細×2、建立家庭×3、Tokens）`);
+  /* 字標＝手寫「萌芽」＋系統字「日記」。整組只掛一個無障礙名稱＝產品全名，
+     所以這裡掃的就是那個名稱；順帶保證沒有任何一處把舊名留在畫面上。 */
+  const inkBoards = files.filter((f) => /aria-label="萌芽日記"/.test(read(f)));
+  ok(inkBoards.length >= 8, `G15 字標出現在 ${inkBoards.length} 張板（歡迎×3、信件明細×3、建立家庭×2、Tokens）`);
   ok(/Main|Welcome/.test(inkBoards.join()) && /Email\.dc/.test(inkBoards.join()) && /CreateFamily\.dc/.test(inkBoards.join()),
-    'G15 手寫字標跨板縫合：歡迎頁 → 信件明細「寄件人」 → 建立家庭即時預覽');
+    'G15 字標跨板縫合：歡迎頁 → 信件明細「寄件人」 → 建立家庭即時預覽');
+  {
+    const old = files.filter((f) => /小芽/.test(read(f)));
+    ok(old.length === 0, `G15 舊名清乾淨：${files.length} 張板上沒有任何一處還寫著「小芽」（產品中文名＝${'萌芽日記'}）`, old.join(' '));
+    const lock = files.filter((f) => /aria-label="萌芽日記"/.test(read(f)) && !/>日記</.test(read(f)));
+    ok(lock.length === 0, 'G15 lockup 完整：每一個字標都是「手寫萌芽＋系統字日記」兩塊，沒有只出現一半的', lock.join(' '));
+  }
 }
 
 /* ══ G16  原始碼衛生：重複宣告與雙分號 ══════════════════════════ */
@@ -438,6 +589,16 @@ if (M.approve) {
   }
   ok(dups.length === 0, 'G16 沒有重複的 CSS 宣告（font-weight 等）', [...new Set(dups)].slice(0, 8).join(' | '));
   ok(semis.length === 0, 'G16 沒有雙分號', semis.join(' '));
+
+  /* 第 1 輪 R2：build.mjs 有兩行用了單引號，`${CODE2}` 六個字元原封不動印在
+     InviteRequestsMany 板上給人看 —— 71 項 gate 沒有一項會叫（沒有人在掃產物的字面）。
+     這一條是 fail-closed 的：產物與畫布註記裡出現未內插的樣板語法一律 FAIL。 */
+  const raw = [];
+  for (const f of [...files, 'canvas.json']) {
+    const s = read(f);
+    for (const m of s.matchAll(/\$\{[^}]{0,40}\}?/g)) raw.push(`${f} 「${m[0].slice(0, 24)}」`);
+  }
+  ok(raw.length === 0, `G16 沒有沒內插的樣板語法：${files.length} 張板＋canvas.json 裡不存在 \${…}`, raw.slice(0, 6).join(' | '));
 }
 
 /* ══ G18  Tokens 板印的常數 ＝ tokens.mjs 的常數 ══════════════════
@@ -462,12 +623,20 @@ if (M.approve) {
 if (M.lips) {
   const w = new Set(Object.keys(M.lips).map((k) => k.split('@')[1]));
   ok([...w].join() === String(FIX.lip), `G19 唇邊一律 ${FIX.lip}pt：${Object.entries(M.lips).map(([k, v]) => `${k}×${v}`).join(' ')}`, [...w].join('/'));
-  ok(Object.keys(M.lips).every((k) => /^(ctaDeep|ctaBusy|board3|edge|pen|googleLine)@/.test(k)),
-    'G19 唇邊一律是「該表面的深一階」：濃玫瑰→ctaDeep、台紙→edge、朱→pen、Google→它自己規範的描邊色；載入中→與底同色（主要 ctaBusy／次要 board3）＝按不動',
-    Object.keys(M.lips).filter((k) => !/^(ctaDeep|ctaBusy|board3|edge|pen|googleLine)@/.test(k)).join(' '));
-  ok(M.lipNoneWho.every((s) => /:(button|switch)$/.test(s)) && M.lipNone === 8,
-    `G19 沒有唇邊的浮起面只有兩種、共 ${M.lipNone} 個：Apple 鍵 5 張板（HIG 不可改外觀，連唇邊都算改）與審核開關 ON 的軌道 3 個（膠囊軌道，唇邊會壓到把手行程）—— Google 鍵**不在**這張名單上，它走同一條唇邊規則`,
-    M.lipNoneWho.join(' '));
+  ok(Object.keys(M.lips).every((k) => /^(ctaDeep|ctaBusy|board3|edge|pen)@/.test(k)),
+    'G19 唇邊一律是「該表面的深一階」：濃玫瑰→ctaDeep、台紙→edge、朱→pen；載入中→與底同色（主要 ctaBusy／次要 board3）＝按不動',
+    Object.keys(M.lips).filter((k) => !/^(ctaDeep|ctaBusy|board3|edge|pen)@/.test(k)).join(' '));
+  /* 第 1 輪 R6 裁定「Google 的描邊被借做唇邊＝巧合不是融入」，本輪表態：
+     兩顆品牌鍵都不加唇邊。量測端的判準也一起改成幾何的 —— 唇邊＝下緣比上緣厚；
+     四邊等寬的是描邊。所以就算有人再把 border-bottom 調成 3px，它也會立刻出現在
+     lips 而不是 lipNone，這一條就會 FAIL。 */
+  {
+    const brand = M.lipNoneWho.filter((s) => /\/(apple|google)$/.test(s));
+    const sw = M.lipNoneWho.filter((s) => /:switch$/.test(s));
+    ok(brand.length + sw.length === M.lipNone && brand.length === 8 && sw.length === 3,
+      `G19 沒有唇邊的浮起面只有兩種、共 ${M.lipNone} 個：兩顆品牌鍵（Apple ${brand.filter((s) => /apple/.test(s)).length}＋Google ${brand.filter((s) => /google/.test(s)).length}，我們不改別人的外觀 —— 連加一道唇邊、連把它規範的 1px 描邊加粗成 3px 都算改）與審核開關 ON 的軌道 ${sw.length} 個（膠囊軌道，唇邊會壓到把手行程）`,
+      M.lipNoneWho.join(' '));
+  }
 } else need('lips', 'G19 唇邊');
 
 if (M.toggles) {
@@ -543,7 +712,8 @@ if (M.toggles) {
     const start = src.indexOf('annotations: [');
     const end = src.indexOf('  pages: [', start);
     const block = src.slice(start, end);
-    const LIT_OK = [/AX[35]/g, /H1/g, /第 2 輪/g, /LS-\d+/g];   // 級名（AX3／AX5／H1）、歷史敘述、票號，不是規格數字
+    // 級名（AX3／AX5／H1）、gate 代號（G23②）、歷史敘述、票號 —— 都是標籤，不是規格數字
+    const LIT_OK = [/AX[35]/g, /H1/g, /G\d+[①②③④⑤⑥⑦⑧⑨]?/g, /\bR\d+/g, /第 [1234567] 輪/g, /LS-\d+/g];
     const bad = [];
     for (const m of block.matchAll(/text: `/g)) {
       let i = m.index + m[0].length, depth = 0, lit = '';
@@ -560,7 +730,7 @@ if (M.toggles) {
       if (digits) bad.push(`…${rest.slice(Math.max(0, rest.search(/\d/) - 12), rest.search(/\d/) + 8)}…`);
     }
     ok(bad.length === 0,
-      `G20 註記無手打數字：${notes.length} 則註記的模板裡，阿拉伯數字一律出自 \${}（例外只有 AX3／AX5 級名與「第 2 輪」）`,
+      `G20 註記無手打數字：${notes.length} 則註記的模板裡，阿拉伯數字一律出自 \${}（例外只有 AX3／AX5／H1 級名、G23／R6 這類 gate 與 finding 代號、「第 N 輪」這種歷史敘述、LS 票號）`,
       bad.join(' | '));
   }
 }
@@ -581,6 +751,19 @@ if (M.toggles) {
   ok(uniq.length === 1 && uniq[0] === now,
     `G21 產物同版：板上印的實測句出自現行 measured.json（#${now}）`,
     uniq[0] !== now ? `板上是 #${uniq[0]}、現行是 #${now} —— 板上的實測數字是上一版的，重跑 node build.mjs` : '');
+
+  /* G21b（第 1 輪 R9）：這一份量測是在哪一個根目錄上量的。
+     上一輪 measure 的預設埠指向軌 B 的根目錄，而兩軌的檔名與欄位完全相容 ——
+     量到別人的畫面時 measured.json 長得毫無異狀，所有 gate 會全綠地放行別人的設計。
+     build 把軌別＋板清單指紋寫成 _root.json，measure 開跑前抓 server 上的同名檔比對，
+     這裡再比對一次「量測時記下的根目錄」＝「現在這一份產物」。 */
+  const rootFile = new URL('_root.json', import.meta.url);
+  const local = existsSync(rootFile) ? JSON.parse(readFileSync(rootFile, 'utf8')) : null;
+  ok(!!local && !!M.root && M.root.track === local.track && M.root.fp === local.fp,
+    `G21b 量測來源：measured.json 是在本軌的根目錄上量的（${local ? `${local.track} #${local.fp}／${local.boards} 板` : '_root.json 不見了'}）`,
+    !local ? '沒有 _root.json —— 先跑 node build.mjs'
+      : !M.root ? 'measured.json 沒有記下根目錄 —— 重跑 node measure.mjs'
+        : `量測時是 ${M.root.track} #${M.root.fp}（${M.root.boards} 板）`);
 }
 
 /* ══ G17  截圖與重渲染的底部 40px 一致（_shot.mjs 寫回）══════════ */

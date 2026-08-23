@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <!-- ls-measured:4dc7510b1fc0 -->
+  <!-- ls-measured:1e5850fcb42a -->
   <script src="./support.js"></script>
 </head>
 <body>
@@ -20,7 +20,10 @@
       --ls-g-win3:linear-gradient(180deg, #D8B9B1 0%, #E6C9C1 100%);
       --ls-g-face:linear-gradient(180deg, #E9CFC7 0%, #DBBDB5 100%);
       --ls-g-cta:linear-gradient(180deg, #901F49 0%, #7C1236 100%);
-      --ls-g-stub:linear-gradient(180deg, #FAEADE 0%, #ECD0D6 100%);
+      --ls-g-stub3:linear-gradient(180deg, #FAEADE 0%, #EFD3D6 35%, #ECD0D6 100%);
+      --ls-g-stub2:linear-gradient(180deg, #F9EBE0 0%, #F2DAD8 35%, #F1D8D7 100%);
+      --ls-g-stub1:linear-gradient(180deg, #F8EBE1 0%, #F5E1DB 35%, #F4E0DB 100%);
+      --ls-g-stub0:linear-gradient(180deg, #F7ECE3 0%, #F6E8E1 35%, #F6E8E0 100%);
       --ls-g-seam:linear-gradient(180deg, rgba(42,18,25,0) 0%, rgba(42,18,25,.42) 100%);
       --ls-r-window:12px; --ls-r-control:14px; --ls-r-card:18px;
       --ls-sp-1:4px; --ls-sp-2:8px; --ls-sp-3:12px; --ls-sp-4:16px;
@@ -35,24 +38,24 @@
       mix-blend-mode:multiply}
   </style></helmet>
 
-<div class="g" data-col="phone" data-grad="paper" style="position:relative;width:390px;height:2540px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;display:flex;flex-direction:column">
+<div class="g" data-col="phone" data-grad="paper" style="position:relative;width:390px;height:2790px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;display:flex;flex-direction:column">
   <div style="display:flex;flex-direction:column;gap:32px;padding:59px 24px 34px;flex-grow:1">
     <h1 style="font-size:87px;line-height:105px;font-weight:700;letter-spacing:-.01em;color:#2A1219;margin:0">選一種方式登入</h1>
-    <div style="display:flex;flex-direction:column;gap:12px">
-      <div data-s="raise" data-role="button" data-brand="apple" style="background:#000000;border-radius:14px;min-height:174px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px;color:#FFFFFF;box-shadow:0 8px 16px -12px rgba(0,0,0,.8)">
+    <div data-s="win" data-role="tray" style="background:linear-gradient(180deg, #E0C4C3 0%, #EED5D2 100%);border:1px solid #8C6159;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(42,18,25,.34), inset 0 4px 6px -3px rgba(42,18,25,.22), inset 0 -1.5px 0 rgba(255,246,242,.78);padding:12px;display:flex;flex-direction:column;gap:12px">
+      <div data-s="raise" data-role="button" data-brand="apple" style="background:#000000;border-radius:14px;min-height:174px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px;color:#FFFFFF;box-shadow:0 8px 16px -12px rgba(0,0,0,.8)">
       <svg width="62" height="74" viewBox="0 0 17 20" fill="#FFFFFF" aria-hidden="true" style="flex:none"><path d="M14.02 10.6c.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.62-1.7-3.18-1.72-1.35-.14-2.64.79-3.33.79-.69 0-1.75-.77-2.87-.75-1.48.02-2.84.86-3.6 2.18-1.53 2.66-.39 6.6 1.1 8.76.73 1.06 1.6 2.25 2.74 2.2 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.08 2.65-2.14.84-1.23 1.18-2.42 1.2-2.48-.03-.01-2.3-.88-2.29-3.51ZM11.85 4.16c.6-.74 1.01-1.76.9-2.78-.87.04-1.93.58-2.56 1.31-.56.65-1.06 1.69-.93 2.69.97.07 1.97-.49 2.59-1.22Z"/></svg>
-      <span style="font-size:53px;line-height:78px;font-weight:600;color:#FFFFFF;text-align:center">透過 Apple 登入</span>
+      <span style="font-size:53px;line-height:78px;font-weight:600;color:#FFFFFF;text-align:center">登入</span>
     </div>
-      <div data-s="raise" data-role="button" data-brand="google" style="background:#FFFFFF;border-radius:14px;border:1px solid #747775;border-bottom:3px solid #747775;min-height:174px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;box-shadow:0 1px 0 rgba(42,18,25,.20), 0 8px 16px -10px rgba(42,18,25,.55)">
+      <div data-s="raise" data-role="button" data-brand="google" style="background:#FFFFFF;border-radius:14px;border:1px solid #747775;min-height:174px;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 16px;box-shadow:0 1px 0 rgba(42,18,25,.20), 0 8px 16px -10px rgba(42,18,25,.55)">
       <svg width="62" height="62" viewBox="0 0 48 48" aria-hidden="true" style="flex:none">
      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"/>
      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65Z"/>
      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19Z"/>
      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z"/>
    </svg>
-      <span style="font-size:53px;line-height:78px;font-weight:600;color:#1F1F1F;text-align:center">透過 Google 登入</span>
+      <span style="font-size:53px;line-height:78px;font-weight:600;color:#1F1F1F;text-align:center">登入</span>
     </div>
-      <div data-s="raise" data-role="button" style="background:linear-gradient(180deg, #E9CFC7 0%, #DBBDB5 100%);border-radius:14px;border-bottom:3px solid #8C6159;box-shadow:0 1px 0 rgba(42,18,25,.20), 0 8px 16px -10px rgba(42,18,25,.55);min-height:174px;display:flex;align-items:center;justify-content:center;padding:0 16px;color:#2A1219">
+      <div data-s="raise" data-role="button" style="background:linear-gradient(180deg, #E9CFC7 0%, #DBBDB5 100%);border-radius:14px;border-bottom:3px solid #8C6159;box-shadow:0 1px 0 rgba(42,18,25,.20), 0 8px 16px -10px rgba(42,18,25,.55);min-height:174px;display:flex;align-items:center;justify-content:center;padding:16px;color:#2A1219">
         <span style="font-size:53px;line-height:78px;font-weight:600;color:#2A1219;text-align:center">用 Email 登入</span>
       </div>
     </div>
@@ -63,7 +66,7 @@
       <span data-s="raise" data-role="link" style="align-self:flex-start;min-height:44px;display:inline-flex;align-items:center;padding:0 8px;font-size:40px;line-height:56px;font-weight:600;color:#2A1219;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px">隱私權政策</span>
     </div>
     <div data-s="flat" style="border:1px solid #8C6159;border-radius:12px;padding:16px">
-      <span style="font-size:40px;line-height:56px;font-weight:500;color:#3E232B;text-shadow:0 1px 0 rgba(255,246,242,.80)">我們自己的 icon（信封）在 AX3 以上一律拿掉只留字。Apple 與 Google 的標誌<b style="color:#2A1219">留著並跟著放大</b>——那是商標，不是裝飾性 icon；字換行時標誌改排到字的上方，不要卡在中間那一行旁邊。命中盒的 44pt 是<b style="color:#2A1219">實體最小值，不跟著字級放大</b>——放大的是行高。</span>
+      <span style="font-size:40px;line-height:56px;font-weight:500;color:#3E232B;text-shadow:0 1px 0 rgba(255,246,242,.80)">我們自己的 icon（信封）在 AX3 以上一律拿掉只留字。Apple 與 Google 的標誌<b style="color:#2A1219">留著並跟著放大</b>——那是商標，不是裝飾性 icon。空間不夠時<b style="color:#2A1219">換成它們官方的短標題「登入」，版式不動</b>——自己把標誌堆到字上面也是改外觀。我們自己那顆不換短標題：「用 Email 登入」整句留著、換行，所以三顆在 AX5 <b style="color:#2A1219">不再等高</b>，這是刻意的取捨。命中盒的 44pt 是<b style="color:#2A1219">實體最小值，不跟著字級放大</b>——放大的是行高。</span>
     </div>
   </div>
 </div>

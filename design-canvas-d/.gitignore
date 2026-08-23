@@ -1,4 +1,7 @@
-# 建置產物（single source = build.mjs + tokens.mjs + *.dc.html；打包檔含 minified runtime 會誤觸 secrets 掃描）
+# 建置產物（single source = build.mjs + tokens.mjs + brush.mjs + *.dc.html）
+# 打包出來的畫布檔含 minified runtime，會誤觸 secrets 掃描 —— 正解是不入版控。
 little-sprout-*.html
+mengya-*.html
+*-album-board.html
 shots/
 measured.json

@@ -1,12 +1,34 @@
 // 在真的瀏覽器裡跑 _probe.html，把量到的每一項寫進 measured.json。
 // Tokens 板上印的數字、verify.mjs 下的判斷，都只讀這個檔 —— 不可能再自報不實。
-// Run: node measure.mjs   （需要本機 http server：python3 -m http.server 8731）
+// Run: node measure.mjs   （需要本機 http server：python3 -m http.server 8741）
 import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { H1_GROUPS, RULE } from './tokens.mjs';
+import { H1_GROUPS, RULE, TRACK } from './tokens.mjs';
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const URLBASE = process.env.LS_URL || 'http://localhost:8731';
+/* 第 1 輪 R9：上一輪的預設埠 8731 指的是**軌 B 的根目錄**。兩軌的檔名、欄位、
+   data-* 標記完全相容，所以那樣量出來的 measured.json 長得毫無異狀，
+   31 張板的 gate 會全綠地放行別人的設計。兩道修法：
+     ① 預設埠改 8741（軌 D 自己的），而且埠沒開時是硬失敗不是靜默；
+     ② **開跑前先抓 server 上的 _root.json 與本地的比對**（軌別＋板清單指紋），
+        不一致就 exit 1 —— 這一條才是真正的保險，換埠號也騙不過。 */
+const URLBASE = process.env.LS_URL || 'http://localhost:8741';
+
+const rootFile = new URL('_root.json', import.meta.url);
+if (!existsSync(rootFile)) { console.error('measure: 找不到 _root.json —— 先跑 node build.mjs'); process.exit(1); }
+const localRoot = JSON.parse(readFileSync(rootFile, 'utf8'));
+const served = await fetch(`${URLBASE}/_root.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+if (!served) {
+  console.error(`measure: ${URLBASE}/_root.json 抓不到 —— server 沒開，或它的根目錄裡沒有這一軌的產物。`);
+  console.error(`         本軌應該這樣開：python3 -m http.server 8741 （在 ${new URL('.', import.meta.url).pathname}）`);
+  process.exit(1);
+}
+if (served.track !== localRoot.track || served.fp !== localRoot.fp) {
+  console.error(`measure: ${URLBASE} 服務的不是這一份產物 —— server 上是 ${served.track} #${served.fp}（${served.boards} 板），`);
+  console.error(`         本地是 ${localRoot.track} #${localRoot.fp}（${localRoot.boards} 板）。量下去會把別軌的數字寫進這一軌，所以停在這裡。`);
+  process.exit(1);
+}
+console.log(`measure: 根目錄核對 OK —— ${served.track} #${served.fp}（${served.boards} 板）`);
 
 const dump = execFileSync(CHROME, [
   '--headless', '--disable-gpu', '--no-sandbox', '--virtual-time-budget=30000',
@@ -51,6 +73,9 @@ const btnTail = lowest(R.mainBtn.filter((b) => tailBoards.has(b.file)));
 
 const out = {
   ...prev,
+  /* 這一份量測是在哪一個根目錄上量的（G21b）。verify 拿本地 _root.json 比對它 ——
+     就算有人手動改埠號、或先開對再開錯，板上印的實測句也不可能出自別軌。 */
+  root: { track: served.track, fp: served.fp, boards: served.boards },
   count: R.boards.length,
   boards: R.boards,
   clipped: R.boards.filter((b) => b.clipped).map((b) => `${b.file}+${b.clipped}`),
@@ -97,6 +122,13 @@ const out = {
     byKind: Object.entries(R.grads.reduce((a, g) => { const k = g.kind || (g.repeating ? 'perf' : '(未標記)'); a[k] = (a[k] || 0) + 1; return a; }, {})),
   },
   gradBad: R.gradBad,
+  /* G23②：平印面（與其後代）上的漸層。合法的只有掛牌的號碼帶與騎縫線。 */
+  flatBad: R.flatBad, flatOk: [...new Set(R.flatOk)].sort(),
+  /* R5：登入鍵與它坐的托盤之間的 ΔE。最小的那一顆就是「會不會糊在一起」的那一顆。 */
+  trayDelta: R.trayDelta, trays: R.trays,
+  trayDeltaMin: R.trayDelta.length ? Math.min(...R.trayDelta.map((d) => d.dE)) : null,
+  trayDeltaMinWho: R.trayDelta.length
+    ? (() => { const w = R.trayDelta.reduce((a, b) => (b.dE < a.dE ? b : a)); return `${w.file}/${w.who}`; })() : '-',
   gradMin: Math.round(R.contrast.min * 100) / 100,
   gradWorst: R.contrast.worst,
   grainMin: Math.round(R.contrast.grainMin * 100) / 100,
@@ -122,6 +154,8 @@ writeFileSync(new URL('measured.json', import.meta.url), JSON.stringify(out, nul
 console.log(`measured ${out.count} boards · 呼吸帶 手機 ${out.maxVoid}px (${out.maxVoidFile}) / iPad ${out.maxVoidPad}px (${out.maxVoidPadFile})`);
 console.log(`  對比節點 ${out.contrastNodes}（漸層最不利點最低 ${out.contrastMin} @ ${out.contrastWorst}，未達 AAA ${out.contrastFails.length}）· 照片上文字 ${out.textOverPhoto}`);
 console.log(`  漸層 ${out.grad.total} 個使用點／${out.grad.kinds} 種寫法（非垂直 ${out.grad.badDir}）· 壓字節點 ${out.grad.textOn} · 顆粒最暗格最低 ${out.grainMin} @ ${out.grainWorst}（低於 6 的 ${out.grainFails.length}）`);
+console.log(`  平印面上的漸層：合法 ${out.flatOk.join('/')}／違規 ${out.flatBad.length}` + (out.flatBad.length ? ` — ${out.flatBad.slice(0,3).join(' | ')}` : ''));
+console.log(`  托盤 ${out.trays.length} 個 · 鍵與托盤 ΔE 最小 ${out.trayDeltaMin} (${out.trayDeltaMinWho})`);
 console.log(`  inset 使用點 ${out.insetTotal}（白名單外 ${out.insetBad.length}）· 陶土最多 ${out.ctaMax}/板 · 孤兒斷行 ${out.orphans.length} · 裁切 ${out.clipped.length}`);
 console.log(`  >${RULE.pause}px 空白 ${out.pauses.length} 段掛牌 / ${out.pauseBad.length} 段未掛牌 · 尾段最大 ${out.maxTrail}px (${out.maxTrailFile}) · 主按鈕中心位置最低 ${out.btnMaxPct}% (${out.btnMaxFile})`);
 console.log(`  唇邊 ${JSON.stringify(out.lips)} · 無唇邊 ${out.lipNone}（${out.lipNoneWho.join(' ')}）· 開關列 ${out.toggles.map((t) => `${t.file}@${t.top}`).join(' ')}`);
