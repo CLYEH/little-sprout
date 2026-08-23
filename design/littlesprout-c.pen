@@ -357,54 +357,6 @@
     },
     {
       "type": "frame",
-      "id": "wgXYJ",
-      "x": 1380,
-      "y": 220,
-      "name": "cmp/Banner",
-      "reusable": true,
-      "width": 345,
-      "fill": "$surface",
-      "cornerRadius": [
-        0,
-        "$radius-md",
-        "$radius-md",
-        0
-      ],
-      "stroke": "$danger",
-      "strokeWidth": {
-        "left": 4
-      },
-      "strokeAlignment": "inner",
-      "gap": "$sp-label",
-      "padding": "$sp-item",
-      "children": [
-        {
-          "type": "icon",
-          "id": "dPafU",
-          "name": "Banner Icon",
-          "width": 22,
-          "height": 22,
-          "icon": "triangle-alert",
-          "library": "lucide",
-          "fill": "$danger"
-        },
-        {
-          "type": "text",
-          "id": "CF0D4",
-          "name": "Banner Text",
-          "fill": "$text-primary",
-          "textGrowth": "fixed-width",
-          "width": "fill_container",
-          "content": "提示訊息內容。",
-          "lineHeight": 1.5,
-          "fontFamily": "$font",
-          "fontSize": "$fs-body",
-          "fontWeight": "normal"
-        }
-      ]
-    },
-    {
-      "type": "frame",
       "id": "AqN3F",
       "x": 1840,
       "y": 220,
@@ -2922,7 +2874,7 @@
                         {
                           "type": "text",
                           "id": "EVkCD",
-                          "name": "Code 2QD [tabular]",
+                          "name": "Code 2FD [tabular]",
                           "fill": "$text-primary",
                           "content": "2FD",
                           "lineHeight": 1.1,
@@ -6950,7 +6902,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "M0AU2",
+                      "id": "TW2Iy",
                       "x": 0,
                       "y": 0,
                       "name": "Card Paper",
@@ -6966,20 +6918,19 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "rES9R",
+                          "id": "vZjrU",
                           "name": "Code Row",
                           "width": "fill_container",
                           "gap": "$sp-label",
                           "children": [
                             {
-                              "id": "lhL9r",
+                              "id": "fvVg3",
                               "type": "ref",
                               "ref": "asPLH",
                               "name": "Code 1",
                               "width": "fill_container",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5,
-                              "opacity": 0.6,
+                              "stroke": "$danger",
+                              "strokeWidth": 2,
                               "descendants": {
                                 "zLuIX": {
                                   "content": "K",
@@ -6988,14 +6939,13 @@
                               }
                             },
                             {
-                              "id": "c8WcHP",
+                              "id": "oHpSn",
                               "type": "ref",
                               "ref": "asPLH",
                               "name": "Code 2",
                               "width": "fill_container",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5,
-                              "opacity": 0.6,
+                              "stroke": "$danger",
+                              "strokeWidth": 2,
                               "descendants": {
                                 "zLuIX": {
                                   "content": "7",
@@ -7004,14 +6954,13 @@
                               }
                             },
                             {
-                              "id": "bDpK4",
+                              "id": "VMRtl",
                               "type": "ref",
                               "ref": "asPLH",
                               "name": "Code 3",
                               "width": "fill_container",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5,
-                              "opacity": 0.6,
+                              "stroke": "$danger",
+                              "strokeWidth": 2,
                               "descendants": {
                                 "zLuIX": {
                                   "content": "M",
@@ -7020,14 +6969,13 @@
                               }
                             },
                             {
-                              "id": "hP7J8",
+                              "id": "z5Wyjv",
                               "type": "ref",
                               "ref": "asPLH",
                               "name": "Code 4",
                               "width": "fill_container",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5,
-                              "opacity": 0.6,
+                              "stroke": "$danger",
+                              "strokeWidth": 2,
                               "descendants": {
                                 "zLuIX": {
                                   "content": "2",
@@ -7036,14 +6984,13 @@
                               }
                             },
                             {
-                              "id": "DO701",
+                              "id": "qEEzc",
                               "type": "ref",
                               "ref": "asPLH",
                               "name": "Code 5",
                               "width": "fill_container",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5,
-                              "opacity": 0.6,
+                              "stroke": "$danger",
+                              "strokeWidth": 2,
                               "descendants": {
                                 "zLuIX": {
                                   "content": "F",
@@ -7052,35 +6999,65 @@
                               }
                             },
                             {
-                              "id": "TvwuA",
+                              "id": "Uesid",
                               "type": "ref",
                               "ref": "asPLH",
                               "name": "Code 6",
                               "width": "fill_container",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5,
-                              "opacity": 0.6,
+                              "stroke": "$danger",
+                              "strokeWidth": 2,
                               "descendants": {
                                 "zLuIX": {
                                   "content": "8",
                                   "fill": "$text-primary"
                                 }
                               }
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 9,
+                              "id": "G6dPOX",
+                              "layoutPosition": "absolute",
+                              "x": 5,
+                              "y": 5,
+                              "name": "Focus Ring 第1格",
+                              "width": 34.166666666666664,
+                              "height": 62,
+                              "stroke": "$accent",
+                              "strokeWidth": 2
                             }
                           ]
                         },
                         {
-                          "type": "text",
-                          "id": "oTctJ",
-                          "name": "Code Hint",
-                          "fill": "$danger",
-                          "textGrowth": "fixed-width",
+                          "type": "frame",
+                          "id": "zghJ8",
+                          "name": "Code Error",
                           "width": "fill_container",
-                          "content": "這組邀請碼已經過期。",
-                          "lineHeight": 1.5,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "lz8JE",
+                              "name": "Err Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "circle-alert",
+                              "library": "lucide",
+                              "fill": "$danger"
+                            },
+                            {
+                              "type": "text",
+                              "id": "NHK2r",
+                              "name": "Err Text",
+                              "fill": "$danger",
+                              "content": "這組邀請碼已經過期。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -7089,7 +7066,7 @@
                 {
                   "type": "frame",
                   "id": "QSVYa",
-                  "name": "Banner Wrap",
+                  "name": "Policy Wrap",
                   "width": "fill_container",
                   "layout": "vertical",
                   "padding": [
@@ -7100,55 +7077,43 @@
                   ],
                   "children": [
                     {
-                      "id": "PzRse",
-                      "type": "ref",
-                      "ref": "wgXYJ",
-                      "name": "State Banner",
+                      "type": "frame",
+                      "id": "DXE4S",
+                      "name": "Policy Note",
                       "width": "fill_container",
-                      "descendants": {
-                        "dPafU": {
-                          "icon": "circle-alert"
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "WQArS",
+                          "name": "Policy Seg",
+                          "fill": "$text-secondary",
+                          "content": "邀請碼從產生那天算 ",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         },
-                        "CF0D4": {
-                          "type": "frame",
-                          "id": "ctVPv",
-                          "name": "Banner Text",
-                          "width": "fill_container",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "A1BrSe",
-                              "name": "Banner Seg",
-                              "fill": "$text-primary",
-                              "content": "邀請碼從產生那天算 ",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "lSKXl",
-                              "name": "Policy Value [tabular]",
-                              "fill": "$text-primary",
-                              "content": "7",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "tCpjq",
-                              "name": "Banner Seg",
-                              "fill": "$text-primary",
-                              "content": " 天。",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "normal"
-                            }
-                          ]
+                        {
+                          "type": "text",
+                          "id": "HiyBE",
+                          "name": "Policy Value [tabular]",
+                          "fill": "$text-secondary",
+                          "content": "7",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Rtcpm",
+                          "name": "Policy Seg",
+                          "fill": "$text-secondary",
+                          "content": " 天。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
-                      }
+                      ]
                     }
                   ]
                 },
@@ -7396,7 +7361,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "NcOFs",
+                      "id": "mIevm",
                       "x": 0,
                       "y": 0,
                       "name": "Card Paper",
@@ -7412,20 +7377,19 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "UUAmF",
+                          "id": "RKrUh",
                           "name": "Code Row",
                           "width": "fill_container",
                           "gap": "$sp-label",
                           "children": [
                             {
-                              "id": "e44X47",
+                              "id": "a7T2M",
                               "type": "ref",
                               "ref": "asPLH",
                               "name": "Code 1",
                               "width": "fill_container",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5,
-                              "opacity": 0.6,
+                              "stroke": "$danger",
+                              "strokeWidth": 2,
                               "descendants": {
                                 "zLuIX": {
                                   "content": "K",
@@ -7434,14 +7398,13 @@
                               }
                             },
                             {
-                              "id": "yYMJB",
+                              "id": "xzoRz",
                               "type": "ref",
                               "ref": "asPLH",
                               "name": "Code 2",
                               "width": "fill_container",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5,
-                              "opacity": 0.6,
+                              "stroke": "$danger",
+                              "strokeWidth": 2,
                               "descendants": {
                                 "zLuIX": {
                                   "content": "7",
@@ -7450,14 +7413,13 @@
                               }
                             },
                             {
-                              "id": "xnLG6",
+                              "id": "UbbGw",
                               "type": "ref",
                               "ref": "asPLH",
                               "name": "Code 3",
                               "width": "fill_container",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5,
-                              "opacity": 0.6,
+                              "stroke": "$danger",
+                              "strokeWidth": 2,
                               "descendants": {
                                 "zLuIX": {
                                   "content": "M",
@@ -7466,14 +7428,13 @@
                               }
                             },
                             {
-                              "id": "TCnew",
+                              "id": "fUO15",
                               "type": "ref",
                               "ref": "asPLH",
                               "name": "Code 4",
                               "width": "fill_container",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5,
-                              "opacity": 0.6,
+                              "stroke": "$danger",
+                              "strokeWidth": 2,
                               "descendants": {
                                 "zLuIX": {
                                   "content": "2",
@@ -7482,14 +7443,13 @@
                               }
                             },
                             {
-                              "id": "J3pnZS",
+                              "id": "oI6wY",
                               "type": "ref",
                               "ref": "asPLH",
                               "name": "Code 5",
                               "width": "fill_container",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5,
-                              "opacity": 0.6,
+                              "stroke": "$danger",
+                              "strokeWidth": 2,
                               "descendants": {
                                 "zLuIX": {
                                   "content": "F",
@@ -7498,35 +7458,65 @@
                               }
                             },
                             {
-                              "id": "r078BX",
+                              "id": "Pg7qL",
                               "type": "ref",
                               "ref": "asPLH",
                               "name": "Code 6",
                               "width": "fill_container",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5,
-                              "opacity": 0.6,
+                              "stroke": "$danger",
+                              "strokeWidth": 2,
                               "descendants": {
                                 "zLuIX": {
                                   "content": "8",
                                   "fill": "$text-primary"
                                 }
                               }
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 9,
+                              "id": "YDyA7",
+                              "layoutPosition": "absolute",
+                              "x": 5,
+                              "y": 5,
+                              "name": "Focus Ring 第1格",
+                              "width": 34.166666666666664,
+                              "height": 62,
+                              "stroke": "$accent",
+                              "strokeWidth": 2
                             }
                           ]
                         },
                         {
-                          "type": "text",
-                          "id": "gM0xA",
-                          "name": "Code Hint",
-                          "fill": "$danger",
-                          "textGrowth": "fixed-width",
+                          "type": "frame",
+                          "id": "BB943",
+                          "name": "Code Error",
                           "width": "fill_container",
-                          "content": "這組邀請碼的使用次數已用完。",
-                          "lineHeight": 1.5,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "hPxQJ",
+                              "name": "Err Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "circle-alert",
+                              "library": "lucide",
+                              "fill": "$danger"
+                            },
+                            {
+                              "type": "text",
+                              "id": "mur3y",
+                              "name": "Err Text",
+                              "fill": "$danger",
+                              "content": "這組邀請碼的使用次數已用完。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -7535,7 +7525,7 @@
                 {
                   "type": "frame",
                   "id": "D1fa87",
-                  "name": "Banner Wrap",
+                  "name": "Policy Wrap",
                   "width": "fill_container",
                   "layout": "vertical",
                   "padding": [
@@ -7546,55 +7536,43 @@
                   ],
                   "children": [
                     {
-                      "id": "C3ADd",
-                      "type": "ref",
-                      "ref": "wgXYJ",
-                      "name": "State Banner",
+                      "type": "frame",
+                      "id": "OIAOW",
+                      "name": "Policy Note",
                       "width": "fill_container",
-                      "descendants": {
-                        "dPafU": {
-                          "icon": "circle-alert"
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "UspNT",
+                          "name": "Policy Seg",
+                          "fill": "$text-secondary",
+                          "content": "一組邀請碼最多 ",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         },
-                        "CF0D4": {
-                          "type": "frame",
-                          "id": "cyRCT",
-                          "name": "Banner Text",
-                          "width": "fill_container",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "Nf0pb",
-                              "name": "Banner Seg",
-                              "fill": "$text-primary",
-                              "content": "一組邀請碼最多 ",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "G7ql3x",
-                              "name": "Policy Value [tabular]",
-                              "fill": "$text-primary",
-                              "content": "5",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "Lngoh",
-                              "name": "Banner Seg",
-                              "fill": "$text-primary",
-                              "content": " 位家人可以用。",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "normal"
-                            }
-                          ]
+                        {
+                          "type": "text",
+                          "id": "pRUpE",
+                          "name": "Policy Value [tabular]",
+                          "fill": "$text-secondary",
+                          "content": "5",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "q8vBw8",
+                          "name": "Policy Seg",
+                          "fill": "$text-secondary",
+                          "content": " 位家人可以用。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
-                      }
+                      ]
                     }
                   ]
                 },
@@ -8268,7 +8246,7 @@
                             {
                               "type": "text",
                               "id": "efWGI",
-                              "name": "Code 2QD [tabular]",
+                              "name": "Code 2FD [tabular]",
                               "fill": "$text-primary",
                               "content": "2FD",
                               "lineHeight": 1.1,
@@ -10410,15 +10388,20 @@
                           "content": "家庭名稱"
                         },
                         "v6YiYR": {
-                          "stroke": "$border",
+                          "stroke": "$control-line",
                           "strokeWidth": 1.5
                         },
                         "iu3Q8": {
                           "content": "例如：陳家",
                           "fill": "$text-secondary"
                         },
+                        "JqQZG": {
+                          "icon": "circle-alert",
+                          "fill": "$text-primary"
+                        },
                         "ikuz2": {
-                          "content": "家人加入後會看到這個名稱，之後可以再改。"
+                          "content": "還沒填家庭名稱。在上面打上名字，再按一次。",
+                          "fill": "$text-primary"
                         }
                       }
                     }
@@ -10428,14 +10411,14 @@
                   "type": "text",
                   "id": "gIKAX",
                   "name": "Footer Note",
-                  "fill": "$text-primary",
+                  "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "先輸入家庭名稱才能建立。名稱之後隨時可以改。",
+                  "content": "建立後你會是這個家庭的管理者，可以邀請家人、管理內容。",
                   "lineHeight": 1.55,
                   "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "600"
+                  "fontSize": "$fs-meta",
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -10454,22 +10437,19 @@
               ],
               "children": [
                 {
-                  "id": "g3N7q6",
+                  "id": "DjpVp",
                   "type": "ref",
                   "ref": "OKSJI",
                   "name": "Create Button",
                   "width": "fill_container",
-                  "fill": "$surface-2",
-                  "stroke": "$border",
-                  "strokeWidth": 1.5,
                   "descendants": {
                     "s9bME2": {
                       "icon": "check",
-                      "fill": "$text-secondary"
+                      "fill": "$on-accent"
                     },
                     "w7CUP": {
                       "content": "建立家庭",
-                      "fill": "$text-secondary"
+                      "fill": "$on-accent"
                     }
                   }
                 }
@@ -10958,7 +10938,7 @@
                   "fill": "#553040",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "色彩極度稀缺——但「整份設計只有一個飽和色」這句 R3 講得不誠實：實測 accent C* 46.84、danger C* 46.87，兩者彩度一樣。R4 改成三句可驗證的話。\n① accent（深玫紅 #8E2447，L* 32.85／C* 46.84／h 6.3°）是唯一的「識別」飽和色：只有它承載品牌，也只有它能做實心主動作，每畫面最多一次。\n② danger（磚紅 #6B1809，C* 46.87／h 40.3°）彩度與 accent 相同是刻意的——功能色被忽略比被誤認更危險，它需要同等的視覺重量。它不參與識別、不做主鍵，而且永遠不與 accent 在同一畫面同時擔任主要動作。分開它們的是色相（差 34.0°）與角色，不是彩度。\n③ success（#1E4732／深色 #82C79E，C* 21.84 ＝ accent 的 47%）登記在案：全 app 只出現一次（06d「申請已送出」的勾勾），好消息說一次就夠。\n中性階本身就是粉——每一階 B ≥ G（rose 家族），不是在米色上加粉紅濾鏡：對照軌 A 的暖白系統每一階 B < G（cream 家族），色相由 13–39° 轉到 334–356°。\n錯誤永遠同時用形（粗邊）與字說明，不靠顏色單獨承載。而且「還沒做完」不是錯誤：06 的「還要再填 1 個字」與 Stress-05 的空欄位提示，R4 已從 danger 改回 $text-primary——用錯誤色責備一個還沒做完的人，是把提示寫成判決。",
+                  "content": "色彩極度稀缺——但「整份設計只有一個飽和色」這句 R3 講得不誠實：實測 accent C* 46.84、danger C* 46.87，兩者彩度一樣。R4 改成三句可驗證的話；R6 補上深色的數字，因為前三句寫的時候只量了淺色。\n① accent 是唯一的「識別」飽和色：只有它承載品牌，也只有它能做實心主動作，每畫面最多一次。這一句與模式無關——撐住它的是配額，不是色值。淺 #8E2447（L* 32.85／C* 46.84／h 6.3°）、深 #FCA4B5（L* 76.43／C* 35.02／h 7.9°）。\n② danger 的彩度與 accent 相同是刻意的——功能色被忽略比被誤認更危險。【R6 更正：這句只在淺色成立】淺色 accent C* 46.84 對 danger C* 46.87（差 0.03）；深色 accent C* 35.02 對 danger C* 40.05（danger 高 14.4%）。深色補不上來的原因量得出來：accent 要對 $bg 拿到 9.99:1 就必須落在 L*≈76，而在 L* 76.4／h 8° 這條線上 sRGB 給得出的最大彩度只有 37.6（#FFA1B5，R 已頂到 255），#FCA4B5 的 35.02 已經是色域上限的 93%；danger 能到 40.05 是因為它的色相在 38.5°（橘紅），同一個亮度上色域比玫瑰寬。所以深色不宣稱彩度相等，改宣稱兩個模式都成立的那一半：色相分離（淺 34.0°／深 30.6°）與角色分離——danger 不參與識別、不做主鍵、永遠不與 accent 在同一畫面同時擔任主要動作。（R6 同時把 accent 深色從 #F4A8B6 換成 #FCA4B5：同亮度、同色相、彩度 +16%，而四項既有量測逐位不變——對 bg 9.99、對 surface 8.52、on-accent 壓它 9.99、深色 ON 把手對軌 9.99。這是這條線上不用付代價就能拿到的彩度。）\n③ success 一個流程只出現一次（06d「申請已送出」的勾勾），好消息說一次就夠。【R6 補深色】淺色 C* 21.84 ＝ accent 的 46.6%；深色 C* 33.50 ＝ accent 的 95.7%——深色下 success 幾乎和 accent 一樣飽和，分開它們的同樣是色相（155.8° 對 7.9°）與那條配額。\n中性階本身就是粉——每一階 B ≥ G（rose 家族），不是在米色上加粉紅濾鏡：對照軌 A 的暖白系統每一階 B < G（cream 家族），色相由 13–39° 轉到 334–356°。\n錯誤永遠同時用形（粗邊）與字說明，不靠顏色單獨承載。而且「還沒做完」不是錯誤：06 的「還要再填 1 個字」與 Stress-05 空欄位的行內回話都是 $text-primary ＋ circle-alert，不用 danger——用錯誤色責備一個還沒做完的人，是把提示寫成判決。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 13,
@@ -12633,7 +12613,7 @@
                           "cornerRadius": 7,
                           "id": "sYlo9",
                           "name": "sw",
-                          "fill": "#F4A8B6",
+                          "fill": "#FCA4B5",
                           "width": 26,
                           "height": 26,
                           "stroke": "#2B141C1F",
@@ -12644,7 +12624,7 @@
                           "id": "B2VMrg",
                           "name": "t",
                           "fill": "#2B141C",
-                          "content": "#F4A8B6",
+                          "content": "#FCA4B5",
                           "fontFamily": "$font-num",
                           "fontSize": 12,
                           "fontWeight": "700"
@@ -13092,7 +13072,7 @@
                           "id": "b9mao9",
                           "name": "t",
                           "fill": "#2B141C",
-                          "content": "#7C1D0C",
+                          "content": "#6B1809",
                           "fontFamily": "$font-num",
                           "fontSize": 12,
                           "fontWeight": "700"
@@ -13180,7 +13160,7 @@
                           "fill": "#553040",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "7.31／9.85 AAA",
+                          "content": "8.46／9.85 AAA",
                           "lineHeight": 1.45,
                           "fontFamily": "Noto Sans TC",
                           "fontSize": 13,
@@ -14827,7 +14807,7 @@
                           "fill": "#2B141C",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "accent-text",
+                          "content": "accent-text（已除役）",
                           "lineHeight": 1.45,
                           "fontFamily": "Noto Sans TC",
                           "fontSize": 13,
@@ -14924,7 +14904,7 @@
                           "fill": "#553040",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "accent 當文字用（07b 次要「核准」列）",
+                          "content": "【R4 除役】R1 為「accent 當文字」保留的 AAA 版本；07b 第二筆核准改用 $control-line／$text-primary 後零使用點。保留在表上只為記錄，不得再引用。",
                           "lineHeight": 1.45,
                           "fontFamily": "Noto Sans TC",
                           "fontSize": 13,
@@ -15646,7 +15626,7 @@
                   "fill": "#553040",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "四階跳階：34 / 22 / 17 / 13。note 與 body 同為 17 是刻意的——分成兩個 token 不是為了大小差別，是為了讓實作區分角色：note 一定伴隨狀態色或狀態圖示。\n\n【13pt 的成員資格（規則，不是慣例）】13pt 只給「不讀也能完成任務」的內容。三類：①法務行（登入即表示…）②微標籤（邀請碼／加入申請這種放在 60pt 主體上方的眉標）③設計註記（游標停在第 4 格）。任何寫著「還可以用幾次／有效幾天／錯在哪裡／要怎麼改／你是誰」的字一律 ≥17。本輪再升 16 個節點（Field Help、cmp/Pill、06b/06c 政策值、06d 身分資料、07/07a 重新產生後果、07b 數量）。\n\n【印刷物例外】印在紙上的字不吃 Dynamic Type：沖印廠牌壓印 LITTLE SPROUT 固定 12pt/ls 3.5。它是那張相紙的一部分，不是 UI——長大會變成 UI。",
+                  "content": "【R6 改寫，取代 R1 的「四階」】完整七級：display 34 ／ lead 22 ／ body 17 ／ note 17 ／ meta 13 ／ otp 36 ／ code 60，全部走 Dynamic Type（表格右欄是 AX3 的值）。表格分三組讀：一般文字（display／lead／body）→ 等寬數字（otp／code）→ 狀態與註腳（note／meta）。R1 那句「只用四階 34/22/17/13」只涵蓋第一組，把六格驗證碼、邀請碼大字與 note 漏掉了；R6 之前表上還同時掛著兩列互相矛盾的 meta（一列寫「輔助說明」、一列寫「輔助說明一律升 note」），舊的那列本輪刪除。\n\n note 與 body 同為 17 是刻意的——分成兩個 token 不是為了大小差別，是為了讓實作區分角色：note 一定伴隨狀態色或狀態圖示。\n\n【13pt 的成員資格（規則，不是慣例）】13pt 只給「不讀也能完成任務」的內容。三類：①法務行（登入即表示…）②微標籤（邀請碼／加入申請這種放在 60pt 主體上方的眉標）③設計註記（游標位置）。任何寫著「還可以用幾次／有效幾天／錯在哪裡／要怎麼改／你是誰」的字一律 ≥17。\n\n【印刷物例外，也是唯一不吃 Dynamic Type 的一級】fs-imprint 12（沖印廠牌壓印 LITTLE SPROUT，固定 12pt／ls 3.5，出現在 01／01b／01c／01-iPad）：它是那張相紙的一部分，不是 UI——會長大就變成 UI 了，與「角托不吃 Dynamic Type」同一條理由。代價寫明：因為它永遠是 12pt，它不得承載任何唯一資訊。實作二選一，不得兩者皆無——.accessibilityHidden(true)，或把它併進該張相片 alt 的尾段（「…（相紙邊緣印著 LITTLE SPROUT）」）。它現在印的是品牌名，同一個字在畫面別處已經出現過，符合這條。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 13,
@@ -16181,141 +16161,6 @@
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": ".body（次階 .body + #5C4A3A）",
-                          "lineHeight": 1.45,
-                          "fontFamily": "Noto Sans TC",
-                          "fontSize": 13,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "tvefU",
-                  "name": "r3",
-                  "width": "fill_container",
-                  "fill": "#F5E1E3",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "xnnsZ",
-                      "name": "c",
-                      "width": 186,
-                      "padding": [
-                        9,
-                        14
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "Rh01l",
-                          "name": "t",
-                          "fill": "#2B141C",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "meta",
-                          "lineHeight": 1.45,
-                          "fontFamily": "Noto Sans TC",
-                          "fontSize": 13,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "t66So4",
-                      "name": "c",
-                      "width": 110,
-                      "padding": [
-                        9,
-                        14
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "M0Xcl",
-                          "name": "t",
-                          "fill": "#553040",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "13",
-                          "lineHeight": 1.45,
-                          "fontFamily": "$font-num",
-                          "fontSize": 13,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "CdUul",
-                      "name": "c",
-                      "width": 110,
-                      "padding": [
-                        9,
-                        14
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "cukWl",
-                          "name": "t",
-                          "fill": "#553040",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "33",
-                          "lineHeight": 1.45,
-                          "fontFamily": "$font-num",
-                          "fontSize": 13,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "wGGI4",
-                      "name": "c",
-                      "width": 408,
-                      "padding": [
-                        9,
-                        14
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "F7EOW",
-                          "name": "t",
-                          "fill": "#553040",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "法務、輔助說明、pill、時間戳。",
-                          "lineHeight": 1.45,
-                          "fontFamily": "Noto Sans TC",
-                          "fontSize": 13,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "hhRSH",
-                      "name": "c",
-                      "width": 408,
-                      "padding": [
-                        9,
-                        14
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "Yl0Lq",
-                          "name": "t",
-                          "fill": "#553040",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": ".footnote",
                           "lineHeight": 1.45,
                           "fontFamily": "Noto Sans TC",
                           "fontSize": 13,
@@ -23871,7 +23716,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "這是全 app 風險最高的控件——它決定誰能看到家人的照片。R3 只畫了兩態，而且宣稱的數字對不上任何一組配對（深色 ON 的白把手對淺粉軌只有 1.89:1）。R4 四格全畫、逐格標配對、逐格給數字。解剖照 Apple kit：軌 51×31、把手 27、內縮 2、同心圓角。把手在 R4 多了一道 1pt $knob-edge——它不是裝飾，它是深色 OFF 與淺色 OFF 兩格唯一過得了 3:1 的東西。",
+                  "content": "這是全 app 風險最高的控件——它決定誰能看到家人的照片。R3 只畫了兩態，而且宣稱的數字對不上任何一組配對（深色 ON 的白把手對淺粉軌只有 1.89:1）。R4 四格全畫、逐格標配對、逐格給數字。R6 再補三件：①四格補上狀態文字行——cmp/Approval Toggle 本來就有這一行，是這塊板自己漏畫，四格現在直接用元件的實例，板上看到的就是實作會拿到的；②三個訊號排出順位（文字第一）；③與 Apple 解剖的四條具名偏離逐條寫成「Apple 做法／我們的做法／為什麼／代價」。解剖照 Apple kit：軌 51×31、把手 27、內縮 2、同心圓角。",
                   "lineHeight": 1.6,
                   "fontFamily": "$font",
                   "fontSize": 15,
@@ -23905,71 +23750,28 @@
                       "fontWeight": "700"
                     },
                     {
-                      "type": "frame",
-                      "id": "u0bCgr",
+                      "id": "cGpi1",
+                      "type": "ref",
+                      "ref": "PXPcH",
                       "name": "Demo",
                       "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-lg",
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "gap": 16,
-                      "padding": 20,
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "iQetN",
-                          "name": "l",
-                          "fill": "$text-primary",
-                          "content": "新成員要我核准才能進來",
-                          "fontFamily": "$font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
+                      "descendants": {
+                        "vSWWm": {
+                          "content": "目前：已開啟"
                         },
-                        {
-                          "type": "frame",
-                          "id": "Tddiy",
-                          "name": "Switch",
-                          "width": 51,
-                          "height": 31,
+                        "W0pocy": {
                           "fill": "$accent",
-                          "cornerRadius": "$radius-full",
-                          "stroke": "$accent",
-                          "strokeWidth": 1,
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "ellipse",
-                              "id": "eZDlQ",
-                              "x": 22,
-                              "y": 2,
-                              "name": "Knob",
-                              "fill": "$switch-knob",
-                              "width": 27,
-                              "height": 27,
-                              "stroke": "$knob-edge",
-                              "strokeWidth": 1,
-                              "strokeAlignment": "inner",
-                              "effect": {
-                                "type": "shadow",
-                                "shadowType": "outer",
-                                "color": "$knob-shadow",
-                                "offset": {
-                                  "x": 0,
-                                  "y": 1
-                                },
-                                "blur": 3
-                              }
-                            }
-                          ]
+                          "stroke": "$accent"
+                        },
+                        "uKrH8": {
+                          "x": 22,
+                          "y": 2
                         }
-                      ]
+                      }
                     },
                     {
                       "type": "text",
-                      "id": "P4Ynqu",
+                      "id": "gAzsn",
                       "name": "m",
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
@@ -24014,67 +23816,24 @@
                       "fontWeight": "700"
                     },
                     {
-                      "type": "frame",
-                      "id": "iFyXs",
+                      "id": "sCZj8",
+                      "type": "ref",
+                      "ref": "PXPcH",
                       "name": "Demo",
                       "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-lg",
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "gap": 16,
-                      "padding": 20,
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "piXLy",
-                          "name": "l",
-                          "fill": "$text-primary",
-                          "content": "新成員要我核准才能進來",
-                          "fontFamily": "$font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
+                      "descendants": {
+                        "vSWWm": {
+                          "content": "目前：已關閉"
                         },
-                        {
-                          "type": "frame",
-                          "id": "bThzN",
-                          "name": "Switch",
-                          "width": 51,
-                          "height": 31,
+                        "W0pocy": {
                           "fill": "$switch-off",
-                          "cornerRadius": "$radius-full",
-                          "stroke": "$control-line",
-                          "strokeWidth": 1,
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "ellipse",
-                              "id": "cg9Xd",
-                              "x": 2,
-                              "y": 2,
-                              "name": "Knob",
-                              "fill": "$switch-knob",
-                              "width": 27,
-                              "height": 27,
-                              "stroke": "$knob-edge",
-                              "strokeWidth": 1,
-                              "strokeAlignment": "inner",
-                              "effect": {
-                                "type": "shadow",
-                                "shadowType": "outer",
-                                "color": "$knob-shadow",
-                                "offset": {
-                                  "x": 0,
-                                  "y": 1
-                                },
-                                "blur": 3
-                              }
-                            }
-                          ]
+                          "stroke": "$control-line"
+                        },
+                        "uKrH8": {
+                          "x": 2,
+                          "y": 2
                         }
-                      ]
+                      }
                     },
                     {
                       "type": "text",
@@ -24135,67 +23894,24 @@
                       "fontWeight": "700"
                     },
                     {
-                      "type": "frame",
-                      "id": "n0Jrn",
+                      "id": "sc3ds",
+                      "type": "ref",
+                      "ref": "PXPcH",
                       "name": "Demo",
                       "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-lg",
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "gap": 16,
-                      "padding": 20,
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "CxK1z",
-                          "name": "l",
-                          "fill": "$text-primary",
-                          "content": "新成員要我核准才能進來",
-                          "fontFamily": "$font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
+                      "descendants": {
+                        "vSWWm": {
+                          "content": "目前：已開啟"
                         },
-                        {
-                          "type": "frame",
-                          "id": "YayXo",
-                          "name": "Switch",
-                          "width": 51,
-                          "height": 31,
+                        "W0pocy": {
                           "fill": "$accent",
-                          "cornerRadius": "$radius-full",
-                          "stroke": "$accent",
-                          "strokeWidth": 1,
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "ellipse",
-                              "id": "wAneL",
-                              "x": 22,
-                              "y": 2,
-                              "name": "Knob",
-                              "fill": "$switch-knob",
-                              "width": 27,
-                              "height": 27,
-                              "stroke": "$knob-edge",
-                              "strokeWidth": 1,
-                              "strokeAlignment": "inner",
-                              "effect": {
-                                "type": "shadow",
-                                "shadowType": "outer",
-                                "color": "$knob-shadow",
-                                "offset": {
-                                  "x": 0,
-                                  "y": 1
-                                },
-                                "blur": 3
-                              }
-                            }
-                          ]
+                          "stroke": "$accent"
+                        },
+                        "uKrH8": {
+                          "x": 22,
+                          "y": 2
                         }
-                      ]
+                      }
                     },
                     {
                       "type": "text",
@@ -24204,7 +23920,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "量的是：把手填色 $switch-knob #190E12 ↔ 軌道 $accent #F4A8B6 ＝ 9.99:1 ✓ — 由填色承擔，鏡像淺色的關係（深把手對淺軌）。",
+                      "content": "量的是：把手填色 $switch-knob #190E12 ↔ 軌道 $accent #FCA4B5 ＝ 9.99:1 ✓ — 由填色承擔，鏡像淺色的關係（深把手對淺軌）。",
                       "lineHeight": 1.5,
                       "fontFamily": "$font",
                       "fontSize": 13,
@@ -24247,67 +23963,24 @@
                       "fontWeight": "700"
                     },
                     {
-                      "type": "frame",
-                      "id": "pmEM6",
+                      "id": "u15puy",
+                      "type": "ref",
+                      "ref": "PXPcH",
                       "name": "Demo",
                       "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-lg",
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "gap": 16,
-                      "padding": 20,
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "N6IAUM",
-                          "name": "l",
-                          "fill": "$text-primary",
-                          "content": "新成員要我核准才能進來",
-                          "fontFamily": "$font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
+                      "descendants": {
+                        "vSWWm": {
+                          "content": "目前：已關閉"
                         },
-                        {
-                          "type": "frame",
-                          "id": "pA3Xm",
-                          "name": "Switch",
-                          "width": 51,
-                          "height": 31,
+                        "W0pocy": {
                           "fill": "$switch-off",
-                          "cornerRadius": "$radius-full",
-                          "stroke": "$control-line",
-                          "strokeWidth": 1,
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "ellipse",
-                              "id": "J4TUcY",
-                              "x": 2,
-                              "y": 2,
-                              "name": "Knob",
-                              "fill": "$switch-knob",
-                              "width": 27,
-                              "height": 27,
-                              "stroke": "$knob-edge",
-                              "strokeWidth": 1,
-                              "strokeAlignment": "inner",
-                              "effect": {
-                                "type": "shadow",
-                                "shadowType": "outer",
-                                "color": "$knob-shadow",
-                                "offset": {
-                                  "x": 0,
-                                  "y": 1
-                                },
-                                "blur": 3
-                              }
-                            }
-                          ]
+                          "stroke": "$control-line"
+                        },
+                        "uKrH8": {
+                          "x": 2,
+                          "y": 2
                         }
-                      ]
+                      }
                     },
                     {
                       "type": "text",
@@ -24341,18 +24014,41 @@
             },
             {
               "type": "frame",
-              "id": "Aa4HU",
-              "name": "Invariant",
+              "id": "PO7Ht",
+              "name": "Invariant ＋ 具名偏離",
               "width": "fill_container",
               "fill": "$accent-soft",
               "cornerRadius": "$radius-md",
               "layout": "vertical",
-              "gap": 6,
+              "gap": 10,
               "padding": 20,
               "children": [
                 {
                   "type": "text",
-                  "id": "CEnLg",
+                  "id": "xHqTI",
+                  "name": "h",
+                  "fill": "$text-primary",
+                  "content": "三個訊號，依可讀性排順位",
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "yyUa0",
+                  "name": "b",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "① 文字（第一順位）：每一列在標題下印「目前：已開啟／已關閉」（$fs-note 17、$text-secondary）。它不依賴視力銳度，也是 VoiceOver 直接唸得出的那一句。② 把手位置：ON x=22／OFF x=2，行程 20pt。③ 色相與填色：中性 ↔ 玫瑰。三個訊號同向、互為冗餘——任何一個單獨消失，剩下兩個都還讀得出狀態，這才是「冗餘」的意思。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "k4T2SP",
                   "name": "h",
                   "fill": "$text-primary",
                   "content": "不變量（違反就是 bug）",
@@ -24362,16 +24058,337 @@
                 },
                 {
                   "type": "text",
-                  "id": "zWa71",
+                  "id": "s3Itx",
                   "name": "b",
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "把手（填色或 1pt 邊，取較大者）對軌道，四格皆 ≥3:1。四格實測 8.42／3.25／9.99／7.03，最低一格是淺色 OFF 的 3.25:1，由邊承擔。這條不變量之所以要寫死：把手位置是這顆開關唯一的狀態訊號，把手看不見＝狀態看不見。另外兩個同向訊號（色相：中性↔玫瑰；行程：x=2↔x=22）是冗餘，不是替代品。",
+                  "content": "把手（填色或 1pt 邊，取較大者）對軌道，四格皆 ≥3:1。四格實測 8.42／3.25／9.99／7.03，最低一格是淺色 OFF 的 3.25:1，由邊承擔。為什麼寫死的是第②個訊號而不是第①個：文字會被系統字級與粗體設定改寫、顏色會被色彩濾鏡改寫，只有幾何在任何輔助設定下都還在。把手看不見＝狀態看不見，所以它是那條不能商量的線。",
                   "lineHeight": 1.6,
                   "fontFamily": "$font",
                   "fontSize": 15,
                   "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "e9aG4",
+                  "name": "h",
+                  "fill": "$text-primary",
+                  "content": "與 Apple 開關解剖的四條具名偏離",
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "mhRde",
+                  "name": "b",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "判準只有一條：偏離必須讓「狀態看不看得見」變得更嚴，不是為了好看。四條都是「比平台更嚴」，沒有一條是在說平台做錯了——Apple 的白把手在系統灰軌上成立，是我們把軌道換成粉的，就得自己補上差額。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "dk55C",
+                  "name": "Deviations",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "gVLnw",
+                      "name": "Deviation",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "x3TXC",
+                          "name": "h",
+                          "fill": "$text-primary",
+                          "content": "① 把手加 1pt 描邊",
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "I2zup",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Apple 做法：把手是純白實心圓、無描邊，靠陰影與軌道色差分辨。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "b0W6L",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "我們的做法：把手加 1pt $knob-edge（淺 #8A6470／深 #D3AEB2），strokeAlignment inner。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Yk6Cd",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "為什麼：OFF 態把手填色對軌道只有 1.56:1（淺）／1.34:1（深）——粉調軌道把系統灰軌原有的色差吃掉了。加邊後 3.25:1／7.03:1，剛好過不變量。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "jA94h",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "代價：把手在 51×31 的尺度上比系統開關「重」一點；換到的是 OFF 態在一公尺外還看得出把手在左邊。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "X6DEf8",
+                      "name": "Deviation",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "L0nT6L",
+                          "name": "h",
+                          "fill": "$text-primary",
+                          "content": "② OFF 軌道加 1pt 描邊",
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "nmIVI",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Apple 做法：OFF 軌道只有填色、無描邊（系統灰對系統背景本來就有邊界）。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "LtXHU",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "我們的做法：OFF 軌道加 1pt $control-line。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "II1s2",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "為什麼：$switch-off 對 $surface 只有 1.35:1（淺）／1.14:1（深）＝沒有邊界，整顆開關會消失在卡面上。加邊後 4.40:1／4.02:1。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ro6XF",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "代價：ON 與 OFF 的描邊色不同（ON $accent／OFF $control-line），實作要兩組值，不能只換填色。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fYznS",
+                      "name": "Deviation",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "H4UB4S",
+                          "name": "h",
+                          "fill": "$text-primary",
+                          "content": "③ 開關列印出可見的狀態文字",
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ZraAP",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Apple 做法：UISwitch 沒有可見狀態文字，狀態只給 VoiceOver（「開啟／關閉」）。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "e4BEO6",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "我們的做法：每一列在標題下加「目前：已開啟／已關閉」（$fs-note 17、$text-secondary）。四格與 cmp/Approval Toggle 一致。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "d5Ptj6",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "為什麼：長輩優先。把手位置是幾何訊號，要在一公尺外分辨 20pt 位移；文字不用分辨，讀就是了——三個訊號裡唯一不吃視力銳度的一個。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "MzqXs",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "代價：列高 58 → 90（+55%），一頁放得下的列數變少。全 app 只有這一顆開關，付得起。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vk9d2",
+                      "name": "Deviation",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "phLEe",
+                          "name": "h",
+                          "fill": "$text-primary",
+                          "content": "④ 深色把手翻黑",
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "GqqKX",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Apple 做法：把手在淺色與深色都是白色，系統只換軌道色。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "n9fg9U",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "我們的做法：$switch-knob 主題化：淺 #FFFFFF、深 #190E12。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "J7T7C",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "為什麼：深色 ON 軌道是 $accent（淺粉）。白把手壓在淺粉軌上只有 1.89:1，等於沒有把手；翻黑後 9.99:1，並且與淺色互為鏡像（淺：淺把手對深軌 8.42:1／深：深把手對淺軌 9.99:1）——把手永遠是軌道的反相。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "YUOcE",
+                          "name": "l",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "代價：深色模式下若與系統控件並排，我們的把手是黑的、系統的是白的，看得出不是同一顆。判斷：這顆開關決定誰能看到家人的照片，看得見比看起來像系統重要。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -24434,7 +24451,7 @@
               "id": "v6EzAQ",
               "name": "h",
               "fill": "#2B141C",
-              "content": "怎麼讀左邊那一欄（R4 新增規則）",
+              "content": "怎麼讀左邊那一欄（R4 建立；R6 補母體宣告、彩度梯度與逐段複核）",
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
               "fontWeight": "700"
@@ -24446,7 +24463,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "每一段註記左邊的戳記是「最後改寫輪次 · 對應 frame」。R2-14 抓到 iPad 那段是第 1 輪的舊描述，R3-10 又抓到 07a 與 lockup 兩段同病——過期的 Notes 比沒有 Notes 更糟，因為它看起來還有效。所以把出處變成版面的一部分：戳記是必填欄，改稿沒回頭校對這一段就不准把輪次往上寫；顏色由深到淺就是新到舊（R4 深玫紅 / R3 灰玫 / R1–R2 灰），一眼看得出哪幾段最久沒人碰。新增畫面時先在這裡加一段帶戳的註記，再去畫——沒有戳的段落視為未對帳。",
+              "content": "每一段註記左邊的戳記是「最後改寫輪次 · 對應 frame」。R2-14 抓到 iPad 那段是第 1 輪的舊描述，R3-10 又抓到 07a 與 lockup 兩段同病——過期的 Notes 比沒有 Notes 更糟，因為它看起來還有效。所以把出處變成版面的一部分：戳記是必填欄，改稿沒回頭校對這一段就不准把輪次往上寫。\n\n【R6 · 母體宣告】這條規則的母體是可數的，不是「大致上每一段」：Notes 板六個區段（通用／LS-17 登入／LS-18 家庭／狀態涵蓋／未決 · 需人核可／.monospacedDigit 清單）裡的每一段 [l]，本輪實測 66 段，缺戳 ＝ FAIL（本輪 66/66 有戳、0 缺）。母體外只有一個具名例外：文件根層的 note 節點「設計註記 · OTP 游標位置」——它不在任何區段裡、沒有戳記欄可放，改為在內文開頭自帶「【R6 · 03／Stress-03】」。本輪也正是靠這次點名才發現它寫的焦點框規格（$control-line 2pt）與畫面（$accent 2.5pt）對不上。母體以外的板（設計語言、Brand）不適用戳記制，它們的版本資訊寫在各節標題裡。\n\n【R6 · 顏色梯度改走彩度】R3 的版本用亮度做新舊梯度，最舊的一階落在 #9F878C ＝ 對卡面 2.88:1，遠低於 4.5:1；更難堪的是那正好是 $disabled-fg 的值——這份文件用停用色標記自己最久沒人碰的段落。而且褪色相紙褪的是彩度不是亮度（見色彩節），亮度梯度連隱喻都不對。R6 改成彩度梯度、亮度不動：本輪改寫 #8E2447（C* 46.84／7.30:1）／R3–R4 #7A3B48（C* 29.26／7.15:1）／R1–R2 #60464A（C* 11.99／7.36:1）。三階 L* 32.6–33.4（差 <1）、對比 7.15–7.36:1——最舊的一階一樣讀得清楚，會少的只有染料。這三個值是文件用色，不進 app token 表，登記在這裡。\n\n【R6 · 逐段複核標記】R5 指出 27 段 R1 註記是風險池（最久沒被回頭對過）。本輪把 R1 與 R2 共 32 段逐段對照畫面，結果印在戳記第二行：「R6 複核」＝這一輪逐字對過、內容成立、沒動（19 段）；「R6 · … ／原 R1」＝這一輪改寫過（17 段，其中 10 段原本是 R1）。不准無腦把輪次往上寫的意思就是這個：沒回頭對過的段落，戳記維持原輪次不動——R3（5 段）與 R4（25 段）本輪沒有逐段複核，戳記照舊，它們是下一輪的風險池。\n複核抓到 6 處實質錯誤，全部落在 R1 段：等寬數字節點數 55→60、OTP 節點數 24→18、邀請碼輸入格漏列 06-kbd、節點名 Code 2QD 與內容 2FD 不符（已改名）、03b 重寄節點寫成 enabled:false（畫面上根本沒有這個節點，全稿 enabled:false ＝ 0）、字級「只用四階」漏掉 note／otp／code 三級。\n新增畫面時先在這裡加一段帶戳的註記，再去畫——沒有戳的段落視為未對帳。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 15,
@@ -24489,7 +24506,7 @@
                   "type": "text",
                   "id": "KCajA",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 全域",
@@ -24525,7 +24542,7 @@
                   "type": "text",
                   "id": "WtmAp",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 全域",
@@ -24561,10 +24578,10 @@
                   "type": "text",
                   "id": "kEiMJ",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 全域",
+                  "content": "R1 · 全域\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -24597,10 +24614,10 @@
                   "type": "text",
                   "id": "bta0E",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 全域",
+                  "content": "R6 · 全域\n原 R1",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -24614,7 +24631,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "字級：只用四階 34／22／17／13（.largeTitle／.title2／.body／.footnote），全部走 Dynamic Type。禁止再出現 28／20／16／15。次階用 .fontWeight(.semibold) ＋ text-secondary，不要縮字。",
+                  "content": "字級（R6 改寫，取代 R1 的「四階」）：七個 token，全部走 Dynamic Type。① display 34→55（.largeTitle/.bold，畫面標題，每畫面 1 個）② lead 22→44（.title2/.bold，唯一主卡或區塊標題，每畫面最多 1 個）③ body 17→40（.body，正文／按鈕標籤／欄位值／清單列；主次靠字重＋顏色，不靠縮字）④ note 17→40（.body ＋ 狀態色或狀態圖示；與 body 同值是刻意的，分兩個 token 只為讓實作區分角色）⑤ meta 13→33（.footnote，只剩法務行、值已用大字呈現過的欄位微標籤、純時間戳）⑥ otp 36→52（.system(size:).monospaced，六格驗證碼）⑦ code 60→76（.system(size:).monospaced，邀請碼大字 3+3 分組）。禁止再出現 28／20／16／15 這些階外值。\n【唯一不吃 Dynamic Type 的一級】fs-imprint 12（沖印廠牌壓印 LITTLE SPROUT，ls 3.5，出現在 01／01b／01c／01-iPad）：畫的是印在相紙邊上的廠牌字，紙上的字不會因為系統字級變大而變大——與「角托不吃 Dynamic Type」同一條理由。代價寫明：因為它永遠停在 12pt，它不得承載任何唯一資訊。實作二選一、不得兩者皆無——.accessibilityHidden(true)，或併入該張相片 alt 的尾段（「…（相紙邊緣印著 LITTLE SPROUT）」）。它現在印的是品牌名，同一個字在畫面別處已經出現過，符合這條。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -24633,10 +24650,10 @@
                   "type": "text",
                   "id": "oZFrN",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 全域",
+                  "content": "R6 · 全域\n原 R1",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -24650,7 +24667,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "等寬數字：全 app 對數字套 .monospacedDigit()。稿面上每一個會隨執行期變動的數字都已拆成獨立 text node，名稱加 [tabular] 後綴（共 55 個節點 / 22 處），實作時對照下方清單逐一套用。",
+                  "content": "等寬數字：全 app 對數字套 .monospacedDigit()。稿面上每一個會隨執行期變動的數字都已拆成獨立 text node，名稱加 [tabular] 後綴，實作時對照下方清單逐一套用。【R6 重數】共 60 個節點 / 20 處（含 cmp/OTP Cell 母體那 1 個）；R1 寫的「55 / 22」是 06-kbd 那張與 06b／06c 政策值加進來之前的數字。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -24669,10 +24686,10 @@
                   "type": "text",
                   "id": "guaRx",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 全域",
+                  "content": "R1 · 全域\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -24705,7 +24722,7 @@
                   "type": "text",
                   "id": "aif07",
                   "name": "stamp",
-                  "fill": "#8A6470",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R3 · 全域",
@@ -24741,7 +24758,7 @@
                   "type": "text",
                   "id": "UyD3w",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 全域",
@@ -24777,10 +24794,10 @@
                   "type": "text",
                   "id": "T79PHz",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 全域",
+                  "content": "R6 · 全域\n原 R1",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -24794,7 +24811,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "錯誤態：不要整塊粉底。做法＝邊框轉 danger（2pt）＋ icon ＋單行文字，顏色絕不單獨表意。",
+                  "content": "錯誤態文法（R6 收成一套；02b／03b／06b／06c 四張錯誤畫面用同一段規則描述）。版式由上而下固定四層，缺一不可，也不得加第五層：\n① 出錯的輸入元件本身：邊框轉 $danger 2pt（Text Field 的 Field Box；六格則是六格全轉）。不加底色塊、不改填色。\n② 錯誤句：circle-alert（18pt、$danger）＋文字（$fs-note 17、$danger、600），緊貼在出錯的輸入元件正下方。只講「什麼錯了」，不講政策。上緣間距與 icon↔文字間距都沿用該輸入元件本來的內距，不另立值：欄位型（02b）用 cmp/Text Field 的 Field Help——上 8、icon↔文字 8；六格型（03b／06b／06c）用 $sp-group 12、icon↔文字 $sp-tight 6。差別來自元件內距，不是文法差別。\n③ 後續動作：主 CTA 一律是可按的 $accent 實心（03b「確認登入」、06b/06c「傳訊息跟家人要新的」），其說明文字 $text-secondary $fs-note。\n④ 政策句：素註記——無 icon、無色塊、無邊條、無左棒，$fs-note 17，數字仍是獨立 [tabular] 節點。顏色預設 $text-secondary（02b footer、06b「…算 7 天」、06c「…最多 5 位家人」）；只有一個具名例外用 $text-primary：03b 的「驗證碼 10 分鐘內有效」，因為那是使用者必須在時限內行動的那一句，全稿只有這一句符合。\n$danger 只裝兩樣東西：①的邊框與②的那一句。中性的政策文字絕不放進 danger 容器——R5 之前 06b／06c 把 7 天／5 次裝在 danger 左棒橫幅裡，等於用錯誤色講規則，R6 撤除橫幅（cmp/Banner 隨之零引用除役）。\n錯誤態的焦點：六格全轉 danger 之後，游標所在的第 1 格另加一圈 $accent 2pt 內框（inset 5、radius 9）——外框說「這組碼有問題」，內框說「游標在這裡，可以直接重打」，同一條線不同時說兩件事。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -24813,7 +24830,7 @@
                   "type": "text",
                   "id": "JkDaY",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 全域",
@@ -24849,7 +24866,7 @@
                   "type": "text",
                   "id": "vv4CW",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 01·04·07a",
@@ -24885,10 +24902,10 @@
                   "type": "text",
                   "id": "V70OpS",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 01",
+                  "content": "R1 · 01\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -24921,10 +24938,10 @@
                   "type": "text",
                   "id": "Wy40c",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R2 · 全域",
+                  "content": "R6 · 全域\n原 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -24938,7 +24955,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "【R2 · 字級三分】fs-note = 17（AX3 40），與 fs-body 同值是刻意的：分兩個 token 只為讓實作區分角色——note 一定伴隨狀態色或狀態圖示（.body ＋ danger／primary）。fs-meta 13 只剩三類：法務行、欄位微標籤（其值已用大字呈現）、純時間戳。本輪 22 個節點由 meta 升 note：06 輸入指示、03／03b／Stress-03 驗證碼說明、03b 錯誤三段、06b／06c 失效說明、Stress-05 空欄位、01b／05b／07c 載入四段、07b 核准依據八段、01／01b／01c／01-iPad 信任行。VoiceOver：note 與它上方的控件用 .accessibilityElement(children: .combine) 綁成一組，不要讓長輩分兩次滑到。",
+                  "content": "【R2 · 字級三分】fs-note = 17（AX3 40），與 fs-body 同值是刻意的：分兩個 token 只為讓實作區分角色——note 一定伴隨狀態色或狀態圖示（.body ＋ danger／primary）。fs-meta 13 只剩三類：法務行、欄位微標籤（其值已用大字呈現）、純時間戳。本輪 22 個節點由 meta 升 note：06 輸入指示、03／03b／Stress-03 驗證碼說明、03b 錯誤三段、06b／06c 失效說明、Stress-05 空欄位、01b／05b／07c 載入四段、07b 核准依據八段、01／01b／01c／01-iPad 信任行。VoiceOver：note 與它上方的控件用 .accessibilityElement(children: .combine) 綁成一組，不要讓長輩分兩次滑到。\n【R6】清單裡「Stress-05 空欄位」那一行改由欄位自己的說明列承載（circle-alert ＋ $text-primary ＋ $fs-note 17）：字級沒變，換了承載它的節點。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -24957,7 +24974,7 @@
                   "type": "text",
                   "id": "sjoQ5",
                   "name": "stamp",
-                  "fill": "#8A6470",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R3 · 全域",
@@ -24993,7 +25010,7 @@
                   "type": "text",
                   "id": "L40zv",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 全域",
@@ -25032,7 +25049,7 @@
                   "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R4 · 全域",
+                  "content": "R6 · 全域\n原 R4",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -25046,7 +25063,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "【R3 · 平台慣例對齊；R4 修正開關數字】系統控件借慣例、識別元素才自由發揮。\n① 開關解剖照 Apple kit：軌 51×31、knob 27、內縮 2、knob 落影 (0,1,3) knob-shadow、圓角同心。ON knob x=22、OFF knob x=2。\n②【R3 改】ON 態用 $accent 實心（R2 用 text-primary 是把內文色當控件填色，已停用）。唯一的識別飽和色只給兩種東西：單一主要動作，以及這顆開關——它決定誰能進到家人的照片裡，配得上那個顏色。\n③【R4 新增】把手多一道 1pt $knob-edge（淺 #8A6470／深 #D3AEB2）。這不是裝飾：淺色 OFF 與深色 OFF 兩格，把手填色對軌道只有 1.56:1 與 1.34:1，全靠這道邊拿到 3.25:1 與 7.03:1。\n④【R4 修正 R3 的假數字】R3 印的 5.36／7.47 量的是「軌道對卡面」，不是任何一組把手配對，而深色 ON 的白把手對淺粉軌實際只有 1.89:1。$switch-knob 因此改為主題化（淺 #FFFFFF／深 #190E12，深把手對淺粉軌 9.99:1，鏡像淺色的關係）。四格完整量測見設計語言 ⑦，不變量是「把手（填色或邊，取較大者）對軌道四格皆 ≥3:1」。\n⑤ OFF 態軌道對卡面 1.35:1／1.14:1＝沒有邊界，所以 OFF 軌加 1pt $control-line 描邊（4.40:1／4.02:1）。\n⑥ 狀態文字「目前：已開啟／已關閉」統一 fs-note 17（R2 是 13）。開關本身不是唯一訊號——文字才是長輩讀得到的那個。",
+                  "content": "【R3 · 平台慣例對齊；R4 修正開關數字】系統控件借慣例、識別元素才自由發揮。\n① 開關解剖照 Apple kit：軌 51×31、knob 27、內縮 2、knob 落影 (0,1,3) knob-shadow、圓角同心。ON knob x=22、OFF knob x=2。\n②【R3 改】ON 態用 $accent 實心（R2 用 text-primary 是把內文色當控件填色，已作廢）。唯一的識別飽和色只給兩種東西：單一主要動作，以及這顆開關——它決定誰能進到家人的照片裡，配得上那個顏色。\n③【R4 新增】把手多一道 1pt $knob-edge（淺 #8A6470／深 #D3AEB2）。這不是裝飾：淺色 OFF 與深色 OFF 兩格，把手填色對軌道只有 1.56:1 與 1.34:1，全靠這道邊拿到 3.25:1 與 7.03:1。\n④【R4 修正 R3 的假數字】R3 印的 5.36／7.47 量的是「軌道對卡面」，不是任何一組把手配對，而深色 ON 的白把手對淺粉軌實際只有 1.89:1。$switch-knob 因此改為主題化（淺 #FFFFFF／深 #190E12，深把手對淺粉軌 9.99:1，鏡像淺色的關係）。四格完整量測見設計語言 ⑦，不變量是「把手（填色或邊，取較大者）對軌道四格皆 ≥3:1」。\n⑤ OFF 態軌道對卡面 1.35:1／1.14:1＝沒有邊界，所以 OFF 軌加 1pt $control-line 描邊（4.40:1／4.02:1）。\n⑥ 狀態文字「目前：已開啟／已關閉」統一 fs-note 17（R2 是 13）。開關本身不是唯一訊號——文字才是長輩讀得到的那個。\n⑦【R6】以上與 Apple 解剖不同的地方，已逐條寫成「Apple 做法／我們的做法／為什麼／代價」四段，共四條具名偏離（把手加描邊、OFF 軌加描邊、可見狀態文字、深色把手翻黑），見設計語言 ⑦ 節末。第③條（可見狀態文字）是本輪才在四格對比板上補畫的——cmp/Approval Toggle 一直都有這一行，是板上漏畫；四格現在直接用元件實例，板上看到的就是實作拿到的。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -25065,10 +25082,10 @@
                   "type": "text",
                   "id": "QERgI",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R2 · 全域",
+                  "content": "R2 · 全域\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -25127,7 +25144,7 @@
                   "type": "text",
                   "id": "gW3hy",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 01",
@@ -25163,10 +25180,10 @@
                   "type": "text",
                   "id": "AjlMY",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 02",
+                  "content": "R1 · 02\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -25199,10 +25216,10 @@
                   "type": "text",
                   "id": "EaM9x",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 03",
+                  "content": "R1 · 03\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -25235,10 +25252,10 @@
                   "type": "text",
                   "id": "Y4TVI",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 03b",
+                  "content": "R6 · 03b\n原 R1",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -25252,7 +25269,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "03b 驗證碼錯誤：六格 border 轉 danger 2pt ＋單行錯誤文字（含剩餘次數，等寬），不加底色塊；重寄連結轉為墨色＋底線可點。",
+                  "content": "03b 驗證碼錯誤：六格 border 轉 danger 2pt ＋單行錯誤文字（含剩餘次數，等寬），不加底色塊；重寄連結轉為墨色＋底線可點。【R6 複核】這張是錯誤態文法的第二個樣板（02b 欄位型、03b 六格型），本輪 06b／06c 照它改，03b 自身未動。它的政策句「驗證碼 10 分鐘內有效」是文法第④層唯一用 $text-primary 的具名例外。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -25271,7 +25288,7 @@
                   "type": "text",
                   "id": "dTJ3z",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 06-kbd",
@@ -25310,7 +25327,7 @@
                   "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R4 · 全域",
+                  "content": "R6 · 全域\n原 R4",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -25324,7 +25341,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "【R3 產品規則（取代 R2 的 disabled 做法）· 不因「驗證未通過」而 disable，只因「這一刻在處理中」而 disable】\n① 驗證型 disable 一律撤回：欄位沒填完、格式不對，按鈕照樣可按，按下去給回話（06 的「還要再填 1 個字」、02b 的格式訊息）。長輩最常卡在「按不下去而且不知道為什麼」。\n② in-flight 才 disable，元件是 cmp/Button Working（$accent 底 ＋ loader ＋「正在…」）。\n③【R4 落點】07c 產生中：主鍵改成真正的 Button Working 實例；「複製邀請碼」與「重新產生一組」在這一刻對一個還不存在的碼動作，因此同時 in-flight disabled（$surface-2 底 ＋ $disabled-fg 文字）。這是 disabled-fg 這個 token 的唯一使用點。",
+                  "content": "【R3 產品規則（取代 R2 的 disabled 做法）· 不因「驗證未通過」而 disable，只因「這一刻在處理中」而 disable】\n① 驗證型 disable 一律撤回：欄位沒填完、格式不對，按鈕照樣可按，按下去給回話（06 的「還要再填 1 個字」、02b 的格式訊息、Stress-05 空欄位的「還沒填家庭名稱。在上面打上名字，再按一次。」——R6 補上最後這一處，它是 R5 之前全稿唯一還畫著驗證型 disable 的畫面）。長輩最常卡在「按不下去而且不知道為什麼」。\n② in-flight 才 disable，元件是 cmp/Button Working（$accent 底 ＋ loader ＋「正在…」）。\n③【R4 落點】07c 產生中：主鍵改成真正的 Button Working 實例；「複製邀請碼」與「重新產生一組」在這一刻對一個還不存在的碼動作，因此同時 in-flight disabled（$surface-2 底 ＋ $disabled-fg 文字）。這是 disabled-fg 這個 token 的唯一使用點，R6 全稿掃描複核：4 個節點，全在 07c，無第二處。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -25343,7 +25360,7 @@
                   "type": "text",
                   "id": "gnnI6",
                   "name": "stamp",
-                  "fill": "#8A6470",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R3 · 01c",
@@ -25405,7 +25422,7 @@
                   "type": "text",
                   "id": "n2DvM",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 04",
@@ -25441,10 +25458,10 @@
                   "type": "text",
                   "id": "ODBLD",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 05",
+                  "content": "R6 · 05\n原 R1",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -25458,7 +25475,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "05 建立家庭：欄位單一，標題→欄位 44。空欄位時 CTA 停用（surface-2 底 + border + text-secondary 文字），不要只靠 opacity 調淡（會壓對比）。長家庭名不截斷，欄位高度改 fit_content(60) 讓它換行。",
+                  "content": "05 建立家庭：欄位單一，標題→欄位 44。長家庭名不截斷，欄位高度 fit_content(60) 讓它換行。\n【R6 改寫，取代 R1 的「空欄位時 CTA 停用」】空欄位不 disable：CTA 維持 $accent 實心可按（Stress / 05 空欄位那張畫的就是這個狀態），按下去由欄位自己的說明列回話——circle-alert ＋「還沒填家庭名稱。在上面打上名字，再按一次。」，$text-primary、$fs-note 17，不用 danger（見「不因驗證未通過而 disable」與色彩節第三段）。同一張的欄位外框也從 $border 改回 $control-line：$border 是純裝飾髮絲線（1.86:1），輸入框的邊界一律 $control-line（3.60:1）——空欄位不是弱化的欄位。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -25477,7 +25494,7 @@
                   "type": "text",
                   "id": "rOZLT",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 06",
@@ -25516,7 +25533,7 @@
                   "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R4 · 06b·06c",
+                  "content": "R6 · 06b·06c\n原 R4",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -25530,7 +25547,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "06b 已過期 / 06c 次數用盡（R4 再修）：\n【假 CTA 已換掉】主鍵是「傳訊息跟家人要新的」——開系統分享／訊息，不是叫 app 去動別人的資料。\n【R4 · 橫幅只留原因】判決句（「這一組已經過期了」）已經在卡片的 Code Hint 上說過一次，橫幅只留原因：06b「邀請碼從產生那天算 7 天。」、06c「一組邀請碼最多 5 位家人可以用。」政策數字（7／5）是獨立的 [tabular] 節點，實作要套 .monospacedDigit()。\n【R4 · 預寫訊息兩狀態不同】CTA 下方一行預告會送出什麼：06b「我的邀請碼過期了，可以再產生一組新的給我嗎？」／06c「邀請碼的名額用完了，可以再產生一組新的給我嗎？」——兩張畫面的主鍵文案相同是對的（動作一樣），差異落在它真正會產生的東西上。\n版面與 06 同骨架：標題 → 卡 → 橫幅 → 主鍵 → 預寫訊息 → 底部貼上連結。",
+                  "content": "06b 已過期 / 06c 次數用盡（R6 再修）：\n【主鍵】「傳訊息跟家人要新的」——開系統分享／訊息，不是叫 app 去動別人的資料。\n【R6 · 回到錯誤態文法】判決句留在卡片上、緊貼六格下方，並補上 circle-alert（02b／03b 一直都有，只有這兩張漏了）。原本裝政策文字的 danger 左棒橫幅撤除，改素註記：06b「邀請碼從產生那天算 7 天。」、06c「一組邀請碼最多 5 位家人可以用。」，$text-secondary $fs-note；政策數字（7／5）仍是獨立 [tabular] 節點，實作套 .monospacedDigit()。\n【R6 · 六格不再長得像不能用】R4 把六格整組壓到 opacity 0.6（等效 #7E6A6F，碼字對卡面只剩 4.36:1，而且那個值不在 token 表上）。使用者拿到新碼要在同一組格子裡重打，欄位不能長得像唯讀：opacity 撤回 1、碼字回 $text-primary（14.92:1）、六格 border 轉 $danger 2pt（比照 03b）、第 1 格加 $accent 2pt 內框表示游標。\n【預寫訊息兩狀態不同】CTA 下方一行預告會送出什麼：06b「我的邀請碼過期了，可以再產生一組新的給我嗎？」／06c「邀請碼的名額用完了，可以再產生一組新的給我嗎？」——主鍵文案相同是對的（動作一樣），差異落在它真正會產生的東西上。\n版面與 06 同骨架：標題 → 卡（六格＋錯誤句）→ 政策素註記 → 主鍵 → 預寫訊息 → 底部貼上連結。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -25549,7 +25566,7 @@
                   "type": "text",
                   "id": "Sfu1o",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 06d",
@@ -25585,7 +25602,7 @@
                   "type": "text",
                   "id": "m55rF",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 07",
@@ -25621,7 +25638,7 @@
                   "type": "text",
                   "id": "gP8fV",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 07a",
@@ -25657,7 +25674,7 @@
                   "type": "text",
                   "id": "aBT2X",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 07b",
@@ -25693,7 +25710,7 @@
                   "type": "text",
                   "id": "oQlKC",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 07c",
@@ -25729,7 +25746,7 @@
                   "type": "text",
                   "id": "BBK9B",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 07·07a·07b·07c",
@@ -25765,7 +25782,7 @@
                   "type": "text",
                   "id": "PLBEQ",
                   "name": "stamp",
-                  "fill": "#8A6470",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R3 · 07b",
@@ -25801,7 +25818,7 @@
                   "type": "text",
                   "id": "LmvOK",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 全域",
@@ -25837,7 +25854,7 @@
                   "type": "text",
                   "id": "BhqIY",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 07a",
@@ -25899,10 +25916,10 @@
                   "type": "text",
                   "id": "JuOjC",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 05·07a·07b",
+                  "content": "R6 · 05·07a·07b\n原 R1",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -25916,7 +25933,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "空：05 空欄位（CTA 停用）、07a 尚未產生（照片主導，不是灰卡）、07b 無申請時待核准區塊整塊不出現。",
+                  "content": "空：05 空欄位（CTA 可按，按下由欄位說明列回話；R1 寫的「CTA 停用」R6 作廢）、07a 尚未產生（照片主導，不是灰卡）、07b 無申請時待核准區塊整塊不出現。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -25935,7 +25952,7 @@
                   "type": "text",
                   "id": "KR0oZ",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 01b·05b·07c",
@@ -25971,10 +25988,10 @@
                   "type": "text",
                   "id": "ToUQR",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 02b·03b·06b·06c",
+                  "content": "R6 · 02b·03b·06b·06c\n原 R1",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -25988,7 +26005,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "錯誤：02b Email 格式、03b 驗證碼錯誤（含剩餘次數）、06b 已過期、06c 次數用盡。四種文案各自獨立，不共用。",
+                  "content": "錯誤：02b Email 格式、03b 驗證碼錯誤（含剩餘次數）、06b 已過期、06c 次數用盡。四種文案各自獨立、不共用；四張的版式則共用同一段規則（見通用節「錯誤態文法」），R6 起可逐條對照。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -26007,10 +26024,10 @@
                   "type": "text",
                   "id": "F3Ypr",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 01c",
+                  "content": "R1 · 01c\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26043,7 +26060,7 @@
                   "type": "text",
                   "id": "p4UY9O",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 01-iPad·04-iPad",
@@ -26079,10 +26096,10 @@
                   "type": "text",
                   "id": "N3FGy",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · A11y-04",
+                  "content": "R1 · A11y-04\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26115,10 +26132,10 @@
                   "type": "text",
                   "id": "cWYUL",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · Stress",
+                  "content": "R1 · Stress\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26151,7 +26168,7 @@
                   "type": "text",
                   "id": "oIxaY",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 全域",
@@ -26168,7 +26185,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "【R4】狀態盤點：ON/OFF 開關兩態皆已畫（07／07b／07c ON、07a OFF），四格對比板另有完整量測；in-flight 態＝cmp/Button Working（01b／05b／07c）；鍵盤升起態＝06-kbd（新增，全稿唯一一張，其餘輸入畫面比照它的四條版面規則）。",
+                  "content": "【R4】狀態盤點：ON/OFF 開關兩態皆已畫（07／07b／07c ON、07a OFF），四格對比板另有完整量測；in-flight 態 ＝ cmp/Button Working（01b／05b／07c）；鍵盤升起態 ＝ 06-kbd（全稿唯一一張，其餘輸入畫面比照它的四條版面規則）。\n\n【R6 · 全稿「看起來不能用」掃描（一次做完，數字可重跑）】判準一條：一個元素只要看起來像不能按、不能打字，它就必須真的是 in-flight（這一刻正在處理中）；否則一律翻正。五類逐項：\n① opacity < 1 的節點：0。掃描前是 12，全在 06b／06c 的六格（等效色 #7E6A6F ＝ 碼字對卡面 4.36:1，而且那個值不在 token 表上）。本輪撤回 opacity、碼字回 $text-primary（14.92:1）。\n② enabled:false 的節點：0。順帶推翻 R1 註記那句「03b 的重寄節點 enabled:false」——那個節點根本不存在。\n③ 用 $disabled-fg 的節點：4，全部在 07c 的「複製邀請碼」與「重新產生一組」，也就是 in-flight（碼還沒生出來，兩顆鍵在對一個不存在的東西動作）。與這個 token 宣告的「唯一使用點」一致。\n④ 按鈕用 $surface-2 當底：1，07c 的複製鍵，同上 in-flight。R5 之前還有第 2 個——Stress-05 空欄位的「建立家庭」，那是驗證型 disable，本輪改成 $accent 實心可按。\n⑤ 只有外框、沒有填色的按鈕：8，全部是 cmp/Button Secondary 與它的實例（貼上連結／複製／分享）。判定：次要按鈕樣式，不是停用樣式；判準是兩者長得不一樣而且量得出來——次要鍵 ＝ 無填色 ＋ $control-line 1.5 外框 ＋ $text-primary 標籤（14.92:1）；in-flight 停用鍵 ＝ $surface-2 填色 ＋ 無外框 ＋ $disabled-fg 標籤（2.13:1 淺／2.47:1 深，停用控件依 WCAG 1.4.3 豁免，這裡登記在案）。標籤對比差 7 倍，不會被誤認。\n另外翻正兩處不在上列五類、但同樣「看起來比較弱」的東西：①Stress-05 空欄位的輸入框外框由 $border（1.86:1，純裝飾髮絲線）改回 $control-line（3.60:1）——空欄位不是弱化的欄位；②Notes 板 R1–R2 段的戳記由 #9F878C（對卡面 2.88:1，而且正好是 $disabled-fg 的值）改成 #60464A（7.36:1）——文件不該用停用色標記自己最舊的段落。\n結論：全稿「停用／disable」這個概念現在只指向一件事——in-flight。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -26213,10 +26230,10 @@
                   "type": "text",
                   "id": "HISTn",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 06b·06c",
+                  "content": "R1 · 06b·06c\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26249,10 +26266,10 @@
                   "type": "text",
                   "id": "d5Hj1q",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 01",
+                  "content": "R1 · 01\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26285,10 +26302,10 @@
                   "type": "text",
                   "id": "gVXml",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 07b",
+                  "content": "R1 · 07b\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26321,10 +26338,10 @@
                   "type": "text",
                   "id": "l34SVC",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 07b",
+                  "content": "R1 · 07b\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26357,7 +26374,7 @@
                   "type": "text",
                   "id": "zRtKq",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 04",
@@ -26393,10 +26410,10 @@
                   "type": "text",
                   "id": "CRqVu",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R2 · 06·07",
+                  "content": "R6 · 06·07\n原 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26410,7 +26427,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "【R2 新增】邀請碼位數與字母集需與後端 LS-33 對帳：排除 Q/O/0/I/L/1 後 6 位只有 29.4 bit，若要 40 bit 需改 8 位。設計端建議 7–8 位。需人裁決。",
+                  "content": "【R2 新增】邀請碼位數與字母集需與後端 LS-33 對帳：排除 Q/O/0/I/L/1 後 6 位只有 29.4 bit，若要 40 bit 需改 8 位。設計端建議 7–8 位。需人裁決。【R6】八格的完整版面規格（格寬 31.63、gap 6＋分組 16、fs-otp AX3 52→42、fs-code 60→52、單一 tap target 前提、切換成本）已寫在通用節「邀請碼字母集」那一段——裁決若是 8 位，不需要再開一輪設計。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -26429,7 +26446,7 @@
                   "type": "text",
                   "id": "t2yUB",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · Brand",
@@ -26465,10 +26482,10 @@
                   "type": "text",
                   "id": "flo3c",
                   "name": "stamp",
-                  "fill": "#8A6470",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R3 · 03·06",
+                  "content": "R6 · 03·06\n原 R3",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26482,7 +26499,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "【R3 撤回】R2 把 06 的 CTA 也改成 disabled 的做法已作廢，見上方「不因驗證未通過而 disable」。03 與 06 的 CTA 現在都是可按的 primary。",
+                  "content": "【R3 撤回，R6 補齊最後一處】R2 把 06 的 CTA 也改成 disabled 的做法已作廢，見上方「不因驗證未通過而 disable」。03 與 06 的 CTA 都是可按的 primary；但 R5 之前 Stress-05 空欄位那張仍畫著 disabled 的 CTA（$surface-2 底 ＋ $border ＋ $text-secondary 文字），R6 一併改成 $accent 實心可按。至此全稿驗證型 disable ＝ 0 處。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -26501,7 +26518,7 @@
                   "type": "text",
                   "id": "pMuuw",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 01·01-iPad",
@@ -26563,10 +26580,10 @@
                   "type": "text",
                   "id": "Zeb7f",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 03·03b",
+                  "content": "R6 · 03·03b\n原 R1",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26580,7 +26597,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "OTP 六格數字（03 / 03b / Stress-03）— cmp/OTP Cell 的 OTP Text [tabular]，共 24 個節點。",
+                  "content": "OTP 六格數字（03 / 03b / Stress-03）— cmp/OTP Cell 的 OTP Text [tabular]，共 18 個節點（三張各 6）＋元件母體 1 個。【R6 更正】R1 寫的「24 個」把 06 家族的邀請碼輸入格也算進來了，那些歸下一條。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -26599,10 +26616,10 @@
                   "type": "text",
                   "id": "xF7cz",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 06·07",
+                  "content": "R6 · 06·07\n原 R1",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26616,7 +26633,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "邀請碼六碼（06 / 06b / 06c 輸入格；07 / 07b 顯示用 Code K7M / Code 2QD）。",
+                  "content": "邀請碼六碼輸入格（06 / 06b / 06c / 06-kbd，四張各 6 格 ＝ 24 個 OTP Text [tabular]）；07 / 07b 顯示用大字 Code K7M [tabular] 與 Code 2FD [tabular]。【R6 更正兩處】① R1 漏了 06-kbd；② 節點名一直叫「Code 2QD」，但 R2 定案已把示例碼的 Q 換成 F（易混字元），內容早就是 2FD——本輪把節點名一併改成 Code 2FD [tabular]，名實對上。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -26635,10 +26652,10 @@
                   "type": "text",
                   "id": "ptr5i",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 03",
+                  "content": "R6 · 03\n原 R1",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26652,7 +26669,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "重寄倒數秒數 Resend Num [tabular]（03、Stress-03 值統一為 60；03b 為可重寄狀態，該節點 enabled:false）。",
+                  "content": "重寄倒數秒數 Resend Num [tabular]（03、Stress-03，值統一為 60）。【R6 更正】R1 寫「03b 為可重寄狀態，該節點 enabled:false」——畫面上 03b 根本沒有這個節點（重寄列只有 refresh icon ＋「重新寄一次驗證碼」）。全稿 enabled:false 的節點數 ＝ 0，本輪掃描確認。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -26671,10 +26688,10 @@
                   "type": "text",
                   "id": "AxekD",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 03b",
+                  "content": "R1 · 03b\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26707,10 +26724,10 @@
                   "type": "text",
                   "id": "sIYTX",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 07·07b",
+                  "content": "R1 · 07·07b\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26743,10 +26760,10 @@
                   "type": "text",
                   "id": "P57tn",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 07b",
+                  "content": "R1 · 07b\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26779,10 +26796,10 @@
                   "type": "text",
                   "id": "p05z4",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 07b·06d",
+                  "content": "R1 · 07b·06d\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26815,7 +26832,7 @@
                   "type": "text",
                   "id": "BaRuy",
                   "name": "stamp",
-                  "fill": "#8E2447",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R4 · 06b·06c",
@@ -26851,10 +26868,10 @@
                   "type": "text",
                   "id": "ZO1rO",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R1 · 全域",
+                  "content": "R1 · 全域\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26887,10 +26904,10 @@
                   "type": "text",
                   "id": "HeK7W",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R2 · 全域",
+                  "content": "R2 · 全域\nR6 複核",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26923,10 +26940,10 @@
                   "type": "text",
                   "id": "f2Gm3",
                   "name": "stamp",
-                  "fill": "#9F878C",
+                  "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R2 · 全域",
+                  "content": "R6 · 全域\n原 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26940,7 +26957,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "【R2 · 邀請碼字母集（設計對後端的規格請求）】排除易混字元 Q O 0 I L 1（Crockford Base32 前例）。剩餘 30 字元：2-9 ＋ A B C D E F G H J K M N P R S T U V W X Y Z。6 位 → 30^6 ≈ 7.29×10^8 ≈ 29.4 bit。⚠ 若 LS-33 需維持 40 bit，6 位英數不可能達成（需 ~100 個符號），要嘛加到 8 位（30^8 ≈ 39.2 bit）要嘛放寬字母集——設計端立場：寧可 7-8 位也不要讓長輩把 O 唸成零。稿內示例碼已由「K7M 2QD」改為「K7M 2FD」，06/06b/06c 輸入格第 5 格 Q → F。",
+                  "content": "【R2 · 邀請碼字母集（設計對後端的規格請求）】排除易混字元 Q O 0 I L 1（Crockford Base32 前例）。剩餘 30 字元：2-9 ＋ A B C D E F G H J K M N P R S T U V W X Y Z。6 位 → 30^6 ≈ 7.29×10^8 ≈ 29.4 bit。⚠ 若 LS-33 需維持 40 bit，6 位英數不可能達成（需 ~100 個符號），要嘛加到 8 位（30^8 ≈ 39.2 bit）要嘛放寬字母集——設計端立場：寧可 7-8 位也不要讓長輩把 O 唸成零。稿內示例碼已由「K7M 2QD」改為「K7M 2FD」，06/06b/06c 輸入格第 5 格 Q → F。\n【R6 · 八格應變規格（如果裁決是 8 位，這是它長什麼樣，不必再開一輪設計）】\n① 格寬：卡片內寬固定 305（345 − 2×$inset-card 20）。六格＝(305 − 5×8)/6 ＝ 44.17（gap $sp-label 8）。八格改 4+4 分組：格間 gap 降到 $sp-tight 6（6 道）＋中間一道分組間隙 $sp-item 16，格寬 ＝ (305 − 6×6 − 16)/8 ＝ 31.63。\n② 字級：fs-otp 36，Courier Prime 數字前進寬約 0.6em ＝ 21.6，格內扣掉 2pt 邊框剩 27.6，左右各餘 3.0 ✓。AX3 的 52 會爆（31.2 > 27.6），八格時 fs-otp 的 AX3 值由 52 降到 42（25.2，左右各餘 1.2）。這是八格唯一需要改的 token 值。\n③ 分組：六格 3+3、八格 4+4。分組間隙是版面元素不是格線，AX 下不放大。\n④ fs-code 降階（07／07b 的顯示用大字）：60 在八位時實測 8×0.6×60 ＝ 288，加分組間隙 16 ＝ 304，對內寬 305 只剩 1pt，沒有安全邊界；八位時 fs-code 降到 52（249.6＋16 ＝ 265.6，餘 39），AX3 由 76 降到 66。\n⑤ 單一 tap target（前提，不是附註）：六格與八格都是「一個隱形輸入框 ＋ N 個顯示格」，整列是單一 tap target（高 72 ≥44），不是 N 個各自可點的小方塊。31.63pt 寬的格子本來就構不成 44pt 命中目標——這條註記是八格能成立的前提，實作不得把每格做成獨立按鈕。\n⑥ 切換成本一句：改位數是「一個 cellCount ＋ 兩個 AX3 字級值」的事，不是重排版面——六格與八格共用同一張卡、同一個 72 高、同一條錯誤態文法；真正要重畫的只有 07／07b 的顯示碼與分享文案裡的示例字串。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -26959,7 +26976,7 @@
                   "type": "text",
                   "id": "D5ywLd",
                   "name": "stamp",
-                  "fill": "#8A6470",
+                  "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
                   "content": "R3 · 07b",
@@ -31124,7 +31141,7 @@
       "name": "設計註記 · OTP 游標位置（03 / Stress-03）",
       "width": 360,
       "height": 0,
-      "content": "設計註記，不是畫面文字：03 與 Stress / 03 的六格中，前三格已填、游標停在第 4 格。稿面用第 4 格的 $control-line 2pt 焦點框表示，實作由 focus state 決定，不要真的印一行說明字上去。R3 之前這句話是畫在畫面裡的 13pt 斜體文字——那會被 VoiceOver 唸出來，也會被使用者當成錯誤訊息。"
+      "content": "【R6 · 03／Stress-03】設計註記，不是畫面文字：03 與 Stress / 03 的六格中，前三格已填、游標停在第 4 格。稿面用第 4 格的 $accent 2.5pt 焦點框表示（R6 更正：這段 R3 寫的是「$control-line 2pt」，但畫面上一直是 $accent 2.5pt——以畫面為準。焦點框是全稿唯一的焦點語彙，另一個使用點是 06b／06c 第 1 格的 $accent 2pt 內框）。實作由 focus state 決定，不要真的印一行說明字上去：R3 之前這句話是畫在畫面裡的 13pt 斜體文字——那會被 VoiceOver 唸出來，也會被使用者當成錯誤訊息。\n這個節點在文件根層、不在 Notes 板的六個區段裡，是戳記母體的唯一具名例外（見 Notes 板「怎麼讀左邊那一欄」）。"
     }
   ],
   "themes": {
@@ -31254,7 +31271,7 @@
           }
         },
         {
-          "value": "#F4A8B6",
+          "value": "#FCA4B5",
           "theme": {
             "mode": "dark"
           }
