@@ -1811,7 +1811,12 @@ const measured = {
    設計稿上印的每一句都是從 measured.json 讀的，不是手寫的。 */
 const MJ = new URL('measured.json', import.meta.url);
 const MEAS_RAW = existsSync(MJ) ? readFileSync(MJ, 'utf8') : '';
-const M = MEAS_RAW ? JSON.parse(MEAS_RAW) : {};
+/* verify 算完之後才知道的四個統計，寫在自己的檔裡（第 3 輪拆出來的）——
+   它們不能回寫進 measured.json，那會讓 G21 變成不冪等的：verify 動了那個檔，
+   同一份產物再驗一次就會說「板上印的是上一版」。跑兩次得到兩個答案的 gate 不是 gate。 */
+const VJ = new URL('verified.json', import.meta.url);
+const V = existsSync(VJ) ? JSON.parse(readFileSync(VJ, 'utf8')) : {};
+const M = { ...(MEAS_RAW ? JSON.parse(MEAS_RAW) : {}), ...V };
 /* 這一次 build 讀到的 measured.json 指紋。每一張產物都蓋上它（見 doc()），
    verify 的 G21 拿現行 measured.json 的指紋比對 —— 板上印的實測句是不是上一版，
    從此是 gate 判的，不是人記得跑第二輪。 */

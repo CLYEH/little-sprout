@@ -997,6 +997,13 @@ if (M.shot) {
   console.log('SKIP  G17 截圖一致性 —— 先跑 node _shot.mjs');
 }
 
-writeFileSync(MJ, JSON.stringify(M, null, 2));
+/* verify 有四個統計（gapCount／padCount／sizesUsed／axDerived）要回寫給 build 印在板上。
+   第 2 輪它們直接寫進 measured.json —— 那讓 G21 變成**不冪等**的：
+   verify 改了 measured.json ⇒ 它的雜湊變了 ⇒ 同一份產物再跑一次 verify，
+   G21 就會說「板上印的是上一版」。跑兩次得到兩個答案的 gate 不是 gate。
+   改法：這四個數寫到自己的檔（verified.json），build 一併讀，measured.json
+   從 measure 寫完那一刻起到下一次 measure 之前**一個位元組都不會動**。 */
+writeFileSync(new URL('verified.json', import.meta.url),
+  `${JSON.stringify({ gapCount: M.gapCount, padCount: M.padCount, sizesUsed: M.sizesUsed, axDerived: M.axDerived }, null, 2)}\n`);
 console.log(`\n${fail ? `${fail} 項未過` : '全部通過'}`);
 process.exit(fail ? 1 : 0);
