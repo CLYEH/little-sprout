@@ -591,6 +591,32 @@ begin
     raise exception 'FAIL：改成不合規約的路徑被拒，但錯誤碼是 % 而不是 42501', v_state;
   end if;
 
+  -- 釘樁探針（LS-40 review F10）：member 把自己上傳檔案的 owner 改成同家庭別人，
+  -- 想藉此把「上傳者本人」分支認的身分轉送給沒上傳過這個檔案的人——UPDATE 的
+  -- WITH CHECK 補了與 INSERT 相同的兩行釘樁之後，這條側門必須被擋下。
+  -- 「42501 或 0 列」都算擋下：擋下的形式取決於 policy 求值細節，這裡不押注是哪一種，
+  -- 只要求兩者之一，且擋下之後不能有第二筆物件被塞進 owner=別人的狀態。
+  v_blocked := false;
+  begin
+    update storage.objects
+       set owner = 'a0000000-0000-4000-8000-000000000001'::uuid
+     where name = 'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000002.jpg';
+  exception when others then
+    v_blocked := true; v_state := sqlstate;
+  end;
+  if v_blocked then
+    if v_state <> '42501' then
+      raise exception 'FAIL：member 把 owner 改成同家庭他人被拒，但錯誤碼是 % 而不是 42501', v_state;
+    end if;
+  else
+    get diagnostics v_n = row_count;
+    if v_n <> 0 then
+      raise exception 'FAIL：member 把自己上傳檔案的 owner 改成同家庭他人成功了（影響 % 列）——把改／刪權轉送給了沒上傳過這個檔案的人', v_n;
+    end if;
+  end if;
+  raise notice 'ok 釘樁：member 無法把自己檔案的 owner 改成同家庭他人（% 擋下）',
+    case when v_blocked then '42501' else '0 列' end;
+
   raise notice 'ok UPDATE：上傳者與家庭 owner 改得動、他人改不動、跨家庭 0 列、改名搬家與違規路徑皆被 WITH CHECK 擋下 (42501)';
 end;
 $$;

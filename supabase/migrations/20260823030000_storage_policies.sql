@@ -178,6 +178,13 @@ create policy media_bucket_select on storage.objects for select to authenticated
 -- 「上傳者本人」分支認的就是這兩欄——等於可以把刪除權硬塞給沒有上傳過那個檔案的人。
 -- 留空要放行：storage-api 依版本可能只寫其中一欄（見下方 UPDATE/DELETE 的說明），
 -- 兩欄都強制非空會讓上傳在某些版本直接失敗。
+--
+-- 這道釘樁只鎖得住「插入當下」：INSERT 之後如果 UPDATE 不驗同一組欄位，有上傳權
+-- 的成員可以先合法上傳（owner/owner_id 兩欄都留自己），再用一次 UPDATE 把 owner
+-- 改成同家庭另一個人——那個人的 uid 從此符合下面 UPDATE/DELETE 的「上傳者本人」
+-- 分支，等於把這個檔案的改／刪權轉送給一個從沒上傳過它的人。所以下面
+-- media_bucket_update 的 WITH CHECK 重複了同一組兩行釘樁，堵住這條側門；
+-- 90_storage_policies.sql 第 5 段有一條探針專門釘住這個攻擊路徑。
 create policy media_bucket_insert on storage.objects for insert to authenticated
   with check (
     bucket_id = 'media'
@@ -193,18 +200,28 @@ create policy media_bucket_insert on storage.objects for insert to authenticated
 -- owner_id（text，新欄位）或兩者皆寫。只認一個等於把 policy 押在 storage 的版本行為上
 -- （LS-15 教訓）。兩欄皆為 NULL 時退化成「只有家庭 owner 能動」——失敗方向是關緊，
 -- 不是開放，這是可以接受的退化。五種 (owner, owner_id) 組合的行為由
--- supabase/tests/90_storage_policies.sql 第 5 段逐一釘住。
+-- supabase/tests/90_storage_policies.sql 第 6 段逐一釘住。
 --
 -- 上傳者分支要求「**當下仍**在 uploadable_family_ids() 裡」，不是「上傳當時有權」——
 -- 這是刻意選較嚴的一邊：can_upload 被 owner 收回之後，那個人連自己以前上傳的檔案
 -- 也動不了。理由是 can_upload 的語義是「這個人現在不該再寫這個 bucket」，
 -- 留一條「但他還能刪」的縫等於權限撤了一半。代價寫進 docs/PLAN.md 的契約：
--- 被撤權成員留下的孤兒物件改由家庭 owner 清理。這個選擇由 90_ 第 5 段的斷言釘住，
+-- 被撤權成員留下的孤兒物件改由家庭 owner 清理。這個選擇由 90_ 第 7 段的斷言釘住，
 -- 日後若要改成寬鬆版（看上傳當時的權限），那條斷言會先紅。
 --
 -- UPDATE 的 WITH CHECK 同時擋住「改名搬家」：storage-api 的 move/copy 是 UPDATE name，
 -- 若只驗舊列（USING）不驗新列，有上傳權的成員可以把自家檔案改名成別家的路徑前綴，
 -- 等於繞過 INSERT 那條防線把檔案送進別人家。新列一樣要通過規約與家庭歸屬。
+--
+-- 「上傳者本人」分支裡另外兩行與 INSERT 那條重複同一組 owner/owner_id 釘樁
+-- （見上方 INSERT 的註解）：原本的 `owner = me or owner_id = me` 只要求兩欄之一
+-- 對得上，攻擊者可以留著自己認得的那欄不動、把另一欄改成同家庭另一個人的 uid——
+-- 這一步不會被原本的 OR 擋下，卻讓那個人從此符合「上傳者本人」分支，等於把改／刪
+-- 權轉送給沒上傳過這個檔案的人。加上「兩欄各自都必須是 NULL 或本人」之後，兩欄
+-- 只要有一個被改成別人就會被擋。這道釘樁刻意只放在「上傳者本人」這個分支裡，
+-- 不放在最外層：家庭 owner 走的是 owned_family_ids() 那一支，本來就該不受
+-- owner/owner_id 欄位限制地改動自家任何檔案（包含別的成員上傳、owner 欄位是別人
+-- 的那些）——放在最外層會連家庭 owner 這個合法用例都一起擋掉。
 create policy media_bucket_update on storage.objects for update to authenticated
   using (
     bucket_id = 'media'
@@ -223,6 +240,8 @@ create policy media_bucket_update on storage.objects for update to authenticated
       (storage.foldername(name))[1] in (select f::text from private.owned_family_ids() f)
       or (
         (owner = (select auth.uid()) or owner_id = (select auth.uid())::text)
+        and (owner is null or owner = (select auth.uid()))
+        and (owner_id is null or owner_id = (select auth.uid())::text)
         and (storage.foldername(name))[1] in (select f::text from private.uploadable_family_ids() f)
       )
     )

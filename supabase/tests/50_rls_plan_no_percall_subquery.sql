@@ -157,21 +157,12 @@ begin
       ('主查詢 5：Storage 物件清單（policy 靠路徑第一段判家庭）',
        'select id, name from storage.objects
          where bucket_id = ''media''
-         order by created_at desc limit 50'),
-      -- LS-40 review F6：讀取那條只走 SELECT policy 的單一 qual。UPDATE 這條才會同時
-      -- 求值 USING 與 WITH CHECK，且 USING 裡有 OR 兩側（owned／uploader）與 owner
-      -- 兩欄比對——那是全 schema 最複雜的一組 qual，沒有它就沒有任何 plan 判準看得到。
-      --
-      -- 判準歸因（哪一條在這裡真的吃重）：UPDATE 的 WITH CHECK 子計畫不會出現在任何
-      -- Filter 行裡（它們以裸的 `SubPlan N` 標籤掛在 Update 節點下），所以
-      -- 「plan 不得出現 (SubPlan N) 形式的 **qual 引用**」那條判準對它們是無效的；
-      -- 真正抓得到「WITH CHECK 被逐列重算」的是 loops=1 那條——correlated 的話
-      -- 那些 Function Scan 的 loops 會直接變成 2 萬。兩條判準在這裡分工不同，
-      -- 不是互為備援。
-      ('主查詢 6：Storage 物件改寫（UPDATE 的 USING＋WITH CHECK 一起求值）',
-       'update storage.objects
-           set metadata = coalesce(metadata, ''{}''::jsonb) || ''{"ls40_plan_probe": true}''::jsonb
-         where bucket_id = ''media''')
+         order by created_at desc limit 50')
+      -- 主查詢 6（Storage 物件改寫，UPDATE 的 USING＋WITH CHECK）不放在這個迴圈裡：
+      -- 它會真的 UPDATE 這 2 萬列，若跑在檔尾證據 EXPLAIN 之前，後面「證據 4：
+      -- Storage 物件清單」量到的 buffers/cost 會摻進這次 UPDATE 留下的死元組
+      -- （同一交易內死元組仍佔頁面，即使最終 rollback）。定點複驗 N4：搬到本檔
+      -- 檔尾、所有證據 EXPLAIN 印完之後、真正 rollback 之前，見下方獨立的區塊。
     ) as t(label, stmt)
   loop
     v_plan := '';
@@ -270,5 +261,54 @@ select m.id from public.media m
    and (select count(*) from public.family_members fm
          where fm.family_id = m.family_id and fm.user_id = auth.uid()) > 0
  limit 50;
+
+-- ---------------------------------------------------------------------------
+-- 主查詢 6：Storage 物件改寫（UPDATE 的 USING＋WITH CHECK 一起求值）
+--
+-- LS-40 review F6：讀取那條（主查詢 5）只走 SELECT policy 的單一 qual。UPDATE 這條
+-- 才會同時求值 USING 與 WITH CHECK，且 USING 裡有 OR 兩側（owned／uploader）與
+-- owner 兩欄比對——那是全 schema 最複雜的一組 qual，沒有它就沒有任何 plan 判準看得到。
+--
+-- 判準歸因（哪一條在這裡真的吃重）：UPDATE 的 WITH CHECK 子計畫不會出現在任何
+-- Filter 行裡（它們以裸的 `SubPlan N` 標籤掛在 Update 節點下），所以
+-- 「plan 不得出現 (SubPlan N) 形式的 **qual 引用**」那條判準對它們是無效的；
+-- 真正抓得到「WITH CHECK 被逐列重算」的是 loops=1 那條——correlated 的話
+-- 那些 Function Scan 的 loops 會直接變成 2 萬。兩條判準在這裡分工不同，不是互為備援。
+--
+-- 定點複驗 N4：這條刻意搬到這裡（所有「證據」EXPLAIN 都印完之後、真正 rollback
+-- 之前），不與主查詢 1-5 放在同一個判準迴圈裡——它會真的 UPDATE 這 2 萬列
+-- storage.objects，同一交易內接下來的查詢仍看得到這次 UPDATE 留下的死元組
+-- （MVCC 只在跨交易時才不可見），若排在「證據 4：Storage 物件清單」之前執行，
+-- 量到的 buffers/cost 就不是乾淨的讀取基準。搬到這裡之後，證據 1-4 與對照組
+-- 量到的都是這條 UPDATE 執行之前的乾淨狀態。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_line text;
+  v_plan text := '';
+  v_loops bigint;
+  v_stmt text :=
+    'update storage.objects
+        set metadata = coalesce(metadata, ''{}''::jsonb) || ''{"ls40_plan_probe": true}''::jsonb
+      where bucket_id = ''media''';
+begin
+  for v_line in execute 'explain (analyze, verbose, buffers) ' || v_stmt loop
+    v_plan := v_plan || v_line || E'\n';
+  end loop;
+
+  if v_plan ~ '\(SubPlan [0-9]+\)' then
+    raise exception E'FAIL 效能：主查詢 6 的 plan 出現 per-row correlated SubPlan\n%', v_plan;
+  end if;
+
+  select coalesce(max((x[1])::bigint), 1) into v_loops
+    from regexp_matches(v_plan, 'loops=([0-9]+)', 'g') as x;
+  if v_loops > 1 then
+    raise exception E'FAIL 效能：主查詢 6 的 plan 有節點被執行 % 次（policy 遭逐列重算）\n%',
+      v_loops, v_plan;
+  end if;
+
+  raise notice 'ok 效能：主查詢 6 —— 無 correlated SubPlan，所有節點 loops=1';
+end;
+$$;
 
 rollback;

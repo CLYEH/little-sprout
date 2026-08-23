@@ -117,7 +117,7 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 **Storage 的雲端部署驗證清單**（本機測不到、只在雲端才成立的三件事；`db push` 綠燈不能取代這三條）：
 
 1. **`storage.prefixes`**：較新的 storage-api 會建這張表並用 trigger 維護，官方本機開發映像沒有它。→ 部署後跑 `select to_regclass('storage.prefixes');`，非 NULL 就再跑 `select relrowsecurity from pg_class where oid = 'storage.prefixes'::regclass;` 與 `select polname from pg_policy where polrelid = 'storage.prefixes'::regclass;`；**啟用了 RLS 又沒有任何 policy** 就是上傳會在雲端被擋的形狀。最終判準是**做一次真實上傳**：本機同路徑可過、雲端回 403／RLS 錯誤，就是這一條。
-2. **`owner` / `owner_id` 由誰填**：policy 兩欄都認，五種組合的行為已由 `supabase/tests/90_storage_policies.sql` 第 6 段釘住，所以這裡只剩一個事實查詢——真實上傳一張照片後跑 `select owner, owner_id from storage.objects where bucket_id = 'media' limit 1;`，**至少一欄非 NULL** 即可。兩欄皆 NULL 不是安全問題（退化成只有家庭 owner 能動），但表示「上傳者自刪孤兒物件」在雲端不會生效。
+2. **`owner` / `owner_id` 由誰填**：policy 兩欄都認，五種組合的行為已由 `supabase/tests/90_storage_policies.sql` 第 6 段釘住，所以這裡只剩一個事實查詢——真實上傳一張照片後跑 `select owner, owner_id from storage.objects where bucket_id = 'media' limit 1;`，**至少一欄非 NULL** 即可。兩欄皆 NULL 不是安全問題（退化成只有家庭 owner 能動），但表示「上傳者自刪孤兒物件」在雲端不會生效。若真實上傳回 **42501 而路徑本身無誤**，先懷疑是 UPDATE/INSERT 那組 owner／owner_id 釘樁擋下——查 `storage.objects` 該兩欄實際被填了什麼（storage-api 版本可能填出與 `auth.uid()` 不同形態的值）。
 3. **`storage.buckets` 沒有給 authenticated 任何 policy**：客戶端 `listBuckets()` 回空陣列是**預期行為**（bucket 名稱寫死在 app 裡），不是要修的 bug。→ `select count(*) from pg_policy where polrelid = 'storage.buckets'::regclass;` 應為 0；哪天不是 0，表示有人從 dashboard 加了東西。
 
 ## 6. 開發路線圖

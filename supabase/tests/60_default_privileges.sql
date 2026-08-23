@@ -450,7 +450,11 @@ declare
   v_leaky text;
   v_stale text;
 begin
-  select array_agg(f::regprocedure::oid) into v_exc_oids from unnest(v_exceptions) as f;
+  -- coalesce 是必要的不是裝飾：v_exceptions 若被清空，array_agg 對零列取值會回 NULL，
+  -- 下面的 `p.oid <> all (v_exc_oids)` 遇到 NULL 陣列恆得 NULL，WHERE 篩不出任何一列
+  -- ——例外清單空了，這段檢查反而對全體 private 函式靜默通過（fail-open）。
+  select coalesce(array_agg(f::regprocedure::oid), array[]::oid[])
+    into v_exc_oids from unnest(v_exceptions) as f;
 
   -- 清單外的每一支都必須 definer + search_path=""。
   -- coalesce 是必要的不是裝飾：proconfig 為 NULL（＝沒有任何 SET 子句）時
