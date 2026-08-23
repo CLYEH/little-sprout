@@ -20,9 +20,10 @@ import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { hash12 } from './tokens.mjs';
+import { BANDS } from './bands.mjs';
 
 const HERE = new URL('.', import.meta.url).pathname;
-const CODE = ['build.mjs', 'verify.mjs', 'measure.mjs', 'tokens.mjs', 'icon.mjs', 'brush.mjs', '_probe.html', 'selftest.mjs'];
+const CODE = ['build.mjs', 'verify.mjs', 'measure.mjs', 'tokens.mjs', 'icon.mjs', 'brush.mjs', 'ink.mjs', '_probe.html', 'selftest.mjs', 'bands.mjs'];
 const codeFp = hash12(CODE.map((f) => `${f}:${hash12(readFileSync(join(HERE, f), 'utf8'))}`).join('|'));
 
 const stage = () => {
@@ -89,6 +90,11 @@ const SAMPLES = [
   {
     id: 'M2b-偷改驗收排的繪製尺寸', gate: 'G26c', run: runVerify,
     why: '第 4 輪原版：G26 驗 path 與 viewBox（畫的是不是同一份幾何），不驗「畫多大」—— 驗收排上把一顆偷偷畫大，全綠。',
+    /* 第 6 輪：它指名的那一族在 AppIcon 板上暫停了（使用者否決字形 icon 概念），
+       所以這一發現在**必然**是綠的 —— 留著它會讓 MG3 因為一個已知的理由而紅，
+       對照就失去分辨力。**不刪掉**：刪掉的樣本沒有人會記得要補回來。
+       它跟著 G26 族一起停，恢復條件與登記簿那一筆同一句話。 */
+    suspended: 'G26 族在 AppIcon 板上暫停（EXEMPT 的 data-veto=icon-concept）。恢復條件＝外部 icon 素材到位、AppIcon 板重做、那一筆豁免被刪掉。',
     mutate: (d) => edit(d, 'AppIcon.dc.html', (s) => s.replace('data-icon-acc="20" style="width:20px;height:20px', 'data-icon-acc="20" style="width:28px;height:28px')),
   },
   {
@@ -138,6 +144,36 @@ const SAMPLES = [
     mutate: (d) => editJson(d, 'measured.json', (m) => { m.brandLab = m.brandLab.map((b) => ({ ...b, title: 'short', text: '登入', lines: 2 })); }),
   },
   {
+    id: '換了字樣卻沒改宣告', gate: 'G33', run: runVerify,
+    why: '字標換成外部素材之後多了一段以前沒有的距離：那串 37KB 的 path 憑什麼說它出自那張蠟筆？這一發換掉來源圖的內容而不動 ink.mjs 的宣告 —— 沒有 G33 的話，畫面與宣告都沒有人會叫。',
+    mutate: (d) => edit(d, 'mengya-crayon-alpha.png', (s) => `${s}\n`),
+  },
+  {
+    id: '手改字標的一個座標', gate: 'G33', run: runVerify,
+    why: '描摹出來的 path 是 40 條輪廓、幾千個座標，手改一個沒有人看得出來。板上畫的必須逐字元等於 ink.mjs 那一份（與 G26「板上畫的就是被量的那一份」同一招）。',
+    mutate: (d) => edit(d, 'Main.dc.html', (s) => s.replace('data-ink="brush" style="display:block;flex:none"><path d="M', 'data-ink="brush" style="display:block;flex:none"><path d="M1')),
+  },
+  /* ── 門檻洗白重放（reviewer 第 5 輪 D5-02 的原始突變）────────────────────
+     這一發不弄壞任何證據 —— 它只把 tokens.mjs 裡的 AAA 從 7 改成 4.5。
+     第 5 輪這一招讓 144 項全綠、selftest 14 發全部照常轉紅：門檻本身沒有任何人在守。
+     現在 MG4① 讀的是**產物根目錄的原始碼文字**（不是 gate 自己 import 的那一份），
+     所以複本裡被洗白的那一行會與登記簿對不上，當場咬 MG4。 */
+  {
+    id: '門檻洗白－AAA 7→4.5（reviewer 重放）', gate: 'MG4', run: runVerify,
+    why: '第 5 輪的原始突變：一行改動把 AAA 洗成 AA，全綠。門檻沒有出處、沒有登記、沒有人比對 —— 這正是 MG4 存在的理由。',
+    mutate: (d) => edit(d, 'tokens.mjs', (s) => s.replace('export const CONTRAST = { aaa: 7, grain: 6 };', 'export const CONTRAST = { aaa: 4.5, grain: 6 };')),
+  },
+  {
+    id: '門檻洗白－HIG 的 44 改成 40', gate: 'MG4', run: runVerify,
+    why: '同一招換一條門檻：命中盒從 HIG 的 44 洗成 40。登記簿記著它出自 HIG，所以改掉它等於親手刪掉那句引用。',
+    mutate: (d) => edit(d, 'tokens.mjs', (s) => s.replace('tap: 44 }', 'tap: 40 }')),
+  },
+  {
+    id: '門檻洗白－推導式改回手寫字面值', gate: 'MG4', run: runVerify,
+    why: '把 SCALE_DE 從推導式改回三個手寫的數（值一模一樣，全綠）。推導式的門檻沒有自由度，寫回字面值就把自由度放回來了 —— MG4③ 咬的是這件事，不是那三個數。',
+    mutate: (d) => edit(d, 'tokens.mjs', (s) => s.replace('export const SCALE_DE = { adj: 3 * HUE_DE_MIN, ends: 6 * HUE_DE_MIN, band: 1 * HUE_DE_MIN };', 'export const SCALE_DE = { adj: 3, ends: 6, band: 1.0 };')),
+  },
+  {
     id: 'M8-三方對帳（指紋對不上）', gate: 'measure', run: runMeasure,
     why: '第 4 輪 reviewer 兩行改寫就讓三方對帳恆真。這一發把本地 _root.json 改掉，measure 必須當場停 —— 對帳若被改成恆真，它會若無其事地量下去。',
     mutate: (d) => editJson(d, '_root.json', (o) => { o.fp = 'deadbeef0000'; }),
@@ -148,6 +184,16 @@ const SAMPLES = [
     mutate: (d) => edit(d, 'Notes.dc.html', (s) => s.replace('實作註記', '實作註記 ')),
   },
 ];
+
+/* 邊界樣本（bands.mjs）併進來 —— 宣告在那裡、結果寫在 selftest.json，
+   verify 的 MG4②a 讀的是宣告，MG3③ 讀的是結果。分開才不會雞生蛋。 */
+for (const b of BANDS) {
+  SAMPLES.push({
+    id: b.id, gate: b.gate, why: b.why, band: { of: b.of, v: b.v },
+    mutate: (d) => b.mutate(d, b.v, { edit, editJson }),
+    run: runVerify,
+  });
+}
 
 /* ── 跑 ── */
 const base = stage();
@@ -162,22 +208,31 @@ console.log(`selftest: baseline 全綠（gate 程式 #${codeFp}）—— 開始�
 
 const out = [];
 for (const smp of SAMPLES) {
+  /* 暫停中的樣本不跑，但**留在表上**（帶著理由寫進 selftest.json，MG3 會驗那個理由
+     真的對應到一筆具名豁免）。刪掉的樣本沒有人會記得要補回來。 */
+  if (smp.suspended) {
+    out.push({ id: smp.id, gate: smp.gate, why: smp.why, suspended: smp.suspended, red: null, hits: [], hitExpected: null });
+    console.log(`  暫停 －  ${smp.id} → ${smp.gate}（${smp.suspended.slice(0, 28)}…）`);
+    continue;
+  }
   const dir = mkdtempSync(join(tmpdir(), 'ls38d-case-'));
   cpSync(base, dir, { recursive: true });
-  smp.mutate(dir);
+  /* band 一併傳進去 —— 邊界樣本寫進 measured.json 的值，就是它登記給 MG4 檢查的值。
+     同一個數用兩次，所以 band.v 不可能是一個誰都可以填的宣稱。 */
+  smp.mutate(dir, smp.band);
   const r = smp.run(dir);
   const red = r.code !== 0;
   const hitExpected = smp.gate === 'measure' ? red : r.hits.includes(smp.gate);
-  out.push({ id: smp.id, gate: smp.gate, why: smp.why, red, hits: r.hits, hitExpected });
+  out.push({ id: smp.id, gate: smp.gate, why: smp.why, band: smp.band || null, red, hits: r.hits, hitExpected });
   console.log(`  ${red ? (hitExpected ? '轉紅 ✓' : '轉紅但咬錯 ✗') : '**全綠 ✗**'}  ${smp.id} → 期望 ${smp.gate}${red && r.hits.length ? `，實際 ${r.hits.join('/')}` : ''}`);
   rmSync(dir, { recursive: true, force: true });
 }
 rmSync(base, { recursive: true, force: true });
 
-const bad = out.filter((x) => !x.red || !x.hitExpected);
+const bad = out.filter((x) => !x.suspended && (!x.red || !x.hitExpected));
 writeFileSync(new URL('selftest.json', import.meta.url),
   `${JSON.stringify({ codeFp, when: new Date().toISOString().slice(0, 10), samples: out }, null, 2)}\n`);
-console.log(`selftest: ${out.length} 發，${out.filter((x) => x.red && x.hitExpected).length} 發咬到指名的那一條`);
+console.log(`selftest: ${out.length} 發（暫停 ${out.filter((x) => x.suspended).length}），${out.filter((x) => x.red && x.hitExpected).length} 發咬到指名的那一條`);
 if (bad.length) {
   console.error(`selftest: **${bad.length} 發沒有咬到** —— 那幾條 gate 現在沒有牙：${bad.map((x) => x.id).join('、')}`);
   process.exit(1);

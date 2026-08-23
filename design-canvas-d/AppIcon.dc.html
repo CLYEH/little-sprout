@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <!-- ls-measured:cbc2d053f962 -->
+  <!-- ls-measured:12c74c0820f7 -->
   <script src="./support.js"></script>
 </head>
 <body>
@@ -42,7 +42,11 @@
       mix-blend-mode:multiply}
   </style></helmet>
 
-<div class="g" data-grad="paper" style="position:relative;width:1290px;height:3480px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;padding:48px">
+<div class="g" data-grad="paper" data-veto="icon-concept" style="position:relative;width:1290px;height:3660px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;padding:48px">
+  <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px;border-left:2px solid #7E1414;margin-bottom:24px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#2A1219">這張板的概念已被否決（2026-08-23）——底下的內容原地保留，不是現行方案</span><br>
+    <span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B;text-shadow:0 1px 0 rgba(255,246,242,.80)">使用者否決的是<b style="color:#2A1219">「app icon ＝ 一個字」這件事本身</b>，不是這個字的筆觸、也不是它的尺寸 —— 所以換一支筆、換一個字、把它畫粗都不是修法。外部 icon 素材正在另外生成中，下一輪整合；在那之前這張板不重做、也不換字樣（換字樣只會做出一顆一樣被否決的東西）。<br><br><b style="color:#2A1219">板上已經過期的一句話，先講在這裡</b>：底下凡是寫著「與字標<b style="color:#2A1219">同一支筆</b>」的段落，在字標於本輪換成蠟筆之後<b style="color:#2A1219">字面已經不成立</b> —— 這張板上的落款印是第 3 輪那支程式生成的刀。凍結的意思就是「它停在被否決的那一版」，不是「它還對」。<br><br>板上其餘每一段（分層意圖、三種外觀、驗收排、G26 的四條規格、Tinted 的中灰玻璃底）<b style="color:#2A1219">留著是因為它們與「用哪一個圖形」無關</b>：那些是「任何一個圖示都要通過的檢查」，換素材之後照樣要跑一次。<b style="color:#2A1219">G26／G26b／G26c 三族在這張板上暫停</b>，登記在具名豁免簿裡（<code>data-veto="icon-concept"</code> → G26），理由與恢復條件都寫在那一筆上：外部素材到位、這張板重做，就把那一筆刪掉，三族自動恢復。<b style="color:#2A1219">刪不掉就是還沒重做</b> —— 這是豁免簿的等式在守的事（MG2）。</span>
+  </div>
   <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:32px">
     <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B;letter-spacing:.14em">LITTLE SPROUT · 萌芽日記 · APP ICON ＋ LOGO（第 3 輪：重筆＋G26 驗收）</span>
     <h1 style="font-size:34px;line-height:40px;font-weight:700;letter-spacing:-.012em;color:#2A1219;margin:0">落款印</h1>
@@ -304,7 +308,7 @@
     
   <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
     <span style="font-size:15px;line-height:21px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)">ios-dev／生產（本輪是概念稿，尚未出檔）</span>
-    <span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">兩層各出一份：<code>background</code>（1024 純漸層，PNG 或 SVG）、<code>foreground</code>（1024 透明底墨跡 SVG）。用 <b>Xcode 的 Icon Composer</b> 合成，讓系統自己生 Light／Dark／Clear 三種外觀 —— 不要手動出三張 PNG。</span><span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>不要自己畫 squircle、不要自己加圓角、不要自己加陰影或高光</b>：遮罩與 Liquid Glass 的材質是系統的事。我們只交一張紙與一團墨。</span><span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">墨跡的外框寬 ＝ 畫布的 66%、垂直置中（落款印自己的 viewBox 94:104，字標長版是 180:91）。這兩個 bbox 都是推出來的，不是手量的。</span><span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>本輪尚未交付的</b>：實際 PNG／SVG 檔、Icon Composer 專案、watchOS／macOS 的變體、App Store 1024 的最終出檔。這一張板是概念與版式的定稿依據，下一輪補檔。<b>不需要再等的是幾何</b>：刻的那支筆的筆寬映射（7.5→16.5、提按 ×0.55）與 66% 的置中已經定案，出檔照著 icon.mjs 產就好。</span>
+    <span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">兩層各出一份：<code>background</code>（1024 純漸層，PNG 或 SVG）、<code>foreground</code>（1024 透明底墨跡 SVG）。用 <b>Xcode 的 Icon Composer</b> 合成，讓系統自己生 Light／Dark／Clear 三種外觀 —— 不要手動出三張 PNG。</span><span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>不要自己畫 squircle、不要自己加圓角、不要自己加陰影或高光</b>：遮罩與 Liquid Glass 的材質是系統的事。我們只交一張紙與一團墨。</span><span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B">墨跡的外框寬 ＝ 畫布的 66%、垂直置中（落款印自己的 viewBox 94:104，字標長版是 193:111）。這兩個 bbox 都是推出來的，不是手量的。</span><span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>本輪尚未交付的</b>：實際 PNG／SVG 檔、Icon Composer 專案、watchOS／macOS 的變體、App Store 1024 的最終出檔。這一張板是概念與版式的定稿依據，下一輪補檔。<b>不需要再等的是幾何</b>：刻的那支筆的筆寬映射（7.5→16.5、提按 ×0.55）與 66% 的置中已經定案，出檔照著 icon.mjs 產就好。</span>
   </div>
   </div>
 

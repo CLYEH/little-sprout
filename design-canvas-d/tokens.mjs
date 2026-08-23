@@ -142,7 +142,18 @@ export const T = {
     board: '#261416', board2: '#1F1013', board3: '#372020', lit: '#462B28',
     ink: '#F8E7E2', ink2: '#DCBEBC',
     cta: '#E3A9C4', ctaDeep: '#995F7F', ctaBusy: '#C39BAE', onCta: '#261416',
-    pen: '#FFAE86', sprout: '#8FD2A6', onSprout: '#261416',
+    /* 朱（紅筆）：第 6 輪 D5-03 從 #FFAE86 改成 #FFAC9E。
+       舊值的色相是 52.16°，比淺色的朱（34.23°）**往暖轉 +17.94°** —— 而全稿四階台紙在
+       深色下是往冷轉 −19° 到 −21°。一支顏料在同一份設計裡往兩個相反的方向跑，
+       只能是巧合或藉口。改法回到隱喻本身：**朱是筆，不是紙**。
+       紙會因為時間與光改變顏色（那是四階台紙那條 −19° 的來源）；筆的顏料不會 ——
+       白天寫的紅字與晚上寫的紅字是同一支筆。所以深色的朱與淺色的朱**同一個色相角**
+       （實測差 0.09°），變的只有兩件事，而且兩件都是被逼的：
+         · L* 26.70 → 78.02：深底上要維持 AAA，紅必須變亮（實測對深色四階 7.12–10.20:1）
+         · C* 52.84 → 34.85：sRGB 在 L*78 上這個色相角的可表示彩度上限就是 34.85
+           （掃描過：再高就出界）—— 不是我們選擇讓它變淡。
+       G23⑥ 把這三句話變成三個斷言。 */
+    pen: '#FFAC9E', sprout: '#8FD2A6', onSprout: '#261416',
     edge: '#A0807C',
     knob: '#FFFFFF', wellEdge: '#5A3B37',
     glassFill: 'rgba(55,32,32,.70)', glassEdge: 'rgba(255,255,255,.16)', glassDim: 'rgba(0,0,0,.28)',
@@ -302,7 +313,7 @@ export const GRAD_WHY = {
 /* 騎縫線第 4 輪還在這張表裡（它那時是一條 repeating-linear-gradient 的圖樣）。
    本輪它改成遮罩挖出來的洞 —— 遮罩不是背景，所以它從漸層清冊裡整個離開：
    平印面上合法的背景漸層因此從兩個減成**一個**（只剩號碼帶）。理由見 PERF。 */
-export const PERF_WHY = '騎縫線＝紙被打穿。它不是畫上去的線，是遮罩挖掉的洞：底下透出來的是台紙本身。票根（還沒撕）上下兩半各切自己那一緣的一半，合起來是完整的圓孔；托盤（已經從我們自己那張紙上撕下來）只切上緣，留下半圓的扇貝邊。齒距綁 ax()，所以字級放大時紙上的齒跟著變大。';
+export const PERF_WHY = '騎縫線＝紙被打穿。它不是畫上去的線，是遮罩挖掉的洞：底下透出來的是台紙本身。票根（還沒撕）上下兩半各切自己那一緣的一半，合起來是完整的圓孔；托盤（已經從我們自己那張紙上撕下來）只切上緣，留下半圓的扇貝邊。齒距綁 ax()，所以字級放大時紙上的齒跟著變大。<b>第 6 輪再進一步：那些洞不再等距、也不再一樣大</b> —— 五顆一循環的抖動（圓心偏移最大 0.21 個齒距、半徑比例 0.82–1.14），因為等距等大的圓孔是打孔機打的，手撕不會。抖動是<b>寫死的一組數不是亂數</b>：產物可重現、gate 驗得到，而且「抖多少」是設計決定的。撕口另外有一道 <b>1px 的斷面唇</b>（紙芯露出來、在光下反光），用 drop-shadow 畫 —— 它吃的是遮罩之後的輪廓，所以那道唇沿著每一顆扇貝的弧走；box-shadow 只會沿著矩形。唇的顏色由 dir 決定（朝光＝亮邊、背光＝暗邊），沒有第二個光源。';
 
 /* 刻意<b>沒有</b>漸層的表面，每一個都要有理由 —— 「規則有例外可以，例外沒印出來不行」。 */
 export const NO_GRAD_WHY = {
@@ -346,14 +357,41 @@ export const PERF = {
 /* 一層遮罩 ＝ 一種形狀。三層取交集（intersect）：一排圓孔 ∩ 左缺口 ∩ 右缺口。
    edge='bottom' 切自己的下緣、'top' 切自己的上緣。位置用百分比不用 px ——
    元件高度會隨 Dynamic Type 變，用 px 的話齒孔會跑掉。 */
+/* ── 撕邊不是機器切的（第 6 輪 D5-06）────────────────────────────────
+   第 5 輪把騎縫線從「畫上去的線」改成「遮罩挖掉的洞」——那一步是對的，但那些洞
+   **等距而且一樣大**：那是打孔機打出來的，不是手撕的。真的撕開一張紙，齒的間距與
+   大小都會抖，而且撕口的斷面會露出紙芯，在光下是一道很細的亮唇（軌 C 的 paper-edge
+   已經證明這一手有效）。兩件事一起補，兩件都**不是隨機數**：
+     · JITTER 是一組寫死的抖動（五顆一循環），所以產物可重現、gate 驗得到，
+       而且「抖多少」是設計決定的不是亂數決定的（dx 是齒距的比例、dr 是半徑的比例）
+     · 亮唇由 dir 決定顏色：撕口朝著光就是亮邊、背著光就是暗邊 —— 沒有第二個光源
+   五顆一循環（不是三顆）是刻意的：托盤寬約 342px、齒距 18px，五顆的週期 90px
+   在一條邊上會重複不到四次，眼睛讀不出那是一個循環。 */
+export const PERF_TILE = 5;
+export const JITTER = [
+  { dx: 0, dr: 1 },
+  { dx: .18, dr: .82 },
+  { dx: -.12, dr: 1.14 },
+  { dx: .07, dr: .93 },
+  { dx: -.21, dr: 1.06 },
+];
 export const perfMask = (edge, pitch = PERF.pitch, { r = PERF.r, notch = PERF.notch } = {}) => {
   const y = edge === 'top' ? '0' : '100%';
   const hole = (cx, rad) => `radial-gradient(circle ${rad}px at ${cx} ${y}, transparent ${rad}px, #000 ${rad + 0.5}px)`;
-  const img = [hole('50%', r), hole('0', notch), hole('100%', notch)].join(', ');
-  const size = [`${pitch}px 100%`, '100% 100%', '100% 100%'].join(', ');
-  const rep = ['repeat-x', 'no-repeat', 'no-repeat'].join(', ');
-  return `-webkit-mask-image:${img};-webkit-mask-size:${size};-webkit-mask-repeat:${rep};-webkit-mask-composite:source-in,source-in;`
-    + `mask-image:${img};mask-size:${size};mask-repeat:${rep};mask-composite:intersect,intersect`;
+  const tile = PERF_TILE * pitch;
+  const teeth = JITTER.map((j, i) => hole(`${((i + .5 + j.dx) * pitch).toFixed(2)}px`, +(r * j.dr).toFixed(2)));
+  const img = [...teeth, hole('0', notch), hole('100%', notch)].join(', ');
+  const size = [...teeth.map(() => `${tile}px 100%`), '100% 100%', '100% 100%'].join(', ');
+  const rep = [...teeth.map(() => 'repeat-x'), 'no-repeat', 'no-repeat'].join(', ');
+  const n = teeth.length + 1;   // composite 的層數比 image 少一層
+  return `-webkit-mask-image:${img};-webkit-mask-size:${size};-webkit-mask-repeat:${rep};-webkit-mask-composite:${Array(n).fill('source-in').join(',')};`
+    + `mask-image:${img};mask-size:${size};mask-repeat:${rep};mask-composite:${Array(n).fill('intersect').join(',')}`;
+};
+/* 撕口的斷面。drop-shadow 吃的是**遮罩之後的輪廓**（不是矩形的 box），
+   所以這道 1px 的唇會沿著每一顆扇貝的弧走 —— box-shadow 做不到這件事。 */
+export const perfLip = (th, edge) => {
+  const lit = th.dir > 0 ? edge === 'top' : edge !== 'top';
+  return `filter:drop-shadow(0 ${edge === 'top' ? -1 : 1}px 0 ${lit ? th.bevelLit : th.bevelDark})`;
 };
 
 /* ── 深色的照片：少一格光（第 5 輪 D4-03）───────────────────────────
@@ -378,8 +416,15 @@ export const PHOTO_STOP_TOL = 0.04;
      ① 還沒用的格改畫**當前階**（與號碼帶同一支漸層，ΔE→0）
      ② 用掉的格蓋一道**朱筆銷記**（照相館的存根蓋銷）
    門檻：相鄰狀態之間，同一個格位的最大 ΔE ≥ adj；剛印好 ↔ 用完了之間，
-   三個格位**每一個**都要 ≥ ends。逐格對位比，因為人讀的是「哪一格不一樣」。 */
-export const SCALE_DE = { adj: 3, ends: 6, band: 1.0 };
+   三個格位**每一個**都要 ≥ ends。逐格對位比，因為人讀的是「哪一格不一樣」。
+
+   **第 6 輪 D5-02：這三個數改寫成推導**（可推導的門檻不該是手寫的字面值）。
+   全部長在 HUE_DE_MIN（＝CIE ΔE*ab 的 JND，剛好分得出來的最小色差）上：
+     band ＝ 1 個 JND  ——「未用格與號碼帶是同一支漸層」＝ 兩者的差要在人眼分不出來之內
+     adj  ＝ 3 個 JND  —— 相鄰兩態要「一眼讀得出不一樣」，不是「盯著比才看得出來」
+     ends ＝ 2 × adj   —— 兩端之間隔了三步；每一步都要達到 adj，兩端至少是相鄰的兩倍
+   換句話說：這三個門檻只有一個自由參數，而那個參數有外部出處。 */
+export const SCALE_DE = { adj: 3 * HUE_DE_MIN, ends: 6 * HUE_DE_MIN, band: 1 * HUE_DE_MIN };
 
 /* ── 具名豁免登記簿（第 5 輪 D4-07②）────────────────────────────
    第 4 輪的 M1b：在任何一個元素上加 data-light="隨便什麼值" 就能讓它整個豁免 G24 的
@@ -409,6 +454,11 @@ export const EXEMPT = [
     why: 'iPad 內容欄的左緣投影是**幾何**造成的（那張紙壓在照片上，影子往左投），不是上下受光緣；G24 驗的是上下緣的相對亮度，對一道左向投影沒有意義。',
   },
   {
+    marker: 'data-veto', role: 'icon-concept', gate: 'G26',
+    files: ['AppIcon'],
+    why: '使用者於 2026-08-23 否決了「app icon ＝ 一個字」這個概念本身（不是筆觸、不是尺寸 —— 是字形 icon 這件事），外部 icon 素材另外生成中。所以 AppIcon 板整張凍結在被否決的那一版，G26／G26b／G26c 三族在這張板上暫停：它們量的是「那顆落款印讀不讀得出來」，而那顆印已經不是我們要交的東西了。恢復條件＝外部素材到位、AppIcon 板重做，屆時把這一筆從登記簿刪掉，三族自動恢復（刪不掉就是還沒重做）。',
+  },
+  {
     marker: 'data-cancel', role: 'stub', gate: 'G4',
     files: ['InviteRequests', 'InviteRequestsMany', 'InviteSpent', 'GlassSeam', 'Tokens'],
     why: '票根刻度上「用掉的格」蓋的那一道朱筆銷記。G4 管的是「朱＝錯誤訊號，每張板最多兩處」；銷記是紅筆的另一個本業（劃掉），不是錯誤 —— 它永遠只出現在刻度格裡，而且一次出現幾道由剩餘次數決定，不是由設計者決定。',
@@ -420,6 +470,14 @@ export const EXEMPT = [
    grain 顆粒層把底乘暗之後的下限。顆粒是每畫素的雜訊，最暗的那一格是極端值，
          不拿它當 AAA 門檻（那會逼整套色階失真），但它必須留在 AA 以上很多。 */
 export const CONTRAST = { aaa: 7, grain: 6 };
+/* 開關把手對軌道的下限（G19b①）。第 5 輪這個 3 是**寫死在 verify.mjs 裡的一個字面值** ——
+   一條連自己的門檻都沒有出處的 gate。它有外部出處：WCAG 2.1 SC 1.4.11 Non-text Contrast
+   規定「識別 UI 元件所必需的視覺資訊」至少 3:1，把手停在哪一端正是那種資訊。 */
+export const KNOB_CR = 3;
+/* 朱在深淺兩個模式之間的色相角容差（G23⑥）。它是**同一支筆**：
+   深色的朱只准為了對比變亮、為了色域變淡，不准換色相。1° 是 8 bit 網格上
+   同一個角度找得到的最接近點的抖動幅度 —— 比它大就不是「同一個角度」了。 */
+export const PEN_DH = 1;
 
 /* ── 間距：七階，沒有第八階 ──────────────────────────
    每一個 gap / padding / margin 都必須是這七階、FIX 常數、或 0。
@@ -492,6 +550,40 @@ export const H1_GROUPS = {
   '歡迎頁（H1 在卡紙裡）': ['Main', 'WelcomeDark'],
 };
 export const H1_EXCLUDED = ['WelcomeIPad', 'ForkIPad', 'StressType', 'StressLoginAX', 'StressCodeAX', 'StressContent', 'Tokens', 'Notes', 'AppIcon', 'GlassSeam'];
+
+/* ── 板級排除登記簿（第 6 輪 D5-04）─────────────────────────────────
+   第 5 輪 reviewer：G10 的排除清單只寫在註解裡，斷言印出來的是「35 張板全部通過」——
+   看的人不知道那 35 裡少了哪幾張。更糟的是同樣的排除在四個地方各寫了一份**內嵌正則**，
+   而且四份都不一樣（`Tokens|Notes|AppIcon|GlassSeam`／`Tokens|Notes|AX`／
+   `Tokens|Notes|Stress`／`Tokens|Notes|Stress|AppIcon|GlassSeam`），其中兩處連註解都沒有。
+   四份各自漂移的排除清單＝四個沒有人看得見的豁免。
+
+   現在它們是**一張具名的表**：每一條 gate 排除哪幾張板、為什麼，寫在這裡；
+   verify 與 measure 都從這裡讀；斷言把排除的板名**印出來**（G34 另外反驗
+   「登記的板真的存在」與「沒有一條 gate 還在用內嵌正則」）。 */
+export const DELIVERY_BOARDS = ['Tokens', 'Notes', 'AppIcon', 'GlassSeam'];
+export const STRESS_BOARDS = ['StressType', 'StressLoginAX', 'StressCodeAX', 'StressContent'];
+export const SCOPE = {
+  G4: { skip: DELIVERY_BOARDS,
+    why: '交付板上的朱是圖例與標註（色票、gate 代號、被否決的標示），不是畫面上給使用者看的錯誤訊號。壓力板不排除 —— 它們是真的畫面，只是字級被推到極端。' },
+  G7: { skip: [...DELIVERY_BOARDS.filter((b) => b !== 'AppIcon' && b !== 'GlassSeam'), 'StressLoginAX', 'StressCodeAX'],
+    why: '六位碼的兩種正典（票根 60pt／輸入格 36pt）只在一般字級成立。AX 板的字級被乘上 2.35 或 3.1，量到的會是推導值不是正典；AppIcon 與 GlassSeam 上沒有六位碼，列在這裡是為了讓「沒有樣本」與「被排除」分得開。' },
+  G8: { skip: [...DELIVERY_BOARDS.filter((b) => b !== 'AppIcon' && b !== 'GlassSeam'), ...STRESS_BOARDS],
+    why: '「每張流程板最多一個最外層陶土區塊」講的是畫面的視覺重量分配。交付板是規格文件（Tokens 板上光色票就有好幾塊），壓力板是同一個畫面的多個字級版本疊在一起。' },
+  G10: { skip: [...DELIVERY_BOARDS, ...STRESS_BOARDS],
+    why: '呼吸帶與板高兩條規則的落地範圍是「一個會被捲動、有主按鈕的畫面」。交付板是文件（Tokens 板 8760px 高本來就要捲）、壓力板是把同一個畫面的三個字級版本並排 —— 兩者都不是使用者會走到的畫面。' },
+  'G23-stub': { skip: ['Tokens'],
+    why: 'Tokens 板把褪色階**全部四階**並排印出來當色票（那是它的工作），所以「一張板上的號碼帶階數＝那張板上印的剩餘次數」在它身上不成立。它不是被跳過：斷言改印「這張板印了全部幾階」。' },
+  'G23-scale': { skip: ['Notes'],
+    why: 'Notes 板寫的是三格刻度的**規格文字**，不是刻度本身；掃它會掃到規格句裡的 data-scale 字串而不是畫出來的格子。' },
+  G15: { skip: ['AppIcon'],
+    why: '「落單的筆跡」（不在 lockup 裡的 data-ink="brush"）只准出現在 AppIcon 板上 —— 那張板講的就是「把一個字單獨拿去刻成印」，落款印本來就只有筆跡沒有系統字。其他任何板上出現半組字標一律 FAIL。' },
+  cta: { skip: [...DELIVERY_BOARDS.filter((b) => b !== 'AppIcon' && b !== 'GlassSeam'), ...STRESS_BOARDS],
+    why: 'measure 端算「流程板的陶土計數」時用的同一份範圍（G8 讀它）。兩邊共用一筆登記，不再各寫一份正則。' },
+};
+/* 檔名 → 這條 gate 管不管它。板名比對用的是**去掉副檔名的完整板名**，不是正則片段 ——
+   `AX` 這種片段會順手掃到任何名字裡有 AX 的板，那正是第 5 輪四份清單漂移的方式。 */
+export const inScope = (gate, file) => !(SCOPE[gate].skip.includes(String(file).replace(/\.dc\.html$/, '')));
 
 /* cap-height 佔字級的比例（SF Pro / PingFang 實測近似）。
    iPad 跨欄基線與 H1 分組基線都用這個常數換算，verify 也用同一個。 */

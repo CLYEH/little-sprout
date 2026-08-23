@@ -11,9 +11,18 @@
 //   **系統字的是「日記」（東西的種類）**。險只冒在一個地方，其餘保持安靜；
 //   而且「日記」是真的文字，會跟著 Dynamic Type 長大，手寫的那兩個字是圖不會。
 //
-// 做法：每一筆給一條三次貝茲中線 + 起筆寬 + 收筆寬 + 中段提按，
-// 取樣後往法線兩側推出外框，輸出成填色多邊形。所以筆畫真的有粗細變化，
-// 不是「圓頭 stroke 假裝手寫」。
+// ── 第 6 輪：那兩個字換成蠟筆（使用者定案）──────────────────────────
+// 第 1–5 輪的「萌芽」是這支檔案用貝茲中線推出來的筆跡。工藝上站得住（光學密度配平、
+// 共基線 1px），**但使用者判它「很醜」**——那是 glyph 品質層的否決，程式生成的
+// 楷體筆跡再怎麼調也做不出一隻手真的握著筆的樣子。所以換的是**字樣**：
+// 外部生成的蠟筆手寫「萌芽」描成向量（見 trace.py／ink.mjs），
+// 規則一條都沒有換：材質標記 data-ink、整組一個 aria 名稱、跨板五個使用點、字距與版位。
+//
+// 這支檔案因此剩下三件事：① 兩顆貝茲「芽」的落款印（AppIcon 板用；**本輪原地不動** ——
+// 使用者於 2026-08-23 否決了「app icon ＝ 一個字」這個概念本身，外部素材生成中）；
+// ② 朱筆銷記（那是**另一支筆**，見下面）；③ 字標與落款印的包裝（aria、材質標記、尺寸）。
+
+import * as Ink from './ink.mjs';
 
 const bez = (p, u) => {
   const v = 1 - u, a = v * v * v, b = 3 * v * v * u, c = 3 * v * u * u, d = u * u * u;
@@ -22,15 +31,6 @@ const bez = (p, u) => {
 };
 
 const r2 = (n) => Math.round(n * 100) / 100;
-
-// 每一筆的外框點都記在這裡，viewBox 由它算出來 —— 第 1 輪的四個 bbox 數字是手量的，
-// 換了字就會過期（換名字這件事正好證明了這一點）。現在它是推出來的。
-let BOX = null;
-const seen = (x, y) => {
-  if (!BOX) BOX = { x0: x, y0: y, x1: x, y1: y };
-  BOX.x0 = Math.min(BOX.x0, x); BOX.y0 = Math.min(BOX.y0, y);
-  BOX.x1 = Math.max(BOX.x1, x); BOX.y1 = Math.max(BOX.y1, y);
-};
 
 /* 筆寬的映射函式。寫的（字標）用 ident：宣告多寬就多寬。
    刻的（落款印）另給一支 —— 見 icon.mjs 的 CARVE。**中線一個點都不動**，
@@ -62,7 +62,8 @@ const stroke = (pts, w0, w1, swell = 0, place = null) => {
     const w = (w0 + (w1 - w0) * u) * (1 + swell * Math.sin(Math.PI * u)) / 2;
     L.push([r2(x - ty * w), r2(y + tx * w)]);
     R.push([r2(x + ty * w), r2(y - tx * w)]);
-    if (place) for (const p of [L[i], R[i]]) seen(...place(p));
+    // place 是 bbox 的回收口（buildSeal 傳進來收自己那顆印的外框），不改幾何
+    if (place) { place(L[i]); place(R[i]); }
   }
   const path = [`M${L[0][0]} ${L[0][1]}`];
   for (let i = 1; i <= N; i++) path.push(`L${L[i][0]} ${L[i][1]}`);
@@ -71,8 +72,15 @@ const stroke = (pts, w0, w1, swell = 0, place = null) => {
 };
 
 /* ── 銷記：照相館在用掉的存根上劃掉的那一道（第 5 輪 D4-01）──────────
-   同一支筆、同一個 stroke() 模型 —— 一道由粗到細、右上收鋒的斜劃（右手劃掉的方向）。
-   不是 CSS 畫的 ✗、不是圓頭 stroke 假裝的手筆：它與字標、落款印是同一份幾何模型。
+   一道由粗到細、右上收鋒的斜劃（右手劃掉的方向），走 stroke() 的模型：
+   有起筆寬、收筆寬、中段提按 —— 不是 CSS 畫的 ✗，也不是圓頭 stroke 假裝的。
+
+   **第 6 輪的誠實話**：字標換成蠟筆之後，這一道與字標**不是同一支筆了**，
+   而那是對的 —— 這兩筆本來就不是同一個人畫的。字標是這個名字被寫下來的樣子（蠟筆、
+   孩子的手）；銷記是照相館的人拿紅筆在存根上劃掉用過的那一格（朱、店員的手）。
+   第 5 輪板上那句「它與字標、落款印是同一份幾何模型」在本輪之後字面為假，
+   所以板上那句話跟著改（見 build 的刻度說明與 Tokens 板）：共用的是 stroke() 這支
+   **模型**（真的有提按的筆跡），不是同一隻手。
    顏色是朱（紅筆的另一個本業：劃掉），豁免登記在 tokens.mjs 的 EXEMPT 裡。 */
 const CANCEL_VB = { x: 0, y: 0, w: 100, h: 60 };
 const CANCEL_D = withWidth(identWidth, () => stroke([[8, 52], [32, 41], [63, 22], [92, 8]], 16, 6, .1));
@@ -101,27 +109,6 @@ const grass = (v, place) => [
   stroke([[31 - v, 11 + v], [30, 18], [29, 26], [27.5, 35 - v]], 6.2, 4.6, 0, place),
   stroke([[67.5 + v, 10 + v * 1.4], [69, 18], [70.5, 26], [72, 35 - v]], 4.8, 6.6, 0, place),
 ];
-
-/* ── 萌（0–100 見方）───────────────────────────────────
-   艹 在上（壓扁到 y 8–35），明在下：日在左、月在右。
-   日的橫折拆成「上橫＋右豎」兩筆下筆 —— 手寫時本來就是一筆轉過去，
-   拆成兩段才畫得出轉角處的提按。 */
-const MENG = (place) => [
-  ...grass(0, place).map((s) => s),
-  // 日
-  stroke([[13, 41], [13.6, 58], [14, 75], [14.5, 91]], 7.4, 5.8, 0, place),
-  stroke([[12, 41], [23, 40], [34, 39], [45, 38]], 5.6, 7.2, .05, place),
-  stroke([[45, 38.5], [44.5, 56], [44, 74], [43.4, 90]], 7.6, 6, 0, place),
-  stroke([[15, 66], [24, 65.6], [34, 65.2], [44, 64.8]], 4.6, 6, .05, place),
-  stroke([[14, 90], [24, 89.6], [34, 89.2], [44, 88.6]], 5, 6.6, .05, place),
-  // 月
-  stroke([[64, 36], [61, 55], [58, 76], [52, 97]], 7.6, 2.2, .05, place),
-  stroke([[64, 35], [74, 34.3], [84, 33.8], [94, 33]], 5.4, 7, .05, place),
-  stroke([[94, 34], [93.4, 52], [92.8, 70], [92, 88]], 7.4, 6, 0, place),
-  stroke([[92, 88], [90.5, 94], [85, 97.5], [76, 95]], 6, 1.2, 0, place),
-  stroke([[60, 57], [70, 56.6], [81, 56.2], [91, 55.8]], 4.4, 5.8, .05, place),
-  stroke([[56, 78], [68, 77.6], [79, 77.2], [90, 76.8]], 4.4, 5.8, .05, place),
-].join('');
 
 /* ── 芽（0–100 見方）─────────────────────────────────
    艹（第二次落筆，弧度與出頭都差一點）＋牙：左上短撇、長橫、長撇、右豎鉤。 */
@@ -164,26 +151,14 @@ const YA_SEAL = (place) => [
   stroke([[78, 90], [75, 96], [68, 99.5], [58, 97]], 7.2, 2.2, 0, place),
 ].join('');
 
-/* 兩字並排：手寫的字不會排得像表格 —— 第二個字微微下沉、微微轉一點，
-   是筆跡自然的參差。字距收到 93（原 100）：兩字之間的白比字內的白小，
-   才會讀成一個詞，而不是兩個各自站著的字。
-   兩組 transform 與下面兩個 place() 是同一組數 —— viewBox 因此貼著真正的墨跡。 */
-const T1 = { dx: 2, dy: 2, rot: -1.1, s: .97 };
-const T2 = { dx: 93, dy: -1, rot: .9, s: 1 };
-const placer = (t) => ([x, y]) => {
-  const a = t.rot * Math.PI / 180;
-  const px = (x - 50) * t.s, py = (y - 50) * t.s;
-  return [t.dx + 50 + px * Math.cos(a) - py * Math.sin(a), t.dy + 50 + px * Math.sin(a) + py * Math.cos(a)];
-};
-const MENG_D = MENG(placer(T1));
-const YA_D = YA(placer(T2));
-const PAD = 1.5;   // 抗鋸齒餘裕
-export const VB = {
-  x: r2(BOX.x0 - PAD), y: r2(BOX.y0 - PAD),
-  w: r2(BOX.x1 - BOX.x0 + PAD * 2), h: r2(BOX.y1 - BOX.y0 + PAD * 2),
-};
+const PAD = 1.5;   // 抗鋸齒餘裕（沿革對照那兩顆貝茲印自己的 bbox 用）
 
-const gt = (t) => `translate(${t.dx} ${t.dy}) rotate(${t.rot} 50 50) scale(${t.s})`;
+/* 字標的 viewBox 現在是描摹出來的那一份（ink.mjs），不是這裡推的。
+   兩字的相對位置、下沉與參差因此不是我們排的 —— 是寫的人自己那樣寫的。
+   第 1–5 輪那組 transform（T1/T2、字距 93、第二字微微轉 0.9°）連同「萌」的貝茲幾何
+   一起除役：留著不畫的字＝死碼，而它想證明的事（兩字之間的白比字內的白小）
+   現在由字樣本身承擔。 */
+export const VB = Ink.LOCKUP.vb;
 
 /* 落款印：app icon 用的單字版，只取「芽」——**同一支筆的同一份幾何**，
    不是另外畫一個圖形（換一支筆就等於換一個品牌）。
@@ -215,9 +190,16 @@ export const buildSeal = (wf = identWidth) => {
 };
 const WRITTEN_SEAL = buildSeal();
 export const SEAL_VB = WRITTEN_SEAL.vb;
-/* data-seal 標的是「這一顆印是用哪一支筆刻的」：carved ＝ 正式的落款印、
+/* data-seal 標的是「這一顆印是用哪一支筆刻的」：carved ＝ 那顆落款印、
    written ＝ 只在 AppIcon 板上出現一次的對照（第 2 輪那一版）。
-   G26 靠這個標記把對照排除掉，而且**斷言對照只有一顆** —— 不然「排除」會變成漏洞。 */
+   G26 靠這個標記把對照排除掉，而且**斷言對照只有一顆** —— 不然「排除」會變成漏洞。
+
+   **第 6 輪：這兩顆都停在原地**。使用者於 2026-08-23 否決了「app icon ＝ 一個字」
+   這個概念本身（不是筆觸問題），外部 icon 素材正在生成中 —— 所以落款印**不換字樣**，
+   AppIcon 板整張標示為已否決、待整合，G26／G26b 掛具名豁免（登記在 tokens.mjs 的 EXEMPT）。
+   字標（下面的 inkMark）換蠟筆不受影響：被否決的是 icon 用字，不是 wordmark。
+   刻意**不**在這裡加 fill-rule：這兩顆印是逐筆外框的聯集，筆與筆本來就重疊，
+   even-odd 會把重疊處挖成洞（描摹出來的字標才是 even-odd，見 inkMark）。 */
 export const sealMark = (size, color, seal = WRITTEN_SEAL) =>
   `<svg width="${Math.round(size)}" height="${Math.round(size * seal.vb.h / seal.vb.w)}" viewBox="${seal.vb.x} ${seal.vb.y} ${seal.vb.w} ${seal.vb.h}" fill="${color}" role="img" aria-label="萌芽日記的落款印" data-ink="brush" data-seal="${seal === WRITTEN_SEAL ? 'written' : 'carved'}" style="display:block">${seal.d}</svg>`;
 
@@ -228,12 +210,16 @@ export const sealMark = (size, color, seal = WRITTEN_SEAL) =>
    那是拿內容當結構用：正文裡出現一次「萌芽日記」就會讓斷言變綠，
    而真正要守的是**材質**（哪一塊是手寫的、哪一塊是系統字的）。第 3 輪改成屬性標記：
    data-ink="brush"（筆跡，是圖，不隨 Dynamic Type 長大）／"system"（真文字，會長大）。
-   G15 掃的是這兩個標記的配對，與字元無關 —— 換名字、換語言都不會讓它失效。 */
+   G15 掃的是這兩個標記的配對，與字元無關 —— 換名字、換語言都不會讓它失效。
+
+   **第 6 輪換蠟筆時，這個包法逐字保留**（reviewer 的補充第二條）：
+   外層 role="img" aria-label="萌芽日記"、裡面兩塊全部 aria-hidden。
+   少了任何一半，讀螢幕的人就會聽到「萌芽日記 萌芽日記」——換字樣不該改變聽到的東西。 */
 export const inkMark = (spec, color, subColor = color) => {
   const h = Math.round(spec.h), w = Math.round(spec.h * VB.w / VB.h);
   return `<span role="img" aria-label="萌芽日記" data-lockup="1" style="display:inline-flex;align-items:flex-end;gap:${spec.gap}px">`
-    + `<svg width="${w}" height="${h}" viewBox="${VB.x} ${VB.y} ${VB.w} ${VB.h}" fill="${color}" aria-hidden="true" data-ink="brush" style="display:block;flex:none">`
-    + `<g transform="${gt(T1)}">${MENG_D}</g><g transform="${gt(T2)}">${YA_D}</g></svg>`
+    + `<svg width="${w}" height="${h}" viewBox="${VB.x} ${VB.y} ${VB.w} ${VB.h}" fill="${color}" fill-rule="${Ink.FILL_RULE}" aria-hidden="true" data-ink="brush" style="display:block;flex:none">`
+    + `<path d="${Ink.LOCKUP.d}"/></svg>`
     + `<span aria-hidden="true" data-ink="system" style="font-size:${spec.sub}px;line-height:${spec.sub}px;font-weight:500;letter-spacing:.16em;color:${subColor};white-space:nowrap">日記</span>`
     + '</span>';
 };

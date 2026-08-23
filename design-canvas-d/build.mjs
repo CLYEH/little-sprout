@@ -4,12 +4,13 @@ import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import {
   T, SP, FIX, TY, FONT, MONO, CAP, H1_GROUPS, H1_EXCLUDED, RULE, AX, ax, AX4, ax4, hash12,
   GRAD_WHY, NO_GRAD_WHY, PERF_WHY, GRAD_KEYS, STUB_KEYS, LIGHT_KEYS, TIME_KEYS, CONTRAST, gradCss,
-  PERF, perfMask, PHOTO_STOP, PHOTO_DIM, SCALE_DE, EXEMPT,
+  PERF, perfMask, perfLip, PERF_TILE, JITTER, PHOTO_STOP, PHOTO_DIM, SCALE_DE, EXEMPT,
   TRACK, TEMP, TEMP_TOL, HUE_MIN, LIGHT_DH, TIME_DH, STUB_KNEE, STUB_AT_KNEE, STUB_USES, USES_TOTAL,
   lch, lchHex, dHue, dE, stubOf, hueDE, HUE_DE_MIN, INSET_KEYS, measStamp,
 } from './tokens.mjs';
 import { inkMark, sealMark, VB, cancelMark, CANCEL_COV } from './brush.mjs';
 import * as Icon from './icon.mjs';
+import * as Ink from './ink.mjs';
 
 /* ── 給自驗管線的標記 ──────────────────────────────────
    verify/measure 不用猜元件是什麼，直接讀這些屬性 ——
@@ -151,8 +152,10 @@ const rule = (t) => `<div style="height:${FIX.hair}px;background:${t.edge}"></di
      · joined（票根，還沒撕）＝上下兩半各切自己那一緣的一半 → 合起來是完整的圓孔
        torn （托盤，撕下來的那一邊）＝只切一緣 → 半圓的扇貝邊
    perfCut() 回傳的是「屬性＋樣式片段」，貼在**要被切的那個元素**上。 */
-const perfCut = (kind, edge, pitch = PERF.pitch) =>
-  ({ attr: ` data-perf="${kind}-${edge[0]}"`, css: perfMask(edge, pitch) });
+/* 撕口 ＝ 遮罩挖掉的洞（不等距、不等大）＋ 沿著輪廓的 1px 斷面唇（第 6 輪 D5-06）。
+   兩者都由同一個 edge 決定方向，唇的顏色由 dir 決定 —— 沒有第二個光源。 */
+const perfCut = (kind, edge, pitch = PERF.pitch, th = null) =>
+  ({ attr: ` data-perf="${kind}-${edge[0]}"`, css: `${perfMask(edge, pitch)};${perfLip(th || T.light, edge)}` });
 
 /* ─────────────────────────  控制項  ───────────────────────── */
 
@@ -192,19 +195,42 @@ const btn = (t, label, { icon = '', tone = 'primary', busy = false } = {}) => {
    第 1 輪 R7：AX5 的版本不是自己把標誌堆到字上面（那也是改外觀），
    是換成官方的**短標題**「登入」，版式一律維持橫排。 */
 const APPLE_MARK = '<path d="M14.02 10.6c.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.62-1.7-3.18-1.72-1.35-.14-2.64.79-3.33.79-.69 0-1.75-.77-2.87-.75-1.48.02-2.84.86-3.6 2.18-1.53 2.66-.39 6.6 1.1 8.76.73 1.06 1.6 2.25 2.74 2.2 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.08 2.65-2.14.84-1.23 1.18-2.42 1.2-2.48-.03-.01-2.3-.88-2.29-3.51ZM11.85 4.16c.6-.74 1.01-1.76.9-2.78-.87.04-1.93.58-2.56 1.31-.56.65-1.06 1.69-.93 2.69.97.07 1.97-.49 2.59-1.22Z"/>';
-/* 標籤有三階，因為空間有三階（第 5 輪 D4-05）：
-     full  「透過 Apple 登入」 —— 一般字級
-     brand 「Apple 登入」     —— AX4：虛詞（透過／用）丟掉，**品牌詞留著**
-     short 「登入」           —— AX5：官方短標題。品牌詞由商標本身與無障礙名稱承擔
-   第 4 輪這裡直接從 full 跳到 short，兩顆鍵在 AX5 下都只剩「登入」二字，
-   語意塌掉。中間這一階（brand）是實測出來的：見 StressLoginAX 板上的三個寬度。 */
-const signInLabel = (brand, title) => (title === 'short' ? '登入' : title === 'brand' ? `${brand} 登入` : `透過 ${brand} 登入`);
+/* ── 登入鍵組的標籤：三階，而且**三顆各有各的三階**（第 6 輪 D5-01）──────────
+   第 5 輪這張表只寫給兩顆品牌鍵，我們自己那顆 Email 沒有進來 —— 於是它在 AX5
+   跟著掉成「登入」，三顆鍵的第三顆變成一個沒有商標、沒有 aria-label、
+   讀螢幕唸出來就是「登入」二字的按鈕。**身分歸零**。
+
+   第三顆不換短標題的理由是量出來的，不是偏好：Apple 與 Google 的短標題是
+   **它們的規範給的**（窄空間用「登入」，品牌詞由商標承擔）；我們沒有商標可以承擔，
+   而且我們的鍵沒有標誌佔位，AX5 下留給標籤的寬度反而是三顆裡最寬的。
+   「Email 登入」在那一階需要的寬度 vs 那顆鍵真正剩下的寬度，兩個數都印在 StressLoginAX 板上。
+
+     階     Apple／Google                    Email（我們自己的）
+     full   透過 X 登入                       用 Email 登入
+     brand  X 登入（虛詞丟掉，品牌詞留著）      Email 登入
+     short  登入（官方短標題＋aria-label）      Email 登入（放得下就不縮）
+
+   無障礙名稱的規則（WCAG 2.5.3 Label in Name）：**可見文字必須是無障礙名稱的一部分**。
+   所以 aria-label 只在 short 那一階出現（可見的只剩「登入」，名稱補上品牌詞成為
+   「Apple 登入」——包含可見文字）；其餘兩階沒有 aria-label，可見文字自己就是名稱。
+   第 5 輪三顆都掛著 `使用 X 帳號登入`，在 AX4（可見「Apple 登入」）反而**違反** 2.5.3 ——
+   語音控制的人唸得出畫面上的字卻按不到那顆鍵。G32⑤ 逐顆驗這件事。 */
+const SIGNIN_LABEL = {
+  apple: { full: '透過 Apple 登入', brand: 'Apple 登入', short: '登入' },
+  google: { full: '透過 Google 登入', brand: 'Google 登入', short: '登入' },
+  email: { full: '用 Email 登入', brand: 'Email 登入', short: 'Email 登入' },
+};
+const signInLabel = (who, title) => SIGNIN_LABEL[who][title || 'full'];
+/* short 那一階（也只有那一階）補無障礙名稱：品牌詞 ＋ 可見文字。 */
+const signInAria = (who, title) => (title === 'short' && who !== 'email'
+  ? ` aria-label="${who === 'apple' ? 'Apple' : 'Google'} ${signInLabel(who, title)}"` : '');
 const btnApple = (t, size = null) => {
   const s = size || { label: TY.bs, mark: [20, 24], h: FIX.button };
   const pad = s.pad || SP.l;
-  return `<div${S('raise', 'button')} data-brand="apple" data-title="${s.title || 'full'}" role="button" aria-label="使用 Apple 帳號登入" style="background:${t.appleBg};border-radius:14px;min-height:${s.h}px;display:flex;align-items:center;justify-content:center;gap:${SP.s}px;padding:0 ${pad}px;color:${t.appleFg}">
+  const title = s.title || 'full';
+  return `<div${S('raise', 'button')} data-brand="apple" data-signin="apple" data-title="${title}" role="button"${signInAria('apple', title)} style="background:${t.appleBg};border-radius:14px;min-height:${s.h}px;display:flex;align-items:center;justify-content:center;gap:${SP.s}px;padding:0 ${pad}px;color:${t.appleFg}">
       <svg width="${s.mark[0]}" height="${s.mark[1]}" viewBox="0 0 17 20" fill="${t.appleFg}" aria-hidden="true" style="flex:none">${APPLE_MARK}</svg>
-      <span style="${s.label};color:${t.appleFg};text-align:center;white-space:nowrap">${signInLabel('Apple', s.title)}</span>
+      <span data-signin-label="1" style="${s.label};color:${t.appleFg};text-align:center;white-space:nowrap">${signInLabel('apple', title)}</span>
     </div>`;
 };
 
@@ -219,9 +245,23 @@ const gMark = (n) => `<svg width="${n}" height="${n}" viewBox="0 0 48 48" aria-h
 const btnGoogle = (t, size = null) => {
   const s = size || { label: TY.bs, mark: 20, h: FIX.button };
   const pad = s.pad || SP.l;
-  return `<div${S('raise', 'button')} data-brand="google" data-title="${s.title || 'full'}" role="button" aria-label="使用 Google 帳號登入" style="background:${t.googleBg};border-radius:14px;border:${FIX.hair}px solid ${t.googleLine};min-height:${s.h}px;display:flex;align-items:center;justify-content:center;gap:${SP.m}px;padding:0 ${pad}px">
+  const title = s.title || 'full';
+  return `<div${S('raise', 'button')} data-brand="google" data-signin="google" data-title="${title}" role="button"${signInAria('google', title)} style="background:${t.googleBg};border-radius:14px;border:${FIX.hair}px solid ${t.googleLine};min-height:${s.h}px;display:flex;align-items:center;justify-content:center;gap:${SP.m}px;padding:0 ${pad}px">
       ${gMark(s.mark)}
-      <span style="${s.label};color:${t.googleFg};text-align:center;white-space:nowrap">${signInLabel('Google', s.title)}</span>
+      <span data-signin-label="1" style="${s.label};color:${t.googleFg};text-align:center;white-space:nowrap">${signInLabel('google', title)}</span>
+    </div>`;
+};
+
+/* 第三顆：我們自己的。它**不是**品牌鍵（沒有 data-brand，所以 G25「品牌鍵不接光」
+   不管它 —— 它本來就該接我們的光），但它**是**登入鍵組的一員（data-signin），
+   所以 G32 的每一條都咬得到它。第 5 輪它兩樣都不是，於是誰都沒在看它。 */
+const btnEmail = (t, size = null) => {
+  const s = size || { label: TY.bs, mark: 20, h: FIX.button };
+  const pad = s.pad || SP.m;
+  const title = s.title || 'full';
+  return `<div${S('raise', 'button')} data-signin="email" data-title="${title}" role="button" style="${raise(t, { g: 'face', lip: t.edge })};min-height:${s.h}px;display:flex;align-items:center;justify-content:center;gap:${SP.m}px;padding:0 ${pad}px;color:${t.ink}">
+      ${title === 'full' ? `<span style="display:flex;flex:none">${I.mail}</span>` : ''}
+      <span data-signin-label="1" style="${s.label};color:${t.ink};text-align:center;white-space:nowrap">${signInLabel('email', title)}</span>
     </div>`;
 };
 
@@ -371,7 +411,7 @@ const noteBox = (t, icon, text, { size = TY.b, inset = true } = {}) => `
    左右兩緣被打孔機咬掉一口（那兩個半圓缺口現在真的在螢幕邊上）。
    左右不留圓角：紙從螢幕邊緣繼續延伸出去，圓角會把它變回一張卡片。 */
 const ticketShell = (t, { surface, motif = '', label = '邀 請 碼', main, foot, fade = null, pitch = PERF.pitch }) => {
-  const up = perfCut('joined', 'bottom', pitch), lo = perfCut('joined', 'top', pitch);
+  const up = perfCut('joined', 'bottom', pitch, t), lo = perfCut('joined', 'top', pitch, t);
   return `
   <div${surface.mark}${motif} data-w="bleed" style="${surface.css};overflow:hidden;margin:0 -${FIX.gutter}px">
     <div${up.attr}${fade ? ` data-grad="${fade}" data-band="code"` : ''} style="${fade ? `background:${gradCss(t, fade)};` : ''}${up.css};padding:${SP.xl}px;display:flex;flex-direction:column;align-items:center;gap:${SP.m}px">
@@ -403,7 +443,9 @@ const ticketShell = (t, { surface, motif = '', label = '邀 請 碼', main, foot
      ① 還沒用的格改畫**當前階**（與號碼帶同一支漸層）—— 刻度與帶子從此是同一件事
         的兩種說法（實測 ΔE→0），而不是一個圖例。
      ② 用掉的格蓋一道**朱筆銷記**：照相館在存根上劃掉用過的那一格。
-        它是同一支筆（brush.mjs 的 stroke() 模型），不是 CSS 畫的叉。
+        它走的是 brush.mjs 的 stroke() 模型（有起筆、收筆、提按的真筆跡），不是 CSS 畫的叉；
+        但它**不是字標那支筆**——字標是蠟筆（孩子的手），這一道是照相館的人拿紅筆劃的。
+        兩支筆本來就不該是同一支。
    結果：遮住文字，四個狀態的刻度逐格對位比，相鄰兩態至少有一格 ΔE ≥ SCALE_DE.adj，
    剛印好↔用完了三格**每一格**都 ≥ SCALE_DE.ends（G29 逐格量、逐態比）。 */
 const SCALE_W = 34, SCALE_H = 20;
@@ -561,8 +603,8 @@ const HH = {
   'InviteEmpty.dc.html': 920, 'InviteGenerating.dc.html': 920,
   'InviteApprovalOff.dc.html': 880, 'InviteApprovalOffDark.dc.html': 880,
   'InviteRequests.dc.html': 940, 'InviteRequestsMany.dc.html': 1420, 'StressType.dc.html': 1700,
-  'StressCodeAX.dc.html': 2160, 'StressLoginAX.dc.html': 5240,
-  'Tokens.dc.html': 8760, 'Notes.dc.html': 3820, 'StressContent.dc.html': 960, 'AppIcon.dc.html': 3480,
+  'StressCodeAX.dc.html': 2160, 'StressLoginAX.dc.html': 8420,
+  'Tokens.dc.html': 8900, 'Notes.dc.html': 3820, 'StressContent.dc.html': 960, 'AppIcon.dc.html': 3660,
   'GlassSeam.dc.html': 2060,
 };
 const h = (f) => HH[f] || 844;
@@ -652,7 +694,7 @@ const consent = (t) => `
    所以它的齒是完整的圓孔 —— 同一台打孔機，兩種狀態，這是可以被 gate 咬的區別。
    托盤也跟著票根出血：它是從我們自己那張紙上撕下來的一塊，不是版心裡的一張卡。 */
 const signInStack = (t, { bleed = FIX.gutter } = {}) => {
-  const cut = perfCut('torn', 'top');
+  const cut = perfCut('torn', 'top', PERF.pitch, t);
   const out = bleed
     ? ` data-w="bleed" style="${win(t, { role: 'tray', pad: '0', radius: 0, outline: false })};${cut.css};margin:0 -${bleed}px;`
     : ` style="${win(t, { role: 'tray', pad: '0', outline: false })};${cut.css};`;
@@ -661,7 +703,7 @@ const signInStack = (t, { bleed = FIX.gutter } = {}) => {
     <div style="padding:${SP.m}px ${bleed ? FIX.gutter : SP.m}px;display:flex;flex-direction:column;gap:${SP.m}px">
       ${btnApple(t)}
       ${btnGoogle(t)}
-      ${btn(t, '用 Email 登入', { icon: I.mail, tone: 'secondary' })}
+      ${btnEmail(t, { label: TY.bs, h: FIX.button, pad: SP.l, title: 'full' })}
     </div>
   </div>`;
 };
@@ -1113,14 +1155,12 @@ const stressLoginAX = (t) => {
   const stack = (px, title, label) => {
     const f = (n) => Math.round(n * px / 17);   // 這一階的字級推導（17pt body 是基準）
     const lab = `font-size:${f(17)}px;line-height:${f(25)}px;font-weight:600`;
-    const cut = perfCut('torn', 'top', f(PERF.pitch));   // 齒距跟著這一階的紙一起長大
+    const cut = perfCut('torn', 'top', f(PERF.pitch), t);   // 齒距跟著這一階的紙一起長大
     return `<div${S('win', 'tray')}${cut.attr} data-w="bleed" data-ax="${label}" style="${win(t, { role: 'tray', pad: '0', radius: 0, outline: false })};${cut.css};margin:0 -${FIX.gutter}px;display:flex;flex-direction:column">
       <div style="padding:${SP.l}px ${FIX.gutter}px;display:grid;grid-auto-rows:1fr;gap:${SP.m}px">
         ${btnApple(t, { label: lab, mark: [f(20), f(24)], h: f(FIX.button), title, pad: SP.m })}
         ${btnGoogle(t, { label: lab, mark: f(20), h: f(FIX.button), title, pad: SP.m })}
-        <div${S('raise', 'button')} style="${raise(t, { g: 'face', lip: t.edge })};min-height:${f(FIX.button)}px;display:flex;align-items:center;justify-content:center;padding:0 ${SP.l}px;color:${t.ink}">
-          <span style="${lab};color:${t.ink};text-align:center;white-space:nowrap">${title === 'short' ? '登入' : 'Email 登入'}</span>
-        </div>
+        ${btnEmail(t, { label: lab, h: f(FIX.button), title, pad: SP.m })}
       </div>
     </div>`;
   };
@@ -1133,13 +1173,21 @@ const stressLoginAX = (t) => {
     ${stack(ax4(17), 'brand', 'AX4')}
     <span style="font-size:${ax4(15)}px;line-height:${ax4(21)}px;font-weight:600;color:${t.ink2}">AX5（${Math.round(AX * 100)}%）：換官方短標題</span>
     ${stack(ax(17), 'short', 'AX5')}
-    <!-- 放不下的那一行，照實畫出來：容器寬 ＝ AX5 那顆 Google 鍵真正剩給標籤的寬度。
-         超出去的部分被裁掉，裁口上壓一道朱線 —— 差多少是量出來的，不是說出來的。 -->
+    <!-- 兩條示範行，一條放不下、一條放得下 —— 「換不換短標題」在這一階不是偏好，是算術。
+         容器寬 ＝ 那顆鍵在 AX5 真正剩給標籤的寬度（自己的 padding／標誌／間距都扣掉了）。
+         放不下的那條被裁掉，裁口上壓一道朱線；放得下的那條把剩下的餘裕畫成一段綠色的量尺。 -->
     <div style="display:flex;flex-direction:column;gap:${SP.xs}px">
-      <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2}">同一階字級下「Google 登入」放不下的樣子</span>
+      <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2}">同一階字級下「Google 登入」放不下的樣子（所以它換官方短標題）</span>
       <div data-fit="ax5-google" style="position:relative;width:${390 - FIX.gutter * 2 - SP.m * 2 - ax(20) - SP.m}px;overflow:hidden">
         <span data-fit-label="1" style="font-size:${ax(17)}px;line-height:${ax(25)}px;font-weight:600;color:${t.ink};white-space:nowrap">Google 登入</span>
         <div aria-hidden="true" style="position:absolute;right:0;top:0;width:${FIX.errBar}px;height:100%;background:${t.pen}"></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:${SP.xs}px">
+      <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2}">同一階字級下「Email 登入」放得下的樣子（所以它<b style="color:${t.ink}">不縮</b>）</span>
+      <div data-fit="ax5-email" style="position:relative;width:${390 - FIX.gutter * 2 - SP.m * 2}px;overflow:hidden;display:flex;align-items:center">
+        <span data-fit-label="1" style="font-size:${ax(17)}px;line-height:${ax(25)}px;font-weight:600;color:${t.ink};white-space:nowrap">Email 登入</span>
+        <span aria-hidden="true" style="flex:1;height:${FIX.hair * 3}px;background:${t.sprout};margin-left:${SP.s}px"></span>
       </div>
     </div>
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:${SP.xs}px">
@@ -1148,8 +1196,14 @@ const stressLoginAX = (t) => {
       <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2}">與</span>
       ${axLink('隱私權政策')}
     </div>
+    <!-- 規格用表講，不用散文講：三顆 × 三階，一眼看得出「第三顆那一列不一樣」。 -->
+    <table style="border-collapse:collapse;width:100%">
+      <tr>${['', `一般字級`, `AX4（${Math.round(AX4 * 100)}%）`, `AX5（${Math.round(AX * 100)}%）`].map((x) => `<th style="text-align:left;padding:${SP.s}px ${SP.m}px ${SP.s}px 0;font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:600;color:${t.ink}">${x}</th>`).join('')}</tr>
+      ${[['apple', 'Apple（借來的）'], ['google', 'Google（借來的）'], ['email', 'Email（我們自己的）']].map(([k, who]) => `
+      <tr>${[who, ...['full', 'brand', 'short'].map((tt) => signInLabel(k, tt))].map((v, i) => `<td style="padding:${SP.s}px ${SP.m}px ${SP.s}px 0;border-top:${FIX.hair}px solid ${t.edge};font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:${i === 0 ? 600 : 400};color:${i === 0 ? t.ink : t.ink2}">${v}</td>`).join('')}</tr>`).join('')}
+    </table>
     <div${S('flat')} style="${flat(t, { pad: `${SP.l}px` })}">
-      <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};${press(t)}"><b style="color:${t.ink}">標籤有三階，因為空間有三階</b>：一般字級「透過 Apple 登入」、AX4「Apple 登入」（虛詞丟掉、<b style="color:${t.ink}">品牌詞留著</b>）、AX5「登入」（官方短標題）。<b style="color:${t.ink}">斷點是量出來的不是喊出來的</b>：${measured.axFitLine}<b style="color:${t.ink}">兩條沒有選的路</b>：折行（長輩讀兩行按鈕比讀一個短標題更慢）、把標誌堆到字的上方（那是改別人的版式，第 1 輪 R7 已裁）。AX5 的品牌詞因此由<b style="color:${t.ink}">商標本身與無障礙名稱</b>承擔（<code>aria-label="使用 Google 帳號登入"</code>）。我們自己的 icon（信封）在 AX3 以上一律拿掉只留字；<b style="color:${t.ink}">兩個品牌的標誌留著並跟著長大</b>——那是商標，不是裝飾性 icon。三顆等高由 <code>grid-auto-rows:1fr</code> 保證：品牌規範給的是最小高度不是最大高度。命中盒的 ${FIX.tap}pt 是實體最小值，不跟著字級放大。</span>
+      <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};${press(t)}"><b style="color:${t.ink}">最後一列為什麼不一樣</b>：Apple 與 Google 的「登入」是<b style="color:${t.ink}">它們規範自己給的短標題</b>，品牌詞由商標承擔；我們沒有商標可以替我們說話，而且我們那顆沒有標誌佔位，剩給標籤的寬反而最寬。<b style="color:${t.ink}">所以第三顆不縮不是通融，是算術</b>：${measured.axFitLine}<br><br><b style="color:${t.ink}">第 5 輪這裡漏了第三顆</b>——那時它跟著掉成「登入」，一顆沒有商標、沒有無障礙名稱的按鈕，讀螢幕唸出來就是「登入」二字。<b style="color:${t.ink}">aria-label 只掛在 AX5 的兩顆品牌鍵上</b>，值是「品牌詞＋可見文字」（<code>Apple 登入</code>）；其餘一律不掛，可見文字自己就是名稱 —— 因為<b style="color:${t.ink}">可見的字必須在名稱裡</b>（WCAG 2.5.3，用語音控制的人唸的是他看得到的字）。第 5 輪三顆都掛 <code>使用 X 帳號登入</code>，在 AX4（畫面上寫「Apple 登入」）反而違反那一條。G32⑤ 逐顆比對。<br><br><b style="color:${t.ink}">沒有選的兩條路</b>：折行（長輩讀兩行按鈕比讀一個短標題更慢）、把標誌堆到字的上方（那是改別人的版式）。我們自己的信封 icon 在 AX3 以上拿掉只留字；兩個品牌的標誌留著並跟著長大 —— 那是商標不是裝飾。三顆等高由 <code>grid-auto-rows:1fr</code> 保證，命中盒的 ${FIX.tap}pt 是實體最小值不隨字級放大。</span>
     </div>
   </div>
 </div>`);
@@ -1180,12 +1234,12 @@ const stressCodeAX = (t) => {
     </div>
     <p style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};margin:0">${SAY}</p>
     <div${S('flat')}${MO('ticket')} data-w="bleed" style="${flat(t, { pad: '0', radius: 0 })};overflow:hidden;margin:0 -${FIX.gutter}px">
-      <div${perfCut('joined', 'bottom', ax(PERF.pitch)).attr} data-grad="${stubOf(USES_TOTAL)}" style="background:${gradCss(t, stubOf(USES_TOTAL))};${perfCut('joined', 'bottom', ax(PERF.pitch)).css};padding:${FIX.gutter}px;display:flex;flex-direction:column;align-items:center;gap:${SP.l}px">
+      <div${perfCut('joined', 'bottom', ax(PERF.pitch), t).attr} data-grad="${stubOf(USES_TOTAL)}" style="background:${gradCss(t, stubOf(USES_TOTAL))};${perfCut('joined', 'bottom', ax(PERF.pitch), t).css};padding:${FIX.gutter}px;display:flex;flex-direction:column;align-items:center;gap:${SP.l}px">
         <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};letter-spacing:.16em;${press(t)}">邀 請 碼</span>
         <span style="${nAX};color:${t.ink};${press(t)}">${CODE.split(' ')[0]}</span>
         <span style="${nAX};color:${t.ink};${press(t)}">${CODE.split(' ')[1]}</span>
       </div>
-      <div${perfCut('joined', 'top', ax(PERF.pitch)).attr} style="${perfCut('joined', 'top', ax(PERF.pitch)).css};padding:${SP.l}px ${FIX.gutter}px;display:flex;flex-direction:column;gap:${SP.s}px;background:${t.board3}">
+      <div${perfCut('joined', 'top', ax(PERF.pitch), t).attr} style="${perfCut('joined', 'top', ax(PERF.pitch), t).css};padding:${SP.l}px ${FIX.gutter}px;display:flex;flex-direction:column;gap:${SP.s}px;background:${t.board3}">
         <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};${press(t)}">有效到 8 月 30 日</span>
         <span style="display:inline-flex;align-items:center;gap:${SP.m}px">${stubScale(t, { uses: USES_TOTAL, big: true })}<span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};${press(t)};white-space:nowrap">還可以用 ${USES_TOTAL} 次</span></span>
       </div>
@@ -1318,7 +1372,7 @@ const stubLadder = (t) => {
           ${STUB_USES.map((n) => `<span style="display:inline-flex;align-items:center;gap:${SP.s}px">${stubScale(th, { uses: n })}<span style="${TY.cap};color:${th.ink}">${usesLine(n)}</span></span>`).join('')}
         </div>`).join('')}
       </div>
-      <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2}"><b style="color:${t.ink}">還沒用的格畫的是當前階</b>（與號碼帶同一支漸層，實測 ΔE ${'0'}），<b style="color:${t.ink}">用掉的格褪到底並蓋一道朱筆銷記</b>（照相館在存根上劃掉用過的那一格；那一道是同一支 brush 幾何畫的，不是 CSS 的叉）。G29 逐格對位比：相鄰狀態至少有一格 ΔE ≥ ${SCALE_DE.adj}、剛印好↔用完了三格每一格都 ≥ ${SCALE_DE.ends}。</span>
+      <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2}"><b style="color:${t.ink}">還沒用的格畫的是當前階</b>（與號碼帶同一支漸層，實測 ΔE ${'0'}），<b style="color:${t.ink}">用掉的格褪到底並蓋一道朱筆銷記</b>（照相館在存根上劃掉用過的那一格；那一道是有提按的真筆跡，不是 CSS 的叉——但它是紅筆不是蠟筆，與字標<b>刻意</b>不同支）。G29 逐格對位比，而<b style="color:${t.ink}">兩個門檻取的統計量刻意不一樣</b>：<b style="color:${t.ink}">相鄰兩態取三格裡的最大值</b>（≥${SCALE_DE.adj}）—— 相鄰只要求「<b style="color:${t.ink}">至少有一格變了</b>」，因為從剩 3 次到剩 2 次本來就只有一格會被劃掉；<b style="color:${t.ink}">剛印好↔用完了取最小值</b>（≥${SCALE_DE.ends}）—— 兩極端要求「<b style="color:${t.ink}">每一格都變了</b>」，因為三次全部用掉之後三格都該被劃掉。同一個 ΔE，兩個統計量，兩件不同的事。門檻本身是推導的：${SCALE_DE.band} ＝ 一個 JND（人眼剛好分得出來）、${SCALE_DE.adj} ＝ 三個 JND、${SCALE_DE.ends} ＝ 相鄰的兩倍。</span>
     </div>
     <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2}"><b style="color:${t.ink}">三個量一起單調衰減，這是 G23④ 的斷言，不是描述</b>：褪到最後（用完了）色相位移、明度差、彩度同時趨近於零 ——<b style="color:${t.ink}">褪完了就沒有褪色的方向了</b>。這與「還沒印上號碼的空票根沒有這條漸層（沒印過的東西不會褪色）」是同一句話的兩端。第 1 輪 R4 抓的「全稿最大振幅在最惰性的面上」也在這裡結案：兩端 ΔE 雖然仍是 ${q('stub3').e.toFixed(2)}，但它是<b style="color:${t.ink}">邊緣加權</b>的 —— 膝點（${STUB_KNEE}%）到底部只剩 ${dE(T.light.grad.stub3[1][0], T.light.grad.stub3[2][0]).toFixed(2)} ΔE，號碼就坐在那一段上。</span>
   </div>`;
@@ -1539,7 +1593,7 @@ const tokensSheet = (measured) => {
       `<b>漸層以「字底下最不利的那一點」計對比</b>：不是取兩端平均，也不是取元素中心 —— 逐個文字節點量它覆蓋到的那一段漸層，取其中對比最低的一點，門檻 ${CONTRAST.aaa}:1。<b>量不了就不准壓字</b>：只有 180deg 的線性漸層量得出這個點，其他方向一律 FAIL。顆粒層（紙的雜訊）另外以「最暗的那一格」重算一次，下限 ${CONTRAST.grain}:1。${measured.gradLine}`,
     ])}
     ${ruleCard(t, `字標「${BRAND}」＝手寫「萌芽」＋系統字「日記」`, [
-      '手寫的那兩個字是全稿唯一的非系統線條。每一筆是「中線貝茲＋起筆寬／收筆寬／中段提按」推出來的填色外框，所以真的有粗細變化，不是圓頭 stroke 假裝的。「萌」與「芽」共用艹部，兩次落筆刻意不一樣（弧度與出頭各差一點）—— 同一支筆寫兩次本來就不會一樣。',
+      `手寫的那兩個字是全稿唯一的非系統線條，第 6 輪起是<b>一隻手用蠟筆寫在紙上的真跡</b>（描成向量，配方與來源雜湊在 ink.mjs／trace.py，G33 驗）。第 1–5 輪它是程式生成的貝茲筆跡 —— 工藝上站得住（提按、收鋒、配平過的光學密度），使用者的判決是「很醜」：那不是規格層的問題，是 glyph 品質層的否決，所以換的是<b>字樣本身</b>，規則一條都沒換。蠟筆的崩邊顆粒刻意留著（描摹容差 ${Ink.TRACE.eps} 原圖像素；再平滑一階就開始像麥克筆）。兩字的字距、下沉與參差<b>不是我們排的</b> —— 是寫的人自己那樣寫的；我們量過才決定不動它：字間的白比字內最大的白還窄，所以它讀成一個詞而不是兩個字。`,
       `<b>為什麼四個字不全部手寫</b>：「萌」十四筆、「記」十筆。信件明細那一格的字標只有 ${INK.mail.h}pt 高，四字全手寫的話每一筆不到 1.3pt、筆與筆的空隙不到 1pt —— 對長輩就是一團墨。所以 lockup 分兩層：<b>手寫的是名字的意思（萌芽），系統字的是東西的種類（日記）</b>。險只冒在一個地方；而且「日記」是真的文字，會跟著 Dynamic Type 長大。`,
       `五個使用點，手寫字高／系統字級／間距：歡迎頁手機 ${INK.phone.h}／${INK.phone.sub}／${INK.phone.gap}、iPad ${INK.pad.h}／${INK.pad.sub}／${INK.pad.gap}、這張規格板 ${INK.sheet.h}／${INK.sheet.sub}／${INK.sheet.gap}、信件明細的「寄件人」${INK.mail.h}／${INK.mail.sub}／${INK.mail.gap}、建立家庭的即時預覽 ${INK.preview.h}／${INK.preview.sub}／${INK.preview.gap}。最小的兩個從 20 提到 ${INK.mail.h}，理由同上。畫面上看到的筆跡，信箱裡也會看到同一支。`,
       '它<b>不壓在照片上</b>（照片上的對比無法定義）—— 它在台紙上，ink/board 實測 ' + measured.inkContrast + '。',
@@ -1571,6 +1625,12 @@ const tokensSheet = (measured) => {
    分層與網格照官方 App Icon Template（iOS/iPadOS 27）：1024 見方、系統套 squircle 遮罩，
    內容留在中央安全圓內；最終生產走 Xcode 的 Icon Composer（我們交兩層 SVG／PNG）。 */
 const ICON = Icon.ICON, SEAL_FRAC = Icon.SEAL_FRAC, CARVED = Icon.SEAL;
+/* 使用者裁決（第 6 輪中途）：字形 icon 的概念整個被否決。日期與後續寫成常數，
+   因為 canvas.json 的註記模板不准手打阿拉伯數字（G20③）—— 一切數字都要有出處。 */
+const ICON_VETO = {
+  when: '2026-08-23',
+  next: '外部 icon 素材正在另外生成中，下一輪整合；在那之前這張板不重做、也不換字樣（換字樣只會做出一顆一樣被否決的東西）。',
+};
 /* 三種外觀的前景與底。Tinted 的底是**官方的中灰玻璃**：Apple design kit（iOS 27）
    匯出的 kit-AppIcons 第三排（Tinted 那一排），整排像素的眾數就是 rgb(128,128,128)。
    第 2 輪拿純黑當 Tinted 的驗收底 —— 黑底會讓任何白色前景都好看，等於沒有驗。 */
@@ -1614,7 +1674,11 @@ const iconSheet = () => {
         ${tag26(okS)} ${m.minStrokeDev.toFixed(2)}px · ${tag26(okC)} ${(m.coverage * 100).toFixed(1)}% · ${tag26(okK)} ${m.contrast.toFixed(2)}:1 · ${tag26(okG)} ${m.counterDev.toFixed(0)}px</td>`;
   };
   return doc(t, `
-<div class="g" data-grad="paper" style="position:relative;width:1290px;height:${h('AppIcon.dc.html')}px;background:${gradCss(t, 'paper')};overflow:hidden;padding:${FIX.padSheet}px">
+<div class="g" data-grad="paper" data-veto="icon-concept" style="position:relative;width:1290px;height:${h('AppIcon.dc.html')}px;background:${gradCss(t, 'paper')};overflow:hidden;padding:${FIX.padSheet}px">
+  <div${S('flat')} style="${flat(t, { pad: `${SP.l}px`, radius: 14 })};border-left:${FIX.errBar}px solid ${t.pen};margin-bottom:${SP.xl}px">
+    <span style="${TY.l};color:${t.ink}">這張板的概念已被否決（${ICON_VETO.when}）——底下的內容原地保留，不是現行方案</span><br>
+    <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2};${press(t)}">使用者否決的是<b style="color:${t.ink}">「app icon ＝ 一個字」這件事本身</b>，不是這個字的筆觸、也不是它的尺寸 —— 所以換一支筆、換一個字、把它畫粗都不是修法。${ICON_VETO.next}<br><br><b style="color:${t.ink}">板上已經過期的一句話，先講在這裡</b>：底下凡是寫著「與字標<b style="color:${t.ink}">同一支筆</b>」的段落，在字標於本輪換成蠟筆之後<b style="color:${t.ink}">字面已經不成立</b> —— 這張板上的落款印是第 3 輪那支程式生成的刀。凍結的意思就是「它停在被否決的那一版」，不是「它還對」。<br><br>板上其餘每一段（分層意圖、三種外觀、驗收排、G26 的四條規格、Tinted 的中灰玻璃底）<b style="color:${t.ink}">留著是因為它們與「用哪一個圖形」無關</b>：那些是「任何一個圖示都要通過的檢查」，換素材之後照樣要跑一次。<b style="color:${t.ink}">G26／G26b／G26c 三族在這張板上暫停</b>，登記在具名豁免簿裡（<code>data-veto="icon-concept"</code> → G26），理由與恢復條件都寫在那一筆上：外部素材到位、這張板重做，就把那一筆刪掉，三族自動恢復。<b style="color:${t.ink}">刪不掉就是還沒重做</b> —— 這是豁免簿的等式在守的事（MG2）。</span>
+  </div>
   <div style="display:flex;flex-direction:column;gap:${SP.m}px;margin-bottom:${SP.xxl}px">
     <span style="${TY.cap};color:${t.ink2};letter-spacing:.14em">LITTLE SPROUT · ${BRAND} · APP ICON ＋ LOGO（第 3 輪：重筆＋G26 驗收）</span>
     <h1 style="${TY.d};color:${t.ink};margin:0">落款印</h1>
@@ -1803,8 +1867,8 @@ const notesSheet = () => {
       `<b>寬度有三階，而且階有意思</b>：<b>出血</b>（板寬，只給拿在手上的實體：票根、登入托盤）／<b>欄</b>（版心 ${FIX.gutter}pt 內距，給可以操作的東西：輸入框、按鈕、選項卡、待核卡片）／<b>旁註</b>（欄再縮 ${NOTE_IN}pt，給引用與說明：明細表、說明框）。第 4 輪整份稿子 ${'156'} 個區塊只有 6 種寬度、七成是同一個 342 —— 主體與幫助文字同寬同皮，讀者分不出哪一塊要做、哪一塊只是解釋。SwiftUI：出血用 <code>.listRowInsets(EdgeInsets())</code> 或負 padding，旁註用 <code>.padding(.horizontal, ${NOTE_IN})</code>。`,
       `<b>說明框沒有皮</b>：它不是另一張紙，是印在台紙上的旁註（縮排＋左側 ${FIX.hair}pt 邊線）。平印的「皮」從此只代表一件事：那是一張真的印刷品（票根、明細表、警語條）。`,
       `<b>騎縫線是遮罩挖出來的洞，不是畫上去的線</b>：圓孔 r=${PERF.r}、齒距 ${PERF.pitch}（AX 板 ${ax(PERF.pitch)}，齒距綁 <code>ax()</code>）、左右兩緣半圓缺口 r=${PERF.notch}。<b>票根（還沒撕）＝完整圓孔</b>（上下兩半各切自己那一緣的一半）、<b>托盤（撕下來的那一邊）＝半圓扇貝邊</b>。iOS 實作用 <code>.mask()</code> 疊三層 <code>RadialGradient</code>，或直接用 <code>Path</code> 減去圓形 —— <b>不要用一條虛線圖片</b>，那是第 4 輪被判掉的裝飾線。`,
-      `<b>三格刻度：還沒用的格畫當前階、用掉的格蓋朱筆銷記</b>。刻度與號碼帶是同一支漸層（ΔE→0），所以「剩幾次」在刻度與帶色上是同一件事；銷記是同一支 brush 幾何畫的一劃，不是 CSS 的叉。`,
-      `<b>登入鍵的標籤有三階</b>：一般「透過 Apple 登入」／AX4「Apple 登入」／AX5「登入」（官方短標題）。AX5 換短標題是<b>量出來的</b>（見 StressLoginAX 板上那條放不下的示範行），品牌詞在 AX5 由商標與 <code>aria-label</code> 承擔。`,
+      `<b>三格刻度：還沒用的格畫當前階、用掉的格蓋朱筆銷記</b>。刻度與號碼帶是同一支漸層（ΔE→0），所以「剩幾次」在刻度與帶色上是同一件事；銷記是有提按的一劃（brush 幾何），不是 CSS 的叉；它用的是紅筆不是字標那支蠟筆——劃掉存根的是照相館的人。`,
+      `<b>登入鍵組的標籤有三階，三顆各走各的</b>（第 6 輪修）。<b>借來的兩顆</b>（Apple／Google）：一般「透過 X 登入」／AX4「X 登入」／AX5「登入」——AX5 那一階是<b>它們規範自己給的短標題</b>，品牌詞由商標承擔。<b>我們自己的那顆</b>：一般「用 Email 登入」／AX4 與 AX5 都是「Email 登入」——<b>不換短標題，因為量出來放得下</b>（兩條示範行都畫在 StressLoginAX 板上：一條被裁、一條有餘裕）。<b>aria-label 只加在 AX5 的兩顆品牌鍵上</b>，值是「品牌詞＋可見文字」；其餘每一顆一律沒有 aria-label，可見文字自己就是無障礙名稱（WCAG 2.5.3 Label in Name，G32⑤ 逐顆驗）。`,
     ])}
     ${note(t, '色彩落地', [
     '把 Tokens 板的 hex 建成 Asset Catalog color set，每一個都給 Any 與 Dark 兩個外觀值；View 裡只用語意名，例如 <code>Color.lsBoard</code>。',
@@ -2018,8 +2082,9 @@ measured.lipLine = say(M.lips, () => {
 /* 第 5 輪新增的五條實測句。每一句都只讀 measured.json —— 板上印的與 gate 判的同一份。 */
 measured.axFitLine = say(M.axFit, () => {
   const g = (M.axFit || []).find((x) => x.id === 'ax5-google');
-  return g
-    ? `AX5 的「Google 登入」在 ${ax(17)}pt 下佔 ${g.need}px，而那顆鍵真正剩給標籤的寬度是 ${g.room}px —— 差 ${g.short}px（板上那條被裁掉的示範行就是它）。加上跟著長大的商標 ${ax(20)}px 與間距 ${SP.m}px 之後，${390}px 的機身放不下。`
+  const e = (M.axFit || []).find((x) => x.id === 'ax5-email');
+  return g && e
+    ? `AX5 的「Google 登入」在 ${ax(17)}pt 下佔 ${g.need}px，那顆鍵真正剩給標籤的寬度是 ${g.room}px —— <b>差 ${g.short}px</b>（板上那條被裁掉的示範行就是它）：跟著長大的商標 ${ax(20)}px 與間距 ${SP.m}px 吃掉的就是這個差。同一階的「Email 登入」佔 ${e.need}px，而那顆鍵剩 ${e.room}px —— <b>還有 ${-e.short}px 沒用到</b>（它沒有商標要擺）。同一個機身寬 ${390}px、同一階字級，一顆放不下一顆放得下，所以第三顆不縮不是通融。`
     : '（尚未量測）';
 });
 measured.photoLine = say(M.photo, () => `實測（逐像素，${M.photo.n} 張照片）：深色版對淺色版，平均亮度比 ${M.photo.meanRatio}、p99 比 ${M.photo.p99Ratio}，門檻是一格光 ${PHOTO_STOP}±${'0.04'}。`);
@@ -2118,12 +2183,16 @@ const canvas = {
   artboards: [...artboards, ...sheets],
   annotations: [
     {
+      id: 'icon-veto', x: 1400, y: -320, w: 620, page: 'page-1',
+      text: `<b>AppIcon 板：概念經使用者否決（${ICON_VETO.when}），原地凍結。</b>被否決的是「app icon ＝ 一個字」<b>這件事本身</b> —— 不是筆觸、不是尺寸、不是那個字選得好不好，所以換筆換字都不是修法。${ICON_VETO.next} 板上其餘每一段（分層意圖、三種外觀、驗收排、G26 的四條規格、Tinted 的中灰玻璃底）留著，因為那些是<b>任何一個圖示都要通過的檢查</b>，換素材之後照樣要跑。G26／G26b／G26c 三族在這張板上暫停，登記在具名豁免簿（data-veto="icon-concept"→G26），恢復條件寫在那一筆上；負面對照裡指名咬那一族的樣本一起暫停並具名。ios-dev：<b>不要照這張板出圖</b>。`,
+    },
+    {
       id: 'motif', x: 0, y: -320, w: 640, page: 'page-1',
       text: `母題：相簿台紙。三種表面，一種一個意思 —— 凹進去＝可以填東西進去；浮起來＝可以按（兩層：${FIX.lip}pt 唇邊＋落影，沒有第三層 inset）；平印上去＝只能讀。凹的白名單有 ${A(M.insetUse, (u) => Object.keys(u).length)} 個角色（實測 ${A(M.insetTotal, (n) => n)} 個使用點全部落在裡面），全部印在 Tokens 板上；沒印在那張板上的例外就是 bug。粉不是濾鏡：彩色沖印的青色染料衰退最快，家裡那本相簿與它的台紙就是一年一年往洋紅偏過去 —— 這是家庭記憶會變成的顏色。四階台紙因此是四種老化狀態（新紙／本體／偏冷的陰影／偏暖的手澤），不是同一支粉的四個明度。`,
     },
     {
       id: 'ink-note', x: 700, y: -320, w: 620, page: 'page-1',
-      text: `字標「${BRAND}」＝手寫「萌芽」＋系統字「日記」。手寫那兩個字是全稿唯一的非系統線條，也是歡迎頁的溫度來源 —— 不是暖色底、不是粗體字；每一筆是中線貝茲＋起筆／收筆寬＋中段提按推出來的填色外框。四個字不全部手寫是有理由的：「萌」十四筆、「記」十筆，在信件明細那一格字標只有 ${INK.mail.h}pt 高，全手寫每一筆不到 ${(INK.mail.h * .05).toFixed(1)}pt，對長輩就是一團墨 —— 所以手寫的是名字的意思（萌芽）、系統字的是種類（日記），而且「日記」是真文字，會跟著 Dynamic Type 長大。五個使用點：歡迎頁（手機 ${INK.phone.h}pt／iPad ${INK.pad.h}pt）、信件明細的「寄件人」（${INK.mail.h}pt）、建立家庭的即時預覽（${INK.preview.h}pt）、規格板（${INK.sheet.h}pt）—— 你在畫面上看到的筆跡，信箱裡會看到同一支。它刻意不壓在照片上（照片上的對比無法定義），在卡紙上實測 ${ratio(L.ink, L.board)}。整組只掛一個無障礙名稱＝產品全名。`,
+      text: `字標「${BRAND}」＝手寫「萌芽」＋系統字「日記」。手寫那兩個字是全稿唯一的非系統線條，也是歡迎頁的溫度來源 —— 不是暖色底、不是粗體字；第 6 輪起它是一隻手用蠟筆寫的真跡描成的向量（來源雜湊與描摹參數綁在 ink.mjs 上，G33 驗；第 5 輪以前的程式生成筆跡被使用者判「很醜」，換掉的是字樣不是規則）。四個字不全部手寫是有理由的：「萌」十四筆、「記」十筆，在信件明細那一格字標只有 ${INK.mail.h}pt 高，全手寫每一筆不到 ${(INK.mail.h * .05).toFixed(1)}pt，對長輩就是一團墨 —— 所以手寫的是名字的意思（萌芽）、系統字的是種類（日記），而且「日記」是真文字，會跟著 Dynamic Type 長大。五個使用點：歡迎頁（手機 ${INK.phone.h}pt／iPad ${INK.pad.h}pt）、信件明細的「寄件人」（${INK.mail.h}pt）、建立家庭的即時預覽（${INK.preview.h}pt）、規格板（${INK.sheet.h}pt）—— 你在畫面上看到的筆跡，信箱裡會看到同一支。它刻意不壓在照片上（照片上的對比無法定義），在卡紙上實測 ${ratio(L.ink, L.board)}。整組只掛一個無障礙名稱＝產品全名。`,
     },
     {
       id: 'photo-note', x: 1400, y: -320, w: 600, page: 'page-1',
@@ -2155,7 +2224,7 @@ const canvas = {
     },
     {
       id: 'stub-note', x: 760, y: 5 * (PH + GY) + 80 - 300, w: 700, page: 'page-1',
-      text: `<b>號碼帶的褪色階 ＝ 還可以用幾次</b>（第 2 輪新增；這是這一稿唯一「只有褪色相紙這個概念才長得出來」的東西 —— 卡紙的語言裡，一張卡片不會因為被用過而變淡）。票根是照相館的取件存根：<b>號碼帶是印上去的染料（會褪），號碼本身是碳墨（不會褪）</b>，這正是整個 app 的粉的出處。所以每被用掉一次，號碼帶就往「乾淨的紙」褪一階，而號碼永遠讀得到（四階實測全部 ${asRatio(CONTRAST.aaa)} 以上）。送出申請的當下就算用掉一次，不是核准才算 —— 所以：已產生 ${USES_TOTAL} 次（stub${USES_TOTAL}）→ 有 ${1} 個人在等、他用的是這組碼，剩 ${USES_TOTAL - 1} 次（stub${USES_TOTAL - 1}）→ 有 ${QUEUE.length} 個人在等、其中 ${QUEUE_OWN} 位用這組碼（另 ${QUEUE.length - QUEUE_OWN} 位用上一組，攤開的那張卡上寫著），剩 ${USES_TOTAL - QUEUE_OWN} 次（stub${USES_TOTAL - QUEUE_OWN}）。褪到最後（用完了）色相位移、明度差、彩度三個量一起趨近於零：<b>褪完了就沒有褪色的方向了</b> —— 這與「還沒印上號碼的空票根沒有這條漸層」是同一句話的兩端。G23④ 斷言三個量單調衰減、G23⑤ 斷言「畫出來的階數 ＝ 印在板上的次數」，改了文案不改階數會 FAIL。<b>三格刻度（第 5 輪改）</b>：還沒用的格畫的是<b>當前階</b>（與號碼帶同一支漸層，實測 ΔE ${A(M.scaleDelta, (d) => d.bandMax)}）、用掉的格褪到底並蓋一道<b>朱筆銷記</b>（照相館在存根上劃掉用過的那一格，那一道是同一支 brush 幾何畫的）。第 4 輪未用格永遠畫 stub${USES_TOTAL}，所以帶子走到第幾階刻度上看不到 —— 遮住文字時五個狀態裡有三個逐格 ΔE 為 ${0}。現在逐格對位實測：相鄰狀態最大 ΔE 最小的一組 ${A(M.scaleDelta, (d) => d.adjMin)}、剛印好↔用完了三格最小 ${A(M.scaleDelta, (d) => d.endsMin)}（門檻 ${SCALE_DE.adj}／${SCALE_DE.ends}，G29）。ios-dev：褪色階是這組碼的<b>資料</b>（remaining uses），不是那個畫面的樣式 —— 票根出現在哪裡就帶到哪裡。`,
+      text: `<b>號碼帶的褪色階 ＝ 還可以用幾次</b>（第 2 輪新增；這是這一稿唯一「只有褪色相紙這個概念才長得出來」的東西 —— 卡紙的語言裡，一張卡片不會因為被用過而變淡）。票根是照相館的取件存根：<b>號碼帶是印上去的染料（會褪），號碼本身是碳墨（不會褪）</b>，這正是整個 app 的粉的出處。所以每被用掉一次，號碼帶就往「乾淨的紙」褪一階，而號碼永遠讀得到（四階實測全部 ${asRatio(CONTRAST.aaa)} 以上）。送出申請的當下就算用掉一次，不是核准才算 —— 所以：已產生 ${USES_TOTAL} 次（stub${USES_TOTAL}）→ 有 ${1} 個人在等、他用的是這組碼，剩 ${USES_TOTAL - 1} 次（stub${USES_TOTAL - 1}）→ 有 ${QUEUE.length} 個人在等、其中 ${QUEUE_OWN} 位用這組碼（另 ${QUEUE.length - QUEUE_OWN} 位用上一組，攤開的那張卡上寫著），剩 ${USES_TOTAL - QUEUE_OWN} 次（stub${USES_TOTAL - QUEUE_OWN}）。褪到最後（用完了）色相位移、明度差、彩度三個量一起趨近於零：<b>褪完了就沒有褪色的方向了</b> —— 這與「還沒印上號碼的空票根沒有這條漸層」是同一句話的兩端。G23④ 斷言三個量單調衰減、G23⑤ 斷言「畫出來的階數 ＝ 印在板上的次數」，改了文案不改階數會 FAIL。<b>三格刻度（第 5 輪改）</b>：還沒用的格畫的是<b>當前階</b>（與號碼帶同一支漸層，實測 ΔE ${A(M.scaleDelta, (d) => d.bandMax)}）、用掉的格褪到底並蓋一道<b>朱筆銷記</b>（照相館在存根上劃掉用過的那一格，那一道是有提按的真筆跡，紅筆，與字標那支蠟筆刻意不同支）。第 4 輪未用格永遠畫 stub${USES_TOTAL}，所以帶子走到第幾階刻度上看不到 —— 遮住文字時五個狀態裡有三個逐格 ΔE 為 ${0}。現在逐格對位實測：相鄰狀態最大 ΔE 最小的一組 ${A(M.scaleDelta, (d) => d.adjMin)}、剛印好↔用完了三格最小 ${A(M.scaleDelta, (d) => d.endsMin)}（門檻 ${SCALE_DE.adj}／${SCALE_DE.ends}，G29）。ios-dev：褪色階是這組碼的<b>資料</b>（remaining uses），不是那個畫面的樣式 —— 票根出現在哪裡就帶到哪裡。`,
     },
     {
       id: 'ax-note', x: 0, y: -280, w: 480, page: 'page-2',

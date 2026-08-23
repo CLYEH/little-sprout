@@ -613,6 +613,13 @@
         layers: layers.length,
         holes: layers.filter((l) => /radial-gradient/.test(l) && /transparent|rgba\(0, 0, 0, 0\)/.test(l)).length,
         pitch: sizes.length ? Math.round(parseFloat(sizes[0])) : null,
+        /* 撕口的斷面唇（D5-06）：drop-shadow 吃的是遮罩之後的輪廓，所以它沿著扇貝的弧走。
+           量的是 computed filter —— 位移方向與顏色都要對得上 dir。 */
+        lip: cs.filter && cs.filter !== 'none' ? cs.filter : '',
+        /* 每一顆齒的半徑（不等大）與圓心（不等距）：從遮罩的每一層 radial-gradient 讀。
+           等距等大 ＝ 打孔機；抖動 ＝ 手撕。這兩個陣列讓 G27⑤ 判得出來。 */
+        radii: layers.filter((l) => /radial-gradient/.test(l)).map((l) => { const m2 = /radial-gradient\((?:circle\s+)?([\d.]+)px/.exec(l); return m2 ? +m2[1] : null; }),
+        cxs: layers.filter((l) => /radial-gradient/.test(l)).map((l) => { const m2 = /at\s+([\d.]+)px/.exec(l); return m2 ? +m2[1] : null; }),
         composite: mc.split(',')[0].trim(),
         top: Math.round(r.t), bottom: Math.round(r.b), w: Math.round(r.w),
         edgeY: /-b$/.test(n.getAttribute('data-perf')) ? Math.round(r.b) : Math.round(r.t),
@@ -680,20 +687,32 @@
       }
     }
 
-    /* ── 15. 登入鍵的標籤（D4-05）──────────────────────────────────
-           ① 每一顆品牌鍵的標籤有沒有折行、內容有沒有超出按鈕
-           ② 板上那條「放不下的示範行」：容器寬 vs 標籤真正需要的寬 */
-    for (const b of el.querySelectorAll('[data-brand]')) {
+    /* ── 15. 登入鍵組的標籤（D4-05；第 6 輪 D5-01 母體從「品牌鍵」改成「登入鍵組的每一顆」）──
+           第 5 輪掃的是 [data-brand]，那只有 Apple 與 Google —— 我們自己那顆 Email
+           兩樣都不是，於是它在 AX5 掉成「登入」而沒有任何一條 gate 看得到。
+           現在掃的是 [data-signin]（三顆全在），[data-brand] 留給 G25「品牌鍵不接光」用。
+           ① 標籤有沒有折行、內容有沒有超出按鈕
+           ② 可見文字有沒有被無障礙名稱包住（WCAG 2.5.3 Label in Name）
+           ③ 板上那兩條示範行：容器寬 vs 標籤真正需要的寬（一條放不下、一條放得下） */
+    for (const b of el.querySelectorAll('[data-signin]')) {
       const kids = [...b.children].map(rel);
       const bcs = getComputedStyle(b), br2 = rel(b);
       const gap = parseFloat(bcs.gap) || 0;
       const need = kids.reduce((a, k) => a + k.w, 0) + gap * Math.max(0, kids.length - 1)
         + (parseFloat(bcs.paddingLeft) || 0) + (parseFloat(bcs.paddingRight) || 0);
-      const lab = [...b.children].find((c) => c.tagName === 'SPAN');
+      /* 標籤是**標出來的**（data-signin-label），不是「第一個 span」——
+         我們自己那顆在一般字級有一個信封 icon 包在 span 裡排在標籤前面，
+         用「第一個 span」會量到那個 icon：文字空字串、行數 2 行。 */
+      const lab = b.querySelector('[data-signin-label]');
       const lcs = lab ? getComputedStyle(lab) : null;
       const lh = lcs ? (parseFloat(lcs.lineHeight) || parseFloat(lcs.fontSize) * 1.2) : 1;
-      R.brandLab.push({ file: name, brand: b.getAttribute('data-brand'), title: b.getAttribute('data-title'),
-        lines: lab ? Math.round(rel(lab).h / lh) : 0, over: Math.round(need - br2.w), text: lab ? lab.textContent.trim() : '' });
+      const vis = lab ? lab.textContent.trim() : '';
+      /* 無障礙名稱：有 aria-label 就是它，沒有就是可見文字（子樹裡的 aria-hidden 不算）。
+         2.5.3 要的是「名稱**包含**可見文字」，所以這裡回報兩個字串，判斷留給 G32⑤。 */
+      const aria = b.getAttribute('aria-label');
+      R.brandLab.push({ file: name, brand: b.getAttribute('data-signin'), title: b.getAttribute('data-title'),
+        lines: lab ? Math.round(rel(lab).h / lh) : 0, over: Math.round(need - br2.w), text: vis,
+        aria: aria === null ? null : aria, name: aria === null ? vis : aria });
     }
     for (const n of el.querySelectorAll('[data-fit]')) {
       const lab = n.querySelector('[data-fit-label]');
@@ -703,8 +722,10 @@
     }
 
     /* ── 16. 具名豁免的使用點（D4-07②）＋ 玻璃交界的兩條規則（D4-11）── */
-    for (const n of el.querySelectorAll('[data-sys],[data-light],[data-cancel]')) {
-      for (const mk of ['data-sys', 'data-light', 'data-cancel']) {
+    /* 連**根節點自己**一起掃：整張板的豁免（data-veto）掛在板根上，
+       querySelectorAll 不含根 —— 少了這一句，「登記了卻沒用到」會誤報。 */
+    for (const n of [el, ...el.querySelectorAll('[data-sys],[data-light],[data-cancel],[data-veto]')]) {
+      for (const mk of ['data-sys', 'data-light', 'data-cancel', 'data-veto']) {
         if (n.hasAttribute(mk)) R.exemptSeen.push({ file: name, marker: mk, role: n.getAttribute(mk) });
       }
     }

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <!-- ls-measured:cbc2d053f962 -->
+  <!-- ls-measured:12c74c0820f7 -->
   <script src="./support.js"></script>
 </head>
 <body>
@@ -72,7 +72,7 @@
   <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
     <span style="font-size:15px;line-height:21px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)">版式：三階寬度、騎縫線、刻度（第 5 輪新增）</span>
     <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
-      <li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>寬度有三階，而且階有意思</b>：<b>出血</b>（板寬，只給拿在手上的實體：票根、登入托盤）／<b>欄</b>（版心 24pt 內距，給可以操作的東西：輸入框、按鈕、選項卡、待核卡片）／<b>旁註</b>（欄再縮 24pt，給引用與說明：明細表、說明框）。第 4 輪整份稿子 156 個區塊只有 6 種寬度、七成是同一個 342 —— 主體與幫助文字同寬同皮，讀者分不出哪一塊要做、哪一塊只是解釋。SwiftUI：出血用 <code>.listRowInsets(EdgeInsets())</code> 或負 padding，旁註用 <code>.padding(.horizontal, 24)</code>。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>說明框沒有皮</b>：它不是另一張紙，是印在台紙上的旁註（縮排＋左側 1pt 邊線）。平印的「皮」從此只代表一件事：那是一張真的印刷品（票根、明細表、警語條）。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>騎縫線是遮罩挖出來的洞，不是畫上去的線</b>：圓孔 r=4、齒距 18（AX 板 56，齒距綁 <code>ax()</code>）、左右兩緣半圓缺口 r=10。<b>票根（還沒撕）＝完整圓孔</b>（上下兩半各切自己那一緣的一半）、<b>托盤（撕下來的那一邊）＝半圓扇貝邊</b>。iOS 實作用 <code>.mask()</code> 疊三層 <code>RadialGradient</code>，或直接用 <code>Path</code> 減去圓形 —— <b>不要用一條虛線圖片</b>，那是第 4 輪被判掉的裝飾線。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>三格刻度：還沒用的格畫當前階、用掉的格蓋朱筆銷記</b>。刻度與號碼帶是同一支漸層（ΔE→0），所以「剩幾次」在刻度與帶色上是同一件事；銷記是同一支 brush 幾何畫的一劃，不是 CSS 的叉。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>登入鍵的標籤有三階</b>：一般「透過 Apple 登入」／AX4「Apple 登入」／AX5「登入」（官方短標題）。AX5 換短標題是<b>量出來的</b>（見 StressLoginAX 板上那條放不下的示範行），品牌詞在 AX5 由商標與 <code>aria-label</code> 承擔。</li>
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>寬度有三階，而且階有意思</b>：<b>出血</b>（板寬，只給拿在手上的實體：票根、登入托盤）／<b>欄</b>（版心 24pt 內距，給可以操作的東西：輸入框、按鈕、選項卡、待核卡片）／<b>旁註</b>（欄再縮 24pt，給引用與說明：明細表、說明框）。第 4 輪整份稿子 156 個區塊只有 6 種寬度、七成是同一個 342 —— 主體與幫助文字同寬同皮，讀者分不出哪一塊要做、哪一塊只是解釋。SwiftUI：出血用 <code>.listRowInsets(EdgeInsets())</code> 或負 padding，旁註用 <code>.padding(.horizontal, 24)</code>。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>說明框沒有皮</b>：它不是另一張紙，是印在台紙上的旁註（縮排＋左側 1pt 邊線）。平印的「皮」從此只代表一件事：那是一張真的印刷品（票根、明細表、警語條）。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>騎縫線是遮罩挖出來的洞，不是畫上去的線</b>：圓孔 r=4、齒距 18（AX 板 56，齒距綁 <code>ax()</code>）、左右兩緣半圓缺口 r=10。<b>票根（還沒撕）＝完整圓孔</b>（上下兩半各切自己那一緣的一半）、<b>托盤（撕下來的那一邊）＝半圓扇貝邊</b>。iOS 實作用 <code>.mask()</code> 疊三層 <code>RadialGradient</code>，或直接用 <code>Path</code> 減去圓形 —— <b>不要用一條虛線圖片</b>，那是第 4 輪被判掉的裝飾線。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>三格刻度：還沒用的格畫當前階、用掉的格蓋朱筆銷記</b>。刻度與號碼帶是同一支漸層（ΔE→0），所以「剩幾次」在刻度與帶色上是同一件事；銷記是有提按的一劃（brush 幾何），不是 CSS 的叉；它用的是紅筆不是字標那支蠟筆——劃掉存根的是照相館的人。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>登入鍵組的標籤有三階，三顆各走各的</b>（第 6 輪修）。<b>借來的兩顆</b>（Apple／Google）：一般「透過 X 登入」／AX4「X 登入」／AX5「登入」——AX5 那一階是<b>它們規範自己給的短標題</b>，品牌詞由商標承擔。<b>我們自己的那顆</b>：一般「用 Email 登入」／AX4 與 AX5 都是「Email 登入」——<b>不換短標題，因為量出來放得下</b>（兩條示範行都畫在 StressLoginAX 板上：一條被裁、一條有餘裕）。<b>aria-label 只加在 AX5 的兩顆品牌鍵上</b>，值是「品牌詞＋可見文字」；其餘每一顆一律沒有 aria-label，可見文字自己就是無障礙名稱（WCAG 2.5.3 Label in Name，G32⑤ 逐顆驗）。</li>
     </ul>
   </div>
     

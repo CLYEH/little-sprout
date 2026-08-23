@@ -4,7 +4,7 @@
 import { writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
-import { H1_GROUPS, RULE, TRACK, hash12, dERgb, cellSeen, STUB_USES } from './tokens.mjs';
+import { H1_GROUPS, RULE, TRACK, hash12, dERgb, cellSeen, STUB_USES, inScope } from './tokens.mjs';
 import { CANCEL_COV } from './brush.mjs';
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -196,9 +196,9 @@ const out = {
   })),
 
   insetUse: insetCount, insetTotal: R.inset.length, insetBad: R.insetBad,
-  cta: R.cta, ctaMax: Math.max(...Object.entries(R.cta).filter(([k]) => !/Tokens|Notes|Stress/.test(k)).map(([, v]) => v)),
-  ctaBoards: Object.keys(R.cta).filter((k) => !/Tokens|Notes|Stress/.test(k)).length,
-  ctaZero: Object.entries(R.cta).filter(([k, v]) => !/Tokens|Notes|Stress/.test(k) && v === 0).length,
+  cta: R.cta, ctaMax: Math.max(...Object.entries(R.cta).filter(([k]) => inScope('cta', k)).map(([, v]) => v)),
+  ctaBoards: Object.keys(R.cta).filter((k) => inScope('cta', k)).length,
+  ctaZero: Object.entries(R.cta).filter(([k, v]) => inScope('cta', k) && v === 0).length,
 
   /* ── 漸層（G22）──────────────────────────────────────
      kinds  畫面上實際出現的「不同寫法」數（去重後的 CSS 字串）

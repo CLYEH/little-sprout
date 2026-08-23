@@ -9,3 +9,4 @@ verified.json
 # 量測與截圖的副產物（與 measured.json 同一類：每次跑管線都會重寫）
 shots.json
 selftest.json
+__pycache__/
