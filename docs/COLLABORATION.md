@@ -14,7 +14,7 @@
 - **merge-reviewer subagent**：merge gate 的 code review（四維度，見 §4）。
 - **qa subagent**：在 `test` branch 上依驗收條件驗收，UI 票必做視覺驗收（模擬器實際渲染，優先用 mobile-mcp，備援 `xcrun simctl` 截圖）。
 - **dead-code-sweeper subagent**：feature 收尾時巡檢該 feature 引入的死碼與殘留物（只報告不刪改）。
-- **visual-reviewer subagent**：對抗性視覺審查。**任何設計稿在送 orchestrator／使用者核可之前必須先過它**——以極嚴視覺標準獵殺 AI slop 與模板感，預設 REQUEST_CHANGES，設計須自證三個記憶點才能通過。只審查不動檔。
+- **visual-reviewer subagent**：對抗性視覺審查。**任何設計稿在送 orchestrator／使用者核可之前必須先過它**——以極嚴視覺標準獵殺 AI slop 與模板感，預設 ITERATE（退修；verdict 詞彙唯一：ITERATE／APPROVE），設計須自證三個記憶點才能通過。只審查不動檔。
 
 **Agent model 政策**（agent 定義檔的 `model:` 為預設；orchestrator 派工時得以 Agent 工具的 `model` 參數覆寫升級）：
 
@@ -140,6 +140,7 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 | 新畫面必有 .pen 設計稿 | CI 掃 diff 新增行的 View 宣告＋驗 body `Design:` 欄（換行式 conformance 掃不到，LS-10 起限定 feature|fix|hotfix head 執行——promote／back-merge 的內容已在來源 feature PR 驗過，PR body 標記也不會隨 promote 携帶）；設計稿真偽由 orchestrator 核 | ⚠️ 混合 |
 | 設計稿須過 visual-reviewer 對抗審查（≥3 輪迭代）才送人核 | 掛在 Design 狀態出口：ticket 須有**三輪以上輪次標記的審查記錄**＋末輪 APPROVE，orchestrator 轉換狀態時逐輪清點 | ⚠️ 人工（狀態機承載） |
 | ui-designer 必先載入 frontend-design skill | 無機械 gate——skill 載入發生在 subagent 內部；handoff checklist 有「skill 影響了哪些取捨」欄（載入失敗須明說），orchestrator 驗 handoff 兜底（LS-32） | ⚠️ 人工 |
+| .pen 設計稿必須真實落地（Pencil 無 save 工具，編輯只在 app 記憶體） | `scripts/gates/design-landing-check.sh`：0 bytes／壞 JSON／空結構即紅（機械）；觸發靠 ui-designer 收工程序（agent 定義），orchestrator 進版控前可複跑（LS-26） | ⚠️ 混合 |
 | project.yml ↔ .xcodeproj 同步（XcodeGen 雙來源） | CI：重跑 `xcodegen generate` 後 `git add -A -- LittleSprout.xcodeproj && git diff --cached --exit-code`（涵蓋 xcodegen 產生的全新 untracked 檔，LS-10 補上原本只比對已追蹤檔案的盲區；生成物 byte-identical，不 flaky；雙向漂移皆攔） | ✅ |
 | 雲端 DB 不得繞過 migration 直改 | supabase MCP 鎖 `read_only=true`（機械）；dashboard 路徑靠規約 | ⚠️ 混合 |
 | harness 檔 back-merge 到 test／development | 無機械 gate——orchestrator 在 LS ticket 驗收條件中列入並人工確認 | ⚠️ 人工 |

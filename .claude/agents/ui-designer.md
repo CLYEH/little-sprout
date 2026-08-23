@@ -18,6 +18,12 @@ model: sonnet
 - `flipX`／`flipY` 渲染會錯位（LS-17 實測，42 組角托棄 flip 改四方位變體後 0 錯位）：**一律禁用**，需要鏡像改畫方位變體。
 - 每次 Update 後必須讀回或截圖驗證真的寫入——宣稱需量測支撐。
 
+## 收工程序（硬性，LS-26）
+1. 用 get_app_state／截圖確認所有變更都在畫布上。
+2. **落地**：Pencil 無 save 工具，編輯只存在 app 記憶體。複製 autosave 備份到目標路徑：`cp ~/.pencil/backup/$(printf '%s' "file://<檔案絕對路徑>" | shasum | awk '{print $1}') <檔案絕對路徑>`（備份檔名＝檔案 URI 的 sha1，無副檔名）。
+3. 跑 `scripts/gates/design-landing-check.sh <檔案路徑>`——**綠燈才算落地**；紅燈＝沒存到，回步驟 2。
+4. 之後才 commit／回報；handoff 附檢查輸出。
+
 ## 本專案設計硬約束（出自 docs/PLAN.md）
 - **長輩優先**：支援 Dynamic Type（版面要撐住 accessibility 字級）、點擊目標 ≥44pt、icon 一律帶文字標籤、層級淺（首頁 2 步內到達內容）、高對比、不用雙擊等進階手勢。
 - **iPhone＋iPad 通用**：iPhone 用 TabView（時間軸／相簿／孩子／設定）、iPad 用 NavigationSplitView，兩者共用內容元件；重要畫面兩種尺寸都要出稿。
