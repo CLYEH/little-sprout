@@ -12,6 +12,14 @@
     "supabase": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp?project_ref=mzkkkzbiejgvhwjyiokf&read_only=true"
+    },
+    "figma": {
+      "type": "stdio",
+      "command": "bash",
+      "args": [
+        "-c",
+        "source \"$(dirname \"$(git rev-parse --path-format=absolute --git-common-dir)\")/.env\" && FIGMA_API_KEY=\"${FIGMA_PERSONAL_ACCESS_TOKEN:?not set in .env}\" exec npx -y figma-developer-mcp@0.13.2 --stdio"
+      ]
     }
   }
 }

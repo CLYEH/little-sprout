@@ -95,6 +95,7 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 
 - Team key：`LS`（workspace `little-sprout-app`）。**Linear 是唯一的任務狀態來源**；每個狀態的離開就是一個 gate，由 orchestrator 執行轉換並在 ticket 留 comment 記錄 gate 證據。
 - MCP 設定在專案 `.mcp.json`；session 重啟後用 `/mcp` 完成 OAuth。
+- **MCP 必要環境變數**：repo 根 `.env`（gitignored）須含 `FIGMA_PERSONAL_ACCESS_TOKEN`（figma MCP 啟動時注入；缺失即啟動失敗 fail loud——LS-42）。`.env` 的值一律只認 key 名、不讀取。
 - **開票結構**：Project＝epic；Milestone＝feature 群（同一 epic 底下相關的一批 issue）；Issue＝story，必須帶可驗證的驗收條件（同 §1 的 Spec 狀態離開條件）；Sub-issue＝task，**只有在單一 story 需要多個 agent 接力完成**（例如設計→實作→審查分屬不同派工、無法一個 agent 一次做完）時才拆，拆分依據與各 task 的範圍寫在該 story 的 ticket scope 裡，不預先拆。
 
 | 狀態 | 離開條件（gate） |
@@ -141,6 +142,7 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 | 設計稿須過 visual-reviewer 對抗審查（≥3 輪迭代）才送人核 | 掛在 Design 狀態出口：ticket 須有**三輪以上輪次標記的審查記錄**＋末輪 APPROVE，orchestrator 轉換狀態時逐輪清點 | ⚠️ 人工（狀態機承載） |
 | ui-designer 必先載入 frontend-design skill | 無機械 gate——skill 載入發生在 subagent 內部；handoff checklist 有「skill 影響了哪些取捨」欄（載入失敗須明說），orchestrator 驗 handoff 兜底（LS-32） | ⚠️ 人工 |
 | .pen 設計稿必須真實落地（Pencil 無 save 工具，編輯只在 app 記憶體） | `scripts/gates/design-landing-check.sh`：0 bytes／壞 JSON／空結構即紅，`--expect-nodes` 驗與畫布一致；**commit-gate 對 staged .pen 自動觸發＋CI rules job 對 diff 內 .pen 兜底**（皆無 N——「落地比記憶體舊」的深度驗證靠收工程序步驟 2/4，PR review 驗 handoff 輸出）（LS-26） | ✅ hook＋CI（深度驗證⚠️程序） |
+| MCP 必要 env 變數必須存在（FIGMA_PERSONAL_ACCESS_TOKEN） | `.mcp.json` 的 `${VAR:?}` 展開——缺失／空值時 server 啟動即炸，`/mcp` 可見（LS-42） | ✅（fail loud 設計） |
 | project.yml ↔ .xcodeproj 同步（XcodeGen 雙來源） | CI：重跑 `xcodegen generate` 後 `git add -A -- LittleSprout.xcodeproj && git diff --cached --exit-code`（涵蓋 xcodegen 產生的全新 untracked 檔，LS-10 補上原本只比對已追蹤檔案的盲區；生成物 byte-identical，不 flaky；雙向漂移皆攔） | ✅ |
 | 雲端 DB 不得繞過 migration 直改 | supabase MCP 鎖 `read_only=true`（機械）；dashboard 路徑靠規約 | ⚠️ 混合 |
 | harness 檔 back-merge 到 test／development | 無機械 gate——orchestrator 在 LS ticket 驗收條件中列入並人工確認 | ⚠️ 人工 |
