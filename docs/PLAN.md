@@ -107,6 +107,12 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 
 **檔案路徑規約**：`{family_id}/{yyyy}/{mm}/{media_id}.{ext}` + `..._thumb.jpg`，未來 S3 sync 到 NAS 時整個前綴搬走即可。`{yyyy}/{mm}` **取上傳時間，不取 `taken_at`** —— 這個前綴的用途是搬移分片而非查詢，用 `taken_at` 會讓回填舊照片時分片散開。
 
+**Storage 邊界**（LS-40，`supabase/migrations/20260823030000_storage_policies.sql`）：檔案放在 private 的 `media` bucket（單檔 50 MiB、僅 HEIC/HEIF/JPEG/PNG/MP4/MOV）。`storage.objects` 沒有 `family_id` 欄位，RLS 只能以**路徑第一段**判歸屬——讀＝同家庭成員（含 viewer），寫＝有 `can_upload` 的成員**且第一段必須是自己所屬的 family_id**，改／刪＝上傳者本人或家庭 owner。上面那條路徑規約因此不再只是約定，而是被 policy 強制的安全邊界，客戶端必須遵守三件事：
+
+- **UUID 一律小寫正規形**。Swift 的 `UUID.uuidString` 預設是大寫，要 `.lowercased()`。policy 比對的是 `uuid::text`（Postgres 恆輸出小寫），也與 `media.storage_path` 的 `media_storage_path_family_prefix` CHECK 對齊；大寫路徑會在上傳當下被拒（42501），不會有半套狀態。
+- **列表只載 `_thumb.jpg`，原圖等進大圖再載，且一律走簽名 URL**（bucket 私有，檔案沒有公開網址）。這是 §7 egress 那一項的主要防線，不只是速度。
+- **刪除順序**：照片的「刪除」是 `media.deleted_at` 軟刪除，**不動檔案**（§5 長輩誤刪要有救援路徑）；policy 之所以讓上傳者刪得掉自己的檔案，是為了清掉「上傳失敗、沒有成功建出 media 列」的孤兒物件——那種物件只有上傳者知道它存在。`families.storage_used_bytes` 由 media 的 trigger 依 `byte_size` 維護，與 bucket 實際用量對帳的基準就是 `media.storage_path` ↔ `storage.objects.name` 這組對應。
+
 ## 6. 開發路線圖
 
 > 各階段的週數是「手寫程式」的量級估算，供排序參考。實際採 agent 主力開發，瓶頸不在打字而在**驗證**與**外部等待**（Apple 審核、家人試用回饋）—— 所以每步的「驗證：」條件才是真正的進度閘門，週數不是。
