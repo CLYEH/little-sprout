@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <!-- ls-measured:1e5850fcb42a -->
+  <!-- ls-measured:67c805912926 -->
   <script src="./support.js"></script>
 </head>
 <body>
@@ -10,7 +10,7 @@
 <helmet><style>
     /* ── Little Sprout M1 tokens（值即實作值，ios-dev 直接抄）── */
     :root{
-      --ls-board:#F4DFDB; --ls-board-2:#E7CDCB; --ls-board-3:#E2C6BE; --ls-lit:#FEF3F0;
+      --ls-board:#F4DFDB; --ls-board-2:#E7CDCB; --ls-board-3:#E2C6BE; --ls-lit:#FBEBE4;
       --ls-ink:#2A1219; --ls-ink-2:#3E232B;
       --ls-cta:#86183F; --ls-cta-deep:#4A0722; --ls-cta-busy:#5E0A2A; --ls-on-cta:#FEF3F0;
       --ls-pen:#7E1414; --ls-sprout:#1C4630; --ls-edge:#8C6159; --ls-google-line:#747775;
@@ -20,11 +20,15 @@
       --ls-g-win3:linear-gradient(180deg, #D8B9B1 0%, #E6C9C1 100%);
       --ls-g-face:linear-gradient(180deg, #E9CFC7 0%, #DBBDB5 100%);
       --ls-g-cta:linear-gradient(180deg, #901F49 0%, #7C1236 100%);
+      --ls-g-well:linear-gradient(180deg, #866867 0%, #957B7A 100%);
       --ls-g-stub3:linear-gradient(180deg, #FAEADE 0%, #EFD3D6 35%, #ECD0D6 100%);
       --ls-g-stub2:linear-gradient(180deg, #F9EBE0 0%, #F2DAD8 35%, #F1D8D7 100%);
       --ls-g-stub1:linear-gradient(180deg, #F8EBE1 0%, #F5E1DB 35%, #F4E0DB 100%);
       --ls-g-stub0:linear-gradient(180deg, #F7ECE3 0%, #F6E8E1 35%, #F6E8E0 100%);
       --ls-g-seam:linear-gradient(180deg, rgba(42,18,25,0) 0%, rgba(42,18,25,.42) 100%);
+      /* 光從哪一邊來（+1 上、−1 下）。G24 讀它決定每一個表面該長什麼樣，
+         所以「這一張板是哪一種光」不再靠檔名猜。 */
+      --ls-dir:1;
       --ls-r-window:12px; --ls-r-control:14px; --ls-r-card:18px;
       --ls-sp-1:4px; --ls-sp-2:8px; --ls-sp-3:12px; --ls-sp-4:16px;
       --ls-sp-5:24px; --ls-sp-6:32px; --ls-tap-min:44px;
@@ -37,7 +41,7 @@
       background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
       mix-blend-mode:multiply}
   </style></helmet>
-<div class="g" data-col="phone" data-grad="paper" style="position:relative;width:390px;height:844px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;display:flex;flex-direction:column">
+<div class="g" data-col="phone" data-grad="paper" style="position:relative;width:390px;height:940px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;display:flex;flex-direction:column">
   <div style="padding:59px 24px 0"><div data-s="raise" data-role="link" style="min-height:44px;display:flex;align-items:center;gap:4px;margin-left:-6px;color:#2A1219">
       <span style="display:flex"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5 8 12l6.5 7"/></svg></span><span style="font-size:17px;line-height:25px;font-weight:600">陳家</span>
    </div></div>
@@ -49,7 +53,7 @@
   
   <div data-s="flat" style="border:1px solid #8C6159;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:16px">
     <div style="display:flex;gap:12px;align-items:center">
-      <div data-s="win" data-role="avatar" style="flex:none;width:52px;height:52px;background:linear-gradient(180deg, #D8B9B1 0%, #E6C9C1 100%);border:1px solid #8C6159;border-radius:50%;box-shadow:inset 0 1.5px 0 rgba(42,18,25,.34), inset 0 4px 6px -3px rgba(42,18,25,.22), inset 0 -1.5px 0 rgba(255,246,242,.78);padding:0;display:flex;align-items:center;justify-content:center">
+      <div data-s="win" data-role="avatar" data-inset="mount" style="flex:none;width:52px;height:52px;background:linear-gradient(180deg, #D8B9B1 0%, #E6C9C1 100%);border:1px solid #8C6159;border-radius:50%;box-shadow:inset 0 1px 0 rgba(42,18,25,.34), inset 0 2.5px 4px -2px rgba(42,18,25,.22), inset 0 -1px 0 rgba(255,246,242,.78);padding:0;display:flex;align-items:center;justify-content:center">
         <span style="font-size:22px;line-height:28px;font-weight:600;letter-spacing:-.005em;color:#3E232B">怡</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
@@ -74,9 +78,16 @@
   
   <div style="height:1px;background:#8C6159"></div>
   
-  <div data-s="flat" data-grad="stub2" style="border:1px solid #8C6159;border-radius:12px;padding:12px 16px;background:linear-gradient(180deg, #F9EBE0 0%, #F2DAD8 35%, #F1D8D7 100%);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-    <span style="font-size:17px;line-height:25px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)">邀請碼 K7M 2QD</span>
-    <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B;text-shadow:0 1px 0 rgba(255,246,242,.80)">8/30 到期 · 還可以用 2 次</span>
+  <div data-s="flat" data-m="ticket" style="border:1px solid #8C6159;border-radius:18px;padding:0;overflow:hidden">
+    <div data-grad="stub2" data-band="code" style="background:linear-gradient(180deg, #F9EBE0 0%, #F2DAD8 35%, #F1D8D7 100%);padding:24px;display:flex;flex-direction:column;align-items:center;gap:12px">
+      <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B;letter-spacing:.16em;text-shadow:0 1px 0 rgba(255,246,242,.80)">邀 請 碼</span>
+      <div style="height:64px;display:flex;align-items:center;justify-content:center;gap:12px"><span style="display:flex;gap:24px;font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:60px;line-height:64px;font-weight:600;letter-spacing:.04em;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)"><span>K7M</span><span>2QD</span></span></div>
+    </div>
+    <div data-grad="perf" style="height:1px;background:repeating-linear-gradient(90deg, #8C6159 0 6px, transparent 6px 12px)"></div>
+    <div style="padding:12px 24px;display:flex;flex-direction:column;gap:4px;background:#E2C6BE"><span style="display:inline-flex;align-items:center;gap:8px"><span data-scale="2" style="display:inline-flex;align-items:center;gap:4px">
+      <span data-cell="spent" data-grad="stub0" style="width:34px;height:20px;border-radius:2px;border:1px solid #8C6159;background:linear-gradient(180deg, #F7ECE3 0%, #F6E8E1 35%, #F6E8E0 100%)"></span><span data-cell="left" data-grad="stub3" style="width:34px;height:20px;border-radius:2px;border:1px solid #8C6159;background:linear-gradient(180deg, #FAEADE 0%, #EFD3D6 35%, #ECD0D6 100%)"></span><span data-cell="left" data-grad="stub3" style="width:34px;height:20px;border-radius:2px;border:1px solid #8C6159;background:linear-gradient(180deg, #FAEADE 0%, #EFD3D6 35%, #ECD0D6 100%)"></span>
+    </span><span style="font-size:17px;line-height:25px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80);white-space:nowrap">還可以用 2 次</span></span>
+         <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B;text-shadow:0 1px 0 rgba(255,246,242,.80)">有效到 8 月 30 日</span></div>
   </div>
   <span data-s="raise" data-role="link" style="align-self:center;min-height:44px;display:inline-flex;align-items:center;padding:0 8px;font-size:17px;line-height:25px;font-weight:600;color:#2A1219;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px">換一組新的號碼</span>
 </div></div>

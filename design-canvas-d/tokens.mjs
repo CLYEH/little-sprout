@@ -73,16 +73,32 @@ export const lchHex = (L, C, h) => {
    edge 是全稿唯一的線色（分隔線、開窗邊、未走的步驟段）。 */
 export const T = {
   light: {
-    board: '#F4DFDB', board2: '#E7CDCB', board3: '#E2C6BE', lit: '#FEF3F0',
+    /* dir ＝ 光從哪邊來：+1 上、−1 下。**同一個常數同時決定四件事** ——
+       凹的內陰影落在哪一緣、浮起的落影往哪邊投、平印的亮邊翻到哪一緣、
+       漸層的兩端誰亮。第 2 輪這四件事在深色下互相牴觸（bevelTop/bevelBot 沒鏡像、
+       lift 還在往下投），同一個元件上有兩個互相矛盾的光源。G24 逐個使用點驗它。 */
+    dir: +1,
+    board: '#F4DFDB', board2: '#E7CDCB', board3: '#E2C6BE', lit: '#FBEBE4',
     ink: '#2A1219', ink2: '#3E232B',
     cta: '#86183F', ctaDeep: '#4A0722', ctaBusy: '#5E0A2A', onCta: '#FEF3F0',
     pen: '#7E1414', sprout: '#1C4630', onSprout: '#FEF3F0',
     edge: '#8C6159',
+    /* 系統開關的兩個零件（解剖照 Apple design kit）。把手在四種組合裡都是同一個顏色 ——
+       官方 kit 的 Light/Dark × ON/OFF 四顆，把手全部是白的（見 kit-Toggles 匯出）。
+       第 2 輪的 OFF 把手用 board3 坐在 win 上，實測 1.04:1：全稿唯一會出事的可用性缺陷。 */
+    knob: '#FFFFFF', wellEdge: '#6E4640',
+    /* 系統的 Liquid Glass。這兩個值**不是我們的表面語言** —— 它們是為了在稿上
+       畫出「系統材質疊在我們的紙上會長什麼樣」而存在的，唯一的使用點是 GlassSeam 板。
+       真的實作時這一層由系統畫（.presentationBackground 之類），我們一個像素都不出。 */
+    glassFill: 'rgba(251,235,228,.72)', glassEdge: 'rgba(255,255,255,.62)', glassDim: 'rgba(42,18,25,.10)',
+    appleBg: '#000000', appleFg: '#FFFFFF',
     /* 第三方品牌鍵：外觀由對方的規範決定，不吃我們的色。列在這裡是因為
        「沒印出來的例外就是 bug」——它們是全稿唯二不走台紙色的表面。 */
-    appleBg: '#000000', appleFg: '#FFFFFF',
     googleBg: '#FFFFFF', googleFg: '#1F1F1F', googleLine: '#747775',
-    bevelTop: 'rgba(42,18,25,.34)', bevelSoft: 'rgba(42,18,25,.22)', bevelBot: 'rgba(255,246,242,.78)',
+    /* 極性（不是位置）：bevelLit ＝ 被照到的那一壁、bevelDark ＝ 背光的那一壁。
+       bevelTop／bevelBot 是由 dir 推出來的**位置別名**（見檔案下方），
+       所以「哪一緣亮」永遠是光源方向的結果，不可能再有人單獨改一邊。 */
+    bevelLit: 'rgba(255,246,242,.78)', bevelDark: 'rgba(42,18,25,.34)', bevelSoft: 'rgba(42,18,25,.22)',
     lift: '0 1px 0 rgba(42,18,25,.20), 0 8px 16px -10px rgba(42,18,25,.55)',
     press: '0 1px 0 rgba(255,246,242,.80)',   // 平印：光從上來，字的下緣有亮邊
     grain: '.055',
@@ -95,6 +111,7 @@ export const T = {
       win3: [['#D8B9B1', 0], ['#E6C9C1', 100]],
       face: [['#E9CFC7', 0], ['#DBBDB5', 100]],
       cta: [['#901F49', 0], ['#7C1236', 100]],
+      well: [['#866867', 0], ['#957B7A', 100]],
       seam: [['rgba(42,18,25,0)', 0], ['rgba(42,18,25,.42)', 100]],
     },
     /* 號碼帶的兩個錨點：剛印好的染料帶（上緣已經見過光，所以上淺下濃），
@@ -103,28 +120,45 @@ export const T = {
     stubSpent: '#F7ECE4',
   },
   dark: {
-    board: '#261416', board2: '#1F1013', board3: '#372020', lit: '#462A2B',
+    dir: -1,                                   // 深色：光從下面來
+    board: '#261416', board2: '#1F1013', board3: '#372020', lit: '#462B28',
     ink: '#F8E7E2', ink2: '#DCBEBC',
     cta: '#E3A9C4', ctaDeep: '#995F7F', ctaBusy: '#C39BAE', onCta: '#261416',
     pen: '#FFAE86', sprout: '#8FD2A6', onSprout: '#261416',
     edge: '#A0807C',
+    knob: '#FFFFFF', wellEdge: '#5A3B37',
+    glassFill: 'rgba(55,32,32,.70)', glassEdge: 'rgba(255,255,255,.16)', glassDim: 'rgba(0,0,0,.28)',
     appleBg: '#FFFFFF', appleFg: '#000000',
     googleBg: '#131314', googleFg: '#E3E3E3', googleLine: '#8E918F',
-    bevelTop: 'rgba(0,0,0,.6)', bevelSoft: 'rgba(0,0,0,.45)', bevelBot: 'rgba(255,214,208,.20)',
-    lift: '0 1px 0 rgba(0,0,0,.5), 0 8px 16px -10px rgba(0,0,0,.9)',
-    press: '0 -1px 0 rgba(0,0,0,.55)',        // 深色：光從下來，亮邊翻到上緣（同一條規則的鏡像）
+    /* 第 2 輪的 bug（reviewer 的 M3 突變在這裡有真實對應）：深色的 bevelTop 是暗的、
+       bevelBot 是亮的 —— 與淺色同極性。可是深色的光從下面來，凹進去的洞裡，
+       被照到的是**上**內壁、暗的是下內壁。所以同一個 win() 在深色下印出來的是
+       「光從上」，而同一張板的 press 印的是「光從下」：一個元件兩個互相牴觸的光源，
+       而且錯的那一支振幅（.6）是對的那一支（.20）的三倍，所以錯的那個看起來還比較像真的。
+       這一輪 bevelTop 一律是「受光緣」、bevelBot 一律是「背光緣」，光的方向由 dir 決定。 */
+    bevelLit: 'rgba(255,214,208,.26)', bevelDark: 'rgba(0,0,0,.62)', bevelSoft: 'rgba(0,0,0,.45)',
+    lift: '0 -1px 0 rgba(0,0,0,.5), 0 -8px 16px -10px rgba(0,0,0,.9)',
+    /* 淺色的 press 是「亮邊在下」（光從上，壓進去的字，遠側那一壁被照到）。
+       深色的鏡像因此是「亮邊在上」—— 位置翻面，**極性也要跟著翻**。
+       第 2 輪只翻了位置沒翻極性（暗邊在上），那讀起來還是光從上面來。 */
+    press: '0 -1px 0 rgba(255,214,208,.22)',
     grain: '.09',
     /* 深色是同一套語言的鏡像：光源翻到下方，所以每一種漸層的兩端也一起對調
        （台紙較亮的那一端、浮起面較亮的那一端、凹窗較暗的那一端）。
        唯一不翻的是 seam —— 它由「紙壓在照片上」的幾何決定，不由光源決定。
-       第 2 輪：每一個端點的 L* 與 C* 原封不動，只把色相轉到深色的錨點上
-       （＝淺色同名端點的色相 −18.95°）—— 對比因此一位元都沒動，溫度階梯卻回來了。 */
+       第 2 輪：每一個端點的 L* 與 C* 原封不動，只把色相轉到深色的錨點上。
+       **「−18.95°」這個數只對實體 token（board／board2／board3／lit／cta）成立**——
+       漸層端點是另一回事，它們各自順著自己那一支的光走，兩端跨距最大到 78°。
+       第 2 輪把這個數寫成「所有東西都轉了 −18.95°」，reviewer 實測，那是假的。
+       而且「對比一位元都沒動」字面上也是假的：sRGB 是 8 bit，固定 L* 轉色相之後
+       每個通道各自進位一次，實測整批對比變動在 0.04:1 以內（Tokens 板印實測上界）。 */
     grad: {
       paper: [['#1F1015', 0], ['#2B1915', 100]],
       win: [['#251417', 0], ['#180B0E', 100]],
       win3: [['#3F2626', 0], ['#2E1A1A', 100]],
       face: [['#2E1A1A', 0], ['#3F2626', 100]],
       cta: [['#D998B4', 0], ['#E9B3CE', 100]],
+      well: [['#261418', 0], ['#1D0C10', 100]],
       seam: [['rgba(0,0,0,0)', 0], ['rgba(0,0,0,.62)', 100]],
     },
     stubFresh: ['#22131C', '#34211A'],
@@ -139,8 +173,46 @@ export const T = {
    染料永遠比它印上去的那張泛黃的紙**冷**，兩個模式都是。
    墨（ink/ink2）與訊號色（朱、芽綠）不在這張表上：它們不是這張紙的老化，
    是後來畫上去的東西（紅筆、機制），不參加台紙的溫度階梯。 */
-export const TEMP = { board2: -8.7, board3: +6.7, lit: +6.0, cta: -28.2 };
+/* 位置別名：凹進去的洞裡，被照到的是**離光源遠**的那一壁。
+   淺色光從上 ⇒ 上緣背光（暗）、下緣受光（亮）；深色光從下 ⇒ 整個翻過來。
+   第 2 輪深色兩邊都沒翻（上暗下亮，與淺色同極性），所以同一個 win() 在深色下
+   說「光從上」，而同一張板的 press／漸層說「光從下」——一個元件兩個光源。
+   現在這兩個名字是推出來的，翻面是自動的。 */
+for (const th of [T.light, T.dark]) {
+  th.bevelTop = th.dir > 0 ? th.bevelDark : th.bevelLit;
+  th.bevelBot = th.dir > 0 ? th.bevelLit : th.bevelDark;
+}
+
+/* 「凹」的兩族白名單。build.mjs 的 INSET_FAM、_probe.html 的 INSET_OK、
+   verify 的 G5 都應該讀得到同一份 —— 這裡是它的規格出處（板上也印這一份）。 */
+export const INSET_KEYS = { fillable: ['field', 'cell', 'codeslot', 'tray', 'switchTrack'], mount: ['photo', 'avatar'] };
+
+export const TEMP = { board2: -8.7, board3: +6.7, lit: +16.5, cta: -28.2 };
 export const TEMP_TOL = 3;
+
+/* 第 3 輪 R1：G23① 原本只驗**角度**，而角度在低彩度上等於沒有溫度 ——
+   淺色 lit 宣告 +6.0°、實測 +6.05°，這一項一路綠燈；但它的 C* 只有 4.2，
+   6° 的色相位移單獨貢獻的 ΔE 是 **0.51**，在 JND（≈1）之下：
+   「四階台紙有溫度層次」這句話在最亮的那一階上是量得出來的假。
+   兩件事一起修：
+     ① 門檻從角度改成 ΔE —— 每一階的色相位移**單獨**要貢獻 ΔE ≥ HUE_DE_MIN；
+     ② lit 真的把溫度做出來：TEMP.lit 從 +6.0 抬到 +16.5，色 #FEF3F0 → #FBEBE4。
+   為什麼是 lit 抬角度而不是加彩度：概念上 lit 是「還沒被翻過的新紙」＝**還沒開始褪的原色**，
+   它離「褪過的台紙」最遠是對的；而 C* 必須維持四階最低（越老才越有顏色，G23③ 的
+   淺色階梯就是這條），所以能動的只有角度。抬完之後四階的溫度也不再兩兩重疊
+   （第 2 輪 lit +6.05° 與 board3 +6.71° 幾乎同溫，等於四階只有三種溫度）。
+   為什麼不寫成 lchHex() 的推導值：L*96 附近的 sRGB 是 8 bit 的粗網格，那個高度上
+   找不到落在宣告角度上的可表示點（推導出來的 #FFF3ED 實測位移 20.2°，離宣告的 16.5°
+   有 3.7°—— 推導反而製造漂移）。所以四階一律是實值，關係由 G23① 守。
+   新的 lit：L* 96.6→94.11（仍是四階最亮，board 90.4）、C* 6.82（仍是四階最低）、
+   位移 +16.53°、單獨貢獻 ΔE 2.16。L* 動了 2.5 ⇒ 對比會動一點點，動多少由板上實測。 */
+export const HUE_DE_MIN = 1.0;
+/* 色相位移**單獨**貢獻的 ΔE：固定 L* 與 C*，只把色相轉回台紙本體的角度，量兩者的距離。
+   板上印的、G23① 判的是同一個函式。 */
+export const hueDE = (th, k) => {
+  const c = lch(th[k]);
+  return dE(lchHex(c.L, c.C, c.h), lchHex(c.L, c.C, lch(th.board).h));
+};
 
 /* 漸層層級的溫度下限（度）。寫死的是**實測下限**：
    淺色 win 比 paper 冷 9.31°、win3 比 paper 暖 4.71°、跨距 15.4°；
@@ -201,24 +273,25 @@ export const GRAD_WHY = {
   win3: '開窗底的次要面版本（頭像位）。與 win 同一條規則，只是底色是 board3。',
   face: '浮起面（可按）。凸面朝上，上緣接到的光比下緣多 —— 上亮下暗，正好與凹相反。長輩不必分辨陰影方向也知道能不能按，但摸過一次就會記得。',
   cta: '主按鈕的浮起面。與 face 同一條光，只是底色是「還沒褪色的那個粉」—— 台紙是褪過色的，主按鈕是它還沒褪色時的樣子。',
-  stub3: '號碼帶．還可以用 3 次（剛產生）。這是全稿唯一「時間」的漸層：染料褪、碳墨不褪。它不是一支振幅比較大的光 —— 光只改明度（其他四支兩端色相差 ≤7°），褪色會把染料抽走露出泛黃的紙，所以兩端色相差 63°；而且它是**邊緣加權**的：只有露在外面的那一段見得到光，35% 之內就褪完，剩下 65% 幾乎沒動（全稿唯一的三色停、唯一非等速的漸層）。',
+  stub3: '號碼帶．還可以用 3 次（剛產生）。這是全稿唯一「時間」的漸層：染料褪、碳墨不褪。它不是一支振幅比較大的光 —— 光只改明度（其他四支兩端色相差 ≤7°），褪色會把染料抽走露出泛黃的紙，所以兩端色相差 63°；而且它是<b>邊緣加權</b>的：只有露在外面的那一段見得到光，35% 之內就褪完，剩下 65% 幾乎沒動（全稿唯一的三色停、唯一非等速的漸層）。',
   stub2: '號碼帶．還可以用 2 次。已經被用掉一次 —— 整條往「乾淨的紙」褪一階：色相位移、明度差、彩度三個量一起降。',
   stub1: '號碼帶．還可以用 1 次。褪到第三階，號碼帶快要跟票根本身的紙分不出來了；號碼本身完全沒有變（碳墨不褪，實測仍 13:1 以上）。',
-  stub0: '號碼帶．用完了。三個量都趨近於零 —— **褪完了就沒有褪色的方向了**。這與「還沒印上號碼的空票根沒有這條漸層」是同一句話的兩端：沒印過的不會褪，褪完的也不再褪。',
+  stub0: '號碼帶．用完了。三個量都趨近於零 —— <b>褪完了就沒有褪色的方向了</b>。這與「還沒印上號碼的空票根沒有這條漸層」是同一句話的兩端：沒印過的不會褪，褪完的也不再褪。',
+  well: '審核開關關掉時的軌道 ＝ 台紙被打穿之後那個空的槽。與 win 同一條光（凹進去的地方上暗下亮），只是深得多 —— 因為它必須讓把手（那片打孔留下的紙圓片）在 1 公尺外看得出來停在哪一端：實測對比印在 Tokens 板上，硬門檻 3:1。第 2 輪的 OFF 把手對軌道只有 1.04:1，是全稿唯一會出事的可用性缺陷。',
   seam: '台紙壓在照片上投下的影子。紙有厚度，影子從實到無 —— 全稿唯一不是「明暗」而是「有無」的漸層，也是唯一壓在照片上的（所以它上面永遠沒有字）。它是唯一深色不翻面的漸層：紙的邊緣永遠向上蓋住照片，影子就永遠往上，那是幾何不是光源。',
   perf: '騎縫線。它用 repeating-linear-gradient 的語法，但它是圖樣不是明暗漸層（橫向、1px 高、上面永遠沒有字）—— 全稿唯一的方向例外，列在這裡是為了不讓它變成沒印出來的例外。',
 };
 
-/* 刻意**沒有**漸層的表面，每一個都要有理由 —— 「規則有例外可以，例外沒印出來不行」。 */
+/* 刻意<b>沒有</b>漸層的表面，每一個都要有理由 —— 「規則有例外可以，例外沒印出來不行」。 */
 export const NO_GRAD_WHY = {
-  平印: '只能讀的東西不接光：票根外框、明細表、說明框、待核卡片、警語條全部沒有漸層。例外只有兩個，而且是逐個元素標記出來的（data-grad）：號碼帶（stub，那條是褪色不是光）與騎縫線（perf，那是圖樣不是明暗）。G23② 掃的是平印元素**與它所有後代**的 computed background，這兩個標記以外的漸層一律 FAIL —— 上一輪 reviewer 把台紙漸層加到平印面上，71 項 gate 沒有一項會叫。',
+  平印: '只能讀的東西不接光：票根外框、明細表、說明框、待核卡片、警語條全部沒有漸層。例外只有兩個，而且是逐個元素標記出來的（data-grad）：號碼帶（stub，那條是褪色不是光）與騎縫線（perf，那是圖樣不是明暗）。G23② 掃的是平印元素<b>與它所有後代</b>的 computed background，這兩個標記以外的漸層一律 FAIL —— 上一輪 reviewer 把台紙漸層加到平印面上，71 項 gate 沒有一項會叫。',
   載入中: '按鈕載入中時漸層整條拿掉、換成實色，唇邊與底同色 —— 按不動的東西不反光。這是「就地轉態」在光語言裡的落地，不是另做一顆按鈕。',
   品牌鍵: 'Apple 與 Google 兩顆鍵的外觀由對方的品牌規範決定：實色底、指定的描邊與字色，不加漸層。我們只借幾何（高度、圓角、間距、命中盒），不借光。',
 };
 
-export const GRAD_KEYS = ['paper', 'win', 'win3', 'face', 'cta', 'stub3', 'stub2', 'stub1', 'stub0', 'seam'];
+export const GRAD_KEYS = ['paper', 'win', 'win3', 'face', 'cta', 'well', 'stub3', 'stub2', 'stub1', 'stub0', 'seam'];
 export const STUB_KEYS = STUB_USES.map((n) => `stub${n}`);
-export const LIGHT_KEYS = ['win', 'win3', 'face', 'cta'];   // 「光」的漸層
+export const LIGHT_KEYS = ['win', 'win3', 'face', 'cta', 'well'];   // 「光」的漸層
 export const TIME_KEYS = ['paper', ...STUB_KEYS];           // 「時間」的漸層
 
 /* 產出與比對用的唯一寫法。build 畫的、verify 掃的、Tokens 板印的，都是這一個函式。 */
@@ -300,10 +373,10 @@ export const TY = {
 export const H1_GROUPS = {
   有步驟條: ['Email', 'EmailError', 'EmailSending', 'Otp', 'OtpError', 'OtpErrorDark', 'JoinCode', 'JoinCodeDark', 'JoinExpired', 'JoinUsedUp'],
   無步驟條: ['Fork', 'CreateFamily', 'CreateFamilySending', 'Pending', 'InviteEmpty', 'InviteGenerating',
-    'InviteReady', 'InviteApprovalOff', 'InviteApprovalOffDark', 'InviteRequests', 'InviteRequestsMany'],
+    'InviteReady', 'InviteSpent', 'InviteApprovalOff', 'InviteApprovalOffDark', 'InviteRequests', 'InviteRequestsMany'],
   '歡迎頁（H1 在卡紙裡）': ['Main', 'WelcomeDark'],
 };
-export const H1_EXCLUDED = ['WelcomeIPad', 'ForkIPad', 'StressType', 'StressLoginAX', 'StressCodeAX', 'StressContent', 'Tokens', 'Notes', 'AppIcon'];
+export const H1_EXCLUDED = ['WelcomeIPad', 'ForkIPad', 'StressType', 'StressLoginAX', 'StressCodeAX', 'StressContent', 'Tokens', 'Notes', 'AppIcon', 'GlassSeam'];
 
 /* cap-height 佔字級的比例（SF Pro / PingFang 實測近似）。
    iPad 跨欄基線與 H1 分組基線都用這個常數換算，verify 也用同一個。 */

@@ -32,9 +32,21 @@ const seen = (x, y) => {
   BOX.x1 = Math.max(BOX.x1, x); BOX.y1 = Math.max(BOX.y1, y);
 };
 
+/* 筆寬的映射函式。寫的（字標）用 ident：宣告多寬就多寬。
+   刻的（落款印）另給一支 —— 見 icon.mjs 的 CARVE。**中線一個點都不動**，
+   換的只有「這一筆有多寬」與「提按的幅度」：同一隻手、同一個字、換一把工具。 */
+export const identWidth = { w: (v) => v, swell: 1 };
+let WF = identWidth;
+export const withWidth = (wf, fn) => { const prev = WF; WF = wf; try { return fn(); } finally { WF = prev; } };
+
 // pts: 四個控制點 [起, c1, c2, 終]；w0/w1 起訖筆寬；swell 中段提按（0 = 沒有）
 // place: 這一筆在兩字並排時的位移與縮放（bbox 要算的是**排好之後**的位置）
+// 每一筆的「名目寬」（中段的寬度）逐筆記下來 —— G26 的中位／最細筆畫讀的就是它，
+// 不是回頭去數像素（像素會被抗鋸齒糊掉，而這個數是設計自己控制得住的那一個）。
+export const NOMINAL = [];
 const stroke = (pts, w0, w1, swell = 0, place = null) => {
+  w0 = WF.w(w0); w1 = WF.w(w1); swell *= WF.swell;
+  NOMINAL.push({ nominal: (w0 + w1) / 2 * (1 + swell), w0, w1 });
   const N = 26, L = [], R = [];
   for (let i = 0; i <= N; i++) {
     const u = i / N;
@@ -97,6 +109,36 @@ const YA = (place) => [
   stroke([[70.6, 86], [69, 92.5], [63, 96.5], [51, 94]], 6.4, 1, 0, place),
 ].join('');
 
+/* ── 芽（刻的版本，落款印用）──────────────────────────────────
+   同一個字、同一份筆的模型（起筆／收筆／提按都還在）、同一個筆序，
+   換的是**工具與章法**：刀有刃寬，所以筆畫粗、提按小；而粗了之後，
+   寫的那個間架會糊掉 —— 所以要重新分白。這正是篆刻與題字的差別：
+   刻不是把寫的加粗，刻是為了刀重新排一次。
+
+   誠實話：這一版的中線與寫的版本**不同**（下面每一筆都寫了它為什麼移動）。
+   不變的是：同一個「芽」、同一組八筆、同一個筆序、同一支 stroke() 的模型。
+   驗收不靠這段話 —— 靠 G26（四個實際尺寸的最細筆畫、墨覆蓋率、反白、對比）。
+
+   分白的三條橫帶（量出來的，見 icon.mjs 的 counterGap）：
+     ① 艹 收在 y29，短撇從 y36 起 —— 中間一條通欄的白
+     ② 短撇收在 y57，長橫從 y63 起 —— 第二條白
+     ③ 長橫收在 y82，鉤從 y90 起 —— 第三條白 */
+const YA_SEAL = (place) => [
+  // 艹：橫收短一點、兩豎縮到 y29 以內，把「艹 和 牙 之間的白」讓出來
+  stroke([[5, 19], [35, 17.6], [65, 16.6], [95, 16]], 6.4, 8.2, .05, place),
+  stroke([[31, 2.5], [30.2, 12], [29.4, 21], [28.4, 31]], 7.6, 6.4, 0, place),
+  stroke([[68, 2.5], [69, 12], [70, 21], [71, 31]], 6.4, 7.6, 0, place),
+  // 牙：短撇整條上移並收窄擺幅，讓出第二條白
+  stroke([[70, 44], [58, 47.5], [47, 50.5], [36, 53]], 8.2, 3.4, .05, place),
+  // 長橫：下移到 y71–74（寫的版本在 y57），第二條白因此有 6 個字身單位
+  stroke([[5, 74], [35, 72.8], [65, 71.8], [95, 71]], 6.2, 8.4, .05, place),
+  // 長撇：起點右移、角度加陡，讓它與長橫交在中央而不是貼著左邊
+  stroke([[60, 48], [50, 63], [34, 80], [12, 98]], 8.6, 2.6, .06, place),
+  // 豎：右移到 x78–80（避開艹的右豎），從 y42 起 —— 上端與艹之間 13 個單位的白
+  stroke([[80, 42], [79.4, 58], [78.8, 74], [78, 90]], 8.8, 7.2, 0, place),
+  stroke([[78, 90], [75, 96], [68, 99.5], [58, 97]], 7.2, 2.2, 0, place),
+].join('');
+
 /* 兩字並排：手寫的字不會排得像表格 —— 第二個字微微下沉、微微轉一點，
    是筆跡自然的參差。字距收到 93（原 100）：兩字之間的白比字內的白小，
    才會讀成一個詞，而不是兩個各自站著的字。
@@ -120,28 +162,51 @@ const gt = (t) => `translate(${t.dx} ${t.dy}) rotate(${t.rot} 50 50) scale(${t.s
 
 /* 落款印：app icon 用的單字版，只取「芽」——**同一支筆的同一份幾何**，
    不是另外畫一個圖形（換一支筆就等於換一個品牌）。
-   它自己的 bbox 也是推出來的，所以圖示裡的留白是量出來的不是眼睛抓的。 */
-let SEAL_BOX = null;
-const sealSeen = (x, y) => {
-  if (!SEAL_BOX) SEAL_BOX = { x0: x, y0: y, x1: x, y1: y };
-  SEAL_BOX.x0 = Math.min(SEAL_BOX.x0, x); SEAL_BOX.y0 = Math.min(SEAL_BOX.y0, y);
-  SEAL_BOX.x1 = Math.max(SEAL_BOX.x1, x); SEAL_BOX.y1 = Math.max(SEAL_BOX.y1, y);
+   它自己的 bbox 也是推出來的，所以圖示裡的留白是量出來的不是眼睛抓的。
+
+   第 3 輪：印是**刻**出來的，不是寫出來的。落款印與落款題字在中國書畫裡本來就不同工具 ——
+   刀有固定的刃寬，所以刻出來的筆畫比寫出來的粗、而且提按的幅度小得多。
+   這不是「把 logo 加粗」的藉口：它是 60/40/29/20pt 這四個實際尺寸逼出來的
+   （第 2 輪 20pt 最細筆畫 0.44 裝置像素、墨覆蓋 7.63%，物理上讀不出來）。
+   換的只有筆寬映射，中線的控制點一個都沒動。 */
+export const buildSeal = (wf = identWidth) => {
+  let box = null;
+  const seen = (x, y) => {
+    if (!box) box = { x0: x, y0: y, x1: x, y1: y };
+    box.x0 = Math.min(box.x0, x); box.y0 = Math.min(box.y0, y);
+    box.x1 = Math.max(box.x1, x); box.y1 = Math.max(box.y1, y);
+  };
+  NOMINAL.length = 0;
+  const glyph = wf === identWidth ? YA : YA_SEAL;
+  const d = withWidth(wf, () => glyph(([x, y]) => { seen(x, y); return [x, y]; }));
+  const nominal = NOMINAL.map((s) => s.nominal);
+  return {
+    d,
+    nominal,
+    vb: { x: r2(box.x0 - PAD), y: r2(box.y0 - PAD), w: r2(box.x1 - box.x0 + PAD * 2), h: r2(box.y1 - box.y0 + PAD * 2) },
+  };
 };
-const SEAL_D = YA(([x, y]) => { sealSeen(x, y); return [x, y]; });
-export const SEAL_VB = {
-  x: r2(SEAL_BOX.x0 - PAD), y: r2(SEAL_BOX.y0 - PAD),
-  w: r2(SEAL_BOX.x1 - SEAL_BOX.x0 + PAD * 2), h: r2(SEAL_BOX.y1 - SEAL_BOX.y0 + PAD * 2),
-};
-export const sealMark = (size, color) =>
-  `<svg width="${Math.round(size)}" height="${Math.round(size * SEAL_VB.h / SEAL_VB.w)}" viewBox="${SEAL_VB.x} ${SEAL_VB.y} ${SEAL_VB.w} ${SEAL_VB.h}" fill="${color}" role="img" aria-label="萌芽日記的落款印" style="display:block">${SEAL_D}</svg>`;
+const WRITTEN_SEAL = buildSeal();
+export const SEAL_VB = WRITTEN_SEAL.vb;
+/* data-seal 標的是「這一顆印是用哪一支筆刻的」：carved ＝ 正式的落款印、
+   written ＝ 只在 AppIcon 板上出現一次的對照（第 2 輪那一版）。
+   G26 靠這個標記把對照排除掉，而且**斷言對照只有一顆** —— 不然「排除」會變成漏洞。 */
+export const sealMark = (size, color, seal = WRITTEN_SEAL) =>
+  `<svg width="${Math.round(size)}" height="${Math.round(size * seal.vb.h / seal.vb.w)}" viewBox="${seal.vb.x} ${seal.vb.y} ${seal.vb.w} ${seal.vb.h}" fill="${color}" role="img" aria-label="萌芽日記的落款印" data-ink="brush" data-seal="${seal === WRITTEN_SEAL ? 'written' : 'carved'}" style="display:block">${seal.d}</svg>`;
 
 /* 字標＝手寫「萌芽」＋系統字「日記」。整組只有一個無障礙名稱（產品全名），
-   裡面兩塊都是 aria-hidden —— 讀螢幕的人聽到的是「萌芽日記」一次，不是兩次。 */
+   裡面兩塊都是 aria-hidden —— 讀螢幕的人聽到的是「萌芽日記」一次，不是兩次。
+
+   第 2 輪 G15 靠「板上有沒有出現『萌芽』與『日記』這幾個字元」判斷兩塊在不在 ——
+   那是拿內容當結構用：正文裡出現一次「萌芽日記」就會讓斷言變綠，
+   而真正要守的是**材質**（哪一塊是手寫的、哪一塊是系統字的）。第 3 輪改成屬性標記：
+   data-ink="brush"（筆跡，是圖，不隨 Dynamic Type 長大）／"system"（真文字，會長大）。
+   G15 掃的是這兩個標記的配對，與字元無關 —— 換名字、換語言都不會讓它失效。 */
 export const inkMark = (spec, color, subColor = color) => {
   const h = Math.round(spec.h), w = Math.round(spec.h * VB.w / VB.h);
-  return `<span role="img" aria-label="萌芽日記" style="display:inline-flex;align-items:flex-end;gap:${spec.gap}px">`
-    + `<svg width="${w}" height="${h}" viewBox="${VB.x} ${VB.y} ${VB.w} ${VB.h}" fill="${color}" aria-hidden="true" style="display:block;flex:none">`
+  return `<span role="img" aria-label="萌芽日記" data-lockup="1" style="display:inline-flex;align-items:flex-end;gap:${spec.gap}px">`
+    + `<svg width="${w}" height="${h}" viewBox="${VB.x} ${VB.y} ${VB.w} ${VB.h}" fill="${color}" aria-hidden="true" data-ink="brush" style="display:block;flex:none">`
     + `<g transform="${gt(T1)}">${MENG_D}</g><g transform="${gt(T2)}">${YA_D}</g></svg>`
-    + `<span aria-hidden="true" style="font-size:${spec.sub}px;line-height:${spec.sub}px;font-weight:500;letter-spacing:.16em;color:${subColor};white-space:nowrap">日記</span>`
+    + `<span aria-hidden="true" data-ink="system" style="font-size:${spec.sub}px;line-height:${spec.sub}px;font-weight:500;letter-spacing:.16em;color:${subColor};white-space:nowrap">日記</span>`
     + '</span>';
 };

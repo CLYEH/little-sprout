@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- ls-measured:67c805912926 -->
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>
+    /* ── Little Sprout M1 tokens（值即實作值，ios-dev 直接抄）── */
+    :root{
+      --ls-board:#F4DFDB; --ls-board-2:#E7CDCB; --ls-board-3:#E2C6BE; --ls-lit:#FBEBE4;
+      --ls-ink:#2A1219; --ls-ink-2:#3E232B;
+      --ls-cta:#86183F; --ls-cta-deep:#4A0722; --ls-cta-busy:#5E0A2A; --ls-on-cta:#FEF3F0;
+      --ls-pen:#7E1414; --ls-sprout:#1C4630; --ls-edge:#8C6159; --ls-google-line:#747775;
+      /* 漸層：兩端各自是 token，寫法只有一種（180deg，上→下）。 */
+      --ls-g-paper:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);
+      --ls-g-win:linear-gradient(180deg, #E0C4C3 0%, #EED5D2 100%);
+      --ls-g-win3:linear-gradient(180deg, #D8B9B1 0%, #E6C9C1 100%);
+      --ls-g-face:linear-gradient(180deg, #E9CFC7 0%, #DBBDB5 100%);
+      --ls-g-cta:linear-gradient(180deg, #901F49 0%, #7C1236 100%);
+      --ls-g-well:linear-gradient(180deg, #866867 0%, #957B7A 100%);
+      --ls-g-stub3:linear-gradient(180deg, #FAEADE 0%, #EFD3D6 35%, #ECD0D6 100%);
+      --ls-g-stub2:linear-gradient(180deg, #F9EBE0 0%, #F2DAD8 35%, #F1D8D7 100%);
+      --ls-g-stub1:linear-gradient(180deg, #F8EBE1 0%, #F5E1DB 35%, #F4E0DB 100%);
+      --ls-g-stub0:linear-gradient(180deg, #F7ECE3 0%, #F6E8E1 35%, #F6E8E0 100%);
+      --ls-g-seam:linear-gradient(180deg, rgba(42,18,25,0) 0%, rgba(42,18,25,.42) 100%);
+      /* 光從哪一邊來（+1 上、−1 下）。G24 讀它決定每一個表面該長什麼樣，
+         所以「這一張板是哪一種光」不再靠檔名猜。 */
+      --ls-dir:1;
+      --ls-r-window:12px; --ls-r-control:14px; --ls-r-card:18px;
+      --ls-sp-1:4px; --ls-sp-2:8px; --ls-sp-3:12px; --ls-sp-4:16px;
+      --ls-sp-5:24px; --ls-sp-6:32px; --ls-tap-min:44px;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Helvetica Neue", sans-serif;-webkit-font-smoothing:antialiased;background:#F4DFDB;color:#2A1219;text-wrap:pretty}
+    a{color:#2A1219;text-decoration:underline} a:hover{color:#86183F}
+    /* 紙的紋理：卡紙不是純色。全稿唯一用到透明度的地方。 */
+    .g::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.055;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+      mix-blend-mode:multiply}
+  </style></helmet>
+
+<div class="g" data-grad="paper" style="position:relative;width:980px;height:2060px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;padding:48px">
+  <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+    <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B;letter-spacing:.14em">LITTLE SPROUT · 萌芽日記 · 系統材質 × 紙</span>
+    <h1 style="font-size:34px;line-height:40px;font-weight:700;letter-spacing:-.012em;color:#2A1219;margin:0">玻璃與紙的交界</h1>
+    <p style="font-size:17px;line-height:25px;font-weight:400;color:#3E232B;margin:0;max-width:880px">第 2 輪寫下「不用 <code>glassEffect</code>」時，那是一句立場，不是一張設計。而且那句話容易被讀錯成「這個 app 裡不會有玻璃」——<b style="color:#2A1219">不對</b>：系統的 sheet、navigation bar、tab bar、鍵盤都會用 Liquid Glass 蓋在我們的紙上面，那不是我們能否決的。能決定的只有交界處<b style="color:#2A1219">誰讓誰</b>。這張板把那條線畫出來（下面兩支手機上的<span style="color:#7E1414">朱紅細線</span>就是它），並且把四條規則寫成可以被 gate 咬的形狀。</p>
+  </div>
+  <div style="display:flex;gap:24px;align-items:flex-start;margin-bottom:24px">
+    <div class="g" data-mode="light" data-grad="paper" style="position:relative;width:390px;height:844px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;flex:none">
+    
+  <div style="padding:59px 24px 0"><div data-s="raise" data-role="link" style="min-height:44px;display:flex;align-items:center;gap:4px;margin-left:-6px;color:#2A1219">
+      <span style="display:flex"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5 8 12l6.5 7"/></svg></span><span style="font-size:17px;line-height:25px;font-weight:600">陳家</span>
+   </div></div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:16px 24px 0">
+    <h1 style="font-size:28px;line-height:34px;font-weight:700;letter-spacing:-.01em;color:#2A1219;margin:0">邀請家人</h1>
+    <p style="font-size:17px;line-height:25px;font-weight:400;color:#3E232B;margin:0">號碼有期限，也有可用次數。</p>
+  </div>
+    <div style="padding:24px 24px 0;display:flex;flex-direction:column;gap:24px">
+      
+  <div data-s="flat" data-m="ticket" style="border:1px solid #8C6159;border-radius:18px;padding:0;overflow:hidden">
+    <div data-grad="stub2" data-band="code" style="background:linear-gradient(180deg, #F9EBE0 0%, #F2DAD8 35%, #F1D8D7 100%);padding:24px;display:flex;flex-direction:column;align-items:center;gap:12px">
+      <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B;letter-spacing:.16em;text-shadow:0 1px 0 rgba(255,246,242,.80)">邀 請 碼</span>
+      <div style="height:64px;display:flex;align-items:center;justify-content:center;gap:12px"><span style="display:flex;gap:24px;font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:60px;line-height:64px;font-weight:600;letter-spacing:.04em;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)"><span>K7M</span><span>2QD</span></span></div>
+    </div>
+    <div data-grad="perf" style="height:1px;background:repeating-linear-gradient(90deg, #8C6159 0 6px, transparent 6px 12px)"></div>
+    <div style="padding:12px 24px;display:flex;flex-direction:column;gap:4px;background:#E2C6BE"><span style="display:inline-flex;align-items:center;gap:8px"><span data-scale="2" style="display:inline-flex;align-items:center;gap:4px">
+      <span data-cell="spent" data-grad="stub0" style="width:34px;height:20px;border-radius:2px;border:1px solid #8C6159;background:linear-gradient(180deg, #F7ECE3 0%, #F6E8E1 35%, #F6E8E0 100%)"></span><span data-cell="left" data-grad="stub3" style="width:34px;height:20px;border-radius:2px;border:1px solid #8C6159;background:linear-gradient(180deg, #FAEADE 0%, #EFD3D6 35%, #ECD0D6 100%)"></span><span data-cell="left" data-grad="stub3" style="width:34px;height:20px;border-radius:2px;border:1px solid #8C6159;background:linear-gradient(180deg, #FAEADE 0%, #EFD3D6 35%, #ECD0D6 100%)"></span>
+    </span><span style="font-size:17px;line-height:25px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80);white-space:nowrap">還可以用 2 次</span></span>
+         <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B;text-shadow:0 1px 0 rgba(255,246,242,.80)">有效到 8 月 30 日</span></div>
+  </div>
+    </div>
+    <div aria-hidden="true" style="position:absolute;left:0;top:470px;width:390px;height:374px;background:rgba(42,18,25,.10)"></div>
+    <div data-s="system" data-sys="glass" style="position:absolute;left:0;top:470px;width:390px;height:374px;border-radius:34px 34px 0 0;background:rgba(251,235,228,.72);backdrop-filter:blur(24px) saturate(1.7);-webkit-backdrop-filter:blur(24px) saturate(1.7);box-shadow:0 -0.5px 0 rgba(255,255,255,.62);display:flex;flex-direction:column;align-items:center;padding:12px 24px 34px;gap:16px">
+      <span data-sys="grabber" style="width:36px;height:5px;border-radius:3px;background:#8C6159"></span>
+      <span style="font-size:22px;line-height:28px;font-weight:600;letter-spacing:-.005em;color:#2A1219">傳給家人</span>
+      <span style="font-size:17px;line-height:25px;font-weight:400;color:#3E232B;text-align:center">系統的分享表單。這一層的材質、圓角、模糊、高光全部是系統畫的 —— 我們一個像素都不出。</span>
+      <div data-s="flat" style="border:1px solid #8C6159;border-radius:12px;padding:12px 16px;align-self:stretch">
+        <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B;text-shadow:0 1px 0 rgba(255,246,242,.80)">交界在上面那條線。線以上是紙，線以下是玻璃。</span>
+      </div>
+    </div>
+    <div aria-hidden="true" style="position:absolute;left:0;top:470px;width:390px;height:2px;background:#7E1414"></div>
+  </div>
+    <div class="g" data-mode="dark" data-grad="paper" style="position:relative;width:390px;height:844px;background:linear-gradient(180deg, #1F1015 0%, #2B1915 100%);overflow:hidden;flex:none">
+    
+  <div style="padding:59px 24px 0"><div data-s="raise" data-role="link" style="min-height:44px;display:flex;align-items:center;gap:4px;margin-left:-6px;color:#F8E7E2">
+      <span style="display:flex"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5 8 12l6.5 7"/></svg></span><span style="font-size:17px;line-height:25px;font-weight:600">陳家</span>
+   </div></div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:16px 24px 0">
+    <h1 style="font-size:28px;line-height:34px;font-weight:700;letter-spacing:-.01em;color:#F8E7E2;margin:0">邀請家人</h1>
+    <p style="font-size:17px;line-height:25px;font-weight:400;color:#DCBEBC;margin:0">號碼有期限，也有可用次數。</p>
+  </div>
+    <div style="padding:24px 24px 0;display:flex;flex-direction:column;gap:24px">
+      
+  <div data-s="flat" data-m="ticket" style="border:1px solid #A0807C;border-radius:18px;padding:0;overflow:hidden">
+    <div data-grad="stub2" data-band="code" style="background:linear-gradient(180deg, #27171C 0%, #31211C 35%, #32221C 100%);padding:24px;display:flex;flex-direction:column;align-items:center;gap:12px">
+      <span style="font-size:13px;line-height:18px;font-weight:500;color:#DCBEBC;letter-spacing:.16em;text-shadow:0 -1px 0 rgba(255,214,208,.22)">邀 請 碼</span>
+      <div style="height:64px;display:flex;align-items:center;justify-content:center;gap:12px"><span style="display:flex;gap:24px;font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:60px;line-height:64px;font-weight:600;letter-spacing:.04em;color:#F8E7E2;text-shadow:0 -1px 0 rgba(255,214,208,.22)"><span>K7M</span><span>2QD</span></span></div>
+    </div>
+    <div data-grad="perf" style="height:1px;background:repeating-linear-gradient(90deg, #A0807C 0 6px, transparent 6px 12px)"></div>
+    <div style="padding:12px 24px;display:flex;flex-direction:column;gap:4px;background:#372020"><span style="display:inline-flex;align-items:center;gap:8px"><span data-scale="2" style="display:inline-flex;align-items:center;gap:4px">
+      <span data-cell="spent" data-grad="stub0" style="width:34px;height:20px;border-radius:2px;border:1px solid #A0807C;background:linear-gradient(180deg, #2C221F 0%, #2E2420 35%, #2E2420 100%)"></span><span data-cell="left" data-grad="stub3" style="width:34px;height:20px;border-radius:2px;border:1px solid #A0807C;background:linear-gradient(180deg, #22131C 0%, #331F1A 35%, #34211A 100%)"></span><span data-cell="left" data-grad="stub3" style="width:34px;height:20px;border-radius:2px;border:1px solid #A0807C;background:linear-gradient(180deg, #22131C 0%, #331F1A 35%, #34211A 100%)"></span>
+    </span><span style="font-size:17px;line-height:25px;font-weight:600;color:#F8E7E2;text-shadow:0 -1px 0 rgba(255,214,208,.22);white-space:nowrap">還可以用 2 次</span></span>
+         <span style="font-size:13px;line-height:18px;font-weight:500;color:#DCBEBC;text-shadow:0 -1px 0 rgba(255,214,208,.22)">有效到 8 月 30 日</span></div>
+  </div>
+    </div>
+    <div aria-hidden="true" style="position:absolute;left:0;top:470px;width:390px;height:374px;background:rgba(0,0,0,.28)"></div>
+    <div data-s="system" data-sys="glass" style="position:absolute;left:0;top:470px;width:390px;height:374px;border-radius:34px 34px 0 0;background:rgba(55,32,32,.70);backdrop-filter:blur(24px) saturate(1.7);-webkit-backdrop-filter:blur(24px) saturate(1.7);box-shadow:0 -0.5px 0 rgba(255,255,255,.16);display:flex;flex-direction:column;align-items:center;padding:12px 24px 34px;gap:16px">
+      <span data-sys="grabber" style="width:36px;height:5px;border-radius:3px;background:#A0807C"></span>
+      <span style="font-size:22px;line-height:28px;font-weight:600;letter-spacing:-.005em;color:#F8E7E2">傳給家人</span>
+      <span style="font-size:17px;line-height:25px;font-weight:400;color:#DCBEBC;text-align:center">系統的分享表單。這一層的材質、圓角、模糊、高光全部是系統畫的 —— 我們一個像素都不出。</span>
+      <div data-s="flat" style="border:1px solid #A0807C;border-radius:12px;padding:12px 16px;align-self:stretch">
+        <span style="font-size:13px;line-height:18px;font-weight:500;color:#DCBEBC;text-shadow:0 -1px 0 rgba(255,214,208,.22)">交界在上面那條線。線以上是紙，線以下是玻璃。</span>
+      </div>
+    </div>
+    <div aria-hidden="true" style="position:absolute;left:0;top:470px;width:390px;height:2px;background:#FFAE86"></div>
+  </div>
+  </div>
+  <div style="display:flex;gap:24px;margin-bottom:24px">
+    <div style="flex:1;min-width:0">
+  <div data-s="flat" style="border:1px solid #8C6159;border-radius:12px;padding:16px;display:flex;gap:12px;align-items:flex-start">
+    <span style="display:flex;flex:none;color:#3E232B"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.4 12S6 5.8 12 5.8 21.6 12 21.6 12 18 18.2 12 18.2 2.4 12 2.4 12Z"/><circle cx="12" cy="12" r="2.8"/></svg></span>
+    <span style="font-size:17px;line-height:25px;font-weight:400;color:#3E232B;text-shadow:0 1px 0 rgba(255,246,242,.80)">兩支手機上那條<b style="color:#7E1414">朱紅細線</b>就是交界。線以上是我們的紙（四階台紙、凹浮平印、褪色階），線以下是系統的玻璃。線本身當然不會出現在產品裡 —— 它是這張板的標註。</span>
+  </div></div>
+    <div style="flex:1;min-width:0">
+  <div data-s="flat" style="border:1px solid #8C6159;border-radius:12px;padding:16px;display:flex;gap:12px;align-items:flex-start">
+    <span style="display:flex;flex:none;color:#3E232B"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.2V12l3.2 2"/></svg></span>
+    <span style="font-size:17px;line-height:25px;font-weight:400;color:#3E232B;text-shadow:0 1px 0 rgba(255,246,242,.80)">深色那一支的玻璃底下是同一張紙的暗處版本：光源翻到下面（凹的受光緣、浮起的落影、壓印的亮邊全部跟著翻），但<b>玻璃的高光不跟著翻</b> —— 那是系統的光，不歸我們的 dir 管。這就是 G24 要具名豁免 [data-sys] 的原因。</span>
+  </div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:24px;margin-bottom:24px">
+      
+  <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)">誰讓誰：紙讓玻璃，一次讓到底</span>
+    <span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>玻璃贏在它自己那一層</b>：交界以下的材質、圓角、模糊、高光、抓桿，全部是系統的。我們不畫、不抄、不改、不加自己的唇邊或內影去「接住」它 —— 接住它就是把兩套光疊在一起。</span><span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>紙贏在其他所有地方</b>：交界以上是我們的四階台紙、凹浮平印、褪色階。玻璃不會爬上來，我們也不會沉下去。</span><span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>不互相模仿</b>：我們的表面永遠不裝成玻璃（不加 backdrop blur、不加高光弧），也不要求系統的玻璃裝成紙。兩種材質同時存在是對的；一種材質假裝成另一種才是錯的。</span><span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>這一條是有代價的</b>：玻璃會把它下面的東西吸進自己的色裡，所以交界附近我們的紙必須保持低彩度（四階 C* 6.8–11.5）。這也是主按鈕那支濃玫瑰（C* 47.8）永遠不貼著交界放的原因。</span>
+  </div>
+      
+  <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)">三條可以被咬的規則（第 4 輪要變成斷言）</span>
+    <span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>① 玻璃上的字，底下只能是台紙。</b>模糊會改變局部極值，所以「壓在玻璃上的對比」只有在底下是單一漸層時算得準。上面兩支手機的 sheet 文字底下只有 paper 那一支 —— 這不是排版巧合，是規則。照片、票根、高振幅漸層一律不准出現在有字的玻璃底下。</span><span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>② 交界 16pt 之內不放我們的浮起面。</b>浮起面帶落影，落影與玻璃的邊緣高光是兩個方向的光；離太近會讀成同一個物件的兩個邊。</span><span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>③ 系統 chrome 一律標 <code>data-sys</code>，並豁免我們的光方向 gate（G24）。</b>系統的高光由系統決定，用我們的 dir 去驗它只會驗出假的 FAIL。豁免必須是<b>具名的</b>——沒印出來的例外就是 bug。</span>
+  </div>
+  </div>
+  <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px">
+    <span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B;text-shadow:0 1px 0 rgba(255,246,242,.80)"><b style="color:#2A1219">給 ios-dev</b>：這張板上的玻璃是<b style="color:#2A1219">畫給人看的近似</b>（<code>background: rgba(251,235,228,.72)</code> ＋ <code>backdrop-filter: blur(24px) saturate(1.7)</code> ＋ 上緣 0.5px 高光 <code>rgba(255,255,255,.62)</code>），<b style="color:#2A1219">不要照抄成實作</b>。實作就是讓系統畫：sheet 用預設的 presentation background、nav/tab bar 不設自訂背景、<b style="color:#2A1219">不要在自己的卡片上呼叫 <code>glassEffect</code></b>。我們要出的只有交界以上那張紙。<b style="color:#2A1219">這張板的 gate 適用範圍</b>：適用 G1／G2／G6（玻璃上的字照 AAA 量，見規則①）／G16／G21／G23②。<b style="color:#2A1219">具名豁免</b>：G24 光方向（<code>[data-sys]</code> 子樹，理由如規則③）、G10 板高與 G11 起跑線（交付板）、G19 唇邊（板上的浮起面在手機模型裡，已由來源畫面驗過）。</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

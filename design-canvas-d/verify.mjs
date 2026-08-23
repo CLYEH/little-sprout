@@ -8,8 +8,9 @@ import {
   T, GAPS, SIZES, FIX, AX, RULE, H1_GROUPS, H1_EXCLUDED, hash12,
   GRAD_KEYS, GRAD_WHY, NO_GRAD_WHY, CONTRAST, gradCss, perfCss,
   TRACK, TEMP, TEMP_TOL, HUE_MIN, LIGHT_DH, TIME_DH, LIGHT_KEYS, STUB_KEYS, STUB_KNEE,
-  lch, dHue, dE,
+  lch, dHue, dE, hueDE, HUE_DE_MIN, INSET_KEYS,
 } from './tokens.mjs';
+import * as Icon from './icon.mjs';
 
 const files = readdirSync(new URL('.', import.meta.url)).filter((f) => f.endsWith('.dc.html')).sort();
 const read = (f) => readFileSync(new URL(f, import.meta.url), 'utf8');
@@ -84,7 +85,7 @@ const need = (key, label) => { console.log(`SKIP  ${label} —— measured.json 
 {
   const rows = [];
   for (const f of files) {
-    if (/Tokens|Notes/.test(f)) continue;
+    if (/Tokens|Notes|AppIcon|GlassSeam/.test(f)) continue;   // 交付板：朱在這裡是圖例／標註，不是畫面上的訊號
     const body = read(f).replace(/--ls-pen:[^;]+;/g, '');
     const n = [...body.matchAll(new RegExp(T.light.pen, 'gi'))].length + [...body.matchAll(new RegExp(T.dark.pen, 'gi'))].length;
     if (n) rows.push([f, n]);
@@ -97,13 +98,31 @@ const need = (key, label) => { console.log(`SKIP  ${label} —— measured.json 
 /* ══ G5  「凹＝可以填」：掃使用點的 computed box-shadow ══════════
    第 2 輪只 grep helper 定義，實測 49 個非可填元件帶 inset。 */
 if (M.insetBad) {
-  ok(M.insetBad.length === 0, `G5 凹的白名單：${M.insetTotal} 個帶 inset 的使用點，全部落在 ${Object.keys(M.insetUse).length} 個角色`,
+  /* 第 2 輪 reviewer：「凹＝可填」的白名單一路漂移到八個角色，因為那八個其實不是同一件事。
+     本輪拆兩族，各自一條斷言，而且再加一條「兩族的實測深度真的不同」——
+     不然「兩族」只是兩個標籤。 */
+  ok(M.insetBad.length === 0, `G5 凹的兩族：${M.insetTotal} 個帶 inset 的使用點，全部落在自己那一族的白名單上（可填 ${INSET_KEYS.fillable.join('／')}；已鑲 ${INSET_KEYS.mount.join('／')}）`,
     M.insetBad.length ? M.insetBad.slice(0, 6).join(' | ') : Object.entries(M.insetUse).map(([k, v]) => `${k}×${v}`).join(' '));
-  ok(!/inset/.test(src.slice(src.indexOf('const raise ='), src.indexOf('// 平印：'))),
+  if (M.insetDepth) {
+    const dp = (k) => (M.insetDepth[k] || []);
+    const fmin = Math.min(...dp('fillable')), mmax = Math.max(...dp('mount'));
+    ok(dp('fillable').length > 0 && dp('mount').length > 0 && fmin > mmax,
+      `G5 兩族的深度真的不同：可填 ${dp('fillable').length} 個（模糊半徑 ${fmin}px）比已鑲 ${dp('mount').length} 個（${mmax}px）深 —— 空的槽看得到深度，鑲好的東西是齊平的`,
+      `fillable min ${fmin} / mount max ${mmax}`);
+    ok(new Set(dp('fillable')).size === 1 && new Set(dp('mount')).size === 1,
+      'G5 同一族只有一個深度：兩族各自的模糊半徑在全稿只出現一個值（第 2 輪同族內有 4／6／8 三種手寫深度）',
+      `fillable ${[...new Set(dp('fillable'))].join('/')} · mount ${[...new Set(dp('mount'))].join('/')}`);
+  } else need('insetDepth', 'G5 兩族深度');
+  if (M.folds) {
+    ok(M.folds.length >= 2 && M.folds.every((f) => f.n === 1 && f.blur === 0),
+      `G5 摺邊不是凹：${M.folds.length} 個 fold（紙壓在照片上的裁邊）只有一層零模糊的受光邊，沒有槽 —— 它因此不進凹的白名單（第 2 輪它掛在 win/seam 底下，白名單多養了一個不是洞的角色）`,
+      JSON.stringify(M.folds));
+  } else need('folds', 'G5 摺邊');
+  ok(!/inset/.test(/const raise = [\s\S]*?;\n/.exec(src)[0]),
     'G5 浮起只有兩層：raise() 的函式體裡沒有 inset（第三層 topLight 已移除）');
   ok(/border-bottom:\$\{FIX\.lip\}px/.test(src), 'G5 浮起保留 3pt 唇邊');
-  ok(!/const flat =[\s\S]*?box-shadow/.test(src.slice(src.indexOf('const flat ='), src.indexOf('const press ='))), 'G5 平印：flat() 沒有 inset、沒有 box-shadow');
-  ok(/const win[\s\S]{0,300}?inset 0 1\.5px 0/.test(src), 'G5 凹窗：win() 保留上緣內陰影（真凹沒有被動到）');
+  ok(!/const flat =[\s\S]*?box-shadow/.test(src.slice(src.indexOf('const flat ='), src.indexOf('const noWt ='))), 'G5 平印：flat() 沒有 inset、沒有 box-shadow');
+  ok(/const insetShadow[\s\S]{0,400}?inset 0 \$\{d\.edge\}px 0 \$\{t\.bevelTop\}/.test(src), 'G5 凹窗：insetShadow() 保留上緣內陰影（真凹沒有被動到）');
 } else need('insetBad', 'G5 凹的白名單');
 
 /* ══ G6  對比：節點級，全部 AAA，而且沒有字壓在照片上 ══════════
@@ -256,13 +275,18 @@ if (M.contrastNodes) {
     for (const [name, th] of modes) {
       const base = lch(th.board).h;
       for (const [k, want] of Object.entries(TEMP)) {
-        const got = dHue(lch(th[k]).h, base);
-        seen.push(`${name}${k} ${got > 0 ? '+' : ''}${got.toFixed(1)}°`);
+        const got = dHue(lch(th[k]).h, base), de = hueDE(th, k);
+        seen.push(`${name}${k} ${got > 0 ? '+' : ''}${got.toFixed(1)}°／ΔE ${de.toFixed(2)}`);
         if (Math.abs(got - want) > TEMP_TOL) bad.push(`${name} ${k} 實測 ${got.toFixed(1)}°、宣告 ${want}°（容差 ±${TEMP_TOL}）`);
+        /* 第 3 輪 R1：角度在低彩度上等於沒有溫度。淺色 lit 宣告 +6.0°、實測 +6.05°，
+           這一項第 2 輪一路綠燈 —— 可是它的 C* 只有 4.2，那 6° 單獨貢獻的 ΔE 是 0.51，
+           在 JND（≈1）之下：「四階有溫度層次」在最亮的那一階上是量得出來的假。
+           所以門檻改成 ΔE：固定 L* 與 C*、只把色相轉回台紙本體，量兩者的距離。 */
+        if (de < HUE_DE_MIN) bad.push(`${name} ${k} 的色相位移單獨只貢獻 ΔE ${de.toFixed(2)}（門檻 ${HUE_DE_MIN}，JND 以下＝看不見的溫度）`);
       }
     }
     ok(bad.length === 0,
-      `G23① 溫度階梯：四階台紙與染料相對台紙本體的色相角，淺色與深色都等於宣告的 TEMP（${seen.join(' · ')}）`,
+      `G23① 溫度階梯：四階台紙與染料相對台紙本體的色相角等於宣告的 TEMP（±${TEMP_TOL}°），而且每一階的色相位移**單獨**貢獻 ΔE ≥ ${HUE_DE_MIN}（${seen.join(' · ')}）`,
       bad.join(' · '));
   }
 
@@ -349,21 +373,157 @@ if (M.contrastNodes) {
 
   // ⑤ 褪色階 ＝ 剩餘次數：板上畫的階數要等於板上寫的次數（設計自己的對帳）
   {
+    /* 第 3 輪：票根多了三格刻度（把「褪色」變成一張畫面裡就讀得出來的比較），
+       所以這一條也一起長大 —— 現在對帳的是**三件事**：
+         ① 號碼帶（data-band="code"）畫的階數
+         ② 三格刻度裡「還沒褪」的格數
+         ③ 票根上印出來的那句話（N 次／用完了）
+       三者必須是同一個數。改了文案不改階數會 FAIL，改了刻度不改文案也會 FAIL。 */
     const bad = [], seen = [];
     for (const f of files) {
       const s = read(f);
-      const lv = [...new Set([...s.matchAll(/data-grad="stub(\d)"/g)].map((m) => +m[1]))];
-      const say = [...new Set([...s.matchAll(/還可以用 (\d) 次/g)].map((m) => +m[1]))];
-      if (!lv.length && !say.length) continue;
-      if (/Tokens/.test(f)) { seen.push(`${f.replace('.dc.html', '')} 印了全部 ${lv.length} 階`); continue; }
-      if (lv.length !== 1 || say.length !== 1 || lv[0] !== say[0]) {
-        bad.push(`${f} 畫的是 stub${lv.join('/')}、寫的是「還可以用 ${say.join('/')} 次」`);
-      } else seen.push(`${f.replace('.dc.html', '')} ${lv[0]}`);
+      const band = [...new Set([...s.matchAll(/data-grad="stub(\d)" data-band="code"/g)].map((m) => +m[1]))];
+      const scale = [...s.matchAll(/data-scale="(\d|blank)"/g)].map((m) => m[1]);
+      const say = [...s.matchAll(/還可以用 (\d) 次|(這組號碼用完了)/g)].map((m) => (m[2] ? 0 : +m[1]));
+      if (!band.length && !scale.length && !say.length) continue;
+      if (/Tokens/.test(f)) { seen.push(`${f.replace('.dc.html', '')} 印了全部 ${[...new Set([...s.matchAll(/data-grad="stub(\d)"/g)].map((m) => +m[1]))].length} 階`); continue; }
+      const uniq = [...new Set([...band, ...scale.filter((x) => x !== 'blank').map(Number), ...say])];
+      const blanks = scale.filter((x) => x === 'blank').length;
+      if (!band.length && blanks) { seen.push(`${f.replace('.dc.html', '')} 空票根（刻度 ${blanks} 組全空、沒有褪色漸層）`); continue; }
+      if (uniq.length !== 1) bad.push(`${f} 號碼帶 stub${band.join('/')}、刻度 ${scale.join('/')}、文案 ${say.join('/')} —— 三者不同`);
+      else seen.push(`${f.replace('.dc.html', '')} ${uniq[0]}`);
     }
     ok(bad.length === 0,
-      `G23⑤ 褪色階＝剩餘次數：${seen.length} 張有號碼帶的板，畫出來的階數等於印在上面的次數（${seen.join(' · ')}）`,
+      `G23⑤ 褪色階＝剩餘次數：${seen.length} 張有票根的板，號碼帶的階數＝三格刻度剩下的格數＝票根上印的那句話（${seen.join(' · ')}）`,
       bad.join(' · '));
+    /* 三格刻度自己的規則：剩幾次就剩幾格沒褪，用掉的那幾格一律褪到底（stub0）。
+       這一條守的是「刻度是這組碼的資料，不是裝飾」。 */
+    {
+      const wrong = [];
+      for (const f of files) {
+        if (/Tokens|Notes/.test(f)) continue;
+        const s = read(f);
+        for (const m of s.matchAll(/data-scale="(\d)"[\s\S]*?<\/span>\s*<\/span>/g)) {
+          const left = [...m[0].matchAll(/data-cell="left" data-grad="stub3"/g)].length;
+          const spent = [...m[0].matchAll(/data-cell="spent" data-grad="stub0"/g)].length;
+          if (left !== +m[1] || left + spent !== 3) wrong.push(`${f} 刻度寫 ${m[1]}，實際 ${left} 格未褪＋${spent} 格褪完`);
+        }
+      }
+      ok(wrong.length === 0, 'G23⑤b 三格刻度：剩幾次就剩幾格是剛印好的染料（stub3），用掉的每一格都褪到底（stub0），三格不多不少', wrong.join(' · '));
+    }
   }
+}
+
+/* ══ G24  光的方向（第 3 輪新增）════════════════════════════════
+   第 2 輪 reviewer 的 M3 突變：把 87 個 inset 從凹翻成凸 —— 71 項 gate 全綠。
+   原因是 G5 只做**字串比對**（「有沒有 inset」「helper 定義裡有沒有那一段」），
+   沒有一項在問「光從哪一邊來」。而且管線自己也有同一個病的真實版本：
+   深色的 bevelTop／bevelBot 沒有鏡像，同一個元件上兩個互相牴觸的光源，
+   而且錯的那一支振幅是對的那一支的三倍。
+
+   這一條驗的是**顏色的明度**不是字串：measure 把每一層陰影的顏色疊到元件自己的
+   底色上算相對亮度 Y，再比上下緣。三個子句：
+     ① 凹：淺色（dir=+1）上暗下亮、深色（dir=−1）上亮下暗；
+     ② 有模糊的那一層（凹的柔影／浮起的落影）：y 位移的正負號 ＝ dir；
+     ③ 具名豁免只有兩種：系統 chrome（[data-sys]）與幾何投影（[data-light="geometry"]）。
+   ①②在 measure 端就判完了（那裡才有 computed style），這裡驗結論與涵蓋率。 */
+if (M.light) {
+  const seen = M.light.seen || [], bad = M.light.bad || [];
+  ok(bad.length === 0,
+    `G24 光的方向：${seen.length} 個帶上下緣的表面，受光緣與背光緣的實測相對亮度都與該模式的光源方向一致（淺色光從上、深色光從下），有模糊的陰影層位移正負號也都等於 dir`,
+    bad.slice(0, 6).join(' | '));
+  const dl = seen.filter((x) => x.dir < 0), lt = seen.filter((x) => x.dir > 0);
+  ok(dl.length >= 8 && lt.length >= 20,
+    `G24 兩個模式都被涵蓋：淺色 ${lt.length} 個使用點、深色 ${dl.length} 個 —— 深色不是「沒有樣本所以沒 FAIL」`,
+    `light ${lt.length} / dark ${dl.length}`);
+  /* 極性是推出來的，不是兩邊各寫一次（tokens.mjs 由 dir 生出 bevelTop／bevelBot）。
+     這一條擋的是「有人回頭把其中一邊硬寫死」。 */
+  ok(/th\.bevelTop = th\.dir > 0 \? th\.bevelDark : th\.bevelLit/.test(readFileSync(new URL('tokens.mjs', import.meta.url), 'utf8')),
+    'G24 位置別名是推導的：bevelTop／bevelBot 由 dir 從 bevelLit／bevelDark 生出來，不是兩個模式各寫一次（第 2 輪就是各寫一次，深色那一份忘了翻）');
+  const dirs = [...(readFileSync(new URL('tokens.mjs', import.meta.url), 'utf8').matchAll(/dir: ([+-]\d)/g))].map((m) => +m[1]);
+  ok(dirs.join() === '1,-1', `G24 兩個模式各宣告一次光源方向：淺色 ${dirs[0]}（上）、深色 ${dirs[1]}（下）`, dirs.join('/'));
+} else need('light', 'G24 光的方向');
+
+/* ══ G25  品牌鍵不接光（第 3 輪新增）════════════════════════════
+   第 2 輪 reviewer 的 M4c 突變：把漸層貼到 Google 鍵上 —— 全綠。
+   「兩顆鍵不加漸層、不加唇邊、只借幾何」這條規則只寫在 Tokens 板的散文裡，
+   零個 gate 在掃它。這一條掃 [data-brand] **與它整個子樹**的 computed 裝飾：
+   背景圖（漸層）、box-shadow、text-shadow 一律 FAIL；描邊只准品牌規範指定的那一種。
+   它在本輪一開始就先咬到我們自己：兩顆鍵原本都掛著我們的 lift 落影。 */
+if (M.brandBad) {
+  ok(M.brandBad.length === 0,
+    `G25 品牌鍵不接光：${(M.brand || []).length} 顆第三方登入鍵（與它們的子樹）上，沒有任何一處我們的裝飾 —— 沒有漸層、沒有落影、沒有壓印、描邊只有它們自己規範的那一道`,
+    M.brandBad.slice(0, 6).join(' | '));
+  ok((M.brand || []).length >= 8, `G25 涵蓋率：${(M.brand || []).length} 顆鍵被掃到（歡迎頁三張＋AX5 壓力板，各 Apple/Google 兩顆）`);
+  // 官方四色 G 是商標，色值不可被我們的色階「順手」改掉
+  const g4 = ['#EA4335', '#4285F4', '#FBBC05', '#34A853'];
+  const miss = g4.filter((c) => !src.includes(c));
+  ok(miss.length === 0, `G25 Google 標誌的官方四色原封不動（${g4.join(' ')}）`, miss.join(' '));
+} else need('brandBad', 'G25 品牌鍵');
+
+/* ══ G26  圖示在實際尺寸讀不讀得出來（第 3 輪新增；reviewer 已裁規格）══
+   第 2 輪的 AppIcon 板自己寫著「20pt 讀不讀得出來是目視項，第 3 輪要變成量得出來的」。
+   reviewer 量了：20pt 最細筆畫 0.44 裝置像素、墨覆蓋 7.63% —— 物理上讀不出來。
+   規格（reviewer 裁定三條，第四條是設計自己加嚴的）：
+     ① 最細筆畫 ≥1.5 裝置像素   ② 墨覆蓋率 ≥12%   ③ 前景對比 ≥3:1
+     ④ 反白 p05 ≥1 裝置像素（自己加的：筆畫夠粗但反白塞死，字一樣是一團墨）
+   三種外觀（Light／Dark／Tinted）× 四個尺寸 × @2x/@3x 全部要過。
+   Tinted 的底是官方中灰玻璃（取樣 kit-AppIcons 第三排的眾數像素），不是純黑 ——
+   黑底會讓任何白色前景都好看，等於沒有驗。
+   數字不是板上手打的：icon.mjs 把 1024 母稿真的光柵化（4×4 超取樣）算出來，
+   板上印的與這裡判的是同一支函式。 */
+{
+  const R26 = Icon.RULE;
+  const cs = Icon.strokeStats(Icon.SEAL), ws = Icon.strokeStats(Icon.WRITTEN);
+  ok(cs.median >= 90 && cs.min >= 45,
+    `G26 母稿筆寬：1024 母稿上中位筆畫 ${cs.median.toFixed(1)}px（門檻 90）、最細 ${cs.min.toFixed(1)}px（門檻 45）—— 刻的那支筆是寫的那支的 ${(cs.median / ws.median).toFixed(2)} 倍（寫的中位 ${ws.median.toFixed(1)}／最細 ${ws.min.toFixed(1)}）`,
+    `median ${cs.median.toFixed(1)} / min ${cs.min.toFixed(1)}`);
+  const looks = {
+    淺色: { fg: T.light.ink, bg: T.light.grad.paper.map(([c]) => c) },
+    深色: { fg: T.dark.ink, bg: T.dark.grad.paper.map(([c]) => c) },
+    Tinted: { fg: Icon.TINT_FG, bg: [Icon.TINT_BASE] },
+  };
+  const bad = [], rows = [];
+  for (const [name, look] of Object.entries(looks)) {
+    // 有漸層的底：對比量在最不利的那一端（與 G22② 同一條規則）
+    const worst = look.bg.reduce((a, b) => (Icon.contrast(Icon.rgbOf(look.fg), Icon.rgbOf(b)) < Icon.contrast(Icon.rgbOf(look.fg), Icon.rgbOf(a)) ? b : a));
+    for (const [pt] of Icon.SIZES) for (const sc of Icon.SCALES) {
+      const m = Icon.measureAt(pt, sc, { fg: look.fg, bg: worst });
+      const why = [];
+      if (m.minStrokeDev < R26.minStrokeDev) why.push(`最細筆畫 ${m.minStrokeDev.toFixed(2)} 裝置像素`);
+      if (m.coverage < R26.coverage) why.push(`墨覆蓋 ${(m.coverage * 100).toFixed(2)}%`);
+      if (m.contrast < R26.contrast) why.push(`前景對比 ${m.contrast.toFixed(2)}:1（底 ${worst}）`);
+      if (m.counterDev < R26.counterDev) why.push(`反白 p05 ${m.counterDev}`);
+      if (why.length) bad.push(`${name} ${pt}pt@${sc}x：${why.join('、')}`);
+      rows.push(m);
+    }
+  }
+  const mins = (k) => Math.min(...rows.map((r) => r[k]));
+  ok(bad.length === 0,
+    `G26 圖示最小尺寸：${Object.keys(looks).length} 種外觀 × ${Icon.SIZES.length} 個尺寸 × ${Icon.SCALES.length} 個倍率＝${rows.length} 格全過（最壞值：最細筆畫 ${mins('minStrokeDev').toFixed(2)}／${R26.minStrokeDev} 裝置像素、墨覆蓋 ${(mins('coverage') * 100).toFixed(2)}%／${R26.coverage * 100}%、前景對比 ${mins('contrast').toFixed(2)}／${R26.contrast}:1、反白 p05 ${mins('counterDev')}／${R26.counterDev}）`,
+    bad.slice(0, 6).join(' | '));
+  ok(Icon.TINT_BASE === '#808080',
+    `G26 Tinted 的驗收底是官方的中灰玻璃 ${Icon.TINT_BASE}（取樣自 Apple design kit 匯出的 kit-AppIcons 第三排；第 2 輪用純黑，黑底會讓任何白色前景都好看）`);
+  // 板上印的數字必須出自同一支函式（不是手打的）
+  const sheet26 = read('AppIcon.dc.html');
+  const shown = rows.filter((m) => sheet26.includes(`${m.minStrokeDev.toFixed(2)}px`)).length;
+  ok(shown === rows.length, `G26 板上印的 ${rows.length} 格全部出自 icon.mjs 的實測（不是手打的）`, `板上找得到 ${shown}/${rows.length}`);
+  /* 這一條是本輪突變測試逼出來的（M-G26 第一版全綠漏網）：上面量的是 icon.mjs 裡的
+     **規格**，不是板上**畫出來的東西**。把 build 端換回「寫的那支筆」，量測完全不受影響 ——
+     跟第 2 輪 G5 只 grep helper 定義是同一個病。所以再加一條：板上那顆印的
+     路徑資料與 viewBox，必須逐字元等於被量的那一份幾何。 */
+  const seals = [...sheet26.matchAll(/viewBox="([^"]+)"[^>]*data-ink="brush" data-seal="(\w+)"[^>]*>([\s\S]*?)<\/svg>/g)];
+  const wantVB = `${Icon.SEAL.vb.x} ${Icon.SEAL.vb.y} ${Icon.SEAL.vb.w} ${Icon.SEAL.vb.h}`;
+  const carved = seals.filter(([, , kind]) => kind === 'carved');
+  const written = seals.filter(([, , kind]) => kind === 'written');
+  ok(carved.length >= 10 && carved.every(([, vb, , d]) => vb === wantVB && d === Icon.SEAL.d),
+    `G26 板上畫的就是被量的那一份幾何：AppIcon 上 ${carved.length} 顆落款印的 path 與 viewBox 逐字元等於 icon.mjs 量的那一份（把 build 端換回「寫的那支筆」會在這裡 FAIL —— 只驗規格不驗畫面，就是第 2 輪 G5 的病，本輪的突變測試就是這樣漏過一次的）`,
+    `${carved.filter(([, vb, , d]) => vb !== wantVB || d !== Icon.SEAL.d).length} 顆不同`);
+  ok(written.length === 1 && written.every(([, , , d]) => d === Icon.WRITTEN.d),
+    `G26 對照用的舊筆只准出現 ${written.length} 顆（第 2 輪那一版，畫在「刻的比寫的粗」那一組旁邊）—— 排除項自己也要是斷言，不然排除就是漏洞`,
+    `written ${written.length}`);
+  ok(new RegExp(`width:\\s*${Math.round(Icon.ICON * Icon.SEAL_FRAC)}px`).test(sheet26),
+    `G26 墨跡佔畫布的比例是 ${Math.round(Icon.SEAL_FRAC * 100)}%（板上畫的寬度 ${Math.round(Icon.ICON * Icon.SEAL_FRAC)}px 於 ${Icon.ICON} 母稿）`);
 }
 
 /* ══ G7  六位數字的兩種正典 ＋ 3+3 分格 ＋ 兩種分組怎麼分開 ══════
@@ -456,12 +616,13 @@ if (M.err) {
    ②「內容末端到板底不設上限，但主按鈕中心須落在畫面 70% 以內」——
       落地範圍：尾段空白 >120px 的流程板（交付板／壓力板不是畫面）。理由印在 Tokens 板上。 */
 if (M.voids) {
-  // 交付板不是畫面（Tokens／Notes／壓力板／AppIcon），呼吸帶與板高的兩條規則不適用；
-  // 排除清單明講在這裡，不是靠 verify 靜靜跳過（AppIcon 板上也印了它自己的豁免清單）。
-  const PAUSE = RULE.pause, FLOW = (f) => !/Tokens|Notes|Stress|AppIcon/.test(f);
-  ok(M.pauseBad.length === 0,
+  // 交付板不是畫面（Tokens／Notes／壓力板／AppIcon／GlassSeam），呼吸帶與板高的兩條規則不適用；
+  // 排除清單明講在這裡，不是靠 verify 靜靜跳過 —— AppIcon 與 GlassSeam 兩張板上也各自
+  // 印了它自己的豁免清單（「沒印出來的例外就是 bug」）。
+  const PAUSE = RULE.pause, FLOW = (f) => !/Tokens|Notes|Stress|AppIcon|GlassSeam/.test(f);
+  ok(M.pauseBad.filter((v) => FLOW(v.file)).length === 0,
     `G10 呼吸帶①：內容之間 >${PAUSE}px 的空白共 ${M.pauses.length} 段，全部掛了 data-pause 說明理由（手機 iPad 同一條門檻）`,
-    M.pauseBad.map((v) => `${v.file}/${v.col}=${v.len}px@${v.at} 未掛牌`).join(' '));
+    M.pauseBad.filter((v) => FLOW(v.file)).map((v) => `${v.file}/${v.col}=${v.len}px@${v.at} 未掛牌`).join(' '));
   ok(M.pauses.every((p) => p.why.length >= 8),
     `G10 呼吸帶①：掛牌的理由都是句子不是敷衍`, M.pauses.filter((p) => p.why.length < 8).map((p) => p.file).join(' '));
   {
@@ -571,6 +732,31 @@ if (M.approve) {
     ok(old.length === 0, `G15 舊名清乾淨：${files.length} 張板上沒有任何一處還寫著「小芽」（產品中文名＝${'萌芽日記'}）`, old.join(' '));
     const lock = files.filter((f) => /aria-label="萌芽日記"/.test(read(f)) && !/>日記</.test(read(f)));
     ok(lock.length === 0, 'G15 lockup 完整：每一個字標都是「手寫萌芽＋系統字日記」兩塊，沒有只出現一半的', lock.join(' '));
+    /* 第 2 輪這一條靠「板上有沒有出現『萌芽』『日記』這幾個字元」判斷 —— 那是拿內容當結構用：
+       正文裡出現一次產品全名就會讓斷言變綠，而真正要守的是**材質**
+       （哪一塊是手寫的圖、哪一塊是會跟著 Dynamic Type 長大的真文字）。改成屬性標記。 */
+    const mat = [];
+    for (const f of files) {
+      const s2 = read(f);
+      /* 上界不能設 —— 手寫那兩個字的 path 資料就超過 4000 字元，
+         設了上界正則會一個都對不上，這一條就變成「沒有樣本所以不會 FAIL」
+         （本輪的突變測試 M-G15 就是這樣漏網的）。用非貪婪配到第一個收尾即可。 */
+      for (const m of s2.matchAll(/data-lockup="1"[\s\S]*?<\/span><\/span>/g)) {
+        const brush = (m[0].match(/data-ink="brush"/g) || []).length;
+        const sys = (m[0].match(/data-ink="system"/g) || []).length;
+        if (brush !== 1 || sys !== 1) mat.push(`${f} 一組 lockup 裡 brush×${brush}／system×${sys}`);
+      }
+      /* 落單的筆跡（不在 lockup 裡的 brush）只准出現在 AppIcon 板上 ——
+         那張板講的就是「同一支筆單獨拿去刻成印」，落款印本來就只有筆跡沒有系統字。
+         其他任何板上出現半組字標一律 FAIL。 */
+      const loose = (s2.match(/data-ink="brush"/g) || []).length - (s2.match(/data-lockup="1"/g) || []).length;
+      if (!/AppIcon/.test(f) && loose !== 0) mat.push(`${f} 有 ${loose} 個不在 lockup 裡的筆跡`);
+    }
+    const nLock = files.reduce((a, f) => a + (read(f).match(/data-lockup="1"/g) || []).length, 0);
+    ok(nLock >= 8, `G15 字標的樣本數：全稿 ${nLock} 組 lockup 被掃到（沒有樣本就不會 FAIL，所以樣本數自己也是一條斷言）`, `nLock=${nLock}`);
+    ok(mat.length === 0,
+      `G15 字標的材質是標出來的不是猜出來的：每一組 data-lockup 裡剛好一塊 data-ink="brush"（筆跡，是圖，不隨 Dynamic Type 長大）＋一塊 data-ink="system"（真文字，會長大）——判準與字元無關，換名字換語言都不會失效`,
+      mat.join(' · '));
   }
 }
 
@@ -633,11 +819,33 @@ if (M.lips) {
   {
     const brand = M.lipNoneWho.filter((s) => /\/(apple|google)$/.test(s));
     const sw = M.lipNoneWho.filter((s) => /:switch$/.test(s));
-    ok(brand.length + sw.length === M.lipNone && brand.length === 8 && sw.length === 3,
-      `G19 沒有唇邊的浮起面只有兩種、共 ${M.lipNone} 個：兩顆品牌鍵（Apple ${brand.filter((s) => /apple/.test(s)).length}＋Google ${brand.filter((s) => /google/.test(s)).length}，我們不改別人的外觀 —— 連加一道唇邊、連把它規範的 1px 描邊加粗成 3px 都算改）與審核開關 ON 的軌道 ${sw.length} 個（膠囊軌道，唇邊會壓到把手行程）`,
+    ok(brand.length + sw.length === M.lipNone && brand.length === 8 && sw.length === 0,
+      `G19 沒有唇邊的浮起面只有兩種、共 ${M.lipNone} 個：兩顆品牌鍵（Apple ${brand.filter((s) => /apple/.test(s)).length}＋Google ${brand.filter((s) => /google/.test(s)).length}，我們不改別人的外觀 —— 連加一道唇邊、連把它規範的 1px 描邊加粗成 3px 都算改）。第 2 輪這裡還有第三種例外：ON 的開關軌道 —— 本輪它不再是浮起面了（軌道在兩個狀態都是同一個凹槽，差別只有槽裡填什麼），所以那個例外自己消失了，現在是 ${sw.length} 個`,
       M.lipNoneWho.join(' '));
   }
 } else need('lips', 'G19 唇邊');
+
+/* ══ G19b  審核開關（第 3 輪 R1：全稿唯一會出事的可用性缺陷）══════════
+   第 2 輪實測 OFF 的把手對軌道只有 1.04:1 —— 一個看不出停在哪一邊的開關，
+   而它管的是「陌生人能不能直接看到孩子的照片」。三條：
+     ① OFF 的把手對軌道 ≥3:1（ON 不設這條：ON 的訊號是**軌道的顏色**不是把手的邊，
+        官方 kit 的 Light/Dark ON 兩顆也都是白把手坐在綠軌道上、對比 1.x）；
+     ② 把手在四種組合裡是同一個顏色（它是同一個零件，不會因為狀態換色）；
+     ③ 行程看得見：把手中心在兩端的距離 ＝ 軌道寬 − 把手 − 兩側間隙。 */
+if (M.knobs) {
+  const off = M.knobs.filter((k) => !k.on), on = M.knobs.filter((k) => k.on);
+  const travel = FIX.switchW - FIX.switchKnob - FIX.knob * 2;
+  ok(off.length >= 2 && off.every((k) => k.cr >= 3),
+    `G19b OFF 的把手看得見：${off.length} 張關閉態的板，把手對軌道實測 ${off.map((k) => `${k.file.replace('Invite', '')} ${k.cr}:1`).join('／')}（門檻 3:1；第 2 輪是 1.04:1）`,
+    off.filter((k) => k.cr < 3).map((k) => `${k.file} ${k.cr}`).join(' '));
+  ok(on.length >= 3, `G19b ON 態也被量到 ${on.length} 張（把手對芽綠軌道 ${[...new Set(on.map((k) => k.cr))].join('／')}:1 —— 這一條刻意不設 3:1 門檻，ON 的訊號是軌道的顏色，官方 kit 的 ON 也是白把手坐綠軌道）`);
+  const cx = { on: [...new Set(on.map((k) => k.cx))], off: [...new Set(off.map((k) => k.cx))] };
+  ok(cx.on.length === 1 && cx.off.length === 1 && cx.on[0] - cx.off[0] === travel,
+    `G19b 行程看得見：把手中心 OFF 在 ${cx.off[0]}px、ON 在 ${cx.on[0]}px，相差 ${cx.on[0] - cx.off[0]}px ＝ 軌道 ${FIX.switchW} − 把手 ${FIX.switchKnob} − 兩側間隙 ${FIX.knob}×2`,
+    `on ${cx.on.join('/')} off ${cx.off.join('/')} 應差 ${travel}`);
+  ok(/const knob = `<div data-role="knob"[^`]*background:\$\{t\.knob\}/.test(src),
+    'G19b 把手是同一個零件：兩個狀態走同一行程式、同一個 t.knob（第 2 輪 ON 用 onSprout、OFF 用 board3 —— 一顆會變色的把手是兩個零件）');
+} else need('knobs', 'G19b 審核開關');
 
 if (M.toggles) {
   const ys = [...new Set(M.toggles.map((t) => t.top))];
@@ -675,9 +883,9 @@ if (M.toggles) {
   // ② 具名量 → 出處。左邊是註記上的說法，右邊是它唯一的來源。
   const hOf = (f) => (cv.artboards.find((a) => a.file === f) || {}).h;
   const cite = [
-    ['板高 (\\d+)px', (n) => n === hOf('InviteRequestsMany.dc.html'), () => `canvas.json 的 InviteRequestsMany 板高 ${hOf('InviteRequestsMany.dc.html')}`],
-    ['放不下 (\\d+) 才長高', (n) => n === hOf('InviteRequests.dc.html'), () => `canvas.json 的手機板高 ${hOf('InviteRequests.dc.html')}`],
-    ['其餘待核板一律 (\\d+)', (n) => n === hOf('InviteRequests.dc.html'), () => `canvas.json 的手機板高 ${hOf('InviteRequests.dc.html')}`],
+    ['單人 (\\d+)px', (n) => n === hOf('InviteRequests.dc.html'), () => `canvas.json 的 InviteRequests 板高 ${hOf('InviteRequests.dc.html')}`],
+    ['多人 (\\d+)px', (n) => n === hOf('InviteRequestsMany.dc.html'), () => `canvas.json 的 InviteRequestsMany 板高 ${hOf('InviteRequestsMany.dc.html')}`],
+    ['都放不下 (\\d+)', (n) => n === 844, () => '真實螢幕高 844'],
     ['≤(\\d+)px', (n) => n === RULE.pause, () => `RULE.pause=${RULE.pause}`],
     ['尾段 >(\\d+)px', (n) => n === RULE.pause, () => `RULE.pause=${RULE.pause}`],
     ['落在畫面 (\\d+)% 以內', (n) => n === RULE.btnPct, () => `RULE.btnPct=${RULE.btnPct}`],
@@ -759,11 +967,26 @@ if (M.toggles) {
      這裡再比對一次「量測時記下的根目錄」＝「現在這一份產物」。 */
   const rootFile = new URL('_root.json', import.meta.url);
   const local = existsSync(rootFile) ? JSON.parse(readFileSync(rootFile, 'utf8')) : null;
-  ok(!!local && !!M.root && M.root.track === local.track && M.root.fp === local.fp,
-    `G21b 量測來源：measured.json 是在本軌的根目錄上量的（${local ? `${local.track} #${local.fp}／${local.boards} 板` : '_root.json 不見了'}）`,
+  ok(!!local && !!M.root && M.root.track === local.track && M.root.structFp === local.structFp && M.root.boards === local.boards,
+    `G21b 量測來源：measured.json 是在本軌的根目錄上量的（${local ? `${local.track} 結構 #${local.structFp}／${local.boards} 板` : '_root.json 不見了'}）`,
     !local ? '沒有 _root.json —— 先跑 node build.mjs'
       : !M.root ? 'measured.json 沒有記下根目錄 —— 重跑 node measure.mjs'
-        : `量測時是 ${M.root.track} #${M.root.fp}（${M.root.boards} 板）`);
+        : `量測時是 ${M.root.track} 結構 #${M.root.structFp}（${M.root.boards} 板）`);
+
+  /* G21c（第 3 輪 R9 第二版）：內容核對**有沒有真的跑過**。
+     第 2 輪 reviewer 親自踩到的殘留 server 之所以能一邊印「核對 OK」一邊量別的目錄，
+     是因為指紋只吃板清單。現在 measure 開跑前要三方對帳（server 的 _root.json、
+     本地磁碟、瀏覽器真的 fetch 到的原文），任何一方不同就 exit 1。
+     這裡驗的是那一關留下的憑證：measured.json 裡有 contentFp，而且它就是
+     probe 回報的那一個。**它不會等於現在磁碟上的內容雜湊** —— 因為管線是
+     build→measure→build，第二次 build 才把量到的數字印上板，內容必然變一次。
+     這條邊界寫在這裡，不寫在註解以外的地方：G21c 管「有沒有查」，
+     G21 的 ls-measured 鏈管「現在的板是不是從這一份量測建出來的」，兩條合起來才閉環。 */
+  ok(!!M.root && /^[0-9a-f]{12}$/.test(M.root.contentFp || ''),
+    `G21c 內容核對留下憑證：measured.json 記著量測當下三方對帳過的內容雜湊 #${(M.root || {}).contentFp}（server 的 _root.json ＝ 本地磁碟 ＝ 瀏覽器真的讀到的那 ${(M.root || {}).boards} 份原文）`,
+    M.root ? `contentFp=${M.root.contentFp}` : 'measured.json 沒有 root');
+  ok(/R\.contentFp !== local \|\| local !== localRoot\.contentFp/.test(readFileSync(new URL('measure.mjs', import.meta.url), 'utf8')),
+    'G21c 三方對帳的程式還在 measure.mjs 裡（拿掉它，上面那個憑證就變成自報）');
 }
 
 /* ══ G17  截圖與重渲染的底部 40px 一致（_shot.mjs 寫回）══════════ */

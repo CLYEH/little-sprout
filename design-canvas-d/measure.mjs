@@ -1,9 +1,9 @@
 // 在真的瀏覽器裡跑 _probe.html，把量到的每一項寫進 measured.json。
 // Tokens 板上印的數字、verify.mjs 下的判斷，都只讀這個檔 —— 不可能再自報不實。
 // Run: node measure.mjs   （需要本機 http server：python3 -m http.server 8741）
-import { writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { H1_GROUPS, RULE, TRACK } from './tokens.mjs';
+import { H1_GROUPS, RULE, TRACK, hash12 } from './tokens.mjs';
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 /* 第 1 輪 R9：上一輪的預設埠 8731 指的是**軌 B 的根目錄**。兩軌的檔名、欄位、
@@ -29,6 +29,10 @@ if (served.track !== localRoot.track || served.fp !== localRoot.fp) {
   process.exit(1);
 }
 console.log(`measure: 根目錄核對 OK —— ${served.track} #${served.fp}（${served.boards} 板）`);
+/* R9 第二版（第 3 輪）：上面那一關只證明「server 上的 _root.json 跟本地一樣」。
+   reviewer 第 2 輪親自踩到的殘留 server 就是這樣過關的 —— 板名尺寸全同、
+   _root.json 抄得一模一樣，量的卻是別的目錄。所以 fp 現在併入內容雜湊（build 端），
+   而且 probe 會把**它真的 fetch 到的**原文再雜湊一次，見下面的內容核對。 */
 
 const dump = execFileSync(CHROME, [
   '--headless', '--disable-gpu', '--no-sandbox', '--virtual-time-budget=30000',
@@ -39,6 +43,22 @@ const m = /JSON&gt;&gt;([\s\S]*?)&lt;&lt;JSON|JSON>>([\s\S]*?)<<JSON/.exec(dump)
 if (!m) { console.error('measure: 量不到 —— http server 有開嗎？'); process.exit(1); }
 const raw = (m[1] || m[2]).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 const R = JSON.parse(raw);
+
+/* 內容核對：本地重算一次「板名:原文雜湊」，跟 probe 回報的比。
+   probe 是從 URLBASE fetch 的，所以這一關咬的是「瀏覽器讀到的」≠「磁碟上的」。
+   三個數字（瀏覽器讀到的／本地磁碟上的／_root.json 記的）必須完全一致。 */
+{
+  const dcFiles = readdirSync(new URL('.', import.meta.url)).filter((f) => f.endsWith('.dc.html')).sort();
+  const local = hash12(JSON.stringify(dcFiles.map((f) => `${f}:${hash12(readFileSync(new URL(f, import.meta.url), 'utf8'))}`).sort()));
+  if (!R.contentFp) { console.error('measure: probe 沒有回報 contentFp —— _probe.html 是舊版，停在這裡。'); process.exit(1); }
+  if (R.contentFp !== local || local !== localRoot.contentFp) {
+    console.error(`measure: **內容核對失敗**。瀏覽器讀到的 ${dcFiles.length} 份原文雜湊 #${R.contentFp}，`);
+    console.error(`         本地磁碟上是 #${local}，_root.json 裡記的是 #${localRoot.contentFp}。`);
+    console.error('         三者必須一致 —— 不一致代表 server 的根目錄不是這一份產物（板名與尺寸相同也騙不過），或 build 沒重跑。');
+    process.exit(1);
+  }
+  console.log(`measure: 內容核對 OK —— ${dcFiles.length} 份原文 #${local}（板清單、尺寸、內容三者都對上）`);
+}
 
 const prev = existsSync(new URL('measured.json', import.meta.url))
   ? JSON.parse(readFileSync(new URL('measured.json', import.meta.url), 'utf8')) : {};
@@ -75,7 +95,11 @@ const out = {
   ...prev,
   /* 這一份量測是在哪一個根目錄上量的（G21b）。verify 拿本地 _root.json 比對它 ——
      就算有人手動改埠號、或先開對再開錯，板上印的實測句也不可能出自別軌。 */
-  root: { track: served.track, fp: served.fp, boards: served.boards },
+  root: { track: served.track, fp: served.fp, structFp: localRoot.structFp, boards: served.boards, contentFp: R.contentFp },
+  light: { seen: R.lightSeen, bad: R.lightBad },
+  brand: R.brand, brandBad: R.brandBad,
+  insetDepth: R.insetDepth, folds: R.folds || [],
+  knobs: R.knobs,
   count: R.boards.length,
   boards: R.boards,
   clipped: R.boards.filter((b) => b.clipped).map((b) => `${b.file}+${b.clipped}`),

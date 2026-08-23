@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <!-- ls-measured:1e5850fcb42a -->
+  <!-- ls-measured:67c805912926 -->
   <script src="./support.js"></script>
 </head>
 <body>
@@ -10,7 +10,7 @@
 <helmet><style>
     /* ── Little Sprout M1 tokens（值即實作值，ios-dev 直接抄）── */
     :root{
-      --ls-board:#F4DFDB; --ls-board-2:#E7CDCB; --ls-board-3:#E2C6BE; --ls-lit:#FEF3F0;
+      --ls-board:#F4DFDB; --ls-board-2:#E7CDCB; --ls-board-3:#E2C6BE; --ls-lit:#FBEBE4;
       --ls-ink:#2A1219; --ls-ink-2:#3E232B;
       --ls-cta:#86183F; --ls-cta-deep:#4A0722; --ls-cta-busy:#5E0A2A; --ls-on-cta:#FEF3F0;
       --ls-pen:#7E1414; --ls-sprout:#1C4630; --ls-edge:#8C6159; --ls-google-line:#747775;
@@ -20,11 +20,15 @@
       --ls-g-win3:linear-gradient(180deg, #D8B9B1 0%, #E6C9C1 100%);
       --ls-g-face:linear-gradient(180deg, #E9CFC7 0%, #DBBDB5 100%);
       --ls-g-cta:linear-gradient(180deg, #901F49 0%, #7C1236 100%);
+      --ls-g-well:linear-gradient(180deg, #866867 0%, #957B7A 100%);
       --ls-g-stub3:linear-gradient(180deg, #FAEADE 0%, #EFD3D6 35%, #ECD0D6 100%);
       --ls-g-stub2:linear-gradient(180deg, #F9EBE0 0%, #F2DAD8 35%, #F1D8D7 100%);
       --ls-g-stub1:linear-gradient(180deg, #F8EBE1 0%, #F5E1DB 35%, #F4E0DB 100%);
       --ls-g-stub0:linear-gradient(180deg, #F7ECE3 0%, #F6E8E1 35%, #F6E8E0 100%);
       --ls-g-seam:linear-gradient(180deg, rgba(42,18,25,0) 0%, rgba(42,18,25,.42) 100%);
+      /* 光從哪一邊來（+1 上、−1 下）。G24 讀它決定每一個表面該長什麼樣，
+         所以「這一張板是哪一種光」不再靠檔名猜。 */
+      --ls-dir:1;
       --ls-r-window:12px; --ls-r-control:14px; --ls-r-card:18px;
       --ls-sp-1:4px; --ls-sp-2:8px; --ls-sp-3:12px; --ls-sp-4:16px;
       --ls-sp-5:24px; --ls-sp-6:32px; --ls-tap-min:44px;
@@ -38,17 +42,23 @@
       mix-blend-mode:multiply}
   </style></helmet>
 
-<div class="g" data-grad="paper" style="position:relative;width:980px;height:3160px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;padding:48px">
+<div class="g" data-grad="paper" style="position:relative;width:980px;height:3560px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;padding:48px">
   <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:24px">
     <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B;letter-spacing:.14em">給 ios-dev · LS-17 / LS-18</span>
     <h1 style="font-size:28px;line-height:34px;font-weight:700;letter-spacing:-.01em;color:#2A1219;margin:0">實作註記</h1>
+  </div>
+  <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px;margin-bottom:24px;display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)">待使用者裁決（第 3 輪；設計端已表態，但不自己決定）</span>
+    <span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b style="color:#2A1219">① 字標的 3:1 —— 本輪維持現狀，等裁。</b>手寫的「萌芽」與系統字的「日記」在 lockup 裡<b style="color:#2A1219">不是等大的</b>（手寫 51pt 對系統字 17pt，約 3.0:1）。reviewer 的判定是：這<b style="color:#2A1219">不是排版決定，是命名決定</b> —— 它把「萌芽」做成品牌、「日記」做成品類，等於宣告這個 app 的名字重心在前兩個字；而軌 C 把四個字做成等大，宣告的是「萌芽日記」四個字一起才是名字。<b style="color:#2A1219">同一個名字被兩軌做成兩種身分，只有使用者能裁。</b>設計端的立場：D 軌這樣做有可否證的理由（「萌」十四筆、「記」十筆，在信件明細那一格字標只有 26pt 高，四個字全手寫每一筆不到 1.3pt，對長輩就是一團墨），但那是<b style="color:#2A1219">為什麼只手寫兩個字</b>的理由，不是<b style="color:#2A1219">為什麼那兩個字要比較大</b>的理由。兩者要分開看。</span>
+    <span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b style="color:#2A1219">② 深色主按鈕那一支粉</b>（Tokens 板有三塊色票對照）：在使用者核定的「粉」上動刀，reviewer 已裁「准」，仍列出等最終確認。</span>
+    <span style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b style="color:#2A1219">③ 邀請碼字母集</b>：排掉易混字元後的位元數要與後端 LS-33 對帳（跨軌事項，兩軌同列）。</span>
   </div>
   <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:16px">
     
   <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
     <span style="font-size:15px;line-height:21px;font-weight:600;color:#2A1219;text-shadow:0 1px 0 rgba(255,246,242,.80)">對齊 Apple 官方 design kit（iOS／iPadOS 27）—— 哪些照做、哪些刻意不照做</span>
     <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">
-      <li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>分層是刻意的</b>：系統控件（開關、sheet、nav bar、按鈕族譜）的<b>解剖與行為</b>照官方 kit；<b>識別層</b>（凹／浮／平印三種表面、台紙、票根、褪色階）是我們的，只作用在我們自己畫的表面上。長輩在別的 app 學會的東西，在這裡要一模一樣。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>照做並且已改</b>：系統開關的解剖 —— 軌道 <code>51×31</code>、把手 <code>27</code>、間隙 <code>2</code>。第 1 輪自己畫的是 56×32／26／3，長得像但不是系統那一個；把手的行程差幾 pt，長輩的肌肉記憶就對不上。SwiftUI 用 <code>Toggle</code> 本體，我們只換 <code>.tint(lsSprout)</code> 與整列的表面。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>照做</b>：字級全部落在官方文字樣式（largeTitle 34／title1 28／title3 22／body 17／subheadline 15／footnote 13），AX1–AX5 由系統推，我們不自己算級距。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>刻意不照做（理由）</b>：① 官方有四級標籤色（Label／Secondary／Tertiary／Quaternary），我們<b>只用兩級</b>並且兩級都 AAA —— 給長輩的 app 不需要「更淡的三種淡」，第三級以下在 7:1 底下根本活不下來。② 官方按鈕族譜每一族都有 <b>disabled</b> 態，我們<b>整套不 disable</b>：按鈕永遠可按，按下去用錯誤或說明回話 —— disabled 的按鈕對長輩是「壞掉了」不是「還不能按」。③ 不用 <code>.glassEffect()</code>：Liquid Glass 是系統的材質語言，我們的凹凸是紙的厚度，疊起來會變成兩套光。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>App icon</b>：分層與網格照官方 App Icon Template（1024 見方、系統套 squircle、中央安全圓），生產走 Icon Composer。見 AppIcon 板。</li>
+      <li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>分層是刻意的</b>：系統控件（開關、sheet、nav bar、按鈕族譜）的<b>解剖與行為</b>照官方 kit；<b>識別層</b>（凹／浮／平印三種表面、台紙、票根、褪色階）是我們的，只作用在我們自己畫的表面上。長輩在別的 app 學會的東西，在這裡要一模一樣。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>照做並且已改</b>：系統開關的解剖 —— 軌道 <code>51×31</code>、把手 <code>27</code>、間隙 <code>2</code>。第 1 輪自己畫的是 56×32／26／3，長得像但不是系統那一個；把手的行程差幾 pt，長輩的肌肉記憶就對不上。SwiftUI 用 <code>Toggle</code> 本體，我們只換 <code>.tint(lsSprout)</code> 與整列的表面。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>照做</b>：字級全部落在官方文字樣式（largeTitle 34／title1 28／title3 22／body 17／subheadline 15／footnote 13），AX1–AX5 由系統推，我們不自己算級距。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>刻意不照做（理由）</b>：① 官方有四級標籤色（Label／Secondary／Tertiary／Quaternary），我們<b>只用兩級</b>並且兩級都 AAA —— 給長輩的 app 不需要「更淡的三種淡」，第三級以下在 7:1 底下根本活不下來。② 官方按鈕族譜每一族都有 <b>disabled</b> 態。第 2 輪這裡寫的是「我們整套不 disable」——<b>字面上是假的</b>（field 有 disabled 態、載入中的按鈕就是 disabled 的樣子）。準確的規則是兩句：<b>不因驗證未通過而 disable</b>（按鈕永遠可按，按下去用錯誤或說明回話 —— disabled 的按鈕對長輩是「壞掉了」不是「還不能按」）；<b>因處理中而 disable</b>（<code>ctaBusy</code> 就是它的樣子：漸層拿掉換實色、唇邊與底同色）。這條已升格為兩軌共用的產品規則。③ 不用 <code>.glassEffect()</code>：Liquid Glass 是系統的材質語言，我們的凹凸是紙的厚度，疊起來會變成兩套光。</li><li style="font-size:13px;line-height:18px;font-weight:400;color:#3E232B"><b>App icon</b>：分層與網格照官方 App Icon Template（1024 見方、系統套 squircle、中央安全圓），生產走 Icon Composer。見 AppIcon 板。</li>
     </ul>
   </div>
     
