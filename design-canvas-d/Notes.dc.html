@@ -32,6 +32,8 @@
       --ls-r-window:12px; --ls-r-control:14px; --ls-r-card:18px;
       --ls-sp-1:4px; --ls-sp-2:8px; --ls-sp-3:12px; --ls-sp-4:16px;
       --ls-sp-5:24px; --ls-sp-6:32px; --ls-tap-min:44px;
+      /* 過期句規線（第 10 輪 D9-02）：粗細與垂直位置，見 tokens.mjs 的 EXPIRED_RULE。 */
+      --ls-expired-rule-w:2px; --ls-expired-rule-y:60%;
     }
     *,*::before,*::after{box-sizing:border-box}
     body{margin:0;font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Helvetica Neue", sans-serif;-webkit-font-smoothing:antialiased;background:#F4DFDB;color:#2A1219;text-wrap:pretty}
@@ -40,6 +42,18 @@
     .g::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.055;
       background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
       mix-blend-mode:multiply}
+    /* 過期句劃掉：不用瀏覽器內建 line-through（落在 CJK 橫畫帶，見 tokens.mjs 的
+       EXPIRED_RULE 註解）。**不能用 background-image 畫這條線**——量測 probe
+       的對比／漸層清冊是逐元素走 backgroundColor／backgroundImage 祖先鏈算的
+       （見 _probe.html 的 bgAt()／onGrad()），畫在 <s> 自己的背景上，這條規線
+       會被誤判成「這段文字站在一支沒登記的漸層上」（G22③／G23②），而且背景
+       原地疊在字底下會把對比直接量成規線色 vs 字色（第 10 輪初版踩過這個坑：
+       AAA 從 7.12 掉成 2.68）。改成 ::after 疊在文字**上面**（正常流內容先畫、
+       絕對定位的偽元素後畫，天生疊在最上層），regine 用純色 background（不是
+       linear-gradient()，掃描才不會誤認），量測祖先鏈只看真的 DOM 元素，
+       不會走到偽元素，兩條 gate 都不會被誤觸。粗細／位置一樣出自具名 token。 */
+    s[data-expired]{text-decoration:none;color:#3E232B;position:relative}
+    s[data-expired]::after{content:"";position:absolute;left:0;right:0;top:var(--ls-expired-rule-y);height:var(--ls-expired-rule-w);background:#8C6159;pointer-events:none}
   </style></helmet>
 
 <div class="g" data-grad="paper" style="position:relative;width:980px;height:3820px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;padding:48px">

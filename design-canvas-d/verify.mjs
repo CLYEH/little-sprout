@@ -1630,9 +1630,54 @@ const mg1 = () => {
       if (!inside) out.push(`${f}@${m.index} 的「${PHRASE}」不在過期標記裡`);
     }
   }
-  ok(struck >= 3 && notes >= 1 && out.length === 0 && thinWhy.length === 0 && stray.length === 0,
-    `G35 過期的句子劃掉不刪掉：凍結板上 ${struck} 句「${PHRASE}」逐句 <s> 劃掉（每一句寫得出為什麼過期），另外 ${notes} 段是宣告它們過期的橫幅本身（標成 note，不劃）；這個字串在其他 ${files.length - frozenFiles.length} 張板上一次都沒有出現 —— 刪掉的假話沒有人會記得它曾經被否決過，所以留著，但留成劃掉的樣子`,
-    [...out, ...thinWhy, ...stray.map((f) => `${f} 也開始講「${PHRASE}」了`)].join(' · '));
+  /* ── 規線本身不准銷毀要保存的內容（第 10 輪 D9-02，G35 追加）─────────
+     第 9 輪抓到：<s> 用瀏覽器內建 line-through 劃掉，它的預設位置落在 CJK 橫畫帶，
+     把「同一支筆」裡三個「一」的那一橫吃掉，讀成「同⎯支筆」——規線把要保存的
+     內容銷毀了。改成 build.mjs 的 helmet() 用 ::after 疊一條線在文字上面
+     （s[data-expired] 關掉內建 line-through、s[data-expired]::after 畫規線），
+     這裡驗四件事：
+       ① s[data-expired] 自己有 text-decoration:none（真的關掉內建 line-through），
+          而且**沒有 background**——規線不准畫在文字自己的背景上（那會被 probe
+          的祖先鏈誤判成漸層使用點，對比也會被量成規線色而不是紙色，第 10 輪
+          初版就是這樣把 AAA 從 7.12 量成 2.68）
+       ② ::after 的規線粗細／垂直位置都出自具名 token（var(--ls-expired-rule-w/-y)），
+          不是瀏覽器決定、也不是隨手寫的裸數字；且 y 落在 58–62% 的安全帶；
+          而且不准用 linear-gradient()（即使兩端同色，這個字串本身就會被
+          probe 當成漸層使用點）
+       ③ 規線色與被劃文字色的 ΔE ≥ 登記簿現成的 JND（HUE_DE_MIN）——
+          太接近會讀不出規線在哪，跟原本「讀不出字」是同一個可讀性家族 */
+  const ruleBad = [];
+  for (const f of frozenFiles) {
+    const html = read(f);
+    const ruleM = /s\[data-expired\]\{([^}]*)\}/.exec(html);
+    const afterM = /s\[data-expired\]::after\{([^}]*)\}/.exec(html);
+    if (!ruleM) { ruleBad.push(`${f} 找不到 s[data-expired] 的樣式`); continue; }
+    if (!afterM) { ruleBad.push(`${f} 找不到 s[data-expired]::after 的規線疊圖`); continue; }
+    const ruleCss = ruleM[1], afterCss = afterM[1];
+    if (!/text-decoration:\s*none/.test(ruleCss)) ruleBad.push(`${f} 的規線樣式沒有關掉瀏覽器內建的 line-through（缺 text-decoration:none）`);
+    if (!/var\(--ls-expired-rule-w\)/.test(afterCss)) ruleBad.push(`${f} 的規線粗細不是出自具名 token（缺 var(--ls-expired-rule-w)）`);
+    if (!/var\(--ls-expired-rule-y\)/.test(afterCss)) ruleBad.push(`${f} 的規線垂直位置不是出自具名 token（缺 var(--ls-expired-rule-y)）`);
+    /* 規線不能畫在 <s> 自己的 background 上：_probe.html 的 bgAt()／onGrad() 是
+       逐元素走 backgroundColor／backgroundImage 的祖先鏈算文字對比與漸層清冊，
+       畫在自己背景上會被誤判成「這段文字站在一支沒登記的漸層上」，而且背景
+       疊在字底下會把對比直接量成規線色 vs 字色（不是紙色 vs 字色）。 */
+    if (/background(-image)?:/.test(ruleCss)) ruleBad.push(`${f} 的 s[data-expired] 自己的樣式裡有 background——規線必須畫在 ::after 疊圖上，不能是這個元素自己的背景（會被 probe 的祖先鏈誤判成文字站在一支沒登記的漸層上，對比也會被量成規線色而不是紙色）`);
+    if (/linear-gradient\(/.test(afterCss)) ruleBad.push(`${f} 的規線疊圖用了 linear-gradient()——即使兩端同色，這個字串本身就會被 probe 當成漸層使用點，改用純色 background`);
+    const rootM = /:root\{([^}]*)\}/.exec(html);
+    const yDecl = rootM ? /--ls-expired-rule-y:\s*([\d.]+)%/.exec(rootM[1]) : null;
+    if (!yDecl) ruleBad.push(`${f} 的 :root 沒有宣告 --ls-expired-rule-y`);
+    else { const y = +yDecl[1]; if (!(y >= 58 && y <= 62)) ruleBad.push(`${f} 的 --ls-expired-rule-y＝${y}%，沒有落在 CJK 橫畫帶的安全帶（58–62%）`); }
+    const ruleColorM = /(?:^|;)\s*background:\s*(#[0-9A-Fa-f]{6})/.exec(afterCss);
+    const textColorM = /(?:^|;)\s*color:\s*(#[0-9A-Fa-f]{6})/.exec(ruleCss);
+    if (!ruleColorM || !textColorM) ruleBad.push(`${f} 的規線色或被劃文字色沒有寫成可讀的 hex（量不了 ΔE）`);
+    else {
+      const delta = dE(ruleColorM[1], textColorM[1]);
+      if (!(delta >= HUE_DE_MIN)) ruleBad.push(`${f} 規線色 ${ruleColorM[1]} 與被劃文字色 ${textColorM[1]} 的 ΔE＝${delta.toFixed(2)}，沒有到 JND（${HUE_DE_MIN}）`);
+    }
+  }
+  ok(struck >= 3 && notes >= 1 && out.length === 0 && thinWhy.length === 0 && stray.length === 0 && ruleBad.length === 0,
+    `G35 過期的句子劃掉不刪掉：凍結板上 ${struck} 句「${PHRASE}」逐句 <s> 劃掉（每一句寫得出為什麼過期），另外 ${notes} 段是宣告它們過期的橫幅本身（標成 note，不劃）；這個字串在其他 ${files.length - frozenFiles.length} 張板上一次都沒有出現 —— 刪掉的假話沒有人會記得它曾經被否決過，所以留著，但留成劃掉的樣子。規線本身不用瀏覽器內建 line-through：粗細／位置出自具名 token，且與被劃文字的 ΔE 過 JND —— 規線不會反過來把要保存的內容吃掉`,
+    [...out, ...thinWhy, ...stray.map((f) => `${f} 也開始講「${PHRASE}」了`), ...ruleBad].join(' · '));
 }
 
 /* ══ MG4  門檻登記簿（第 6 輪 D5-02）═══════════════════════════════
@@ -1682,17 +1727,21 @@ const impNum = (path) => {
    —— 註解裡的宣告不是宣告，第 7 輪的誘餌就是靠這一點活的。 */
 const noComment = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
 const THRESH_SRC = { 'tokens.mjs': noComment(readFileSync(at('tokens.mjs'), 'utf8')), 'icon.mjs': noComment(readFileSync(at('icon.mjs'), 'utf8')) };
-/* path 支援 `NAME` 與 `NAME.key` 兩種寫法，回傳原始碼裡那個字面值（不是字面值就回 NaN）。 */
-const srcNum = (file, path) => {
+/* path 支援 `NAME` 與 `NAME.key` 兩種寫法，回傳原始碼裡那個宣告的原始文字
+   （第 10 輪 D9-06：不再只判「是不是字面值」。第 9 輪的 A4b 打穿了舊版：
+   `{ adj: 1 + 2, ... }` 不是純數字字面值，舊版就判它「是推導式」放行 ——
+   可是 `1+2` 根本不是登記的那個推導（`3 * HUE_DE_MIN`），只是換了一張皮的
+   任意字面值，攻擊者一樣有自由度可以調。現在直接回原始文字，由 ③ 去比對
+   它是不是登記簿上 `expr` 那個具名形狀，不是「看起來像不像算式」。 */
+const srcExpr = (file, path) => {
   const [name, key] = path.split('.');
   const decl = new RegExp(`export const ${name}\\s*=\\s*([^;]+);`).exec(THRESH_SRC[file]);
   if (!decl) return null;
-  if (!key) { const m = /^\s*([\d.]+)\s*$/.exec(decl[1]); return m ? +m[1] : null; }
+  if (!key) return decl[1].trim();
   const m = new RegExp(`\\b${key}:\\s*([^,}]+)`).exec(decl[1]);
-  if (!m) return null;
-  const lit = m[1].trim();
-  return /^[\d.]+$/.test(lit) ? +lit : NaN;   // NaN ＝ 不是字面值（推導式），由 ③ 處理
+  return m ? m[1].trim() : null;
 };
+const normExpr = (s) => String(s || '').replace(/\s+/g, ' ').trim();
 /* 散文裡的數字（⑥ 用）。比的是**數值**不是字串，所以引文寫 7.0:1 也對得上門檻 7。 */
 const proseNums = (s) => [...String(s).matchAll(/\d+(?:\.\d+)?/g)].map((m) => +m[0]);
 const says = (s, v) => proseNums(s).includes(v);
@@ -1734,15 +1783,19 @@ const THRESHOLDS = [
     cite: '攝影的「一格光」＝曝光量減半，亮度剩 0.5。單位是攝影自己的，不是我們定的。' },
   { id: 'PHOTO_DIM', file: 'tokens.mjs', value: null, kind: 'derived', gate: 'G31',
     how: 'PHOTO_STOP^(1/2.2) 取兩位小數＝0.73 —— sRGB 的 brightness() 是通道乘法，一格光在 CSS 裡就是這個數',
+    expr: '+(PHOTO_STOP ** (1 / 2.2)).toFixed(2)',
     calc: () => +(TK.PHOTO_STOP ** (1 / 2.2)).toFixed(2), get: () => TK.PHOTO_DIM },
   { id: 'SCALE_DE.band', file: 'tokens.mjs', value: null, kind: 'derived', gate: 'G29',
     how: '1 × HUE_DE_MIN＝1 —— 「刻度與號碼帶是同一支漸層」＝ 兩者的差要落在人眼分不出來之內',
+    expr: '1 * HUE_DE_MIN',
     calc: () => 1 * TK.HUE_DE_MIN, get: () => TK.SCALE_DE.band },
   { id: 'SCALE_DE.adj', file: 'tokens.mjs', value: null, kind: 'derived', gate: 'G29',
     how: '3 × HUE_DE_MIN＝3 —— 相鄰兩態要「一眼讀得出不一樣」，不是「盯著比才看得出來」',
+    expr: '3 * HUE_DE_MIN',
     calc: () => 3 * TK.HUE_DE_MIN, get: () => TK.SCALE_DE.adj },
   { id: 'SCALE_DE.ends', file: 'tokens.mjs', value: null, kind: 'derived', gate: 'G29',
     how: '2 × SCALE_DE.adj＝6 —— 兩端之間隔了三步，每一步都要達到 adj，兩端至少是相鄰的兩倍',
+    expr: '6 * HUE_DE_MIN',   // 概念上是 2×SCALE_DE.adj，但 tokens.mjs 實際寫的是化簡後的 6 * HUE_DE_MIN —— expr 比的是原始碼真正的樣子，不是 how 的敘事
     calc: () => 2 * TK.SCALE_DE.adj, get: () => TK.SCALE_DE.ends },
   { id: 'CONTRAST.grain', file: 'tokens.mjs', value: 6, kind: 'ours', gate: 'G22', dir: 'min',
     evid: { of: '顆粒層最暗的那一格', v: 6.27, dp: 2, get: () => M.grainMin },
@@ -1796,13 +1849,26 @@ const THRESHOLDS = [
   const bands = new Map();
   for (const b of BD) bands.set(b.of, b);
   const bad1 = [], bad2 = [], bad3 = [], dead = [];
+  /* 死門檻判定（④）：搜尋前先把 THRESHOLDS 這個陣列字面值自己的原始碼區塊切掉
+     （第 10 輪 D9-06）。舊版直接搜整份 verify.mjs，而 THRESHOLDS 的宣告本身就寫著
+     `id: 'CONTRAST.aaa'` —— 搜尋永遠命中自己，判定因此恆真：一條門檻可以完全
+     沒有任何 gate 邏輯在用它，這條檢查照樣印 PASS。切掉這個區塊之後，match
+     只能來自**真正在用它**的 gate 邏輯（例如 G6 用 CONTRAST.aaa、G10 用
+     RULE.btnPct…），不是登記簿對自己宣告的自我引用。 */
+  const verifySrcNoReg = readFileSync(at('verify.mjs'), 'utf8').replace(/const THRESHOLDS = \[[\s\S]*?\n\];/, '');
   for (const th of THRESHOLDS) {
-    const lit = srcNum(th.file, th.id);
-    if (!new RegExp(`\\b${th.id.split('.')[0]}\\b`).test(readFileSync(at('verify.mjs'), 'utf8'))) dead.push(th.id);
+    if (!new RegExp(`\\b${th.id.split('.')[0]}\\b`).test(verifySrcNoReg)) dead.push(th.id);
     if (th.kind === 'derived') {
       const want = th.calc(), got = th.get();
       if (Math.abs(want - got) > 1e-9) bad3.push(`${th.id} 推導出 ${want}、實際是 ${got}`);
-      if (!Number.isNaN(lit) && lit !== null) bad3.push(`${th.id} 在原始碼裡是字面值 ${lit} —— 可推導的門檻要寫成推導式（${th.how}）`);
+      /* ③：形狀比對（第 10 輪 D9-06）。舊版只判「原始碼裡是不是純數字字面值」——
+         第 9 輪的 A4b 打穿它：`{ adj: 1 + 2, ... }` 不是純字面值，舊版就判它
+         「是推導式」放行，但 1+2 根本不是登記的 `3 * HUE_DE_MIN`，只是換了張皮
+         的任意字面值，攻擊者一樣有自由度可以調。現在直接比對原始碼文字是不是
+         逐字元等於（忽略空白）登記簿上 `expr` 那個具名形狀。 */
+      const raw = srcExpr(th.file, th.id);
+      if (raw === null) bad3.push(`${th.id} 在 ${th.file} 裡找不到宣告`);
+      else if (normExpr(raw) !== normExpr(th.expr)) bad3.push(`${th.id} 原始碼裡寫的是「${raw}」，登記簿的推導式形狀是「${th.expr}」—— 形狀對不上（換一個看起來像算式、實際上是任意字面值的假推導式，例如 1+2，就會被這裡咬）`);
       continue;
     }
     /* 值從 **import** 讀（第 8 輪 D7-01①）。第 6 輪讀的是原始碼文字，
@@ -1888,6 +1954,76 @@ const THRESHOLDS = [
   ok(pBad.length === 0,
     `MG4⑥ 文字↔值對帳，母體是全部 ${THRESHOLDS.length} 條（不是十分之一）：每一條的說明裡都寫得出它的門檻值，有實測的 ${withEvid.length} 條連實測值一起寫出來，兩種數都回頭比對 —— 散文裡的數字從此也是被驗的東西`,
     pBad.join(' · '));
+
+  /* ── ⑦ 門檻凍結：value 的唯一權威不能是登記簿自己（第 10 輪 D9-01 甲／乙，P1a）──
+     第 9 輪 reviewer 打穿的洞：登記簿的 value 與 tokens.mjs 互相對帳，但兩邊
+     可以在同一次改動裡一起下移（甲：CONTRAST.grain 6→4.5 同時改 tokens.mjs 與
+     這裡的 value；乙：RULE.btnPct 70→85）——改完兩邊仍然互相對得上，MG4①／②a
+     看不出任何破綻。門檻的 value「有沒有被人動過」，唯一權威只有登記簿自己，
+     這件事本身就是漏洞。
+     thresholds.lock.json 釘住每一條門檻**第一次登記**的 value 與那次 commit 的
+     sha。它擋不住「有 commit 權限的人什麼都能改」——這裡不假裝擋得住。它逼的是
+     另一件事：不寫 moved 就是紅；寫了 moved 就必須交代 from／to 兩個數、哪一輪、
+     哪個 reviewer、還有 ≥120 字寫清楚為什麼。洗白仍然做得到，但會在 diff 上
+     長成一筆看得見的具名動議，不再是一行悄悄的數字替換 —— 與豁免簿、劃掉句
+     同一套規矩：不禁止改變，禁止改變不留痕。 */
+  const LOCK = JSON.parse(readFileSync(at('thresholds.lock.json'), 'utf8'));
+  const lockBad = [];
+  for (const th of THRESHOLDS) {
+    const locked = LOCK[th.id];
+    if (!locked) { lockBad.push(`${th.id} 沒有登記在 thresholds.lock.json 上`); continue; }
+    if (th.value === locked.value) {
+      if (th.moved) lockBad.push(`${th.id} 的 value 沒有真的變（還是 ${th.value}，跟 lock 一樣）卻掛著 moved 動議 —— 動議要對應真的發生的事`);
+      continue;
+    }
+    const mv = th.moved;
+    if (!mv) { lockBad.push(`${th.id}：登記簿 value＝${th.value}，lock 釘的是首次登記的 ${locked.value}，沒有 moved 動議 —— 門檻被移動了但沒有留下具名紀錄`); continue; }
+    if (mv.from !== locked.value) lockBad.push(`${th.id} 的 moved.from＝${mv.from} 對不上 lock 釘的 ${locked.value}`);
+    if (mv.to !== th.value) lockBad.push(`${th.id} 的 moved.to＝${mv.to} 對不上登記簿現在的 value ${th.value}`);
+    if (!mv.round) lockBad.push(`${th.id} 的 moved 沒有寫哪一輪`);
+    if (!mv.reviewer) lockBad.push(`${th.id} 的 moved 沒有具名 reviewer`);
+    if (!mv.why || mv.why.length < 120) lockBad.push(`${th.id} 的 moved.why 少於 120 字（現在 ${mv.why ? mv.why.length : 0} 字）`);
+    else if (!says(mv.why, mv.from) || !says(mv.why, mv.to)) lockBad.push(`${th.id} 的 moved.why 沒有把 from（${mv.from}）與 to（${mv.to}）兩個數都寫進理由裡`);
+  }
+  const movedCount = THRESHOLDS.filter((t2) => t2.moved).length;
+  ok(lockBad.length === 0,
+    `MG4⑦ 門檻凍結：${THRESHOLDS.length} 條全部對過 thresholds.lock.json，value 與首次登記時一致（掛著具名 moved 動議的有 ${movedCount} 條）—— 想放寬門檻，diff 上必須長出一筆具名動議（from／to／round／reviewer／≥120 字理由，兩個數都要寫進理由裡），不能是一行悄悄的數字替換`,
+    lockBad.join(' · '));
+
+  /* ── ⑧ wide 凍結：原本沒有 wide 的門檻不准長出 wide（第 10 輪 D9-01 甲，P1c）──
+     單靠 ⑦ 還留一條路：把門檻與登記簿一起下移、掛一筆看起來合理的 moved 動議，
+     再幫餘裕比補一句含比值的 wide——⑦ 會綠（動議寫得出來），⑤ 也會綠（wide 裡
+     寫了比值）。這正是第 9 輪甲那條路：CONTRAST.grain 6→4.5 之後餘裕比變成
+     ×1.39（>1.3），只要肯掰一句合理的 wide，⑤ 就不再攔它。
+     這裡把那條路也堵掉：lock 釘著每一條門檻**當初有沒有 wide**，沒有的以後也
+     不准長出來。代價是誠實的：某天真的需要幫一條原本沒有 wide 的門檻補上 wide，
+     那不是改這裡放行——是先去改 lock，讓「這條門檻本來沒有 wide」這件事本身
+     也變成一筆看得見的動議，而不是悄悄地多一句藉口。 */
+  const wideBad = THRESHOLDS.filter((th) => LOCK[th.id] && !LOCK[th.id].wide && !!th.wide)
+    .map((th) => `${th.id} 在 lock 上原本沒有 wide，現在長出一句「${th.wide.slice(0, 24)}…」—— 餘裕比放寬常走「補 wide」這條路，這裡先堵住`);
+  const noWideLocked = THRESHOLDS.filter((t2) => LOCK[t2.id] && !LOCK[t2.id].wide).length;
+  ok(wideBad.length === 0,
+    `MG4⑧ wide 凍結：lock 上原本沒有 wide 的 ${noWideLocked} 條，現在也都還是沒有`,
+    wideBad.join(' · '));
+
+  /* ── ⑨ probe 原始碼裡的字面門檻要對得上登記簿（第 10 輪 D9-04）──────────
+     _probe.html 在瀏覽器裡跑，量對比與顆粒時各自寫死一個數（`if (v < 7)`、
+     `if (gv < 6)`）——「單一 token 來源」在這兩條上其實是假的：改 tokens.mjs
+     的 CONTRAST.aaa／grain 不會讓 probe 的判斷跟著變，兩邊可以各自漂移而全部
+     gate 照樣綠（因為 gate 讀的是 probe 吐出來的 fails 陣列，不是重新算一次）。
+     probe 是純瀏覽器腳本、沒有打包，不能直接 import tokens.mjs，所以這裡改成
+     **驗原始碼文字**：那兩個字面值必須逐字元等於 CONTRAST.aaa／CONTRAST.grain。 */
+  const probeSrc = readFileSync(at('_probe.html'), 'utf8');
+  const probeAaa = /if\s*\(v\s*<\s*([\d.]+)\)/.exec(probeSrc);
+  const probeGrain = /if\s*\(gv\s*<\s*([\d.]+)\)/.exec(probeSrc);
+  const probeBad = [];
+  if (!probeAaa) probeBad.push('_probe.html 找不到對比判斷 if (v < …)');
+  else if (+probeAaa[1] !== CONTRAST.aaa) probeBad.push(`_probe.html 的對比判斷寫死 ${probeAaa[1]}，CONTRAST.aaa 登記的是 ${CONTRAST.aaa}`);
+  if (!probeGrain) probeBad.push('_probe.html 找不到顆粒判斷 if (gv < …)');
+  else if (+probeGrain[1] !== CONTRAST.grain) probeBad.push(`_probe.html 的顆粒判斷寫死 ${probeGrain[1]}，CONTRAST.grain 登記的是 ${CONTRAST.grain}`);
+  ok(probeBad.length === 0,
+    `MG4⑨ probe 原始碼裡的字面門檻對得上登記簿：if (v < ${probeAaa ? probeAaa[1] : '?'}) ＝ CONTRAST.aaa（${CONTRAST.aaa}）、if (gv < ${probeGrain ? probeGrain[1] : '?'}) ＝ CONTRAST.grain（${CONTRAST.grain}）—— 「單一 token 來源」現在在這兩條上也是真的`,
+    probeBad.join(' · '));
 }
 
 /* ══ G33  字樣的出處（第 6 輪換蠟筆；第 8 輪 D7-02 把閉環打開）════════

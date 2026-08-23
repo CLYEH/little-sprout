@@ -39,10 +39,24 @@ const stage = () => {
   return dir;
 };
 
-const edit = (dir, file, fn) => writeFileSync(join(dir, file), fn(readFileSync(join(dir, file), 'utf8')));
+/* 取代前後內容必須不一樣（第 10 輪 D9-03）：舊版的 edit()／editJson() 不管
+   fn 有沒有真的改到東西都照樣寫檔、照樣算樣本「跑過」。一旦某發樣本改的字串
+   對不上目標檔案現在的內容（改了旁邊的程式碼、改了措辭），mutate 靜靜地變成
+   no-op，複本跟 baseline 一模一樣，`red` 卻是**別人**（別的樣本、別的原因）
+   讓它轉紅，`hitExpected` 照樣算真——這一發從此不再驗證任何東西，卻在
+   selftest.json 上印著「轉紅 ✓」。現在改壞了就丟例外，讓它在跑的當下就死，
+   不是留一張假的成績單。 */
+const edit = (dir, file, fn) => {
+  const before = readFileSync(join(dir, file), 'utf8');
+  const after = fn(before);
+  if (after === before) throw new Error(`edit() 沒有改到任何東西：${file}（取代前後內容一樣，八成是要替換的字串對不上現在的檔案內容）`);
+  writeFileSync(join(dir, file), after);
+};
 const editJson = (dir, file, fn) => {
   const o = JSON.parse(readFileSync(join(dir, file), 'utf8'));
+  const before = JSON.stringify(o);
   fn(o);
+  if (JSON.stringify(o) === before) throw new Error(`editJson() 沒有改到任何東西：${file}（mutate 函式對這份 JSON 沒有效果）`);
   writeFileSync(join(dir, file), JSON.stringify(o, null, 2));
 };
 
@@ -190,6 +204,11 @@ const SAMPLES = [
       edit(d, 'tokens.mjs', (s) => s.replace('export const CONTRAST = { aaa: 7, grain: 6 };', 'export const CONTRAST = { aaa: 7, grain: 4.5 };'));
       edit(d, 'bands.mjs', (s) => s.replace("of: 'CONTRAST.grain', v: 5.9,", "of: 'CONTRAST.grain', v: 4.4,"));
     },
+  },
+  {
+    id: 'N3c-2-RULE.btnPct 70→85（第 9 輪甲乙重放）', gate: 'MG4', run: runVerify,
+    why: '第 9 輪 reviewer 的乙：RULE.btnPct 70→85，餘裕比 85/67.2＝1.26 沒有破 1.3，MG4⑤（門檻 vs 實測）連問都不問，四行改動（tokens.mjs 的 value、登記簿的 value、bands.mjs 的邊界樣本、why 裡的數字）就能讓管線全綠——因為②a／⑤只查「現在的 value 自己合不合邏輯」，沒有人查「這個 value 是不是被人動過」。這一發只改 tokens.mjs 一個地方（複本沒有能力連動 verify.mjs 自己的登記簿——那正是 D9-01 的重點：登記簿的 value 唯一權威是它自己），所以①/②a 的「now≠登記值」立刻咬；有 commit 權限、能一起改兩邊的完整攻擊由 thresholds.lock.json（MG4⑦）守，此處不重複，見 handoff 的攻擊重放表。',
+    mutate: (d) => edit(d, 'tokens.mjs', (s) => s.replace('export const RULE = { pause: 120, btnPct: 70 };', 'export const RULE = { pause: 120, btnPct: 85 };')),
   },
   {
     id: '換圖＋同步改宣告雜湊（G33 的閉環）', gate: 'G33', run: runVerify,

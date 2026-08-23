@@ -2,7 +2,7 @@
 // tokens.mjs 是唯一 token 來源 -> 31 .dc.html artboards。Run: node build.mjs
 import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import {
-  T, SP, FIX, TY, FONT, MONO, CAP, H1_GROUPS, H1_EXCLUDED, RULE, AX, ax, AX4, ax4, hash12,
+  T, SP, FIX, TY, FONT, MONO, CAP, H1_GROUPS, H1_EXCLUDED, RULE, EXPIRED_RULE, AX, ax, AX4, ax4, hash12,
   GRAD_WHY, NO_GRAD_WHY, PERF_WHY, GRAD_KEYS, STUB_KEYS, LIGHT_KEYS, TIME_KEYS, CONTRAST, gradCss,
   PERF, perfMask, perfLip, PERF_TILE, JITTER, PHOTO_STOP, PHOTO_DIM, SCALE_DE, EXEMPT,
   TRACK, TEMP, TEMP_TOL, HUE_MIN, LIGHT_DH, TIME_DH, STUB_KNEE, STUB_AT_KNEE, STUB_USES, USES_TOTAL,
@@ -559,6 +559,8 @@ ${GRAD_KEYS.map((k) => `      --ls-g-${k}:${gradCss(t, k)};`).join('\n')}
       --ls-r-window:12px; --ls-r-control:14px; --ls-r-card:18px;
       --ls-sp-1:4px; --ls-sp-2:8px; --ls-sp-3:12px; --ls-sp-4:16px;
       --ls-sp-5:24px; --ls-sp-6:32px; --ls-tap-min:44px;
+      /* 過期句規線（第 10 輪 D9-02）：粗細與垂直位置，見 tokens.mjs 的 EXPIRED_RULE。 */
+      --ls-expired-rule-w:${EXPIRED_RULE.w}px; --ls-expired-rule-y:${EXPIRED_RULE.y}%;
     }
     *,*::before,*::after{box-sizing:border-box}
     body{margin:0;font-family:${FONT};-webkit-font-smoothing:antialiased;background:${t.board};color:${t.ink};text-wrap:pretty}
@@ -567,6 +569,18 @@ ${GRAD_KEYS.map((k) => `      --ls-g-${k}:${gradCss(t, k)};`).join('\n')}
     .g::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:${t.grain};
       background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
       mix-blend-mode:multiply}
+    /* 過期句劃掉：不用瀏覽器內建 line-through（落在 CJK 橫畫帶，見 tokens.mjs 的
+       EXPIRED_RULE 註解）。**不能用 background-image 畫這條線**——量測 probe
+       的對比／漸層清冊是逐元素走 backgroundColor／backgroundImage 祖先鏈算的
+       （見 _probe.html 的 bgAt()／onGrad()），畫在 <s> 自己的背景上，這條規線
+       會被誤判成「這段文字站在一支沒登記的漸層上」（G22③／G23②），而且背景
+       原地疊在字底下會把對比直接量成規線色 vs 字色（第 10 輪初版踩過這個坑：
+       AAA 從 7.12 掉成 2.68）。改成 ::after 疊在文字**上面**（正常流內容先畫、
+       絕對定位的偽元素後畫，天生疊在最上層），regine 用純色 background（不是
+       linear-gradient()，掃描才不會誤認），量測祖先鏈只看真的 DOM 元素，
+       不會走到偽元素，兩條 gate 都不會被誤觸。粗細／位置一樣出自具名 token。 */
+    s[data-expired]{text-decoration:none;color:${t.ink2};position:relative}
+    s[data-expired]::after{content:"";position:absolute;left:0;right:0;top:var(--ls-expired-rule-y);height:var(--ls-expired-rule-w);background:${t.edge};pointer-events:none}
   </style>`;
 
 /* 每一張產物都蓋上「這一次 build 讀到的 measured.json 指紋」。不渲染、不影響版面，
@@ -1686,7 +1700,7 @@ const iconSheet = () => {
   <div style="display:flex;flex-direction:column;gap:${SP.m}px;margin-bottom:${SP.xxl}px">
     <span style="${TY.cap};color:${t.ink2};letter-spacing:.14em">LITTLE SPROUT · ${BRAND} · APP ICON ＋ LOGO（第 3 輪：重筆＋G26 驗收）</span>
     <h1 style="${TY.d};color:${t.ink};margin:0">落款印</h1>
-    <p style="${TY.b};color:${t.ink2};margin:0;max-width:820px">Logo（字標）是<b style="color:${t.ink}">手寫「萌芽」＋系統字「日記」</b>，用在畫面裡、信件裡、任何有空間把全名說完的地方。<b style="color:${t.ink}">App icon 是它的落款印</b>：<s data-expired="字標第 6 輪換成蠟筆、而這張板上的落款印還是第 3 輪程式生成的刀：這句話的字面已經不成立，留著是否決紀錄">同一支筆、同一張紙，只取一個字。</s>兩者的關係跟印章與署名一樣 —— 不是兩套設計，是同一套的長版與短版。</p>
+    <p style="${TY.b};color:${t.ink2};margin:0;max-width:820px">Logo（字標）是<b style="color:${t.ink}">手寫「萌芽」＋系統字「日記」</b>，用在畫面裡、信件裡、任何有空間把全名說完的地方。<b style="color:${t.ink}">App icon 是它的落款印</b>：<s data-expired="字標第 6 輪換成蠟筆、而這張板上的落款印還是第 3 輪程式生成的刀：這句話的字面已經不成立，留著是否決紀錄">同一支筆、同一張紙，只取一個字。</s> 兩者的關係跟印章與署名一樣 —— 不是兩套設計，是同一套的長版與短版。</p>
     <p style="${TY.b};color:${t.ink2};margin:0;max-width:820px"><b style="color:${t.ink}">為什麼是「芽」不是「萌」</b>：${Object.entries(strokes).map(([c, n]) => `${c} ${n} 筆`).join('、')}。App icon 在主畫面是 60pt，扣掉安全區約 ${Math.round(60 * .88)}pt 見方 —— 十四筆的「萌」在那個尺寸會糊成一團墨（下面第三排是實際大小，自己看）。「芽」八筆，而且它就是英文名 Little Sprout 的意思。取筆畫少的那一個不是取巧，是<b style="color:${t.ink}">在小尺寸還讀得出來</b>這條長輩優先的硬約束。</p>
   </div>
 
@@ -1707,7 +1721,7 @@ const iconSheet = () => {
     ${iconTile(t, `第 2 輪：寫的那支筆（中位 ${written.median.toFixed(0)}px／最細 ${written.min.toFixed(0)}px）`, `<div style="position:relative;width:${ICON}px;height:${ICON}px;background:${gradCss(t, 'paper')};display:flex;align-items:center;justify-content:center"><div style="width:${Math.round(ICON * .52)}px">${sealMark(Math.round(ICON * .52), t.ink)}</div></div>`, { px: 200, note: `20pt@2x 時最細筆畫只有 ${(written.min * 40 / ICON).toFixed(2)} 裝置像素、墨覆蓋 7.63% —— 物理上讀不出來。` })}
     ${iconTile(t, `第 3 輪：刻的那支筆（中位 ${carved.median.toFixed(0)}px／最細 ${carved.min.toFixed(0)}px）`, iconArt(look['淺色']), { px: 200, note: `同一個「芽」、同一組八筆、同一個筆序、同一支 stroke() 模型；換的是刀（筆寬映射 ×${(carved.median / written.median).toFixed(2)}、提按幅度 ×${Icon.CARVE.swell}）與章法（重新分白）。` })}
     <div${S('flat')} style="${flat(t, { pad: `${SP.l}px`, radius: 14 })};flex:1;min-width:0">
-      <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2};${press(t)}"><b style="color:${t.ink}">落款印與落款題字本來就不是同一支工具</b>。題字是筆：有提按、有飛白、細處可以到一根毫。印是刀：刃有固定寬度，所以筆畫粗、提按小、收筆是切的不是拖的。第 2 輪把字標的筆直接縮小去當圖示，等於拿寫的當刻的 —— 那是這一稿自己開的藥（「小尺寸還讀得出來」）沒有自己吃。<br><br><b style="color:${t.ink}">誠實話</b>：刻的版本<b style="color:${t.ink}">中線與寫的版本不同</b>。粗了之後寫的那個間架會糊掉（草字頭的兩豎會被長橫吃掉、短撇會黏上長橫），所以重新分白 —— 那正是篆刻在做的事。<s data-expired="字標第 6 輪換成蠟筆、而這張板上的落款印還是第 3 輪程式生成的刀：這句話的字面已經不成立，留著是否決紀錄">不變的是同一個字、同一組八筆、同一個筆序、同一支筆的模型。</s><b style="color:${t.ink}">第 4 輪這句話只是自我宣告</b>（底下那張 ${Object.keys(look).length}×${Icon.SIZES.length}×${Icon.SCALES.length} 格的表量的是可讀性，不是「同不同一個字」），所以本輪把它拆成八個可以被否證的數 —— 見下一張表。</span>
+      <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2};${press(t)}"><b style="color:${t.ink}">落款印與落款題字本來就不是同一支工具</b>。題字是筆：有提按、有飛白、細處可以到一根毫。印是刀：刃有固定寬度，所以筆畫粗、提按小、收筆是切的不是拖的。第 2 輪把字標的筆直接縮小去當圖示，等於拿寫的當刻的 —— 那是這一稿自己開的藥（「小尺寸還讀得出來」）沒有自己吃。<br><br><b style="color:${t.ink}">誠實話</b>：刻的版本<b style="color:${t.ink}">中線與寫的版本不同</b>。粗了之後寫的那個間架會糊掉（草字頭的兩豎會被長橫吃掉、短撇會黏上長橫），所以重新分白 —— 那正是篆刻在做的事。<s data-expired="字標第 6 輪換成蠟筆、而這張板上的落款印還是第 3 輪程式生成的刀：這句話的字面已經不成立，留著是否決紀錄">不變的是同一個字、同一組八筆、同一個筆序、同一支筆的模型。</s> <b style="color:${t.ink}">第 4 輪這句話只是自我宣告</b>（底下那張 ${Object.keys(look).length}×${Icon.SIZES.length}×${Icon.SCALES.length} 格的表量的是可讀性，不是「同不同一個字」），所以本輪把它拆成八個可以被否證的數 —— 見下一張表。</span>
     </div>
   </div>
 

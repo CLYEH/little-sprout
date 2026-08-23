@@ -472,7 +472,11 @@ export const EXEMPT = [
        而它豁免掉的是整整三族 gate。所以把被否決版的內容雜湊釘在這裡：
        板一改，MG2⑥ 當場紅，這一筆豁免失效（要嘛把板改回去，要嘛這一筆本來就該刪了）。
        雜湊排除 ls-measured 戳記 —— 那是量測版本章，不是這張板的內容。 */
-    frozen: { file: 'AppIcon', sha256: '6c9c082cec321ffa119dfa0ca696e2f6c744f409adc30aabd420f75cfe201275' },
+    /* 第 10 輪 D9-02：規線改法（見 EXPIRED_RULE 那段）是合法的設計修正，
+       不是有人偷改內容，所以雜湊照規矩重釘——舊值 6c9c082cec321ffa119dfa0ca696e2f6c744f409adc30aabd420f75cfe201275，
+       新值是 CSS 加了 s[data-expired]／::after 兩條規則、helmet 的 :root
+       多兩個變數、兩處 <s> 收尾補一個半形空白之後重算的。 */
+    frozen: { file: 'AppIcon', sha256: '1464fe85d5b4abb799bd2f4e8d44a37d52ed1a215fd1da46743b1cd6dfa93335' },
   },
   {
     marker: 'data-cancel', role: 'stub', gate: 'G4',
@@ -619,6 +623,17 @@ export const ax4 = (px) => Math.round(px * AX4);
    板上印的、measure.mjs 分流用的、verify.mjs 判定用的，全部讀這裡。
    刻意不放進 FIX：FIX 的值同時是 G1 允許的間距白名單，門檻不是間距。 */
 export const RULE = { pause: 120, btnPct: 70 };
+
+/* ── 過期句規線（第 10 輪 D9-02）─────────────────────────
+   AppIcon 板凍結豁免上那三句「同一支筆」用 <s data-expired> 劃掉，第 9 輪抓到：
+   瀏覽器內建 line-through 的預設位置落在 CJK 橫畫帶，把「同一支筆」裡三個「一」
+   的那一橫吃掉，讀成「同⎯支筆」——規線本身銷毀了要保存的內容。
+   改成自己畫一條背景線，粗細（w）與垂直位置（y，em 框的百分比）都是這裡的具名值，
+   不是瀏覽器決定的；G35 驗畫面上真的引用 var(--ls-expired-rule-w/-y) 這兩個名字，
+   不是抄一份數字進去。y 落在 58–62 的安全帶：CJK 單橫畫字的那一橫多半在 45–55%
+   附近，60% 已經明顯下移，不會壓在筆畫上。刻意不放進 FIX：同上一條的理由，
+   FIX 的值同時是 G1 的間距白名單，規線粗細不是間距。 */
+export const EXPIRED_RULE = { w: 2, y: 60 };   // w：px；y：% of em box
 
 /* ── 產物與量測資料的綁定（G21）──────────────────────
    build.mjs 把它「當次讀到的 measured.json」的指紋寫進每一張產物，
