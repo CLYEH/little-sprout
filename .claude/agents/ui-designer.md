@@ -22,7 +22,7 @@ model: sonnet
 1. 用 get_app_state 確認所有變更都在畫布上，**記下畫布節點總數 N**（含遞迴 children）。
 2. **確認 autosave 已含最新編輯**：備份檔＝`~/.pencil/backup/$(printf '%s' "file://<檔案絕對路徑>" | shasum | awk '{print $1}')`（檔名＝檔案 URI 的 sha1、無副檔名；路徑含空白／非 ASCII 時 sha1 可能對不上——對不上時 cp 會報錯不會靜默）。檢查備份 mtime **晚於你最後一次 execute**；還沒就等 autosave（可在 app 內做一次微小變更再還原來觸發），逾時仍舊＝fail loud 回報，**不得硬複製**。
 3. **落地**：`cp <備份檔> <檔案絕對路徑>`。這是單向覆寫——跳過步驟 2 就複製，可能拿舊備份蓋掉較新的落地檔。
-4. 跑 `"$(git rev-parse --show-toplevel)/scripts/gates/design-landing-check.sh" <檔案路徑> --expect-nodes N`——**綠燈（含節點數與畫布一致）才算落地**；紅燈照訊息處理（節點數不符＝備份舊，回步驟 2；讀取失敗＝權限／編碼問題，不是重複製能解的）。
+4. 跑 `"$(git rev-parse --show-toplevel)/scripts/gates/design-landing-check.sh" <檔案路徑> --expect-nodes N`——**綠燈（含節點數與畫布一致）才算落地**；紅燈照訊息處理（節點數不符＝備份舊，回步驟 2；讀取失敗＝權限／編碼問題，不是重複製能解的）。注意 N 只驗結構——純屬性變更（改色、改字）不改節點數，屬性層真正把關的是步驟 2 的 mtime，兩步缺一不可。
 5. 之後才 commit／回報；handoff 附檢查輸出。commit 時 commit-gate 會對 staged .pen 自動再跑結構檢查（機械兜底，但它沒有 N——深度驗證靠本程序）。
 
 ## 本專案設計硬約束（出自 docs/PLAN.md）

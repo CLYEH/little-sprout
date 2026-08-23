@@ -31,7 +31,7 @@ printf '%s\n' "$added" | bash "$(git rev-parse --show-toplevel)/scripts/gates/sc
 
 # staged .pen 設計稿落地檢查（LS-26：機械觸發點——不靠 agent 記得跑收工程序）
 # for 迴圈而非 pipe|while：檢查失敗要能中止整個 gate，不被 subshell 吞掉
-staged_pen=$(git diff --cached --name-only --diff-filter=ACM | grep '\.pen$' || true)
+staged_pen=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACM | grep '\.pen$' || true)
 if [ -n "$staged_pen" ]; then
   root=$(git rev-parse --show-toplevel)
   while IFS= read -r p; do

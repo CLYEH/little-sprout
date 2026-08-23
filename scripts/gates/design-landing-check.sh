@@ -8,10 +8,17 @@
 set -euo pipefail
 
 f="${1:-}"
-expect="${3:-}"
-if [ "${2:-}" = "--expect-nodes" ] && [ -z "${expect}" ]; then
-  echo "✗ design-landing gate：--expect-nodes 需要數值" >&2
+expect=""
+if [ "$#" -ne 1 ] && [ "$#" -ne 3 ]; then
+  echo "✗ design-landing gate：用法 design-landing-check.sh <path.pen> [--expect-nodes N]（不接受 --expect-nodes=N 等號式）" >&2
   exit 1
+fi
+if [ "$#" -eq 3 ]; then
+  if [ "$2" != "--expect-nodes" ] || ! printf '%s' "$3" | grep -qE '^[0-9]+$'; then
+    echo "✗ design-landing gate：第二參數必須恰為 --expect-nodes、第三參數必須是純數字（收到「$2 $3」）" >&2
+    exit 1
+  fi
+  expect="$3"
 fi
 if [ -z "${f}" ] || [ ! -f "${f}" ]; then
   echo "✗ design-landing gate：找不到檔案「${f:-<未給路徑>}」" >&2
@@ -35,6 +42,8 @@ except json.JSONDecodeError as e:
     print(f"✗ design-landing gate：{p} 不是有效 JSON（{e.msg} @ line {e.lineno}）——落地檔損壞，回收工程序步驟 2 重新複製", file=sys.stderr); sys.exit(1)
 except (OSError, UnicodeDecodeError) as e:
     print(f"✗ design-landing gate：{p} 讀取失敗（{type(e).__name__}: {e}）——這不是落地問題，先修檔案權限／編碼", file=sys.stderr); sys.exit(1)
+except RecursionError:
+    print(f"✗ design-landing gate：{p} JSON 巢狀過深，無法解析——檔案異常", file=sys.stderr); sys.exit(1)
 if not isinstance(d, dict):
     print(f"✗ design-landing gate：{p} 頂層不是物件（{type(d).__name__}）——不是 .pen 格式", file=sys.stderr); sys.exit(1)
 ver = d.get("version")
