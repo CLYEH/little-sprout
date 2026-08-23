@@ -94,8 +94,8 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 ## 5. Linear（協作狀態機）
 
 - Team key：`LS`（workspace `little-sprout-app`）。**Linear 是唯一的任務狀態來源**；每個狀態的離開就是一個 gate，由 orchestrator 執行轉換並在 ticket 留 comment 記錄 gate 證據。
-- MCP 設定在專案 `.mcp.json`；session 重啟後用 `/mcp` 完成 OAuth。
-- **MCP 必要環境變數**：repo 根 `.env`（gitignored）須含 `FIGMA_PERSONAL_ACCESS_TOKEN`（figma MCP 啟動時注入；缺失即啟動失敗 fail loud——LS-42）。`.env` 的值一律只認 key 名、不讀取。
+- MCP 設定在專案 `.mcp.json`；linear 走 OAuth（session 重啟後用 `/mcp` 完成），其餘皆 stdio＋.env 注入。
+- **MCP 必要環境變數**：repo 根 `.env`（gitignored）須含 `FIGMA_PERSONAL_ACCESS_TOKEN`（figma MCP，LS-42）與 `SUPABASE_ACCESS_TOKEN`（supabase MCP，LS-43）——啟動時注入、缺失即啟動失敗 fail loud。`.env` 的值一律只認 key 名、不讀取。
 - **開票結構**：Project＝epic；Milestone＝feature 群（同一 epic 底下相關的一批 issue）；Issue＝story，必須帶可驗證的驗收條件（同 §1 的 Spec 狀態離開條件）；Sub-issue＝task，**只有在單一 story 需要多個 agent 接力完成**（例如設計→實作→審查分屬不同派工、無法一個 agent 一次做完）時才拆，拆分依據與各 task 的範圍寫在該 story 的 ticket scope 裡，不預先拆。
 
 | 狀態 | 離開條件（gate） |
@@ -117,7 +117,7 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 - **DB migration gate**：`supabase/migrations` 的變更必附 RLS 測試（CI 強制）；**破壞性 migration（DROP、縮欄、改型）需使用者本人核可**——核可方式：使用者本人在 PR body 加上 `DESTRUCTIVE-APPROVED`，agent 不得代寫。
 - **Secrets**：金鑰一律不進 repo。Client 端用 gitignored 的 `Secrets.xcconfig`；CI 用 GitHub Secrets；`service_role` key 永不出現在 client 或 repo。
 - **回滾**：正式站問題以 revert PR 處理（GitHub Revert 按鈕產生的 `revert-*` head 在 CI 方向矩陣中對三條保護分支皆合法）；保護分支禁止 force-push。
-- **雲端資料庫只透過 migration 變更**：schema／policy 變更一律走 `supabase/migrations`＋PR，**禁止用 Supabase MCP 或 dashboard 直接改正式專案**。機械面：`.mcp.json` 的 supabase MCP 已鎖 `read_only=true`，需要寫入時由使用者本人臨時解鎖。`project_ref` 視為公開資訊（本來就會出現在 app 的 API URL），安全性完全依賴 RLS＋key 管理。
+- **雲端資料庫只透過 migration 變更**：schema／policy 變更一律走 `supabase/migrations`＋PR，**禁止用 Supabase MCP 或 dashboard 直接改正式專案**。機械面：`.mcp.json` 的 supabase MCP 以 `--read-only --project-ref` 鎖唯讀與專案（LS-43 起走 PAT/stdio，PAT 存 .env），需要寫入時由使用者本人臨時解鎖。**注意：PAT 是帳號層級、具完整寫入權的 Management API 憑證，唯讀鎖只在本機 client 端生效，且 Management API 路徑繞過 RLS——`.env` 的保管等級＝正式站的保管等級**。`project_ref` 視為公開資訊（本來就會出現在 app 的 API URL）。
 - **Checkpoint**：每張 ticket 完成，orchestrator 把 handoff 訊息留在 Linear ticket comment，讓狀態可還原、可交接。
 - **Feature 收尾儀式**：「feature」的粒度由 orchestrator 判斷並記錄——單張 feature 票，或同批 promote 的票群共用一次。① dead-code-sweeper 巡檢（範圍＝該 feature 的累積 diff）；② orchestrator retro（lesson learning review）——固定檢視：各 gate 的攔截／漏接記錄、review 輪數與返工原因、agent 派工與 model 選擇是否恰當、需要補的工具或 MCP、規約與 gate script 的改善項。改善項一律開票（harness 票走 hotfix 流程），不留口頭。純 harness 票可免 dead-code 巡檢，retro 照做（輕量版）。
 - **模擬器驗不了的項目**（推播、Sign in with Apple 完整流程）：QA 標註「需實機驗證」，不得記為 PASS。
@@ -142,9 +142,9 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 | 設計稿須過 visual-reviewer 對抗審查（≥3 輪迭代）才送人核 | 掛在 Design 狀態出口：ticket 須有**三輪以上輪次標記的審查記錄**＋末輪 APPROVE，orchestrator 轉換狀態時逐輪清點 | ⚠️ 人工（狀態機承載） |
 | ui-designer 必先載入 frontend-design skill | 無機械 gate——skill 載入發生在 subagent 內部；handoff checklist 有「skill 影響了哪些取捨」欄（載入失敗須明說），orchestrator 驗 handoff 兜底（LS-32） | ⚠️ 人工 |
 | .pen 設計稿必須真實落地（Pencil 無 save 工具，編輯只在 app 記憶體） | `scripts/gates/design-landing-check.sh`：0 bytes／壞 JSON／空結構即紅，`--expect-nodes` 驗與畫布一致；**commit-gate 對 staged .pen 自動觸發＋CI rules job 對 diff 內 .pen 兜底**（皆無 N——「落地比記憶體舊」的深度驗證靠收工程序步驟 2/4，PR review 驗 handoff 輸出）（LS-26） | ✅ hook＋CI（深度驗證⚠️程序） |
-| MCP 必要 env 變數必須存在（FIGMA_PERSONAL_ACCESS_TOKEN） | `.mcp.json` 的 `${VAR:?}` 展開——缺失／空值時 server 啟動即炸，`/mcp` 可見（LS-42） | ✅（fail loud 設計） |
+| MCP 必要 env 變數必須存在（FIGMA_PERSONAL_ACCESS_TOKEN、SUPABASE_ACCESS_TOKEN） | `.mcp.json` 的 `${VAR:?}` 展開——缺失／空值時 server 啟動即炸，`/mcp` 可見（LS-42） | ✅（fail loud 設計） |
 | project.yml ↔ .xcodeproj 同步（XcodeGen 雙來源） | CI：重跑 `xcodegen generate` 後 `git add -A -- LittleSprout.xcodeproj && git diff --cached --exit-code`（涵蓋 xcodegen 產生的全新 untracked 檔，LS-10 補上原本只比對已追蹤檔案的盲區；生成物 byte-identical，不 flaky；雙向漂移皆攔） | ✅ |
-| 雲端 DB 不得繞過 migration 直改 | supabase MCP 鎖 `read_only=true`（機械）；dashboard 路徑靠規約 | ⚠️ 混合 |
+| 雲端 DB 不得繞過 migration 直改 | supabase MCP 以 `--read-only` 旗標鎖唯讀（機械，LS-43 起 PAT/stdio）；dashboard 路徑靠規約 | ⚠️ 混合 |
 | harness 檔 back-merge 到 test／development | 無機械 gate——orchestrator 在 LS ticket 驗收條件中列入並人工確認 | ⚠️ 人工 |
 | scope 不越界、worktree 隔離 | 無法全機械化——merge-reviewer 的 scope 維度人工兜底 | ⚠️ 人工 |
 | QA 不得把跳過寫成 PASS | 無法機械化——orchestrator 驗 handoff 證據（截圖／輸出）兜底 | ⚠️ 人工 |
