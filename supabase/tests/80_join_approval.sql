@@ -1439,28 +1439,24 @@ reset role;
 -- 兩層各自的機械斷言（不靠上面那些行為探針推論——行為探針只要有一層在就會綠）
 do $$
 declare
-  v_col text;
   v_present int;
 begin
-  -- 第一層：grant。INSERT／UPDATE 都不該還在。
-  if has_table_privilege('authenticated', 'public.invites', 'insert') then
-    raise exception 'FAIL：authenticated 還有 invites 的 INSERT grant（收斂只做了 policy 那一層）';
+  -- 第一層：grant。INSERT／UPDATE 兩面都不該還有「任何形態」的授權。
+  --
+  -- 用 has_any_column_privilege 而不是 has_table_privilege：後者對欄位級 grant 是回
+  -- false 的，於是日後補上一句 `grant insert (family_id, code)` 或 `grant update (used_count)`
+  -- 這種洞，只驗整表的斷言完全測不出來（PR #55 review F1——原本這裡只對 UPDATE 用
+  -- 逐欄迴圈防住了這件事，INSERT 那一行一字不差地有同樣的洞卻沒防）。
+  --
+  -- has_any_column_privilege 一次涵蓋兩種形態：表級授權隱含所有欄位，所以它是整表斷言的
+  -- 超集；而它問的是「有沒有任何一欄」，日後 invites 新增欄位（例如真的做了軟撤銷的
+  -- revoked_at）也自動納入，不必回頭維護一份會漂移的欄位清單。
+  if has_any_column_privilege('authenticated', 'public.invites', 'insert') then
+    raise exception 'FAIL：authenticated 還有 invites 的 INSERT 授權（表級或任一欄位級）—— owner 能繞過 create_invite 自己造碼，收斂只做了 policy 那一層';
   end if;
-  if has_table_privilege('authenticated', 'public.invites', 'update') then
-    raise exception 'FAIL：authenticated 還有 invites 的 UPDATE grant（收斂只做了 policy 那一層）';
+  if has_any_column_privilege('authenticated', 'public.invites', 'update') then
+    raise exception 'FAIL：authenticated 還有 invites 的 UPDATE 授權（表級或任一欄位級）—— 邀請碼的效期／次數／碼本身可被呼叫端改寫，create_invite 的邊界形同虛設';
   end if;
-
-  -- UPDATE 逐欄再驗一次：本票的裁量是「一欄都不給」（invites 沒有任何撤銷用欄位，
-  -- 所以不像 family_members 那樣留 role/can_upload）。逐欄列舉是為了擋下日後
-  -- 「只補一個欄位級 grant」的漂移——整表 has_table_privilege 對欄位級 grant 是回 false 的，
-  -- 只驗整表的話補上 `grant update (used_count)` 這種洞測不出來。
-  foreach v_col in array array['id', 'family_id', 'code', 'role',
-                              'created_by', 'max_uses', 'used_count', 'expires_at'] loop
-    if has_column_privilege('authenticated', 'public.invites', v_col, 'update') then
-      raise exception
-        'FAIL：authenticated 可以 UPDATE invites.% —— 邀請碼的效期／次數／碼本身可被呼叫端改寫，create_invite 的邊界形同虛設', v_col;
-    end if;
-  end loop;
 
   -- 第二層：policy。兩條都該不在了（RLS 預設拒絕，沒有 policy ＝ 不通過）。
   select count(*) into v_present from pg_policies p
