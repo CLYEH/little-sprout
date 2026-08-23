@@ -18,6 +18,7 @@ patterns="$patterns|sk[-][A-Za-z0-9_-]{20,}"
 patterns="$patterns|sb[_]secret_[A-Za-z0-9_-]{10,}"
 patterns="$patterns|sb[_]publishable_[A-Za-z0-9_-]{10,}"
 patterns="$patterns|gh[opsu][_][A-Za-z0-9]{20,}"
+patterns="$patterns|fig[d][_][A-Za-z0-9_-]{20,}"   # Figma PAT（LS-42）
 patterns="$patterns|AIz[a][0-9A-Za-z_-]{35}"
 patterns="$patterns|xox[baprs][-]"
 patterns="$patterns|postgres(ql)?[:]//[^:]+:[^@]+@"
