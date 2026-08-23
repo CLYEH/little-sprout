@@ -64,13 +64,17 @@ begin
   end loop;
   raise notice 'ok：private 的 trigger 函式對 anon/authenticated 都沒有 EXECUTE';
 
-  -- 正向對照：policy 依賴的集合函式必須留給 authenticated，否則整組 RLS 判斷會噴權限錯
+  -- 正向對照：policy 依賴的函式必須留給 authenticated，否則整組 RLS 判斷會噴權限錯。
+  -- LS-40 的 private.is_media_object_path(text) 不是集合函式（是路徑規約的判斷式，
+  -- 給 storage.objects 的 INSERT／UPDATE WITH CHECK 用），但同樣是「policy 求值時會被
+  -- 呼叫、少了 EXECUTE 整條上傳路徑就炸」的東西，所以登記在同一份清單裡。
   foreach v_fn in array array[
     'private.family_ids()',
     'private.owned_family_ids()',
     'private.contributor_family_ids()',
     'private.uploadable_family_ids()',
-    'private.peer_profile_ids()'
+    'private.peer_profile_ids()',
+    'private.is_media_object_path(text)'
   ] loop
     if not has_function_privilege('authenticated', v_fn, 'execute') then
       raise exception 'FAIL：authenticated 失去 % 的 EXECUTE，所有 RLS policy 都會失效', v_fn;
@@ -79,7 +83,7 @@ begin
       raise exception 'FAIL：anon 不該有 % 的 EXECUTE', v_fn;
     end if;
   end loop;
-  raise notice 'ok：policy 用的五支集合函式只有 authenticated 可執行';
+  raise notice 'ok：policy 用的六支 private 函式只有 authenticated 可執行';
 end;
 $$;
 
@@ -410,6 +414,81 @@ begin
       v_unknown;
   end if;
   raise notice 'ok：public schema 沒有清單外的 SECURITY DEFINER RPC';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 9. LS-40：schema private 的函式必須 SECURITY DEFINER＋search_path 收斂，例外逐支登記
+--
+-- 前提對帳（LS-40 review F8 的宣稱與實況）：review 說 supabase/tests 裡 grep 不到
+-- prosecdef／proconfig。實況是**有的**——第 8 段（LS-34 併入）就在驗，
+-- 但它的範圍是 `public` schema 的 RPC 白名單。private schema 這一側在此之前確實
+-- 沒有任何 definer／search_path 的機械檢查：第 3 段只管「不對 PUBLIC 開放 EXECUTE」，
+-- 第 2 段只管「authenticated 有沒有 EXECUTE」，兩者都不看函式怎麼硬化。
+-- 所以 review 的結論（要補）是對的，理由（grep 不到）不對，兩件事分開記。
+--
+-- 為什麼 private 這一側需要這道 gate：schema private 的函式幾乎都是 policy 與 trigger
+-- 用的，它們要讀 family_members 這種自己也帶 RLS 的表，非 definer 不可；而 definer
+-- 沒有 `set search_path = ''` 就會被呼叫端的 search_path 挾持。這兩件事現在靠人記得，
+-- 漏掉不會有任何錯誤訊息。
+--
+-- 例外清單（invoker 函式）——刻意的，不是漏網：
+--   private.is_media_object_path(text)：只對參數做 regex，不碰任何資料庫物件，
+--   沒有 search_path 挾持的面；而帶 SET 子句的 SQL 函式**無法被規劃器 inline**，
+--   會變成每列一次真正的函式呼叫。它掛在 storage.objects 的 INSERT／UPDATE
+--   WITH CHECK 上，逐列跑，所以刻意留成 invoker 且不加 SET 以換取 inline。
+--   （新增 private 函式若也要走這條例外，必須先來這裡登記並寫明理由。）
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  -- 單一清單來源（比照第 8 段）：oid 版本由文字版 cast 導出，清單裡的函式不存在時
+  -- 這句 cast 會直接噴出含簽名的錯誤，不會無聲漂移。
+  v_exceptions text[] := array[
+    'private.is_media_object_path(text)'
+  ];
+  v_exc_oids oid[];
+  v_leaky text;
+  v_stale text;
+begin
+  -- coalesce 是必要的不是裝飾：v_exceptions 若被清空，array_agg 對零列取值會回 NULL，
+  -- 下面的 `p.oid <> all (v_exc_oids)` 遇到 NULL 陣列恆得 NULL，WHERE 篩不出任何一列
+  -- ——例外清單空了，這段檢查反而對全體 private 函式靜默通過（fail-open）。
+  select coalesce(array_agg(f::regprocedure::oid), array[]::oid[])
+    into v_exc_oids from unnest(v_exceptions) as f;
+
+  -- 清單外的每一支都必須 definer + search_path=""。
+  -- coalesce 是必要的不是裝飾：proconfig 為 NULL（＝沒有任何 SET 子句）時
+  -- `NULL @> array[...]` 是 NULL，`prosecdef and NULL` 對 definer 函式會得到 NULL，
+  -- WHERE 篩不出來——正好漏掉「是 definer 但忘了收 search_path」這個最該抓的情況。
+  select string_agg(p.oid::regprocedure::text, '、' order by p.oid::regprocedure::text)
+    into v_leaky
+    from pg_proc p
+   where p.pronamespace = 'private'::regnamespace
+     and p.oid <> all (v_exc_oids)
+     and not (p.prosecdef
+              and coalesce(p.proconfig, array[]::text[]) @> array['search_path=""']);
+
+  if v_leaky is not null then
+    raise exception
+      'FAIL：schema private 的這些函式不是 SECURITY DEFINER 或沒有 set search_path = '''' —— %（policy／trigger 函式要讀帶 RLS 的表必須是 definer；definer 沒收 search_path 會被呼叫端挾持。若是刻意的 invoker 例外，先到本檔第 9 段登記並寫明理由）',
+      v_leaky;
+  end if;
+
+  -- 反向對照：例外清單裡的函式如果其實已經是 definer 了，代表清單過期沒清掉
+  select string_agg(p.oid::regprocedure::text, '、' order by p.oid::regprocedure::text)
+    into v_stale
+    from pg_proc p
+   where p.oid = any (v_exc_oids) and p.prosecdef;
+
+  if v_stale is not null then
+    raise exception
+      'FAIL：例外清單裡的這些函式其實已經是 SECURITY DEFINER 了，清單過期——請從第 9 段的 v_exceptions 移除：%',
+      v_stale;
+  end if;
+
+  raise notice
+    'ok：schema private 的函式除了登記在案的 % 支 invoker 例外，都是 SECURITY DEFINER＋search_path 收斂',
+    coalesce(array_length(v_exceptions, 1), 0);
 end;
 $$;
 

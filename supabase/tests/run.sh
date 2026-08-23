@@ -239,7 +239,7 @@ if [ -f "$perf_out" ]; then
     # 連線通道與 server 版本一起記下來：證據要能自己說明它是在哪裡跑出來的
     echo "# 連線：$channel"
     echo "# Server：$(printf 'select version();' > "$tmp/ver.sql"; run_sql "$tmp/ver.sql" 2>/dev/null | sed -n '3p' | sed 's/^ *//')"
-    echo "# 資料量：public.media 5 萬列、public.join_requests 2 千列（家庭 fc000000-0000-4000-8000-000000000001）"
+    echo "# 資料量：public.media 5 萬列、public.join_requests 2 千列、storage.objects 2 萬列（家庭 fc000000-0000-4000-8000-000000000001）"
     echo "# 判準：plan 不得出現 (SubPlan N) 形式的 qual 引用（hashed SubPlan 不命中此判準，不算違規），且所有節點 loops=1"
     echo
     cat "$perf_out"
