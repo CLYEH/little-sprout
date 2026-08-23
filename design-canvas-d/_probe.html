@@ -707,12 +707,24 @@
       const lcs = lab ? getComputedStyle(lab) : null;
       const lh = lcs ? (parseFloat(lcs.lineHeight) || parseFloat(lcs.fontSize) * 1.2) : 1;
       const vis = lab ? lab.textContent.trim() : '';
-      /* 無障礙名稱：有 aria-label 就是它，沒有就是可見文字（子樹裡的 aria-hidden 不算）。
+      /* 無障礙名稱（第 8 輪 D7-03：補齊算名字的順序）。
+         第 6 輪只認 aria-label —— 那不是「無障礙名稱」，那是它的其中一個來源。
+         accname 的順序是 aria-labelledby → aria-label → 內容 → title；
+         只認一個來源的話，用 aria-labelledby 或 title 命名的按鈕會被算成「名稱＝可見文字」，
+         2.5.3 的比對於是比了一個不存在的東西。四個來源都認，並且回報**名字從哪裡來的**。
          2.5.3 要的是「名稱**包含**可見文字」，所以這裡回報兩個字串，判斷留給 G32⑤。 */
+      const byIds = (b.getAttribute('aria-labelledby') || '').split(/\s+/).filter(Boolean)
+        .map((id) => { const n2 = el.querySelector(`#${CSS.escape(id)}`); return n2 ? n2.textContent.trim() : ''; }).filter(Boolean).join(' ');
       const aria = b.getAttribute('aria-label');
+      const title = b.getAttribute('title');
+      const from = byIds ? 'labelledby' : (aria !== null ? 'label' : (vis ? 'content' : (title ? 'title' : 'none')));
+      const nm = byIds || (aria !== null ? aria : (vis || title || ''));
       R.brandLab.push({ file: name, brand: b.getAttribute('data-signin'), title: b.getAttribute('data-title'),
         lines: lab ? Math.round(rel(lab).h / lh) : 0, over: Math.round(need - br2.w), text: vis,
-        aria: aria === null ? null : aria, name: aria === null ? vis : aria });
+        /* role：這幾顆是 div，沒有 role 就**根本不在無障礙樹裡**（第 5 輪 r5 抓到的那一顆
+           就是這樣）。可見文字對得上、名稱算得出來，都不代表 VoiceOver 找得到它。 */
+        role: b.getAttribute('role'), nameFrom: from,
+        aria: aria === null ? null : aria, name: nm });
     }
     for (const n of el.querySelectorAll('[data-fit]')) {
       const lab = n.querySelector('[data-fit-label]');

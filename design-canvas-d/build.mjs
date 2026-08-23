@@ -12,6 +12,10 @@ import { inkMark, sealMark, VB, cancelMark, CANCEL_COV } from './brush.mjs';
 import * as Icon from './icon.mjs';
 import * as Ink from './ink.mjs';
 
+/* 字間白 vs 字內白（第 8 輪 D7-02／G33⑤）：板上那句話印的三個數，
+   與 verify 的 G33⑤ 下判斷用的是**同一支** icon.mjs 的 counterStats。 */
+const INK_GAP = Icon.counterStats({ d: Ink.LOCKUP.d, vb: Ink.LOCKUP.vb });
+
 /* ── 給自驗管線的標記 ──────────────────────────────────
    verify/measure 不用猜元件是什麼，直接讀這些屬性 ——
    第 2 輪的三盞燈接錯線，就是因為檢查靠 grep 猜。 */
@@ -604,7 +608,7 @@ const HH = {
   'InviteApprovalOff.dc.html': 880, 'InviteApprovalOffDark.dc.html': 880,
   'InviteRequests.dc.html': 940, 'InviteRequestsMany.dc.html': 1420, 'StressType.dc.html': 1700,
   'StressCodeAX.dc.html': 2160, 'StressLoginAX.dc.html': 8420,
-  'Tokens.dc.html': 8900, 'Notes.dc.html': 3820, 'StressContent.dc.html': 960, 'AppIcon.dc.html': 3660,
+  'Tokens.dc.html': 9020, 'Notes.dc.html': 3820, 'StressContent.dc.html': 960, 'AppIcon.dc.html': 3660,
   'GlassSeam.dc.html': 2060,
 };
 const h = (f) => HH[f] || 844;
@@ -1593,7 +1597,7 @@ const tokensSheet = (measured) => {
       `<b>漸層以「字底下最不利的那一點」計對比</b>：不是取兩端平均，也不是取元素中心 —— 逐個文字節點量它覆蓋到的那一段漸層，取其中對比最低的一點，門檻 ${CONTRAST.aaa}:1。<b>量不了就不准壓字</b>：只有 180deg 的線性漸層量得出這個點，其他方向一律 FAIL。顆粒層（紙的雜訊）另外以「最暗的那一格」重算一次，下限 ${CONTRAST.grain}:1。${measured.gradLine}`,
     ])}
     ${ruleCard(t, `字標「${BRAND}」＝手寫「萌芽」＋系統字「日記」`, [
-      `手寫的那兩個字是全稿唯一的非系統線條，第 6 輪起是<b>一隻手用蠟筆寫在紙上的真跡</b>（描成向量，配方與來源雜湊在 ink.mjs／trace.py，G33 驗）。第 1–5 輪它是程式生成的貝茲筆跡 —— 工藝上站得住（提按、收鋒、配平過的光學密度），使用者的判決是「很醜」：那不是規格層的問題，是 glyph 品質層的否決，所以換的是<b>字樣本身</b>，規則一條都沒換。蠟筆的崩邊顆粒刻意留著（描摹容差 ${Ink.TRACE.eps} 原圖像素；再平滑一階就開始像麥克筆）。兩字的字距、下沉與參差<b>不是我們排的</b> —— 是寫的人自己那樣寫的；我們量過才決定不動它：字間的白比字內最大的白還窄，所以它讀成一個詞而不是兩個字。`,
+      `手寫的那兩個字是全稿唯一的非系統線條，第 6 輪起是<b>一隻手用蠟筆寫在紙上的真跡</b>（描成向量，配方與來源雜湊在 ink.mjs／trace.py，G33 驗）。第 1–5 輪它是程式生成的貝茲筆跡 —— 工藝上站得住（提按、收鋒、配平過的光學密度），使用者的判決是「很醜」：那不是規格層的問題，是 glyph 品質層的否決，所以換的是<b>字樣本身</b>，規則一條都沒換。蠟筆的崩邊顆粒刻意留著（描摹容差 ${Ink.TRACE.eps} 原圖像素；再平滑一階就開始像麥克筆）。兩字的字距、下沉與參差<b>不是我們排的</b> —— 是寫的人自己那樣寫的；我們量過才決定不動它：<b>字間的白 ${INK_GAP.gap.toFixed(1)} 個字身單位，比左字最大的反白 ${INK_GAP.left.toFixed(1)}、右字 ${INK_GAP.right.toFixed(1)} 都窄</b>（窄 ${((1 - INK_GAP.gap / Math.min(INK_GAP.left, INK_GAP.right)) * 100).toFixed(1)}%），所以它讀成一個詞而不是兩個字。這三個數是從 path 自己算的（even-odd 光柵化、${INK_GAP.n} 個反白），不是目測 —— 換字樣就會重算，G33⑤ 驗它。`,
       `<b>為什麼四個字不全部手寫</b>：「萌」十四筆、「記」十筆。信件明細那一格的字標只有 ${INK.mail.h}pt 高，四字全手寫的話每一筆不到 1.3pt、筆與筆的空隙不到 1pt —— 對長輩就是一團墨。所以 lockup 分兩層：<b>手寫的是名字的意思（萌芽），系統字的是東西的種類（日記）</b>。險只冒在一個地方；而且「日記」是真的文字，會跟著 Dynamic Type 長大。`,
       `五個使用點，手寫字高／系統字級／間距：歡迎頁手機 ${INK.phone.h}／${INK.phone.sub}／${INK.phone.gap}、iPad ${INK.pad.h}／${INK.pad.sub}／${INK.pad.gap}、這張規格板 ${INK.sheet.h}／${INK.sheet.sub}／${INK.sheet.gap}、信件明細的「寄件人」${INK.mail.h}／${INK.mail.sub}／${INK.mail.gap}、建立家庭的即時預覽 ${INK.preview.h}／${INK.preview.sub}／${INK.preview.gap}。最小的兩個從 20 提到 ${INK.mail.h}，理由同上。畫面上看到的筆跡，信箱裡也會看到同一支。`,
       '它<b>不壓在照片上</b>（照片上的對比無法定義）—— 它在台紙上，ink/board 實測 ' + measured.inkContrast + '。',
@@ -1677,12 +1681,12 @@ const iconSheet = () => {
 <div class="g" data-grad="paper" data-veto="icon-concept" style="position:relative;width:1290px;height:${h('AppIcon.dc.html')}px;background:${gradCss(t, 'paper')};overflow:hidden;padding:${FIX.padSheet}px">
   <div${S('flat')} style="${flat(t, { pad: `${SP.l}px`, radius: 14 })};border-left:${FIX.errBar}px solid ${t.pen};margin-bottom:${SP.xl}px">
     <span style="${TY.l};color:${t.ink}">這張板的概念已被否決（${ICON_VETO.when}）——底下的內容原地保留，不是現行方案</span><br>
-    <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2};${press(t)}">使用者否決的是<b style="color:${t.ink}">「app icon ＝ 一個字」這件事本身</b>，不是這個字的筆觸、也不是它的尺寸 —— 所以換一支筆、換一個字、把它畫粗都不是修法。${ICON_VETO.next}<br><br><b style="color:${t.ink}">板上已經過期的一句話，先講在這裡</b>：底下凡是寫著「與字標<b style="color:${t.ink}">同一支筆</b>」的段落，在字標於本輪換成蠟筆之後<b style="color:${t.ink}">字面已經不成立</b> —— 這張板上的落款印是第 3 輪那支程式生成的刀。凍結的意思就是「它停在被否決的那一版」，不是「它還對」。<br><br>板上其餘每一段（分層意圖、三種外觀、驗收排、G26 的四條規格、Tinted 的中灰玻璃底）<b style="color:${t.ink}">留著是因為它們與「用哪一個圖形」無關</b>：那些是「任何一個圖示都要通過的檢查」，換素材之後照樣要跑一次。<b style="color:${t.ink}">G26／G26b／G26c 三族在這張板上暫停</b>，登記在具名豁免簿裡（<code>data-veto="icon-concept"</code> → G26），理由與恢復條件都寫在那一筆上：外部素材到位、這張板重做，就把那一筆刪掉，三族自動恢復。<b style="color:${t.ink}">刪不掉就是還沒重做</b> —— 這是豁免簿的等式在守的事（MG2）。</span>
+    <span data-expired-note="板頂的否決橫幅：底下每一句「同一支筆」都已經被劃掉，這一段是宣告它們過期的那句話本身，所以它自己不劃" style="${noWt(TY.cap)};font-weight:400;color:${t.ink2};${press(t)}">使用者否決的是<b style="color:${t.ink}">「app icon ＝ 一個字」這件事本身</b>，不是這個字的筆觸、也不是它的尺寸 —— 所以換一支筆、換一個字、把它畫粗都不是修法。${ICON_VETO.next}<br><br><b style="color:${t.ink}">板上已經過期的一句話，先講在這裡</b>：底下凡是寫著「與字標<b style="color:${t.ink}">同一支筆</b>」的段落，在字標於本輪換成蠟筆之後<b style="color:${t.ink}">字面已經不成立</b> —— 這張板上的落款印是第 3 輪那支程式生成的刀。凍結的意思就是「它停在被否決的那一版」，不是「它還對」。<br><br>板上其餘每一段（分層意圖、三種外觀、驗收排、G26 的四條規格、Tinted 的中灰玻璃底）<b style="color:${t.ink}">留著是因為它們與「用哪一個圖形」無關</b>：那些是「任何一個圖示都要通過的檢查」，換素材之後照樣要跑一次。<b style="color:${t.ink}">G26／G26b／G26c 三族在這張板上暫停</b>，登記在具名豁免簿裡（<code>data-veto="icon-concept"</code> → G26），理由與恢復條件都寫在那一筆上：外部素材到位、這張板重做，就把那一筆刪掉，三族自動恢復。<b style="color:${t.ink}">刪不掉就是還沒重做</b> —— 這是豁免簿的等式在守的事（MG2）。</span>
   </div>
   <div style="display:flex;flex-direction:column;gap:${SP.m}px;margin-bottom:${SP.xxl}px">
     <span style="${TY.cap};color:${t.ink2};letter-spacing:.14em">LITTLE SPROUT · ${BRAND} · APP ICON ＋ LOGO（第 3 輪：重筆＋G26 驗收）</span>
     <h1 style="${TY.d};color:${t.ink};margin:0">落款印</h1>
-    <p style="${TY.b};color:${t.ink2};margin:0;max-width:820px">Logo（字標）是<b style="color:${t.ink}">手寫「萌芽」＋系統字「日記」</b>，用在畫面裡、信件裡、任何有空間把全名說完的地方。<b style="color:${t.ink}">App icon 是它的落款印</b>：同一支筆、同一張紙，只取一個字。兩者的關係跟印章與署名一樣 —— 不是兩套設計，是同一套的長版與短版。</p>
+    <p style="${TY.b};color:${t.ink2};margin:0;max-width:820px">Logo（字標）是<b style="color:${t.ink}">手寫「萌芽」＋系統字「日記」</b>，用在畫面裡、信件裡、任何有空間把全名說完的地方。<b style="color:${t.ink}">App icon 是它的落款印</b>：<s data-expired="字標第 6 輪換成蠟筆、而這張板上的落款印還是第 3 輪程式生成的刀：這句話的字面已經不成立，留著是否決紀錄">同一支筆、同一張紙，只取一個字。</s>兩者的關係跟印章與署名一樣 —— 不是兩套設計，是同一套的長版與短版。</p>
     <p style="${TY.b};color:${t.ink2};margin:0;max-width:820px"><b style="color:${t.ink}">為什麼是「芽」不是「萌」</b>：${Object.entries(strokes).map(([c, n]) => `${c} ${n} 筆`).join('、')}。App icon 在主畫面是 60pt，扣掉安全區約 ${Math.round(60 * .88)}pt 見方 —— 十四筆的「萌」在那個尺寸會糊成一團墨（下面第三排是實際大小，自己看）。「芽」八筆，而且它就是英文名 Little Sprout 的意思。取筆畫少的那一個不是取巧，是<b style="color:${t.ink}">在小尺寸還讀得出來</b>這條長輩優先的硬約束。</p>
   </div>
 
@@ -1703,7 +1707,7 @@ const iconSheet = () => {
     ${iconTile(t, `第 2 輪：寫的那支筆（中位 ${written.median.toFixed(0)}px／最細 ${written.min.toFixed(0)}px）`, `<div style="position:relative;width:${ICON}px;height:${ICON}px;background:${gradCss(t, 'paper')};display:flex;align-items:center;justify-content:center"><div style="width:${Math.round(ICON * .52)}px">${sealMark(Math.round(ICON * .52), t.ink)}</div></div>`, { px: 200, note: `20pt@2x 時最細筆畫只有 ${(written.min * 40 / ICON).toFixed(2)} 裝置像素、墨覆蓋 7.63% —— 物理上讀不出來。` })}
     ${iconTile(t, `第 3 輪：刻的那支筆（中位 ${carved.median.toFixed(0)}px／最細 ${carved.min.toFixed(0)}px）`, iconArt(look['淺色']), { px: 200, note: `同一個「芽」、同一組八筆、同一個筆序、同一支 stroke() 模型；換的是刀（筆寬映射 ×${(carved.median / written.median).toFixed(2)}、提按幅度 ×${Icon.CARVE.swell}）與章法（重新分白）。` })}
     <div${S('flat')} style="${flat(t, { pad: `${SP.l}px`, radius: 14 })};flex:1;min-width:0">
-      <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2};${press(t)}"><b style="color:${t.ink}">落款印與落款題字本來就不是同一支工具</b>。題字是筆：有提按、有飛白、細處可以到一根毫。印是刀：刃有固定寬度，所以筆畫粗、提按小、收筆是切的不是拖的。第 2 輪把字標的筆直接縮小去當圖示，等於拿寫的當刻的 —— 那是這一稿自己開的藥（「小尺寸還讀得出來」）沒有自己吃。<br><br><b style="color:${t.ink}">誠實話</b>：刻的版本<b style="color:${t.ink}">中線與寫的版本不同</b>。粗了之後寫的那個間架會糊掉（草字頭的兩豎會被長橫吃掉、短撇會黏上長橫），所以重新分白 —— 那正是篆刻在做的事。不變的是同一個字、同一組八筆、同一個筆序、同一支筆的模型。<b style="color:${t.ink}">第 4 輪這句話只是自我宣告</b>（底下那張 ${Object.keys(look).length}×${Icon.SIZES.length}×${Icon.SCALES.length} 格的表量的是可讀性，不是「同不同一個字」），所以本輪把它拆成八個可以被否證的數 —— 見下一張表。</span>
+      <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2};${press(t)}"><b style="color:${t.ink}">落款印與落款題字本來就不是同一支工具</b>。題字是筆：有提按、有飛白、細處可以到一根毫。印是刀：刃有固定寬度，所以筆畫粗、提按小、收筆是切的不是拖的。第 2 輪把字標的筆直接縮小去當圖示，等於拿寫的當刻的 —— 那是這一稿自己開的藥（「小尺寸還讀得出來」）沒有自己吃。<br><br><b style="color:${t.ink}">誠實話</b>：刻的版本<b style="color:${t.ink}">中線與寫的版本不同</b>。粗了之後寫的那個間架會糊掉（草字頭的兩豎會被長橫吃掉、短撇會黏上長橫），所以重新分白 —— 那正是篆刻在做的事。<s data-expired="字標第 6 輪換成蠟筆、而這張板上的落款印還是第 3 輪程式生成的刀：這句話的字面已經不成立，留著是否決紀錄">不變的是同一個字、同一組八筆、同一個筆序、同一支筆的模型。</s><b style="color:${t.ink}">第 4 輪這句話只是自我宣告</b>（底下那張 ${Object.keys(look).length}×${Icon.SIZES.length}×${Icon.SCALES.length} 格的表量的是可讀性，不是「同不同一個字」），所以本輪把它拆成八個可以被否證的數 —— 見下一張表。</span>
     </div>
   </div>
 
@@ -1739,7 +1743,7 @@ const iconSheet = () => {
   <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:${FIX.gutter}px">
     ${ruleCard(t, 'Logo 與 App icon 的關係（一句話：長版與短版）', [
       `<b>Logo（字標）</b>＝手寫「萌芽」＋系統字「日記」。用在歡迎頁、iPad 抬頭、信件寄件人、建立家庭預覽、規格板 —— 五個使用點的字高都印在 Tokens 板上。`,
-      `<b>App icon（落款印）</b>＝同一支筆的「芽」印在台紙上。它不出現在畫面裡（畫面裡出現的一律是字標全名），只出現在系統的圖示位。`,
+      `<b>App icon（落款印）</b>＝<s data-expired="字標第 6 輪換成蠟筆、而這張板上的落款印還是第 3 輪程式生成的刀：這句話的字面已經不成立，留著是否決紀錄">同一支筆的「芽」印在台紙上</s>。它不出現在畫面裡（畫面裡出現的一律是字標全名），只出現在系統的圖示位。`,
       '<b>不做兩套</b>：icon 不是把字標塞進方框（四個字在 60pt 讀不出來），字標也不是把 icon 加字（印章放大會失去筆跡的細節）。它們共用同一份 brush 幾何，換的只有取字與尺寸。',
       '<b>App Store 1024 用哪一個</b>：用 icon（落款印）。商店頁的名稱欄已經寫著全名，圖示再寫一次是重複。',
     ])}

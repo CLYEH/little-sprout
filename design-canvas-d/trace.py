@@ -22,26 +22,45 @@ SHA-256 與這裡的每一個參數，G33 會回頭比對磁碟上的 PNG ——
     ——不是筆觸問題，是字形 icon 這件事——外部 icon 素材另外生成中。所以這裡**刻意不輸出**
     那份裁切資料：留著沒人用的匯出就是死碼。要的時候把 split 那幾行接回來即可（見 main()）。
 
-Run: python3 trace.py   （需要 numpy / opencv-python / Pillow；輸出 ink.mjs）
+**第 8 輪 D7-02（G33④）**：這一支現在可以被 gate **當場重跑**。第 6 輪的 G33 只驗
+「宣告的來源雜湊 ＝ 磁碟上那張圖的雜湊」——那是一個閉環：換一張圖、順手把宣告的雜湊
+也改掉，兩邊照樣一致，而 37KB 的 path 沒有人回頭問它出自誰。所以加了 `--check`：
+**不寫檔**，把描摹結果（輪廓數、viewBox、d）印成 JSON 到 stdout；描摹參數與來源檔
+一律可以由環境變數指定（`LS_TRACE_SRC` / `LS_TRACE_ALPHA_T` / `_SPECK` / `_HOLE` /
+`_EPS` / `_UNIT` / `_DEC`），G33④ 因此是「拿 ink.mjs 自己宣告的那組參數，對磁碟上
+那張圖重跑一次，輸出必須逐字元等於 ink.mjs 的 LOCKUP.d」。換圖就對不上，
+改參數宣告也對不上 —— 出處從一句宣告變成一次重現。
+
+Run: python3 trace.py            （需要 numpy / opencv-python / Pillow；輸出 ink.mjs）
+     python3 trace.py --check    （只印 JSON，不動任何檔案；G33④ 用）
 """
 import hashlib
 import json
 import os
+import sys
 
 import cv2
 import numpy as np
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.join(HERE, 'mengya-crayon-alpha.png')
+SRC = os.environ.get('LS_TRACE_SRC') or os.path.join(HERE, 'mengya-crayon-alpha.png')
 OUT = os.path.join(HERE, 'ink.mjs')
 
-ALPHA_T = 110   # 二值化門檻（alpha 0–255）。蠟筆的邊是軟的，這個值落在崩邊的中段。
-SPECK = 90      # 小於這個面積（原圖 px²）的孤立碎屑丟掉 —— 掃描雜訊，不是筆跡。
-HOLE = 900      # 小於這個面積的內部白點填掉；真反白（日／月／牙）比它大兩個數量級。
-EPS = 1.0       # Douglas-Peucker 容差（原圖 px）。顆粒的存廢就在這個數上。
-UNIT = 193.0    # 字身單位：兩字並排的總寬 ＝ 193（沿用貝茲版的座標語彙：兩字各 100、字距 93）
-DEC = 1         # 座標小數位。1 位在 193 個單位上 ＝ 0.05% —— 遠小於一個裝置像素。
+
+def _p(name, default, cast):
+    """描摹參數：預設是這裡寫的那一組（人跑的時候），可由環境變數指定（gate 重跑的時候）。
+       gate 餵進來的是 ink.mjs 自己宣告的 TRACE —— 所以「宣告的參數」也一起被驗。"""
+    v = os.environ.get('LS_TRACE_' + name)
+    return default if v is None else cast(v)
+
+
+ALPHA_T = _p('ALPHA_T', 110, int)   # 二值化門檻（alpha 0–255）。蠟筆的邊是軟的，這個值落在崩邊的中段。
+SPECK = _p('SPECK', 90, int)        # 小於這個面積（原圖 px²）的孤立碎屑丟掉 —— 掃描雜訊，不是筆跡。
+HOLE = _p('HOLE', 900, int)         # 小於這個面積的內部白點填掉；真反白（日／月／牙）比它大兩個數量級。
+EPS = _p('EPS', 1.0, float)         # Douglas-Peucker 容差（原圖 px）。顆粒的存廢就在這個數上。
+UNIT = _p('UNIT', 193.0, float)     # 字身單位：兩字並排的總寬 ＝ 193（沿用貝茲版的座標語彙：兩字各 100、字距 93）
+DEC = _p('DEC', 1, int)             # 座標小數位。1 位在 193 個單位上 ＝ 0.05% —— 遠小於一個裝置像素。
 
 
 def mask():
@@ -103,6 +122,19 @@ def main():
 
     sha = hashlib.sha256(open(SRC, 'rb').read()).hexdigest()
     im = Image.open(SRC)
+
+    # --check：**不寫任何檔**，把重跑的結果原樣印出來給 G33④ 逐字元比對。
+    if '--check' in sys.argv:
+        print(json.dumps({
+            'n': len(polys),
+            'vb': {'w': round(UNIT, 2), 'h': round((y1 - y0) * k, 2)},
+            'd': lock_d,
+            'sha256': sha,
+            'src': os.path.basename(SRC),
+            'trace': {'alphaT': ALPHA_T, 'speck': SPECK, 'hole': HOLE, 'eps': EPS, 'unit': UNIT, 'dec': DEC},
+        }))
+        return
+
     js = f'''/* ── 蠟筆字樣「萌芽」的向量資料（第 6 輪；**這個檔是 trace.py 產生的，不要手改**）──
    使用者定案：字標筆觸＝蠟筆。第 1–5 輪程式生成的貝茲筆跡被判「很醜」，
    換掉的是字樣本身；規則（材質標記 data-ink、aria 包法、跨板縫合、字距與版位）逐條留著。

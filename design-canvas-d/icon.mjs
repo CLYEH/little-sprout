@@ -40,14 +40,19 @@ export const strokeStats = (seal) => ({
 /* ── 光柵化 ───────────────────────────────────────────────
    路徑是「M x y L x y … Z」的多邊形串。每一筆各自填（non-zero 對一個凸凹多邊形
    等同 even-odd，因為 stroke() 的外框不自交），再取聯集 —— 筆與筆重疊的地方
-   不會被算兩次墨。SS 是超取樣倍率，回傳每個像素的墨覆蓋率 0..1。 */
+   不會被算兩次墨。SS 是超取樣倍率，回傳每個像素的墨覆蓋率 0..1。
+
+   evenodd:true 走另一條路（第 8 輪 D7-02／G33⑤ 加的）：**所有輪廓放在同一條掃描線上
+   一起判奇偶**。描摹出來的字樣（ink.mjs）外框與洞在同一個 d 裡、靠 fill-rule="evenodd"
+   分（瀏覽器就是這樣畫的），逐筆聯集會把「日」「月」「牙」的反白填實 ——
+   要量反白就必須用瀏覽器那一套判法，不能用刻印那一套。 */
 const parsePolys = (d) => d.split('Z').filter((s) => s.trim()).map((s) => {
   const pts = [];
   for (const m of s.matchAll(/[ML](-?[\d.]+) (-?[\d.]+)/g)) pts.push([+m[1], +m[2]]);
   return pts;
 });
 
-export const raster = (px, { seal = SEAL, ss = 4 } = {}) => {
+export const raster = (px, { seal = SEAL, ss = 4, evenodd = false } = {}) => {
   const N = px * ss;
   const hit = new Uint8Array(N * N);
   // 母稿座標：墨跡置中，寬 = ICON*SEAL_FRAC
@@ -55,21 +60,27 @@ export const raster = (px, { seal = SEAL, ss = 4 } = {}) => {
   const drawnH = seal.vb.h * k;
   const ox = (ICON - ICON * SEAL_FRAC) / 2, oy = (ICON - drawnH) / 2;
   const toDev = (p) => [((p[0] - seal.vb.x) * k + ox) * N / ICON, ((p[1] - seal.vb.y) * k + oy) * N / ICON];
-  for (const poly of parsePolys(seal.d)) {
-    const P = poly.map(toDev);
-    let y0 = Infinity, y1 = -Infinity;
-    for (const p of P) { y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
-    for (let y = Math.max(0, Math.floor(y0)); y <= Math.min(N - 1, Math.ceil(y1)); y++) {
-      const yc = y + 0.5, xs = [];
-      for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
-        const a = P[j], b = P[i];
-        if ((a[1] > yc) === (b[1] > yc)) continue;
-        xs.push(a[0] + (yc - a[1]) / (b[1] - a[1]) * (b[0] - a[0]));
-      }
-      xs.sort((p, q) => p - q);
-      for (let i = 0; i + 1 < xs.length; i += 2) {
-        for (let x = Math.max(0, Math.ceil(xs[i] - 0.5)); x <= Math.min(N - 1, Math.floor(xs[i + 1] - 0.5)); x++) hit[y * N + x] = 1;
-      }
+  const polys = parsePolys(seal.d).map((poly) => poly.map(toDev));
+  const span = (xs, y) => {
+    xs.sort((p, q) => p - q);
+    for (let i = 0; i + 1 < xs.length; i += 2) {
+      for (let x = Math.max(0, Math.ceil(xs[i] - 0.5)); x <= Math.min(N - 1, Math.floor(xs[i + 1] - 0.5)); x++) hit[y * N + x] = 1;
+    }
+  };
+  const cross = (P, yc, xs) => {
+    for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
+      const a = P[j], b = P[i];
+      if ((a[1] > yc) === (b[1] > yc)) continue;
+      xs.push(a[0] + (yc - a[1]) / (b[1] - a[1]) * (b[0] - a[0]));
+    }
+  };
+  if (evenodd) {
+    for (let y = 0; y < N; y++) { const xs = []; for (const P of polys) cross(P, y + 0.5, xs); span(xs, y); }
+  } else {
+    for (const P of polys) {
+      let y0 = Infinity, y1 = -Infinity;
+      for (const p of P) { y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
+      for (let y = Math.max(0, Math.floor(y0)); y <= Math.min(N - 1, Math.ceil(y1)); y++) { const xs = []; cross(P, y + 0.5, xs); span(xs, y); }
     }
   }
   const cov = new Float32Array(px * px);
@@ -79,6 +90,52 @@ export const raster = (px, { seal = SEAL, ss = 4 } = {}) => {
     cov[y * px + x] = s / (ss * ss);
   }
   return cov;
+};
+
+/* ── 字間白 vs 字內白（第 8 輪 D7-02／G33⑤）──────────────────────────
+   「字間的白比字內最大的白還窄，所以『萌芽』讀成一個詞而不是兩個字」——
+   第 6 輪這是一句目測的宣稱。這一支把它變成三個從 d 自己算出來的數：
+     gap   兩字之間那一段**整條直欄都沒有墨**的最寬處
+     left  ／ right  不與外界連通的白（counter）裡，左右兩字各自最寬的一個
+   單位是字身單位（LOCKUP 的座標系），所以它不隨畫面上畫多大而變。
+   光柵化走 even-odd（瀏覽器畫這個 d 的那一套）—— 逐筆聯集會把反白填實。
+   build 印板上那句話、verify 的 G33⑤ 下判斷，兩邊叫的是這同一支。 */
+export const counterStats = (seal, px = 512) => {
+  const U = seal.vb.w / (px * SEAL_FRAC);                       // 一個光柵格 ＝ 幾個字身單位
+  const cov = raster(px, { seal, ss: 2, evenodd: true });
+  const ink = (x, y) => cov[y * px + x] > 0.5;
+  const col = Array.from({ length: px }, (_, x) => { for (let y = 0; y < px; y++) if (ink(x, y)) return 1; return 0; });
+  const x0 = col.indexOf(1), x1 = col.lastIndexOf(1);
+  let gap = 0, gapEnd = 0, run = 0;
+  for (let x = x0; x <= x1; x++) { if (!col[x]) { run++; if (run > gap) { gap = run; gapEnd = x; } } else run = 0; }
+  const mid = gapEnd - gap / 2;
+  const ext = new Uint8Array(px * px), st = [];
+  const flood = (x, y) => { if (!ink(x, y) && !ext[y * px + x]) { ext[y * px + x] = 1; st.push(x * px + y); } };
+  for (let x = 0; x < px; x++) { flood(x, 0); flood(x, px - 1); }
+  for (let y = 0; y < px; y++) { flood(0, y); flood(px - 1, y); }
+  while (st.length) {
+    const v = st.pop(), x = (v / px) | 0, y = v % px;
+    if (x > 0) flood(x - 1, y); if (x < px - 1) flood(x + 1, y);
+    if (y > 0) flood(x, y - 1); if (y < px - 1) flood(x, y + 1);
+  }
+  const seen = new Uint8Array(px * px), comps = [];
+  for (let y = 0; y < px; y++) for (let x = 0; x < px; x++) {
+    if (ink(x, y) || ext[y * px + x] || seen[y * px + x]) continue;
+    const q = [x * px + y]; seen[y * px + x] = 1;
+    let lo = x, hi = x;
+    while (q.length) {
+      const v = q.pop(), a = (v / px) | 0, b = v % px;
+      lo = Math.min(lo, a); hi = Math.max(hi, a);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const c = a + dx, e = b + dy;
+        if (c < 0 || e < 0 || c >= px || e >= px || ink(c, e) || ext[e * px + c] || seen[e * px + c]) continue;
+        seen[e * px + c] = 1; q.push(c * px + e);
+      }
+    }
+    comps.push({ w: hi - lo + 1, cx: (lo + hi) / 2 });
+  }
+  const widest = (side) => { const a = comps.filter(side); return a.length ? Math.max(...a.map((c) => c.w)) * U : 0; };
+  return { gap: gap * U, left: widest((c) => c.cx < mid), right: widest((c) => c.cx >= mid), n: comps.length };
 };
 
 /* 反白（counter）最小值：墨與墨之間那條白。糊成一團的物理原因就是它掉到 1 像素以下。

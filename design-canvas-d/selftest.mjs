@@ -16,6 +16,7 @@
    不由這一支守 —— 兩者互補，不互相取代。
    Run: node selftest.mjs   （或 node measure.mjs --selftest；管線第 ⑤ 步） */
 import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, cpSync, rmSync, readdirSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -172,6 +173,48 @@ const SAMPLES = [
     id: '門檻洗白－推導式改回手寫字面值', gate: 'MG4', run: runVerify,
     why: '把 SCALE_DE 從推導式改回三個手寫的數（值一模一樣，全綠）。推導式的門檻沒有自由度，寫回字面值就把自由度放回來了 —— MG4③ 咬的是這件事，不是那三個數。',
     mutate: (d) => edit(d, 'tokens.mjs', (s) => s.replace('export const SCALE_DE = { adj: 3 * HUE_DE_MIN, ends: 6 * HUE_DE_MIN, band: 1 * HUE_DE_MIN };', 'export const SCALE_DE = { adj: 3, ends: 6, band: 1.0 };')),
+  },
+  /* ── 第 7 輪 reviewer 的三發（第 8 輪補上的牙）────────────────────────
+     前兩發打的是 MG4 自己：第 6 輪的 MG4 讀的是**原始碼文字**，而且餘裕比是
+     「門檻 vs 邊界樣本」—— 兩個數都在洗白者手上。 */
+  {
+    id: 'N2c-誘餌註解（正則讀到假的那一行）', gate: 'MG4', run: runVerify,
+    why: 'reviewer 第 7 輪的原始突變：把真的那一行洗成 4.5，前面補一行**註解掉的**原始宣告。第 6 輪的 MG4 用正則找第一個 `export const CONTRAST =`，第一個 match 落在註解上 —— 154 項全綠，而 MG4① 正印著「值與出處都對得上」這句關於自己的假話。第 8 輪改成 import：讀的是真的被 export 的值，註解不是宣告。',
+    mutate: (d) => edit(d, 'tokens.mjs', (s) => s.replace('export const CONTRAST = { aaa: 7, grain: 6 };',
+      '// 舊值留參考：export const CONTRAST = { aaa: 7, grain: 6 };\nexport const CONTRAST = { aaa: 4.5, grain: 6 };')),
+  },
+  {
+    id: 'N3c-門檻與邊界樣本一起下移', gate: 'MG4', run: runVerify,
+    why: 'reviewer 第 7 輪：「餘裕比自我指涉 —— 門檻與樣本兩個數都在洗白者手上」。把顆粒門檻 6→4.5、同時把那一發邊界樣本 5.9→4.4，比值仍然貼著線。第 8 輪的餘裕比改成量「門檻 vs **實測**」，而實測（6.27）不在他手上：×1.39 對不上登記的 ×1.04。',
+    mutate: (d) => {
+      edit(d, 'tokens.mjs', (s) => s.replace('export const CONTRAST = { aaa: 7, grain: 6 };', 'export const CONTRAST = { aaa: 7, grain: 4.5 };'));
+      edit(d, 'bands.mjs', (s) => s.replace("of: 'CONTRAST.grain', v: 5.9,", "of: 'CONTRAST.grain', v: 4.4,"));
+    },
+  },
+  {
+    id: '換圖＋同步改宣告雜湊（G33 的閉環）', gate: 'G33', run: runVerify,
+    why: 'reviewer 第 7 輪：G33 的出處是一個閉環 —— 換一張家庭照進來、順手把 ink.mjs 宣告的 SHA-256 也改成新的，①②③ 全綠，而那 37KB 的 path 與那張新圖一點關係也沒有。第 8 輪的 G33④ 拿宣告的那組描摹參數對那張圖**當場重跑一次 trace.py**，輸出必須逐字元等於 LOCKUP.d。',
+    mutate: (d) => {
+      const img = readFileSync(join(d, 'family.jpg'));
+      writeFileSync(join(d, 'mengya-crayon-alpha.png'), img);
+      const sha = createHash('sha256').update(img).digest('hex');
+      edit(d, 'ink.mjs', (s) => s.replace(/sha256: '[0-9a-f]{64}'/, `sha256: '${sha}'`));
+    },
+  },
+  {
+    id: '凍結的板被改了一個字', gate: 'MG2', run: runVerify,
+    why: '「AppIcon 板整張凍結在被否決的那一版」是那一筆豁免關掉 G26／G26b／G26c 三族的理由。第 6 輪那句話沒有任何東西在守：板改了，豁免照樣生效。現在被否決版的內容雜湊釘在登記簿上（MG2⑥）。',
+    mutate: (d) => edit(d, 'AppIcon.dc.html', (s) => s.replace('App Store 1024 用哪一個', 'App Store 1024 用哪一顆')),
+  },
+  {
+    id: '過期標記被拿掉（假句復活）', gate: 'G35', run: runVerify,
+    why: '板頂的否決橫幅說「底下凡是寫著同一支筆的段落字面都不成立」，可是三百字之外那句話還是好端端地印著。第 8 輪逐句劃掉（<s data-expired>），這一發把其中一句的劃線標記拿掉 —— 假話一復活就要紅。',
+    mutate: (d) => edit(d, 'AppIcon.dc.html', (s) => s.replace(/<s data-expired="[^"]*">(同一支筆、同一張紙[^<]*)<\/s>/, '$1')),
+  },
+  {
+    id: '登入鍵的 role 被拿掉（掉出無障礙樹）', gate: 'G32', run: runVerify,
+    why: '第 5 輪 r5：那顆 Email 鍵是個沒有 role 的 div —— 可見文字對得上、名稱算得出來，而 VoiceOver 根本找不到它。第 6 輪把 role 補上了，但沒有任何一條 gate 在看它；這一發把三顆的 role 全拿掉，G32①–⑤ 一條都不會叫（它們數的是文字），只有 ⑥ 會。',
+    mutate: (d) => editJson(d, 'measured.json', (m) => { m.brandLab = m.brandLab.map((b) => ({ ...b, role: null })); }),
   },
   {
     id: 'M8-三方對帳（指紋對不上）', gate: 'measure', run: runMeasure,

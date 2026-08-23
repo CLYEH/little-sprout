@@ -5,13 +5,14 @@
 // Run: node measure.mjs && node verify.mjs
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import {
   T, GAPS, SIZES, FIX, AX, RULE, H1_GROUPS, H1_EXCLUDED, hash12,
   GRAD_KEYS, GRAD_WHY, NO_GRAD_WHY, CONTRAST, gradCss, SP,
   TRACK, TEMP, TEMP_TOL, HUE_MIN, LIGHT_DH, TIME_DH, LIGHT_KEYS, STUB_KEYS, STUB_KNEE, STUB_USES,
   lch, dHue, dE, hueDE, HUE_DE_MIN, INSET_KEYS, AX4, ax4, ax,
-  PERF, perfMask, PERF_WHY, PERF_TILE, JITTER, PHOTO_STOP, PHOTO_DIM, PHOTO_STOP_TOL, SCALE_DE, EXEMPT, dERgb, cellSeen, measStamp, KNOB_CR, PEN_DH, lchHex,
+  PERF, perfMask, PERF_WHY, PERF_TILE, JITTER, PHOTO_STOP, PHOTO_DIM, PHOTO_STOP_TOL, SCALE_DE, EXEMPT, dERgb, cellSeen, measStamp, KNOB_CR, PEN_DH, lchHex, LIP_DE,
   SCOPE, inScope,
 } from './tokens.mjs';
 import { CANCEL_COV, CANCEL_PATH, CANCEL_BOX, polyArea } from './brush.mjs';
@@ -96,7 +97,8 @@ const NOPOP = {
   MG2: '母體＝畫面上出現的每一個豁免標記 ∪ 登記簿上的每一筆（等式的兩邊都是全集）',
   MG3: '母體＝負面對照的樣本表，每一發都具名列出（見 selftest.mjs）',
   G34: '母體＝板級排除登記簿上的每一筆（登記簿本身就是全集），加上 verify／measure 兩份原始碼的全文掃描',
-  G33: '母體＝字樣的那一份出處（來源檔＋描摹參數）與畫面上每一張帶字標的板，逐張比 path',
+  G33: '母體＝字樣的那一份出處（來源檔＋描摹參數）與畫面上每一張帶字標的板，逐張比 path；④重跑一次描摹、⑤從同一份 path 算字距，兩者的母體都是那一份 d 的全部',
+  G35: '母體＝**全部產物**裡「同一支筆」這個字串的每一次出現（凍結板上的逐一比對是否落在過期標記內，其餘板上一次都不准出現）',
   MG4: '母體＝gate 拿來做比較的每一條門檻，逐條列在 THRESHOLDS 登記簿上（登記簿本身就是母體宣告；MG4④ 反過來驗沒有死掉的登記）',
 };
 
@@ -1120,6 +1122,15 @@ if (M.perf) {
     ok(lipBad.length === 0 && dirBad.length === 0,
       `G27⑤ 撕口有斷面：${rows.length} 個使用點都有一道 1px 的唇，而且它是 drop-shadow 不是 box-shadow —— drop-shadow 吃的是**遮罩之後的輪廓**，所以那道唇沿著每一顆扇貝的弧走（box-shadow 只會沿著矩形）。方向由切的是哪一緣決定，顏色由 dir 決定（撕口朝光＝亮邊、背光＝暗邊），沒有第二個光源`,
       [...lipBad.map((r) => `${r.file}/${r.kind} 沒有斷面唇`), ...dirBad.map((r) => `${r.file}/${r.kind} 唇的方向反了：${r.lip}`)].join(' '));
+    /* ⑥ 第 5 輪 reviewer 對這一手的評語是「加了一個沒人看得到的東西」。第 8 輪的表態
+       （二選一裡選「板上承認」，而不是把它做得更明顯 —— 做明顯就不是 1px 的斷面了）：
+       把它拆成兩件可以分開判斷的事，兩件都印在 Tokens 板上（PERF_WHY）。
+         · 顏色：唇與台紙合成後的色差必須在 JND 之上 —— 它不是一個看不見的顏色
+         · 高度：它就是 1 個裝置像素，所以在縮圖上確實看不到（那是尺度的事實，不是缺陷）
+       沒有這一條，「留著它」就只是一句品味宣稱。 */
+    ok(Math.min(...LIP_DE) >= HUE_DE_MIN,
+      `G27⑥ 斷面唇的誠實話：唇與台紙合成之後的色差 ΔE ${LIP_DE.map((v) => v.toFixed(1)).join('–')}（JND ${HUE_DE_MIN}）—— **顏色差得到**；而它只有 1 個裝置像素高，所以板被縮小看的時候**看不到**。兩件事分開講、都印在 Tokens 板上，不留給看板的人自己發現`,
+      `最小 ΔE ${Math.min(...LIP_DE).toFixed(2)} 在 JND 以下 —— 那就真的是一個看不見的顏色，該拿掉而不是留著`);
   }
 } else need('perf', 'G27 騎縫線');
 
@@ -1270,6 +1281,19 @@ if (M.brandLab && M.brandLab.length) {
     && M.brandLab.filter((b) => b.title === 'short' && b.brand !== 'email').every((b) => b.aria),
     'G32⑤ aria-label 只出現在該出現的地方：可見文字塌成「登入」的那一階（AX5 的兩顆品牌鍵）一顆不漏，其餘一顆不多 —— 多掛的 aria-label 會蓋掉可見文字，那正是上一輪違反 2.5.3 的原因',
     ariaWhere.filter((b) => b.title !== 'short' || b.brand === 'email').map((b) => `${b.file}/${b.brand}@${b.title} 多掛了 aria-label`).join(' '));
+  /* ⑥ 在不在無障礙樹裡（第 8 輪 D7-03）。第 5 輪 r5 抓到的那一顆 Email 鍵是個
+     **沒有 role 的 div** —— 名稱算得出來、可見文字對得上，而 VoiceOver 根本找不到它。
+     第 6 輪把 role 補上了，但補上這件事沒有任何一條 gate 在看：下一次誰刪掉它，
+     G32①–⑤ 一條都不會叫（它們數的是文字，不是「這顆鍵存不存在」）。
+     順帶驗名稱**是從哪裡算出來的**：probe 現在照 accname 的順序認四個來源
+     （aria-labelledby → aria-label → 內容 → title），沒有來源的一顆就是沒有名字。 */
+  const roleBad = M.brandLab.filter((b) => b.role !== 'button');
+  const fromBad = M.brandLab.filter((b) => !b.nameFrom || b.nameFrom === 'none');
+  const froms = [...new Set(M.brandLab.map((b) => b.nameFrom))];
+  ok(roleBad.length === 0 && fromBad.length === 0,
+    `G32⑥ 三顆鍵都在無障礙樹裡：${M.brandLab.length} 顆逐顆帶 role="button"（它們是 div —— 沒有 role 就不是按鈕，第 5 輪 r5 的那一顆就是這樣消失的），而且每一顆的名稱都算得出來源（本稿用到 ${froms.join('／')}；probe 依 accname 順序認 aria-labelledby／aria-label／內容／title 四種）`,
+    [...roleBad.map((b) => `${b.file}/${b.brand}@${b.title} 的 role 是「${b.role ?? '（沒有）'}」`),
+      ...fromBad.map((b) => `${b.file}/${b.brand}@${b.title} 算不出名稱`)].join(' · '));
 } else need('brandLab', 'G32 登入標籤');
 
 /* ══ G20  畫布註記的數值同源（G18 的守備範圍擴到 canvas.json）══════
@@ -1541,6 +1565,74 @@ const mg1 = () => {
   ok(orphan.length === 0,
     `MG2⑤ 登記簿上的每一種 marker 都真的在豁免什麼：${inCode.join('／')} 由 probe 認；${Object.keys(PROBE_FREE).join('／')} 具名登記為「不走 probe」並寫出在哪裡生效`,
     `無主的 marker ${orphan.join('/')}（既沒接上 probe，也沒登記它在哪裡生效）`);
+
+  /* ⑥ 凍結的反向鎖（第 8 輪 D7-03）。「這張板凍結在被否決的那一版」是這一筆豁免
+     整整三族 gate 的理由 —— 而第 6 輪那句話沒有任何東西在守：板改了，豁免照樣生效。
+     現在被否決版的內容雜湊釘在登記簿上，板一動這一條就紅。
+     排除 ls-measured 戳記（那是量測版本章，不是這張板的內容）—— 不排除的話
+     任何一次重新量測都會讓這一條紅，那不是「板改了」。 */
+  const FROZEN = EXEMPT.filter((e) => e.frozen);
+  const froBad = [], froSeen = [];
+  for (const e of FROZEN) {
+    const f = `${e.frozen.file}.dc.html`;
+    if (!files.includes(f)) { froBad.push(`${e.frozen.file} 這張板不存在`); continue; }
+    const now = createHash('sha256').update(read(f).replace(/<!-- ls-measured:[a-z0-9-]+ -->/g, '')).digest('hex');
+    froSeen.push(`${e.frozen.file}#${now.slice(0, 12)}`);
+    if (now !== e.frozen.sha256) froBad.push(`${e.frozen.file} 現在是 #${now.slice(0, 12)}、登記的被否決版是 #${String(e.frozen.sha256).slice(0, 12)} —— 板動了，這一筆豁免（${e.marker}="${e.role}"→${e.gate}）失效`);
+  }
+  ok(FROZEN.length > 0 && froBad.length === 0,
+    `MG2⑥ 凍結的板釘著被否決版的內容雜湊：${FROZEN.length} 筆「整張板凍結」的豁免逐筆比對（${froSeen.join('、')}）—— 板一改，豁免當場失效。沒有這一條，「凍結在被否決的那一版」只是一句話，而它豁免掉的是 G26／G26b／G26c 整整三族`,
+    froBad.join(' · '));
+}
+
+/* ══ G35  過期的句子要劃掉、不要刪掉（第 8 輪 D7-03）════════════════
+   AppIcon 板頂有一條否決橫幅，第 6 輪它已經誠實地寫著「底下凡是寫著『與字標同一支筆』
+   的段落，字面已經不成立」。第 7 輪 reviewer 的裁定：**那還是三句假話配一句免責聲明**。
+   看板的人（ios-dev）讀到第 1742 行那句「App icon ＝ 同一支筆的芽」時，
+   不會記得板頂三百字之前有一段但書。
+
+   刪掉也不對 —— 刪掉的假話沒有人會記得它曾經被否決過（與 M2b 那一發樣本同一個道理）。
+   所以：**逐句劃掉**（<s>），劃掉的理由寫在 data-expired 上，橫幅自己標成 note。
+   這一條守的是「那個字串只准出現在過期標記裡」：
+     ① 每一處「同一支筆」都落在 <s data-expired> 或 data-expired-note 之內
+     ② 每一個 data-expired 都寫得出為什麼過期
+     ③ 這個字串只出現在那張凍結的板上（別的板不准開始講同一句話） */
+{
+  const PHRASE = '同一支筆';
+  /* 找出帶某個屬性的元素的範圍（同名標籤計數，所以巢狀也算得對）。 */
+  const ranges = (html, tag, attr) => {
+    const out = [];
+    const open = new RegExp(`<${tag}(\\s[^>]*)?>`, 'g');
+    for (const m of html.matchAll(open)) {
+      if (!new RegExp(`\\b${attr}=`).test(m[0])) continue;
+      let i = m.index + m[0].length, depth = 1;
+      const step = new RegExp(`<${tag}(\\s[^>]*)?>|</${tag}>`, 'g');
+      step.lastIndex = i;
+      let t;
+      while ((t = step.exec(html))) { depth += t[0][1] === '/' ? -1 : 1; if (!depth) break; }
+      const av = new RegExp(`${attr}="([^"]*)"`).exec(m[0]);
+      out.push([m.index, t ? t.index + t[0].length : html.length, av ? av[1] : '']);
+    }
+    return out;
+  };
+  const frozenFiles = EXEMPT.filter((e) => e.frozen).map((e) => `${e.frozen.file}.dc.html`);
+  const stray = files.filter((f) => !frozenFiles.includes(f) && read(f).includes(PHRASE));
+  const out = [], thinWhy = [];
+  let struck = 0, notes = 0;
+  for (const f of frozenFiles) {
+    const html = read(f);
+    const sTags = ranges(html, 's', 'data-expired');
+    const nTags = ranges(html, 'span', 'data-expired-note');
+    struck += sTags.length; notes += nTags.length;
+    for (const [, , why] of [...sTags, ...nTags]) if (String(why).length < 20) thinWhy.push(`${f} 的過期標記沒寫出為什麼`);
+    for (const m of html.matchAll(new RegExp(PHRASE, 'g'))) {
+      const inside = [...sTags, ...nTags].some(([a, b]) => m.index > a && m.index < b);
+      if (!inside) out.push(`${f}@${m.index} 的「${PHRASE}」不在過期標記裡`);
+    }
+  }
+  ok(struck >= 3 && notes >= 1 && out.length === 0 && thinWhy.length === 0 && stray.length === 0,
+    `G35 過期的句子劃掉不刪掉：凍結板上 ${struck} 句「${PHRASE}」逐句 <s> 劃掉（每一句寫得出為什麼過期），另外 ${notes} 段是宣告它們過期的橫幅本身（標成 note，不劃）；這個字串在其他 ${files.length - frozenFiles.length} 張板上一次都沒有出現 —— 刪掉的假話沒有人會記得它曾經被否決過，所以留著，但留成劃掉的樣子`,
+    [...out, ...thinWhy, ...stray.map((f) => `${f} 也開始講「${PHRASE}」了`)].join(' · '));
 }
 
 /* ══ MG4  門檻登記簿（第 6 輪 D5-02）═══════════════════════════════
@@ -1560,11 +1652,37 @@ const mg1 = () => {
      ③ 可以推導的 → 寫成推導（G31③ 的 0.73 ＝ 0.5^(1/2.2) 是這一類的樣板）。
         推導式的門檻不需要出處也不需要邊界樣本：它沒有可以被調的自由度。
 
-   讀值的方式很講究：**從產物根目錄的原始碼文字讀**，不是從 import 進來的常數讀。
-   import 進來的永遠是 gate 自己那一份（本尊）；負面對照要能把「被洗白的 tokens.mjs」
-   餵進來，這一條就必須讀得到那一份文字。平常跑的時候兩者是同一個檔。 */
-const THRESH_SRC = { 'tokens.mjs': readFileSync(at('tokens.mjs'), 'utf8'), 'icon.mjs': readFileSync(at('icon.mjs'), 'utf8') };
-/* path 支援 `NAME` 與 `NAME.key` 兩種寫法，回傳原始碼裡那個字面值（沒有就 null）。 */
+   ── 第 8 輪 D7-01：reviewer 把第 6 輪這三條逐條打穿，補牙五處 ──────────
+     ① **讀值改用 import**。第 6 輪讀的是原始碼文字（正則），而正則看不穿註解：
+        把真的那一行洗成 4.5，前面補一行 `// export const CONTRAST = { aaa: 7, ... };`，
+        第一個 match 落在誘餌上 —— 154 項全綠，而 MG4① 正印著一句關於自己的假話。
+        import 讀的是**真的被 export 的值**，而且對照複本也讀得到（LS_ROOT 指到哪就讀哪）。
+     ② MG4① 的引文必須**含登記值**：一句「出自 WCAG」而不寫數字的引文，
+        改門檻的時候不必動它。含了值，洗白就得親手把那個數從引文裡改掉。
+     ⑤ **餘裕比從「門檻 vs 樣本」改成「門檻 vs 實測」**。第 6 輪那個比值是自我指涉的：
+        門檻與樣本兩個數都在洗白者手上，一起往下移就永遠貼著。實測不在他手上
+        （它是瀏覽器量回來的、或是整份色票算出來的），所以 6→4.5 之後
+        實測 6.27 對門檻 4.5 ＝ 1.39 倍，登記的 1.05 當場對不上。
+     ⑥ **文字↔值對帳推廣到全部 20 條**（G20 早就有這個機制，只是母體只有十分之一）：
+        每一條登記的散文裡都要出現它的門檻值與它的實測值，兩個數都回頭比對。
+        本輪它當場抓到兩句假話：跨距寫「15.4°」（實為 14.02）、顆粒寫「6.29」（實為 6.27）。
+     ②b **六條「做不到邊界樣本」的缺口關掉了**。理由本來是「複本換不掉 gate import 進來的
+        色票」—— 那是第 6 輪讀值方式的後果，不是事實。①之後整份色票也從複本 import，
+        於是那六條也量得到實測、也做得出邊界樣本（bands.mjs 後半段那六發）。 */
+/* 讀值：從**產物根目錄**動態 import。平常跑的時候它就是 gate 自己那一份；
+   負面對照跑的時候它是被動過手腳的複本 —— 兩者都讀得到，而且讀到的是值不是文字。 */
+const TK = await import(at('tokens.mjs').href);
+const BD = (await import(at('bands.mjs').href)).BANDS;
+const impNum = (path) => {
+  const [name, key] = path.split('.');
+  const v = key ? (TK[name] || {})[key] : TK[name];
+  return typeof v === 'number' ? v : null;
+};
+/* 「寫成推導式了沒有」只能看文字（值一樣，形狀不一樣）。所以這一份文字**先把註解拿掉**
+   —— 註解裡的宣告不是宣告，第 7 輪的誘餌就是靠這一點活的。 */
+const noComment = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+const THRESH_SRC = { 'tokens.mjs': noComment(readFileSync(at('tokens.mjs'), 'utf8')), 'icon.mjs': noComment(readFileSync(at('icon.mjs'), 'utf8')) };
+/* path 支援 `NAME` 與 `NAME.key` 兩種寫法，回傳原始碼裡那個字面值（不是字面值就回 NaN）。 */
 const srcNum = (file, path) => {
   const [name, key] = path.split('.');
   const decl = new RegExp(`export const ${name}\\s*=\\s*([^;]+);`).exec(THRESH_SRC[file]);
@@ -1575,10 +1693,37 @@ const srcNum = (file, path) => {
   const lit = m[1].trim();
   return /^[\d.]+$/.test(lit) ? +lit : NaN;   // NaN ＝ 不是字面值（推導式），由 ③ 處理
 };
-/* 登記簿。kind：std（外部出處）／derived（推導）／ours（我們自己開的線，要邊界樣本）。 */
+/* 散文裡的數字（⑥ 用）。比的是**數值**不是字串，所以引文寫 7.0:1 也對得上門檻 7。 */
+const proseNums = (s) => [...String(s).matchAll(/\d+(?:\.\d+)?/g)].map((m) => +m[0]);
+const says = (s, v) => proseNums(s).includes(v);
+/* 實測證據（⑤⑥ 用）。色票那幾條走 TK（＝複本的色票），measured 那幾條走 M。 */
+const gmOf = (th, k) => { const s = th.grad[k].filter(([c]) => /^#/.test(c)); const a = TK.lch(s[0][0]), b = TK.lch(s.at(-1)[0]); return a.h + TK.dHue(b.h, a.h) / 2; };
+const dhOf = (th, k) => Math.abs(TK.dHue(TK.lch(th.grad[k].at(0)[0]).h, TK.lch(th.grad[k].at(-1)[0]).h));
+const MODES = () => [TK.T.light, TK.T.dark];
+const tempDev = () => Math.max(...MODES().flatMap((th) => Object.entries(TK.TEMP)
+  .map(([k, want]) => Math.abs(TK.dHue(TK.lch(th[k]).h, TK.lch(th.board).h) - want))));
+const hueTri = () => MODES().map((th) => {
+  const p = gmOf(th, 'paper');
+  return { cool: -TK.dHue(gmOf(th, 'win'), p), warm: Math.min(TK.dHue(gmOf(th, 'win3'), p), TK.dHue(gmOf(th, 'face'), p)), span: TK.dHue(gmOf(th, 'win3'), p) - TK.dHue(gmOf(th, 'win'), p) };
+});
+const voidMax = () => {
+  const tagged = new Set((M.pauses || []).map((p) => `${p.file}|${p.col}`));
+  const v = (M.voids || []).filter((x) => inScope('G10', x.file) && !tagged.has(`${x.file}|${x.col}`));
+  return v.length ? Math.max(...v.map((x) => x.interior || 0)) : 0;
+};
+const btnPctMax = () => {
+  const tails = new Set(M.boards.filter((b) => inScope('G10', b.file) && b.trail > TK.RULE.pause).map((b) => b.file));
+  const rows = M.mainBtn.filter((b) => tails.has(b.file));
+  return rows.length ? Math.max(...rows.map((b) => b.pct)) : 0;
+};
+/* 登記簿。kind：std（外部出處）／derived（推導）／ours（我們自己開的線，要邊界樣本）。
+   evid ＝ 這條門檻**實際上被量到多少**：of 是那個量的名字、v 是登記的值、dp 是小數位、
+   get() 現算一次。⑤ 拿它算餘裕比（門檻 vs 實測），⑥ 回頭比對散文裡寫的那個數。
+   餘裕比 >1.3 的要寫 wide（為什麼故意不貼緊，而且那句話裡要寫出比值）。 */
 const THRESHOLDS = [
-  { id: 'CONTRAST.aaa', file: 'tokens.mjs', value: 7, kind: 'std', gate: 'G6',
-    cite: 'WCAG 2.1 SC 1.4.6 Contrast (Enhanced)：一般大小的文字 7.0:1。這個數不是我們調的，是標準寫的。' },
+  { id: 'CONTRAST.aaa', file: 'tokens.mjs', value: 7, kind: 'std', gate: 'G6', dir: 'min',
+    evid: { of: '全稿最低的文字節點', v: 7.12, dp: 2, get: () => M.contrastMin },
+    cite: 'WCAG 2.1 SC 1.4.6 Contrast (Enhanced)：一般大小的文字 7.0:1。這個數不是我們調的，是標準寫的。實測最低的文字節點 7.12:1 —— 餘裕只有 0.12，全稿最薄的一條。' },
   { id: 'SP.tap', file: 'tokens.mjs', value: 44, kind: 'std', gate: 'G14',
     cite: 'Apple HIG（Layout／Accessibility）：可點擊目標最小 44×44pt。' },
   { id: 'KNOB_CR', file: 'tokens.mjs', value: 3, kind: 'std', gate: 'G19b',
@@ -1588,60 +1733,68 @@ const THRESHOLDS = [
   { id: 'PHOTO_STOP', file: 'tokens.mjs', value: 0.5, kind: 'std', gate: 'G31',
     cite: '攝影的「一格光」＝曝光量減半，亮度剩 0.5。單位是攝影自己的，不是我們定的。' },
   { id: 'PHOTO_DIM', file: 'tokens.mjs', value: null, kind: 'derived', gate: 'G31',
-    how: 'PHOTO_STOP^(1/2.2) 取兩位小數 —— sRGB 的 brightness() 是通道乘法，一格光在 CSS 裡就是這個數',
-    calc: () => +(PHOTO_STOP ** (1 / 2.2)).toFixed(2), get: () => PHOTO_DIM },
+    how: 'PHOTO_STOP^(1/2.2) 取兩位小數＝0.73 —— sRGB 的 brightness() 是通道乘法，一格光在 CSS 裡就是這個數',
+    calc: () => +(TK.PHOTO_STOP ** (1 / 2.2)).toFixed(2), get: () => TK.PHOTO_DIM },
   { id: 'SCALE_DE.band', file: 'tokens.mjs', value: null, kind: 'derived', gate: 'G29',
-    how: '1 × HUE_DE_MIN —— 「刻度與號碼帶是同一支漸層」＝ 兩者的差要落在人眼分不出來之內',
-    calc: () => 1 * HUE_DE_MIN, get: () => SCALE_DE.band },
+    how: '1 × HUE_DE_MIN＝1 —— 「刻度與號碼帶是同一支漸層」＝ 兩者的差要落在人眼分不出來之內',
+    calc: () => 1 * TK.HUE_DE_MIN, get: () => TK.SCALE_DE.band },
   { id: 'SCALE_DE.adj', file: 'tokens.mjs', value: null, kind: 'derived', gate: 'G29',
-    how: '3 × HUE_DE_MIN —— 相鄰兩態要「一眼讀得出不一樣」，不是「盯著比才看得出來」',
-    calc: () => 3 * HUE_DE_MIN, get: () => SCALE_DE.adj },
+    how: '3 × HUE_DE_MIN＝3 —— 相鄰兩態要「一眼讀得出不一樣」，不是「盯著比才看得出來」',
+    calc: () => 3 * TK.HUE_DE_MIN, get: () => TK.SCALE_DE.adj },
   { id: 'SCALE_DE.ends', file: 'tokens.mjs', value: null, kind: 'derived', gate: 'G29',
-    how: '2 × SCALE_DE.adj —— 兩端之間隔了三步，每一步都要達到 adj，兩端至少是相鄰的兩倍',
-    calc: () => 2 * SCALE_DE.adj, get: () => SCALE_DE.ends },
+    how: '2 × SCALE_DE.adj＝6 —— 兩端之間隔了三步，每一步都要達到 adj，兩端至少是相鄰的兩倍',
+    calc: () => 2 * TK.SCALE_DE.adj, get: () => TK.SCALE_DE.ends },
   { id: 'CONTRAST.grain', file: 'tokens.mjs', value: 6, kind: 'ours', gate: 'G22', dir: 'min',
-    why: '顆粒層把底乘暗之後的下限。顆粒是每畫素的雜訊，最暗的那一格是極端值 —— 拿它當 AAA 門檻會逼整套色階失真，但它必須留在 AA（4.5）以上很多。實測最低 6.29，餘裕 0.29。' },
+    evid: { of: '顆粒層最暗的那一格', v: 6.27, dp: 2, get: () => M.grainMin },
+    why: '顆粒層把底乘暗之後的下限 6。顆粒是每畫素的雜訊，最暗的那一格是極端值 —— 拿它當 AAA 門檻會逼整套色階失真，但它必須留在 AA（4.5）以上很多。實測最低 6.27。' },
   { id: 'PHOTO_STOP_TOL', file: 'tokens.mjs', value: 0.04, kind: 'ours', gate: 'G31', dir: 'max',
-    why: '「少一格光」的容差。brightness() 是通道乘法而照片是實際像素，逐像素平均不會剛好落在 0.5；±0.04 是「看得出來是一格、而不是半格或兩格」的寬度。實測 mean 0.497／p99 0.490。' },
+    evid: { of: '亮度比偏離「一格光」最遠的一個量（mean 與 p99 取大）', v: 0.01, dp: 3, get: () => Math.max(Math.abs(M.photo.meanRatio - TK.PHOTO_STOP), Math.abs(M.photo.p99Ratio - TK.PHOTO_STOP)) },
+    why: '「少一格光」的容差 0.04。brightness() 是通道乘法而照片是實際像素，逐像素平均不會剛好落在 0.5；這是「看得出來是一格、而不是半格或兩格」的寬度。實測偏最遠的一個量是 0.010（mean 0.497／p99 0.490）。',
+    wide: '餘裕比 4 倍 —— 這一條**刻意留寬**：容差守的是「照片有沒有真的暗一格」，而偏差的大小取決於那張照片的直方圖，不是取決於我們的設計。把門檻收到 0.013 只會讓「換一張照片」變成 gate 失敗，而換照片本來就該換。真正在守的是符號（是不是一格），不是精度。' },
   { id: 'RULE.pause', file: 'tokens.mjs', value: 120, kind: 'ours', gate: 'G10', dir: 'max',
-    why: '內容之間的連續空白上限（手機 iPad 同一條）。超過的必須掛牌說理由 —— 這是意圖 gate 不是版面美學：120px 大約是一個主按鈕加一段間距，再大就會讓長輩以為畫面到此為止。' },
+    evid: { of: '流程板上最長的一段沒掛牌的連續空白', v: 104, dp: 0, get: () => voidMax() },
+    why: '內容之間的連續空白上限 120px（手機 iPad 同一條）。超過的必須掛牌說理由 —— 這是意圖 gate 不是版面美學：大約是一個主按鈕加一段間距，再大就會讓長輩以為畫面到此為止。實測最長的一段沒掛牌的空白是 104px。' },
   { id: 'RULE.btnPct', file: 'tokens.mjs', value: 70, kind: 'ours', gate: 'G10', dir: 'max',
-    why: '主按鈕中心必須落在畫面高度的 70% 以內。出處是拇指可及範圍的常識值（單手持握 6.1 吋機身），不是量出來的 —— 所以它需要邊界樣本。' },
+    evid: { of: '有尾段的流程板上，主按鈕中心最低的一個位置', v: 67.2, dp: 1, get: () => btnPctMax() },
+    why: '主按鈕中心必須落在畫面高度的 70% 以內。出處是拇指可及範圍的常識值（單手持握 6.1 吋機身），不是量出來的 —— 所以它需要邊界樣本。實測最低的一顆在 67.2%。' },
   { id: 'SP.l', file: 'tokens.mjs', value: 16, kind: 'ours', gate: 'G30', dir: 'min',
-    why: '玻璃與紙的交界 16pt 之內不得出現我們的浮起面（否則兩套光會疊在一起）。它取自間距階的 l，不是為這條 gate 挑的一個數 —— 但「為什麼是 l 不是 m」沒有外部出處，所以照樣要邊界樣本。' },
-  /* ── 判「規格本身」的那幾條 ──────────────────────────────────────
-     下面五條與上面的差別是**它們判的東西不是量出來的證據，是規格自己**：
-     G22／G23 拿 tokens.mjs 裡的色票去算色相差，再與門檻比。而負面對照的複本
-     只換得掉產物與 measured.json，換不掉 gate 自己 import 進來的規格（那是刻意的：
-     gate 的尺不能隨樣本變）。所以「把量到的值放到門檻帶內」這一招在這裡做不出來 ——
-     要做出一個「差一點點就不合格的設計」，得去解一個色票，那是另一件工程。
-     **登記在這裡而不是靜靜跳過**：每一條寫出做不到的理由、寫出目前的實測值，
-     並且列為下一輪的缺口。這是 MG4②b。 */
+    why: '玻璃與紙的交界 16pt 之內不得出現我們的浮起面（否則兩套光會疊在一起）。它取自間距階的 l，不是為這條 gate 挑的一個數 —— 但「為什麼是 l 不是 m」沒有外部出處，所以照樣要邊界樣本。',
+    noEvid: '**沒有實測值可以量，而且那正是它通過的方式**：交界附近一個我們的浮起面都沒有（M.glass 兩列的 nearRaise 都是 null），所以沒有「最近的一個離多遠」這個數。這一條守的是「不要出現」，零使用點時餘裕比無定義 —— 它的牙全押在邊界樣本上（bands 那一發把 nearRaise 放到 13pt）。哪一天交界旁邊真的出現浮起面，這一欄就會有數，⑤ 會自動開始要求餘裕比。' },
+  /* ── 判「規格本身」的那六條（第 8 輪 D7-01①：缺口關掉了）──────────────
+     第 6 輪這六條登記成「做不到邊界樣本」，理由是「對照複本換不掉 gate import 進來的色票」。
+     第 7 輪 reviewer 裁那個理由**不成立**：換不掉是因為第 6 輪用正則讀原始碼文字，
+     而不是因為換不掉。①改成從產物根目錄 import 整份色票之後，這六條的實測值
+     就跟其他條一樣是「從複本算出來的證據」—— 餘裕比量得到（⑤）、邊界樣本做得出來
+     （bands.mjs 後半段那六發：把色票轉一個角度，讓算出來的值剛好落到門檻另一邊）。 */
   { id: 'TEMP_TOL', file: 'tokens.mjs', value: 3, kind: 'ours', gate: 'G23', dir: 'max',
-    why: '四階台紙溫度（色相角）的容差。sRGB 是 8 bit 的網格，宣告的角度找不到剛好可表示的點；±3° 是「還讀得出同一階」的寬度。',
-    bandNA: '判的是規格本身（四階色票算出來的色相角），不是 measured.json 上的證據 —— 對照複本換不掉 gate import 進來的色票。要做邊界樣本必須反解出一個「偏差剛好 3.6° 」的色票並讓對照跑複本的 tokens.mjs：那是下一輪的工程。目前實測最大偏差遠小於門檻。' },
+    evid: { of: '四階台紙與宣告的 TEMP 差最遠的一階', v: 1.92, dp: 2, get: () => tempDev() },
+    why: '四階台紙溫度（色相角）的容差 ±3°。sRGB 是 8 bit 的網格，宣告的角度找不到剛好可表示的點；這是「還讀得出同一階」的寬度。實測差最遠的一階是 1.92°（深色的 cta）。',
+    wide: '餘裕比 1.56 —— 容差不是目標值，是「網格上找得到多近的點」的寬度。把它收到 1.92° 就等於宣稱「8 bit 網格保證能落在 1.92° 之內」，那不是我們能保證的事（換一個 L*／C* 就不成立）。留寬是對的，而寬多少現在寫在這裡，不再是「遠小於門檻」這種沒有數的話。' },
   { id: 'HUE_MIN.cool', file: 'tokens.mjs', value: 6, kind: 'ours', gate: 'G22', dir: 'min',
-    why: '開窗底（凹）比台紙冷的下限。取在實測（淺 9.31°／深 10.80°）下方留餘裕，但遠高於「一個色相四個明度」會有的 0–5°。',
-    bandNA: '同 TEMP_TOL：判的是色票算出來的角度不是證據。**而且這一條的餘裕很寬**（實測 9.31° 對門檻 6°，餘裕 55%）—— 就算做得出邊界樣本，它證明的也只是「比較式還活著」。真正該補的是把門檻往實測靠，那要先決定「冷到什麼程度才算冷」，是設計判斷不是 gate 工程。' },
+    evid: { of: '兩個模式裡「凹比台紙冷」最少的那一個', v: 9.31, dp: 2, get: () => Math.min(...hueTri().map((t) => t.cool)) },
+    why: '開窗底（凹）比台紙冷的下限 6°。取在實測下方留餘裕，但遠高於「一個色相四個明度」會有的 0–5°。實測最少的一個模式是 9.31°（淺色；深色 10.80°）。',
+    wide: '餘裕比 1.55 —— 門檻是「冷到什麼程度才算冷」的設計判斷，不是量出來的。把它往實測收，等於宣稱「凹一定要冷 9° 以上」，那會把未來所有配色都綁死在這一版的色票上。三條 HUE_MIN 統一用**比值尺**排序：span 1.17 < cool 1.55 < warm 1.57 —— 貼得最緊的是 span，不是 warm。' },
   { id: 'HUE_MIN.warm', file: 'tokens.mjs', value: 3, kind: 'ours', gate: 'G22', dir: 'min',
-    why: '同上，暖的那一端（實測淺 4.71°／深 4.81°）。暖端的餘裕本來就比冷端薄 —— 這件事登記在這裡，不藏在註解裡。',
-    bandNA: '同 HUE_MIN.cool。餘裕 57%（4.71° 對 3°）—— 三條 HUE_MIN 之中它與門檻最近，所以如果只補一條邊界樣本，先補這一條。' },
+    evid: { of: '兩個模式裡「次要面比台紙暖」最少的那一個', v: 4.71, dp: 2, get: () => Math.min(...hueTri().map((t) => t.warm)) },
+    why: '同上，暖的那一端，下限 3°。實測最少的一個是 4.71°（淺色；深色 4.81°）。暖端的絕對餘裕本來就比冷端薄 —— 這件事登記在這裡，不藏在註解裡。',
+    wide: '餘裕比 1.57 —— 三條 HUE_MIN 之中**比值最鬆**的一條。第 6 輪這裡寫著「它與門檻最近，要補先補這一條」：那句話用的是絕對差（4.71−3＝1.71° 比 14.02−12＝2.02° 小），與同一段裡 span 用的比值尺**互相矛盾**，兩把尺混在一份登記簿裡給出了相反的指令。第 8 輪統一成比值尺（門檻之間的絕對度數本來就不可比：3° 的 1.71 與 12° 的 2.02 不是同一件事），排序見 cool 那一條。' },
   { id: 'HUE_MIN.span', file: 'tokens.mjs', value: 12, kind: 'ours', gate: 'G22', dir: 'min',
-    why: '冷端到暖端的總跨距（實測 15.4°／15.6°）。它不是 cool+warm 的和 —— 兩端各自對台紙量，跨距是兩端互相量。',
-    bandNA: '同 HUE_MIN.cool。餘裕 28%（15.4° 對 12°）—— 三條裡比值最小的一條，所以它其實已經接近「邊界測試」的意義了，但那是巧合不是設計。' },
+    evid: { of: '兩個模式裡「凹到次要面」的總跨距最小的那一個', v: 14.02, dp: 2, get: () => Math.min(...hueTri().map((t) => t.span)) },
+    why: '冷端到暖端的總跨距，下限 12°。它不是 cool+warm 的和 —— 兩端各自對台紙量，跨距是兩端互相量。實測最小的一個模式是 14.02°（淺色；深色 15.61°）。第 6 輪這裡寫的是「15.4°／15.6°」——**那個 15.4 是假的**，淺色從來沒有到過 15.4；⑥ 的文字↔值對帳就是為了這種句子而寫的。' },
   { id: 'LIGHT_DH', file: 'tokens.mjs', value: 7, kind: 'ours', gate: 'G22', dir: 'max',
-    why: '「光」的漸層兩端色相差上限。光只改明度不改色相；7° 是同一支光在 8 bit 網格上量得到的抖動上限。',
-    bandNA: '同 TEMP_TOL。這一條與 TIME_DH 是一對：真正被守的是「兩族不重疊」（7 < 15），而那一句是可以用兩個常數直接斷言的 —— 見下面 MG4②b 的附帶檢查。' },
+    evid: { of: '五支「光」的漸層裡，兩端色相差最大的一支', v: 6.53, dp: 2, get: () => Math.max(...MODES().flatMap((th) => TK.LIGHT_KEYS.map((k) => dhOf(th, k)))) },
+    why: '「光」的漸層兩端色相差上限 7°。光只改明度不改色相；這是同一支光在 8 bit 網格上量得到的抖動上限。實測最大的一支是 6.53°（淺色 win）—— 餘裕比 1.07，全部門檻裡貼得最緊的一條。' },
   { id: 'TIME_DH', file: 'tokens.mjs', value: 15, kind: 'ours', gate: 'G22', dir: 'min',
-    why: '「時間」的漸層兩端色相差下限。褪色會把染料抽走、露出泛黃的紙，所以它必須明顯改色相 —— 15° 與 LIGHT_DH 的 7° 之間留一段不重疊的帶，兩族因此永遠分得開。',
-    bandNA: '同 LIGHT_DH（同一對）：判的是色票算出來的角度不是證據，複本換不掉 gate import 進來的規格。這一對真正被守著的事（兩族不重疊）由 MG4②b 的附帶斷言直接驗，不需要樣本。' },
+    evid: { of: '兩支「時間」的漸層裡，兩端色相差最小的一支', v: 38.33, dp: 2, get: () => Math.min(...MODES().flatMap((th) => ['paper', 'stub3'].map((k) => dhOf(th, k)))) },
+    why: '「時間」的漸層兩端色相差下限 15°。褪色會把染料抽走、露出泛黃的紙，所以它必須明顯改色相 —— 與 LIGHT_DH 的 7° 之間留一段不重疊的帶，兩族因此永遠分得開。實測最小的一支是 38.33°。',
+    wide: '餘裕比 2.56 —— 這一條與 LIGHT_DH 是一對，門檻畫在哪裡是由**兩族不重疊**決定的（7 與 15 中間留 8° 的帶），不是由實測決定的。把它往 38.33° 收，帶就變成 7–38，那不是「分得開」而是「只准這一種褪色」。真正被守的那一句由 ②b 的附帶斷言直接驗。' },
 ];
 {
   /* 邊界樣本讀的是**宣告**（bands.mjs），不是結果（selftest.json）。
      兩件事分開的理由是雞生蛋：baseline 要綠才跑得了對照，而對照的結果才讓 baseline 綠。
      「那一發真的轉紅了嗎」由 MG3③ 守（它本來就要求每一發都轉紅），這裡不重複。 */
   const bands = new Map();
-  for (const b of BANDS) bands.set(b.of, b);
+  for (const b of BD) bands.set(b.of, b);
   const bad1 = [], bad2 = [], bad3 = [], dead = [];
   for (const th of THRESHOLDS) {
     const lit = srcNum(th.file, th.id);
@@ -1652,12 +1805,15 @@ const THRESHOLDS = [
       if (!Number.isNaN(lit) && lit !== null) bad3.push(`${th.id} 在原始碼裡是字面值 ${lit} —— 可推導的門檻要寫成推導式（${th.how}）`);
       continue;
     }
-    if (lit === null || Number.isNaN(lit)) { (th.kind === 'std' ? bad1 : bad2).push(`${th.id} 在 ${th.file} 裡讀不到字面值`); continue; }
-    if (lit !== th.value) {
-      (th.kind === 'std' ? bad1 : bad2).push(`${th.id}：${th.file} 寫 ${lit}、登記簿寫 ${th.value}${th.kind === 'std' ? `（出處：${th.cite}）` : ''}`);
+    /* 值從 **import** 讀（第 8 輪 D7-01①）。第 6 輪讀的是原始碼文字，
+       所以一行誘餌註解就能讓這裡讀到「原來那個值」而放行被洗白的真值。 */
+    const now = impNum(th.id);
+    if (now === null) { (th.kind === 'std' ? bad1 : bad2).push(`${th.id} 在 ${th.file} 裡 import 不到數值`); continue; }
+    if (now !== th.value) {
+      (th.kind === 'std' ? bad1 : bad2).push(`${th.id}：${th.file} export 的是 ${now}、登記簿寫 ${th.value}${th.kind === 'std' ? `（出處：${th.cite}）` : ''}`);
       continue;
     }
-    if (th.kind === 'ours' && !th.bandNA) {
+    if (th.kind === 'ours') {
       const smp = bands.get(th.id);
       if (!smp) { bad2.push(`${th.id} 沒有邊界樣本 —— 無外部出處的門檻必須有一發落在門檻帶內的負面對照`); continue; }
       const r = th.dir === 'min' ? th.value / smp.v : smp.v / th.value;
@@ -1665,58 +1821,152 @@ const THRESHOLDS = [
     }
   }
   const std = THRESHOLDS.filter((t2) => t2.kind === 'std'), der = THRESHOLDS.filter((t2) => t2.kind === 'derived');
-  const ours = THRESHOLDS.filter((t2) => t2.kind === 'ours' && !t2.bandNA);
-  const na = THRESHOLDS.filter((t2) => t2.bandNA);
-  ok(bad1.length === 0 && std.every((t2) => t2.cite && t2.cite.length >= 20),
-    `MG4① 有外部出處的 ${std.length} 條門檻，值與出處都對得上：${std.map((t2) => `${t2.id}=${t2.value}`).join('、')}（把 tokens.mjs 裡任何一個改掉，這一條當場紅 —— 洗白不再是一行改動）`,
-    bad1.join(' · '));
+  const ours = THRESHOLDS.filter((t2) => t2.kind === 'ours');
+  /* ①＋②（第 8 輪 D7-01②）：引文不只要存在，**還要寫得出那個數**。
+     「出自 WCAG」而不寫值的引文，改門檻的時候一個字都不必動 —— 那不是出處，是背書。 */
+  const citeBad = std.filter((t2) => !t2.cite || t2.cite.length < 20 || !says(t2.cite, t2.value));
+  ok(bad1.length === 0 && citeBad.length === 0,
+    `MG4① 有外部出處的 ${std.length} 條門檻，值與出處都對得上，而且**每一句引文裡都寫著那個值**：${std.map((t2) => `${t2.id}=${t2.value}`).join('、')}（把 tokens.mjs 裡任何一個改掉，這一條當場紅 —— 洗白得同時改掉引文裡的數字）`,
+    [...bad1, ...citeBad.map((t2) => `${t2.id} 的引文裡找不到 ${t2.value} 這個數`)].join(' · '));
   ok(bad2.length === 0,
-    `MG4②a 沒有外部出處、而且判的是實測證據的 ${ours.length} 條門檻，每一條都有一發**落在門檻帶內**（≤1.3×）而且真的轉紅的負面樣本：${ours.map((t2) => { const s3 = bands.get(t2.id); return `${t2.id}=${t2.value}→樣本 ${s3 ? s3.v : '無'}`; }).join('、')}`,
+    `MG4②a 我們自己開的 ${ours.length} 條門檻，每一條都有一發**落在門檻帶內**（≤1.3×）而且真的轉紅的負面樣本：${ours.map((t2) => { const s3 = bands.get(t2.id); return `${t2.id}=${t2.value}→樣本 ${s3 ? s3.v : '無'}`; }).join('、')}`,
     bad2.join(' · '));
-  /* ②b：做不到邊界樣本的那幾條，理由要具名、要寫得出「為什麼做不到」。
-     這一條不是通融 —— 它把一個**已知的缺口**變成一份寫下來的清單，
-     下一輪要嘛補樣本、要嘛把它從登記簿刪掉。附帶再驗一件真正被守著的事：
-     光與時間兩族的門檻不重疊（那一句可以只用兩個常數斷言，不需要樣本）。 */
-  const naBad = na.filter((t2) => !t2.bandNA || t2.bandNA.length < 60);
-  ok(naBad.length === 0 && LIGHT_DH < TIME_DH,
-    `MG4②b 做不到邊界樣本的 ${na.length} 條，每一條都具名寫出為什麼（判的是規格本身，不是 measured.json 上的證據 —— 對照複本換不掉 gate import 進來的色票）：${na.map((t2) => t2.id).join('、')}。附帶斷言：光（≤${LIGHT_DH}°）與時間（≥${TIME_DH}°）兩族的門檻不重疊，中間留著 ${TIME_DH - LIGHT_DH}° 的帶`,
-    [...naBad.map((t2) => `${t2.id} 沒寫出做不到的理由`), LIGHT_DH < TIME_DH ? '' : `LIGHT_DH ${LIGHT_DH} 與 TIME_DH ${TIME_DH} 重疊了`].filter(Boolean).join(' · '));
+  /* ②b：第 6 輪這裡是一份「做不到邊界樣本」的缺口清單（六條色票門檻）。
+     第 8 輪那六條補上了（①讓複本的色票也讀得到），所以這一條現在守的是
+     **清單必須是空的**：想再往裡面放東西，就得先寫出為什麼做不到。
+     附帶仍然驗那件真正被守著的事：光與時間兩族的門檻不重疊。 */
+  const gapList = THRESHOLDS.filter((t2) => t2.kind === 'ours' && !t2.evid);
+  const gapBad = gapList.filter((t2) => !t2.noEvid || t2.noEvid.length < 60);
+  ok(gapBad.length === 0 && TK.LIGHT_DH < TK.TIME_DH,
+    `MG4②b 量不到實測值的門檻只剩 ${gapList.length} 條（${gapList.map((t2) => t2.id).join('、') || '一條都沒有'}），而且它具名寫出為什麼量不到 —— 第 6 輪這裡有六條色票門檻登記著「做不到邊界樣本」，第 7 輪 reviewer 裁那個理由不成立（是讀值方式的後果，不是事實），第 8 輪六條全部補上。附帶斷言：光（≤${TK.LIGHT_DH}°）與時間（≥${TK.TIME_DH}°）兩族的門檻不重疊，中間留著 ${TK.TIME_DH - TK.LIGHT_DH}° 的帶`,
+    [...gapBad.map((t2) => `${t2.id} 沒寫出量不到的理由`), TK.LIGHT_DH < TK.TIME_DH ? '' : `LIGHT_DH ${TK.LIGHT_DH} 與 TIME_DH ${TK.TIME_DH} 重疊了`].filter(Boolean).join(' · '));
   ok(bad3.length === 0,
     `MG4③ 可以推導的 ${der.length} 條門檻寫成推導式，沒有自由度可以被調：${der.map((t2) => `${t2.id}＝${t2.how.split(' —— ')[0]}`).join('；')}`,
     bad3.join(' · '));
   const thin = THRESHOLDS.filter((t2) => t2.kind === 'ours' && (!t2.why || t2.why.length < 40));
   ok(dead.length === 0 && thin.length === 0,
-    `MG4④ 登記簿上沒有死掉的門檻：${THRESHOLDS.length} 條全部真的被 gate 用著（${std.length} 條有外部出處、${der.length} 條是推導、${ours.length + na.length} 條是我們自己開的線），而且每一條自己開的線都寫得出它為什麼畫在那裡`,
+    `MG4④ 登記簿上沒有死掉的門檻：${THRESHOLDS.length} 條全部真的被 gate 用著（${std.length} 條有外部出處、${der.length} 條是推導、${ours.length} 條是我們自己開的線），而且每一條自己開的線都寫得出它為什麼畫在那裡`,
     [...dead.map((d) => `${d} 登記了卻沒有 gate 在用`), ...thin.map((t2) => `${t2.id} 沒寫理由`)].join(' · '));
+
+  /* ── ⑤ 餘裕比：門檻 vs **實測**（第 8 輪 D7-01③）───────────────────
+     第 6 輪的餘裕比是「門檻 vs 邊界樣本」—— 兩個數都在洗白者手上，一起往下移
+     就永遠貼著（reviewer 的 N3c）。實測不在他手上：它是瀏覽器量回來的，
+     或是整份色票算出來的。所以這裡改成：
+       ① 實測值必須真的落在門檻的合格側（門檻 < 實測，或反向）
+       ② 登記的實測值 ＝ 現算的實測值（登記簿不准對實測說謊）
+       ③ 餘裕比 ≤1.3；超過的要具名寫 wide，而且**那句話裡要寫出比值** ——
+          所以放寬門檻會讓比值變大、與 wide 裡寫的數對不上，當場紅。 */
+  const withEvid = THRESHOLDS.filter((t2) => t2.evid);
+  const mBad = [], shown = [];
+  for (const th of withEvid) {
+    const raw = th.evid.get(), v = +raw.toFixed(th.evid.dp);
+    if (!Number.isFinite(raw)) { mBad.push(`${th.id} 的實測值算不出來`); continue; }
+    if (v !== th.evid.v) { mBad.push(`${th.id} 登記的實測值 ${th.evid.v}、現算是 ${v}（${th.evid.of}）`); continue; }
+    const r = th.dir === 'min' ? raw / th.value : th.value / raw;
+    const rr = +r.toFixed(2);
+    shown.push(`${th.id} ${th.value}／實測 ${v}＝×${rr.toFixed(2)}`);
+    if (!(r > 1)) { mBad.push(`${th.id} 實測 ${v} 沒有落在門檻 ${th.value} 的合格側`); continue; }
+    if (r > 1.3 && (!th.wide || th.wide.length < 60)) mBad.push(`${th.id} 餘裕比 ×${rr}（>1.3），要具名寫出為什麼故意不貼緊`);
+    else if (r > 1.3 && !says(th.wide, rr)) mBad.push(`${th.id} 的 wide 裡沒有寫出比值 ${rr}`);
+  }
+  ok(mBad.length === 0,
+    `MG4⑤ 餘裕比量的是「門檻 vs 實測」不是「門檻 vs 樣本」：${withEvid.length} 條門檻逐條現算實測、與登記簿對帳，全部落在合格側；${withEvid.filter((t2) => !t2.wide).length} 條貼著線（≤1.3×）、${withEvid.filter((t2) => t2.wide).length} 條具名登記為刻意留寬並寫出比值 —— ${shown.join('、')}`,
+    mBad.join(' · '));
+
+  /* ── ⑥ 文字↔值對帳，母體＝全部 20 條（第 8 輪 D7-01⑤）──────────────
+     G20 早就有這個機制（註記裡的數字回頭比對出處），只是母體只有 canvas.json 的註記。
+     推廣到登記簿：每一條的散文裡都要出現它的門檻值；有實測的還要出現實測值。
+     本輪它當場抓到兩句假話 —— 跨距寫「15.4°」（實為 14.02）、顆粒寫「6.29」（實為 6.27）。
+     比的是**數值**不是字串，所以引文寫 7.0:1 也對得上門檻 7。 */
+  const pBad = [];
+  for (const th of THRESHOLDS) {
+    const prose = [th.cite, th.why, th.how, th.wide, th.noEvid].filter(Boolean).join(' ');
+    const want = th.kind === 'derived' ? th.calc() : th.value;
+    if (!says(prose, want)) pBad.push(`${th.id} 的說明裡沒有出現它的值 ${want}`);
+    if (th.evid && !says(prose, th.evid.v)) pBad.push(`${th.id} 的說明裡沒有出現實測值 ${th.evid.v}（${th.evid.of}）`);
+  }
+  ok(pBad.length === 0,
+    `MG4⑥ 文字↔值對帳，母體是全部 ${THRESHOLDS.length} 條（不是十分之一）：每一條的說明裡都寫得出它的門檻值，有實測的 ${withEvid.length} 條連實測值一起寫出來，兩種數都回頭比對 —— 散文裡的數字從此也是被驗的東西`,
+    pBad.join(' · '));
 }
 
-/* ══ G33  字樣的出處（第 6 輪換蠟筆）════════════════════════════
+/* ══ G33  字樣的出處（第 6 輪換蠟筆；第 8 輪 D7-02 把閉環打開）════════
    第 1–5 輪的字標是這一份程式自己畫的（brush.mjs 的貝茲筆跡），所以「板上畫的
    是不是我們宣稱的那一份幾何」可以直接比 —— 兩邊都在同一個檔案裡。
    換成**外部素材描摹**之後多了一段以前沒有的距離：ink.mjs 裡那串 37KB 的 path
    要怎麼證明它真的出自那張蠟筆，而不是誰手改過一筆、或換了一張圖？
 
-   三條：
+   第 7 輪 reviewer 把第 6 輪的三條打穿了：**它是一個閉環**。①比的是「宣告的雜湊」
+   對「磁碟上那張圖的雜湊」，兩個數都在同一隻手上 —— 換一張家庭照進來、順手把 ink.mjs
+   宣告的 sha256 也改成新的，①②③ 全綠，而那 37KB 的 path 與畫面上的字，
+   跟那張新圖一點關係也沒有。**出處是宣告，不是重現。**
+
+   五條（④⑤是第 8 輪補的牙）：
      ① ink.mjs 記著來源檔的 SHA-256，這裡回頭雜湊磁碟上那張 PNG 比對
         （換了圖不改宣告 → 紅；改了宣告不換圖 → 紅）
      ② 描摹的每一個參數都記著（二值化門檻、碎屑、補洞、DP 容差）——
         「顆粒留多少」是設計決定，不是描摹器的預設值
-     ③ 板上畫的字標與 ink.mjs 的 path 逐字元相同（與 G26「板上畫的就是被量的那一份」同一招）*/
+     ③ 板上畫的字標與 ink.mjs 的 path 逐字元相同（與 G26「板上畫的就是被量的那一份」同一招）
+     ④ **拿 ② 宣告的那組參數，對 ① 那張圖當場重跑一次 trace.py**（--check 不寫檔），
+        輸出的 d 必須逐字元等於 LOCKUP.d。換圖＋同步改宣告雜湊在這裡當場紅：
+        新圖描出來的不是這 40 條輪廓。出處從「一句宣告」升級成「一次重現」。
+     ⑤ 「字間的白比字內最大的白還窄，所以讀成一個詞」——第 6 輪這是一句**目測**。
+        現在從 LOCKUP.d 自己算：even-odd 光柵化，量兩字之間那條全空直欄的寬度，
+        與左右兩字各自最大的反白（counter）比。宣稱因此綁在幾何上，換字就會重算。
+
+   ink.mjs 是**產物**（trace.py 產生的），不是 gate 程式 —— 所以這裡從產物根目錄讀它，
+   不用 import 進來的那一份。負面對照才有辦法把「被動過手腳的宣告」餵進來。 */
+const Ink2 = await import(at('ink.mjs').href);
 {
-  const png = at(Ink.SRC.file);
+  const png = at(Ink2.SRC.file);
   const sha = existsSync(png) ? createHash('sha256').update(readFileSync(png)).digest('hex') : null;
-  ok(sha === Ink.SRC.sha256,
-    `G33① 字樣出自那張蠟筆：ink.mjs 記著來源 ${Ink.SRC.file}（${Ink.SRC.w}×${Ink.SRC.h}）的 SHA-256 #${Ink.SRC.sha256.slice(0, 12)}，磁碟上那張圖重算是 #${(sha || '（檔案不見了）').slice(0, 12)}`,
-    sha === Ink.SRC.sha256 ? '' : '兩者不同 —— 換了圖就要重跑 python3 trace.py，手改 path 再宣稱它出自那張圖會停在這裡');
-  const T3 = Ink.TRACE;
+  ok(sha === Ink2.SRC.sha256,
+    `G33① 字樣出自那張蠟筆：ink.mjs 記著來源 ${Ink2.SRC.file}（${Ink2.SRC.w}×${Ink2.SRC.h}）的 SHA-256 #${Ink2.SRC.sha256.slice(0, 12)}，磁碟上那張圖重算是 #${(sha || '（檔案不見了）').slice(0, 12)}`,
+    sha === Ink2.SRC.sha256 ? '' : '兩者不同 —— 換了圖就要重跑 python3 trace.py，手改 path 再宣稱它出自那張圖會停在這裡');
+  const T3 = Ink2.TRACE;
   ok([T3.alphaT, T3.speck, T3.hole, T3.eps, T3.unit].every((v) => typeof v === 'number') && T3.eps > 0 && T3.eps <= 2,
     `G33② 描摹的參數是設計決定的，逐個記著：二值化門檻 ${T3.alphaT}、碎屑下限 ${T3.speck}px²、補洞上限 ${T3.hole}px²、DP 容差 ${T3.eps} 原圖像素（顆粒的存廢就在這個數上：抬到 2.2 以上邊緣就開始像麥克筆）、字身單位 ${T3.unit}`,
     `eps=${T3.eps}`);
   const inked = files.filter((f) => read(f).includes('data-lockup="1"'));
-  const off = inked.filter((f) => !read(f).includes(Ink.LOCKUP.d));
+  const off = inked.filter((f) => !read(f).includes(Ink2.LOCKUP.d));
   ok(inked.length > 0 && off.length === 0,
-    `G33③ 板上畫的就是 ink.mjs 那一份：${inked.length} 張帶字標的板，path 資料（${Ink.LOCKUP.n} 條輪廓、${(Ink.LOCKUP.d.length / 1024).toFixed(1)}KB）逐字元相同，viewBox ${Ink.LOCKUP.vb.w}:${Ink.LOCKUP.vb.h}，fill-rule ${Ink.FILL_RULE}（外框與洞在同一個 d 裡，靠 even-odd 分）`,
+    `G33③ 板上畫的就是 ink.mjs 那一份：${inked.length} 張帶字標的板，path 資料（${Ink2.LOCKUP.n} 條輪廓、${(Ink2.LOCKUP.d.length / 1024).toFixed(1)}KB）逐字元相同，viewBox ${Ink2.LOCKUP.vb.w}:${Ink2.LOCKUP.vb.h}，fill-rule ${Ink2.FILL_RULE}（外框與洞在同一個 d 裡，靠 even-odd 分）`,
     off.join(' '));
+
+  /* ④ 重現。環境變數餵的是 ink.mjs **自己宣告的**那一組參數 —— 所以「參數宣告」
+     與「來源圖」一起被驗：任何一邊被動過，重跑出來的 d 就對不上。 */
+  {
+    let out = null, err = '';
+    try {
+      out = JSON.parse(execFileSync('python3', [at('trace.py').pathname, '--check'], {
+        encoding: 'utf8',
+        maxBuffer: 1 << 26,
+        env: {
+          ...process.env,
+          LS_TRACE_SRC: at(Ink2.SRC.file).pathname,
+          LS_TRACE_ALPHA_T: String(T3.alphaT), LS_TRACE_SPECK: String(T3.speck), LS_TRACE_HOLE: String(T3.hole),
+          LS_TRACE_EPS: String(T3.eps), LS_TRACE_UNIT: String(T3.unit), LS_TRACE_DEC: String(T3.dec),
+        },
+      }));
+    } catch (e) { err = String(e.stderr || e.message).split('\n').slice(-3).join(' '); }
+    const same = !!out && out.d === Ink2.LOCKUP.d && out.n === Ink2.LOCKUP.n
+      && out.vb.w === Ink2.LOCKUP.vb.w && out.vb.h === Ink2.LOCKUP.vb.h;
+    ok(same,
+      `G33④ 出處是**重現**不是宣告：拿 ② 那組參數對 ① 那張圖重跑一次 trace.py --check（不寫檔），輸出 ${out ? out.n : '?'} 條輪廓、viewBox ${out ? `${out.vb.w}:${out.vb.h}` : '?'}、d 共 ${out ? out.d.length : '?'} 字元，與 ink.mjs 的 LOCKUP.d **逐字元相同** —— 換一張圖再把宣告的雜湊同步改掉（①②③ 全綠的那一手）會停在這裡`,
+      err ? `重跑不起來：${err}（需要 python3 ＋ numpy／opencv-python／Pillow）`
+        : (out ? `重跑得到 ${out.n} 條輪廓、d ${out.d.length} 字元，與宣告的 ${Ink2.LOCKUP.n} 條／${Ink2.LOCKUP.d.length} 字元不同` : ''));
+  }
+
+  /* ⑤ 字距。even-odd 光柵化之後：
+       字間白 ＝ 兩字之間那一段**整條直欄都沒有墨**的最寬處
+       字內白 ＝ 不與外界連通的白（counter），左右兩字各取最寬的一個
+     單位是字身單位（LOCKUP 的座標系，總寬 ${vb.w}），所以它不隨畫面上畫多大而變。 */
+  {
+    const s5 = Icon.counterStats({ d: Ink2.LOCKUP.d, vb: Ink2.LOCKUP.vb });
+    ok(s5.n >= 2 && s5.gap > 0 && s5.gap < Math.min(s5.left, s5.right),
+      `G33⑤ 字距不是排出來的、是量出來的：字間白 ${s5.gap.toFixed(1)} 個字身單位，比左字最大的反白 ${s5.left.toFixed(1)}、右字 ${s5.right.toFixed(1)} 都窄（窄 ${((1 - s5.gap / Math.min(s5.left, s5.right)) * 100).toFixed(1)}%）—— 所以「萌芽」讀成一個詞不是兩個字。${s5.n} 個反白全部由 LOCKUP.d 的 even-odd 光柵化算出來（板上印的就是這三個數），換字樣就會重算`,
+      `字間白 ${s5.gap.toFixed(1)} vs 反白 ${s5.left.toFixed(1)}／${s5.right.toFixed(1)}（counter ${s5.n} 個）—— 字間白不再是最窄的白，那一句宣稱就不成立了`);
+  }
 }
 
 /* ══ G34  板級排除登記簿（第 6 輪 D5-04）══════════════════════════
@@ -1777,8 +2027,16 @@ if (process.env.LS_SELFTEST) {
       `MG3③ ${live.length} 發壞樣本**全部轉紅**（每一發都指名它應該咬到的那一條）：${live.map((x) => `${x.id}→${x.gate}`).join('、')}`,
       green.map((x) => `${x.id} 沒有任何 gate 叫 —— 這就是漏洞本人`).join(' · '));
     const wrong = live.filter((x) => x.red && !x.hitExpected);
+    /* 第 7 輪 reviewer：這一條的散文（「只咬指名的那一條」）與實作（inclusion）對不上。
+       第 8 輪選「改字」而不是「改實作」，理由是實作本來就是對的：一發壞樣本
+       同時驚動別的 gate 很常見而且**不是壞事**（改壞 measured.json 一定會連帶咬 G21
+       產物同版、改壞板一定會連帶咬 G17 截圖同版）。要求「只有一條會叫」等於要求
+       每一發都繞過所有連帶關係，那會把樣本寫成不真實的形狀。
+       這一條真正在守的是「**不是別人代它叫的**」：指名的那一條必須在叫的名單裡。
+       所以散文改成 inclusion，並且把連帶叫的那幾條印出來 —— 看得見才叫誠實。 */
+    const collateral = [...new Set(live.flatMap((x) => (x.hits || []).filter((h) => h !== x.gate)))];
     ok(wrong.length === 0,
-      'MG3④ 咬到的是**指名的那一條**，不是別的 gate 順便叫（不然下一次別的地方改壞了，這一發會誤報成綠）',
+      `MG3④ 指名的那一條**在叫的名單裡**（inclusion，不是「只有它在叫」）：一發壞樣本連帶驚動別的 gate 是常態也是對的 —— 改壞 measured.json 必然連帶咬 G21、改壞板必然連帶咬 G17。本次連帶叫到的是 ${collateral.join('／') || '（沒有）'}。這一條守的是「不是別人代它叫的」`,
       wrong.map((x) => `${x.id} 期望 ${x.gate}，實際叫的是 ${x.hits.slice(0, 2).join('/')}`).join(' · '));
     /* 暫停中的樣本：它指名的那一族必須**真的在豁免登記簿上**。
        沒有這一條，「暫停」就是一個誰都可以寫的字串 —— 想關掉哪一發就關掉哪一發。 */
