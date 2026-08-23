@@ -142,6 +142,7 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 | 設計稿須過 visual-reviewer 對抗審查（≥3 輪迭代）才送人核 | 掛在 Design 狀態出口：ticket 須有**三輪以上輪次標記的審查記錄**＋末輪 APPROVE，orchestrator 轉換狀態時逐輪清點 | ⚠️ 人工（狀態機承載） |
 | ui-designer 必先載入 frontend-design skill | 無機械 gate——skill 載入發生在 subagent 內部；handoff checklist 有「skill 影響了哪些取捨」欄（載入失敗須明說），orchestrator 驗 handoff 兜底（LS-32） | ⚠️ 人工 |
 | .pen 設計稿必須真實落地（Pencil 無 save 工具，編輯只在 app 記憶體） | `scripts/gates/design-landing-check.sh`：0 bytes／壞 JSON／空結構即紅，`--expect-nodes` 驗與畫布一致；**commit-gate 對 staged .pen 自動觸發＋CI rules job 對 diff 內 .pen 兜底**（皆無 N——「落地比記憶體舊」的深度驗證靠收工程序步驟 2/4，PR review 驗 handoff 輸出）（LS-26） | ✅ hook＋CI（深度驗證⚠️程序） |
+| MCP 必要 env 變數必須存在（FIGMA_PERSONAL_ACCESS_TOKEN） | `.mcp.json` 的 `${VAR:?}` 展開——缺失／空值時 server 啟動即炸，`/mcp` 可見（LS-42） | ✅（fail loud 設計） |
 | project.yml ↔ .xcodeproj 同步（XcodeGen 雙來源） | CI：重跑 `xcodegen generate` 後 `git add -A -- LittleSprout.xcodeproj && git diff --cached --exit-code`（涵蓋 xcodegen 產生的全新 untracked 檔，LS-10 補上原本只比對已追蹤檔案的盲區；生成物 byte-identical，不 flaky；雙向漂移皆攔） | ✅ |
 | 雲端 DB 不得繞過 migration 直改 | supabase MCP 鎖 `read_only=true`（機械）；dashboard 路徑靠規約 | ⚠️ 混合 |
 | harness 檔 back-merge 到 test／development | 無機械 gate——orchestrator 在 LS ticket 驗收條件中列入並人工確認 | ⚠️ 人工 |
