@@ -95,6 +95,7 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 
 - Team key：`LS`（workspace `little-sprout-app`）。**Linear 是唯一的任務狀態來源**；每個狀態的離開就是一個 gate，由 orchestrator 執行轉換並在 ticket 留 comment 記錄 gate 證據。
 - MCP 設定在專案 `.mcp.json`；session 重啟後用 `/mcp` 完成 OAuth。
+- **MCP 必要環境變數**：repo 根 `.env`（gitignored）須含 `FIGMA_PERSONAL_ACCESS_TOKEN`（figma MCP 啟動時注入；缺失即啟動失敗 fail loud——LS-42）。`.env` 的值一律只認 key 名、不讀取。
 - **開票結構**：Project＝epic；Milestone＝feature 群（同一 epic 底下相關的一批 issue）；Issue＝story，必須帶可驗證的驗收條件（同 §1 的 Spec 狀態離開條件）；Sub-issue＝task，**只有在單一 story 需要多個 agent 接力完成**（例如設計→實作→審查分屬不同派工、無法一個 agent 一次做完）時才拆，拆分依據與各 task 的範圍寫在該 story 的 ticket scope 裡，不預先拆。
 
 | 狀態 | 離開條件（gate） |
