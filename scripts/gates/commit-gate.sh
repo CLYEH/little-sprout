@@ -29,6 +29,16 @@ esac
 added=$(git diff --cached --diff-filter=ACM --unified=0 | grep '^+' | grep -v '^+++' || true)
 printf '%s\n' "$added" | bash "$(git rev-parse --show-toplevel)/scripts/gates/scan-secrets.sh"
 
+# staged .pen 設計稿落地檢查（LS-26：機械觸發點——不靠 agent 記得跑收工程序）
+# for 迴圈而非 pipe|while：檢查失敗要能中止整個 gate，不被 subshell 吞掉
+staged_pen=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACM | grep '\.pen$' || true)
+if [ -n "$staged_pen" ]; then
+  root=$(git rev-parse --show-toplevel)
+  while IFS= read -r p; do
+    bash "${root}/scripts/gates/design-landing-check.sh" "${root}/${p}"
+  done <<< "$staged_pen"
+fi
+
 # staged Swift 檔 lint（fail loud：有 Swift 變更但沒裝 SwiftLint 就擋下，不靜默跳過）
 staged_swift=$(git diff --cached --name-only --diff-filter=ACM | grep '\.swift$' || true)
 if [ -n "$staged_swift" ]; then

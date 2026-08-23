@@ -120,6 +120,18 @@ jobs:
             exit 1
           fi
 
+      # LS-26：.pen 落地結構兜底（本機 commit-gate 的伺服器端對應；
+      # 無 --expect-nodes——「落地比記憶體舊」的深度驗證靠收工程序＋handoff 證據）
+      - name: .pen 落地結構檢查
+        run: |
+          base_sha=$(git merge-base "origin/$BASE" HEAD)
+          pens=$(git -c core.quotePath=false diff --name-only --diff-filter=ACM "$base_sha"...HEAD -- '*.pen' || true)
+          if [ -n "$pens" ]; then
+            while IFS= read -r p; do
+              bash scripts/gates/design-landing-check.sh "$p"
+            done <<< "$pens"
+          fi
+
   # DB migration gate 的執行面（LS-11）：CI 實際跑 supabase/tests/run.sh（RLS 隔離／owner
   # 不變量／trigger／併發／RLS plan 效能），把 §7 對照表「migration 必附 RLS 測試」從
   # 「有沒有動測試檔」的弱驗證，補強成「測試真的綠」。
