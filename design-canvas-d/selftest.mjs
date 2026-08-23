@@ -85,6 +85,52 @@ const runMeasure = (dir) => {
   }
 };
 
+/* ── MG4⑩ 專用的複製法（第 12 輪 D11-01）─────────────────────────────
+   上面 stage() 的複本不含 .git（見檔頭①：mkdtempSync 開在系統暫存目錄，
+   本來就不在任何 git 歷史裡）——verify.mjs 的 MG4⑩ 在那種複本裡只會印
+   SKIP，不計入 fail，這正是它的設計（38 發裡沒有一發是在測那一條）。
+   要真的咬到 MG4⑩，複本必須是真的 git work tree：`git worktree add
+   --detach` 開一份共用同一個物件庫的連結工作樹，git show／merge-base 在
+   裡面跑得動。worktree add 只給得到 HEAD 那次 commit 的版本，不是這一輪
+   剛寫在磁碟上、還沒 commit 的 verify.mjs／MG4⑩ 本身——所以開出工作樹之後
+   還要疊一次「現在磁碟上」的內容（跟 stage() 同一份複製邏輯），物件庫
+   本身不動，只換工作樹裡的檔案。 */
+const stageGitWT = () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ls38d-gitwt-'));
+  rmSync(dir, { recursive: true, force: true });   // git worktree add 要求目標路徑不存在
+  execFileSync('git', ['worktree', 'add', '--detach', '--quiet', dir, 'HEAD'], { cwd: HERE, encoding: 'utf8' });
+  const sub = join(dir, 'design-canvas-d');
+  for (const f of readdirSync(HERE)) {
+    if (/^(node_modules|shots|\.git)$/.test(f)) continue;
+    if (/album-board\.html$/.test(f)) continue;
+    cpSync(join(HERE, f), join(sub, f), { recursive: true });
+  }
+  mkdirSync(join(sub, 'shots'), { recursive: true });
+  for (const f of readdirSync(join(HERE, 'shots'))) cpSync(join(HERE, 'shots', f), join(sub, 'shots', f));
+  return sub;
+};
+const unstageGitWT = (sub) => {
+  const root = sub.replace(/\/design-canvas-d\/?$/, '');
+  try { execFileSync('git', ['worktree', 'remove', '--force', root], { cwd: HERE, encoding: 'utf8' }); }
+  catch { rmSync(root, { recursive: true, force: true }); try { execFileSync('git', ['worktree', 'prune', '--force'], { cwd: HERE }); } catch { /* 收尾失敗不影響這一發的判定 */ } }
+};
+/* 跑複本**自己的** verify.mjs（不是本尊那一份）——這一發要驗的是「有 commit
+   權限的人連 verify.mjs 自己的登記簿都一起改」，本尊的 verify.mjs 不會有
+   那個被改過的 value，跑本尊等於白跑（同一個理由，N3c 系列也是跑複本自己
+   的 tokens.mjs 生效，但那些發沒有動 verify.mjs 的登記簿本身）。git 指令的
+   cwd 就是這個 sub（真的 work tree），MG4⑩ 的 git show／merge-base 讀到的
+   是真的歷史。 */
+const runVerifyGitWT = (dir) => {
+  try {
+    execFileSync(process.execPath, [join(dir, 'verify.mjs')], { encoding: 'utf8', maxBuffer: 1 << 26 });
+    return { code: 0, hits: [] };
+  } catch (e) {
+    const out = (e.stdout || '') + (e.stderr || '');
+    const hits = [...new Set([...out.matchAll(/^(?:FAIL|SKIP)\s+(MG\d|G\d+[a-z]?)/gm)].map((m) => m[1]))];
+    return { code: e.status || 1, hits, out };
+  }
+};
+
 /* ── 壞樣本表：每一發都寫「它模擬的是哪一種真實的漏法」 ── */
 const SAMPLES = [
   {
@@ -245,6 +291,41 @@ const SAMPLES = [
     why: '板名、尺寸、_root.json 全部一樣，只有內容差一個字元 —— 這正是第 2 輪那台殘留 server 的形狀。',
     mutate: (d) => edit(d, 'Notes.dc.html', (s) => s.replace('實作註記', '實作註記 ')),
   },
+  /* ── 第 12 輪 D11-01：lock 對 git 歷史錨定（MG4⑩）────────────────────
+     round-11 reviewer 的攻擊重放（atk6.mjs 的 P4）：不寫 moved，直接把
+     tokens.mjs／verify.mjs 的 value 與 thresholds.lock.json 的 value 一起
+     洗到同一個新數字——th.value === locked.value 從此恆真，MG4⑦「沒有
+     moved 就是紅」那一支被繞過去，MG4②a／⑤也因為兩邊一起動看不出破綻。
+     這一發跑在真的 git work tree 裡（stageGitWT／runVerifyGitWT，見上）——
+     MG4⑩ 回頭問 git：lock.sha（974fd99）那次 commit 裡 RULE.btnPct 的 value
+     仍然是 70，跟 lock 現在記的 85 對不上，這裡當場咬，而且**只咬 MG4⑩**：
+     ①②a／⑤／⑦都在複本自己的三個地方（tokens.mjs／verify.mjs／lock.json）
+     互相對得上，不會叫；G10（用到 RULE.btnPct 的 gate）也不會叫，因為
+     bands.mjs 的邊界樣本跟著一起下移，餘裕比照樣落在合格側。 */
+  {
+    id: 'D11-01-lock 的 value 被改成與登記簿一致（無 moved，MG4⑩）', gate: 'MG4', run: runVerifyGitWT,
+    stage: stageGitWT, unstage: unstageGitWT,
+    why: 'round-11 reviewer 的 atk6 P4 重放：thresholds.lock.json 自己是一本沒有錨的登記簿——把 tokens.mjs 的 RULE.btnPct、verify.mjs 登記簿裡這一條的 value、thresholds.lock.json 的 value 三個地方一起從 70 洗成 85（外加 bands.mjs 的邊界樣本跟著下移到 88，讓②a／⑤也貼線），沒有寫 moved 動議。MG4⑦只信 lock 自己寫的 value，改完仍然互相對得上，直接放行。MG4⑩ 不信 lock 自己：回頭問 git，lock.sha 指的那次 commit（974fd99）裡 verify.mjs 寫的仍然是 70——與 lock 現在記的 85 對不上，這裡咬。',
+    mutate: (d) => {
+      edit(d, 'tokens.mjs', (s) => s.replace('export const RULE = { pause: 120, btnPct: 70 };', 'export const RULE = { pause: 120, btnPct: 85 };'));
+      edit(d, 'verify.mjs', (s) => s.replace(
+        `{ id: 'RULE.btnPct', file: 'tokens.mjs', value: 70, kind: 'ours', gate: 'G10', dir: 'max',\n    evid: { of: '有尾段的流程板上，主按鈕中心最低的一個位置', v: 67.2, dp: 1, get: () => btnPctMax() },\n    why: '主按鈕中心必須落在畫面高度的 70% 以內。出處是拇指可及範圍的常識值（單手持握 6.1 吋機身），不是量出來的 —— 所以它需要邊界樣本。實測最低的一顆在 67.2%。' },`,
+        `{ id: 'RULE.btnPct', file: 'tokens.mjs', value: 85, kind: 'ours', gate: 'G10', dir: 'max',\n    evid: { of: '有尾段的流程板上，主按鈕中心最低的一個位置', v: 67.2, dp: 1, get: () => btnPctMax() },\n    why: '主按鈕中心必須落在畫面高度的 85% 以內。出處是拇指可及範圍的常識值（單手持握 6.1 吋機身），不是量出來的 —— 所以它需要邊界樣本。實測最低的一顆在 67.2%。' },`,
+      ));
+      edit(d, 'bands.mjs', (s) => s.replace("id: '邊界－主按鈕剛好掉出可及範圍', of: 'RULE.btnPct', v: 72,", "id: '邊界－主按鈕剛好掉出可及範圍', of: 'RULE.btnPct', v: 88,"));
+      edit(d, 'thresholds.lock.json', (s) => s.replace('"RULE.btnPct": { "value": 70,', '"RULE.btnPct": { "value": 85,'));
+      execFileSync(process.execPath, [join(d, 'build.mjs')], { encoding: 'utf8' });
+    },
+  },
+  /* ── 第 12 輪 D11-02：過期標記換行鎖（G35④）──────────────────────────
+     G35④ 讀的是 measured.json 的 M.expiredRects（真瀏覽器量的 getClientRects()
+     行框數）——這一發直接把某一筆的 n 改成 2，模擬「這句話真的排出兩行」
+     （字加長或版縮窄，最後在瀏覽器裡量出來就是這個數）。 */
+  {
+    id: 'D11-02-過期標記換行（G35④）', gate: 'G35', run: runVerify,
+    why: '_probe.html 對每個 s[data-expired] 量 getClientRects().length，G35④ 要求 ===1——換行會讓 ::after 那條規線只疊到其中一行，另一行沒有規線，「劃掉」這件事讀不出來。這一發把一筆量到的行框數改成 2，模擬換行真的發生。',
+    mutate: (d) => editJson(d, 'measured.json', (m) => { m.expiredRects[0].n = 2; }),
+  },
 ];
 
 /* 邊界樣本（bands.mjs）併進來 —— 宣告在那裡、結果寫在 selftest.json，
@@ -277,8 +358,10 @@ for (const smp of SAMPLES) {
     console.log(`  暫停 －  ${smp.id} → ${smp.gate}（${smp.suspended.slice(0, 28)}…）`);
     continue;
   }
-  const dir = mkdtempSync(join(tmpdir(), 'ls38d-case-'));
-  cpSync(base, dir, { recursive: true });
+  /* 預設複製法：從沒動手腳的 base 開一份純檔案複本（沒有 .git，見 stage()）。
+     少數樣本（MG4⑩）需要真的 git work tree，才會帶著自己的 stage／unstage
+     （stageGitWT／unstageGitWT）——其餘樣本完全不受影響，走原本這條路。 */
+  const dir = smp.stage ? smp.stage() : (() => { const d = mkdtempSync(join(tmpdir(), 'ls38d-case-')); cpSync(base, d, { recursive: true }); return d; })();
   /* band 一併傳進去 —— 邊界樣本寫進 measured.json 的值，就是它登記給 MG4 檢查的值。
      同一個數用兩次，所以 band.v 不可能是一個誰都可以填的宣稱。 */
   smp.mutate(dir, smp.band);
@@ -287,7 +370,7 @@ for (const smp of SAMPLES) {
   const hitExpected = smp.gate === 'measure' ? red : r.hits.includes(smp.gate);
   out.push({ id: smp.id, gate: smp.gate, why: smp.why, band: smp.band || null, red, hits: r.hits, hitExpected });
   console.log(`  ${red ? (hitExpected ? '轉紅 ✓' : '轉紅但咬錯 ✗') : '**全綠 ✗**'}  ${smp.id} → 期望 ${smp.gate}${red && r.hits.length ? `，實際 ${r.hits.join('/')}` : ''}`);
-  rmSync(dir, { recursive: true, force: true });
+  (smp.unstage || ((d) => rmSync(d, { recursive: true, force: true })))(dir);
 }
 rmSync(base, { recursive: true, force: true });
 

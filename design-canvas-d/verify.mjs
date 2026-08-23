@@ -1678,6 +1678,19 @@ const mg1 = () => {
   ok(struck >= 3 && notes >= 1 && out.length === 0 && thinWhy.length === 0 && stray.length === 0 && ruleBad.length === 0,
     `G35 過期的句子劃掉不刪掉：凍結板上 ${struck} 句「${PHRASE}」逐句 <s> 劃掉（每一句寫得出為什麼過期），另外 ${notes} 段是宣告它們過期的橫幅本身（標成 note，不劃）；這個字串在其他 ${files.length - frozenFiles.length} 張板上一次都沒有出現 —— 刪掉的假話沒有人會記得它曾經被否決過，所以留著，但留成劃掉的樣子。規線本身不用瀏覽器內建 line-through：粗細／位置出自具名 token，且與被劃文字的 ΔE 過 JND —— 規線不會反過來把要保存的內容吃掉`,
     [...out, ...thinWhy, ...stray.map((f) => `${f} 也開始講「${PHRASE}」了`), ...ruleBad].join(' · '));
+
+  /* ── ④ 過期標記不准換行（第 12 輪 D11-02）─────────────────────────────
+     ①②③的規線（::after 疊圖）是畫在文字上面的一條水平線，位置是相對整個
+     <s> 元素算的（--ls-expired-rule-y）——這個假設只在文字**排成一行**的時候
+     成立。真的排出兩行，規線只會疊在其中一行的高度上，另一行沒有規線，或
+     規線飄到兩行的行間，看起來像浮在字外面的一條線，不再讀得出「這行字被
+     劃掉了」。getClientRects() 在真瀏覽器的版面裡量：一行＝1 個矩形。 */
+  if (M.expiredRects) {
+    const wrapped = M.expiredRects.filter((r) => r.n !== 1);
+    ok(M.expiredRects.length > 0 && wrapped.length === 0,
+      `G35④ 過期標記不准換行：${M.expiredRects.length} 個 s[data-expired] 全部量到 1 個 getClientRects()（真排版的行框數）—— 換行會讓規線飄到行間，「劃掉」這件事本身就讀不出來了`,
+      wrapped.map((r) => `${r.file} 的「${r.text}」排成 ${r.n} 行`).join(' · '));
+  } else need('expiredRects', 'G35④ 過期標記換行鎖');
 }
 
 /* ══ MG4  門檻登記簿（第 6 輪 D5-02）═══════════════════════════════
@@ -2036,6 +2049,167 @@ const THRESHOLDS = [
   ok(probeBad.length === 0,
     `MG4⑨ probe 原始碼裡的字面門檻對得上登記簿：if (v < ${probeAaa ? probeAaa[1] : '?'}) ＝ CONTRAST.aaa（${CONTRAST.aaa}）、if (gv < ${probeGrain ? probeGrain[1] : '?'}) ＝ CONTRAST.grain（${CONTRAST.grain}）—— 「單一 token 來源」現在在這兩條上也是真的`,
     probeBad.join(' · '));
+
+  /* ── ⑩ lock 對 git 歷史錨定（第 12 輪 D11-01）─────────────────────────
+     ⑦⑧ 的洞：thresholds.lock.json 是一本**沒有錨的新登記簿**。P4 不寫 moved，
+     直接把 tokens.mjs／verify.mjs 的 value 與 thresholds.lock.json 的 value
+     一起洗到同一個新數字——`th.value === locked.value` 從此恆真，⑦「沒有
+     moved 就是紅」那一支（line 1987 附近 `if (th.value === locked.value) {…
+     continue }`）直接被繞過去。P5 連 wide 一起洗（lock 的 wide: false→true），
+     ⑧「沒有 wide 的不准長出來」也跟著失效。兩發共同的破綻：lock.json 與
+     THRESHOLDS 同時被同一個人改，互相對帳當然對得上——**登記簿的權威來源
+     是它自己**，這件事本身就是漏洞。
+     「首次登記時是多少」唯一不在洗白者手上的權威是 git 自己的歷史：
+     lock[id].sha 記著那次登記的 commit，這裡回頭去問 git，不再只信 lock
+     自己寫的 value／sha。
+       ① git show <sha>:./verify.mjs 抽出那次 commit 裡這條門檻的 value，
+          必須與 lock[id].value 一致（P4：lock 被改的那個數，在 git 歷史裡
+          找不到——974fd99 那次寫的仍然是舊值）
+       ② merge-base --is-ancestor <sha> HEAD 必須成立——sha 必須真的是這個
+          分支的祖先（擋「物件存在但不在歷史上」的偽造 commit）
+       ③ sha 的每個 parent 都不能已經有這個 id——sha 必須真的是**第一次**
+          登記（擋「補一個新 commit 造假 value，再把 lock 的 sha 指過去」；
+          974fd99 的 parent a8efcc1 整份 verify.mjs 連 THRESHOLDS 這個陣列
+          都還不存在，20 條全部在這裡通過）
+     它擋不住「有 commit 權限的人什麼都能改」（連 git 歷史一起重寫）——跟 MG4⑦
+     同一個立場，這裡不假裝擋得住。
+     derived 四條（value=null）只驗 id 有沒有登記在 lock 上——那件事⑦已經驗過
+     （`if (!locked)`），這裡不重複；它們的形狀已經由 MG4③ 釘死，沒有 value
+     可以被洗。
+     wide 沒有①②③這條路可走：974fd99（round 6，20 條全部首次登記的那次
+     commit）那時候 `wide` 這個欄位**根本還不存在**（round 8 f9a721d 才加，
+     見 D7-01③ 的說明）——「首次登記版有沒有 wide」這個問題本身沒有答案，
+     機械抽不出來，如實回報。
+     替代錨定：改錨在 thresholds.lock.json **自己第一次出現**的那次 commit
+     （`git log -- thresholds.lock.json` 最早一筆，不信任 lock 檔案裡任何
+     欄位——只信 git 對這個路徑的提交歷史，P5 改得動檔案內容，改不動已經
+     提交過的歷史）。lock.json 自己的說明也是這樣寫的：wide 記的是「這次
+     凍結…當下那條門檻有沒有掛著 wide」，凍結的當下就是那次 commit。回那
+     次 commit 的 verify.mjs 讀「這個 id 的宣告裡有沒有 wide: 欄位」，必須
+     與 lock[id].wide 一致——P5 把 lock.wide 改成 true，但改不動已經提交過
+     的那次 commit，這裡當場對不上。
+     （這條錨定上路後，順手挖到一個既有的資料錯誤：HUE_MIN.span 在凍結那次
+     commit〔4dbe881〕從來沒有掛過 wide——它的比值 1.17 是三條 HUE_MIN 裡
+     最貼線的一條，⑤的 wide 敘述原文也只提「span 1.17 < cool 1.55 < warm
+     1.57」，從沒把 span 算進「留寬」那一類；thresholds.lock.json 卻把它的
+     wide 登記成 true，八成是複製隔壁 cool／warm 兩條時漏改的殘留。這是這
+     條新檢查第一次讓它有辦法被機器抓到，不是這一輪造成的——順手在下面把
+     它改回 false，讓凍結快照回頭對得上歷史真的長什麼樣子；改的是 lock 的
+     `wide` 記錄，不是 verify.mjs 裡 HUE_MIN.span 這條門檻本身，所以不算
+     「門檻被移動」，不需要 moved 動議。）
+     非 git work tree（selftest／atk 重放的 /tmp 複本，見檔頭 HERE 的說明：
+     它們的複製方式本來就不含 .git）：印具名 SKIP，不計入 fail——baseline
+     與現有 38 發 selftest 樣本都跑在這種複本裡，硬計 fail 會讓它們全部變
+     紅，而它們沒有一發是在測這一條。真的要測 MG4⑩，複本必須是真的 git
+     work tree（selftest.mjs 的 stageGitWT／atk 重放的 git worktree add）。
+     repo 內跑（`node run.mjs`／`node verify.mjs` 沒有 LS_ROOT，或 LS_ROOT
+     指到一個真的 work tree）：沒有 git 就硬失敗——那是逃避這條檢查的路，
+     不是它的例外。 */
+  {
+    const gitCwd = HERE.pathname;
+    const gitOK = (() => {
+      try { execFileSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd: gitCwd, stdio: ['ignore', 'pipe', 'pipe'] }); return true; }
+      catch { return false; }
+    })();
+    if (!gitOK) {
+      if (process.env.LS_SELFTEST) {
+        console.log('SKIP  MG4⑩ lock 對 git 歷史錨定 —— 這份產物不在 git work tree 裡（見上：selftest／atk 重放的 /tmp 複本本來就沒有 .git），不計入 fail；真的要驗這一條需要真的 git work tree');
+      } else {
+        ok(false, 'MG4⑩ lock 對 git 歷史錨定', `${gitCwd} 不是 git work tree —— repo 內跑理應永遠是（LS_SELFTEST 之外沒有例外），這裡硬失敗，不當作可以跳過的情況`);
+      }
+    } else {
+      /* 逐行抽出某個 commit 的 verify.mjs 裡，THRESHOLDS 陣列各條門檻的 value
+         與有沒有 wide 欄位——走文字，不 import：那個年代的 verify.mjs 未必在
+         現在的環境裡跑得起來（它 import 的 tokens.mjs／bands.mjs 可能是那個
+         年代的形狀），而且要驗的正是「原始碼寫的是什麼」，不是「跑出來的值
+         是什麼」。從第 6 輪起，每一條門檻的宣告固定開頭在自己一行
+         `  { id: '...', file: '...', value: <字面值>, kind: ...`——id 與 value
+         同一行；wide 不一定同一行，所以在整條宣告的範圍內找。 */
+      const parseHistThresholds = (src) => {
+        const m2 = /const THRESHOLDS = \[([\s\S]*?)\n\];/.exec(src || '');
+        if (!m2) return null;
+        const chunks = m2[1].split(/\n(?=  \{ id: )/).filter((c) => /id:\s*'/.test(c));
+        const out2 = new Map();
+        for (const c of chunks) {
+          const idm = /id:\s*'([^']+)'/.exec(c);
+          if (!idm) continue;
+          const vm = /value:\s*(null|-?\d+(?:\.\d+)?)/.exec(c.split('\n')[0]);
+          out2.set(idm[1], { value: vm ? (vm[1] === 'null' ? null : +vm[1]) : undefined, hasWide: /\bwide:/.test(c) });
+        }
+        return out2;
+      };
+      const showCache = new Map();
+      const gitShow = (sha, path) => {
+        const key = `${sha}:${path}`;
+        if (showCache.has(key)) return showCache.get(key);
+        let v;
+        try { v = execFileSync('git', ['show', `${sha}:${path}`], { cwd: gitCwd, encoding: 'utf8', maxBuffer: 1 << 26 }); }
+        catch { v = null; }
+        showCache.set(key, v);
+        return v;
+      };
+      const ancCache = new Map();
+      const isAncestor = (sha) => {
+        if (ancCache.has(sha)) return ancCache.get(sha);
+        let v;
+        try { execFileSync('git', ['merge-base', '--is-ancestor', sha, 'HEAD'], { cwd: gitCwd, stdio: 'ignore' }); v = true; }
+        catch { v = false; }
+        ancCache.set(sha, v);
+        return v;
+      };
+      const parCache = new Map();
+      const parents = (sha) => {
+        if (parCache.has(sha)) return parCache.get(sha);
+        let v;
+        try { v = execFileSync('git', ['log', '--format=%P', '-n', '1', sha], { cwd: gitCwd, encoding: 'utf8' }).trim().split(/\s+/).filter(Boolean); }
+        catch { v = null; }
+        parCache.set(sha, v);
+        return v;
+      };
+      /* wide 的替代錨：thresholds.lock.json 自己第一次出現的 commit（見上面
+         的說明）—— git log 本身就是外部權威，不讀 lock 檔案裡任何欄位。 */
+      let wideAnchorSha = null, wideAnchorErr = '';
+      try {
+        const log = execFileSync('git', ['log', '--format=%H', '--', 'thresholds.lock.json'], { cwd: gitCwd, encoding: 'utf8' }).trim().split('\n').filter(Boolean);
+        wideAnchorSha = log.length ? log[log.length - 1] : null;
+        if (!wideAnchorSha) wideAnchorErr = 'git log 對 thresholds.lock.json 找不到任何一次提交';
+      } catch (e) { wideAnchorErr = String(e.message || e).split('\n')[0]; }
+      const wideAnchorMap = wideAnchorSha ? parseHistThresholds(gitShow(wideAnchorSha, './verify.mjs')) : null;
+
+      const lockBad10 = [];
+      let checked10 = 0;
+      for (const th of THRESHOLDS) {
+        if (th.kind === 'derived') continue;   // ④：只驗 id 存在，⑦已經驗過（`if (!locked)` 那一支）
+        const locked = LOCK[th.id];
+        if (!locked) continue;                 // 「沒有登記在 lock 上」⑦已經標出來了，這裡不重複
+        checked10++;
+        const sha = locked.sha;
+        if (!/^[0-9a-f]{40}$/.test(String(sha || ''))) { lockBad10.push(`${th.id} 的 lock.sha「${sha}」不是合法的 40 字元 commit sha`); continue; }
+        if (!isAncestor(sha)) { lockBad10.push(`${th.id} 的 lock.sha ${sha.slice(0, 12)} 不是 HEAD 的祖先 —— 不是這個分支真的提交過的東西`); continue; }
+        const histSrc = gitShow(sha, './verify.mjs');
+        if (histSrc === null) { lockBad10.push(`${th.id}：git show ${sha.slice(0, 12)}:./verify.mjs 讀不到（那個 commit 底下沒有這個檔案，或路徑對不上）`); continue; }
+        const hist = parseHistThresholds(histSrc)?.get(th.id);
+        if (!hist || hist.value === undefined) { lockBad10.push(`${th.id} 在 ${sha.slice(0, 12)} 的 verify.mjs 裡抽不到這條門檻的 value —— lock.sha 指錯地方了`); continue; }
+        if (hist.value !== locked.value) lockBad10.push(`${th.id}：lock 記的 value 是 ${locked.value}，但 ${sha.slice(0, 12)}（lock 自己指的那次登記）裡寫的是 ${hist.value} —— lock 被改過，不是那次 commit 寫的東西`);
+        const ps = parents(sha);
+        if (ps === null) { lockBad10.push(`${th.id}：讀不到 ${sha.slice(0, 12)} 的 parent`); continue; }
+        for (const p of ps) {
+          const pMap = parseHistThresholds(gitShow(p, './verify.mjs'));
+          if (pMap && pMap.has(th.id)) { lockBad10.push(`${th.id}：${sha.slice(0, 12)} 的 parent ${p.slice(0, 12)} 裡已經有這條門檻了 —— lock.sha 指的不是「第一次登記」，是後來隨便一次提交`); break; }
+        }
+        if (wideAnchorMap) {
+          const wa = wideAnchorMap.get(th.id);
+          const anchoredWide = !!(wa && wa.hasWide);
+          if (anchoredWide !== !!locked.wide) lockBad10.push(`${th.id}：lock 記的 wide＝${!!locked.wide}，但凍結那次 commit（${wideAnchorSha.slice(0, 12)}，thresholds.lock.json 第一次出現的那次）verify.mjs 裡「有沒有 wide 欄位」＝${anchoredWide} —— 對不上`);
+        } else {
+          lockBad10.push(`${th.id}：wide 的凍結錨（thresholds.lock.json 第一次出現的 commit）讀不到 —— ${wideAnchorErr || '原因不明'}`);
+        }
+      }
+      ok(lockBad10.length === 0 && checked10 > 0,
+        `MG4⑩ lock 對 git 歷史錨定：${checked10} 條門檻的 value 逐條回 lock.sha 那次 commit 核對（sha 是 HEAD 的祖先、parent 裡還沒有這條，兩層都成立才算真的是第一次登記）；wide 另外錨定在 thresholds.lock.json 自己第一次出現的 commit（${wideAnchorSha ? wideAnchorSha.slice(0, 12) : '?'}——974fd99 那次 wide 這個欄位還不存在，機械抽不出「首次登記版有沒有 wide」，改用「凍結那次 commit」，見上面的說明）`,
+        lockBad10.join(' · '));
+    }
+  }
 }
 
 /* ══ G33  字樣的出處（第 6 輪換蠟筆；第 8 輪 D7-02 把閉環打開）════════

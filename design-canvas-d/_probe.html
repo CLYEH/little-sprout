@@ -22,7 +22,8 @@
               toggles: [], mainBtn: [], photos: [],
               /* 第 5 輪新增的量測（D4-01/03/04/06/07） */
               perf: [], scale: [], photoPix: [], widths: {}, ranks: [], axFit: [], brandLab: [],
-              exemptSeen: [], exemptBad: [], glass: [] };
+              exemptSeen: [], exemptBad: [], glass: [],
+              expiredRects: [] };
 
   /* ── 具名豁免登記簿（D4-07②）──────────────────────────────────
      第 4 輪：`data-light` 加上**任何值**都能整個豁免 G24，而且沒有任何一份清單記得誰被豁免
@@ -183,6 +184,30 @@
     const name = file.replace('.dc.html', '');
     const isDark = /Dark$/.test(name);
     const rel = (n) => { const r = n.getBoundingClientRect(); return { t: r.top-base.top, b: r.bottom-base.top, l: r.left-base.left, r: r.right-base.left, w: r.width, h: r.height }; };
+
+    /* ── 0. 過期標記換行鎖（第 12 輪 D11-02，G35④）───────────────────
+       G35 的 ::after 規線是疊在文字上面畫的一條水平線（見 build.mjs 的 helmet()）——
+       它假設 <s data-expired> 裡的文字**只有一行**。真的排出兩行的話，規線只會
+       疊在其中一行上，另一行沒有規線、或規線飄到行間——「劃掉」這件事本身
+       就讀不出來了。getClientRects() 量的是真的排版之後的行框：一行＝1 個矩形，
+       多行＝多個。這裡在真瀏覽器的版面裡量，不是猜字數。
+       陷阱（量測時當場踩到，記下來免得下一個人重踩）：holder 是 _probe.html
+       自己 <body> 底下的一個 <div>，helmet style 裡的 `body{font-family:…}`
+       規則因此配不到任何東西——複製進來的內容裡沒有真的 <body> 可以配。
+       量到的字這裡會退回 _probe.html 自己 <body> 的 font:12px monospace，
+       逐字元寬度跟真的比例字體差很多，換不換行因此量得不準（初版就是這樣
+       把這一句誤判成 2 行）。這裡量之前把 body 那條規則裡的 font-family
+       抽出來、暫時扣到 el 上，量完立刻還原——只影響這一段量測，不影響同一個
+       el 後面其他量測讀到的字型（那些量測本來就不在乎字寬，維持原樣）。 */
+    {
+      const bodyFontM = st ? /\bbody\{[^}]*?font-family:\s*([^;]+);/.exec(st.textContent) : null;
+      const savedFont = el.style.fontFamily;
+      if (bodyFontM) el.style.fontFamily = bodyFontM[1];
+      for (const sEl of el.querySelectorAll('s[data-expired]')) {
+        R.expiredRects.push({ file: name, n: sEl.getClientRects().length, text: (sEl.textContent || '').slice(0, 24) });
+      }
+      el.style.fontFamily = savedFont;
+    }
 
     /* ── 1. inset 的使用點（不是 helper 定義）── */
     for (const n of el.querySelectorAll('*')) {

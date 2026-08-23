@@ -177,6 +177,10 @@ const out = {
   maxVoidPad: wPad.interior, maxVoidPadFile: `${wPad.file}/${wPad.col}`,
   pauses: R.pauses, pauseBad: R.pauseBad,
 
+  /* 過期標記換行鎖（第 12 輪 D11-02，G35④）：每個 s[data-expired] 真的排版
+     出來的行框數——真瀏覽器裡量的，不是猜字數。 */
+  expiredRects: R.expiredRects,
+
   /* 尾段空白與主按鈕：呼吸帶規則 ② 用的兩個數 */
   maxTrail: trail.trail, maxTrailFile: trail.file,
   btnMaxPct: pct(btnTop), btnMaxFile: btnTop ? btnTop.file : '-',
