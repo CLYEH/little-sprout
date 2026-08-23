@@ -98,7 +98,9 @@ jobs:
               echo "::error::migration 變更必須伴隨 supabase/tests/ 的 RLS 測試變更（DB migration gate）"
               exit 1
             fi
-            destructive=$(git diff "$base_sha"...HEAD -- supabase/migrations/ | grep '^+' | grep -icE 'DROP TABLE|DROP COLUMN|DROP POLICY|DROP FUNCTION|DROP TRIGGER|DROP INDEX|DROP SCHEMA|DROP CONSTRAINT|DROP NOT NULL|TRUNCATE|DISABLE ROW LEVEL SECURITY|ALTER (TABLE|COLUMN).* TYPE ' || true)
+            # LS-34：比對前先剝除 SQL 註解（整行與行尾 `--`），註解裡提到
+            # 破壞性關鍵字不再誤判（LS-33 實測踩過，當時被迫用中文措辭迴避）
+            destructive=$(git diff "$base_sha"...HEAD -- supabase/migrations/ | grep '^+' | sed 's/--.*//' | grep -icE 'DROP TABLE|DROP COLUMN|DROP POLICY|DROP FUNCTION|DROP TRIGGER|DROP INDEX|DROP SCHEMA|DROP CONSTRAINT|DROP NOT NULL|TRUNCATE|DISABLE ROW LEVEL SECURITY|ALTER (TABLE|COLUMN).* TYPE ' || true)
             if [ "${destructive:-0}" -gt 0 ] && ! printf '%s' "$PR_BODY" | grep -q 'DESTRUCTIVE-APPROVED'; then
               echo "::error::偵測到破壞性 migration。此類變更需使用者本人依規約核可（docs/COLLABORATION.md §6）；agent 遇此錯誤必須停下回報使用者，不得自行處理"
               exit 1
@@ -116,6 +118,18 @@ jobs:
           if [ "${new_views:-0}" -gt 0 ] && ! printf '%s' "$PR_BODY" | grep -qE 'Design:[[:space:]]*[^[:space:]]'; then
             echo "::error::PR 新增了 SwiftUI View 但 body 的 Design: 欄位是空的——新畫面必須先有 ui-designer 的 .pen 設計稿並填上 frame 名稱"
             exit 1
+          fi
+
+      # LS-26：.pen 落地結構兜底（本機 commit-gate 的伺服器端對應；
+      # 無 --expect-nodes——「落地比記憶體舊」的深度驗證靠收工程序＋handoff 證據）
+      - name: .pen 落地結構檢查
+        run: |
+          base_sha=$(git merge-base "origin/$BASE" HEAD)
+          pens=$(git -c core.quotePath=false diff --name-only --diff-filter=ACM "$base_sha"...HEAD -- '*.pen' || true)
+          if [ -n "$pens" ]; then
+            while IFS= read -r p; do
+              bash scripts/gates/design-landing-check.sh "$p"
+            done <<< "$pens"
           fi
 
   # DB migration gate 的執行面（LS-11）：CI 實際跑 supabase/tests/run.sh（RLS 隔離／owner
