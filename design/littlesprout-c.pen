@@ -592,16 +592,16 @@
               "width": 393,
               "descendants": {
                 "ZPZek": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "O8BQeT": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "eLmLf": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "pFP2y": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 }
               }
             },
@@ -3107,16 +3107,16 @@
               "width": 393,
               "descendants": {
                 "ZPZek": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "O8BQeT": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "eLmLf": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "pFP2y": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 }
               }
             },
@@ -3131,10 +3131,10 @@
               "width": 393,
               "descendants": {
                 "EkEeC": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "VCU41": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 }
               }
             },
@@ -3414,16 +3414,16 @@
               ],
               "descendants": {
                 "ZPZek": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "O8BQeT": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "eLmLf": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "pFP2y": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 }
               }
             },
@@ -4242,16 +4242,16 @@
               "width": 393,
               "descendants": {
                 "ZPZek": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "O8BQeT": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "eLmLf": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "pFP2y": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 }
               }
             },
@@ -4623,16 +4623,16 @@
               "width": 393,
               "descendants": {
                 "ZPZek": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "O8BQeT": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "eLmLf": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 },
                 "pFP2y": {
-                  "fill": "#FDF8EF"
+                  "fill": "$on-photo"
                 }
               }
             },
@@ -7775,11 +7775,11 @@
                               "descendants": {
                                 "s9bME2": {
                                   "icon": "check",
-                                  "fill": "#74193A"
+                                  "fill": "$accent-text"
                                 },
                                 "w7CUP": {
                                   "content": "核准，讓 王美玲 加入",
-                                  "fill": "#74193A"
+                                  "fill": "$accent-text"
                                 }
                               }
                             }
@@ -13907,6 +13907,328 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ISAZn",
+                  "name": "Row X0",
+                  "width": "fill_container",
+                  "fill": "#F5E1E3",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "nHU60",
+                      "name": "C0",
+                      "width": 190,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Xqe8t",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "accent-text",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "EHGC0",
+                      "name": "C1",
+                      "width": 230,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 7,
+                          "id": "UZ1R8",
+                          "name": "sw",
+                          "fill": "#74193A",
+                          "width": 26,
+                          "height": 26,
+                          "stroke": "#2B141C1F",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "WNKJ5",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "content": "#74193A",
+                          "fontFamily": "$font-num",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WIQvM",
+                      "name": "C2",
+                      "width": 230,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 7,
+                          "id": "v1gMFe",
+                          "name": "sw",
+                          "fill": "#F4A8B6",
+                          "width": 26,
+                          "height": 26,
+                          "stroke": "#2B141C1F",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "gJby3",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "content": "#F4A8B6",
+                          "fontFamily": "$font-num",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZuxQd",
+                      "name": "C3",
+                      "width": 330,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "iaHNa",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "accent 當文字用（07b 次要「核准」列）",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Z6IKw",
+                      "name": "C4",
+                      "width": 280,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Lsgog",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "7.66／9.99 AAA（對 bg）｜9.20／8.52（對 surface）",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "lS22L",
+                  "name": "Row X1",
+                  "width": "fill_container",
+                  "fill": "#FBEBEC",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "eyt26",
+                      "name": "C0",
+                      "width": 190,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "uWSXv",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "on-photo",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "a2MSoF",
+                      "name": "C1",
+                      "width": 230,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 7,
+                          "id": "RzkUd",
+                          "name": "sw",
+                          "fill": "#FBEBEC",
+                          "width": 26,
+                          "height": 26,
+                          "stroke": "#2B141C1F",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "juduF",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "content": "#FBEBEC",
+                          "fontFamily": "$font-num",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "NRyKA",
+                      "name": "C2",
+                      "width": 230,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 7,
+                          "id": "jLCjk",
+                          "name": "sw",
+                          "fill": "#FBEBEC",
+                          "width": 26,
+                          "height": 26,
+                          "stroke": "#2B141C1F",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "TNomz",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "content": "#FBEBEC",
+                          "fontFamily": "$font-num",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WNBkj",
+                      "name": "C3",
+                      "width": 330,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "e3WYaI",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "壓在照片／印相罩上的字。兩個模式同一個值——照片上永遠要淺色",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Q804i",
+                      "name": "C4",
+                      "width": 280,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "sQsj1",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "印相罩最不利點 7.36／8.71 AAA",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -17928,7 +18250,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "色彩：Asset Catalog 建 Color Set，Any/Dark 兩欄，名稱對齊 token（bg／bg-lit／surface／mount-edge／surface-2／text-primary／text-secondary／accent／accent-text／accent-soft／on-accent／control-line／border／danger／success／photo-corner／corner-fold／scrim-ink／scrim-fade／ground-fade／paper-shadow／apple-bg／apple-fg／google-bg／google-fg／google-line）。text-tertiary 已廢除。兩條硬規則：① surface-2 只承載 text-primary 與 text-secondary（danger／success／accent-text 落在它上面不到 AAA）；② border 是純裝飾髮絲線，任何承載意義的邊界（輸入框、外框鈕、焦點）一律用 control-line。",
+                  "content": "色彩：Asset Catalog 建 Color Set，Any/Dark 兩欄，名稱對齊 token（bg／bg-lit／surface／mount-edge／surface-2／text-primary／text-secondary／accent／accent-text／accent-soft／on-accent／on-photo／control-line／border／danger／success／photo-corner／corner-fold／scrim-ink／scrim-fade／paper-shadow／apple-bg／apple-fg／google-bg／google-fg／google-line）。text-tertiary 已廢除。三條硬規則：① surface-2 只承載 text-primary 與 text-secondary（danger／success／accent-text 落在它上面不到 AAA）；② border 是純裝飾髮絲線，任何承載意義的邊界（輸入框、外框鈕、焦點）一律用 control-line；③ 壓在照片上的字一律 on-photo（兩個模式同值），不要用 on-accent——on-accent 在深色模式是深色，壓在照片上會消失。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -20293,6 +20615,27 @@
         },
         {
           "value": "#8E918F",
+          "theme": {
+            "mode": "dark"
+          }
+        }
+      ]
+    },
+    "on-photo": {
+      "type": "color",
+      "value": "#FBEBEC"
+    },
+    "accent-text": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#74193A",
+          "theme": {
+            "mode": "light"
+          }
+        },
+        {
+          "value": "#F4A8B6",
           "theme": {
             "mode": "dark"
           }
