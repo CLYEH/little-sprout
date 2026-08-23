@@ -354,6 +354,69 @@ begin
 end;
 $$;
 
+-- 上傳者欄位只能留空或寫自己（defence in depth）。
+-- 沒有這道防線的話，有上傳權的成員可以在自家路徑塞一個 `owner = 別人` 的物件，
+-- 而第 6 段那條「上傳者本人」分支認的正是這兩欄——等於把刪除權硬塞給沒上傳過的人。
+-- 「留空要放行」也要驗：storage-api 依版本可能只寫其中一欄，兩欄都強制非空會讓
+-- 上傳在某些版本直接失敗（那種失敗只會在雲端出現，本機測不到，所以這裡先釘住）。
+do $$
+declare
+  v_case record;
+  v_blocked boolean;
+  v_state text;
+begin
+  -- 全程以 A 家 owner（a0…0001）身分寫入；「他人」指 A 家 member（a0…0002）
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+
+  for v_case in
+    select * from (values
+      ('owner=本人, owner_id=他人',
+       'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000f1.jpg',
+       'a0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000002', false),
+      ('owner=他人, owner_id=本人',
+       'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000f2.jpg',
+       'a0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000001', false),
+      ('owner=他人, owner_id=他人',
+       'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000f3.jpg',
+       'a0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000002', false),
+      ('owner=NULL, owner_id=NULL',
+       'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000f4.jpg',
+       null, null, true),
+      ('owner=NULL, owner_id=本人',
+       'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000f5.jpg',
+       null, 'a0000000-0000-4000-8000-000000000001', true),
+      ('owner=本人, owner_id=NULL',
+       'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000f6.jpg',
+       'a0000000-0000-4000-8000-000000000001', null, true)
+    ) as t(label, name, o_owner, o_owner_id, expect_ok)
+  loop
+    v_blocked := false;
+    begin
+      insert into storage.objects (bucket_id, name, owner, owner_id)
+      values ('media', v_case.name, v_case.o_owner::uuid, v_case.o_owner_id);
+    exception when others then
+      v_blocked := true; v_state := sqlstate;
+    end;
+
+    if v_case.expect_ok and v_blocked then
+      raise exception 'FAIL：合法的上傳者欄位組合「%」被擋下了（%）——storage-api 只寫一欄的版本會上傳不了',
+        v_case.label, v_state;
+    end if;
+    if not v_case.expect_ok then
+      if not v_blocked then
+        raise exception 'FAIL：上傳者欄位組合「%」沒有被擋下——可以把刪除權塞給沒上傳過那個檔案的人', v_case.label;
+      end if;
+      if v_state <> '42501' then
+        raise exception 'FAIL：上傳者欄位組合「%」被拒，但錯誤碼是 % 而不是 42501', v_case.label, v_state;
+      end if;
+    end if;
+    raise notice 'ok 上傳者欄位：% → %', v_case.label,
+      case when v_case.expect_ok then '放行' else '擋下 (42501)' end;
+  end loop;
+end;
+$$;
+
 rollback;
 
 -- ===========================================================================
@@ -590,9 +653,185 @@ $$;
 rollback;
 
 -- ===========================================================================
--- 6. 路徑規約判斷式本身的列舉驗證
+-- 6. 「上傳者本人」的 (owner, owner_id) 五種組合
+--
+-- policy 用的是 `owner = me OR owner_id = me`——兩欄都認，因為 storage-api 依版本
+-- 可能只寫其中一欄。問題是：第 5 段（以及其他所有段落）每一筆 insert 都同時塞了
+-- 兩欄且同值，所以把那個 OR 改成 AND，全套測試仍然會綠——那條 OR 等於零覆蓋，
+-- 「不押在 storage 版本行為上」這個保證根本沒有被釘住（LS-40 review F1）。
+--
+-- 這一段逐一列舉五種組合，對 member 驗 UPDATE 與 DELETE 的 row_count：
+--   (本人, 本人) (NULL, 本人) (本人, NULL) → 動得了（1 列）
+--   (他人, NULL) (NULL, NULL)             → 動不了（0 列）
+-- 最後一組正向對照最重要：兩欄皆空時**退化成「只有家庭 owner 能動」，不是「沒人能動」**。
+-- 少了那條對照，一個把所有人都擋掉的爛 policy 也會讓這一段全綠。
+-- ===========================================================================
+begin;
+set local storage.allow_delete_query = 'true';
+
+insert into storage.objects (bucket_id, name, owner, owner_id) values
+  ('media', 'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000091.jpg',
+   'a0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000002'),
+  ('media', 'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000092.jpg',
+   null, 'a0000000-0000-4000-8000-000000000002'),
+  ('media', 'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000093.jpg',
+   'a0000000-0000-4000-8000-000000000002', null),
+  ('media', 'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000094.jpg',
+   'a0000000-0000-4000-8000-000000000001', null),
+  ('media', 'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000095.jpg',
+   null, null);
+
+set local role authenticated;
+
+do $$
+declare
+  v_case record;
+  v_n int;
+  v_want int;
+begin
+  -- 以 A 家 member 身分（他不是家庭 owner，所以只有「上傳者本人」那條分支能救他）
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+
+  for v_case in
+    select * from (values
+      ('(owner=本人, owner_id=本人)',
+       'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000091.jpg', true),
+      ('(owner=NULL, owner_id=本人)',
+       'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000092.jpg', true),
+      ('(owner=本人, owner_id=NULL)',
+       'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000093.jpg', true),
+      ('(owner=他人, owner_id=NULL)',
+       'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000094.jpg', false),
+      ('(owner=NULL, owner_id=NULL)',
+       'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000095.jpg', false)
+    ) as t(label, name, allowed)
+  loop
+    v_want := case when v_case.allowed then 1 else 0 end;
+
+    update storage.objects set metadata = '{"ls40_probe": true}' where name = v_case.name;
+    get diagnostics v_n = row_count;
+    if v_n <> v_want then
+      raise exception 'FAIL 上傳者欄位組合 %：member 的 UPDATE 影響 % 列，期望 % 列', v_case.label, v_n, v_want;
+    end if;
+
+    delete from storage.objects where name = v_case.name;
+    get diagnostics v_n = row_count;
+    if v_n <> v_want then
+      raise exception 'FAIL 上傳者欄位組合 %：member 的 DELETE 影響 % 列，期望 % 列', v_case.label, v_n, v_want;
+    end if;
+
+    raise notice 'ok 上傳者欄位組合 %：member 的 UPDATE／DELETE 各影響 % 列', v_case.label, v_want;
+  end loop;
+
+  -- 正向對照：member 動不了的那兩筆，家庭 owner 動得了（＝退化方向是「歸 owner」而非「沒人能動」）
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+  delete from storage.objects where name in (
+    'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000094.jpg',
+    'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000095.jpg');
+  get diagnostics v_n = row_count;
+  if v_n <> 2 then
+    raise exception 'FAIL 正向對照：家庭 owner 應刪得掉那 2 筆 member 動不了的物件，實際 % 列（兩欄皆空時退化成「沒人能動」，孤兒檔案永遠清不掉）', v_n;
+  end if;
+
+  raise notice 'ok 上傳者欄位：五種 (owner, owner_id) 組合行為皆符合設計，且兩欄皆空時由家庭 owner 接手';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 7. can_upload 被收回之後，成員連自己上傳的檔案也動不了（刻意選較嚴的一邊）
+--
+-- policy 的上傳者分支要求「**當下仍**在 uploadable_family_ids() 裡」，不是
+-- 「上傳當時有權」。這是設計選擇不是疏漏：can_upload 的語義是「這個人現在不該再寫
+-- 這個 bucket」，留一條「但他還能刪」的縫等於權限只撤了一半。
+-- 代價是被撤權成員留下的孤兒物件要由家庭 owner 清——那條契約寫在 docs/PLAN.md §5，
+-- 這裡把它釘成斷言：日後若有人改成寬鬆版（看上傳當時的權限），這一段會先紅。
+-- ===========================================================================
+begin;
+set local storage.allow_delete_query = 'true';
+
+insert into storage.objects (bucket_id, name, owner, owner_id) values
+  ('media', 'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000c1.jpg',
+   'a0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000002');
+
+set local role authenticated;
+do $$
+declare
+  v_n int;
+begin
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  update storage.objects set metadata = '{"ls40_probe": true}'
+   where name = 'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000c1.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then
+    raise exception 'FAIL 前置：can_upload=true 的成員應動得了自己上傳的檔案，實際 % 列', v_n;
+  end if;
+  raise notice 'ok 撤權演練（前）：can_upload=true 時，上傳者動得了自己的檔案';
+end;
+$$;
+
+reset role;
+update public.family_members set can_upload = false
+ where family_id = 'fa000000-0000-4000-8000-000000000001'
+   and user_id = 'a0000000-0000-4000-8000-000000000002';
+
+set local role authenticated;
+do $$
+declare
+  v_n int;
+begin
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+
+  update storage.objects set metadata = '{"ls40_probe2": true}'
+   where name = 'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000c1.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 0 then
+    raise exception 'FAIL：can_upload 被收回後，成員仍改得動自己以前上傳的檔案（影響 % 列）——權限只撤了一半', v_n;
+  end if;
+
+  delete from storage.objects
+   where name = 'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000c1.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 0 then
+    raise exception 'FAIL：can_upload 被收回後，成員仍刪得掉自己以前上傳的檔案（影響 % 列）', v_n;
+  end if;
+
+  -- 讀取不受影響：撤的是寫入權，不是家庭成員身分
+  if (select count(*) from storage.objects where bucket_id = 'media') <> 1 then
+    raise exception 'FAIL：撤權連帶讓成員看不到自家檔案——關錯了東西';
+  end if;
+
+  -- 契約的另一半：孤兒物件由家庭 owner 清得掉
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+  delete from storage.objects
+   where name = 'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000c1.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then
+    raise exception 'FAIL 契約：被撤權成員留下的孤兒物件，家庭 owner 也清不掉（影響 % 列）——那個檔案就永遠留在那裡了', v_n;
+  end if;
+
+  raise notice 'ok 撤權演練（中）：被撤權成員改不動也刪不掉自己以前的檔案（讀取不受影響），孤兒物件由家庭 owner 清理';
+end;
+$$;
+
+reset role;
+update public.family_members set can_upload = true
+ where family_id = 'fa000000-0000-4000-8000-000000000001'
+   and user_id = 'a0000000-0000-4000-8000-000000000002';
+
+rollback;
+
+-- ===========================================================================
+-- 8. 路徑規約判斷式本身的列舉驗證
 --
 -- 第 3 段是「經由 policy」驗規約，這一段直接驗 private.is_media_object_path()。
+-- （承上：第 6、7 段驗的是「誰動得了既有物件」，與規約本身無關。）
 -- 兩段都要：policy 那段證明規約真的接在寫入路徑上，這段證明規約本身的邊界正確
 -- （policy 那段若哪天把規約條件拿掉，這段仍會綠——所以它不能取代第 3 段，反之亦然）。
 -- ===========================================================================

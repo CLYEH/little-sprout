@@ -67,6 +67,12 @@ select 'fc000000-0000-4000-8000-000000000001',
 -- bucket 'media' 由 20260823030000_storage_policies.sql 建立；storage.objects 上沒有
 -- 任何可服務這條 qual 的索引（那張表不歸我們擁有，加不了索引），所以這裡預期看到
 -- Seq Scan——本測試判的是「有沒有被逐列重算」，不是「有沒有走索引」。
+--
+-- 這裡也順帶說明那條 qual 為什麼用較慢的 storage.foldername()（本機實測 2 萬列：
+-- foldername 36 ms、split_part 2.7 ms、path_tokens[1] 2.2 ms，基線 1.1 ms）：
+-- 另外兩種寫法都得自己重述「第一段＝family」這個語義，或依賴 storage 自己的
+-- generated 欄位，兩者都是環境相依的賭注（LS-15 教訓）。完整取捨寫在 migration
+-- 那四條 policy 上方的註解，這裡不重複，只留指路。
 insert into storage.objects (bucket_id, name, owner, owner_id, created_at)
 select 'media',
        'fc000000-0000-4000-8000-000000000001/2026/'
@@ -151,7 +157,21 @@ begin
       ('主查詢 5：Storage 物件清單（policy 靠路徑第一段判家庭）',
        'select id, name from storage.objects
          where bucket_id = ''media''
-         order by created_at desc limit 50')
+         order by created_at desc limit 50'),
+      -- LS-40 review F6：讀取那條只走 SELECT policy 的單一 qual。UPDATE 這條才會同時
+      -- 求值 USING 與 WITH CHECK，且 USING 裡有 OR 兩側（owned／uploader）與 owner
+      -- 兩欄比對——那是全 schema 最複雜的一組 qual，沒有它就沒有任何 plan 判準看得到。
+      --
+      -- 判準歸因（哪一條在這裡真的吃重）：UPDATE 的 WITH CHECK 子計畫不會出現在任何
+      -- Filter 行裡（它們以裸的 `SubPlan N` 標籤掛在 Update 節點下），所以
+      -- 「plan 不得出現 (SubPlan N) 形式的 **qual 引用**」那條判準對它們是無效的；
+      -- 真正抓得到「WITH CHECK 被逐列重算」的是 loops=1 那條——correlated 的話
+      -- 那些 Function Scan 的 loops 會直接變成 2 萬。兩條判準在這裡分工不同，
+      -- 不是互為備援。
+      ('主查詢 6：Storage 物件改寫（UPDATE 的 USING＋WITH CHECK 一起求值）',
+       'update storage.objects
+           set metadata = coalesce(metadata, ''{}''::jsonb) || ''{"ls40_plan_probe": true}''::jsonb
+         where bucket_id = ''media''')
     ) as t(label, stmt)
   loop
     v_plan := '';

@@ -143,6 +143,21 @@ grant execute on function private.is_media_object_path(text) to authenticated;
 --
 -- 全部只給 authenticated：未登入者（anon）沒有任何一條 policy 命中，
 -- RLS 預設拒絕，因此 anon 讀不到、寫不進、刪不掉——不需要也不該寫「拒絕 anon」的 policy。
+--
+-- 取路徑第一段的三種寫法與這裡的取捨（實測，2 萬列 storage.objects，本機 PG 17.6）：
+--   (storage.foldername(name))[1]  整條查詢 36 ms
+--   split_part(name, '/', 1)       整條查詢 2.7 ms
+--   path_tokens[1]（generated 欄） 整條查詢 2.2 ms
+--   （不帶路徑判斷的基線 1.1 ms；扣掉基線後，plpgsql 那支的純判斷式成本約 22 倍，
+--     絕對值約 1.7 µs／列）
+-- 明知較慢仍選 storage.foldername()：另外兩個都是**環境相依**的賭注——path_tokens 是
+-- storage 自己的 generated 欄位，split_part 雖是內建函式但「第一段＝family」這個語義
+-- 得自己重述一次；而 foldername() 是 Supabase 文件對 Storage RLS 的指定寫法，
+-- 語義由平台定義。LS-15 的教訓是「不要把斷言押在 supabase 版本行為上」，
+-- 這裡的對應動作就是**不要自己重新實作平台語義**去換那 1.7 µs。
+-- 代價可以承受的理由：實務上列表是查 public.media（有索引）再換簽名 URL，
+-- 沒有人會去掃整個 bucket；這條 qual 只在真的列 storage.objects 時才逐列跑。
+-- 哪天真的需要，換成 path_tokens[1] 是一行的事，且有 50_ 的 plan 判準接著。
 -- ---------------------------------------------------------------------------
 
 -- 讀：同家庭成員（含 viewer）可讀自家路徑下的檔案。
@@ -157,11 +172,19 @@ create policy media_bucket_select on storage.objects for select to authenticated
 -- 寫：必須是有上傳權的成員（owner 恆可；member 看 can_upload；viewer 一律不行），
 -- 且路徑第一段必須是**自己所屬**的家庭——這一條就是跨家庭寫入的防線：
 -- 把別人家的 family_id 塞進路徑第一段，那個 id 不在 uploadable_family_ids() 裡，直接拒絕。
+--
+-- 最後兩行是 defence in depth：上傳者欄位只能留空或寫自己。沒有這兩行的話，
+-- 有上傳權的成員可以在自家路徑塞一個 `owner = 別人` 的物件，而下面 UPDATE/DELETE 的
+-- 「上傳者本人」分支認的就是這兩欄——等於可以把刪除權硬塞給沒有上傳過那個檔案的人。
+-- 留空要放行：storage-api 依版本可能只寫其中一欄（見下方 UPDATE/DELETE 的說明），
+-- 兩欄都強制非空會讓上傳在某些版本直接失敗。
 create policy media_bucket_insert on storage.objects for insert to authenticated
   with check (
     bucket_id = 'media'
     and private.is_media_object_path(name)
     and (storage.foldername(name))[1] in (select f::text from private.uploadable_family_ids() f)
+    and (owner is null or owner = (select auth.uid()))
+    and (owner_id is null or owner_id = (select auth.uid())::text)
   );
 
 -- 改／刪：上傳者本人（有上傳權時）或家庭 owner。
@@ -169,7 +192,15 @@ create policy media_bucket_insert on storage.objects for insert to authenticated
 -- 「上傳者本人」兩個欄位都認：storage-api 依版本可能寫 owner（uuid，舊欄位）、
 -- owner_id（text，新欄位）或兩者皆寫。只認一個等於把 policy 押在 storage 的版本行為上
 -- （LS-15 教訓）。兩欄皆為 NULL 時退化成「只有家庭 owner 能動」——失敗方向是關緊，
--- 不是開放，這是可以接受的退化。
+-- 不是開放，這是可以接受的退化。五種 (owner, owner_id) 組合的行為由
+-- supabase/tests/90_storage_policies.sql 第 5 段逐一釘住。
+--
+-- 上傳者分支要求「**當下仍**在 uploadable_family_ids() 裡」，不是「上傳當時有權」——
+-- 這是刻意選較嚴的一邊：can_upload 被 owner 收回之後，那個人連自己以前上傳的檔案
+-- 也動不了。理由是 can_upload 的語義是「這個人現在不該再寫這個 bucket」，
+-- 留一條「但他還能刪」的縫等於權限撤了一半。代價寫進 docs/PLAN.md 的契約：
+-- 被撤權成員留下的孤兒物件改由家庭 owner 清理。這個選擇由 90_ 第 5 段的斷言釘住，
+-- 日後若要改成寬鬆版（看上傳當時的權限），那條斷言會先紅。
 --
 -- UPDATE 的 WITH CHECK 同時擋住「改名搬家」：storage-api 的 move/copy 是 UPDATE name，
 -- 若只驗舊列（USING）不驗新列，有上傳權的成員可以把自家檔案改名成別家的路徑前綴，
