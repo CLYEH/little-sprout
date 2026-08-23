@@ -94,7 +94,7 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 ## 5. Linear（協作狀態機）
 
 - Team key：`LS`（workspace `little-sprout-app`）。**Linear 是唯一的任務狀態來源**；每個狀態的離開就是一個 gate，由 orchestrator 執行轉換並在 ticket 留 comment 記錄 gate 證據。
-- MCP 設定在專案 `.mcp.json`；session 重啟後用 `/mcp` 完成 OAuth。
+- MCP 設定在專案 `.mcp.json`；linear 走 OAuth（session 重啟後用 `/mcp` 完成），其餘皆 stdio＋.env 注入。
 - **MCP 必要環境變數**：repo 根 `.env`（gitignored）須含 `FIGMA_PERSONAL_ACCESS_TOKEN`（figma MCP，LS-42）與 `SUPABASE_ACCESS_TOKEN`（supabase MCP，LS-43）——啟動時注入、缺失即啟動失敗 fail loud。`.env` 的值一律只認 key 名、不讀取。
 - **開票結構**：Project＝epic；Milestone＝feature 群（同一 epic 底下相關的一批 issue）；Issue＝story，必須帶可驗證的驗收條件（同 §1 的 Spec 狀態離開條件）；Sub-issue＝task，**只有在單一 story 需要多個 agent 接力完成**（例如設計→實作→審查分屬不同派工、無法一個 agent 一次做完）時才拆，拆分依據與各 task 的範圍寫在該 story 的 ticket scope 裡，不預先拆。
 
@@ -117,7 +117,7 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 - **DB migration gate**：`supabase/migrations` 的變更必附 RLS 測試（CI 強制）；**破壞性 migration（DROP、縮欄、改型）需使用者本人核可**——核可方式：使用者本人在 PR body 加上 `DESTRUCTIVE-APPROVED`，agent 不得代寫。
 - **Secrets**：金鑰一律不進 repo。Client 端用 gitignored 的 `Secrets.xcconfig`；CI 用 GitHub Secrets；`service_role` key 永不出現在 client 或 repo。
 - **回滾**：正式站問題以 revert PR 處理（GitHub Revert 按鈕產生的 `revert-*` head 在 CI 方向矩陣中對三條保護分支皆合法）；保護分支禁止 force-push。
-- **雲端資料庫只透過 migration 變更**：schema／policy 變更一律走 `supabase/migrations`＋PR，**禁止用 Supabase MCP 或 dashboard 直接改正式專案**。機械面：`.mcp.json` 的 supabase MCP 以 `--read-only --project-ref` 鎖唯讀與專案（LS-43 起走 PAT/stdio，PAT 存 .env），需要寫入時由使用者本人臨時解鎖。`project_ref` 視為公開資訊（本來就會出現在 app 的 API URL），安全性完全依賴 RLS＋key 管理。
+- **雲端資料庫只透過 migration 變更**：schema／policy 變更一律走 `supabase/migrations`＋PR，**禁止用 Supabase MCP 或 dashboard 直接改正式專案**。機械面：`.mcp.json` 的 supabase MCP 以 `--read-only --project-ref` 鎖唯讀與專案（LS-43 起走 PAT/stdio，PAT 存 .env），需要寫入時由使用者本人臨時解鎖。**注意：PAT 是帳號層級、具完整寫入權的 Management API 憑證，唯讀鎖只在本機 client 端生效，且 Management API 路徑繞過 RLS——`.env` 的保管等級＝正式站的保管等級**。`project_ref` 視為公開資訊（本來就會出現在 app 的 API URL）。
 - **Checkpoint**：每張 ticket 完成，orchestrator 把 handoff 訊息留在 Linear ticket comment，讓狀態可還原、可交接。
 - **Feature 收尾儀式**：「feature」的粒度由 orchestrator 判斷並記錄——單張 feature 票，或同批 promote 的票群共用一次。① dead-code-sweeper 巡檢（範圍＝該 feature 的累積 diff）；② orchestrator retro（lesson learning review）——固定檢視：各 gate 的攔截／漏接記錄、review 輪數與返工原因、agent 派工與 model 選擇是否恰當、需要補的工具或 MCP、規約與 gate script 的改善項。改善項一律開票（harness 票走 hotfix 流程），不留口頭。純 harness 票可免 dead-code 巡檢，retro 照做（輕量版）。
 - **模擬器驗不了的項目**（推播、Sign in with Apple 完整流程）：QA 標註「需實機驗證」，不得記為 PASS。
