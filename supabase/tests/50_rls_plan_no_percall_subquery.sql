@@ -60,10 +60,28 @@ select 'fc000000-0000-4000-8000-000000000001',
        'rejected', now() - (i * interval '1 minute')
   from generate_series(1, 2000) i;
 
+-- LS-40：storage.objects 的 policy 是全 schema 唯一「不靠 family_id 欄位、靠路徑第一段」
+-- 判家庭的一組，形狀與其他表不同（qual 左邊是 `(storage.foldername(name))[1]`），
+-- 所以不能靠上面那幾條查詢代驗。2 萬列的理由同 join_requests：判的是 plan 形狀，
+-- 空表上「loops=1」是恆真句。
+-- bucket 'media' 由 20260823030000_storage_policies.sql 建立；storage.objects 上沒有
+-- 任何可服務這條 qual 的索引（那張表不歸我們擁有，加不了索引），所以這裡預期看到
+-- Seq Scan——本測試判的是「有沒有被逐列重算」，不是「有沒有走索引」。
+insert into storage.objects (bucket_id, name, owner, owner_id, created_at)
+select 'media',
+       'fc000000-0000-4000-8000-000000000001/2026/'
+         || lpad((1 + (i % 12))::text, 2, '0') || '/'
+         || gen_random_uuid()::text || '.jpg',
+       'c0000000-0000-4000-8000-000000000001',
+       'c0000000-0000-4000-8000-000000000001',
+       now() - (i * interval '1 minute')
+  from generate_series(1, 20000) i;
+
 analyze public.media;
 analyze public.feed_items;
 analyze public.family_members;
 analyze public.join_requests;
+analyze storage.objects;
 
 do $$
 declare
@@ -84,7 +102,11 @@ begin
   if v_n < 2000 then
     raise exception 'FAIL：join_requests 的 plan 判準需要 ≥2000 列，實際只有 %（空表上 loops=1 是恆真句）', v_n;
   end if;
-  raise notice 'ok：已灌入 5 萬列 media（feed_items 由 trigger 同步產生 5 萬列）與 2 千列 join_requests';
+  select count(*) into v_n from storage.objects where bucket_id = 'media';
+  if v_n < 20000 then
+    raise exception 'FAIL：storage.objects 的 plan 判準需要 ≥2 萬列，實際只有 %', v_n;
+  end if;
+  raise notice 'ok：已灌入 5 萬列 media（feed_items 由 trigger 同步產生 5 萬列）、2 千列 join_requests、2 萬列 storage.objects';
 end;
 $$;
 
@@ -120,6 +142,15 @@ begin
       -- 這條清單的長度平時是個位數，所以慢下來不會有人察覺，直到某天不會。
       ('主查詢 4：加入申請清單（policy 有 OR 兩側）',
        'select id, family_id, applicant_id, status from public.join_requests
+         order by created_at desc limit 50'),
+      -- LS-40：Storage 的 policy 用 `(storage.foldername(name))[1] in (select f::text
+      -- from private.family_ids() f)` 判家庭。這個子查詢一樣不引用外層資料列，
+      -- 所以應該被收斂成 hashed SubPlan 一次求值；寫成 `exists (select 1 from
+      -- private.family_ids() f where name like f::text || '/%')` 那種形狀就會變成
+      -- 逐列 correlated SubPlan，這條查詢就是用來擋住那種改法的。
+      ('主查詢 5：Storage 物件清單（policy 靠路徑第一段判家庭）',
+       'select id, name from storage.objects
+         where bucket_id = ''media''
          order by created_at desc limit 50')
     ) as t(label, stmt)
   loop
@@ -203,6 +234,13 @@ select kind, ref_id, occurred_at from public.feed_items
  where family_id = 'fc000000-0000-4000-8000-000000000001'
    and (occurred_at, ref_id) < (now(), 'ffffffff-ffff-ffff-ffff-ffffffffffff'::uuid)
  order by occurred_at desc, ref_id desc limit 30;
+
+\echo ''
+\echo '=== EXPLAIN 證據 4：Storage 物件清單（LS-40，2 萬列，policy 判路徑第一段）==='
+explain (analyze, verbose, buffers)
+select id, name from storage.objects
+ where bucket_id = 'media'
+ order by created_at desc limit 50;
 
 \echo ''
 \echo '=== 對照組：PLAN §5 稱為必定逐列重算的內嵌 aggregate／correlated 子查詢寫法（loops 會等於掃描列數）==='

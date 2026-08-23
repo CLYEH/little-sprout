@@ -64,13 +64,17 @@ begin
   end loop;
   raise notice 'ok：private 的 trigger 函式對 anon/authenticated 都沒有 EXECUTE';
 
-  -- 正向對照：policy 依賴的集合函式必須留給 authenticated，否則整組 RLS 判斷會噴權限錯
+  -- 正向對照：policy 依賴的函式必須留給 authenticated，否則整組 RLS 判斷會噴權限錯。
+  -- LS-40 的 private.is_media_object_path(text) 不是集合函式（是路徑規約的判斷式，
+  -- 給 storage.objects 的 INSERT／UPDATE WITH CHECK 用），但同樣是「policy 求值時會被
+  -- 呼叫、少了 EXECUTE 整條上傳路徑就炸」的東西，所以登記在同一份清單裡。
   foreach v_fn in array array[
     'private.family_ids()',
     'private.owned_family_ids()',
     'private.contributor_family_ids()',
     'private.uploadable_family_ids()',
-    'private.peer_profile_ids()'
+    'private.peer_profile_ids()',
+    'private.is_media_object_path(text)'
   ] loop
     if not has_function_privilege('authenticated', v_fn, 'execute') then
       raise exception 'FAIL：authenticated 失去 % 的 EXECUTE，所有 RLS policy 都會失效', v_fn;
@@ -79,7 +83,7 @@ begin
       raise exception 'FAIL：anon 不該有 % 的 EXECUTE', v_fn;
     end if;
   end loop;
-  raise notice 'ok：policy 用的五支集合函式只有 authenticated 可執行';
+  raise notice 'ok：policy 用的六支 private 函式只有 authenticated 可執行';
 end;
 $$;
 
