@@ -143,6 +143,54 @@ export const measureAt = (pt, scale, { fg, bg }) => {
   };
 };
 
+/* ── 「刻是為刀重排，但還是同一個字」——把那句話變成八個可以被否證的數（第 5 輪 D4-10）──
+   第 4 輪 reviewer 的判定：板上寫著「同一個字、同一組八筆、同一個筆序」，
+   而底下那張表量的是**可讀性**（最細筆畫、墨覆蓋、對比、反白），其中兩個還是規格算術 ——
+   「同不同一個字」從來沒有被量過，那句話因此只是自我宣告。
+
+   逐筆量三個數（單位：字身，整個字是 100×100）：
+     move  中線的平均位移 —— 「重排」有沒有真的發生（全部為 0 就等於只是加粗）
+     tilt  首尾連線的角度差 —— 這一筆還是不是同一個方向的那一筆
+     len   長度比 —— 這一筆有沒有被拉長或截短成另一支筆
+   再加一條**身分**斷言（這一條才是「同一個字」的真正判準）：
+     每一筆離自己的對應筆，比離其他任何一筆都近 —— 重排沒有把任何一筆搬成另一筆。
+   門檻是設計自己開的，寫在這裡、印在板上、由 G26b 判：位移 ≤ MOVE_MAX、
+   角度 ≤ TILT_MAX、長度比落在 LEN_RANGE 之內，而且身分配對必須全中。 */
+/* 門檻的出處（每一個都不是照著實測畫的線）：
+     moveMax 25  ＝ 四分之一個字身。一筆搬得比這個遠，它就走進別的部件的地盤 —— 那是重寫不是重排。
+     reMin   7.5 ＝ 刻刀最細的一劃（CARVE.lo）。**至少要有一筆**搬得比一劃還遠，
+                   否則「重排」根本沒發生（只是加粗）—— 這一條是下界，防的是自己說謊。
+     tiltMax 20° ＝ 一筆轉超過 20° 就換了方向，橫會變成撇。
+     len 0.7–1.4 ＝ 長度可以為了分白伸縮，但不能被截成另一支筆。
+     nearest 0.75＝ **身分**：每一筆離自己的對應筆，至少要比離最近的其他筆再近 25%。
+                   這一條才是「同一個字」的判準，前面四條只是「沒有亂搬」。 */
+export const CARVE_RULE = { moveMax: 25, reMin: CARVE.lo, tiltMax: 20, lenLo: 0.7, lenHi: 1.4, nearest: 0.75 };
+const bezPt = (p, u) => {
+  const v = 1 - u, a = v * v * v, b = 3 * v * v * u, c = 3 * v * u * u, d = u * u * u;
+  return [a * p[0][0] + b * p[1][0] + c * p[2][0] + d * p[3][0],
+    a * p[0][1] + b * p[1][1] + c * p[2][1] + d * p[3][1]];
+};
+const samples = (pts, n = 24) => Array.from({ length: n + 1 }, (_, i) => bezPt(pts, i / n));
+const meanDist = (A, B) => A.reduce((s, p, i) => s + Math.hypot(p[0] - B[i][0], p[1] - B[i][1]), 0) / A.length;
+const chord = (P) => Math.atan2(P[P.length - 1][1] - P[0][1], P[P.length - 1][0] - P[0][0]) * 180 / Math.PI;
+const arclen = (P) => P.reduce((s, p, i) => (i ? s + Math.hypot(p[0] - P[i - 1][0], p[1] - P[i - 1][1]) : 0), 0);
+export const centerlineDev = () => {
+  const W = WRITTEN.strokes.map((s) => samples(s.pts)), C = SEAL.strokes.map((s) => samples(s.pts));
+  return W.map((w, i) => {
+    const c = C[i];
+    // 身分：這一筆離自己的對應筆，比離別的筆近多少（比值 <1 才成立）
+    const others = C.map((o, j) => (j === i ? Infinity : meanDist(w, o)));
+    const own = meanDist(w, c);
+    return {
+      i: i + 1,
+      move: +own.toFixed(2),
+      tilt: +Math.abs(((chord(c) - chord(w) + 540) % 360) - 180).toFixed(2),
+      len: +(arclen(c) / arclen(w)).toFixed(3),
+      nearest: +(own / Math.min(...others)).toFixed(3),
+    };
+  });
+};
+
 export const APPEARANCE = {
   淺色: { fg: null, bg: null },   // build.mjs 填入 t.ink / 台紙漸層的最不利端
   深色: { fg: null, bg: null },

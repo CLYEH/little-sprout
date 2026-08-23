@@ -10,6 +10,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { inflateSync, deflateSync, crc32 } from 'node:zlib';
+import { hash12 } from './tokens.mjs';
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 /* 第 1 輪 R9 說的是 measure.mjs 的預設埠指向軌 B —— 但同一個洞在這裡也有一份，
@@ -138,10 +139,20 @@ for (const r of rows) {
   if (+g[3] / +g[4] > 0.005) tailBad.push(`${g[1]} ${g[3]}/${g[4]}`);
 }
 
-const MJ = here('measured.json');
-const M = existsSync(MJ) ? JSON.parse(readFileSync(MJ, 'utf8')) : {};
-M.shot = { n: cv.artboards.length, chromeH: CH, sizeBad, tailBad, maxDiff, rows };
-writeFileSync(MJ, JSON.stringify(M, null, 2));
+/* 第 5 輪 D4-08：截圖的結果**不再寫回 measured.json**，改寫自己的 shots.json。
+   兩個理由，都是這一輪被抓到的：
+     ① 順序：管線本來是 build→measure→**shot**→build→verify，所以 PNG 是
+        「印上實測數字之前」的那一版板 —— 人看的東西（截圖）與 gate 驗的東西（產物）
+        永遠不同版，而且 PNG 上沒有任何一條 gate。現在順序改成
+        build→measure→build→**shot**→verify：截的是最終產物。
+     ② 冪等：shot 若還寫進 measured.json，第二次 build 之後那個檔又變了，
+        G21 的戳記鏈就會失效（與第 3 輪 verify 回寫的病一模一樣，那次的解法也是拆檔）。
+   另外逐張記下**截圖當下那張板的原文雜湊**，G17 拿它跟現在磁碟上的比 ——
+   「這張 PNG 是不是這一版產物截的」從此是 gate 判的，不是人記得順序。 */
+const srcFp = {};
+for (const a of cv.artboards) srcFp[a.file] = hash12(readFileSync(here(a.file), 'utf8'));
+writeFileSync(here('shots.json'),
+  `${JSON.stringify({ n: cv.artboards.length, chromeH: CH, sizeBad, tailBad, maxDiff, rows, srcFp, root: localRoot.fp }, null, 2)}\n`);
 
 rmSync(here('_vp.html'));
 for (const f of readdirSync(here('.'))) if (/^_(s|b)_.*\.html$/.test(f)) rmSync(here(f));

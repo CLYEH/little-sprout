@@ -3,7 +3,9 @@
 // Run: node measure.mjs   （需要本機 http server：python3 -m http.server 8741）
 import { writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { H1_GROUPS, RULE, TRACK, hash12 } from './tokens.mjs';
+import { pathToFileURL } from 'node:url';
+import { H1_GROUPS, RULE, TRACK, hash12, dERgb, cellSeen, STUB_USES } from './tokens.mjs';
+import { CANCEL_COV } from './brush.mjs';
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 /* 第 1 輪 R9：上一輪的預設埠 8731 指的是**軌 B 的根目錄**。兩軌的檔名、欄位、
@@ -13,14 +15,26 @@ const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
      ② **開跑前先抓 server 上的 _root.json 與本地的比對**（軌別＋板清單指紋），
         不一致就 exit 1 —— 這一條才是真正的保險，換埠號也騙不過。 */
 const URLBASE = process.env.LS_URL || 'http://localhost:8741';
+/* 產物根目錄。平常是自己所在的目錄；負面對照（selftest）會指到一份動過手腳的複本 ——
+   **URLBASE 不變**，所以「瀏覽器讀到的」與「本地磁碟上的」會不一致，
+   三方對帳就必須當場 exit 1。那正是要驗的事（第 4 輪的 M8 把那三行改成恆真）。 */
+const HERE = process.env.LS_ROOT ? pathToFileURL(`${process.env.LS_ROOT.replace(/\/?$/, '/')}`) : new URL('.', import.meta.url);
+const at = (f) => new URL(f, HERE);
 
-const rootFile = new URL('_root.json', import.meta.url);
+/* `node measure.mjs --selftest` ＝ 跑負面對照（票面指名的入口）。
+   實作放在 selftest.mjs：它要對**同一份 gate 程式**餵壞樣本，包含這一支自己。 */
+if (process.argv.includes('--selftest')) {
+  const r = execFileSync(process.execPath, [new URL('selftest.mjs', import.meta.url).pathname], { encoding: 'utf8', stdio: 'inherit' });
+  process.exit(0);
+}
+
+const rootFile = at('_root.json');
 if (!existsSync(rootFile)) { console.error('measure: 找不到 _root.json —— 先跑 node build.mjs'); process.exit(1); }
 const localRoot = JSON.parse(readFileSync(rootFile, 'utf8'));
 const served = await fetch(`${URLBASE}/_root.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
 if (!served) {
   console.error(`measure: ${URLBASE}/_root.json 抓不到 —— server 沒開，或它的根目錄裡沒有這一軌的產物。`);
-  console.error(`         本軌應該這樣開：python3 -m http.server 8741 （在 ${new URL('.', import.meta.url).pathname}）`);
+  console.error(`         本軌應該這樣開：python3 -m http.server 8741 （在 ${HERE.pathname}）`);
   process.exit(1);
 }
 if (served.track !== localRoot.track || served.fp !== localRoot.fp) {
@@ -48,8 +62,8 @@ const R = JSON.parse(raw);
    probe 是從 URLBASE fetch 的，所以這一關咬的是「瀏覽器讀到的」≠「磁碟上的」。
    三個數字（瀏覽器讀到的／本地磁碟上的／_root.json 記的）必須完全一致。 */
 {
-  const dcFiles = readdirSync(new URL('.', import.meta.url)).filter((f) => f.endsWith('.dc.html')).sort();
-  const local = hash12(JSON.stringify(dcFiles.map((f) => `${f}:${hash12(readFileSync(new URL(f, import.meta.url), 'utf8'))}`).sort()));
+  const dcFiles = readdirSync(HERE).filter((f) => f.endsWith('.dc.html')).sort();
+  const local = hash12(JSON.stringify(dcFiles.map((f) => `${f}:${hash12(readFileSync(at(f), 'utf8'))}`).sort()));
   if (!R.contentFp) { console.error('measure: probe 沒有回報 contentFp —— _probe.html 是舊版，停在這裡。'); process.exit(1); }
   if (R.contentFp !== local || local !== localRoot.contentFp) {
     console.error(`measure: **內容核對失敗**。瀏覽器讀到的 ${dcFiles.length} 份原文雜湊 #${R.contentFp}，`);
@@ -60,8 +74,7 @@ const R = JSON.parse(raw);
   console.log(`measure: 內容核對 OK —— ${dcFiles.length} 份原文 #${local}（板清單、尺寸、內容三者都對上）`);
 }
 
-const prev = existsSync(new URL('measured.json', import.meta.url))
-  ? JSON.parse(readFileSync(new URL('measured.json', import.meta.url), 'utf8')) : {};
+const prev = existsSync(at('measured.json')) ? JSON.parse(readFileSync(at('measured.json'), 'utf8')) : {};
 
 /* ── 呼吸帶：手機與 iPad 分開統計（iPad 是分欄量的）── */
 const ph = R.voids.filter((v) => !v.pad), pad = R.voids.filter((v) => v.pad);
@@ -90,6 +103,60 @@ const tailBoards = new Set(R.boards.filter((b) => b.trail > RULE.pause).map((b) 
 const lowest = (rows) => rows.reduce((a, b) => (b.mid / b.h > a.mid / a.h ? b : a), rows[0] || null);
 const btnTop = lowest(R.mainBtn);
 const btnTail = lowest(R.mainBtn.filter((b) => tailBoards.has(b.file)));
+
+/* 三格刻度的可讀性推導（D4-01）。逐格對位比，因為人讀的是「哪一格不一樣」：
+     adjMin  相鄰兩個狀態之間，同一個格位的**最大** ΔE，取所有相鄰對裡最小的那一組
+     endsMin 剛印好↔用完了，三個格位裡**最小**的那一個 ΔE
+     bandMax 「還沒用的格」與號碼帶之間的 ΔE 最大值（這一條要趨近於 0：刻度＝帶子） */
+const scaleDelta = (rows) => {
+  const out = { adjMin: null, endsMin: null, bandMax: null, pairs: [], bands: [] };
+  const seen = new Map();   // mode|uses → cells
+  for (const r of rows) {
+    if (r.uses === 'blank') continue;
+    const key = `${r.dark ? 'dark' : 'light'}|${r.uses}`;
+    if (!seen.has(key)) seen.set(key, r);
+    if (r.band) {
+      for (const c of r.cells) {
+        if (c.state !== 'left') continue;
+        const d = Math.round(dERgb(c.bg, r.band) * 100) / 100;
+        out.bands.push({ file: r.file, uses: r.uses, dE: d });
+        out.bandMax = out.bandMax === null ? d : Math.max(out.bandMax, d);
+      }
+    }
+  }
+  for (const mode of ['light', 'dark']) {
+    const at = (u) => seen.get(`${mode}|${u}`);
+    for (let i = 0; i < STUB_USES.length - 1; i++) {
+      const a = at(STUB_USES[i]), b = at(STUB_USES[i + 1]);
+      if (!a || !b) continue;
+      const per = a.cells.map((c, j) => Math.round(dERgb(cellSeen(c, CANCEL_COV), cellSeen(b.cells[j], CANCEL_COV)) * 100) / 100);
+      const mx = Math.max(...per);
+      out.pairs.push({ mode, from: STUB_USES[i], to: STUB_USES[i + 1], per, max: mx });
+      out.adjMin = out.adjMin === null ? mx : Math.min(out.adjMin, mx);
+    }
+    const a = at(STUB_USES[0]), z = at(STUB_USES.at(-1));
+    if (a && z) {
+      const per = a.cells.map((c, j) => Math.round(dERgb(cellSeen(c, CANCEL_COV), cellSeen(z.cells[j], CANCEL_COV)) * 100) / 100);
+      const mn = Math.min(...per);
+      out.pairs.push({ mode, from: STUB_USES[0], to: STUB_USES.at(-1), per, min: mn, ends: true });
+      out.endsMin = out.endsMin === null ? mn : Math.min(out.endsMin, mn);
+    }
+  }
+  return out;
+};
+
+/* 深色的照片少一格光（D4-03）：深色版對淺色版的平均亮度比與 p99 比。 */
+const photoStats = (rows) => {
+  const day = rows.filter((r) => r.mode === 'day'), night = rows.filter((r) => r.mode === 'night');
+  if (!day.length || !night.length) return null;
+  const avg = (a, k) => a.reduce((s, r) => s + r[k], 0) / a.length;
+  return {
+    n: rows.length, day: day.length, night: night.length,
+    meanRatio: Math.round(avg(night, 'mean') / avg(day, 'mean') * 1000) / 1000,
+    p99Ratio: Math.round(avg(night, 'p99') / avg(day, 'p99') * 1000) / 1000,
+    dayMean: Math.round(avg(day, 'mean') * 1e4) / 1e4, nightMean: Math.round(avg(night, 'mean') * 1e4) / 1e4,
+  };
+};
 
 const out = {
   ...prev,
@@ -172,9 +239,27 @@ const out = {
   errOverlap: R.err.filter((e) => e.overlap).length,
 
   approve: R.approve, subTap: R.taps,
+
+  /* ── 第 5 輪新增 ──────────────────────────────────────────
+     騎縫線、三格刻度、深色照片、寬度階、AX 標籤、具名豁免、玻璃交界。
+     這裡只做「彙整」與少量推導；判斷全部在 verify（而且 verify 從 raw 重算一次，
+     不吃這裡算好的數 —— 兩邊各自從同一份原始量測出發，對不上就會 FAIL）。 */
+  perf: R.perf,
+  scale: R.scale,
+  scaleDelta: scaleDelta(R.scale),
+  cancelCov: CANCEL_COV,
+  photo: photoStats(R.photoPix),
+  photoPix: R.photoPix,
+  widths: R.widths,
+  ranks: R.ranks,
+  axFit: R.axFit,
+  brandLab: R.brandLab,
+  exemptSeen: [...new Map(R.exemptSeen.map((e) => [`${e.file}|${e.marker}|${e.role}`, e])).values()],
+  exemptBad: [...new Set(R.exemptBad)],
+  glass: R.glass,
 };
 
-writeFileSync(new URL('measured.json', import.meta.url), JSON.stringify(out, null, 2));
+writeFileSync(at('measured.json'), JSON.stringify(out, null, 2));
 console.log(`measured ${out.count} boards · 呼吸帶 手機 ${out.maxVoid}px (${out.maxVoidFile}) / iPad ${out.maxVoidPad}px (${out.maxVoidPadFile})`);
 console.log(`  對比節點 ${out.contrastNodes}（漸層最不利點最低 ${out.contrastMin} @ ${out.contrastWorst}，未達 AAA ${out.contrastFails.length}）· 照片上文字 ${out.textOverPhoto}`);
 console.log(`  漸層 ${out.grad.total} 個使用點／${out.grad.kinds} 種寫法（非垂直 ${out.grad.badDir}）· 壓字節點 ${out.grad.textOn} · 顆粒最暗格最低 ${out.grainMin} @ ${out.grainWorst}（低於 6 的 ${out.grainFails.length}）`);

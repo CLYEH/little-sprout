@@ -1,0 +1,42 @@
+[
+  {
+    "marker": "data-sys",
+    "role": "glass",
+    "gate": "G24",
+    "files": [
+      "GlassSeam"
+    ],
+    "why": "系統的 Liquid Glass 由系統畫，它的邊緣高光方向由系統決定；拿我們的 dir 去驗它只會驗出假的 FAIL。理由與這一條豁免本身都印在 GlassSeam 板的規則③上。"
+  },
+  {
+    "marker": "data-sys",
+    "role": "grabber",
+    "gate": "G24",
+    "files": [
+      "GlassSeam"
+    ],
+    "why": "系統 sheet 的抓桿，與玻璃同一層、同一個理由 —— 它是系統 chrome 的一部分，不是我們畫的表面。"
+  },
+  {
+    "marker": "data-light",
+    "role": "geometry",
+    "gate": "G24",
+    "files": [
+      "WelcomeIPad"
+    ],
+    "why": "iPad 內容欄的左緣投影是**幾何**造成的（那張紙壓在照片上，影子往左投），不是上下受光緣；G24 驗的是上下緣的相對亮度，對一道左向投影沒有意義。"
+  },
+  {
+    "marker": "data-cancel",
+    "role": "stub",
+    "gate": "G4",
+    "files": [
+      "InviteRequests",
+      "InviteRequestsMany",
+      "InviteSpent",
+      "GlassSeam",
+      "Tokens"
+    ],
+    "why": "票根刻度上「用掉的格」蓋的那一道朱筆銷記。G4 管的是「朱＝錯誤訊號，每張板最多兩處」；銷記是紅筆的另一個本業（劃掉），不是錯誤 —— 它永遠只出現在刻度格裡，而且一次出現幾道由剩餘次數決定，不是由設計者決定。"
+  }
+]

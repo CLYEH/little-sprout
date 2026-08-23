@@ -19,7 +19,24 @@
               lightBad: [], lightSeen: [], insetDepth: {}, brand: [], brandBad: [], knobs: [], src: [],
               orphans: [], approve: [], taps: [], darkMotifs: {}, motifs: {},
               pauses: [], pauseBad: [], lips: {}, lipNone: [], lipTotal: 0,
-              toggles: [], mainBtn: [], photos: [] };
+              toggles: [], mainBtn: [], photos: [],
+              /* 第 5 輪新增的量測（D4-01/03/04/06/07） */
+              perf: [], scale: [], photoPix: [], widths: {}, ranks: [], axFit: [], brandLab: [],
+              exemptSeen: [], exemptBad: [], glass: [] };
+
+  /* ── 具名豁免登記簿（D4-07②）──────────────────────────────────
+     第 4 輪：`data-light` 加上**任何值**都能整個豁免 G24，而且沒有任何一份清單記得誰被豁免
+     （reviewer 的 M1b 就是這樣全綠的）。現在 probe 只認 _exempt.json 上具名的
+     marker+role+板名；不在清單上的標記不生效，而且會被記下來讓 MG2 咬。 */
+  const EX = await (await fetch('_exempt.json')).json();
+  const exemptOK = (n, marker, file) => {
+    const holder = n.closest('[' + marker + ']');
+    if (!holder) return false;
+    const role = holder.getAttribute(marker);
+    const ok = EX.some((e) => e.marker === marker && e.role === role && e.files.includes(file));
+    if (!ok) R.exemptBad.push(file + ':' + marker + '="' + role + '" 不在具名清單上 —— 豁免不生效');
+    return ok;
+  };
 
   const cv = await (await fetch('canvas.json')).json();
 
@@ -171,7 +188,7 @@
     for (const n of el.querySelectorAll('*')) {
       const cs = getComputedStyle(n);
       if (!cs.boxShadow.includes('inset')) continue;
-      if (n.closest('[data-sys]')) continue;          // 系統 chrome 的光不歸我們管（具名豁免，印在 GlassSeam 板上）
+      if (exemptOK(n, 'data-sys', name)) continue;    // 系統 chrome 的光不歸我們管（具名豁免，清單在 _exempt.json）
       /* 摺邊（fold）：紙的裁邊只有一道受光的邊，沒有槽。它用 inset 畫，但它不是凹 ——
          所以獨立記帳（G5 驗它「只有一層、沒有模糊」，凹的兩族各自驗自己）。 */
       if (n.getAttribute('data-s') === 'fold') {
@@ -365,7 +382,7 @@
       };
       for (const n of el.querySelectorAll('[data-s],[data-role="knob"]')) {
         const kind = n.getAttribute('data-s') || n.getAttribute('data-role');
-        if (n.closest('[data-sys]') || n.hasAttribute('data-light')) continue;
+        if (exemptOK(n, 'data-sys', name) || exemptOK(n, 'data-light', name)) continue;
         const cs = getComputedStyle(n);
         if (cs.boxShadow === 'none') continue;
         const dir = dirOf(n);
@@ -382,13 +399,17 @@
           if (L === null) continue;
           if (isInset && blur === 0 && dy !== 0) { if (dy > 0) top = L; else bot = L; continue; }
           // 有模糊的那一層（凹的柔影 / 浮的落影）：只驗方向
-          if (dy !== 0 && blur > 0 && Math.sign(dy) !== dir) {
-            R.lightBad.push(who + ' 影子往 ' + (dy > 0 ? '下' : '上') + '（dir=' + dir + ' 要往 ' + (dir > 0 ? '下' : '上') + '）' + sh.slice(0, 40));
+          if (dy !== 0 && blur > 0) {
+            /* 第 5 輪：看過的也要記。只記錯的那一版，母體是空的也一樣全綠 ——
+               所有浮起面的落影一起消失時，G24 會一句話都不說（MG1 咬的就是這種空格）。 */
+            const good = Math.sign(dy) === dir;
+            R.lightSeen.push({ file: name, who, dir, kind: kind === 'raise' ? 'raise' : kind, layer: 'shadow', dy, ok: good });
+            if (!good) R.lightBad.push(who + ' 影子往 ' + (dy > 0 ? '下' : '上') + '（dir=' + dir + ' 要往 ' + (dir > 0 ? '下' : '上') + '）' + sh.slice(0, 40));
           }
         }
         if (top !== null && bot !== null) {
           const okDir = dir > 0 ? top < bot : top > bot;
-          R.lightSeen.push({ file: name, who, dir, top: Math.round(top * 1e4) / 1e4, bot: Math.round(bot * 1e4) / 1e4, ok: okDir });
+          R.lightSeen.push({ file: name, who, dir, kind, layer: 'bevel', top: Math.round(top * 1e4) / 1e4, bot: Math.round(bot * 1e4) / 1e4, ok: okDir });
           if (!okDir) R.lightBad.push(who + ' 上緣 Y=' + top.toFixed(4) + '、下緣 Y=' + bot.toFixed(4) + '（dir=' + dir + ' 要求上' + (dir > 0 ? '暗下亮' : '亮下暗') + '）');
         }
       }
@@ -574,6 +595,141 @@
       const cs = getComputedStyle(n), r = rel(n);
       if (cs.textDecorationLine.includes('underline') && r.h > 0 && r.h < 44 && r.w > 24 && (n.textContent||'').trim())
         R.taps.push(name + ':' + Math.round(r.h) + 'px 「' + (n.textContent||'').trim().slice(0,14) + '」');
+    }
+
+    /* ── 11. 騎縫線是紙的形狀（D4-04）──────────────────────────────
+           量的是 computed mask：有沒有真的挖洞（radial-gradient + transparent）、
+           齒距（mask-size 的 x）、三層取交集、以及缺口在哪一緣。
+           joined 的一對還要對得上：上半的下緣 ＝ 下半的上緣（合起來才是完整的圓孔）。 */
+    for (const n of el.querySelectorAll('[data-perf]')) {
+      const cs = getComputedStyle(n), r = rel(n);
+      const mi = (cs.maskImage && cs.maskImage !== 'none') ? cs.maskImage : cs.webkitMaskImage;
+      const ms = (cs.maskSize && cs.maskSize !== 'auto') ? cs.maskSize : cs.webkitMaskSize;
+      const mc = cs.maskComposite || cs.webkitMaskComposite || '';
+      const layers = shadowLayers(mi || '');
+      const sizes = shadowLayers(ms || '');
+      R.perf.push({
+        file: name, kind: n.getAttribute('data-perf'),
+        layers: layers.length,
+        holes: layers.filter((l) => /radial-gradient/.test(l) && /transparent|rgba\(0, 0, 0, 0\)/.test(l)).length,
+        pitch: sizes.length ? Math.round(parseFloat(sizes[0])) : null,
+        composite: mc.split(',')[0].trim(),
+        top: Math.round(r.t), bottom: Math.round(r.b), w: Math.round(r.w),
+        edgeY: /-b$/.test(n.getAttribute('data-perf')) ? Math.round(r.b) : Math.round(r.t),
+      });
+    }
+
+    /* ── 12. 三格刻度：逐格量顏色與銷記（D4-01）────────────────────
+           量的是**畫面上算出來的顏色**（漸層取樣後的），不是 token；
+           銷記的墨與覆蓋率另外記，verify 用它合成「這一格看起來的顏色」。 */
+    for (const sc of el.querySelectorAll('[data-scale]')) {
+      const cells = [...sc.querySelectorAll('[data-cell]')].map((c) => {
+        const r = rel(c);
+        const mark = c.querySelector('[data-cancel]');
+        return {
+          state: c.getAttribute('data-cell'),
+          bg: bgAt(c, r.t + r.h / 2, base.top, el).slice(0, 3).map((v) => Math.round(v * 100) / 100),
+          ink: mark ? (hexToRgb(getComputedStyle(mark).fill) || []).slice(0, 3) : null,
+          w: Math.round(r.w), h: Math.round(r.h),
+        };
+      });
+      const tk = sc.closest('[data-m="ticket"]');
+      const band = tk ? tk.querySelector('[data-band="code"]') : null;
+      const br = band ? rel(band) : null;
+      /* 模式不用檔名猜：規格板上同時排了淺色與深色兩組，深色那一組掛 data-mode="dark"
+         （與 GlassSeam 板同一個慣例）。 */
+      R.scale.push({ file: name, uses: sc.getAttribute('data-scale'), dark: isDark || !!sc.closest('[data-mode="dark"]'), cells,
+        band: band ? bgAt(band, br.t + br.h / 2, base.top, el).slice(0, 3).map((v) => Math.round(v * 100) / 100) : null });
+    }
+
+    /* ── 13. 深色的照片少一格光（D4-03）────────────────────────────
+           逐像素量：把 img 畫進 canvas，**套用它 computed 的 filter**（畫面上是什麼就量什麼），
+           算平均亮度與 p99。拿掉 filter 這裡的數就會跟淺色一樣，G31 立刻 FAIL。 */
+    for (const im of el.querySelectorAll('img[data-photo]')) {
+      const cs = getComputedStyle(im);
+      const cw = 160, ch = Math.max(1, Math.round(cw * im.naturalHeight / im.naturalWidth));
+      const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+      const ctx = cv.getContext('2d', { willReadFrequently: true });
+      ctx.filter = (cs.filter && cs.filter !== 'none') ? cs.filter : 'none';
+      ctx.drawImage(im, 0, 0, cw, ch);
+      const d = ctx.getImageData(0, 0, cw, ch).data;
+      const ys = []; let sum = 0;
+      for (let i = 0; i < d.length; i += 4) { const Y = lum([d[i], d[i + 1], d[i + 2]]); ys.push(Y); sum += Y; }
+      ys.sort((a, b) => a - b);
+      R.photoPix.push({ file: name, mode: im.getAttribute('data-photo'), filter: cs.filter,
+        mean: Math.round(sum / ys.length * 1e5) / 1e5, p99: Math.round(ys[Math.floor(ys.length * 0.99)] * 1e5) / 1e5 });
+    }
+
+    /* ── 14. 版式的寬度階（D4-06）──────────────────────────────────
+           ① 每一張板上，區塊到底有幾種寬度（第 4 輪：156 個區塊只有 6 種、七成同一個）
+           ② 掛了 data-w 的區塊，與它父層內容盒的差 —— 出血是正的、旁註是負的。 */
+    {
+      const list = [];
+      for (const n of el.querySelectorAll('[data-s],[data-w]')) {
+        const r = rel(n);
+        if (r.w < 200 || r.h < 8) continue;
+        if (n.getAttribute('data-role') === 'link') continue;
+        list.push(Math.round(r.w));
+      }
+      R.widths[name] = { list: [...new Set(list)].sort((a, b) => a - b), kinds: new Set(list).size, n: list.length };
+      for (const n of el.querySelectorAll('[data-w]')) {
+        const r = rel(n), pnt = n.parentElement, pr = rel(pnt), pcs = getComputedStyle(pnt);
+        const inner = pr.w - (parseFloat(pcs.paddingLeft) || 0) - (parseFloat(pcs.paddingRight) || 0)
+          - (parseFloat(pcs.borderLeftWidth) || 0) - (parseFloat(pcs.borderRightWidth) || 0);
+        R.ranks.push({ file: name, rank: n.getAttribute('data-w'), w: Math.round(r.w), inner: Math.round(inner), delta: Math.round(r.w - inner) });
+      }
+    }
+
+    /* ── 15. 登入鍵的標籤（D4-05）──────────────────────────────────
+           ① 每一顆品牌鍵的標籤有沒有折行、內容有沒有超出按鈕
+           ② 板上那條「放不下的示範行」：容器寬 vs 標籤真正需要的寬 */
+    for (const b of el.querySelectorAll('[data-brand]')) {
+      const kids = [...b.children].map(rel);
+      const bcs = getComputedStyle(b), br2 = rel(b);
+      const gap = parseFloat(bcs.gap) || 0;
+      const need = kids.reduce((a, k) => a + k.w, 0) + gap * Math.max(0, kids.length - 1)
+        + (parseFloat(bcs.paddingLeft) || 0) + (parseFloat(bcs.paddingRight) || 0);
+      const lab = [...b.children].find((c) => c.tagName === 'SPAN');
+      const lcs = lab ? getComputedStyle(lab) : null;
+      const lh = lcs ? (parseFloat(lcs.lineHeight) || parseFloat(lcs.fontSize) * 1.2) : 1;
+      R.brandLab.push({ file: name, brand: b.getAttribute('data-brand'), title: b.getAttribute('data-title'),
+        lines: lab ? Math.round(rel(lab).h / lh) : 0, over: Math.round(need - br2.w), text: lab ? lab.textContent.trim() : '' });
+    }
+    for (const n of el.querySelectorAll('[data-fit]')) {
+      const lab = n.querySelector('[data-fit-label]');
+      if (!lab) continue;
+      const room = Math.round(rel(n).w), need = Math.round(lab.getBoundingClientRect().width);
+      R.axFit.push({ file: name, id: n.getAttribute('data-fit'), room, need, short: need - room });
+    }
+
+    /* ── 16. 具名豁免的使用點（D4-07②）＋ 玻璃交界的兩條規則（D4-11）── */
+    for (const n of el.querySelectorAll('[data-sys],[data-light],[data-cancel]')) {
+      for (const mk of ['data-sys', 'data-light', 'data-cancel']) {
+        if (n.hasAttribute(mk)) R.exemptSeen.push({ file: name, marker: mk, role: n.getAttribute(mk) });
+      }
+    }
+    for (const sys of el.querySelectorAll('[data-sys="glass"]')) {
+      const sr = rel(sys);
+      const under = [];
+      for (const n of el.querySelectorAll('*')) {
+        if (sys.contains(n)) continue;
+        const r = rel(n), cs = getComputedStyle(n);
+        if (!(r.l < sr.r && r.r > sr.l && r.t < sr.b && r.b > sr.t)) continue;
+        const bg = hexToRgb(cs.backgroundColor);
+        const paints = (cs.backgroundImage && cs.backgroundImage !== 'none') || (bg && bg[3] > 0);
+        if (!paints) continue;
+        under.push(n.getAttribute('data-grad') || n.getAttribute('data-role') || n.tagName.toLowerCase());
+      }
+      let near = 1e9;
+      for (const rz of el.querySelectorAll('[data-s="raise"]')) {
+        if (sys.contains(rz) || rz.getAttribute('data-role') === 'link') continue;
+        const r = rel(rz);
+        near = Math.min(near, Math.abs(r.b - sr.t), Math.abs(r.t - sr.t));
+      }
+      const md = sys.closest('[data-mode]');
+      R.glass.push({ file: name, mode: md ? md.getAttribute('data-mode') : (isDark ? 'dark' : 'light'),
+        under: [...new Set(under)].sort(), nearRaise: near === 1e9 ? null : Math.round(near),
+        textN: [...sys.querySelectorAll('*')].filter((n) => [...n.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim())).length });
     }
 
     holder.remove();

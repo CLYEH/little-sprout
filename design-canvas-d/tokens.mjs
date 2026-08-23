@@ -33,6 +33,24 @@ export const lch = (hexStr) => {
    絕對色相在 0° 附近繞圈，用絕對值比會比出假的大小關係。 */
 export const dHue = (a, b) => { let d = a - b; while (d > 180) d -= 360; while (d < -180) d += 360; return d; };
 export const dE = (a, b) => { const x = lab(a), y = lab(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); };
+/* 量測回來的顏色是 [r,g,b]（0–255）不是 hex —— 刻度、照片、玻璃那幾條 gate
+   量的都是「畫面上算出來的顏色」，所以 Lab 與 ΔE 另備一組吃陣列的。同一條算式。 */
+export const labRgb = (c) => {
+  const [r, g, b] = c.slice(0, 3).map((v) => srgbToLin(v / 255));
+  const xyz = [(.4124564 * r + .3575761 * g + .1804375 * b) / WP[0],
+    (.2126729 * r + .7151522 * g + .0721750 * b) / WP[1],
+    (.0193339 * r + .1191920 * g + .9503041 * b) / WP[2]];
+  const f = (t) => (t > 216 / 24389 ? Math.cbrt(t) : (841 / 108) * t + 4 / 29);
+  const [fx, fy, fz] = xyz.map(f);
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+};
+export const dERgb = (a, b) => { const x = labRgb(a), y = labRgb(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); };
+/* 一格刻度「看起來的顏色」＝底色與銷記的墨按覆蓋率合成。
+   覆蓋率不是手填的：它是銷記那一筆的多邊形面積除以格子面積（brush.mjs 的 polyArea），
+   而且 verify 會拿**板上那條 path** 重算一次再比對（與 G26「板上畫的就是被量的那一份」同一招）。 */
+export const cellSeen = (cell, cov) => (cell.ink && cell.ink.length === 3
+  ? cell.bg.map((v, i) => v * (1 - cov) + cell.ink[i] * cov)
+  : cell.bg.slice(0, 3));
 const labHex = (L, a, b) => {
   const fy = (L + 16) / 116, fx = fy + a / 500, fz = fy - b / 200;
   const fi = (t) => (t > 6 / 29 ? t ** 3 : (t - 4 / 29) * 3 * (6 / 29) ** 2);
@@ -279,12 +297,16 @@ export const GRAD_WHY = {
   stub0: '號碼帶．用完了。三個量都趨近於零 —— <b>褪完了就沒有褪色的方向了</b>。這與「還沒印上號碼的空票根沒有這條漸層」是同一句話的兩端：沒印過的不會褪，褪完的也不再褪。',
   well: '審核開關關掉時的軌道 ＝ 台紙被打穿之後那個空的槽。與 win 同一條光（凹進去的地方上暗下亮），只是深得多 —— 因為它必須讓把手（那片打孔留下的紙圓片）在 1 公尺外看得出來停在哪一端：實測對比印在 Tokens 板上，硬門檻 3:1。第 2 輪的 OFF 把手對軌道只有 1.04:1，是全稿唯一會出事的可用性缺陷。',
   seam: '台紙壓在照片上投下的影子。紙有厚度，影子從實到無 —— 全稿唯一不是「明暗」而是「有無」的漸層，也是唯一壓在照片上的（所以它上面永遠沒有字）。它是唯一深色不翻面的漸層：紙的邊緣永遠向上蓋住照片，影子就永遠往上，那是幾何不是光源。',
-  perf: '騎縫線。它用 repeating-linear-gradient 的語法，但它是圖樣不是明暗漸層（橫向、1px 高、上面永遠沒有字）—— 全稿唯一的方向例外，列在這裡是為了不讓它變成沒印出來的例外。',
 };
+
+/* 騎縫線第 4 輪還在這張表裡（它那時是一條 repeating-linear-gradient 的圖樣）。
+   本輪它改成遮罩挖出來的洞 —— 遮罩不是背景，所以它從漸層清冊裡整個離開：
+   平印面上合法的背景漸層因此從兩個減成**一個**（只剩號碼帶）。理由見 PERF。 */
+export const PERF_WHY = '騎縫線＝紙被打穿。它不是畫上去的線，是遮罩挖掉的洞：底下透出來的是台紙本身。票根（還沒撕）上下兩半各切自己那一緣的一半，合起來是完整的圓孔；托盤（已經從我們自己那張紙上撕下來）只切上緣，留下半圓的扇貝邊。齒距綁 ax()，所以字級放大時紙上的齒跟著變大。';
 
 /* 刻意<b>沒有</b>漸層的表面，每一個都要有理由 —— 「規則有例外可以，例外沒印出來不行」。 */
 export const NO_GRAD_WHY = {
-  平印: '只能讀的東西不接光：票根外框、明細表、說明框、待核卡片、警語條全部沒有漸層。例外只有兩個，而且是逐個元素標記出來的（data-grad）：號碼帶（stub，那條是褪色不是光）與騎縫線（perf，那是圖樣不是明暗）。G23② 掃的是平印元素<b>與它所有後代</b>的 computed background，這兩個標記以外的漸層一律 FAIL —— 上一輪 reviewer 把台紙漸層加到平印面上，71 項 gate 沒有一項會叫。',
+  平印: '只能讀的東西不接光：票根外框、明細表、說明框、待核卡片、警語條全部沒有漸層。例外只有<b>一個</b>，而且是逐個元素標記出來的（data-grad）：號碼帶（stub，那條是褪色不是光）。第 4 輪還有第二個例外（騎縫線），第 5 輪它改成遮罩挖出來的洞 —— 遮罩不是背景，所以它整個離開了漸層清冊。G23② 掃的是平印元素<b>與它所有後代</b>的 computed background，這個標記以外的漸層一律 FAIL —— 上一輪 reviewer 把台紙漸層加到平印面上，71 項 gate 沒有一項會叫。',
   載入中: '按鈕載入中時漸層整條拿掉、換成實色，唇邊與底同色 —— 按不動的東西不反光。這是「就地轉態」在光語言裡的落地，不是另做一顆按鈕。',
   品牌鍵: 'Apple 與 Google 兩顆鍵的外觀由對方的品牌規範決定：實色底、指定的描邊與字色，不加漸層。我們只借幾何（高度、圓角、間距、命中盒），不借光。',
 };
@@ -298,7 +320,100 @@ export const TIME_KEYS = ['paper', ...STUB_KEYS];           // 「時間」的�
 export const gradCss = (t, name) =>
   `linear-gradient(180deg, ${t.grad[name].map(([c, p]) => `${c} ${p}%`).join(', ')})`;
 export const stubOf = (uses) => `stub${uses}`;
-export const perfCss = (t) => `repeating-linear-gradient(90deg, ${t.edge} 0 6px, transparent 6px 12px)`;
+
+/* ── 騎縫線：紙的形狀，不是印在紙上的線（第 5 輪 D4-04）──────────────────
+   第 4 輪的判定：那條「騎縫線」是 1px 高的 repeating-linear-gradient，畫材是
+   edge（＝印上去的框的顏色），撕了也不會有東西分開，AX5 下不變大 ——
+   **它是一條裝飾線，不是一道齒孔**。真的騎縫線是紙被打穿：撕開之前是一排圓孔，
+   撕開之後留下半圓的扇貝邊。
+
+   所以這一版用遮罩把紙**真的挖掉**（radial-gradient 的 transparent 是洞，
+   底下透出來的是台紙本身，不是我們畫的另一個顏色）：
+     · 圓孔：一排 r=PERF.r 的洞，齒距綁 ax() —— 字級放大時紙上的齒也跟著變大，
+       因為那是同一張紙上的東西（第 4 輪它是硬寫的 12px，AX5 下紙變大、齒不變）。
+     · 邊緣的半圓缺口：票根左右兩緣各咬掉一口。這是印刷品被打孔機咬過的證據。
+   兩種切法各有意思，而且是可以被 gate 咬的區別：
+     joined（票根）  上下兩半各在自己那一緣切一半 → 合起來是**完整的圓孔**（還沒撕）
+     torn  （托盤）  只有一緣被切 → **半圓的扇貝邊**（已經從我們自己那張紙上撕下來）
+   遮罩不是背景，所以騎縫線從此不在「漸層清冊」裡 —— 平印面上的背景漸層例外
+   因此從兩個減成一個（只剩號碼帶）。 */
+export const PERF = {
+  r: 4,        // 圓孔半徑
+  pitch: 18,   // 齒距（孔心到孔心）；AX 板用 ax(pitch)
+  notch: 10,   // 左右兩緣的半圓缺口半徑
+  band: 20,    // 齒孔帶的高度（＝2×notch，缺口不會被切掉一半）
+};
+/* 一層遮罩 ＝ 一種形狀。三層取交集（intersect）：一排圓孔 ∩ 左缺口 ∩ 右缺口。
+   edge='bottom' 切自己的下緣、'top' 切自己的上緣。位置用百分比不用 px ——
+   元件高度會隨 Dynamic Type 變，用 px 的話齒孔會跑掉。 */
+export const perfMask = (edge, pitch = PERF.pitch, { r = PERF.r, notch = PERF.notch } = {}) => {
+  const y = edge === 'top' ? '0' : '100%';
+  const hole = (cx, rad) => `radial-gradient(circle ${rad}px at ${cx} ${y}, transparent ${rad}px, #000 ${rad + 0.5}px)`;
+  const img = [hole('50%', r), hole('0', notch), hole('100%', notch)].join(', ');
+  const size = [`${pitch}px 100%`, '100% 100%', '100% 100%'].join(', ');
+  const rep = ['repeat-x', 'no-repeat', 'no-repeat'].join(', ');
+  return `-webkit-mask-image:${img};-webkit-mask-size:${size};-webkit-mask-repeat:${rep};-webkit-mask-composite:source-in,source-in;`
+    + `mask-image:${img};mask-size:${size};mask-repeat:${rep};mask-composite:intersect,intersect`;
+};
+
+/* ── 深色的照片：少一格光（第 5 輪 D4-03）───────────────────────────
+   第 4 輪實測：深色版的照片與淺色版逐像素平均差 ΔRGB −2.6 ——
+   「這一稿蓋了一個有光源、有時間的世界，唯獨照片不在裡面。」
+
+   為什麼不照台紙的比例降：台紙從 Y=0.771 掉到 0.0097（1.3%），照片跟著掉就是一塊黑。
+   相紙不是台紙 —— 它是這本相簿裡唯一自己就是影像的東西，把它降到紙的比例等於把主角關掉。
+   所以規則用攝影自己的單位寫：**夜裡少一格光**（曝光少一格 ＝ 亮度剩一半）。
+   sRGB 的 brightness() 是通道乘法，所以 0.5^(1/2.2)=0.73 —— 這個數是推出來的，
+   實測（probe 逐像素）平均亮度比 0.497、p99 比 0.490，兩者都落在「一格」上。
+   誠實話（印在 Tokens 板上）：少一格之後照片的白仍然比它裱在上面的紙亮十幾倍。
+   一格是「看得出來變暗、而且長輩仍然看得清楚祖母的臉」之間的取捨，不是物理的終點。 */
+export const PHOTO_STOP = 0.5;                       // 一格＝亮度剩一半
+export const PHOTO_DIM = +(PHOTO_STOP ** (1 / 2.2)).toFixed(2);   // ＝0.73，寫進 CSS 的 brightness()
+export const PHOTO_STOP_TOL = 0.04;
+
+/* ── 三格刻度的可讀性門檻（第 5 輪 D4-01）──────────────────────────
+   第 4 輪實測：五個狀態裡有三個狀態的刻度**逐格顏色完全一樣**（ΔE=0）——
+   因為「還沒用的格」永遠畫 stub3、「用掉的格」永遠畫 stub0，
+   號碼帶自己走到第幾階從來沒有出現在刻度上。兩件事一起修（見 build 的 stubScale）：
+     ① 還沒用的格改畫**當前階**（與號碼帶同一支漸層，ΔE→0）
+     ② 用掉的格蓋一道**朱筆銷記**（照相館的存根蓋銷）
+   門檻：相鄰狀態之間，同一個格位的最大 ΔE ≥ adj；剛印好 ↔ 用完了之間，
+   三個格位**每一個**都要 ≥ ends。逐格對位比，因為人讀的是「哪一格不一樣」。 */
+export const SCALE_DE = { adj: 3, ends: 6, band: 1.0 };
+
+/* ── 具名豁免登記簿（第 5 輪 D4-07②）────────────────────────────
+   第 4 輪的 M1b：在任何一個元素上加 data-light="隨便什麼值" 就能讓它整個豁免 G24 的
+   光方向檢查，而且**沒有任何一份清單記得誰被豁免了** —— 那正好違反 GlassSeam 板
+   自己寫的規則③（「豁免必須是具名的」）。
+
+   這張表是那份具名清單，而且是**等於**不是包含：
+     · 畫面上出現的每一個豁免標記，都必須在這裡（多一個 → FAIL）
+     · 這裡的每一筆，畫面上都必須真的用到（少一個 → FAIL，死掉的豁免也是漏洞）
+     · _probe.html 只認這張表裡的 marker+role；不在表上的值不豁免（所以 M1b 那一招
+       現在會**同時**踩到兩條線：豁免不生效、而且登記簿對不上）
+   欄位：marker（屬性）／role（屬性值）／files（哪幾張板）／gate（豁免哪一條）／why。 */
+export const EXEMPT = [
+  {
+    marker: 'data-sys', role: 'glass', gate: 'G24',
+    files: ['GlassSeam'],
+    why: '系統的 Liquid Glass 由系統畫，它的邊緣高光方向由系統決定；拿我們的 dir 去驗它只會驗出假的 FAIL。理由與這一條豁免本身都印在 GlassSeam 板的規則③上。',
+  },
+  {
+    marker: 'data-sys', role: 'grabber', gate: 'G24',
+    files: ['GlassSeam'],
+    why: '系統 sheet 的抓桿，與玻璃同一層、同一個理由 —— 它是系統 chrome 的一部分，不是我們畫的表面。',
+  },
+  {
+    marker: 'data-light', role: 'geometry', gate: 'G24',
+    files: ['WelcomeIPad'],
+    why: 'iPad 內容欄的左緣投影是**幾何**造成的（那張紙壓在照片上，影子往左投），不是上下受光緣；G24 驗的是上下緣的相對亮度，對一道左向投影沒有意義。',
+  },
+  {
+    marker: 'data-cancel', role: 'stub', gate: 'G4',
+    files: ['InviteRequests', 'InviteRequestsMany', 'InviteSpent', 'GlassSeam', 'Tokens'],
+    why: '票根刻度上「用掉的格」蓋的那一道朱筆銷記。G4 管的是「朱＝錯誤訊號，每張板最多兩處」；銷記是紅筆的另一個本業（劃掉），不是錯誤 —— 它永遠只出現在刻度格裡，而且一次出現幾道由剩餘次數決定，不是由設計者決定。',
+  },
+];
 
 /* ── 對比門檻：一個數字一個出處 ──────────────────────
    aaa   內文的硬門檻（WCAG 2.1 AAA）。以「漸層最不利點」計，不是以平均值計。
@@ -373,7 +488,7 @@ export const TY = {
 export const H1_GROUPS = {
   有步驟條: ['Email', 'EmailError', 'EmailSending', 'Otp', 'OtpError', 'OtpErrorDark', 'JoinCode', 'JoinCodeDark', 'JoinExpired', 'JoinUsedUp'],
   無步驟條: ['Fork', 'CreateFamily', 'CreateFamilySending', 'Pending', 'InviteEmpty', 'InviteGenerating',
-    'InviteReady', 'InviteSpent', 'InviteApprovalOff', 'InviteApprovalOffDark', 'InviteRequests', 'InviteRequestsMany'],
+    'InviteReady', 'InviteReadyDark', 'InviteSpent', 'InviteApprovalOff', 'InviteApprovalOffDark', 'InviteRequests', 'InviteRequestsMany'],
   '歡迎頁（H1 在卡紙裡）': ['Main', 'WelcomeDark'],
 };
 export const H1_EXCLUDED = ['WelcomeIPad', 'ForkIPad', 'StressType', 'StressLoginAX', 'StressCodeAX', 'StressContent', 'Tokens', 'Notes', 'AppIcon', 'GlassSeam'];
@@ -382,9 +497,13 @@ export const H1_EXCLUDED = ['WelcomeIPad', 'ForkIPad', 'StressType', 'StressLogi
    iPad 跨欄基線與 H1 分組基線都用這個常數換算，verify 也用同一個。 */
 export const CAP = 0.72;
 
-/* AX5 ≈ 310%。壓力板用，是推導值不是新階。 */
+/* AX5 ≈ 310%、AX4 ≈ 235%（body 17pt → 53／40，照 iOS 的 accessibility 字級表）。
+   壓力板用，是推導值不是新階。第 5 輪多了 AX4：登入鍵的標籤在 AX4 還說得完整句
+   （「Apple 登入」），AX5 才放不下 —— 那個斷點是量出來的，見 StressLoginAX 板。 */
 export const AX = 3.1;
+export const AX4 = 2.35;
 export const ax = (px) => Math.round(px * AX);
+export const ax4 = (px) => Math.round(px * AX4);
 
 /* ── 呼吸帶兩條規則的門檻：一個數字一個出處 ──────────
    pause  ①「內容首末之間，任何一段連續空白 ≤120px」的門檻
@@ -398,3 +517,14 @@ export const RULE = { pause: 120, btnPct: 70 };
    verify.mjs 拿現行 measured.json 的指紋比對 —— 不一致＝板上印的實測句是上一版的。
    兩邊算法必須是同一份，所以定義在這裡。 */
 export const hash12 = (s) => createHash('sha256').update(s).digest('hex').slice(0, 12);
+
+/* ── 產物上蓋的量測戳記（第 5 輪 D4-09）────────────────────────────
+   戳記**排除 measured.json 的 root 欄位**。不排除的話會有一個自我餵食的迴圈：
+     板上的戳記 → 板的內容 → root.contentFp → measured.json → 板上的戳記……
+   第 4 輪因此跑兩次就得到兩份不同的產物，沒有人能靠重建來核對這一份稿子。
+   root 自己另有兩道守衛（measure 開跑前的三方對帳、G21b／G21c），不靠戳記。
+   build 蓋章與 verify 比對用的是**同一個函式**，所以不可能各算各的。 */
+export const measStamp = (raw) => {
+  if (!raw) return 'no-measurement';
+  try { const o = JSON.parse(raw); delete o.root; return hash12(JSON.stringify(o)); } catch { return hash12(raw); }
+};

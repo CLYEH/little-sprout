@@ -2,12 +2,13 @@
 // tokens.mjs 是唯一 token 來源 -> 31 .dc.html artboards。Run: node build.mjs
 import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import {
-  T, SP, FIX, TY, FONT, MONO, CAP, H1_GROUPS, H1_EXCLUDED, RULE, AX, ax, hash12,
-  GRAD_WHY, NO_GRAD_WHY, GRAD_KEYS, STUB_KEYS, LIGHT_KEYS, TIME_KEYS, CONTRAST, gradCss, perfCss,
+  T, SP, FIX, TY, FONT, MONO, CAP, H1_GROUPS, H1_EXCLUDED, RULE, AX, ax, AX4, ax4, hash12,
+  GRAD_WHY, NO_GRAD_WHY, PERF_WHY, GRAD_KEYS, STUB_KEYS, LIGHT_KEYS, TIME_KEYS, CONTRAST, gradCss,
+  PERF, perfMask, PHOTO_STOP, PHOTO_DIM, SCALE_DE, EXEMPT,
   TRACK, TEMP, TEMP_TOL, HUE_MIN, LIGHT_DH, TIME_DH, STUB_KNEE, STUB_AT_KNEE, STUB_USES, USES_TOTAL,
-  lch, lchHex, dHue, dE, stubOf, hueDE, HUE_DE_MIN, INSET_KEYS,
+  lch, lchHex, dHue, dE, stubOf, hueDE, HUE_DE_MIN, INSET_KEYS, measStamp,
 } from './tokens.mjs';
-import { inkMark, sealMark, VB } from './brush.mjs';
+import { inkMark, sealMark, VB, cancelMark, CANCEL_COV } from './brush.mjs';
 import * as Icon from './icon.mjs';
 
 /* ── 給自驗管線的標記 ──────────────────────────────────
@@ -139,7 +140,19 @@ const press = (t) => `text-shadow:${t.press}`;                  // 平印的字�
 const rule = (t) => `<div style="height:${FIX.hair}px;background:${t.edge}"></div>`;
 // 騎縫線：唯一的方向例外，所以它自己掛牌（G23② 掃平印面上的漸層時，
 // 只認 data-grad 標記過的 stub 與 perf 兩種；沒掛牌的一律 FAIL）。
-const perf = (t) => `<div data-grad="perf" style="height:${FIX.hair}px;background:${perfCss(t)}"></div>`;
+/* 騎縫線（第 5 輪 D4-04：改成紙的形狀）。
+   第 4 輪這裡是一條 1px 高、用橫向 repeating 背景漸層畫出來的虛線 ——
+   一條**印在紙上**的虛線：撕開它不會有東西分開，AX5 下紙長大它不長大，
+   而且它的畫材是 edge（我們用來畫「印上去的框」的那個顏色）。reviewer 判它是裝飾線。
+
+   現在它是遮罩挖出來的洞（見 tokens.mjs 的 perfMask）：
+     · 洞裡透出來的是台紙本身 —— 沒有任何一個像素是我們畫的
+     · 齒距綁 ax()：AX 板上的紙變大，紙上的齒跟著變大
+     · joined（票根，還沒撕）＝上下兩半各切自己那一緣的一半 → 合起來是完整的圓孔
+       torn （托盤，撕下來的那一邊）＝只切一緣 → 半圓的扇貝邊
+   perfCut() 回傳的是「屬性＋樣式片段」，貼在**要被切的那個元素**上。 */
+const perfCut = (kind, edge, pitch = PERF.pitch) =>
+  ({ attr: ` data-perf="${kind}-${edge[0]}"`, css: perfMask(edge, pitch) });
 
 /* ─────────────────────────  控制項  ───────────────────────── */
 
@@ -179,11 +192,19 @@ const btn = (t, label, { icon = '', tone = 'primary', busy = false } = {}) => {
    第 1 輪 R7：AX5 的版本不是自己把標誌堆到字上面（那也是改外觀），
    是換成官方的**短標題**「登入」，版式一律維持橫排。 */
 const APPLE_MARK = '<path d="M14.02 10.6c.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.62-1.7-3.18-1.72-1.35-.14-2.64.79-3.33.79-.69 0-1.75-.77-2.87-.75-1.48.02-2.84.86-3.6 2.18-1.53 2.66-.39 6.6 1.1 8.76.73 1.06 1.6 2.25 2.74 2.2 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.08 2.65-2.14.84-1.23 1.18-2.42 1.2-2.48-.03-.01-2.3-.88-2.29-3.51ZM11.85 4.16c.6-.74 1.01-1.76.9-2.78-.87.04-1.93.58-2.56 1.31-.56.65-1.06 1.69-.93 2.69.97.07 1.97-.49 2.59-1.22Z"/>';
+/* 標籤有三階，因為空間有三階（第 5 輪 D4-05）：
+     full  「透過 Apple 登入」 —— 一般字級
+     brand 「Apple 登入」     —— AX4：虛詞（透過／用）丟掉，**品牌詞留著**
+     short 「登入」           —— AX5：官方短標題。品牌詞由商標本身與無障礙名稱承擔
+   第 4 輪這裡直接從 full 跳到 short，兩顆鍵在 AX5 下都只剩「登入」二字，
+   語意塌掉。中間這一階（brand）是實測出來的：見 StressLoginAX 板上的三個寬度。 */
+const signInLabel = (brand, title) => (title === 'short' ? '登入' : title === 'brand' ? `${brand} 登入` : `透過 ${brand} 登入`);
 const btnApple = (t, size = null) => {
   const s = size || { label: TY.bs, mark: [20, 24], h: FIX.button };
-  return `<div${S('raise', 'button')} data-brand="apple" style="background:${t.appleBg};border-radius:14px;min-height:${s.h}px;display:flex;align-items:center;justify-content:center;gap:${SP.s}px;padding:0 ${SP.l}px;color:${t.appleFg}">
+  const pad = s.pad || SP.l;
+  return `<div${S('raise', 'button')} data-brand="apple" data-title="${s.title || 'full'}" role="button" aria-label="使用 Apple 帳號登入" style="background:${t.appleBg};border-radius:14px;min-height:${s.h}px;display:flex;align-items:center;justify-content:center;gap:${SP.s}px;padding:0 ${pad}px;color:${t.appleFg}">
       <svg width="${s.mark[0]}" height="${s.mark[1]}" viewBox="0 0 17 20" fill="${t.appleFg}" aria-hidden="true" style="flex:none">${APPLE_MARK}</svg>
-      <span style="${s.label};color:${t.appleFg};text-align:center">${s.short ? '登入' : '透過 Apple 登入'}</span>
+      <span style="${s.label};color:${t.appleFg};text-align:center;white-space:nowrap">${signInLabel('Apple', s.title)}</span>
     </div>`;
 };
 
@@ -197,9 +218,10 @@ const gMark = (n) => `<svg width="${n}" height="${n}" viewBox="0 0 48 48" aria-h
 
 const btnGoogle = (t, size = null) => {
   const s = size || { label: TY.bs, mark: 20, h: FIX.button };
-  return `<div${S('raise', 'button')} data-brand="google" style="background:${t.googleBg};border-radius:14px;border:${FIX.hair}px solid ${t.googleLine};min-height:${s.h}px;display:flex;align-items:center;justify-content:center;gap:${SP.m}px;padding:0 ${SP.l}px">
+  const pad = s.pad || SP.l;
+  return `<div${S('raise', 'button')} data-brand="google" data-title="${s.title || 'full'}" role="button" aria-label="使用 Google 帳號登入" style="background:${t.googleBg};border-radius:14px;border:${FIX.hair}px solid ${t.googleLine};min-height:${s.h}px;display:flex;align-items:center;justify-content:center;gap:${SP.m}px;padding:0 ${pad}px">
       ${gMark(s.mark)}
-      <span style="${s.label};color:${t.googleFg};text-align:center">${s.short ? '登入' : '透過 Google 登入'}</span>
+      <span style="${s.label};color:${t.googleFg};text-align:center;white-space:nowrap">${signInLabel('Google', s.title)}</span>
     </div>`;
 };
 
@@ -256,28 +278,44 @@ const field = (t, { label, value = '', placeholder = '', state = 'idle', hint = 
 
 const errorLine = (t, msg) => `<span style="${TY.bs};color:${t.pen}">${msg}</span>`;
 
-// 六位碼的第一種正典：3＋3 分格，36pt 等寬。信裡的驗證碼（純數字）與邀請碼（英數）
-// 共用同一個元件 —— 兩者長度相同、分組相同，長輩只要學一次。
-// 邀請碼那一版在兩組中間印一個「、」，因為它是要**唸出來**的：畫面上的分組
-// 就是嘴巴唸出來的分組（「K7M、2QD」）。驗證碼是從信裡抄過來的，不必唸，所以沒有那一撇。
-const codeCells = (t, digits, { caret = -1, error = false, sep = false } = {}) => {
+/* 六位碼的第一種正典：3＋3 分格，36pt 等寬。信裡的驗證碼（純數字）與邀請碼（英數）
+   共用同一個元件 —— 兩者長度相同、分組相同，長輩只要學一次。
+
+   第 5 輪 D4-13：第 4 輪邀請碼那一版在兩組中間印了一個「、」（理由是「它要唸出來」）。
+   撤掉。理由是這一稿自己的規則：**印刷品用間距分組，不用標點** ——
+   票根上的兩組號碼中間一個字元都沒有（G7 已經在驗那件事），輸入格卻多一個頓號，
+   等於同一個東西在同一條流程裡有兩種分組寫法。而且「唸出來」這件事本來就由
+   下面那句唸法句承擔（「念的時候分兩組：…」），不需要在格子中間再放一個標點。
+   兩種碼從此完全同一個版式：24（SP.xl）pt 的組間距，沒有標點。 */
+const codeCells = (t, digits, { caret = -1, error = false } = {}) => {
   const cell = (d, i) => `<div${S('win', 'cell')}${MO('cells')} style="flex:1;background:${gradCss(t, 'win')};border:${i === caret ? 2 : FIX.hair}px solid ${i === caret ? t.ink : t.edge};border-radius:12px;box-shadow:${insetShadow(t)};height:${FIX.cell}px;display:flex;align-items:center;justify-content:center">
       <span style="${TY.n2};color:${t.ink}">${d || ''}</span></div>`;
-  const group = (from) => `<div style="display:flex;gap:${SP.s}px;flex:1">${digits.slice(from, from + 3).map((d, j) => cell(d, from + j)).join('')}</div>`;
-  const middle = sep
-    ? `<div style="display:flex;gap:${SP.m}px;align-items:center">${group(0)}<span style="${TY.c};color:${t.ink2};flex:none">、</span>${group(3)}</div>`
-    : `<div style="display:flex;gap:${SP.xl}px">${group(0)}${group(3)}</div>`;
+  const group = (from) => `<div data-group="${from / 3 + 1}" style="display:flex;gap:${SP.s}px;flex:1">${digits.slice(from, from + 3).map((d, j) => cell(d, from + j)).join('')}</div>`;
   return `<div style="display:flex;flex-direction:column;gap:${SP.s}px">
-      ${middle}
+      <div data-cellgroups="1" style="display:flex;gap:${SP.xl}px">${group(0)}${group(3)}</div>
       ${error ? errBar(t) : ''}
     </div>`;
 };
 
 /* ─────────────────────  平印：只能讀的東西  ───────────────────── */
 
+/* ── 版式的三階寬度（第 5 輪 D4-06）────────────────────────────────
+   第 4 輪的判定：「156 個區塊只有 6 種寬度、72% 是同一個 342px —— 材質做滿、空間沒做。
+   歡迎頁的出血自己證明了破欄有效，然後一次都沒有再用。」
+
+   所以版式自己也要有一個階，而且階要有意思，不是為了長得不一樣：
+     出血 bleed（板寬）    只給**拿在手上的實體**：票根、以及托盤（從我們的紙上撕下來的那一塊）
+     欄   col  （版心）    給**可以操作的東西**：輸入框、按鈕、選項卡、待核卡片
+     旁註 note （版心−2×${'SP.xl'}）給**引用與說明**：明細表、說明框、提示句
+   一句話：主體物件與幫助文字不得同寬、也不得同皮。
+   旁註因此也撤掉了它的皮 —— 說明文字不是另一張紙，它就印在台紙上，
+   靠一道 ${'FIX.hair'}px 的邊線與縮排表示身分（印刷品的旁註本來就是這樣做的）。 */
+const NOTE_IN = SP.xl;
+const noteW = ` data-w="note" style="margin-left:${NOTE_IN}px;margin-right:${NOTE_IN}px;`;
+
 // 明細表：一格一格印在紙上。Pending、信件預覽、號碼用途都用同一個元件。
 const table = (t, rows, { head = null, radius = 14 } = {}) => `
-  <div${S('flat')} style="${flat(t, { pad: `${SP.l}px`, radius })};display:flex;flex-direction:column;gap:${SP.m}px">
+  <div${S('flat')}${noteW}${flat(t, { pad: `${SP.l}px`, radius })};display:flex;flex-direction:column;gap:${SP.m}px">
     ${head ? `<span style="${TY.l};color:${t.ink2};${press(t)}">${head}</span>` : ''}
     ${rows.map((r, i) => `${(i || head) ? rule(t) : ''}
       ${Array.isArray(r)
@@ -291,13 +329,26 @@ const table = (t, rows, { head = null, radius = 14 } = {}) => `
 // 出錯的時候，明細表收成一行 —— 讓「欄位 → 錯誤句 → 下一步」擠成一群，
 // 中間不要卡一張三行的表。同樣是平印，只是降一級。
 const tableLine = (t, text) => `
-  <div${S('flat')} style="${flat(t, { pad: `${SP.m}px ${SP.l}px` })}">
+  <div${S('flat')}${noteW}${flat(t, { pad: `${SP.m}px ${SP.l}px` })}">
     <span style="${TY.b};color:${t.ink2};${press(t)}">${text}</span>
   </div>`;
 
-// 說明框：也是平印。以前它穿著開窗的衣服 —— 那是錯的，它不能填東西。
-const noteBox = (t, icon, text, { size = TY.b } = {}) => `
-  <div${S('flat')} style="${flat(t, { pad: `${SP.l}px` })};display:flex;gap:${SP.m}px;align-items:flex-start">
+/* 說明框（第 5 輪 D4-06：撤皮）。第 4 輪它是一張與主體同寬、同一種皮的平印卡 ——
+   「主體物件與幫助文字同寬同皮」，讀者因此分不出哪一塊是要做的事、哪一塊是旁邊的解釋。
+   現在它**沒有皮**：說明文字直接印在台紙上，靠縮排與一道邊線表示身分 ——
+   印刷品的旁註本來就是這樣做的，而且這樣一來「平印的皮」重新只代表一件事：
+   那是一張真的印刷品（票根、明細表、警語條），不是一段幫助文字。 */
+/* 旁註（沒有圖示的那一種）：說明「怎麼用、接下來會發生什麼」的句子。
+   與 noteBox 同一階、同一個處理（縮排＋左側邊線），差別只有它沒有圖示。
+   **警告不用這一階**：後果的句子（「號碼給誰就等於邀請誰」）留在欄寬 ——
+   旁註是「可以晚點再讀」的東西，警告不是。 */
+const hint = (t, text, { size = TY.cap } = {}) => `
+  <div data-w="note" style="margin-left:${NOTE_IN}px;margin-right:${NOTE_IN}px;padding:${SP.s}px 0 ${SP.s}px ${SP.m}px;border-left:${FIX.hair}px solid ${t.edge}">
+    <span style="${size};color:${t.ink2};${press(t)}">${text}</span>
+  </div>`;
+
+const noteBox = (t, icon, text, { size = TY.b, inset = true } = {}) => `
+  <div${inset ? ' data-w="note"' : ''} style="${inset ? `margin-left:${NOTE_IN}px;margin-right:${NOTE_IN}px;` : ''}padding:${SP.m}px 0 ${SP.m}px ${SP.m}px;border-left:${FIX.hair}px solid ${t.edge};display:flex;gap:${SP.m}px;align-items:flex-start">
     <span style="display:flex;flex:none;color:${t.ink2}">${icon}</span>
     <span style="${size};color:${t.ink2};${press(t)}">${text}</span>
   </div>`;
@@ -312,15 +363,24 @@ const noteBox = (t, icon, text, { size = TY.b } = {}) => `
    ＝60pt 的行高）、騎縫線、下緣帶完全一樣，所以三張畫面的高度一模一樣 ——
    開關列因此可以固定在票根正下方，不會因為狀態不同而跳位（第 3 輪 R4）。
    已產生＝平印（只能讀）；還沒產生＝凹（可以填的號碼位，白名單上的 codeslot）。 */
-const ticketShell = (t, { surface, motif = '', label = '邀 請 碼', main, foot, fade = null }) => `
-  <div${surface.mark}${motif} style="${surface.css};overflow:hidden">
-    <div${fade ? ` data-grad="${fade}" data-band="code"` : ''} style="${fade ? `background:${gradCss(t, fade)};` : ''}padding:${SP.xl}px;display:flex;flex-direction:column;align-items:center;gap:${SP.m}px">
+/* 票根是**出血**的（第 5 輪 D4-06）。第 4 輪整份稿子 156 個區塊只有 6 種寬度、
+   72% 是同一個 342px —— reviewer 的判定是「材質做滿、空間沒做」。這一稿的版式有
+   三階寬度（出血／欄／旁註），而票根拿的是最上面那一階：它是全 app 唯一一個
+   「拿在手上的實體」，理當是唯一比版心寬的東西 —— 印刷品是從整張紙上裁下來的，
+   不會乖乖坐在版心裡。出血因此不是排版效果，是這張票的物理：它跑出版心、
+   左右兩緣被打孔機咬掉一口（那兩個半圓缺口現在真的在螢幕邊上）。
+   左右不留圓角：紙從螢幕邊緣繼續延伸出去，圓角會把它變回一張卡片。 */
+const ticketShell = (t, { surface, motif = '', label = '邀 請 碼', main, foot, fade = null, pitch = PERF.pitch }) => {
+  const up = perfCut('joined', 'bottom', pitch), lo = perfCut('joined', 'top', pitch);
+  return `
+  <div${surface.mark}${motif} data-w="bleed" style="${surface.css};overflow:hidden;margin:0 -${FIX.gutter}px">
+    <div${up.attr}${fade ? ` data-grad="${fade}" data-band="code"` : ''} style="${fade ? `background:${gradCss(t, fade)};` : ''}${up.css};padding:${SP.xl}px;display:flex;flex-direction:column;align-items:center;gap:${SP.m}px">
       <span style="${TY.cap};color:${t.ink2};letter-spacing:.16em;${press(t)}">${label}</span>
       <div style="height:${FIX.codeLine}px;display:flex;align-items:center;justify-content:center;gap:${SP.m}px">${main}</div>
     </div>
-    ${perf(t)}
-    <div style="padding:${SP.m}px ${SP.xl}px;display:flex;flex-direction:column;gap:${SP.xs}px;background:${t.board3}">${foot}</div>
+    <div${lo.attr} style="${lo.css};padding:${SP.m}px ${SP.xl}px;display:flex;flex-direction:column;gap:${SP.xs}px;background:${t.board3}">${foot}</div>
   </div>`;
+};
 
 /* ── 三格刻度：把「褪色」變成一張畫面裡讀得出來的東西（第 3 輪 R1）──────────
    第 2 輪的褪色階是真的：號碼帶是染料（會褪）、號碼是碳墨（不褪）。但 reviewer 量出
@@ -334,14 +394,28 @@ const ticketShell = (t, { surface, motif = '', label = '邀 請 碼', main, foot
    結果是：任何一張有票根的畫面，單獨看都讀得出「三格用掉一格」。
    空票根（還沒產生號碼）的三格是**空白的**：沒印過的東西不會褪 ——
    這與「褪完了就沒有褪色的方向了」是同一句話的兩端。 */
+/* 第 5 輪 D4-01：第 4 輪的三格刻度**沒有達成它的目的**。reviewer 遮住說明文字實測：
+   五個狀態裡有三個狀態的刻度逐格顏色完全一樣（ΔE=0）—— 因為「還沒用的格」永遠畫
+   stub3、「用掉的格」永遠畫 stub0，**號碼帶自己走到第幾階從來沒有出現在刻度上**。
+   刻度只用了褪色階的兩端，中間兩階（正是「用過幾次」的資訊）不在刻度上。
+
+   兩件事一起修，兩件都是這張票根本來就有的東西：
+     ① 還沒用的格改畫**當前階**（與號碼帶同一支漸層）—— 刻度與帶子從此是同一件事
+        的兩種說法（實測 ΔE→0），而不是一個圖例。
+     ② 用掉的格蓋一道**朱筆銷記**：照相館在存根上劃掉用過的那一格。
+        它是同一支筆（brush.mjs 的 stroke() 模型），不是 CSS 畫的叉。
+   結果：遮住文字，四個狀態的刻度逐格對位比，相鄰兩態至少有一格 ΔE ≥ SCALE_DE.adj，
+   剛印好↔用完了三格**每一格**都 ≥ SCALE_DE.ends（G29 逐格量、逐態比）。 */
 const SCALE_W = 34, SCALE_H = 20;
-const stubScale = (t, { uses = null } = {}) => {
+const stubScale = (t, { uses = null, big = false } = {}) => {
+  // AX 板上紙變大，紙上印的格子跟著變大（與騎縫線的齒距同一條規則）
+  const W = big ? ax(SCALE_W) : SCALE_W, H = big ? ax(SCALE_H) : SCALE_H, gap = big ? ax(SP.xs) : SP.xs;
   const cell = (i) => {
     const state = uses === null ? 'blank' : (i <= USES_TOTAL - uses ? 'spent' : 'left');
-    const g = state === 'blank' ? null : (state === 'spent' ? 'stub0' : 'stub3');
-    return `<span data-cell="${state}"${g ? ` data-grad="${g}"` : ''} style="width:${SCALE_W}px;height:${SCALE_H}px;border-radius:2px;border:${FIX.hair}px solid ${t.edge};background:${g ? gradCss(t, g) : 'transparent'}"></span>`;
+    const g = state === 'blank' ? null : (state === 'spent' ? stubOf(0) : stubOf(uses));
+    return `<span data-cell="${state}"${g ? ` data-grad="${g}"` : ''} style="position:relative;width:${W}px;height:${H}px;border-radius:2px;border:${FIX.hair}px solid ${t.edge};background:${g ? gradCss(t, g) : 'transparent'}">${state === 'spent' ? cancelMark(t.pen) : ''}</span>`;
   };
-  return `<span data-scale="${uses === null ? 'blank' : uses}" style="display:inline-flex;align-items:center;gap:${SP.xs}px">
+  return `<span data-scale="${uses === null ? 'blank' : uses}" style="display:inline-flex;align-items:center;gap:${gap}px;flex:none">
       ${[1, 2, 3].map(cell).join('')}
     </span>`;
 };
@@ -353,7 +427,7 @@ const stubScale = (t, { uses = null } = {}) => {
    下緣印的「還可以用 N 次」與 data-grad 的階數是同一個 uses，G7 逐板對帳。 */
 const usesLine = (uses) => (uses > 0 ? `還可以用 ${uses} 次` : '這組號碼用完了');
 const ticket = (t, { code = CODE, uses = USES_TOTAL } = {}) => ticketShell(t, {
-  surface: { mark: S('flat'), css: flat(t, { pad: '0', radius: 18 }) },
+  surface: { mark: S('flat'), css: flat(t, { pad: '0', radius: 0 }) },
   motif: MO('ticket'),
   fade: stubOf(uses),
   main: `<span style="display:flex;gap:${SP.xl}px;${TY.n1};color:${t.ink};${press(t)}">${code.split(' ').map((g) => `<span>${g}</span>`).join('')}</span>`,
@@ -367,7 +441,7 @@ const ticket = (t, { code = CODE, uses = USES_TOTAL } = {}) => ticketShell(t, {
 // 空的票根：同一張票，只是還沒印上號碼。凹＝可以填。
 // 它**沒有**褪色漸層 —— 沒印過的東西不會褪色。四態等高，差別只在表面。
 const ticketSlot = (t, { busy = false } = {}) => ticketShell(t, {
-  surface: { mark: S('win', 'codeslot'), css: win(t, { role: 'codeslot', pad: '0', radius: 18 }) },
+  surface: { mark: S('win', 'codeslot'), css: win(t, { role: 'codeslot', pad: '0', radius: 0 }) },
   main: `${busy ? spinner(t, t.ink2) : `<span style="display:flex;color:${t.ink2}">${I.key}</span>`}
          <span style="${TY.bs};color:${t.ink}">${busy ? '正在產生號碼…' : '號碼會出現在這裡'}</span>`,
   foot: `<span style="display:inline-flex;align-items:center;gap:${SP.s}px">${stubScale(t)}<span style="${TY.bs};color:${t.ink2};white-space:nowrap">一組可以用 ${USES_TOTAL} 次</span></span>
@@ -487,8 +561,8 @@ const HH = {
   'InviteEmpty.dc.html': 920, 'InviteGenerating.dc.html': 920,
   'InviteApprovalOff.dc.html': 880, 'InviteApprovalOffDark.dc.html': 880,
   'InviteRequests.dc.html': 940, 'InviteRequestsMany.dc.html': 1420, 'StressType.dc.html': 1700,
-  'StressCodeAX.dc.html': 2060, 'StressLoginAX.dc.html': 3580,
-  'Tokens.dc.html': 8460, 'Notes.dc.html': 3560, 'StressContent.dc.html': 960, 'AppIcon.dc.html': 2900,
+  'StressCodeAX.dc.html': 2160, 'StressLoginAX.dc.html': 5240,
+  'Tokens.dc.html': 8760, 'Notes.dc.html': 3820, 'StressContent.dc.html': 960, 'AppIcon.dc.html': 3480,
   'GlassSeam.dc.html': 2060,
 };
 const h = (f) => HH[f] || 844;
@@ -515,6 +589,20 @@ const objPos = (bw, bh) => {
 // alt 寫「看得到什麼」：誰、在哪、在做什麼。攝影 brief 不藏在 alt 裡
 // （那是給採購看的，不是給讀螢幕的人聽的）。換了照片，alt 跟著重寫。
 const PHOTO_ALT = '一位祖母坐在床邊，把幾個月大的嬰兒抱在胸前，兩人臉頰靠在一起、都望著鏡頭；晨光從左邊的紗簾透進來，身後是木頭櫃子和摺好的粉色布巾';
+
+/* ── 深色的照片：少一格光（第 5 輪 D4-03）────────────────────────────
+   第 4 輪實測深色版與淺色版的照片逐像素平均差 ΔRGB −2.6 —— 等於沒有變暗。
+   判定很準：「這一稿蓋了一個有光源、有時間的世界，唯獨照片不在裡面。」
+
+   這一輪它進到那個世界裡，用的是攝影自己的單位：**夜裡少一格光**。
+   為什麼不照台紙的比例（台紙 Y 0.771 → 0.0097，1.3%）：那會把照片變成一塊黑。
+   相紙不是台紙 —— 它是這本相簿裡唯一自己就是影像的東西；把它降到紙的比例，
+   等於為了語言的一致把主角關掉，而這個 app 的主角就是照片裡那兩張臉。
+   一格是可以驗的：probe 逐像素量兩張板的照片，平均亮度比與 p99 比都必須落在
+   0.5±0.04（實測 0.497／0.490）。誠實話印在 Tokens 板上：少一格之後，
+   照片的白仍然比它裱在上面的紙亮十幾倍 —— 一格是「看得出來變暗」與
+   「長輩仍然看得清楚祖母的臉」之間的取捨，不是物理的終點。 */
+const photoLight = (t) => (t.dir > 0 ? '' : `;filter:brightness(${PHOTO_DIM})`);
 
 /* ─────────────────────  WELCOME  ───────────────────── */
 
@@ -559,21 +647,30 @@ const consent = (t) => `
       不是靠自家的色塊比較大聲。同時 win() 這裡不畫四邊描邊（outline:false）——
       紙上壓出來的凹槽沒有輪廓線；有輪廓線的是印上去的框（表格、輸入格）。
       所以托盤現在只有三個邊界：上緣的騎縫線、左右與下緣那道內影。 */
-const signInStack = (t) => `
-  <div${S('win', 'tray')} style="${win(t, { role: 'tray', pad: '0', outline: false })};display:flex;flex-direction:column">
-    ${perf(t)}
-    <div style="padding:${SP.m}px;display:flex;flex-direction:column;gap:${SP.m}px">
+/* 第 5 輪：托盤的上緣不再是「一條印上去的虛線」，是**撕開之後留下的扇貝邊**
+   （perfCut 的 torn：只切自己的上緣，所以每一口都是半圓）。票根還沒撕，
+   所以它的齒是完整的圓孔 —— 同一台打孔機，兩種狀態，這是可以被 gate 咬的區別。
+   托盤也跟著票根出血：它是從我們自己那張紙上撕下來的一塊，不是版心裡的一張卡。 */
+const signInStack = (t, { bleed = FIX.gutter } = {}) => {
+  const cut = perfCut('torn', 'top');
+  const out = bleed
+    ? ` data-w="bleed" style="${win(t, { role: 'tray', pad: '0', radius: 0, outline: false })};${cut.css};margin:0 -${bleed}px;`
+    : ` style="${win(t, { role: 'tray', pad: '0', outline: false })};${cut.css};`;
+  return `
+  <div${S('win', 'tray')}${cut.attr}${out}display:flex;flex-direction:column">
+    <div style="padding:${SP.m}px ${bleed ? FIX.gutter : SP.m}px;display:flex;flex-direction:column;gap:${SP.m}px">
       ${btnApple(t)}
       ${btnGoogle(t)}
       ${btn(t, '用 Email 登入', { icon: I.mail, tone: 'secondary' })}
     </div>
   </div>`;
+};
 
 const welcome = (t) => {
   const photoH = 340, overlap = FIX.seamPhone;
   return doc(t, `<div class="g" data-col="phone" data-grad="paper" style="position:relative;width:390px;height:844px;background:${gradCss(t, 'paper')};overflow:hidden">
   <div${S('win', 'photo')} style="position:absolute;top:0;left:0;width:390px;height:${photoH}px;overflow:hidden;box-shadow:${insetShadow(t, 'mount')}">
-    <img src="family.jpg" alt="${PHOTO_ALT}" style="width:100%;height:100%;object-fit:cover;object-position:${objPos(390, photoH)};display:block">
+    <img src="family.jpg" alt="${PHOTO_ALT}" data-photo="${t.dir > 0 ? 'day' : 'night'}" style="width:100%;height:100%;object-fit:cover;object-position:${objPos(390, photoH)};display:block${photoLight(t)}">
   </div>
   <div data-grad="seam" aria-hidden="true" style="position:absolute;left:0;top:${photoH - overlap - SP.xxl}px;width:390px;height:${SP.xxl}px;background:${gradCss(t, 'seam')}"></div>
   <div class="g"${S('fold', 'seam')} data-grad="paper" style="position:absolute;left:0;top:${photoH - overlap}px;width:390px;height:${844 - photoH + overlap}px;background:${gradCss(t, 'paper')};border-radius:20px 20px 0 0;border-top:${FIX.hair}px solid ${t.edge};box-shadow:inset 0 2px 0 ${foldEdge(t)}">
@@ -599,7 +696,7 @@ const welcome = (t) => {
 const welcomeIPad = (t) => doc(t, `
 <div class="g" data-grad="paper" style="position:relative;width:1194px;height:834px;background:${gradCss(t, 'paper')};overflow:hidden;display:flex">
   <div${S('win', 'photo')} data-col="photo" style="position:relative;width:657px;height:834px;overflow:hidden;flex:none">
-    <img src="family.jpg" alt="${PHOTO_ALT}" style="width:100%;height:100%;object-fit:cover;object-position:${objPos(657, 834)};display:block">
+    <img src="family.jpg" alt="${PHOTO_ALT}" data-photo="${t.dir > 0 ? 'day' : 'night'}" style="width:100%;height:100%;object-fit:cover;object-position:${objPos(657, 834)};display:block${photoLight(t)}">
   </div>
   <div class="g"${S('fold', 'seam')} data-col="content" data-light="geometry" data-grad="paper" style="position:relative;width:537px;height:834px;background:${gradCss(t, 'paper')};margin-left:-${FIX.seam}px;border-radius:24px 0 0 24px;border-left:${FIX.hair}px solid ${t.edge};box-shadow:-18px 0 30px -24px rgba(20,12,6,.75)">
     <div style="display:flex;flex-direction:column;justify-content:space-between;height:100%;padding:${FIX.padPad}px">
@@ -609,7 +706,7 @@ const welcomeIPad = (t) => doc(t, `
         <p style="${TY.bPad};color:${t.ink2};margin:0">照片、影片和日記，只有你邀請的人看得到。</p>
       </div>
       <div data-pause="iPad 三段式：動作區貼欄底（拇指在下緣），與標題組之間的空白是刻意的間隔" style="display:flex;flex-direction:column;gap:${SP.m}px;max-width:${FIX.btnMax}px">
-        ${signInStack(t)}
+        ${signInStack(t, { bleed: 0 })}
         ${consent(t)}
       </div>
     </div>
@@ -771,11 +868,11 @@ ${head(t)}
 ${col(`
   ${stepRail(t, 1, 2, '步驟 1，共 2 步')}
   ${titleBlock(t, '輸入邀請碼', '家人給你的 6 個字母和數字，分成前三碼和後三碼。')}
-  ${codeCells(t, CODE.replace(' ', '').split(''), { caret: err ? -1 : 5, error: !!err, sep: true })}
+  ${codeCells(t, CODE.replace(' ', '').split(''), { caret: err ? -1 : 5, error: !!err })}
   ${err
     ? `<div style="display:flex;flex-direction:column;gap:${SP.s}px">
          ${errorLine(t, err.msg)}
-         <span style="${TY.b};color:${t.ink2}">${err.body}</span>
+         ${hint(t, err.body, { size: TY.b })}
        </div>`
     : `<span style="${TY.cap};color:${t.ink2}">${SAY}</span>`}
   ${err
@@ -789,7 +886,7 @@ ${col(`
       ['為什麼', '擋下拿到碼的陌生人'],
     ], { head: '接下來會發生什麼' })}
   ${btn(t, '送出申請')}
-  <span style="${TY.cap};color:${t.ink2}">送出之後這個畫面會變成「等家長核准」。可以先關掉 app，核准了會通知你。</span>
+  ${hint(t, '送出之後這個畫面會變成「等家長核准」。可以先關掉 app，核准了會通知你。')}
 `)}`, { h: h(state === 'expired' ? 'JoinExpired.dc.html' : state === 'usedup' ? 'JoinUsedUp.dc.html' : 'JoinCode.dc.html') }));
 };
 
@@ -855,7 +952,7 @@ const requestCard = (t, { name = '王怡君', initial = '怡', email = 'yijun@gm
         <span style="${TY.cap};color:${t.ink2}">${when}</span>
       </div>
     </div>
-    ${noteBox(t, I.people, '核准之後，他就看得到家庭裡的照片。身分（家人或親友）之後在成員設定裡改，不用現在決定。', { size: TY.cap })}
+    ${noteBox(t, I.people, '核准之後，他就看得到家庭裡的照片。身分（家人或親友）之後在成員設定裡改，不用現在決定。', { size: TY.cap, inset: false })}
     <div style="display:flex;flex-direction:column;gap:${SP.xxl}px">
       ${btn(t, '核准加入')}
       ${tapLink(t, '拒絕這個申請', { center: true })}
@@ -923,7 +1020,10 @@ const inviteScreen = (t, { state = 'empty' } = {}) => {
     spent: ['邀請家人', '號碼有期限，也有可用次數。'],
   }[state];
   // 還沒產生的兩態多一張「號碼是這樣用的」明細表，內容放不下 844 —— 板長高＝這張會捲動。
-  const board = { empty: 'InviteEmpty', busy: 'InviteGenerating', ready: 'InviteReady', approvalOff: 'InviteApprovalOff', spent: 'InviteSpent' }[state];
+  /* 深色板的板名是推出來的（第 5 輪 D4-02）。第 4 輪這裡寫死淺色板名，
+     深色的兩張是靠「高度剛好一樣」矇過去的 —— 加一張深色板就會拿到錯的板高。 */
+  const board = { empty: 'InviteEmpty', busy: 'InviteGenerating', ready: 'InviteReady', approvalOff: 'InviteApprovalOff', spent: 'InviteSpent' }[state]
+    + (t.dir < 0 ? 'Dark' : '');
 
   return doc(t, phone(t, `${inviteHead(t, titles[0], titles[1])}
 ${col(body, { top: SP.xl })}`, { h: h(`${board}.dc.html`) }));
@@ -987,7 +1087,7 @@ const stressType = (t) => doc(t, `
     <div${S('raise', 'button')}${CTA} style="${raise(t, { g: 'cta', lip: t.ctaDeep })};min-height:${ax(56)}px;display:flex;align-items:center;justify-content:center;padding:${SP.l}px;color:${t.onCta}">
       <span style="font-size:${ax(17)}px;line-height:${ax(25)}px;font-weight:600;color:${t.onCta};text-align:center">傳送驗證碼</span>
     </div>
-    <p style="font-size:${ax(13)}px;line-height:${ax(18)}px;color:${t.ink2};margin:0">信通常一分鐘內會到。沒看到的話，找找垃圾郵件。</p>
+    ${hint(t, '信通常一分鐘內會到。沒看到的話，找找垃圾郵件。', { size: `font-size:${ax(13)}px;line-height:${ax(18)}px` })}
   </div>
 </div>`);
 
@@ -1007,20 +1107,39 @@ const stressType = (t) => doc(t, `
    版式，只讓它們的最小高度被更長的鄰居撐開）。實作是 grid-auto-rows:1fr，
    不是手算高度 —— 手算的那一份會在下一次改字時過期。 */
 const stressLoginAX = (t) => {
-  const s = { label: `font-size:${ax(17)}px;line-height:${ax(25)}px;font-weight:600`, mark: ax(20), h: ax(FIX.button), short: true };
+  /* 第 5 輪 D4-05：第 4 輪這張板只畫 AX5，而 AX5 下兩顆品牌鍵都只剩「登入」二字 ——
+     reviewer 的判定是「等高達標但語意塌」。改法不是硬把長標籤塞進去（塞不下，
+     下面是量出來的數字），是**把斷點畫出來**：AX4 是最後一階仍然說得完整句的字級。 */
+  const stack = (px, title, label) => {
+    const f = (n) => Math.round(n * px / 17);   // 這一階的字級推導（17pt body 是基準）
+    const lab = `font-size:${f(17)}px;line-height:${f(25)}px;font-weight:600`;
+    const cut = perfCut('torn', 'top', f(PERF.pitch));   // 齒距跟著這一階的紙一起長大
+    return `<div${S('win', 'tray')}${cut.attr} data-w="bleed" data-ax="${label}" style="${win(t, { role: 'tray', pad: '0', radius: 0, outline: false })};${cut.css};margin:0 -${FIX.gutter}px;display:flex;flex-direction:column">
+      <div style="padding:${SP.l}px ${FIX.gutter}px;display:grid;grid-auto-rows:1fr;gap:${SP.m}px">
+        ${btnApple(t, { label: lab, mark: [f(20), f(24)], h: f(FIX.button), title, pad: SP.m })}
+        ${btnGoogle(t, { label: lab, mark: f(20), h: f(FIX.button), title, pad: SP.m })}
+        <div${S('raise', 'button')} style="${raise(t, { g: 'face', lip: t.edge })};min-height:${f(FIX.button)}px;display:flex;align-items:center;justify-content:center;padding:0 ${SP.l}px;color:${t.ink}">
+          <span style="${lab};color:${t.ink};text-align:center;white-space:nowrap">${title === 'short' ? '登入' : 'Email 登入'}</span>
+        </div>
+      </div>
+    </div>`;
+  };
   const axLink = (label) => `<span${S('raise', 'link')} style="align-self:flex-start;min-height:${FIX.tap}px;display:inline-flex;align-items:center;padding:0 ${SP.s}px;font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:600;color:${t.ink};text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px">${label}</span>`;
   return doc(t, `
 <div class="g" data-col="phone" data-grad="paper" style="position:relative;width:390px;height:${h('StressLoginAX.dc.html')}px;background:${gradCss(t, 'paper')};overflow:hidden;display:flex;flex-direction:column">
-  <div style="display:flex;flex-direction:column;gap:${SP.xxl}px;padding:${FIX.safeTop}px ${FIX.gutter}px ${FIX.safeBottom}px;flex-grow:1">
-    <h1 style="font-size:${ax(28)}px;line-height:${ax(34)}px;font-weight:700;letter-spacing:-.01em;color:${t.ink};margin:0">選一種方式登入</h1>
-    <div${S('win', 'tray')} style="${win(t, { role: 'tray', pad: '0', outline: false })};display:flex;flex-direction:column">
-      ${perf(t)}
-      <div style="padding:${SP.m}px;display:grid;grid-auto-rows:1fr;gap:${SP.m}px">
-        ${btnApple(t, { label: s.label, mark: [ax(20), ax(24)], h: s.h, short: true })}
-        ${btnGoogle(t, { label: s.label, mark: s.mark, h: s.h, short: true })}
-        <div${S('raise', 'button')} style="${raise(t, { g: 'face', lip: t.edge })};min-height:${s.h}px;display:flex;align-items:center;justify-content:center;padding:${SP.s}px;color:${t.ink}">
-          <span style="${s.label};color:${t.ink};text-align:center">用 Email 登入</span>
-        </div>
+  <div style="display:flex;flex-direction:column;gap:${SP.xl}px;padding:${FIX.safeTop}px ${FIX.gutter}px ${FIX.safeBottom}px;flex-grow:1">
+    <h1 style="font-size:${ax4(28)}px;line-height:${ax4(34)}px;font-weight:700;letter-spacing:-.01em;color:${t.ink};margin:0">選一種方式登入</h1>
+    <span style="font-size:${ax4(15)}px;line-height:${ax4(21)}px;font-weight:600;color:${t.ink2}">AX4（${Math.round(AX4 * 100)}%）：說得完整句</span>
+    ${stack(ax4(17), 'brand', 'AX4')}
+    <span style="font-size:${ax4(15)}px;line-height:${ax4(21)}px;font-weight:600;color:${t.ink2}">AX5（${Math.round(AX * 100)}%）：換官方短標題</span>
+    ${stack(ax(17), 'short', 'AX5')}
+    <!-- 放不下的那一行，照實畫出來：容器寬 ＝ AX5 那顆 Google 鍵真正剩給標籤的寬度。
+         超出去的部分被裁掉，裁口上壓一道朱線 —— 差多少是量出來的，不是說出來的。 -->
+    <div style="display:flex;flex-direction:column;gap:${SP.xs}px">
+      <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2}">同一階字級下「Google 登入」放不下的樣子</span>
+      <div data-fit="ax5-google" style="position:relative;width:${390 - FIX.gutter * 2 - SP.m * 2 - ax(20) - SP.m}px;overflow:hidden">
+        <span data-fit-label="1" style="font-size:${ax(17)}px;line-height:${ax(25)}px;font-weight:600;color:${t.ink};white-space:nowrap">Google 登入</span>
+        <div aria-hidden="true" style="position:absolute;right:0;top:0;width:${FIX.errBar}px;height:100%;background:${t.pen}"></div>
       </div>
     </div>
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:${SP.xs}px">
@@ -1030,7 +1149,7 @@ const stressLoginAX = (t) => {
       ${axLink('隱私權政策')}
     </div>
     <div${S('flat')} style="${flat(t, { pad: `${SP.l}px` })}">
-      <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};${press(t)}">我們自己的 icon（信封）在 AX3 以上一律拿掉只留字。Apple 與 Google 的標誌<b style="color:${t.ink}">留著並跟著放大</b>——那是商標，不是裝飾性 icon。空間不夠時<b style="color:${t.ink}">換成它們官方的短標題「登入」，版式不動</b>——自己把標誌堆到字上面也是改外觀。我們自己那顆不換短標題：「用 Email 登入」整句留著、換行。<b style="color:${t.ink}">三顆仍然等高</b>（第 2 輪這裡是「不再等高」，錯了）：三顆排在 <code>grid-auto-rows:1fr</code> 上，最高的那一顆決定另外兩顆——<b style="color:${t.ink}">品牌規範給的是最小高度不是最大高度</b>，讓 Apple／Google 跟著長高不算改它們的外觀，讓它們比旁邊矮一截才是把版式讓給了字數。命中盒的 ${FIX.tap}pt 是<b style="color:${t.ink}">實體最小值，不跟著字級放大</b>——放大的是行高。</span>
+      <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};${press(t)}"><b style="color:${t.ink}">標籤有三階，因為空間有三階</b>：一般字級「透過 Apple 登入」、AX4「Apple 登入」（虛詞丟掉、<b style="color:${t.ink}">品牌詞留著</b>）、AX5「登入」（官方短標題）。<b style="color:${t.ink}">斷點是量出來的不是喊出來的</b>：${measured.axFitLine}<b style="color:${t.ink}">兩條沒有選的路</b>：折行（長輩讀兩行按鈕比讀一個短標題更慢）、把標誌堆到字的上方（那是改別人的版式，第 1 輪 R7 已裁）。AX5 的品牌詞因此由<b style="color:${t.ink}">商標本身與無障礙名稱</b>承擔（<code>aria-label="使用 Google 帳號登入"</code>）。我們自己的 icon（信封）在 AX3 以上一律拿掉只留字；<b style="color:${t.ink}">兩個品牌的標誌留著並跟著長大</b>——那是商標，不是裝飾性 icon。三顆等高由 <code>grid-auto-rows:1fr</code> 保證：品牌規範給的是最小高度不是最大高度。命中盒的 ${FIX.tap}pt 是實體最小值，不跟著字級放大。</span>
     </div>
   </div>
 </div>`);
@@ -1060,16 +1179,15 @@ const stressCodeAX = (t) => {
       ${rowAX(CODE.split(' ')[1].split(''))}
     </div>
     <p style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};margin:0">${SAY}</p>
-    <div${S('flat')}${MO('ticket')} style="${flat(t, { pad: '0', radius: 18 })};overflow:hidden">
-      <div data-grad="${stubOf(USES_TOTAL)}" style="background:${gradCss(t, stubOf(USES_TOTAL))};padding:${FIX.gutter}px;display:flex;flex-direction:column;align-items:center;gap:${SP.l}px">
+    <div${S('flat')}${MO('ticket')} data-w="bleed" style="${flat(t, { pad: '0', radius: 0 })};overflow:hidden;margin:0 -${FIX.gutter}px">
+      <div${perfCut('joined', 'bottom', ax(PERF.pitch)).attr} data-grad="${stubOf(USES_TOTAL)}" style="background:${gradCss(t, stubOf(USES_TOTAL))};${perfCut('joined', 'bottom', ax(PERF.pitch)).css};padding:${FIX.gutter}px;display:flex;flex-direction:column;align-items:center;gap:${SP.l}px">
         <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};letter-spacing:.16em;${press(t)}">邀 請 碼</span>
         <span style="${nAX};color:${t.ink};${press(t)}">${CODE.split(' ')[0]}</span>
         <span style="${nAX};color:${t.ink};${press(t)}">${CODE.split(' ')[1]}</span>
       </div>
-      ${perf(t)}
-      <div style="padding:${SP.l}px ${FIX.gutter}px;display:flex;flex-direction:column;gap:${SP.s}px;background:${t.board3}">
+      <div${perfCut('joined', 'top', ax(PERF.pitch)).attr} style="${perfCut('joined', 'top', ax(PERF.pitch)).css};padding:${SP.l}px ${FIX.gutter}px;display:flex;flex-direction:column;gap:${SP.s}px;background:${t.board3}">
         <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};${press(t)}">有效到 8 月 30 日</span>
-        <span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};${press(t)}">還可以用 ${USES_TOTAL} 次</span>
+        <span style="display:inline-flex;align-items:center;gap:${SP.m}px">${stubScale(t, { uses: USES_TOTAL, big: true })}<span style="font-size:${ax(13)}px;line-height:${ax(18)}px;font-weight:500;color:${t.ink2};${press(t)};white-space:nowrap">還可以用 ${USES_TOTAL} 次</span></span>
       </div>
     </div>
     <div${S('flat')} style="${flat(t, { pad: `${SP.l}px` })}">
@@ -1110,7 +1228,7 @@ const stressContent = (t) => {
     ${c('空欄位就按送出', `
       <div style="display:flex;flex-direction:column;gap:${FIX.gutter}px;padding:${SP.xxl}px ${FIX.gutter}px;flex-grow:1">
         ${titleBlock(t, '輸入邀請碼', '家人給你的 6 個字母和數字。')}
-        ${codeCells(t, ['', '', '', '', '', ''], { caret: 0, error: true, sep: true })}
+        ${codeCells(t, ['', '', '', '', '', ''], { caret: 0, error: true })}
         ${errorLine(t, '還沒輸入號碼。請家人念給你聽，或看他傳來的訊息。')}
         ${tableLine(t, '送出之後家長會收到通知，他按下核准，你才進得到家庭裡。')}
         ${btn(t, '送出申請')}
@@ -1189,6 +1307,19 @@ const stubLadder = (t) => {
         <span style="font-family:${MONO};${TY.cap};color:${t.ink2}">Δh ${v.dh.toFixed(1)}° · ΔL* ${v.dl.toFixed(2)} · C* ${v.c.toFixed(2)} · 兩端 ΔE ${v.e.toFixed(2)}　<span style="${noWt(TY.cap)};font-family:${FONT}">${where[n]}</span></span>
       </div>`;
   }).join('')}
+    <!-- 第 5 輪 D4-01／D4-07①：四個狀態的三格刻度，**兩個模式各畫一次**。
+         第 4 輪深色只有「剛印好」那一格有樣本，所以 G29 的相鄰態 ΔE 在深色下
+         根本沒有東西可以比 —— 母體宣告（MG1）會把那種空格判成 FAIL，
+         而補樣本的正確位置就是規格板：它本來就是拿來把階排出來看的。 -->
+    <div style="display:flex;flex-direction:column;gap:${SP.s}px;margin-top:${SP.s}px">
+      <span style="${TY.l};color:${t.ink};${press(t)}">三格刻度的四個狀態（左：淺色／右：深色）</span>
+      <div style="display:flex;gap:${SP.xxl}px;flex-wrap:wrap">
+        ${[T.light, T.dark].map((th) => `<div${th.dir < 0 ? ' data-mode="dark"' : ''} style="display:flex;flex-direction:column;gap:${SP.s}px;padding:${SP.m}px;border-radius:10px;background:${th.board}">
+          ${STUB_USES.map((n) => `<span style="display:inline-flex;align-items:center;gap:${SP.s}px">${stubScale(th, { uses: n })}<span style="${TY.cap};color:${th.ink}">${usesLine(n)}</span></span>`).join('')}
+        </div>`).join('')}
+      </div>
+      <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2}"><b style="color:${t.ink}">還沒用的格畫的是當前階</b>（與號碼帶同一支漸層，實測 ΔE ${'0'}），<b style="color:${t.ink}">用掉的格褪到底並蓋一道朱筆銷記</b>（照相館在存根上劃掉用過的那一格；那一道是同一支 brush 幾何畫的，不是 CSS 的叉）。G29 逐格對位比：相鄰狀態至少有一格 ΔE ≥ ${SCALE_DE.adj}、剛印好↔用完了三格每一格都 ≥ ${SCALE_DE.ends}。</span>
+    </div>
     <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2}"><b style="color:${t.ink}">三個量一起單調衰減，這是 G23④ 的斷言，不是描述</b>：褪到最後（用完了）色相位移、明度差、彩度同時趨近於零 ——<b style="color:${t.ink}">褪完了就沒有褪色的方向了</b>。這與「還沒印上號碼的空票根沒有這條漸層（沒印過的東西不會褪色）」是同一句話的兩端。第 1 輪 R4 抓的「全稿最大振幅在最惰性的面上」也在這裡結案：兩端 ΔE 雖然仍是 ${q('stub3').e.toFixed(2)}，但它是<b style="color:${t.ink}">邊緣加權</b>的 —— 膝點（${STUB_KNEE}%）到底部只剩 ${dE(T.light.grad.stub3[1][0], T.light.grad.stub3[2][0]).toFixed(2)} ΔE，號碼就坐在那一段上。</span>
   </div>`;
 };
@@ -1287,13 +1418,21 @@ const tokensSheet = (measured) => {
         </div>
         <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2}">${GRAD_WHY[k]}</span>
       </div>`).join('')}
+    <!-- 第 5 輪：騎縫線離開漸層清冊（它現在是遮罩挖出來的洞，不是背景）。
+         這一格畫的是實物：左邊完整圓孔（票根，還沒撕）、右邊半圓扇貝邊（托盤，撕下來的那一邊）。 -->
     <div style="display:grid;grid-template-columns:120px 260px 1fr;gap:${SP.l}px;align-items:start;padding:${SP.m}px 0;border-bottom:${FIX.hair}px solid ${t.edge}">
-      <div data-grad="perf" style="height:${FIX.tap}px;border-radius:10px;background:${perfCss(t)};border:${FIX.hair}px solid ${t.edge}"></div>
       <div style="display:flex;flex-direction:column;gap:${SP.xs}px">
-        <span style="${TY.l};color:${t.ink}">perf</span>
-        <span style="font-family:${MONO};${TY.cap};color:${t.ink2}">repeating 90deg<br>唯一的方向例外</span>
+        <div style="display:flex;flex-direction:column">
+          <div style="height:${SP.l}px;background:${t.board3};${perfMask('bottom')}"></div>
+          <div style="height:${SP.l}px;background:${t.board3};${perfMask('top')}"></div>
+        </div>
+        <div style="height:${SP.xl}px;background:${t.board3};${perfMask('top')}"></div>
       </div>
-      <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2}">${GRAD_WHY.perf}</span>
+      <div style="display:flex;flex-direction:column;gap:${SP.xs}px">
+        <span style="${TY.l};color:${t.ink}">perf（不是漸層）</span>
+        <span style="font-family:${MONO};${TY.cap};color:${t.ink2}">mask r=${PERF.r} pitch=${PERF.pitch}<br>缺口 r=${PERF.notch}／AX 齒距 ${ax(PERF.pitch)}</span>
+      </div>
+      <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2}">${PERF_WHY}</span>
     </div>
   </div>
   ${stubLadder(t)}
@@ -1500,9 +1639,16 @@ const iconSheet = () => {
     ${iconTile(t, `第 2 輪：寫的那支筆（中位 ${written.median.toFixed(0)}px／最細 ${written.min.toFixed(0)}px）`, `<div style="position:relative;width:${ICON}px;height:${ICON}px;background:${gradCss(t, 'paper')};display:flex;align-items:center;justify-content:center"><div style="width:${Math.round(ICON * .52)}px">${sealMark(Math.round(ICON * .52), t.ink)}</div></div>`, { px: 200, note: `20pt@2x 時最細筆畫只有 ${(written.min * 40 / ICON).toFixed(2)} 裝置像素、墨覆蓋 7.63% —— 物理上讀不出來。` })}
     ${iconTile(t, `第 3 輪：刻的那支筆（中位 ${carved.median.toFixed(0)}px／最細 ${carved.min.toFixed(0)}px）`, iconArt(look['淺色']), { px: 200, note: `同一個「芽」、同一組八筆、同一個筆序、同一支 stroke() 模型；換的是刀（筆寬映射 ×${(carved.median / written.median).toFixed(2)}、提按幅度 ×${Icon.CARVE.swell}）與章法（重新分白）。` })}
     <div${S('flat')} style="${flat(t, { pad: `${SP.l}px`, radius: 14 })};flex:1;min-width:0">
-      <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2};${press(t)}"><b style="color:${t.ink}">落款印與落款題字本來就不是同一支工具</b>。題字是筆：有提按、有飛白、細處可以到一根毫。印是刀：刃有固定寬度，所以筆畫粗、提按小、收筆是切的不是拖的。第 2 輪把字標的筆直接縮小去當圖示，等於拿寫的當刻的 —— 那是這一稿自己開的藥（「小尺寸還讀得出來」）沒有自己吃。<br><br><b style="color:${t.ink}">誠實話</b>：刻的版本<b style="color:${t.ink}">中線與寫的版本不同</b>。粗了之後寫的那個間架會糊掉（草字頭的兩豎會被長橫吃掉、短撇會黏上長橫），所以重新分白 —— 那正是篆刻在做的事。不變的是同一個字、同一組八筆、同一個筆序、同一支筆的模型。要不要相信這句話不必看文字：下面那張表把 ${Object.keys(look).length}×${Icon.SIZES.length}×${Icon.SCALES.length} 格都量出來了。</span>
+      <span style="${noWt(TY.cap)};font-weight:400;color:${t.ink2};${press(t)}"><b style="color:${t.ink}">落款印與落款題字本來就不是同一支工具</b>。題字是筆：有提按、有飛白、細處可以到一根毫。印是刀：刃有固定寬度，所以筆畫粗、提按小、收筆是切的不是拖的。第 2 輪把字標的筆直接縮小去當圖示，等於拿寫的當刻的 —— 那是這一稿自己開的藥（「小尺寸還讀得出來」）沒有自己吃。<br><br><b style="color:${t.ink}">誠實話</b>：刻的版本<b style="color:${t.ink}">中線與寫的版本不同</b>。粗了之後寫的那個間架會糊掉（草字頭的兩豎會被長橫吃掉、短撇會黏上長橫），所以重新分白 —— 那正是篆刻在做的事。不變的是同一個字、同一組八筆、同一個筆序、同一支筆的模型。<b style="color:${t.ink}">第 4 輪這句話只是自我宣告</b>（底下那張 ${Object.keys(look).length}×${Icon.SIZES.length}×${Icon.SCALES.length} 格的表量的是可讀性，不是「同不同一個字」），所以本輪把它拆成八個可以被否證的數 —— 見下一張表。</span>
     </div>
   </div>
+
+  <h2 style="${TY.c};color:${t.ink};margin:0 0 ${SP.s}px">逐筆中線：「重排」與「同一個字」各自是一個數</h2>
+  <p style="${TY.b};color:${t.ink2};margin:0 0 ${SP.m}px;max-width:1000px">八筆逐一比對<b style="color:${t.ink}">寫的中線</b>與<b style="color:${t.ink}">刻的中線</b>（單位：字身，整個字是 100×100）。<b style="color:${t.ink}">位移</b>證明重排真的發生（全是 0 就代表只是加粗）；<b style="color:${t.ink}">角度</b>與<b style="color:${t.ink}">長度比</b>證明沒有把一筆改成另一支筆；<b style="color:${t.ink}">身分</b>是這張表的重點 —— 每一筆離自己的對應筆，比離最近的其他筆再近 ${Math.round((1 - Icon.CARVE_RULE.nearest) * 100)}%（比值 ≤${Icon.CARVE_RULE.nearest}），所以重排沒有把任何一筆搬成別的一筆。門檻的出處印在 icon.mjs 裡，G26b 判的是同一份數。</p>
+  <table style="border-collapse:collapse;width:100%;margin-bottom:${SP.xxl}px">
+    <tr>${['筆序（同寫的順序）', `位移（≤${Icon.CARVE_RULE.moveMax}）`, `角度差（≤${Icon.CARVE_RULE.tiltMax}°）`, `長度比（${Icon.CARVE_RULE.lenLo}–${Icon.CARVE_RULE.lenHi}）`, `身分比值（≤${Icon.CARVE_RULE.nearest}）`].map((x) => `<th style="text-align:left;padding:${SP.s}px ${SP.m}px;${TY.l};color:${t.ink}">${x}</th>`).join('')}</tr>
+    ${Icon.centerlineDev().map((r) => `<tr>${[`第 ${r.i} 筆`, r.move.toFixed(2), `${r.tilt.toFixed(2)}°`, r.len.toFixed(3), r.nearest.toFixed(3)].map((v) => `<td style="padding:${SP.s}px ${SP.m}px;border-top:${FIX.hair}px solid ${t.edge};${TY.cap};color:${t.ink2};white-space:nowrap">${v}</td>`).join('')}</tr>`).join('')}
+  </table>
 
   <h2 style="${TY.c};color:${t.ink};margin:0 0 ${SP.s}px">實際大小 × 三種外觀 —— 這一排是驗收，不是展示</h2>
   <p style="${TY.b};color:${t.ink2};margin:0 0 ${SP.m}px;max-width:1000px">四個尺寸（${Icon.SIZES.map(([px, u]) => `${u} ${px}`).join('、')}）各畫三種外觀。<b style="color:${t.ink}">第 2 輪只畫了淺色一排＋深色一顆，而且 Tinted 拿純黑當底</b>——黑底會讓任何白色前景都好看。</p>
@@ -1511,7 +1657,7 @@ const iconSheet = () => {
     <span style="${TY.l};color:${t.ink};width:120px;flex:none">${k}</span>
     ${Icon.SIZES.map(([px, use]) => `
       <div style="display:flex;flex-direction:column;gap:${SP.s}px;align-items:center">
-        <div style="width:${px}px;height:${px}px;border-radius:${Math.round(px * .2237)}px;overflow:hidden;border:${FIX.hair}px solid ${t.edge}">
+        <div data-icon-acc="${px}" style="width:${px}px;height:${px}px;border-radius:${Math.round(px * .2237)}px;overflow:hidden;border:${FIX.hair}px solid ${t.edge}">
           <div style="width:${ICON}px;height:${ICON}px;transform:scale(${px / ICON});transform-origin:0 0">${iconArt(v)}</div>
         </div>
         <span style="${TY.cap};color:${t.ink2}">${use} ${px}</span>
@@ -1519,7 +1665,7 @@ const iconSheet = () => {
   </div>`).join('')}
 
   <h2 style="${TY.c};color:${t.ink};margin:${SP.xxl}px 0 ${SP.s}px">G26 驗收表：三條裁定的規格 ＋ 一條自己加嚴的</h2>
-  <p style="${TY.b};color:${t.ink2};margin:0 0 ${SP.m}px;max-width:1000px">每一格四個數，依序是 <b style="color:${t.ink}">①最細筆畫（≥${R26.minStrokeDev} 裝置像素）· ②墨覆蓋率（≥${(R26.coverage * 100).toFixed(0)}%）· ③前景對比（≥${R26.contrast}:1）· ④反白 p05（≥${R26.counterDev} 裝置像素，自己加嚴的）</b>。①②④ 是把 1024 母稿真的光柵化（4×4 超取樣）之後算的，不是估的；④ 取第 5 百分位不取最小值，因為兩筆交會處的白會收成楔形，「恰好 1 像素」在任何解析度都必然存在 —— 最小值量的是交點不是反白。</p>
+  <p style="${TY.b};color:${t.ink2};margin:0 0 ${SP.m}px;max-width:1000px">每一格四個數，依序是 <b style="color:${t.ink}">①最細筆畫（≥${R26.minStrokeDev} 裝置像素）· ②墨覆蓋率（≥${(R26.coverage * 100).toFixed(0)}%）· ③前景對比（≥${R26.contrast}:1）· ④反白 p05（≥${R26.counterDev} 裝置像素，自己加嚴的）</b>。①②④ 是把 1024 母稿真的光柵化（4×4 超取樣）之後算的，不是估的；④ 取第 5 百分位不取最小值，因為兩筆交會處的白會收成楔形，「恰好 1 像素」在任何解析度都必然存在 —— 最小值量的是交點不是反白。<br><b style="color:${t.ink}">這張表最薄的一格要講清楚</b>：全表最壞的前景對比是 Tinted 的 ${Icon.contrast(Icon.rgbOf(Icon.TINT_FG), Icon.rgbOf(Icon.TINT_BASE)).toFixed(2)}:1，門檻 ${R26.contrast}:1 —— <b style="color:${t.ink}">餘裕只有 ${(Icon.contrast(Icon.rgbOf(Icon.TINT_FG), Icon.rgbOf(Icon.TINT_BASE)) - R26.contrast).toFixed(2)}</b>。它<b style="color:${t.ink}">不隨尺寸變</b>，因為它是白對官方中灰玻璃這兩個顏色決定的：Tinted 模式下前景色與底色都由系統給，我們一個像素都改不動（G26 另有一條斷言：這一格在 ${Icon.SIZES.length}×${Icon.SCALES.length} 個尺寸上必須完全相同，證明它是顏色的性質不是尺寸的性質）。我們在 Tinted 這一排真正能改、也真的被驗的是<b style="color:${t.ink}">形狀</b>：墨覆蓋 ${(Icon.measureAt(20, 2, { fg: Icon.TINT_FG, bg: Icon.TINT_BASE }).coverage * 100).toFixed(1)}%、20pt@2x 最細筆畫 ${Icon.measureAt(20, 2, { fg: Icon.TINT_FG, bg: Icon.TINT_BASE }).minStrokeDev.toFixed(2)} 裝置像素。</p>
   <table style="border-collapse:collapse;width:100%;margin-bottom:${SP.xxl}px">
     <tr><th style="text-align:left;padding:${SP.s}px ${SP.m}px;${TY.l};color:${t.ink}">尺寸</th>${Object.keys(look).map((k) => `<th style="text-align:left;padding:${SP.s}px ${SP.m}px;${TY.l};color:${t.ink}">${k}</th>`).join('')}</tr>
     ${Icon.SIZES.flatMap(([px, use]) => Icon.SCALES.map((sc) => `
@@ -1562,7 +1708,7 @@ const glassPhone = (t, { mode }) => {
     <div style="padding:${SP.xl}px ${FIX.gutter}px 0;display:flex;flex-direction:column;gap:${SP.xl}px">
       ${ticket(t, { uses: 2 })}
     </div>
-    <div aria-hidden="true" style="position:absolute;left:0;top:${top}px;width:390px;height:${sheetH}px;background:${t.glassDim}"></div>
+    <div aria-hidden="true" data-role="glassDim" style="position:absolute;left:0;top:${top}px;width:390px;height:${sheetH}px;background:${t.glassDim}"></div>
     <div data-s="system" data-sys="glass" style="position:absolute;left:0;top:${top}px;width:390px;height:${sheetH}px;border-radius:34px 34px 0 0;background:${t.glassFill};backdrop-filter:blur(24px) saturate(1.7);-webkit-backdrop-filter:blur(24px) saturate(1.7);box-shadow:0 -0.5px 0 ${t.glassEdge};display:flex;flex-direction:column;align-items:center;padding:${SP.m}px ${FIX.gutter}px ${FIX.safeBottom}px;gap:${SP.l}px">
       <span data-sys="grabber" style="width:36px;height:5px;border-radius:3px;background:${t.edge}"></span>
       <span style="${TY.c};color:${t.ink}">傳給家人</span>
@@ -1571,7 +1717,7 @@ const glassPhone = (t, { mode }) => {
         <span style="${TY.cap};color:${t.ink2};${press(t)}">交界在上面那條線。線以上是紙，線以下是玻璃。</span>
       </div>
     </div>
-    <div aria-hidden="true" style="position:absolute;left:0;top:${top}px;width:390px;height:${FIX.errBar}px;background:${t.pen}"></div>
+    <div aria-hidden="true" data-role="seamMark" style="position:absolute;left:0;top:${top}px;width:390px;height:${FIX.errBar}px;background:${t.pen}"></div>
   </div>`;
 };
 
@@ -1580,6 +1726,12 @@ const glassSeam = (t) => doc(t, `
   <div style="display:flex;flex-direction:column;gap:${SP.m}px;margin-bottom:${FIX.gutter}px">
     <span style="${TY.cap};color:${t.ink2};letter-spacing:.14em">LITTLE SPROUT · ${BRAND} · 系統材質 × 紙</span>
     <h1 style="${TY.d};color:${t.ink};margin:0">玻璃與紙的交界</h1>
+    <!-- 第 5 輪 D4-12：這一句原本埋在板底那段小字的第三行。它是這張板上唯一一句
+         「照抄會出事」的話 —— 後果最嚴重的話要排在最前面、用朱筆。 -->
+    <div style="display:flex;gap:${SP.m}px;align-items:flex-start;margin-bottom:${SP.s}px">
+      <div aria-hidden="true" style="width:${FIX.errBar}px;align-self:stretch;flex:none;background:${t.pen}"></div>
+      <span style="${TY.bs};color:${t.pen}">這張板上的玻璃是<b>畫給人看的近似</b>，不要照抄成實作。實作就是讓系統畫 —— 我們只出交界以上那張紙。</span>
+    </div>
     <p style="${TY.b};color:${t.ink2};margin:0;max-width:880px">第 2 輪寫下「不用 <code>glassEffect</code>」時，那是一句立場，不是一張設計。而且那句話容易被讀錯成「這個 app 裡不會有玻璃」——<b style="color:${t.ink}">不對</b>：系統的 sheet、navigation bar、tab bar、鍵盤都會用 Liquid Glass 蓋在我們的紙上面，那不是我們能否決的。能決定的只有交界處<b style="color:${t.ink}">誰讓誰</b>。這張板把那條線畫出來（下面兩支手機上的<span style="color:${t.pen}">朱紅細線</span>就是它），並且把四條規則寫成可以被 gate 咬的形狀。</p>
   </div>
   <div style="display:flex;gap:${FIX.gutter}px;align-items:flex-start;margin-bottom:${FIX.gutter}px">
@@ -1597,10 +1749,10 @@ const glassSeam = (t) => doc(t, `
     '<b>不互相模仿</b>：我們的表面永遠不裝成玻璃（不加 backdrop blur、不加高光弧），也不要求系統的玻璃裝成紙。兩種材質同時存在是對的；一種材質假裝成另一種才是錯的。',
     `<b>這一條是有代價的</b>：玻璃會把它下面的東西吸進自己的色裡，所以交界附近我們的紙必須保持低彩度（四階 C* ${lch(t.lit).C.toFixed(1)}–${lch(t.board3).C.toFixed(1)}）。這也是主按鈕那支濃玫瑰（C* ${lch(t.cta).C.toFixed(1)}）永遠不貼著交界放的原因。`,
   ])}
-      ${ruleCard(t, '三條可以被咬的規則（第 4 輪要變成斷言）', [
-    `<b>① 玻璃上的字，底下只能是台紙。</b>模糊會改變局部極值，所以「壓在玻璃上的對比」只有在底下是單一漸層時算得準。上面兩支手機的 sheet 文字底下只有 paper 那一支 —— 這不是排版巧合，是規則。照片、票根、高振幅漸層一律不准出現在有字的玻璃底下。`,
-    `<b>② 交界 ${SP.l}pt 之內不放我們的浮起面。</b>浮起面帶落影，落影與玻璃的邊緣高光是兩個方向的光；離太近會讀成同一個物件的兩個邊。`,
-    `<b>③ 系統 chrome 一律標 <code>data-sys</code>，並豁免我們的光方向 gate（G24）。</b>系統的高光由系統決定，用我們的 dir 去驗它只會驗出假的 FAIL。豁免必須是<b>具名的</b>——沒印出來的例外就是 bug。`,
+      ${ruleCard(t, '三條規則，三條斷言（第 5 輪：已經是 G30，不再是承諾）', [
+    `<b>① 玻璃上的字，底下只能是台紙。</b>模糊會改變局部極值，所以「壓在玻璃上的對比」只有在底下是單一漸層時算得準。照片、票根、高振幅漸層一律不准出現在有字的玻璃底下。<b>→ G30① 逐個字節點往上找它的底</b>：在 <code>[data-sys]</code> 子樹裡的每一個文字節點，背後的第一個有背景的祖先必須是 paper 那一支。`,
+    `<b>② 交界 ${SP.l}pt 之內不放我們的浮起面。</b>浮起面帶落影，落影與玻璃的邊緣高光是兩個方向的光；離太近會讀成同一個物件的兩個邊。<b>→ G30② 量距離</b>：逐個浮起面量它與交界線的最短距離，小於 ${SP.l}pt 就 FAIL（交界線自己是量出來的，不是寫死的 y）。`,
+    `<b>③ 系統 chrome 一律標 <code>data-sys</code>，並豁免我們的光方向 gate（G24）。</b>系統的高光由系統決定，用我們的 dir 去驗它只會驗出假的 FAIL。豁免必須是<b>具名的</b>——沒印出來的例外就是 bug。<b>→ G30③ ＋ 豁免登記簿（MG2）</b>：第 4 輪這條規則自己被違反了——當時 <code>data-light</code> 加上任何值都能豁免，而且沒有任何一份清單記得誰被豁免。現在豁免集合<b>等於</b> tokens.mjs 的 EXEMPT 具名清單（檔案＋角色＋理由），多一個少一個都 FAIL，probe 也只認清單上的值。`,
   ])}
   </div>
   <div${S('flat')} style="${flat(t, { pad: `${SP.l}px`, radius: 14 })}">
@@ -1647,6 +1799,13 @@ const notesSheet = () => {
     `平印（<code>flat</code>）給「只能讀」的：票根、明細表、說明框、待核卡片、警語條。沒有 inset、沒有 lift、<b>沒有漸層</b>，只有 ${FIX.hair}px edge 與字的 letterpress。唯一的例外是票根的號碼帶（褪色，不是光）。`,
     'SwiftUI 到現行世代（iOS 26／27）仍然沒有第一級的 inner shadow：用兩層 stroke（上緣深、下緣亮）或 <code>.stroke(gradient).blur().mask()</code>。<b>不要用 Liquid Glass 的 <code>.glassEffect()</code> 代替凹凸</b> —— 那是系統的材質語言（它自己會反光、會跟著背景動），我們的凹凸是紙的厚度，兩者疊在一起會變成兩套光。系統控件（開關、sheet、nav bar）該長什麼樣就長什麼樣，識別層只作用在我們自己畫的表面上。',
   ])}
+    ${note(t, '版式：三階寬度、騎縫線、刻度（第 5 輪新增）', [
+      `<b>寬度有三階，而且階有意思</b>：<b>出血</b>（板寬，只給拿在手上的實體：票根、登入托盤）／<b>欄</b>（版心 ${FIX.gutter}pt 內距，給可以操作的東西：輸入框、按鈕、選項卡、待核卡片）／<b>旁註</b>（欄再縮 ${NOTE_IN}pt，給引用與說明：明細表、說明框）。第 4 輪整份稿子 ${'156'} 個區塊只有 6 種寬度、七成是同一個 342 —— 主體與幫助文字同寬同皮，讀者分不出哪一塊要做、哪一塊只是解釋。SwiftUI：出血用 <code>.listRowInsets(EdgeInsets())</code> 或負 padding，旁註用 <code>.padding(.horizontal, ${NOTE_IN})</code>。`,
+      `<b>說明框沒有皮</b>：它不是另一張紙，是印在台紙上的旁註（縮排＋左側 ${FIX.hair}pt 邊線）。平印的「皮」從此只代表一件事：那是一張真的印刷品（票根、明細表、警語條）。`,
+      `<b>騎縫線是遮罩挖出來的洞，不是畫上去的線</b>：圓孔 r=${PERF.r}、齒距 ${PERF.pitch}（AX 板 ${ax(PERF.pitch)}，齒距綁 <code>ax()</code>）、左右兩緣半圓缺口 r=${PERF.notch}。<b>票根（還沒撕）＝完整圓孔</b>（上下兩半各切自己那一緣的一半）、<b>托盤（撕下來的那一邊）＝半圓扇貝邊</b>。iOS 實作用 <code>.mask()</code> 疊三層 <code>RadialGradient</code>，或直接用 <code>Path</code> 減去圓形 —— <b>不要用一條虛線圖片</b>，那是第 4 輪被判掉的裝飾線。`,
+      `<b>三格刻度：還沒用的格畫當前階、用掉的格蓋朱筆銷記</b>。刻度與號碼帶是同一支漸層（ΔE→0），所以「剩幾次」在刻度與帶色上是同一件事；銷記是同一支 brush 幾何畫的一劃，不是 CSS 的叉。`,
+      `<b>登入鍵的標籤有三階</b>：一般「透過 Apple 登入」／AX4「Apple 登入」／AX5「登入」（官方短標題）。AX5 換短標題是<b>量出來的</b>（見 StressLoginAX 板上那條放不下的示範行），品牌詞在 AX5 由商標與 <code>aria-label</code> 承擔。`,
+    ])}
     ${note(t, '色彩落地', [
     '把 Tokens 板的 hex 建成 Asset Catalog color set，每一個都給 Any 與 Dark 兩個外觀值；View 裡只用語意名，例如 <code>Color.lsBoard</code>。',
     `<b>粉的來源要一起帶進 code review</b>：四階台紙不是同一支粉的四個明度，而是四種老化狀態（新紙／本體／偏冷的陰影／偏暖的手澤）。改色時不要只調明度，會把溫度層次抹平。`,
@@ -1682,9 +1841,9 @@ const notesSheet = () => {
     `<b>一律 6 位英數（大寫）</b>，顯示與輸入都切 3＋3 —— <b>對齊 LS-33 已上線的產生器</b>（40-bit）。上一稿提案的「6 位純數字」已由使用者否決，這一稿不再出現純數字的邀請碼。`,
     '<b>字母表要排掉會聽錯的字元</b>（0/O、1/I/L）—— 這組碼是要在電話裡念給長輩聽的。<b>這一項需要與 LS-33 的產生器對帳</b>（見本板最後一行未決事項）。',
     '只有<b>兩種正典</b>：票根 60pt（顯示）、分格 36pt（輸入）。信裡的驗證碼（6 位<b>純數字</b>）與邀請碼（6 位<b>英數</b>）長度與分組相同，共用同一個分格元件 —— 長輩只要學一次。',
-    `<b>輸入邀請碼那一版，兩組中間印一個「、」</b>：邀請碼是要<b>唸出來</b>的，所以畫面上的分組就是嘴巴唸出來的分組（「${SAY}」）。驗證碼是從信裡抄過來的、不必唸，所以沒有那一撇，只用 ${SP.xl}pt 的組間距。`,
+    `<b>兩種碼的分組完全一樣：${SP.xl}pt 的組間距，不用標點</b>（第 5 輪改）。第 4 輪邀請碼那一版在兩組中間印一個「、」，理由是「它要唸出來」——但唸法那一句（「${SAY}」）本來就在畫面上把它講完了，而<b>票根上的兩組號碼中間一個字元都沒有</b>：同一組碼在同一條流程裡不該有兩種分組寫法。印刷品用間距分組，不用標點——這是這一稿自己的規則，現在輸入格也照它。`,
     `期限與剩餘次數<b>永遠跟著號碼</b>（票根下緣那條）。<b>還沒產生的號碼位就是一張空票根</b>：外框、數字帶高（<code>codeLine ${FIX.codeLine}</code>）、騎縫線、下緣帶全部一樣，只有表面從平印換成凹（可以填）—— 所以四個狀態的高度一致，開關列不會跳位。`,
-    '有人在等核准時，票根降成一行 —— 畫面的主詞是人，不是號碼。',
+    '<b>有人在等核准時，票根不縮</b>（第 3 輪改）：第 2 輪這裡把票根壓成一條 51px 的細帶，而那兩張正好是全稿唯二畫得出不同褪色階的板 —— 抬標的元素被壓扁，褪色在真畫面上就等於沒發生。現在兩張待核板用的就是同一張票根（號碼帶全高、三格刻度都在），代價是這兩張會捲動。',
   ])}
     ${note(t, '兩段式審核（LS-18 使用者核定）', [
     '輸碼 → <code>request_join(code)</code> → 等待核准；核准前 RLS 一律查不到內容，UI 不要樂觀寫入。',
@@ -1708,6 +1867,7 @@ const notesSheet = () => {
     `<b>焦點規格（各斷點自己一組值，不要共用一組）</b>：焦點寫成影像座標比例 <b>(${Math.round(PHOTO.fx * 100)}%, ${Math.round(PHOTO.fy * 100)}%)</b>，取在<b>兩張臉的中間</b>而不是單一張臉上 —— 主體是「兩個人靠在一起」這件事。<code>object-position</code> 由它推。${measured.focusLine}`,
     `<b>alt 寫「看得到什麼」</b>（誰、在哪、在做什麼），不寫用途、不寫攝影指示 —— brief 不可以藏在 alt 裡。目前的 alt：「${PHOTO_ALT}」。`,
     '照片上<b>不放任何文字</b>（壓在照片上的對比無法定義）。歡迎頁的溫度來源是手寫字標，它在台紙上，對比量得出來。',
+    `<b>深色模式的照片少一格光</b>（第 5 輪新增）：<code>brightness(${PHOTO_DIM})</code> —— 曝光少一格＝亮度剩一半（${PHOTO_STOP}），sRGB 是通道乘法所以 0.5^(1/2.2)=${PHOTO_DIM}。理由是這一稿的深色是「同一本相簿在夜裡」：全稿每一塊面都跟著暗了，照片不能是唯一自己發光的東西。<b>為什麼不照台紙的比例降</b>（台紙 Y 0.771→0.0097）：那會把照片變成一塊黑——相紙不是台紙。<b>誠實話</b>：少一格之後照片的白仍然比它裱在上面的紙亮十幾倍，這是取捨不是物理終點。SwiftUI 用 <code>.brightness()</code> 之前先確認它作用在 sRGB 上，或改用 <code>.colorMultiply(.init(white: ${PHOTO_DIM}))</code>。`,
     `<b>出貨前要補的</b>：這張 ${PHOTO.w}px 寬的素材在 iPad@2x（需要 ${657 * 2}px）不夠，出貨要重新出圖或換更大的原檔。`,
   ])}
     ${note(t, '三顆登入鍵（順序為使用者核定）', [
@@ -1804,7 +1964,7 @@ const measured = {
     `深色最低文字組合 ${Math.min(+cr(D.onCta, gc(D, 'cta', 0)), +cr(D.ink2, D.board), +cr(D.pen, D.lit)).toFixed(2)}（AAA）`,
   ],
   gaps: '', sizes: '', pads: '', insetLine: '', ctaLine: '', h1Line: '', voidLine: '', errLine: '', trayLine: '',
-  lipLine: '', focusLine: '', gradLine: '',
+  lipLine: '', focusLine: '', gradLine: '', axFitLine: '', photoLine: '', scaleLine: '', perfLine: '', widthLine: '',
 };
 
 /* verify.mjs / measure.mjs 會重新掃描產出並回填實測句子；
@@ -1820,7 +1980,17 @@ const M = { ...(MEAS_RAW ? JSON.parse(MEAS_RAW) : {}), ...V };
 /* 這一次 build 讀到的 measured.json 指紋。每一張產物都蓋上它（見 doc()），
    verify 的 G21 拿現行 measured.json 的指紋比對 —— 板上印的實測句是不是上一版，
    從此是 gate 判的，不是人記得跑第二輪。 */
-const MEAS_HASH = MEAS_RAW ? hash12(MEAS_RAW) : 'no-measurement';
+/* ── 指紋迴圈：戳記排除 root（第 5 輪 D4-09）────────────────────────
+   第 4 輪：跑兩次同一份原始碼，34 張板的內容雜湊每次都不一樣。原因是一個自我餵食的迴圈 ——
+     板上蓋的 ls-measured 戳記 ＝ hash(measured.json 全文)
+     而 measured.json 裡有 root.contentFp ＝ hash(34 張板的原文)
+     而板的原文裡有那個戳記……
+   所以每一次 measure 都會把上一次的戳記吃進去、生出一個新的戳記，永遠不收斂。
+   後果不是美觀問題：**沒有人能靠重建來核對這一份產物**（重跑必變），
+   而「可重現」正是這一整套 gate 的地基。
+   修法：戳記只吃 measured.json 裡**與產物內容無關**的部分 —— 把 root 整段排除。
+   root 自己另有兩道守衛（measure 開跑前的三方對帳、G21b／G21c），不靠戳記。 */
+const MEAS_HASH = measStamp(MEAS_RAW);
 const say = (v, f) => (v === undefined ? '（尚未量測：node measure.mjs && node verify.mjs）' : f(v));
 
 measured.gaps = say(M.gapCount, () => `實測（${M.measuredAt || '本次'}）：${M.count} 張板共 ${M.gapCount} 個 gap，全部落在這七階。`);
@@ -1845,6 +2015,20 @@ measured.lipLine = say(M.lips, () => {
     + `<b>Google 鍵不是例外</b>：它的品牌規範自己指定了一條描邊色，那條色正好就是「該表面的深一階」，所以它走同一條唇邊規則，只是顏色由對方給。`
     + `另外「載入中」的按鈕底與唇邊同色（ctaBusy）而且漸層整條拿掉，因為它這一刻按不動。`;
 });
+/* 第 5 輪新增的五條實測句。每一句都只讀 measured.json —— 板上印的與 gate 判的同一份。 */
+measured.axFitLine = say(M.axFit, () => {
+  const g = (M.axFit || []).find((x) => x.id === 'ax5-google');
+  return g
+    ? `AX5 的「Google 登入」在 ${ax(17)}pt 下佔 ${g.need}px，而那顆鍵真正剩給標籤的寬度是 ${g.room}px —— 差 ${g.short}px（板上那條被裁掉的示範行就是它）。加上跟著長大的商標 ${ax(20)}px 與間距 ${SP.m}px 之後，${390}px 的機身放不下。`
+    : '（尚未量測）';
+});
+measured.photoLine = say(M.photo, () => `實測（逐像素，${M.photo.n} 張照片）：深色版對淺色版，平均亮度比 ${M.photo.meanRatio}、p99 比 ${M.photo.p99Ratio}，門檻是一格光 ${PHOTO_STOP}±${'0.04'}。`);
+measured.scaleLine = say(M.scale, () => {
+  const adj = (M.scaleDelta || {}).adjMin, ends = (M.scaleDelta || {}).endsMin;
+  return `實測：${(M.scale || []).length} 個刻度使用點；逐格對位，相鄰狀態最大 ΔE 最小的一組是 ${adj}（門檻 ${SCALE_DE.adj}），剛印好↔用完了三格最小 ΔE ${ends}（門檻 ${SCALE_DE.ends}）；「還沒用的格」與號碼帶的 ΔE 最大 ${(M.scaleDelta || {}).bandMax}（門檻 ${SCALE_DE.band}，這一條是「刻度＝帶子」）。`;
+});
+measured.perfLine = say(M.perf, () => `實測：${M.perf.length} 個騎縫線使用點（完整圓孔 ${M.perf.filter((p) => /^joined/.test(p.kind)).length}、半圓扇貝邊 ${M.perf.filter((p) => p.kind === 'torn-t').length}），齒距 ${[...new Set(M.perf.map((p) => p.pitch))].sort((a, b) => a - b).join('／')}px（一般 ${PERF.pitch}、AX 板 ${ax(PERF.pitch)}）。`);
+measured.widthLine = say(M.widths, () => `實測：${Object.keys(M.widths).length} 張板，每張板的區塊寬度種類最少 ${Math.min(...Object.values(M.widths).map((w) => w.kinds))} 種（門檻 2）；全稿共 ${new Set(Object.values(M.widths).flatMap((w) => w.list)).size} 種寬度（第 4 輪是 6 種，其中 72% 是同一個 342）。`);
 measured.focusLine = say(M.focus, () => M.focus.map((f) => `<b>${f.name} ${f.bw}×${f.bh}</b>：cover 後只裁${f.axis}（${f.crop}px），<code>object-position:${f.pos}</code>${f.clamped ? '（焦點推出來的值超出可及範圍，已鎖到極值 —— iPad 的框幾乎與素材同比例，所以「從最上面開始顯示」就是對的）' : ''}`).join('；') + '。另一軸寫什麼都沒有作用，不要照抄兩軸數字。');
 
 /* ─────────────────────────  EMIT  ───────────────────────── */
@@ -1871,6 +2055,7 @@ const files = {
   'InviteEmpty.dc.html': inviteScreen(L, { state: 'empty' }),
   'InviteGenerating.dc.html': inviteScreen(L, { state: 'busy' }),
   'InviteReady.dc.html': inviteScreen(L, { state: 'ready' }),
+  'InviteReadyDark.dc.html': inviteScreen(D, { state: 'ready' }),
   'InviteApprovalOff.dc.html': inviteScreen(L, { state: 'approvalOff' }),
   'InviteApprovalOffDark.dc.html': inviteScreen(D, { state: 'approvalOff' }),
   'InviteSpent.dc.html': inviteScreen(L, { state: 'spent' }),
@@ -1902,7 +2087,7 @@ const artboards = [
   ...row(PH + GY, [['Email.dc.html', P], ['EmailError.dc.html', P], ['EmailSending.dc.html', P], ['Otp.dc.html', P], ['OtpError.dc.html', P], ['OtpErrorDark.dc.html', P]]),
   ...row(2 * (PH + GY) + 40, [['Fork.dc.html', P], ['ForkIPad.dc.html', 1194, 834], ['CreateFamily.dc.html', P], ['CreateFamilySending.dc.html', P]]),
   ...row(3 * (PH + GY) + 40, [['JoinCode.dc.html', P], ['JoinCodeDark.dc.html', P], ['JoinExpired.dc.html', P], ['JoinUsedUp.dc.html', P], ['Pending.dc.html', P]]),
-  ...row(4 * (PH + GY) + 80, [['InviteEmpty.dc.html', P], ['InviteGenerating.dc.html', P], ['InviteReady.dc.html', P], ['InviteApprovalOff.dc.html', P], ['InviteApprovalOffDark.dc.html', P]]),
+  ...row(4 * (PH + GY) + 80, [['InviteEmpty.dc.html', P], ['InviteGenerating.dc.html', P], ['InviteReady.dc.html', P], ['InviteReadyDark.dc.html', P], ['InviteApprovalOff.dc.html', P], ['InviteApprovalOffDark.dc.html', P]]),
   ...row(5 * (PH + GY) + 80, [['InviteSpent.dc.html', P], ['InviteRequests.dc.html', P], ['InviteRequestsMany.dc.html', P]]),
 ].map((a) => ({ ...a, page: 'page-1' }));
 
@@ -1942,7 +2127,7 @@ const canvas = {
     },
     {
       id: 'photo-note', x: 1400, y: -320, w: 600, page: 'page-1',
-      text: `照片已經是真實素材（${PHOTO.w}×${PHOTO.h}），不是佔位圖 —— 畫面上不印任何規格註記，攝影條件只在 Notes 板。它符合板上原本就寫著的條件：兩個人、兩張臉都看得見而且都朝著鏡頭、有生活雜訊、沒有人背對鏡頭走開、清晰；而且主角是長輩 —— 這個 app 是為長輩設計的，主視覺裡就該有長輩。焦點寫成影像座標比例 (${Math.round(PHOTO.fx * 100)}%, ${Math.round(PHOTO.fy * 100)}%)，取在兩張臉的中間而不是單一張臉上；object-position 由各斷點自己換算：${A(M.focus, (f) => f.map((x) => `${x.name} ${x.bw}×${x.bh} 只裁${x.axis} ${x.crop}px → ${x.pos}`).join('；'))}（另一軸寫什麼都沒有作用）。台紙上緣壓過照片 ${FIX.seamPhone}pt、iPad ${FIX.seam}pt，交界另有一道 seam 漸層（紙的厚度投下的影）。`,
+      text: `照片已經是真實素材（${PHOTO.w}×${PHOTO.h}），不是佔位圖 —— 畫面上不印任何規格註記，攝影條件只在 Notes 板。它符合板上原本就寫著的條件：兩個人、兩張臉都看得見而且都朝著鏡頭、有生活雜訊、沒有人背對鏡頭走開、清晰；而且主角是長輩 —— 這個 app 是為長輩設計的，主視覺裡就該有長輩。焦點寫成影像座標比例 (${Math.round(PHOTO.fx * 100)}%, ${Math.round(PHOTO.fy * 100)}%)，取在兩張臉的中間而不是單一張臉上；object-position 由各斷點自己換算：${A(M.focus, (f) => f.map((x) => `${x.name} ${x.bw}×${x.bh} 只裁${x.axis} ${x.crop}px → ${x.pos}`).join('；'))}（另一軸寫什麼都沒有作用）。台紙上緣壓過照片 ${FIX.seamPhone}pt、iPad ${FIX.seam}pt，交界另有一道 seam 漸層（紙的厚度投下的影）。<b>深色模式的照片少一格光</b>（第 5 輪）：<code>brightness(${PHOTO_DIM})</code>＝亮度剩 ${PHOTO_STOP}（sRGB 通道乘法，${PHOTO_STOP}^(${1}/${2.2})）。實測逐像素平均亮度比 ${A(M.photo, (p) => p.meanRatio)}、第 ${99} 百分位亮度比 ${A(M.photo, (p) => p.p99Ratio)}。不照台紙的比例降是刻意的：台紙從 Y=${'0.771'} 掉到 ${'0.0097'}，照片跟著降就是一塊黑 —— 相紙不是台紙。誠實話：少一格之後照片的白仍然比紙亮十幾倍。`,
     },
     {
       id: 'void-note', x: 0, y: PH + GY - 300, w: 620, page: 'page-1',
@@ -1965,8 +2150,12 @@ const canvas = {
       text: `待核清單：等最久的排最上面並攤開，其餘收成一列（頭像＋名＋Email＋等多久＋「查看 ›」）。一次只有一張攤開 —— 濃玫瑰因此每畫面仍然只有一個（第 2 輪是四個），而且順序天然就是「先處理等最久的」。兩張待核板都放不下 ${PH}（單人 ${h('InviteRequests.dc.html')}px、多人 ${h('InviteRequestsMany.dc.html')}px），所以長高＝這兩張會捲動。<b>第 2 輪這裡把票根壓成一條細帶</b>（高度只剩號碼帶的 ${Math.round(51 / FIX.codeLine * 100)}%）——reviewer 的判定是：全稿唯二畫得出不同褪色階的兩張板，正好是把票根壓扁的那兩張，褪色因此在真畫面上等於沒發生。本輪撤掉細帶，這兩張用的就是同一張票根（號碼帶全高、三格刻度都在），代價就是這兩張要捲動。`,
     },
     {
+      id: 'width-note', x: 1480, y: 5 * (PH + GY) + 80 - 300, w: 680, page: 'page-1',
+      text: `<b>版式有三階寬度，材質也跟著分工</b>（第 5 輪）。<b>出血</b>（板寬 ${P}）只給拿在手上的實體：票根與登入托盤 —— 印刷品是從整張紙上裁下來的，不會乖乖坐在版心裡，所以它跑出版心、左右兩緣被打孔機咬掉一口。<b>欄</b>（版心，兩側 ${FIX.gutter}）給可以操作的東西：輸入框、按鈕、選項卡、待核卡片。<b>旁註</b>（再縮 ${NOTE_IN}×${2}）給引用與說明：明細表、說明框、提示句 —— 而且<b>旁註沒有皮</b>（縮排＋左側 ${FIX.hair}px 邊線），因為它不是另一張紙，是印在台紙上的旁註。平印的「皮」從此只代表一件事：那是一張真的印刷品。實測 ${A(M.widths, (w) => Object.keys(w).length)} 張板每一張至少兩種區塊寬度（G28①），全稿共 ${A(M.widths, (w) => new Set(Object.values(w).flatMap((x) => x.list)).size)} 種。<b>騎縫線是紙的形狀不是印上去的線</b>：遮罩挖出來的圓孔（r=${PERF.r}、齒距 ${PERF.pitch}，AX 板 ${ax(PERF.pitch)} —— 齒距綁 ax()，紙變大齒跟著變大），洞裡透出來的是台紙本身。<b>票根還沒撕＝完整圓孔、托盤是撕下來的那一邊＝半圓扇貝邊</b>，同一台打孔機的兩種狀態（G27 逐個使用點驗）。`,
+    },
+    {
       id: 'stub-note', x: 760, y: 5 * (PH + GY) + 80 - 300, w: 700, page: 'page-1',
-      text: `<b>號碼帶的褪色階 ＝ 還可以用幾次</b>（第 2 輪新增；這是這一稿唯一「只有褪色相紙這個概念才長得出來」的東西 —— 卡紙的語言裡，一張卡片不會因為被用過而變淡）。票根是照相館的取件存根：<b>號碼帶是印上去的染料（會褪），號碼本身是碳墨（不會褪）</b>，這正是整個 app 的粉的出處。所以每被用掉一次，號碼帶就往「乾淨的紙」褪一階，而號碼永遠讀得到（四階實測全部 ${asRatio(CONTRAST.aaa)} 以上）。送出申請的當下就算用掉一次，不是核准才算 —— 所以：已產生 ${USES_TOTAL} 次（stub${USES_TOTAL}）→ 有 ${1} 個人在等、他用的是這組碼，剩 ${USES_TOTAL - 1} 次（stub${USES_TOTAL - 1}）→ 有 ${QUEUE.length} 個人在等、其中 ${QUEUE_OWN} 位用這組碼（另 ${QUEUE.length - QUEUE_OWN} 位用上一組，攤開的那張卡上寫著），剩 ${USES_TOTAL - QUEUE_OWN} 次（stub${USES_TOTAL - QUEUE_OWN}）。褪到最後（用完了）色相位移、明度差、彩度三個量一起趨近於零：<b>褪完了就沒有褪色的方向了</b> —— 這與「還沒印上號碼的空票根沒有這條漸層」是同一句話的兩端。G23④ 斷言三個量單調衰減、G23⑤ 斷言「畫出來的階數 ＝ 印在板上的次數」，改了文案不改階數會 FAIL。ios-dev：褪色階是這組碼的<b>資料</b>（remaining uses），不是那個畫面的樣式 —— 票根出現在哪裡就帶到哪裡。`,
+      text: `<b>號碼帶的褪色階 ＝ 還可以用幾次</b>（第 2 輪新增；這是這一稿唯一「只有褪色相紙這個概念才長得出來」的東西 —— 卡紙的語言裡，一張卡片不會因為被用過而變淡）。票根是照相館的取件存根：<b>號碼帶是印上去的染料（會褪），號碼本身是碳墨（不會褪）</b>，這正是整個 app 的粉的出處。所以每被用掉一次，號碼帶就往「乾淨的紙」褪一階，而號碼永遠讀得到（四階實測全部 ${asRatio(CONTRAST.aaa)} 以上）。送出申請的當下就算用掉一次，不是核准才算 —— 所以：已產生 ${USES_TOTAL} 次（stub${USES_TOTAL}）→ 有 ${1} 個人在等、他用的是這組碼，剩 ${USES_TOTAL - 1} 次（stub${USES_TOTAL - 1}）→ 有 ${QUEUE.length} 個人在等、其中 ${QUEUE_OWN} 位用這組碼（另 ${QUEUE.length - QUEUE_OWN} 位用上一組，攤開的那張卡上寫著），剩 ${USES_TOTAL - QUEUE_OWN} 次（stub${USES_TOTAL - QUEUE_OWN}）。褪到最後（用完了）色相位移、明度差、彩度三個量一起趨近於零：<b>褪完了就沒有褪色的方向了</b> —— 這與「還沒印上號碼的空票根沒有這條漸層」是同一句話的兩端。G23④ 斷言三個量單調衰減、G23⑤ 斷言「畫出來的階數 ＝ 印在板上的次數」，改了文案不改階數會 FAIL。<b>三格刻度（第 5 輪改）</b>：還沒用的格畫的是<b>當前階</b>（與號碼帶同一支漸層，實測 ΔE ${A(M.scaleDelta, (d) => d.bandMax)}）、用掉的格褪到底並蓋一道<b>朱筆銷記</b>（照相館在存根上劃掉用過的那一格，那一道是同一支 brush 幾何畫的）。第 4 輪未用格永遠畫 stub${USES_TOTAL}，所以帶子走到第幾階刻度上看不到 —— 遮住文字時五個狀態裡有三個逐格 ΔE 為 ${0}。現在逐格對位實測：相鄰狀態最大 ΔE 最小的一組 ${A(M.scaleDelta, (d) => d.adjMin)}、剛印好↔用完了三格最小 ${A(M.scaleDelta, (d) => d.endsMin)}（門檻 ${SCALE_DE.adj}／${SCALE_DE.ends}，G29）。ios-dev：褪色階是這組碼的<b>資料</b>（remaining uses），不是那個畫面的樣式 —— 票根出現在哪裡就帶到哪裡。`,
     },
     {
       id: 'ax-note', x: 0, y: -280, w: 480, page: 'page-2',
@@ -2023,4 +2212,10 @@ const ROOT_FP = hash12(JSON.stringify([STRUCT_FP, CONTENT_FP]));
                        拿它去驗「量測是不是在本軌量的」會永遠 FAIL，而且是假的 FAIL。
    兩者都寫進 _root.json 與 measured.json，誰在守什麼是印出來的。 */
 writeFileSync(new URL('_root.json', import.meta.url), `${JSON.stringify({ track: TRACK, fp: ROOT_FP, structFp: STRUCT_FP, contentFp: CONTENT_FP, boards: canvas.artboards.length }, null, 2)}\n`);
+
+/* ── 具名豁免登記簿的機器可讀版（第 5 輪 D4-07②）────────────────────
+   _probe.html 只認這一份清單上的 marker+role+板名：不在清單上的豁免標記**不生效**
+   （第 4 輪的 M1b 是「data-light 加任何值都豁免」，這一版那一招當場失效），
+   而且 MG2 會反過來驗「畫面上有的」與「清單上有的」是同一個集合。 */
+writeFileSync(new URL('_exempt.json', import.meta.url), `${JSON.stringify(EXEMPT, null, 2)}\n`);
 console.log(`wrote ${Object.keys(files).length} artboards + canvas.json + _root.json (${TRACK} #${ROOT_FP} / 內容 #${CONTENT_FP})`);

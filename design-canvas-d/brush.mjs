@@ -46,7 +46,10 @@ export const withWidth = (wf, fn) => { const prev = WF; WF = wf; try { return fn
 export const NOMINAL = [];
 const stroke = (pts, w0, w1, swell = 0, place = null) => {
   w0 = WF.w(w0); w1 = WF.w(w1); swell *= WF.swell;
-  NOMINAL.push({ nominal: (w0 + w1) / 2 * (1 + swell), w0, w1 });
+  /* 第 5 輪 D4-10：連控制點一起記下來。「刻是為刀重排、但還是同一個字」這句話
+     在第 4 輪只是一段文字（表上那四個數量的是可讀性，不是「同不同一個字」）。
+     記下中線之後，那句話變成八個可以被否證的數 —— 見 icon.mjs 的 centerlineDev()。 */
+  NOMINAL.push({ nominal: (w0 + w1) / 2 * (1 + swell), w0, w1, pts: pts.map((p) => [p[0], p[1]]) });
   const N = 26, L = [], R = [];
   for (let i = 0; i <= N; i++) {
     const u = i / N;
@@ -66,6 +69,28 @@ const stroke = (pts, w0, w1, swell = 0, place = null) => {
   for (let i = N; i >= 0; i--) path.push(`L${R[i][0]} ${R[i][1]}`);
   return `<path d="${path.join('')}Z"/>`;
 };
+
+/* ── 銷記：照相館在用掉的存根上劃掉的那一道（第 5 輪 D4-01）──────────
+   同一支筆、同一個 stroke() 模型 —— 一道由粗到細、右上收鋒的斜劃（右手劃掉的方向）。
+   不是 CSS 畫的 ✗、不是圓頭 stroke 假裝的手筆：它與字標、落款印是同一份幾何模型。
+   顏色是朱（紅筆的另一個本業：劃掉），豁免登記在 tokens.mjs 的 EXEMPT 裡。 */
+const CANCEL_VB = { x: 0, y: 0, w: 100, h: 60 };
+const CANCEL_D = withWidth(identWidth, () => stroke([[8, 52], [32, 41], [63, 22], [92, 8]], 16, 6, .1));
+/* 墨蓋掉這一格的多少比例 —— 用來算「這一格看起來變了多少」（G29 的 ΔE 合成）。
+   多邊形面積用鞋帶公式直接算，不用光柵化：stroke() 的外框不自交，所以是精確值。 */
+export const polyArea = (d) => d.split('Z').filter((s) => s.trim()).reduce((acc, s) => {
+  const pts = [...s.matchAll(/[ML](-?[\d.]+) (-?[\d.]+)/g)].map((m) => [+m[1], +m[2]]);
+  let a = 0;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) a += pts[j][0] * pts[i][1] - pts[i][0] * pts[j][1];
+  return acc + Math.abs(a) / 2;
+}, 0);
+export const CANCEL_COV = +(polyArea(CANCEL_D) / (CANCEL_VB.w * CANCEL_VB.h)).toFixed(4);
+export const CANCEL_PATH = CANCEL_D;
+export const CANCEL_BOX = CANCEL_VB;
+/* preserveAspectRatio="none"：這一道劃橫著拉滿整格。仿射變換不改面積比例，
+   所以 CANCEL_COV 在任何格子尺寸下都成立。 */
+export const cancelMark = (color) =>
+  `<svg viewBox="${CANCEL_VB.x} ${CANCEL_VB.y} ${CANCEL_VB.w} ${CANCEL_VB.h}" preserveAspectRatio="none" fill="${color}" aria-hidden="true" data-cancel="stub" data-ink="brush-cancel" style="position:absolute;left:0;top:0;width:100%;height:100%;display:block">${CANCEL_D}</svg>`;
 
 /* ── 艹（草字頭）─────────────────────────────────────
    「萌」與「芽」共用同一個部首 —— 這是這個詞在字形上本來就有的呼應。
@@ -180,9 +205,11 @@ export const buildSeal = (wf = identWidth) => {
   const glyph = wf === identWidth ? YA : YA_SEAL;
   const d = withWidth(wf, () => glyph(([x, y]) => { seen(x, y); return [x, y]; }));
   const nominal = NOMINAL.map((s) => s.nominal);
+  const strokes = NOMINAL.map((s) => ({ nominal: s.nominal, pts: s.pts }));
   return {
     d,
     nominal,
+    strokes,
     vb: { x: r2(box.x0 - PAD), y: r2(box.y0 - PAD), w: r2(box.x1 - box.x0 + PAD * 2), h: r2(box.y1 - box.y0 + PAD * 2) },
   };
 };
