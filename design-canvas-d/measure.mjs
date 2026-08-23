@@ -82,6 +82,26 @@ const out = {
   insetUse: insetCount, insetTotal: R.inset.length, insetBad: R.insetBad,
   cta: R.cta, ctaMax: Math.max(...Object.entries(R.cta).filter(([k]) => !/Tokens|Notes|Stress/.test(k)).map(([, v]) => v)),
   ctaBoards: Object.keys(R.cta).filter((k) => !/Tokens|Notes|Stress/.test(k)).length,
+  ctaZero: Object.entries(R.cta).filter(([k, v]) => !/Tokens|Notes|Stress/.test(k) && v === 0).length,
+
+  /* ── 漸層（G22）──────────────────────────────────────
+     kinds  畫面上實際出現的「不同寫法」數（去重後的 CSS 字串）
+     badDir 方向不是垂直的使用點 —— 量不出漸層最不利點，所以一個都不准有
+     textOn 底下壓了字的文字節點數（對比就是以最不利點算出來的那一批） */
+  grad: {
+    total: R.grads.length,
+    kinds: new Set(R.grads.filter((g) => !g.repeating).map((g) => g.css)).size,
+    badDir: R.gradBad.length,
+    textOn: R.contrast.onGrad,
+    css: [...new Set(R.grads.map((g) => g.css))],
+    byKind: Object.entries(R.grads.reduce((a, g) => { const k = g.kind || (g.repeating ? 'perf' : '(未標記)'); a[k] = (a[k] || 0) + 1; return a; }, {})),
+  },
+  gradBad: R.gradBad,
+  gradMin: Math.round(R.contrast.min * 100) / 100,
+  gradWorst: R.contrast.worst,
+  grainMin: Math.round(R.contrast.grainMin * 100) / 100,
+  grainWorst: R.contrast.grainWorst,
+  grainFails: R.contrast.grainFails,
 
   motifs: R.motifs, darkMotifs: R.darkMotifs,
 
@@ -100,7 +120,8 @@ const out = {
 
 writeFileSync(new URL('measured.json', import.meta.url), JSON.stringify(out, null, 2));
 console.log(`measured ${out.count} boards · 呼吸帶 手機 ${out.maxVoid}px (${out.maxVoidFile}) / iPad ${out.maxVoidPad}px (${out.maxVoidPadFile})`);
-console.log(`  對比節點 ${out.contrastNodes}（最低 ${out.contrastMin} @ ${out.contrastWorst}，未達 AAA ${out.contrastFails.length}）· 照片上文字 ${out.textOverPhoto}`);
+console.log(`  對比節點 ${out.contrastNodes}（漸層最不利點最低 ${out.contrastMin} @ ${out.contrastWorst}，未達 AAA ${out.contrastFails.length}）· 照片上文字 ${out.textOverPhoto}`);
+console.log(`  漸層 ${out.grad.total} 個使用點／${out.grad.kinds} 種寫法（非垂直 ${out.grad.badDir}）· 壓字節點 ${out.grad.textOn} · 顆粒最暗格最低 ${out.grainMin} @ ${out.grainWorst}（低於 6 的 ${out.grainFails.length}）`);
 console.log(`  inset 使用點 ${out.insetTotal}（白名單外 ${out.insetBad.length}）· 陶土最多 ${out.ctaMax}/板 · 孤兒斷行 ${out.orphans.length} · 裁切 ${out.clipped.length}`);
 console.log(`  >${RULE.pause}px 空白 ${out.pauses.length} 段掛牌 / ${out.pauseBad.length} 段未掛牌 · 尾段最大 ${out.maxTrail}px (${out.maxTrailFile}) · 主按鈕中心位置最低 ${out.btnMaxPct}% (${out.btnMaxFile})`);
 console.log(`  唇邊 ${JSON.stringify(out.lips)} · 無唇邊 ${out.lipNone}（${out.lipNoneWho.join(' ')}）· 開關列 ${out.toggles.map((t) => `${t.file}@${t.top}`).join(' ')}`);

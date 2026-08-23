@@ -8,10 +8,12 @@
       所以這一輪全部改成「掃使用點的 computed style」。 */
 (async () => {
   const CAP = 0.72;
-  const INSET_OK = ['field','cell','photo','avatar','codeslot','choiceSel','switchOff','seam'];
+  const INSET_OK = ['field','cell','photo','avatar','codeslot','switchOff','seam'];
   const PAUSE = 120;   // 呼吸帶門檻：手機與 iPad 同一條
   const R = { boards: [], inset: [], insetBad: [], cta: {}, h1: [], voids: [], err: [],
-              contrast: { n: 0, min: 99, worst: '', fails: [], overPhoto: 0 },
+              contrast: { n: 0, min: 99, worst: '', fails: [], overPhoto: 0,
+                          grainMin: 99, grainWorst: '', grainFails: [], onGrad: 0 },
+              grads: [], gradBad: [],
               orphans: [], approve: [], taps: [], darkMotifs: {}, motifs: {},
               pauses: [], pauseBad: [], lips: {}, lipNone: [], lipTotal: 0,
               toggles: [], mainBtn: [], photos: [] };
@@ -22,6 +24,92 @@
   const lum = (c) => { const s = c.slice(0,3).map(v => { v /= 255; return v <= .03928 ? v/12.92 : ((v+.055)/1.055)**2.4; }); return .2126*s[0] + .7152*s[1] + .0722*s[2]; };
   const cr = (a, b) => { const l1 = lum(a), l2 = lum(b); const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1]; return (hi+.05)/(lo+.05); };
   const over = (fg, bg) => fg.map((v,i) => i<3 ? v*fg[3] + bg[i]*(1-fg[3]) : 1);
+  const mul = (c, k) => [c[0]*k, c[1]*k, c[2]*k, c.length > 3 ? c[3] : 1];
+
+  /* ── 漸層：解析、方向判定、任一高度取色 ───────────────────────────────
+     這一稿每一張紙、每一個可按的面、每一個開窗都帶漸層，所以「文字對比」不再是
+     一個底色對一個字色 —— 一段字蓋到的是漸層的一「段」，對比要以**那一段裡最不利的
+     一點**計。做得到這件事的前提是漸層可解析：
+       · 只有 180deg（＝ to bottom，Chrome 會把預設方向正規化掉）的線性漸層，
+         色停才能沿著 y 軸唯一決定 —— 斜的漸層在同一個 y 上有不只一個顏色，量不了。
+       · 量不了就不准壓字：方向不合的一律進 gradBad，verify 直接 FAIL。
+     漸層的鋪設區域是 padding box（background-origin 的預設值），所以要扣掉框線。 */
+  const parseStops = (css) => {
+    const inner = css.slice(css.indexOf('(') + 1, css.lastIndexOf(')'));
+    const parts = []; let depth = 0, cur = '';
+    for (const ch of inner) {
+      if (ch === '(') depth++;
+      if (ch === ')') depth--;
+      if (ch === ',' && depth === 0) { parts.push(cur.trim()); cur = ''; continue; }
+      cur += ch;
+    }
+    parts.push(cur.trim());
+    const stops = [];
+    for (const p of parts) {
+      const c = hexToRgb(p);
+      if (!c) continue;
+      const m = /([\d.]+)%\s*$/.exec(p);
+      stops.push({ c, at: m ? +m[1] / 100 : null });
+    }
+    if (stops.length < 2) return null;
+    if (stops[0].at === null) stops[0].at = 0;
+    if (stops[stops.length - 1].at === null) stops[stops.length - 1].at = 1;
+    for (let i = 1; i < stops.length - 1; i++) if (stops[i].at === null) stops[i].at = i / (stops.length - 1);
+    return stops;
+  };
+  const stopAt = (stops, f) => {
+    f = Math.max(0, Math.min(1, f));
+    for (let i = 1; i < stops.length; i++) {
+      if (f <= stops[i].at || i === stops.length - 1) {
+        const a = stops[i - 1], b = stops[i];
+        const span = b.at - a.at || 1, k = Math.max(0, Math.min(1, (f - a.at) / span));
+        return [0,1,2,3].map((j) => a.c[j] + (b.c[j] - a.c[j]) * k);
+      }
+    }
+    return stops[0].c.slice();
+  };
+
+  /* 每個元素只算一次 computed style：文字節點的取樣會沿著祖先鏈重複走同一批元素。 */
+  const SC = new WeakMap();
+  const info = (n, baseTop) => {
+    let v = SC.get(n);
+    if (v) return v;
+    const cs = getComputedStyle(n);
+    const bc = hexToRgb(cs.backgroundColor) || [0,0,0,0];
+    const bi = cs.backgroundImage;
+    let grad = null;
+    if (bi && bi !== 'none' && /(^|,)\s*(repeating-)?linear-gradient\(/.test(bi)) {
+      const vertical = /^linear-gradient\(\s*rgba?\(/.test(bi) || /^linear-gradient\(\s*180deg/.test(bi);
+      const stops = vertical ? parseStops(bi) : null;
+      const r = n.getBoundingClientRect();
+      const bt = parseFloat(cs.borderTopWidth) || 0, bb = parseFloat(cs.borderBottomWidth) || 0;
+      grad = { css: bi, vertical, stops, top: r.top - baseTop + bt, h: Math.max(1, r.height - bt - bb) };
+    }
+    v = { bc, grad };
+    SC.set(n, v);
+    return v;
+  };
+
+  const bgAt = (node, y, baseTop, root) => {
+    let acc = [0,0,0,0];
+    for (let cur = node; cur; cur = cur.parentElement) {
+      const { bc, grad } = info(cur, baseTop);
+      let layer = bc;
+      if (grad && grad.stops) layer = over(stopAt(grad.stops, (y - grad.top) / grad.h), layer);
+      if (layer[3] > 0) acc = acc[3] > 0 ? over(acc, layer) : layer;
+      if (acc[3] >= 1) return acc;
+      if (cur === root) break;
+    }
+    return acc[3] > 0 ? over(acc, [255,255,255,1]) : [255,255,255,1];
+  };
+  const onGrad = (node, root) => {
+    for (let cur = node; cur; cur = cur.parentElement) {
+      const v = SC.get(cur);
+      if (v && v.grad && v.grad.stops) return true;
+      if (cur === root) break;
+    }
+    return false;
+  };
 
   for (const ab of cv.artboards) {
     const file = ab.file, W = ab.w, FH = ab.h;
@@ -133,7 +221,9 @@
            （底線連結不是表面，不算）。沒有唇邊的一律列名，例外必須自己現形。 ── */
     const rootVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
     const cssRgb = (v) => { const p = document.createElement('span'); p.style.color = v; document.body.appendChild(p); const c = getComputedStyle(p).color; p.remove(); return c; };
-    const lipNames = { ctaDeep: cssRgb(rootVar('--ls-cta-deep')), edge: cssRgb(rootVar('--ls-edge')), wine: cssRgb(rootVar('--ls-wine')) };
+    const lipNames = { ctaDeep: cssRgb(rootVar('--ls-cta-deep')), ctaBusy: cssRgb(rootVar('--ls-cta-busy')),
+                       board3: cssRgb(rootVar('--ls-board-3')), edge: cssRgb(rootVar('--ls-edge')),
+                       pen: cssRgb(rootVar('--ls-pen')), googleLine: cssRgb(rootVar('--ls-google-line')) };
     for (const n of el.querySelectorAll('[data-s="raise"]')) {
       if (n.getAttribute('data-role') === 'link') continue;
       R.lipTotal++;
@@ -187,28 +277,54 @@
       R.err.push({ file: name, h: Math.round(er.h*10)/10, gap: min === 1e9 ? 999 : Math.round(min*10)/10, overlap: hit });
     }
 
-    /* ── 8. 節點級對比（含「有沒有字壓在照片上」）── */
-    const bgOf = (n) => {
-      let cur = n, acc = [0,0,0,1], got = false;
-      while (cur && cur !== document.body) {
-        const c = hexToRgb(getComputedStyle(cur).backgroundColor);
-        if (c && c[3] > 0) { acc = got ? over(acc, c) : c; got = true; if (c[3] === 1) return acc; }
-        cur = cur.parentElement;
-      }
-      return got ? acc : [255,255,255,1];
-    };
+    /* ── 8a. 漸層清冊：畫面上實際出現的每一個漸層使用點 ──
+           方向不是垂直的一律進 gradBad（量不了最不利點 → 不准壓字 → 直接不准出現）。 */
+    for (const n of el.querySelectorAll('*')) {
+      const { grad } = info(n, base.top);
+      if (!grad) continue;
+      const kind = n.getAttribute('data-grad') || '';
+      const repeating = /^repeating-/.test(grad.css);
+      R.grads.push({ file: name, kind, css: grad.css, vertical: grad.vertical, repeating,
+                     tag: (n.getAttribute('data-s') || '') + '/' + (n.getAttribute('data-role') || '') });
+      if (!grad.vertical && !repeating) R.gradBad.push(name + ' ' + grad.css.slice(0, 70));
+    }
+
+    /* ── 8b. 節點級對比：以「字蓋到的那一段漸層裡最不利的一點」計 ──
+           不是取元素中心、不是取兩端平均 —— 沿著每一行字的上下緣取樣，取對比最低的那一點。
+           另外把紙的顆粒層一起算一次：它是 multiply，會把底乘暗（淺色時對比會掉），
+           所以再以「顆粒最暗的那一格」重算一次當下限，兩個數都印在板上。 */
+    const SAMPLES = 9;
+    let grainOp = 0;
+    for (const g of el.querySelectorAll('.g')) {
+      const o = parseFloat(getComputedStyle(g, '::after').opacity);
+      if (o > grainOp) grainOp = o;
+    }
+    if (getComputedStyle(el, '::after').content !== 'none') {
+      const o = parseFloat(getComputedStyle(el, '::after').opacity);
+      if (o > grainOp) grainOp = o;
+    }
     const photoRects = [...el.querySelectorAll('img')].map(rel);
     const it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
     for (let t = it.nextNode(); t; t = it.nextNode()) {
       const txt = t.textContent.trim();
       if (!txt) continue;
       const p = t.parentElement, cs = getComputedStyle(p);
-      const fg = hexToRgb(cs.color); if (!fg) continue;
-      const bg = bgOf(p);
-      const v = cr(fg[3] < 1 ? over(fg, bg) : fg, bg);
+      const fg0 = hexToRgb(cs.color); if (!fg0) continue;
       R.contrast.n++;
       const rg = document.createRange(); rg.selectNodeContents(t);
       const rects = [...rg.getClientRects()];
+      let v = 99, at = 0;
+      const bands = rects.length ? rects.map((rc) => [rc.top - base.top, rc.bottom - base.top])
+                                 : [[rel(p).t, rel(p).b]];
+      for (const [a, b] of bands) {
+        for (let i = 0; i < SAMPLES; i++) {
+          const y = a + (b - a) * (i / (SAMPLES - 1));
+          const bg = bgAt(p, y, base.top, el);
+          const c = cr(fg0[3] < 1 ? over(fg0, bg) : fg0, bg);
+          if (c < v) { v = c; at = Math.round(y); }
+        }
+      }
+      if (onGrad(p, el)) R.contrast.onGrad++;
       for (const rc of rects) {
         const tr = { t: rc.top-base.top, b: rc.bottom-base.top, l: rc.left-base.left, r: rc.right-base.left };
         for (const pr of photoRects) {
@@ -219,8 +335,15 @@
           }
         }
       }
-      if (v < R.contrast.min) { R.contrast.min = v; R.contrast.worst = name + ' 「' + txt.slice(0,14) + '」'; }
-      if (v < 7) R.contrast.fails.push(name + ' 「' + txt.slice(0,16) + '」 ' + v.toFixed(2));
+      const where = name + ' 「' + txt.slice(0,14) + '」@y' + at;
+      if (v < R.contrast.min) { R.contrast.min = v; R.contrast.worst = where; }
+      if (v < 7) R.contrast.fails.push(name + ' 「' + txt.slice(0,16) + '」 ' + v.toFixed(2) + ' @y' + at);
+      if (grainOp > 0) {
+        const bg = bgAt(p, at, base.top, el), k = 1 - grainOp;
+        const gv = cr(mul(fg0[3] < 1 ? over(fg0, bg) : fg0, k), mul(bg, k));
+        if (gv < R.contrast.grainMin) { R.contrast.grainMin = gv; R.contrast.grainWorst = where; }
+        if (gv < 6) R.contrast.grainFails.push(name + ' 「' + txt.slice(0,16) + '」 ' + gv.toFixed(2));
+      }
     }
 
     /* ── 9. 孤兒斷行：以「一個文字區塊」為單位，不是以文字節點為單位 ——

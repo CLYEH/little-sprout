@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <!-- ls-measured:aeeb7eef2602 -->
+  <!-- ls-measured:4dc7510b1fc0 -->
   <script src="./support.js"></script>
 </head>
 <body>
@@ -10,69 +10,77 @@
 <helmet><style>
     /* ── Little Sprout M1 tokens（值即實作值，ios-dev 直接抄）── */
     :root{
-      --ls-board:#EFE3D0; --ls-board-2:#E3D2B8; --ls-board-3:#D9C7AB; --ls-lit:#FBF4E8;
-      --ls-ink:#241A12; --ls-ink-2:#413327;
-      --ls-cta:#8A3016; --ls-cta-deep:#6B2410; --ls-on-cta:#FFFFFF;
-      --ls-wine:#6E1424; --ls-sprout:#1F5230; --ls-edge:#7D6342;
+      --ls-board:#F4DFDB; --ls-board-2:#E7CDCB; --ls-board-3:#E2C6BE; --ls-lit:#FEF3F0;
+      --ls-ink:#2A1219; --ls-ink-2:#3E232B;
+      --ls-cta:#86183F; --ls-cta-deep:#4A0722; --ls-cta-busy:#5E0A2A; --ls-on-cta:#FEF3F0;
+      --ls-pen:#7E1414; --ls-sprout:#1C4630; --ls-edge:#8C6159; --ls-google-line:#747775;
+      /* 漸層：兩端各自是 token，寫法只有一種（180deg，上→下）。 */
+      --ls-g-paper:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);
+      --ls-g-win:linear-gradient(180deg, #E0C4C3 0%, #EED5D2 100%);
+      --ls-g-win3:linear-gradient(180deg, #D8B9B1 0%, #E6C9C1 100%);
+      --ls-g-face:linear-gradient(180deg, #E9CFC7 0%, #DBBDB5 100%);
+      --ls-g-cta:linear-gradient(180deg, #901F49 0%, #7C1236 100%);
+      --ls-g-stub:linear-gradient(180deg, #FAEADE 0%, #ECD0D6 100%);
+      --ls-g-seam:linear-gradient(180deg, rgba(42,18,25,0) 0%, rgba(42,18,25,.42) 100%);
       --ls-r-window:12px; --ls-r-control:14px; --ls-r-card:18px;
       --ls-sp-1:4px; --ls-sp-2:8px; --ls-sp-3:12px; --ls-sp-4:16px;
       --ls-sp-5:24px; --ls-sp-6:32px; --ls-tap-min:44px;
     }
     *,*::before,*::after{box-sizing:border-box}
-    body{margin:0;font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Helvetica Neue", sans-serif;-webkit-font-smoothing:antialiased;background:#EFE3D0;color:#241A12;text-wrap:pretty}
-    a{color:#241A12;text-decoration:underline} a:hover{color:#8A3016}
+    body{margin:0;font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Helvetica Neue", sans-serif;-webkit-font-smoothing:antialiased;background:#F4DFDB;color:#2A1219;text-wrap:pretty}
+    a{color:#2A1219;text-decoration:underline} a:hover{color:#86183F}
     /* 紙的紋理：卡紙不是純色。全稿唯一用到透明度的地方。 */
     .g::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.055;
       background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
       mix-blend-mode:multiply}
   </style></helmet>
-<div class="g" data-col="phone" style="position:relative;width:390px;height:844px;background:#EFE3D0;overflow:hidden;display:flex;flex-direction:column">
-<div style="padding:59px 24px 0"><div data-s="raise" data-role="link" style="min-height:44px;display:flex;align-items:center;gap:4px;margin-left:-6px;color:#241A12">
+<div class="g" data-col="phone" data-grad="paper" style="position:relative;width:390px;height:844px;background:linear-gradient(180deg, #F8E6DD 0%, #EFD8D9 100%);overflow:hidden;display:flex;flex-direction:column">
+<div style="padding:59px 24px 0"><div data-s="raise" data-role="link" style="min-height:44px;display:flex;align-items:center;gap:4px;margin-left:-6px;color:#2A1219">
       <span style="display:flex"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5 8 12l6.5 7"/></svg></span><span style="font-size:17px;line-height:25px;font-weight:600">返回</span>
    </div></div>
 <div style="display:flex;flex-direction:column;gap:24px;padding:16px 24px 34px;flex-grow:1">
   <div data-rail="1" style="display:flex;align-items:center;gap:8px">
-      <div style="display:flex;gap:4px"><span style="width:30px;height:4px;border-radius:2px;background:#241A12"></span><span style="width:30px;height:4px;border-radius:2px;background:#7D6342"></span></div>
-      <span style="font-size:13px;line-height:18px;font-weight:500;color:#413327;letter-spacing:.03em">步驟 1，共 2 步</span>
+      <div style="display:flex;gap:4px"><span style="width:30px;height:4px;border-radius:2px;background:#2A1219"></span><span style="width:30px;height:4px;border-radius:2px;background:#8C6159"></span></div>
+      <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B;letter-spacing:.03em">步驟 1，共 2 步</span>
     </div>
   
   <div style="display:flex;flex-direction:column;gap:8px">
-    <h1 style="font-size:28px;line-height:34px;font-weight:700;letter-spacing:-.01em;color:#241A12;margin:0">輸入邀請碼</h1>
-    <p style="font-size:17px;line-height:25px;font-weight:400;color:#413327;margin:0">家人給你的 6 位數字，分成前三碼和後三碼。</p>
+    <h1 style="font-size:28px;line-height:34px;font-weight:700;letter-spacing:-.01em;color:#2A1219;margin:0">輸入邀請碼</h1>
+    <p style="font-size:17px;line-height:25px;font-weight:400;color:#3E232B;margin:0">家人給你的 6 個字母和數字，分成前三碼和後三碼。</p>
   </div>
   <div style="display:flex;flex-direction:column;gap:8px">
-      <div style="display:flex;gap:12px;align-items:center"><div style="display:flex;gap:8px;flex:1"><div data-s="win" data-role="cell" data-m="cells" style="flex:1;background:#E3D2B8;border:1px solid #7D6342;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(36,26,18,.34), inset 0 5px 8px -4px rgba(36,26,18,.22), inset 0 -1.5px 0 rgba(255,250,238,.75);height:80px;display:flex;align-items:center;justify-content:center">
-      <span style="font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:36px;line-height:40px;font-weight:600;color:#241A12">7</span></div><div data-s="win" data-role="cell" data-m="cells" style="flex:1;background:#E3D2B8;border:1px solid #7D6342;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(36,26,18,.34), inset 0 5px 8px -4px rgba(36,26,18,.22), inset 0 -1.5px 0 rgba(255,250,238,.75);height:80px;display:flex;align-items:center;justify-content:center">
-      <span style="font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:36px;line-height:40px;font-weight:600;color:#241A12">4</span></div><div data-s="win" data-role="cell" data-m="cells" style="flex:1;background:#E3D2B8;border:1px solid #7D6342;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(36,26,18,.34), inset 0 5px 8px -4px rgba(36,26,18,.22), inset 0 -1.5px 0 rgba(255,250,238,.75);height:80px;display:flex;align-items:center;justify-content:center">
-      <span style="font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:36px;line-height:40px;font-weight:600;color:#241A12">2</span></div></div><span style="font-size:22px;line-height:28px;font-weight:600;letter-spacing:-.005em;color:#413327;flex:none">、</span><div style="display:flex;gap:8px;flex:1"><div data-s="win" data-role="cell" data-m="cells" style="flex:1;background:#E3D2B8;border:1px solid #7D6342;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(36,26,18,.34), inset 0 5px 8px -4px rgba(36,26,18,.22), inset 0 -1.5px 0 rgba(255,250,238,.75);height:80px;display:flex;align-items:center;justify-content:center">
-      <span style="font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:36px;line-height:40px;font-weight:600;color:#241A12">9</span></div><div data-s="win" data-role="cell" data-m="cells" style="flex:1;background:#E3D2B8;border:1px solid #7D6342;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(36,26,18,.34), inset 0 5px 8px -4px rgba(36,26,18,.22), inset 0 -1.5px 0 rgba(255,250,238,.75);height:80px;display:flex;align-items:center;justify-content:center">
-      <span style="font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:36px;line-height:40px;font-weight:600;color:#241A12">3</span></div><div data-s="win" data-role="cell" data-m="cells" style="flex:1;background:#E3D2B8;border:2px solid #241A12;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(36,26,18,.34), inset 0 5px 8px -4px rgba(36,26,18,.22), inset 0 -1.5px 0 rgba(255,250,238,.75);height:80px;display:flex;align-items:center;justify-content:center">
-      <span style="font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:36px;line-height:40px;font-weight:600;color:#241A12">6</span></div></div></div>
+      <div style="display:flex;gap:12px;align-items:center"><div style="display:flex;gap:8px;flex:1"><div data-s="win" data-role="cell" data-m="cells" style="flex:1;background:linear-gradient(180deg, #E0C4C3 0%, #EED5D2 100%);border:1px solid #8C6159;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(42,18,25,.34), inset 0 5px 8px -4px rgba(42,18,25,.22), inset 0 -1.5px 0 rgba(255,246,242,.78);height:80px;display:flex;align-items:center;justify-content:center">
+      <span style="font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:36px;line-height:40px;font-weight:600;color:#2A1219">K</span></div><div data-s="win" data-role="cell" data-m="cells" style="flex:1;background:linear-gradient(180deg, #E0C4C3 0%, #EED5D2 100%);border:1px solid #8C6159;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(42,18,25,.34), inset 0 5px 8px -4px rgba(42,18,25,.22), inset 0 -1.5px 0 rgba(255,246,242,.78);height:80px;display:flex;align-items:center;justify-content:center">
+      <span style="font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:36px;line-height:40px;font-weight:600;color:#2A1219">7</span></div><div data-s="win" data-role="cell" data-m="cells" style="flex:1;background:linear-gradient(180deg, #E0C4C3 0%, #EED5D2 100%);border:1px solid #8C6159;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(42,18,25,.34), inset 0 5px 8px -4px rgba(42,18,25,.22), inset 0 -1.5px 0 rgba(255,246,242,.78);height:80px;display:flex;align-items:center;justify-content:center">
+      <span style="font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:36px;line-height:40px;font-weight:600;color:#2A1219">M</span></div></div><span style="font-size:22px;line-height:28px;font-weight:600;letter-spacing:-.005em;color:#3E232B;flex:none">、</span><div style="display:flex;gap:8px;flex:1"><div data-s="win" data-role="cell" data-m="cells" style="flex:1;background:linear-gradient(180deg, #E0C4C3 0%, #EED5D2 100%);border:1px solid #8C6159;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(42,18,25,.34), inset 0 5px 8px -4px rgba(42,18,25,.22), inset 0 -1.5px 0 rgba(255,246,242,.78);height:80px;display:flex;align-items:center;justify-content:center">
+      <span style="font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:36px;line-height:40px;font-weight:600;color:#2A1219">2</span></div><div data-s="win" data-role="cell" data-m="cells" style="flex:1;background:linear-gradient(180deg, #E0C4C3 0%, #EED5D2 100%);border:1px solid #8C6159;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(42,18,25,.34), inset 0 5px 8px -4px rgba(42,18,25,.22), inset 0 -1.5px 0 rgba(255,246,242,.78);height:80px;display:flex;align-items:center;justify-content:center">
+      <span style="font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:36px;line-height:40px;font-weight:600;color:#2A1219">Q</span></div><div data-s="win" data-role="cell" data-m="cells" style="flex:1;background:linear-gradient(180deg, #E0C4C3 0%, #EED5D2 100%);border:2px solid #2A1219;border-radius:12px;box-shadow:inset 0 1.5px 0 rgba(42,18,25,.34), inset 0 5px 8px -4px rgba(42,18,25,.22), inset 0 -1.5px 0 rgba(255,246,242,.78);height:80px;display:flex;align-items:center;justify-content:center">
+      <span style="font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:36px;line-height:40px;font-weight:600;color:#2A1219">D</span></div></div></div>
       
     </div>
-  <span style="font-size:13px;line-height:18px;font-weight:500;color:#413327">念的時候是「七四二、九三六」。</span>
+  <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B">念的時候分兩組：「K7M」、「2QD」。</span>
   
-  <div data-s="flat" style="border:1px solid #7D6342;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
-    <span style="font-size:15px;line-height:21px;font-weight:600;color:#413327;text-shadow:0 1px 0 rgba(255,250,238,.75)">接下來會發生什麼</span>
-    <div style="height:1px;background:#7D6342"></div>
+  <div data-s="flat" style="border:1px solid #8C6159;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+    <span style="font-size:15px;line-height:21px;font-weight:600;color:#3E232B;text-shadow:0 1px 0 rgba(255,246,242,.80)">接下來會發生什麼</span>
+    <div style="height:1px;background:#8C6159"></div>
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
-             <span style="font-size:15px;line-height:21px;font-weight:600;color:#413327">送出後</span>
-             <span style="font-size:17px;line-height:25px;font-weight:600;color:#241A12;text-align:right;text-shadow:0 1px 0 rgba(255,250,238,.75);overflow-wrap:anywhere">家長會收到通知</span>
-           </div><div style="height:1px;background:#7D6342"></div>
+             <span style="font-size:15px;line-height:21px;font-weight:600;color:#3E232B">送出後</span>
+             <span style="font-size:17px;line-height:25px;font-weight:600;color:#2A1219;text-align:right;text-shadow:0 1px 0 rgba(255,246,242,.80);overflow-wrap:anywhere">家長會收到通知</span>
+           </div><div style="height:1px;background:#8C6159"></div>
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
-             <span style="font-size:15px;line-height:21px;font-weight:600;color:#413327">他按核准</span>
-             <span style="font-size:17px;line-height:25px;font-weight:600;color:#241A12;text-align:right;text-shadow:0 1px 0 rgba(255,250,238,.75);overflow-wrap:anywhere">你才進得到家庭裡</span>
-           </div><div style="height:1px;background:#7D6342"></div>
+             <span style="font-size:15px;line-height:21px;font-weight:600;color:#3E232B">他按核准</span>
+             <span style="font-size:17px;line-height:25px;font-weight:600;color:#2A1219;text-align:right;text-shadow:0 1px 0 rgba(255,246,242,.80);overflow-wrap:anywhere">你才進得到家庭裡</span>
+           </div><div style="height:1px;background:#8C6159"></div>
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
-             <span style="font-size:15px;line-height:21px;font-weight:600;color:#413327">為什麼</span>
-             <span style="font-size:17px;line-height:25px;font-weight:600;color:#241A12;text-align:right;text-shadow:0 1px 0 rgba(255,250,238,.75);overflow-wrap:anywhere">擋下拿到碼的陌生人</span>
+             <span style="font-size:15px;line-height:21px;font-weight:600;color:#3E232B">為什麼</span>
+             <span style="font-size:17px;line-height:25px;font-weight:600;color:#2A1219;text-align:right;text-shadow:0 1px 0 rgba(255,246,242,.80);overflow-wrap:anywhere">擋下拿到碼的陌生人</span>
            </div>
   </div>
-  <div data-s="raise" data-role="button" data-cta="1" style="background:#8A3016;border-radius:14px;border-bottom:3px solid #6B2410;box-shadow:0 1px 0 rgba(36,26,18,.20), 0 8px 16px -10px rgba(36,26,18,.55);min-height:56px;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 16px;color:#FFFFFF">
+  <div data-s="raise" data-role="button" data-cta="1" style="background:linear-gradient(180deg, #901F49 0%, #7C1236 100%);border-radius:14px;border-bottom:3px solid #4A0722;box-shadow:0 1px 0 rgba(42,18,25,.20), 0 8px 16px -10px rgba(42,18,25,.55);min-height:56px;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 16px;color:#FEF3F0">
       
-      <span style="font-size:17px;line-height:25px;font-weight:600;color:#FFFFFF;text-align:center">送出申請</span>
+      <span style="font-size:17px;line-height:25px;font-weight:600;color:#FEF3F0;text-align:center">送出申請</span>
     </div>
-  <span style="font-size:13px;line-height:18px;font-weight:500;color:#413327">送出之後這個畫面會變成「等家長核准」。可以先關掉 app，核准了會通知你。</span>
+  <span style="font-size:13px;line-height:18px;font-weight:500;color:#3E232B">送出之後這個畫面會變成「等家長核准」。可以先關掉 app，核准了會通知你。</span>
 </div></div>
 </x-dc>
 </body>

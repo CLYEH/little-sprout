@@ -4,7 +4,10 @@
 // 所以 G1–G12 全部進管線，reviewer 拒絕管線外自證。
 // Run: node measure.mjs && node verify.mjs
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
-import { T, GAPS, SIZES, FIX, AX, RULE, H1_GROUPS, H1_EXCLUDED, hash12 } from './tokens.mjs';
+import {
+  T, GAPS, SIZES, FIX, AX, RULE, H1_GROUPS, H1_EXCLUDED, hash12,
+  GRAD_KEYS, GRAD_WHY, NO_GRAD_WHY, CONTRAST, gradCss, perfCss,
+} from './tokens.mjs';
 
 const files = readdirSync(new URL('.', import.meta.url)).filter((f) => f.endsWith('.dc.html')).sort();
 const read = (f) => readFileSync(new URL(f, import.meta.url), 'utf8');
@@ -75,37 +78,152 @@ const need = (key, label) => { console.log(`SKIP  ${label} —— measured.json 
   ok(hits.length === 0, 'G3 透明度：沒有任何文字或元件帶 opacity（卡紙顆粒與 stroke-opacity 除外）', hits.slice(0, 8).join(' '));
 }
 
-/* ══ G4  紅訊號：一張板最多兩處酒紅 ══════════════════════════════ */
+/* ══ G4  紅訊號：一張板最多兩處朱 ══════════════════════════════ */
 {
   const rows = [];
   for (const f of files) {
     if (/Tokens|Notes/.test(f)) continue;
-    const body = read(f).replace(/--ls-wine:[^;]+;/g, '');
-    const n = [...body.matchAll(new RegExp(T.light.wine, 'gi'))].length + [...body.matchAll(new RegExp(T.dark.wine, 'gi'))].length;
+    const body = read(f).replace(/--ls-pen:[^;]+;/g, '');
+    const n = [...body.matchAll(new RegExp(T.light.pen, 'gi'))].length + [...body.matchAll(new RegExp(T.dark.pen, 'gi'))].length;
     if (n) rows.push([f, n]);
   }
   const bad = rows.filter(([, n]) => n > 2);
-  ok(bad.length === 0, `G4 紅訊號：有酒紅的 ${rows.length} 張板，每張 ≤2 處`,
+  ok(bad.length === 0, `G4 紅訊號：有朱的 ${rows.length} 張板，每張 ≤2 處`,
     bad.length ? bad.map(([f, n]) => `${f}=${n}`).join(' ') : rows.map(([f, n]) => `${f.replace('.dc.html','')}:${n}`).join(' '));
 }
 
 /* ══ G5  「凹＝可以填」：掃使用點的 computed box-shadow ══════════
    第 2 輪只 grep helper 定義，實測 49 個非可填元件帶 inset。 */
 if (M.insetBad) {
-  ok(M.insetBad.length === 0, `G5 凹的白名單：${M.insetTotal} 個帶 inset 的使用點，全部落在八個角色`,
+  ok(M.insetBad.length === 0, `G5 凹的白名單：${M.insetTotal} 個帶 inset 的使用點，全部落在 ${Object.keys(M.insetUse).length} 個角色`,
     M.insetBad.length ? M.insetBad.slice(0, 6).join(' | ') : Object.entries(M.insetUse).map(([k, v]) => `${k}×${v}`).join(' '));
-  ok(!/const raise[\s\S]{0,400}?inset/.test(src), 'G5 浮起只有兩層：raise() 沒有 inset（第三層 topLight 已移除）');
+  ok(!/inset/.test(src.slice(src.indexOf('const raise ='), src.indexOf('// 平印：'))),
+    'G5 浮起只有兩層：raise() 的函式體裡沒有 inset（第三層 topLight 已移除）');
   ok(/border-bottom:\$\{FIX\.lip\}px/.test(src), 'G5 浮起保留 3pt 唇邊');
   ok(!/const flat =[\s\S]*?box-shadow/.test(src.slice(src.indexOf('const flat ='), src.indexOf('const press ='))), 'G5 平印：flat() 沒有 inset、沒有 box-shadow');
   ok(/const win[\s\S]{0,300}?inset 0 1\.5px 0/.test(src), 'G5 凹窗：win() 保留上緣內陰影（真凹沒有被動到）');
 } else need('insetBad', 'G5 凹的白名單');
 
-/* ══ G6  對比：節點級，全部 AAA，而且沒有字壓在照片上 ══════════ */
+/* ══ G6  對比：節點級，全部 AAA，而且沒有字壓在照片上 ══════════
+   這一稿每張紙都是漸層，所以「一個底色對一個字色」的算法已經不成立：
+   G6 讀到的最低值是 measure 沿著每一行字上下緣取樣、取**最不利那一點**算出來的
+   （見 G22②）。門檻仍然是 AAA。 */
 if (M.contrastNodes) {
-  ok(M.contrastFails.length === 0, `G6 對比：${M.contrastNodes} 個文字節點全部 ≥7:1（最低 ${M.contrastMin} @ ${M.contrastWorst}）`,
+  ok(M.contrastFails.length === 0, `G6 對比：${M.contrastNodes} 個文字節點全部 ≥${CONTRAST.aaa}:1（以漸層最不利點計，最低 ${M.contrastMin} @ ${M.contrastWorst}）`,
     M.contrastFails.slice(0, 6).join(' | '));
   ok(M.textOverPhoto === 0, `G6 照片上文字：${M.textOverPhoto} 個（壓在照片上的對比無法定義，所以一個都不能有）`);
 } else need('contrastNodes', 'G6 對比');
+
+/* ══ G22  漸層（本輪新增；規則＝「每個漸層要有理由」＋「量不了就不准壓字」）══
+   ① 可量性：只有 180deg 線性漸層量得出「字底下最不利的那一點」。斜的一律 FAIL。
+   ② 最不利點：壓在漸層上的字，以取樣到的最低對比計，門檻 AAA。（數字由 G6 印）
+   ③ 清冊：畫面上出現的每一種漸層，都必須登記在 tokens.mjs 的 GRAD_KEYS，
+      而且它的**理由**與兩端 hex 印在 Tokens 板上 —— 沒印理由的漸層就是裝飾。
+   ④ 鏡像：深色的兩端與淺色相反（seam 例外，理由印在板上）。
+   ⑤ 顆粒容差：紙的顆粒是 multiply，會把底乘暗；以「最暗的那一格」重算，下限 6:1。 */
+{
+  const sheet = read('Tokens.dc.html');
+
+  if (M.grad) {
+    ok(M.grad.badDir === 0,
+      `G22① 漸層可量性：${M.grad.total} 個漸層使用點全部是 180deg 垂直線性漸層（斜的量不出字底下最不利的那一點，所以不准壓字）`,
+      (M.gradBad || []).slice(0, 4).join(' | '));
+    ok(M.grad.textOn > 0,
+      `G22② 最不利點：${M.grad.textOn} 個文字節點壓在漸層上，逐行取樣後最低 ${M.contrastMin}（${M.contrastWorst}），門檻 ${CONTRAST.aaa}`,
+      M.grad.textOn === 0 ? '一個都沒有 —— 這張檢查沒在守東西' : '');
+    ok((M.grainFails || []).length === 0,
+      `G22⑤ 顆粒容差：以顆粒最暗的一格重算，最低 ${M.grainMin}（${M.grainWorst}），下限 ${CONTRAST.grain}`,
+      (M.grainFails || []).slice(0, 4).join(' | '));
+
+    /* 清冊：畫面上真的出現的每一種寫法，都要對得上 tokens.mjs 的某一個 key。
+       比的是**解析後的色停**不是字串 —— Chrome 會把 180deg（＝預設方向）正規化掉，
+       rgba 的小數寫法也和我們寫進 CSS 的不同；比字串會比出假的不一致。 */
+    const canon = (css) => {
+      const inner = css.slice(css.indexOf('(') + 1, css.lastIndexOf(')'));
+      const parts = []; let depth = 0, cur = '';
+      for (const ch of inner) {
+        if (ch === '(') depth++;
+        if (ch === ')') depth--;
+        if (ch === ',' && depth === 0) { parts.push(cur.trim()); cur = ''; continue; }
+        cur += ch;
+      }
+      parts.push(cur.trim());
+      const out = [];
+      for (const raw of parts) {
+        let p = raw;
+        const hx = /^#([0-9A-Fa-f]{6})/.exec(p);
+        if (hx) p = p.replace(hx[0], `rgb(${parseInt(hx[1].slice(0, 2), 16)},${parseInt(hx[1].slice(2, 4), 16)},${parseInt(hx[1].slice(4, 6), 16)})`);
+        const c = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s/]+([\d.]+))?\s*\)/.exec(p);
+        if (!c) continue;
+        const a = c[4] === undefined ? 1 : +c[4];
+        const pos = /([\d.]+)(%|px)/.exec(p.slice(c[0].length));
+        out.push(`${+c[1]},${+c[2]},${+c[3]},${a}@${pos ? pos[1] + pos[2] : '-'}`);
+      }
+      return (/^repeating-/.test(css) ? 'rep:' : '') + out.join('|');
+    };
+    const legal = new Map();
+    for (const th of [T.light, T.dark]) for (const k of GRAD_KEYS) legal.set(canon(gradCss(th, k)), k);
+    /* 明暗漸層逐個比色停；騎縫線（repeating）是圖樣，另外一條規則驗：
+       只有兩種顏色（該主題的 edge 與全透明）、6/12px 的節拍，而且只能是它。 */
+    const shading = (M.grad.css || []).filter((c) => !/^repeating-/.test(c));
+    const patterns = (M.grad.css || []).filter((c) => /^repeating-/.test(c));
+    const seen = shading.map(canon);
+    const stray = seen.filter((c) => !legal.has(c));
+    ok(stray.length === 0,
+      `G22③ 漸層清冊：畫面上出現的 ${seen.length} 種明暗漸層全部出自 tokens.mjs 的 ${GRAD_KEYS.length} 個 key，共 ${new Set(seen.map((c) => legal.get(c))).size} 個 key 真的用到`,
+      stray.slice(0, 3).join(' | '));
+    {
+      const edges = [T.light, T.dark].map((th) => {
+        const m = /#([0-9A-Fa-f]{6})/.exec(th.edge);
+        return `rgb(${[0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16)).join(', ')})`;
+      });
+      const badP = patterns.filter((c) => {
+        const cols = [...new Set([...c.matchAll(/rgba?\([^)]*\)/g)].map((x) => x[0]))];
+        const solid = cols.filter((x) => !/,\s*0\)$/.test(x));
+        const beats = [...c.matchAll(/([\d.]+)px/g)].map((x) => x[1]).join(',');
+        return !(solid.length === 1 && edges.includes(solid[0]) && beats === '0,6,6,12');
+      });
+      ok(patterns.length > 0 && badP.length === 0,
+        `G22③ 騎縫線：${patterns.length} 種 repeating 寫法只有 edge 一個實色＋全透明，節拍 6/12px（它是圖樣不是明暗漸層，方向例外印在板上）`,
+        badP.slice(0, 2).join(' | ') || (patterns.length ? '' : '一個都沒有 —— 票根的騎縫線不見了'));
+    }
+  } else need('grad', 'G22 漸層');
+
+  // 理由與端點都要印在 Tokens 板上：沒印理由的漸層就是裝飾，不是設計
+  {
+    const missWhy = [], missHex = [];
+    for (const k of [...GRAD_KEYS, 'perf']) {
+      if (!sheet.includes(GRAD_WHY[k])) missWhy.push(k);
+      if (k === 'perf') continue;
+      for (const th of [T.light, T.dark]) for (const hex of th.grad[k]) if (!sheet.includes(hex)) missHex.push(`${k}:${hex}`);
+    }
+    ok(missWhy.length === 0 && missHex.length === 0,
+      `G22③ 漸層理由：${GRAD_KEYS.length + 1} 種漸層的理由與兩端 hex（淺／深各一組）全部印在 Tokens 板上`,
+      [...missWhy.map((k) => `${k} 沒印理由`), ...missHex.map((s) => `${s} 沒印`)].join(' · '));
+    const missNo = Object.values(NO_GRAD_WHY).filter((v) => !sheet.includes(v));
+    ok(missNo.length === 0,
+      `G22③ 刻意沒有漸層的 ${Object.keys(NO_GRAD_WHY).length} 種表面（平印／載入中／品牌鍵），理由也印在板上`,
+      missNo.length ? '有理由沒印出來' : '');
+  }
+
+  // 深色＝鏡像：每一種漸層的兩端在深色是反過來的（seam 例外）
+  {
+    const L6 = (h) => { const m = /#([0-9A-Fa-f]{6})/.exec(h); if (!m) return null;
+      const c = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16) / 255)
+        .map((v) => (v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4));
+      return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+    const bad = [];
+    for (const k of GRAD_KEYS) {
+      const l = T.light.grad[k].map(L6), d = T.dark.grad[k].map(L6);
+      if (l[0] === null || d[0] === null) continue;            // seam 是 rgba，本來就不比明度
+      const sl = Math.sign(l[0] - l[1]), sd = Math.sign(d[0] - d[1]);
+      if (sl !== -sd) bad.push(`${k} 淺色 ${sl > 0 ? '上亮' : '上暗'}、深色 ${sd > 0 ? '上亮' : '上暗'}`);
+    }
+    ok(bad.length === 0,
+      `G22④ 深色是鏡像：${GRAD_KEYS.length - 1} 種帶明度的漸層，深色兩端與淺色相反（seam 是 rgba 的「有無」漸層，由幾何決定、不隨光源翻面）`,
+      bad.join(' · '));
+  }
+}
 
 /* ══ G7  六位數字的兩種正典 ＋ 3+3 分格 ＋ 兩種分組怎麼分開 ══════
    第 3 輪的「、」斷言量錯東西：/、/.test(join) 連畫面下方那句散文
@@ -133,7 +251,7 @@ if (M.contrastNodes) {
   /* ② 票根：兩組數字之間「什麼字元都沒有」，分組靠的是它們共同容器的組間距。
         插一個「、」進去 → 兩個 span 不再相鄰，這裡就找不到 3＋3；
         把組間距拿掉 → 找不到級距內的 gap。兩種破壞都會叫。 */
-  const GROUPS = /<span[^>]*>(\d{3})<\/span>\s*<span[^>]*>(\d{3})<\/span>/;
+  const GROUPS = /<span[^>]*>([A-Z0-9]{3})<\/span>\s*<span[^>]*>([A-Z0-9]{3})<\/span>/;
   const tickets = files.filter((f) => /data-m="ticket"/.test(read(f)));
   const badT = [];
   for (const f of tickets) {
@@ -149,7 +267,30 @@ if (M.contrastNodes) {
     `G7 分隔（票根）：${tickets.length} 張票根板的號碼是相鄰的 3＋3 兩組、中間一個字元都沒有，分組靠組間距（印刷品用間距不用標點）`,
     badT.join(' | '));
 
-  ok(/念的時候是「七四二、九三六」。/.test(join), 'G7 「念的時候是「七四二、九三六」。」還在（畫面的分組＝嘴巴唸的分組）');
+  /* ③ 使用者核定：邀請碼是 6 位**英數**（對齊 LS-33 已上線的產生器），不是純數字。
+        而且「畫面上印的碼」與「唸法那一句引的碼」必須是同一組 —— 改了一邊沒改另一邊就 FAIL。 */
+  {
+    const tk = files.find((f) => /data-m="ticket"/.test(read(f)) && !/AX/.test(f));
+    const m = GROUPS.exec(read(tk).slice(read(tk).indexOf('data-m="ticket"')));
+    const said = /念的時候分兩組：「([A-Z0-9]{3})」、「([A-Z0-9]{3})」。/.exec(join);
+    ok(!!m && !!said && m[1] === said[1] && m[2] === said[2],
+      `G7 唸法同源：票根上印的是 ${m ? `${m[1]} ${m[2]}` : '(找不到)'}，唸法那一句引的是 ${said ? `${said[1]} ${said[2]}` : '(找不到)'} —— 畫面的分組＝嘴巴唸的分組，同一組碼`);
+    ok(!!m && /[A-Z]/.test(m[1] + m[2]),
+      `G7 邀請碼是 6 位英數不是純數字（使用者核定，對齊 LS-33 已上線的產生器）`,
+      m && !/[A-Z]/.test(m[1] + m[2]) ? `票根上是純數字 ${m[1]} ${m[2]} —— 那一版已作廢` : '');
+    ok(!/七四二|九三六/.test(files.map(read).join('')), 'G7 作廢的純數字唸法（「七四二、九三六」）全稿已清乾淨');
+    /* ④ 文案對帳：「6 位數字」只能出現在信裡的驗證碼那條流程。
+          邀請碼是英數，任何一張邀請／加入的板還在說「數字」就是文案沒跟著改。 */
+    /* 只擋「講邀請碼卻說數字」的那幾句 —— 板中板（StressContent）同時放了驗證碼與邀請碼
+       兩條流程，用整張板當單位會誤殺驗證碼那一欄，所以量的是句子不是檔名。 */
+    const BAD = /(家人給你[^。]{0,8}|產生一組 )6 位數字/;
+    const drift = files.filter((f) => BAD.test(read(f))).map((f) => f.replace('.dc.html', ''));
+    ok(drift.length === 0,
+      'G7 文案對帳：邀請碼的句子一律說「字母和數字」；「6 位數字」只留給信裡的驗證碼',
+      drift.length ? `${drift.join(' ')} 還在說邀請碼是「6 位數字」，但它已經是英數` : '');
+    ok(/6 個字母和數字/.test(read('JoinCode.dc.html')) && /6 位數字/.test(read('Otp.dc.html')),
+      'G7 兩條流程說法各自到位：邀請碼「6 個字母和數字」、驗證碼「6 位數字」—— 兩者長度相同、分組相同，但不是同一種東西');
+  }
 }
 
 /* ══ G8  陶土：每張流程板最多一個最外層陶土區塊 ══════════════════ */
@@ -265,7 +406,8 @@ if (M.approve) {
     ['載入就地轉態', 'CreateFamilySending.dc.html'],
     ['空狀態指向產生邀請碼', 'InviteEmpty.dc.html'],
     ['審核開關關掉的後果', 'InviteApprovalOff.dc.html'],
-    ['身分選項選中＝更亮', 'InviteRequests.dc.html'],
+    ['審核關閉的警語條用 lit', 'InviteApprovalOff.dc.html'],
+    ['三顆登入鍵在 AX5', 'StressLoginAX.dc.html'],
     ['待核清單收成一列', 'InviteRequestsMany.dc.html'],
     ['票根降成一行', 'InviteRequestsMany.dc.html'],
     ['iPad 三段式登入', 'WelcomeIPad.dc.html'],
@@ -320,11 +462,11 @@ if (M.approve) {
 if (M.lips) {
   const w = new Set(Object.keys(M.lips).map((k) => k.split('@')[1]));
   ok([...w].join() === String(FIX.lip), `G19 唇邊一律 ${FIX.lip}pt：${Object.entries(M.lips).map(([k, v]) => `${k}×${v}`).join(' ')}`, [...w].join('/'));
-  ok(Object.keys(M.lips).every((k) => /^(ctaDeep|edge|wine)@/.test(k)),
-    'G19 唇邊只有三種顏色，而且都是該表面的深一階（陶土→ctaDeep、卡紙→edge、危險→wine）',
-    Object.keys(M.lips).filter((k) => !/^(ctaDeep|edge|wine)@/.test(k)).join(' '));
-  ok(M.lipNoneWho.every((s) => /:(button|switch)$/.test(s)) && M.lipNone === 7,
-    `G19 沒有唇邊的浮起面只有兩種、共 ${M.lipNone} 個：Apple 鍵（HIG 不可改外觀）與審核開關 ON 的軌道（膠囊軌道，唇邊會壓到把手行程）—— 例外印在 Tokens 板上`,
+  ok(Object.keys(M.lips).every((k) => /^(ctaDeep|ctaBusy|board3|edge|pen|googleLine)@/.test(k)),
+    'G19 唇邊一律是「該表面的深一階」：濃玫瑰→ctaDeep、台紙→edge、朱→pen、Google→它自己規範的描邊色；載入中→與底同色（主要 ctaBusy／次要 board3）＝按不動',
+    Object.keys(M.lips).filter((k) => !/^(ctaDeep|ctaBusy|board3|edge|pen|googleLine)@/.test(k)).join(' '));
+  ok(M.lipNoneWho.every((s) => /:(button|switch)$/.test(s)) && M.lipNone === 8,
+    `G19 沒有唇邊的浮起面只有兩種、共 ${M.lipNone} 個：Apple 鍵 5 張板（HIG 不可改外觀，連唇邊都算改）與審核開關 ON 的軌道 3 個（膠囊軌道，唇邊會壓到把手行程）—— Google 鍵**不在**這張名單上，它走同一條唇邊規則`,
     M.lipNoneWho.join(' '));
 } else need('lips', 'G19 唇邊');
 
@@ -379,6 +521,10 @@ if (M.toggles) {
     ['(\\d+) 段掛牌', (n) => n === (M.pauses || []).length, () => `measured.pauses=${(M.pauses || []).length}`],
     ['(\\d+) 段未掛牌', (n) => n === (M.pauseBad || []).length, () => `measured.pauseBad=${(M.pauseBad || []).length}`],
     ['欄內最大 (\\d+)px', (n) => n === M.maxVoidPad, () => `measured.maxVoidPad=${M.maxVoidPad}`],
+    ['漸層 (\\d+) 處', (n) => n === (M.grad || {}).total, () => `measured.grad.total=${(M.grad || {}).total}`],
+    ['(\\d+) 種寫法', (n) => n === (M.grad || {}).kinds, () => `measured.grad.kinds=${(M.grad || {}).kinds}`],
+    ['非垂直 (\\d+) 處', (n) => n === (M.grad || {}).badDir, () => `measured.grad.badDir=${(M.grad || {}).badDir}`],
+    ['上的字 (\\d+) 個節點', (n) => n === (M.grad || {}).textOn, () => `measured.grad.textOn=${(M.grad || {}).textOn}`],
   ];
   {
     const wrong = [], unseen = [];
@@ -397,7 +543,7 @@ if (M.toggles) {
     const start = src.indexOf('annotations: [');
     const end = src.indexOf('  pages: [', start);
     const block = src.slice(start, end);
-    const LIT_OK = [/AX[35]/g, /H1/g, /第 2 輪/g];   // 級名（AX3／AX5／H1）與歷史敘述，不是規格數字
+    const LIT_OK = [/AX[35]/g, /H1/g, /第 2 輪/g, /LS-\d+/g];   // 級名（AX3／AX5／H1）、歷史敘述、票號，不是規格數字
     const bad = [];
     for (const m of block.matchAll(/text: `/g)) {
       let i = m.index + m[0].length, depth = 0, lit = '';

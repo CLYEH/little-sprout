@@ -1,4 +1,4 @@
 # 建置產物（single source = build.mjs + tokens.mjs + *.dc.html；打包檔含 minified runtime 會誤觸 secrets 掃描）
-little-sprout-onboarding.html
+little-sprout-*.html
 shots/
 measured.json
