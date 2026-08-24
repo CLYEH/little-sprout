@@ -156,6 +156,12 @@ cd "$repo"
 expect DESTRUCTIVE '--base(R2-F2)：前檔字面值 /* 不跨檔吃掉後檔 DROP' '' --base HEAD~1
 cd "$root"
 expect DESTRUCTIVE '檔案清單模式(R2-F2)：同上，逐檔 normalize' '' "${K[@]}" "$repo/supabase/migrations/008a.sql" "$repo/supabase/migrations/008b.sql"
+# R3 G1：非 ASCII 檔名——core.quotePath 預設會讓 --name-only 輸出加引號 C-escape，餵回 pathspec 對不上、整檔靜默跳過
+printf 'drop table public.t;\n' > "$repo/supabase/migrations/009_日記.sql"
+gitc add -A && gitc commit -qm head7
+cd "$repo"
+expect DESTRUCTIVE '--base(R3-G1)：非 ASCII 檔名的 migration 不被 quotePath 跳過' '' --base HEAD~1
+cd "$root"
 # F3：--known-functions 指向目錄（如 /tmp）→ exit 1
 if printf 'create or replace function public.x() returns void language sql as $$ select 1 $$;' | bash "$check" --known-functions "$work" >/dev/null 2>&1; then
   echo "✗ R2-F3 --known-functions 指向目錄應 exit 1" >&2; fail=1
@@ -169,6 +175,6 @@ else
 fi
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ migration-breaking-check 自測通過（68 組樣本）"
+  echo "✓ migration-breaking-check 自測通過（69 組樣本）"
 fi
 exit "$fail"

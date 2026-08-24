@@ -183,13 +183,15 @@ if [ -n "$base" ]; then
   cd "$(git rev-parse --show-toplevel)" || exit 1
   known_file=$(mktemp)
   trap 'rm -f "$known_file"' EXIT
-  base_files=$(git ls-tree -r --name-only "$base" -- supabase/migrations/) \
+  # R3 G1：core.quotePath 預設會把非 ASCII 檔名輸出成加引號的 C-escape，餵回 pathspec 對不上 → 該檔靜默跳過；
+  # 兩處「輸出路徑」的 git 指令都關掉（逐檔 diff／show 是「吃路徑」，不受影響）
+  base_files=$(git -c core.quotePath=false ls-tree -r --name-only "$base" -- supabase/migrations/) \
     || { echo "✗ migration-breaking-check：git ls-tree $base 失敗" >&2; exit 1; }
   to_array "$base_files"
   if [ "${#paths[@]}" -gt 0 ]; then
     normalize_files show "${paths[@]}" | fn_name "$FN_DEF" | sort -u > "$known_file" || pipeline_failed
   fi
-  changed=$(git diff --name-only "$base...HEAD" -- supabase/migrations/) \
+  changed=$(git -c core.quotePath=false diff --name-only "$base...HEAD" -- supabase/migrations/) \
     || { echo "✗ migration-breaking-check：git diff --name-only $base...HEAD 失敗" >&2; exit 1; }
   to_array "$changed"
   if [ "${#paths[@]}" -gt 0 ]; then
