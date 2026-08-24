@@ -230,6 +230,19 @@ jobs:
           export SUPABASE_DB_URL
           bash supabase/tests/run.sh
 
+      # LS-54 D2：EXPLAIN 證據（supabase/tests/evidence/）不再進 repo——計時、規劃器估計值、
+      # buffers hit 數、stderr/stdout 交錯順序每次都變，tracked 會讓本機跑一次測試就弄髒工作區。
+      # LS-6 驗收條件 c 的「留存」改落在這裡：每次 db job 綠燈都上傳成 artifact（GitHub 預設
+      # 保留 90 天）。run.sh 只在全部測試通過後才寫 evidence，所以不用 always()；綠了卻沒檔案
+      # 是 run.sh 壞了，if-no-files-found: error 直接紅，不靜默略過。
+      - name: 上傳 RLS plan 證據（supabase/tests/evidence → artifact）
+        if: steps.detect.outputs.skip == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rls-plan-evidence
+          path: supabase/tests/evidence/
+          if-no-files-found: error
+
   lint:
     runs-on: macos-15
     timeout-minutes: 15
