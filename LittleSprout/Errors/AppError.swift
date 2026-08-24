@@ -56,6 +56,8 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     case diaryNotFoundOrDeleted = "LS020"
     case diaryNotEditableByCaller = "LS021"
     case timelineCursorIncomplete = "LS022"
+    case albumNotFound = "LS023"
+    case commentNotFound = "LS024"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -69,7 +71,8 @@ enum LSErrorCode: String, CaseIterable, Sendable {
         switch self {
         case .familyMustHaveOwner, .storageQuotaExceeded,
              .alreadyMember, .alreadyHasPendingRequest, .requestNotFoundOrProcessed,
-             .diaryNotFoundOrDeleted, .diaryNotEditableByCaller:
+             .diaryNotFoundOrDeleted, .diaryNotEditableByCaller,
+             .albumNotFound, .commentNotFound:
             // 這三碼是 PR #63 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
@@ -77,6 +80,9 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // diaryNotFoundOrDeleted／diaryNotEditableByCaller（LS-54 補齊 LS020／LS021）同理：
             // 日記不存在或已軟刪要先還原、呼叫者已不是仍在家庭裡的作者——重送同一個
             // update_diary_entry／set_diary_deleted 不會變成功，要先做別的事。
+            // albumNotFound／commentNotFound（LS-52，set_album_deleted／set_comment_deleted
+            // 的 LS023／LS024）同理：相簿或留言不存在，重送同一個 RPC 呼叫不會變成功，
+            // 呼叫端該做的是回上一頁或重新整理清單，不是原地重試。
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:
             // 碼本身是「輸入」——打錯字換一個、或請 owner 給一支新的碼，都是同一個 UI 動作
