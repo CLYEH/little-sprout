@@ -23,6 +23,7 @@ expect() {
 # 應放行：標記獨佔一行
 expect 0 '① 獨立成行' $'## 風險\nDESTRUCTIVE-APPROVED\n'
 expect 0 '① 獨立成行＋前後空白＋CRLF（web UI 貼上）' $'## 風險\r\n  DESTRUCTIVE-APPROVED  \r\n'
+expect 0 '① 標記在末行、無結尾換行（CI printf %s 的實際形狀）' $'## 風險\nDESTRUCTIVE-APPROVED'
 
 # 不得放行：散文提及（PR #55 run 32626369903 實際被誤放行的寫法）
 expect 1 '② 散文：〈〉括起' $'等待使用者蓋〈DESTRUCTIVE-APPROVED〉後再合併\n'
@@ -31,6 +32,9 @@ expect 1 '② 散文：前綴文字' $'等待使用者蓋 DESTRUCTIVE-APPROVED\n
 # 不得放行：行內尾隨其他字
 expect 1 '③ 行內尾隨文字' $'DESTRUCTIVE-APPROVED by orchestrator\n'
 expect 1 '③ Markdown 粗體包起（已知限制：標記須裸寫）' $'**DESTRUCTIVE-APPROVED**\n'
+expect 1 '③ Markdown 引用前綴' $'> DESTRUCTIVE-APPROVED\n'
+expect 1 '③ 小寫' $'destructive-approved\n'
+expect 1 '③ 尾隨連字' $'DESTRUCTIVE-APPROVED-NOT\n'
 
 expect 1 '空 body' ''
 
