@@ -52,6 +52,31 @@ begin
 end;
 $$;
 
+-- merge-reviewer PR #60 review F4（minor）：比照 20260823040000_invites_write_path.sql／
+-- 80_join_approval.sql §11 對 invites 的兩層授權斷言慣例——上面那段驗的是「policy 擋不
+-- 擋得住」，這裡另外直接驗「grant 這一層還在不在」。用 has_any_column_privilege 而不是
+-- has_table_privilege：後者對欄位級 grant 回 false，若日後不小心補了一句
+-- `grant insert (family_id, body) on public.diaries to authenticated` 這種欄位級授權，
+-- 只驗整表的斷言測不出來（PR #55 review F1 對 invites 抓到的同一類洞，這裡照樣防一次）。
+-- SELECT／DELETE 的正向對照則確保收斂沒有連帶把讀取與硬刪的路徑也關掉。
+do $$
+begin
+  if has_any_column_privilege('authenticated', 'public.diaries', 'insert') then
+    raise exception 'FAIL：authenticated 還有 diaries 的 INSERT 授權（表級或任一欄位級）—— 收斂只做了 policy 那一層，create_diary_entry 的邊界形同虛設';
+  end if;
+  if has_any_column_privilege('authenticated', 'public.diaries', 'update') then
+    raise exception 'FAIL：authenticated 還有 diaries 的 UPDATE 授權（表級或任一欄位級）—— owner 能直接改寫別人日記內容的洞沒有真的補上';
+  end if;
+  if not has_table_privilege('authenticated', 'public.diaries', 'select') then
+    raise exception 'FAIL 回歸：authenticated 失去 diaries 的 SELECT grant';
+  end if;
+  if not has_table_privilege('authenticated', 'public.diaries', 'delete') then
+    raise exception 'FAIL 回歸：authenticated 失去 diaries 的 DELETE grant（owner 硬刪的路徑）';
+  end if;
+  raise notice 'ok：diaries 授權兩層對帳——INSERT/UPDATE 無任何形態的 grant，SELECT/DELETE 原樣保留（F4）';
+end;
+$$;
+
 rollback;
 
 -- ===========================================================================
@@ -182,6 +207,54 @@ begin
   raise notice 'ok：作者本人可以編輯自己的日記內容';
   reset role;
 
+  -- ---------------------------------------------------------------------------
+  -- merge-reviewer PR #60 review F2（major）回歸：author_id 是永遠不變的歷史欄位，
+  -- 授權必須另外綁定「現在還是不是這個家庭的 owner/member」。
+  -- ---------------------------------------------------------------------------
+
+  -- 已離開家庭：完全不在 family_members 裡了 → 不能再編輯自己過去寫的日記內容 (LS021)
+  delete from public.family_members where family_id = v_family and user_id = v_member;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.update_diary_entry(v_diary, '離開後想改', current_date, null);
+    raise exception 'FAIL：已離開家庭的前作者竟然還能編輯自己過去的日記';
+  exception when sqlstate 'LS021' then
+    null;  -- ok
+  end;
+  reset role;
+
+  insert into public.family_members (family_id, user_id, role, can_upload)
+  values (v_family, v_member, 'member', true);
+  raise notice 'ok：已離開家庭的前作者無法編輯過去寫的日記內容 (LS021)——F2 回歸';
+
+  -- 已降級 viewer：仍在 family_members 裡，只是角色變成 viewer → 同樣不能再編內容
+  -- （viewer 不是 contributor，§3「Viewer 只能看與留言」——這條界線不因為「這是我
+  -- 自己寫的」而放寬）
+  update public.family_members set role = 'viewer'
+   where family_id = v_family and user_id = v_member;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.update_diary_entry(v_diary, '降級後想改', current_date, null);
+    raise exception 'FAIL：被降級成 viewer 的前作者竟然還能編輯自己過去的日記';
+  exception when sqlstate 'LS021' then
+    null;  -- ok
+  end;
+  select body into v_body from public.diaries where id = v_diary;
+  if v_body <> '作者改過的內容' then
+    raise exception 'FAIL：降級 viewer 的編輯嘗試竟然還是讓內容變了（應維持上一步的「作者改過的內容」，實際「%」）', v_body;
+  end if;
+  reset role;
+
+  update public.family_members set role = 'member'
+   where family_id = v_family and user_id = v_member;
+  raise notice 'ok：被降級成 viewer 的前作者無法編輯過去寫的日記內容 (LS021)——F2 回歸';
+
   -- owner（非作者）不能編內容——只能透過 set_diary_deleted 移除，不能竄改
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
@@ -260,6 +333,8 @@ declare
   v_outsider uuid := 'b0000000-0000-4000-8000-000000000001';
   v_diary uuid;
   v_deleted_at timestamptz;
+  v_body text;
+  v_body_before text;
 begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
@@ -307,17 +382,72 @@ begin
   reset role;
   raise notice 'ok：viewer／非本家庭成員都無法軟刪日記 (42501)';
 
-  -- owner 可以軟刪別人（member）的日記——這是 §10 授權的那件事，且只動 deleted_at
+  -- owner 可以軟刪別人（member）的日記——這是 §10 授權的那件事，且只動 deleted_at。
+  -- merge-reviewer PR #60 review F8：原本這裡是 `select deleted_at, body into
+  -- v_deleted_at`（兩欄選進一個純量變數）——PL/pgSQL 對這種欄位數與 INTO 目標數不match
+  -- 的情況不會報錯，只會靜默丟掉多出來的欄位（body 從沒被真的檢查過，實測驗證：
+  -- `select now(), 'x' into v_scalar` 不會噴錯，v_scalar 只拿到第一欄）。改成
+  -- 前後各存一次 body 再比對，才是真的在驗「body 沒被動到」。
+  select body into v_body_before from public.diaries where id = v_diary;
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
   perform public.set_diary_deleted(v_diary, true);
-  select deleted_at, body into v_deleted_at from public.diaries where id = v_diary;
+  reset role;
+  select deleted_at, body into v_deleted_at, v_body from public.diaries where id = v_diary;
   if v_deleted_at is null then
     raise exception 'FAIL：owner 軟刪成員的日記沒有生效';
   end if;
+  if v_body is distinct from v_body_before then
+    raise exception 'FAIL：owner 軟刪日記時 body 被改動了（從「%」變成「%」）——set_diary_deleted 不該碰得到內容欄位',
+      v_body_before, v_body;
+  end if;
+  raise notice 'ok：owner 可以軟刪家庭內任何一篇日記，且 body 內容逐字不變（F8 回歸）';
+
+  -- ---------------------------------------------------------------------------
+  -- merge-reviewer PR #60 review F2（major）回歸：作者分支必須綁定「現在還是不是
+  -- 這個家庭的成員」，不能只認 author_id 這個永遠不變的歷史欄位。
+  -- ---------------------------------------------------------------------------
+
+  -- 已離開家庭：完全不在 family_members 裡了 → 連軟刪／還原自己過去的日記都不行 (42501)
+  delete from public.family_members where family_id = v_family and user_id = v_member;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.set_diary_deleted(v_diary, true);
+    raise exception 'FAIL：已離開家庭的前作者竟然還能軟刪自己過去的日記';
+  exception when sqlstate '42501' then
+    null;  -- ok
+  end;
   reset role;
-  raise notice 'ok：owner 可以軟刪家庭內任何一篇日記（且不影響內容欄位）';
+
+  insert into public.family_members (family_id, user_id, role, can_upload)
+  values (v_family, v_member, 'member', true);
+  raise notice 'ok：已離開家庭的前作者無法軟刪／還原過去寫的日記 (42501)——F2 回歸';
+
+  -- 已降級 viewer：仍在 family_members 裡，只是角色變成 viewer → 仍可軟刪／還原自己的
+  -- 日記。這與 update_diary_entry 不同（那支要求仍是 owner/member）：set_diary_deleted
+  -- 的作者分支只要求「仍是成員」，是 migration 裡寫明的產品決定，不是漏補。
+  -- 此時 v_diary 處於 deleted=true（上一段 owner 軟刪的結果），這裡用還原（false）
+  -- 順便驗證「仍可雙向切換」，不是只測得到其中一個方向。
+  update public.family_members set role = 'viewer'
+   where family_id = v_family and user_id = v_member;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.set_diary_deleted(v_diary, false);
+  select deleted_at into v_deleted_at from public.diaries where id = v_diary;
+  if v_deleted_at is not null then
+    raise exception 'FAIL：被降級成 viewer 的前作者，還原自己的日記卻沒有生效';
+  end if;
+  reset role;
+
+  update public.family_members set role = 'member'
+   where family_id = v_family and user_id = v_member;
+  raise notice 'ok：被降級成 viewer 的作者仍可軟刪／還原自己的日記（只要求仍是成員，不要求 owner/member）——F2 回歸';
 
   -- 不存在的日記 → LS020
   perform set_config('request.jwt.claims',
@@ -420,6 +550,7 @@ declare
   v_iterations int := 0;
   v_page record;
   v_got_any boolean;
+  v_tie_date date := current_date - 100;
 begin
   -- ---- 準備資料（postgres 身分，繞過 RLS；等同 00_fixtures 的作法）--------
   insert into public.children (id, family_id, name, birthday)
@@ -597,6 +728,102 @@ begin
   end if;
   reset role;
   raise notice 'ok：get_family_timeline 的跨家庭隔離由 feed_items 既有 RLS 保證（security invoker 生效）';
+
+  -- ---------------------------------------------------------------------------
+  -- (h) 平手鍵（merge-reviewer PR #60 review F6）：同一個 occurred_at 底下有多筆
+  -- 項目時，keyset 游標必須靠 ref_id 當 tie-breaker，不能漏項或重複。做法：塞 3 筆
+  -- entry_date 完全相同（因此 occurred_at 完全相同）的日記，用 limit=1（會讓分頁邊界
+  -- 大機率剛好切在平手中間）重跑一次「單次撈 1000 筆 vs 逐頁串接」的比對——若
+  -- tie-breaker 漏用 ref_id，這裡的陣列比對會不相等（漏項或重複）。
+  -- ---------------------------------------------------------------------------
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.create_diary_entry(v_family, null, '平手鍵之一', v_tie_date);
+  perform public.create_diary_entry(v_family, null, '平手鍵之二', v_tie_date);
+  perform public.create_diary_entry(v_family, null, '平手鍵之三', v_tie_date);
+  reset role;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  select array_agg(t.kind::text || ':' || t.ref_id::text order by t.occurred_at desc, t.ref_id desc)
+    into v_full
+    from public.get_family_timeline(v_family, null, null, null, 1000) t;
+
+  v_collected := array[]::text[];
+  v_cursor_at := null;
+  v_cursor_id := null;
+  v_iterations := 0;
+  loop
+    v_iterations := v_iterations + 1;
+    if v_iterations > 50 then
+      raise exception 'FAIL：平手鍵分頁超過 50 頁還沒結束（游標可能沒有前進）';
+    end if;
+    v_got_any := false;
+    for v_page in
+      select * from public.get_family_timeline(v_family, null, v_cursor_at, v_cursor_id, 1)
+    loop
+      v_got_any := true;
+      v_collected := v_collected || (v_page.kind::text || ':' || v_page.ref_id::text);
+      v_cursor_at := v_page.occurred_at;
+      v_cursor_id := v_page.ref_id;
+    end loop;
+    exit when not v_got_any;
+  end loop;
+
+  if v_collected is distinct from v_full then
+    raise exception
+      'FAIL：加入 3 筆同一 occurred_at 的日記後，limit=1 逐頁串接與單次查詢不同（tie-breaker 可能漏用 ref_id）—— 分頁=%，完整=%',
+      v_collected, v_full;
+  end if;
+  if array_length(v_collected, 1) <> 12 then
+    raise exception 'FAIL：加入 3 筆平手日記後應收集到 12 筆（原 9 ＋新 3），實際 %', array_length(v_collected, 1);
+  end if;
+  raise notice 'ok：3 筆同一 occurred_at 的日記混進資料集後，limit=1 逐頁串接仍與單次查詢完全一致（tie-breaker 正確靠 ref_id）——F6';
+
+  -- ---------------------------------------------------------------------------
+  -- (i) p_limit 上界＝100（merge-reviewer PR #60 review F9）：先前只驗過下界
+  -- （<=0 夾到 1）；上界從未用「家庭總筆數 > 100」的資料集驗證過——之前資料集只有
+  -- 9～12 筆，任何 p_limit ≥ 9 都測不出上界有沒有真的生效。這裡灌 95 列不帶 child_id
+  -- 的 media（不影響任何 child 篩選或計數斷言，前面全部都已經斷言完畢），把總量推過
+  -- 100，才有辦法把「上界卡在 100」這件事真的測出差異。
+  -- ---------------------------------------------------------------------------
+  insert into public.media (family_id, storage_path, type, byte_size, width, height, uploaded_by)
+  select v_family, v_family || '/2026/08/limit-probe-' || i || '.jpg', 'photo', 10, 100, 100, v_owner
+    from generate_series(1, 95) i;
+
+  select count(*) into v_n from public.feed_items where family_id = v_family;
+  if v_n <= 100 then
+    raise exception 'FAIL：灌完 95 列 media 後 A 家 feed_items 應超過 100 列，實際 %（上界測試的前提不成立）', v_n;
+  end if;
+
+  select count(*) into v_n from public.get_family_timeline(v_family, null, null, null, 9999);
+  if v_n <> 100 then
+    raise exception 'FAIL：p_limit=9999 應被夾到 100，實際回傳 % 筆', v_n;
+  end if;
+  raise notice 'ok：p_limit 上界確實卡在 100（家庭總筆數已超過 100，p_limit=9999 仍只回傳 100 筆）——F9';
+
+  -- ---------------------------------------------------------------------------
+  -- (j) 半游標必須明確拒絕（LS022），不是靜默回空集合（merge-reviewer PR #60
+  -- review F1 順帶要求：docs/API.md 已經寫「半游標不合法」，這裡驗證真的是用
+  -- raise，不是回 0 列——回 0 列會讓呼叫端誤判成「這頁真的沒資料了」）。
+  -- ---------------------------------------------------------------------------
+  begin
+    perform public.get_family_timeline(v_family, null, now(), null, 10);
+    raise exception 'FAIL：只給 p_cursor_occurred_at、不給 p_cursor_ref_id 竟然沒有出錯';
+  exception when sqlstate 'LS022' then
+    null;  -- ok
+  end;
+  begin
+    perform public.get_family_timeline(v_family, null, null, gen_random_uuid(), 10);
+    raise exception 'FAIL：只給 p_cursor_ref_id、不給 p_cursor_occurred_at 竟然沒有出錯';
+  exception when sqlstate 'LS022' then
+    null;  -- ok
+  end;
+  reset role;
+  raise notice 'ok：半游標（游標兩參數只給其中一個）明確拒絕，回報 LS022，不是靜默回空集合';
 end;
 $$;
 

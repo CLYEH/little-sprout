@@ -45,11 +45,18 @@
 -- 寫入路徑，函式內部才是真正的權限判斷，不依賴 RLS。
 --
 -- 收斂方式選 ALTER POLICY ... WITH CHECK (false)（LS-33 對 family_members_insert 的作法），
--- 不選 LS-37 對 invites 用的 DROP POLICY：本票的 PR 說明預期是純新增、非破壞性
--- （不需要使用者在 PR body 蓋 DESTRUCTIVE-APPROVED），而 CI 的破壞性偵測器會對
--- `DROP POLICY` 關鍵字命中；ALTER POLICY 不會。RLS 語意上兩者等效（policy 通不過
--- ＝ 該操作被拒絕），差別只在「物件是否還在 pg_policies 裡」，兩種寫法在這個 codebase
--- 都有前例，見 20260823040000_invites_write_path.sql 開頭的分歧記錄。
+-- 不選 LS-37 對 invites 用的 DROP POLICY。這不只是為了閃避 CI 的關鍵字偵測器，是三個
+-- 實質理由都成立才做的選擇（merge-reviewer PR #60 review F7：偵測器閃不閃得過只是
+-- 這三件事的自然結果，不是理由本身，寫成「不觸發偵測器」會本末倒置）：
+--   1. **縮權，不是刪除物件**：INSERT/UPDATE 這兩個操作的行為由「開放」變成「一律拒絕」，
+--      但 policy 物件本身、它的名字、它管哪個操作，都原封不動留在 pg_policies 裡——
+--      這就是為什麼 ALTER 而不是 DROP：後者連物件都不在了，才是真正的結構性變更。
+--   2. **可逆**：要恢復舊行為，一句 `ALTER POLICY ... WITH CHECK (...)` 把條件改回來即可，
+--      不需要重建整個 policy（不必重新宣告 FOR INSERT/FOR UPDATE、USING、角色範圍等）。
+--   3. **不動任何既有資料**：這兩句 ALTER POLICY／下面的 REVOKE 都是純權限層的敘述，
+--      不觸碰任何一列 diaries；已經寫入的日記，不論是誰寫的，內容與可見性都不受影響。
+--   （PR body 因此改標成「diaries 直接 INSERT/UPDATE 自本 PR 起一律 42501」，不是「純新增」——
+--   對呼叫端而言這是一個真實的行為變更，只是不屬於 CI 破壞性偵測器要攔的那一類。）
 -- ---------------------------------------------------------------------------
 
 alter policy diaries_insert on public.diaries with check (false);
@@ -70,8 +77,9 @@ comment on table public.diaries is
 -- 2. diaries 的寫入 RPC
 --
 -- 錯誤碼延續 LS001/LS002（trigger 不變量）、LS010-LS017（LS-33 邀請/申請）之後的序號：
---   LS020 日記不存在或已被移除     LS021 非本人日記，無法編輯
--- 42501（未登入／非本家庭 contributor／非 owner 且非本人）沿用既有慣例。
+--   LS020 日記不存在或已被移除     LS021 非本人日記或已不是該家庭 owner/member，無法編輯
+--   LS022 get_family_timeline 的游標參數只給了一半（見第 4 段）
+-- 42501（未登入／非本家庭 contributor／非 owner 且非本人／已離開家庭）沿用既有慣例。
 -- ---------------------------------------------------------------------------
 
 -- create_diary_entry：owner／member 都能寫（viewer 不行——§3「Viewer 只能看與留言」），
@@ -144,12 +152,25 @@ begin
     raise exception '日記不存在' using errcode = 'LS020';
   end if;
 
-  -- 授權檢查（作者）刻意排在「是否已軟刪除」的狀態檢查之前（沿用
-  -- 20260823010000_join_approval.sql approve_join／reject_join 的既有慣例：授權檢查排在
-  -- 狀態檢查之前）：不是作者的人，不管這篇日記是否已被移除，一律拿到 LS021，不會從
-  -- 錯誤碼的差別推敲出某篇不屬於自己的日記目前是否已被軟刪除。
-  if v_diary.author_id is distinct from v_uid then
-    raise exception '只有作者本人能編輯這篇日記' using errcode = 'LS021';
+  -- 授權檢查（作者身分＋仍是本家庭 owner/member）刻意排在「是否已軟刪除」的狀態檢查
+  -- 之前（沿用 20260823010000_join_approval.sql approve_join／reject_join 的既有慣例：
+  -- 授權檢查排在狀態檢查之前）：未通過授權的人，不管這篇日記是否已被移除，一律拿到
+  -- LS021，不會從錯誤碼的差別推敲出某篇不屬於自己的日記目前是否已被軟刪除。
+  --
+  -- merge-reviewer PR #60 review F2（授權回歸，major）：原本只判 `author_id = v_uid`，
+  -- 丟了收斂前 diaries_update policy 的第二個條件
+  -- `family_id in contributor_family_ids()`——被移出家庭的前成員、或被降級成 viewer
+  -- 的人，author_id 不會跟著變，於是仍能呼叫這支 RPC 改寫自己過去寫的所有日記內容。
+  -- 這與收斂 diaries_update 的目的直接矛盾：內容編輯權必須綁定「現在還是不是這個家庭
+  -- 的 contributor」，不能只認一個永遠不變的歷史欄位。用 OR 合併兩個條件、共用同一個
+  -- LS021：呼叫端拿到的錯誤碼不會透露「你到底是不是作者」還是「你雖是作者但已經不是
+  -- 這個家庭的 owner/member」，兩種情況對 UI 而言都是「你現在不能編輯這篇日記」。
+  if v_diary.author_id is distinct from v_uid
+     or not exists (
+       select 1 from public.family_members m
+        where m.family_id = v_diary.family_id and m.user_id = v_uid and m.role in ('owner', 'member')
+     ) then
+    raise exception '只有仍是該家庭 owner/member 的原作者能編輯這篇日記' using errcode = 'LS021';
   end if;
 
   if v_diary.deleted_at is not null then
@@ -167,9 +188,26 @@ $$;
 revoke execute on function public.update_diary_entry(uuid, text, date, uuid) from public, anon;
 grant execute on function public.update_diary_entry(uuid, text, date, uuid) to authenticated;
 
--- set_diary_deleted：唯一能碰 deleted_at 的路徑。作者能軟刪／還原自己的；
--- owner 能軟刪／還原全家任何一篇（§10 對齊：owner 的權力止於移除，不含改內容——
--- 這支函式的 UPDATE 就只寫 deleted_at 一欄，物理上不可能被拿來竄改 body）。
+-- set_diary_deleted：唯一能碰 deleted_at 的路徑。作者能軟刪／還原自己的（前提是仍是
+-- 該家庭的成員，見下）；owner 能軟刪／還原全家任何一篇（§10 對齊：owner 的權力止於
+-- 移除，不含改內容——這支函式的 UPDATE 就只寫 deleted_at 一欄，物理上不可能被拿來
+-- 竄改 body）。
+--
+-- merge-reviewer PR #60 review F2（授權回歸，major）：作者分支原本只判
+-- `author_id = v_uid`，同樣的洞——被移出家庭的前成員仍能軟刪／還原自己過去的日記。
+-- 這裡補的門檻比 update_diary_entry 低一階：**只要求仍是該家庭的成員（任何角色），
+-- 不要求是 owner/member**。這是刻意的產品決定，不是漏補：
+--   - 「改寫內容」與「移除／還原自己的東西」是不同性質的操作，前者是持續的創作權，
+--     後者更接近「對自己貢獻過的東西有最基本的處置權」，被降級成 viewer 不該連這點
+--     都被剝奪。
+--   - 若日後帳號離開流程（PLAN §9-A2／「家人想離開要能帶走自己的資料」）需要在離開
+--     家庭之後、資料匯出或清理之前，還保留一段時間讓本人能操作自己過去的日記，這裡
+--     只要求「仍是成員」而非「仍是 owner/member」，是留給那個流程的最小前提；若那個
+--     設計成立，屆時要放寬的是這裡的角色範圍，不是拿掉「仍是成員」這個下限。
+--   - 但「完全離開家庭（family_members 裡已經沒有這一列）」之後，這支 RPC 對此人
+--     完全關閉——不論是編輯還是軟刪，都不存在「離開後仍可從外部操作這個家庭的資料」
+--     這種路徑，這點與本 schema 其他每一張表的 RLS 精神一致（family_ids() 決定得到
+--     什麼，不在裡面就什麼都碰不到）。
 create or replace function public.set_diary_deleted(
   p_diary_id uuid,
   p_deleted boolean
@@ -183,6 +221,7 @@ declare
   v_uid uuid := auth.uid();
   v_diary public.diaries%rowtype;
   v_is_owner boolean;
+  v_is_current_member boolean;
 begin
   if v_uid is null then
     raise exception '未登入，無法移除或還原日記' using errcode = '42501';
@@ -199,8 +238,15 @@ begin
      where m.family_id = v_diary.family_id and m.user_id = v_uid and m.role = 'owner'
   ) into v_is_owner;
 
-  if not v_is_owner and v_diary.author_id is distinct from v_uid then
-    raise exception '只有作者本人或該家庭的 owner 能移除／還原這篇日記' using errcode = '42501';
+  select exists (
+    select 1 from public.family_members m
+     where m.family_id = v_diary.family_id and m.user_id = v_uid
+  ) into v_is_current_member;
+
+  if not v_is_owner
+     and (v_diary.author_id is distinct from v_uid or not v_is_current_member) then
+    raise exception '只有作者本人（且仍是該家庭成員）或該家庭的 owner 能移除／還原這篇日記'
+      using errcode = '42501';
   end if;
 
   update public.diaries d
@@ -238,6 +284,29 @@ grant execute on function public.set_diary_deleted(uuid, boolean) to authenticat
 -- ---------------------------------------------------------------------------
 
 alter table public.feed_items add column child_id uuid;
+
+-- merge-reviewer PR #60 review F3（major）：ADD COLUMN 不會觸發任何 trigger——雲端
+-- 已經跑過一段時間、已經有真實的 diary／album 資料，這些既有列在 feed_items 裡
+-- 對應的既有列，child_id 會永遠停在 NULL，直到那筆 diary／album 之後剛好被 UPDATE
+-- 一次（觸發 feed_sync_diaries／feed_sync_albums 重寫該列）才會補上。在那之前，
+-- 「切到某個孩子的時間軸」對所有既有內容都會靜默地看起來是空的——不會報錯，只是
+-- 資料不見了，而且 fresh `supabase db reset` 的測試永遠重現不了這個問題（測試資料
+-- 一律是 migration 套用「之後」才寫入的，天生就會被 trigger 蓋到）。
+--
+-- 修法：一次性回填，直接從 diaries／albums 讀回 child_id。用 `IS DISTINCT FROM` 當
+-- WHERE 條件讓它天生冪等——同一支 migration 被重複套用（例如手動重跑同一段 SQL
+-- 排查問題）不會有任何副作用，也不會對已經正確的列白白取寫鎖。
+update public.feed_items f
+   set child_id = d.child_id
+  from public.diaries d
+ where f.kind = 'diary' and f.ref_id = d.id
+   and f.child_id is distinct from d.child_id;
+
+update public.feed_items f
+   set child_id = a.child_id
+  from public.albums a
+ where f.kind = 'album' and f.ref_id = a.id
+   and f.child_id is distinct from a.child_id;
 
 -- on delete set null (child_id)：column-specific SET NULL，同 init_schema.sql 的
 -- albums_child_same_family_fkey／diaries_child_same_family_fkey。這裡不能省略
@@ -330,9 +399,34 @@ $$;
 -- 回傳 0 列，不需要在函式裡再手動重複一次 family_ids() 的檢查。這是比 DEFINER
 -- 更小的暴露面：函式本身不持有任何 RLS 繞過能力。
 --
--- set search_path = '' 仍然保留：與 definer 函式的理由不同（那是防止呼叫端 search_path
--- 挾持），這裡純粹是讓所有物件引用維持全名限定的一致慣例，函式本體已經全部用
--- public. 前綴，實務上不受影響。
+-- merge-reviewer PR #60 review F1（major，本機實測證據）：原本用 `language sql` 包一句
+-- `set search_path = ''`。SET 子句是 Postgres 判斷「這支函式能不能被規劃器 inline」的
+-- 已知阻斷條件——不能 inline，`(p_child_id is null or f.child_id = p_child_id)` 與
+-- 游標比對的 `(cursor is null and cursor is null) or (row) < (row)` 這兩個 OR 條件就
+-- 沒有機會被下推進 index cond，只能整段落在 Filter 逐列判斷。實測 20 萬列同一家庭：
+-- 深頁分頁 3516 buffers、稀疏 child 第一頁 4638 buffers（同語意的手寫等值查詢只要
+-- 4 buffers），本票新建的 feed_items_family_child_occurred_idx 從頭到尾沒被選用過。
+--
+-- 修法：整支改寫成 `language plpgsql`，依「p_child_id 是否為 NULL」與「游標是否為
+-- NULL」拆成四條**靜態**查詢（不是同一句 SQL 裡的 OR 分支，是四個各自獨立、規劃器
+-- 各自求解的查詢文字）。child 篩選一律寫成 `f.child_id = p_child_id` 的等值比對，
+-- 不再是 OR；游標一律寫成 `(f.occurred_at, f.ref_id) < (?, ?)` 的 ROW 比較，同樣不再
+-- 是 OR。四個分支各自都能被規劃器獨立選出最合適的 index cond（不篩 child 走
+-- feed_items_family_occurred_idx；篩 child 走本票新增的
+-- feed_items_family_child_occurred_idx）。效能回歸驗證見
+-- supabase/tests/50_rls_plan_no_percall_subquery.sql 新增的 get_family_timeline 專屬段落
+-- （EXPLAIN 直接對 RPC 呼叫與函式內部這四段查詢文字驗 buffers／Index Cond／
+-- Rows Removed by Filter——那邊的四段探針 SQL 與下面四個分支逐字一致，之後修改
+-- 任一分支的查詢文字，兩邊都要同步改，否則驗到的不是真正部署的查詢）。
+--
+-- 半游標（只傳 p_cursor_occurred_at／p_cursor_ref_id 其中一個）原本被歸類成「不是
+-- 無游標」，靜默回傳 0 列——merge-reviewer PR #60 review F1 指出 API.md 已經寫了
+-- 「半游標不合法」，靜默回空集合比直接 raise 更容易被誤讀成「這頁真的沒資料了」。
+-- 改成明確 raise（LS022），呼叫端會直接看到錯誤而不是誤判分頁已經到底。
+--
+-- set search_path = '' 仍然保留：plpgsql 函式本來就不會被 inline（與 SET 子句無關），
+-- 這裡純粹是與整個 schema 的 definer／查詢函式一致慣例，函式本體已經全部用 public.
+-- 前綴，實務上不受影響。
 create or replace function public.get_family_timeline(
   p_family_id uuid,
   p_child_id uuid default null,
@@ -346,20 +440,56 @@ returns table (
   occurred_at timestamptz,
   child_id uuid
 )
-language sql
+language plpgsql
 stable
 set search_path = ''
 as $$
-  select f.kind, f.ref_id, f.occurred_at, f.child_id
-    from public.feed_items f
-   where f.family_id = p_family_id
-     and (p_child_id is null or f.child_id = p_child_id)
-     and (
-       (p_cursor_occurred_at is null and p_cursor_ref_id is null)
-       or (f.occurred_at, f.ref_id) < (p_cursor_occurred_at, p_cursor_ref_id)
-     )
-   order by f.occurred_at desc, f.ref_id desc
-   limit least(greatest(coalesce(p_limit, 20), 1), 100);
+declare
+  v_limit integer := least(greatest(coalesce(p_limit, 20), 1), 100);
+begin
+  if (p_cursor_occurred_at is null) <> (p_cursor_ref_id is null) then
+    raise exception '游標參數必須同時提供或同時省略（p_cursor_occurred_at／p_cursor_ref_id）'
+      using errcode = 'LS022';
+  end if;
+
+  if p_child_id is null then
+    if p_cursor_occurred_at is null then
+      return query
+        select f.kind, f.ref_id, f.occurred_at, f.child_id
+          from public.feed_items f
+         where f.family_id = p_family_id
+         order by f.occurred_at desc, f.ref_id desc
+         limit v_limit;
+    else
+      return query
+        select f.kind, f.ref_id, f.occurred_at, f.child_id
+          from public.feed_items f
+         where f.family_id = p_family_id
+           and (f.occurred_at, f.ref_id) < (p_cursor_occurred_at, p_cursor_ref_id)
+         order by f.occurred_at desc, f.ref_id desc
+         limit v_limit;
+    end if;
+  else
+    if p_cursor_occurred_at is null then
+      return query
+        select f.kind, f.ref_id, f.occurred_at, f.child_id
+          from public.feed_items f
+         where f.family_id = p_family_id
+           and f.child_id = p_child_id
+         order by f.occurred_at desc, f.ref_id desc
+         limit v_limit;
+    else
+      return query
+        select f.kind, f.ref_id, f.occurred_at, f.child_id
+          from public.feed_items f
+         where f.family_id = p_family_id
+           and f.child_id = p_child_id
+           and (f.occurred_at, f.ref_id) < (p_cursor_occurred_at, p_cursor_ref_id)
+         order by f.occurred_at desc, f.ref_id desc
+         limit v_limit;
+    end if;
+  end if;
+end;
 $$;
 
 revoke execute on function

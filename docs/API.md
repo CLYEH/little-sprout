@@ -314,48 +314,81 @@
 - **併發**：無特殊語意，單一 `INSERT`。
 
 ### `update_diary_entry(p_diary_id uuid, p_body text, p_entry_date date, p_child_id uuid) -> void`
-- **誰能呼叫**：**只有原作者本人**——即使是該家庭的 owner，也不能用這支 RPC 改別人
-  日記的內容（見 §3 `diaries` 段的心智模型說明）。
+- **誰能呼叫**：**只有原作者本人，且必須現在仍是該家庭的 owner/member**——即使是該
+  家庭的 owner，也不能用這支 RPC 改別人日記的內容（見 §3 `diaries` 段的心智模型
+  說明）；作者若已被移出家庭、或被降級成 viewer，同樣不能再編輯自己過去寫的日記
+  （merge-reviewer PR #60 review F2：`author_id` 是永遠不變的歷史欄位，不能單獨當
+  授權依據）。
 - **語意**：**整組替換**（PUT，不是逐欄 PATCH）——三個參數（`body`／`entry_date`／
   `child_id`）一律用傳入值覆蓋，不支援「傳 `NULL` 代表不變」。呼叫端要送出完整的期望
   狀態（例如只想改 `body`，`p_entry_date`／`p_child_id` 也要照抄原值一起傳）。
-- **錯誤碼**：未登入 `42501`；日記不存在 `LS020`；不是作者本人 `LS021`（**排在「是否
-  已軟刪除」之前檢查**——不是作者的人不管日記是否已被移除，一律拿到 `LS021`，不會從
-  錯誤碼差異推敲出一篇不屬於自己的日記目前是否已被軟刪除，同 `approve_join` 的授權
-  檢查排序慣例）；已軟刪除（`deleted_at` 非 NULL）`LS020`（要先用
-  `set_diary_deleted(id, false)` 還原才能編輯）。
-- **併發**：對目標列用 `FOR UPDATE` 鎖住，單一 statement 更新，無特殊競態語意。
+- **錯誤碼**：未登入 `42501`；日記不存在 `LS020`；不是作者本人、或雖是作者但已不是
+  該家庭 owner/member `LS021`（兩種情況共用同一個碼，**排在「是否已軟刪除」之前
+  檢查**——未通過授權的人，不管日記是否已被移除，一律拿到 `LS021`，不會從錯誤碼差異
+  推敲出一篇不屬於自己的日記目前是否已被軟刪除，同 `approve_join` 的授權檢查排序
+  慣例）；已軟刪除（`deleted_at` 非 NULL）`LS020`（要先用 `set_diary_deleted(id,
+  false)` 還原才能編輯）。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住，單一 statement 更新；與 `set_diary_deleted`
+  互相排隊（見 `supabase/tests/concurrency/diary_edit_vs_delete_*.sql`：軟刪先動，
+  編輯會在解除阻塞後拿到 `LS020`；編輯先動，軟刪會在解除阻塞後正常成功，但編輯的
+  內容保證先落地）。
 
 ### `set_diary_deleted(p_diary_id uuid, p_deleted boolean) -> void`
-- **誰能呼叫**：作者本人（自己的日記）**或**該家庭的 owner（家庭內任何一篇）。
+- **誰能呼叫**：作者本人（**只要求現在仍是該家庭的成員，角色不拘**——被降級成 viewer
+  仍可軟刪／還原自己的日記，這點刻意比 `update_diary_entry` 寬，見 migration 對這支
+  函式的裁量說明）**或**該家庭的 owner（家庭內任何一篇）。作者若已完全離開家庭
+  （`family_members` 裡已經沒有這一列），這支 RPC 對他完全關閉。
 - **用途**：軟刪（`p_deleted = true`）／還原（`p_deleted = false`）。**唯一能寫
   `diaries.deleted_at` 的路徑**——這支只碰這一欄，owner 分支不可能被拿來竄改內容
   （物理上不會執行到 `body`／`entry_date`／`child_id` 的 `UPDATE`）。
 - **副作用**：軟刪後該篇立即從 `feed_items`／`get_family_timeline` 消失，還原後立即
   回來（既有 trigger 行為，見 `supabase/tests/40_triggers_feed_and_storage.sql`）。
-- **錯誤碼**：未登入 `42501`；日記不存在 `LS020`；不是作者也不是該家 owner `42501`。
-- **併發**：對目標列用 `FOR UPDATE` 鎖住。
+- **錯誤碼**：未登入 `42501`；日記不存在 `LS020`；不是作者也不是該家 owner，或雖是
+  作者但已離開家庭 `42501`。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住；與 `update_diary_entry` 的互斥關係見上。
 
-### `get_family_timeline(p_family_id uuid, p_child_id uuid default null, p_cursor_occurred_at timestamptz default null, p_cursor_ref_id uuid default null, p_limit integer default 20) -> table(kind text, ref_id uuid, occurred_at timestamptz, child_id uuid)`
+### `get_family_timeline(p_family_id uuid, p_child_id uuid default null, p_cursor_occurred_at timestamptz default null, p_cursor_ref_id uuid default null, p_limit integer default 20) -> table(kind public.feed_kind, ref_id uuid, occurred_at timestamptz, child_id uuid)`
 - **誰能呼叫**：任何已登入使用者，但只查得到自己所屬家庭的資料——`p_family_id` 傳一個
   自己不屬於的家庭不會報錯，只會回傳 0 列（`security invoker`，完全依賴 `feed_items`
   既有的 `feed_items_select` RLS policy，見 §3）。
+- **回傳的 `kind`**：`public.feed_kind` 這個 enum（`album`/`media`/`diary`），不是泛用
+  `text`——PostgREST 會把 enum 序列化成 JSON 字串，Swift 端可以直接對映成一個三選一的
+  型別（例如 `enum FeedKind: String, Decodable { case album, media, diary }`），不需要
+  自己防禦「萬一多一種字串」這種情況。
 - **用途**：時間軸混排查詢（日記＋相簿＋照片），取代直接 `.from("feed_items")` 拼
-  keyset 條件。回傳的是**指標**（`kind`／`ref_id`），不是完整內容——要看某一列的完整
-  資料（日記內文、相簿標題、照片路徑），呼叫端再各自查對應的表（皆已有 RLS 保護，
-  family 成員本來就查得到）。
+  keyset 條件。回傳的是**指標**（`kind`／`ref_id`），不是完整內容——要看某一頁的完整
+  資料（日記內文、相簿標題、照片路徑），**依 `kind` 分組後各發一支批次查詢**，不要對
+  每一列各發一次請求：
+  ```swift
+  // 一頁最多 3 支 kind（album/media/diary），所以每頁封頂 3 次查詢，不是每列一次
+  let byKind = Dictionary(grouping: page, by: \.kind)
+  for (kind, items) in byKind {
+    let ids = items.map(\.refId)
+    // 例如 diary：await supabase.from("diaries").select().in("id", value: ids)
+  }
+  ```
+  這是「依 kind 分組、`in.(ref_id,…)` 每頁最多 3 次查詢」，不是逐列各查一次的 N+1；
+  皆已有 RLS 保護，family 成員本來就查得到，不需要額外授權。
 - **`p_child_id`**：`NULL`＝不篩（回傳全部，含 `child_id` 為 NULL 的項目與所有
   `media`）；帶值＝只回傳 `child_id` 等於該值的項目。**`media` 類項目在指定 `p_child_id`
   時恆不出現**（見 §3 `feed_items` 段的裁量說明），這不是 bug。
 - **分頁**：keyset，游標是 `(p_cursor_occurred_at, p_cursor_ref_id)` 這一對——傳上一頁
-  最後一列的 `occurred_at`／`ref_id`。第一頁兩者都不傳（或都傳 `NULL`）。只傳其中一個
-  （另一個留 `NULL`）不是合法用法，會被當成「無游標」以外的情況處理、實務上回傳 0 列，
-  呼叫端要嘛都傳、要嘛都不傳。
+  最後一列的 `occurred_at`／`ref_id`。第一頁兩者都不傳（或都傳 `NULL`）。**只傳其中
+  一個（另一個留 `NULL`）會拿到 `LS022`**——半游標不是合法用法，呼叫端要嘛都傳、要嘛
+  都不傳；這支 RPC 不會為了容錯半游標而靜默回傳空集合（那會讓呼叫端誤判成「這頁真的
+  沒資料了」）。
 - **`p_limit`**：下界會被夾到 1（傳 `0` 或負數不會被誤用成「不限筆數」）、上界夾到
-  100；預設 20。
-- **錯誤碼**：無自訂錯誤碼（純查詢，未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然
-  回傳 0 列，不 raise）。
-- **併發**：無寫入，`stable` 唯讀函式。
+  100；預設 20。兩端都有測試覆蓋（`supabase/tests/85_diaries_timeline.sql`，上界測試
+  用了一個 >100 筆的家庭資料集，不是只驗小數字下「反正沒差」的空案例）。
+- **錯誤碼**：未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列，不 raise；
+  游標只傳一半 `LS022`。
+- **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
+- **效能**：`language plpgsql`，依 `p_child_id`／游標是否為 `NULL` 拆成四條各自可以
+  走索引的靜態查詢（不是同一句 SQL 裡的 `OR` 分支）——這是刻意的實作選擇，不只是
+  風格：`language sql` 搭配 `set search_path` 會讓函式無法被規劃器 inline，`OR` 條件
+  就下推不進 index cond。細節與 EXPLAIN 證據見 migration 內
+  `public.get_family_timeline` 的完整說明與
+  `supabase/tests/50_rls_plan_no_percall_subquery.sql` 的專屬效能回歸段落。
 
 ---
 
@@ -377,8 +410,9 @@ Swift 端後續實作 `LSError` enum 時（見下方「未涵蓋於本票」）�
 | `LS016` | 邀請碼產生連續撞碼，請重試 | `create_invite`（機率極低，代表亂數來源異常，不是使用者可修正的錯誤，UI 顯示通用重試訊息即可） |
 | `LS017` | 邀請碼參數不合法（到期時間或可用次數超出範圍） | `create_invite` |
 | `LS020` | 日記不存在，或（`update_diary_entry` 情境）已被軟刪除須先還原 | `update_diary_entry`／`set_diary_deleted` |
-| `LS021` | 只有作者本人能編輯這篇日記 | `update_diary_entry` |
-| `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字 |
+| `LS021` | 不是作者本人，或雖是作者但已不是該家庭 owner/member | `update_diary_entry` |
+| `LS022` | `get_family_timeline` 的游標參數只給了一半（`p_cursor_occurred_at`／`p_cursor_ref_id` 兩者要嘛都給、要嘛都不給） | `get_family_timeline` |
+| `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字 |
 
 **沒有被上面任何一支 RPC 包住、可能直接從 PostgREST 冒出來的標準 Postgres 錯誤碼**
 （直接 `.insert()`/`.update()` 到允許直寫的表時可能撞到，client 應該當成一般失敗處理，

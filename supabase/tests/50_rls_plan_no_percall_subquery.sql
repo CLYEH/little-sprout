@@ -311,4 +311,176 @@ begin
 end;
 $$;
 
+-- ---------------------------------------------------------------------------
+-- get_family_timeline（LS-48）效能回歸：merge-reviewer PR #60 review F1（major，
+-- 本機實測證據）
+--
+-- 背景：get_family_timeline 原本用 `language sql` 包一句 `set search_path = ''`。
+-- SET 子句是 Postgres 判斷「這支函式能不能被規劃器 inline」的已知阻斷條件——不能
+-- inline，`(p_child_id is null or f.child_id = p_child_id)` 與游標比對的
+-- `(cursor is null and cursor is null) or (row) < (row)` 這兩個 OR 條件就沒有機會被
+-- 下推進 index cond，只能整段落在 Filter 逐列判斷。review 實測 20 萬列同一家庭：
+-- 深頁分頁 3516 buffers、稀疏 child 第一頁 4638 buffers（同語意的手寫等值查詢只要
+-- 4 buffers），本檔案上面新建的 feed_items_family_child_occurred_idx 從頭到尾沒被
+-- 選用過。修法見 migration 對 get_family_timeline 的完整說明：改寫成 `language plpgsql`，
+-- 依 p_child_id／游標是否為 NULL 拆成四條靜態查詢，每條都能被規劃器獨立求出走索引
+-- 的 plan。
+--
+-- 與上面「主查詢」迴圈的分工：那個迴圈只驗 SubPlan／loops（policy 有沒有被逐列
+-- 重算），對象是手寫 SQL，不是這支 RPC（review 原話：「現在 50_ 主查詢 3 測的是
+-- 手寫 SQL，不是這支 RPC」）。這裡新增的判準是另一個維度——「索引有沒有被選對、
+-- 掃描量是否與資料總量無關」，需要 buffers 與 Rows Removed by Filter，兩者都不是
+-- 上面迴圈量的東西。
+--
+-- 驗法分兩層（EXPLAIN 對 plpgsql 函式呼叫是不透明的黑盒，外層看不到內層的
+-- Index Cond——這是 Postgres 對函式呼叫節點的既有行為，不是本測試發明的假設）：
+--   a) 直接對 RPC 呼叫本身做 EXPLAIN ANALYZE BUFFERS：Function Scan 節點會把內層
+--      查詢實際跑掉的 buffers 彙總上來，斷言彙總值遠低於「壞掉的舊版」那個數量級
+--      （門檻抓 60——比 review 實測的「手寫等值 4 buffers」留了十幾倍餘裕，用來
+--      吸收環境差異／heap 沒有完美聚簇的正常波動，但離 3516／4638 那個數量級仍差了
+--      兩個數量級以上，足以分辨「有沒有修好」）。
+--   b) 另外直接 EXPLAIN 函式內部實際在跑的那兩段查詢文字（與 migration 裡
+--      get_family_timeline 對應分支的 SQL **逐字一致**——之後修改任一分支的查詢
+--      文字，這裡要同步改，否則驗到的不是真正部署的查詢，見下方每個探針前的
+--      提醒）：驗 Index Cond 真的含 child_id／ROW 比較，且 Rows Removed by Filter
+--      趨近於 0。
+--
+-- 資料量：效能家（fc）原本的 5 萬列 media 都沒有 child_id 可用；這裡另外準備
+--   - 20 萬列合成的 diary 型別 feed_items（不經過 create_diary_entry／trigger，直接寫
+--     feed_items——這張表對 diaries 本來就沒有外鍵，是已知且被接受的多型關聯設計，
+--     見 init_schema.sql 對 feed_items 的註解），child_id 全部 NULL，用來撐出「深頁
+--     分頁」的資料量；
+--   - 5 列帶同一個 child_id、時間穿插在最新附近，模擬「稀疏 child 篩選」：20 萬多列
+--     裡只有 5 列符合，若規劃器沒有真的選用 child 索引，篩選代價會跟資料總量成正比。
+-- ---------------------------------------------------------------------------
+
+-- 效能家（fc）原本沒有孩子；補一個給稀疏 child 篩選測試用
+insert into public.children (id, family_id, name, birthday)
+values ('2c000000-0000-4000-8000-000000000001', 'fc000000-0000-4000-8000-000000000001',
+        '效能測試孩子', date '2025-01-01')
+on conflict (id) do nothing;
+
+insert into public.feed_items (family_id, kind, ref_id, occurred_at, child_id)
+select 'fc000000-0000-4000-8000-000000000001', 'diary', gen_random_uuid(),
+       now() - (i * interval '1 minute'), null
+  from generate_series(1, 200000) i;
+
+insert into public.feed_items (family_id, kind, ref_id, occurred_at, child_id)
+select 'fc000000-0000-4000-8000-000000000001', 'diary', gen_random_uuid(),
+       now() - (i * interval '17 minutes'), '2c000000-0000-4000-8000-000000000001'
+  from generate_series(1, 5) i;
+
+analyze public.feed_items;
+analyze public.children;
+
+do $$
+declare
+  v_line text;
+  v_plan text;
+  v_buffers bigint;
+  v_removed bigint;
+  v_deep_cursor constant timestamptz := now() - interval '150000 minutes';
+  v_max_uuid constant uuid := 'ffffffff-ffff-ffff-ffff-ffffffffffff';
+  v_child constant uuid := '2c000000-0000-4000-8000-000000000001';
+  v_family constant uuid := 'fc000000-0000-4000-8000-000000000001';
+  -- review 實測壞掉的版本是 3516／4638 buffers；這裡留兩個數量級以上的餘裕，
+  -- 但足以區分「有沒有修好」（見上方說明）。
+  c_buffer_budget constant bigint := 60;
+begin
+  -- (a) 深頁分頁，透過真正的 RPC 呼叫（不篩 child）
+  v_plan := '';
+  for v_line in execute format(
+    'explain (analyze, verbose, buffers) select * from public.get_family_timeline(%L::uuid, null, %L::timestamptz, %L::uuid, 20)',
+    v_family, v_deep_cursor, v_max_uuid
+  ) loop
+    v_plan := v_plan || v_line || E'\n';
+  end loop;
+
+  if v_plan ~ '\(SubPlan [0-9]+\)' then
+    raise exception E'FAIL 效能：get_family_timeline 深頁分頁的 plan 出現 correlated SubPlan\n%', v_plan;
+  end if;
+
+  select coalesce(sum((x[1])::bigint), 0) into v_buffers
+    from regexp_matches(v_plan, 'shared hit=([0-9]+)', 'g') as x;
+  if v_buffers > c_buffer_budget then
+    raise exception E'FAIL 效能：get_family_timeline 深頁分頁 buffers=%（門檻 %）—— 疑似又退化成掃過整個 family 而不是索引直接定位到游標位置\n%',
+      v_buffers, c_buffer_budget, v_plan;
+  end if;
+  raise notice 'ok 效能：get_family_timeline 深頁分頁（20 萬＋列，不篩 child） buffers=%（門檻 ≤%）',
+    v_buffers, c_buffer_budget;
+
+  -- (b) 稀疏 child 第一頁，透過真正的 RPC 呼叫
+  v_plan := '';
+  for v_line in execute format(
+    'explain (analyze, verbose, buffers) select * from public.get_family_timeline(%L::uuid, %L::uuid, null, null, 20)',
+    v_family, v_child
+  ) loop
+    v_plan := v_plan || v_line || E'\n';
+  end loop;
+
+  if v_plan ~ '\(SubPlan [0-9]+\)' then
+    raise exception E'FAIL 效能：get_family_timeline 稀疏 child 第一頁的 plan 出現 correlated SubPlan\n%', v_plan;
+  end if;
+
+  select coalesce(sum((x[1])::bigint), 0) into v_buffers
+    from regexp_matches(v_plan, 'shared hit=([0-9]+)', 'g') as x;
+  if v_buffers > c_buffer_budget then
+    raise exception E'FAIL 效能：get_family_timeline 稀疏 child 第一頁 buffers=%（門檻 %）—— 疑似又退化成逐列篩 child_id，而不是走 feed_items_family_child_occurred_idx\n%',
+      v_buffers, c_buffer_budget, v_plan;
+  end if;
+  raise notice 'ok 效能：get_family_timeline 稀疏 child 第一頁（20 萬多列裡只有 5 列符合） buffers=%（門檻 ≤%）',
+    v_buffers, c_buffer_budget;
+
+  -- (c) 直接 EXPLAIN 函式內部「不篩 child、有游標」分支的原始查詢文字（與
+  -- get_family_timeline 對應分支逐字一致），驗 Index Cond 真的含 ROW 比較
+  v_plan := '';
+  for v_line in execute format(
+    $probe$explain (analyze, verbose, buffers)
+      select f.kind, f.ref_id, f.occurred_at, f.child_id
+        from public.feed_items f
+       where f.family_id = %L::uuid
+         and (f.occurred_at, f.ref_id) < (%L::timestamptz, %L::uuid)
+       order by f.occurred_at desc, f.ref_id desc
+       limit 20$probe$,
+    v_family, v_deep_cursor, v_max_uuid
+  ) loop
+    v_plan := v_plan || v_line || E'\n';
+  end loop;
+
+  if v_plan !~ 'Index Cond:.*ROW\(' then
+    raise exception E'FAIL 效能：get_family_timeline 不篩 child 的游標分支沒有走到帶 ROW 比較的 Index Cond（可能又退化成 Seq Scan 或 Filter）\n%', v_plan;
+  end if;
+  raise notice 'ok 效能：不篩 child 的游標分支 Index Cond 含 ROW 比較（走 feed_items_family_occurred_idx）';
+
+  -- (d) 直接 EXPLAIN 函式內部「篩 child、無游標」分支的原始查詢文字（與
+  -- get_family_timeline 對應分支逐字一致），驗 Index Cond 含 child_id、且
+  -- Rows Removed by Filter 趨近於 0
+  v_plan := '';
+  for v_line in execute format(
+    $probe$explain (analyze, verbose, buffers)
+      select f.kind, f.ref_id, f.occurred_at, f.child_id
+        from public.feed_items f
+       where f.family_id = %L::uuid
+         and f.child_id = %L::uuid
+       order by f.occurred_at desc, f.ref_id desc
+       limit 20$probe$,
+    v_family, v_child
+  ) loop
+    v_plan := v_plan || v_line || E'\n';
+  end loop;
+
+  if v_plan !~ 'Index Cond:.*child_id' then
+    raise exception E'FAIL 效能：get_family_timeline 篩 child 分支的 Index Cond 沒有含 child_id（可能沒有選用 feed_items_family_child_occurred_idx）\n%', v_plan;
+  end if;
+
+  select coalesce(sum((x[1])::bigint), 0) into v_removed
+    from regexp_matches(v_plan, 'Rows Removed by Filter: ([0-9]+)', 'g') as x;
+  if v_removed > 5 then
+    raise exception E'FAIL 效能：get_family_timeline 篩 child 分支 Rows Removed by Filter=%（應趨近於 0，代表 child_id 真的被當成 index cond，而不是逐列 filter 掉）\n%',
+      v_removed, v_plan;
+  end if;
+  raise notice 'ok 效能：篩 child 分支 Index Cond 含 child_id、Rows Removed by Filter=%（趨近於 0）', v_removed;
+end;
+$$;
+
 rollback;
