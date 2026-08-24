@@ -11,7 +11,8 @@
 --
 -- ---------------------------------------------------------------------------
 -- Mutation 自證（開發期用本機 Supabase CLI 映像實跑 `supabase db reset` +
--- `supabase/tests/run.sh` 手動驗證，非本檔自動執行）：
+-- `supabase/tests/run.sh` 手動驗證，非本檔自動執行；每個 mutation 各自單獨
+-- 套用、跑過、確認精準命中或確認不成立，套用後已改回原狀）：
 --   M1：拿掉 toggle_reaction 裡的 `perform pg_advisory_xact_lock(...)`
 --       → supabase/tests/concurrency/reaction_toggle_race_s2.sql 的斷言變紅——
 --         S2 不再被阻塞在鎖上，改成被 unique index 插入等待卡住（時序仍然
@@ -20,16 +21,28 @@
 --         斷言精準抓到（實測：`錯誤碼=23505`，不是「無，成功」）。
 --   M2：拿掉 update_comment 裡的作者／成員授權檢查（`if v_comment.author_id
 --       is distinct from v_uid or not exists (...) then raise ...`）
---       → 本檔 §3「非作者的 member／viewer／非本家庭成員呼叫 update_comment
---         皆 LS025」的斷言變紅（非作者也能改到內容）。
---   M3：拿掉 update_comment 的 SELECT ... FOR UPDATE 鎖（改成不鎖的裸 SELECT）
---       → supabase/tests/concurrency/comment_edit_vs_delete_s2_delete.sql
---         這組（軟刪先動，作者編輯必須被阻塞後拿到已軟刪除前的資料一致性）
---         的「等待秒數 < 0.5」斷言變紅——S2 不再被 S1 的 set_comment_deleted
---         阻塞，兩者交錯執行。
--- 三個 mutation 都各自單獨套用（其餘保持修好的版本）、跑 `supabase db reset`
--- 套用到真實 schema、再跑 `run.sh` 全套，確認精準命中對應斷言、其餘斷言正常
--- 通過，套用後已改回原狀。
+--       → 本檔 §3「owner（非作者）呼叫 update_comment 拿到 LS025」的斷言變紅
+--         （實測：owner 竟然改到了內容，錯誤碼=NULL，body 被竄改）。
+--   M3（誠實記錄一次「預期會紅、實測沒有紅」）：拿掉 update_comment 的
+--       SELECT ... FOR UPDATE 鎖（改成不鎖的裸 SELECT）→ 實測
+--       supabase/tests/concurrency/comment_edit_vs_delete_*（編輯先動／軟刪
+--       先動兩個方向）**都還是綠的**，不是原本預期的紅。原因：這兩組驗的是
+--       update_comment 與 set_comment_deleted 兩支 RPC 之間的序列化，而
+--       set_comment_deleted 自己的 `for update`／它尾端真正執行的 `UPDATE`
+--       敘述本身就會對這一列取隱式列鎖——不論 update_comment 那端有沒有
+--       `FOR UPDATE`，只要任一邊真的執行了 `UPDATE`，Postgres 對同一列的
+--       寫入本來就會序列化，兩個方向的「被阻塞」現象其實是由對方的 UPDATE
+--       撐住的，不是這支自己的 SELECT FOR UPDATE 在撐。這與 albums 那組
+--       「作者搬家 vs owner 軟刪」的道理一致（見
+--       docs/API.md／migration 對 set_album_deleted 的既有說明：「這兩組能
+--       證明的是序列化正確，不是 FOR UPDATE 本身必要」）——但 comments 甚至
+--       **沒有**等價的「搬家」場景可以驗（`update_comment` 的參數本來就沒有
+--       `family_id`，LS-58 收斂後這個攻擊面在前提上已經不存在，見
+--       comment_edit_vs_delete_s2_delete.sql 檔頭）。結論：`update_comment`
+--       的 `FOR UPDATE` 目前**沒有**任何一個測試能證明它是必要的，保留它是
+--       防禦性一致（跟 update_diary_entry／set_*_deleted 同一套「讀了列就該
+--       鎖住」的寫法慣例），不是靠這裡的 mutation 撐住——如實記錄，不假裝
+--       撐得住的斷言存在。
 -- ---------------------------------------------------------------------------
 
 \set ON_ERROR_STOP on
