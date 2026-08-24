@@ -784,6 +784,67 @@ begin
   raise notice 'ok：3 筆同一 occurred_at 的日記混進資料集後，limit=1 逐頁串接仍與單次查詢完全一致（tie-breaker 正確靠 ref_id）——F6';
 
   -- ---------------------------------------------------------------------------
+  -- child 篩選下的 keyset 分頁（merge-reviewer PR #60 review N1，major）：(d)／(h)
+  -- 兩段分頁測試的 p_child_id 都是 NULL，只走過 get_family_timeline 的分支 1／2
+  -- （不篩 child）；「篩 child 又帶游標」（分支 4）在這之前完全沒有被任何一次呼叫
+  -- 真正執行過——這正是 review 指出的 gate 缺口：50_ 的舊探針 EXPLAIN 的是手抄 SQL
+  -- 副本、不是函式本體，而這裡（行為面）也完全沒有測試涵蓋分支 4。reviewer 用
+  -- mutation 證實：把分支 4 改回 OR 條件的壞寫法，這個檔案原本全綠不變。
+  --
+  -- 修法：複製 (d) 的比對手法，把 p_child_id 從 null 換成 v_child1，用 limit=1
+  -- 逐頁走訪，驗證：串接結果＝單次查詢（無漏項無重複，證明分支 4 的游標比對正確）、
+  -- 且每一列都真的屬於 child1、且不含 media（child 篩選下 media 恆不出現這件事，
+  -- (c) 只驗過單次查詢，這裡在分頁路徑上再確認一次不是巧合地只在單次查詢下成立）。
+  -- ---------------------------------------------------------------------------
+  select array_agg(t.kind::text || ':' || t.ref_id::text order by t.occurred_at desc, t.ref_id desc)
+    into v_full
+    from public.get_family_timeline(v_family, v_child1, null, null, 1000) t;
+
+  if array_length(v_full, 1) <> 4 then
+    raise exception 'FAIL：child1 篩選單次查詢應為 4 筆，實際 %（前面 (b) 驗過的基準線跑掉了）',
+      array_length(v_full, 1);
+  end if;
+
+  v_collected := array[]::text[];
+  v_cursor_at := null;
+  v_cursor_id := null;
+  v_iterations := 0;
+  loop
+    v_iterations := v_iterations + 1;
+    if v_iterations > 20 then
+      raise exception 'FAIL：child1 篩選分頁超過 20 頁還沒結束（游標可能沒有前進）';
+    end if;
+    v_got_any := false;
+    for v_page in
+      select * from public.get_family_timeline(v_family, v_child1, v_cursor_at, v_cursor_id, 1)
+    loop
+      v_got_any := true;
+      if v_page.child_id is distinct from v_child1 then
+        raise exception
+          'FAIL：child1 篩選＋分頁（分支 4）洩漏了其他 child／全家共用的項目（child_id=%，kind=%，ref_id=%）',
+          v_page.child_id, v_page.kind, v_page.ref_id;
+      end if;
+      if v_page.kind = 'media' then
+        raise exception 'FAIL：child1 篩選＋分頁（分支 4）竟然出現 media 項目（media 的 child_id 恆為 NULL，不該通過 child 篩選）';
+      end if;
+      v_collected := v_collected || (v_page.kind::text || ':' || v_page.ref_id::text);
+      v_cursor_at := v_page.occurred_at;
+      v_cursor_id := v_page.ref_id;
+    end loop;
+    exit when not v_got_any;
+  end loop;
+
+  if v_collected is distinct from v_full then
+    raise exception
+      'FAIL：child1 篩選下 limit=1 逐頁串接與單次查詢不同（get_family_timeline 分支 4——同時篩 child 又帶游標——可能漏項或重複）—— 分頁=%，完整=%',
+      v_collected, v_full;
+  end if;
+  if array_length(v_collected, 1) <> 4 then
+    raise exception 'FAIL：child1 篩選分頁串接後應收集到 4 筆，實際 %', array_length(v_collected, 1);
+  end if;
+  raise notice 'ok：child1 篩選下 limit=1 逐頁串接（get_family_timeline 分支 4：篩 child＋帶游標）與單次查詢完全一致，且未洩漏其他 child／media——N1';
+
+  -- ---------------------------------------------------------------------------
   -- (i) p_limit 上界＝100（merge-reviewer PR #60 review F9）：先前只驗過下界
   -- （<=0 夾到 1）；上界從未用「家庭總筆數 > 100」的資料集驗證過——之前資料集只有
   -- 9～12 筆，任何 p_limit ≥ 9 都測不出上界有沒有真的生效。這裡灌 95 列不帶 child_id
@@ -824,6 +885,145 @@ begin
   end;
   reset role;
   raise notice 'ok：半游標（游標兩參數只給其中一個）明確拒絕，回報 LS022，不是靜默回空集合';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 7. feed_items.child_id 的回填冪等性與孩子刪除的 FK 行為（merge-reviewer PR #60
+--    review N4）
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_child uuid := '2a000000-0000-4000-8000-000000000001';
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_new_child uuid;
+  v_diary uuid;
+  v_album uuid;
+  v_before_diary uuid;
+  v_before_album uuid;
+  v_after_family_diary uuid;
+  v_after_child_diary uuid;
+  v_after_family_album uuid;
+  v_after_child_album uuid;
+  v_n int;
+begin
+  -- ---------------------------------------------------------------------------
+  -- (a) 回填冪等性：把 fixtures 既有 diary/album 對應的 feed_items.child_id 手動
+  -- 清成 NULL，重新執行一次跟 20260824010000_diaries_write_path_and_timeline.sql
+  -- 逐字一致的回填 UPDATE 語句，驗證正確地從 diaries/albums 補回 child_id，且再跑
+  -- 一次影響 0 列（真正的冪等定義，不只是「跑了不會錯」）。
+  --
+  -- 為什麼 fresh reset 測不出這件事：migration 套用當下 diaries/albums 都還沒有
+  -- 資料，回填當下等於是 no-op，從未真的補過任何一列——F3（第 1 輪 review）當時
+  -- 只交付了回填 SQL 本身，沒有測試證明「這段 UPDATE 對已存在、child_id 已是 NULL
+  -- 的列」是正確且冪等的。
+  -- ---------------------------------------------------------------------------
+  update public.feed_items
+     set child_id = null
+   where family_id = v_family and kind in ('diary', 'album');
+
+  select count(*) into v_n from public.feed_items
+   where family_id = v_family and kind in ('diary', 'album') and child_id is not null;
+  if v_n <> 0 then
+    raise exception 'FAIL：手動清空後應該 0 列還帶 child_id，實際 %', v_n;
+  end if;
+
+  update public.feed_items f
+     set child_id = d.child_id
+    from public.diaries d
+   where f.kind = 'diary' and f.ref_id = d.id
+     and f.child_id is distinct from d.child_id;
+
+  update public.feed_items f
+     set child_id = a.child_id
+    from public.albums a
+   where f.kind = 'album' and f.ref_id = a.id
+     and f.child_id is distinct from a.child_id;
+
+  select count(*) into v_n from public.feed_items
+   where family_id = v_family and kind in ('diary', 'album') and child_id is distinct from v_child;
+  if v_n <> 0 then
+    raise exception 'FAIL：回填後 A 家的 diary/album feed_items 應全部補回 child_id=%，實際有 % 列不是', v_child, v_n;
+  end if;
+
+  update public.feed_items f
+     set child_id = d.child_id
+    from public.diaries d
+   where f.kind = 'diary' and f.ref_id = d.id
+     and f.child_id is distinct from d.child_id;
+  get diagnostics v_n = row_count;
+  if v_n <> 0 then
+    raise exception 'FAIL：diary 回填 UPDATE 重跑一次應影響 0 列（冪等），實際影響 % 列', v_n;
+  end if;
+
+  update public.feed_items f
+     set child_id = a.child_id
+    from public.albums a
+   where f.kind = 'album' and f.ref_id = a.id
+     and f.child_id is distinct from a.child_id;
+  get diagnostics v_n = row_count;
+  if v_n <> 0 then
+    raise exception 'FAIL：album 回填 UPDATE 重跑一次應影響 0 列（冪等），實際影響 % 列', v_n;
+  end if;
+
+  raise notice 'ok：feed_items.child_id 的回填 UPDATE 正確補回既有資料，且重跑一次影響 0 列（冪等）——N4';
+
+  -- ---------------------------------------------------------------------------
+  -- (b) 刪除孩子：feed_items.family_id 保留、child_id 變 NULL，delete 本身不噴
+  -- 23502。驗證 feed_items_child_same_family_fkey 的 `on delete set null (child_id)`
+  -- column-specific 寫法——若漏寫 `(child_id)`，Postgres 對複合外鍵 ON DELETE SET
+  -- NULL 的預設行為是把「所有」參照欄位都設成 NULL，會連 family_id 一起 NULL 掉，
+  -- 而 feed_items.family_id 是 NOT NULL，會直接噴 23502。這條在 migration 裡原本
+  -- 只靠註解推理說明，這裡補機械驗證，不是只靠人看得懂那段註解就信任它。
+  -- ---------------------------------------------------------------------------
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  insert into public.children (id, family_id, name, birthday)
+  values (gen_random_uuid(), v_family, '即將被刪除的孩子', date '2024-01-01')
+  returning id into v_new_child;
+  v_diary := public.create_diary_entry(v_family, v_new_child, '掛在即將被刪的孩子底下', current_date);
+  reset role;
+
+  -- albums 沒有 RPC（不在本票範圍），直接以 postgres 身分建立，等同既有 fixtures 慣例
+  insert into public.albums (id, family_id, child_id, title, created_by)
+  values (gen_random_uuid(), v_family, v_new_child, '也掛在即將被刪的孩子底下', v_owner)
+  returning id into v_album;
+
+  select f.child_id into v_before_diary from public.feed_items f
+   where f.kind = 'diary' and f.ref_id = v_diary;
+  select f.child_id into v_before_album from public.feed_items f
+   where f.kind = 'album' and f.ref_id = v_album;
+  if v_before_diary <> v_new_child or v_before_album <> v_new_child then
+    raise exception 'FAIL：刪除孩子之前，日記／相簿的 feed_items.child_id 應該是新孩子 id（diary=%，album=%）',
+      v_before_diary, v_before_album;
+  end if;
+
+  -- 真正的斷言就是這句 DELETE 本身：若 FK 的 ON DELETE SET NULL 沒有正確地只設
+  -- child_id 一欄，這句會直接噴 23502，讓整個測試檔案失敗——不需要額外包
+  -- exception 區塊，讓錯誤自然傳播就是測試本身。
+  delete from public.children where id = v_new_child;
+
+  select f.family_id, f.child_id into v_after_family_diary, v_after_child_diary
+    from public.feed_items f where f.kind = 'diary' and f.ref_id = v_diary;
+  select f.family_id, f.child_id into v_after_family_album, v_after_child_album
+    from public.feed_items f where f.kind = 'album' and f.ref_id = v_album;
+
+  if v_after_family_diary <> v_family or v_after_family_album <> v_family then
+    raise exception 'FAIL：刪除孩子後 feed_items.family_id 應該原封不動保留（diary=%，album=%，期望 %）',
+      v_after_family_diary, v_after_family_album, v_family;
+  end if;
+  if v_after_child_diary is not null or v_after_child_album is not null then
+    raise exception 'FAIL：刪除孩子後 feed_items.child_id 應該被設成 NULL（diary=%，album=%）',
+      v_after_child_diary, v_after_child_album;
+  end if;
+
+  raise notice 'ok：刪除孩子後 feed_items.family_id 保留、child_id 變 NULL，且刪除本身沒有噴 23502——N4';
 end;
 $$;
 

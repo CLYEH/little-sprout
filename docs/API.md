@@ -369,17 +369,27 @@
 - **用途**：時間軸混排查詢（日記＋相簿＋照片），取代直接 `.from("feed_items")` 拼
   keyset 條件。回傳的是**指標**（`kind`／`ref_id`），不是完整內容——要看某一頁的完整
   資料（日記內文、相簿標題、照片路徑），**依 `kind` 分組後各發一支批次查詢**，不要對
-  每一列各發一次請求：
+  每一列各發一次請求。三支查詢彼此獨立（不同表、不同 RLS 判斷），**用
+  `withThrowingTaskGroup` 平行發出，不要序列 `await`**——序列寫法雖然一樣只有 3 次
+  網路請求（不是 N+1），但頁面延遲會變成三支查詢時間相加，而不是三者當中最慢的那支：
   ```swift
-  // 一頁最多 3 支 kind（album/media/diary），所以每頁封頂 3 次查詢，不是每列一次
+  // 一頁最多 3 支 kind（album/media/diary），所以每頁封頂 3 次查詢，不是每列一次；
+  // 三支彼此獨立，平行發出而不是序列 await，頁面延遲取決於最慢的那支，不是總和。
   let byKind = Dictionary(grouping: page, by: \.kind)
-  for (kind, items) in byKind {
-    let ids = items.map(\.refId)
-    // 例如 diary：await supabase.from("diaries").select().in("id", value: ids)
+  try await withThrowingTaskGroup(of: Void.self) { group in
+    for (kind, items) in byKind {
+      group.addTask {
+        let ids = items.map(\.refId)
+        // 例如 diary：await supabase.from("diaries").select().in("id", value: ids)
+        // 各支查詢各自寫回對應的本地快取／狀態，不需要彼此的回傳值
+      }
+    }
+    try await group.waitForAll()
   }
   ```
-  這是「依 kind 分組、`in.(ref_id,…)` 每頁最多 3 次查詢」，不是逐列各查一次的 N+1；
-  皆已有 RLS 保護，family 成員本來就查得到，不需要額外授權。
+  這是「依 kind 分組、`in.(ref_id,…)` 每頁最多 3 次查詢、且三次平行發出」，不是逐列
+  各查一次的 N+1，也不是看似批次、實則序列等待三倍延遲的假平行；皆已有 RLS 保護，
+  family 成員本來就查得到，不需要額外授權。
 - **`p_child_id`**：`NULL`＝不篩（回傳全部，含 `child_id` 為 NULL 的項目與所有
   `media`）；帶值＝只回傳 `child_id` 等於該值的項目。**`media` 類項目在指定 `p_child_id`
   時恆不出現**（見 §3 `feed_items` 段的裁量說明），這不是 bug。
