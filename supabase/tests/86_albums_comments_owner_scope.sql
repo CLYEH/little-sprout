@@ -381,141 +381,40 @@ rollback;
 --     跟 albums 不同——viewer 也能留言，PLAN §3），這是收斂前就有的既有行為，
 --     本段連帶驗證這個差異點沒有被本票夾帶抹平
 -- ===========================================================================
+-- LS-58 更新：comments 的寫入面已從本段原本測的「hybrid 模式」（作者直接 UPDATE
+-- 放行、owner 分支才收斂）進一步收斂成 RPC-only（見
+-- 20260825020000_comments_reactions_notifications.sql 第 0 段）——comments_update
+-- policy 已被 ALTER 成 `using (false) with check (false)`，UPDATE grant 也整個
+-- revoke。這代表本段原本驗的「作者直接 UPDATE 放行、owner 分支 0 列」已經不成立：
+-- 現在不分是誰，直接 UPDATE 一律 42501（連作者自己也一樣）。完整的角色矩陣（作者／
+-- owner／member／viewer／外人／已離開／降級）改測 update_comment RPC，見
+-- supabase/tests/87_comments_reactions_notifications.sql §B——這裡只留一條回歸，
+-- 證明「直接 UPDATE 現在連作者本人都會被擋下」沒有被之後的改動悄悄鬆開。
 begin;
 
 do $$
 declare
   v_family uuid := 'fa000000-0000-4000-8000-000000000001';
-  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
   v_author uuid := 'a0000000-0000-4000-8000-000000000002';
-  v_viewer uuid := 'a0000000-0000-4000-8000-000000000003';
-  v_other_member uuid := 'a0000000-0000-4000-8000-000000000004';
-  v_outsider uuid := 'b0000000-0000-4000-8000-000000000001';
   v_target_media uuid := '3a000000-0000-4000-8000-000000000001';
   v_comment uuid;
-  v_body text;
-  v_n int;
 begin
   set local role postgres;
-  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at,
-                          raw_app_meta_data, raw_user_meta_data)
-  values (v_other_member, '00000000-0000-0000-0000-000000000000',
-          'authenticated', 'authenticated', 'a4-member@ls52.test', now(), now(), '{}', '{}');
-  insert into public.profiles (id, display_name) values (v_other_member, 'A 家第 4 位成員');
-  insert into public.family_members (family_id, user_id, role, can_upload)
-  values (v_family, v_other_member, 'member', true);
-
   insert into public.comments (family_id, target_type, target_id, author_id, body)
   values (v_family, 'media', v_target_media, v_author, '原始留言')
   returning id into v_comment;
   reset role;
 
-  -- 作者本人：放行
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  update public.comments set body = '作者改過的留言' where id = v_comment;
-  get diagnostics v_n = row_count;
+  begin
+    update public.comments set body = '作者想直接改' where id = v_comment;
+    raise exception 'FAIL：LS-58 之後直接 UPDATE comments 應該對任何人（含作者本人）都是 42501，作者本人竟然成功了';
+  exception when insufficient_privilege then
+    raise notice 'ok（LS-58 回歸）：作者本人直接 UPDATE 自己的留言 body 現在也是 42501（RPC-only，見 update_comment）';
+  end;
   reset role;
-  if v_n <> 1 then
-    raise exception 'FAIL：作者本人直接 UPDATE 自己的留言 body 應該成功，實際影響 % 列', v_n;
-  end if;
-  raise notice 'ok：作者本人可以直接 UPDATE 自己的留言 body';
-
-  -- owner（非作者）——本票要修的核心洞
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
-  set local role authenticated;
-  update public.comments set body = 'owner 竄改的留言' where id = v_comment;
-  get diagnostics v_n = row_count;
-  reset role;
-  select body into v_body from public.comments where id = v_comment;
-  if v_n <> 0 or v_body <> '作者改過的留言' then
-    raise exception 'FAIL：owner（非作者）直接 UPDATE 別人留言的 body 竟然生效了（影響 % 列，body=「%」）——LS-52 要修的洞沒有補上', v_n, v_body;
-  end if;
-  raise notice 'ok：owner（非作者）直接 UPDATE 別人留言的 body 影響 0 列，內容逐字不變';
-
-  -- member（非作者、非 owner）／viewer（非作者）／非本家庭成員：皆 0 列
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', v_other_member, 'role', 'authenticated')::text, true);
-  set local role authenticated;
-  update public.comments set body = 'member 竄改的留言' where id = v_comment;
-  get diagnostics v_n = row_count;
-  reset role;
-  if v_n <> 0 then
-    raise exception 'FAIL：非作者的 member 竟然改得動別人的留言（影響 % 列）', v_n;
-  end if;
-
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', v_viewer, 'role', 'authenticated')::text, true);
-  set local role authenticated;
-  update public.comments set body = 'viewer 竄改的留言' where id = v_comment;
-  get diagnostics v_n = row_count;
-  reset role;
-  if v_n <> 0 then
-    raise exception 'FAIL：非作者的 viewer 竟然改得動別人的留言（影響 % 列）', v_n;
-  end if;
-
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', v_outsider, 'role', 'authenticated')::text, true);
-  set local role authenticated;
-  update public.comments set body = '外人竄改的留言' where id = v_comment;
-  get diagnostics v_n = row_count;
-  reset role;
-  if v_n <> 0 then
-    raise exception 'FAIL：非本家庭成員竟然改得動留言（影響 % 列）', v_n;
-  end if;
-  raise notice 'ok：非作者的 member／viewer／非本家庭成員 對留言 body 的直接 UPDATE 皆影響 0 列';
-
-  -- F3（merge-reviewer PR #70 review）：owner 直接 UPDATE 的目標欄位換成
-  -- deleted_at 依然是 0 列，同 §A 的說明。
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
-  set local role authenticated;
-  update public.comments set deleted_at = now() where id = v_comment;
-  get diagnostics v_n = row_count;
-  reset role;
-  if v_n <> 0 then
-    raise exception 'FAIL：owner 直接 UPDATE 別人留言的 deleted_at 竟然生效了（影響 % 列）——即使是 RPC 路徑准動的欄位，直接 UPDATE 仍應影響 0 列', v_n;
-  end if;
-  if (select deleted_at from public.comments where id = v_comment) is not null then
-    raise exception 'FAIL：owner 直接 UPDATE 別人留言的 deleted_at 竟然真的寫入了';
-  end if;
-  raise notice 'ok：owner 直接 UPDATE 別人留言的 deleted_at（RPC 路徑准動的唯一欄位）同樣影響 0 列（F3）';
-
-  -- 作者已離開家庭：不在 family_ids() 裡了，不能再改
-  delete from public.family_members where family_id = v_family and user_id = v_author;
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
-  set local role authenticated;
-  update public.comments set body = '離開後想改' where id = v_comment;
-  get diagnostics v_n = row_count;
-  reset role;
-  select body into v_body from public.comments where id = v_comment;
-  if v_n <> 0 or v_body <> '作者改過的留言' then
-    raise exception 'FAIL：已離開家庭的前作者竟然還改得動自己過去的留言（影響 % 列）', v_n;
-  end if;
-  insert into public.family_members (family_id, user_id, role, can_upload)
-  values (v_family, v_author, 'member', true);
-  raise notice 'ok：已離開家庭的前作者無法直接 UPDATE 自己過去的留言';
-
-  -- 作者被降級成 viewer：comments 的作者分支只要求「仍是任一角色的成員」
-  -- （family_ids()），跟 albums（要求仍是 contributor）不同——這裡刻意驗證
-  -- 「仍可編輯」，不是漏測負向案例。
-  update public.family_members set role = 'viewer'
-   where family_id = v_family and user_id = v_author;
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
-  set local role authenticated;
-  update public.comments set body = '降級後仍可改' where id = v_comment;
-  get diagnostics v_n = row_count;
-  reset role;
-  if v_n <> 1 then
-    raise exception 'FAIL：被降級成 viewer 的前作者應該仍可編輯自己的留言（comments 作者分支只要求仍是成員），實際影響 % 列', v_n;
-  end if;
-  update public.family_members set role = 'member'
-   where family_id = v_family and user_id = v_author;
-  raise notice 'ok：被降級成 viewer 的前作者仍可直接 UPDATE 自己的留言 body（comments_update 作者分支只要求仍是任一角色的成員，跟收斂前一致，不是本票放寬）';
 end;
 $$;
 
@@ -693,12 +592,18 @@ rollback;
 -- ===========================================================================
 -- §E. 授權兩層對帳
 --
--- 這次的收斂**沒有**動 albums／comments 的表級 grant（跟 LS-48 對 diaries 整個
--- revoke 不同——這裡作者仍走直接 UPDATE，grant 本來就該留著）。所以這裡驗的是
--- 正向回歸：grant 這一層原封不動還在，縮權完全是靠上面兩段驗過的 policy 窄化，
--- 不是靠關掉 grant；另外驗新增兩支 RPC 的 EXECUTE 授權（authenticated 可、
--- anon 不可），這兩支也要納入 supabase/tests/60_default_privileges.sql §8 的
--- public RPC 白名單，否則會被那邊「清單外函式」那段擋下——本檔已同步更新那個
+-- albums 這次的收斂**沒有**動表級 grant（跟 LS-48 對 diaries 整個 revoke 不同——
+-- 這裡作者仍走直接 UPDATE，grant 本來就該留著），所以下面驗的是正向回歸：grant
+-- 這一層原封不動還在，縮權完全是靠上面兩段驗過的 policy 窄化，不是靠關掉 grant。
+--
+-- comments 則相反：LS-58（20260825020000_comments_reactions_notifications.sql）
+-- 把 comments 的寫入面從這裡原本測的 hybrid 模式進一步收斂成 RPC-only，INSERT／
+-- UPDATE 的表級 grant 已被整個 revoke（比照 diaries），只剩 SELECT／DELETE 兩個
+-- grant 還在——下面改成驗這個新現況，不是複製 albums 那份斷言。
+--
+-- 另外驗 albums／comments 各自新增 RPC 的 EXECUTE 授權（authenticated 可、anon
+-- 不可），這些也要納入 supabase/tests/60_default_privileges.sql §8 的 public RPC
+-- 白名單，否則會被那邊「清單外函式」那段擋下——本檔與 LS-58 都已同步更新那個
 -- 白名單，這裡不重複驗 definer／search_path 硬化（60_ 已經涵蓋）。
 -- ---------------------------------------------------------------------------
 do $$
@@ -715,20 +620,22 @@ begin
   if not has_table_privilege('authenticated', 'public.albums', 'delete') then
     raise exception 'FAIL 回歸：authenticated 失去 albums 的 DELETE grant（owner 硬刪的路徑）';
   end if;
+  raise notice 'ok 回歸：albums 的 SELECT/INSERT/UPDATE/DELETE 表級 grant 原封不動——LS-52 完全靠 policy 窄化與新 RPC 達成縮權，沒有動 grant';
 
-  if not has_table_privilege('authenticated', 'public.comments', 'update') then
-    raise exception 'FAIL 回歸：authenticated 失去 comments 的表級 UPDATE grant——作者直接編輯內容的路徑會跟著壞掉';
+  -- LS-58：comments 的 INSERT／UPDATE grant 已被整個 revoke（RPC-only，同 diaries）。
+  if has_table_privilege('authenticated', 'public.comments', 'insert') then
+    raise exception 'FAIL 回歸（LS-58）：authenticated 竟然還有 comments 的表級 INSERT grant——應該已收斂成 RPC-only（create_comment）';
+  end if;
+  if has_table_privilege('authenticated', 'public.comments', 'update') then
+    raise exception 'FAIL 回歸（LS-58）：authenticated 竟然還有 comments 的表級 UPDATE grant——應該已收斂成 RPC-only（update_comment／set_comment_deleted）';
   end if;
   if not has_table_privilege('authenticated', 'public.comments', 'select') then
     raise exception 'FAIL 回歸：authenticated 失去 comments 的 SELECT grant';
   end if;
-  if not has_table_privilege('authenticated', 'public.comments', 'insert') then
-    raise exception 'FAIL 回歸：authenticated 失去 comments 的 INSERT grant';
-  end if;
   if not has_table_privilege('authenticated', 'public.comments', 'delete') then
     raise exception 'FAIL 回歸：authenticated 失去 comments 的 DELETE grant（owner 硬刪的路徑）';
   end if;
-  raise notice 'ok 回歸：albums／comments 的 SELECT/INSERT/UPDATE/DELETE 表級 grant 原封不動——LS-52 完全靠 policy 窄化與新 RPC 達成縮權，沒有動 grant';
+  raise notice 'ok 回歸（LS-58）：comments 的 INSERT/UPDATE 表級 grant 已收回（RPC-only），SELECT/DELETE 原樣保留';
 
   if not has_function_privilege('authenticated', 'public.set_album_deleted(uuid, boolean)', 'execute') then
     raise exception 'FAIL：authenticated 不能執行 set_album_deleted，owner 軟刪別人相簿的唯一路徑會炸掉';
