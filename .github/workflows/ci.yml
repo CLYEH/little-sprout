@@ -80,11 +80,12 @@ jobs:
           git diff "$base_sha"...HEAD | grep '^+' | grep -v '^+++' \
             | bash scripts/gates/scan-secrets.sh
 
-      # LS-45／LS-41／LS-54：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
-      # 放行」（destructive-approval-check）、「schema／文件對帳」（api-contract-check）與
-      # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）的偵測不退化（前饋必有反饋，
+      # LS-45／LS-41／LS-54／LS-53：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
+      # 放行」（destructive-approval-check）、「schema／文件對帳」（api-contract-check）、
+      # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）與「migration 兩級分級／BREAKING: 段落」
+      # （migration-breaking-check／breaking-section-check）的偵測不退化（前饋必有反饋，
       # 對 gate 本身也適用）。集中在同一個 step，維持「一個地方跑所有 gate 自測」。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check）
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／breaking-section-check）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -92,13 +93,27 @@ jobs:
           bash scripts/gates/destructive-approval-check.test.sh || rc=1
           bash scripts/gates/api-contract-check.test.sh || rc=1
           bash scripts/gates/error-codes-check.test.sh || rc=1
+          bash scripts/gates/migration-breaking-check.test.sh || rc=1
+          bash scripts/gates/breaking-section-check.test.sh || rc=1
           exit "$rc"
 
-      # LS-54 N4′：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue 雙向對帳（本機
-      # push-gate 的伺服器端兜底）。所有 PR 都跑：純檔案比對、不依賴 PR body 標記，
-      # 沒有 promote／back-merge 誤擋的問題（同 secrets 掃描）。
-      - name: 錯誤碼對帳（docs/API.md §5 ↔ LSErrorCode，LS-54）
+      # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
+      # errcode 三方雙向對帳（本機 push-gate 的伺服器端兜底）。所有 PR 都跑：純檔案比對、
+      # 不依賴 PR body 標記，沒有 promote／back-merge 誤擋的問題（同 secrets 掃描）。
+      - name: 錯誤碼三方對帳（docs/API.md §5 ↔ LSErrorCode ↔ migrations errcode，LS-54／LS-56）
         run: bash scripts/gates/error-codes-check.sh
+
+      # LS-51：設計畫布（design-canvas*/）執行產物由根 .gitignore 統一 ignore，但 ignore 規則
+      # 管不到「已經在 index 裡」的檔（規則落地前就 commit 進去的、或 git add -f 硬加的）——
+      # 三軌的 _shotcheck.html 正是這個形狀。所以再驗 index 內沒有任何已追蹤檔命中 repo 內的
+      # .gitignore（pre-commit 的伺服器端兜底）。純檔案比對、不依賴 PR body，所有 PR 都跑。
+      # 自測與正式檢查同一 step、自測先跑：自測紅＝gate 沒牙，正式檢查的綠不可信。
+      # （獨立 step 而不併進上面「Gate 腳本自測」，是為了避開同時在飛的 LS-53 改同一 step；
+      #   LS-53 併入後可併回去，維持「一個地方跑所有 gate 自測」。）
+      - name: 已追蹤檔不得命中 .gitignore（tracked-ignored-check，LS-51）
+        run: |
+          bash scripts/gates/tracked-ignored-check.test.sh
+          bash scripts/gates/tracked-ignored-check.sh
 
       # LS-10：Migration rules 與 Design gate 這兩段內容檢查改比照上面的
       # commit-message 檢查，只在工作分支（feature|fix|hotfix）head 執行。
@@ -118,14 +133,33 @@ jobs:
               echo "::error::migration 變更必須伴隨 supabase/tests/ 的 RLS 測試變更（DB migration gate）"
               exit 1
             fi
-            # LS-34：比對前先剝除 SQL 註解（整行與行尾 `--`），註解裡提到
-            # 破壞性關鍵字不再誤判（LS-33 實測踩過，當時被迫用中文措辭迴避）
-            destructive=$(git diff "$base_sha"...HEAD -- supabase/migrations/ | grep '^+' | sed 's/--.*//' | grep -icE 'DROP TABLE|DROP COLUMN|DROP POLICY|DROP FUNCTION|DROP TRIGGER|DROP INDEX|DROP SCHEMA|DROP CONSTRAINT|DROP NOT NULL|TRUNCATE|DISABLE ROW LEVEL SECURITY|ALTER (TABLE|COLUMN).* TYPE ' || true)
-            # LS-45：核可標記改整行錨定（scripts/gates/destructive-approval-check.sh）——
-            # 純子字串比對曾被 PR body 的散文提及誤放行（PR #55 run 32626369903）
-            if [ "${destructive:-0}" -gt 0 ] && ! printf '%s' "$PR_BODY" | bash scripts/gates/destructive-approval-check.sh; then
-              echo "::error::偵測到破壞性 migration。此類變更需使用者本人依規約核可（docs/COLLABORATION.md §6）；agent 遇此錯誤必須停下回報使用者，不得自行處理"
+            # LS-53：分級改由 scripts/gates/migration-breaking-check.sh 做 statement 級判定（單一 pass 剝
+            # --／/* */ 註解後以 ; 切句；多行敘述、單一字面值的 execute '…' 動態 SQL 也認得——`||` 串接拆開的
+            # 多字關鍵字認不得，見該檔檔頭已知限制；規則表同檔頭）。
+            # 舊版逐行關鍵字 grep 命中 DROP POLICY 卻放過同義的 ALTER POLICY … (false)／REVOKE
+            # （PR #60 review F7，LS-48 曾以「不觸發偵測器」為選型理由）——想避開 gate 就換寫法的前例。
+            findings=$(bash scripts/gates/migration-breaking-check.sh --base "$base_sha") || exit 1
+            if [ -n "$findings" ]; then
+              printf 'migration 分級結果（級別<TAB>敘述）：\n%s\n' "$findings"
+            fi
+            # DESTRUCTIVE：維持既有——使用者本人在 PR body 蓋核可標記，LS-45 起整行錨定
+            # （scripts/gates/destructive-approval-check.sh；純子字串比對曾被散文提及誤放行，PR #55 run 32626369903）
+            if printf '%s\n' "$findings" | grep -q '^DESTRUCTIVE' \
+               && ! printf '%s' "$PR_BODY" | bash scripts/gates/destructive-approval-check.sh; then
+              echo "::error::偵測到破壞性 migration（見上方 DESTRUCTIVE 列）。此類變更需使用者本人依規約核可（docs/COLLABORATION.md §6）；agent 遇此錯誤必須停下回報使用者，不得自行處理"
               exit 1
+            fi
+            # BREAKING：既有呼叫端行為改變——PR body 須有行首的 BREAKING: 段落（scripts/gates/breaking-section-check.sh），
+            # 且 docs/API.md 同 PR 有變更（§6 API 變更紀律：契約文件跟著改）
+            if printf '%s\n' "$findings" | grep -q '^BREAKING'; then
+              if ! printf '%s' "$PR_BODY" | bash scripts/gates/breaking-section-check.sh; then
+                echo "::error::migration 改變既有呼叫端行為（見上方 BREAKING 列：ALTER POLICY／REVOKE／既有函式重定義等）。PR body 必須有行首的 BREAKING: 段落，同一行寫受影響的呼叫端與遷移路徑（docs/COLLABORATION.md §6）"
+                exit 1
+              fi
+              if [ -z "$(git diff --name-only "$base_sha"...HEAD -- docs/API.md)" ]; then
+                echo "::error::migration 被判 BREAKING 但 docs/API.md 在本 PR 沒有變更——呼叫端契約（權限／policy／RPC 行為）改了就要同 PR 更新契約文件（docs/COLLABORATION.md §6）"
+                exit 1
+              fi
             fi
           fi
 
@@ -232,9 +266,10 @@ jobs:
 
       # LS-54 D2：EXPLAIN 證據（supabase/tests/evidence/）不再進 repo——計時、規劃器估計值、
       # buffers hit 數、stderr/stdout 交錯順序每次都變，tracked 會讓本機跑一次測試就弄髒工作區。
-      # LS-6 驗收條件 c 的「留存」改落在這裡：每次 db job 綠燈都上傳成 artifact（GitHub 預設
-      # 保留 90 天）。run.sh 只在全部測試通過後才寫 evidence，所以不用 always()；綠了卻沒檔案
-      # 是 run.sh 壞了，if-no-files-found: error 直接紅，不靜默略過。
+      # LS-6 驗收條件 c 的「留存」改落在這裡：每次 db job 綠燈都上傳成 artifact，保留天數
+      # 顯式寫死 retention-days: 90（LS-56 F3：不押 repo／org 的環境預設，預設值改了驗收條件
+      # 不會跟著靜默漂移）。run.sh 只在全部測試通過後才寫 evidence，所以不用 always()；綠了
+      # 卻沒檔案是 run.sh 壞了，if-no-files-found: error 直接紅，不靜默略過。
       - name: 上傳 RLS plan 證據（supabase/tests/evidence → artifact）
         if: steps.detect.outputs.skip == 'false'
         uses: actions/upload-artifact@v4
@@ -242,6 +277,7 @@ jobs:
           name: rls-plan-evidence
           path: supabase/tests/evidence/
           if-no-files-found: error
+          retention-days: 90
 
   lint:
     runs-on: macos-15
