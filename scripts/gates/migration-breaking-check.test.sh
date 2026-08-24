@@ -85,6 +85,22 @@ expect BREAKING+DESTRUCTIVE '兩級並存（LS-37 invites 形狀：DROP POLICY�
 expect NONE '典型新增 RPC migration 全部不誤判' $'create table public.t (id uuid primary key);\nalter table public.t enable row level security;\ncreate policy p on public.t for select to authenticated using (true);\ngrant select on public.t to authenticated;\ncreate or replace function public.new_rpc() returns void language sql security definer set search_path = \'\' as $$ select 1 $$;\nrevoke execute on function public.new_rpc() from public, anon;\ngrant execute on function public.new_rpc() to authenticated;\ncreate index concurrently if not exists i on public.t (id);' "${K[@]}"
 expect NONE '空輸入' '' "${K[@]}"
 
+# ── PR #78 merge-reviewer R1 補樣本（B1／B2／M1／M2／I1：自測盲區曾與實作盲區重疊——R1 I10） ──
+expect DESTRUCTIVE 'R1-B1 末句無分號、檔尾有換行（reviewer 原樣本）' $'create index i on public.t (id);\ndrop table public.families\n' "${K[@]}"
+expect DESTRUCTIVE 'R1-B1 末句無分號、無結尾換行' $'create index i on public.t (id);\ndrop table public.families' "${K[@]}"
+expect BREAKING+DESTRUCTIVE 'R1-B2 -- 行註解內的 /* 不開啟塊註解（Postgres 詞法）' $'-- a /*\ndrop table public.families;\nrevoke insert on public.diaries from authenticated;\n-- b */' "${K[@]}"
+expect DESTRUCTIVE 'R1-B2 反向：/* */ 內的 -- 不吃掉 */' $'/* -- */ drop table public.families;' "${K[@]}"
+expect BREAKING+DESTRUCTIVE 'R1-M1 DROP FUNCTION 既有名稱＝同一句兩級' 'drop function public.existing_fn(uuid);' "${K[@]}"
+expect BREAKING+DESTRUCTIVE 'R1-M1 DROP FUNCTION IF EXISTS 既有名稱' 'drop function if exists public.existing_fn(uuid);' "${K[@]}"
+expect DESTRUCTIVE 'R1-M1 DROP FUNCTION 新名稱只 DESTRUCTIVE' 'drop function public.new_fn(uuid);' "${K[@]}"
+expect BREAKING 'R1-I1 點號旁空白 public . existing_fn' 'create or replace function public . existing_fn () returns void language sql as $$ select 1 $$;' "${K[@]}"
+expect NONE 'R1-I1 點號旁空白、新函式' 'create or replace function public . new_fn () returns void language sql as $$ select 1 $$;' "${K[@]}"
+if printf 'create or replace function public.x() returns void language sql as $$ select 1 $$;' | bash "$check" --known-functions "$work/nope.known" >/dev/null 2>&1; then
+  echo "✗ R1-M2 --known-functions 讀不到應 exit 1" >&2; fail=1
+else
+  echo "✓ R1-M2 --known-functions 讀不到 → exit 1（fail closed，不當新函式放行）"
+fi
+
 # ── 檔案清單模式 ───────────────────────────────────────────────────────────────
 printf 'drop table public.a;\n' > "$work/a.sql"
 printf 'alter policy p on public.b using (false);\n' > "$work/b.sql"
@@ -110,6 +126,20 @@ cd "$repo"
 expect BREAKING '--base：既有函式被 OR REPLACE（清單自 base 取）' '' --base base
 expect NONE '--base：只有新函式的 commit' '' --base HEAD~1
 cd "$root"
+printf 'drop function public.existing_fn()' > "$repo/supabase/migrations/004.sql"   # 無分號、無結尾換行（R1 B1 的 CI 實際路徑）
+gitc add -A && gitc commit -qm head3
+cd "$repo"
+expect BREAKING+DESTRUCTIVE '--base(R1)：末句無分號的 DROP FUNCTION 既有＝兩級' '' --base HEAD~1
+cd "$root"
+# 檔案邊界：005 末句 revoke authenticated 無分號、006 第一句 revoke public/anon——黏成一句時 REVOKE 只看最後的
+# from 子句而漏報；邊界補 ; 後必須 BREAKING
+printf 'revoke insert on public.t from authenticated' > "$repo/supabase/migrations/005.sql"
+printf 'revoke execute on function public.brand_new() from public, anon;\n' > "$repo/supabase/migrations/006.sql"
+gitc add -A && gitc commit -qm head4
+cd "$repo"
+expect BREAKING '--base(R1)：跨檔黏句——前檔末句無分號的 REVOKE authenticated 不被後檔蓋掉' '' --base HEAD~1
+cd "$root"
+expect BREAKING '檔案清單模式：跨檔黏句同上' '' "${K[@]}" "$repo/supabase/migrations/005.sql" "$repo/supabase/migrations/006.sql"
 if (cd "$repo" && bash "$check" --base no-such-rev >/dev/null 2>&1); then
   echo "✗ --base 壞 rev 應 exit 1" >&2; fail=1
 else
@@ -117,6 +147,6 @@ else
 fi
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ migration-breaking-check 自測通過（51 組樣本）"
+  echo "✓ migration-breaking-check 自測通過（64 組樣本）"
 fi
 exit "$fail"
