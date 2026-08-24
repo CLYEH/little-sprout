@@ -29,6 +29,8 @@
 
 降級同理：機械性小任務（批次改名、跑腳本回報）可用 haiku。升降級都要在派工訊息中註明理由。
 
+**審查類 agent 的 Linear 權限**（LS-60）：merge-reviewer 與 dead-code-sweeper 具 Linear 讀票（`get_issue`／`list_comments`）權，merge-reviewer 另具 `save_comment` 寫回權；兩者皆**無** `save_issue`（不得改狀態或票文）。審查依據以票文為準，不得只憑 commit／PR body 推斷。
+
 ## 2. 分支模型
 
 | Branch | 用途 | 規則 |
