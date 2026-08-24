@@ -10,17 +10,28 @@
 -- 保證，還是靠既有（LS-6）的既有行為。
 --
 -- ---------------------------------------------------------------------------
--- Mutation 自證（開發期用本機 Supabase CLI 映像手動驗證，非本檔自動執行）：
+-- Mutation 自證（開發期用本機 Supabase CLI 映像實跑 `supabase db reset` +
+-- `supabase/tests/run.sh` 手動驗證，非本檔自動執行；merge-reviewer PR #70
+-- review F1 抓到第一版的 M2 宣稱不成立——baseline 當時在作者的兩次自我呼叫「之後」
+-- 才擷取，同一個被 mutation 污染的函式先污染了 baseline 本身，後面的比對變成
+-- 拿被污染的值互相比對，假綠。下面四個 mutation 已針對修好的版本重新逐一單獨
+-- 套用、重跑，確認全部真的變紅）：
 --   M1：拿掉 migration 裡的兩句 ALTER POLICY（policy 維持收斂前的 owner 分支）
---       → 下面 §A 的「owner 直接 UPDATE 別人相簿 title 應影響 0 列」斷言變紅
---         （owner 分支還在，row_count 變成 1，title 真的被改掉）。
---   M2：把 set_album_deleted 的 UPDATE 多加一句 `title = 'HACKED'`
---       → 下面 §B「owner 軟刪別人相簿後 title 必須逐字不變」的斷言變紅。
+--       → §A「owner 直接 UPDATE 別人相簿 title 應影響 0 列」斷言變紅（owner 分支
+--         還在，row_count 變成 1，title 真的被改掉）。
+--   M2：把 set_album_deleted 尾端的 UPDATE 多加一句 `title = 'HACKED...'`
+--       → §B「作者軟刪自己的相簿時，deleted_at 以外的欄位被動到了」斷言變紅——
+--         baseline 修好之後，這個斷言在**作者自己的第一次呼叫**就抓到了，不必
+--         等到 owner 那一段才發現，比第一版的宣稱涵蓋更早、更嚴格。
+--   M2′：comments 版本（`set_comment_deleted` 尾端多加一句 `body = 'HACKED...'`）
+--       → §D 同樣在作者自己的第一次呼叫就變紅，且只有 §D 變紅、§A/§B/§C 依然
+--         全線通過（mutation 精準命中 comments，沒有連坐 albums 那一側）。
 --   M3：拿掉 set_album_deleted 裡的 `if not v_is_owner and (...) then raise ...`
---       授權檢查 → 下面 §B「viewer 軟刪別人相簿必須 42501」的斷言變紅。
--- 三個 mutation 都個別驗證過（各自單獨套用、其餘保持修好的版本），確認會讓對應
--- 的斷言、且只有對應的斷言，從綠變紅——不是整份測試檔一起爛掉的那種假陽性。
--- comments 側（set_comment_deleted）用同一支函式骨架，未重複列出對應的 M1'/M2'/M3'。
+--       授權檢查 → §B「非作者、非 owner 的 member 竟然可以用 set_album_deleted
+--       動別人的相簿」斷言變紅。
+-- 四個 mutation 都各自單獨套用（其餘保持修好的版本）、跑 `supabase db reset` 套用
+-- 到真實 schema、再跑 `run.sh` 全套，確認每次都精準命中對應斷言、其餘斷言正常
+-- 通過——不是整份測試檔一起爛掉的那種假陽性。
 -- ---------------------------------------------------------------------------
 
 \set ON_ERROR_STOP on
@@ -119,6 +130,25 @@ begin
   end if;
   raise notice 'ok：member（非作者）／viewer／非本家庭成員 對相簿 title 的直接 UPDATE 皆影響 0 列';
 
+  -- F3（merge-reviewer PR #70 review）：owner 直接 UPDATE 的目標欄位換成
+  -- deleted_at——owner 在 RPC 路徑本來就准動的唯一欄位——依然是 0 列。USING
+  -- 比對不上這一列的門檻在「是不是建立者」，不在乎這次想改哪個欄位；
+  -- docs/API.md §2「寫入路徑小結」已明寫這個行為，這裡補機械驗證，不只是
+  -- 文件宣稱。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  update public.albums set deleted_at = now() where id = v_album;
+  get diagnostics v_n = row_count;
+  reset role;
+  if v_n <> 0 then
+    raise exception 'FAIL：owner 直接 UPDATE 別人相簿的 deleted_at 竟然生效了（影響 % 列）——即使是 RPC 路徑准動的欄位，直接 UPDATE 仍應影響 0 列', v_n;
+  end if;
+  if (select deleted_at from public.albums where id = v_album) is not null then
+    raise exception 'FAIL：owner 直接 UPDATE 別人相簿的 deleted_at 竟然真的寫入了';
+  end if;
+  raise notice 'ok：owner 直接 UPDATE 別人相簿的 deleted_at（RPC 路徑准動的唯一欄位）同樣影響 0 列（F3）';
+
   -- 作者已離開家庭：完全不在 family_members 裡了
   delete from public.family_members where family_id = v_family and user_id = v_author;
   perform set_config('request.jwt.claims',
@@ -164,13 +194,15 @@ begin;
 do $$
 declare
   v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_child uuid := '2a000000-0000-4000-8000-000000000001';  -- fixture：A 家的孩子
+  v_cover uuid := '3a000000-0000-4000-8000-000000000001';  -- fixture：A 家的一張照片
   v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
   v_author uuid := 'a0000000-0000-4000-8000-000000000002';
   v_viewer uuid := 'a0000000-0000-4000-8000-000000000003';
   v_other_member uuid := 'a0000000-0000-4000-8000-000000000004';
   v_outsider uuid := 'b0000000-0000-4000-8000-000000000001';
   v_album uuid;
-  v_title_before text;
+  v_snapshot jsonb;
   v_deleted_at timestamptz;
 begin
   set local role postgres;
@@ -182,12 +214,24 @@ begin
   insert into public.family_members (family_id, user_id, role, can_upload)
   values (v_family, v_other_member, 'member', true);
 
-  insert into public.albums (family_id, title, created_by)
-  values (v_family, '會被軟刪又還原的相簿', v_author)
+  -- F1（merge-reviewer PR #70 review）：child_id／cover_media_id 刻意塞非 NULL 值
+  -- （收斂前的 fixture 沒帶這兩欄，「RPC 只寫 deleted_at」的斷言因此測不到這兩欄
+  -- 被動過——這裡補上，讓下面的整列比對真的涵蓋 albums 全部可能被竄改的欄位）。
+  insert into public.albums (family_id, title, child_id, cover_media_id, created_by)
+  values (v_family, '會被軟刪又還原的相簿', v_child, v_cover, v_author)
   returning id into v_album;
+
+  -- F1：baseline 必須在任何 RPC 呼叫之前擷取（INSERT 之後立刻拍照），不能在作者
+  -- 自己的 set_album_deleted 呼叫「之後」才拍——reviewer 重放 mutation（RPC 多寫
+  -- `title = 'HACKED'`）證實：若 baseline 晚於作者的兩次自我呼叫才擷取，作者那兩次
+  -- 呼叫已經先被同一個被竄改的函式污染過 title，baseline 拍到的就已經是「HACKED」，
+  -- 後面拿 owner 那次的結果去跟這個已經被污染的 baseline 比對，兩邊相等、斷言假綠。
+  -- 用 `to_jsonb(row) - 'deleted_at'` 整列比對（而不是隻列舉 title 一欄）：日後這
+  -- 兩張表加新欄位會自動被涵蓋，不必回頭記得在這裡加一行新的欄位比對。
+  select to_jsonb(a) - 'deleted_at' into v_snapshot from public.albums a where a.id = v_album;
   reset role;
 
-  -- 作者本人（仍是 contributor）：軟刪／還原自己的
+  -- 作者本人（仍是家庭成員）：軟刪／還原自己的
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
   set local role authenticated;
@@ -196,6 +240,10 @@ begin
   select deleted_at into v_deleted_at from public.albums where id = v_album;
   if v_deleted_at is null then
     raise exception 'FAIL：作者軟刪自己的相簿沒有生效';
+  end if;
+  if (select to_jsonb(a) - 'deleted_at' from public.albums a where a.id = v_album)
+     is distinct from v_snapshot then
+    raise exception 'FAIL：作者軟刪自己的相簿時，deleted_at 以外的欄位被動到了';
   end if;
 
   perform set_config('request.jwt.claims',
@@ -207,10 +255,15 @@ begin
   if v_deleted_at is not null then
     raise exception 'FAIL：作者還原自己的相簿沒有生效';
   end if;
-  raise notice 'ok：作者本人可以用 set_album_deleted 軟刪／還原自己的相簿';
+  if (select to_jsonb(a) - 'deleted_at' from public.albums a where a.id = v_album)
+     is distinct from v_snapshot then
+    raise exception 'FAIL：作者還原自己的相簿時，deleted_at 以外的欄位被動到了';
+  end if;
+  raise notice 'ok：作者本人可以用 set_album_deleted 軟刪／還原自己的相簿，且 title/child_id/cover_media_id 全程逐字不變';
 
-  -- owner（非作者）：軟刪別人的——這是 §10 授權的那件事，且只動 deleted_at
-  select title into v_title_before from public.albums where id = v_album;
+  -- owner（非作者）：軟刪別人的——這是 §10 授權的那件事，且只動 deleted_at。
+  -- 比對對象是 INSERT 後拍的 v_snapshot（未受前面兩次作者呼叫影響），不是重新在
+  -- 這裡才拍的「當下值」——這正是 F1 要修的那個 baseline 時機錯誤。
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
@@ -220,11 +273,11 @@ begin
   if v_deleted_at is null then
     raise exception 'FAIL：owner 用 set_album_deleted 軟刪別人的相簿沒有生效';
   end if;
-  if (select title from public.albums where id = v_album) is distinct from v_title_before then
-    raise exception 'FAIL：owner 軟刪別人的相簿時，title 被改動了（從「%」變成「%」）——set_album_deleted 不該碰得到內容欄位',
-      v_title_before, (select title from public.albums where id = v_album);
+  if (select to_jsonb(a) - 'deleted_at' from public.albums a where a.id = v_album)
+     is distinct from v_snapshot then
+    raise exception 'FAIL：owner 軟刪別人的相簿時，deleted_at 以外的欄位被動到了（title/child_id/cover_media_id 有一項跟 INSERT 當下的值不一樣）——set_album_deleted 不該碰得到內容欄位';
   end if;
-  raise notice 'ok：owner 可以用 set_album_deleted 軟刪別人的相簿，且 title 逐字不變';
+  raise notice 'ok：owner 可以用 set_album_deleted 軟刪別人的相簿，且整列（除 deleted_at 外）逐欄逐字不變';
 
   -- member（非作者、非 owner）：42501
   perform set_config('request.jwt.claims',
@@ -238,13 +291,13 @@ begin
   end;
   reset role;
 
-  -- viewer：42501
+  -- viewer（非作者）：42501
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_viewer, 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin
     perform public.set_album_deleted(v_album, false);
-    raise exception 'FAIL：viewer 竟然可以用 set_album_deleted 動相簿';
+    raise exception 'FAIL：非作者的 viewer 竟然可以用 set_album_deleted 動別人的相簿';
   exception when sqlstate '42501' then
     null;
   end;
@@ -263,7 +316,7 @@ begin
   reset role;
   raise notice 'ok：非作者非 owner 的 member／viewer／非本家庭成員呼叫 set_album_deleted 皆 42501';
 
-  -- 作者已離開家庭：連軟刪自己過去建立的都不行（跟直接 UPDATE 的判準一致）
+  -- 作者已離開家庭：完全不在 family_members 裡了，連軟刪自己過去建立的都不行
   delete from public.family_members where family_id = v_family and user_id = v_author;
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
@@ -279,25 +332,31 @@ begin
   values (v_family, v_author, 'member', true);
   raise notice 'ok：已離開家庭的前作者無法用 set_album_deleted 動自己過去建立的相簿';
 
-  -- 作者被降級成 viewer：同樣不行——這支 RPC 的作者分支判準逐字沿用收斂前
-  -- albums_update 作者分支的判準（要求仍是 contributor），跟 diaries 的
-  -- set_diary_deleted（作者分支只要求仍是任何角色的成員）刻意不同，見 migration
-  -- 說明；這裡驗證的正是「albums 沒有比照 diaries 放寬」這件事。
+  -- F5（orchestrator PR #70 review 裁決）：作者被降級成 viewer——仍在
+  -- family_members 裡，只是角色變成 viewer——現在**可以**軟刪／還原自己的相簿。
+  -- 對齊 LS-48 set_diary_deleted／本票 set_comment_deleted：移除／還原自己的東西
+  -- 只要求「當下仍是成員」，不要求仍是 contributor；「改內容」（§A 的直接 UPDATE）
+  -- 仍要求仍是 contributor，兩者是不同性質的操作，見 migration 對這支函式的裁量
+  -- 說明。此時相簿處於已軟刪狀態（上一段 owner 軟刪的結果），這裡用還原（false）
+  -- 順便驗證「降級後仍可雙向切換」，不是只測得到其中一個方向。
   update public.family_members set role = 'viewer'
    where family_id = v_family and user_id = v_author;
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  begin
-    perform public.set_album_deleted(v_album, false);
-    raise exception 'FAIL：被降級成 viewer 的前作者竟然還能用 set_album_deleted 動自己過去建立的相簿';
-  exception when sqlstate '42501' then
-    null;
-  end;
+  perform public.set_album_deleted(v_album, false);
   reset role;
+  select deleted_at into v_deleted_at from public.albums where id = v_album;
+  if v_deleted_at is not null then
+    raise exception 'FAIL：被降級成 viewer 的前作者，用 set_album_deleted 還原自己的相簿卻沒有生效';
+  end if;
+  if (select to_jsonb(a) - 'deleted_at' from public.albums a where a.id = v_album)
+     is distinct from v_snapshot then
+    raise exception 'FAIL：被降級成 viewer 的前作者還原相簿時，deleted_at 以外的欄位被動到了';
+  end if;
   update public.family_members set role = 'member'
    where family_id = v_family and user_id = v_author;
-  raise notice 'ok：被降級成 viewer 的前作者無法用 set_album_deleted 動自己過去建立的相簿（要求仍是 contributor，非本票新加限制）';
+  raise notice 'ok：被降級成 viewer 的前作者仍可用 set_album_deleted 軟刪／還原自己的相簿（F5：對齊 diaries／comments，只要求仍是成員，不要求仍是 contributor）';
 
   -- 不存在的相簿 → LS023
   perform set_config('request.jwt.claims',
@@ -408,6 +467,22 @@ begin
   end if;
   raise notice 'ok：非作者的 member／viewer／非本家庭成員 對留言 body 的直接 UPDATE 皆影響 0 列';
 
+  -- F3（merge-reviewer PR #70 review）：owner 直接 UPDATE 的目標欄位換成
+  -- deleted_at 依然是 0 列，同 §A 的說明。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  update public.comments set deleted_at = now() where id = v_comment;
+  get diagnostics v_n = row_count;
+  reset role;
+  if v_n <> 0 then
+    raise exception 'FAIL：owner 直接 UPDATE 別人留言的 deleted_at 竟然生效了（影響 % 列）——即使是 RPC 路徑准動的欄位，直接 UPDATE 仍應影響 0 列', v_n;
+  end if;
+  if (select deleted_at from public.comments where id = v_comment) is not null then
+    raise exception 'FAIL：owner 直接 UPDATE 別人留言的 deleted_at 竟然真的寫入了';
+  end if;
+  raise notice 'ok：owner 直接 UPDATE 別人留言的 deleted_at（RPC 路徑准動的唯一欄位）同樣影響 0 列（F3）';
+
   -- 作者已離開家庭：不在 family_ids() 裡了，不能再改
   delete from public.family_members where family_id = v_family and user_id = v_author;
   perform set_config('request.jwt.claims',
@@ -461,7 +536,7 @@ declare
   v_outsider uuid := 'b0000000-0000-4000-8000-000000000001';
   v_target_media uuid := '3a000000-0000-4000-8000-000000000001';
   v_comment uuid;
-  v_body_before text;
+  v_snapshot jsonb;
   v_deleted_at timestamptz;
 begin
   set local role postgres;
@@ -476,6 +551,11 @@ begin
   insert into public.comments (family_id, target_type, target_id, author_id, body)
   values (v_family, 'media', v_target_media, v_author, '會被軟刪又還原的留言')
   returning id into v_comment;
+
+  -- F1（merge-reviewer PR #70 review，同 §B 的說明）：baseline 必須在任何 RPC
+  -- 呼叫之前擷取，且改成整列比對（`to_jsonb(row) - 'deleted_at'`）而不是只列舉
+  -- body 一欄。
+  select to_jsonb(c) - 'deleted_at' into v_snapshot from public.comments c where c.id = v_comment;
   reset role;
 
   -- 作者本人（仍是任一角色成員）：軟刪／還原自己的
@@ -488,6 +568,10 @@ begin
   if v_deleted_at is null then
     raise exception 'FAIL：作者軟刪自己的留言沒有生效';
   end if;
+  if (select to_jsonb(c) - 'deleted_at' from public.comments c where c.id = v_comment)
+     is distinct from v_snapshot then
+    raise exception 'FAIL：作者軟刪自己的留言時，deleted_at 以外的欄位被動到了';
+  end if;
 
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
@@ -498,10 +582,14 @@ begin
   if v_deleted_at is not null then
     raise exception 'FAIL：作者還原自己的留言沒有生效';
   end if;
-  raise notice 'ok：作者本人可以用 set_comment_deleted 軟刪／還原自己的留言';
+  if (select to_jsonb(c) - 'deleted_at' from public.comments c where c.id = v_comment)
+     is distinct from v_snapshot then
+    raise exception 'FAIL：作者還原自己的留言時，deleted_at 以外的欄位被動到了';
+  end if;
+  raise notice 'ok：作者本人可以用 set_comment_deleted 軟刪／還原自己的留言，且 body 全程逐字不變';
 
-  -- owner（非作者）：軟刪別人的，只動 deleted_at
-  select body into v_body_before from public.comments where id = v_comment;
+  -- owner（非作者）：軟刪別人的，只動 deleted_at。比對對象是 INSERT 後拍的
+  -- v_snapshot（未受前面兩次作者呼叫影響），不是重新在這裡才拍的「當下值」。
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
@@ -511,11 +599,11 @@ begin
   if v_deleted_at is null then
     raise exception 'FAIL：owner 用 set_comment_deleted 軟刪別人的留言沒有生效';
   end if;
-  if (select body from public.comments where id = v_comment) is distinct from v_body_before then
-    raise exception 'FAIL：owner 軟刪別人的留言時，body 被改動了（從「%」變成「%」）——set_comment_deleted 不該碰得到內容欄位',
-      v_body_before, (select body from public.comments where id = v_comment);
+  if (select to_jsonb(c) - 'deleted_at' from public.comments c where c.id = v_comment)
+     is distinct from v_snapshot then
+    raise exception 'FAIL：owner 軟刪別人的留言時，deleted_at 以外的欄位被動到了（body 跟 INSERT 當下的值不一樣）——set_comment_deleted 不該碰得到內容欄位';
   end if;
-  raise notice 'ok：owner 可以用 set_comment_deleted 軟刪別人的留言，且 body 逐字不變';
+  raise notice 'ok：owner 可以用 set_comment_deleted 軟刪別人的留言，且整列（除 deleted_at 外）逐欄逐字不變';
 
   -- member（非作者、非 owner）／viewer（非作者）／非本家庭成員：皆 42501
   perform set_config('request.jwt.claims',

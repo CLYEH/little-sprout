@@ -221,13 +221,36 @@ race_case "同一篇日記：軟刪先動，編輯必須被阻塞後拿到 LS020
   diary_edit_vs_delete_setup.sql diary_edit_vs_delete_s1_delete.sql \
   diary_edit_vs_delete_s2_update.sql diary_edit_vs_delete_verify_delete_won.sql
 
+# LS-52 併發場景（merge-reviewer PR #70 review F2）：同一本相簿的直接 UPDATE（內容
+# 編輯）與 set_album_deleted（軟刪）同時發生。兩個方向缺一不可，理由同上一組——只跑
+# 單一方向，先動的那邊反正會在自己的 UPDATE 上取鎖，測不出後動那邊的寫入有沒有真的
+# 被序列化。**與 diary_edit_vs_delete 不同**：albums 沒有「已軟刪除不能編輯」的規則，
+# 兩個方向的最終狀態都是「編輯與軟刪皆生效」，不是其中一邊被擋下——見對應 verify
+# 檔案與 s2_update.sql 檔頭的說明。
+race_case "同一本相簿：直接編輯先動，軟刪必須被阻塞後才成功" \
+  album_edit_vs_delete_setup.sql album_edit_vs_delete_s1_update.sql \
+  album_edit_vs_delete_s2_delete.sql album_edit_vs_delete_verify_edit_first.sql
+race_case "同一本相簿：軟刪先動，直接編輯必須被阻塞後才成功" \
+  album_edit_vs_delete_setup.sql album_edit_vs_delete_s1_delete.sql \
+  album_edit_vs_delete_s2_update.sql album_edit_vs_delete_verify_delete_first.sql
+
+# LS-52 併發場景，comments 版本，結構同上。
+race_case "同一則留言：直接編輯先動，軟刪必須被阻塞後才成功" \
+  comment_edit_vs_delete_setup.sql comment_edit_vs_delete_s1_update.sql \
+  comment_edit_vs_delete_s2_delete.sql comment_edit_vs_delete_verify_edit_first.sql
+race_case "同一則留言：軟刪先動，直接編輯必須被阻塞後才成功" \
+  comment_edit_vs_delete_setup.sql comment_edit_vs_delete_s1_delete.sql \
+  comment_edit_vs_delete_s2_update.sql comment_edit_vs_delete_verify_delete_first.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 delete from public.families where id in (
   'fd000000-0000-4000-8000-000000000001',
   'fe000000-0000-4000-8000-000000000001',
   'ff000000-0000-4000-8000-000000000001',
-  'f2000000-0000-4000-8000-000000000001'
+  'f2000000-0000-4000-8000-000000000001',
+  'f3000000-0000-4000-8000-000000000001',
+  'f4000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -239,7 +262,11 @@ delete from auth.users where id in (
   'eb000000-0000-4000-8000-000000000002',
   'eb000000-0000-4000-8000-000000000003',
   'a9000000-0000-4000-8000-000000000001',
-  'a8000000-0000-4000-8000-000000000001'
+  'a8000000-0000-4000-8000-000000000001',
+  'a7000000-0000-4000-8000-000000000001',
+  'a6000000-0000-4000-8000-000000000001',
+  'a5000000-0000-4000-8000-000000000001',
+  'a4000000-0000-4000-8000-000000000001'
 );
 SQL
 run_sql "$cleanup" > /dev/null
