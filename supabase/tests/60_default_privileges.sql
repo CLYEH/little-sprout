@@ -345,9 +345,12 @@ $$;
 -- 不能執行」這條就算拿掉本票各支 RPC 自己的 revoke 也仍會通過（已實測）——這裡
 -- 真正單獨保證的是 authenticated 那一側；漏 grant 時炸的正是這一側。
 --
--- 白名單（8 支，行為各自已由對應 ticket 的測試逐支驗證過；這裡只驗授權面＋definer 硬化）：
+-- 白名單（11 支，行為各自已由對應 ticket 的測試逐支驗證過；這裡只驗授權面＋definer 硬化）：
 --   register_device_token          LS-6／LS-15（70_device_token_handover.sql、本檔第 7 段）
 --   其餘 7 支（create_invite…）    LS-33（80_join_approval.sql，行為驗收）
+--   diaries 三支寫入 RPC           LS-48（85_diaries_timeline.sql，行為驗收）
+--   （get_family_timeline 不在此清單：它是 security invoker，不是 definer，
+--   依賴 feed_items 既有的 RLS，不落在這段「public definer RPC」的檢查範圍內）
 --
 -- 排除 public.rls_auto_enable()：Supabase 平台自帶的 event trigger 支撐函式（見第 6 段），
 -- 不是本專案的 API RPC，本機開發映像沒有它，其收權已由第 6 段獨立驗證，不重複登記。
@@ -368,7 +371,10 @@ declare
     'public.withdraw_join(uuid)',
     'public.list_join_requests()',
     'public.get_my_join_request()',
-    'public.register_device_token(text, text)'
+    'public.register_device_token(text, text)',
+    'public.create_diary_entry(uuid, uuid, text, date)',
+    'public.update_diary_entry(uuid, text, date, uuid)',
+    'public.set_diary_deleted(uuid, boolean)'
   ];
   v_whitelist oid[];
   v_unknown text;
