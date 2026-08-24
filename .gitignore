@@ -19,3 +19,26 @@ Secrets.xcconfig
 # LS-54 D2：RLS plan 證據每次執行都不同（計時／規劃器估計／buffers／stderr 交錯順序），
 # 由 CI db job 上傳 artifact 留存，不進 repo
 supabase/tests/evidence/
+
+# LS-51：設計畫布三軌（design-canvas／design-canvas-d／後續 design-canvas-*）的執行產物統一在此 ignore。
+# 各軌自己的 .gitignore 只是這裡的子集（歷史上不一致：design-canvas 少 verified／shots／selftest.json，
+# 三軌都漏了 _shotcheck.html）。single source＝build.mjs＋tokens.mjs＋brush.mjs＋*.dc.html；
+# canvas.json／_root.json 雖由 build 重寫，但它們就是交付物本身＋measure 三方對帳的身分檔，刻意入版控。
+# ignore 規則管不到規則落地前就已追蹤的檔（_shotcheck.html 正是）——已追蹤檔命中下列規則由
+# scripts/gates/tracked-ignored-check.sh 擋（pre-commit＋CI rules），解法 git rm --cached。
+# _shot.mjs：截圖對照頁、暫存頁（正常結束會自刪，中途炸掉會留下）、截圖與結果
+design-canvas*/_shotcheck.html
+design-canvas*/_vp.html
+design-canvas*/_s_*.html
+design-canvas*/_b_*.html
+design-canvas*/shots/
+design-canvas*/shots.json
+# measure／verify／selftest：每跑一次就重寫
+design-canvas*/measured.json
+design-canvas*/verified.json
+design-canvas*/selftest.json
+design-canvas*/__pycache__/
+# build 打包檔：含 minified runtime，會誤觸 secrets 掃描——正解是不入版控
+design-canvas*/little-sprout-*.html
+design-canvas*/mengya-*.html
+design-canvas*/*-album-board.html
