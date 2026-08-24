@@ -48,8 +48,8 @@ if [ -d supabase/migrations ]; then
   bash "$(git rev-parse --show-toplevel)/scripts/gates/api-contract-check.sh"
 fi
 
-# 4) 錯誤碼對帳（docs/API.md §5 ↔ LSErrorCode，LS-54）：無條件跑——兩個檔案任一搬家
-#    就直接紅，逼著同 PR 更新這裡與 CI 的路徑，不靜默跳過。
+# 4) 錯誤碼三方對帳（docs/API.md §5 ↔ LSErrorCode ↔ migrations errcode，LS-54／LS-56）：
+#    無條件跑——三個來源任一搬家就直接紅，逼著同 PR 更新這裡與 CI 的路徑，不靜默跳過。
 bash "$(git rev-parse --show-toplevel)/scripts/gates/error-codes-check.sh"
 
 echo "✓ push gate 通過"

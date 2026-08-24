@@ -94,10 +94,10 @@ jobs:
           bash scripts/gates/error-codes-check.test.sh || rc=1
           exit "$rc"
 
-      # LS-54 N4′：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue 雙向對帳（本機
-      # push-gate 的伺服器端兜底）。所有 PR 都跑：純檔案比對、不依賴 PR body 標記，
-      # 沒有 promote／back-merge 誤擋的問題（同 secrets 掃描）。
-      - name: 錯誤碼對帳（docs/API.md §5 ↔ LSErrorCode，LS-54）
+      # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
+      # errcode 三方雙向對帳（本機 push-gate 的伺服器端兜底）。所有 PR 都跑：純檔案比對、
+      # 不依賴 PR body 標記，沒有 promote／back-merge 誤擋的問題（同 secrets 掃描）。
+      - name: 錯誤碼三方對帳（docs/API.md §5 ↔ LSErrorCode ↔ migrations errcode，LS-54／LS-56）
         run: bash scripts/gates/error-codes-check.sh
 
       # LS-10：Migration rules 與 Design gate 這兩段內容檢查改比照上面的

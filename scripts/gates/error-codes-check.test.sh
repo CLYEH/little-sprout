@@ -69,7 +69,7 @@ expect() {
     printf '%s\n' "$out" | sed 's/^/    /' >&2
     fail=1
   elif [ -n "$must" ] && ! printf '%s\n' "$out" | grep -qF -- "$must"; then
-    echo "✗ $name（exit 對了，但輸出缺少「$must」——紅的理由不對）" >&2
+    echo "✗ ${name}（exit 對了，但輸出缺少「${must}」——紅的理由不對）" >&2
     printf '%s\n' "$out" | sed 's/^/    /' >&2
     fail=1
   else
@@ -155,6 +155,9 @@ expect 1 '⑨ API.md 有、migrations 沒有（後端從不丟）' "$work/m.md" 
 #    正向對照：errcode 大小寫不拘、空白不拘
 migrations "$work/m_case" "  RAISE EXCEPTION 'x' USING ERRCODE='LS001';" "  raise exception 'y' using errcode   =   'LS010';"
 expect 0 '⑨ ERRCODE 大小寫／空白不拘（正向對照）' "$work/m.md" "$work/m.swift" "$work/m_case"
+
+# LS-56 R1 I10：§7 對照表寫死「19 組」——樣本被砍或 expect 呼叫漏掉時這裡紅，數字不會靜默漂移
+[ "$count" -eq 19 ] || { echo "✗ 樣本數應為 19，實得 ${count}" >&2; exit 1; }
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ error-codes-check 自測通過（${count} 組樣本）"
