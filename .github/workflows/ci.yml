@@ -97,10 +97,10 @@ jobs:
           bash scripts/gates/breaking-section-check.test.sh || rc=1
           exit "$rc"
 
-      # LS-54 N4′：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue 雙向對帳（本機
-      # push-gate 的伺服器端兜底）。所有 PR 都跑：純檔案比對、不依賴 PR body 標記，
-      # 沒有 promote／back-merge 誤擋的問題（同 secrets 掃描）。
-      - name: 錯誤碼對帳（docs/API.md §5 ↔ LSErrorCode，LS-54）
+      # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
+      # errcode 三方雙向對帳（本機 push-gate 的伺服器端兜底）。所有 PR 都跑：純檔案比對、
+      # 不依賴 PR body 標記，沒有 promote／back-merge 誤擋的問題（同 secrets 掃描）。
+      - name: 錯誤碼三方對帳（docs/API.md §5 ↔ LSErrorCode ↔ migrations errcode，LS-54／LS-56）
         run: bash scripts/gates/error-codes-check.sh
 
       # LS-51：設計畫布（design-canvas*/）執行產物由根 .gitignore 統一 ignore，但 ignore 規則
@@ -266,9 +266,10 @@ jobs:
 
       # LS-54 D2：EXPLAIN 證據（supabase/tests/evidence/）不再進 repo——計時、規劃器估計值、
       # buffers hit 數、stderr/stdout 交錯順序每次都變，tracked 會讓本機跑一次測試就弄髒工作區。
-      # LS-6 驗收條件 c 的「留存」改落在這裡：每次 db job 綠燈都上傳成 artifact（GitHub 預設
-      # 保留 90 天）。run.sh 只在全部測試通過後才寫 evidence，所以不用 always()；綠了卻沒檔案
-      # 是 run.sh 壞了，if-no-files-found: error 直接紅，不靜默略過。
+      # LS-6 驗收條件 c 的「留存」改落在這裡：每次 db job 綠燈都上傳成 artifact，保留天數
+      # 顯式寫死 retention-days: 90（LS-56 F3：不押 repo／org 的環境預設，預設值改了驗收條件
+      # 不會跟著靜默漂移）。run.sh 只在全部測試通過後才寫 evidence，所以不用 always()；綠了
+      # 卻沒檔案是 run.sh 壞了，if-no-files-found: error 直接紅，不靜默略過。
       - name: 上傳 RLS plan 證據（supabase/tests/evidence → artifact）
         if: steps.detect.outputs.skip == 'false'
         uses: actions/upload-artifact@v4
@@ -276,6 +277,7 @@ jobs:
           name: rls-plan-evidence
           path: supabase/tests/evidence/
           if-no-files-found: error
+          retention-days: 90
 
   lint:
     runs-on: macos-15
