@@ -189,6 +189,16 @@ jobs:
           export SUPABASE_DB_URL
           bash supabase/tests/run.sh
 
+      # LS-41：docs/API.md ↔ migrations 對帳。放在 db job 尾端而不是獨立 job：
+      # 這樣不必額外把新 job 名稱加進 branch protection 的 required checks
+      # （那是 orchestrator 才能動的 GitHub 設定），且與 db job 一樣在 push／
+      # pull_request 都會跑，比只在 PR 觸發的 rules job 涵蓋範圍更完整
+      # （back-merge／promote 若走直接 push 也會被驗到）。純文字比對，不依賴
+      # 前面幾步起的 DB，即使 supabase/ 目錄不存在（detect.outputs.skip）也一併略過。
+      - name: API 契約對帳（docs/API.md ↔ migrations，LS-41）
+        if: steps.detect.outputs.skip == 'false'
+        run: bash scripts/gates/api-contract-check.sh
+
   lint:
     runs-on: macos-15
     timeout-minutes: 15

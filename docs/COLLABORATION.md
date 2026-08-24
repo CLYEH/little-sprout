@@ -145,6 +145,7 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 | MCP 必要 env 變數必須存在（FIGMA_PERSONAL_ACCESS_TOKEN、SUPABASE_ACCESS_TOKEN） | `.mcp.json` 的 `${VAR:?}` 展開——缺失／空值時 server 啟動即炸，`/mcp` 可見（LS-42） | ✅（fail loud 設計） |
 | project.yml ↔ .xcodeproj 同步（XcodeGen 雙來源） | CI：重跑 `xcodegen generate` 後 `git add -A -- LittleSprout.xcodeproj && git diff --cached --exit-code`（涵蓋 xcodegen 產生的全新 untracked 檔，LS-10 補上原本只比對已追蹤檔案的盲區；生成物 byte-identical，不 flaky；雙向漂移皆攔） | ✅ |
 | 雲端 DB 不得繞過 migration 直改 | supabase MCP 以 `--read-only` 旗標鎖唯讀（機械，LS-43 起 PAT/stdio）；dashboard 路徑靠規約 | ⚠️ 混合 |
+| API 變更必同步 `docs/API.md` | `scripts/gates/api-contract-check.sh`：從 `supabase/migrations/*.sql` 機械抽出 public schema 的 RPC 簽章與表清單，比對 `docs/API.md` §9 的 `API-CONTRACT:RPC`／`API-CONTRACT:TABLES` 區塊，任一邊多、任一邊少（新增 RPC 忘記補文件、文件列了不存在的幽靈 RPC）都紅；掛在 push-gate（本機）＋ CI `db` job 尾端（與該 job 一樣在 push／pull_request 都跑，不限 PR，涵蓋 back-merge／promote 走直接 push 的情況）（LS-41） | ✅ hook＋CI |
 | harness 檔 back-merge 到 test／development | 無機械 gate——orchestrator 在 LS ticket 驗收條件中列入並人工確認 | ⚠️ 人工 |
 | scope 不越界、worktree 隔離 | 無法全機械化——merge-reviewer 的 scope 維度人工兜底 | ⚠️ 人工 |
 | QA 不得把跳過寫成 PASS | 無法機械化——orchestrator 驗 handoff 證據（截圖／輸出）兜底 | ⚠️ 人工 |
