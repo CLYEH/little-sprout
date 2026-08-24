@@ -37,7 +37,10 @@ final class SupabaseAuthService: AuthService {
         observeAuthChangesTask.cancel()
     }
 
-    /// 目前的登入狀態快取，安全用在 SwiftUI body（純記憶體讀取，不打 Keychain）。
+    /// 目前的登入狀態快取（純記憶體讀取，不打 Keychain，讀取本身可以安全放在 SwiftUI body
+    /// 裡不會拖慢重繪）。但這不是 Observable 屬性——背景更新（`authStateChanges` 監聽到的
+    /// 變化）不會通知任何 View 重繪，不得把它當成畫面的狀態來源（見 `AuthService.
+    /// currentSession` 協定文件；LS-17 需要另外包一層 observable，LS-55 N7）。
     var currentSession: AuthSession? {
         cachedSession.withLock { $0 }
     }

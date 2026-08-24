@@ -86,11 +86,14 @@ final class AppErrorTests: XCTestCase {
 
     // MARK: - PostgrestError
 
-    func test_map_postgrestError_customJoinApprovalCode_isValidationRetryable() {
+    func test_map_postgrestError_inviteCodeExhausted_isValidationRetryable() {
         // LS012：supabase/migrations/20260823010000_join_approval.sql——邀請碼使用次數已用完。
+        // 這是 tier 分類判斷的是「換個輸入重試同一動作」而不是碼開頭是不是 LS0（LS-55 N5：
+        // 舊訊息寫「自訂 LS0xx 碼應映射為 .validationRetryable」暗示所有 LS0xx 都同一個歸類，
+        // 跟現在 LS001/LS013 等 LS0xx 碼其實是 .rejected 互相矛盾，改成只針對 LS012 本身斷言）。
         let error = PostgrestError(code: "LS012", message: "邀請碼的使用次數已用完")
         guard case .validationRetryable(let message, let code) = AppError.map(error) else {
-            return XCTFail("自訂 LS0xx 碼應映射為 .validationRetryable")
+            return XCTFail("LS012（inviteCodeExhausted）應映射為 .validationRetryable，實際是不同的分類")
         }
         XCTAssertEqual(message, "邀請碼的使用次數已用完")
         XCTAssertEqual(code, "LS012")
@@ -175,19 +178,30 @@ final class AppErrorTests: XCTestCase {
             .diaryNotFoundOrDeleted,
             .diaryNotEditableByCaller,
             .albumNotFound,
-            .commentNotFound
+            .commentNotFound,
+            // LS022：游標是 app 自己組的，使用者沒有輸入可換，重試同一呼叫不會成功——
+            // 留在 validationRetryable 違反 N9 的定義（PR #77 R1 B2(b)；orchestrator 裁決）。
+            .timelineCursorIncomplete
         ]
         let expectedValidationRetryable: Set<LSErrorCode> = [
             .inviteCodeNotFound,
             .inviteCodeExpired,
             .inviteCodeExhausted,
-            .inviteCodeGenerationCollision,
-            .inviteParamsInvalid,
-            .timelineCursorIncomplete
+            .inviteParamsInvalid
+        ]
+        // LS-55 N9：LS016 從 .validationRetryable 移到這個新層——重試會成功，但不是使用者
+        // 輸入有誤（見 LSErrorCode.tier 的 case .inviteCodeGenerationCollision 註解）。
+        let expectedRetryableSystem: Set<LSErrorCode> = [
+            .inviteCodeGenerationCollision
         ]
 
-        XCTAssertEqual(expectedRejected.union(expectedValidationRetryable), Set(LSErrorCode.allCases))
+        XCTAssertEqual(
+            expectedRejected.union(expectedValidationRetryable).union(expectedRetryableSystem),
+            Set(LSErrorCode.allCases)
+        )
         XCTAssertTrue(expectedRejected.isDisjoint(with: expectedValidationRetryable))
+        XCTAssertTrue(expectedRejected.isDisjoint(with: expectedRetryableSystem))
+        XCTAssertTrue(expectedValidationRetryable.isDisjoint(with: expectedRetryableSystem))
 
         for code in expectedRejected {
             XCTAssertEqual(code.tier, .rejected, "\(code.rawValue) 應該是 .rejected")
@@ -195,6 +209,20 @@ final class AppErrorTests: XCTestCase {
         for code in expectedValidationRetryable {
             XCTAssertEqual(code.tier, .validationRetryable, "\(code.rawValue) 應該是 .validationRetryable")
         }
+        for code in expectedRetryableSystem {
+            XCTAssertEqual(code.tier, .retryableSystem, "\(code.rawValue) 應該是 .retryableSystem")
+        }
+    }
+
+    func test_map_postgrestError_inviteCodeGenerationCollision_isRetryableSystem() {
+        // LS016：邀請碼產生連續撞碼——機率極低的系統隨機性問題，使用者沒有輸入任何東西
+        // 可以「換掉」，跟 inviteCodeNotFound 那種使用者輸入類的 .validationRetryable
+        // 語意不同（LS-55 N9；PR #63 review R2）。
+        let error = PostgrestError(code: "LS016", message: "邀請碼產生連續撞碼，請重試")
+        guard case .retryableSystem(_, let code) = AppError.map(error) else {
+            return XCTFail("LS016 應映射為 .retryableSystem，實際是不同的分類")
+        }
+        XCTAssertEqual(code, "LS016")
     }
 
     func test_map_postgrestError_alreadyMember_isRejected() {
@@ -213,6 +241,30 @@ final class AppErrorTests: XCTestCase {
             return XCTFail("LS001 應映射為 .rejected")
         }
         XCTAssertEqual(code, "LS001")
+    }
+
+    // MARK: - userFacingMessage（LS-55 N3；PR #63 R2：零呼叫者但保留，因為 N9 的
+    // .retryableSystem 需要用它。留下就要有測試釘住「不外洩後端訊息」這個底線。）
+
+    func test_userFacingMessage_neverLeaksBackendMessage() {
+        // 刻意組一個像真的會從後端冒出來、混了 HTML／狀態碼／SQLSTATE 的原始訊息，逐 case
+        // 斷言 userFacingMessage 既不等於原始 message，也不包含裡面任何一段技術細節。
+        let leakyMessage = "<html>502 Bad Gateway</html> SQLSTATE 23505"
+        let cases: [AppError] = [
+            .network(message: leakyMessage),
+            .validationRetryable(message: leakyMessage, code: "LS010"),
+            .retryableSystem(message: leakyMessage, code: "LS016"),
+            .rejected(message: leakyMessage, code: "42501"),
+            .server(message: leakyMessage, code: nil)
+        ]
+
+        for appError in cases {
+            let userFacing = appError.userFacingMessage
+            XCTAssertNotEqual(userFacing, leakyMessage, "\(appError) 的 userFacingMessage 不該直接回傳原始 message")
+            XCTAssertFalse(userFacing.contains("<html"), "\(appError) 的 userFacingMessage 洩漏了 HTML 片段")
+            XCTAssertFalse(userFacing.contains("502"), "\(appError) 的 userFacingMessage 洩漏了 HTTP 狀態碼")
+            XCTAssertFalse(userFacing.contains("23505"), "\(appError) 的 userFacingMessage 洩漏了 SQLSTATE")
+        }
     }
 
     // MARK: - Helpers

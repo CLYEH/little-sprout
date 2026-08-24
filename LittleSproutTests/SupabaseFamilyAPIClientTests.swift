@@ -149,6 +149,28 @@ final class SupabaseFamilyAPIClientTests: XCTestCase {
         }
     }
 
+    func test_setRequireApproval_success_doesNotThrow() async throws {
+        let client = TestSupabaseClient.make { [userID, familyID] request in
+            XCTAssertEqual(request.url?.path, "/rest/v1/families")
+            XCTAssertEqual(request.httpMethod, "PATCH")
+            let body = try XCTUnwrap(request.bodyData)
+            let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Bool])
+            XCTAssertEqual(payload["require_approval"], false)
+            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+            [{
+              "id": "\(familyID.uuidString)",
+              "name": "葉家",
+              "created_by": "\(userID.uuidString)",
+              "created_at": "2026-08-24T00:00:00Z",
+              "require_approval": false
+            }]
+            """.utf8))
+        }
+        let apiClient = SupabaseFamilyAPIClient(client: client)
+
+        try await apiClient.setRequireApproval(familyID: familyID, requireApproval: false)
+    }
+
     func test_setRequireApproval_notOwner_throwsRejected() async {
         let client = TestSupabaseClient.make { request in
             XCTAssertEqual(request.httpMethod, "PATCH")

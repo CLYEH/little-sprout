@@ -8,6 +8,19 @@ import Supabase
 /// client（見 LittleSproutTests/Support/TestSupabaseClient.swift）。這裡只負責
 /// production 那顆真正打 `AppConfig` 指定專案的 client。
 enum SupabaseClientFactory {
+    /// 離線開 app 時：SDK 預設（false）會先嘗試用網路刷新本機 session，刷新失敗（連不上網）
+    /// 就把 `.initialSession` 事件的 session 灌成 nil——即使 Keychain 裡其實還有一份（可能
+    /// 過期的）session，`SupabaseAuthService` 的背景監聽（見該檔 `observeAuthChangesTask`）
+    /// 會照單全收，把快取覆寫成 nil，離線回訪被誤判成未登入（LS-55 N1）。設成 true 後 SDK
+    /// 改成同步直接發本機儲存的 session（不管有沒有過期），刷新失敗只會維持原值，不會覆寫成
+    /// nil；SDK 本身也已警告舊行為（false）將在下個 major 版本移除。
+    ///
+    /// 抽成常數（而不是直接寫死在 `makeClient()` 裡）並讓
+    /// `LittleSproutTests/Support/TestSupabaseClient.swift` 透過 `@testable import` 共用同一個
+    /// 值：N1 的測試要釘住的是「正式 factory 真的有開這個旗標」，如果測試端自己另外寫一份
+    /// `true`，正式路徑被改掉（或漏改）測試也不會紅，等於沒測到（PR #77 R1 M1）。
+    static let emitLocalSessionAsInitialSession = true
+
     static func makeClient() -> SupabaseClient {
         let url = AppConfig.supabaseURL
         // 只在 Debug/Test build 生效（Release build 中 assert 會被編譯器移除）：忘記建立
@@ -27,7 +40,10 @@ enum SupabaseClientFactory {
         )
         return SupabaseClient(
             supabaseURL: url,
-            supabaseKey: AppConfig.supabaseAnonKey
+            supabaseKey: AppConfig.supabaseAnonKey,
+            options: SupabaseClientOptions(
+                auth: .init(emitLocalSessionAsInitialSession: emitLocalSessionAsInitialSession)
+            )
         )
     }
 
