@@ -243,18 +243,29 @@ race_case "同一則留言：軟刪先動，直接編輯必須被阻塞後才成
   comment_edit_vs_delete_s2_update.sql comment_edit_vs_delete_verify_delete_first.sql
 
 # LS-52 併發場景，方向 C（merge-reviewer PR #70 review N1，第 2 輪）：作者把自己的
-# 相簿／留言直接 UPDATE 搬到自己也是 owner 的另一個家庭，與原家庭 owner 呼叫
-# set_album_deleted／set_comment_deleted 同時發生。這組才是真正驗到 `for update`
-# 必要性的場景——方向 A／B 改的是 title/body，不是授權判斷會讀的 family_id，測不出
-# 拿掉 `for update` 會不會造成跨家庭越權；這組改 family_id，拿掉 `for update` 會讓
-# 斷言變紅（原家庭 owner 對已搬到別家的相簿/留言完成軟刪）。詳細技術說明與 mutation
-# 證據見對應 s2_delete_after_move.sql 檔頭。
+# 相簿直接 UPDATE 搬到自己也是 owner 的另一個家庭，與原家庭 owner 呼叫
+# set_album_deleted 同時發生。這組才是真正驗到 `for update` 必要性的場景——方向
+# A／B 改的是 title，不是授權判斷會讀的 family_id，測不出拿掉 `for update` 會不會
+# 造成跨家庭越權；這組改 family_id，拿掉 `for update` 會讓斷言變紅（原家庭 owner
+# 對已搬到別家的相簿完成軟刪）。詳細技術說明與 mutation 證據見對應
+# s2_delete_after_move.sql 檔頭。
+#
+# LS-58：comments 版的同一組場景（原本在這裡）已隨 comments 收斂成 RPC-only 一起
+# 退役——update_comment 的參數只有 body，comments 的 UPDATE grant 也整個被收回，
+# authenticated 已經沒有任何路徑能搬動一則留言的 family_id，這個攻擊面在前提上就
+# 不成立了，不是靠鎖擋住。albums 目前仍是 hybrid 模式（作者直接 UPDATE 保留），
+# 這組場景對 albums 依然成立，繼續保留。詳見
+# supabase/tests/concurrency/comment_edit_vs_delete_s2_delete.sql 的說明。
 race_case "同一本相簿：作者搬家先動，owner 的軟刪必須被阻塞後正確拿到 42501" \
   album_edit_vs_delete_setup.sql album_edit_vs_delete_s1_move_family.sql \
   album_edit_vs_delete_s2_delete_after_move.sql album_edit_vs_delete_verify_move_blocked.sql
-race_case "同一則留言：作者搬家先動，owner 的軟刪必須被阻塞後正確拿到 42501" \
-  comment_edit_vs_delete_setup.sql comment_edit_vs_delete_s1_move_family.sql \
-  comment_edit_vs_delete_s2_delete_after_move.sql comment_edit_vs_delete_verify_move_blocked.sql
+
+# LS-58 併發場景：同一人對同一目標的兩次 toggle_reaction 幾乎同時發出，必須被
+# pg_advisory_xact_lock 序列化——沒有這把鎖，兩次呼叫都會查到「還沒按過」而各自
+# INSERT，第二次會撞 reactions_target_user_key 的 23505。
+race_case "同一人對同一目標：雙 toggle_reaction 必須序列化且淨效果歸零" \
+  reaction_toggle_race_setup.sql reaction_toggle_race_s1.sql \
+  reaction_toggle_race_s2.sql reaction_toggle_race_verify.sql
 
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
@@ -265,8 +276,8 @@ delete from public.families where id in (
   'f2000000-0000-4000-8000-000000000001',
   'f3000000-0000-4000-8000-000000000001',
   'f4000000-0000-4000-8000-000000000001',
-  'f8000000-0000-4000-8000-000000000001',
-  'f9000000-0000-4000-8000-000000000001'
+  'f6000000-0000-4000-8000-000000000001',
+  'f8000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -282,7 +293,8 @@ delete from auth.users where id in (
   'a7000000-0000-4000-8000-000000000001',
   'a6000000-0000-4000-8000-000000000001',
   'a5000000-0000-4000-8000-000000000001',
-  'a4000000-0000-4000-8000-000000000001'
+  'a4000000-0000-4000-8000-000000000001',
+  'a1000000-0000-4000-8000-000000000001'
 );
 SQL
 run_sql "$cleanup" > /dev/null

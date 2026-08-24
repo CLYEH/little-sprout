@@ -126,14 +126,15 @@ begin
     raise notice 'ok 隔離：A 家 owner 寫入 B 家 media 被 RLS 擋下 (42501)';
   end;
 
+  -- LS-58：comments 的 INSERT 收斂成 RPC-only（create_comment），直接 .insert() 對
+  -- 任何家庭（含自家）都已被 revoke，不再能單靠這裡驗出「跨家庭」這件事本身；改呼叫
+  -- RPC，驗的是 create_comment 自己的成員資格檢查擋下非本家庭成員。
   begin
-    insert into public.comments (family_id, target_type, target_id, author_id, body)
-    values ('fb000000-0000-4000-8000-000000000001', 'media',
-            '3b000000-0000-4000-8000-000000000001',
-            'a0000000-0000-4000-8000-000000000001', '我不該留得下這則留言');
+    perform public.create_comment('fb000000-0000-4000-8000-000000000001', 'media',
+      '3b000000-0000-4000-8000-000000000001', '我不該留得下這則留言');
     raise exception 'FAIL 隔離：A 家 owner 竟然可以在 B 家的照片下留言';
   exception when insufficient_privilege then
-    raise notice 'ok 隔離：A 家 owner 對 B 家 comments 的寫入被 RLS 擋下 (42501)';
+    raise notice 'ok 隔離：A 家 owner 呼叫 create_comment 對 B 家留言被擋下 (42501)';
   end;
 end;
 $$;

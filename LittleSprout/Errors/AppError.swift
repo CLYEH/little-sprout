@@ -65,6 +65,8 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     case timelineCursorIncomplete = "LS022"
     case albumNotFound = "LS023"
     case commentNotFound = "LS024"
+    case commentNotEditableByCaller = "LS025"
+    case targetFamilyMismatch = "LS026"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -82,8 +84,9 @@ enum LSErrorCode: String, CaseIterable, Sendable {
         case .familyMustHaveOwner, .storageQuotaExceeded,
              .alreadyMember, .alreadyHasPendingRequest, .requestNotFoundOrProcessed,
              .diaryNotFoundOrDeleted, .diaryNotEditableByCaller,
-             .albumNotFound, .commentNotFound, .timelineCursorIncomplete:
-            // 這三碼是 PR #63 review 明確指定的案例：已是成員／已有待審／申請已處理，
+             .albumNotFound, .commentNotFound, .commentNotEditableByCaller,
+             .targetFamilyMismatch, .timelineCursorIncomplete:
+            // 以下碼為 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
             // （指定新 owner、騰出空間或升級額度），不是「打錯字重打」能解的。
@@ -91,13 +94,19 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // 日記不存在或已軟刪要先還原、呼叫者已不是仍在家庭裡的作者——重送同一個
             // update_diary_entry／set_diary_deleted 不會變成功，要先做別的事。
             // albumNotFound／commentNotFound（LS-52，set_album_deleted／set_comment_deleted
-            // 的 LS023／LS024）同理：相簿或留言不存在，重送同一個 RPC 呼叫不會變成功，
-            // 呼叫端該做的是回上一頁或重新整理清單，不是原地重試。
+            // 的 LS023／LS024；LS-58 起 commentNotFound 也用於 update_comment）同理：相簿或
+            // 留言不存在，重送同一個 RPC 呼叫不會變成功，呼叫端該做的是回上一頁或重新整理
+            // 清單，不是原地重試。commentNotEditableByCaller（LS-58 補齊 LS025，
+            // update_comment）同理：不是作者本人、或雖是作者但已離開家庭，換輸入沒有用，
+            // UI 該做的是隱藏編輯入口，不是讓使用者重試。targetFamilyMismatch（LS-58 R1
+            // 補齊 LS026，create_comment／toggle_reaction）：target 存在但屬於別的家庭，
+            // 是呼叫端組錯參數的訊號，不是「換個輸入再試」能解的，UI 該做的是回上一頁或
+            // 重新整理，不是原地重試。
             // timelineCursorIncomplete（LS022）：游標參數（p_cursor_occurred_at／
-            // p_cursor_ref_id）是 app 自己從上一頁回應組出來的，不是使用者手動輸入的
-            // 東西——使用者沒有「換個輸入再送」這個動作可做，原地重試同一個
-            // get_family_timeline 呼叫不會變成功，該修的是呼叫端組游標的程式碼（或乾脆不帶
-            // 游標重新查詢）。歸在這裡而不是 validationRetryable，才符合 N9 定的準則——
+            // p_cursor_ref_id，或 list_comments 的對應游標，LS-58）是 app 自己從上一頁回應
+            // 組出來的，不是使用者手動輸入的東西——使用者沒有「換個輸入再送」這個動作可做，
+            // 原地重試同一個呼叫不會變成功，該修的是呼叫端組游標的程式碼（或乾脆不帶游標
+            // 重新查詢）。歸在這裡而不是 validationRetryable，才符合 N9 定的準則——
             // 「使用者能換輸入」才算 validationRetryable（PR #77 R1 B2(b)；orchestrator 裁決）。
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:

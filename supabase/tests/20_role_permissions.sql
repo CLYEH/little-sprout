@@ -26,12 +26,11 @@ begin
     raise notice 'ok：viewer 不能上傳照片 (42501)';
   end;
 
-  -- 但留言可以（§3）
-  insert into public.comments (family_id, target_type, target_id, author_id, body)
-  values ('fa000000-0000-4000-8000-000000000001', 'media',
-          '3a000000-0000-4000-8000-000000000001',
-          'a0000000-0000-4000-8000-000000000003', 'viewer 的留言');
-  raise notice 'ok：viewer 可以留言';
+  -- 但留言可以（§3）。LS-58：comments 的 INSERT 收斂成 RPC-only（create_comment），
+  -- 直接 .insert() 已被 revoke，這裡改呼叫 RPC。
+  perform public.create_comment('fa000000-0000-4000-8000-000000000001', 'media',
+    '3a000000-0000-4000-8000-000000000001', 'viewer 的留言');
+  raise notice 'ok：viewer 可以留言（create_comment RPC）';
 
   -- 也不能管理成員
   begin
