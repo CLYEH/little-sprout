@@ -14,10 +14,10 @@
 begin;
 
 select set_config('request.jwt.claims',
-  '{"sub":"g0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+  '{"sub":"a9000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 set local role authenticated;
 
-select public.set_diary_deleted('5g000000-0000-4000-8000-000000000001', true);
+select public.set_diary_deleted('59000000-0000-4000-8000-000000000001', true);
 
 select pg_sleep(3);
 

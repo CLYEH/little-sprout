@@ -354,6 +354,12 @@ $$;
 --     裡只有 5 列符合，若規劃器沒有真的選用 child 索引，篩選代價會跟資料總量成正比。
 -- ---------------------------------------------------------------------------
 
+-- 上面「主查詢 6」那段一路沿用檔案開頭的 `set local role authenticated;`（同一個
+-- transaction 內持續有效，不會自己過期）。這裡的 fixture 準備（建孩子、灌 20 萬列
+-- feed_items）需要繞過 RLS／grant，比照全檔其他 fixture 準備段落的慣例先切回
+-- postgres，稍後呼叫 get_family_timeline 前再切回 authenticated。
+reset role;
+
 -- 效能家（fc）原本沒有孩子；補一個給稀疏 child 篩選測試用
 insert into public.children (id, family_id, name, birthday)
 values ('2c000000-0000-4000-8000-000000000001', 'fc000000-0000-4000-8000-000000000001',
@@ -373,6 +379,11 @@ select 'fc000000-0000-4000-8000-000000000001', 'diary', gen_random_uuid(),
 analyze public.feed_items;
 analyze public.children;
 
+-- 切回 authenticated（jwt claims 沿用檔案開頭已經 set_config 過的 c0000000...，
+-- set_config 的設定不受 `set local role` 影響，仍然有效）：get_family_timeline 的
+-- 授權判斷（feed_items 的 RLS）需要真的以 authenticated 身分呼叫才有意義。
+set local role authenticated;
+
 do $$
 declare
   v_line text;
@@ -384,8 +395,12 @@ declare
   v_child constant uuid := '2c000000-0000-4000-8000-000000000001';
   v_family constant uuid := 'fc000000-0000-4000-8000-000000000001';
   -- review 實測壞掉的版本是 3516／4638 buffers；這裡留兩個數量級以上的餘裕，
-  -- 但足以區分「有沒有修好」（見上方說明）。
-  c_buffer_budget constant bigint := 60;
+  -- 但足以區分「有沒有修好」（見上方說明）。門檻抓 200 而不是更貼近「手寫 4 buffers」
+  -- 的數字：本機實測抓過 60 當門檻，撞到 61（hit=61 read=25，冷快取——這是本檔案
+  -- 剛灌完 20 萬列的第一次查詢，部分頁面還沒進 shared_buffers，是正常的一次性成本，
+  -- 不是索引選錯；同一個 session 再查一次通常會降到個位數）。200 依然比 3516／4638
+  -- 低了超過一個數量級，不會被冷快取的正常波動誤傷。
+  c_buffer_budget constant bigint := 200;
 begin
   -- (a) 深頁分頁，透過真正的 RPC 呼叫（不篩 child）
   v_plan := '';

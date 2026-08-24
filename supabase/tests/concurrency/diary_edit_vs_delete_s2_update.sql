@@ -22,7 +22,7 @@ declare
   v_other text := null;
 begin
   perform set_config('request.jwt.claims',
-    '{"sub":"g0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+    '{"sub":"a8000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
   set local role authenticated;
 
   -- 讓 session 1 的 set_diary_deleted（含取鎖）先跑完
@@ -31,7 +31,7 @@ begin
   v_t0 := clock_timestamp();
   begin
     perform public.update_diary_entry(
-      '5g000000-0000-4000-8000-000000000001', '軟刪之後還想改', current_date, null);
+      '59000000-0000-4000-8000-000000000001', '軟刪之後還想改', current_date, null);
   exception
     when sqlstate 'LS020' then v_ls020 := true;
     when others then v_other := sqlstate;

@@ -12,7 +12,7 @@ declare
   v_deleted timestamptz;
 begin
   select d.body, d.deleted_at into v_body, v_deleted from public.diaries d
-   where d.id = '5g000000-0000-4000-8000-000000000001';
+   where d.id = '59000000-0000-4000-8000-000000000001';
 
   if v_body <> '編輯先動的新內容' then
     raise exception 'FAIL 併發：最終 body 不是作者編輯後的內容（實際「%」）', v_body;

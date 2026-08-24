@@ -9,11 +9,11 @@
 begin;
 
 select set_config('request.jwt.claims',
-  '{"sub":"g0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  '{"sub":"a8000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 set local role authenticated;
 
 select public.update_diary_entry(
-  '5g000000-0000-4000-8000-000000000001', '編輯先動的新內容', current_date, null);
+  '59000000-0000-4000-8000-000000000001', '編輯先動的新內容', current_date, null);
 
 select pg_sleep(3);
 

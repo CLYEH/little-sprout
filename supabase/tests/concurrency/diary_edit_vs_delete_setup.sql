@@ -11,34 +11,34 @@
 
 \set ON_ERROR_STOP on
 
-delete from public.families where id = 'fg000000-0000-4000-8000-000000000001';
+delete from public.families where id = 'f2000000-0000-4000-8000-000000000001';
 delete from auth.users where id in (
-  'g0000000-0000-4000-8000-000000000001',
-  'g0000000-0000-4000-8000-000000000002'
+  'a9000000-0000-4000-8000-000000000001',
+  'a8000000-0000-4000-8000-000000000001'
 );
 
 insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at,
                         raw_app_meta_data, raw_user_meta_data)
 values
-  ('g0000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000',
-   'authenticated', 'authenticated', 'g-owner@ls48.test',  now(), now(), '{}', '{}'),
-  ('g0000000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000',
-   'authenticated', 'authenticated', 'g-member@ls48.test', now(), now(), '{}', '{}');
+  ('a9000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000',
+   'authenticated', 'authenticated', 'diary-race-owner@ls48.test',  now(), now(), '{}', '{}'),
+  ('a8000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000',
+   'authenticated', 'authenticated', 'diary-race-member@ls48.test', now(), now(), '{}', '{}');
 
 insert into public.profiles (id, display_name) values
-  ('g0000000-0000-4000-8000-000000000001', '編輯刪除競態家 owner'),
-  ('g0000000-0000-4000-8000-000000000002', '編輯刪除競態家 作者');
+  ('a9000000-0000-4000-8000-000000000001', '編輯刪除競態家 owner'),
+  ('a8000000-0000-4000-8000-000000000001', '編輯刪除競態家 作者');
 
 -- created_by 由 add_creator_as_owner trigger 寫成 owner
 insert into public.families (id, name, created_by) values
-  ('fg000000-0000-4000-8000-000000000001', '編輯刪除競態家', 'g0000000-0000-4000-8000-000000000001');
+  ('f2000000-0000-4000-8000-000000000001', '編輯刪除競態家', 'a9000000-0000-4000-8000-000000000001');
 
 insert into public.family_members (family_id, user_id, role) values
-  ('fg000000-0000-4000-8000-000000000001', 'g0000000-0000-4000-8000-000000000002', 'member');
+  ('f2000000-0000-4000-8000-000000000001', 'a8000000-0000-4000-8000-000000000001', 'member');
 
 insert into public.diaries (id, family_id, author_id, body, entry_date) values
-  ('5g000000-0000-4000-8000-000000000001', 'fg000000-0000-4000-8000-000000000001',
-   'g0000000-0000-4000-8000-000000000002', '原始內容', current_date);
+  ('59000000-0000-4000-8000-000000000001', 'f2000000-0000-4000-8000-000000000001',
+   'a8000000-0000-4000-8000-000000000001', '原始內容', current_date);
 
 do $$
 declare
@@ -47,9 +47,9 @@ declare
   v_deleted timestamptz;
 begin
   select count(*) into v_owners from public.family_members
-   where family_id = 'fg000000-0000-4000-8000-000000000001' and role = 'owner';
+   where family_id = 'f2000000-0000-4000-8000-000000000001' and role = 'owner';
   select d.body, d.deleted_at into v_body, v_deleted from public.diaries d
-   where d.id = '5g000000-0000-4000-8000-000000000001';
+   where d.id = '59000000-0000-4000-8000-000000000001';
 
   if v_owners <> 1 then
     raise exception 'SETUP FAIL：編輯刪除競態家應有 1 位 owner，實際 %', v_owners;

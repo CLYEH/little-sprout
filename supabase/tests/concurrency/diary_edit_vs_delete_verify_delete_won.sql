@@ -12,7 +12,7 @@ declare
   v_deleted timestamptz;
 begin
   select d.body, d.deleted_at into v_body, v_deleted from public.diaries d
-   where d.id = '5g000000-0000-4000-8000-000000000001';
+   where d.id = '59000000-0000-4000-8000-000000000001';
 
   if v_deleted is null then
     raise exception 'FAIL 併發：先 commit 的軟刪被推翻了（deleted_at 竟然是 NULL）';
