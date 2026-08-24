@@ -29,7 +29,7 @@
 
 降級同理：機械性小任務（批次改名、跑腳本回報）可用 haiku。升降級都要在派工訊息中註明理由。
 
-**審查類 agent 的 Linear 權限**（LS-60）：merge-reviewer 與 dead-code-sweeper 具 Linear 讀票（`get_issue`／`list_comments`）權，merge-reviewer 另具 `save_comment` 寫回權；兩者皆**無** `save_issue`（不得改狀態或票文）。審查依據以票文為準，不得只憑 commit／PR body 推斷。
+**審查類 agent 的工具與 Linear 權限**（LS-60）：merge-reviewer 與 dead-code-sweeper 的定義檔**不列 `tools:`**（明列白名單時 MCP 工具不會交給 subagent，實測連 Grep/Glob 都被剝掉）；兩者繼承全部工具，但「只審不改」由 prompt 硬規定＋收工證明（`git status --porcelain` 為空）把關；Linear 只准 `get_issue`／`list_comments`，merge-reviewer 另准 `save_comment`；禁 `save_issue`。審查依據以票文為準，不得只憑 commit／PR body 推斷。
 
 ## 2. 分支模型
 

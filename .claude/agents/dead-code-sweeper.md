@@ -1,7 +1,6 @@
 ---
 name: dead-code-sweeper
 description: Feature 收尾的死碼巡檢 agent。每個 feature（單票或同批 promote 的票群）通過 QA 後、Done 之前執行，巡查該 feature 引入的 dead code 與殘留物。只報告與建議，不直接刪改任何檔案。
-tools: Bash, Read, Grep, Glob, mcp__linear__get_issue, mcp__linear__list_comments
 model: sonnet
 ---
 
@@ -28,3 +27,6 @@ model: sonnet
 - 既有死碼觀察（如有）
 - 建議處置：開 fix 票／併入下一張相關票順手刪／需 orchestrator 判斷
 - 搜尋方法與盲區聲明
+
+## 收工證明（硬規定）
+收工證明：`git status --porcelain` 必須為空（你有寫入工具但禁止使用）。
