@@ -20,6 +20,16 @@ if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1;
     echo "✗ push gate：模擬器偵測失敗。" >&2
     exit 1
   }
+  # LS-56：fresh worktree 首次 SPM 解析偶發瞬斷（xcodebuild「Could not resolve package
+  # dependencies / Couldn't check out revision」，重跑即過——LS-54 back-merge 實測）。先單獨
+  # 解析一次、失敗隔 10 秒再重試一次：LS-56 自己的首次 push 實測「立刻重試」3 秒後仍紅、
+  # 隔一陣子再跑就綠，所以退避要有；解析步驟很快，不必把整套 test 重跑（也不會順手蓋掉
+  # 真正的測試 flaky）。重試那次不帶 -quiet，再紅時才看得到是哪個 package 為什麼 checkout 失敗。
+  if ! xcodebuild -resolvePackageDependencies -scheme "$XCODE_SCHEME" -quiet; then
+    echo "⚠ push gate：SPM 解析失敗，10 秒後重試一次…" >&2
+    sleep 10
+    xcodebuild -resolvePackageDependencies -scheme "$XCODE_SCHEME"
+  fi
   echo "→ push gate：執行 unit tests（scheme: ${XCODE_SCHEME}, destination: ${dest}）…"
   # LS-54 N8：與 CI 一致，明確序列執行（MockURLProtocol 全域 handler 不可平行）
   xcodebuild test \
