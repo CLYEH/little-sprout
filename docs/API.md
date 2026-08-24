@@ -13,7 +13,7 @@
 > `docs/COLLABORATION.md` §7。
 >
 > **這份文件涵蓋的分支狀態**：以 `development` 分支當下的 migrations 為準（含 LS-6／LS-15／
-> LS-33／LS-36／LS-37／LS-40／LS-48／LS-52）。
+> LS-33／LS-36／LS-37／LS-40／LS-48／LS-52／LS-58）。
 
 ## 目錄
 
@@ -67,33 +67,35 @@
 | `album_media` | 同上 | owner／member | owner／member | owner／member | 連結表自帶 `family_id`，policy 不必 join 回 `albums` |
 | `diaries` | 我所屬家庭的日記 | 🔒 **RPC-only**（`create_diary_entry`，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（body／entry_date／child_id）僅作者本人用 `update_diary_entry`；軟刪／還原（`deleted_at`）作者自己的或 owner 任何一篇，皆用 `set_diary_deleted`（直接 UPDATE 已被 revoke） | owner-only（硬刪，policy 未變） | LS-48 收斂：owner 不能像 `albums` 那樣直接改寫別人日記的內容，只能移除 |
 | `diary_media` | 同上 | owner／member | owner／member | owner／member | 同 `album_media` |
-| `comments` | 我所屬家庭 | **任何角色**（含 viewer） | 🔀 **混合模式（LS-52）**：內容（`body`）僅作者本人直接 `.update()`；軟刪／還原（`deleted_at`）作者自己的可直接 `.update()`，owner 對別人留言僅能用 `set_comment_deleted` RPC | owner-only | Viewer 能留言，符合 PLAN §3；owner 對別人留言的內容**沒有**直接 `.update()` 路徑 |
-| `reactions` | 我所屬家庭 | **任何角色** | ❌ 無 update policy（收回愛心走 DELETE） | 僅自己按的 | `UNIQUE(target_type, target_id, user_id)`：同一目標重複按會拿到 `23505` |
+| `comments` | 我所屬家庭 | 🔒 **RPC-only**（`create_comment`，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`body`）僅作者本人用 `update_comment`；軟刪／還原（`deleted_at`）作者自己的或 owner 任何一則，皆用 `set_comment_deleted`（直接 UPDATE 已被 revoke） | owner-only（硬刪，policy 未變） | LS-58 收斂：取代 LS-52 的 hybrid 模式，理由與 `diaries` 同型（見 §3「為什麼 albums／comments／diaries 用了三套不同的寫入模型」）；Viewer 仍能呼叫 `create_comment`／`update_comment`，符合 PLAN §3 |
+| `reactions` | 我所屬家庭 | 🔒 **RPC-only**（`toggle_reaction`，直接 INSERT 已被 revoke） | ❌ 無 update policy（沒有可改的內容欄位） | 🔒 **RPC-only**（`toggle_reaction`，直接 DELETE 已被 revoke） | LS-58：加入／收回都收斂進 `toggle_reaction`，不再需要呼叫端自己處理 `23505`（見 §4） |
 | `device_tokens` | 僅自己的裝置 | ⚠️ 見下方 | 僅自己 | 僅自己 | **換裝置／換帳號登入請務必呼叫 `register_device_token` RPC，不要直接 INSERT／UPSERT**（見 §4） |
 | `feed_items` | 我所屬家庭的時間軸 | 🔒 唯讀（trigger 維護） | 🔒 唯讀 | 🔒 唯讀 | 沒有任何 client 可寫入的路徑，連 grant 都沒有；混排查詢建議走 `get_family_timeline` RPC（見 §4），不要直接 `.from("feed_items")` 拼 keyset 條件 |
 | `content_reports` | 自己送出的＋（若是 owner）自家的 | **任何家庭成員** | 僅 `status` 欄，owner-only，且只能改成 `resolved`（不能 `dismissed`） | ❌ 無 delete policy | 駁回（`dismissed`）保留給平台方用 `service_role`／Dashboard 處理 |
 | `blocked_users` | 僅自己封鎖的名單（`blocker_id = 我`） | 僅自己 | ❌ 無 update policy | 僅自己 | 被封鎖者看不到自己被封鎖 |
 | `join_requests` | 自己送出的申請＋（若是 owner）自家的待審申請 | 🔒 **RPC-only**（`request_join`） | 🔒 **RPC-only**（`approve_join`／`reject_join`／`withdraw_join`） | 🔒 無 delete policy | 沒有任何 client 直接寫入路徑，grant 只有 SELECT |
+| `notification_events` | 🔒 **完全不可讀**（成員無 grant 也無 policy） | 🔒 唯讀（trigger 維護） | 🔒 唯讀 | 🔒 唯讀 | LS-58：推播彙總佇列的資料面，只給 `service_role`（LS-22 的 Edge Function）讀寫；見 §3 |
 
 **寫入路徑小結（給 iOS 呼叫端的心智模型）**：`family_members`／`invites`／`join_requests`／
-`diaries` 四張表**完全不能**用 `.insert()`／`.update()`（`family_members` 的 `role`／
-`can_upload` 例外，見上表；`diaries` 的硬刪 `.delete()` 仍走 policy 直接允許，見上表），
-一律呼叫對應 RPC；其餘表可用 PostgREST 的 `.from(...)` 直接讀寫，但每張表都有欄位級或
-列級限制，寫超出範圍會拿到 `42501`（grant 層）或該欄位的 `CHECK`/`NOT NULL` 違反碼
-（policy 通過但值不合法）。
+`diaries`／`comments`／`reactions` 六張表**完全不能**用 `.insert()`／`.update()`／
+`.delete()`（`family_members` 的 `role`／`can_upload` 例外，見上表；`diaries`／`comments`
+的硬刪 `.delete()` 仍走 policy 直接允許，見上表），一律呼叫對應 RPC；其餘表可用
+PostgREST 的 `.from(...)` 直接讀寫，但每張表都有欄位級或列級限制，寫超出範圍會拿到
+`42501`（grant 層）或該欄位的 `CHECK`/`NOT NULL` 違反碼（policy 通過但值不合法）。
 
-**例外（LS-52）：`albums`／`comments` 的越權 `.update()` 不會回 `42501`，而是靜默影響 0
-列**——`albums_update`／`comments_update` 的 USING 子句只有「建立者／作者本人」這一個
-分支，owner 對別人的相簿／留言下 `.update()` 時，那一列根本不在 USING 比對得到的範圍
-內，Postgres 對「比對不上 USING 的列」的標準反應是直接排除、不觸發任何錯誤（跟對一個
-不存在的 `id` 下 `.update()` 一樣，`PATCH` 回應是 200 但 body 是空陣列，不是 4xx）。
-這**不是** grant 層限制（不會有 `42501`），也不是 `CHECK` 違反（不會有 `23514`）——
-呼叫端必須自己檢查回傳的受影響列數／`return=representation` 的內容判斷「這次
-`.update()` 到底改到了沒有」，不能假設「沒有丟出錯誤＝改到了」。owner 想對別人的
-相簿／留言做事，唯一有意義的操作是移除／還原，要呼叫 `set_album_deleted`／
-`set_comment_deleted` RPC（見 §4）——這兩支呼叫失敗時**會**丟出明確的 `42501`／
-`LS023`／`LS024`，不會有「靜默 0 列」這種模稜兩可的結果，是這兩張表唯一保證「失敗必
-噴錯」的寫入路徑。
+**例外（LS-52，僅 `albums` 適用）：owner 越權 `.update()` 不會回 `42501`，而是靜默影響
+0 列**——`albums_update` 的 USING 子句只有「建立者本人」這一個分支，owner 對別人的
+相簿下 `.update()` 時，那一列根本不在 USING 比對得到的範圍內，Postgres 對「比對不上
+USING 的列」的標準反應是直接排除、不觸發任何錯誤（跟對一個不存在的 `id` 下 `.update()`
+一樣，`PATCH` 回應是 200 但 body 是空陣列，不是 4xx）。這**不是** grant 層限制（不會有
+`42501`），也不是 `CHECK` 違反（不會有 `23514`）——呼叫端必須自己檢查回傳的受影響列數／
+`return=representation` 的內容判斷「這次 `.update()` 到底改到了沒有」，不能假設
+「沒有丟出錯誤＝改到了」。owner 想對別人的相簿做事，唯一有意義的操作是移除／還原，
+要呼叫 `set_album_deleted` RPC（見 §4）——這支呼叫失敗時**會**丟出明確的 `42501`／
+`LS023`，不會有「靜默 0 列」這種模稜兩可的結果。**`comments` 不再適用這條例外**：
+LS-58 把 `comments` 的寫入面整個收斂成 RPC-only（同 `diaries`），直接 `.update()` 對
+任何人（含作者本人）都會回 `42501`，不會有靜默 0 列的情況；`set_comment_deleted` 對
+失敗情境的保證與 `set_album_deleted` 相同。
 
 ---
 
@@ -176,33 +178,44 @@
   - 硬刪（真正 `DELETE` 整列）仍是 owner-only 的直接 policy，未被收斂進 RPC。
 - `diaries`（LS-48 起，見 §2 表與 §4 三支 RPC）：
   - 新增／編輯內容／軟刪都是 **RPC-only**，直接 `.insert()`／`.update()` 一律 `42501`
-    （這點與 `albums`／`comments` 不同：後兩者的作者仍保留直接 `.update()` 路徑）。
+    （這點與 `albums` 不同：`albums` 的作者仍保留直接 `.update()` 路徑，見上方）。
+    `comments` 自 LS-58 起也是這個模式，見 §3「comments / reactions」段。
   - Owner 對別人日記**只有軟刪權**（`set_diary_deleted`），**沒有**編輯內容的權限。
   - 硬刪（真正 `DELETE` 整列）仍是 owner-only 的直接 policy，未被收斂進 RPC。
 
-**為什麼 `albums`／`comments`／`diaries` 用了三套不同的寫入模型**：這個 codebase 目前
-刻意並存三種模式，差別在於「owner 分支需不需要被收斂」與「收斂之後選哪種機制」：
+**為什麼 `albums`／`comments`／`diaries` 曾經、現在用了不同的寫入模型**：`comments`
+自 LS-58 起已經改用跟 `diaries` 相同的 RPC-only 模式，取代 LS-52 當時採用的 hybrid
+模式——這裡完整記錄演進過程與取捨，而不是只留最終狀態，因為「為什麼 albums 現在還是
+hybrid、comments 不是」這個問題如果只看 schema 本身看不出來，得知道 comments 曾經也是
+hybrid 才看得懂 albums 為什麼沒有跟著一起改：
 
 1. **`media`（單一允許欄位集合，見上方 `media` 段）**：owner 分支與上傳者分支雖然是
    兩條 USING 分支，但兩邊允許改的欄位集合本來就相同（`taken_at`／`deleted_at`／
    `width`／`height`），跟「這一列是不是我建立的」無關，所以純粹用 column-level
    grant（角色層級、不分列）就能表達，不需要 RPC。
-2. **`diaries`（RPC-only，LS-48）**：`diaries_update` policy 原本讓 owner 能改寫別人
-   日記的**任意欄位**（不只 `deleted_at`），超出 PLAN §10「Owner 移除內容」授權的
-   範圍。修法把 INSERT／UPDATE 整個收斂成三支 RPC，直接寫入的 grant 也一併 revoke。
-3. **`albums`／`comments`（混合模式，LS-52）**：跟 diaries 是同一種洞（owner 分支
-   不限欄位），但修法**沒有**照抄 diaries 的「整表收斂成 RPC-only」：這個洞只出在
-   owner 分支，建立者改自己內容的那個分支本來就沒有問題，收斂範圍只動 owner 分支，
-   建立者／作者的直接 `.update()` 路徑與 grant 都原封不動——`set_album_deleted`／
-   `set_comment_deleted` 兩支 RPC 只服務 owner 對別人內容的軟刪／還原，不像 diaries
-   的三支 RPC 服務了新增與編輯。曾經考慮過比照 `families`／`content_reports` 用
-   column-level grant 收斂（欄位級 grant 是角色層級、不分列，只有在「不論走 owner
-   分支還是作者分支，允許改的欄位集合都一樣」時才適用，`media` 正是這種形狀）；
-   但 albums／comments 的兩個分支允許的欄位集合本來就該不同（作者能動全部內容欄位，
-   owner 只能動 `deleted_at`），column-level grant 對同一個角色（`authenticated`）
-   物理上表達不出「依這一列是不是我建立的，給不同欄位集合」，這條路走不通，改採
-   RPC，理由與取捨細節見
-   `supabase/migrations/20260825010000_albums_comments_owner_scope.sql` 檔頭。
+2. **`diaries`（RPC-only，LS-48）／`comments`（RPC-only，LS-58）**：`diaries_update`
+   policy 原本讓 owner 能改寫別人日記的**任意欄位**（不只 `deleted_at`），超出
+   PLAN §10「Owner 移除內容」授權的範圍。LS-48 修法把 `diaries` 的 INSERT／UPDATE
+   整個收斂成三支 RPC，直接寫入的 grant 也一併 revoke。LS-52 當時修 `comments`／
+   `albums` 同一種洞（見下一點的 hybrid 說明）；LS-58 為了新增
+   `create_comment`／`update_comment` 這兩支寫入 RPC（給留言分頁讀取＋推播彙總
+   trigger 一個單一、可稽核的寫入入口），順勢把 `comments` 也整個收斂成 RPC-only，
+   取代 LS-52 的 hybrid——但**只收斂 comments，不動 albums**（見下一點）：這是本票
+   刻意的範圍控制，不是「反正都要動就一起改」，albums 沒有出現任何要求它跟著一起
+   收斂的新需求（沒有 list_albums 這類新 RPC 要建），維持 LS-52 當時的裁量。
+3. **`albums`（hybrid 模式，LS-52，至今未變）**：跟 `diaries`／`comments` 是同一種洞
+   （owner 分支不限欄位），但 LS-52 修法**沒有**照抄「整表收斂成 RPC-only」：這個洞
+   只出在 owner 分支，建立者改自己內容的那個分支本來就沒有問題，收斂範圍只動 owner
+   分支，建立者的直接 `.update()` 路徑與 grant 都原封不動——`set_album_deleted` 只
+   服務 owner 對別人相簿的軟刪／還原，不像 `diaries`／`comments` 的 RPC 服務了新增
+   與編輯。曾經考慮過比照 `families`／`content_reports` 用 column-level grant 收斂
+   （欄位級 grant 是角色層級、不分列，只有在「不論走 owner 分支還是作者分支，允許改
+   的欄位集合都一樣」時才適用，`media` 正是這種形狀）；但 `albums` 的兩個分支允許的
+   欄位集合本來就該不同（作者能動全部內容欄位，owner 只能動 `deleted_at`），
+   column-level grant 對同一個角色（`authenticated`）物理上表達不出「依這一列是不是
+   我建立的，給不同欄位集合」，這條路走不通，改採 RPC，理由與取捨細節見
+   `supabase/migrations/20260825010000_albums_comments_owner_scope.sql` 檔頭（該檔
+   也是當時 `comments` 尚未收斂前的 hybrid 實作，供對照演進脈絡）。
 
 **曾經考慮過、後來否決的第四種寫法**：在 RLS 的 WITH CHECK 裡直接對同一張表寫自我
 join 子查詢，比對「這一欄的新值是不是跟改之前一樣」——本機用 Supabase CLI 映像
@@ -222,17 +235,40 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 
 ### `comments` / `reactions`
 - `target_type` ∈ `album|media|diary|comment`，`target_id` 是對應表的 `id`。**這是
-  多型關聯，DB 無法對它下外鍵**——傳一個不存在的 `target_id` 不會被 DB 擋下（沒有
-  `23503` 可用），孤兒留言的清理是應用層或定期清理的責任，不是 API 的錯誤處理範圍。
-- `comments`（LS-52，見 §2 表與上方「三套寫入模型」）：內容（`body`）僅作者本人、
-  仍是該家庭**任一角色**的成員時可直接 `.update()`——這裡刻意不要求 owner/member，
-  跟 `albums` 的建立者分支要求「仍是 owner/member」不同，因為留言的作者分支從
-  `comments_update` policy 一開始就沒有排除 viewer（PLAN §3：Viewer 也能留言），
-  LS-52 收斂時原樣保留，不是新放寬。owner 對別人留言的軟刪／還原要呼叫
-  `set_comment_deleted` RPC（見 §4），對內容沒有任何直接寫入路徑。
-- `reactions` 每人對同一目標只能有一顆愛心（`UNIQUE(target_type, target_id, user_id)`）；
-  重複按會拿到 `23505`，client 應該先查有沒有按過，或把 `23505` 當成「已經按過」處理，
-  不要當成失敗。
+  多型關聯，DB 無法對它下外鍵**——傳一個完全不存在的 `target_id`（誰都沒建過）不會被
+  DB 擋下（沒有 `23503` 可用），孤兒留言的清理是應用層或定期清理的責任，不是 API 的
+  錯誤處理範圍，`create_comment`／`toggle_reaction`（見 §4）對這種情況維持既有裁量、
+  照樣放行。**但 `target_id` 若真的存在、卻屬於別的家庭，這兩支 RPC 會擋下（`LS026`，
+  LS-58 R1）**——只驗證「查得到的話 family 對不對」，不驗證「查得到查不到」，這是刻意
+  縮小的修補範圍（見 §4 兩支 RPC 各自的說明）。
+- `comments`（LS-58，取代 LS-52 的 hybrid 模式，見 §2 表與上方「三套寫入模型」）：
+  新增／編輯內容／軟刪都是 **RPC-only**，直接 `.insert()`／`.update()` 一律 `42501`
+  （這點現在跟 `diaries` 一致；跟收斂前的 LS-52 不同，那時作者仍保留直接 `.update()`
+  路徑）。`create_comment`／`update_comment` 的授權範圍**刻意延續 LS-52 定案的判準、
+  沒有比照 diaries 收緊**：任何角色（含 viewer）都能呼叫 `create_comment`；
+  `update_comment` 的作者分支只要求「當下仍是該家庭**任一角色**的成員」，不要求
+  owner/member——因為留言的作者分支從 `comments_update` policy 一開始就沒有排除
+  viewer（PLAN §3：Viewer 也能留言），這是延續既有、已被記錄在案的產品決定，不是
+  LS-58 的新裁量。`update_comment` 也**刻意不檢查目標是否已軟刪除**（跟
+  `update_diary_entry` 不同）——已軟刪除的留言仍可編輯，因為收斂前的 `comments_update`
+  policy 從來沒有這條限制，`albums_update` 的作者分支現在也還是沒有，這不是要通用套用
+  到每張表的規則，是 `diaries` 自己的產品決定。owner 對別人留言的軟刪／還原要呼叫
+  `set_comment_deleted` RPC（見 §4，LS-52 建立、本票未改動），對內容沒有任何直接寫入
+  路徑。
+- `reactions`（LS-58）：加入／收回都收斂進 `toggle_reaction` RPC（見 §4），直接
+  `.insert()`／`.delete()` 一律 `42501`。呼叫端**不再需要**自己處理
+  `UNIQUE(target_type, target_id, user_id)` 的 `23505`——`toggle_reaction` 內部用
+  advisory lock 序列化「查詢現況→決定加或刪」，永遠回傳布林值（`true`＝加入、
+  `false`＝收回），不會噴 `23505`。**唯一鍵不含 `family_id`**（`UNIQUE(target_type,
+  target_id, user_id)`，跟表定義一致），但**加入與收回兩條路徑都受 `LS026` 約束**
+  （merge-reviewer PR #85 R2 F2 實測澄清，修正 R1 對殘餘範圍的高估）——`LS026`
+  的目標歸屬檢查排在 `DELETE`／`INSERT` 之前：對**真的存在**的 target，呼叫端用
+  跟先前不同的 `p_family_id` 想收回別的家庭底下的反應，會直接拿到 `LS026`，
+  `DELETE` 完全不會執行，那個家庭的反應原封不動。殘餘情況只剩 `target_id`
+  **完全查不到**（孤兒，`private.target_family_id` 回 `NULL`）時——這時 `LS026`
+  檢查放行，`DELETE` 才會單靠 `user_id` 找到並收回呼叫者對這個孤兒 id 的反應，
+  不論那顆反應當初是用哪個 `family_id` 加的；這是孤兒 `target_id` 既有裁量（放行、
+  不驗證存在）的自然延伸，不是新的洞，只影響呼叫者自己的反應，不是越權。
 
 ### `device_tokens`
 - **不要**直接 `.upsert()` 或 `.insert()`／`.delete()` 這張表。同一支裝置換帳號登入時，
@@ -252,6 +288,39 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   多對多地關聯到相簿的 `child_id`，無法唯一決定歸屬。實際影響：`get_family_timeline`
   的 `p_child_id` 篩選為指定值時，`media` 類項目**不會出現**；只有 `p_child_id = NULL`
   （查全部）時才看得到。
+
+### `notification_events`
+- **推播彙總佇列的資料面（LS-58），只做資料層，不含發送**——發送邏輯（挑出待送事件、
+  決定通知對象、呼叫 APNs）是 LS-22 的 Edge Function 範圍，不在這份 API 契約內。
+  記在這裡是給 LS-22 開發時查表結構與彙總規則用，**iOS client 完全不會呼叫這張表**
+  （沒有任何 grant，見下）。
+- 來源：`comments`／`reactions`／`diaries`／`albums` 四張表各自的 `AFTER INSERT`
+  trigger，只在**新增**時觸發（留言/按讚的收回、日記/相簿的編輯或軟刪都不通知）。
+- 欄位：`kind`（`comment`/`reaction`/`diary`/`album`）＋`target_type`／`target_id`
+  （`comment`／`reaction` 指向被留言／被按讚的目標；`diary`／`album` 指向內容自己）＋
+  `actor_id`（最近一次觸發者）＋`event_count`（彙總筆數）＋`occurred_at`（最近一次
+  事件時間）＋`sent_at`（`NULL`＝待送，由 Edge Function／`service_role` 標記已送出）。
+- **彙總策略**：同一 `family_id`＋`kind`＋`target_type`＋`target_id` 在 **5 分鐘滾動
+  視窗**內的多次事件合併成同一筆（`event_count` 累加、`occurred_at` 更新成最新一次、
+  `actor_id` 換成最新觸發者）——只要事件間隔小於 5 分鐘就持續延伸同一筆，不是從第一次
+  事件起算的固定桶。合併判斷由 `pg_advisory_xact_lock` 序列化，避免兩個幾乎同時發生的
+  事件都判斷成「還沒有可合併的視窗」而各自開一筆。**合併鍵含 `family_id`（LS-58 R1）**
+  ——`target_type`／`target_id` 是多型關聯、沒有 FK（見上方「已知代價」），不能只靠
+  `(kind, target_type, target_id)` 當合併鍵：這會讓兩個不同家庭對同一個 `target_id`
+  （例如被踢出的前成員手上還記得的舊 id）的事件合併成一列，通知因此被算進錯的家庭。
+  `create_comment`／`toggle_reaction`（§4）已經在寫入前擋掉「target 存在但屬於別家」
+  （`LS026`），合併鍵含 `family_id` 是第二道防線。
+- **權限：成員完全讀不到**——沒有 RLS policy（`enable row level security` 但零 policy），
+  也沒有任何 table grant 給 `authenticated`／`anon`；PostgREST 會在到達 RLS 之前就先被
+  grant 層擋下（`42501`）。`service_role`（LS-22 的 Edge Function 用）明確 grant 了
+  `SELECT`／`UPDATE`（讀待送事件、標記 `sent_at`）——**不要假設平台預設會給
+  service_role 足夠的權限**：本 repo 實測過 public schema 新表對 `service_role` 的
+  預設只有 `TRUNCATE`/`REFERENCES`/`TRIGGER`/`MAINTAIN`，沒有 `SELECT`/`UPDATE`，這張
+  表的 migration 自己明確 grant 這兩項（比照
+  `20260822120300_harden_default_privileges.sql` §2 對 sequences 的既有作法）。
+  `INSERT`／`DELETE` 都沒有給 `service_role`——寫入只走 trigger，刪除留給日後的
+  retention 策略決定（目前沒有任何清理路徑，已送出的列會一直留著，見該 migration
+  檔尾備註）。
 
 ### `content_reports` / `blocked_users`
 - `content_reports`：任何家庭成員都能送出檢舉（`reporter_id` 必須是自己）；owner 只能
@@ -449,31 +518,142 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   已不屬於自己家庭的相簿完成了軟刪，是一次跨家庭越權。本機實測重現過這個結果
   （拿掉 `FOR UPDATE` 後、對調 fixture 的最小 repro：授權判斷回報「通過」、
   最終列確實被軟刪，即使它此刻的 `family_id` 已經是另一個家庭），
-  `supabase/tests/concurrency/album_edit_vs_delete_s1_move_family.sql` 這組
-  race case 就是把這個場景寫成回歸測試，拿掉 `FOR UPDATE` 會讓它變紅（測試檔頭
-  有 mutation 證據）。既有的 `album_edit_vs_delete_s1_update.sql`／
+  `supabase/tests/concurrency/album_edit_vs_delete_s1_move_family.sql`／
+  `s2_delete_after_move.sql` 這組 race case 就是把這個場景寫成回歸測試，拿掉
+  `FOR UPDATE` 會讓它變紅（mutation 證據見 `s2_delete_after_move.sql` 檔頭）。
+  既有的 `album_edit_vs_delete_s1_update.sql`／
   `s1_delete.sql` 兩組（作者改 `title`、owner 軟刪同時發生）測不到這件事——
   `title` 不是授權判斷讀的欄位，這兩組能證明的是「序列化正確、沒有互相覆蓋
   對方寫的欄位」，不是「`FOR UPDATE` 本身必要」，兩件事不能混為一談。
 
 ### `set_comment_deleted(p_comment_id uuid, p_deleted boolean) -> void`
-- **誰能呼叫**：作者本人（**只要求仍是該家庭任一角色的成員**，跟
-  `comments_update` policy 的作者分支判準一致——包含被降級成 viewer 的情況）
-  **或**該家庭的 owner（家庭內任何一則留言）。
+- **誰能呼叫**：作者本人（**只要求仍是該家庭任一角色的成員**，包含被降級成 viewer
+  的情況——跟 `update_comment` 的作者分支判準一致，見下）**或**該家庭的 owner
+  （家庭內任何一則留言）。
 - **用途**：軟刪（`p_deleted = true`）／還原（`p_deleted = false`）。**owner 對別人
   留言唯一能做的操作**——這支只碰 `deleted_at` 一欄，owner 分支不可能被拿來竄改
-  `body`。作者對自己的留言仍可直接 `.update()` 軟刪／還原（見 §3），這支 RPC 對
-  作者是多一條路徑而非唯一路徑。
-- **與直接 `.update()` 的差異**：同 `set_album_deleted`——owner 對別人留言直接下
-  `.update({deleted_at: ...})` 會靜默影響 0 列，不會拿到錯誤；這支 RPC 才會在
-  失敗時給出明確錯誤碼。
+  `body`。作者對自己的留言也可以用這支 RPC 軟刪／還原，或改用 `update_comment` 間接
+  觸發（見下）。
+- **與 LS-58 之前的差異**：`comments` 收斂成 RPC-only 之前，owner 對別人留言直接下
+  `.update({deleted_at: ...})` 會靜默影響 0 列；收斂之後**任何人**直接 `.update()`
+  comments 都會拿到明確的 `42501`（見 §2「寫入路徑小結」），不再有「靜默 0 列」這種
+  模稜兩可的結果——這支 RPC 現在不只是「owner 想確認成功／失敗的正確呼叫方式」，
+  是唯一能碰 `deleted_at` 的路徑。
 - **錯誤碼**：未登入 `42501`；留言不存在 `LS024`；不是作者也不是該家 owner，或
   雖是作者但已離開家庭 `42501`。
-- **併發**：對目標列用 `FOR UPDATE` 鎖住，**這把鎖不可移除**，理由同
-  `set_album_deleted`——`comments_update` policy 的作者分支比 albums 的門檻
-  更低（`family_id in family_ids()`，任一角色皆可搬家，見 §3），同一種
-  跨家庭越權在 comments 更容易觸發。回歸測試見
-  `supabase/tests/concurrency/comment_edit_vs_delete_s1_move_family.sql`。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住。這把鎖原本是為了擋住「作者把留言直接
+  `.update()` 搬到另一個家庭、同時 owner 對原家庭那一列軟刪」的跨家庭越權
+  race——`comments` 收斂成 RPC-only 之後，`update_comment` 的參數只有 `body`，
+  已經沒有任何路徑能搬動 `family_id`，這個特定 race 場景在前提上已經不成立
+  （不是靠鎖擋住）。鎖本身仍然保留（migration 是歷史紀錄不回頭改），繼續為
+  `update_comment` 與 `set_comment_deleted` 之間的一般序列化把關，回歸測試見
+  `supabase/tests/concurrency/comment_edit_vs_delete_setup.sql` 一組（編輯／軟刪
+  兩個方向）。
+
+### `create_comment(p_family_id uuid, p_target_type text, p_target_id uuid, p_body text) -> uuid`
+- **誰能呼叫**：**任何角色**（含 viewer），比照收斂前 `comments_insert` policy 的
+  授權範圍——PLAN §3「Viewer 只能看與留言」是產品定案，不是 LS-58 的裁量。
+- **回傳**：新留言的 `id`。
+- **副作用**：`author_id` 恆為呼叫者本人，不接受由參數指定（防冒名，同
+  `create_diary_entry`／`media.uploaded_by` 的既有慣例）。
+- **參數**：`p_target_type` 傳字串（cast 失敗 `22P02`，值域見 §3「target_type ∈
+  album|media|diary|comment」）；`p_target_id` 若查得到（不是孤兒 id）就必須屬於
+  `p_family_id`，否則 `LS026`（見 §3、LS-58 R1）；查不到維持既有裁量放行。
+  `p_body` 為空或超過 2000 字 `23514`（`CHECK` 約束，非本 RPC 自訂）。
+- **錯誤碼**：未登入 `42501`；不是該家任一角色的成員 `42501`；`target_id` 存在但屬於
+  別的家庭 `LS026`。
+- **併發**：無特殊語意，單一 `INSERT`。
+
+### `update_comment(p_comment_id uuid, p_body text) -> void`
+- **誰能呼叫**：**只有原作者本人，且必須現在仍是該家庭任一角色的成員**——這裡刻意
+  不要求 owner/member（跟 `update_diary_entry` 要求仍是 owner/member 不同），因為
+  收斂前的 `comments_update` policy 作者分支從一開始就沒有排除 viewer，LS-58 收斂
+  時原樣延續，不是新放寬也不是向 diaries 看齊。
+- **語意**：只有 `body` 一個欄位可改，沒有 PUT／PATCH 的分歧問題。**刻意不檢查
+  `deleted_at`**——已被軟刪除的留言仍可編輯（跟 `update_diary_entry` 不同，那支明確
+  拒絕編輯已軟刪除的日記）：收斂前的 `comments_update` policy 從來沒有這條限制，
+  `albums_update` 的作者分支現在也還是沒有，這不是通用規則，是 `diaries` 自己的
+  產品決定，comments 沒有理由被動繼承。
+- **錯誤碼**：未登入 `42501`；留言不存在 `LS024`；不是作者本人、或雖是作者但已不是
+  該家庭任一角色的成員 `LS025`（兩種情況共用同一個碼，排在「留言不存在」的檢查之後
+  ——同 `update_diary_entry`／`approve_join` 的既有慣例，未通過授權的人不會從錯誤碼
+  差異推敲出更多資訊）。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住，與 `set_comment_deleted` 互相排隊（見上）。
+
+### `toggle_reaction(p_family_id uuid, p_target_type text, p_target_id uuid) -> boolean`
+- **誰能呼叫**：**任何角色**（含 viewer），比照收斂前 `reactions_insert` policy 的
+  授權範圍。
+- **回傳**：`true`＝這次呼叫加入了反應；`false`＝這次呼叫收回了反應。同一人對同一
+  `(target_type, target_id)` 只能有一顆愛心，這支 RPC 就是「切換」那顆愛心的唯一
+  入口——呼叫端**不需要**自己先查有沒有按過，直接呼叫即可，回傳值就是切換後的狀態。
+- **為什麼不能用直接 INSERT／DELETE**：`reactions_target_user_key`
+  （`UNIQUE(target_type, target_id, user_id)`）在沒有序列化的情況下，兩個幾乎同時
+  發出的呼叫都會查到「還沒按過」而各自嘗試 INSERT，第二個會撞 `23505`——這支 RPC
+  用 `pg_advisory_xact_lock`（鎖鍵為 `(target_type, target_id, user_id)` 的雜湊）
+  序列化查詢與加/刪，讓兩次幾乎同時的呼叫都能正常完成，不會有任何一次噴錯。
+- **錯誤碼**：未登入 `42501`；不是該家任一角色的成員 `42501`；`target_id` 存在但
+  屬於別的家庭 `LS026`（同 `create_comment`，LS-58 R1，見 §3）。
+- **併發**：見上——這是這支 RPC 存在的核心理由，回歸測試見
+  `supabase/tests/concurrency/reaction_toggle_race_*.sql`（同一人對同一目標的雙
+  `toggle_reaction` 併發呼叫）。
+- **`LS026` 在加入與收回兩條路徑之前都會擋**：檢查排在 `pg_advisory_xact_lock`
+  與 `DELETE`／`INSERT` 之前，對**真的存在**的 target，用跟先前不同的
+  `p_family_id` 想收回別家的反應會直接拿到 `LS026`，`DELETE` 完全不會執行。殘餘
+  情況只剩 `target_id` 完全查不到（孤兒）時——細節見 §3「reactions」段。
+
+### `list_comments(p_family_id uuid, p_target_type text, p_target_id uuid, p_cursor_created_at timestamptz default null, p_cursor_id uuid default null, p_limit integer default 20) -> table(id uuid, author_id uuid, author_display_name text, author_avatar_url text, body text, created_at timestamptz)`
+- **誰能呼叫**：該家庭任一角色的成員；非本家庭成員呼叫會拿到明確的 `42501`
+  （`security definer`，函式內部手動檢查成員資格——見下方「為什麼不是 invoker」）。
+- **用途**：單一 target 的留言分頁（keyset），含軟刪過濾（`deleted_at is null`）與
+  作者顯示名／頭像（join `profiles`，避免呼叫端逐則留言各查一次作者資料的 N+1）。
+- **為什麼是 `security definer`，不是像 `get_family_timeline` 那樣選 invoker**：
+  本機用 5 萬則留言（單一 target）實測，`security invoker`（仰賴 `comments_select`／
+  `profiles_select` 既有 RLS）版本即使 `comments_target_idx` 完整存在，
+  `authenticated` 身分下的查詢一律被規劃器改選 Bitmap／Seq Scan＋顯式 Sort
+  （829-873 buffers），不是能讓 `LIMIT` 提早結束的 Index Scan Backward——RLS 的
+  `family_id in (select private.family_ids())` 這個 hashed SubPlan 條件疊上去後，
+  規劃器對它的選擇度估計不準，連帶誤判排序後索引掃描的成本高於整段掃描＋排序。改用
+  definer、函式內部手動查一句 `exists (...)` 確認成員資格，繞過那個 hashed
+  SubPlan，規劃器就正確選回 Index Scan Backward（buffers 降到個位數）。**副作用**
+  （刻意接受）：作者若已離開這個家庭，他過去留言的顯示名稱依然看得到（不像
+  `profiles_select` 的 `peer_profile_ids()` 只認「目前」同家庭的人）——這其實是更
+  合理的行為，不是資訊洩漏（`display_name` 在這個 app 的信任模型裡只是暱稱）。完整
+  的實測數據與取捨見 migration 對這支函式的說明。
+- **分頁**：keyset，游標是 `(created_at, id)` 這一對，跟 `get_family_timeline` 同一套
+  規則——第一頁兩個游標參數都不傳；**只傳其中一個會拿到 `LS022`**（跟
+  `get_family_timeline` 共用同一個碼，語意完全相同：半游標不合法）。
+- **`p_limit`**：下界夾到 1、上界夾到 100，預設 20，同 `get_family_timeline`。
+- **錯誤碼**：未登入 `42501`；不是該家任一角色的成員 `42501`；半游標 `LS022`。
+- **效能**：`language plpgsql`，依游標是否為 `NULL` 拆成兩條**靜態**查詢（同
+  `get_family_timeline` 的 LS-48 F1 教訓），且刻意先在子查詢裡完成「篩選＋排序＋
+  LIMIT」才 LEFT JOIN `profiles`，避免 `profiles` 的 join 被規劃器選成 Hash Join
+  而把已經走對索引的 `comments` 那側整批物化。效能回歸見
+  `supabase/tests/50_rls_plan_no_percall_subquery.sql` 的專屬段落。
+
+### `get_reaction_counts(p_family_id uuid, p_target_type text, p_target_ids uuid[]) -> table(target_id uuid, reaction_count bigint, reacted_by_me boolean)`
+- **誰能呼叫**：該家庭任一角色的成員；`security invoker`（依賴既有的
+  `reactions_select` RLS，跟 `list_comments` 不同裁量——這支是單一靜態聚合查詢，
+  沒有「排序＋LIMIT 提早結束」這個會被 RLS 選擇度誤判打斷的路徑，本機同樣灌測過
+  沒有出現 `list_comments` 那種 Bitmap／Seq Scan 退化，見 migration 說明）。
+- **用途**：批次彙總一頁內容（例如一頁留言、一頁相簿卡片）各自的愛心數與「我是否按過」，
+  呼叫端傳一組 `target_id` 一次拿回全部計數，避免對每個 target 各查一次 `COUNT` 的
+  N+1。
+- **回傳規則**：**沒有任何反應的 `target_id` 不會出現在回傳列裡**（`GROUP BY` 天生
+  排除 0 筆的組合）——呼叫端要把缺席的 `target_id` 當成 `reaction_count = 0`，同
+  `get_my_join_request()`「0 列＝空結果」的既有慣例，不是遺漏。
+- **非本家庭成員不會拿到錯誤**：這支是 `security invoker`，`p_family_id` 傳一個自己
+  不屬於的家庭不會 raise，只會依 `reactions_select` RLS 自然回傳空集合——跟
+  `get_family_timeline` 是同一種行為（見該支說明），**跟 `create_comment`／
+  `toggle_reaction`／`list_comments` 呼叫端會拿到明確 `42501`／`LS026` 不同**，呼叫端
+  不要假設這支「傳錯家庭一定會報錯」。
+- **`p_target_ids` 沒有長度上限**：不像 `list_comments` 的 `p_limit` 有
+  `least(greatest(…,1),100)` 夾定，這支目前刻意不設硬上限（`security invoker` 加上
+  `reactions_select` 既有 RLS 已經是隔離防線，過大的陣列只會拉長查詢時間，不是安全
+  問題）——呼叫端仍建議依實際使用情境（例如一頁留言、一頁相簿卡片）控制批次大小，
+  不要一次傳整個家庭的所有 target_id。
+- **錯誤碼**：`p_target_type` cast 失敗 `22P02`；未登入時 `auth.uid()` 為 `NULL`，
+  配合 RLS 自然回傳空集合（同 `get_family_timeline` 的未登入行為），不 raise。
+- **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 
 ### `get_family_timeline(p_family_id uuid, p_child_id uuid default null, p_cursor_occurred_at timestamptz default null, p_cursor_ref_id uuid default null, p_limit integer default 20) -> table(kind public.feed_kind, ref_id uuid, occurred_at timestamptz, child_id uuid)`
 - **誰能呼叫**：任何已登入使用者，但只查得到自己所屬家庭的資料——`p_family_id` 傳一個
@@ -551,10 +731,12 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS017` | 邀請碼參數不合法（到期時間或可用次數超出範圍） | `create_invite` |
 | `LS020` | 日記不存在，或（`update_diary_entry` 情境）已被軟刪除須先還原 | `update_diary_entry`／`set_diary_deleted` |
 | `LS021` | 不是作者本人，或雖是作者但已不是該家庭 owner/member | `update_diary_entry` |
-| `LS022` | `get_family_timeline` 的游標參數只給了一半（`p_cursor_occurred_at`／`p_cursor_ref_id` 兩者要嘛都給、要嘛都不給） | `get_family_timeline`（游標是呼叫端自己組的，不是使用者輸入——使用者沒有東西可換，原地重試不會成功；Swift 端 `AppError`／`LSErrorCode.Tier` 把它歸在 `rejected` 層，不是 `validationRetryable`，見 LS-55 PR #77 R1 裁決） |
+| `LS022` | keyset 分頁的游標參數只給了一半（兩個游標參數要嘛都給、要嘛都不給） | `get_family_timeline`／`list_comments`（游標都是呼叫端自己組的，不是使用者輸入——使用者沒有東西可換，原地重試不會成功；Swift 端 `AppError`／`LSErrorCode.Tier` 把它歸在 `rejected` 層，不是 `validationRetryable`，見 LS-55 PR #77 R1 裁決） |
 | `LS023` | 相簿不存在 | `set_album_deleted` |
-| `LS024` | 留言不存在 | `set_comment_deleted` |
-| `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字。**例外**：owner 對別人的 `albums`／`comments` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明 |
+| `LS024` | 留言不存在 | `update_comment`／`set_comment_deleted` |
+| `LS025` | 不是留言作者本人，或雖是作者但已離開該家庭 | `update_comment` |
+| `LS026` | 留言／按讚的 target 存在，但屬於別的家庭 | `create_comment`／`toggle_reaction` |
+| `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
 
 **沒有被上面任何一支 RPC 包住、可能直接從 PostgREST 冒出來的標準 Postgres 錯誤碼**
 （直接 `.insert()`/`.update()` 到允許直寫的表時可能撞到，client 應該當成一般失敗處理，
@@ -565,14 +747,18 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `23502`（`not_null_violation`） | 必填欄位留空，例如 `children.birthday`、`media.byte_size` |
 | `23514`（`check_violation`） | 違反欄位 `CHECK`，例如 `families.name` 長度、`media.width/height > 0`、`diaries.body` 長度 |
 | `22P02`（`invalid_text_representation`） | enum 欄位傳了不合法的字串（例如 `role` 不是 `owner/member/viewer`） |
-| `23505`（`unique_violation`） | 例如 `reactions` 重複按讚、`blocked_users` 重複封鎖同一人 |
+| `23505`（`unique_violation`） | 例如 `blocked_users` 重複封鎖同一人（`reactions` 自 LS-58 起不會了——直接 INSERT 已被 revoke，`toggle_reaction` 用 advisory lock 序列化，不會撞這個碼） |
 | `23503`（`foreign_key_violation`） | 例如 `albums.child_id` 指到別家的孩子（複合外鍵擋下） |
 
 **Swift 端覆蓋現況（LS-54 D4 改寫；原「repo 尚未有網路層 Swift 程式碼、留給 LS-17」的段落已被
 LS-49 推翻）**：`LSErrorCode` 已逐碼涵蓋上表全部自訂碼——`LS001`／`LS002` 與 `LS010`–`LS017`
 （LS-49）、`LS020`–`LS022`（LS-54 補齊，歸層：`LS020`／`LS021`／`LS022` → `rejected`；`LS022`
 原本歸 `validationRetryable`，PR #77 R1 review 指出游標是呼叫端自己組的、使用者無輸入可換，
-改歸 `rejected`，見上方 `LS022` 列註記）、`LS023`／`LS024`（LS-52 補齊，歸層皆 `rejected`）；
+改歸 `rejected`，見上方 `LS022` 列註記）、`LS023`／`LS024`（LS-52 補齊，歸層皆 `rejected`）、
+`LS025`（LS-58 補齊，歸層 `rejected`——跟 `LS021`／`LS023`／`LS024` 同一類：不是作者本人、或
+雖是作者但已離開家庭，換輸入沒有用，UI 該做的是隱藏編輯入口而不是讓使用者重試）、`LS026`
+（LS-58 R1 補齊，歸層 `rejected`——target 存在但屬於別的家庭，這是呼叫端組錯參數／資料
+被竄改的訊號，不是「換個輸入再試」能解的，UI 該做的是回上一頁或重新整理而不是原地重試）；
 `LS016` 另於 LS-55 從 `validationRetryable` 改歸新增的 `retryableSystem` 層（見上方 `LS016`
 列註記）。三層（`validationRetryable`／`retryableSystem`／`rejected`）歸類由
 `LittleSproutTests/AppErrorTests.swift` 的列舉測試逐碼釘住。
@@ -718,10 +904,13 @@ schema 或本文要修，不是 gate 要調。
 
 <!-- API-CONTRACT:RPC
 approve_join(uuid)
+create_comment(uuid, text, uuid, text)
 create_diary_entry(uuid, uuid, text, date)
 create_invite(uuid, text, timestamptz, integer)
 get_family_timeline(uuid, uuid, timestamptz, uuid, integer)
 get_my_join_request()
+get_reaction_counts(uuid, text, uuid[])
+list_comments(uuid, text, uuid, timestamptz, uuid, integer)
 list_join_requests()
 register_device_token(text, text)
 reject_join(uuid)
@@ -729,6 +918,8 @@ request_join(text)
 set_album_deleted(uuid, boolean)
 set_comment_deleted(uuid, boolean)
 set_diary_deleted(uuid, boolean)
+toggle_reaction(uuid, text, uuid)
+update_comment(uuid, text)
 update_diary_entry(uuid, text, date, uuid)
 withdraw_join(uuid)
 -->
@@ -749,6 +940,7 @@ feed_items
 invites
 join_requests
 media
+notification_events
 profiles
 reactions
 -->
