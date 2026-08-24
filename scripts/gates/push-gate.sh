@@ -29,4 +29,11 @@ else
   echo "⚠ push gate：尚未建立 Xcode 專案，跳過 unit tests（Phase 0-1 完成後自動生效）"
 fi
 
+# 3) API 契約對帳（docs/API.md ↔ supabase/migrations，LS-41）：有 migrations 才跑。
+#    本機固定用文字模式（best-effort，不需要活資料庫）；CI 的 db job 另外用
+#    --catalog 模式對套用完 migrations 的活資料庫做權威對帳（PR #58 review）。
+if [ -d supabase/migrations ]; then
+  bash "$(git rev-parse --show-toplevel)/scripts/gates/api-contract-check.sh"
+fi
+
 echo "✓ push gate 通過"

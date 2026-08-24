@@ -210,12 +210,24 @@ race_case "同一筆申請：拒絕先動，核准必須被擋下" \
   approve_reject_race_setup.sql approve_reject_race_s1_reject.sql \
   approve_reject_race_s2_approve.sql approve_reject_race_verify_rejected.sql
 
+# LS-48 併發場景（merge-reviewer PR #60 review F5）：同一篇日記的編輯（update_diary_entry）
+# 與軟刪（set_diary_deleted）同時發生。兩個方向缺一不可，理由同上一組
+# approve_reject_race（mutation test 的教訓）：只跑單一方向，先動的那邊反正會在自己的
+# UPDATE 上取鎖，測不出後動那支 RPC 自己的 `for update` 有沒有真的存在。
+race_case "同一篇日記：編輯先動，軟刪必須被阻塞後才成功" \
+  diary_edit_vs_delete_setup.sql diary_edit_vs_delete_s1_update.sql \
+  diary_edit_vs_delete_s2_delete.sql diary_edit_vs_delete_verify_update_won.sql
+race_case "同一篇日記：軟刪先動，編輯必須被阻塞後拿到 LS020" \
+  diary_edit_vs_delete_setup.sql diary_edit_vs_delete_s1_delete.sql \
+  diary_edit_vs_delete_s2_update.sql diary_edit_vs_delete_verify_delete_won.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 delete from public.families where id in (
   'fd000000-0000-4000-8000-000000000001',
   'fe000000-0000-4000-8000-000000000001',
-  'ff000000-0000-4000-8000-000000000001'
+  'ff000000-0000-4000-8000-000000000001',
+  'f2000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -225,7 +237,9 @@ delete from auth.users where id in (
   'ea000000-0000-4000-8000-000000000003',
   'eb000000-0000-4000-8000-000000000001',
   'eb000000-0000-4000-8000-000000000002',
-  'eb000000-0000-4000-8000-000000000003'
+  'eb000000-0000-4000-8000-000000000003',
+  'a9000000-0000-4000-8000-000000000001',
+  'a8000000-0000-4000-8000-000000000001'
 );
 SQL
 run_sql "$cleanup" > /dev/null
