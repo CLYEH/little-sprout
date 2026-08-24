@@ -3,12 +3,21 @@ import Foundation
 import Supabase
 import XCTest
 
-/// `SupabaseFamilyAPIClient` 對 LS-33/37 的 RPC／`families` 表做編碼/解碼與錯誤映射，
-/// 用 `MockURLProtocol` 攔截請求（不打真網路）。多數方法要求呼叫者已登入，所以每個測試
-/// 先透過 `signIn(_:userID:)` 讓底下的 `SupabaseClient` 處於已登入狀態，再測目標方法。
+/// `SupabaseFamilyAPIClient` 對 `families` 表（create/update）與 `create_invite` RPC 的編碼/
+/// 解碼與錯誤映射。用 `MockURLProtocol` 攔截請求（不打真網路）。加入審核流程
+/// （request_join／approve_join／list_join_requests／get_my_join_request）另見
+/// `SupabaseFamilyAPIClientJoinTests`——分兩個檔純粹是 SwiftLint `type_body_length`（250 行）
+/// 撞到，兩者共用同一份 Support（`TestSupabaseClient`／`MockURLProtocol`／`SessionFixture`）。
 final class SupabaseFamilyAPIClientTests: XCTestCase {
     private let userID = UUID(uuidString: "22222222-2222-2222-2222-222222222222")!
     private let familyID = UUID(uuidString: "33333333-3333-3333-3333-333333333333")!
+
+    override func tearDown() {
+        // 見 SupabaseAuthServiceTests 同名 tearDown 的說明：MockURLProtocol 的 handler
+        // 是全域 static，測試之間必須清乾淨（LS-49 PR #63 review F9）。
+        MockURLProtocol.setHandler(nil)
+        super.tearDown()
+    }
 
     func test_createFamily_success_sendsCreatedByAndDecodesFamily() async throws {
         let client = TestSupabaseClient.make { [userID, familyID] request in
@@ -100,6 +109,65 @@ final class SupabaseFamilyAPIClientTests: XCTestCase {
         }
     }
 
+    func test_updateFamilyName_success_doesNotThrow() async throws {
+        let client = TestSupabaseClient.make { [userID, familyID] request in
+            XCTAssertEqual(request.url?.path, "/rest/v1/families")
+            XCTAssertEqual(request.httpMethod, "PATCH")
+            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+            [{
+              "id": "\(familyID.uuidString)",
+              "name": "新名字",
+              "created_by": "\(userID.uuidString)",
+              "created_at": "2026-08-24T00:00:00Z",
+              "require_approval": true
+            }]
+            """.utf8))
+        }
+        let apiClient = SupabaseFamilyAPIClient(client: client)
+
+        try await apiClient.updateFamilyName(familyID: familyID, name: "新名字")
+    }
+
+    func test_updateFamilyName_notOwner_throwsRejected() async {
+        // families_update policy 是 USING 過濾：非 owner 的 UPDATE 語句本身不會出錯，
+        // 只是匹配 0 列——PostgREST 回 200 + `[]`，不 throw（LS-49 PR #63 review F2）。
+        // client 端必須自己把「0 列受影響」翻成錯誤，否則 UI 會顯示「已儲存」但其實沒改到。
+        let client = TestSupabaseClient.make { _ in
+            MockURLProtocol.StubResponse(statusCode: 200, body: Data("[]".utf8))
+        }
+        let apiClient = SupabaseFamilyAPIClient(client: client)
+
+        do {
+            try await apiClient.updateFamilyName(familyID: familyID, name: "新名字")
+            XCTFail("非 owner（0 列受影響）應該要 throw")
+        } catch let error as AppError {
+            guard case .rejected = error else {
+                return XCTFail("0 列受影響應映射為 .rejected，實際是 \(error)")
+            }
+        } catch {
+            XCTFail("應該 throw AppError，實際是 \(error)")
+        }
+    }
+
+    func test_setRequireApproval_notOwner_throwsRejected() async {
+        let client = TestSupabaseClient.make { request in
+            XCTAssertEqual(request.httpMethod, "PATCH")
+            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("[]".utf8))
+        }
+        let apiClient = SupabaseFamilyAPIClient(client: client)
+
+        do {
+            try await apiClient.setRequireApproval(familyID: familyID, requireApproval: false)
+            XCTFail("非 owner（0 列受影響）應該要 throw")
+        } catch let error as AppError {
+            guard case .rejected = error else {
+                return XCTFail("0 列受影響應映射為 .rejected，實際是 \(error)")
+            }
+        } catch {
+            XCTFail("應該 throw AppError，實際是 \(error)")
+        }
+    }
+
     func test_createInvite_success_returnsCode() async throws {
         let client = TestSupabaseClient.make { [userID, familyID] request in
             if request.url?.path == "/auth/v1/token" {
@@ -114,6 +182,13 @@ final class SupabaseFamilyAPIClientTests: XCTestCase {
             XCTAssertEqual(payload["p_family_id"] as? String, familyID.uuidString)
             XCTAssertEqual(payload["p_role"] as? String, "member")
             XCTAssertEqual(payload["p_max_uses"] as? Int, 5)
+            // SDK 的預設 Date 編碼不帶時區指示（Helpers/DateFormatter.swift 的
+            // `iso8601String`），直接送給 Postgres 的 timestamptz 會依資料庫 session
+            // timezone 解讀，不保證是 UTC——client 端改成自己用 ISO8601DateFormatter 明確
+            // 帶 'Z'（LS-49 PR #63 review F8）。這裡釘住 wire 上真的長這樣，不只是釘住
+            // Swift 端 Date 值本身。
+            let expiresAtWire = try XCTUnwrap(payload["p_expires_at"] as? String)
+            XCTAssertTrue(expiresAtWire.hasSuffix("Z"), "p_expires_at 應以 'Z' 結尾，實際是 \(expiresAtWire)")
 
             return MockURLProtocol.StubResponse(statusCode: 200, body: Data("\"ABCD1234\"".utf8))
         }
@@ -162,109 +237,6 @@ final class SupabaseFamilyAPIClientTests: XCTestCase {
         }
     }
 
-    func test_requestJoin_pending_decodesOutcome() async throws {
-        let requestID = UUID(uuidString: "44444444-4444-4444-4444-444444444444")!
-        let client = TestSupabaseClient.make { [familyID] request in
-            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/request_join")
-            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
-            {"status":"pending","request_id":"\(requestID.uuidString)","family_id":"\(familyID.uuidString)"}
-            """.utf8))
-        }
-        let apiClient = SupabaseFamilyAPIClient(client: client)
-
-        let outcome = try await apiClient.requestJoin(code: "ABCD1234")
-
-        guard case .pending(let decodedRequestID, let decodedFamilyID) = outcome else {
-            return XCTFail("應該解成 .pending，實際是 \(outcome)")
-        }
-        XCTAssertEqual(decodedRequestID, requestID)
-        XCTAssertEqual(decodedFamilyID, familyID)
-    }
-
-    func test_requestJoin_joined_decodesOutcome() async throws {
-        let client = TestSupabaseClient.make { [familyID] _ in
-            MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
-            {"status":"joined","request_id":null,"family_id":"\(familyID.uuidString)"}
-            """.utf8))
-        }
-        let apiClient = SupabaseFamilyAPIClient(client: client)
-
-        let outcome = try await apiClient.requestJoin(code: "ABCD1234")
-
-        guard case .joined(let decodedFamilyID) = outcome else {
-            return XCTFail("應該解成 .joined，實際是 \(outcome)")
-        }
-        XCTAssertEqual(decodedFamilyID, familyID)
-    }
-
-    func test_requestJoin_invalidCode_mapsToValidationRetryable() async {
-        let client = TestSupabaseClient.make { _ in
-            // LS010：邀請碼不存在。
-            MockURLProtocol.StubResponse(statusCode: 400, body: Data("""
-            {"code":"LS010","message":"邀請碼不存在"}
-            """.utf8))
-        }
-        let apiClient = SupabaseFamilyAPIClient(client: client)
-
-        do {
-            _ = try await apiClient.requestJoin(code: "WRONGCODE")
-            XCTFail("應該要 throw")
-        } catch let error as AppError {
-            guard case .validationRetryable(_, let code) = error else {
-                return XCTFail("LS010 應映射為 .validationRetryable，實際是 \(error)")
-            }
-            XCTAssertEqual(code, "LS010")
-        } catch {
-            XCTFail("應該 throw AppError，實際是 \(error)")
-        }
-    }
-
-    func test_approveJoin_success_doesNotThrow() async throws {
-        let client = TestSupabaseClient.make { request in
-            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/approve_join")
-            return MockURLProtocol.StubResponse(statusCode: 204)
-        }
-        let apiClient = SupabaseFamilyAPIClient(client: client)
-
-        try await apiClient.approveJoin(requestID: UUID())
-    }
-
-    func test_listJoinRequests_decodesArray() async throws {
-        let client = TestSupabaseClient.make { [familyID, userID] request in
-            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/list_join_requests")
-            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
-            [{
-              "request_id": "\(UUID().uuidString)",
-              "family_id": "\(familyID.uuidString)",
-              "applicant_id": "\(userID.uuidString)",
-              "display_name": "阿公",
-              "avatar_url": null,
-              "role": "member",
-              "created_at": "2026-08-24T00:00:00Z"
-            }]
-            """.utf8))
-        }
-        let apiClient = SupabaseFamilyAPIClient(client: client)
-
-        let requests = try await apiClient.listJoinRequests()
-
-        XCTAssertEqual(requests.count, 1)
-        XCTAssertEqual(requests[0].displayName, "阿公")
-        XCTAssertEqual(requests[0].role, .member)
-    }
-
-    func test_myJoinRequest_emptyResult_returnsNil() async throws {
-        let client = TestSupabaseClient.make { request in
-            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/get_my_join_request")
-            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("[]".utf8))
-        }
-        let apiClient = SupabaseFamilyAPIClient(client: client)
-
-        let result = try await apiClient.myJoinRequest()
-
-        XCTAssertNil(result)
-    }
-
     // MARK: - Helpers
 
     /// 直接用底下的 `AuthClient` 走一次 Sign in with Apple 流程（走 mock，不打真網路），
@@ -276,7 +248,7 @@ final class SupabaseFamilyAPIClientTests: XCTestCase {
     }
 }
 
-private extension URLRequest {
+extension URLRequest {
     /// `httpBody` 在透過 `URLSession` 實際送出的請求裡常常搬到 `httpBodyStream`，
     /// `MockURLProtocol` 攔截到的 `request` 是 `URLProtocol` 轉譯過的版本，直接讀
     /// `httpBody` 通常仍然有值；這裡集中處理，避免每個測試各自重複同一段判斷。

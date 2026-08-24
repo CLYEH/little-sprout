@@ -54,12 +54,20 @@ struct PendingJoinRequest: Equatable, Sendable, Decodable {
     }
 }
 
+/// 對應 `public.join_request_status`（supabase/migrations/20260823010000_join_approval.sql）。
+enum JoinRequestStatus: String, Codable, Sendable {
+    case pending
+    case approved
+    case rejected
+    case withdrawn
+}
+
 /// `get_my_join_request` RPC 回傳列——申請人自己那一筆申請的狀態。
 struct MyJoinRequest: Equatable, Sendable, Decodable {
     let requestID: UUID
     let familyID: UUID
     let familyName: String
-    let status: String
+    let status: JoinRequestStatus
     let createdAt: Date
     let resolvedAt: Date?
 

@@ -9,6 +9,14 @@ import XCTest
 final class SupabaseAuthServiceTests: XCTestCase {
     private let testUserID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
 
+    override func tearDown() {
+        // MockURLProtocol 的 handler 是全域 static——不清掉的話，這個測試最後設的 handler
+        // 會被下一個測試方法的第一個請求（例如它自己還沒來得及呼叫 TestSupabaseClient.make
+        // 之前，某個背景 Task 剛好先發了請求）誤用，變成難查的跨測試汙染（LS-49 PR #63 review F9）。
+        MockURLProtocol.setHandler(nil)
+        super.tearDown()
+    }
+
     func test_currentSession_initiallyNil() {
         // 不斷言「完全沒有請求」：SupabaseClient 初始化會起一個背景 Task 監聽
         // authStateChanges，時序上不保證在這個同步測試方法返回前完全跑完或不跑，
@@ -148,6 +156,10 @@ final class SupabaseAuthServiceTests: XCTestCase {
                 )
             }
             XCTAssertEqual(request.url?.path, "/auth/v1/logout")
+            // .local：只登出這一台裝置，不是 SDK 預設的 .global（撤銷同帳號所有裝置的
+            // session）——AuthService 協定文件寫的是「登出目前裝置的 session」
+            // （LS-49 PR #63 review F1）。
+            XCTAssertEqual(request.url?.query?.contains("scope=local"), true)
             sawLogoutRequest.withLock { $0 = true }
             return MockURLProtocol.StubResponse(statusCode: 204)
         }

@@ -1,7 +1,10 @@
 import Foundation
 
 /// 讀取建置期灌進 Info.plist 的 Supabase 環境設定（見 `Config/Base.xcconfig`、
-/// `project.yml` 的 `INFOPLIST_KEY_SupabaseURL` / `INFOPLIST_KEY_SupabaseAnonKey`）。
+/// `LittleSprout/Info.plist` 的 `SupabaseURL` / `SupabaseAnonKey` 兩個 `$(VAR)` 取代 key，
+/// project.yml 用 `INFOPLIST_FILE` 指向那個實體檔——`GENERATE_INFOPLIST_FILE` 的
+/// `INFOPLIST_KEY_<Key>` 機制只認 Apple 已知的 key，自訂 key 會被靜默忽略，這裡改回
+/// 傳統的實體 Info.plist 機制才保證生效，細節見 project.yml 內的 LS-49 註記）。
 ///
 /// Fail loud：這兩個值若缺失或格式不對，代表 xcconfig／Info.plist 沒接好，
 /// 是設定錯誤而非可恢復的執行期狀態，因此用 `precondition` 讓 app 直接停在啟動點，
@@ -14,8 +17,8 @@ enum AppConfig {
               let url = URL(string: raw) else {
             preconditionFailure(
                 "Info.plist 缺少合法的 SupabaseURL——確認 Config/Base.xcconfig 或 " +
-                "Config/Secrets.xcconfig 的 SUPABASE_URL 有值，且 project.yml 的 " +
-                "INFOPLIST_KEY_SupabaseURL 有正確引用它。"
+                "Config/Secrets.xcconfig 的 SUPABASE_URL 有值，且 LittleSprout/Info.plist 的 " +
+                "SupabaseURL 有正確引用它（$(SUPABASE_URL)）。"
             )
         }
         return url

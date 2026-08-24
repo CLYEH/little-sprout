@@ -5,7 +5,9 @@ import Foundation
 /// Supabase SDK 的 error 型別。
 protocol AuthService: Sendable {
     /// 目前的登入狀態；未登入為 nil。可能是過期的——呼叫端若需要保證有效的 session，
-    /// 用 `refreshSession()`。
+    /// 用 `refreshSession()`。實作要求：這個屬性必須是純記憶體讀取（不得每次存取都同步
+    /// 打 Keychain 之類的 I/O），才能安全用在 SwiftUI body 這種高頻重繪的地方
+    /// （`SupabaseAuthService` 用內部快取＋監聽 auth 狀態變化達成）。
     var currentSession: AuthSession? { get }
 
     /// 用 Sign in with Apple 拿到的 ID token 交換 Supabase session。
