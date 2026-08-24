@@ -80,10 +80,14 @@ jobs:
           git diff "$base_sha"...HEAD | grep '^+' | grep -v '^+++' \
             | bash scripts/gates/scan-secrets.sh
 
-      # LS-45：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才放行」
-      # 的偵測不退化回子字串比對（前饋必有反饋，對 gate 本身也適用）。
-      - name: Gate 腳本自測（destructive-approval-check）
-        run: bash scripts/gates/destructive-approval-check.test.sh
+      # LS-45／LS-41：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
+      # 放行」（destructive-approval-check）與「schema／文件對帳」（api-contract-
+      # check）的偵測不退化（前饋必有反饋，對 gate 本身也適用）。集中在同一個 step，
+      # 維持「一個地方跑所有 gate 自測」。
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check）
+        run: |
+          bash scripts/gates/destructive-approval-check.test.sh
+          bash scripts/gates/api-contract-check.test.sh
 
       # LS-10：Migration rules 與 Design gate 這兩段內容檢查改比照上面的
       # commit-message 檢查，只在工作分支（feature|fix|hotfix）head 執行。
@@ -179,6 +183,25 @@ jobs:
       - name: supabase db reset（套用 supabase/migrations）
         if: steps.detect.outputs.skip == 'false'
         run: supabase db reset
+
+      # LS-41（PR #58 review 主修）：docs/API.md ↔ migrations 對帳，改用套用完
+      # migrations 的活資料庫 pg_catalog 當權威來源（--catalog 模式），不是重新剖析
+      # SQL 原始碼——不受文字解析器的已知限制影響。放在 db reset 之後、run.sh
+      # 之前：這是一個純比對、幾十毫秒等級的檢查，不該排在兩分鐘的 run.sh 後面才被
+      # 發現紅燈（F10）。不開新 job（與 db job 共用同一個活資料庫），也不必額外把
+      # job 名稱加進 branch protection 的 required checks（db 本身已是 required）。
+      # 自成一段擷取 SUPABASE_DB_URL，不與下面 run.sh 那步共用變數：兩步是各自
+      # 獨立的 GitHub Actions run: shell，不共享 shell 狀態，維持各自完整可讀。
+      - name: API 契約對帳（docs/API.md ↔ 活資料庫 catalog，LS-41）
+        if: steps.detect.outputs.skip == 'false'
+        run: |
+          SUPABASE_DB_URL="$(supabase status -o env | grep '^DB_URL=' | head -n1 | cut -d= -f2- | tr -d '"' || true)"
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::supabase status -o env 未能取得 DB_URL，SUPABASE_DB_URL 為空——中止，避免用空連線字串誤跑測試"
+            exit 1
+          fi
+          export SUPABASE_DB_URL
+          bash scripts/gates/api-contract-check.sh --catalog
 
       - name: RLS／owner 不變量／trigger／併發測試（supabase/tests/run.sh）
         if: steps.detect.outputs.skip == 'false'
