@@ -173,7 +173,9 @@ final class AppErrorTests: XCTestCase {
             .alreadyHasPendingRequest,
             .requestNotFoundOrProcessed,
             .diaryNotFoundOrDeleted,
-            .diaryNotEditableByCaller
+            .diaryNotEditableByCaller,
+            .albumNotFound,
+            .commentNotFound
         ]
         let expectedValidationRetryable: Set<LSErrorCode> = [
             .inviteCodeNotFound,
