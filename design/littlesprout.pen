@@ -124,15 +124,19 @@
       "alignItems": "center",
       "children": [
         {
-          "type": "icon",
-          "id": "Cjrbr",
+          "type": "path",
+          "id": "WiqyL",
           "name": "Apple Icon",
-          "width": 24,
-          "height": 24,
-          "icon": "apple-logo-fill",
-          "library": "phosphor",
-          "weight": 400,
-          "fill": "$apple-fg"
+          "geometry": "M14.02 10.6c0.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.62-1.7-3.18-1.72-1.35-0.14-2.64 0.79-3.33 0.79-0.69 0-1.75-0.77-2.87-0.75-1.48 0.02-2.84 0.86-3.6 2.18-1.53 2.66-0.39 6.6 1.1 8.76 0.73 1.06 1.6 2.25 2.74 2.2 1.1-0.04 1.51-0.71 2.84-0.71 1.32 0 1.7 0.71 2.86 0.69 1.18-0.02 1.93-1.08 2.65-2.14 0.84-1.23 1.18-2.42 1.2-2.48-0.03-0.01-2.3-0.88-2.29-3.51z m-2.17-6.44c0.6-0.74 1.01-1.76 0.9-2.78-0.87 0.04-1.93 0.58-2.56 1.31-0.56 0.65-1.06 1.69-0.93 2.69 0.97 0.07 1.97-0.49 2.59-1.22z",
+          "viewBox": [
+            0,
+            0,
+            17,
+            20
+          ],
+          "fill": "$apple-fg",
+          "width": 20,
+          "height": 24
         },
         {
           "type": "text",
@@ -772,7 +776,7 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "mnLyb",
+                  "id": "usOGG",
                   "name": "App Name",
                   "fill": "$text-primary",
                   "content": "萌芽日記",
@@ -5450,8 +5454,14 @@
                   "name": "Sign in with Apple",
                   "width": "fill_container",
                   "descendants": {
-                    "Cjrbr": {
-                      "icon": "loader-circle"
+                    "WiqyL": {
+                      "type": "icon",
+                      "id": "eGV6s",
+                      "width": 20,
+                      "height": 24,
+                      "icon": "loader-circle",
+                      "library": "lucide",
+                      "fill": "$apple-fg"
                     },
                     "QJPNG": {
                       "content": "登入中…"
@@ -12939,7 +12949,7 @@
                           "id": "CVLH2",
                           "name": "t",
                           "fill": "#553040",
-                          "content": "（僅深色錨點）",
+                          "content": "角色：無（歷史對照）",
                           "fontFamily": "Noto Sans TC",
                           "fontSize": 12,
                           "fontWeight": "normal"
@@ -13027,7 +13037,7 @@
                           "fill": "#553040",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "備選錨點，未上線量測",
+                          "content": "LS-46 R2 覆核：判定無生產角色。D 軌原本就是把它放在同一格位（dark accent/CTA）試色，跟 #FCA4B5 是同一個位置的兩個候選，不是分工。本稿另有兩條既有規則會被它違反：①「一畫面一實心 accent」（Color Table 上方 S 段）②焦點語彙全稿唯一綁定 $accent（見『設計註記 · OTP 游標位置』）。硬塞一個 accent-soft／焦點環角色只是為了讓它有事做，不是真需求，故不 upgrade 為生產值，維持對照錨點。",
                           "lineHeight": 1.45,
                           "fontFamily": "Noto Sans TC",
                           "fontSize": 13,
@@ -27007,6 +27017,42 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "lFcUL",
+              "name": "i5",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "D5kKcT",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-46 R2\n字標 v3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "WxRdp",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "本輪中途追加需求，要求把歡迎登入頁（含 iPad／深色／登入中）的「萌芽日記」標題也換成 v3 蠟筆字標 image fill。查證後：svedU/BDrtd/ufdIl/iEmwh 這四張的標題實際是系統文字節點（綁 $fs-display token），從來不是 image——這是本輪之前就有的狀態。已把 Brand 板唯一既有的字標 image（oGB6x）換成 v3；歡迎頁四張暫不換，因為系統文字才能吃 Dynamic Type（長輩優先硬約束），換成不隨 AX 縮放的點陣圖是可及性倒退，且深色版反白處理也還沒有既有做法可以延用。是否要用品牌鎖版圖犧牲 AX 縮放，需要人核可；核准的話還要一併決定深色版做法（同一張 alpha 加填色 vs 另存反白版）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -27729,17 +27775,83 @@
               "fontWeight": "700"
             },
             {
-              "type": "text",
-              "id": "SRbGE",
-              "name": "S",
-              "fill": "#553040",
-              "textGrowth": "fixed-width",
+              "type": "frame",
+              "id": "dkaZh",
+              "name": "S (struck)",
               "width": "fill_container",
-              "content": "核心：標識不是另做一個吉祥物，是把字標的第二個字「芽」裱起來。這個 app 在做的事就是把家人的一個瞬間裱起來——標識照做一次。角托、相紙、窗光、染料階四個既有裝置全部沿用，沒有新增任何造型語彙。",
-              "lineHeight": 1.6,
-              "fontFamily": "Noto Sans TC",
-              "fontSize": 15,
-              "fontWeight": "normal"
+              "layout": "vertical",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "q251q",
+                  "name": "Struck Wrap",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "F9Gvz2",
+                      "name": "Struck Text",
+                      "fill": "#553040",
+                      "content": "核心：標識不是另做一個吉祥物，是把字標的第二個字「芽」裱起來。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "EfgyZ",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": 14.399999999999999,
+                      "name": "Strike Rule",
+                      "fill": "$border",
+                      "width": 466,
+                      "height": 2
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Uk8q4",
+                  "name": "Round Badge",
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "hfZj0",
+                      "name": "Round Label",
+                      "fill": "#553040",
+                      "content": "推翻於 LS-38 R5（2026-08-23）",
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "PWIn6",
+                  "name": "S Remainder",
+                  "fill": "#553040",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "這個 app 在做的事就是把家人的一個瞬間裱起來——標識照做一次。角托、相紙、窗光、染料階四個既有裝置全部沿用，沒有新增任何造型語彙。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -29990,9 +30102,22 @@
                       "fill": {
                         "type": "image",
                         "enabled": true,
-                        "url": "mengya-diary-crayon-equal.png",
+                        "url": "mengya-diary-crayon-v3.png",
                         "mode": "fit"
                       }
+                    },
+                    {
+                      "type": "text",
+                      "id": "jnJqb",
+                      "name": "Wordmark Asset Note",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 180,
+                      "content": "字標素材：v1（生成初版）逐像素比對後判定為各向異性拉伸偽造等大、非重畫，已淘汰。v3（真重畫）2026-08-24 複驗通過：四字高 423/423/423/423px（差 0.0%）、寬 344/279/265/387px（與原稿/v2 全異＝真重畫非拉伸）、筆寬比 0.886-0.973、覆蓋率極差 7.63pp、字距中心距差 1.4%（非單調）。素材：mengya-diary-crayon-v3.png（1860×887，透明）。舊檔 mengya-diary-crayon-equal.png 保留於 design/ 供對照，不再引用。",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -30081,27 +30206,162 @@
                   "gap": 4,
                   "children": [
                     {
-                      "type": "text",
-                      "id": "fUYDo",
-                      "name": "h",
-                      "fill": "#2B141C",
-                      "content": "為什麼是「芽」不是插畫",
-                      "fontFamily": "Noto Sans TC",
-                      "fontSize": 15,
-                      "fontWeight": "700"
+                      "type": "frame",
+                      "id": "Ip9Lb",
+                      "name": "h (struck)",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "N94KA",
+                          "name": "Struck Wrap",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "yf9Lj",
+                              "name": "Struck Text",
+                              "fill": "#2B141C",
+                              "content": "為什麼是「芽」不是插畫",
+                              "lineHeight": 1.3,
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 15,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "Wjiy6",
+                              "layoutPosition": "absolute",
+                              "x": 0,
+                              "y": 12,
+                              "name": "Strike Rule",
+                              "fill": "$border",
+                              "width": 166,
+                              "height": 2
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "X1P6l",
+                          "name": "Round Badge",
+                          "fill": "$surface-2",
+                          "cornerRadius": "$radius-full",
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "padding": [
+                            3,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "pc4ak",
+                              "name": "Round Label",
+                              "fill": "#553040",
+                              "content": "推翻於 LS-38 R5（2026-08-23）",
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "jx0GP",
-                      "name": "b",
-                      "fill": "#553040",
-                      "textGrowth": "fixed-width",
+                      "type": "frame",
+                      "id": "qwr7C",
+                      "name": "b (annotated)",
                       "width": "fill_container",
-                      "content": "① 稿約禁止手繪吉祥物，且插畫式 icon 在 60pt 一律糊。② 對長輩，一個清楚的中文字比抽象符號好認。③ 「芽」是產品名的第二個字，標識與字標因此是同一物的兩個裁切，不是兩個要互相解釋的東西。④ 深玫紅 $accent 是唯一的識別飽和色，icon 用掉它一次——與「一畫面一實心 accent」同一條規則。",
-                      "lineHeight": 1.6,
-                      "fontFamily": "Noto Sans TC",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "apF8W",
+                          "name": "B Before",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "① 稿約禁止手繪吉祥物，且插畫式 icon 在 60pt 一律糊。② 對長輩，一個清楚的中文字比抽象符號好認。",
+                          "lineHeight": 1.6,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "c0yecu",
+                          "name": "Struck Wrap 2",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "khLYx",
+                              "name": "Struck Text 2",
+                              "fill": "#553040",
+                              "content": "③「芽」是產品名的第二個字，標識與字標因此是同一物的兩個裁切，不是兩個要互相解釋的東西。",
+                              "lineHeight": 1.6,
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "vRQFQ",
+                              "layoutPosition": "absolute",
+                              "x": 0,
+                              "y": 12.6,
+                              "name": "Strike Rule",
+                              "fill": "$border",
+                              "width": 573,
+                              "height": 2
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "f7lr5",
+                          "name": "Round Badge",
+                          "fill": "$surface-2",
+                          "cornerRadius": "$radius-full",
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "padding": [
+                            3,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ku6uN",
+                              "name": "Round Label",
+                              "fill": "#553040",
+                              "content": "推翻於 LS-38 R5（2026-08-23）",
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "REnI0",
+                          "name": "B After",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "④ 深玫紅 $accent 是唯一的識別飽和色，icon 用掉它一次——與「一畫面一實心 accent」同一條規則。",
+                          "lineHeight": 1.6,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -30124,17 +30384,83 @@
                       "fontWeight": "700"
                     },
                     {
-                      "type": "text",
-                      "id": "sDbW3",
-                      "name": "b",
-                      "fill": "#553040",
-                      "textGrowth": "fixed-width",
+                      "type": "frame",
+                      "id": "G8AvV",
+                      "name": "b (struck-first)",
                       "width": "fill_container",
-                      "content": "標識（App icon／頭像／分享卡）＝被裱起來的「芽」。字標（歡迎頁／App Store）＝萌芽日記。四字等大不拆大小——四個等大的字是一個詞，拆成「萌芽＋日記」會被讀成品牌＋品類；等大也只需要一個字級 token，AX3 一起長大。\n\n【橫式鎖版規格（R3 補齊）】\n· 比例：標識高 ＝ 字標大字高 × 1.4；標識 ↔ 字標間距 ＝ 標識高 × 0.25。\n· 淨空 clear space：四邊各 ＝ 標識高 × 0.5，淨空內不得放任何字、線、邊框或另一個標誌。\n· 最小尺寸：橫式鎖版最小標識高 60pt（印刷 12mm）。低於此一律改用單獨標識，不要縮鎖版。\n· 單色版：見「還沒做」段的單色規則，鎖版與標識共用同一套。\n· 錯用：不得改變兩者相對大小、不得換行成直式（另做直式鎖版）、不得替換字標字體、不得把標識放進另一個框裡。\n\n【眉標 LITTLE SPROUT 的退場規則（R3 · 這是本輪的表態）】\n· app 介面內：眉標已離開視線起點。它不再是文字區塊的第一行，改成印在「入口那張紙」下緣的沖印廠牌壓印（01 相紙、01-iPad 登入卡），置中、12pt、ls 3.5、不吃 Dynamic Type——因為它印在紙上，不是 UI。\n· 橫式鎖版內：眉標只在鎖版寬度 ≥ 240pt 時出現（14pt/ls 3）。低於 240pt 一律退場，只留「萌芽日記」——一個讀不到的字比沒有更糟。\n· 中英並置只在這兩個地方成立；其餘任何地方不要為了「看起來國際」再放一次英文名。",
-                      "lineHeight": 1.6,
-                      "fontFamily": "Noto Sans TC",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Bqs9I",
+                          "name": "Struck Wrap",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "SWPkY",
+                              "name": "Struck Text",
+                              "fill": "#553040",
+                              "content": "標識（App icon／頭像／分享卡）＝被裱起來的「芽」。",
+                              "lineHeight": 1.6,
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "vsXsv",
+                              "layoutPosition": "absolute",
+                              "x": 0,
+                              "y": 12.6,
+                              "name": "Strike Rule",
+                              "fill": "$border",
+                              "width": 326,
+                              "height": 2
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yojvg",
+                          "name": "Round Badge",
+                          "fill": "$surface-2",
+                          "cornerRadius": "$radius-full",
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "padding": [
+                            3,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QVy7J",
+                              "name": "Round Label",
+                              "fill": "#553040",
+                              "content": "推翻於 LS-38 R5（2026-08-23）",
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "S1FuR",
+                          "name": "B Remainder",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "字標（歡迎頁／App Store）＝萌芽日記。四字等大不拆大小——四個等大的字是一個詞，拆成「萌芽＋日記」會被讀成品牌＋品類；等大也只需要一個字級 token，AX3 一起長大。\n\n【橫式鎖版規格（R3 補齊）】\n· 比例：標識高 ＝ 字標大字高 × 1.4；標識 ↔ 字標間距 ＝ 標識高 × 0.25。\n· 淨空 clear space：四邊各 ＝ 標識高 × 0.5，淨空內不得放任何字、線、邊框或另一個標誌。\n· 最小尺寸：橫式鎖版最小標識高 60pt（印刷 12mm）。低於此一律改用單獨標識，不要縮鎖版。\n· 單色版：見「還沒做」段的單色規則，鎖版與標識共用同一套。\n· 錯用：不得改變兩者相對大小、不得換行成直式（另做直式鎖版）、不得替換字標字體、不得把標識放進另一個框裡。\n\n【眉標 LITTLE SPROUT 的退場規則（R3 · 這是本輪的表態）】\n· app 介面內：眉標已離開視線起點。它不再是文字區塊的第一行，改成印在「入口那張紙」下緣的沖印廠牌壓印（01 相紙、01-iPad 登入卡），置中、12pt、ls 3.5、不吃 Dynamic Type——因為它印在紙上，不是 UI。\n· 橫式鎖版內：眉標只在鎖版寬度 ≥ 240pt 時出現（14pt/ls 3）。低於 240pt 一律退場，只留「萌芽日記」——一個讀不到的字比沒有更糟。\n· 中英並置只在這兩個地方成立；其餘任何地方不要為了「看起來國際」再放一次英文名。",
+                          "lineHeight": 1.6,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -30494,6 +30820,151 @@
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "a85M0Q",
+                  "name": "Next Steps Note",
+                  "width": "fill_container",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "outer",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "padding": "$sp-item",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "BjoZw",
+                      "name": "Note Title",
+                      "fill": "$text-primary",
+                      "content": "接下來會發生什麼",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "e0fZ5",
+                      "name": "Divider 0",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "G7thuj",
+                      "name": "Row",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "l2Wc9",
+                          "name": "Row Label",
+                          "fill": "$text-secondary",
+                          "content": "送出後",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "qRAwv",
+                          "name": "Row Value",
+                          "fill": "$text-primary",
+                          "content": "家長會收到通知",
+                          "textAlign": "right",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "CwqSo",
+                      "name": "Divider 1",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YJww0",
+                      "name": "Row",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "hGhuy",
+                          "name": "Row Label",
+                          "fill": "$text-secondary",
+                          "content": "他按核准",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "l9daNE",
+                          "name": "Row Value",
+                          "fill": "$text-primary",
+                          "content": "你才進得到家庭裡",
+                          "textAlign": "right",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "kwSeE",
+                      "name": "Divider 2",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YAW7Q",
+                      "name": "Row",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "o2wCp",
+                          "name": "Row Label",
+                          "fill": "$text-secondary",
+                          "content": "為什麼",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "gqXYr",
+                          "name": "Row Value",
+                          "fill": "$text-primary",
+                          "content": "擋下拿到碼的陌生人",
+                          "textAlign": "right",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -31750,6 +32221,592 @@
       "width": 393,
       "height": 0,
       "content": "【LS-46】多寶貝預留：建立家庭完成後的第一個畫面（07a 邀請家人／z6DOE）是本輪家庭建立動線的終點。→ 新增寶貝 profile（LS-47 設計中）尚未設計，本輪不新增畫面，只留這則設計註記，供 LS-47 銜接時參考動線位置。\n文案檢查（LS-46）：建立家庭／邀請家人／核准申請全流程（bC6ZX／cy89z／z6DOE／kcGJa／NRLL3／W4aNW）文案只提「家庭」與「家人」，未出現寶貝數量或單一寶貝相關措辭，沒有鎖死單寶貝假設——LS-47 加「新增寶貝」入口時不需要改動這些畫面的既有文字。"
+    },
+    {
+      "type": "note",
+      "id": "tR52r",
+      "x": -400,
+      "y": 4651,
+      "name": "設計註記 · 06-kbd 預告表去留（LS-46 R2）",
+      "width": 360,
+      "height": 0,
+      "content": "【LS-46 R2】第 1 輪對抗審查判「06-kbd 刪預告表理由不成立——是捲動問題不是取捨問題」。三解擇一，選 (c) 留在可捲動區：把「接下來會發生什麼」三行表原樣複製（與 06／VCMrA 同一份內容與樣式）接在 Press Reply 即時回饋之後、Footer 之前。\n為什麼不選 (a)：量過 Upper 現有內容（Header 43＋Code Card 150＋Explain 70＋Press Reply 33＋間距）在鍵盤升起時只剩 320/350pt 可視高度，表格 207pt 一定會把 Code Card 或 Header 擠出視窗，等於用另一種方式犧牲最急需的即時輸入回饋——比刪表更糟。\n為什麼不選 (b)：聚焦收合／失焦展開需要即時互動狀態，Pencil 靜態稿無法表現這個行為差異，硬做會變成兩個看起來一樣的靜態框，reviewer 也無從驗證摺疊邏輯是否合理；等有原型工具再做。\n(c) 的代價：現在 Next Steps Note（207pt）與 Footer 的貼上連結按鈕會被系統鍵盤完全遮住（見 nhCrq 螢幕截圖，y≈434 起已在鍵盤 y=456 遮擋線之下）。這是預期行為，不是 bug——ios-dev 用 ScrollView 包住 Upper 區塊，使用者捲動或系統在欄位聚焦時自動捲動皆可看到；不需要額外互動設計，因為表格本身沒有可互動元素，晚一點看到不影響輸入流程。"
+    },
+    {
+      "type": "frame",
+      "id": "dMUcT",
+      "x": 2300,
+      "y": 13567,
+      "name": "A11y / 06 輸入邀請碼 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1510,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "hbE6B",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "Z4EJQ",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "YnPpp",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-section",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "KlqmA",
+              "name": "Upper",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "O612H",
+                  "name": "Top",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "o3U8SI",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "qExps",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "content": "輸入邀請碼",
+                          "lineHeight": 1.25,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ngFB0",
+                          "name": "Subtitle",
+                          "fill": "$text-secondary",
+                          "content": "6 位英數字，分前三碼、後三碼。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vbj0p",
+                  "name": "Code Card",
+                  "width": "fill_container",
+                  "height": 150,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "YRhRw",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Card Paper",
+                      "width": 345,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-lg",
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "cmq1S",
+                          "name": "Code Groups",
+                          "width": "fill_container",
+                          "gap": "$sp-block",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "I9qrD",
+                              "name": "Group 1",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "id": "qtD9z",
+                                  "type": "ref",
+                                  "ref": "asPLH",
+                                  "name": "Code 1",
+                                  "width": "fill_container",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "zLuIX": {
+                                      "content": "K"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "pNUp9",
+                                  "type": "ref",
+                                  "ref": "asPLH",
+                                  "name": "Code 2",
+                                  "width": "fill_container",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "zLuIX": {
+                                      "content": "7"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "u5RQ9",
+                                  "type": "ref",
+                                  "ref": "asPLH",
+                                  "name": "Code 3",
+                                  "width": "fill_container",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "zLuIX": {
+                                      "content": "M"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "YL4vN",
+                              "name": "Group 2",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "id": "axIjF",
+                                  "type": "ref",
+                                  "ref": "asPLH",
+                                  "name": "Code 1",
+                                  "width": "fill_container",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "zLuIX": {
+                                      "content": "2"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "bYRFK",
+                                  "type": "ref",
+                                  "ref": "asPLH",
+                                  "name": "Code 2",
+                                  "width": "fill_container",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "zLuIX": {
+                                      "content": "F"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "wLnVX",
+                                  "type": "ref",
+                                  "ref": "asPLH",
+                                  "name": "Code 3",
+                                  "width": "fill_container",
+                                  "stroke": "$accent",
+                                  "strokeWidth": 2.5,
+                                  "descendants": {
+                                    "zLuIX": {
+                                      "content": ""
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "B0w43T",
+                          "name": "Code Hint",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "英文字母不分大小寫",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "fu8bV",
+                  "name": "Explain Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-item",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "eFrve",
+                      "name": "Explain",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請家人在 App 裡點「邀請家人」，把 6 位碼傳給你。送出後要等管理者核准。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "h92Dee",
+                  "name": "Press Reply",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-label",
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "pDpXF",
+                      "name": "Reply Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "MkjLU",
+                      "name": "Reply Text",
+                      "fill": "$text-primary",
+                      "content": "還要再填 1 個字",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "lZod7",
+                  "name": "CTA Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "padding": [
+                    "$sp-label",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "KBSht",
+                      "name": "Next Steps Note",
+                      "width": "fill_container",
+                      "cornerRadius": "$radius-lg",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": "$sp-item",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "P6UAtl",
+                          "name": "Note Title",
+                          "fill": "$text-primary",
+                          "content": "接下來會發生什麼",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "EfdaH",
+                          "name": "Divider 0",
+                          "fill": "$border",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "pVoes",
+                          "name": "Row",
+                          "width": "fill_container",
+                          "gap": 16,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zzSx4",
+                              "name": "Row Label",
+                              "fill": "$text-secondary",
+                              "content": "送出後",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ZyCwF",
+                              "name": "Row Value",
+                              "fill": "$text-primary",
+                              "content": "家長會收到通知",
+                              "textAlign": "right",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "HvZWm",
+                          "name": "Divider 1",
+                          "fill": "$border",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "aVZc8",
+                          "name": "Row",
+                          "width": "fill_container",
+                          "gap": 16,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YJIgL",
+                              "name": "Row Label",
+                              "fill": "$text-secondary",
+                              "content": "他按核准",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "IYwOt",
+                              "name": "Row Value",
+                              "fill": "$text-primary",
+                              "content": "你才進得到家庭裡",
+                              "textAlign": "right",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "TnWbn",
+                          "name": "Divider 2",
+                          "fill": "$border",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "V7hl2h",
+                          "name": "Row",
+                          "width": "fill_container",
+                          "gap": 16,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "p5AC9",
+                              "name": "Row Label",
+                              "fill": "$text-secondary",
+                              "content": "為什麼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "vQKb2",
+                              "name": "Row Value",
+                              "fill": "$text-primary",
+                              "content": "擋下拿到碼的陌生人",
+                              "textAlign": "right",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "T6zFC7",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Join Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "send"
+                        },
+                        "w7CUP": {
+                          "content": "送出加入申請"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gPOKC",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "id": "dD0kl",
+                  "type": "ref",
+                  "ref": "XggYA",
+                  "name": "Paste Link Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "G4R75k": {
+                      "icon": "link"
+                    },
+                    "yxwnz": {
+                      "content": "改用貼上邀請連結"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "wWOhV",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "AljEd",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "note",
+      "id": "aODMQ",
+      "x": 1900,
+      "y": 13567,
+      "name": "設計註記 · 06 AX3 壓力板結果（LS-46 R2）",
+      "width": 360,
+      "height": 0,
+      "content": "【LS-46 R2】AX3（body 40pt）壓力板 dMUcT，比照 d3lOwV 做法：Copy VCMrA、theme.size=ax3、Body 由 fill_container+space_between 改 fit_content+start，外框高度按實測內容收緊到 1510pt（原 852pt）。\n\n① CTA（送出加入申請）：驗證通過，AX3 下完整可見、無 clip，絕對座標 y≈1080，在 1510pt 框內留有餘裕，不需要另外做成可捲動。\n\n② 順帶量到 3 個既有元件在 AX3 下真的會 clip，不在本票範圍、未修，如實記錄供後續立票：\n· Subtitle「6 位英數字，分前三碼、後三碼」用 textGrowth:auto（不換行），AX3 量到 592pt 寬 > 卡片 345pt，右側被裁。\n· Code Card 外框（neY0d）固定 height:150 是照一般字級的 OTP 格高抓的，AX3 格子實際需要 244pt，底部被裁掉約 94pt——這個比 CTA 更急，使用者会看不到自己剛打的碼。\n· 「接下來會發生什麼」表格的 Row Value（右對齊值欄）在窄欄位裡也是 auto 不換行，「你才進得到家庭裡」「擋下拿到碼的陌生人」在 313pt 欄寬下量到寬達 320-360pt，左側溢出負值。\n這三個是 06／06b／06c／06-kbd 共用元件（Explain 字型樣式、Code Card 外框、Next Steps Row）的既有問題，不是本輪新增的東西，也不是本輪新增的 06-kbd 預告表造成的（06-kbd 抄的是同一份表，同樣會中）。建議另立 AX 硬化票，統一把這三個地方的 textGrowth 改 fixed-width+wrap、Code Card 外框改 fit_content。"
     }
   ],
   "themes": {
