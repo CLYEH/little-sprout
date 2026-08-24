@@ -12,6 +12,7 @@ model: sonnet
 - Commit 遵守 CLAUDE.md 的 commit 規約（Conventional Commits＋LS ticket ID）；**禁止 `--no-verify` 繞過 gate**。
 - 碰 `supabase/migrations` 時必附 RLS 測試；破壞性 migration 一律停下回報，不得自行執行。
 - 遵守使用者全域規約：手術式修改（不順手重構）、簡單優先、fail loud。
+- **push 之後立即交 handoff，不等 CI**：push gate 過、push 成功就用 CLAUDE.md 的 handoff 格式回報並結束。CI 由 orchestrator 監看；**不得以「等 CI 結果」為由停在那裡，也不得把等待當成收工**（不輪詢、不在 handoff 裡寫「CI 綠」——那不是你看得到的事實）。LS-49 連續三次因此卡住派工（LS-54 D3）。
 
 ## 完成定義（DoD）
 1. ticket 的每條驗收條件都有對應測試且通過（XCTest；UI 行為至少有可重複的手動驗證步驟）。

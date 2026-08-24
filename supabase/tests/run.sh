@@ -245,6 +245,11 @@ SQL
 run_sql "$cleanup" > /dev/null
 
 # EXPLAIN 證據存檔（驗收條件 c 要求留存）
+# LS-54 D2：evidence/ 已 gitignore，不再進 repo——產生時間、EXPLAIN ANALYZE 計時、規劃器估計值
+# （ANALYZE 隨機取樣）、buffers hit 數、以及 NOTICE（stderr）與查詢輸出（stdout）在合流檔裡的
+# 交錯順序每次跑都會變（本票實測：逐一遮掉前三種之後第五次仍在 buffers 上漂移），tracked 就是
+# 本機跑一次測試必弄髒工作區。留存改由 CI db job 每次以 artifact 上傳（.github/workflows/ci.yml
+# 的「上傳 RLS plan 證據」step），本機產出只給自己看。
 perf_out="$tmp/50_rls_plan_no_percall_subquery.sql.out"
 if [ -f "$perf_out" ]; then
   {
