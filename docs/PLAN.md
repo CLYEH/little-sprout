@@ -107,6 +107,19 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 
 **檔案路徑規約**：`{family_id}/{yyyy}/{mm}/{media_id}.{ext}` + `..._thumb.jpg`，未來 S3 sync 到 NAS 時整個前綴搬走即可。`{yyyy}/{mm}` **取上傳時間，不取 `taken_at`** —— 這個前綴的用途是搬移分片而非查詢，用 `taken_at` 會讓回填舊照片時分片散開。
 
+**Storage 邊界**（LS-40，`supabase/migrations/20260823030000_storage_policies.sql`）：檔案放在 private 的 `media` bucket（單檔 50 MiB、僅 HEIC/HEIF/JPEG/PNG/MP4/MOV）。`storage.objects` 沒有 `family_id` 欄位，RLS 只能以**路徑第一段**判歸屬——讀＝同家庭成員（含 viewer），寫＝有 `can_upload` 的成員**且第一段必須是自己所屬的 family_id**，改／刪＝上傳者本人（須**當下仍有**上傳權）或家庭 owner。上面那條路徑規約因此不再只是約定，而是被 policy 強制的安全邊界，客戶端必須遵守四件事：
+
+- **UUID 一律小寫正規形**。Swift 的 `UUID.uuidString` 預設是大寫，要 `.lowercased()`。policy 比對的是 `uuid::text`（Postgres 恆輸出小寫），也與 `media.storage_path` 的 `media_storage_path_family_prefix` CHECK 對齊；大寫路徑會在上傳當下被拒（42501），不會有半套狀態。
+- **列表只載 `_thumb.jpg`，原圖等進大圖再載，且一律走簽名 URL**（bucket 私有，檔案沒有公開網址）。這是 §7 egress 那一項的主要防線，不只是速度。
+- **上傳順序：先檔後列**（先 upload 到 Storage，成功之後才 insert `media` 列）。反過來的話，上傳失敗會留下一列指向不存在檔案的 `media`——時間軸出現破圖，而清掉它需要 media 的寫入權；照這個順序失敗則只留下一個孤兒物件，而 policy 明確允許上傳者自己刪掉它。**代價要知道**：`families.storage_used_bytes` 是 `media` 的 trigger 依 `byte_size` 維護的，所以**額度只在 media 列這一層綁得住**——檔案已經進 bucket 了才輪到額度判斷，Storage 的實際 bytes 一定 ≥ 帳面值。這不是可以靠調順序解決的問題（反過來就變成破圖），只能靠**離線對帳**收斂：以 `media.storage_path` ↔ `storage.objects.name` 為基準，`media` 沒有對應列的物件即孤兒。縮圖不在 `media` 裡，推導規則是 `regexp_replace(storage_path, '\.\w+$', '_thumb.jpg')`；**`storage_used_bytes` 不含縮圖**，所以對帳時要把縮圖那份從「孤兒」裡排除，也要知道帳面值天生低估。
+- **刪除順序**：照片的「刪除」是 `media.deleted_at` 軟刪除，**不動檔案**（§5 長輩誤刪要有救援路徑）；policy 讓上傳者刪得掉自己的檔案，只是為了清掉上一條說的那種孤兒物件。上傳者分支要求「**當下仍**在有上傳權的成員名單裡」——`can_upload` 被 owner 收回之後，那個人連自己以前上傳的檔案也動不了（`can_upload` 的語義是「這個人現在不該再寫這個 bucket」，留一條「但他還能刪」的縫等於權限只撤了一半）。因此**被撤權成員留下的孤兒物件由家庭 owner 清理**，這是契約的一部分，不是漏洞。
+
+**Storage 的雲端部署驗證清單**（本機測不到、只在雲端才成立的三件事；`db push` 綠燈不能取代這三條）：
+
+1. **`storage.prefixes`**：較新的 storage-api 會建這張表並用 trigger 維護，官方本機開發映像沒有它。→ 部署後跑 `select to_regclass('storage.prefixes');`，非 NULL 就再跑 `select relrowsecurity from pg_class where oid = 'storage.prefixes'::regclass;` 與 `select polname from pg_policy where polrelid = 'storage.prefixes'::regclass;`；**啟用了 RLS 又沒有任何 policy** 就是上傳會在雲端被擋的形狀。最終判準是**做一次真實上傳**：本機同路徑可過、雲端回 403／RLS 錯誤，就是這一條。
+2. **`owner` / `owner_id` 由誰填**：policy 兩欄都認，五種組合的行為已由 `supabase/tests/90_storage_policies.sql` 第 6 段釘住，所以這裡只剩一個事實查詢——真實上傳一張照片後跑 `select owner, owner_id from storage.objects where bucket_id = 'media' limit 1;`，**至少一欄非 NULL** 即可。兩欄皆 NULL 不是安全問題（退化成只有家庭 owner 能動），但表示「上傳者自刪孤兒物件」在雲端不會生效。若真實上傳回 **42501 而路徑本身無誤**，先懷疑是 UPDATE/INSERT 那組 owner／owner_id 釘樁擋下——查 `storage.objects` 該兩欄實際被填了什麼（storage-api 版本可能填出與 `auth.uid()` 不同形態的值）。
+3. **`storage.buckets` 沒有給 authenticated 任何 policy**：客戶端 `listBuckets()` 回空陣列是**預期行為**（bucket 名稱寫死在 app 裡），不是要修的 bug。→ `select count(*) from pg_policy where polrelid = 'storage.buckets'::regclass;` 應為 0；哪天不是 0，表示有人從 dashboard 加了東西。
+
 ## 6. 開發路線圖
 
 > 各階段的週數是「手寫程式」的量級估算，供排序參考。實際採 agent 主力開發，瓶頸不在打字而在**驗證**與**外部等待**（Apple 審核、家人試用回饋）—— 所以每步的「驗證：」條件才是真正的進度閘門，週數不是。

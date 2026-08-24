@@ -1304,4 +1304,183 @@ end;
 $$;
 reset role;
 
+-- ---------------------------------------------------------------------------
+-- 13. LS-37：invites 的寫入路徑收斂——唯一寫入路徑是 create_invite
+--
+-- 依據：20260823040000_invites_write_path.sql（DROP POLICY invites_insert／
+-- invites_update ＋ REVOKE INSERT, UPDATE）。與第 10 段是同一件事的兩半：
+-- 那裡關的是「不經邀請碼直接塞人進成員名單」，這裡關的是「不經 create_invite
+-- 直接造一支不受限制的邀請碼」。
+--
+-- 兩層都要斷言（同第 10 段的理由）：只驗「INSERT 會失敗」的話，日後有人把 policy
+-- 加回去、grant 卻還沒補（或反之），測試仍然是綠的，而兩層只要有一層在就擋得住——
+-- 於是這個測試會在「防線已經破了一半」的狀態下繼續報綠。
+--
+-- request_join 的 used_count 加一不在這裡重測：本檔第 2、6、9 段全程走 request_join
+-- 並逐段斷言 used_count，那些段落跑在同一份 migration 之上，收斂若弄壞了 definer
+-- 那條路徑，它們會先紅。這裡只補「呼叫端寫不進去」這一面。
+-- ---------------------------------------------------------------------------
+select set_config('request.jwt.claims',
+  '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare
+  v_code text;
+  v_n int;
+  v_sql text;
+  -- 每一句都是「合法 owner、對自己的家庭」——family_id 完全正確，所以舊的
+  -- invites_insert/invites_update policy（qual 只看 family_id）會全部放行。
+  -- 擋下它們的只有本票收掉的那兩層。
+  v_probes text[] := array[
+    -- 保險欄位 1：expires_at。create_invite 的上限是 30 天，這裡直接寫 100 年。
+    $q$update public.invites set expires_at = now() + interval '100 years' where id = '1a000000-0000-4000-8000-000000000001'$q$,
+    -- 保險欄位 2：max_uses。create_invite 的上限是 20，這裡寫 100000。
+    $q$update public.invites set max_uses = 100000 where id = '1a000000-0000-4000-8000-000000000001'$q$,
+    -- 保險欄位 3：used_count。可寫＝用罄的碼隨時歸零，max_uses 變成裝飾；
+    -- 而且它是 request_join 併發正確性的根（FOR NO KEY UPDATE 重讀的就是這一欄）。
+    $q$update public.invites set used_count = 0 where id = '1a000000-0000-4000-8000-000000000001'$q$,
+    -- 保險欄位 4：code。改成自選的碼＝繞過 create_invite 的字元集與長度。
+    $q$update public.invites set code = 'LS37EVIL' where id = '1a000000-0000-4000-8000-000000000001'$q$,
+    -- role：approve_join 是在「核准的那一刻」才讀 invites.role 決定新成員的角色，
+    -- 可改的話，一筆已送出的 member 申請能在 owner 按下核准之前被改成 owner。
+    $q$update public.invites set role = 'owner' where id = '1a000000-0000-4000-8000-000000000001'$q$
+  ];
+begin
+  -- 攻擊探針（本票的主要驗收條件）：owner 繞過 create_invite，直接寫一支
+  -- 「100 年後到期、可用十萬次、且直接給 owner 權限」的邀請碼。
+  -- 這一句在收斂前是會成功的——max_uses 與 expires_at 是 PLAN §5／§8 用來限制
+  -- 「碼外流之後果」的兩個旋鈕，能由呼叫端自己填就等於沒有。
+  begin
+    insert into public.invites (family_id, code, role, created_by, max_uses, expires_at)
+    values ('fa000000-0000-4000-8000-000000000001', 'ls37-forever-code', 'owner',
+            'a0000000-0000-4000-8000-000000000001', 100000, now() + interval '100 years');
+    raise exception 'FAIL 攻擊探針：owner 繞過 create_invite，直接寫進一支 100 年到期／可用 100000 次的 owner 邀請碼';
+  exception when insufficient_privilege then
+    raise notice 'ok 攻擊探針：owner 無法直接 INSERT invites (42501)——超長效期／超量次數的碼造不出來';
+  end;
+
+  -- 這幾句必須是「當場噴 42501」而不是「影響 0 列」。UPDATE 的 RLS 是靠 USING 篩掉
+  -- 看不到的列，篩掉不會報錯（只有 WITH CHECK 違反才噴 42501）——所以少了 policy 但
+  -- grant 還在的半破狀態下，這些句子會安靜地成功並影響 0 列。那個狀態一樣要紅：
+  -- 它代表兩層防線只剩一層。失敗訊息把 row_count 一起印出來，日後這條紅燈亮起時，
+  -- 讀訊息的人能直接分辨是「真的被改掉了」還是「grant 漏收」。
+  foreach v_sql in array v_probes loop
+    begin
+      execute v_sql;
+      get diagnostics v_n = row_count;
+      raise exception
+        'FAIL 攻擊探針：invites 的保險欄位沒有被 42501 擋下（影響 % 列）——「%」。'
+        '影響 1 列＝policy 與 grant 兩層都回來了；影響 0 列＝policy 擋著但 grant 漏收，防線只剩一層',
+        v_n, v_sql;
+    exception when insufficient_privilege then
+      null;
+    end;
+  end loop;
+  raise notice 'ok 攻擊探針：owner 無法 UPDATE invites 的 expires_at／max_uses／used_count／code／role (42501)';
+
+  -- 正向對照 1：唯一寫入路徑照常可用。沒有這一條，「把整張表對呼叫端關掉」
+  -- 也會讓上面每一條攻擊探針變綠——收斂與砸壞功能在斷言上長得一模一樣。
+  select public.create_invite(
+    'fa000000-0000-4000-8000-000000000001', 'member',
+    now() + interval '7 days', 3) into v_code;
+  if v_code is null or v_code !~ '^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$' then
+    raise exception 'FAIL 正向對照：create_invite 產不出合規的邀請碼（實際 %）', v_code;
+  end if;
+  raise notice 'ok 正向對照：create_invite 照常可用（%）', v_code;
+
+  -- 正向對照 2：owner 的撤銷路徑照常可用。本票裁定撤銷邀請＝DELETE 該列
+  -- （invites 沒有 revoked_at 之類的欄位，LS-33 也沒有 revoke RPC；
+  --   DELETE 只減不增，不需要為它建一支 RPC），所以 invites_delete 原樣保留。
+  delete from public.invites where code = v_code;
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then
+    raise exception 'FAIL 正向對照：owner 撤銷不了自己剛產出的邀請碼（影響 % 列）—— 收斂把撤銷路徑一起關掉了', v_n;
+  end if;
+  raise notice 'ok 正向對照：owner 仍撤銷得掉自家邀請碼（DELETE 1 列）';
+end;
+$$;
+reset role;
+
+-- 未登入（anon）對 invites 四個動作全拒：policy 一律 `to authenticated`，
+-- 且 init_schema 已把 public schema 的所有表對 anon 收乾淨（兩層都沒有它的份）。
+set local role anon;
+do $$
+declare
+  v_state text;
+  v_sql text;
+  v_blocked boolean;
+  v_probes text[] := array[
+    $q$select count(*) from public.invites$q$,
+    $q$insert into public.invites (family_id, code, role, created_by, max_uses, expires_at) values ('fa000000-0000-4000-8000-000000000001', 'ls37-anon-code', 'member', 'a0000000-0000-4000-8000-000000000001', 1, now() + interval '1 day')$q$,
+    $q$update public.invites set max_uses = 999 where id = '1a000000-0000-4000-8000-000000000001'$q$,
+    $q$delete from public.invites where id = '1a000000-0000-4000-8000-000000000001'$q$
+  ];
+begin
+  perform set_config('request.jwt.claims', '{"role":"anon"}', true);
+  foreach v_sql in array v_probes loop
+    v_blocked := false;
+    begin
+      execute v_sql;
+    exception when others then
+      v_blocked := true; v_state := sqlstate;
+    end;
+    if not v_blocked then
+      raise exception 'FAIL anon：未登入者執行得了「%」', v_sql;
+    end if;
+    if v_state <> '42501' then
+      raise exception 'FAIL anon：「%」被拒，但錯誤碼是 % 而不是 42501', v_sql, v_state;
+    end if;
+  end loop;
+  raise notice 'ok anon：未登入者對 invites 的 select／insert／update／delete 全部被拒 (42501)';
+end;
+$$;
+reset role;
+
+-- 兩層各自的機械斷言（不靠上面那些行為探針推論——行為探針只要有一層在就會綠）
+do $$
+declare
+  v_present int;
+begin
+  -- 第一層：grant。INSERT／UPDATE 兩面都不該還有「任何形態」的授權。
+  --
+  -- 用 has_any_column_privilege 而不是 has_table_privilege：後者對欄位級 grant 是回
+  -- false 的，於是日後補上一句 `grant insert (family_id, code)` 或 `grant update (used_count)`
+  -- 這種洞，只驗整表的斷言完全測不出來（PR #55 review F1——原本這裡只對 UPDATE 用
+  -- 逐欄迴圈防住了這件事，INSERT 那一行一字不差地有同樣的洞卻沒防）。
+  --
+  -- has_any_column_privilege 一次涵蓋兩種形態：表級授權隱含所有欄位，所以它是整表斷言的
+  -- 超集；而它問的是「有沒有任何一欄」，日後 invites 新增欄位（例如真的做了軟撤銷的
+  -- revoked_at）也自動納入，不必回頭維護一份會漂移的欄位清單。
+  if has_any_column_privilege('authenticated', 'public.invites', 'insert') then
+    raise exception 'FAIL：authenticated 還有 invites 的 INSERT 授權（表級或任一欄位級）—— owner 能繞過 create_invite 自己造碼，收斂只做了 policy 那一層';
+  end if;
+  if has_any_column_privilege('authenticated', 'public.invites', 'update') then
+    raise exception 'FAIL：authenticated 還有 invites 的 UPDATE 授權（表級或任一欄位級）—— 邀請碼的效期／次數／碼本身可被呼叫端改寫，create_invite 的邊界形同虛設';
+  end if;
+
+  -- 第二層：policy。兩條都該不在了（RLS 預設拒絕，沒有 policy ＝ 不通過）。
+  select count(*) into v_present from pg_policies p
+   where p.schemaname = 'public' and p.tablename = 'invites'
+     and p.policyname in ('invites_insert', 'invites_update');
+  if v_present <> 0 then
+    raise exception 'FAIL：invites 還留著 % 條 INSERT／UPDATE policy（收斂只做了 grant 那一層）', v_present;
+  end if;
+
+  -- 回歸：另外兩條 policy 與它們的 grant 不該被本票動到。
+  -- owner 要看得到自家的碼（邀請畫面），也要撤銷得掉（本票裁定的撤銷路徑）。
+  select count(*) into v_present from pg_policies p
+   where p.schemaname = 'public' and p.tablename = 'invites'
+     and p.policyname in ('invites_select', 'invites_delete');
+  if v_present <> 2 then
+    raise exception 'FAIL 回歸：invites 的 select／delete policy 少了（實際 % 條）—— owner 看不到或撤銷不了自家邀請碼', v_present;
+  end if;
+  if not has_table_privilege('authenticated', 'public.invites', 'select')
+     or not has_table_privilege('authenticated', 'public.invites', 'delete') then
+    raise exception 'FAIL 回歸：authenticated 失去 invites 的 SELECT 或 DELETE grant';
+  end if;
+
+  raise notice 'ok 驗收：invites 的呼叫端寫入兩層都關——INSERT／UPDATE（policy 已移除 + grant 已收回），SELECT／DELETE 原樣保留';
+end;
+$$;
+
 rollback;
