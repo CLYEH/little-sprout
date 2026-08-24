@@ -86,4 +86,22 @@ if [ -d supabase/migrations ]; then
   esac
 fi
 
+# 6) 分支起點乾淨度（LS-50）：工作分支自 merge-base 以來的每個非 merge commit，subject 票號必須等於分支票號
+#    （scripts/gates/branch-ticket-check.sh，規則與逃生口見該檔檔頭）——LS-38 分支疊了 LS-31 三個從未開 PR 的
+#    commit 而沒有任何 gate 攔到。刻意夾帶：本票 commit body 獨佔一行 `Bundles: LS-<m>`，PR body 同步宣告（CI 驗）。
+# 7) 合併衝突預檢（LS-50，PR #77 事件）：`git merge-tree --write-tree origin/<target> HEAD` 有衝突即擋
+#    （scripts/gates/merge-conflict-check.sh；本機 origin/<target> 落後遠端也擋，先 fetch）。GitHub 對不可合併的
+#    PR 不觸發 pull_request workflow——CI 零紀錄、沒有任何機械訊號，這一關只有本機 push 前做得到。
+# 兩步共用第 5 步的方向矩陣（hotfix/* 對 origin/main，其餘對 origin/development）；保護分支與 detached HEAD
+# 跳過；找不到 origin/<target> 由腳本直接紅，不靜默跳過。
+branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
+case "$branch" in
+  main|test|development|DETACHED) ;;
+  *)
+    case "$branch" in hotfix/*) target_ref=origin/main ;; *) target_ref=origin/development ;; esac
+    bash "$(git rev-parse --show-toplevel)/scripts/gates/branch-ticket-check.sh" --base "$target_ref"
+    bash "$(git rev-parse --show-toplevel)/scripts/gates/merge-conflict-check.sh" --target "$target_ref"
+    ;;
+esac
+
 echo "✓ push gate 通過"
