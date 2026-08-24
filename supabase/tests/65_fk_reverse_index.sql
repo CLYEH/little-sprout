@@ -29,15 +29,17 @@
 -- 佈建的 migration，我們不擁有也改不動，不是這道 gate 該管的範圍（本機掃描實測
 -- 那幾個 schema 也有多處同樣缺索引，但那是平台的事）。
 --
--- 白名單（已知缺口，非本票造成）：以下 11 個外鍵在本票開工前就已存在，是 LS-6～LS-15
--- 期間陸續加表時留下的技術債，這裡掃描第一次跑就會挑出來。列出來而不是悄悄放過——
--- PLAN.md §5 對 comments／reactions 的多型關聯已有「代價可接受但要知道它存在」的
--- 先例，這裡比照辦理：明確記錄、待開票逐一補索引，不能只靠一句「可接受」帶過。
--- 這份清單只能變短，不能變長，且只能登記「目前真的存在」的外鍵：
+-- 白名單（已知缺口，非本票造成）：LS-36 已把 LS-6～LS-15 期間留下的 11 項技術債
+-- 全部補上反向索引（見 supabase/migrations/20260823020000_fk_reverse_indexes.sql
+-- 的逐項裁量說明），目前沒有「有意不建」項，清單維持淨空。
+-- 這份清單的技術債類條目只能變短，不能變長，且只能登記「目前真的存在」的外鍵：
 --   - 清單內的項目其實已經有索引了 → 過期沒清掉（第 2 段擋）。
 --   - 清單內的項目根本找不到對應的外鍵了（表／約束改名或刪除）→ 殭屍條目；
 --     不擋的話，日後若有人重建一個同名外鍵，會被這個殭屍條目無聲豁免、繞過檢查
 --     （LS-34 review F4）（第 3 段擋）。
+-- 若日後有 FK 判定「有意不建」（極少反向查詢、父表也無 DELETE/UPDATE 觸發 RI 反查），
+-- 才把該項加回這裡，並在 migration 註解記錄裁量理由——與這份「暫置技術債」清單
+-- 語義不同：那是決定，不是債，理論上應該另分一段標記，但目前尚無此類項目。
 --
 -- 判定式只寫一次（LS-34 review F6）：一支查詢把 (label, has_index) 算好存進兩個
 -- 平行陣列，後面三段檢查各自用 unnest 過濾這兩個陣列，不會出現「同一段 SQL 複製
@@ -48,19 +50,8 @@ begin;
 
 do $$
 declare
-  v_known_gaps text[] := array[
-    'albums.albums_created_by_fkey',
-    'blocked_users.blocked_users_blocked_id_fkey',
-    'blocked_users.blocked_users_blocker_id_fkey',
-    'comments.comments_author_id_fkey',
-    'comments.comments_family_id_fkey',
-    'content_reports.content_reports_reporter_id_fkey',
-    'diaries.diaries_author_id_fkey',
-    'families.families_created_by_fkey',
-    'invites.invites_created_by_fkey',
-    'media.media_uploaded_by_fkey',
-    'reactions.reactions_user_id_fkey'
-  ];
+  -- LS-36：11 項既有缺口已全部補上反向索引，清單收斂為空（見上方註解）
+  v_known_gaps text[] := array[]::text[];
   v_labels text[];
   v_has_index boolean[];
   v_missing text;
@@ -134,7 +125,7 @@ begin
 
   raise notice
     'ok：public schema 內每一個外鍵，除了已登記的 % 項既有技術債，都有可用的反向索引',
-    array_length(v_known_gaps, 1);
+    coalesce(array_length(v_known_gaps, 1), 0);
 end;
 $$;
 
