@@ -493,9 +493,10 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   已不屬於自己家庭的相簿完成了軟刪，是一次跨家庭越權。本機實測重現過這個結果
   （拿掉 `FOR UPDATE` 後、對調 fixture 的最小 repro：授權判斷回報「通過」、
   最終列確實被軟刪，即使它此刻的 `family_id` 已經是另一個家庭），
-  `supabase/tests/concurrency/album_edit_vs_delete_s1_move_family.sql` 這組
-  race case 就是把這個場景寫成回歸測試，拿掉 `FOR UPDATE` 會讓它變紅（測試檔頭
-  有 mutation 證據）。既有的 `album_edit_vs_delete_s1_update.sql`／
+  `supabase/tests/concurrency/album_edit_vs_delete_s1_move_family.sql`／
+  `s2_delete_after_move.sql` 這組 race case 就是把這個場景寫成回歸測試，拿掉
+  `FOR UPDATE` 會讓它變紅（mutation 證據見 `s2_delete_after_move.sql` 檔頭）。
+  既有的 `album_edit_vs_delete_s1_update.sql`／
   `s1_delete.sql` 兩組（作者改 `title`、owner 軟刪同時發生）測不到這件事——
   `title` 不是授權判斷讀的欄位，這兩組能證明的是「序列化正確、沒有互相覆蓋
   對方寫的欄位」，不是「`FOR UPDATE` 本身必要」，兩件事不能混為一談。
