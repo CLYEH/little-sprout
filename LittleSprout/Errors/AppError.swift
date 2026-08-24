@@ -82,7 +82,7 @@ enum LSErrorCode: String, CaseIterable, Sendable {
         case .familyMustHaveOwner, .storageQuotaExceeded,
              .alreadyMember, .alreadyHasPendingRequest, .requestNotFoundOrProcessed,
              .diaryNotFoundOrDeleted, .diaryNotEditableByCaller,
-             .albumNotFound, .commentNotFound:
+             .albumNotFound, .commentNotFound, .timelineCursorIncomplete:
             // 這三碼是 PR #63 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
@@ -93,6 +93,12 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // albumNotFound／commentNotFound（LS-52，set_album_deleted／set_comment_deleted
             // 的 LS023／LS024）同理：相簿或留言不存在，重送同一個 RPC 呼叫不會變成功，
             // 呼叫端該做的是回上一頁或重新整理清單，不是原地重試。
+            // timelineCursorIncomplete（LS022）：游標參數（p_cursor_occurred_at／
+            // p_cursor_ref_id）是 app 自己從上一頁回應組出來的，不是使用者手動輸入的
+            // 東西——使用者沒有「換個輸入再送」這個動作可做，原地重試同一個
+            // get_family_timeline 呼叫不會變成功，該修的是呼叫端組游標的程式碼（或乾脆不帶
+            // 游標重新查詢）。歸在這裡而不是 validationRetryable，才符合 N9 定的準則——
+            // 「使用者能換輸入」才算 validationRetryable（PR #77 R1 B2(b)；orchestrator 裁決）。
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:
             // 碼本身是「輸入」——打錯字換一個、或請 owner 給一支新的碼，都是同一個 UI 動作
@@ -104,9 +110,8 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // inviteCodeNotFound 那種「使用者輸入有誤」的語意不同——歸 `retryableSystem`
             // 而不是 `validationRetryable`（LS-55 N9；PR #63 review R2）。
             return .retryableSystem
-        case .inviteParamsInvalid, .timelineCursorIncomplete:
-            // 參數本身不合法（邀請設定超出範圍／游標只給一半，LS-54 補齊 LS022）：
-            // 修正輸入之後同一個呼叫就會成功。
+        case .inviteParamsInvalid:
+            // 參數本身不合法（邀請設定超出範圍）：修正輸入之後同一個呼叫就會成功。
             return .validationRetryable
         }
     }

@@ -178,14 +178,16 @@ final class AppErrorTests: XCTestCase {
             .diaryNotFoundOrDeleted,
             .diaryNotEditableByCaller,
             .albumNotFound,
-            .commentNotFound
+            .commentNotFound,
+            // LS022：游標是 app 自己組的，使用者沒有輸入可換，重試同一呼叫不會成功——
+            // 留在 validationRetryable 違反 N9 的定義（PR #77 R1 B2(b)；orchestrator 裁決）。
+            .timelineCursorIncomplete
         ]
         let expectedValidationRetryable: Set<LSErrorCode> = [
             .inviteCodeNotFound,
             .inviteCodeExpired,
             .inviteCodeExhausted,
-            .inviteParamsInvalid,
-            .timelineCursorIncomplete
+            .inviteParamsInvalid
         ]
         // LS-55 N9：LS016 從 .validationRetryable 移到這個新層——重試會成功，但不是使用者
         // 輸入有誤（見 LSErrorCode.tier 的 case .inviteCodeGenerationCollision 註解）。

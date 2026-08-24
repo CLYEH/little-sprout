@@ -9,6 +9,12 @@ protocol AuthService: Sendable {
     /// 打 Keychain 之類的 I/O），讀取本身在 SwiftUI body 這種高頻重繪的地方是安全的
     /// （`SupabaseAuthService` 用內部快取＋監聽 auth 狀態變化達成）。
     ///
+    /// 離線開 app 時（見 `SupabaseClientFactory.emitLocalSessionAsInitialSession`／LS-55 N1）：
+    /// 這裡回傳的可能是一份**已過期但非 nil**的 session（先前登入過、本機還留著、但目前連
+    /// 不上網刷新）——不是「nil＝未登入、非 nil＝已登入且可用」這麼單純。任何要用這個值判斷
+    /// 「該不該讓使用者進 app」的 root routing 邏輯，必須另外檢查 `expiresAt`，不能只看
+    /// 「非 nil 就當作已登入可用」（LS-55 I5；PR #77 R1）。
+    ///
     /// 注意：「讀取安全」不等於「可以直接當 SwiftUI 的狀態源」。這個屬性本身不是
     /// Observable（沒有 publisher，值變化不會通知任何 View），值在背景變化時（例如
     /// autoRefreshToken 自動刷新、或另一個畫面呼叫 `signOut()`）不會觸發任何重繪——

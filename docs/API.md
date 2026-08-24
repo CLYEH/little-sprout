@@ -551,7 +551,7 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS017` | 邀請碼參數不合法（到期時間或可用次數超出範圍） | `create_invite` |
 | `LS020` | 日記不存在，或（`update_diary_entry` 情境）已被軟刪除須先還原 | `update_diary_entry`／`set_diary_deleted` |
 | `LS021` | 不是作者本人，或雖是作者但已不是該家庭 owner/member | `update_diary_entry` |
-| `LS022` | `get_family_timeline` 的游標參數只給了一半（`p_cursor_occurred_at`／`p_cursor_ref_id` 兩者要嘛都給、要嘛都不給） | `get_family_timeline` |
+| `LS022` | `get_family_timeline` 的游標參數只給了一半（`p_cursor_occurred_at`／`p_cursor_ref_id` 兩者要嘛都給、要嘛都不給） | `get_family_timeline`（游標是呼叫端自己組的，不是使用者輸入——使用者沒有東西可換，原地重試不會成功；Swift 端 `AppError`／`LSErrorCode.Tier` 把它歸在 `rejected` 層，不是 `validationRetryable`，見 LS-55 PR #77 R1 裁決） |
 | `LS023` | 相簿不存在 | `set_album_deleted` |
 | `LS024` | 留言不存在 | `set_comment_deleted` |
 | `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字。**例外**：owner 對別人的 `albums`／`comments` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明 |
@@ -570,10 +570,11 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 
 **Swift 端覆蓋現況（LS-54 D4 改寫；原「repo 尚未有網路層 Swift 程式碼、留給 LS-17」的段落已被
 LS-49 推翻）**：`LSErrorCode` 已逐碼涵蓋上表全部自訂碼——`LS001`／`LS002` 與 `LS010`–`LS017`
-（LS-49）、`LS020`–`LS022`（LS-54 補齊，歸層：`LS020`／`LS021` → `rejected`、`LS022` →
-`validationRetryable`）、`LS023`／`LS024`（LS-52 補齊，歸層皆 `rejected`）；`LS016` 另於
-LS-55 從 `validationRetryable` 改歸新增的 `retryableSystem` 層（見上方 `LS016` 列註記）。
-三層（`validationRetryable`／`retryableSystem`／`rejected`）歸類由
+（LS-49）、`LS020`–`LS022`（LS-54 補齊，歸層：`LS020`／`LS021`／`LS022` → `rejected`；`LS022`
+原本歸 `validationRetryable`，PR #77 R1 review 指出游標是呼叫端自己組的、使用者無輸入可換，
+改歸 `rejected`，見上方 `LS022` 列註記）、`LS023`／`LS024`（LS-52 補齊，歸層皆 `rejected`）；
+`LS016` 另於 LS-55 從 `validationRetryable` 改歸新增的 `retryableSystem` 層（見上方 `LS016`
+列註記）。三層（`validationRetryable`／`retryableSystem`／`rejected`）歸類由
 `LittleSproutTests/AppErrorTests.swift` 的列舉測試逐碼釘住。
 **尚缺碼：無**。之後每新增一個自訂碼，本表與 `LSErrorCode` 必須同 PR 更新，否則
 `error-codes-check` 會紅（任一邊多都算；gate 只認本節表格列的 `` `LSnnn` `` 首欄，散文提及不計）。

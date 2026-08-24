@@ -237,9 +237,14 @@ final class SupabaseAuthServiceTests: XCTestCase {
         let service = SupabaseAuthService(client: offlineClient)
 
         // `authStateChanges` 的 `.initialSession` 事件是背景排程送達的（見 SupabaseAuthService
-        // init 的註解），這裡用輪詢＋timeout 等它跑完（而不是斷言「一定會變成某個值」再等，
-        // 因為這裡要驗的正是「保持不變」，用 sleep 給非同步事件足夠時間跑完後再斷言）。
-        try await Task.sleep(nanoseconds: 300_000_000)
+        // init 的註解），這裡用 sleep 給非同步事件足夠時間跑完後再斷言（要驗的正是「保持
+        // 不變」，沒有一個「變成某個值」的終態可以拿來 poll）。300ms 曾經不夠：
+        // supabase-swift 的 `RetryRequestInterceptor`（`retryLimit: 2`／指數退避
+        // `pow(2, retryCount) * 0.5` 秒）替 `.notConnectedToInternet` 這類錯誤重試一次，
+        // 光是第一次重試前的等待就有 1 秒——sleep 300ms 時舊行為（false）根本還沒重試完、
+        // `.initialSession(nil)` 事件根本還沒送達，測試在旗標是 false 時也會誤判綠燈
+        // （PR #77 R1 M1 紅╱綠證明實測抓到）。2.5 秒留足夠餘裕蓋過重試延遲。
+        try await Task.sleep(nanoseconds: 2_500_000_000)
 
         XCTAssertEqual(
             service.currentSession?.userID, testUserID,
