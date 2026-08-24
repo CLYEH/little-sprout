@@ -810,3 +810,12 @@ create trigger albums_notify_insert after insert on public.albums
 --    不需要也不應該直接呼叫這些內部判斷／trigger 函式。
 -- ---------------------------------------------------------------------------
 revoke execute on all functions in schema private from public;
+
+-- ---------------------------------------------------------------------------
+-- 5. 已知缺口登記（merge-reviewer PR #85 I8，不在本票範圍內修，留紀錄不留空白）：
+--    notification_events 目前沒有任何 retention／清理路徑——已送出（sent_at is not
+--    null）的列會一直留著，也沒有涵蓋 sent_at 非空列的索引（notification_events_
+--    pending_idx 是 `where sent_at is null` 的部分索引，只服務待送查詢）。這張表會
+--    單向成長。票文沒有要求這件事，留給 LS-22（Edge Function 送出流程定案時，順便
+--    決定要保留多久、多久清一次）或後續票，不在這裡先猜一個保留期限。
+-- ---------------------------------------------------------------------------
