@@ -95,6 +95,8 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 
 **`feed_items` 為什麼第一天就要有**：時間軸要混排相簿/照片/日記，跨三張表 union 再排序，用 OFFSET 分頁在資料長大後會慢且會跳項。用一張由 trigger 維護的扁平表配 keyset 分頁（`WHERE occurred_at < $cursor ORDER BY occurred_at DESC LIMIT n`）。事後補要重寫整個首頁查詢，所以不列為優化項。
 
+**`feed_items` 的索引／外鍵變更規則（LS-48 收尾）**：這張表每筆 media／album／diary 各一列，是最快長大的表；自 LS-48 起對它新增索引一律 `CREATE INDEX CONCURRENTLY`、新增外鍵一律 `ADD CONSTRAINT … NOT VALID` 之後再 `VALIDATE CONSTRAINT`（都不會長時間鎖表）。兩者都不能在交易區塊內執行，所以這類變更要拆成獨立的非交易 migration 檔，不與其他 DDL 混在同一個檔案。
+
 **RLS**：所有內容表都帶 `family_id`，policy 一律檢查 `family_id IN (使用者所屬家庭)`。**不要直接內嵌子查詢**——一律包成 `STABLE SECURITY DEFINER` 函式（或把 family 清單放進 JWT custom claim）。必定逐列重算、必慢的形狀是 **aggregate／correlated 子查詢**（子查詢裡引用了外層資料列的欄位，且包在聚合函式內，規劃器無法拉平成 join，只能逐列跑一次 SubPlan），例如 `(SELECT count(*) FROM family_members fm WHERE fm.family_id = m.family_id AND fm.user_id = auth.uid()) > 0`。**等值形**（如 `family_id IN (SELECT family_id FROM family_members WHERE user_id = auth.uid())`，子查詢不引用外層欄位）規劃器通常會拉平成 hashed SubPlan／semi-join 一次求值，但那是規劃器依估計列數與 `work_mem` 做的選擇，**不是保證**——雜湊表放不進 `work_mem` 時一樣會退化成逐列的 `(SubPlan N)`，一樣會被 `supabase/tests/50_rls_plan_no_percall_subquery.sql` 的偵測器擋下（判的是 plan 形狀，不是 SQL 寫法）。這正是規則寫成「一律包函式」而不是「等值形可以裸寫」的原因：包函式不必賭資料量會不會超過 `work_mem`。
 
 **其他約束**：
