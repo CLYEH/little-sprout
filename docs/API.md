@@ -278,6 +278,10 @@
   狀態（那個檢查排在 owner 檢查之後，非 owner 永遠到不了那一步）；`request_id` 是
   128-bit 隨機 UUID，實務上不可窮舉猜測，這不構成有意義的資訊洩漏。未登入另外先擋
   `42501`。
+- **與 migration 檔頭註解的矛盾（LS-54 N6）**：`supabase/migrations/20260823010000_join_approval.sql`
+  裡 `approve_join` 上方的註解仍寫「授權檢查排在狀態檢查之前……不會從錯誤碼的差別推敲出
+  某個 request id 存不存在」——這個「不洩漏存在性」宣稱**不成立**（如上：找不到列的 `LS015`
+  先於 owner 檢查的 `42501`）。依「migration 是歷史紀錄、不回頭改」原則不修舊檔，**以本文為準**。
 - **併發**：對同一筆申請用 `FOR UPDATE` 鎖住，與 `reject_join` 互相排隊——同一筆申請
   被同時核准與拒絕時，後到的那邊會讀到已處理狀態，拿到 `LS015`（見
   `supabase/tests/concurrency/approve_reject_race_*.sql`）。
@@ -416,7 +420,9 @@
 ## 5. 錯誤碼全表
 
 自訂 `SQLSTATE` 一律是 `LS0xx`/`LS1xx` 格式（5 碼英數，符合 Postgres 自訂 errcode 慣例）。
-Swift 端後續實作 `LSError` enum 時（見下方「未涵蓋於本票」）應逐碼列舉，不要用字串比對。
+Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本表全部自訂碼，不用字串
+前綴比對；本表與 `LSErrorCode` 的雙向集合一致由 `scripts/gates/error-codes-check.sh` 機械對帳
+（push-gate＋CI rules job，LS-54），見本節末。
 
 | 碼 | 意義 | 由哪支 RPC／哪個路徑觸發 |
 |---|---|---|
@@ -447,11 +453,12 @@ Swift 端後續實作 `LSError` enum 時（見下方「未涵蓋於本票」）�
 | `23505`（`unique_violation`） | 例如 `reactions` 重複按讚、`blocked_users` 重複封鎖同一人 |
 | `23503`（`foreign_key_violation`） | 例如 `albums.child_id` 指到別家的孩子（複合外鍵擋下） |
 
-**未涵蓋於本票（LS-41）的範圍，記錄供後續票參考**：Swift 端 `LSError` enum 對映全碼＋
-列舉式單元測試，是原始 ticket scope 的一部分，但目前 repo 尚未有任何網路層 Swift 程式碼
-（`LittleSprout/` 底下沒有任何呼叫 Supabase 的程式碼），orchestrator 派工時把本票範圍收斂
-為「文件＋對帳 gate」，Swift 端留給第一張真正呼叫這些 RPC 的 UI 票（LS-17 起）一併實作，
-到時候直接對照本節的表即可。
+**Swift 端覆蓋現況（LS-54 D4 改寫；原「repo 尚未有網路層 Swift 程式碼、留給 LS-17」的段落已被
+LS-49 推翻）**：`LSErrorCode` 已逐碼涵蓋上表全部自訂碼——`LS001`／`LS002` 與 `LS010`–`LS017`
+（LS-49）、`LS020`–`LS022`（LS-54 補齊，歸層：`LS020`／`LS021` → `rejected`、`LS022` →
+`validationRetryable`）；四層歸類由 `LittleSproutTests/AppErrorTests.swift` 的列舉測試逐碼釘住。
+**尚缺碼：無**。之後每新增一個自訂碼，本表與 `LSErrorCode` 必須同 PR 更新，否則
+`error-codes-check` 會紅（任一邊多都算；gate 只認本節表格列的 `` `LSnnn` `` 首欄，散文提及不計）。
 
 ---
 
@@ -584,6 +591,11 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
 `supabase/migrations/*.sql` 抽出的 `public` schema RPC 簽章與表名清單（順序不拘，多一項
 少一項都會讓 gate 變紅）。**改 schema 時，先跑一次 `bash scripts/gates/api-contract-check.sh`
 確認紅燈的差異訊息，再回來同步這兩個區塊**——不要手動猜測格式。
+
+**權威性（LS-54 N4）**：CI `db` job 以 `--catalog`（`supabase db reset` 後查活資料庫 `pg_catalog`）
+為權威來源；本機 push-gate 的文字解析模式是 best-effort（已知限制見
+`scripts/gates/api_contract_check.py` 檔頭）。兩者不一致時一律以 CI 為準——本機綠、CI 紅就是
+schema 或本文要修，不是 gate 要調。
 
 <!-- API-CONTRACT:RPC
 approve_join(uuid)
