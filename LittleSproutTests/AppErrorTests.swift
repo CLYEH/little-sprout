@@ -118,6 +118,18 @@ final class AppErrorTests: XCTestCase {
         }
     }
 
+    func test_map_postgrestError_unknownLSCode_isServer() {
+        // LS999 不在 LSErrorCode 裡：後端新增了碼、Swift 還沒列舉時，必須 fail loud 落在 .server
+        // （逼呼叫端至少顯示「發生錯誤」），不能被「開頭是 LS」這種前綴比對悄悄歸進可重試。
+        // 與 error-codes-check gate 互補：gate 擋 API.md 表裡有而 Swift 沒有的碼，這裡釘住
+        // 萬一漏網（例如後端直接 raise 了表裡沒有的碼）時的行為（LS-54）。
+        let error = PostgrestError(code: "LS999", message: "unlisted custom code")
+        guard case .server(_, let code) = AppError.map(error) else {
+            return XCTFail("未列舉的 LS 碼應映射為 .server，實際是不同的分類")
+        }
+        XCTAssertEqual(code, "LS999")
+    }
+
     func test_map_postgrestError_missingCode_isServer() {
         let error = PostgrestError(code: nil, message: "unexpected")
         guard case .server = AppError.map(error) else {
@@ -159,14 +171,17 @@ final class AppErrorTests: XCTestCase {
             .storageQuotaExceeded,
             .alreadyMember,
             .alreadyHasPendingRequest,
-            .requestNotFoundOrProcessed
+            .requestNotFoundOrProcessed,
+            .diaryNotFoundOrDeleted,
+            .diaryNotEditableByCaller
         ]
         let expectedValidationRetryable: Set<LSErrorCode> = [
             .inviteCodeNotFound,
             .inviteCodeExpired,
             .inviteCodeExhausted,
             .inviteCodeGenerationCollision,
-            .inviteParamsInvalid
+            .inviteParamsInvalid,
+            .timelineCursorIncomplete
         ]
 
         XCTAssertEqual(expectedRejected.union(expectedValidationRetryable), Set(LSErrorCode.allCases))

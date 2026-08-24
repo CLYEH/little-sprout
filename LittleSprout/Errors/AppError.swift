@@ -39,6 +39,7 @@ enum AppError: Error, Equatable {
 }
 
 /// 本專案自訂 SQLSTATE 全碼（docs/API.md §5 錯誤碼全表；`LS1xx` 目前尚未使用，格式保留給未來）。
+/// 與 §5 表的雙向集合一致由 `scripts/gates/error-codes-check.sh` 機械對帳（push-gate＋CI，LS-54）。
 /// 逐碼列舉而不是字串前綴比對（LS-49 PR #63 review F4）：新碼若忘記歸類，在這裡會直接編不出來
 /// 或被列舉測試抓到，不會被「開頭是 LS0」這種寬鬆比對悄悄吞進錯的分類。
 enum LSErrorCode: String, CaseIterable, Sendable {
@@ -52,6 +53,9 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     case requestNotFoundOrProcessed = "LS015"
     case inviteCodeGenerationCollision = "LS016"
     case inviteParamsInvalid = "LS017"
+    case diaryNotFoundOrDeleted = "LS020"
+    case diaryNotEditableByCaller = "LS021"
+    case timelineCursorIncomplete = "LS022"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -64,11 +68,15 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     var tier: Tier {
         switch self {
         case .familyMustHaveOwner, .storageQuotaExceeded,
-             .alreadyMember, .alreadyHasPendingRequest, .requestNotFoundOrProcessed:
+             .alreadyMember, .alreadyHasPendingRequest, .requestNotFoundOrProcessed,
+             .diaryNotFoundOrDeleted, .diaryNotEditableByCaller:
             // 這三碼是 PR #63 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
             // （指定新 owner、騰出空間或升級額度），不是「打錯字重打」能解的。
+            // diaryNotFoundOrDeleted／diaryNotEditableByCaller（LS-54 補齊 LS020／LS021）同理：
+            // 日記不存在或已軟刪要先還原、呼叫者已不是仍在家庭裡的作者——重送同一個
+            // update_diary_entry／set_diary_deleted 不會變成功，要先做別的事。
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:
             // 碼本身是「輸入」——打錯字換一個、或請 owner 給一支新的碼，都是同一個 UI 動作
@@ -77,7 +85,9 @@ enum LSErrorCode: String, CaseIterable, Sendable {
         case .inviteCodeGenerationCollision:
             // RPC 自己的訊息是「請重試」——單純的隨機碰撞，同樣的呼叫幾乎必然在下一次成功。
             return .validationRetryable
-        case .inviteParamsInvalid:
+        case .inviteParamsInvalid, .timelineCursorIncomplete:
+            // 參數本身不合法（邀請設定超出範圍／游標只給一半，LS-54 補齊 LS022）：
+            // 修正輸入之後同一個呼叫就會成功。
             return .validationRetryable
         }
     }

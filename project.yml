@@ -85,4 +85,9 @@ schemes:
     test:
       config: Debug
       targets:
-        - LittleSproutTests
+        # LS-54 N8：明確序列執行。MockURLProtocol 的 handler 是全域 static（各測試檔的
+        # tearDown 清掉它是靠「同一時間只有一個測試在跑」才成立），平行測試會互相汙染。
+        # XcodeGen 預設本來就是 false，這裡寫死是讓意圖進 repo、不靠預設值；CI 與
+        # push-gate 的 xcodebuild 另外帶 -parallel-testing-enabled NO 雙保險。
+        - name: LittleSproutTests
+          parallelizable: false
