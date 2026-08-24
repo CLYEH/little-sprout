@@ -121,10 +121,20 @@ comment on table public.comments is
 -- ---------------------------------------------------------------------------
 -- set_album_deleted：owner 對別人相簿唯一剩下的操作——軟刪／還原。
 --
--- 作者分支的判準逐字沿用收斂前 albums_update 作者分支的判準
--- （created_by = 我 and family_id in contributor_family_ids()）：這支 RPC
--- 對作者而言是「多一條路徑」而不是唯一路徑（作者仍可直接 UPDATE 軟刪自己的
--- 相簿），刻意讓兩條路徑的授權範圍一致，不夾帶擴權或縮權。
+-- 作者分支的判準（orchestrator PR #70 review F5 裁決）：只要求「當下仍是該
+-- 家庭任一角色的成員」，不要求仍是 owner/member——對齊 LS-48 對 diaries 的
+-- set_diary_deleted（見該支函式的裁量說明）：改內容（title／child_id／
+-- cover_media_id）是持續的創作權，要求仍是 contributor（albums_update policy
+-- 的作者分支未變，見上）；移除／還原自己的東西是對自己貢獻過的內容最基本的
+-- 處置權，被降級成 viewer 不該連這點都被剝奪。這與 F1 版本（要求仍是
+-- owner/member）不同——F1 版本是「逐字沿用收斂前 albums_update 作者分支的
+-- 判準」，但那個判準管的是「改內容」，套用到「移除」這個不同性質的操作上
+-- 沒有實質理由，只是圖省事；diaries／comments 兩邊都是「改內容要求
+-- contributor、移除只要求仍是成員」，albums 沒有理由自成一格。
+--
+-- 「完全離開家庭」（family_members 裡已經沒有這一列）之後，這支 RPC 對此人
+-- 完全關閉——不論是編輯還是軟刪，都不存在「離開後仍可從外部操作這個家庭的
+-- 資料」這種路徑，這點與 set_diary_deleted 一致。
 --
 -- 錯誤碼延續 LS022（get_family_timeline）之後的序號：LS023＝相簿不存在。
 -- 授權失敗沿用既有慣例用裸 42501（不像 update_diary_entry 那樣另開專屬碼），
@@ -145,7 +155,7 @@ declare
   v_uid uuid := auth.uid();
   v_album public.albums%rowtype;
   v_is_owner boolean;
-  v_is_author_contributor boolean;
+  v_is_author_current_member boolean;
 begin
   if v_uid is null then
     raise exception '未登入，無法移除或還原相簿' using errcode = '42501';
@@ -164,12 +174,12 @@ begin
 
   select exists (
     select 1 from public.family_members m
-     where m.family_id = v_album.family_id and m.user_id = v_uid and m.role in ('owner', 'member')
-  ) into v_is_author_contributor;
+     where m.family_id = v_album.family_id and m.user_id = v_uid
+  ) into v_is_author_current_member;
 
   if not v_is_owner
-     and (v_album.created_by is distinct from v_uid or not v_is_author_contributor) then
-    raise exception '只有建立者本人（且仍是該家庭 owner/member）或該家庭的 owner 能移除／還原這本相簿'
+     and (v_album.created_by is distinct from v_uid or not v_is_author_current_member) then
+    raise exception '只有建立者本人（且仍是該家庭成員）或該家庭的 owner 能移除／還原這本相簿'
       using errcode = '42501';
   end if;
 

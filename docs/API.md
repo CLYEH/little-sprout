@@ -168,8 +168,11 @@
   - 內容（title／child_id／cover_media_id）僅建立者本人（仍是該家庭 owner/member）
     直接 `.update()`；owner 對別人建立的相簿**沒有**改寫內容的路徑（連「靜默 0 列」
     都沒有其他分支可用，見 §2「寫入路徑小結」的例外說明）。
-  - 軟刪／還原（`deleted_at`）：建立者可直接 `.update()` 自己的；owner 對別人的相簿
-    要呼叫 `set_album_deleted` RPC（見 §4）。
+  - 軟刪／還原（`deleted_at`）：建立者可直接 `.update()` 自己的（要求仍是
+    owner/member）；owner 對別人的相簿要呼叫 `set_album_deleted` RPC（見 §4）。
+    **建立者也可以改用這支 RPC 軟刪／還原自己的相簿**，且授權範圍比直接
+    `.update()` 寬——只要求仍是該家庭任一角色的成員，被降級成 viewer 也適用
+    （F5：對齊 `diaries`／`comments` 的同名 RPC，見 §4）。
   - 硬刪（真正 `DELETE` 整列）仍是 owner-only 的直接 policy，未被收斂進 RPC。
 - `diaries`（LS-48 起，見 §2 表與 §4 三支 RPC）：
   - 新增／編輯內容／軟刪都是 **RPC-only**，直接 `.insert()`／`.update()` 一律 `42501`
@@ -409,21 +412,33 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **併發**：對目標列用 `FOR UPDATE` 鎖住；與 `update_diary_entry` 的互斥關係見上。
 
 ### `set_album_deleted(p_album_id uuid, p_deleted boolean) -> void`
-- **誰能呼叫**：建立者本人（**要求仍是該家庭的 owner/member**，跟 `albums_update`
-  policy 的建立者分支判準一致，比 `set_diary_deleted` 的作者分支嚴——那支只要求
-  仍是任一角色的成員）**或**該家庭的 owner（家庭內任何一本相簿）。
+- **誰能呼叫**：建立者本人（**只要求仍是該家庭任一角色的成員**，orchestrator PR
+  #70 review F5 裁決對齊 `set_diary_deleted`／`set_comment_deleted`——被降級成
+  viewer 仍可移除／還原自己建立的相簿）**或**該家庭的 owner（家庭內任何一本
+  相簿）。**這個要求比 `albums_update` policy 的建立者分支寬**（那支要求仍是
+  owner/member，見 §3）——「改內容」與「移除／還原自己的東西」是不同性質的
+  操作，前者是持續的創作權，後者更接近對自己貢獻過的東西最基本的處置權，兩者
+  刻意不同高標準，不是本票的不一致，理由見 migration 對這支函式的裁量說明。
 - **用途**：軟刪（`p_deleted = true`）／還原（`p_deleted = false`）。**owner 對別人
   相簿唯一能做的操作**——這支只碰 `deleted_at` 一欄，owner 分支不可能被拿來竄改
   `title`／`child_id`／`cover_media_id`（物理上不會執行到那些欄位的 `UPDATE`）。
-  建立者對自己的相簿仍可直接 `.update()` 軟刪／還原（見 §3），這支 RPC 對建立者
-  是多一條路徑而非唯一路徑，兩條路徑的授權範圍一致。
+  建立者對自己的相簿仍可直接 `.update()` 軟刪／還原（見 §3，那條路徑要求仍是
+  owner/member），這支 RPC 對建立者是多一條路徑而非唯一路徑，但**兩條路徑的
+  授權範圍不同**——被降級成 viewer 的建立者，直接 `.update()` 會被排除（0 列），
+  但這支 RPC 仍會成功，這是刻意的設計，不是疏漏。
 - **與直接 `.update()` 的差異**：owner 對別人相簿直接下 `.update({deleted_at: ...})`
   會被 policy 排除、靜默影響 0 列（見 §2「寫入路徑小結」的例外說明），**不會**
   拿到錯誤；這支 RPC 才是 owner 想確認成功／失敗的正確呼叫方式，失敗會拿到明確的
   錯誤碼。
 - **錯誤碼**：未登入 `42501`；相簿不存在 `LS023`；不是建立者也不是該家 owner，或
-  雖是建立者但已不是該家庭 owner/member `42501`。
-- **併發**：對目標列用 `FOR UPDATE` 鎖住，單一 statement 更新。
+  雖是建立者但已完全離開該家庭 `42501`。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住，單一 statement 更新——但這把鎖對這支
+  函式沒有 `update_diary_entry`／`set_diary_deleted` 那種「狀態決策依賴新鮮讀取」
+  的必要性：這支函式的授權判斷只查 `family_members`（不受這本相簿本身的欄位影響），
+  尾端的 `UPDATE` 又是把 `deleted_at` 設成常數而非依讀到的舊值計算新值，所以就算
+  拿掉這把鎖，序列化仍然由那句 `UPDATE` 本身的隱含列鎖保證——本機實測驗證過（見
+  `supabase/tests/concurrency/album_edit_vs_delete_*.sql` 檔頭），這與作者直接
+  `.update()` 併發的行為驗證見那組測試，這裡不重複展開。
 
 ### `set_comment_deleted(p_comment_id uuid, p_deleted boolean) -> void`
 - **誰能呼叫**：作者本人（**只要求仍是該家庭任一角色的成員**，跟
@@ -438,7 +453,9 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   失敗時給出明確錯誤碼。
 - **錯誤碼**：未登入 `42501`；留言不存在 `LS024`；不是作者也不是該家 owner，或
   雖是作者但已離開家庭 `42501`。
-- **併發**：對目標列用 `FOR UPDATE` 鎖住，單一 statement 更新。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住，單一 statement 更新——這把鎖的必要性
+  說明同 `set_album_deleted`，這裡不重複展開；作者直接 `.update()` 併發的行為
+  驗證見 `supabase/tests/concurrency/comment_edit_vs_delete_*.sql`。
 
 ### `get_family_timeline(p_family_id uuid, p_child_id uuid default null, p_cursor_occurred_at timestamptz default null, p_cursor_ref_id uuid default null, p_limit integer default 20) -> table(kind public.feed_kind, ref_id uuid, occurred_at timestamptz, child_id uuid)`
 - **誰能呼叫**：任何已登入使用者，但只查得到自己所屬家庭的資料——`p_family_id` 傳一個
