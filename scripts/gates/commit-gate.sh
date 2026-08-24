@@ -29,6 +29,9 @@ esac
 added=$(git diff --cached --diff-filter=ACM --unified=0 | grep '^+' | grep -v '^+++' || true)
 printf '%s\n' "$added" | bash "$(git rev-parse --show-toplevel)/scripts/gates/scan-secrets.sh"
 
+# 已追蹤檔不得命中 .gitignore（LS-51：設計畫布執行產物——ignore 規則管不到已追蹤／git add -f 硬加的檔）
+bash "$(git rev-parse --show-toplevel)/scripts/gates/tracked-ignored-check.sh"
+
 # staged .pen 設計稿落地檢查（LS-26：機械觸發點——不靠 agent 記得跑收工程序）
 # for 迴圈而非 pipe|while：檢查失敗要能中止整個 gate，不被 subshell 吞掉
 staged_pen=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACM | grep '\.pen$' || true)
