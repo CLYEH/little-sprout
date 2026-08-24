@@ -12130,9 +12130,13 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "RayG5",
+                          "id": "yOHuy",
                           "name": "Family Caption",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": " ",
+                          "textAlign": "center",
                           "fontFamily": "$font",
                           "fontSize": "$fs-lead",
                           "fontWeight": "600"
@@ -26344,7 +26348,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "間距節奏（R3 收斂成一套）：群內 8 ／ 群間 16 ／ 段落 24 ／ 章節 44。輔助：sp-tight 6（詞內光學）、sp-group 12（同一段文字內部）。sp-inline 10 已刪除——它與 8／12 在畫面上不可分辨，20 個使用點已重新指派。\n章節 44 是硬要求：25 個畫面每一個都必須出現一次。實建 18/25（7 gap＋11 padding；03/06 碼輸入家族 7 張經 R4/R6 重排後未含 44 斷點——待補或已裁可免，見戳記）。同一垂直堆疊仍禁止連續三個相同 gap。\n左右邊距 24（screen-pad）由畫面 wrapper 統一給，iPad 用 screen-pad-lg 40。",
+                  "content": "間距節奏（R3 收斂成一套）：群內 8 ／ 群間 16 ／ 段落 24 ／ 章節 44。輔助：sp-tight 6（詞內光學）、sp-group 12（同一段文字內部）。sp-inline 10 已刪除——它與 8／12 在畫面上不可分辨，20 個使用點已重新指派。\n章節 44 是硬要求：碼輸入家族（06/06b/06c/06d）正式豁免，理由：Upper/Footer 兩段式已用 flex spacer 承擔章節分隔。其餘畫面每一個都必須出現一次。實建 18/25（7 gap＋11 padding；03/06 碼輸入家族 7 張經 R4/R6 重排後未含 44 斷點，見戳記）。同一垂直堆疊仍禁止連續三個相同 gap。\n左右邊距 24（screen-pad）由畫面 wrapper 統一給，iPad 用 screen-pad-lg 40。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -33861,6 +33865,7 @@
                   "type": "frame",
                   "id": "PUequ",
                   "name": "Trust Row",
+                  "width": "fill_container",
                   "gap": "$sp-label",
                   "alignItems": "center",
                   "children": [
@@ -33879,6 +33884,8 @@
                       "id": "LK2RV",
                       "name": "Trust Text",
                       "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "只有你邀請的家人看得到",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
@@ -36751,7 +36758,7 @@
     },
     {
       "type": "frame",
-      "id": "DW9PE",
+      "id": "hKSu1",
       "x": 2300,
       "y": 16378,
       "name": "A11y / 06 輸入邀請碼 · Dynamic Type AX3（body 40pt）",
@@ -36760,7 +36767,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2200,
+      "height": 1297,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -36789,14 +36796,14 @@
       "layout": "vertical",
       "children": [
         {
-          "id": "G7UJ65",
+          "id": "R1iW1o",
           "type": "ref",
           "ref": "OeXop",
           "name": "Status Bar",
           "width": "fill_container"
         },
         {
-          "id": "iJJ3U",
+          "id": "NiCAa",
           "type": "ref",
           "ref": "W6qTyS",
           "name": "Nav Back",
@@ -36804,10 +36811,9 @@
         },
         {
           "type": "frame",
-          "id": "P4qJT",
+          "id": "azrwv",
           "name": "Body",
           "width": "fill_container",
-          "height": "fill_container",
           "layout": "vertical",
           "gap": "$sp-group",
           "padding": [
@@ -36819,16 +36825,15 @@
           "children": [
             {
               "type": "frame",
-              "id": "VhShF",
+              "id": "BKggF",
               "name": "Upper",
               "width": "fill_container",
-              "height": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
               "children": [
                 {
                   "type": "frame",
-                  "id": "VEYfg",
+                  "id": "AhEZ6",
                   "name": "Top",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -36836,7 +36841,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "NCPQj",
+                      "id": "Hvv2r",
                       "name": "Header",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -36844,7 +36849,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "t38yQ",
+                          "id": "BgdG5",
                           "name": "Title",
                           "fill": "$text-primary",
                           "content": "輸入邀請碼",
@@ -36855,7 +36860,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "W4ITF",
+                          "id": "h0NmA",
                           "name": "Subtitle",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
@@ -36872,14 +36877,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "KBH15",
+                  "id": "AMBZx",
                   "name": "Code Card",
                   "width": "fill_container",
                   "layout": "vertical",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "JazSM",
+                      "id": "oKGg9",
                       "name": "Card Paper",
                       "width": 345,
                       "fill": "$surface",
@@ -36893,20 +36898,20 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "zsYz2",
+                          "id": "NEE1j",
                           "name": "Code Groups",
                           "width": "fill_container",
                           "gap": "$sp-block",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "c8uTY",
+                              "id": "aFljZ",
                               "name": "Group 1",
                               "width": "fill_container",
                               "gap": "$sp-label",
                               "children": [
                                 {
-                                  "id": "f4XBj",
+                                  "id": "k8gYYb",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 1",
@@ -36920,7 +36925,7 @@
                                   }
                                 },
                                 {
-                                  "id": "agExG",
+                                  "id": "ebbbl",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 2",
@@ -36934,7 +36939,7 @@
                                   }
                                 },
                                 {
-                                  "id": "r4u7Xz",
+                                  "id": "CI0np",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 3",
@@ -36951,13 +36956,13 @@
                             },
                             {
                               "type": "frame",
-                              "id": "nMd4r",
+                              "id": "T7nH6",
                               "name": "Group 2",
                               "width": "fill_container",
                               "gap": "$sp-label",
                               "children": [
                                 {
-                                  "id": "UQTlx",
+                                  "id": "ZjdRT",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 1",
@@ -36971,7 +36976,7 @@
                                   }
                                 },
                                 {
-                                  "id": "cP6wQ",
+                                  "id": "nPHZU",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 2",
@@ -36985,7 +36990,7 @@
                                   }
                                 },
                                 {
-                                  "id": "uLgeq",
+                                  "id": "sJO99",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 3",
@@ -37004,7 +37009,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "kwINL",
+                          "id": "VuMPo",
                           "name": "Code Hint",
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
@@ -37021,7 +37026,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "h1lXdS",
+                  "id": "sjSzt",
                   "name": "Explain Wrap",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -37034,12 +37039,12 @@
                   "children": [
                     {
                       "type": "text",
-                      "id": "dSAe4",
+                      "id": "G7uAv",
                       "name": "Explain",
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "請家人在 App 裡點「邀請家人」，把 6 位碼傳給你。送出後要等管理者核准。",
+                      "content": "請家人在 App 裡點「邀請家人」，把 6 位碼傳給你。",
                       "lineHeight": 1.6,
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
@@ -37049,7 +37054,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "FuwLU",
+                  "id": "GQJxP",
                   "name": "Next Steps Summary",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -37062,7 +37067,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "zsMWi",
+                  "id": "RZPjo",
                   "name": "Press Reply",
                   "width": "fill_container",
                   "gap": "$sp-label",
@@ -37076,7 +37081,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "tpYBM",
+                      "id": "gRvqc",
                       "name": "Reply Icon",
                       "width": 18,
                       "height": 18,
@@ -37086,7 +37091,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "q60JXa",
+                      "id": "P6Dxy",
                       "name": "Reply Text",
                       "fill": "$text-primary",
                       "content": "還要再填 1 個字",
@@ -37098,14 +37103,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "aoOlW",
+                  "id": "FjAcM",
                   "name": "CTA Wrap",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-group",
                   "children": [
                     {
-                      "id": "RGNEG",
+                      "id": "Z8mT7",
                       "type": "ref",
                       "ref": "OKSJI",
                       "name": "Join Button",
@@ -37120,19 +37125,12 @@
                       }
                     }
                   ]
-                },
-                {
-                  "type": "frame",
-                  "id": "OLO7s",
-                  "name": "Whitespace Spacer",
-                  "width": "fill_container",
-                  "height": "fill_container"
                 }
               ]
             },
             {
               "type": "frame",
-              "id": "Q2kT3e",
+              "id": "lwCrE",
               "name": "Footer",
               "width": "fill_container",
               "layout": "vertical",
@@ -37145,7 +37143,7 @@
               ],
               "children": [
                 {
-                  "id": "HSUJF",
+                  "id": "z0ATW",
                   "type": "ref",
                   "ref": "XggYA",
                   "name": "Paste Link Button",
@@ -37165,7 +37163,7 @@
         },
         {
           "type": "frame",
-          "id": "t2YkV",
+          "id": "i5ftrx",
           "name": "Home Indicator Area",
           "width": "fill_container",
           "height": 34,
@@ -37175,7 +37173,7 @@
             {
               "type": "rectangle",
               "cornerRadius": "$radius-full",
-              "id": "OjD0J",
+              "id": "v1CDj",
               "name": "Home Indicator",
               "fill": "$home-indicator",
               "width": 140,
