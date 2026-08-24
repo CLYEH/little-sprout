@@ -472,4 +472,171 @@ begin
 end;
 $$;
 
+-- ---------------------------------------------------------------------------
+-- list_comments（LS-58）效能回歸：同一個教訓（LS-48 F1）再套一次——比照
+-- get_family_timeline 拆成「無游標／有游標」兩條靜態查詢，避免 OR 條件擋掉
+-- comments_target_idx（family_id, target_type, target_id, created_at）的索引選用。
+--
+-- 資料量：5 萬則留言全部掛在**同一個** target 上（單一相簿/照片吃到 5 萬則留言在
+-- 產品上不現實，但這正是要驗的東西——分頁查詢的 buffers 必須跟 limit 成正比，
+-- 不能跟這個 target 底下的留言總數成正比；用一個極端值才測得出退化成全表掃描的
+-- 情況會有多糟）。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_target constant uuid := '3c000000-0000-4000-8000-000000000001';
+  v_n bigint;
+begin
+  reset role;
+  insert into public.comments (family_id, target_type, target_id, author_id, body, created_at)
+  select 'fc000000-0000-4000-8000-000000000001', 'media', v_target,
+         'c0000000-0000-4000-8000-000000000001', 'list_comments 效能測試 #' || i,
+         now() - (i * interval '1 minute')
+    from generate_series(1, 50000) i;
+  analyze public.comments;
+
+  select count(*) into v_n from public.comments
+   where target_type = 'media' and target_id = v_target;
+  if v_n < 50000 then
+    raise exception 'FAIL：list_comments 效能測試需要 ≥5 萬則留言，實際只有 %', v_n;
+  end if;
+
+  set local role authenticated;
+  perform * from public.list_comments(
+    'fc000000-0000-4000-8000-000000000001', 'media', v_target, null, null, 1);  -- warm-up
+end;
+$$;
+
+do $$
+declare
+  v_line text;
+  v_plan text;
+  v_buffers bigint;
+  v_hit bigint;
+  v_read bigint;
+  v_target constant uuid := '3c000000-0000-4000-8000-000000000001';
+  v_family constant uuid := 'fc000000-0000-4000-8000-000000000001';
+  v_deep_cursor constant timestamptz := now() - interval '49900 minutes';
+  v_max_uuid constant uuid := 'ffffffff-ffff-ffff-ffff-ffffffffffff';
+  -- 同一套暖機後穩定成本邏輯與門檻取法，見上方 get_family_timeline 段落的 N2 說明。
+  c_buffer_budget constant bigint := 60;
+  q record;
+begin
+  for q in
+    select * from (values
+      (1, '分支 1：無游標（第一頁）',
+       format('select * from public.list_comments(%L::uuid, ''media'', %L::uuid, null, null, 20)',
+         v_family, v_target)),
+      (2, '分支 2：有游標（深頁分頁）',
+       format('select * from public.list_comments(%L::uuid, ''media'', %L::uuid, %L::timestamptz, %L::uuid, 20)',
+         v_family, v_target, v_deep_cursor, v_max_uuid))
+    ) as t(idx, label, stmt)
+    order by idx
+  loop
+    v_plan := '';
+    for v_line in execute 'explain (analyze, verbose, buffers) ' || q.stmt loop
+      v_plan := v_plan || v_line || E'\n';
+    end loop;
+
+    if v_plan ~ '\(SubPlan [0-9]+\)' then
+      raise exception E'FAIL 效能：list_comments %（分支 %）的 plan 出現 correlated SubPlan\n%',
+        q.label, q.idx, v_plan;
+    end if;
+
+    select coalesce(sum((x[1])::bigint), 0) into v_hit
+      from regexp_matches(v_plan, 'shared hit=([0-9]+)', 'g') as x;
+    select coalesce(sum((x[1])::bigint), 0) into v_read
+      from regexp_matches(v_plan, E'read=([0-9]+)', 'g') as x;
+    v_buffers := v_hit + v_read;
+
+    if v_buffers > c_buffer_budget then
+      raise exception E'FAIL 效能：list_comments %（分支 %）buffers=%（hit=% read=%，門檻 %）—— 疑似索引沒被正確選用，掃描量與這個 target 底下的留言總數（5 萬）成正比而不是與 limit 成正比\n%',
+        q.label, q.idx, v_buffers, v_hit, v_read, c_buffer_budget, v_plan;
+    end if;
+
+    raise notice 'ok 效能：list_comments %（分支 %） buffers=%（hit=% read=%，門檻 ≤%）',
+      q.label, q.idx, v_buffers, v_hit, v_read, c_buffer_budget;
+  end loop;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- get_reaction_counts（LS-58）：單一靜態聚合查詢（無 OR／游標分支），跟主查詢
+-- 1-5 同一套判準（無 correlated SubPlan、所有節點 loops=1）即可，不需要另立
+-- get_family_timeline／list_comments 那種暖機＋buffer 門檻的專屬段落——那兩支
+-- 有「拆成多條靜態查詢」的 inline 風險（LS-48 F1 教訓），這支沒有。
+--
+-- 資料量：250 個不同 target，每個各 20 筆反應（5000 筆總計），共用 20 個效能帳號
+-- （reactions 的 UNIQUE(target_type, target_id, user_id) 限制同一人對同一 target
+-- 只能一筆，跨 target 可重複用同一批使用者）。查詢只帶其中 20 個 target_id，
+-- 驗證 buffers／plan 不會跟 5000 筆總量成正比。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_targets uuid[];
+  v_n bigint;
+begin
+  reset role;
+
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at,
+                          raw_app_meta_data, raw_user_meta_data)
+  select ('c2000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid,
+         '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+         'perf-reactor-' || i || '@ls58.test', now(), now(), '{}', '{}'
+    from generate_series(1, 20) i
+   on conflict (id) do nothing;
+
+  insert into public.profiles (id, display_name)
+  select ('c2000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid, '效能測試反應者 ' || i
+    from generate_series(1, 20) i
+   on conflict (id) do nothing;
+
+  select array_agg(('4c000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid)
+    into v_targets
+    from generate_series(1, 250) i;
+
+  insert into public.reactions (family_id, target_type, target_id, user_id)
+  select 'fc000000-0000-4000-8000-000000000001', 'album', t, u
+    from unnest(v_targets) as t
+   cross join lateral (
+     select ('c2000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid as u
+       from generate_series(1, 20) i
+   ) users;
+  analyze public.reactions;
+
+  select count(*) into v_n from public.reactions
+   where family_id = 'fc000000-0000-4000-8000-000000000001' and target_type = 'album';
+  if v_n < 5000 then
+    raise exception 'FAIL：get_reaction_counts 效能測試需要 ≥5000 筆反應，實際只有 %', v_n;
+  end if;
+
+  set local role authenticated;
+end;
+$$;
+
+do $$
+declare
+  v_line text;
+  v_plan text := '';
+  v_loops bigint;
+  v_stmt text := 'select * from public.get_reaction_counts(''fc000000-0000-4000-8000-000000000001''::uuid, ''album'', (select array_agg((''4c000000-0000-4000-8000-'' || lpad(i::text, 12, ''0''))::uuid) from generate_series(1, 20) i))';
+begin
+  for v_line in execute 'explain (analyze, verbose, buffers) ' || v_stmt loop
+    v_plan := v_plan || v_line || E'\n';
+  end loop;
+
+  if v_plan ~ '\(SubPlan [0-9]+\)' then
+    raise exception E'FAIL 效能：get_reaction_counts 的 plan 出現 per-row correlated SubPlan\n%', v_plan;
+  end if;
+
+  select coalesce(max((x[1])::bigint), 1) into v_loops
+    from regexp_matches(v_plan, 'loops=([0-9]+)', 'g') as x;
+  if v_loops > 1 then
+    raise exception E'FAIL 效能：get_reaction_counts 的 plan 有節點被執行 % 次\n%', v_loops, v_plan;
+  end if;
+
+  raise notice 'ok 效能：get_reaction_counts —— 無 correlated SubPlan，所有節點 loops=1';
+end;
+$$;
+
 rollback;

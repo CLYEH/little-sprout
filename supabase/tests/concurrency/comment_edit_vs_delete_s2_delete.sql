@@ -1,12 +1,18 @@
 -- 併發場景（方向 A：編輯先動）的 session 2：owner 在作者還沒 commit 編輯的時候用
 -- set_comment_deleted 軟刪。
 --
--- 更正（merge-reviewer PR #70 review N1，第 2 輪）：先前的檔頭宣稱「for update
--- 不是行為必要的」是錯的，理由同 album_edit_vs_delete_s2_delete.sql（不重複
--- 展開）。真正驗 for update 必要性的是
--- comment_edit_vs_delete_s1_move_family.sql／s2_delete_after_move.sql（作者
--- 搬家 vs owner 軟刪），comments 的作者分支門檻比 albums 更低（family_ids()，
--- 任一角色皆可搬家），同一種跨家庭越權更容易觸發。
+-- LS-58 更新：原本「作者搬家 vs owner 軟刪」的方向 C（
+-- comment_edit_vs_delete_s1_move_family.sql／s2_delete_after_move.sql，merge-
+-- reviewer PR #70 review N1 加的、真正驗到 for update 必要性的那組)已隨 LS-58
+-- 收斂 comments 成 RPC-only 一起退役——update_comment 的參數只有 body，comments
+-- 的 UPDATE grant 也整個被收回，authenticated 已經沒有任何路徑能把一則留言的
+-- family_id 搬到別的家庭，這裡要重現的跨家庭越權場景在前提上就不成立了（不是靠
+-- 鎖擋住，是連「搬家」這個動作本身都做不到）。set_comment_deleted 的 `for update`
+-- 沒有被拿掉（migration 是歷史紀錄不回頭改），下面這組（方向 A／B）繼續驗它與
+-- update_comment 之間序列化正確、沒有互相覆蓋對方寫的欄位——但同 album_edit_vs_
+-- delete_s2_delete.sql 的既有說明：這證明的是「序列化正確」，不是「for update 本身
+-- 必要」，兩件事不能混為一談，comments 這裡目前沒有能重現「拿掉 for update 會實際
+-- 壞掉」的場景。
 
 \set ON_ERROR_STOP on
 

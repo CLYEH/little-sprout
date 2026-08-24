@@ -384,10 +384,15 @@ declare
     'public.update_diary_entry(uuid, text, date, uuid)',
     'public.set_diary_deleted(uuid, boolean)',
     'public.set_album_deleted(uuid, boolean)',
-    'public.set_comment_deleted(uuid, boolean)'
+    'public.set_comment_deleted(uuid, boolean)',
+    'public.create_comment(uuid, text, uuid, text)',
+    'public.update_comment(uuid, text)',
+    'public.toggle_reaction(uuid, text, uuid)',
+    'public.list_comments(uuid, text, uuid, timestamptz, uuid, integer)'
   ];
   v_invoker_rpcs text[] := array[
-    'public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)'
+    'public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)',
+    'public.get_reaction_counts(uuid, text, uuid[])'
   ];
   v_whitelist oid[];
   v_unknown text;
