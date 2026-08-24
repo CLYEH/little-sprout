@@ -6,7 +6,10 @@
       純文字解析 supabase/migrations/*.sql。本機 push-gate 用，best-effort，不需要
       跑起 DB。已知限制（catalog 模式沒有這些限制，因為它問的是套用完 migrations
       之後的真實 pg_catalog，不是重新剖析 SQL 原始碼）：
-        - 用 EXECUTE 組字串動態產生的 DDL 解析不到，會被漏掉而不是報錯。
+        - 動態 DDL：`execute 'create function public.x(...) ...'` 這種把 DDL **字面**寫在
+          字串常值裡的寫法，純文字掃描一樣撈得到（regex 不分辨它在不在引號內）；只有
+          用 `||` 拼接或 `format('%I')` 佔位組出名稱的**拼接式**動態 DDL 才解析不到，
+          會被漏掉而不是報錯（LS-54 N7 更正：原註解籠統寫成「EXECUTE 動態 DDL 解析不到」）。
         - CREATE FUNCTION 的參數解析假設每個參數都有名稱前綴（本專案所有 migration
           目前皆如此）；若未來出現不具名參數用多字型別（如 `timestamp with time
           zone`），第一個字會被誤判成參數名。這種寫法本專案從未用過，是已知但目前
@@ -50,7 +53,13 @@ def normalize_type(t: str) -> str:
 
 
 def strip_mode_keyword(tokens):
-    # F6：IN/OUT/INOUT/VARIADIC 是參數模式前綴，不是名稱也不是型別的一部分
+    """F6：IN/OUT/INOUT/VARIADIC 是參數模式前綴，不是名稱也不是型別的一部分。
+    LS-54 N1：OUT 參數整個丟掉（回傳 []）——它不是呼叫端要傳的東西，Postgres 的函式識別
+    簽章（pg_get_function_identity_arguments，catalog 模式的來源）也不含它；文字模式若保留
+    OUT，同一支函式在本機文字模式與 CI catalog 模式會算出不同簽章。IN/INOUT/VARIADIC 都是
+    識別簽章的一部分，只剝掉關鍵字、保留後面的名稱＋型別。"""
+    if tokens and tokens[0].lower() == "out":
+        return []
     if tokens and tokens[0].lower() in MODE_KEYWORDS:
         return tokens[1:]
     return tokens
@@ -172,7 +181,8 @@ def extract_schema_from_text(migrations_dir: str):
                     print(
                         f"✗ api-contract gate：第 {ln} 行附近 {target} 的參數列裡"
                         f"偵測到 `--`——本文字解析器無法安全處理簽章括號內夾雜的行內"
-                        f"註解，請把註解移到獨立行，或改用 --catalog 模式驗證",
+                        f"註解，請把註解移到 create function 那行之前（參數列括號外——括號區間內"
+                        f"不論獨立行或行尾都會被判定），或改用 --catalog 模式驗證",
                         file=sys.stderr,
                     )
                     sys.exit(1)
@@ -220,6 +230,22 @@ def extract_schema_from_text(migrations_dir: str):
     return set(rpcs.keys()), tables
 
 
+def require_lowercase(name: str, label: str) -> str:
+    """LS-54 N3：catalog 回報的是真實名稱——未加引號的識別字 Postgres 已經折成小寫，
+    所以這裡出現大寫只可能是 `"Widgets"` 這種引號識別字。原本一律 .lower() 會讓
+    public.widgets 與 public."Widgets" 塌成同一個名字、靜默逃過對帳；本專案不用引號
+    識別字，出現就是異常，fail loud 而不是悄悄正規化。"""
+    if name != name.lower():
+        print(
+            f"✗ api-contract gate（catalog 模式）：{label}名稱「{name}」含大寫——本專案不使用"
+            f"引號識別字，catalog 出現大寫名稱代表 schema 裡混進了 \"Quoted\" 識別字；本檢查器"
+            f"不做大小寫正規化（會讓 widgets 與 \"Widgets\" 塌成同一項），請修正 migration",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return name
+
+
 def extract_schema_from_catalog(rpc_file: str, table_file: str):
     # 實測澄清（本機 supabase db reset 後對 pg_get_function_identity_arguments 的
     # 真實輸出）：與一開始從 Postgres 文件推斷的不同，這支函式**會**保留參數名
@@ -232,12 +258,12 @@ def extract_schema_from_catalog(rpc_file: str, table_file: str):
         if not line:
             continue
         paren = line.index("(")
-        name = line[:paren].strip().lower()
+        name = require_lowercase(line[:paren].strip(), "RPC")
         args_str = line[paren + 1 : -1]  # 我們自己下的 SQL 保證最後一個字元就是對應的 ')'
         rpcs.add(f"{name}({', '.join(text_param_types(args_str))})")
 
     tables = set(
-        line.strip().lower()
+        require_lowercase(line.strip(), "資料表")
         for line in pathlib.Path(table_file).read_text(encoding="utf-8").splitlines()
         if line.strip()
     )

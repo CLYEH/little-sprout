@@ -15,3 +15,7 @@ Secrets.xcconfig
 # Claude Code
 .claude/worktrees/
 .claude/settings.local.json
+
+# LS-54 D2：RLS plan 證據每次執行都不同（計時／規劃器估計／buffers／stderr 交錯順序），
+# 由 CI db job 上傳 artifact 留存，不進 repo
+supabase/tests/evidence/

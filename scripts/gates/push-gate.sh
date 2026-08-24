@@ -21,9 +21,11 @@ if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1;
     exit 1
   }
   echo "→ push gate：執行 unit tests（scheme: ${XCODE_SCHEME}, destination: ${dest}）…"
+  # LS-54 N8：與 CI 一致，明確序列執行（MockURLProtocol 全域 handler 不可平行）
   xcodebuild test \
     -scheme "$XCODE_SCHEME" \
     -destination "$dest" \
+    -parallel-testing-enabled NO \
     -quiet
 else
   echo "⚠ push gate：尚未建立 Xcode 專案，跳過 unit tests（Phase 0-1 完成後自動生效）"
@@ -35,5 +37,9 @@ fi
 if [ -d supabase/migrations ]; then
   bash "$(git rev-parse --show-toplevel)/scripts/gates/api-contract-check.sh"
 fi
+
+# 4) 錯誤碼對帳（docs/API.md §5 ↔ LSErrorCode，LS-54）：無條件跑——兩個檔案任一搬家
+#    就直接紅，逼著同 PR 更新這裡與 CI 的路徑，不靜默跳過。
+bash "$(git rev-parse --show-toplevel)/scripts/gates/error-codes-check.sh"
 
 echo "✓ push gate 通過"
