@@ -80,11 +80,12 @@ jobs:
           git diff "$base_sha"...HEAD | grep '^+' | grep -v '^+++' \
             | bash scripts/gates/scan-secrets.sh
 
-      # LS-45／LS-41／LS-54：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
-      # 放行」（destructive-approval-check）、「schema／文件對帳」（api-contract-check）與
-      # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）的偵測不退化（前饋必有反饋，
+      # LS-45／LS-41／LS-54／LS-53：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
+      # 放行」（destructive-approval-check）、「schema／文件對帳」（api-contract-check）、
+      # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）與「migration 兩級分級／BREAKING: 段落」
+      # （migration-breaking-check／breaking-section-check）的偵測不退化（前饋必有反饋，
       # 對 gate 本身也適用）。集中在同一個 step，維持「一個地方跑所有 gate 自測」。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check）
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／breaking-section-check）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -92,6 +93,8 @@ jobs:
           bash scripts/gates/destructive-approval-check.test.sh || rc=1
           bash scripts/gates/api-contract-check.test.sh || rc=1
           bash scripts/gates/error-codes-check.test.sh || rc=1
+          bash scripts/gates/migration-breaking-check.test.sh || rc=1
+          bash scripts/gates/breaking-section-check.test.sh || rc=1
           exit "$rc"
 
       # LS-54 N4′：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue 雙向對帳（本機
@@ -118,14 +121,32 @@ jobs:
               echo "::error::migration 變更必須伴隨 supabase/tests/ 的 RLS 測試變更（DB migration gate）"
               exit 1
             fi
-            # LS-34：比對前先剝除 SQL 註解（整行與行尾 `--`），註解裡提到
-            # 破壞性關鍵字不再誤判（LS-33 實測踩過，當時被迫用中文措辭迴避）
-            destructive=$(git diff "$base_sha"...HEAD -- supabase/migrations/ | grep '^+' | sed 's/--.*//' | grep -icE 'DROP TABLE|DROP COLUMN|DROP POLICY|DROP FUNCTION|DROP TRIGGER|DROP INDEX|DROP SCHEMA|DROP CONSTRAINT|DROP NOT NULL|TRUNCATE|DISABLE ROW LEVEL SECURITY|ALTER (TABLE|COLUMN).* TYPE ' || true)
-            # LS-45：核可標記改整行錨定（scripts/gates/destructive-approval-check.sh）——
-            # 純子字串比對曾被 PR body 的散文提及誤放行（PR #55 run 32626369903）
-            if [ "${destructive:-0}" -gt 0 ] && ! printf '%s' "$PR_BODY" | bash scripts/gates/destructive-approval-check.sh; then
-              echo "::error::偵測到破壞性 migration。此類變更需使用者本人依規約核可（docs/COLLABORATION.md §6）；agent 遇此錯誤必須停下回報使用者，不得自行處理"
+            # LS-53：分級改由 scripts/gates/migration-breaking-check.sh 做 statement 級判定（剝 --／
+            # /* */ 註解後以 ; 切句；多行敘述、execute '…' 動態 SQL 都認得；規則表見該檔檔頭）。
+            # 舊版逐行關鍵字 grep 命中 DROP POLICY 卻放過同義的 ALTER POLICY … (false)／REVOKE
+            # （PR #60 review F7，LS-48 曾以「不觸發偵測器」為選型理由）——想避開 gate 就換寫法的前例。
+            findings=$(bash scripts/gates/migration-breaking-check.sh --base "$base_sha") || exit 1
+            if [ -n "$findings" ]; then
+              printf 'migration 分級結果（級別<TAB>敘述）：\n%s\n' "$findings"
+            fi
+            # DESTRUCTIVE：維持既有——使用者本人在 PR body 蓋核可標記，LS-45 起整行錨定
+            # （scripts/gates/destructive-approval-check.sh；純子字串比對曾被散文提及誤放行，PR #55 run 32626369903）
+            if printf '%s\n' "$findings" | grep -q '^DESTRUCTIVE' \
+               && ! printf '%s' "$PR_BODY" | bash scripts/gates/destructive-approval-check.sh; then
+              echo "::error::偵測到破壞性 migration（見上方 DESTRUCTIVE 列）。此類變更需使用者本人依規約核可（docs/COLLABORATION.md §6）；agent 遇此錯誤必須停下回報使用者，不得自行處理"
               exit 1
+            fi
+            # BREAKING：既有呼叫端行為改變——PR body 須有行首的 BREAKING: 段落（scripts/gates/breaking-section-check.sh），
+            # 且 docs/API.md 同 PR 有變更（§6 API 變更紀律：契約文件跟著改）
+            if printf '%s\n' "$findings" | grep -q '^BREAKING'; then
+              if ! printf '%s' "$PR_BODY" | bash scripts/gates/breaking-section-check.sh; then
+                echo "::error::migration 改變既有呼叫端行為（見上方 BREAKING 列：ALTER POLICY／REVOKE／既有函式重定義等）。PR body 必須有行首的 BREAKING: 段落，同一行寫受影響的呼叫端與遷移路徑（docs/COLLABORATION.md §6）"
+                exit 1
+              fi
+              if [ -z "$(git diff --name-only "$base_sha"...HEAD -- docs/API.md)" ]; then
+                echo "::error::migration 被判 BREAKING 但 docs/API.md 在本 PR 沒有變更——呼叫端契約（權限／policy／RPC 行為）改了就要同 PR 更新契約文件（docs/COLLABORATION.md §6）"
+                exit 1
+              fi
             fi
           fi
 

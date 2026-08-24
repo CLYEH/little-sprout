@@ -1,5 +1,5 @@
 #!/bin/bash
-# Push gate（pre-push）：全 repo lint + unit tests。規約見 CLAUDE.md §4。
+# Push gate（pre-push）：全 repo lint + unit tests + API 契約／錯誤碼對帳 + migration 分級。規約見 docs/COLLABORATION.md §4。
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
@@ -41,5 +41,39 @@ fi
 # 4) 錯誤碼對帳（docs/API.md §5 ↔ LSErrorCode，LS-54）：無條件跑——兩個檔案任一搬家
 #    就直接紅，逼著同 PR 更新這裡與 CI 的路徑，不靜默跳過。
 bash "$(git rev-parse --show-toplevel)/scripts/gates/error-codes-check.sh"
+
+# 5) Migration 分級（LS-53）：對「本分支相對 base 的 migrations 新增行」跑
+#    scripts/gates/migration-breaking-check.sh（規則表見該檔檔頭）。PR body 標記（核可標記／
+#    BREAKING: 段落）只有 CI 看得到，這裡只印分級提醒；但 BREAKING 要求的「docs/API.md 同 PR 有變更」
+#    本機就驗得到，直接擋，省一趟 CI 來回。base：hotfix/* 對 origin/main，其餘對 origin/development
+#    （fetch 過才準；找不到 base ref 直接紅，不靜默跳過）。保護分支與 detached HEAD 不做——
+#    沒有「相對 base 的變更」可言。
+if [ -d supabase/migrations ]; then
+  branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
+  case "$branch" in
+    main|test|development|DETACHED) ;;
+    *)
+      case "$branch" in hotfix/*) base_ref=origin/main ;; *) base_ref=origin/development ;; esac
+      if ! git rev-parse -q --verify "$base_ref" >/dev/null; then
+        echo "✗ push gate：找不到 ${base_ref}（先 git fetch origin），無法做 migration 分級。" >&2
+        exit 1
+      fi
+      base_sha=$(git merge-base "$base_ref" HEAD)
+      findings=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-breaking-check.sh" --base "$base_sha")
+      if printf '%s\n' "$findings" | grep -q '^DESTRUCTIVE'; then
+        echo "⚠ push gate：migration 含 DESTRUCTIVE 敘述——PR body 需使用者本人蓋核可標記，CI 會擋（COLLABORATION §6）：" >&2
+        printf '%s\n' "$findings" | grep '^DESTRUCTIVE' | sed 's/^/    /' >&2
+      fi
+      if printf '%s\n' "$findings" | grep -q '^BREAKING'; then
+        echo "⚠ push gate：migration 含 BREAKING 敘述——PR body 需行首 BREAKING: 段落，CI 會擋（COLLABORATION §6）：" >&2
+        printf '%s\n' "$findings" | grep '^BREAKING' | sed 's/^/    /' >&2
+        if [ -z "$(git diff --name-only "$base_sha"...HEAD -- docs/API.md)" ]; then
+          echo "✗ push gate：migration 被判 BREAKING 但本分支沒動 docs/API.md——契約文件須同 PR 更新（COLLABORATION §6）。" >&2
+          exit 1
+        fi
+      fi
+      ;;
+  esac
+fi
 
 echo "✓ push gate 通過"
