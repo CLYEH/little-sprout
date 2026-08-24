@@ -260,13 +260,15 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `UNIQUE(target_type, target_id, user_id)` 的 `23505`——`toggle_reaction` 內部用
   advisory lock 序列化「查詢現況→決定加或刪」，永遠回傳布林值（`true`＝加入、
   `false`＝收回），不會噴 `23505`。**唯一鍵不含 `family_id`**（`UNIQUE(target_type,
-  target_id, user_id)`，跟表定義一致）——`p_family_id` 只用於呼叫當下的成員資格檢查
-  與 `LS026` 目標歸屬檢查、以及新增列時要寫入哪個 `family_id`，**收回路徑
-  （`DELETE`）不看 `p_family_id`**：同一人若真的在兩個不同情境下對同一個
-  `(target_type, target_id)` 傳了不同的 `p_family_id`（例如同一人是兩個家庭的成員），
-  第二次呼叫收回的是「這個人對這個 target 的那一顆愛心」，不保證是這次傳的
-  `p_family_id` 底下加的那一顆。只影響呼叫者自己的反應，不是越權，但 UI 不該假設
-  「用 A 家的 `family_id` 收回」保證動到的是 A 家那一筆。
+  target_id, user_id)`，跟表定義一致），但**加入與收回兩條路徑都受 `LS026` 約束**
+  （merge-reviewer PR #85 R2 F2 實測澄清，修正 R1 對殘餘範圍的高估）——`LS026`
+  的目標歸屬檢查排在 `DELETE`／`INSERT` 之前：對**真的存在**的 target，呼叫端用
+  跟先前不同的 `p_family_id` 想收回別的家庭底下的反應，會直接拿到 `LS026`，
+  `DELETE` 完全不會執行，那個家庭的反應原封不動。殘餘情況只剩 `target_id`
+  **完全查不到**（孤兒，`private.target_family_id` 回 `NULL`）時——這時 `LS026`
+  檢查放行，`DELETE` 才會單靠 `user_id` 找到並收回呼叫者對這個孤兒 id 的反應，
+  不論那顆反應當初是用哪個 `family_id` 加的；這是孤兒 `target_id` 既有裁量（放行、
+  不驗證存在）的自然延伸，不是新的洞，只影響呼叫者自己的反應，不是越權。
 
 ### `device_tokens`
 - **不要**直接 `.upsert()` 或 `.insert()`／`.delete()` 這張表。同一支裝置換帳號登入時，
@@ -594,9 +596,10 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **併發**：見上——這是這支 RPC 存在的核心理由，回歸測試見
   `supabase/tests/concurrency/reaction_toggle_race_*.sql`（同一人對同一目標的雙
   `toggle_reaction` 併發呼叫）。
-- **收回路徑不看 `p_family_id`**：`LS026` 只在「加入」那一面（可能真的 INSERT）擋
-  跨家庭引用；收回（`DELETE`）依 `reactions_target_user_key` 的欄位組合（不含
-  `family_id`）找列，細節與邊界情況見 §3「reactions」段。
+- **`LS026` 在加入與收回兩條路徑之前都會擋**：檢查排在 `pg_advisory_xact_lock`
+  與 `DELETE`／`INSERT` 之前，對**真的存在**的 target，用跟先前不同的
+  `p_family_id` 想收回別家的反應會直接拿到 `LS026`，`DELETE` 完全不會執行。殘餘
+  情況只剩 `target_id` 完全查不到（孤兒）時——細節見 §3「reactions」段。
 
 ### `list_comments(p_family_id uuid, p_target_type text, p_target_id uuid, p_cursor_created_at timestamptz default null, p_cursor_id uuid default null, p_limit integer default 20) -> table(id uuid, author_id uuid, author_display_name text, author_avatar_url text, body text, created_at timestamptz)`
 - **誰能呼叫**：該家庭任一角色的成員；非本家庭成員呼叫會拿到明確的 `42501`

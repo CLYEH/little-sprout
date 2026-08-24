@@ -284,15 +284,17 @@ begin
     hashtextextended(v_target_type::text || ':' || p_target_id::text || ':' || v_uid::text, 0)
   );
 
-  -- LS026 的檢查通過之後，收回這一步的 DELETE 條件（target_type/target_id/user_id）
-  -- 刻意不再帶 p_family_id——這是既有唯一鍵 reactions_target_user_key 的欄位組合，
-  -- 且 LS026 已經保證「這個 target 若存在就屬於 p_family_id」，所以正常呼叫下這句
-  -- 差不了。merge-reviewer PR #85 I3 記錄了一個殘餘的邊界情況：呼叫端明知故犯傳一個
-  -- 跟自己之前加入時不同的 p_family_id（例如自己同時是兩個家庭的成員，兩次呼叫傳了
-  -- 不同家庭），DELETE 仍會依 user_id 找到並收回「另一個家庭」那一筆——只影響呼叫者
-  -- 自己的反應，不是越權，但語意上 p_family_id 對收回路徑沒有實際約束力，已在
-  -- docs/API.md 的 toggle_reaction 條目明寫，不在這裡改行為（改了會讓「同一顆愛心」
-  -- 的唯一鍵語意複雜化，見 reactions_target_user_key 本身不含 family_id）。
+  -- 收回這一步的 DELETE 條件（target_type/target_id/user_id）不帶 p_family_id
+  -- ——這是既有唯一鍵 reactions_target_user_key 的欄位組合。但這**不是**收回路徑
+  -- 不受 p_family_id 約束：上面的 LS026 檢查排在這裡（與 lock）之前，加入與收回
+  -- 兩條路徑都會先經過它。merge-reviewer PR #85 R2 F2 實測澄清了 R1 I3 原本高估
+  -- 的殘餘範圍：對**真的存在**的 target，呼叫端想用跟先前不同的 p_family_id 收回
+  -- 別人家庭底下的反應，會直接卡在 LS026（回錯誤、DELETE 完全不會執行，那個家庭
+  -- 的反應原封不動）；殘餘情況只剩 target_id **完全查不到**（孤兒）的時候——
+  -- private.target_family_id 回 NULL，LS026 檢查通不通過都放行，DELETE 這時才會
+  -- 單靠 user_id 找到並收回「呼叫者對這個孤兒 id 的反應」，不論那顆反應當初是用
+  -- 哪個 family_id 加的。這與孤兒 target_id 在 create_comment／toggle_reaction 加入
+  -- 路徑本來就有的既有裁量（放行、不驗證存在）是同一件事的自然延伸，不是新洞。
   delete from public.reactions r
    where r.target_type = v_target_type
      and r.target_id = p_target_id

@@ -212,7 +212,7 @@ begin
     perform public.create_comment(v_family_a, 'media', v_b_media, '攻擊者想把留言掛在 B 家的照片下');
   exception when others then v_err := sqlstate;
   end;
-  if v_err <> 'LS026' then
+  if v_err is distinct from 'LS026' then
     raise exception 'FAIL：對別家真實存在的 target 呼叫 create_comment 應該是 LS026，實際 %', coalesce(v_err, '（無，成功——BLOCKER-1 沒有補上）');
   end if;
   select count(*) into v_n from public.comments where target_id = v_b_media and body like '攻擊者想把留言掛%';
@@ -257,7 +257,7 @@ begin
     perform public.toggle_reaction(v_family_a, 'media', v_b_media);
   exception when others then v_err := sqlstate;
   end;
-  if v_err <> 'LS026' then
+  if v_err is distinct from 'LS026' then
     raise exception 'FAIL：對別家真實存在的 target 呼叫 toggle_reaction 應該是 LS026，實際 %', coalesce(v_err, '（無，成功——BLOCKER-1 沒有補上）');
   end if;
   select count(*) into v_n from public.reactions where target_id = v_b_media and user_id = v_attacker;
@@ -337,7 +337,7 @@ begin
   end;
   reset role;
   select body into v_body from public.comments where id = v_comment;
-  if v_err <> 'LS025' or v_body <> '作者改過的留言' then
+  if v_err is distinct from 'LS025' or v_body <> '作者改過的留言' then
     raise exception 'FAIL：owner（非作者）呼叫 update_comment 應該是 LS025 且內容不變，實際錯誤碼=%，body=「%」', v_err, v_body;
   end if;
   raise notice 'ok：owner（非作者）呼叫 update_comment 拿到 LS025，內容逐字不變——本票要修的核心洞';
@@ -352,7 +352,7 @@ begin
   exception when others then v_err := sqlstate;
   end;
   reset role;
-  if v_err <> 'LS025' then
+  if v_err is distinct from 'LS025' then
     raise exception 'FAIL：非作者的 member 呼叫 update_comment 應該是 LS025，實際 %', v_err;
   end if;
 
@@ -365,7 +365,7 @@ begin
   exception when others then v_err := sqlstate;
   end;
   reset role;
-  if v_err <> 'LS025' then
+  if v_err is distinct from 'LS025' then
     raise exception 'FAIL：非作者的 viewer 呼叫 update_comment 應該是 LS025，實際 %', v_err;
   end if;
 
@@ -378,7 +378,7 @@ begin
   exception when others then v_err := sqlstate;
   end;
   reset role;
-  if v_err <> 'LS025' then
+  if v_err is distinct from 'LS025' then
     raise exception 'FAIL：非本家庭成員呼叫 update_comment 應該是 LS025，實際 %', v_err;
   end if;
   raise notice 'ok：非作者的 member／viewer／非本家庭成員呼叫 update_comment 皆 LS025';
@@ -394,7 +394,7 @@ begin
   exception when others then v_err := sqlstate;
   end;
   reset role;
-  if v_err <> 'LS025' then
+  if v_err is distinct from 'LS025' then
     raise exception 'FAIL：已離開家庭的前作者呼叫 update_comment 應該是 LS025，實際 %', v_err;
   end if;
   insert into public.family_members (family_id, user_id, role, can_upload)
@@ -428,7 +428,7 @@ begin
   exception when others then v_err := sqlstate;
   end;
   reset role;
-  if v_err <> 'LS024' then
+  if v_err is distinct from 'LS024' then
     raise exception 'FAIL：update_comment 對不存在的留言應該回報 LS024，實際 %', v_err;
   end if;
   raise notice 'ok：update_comment 對不存在的留言回報 LS024';
