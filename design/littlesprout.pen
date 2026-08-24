@@ -1946,6 +1946,7 @@
                   "type": "frame",
                   "id": "r4mkZc",
                   "name": "Card Join Family",
+                  "clip": true,
                   "width": "fill_container",
                   "fill": "$surface",
                   "cornerRadius": "$radius-lg",
@@ -2919,19 +2920,19 @@
             0,
             "$screen-pad"
           ],
-          "justifyContent": "space_between",
           "children": [
             {
               "type": "frame",
-              "id": "Qk7KB",
+              "id": "P42Vhd",
               "name": "Upper",
               "width": "fill_container",
+              "height": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
               "children": [
                 {
                   "type": "frame",
-                  "id": "HdllN",
+                  "id": "S9yyY",
                   "name": "Top",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -2939,7 +2940,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "e15Yv",
+                      "id": "h61aE",
                       "name": "Header",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -2947,7 +2948,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "Nwgsu",
+                          "id": "K55gda",
                           "name": "Title",
                           "fill": "$text-primary",
                           "content": "輸入邀請碼",
@@ -2958,7 +2959,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "DtiVa",
+                          "id": "BNeNZ",
                           "name": "Subtitle",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
@@ -2975,14 +2976,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "S6KlN",
+                  "id": "ar7wD",
                   "name": "Code Card",
                   "width": "fill_container",
                   "layout": "vertical",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "s5Mlj",
+                      "id": "uZJw2",
                       "name": "Card Paper",
                       "width": 345,
                       "fill": "$surface",
@@ -2996,20 +2997,20 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "mIkQv",
+                          "id": "UEQUh",
                           "name": "Code Groups",
                           "width": "fill_container",
                           "gap": "$sp-block",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "gTGYY",
+                              "id": "v9Z6p",
                               "name": "Group 1",
                               "width": "fill_container",
                               "gap": "$sp-label",
                               "children": [
                                 {
-                                  "id": "cERDG",
+                                  "id": "BWWR2",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 1",
@@ -3023,7 +3024,7 @@
                                   }
                                 },
                                 {
-                                  "id": "FDYzy",
+                                  "id": "Wl4yg",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 2",
@@ -3037,7 +3038,7 @@
                                   }
                                 },
                                 {
-                                  "id": "qW60u",
+                                  "id": "i0fqpz",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 3",
@@ -3054,13 +3055,13 @@
                             },
                             {
                               "type": "frame",
-                              "id": "u7qpPk",
+                              "id": "br8YA",
                               "name": "Group 2",
                               "width": "fill_container",
                               "gap": "$sp-label",
                               "children": [
                                 {
-                                  "id": "uqAmQ",
+                                  "id": "sX2kA",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 1",
@@ -3074,7 +3075,7 @@
                                   }
                                 },
                                 {
-                                  "id": "DISzA",
+                                  "id": "s7JhA5",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 2",
@@ -3088,7 +3089,7 @@
                                   }
                                 },
                                 {
-                                  "id": "I68hi",
+                                  "id": "TIpRb",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 3",
@@ -3107,7 +3108,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "Pokjl",
+                          "id": "gF4wJ",
                           "name": "Code Hint",
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
@@ -3124,7 +3125,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "AfrIF",
+                  "id": "n8ZesV",
                   "name": "Explain Wrap",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -3137,12 +3138,12 @@
                   "children": [
                     {
                       "type": "text",
-                      "id": "MhUy5",
+                      "id": "ZFhMY",
                       "name": "Explain",
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "請家人在 App 裡點「邀請家人」，把 6 位碼傳給你。送出後要等管理者核准。",
+                      "content": "請家人在 App 裡點「邀請家人」，把 6 位碼傳給你。",
                       "lineHeight": 1.6,
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
@@ -3152,7 +3153,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "G9tLC",
+                  "id": "fjobP",
                   "name": "Next Steps Summary",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -3165,7 +3166,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "T8J50",
+                  "id": "oRo7G",
                   "name": "Press Reply",
                   "width": "fill_container",
                   "gap": "$sp-label",
@@ -3179,7 +3180,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "PKd1v",
+                      "id": "NKPkm",
                       "name": "Reply Icon",
                       "width": 18,
                       "height": 18,
@@ -3189,7 +3190,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "IqJop",
+                      "id": "lGMZE",
                       "name": "Reply Text",
                       "fill": "$text-primary",
                       "content": "還要再填 1 個字",
@@ -3201,14 +3202,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "KRabE",
+                  "id": "xWiG7",
                   "name": "CTA Wrap",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-group",
                   "children": [
                     {
-                      "id": "xP4q5",
+                      "id": "kfwm1",
                       "type": "ref",
                       "ref": "OKSJI",
                       "name": "Join Button",
@@ -3223,6 +3224,13 @@
                       }
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "XycOP",
+                  "name": "Whitespace Spacer",
+                  "width": "fill_container",
+                  "height": "fill_container"
                 }
               ]
             },
@@ -3582,6 +3590,12 @@
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
               "children": [
                 {
                   "id": "Sbx9o",
@@ -4122,6 +4136,33 @@
             },
             {
               "type": "frame",
+              "id": "WcTa9",
+              "name": "Approval Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "id": "vZRvj",
+                  "type": "ref",
+                  "ref": "PXPcH",
+                  "name": "Approval Toggle",
+                  "width": "fill_container",
+                  "descendants": {
+                    "vSWWm": {
+                      "content": "為了保護家人隱私，這項設定固定開啟，無法關閉。"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
               "id": "XZ3pM",
               "name": "Actions",
               "width": "fill_container",
@@ -4161,33 +4202,6 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
                   "fontWeight": "normal"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "WcTa9",
-              "name": "Approval Section",
-              "width": "fill_container",
-              "layout": "vertical",
-              "padding": [
-                "$sp-section",
-                0,
-                0,
-                0
-              ],
-              "children": [
-                {
-                  "id": "vZRvj",
-                  "type": "ref",
-                  "ref": "PXPcH",
-                  "name": "Approval Toggle",
-                  "width": "fill_container",
-                  "descendants": {
-                    "vSWWm": {
-                      "content": "為了保護家人隱私，這項設定固定開啟，無法關閉。"
-                    }
-                  }
                 }
               ]
             }
@@ -7982,18 +7996,18 @@
             0,
             "$screen-pad"
           ],
-          "justifyContent": "space_between",
           "children": [
             {
               "type": "frame",
-              "id": "LPFzx",
+              "id": "uTFGW",
               "name": "Upper",
               "width": "fill_container",
+              "height": "fill_container",
               "layout": "vertical",
               "children": [
                 {
                   "type": "frame",
-                  "id": "OQR1A",
+                  "id": "KWhPA",
                   "name": "Head Group",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -8001,7 +8015,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "F5n3cg",
+                      "id": "jYZMH",
                       "name": "Top",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -8009,7 +8023,7 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "q4zxSf",
+                          "id": "F21czm",
                           "name": "Header",
                           "width": "fill_container",
                           "layout": "vertical",
@@ -8017,7 +8031,7 @@
                           "children": [
                             {
                               "type": "text",
-                              "id": "n0UI9A",
+                              "id": "yg6IO",
                               "name": "Title",
                               "fill": "$text-primary",
                               "content": "輸入邀請碼",
@@ -8032,7 +8046,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "t1jKE4",
+                      "id": "veA0I",
                       "name": "Code Card",
                       "width": "fill_container",
                       "height": 150,
@@ -8040,7 +8054,7 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "Yhn6m",
+                          "id": "Fywus",
                           "x": 0,
                           "y": 0,
                           "name": "Card Paper",
@@ -8056,20 +8070,20 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "mY5Za",
+                              "id": "dbfcv",
                               "name": "Code Groups",
                               "width": "fill_container",
                               "gap": "$sp-block",
                               "children": [
                                 {
                                   "type": "frame",
-                                  "id": "ksCSF",
+                                  "id": "H3p6Z",
                                   "name": "Group 1",
                                   "width": "fill_container",
                                   "gap": "$sp-label",
                                   "children": [
                                     {
-                                      "id": "rI91d",
+                                      "id": "zBeVi",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 1",
@@ -8083,7 +8097,7 @@
                                       }
                                     },
                                     {
-                                      "id": "a0Ruvy",
+                                      "id": "wKt6H",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 2",
@@ -8097,7 +8111,7 @@
                                       }
                                     },
                                     {
-                                      "id": "mOqyO",
+                                      "id": "HdPZk",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 3",
@@ -8113,7 +8127,7 @@
                                     {
                                       "type": "rectangle",
                                       "cornerRadius": 9,
-                                      "id": "M4Umwi",
+                                      "id": "L5YAG",
                                       "layoutPosition": "absolute",
                                       "x": 5,
                                       "y": 5,
@@ -8127,13 +8141,13 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "LgQnL",
+                                  "id": "fwllO",
                                   "name": "Group 2",
                                   "width": "fill_container",
                                   "gap": "$sp-label",
                                   "children": [
                                     {
-                                      "id": "vBdhc",
+                                      "id": "gdQDe",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 1",
@@ -8147,7 +8161,7 @@
                                       }
                                     },
                                     {
-                                      "id": "f13P9I",
+                                      "id": "cQ3Pe",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 2",
@@ -8161,7 +8175,7 @@
                                       }
                                     },
                                     {
-                                      "id": "e54xJG",
+                                      "id": "Y5w72S",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 3",
@@ -8180,7 +8194,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "KpPPF",
+                              "id": "e6AEj",
                               "name": "Code Error",
                               "width": "fill_container",
                               "gap": "$sp-tight",
@@ -8188,7 +8202,7 @@
                               "children": [
                                 {
                                   "type": "icon",
-                                  "id": "lMzIp",
+                                  "id": "Xh8sS",
                                   "name": "Err Icon",
                                   "width": 18,
                                   "height": 18,
@@ -8198,7 +8212,7 @@
                                 },
                                 {
                                   "type": "text",
-                                  "id": "RmqcH",
+                                  "id": "BVQc0",
                                   "name": "Err Text",
                                   "fill": "$danger",
                                   "content": "這組邀請碼已經過期了。",
@@ -8217,14 +8231,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "fdGu4",
-                  "name": "Whitespace Spacer",
-                  "width": "fill_container",
-                  "height": 232
-                },
-                {
-                  "type": "frame",
-                  "id": "WeMPU",
+                  "id": "rD1Ec",
                   "name": "Explain Group",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -8232,7 +8239,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "fxpNY",
+                      "id": "EK228",
                       "name": "Policy Wrap",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -8245,14 +8252,14 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "SdkpK",
+                          "id": "GqyAa",
                           "name": "Policy Note",
                           "width": "fill_container",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "text",
-                              "id": "bnXBK",
+                              "id": "N5BQ2p",
                               "name": "Policy Note Text [tabular]",
                               "fill": "$text-secondary",
                               "textGrowth": "fixed-width",
@@ -8268,7 +8275,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "PBAMc",
+                      "id": "NyaMj",
                       "name": "Join Wrap",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -8280,7 +8287,7 @@
                       ],
                       "children": [
                         {
-                          "id": "g7tr7",
+                          "id": "wy8tf",
                           "type": "ref",
                           "ref": "OKSJI",
                           "name": "Join Button",
@@ -8298,7 +8305,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "nLGEe",
+                      "id": "G9cqy",
                       "name": "Prewritten Wrap",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -8311,7 +8318,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "eKdsX",
+                          "id": "qjHAU",
                           "name": "Prewritten Note",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
@@ -8325,6 +8332,13 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "DJQgG",
+                  "name": "Whitespace Spacer",
+                  "width": "fill_container",
+                  "height": "fill_container"
                 }
               ]
             },
@@ -8461,18 +8475,18 @@
             0,
             "$screen-pad"
           ],
-          "justifyContent": "space_between",
           "children": [
             {
               "type": "frame",
-              "id": "qtMw1",
+              "id": "o5bFC",
               "name": "Upper",
               "width": "fill_container",
+              "height": "fill_container",
               "layout": "vertical",
               "children": [
                 {
                   "type": "frame",
-                  "id": "hdFHL",
+                  "id": "DNLNs",
                   "name": "Head Group",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -8480,7 +8494,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "Q3sg1",
+                      "id": "o2tp5",
                       "name": "Top",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -8488,7 +8502,7 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "iYebP",
+                          "id": "qWaKa",
                           "name": "Header",
                           "width": "fill_container",
                           "layout": "vertical",
@@ -8496,7 +8510,7 @@
                           "children": [
                             {
                               "type": "text",
-                              "id": "Pe6A9",
+                              "id": "dtRD7",
                               "name": "Title",
                               "fill": "$text-primary",
                               "content": "輸入邀請碼",
@@ -8511,14 +8525,14 @@
                     },
                     {
                       "type": "frame",
-                      "id": "X5Nw4",
+                      "id": "x2gaMI",
                       "name": "Code Card",
                       "width": "fill_container",
                       "layout": "vertical",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "u5fzWl",
+                          "id": "zE3QD",
                           "name": "Card Paper",
                           "width": 345,
                           "fill": "$surface",
@@ -8532,20 +8546,20 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "y5pFH",
+                              "id": "nZ1iZ",
                               "name": "Code Groups",
                               "width": "fill_container",
                               "gap": "$sp-block",
                               "children": [
                                 {
                                   "type": "frame",
-                                  "id": "f96dgy",
+                                  "id": "QNNvR",
                                   "name": "Group 1",
                                   "width": "fill_container",
                                   "gap": "$sp-label",
                                   "children": [
                                     {
-                                      "id": "qubu8",
+                                      "id": "ZUpDG",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 1",
@@ -8559,7 +8573,7 @@
                                       }
                                     },
                                     {
-                                      "id": "za9Yi",
+                                      "id": "LEvpE",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 2",
@@ -8573,7 +8587,7 @@
                                       }
                                     },
                                     {
-                                      "id": "MM1WW",
+                                      "id": "QlD7E",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 3",
@@ -8589,7 +8603,7 @@
                                     {
                                       "type": "rectangle",
                                       "cornerRadius": 9,
-                                      "id": "hWGvd",
+                                      "id": "UAF3J",
                                       "layoutPosition": "absolute",
                                       "x": 5,
                                       "y": 5,
@@ -8603,13 +8617,13 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "x7ZuE",
+                                  "id": "XYIN6",
                                   "name": "Group 2",
                                   "width": "fill_container",
                                   "gap": "$sp-label",
                                   "children": [
                                     {
-                                      "id": "J2i8P",
+                                      "id": "eRR6q",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 1",
@@ -8623,7 +8637,7 @@
                                       }
                                     },
                                     {
-                                      "id": "y4HMOV",
+                                      "id": "T9aAE",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 2",
@@ -8637,7 +8651,7 @@
                                       }
                                     },
                                     {
-                                      "id": "sbzWs",
+                                      "id": "N6IXqg",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 3",
@@ -8656,7 +8670,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "mHvaF",
+                              "id": "b24CA",
                               "name": "Code Error",
                               "width": "fill_container",
                               "gap": "$sp-tight",
@@ -8664,7 +8678,7 @@
                               "children": [
                                 {
                                   "type": "icon",
-                                  "id": "croUg",
+                                  "id": "ye6ck",
                                   "name": "Err Icon",
                                   "width": 18,
                                   "height": 18,
@@ -8674,7 +8688,7 @@
                                 },
                                 {
                                   "type": "text",
-                                  "id": "Smu0m",
+                                  "id": "QAJzd",
                                   "name": "Err Text",
                                   "fill": "$danger",
                                   "content": "這組邀請碼的次數用完了。",
@@ -8693,14 +8707,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "YWsCZ",
-                  "name": "Whitespace Spacer",
-                  "width": "fill_container",
-                  "height": 100
-                },
-                {
-                  "type": "frame",
-                  "id": "uqkqY",
+                  "id": "PWWQr",
                   "name": "Explain Group",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -8708,7 +8715,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "E7vttn",
+                      "id": "rx3VF",
                       "name": "Policy Wrap",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -8721,14 +8728,14 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "i19SQF",
+                          "id": "bz6Fb",
                           "name": "Policy Note",
                           "width": "fill_container",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "text",
-                              "id": "QCgMs",
+                              "id": "Arlc8",
                               "name": "Policy Note Text [tabular]",
                               "fill": "$text-secondary",
                               "textGrowth": "fixed-width",
@@ -8744,7 +8751,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "ltcqx",
+                      "id": "c5upfE",
                       "name": "Join Wrap",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -8756,7 +8763,7 @@
                       ],
                       "children": [
                         {
-                          "id": "kAfsN",
+                          "id": "ThIQA",
                           "type": "ref",
                           "ref": "OKSJI",
                           "name": "Join Button",
@@ -8774,7 +8781,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "sxR9d",
+                      "id": "uwrI5",
                       "name": "Prewritten Wrap",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -8787,7 +8794,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "AzoAg",
+                          "id": "h8VAGt",
                           "name": "Prewritten Note",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
@@ -8801,6 +8808,13 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "uABMn",
+                  "name": "Whitespace Spacer",
+                  "width": "fill_container",
+                  "height": "fill_container"
                 }
               ]
             },
@@ -9096,6 +9110,12 @@
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
               "children": [
                 {
                   "id": "T7vt2",
@@ -9239,7 +9259,7 @@
       "name": "LS-18 / 07b 邀請家人 · 有待核准申請",
       "clip": true,
       "width": 393,
-      "height": 1614,
+      "height": 1658,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -9544,6 +9564,12 @@
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
                   "children": [
                     {
                       "id": "L6bwX",
@@ -10863,6 +10889,7 @@
                   "type": "frame",
                   "id": "SPgKQ",
                   "name": "Card Join Family",
+                  "clip": true,
                   "width": "fill_container",
                   "fill": "$surface",
                   "cornerRadius": "$radius-lg",
@@ -11502,6 +11529,7 @@
                   "id": "yWH0V",
                   "name": "Family Print",
                   "width": "fill_container",
+                  "height": 175,
                   "fill": [
                     "$print-paper",
                     {
@@ -11646,7 +11674,7 @@
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "陳家的小小世界（台中外婆家）與台北爺爺奶奶家共同相簿",
+                          "content": "陳家的小小世界…",
                           "textAlign": "center",
                           "fontFamily": "$font",
                           "fontSize": "$fs-lead",
@@ -11695,7 +11723,7 @@
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
                       "x": 3,
-                      "y": 191,
+                      "y": 159,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -11712,7 +11740,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 191,
+                      "y": 159,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -22223,30 +22251,6 @@
                           "fontWeight": "normal"
                         }
                       ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "vmAo1",
-                      "name": "c",
-                      "width": 408,
-                      "padding": [
-                        9,
-                        14
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "QF96H",
-                          "name": "t",
-                          "fill": "#553040",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "lineHeight": 1.45,
-                          "fontFamily": "Noto Sans TC",
-                          "fontSize": 13,
-                          "fontWeight": "normal"
-                        }
-                      ]
                     }
                   ]
                 },
@@ -26816,7 +26820,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": 600,
-                  "content": "【$print-paper token】新增（淺 #FBEBEC＝與 $surface 淺色相同／深 #E8D9D4 暖米白）。所有沖印品「相紙」背景 fill 第一層由 $surface 改綁 $print-paper——相紙不因關燈變黑。連帶結果：蠟筆字標不再需要淺墨深色變體，mengya-diary-crayon-v3-dark.png 已退役（全文件零引用，檔案保留不刪）。Asset Catalog 新建 Color Set「print-paper」，Any=#FBEBEC／Dark=#E8D9D4。\n\n【04／04-iPad 沖印品重構】R3 前是「四邊 8pt 白邊、無白邊帶」的簡化版，與 01／01-iPad 的「Print 卡＋白邊 Imprint Row 帶」結構不同型。R4 統一成同構：padding $sp-label、gap 7、Photo Wrap（clip）＋ Imprint Row 白邊帶（此處帶內留空，不放蠟筆字標——04 是加入/建立分流頁，不代表已有家庭）。04-iPad 因是左右兩欄版型，改用「Photo Wrap 露出底部空白相紙邊」的簡化實作（同一張 Print Paper 矩形當背景，照片縮小露出下緣），視覺等效但節點更精簡。兩欄寬度比例（照片欄 420 / 文字欄 294）未變。\n\n【07 核准鎖定列順序統一】07／07b／07c 三個變體過去核准鎖定列（cmp/Approval Status）位置不一致（07/07c 排在分享／重新產生之後；07b 埋在「等你決定」待核准清單區塊內）。R4 統一成「代碼卡 → 核准鎖定列 → 分享/複製 → （07b 專屬：等你決定待核准清單）→ 重新產生」，三張畫面同一順序，只有 07b 多夾了它獨有的待核准清單。",
+                  "content": "【$print-paper token】新增（淺 #FBEBEC＝與 $surface 淺色相同／深 #E8D9D4 暖米白）。所有沖印品「相紙」背景 fill 第一層由 $surface 改綁 $print-paper——相紙不因關燈變黑。連帶結果：蠟筆字標不再需要淺墨深色變體——R5 逐像素複驗深墨字標在 $print-paper 深色值 #E8D9D4 上的對比為 18.2:1／15.3:1，遠高於 WCAG AAA 7:1 門檻；R7 覆核全文件零引用維持不變，正式刪除 mengya-diary-crayon-v3-dark.png 檔案（不再保留），淺墨版 mengya-diary-crayon-v3.png 深淺兩主題通用一份素材。Asset Catalog 新建 Color Set「print-paper」，Any=#FBEBEC／Dark=#E8D9D4。\n\n【04／04-iPad 沖印品重構】R3 前是「四邊 8pt 白邊、無白邊帶」的簡化版，與 01／01-iPad 的「Print 卡＋白邊 Imprint Row 帶」結構不同型。R4 統一成同構：padding $sp-label、gap 7、Photo Wrap（clip）＋ Imprint Row 白邊帶（此處帶內留空，不放蠟筆字標——04 是加入/建立分流頁，不代表已有家庭）。04-iPad 因是左右兩欄版型，改用「Photo Wrap 露出底部空白相紙邊」的簡化實作（同一張 Print Paper 矩形當背景，照片縮小露出下緣），視覺等效但節點更精簡。兩欄寬度比例（照片欄 420 / 文字欄 294）未變。\n\n【07 核准鎖定列順序統一】07／07b／07c 三個變體過去核准鎖定列（cmp/Approval Status）位置不一致（07/07c 排在分享／重新產生之後；07b 埋在「等你決定」待核准清單區塊內）。R4 統一成「代碼卡 → 核准鎖定列 → 分享/複製 → （07b 專屬：等你決定待核准清單）→ 重新產生」，三張畫面同一順序，只有 07b 多夾了它獨有的待核准清單。",
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
                   "fontWeight": "normal"
@@ -26852,6 +26856,42 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "畫布是唯一事實來源：本輪起，Handoff 註記裡任何具體數字（尺寸、座標、比例、色值等）必須以 Get 對畫布實測回填，不得沿用估算、口頭轉述或前一輪文字描述。前幾輪多次出現「量到警告→用一句話解釋掉→未截圖複驗」與「註記數字與畫布實際不符」的失敗模式（見 LS-46 R5 對抗審查），本則作為長期規則記錄於此，供之後每一輪修改前先檢查。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Q8Tdc",
+              "name": "iR7",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "DETVL",
+                  "name": "stamp",
+                  "fill": "#60464A",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R7 · AX/Stress 板時序",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "XQmqM",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX／Stress 板必須在基準畫面的結構定稿後才建立或重建，不能對著還會變動的基準先建。R2b 設計註記（aODMQ）已預言：06b／06c 是否與 06 共用同一個 AX3 clip bug「本輪沒有這兩張的 AX 板，沒有動它們……建議下一輪補測」。R7 印證了這個預言的反面代價——06 AX3 板（DW9PE）是在 06b／06c 各自疊上 Body justifyContent:space_between ＋ Upper 內部魔術數 spacer（232／100）這個尚未統一、有結構性缺陷的階段被建立／複製的，缺陷（Body 內容 728pt 超出 712pt 容器、Prewritten Note「嗎？」壓上貼上連結按鈕框線）被原樣凍結在板上；R7 把 06／06b／06c／06 AX3 四張的 Upper/Footer 結構統一改成「Upper 內建 fill_container 彈性 spacer、Body 移除 space_between」後，AX3 板才第一次真正反映修好的結構。規則：基準畫面的 Upper/Footer/間距結構每有實質變動，所有由它衍生的 AX/Stress 板都要整板重建（Copy 重來，不是局部 Update 補丁），否則板上看到的『沒問題』只是舊結構的假象。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -34699,7 +34739,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2070,
+      "height": 2114,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -34993,6 +35033,12 @@
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
               "children": [
                 {
                   "id": "xz4yG",
@@ -35165,7 +35211,7 @@
           "fill": "#553040",
           "textGrowth": "fixed-width",
           "width": 1360,
-          "content": "母題（白邊沖印＋角托＋mount-pool 染料池）目前只被暖色調、光線均勻的照片驗證過。三態並排：A 合調基準（現稿 hero-grandma.png）／B 冷白日光燈室內（待補生成）／C 夜間高反差（待補生成）。",
+          "content": "母題（白邊沖印＋角托＋mount-pool 染料池）目前只被暖色調、光線均勻的照片驗證過。三態並排：A 合調基準（現稿 hero-grandma.png）／B 冷白日光燈室內（stress-test-cold-fluorescent.png）／C 夜間高反差（stress-test-night-flash.png）。",
           "lineHeight": 1.5,
           "fontFamily": "Noto Sans TC",
           "fontSize": 14,
@@ -35387,7 +35433,7 @@
             {
               "type": "frame",
               "id": "KIZDu",
-              "name": "Col B · 冷白日光燈室內（待補）",
+              "name": "Col B · 冷白日光燈室內",
               "width": 393,
               "layout": "vertical",
               "gap": 12,
@@ -35397,7 +35443,7 @@
                   "id": "Fuh73",
                   "name": "Caption",
                   "fill": "#2B141C",
-                  "content": "B · 冷白日光燈室內（待補）",
+                  "content": "B · 冷白日光燈（stress-test-cold-fluorescent.png）",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 15,
                   "fontWeight": "700"
@@ -35593,7 +35639,7 @@
             {
               "type": "frame",
               "id": "HcT7X",
-              "name": "Col C · 夜間高反差（待補）",
+              "name": "Col C · 夜間高反差",
               "width": 393,
               "layout": "vertical",
               "gap": 12,
@@ -35603,7 +35649,7 @@
                   "id": "x02b9",
                   "name": "Caption",
                   "fill": "#2B141C",
-                  "content": "C · 夜間高反差（待補）",
+                  "content": "C · 夜間高反差（stress-test-night-flash.png）",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 15,
                   "fontWeight": "700"
@@ -36138,7 +36184,7 @@
                   "id": "hpZTm",
                   "name": "Caption",
                   "fill": "#2B141C",
-                  "content": "B · 冷白日光燈室內（stress-test-cold-fluorescent.png）",
+                  "content": "B · 冷白日光燈（stress-test-cold-fluorescent.png）",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 15,
                   "fontWeight": "700"
@@ -36770,19 +36816,19 @@
             0,
             "$screen-pad"
           ],
-          "justifyContent": "space_between",
           "children": [
             {
               "type": "frame",
-              "id": "LNNOj",
+              "id": "VhShF",
               "name": "Upper",
               "width": "fill_container",
+              "height": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
               "children": [
                 {
                   "type": "frame",
-                  "id": "xsO0M",
+                  "id": "VEYfg",
                   "name": "Top",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -36790,7 +36836,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "QK69q",
+                      "id": "NCPQj",
                       "name": "Header",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -36798,7 +36844,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "UuBwi",
+                          "id": "t38yQ",
                           "name": "Title",
                           "fill": "$text-primary",
                           "content": "輸入邀請碼",
@@ -36809,7 +36855,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "KifVi",
+                          "id": "W4ITF",
                           "name": "Subtitle",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
@@ -36826,14 +36872,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "OYfCK",
+                  "id": "KBH15",
                   "name": "Code Card",
                   "width": "fill_container",
                   "layout": "vertical",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "CWmpp",
+                      "id": "JazSM",
                       "name": "Card Paper",
                       "width": 345,
                       "fill": "$surface",
@@ -36847,20 +36893,20 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "cBuHU",
+                          "id": "zsYz2",
                           "name": "Code Groups",
                           "width": "fill_container",
                           "gap": "$sp-block",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "sIXYW",
+                              "id": "c8uTY",
                               "name": "Group 1",
                               "width": "fill_container",
                               "gap": "$sp-label",
                               "children": [
                                 {
-                                  "id": "X120Yg",
+                                  "id": "f4XBj",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 1",
@@ -36874,7 +36920,7 @@
                                   }
                                 },
                                 {
-                                  "id": "IHi32",
+                                  "id": "agExG",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 2",
@@ -36888,7 +36934,7 @@
                                   }
                                 },
                                 {
-                                  "id": "DnVRW",
+                                  "id": "r4u7Xz",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 3",
@@ -36905,13 +36951,13 @@
                             },
                             {
                               "type": "frame",
-                              "id": "VUw3M",
+                              "id": "nMd4r",
                               "name": "Group 2",
                               "width": "fill_container",
                               "gap": "$sp-label",
                               "children": [
                                 {
-                                  "id": "d3Rpi",
+                                  "id": "UQTlx",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 1",
@@ -36925,7 +36971,7 @@
                                   }
                                 },
                                 {
-                                  "id": "Y6jxBz",
+                                  "id": "cP6wQ",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 2",
@@ -36939,7 +36985,7 @@
                                   }
                                 },
                                 {
-                                  "id": "bgxiy",
+                                  "id": "uLgeq",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 3",
@@ -36958,7 +37004,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "KsS24",
+                          "id": "kwINL",
                           "name": "Code Hint",
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
@@ -36975,7 +37021,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "vXZfA",
+                  "id": "h1lXdS",
                   "name": "Explain Wrap",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -36988,7 +37034,7 @@
                   "children": [
                     {
                       "type": "text",
-                      "id": "L63GUt",
+                      "id": "dSAe4",
                       "name": "Explain",
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
@@ -37003,7 +37049,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "n5oeEE",
+                  "id": "FuwLU",
                   "name": "Next Steps Summary",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -37016,7 +37062,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "W86Xk",
+                  "id": "zsMWi",
                   "name": "Press Reply",
                   "width": "fill_container",
                   "gap": "$sp-label",
@@ -37030,7 +37076,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "aPbbY",
+                      "id": "tpYBM",
                       "name": "Reply Icon",
                       "width": 18,
                       "height": 18,
@@ -37040,7 +37086,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "Y7Ral",
+                      "id": "q60JXa",
                       "name": "Reply Text",
                       "fill": "$text-primary",
                       "content": "還要再填 1 個字",
@@ -37052,14 +37098,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "j0qya",
+                  "id": "aoOlW",
                   "name": "CTA Wrap",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-group",
                   "children": [
                     {
-                      "id": "l6G5g",
+                      "id": "RGNEG",
                       "type": "ref",
                       "ref": "OKSJI",
                       "name": "Join Button",
@@ -37074,6 +37120,13 @@
                       }
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OLO7s",
+                  "name": "Whitespace Spacer",
+                  "width": "fill_container",
+                  "height": "fill_container"
                 }
               ]
             },
