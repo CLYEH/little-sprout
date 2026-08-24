@@ -1,0 +1,23 @@
+// LittleSprout — 基礎環境設定（LS-49）。
+//
+// SUPABASE_URL / SUPABASE_ANON_KEY 在這裡先給安全佔位值：CI 與任何尚未建立本機
+// Secrets.xcconfig 的開發環境都會用這兩個值 build，佔位值不指向任何真實後端，
+// 所以測試（不打真網路，見 LittleSproutTests）與純編譯都不受影響。
+//
+// 本機開發要接到真的 Supabase 專案：複製 Secrets.xcconfig.example 為 Secrets.xcconfig
+// （已被 .gitignore 排除，不會進 repo）並填入真實值——取得方式是 supabase MCP 的
+// get_project_url／get_publishable_keys（唯讀）。下面的 #include? 只在該檔存在時生效，
+// 存在的話會覆蓋掉這兩個佔位值。
+//
+// 切換 local vs cloud：同一個 Secrets.xcconfig 改 SUPABASE_URL 即可——指向雲端專案 URL
+// 就是 cloud，指向 `supabase start` 印出的本機 API URL（預設 http://127.0.0.1:54321）
+// 就是 local；anon key 兩邊各自對應換掉。
+
+// xcconfig 的 `//` 是註解起點，寫 `https://...` 會把網址從 `//` 那裡整段截斷成 `https:`
+// （LS-49 實測踩到：INFOPLIST_KEY_SupabaseURL 因此解析成不合法的 URL，AppConfig 的
+// precondition 直接讓 app 在啟動時崩潰）。用 `$()`（展開成空字串）拆開兩個斜線之間，
+// 讓 parser 不把它們認成註解——SUPABASE_URL 與 Secrets.xcconfig 裡的同名設定都要維持這個寫法。
+SUPABASE_URL = https:$()/$()/placeholder.supabase.co
+SUPABASE_ANON_KEY = placeholder-anon-key-not-a-real-secret
+
+#include? "Secrets.xcconfig"
