@@ -382,7 +382,9 @@ declare
     'public.register_device_token(text, text)',
     'public.create_diary_entry(uuid, uuid, text, date)',
     'public.update_diary_entry(uuid, text, date, uuid)',
-    'public.set_diary_deleted(uuid, boolean)'
+    'public.set_diary_deleted(uuid, boolean)',
+    'public.set_album_deleted(uuid, boolean)',
+    'public.set_comment_deleted(uuid, boolean)'
   ];
   v_invoker_rpcs text[] := array[
     'public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)'
