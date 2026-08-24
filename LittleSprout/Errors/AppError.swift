@@ -8,6 +8,10 @@ import PostgREST
 /// - `network`：連不上伺服器或逾時，使用者該做的事是檢查網路後重試。
 /// - `validationRetryable`：這次操作本身有問題（輸入錯誤、碼過期、頻率限制…），
 ///   但修正輸入或稍後再試就可能成功。
+/// - `retryableSystem`：跟 `validationRetryable` 一樣「重試同一個呼叫就可能成功」，但問題
+///   出在系統本身的隨機性或暫時狀態（例如邀請碼產生時的亂數連續撞碼），不是使用者輸入
+///   有誤——使用者沒有「可以修正的東西」，UI 不該引導使用者檢查輸入，只需要提示「請再試
+///   一次」（見 `LSErrorCode.tier`；LS-55 N9）。
 /// - `rejected`：沒有權限、帳號被拒絕，或流程層級的驗證失敗（例如 PKCE/JWT 驗證失敗）；
 ///   也包含「同一動作重試永遠不會成功、需要別的動作」的狀態衝突（見 `LSErrorCode.tier`）。
 /// - `server`：後端本身出錯（5xx、格式看不懂的回應），不是使用者能修正的。
@@ -19,6 +23,7 @@ import PostgREST
 enum AppError: Error, Equatable {
     case network(message: String)
     case validationRetryable(message: String, code: String?)
+    case retryableSystem(message: String, code: String?)
     case rejected(message: String, code: String?)
     case server(message: String, code: String?)
 
@@ -30,6 +35,8 @@ enum AppError: Error, Equatable {
             return "網路連線有問題，請檢查網路連線後再試一次。"
         case .validationRetryable:
             return "這個操作沒有成功，請確認內容後再試一次。"
+        case .retryableSystem:
+            return "請再試一次。"
         case .rejected:
             return "無法完成這個操作。"
         case .server:
@@ -55,12 +62,15 @@ enum LSErrorCode: String, CaseIterable, Sendable {
 
     enum Tier: Equatable {
         case validationRetryable
+        case retryableSystem
         case rejected
     }
 
-    /// 對應 k2Mw4 四層文法的歸類準則：使用者換個輸入、重試「同一個動作」是否可能成功——
-    /// 可能 → `validationRetryable`；即使換輸入也要先做別的事（先讓出一位 owner、等 owner
-    /// 處理、拿全新的邀請碼）→ `rejected`。
+    /// 對應 k2Mw4 四層文法（＋LS-55 N9 補的 `retryableSystem` 層）的歸類準則：使用者換個
+    /// 輸入、重試「同一個動作」是否可能成功——可能，而且是「使用者輸入」該換 →
+    /// `validationRetryable`；可能，但不是使用者輸入的問題（純系統隨機性）→
+    /// `retryableSystem`；即使換輸入也要先做別的事（先讓出一位 owner、等 owner 處理、拿
+    /// 全新的邀請碼）→ `rejected`。
     var tier: Tier {
         switch self {
         case .familyMustHaveOwner, .storageQuotaExceeded,
@@ -75,8 +85,11 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // （輸入邀請碼）換個值再送出，跟 alreadyMember 那種「動作本身已經不適用」不同。
             return .validationRetryable
         case .inviteCodeGenerationCollision:
-            // RPC 自己的訊息是「請重試」——單純的隨機碰撞，同樣的呼叫幾乎必然在下一次成功。
-            return .validationRetryable
+            // RPC 自己的訊息是「請重試」——單純的隨機碰撞，同樣的呼叫幾乎必然在下一次成功，
+            // 但使用者沒有輸入任何東西可以「換掉」（他只是按了一次建立邀請碼），跟
+            // inviteCodeNotFound 那種「使用者輸入有誤」的語意不同——歸 `retryableSystem`
+            // 而不是 `validationRetryable`（LS-55 N9；PR #63 review R2）。
+            return .retryableSystem
         case .inviteParamsInvalid:
             return .validationRetryable
         }
@@ -84,7 +97,7 @@ enum LSErrorCode: String, CaseIterable, Sendable {
 }
 
 extension AppError {
-    /// 把 Supabase SDK（Auth／PostgREST）或系統層的 `Error` 映射成上面四類之一。
+    /// 把 Supabase SDK（Auth／PostgREST）或系統層的 `Error` 映射成上面幾類之一。
     ///
     /// Fail loud 的取捨：任何辨認不出來的錯誤一律落在 `.server`，不會有第五種「未知」分類
     /// 讓呼叫端誤以為可以安全忽略——`.server` 逼呼叫端至少顯示「發生錯誤」而不是靜默吞掉。
@@ -137,6 +150,8 @@ extension AppError {
             switch lsCode.tier {
             case .validationRetryable:
                 return .validationRetryable(message: error.message, code: code)
+            case .retryableSystem:
+                return .retryableSystem(message: error.message, code: code)
             case .rejected:
                 return .rejected(message: error.message, code: code)
             }

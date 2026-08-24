@@ -428,7 +428,7 @@ Swift 端後續實作 `LSError` enum 時（見下方「未涵蓋於本票」）�
 | `LS013` | 你已經是這個家庭的成員 | `request_join` |
 | `LS014` | 你對這個家庭已經有一筆待審核的申請 | `request_join` |
 | `LS015` | 申請不存在或已被處理 | `approve_join`／`reject_join`／`withdraw_join` |
-| `LS016` | 邀請碼產生連續撞碼，請重試 | `create_invite`（機率極低，代表亂數來源異常，不是使用者可修正的錯誤，UI 顯示通用重試訊息即可） |
+| `LS016` | 邀請碼產生連續撞碼，請重試 | `create_invite`（機率極低，代表亂數來源異常，不是使用者可修正的錯誤，UI 顯示通用重試訊息即可；Swift 端 `AppError`／`LSErrorCode.Tier` 把它歸在 `retryableSystem` 層——跟 LS010/LS011/LS012 那種「換個輸入」的 `validationRetryable` 不同，見 LS-55 N9） |
 | `LS017` | 邀請碼參數不合法（到期時間或可用次數超出範圍） | `create_invite` |
 | `LS020` | 日記不存在，或（`update_diary_entry` 情境）已被軟刪除須先還原 | `update_diary_entry`／`set_diary_deleted` |
 | `LS021` | 不是作者本人，或雖是作者但已不是該家庭 owner/member | `update_diary_entry` |

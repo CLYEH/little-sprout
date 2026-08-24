@@ -1,6 +1,7 @@
 import Foundation
 @testable import LittleSprout
 import os
+import Supabase
 import XCTest
 
 /// `SupabaseAuthService` 對真正的 Supabase Auth HTTP 契約做編碼/解碼與錯誤映射，
@@ -144,6 +145,106 @@ final class SupabaseAuthServiceTests: XCTestCase {
         } catch {
             XCTFail("應該 throw AppError，實際是 \(error)")
         }
+    }
+
+    func test_refreshSession_success_returnsAndCachesNewSession() async throws {
+        let client = TestSupabaseClient.make { [testUserID] request in
+            if request.url?.query?.contains("grant_type=id_token") == true {
+                return MockURLProtocol.StubResponse(
+                    statusCode: 200,
+                    body: SessionFixture.json(userID: testUserID, email: "parent@example.com")
+                )
+            }
+            XCTAssertEqual(request.url?.path, "/auth/v1/token")
+            XCTAssertEqual(request.url?.query?.contains("grant_type=refresh_token"), true)
+            return MockURLProtocol.StubResponse(
+                statusCode: 200,
+                body: SessionFixture.json(userID: testUserID, email: "refreshed@example.com")
+            )
+        }
+        let service = SupabaseAuthService(client: client)
+        _ = try await service.signInWithApple(idToken: "fake-id-token", nonce: "fake-nonce")
+
+        let refreshed = try await service.refreshSession()
+
+        XCTAssertEqual(refreshed.email, "refreshed@example.com")
+        // `refreshSession()` 自己的 `updateCache` 同步寫回快取（見 SupabaseAuthService 的
+        // updateCache 註解），不必等 authStateChanges 背景監聽——這裡釘住的是這條同步路徑。
+        XCTAssertEqual(service.currentSession?.email, "refreshed@example.com")
+    }
+
+    func test_authStateChanges_backgroundRefresh_updatesCacheAsynchronously() async throws {
+        // N2：快取有兩條更新路徑（見 SupabaseAuthService 的 cachedSession 欄位註解）——
+        // 上面的 test_refreshSession_success 測的是①（方法自己同步 updateCache）。這裡故意
+        // 繞過 SupabaseAuthService 自己的方法，直接呼叫底層 `client.auth.refreshSession()`，
+        // 只有②（`observeAuthChangesTask` 監聽 `authStateChanges`）能讓快取跟著更新——
+        // 用來釘住「不靠 SupabaseAuthService 自己的方法呼叫、SDK 自己觸發的 session 變化
+        // （例如 autoRefreshToken 計時器）」這條非同步路徑真的有把快取同步進去。
+        let client = TestSupabaseClient.make { [testUserID] request in
+            if request.url?.query?.contains("grant_type=id_token") == true {
+                return MockURLProtocol.StubResponse(
+                    statusCode: 200,
+                    body: SessionFixture.json(userID: testUserID, email: "parent@example.com")
+                )
+            }
+            return MockURLProtocol.StubResponse(
+                statusCode: 200,
+                body: SessionFixture.json(userID: testUserID, email: "background-refreshed@example.com")
+            )
+        }
+        let service = SupabaseAuthService(client: client)
+        _ = try await service.signInWithApple(idToken: "fake-id-token", nonce: "fake-nonce")
+        XCTAssertEqual(service.currentSession?.email, "parent@example.com")
+
+        _ = try await client.auth.refreshSession()
+
+        let expectation = expectation(description: "authStateChanges 背景監聽把新 session 同步進快取")
+        let pollTask = Task {
+            while service.currentSession?.email != "background-refreshed@example.com" {
+                try await Task.sleep(nanoseconds: 5_000_000)
+            }
+            expectation.fulfill()
+        }
+        await fulfillment(of: [expectation], timeout: 2)
+        pollTask.cancel()
+
+        XCTAssertEqual(service.currentSession?.email, "background-refreshed@example.com")
+    }
+
+    func test_initialSession_offlineWithExpiredLocalSession_doesNotClearCache() async throws {
+        // N1：模擬「先前登入過、session 已過期，重開 app 時網路不通」——離線回訪不該被誤判
+        // 成未登入。先用一個「線上」client 登入拿到一份已過期的 session（登入 RPC 本身不驗
+        // expires_at，SDK 存了什麼就是什麼），再用同一份本機儲存建第二個 client 模擬「重開
+        // app」，但這次網路全斷。
+        let sharedStorage = InMemoryAuthLocalStorage()
+        let signInClient = TestSupabaseClient.make(storage: sharedStorage) { [testUserID] _ in
+            MockURLProtocol.StubResponse(
+                statusCode: 200,
+                body: SessionFixture.json(
+                    userID: testUserID,
+                    email: "parent@example.com",
+                    expiresAt: Date().addingTimeInterval(-3600)
+                )
+            )
+        }
+        _ = try await signInClient.auth.signInWithIdToken(
+            credentials: OpenIDConnectCredentials(provider: .apple, idToken: "fake", nonce: "fake")
+        )
+
+        let offlineClient = TestSupabaseClient.make(storage: sharedStorage) { _ in
+            throw URLError(.notConnectedToInternet)
+        }
+        let service = SupabaseAuthService(client: offlineClient)
+
+        // `authStateChanges` 的 `.initialSession` 事件是背景排程送達的（見 SupabaseAuthService
+        // init 的註解），這裡用輪詢＋timeout 等它跑完（而不是斷言「一定會變成某個值」再等，
+        // 因為這裡要驗的正是「保持不變」，用 sleep 給非同步事件足夠時間跑完後再斷言）。
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        XCTAssertEqual(
+            service.currentSession?.userID, testUserID,
+            "離線開 app 時，先前登入過的快取不該被 SDK 的 .initialSession(nil) 事件抹成 nil（N1）"
+        )
     }
 
     func test_signOut_clearsCurrentSession() async throws {

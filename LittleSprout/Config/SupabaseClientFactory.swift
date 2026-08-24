@@ -27,7 +27,17 @@ enum SupabaseClientFactory {
         )
         return SupabaseClient(
             supabaseURL: url,
-            supabaseKey: AppConfig.supabaseAnonKey
+            supabaseKey: AppConfig.supabaseAnonKey,
+            options: SupabaseClientOptions(
+                // 離線開 app 時：SDK 預設（false）會先嘗試用網路刷新本機 session，
+                // 刷新失敗（連不上網）就把 `.initialSession` 事件的 session 灌成 nil——即使
+                // Keychain 裡其實還有一份（可能過期的）session，`SupabaseAuthService` 的
+                // 背景監聽（見該檔 `observeAuthChangesTask`）會照單全收，把快取覆寫成 nil，
+                // 離線回訪被誤判成未登入（LS-55 N1）。設成 true 後 SDK 改成同步直接發本機
+                // 儲存的 session（不管有沒有過期），刷新失敗只會維持原值，不會覆寫成 nil；
+                // SDK 本身也已警告舊行為（false）將在下個 major 版本移除。
+                auth: .init(emitLocalSessionAsInitialSession: true)
+            )
         )
     }
 
