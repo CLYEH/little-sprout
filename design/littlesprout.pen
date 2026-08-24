@@ -670,8 +670,14 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "XugnY",
+                          "id": "k6DrE",
                           "name": "Imprint Mark",
+                          "metadata": {
+                            "type": "a11y",
+                            "accessibilityLabel": "萌芽日記",
+                            "role": "image",
+                            "exemptDynamicType": true
+                          },
                           "width": 200,
                           "height": 95.4,
                           "fill": {
@@ -1886,7 +1892,7 @@
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-section",
+          "gap": 20,
           "padding": [
             "$sp-block",
             "$screen-pad",
@@ -1938,7 +1944,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "xxzR1",
+                  "id": "r4mkZc",
                   "name": "Card Join Family",
                   "width": "fill_container",
                   "fill": "$surface",
@@ -1949,9 +1955,19 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "VHPs8",
-                      "name": "Print Stage",
+                      "id": "b66CZc",
+                      "name": "Print Stage Spacer",
                       "width": "fill_container",
+                      "height": 273
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BXbTE",
+                      "layoutPosition": "absolute",
+                      "x": -24,
+                      "y": 0,
+                      "name": "Print Stage",
+                      "width": 393,
                       "padding": [
                         "$sp-label",
                         "$sp-label",
@@ -1961,10 +1977,10 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "pVzUp",
+                          "id": "ppXvK",
                           "name": "Print",
                           "width": 361,
-                          "height": 239,
+                          "height": 255,
                           "fill": [
                             "$print-paper",
                             {
@@ -2087,7 +2103,7 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "wpzxG",
+                              "id": "O0BNh",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
@@ -2096,7 +2112,7 @@
                               "children": [
                                 {
                                   "type": "rectangle",
-                                  "id": "Cm0pA",
+                                  "id": "QZjPS",
                                   "x": 0,
                                   "y": 0,
                                   "name": "Hero Photo",
@@ -2111,7 +2127,7 @@
                                 },
                                 {
                                   "type": "rectangle",
-                                  "id": "np9J9",
+                                  "id": "tZL7y",
                                   "x": 0,
                                   "y": 0,
                                   "name": "Night Dim",
@@ -2123,24 +2139,24 @@
                             },
                             {
                               "type": "frame",
-                              "id": "E9p9bM",
+                              "id": "aQTB7",
                               "name": "Imprint Row",
                               "width": "fill_container",
                               "justifyContent": "center",
                               "children": [
                                 {
                                   "type": "frame",
-                                  "id": "XpOp4",
+                                  "id": "Mc9L9",
                                   "name": "Imprint Mark (blank)",
                                   "width": 200,
-                                  "height": 16
+                                  "height": 32
                                 }
                               ]
                             }
                           ]
                         },
                         {
-                          "id": "X9NQDH",
+                          "id": "yh9JC",
                           "type": "ref",
                           "ref": "GEBcf",
                           "name": "Corner TL",
@@ -2157,7 +2173,7 @@
                           }
                         },
                         {
-                          "id": "DEail",
+                          "id": "VAoWJ",
                           "type": "ref",
                           "ref": "GEBcf",
                           "name": "Corner TR",
@@ -2174,13 +2190,13 @@
                           }
                         },
                         {
-                          "id": "N3DZg",
+                          "id": "x5FyL",
                           "type": "ref",
                           "ref": "GEBcf",
                           "name": "Corner BL",
                           "layoutPosition": "absolute",
                           "x": 3,
-                          "y": 223,
+                          "y": 239,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M0 26 L0 0 L26 26 Z"
@@ -2191,13 +2207,13 @@
                           }
                         },
                         {
-                          "id": "j5MR6",
+                          "id": "Uzk1X",
                           "type": "ref",
                           "ref": "GEBcf",
                           "name": "Corner BR",
                           "layoutPosition": "absolute",
                           "x": 348,
-                          "y": 223,
+                          "y": 239,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M26 26 L26 0 L0 26 Z"
@@ -2211,7 +2227,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "ziRWO",
+                      "id": "jasAX",
                       "name": "Card Text",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -2220,7 +2236,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "sgRPF",
+                          "id": "z9JbU",
                           "name": "Join Title",
                           "fill": "$text-primary",
                           "content": "我有邀請碼",
@@ -2231,7 +2247,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "p1hN9h",
+                          "id": "Z8jp2",
                           "name": "Join Desc",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
@@ -2246,7 +2262,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "VndqG",
+                      "id": "h06TU",
                       "name": "Card Action",
                       "width": "fill_container",
                       "fill": "$accent",
@@ -2260,7 +2276,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "g7rrRq",
+                          "id": "v2XK6t",
                           "name": "Action Label",
                           "fill": "$on-accent",
                           "content": "輸入邀請碼",
@@ -2270,7 +2286,7 @@
                         },
                         {
                           "type": "icon",
-                          "id": "L0hfB",
+                          "id": "eMb5K",
                           "name": "Action Icon",
                           "width": 22,
                           "height": 22,
@@ -2286,7 +2302,7 @@
             },
             {
               "type": "frame",
-              "id": "l9DEn",
+              "id": "BifYH",
               "name": "Footer",
               "width": "fill_container",
               "layout": "vertical",
@@ -2300,7 +2316,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "id": "Qmwpu",
+                  "id": "KXSfB",
                   "name": "Rule",
                   "fill": "$border",
                   "width": "fill_container",
@@ -2308,7 +2324,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "cOI57",
+                  "id": "crcgO",
                   "name": "Create Family Row",
                   "width": "fill_container",
                   "gap": "$sp-label",
@@ -2321,14 +2337,14 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "qHTuy",
+                      "id": "gmjYt",
                       "name": "Left",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
                         {
                           "type": "icon",
-                          "id": "z0KYPa",
+                          "id": "bgAL2",
                           "name": "Create Icon",
                           "width": 22,
                           "height": 22,
@@ -2338,7 +2354,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "gNEBz",
+                          "id": "EjYHC",
                           "name": "Create Label",
                           "fill": "$text-primary",
                           "content": "我要自己建立家庭",
@@ -2350,7 +2366,7 @@
                     },
                     {
                       "type": "icon",
-                      "id": "UN14P",
+                      "id": "XiGYV",
                       "name": "Chevron",
                       "width": 22,
                       "height": 22,
@@ -2362,7 +2378,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "q1L8n",
+                  "id": "wPmKR",
                   "name": "Footer Note",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -2903,10 +2919,11 @@
             0,
             "$screen-pad"
           ],
+          "justifyContent": "space_between",
           "children": [
             {
               "type": "frame",
-              "id": "JGKw2",
+              "id": "Qk7KB",
               "name": "Upper",
               "width": "fill_container",
               "layout": "vertical",
@@ -2914,7 +2931,7 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "SrmX5",
+                  "id": "HdllN",
                   "name": "Top",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -2922,7 +2939,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "QYseY",
+                      "id": "e15Yv",
                       "name": "Header",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -2930,7 +2947,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "Xu5UU",
+                          "id": "Nwgsu",
                           "name": "Title",
                           "fill": "$text-primary",
                           "content": "輸入邀請碼",
@@ -2941,7 +2958,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "DR5Zg",
+                          "id": "DtiVa",
                           "name": "Subtitle",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
@@ -2958,14 +2975,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "UMqhE",
+                  "id": "S6KlN",
                   "name": "Code Card",
                   "width": "fill_container",
                   "layout": "vertical",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "ApL6t",
+                      "id": "s5Mlj",
                       "name": "Card Paper",
                       "width": 345,
                       "fill": "$surface",
@@ -2979,20 +2996,20 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "L7lKz",
+                          "id": "mIkQv",
                           "name": "Code Groups",
                           "width": "fill_container",
                           "gap": "$sp-block",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "V2M7Vq",
+                              "id": "gTGYY",
                               "name": "Group 1",
                               "width": "fill_container",
                               "gap": "$sp-label",
                               "children": [
                                 {
-                                  "id": "EOJKu",
+                                  "id": "cERDG",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 1",
@@ -3006,7 +3023,7 @@
                                   }
                                 },
                                 {
-                                  "id": "aVbAj",
+                                  "id": "FDYzy",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 2",
@@ -3020,7 +3037,7 @@
                                   }
                                 },
                                 {
-                                  "id": "z1SHpk",
+                                  "id": "qW60u",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 3",
@@ -3037,13 +3054,13 @@
                             },
                             {
                               "type": "frame",
-                              "id": "o6sfp",
+                              "id": "u7qpPk",
                               "name": "Group 2",
                               "width": "fill_container",
                               "gap": "$sp-label",
                               "children": [
                                 {
-                                  "id": "IGaex",
+                                  "id": "uqAmQ",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 1",
@@ -3057,7 +3074,7 @@
                                   }
                                 },
                                 {
-                                  "id": "ho6BO",
+                                  "id": "DISzA",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 2",
@@ -3071,7 +3088,7 @@
                                   }
                                 },
                                 {
-                                  "id": "roFvV",
+                                  "id": "I68hi",
                                   "type": "ref",
                                   "ref": "asPLH",
                                   "name": "Code 3",
@@ -3090,7 +3107,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "fK9MA",
+                          "id": "Pokjl",
                           "name": "Code Hint",
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
@@ -3107,7 +3124,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "mXoDf",
+                  "id": "AfrIF",
                   "name": "Explain Wrap",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -3120,7 +3137,7 @@
                   "children": [
                     {
                       "type": "text",
-                      "id": "vuUlx",
+                      "id": "MhUy5",
                       "name": "Explain",
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
@@ -3134,159 +3151,21 @@
                   ]
                 },
                 {
-                  "type": "frame",
-                  "id": "r9SHqo",
-                  "name": "Next Steps Note",
+                  "type": "text",
+                  "id": "G9tLC",
+                  "name": "Next Steps Summary",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "cornerRadius": "$radius-lg",
-                  "stroke": "$border",
-                  "strokeWidth": 1,
-                  "strokeAlignment": "outer",
-                  "layout": "vertical",
-                  "gap": "$sp-group",
-                  "padding": "$sp-group",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "aJFc8",
-                      "name": "Note Title",
-                      "fill": "$text-primary",
-                      "content": "接下來會發生什麼",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "vXAtB",
-                      "name": "Divider 0",
-                      "fill": "$border",
-                      "width": "fill_container",
-                      "height": 1
-                    },
-                    {
-                      "type": "frame",
-                      "id": "yUhn3",
-                      "name": "Row",
-                      "width": "fill_container",
-                      "gap": 16,
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "oahAr",
-                          "name": "Row Label",
-                          "fill": "$text-secondary",
-                          "content": "送出後",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "R3fQA4",
-                          "name": "Row Value",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "家長會收到通知",
-                          "textAlign": "right",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "AureV",
-                      "name": "Divider 1",
-                      "fill": "$border",
-                      "width": "fill_container",
-                      "height": 1
-                    },
-                    {
-                      "type": "frame",
-                      "id": "U2Kt8",
-                      "name": "Row",
-                      "width": "fill_container",
-                      "gap": 16,
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "qwjbj",
-                          "name": "Row Label",
-                          "fill": "$text-secondary",
-                          "content": "他按核准",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "XpZWm",
-                          "name": "Row Value",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "你才進得到家庭裡",
-                          "textAlign": "right",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "OE3xx",
-                      "name": "Divider 2",
-                      "fill": "$border",
-                      "width": "fill_container",
-                      "height": 1
-                    },
-                    {
-                      "type": "frame",
-                      "id": "bGtEp",
-                      "name": "Row",
-                      "width": "fill_container",
-                      "gap": 16,
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "uWR80",
-                          "name": "Row Label",
-                          "fill": "$text-secondary",
-                          "content": "為什麼",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "L13fw",
-                          "name": "Row Value",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "擋下拿到碼的陌生人",
-                          "textAlign": "right",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        }
-                      ]
-                    }
-                  ]
+                  "content": "送出後家人會收到通知，他核准你就進得來。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-meta",
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "frame",
-                  "id": "HCTf6",
+                  "id": "T8J50",
                   "name": "Press Reply",
                   "width": "fill_container",
                   "gap": "$sp-label",
@@ -3300,7 +3179,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "qCZoF",
+                      "id": "PKd1v",
                       "name": "Reply Icon",
                       "width": 18,
                       "height": 18,
@@ -3310,7 +3189,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "xIrUb",
+                      "id": "IqJop",
                       "name": "Reply Text",
                       "fill": "$text-primary",
                       "content": "還要再填 1 個字",
@@ -3322,14 +3201,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "RDrEG",
+                  "id": "KRabE",
                   "name": "CTA Wrap",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-group",
                   "children": [
                     {
-                      "id": "x9c8p",
+                      "id": "xP4q5",
                       "type": "ref",
                       "ref": "OKSJI",
                       "name": "Join Button",
@@ -3349,7 +3228,7 @@
             },
             {
               "type": "frame",
-              "id": "Wrfa4",
+              "id": "F0IJOJ",
               "name": "Footer",
               "width": "fill_container",
               "layout": "vertical",
@@ -3362,7 +3241,7 @@
               ],
               "children": [
                 {
-                  "id": "zgdAP",
+                  "id": "GjQNR",
                   "type": "ref",
                   "ref": "XggYA",
                   "name": "Paste Link Button",
@@ -4829,8 +4708,14 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "XVRMH",
+                  "id": "IFINL",
                   "name": "Imprint Mark",
+                  "metadata": {
+                    "type": "a11y",
+                    "accessibilityLabel": "萌芽日記",
+                    "role": "image",
+                    "exemptDynamicType": true
+                  },
                   "width": 260,
                   "height": 124,
                   "fill": {
@@ -5815,8 +5700,14 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "G3kTnK",
+                          "id": "yLW1U",
                           "name": "Imprint Mark",
+                          "metadata": {
+                            "type": "a11y",
+                            "accessibilityLabel": "萌芽日記",
+                            "role": "image",
+                            "exemptDynamicType": true
+                          },
                           "width": 200,
                           "height": 95.4,
                           "fill": {
@@ -6360,8 +6251,14 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "p4czP",
+                          "id": "fevUN",
                           "name": "Imprint Mark",
+                          "metadata": {
+                            "type": "a11y",
+                            "accessibilityLabel": "萌芽日記",
+                            "role": "image",
+                            "exemptDynamicType": true
+                          },
                           "width": 200,
                           "height": 95.4,
                           "fill": {
@@ -7738,6 +7635,231 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
                   "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "Lm66y",
+                  "name": "Family Print",
+                  "width": "fill_container",
+                  "height": 175,
+                  "fill": [
+                    "$print-paper",
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.494,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.43213296398891965,
+                        "height": 0.4642857142857143
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.288,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.43213296398891965,
+                        "height": 0.4642857142857143
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.36,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.43213296398891965,
+                        "height": 0.4642857142857143
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 1
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.236,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.43213296398891965,
+                        "height": 0.4642857142857143
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 1
+                      }
+                    }
+                  ],
+                  "stroke": "$paper-edge",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "outer",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 0,
+                      "y": 3
+                    },
+                    "blur": 12
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "N7w5f",
+                      "name": "Photo Wrap",
+                      "clip": true,
+                      "width": "fill_container",
+                      "height": 120,
+                      "fill": "$surface-2",
+                      "layout": "none"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "EcjxU",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "hlHfZ",
+                          "name": "Family Caption",
+                          "fill": "$text-primary",
+                          "content": "陳家",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "o7Ap0",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TL",
+                      "layoutPosition": "absolute",
+                      "x": 3,
+                      "y": 3,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 0 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "H0AfME",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TR",
+                      "layoutPosition": "absolute",
+                      "x": 324,
+                      "y": 3,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 0 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "oqZxi",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BL",
+                      "layoutPosition": "absolute",
+                      "x": 3,
+                      "y": 159,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 26 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "Hs7x4",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BR",
+                      "layoutPosition": "absolute",
+                      "x": 324,
+                      "y": 159,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 26 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    }
+                  ]
                 }
               ]
             },
@@ -8343,14 +8465,14 @@
           "children": [
             {
               "type": "frame",
-              "id": "nEM5z",
+              "id": "qtMw1",
               "name": "Upper",
               "width": "fill_container",
               "layout": "vertical",
               "children": [
                 {
                   "type": "frame",
-                  "id": "Np7LD",
+                  "id": "hdFHL",
                   "name": "Head Group",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -8358,7 +8480,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "teBcF",
+                      "id": "Q3sg1",
                       "name": "Top",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -8366,7 +8488,7 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "oWivQ",
+                          "id": "iYebP",
                           "name": "Header",
                           "width": "fill_container",
                           "layout": "vertical",
@@ -8374,7 +8496,7 @@
                           "children": [
                             {
                               "type": "text",
-                              "id": "vYIFe",
+                              "id": "Pe6A9",
                               "name": "Title",
                               "fill": "$text-primary",
                               "content": "輸入邀請碼",
@@ -8389,17 +8511,14 @@
                     },
                     {
                       "type": "frame",
-                      "id": "ygCQ3",
+                      "id": "X5Nw4",
                       "name": "Code Card",
                       "width": "fill_container",
-                      "height": 150,
-                      "layout": "none",
+                      "layout": "vertical",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "lZVTM",
-                          "x": 0,
-                          "y": 0,
+                          "id": "u5fzWl",
                           "name": "Card Paper",
                           "width": 345,
                           "fill": "$surface",
@@ -8413,20 +8532,20 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "ydVQg",
+                              "id": "y5pFH",
                               "name": "Code Groups",
                               "width": "fill_container",
                               "gap": "$sp-block",
                               "children": [
                                 {
                                   "type": "frame",
-                                  "id": "p6WvA",
+                                  "id": "f96dgy",
                                   "name": "Group 1",
                                   "width": "fill_container",
                                   "gap": "$sp-label",
                                   "children": [
                                     {
-                                      "id": "rQnz4",
+                                      "id": "qubu8",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 1",
@@ -8440,7 +8559,7 @@
                                       }
                                     },
                                     {
-                                      "id": "OZqju",
+                                      "id": "za9Yi",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 2",
@@ -8454,7 +8573,7 @@
                                       }
                                     },
                                     {
-                                      "id": "MiqOR",
+                                      "id": "MM1WW",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 3",
@@ -8470,7 +8589,7 @@
                                     {
                                       "type": "rectangle",
                                       "cornerRadius": 9,
-                                      "id": "a6f0tV",
+                                      "id": "hWGvd",
                                       "layoutPosition": "absolute",
                                       "x": 5,
                                       "y": 5,
@@ -8484,13 +8603,13 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "wmPmK",
+                                  "id": "x7ZuE",
                                   "name": "Group 2",
                                   "width": "fill_container",
                                   "gap": "$sp-label",
                                   "children": [
                                     {
-                                      "id": "uN5B1",
+                                      "id": "J2i8P",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 1",
@@ -8504,7 +8623,7 @@
                                       }
                                     },
                                     {
-                                      "id": "nEpuI",
+                                      "id": "y4HMOV",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 2",
@@ -8518,7 +8637,7 @@
                                       }
                                     },
                                     {
-                                      "id": "mPWGx",
+                                      "id": "sbzWs",
                                       "type": "ref",
                                       "ref": "asPLH",
                                       "name": "Code 3",
@@ -8537,7 +8656,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "qcwqP",
+                              "id": "mHvaF",
                               "name": "Code Error",
                               "width": "fill_container",
                               "gap": "$sp-tight",
@@ -8545,7 +8664,7 @@
                               "children": [
                                 {
                                   "type": "icon",
-                                  "id": "eJjFr",
+                                  "id": "croUg",
                                   "name": "Err Icon",
                                   "width": 18,
                                   "height": 18,
@@ -8555,7 +8674,7 @@
                                 },
                                 {
                                   "type": "text",
-                                  "id": "VLt8I",
+                                  "id": "Smu0m",
                                   "name": "Err Text",
                                   "fill": "$danger",
                                   "content": "這組邀請碼的次數用完了。",
@@ -8574,14 +8693,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "d97XXD",
+                  "id": "YWsCZ",
                   "name": "Whitespace Spacer",
                   "width": "fill_container",
-                  "height": 232
+                  "height": 100
                 },
                 {
                   "type": "frame",
-                  "id": "Z614u",
+                  "id": "uqkqY",
                   "name": "Explain Group",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -8589,7 +8708,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "fVgSK",
+                      "id": "E7vttn",
                       "name": "Policy Wrap",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -8602,14 +8721,14 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "pJUBL",
+                          "id": "i19SQF",
                           "name": "Policy Note",
                           "width": "fill_container",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "text",
-                              "id": "JKPJu",
+                              "id": "QCgMs",
                               "name": "Policy Note Text [tabular]",
                               "fill": "$text-secondary",
                               "textGrowth": "fixed-width",
@@ -8625,7 +8744,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "MjTDu",
+                      "id": "ltcqx",
                       "name": "Join Wrap",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -8637,7 +8756,7 @@
                       ],
                       "children": [
                         {
-                          "id": "CvSon",
+                          "id": "kAfsN",
                           "type": "ref",
                           "ref": "OKSJI",
                           "name": "Join Button",
@@ -8655,7 +8774,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "NkLU2",
+                      "id": "sxR9d",
                       "name": "Prewritten Wrap",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -8668,7 +8787,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "var9j",
+                          "id": "AzoAg",
                           "name": "Prewritten Note",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
@@ -9120,7 +9239,7 @@
       "name": "LS-18 / 07b 邀請家人 · 有待核准申請",
       "clip": true,
       "width": 393,
-      "height": 1606,
+      "height": 1614,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -9406,6 +9525,8 @@
                       "ref": "PXPcH",
                       "name": "Approval Toggle",
                       "width": "fill_container",
+                      "fill": "$surface-2",
+                      "strokeWidth": 0,
                       "descendants": {
                         "vSWWm": {
                           "content": "現在有 2 位在等你核准。",
@@ -10145,7 +10266,7 @@
           "height": "fill_container",
           "layout": "vertical",
           "padding": [
-            "$sp-block",
+            12,
             "$screen-pad",
             0,
             "$screen-pad"
@@ -10158,7 +10279,7 @@
               "name": "Upper",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": "$sp-section",
+              "gap": 8,
               "children": [
                 {
                   "type": "frame",
@@ -10211,7 +10332,7 @@
                       "stroke": "$border",
                       "strokeWidth": 1,
                       "layout": "vertical",
-                      "gap": "$sp-group",
+                      "gap": 8,
                       "padding": "$inset-card",
                       "children": [
                         {
@@ -10380,6 +10501,157 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "kjWwp",
+                  "name": "Next Steps Note",
+                  "width": "fill_container",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "outer",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "oGpsG",
+                      "name": "Note Title",
+                      "fill": "$text-primary",
+                      "content": "接下來會發生什麼",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "p0iDO",
+                      "name": "Divider 0",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mCU6z",
+                      "name": "Row",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "jca5z",
+                          "name": "Row Label",
+                          "fill": "$text-secondary",
+                          "content": "送出後",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "D7LjsH",
+                          "name": "Row Value",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "家長會收到通知",
+                          "textAlign": "right",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "Bgn3U",
+                      "name": "Divider 1",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UBBDC",
+                      "name": "Row",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "XazHI",
+                          "name": "Row Label",
+                          "fill": "$text-secondary",
+                          "content": "他按核准",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ch2zF",
+                          "name": "Row Value",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "你才進得到家庭裡",
+                          "textAlign": "right",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "KEVow",
+                      "name": "Divider 2",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "sP1rV",
+                      "name": "Row",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ZAOvp",
+                          "name": "Row Label",
+                          "fill": "$text-secondary",
+                          "content": "為什麼",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "TCte1",
+                          "name": "Row Value",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "擋下拿到碼的陌生人",
+                          "textAlign": "right",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             },
@@ -10389,9 +10661,9 @@
               "name": "Footer",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": "$sp-group",
+              "gap": 8,
               "padding": [
-                "$sp-block",
+                12,
                 0,
                 "$sp-item",
                 0
@@ -11141,7 +11413,7 @@
               "name": "Top",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": "$sp-block",
+              "gap": 12,
               "children": [
                 {
                   "type": "frame",
@@ -11184,7 +11456,7 @@
                   "width": "fill_container",
                   "layout": "vertical",
                   "padding": [
-                    "$sp-section",
+                    20,
                     0,
                     0,
                     0
@@ -11230,7 +11502,6 @@
                   "id": "yWH0V",
                   "name": "Family Print",
                   "width": "fill_container",
-                  "height": 175,
                   "fill": [
                     "$print-paper",
                     {
@@ -11373,7 +11644,10 @@
                           "id": "WQ9Us",
                           "name": "Family Caption",
                           "fill": "$text-primary",
-                          "content": "陳家的小小世界…",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "陳家的小小世界（台中外婆家）與台北爺爺奶奶家共同相簿",
+                          "textAlign": "center",
                           "fontFamily": "$font",
                           "fontSize": "$fs-lead",
                           "fontWeight": "600"
@@ -11421,7 +11695,7 @@
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
                       "x": 3,
-                      "y": 159,
+                      "y": 191,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -11438,7 +11712,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 159,
+                      "y": 191,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -11682,6 +11956,230 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
                   "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "XrvpC",
+                  "name": "Family Print",
+                  "width": "fill_container",
+                  "height": 175,
+                  "fill": [
+                    "$print-paper",
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.494,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.43213296398891965,
+                        "height": 0.4642857142857143
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.288,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.43213296398891965,
+                        "height": 0.4642857142857143
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.36,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.43213296398891965,
+                        "height": 0.4642857142857143
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 1
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.236,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.43213296398891965,
+                        "height": 0.4642857142857143
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 1
+                      }
+                    }
+                  ],
+                  "stroke": "$paper-edge",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "outer",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 0,
+                      "y": 3
+                    },
+                    "blur": 12
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "l1qRb",
+                      "name": "Photo Wrap",
+                      "clip": true,
+                      "width": "fill_container",
+                      "height": 120,
+                      "fill": "$surface-2",
+                      "layout": "none"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "qakSD",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "RayG5",
+                          "name": "Family Caption",
+                          "fill": "$text-primary",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "FugRL",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TL",
+                      "layoutPosition": "absolute",
+                      "x": 3,
+                      "y": 3,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 0 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "RjaIR",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TR",
+                      "layoutPosition": "absolute",
+                      "x": 324,
+                      "y": 3,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 0 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "NUJKF",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BL",
+                      "layoutPosition": "absolute",
+                      "x": 3,
+                      "y": 159,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 26 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "ZvMw5",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BR",
+                      "layoutPosition": "absolute",
+                      "x": 324,
+                      "y": 159,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 26 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    }
+                  ]
                 }
               ]
             },
@@ -25511,6 +26009,7 @@
       "stroke": "#BC969D",
       "strokeWidth": 1,
       "layout": "vertical",
+      "gap": 24,
       "padding": 44,
       "children": [
         {
@@ -26187,7 +26686,7 @@
                   "fill": "#60464A",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R2 · 全域\nR6 複核",
+                  "content": "R2 · 全域\nR6 改寫",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -26201,7 +26700,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "【R2 · 產品中文名】「萌芽日記」（英文 Little Sprout 不變）。歡迎頁字標＝LITTLE SPROUT 小字在上（fs-meta、letterSpacing 3）＋萌芽日記 fs-display（letterSpacing 2）；四字等大不拆大小，理由：四個等大的字是一個詞，拆成「萌芽＋日記」會被讀成品牌＋品類，而且等大只需一個字級 token，AX3 整組同步放大不會有比例崩掉的問題。拉丁副行留著是因為 Apple／Google 登入表單會顯示英文 app 名，長輩要能把兩個名字對起來——它是字標的一部分，不受 fs-note 規則管。",
+                  "content": "【R6 改寫，取代 R2 的過期描述】產品中文名「萌芽日記」（英文 Little Sprout 不變）。A′ 現況：全 app 唯一的名稱標識是沖印品白邊 Imprint Row 裡的蠟筆字標（mengya-diary-crayon-v3.png，四字等大，image fill，AX3 下固定尺寸不隨字級放大，靠 metadata.accessibilityLabel=\"萌芽日記\" 補 VoiceOver，見下方 A11y 條目）；Head 只保留 Tagline「給家人的私密相簿」一行系統文字，字級升到 $fs-display，會隨 Dynamic Type 縮放。LITTLE SPROUT 英文字樣已從全 app 使用者介面退場，不再有拉丁副行文字節點；英文名只留在橫式鎖版與 App Store 素材（見 Brand 板 S1FuR 眉標退場規則）。四字等大理由不變：四個等大的字是一個詞，拆成「萌芽＋日記」會被讀成品牌＋品類。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -26290,34 +26789,6 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
                   "fontWeight": "normal"
-                },
-                {
-                  "type": "text",
-                  "id": "qoAL1",
-                  "x": 0,
-                  "y": 260,
-                  "name": "H2",
-                  "enabled": false,
-                  "fill": "$text-secondary",
-                  "content": "LS-46 · Design Tokens 板",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-meta",
-                  "fontWeight": "600"
-                },
-                {
-                  "type": "text",
-                  "id": "mY4c3",
-                  "x": 0,
-                  "y": 287,
-                  "name": "b2",
-                  "enabled": false,
-                  "fill": "$text-primary",
-                  "textGrowth": "fixed-width",
-                  "width": 600,
-                  "content": "【LS-46 · 深色 accent 錨點】使用者 2026-08-24 定案兩個深色粉色錨點值 #E3A9C4／#FCA4B5 一併鎖定（Color Table 新增 Row 9b「accent-anchor(D)」）。本檔（C 軌）生產值維持 accent-dark ＝ #FCA4B5（既有，未變）；#E3A9C4 為 D 軌對照錨點，記錄供未來參照，非本檔任何 token 的生產值，不需建 Asset Catalog Color Set。",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
                 }
               ]
             },
@@ -26348,6 +26819,42 @@
                   "content": "【$print-paper token】新增（淺 #FBEBEC＝與 $surface 淺色相同／深 #E8D9D4 暖米白）。所有沖印品「相紙」背景 fill 第一層由 $surface 改綁 $print-paper——相紙不因關燈變黑。連帶結果：蠟筆字標不再需要淺墨深色變體，mengya-diary-crayon-v3-dark.png 已退役（全文件零引用，檔案保留不刪）。Asset Catalog 新建 Color Set「print-paper」，Any=#FBEBEC／Dark=#E8D9D4。\n\n【04／04-iPad 沖印品重構】R3 前是「四邊 8pt 白邊、無白邊帶」的簡化版，與 01／01-iPad 的「Print 卡＋白邊 Imprint Row 帶」結構不同型。R4 統一成同構：padding $sp-label、gap 7、Photo Wrap（clip）＋ Imprint Row 白邊帶（此處帶內留空，不放蠟筆字標——04 是加入/建立分流頁，不代表已有家庭）。04-iPad 因是左右兩欄版型，改用「Photo Wrap 露出底部空白相紙邊」的簡化實作（同一張 Print Paper 矩形當背景，照片縮小露出下緣），視覺等效但節點更精簡。兩欄寬度比例（照片欄 420 / 文字欄 294）未變。\n\n【07 核准鎖定列順序統一】07／07b／07c 三個變體過去核准鎖定列（cmp/Approval Status）位置不一致（07/07c 排在分享／重新產生之後；07b 埋在「等你決定」待核准清單區塊內）。R4 統一成「代碼卡 → 核准鎖定列 → 分享/複製 → （07b 專屬：等你決定待核准清單）→ 重新產生」，三張畫面同一順序，只有 07b 多夾了它獨有的待核准清單。",
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CVTXK",
+              "name": "iR6",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CQwDM",
+                  "name": "stamp",
+                  "fill": "#60464A",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R6 · 驗證方法",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "DeVnL",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "畫布是唯一事實來源：本輪起，Handoff 註記裡任何具體數字（尺寸、座標、比例、色值等）必須以 Get 對畫布實測回填，不得沿用估算、口頭轉述或前一輪文字描述。前幾輪多次出現「量到警告→用一句話解釋掉→未截圖複驗」與「註記數字與畫布實際不符」的失敗模式（見 LS-46 R5 對抗審查），本則作為長期規則記錄於此，供之後每一輪修改前先檢查。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
                   "fontWeight": "normal"
                 }
               ]
@@ -27406,7 +27913,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R4 · 01-iPad·04-iPad",
+                  "content": "R4 · 01-iPad·04-iPad\nR6 數字修正",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -27420,7 +27927,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "iPad（R4 重寫，取代 R3 的過期描述）：\n【01-iPad】不再是全出血底圖。台紙（窗光 radial）上放一張大沖印品：相紙 420×660 @ (40,273)，四顆 40pt 角托，下緣 LITTLE SPROUT 壓印，池 .418/.207/.132/.030（14 倍落差——那張紙躺在窗光的邊緣上）。登入欄在右側 294 寬，直接坐在台紙上，沒有卡、沒有角托、沒有壓印。R3 的做法是把四顆角托裱在登入表單上，等於兩個裝置對「什麼珍貴」給相反答案。\n【04-iPad】照片卡 520×570，四顆 40pt 角托（R3 只有上兩顆），池 .403/.054/.173/.030。\n【共用】iPad 邊距 $screen-pad-lg 40；角托依卡寬升級到 40（>400）。",
+                  "content": "iPad（R6 依 Get 實測回填三處數字，取代先前描述）：\n【01-iPad】不再是全出血底圖。台紙（窗光 radial）上放一張大沖印品：相紙 420×767 @ (40,273)，四顆 40pt 角托，下緣蠟筆字標壓印（260×124pt，取代文字 LITTLE SPROUT），池 .418/.207/.132/.030（14 倍落差——那張紙躺在窗光的邊緣上）。登入欄在右側 294 寬，直接坐在台紙上，沒有卡、沒有角托、沒有壓印。\n【04-iPad】照片卡 420×570，四顆 40pt 角托，池 .403/.054/.173/.030。\n【共用】iPad 邊距 $screen-pad-lg 40；角托依卡寬升級到 40（>400）。畫布是唯一事實來源，本則三處數字皆以 Get 對畫布實測回填，非估算或沿用舊稿。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -33185,8 +33692,14 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "J2n7D9",
+                          "id": "lqk4u",
                           "name": "Imprint Mark",
+                          "metadata": {
+                            "type": "a11y",
+                            "accessibilityLabel": "萌芽日記",
+                            "role": "image",
+                            "exemptDynamicType": true
+                          },
                           "width": 200,
                           "height": 95.4,
                           "fill": {
@@ -34156,572 +34669,6 @@
       ]
     },
     {
-      "type": "frame",
-      "id": "HGSb4",
-      "x": 2300,
-      "y": 16378,
-      "name": "A11y / 06 輸入邀請碼 · Dynamic Type AX3（body 40pt）",
-      "theme": {
-        "size": "ax3"
-      },
-      "clip": true,
-      "width": 393,
-      "height": 2200,
-      "fill": {
-        "type": "gradient",
-        "gradientType": "radial",
-        "enabled": true,
-        "rotation": 0,
-        "size": {
-          "width": 1.6997455470737914,
-          "height": 1.3497652582159625
-        },
-        "colors": [
-          {
-            "color": "$bg-lit",
-            "position": 0
-          },
-          {
-            "color": "$bg",
-            "position": 1
-          }
-        ],
-        "center": {
-          "x": 0.13994910941475827,
-          "y": 0.01995305164319249
-        }
-      },
-      "cornerRadius": 44,
-      "layout": "vertical",
-      "children": [
-        {
-          "id": "e0GUN6",
-          "type": "ref",
-          "ref": "OeXop",
-          "name": "Status Bar",
-          "width": "fill_container"
-        },
-        {
-          "id": "aY6ay",
-          "type": "ref",
-          "ref": "W6qTyS",
-          "name": "Nav Back",
-          "width": "fill_container"
-        },
-        {
-          "type": "frame",
-          "id": "KGRnR",
-          "name": "Body",
-          "width": "fill_container",
-          "height": "fill_container",
-          "layout": "vertical",
-          "gap": "$sp-group",
-          "padding": [
-            16,
-            "$screen-pad",
-            0,
-            "$screen-pad"
-          ],
-          "children": [
-            {
-              "type": "frame",
-              "id": "RRLCA",
-              "name": "Upper",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-label",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "AnrU0",
-                  "name": "Top",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-label",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "QYZsl",
-                      "name": "Header",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": "$sp-label",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "qv35H",
-                          "name": "Title",
-                          "fill": "$text-primary",
-                          "content": "輸入邀請碼",
-                          "lineHeight": 1.25,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-display",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "H8rb1",
-                          "name": "Subtitle",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "6 位英數字，分前三碼、後三碼。",
-                          "lineHeight": 1.5,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "VPxIO",
-                  "name": "Code Card",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "MvQbO",
-                      "name": "Card Paper",
-                      "width": 345,
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-lg",
-                      "stroke": "$paper-edge",
-                      "strokeWidth": 1,
-                      "strokeAlignment": "outer",
-                      "layout": "vertical",
-                      "gap": "$sp-group",
-                      "padding": "$inset-card",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "YfpR5",
-                          "name": "Code Groups",
-                          "width": "fill_container",
-                          "gap": "$sp-block",
-                          "children": [
-                            {
-                              "type": "frame",
-                              "id": "V5G7vJ",
-                              "name": "Group 1",
-                              "width": "fill_container",
-                              "gap": "$sp-label",
-                              "children": [
-                                {
-                                  "id": "kxv9g",
-                                  "type": "ref",
-                                  "ref": "asPLH",
-                                  "name": "Code 1",
-                                  "width": "fill_container",
-                                  "stroke": "$border",
-                                  "strokeWidth": 1.5,
-                                  "descendants": {
-                                    "zLuIX": {
-                                      "content": "K"
-                                    }
-                                  }
-                                },
-                                {
-                                  "id": "x34OIO",
-                                  "type": "ref",
-                                  "ref": "asPLH",
-                                  "name": "Code 2",
-                                  "width": "fill_container",
-                                  "stroke": "$border",
-                                  "strokeWidth": 1.5,
-                                  "descendants": {
-                                    "zLuIX": {
-                                      "content": "7"
-                                    }
-                                  }
-                                },
-                                {
-                                  "id": "IPgB3",
-                                  "type": "ref",
-                                  "ref": "asPLH",
-                                  "name": "Code 3",
-                                  "width": "fill_container",
-                                  "stroke": "$border",
-                                  "strokeWidth": 1.5,
-                                  "descendants": {
-                                    "zLuIX": {
-                                      "content": "M"
-                                    }
-                                  }
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "HEPyQ",
-                              "name": "Group 2",
-                              "width": "fill_container",
-                              "gap": "$sp-label",
-                              "children": [
-                                {
-                                  "id": "LFYGZ",
-                                  "type": "ref",
-                                  "ref": "asPLH",
-                                  "name": "Code 1",
-                                  "width": "fill_container",
-                                  "stroke": "$border",
-                                  "strokeWidth": 1.5,
-                                  "descendants": {
-                                    "zLuIX": {
-                                      "content": "2"
-                                    }
-                                  }
-                                },
-                                {
-                                  "id": "LkxCD",
-                                  "type": "ref",
-                                  "ref": "asPLH",
-                                  "name": "Code 2",
-                                  "width": "fill_container",
-                                  "stroke": "$border",
-                                  "strokeWidth": 1.5,
-                                  "descendants": {
-                                    "zLuIX": {
-                                      "content": "F"
-                                    }
-                                  }
-                                },
-                                {
-                                  "id": "rmBOp",
-                                  "type": "ref",
-                                  "ref": "asPLH",
-                                  "name": "Code 3",
-                                  "width": "fill_container",
-                                  "stroke": "$accent",
-                                  "strokeWidth": 2.5,
-                                  "descendants": {
-                                    "zLuIX": {
-                                      "content": ""
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "K9Xto",
-                          "name": "Code Hint",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "英文字母不分大小寫",
-                          "lineHeight": 1.5,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "TslW7",
-                  "name": "Explain Wrap",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "padding": [
-                    "$sp-group",
-                    0,
-                    0,
-                    0
-                  ],
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "H4oN0K",
-                      "name": "Explain",
-                      "fill": "$text-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "請家人在 App 裡點「邀請家人」，把 6 位碼傳給你。送出後要等管理者核准。",
-                      "lineHeight": 1.6,
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "P0xgn",
-                  "name": "Next Steps Note",
-                  "width": "fill_container",
-                  "cornerRadius": "$radius-lg",
-                  "stroke": "$border",
-                  "strokeWidth": 1,
-                  "strokeAlignment": "outer",
-                  "layout": "vertical",
-                  "gap": "$sp-group",
-                  "padding": "$sp-group",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "j2OXT",
-                      "name": "Note Title",
-                      "fill": "$text-primary",
-                      "content": "接下來會發生什麼",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "h9SPat",
-                      "name": "Divider 0",
-                      "fill": "$border",
-                      "width": "fill_container",
-                      "height": 1
-                    },
-                    {
-                      "type": "frame",
-                      "id": "jwdq1",
-                      "name": "Row",
-                      "width": "fill_container",
-                      "gap": 16,
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "i13gML",
-                          "name": "Row Label",
-                          "fill": "$text-secondary",
-                          "content": "送出後",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "h9Iy2",
-                          "name": "Row Value",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "家長會收到通知",
-                          "textAlign": "right",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "mXNiw",
-                      "name": "Divider 1",
-                      "fill": "$border",
-                      "width": "fill_container",
-                      "height": 1
-                    },
-                    {
-                      "type": "frame",
-                      "id": "W4jeQE",
-                      "name": "Row",
-                      "width": "fill_container",
-                      "gap": 16,
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "nSb19",
-                          "name": "Row Label",
-                          "fill": "$text-secondary",
-                          "content": "他按核准",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "zLglh",
-                          "name": "Row Value",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "你才進得到家庭裡",
-                          "textAlign": "right",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "PiJyn",
-                      "name": "Divider 2",
-                      "fill": "$border",
-                      "width": "fill_container",
-                      "height": 1
-                    },
-                    {
-                      "type": "frame",
-                      "id": "q2XLs",
-                      "name": "Row",
-                      "width": "fill_container",
-                      "gap": 16,
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "N0dRp",
-                          "name": "Row Label",
-                          "fill": "$text-secondary",
-                          "content": "為什麼",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "a3ENgz",
-                          "name": "Row Value",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "擋下拿到碼的陌生人",
-                          "textAlign": "right",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "Aqgdv",
-                  "name": "Press Reply",
-                  "width": "fill_container",
-                  "gap": "$sp-label",
-                  "padding": [
-                    "$sp-tight",
-                    0,
-                    0,
-                    0
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon",
-                      "id": "J8uTq",
-                      "name": "Reply Icon",
-                      "width": 18,
-                      "height": 18,
-                      "icon": "circle-alert",
-                      "library": "lucide",
-                      "fill": "$text-primary"
-                    },
-                    {
-                      "type": "text",
-                      "id": "YYRKZ",
-                      "name": "Reply Text",
-                      "fill": "$text-primary",
-                      "content": "還要再填 1 個字",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "600"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "X2GOa",
-                  "name": "CTA Wrap",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-group",
-                  "children": [
-                    {
-                      "id": "x8R5o",
-                      "type": "ref",
-                      "ref": "OKSJI",
-                      "name": "Join Button",
-                      "width": "fill_container",
-                      "descendants": {
-                        "s9bME2": {
-                          "icon": "send"
-                        },
-                        "w7CUP": {
-                          "content": "送出加入申請"
-                        }
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "QYs19",
-              "name": "Footer",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-group",
-              "padding": [
-                0,
-                0,
-                "$sp-item",
-                0
-              ],
-              "children": [
-                {
-                  "id": "qjWLK",
-                  "type": "ref",
-                  "ref": "XggYA",
-                  "name": "Paste Link Button",
-                  "width": "fill_container",
-                  "descendants": {
-                    "G4R75k": {
-                      "icon": "link"
-                    },
-                    "yxwnz": {
-                      "content": "改用貼上邀請連結"
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "XhCUX",
-          "name": "Home Indicator Area",
-          "width": "fill_container",
-          "height": 34,
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "rectangle",
-              "cornerRadius": "$radius-full",
-              "id": "o8w4oa",
-              "name": "Home Indicator",
-              "fill": "$home-indicator",
-              "width": 140,
-              "height": 5
-            }
-          ]
-        }
-      ]
-    },
-    {
       "type": "note",
       "id": "OE9Ki",
       "x": 0,
@@ -34752,7 +34699,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1972,
+      "height": 2070,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -34844,14 +34791,11 @@
               "id": "BA8yZ",
               "name": "Code Card Wrap",
               "width": "fill_container",
-              "height": 202,
-              "layout": "none",
+              "layout": "vertical",
               "children": [
                 {
                   "type": "frame",
                   "id": "GTHB7",
-                  "x": 0,
-                  "y": 0,
                   "name": "Code Paper",
                   "width": 345,
                   "fill": "$surface",
@@ -34917,6 +34861,8 @@
                       "type": "frame",
                       "id": "h5o5hK",
                       "name": "Code Meta",
+                      "width": "fill_container",
+                      "layout": "vertical",
                       "gap": "$sp-label",
                       "justifyContent": "center",
                       "children": [
@@ -34925,6 +34871,7 @@
                           "type": "ref",
                           "ref": "AqN3F",
                           "name": "Pill Expiry",
+                          "width": "fill_container",
                           "descendants": {
                             "KR7zN": {
                               "icon": "calendar-days"
@@ -34965,6 +34912,7 @@
                           "type": "ref",
                           "ref": "AqN3F",
                           "name": "Pill Uses",
+                          "width": "fill_container",
                           "descendants": {
                             "KR7zN": {
                               "icon": "users"
@@ -35018,138 +34966,6 @@
             },
             {
               "type": "frame",
-              "id": "kN7Z1",
-              "name": "Actions",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-section",
-              "padding": [
-                "$sp-block",
-                0,
-                0,
-                0
-              ],
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "u4ntyB",
-                  "name": "Share Actions",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-label",
-                  "children": [
-                    {
-                      "id": "xz4yG",
-                      "type": "ref",
-                      "ref": "OKSJI",
-                      "name": "Share Button",
-                      "width": "fill_container",
-                      "descendants": {
-                        "s9bME2": {
-                          "icon": "share-2"
-                        },
-                        "w7CUP": {
-                          "content": "分享邀請連結"
-                        }
-                      }
-                    },
-                    {
-                      "type": "frame",
-                      "id": "osj2h",
-                      "name": "Copy Wrap",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "padding": [
-                        4,
-                        0,
-                        0,
-                        0
-                      ],
-                      "children": [
-                        {
-                          "id": "scuxk",
-                          "type": "ref",
-                          "ref": "XggYA",
-                          "name": "Copy Button",
-                          "width": "fill_container",
-                          "descendants": {
-                            "G4R75k": {
-                              "icon": "copy"
-                            },
-                            "yxwnz": {
-                              "content": "複製邀請碼"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "h4QUd",
-                  "name": "Sec 破壞性動作",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-group",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "X8xAN0",
-                      "name": "Danger Label",
-                      "fill": "$text-primary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "重新產生邀請碼",
-                      "lineHeight": 1.5,
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "LbSJg",
-                      "name": "Danger Consequence",
-                      "fill": "$text-primary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "重新產生後，舊的邀請碼就不能再用了。已經拿到舊邀請碼的家人，要再跟你要一次新的。",
-                      "lineHeight": 1.5,
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "JmbyU",
-                      "name": "Regen Wrap",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "children": [
-                        {
-                          "id": "qKTMI",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Regenerate Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "refresh-cw",
-                              "fill": "$danger"
-                            },
-                            "hIhVd": {
-                              "content": "重新產生一組",
-                              "fill": "$danger"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
               "id": "S0U1UC",
               "name": "Approval Section",
               "width": "fill_container",
@@ -35167,6 +34983,122 @@
                   "ref": "PXPcH",
                   "name": "Approval Toggle",
                   "width": "fill_container"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "u4ntyB",
+              "name": "Share Actions",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "id": "xz4yG",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Share Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "share-2"
+                    },
+                    "w7CUP": {
+                      "content": "分享邀請連結"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "osj2h",
+                  "name": "Copy Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    4,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "scuxk",
+                      "type": "ref",
+                      "ref": "XggYA",
+                      "name": "Copy Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "G4R75k": {
+                          "icon": "copy"
+                        },
+                        "yxwnz": {
+                          "content": "複製邀請碼"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "h4QUd",
+              "name": "Sec 破壞性動作",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "X8xAN0",
+                  "name": "Danger Label",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "重新產生邀請碼",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "LbSJg",
+                  "name": "Danger Consequence",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "重新產生後，舊的邀請碼就不能再用了。已經拿到舊邀請碼的家人，要再跟你要一次新的。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "JmbyU",
+                  "name": "Regen Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "id": "qKTMI",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Regenerate Button",
+                      "descendants": {
+                        "breqI": {
+                          "icon": "refresh-cw",
+                          "fill": "$danger"
+                        },
+                        "hIhVd": {
+                          "content": "重新產生一組",
+                          "fill": "$danger"
+                        }
+                      }
+                    }
+                  ]
                 }
               ]
             }
@@ -35897,7 +35829,7 @@
           "fill": "#553040",
           "textGrowth": "fixed-width",
           "width": 1220,
-          "content": "角托＋mount-pool 染料池濃度目前只被暖色調照片驗證過。三態並排：A 合調基準（現稿 join-parents.png）／B 冷白日光燈室內（待補生成）／C 夜間高反差（待補生成）。",
+          "content": "角托＋mount-pool 染料池濃度目前只被暖色調照片驗證過。三態並排：A 合調基準（現稿 join-parents.png）／B 冷白日光燈室內（stress-test-cold-fluorescent.png）／C 夜間高反差（stress-test-night-flash.png）。",
           "lineHeight": 1.5,
           "fontFamily": "Noto Sans TC",
           "fontSize": 14,
@@ -35905,22 +35837,23 @@
         },
         {
           "type": "frame",
-          "id": "hhGVq",
+          "id": "klJtX",
           "name": "Row",
           "width": "fill_container",
           "gap": 24,
+          "justifyContent": "center",
           "children": [
             {
               "type": "frame",
-              "id": "V0f6e",
+              "id": "Pc9Iq",
               "name": "Col A · 合調基準（現稿）",
-              "width": 361,
+              "width": 393,
               "layout": "vertical",
               "gap": 12,
               "children": [
                 {
                   "type": "text",
-                  "id": "t9WDw",
+                  "id": "mwkeF",
                   "name": "Caption",
                   "fill": "#2B141C",
                   "content": "A · 合調基準（現稿）",
@@ -35930,181 +35863,263 @@
                 },
                 {
                   "type": "frame",
-                  "id": "qc8pt",
-                  "name": "Print A",
-                  "width": 361,
-                  "height": 239,
-                  "fill": [
-                    "$print-paper",
-                    {
-                      "type": "gradient",
-                      "gradientType": "radial",
-                      "enabled": true,
-                      "opacity": 0.494,
-                      "rotation": 0,
-                      "size": {
-                        "width": 0.43213296398891965,
-                        "height": 0.4642857142857143
-                      },
-                      "colors": [
-                        {
-                          "color": "$mount-pool",
-                          "position": 0
-                        },
-                        {
-                          "color": "$mount-pool-0",
-                          "position": 1
-                        }
-                      ],
-                      "center": {
-                        "x": 0,
-                        "y": 0
-                      }
-                    },
-                    {
-                      "type": "gradient",
-                      "gradientType": "radial",
-                      "enabled": true,
-                      "opacity": 0.288,
-                      "rotation": 0,
-                      "size": {
-                        "width": 0.43213296398891965,
-                        "height": 0.4642857142857143
-                      },
-                      "colors": [
-                        {
-                          "color": "$mount-pool",
-                          "position": 0
-                        },
-                        {
-                          "color": "$mount-pool-0",
-                          "position": 1
-                        }
-                      ],
-                      "center": {
-                        "x": 1,
-                        "y": 0
-                      }
-                    },
-                    {
-                      "type": "gradient",
-                      "gradientType": "radial",
-                      "enabled": true,
-                      "opacity": 0.36,
-                      "rotation": 0,
-                      "size": {
-                        "width": 0.43213296398891965,
-                        "height": 0.4642857142857143
-                      },
-                      "colors": [
-                        {
-                          "color": "$mount-pool",
-                          "position": 0
-                        },
-                        {
-                          "color": "$mount-pool-0",
-                          "position": 1
-                        }
-                      ],
-                      "center": {
-                        "x": 0,
-                        "y": 1
-                      }
-                    },
-                    {
-                      "type": "gradient",
-                      "gradientType": "radial",
-                      "enabled": true,
-                      "opacity": 0.236,
-                      "rotation": 0,
-                      "size": {
-                        "width": 0.43213296398891965,
-                        "height": 0.4642857142857143
-                      },
-                      "colors": [
-                        {
-                          "color": "$mount-pool",
-                          "position": 0
-                        },
-                        {
-                          "color": "$mount-pool-0",
-                          "position": 1
-                        }
-                      ],
-                      "center": {
-                        "x": 1,
-                        "y": 1
-                      }
-                    }
+                  "id": "Hi9F5",
+                  "name": "Print Stage",
+                  "width": 393,
+                  "padding": [
+                    "$sp-label",
+                    "$sp-label",
+                    10,
+                    "$sp-label"
                   ],
-                  "stroke": "$paper-edge",
-                  "strokeWidth": 1,
-                  "strokeAlignment": "outer",
-                  "effect": {
-                    "type": "shadow",
-                    "shadowType": "outer",
-                    "color": "$paper-shadow",
-                    "offset": {
-                      "x": 0,
-                      "y": 3
-                    },
-                    "blur": 12
-                  },
-                  "layout": "vertical",
-                  "gap": 7,
-                  "padding": "$sp-label",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "gsoeX",
-                      "name": "Photo Wrap",
-                      "clip": true,
-                      "width": "fill_container",
-                      "height": 200,
-                      "layout": "none",
-                      "children": [
+                      "id": "I6A7U",
+                      "name": "Print",
+                      "width": 361,
+                      "height": 255,
+                      "fill": [
+                        "$print-paper",
                         {
-                          "type": "rectangle",
-                          "id": "ivOSG",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Hero Photo",
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "join-parents.png",
-                            "mode": "fill"
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.494,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.43213296398891965,
+                            "height": 0.4642857142857143
                           },
-                          "width": 345,
-                          "height": 200
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
                         },
                         {
-                          "type": "rectangle",
-                          "id": "HcxPs",
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.288,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.43213296398891965,
+                            "height": 0.4642857142857143
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.36,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.43213296398891965,
+                            "height": 0.4642857142857143
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.236,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.43213296398891965,
+                            "height": 0.4642857142857143
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
                           "x": 0,
-                          "y": 0,
-                          "name": "Night Dim",
-                          "fill": "$photo-dim",
-                          "width": 345,
-                          "height": 200
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "layout": "vertical",
+                      "gap": 7,
+                      "padding": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "IKBgC",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 200,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "id": "DO4u9",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Hero Photo",
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "join-parents.png",
+                                "mode": "fill"
+                              },
+                              "width": 345,
+                              "height": 200
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "C0pAf",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Night Dim",
+                              "fill": "$photo-dim",
+                              "width": 345,
+                              "height": 200
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "o896ES",
+                          "name": "Imprint Row",
+                          "width": "fill_container",
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "i0QWez",
+                              "name": "Imprint Mark (blank)",
+                              "width": 200,
+                              "height": 32
+                            }
+                          ]
                         }
                       ]
                     },
                     {
-                      "type": "frame",
-                      "id": "MUe1r",
-                      "name": "Imprint Row",
-                      "width": "fill_container",
-                      "justifyContent": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "brply",
-                          "name": "Imprint Mark (blank)",
-                          "width": 200,
-                          "height": 16
+                      "id": "N5IM97",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TL",
+                      "layoutPosition": "absolute",
+                      "x": 3,
+                      "y": 3,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 0 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
                         }
-                      ]
+                      }
+                    },
+                    {
+                      "id": "ME2gv",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TR",
+                      "layoutPosition": "absolute",
+                      "x": 348,
+                      "y": 3,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 0 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "hpyKi",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BL",
+                      "layoutPosition": "absolute",
+                      "x": 3,
+                      "y": 239,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 26 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "eeI6o",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BR",
+                      "layoutPosition": "absolute",
+                      "x": 348,
+                      "y": 239,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 26 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
                     }
                   ]
                 }
@@ -36112,199 +36127,281 @@
             },
             {
               "type": "frame",
-              "id": "ALx59",
-              "name": "Col B · 冷白日光燈室內（待補）",
-              "width": 361,
+              "id": "LCzbN",
+              "name": "Col B · 冷白日光燈室內",
+              "width": 393,
               "layout": "vertical",
               "gap": 12,
               "children": [
                 {
                   "type": "text",
-                  "id": "A3ypf",
+                  "id": "hpZTm",
                   "name": "Caption",
                   "fill": "#2B141C",
-                  "content": "B · 冷白日光燈室內（待補）",
+                  "content": "B · 冷白日光燈室內（stress-test-cold-fluorescent.png）",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 15,
                   "fontWeight": "700"
                 },
                 {
                   "type": "frame",
-                  "id": "X8zAUp",
-                  "name": "Print B (cold fluorescent)",
-                  "width": 361,
-                  "height": 239,
-                  "fill": [
-                    "$print-paper",
-                    {
-                      "type": "gradient",
-                      "gradientType": "radial",
-                      "enabled": true,
-                      "opacity": 0.494,
-                      "rotation": 0,
-                      "size": {
-                        "width": 0.43213296398891965,
-                        "height": 0.4642857142857143
-                      },
-                      "colors": [
-                        {
-                          "color": "$mount-pool",
-                          "position": 0
-                        },
-                        {
-                          "color": "$mount-pool-0",
-                          "position": 1
-                        }
-                      ],
-                      "center": {
-                        "x": 0,
-                        "y": 0
-                      }
-                    },
-                    {
-                      "type": "gradient",
-                      "gradientType": "radial",
-                      "enabled": true,
-                      "opacity": 0.288,
-                      "rotation": 0,
-                      "size": {
-                        "width": 0.43213296398891965,
-                        "height": 0.4642857142857143
-                      },
-                      "colors": [
-                        {
-                          "color": "$mount-pool",
-                          "position": 0
-                        },
-                        {
-                          "color": "$mount-pool-0",
-                          "position": 1
-                        }
-                      ],
-                      "center": {
-                        "x": 1,
-                        "y": 0
-                      }
-                    },
-                    {
-                      "type": "gradient",
-                      "gradientType": "radial",
-                      "enabled": true,
-                      "opacity": 0.36,
-                      "rotation": 0,
-                      "size": {
-                        "width": 0.43213296398891965,
-                        "height": 0.4642857142857143
-                      },
-                      "colors": [
-                        {
-                          "color": "$mount-pool",
-                          "position": 0
-                        },
-                        {
-                          "color": "$mount-pool-0",
-                          "position": 1
-                        }
-                      ],
-                      "center": {
-                        "x": 0,
-                        "y": 1
-                      }
-                    },
-                    {
-                      "type": "gradient",
-                      "gradientType": "radial",
-                      "enabled": true,
-                      "opacity": 0.236,
-                      "rotation": 0,
-                      "size": {
-                        "width": 0.43213296398891965,
-                        "height": 0.4642857142857143
-                      },
-                      "colors": [
-                        {
-                          "color": "$mount-pool",
-                          "position": 0
-                        },
-                        {
-                          "color": "$mount-pool-0",
-                          "position": 1
-                        }
-                      ],
-                      "center": {
-                        "x": 1,
-                        "y": 1
-                      }
-                    }
+                  "id": "Lc5BJ",
+                  "name": "Print Stage",
+                  "width": 393,
+                  "padding": [
+                    "$sp-label",
+                    "$sp-label",
+                    10,
+                    "$sp-label"
                   ],
-                  "stroke": "$paper-edge",
-                  "strokeWidth": 1,
-                  "strokeAlignment": "outer",
-                  "effect": {
-                    "type": "shadow",
-                    "shadowType": "outer",
-                    "color": "$paper-shadow",
-                    "offset": {
-                      "x": 0,
-                      "y": 3
-                    },
-                    "blur": 12
-                  },
-                  "layout": "vertical",
-                  "gap": 7,
-                  "padding": "$sp-label",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "o0Rclx",
-                      "name": "Photo Wrap",
-                      "clip": true,
-                      "width": "fill_container",
-                      "height": 200,
-                      "layout": "none",
-                      "children": [
+                      "id": "WF95R",
+                      "name": "Print",
+                      "width": 361,
+                      "height": 255,
+                      "fill": [
+                        "$print-paper",
                         {
-                          "type": "rectangle",
-                          "id": "ynQnj",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Hero Photo",
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "stress-test-cold-fluorescent.png",
-                            "mode": "fill"
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.494,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.43213296398891965,
+                            "height": 0.4642857142857143
                           },
-                          "width": 345,
-                          "height": 200
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
                         },
                         {
-                          "type": "rectangle",
-                          "id": "TytF1",
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.288,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.43213296398891965,
+                            "height": 0.4642857142857143
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.36,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.43213296398891965,
+                            "height": 0.4642857142857143
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.236,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.43213296398891965,
+                            "height": 0.4642857142857143
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
                           "x": 0,
-                          "y": 0,
-                          "name": "Night Dim",
-                          "fill": "$photo-dim",
-                          "width": 345,
-                          "height": 200
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "layout": "vertical",
+                      "gap": 7,
+                      "padding": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "RZQKa",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 200,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "id": "d5KS3o",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Hero Photo",
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "stress-test-cold-fluorescent.png",
+                                "mode": "fill"
+                              },
+                              "width": 345,
+                              "height": 200
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "BrBlf",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Night Dim",
+                              "fill": "$photo-dim",
+                              "width": 345,
+                              "height": 200
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "NP5Ri",
+                          "name": "Imprint Row",
+                          "width": "fill_container",
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "xQOfC",
+                              "name": "Imprint Mark (blank)",
+                              "width": 200,
+                              "height": 32
+                            }
+                          ]
                         }
                       ]
                     },
                     {
-                      "type": "frame",
-                      "id": "j56E3",
-                      "name": "Imprint Row",
-                      "width": "fill_container",
-                      "justifyContent": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "kLjis",
-                          "name": "Imprint Mark (blank)",
-                          "width": 200,
-                          "height": 16
+                      "id": "PR5f7",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TL",
+                      "layoutPosition": "absolute",
+                      "x": 3,
+                      "y": 3,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 0 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
                         }
-                      ]
+                      }
+                    },
+                    {
+                      "id": "e1WqPw",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TR",
+                      "layoutPosition": "absolute",
+                      "x": 348,
+                      "y": 3,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 0 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "Wnfy7",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BL",
+                      "layoutPosition": "absolute",
+                      "x": 3,
+                      "y": 239,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 26 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "hxUbs",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BR",
+                      "layoutPosition": "absolute",
+                      "x": 348,
+                      "y": 239,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 26 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
                     }
                   ]
                 }
@@ -36312,199 +36409,281 @@
             },
             {
               "type": "frame",
-              "id": "LJTkN",
-              "name": "Col C · 夜間高反差（待補）",
-              "width": 361,
+              "id": "hXiEb",
+              "name": "Col C · 夜間高反差",
+              "width": 393,
               "layout": "vertical",
               "gap": 12,
               "children": [
                 {
                   "type": "text",
-                  "id": "BeMHC",
+                  "id": "qDt22",
                   "name": "Caption",
                   "fill": "#2B141C",
-                  "content": "C · 夜間高反差（待補）",
+                  "content": "C · 夜間高反差（stress-test-night-flash.png）",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 15,
                   "fontWeight": "700"
                 },
                 {
                   "type": "frame",
-                  "id": "vnTbs",
-                  "name": "Print C (night flash)",
-                  "width": 361,
-                  "height": 239,
-                  "fill": [
-                    "$print-paper",
-                    {
-                      "type": "gradient",
-                      "gradientType": "radial",
-                      "enabled": true,
-                      "opacity": 0.494,
-                      "rotation": 0,
-                      "size": {
-                        "width": 0.43213296398891965,
-                        "height": 0.4642857142857143
-                      },
-                      "colors": [
-                        {
-                          "color": "$mount-pool",
-                          "position": 0
-                        },
-                        {
-                          "color": "$mount-pool-0",
-                          "position": 1
-                        }
-                      ],
-                      "center": {
-                        "x": 0,
-                        "y": 0
-                      }
-                    },
-                    {
-                      "type": "gradient",
-                      "gradientType": "radial",
-                      "enabled": true,
-                      "opacity": 0.288,
-                      "rotation": 0,
-                      "size": {
-                        "width": 0.43213296398891965,
-                        "height": 0.4642857142857143
-                      },
-                      "colors": [
-                        {
-                          "color": "$mount-pool",
-                          "position": 0
-                        },
-                        {
-                          "color": "$mount-pool-0",
-                          "position": 1
-                        }
-                      ],
-                      "center": {
-                        "x": 1,
-                        "y": 0
-                      }
-                    },
-                    {
-                      "type": "gradient",
-                      "gradientType": "radial",
-                      "enabled": true,
-                      "opacity": 0.36,
-                      "rotation": 0,
-                      "size": {
-                        "width": 0.43213296398891965,
-                        "height": 0.4642857142857143
-                      },
-                      "colors": [
-                        {
-                          "color": "$mount-pool",
-                          "position": 0
-                        },
-                        {
-                          "color": "$mount-pool-0",
-                          "position": 1
-                        }
-                      ],
-                      "center": {
-                        "x": 0,
-                        "y": 1
-                      }
-                    },
-                    {
-                      "type": "gradient",
-                      "gradientType": "radial",
-                      "enabled": true,
-                      "opacity": 0.236,
-                      "rotation": 0,
-                      "size": {
-                        "width": 0.43213296398891965,
-                        "height": 0.4642857142857143
-                      },
-                      "colors": [
-                        {
-                          "color": "$mount-pool",
-                          "position": 0
-                        },
-                        {
-                          "color": "$mount-pool-0",
-                          "position": 1
-                        }
-                      ],
-                      "center": {
-                        "x": 1,
-                        "y": 1
-                      }
-                    }
+                  "id": "gk1Vi",
+                  "name": "Print Stage",
+                  "width": 393,
+                  "padding": [
+                    "$sp-label",
+                    "$sp-label",
+                    10,
+                    "$sp-label"
                   ],
-                  "stroke": "$paper-edge",
-                  "strokeWidth": 1,
-                  "strokeAlignment": "outer",
-                  "effect": {
-                    "type": "shadow",
-                    "shadowType": "outer",
-                    "color": "$paper-shadow",
-                    "offset": {
-                      "x": 0,
-                      "y": 3
-                    },
-                    "blur": 12
-                  },
-                  "layout": "vertical",
-                  "gap": 7,
-                  "padding": "$sp-label",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "YOflB",
-                      "name": "Photo Wrap",
-                      "clip": true,
-                      "width": "fill_container",
-                      "height": 200,
-                      "layout": "none",
-                      "children": [
+                      "id": "PRq01",
+                      "name": "Print",
+                      "width": 361,
+                      "height": 255,
+                      "fill": [
+                        "$print-paper",
                         {
-                          "type": "rectangle",
-                          "id": "iAdRv",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Hero Photo",
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "stress-test-night-flash.png",
-                            "mode": "fill"
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.494,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.43213296398891965,
+                            "height": 0.4642857142857143
                           },
-                          "width": 345,
-                          "height": 200
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
                         },
                         {
-                          "type": "rectangle",
-                          "id": "JwWS2",
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.288,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.43213296398891965,
+                            "height": 0.4642857142857143
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.36,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.43213296398891965,
+                            "height": 0.4642857142857143
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.236,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.43213296398891965,
+                            "height": 0.4642857142857143
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
                           "x": 0,
-                          "y": 0,
-                          "name": "Night Dim",
-                          "fill": "$photo-dim",
-                          "width": 345,
-                          "height": 200
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "layout": "vertical",
+                      "gap": 7,
+                      "padding": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "lOlxR",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 200,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "id": "kO4ar",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Hero Photo",
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "stress-test-night-flash.png",
+                                "mode": "fill"
+                              },
+                              "width": 345,
+                              "height": 200
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "DBYu8",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Night Dim",
+                              "fill": "$photo-dim",
+                              "width": 345,
+                              "height": 200
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "fuuPl",
+                          "name": "Imprint Row",
+                          "width": "fill_container",
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "q3aGvL",
+                              "name": "Imprint Mark (blank)",
+                              "width": 200,
+                              "height": 32
+                            }
+                          ]
                         }
                       ]
                     },
                     {
-                      "type": "frame",
-                      "id": "uZiOq",
-                      "name": "Imprint Row",
-                      "width": "fill_container",
-                      "justifyContent": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "T40xoK",
-                          "name": "Imprint Mark (blank)",
-                          "width": 200,
-                          "height": 16
+                      "id": "Sbh1k",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TL",
+                      "layoutPosition": "absolute",
+                      "x": 3,
+                      "y": 3,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 0 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
                         }
-                      ]
+                      }
+                    },
+                    {
+                      "id": "M3ADlG",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TR",
+                      "layoutPosition": "absolute",
+                      "x": 348,
+                      "y": 3,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 0 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "s9WKK",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BL",
+                      "layoutPosition": "absolute",
+                      "x": 3,
+                      "y": 239,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 26 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "oxvkI",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BR",
+                      "layoutPosition": "absolute",
+                      "x": 348,
+                      "y": 239,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 26 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
                     }
                   ]
                 }
@@ -36523,6 +36702,435 @@
       "width": 400,
       "height": 0,
       "content": "【LS-46 R4 F16】01 沖印品與 04 角托＋Fade Pools 各換一張刻意不合調照片實測（codex:codex-rescue 用 imagen 生成，design/stress-test-cold-fluorescent.png／stress-test-night-flash.png，1086×1448）。\n\n結論：母題撐得住，不必調 mount-pool 濃度或搬 Fade Pools。\n\n① 字標零風險：蠟筆字標在 01 白邊 Imprint Row 帶（不含在照片圖層），兩張壓測照片下都維持滿格墨色對比——這是本輪 A′ 決策（字標搬出 Head、只留白邊）的意外紅利，證明字標位置與照片內容完全解耦。\n\n② mount-pool 角托染料池：夜間高反差照片下天然就有暗角，疊加的暖色染料池與照片本身的物理暗角同方向，融合得很自然。冷白日光燈照片下染料池仍可見（角落比中心暖、比中心暗），但視覺存在感比在暖色照片上弱——冷色照片的青灰色調跟染料池的暖色調互相抵銷了一部分。\n\n【觀察，非缺陷】這個減弱是可預期的物理現象（暖疊加在冷上視覺沖淡），不到「撐不住」的地步——構圖仍讀作「相片托在台紙上」，沒有破版。如果之後大量真實使用者上傳大量冷色調（日光燈／手機前鏡頭美肌濾鏡常見）照片，且視覺測試顯示染料池普遍不夠明顯，可以考慮：(a) mount-pool 在冷色照片下用色彩感知動態調整飽和度/不透明度，或 (b) 提高 mount-pool 基礎濃度小幅補償。本輪判斷証據不足以支撐現在就改 token（只測了 2 張照片），留給實測資料更多之後再議。"
+    },
+    {
+      "type": "frame",
+      "id": "DW9PE",
+      "x": 2300,
+      "y": 16378,
+      "name": "A11y / 06 輸入邀請碼 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 2200,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "G7UJ65",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "iJJ3U",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "P4qJT",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-group",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "LNNOj",
+              "name": "Upper",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "xsO0M",
+                  "name": "Top",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "QK69q",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "UuBwi",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "content": "輸入邀請碼",
+                          "lineHeight": 1.25,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "KifVi",
+                          "name": "Subtitle",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "6 位英數字，分前三碼、後三碼。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OYfCK",
+                  "name": "Code Card",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "CWmpp",
+                      "name": "Card Paper",
+                      "width": 345,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-lg",
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "cBuHU",
+                          "name": "Code Groups",
+                          "width": "fill_container",
+                          "gap": "$sp-block",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "sIXYW",
+                              "name": "Group 1",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "id": "X120Yg",
+                                  "type": "ref",
+                                  "ref": "asPLH",
+                                  "name": "Code 1",
+                                  "width": "fill_container",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "zLuIX": {
+                                      "content": "K"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "IHi32",
+                                  "type": "ref",
+                                  "ref": "asPLH",
+                                  "name": "Code 2",
+                                  "width": "fill_container",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "zLuIX": {
+                                      "content": "7"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "DnVRW",
+                                  "type": "ref",
+                                  "ref": "asPLH",
+                                  "name": "Code 3",
+                                  "width": "fill_container",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "zLuIX": {
+                                      "content": "M"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "VUw3M",
+                              "name": "Group 2",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "id": "d3Rpi",
+                                  "type": "ref",
+                                  "ref": "asPLH",
+                                  "name": "Code 1",
+                                  "width": "fill_container",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "zLuIX": {
+                                      "content": "2"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "Y6jxBz",
+                                  "type": "ref",
+                                  "ref": "asPLH",
+                                  "name": "Code 2",
+                                  "width": "fill_container",
+                                  "stroke": "$border",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "zLuIX": {
+                                      "content": "F"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "bgxiy",
+                                  "type": "ref",
+                                  "ref": "asPLH",
+                                  "name": "Code 3",
+                                  "width": "fill_container",
+                                  "stroke": "$accent",
+                                  "strokeWidth": 2.5,
+                                  "descendants": {
+                                    "zLuIX": {
+                                      "content": ""
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "KsS24",
+                          "name": "Code Hint",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "英文字母不分大小寫",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vXZfA",
+                  "name": "Explain Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-group",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "L63GUt",
+                      "name": "Explain",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請家人在 App 裡點「邀請家人」，把 6 位碼傳給你。送出後要等管理者核准。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "n5oeEE",
+                  "name": "Next Steps Summary",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "送出後家人會收到通知，他核准你就進得來。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-meta",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "W86Xk",
+                  "name": "Press Reply",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "aPbbY",
+                      "name": "Reply Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Y7Ral",
+                      "name": "Reply Text",
+                      "fill": "$text-primary",
+                      "content": "還要再填 1 個字",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "j0qya",
+                  "name": "CTA Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "children": [
+                    {
+                      "id": "l6G5g",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Join Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "send"
+                        },
+                        "w7CUP": {
+                          "content": "送出加入申請"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Q2kT3e",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "id": "HSUJF",
+                  "type": "ref",
+                  "ref": "XggYA",
+                  "name": "Paste Link Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "G4R75k": {
+                      "icon": "link"
+                    },
+                    "yxwnz": {
+                      "content": "改用貼上邀請連結"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "t2YkV",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "OjD0J",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
