@@ -58,11 +58,11 @@
 | 表 | 讀 | 新增 | 修改 | 刪除 | 備註 |
 |---|---|---|---|---|---|
 | `profiles` | 同家庭成員互看 | 自己（登入時建立） | 僅自己 | ❌ 無 delete policy | 帳號刪除走 Auth 側 cascade |
-| `families` | 我所屬的家庭 | 任何登入者（自建家庭） | 僅 `name` 欄，owner-only | ❌ 無 delete policy | 額度欄位（`storage_quota_bytes`／`storage_used_bytes`）與 `require_approval` 以外的所有欄位皆不可由 client 直接改 |
+| `families` | 我所屬的家庭 | 任何登入者（自建家庭） | `name`／`require_approval` 兩欄，owner-only | ❌ 無 delete policy | `storage_quota_bytes`／`storage_used_bytes` 兩個額度欄位永遠唯讀——不論身分，client 都改不動（只有 `media` 表的 trigger 與 `service_role` 能寫） |
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子 | owner-only | owner-only | owner-only | Member/Viewer 唯讀 |
-| `media` | 我所屬家庭的檔案中繼資料 | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的 | 硬刪僅 owner（一般刪除走 `deleted_at`） | `byte_size`／`storage_path`／`family_id`／`uploaded_by` 一旦寫入不可改 |
+| `media` | 我所屬家庭的檔案中繼資料 | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | 硬刪僅 owner（一般刪除走 `deleted_at`） | `byte_size`／`storage_path`／`family_id`／`uploaded_by` 一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3 |
 | `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己） | owner 任意列；建立者僅自己建立的 | owner-only | Viewer 不可建立相簿 |
 | `album_media` | 同上 | owner／member | owner／member | owner／member | 連結表自帶 `family_id`，policy 不必 join 回 `albums` |
 | `diaries` | 我所屬家庭的日記 | 🔒 **RPC-only**（`create_diary_entry`，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（body／entry_date／child_id）僅作者本人用 `update_diary_entry`；軟刪／還原（`deleted_at`）作者自己的或 owner 任何一篇，皆用 `set_diary_deleted`（直接 UPDATE 已被 revoke） | owner-only（硬刪，policy 未變） | LS-48 收斂：owner 不能像 `albums` 那樣直接改寫別人日記的內容，只能移除 |
@@ -141,6 +141,12 @@
   這代表：如果 client 上傳到 Storage 的檔案大小與 `media.byte_size` 填的值不一致，
   額度計算會跟著算錯——`byte_size` 必須填實際上傳的位元組數。
 - soft delete（`deleted_at`）立刻釋放額度；硬刪只有 owner 能做。
+- **`media_update` policy 的上傳者分支判斷「當下」而不是「上傳當時」是否有上傳權**
+  （`family_id in uploadable_family_ids()`，跟 §6 storage.objects 的規則同一個判準）：
+  owner 把某個 member 的 `can_upload` 關掉之後，那個人（若不是 owner）連軟刪除
+  （`update ... set deleted_at = now()`）自己以前上傳的照片都會被拒，拿到 `42501`
+  ——不是「刪不到別人的」，是「刪不到自己的」。想清掉自己上傳的內容，要嘛先請 owner
+  恢復 `can_upload`，要嘛請 owner 出手處理（owner 分支不受這個限制）。
 
 ### `albums` / `diaries`
 - `child_id` 可為 `NULL`（家庭共用內容，不特別掛在某個孩子底下）；非 NULL 時必須是
@@ -264,9 +270,14 @@
 - **誰能呼叫**：該申請所屬家庭的 owner。
 - **副作用**：把申請人寫入 `family_members`（角色取自邀請碼），並把申請標記
   `approved`。若申請人在待審期間已經用別支碼入家，不會重複寫入或覆蓋既有角色。
-- **錯誤碼**：未登入 `42501`；申請不存在 `LS015`；不是該家 owner `42501`（**排在
-  狀態檢查之前**——不是 owner 的人不管申請是什麼狀態一律拿 `42501`，不會從錯誤碼差異
-  推敲出某個 request id 存不存在）；申請已被處理（非 pending）`LS015`。
+- **錯誤碼與檢查順序（PR #58 review F9 訂正）**：`SELECT ... FOR UPDATE` 找列 →
+  找不到 `request_id` 就是 `LS015`（**這一步排在 owner 檢查之前**）；找到列之後才檢查
+  呼叫者是不是該家 owner，不是就 `42501`；是 owner 才檢查狀態，非 pending 一樣是
+  `LS015`。實際效果：**非 owner 可以從 `LS015`／`42501` 的差異推知某個 `request_id`
+  是否存在**（先前版本這裡寫反了）——但看得到的僅止於「存在與否」，看不到申請的
+  狀態（那個檢查排在 owner 檢查之後，非 owner 永遠到不了那一步）；`request_id` 是
+  128-bit 隨機 UUID，實務上不可窮舉猜測，這不構成有意義的資訊洩漏。未登入另外先擋
+  `42501`。
 - **併發**：對同一筆申請用 `FOR UPDATE` 鎖住，與 `reject_join` 互相排隊——同一筆申請
   被同時核准與拒絕時，後到的那邊會讀到已處理狀態，拿到 `LS015`（見
   `supabase/tests/concurrency/approve_reject_race_*.sql`）。
