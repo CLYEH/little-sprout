@@ -140,6 +140,28 @@ cd "$repo"
 expect BREAKING '--base(R1)：跨檔黏句——前檔末句無分號的 REVOKE authenticated 不被後檔蓋掉' '' --base HEAD~1
 cd "$root"
 expect BREAKING '檔案清單模式：跨檔黏句同上' '' "${K[@]}" "$repo/supabase/migrations/005.sql" "$repo/supabase/migrations/006.sql"
+
+# ── PR #78 merge-reviewer R2 補樣本（F1／F2／F3） ──
+# F1：字面值內以 ++ 開頭的行在 diff 呈現為 +++ x，舊寫法把它當檔頭切句 → D4 的 ALTER COLUMN TYPE 漏報
+printf "alter table public.t\n  alter column body set default '\n++ x\n', alter column body type text;\n" > "$repo/supabase/migrations/007.sql"
+gitc add -A && gitc commit -qm head5
+cd "$repo"
+expect DESTRUCTIVE '--base(R2-F1)：字面值內 ++ 開頭行不當檔案邊界' '' --base HEAD~1
+cd "$root"
+# F2：a 的字面值含 /*（無 */）、b 的 DROP 後面才有 */——合併 normalize 會把 a 的 /* 到 b 的 */ 整段剝掉
+printf "comment on table public.t is 'see /* details';\n" > "$repo/supabase/migrations/008a.sql"
+printf "drop table public.users;\n/* cleanup */\n" > "$repo/supabase/migrations/008b.sql"
+gitc add -A && gitc commit -qm head6
+cd "$repo"
+expect DESTRUCTIVE '--base(R2-F2)：前檔字面值 /* 不跨檔吃掉後檔 DROP' '' --base HEAD~1
+cd "$root"
+expect DESTRUCTIVE '檔案清單模式(R2-F2)：同上，逐檔 normalize' '' "${K[@]}" "$repo/supabase/migrations/008a.sql" "$repo/supabase/migrations/008b.sql"
+# F3：--known-functions 指向目錄（如 /tmp）→ exit 1
+if printf 'create or replace function public.x() returns void language sql as $$ select 1 $$;' | bash "$check" --known-functions "$work" >/dev/null 2>&1; then
+  echo "✗ R2-F3 --known-functions 指向目錄應 exit 1" >&2; fail=1
+else
+  echo "✓ R2-F3 --known-functions 指向目錄 → exit 1（[ -f ] && [ -r ]）"
+fi
 if (cd "$repo" && bash "$check" --base no-such-rev >/dev/null 2>&1); then
   echo "✗ --base 壞 rev 應 exit 1" >&2; fail=1
 else
@@ -147,6 +169,6 @@ else
 fi
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ migration-breaking-check 自測通過（64 組樣本）"
+  echo "✓ migration-breaking-check 自測通過（68 組樣本）"
 fi
 exit "$fail"

@@ -50,7 +50,8 @@
 #     但字串字面值內的 `--`／`/*` 一樣會被當註解起點（其後內容漏掉，漏報方向）；巢狀 `/* /* */ */`
 #     只剝到第一個 `*/`，其後到外層 `*/` 之間照常分級（多報方向）。
 #   - 函式本體（$$…$$）內的 `;` 一樣切句，本體內語句一樣分級。
-#   - 檔案邊界（--base 的 diff 檔頭、檔案清單、既有清單建立）一律補 `;`：上一檔末句沒分號不會黏進下一檔。
+#   - 逐檔 normalize（--base 逐檔取 diff、檔案清單逐檔、既有清單逐檔）：前檔末句沒分號不黏進後檔，字面值內
+#     的 `/*` 也不會跨檔吃掉後續語句（PR #78 R1 B1／R2 F1／F2）。
 #   - 後續登記（PR #78 R1 I5／I6／I7）：每句 fork 數次 grep（全 repo 約 6s、--base 實務 1–2s，可接受）；
 #     UTF-16 檔案不認得；CRLF 的 \r 殘留在輸出（cosmetic）。
 set -uo pipefail
@@ -70,8 +71,9 @@ while [ $# -gt 0 ]; do
 done
 
 # PR #78 R1 M2：清單檔讀不到就直接紅——grep 讀檔失敗會被當「不是既有函式」放行（fail open）
-if [ -n "$known_file" ] && [ ! -r "$known_file" ]; then
-  echo "✗ migration-breaking-check：--known-functions 檔讀不到：$known_file（fail closed，不當新函式放行）" >&2
+# R2 F3：[ -r ] 對目錄也為真，要 [ -f ] && [ -r ]
+if [ -n "$known_file" ] && { [ ! -f "$known_file" ] || [ ! -r "$known_file" ]; }; then
+  echo "✗ migration-breaking-check：--known-functions 不是可讀的一般檔：$known_file（fail closed，不當新函式放行）" >&2
   exit 1
 fi
 
@@ -157,36 +159,50 @@ classify() {
 
 pipeline_failed() { echo "✗ migration-breaking-check：分級管線失敗（perl／sed／tr 任一步非 0），不靜默放行" >&2; exit 1; }
 
+# 逐檔 normalize（PR #78 R2 F1／F2）：檔與檔之間不再靠補 `;`——前檔末句沒分號不會黏進後檔，字面值內的 `/*`
+# 也不會跨檔吃掉後續語句。每檔 normalize 完補一個換行當句界。
+# R2 F1：--base 改「先 --name-only 再逐檔取 diff」，且只取第一個 hunk 標頭 `@@` 之後的 `+` 行——舊寫法把
+# `+++ …` 一律當檔頭換成 `;`，內容以 `++` 開頭的新增行（字面值內的 `++ x`）也會被切句而漏報 D4。
+# 任一檔讀取／diff／normalize 非 0 即中止（pipefail；在管線 subshell 內 exit 1 → 呼叫端 || pipeline_failed）。
+normalize_files() {   # $1=files|base|show；其餘＝路徑
+  local mode=$1 f; shift
+  for f in "$@"; do
+    case "$mode" in
+      files) normalize < "$f" ;;
+      base)  git diff "$base...HEAD" -- "$f" | sed -n '/^@@/,$p' | sed -n 's/^+//p' | normalize ;;
+      show)  git show "$base:$f" | normalize ;;
+    esac || { echo "✗ migration-breaking-check：$mode $f 讀取或正規化失敗，不靜默放行" >&2; exit 1; }
+    printf '\n'
+  done
+}
+
+# 把逐行清單讀進陣列（bash 3.2 無 mapfile）
+to_array() { paths=(); local f; while IFS= read -r f; do [ -n "$f" ] && paths+=("$f"); done <<< "$1"; }
+
 if [ -n "$base" ]; then
   cd "$(git rev-parse --show-toplevel)" || exit 1
-  known_file=$(mktemp); base_sql=$(mktemp)
-  trap 'rm -f "$known_file" "$base_sql"' EXIT
+  known_file=$(mktemp)
+  trap 'rm -f "$known_file"' EXIT
   base_files=$(git ls-tree -r --name-only "$base" -- supabase/migrations/) \
     || { echo "✗ migration-breaking-check：git ls-tree $base 失敗" >&2; exit 1; }
-  if [ -n "$base_files" ]; then
-    # R1 I4：git show 逐檔檢查 rc（原本放在管線 subshell 裡 exit，外層看不到、清單靜默殘缺）；
-    # 檔與檔之間補換行，避免上一檔檔尾 `--` 註解沒換行時把下一檔第一行吃掉
-    while IFS= read -r f; do
-      git show "$base:$f" >> "$base_sql" \
-        || { echo "✗ migration-breaking-check：git show $base:$f 失敗，既有函式清單不完整即中止" >&2; exit 1; }
-      printf '\n;\n' >> "$base_sql"
-    done <<< "$base_files"
-    normalize < "$base_sql" | fn_name "$FN_DEF" | sort -u > "$known_file" || pipeline_failed
+  to_array "$base_files"
+  if [ "${#paths[@]}" -gt 0 ]; then
+    normalize_files show "${paths[@]}" | fn_name "$FN_DEF" | sort -u > "$known_file" || pipeline_failed
   fi
-  added=$(git diff "$base...HEAD" -- supabase/migrations/) \
-    || { echo "✗ migration-breaking-check：git diff $base...HEAD 失敗" >&2; exit 1; }
-  # sed 一次做「+++ 檔頭換成 ; 當檔案邊界、取新增行並剝掉 +」——用 grep 會在沒有新增行時回 1 觸發
-  # pipefail；檔案邊界補 ; 是因為上一檔末句沒分號時會與下一檔第一句黏成同一句（R1 B1 同類：REVOKE 只看
-  # 最後一個 from 子句，黏句可讓 `from authenticated` 被下一檔的 `from public, anon` 蓋掉）
-  printf '%s\n' "$added" | sed -n 's/^+++ .*/;/p; s/^+//p' | normalize | classify || pipeline_failed
+  changed=$(git diff --name-only "$base...HEAD" -- supabase/migrations/) \
+    || { echo "✗ migration-breaking-check：git diff --name-only $base...HEAD 失敗" >&2; exit 1; }
+  to_array "$changed"
+  if [ "${#paths[@]}" -gt 0 ]; then
+    normalize_files base "${paths[@]}" | classify || pipeline_failed
+  fi
   exit 0
 fi
 
 if [ "${#files[@]}" -gt 0 ]; then
   for f in "${files[@]}"; do
-    [ -r "$f" ] || { echo "✗ migration-breaking-check：讀不到 $f" >&2; exit 1; }
+    [ -f "$f" ] && [ -r "$f" ] || { echo "✗ migration-breaking-check：讀不到 $f" >&2; exit 1; }
   done
-  for f in "${files[@]}"; do cat -- "$f"; printf '\n;\n'; done | normalize | classify || pipeline_failed
+  normalize_files files "${files[@]}" | classify || pipeline_failed
 else
   normalize | classify || pipeline_failed
 fi
