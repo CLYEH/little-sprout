@@ -182,6 +182,9 @@ final class AppErrorTests: XCTestCase {
             // LS025（LS-58，update_comment）：不是作者本人、或雖是作者但已離開家庭，
             // 換輸入沒有用，UI 該做的是隱藏編輯入口，不是讓使用者重試。
             .commentNotEditableByCaller,
+            // LS026（LS-58 R1，create_comment／toggle_reaction）：target 存在但屬於
+            // 別的家庭，是呼叫端組錯參數的訊號，換輸入沒有用。
+            .targetFamilyMismatch,
             // LS022：游標是 app 自己組的，使用者沒有輸入可換，重試同一呼叫不會成功——
             // 留在 validationRetryable 違反 N9 的定義（PR #77 R1 B2(b)；orchestrator 裁決）。
             .timelineCursorIncomplete

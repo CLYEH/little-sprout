@@ -28,8 +28,10 @@
 -- 不是 DROP POLICY——縮權不是刪除物件、可逆、不動任何既有資料（理由詳見
 -- 20260824010000_diaries_write_path_and_timeline.sql 第 1 段，這裡不重複整段展開）。
 --
--- 對呼叫端而言這是一個真實的行為變更（PR body 標成「comments 直接 INSERT/UPDATE
--- 自本 PR 起一律 42501」，不是純新增），docs/API.md §2/§3 同步更新。
+-- 對呼叫端而言這是一個真實的行為變更（comments 直接 INSERT/UPDATE 自本 migration
+-- 起一律 42501，不是純新增；COLLABORATION §6：LS-25 之前全部 RPC 視為上線前，PR body
+-- 的 BREAKING 段落此時非必需，這裡改用 migration 註解本身記錄），docs/API.md §2/§3
+-- 同步更新。
 -- ---------------------------------------------------------------------------
 
 alter policy comments_insert on public.comments with check (false);
@@ -77,6 +79,7 @@ comment on table public.reactions is
 --
 -- 錯誤碼延續 LS023（set_album_deleted，LS-52）之後的序號：
 --   LS025  不是留言作者本人，或雖是作者但已離開家庭（update_comment 專用，理由見下）
+--   LS026  target 存在，但屬於別的家庭（create_comment／toggle_reaction 專用，理由見下）
 -- LS024（留言不存在）沿用既有意義不變——update_comment 與 set_comment_deleted 共用
 -- 同一個碼，且都只代表「不存在」，不像 diaries 的 LS020 那樣還兼指「已被軟刪除」
 -- （update_comment 刻意不檢查 deleted_at，理由見該支函式內的說明：這不是 diaries
@@ -84,12 +87,54 @@ comment on table public.reactions is
 -- 42501（未登入／非本家庭成員／授權失敗的其他分支）沿用既有慣例。
 -- ---------------------------------------------------------------------------
 
+-- private.target_family_id：查多型 target 實際屬於哪個家庭（查不到就回 NULL）。
+--
+-- 為什麼需要這支函式（merge-reviewer PR #85 BLOCKER-1）：docs/API.md §3 原本寫
+-- 「target_type／target_id 不驗證目標是否存在」，這句話對「孤兒 target_id」（誰都
+-- 沒建過的 id）而言依然成立、不受本次修改影響；但沒說出口的另一半是「若 target_id
+-- **真的存在**，呼叫端可以填任何 p_family_id，完全不必是那個 target 實際所屬的
+-- 家庭」——這在加了 notification_events（本檔第 3 段）之後從「無害的資料髒污」
+-- 變成真實的跨家庭挾持：被踢出的前成員只要還記得受害家庭裡任一 target_id（album／
+-- media／diary／comment 的 id 從來就不是機密），就能用自己的 family_id 對那個
+-- target 呼叫 create_comment／toggle_reaction，讓 notification_events 的合併視窗
+-- 被算進攻擊者的家庭，蓋掉受害家庭真正成員的通知（本機實測重現：受害家庭的留言被
+-- 合併進攻擊者那筆事件，`family_id` 變成攻擊者的）。
+--
+-- 修法：create_comment／toggle_reaction 在寫入前都先查 target 實際的 family_id，
+-- **存在**且跟 `p_family_id` 不一致就直接 raise（LS026）——查不到（孤兒 target_id）
+-- 則放行，維持既有裁量不擴大（前述「不驗證是否存在」那一半原封不動）。這支函式回傳
+-- `NULL` 而不是自己 raise，讓兩支呼叫端各自決定「查不到」該怎麼辦，保持單一職責。
+create or replace function private.target_family_id(
+  p_target_type public.content_target_type,
+  p_target_id uuid
+)
+returns uuid
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_family_id uuid;
+begin
+  case p_target_type
+    when 'album' then
+      select a.family_id into v_family_id from public.albums a where a.id = p_target_id;
+    when 'media' then
+      select m.family_id into v_family_id from public.media m where m.id = p_target_id;
+    when 'diary' then
+      select d.family_id into v_family_id from public.diaries d where d.id = p_target_id;
+    when 'comment' then
+      select c.family_id into v_family_id from public.comments c where c.id = p_target_id;
+  end case;
+  return v_family_id;
+end;
+$$;
+
 -- create_comment：任何角色（含 viewer）都能留言，比照收斂前 comments_insert policy
 -- 的授權範圍——PLAN §3「Viewer 只能看與留言」是產品定案，不是本票的裁量。author_id
 -- 一律是呼叫者本人，不接受由參數指定（防冒名，同 create_diary_entry／media_insert
--- 的 uploaded_by 慣例）。target_type／target_id 不驗證目標是否存在：docs/API.md §3
--- 已明寫這是多型關聯的已知代價（無法下外鍵），孤兒留言的清理是應用層或定期清理的
--- 責任，本票不擴大範圍去補一個目前沒有其他表也在做的驗證。
+-- 的 uploaded_by 慣例）。
 create or replace function public.create_comment(
   p_family_id uuid,
   p_target_type text,
@@ -104,6 +149,8 @@ as $$
 declare
   v_uid uuid := auth.uid();
   v_id uuid;
+  v_target_type public.content_target_type := p_target_type::public.content_target_type;
+  v_target_family uuid;
 begin
   if v_uid is null then
     raise exception '未登入，無法留言' using errcode = '42501';
@@ -116,8 +163,15 @@ begin
     raise exception '只有該家庭的成員能留言' using errcode = '42501';
   end if;
 
+  -- 見上方 private.target_family_id 的說明：查得到且不一致才擋，查不到（孤兒
+  -- target_id）維持既有裁量放行。
+  v_target_family := private.target_family_id(v_target_type, p_target_id);
+  if v_target_family is not null and v_target_family <> p_family_id then
+    raise exception '這個留言目標不屬於這個家庭' using errcode = 'LS026';
+  end if;
+
   insert into public.comments (family_id, target_type, target_id, author_id, body)
-  values (p_family_id, p_target_type::public.content_target_type, p_target_id, v_uid, p_body)
+  values (p_family_id, v_target_type, p_target_id, v_uid, p_body)
   returning id into v_id;
 
   return v_id;
@@ -205,6 +259,7 @@ as $$
 declare
   v_uid uuid := auth.uid();
   v_target_type public.content_target_type := p_target_type::public.content_target_type;
+  v_target_family uuid;
 begin
   if v_uid is null then
     raise exception '未登入，無法按讚' using errcode = '42501';
@@ -217,10 +272,27 @@ begin
     raise exception '只有該家庭的成員能按讚' using errcode = '42501';
   end if;
 
+  -- 同 create_comment：查得到且不一致才擋（LS026），查不到（孤兒 target_id）維持
+  -- 既有裁量放行。見 private.target_family_id 與上方 create_comment 的完整說明
+  -- （merge-reviewer PR #85 BLOCKER-1，reactions 與 comments 是同一種挾持面）。
+  v_target_family := private.target_family_id(v_target_type, p_target_id);
+  if v_target_family is not null and v_target_family <> p_family_id then
+    raise exception '這個按讚目標不屬於這個家庭' using errcode = 'LS026';
+  end if;
+
   perform pg_advisory_xact_lock(
     hashtextextended(v_target_type::text || ':' || p_target_id::text || ':' || v_uid::text, 0)
   );
 
+  -- LS026 的檢查通過之後，收回這一步的 DELETE 條件（target_type/target_id/user_id）
+  -- 刻意不再帶 p_family_id——這是既有唯一鍵 reactions_target_user_key 的欄位組合，
+  -- 且 LS026 已經保證「這個 target 若存在就屬於 p_family_id」，所以正常呼叫下這句
+  -- 差不了。merge-reviewer PR #85 I3 記錄了一個殘餘的邊界情況：呼叫端明知故犯傳一個
+  -- 跟自己之前加入時不同的 p_family_id（例如自己同時是兩個家庭的成員，兩次呼叫傳了
+  -- 不同家庭），DELETE 仍會依 user_id 找到並收回「另一個家庭」那一筆——只影響呼叫者
+  -- 自己的反應，不是越權，但語意上 p_family_id 對收回路徑沒有實際約束力，已在
+  -- docs/API.md 的 toggle_reaction 條目明寫，不在這裡改行為（改了會讓「同一顆愛心」
+  -- 的唯一鍵語意複雜化，見 reactions_target_user_key 本身不含 family_id）。
   delete from public.reactions r
    where r.target_type = v_target_type
      and r.target_id = p_target_id
@@ -424,13 +496,26 @@ grant execute on function
 -- 3. notification_events：推播基礎——只做資料面（表＋trigger＋彙總視窗），發送由
 --    Edge Function 另票（LS-22）處理，這裡不呼叫任何外部服務。
 --
--- 彙總策略（PLAN §4「批次上傳 50 張照片要合併成一則」同一個精神）：同一種事件
--- （kind）、同一個目標（target_type + target_id）在 5 分鐘內重複發生，合併成同一筆
--- 待送事件（event_count 累加、occurred_at 更新成最新一次、actor_id 換成最新觸發者）。
--- 這是**滾動視窗**（rolling window）：只要事件間隔小於 5 分鐘就持續延伸同一筆，不是
--- 從第一次事件起算的固定 5 分鐘桶——一段長時間的熱烈留言串會一直合併成同一筆，直到
--- 中斷超過 5 分鐘才開新的一筆。Edge Function（LS-22）之後可以用 occurred_at 判斷
--- 「這筆事件已經穩定超過 5 分鐘沒有新動作」再送出，本票不實作那個判斷本身。
+-- 彙總策略（PLAN §4「批次上傳 50 張照片要合併成一則」同一個精神）：同一個家庭
+-- （family_id）、同一種事件（kind）、同一個目標（target_type + target_id）在 5
+-- 分鐘內重複發生，合併成同一筆待送事件（event_count 累加、occurred_at 更新成最新
+-- 一次、actor_id 換成最新觸發者）。這是**滾動視窗**（rolling window）：只要事件
+-- 間隔小於 5 分鐘就持續延伸同一筆，不是從第一次事件起算的固定 5 分鐘桶——一段長
+-- 時間的熱烈留言串會一直合併成同一筆，直到中斷超過 5 分鐘才開新的一筆。Edge
+-- Function（LS-22）之後可以用 occurred_at 判斷「這筆事件已經穩定超過 5 分鐘沒有
+-- 新動作」再送出，本票不實作那個判斷本身。
+--
+-- **合併鍵含 family_id（merge-reviewer PR #85 BLOCKER-1，不是原始設計，是修正）**：
+-- target_type／target_id 是多型關聯、沒有 FK（見上方 create_comment／toggle_
+-- reaction 對 private.target_family_id 的說明），schema 明文放棄保證「一個
+-- target_id 只屬於一個家庭」這件事。若合併鍵只看 (kind, target_type, target_id)、
+-- 不看 family_id，兩個不同家庭對「同一個 target_id」（例如被踢出的前成員手上的舊
+-- album id）產生的事件會被合併成同一列，且那一列最終的 family_id 只會是其中一個
+-- ——LS-22 的 Edge Function 依 family_id 決定通知對象，等於另一個家庭的通知被吞掉、
+-- 錯的家庭收到一則指向自己讀不到的 target 的推播。create_comment／toggle_reaction
+-- 已經在寫入前擋掉「target 存在但屬於別的家庭」（LS026），這是第一道、也是根治的
+-- 防線；這裡的合併鍵加 family_id 是第二道防線（defense in depth）——即使第一道
+-- 防線之後被弱化或繞過，同一個 target_id 底下不同家庭的事件也不會被合併成一列。
 --
 -- kind 與 target_type／target_id 分開：target_type／target_id 沿用 comments／
 -- reactions 既有的多型關聯（'diary'／'album' 兩種 kind 則直接用該內容自己的 id），
@@ -440,11 +525,30 @@ grant execute on function
 --
 -- 併發：兩個幾乎同時發生的事件（例如兩人同時對同一篇日記留言）若沒有鎖，可能都查到
 -- 「還沒有可合併的待送視窗」而各自 INSERT 一筆，變成兩筆本該合併的事件。用
--- pg_advisory_xact_lock（鎖鍵＝(kind, target_type, target_id) 的雜湊，同 toggle_
--- reaction 的手法）序列化「查詢有無可合併視窗→更新或新增」，即使視窗還不存在也一樣
--- 序列化得到（advisory lock 不需要先有列才能鎖，這是選它而不是 `for update` 的原因
--- ——`for update` 得先有一列可鎖，序列化不了「兩者都在決定要不要新建第一筆」的那個
--- 時刻）。
+-- pg_advisory_xact_lock（鎖鍵＝(family_id, kind, target_type, target_id) 的雜湊，
+-- 同 toggle_reaction 的手法）序列化「查詢有無可合併視窗→更新或新增」，即使視窗還
+-- 不存在也一樣序列化得到（advisory lock 不需要先有列才能鎖，這是選它而不是
+-- `for update` 的原因——`for update` 得先有一列可鎖，序列化不了「兩者都在決定要不要
+-- 新建第一筆」的那個時刻）。
+--
+-- **批次寫入改成先分組再合併（merge-reviewer PR #85 I1）**：四支 notify_* trigger
+-- 函式原本逐列呼叫 record_notification_event（每列各自取一次鎖），對「一次 INSERT
+-- 多列」的場景是 O(N) 次序列往返；本 schema 目前的實際寫入路徑（RPC 一次一列）從
+-- 不會產生這種場景，但 supabase/tests/50_rls_plan_no_percall_subquery.sql 的效能
+-- 探針故意灌了 5 萬列在同一個 target 上，逐列版本量到 26868ms、關掉 trigger 量到
+-- 538ms（差 50 倍）。修法：trigger 函式先用 GROUP BY (family_id, target_type,
+-- target_id) 把 new_rows 摺疊成「這一批裡有幾組不同的目標、每組幾筆、最新一位
+-- actor 是誰」，record_notification_event 改吃一個 `p_increment` 筆數參數，對
+-- 「同一批裡同一組目標」只呼叫一次（而不是呼叫 N 次、每次 +1）——鎖與視窗判斷邏輯
+-- 完全不變，只是把「重複呼叫同一組參數 N 次」收斂成「呼叫一次、帶上 N」，語意上
+-- 對單列寫入（RPC 的實際路徑）完全等價，只有多列寫入才會走到聚合的分支。沒有選
+-- reviewer 建議的另一條路（拿掉 advisory lock、改用部分唯一索引＋
+-- `INSERT … ON CONFLICT`）：5 分鐘滾動視窗是**時間相依**的合併規則，「是否可合併」
+-- 取決於既有列的 occurred_at 有沒有超過 5 分鐘，這件事無法表達成一個靜態的
+-- UNIQUE 約束（`sent_at IS NULL` 的部分唯一索引會把「視窗已經過期但 Edge Function
+-- 還沒來得及標記 sent_at」的舊列也算進去，導致新事件永遠合併進一筆早就該關閉的
+-- 舊視窗）——保留 advisory lock＋時間比對的既有判斷邏輯，只把「重複呼叫」收斂掉，
+-- 是能同時修好效能又不改動合併規則語意的最小改動。
 -- ---------------------------------------------------------------------------
 
 create type public.notification_kind as enum ('comment', 'reaction', 'diary', 'album');
@@ -498,15 +602,35 @@ alter table public.notification_events enable row level security;
 -- 兩層防線（grant 與 RLS）都不開放，PostgREST 會在到達 RLS 之前就先被 grant 層擋下
 -- （42501），跟 feed_items 那種「有 grant、靠 RLS 篩」的唯讀表不同形狀。
 
--- 合併寫入的共用邏輯：找同 kind／target 底下最新一筆「還沒送出且 5 分鐘內」的待送
--- 事件，找到就更新（event_count+1、occurred_at 推進、actor 換成最新觸發者），找不到
--- 就新開一筆。
+-- **service_role 也要明確 grant（merge-reviewer PR #85 應修-1，修正原本的誤判）**：
+-- 這張表原本以為「public schema 新表對 postgres/service_role 的預設權限」跟其他表
+-- 一樣夠用，本機 `\dp` 實測推翻了這個假設——`pg_default_acl` 對 public schema 的
+-- tables，postgres 的預設只給 service_role `Dxtm`（TRUNCATE/REFERENCES/TRIGGER/
+-- MAINTAIN），**沒有 r/a/w/d**；其他表沒撞到這個洞是因為它們的實際存取者是
+-- `authenticated`（逐表明文 grant），`notification_events` 是本 schema 第一張
+-- 「只給 service_role」的表，才第一次真的踩到這個預設破口。`BYPASSRLS`
+-- 只跳過 policy，跳不過 grant 層，兩者是獨立的兩道防線。
+--
+-- 不依賴會因環境而異的平台預設，這張表自己的 migration 把它釘住——本 repo 已有
+-- 先例（`20260822120300_harden_default_privileges.sql` §2 對 sequences 就是同一
+-- 個理由同一種修法）。只給送出流程實際需要的兩個動作：讀取待送事件、標記
+-- `sent_at`；DELETE 留給日後的 retention 策略決定（見 migration 檔尾／API.md 對
+-- 本表的說明），這裡不先開。
+grant select, update on public.notification_events to service_role;
+
+-- 合併寫入的共用邏輯：找同 family_id／kind／target 底下最新一筆「還沒送出且 5 分鐘
+-- 內」的待送事件，找到就更新（event_count 累加 p_increment、occurred_at 推進、
+-- actor 換成最新觸發者），找不到就新開一筆（event_count 直接等於 p_increment）。
+-- p_increment（LS-58 R1，I1）：呼叫端（notify_* trigger 函式）可能是「這一批裡
+-- 同一組目標出現了 N 次」聚合過的結果，不一定是單一事件——單一事件呼叫時
+-- p_increment 恆為 1，跟原本逐次呼叫、每次 event_count+1 的語意完全等價。
 create or replace function private.record_notification_event(
   p_family_id uuid,
   p_kind public.notification_kind,
   p_target_type public.content_target_type,
   p_target_id uuid,
-  p_actor_id uuid
+  p_actor_id uuid,
+  p_increment integer default 1
 )
 returns void
 language plpgsql
@@ -516,13 +640,21 @@ as $$
 declare
   v_existing_id uuid;
 begin
+  -- 鎖鍵含 p_family_id（LS-58 R1，BLOCKER-1 第二道防線）：即使 p_target_id 剛好被
+  -- 兩個不同家庭同時引用，兩邊的合併判斷也序列化在各自的鎖上，不會互相卡到——但
+  -- 「合不合併」的判斷本身還是看下面 SELECT 的 family_id 條件，鎖只負責序列化，
+  -- 不負責篩選。
   perform pg_advisory_xact_lock(
-    hashtextextended(p_kind::text || ':' || p_target_type::text || ':' || p_target_id::text, 0)
+    hashtextextended(
+      p_family_id::text || ':' || p_kind::text || ':' || p_target_type::text || ':' || p_target_id::text,
+      0
+    )
   );
 
   select e.id into v_existing_id
     from public.notification_events e
-   where e.kind = p_kind
+   where e.family_id = p_family_id
+     and e.kind = p_kind
      and e.target_type = p_target_type
      and e.target_id = p_target_id
      and e.sent_at is null
@@ -534,12 +666,12 @@ begin
   if v_existing_id is not null then
     update public.notification_events e
        set occurred_at = now(),
-           event_count = e.event_count + 1,
+           event_count = e.event_count + p_increment,
            actor_id = p_actor_id
      where e.id = v_existing_id;
   else
-    insert into public.notification_events (family_id, kind, target_type, target_id, actor_id)
-    values (p_family_id, p_kind, p_target_type, p_target_id, p_actor_id);
+    insert into public.notification_events (family_id, kind, target_type, target_id, actor_id, event_count)
+    values (p_family_id, p_kind, p_target_type, p_target_id, p_actor_id, p_increment);
   end if;
 end;
 $$;
@@ -560,9 +692,19 @@ as $$
 declare
   r record;
 begin
-  for r in select * from new_rows loop
+  -- LS-58 R1（I1）：先按 (family_id, target_type, target_id) 分組，一組只呼叫一次
+  -- record_notification_event（帶上這組的筆數與最新一位作者），不是逐列各呼叫一次。
+  -- actor 取這組裡 created_at 最新的一列，單列寫入（RPC 的實際路徑）時這組必然只有
+  -- 一列，跟原本逐列版本完全等價。
+  for r in
+    select family_id, target_type, target_id,
+           count(*)::integer as n,
+           (array_agg(author_id order by created_at desc))[1] as actor_id
+      from new_rows
+     group by family_id, target_type, target_id
+  loop
     perform private.record_notification_event(
-      r.family_id, 'comment', r.target_type, r.target_id, r.author_id);
+      r.family_id, 'comment', r.target_type, r.target_id, r.actor_id, r.n);
   end loop;
   return null;
 end;
@@ -581,9 +723,18 @@ as $$
 declare
   r record;
 begin
-  for r in select * from new_rows loop
+  -- 同 notify_comment_created 的分組手法。reactions 沒有 created_at 欄位可排序
+  -- 「最新」，同一組裡任取一個 user_id 當 actor——單列寫入（toggle_reaction 的實際
+  -- 路徑）這組必然只有一列，語意不受影響；多列只會發生在批次灌測資料的場景。
+  for r in
+    select family_id, target_type, target_id,
+           count(*)::integer as n,
+           (array_agg(user_id))[1] as actor_id
+      from new_rows
+     group by family_id, target_type, target_id
+  loop
     perform private.record_notification_event(
-      r.family_id, 'reaction', r.target_type, r.target_id, r.user_id);
+      r.family_id, 'reaction', r.target_type, r.target_id, r.actor_id, r.n);
   end loop;
   return null;
 end;
@@ -604,8 +755,17 @@ as $$
 declare
   r record;
 begin
-  for r in select * from new_rows loop
-    perform private.record_notification_event(r.family_id, 'diary', 'diary', r.id, r.author_id);
+  -- diary／album 的 target_id 是每篇日記／每本相簿自己的 id，天生互不相同，同一批
+  -- new_rows 裡不會有兩列落在同一組——這裡的 GROUP BY 對單列與多列寫入都是恆等
+  -- 變換（每組必然剛好 1 列），純粹是跟另外兩支函式維持同一套寫法，不是為了效能
+  -- （diaries／albums 目前也只會一次一列寫入）。
+  for r in
+    select family_id, id as target_id, count(*)::integer as n,
+           (array_agg(author_id order by created_at desc))[1] as actor_id
+      from new_rows
+     group by family_id, id
+  loop
+    perform private.record_notification_event(r.family_id, 'diary', 'diary', r.target_id, r.actor_id, r.n);
   end loop;
   return null;
 end;
@@ -624,8 +784,15 @@ as $$
 declare
   r record;
 begin
-  for r in select * from new_rows loop
-    perform private.record_notification_event(r.family_id, 'album', 'album', r.id, r.created_by);
+  -- 同 notify_diary_created 的說明：album 的 target_id 也是每本相簿自己的 id，
+  -- GROUP BY 對這張表同樣是恆等變換，維持同一套寫法。
+  for r in
+    select family_id, id as target_id, count(*)::integer as n,
+           (array_agg(created_by order by created_at desc))[1] as actor_id
+      from new_rows
+     group by family_id, id
+  loop
+    perform private.record_notification_event(r.family_id, 'album', 'album', r.target_id, r.actor_id, r.n);
   end loop;
   return null;
 end;
@@ -637,9 +804,9 @@ create trigger albums_notify_insert after insert on public.albums
 
 -- ---------------------------------------------------------------------------
 -- 4. schema private 的 EXECUTE 收斂（比照 rls_policies.sql 檔尾同一句慣例）——
---    本票新增的五支 private 函式（record_notification_event／notify_comment_
---    created／notify_reaction_added／notify_diary_created／notify_album_created）
---    預設對 PUBLIC 開放 EXECUTE，這裡收回；authenticated 不需要也不應該直接呼叫
---    這些 trigger 函式。
+--    本票新增的六支 private 函式（target_family_id／record_notification_event／
+--    notify_comment_created／notify_reaction_added／notify_diary_created／
+--    notify_album_created）預設對 PUBLIC 開放 EXECUTE，這裡收回；authenticated
+--    不需要也不應該直接呼叫這些內部判斷／trigger 函式。
 -- ---------------------------------------------------------------------------
 revoke execute on all functions in schema private from public;

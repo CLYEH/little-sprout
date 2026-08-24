@@ -235,9 +235,12 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 
 ### `comments` / `reactions`
 - `target_type` ∈ `album|media|diary|comment`，`target_id` 是對應表的 `id`。**這是
-  多型關聯，DB 無法對它下外鍵**——傳一個不存在的 `target_id` 不會被 DB 擋下（沒有
-  `23503` 可用），孤兒留言的清理是應用層或定期清理的責任，不是 API 的錯誤處理範圍。
-  `create_comment`／`toggle_reaction`（見 §4）都不驗證目標是否存在，這個代價沿用不變。
+  多型關聯，DB 無法對它下外鍵**——傳一個完全不存在的 `target_id`（誰都沒建過）不會被
+  DB 擋下（沒有 `23503` 可用），孤兒留言的清理是應用層或定期清理的責任，不是 API 的
+  錯誤處理範圍，`create_comment`／`toggle_reaction`（見 §4）對這種情況維持既有裁量、
+  照樣放行。**但 `target_id` 若真的存在、卻屬於別的家庭，這兩支 RPC 會擋下（`LS026`，
+  LS-58 R1）**——只驗證「查得到的話 family 對不對」，不驗證「查得到查不到」，這是刻意
+  縮小的修補範圍（見 §4 兩支 RPC 各自的說明）。
 - `comments`（LS-58，取代 LS-52 的 hybrid 模式，見 §2 表與上方「三套寫入模型」）：
   新增／編輯內容／軟刪都是 **RPC-only**，直接 `.insert()`／`.update()` 一律 `42501`
   （這點現在跟 `diaries` 一致；跟收斂前的 LS-52 不同，那時作者仍保留直接 `.update()`
@@ -256,7 +259,14 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `.insert()`／`.delete()` 一律 `42501`。呼叫端**不再需要**自己處理
   `UNIQUE(target_type, target_id, user_id)` 的 `23505`——`toggle_reaction` 內部用
   advisory lock 序列化「查詢現況→決定加或刪」，永遠回傳布林值（`true`＝加入、
-  `false`＝收回），不會噴 `23505`。
+  `false`＝收回），不會噴 `23505`。**唯一鍵不含 `family_id`**（`UNIQUE(target_type,
+  target_id, user_id)`，跟表定義一致）——`p_family_id` 只用於呼叫當下的成員資格檢查
+  與 `LS026` 目標歸屬檢查、以及新增列時要寫入哪個 `family_id`，**收回路徑
+  （`DELETE`）不看 `p_family_id`**：同一人若真的在兩個不同情境下對同一個
+  `(target_type, target_id)` 傳了不同的 `p_family_id`（例如同一人是兩個家庭的成員），
+  第二次呼叫收回的是「這個人對這個 target 的那一顆愛心」，不保證是這次傳的
+  `p_family_id` 底下加的那一顆。只影響呼叫者自己的反應，不是越權，但 UI 不該假設
+  「用 A 家的 `family_id` 收回」保證動到的是 A 家那一筆。
 
 ### `device_tokens`
 - **不要**直接 `.upsert()` 或 `.insert()`／`.delete()` 這張表。同一支裝置換帳號登入時，
@@ -288,14 +298,27 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   （`comment`／`reaction` 指向被留言／被按讚的目標；`diary`／`album` 指向內容自己）＋
   `actor_id`（最近一次觸發者）＋`event_count`（彙總筆數）＋`occurred_at`（最近一次
   事件時間）＋`sent_at`（`NULL`＝待送，由 Edge Function／`service_role` 標記已送出）。
-- **彙總策略**：同一 `kind`＋`target_type`＋`target_id` 在 **5 分鐘滾動視窗**內的多次
-  事件合併成同一筆（`event_count` 累加、`occurred_at` 更新成最新一次、`actor_id` 換成
-  最新觸發者）——只要事件間隔小於 5 分鐘就持續延伸同一筆，不是從第一次事件起算的固定
-  桶。合併判斷由 `pg_advisory_xact_lock` 序列化，避免兩個幾乎同時發生的事件都判斷成
-  「還沒有可合併的視窗」而各自開一筆。
+- **彙總策略**：同一 `family_id`＋`kind`＋`target_type`＋`target_id` 在 **5 分鐘滾動
+  視窗**內的多次事件合併成同一筆（`event_count` 累加、`occurred_at` 更新成最新一次、
+  `actor_id` 換成最新觸發者）——只要事件間隔小於 5 分鐘就持續延伸同一筆，不是從第一次
+  事件起算的固定桶。合併判斷由 `pg_advisory_xact_lock` 序列化，避免兩個幾乎同時發生的
+  事件都判斷成「還沒有可合併的視窗」而各自開一筆。**合併鍵含 `family_id`（LS-58 R1）**
+  ——`target_type`／`target_id` 是多型關聯、沒有 FK（見上方「已知代價」），不能只靠
+  `(kind, target_type, target_id)` 當合併鍵：這會讓兩個不同家庭對同一個 `target_id`
+  （例如被踢出的前成員手上還記得的舊 id）的事件合併成一列，通知因此被算進錯的家庭。
+  `create_comment`／`toggle_reaction`（§4）已經在寫入前擋掉「target 存在但屬於別家」
+  （`LS026`），合併鍵含 `family_id` 是第二道防線。
 - **權限：成員完全讀不到**——沒有 RLS policy（`enable row level security` 但零 policy），
   也沒有任何 table grant 給 `authenticated`／`anon`；PostgREST 會在到達 RLS 之前就先被
-  grant 層擋下（`42501`）。只有 `service_role`（LS-22 的 Edge Function 用）能讀寫。
+  grant 層擋下（`42501`）。`service_role`（LS-22 的 Edge Function 用）明確 grant 了
+  `SELECT`／`UPDATE`（讀待送事件、標記 `sent_at`）——**不要假設平台預設會給
+  service_role 足夠的權限**：本 repo 實測過 public schema 新表對 `service_role` 的
+  預設只有 `TRUNCATE`/`REFERENCES`/`TRIGGER`/`MAINTAIN`，沒有 `SELECT`/`UPDATE`，這張
+  表的 migration 自己明確 grant 這兩項（比照
+  `20260822120300_harden_default_privileges.sql` §2 對 sequences 的既有作法）。
+  `INSERT`／`DELETE` 都沒有給 `service_role`——寫入只走 trigger，刪除留給日後的
+  retention 策略決定（目前沒有任何清理路徑，已送出的列會一直留著，見該 migration
+  檔尾備註）。
 
 ### `content_reports` / `blocked_users`
 - `content_reports`：任何家庭成員都能送出檢舉（`reporter_id` 必須是自己）；owner 只能
@@ -532,9 +555,11 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **副作用**：`author_id` 恆為呼叫者本人，不接受由參數指定（防冒名，同
   `create_diary_entry`／`media.uploaded_by` 的既有慣例）。
 - **參數**：`p_target_type` 傳字串（cast 失敗 `22P02`，值域見 §3「target_type ∈
-  album|media|diary|comment」）；`p_target_id` 不驗證目標是否存在（見 §3）。
+  album|media|diary|comment」）；`p_target_id` 若查得到（不是孤兒 id）就必須屬於
+  `p_family_id`，否則 `LS026`（見 §3、LS-58 R1）；查不到維持既有裁量放行。
   `p_body` 為空或超過 2000 字 `23514`（`CHECK` 約束，非本 RPC 自訂）。
-- **錯誤碼**：未登入 `42501`；不是該家任一角色的成員 `42501`。
+- **錯誤碼**：未登入 `42501`；不是該家任一角色的成員 `42501`；`target_id` 存在但屬於
+  別的家庭 `LS026`。
 - **併發**：無特殊語意，單一 `INSERT`。
 
 ### `update_comment(p_comment_id uuid, p_body text) -> void`
@@ -564,10 +589,14 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   發出的呼叫都會查到「還沒按過」而各自嘗試 INSERT，第二個會撞 `23505`——這支 RPC
   用 `pg_advisory_xact_lock`（鎖鍵為 `(target_type, target_id, user_id)` 的雜湊）
   序列化查詢與加/刪，讓兩次幾乎同時的呼叫都能正常完成，不會有任何一次噴錯。
-- **錯誤碼**：未登入 `42501`；不是該家任一角色的成員 `42501`。
+- **錯誤碼**：未登入 `42501`；不是該家任一角色的成員 `42501`；`target_id` 存在但
+  屬於別的家庭 `LS026`（同 `create_comment`，LS-58 R1，見 §3）。
 - **併發**：見上——這是這支 RPC 存在的核心理由，回歸測試見
   `supabase/tests/concurrency/reaction_toggle_race_*.sql`（同一人對同一目標的雙
   `toggle_reaction` 併發呼叫）。
+- **收回路徑不看 `p_family_id`**：`LS026` 只在「加入」那一面（可能真的 INSERT）擋
+  跨家庭引用；收回（`DELETE`）依 `reactions_target_user_key` 的欄位組合（不含
+  `family_id`）找列，細節與邊界情況見 §3「reactions」段。
 
 ### `list_comments(p_family_id uuid, p_target_type text, p_target_id uuid, p_cursor_created_at timestamptz default null, p_cursor_id uuid default null, p_limit integer default 20) -> table(id uuid, author_id uuid, author_display_name text, author_avatar_url text, body text, created_at timestamptz)`
 - **誰能呼叫**：該家庭任一角色的成員；非本家庭成員呼叫會拿到明確的 `42501`
@@ -609,6 +638,16 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **回傳規則**：**沒有任何反應的 `target_id` 不會出現在回傳列裡**（`GROUP BY` 天生
   排除 0 筆的組合）——呼叫端要把缺席的 `target_id` 當成 `reaction_count = 0`，同
   `get_my_join_request()`「0 列＝空結果」的既有慣例，不是遺漏。
+- **非本家庭成員不會拿到錯誤**：這支是 `security invoker`，`p_family_id` 傳一個自己
+  不屬於的家庭不會 raise，只會依 `reactions_select` RLS 自然回傳空集合——跟
+  `get_family_timeline` 是同一種行為（見該支說明），**跟 `create_comment`／
+  `toggle_reaction`／`list_comments` 呼叫端會拿到明確 `42501`／`LS026` 不同**，呼叫端
+  不要假設這支「傳錯家庭一定會報錯」。
+- **`p_target_ids` 沒有長度上限**：不像 `list_comments` 的 `p_limit` 有
+  `least(greatest(…,1),100)` 夾定，這支目前刻意不設硬上限（`security invoker` 加上
+  `reactions_select` 既有 RLS 已經是隔離防線，過大的陣列只會拉長查詢時間，不是安全
+  問題）——呼叫端仍建議依實際使用情境（例如一頁留言、一頁相簿卡片）控制批次大小，
+  不要一次傳整個家庭的所有 target_id。
 - **錯誤碼**：`p_target_type` cast 失敗 `22P02`；未登入時 `auth.uid()` 為 `NULL`，
   配合 RLS 自然回傳空集合（同 `get_family_timeline` 的未登入行為），不 raise。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
@@ -693,6 +732,7 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS023` | 相簿不存在 | `set_album_deleted` |
 | `LS024` | 留言不存在 | `update_comment`／`set_comment_deleted` |
 | `LS025` | 不是留言作者本人，或雖是作者但已離開該家庭 | `update_comment` |
+| `LS026` | 留言／按讚的 target 存在，但屬於別的家庭 | `create_comment`／`toggle_reaction` |
 | `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
 
 **沒有被上面任何一支 RPC 包住、可能直接從 PostgREST 冒出來的標準 Postgres 錯誤碼**
@@ -713,8 +753,10 @@ LS-49 推翻）**：`LSErrorCode` 已逐碼涵蓋上表全部自訂碼——`LS0
 原本歸 `validationRetryable`，PR #77 R1 review 指出游標是呼叫端自己組的、使用者無輸入可換，
 改歸 `rejected`，見上方 `LS022` 列註記）、`LS023`／`LS024`（LS-52 補齊，歸層皆 `rejected`）、
 `LS025`（LS-58 補齊，歸層 `rejected`——跟 `LS021`／`LS023`／`LS024` 同一類：不是作者本人、或
-雖是作者但已離開家庭，換輸入沒有用，UI 該做的是隱藏編輯入口而不是讓使用者重試）；`LS016`
-另於 LS-55 從 `validationRetryable` 改歸新增的 `retryableSystem` 層（見上方 `LS016`
+雖是作者但已離開家庭，換輸入沒有用，UI 該做的是隱藏編輯入口而不是讓使用者重試）、`LS026`
+（LS-58 R1 補齊，歸層 `rejected`——target 存在但屬於別的家庭，這是呼叫端組錯參數／資料
+被竄改的訊號，不是「換個輸入再試」能解的，UI 該做的是回上一頁或重新整理而不是原地重試）；
+`LS016` 另於 LS-55 從 `validationRetryable` 改歸新增的 `retryableSystem` 層（見上方 `LS016`
 列註記）。三層（`validationRetryable`／`retryableSystem`／`rejected`）歸類由
 `LittleSproutTests/AppErrorTests.swift` 的列舉測試逐碼釘住。
 **尚缺碼：無**。之後每新增一個自訂碼，本表與 `LSErrorCode` 必須同 PR 更新，否則

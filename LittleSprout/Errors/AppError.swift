@@ -66,6 +66,7 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     case albumNotFound = "LS023"
     case commentNotFound = "LS024"
     case commentNotEditableByCaller = "LS025"
+    case targetFamilyMismatch = "LS026"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -84,7 +85,7 @@ enum LSErrorCode: String, CaseIterable, Sendable {
              .alreadyMember, .alreadyHasPendingRequest, .requestNotFoundOrProcessed,
              .diaryNotFoundOrDeleted, .diaryNotEditableByCaller,
              .albumNotFound, .commentNotFound, .commentNotEditableByCaller,
-             .timelineCursorIncomplete:
+             .targetFamilyMismatch, .timelineCursorIncomplete:
             // 以下碼為 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
@@ -97,7 +98,10 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // 留言不存在，重送同一個 RPC 呼叫不會變成功，呼叫端該做的是回上一頁或重新整理
             // 清單，不是原地重試。commentNotEditableByCaller（LS-58 補齊 LS025，
             // update_comment）同理：不是作者本人、或雖是作者但已離開家庭，換輸入沒有用，
-            // UI 該做的是隱藏編輯入口，不是讓使用者重試。
+            // UI 該做的是隱藏編輯入口，不是讓使用者重試。targetFamilyMismatch（LS-58 R1
+            // 補齊 LS026，create_comment／toggle_reaction）：target 存在但屬於別的家庭，
+            // 是呼叫端組錯參數的訊號，不是「換個輸入再試」能解的，UI 該做的是回上一頁或
+            // 重新整理，不是原地重試。
             // timelineCursorIncomplete（LS022）：游標參數（p_cursor_occurred_at／
             // p_cursor_ref_id，或 list_comments 的對應游標，LS-58）是 app 自己從上一頁回應
             // 組出來的，不是使用者手動輸入的東西——使用者沒有「換個輸入再送」這個動作可做，

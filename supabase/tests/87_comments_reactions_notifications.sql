@@ -185,6 +185,99 @@ $$;
 
 rollback;
 
+-- ---------------------------------------------------------------------------
+-- LS-58 R1（merge-reviewer PR #85 BLOCKER-1）：target 存在但屬於別的家庭要被擋下
+-- （LS026），target 完全不存在（孤兒 target_id）維持既有裁量放行——兩件事是分開的，
+-- 這裡各自驗證，不能只驗其中一個就宣稱補上了。
+-- ---------------------------------------------------------------------------
+begin;
+
+do $$
+declare
+  v_family_a uuid := 'fa000000-0000-4000-8000-000000000001';  -- 攻擊者所屬家庭
+  v_family_b uuid := 'fb000000-0000-4000-8000-000000000001';  -- 受害家庭
+  v_b_media uuid := '3b000000-0000-4000-8000-000000000001';   -- B 家的真實 media（00_fixtures）
+  v_attacker uuid := 'a0000000-0000-4000-8000-000000000001';  -- A 家 owner，不是 B 家成員
+  v_orphan_target uuid := 'ffffffff-0000-4000-8000-000000000001';  -- 誰都沒建過的 id
+  v_err text;
+  v_n int;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_attacker, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- 攻擊情境：A 家成員拿著 B 家真實存在的 media id，用自己的 family_id 呼叫
+  v_err := null;
+  begin
+    perform public.create_comment(v_family_a, 'media', v_b_media, '攻擊者想把留言掛在 B 家的照片下');
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err <> 'LS026' then
+    raise exception 'FAIL：對別家真實存在的 target 呼叫 create_comment 應該是 LS026，實際 %', coalesce(v_err, '（無，成功——BLOCKER-1 沒有補上）');
+  end if;
+  select count(*) into v_n from public.comments where target_id = v_b_media and body like '攻擊者想把留言掛%';
+  if v_n <> 0 then
+    raise exception 'FAIL：LS026 擋下之後，攻擊者的留言竟然還是寫進去了';
+  end if;
+  raise notice 'ok：create_comment 對存在但屬於別家的 target 回報 LS026，且沒有寫入任何列';
+
+  -- 孤兒 target_id（誰都沒建過）：既有裁量不變，允許放行（不是本票要擴大處理的範圍）
+  perform public.create_comment(v_family_a, 'media', v_orphan_target, '掛在孤兒 target_id 上的留言');
+  select count(*) into v_n from public.comments
+   where target_id = v_orphan_target and body = '掛在孤兒 target_id 上的留言';
+  if v_n <> 1 then
+    raise exception 'FAIL：孤兒 target_id（查不到任何表）應該維持既有裁量放行，卻被 LS026 誤擋了';
+  end if;
+  reset role;
+  raise notice 'ok：create_comment 對孤兒 target_id（查不到 family_id）維持既有裁量放行，LS026 沒有誤傷';
+end;
+$$;
+
+rollback;
+
+-- 同一組攻擊情境對 toggle_reaction 也要驗一次——create_comment／toggle_reaction 是
+-- 同一個洞的兩個入口，只驗一邊不能證明另一邊也補上了。
+begin;
+
+do $$
+declare
+  v_family_a uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_b_media uuid := '3b000000-0000-4000-8000-000000000001';
+  v_attacker uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_orphan_target uuid := 'ffffffff-0000-4000-8000-000000000002';
+  v_err text;
+  v_n int;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_attacker, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  v_err := null;
+  begin
+    perform public.toggle_reaction(v_family_a, 'media', v_b_media);
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err <> 'LS026' then
+    raise exception 'FAIL：對別家真實存在的 target 呼叫 toggle_reaction 應該是 LS026，實際 %', coalesce(v_err, '（無，成功——BLOCKER-1 沒有補上）');
+  end if;
+  select count(*) into v_n from public.reactions where target_id = v_b_media and user_id = v_attacker;
+  if v_n <> 0 then
+    raise exception 'FAIL：LS026 擋下之後，攻擊者的反應竟然還是寫進去了';
+  end if;
+
+  perform public.toggle_reaction(v_family_a, 'media', v_orphan_target);
+  select count(*) into v_n from public.reactions
+   where target_id = v_orphan_target and user_id = v_attacker;
+  if v_n <> 1 then
+    raise exception 'FAIL：孤兒 target_id 應該維持既有裁量放行，toggle_reaction 卻被 LS026 誤擋了';
+  end if;
+  reset role;
+  raise notice 'ok：toggle_reaction 對存在但屬於別家的 target 回報 LS026 且不寫入，孤兒 target_id 維持既有裁量放行';
+end;
+$$;
+
+rollback;
+
 -- ===========================================================================
 -- §3. update_comment：角色矩陣（作者本人／owner／member／viewer／非本家庭成員／
 --     已離開／降級），不存在，已軟刪除仍可編輯（刻意不比照 diaries）
@@ -202,6 +295,7 @@ declare
   v_target uuid := '3a000000-0000-4000-8000-000000000001';
   v_comment uuid;
   v_body text;
+  v_deleted timestamptz;
   v_err text;
 begin
   set local role postgres;
@@ -339,18 +433,28 @@ begin
   end if;
   raise notice 'ok：update_comment 對不存在的留言回報 LS024';
 
-  -- 已軟刪除的留言仍可編輯（刻意不比照 update_diary_entry，見 migration 說明）
+  -- 已軟刪除的留言仍可編輯（刻意不比照 update_diary_entry，見 migration 說明）。
+  -- LS-58 R1（merge-reviewer PR #85 I5）：這裡原本用 `select body, deleted_at into
+  -- v_body`——plpgsql 對「多欄位 INTO 單一純量」會靜默丟棄第二欄之後的值，不報錯，
+  -- 所以原本這段從未真的斷言過「已軟刪除」這個前置條件成立；改成兩個變數各自接。
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
   set local role authenticated;
   perform public.set_comment_deleted(v_comment, true);
+  select deleted_at into v_deleted from public.comments where id = v_comment;
+  if v_deleted is null then
+    raise exception 'FAIL：set_comment_deleted 沒有真的軟刪這則留言——後面「已軟刪除仍可編輯」這段的前置條件不成立';
+  end if;
   perform public.update_comment(v_comment, '軟刪後仍能改');
   reset role;
-  select body, deleted_at into v_body from public.comments where id = v_comment;
+  select body, deleted_at into v_body, v_deleted from public.comments where id = v_comment;
   if v_body <> '軟刪後仍能改' then
     raise exception 'FAIL：已軟刪除的留言呼叫 update_comment 應該仍然成功，實際 body=「%」', v_body;
   end if;
-  raise notice 'ok：已軟刪除的留言仍可用 update_comment 編輯內容（刻意不比照 diaries 的限制）';
+  if v_deleted is null then
+    raise exception 'FAIL：update_comment 不該動到 deleted_at，但軟刪狀態竟然被清掉了';
+  end if;
+  raise notice 'ok：已軟刪除的留言仍可用 update_comment 編輯內容，且 deleted_at 不受影響（刻意不比照 diaries 的限制）';
 end;
 $$;
 
@@ -721,8 +825,59 @@ begin
 end;
 $$;
 
--- RLS／grant：成員完全不可讀寫 notification_events，只有 service role（postgres 在
--- 本機測試環境代表 service_role 等級的存取）才看得到。
+-- LS-58 R1（merge-reviewer PR #85 BLOCKER-1，第二道防線）：即使有一天 RPC 層的
+-- LS026 檢查被弱化或繞過，合併鍵本身也不該讓兩個不同家庭的事件合併成一列。這裡直接
+-- 呼叫 private.record_notification_event（postgres 身分，SECURITY DEFINER 函式，
+-- 繞過 RPC 層驗證）模擬「同一個 target_id 被兩個不同家庭引用」，驗證合併鍵確實把
+-- family_id 算進去——不依賴 create_comment／toggle_reaction 的檢查是否存在，是真正
+-- 獨立的第二層驗證。
+do $$
+declare
+  v_family_a uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_family_b uuid := 'fb000000-0000-4000-8000-000000000001';
+  v_shared_target uuid := 'ffffffff-0000-4000-8000-000000000099';
+  v_actor_a uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_actor_b uuid := 'b0000000-0000-4000-8000-000000000001';
+  v_n int;
+  v_a_count int;
+  v_b_count int;
+begin
+  set local role postgres;
+  delete from public.notification_events where target_id = v_shared_target;
+
+  perform private.record_notification_event(v_family_a, 'comment', 'media', v_shared_target, v_actor_a);
+  perform private.record_notification_event(v_family_b, 'comment', 'media', v_shared_target, v_actor_b);
+  perform private.record_notification_event(v_family_a, 'comment', 'media', v_shared_target, v_actor_a);
+
+  select count(*) into v_n from public.notification_events where target_id = v_shared_target;
+  if v_n <> 2 then
+    raise exception 'FAIL：同一個 target_id 被 A／B 兩個家庭引用時應該各自一筆（共 2 筆），實際 %——合併鍵沒有把 family_id 算進去', v_n;
+  end if;
+
+  select event_count into v_a_count from public.notification_events
+   where target_id = v_shared_target and family_id = v_family_a;
+  select event_count into v_b_count from public.notification_events
+   where target_id = v_shared_target and family_id = v_family_b;
+  if v_a_count <> 2 then
+    raise exception 'FAIL：A 家兩次事件應該合併成 event_count=2，實際 %', v_a_count;
+  end if;
+  if v_b_count <> 1 then
+    raise exception 'FAIL：B 家一次事件應該是 event_count=1，實際 %（不該被 A 家的事件影響）', v_b_count;
+  end if;
+
+  delete from public.notification_events where target_id = v_shared_target;
+  reset role;
+  raise notice 'ok：合併鍵含 family_id——同一 target_id 被兩個家庭引用時各自累計、互不合併（A=2/B=1，共 2 筆）';
+end;
+$$;
+
+-- RLS／grant：成員完全不可讀寫 notification_events；service_role 是唯一預期的
+-- 消費者（LS-22 的 Edge Function），必須明確驗證它真的讀寫得到——LS-58 R1（merge-
+-- reviewer PR #85 應修-1）之前這裡只驗了 authenticated／anon 沒有 grant，把
+-- `postgres`（表 owner，本來就不受 grant 限制，跟 service_role 是兩個不同角色）
+-- 誤當成「service_role 等級的存取」，沒有測到 service_role 自己其實完全沒有 grant
+-- 這個真實的 bug（`\dp` 實測：`Dxtm`，沒有 r/a/w/d）。這裡改成對三個角色都各自
+-- 正向／反向對照。
 do $$
 begin
   if has_table_privilege('authenticated', 'public.notification_events', 'select') then
@@ -741,6 +896,22 @@ begin
     raise exception 'FAIL：anon 竟然有 notification_events 的 SELECT grant';
   end if;
   raise notice 'ok：notification_events 對 authenticated／anon 完全沒有 table grant（SELECT/INSERT/UPDATE/DELETE 皆無）';
+
+  -- 正向對照：service_role 必須有 SELECT／UPDATE（送出流程需要的最小集）；
+  -- INSERT／DELETE 刻意不給（寫入只走 trigger，刪除留給日後的 retention 策略）。
+  if not has_table_privilege('service_role', 'public.notification_events', 'select') then
+    raise exception 'FAIL 回歸：service_role 沒有 notification_events 的 SELECT grant——LS-22 的 Edge Function 讀不到待送事件';
+  end if;
+  if not has_table_privilege('service_role', 'public.notification_events', 'update') then
+    raise exception 'FAIL 回歸：service_role 沒有 notification_events 的 UPDATE grant——LS-22 的 Edge Function 標記不了 sent_at';
+  end if;
+  if has_table_privilege('service_role', 'public.notification_events', 'insert') then
+    raise exception 'FAIL：service_role 竟然有 notification_events 的 INSERT grant（寫入應該只走 trigger）';
+  end if;
+  if has_table_privilege('service_role', 'public.notification_events', 'delete') then
+    raise exception 'FAIL：service_role 竟然有 notification_events 的 DELETE grant（retention 策略尚未定案，不該先開）';
+  end if;
+  raise notice 'ok：notification_events 對 service_role 有 SELECT/UPDATE（LS-22 需要的最小集），沒有 INSERT/DELETE';
 end;
 $$;
 
@@ -757,6 +928,44 @@ begin
   end;
   reset role;
   raise notice 'ok：owner 直接查詢 notification_events 被擋下 (42501)，grant 層先於 RLS 層擋下（PostgREST 到不了 policy）';
+end;
+$$;
+
+-- 正向功能測試（不只是 has_table_privilege 的權限位元，實際以 service_role 身分
+-- 讀一列、標記 sent_at）：grant 存在不代表真的用得動，這裡把整個流程走一遍。
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_target uuid := '3a000000-0000-4000-8000-000000000002';
+  v_event_id uuid;
+  v_sent timestamptz;
+begin
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  set local role authenticated;
+  perform public.create_comment(v_family, 'media', v_target, '給 service_role 讀的留言');
+  reset role;
+
+  set local role service_role;
+  select id, sent_at into v_event_id, v_sent from public.notification_events
+   where kind = 'comment' and target_type = 'media' and target_id = v_target
+   order by created_at desc limit 1;
+  if v_event_id is null then
+    raise exception 'FAIL：service_role 以 SELECT 讀不到剛產生的待送事件';
+  end if;
+  if v_sent is not null then
+    raise exception 'FAIL：新事件的 sent_at 一開始就不是 NULL，測試前置條件不對';
+  end if;
+
+  update public.notification_events set sent_at = now() where id = v_event_id;
+  reset role;
+
+  select sent_at into v_sent from public.notification_events where id = v_event_id;
+  if v_sent is null then
+    raise exception 'FAIL：service_role 的 UPDATE 標記 sent_at 沒有真的生效';
+  end if;
+
+  raise notice 'ok：service_role 能實際 SELECT 讀到待送事件、UPDATE 標記 sent_at（不只是 grant 位元，整個流程走過一遍）';
 end;
 $$;
 
