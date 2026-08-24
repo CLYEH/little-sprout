@@ -242,6 +242,20 @@ race_case "同一則留言：軟刪先動，直接編輯必須被阻塞後才成
   comment_edit_vs_delete_setup.sql comment_edit_vs_delete_s1_delete.sql \
   comment_edit_vs_delete_s2_update.sql comment_edit_vs_delete_verify_delete_first.sql
 
+# LS-52 併發場景，方向 C（merge-reviewer PR #70 review N1，第 2 輪）：作者把自己的
+# 相簿／留言直接 UPDATE 搬到自己也是 owner 的另一個家庭，與原家庭 owner 呼叫
+# set_album_deleted／set_comment_deleted 同時發生。這組才是真正驗到 `for update`
+# 必要性的場景——方向 A／B 改的是 title/body，不是授權判斷會讀的 family_id，測不出
+# 拿掉 `for update` 會不會造成跨家庭越權；這組改 family_id，拿掉 `for update` 會讓
+# 斷言變紅（原家庭 owner 對已搬到別家的相簿/留言完成軟刪）。詳細技術說明與 mutation
+# 證據見對應 s2_delete_after_move.sql 檔頭。
+race_case "同一本相簿：作者搬家先動，owner 的軟刪必須被阻塞後正確拿到 42501" \
+  album_edit_vs_delete_setup.sql album_edit_vs_delete_s1_move_family.sql \
+  album_edit_vs_delete_s2_delete_after_move.sql album_edit_vs_delete_verify_move_blocked.sql
+race_case "同一則留言：作者搬家先動，owner 的軟刪必須被阻塞後正確拿到 42501" \
+  comment_edit_vs_delete_setup.sql comment_edit_vs_delete_s1_move_family.sql \
+  comment_edit_vs_delete_s2_delete_after_move.sql comment_edit_vs_delete_verify_move_blocked.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 delete from public.families where id in (
@@ -250,7 +264,9 @@ delete from public.families where id in (
   'ff000000-0000-4000-8000-000000000001',
   'f2000000-0000-4000-8000-000000000001',
   'f3000000-0000-4000-8000-000000000001',
-  'f4000000-0000-4000-8000-000000000001'
+  'f4000000-0000-4000-8000-000000000001',
+  'f8000000-0000-4000-8000-000000000001',
+  'f9000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',

@@ -436,13 +436,25 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   錯誤碼。
 - **錯誤碼**：未登入 `42501`；相簿不存在 `LS023`；不是建立者也不是該家 owner，或
   雖是建立者但已完全離開該家庭 `42501`。
-- **併發**：對目標列用 `FOR UPDATE` 鎖住，單一 statement 更新——但這把鎖對這支
-  函式沒有 `update_diary_entry`／`set_diary_deleted` 那種「狀態決策依賴新鮮讀取」
-  的必要性：這支函式的授權判斷只查 `family_members`（不受這本相簿本身的欄位影響），
-  尾端的 `UPDATE` 又是把 `deleted_at` 設成常數而非依讀到的舊值計算新值，所以就算
-  拿掉這把鎖，序列化仍然由那句 `UPDATE` 本身的隱含列鎖保證——本機實測驗證過（見
-  `supabase/tests/concurrency/album_edit_vs_delete_*.sql` 檔頭），這與作者直接
-  `.update()` 併發的行為驗證見那組測試，這裡不重複展開。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住，**這把鎖不可移除**——授權判斷讀的
+  `family_id`（`v_album.family_id`）就是從這本相簿這一列本身讀來的，不是不變的
+  外部資料。`albums_update` policy 的建立者分支允許建立者把自己的相簿直接
+  `.update()` 搬到自己也是 contributor 的另一個家庭（`family_id in
+  contributor_family_ids()`，見 §3；這件事本身是否該被允許是另一個未決的產品
+  問題，登記在 LS-57，不在本票範圍）——若這支 RPC 拿掉 `FOR UPDATE`，建立者的
+  搬家與原家庭 owner 的軟刪同時發生時：原家庭 owner 呼叫這支 RPC 讀到的會是
+  搬家**之前**的 `family_id`（授權判斷通過，因為讀到的還是自己家），但函式尾端
+  的 `UPDATE`（`SECURITY DEFINER`，不受 RLS 保護）會在建立者的搬家 commit 之後
+  才真正執行，寫入時這本相簿**已經**屬於別的家庭——原家庭 owner 因此對一本此刻
+  已不屬於自己家庭的相簿完成了軟刪，是一次跨家庭越權。本機實測重現過這個結果
+  （拿掉 `FOR UPDATE` 後、對調 fixture 的最小 repro：授權判斷回報「通過」、
+  最終列確實被軟刪，即使它此刻的 `family_id` 已經是另一個家庭），
+  `supabase/tests/concurrency/album_edit_vs_delete_s1_move_family.sql` 這組
+  race case 就是把這個場景寫成回歸測試，拿掉 `FOR UPDATE` 會讓它變紅（測試檔頭
+  有 mutation 證據）。既有的 `album_edit_vs_delete_s1_update.sql`／
+  `s1_delete.sql` 兩組（作者改 `title`、owner 軟刪同時發生）測不到這件事——
+  `title` 不是授權判斷讀的欄位，這兩組能證明的是「序列化正確、沒有互相覆蓋
+  對方寫的欄位」，不是「`FOR UPDATE` 本身必要」，兩件事不能混為一談。
 
 ### `set_comment_deleted(p_comment_id uuid, p_deleted boolean) -> void`
 - **誰能呼叫**：作者本人（**只要求仍是該家庭任一角色的成員**，跟
@@ -457,9 +469,11 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   失敗時給出明確錯誤碼。
 - **錯誤碼**：未登入 `42501`；留言不存在 `LS024`；不是作者也不是該家 owner，或
   雖是作者但已離開家庭 `42501`。
-- **併發**：對目標列用 `FOR UPDATE` 鎖住，單一 statement 更新——這把鎖的必要性
-  說明同 `set_album_deleted`，這裡不重複展開；作者直接 `.update()` 併發的行為
-  驗證見 `supabase/tests/concurrency/comment_edit_vs_delete_*.sql`。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住，**這把鎖不可移除**，理由同
+  `set_album_deleted`——`comments_update` policy 的作者分支比 albums 的門檻
+  更低（`family_id in family_ids()`，任一角色皆可搬家，見 §3），同一種
+  跨家庭越權在 comments 更容易觸發。回歸測試見
+  `supabase/tests/concurrency/comment_edit_vs_delete_s1_move_family.sql`。
 
 ### `get_family_timeline(p_family_id uuid, p_child_id uuid default null, p_cursor_occurred_at timestamptz default null, p_cursor_ref_id uuid default null, p_limit integer default 20) -> table(kind public.feed_kind, ref_id uuid, occurred_at timestamptz, child_id uuid)`
 - **誰能呼叫**：任何已登入使用者，但只查得到自己所屬家庭的資料——`p_family_id` 傳一個

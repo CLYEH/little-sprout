@@ -1,8 +1,12 @@
 -- 併發場景（方向 A：編輯先動）的 session 2：owner 在作者還沒 commit 編輯的時候用
--- set_comment_deleted 軟刪。技術結論同 album_edit_vs_delete_s2_delete.sql（不
--- 重複展開）：這裡會被阻塞，但阻塞來源是 `set_comment_deleted` 尾端的 UPDATE
--- 本身的隱含列鎖，不是開頭 `select ... for update` 的 `for update` 特有效果——
--- 本機實測驗證過拿掉 for update 這個場景的阻塞時間與最終狀態不變。
+-- set_comment_deleted 軟刪。
+--
+-- 更正（merge-reviewer PR #70 review N1，第 2 輪）：先前的檔頭宣稱「for update
+-- 不是行為必要的」是錯的，理由同 album_edit_vs_delete_s2_delete.sql（不重複
+-- 展開）。真正驗 for update 必要性的是
+-- comment_edit_vs_delete_s1_move_family.sql／s2_delete_after_move.sql（作者
+-- 搬家 vs owner 軟刪），comments 的作者分支門檻比 albums 更低（family_ids()，
+-- 任一角色皆可搬家），同一種跨家庭越權更容易觸發。
 
 \set ON_ERROR_STOP on
 

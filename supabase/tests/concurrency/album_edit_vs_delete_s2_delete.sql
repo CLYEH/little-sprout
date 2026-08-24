@@ -1,23 +1,15 @@
 -- 併發場景（方向 A：編輯先動）的 session 2：owner 在作者還沒 commit 編輯的時候用
 -- set_album_deleted 軟刪。
 --
--- 誠實的技術結論（merge-reviewer PR #70 review F2 要求「驗鎖等待」，這裡如實驗證、
--- 也如實記錄驗到了什麼）：這裡確實會被阻塞，但阻塞的來源是
--- `set_album_deleted` 函式尾端那句 `update public.albums a set deleted_at = ...`——
--- **任何** UPDATE 命中一個已被其他未 commit 交易鎖住的列都會等待，這是 Postgres
--- 的通用行為，不是 `select ... for update` 這句話特有的效果。本機用 Supabase CLI
--- 映像實測驗證過：把 `set_album_deleted` 開頭那句 `select ... for update` 的
--- `for update` 拿掉，重跑這個場景，阻塞時間與最終狀態**完全不變**——因為這支函式
--- 的授權判斷（v_is_owner／v_is_author_current_member）查的是 family_members，
--- 不是這本相簿自己的欄位，尾端的 UPDATE 又是把 deleted_at 設成常數（不是根據
--- 讀到的舊值算出新值），所以沒有「讀到舊資料做出錯誤決策」這個 for update 原本
--- 要防的風險。這與 diaries 的 update_diary_entry／set_diary_deleted 不同——那兩支
--- 函式的決策明確依賴讀到的 deleted_at／body 是不是最新的（判斷「這篇日記是否已被
--- 移除」），拿掉 for update 會讓決策讀到過期資料而做錯事，這裡沒有對應的風險。
--- 因此這個測試檔案能證明的是「作者的直接編輯與 owner 的軟刪會正確序列化、不會
--- 互相覆蓋掉對方寫的欄位」（見 verify 檔），**不能**當成「拿掉 for update 這個檔案
--- 會變紅」的證據——如果之後有人真的把 for update 拿掉，這個測試仍然會是綠的，
--- 這是函式本身的邏輯形狀決定的，不是測試漏寫。
+-- 更正（merge-reviewer PR #70 review N1，第 2 輪）：這個檔案先前的檔頭宣稱
+-- 「for update 對這個情境不是行為必要的」是錯的，已由 reviewer 實測反例推翻，
+-- 這裡不重複那段錯誤推論。真話是：**現有這組 race case（作者改 title、owner
+-- 軟刪）測不出 for update 的必要性，但這把鎖本身不可移除**——授權判斷讀的
+-- family_id 就是從這一列本身讀來的，會隨作者的另一種直接 UPDATE（改 family_id
+-- 搬家）而變動。這組（title vs 軟刪）測到的是「序列化正確、不互相覆蓋對方寫的
+-- 欄位」，真正驗 for update 必要性的是另一組
+-- album_edit_vs_delete_s1_move_family.sql／s2_delete_after_move.sql（作者搬家
+-- vs owner 軟刪），該組的檔頭有完整說明與 mutation 證據，這裡不重複展開。
 
 \set ON_ERROR_STOP on
 
