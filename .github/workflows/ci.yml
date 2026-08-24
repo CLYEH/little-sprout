@@ -80,12 +80,23 @@ jobs:
           git diff "$base_sha"...HEAD | grep '^+' | grep -v '^+++' \
             | bash scripts/gates/scan-secrets.sh
 
-      # LS-45／LS-41／LS-54／LS-53：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
+      # LS-50：分支起點乾淨度（push-gate 第 6 步的伺服器端兜底）——工作分支自 merge-base 以來的非 merge commit
+      # 票號必須等於分支票號；夾帶他票須 commit body 與 PR body 各有獨佔一行的 `Bundles: LS-<m>`（逃生口使用在
+      # PR 可見）。只在工作分支 head 執行：promote／back-merge 的 head 是保護分支，沒有「本票」可比（同 LS-10）。
+      # 姊妹規則 merge-conflict-check（push-gate 第 7 步）CI 無法承載：GitHub 對不可合併的 PR 根本不觸發本 workflow。
+      - name: 分支起點乾淨度（工作分支不得夾帶他票 commit；branch-ticket-check，LS-50）
+        if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
+        run: |
+          printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body.txt"
+          bash scripts/gates/branch-ticket-check.sh --branch "$HEAD" --base "origin/$BASE" --pr-body "$RUNNER_TEMP/pr-body.txt"
+
+      # LS-45／LS-41／LS-54／LS-53／LS-50：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
       # 放行」（destructive-approval-check）、「schema／文件對帳」（api-contract-check）、
-      # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）與「migration 兩級分級／BREAKING: 段落」
-      # （migration-breaking-check／breaking-section-check）的偵測不退化（前饋必有反饋，
+      # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）、「migration 兩級分級／BREAKING: 段落」
+      # （migration-breaking-check／breaking-section-check）與「分支不夾帶他票 commit／push 前無合併衝突」
+      # （branch-ticket-check／merge-conflict-check）的偵測不退化（前饋必有反饋，
       # 對 gate 本身也適用）。集中在同一個 step，維持「一個地方跑所有 gate 自測」。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／breaking-section-check）
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／breaking-section-check／branch-ticket-check／merge-conflict-check）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -95,6 +106,8 @@ jobs:
           bash scripts/gates/error-codes-check.test.sh || rc=1
           bash scripts/gates/migration-breaking-check.test.sh || rc=1
           bash scripts/gates/breaking-section-check.test.sh || rc=1
+          bash scripts/gates/branch-ticket-check.test.sh || rc=1
+          bash scripts/gates/merge-conflict-check.test.sh || rc=1
           exit "$rc"
 
       # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
