@@ -83,6 +83,28 @@ final class SupabaseFamilyAPIClientJoinTests: XCTestCase {
         try await apiClient.approveJoin(requestID: UUID())
     }
 
+    func test_rejectJoin_success_doesNotThrow() async throws {
+        // 順帶（LS-49 收尾觀察）：rejectJoin 之前零測試——approveJoin 有 happy path 測試但
+        // 同一種形狀的 rejectJoin／withdrawJoin 沒有，一併補上。
+        let client = TestSupabaseClient.make { request in
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/reject_join")
+            return MockURLProtocol.StubResponse(statusCode: 204)
+        }
+        let apiClient = SupabaseFamilyAPIClient(client: client)
+
+        try await apiClient.rejectJoin(requestID: UUID())
+    }
+
+    func test_withdrawJoin_success_doesNotThrow() async throws {
+        let client = TestSupabaseClient.make { request in
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/withdraw_join")
+            return MockURLProtocol.StubResponse(statusCode: 204)
+        }
+        let apiClient = SupabaseFamilyAPIClient(client: client)
+
+        try await apiClient.withdrawJoin(requestID: UUID())
+    }
+
     func test_listJoinRequests_decodesArray() async throws {
         let client = TestSupabaseClient.make { [familyID, userID] request in
             XCTAssertEqual(request.url?.path, "/rest/v1/rpc/list_join_requests")
