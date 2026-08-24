@@ -75,6 +75,19 @@ expect 0 '⑤ 本機專屬 excludes 不納入比對 → 綠'
 g config --unset core.excludesFile
 printf '' > "$work/repo/.git/info/exclude"
 
+# ⑥ 子目錄 .gitignore 加否定行 `!_shotcheck.html`（PR #79 R1 F1）→ 必紅，且點名 <path>:<line>。
+#    否定後 _shotcheck.html 不再 ignored：不用 -f 就能 add（順便證明否定確實生效），
+#    第一檢查看不見它——只有否定行偵測擋得住
+printf 'verified.json\n!_shotcheck.html\n' > "$work/repo/design-canvas-d/.gitignore"
+g add design-canvas-d/.gitignore design-canvas-d/_shotcheck.html
+expect 1 '⑥ 子目錄 .gitignore 否定行（檔案已不再 ignored）→ 紅' 'design-canvas-d/.gitignore:2: 子目錄否定規則會讓根規則失效'
+g rm -q --cached design-canvas-d/_shotcheck.html
+
+# ⑦ 子目錄 .gitignore 只有收窄規則（含註解與空行）→ 綠
+printf '# 軌內額外產物\nverified.json\n\n_scratch-*.html\n' > "$work/repo/design-canvas-d/.gitignore"
+g add design-canvas-d/.gitignore
+expect 0 '⑦ 子目錄 .gitignore 只收窄（無否定行）→ 綠'
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ tracked-ignored-check 自測失敗" >&2
   exit 1
