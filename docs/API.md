@@ -13,7 +13,7 @@
 > `docs/COLLABORATION.md` §7。
 >
 > **這份文件涵蓋的分支狀態**：以 `development` 分支當下的 migrations 為準（含 LS-6／LS-15／
-> LS-33／LS-36／LS-37／LS-40）。
+> LS-33／LS-36／LS-37／LS-40／LS-48）。
 
 ## 目錄
 
@@ -39,7 +39,7 @@
 - 認證：Supabase Auth（Sign in with Apple／Email OTP，LS-17）。所有表與 RPC 的權限判斷
   一律吃 `auth.uid()`（登入後的 JWT `sub`），未登入呼叫任何一支表或 RPC 都會被 RLS／
   RPC 內部檢查擋下（`42501`）。
-- **沒有 `anon` 角色的資料存取**：`anon` 對 16＋1 張表與全部 8 支 RPC 都沒有任何權限
+- **沒有 `anon` 角色的資料存取**：`anon` 對 16＋1 張表與全部 12 支 RPC 都沒有任何權限
   （逐表逐支 revoke，見 `supabase/migrations/20260822120000_init_schema.sql` 檔尾與
   `supabase/tests/60_default_privileges.sql`）。App 內任何畫面都必須先完成登入才能打
   API，沒有「訪客瀏覽」路徑。
@@ -65,21 +65,22 @@
 | `media` | 我所屬家庭的檔案中繼資料 | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | 硬刪僅 owner（一般刪除走 `deleted_at`） | `byte_size`／`storage_path`／`family_id`／`uploaded_by` 一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3 |
 | `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己） | owner 任意列；建立者僅自己建立的 | owner-only | Viewer 不可建立相簿 |
 | `album_media` | 同上 | owner／member | owner／member | owner／member | 連結表自帶 `family_id`，policy 不必 join 回 `albums` |
-| `diaries` | 我所屬家庭的日記 | owner／member（`author_id` 必須是自己） | owner 任意列；作者僅自己寫的 | owner-only | 同 `albums` 模式 |
+| `diaries` | 我所屬家庭的日記 | 🔒 **RPC-only**（`create_diary_entry`，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（body／entry_date／child_id）僅作者本人用 `update_diary_entry`；軟刪／還原（`deleted_at`）作者自己的或 owner 任何一篇，皆用 `set_diary_deleted`（直接 UPDATE 已被 revoke） | owner-only（硬刪，policy 未變） | LS-48 收斂：owner 不能像 `albums` 那樣直接改寫別人日記的內容，只能移除 |
 | `diary_media` | 同上 | owner／member | owner／member | owner／member | 同 `album_media` |
 | `comments` | 我所屬家庭 | **任何角色**（含 viewer） | owner 任意列；作者僅自己的 | owner-only | Viewer 能留言，符合 PLAN §3 |
 | `reactions` | 我所屬家庭 | **任何角色** | ❌ 無 update policy（收回愛心走 DELETE） | 僅自己按的 | `UNIQUE(target_type, target_id, user_id)`：同一目標重複按會拿到 `23505` |
 | `device_tokens` | 僅自己的裝置 | ⚠️ 見下方 | 僅自己 | 僅自己 | **換裝置／換帳號登入請務必呼叫 `register_device_token` RPC，不要直接 INSERT／UPSERT**（見 §4） |
-| `feed_items` | 我所屬家庭的時間軸 | 🔒 唯讀（trigger 維護） | 🔒 唯讀 | 🔒 唯讀 | 沒有任何 client 可寫入的路徑，連 grant 都沒有 |
+| `feed_items` | 我所屬家庭的時間軸 | 🔒 唯讀（trigger 維護） | 🔒 唯讀 | 🔒 唯讀 | 沒有任何 client 可寫入的路徑，連 grant 都沒有；混排查詢建議走 `get_family_timeline` RPC（見 §4），不要直接 `.from("feed_items")` 拼 keyset 條件 |
 | `content_reports` | 自己送出的＋（若是 owner）自家的 | **任何家庭成員** | 僅 `status` 欄，owner-only，且只能改成 `resolved`（不能 `dismissed`） | ❌ 無 delete policy | 駁回（`dismissed`）保留給平台方用 `service_role`／Dashboard 處理 |
 | `blocked_users` | 僅自己封鎖的名單（`blocker_id = 我`） | 僅自己 | ❌ 無 update policy | 僅自己 | 被封鎖者看不到自己被封鎖 |
 | `join_requests` | 自己送出的申請＋（若是 owner）自家的待審申請 | 🔒 **RPC-only**（`request_join`） | 🔒 **RPC-only**（`approve_join`／`reject_join`／`withdraw_join`） | 🔒 無 delete policy | 沒有任何 client 直接寫入路徑，grant 只有 SELECT |
 
-**寫入路徑小結（給 iOS 呼叫端的心智模型）**：`family_members`／`invites`／`join_requests`
-三張表**完全不能**用 `.insert()`／`.update()`（`family_members` 的 `role`／`can_upload`
-例外，見上表），一律呼叫對應 RPC；其餘表可用 PostgREST 的 `.from(...)` 直接讀寫，但每張表
-都有欄位級或列級限制，寫超出範圍會拿到 `42501`（grant 層）或該欄位的 `CHECK`/`NOT NULL`
-違反碼（policy 通過但值不合法）。
+**寫入路徑小結（給 iOS 呼叫端的心智模型）**：`family_members`／`invites`／`join_requests`／
+`diaries` 四張表**完全不能**用 `.insert()`／`.update()`（`family_members` 的 `role`／
+`can_upload` 例外，見上表；`diaries` 的硬刪 `.delete()` 仍走 policy 直接允許，見上表），
+一律呼叫對應 RPC；其餘表可用 PostgREST 的 `.from(...)` 直接讀寫，但每張表都有欄位級或
+列級限制，寫超出範圍會拿到 `42501`（grant 層）或該欄位的 `CHECK`/`NOT NULL` 違反碼
+（policy 通過但值不合法）。
 
 ---
 
@@ -150,7 +151,21 @@
 ### `albums` / `diaries`
 - `child_id` 可為 `NULL`（家庭共用內容，不特別掛在某個孩子底下）；非 NULL 時必須是
   同一家庭的孩子（複合外鍵，見 §8）。
-- Owner 可編輯／刪除任何一筆；member 只能改自己建立的（Viewer 完全不能建立）。
+- `albums`：直接 `.from("albums")` 讀寫（見 §2 表）。Owner 可編輯／刪除任何一筆；
+  member 只能改自己建立的（Viewer 完全不能建立）。
+- `diaries`（LS-48 起與 `albums` **不同模式**，見 §2 表與 §4 三支 RPC）：
+  - 新增／編輯內容／軟刪都是 **RPC-only**，直接 `.insert()`／`.update()` 一律 `42501`。
+  - Owner 對別人日記**只有軟刪權**（`set_diary_deleted`），**沒有**編輯內容的權限——
+    這點與 `albums` 明確不同（`albums` 的 owner 可以直接改寫任何一筆的標題）。想像
+    「owner 能不能改我寫的日記內文」時不要套用 `albums` 的心智模型。
+  - 硬刪（真正 `DELETE` 整列）仍是 owner-only 的直接 policy，未被收斂進 RPC。
+
+**為什麼 `diaries` 沒有跟 `albums` 用同一套心智模型**：`albums`（無 RPC）與 `diaries`
+（RPC-only）目前是這個 codebase 刻意並存的兩種寫入模式，差別在於 `diaries` 的
+`diaries_update` policy 原本讓 owner 能改寫別人日記的**任意欄位**（不只 `deleted_at`），
+超出 PLAN §10「Owner 移除內容」授權的範圍；`albums` 目前沒有被指出同樣的問題，所以還
+維持直接 policy。日後若同一個洞在 `albums` 被指出，才會比照收斂，不在本票（LS-48）
+範圍內回頭改 `albums`。
 
 ### `album_media` / `diary_media`
 - 純連結表，自帶 `family_id`（不必 join 回 `albums`/`diaries` 判斷歸屬）。
@@ -176,6 +191,14 @@
   `created_at`；media 用 `coalesce(taken_at, created_at)`；diary 用 `entry_date`
   轉 UTC 午夜）。分頁用 keyset：`WHERE family_id = ? AND (occurred_at, ref_id) < (?, ?)
   ORDER BY occurred_at DESC, ref_id DESC LIMIT n`，不要用 `OFFSET`。
+- **不要直接 `.from("feed_items")` 拼上面那條查詢**——用 §4 的 `get_family_timeline`
+  RPC。它就是這條查詢包成 RPC 的結果，額外做了 `p_limit` 邊界夾定（見 §4），且是唯一
+  暴露 `child_id`（LS-48 新增欄位）篩選能力的入口。
+- `child_id`（LS-48）：`diary`／`album` 由對應資料列的 `child_id` 帶入；**`media`
+  恆為 `NULL`**——`media` 本身沒有 `child_id` 欄位，只能透過 `album_media` 間接、
+  多對多地關聯到相簿的 `child_id`，無法唯一決定歸屬。實際影響：`get_family_timeline`
+  的 `p_child_id` 篩選為指定值時，`media` 類項目**不會出現**；只有 `p_child_id = NULL`
+  （查全部）時才看得到。
 
 ### `content_reports` / `blocked_users`
 - `content_reports`：任何家庭成員都能送出檢舉（`reporter_id` 必須是自己）；owner 只能
@@ -195,9 +218,11 @@
 
 ## 4. RPC 逐支文件
 
-呼叫方式：`supabase.rpc("函式名", params: [...])`（supabase-swift）。全部 8 支都是
-`SECURITY DEFINER`，只對 `authenticated` 開放（`anon`／`public` 已逐支 revoke，見
-`supabase/tests/60_default_privileges.sql` 的正向對照）。
+呼叫方式：`supabase.rpc("函式名", params: [...])`（supabase-swift）。全部 12 支都只對
+`authenticated` 開放（`anon`／`public` 已逐支 revoke，見
+`supabase/tests/60_default_privileges.sql` 的正向對照）；其中 11 支是
+`SECURITY DEFINER`，只有 `get_family_timeline`（LS-48）是 `security invoker`——它不需要
+繞過 RLS，完全依賴 `feed_items` 既有的 RLS 做家庭隔離，見該支 RPC 的說明。
 
 ### `register_device_token(p_token text, p_platform text) -> void`
 - **誰能呼叫**：任何已登入使用者。
@@ -287,6 +312,105 @@
   3. 從未申請過 → 0 列（不是錯誤，是空結果）。
 - **只讀**，無寫入副作用。
 
+### `create_diary_entry(p_family_id uuid, p_child_id uuid, p_body text, p_entry_date date) -> uuid`
+- **誰能呼叫**：該家庭的 owner／member（Viewer 不行，同 `albums`）。
+- **回傳**：新日記的 `id`。
+- **副作用**：`author_id` 恆為呼叫者本人，不接受由參數指定（防冒名，同 `media.uploaded_by`
+  的既有慣例）。
+- **參數**：`p_child_id` 可傳 `NULL`（家庭共用，不掛某個孩子）；非 `NULL` 時必須是同一
+  家庭的孩子，否則 `23503`（複合外鍵）。`p_entry_date` 傳 `NULL` 時退回 `current_date`
+  （對齊資料表原本的欄位預設值，不是「必填」）。
+- **錯誤碼**：未登入 `42501`；不是該家 owner/member `42501`；`child_id` 跨家庭 `23503`；
+  `body` 為空或超過 20000 字 `23514`（`CHECK` 約束，非本 RPC 自訂）。
+- **併發**：無特殊語意，單一 `INSERT`。
+
+### `update_diary_entry(p_diary_id uuid, p_body text, p_entry_date date, p_child_id uuid) -> void`
+- **誰能呼叫**：**只有原作者本人，且必須現在仍是該家庭的 owner/member**——即使是該
+  家庭的 owner，也不能用這支 RPC 改別人日記的內容（見 §3 `diaries` 段的心智模型
+  說明）；作者若已被移出家庭、或被降級成 viewer，同樣不能再編輯自己過去寫的日記
+  （merge-reviewer PR #60 review F2：`author_id` 是永遠不變的歷史欄位，不能單獨當
+  授權依據）。
+- **語意**：**整組替換**（PUT，不是逐欄 PATCH）——三個參數（`body`／`entry_date`／
+  `child_id`）一律用傳入值覆蓋，不支援「傳 `NULL` 代表不變」。呼叫端要送出完整的期望
+  狀態（例如只想改 `body`，`p_entry_date`／`p_child_id` 也要照抄原值一起傳）。
+- **錯誤碼**：未登入 `42501`；日記不存在 `LS020`；不是作者本人、或雖是作者但已不是
+  該家庭 owner/member `LS021`（兩種情況共用同一個碼，**排在「是否已軟刪除」之前
+  檢查**——未通過授權的人，不管日記是否已被移除，一律拿到 `LS021`，不會從錯誤碼差異
+  推敲出一篇不屬於自己的日記目前是否已被軟刪除，同 `approve_join` 的授權檢查排序
+  慣例）；已軟刪除（`deleted_at` 非 NULL）`LS020`（要先用 `set_diary_deleted(id,
+  false)` 還原才能編輯）。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住，單一 statement 更新；與 `set_diary_deleted`
+  互相排隊（見 `supabase/tests/concurrency/diary_edit_vs_delete_*.sql`：軟刪先動，
+  編輯會在解除阻塞後拿到 `LS020`；編輯先動，軟刪會在解除阻塞後正常成功，但編輯的
+  內容保證先落地）。
+
+### `set_diary_deleted(p_diary_id uuid, p_deleted boolean) -> void`
+- **誰能呼叫**：作者本人（**只要求現在仍是該家庭的成員，角色不拘**——被降級成 viewer
+  仍可軟刪／還原自己的日記，這點刻意比 `update_diary_entry` 寬，見 migration 對這支
+  函式的裁量說明）**或**該家庭的 owner（家庭內任何一篇）。作者若已完全離開家庭
+  （`family_members` 裡已經沒有這一列），這支 RPC 對他完全關閉。
+- **用途**：軟刪（`p_deleted = true`）／還原（`p_deleted = false`）。**唯一能寫
+  `diaries.deleted_at` 的路徑**——這支只碰這一欄，owner 分支不可能被拿來竄改內容
+  （物理上不會執行到 `body`／`entry_date`／`child_id` 的 `UPDATE`）。
+- **副作用**：軟刪後該篇立即從 `feed_items`／`get_family_timeline` 消失，還原後立即
+  回來（既有 trigger 行為，見 `supabase/tests/40_triggers_feed_and_storage.sql`）。
+- **錯誤碼**：未登入 `42501`；日記不存在 `LS020`；不是作者也不是該家 owner，或雖是
+  作者但已離開家庭 `42501`。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住；與 `update_diary_entry` 的互斥關係見上。
+
+### `get_family_timeline(p_family_id uuid, p_child_id uuid default null, p_cursor_occurred_at timestamptz default null, p_cursor_ref_id uuid default null, p_limit integer default 20) -> table(kind public.feed_kind, ref_id uuid, occurred_at timestamptz, child_id uuid)`
+- **誰能呼叫**：任何已登入使用者，但只查得到自己所屬家庭的資料——`p_family_id` 傳一個
+  自己不屬於的家庭不會報錯，只會回傳 0 列（`security invoker`，完全依賴 `feed_items`
+  既有的 `feed_items_select` RLS policy，見 §3）。
+- **回傳的 `kind`**：`public.feed_kind` 這個 enum（`album`/`media`/`diary`），不是泛用
+  `text`——PostgREST 會把 enum 序列化成 JSON 字串，Swift 端可以直接對映成一個三選一的
+  型別（例如 `enum FeedKind: String, Decodable { case album, media, diary }`），不需要
+  自己防禦「萬一多一種字串」這種情況。
+- **用途**：時間軸混排查詢（日記＋相簿＋照片），取代直接 `.from("feed_items")` 拼
+  keyset 條件。回傳的是**指標**（`kind`／`ref_id`），不是完整內容——要看某一頁的完整
+  資料（日記內文、相簿標題、照片路徑），**依 `kind` 分組後各發一支批次查詢**，不要對
+  每一列各發一次請求。三支查詢彼此獨立（不同表、不同 RLS 判斷），**用
+  `withThrowingTaskGroup` 平行發出，不要序列 `await`**——序列寫法雖然一樣只有 3 次
+  網路請求（不是 N+1），但頁面延遲會變成三支查詢時間相加，而不是三者當中最慢的那支：
+  ```swift
+  // 一頁最多 3 支 kind（album/media/diary），所以每頁封頂 3 次查詢，不是每列一次；
+  // 三支彼此獨立，平行發出而不是序列 await，頁面延遲取決於最慢的那支，不是總和。
+  let byKind = Dictionary(grouping: page, by: \.kind)
+  try await withThrowingTaskGroup(of: Void.self) { group in
+    for (kind, items) in byKind {
+      group.addTask {
+        let ids = items.map(\.refId)
+        // 例如 diary：await supabase.from("diaries").select().in("id", value: ids)
+        // 各支查詢各自寫回對應的本地快取／狀態，不需要彼此的回傳值
+      }
+    }
+    try await group.waitForAll()
+  }
+  ```
+  這是「依 kind 分組、`in.(ref_id,…)` 每頁最多 3 次查詢、且三次平行發出」，不是逐列
+  各查一次的 N+1，也不是看似批次、實則序列等待三倍延遲的假平行；皆已有 RLS 保護，
+  family 成員本來就查得到，不需要額外授權。
+- **`p_child_id`**：`NULL`＝不篩（回傳全部，含 `child_id` 為 NULL 的項目與所有
+  `media`）；帶值＝只回傳 `child_id` 等於該值的項目。**`media` 類項目在指定 `p_child_id`
+  時恆不出現**（見 §3 `feed_items` 段的裁量說明），這不是 bug。
+- **分頁**：keyset，游標是 `(p_cursor_occurred_at, p_cursor_ref_id)` 這一對——傳上一頁
+  最後一列的 `occurred_at`／`ref_id`。第一頁兩者都不傳（或都傳 `NULL`）。**只傳其中
+  一個（另一個留 `NULL`）會拿到 `LS022`**——半游標不是合法用法，呼叫端要嘛都傳、要嘛
+  都不傳；這支 RPC 不會為了容錯半游標而靜默回傳空集合（那會讓呼叫端誤判成「這頁真的
+  沒資料了」）。
+- **`p_limit`**：下界會被夾到 1（傳 `0` 或負數不會被誤用成「不限筆數」）、上界夾到
+  100；預設 20。兩端都有測試覆蓋（`supabase/tests/85_diaries_timeline.sql`，上界測試
+  用了一個 >100 筆的家庭資料集，不是只驗小數字下「反正沒差」的空案例）。
+- **錯誤碼**：未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列，不 raise；
+  游標只傳一半 `LS022`。
+- **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
+- **效能**：`language plpgsql`，依 `p_child_id`／游標是否為 `NULL` 拆成四條各自可以
+  走索引的靜態查詢（不是同一句 SQL 裡的 `OR` 分支）——這是刻意的實作選擇，不只是
+  風格：`language sql` 搭配 `set search_path` 會讓函式無法被規劃器 inline，`OR` 條件
+  就下推不進 index cond。細節與 EXPLAIN 證據見 migration 內
+  `public.get_family_timeline` 的完整說明與
+  `supabase/tests/50_rls_plan_no_percall_subquery.sql` 的專屬效能回歸段落。
+
 ---
 
 ## 5. 錯誤碼全表
@@ -306,7 +430,10 @@ Swift 端後續實作 `LSError` enum 時（見下方「未涵蓋於本票」）�
 | `LS015` | 申請不存在或已被處理 | `approve_join`／`reject_join`／`withdraw_join` |
 | `LS016` | 邀請碼產生連續撞碼，請重試 | `create_invite`（機率極低，代表亂數來源異常，不是使用者可修正的錯誤，UI 顯示通用重試訊息即可） |
 | `LS017` | 邀請碼參數不合法（到期時間或可用次數超出範圍） | `create_invite` |
-| `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字 |
+| `LS020` | 日記不存在，或（`update_diary_entry` 情境）已被軟刪除須先還原 | `update_diary_entry`／`set_diary_deleted` |
+| `LS021` | 不是作者本人，或雖是作者但已不是該家庭 owner/member | `update_diary_entry` |
+| `LS022` | `get_family_timeline` 的游標參數只給了一半（`p_cursor_occurred_at`／`p_cursor_ref_id` 兩者要嘛都給、要嘛都不給） | `get_family_timeline` |
+| `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字 |
 
 **沒有被上面任何一支 RPC 包住、可能直接從 PostgREST 冒出來的標準 Postgres 錯誤碼**
 （直接 `.insert()`/`.update()` 到允許直寫的表時可能撞到，client 應該當成一般失敗處理，
@@ -441,6 +568,12 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
   掛在有 `child_id` 的相簿／日記底下。要查「某個孩子的所有照片」，正確路徑是先查
   `albums`/`diaries` where `child_id = ?`，再 join `album_media`/`diary_media` 取
   `media`，**不是**在 `media` 表上直接篩選（那個欄位不存在）。
+- **時間軸的單寶貝篩選**（LS-48，`get_family_timeline` 的 `p_child_id` 參數，見 §4）：
+  這是「全部／單寶貝」兩種篩選，是 LS-47（多寶貝 UI 定案）之前的暫定硬需求，不是最終
+  設計。指定 `p_child_id` 時，時間軸只回傳 `diary`／`album` 類項目（各自的 `child_id`
+  等於該值），**`media` 類項目一律不出現**——因為 `media` 沒有直接的 `child_id`
+  可比對，見上一條。這與「查某個孩子的所有照片」是兩件不同的事：後者要走上一條的
+  join 路徑，`get_family_timeline` 的單寶貝篩選目前只涵蓋日記與相簿本身。
 
 ---
 
@@ -454,12 +587,16 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
 
 <!-- API-CONTRACT:RPC
 approve_join(uuid)
+create_diary_entry(uuid, uuid, text, date)
 create_invite(uuid, text, timestamptz, integer)
+get_family_timeline(uuid, uuid, timestamptz, uuid, integer)
 get_my_join_request()
 list_join_requests()
 register_device_token(text, text)
 reject_join(uuid)
 request_join(text)
+set_diary_deleted(uuid, boolean)
+update_diary_entry(uuid, text, date, uuid)
 withdraw_join(uuid)
 -->
 
