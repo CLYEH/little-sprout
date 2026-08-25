@@ -467,7 +467,7 @@
           "id": "t3ZTXJ",
           "name": "Top",
           "width": "fill_container",
-          "height": 358,
+          "height": 354,
           "layout": "vertical",
           "children": [
             {
@@ -494,7 +494,7 @@
               "id": "HqrJw",
               "name": "Print Stage",
               "width": "fill_container",
-              "height": 296,
+              "height": 292,
               "layout": "none",
               "children": [
                 {
@@ -913,6 +913,7 @@
                   "id": "qde59",
                   "name": "Legal Wrap",
                   "width": "fill_container",
+                  "height": 38,
                   "layout": "vertical",
                   "padding": [
                     12,
@@ -5542,7 +5543,7 @@
           "id": "oJUdR",
           "name": "Top",
           "width": "fill_container",
-          "height": 358,
+          "height": 354,
           "layout": "vertical",
           "children": [
             {
@@ -5569,7 +5570,7 @@
               "id": "mpeJ1",
               "name": "Print Stage",
               "width": "fill_container",
-              "height": 296,
+              "height": 292,
               "layout": "none",
               "children": [
                 {
@@ -5836,7 +5837,7 @@
           "name": "Welcome Block",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": 12.4,
+          "gap": "$sp-item",
           "padding": [
             "$sp-section",
             "$screen-pad",
@@ -6015,6 +6016,7 @@
                   "id": "zOBxh",
                   "name": "Legal Wrap",
                   "width": "fill_container",
+                  "height": 38,
                   "layout": "vertical",
                   "padding": [
                     12,
@@ -6108,7 +6110,7 @@
           "id": "vE2OF",
           "name": "Top",
           "width": "fill_container",
-          "height": 456.6,
+          "height": 452.6,
           "layout": "vertical",
           "children": [
             {
@@ -6135,7 +6137,7 @@
               "id": "SzLhU",
               "name": "Print Stage",
               "width": "fill_container",
-              "height": 394.6,
+              "height": 390.6,
               "layout": "none",
               "children": [
                 {
@@ -6588,6 +6590,7 @@
                   "id": "r1rUgn",
                   "name": "Legal Wrap",
                   "width": "fill_container",
+                  "height": 38,
                   "layout": "vertical",
                   "padding": [
                     12,
