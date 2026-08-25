@@ -134,6 +134,7 @@ jobs:
           bash scripts/gates/brand-skill-check.test.sh || rc=1
           bash scripts/gates/push-ref-check.test.sh || rc=1
           bash scripts/gates/agent-tools-check.test.sh || rc=1
+          bash scripts/gates/detect-simulator.test.sh || rc=1
           exit "$rc"
 
       # LS-30：品牌 skill 接線——前饋是 ui-designer／visual-reviewer 定義「開工先載入 little-sprout-brand」，載入動作
