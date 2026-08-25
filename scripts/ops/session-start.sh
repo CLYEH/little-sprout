@@ -36,6 +36,9 @@ ctx="${ctx}${out}"$'\n\n'
 if printf '%s' "$out" | grep -q '主 checkout 落後 origin/main'; then
   ctx="${ctx}⚠ 主 checkout 落後 origin/main：先 \`git pull --ff-only origin main\` 再派工（agent 定義與 harness 讀自主 checkout，COLLABORATION §2）。"$'\n'
 fi
+if printf '%s' "$out" | grep -q '^\[hooks\]'; then
+  ctx="${ctx}⚠ gate hooks 未裝好（上列 [hooks] 行）：本機 commit／push gate 靜默不跑、只剩 CI 攔——先照指示修（\`git config core.hooksPath .githooks\`／\`chmod +x .githooks/*\`）再 commit／push 或派工（COLLABORATION §2，LS-87）。"$'\n'
+fi
 ctx="${ctx}若本 session 尚未建立巡檢 cron，立即用 CronCreate 建 \`*/26 * * * *\`，prompt 模板見 docs/COLLABORATION.md §4-b。"
 printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":%s}}\n' "$(json_str "$ctx")"
 printed=1
