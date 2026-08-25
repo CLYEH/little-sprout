@@ -47,6 +47,11 @@ struct LabeledTextField: View {
                     .appFont(.note)
                     .fontWeight(isError ? .semibold : .regular)
                     .foregroundStyle(isError ? Color.lsDanger : Color.lsTextSecondary)
+                    // AX3 下父層版面提案的高度可能比這段文字的完整換行高度小；沒有這個
+                    // modifier，Text 會依提案高度截斷成一行加「…」（R3 review A1，02b 錯誤
+                    // 訊息在 AX3 只剩半句、底下卻留 100pt+ 空白）。加了之後 Text 永遠回報
+                    // 完整換行所需的高度，把父層 VStack 撐開。
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
