@@ -353,6 +353,50 @@ else
 fi
 rm -rf "$race_lock"
 
+# ---- ⑩ XcodeGen 漂移（LS-106；PR #165 head 4a3bfa9 同型）：project.yml 生出的 project.pbxproj 與
+#        commit 的不同 → push-gate.sh 在到達 xcodebuild 之前就擋，印出與 CI 相同的錯誤訊息。獨立小型
+#        synth repo（不共用 $R）——這組案例的重點是 1a 步本身，不需要 $R 既有的模擬器／shutdown 佈線 ----
+xg_root="$work/xg"
+mkdir -p "$xg_root/scripts/gates"
+git -C "$xg_root" init -q -b main
+echo a > "$xg_root/f.txt"
+git -C "$xg_root" -c user.name=t -c user.email=t@t add -A
+git -C "$xg_root" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -qm 'chore: LS-0 seed'
+cp "$gate_src" "$xg_root/scripts/gates/push-gate.sh"
+cp "${root}/scripts/gates/push-ref-check.sh" "$xg_root/scripts/gates/push-ref-check.sh"
+echo 'name: Fake' > "$xg_root/project.yml"
+mkdir -p "$xg_root/LittleSprout.xcodeproj"
+printf 'PBX-COMMITTED\n' > "$xg_root/LittleSprout.xcodeproj/project.pbxproj"
+printf '99.9\n' > "$xg_root/.xcode-version"
+mkdir -p "$work/xgbin"
+# 假身 xcodegen：不真的解析 project.yml，`generate` 直接把 $STUB_XCODEGEN_OUTPUT 的內容寫成
+# project.pbxproj——本組案例要驗的是 push-gate.sh 對 generate 結果與 commit 版本的 diff 判斷，
+# 不是 xcodegen 本身的正確性（那由 ubuntu-latest 的 rules job 環境跑不動真正的 xcodegen／Xcode）。
+cat > "$work/xgbin/xcodegen" <<'STUB'
+#!/bin/bash
+if [ "$1" = --version ]; then
+  echo "Version: 9.9.9"
+  exit 0
+fi
+if [ "$1" = generate ]; then
+  mkdir -p LittleSprout.xcodeproj
+  printf '%s\n' "${STUB_XCODEGEN_OUTPUT:-PBX-COMMITTED}" > LittleSprout.xcodeproj/project.pbxproj
+  exit 0
+fi
+exit 1
+STUB
+chmod +x "$work/xgbin/xcodegen"
+out10=$( cd "$xg_root" && env PATH="$work/xgbin:$PATH" STUB_XCODEGEN_OUTPUT="PBX-DIFFERENT" \
+  bash scripts/gates/push-gate.sh </dev/null 2>&1 ); rc10=$?
+if [ "$rc10" -ne 0 ] && printf '%s' "$out10" | grep -qF '不同步——改 project.yml 後須重跑 xcodegen generate'; then
+  echo "✓ ⑩ XcodeGen 漂移（project.pbxproj 與 project.yml 生出的不同）→ push-gate.sh 擋下（exit ${rc10}）並印出與 CI 相同的錯誤訊息"
+else
+  echo "✗ ⑩ XcodeGen 漂移沒有被擋下（exit ${rc10}）" >&2
+  printf '%s\n' "$out10" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ push-gate 模擬器自測通過"
 fi

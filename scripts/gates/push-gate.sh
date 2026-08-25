@@ -34,8 +34,55 @@ if [ -n "$(git ls-files '*.swift')" ]; then
   swiftlint lint --strict --quiet
 fi
 
-# 2) Unit tests（Xcode 專案存在才跑；Phase 0 建專案時如 scheme 不同請更新此處與 CI）
+# scheme 名稱：1b／2 兩步都要用，提到最前面單一定義（Phase 0 建專案時如 scheme 不同請更新此處與 CI）
 XCODE_SCHEME="${XCODE_SCHEME:-LittleSprout}"
+
+# 1a) XcodeGen 漂移檢查（project.yml ↔ project.pbxproj；LS-106，前移到 xcodebuild 之前——同 LS-65
+#     劃定的位置，便宜檢查排在昂貴的 xcodebuild 之前）。PR #165 head 4a3bfa9：commit 的 project.pbxproj
+#     不是乾淨 xcodegen generate 產物（新檔 GUID 不同），本機兩次綠、CI 才紅——本機從未有一關會跑這個檢查。
+#     只比對 project.pbxproj，不比對整個 .xcodeproj 目錄：project.xcworkspace/xcshareddata/swiftpm/
+#     Package.resolved 是 xcodebuild 解析 SPM 時寫入、不是 xcodegen 產物，在暫存目錄全新產生的專案不會
+#     有這個檔案，若整目錄比對永遠會多出這個檔案而假紅（本票實測：CI 的「in-place 重新產生＋git diff」
+#     不受影響，因為它不會刪除既有檔案；這裡是在暫存目錄產生全新專案，兩種產生方式的產物集合本來就不同）。
+#     暫存目錄不能直接指到系統 tmp——xcodegen 依「輸出目錄」與 sources 路徑的相對關係算路徑，暫存目錄與
+#     repo 根不同深度時，同一份 project.yml 生出的 project.pbxproj 會整份改寫成一長串 `../../..`（本票
+#     實測重現：/tmp 直接產生 vs. repo 根產生，光是路徑深度不同就足以讓每一行 path 欄位都不一樣，與真正
+#     的漂移無關）。解法：在暫存目錄內用符號連結鏡射 repo 根的每個項目（排除 .git 與既有的
+#     LittleSprout.xcodeproj——後者若被連結，xcodegen 寫入時會直接透過符號連結覆寫到真正的專案，等於
+#     這個唯讀檢查偷偷改了工作目錄），讓 xcodegen 在暫存目錄內生成時看到的路徑深度與 repo 根一致（本票
+#     實測：鏡射後的 project.pbxproj 與 repo 根生成的版本逐位元組相同）。
+if [ -f project.yml ]; then
+  if ! command -v xcodegen >/dev/null 2>&1; then
+    echo "✗ push gate：repo 內有 project.yml 但未安裝 xcodegen（brew install xcodegen）。" >&2
+    exit 1
+  fi
+  # CI 用 `brew install xcodegen` 裝當下最新版、未鎖版號，沒有固定值可比對——只印本機版本供人判斷，
+  # 不擋（版本差異若真的造成產物不同，會直接反映在下面的 diff 結果上）。
+  echo "→ push gate：本機 xcodegen（$(xcodegen --version 2>/dev/null | tr '\n' ' ')）；CI 以 brew install xcodegen 裝當下最新版、未鎖版號，可能不同" >&2
+  xg_work=$(mktemp -d)
+  xg_repo_root="$(pwd)"
+  for xg_entry in "$xg_repo_root"/* "$xg_repo_root"/.[!.]*; do
+    [ -e "$xg_entry" ] || continue
+    xg_base=$(basename "$xg_entry")
+    case "$xg_base" in
+      .git|LittleSprout.xcodeproj) continue ;;
+    esac
+    ln -s "$xg_entry" "$xg_work/$xg_base"
+  done
+  if ! (cd "$xg_work" && xcodegen generate --spec project.yml --project . -q); then
+    echo "✗ push gate：xcodegen generate 失敗（漂移檢查）。" >&2
+    rm -rf "$xg_work"
+    exit 1
+  fi
+  if ! diff -q "$xg_work/LittleSprout.xcodeproj/project.pbxproj" LittleSprout.xcodeproj/project.pbxproj >/dev/null 2>&1; then
+    echo "✗ push gate：project.yml 與 LittleSprout.xcodeproj 不同步——改 project.yml 後須重跑 xcodegen generate 一併 commit；若是在 Xcode GUI 改了設定，請把改動搬回 project.yml" >&2
+    rm -rf "$xg_work"
+    exit 1
+  fi
+  rm -rf "$xg_work"
+fi
+
+# 2) Unit tests（Xcode 專案存在才跑；Phase 0 建專案時如 scheme 不同請更新此處與 CI）
 if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1; then
   dest=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/detect-simulator.sh") || {
     echo "✗ push gate：模擬器偵測失敗。" >&2
