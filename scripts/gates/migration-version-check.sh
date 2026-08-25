@@ -10,12 +10,16 @@
 #             不給就只驗本分支內唯一。ref 不存在 → exit 2（先 git fetch origin），不靜默跳過。
 #   --head    要驗的 rev，預設 HEAD（CI 的 checkout 是 detached merge ref，HEAD 即可）。
 # 比對的是 tree（git ls-tree），不是工作目錄：沒 commit 的檔不算——push 出去的只有 commit。
-# 規則：
-#   1) 檔名須符 <數字>_<名稱>.sql（supabase CLI 的 migration 檔名格式；不合格式的檔 CLI 會靜默略過——這裡直接紅）。
-#   2) 本分支 tree 內同一版本號出現兩次 → 紅（列出兩個檔名）。
-#   3) 本分支某版本號在目標分支 tree 內也存在、但檔名不同 → 紅。同名＝同一檔，不算撞號；改名既有 migration
-#      也在此紅——已套用到別人資料庫的 migration 不該改名。目標分支取 ref 當前 tree，不是 merge-base：撞號正是
-#      「分支切出後，別張票帶同版本號先併進去」。
+# 只評估「本分支引入」的 migration（PR #122 R1 M2）：有 --target 時＝相對 merge-base(target, head) 新增或改名
+# （`git diff -M --diff-filter=AR`）的檔；從 target 繼承來的撞號不是本分支製造的——擋了會讓全 repo 每條工作分支都
+# push 不出去，而 gate 建議的修法（改本分支版本號）又救不了它；那要在 target 上另開票修。沒有 --target 就沒有
+# merge-base 可比，退回整棵 tree（只跑規則 1／2）。
+# 規則（f＝本分支引入的檔）：
+#   1) f 檔名須符 <數字>_<名稱>.sql（supabase CLI 的 migration 檔名格式；不合格式的檔 CLI 會靜默略過——這裡直接紅）。
+#   2) f 的版本號在本分支 tree 內出現兩次以上 → 紅（列出全部同號檔；兩檔都繼承自 target 則不算）。
+#   3) f 的版本號在目標分支 tree 內也存在、但檔名不同 → 紅。同名＝同一檔，不算撞號；改名既有 migration 也在此紅
+#      （改名＝引入新檔名）——已套用到別人資料庫的 migration 不該改名。目標分支取 ref 當前 tree，不是 merge-base：
+#      撞號正是「分支切出後，別張票帶同版本號先併進去」。
 # exit 0＝無撞號；1＝撞號或檔名不合格式；2＝參數／git 錯誤（fail closed）。
 set -uo pipefail
 export LC_ALL=C   # sort／join 的排序一致
@@ -51,9 +55,17 @@ TAB=$(printf '\t')
 pairs() { printf '%s\n' "$1" | awk -F_ '/^[0-9]+_.*\.sql$/ { print $1 "\t" $0 }' | sort -t "$TAB" -k1,1; }
 
 head_list=$(list_migrations "$head") || { echo "✗ migration-version-check：git ls-tree ${head} 失敗" >&2; exit 2; }
+# 本分支引入的檔（PR #122 R1 M2）：相對 merge-base 新增（A）或改名（R，-M 明確開啟、不押 diff.renames 預設）的檔名
+if [ -n "$target" ]; then
+  mb=$(git merge-base "$target" "$head") || { echo "✗ migration-version-check：${target} 與 ${head} 沒有共同祖先（merge-base 失敗）" >&2; exit 2; }
+  introduced=$(git -c core.quotePath=false diff -M --diff-filter=AR --name-only "$mb" "$head" -- supabase/migrations/ | sed -n 's#^supabase/migrations/##; /\.sql$/p') \
+    || { echo "✗ migration-version-check：git diff ${mb}..${head} 失敗" >&2; exit 2; }
+else
+  introduced=$head_list
+fi
 bad=0
 
-# 1) 檔名格式
+# 1) 檔名格式（只看本分支引入的）
 while IFS= read -r f; do
   [ -n "$f" ] || continue
   case "$f" in
@@ -61,20 +73,23 @@ while IFS= read -r f; do
   esac
   echo "✗ migration-version-check：supabase/migrations/${f} 不符 <數字版本>_<名稱>.sql 格式（supabase CLI 會靜默略過這個檔）" >&2
   bad=1
-done <<< "$head_list"
+done <<< "$introduced"
 
-# 2) 本分支內唯一
+# 2) 本分支內唯一：tree 內同號兩檔以上、且其中至少一檔是本分支引入的（兩檔都繼承自 target ＝ target 自己的問題）
+flagged=
 dups=$(pairs "$head_list" | cut -f1 | uniq -d)
 for v in $dups; do
+  printf '%s\n' "$introduced" | grep -q "^${v}_" || continue
   echo "✗ migration-version-check：版本號 ${v} 在本分支出現多次（supabase CLI 套用順序未定義、migration list 只認一筆）：" >&2
   printf '%s\n' "$head_list" | grep "^${v}_" | sed 's#^#    supabase/migrations/#' >&2
+  flagged="${flagged}${v} "
   bad=1
 done
 
-# 3) 與目標分支比對：同版本、不同檔名
+# 3) 本分支引入的檔與目標分支比對：同版本、不同檔名（規則 2 已報過的版本不重複報）
 if [ -n "$target" ]; then
   target_list=$(list_migrations "$target") || { echo "✗ migration-version-check：git ls-tree ${target} 失敗" >&2; exit 2; }
-  hp=$(pairs "$head_list"); tp=$(pairs "$target_list")
+  hp=$(pairs "$introduced"); tp=$(pairs "$target_list")
   collisions=
   if [ -n "$hp" ] && [ -n "$tp" ]; then
     collisions=$(join -t "$TAB" -j 1 <(printf '%s\n' "$hp") <(printf '%s\n' "$tp") | awk -F "$TAB" '$2 != $3')
@@ -82,18 +97,24 @@ if [ -n "$target" ]; then
   if [ -n "$collisions" ]; then
     while IFS="$TAB" read -r v f t; do
       [ -n "$v" ] || continue
+      case " $flagged" in *" ${v} "*) continue ;; esac
       echo "✗ migration-version-check：版本號 ${v} 與 ${target} 既有 migration 撞號（同版本、不同檔名）：" >&2
       echo "    本分支：supabase/migrations/${f}" >&2
       echo "    ${target}：supabase/migrations/${t}" >&2
+      bad=1
     done <<< "$collisions"
-    bad=1
   fi
 fi
 
 if [ "$bad" -ne 0 ]; then
-  echo "  修法：把本分支的 migration 改成新的版本號（date -u +%Y%m%d%H%M%S），內容不動；若目標分支那檔本來就是你這張票先前併入的同一檔，改回同名即可（LS-70，COLLABORATION §6）。" >&2
+  echo "  修法：把本分支引入的那張 migration 改成新的版本號（date -u +%Y%m%d%H%M%S），內容不動；若目標分支那檔本來就是你這張票先前併入的同一檔，改回同名即可。目標分支自己既有的撞號不會在這裡擋、也請不要動本分支去修它——在目標分支另開票處理（LS-70，COLLABORATION §6）。" >&2
   exit 1
 fi
 n=$(printf '%s\n' "$head_list" | grep -c '\.sql$' || true)
-echo "✓ migration 版本號無撞號（本分支 ${n} 檔${target:+，對 ${target}}）"
+ni=$(printf '%s\n' "$introduced" | grep -c '\.sql$' || true)
+if [ -n "$target" ]; then
+  echo "✓ migration 版本號無撞號（本分支引入 ${ni} 檔／tree 共 ${n} 檔，對 ${target}）"
+else
+  echo "✓ migration 版本號無撞號（tree 共 ${n} 檔；未給 --target，只驗 tree 內唯一）"
+fi
 exit 0
