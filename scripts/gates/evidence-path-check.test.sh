@@ -123,6 +123,12 @@ expect 1 '⑭ ls46r8-review/x.png（*-review*）仍擋' 'ls46r8-review/x.png'
 expect 1 '⑭′ review-notes/x.png（review* 開頭）仍擋' 'review-notes/x.png'
 g rm -q --cached ls46r8-review/x.png review-notes/x.png
 
+# ⑮ png 白名單含 LittleSprout/Preview Content/（Xcode 模板的 Preview Assets.xcassets 會帶 png）→ 綠
+mk 'LittleSprout/Preview Content/Preview Assets.xcassets/sample.imageset/sample.png'
+g add 'LittleSprout/Preview Content/Preview Assets.xcassets/sample.imageset/sample.png'
+expect 0 '⑮ LittleSprout/Preview Content/…/sample.png（白名單）→ 綠'
+g rm -q --cached 'LittleSprout/Preview Content/Preview Assets.xcassets/sample.imageset/sample.png'
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ evidence-path-check 自測失敗" >&2
   exit 1
