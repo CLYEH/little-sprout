@@ -31925,7 +31925,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": 180,
-                      "content": "字標素材：v1（生成初版）逐像素比對後判定為各向異性拉伸偽造等大、非重畫，已淘汰。v3（真重畫）2026-08-24 複驗通過：四字高 423/423/423/423px（差 0.0%）、寬 344/279/265/387px（與原稿/v2 全異＝真重畫非拉伸）、筆寬比 0.886-0.973、覆蓋率極差 7.63pp、字距中心距差 1.4%（非單調）。素材：mengya-diary-crayon-v3.png（1860×887，透明）。舊檔 mengya-diary-crayon-equal.png 保留於 design/ 供對照，不再引用。",
+                      "content": "字標素材：v1（生成初版）逐像素比對後判定為各向異性拉伸偽造等大、非重畫，已淘汰。v3（真重畫）2026-08-24 複驗通過：四字高 423/423/423/423px（差 0.0%）、寬 344/279/265/387px（與原稿/v2 全異＝真重畫非拉伸）、筆寬比 0.886-0.973、覆蓋率極差 7.63pp、字距中心距差 1.4%（非單調）。素材：mengya-diary-crayon-v3.png（1860×887，透明）。舊檔 mengya-diary-crayon-equal.png 已刪，歷史版本 git 可取回。",
                       "lineHeight": 1.4,
                       "fontFamily": "Noto Sans TC",
                       "fontSize": 12,
