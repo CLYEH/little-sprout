@@ -108,9 +108,9 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 
 ## 4-b. Orchestrator 巡檢與 session 連續性（LS-71）
 
-巡檢要抓的是「**無依賴卻沒人動**」的項——PR 開著沒人審／審過沒人併、分支領先 remote 沒 push（agent 等自己的背景 push 不醒）、worktree 有變更卻長時間沒 commit（設計 agent 4.5h 無存檔）、Ready 沒人接、QA 票 test 分支沒含。這些不會自己好、也沒有人會通知，靠 orchestrator 定期巡（2026-08-25 三種停滯的來源）。
+巡檢要抓的是「**無依賴卻沒人動**」的項——PR 開著沒人審／審過沒人併、分支領先 remote 沒 push（agent 等自己的背景 push 不醒）、worktree 有變更卻長時間沒 commit（設計 agent 4.5h 無存檔）、Ready 沒人接、QA 票 test 分支沒含、lane 有空位卻沒補票（§5-b，LS-75）。這些不會自己好、也沒有人會通知，靠 orchestrator 定期巡（2026-08-25 三種停滯的來源）。
 
-**工具**：`bash scripts/ops/patrol.sh [stale_minutes] [--brief|--json] [--no-fetch] [--no-pr] [--repo <path>]`——只讀不寫（唯一寫入是 `git fetch origin`），列 open PR（mergeState／review／幾分鐘沒更新）、三分支落後數、主 checkout 是否落後 `origin/main`、每個 worktree 的 local vs remote／未 push／dirty 停滯；`--brief` 只印表頭＋異常行（hook 用），`--json` 給程式讀；時間一律 epoch（`git log --format=%ct`、gh 內建 jq 的 `fromdateiso8601`），macOS／GNU 都能跑；`git fetch` 掛看門狗（`PATROL_FETCH_TIMEOUT`，預設 10s——黑洞位址的 TCP 逾時實測 75s，會把 hook 的 30s 撐爆），逾時或失敗印警告、退回本機 ref 續巡；gh 未裝或失敗只標「略過」不炸。自測 `scripts/ops/patrol.test.sh`（合成 repo，掛 CI `rules` job）。Linear 那一半要用 MCP `list_issues` 對照，腳本只印提醒。
+**工具**：`bash scripts/ops/patrol.sh [stale_minutes] [--brief|--json] [--no-fetch] [--no-pr] [--repo <path>]`——只讀不寫（唯一寫入是 `git fetch origin`），列 open PR（mergeState／review／幾分鐘沒更新）、三分支落後數、主 checkout 是否落後 `origin/main`、每個 worktree 的 local vs remote／未 push／dirty 停滯；`--brief` 只印表頭＋異常行（hook 用），`--json` 給程式讀；時間一律 epoch（`git log --format=%ct`、gh 內建 jq 的 `fromdateiso8601`），macOS／GNU 都能跑；`git fetch` 掛看門狗（`PATROL_FETCH_TIMEOUT`，預設 10s——黑洞位址的 TCP 逾時實測 75s，會把 hook 的 30s 撐爆），逾時或失敗印警告、退回本機 ref 續巡；gh 未裝或失敗只標「略過」不炸。自測 `scripts/ops/patrol.test.sh`（合成 repo，掛 CI `rules` job）。Linear 那一半要用 MCP `list_issues` 對照，腳本只印提醒；**lane 補位**（§5-b）同屬 Linear 那一半——`patrol.sh` 無 Linear token，由 orchestrator 依下方 cron 模板用 MCP 執行。
 
 **三種停滯型態**（腳本判定規則；stale＝參數分鐘數，預設 45）：
 1. **PR 停滯**：CONFLICTING／UNSTABLE／BEHIND／CHANGES_REQUESTED 立即標；CLEAN 且 reviewDecision＝APPROVED 立即標「可併」；其餘 CLEAN／BLOCKED 超過 stale 沒更新標 ⏳（草稿不標）。
@@ -121,7 +121,7 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 - **SessionStart hook**（專案層 `.claude/settings.json`，入版控 → `scripts/ops/session-start.sh`，timeout 30s）：startup／resume／clear／compact 後跑 `patrol.sh --brief`，把巡檢摘要＋兩條指示注入 context——①主 checkout 落後 `origin/main` 時先 `git pull --ff-only origin main` 再派工（§2）；②本 session 尚未建巡檢 cron 就立即建（下方模板）。fail-soft：patrol 炸掉／repo 找不到仍輸出合法 JSON、exit 0，錯誤寫在 context 裡，不擋 session。與使用者層的 SessionStart hook 並存不覆蓋；改 `settings.json` 後 settings watcher 要 `/hooks` 或重啟才載入。驗法：`echo '{}' | bash scripts/ops/session-start.sh | jq -e '.hookSpecificOutput.additionalContext'`。
 - **巡檢 cron**（`CronCreate`，`*/26 * * * *`；session-only、7 天到期，所以每個新 session 都由 hook 提醒重建）——prompt 模板（hook 引用的就是這段）：
 
-  > 跑 `bash scripts/ops/patrol.sh 40`＋linear `list_issues`（Ready／In Progress／In Review／QA），只處理無依賴卻沒人動的項：CLEAN 且已 APPROVE 的 PR → 併；CLEAN 無 review → 派 merge-reviewer；分支領先 remote >40 分鐘 → 催／重派；Ready 無人接 → 派工；In Progress >60 分鐘無 commit 且無 dirty → 查勤；QA 但 test 未含 → 晉升；有動作記一行，全正常回『巡檢：無異常』
+  > 跑 `bash scripts/ops/patrol.sh 40`＋linear `list_issues`（Ready／In Progress／In Review／QA），只處理無依賴卻沒人動的項：CLEAN 且已 APPROVE 的 PR → 併；CLEAN 無 review → 派 merge-reviewer；分支領先 remote >40 分鐘 → 催／重派；Ready 無人接 → 派工；In Progress >60 分鐘無 commit 且無 dirty → 查勤；QA 但 test 未含 → 晉升。再做 lane 補位（§5-b）：`list_issue_labels` 取五個 `lane:*`；`list_issues` 各查 state Backlog／In Progress／In Review（fields labels、priority、createdAt）——每 lane 在飛＝In Progress＋In Review 張數，候補＝該 lane Backlog 中非 `lane:product`、priority 最高（同 priority 取 createdAt 最早）者，候補以 `get_issue`（includeRelations）查 blockedBy 全 Done 才算依賴已解，未解看下一張；印 lane 狀態表（每 lane：上限／在飛／候補），並列「無 lane 標籤的 open 票」；在飛＜上限且有候補 → `save_issue` state Ready → 立即派工（Ready 不停留）。有動作記一行，全正常回『巡檢：無異常』
 
 - 巡檢有動作時在對應 ticket 留 comment（§6 Checkpoint 同理），讓下一個 session 看得到誰在等什麼。
 
@@ -134,7 +134,7 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 
 | 狀態 | 離開條件（gate） |
 |---|---|
-| Backlog | 被排入優先，值得寫規格 |
+| Backlog | 被排入優先，值得寫規格；或由 §5-b lane 補位規則直接改 Ready（限票文已具驗收條件者） |
 | Spec | ticket 具備**可驗證的驗收條件**與明確 scope |
 | Design | design gate 過（純後端票可跳過此狀態） |
 | Ready | worktree＋branch 已建、指派給 agent |
@@ -143,6 +143,27 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 | QA | QA gate 過（在 test branch）**且收尾 gate 完成**（dead-code 巡檢＋retro 記錄在案） |
 | Done | 已併入 main（隨 release） |
 | Canceled | 記錄取消原因 |
+
+## 5-b. Lane 與 WIP 上限／Backlog→Ready 機械規則（LS-75）
+
+使用者 2026-08-25 決議：WIP 上限寫進規約、巡檢每輪多做一步「lane 補位」、票間依賴只用 Linear 關係。規則全在 Linear 側，repo 內無 gate（§7 標 ⚠️ 巡檢承載）。
+
+- **Lane**＝Linear label，五個：`lane:harness`、`lane:backend`、`lane:design`、`lane:ui`、`lane:product`（需使用者決策的規格題，不派工）。**每張票必帶一個 lane 標籤，開票即標**（orchestrator 開票的必填項；`save_issue` 的 `labels`）。
+- **WIP 上限**（同 lane 狀態 **In Progress＋In Review** 的票數；Ready 不停留、QA 不計）：
+
+| Lane | 上限 |
+|---|---|
+| `lane:harness` | 1 |
+| `lane:backend` | 2（LS-70 落地後 3） |
+| `lane:design` | 1（Pencil 單一實例） |
+| `lane:ui` | ＝已核可設計稿對應的畫面群數（目前 LS-46 → 1；LS-67 核可後 +1） |
+| `lane:product` | 不派工，無上限 |
+
+- **依賴只用 Linear `blockedBy` 關係**（`save_issue` 的 `blockedBy`），**不用文字**；「依賴已解」＝所有 blockedBy 皆 Done。
+- **Backlog→Ready 機械規則**——觸發時點：巡檢每輪（§4-b cron），以及任一票進 In Review／Done 時。對每個 lane：若 In Progress＋In Review ＜ 上限 → 取該 lane Backlog 中 **priority 最高、blockedBy 全 Done、且不需使用者決策（非 `lane:product`）** 的票 → 改 Ready → **立即派工（Ready 不停留）**；同 priority 取 createdAt 最早。補位跳過 Spec／Design 兩格但不免除其離開條件：候補票文須已有可驗證驗收條件與 scope（Spec 出口），缺者不算候補、在 lane 狀態表標「待 Spec」；`lane:ui` 的 Design 出口由上限定義承載（沒核可稿就沒空位）。
+- **例外**：`lane:design` 與 `lane:ui` 共用 Pen 時，ui 票的「設計稿讀取階段」期間 design lane 視為滿。
+- **巡檢輸出**多一段「**lane 狀態表**」（每 lane：上限／在飛／候補票）＋「**無 lane 標籤的 open 票**」清單（盲區提醒：沒標 lane 的票不會被補位）。
+- **機械面**：`scripts/ops/patrol.sh` 無 Linear token，lane 步驟由 orchestrator 用 MCP 執行（`list_issue_labels`＋`list_issues`＋`get_issue`＋`save_issue`，步驟寫在 §4-b cron 模板）；CI／pre-push 不驗。
 
 ## 6. 補充規定
 
@@ -197,6 +218,7 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 | 審查取證（截圖／匯出／掃描輸出）不入版控，固定落在 `.claude/evidence/<票號>/<輪次>/`（worktree 相對；ui-designer `r<n>/`、visual-reviewer `r<n>-review/`、qa `qa<n>/`） | 根 `.gitignore` ignore `.claude/evidence/`（`git add -f` 硬加由 `tracked-ignored-check` 擋）＋pre-commit `scripts/gates/evidence-path-check.sh`（commit-gate 第 4 步）：staged 路徑（index，`git diff --cached --name-only -z --diff-filter=d`：NUL 分隔讀取，含 `"`／`\`／換行的檔名不會因 `--name-only` 加引號而漏掉——PR #94 R1 I1；新增／修改／rename 目的地，不含刪除——清掉歷史誤入版控的取證要放行）任一目錄層以 `review` 開頭或含 `-review`（`review*`／`*-review*`；不是 `*review*`——那會誤擋 Xcode 預設的 `Preview Content/`，orchestrator 裁決收窄）、或以 `ls<數字>` 開頭，或 `*.png` 不在 `design/`／`LittleSprout/Assets.xcassets/`／`LittleSprout/Preview Content/`（Xcode 模板的 `Preview Assets.xcassets`）／`docs/img/` 白名單即紅並列出檔案與解法（白名單原為整個 `docs/`——repo 最常寫的目錄、放行不 fail loud，R1 M1 收窄成 `docs/img/`；`Assets*` 會吃掉 `AssetsFake/`，R1 I4 改精確目錄名）；所有比對 `shopt -s nocasematch` 大小寫不敏感（`LS46r9/`、`Review-shots/`、`.PNG` 皆擋，白名單亦然——macOS 檔案系統本就不分大小寫，R1 I3）；目錄名規則不看白名單（`docs/img/` 底下也不准有 `*-review/`），檔名層不算（`visual-reviewer.md`、`ls46-notes.md` 放行）；帶路徑參數時目錄不存在或 `git diff` 失敗一律 exit 2 fail closed（R1 I2）；自測 `evidence-path-check.test.sh`（24 組）掛 CI `rules` job（LS-61）。盲區：只看 index——**未追蹤**的取證目錄不管（歷史散落的 `ls46r7-review/`、`ls46r8/`、`ls46r8-review/` 留在 LS-46 worktree 不搬），`git status` 乾淨靠三支 agent 的存放指示；目錄規則只認歷史形狀（`ls<n>`、`review*`／`*-review*`）——新慣例的輪次目錄名 `r<n>/`／`qa<n>/` 或其他名字（`screens/`）誤落在 worktree 根時只剩 png 規則擋得住，非 png 的掃描輸出會漏（R1 I5，靠 merge-reviewer scope）；白名單外的新資產路徑（如未來的 `LittleSprout/Resources/`、第二個 `.xcassets`）要改腳本白名單（fail loud，不會靜默放行）；CI 只跑自測、不對 PR diff 重跑，`--no-verify` 繞過後無伺服器端兜底（`--base` 模式另票，R1 I10） | ✅ hook（CI 自測；未追蹤取證⚠️人工） |
 | 新 session 開頭必巡檢（open PR／分支領先 remote／dirty 停滯／尚未開工／主 checkout 落後 `origin/main`，§4-b） | 專案層 `.claude/settings.json` SessionStart hook → `scripts/ops/session-start.sh`：跑 `patrol.sh --brief`，摘要＋指示注入 `hookSpecificOutput.additionalContext`；fail-soft（patrol 炸掉／repo 找不到仍輸出合法 JSON、exit 0，錯誤寫在 context 裡，不擋 session）；`scripts/ops/patrol.test.sh` 用合成 repo（file:// 裸 origin＋七個 worktree）驗各停滯型態判定的正負樣本、`--json` 合法、gh 不可用不炸、hook 輸出合法 JSON 且 settings.json 有掛上，掛 CI `rules` job（LS-71）。盲區：hook 只在 startup／resume／clear／compact 觸發，session 中途靠 cron；settings 改了要 `/hooks` 或重啟才載入；fetch 逾時（看門狗 10s）退回本機 ref——`origin/*` 可能過期，摘要有標警告但判定仍以過期 ref 為準；Linear 那一半（Ready 無人接／QA 但 test 未含）靠 orchestrator 用 MCP 對照 | ✅ hook（CI 自測） |
 | 每個 session 要有巡檢 cron（`*/26 * * * *`，§4-b） | 同上 hook 每次注入「尚未建就立即 CronCreate」——cron 建了沒有無法從 hook 端驗（CronCreate 是 session 內工具、7 天到期），靠 orchestrator 照做 | ⚠️ 提示非強制 |
+| 每張票必標 `lane:*`、依賴只用 blockedBy、每 lane WIP 上限、Backlog→Ready 補位（§5-b，LS-75） | 無 repo 側 gate——規則全在 Linear 側：`patrol.sh` 無 Linear token，CI／pre-push 不驗。巡檢 cron 每輪由 orchestrator 用 MCP（`list_issue_labels`＋`list_issues`＋`get_issue`）算每 lane 在飛數與候補、印 lane 狀態表、`save_issue` 改 Ready 並派工；票進 In Review／Done 時再算一次。盲區：**忘了標 lane 的票不會被補位**——巡檢輸出列「無 lane 標籤的 open 票」提醒，補標仍靠人；寫在文字裡的依賴（沒建 blockedBy）看不見，會被當「依賴已解」提前補位；上限是人維護的常數（backend 2→3、ui 隨設計核可數），規約改了 cron prompt 沒跟上就失準；cron 本身有沒有建也無法從 hook 端驗（上列） | ⚠️ 巡檢承載 |
 | harness PR 併入 main 後先 pull 主 checkout 再派工（§2） | 同上 hook：主 checkout 落後 `origin/main` 即在 context 提示先 `git pull --ff-only origin main`；session 中途併入的靠 cron 的 patrol 輸出＋orchestrator 自律 | ⚠️ 混合（session 開頭機械、中途人工） |
 | 正式站 `supabase db push` 每次需使用者當次授權（§6） | auto-mode 分類器擋雲端寫入指令（Claude Code 層、非 repo 內 gate；被擋就停下回報）；「不改寫指令繞過」靠規約 | ⚠️ 混合 |
 | handoff「未完成／剩餘」欄必列 reviewer 全部 informational 的處置（CLAUDE.md；派工 prompt 五條之五，§3） | 無機械 gate——orchestrator 驗 handoff 時逐條對照 merge-reviewer 輸出，缺一退回 | ⚠️ 人工 |

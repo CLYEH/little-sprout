@@ -20,6 +20,7 @@
 - Commit 第一行：`<type>(<scope>): LS-<n> <摘要>`（commit-msg hook 會驗）；禁止 `--no-verify`。
 - Handoff 格式：Ticket／已完成／已驗證（怎麼驗）／未完成（**必列 reviewer 全部 informational 的處置**：已修／另票 LS-<m>／不修＋理由，一條不能省）／風險／產出位置。
 - **Linear 是唯一任務狀態來源**（LS team；Backlog→Spec→Design→Ready→In Progress→In Review→QA→Done）。
+- **開票必標 lane**（`lane:harness|backend|design|ui|product`，一票一個）；票間依賴只用 Linear `blockedBy` 關係、不寫成文字。每 lane WIP 上限與巡檢補位規則見 COLLABORATION §5-b。
 - Secrets 永不進 repo（pre-commit 會掃）。
 - 暫存檔一律 `LS-<n>-<用途>.<ext>`（或 `mktemp -d`）；`gh pr create/edit` 前先 `bash scripts/gates/pr-body-check.sh <body>`（CI 亦驗 PR body 檔頭段含分支票號）。
 
