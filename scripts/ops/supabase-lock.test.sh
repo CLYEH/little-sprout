@@ -3,7 +3,8 @@
 # 「前饋必有反饋」對 lock 本身也適用：若互斥退化（第二個不等）、exit code 沒傳回、逾時不 fail loud、死鎖不回收
 # 或回收得太急（剛建好的鎖被殺；判定 stale 之後 mv 到的卻是別人剛建、holder 未落地的活鎖——PR #122 R1 M1）、
 # holder 寫入失敗還帶匿名鎖跑（R1 m1）、重入路徑不 export（R1 m2）、殘留或假造的 SUPABASE_LOCK_HELD 能繞過鎖（R1 m3）、
-# 收到 TERM 不釋放、run.sh 不再經 lock 重跑——這裡會紅。全程用合成 lock 目錄（SUPABASE_LOCK_DIR），不碰真的
+# 兩個都以為自己取得的程序互相認領對方的 holder 暫存檔（R2 F1）、搬回活鎖時把 tomb 塞進第三者的目錄或不出聲（R2 F3）、
+# 殘留 tomb 在 --status 看不到（R2 F2）、收到 TERM 不釋放、run.sh 不再經 lock 重跑——這裡會紅。全程用合成 lock 目錄（SUPABASE_LOCK_DIR），不碰真的
 # /tmp/supabase-lock-*、不碰容器；M1／m1 用 PATH shim 放大既有空窗（只在自測程序的 PATH，不改 repo 檔）。
 set -uo pipefail
 
@@ -239,6 +240,71 @@ rc_is '⑰ m2：不迴圈、走到連線失敗 exit 1（非看門狗 124）' 1 "
 hasnt '⑰ m2：前言沒有 exec 回 lock' "$out" '重新執行'
 if printf '%s' "$out" | grep -qE '連線方式|找不到 psql'; then echo "✓ ⑰ m2：已走過前言到連線那一步"; else echo "✗ ⑰ m2：沒走到連線那一步" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 gone  '⑰ m2：結束後 lock 釋放'
+
+# ---- ⑱ F1（PR #122 R2）：兩個程序都以為自己 mkdir 成功、holder 寫入交錯——暫存檔以 pid 唯一化，不得互相認領 ----
+# shim：mkdir 一律回 0（第二個程序也「取得」）；mv 對 …/holder 先 sleep $MV_SLEEP 再真的搬。P1 先搬（0.3s）、P2 後搬（0.8s）。
+# P1 的命令 1.0s 後結束時 holder 已是 P2 的 → P1 不得誤刪；P2 結束才釋放。舊寫法（固定 holder.tmp）：P2 覆寫 P1 的暫存檔、
+# P1 搬走的是 P2 的內容、P2 的 mv 找不到來源 → 印「holder 寫入失敗」exit 2——這裡會紅。
+cat > "$shim/mkdir" <<'EOS'
+#!/bin/bash
+/bin/mkdir "$@" 2>/dev/null; exit 0
+EOS
+cat > "$shim/mv" <<'EOS'
+#!/bin/bash
+case "${2:-}" in */holder) sleep "${MV_SLEEP:-0}" ;; esac
+exec /bin/mv "$@"
+EOS
+chmod +x "$shim/mkdir" "$shim/mv"
+PATH="$shim:$PATH" MV_SLEEP=0.3 bash "$lock_sh" -- sleep 1.0 > /dev/null 2> "$work/p1.err" &
+p1=$!
+PATH="$shim:$PATH" MV_SLEEP=0.8 bash "$lock_sh" -- sleep 1.5 > /dev/null 2> "$work/p2.err" &
+p2=$!
+wait "$p1"; rc1=$?
+rc_is '⑱ F1：P1 exit 0' 0 "$rc1" "$(cat "$work/p1.err")"
+if [ -d "$SUPABASE_LOCK_DIR" ] && grep -q "^pid=${p2}\$" "$SUPABASE_LOCK_DIR/holder" 2>/dev/null; then echo "✓ ⑱ F1：P1 結束時 holder 是 P2 的、P1 沒有誤刪"; else echo "✗ ⑱ F1：P1 結束後 lock 狀態錯" >&2; ls -la "$SUPABASE_LOCK_DIR" 2>&1 | sed 's/^/    /' >&2; fail=1; fi
+wait "$p2"; rc2=$?
+rc_is '⑱ F1：P2 exit 0' 0 "$rc2" "$(cat "$work/p2.err")"
+hasnt '⑱ F1：P1 沒印 holder 寫入失敗' "$(cat "$work/p1.err")" 'holder 寫入失敗'
+hasnt '⑱ F1：P2 沒印 holder 寫入失敗（沒認領到 P1 的暫存檔）' "$(cat "$work/p2.err")" 'holder 寫入失敗'
+gone  '⑱ F1：P2 結束後釋放'
+rm -f "$shim/mkdir" "$shim/mv"
+
+# ---- ⑲ F3／F2（PR #122 R2）：搬回時 $lock 已被第三者建立（非空）→ rename(2) 失敗、tomb 保留原地＋大聲印；--status 列出 tomb ----
+# shim：mv 對 …stale… 目標（reclaim 的「搬走」）真的搬完後 sleep 1；那 1 秒內自測 (1) 把 tomb 的 holder 改成別的 pid，讓 B
+# 判定「搬到的不是那把死鎖」而搬回，(2) 建第三者 C 的 lock（含 holder、pid 活著）→ 搬回目標非空 → 必須失敗且不塞進去。
+cat > "$shim/mv" <<'EOS'
+#!/bin/bash
+case "${2:-}" in *.stale.*) /bin/mv "$@"; rc=$?; sleep 1; exit "$rc" ;; esac
+exec /bin/mv "$@"
+EOS
+chmod +x "$shim/mv"
+dead=$(sh -c 'echo $$')
+mkdir "$SUPABASE_LOCK_DIR"
+printf 'pid=%s\nstarted=%s\nhost=h\nworktree=/dead\nbranch=b\ncmd=c\n' "$dead" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder"
+PATH="$shim:$PATH" bash "$lock_sh" --timeout 3 -- sh -c 'echo B-took-lock' > "$work/f3.out" 2> "$work/f3.err" &
+b=$!
+sleep 0.5                                   # B 已把死鎖搬到 tomb、卡在 shim 的 sleep
+tomb=$(ls -d "$SUPABASE_LOCK_DIR".stale.* 2>/dev/null | head -1)
+if [ -n "$tomb" ]; then echo "✓ ⑲ 前提：tomb 已建立"; else echo "✗ ⑲ 前提：找不到 tomb" >&2; fail=1; tomb="$SUPABASE_LOCK_DIR.stale.none"; fi
+other=$(sh -c 'echo $$')
+printf 'pid=%s\nstarted=%s\nhost=h\nworktree=/other\nbranch=b\ncmd=c\n' "$other" "$(date +%s)" > "$tomb/holder" 2>/dev/null
+mkdir "$SUPABASE_LOCK_DIR"
+printf 'pid=%s\nstarted=%s\nhost=h\nworktree=/C\nbranch=b\ncmd=C\n' "$$" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder"
+wait "$b"; rc=$?
+rc_is '⑲ F3：B 搬不回 → 改等 C、逾時 124' 124 "$rc" "$(cat "$work/f3.err")"
+hasnt '⑲ F3：B 沒有執行命令' "$(cat "$work/f3.out")" 'B-took-lock'
+has   '⑲ F3：B 大聲印搬回失敗' "$(cat "$work/f3.err")" '搬回誤搬的活鎖失敗'
+if [ -d "$tomb" ] && [ ! -e "$SUPABASE_LOCK_DIR/$(basename "$tomb")" ]; then echo "✓ ⑲ F3：tomb 保留原地、沒被塞進 C 的目錄"; else echo "✗ ⑲ F3：tomb 不在原地或被塞進 lock" >&2; ls -la "$SUPABASE_LOCK_DIR" "$work" 2>&1 | sed 's/^/    /' >&2; fail=1; fi
+if grep -q "^pid=$$\$" "$SUPABASE_LOCK_DIR/holder" 2>/dev/null; then echo "✓ ⑲ F3：C 的 lock 完好"; else echo "✗ ⑲ F3：C 的 lock 被動了" >&2; fail=1; fi
+st="$(L --status 2>&1)"
+has   '⑲ F2：--status 列出殘留 tomb（目錄名）' "$st" "tomb $(basename "$tomb")"
+has   '⑲ F2：tomb 行標 ⚠ 並含 age=' "$st" 'age='
+has   '⑲ F2：tomb 行含 holder_pid' "$st" "holder_pid=${other}"
+rm -rf "$SUPABASE_LOCK_DIR" "$tomb"
+st="$(L --status 2>&1)"
+hasnt '⑲ F2：清掉後 --status 不再列 tomb' "$st" 'tomb'
+has   '⑲ F2：清掉後 free' "$st" 'free'
+rm -f "$shim/mv"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ supabase-lock 自測通過"

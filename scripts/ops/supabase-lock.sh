@@ -5,7 +5,7 @@
 #
 # 用法：
 #   supabase-lock.sh [--timeout <秒>] -- <命令…>   取得 lock 後在前景執行命令，回傳命令的 exit code
-#   supabase-lock.sh --status                      印持有者一行（巡檢用：free／held pid=… ⚠ stale），exit 0
+#   supabase-lock.sh --status                      印持有者一行（free／held pid=… ⚠ stale）＋殘留 tomb 每個一行（⚠ tomb …），exit 0
 #   supabase-lock.sh --held                        本程序是否已在 lock 內（holder pid 為本程序祖先）：exit 0＝是、1＝否
 #   supabase-lock.sh --path                        印 lock 目錄路徑
 # 環境變數：SUPABASE_LOCK_TIMEOUT 等待逾時秒（預設 900＝15 分鐘）；SUPABASE_LOCK_POLL 輪詢秒（預設 1，可小數，下限 0.2）；
@@ -15,7 +15,8 @@
 #   - lock＝一個目錄：`mkdir` 在兩平台都是原子的，成功＝取得。目錄內 holder 檔記 pid／started／host／worktree／
 #     branch／cmd（key=value 一行一項），等待訊息與巡檢（scripts/ops/patrol.sh）讀它顯示持有者。
 #     holder 的內容（worktree／branch／cmd）在等待迴圈**之前**算好，mkdir 成功後只剩一次 printf＋mv（毫秒級空窗）；
-#     holder 寫不進去就把自己剛建的空目錄 rmdir、exit 2——不帶匿名鎖執行（PR #122 R1 m1）。
+#     暫存檔 `holder.<pid>.tmp` 以 pid 唯一化——兩個都以為自己取得的程序不會互相認領對方的暫存檔（PR #122 R2 F1）；
+#     holder 寫不進去就把自己剛建的空目錄 rmdir、exit 2——不帶匿名鎖執行（R1 m1）。
 #   - 路徑以 supabase/config.toml 的 project_id 為鍵、放 /tmp：所有 worktree 共用同一個容器就共用同一把鎖
 #     （不用 git-common-dir——兩個 clone 也是同一個容器）。
 #   - 等待：每 POLL 秒重試 mkdir；第一次與之後每 30 秒印一次「等待中＋持有者」；超過 TIMEOUT 秒 fail loud（exit 124）。
@@ -34,9 +35,11 @@
 #     「有人在用」唯一的代理；SIGKILL 不常見，出事看 docker 狀態。
 #   - pid 重用（死鎖的 pid 被新程序拿走）會讓死鎖看起來活著，等待者等到逾時；逾時訊息印持有者資訊，
 #     確認後人工 `rm -rf <lock 目錄>`。
-#   - 搬回誤搬的活鎖時若 $lock 已被第三者在同一瞬間 mkdir，搬不回（`mv 目錄 既有目錄` 會塞進去，所以先檢查
-#     不存在才搬）——tomb 保留在原地供查證並大聲印出；屆時被搬走的持有者與新持有者可能同時執行。需要三個程序
-#     在同一毫秒內交錯，機率極低；巡檢／逾時訊息會露餡。
+#   - 搬回誤搬的活鎖用 rename(2)（perl；`mv(1) 目錄 既有目錄` 會塞進去並回 0，先 test 再 mv 又不是原子的——R2 F3）：
+#     目標不存在→成功；目標是第三者剛 mkdir 且已寫 holder 的非空目錄→ENOTEMPTY 失敗，tomb 保留在原地供查證並大聲印，
+#     `--status`／巡檢列出殘留 tomb（R2 F2），被搬走的持有者接著 holder 寫入失敗、走 m1 的 exit 2；目標是第三者剛
+#     mkdir、holder 尚未落地的**空**目錄→POSIX 允許 rename 取代空目錄，第三者的 holder 會寫進搬回的目錄——需要三個
+#     程序在同一毫秒內交錯，機率極低；屆時後 mv 的 holder 生效、另一個 release 時 pid 不符不會誤刪，但兩者可能同時執行。
 # exit：命令的 exit code；124＝等待逾時；2＝參數／環境／holder 寫入錯誤。
 set -uo pipefail
 
@@ -116,9 +119,18 @@ holder_line() {   # 一行人類可讀的持有者描述（--status／等待訊�
   fi
 }
 
+tomb_lines() {   # 殘留 tomb（搬回失敗留下的）每個一行，沒有就不印（R2 F2）——是「上次回收異常」唯一的持久證據
+  local t tp
+  for t in "${lock}".stale.*; do
+    [ -d "$t" ] || continue
+    tp=$(sed -n 's/^pid=//p' "$t/holder" 2>/dev/null)
+    printf '⚠ tomb %s age=%ss holder_pid=%s（上次回收異常的殘留：確認 docker 無重疊執行後 rm -rf）\n' "$(basename "$t")" "$(age_of "$t")" "${tp:-none}"
+  done
+}
+
 case "$mode" in
   path) printf '%s\n' "$lock"; exit 0 ;;
-  status) printf '%s\n' "$(holder_line)"; exit 0 ;;
+  status) printf '%s\n' "$(holder_line)"; tomb_lines; exit 0 ;;
   held) if read_holder && is_ancestor "$h_pid"; then exit 0; else exit 1; fi ;;
 esac
 [ $# -gt 0 ] || { echo "✗ supabase-lock：缺命令" >&2; usage >&2; exit 2; }
@@ -139,9 +151,9 @@ is_stale() {   # 0＝這把鎖是死的（pid 不存在、或建好 30s 仍沒 h
   [ -d "$lock" ] || return 1
   [ "$(age_of "$lock")" -gt 30 ]
 }
-restore() {   # 把誤搬的活鎖搬回原位。$lock 已被第三者建立時搬不回（mv 會塞進去）——tomb 留在原地並大聲說
-  if [ ! -e "$lock" ] && mv "$1" "$lock" 2>/dev/null; then return 0; fi
-  echo "⚠ supabase-lock：搬回誤搬的活鎖失敗（${lock} 已被另一程序建立）——${1} 內的持有者與新持有者可能同時執行；tomb 保留供查證，請檢查 docker 狀態" >&2
+restore() {   # 以 rename(2) 原子搬回誤搬的活鎖（R2 F3）：目標已是非空目錄就失敗——tomb 留在原地並大聲說；mv(1) 會塞進去、不能用
+  if command -v perl >/dev/null 2>&1 && perl -e 'rename $ARGV[0], $ARGV[1] or exit 1' "$1" "$lock" 2>/dev/null; then return 0; fi
+  echo "⚠ supabase-lock：搬回誤搬的活鎖失敗（${lock} 已被另一程序建立，或無 perl）——${1} 內的持有者與新持有者可能同時執行；tomb 保留供查證（--status／巡檢會列出），請檢查 docker 狀態" >&2
   return 1
 }
 reclaim() {   # 0＝已回收／已讓出（呼叫端立刻重試 mkdir）；1＝回收不了（lock 仍在但搬不動）
@@ -188,12 +200,13 @@ while ! mkdir "$lock" 2>/dev/null; do
   sleep "$poll"
 done
 
-# 取得了：一次 printf＋一次 mv 寫 holder；失敗就不帶匿名鎖執行（R1 m1）。只 rmdir（非遞迴）：自己剛 mkdir 的空目錄
-# 才刪得掉，若目錄已被搬走、$lock 現在是別人的（裡面有東西），rmdir 失敗、不動它。
-if ! printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=%s\nbranch=%s\ncmd=%s\n' "$$" "$(date +%s)" "$host" "$wt" "$br" "$cmd_str" > "$lock/holder.tmp" 2>/dev/null \
-   || ! mv "$lock/holder.tmp" "$lock/holder" 2>/dev/null; then
-  echo "✗ supabase-lock：holder 寫入失敗（${lock}/holder：目錄被搬走或磁碟滿？）——不帶匿名鎖執行，放棄。" >&2
-  rm -f "$lock/holder.tmp" 2>/dev/null; rmdir "$lock" 2>/dev/null
+# 取得了：一次 printf＋一次 mv 寫 holder；暫存檔名帶 pid（R2 F1：固定名會讓兩個寫入者互相認領對方的暫存檔）；失敗就
+# 不帶匿名鎖執行（R1 m1）。只 rmdir（非遞迴）：自己剛 mkdir 的空目錄才刪得掉，若目錄已被搬走、$lock 現在是別人的
+# （裡面有東西），rmdir 失敗、不動它。
+if ! printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=%s\nbranch=%s\ncmd=%s\n' "$$" "$(date +%s)" "$host" "$wt" "$br" "$cmd_str" > "$lock/holder.$$.tmp" 2>/dev/null \
+   || ! mv "$lock/holder.$$.tmp" "$lock/holder" 2>/dev/null; then
+  echo "✗ supabase-lock：holder 寫入失敗（${lock}/holder：被其他等待者誤搬——重試即可；或目錄被搬走／磁碟滿）——不帶匿名鎖執行，放棄。" >&2
+  rm -f "$lock/holder.$$.tmp" 2>/dev/null; rmdir "$lock" 2>/dev/null
   exit 2
 fi
 
