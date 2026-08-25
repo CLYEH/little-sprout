@@ -72,7 +72,7 @@ struct WelcomeView: View {
 
     private var compactLayout: some View {
         VStack(alignment: .leading, spacing: 0) {
-            printStageSection
+            printStageSection()
             VStack(alignment: .leading, spacing: 0) {
                 headSection
                 Spacer(minLength: 0)
@@ -90,7 +90,9 @@ struct WelcomeView: View {
 
     private var regularLayout: some View {
         HStack(alignment: .center, spacing: AppSpacing.section) {
-            printStageSection
+            // LS-98：01-iPad 稿面（`design/littlesprout.pen` frame `BDrtd`）的染料池四角光強度
+            // ＝ `PrintPhotoCard.MountPoolOpacity.iPad`（LS-17 sweeper F1：這組值原本零呼叫點）。
+            printStageSection(mountPoolOpacity: .iPad)
                 .frame(maxWidth: .infinity)
             VStack(alignment: .leading, spacing: AppSpacing.section) {
                 headSection
@@ -109,13 +111,22 @@ struct WelcomeView: View {
 
     // MARK: - Sections
 
-    private var printStageSection: some View {
+    /// `mountPoolOpacity` 預設 `.welcome`（iPhone 01 板）；`.iPad` 是 `regularLayout` 專用
+    /// （LS-98），台紙壓邊 token（`$print-edge`／`$print-edge-bottom`）兩板同值 8pt，不受此
+    /// 參數影響。
+    private func printStageSection(
+        mountPoolOpacity: PrintPhotoCard.MountPoolOpacity = .welcome
+    ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if colorScheme == .dark {
                 wordmarkPaperStrip
             }
-            PrintPhotoCard(imageName: "HeroGrandma", accessibilityLabel: "祖母抱著嬰兒在晨光中的合照")
-                .padding(.top, 5)
+            PrintPhotoCard(
+                mountPoolOpacity: mountPoolOpacity,
+                imageName: "HeroGrandma",
+                accessibilityLabel: "祖母抱著嬰兒在晨光中的合照"
+            )
+            .padding(.top, 5)
         }
         .padding(.horizontal, 16)
     }
@@ -154,7 +165,7 @@ struct WelcomeView: View {
         Image("Wordmark")
             .resizable()
             .scaledToFit()
-            .frame(width: 190, height: 91)
+            .frame(width: wordmarkSize.width, height: wordmarkSize.height)
             .accessibilityLabel("萌芽日記")
     }
 
@@ -301,6 +312,15 @@ extension WelcomeView {
     /// 兜邏輯而漏掉其中一處）。
     private var authButtonsState: AuthButtonsState {
         AuthButtonsState(isSigningInWithApple: isSigningInWithApple, isSigningInWithGoogle: isSigningInWithGoogle)
+    }
+
+    /// LS-98：字標框尺寸依 size class 切換。iPad（`.regular`）用 01-iPad 稿面（frame `BDrtd`／
+    /// 節點 `A6DnYR`）量到的 247×118（`AppSpacing.wordmarkWidthIPad`／`wordmarkHeightIPad`）；
+    /// iPhone（`.compact`）維持 01 板原本內嵌的 190×91，不因此改成 token（不動 compact 版）。
+    private var wordmarkSize: (width: CGFloat, height: CGFloat) {
+        horizontalSizeClass == .regular
+            ? (AppSpacing.wordmarkWidthIPad, AppSpacing.wordmarkHeightIPad)
+            : (190, 91)
     }
 
     /// Google 登入面板「使用者主動取消」的判定：獨立、可測試的純函式（R1 review I2）。
