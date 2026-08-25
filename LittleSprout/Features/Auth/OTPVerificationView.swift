@@ -17,25 +17,26 @@ struct OTPVerificationView: View {
 
     var body: some View {
         ScrollableFillView {
-            VStack(alignment: .leading, spacing: 0) {
-                VStack(alignment: .leading, spacing: AppSpacing.block) {
-                    header
-                    otpSection
-                    Text(footerNoteText)
-                        .appFont(.note)
-                        .foregroundStyle(Color.lsTextPrimary)
-                }
-
-                Spacer(minLength: AppSpacing.item)
-
-                VStack(spacing: AppSpacing.label) {
-                    resendRow
-                    PrimaryButton(icon: "arrow.right", title: "確認登入", isLoading: model.isVerifying, action: verify)
-                }
-                .padding(.bottom, AppSpacing.item)
+            VStack(alignment: .leading, spacing: AppSpacing.block) {
+                header
+                otpSection
+                Text(footerNoteText)
+                    .appFont(.note)
+                    .foregroundStyle(Color.lsTextPrimary)
             }
             .padding(.horizontal, AppSpacing.screenPad)
             .padding(.top, AppSpacing.label)
+        }
+        // LS-105：CTA 移出可捲動內容、固定在鍵盤上方（safeAreaInset）——AX3 數字鍵盤不隨
+        // Dynamic Type 縮放、蓋住整個下半屏時，「確認登入」仍不需捲動就看得到（長輩是 AX
+        // 字級主要使用者，可見優先於可捲動；EmailSignInView 同型同法）。
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: AppSpacing.label) {
+                resendRow
+                PrimaryButton(icon: "arrow.right", title: "確認登入", isLoading: model.isVerifying, action: verify)
+            }
+            .padding(.horizontal, AppSpacing.screenPad)
+            .padding(.bottom, AppSpacing.item)
         }
         .appBackground()
         .navigationBarTitleDisplayMode(.inline)

@@ -19,41 +19,40 @@ struct EmailSignInView: View {
 
     var body: some View {
         ScrollableFillView {
-            VStack(alignment: .leading, spacing: 0) {
-                VStack(alignment: .leading, spacing: AppSpacing.block) {
-                    VStack(alignment: .leading, spacing: AppSpacing.label) {
-                        Text("用 Email 登入")
-                            .appFont(.display, weight: .bold)
-                            .foregroundStyle(Color.lsTextPrimary)
-                        Text("我們會寄一組 6 位數字的驗證碼到你的信箱，不用記密碼。")
-                            .appFont(.body)
-                            .foregroundStyle(Color.lsTextSecondary)
-                    }
-
-                    LabeledTextField(
-                        label: "Email 地址",
-                        placeholder: "yourname@example.com",
-                        text: Binding(get: { model.email }, set: { model.updateEmail($0) }),
-                        helpText: model.errorMessage ?? "驗證碼會寄到這個信箱，10 分鐘內有效。",
-                        isError: model.errorMessage != nil,
-                        keyboardType: .emailAddress,
-                        textContentType: .emailAddress,
-                        submitLabel: .send,
-                        onSubmit: send
-                    )
-
-                    Text("沒有 Apple 帳號，或不方便用 Apple 登入時，用 Email 一樣可以登入。")
-                        .appFont(.meta)
+            VStack(alignment: .leading, spacing: AppSpacing.block) {
+                VStack(alignment: .leading, spacing: AppSpacing.label) {
+                    Text("用 Email 登入")
+                        .appFont(.display, weight: .bold)
+                        .foregroundStyle(Color.lsTextPrimary)
+                    Text("我們會寄一組 6 位數字的驗證碼到你的信箱，不用記密碼。")
+                        .appFont(.body)
                         .foregroundStyle(Color.lsTextSecondary)
                 }
 
-                Spacer(minLength: AppSpacing.block)
+                LabeledTextField(
+                    label: "Email 地址",
+                    placeholder: "yourname@example.com",
+                    text: Binding(get: { model.email }, set: { model.updateEmail($0) }),
+                    helpText: model.errorMessage ?? "驗證碼會寄到這個信箱，10 分鐘內有效。",
+                    isError: model.errorMessage != nil,
+                    keyboardType: .emailAddress,
+                    textContentType: .emailAddress,
+                    submitLabel: .send,
+                    onSubmit: send
+                )
 
-                PrimaryButton(icon: "paperplane.fill", title: "寄送驗證碼", isLoading: model.isSending, action: send)
-                    .padding(.bottom, AppSpacing.item)
+                Text("沒有 Apple 帳號，或不方便用 Apple 登入時，用 Email 一樣可以登入。")
+                    .appFont(.meta)
+                    .foregroundStyle(Color.lsTextSecondary)
             }
             .padding(.horizontal, AppSpacing.screenPad)
             .padding(.top, AppSpacing.label)
+        }
+        // LS-105：CTA 固定在鍵盤上方（safeAreaInset），理由同 OTPVerificationView。
+        .safeAreaInset(edge: .bottom) {
+            PrimaryButton(icon: "paperplane.fill", title: "寄送驗證碼", isLoading: model.isSending, action: send)
+                .padding(.horizontal, AppSpacing.screenPad)
+                .padding(.bottom, AppSpacing.item)
         }
         .appBackground()
         .navigationBarTitleDisplayMode(.inline)
