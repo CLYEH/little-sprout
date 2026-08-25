@@ -25,6 +25,10 @@ final class OTPVerificationModel {
     /// 這裡改用 `[weak self]`（見 `startCooldown()`）——model 被釋放後迴圈下一次
     /// `guard let self` 就會自然結束，不需要額外的取消路徑。
     private var cooldownTask: Task<Void, Never>?
+    /// 每次 `resend()` 成功遞增的世代計數。`verify()` 在 await 前記下當時的世代，await 回來後
+    /// 若世代已變（代表使用者在等待期間重寄了新碼），整包結果（成功／失敗）都要丟棄，不能
+    /// 用舊碼的驗證結果去污染新碼的 `remainingAttempts`／`errorMessage`（R2 review M2）。
+    private var codeGeneration = 0
 
     init(email: String, authStore: AuthStore, maxAttempts: Int = 5, cooldownSeconds: Int = 60) {
         self.email = email
@@ -42,18 +46,41 @@ final class OTPVerificationModel {
         code = String(newValue.filter(\.isNumber).prefix(6))
     }
 
+    /// 錯誤先依 `AppError` 四層文法分流才決定要不要扣次數：只有真的是「這組碼不對」
+    /// （`.validationRetryable`／`.rejected`）才算使用者用掉一次機會；`.network`／
+    /// `.retryableSystem`／`.server` 是環境或系統的問題，不是碼錯，不該扣長輩的嘗試次數
+    /// （R2 review M1——電梯／收訊死角按下確認登入時，網路錯誤原本會被誤判成碼錯）。
     @discardableResult
     func verify() async -> Bool {
-        guard isCodeComplete, remainingAttempts > 0 else { return false }
+        guard !isVerifying, isCodeComplete else { return false }
+        guard remainingAttempts > 0 else {
+            errorMessage = "已經試了 \(maxAttempts) 次，請重新寄一組驗證碼再試。"
+            return false
+        }
         isVerifying = true
         defer { isVerifying = false }
+        let generationAtStart = codeGeneration
         do {
             try await authStore.verifyEmailOTP(email: email, token: code)
+            // 驗證中若使用者已重寄新碼，這個成功結果對應的是舊碼，不該用來放行（見 resend()）。
+            guard generationAtStart == codeGeneration else { return false }
             errorMessage = nil
             return true
         } catch {
-            recordFailure()
+            // 同上：世代已變就整包丟棄，不動 remainingAttempts／errorMessage（R2 review M2）。
+            guard generationAtStart == codeGeneration else { return false }
+            applyVerificationFailure(error)
             return false
+        }
+    }
+
+    private func applyVerificationFailure(_ error: Error) {
+        let appError = AppError.map(error)
+        switch appError {
+        case .validationRetryable, .rejected:
+            recordFailure()
+        case .network, .retryableSystem, .server:
+            errorMessage = appError.userFacingMessage
         }
     }
 
@@ -69,6 +96,7 @@ final class OTPVerificationModel {
         defer { isResending = false }
         do {
             try await authStore.sendEmailOTP(email: email)
+            codeGeneration += 1
             code = ""
             remainingAttempts = maxAttempts
             errorMessage = nil
@@ -84,10 +112,9 @@ final class OTPVerificationModel {
         resendCooldown = cooldownSeconds
         cooldownTask?.cancel()
         cooldownTask = Task { [weak self] in
-            guard let self else { return }
-            while !Task.isCancelled && self.resendCooldown > 0 {
+            while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
-                if Task.isCancelled { return }
+                guard !Task.isCancelled, let self, self.resendCooldown > 0 else { return }
                 self.tickCooldown()
             }
         }

@@ -42,6 +42,23 @@ final class EmailSignInModelTests: XCTestCase {
         XCTAssertEqual(model.errorMessage, AppError.network(message: "offline").userFacingMessage)
     }
 
+    func test_sendCode_reentrantCallWhileSending_isIgnored() async {
+        // R2 review M5：sendCode() 少一道與 resend() 對稱的再入 guard，鍵盤 Send 鍵與主按鈕
+        // 理論上可在 isSending 傳播到 .disabled() 之前重疊觸發第二次送出。
+        let stub = StubAuthService()
+        let store = AuthStore(authService: stub)
+        let model = EmailSignInModel(authStore: store)
+        model.updateEmail("grandma@example.com")
+        stub.setSendEmailOTPHandler { _ in
+            _ = await model.sendCode()
+        }
+
+        let result = await model.sendCode()
+
+        XCTAssertTrue(result)
+        XCTAssertEqual(stub.sentEmails, ["grandma@example.com"], "isSending 時的重入呼叫不該再打一次後端")
+    }
+
     func test_updateEmail_clearsPreviousError() async {
         let stub = StubAuthService()
         let store = AuthStore(authService: stub)

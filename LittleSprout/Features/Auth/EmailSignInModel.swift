@@ -24,6 +24,7 @@ final class EmailSignInModel {
 
     @discardableResult
     func sendCode() async -> Bool {
+        guard !isSending else { return false }
         guard EmailFormat.isValid(email) else {
             errorMessage = "這個 Email 好像沒打完，請再看一次，格式像 name@example.com"
             return false

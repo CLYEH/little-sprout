@@ -101,6 +101,92 @@ final class OTPVerificationModelTests: XCTestCase {
         XCTAssertEqual(stub2.verifyAttempts.count, 1, "次數用盡後不該再打後端")
     }
 
+    // MARK: - 錯誤分流（R2 review M1）
+
+    func test_verify_networkError_doesNotDecrementAttemptsAndUsesUserFacingMessage() async {
+        let stub = StubAuthService()
+        stub.setVerifyEmailOTPHandler { _, _ in throw AppError.network(message: "offline") }
+        let (model, _) = makeModel(maxAttempts: 5, stub: stub)
+        model.updateCode("111111")
+
+        let result = await model.verify()
+
+        XCTAssertFalse(result)
+        XCTAssertEqual(model.remainingAttempts, 5, "網路錯誤不是驗證碼的問題，不該扣次數")
+        XCTAssertEqual(model.errorMessage, AppError.network(message: "offline").userFacingMessage)
+    }
+
+    func test_verify_serverError_doesNotDecrementAttempts() async {
+        let stub = StubAuthService()
+        stub.setVerifyEmailOTPHandler { _, _ in throw AppError.server(message: "boom", code: nil) }
+        let (model, _) = makeModel(maxAttempts: 5, stub: stub)
+        model.updateCode("111111")
+
+        _ = await model.verify()
+
+        XCTAssertEqual(model.remainingAttempts, 5)
+        XCTAssertEqual(model.errorMessage, AppError.server(message: "boom", code: nil).userFacingMessage)
+    }
+
+    func test_verify_afterAttemptsExhausted_setsClearMessageInsteadOfSilentNoop() async {
+        let stub = StubAuthService()
+        stub.setVerifyEmailOTPHandler { _, _ in throw AppError.validationRetryable(message: "bad", code: nil) }
+        let (model, _) = makeModel(maxAttempts: 1, stub: stub)
+        model.updateCode("111111")
+        _ = await model.verify()
+        XCTAssertEqual(model.remainingAttempts, 0)
+
+        let result = await model.verify()
+
+        XCTAssertFalse(result)
+        XCTAssertNotNil(model.errorMessage, "次數用盡後按下確認登入不能靜默無反應")
+        XCTAssertNotEqual(
+            model.errorMessage, "驗證碼不對，還可以再試 0 次",
+            "應給出可重寄的明確出路，不是沿用舊的計次訊息"
+        )
+    }
+
+    // MARK: - 重寄／驗證競態（R2 review M2）
+
+    func test_verify_staleFailureAfterResend_doesNotChangeAttemptsOrMessage() async {
+        let stub = StubAuthService()
+        let (model, _) = makeModel(maxAttempts: 5, cooldownSeconds: 60, stub: stub)
+        model.updateCode("111111")
+        for _ in 0..<100 { model.tickCooldown() }
+        XCTAssertTrue(model.canResend)
+
+        // 模擬「verify 還在飛的時候使用者按了重寄」：resend 在 verify 的後端呼叫回來之前完成。
+        stub.setVerifyEmailOTPHandler { _, _ in
+            _ = await model.resend()
+            throw AppError.validationRetryable(message: "stale", code: nil)
+        }
+
+        let result = await model.verify()
+
+        XCTAssertFalse(result)
+        XCTAssertEqual(model.remainingAttempts, 5, "resend 已重置次數，遲到的舊碼驗證失敗不得再扣一次")
+        XCTAssertEqual(model.code, "", "resend 已清空輸入，遲到的失敗結果不得殘留舊訊息")
+        XCTAssertNil(model.errorMessage, "resend 成功已清錯誤，遲到的舊碼失敗不得覆蓋")
+    }
+
+    // MARK: - 再入 guard（R2 review M5）
+
+    func test_verify_reentrantCallWhileVerifying_isIgnored() async {
+        let stub = StubAuthService()
+        let (model, stub2) = makeModel(maxAttempts: 5, stub: stub)
+        model.updateCode("111111")
+        stub.setVerifyEmailOTPHandler { _, _ in
+            _ = await model.verify()
+            throw AppError.validationRetryable(message: "bad", code: nil)
+        }
+
+        let result = await model.verify()
+
+        XCTAssertFalse(result)
+        XCTAssertEqual(stub2.verifyAttempts.count, 1, "isVerifying 時的重入呼叫不該再打一次後端")
+        XCTAssertEqual(model.remainingAttempts, 4)
+    }
+
     func test_verify_success_clearsErrorMessage() async {
         let stub = StubAuthService()
         let expected = AuthSession(userID: userID, email: "grandma@example.com", expiresAt: .distantFuture)

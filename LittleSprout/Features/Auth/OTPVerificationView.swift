@@ -91,7 +91,7 @@ struct OTPVerificationView: View {
                 }
             }
             .foregroundStyle(Color.lsTextPrimary)
-            .disabled(model.isResending)
+            .disabled(model.isResending || model.isVerifying)
         } else {
             HStack(spacing: AppSpacing.tight) {
                 Text("沒收到驗證碼？")
