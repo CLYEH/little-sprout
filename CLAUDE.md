@@ -18,7 +18,7 @@
 - 分支流向：`feature|fix/* → development ⇒(FF) test ⇒(FF) main`——晉升一律 `bash scripts/ops/promote.sh <from> <to>`（fast-forward push，不開 PR、不 back-merge），禁手動 push 到 `test`／`main`（push-gate 擋）；`hotfix/*` 與 harness 檔從 `main` 切、PR 回 `main` 後只補一支 back-merge `main`→`development`。保護分支禁直接 commit（hook＋GitHub 都會擋）。
 - 一張 ticket＝一個 worktree（`.claude/worktrees/LS-<n>`）＝一條 branch（`feature/LS-<n>-slug`）；禁止跨 worktree 編輯。
 - Commit 第一行：`<type>(<scope>): LS-<n> <摘要>`（commit-msg hook 會驗）；禁止 `--no-verify`。
-- Handoff 格式：Ticket／已完成／已驗證（怎麼驗）／未完成（**必列 reviewer 全部 informational 的處置**：已修／另票 LS-<m>／不修＋理由，一條不能省）／風險／產出位置。
+- Handoff 格式：Ticket／已完成／已驗證（怎麼驗）／未完成（**必列 reviewer 全部 informational 的處置**：已修／記入待辦池 LS-96／另票 LS-<m>（限 COLLABORATION §5-b harness 優先序 High 以上）／不修＋理由，一條不能省）／風險／產出位置。
 - **Linear 是唯一任務狀態來源**（LS team；Backlog→Spec→Design→Ready→In Progress→In Review→QA→Done）。
 - **開票必標 lane**（`lane:harness|backend|design|ui|product`，一票一個）；票間依賴只用 Linear `blockedBy` 關係、不寫成文字。每 lane WIP 上限與巡檢補位規則見 COLLABORATION §5-b。
 - Secrets 永不進 repo（pre-commit 會掃）。
