@@ -388,11 +388,15 @@ declare
     'public.create_comment(uuid, text, uuid, text)',
     'public.update_comment(uuid, text)',
     'public.toggle_reaction(uuid, text, uuid)',
-    'public.list_comments(uuid, text, uuid, timestamptz, uuid, integer)'
+    'public.list_comments(uuid, text, uuid, timestamptz, uuid, integer)',
+    'public.create_child(uuid, text, date, text)',
+    'public.update_child(uuid, text, date, text)',
+    'public.set_child_deleted(uuid, boolean)'
   ];
   v_invoker_rpcs text[] := array[
     'public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)',
-    'public.get_reaction_counts(uuid, text, uuid[])'
+    'public.get_reaction_counts(uuid, text, uuid[])',
+    'public.list_children(uuid)'
   ];
   v_whitelist oid[];
   v_unknown text;

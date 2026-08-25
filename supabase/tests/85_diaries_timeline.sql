@@ -984,9 +984,10 @@ begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  insert into public.children (id, family_id, name, birthday)
-  values (gen_random_uuid(), v_family, '即將被刪除的孩子', date '2024-01-01')
-  returning id into v_new_child;
+  -- LS-66：children 的直接 INSERT 已收斂成 RPC-only，這裡改用 create_child（原本
+  -- 直接 INSERT 純粹是圖方便建測試資料，不是本段要驗的行為——本段驗的是「刪除孩子」
+  -- 之後 feed_items 的 FK 級聯，不是「建立孩子」的寫入路徑，用哪條路徑建都一樣）。
+  v_new_child := public.create_child(v_family, '即將被刪除的孩子', date '2024-01-01', null);
   v_diary := public.create_diary_entry(v_family, v_new_child, '掛在即將被刪的孩子底下', current_date);
   reset role;
 
