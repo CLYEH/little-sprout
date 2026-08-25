@@ -248,7 +248,7 @@ race_case "同一則留言：軟刪先動，直接編輯必須被阻塞後才成
 # s2_delete_after_move.sql／verify_move_blocked.sql，原本在這裡）已隨 LS-57 一起
 # 退役：LS-57 把 albums／diaries／comments 的 family_id 收斂成不可變欄
 # （private.enforce_deletion_attribution() trigger，見
-# supabase/migrations/20260825030000_deletion_attribution.sql），作者的搬家 UPDATE
+# supabase/migrations/20260825040000_deletion_attribution.sql），作者的搬家 UPDATE
 # 本身現在會直接被這支 trigger 擋下 42501，「family_id 可以被搬動」這個攻擊面在
 # 前提上已經不成立，不需要再靠併發時序去驗證 `for update` 有沒有守住這個特定 race——
 # 比照 LS-58 讓 comments 版同一場景退役的處理方式（見上一段這裡原本留的說明）。

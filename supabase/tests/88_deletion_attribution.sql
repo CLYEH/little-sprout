@@ -1,6 +1,6 @@
 -- LS-57 — deleted_by／還原鎖／family_id 不可變驗收
 --
--- 對應 20260825030000_deletion_attribution.sql 的 private.enforce_deletion_attribution()
+-- 對應 20260825040000_deletion_attribution.sql 的 private.enforce_deletion_attribution()
 -- trigger。85_diaries_timeline.sql／86_albums_comments_owner_scope.sql 的角色矩陣段落
 -- 已經逐表驗過「owner 軟刪的內容，作者呼叫對應 RPC 還原會拿到 LS027；owner 可以還原
 -- 任何一篇／本／則；作者仍可還原自己設下的」——這裡不重複那組矩陣，只補三件那邊測不到
