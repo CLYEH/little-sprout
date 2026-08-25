@@ -1,5 +1,5 @@
 #!/bin/bash
-# 巡檢（LS-71）：列出「無依賴卻沒人動」的 PR／分支／worktree，只讀不寫（唯一的寫入是 git fetch origin）。
+# 巡檢（LS-71）：列出「無依賴卻沒人動」的 PR／分支／worktree＋Supabase lock 持有者（LS-70），只讀不寫（唯一的寫入是 git fetch origin）。
 # 給 orchestrator 的巡檢 cron（每 26 分鐘，prompt 模板見 docs/COLLABORATION.md §4-b）與 SessionStart hook
 # （scripts/ops/session-start.sh）用。Linear 那一半（Ready 無人接／In Progress 無 worktree／QA 但 test 未含）
 # 要 orchestrator 用 MCP list_issues 對照，這裡只印提醒。自測：scripts/ops/patrol.test.sh（合成 repo，掛 CI rules job）。
@@ -235,19 +235,29 @@ while IFS= read -r line || [ -n "$line" ]; do
 done < <(git -C "$ROOT" worktree list --porcelain 2>/dev/null)
 flush_wt
 
+# ---- Supabase lock（LS-70：本機容器序列化，持有者由 scripts/ops/supabase-lock.sh --status 讀 holder 檔）----
+# 用腳本所在目錄的 supabase-lock.sh（與 patrol.sh 同一份 harness），不從 --repo 找：lock 路徑由它自己依 config.toml 推。
+here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+if [ -f "$here/supabase-lock.sh" ]; then
+  lock_line=$(bash "$here/supabase-lock.sh" --status 2>&1) || lock_line="（狀態讀取失敗：${lock_line}）"
+else
+  lock_line="（無 ${here}/supabase-lock.sh）"
+fi
+
 # ---- 輸出 ----
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" \
-      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$J_FLAGS"
+      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$J_FLAGS"
     ;;
   brief)
     echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev}"
     [ -n "$fetch_warn" ] && echo "${fetch_warn}"
+    case "$lock_line" in free) ;; *) echo "Supabase lock：${lock_line}" ;; esac
     if [ -n "$FLAGS" ]; then printf '%s' "$FLAGS"; else echo "巡檢：無異常（git／PR 面；Linear 對照仍需 list_issues）"; fi
     ;;
   *)
@@ -261,6 +271,8 @@ case "$MODE" in
     echo "  ${mc_branch} 落後 origin/main ${mc_behind} dirty=${mc_dirty}  ${mc_flag:-ok}"
     echo "== worktree（local vs remote／未 push／dirty 停滯；base＝hotfix→origin/main、其餘→origin/development）"
     if [ -n "$WT_LINES" ]; then printf '%s' "$WT_LINES"; else echo "  （無）"; fi
+    echo "== Supabase lock（本機容器序列化，scripts/ops/supabase-lock.sh；LS-70）"
+    echo "  ${lock_line}"
     echo "== Linear（需 orchestrator 用 MCP 對照：Ready 無人接／In Progress 無 worktree／QA 但 test 未含）"
     echo "  → list_issues state in (Ready, In Progress, In Review, QA)，對照上表 worktree／PR"
     ;;

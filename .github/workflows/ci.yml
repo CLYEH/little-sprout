@@ -103,11 +103,12 @@ jobs:
       # LS-45／LS-41／LS-54／LS-53／LS-50／LS-63：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
       # 放行」（destructive-approval-check）、「schema／文件對帳」（api-contract-check）、
       # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）、「migration 兩級分級／BREAKING: 段落」
-      # （migration-breaking-check／breaking-section-check）、「分支不夾帶他票 commit／push 前無合併衝突」
+      # （migration-breaking-check／breaking-section-check）、「migration 版本號撞號」（migration-version-check，LS-70）、
+      # 「分支不夾帶他票 commit／push 前無合併衝突」
       # （branch-ticket-check／merge-conflict-check）、「PR body 檔頭段含本票票號」（pr-body-check）與
       # 「審查取證不進版控」（evidence-path-check）的偵測不退化（前饋必有反饋，對 gate 本身也適用）。
       # 集中在同一個 step，維持「一個地方跑所有 gate 自測」。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check）
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -116,6 +117,7 @@ jobs:
           bash scripts/gates/api-contract-check.test.sh || rc=1
           bash scripts/gates/error-codes-check.test.sh || rc=1
           bash scripts/gates/migration-breaking-check.test.sh || rc=1
+          bash scripts/gates/migration-version-check.test.sh || rc=1
           bash scripts/gates/breaking-section-check.test.sh || rc=1
           bash scripts/gates/branch-ticket-check.test.sh || rc=1
           bash scripts/gates/merge-conflict-check.test.sh || rc=1
@@ -127,8 +129,14 @@ jobs:
       # 正負樣本、--json 合法、gh 不可用不炸；session-start.sh（SessionStart hook）驗輸出合法 JSON 且 fail-soft、
       # .claude/settings.json 有掛上。獨立 step、不併進上面的 gate 自測 step（同 LS-51 的理由：避開與同時在飛的
       # harness 票改同一 step 撞衝突；巡檢也不是 merge gate）。
-      - name: Ops 腳本自測（patrol／session-start，LS-71）
-        run: bash scripts/ops/patrol.test.sh
+      # LS-70：supabase-lock.sh（本機容器序列化 lock）自測也在這裡——合成 lock 目錄驗互斥／exit code／逾時／死鎖回收與
+      # 不誤殺剛建的鎖／重入／TERM 釋放／run.sh 自動經 lock，不碰容器。各收各的 rc、最後一起 exit（同 LS-54 N5）。
+      - name: Ops 腳本自測（patrol／session-start／supabase-lock，LS-71／LS-70）
+        run: |
+          rc=0
+          bash scripts/ops/patrol.test.sh || rc=1
+          bash scripts/ops/supabase-lock.test.sh || rc=1
+          exit "$rc"
 
       # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
       # errcode 三方雙向對帳（本機 push-gate 的伺服器端兜底）。所有 PR 都跑：純檔案比對、
@@ -166,6 +174,10 @@ jobs:
               echo "::error::migration 變更必須伴隨 supabase/tests/ 的 RLS 測試變更（DB migration gate）"
               exit 1
             fi
+            # LS-70：版本號撞號（push-gate 4b 的伺服器端兜底）——本分支 tree 內版本號唯一、且不與 origin/$BASE 既有
+            # 版本撞號（同版本、不同檔名）。對 base 當前 tip 比，不是 merge-base：撞號正是別張票先併進去
+            # （LS-57／LS-66 同取 20260825030000）。
+            bash scripts/gates/migration-version-check.sh --target "origin/$BASE" || exit 1
             # LS-53：分級改由 scripts/gates/migration-breaking-check.sh 做 statement 級判定（單一 pass 剝
             # --／/* */ 註解後以 ; 切句；多行敘述、單一字面值的 execute '…' 動態 SQL 也認得——`||` 串接拆開的
             # 多字關鍵字認不得，見該檔檔頭已知限制；規則表同檔頭）。
