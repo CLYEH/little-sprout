@@ -104,9 +104,10 @@ jobs:
       # 放行」（destructive-approval-check）、「schema／文件對帳」（api-contract-check）、
       # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）、「migration 兩級分級／BREAKING: 段落」
       # （migration-breaking-check／breaking-section-check）、「分支不夾帶他票 commit／push 前無合併衝突」
-      # （branch-ticket-check／merge-conflict-check）與「PR body 檔頭段含本票票號」（pr-body-check）的偵測不退化
-      # （前饋必有反饋，對 gate 本身也適用）。集中在同一個 step，維持「一個地方跑所有 gate 自測」。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check）
+      # （branch-ticket-check／merge-conflict-check）、「PR body 檔頭段含本票票號」（pr-body-check）與
+      # 「審查取證不進版控」（evidence-path-check）的偵測不退化（前饋必有反饋，對 gate 本身也適用）。
+      # 集中在同一個 step，維持「一個地方跑所有 gate 自測」。
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -119,6 +120,7 @@ jobs:
           bash scripts/gates/branch-ticket-check.test.sh || rc=1
           bash scripts/gates/merge-conflict-check.test.sh || rc=1
           bash scripts/gates/pr-body-check.test.sh || rc=1
+          bash scripts/gates/evidence-path-check.test.sh || rc=1
           exit "$rc"
 
       # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
