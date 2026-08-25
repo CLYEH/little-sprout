@@ -41629,11 +41629,11 @@
                       "type": "gradient",
                       "gradientType": "radial",
                       "enabled": true,
-                      "opacity": 0.386,
+                      "opacity": 0.393,
                       "rotation": 0,
                       "size": {
                         "width": 0.45217391304347826,
-                        "height": 0.582089552238806
+                        "height": 0.6724137931034483
                       },
                       "colors": [
                         {
@@ -41654,11 +41654,11 @@
                       "type": "gradient",
                       "gradientType": "radial",
                       "enabled": true,
-                      "opacity": 0.255,
+                      "opacity": 0.259,
                       "rotation": 0,
                       "size": {
                         "width": 0.45217391304347826,
-                        "height": 0.582089552238806
+                        "height": 0.6724137931034483
                       },
                       "colors": [
                         {
@@ -41679,11 +41679,11 @@
                       "type": "gradient",
                       "gradientType": "radial",
                       "enabled": true,
-                      "opacity": 0.27,
+                      "opacity": 0.293,
                       "rotation": 0,
                       "size": {
                         "width": 0.45217391304347826,
-                        "height": 0.582089552238806
+                        "height": 0.6724137931034483
                       },
                       "colors": [
                         {
@@ -41704,11 +41704,11 @@
                       "type": "gradient",
                       "gradientType": "radial",
                       "enabled": true,
-                      "opacity": 0.18,
+                      "opacity": 0.19699999999999998,
                       "rotation": 0,
                       "size": {
                         "width": 0.45217391304347826,
-                        "height": 0.582089552238806
+                        "height": 0.6724137931034483
                       },
                       "colors": [
                         {
@@ -44825,7 +44825,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "08/09b 的 Footer 改用 flex spacer（Body 不再是 space_between），螢幕高度回頭量測補足（08＝910、09b＝910、AX3-08＝1900）；不要再照抄 R1 版 Handoff 的『08/09/09b 44 斷點』段落數字，畫面本身已含這條斷點且已重量測。",
+                  "content": "08/09b 的 Footer 改用 flex spacer（Body 不再是 space_between），螢幕高度回頭量測補足（08＝852、09b＝852、AX3-08＝1900）；不要再照抄 R1 版 Handoff 的『08/09/09b 44 斷點』段落數字，畫面本身已含這條斷點且已重量測。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -44897,7 +44897,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "分段控制改成共用軌道（$surface-2）＋等分等分段＋選中段 $surface 浮起，不再是各自獨立描邊的裸 chip；10/10b/10深/AX3-10 補上 cmp/Tab Bar（底部浮動膠囊，時間軸／相簿／寶貝／設定），FAB 上移到 tab bar 之上；iPad 版移除 FAB 改用內容區右上角的工具列＋鈕（sidebar 已有導覽，不需要 FAB）。新增 `Stress / 10 · 3 個寶貝＋超長名字` 壓測板：3 位真實長名字（陳彥廷／小饅頭／Emma Chen）下分段控制本身就會溢出——結論是『>3 才下拉』的門檻不夠，實作應改用『segments 文字總寬度超過可用寬度就自動下拉』，不要寫死用數量判斷。",
+                  "content": "分段控制改成共用軌道（$surface-2）＋等分段＋選中段 $surface 浮起，不再是各自獨立描邊的裸 chip；10/10b/10深/AX3-10 補上 cmp/Tab Bar（底部浮動膠囊，時間軸／相簿／寶貝／設定），FAB 上移到 tab bar 之上；iPad 版移除 FAB 改用內容區右上角的工具列＋鈕（sidebar 已有導覽，不需要 FAB）。新增 `Stress / 10 · 3 個寶貝＋超長名字` 壓測板：3 位真實長名字（陳彥廷／小饅頭／Emma Chen）下分段控制本身就會溢出——結論是『>3 才下拉』的門檻不夠，實作應改用『segments 文字總寬度超過可用寬度就自動下拉』，不要寫死用數量判斷。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -45067,7 +45067,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "9 張沖印品補齊染料池（8 張印品×4顆＋10-iPad 2 張=9）：08/08c/AX3-08/08-iPad/09空/10/10深 各1張、10-iPad 2張。opacity=0.03+0.5·lit(角座標)，R=78（角托邊長26×3），座標各自取該畫面 Print 在 viewport 的實際落點——不是複製01的值。四角opacity各自為：08/08c(TL.429 TR.275 BL.367 BR.245)、AX3-08(.293/.197/.168/.099)、08-iPad(.376/.191/.150/.045)、09空(.418/.271/.320/.215)、10/10深(.386/.255/.270/.180)、10-iPad-L(.331/.163/.197/.076)、10-iPad-R(.146/.030/.062/.030，兩角已觸地板0.03)。",
+                  "content": "10 張沖印品補齊染料池（8 張印品×4顆＋10-iPad 2 張=10）：08/08c/AX3-08/08-iPad/09空/10/10深/AX3-10 各1張、10-iPad 2張。opacity=0.03+0.5·lit(角座標)，R=78（角托邊長26×3），座標各自取該畫面 Print 在 viewport 的實際落點——不是複製01的值。四角opacity各自為：08/08c(TL.429 TR.275 BL.367 BR.245)、AX3-08(.293/.197/.168/.099)、08-iPad(.376/.191/.150/.045)、09空(.418/.271/.320/.215)、10/10深(.393/.259/.293/.197)、AX3-10(.392/.258/.236/.155)、10-iPad-L(.331/.163/.197/.076)、10-iPad-R(.146/.030/.062/.030，兩角已觸地板0.03)。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -45247,7 +45247,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "R4 更正：R3 版本用 clip:true 把 Diary Card 整張切掉（被 reviewer 抓到，這是「切內容」不是「修遮蔽」）。R4 改法：不清 Diary Card，改讓 FAB 淨空。Header→Filter、Filter→已移除揭露列的間距各由 24 收緊到 16（省 16pt，兩處都不是唯一的 44 斷點所以可以收）；Photo Wrap 220→184、Photo Print 268→232（角托 BL/BR 座標同步由 y247 改 y211=232−26+5，這正是 N1 同一種「印品變矮但角托座標沒跟著改」的缺陷，全稿 9+1 張印品已逐張機械核對 4/4 角托座標）；Content 與 Diary Card 間 gap 24→16；Diary Card 的 Snippet 縮成單行「今天在溜滑梯上玩得好開心。」（124→99pt）。結果：Photo Print y328–560、Diary Card y576–675（完整顯示，未clip）、FAB y682–738——Diary Card 底到 FAB 頂淨距 7pt，0 交集。跨-parent 掃描（同一支腳本，見 overflow.json）：FAB×Snippet 在 10／10深 兩張皆為 0。AX3-10 同步：Tab Bar y1174、FAB y1102、Home Indicator y1238，板高 1300→1272（由內容決定）；AX3-10 的下拉（Dropdown Menu, y271–880）與新補的 Photo Print／Diary Card 內文（Caption/Icon/Meta/Snippet）仍有重疊——這是「下拉打開時蓋住背景內容」的預期模態行為（同一類別於 09c/10c 的 scrim 疊 backdrop 已被判定為設計意圖），不屬於 F10/F11 原文點名的「Dropdown×Trigger」（後者已確認 0）；已在 overflow.json 如實列出這 4 筆並分類，不再宣稱「0」。",
+                  "content": "R4 更正：R3 版本用 clip:true 把 Diary Card 整張切掉（被 reviewer 抓到，這是「切內容」不是「修遮蔽」）。R4 改法：不清 Diary Card，改讓 FAB 淨空。Header→Filter、Filter→已移除揭露列的間距各由 24 收緊到 16（省 16pt，兩處都不是唯一的 44 斷點所以可以收）；Photo Wrap 220→184、Photo Print 268→232（角托 BL/BR 座標同步由 y247 改 y211=232−26+5，這正是 N1 同一種「印品變矮但角托座標沒跟著改」的缺陷，全稿 9+1 張印品已逐張機械核對 4/4 角托座標）；Content 與 Diary Card 間 gap 24→16；Diary Card 的 Snippet 縮成單行「今天在溜滑梯上玩得好開心。」（124→99pt）。結果：Photo Print y328–560、Diary Card y576–675（完整顯示，未clip）、FAB y682–738——Diary Card 底到 FAB 頂淨距 7pt，0 交集。跨-parent 掃描（同一支腳本，見 overflow.json）：FAB×Snippet 在 10／10深 兩張皆為 0。AX3-10 同步：Tab Bar y1174、FAB y1102、Home Indicator y1238，板高 1300→1272（由內容決定）；AX3-10 的下拉（Dropdown Menu, y271–880）與新補的 Photo Print／Diary Card 內文（Caption/Icon/Meta/Snippet）仍有重疊——這是 menu／popover 打開時蓋住背景的預期行為：`zGEet` 表面不透明（`$surface`＋`$border`，無 alpha），不加 scrim、不用半透明材質，被蓋內容只是待在一塊不透明表面後面，不是「看不清楚」；這與 09c/10c 的 modal sheet scrim 是不同類別（FAB 是常駐 chrome 必須歸零，下拉是使用者自己點開的暫態覆蓋，遮住背景正是它的功能）。若把 Content 搬到 880 以下以求物理歸零，會讓收合／展開兩態的內容座標不一致，違反十條#10「狀態切換不搬動版面」，所以維持現狀、不搬動 Content。不屬於 F10/F11 原文點名的「Dropdown×Trigger」（後者已確認 0）；已在 overflow.json 如實列出這 4 筆並分類，不再宣稱「0」。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -45705,7 +45705,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "AX3-10新增的Photo Print是Copy自「10」的c9EwP，連同已經算好的染料池opacity（.386/.255/.270/.180）一起複製過去，但AX3-10這張印品實際位置(24,331)與尺寸(345×359)跟「10」的(24,344,345,268)不同，opacity沒有重算。已用同一套lit()公式重算：TL.392 TR.258 BL.236 BR.155——與 reviewer 預測值逐位吻合。",
+                  "content": "AX3-10新增的Photo Print是Copy自「10」的c9EwP，連同已經算好的染料池opacity（.386/.255/.270/.180）一起複製過去，但AX3-10這張印品實際位置(24,331)與尺寸(345×359)跟「10」的(24,328,345,232)不同，opacity沒有重算。已用同一套lit()公式重算：TL.392 TR.258 BL.236 BR.155——與 reviewer 預測值逐位吻合。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -49115,11 +49115,11 @@
                       "type": "gradient",
                       "gradientType": "radial",
                       "enabled": true,
-                      "opacity": 0.386,
+                      "opacity": 0.393,
                       "rotation": 0,
                       "size": {
                         "width": 0.45217391304347826,
-                        "height": 0.582089552238806
+                        "height": 0.6724137931034483
                       },
                       "colors": [
                         {
@@ -49140,11 +49140,11 @@
                       "type": "gradient",
                       "gradientType": "radial",
                       "enabled": true,
-                      "opacity": 0.255,
+                      "opacity": 0.259,
                       "rotation": 0,
                       "size": {
                         "width": 0.45217391304347826,
-                        "height": 0.582089552238806
+                        "height": 0.6724137931034483
                       },
                       "colors": [
                         {
@@ -49165,11 +49165,11 @@
                       "type": "gradient",
                       "gradientType": "radial",
                       "enabled": true,
-                      "opacity": 0.27,
+                      "opacity": 0.293,
                       "rotation": 0,
                       "size": {
                         "width": 0.45217391304347826,
-                        "height": 0.582089552238806
+                        "height": 0.6724137931034483
                       },
                       "colors": [
                         {
@@ -49190,11 +49190,11 @@
                       "type": "gradient",
                       "gradientType": "radial",
                       "enabled": true,
-                      "opacity": 0.18,
+                      "opacity": 0.19699999999999998,
                       "rotation": 0,
                       "size": {
                         "width": 0.45217391304347826,
-                        "height": 0.582089552238806
+                        "height": 0.6724137931034483
                       },
                       "colors": [
                         {
