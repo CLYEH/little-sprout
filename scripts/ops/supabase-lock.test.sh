@@ -1,8 +1,10 @@
 #!/bin/bash
 # supabase-lock.sh 的自測（LS-70）。CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對 lock 本身也適用：若互斥退化（第二個不等）、exit code 沒傳回、逾時不 fail loud、死鎖不回收
-# 或回收得太急（剛建好的鎖被殺）、殘留的 SUPABASE_LOCK_HELD 能繞過鎖、收到 TERM 不釋放、run.sh 不再經 lock
-# 重跑——這裡會紅。全程用合成 lock 目錄（SUPABASE_LOCK_DIR），不碰真的 /tmp/supabase-lock-*、不碰容器。
+# 或回收得太急（剛建好的鎖被殺；判定 stale 之後 mv 到的卻是別人剛建、holder 未落地的活鎖——PR #122 R1 M1）、
+# holder 寫入失敗還帶匿名鎖跑（R1 m1）、重入路徑不 export（R1 m2）、殘留或假造的 SUPABASE_LOCK_HELD 能繞過鎖（R1 m3）、
+# 收到 TERM 不釋放、run.sh 不再經 lock 重跑——這裡會紅。全程用合成 lock 目錄（SUPABASE_LOCK_DIR），不碰真的
+# /tmp/supabase-lock-*、不碰容器；M1／m1 用 PATH shim 放大既有空窗（只在自測程序的 PATH，不改 repo 檔）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -64,7 +66,7 @@ st="$(L --status 2>&1)"
 has   '⑧ --status 持有中：held pid=' "$st" "held pid=${a}"
 has   '⑧ --status 持有中：含 branch=' "$st" 'branch='
 hasnt '⑧ --status 持有中、pid 活著：不標 stale' "$st" 'stale'
-has   '⑪ holder 檔含 pid／started／host／worktree／branch／cmd' "$(cat "$SUPABASE_LOCK_DIR/holder" 2>/dev/null | cut -d= -f1 | paste -s -d, -)" 'pid,started,started_at,host,worktree,branch,cmd'
+has   '⑪ holder 檔含 pid／started／host／worktree／branch／cmd' "$(cat "$SUPABASE_LOCK_DIR/holder" 2>/dev/null | cut -d= -f1 | paste -s -d, -)" 'pid,started,host,worktree,branch,cmd'
 # ---- 殘留的 SUPABASE_LOCK_HELD 不能繞過鎖（持有者不是祖先）----
 berr="$(SUPABASE_LOCK_HELD="$SUPABASE_LOCK_DIR" L --timeout 1 -- true 2>&1)"; rc=$?
 rc_is '⑦ 殘留 SUPABASE_LOCK_HELD、持有者非祖先 → 照樣等、逾時 124' 124 "$rc" "$berr"
@@ -78,9 +80,10 @@ has   '⑧ --path 印 lock 路徑' "$p" "$SUPABASE_LOCK_DIR"
 # ---- ⑤ 死鎖回收：holder pid 不存在 → 自動回收、命令照跑；--status 先標 stale ----
 dead=$(sh -c 'echo $$')
 mkdir "$SUPABASE_LOCK_DIR"
-printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=/dead/wt\nbranch=feature/LS-0-dead\ncmd=sleep 999\n' "$dead" "$(date +%s)" "$(hostname)" > "$SUPABASE_LOCK_DIR/holder"
+# host 故意寫別的名字：/tmp 不跨主機、macOS hostname 會飄，回收不得比 host（PR #122 R1 m4）
+printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=/dead/wt\nbranch=feature/LS-0-dead\ncmd=sleep 999\n' "$dead" "$(date +%s)" "some-other-host.local" > "$SUPABASE_LOCK_DIR/holder"
 st="$(L --status 2>&1)"
-has   '⑤ --status 對死鎖標 stale' "$st" 'stale'
+has   '⑤ --status 對死鎖標 stale（holder host 不同也一樣）' "$st" 'stale'
 out="$(L --timeout 5 -- sh -c 'echo after-reclaim' 2>&1)"; rc=$?
 rc_is '⑤ 死鎖自動回收後命令成功' 0 "$rc" "$out"
 has   '⑤ 印回收訊息' "$out" '回收死鎖'
@@ -114,6 +117,8 @@ out="$(L --timeout abc -- true 2>&1)"; rc_is '⑨ --timeout 非整數 → exit 2
 out="$(L --timeout 2>&1)"; rc_is '⑨ --timeout 缺值 → exit 2' 2 "$?" "$out"
 out="$(L --bogus -- true 2>&1)"; rc_is '⑨ 未知參數 → exit 2' 2 "$?" "$out"
 out="$(SUPABASE_LOCK_POLL=x L -- true 2>&1)"; rc_is '⑨ SUPABASE_LOCK_POLL 非數字 → exit 2' 2 "$?" "$out"
+out="$(SUPABASE_LOCK_POLL=0 L -- true 2>&1)"; rc_is '⑨ SUPABASE_LOCK_POLL=0（busy-spin）→ exit 2（R1 i4）' 2 "$?" "$out"
+out="$(SUPABASE_LOCK_POLL=0.1 L -- true 2>&1)"; rc_is '⑨ SUPABASE_LOCK_POLL 低於 0.2 → exit 2（R1 i4）' 2 "$?" "$out"
 out="$(SUPABASE_LOCK_DIR= L --path 2>&1)"; rc=$?
 # 沒設 SUPABASE_LOCK_DIR 時走 config.toml 的 project_id（真 repo 有 config.toml → 印 /tmp/supabase-lock-<id>）
 if [ -f "$root/supabase/config.toml" ]; then
@@ -144,6 +149,59 @@ if [ -f "$run_sh" ]; then
 else
   echo "✗ ⑫ 找不到 ${run_sh}" >&2; fail=1
 fi
+
+# ---- ⑬ M1（PR #122 R1）：判定 stale 之後、mv 到的卻是別人剛建好、holder 還沒落地的活鎖 → 必須搬回、不得回收 ----
+# 用 PATH shim 放大空窗：ps 對這個死 pid 的 -p 查詢延遲 1s（其餘原樣轉交 /bin/ps）。B 在 is_stale 讀到死 holder、卡在
+# ps 的那 1 秒內，自測把死鎖換成一個全新的空目錄（＝A 剛 mkdir）；B 回來 mv 到的是活鎖，tomb 無 holder 且很新。
+shim="$work/shim"; mkdir -p "$shim"
+dead=$(sh -c 'echo $$')
+cat > "$shim/ps" <<EOS
+#!/bin/bash
+if [ "\$1" = -p ] && [ "\$2" = "$dead" ]; then sleep 1; exit 1; fi
+exec /bin/ps "\$@"
+EOS
+chmod +x "$shim/ps"
+mkdir "$SUPABASE_LOCK_DIR"
+printf 'pid=%s\nstarted=%s\nhost=h\nworktree=/dead\nbranch=b\ncmd=c\n' "$dead" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder"
+PATH="$shim:$PATH" bash "$lock_sh" --timeout 3 -- sh -c 'echo B-took-lock' > "$work/m1.out" 2> "$work/m1.err" &
+b=$!
+sleep 0.4                                   # B 已讀到死 holder、正卡在 shim 的 ps 裡
+mv "$SUPABASE_LOCK_DIR" "$work/gone"; mkdir "$SUPABASE_LOCK_DIR"    # ＝A 回收後剛 mkdir，holder 尚未寫
+sleep 1.2                                   # B 的 mv 已發生（t≈1.0s）
+printf 'pid=%s\nstarted=%s\nhost=h\nworktree=/A\nbranch=b\ncmd=A\n' "$$" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder" 2>/dev/null   # A 的 holder 落地
+wait "$b"; rc=$?
+rc_is '⑬ M1：B 不得取得（等到逾時 124）' 124 "$rc" "$(cat "$work/m1.err")"
+hasnt '⑬ M1：B 沒有執行命令' "$(cat "$work/m1.out")" 'B-took-lock'
+hasnt '⑬ M1：B 沒有印「回收死鎖」（搬到的是活鎖）' "$(cat "$work/m1.err")" '回收死鎖'
+if [ -d "$SUPABASE_LOCK_DIR" ] && grep -q "^pid=$$\$" "$SUPABASE_LOCK_DIR/holder" 2>/dev/null; then echo "✓ ⑬ M1：A 的活鎖仍在原位、holder 是 A"; else echo "✗ ⑬ M1：A 的活鎖被殺或被搬走" >&2; ls -la "$SUPABASE_LOCK_DIR" "$work" >&2; fail=1; fi
+if ls -d "$SUPABASE_LOCK_DIR".stale.* >/dev/null 2>&1; then echo "✗ ⑬ M1：殘留 tomb" >&2; ls -d "$SUPABASE_LOCK_DIR".stale.* >&2; fail=1; else echo "✓ ⑬ M1：無殘留 tomb"; fi
+rm -rf "$SUPABASE_LOCK_DIR" "$work/gone"
+
+# ---- ⑭ m1（PR #122 R1）：holder 寫不進去 → 不得帶匿名鎖執行：exit 2、自己建的空目錄清掉、命令不跑 ----
+cat > "$shim/mv" <<'EOS'
+#!/bin/bash
+case "${2:-}" in */holder) exit 1 ;; esac
+exec /bin/mv "$@"
+EOS
+chmod +x "$shim/mv"
+out="$(PATH="$shim:$PATH" bash "$lock_sh" -- sh -c 'echo ran-anonymous' 2>&1)"; rc=$?
+rc_is '⑭ m1：holder 寫入失敗 → exit 2' 2 "$rc" "$out"
+has   '⑭ m1：印 holder 寫入失敗' "$out" 'holder 寫入失敗'
+hasnt '⑭ m1：命令沒跑' "$out" 'ran-anonymous'
+gone  '⑭ m1：自己建的空 lock 目錄已清掉'
+rm -f "$shim/mv"
+
+# ---- ⑮ m2（PR #122 R1）：重入路徑也 export SUPABASE_LOCK_HELD；--held 只看祖先、不看變數 ----
+out="$(L -- bash -c 'env -u SUPABASE_LOCK_HELD bash "$1" -- sh -c "echo held=\$SUPABASE_LOCK_HELD"' _ "$lock_sh" 2>/dev/null)"; rc=$?
+rc_is '⑮ m2：變數被洗掉後重入仍成功' 0 "$rc" "$out"
+has   '⑮ m2：重入路徑有 export SUPABASE_LOCK_HELD' "$out" "held=$SUPABASE_LOCK_DIR"
+L -- bash -c 'env -u SUPABASE_LOCK_HELD bash "$1" --held' _ "$lock_sh" 2>/dev/null; rc_is '⑮ --held：在 lock 內（變數已洗掉）→ 0' 0 "$?" ''
+SUPABASE_LOCK_HELD="$SUPABASE_LOCK_DIR" L --held 2>/dev/null; rc_is '⑮ --held：未持有、只有假變數 → 1' 1 "$?" ''
+bash "$lock_sh" -- sleep 2 2>/dev/null &
+a=$!
+sleep 0.3
+SUPABASE_LOCK_HELD="$SUPABASE_LOCK_DIR" L --held 2>/dev/null; rc_is '⑮ --held：別人持有（目錄真的在）、假變數 → 1' 1 "$?" ''
+wait "$a"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ supabase-lock 自測通過"
