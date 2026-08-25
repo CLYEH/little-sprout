@@ -1,10 +1,37 @@
 import SwiftUI
 
-/// 依 horizontal size class 切換版面的根視圖。
+/// App 的根視圖：依登入狀態在「歡迎登入」與「已登入內容」之間切換。
+///
+/// `AuthStore.session` 是 `@Observable`，這裡讀它才會在登入/登出時觸發重繪——直接讀
+/// `AuthService.currentSession`（非 Observable）不會（見 `AuthStore` 文件／LS-55 N7）。
+/// `scenePhase` 轉 `.active` 時補撿一次快照，涵蓋「本 store 沒有主動呼叫、但背景已經
+/// 改變 session」的情況（例如 SDK 的 autoRefreshToken 計時器）。
+struct RootView: View {
+    let authStore: AuthStore
+
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some View {
+        Group {
+            if authStore.isAuthenticated() {
+                AuthenticatedRootView()
+            } else {
+                WelcomeView(authStore: authStore)
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                authStore.refreshSnapshot()
+            }
+        }
+    }
+}
+
+/// 依 horizontal size class 切換版面的已登入根視圖。
 ///
 /// selection 存在這一層而非各自的子視圖，所以 iPad 旋轉／分割畫面造成 size class
 /// 改變時，使用者停留的區塊會被保留。
-struct RootView: View {
+struct AuthenticatedRootView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selection: AppSection = .timeline
 
@@ -85,11 +112,11 @@ struct SectionContentView: View {
 }
 
 #Preview("Compact") {
-    RootView()
+    AuthenticatedRootView()
         .environment(\.horizontalSizeClass, .compact)
 }
 
 #Preview("Regular") {
-    RootView()
+    AuthenticatedRootView()
         .environment(\.horizontalSizeClass, .regular)
 }
