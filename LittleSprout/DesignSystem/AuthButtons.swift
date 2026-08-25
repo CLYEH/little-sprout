@@ -30,6 +30,10 @@ struct PrimaryButton: View {
 /// `cmp/Button Secondary`：無填色、`$control-line` 外框——次要動作樣式，不是停用樣式
 /// （Handoff Notes 通用節「全稿『看起來不能用』掃描」）。`isDimmed` 對應 01b 登入中時
 /// Google／Email 鍵轉 `$surface-2` 的暫時態，不是永久的 disabled 視覺語彙。
+///
+/// 字級／字重見 LS-101 point 5：官方 `SignInWithAppleButton` 不開放自訂字型（見
+/// `AppleSignInButton.swift` R3/R4 review 定論），因此文字改對齊 Apple 鈕實測值，而不是反過來。
+/// 這裡只在 WelcomeView 用（見用量檢查），不影響其他畫面。
 struct SecondaryButton: View {
     let icon: String
     let title: String
@@ -40,7 +44,7 @@ struct SecondaryButton: View {
         Button(action: action) {
             HStack(spacing: AppSpacing.label) {
                 Image(systemName: icon).appIconFrame(.medium)
-                Text(title).appFont(.body)
+                Text(title).appFont(.lead, weight: .medium)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingMedium)
@@ -61,10 +65,12 @@ struct SecondaryButton: View {
 
 /// `cmp/Button Google`：品牌硬規定的官方樣式（底色／外框／字色三個 token 不得改）。
 ///
-/// Google 的四色「G」標是受商標保護的圖形，本票 Google 登入為 stub（無 GoogleSignIn SDK、
-/// 未接真實流程——見環境規約），因此這裡用中性 SF Symbol 佔位，不手繪 G 標；接上真的
-/// Google 登入時應改用 GoogleSignIn SDK 提供的官方按鈕／G 標資產（Handoff Notes「三方登入鍵
-/// 的色彩豁免」）。
+/// Google 的四色「G」標是受商標保護的圖形（LS-101 point 3）：`GoogleG` 資產直接取自 Google
+/// 官方 CDN（`fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg`，Google Sign-In branding
+/// guidelines 指定資產），非手繪重製，`template-rendering-intent: original` 防止被當 template
+/// 圖示套色。Google 登入本身仍是 stub（無 GoogleSignIn SDK、未接真實流程——見環境規約），接上
+/// 真的 Google 登入時應改用 GoogleSignIn SDK 提供的官方按鈕（Handoff Notes「三方登入鍵的色彩
+/// 豁免」）。
 struct GoogleSignInButton: View {
     var isDimmed = false
     let action: () -> Void
@@ -72,8 +78,8 @@ struct GoogleSignInButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: AppSpacing.group) {
-                Image(systemName: "g.circle.fill").appIconFrame(.google)
-                Text("使用 Google 登入").appFont(.body)
+                Image("GoogleG").resizable().scaledToFit().appIconFrame(.google)
+                Text("使用 Google 登入").appFont(.lead, weight: .medium)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingMedium)
@@ -92,10 +98,21 @@ struct GoogleSignInButton: View {
     }
 }
 
-#Preview {
+// R1 review F3：`PrimaryButton`（`.body` 17pt，EmailSignInView／OTPVerificationView 用）與
+// `SecondaryButton`／`GoogleSignInButton`（`.lead` 22pt medium，只有 WelcomeView 用，LS-101
+// point 5 對齊 Apple 官方鈕實測值）字級不同——分成兩個 Preview，各自反映實際出現的畫面情境，
+// 不要把兩種字級併在同一張預覽裡看起來像沒對齊。
+
+#Preview("Primary（EmailSignInView／OTPVerificationView）") {
     VStack(spacing: AppSpacing.label) {
         PrimaryButton(icon: "paperplane", title: "寄送驗證碼", action: {})
         PrimaryButton(icon: "paperplane", title: "寄送驗證碼", isLoading: true, action: {})
+    }
+    .padding()
+}
+
+#Preview("Secondary／Google（WelcomeView）") {
+    VStack(spacing: AppSpacing.group) {
         SecondaryButton(icon: "envelope", title: "使用 Email 登入", action: {})
         SecondaryButton(icon: "envelope", title: "使用 Email 登入", isDimmed: true, action: {})
         GoogleSignInButton(action: {})
