@@ -32,7 +32,7 @@ printf '%s\n' "$added" | bash "$(git rev-parse --show-toplevel)/scripts/gates/sc
 # 已追蹤檔不得命中 .gitignore（LS-51：設計畫布執行產物——ignore 規則管不到已追蹤／git add -f 硬加的檔）
 bash "$(git rev-parse --show-toplevel)/scripts/gates/tracked-ignored-check.sh"
 
-# 審查取證不得進版控（LS-61：staged 路徑任一目錄層命中 *review*／ls[0-9]*、或 *.png 不在 design/／
+# 審查取證不得進版控（LS-61：staged 路徑任一目錄層命中 review*／*-review*／ls[0-9]*、或 *.png 不在 design/／
 # LittleSprout/Assets*／docs/ 白名單即擋——.gitignore 只認固定位置 .claude/evidence/，散落路徑沒規則可 ignore）
 bash "$(git rev-parse --show-toplevel)/scripts/gates/evidence-path-check.sh"
 

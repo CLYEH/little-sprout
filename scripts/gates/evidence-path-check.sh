@@ -4,7 +4,8 @@
 # visual-reviewer／ui-designer／qa 的截圖、匯出、掃描輸出固定落在 .claude/evidence/<票號>/<輪次>/
 # （根 .gitignore 已 ignore；git add -f 硬加的由 tracked-ignored-check 擋）。這裡擋的是「沒照規矩放、
 # 又 git add 進來」的形狀——歷史上取證散落在 worktree 根（ls46r7-review/、ls46r8/…），.gitignore
-# 沒有規則可 ignore。staged 路徑任一目錄層命中 *review*／ls[0-9]*，或檔名 *.png 不在白名單
+# 沒有規則可 ignore。staged 路徑任一目錄層以 review 開頭或含 -review（review*／*-review*；不是 *review*——
+# 那會誤擋 Xcode 預設的 Preview Content/）、或以 ls<數字> 開頭，或檔名 *.png 不在白名單
 # （design/、LittleSprout/Assets*、docs/）即紅並列出檔案。目錄名規則不看白名單（docs/ 底下也不准有 *review*/）。
 #
 # 只看 index（--diff-filter=d：新增／修改／rename 目的地，不含刪除——清掉歷史誤入版控的取證要放行），
@@ -20,10 +21,10 @@ hits=""
 while IFS= read -r p; do
   [ -n "$p" ] || continue
   why=""
-  # 目錄層：pattern 裡的 * 可跨 /，*review*/* 等價於「任一目錄層含 review」、*/ls[0-9]*/* 等價於
-  # 「任一非首層目錄以 ls<數字> 開頭」（首層另列）；檔名層不算（visual-reviewer.md、ls46-notes.md 放行）
+  # 目錄層：pattern 裡的 * 可跨 /，*-review*/* 等價於「任一目錄層含 -review」、*/review*/* 等價於
+  # 「任一非首層目錄以 review 開頭」（首層另列；ls[0-9] 同法）；檔名層不算（visual-reviewer.md、ls46-notes.md 放行）
   case "$p" in
-    *review*/*) why='目錄層命中 *review*/' ;;
+    review*/*|*/review*/*|*-review*/*) why='目錄層命中 review*/ 或 *-review*/' ;;
     ls[0-9]*/*|*/ls[0-9]*/*) why='目錄層命中 ls[0-9]*/' ;;
   esac
   if [ -z "$why" ]; then

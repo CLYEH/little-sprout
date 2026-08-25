@@ -110,6 +110,19 @@ expect 1 '⑫ 多檔命中一次全列（第一檔）' 'ls99r1/x.png'
 expect 1 '⑫′ 多檔命中一次全列（第二檔）' 'Screenshots/home.png'
 g rm -q --cached ls99r1/x.png Screenshots/home.png
 
+# ⑬ 目錄名規則是 review*／*-review*、不是 *review*：Xcode 預設的 Preview Content/ 放行（orchestrator 裁決）
+mk 'Preview Content/x.swift' 'LittleSprout/Preview Content/y.swift'
+g add 'Preview Content/x.swift' 'LittleSprout/Preview Content/y.swift'
+expect 0 '⑬ Preview Content/（含 review 子字串但非 review 開頭／-review）→ 綠'
+g rm -q --cached 'Preview Content/x.swift' 'LittleSprout/Preview Content/y.swift'
+
+# ⑭ 收窄後兩種形狀仍擋：-review 尾綴（歷史 ls46r8-review/）與 review 開頭（review-notes/）
+mk ls46r8-review/x.png review-notes/x.png
+g add ls46r8-review/x.png review-notes/x.png
+expect 1 '⑭ ls46r8-review/x.png（*-review*）仍擋' 'ls46r8-review/x.png'
+expect 1 '⑭′ review-notes/x.png（review* 開頭）仍擋' 'review-notes/x.png'
+g rm -q --cached ls46r8-review/x.png review-notes/x.png
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ evidence-path-check 自測失敗" >&2
   exit 1
