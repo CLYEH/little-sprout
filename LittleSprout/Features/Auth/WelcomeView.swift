@@ -159,6 +159,10 @@ struct WelcomeView: View {
         .accessibilityElement(children: .combine)
     }
 
+    // 三顆鈕間距一致（LS-101 point 1）：單一 VStack `spacing` token 是唯一的間距來源；
+    // 舊版每顆鈕自身還疊加 `.padding(.top:)`（Google +4、Email +$sp-group），量測後段距
+    // 分別是 12pt／20pt，並不等距。改成只用 `AppSpacing.label`（8pt）本身當唯一 token，
+    // 三段間距量測後一致為 8pt（見 handoff）。
     private var actionsSection: some View {
         VStack(spacing: AppSpacing.label) {
             AppleSignInButton(
@@ -169,11 +173,9 @@ struct WelcomeView: View {
             GoogleSignInButton(isDimmed: isSigningInWithApple) {
                 isGoogleStubAlertPresented = true
             }
-            .padding(.top, 4)
             SecondaryButton(icon: "envelope", title: "使用 Email 登入", isDimmed: isSigningInWithApple) {
                 path.append(.emailInput)
             }
-            .padding(.top, AppSpacing.group)
         }
     }
 

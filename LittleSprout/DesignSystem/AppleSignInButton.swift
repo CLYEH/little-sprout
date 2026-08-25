@@ -32,6 +32,9 @@ struct AppleSignInButton: View {
             SignInWithAppleButton(.signIn, onRequest: onRequest, onCompletion: onCompletion)
                 .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
                 .frame(height: buttonHeight)
+                // 圓角對齊 Primary／Secondary／Google 鈕同一個 token（LS-101 point 2）：
+                // 官方按鈕預設 cornerRadius 是 6pt，不套 token 會與其他三顆鈕（14pt）不齊。
+                .cornerRadius(AppSpacing.radiusMedium)
                 .disabled(isSigningIn)
                 .opacity(isSigningIn ? 0 : 1)
                 .accessibilityHidden(isSigningIn)
