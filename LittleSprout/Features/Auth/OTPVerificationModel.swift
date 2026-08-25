@@ -74,16 +74,20 @@ final class OTPVerificationModel {
         }
     }
 
-    /// 這幾個後端錯誤碼不是「這組碼打錯了」——即使打的碼完全正確也會出現，不該算使用者
-    /// 用掉一次嘗試（R3 review B3）：`otp_expired` 是碼本身過期（在 `.validationRetryable`
-    /// 或 `.rejected` 都觀察到過，見 `AppErrorTests` 400 案例與正式環境實測的 403 案例，
-    /// `mapAPIStatus` 只依 HTTP 狀態碼分層、不看 `code`），三個 rate-limit 碼是打太快，
-    /// 兩者都該提示使用者換一個動作（重寄／等一下），不是暗示「碼打錯了」。
+    /// 只有 rate-limit 碼不該算使用者用掉一次嘗試（R4 review A1，修正 R3 引入的回歸）：
+    /// 打太快跟這組碼本身無關，該提示使用者等一下，不是暗示「碼打錯了」。
+    ///
+    /// `otp_expired` **刻意不在這個集合裡**：本機 GoTrue v2.195.0 實測（`scripts/ops/
+    /// supabase-lock.sh` 序列化跑的三段 curl）——剛寄出、仍在有效期內的碼被打錯（例如
+    /// 全填 000000）也回 403 `otp_expired`／`"Token has expired or is invalid"`。GoTrue
+    /// 刻意把「碼不對」與「碼過期」壓成同一個碼與同一句訊息（防帳號／碼列舉），訊息裡的
+    /// "or is invalid" 就是證據。R3 把 `otp_expired` 當成「一定是過期」而跳過計次，
+    /// 長輩打錯碼時反而看到「已經過期」、次數不扣、又撞上重寄冷卻——唯一有用的提示
+    /// 「還可以再試」永遠出不來。所以 `otp_expired` 照一般打錯碼處理：計次＋誠實文案
+    /// （見 `recordFailure()`），不能二選一斷言成「一定是過期」。
     private static let nonAttemptConsumingCodes: Set<String> = [
-        "otp_expired",
         "over_request_rate_limit",
-        "over_email_send_rate_limit",
-        "over_sms_send_rate_limit"
+        "over_email_send_rate_limit"
     ]
 
     private func applyVerificationFailure(_ error: Error) {
@@ -91,7 +95,7 @@ final class OTPVerificationModel {
         switch appError {
         case .validationRetryable(_, let code), .rejected(_, let code):
             if let code, Self.nonAttemptConsumingCodes.contains(code) {
-                errorMessage = message(forNonAttemptConsumingCode: code)
+                errorMessage = "太多次嘗試了，請稍候一下再試一次。"
             } else {
                 recordFailure()
             }
@@ -100,18 +104,9 @@ final class OTPVerificationModel {
         }
     }
 
-    private func message(forNonAttemptConsumingCode code: String) -> String {
-        switch code {
-        case "otp_expired":
-            return "這組驗證碼已經過期了，請重新寄一組新的再試。"
-        default:
-            return "太多次嘗試了，請稍候一下再試一次。"
-        }
-    }
-
     private func recordFailure() {
         remainingAttempts = max(0, remainingAttempts - 1)
-        errorMessage = "驗證碼不對，還可以再試 \(remainingAttempts) 次"
+        errorMessage = "驗證碼不對或已經過期，還可以再試 \(remainingAttempts) 次；沒收到的話請重新寄一組。"
     }
 
     @discardableResult

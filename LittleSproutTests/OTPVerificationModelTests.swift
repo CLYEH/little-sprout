@@ -56,7 +56,7 @@ final class OTPVerificationModelTests: XCTestCase {
 
         XCTAssertFalse(result)
         XCTAssertEqual(model.remainingAttempts, 4)
-        XCTAssertEqual(model.errorMessage, "驗證碼不對，還可以再試 4 次")
+        XCTAssertEqual(model.errorMessage, "驗證碼不對或已經過期，還可以再試 4 次；沒收到的話請重新寄一組。")
     }
 
     func test_verify_failure_keepsEnteredCode() async {
@@ -83,7 +83,7 @@ final class OTPVerificationModelTests: XCTestCase {
         XCTAssertEqual(model.remainingAttempts, 1)
         _ = await model.verify()
         XCTAssertEqual(model.remainingAttempts, 0)
-        XCTAssertEqual(model.errorMessage, "驗證碼不對，還可以再試 0 次")
+        XCTAssertEqual(model.errorMessage, "驗證碼不對或已經過期，還可以再試 0 次；沒收到的話請重新寄一組。")
     }
 
     func test_verify_afterAttemptsExhausted_doesNotCallAuthServiceAgain() async {
@@ -128,13 +128,19 @@ final class OTPVerificationModelTests: XCTestCase {
         XCTAssertEqual(model.errorMessage, AppError.server(message: "boom", code: nil).userFacingMessage)
     }
 
-    // MARK: - otp_expired／429 不算碼錯（R3 review B3）
+    // MARK: - otp_expired 是「碼錯或過期」同一個碼（R4 review A1，修正 R3 引入的回歸）
 
-    func test_verify_otpExpired_doesNotDecrementAttempts_promptsResend() async {
-        // 正式環境實測：碼過期以 403（.rejected 層）回來，不是 400（見 R3 handoff）。
+    func test_verify_otpExpiredCode_decrementsAttempts_withAmbiguousMessage() async {
+        // 本機 GoTrue v2.195.0 實測（`scripts/ops/supabase-lock.sh` 序列化跑的三段 curl，
+        // 見 LS-17 R3 review comment A1）：剛寄出、仍在有效期內的碼被打錯（例如全填
+        // 000000）也回 403 `otp_expired`／`"Token has expired or is invalid"`——GoTrue
+        // 刻意把「碼不對」與「碼過期」壓成同一個碼與同一句訊息（防帳號／碼列舉），訊息裡
+        // 的 "or is invalid" 就是證據。這條測試釘住的是「GoTrue 分不出碼錯／過期，UI 不
+        // 能二選一斷言」這件事本身（Rule 8），不是單純比對字串——R3 把 otp_expired 當成
+        // 「一定是過期」而跳過計次，正是這裡要擋住的回歸。
         let stub = StubAuthService()
         stub.setVerifyEmailOTPHandler { _, _ in
-            throw AppError.rejected(message: "token has expired or is invalid", code: "otp_expired")
+            throw AppError.rejected(message: "Token has expired or is invalid", code: "otp_expired")
         }
         let (model, _) = makeModel(maxAttempts: 5, stub: stub)
         model.updateCode("111111")
@@ -142,11 +148,12 @@ final class OTPVerificationModelTests: XCTestCase {
         let result = await model.verify()
 
         XCTAssertFalse(result)
-        XCTAssertEqual(model.remainingAttempts, 5, "碼過期不是打錯字，不該扣長輩的嘗試次數")
-        XCTAssertEqual(model.errorMessage, "這組驗證碼已經過期了，請重新寄一組新的再試。")
+        XCTAssertEqual(model.remainingAttempts, 4, "otp_expired 可能是打錯碼，必須計次，不能假設一定是過期")
+        XCTAssertEqual(model.errorMessage, "驗證碼不對或已經過期，還可以再試 4 次；沒收到的話請重新寄一組。")
     }
 
     func test_verify_rateLimited_doesNotDecrementAttempts_showsCooldownMessage() async {
+        // 429／over_request_rate_limit 是打太快，跟這組碼本身無關，才是唯一不扣次數的情境。
         let stub = StubAuthService()
         stub.setVerifyEmailOTPHandler { _, _ in
             throw AppError.validationRetryable(message: "rate limited", code: "over_request_rate_limit")
@@ -174,7 +181,7 @@ final class OTPVerificationModelTests: XCTestCase {
         XCTAssertFalse(result)
         XCTAssertNotNil(model.errorMessage, "次數用盡後按下確認登入不能靜默無反應")
         XCTAssertNotEqual(
-            model.errorMessage, "驗證碼不對，還可以再試 0 次",
+            model.errorMessage, "驗證碼不對或已經過期，還可以再試 0 次；沒收到的話請重新寄一組。",
             "應給出可重寄的明確出路，不是沿用舊的計次訊息"
         )
     }
