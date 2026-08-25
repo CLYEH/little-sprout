@@ -52,7 +52,14 @@
 --       target_family_id／notify_comment_created／notify_reaction_added／
 --       notify_diary_created／notify_album_created）逐支重複這個 grant→紅→
 --       revoke→綠的循環，全部驗過，套用後皆已改回原狀（migration 檔本身未變更，
---       只在本機交易內臨時 grant 過又 rollback，不留痕跡）。
+--       只在本機交易內臨時 grant 過又 rollback，不留痕跡）。LS-84（PR #124 review
+--       F2）補充：六支之中只有 record_notification_event／target_family_id 兩支
+--       的紅是這裡描述的 v_err=NULL（成功）情境；其餘四支 notify_* 是 `returns
+--       trigger` 的函式，實測到的紅是 sqlstate=0A000「trigger functions can
+--       only be called as triggers」，不是 NULL——理由見 §8 開頭 :1003-1010 的
+--       因果說明（EXECUTE 權限檢查先於「是不是 trigger 函式」的檢查，但沒有
+--       EXECUTE 時卡在 42501；一旦 grant 了 EXECUTE，才會繼續往下走到「不是被
+--       trigger 機制呼叫」這個 0A000）。
 -- ---------------------------------------------------------------------------
 
 \set ON_ERROR_STOP on
@@ -1078,71 +1085,42 @@ begin
 end;
 $$;
 
+-- LS-84（merge-reviewer PR #124 review F1，minor）：anon 沒有 schema private 的
+-- USAGE（init_schema.sql:16-17 只 `grant usage on schema private to
+-- authenticated`），所以 private. 底下任何名稱在名稱解析階段就先被擋下——不論
+-- 函式存不存在、有沒有被 grant，anon 呼叫都會是同一句「42501 permission denied
+-- for schema private」。上面 authenticated 那段逐支斷言是有意義的（六支各自的
+-- EXECUTE grant 狀態不同、真的各自被驗到）；但這裡若依樣逐支斷言 sqlstate=42501，
+-- 六句只是同一件事（anon 沒有 schema USAGE）重複驗六次——名稱解析階段就先擋下，
+-- 六支函式各自的 grant 狀態完全不影響這裡的結果，是恆真的空案。改成一次呼叫＋
+-- 斷言錯誤訊息的形狀（sqlerrm like '%schema private%'），把「這裡驗的是 schema
+-- 層，不是函式層」講死。
 do $$
 declare
   v_family uuid := 'fa000000-0000-4000-8000-000000000001';
   v_target uuid := 'ffffffff-0000-4000-8000-000000000011';
   v_actor uuid := 'a0000000-0000-4000-8000-000000000001';
   v_err text;
+  v_msg text;
 begin
   set local role anon;
 
   v_err := null;
+  v_msg := null;
   begin
     perform private.record_notification_event(v_family, 'comment', 'media', v_target, v_actor);
-  exception when others then v_err := sqlstate;
+  exception when others then
+    v_err := sqlstate;
+    v_msg := sqlerrm;
   end;
-  if v_err is distinct from '42501' then
-    raise exception 'FAIL：anon 直呼 private.record_notification_event 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
-  end if;
-
-  v_err := null;
-  begin
-    perform private.target_family_id('media', v_target);
-  exception when others then v_err := sqlstate;
-  end;
-  if v_err is distinct from '42501' then
-    raise exception 'FAIL：anon 直呼 private.target_family_id 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
-  end if;
-
-  v_err := null;
-  begin
-    perform private.notify_comment_created();
-  exception when others then v_err := sqlstate;
-  end;
-  if v_err is distinct from '42501' then
-    raise exception 'FAIL：anon 直呼 private.notify_comment_created 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
-  end if;
-
-  v_err := null;
-  begin
-    perform private.notify_reaction_added();
-  exception when others then v_err := sqlstate;
-  end;
-  if v_err is distinct from '42501' then
-    raise exception 'FAIL：anon 直呼 private.notify_reaction_added 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
-  end if;
-
-  v_err := null;
-  begin
-    perform private.notify_diary_created();
-  exception when others then v_err := sqlstate;
-  end;
-  if v_err is distinct from '42501' then
-    raise exception 'FAIL：anon 直呼 private.notify_diary_created 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
-  end if;
-
-  v_err := null;
-  begin
-    perform private.notify_album_created();
-  exception when others then v_err := sqlstate;
-  end;
-  if v_err is distinct from '42501' then
-    raise exception 'FAIL：anon 直呼 private.notify_album_created 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  if v_err is distinct from '42501' or v_msg not like '%schema private%' then
+    raise exception
+      'FAIL：anon 直呼 private.record_notification_event 應該撞 42501「permission denied for schema private」，實際 sqlstate=%，訊息=%',
+      coalesce(v_err, '（無，成功——授權邊界形同虛設）'), coalesce(v_msg, '（無）');
   end if;
 
   reset role;
-  raise notice 'ok：anon 直呼六支 LS-58 private 函式（record_notification_event／target_family_id／四支 notify_*）皆 42501';
+  raise notice 'ok：anon 呼叫 private. 底下任何名稱皆卡在 schema USAGE（42501 permission denied for schema private）——這一句斷言驗的是「anon 沒有 private schema 的 USAGE」這件事本身，不是六支函式各自的 grant（其餘五支同理，逐支重複驗只會是恆真的空案，不再重複）';
 end;
 $$;
 
