@@ -316,6 +316,85 @@ has   '⑪ 殘留 tomb → --brief 也印' "$(bash "$patrol" --repo "$repo" --no
 jq_ok '⑪ --json supabase_lock 含 tomb 行' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)" '.supabase_lock | test("tomb")'
 rm -rf "$SUPABASE_LOCK_DIR" "$SUPABASE_LOCK_DIR.stale.1.2"
 
+# ---- ⑭ 專屬模擬器 >7 天未用（LS-83）：xcrun 假身回固定 JSON，驗 lastBootedAt／目錄 mtime 兩種判定、
+#        名稱不符 <票號>-<機型> 樣式（非 detect-simulator.sh 所建）不管、只列不刪＋印 simctl delete 指令、
+#        --brief／--json 都看得到；xcrun 本身失敗（非 macOS／查詢出錯）fail-soft 不當異常炸掉 ----
+mkdir -p "$work/bin" "$work/simdevs/SIM-OLDDIR/data"
+touch -t "$OLD_T" "$work/simdevs/SIM-OLDDIR"   # 無 lastBootedAt 的裝置：靠這個目錄的 mtime 判老
+now_iso=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+esc_dpath=$(printf '%s' "$work/simdevs/SIM-OLDDIR/data" | sed 's/\//\\\//g')
+cat > "$work/simdevices.json" <<JSON
+{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-0" : [
+      {
+        "lastBootedAt" : "${now_iso}",
+        "dataPath" : "\/tmp\/unused-fresh\/data",
+        "udid" : "SIM-FRESH",
+        "state" : "Shutdown",
+        "name" : "LS-83-iPhone17Pro"
+      },
+      {
+        "lastBootedAt" : "${OLD}",
+        "dataPath" : "\/tmp\/unused-old\/data",
+        "udid" : "SIM-OLD",
+        "state" : "Shutdown",
+        "name" : "LS-90-iPhoneAir"
+      },
+      {
+        "dataPath" : "${esc_dpath}",
+        "udid" : "SIM-OLDDIR",
+        "state" : "Shutdown",
+        "name" : "main-iPhone17"
+      },
+      {
+        "lastBootedAt" : "${OLD}",
+        "dataPath" : "\/tmp\/unused-other\/data",
+        "udid" : "SIM-OTHER",
+        "state" : "Shutdown",
+        "name" : "iPhone 17 Pro"
+      },
+      {
+        "lastBootedAt" : "${OLD}",
+        "dataPath" : "\/tmp\/unused-lastold\/data",
+        "udid" : "SIM-LASTOLD",
+        "state" : "Shutdown",
+        "name" : "LS-95-iPhoneAir"
+      }
+    ]
+  }
+}
+JSON
+cat > "$work/bin/xcrun" <<STUB
+#!/bin/bash
+if [ -n "\${STUB_XCRUN_FAIL:-}" ]; then exit 1; fi
+if [ "\$1" = simctl ] && [ "\$2" = list ] && [ "\$3" = devices ] && [ "\$4" = -j ]; then
+  cat "$work/simdevices.json"
+  exit 0
+fi
+exit 1
+STUB
+chmod +x "$work/bin/xcrun"
+
+out14="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑭ 老裝置（lastBootedAt 超過 7 天）→ 列出並印 simctl delete' "$out14" 'LS-90-iPhoneAir（SIM-OLD）'
+has   '⑭ 指令含 xcrun simctl delete SIM-OLD' "$out14" 'xcrun simctl delete SIM-OLD'
+hasnt '⑭ 剛用過的（lastBootedAt 近期）不列' "$out14" 'SIM-FRESH'
+has   '⑭ 無 lastBootedAt 退回目錄 mtime 判定為老 → 列出' "$out14" 'main-iPhone17（SIM-OLDDIR）'
+hasnt '⑭ 名稱不符 <票號>-<機型> 樣式不管' "$out14" 'SIM-OTHER'
+# 陣列／檔案最後一台裝置（SIM-LASTOLD）之後還有多個收尾大括號（"]"／物件 "}"／外層 "}"）——awk 狀態機
+# 印過一筆要清空，不然檔尾這些收尾大括號會把最後一筆重複印出（曾經的迴歸：只在最後一台裝置身上發生）
+lastold_count=$(printf '%s' "$out14" | grep -c 'LS-95-iPhoneAir（SIM-LASTOLD）' || true)
+if [ "$lastold_count" -eq 1 ]; then echo "✓ ⑭ 檔尾裝置（最後一筆）只列一次，不被收尾大括號重複印出"; else echo "✗ ⑭ 檔尾裝置列了 ${lastold_count} 次（應為 1）" >&2; fail=1; fi
+brief14="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '⑭ --brief 也看得到（掛 add_flag）' "$brief14" '[專屬模擬器 LS-90-iPhoneAir]'
+json14="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '⑭ --json：stale_simulators 只含三筆老裝置（SIM-OLD／SIM-OLDDIR／SIM-LASTOLD），不含 SIM-FRESH（未超過門檻不列入）' "$json14" \
+  '([.stale_simulators[].udid] | sort) == (["SIM-LASTOLD","SIM-OLD","SIM-OLDDIR"] | sort)'
+out14b="$(STUB_XCRUN_FAIL=1 PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
+rc_is '⑭ xcrun 本身失敗（非 macOS／查詢出錯）→ 仍 exit 0，不當異常炸掉' 0 "$rc" "$out14b"
+hasnt '⑭ xcrun 失敗時不誤列任何裝置' "$out14b" 'xcrun simctl delete'
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
 fi
