@@ -10,6 +10,7 @@ struct EmailSignInView: View {
     let onCodeSent: (String) -> Void
 
     @State private var model: EmailSignInModel
+    @State private var keyboard = KeyboardHeightObserver()
 
     init(authStore: AuthStore, onCodeSent: @escaping (String) -> Void) {
         self.authStore = authStore
@@ -48,6 +49,10 @@ struct EmailSignInView: View {
             .padding(.horizontal, AppSpacing.screenPad)
             .padding(.top, AppSpacing.label)
         }
+        // LS-105：safeAreaInset 的 CTA 會正確貼齊鍵盤上緣，但 ScrollView 本身不會跟著收縮可視
+        // 範圍（KeyboardHeightObserver 檔頭注解有實測說明）；補這行讓可捲動內容的底界跟著鍵盤
+        // 收縮，兩者才不會互相蓋到。
+        .contentMargins(.bottom, keyboard.height, for: .scrollContent)
         // LS-105：CTA 固定在鍵盤上方（safeAreaInset），理由同 OTPVerificationView。
         .safeAreaInset(edge: .bottom) {
             PrimaryButton(icon: "paperplane.fill", title: "寄送驗證碼", isLoading: model.isSending, action: send)
