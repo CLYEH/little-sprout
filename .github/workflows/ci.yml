@@ -114,9 +114,9 @@ jobs:
       # （branch-ticket-check／merge-conflict-check）、「PR body 檔頭段含本票票號」（pr-body-check）與
       # 「審查取證不進版控」（evidence-path-check）與「品牌 skill 接線」（brand-skill-check，LS-30）與「push 目標 ref 分類：
       # 刪除／tag 早退、test／main 只准 promote.sh FF」（push-ref-check，LS-85）與「agent 定義 tools: 白名單含必要工具」
-      # （agent-tools-check，LS-87）的偵測不退化
+      # （agent-tools-check，LS-87）與「PreToolUse H1-H3 fail-closed 分派」（pretool，LS-88）的偵測不退化
       # （前饋必有反饋，對 gate 本身也適用）。集中在同一個 step，維持「一個地方跑所有 gate 自測」。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check）
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／pretool）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -135,6 +135,7 @@ jobs:
           bash scripts/gates/push-ref-check.test.sh || rc=1
           bash scripts/gates/agent-tools-check.test.sh || rc=1
           bash scripts/gates/detect-simulator.test.sh || rc=1
+          bash scripts/hooks/pretool.test.sh || rc=1
           exit "$rc"
 
       # LS-30：品牌 skill 接線——前饋是 ui-designer／visual-reviewer 定義「開工先載入 little-sprout-brand」，載入動作
