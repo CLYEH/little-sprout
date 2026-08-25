@@ -129,7 +129,7 @@ extension OTPVerificationModelTests {
         XCTAssertFalse(model.resendRateLimitSecondsAreReal)
     }
 
-    // MARK: - R3 F8：長等待時間存的仍是原始秒數，換算成分鐘是 View 端用 humanReadableWaitTime 的事
+    // MARK: - R3 F8：長等待時間存的仍是原始秒數，換算成分鐘是 View 端用 waitClause 的事
 
     func test_resend_rateLimited_longWait_storesRawSecondsForViewToFormat() async {
         let stub = StubAuthService()
@@ -145,7 +145,7 @@ extension OTPVerificationModelTests {
         _ = await model.resend()
 
         XCTAssertTrue(model.resendRateLimitSecondsAreReal)
-        XCTAssertEqual(model.resendCooldown, 125, "model 存原始秒數；F8 的「約 N 分鐘」換算是 View 用 humanReadableWaitTime 做的")
-        XCTAssertEqual(OTPVerificationModel.humanReadableWaitTime(seconds: model.resendCooldown), "約 2 分鐘")
+        XCTAssertEqual(model.resendCooldown, 125, "model 存原始秒數；F8 的「約 N 分鐘」換算是 View 用 waitClause 做的")
+        XCTAssertEqual(OTPVerificationModel.waitClause(seconds: model.resendCooldown), "請等約 2 分鐘再試")
     }
 }

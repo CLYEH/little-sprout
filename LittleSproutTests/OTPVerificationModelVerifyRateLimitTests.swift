@@ -139,15 +139,29 @@ extension OTPVerificationModelTests {
         )
     }
 
-    // MARK: - R3 F8：秒數 ≥90 換算成「約 N 分鐘」
+    // MARK: - R3 F8／R4 m1／m2：秒數 ≥90 換算成「約 N 分鐘」、≥3600 換算成「約 N 小時」
 
-    func test_humanReadableWaitTime_belowNinety_showsRawSeconds() {
-        XCTAssertEqual(OTPVerificationModel.humanReadableWaitTime(seconds: 89), "89 秒")
+    func test_waitClause_belowNinety_showsRawSeconds() {
+        XCTAssertEqual(OTPVerificationModel.waitClause(seconds: 89), "請等 89 秒再試")
     }
 
-    func test_humanReadableWaitTime_atOrAboveNinety_showsMinutes() {
-        XCTAssertEqual(OTPVerificationModel.humanReadableWaitTime(seconds: 90), "約 2 分鐘")
-        XCTAssertEqual(OTPVerificationModel.humanReadableWaitTime(seconds: 125), "約 2 分鐘")
+    func test_waitClause_atOrAboveNinety_showsMinutes() {
+        XCTAssertEqual(OTPVerificationModel.waitClause(seconds: 90), "請等約 2 分鐘再試")
+        XCTAssertEqual(OTPVerificationModel.waitClause(seconds: 125), "請等約 2 分鐘再試")
+    }
+
+    func test_waitClause_atOrAboveOneHour_showsHours() {
+        // R4 m2：3600 秒＝約 1 小時、5400 秒＝約 2 小時——四捨五入方向跟分鐘一致
+        // （`Double.rounded()`：5400/3600=1.5 進位到 2）。
+        XCTAssertEqual(OTPVerificationModel.waitClause(seconds: 3600), "請等約 1 小時再試")
+        XCTAssertEqual(OTPVerificationModel.waitClause(seconds: 5400), "請等約 2 小時再試")
+    }
+
+    func test_waitClause_neverHasExtraSpaceBeforeApproximation() {
+        // R4 m1：「約」是漢字，不像數字需要留一格半形空白——「請等約 2 分鐘再試」才對，
+        // 「請等 約 2 分鐘再試」多了一個看得出來的空格。
+        XCTAssertFalse(OTPVerificationModel.waitClause(seconds: 125).contains("等 約"))
+        XCTAssertFalse(OTPVerificationModel.waitClause(seconds: 5400).contains("等 約"))
     }
 
     func test_verify_rateLimited_longWait_messageUsesMinutesNotRawSeconds() async {
@@ -163,7 +177,10 @@ extension OTPVerificationModelTests {
 
         _ = await model.verify()
 
-        XCTAssertEqual(model.visibleMessages.first?.text, "太多次嘗試了，請等 約 2 分鐘再試。", "F8：≥90 秒要換算成分鐘，不是報 125 秒")
+        XCTAssertEqual(
+            model.visibleMessages.first?.text, "太多次嘗試了，請等約 2 分鐘再試。",
+            "F8：≥90 秒要換算成分鐘，不是報 125 秒；R4 m1：等與約之間不能多一格"
+        )
     }
 
     // MARK: - R3 F9：verify 限流中按「確認登入」給予回饋

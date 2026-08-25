@@ -137,10 +137,12 @@ struct OTPVerificationView: View {
         guard model.isResendRateLimited else {
             return "沒收到驗證碼？\(model.resendCooldown) 秒後可重新寄送"
         }
-        // R3 F8：秒數 ≥90 換算成「約 N 分鐘」，不逐秒報數字給長輩看。
-        return model.resendRateLimitSecondsAreReal
-            ? "寄太頻繁了，請等 \(OTPVerificationModel.humanReadableWaitTime(seconds: model.resendCooldown))再試"
-            : "寄送太頻繁了，請稍後再試"
+        // R3 F8／R4 m1／m2：秒數 ≥90 換算成分鐘、≥3600 換算成小時，不逐秒報數字給長輩看；
+        // `waitClause` 自己決定「請等」到數字之間該不該留空格，這裡不再自己組字串（R4 m1）。
+        guard model.resendRateLimitSecondsAreReal else {
+            return "寄送太頻繁了，請稍後再試"
+        }
+        return "寄太頻繁了，\(OTPVerificationModel.waitClause(seconds: model.resendCooldown))"
     }
 
     private func verify() {

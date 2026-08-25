@@ -117,6 +117,38 @@ extension OTPVerificationModelTests {
         XCTAssertTrue(model.isLocked, "resend 失敗不該解除鎖定——次數仍是 0")
     }
 
+    // MARK: - verify 限流黏著（0 狀態）不得蓋掉 resend 的錯誤（R4，LS-92 PR #155 review R3 m3）
+
+    func test_visibleMessages_whenVerifyRateLimitStuckAtZero_andResendFailsWithNetworkError_showsBothMessages() async {
+        // `verifyRateLimitSecondsRemaining == 0`（解不出真實秒數，沒有計時器會把它歸零）會
+        // 一直黏著，直到下一次 verify() 成功打後端前才清掉。原本 `visibleMessages` 第二格是
+        // `else if`，這則黏著訊息會蓋掉之後 resend() 因網路／伺服器錯誤寫進的 errorMessage
+        // ——跟 F6 是同一種「兩件事、兩句話」，改成疊加。
+        let stub = StubAuthService()
+        stub.setVerifyEmailOTPHandler { _, _ in
+            throw AppError.validationRetryable(message: "Request rate limit reached", code: "over_request_rate_limit")
+        }
+        let (model, _) = makeModel(cooldownSeconds: 1, stub: stub)
+        model.updateCode("111111")
+        _ = await model.verify()
+        XCTAssertEqual(model.verifyRateLimitSecondsRemaining, 0)
+        XCTAssertFalse(model.isLocked)
+        let rateLimitMessageBeforeResend = model.visibleMessages.first?.text
+        XCTAssertNotNil(rateLimitMessageBeforeResend)
+        model.tickCooldown()
+        XCTAssertTrue(model.canResend)
+        stub.setSendEmailOTPHandler { _ in throw AppError.network(message: "offline") }
+
+        let result = await model.resend()
+
+        XCTAssertFalse(result)
+        XCTAssertEqual(model.visibleMessages.count, 2, "m3：黏著的限流訊息與 resend 失敗訊息要兩句併陳，不能被蓋掉")
+        XCTAssertEqual(model.visibleMessages.first?.text, rateLimitMessageBeforeResend)
+        XCTAssertEqual(model.visibleMessages.first?.tone, .neutral)
+        XCTAssertEqual(model.visibleMessages.last?.text, AppError.network(message: "offline").userFacingMessage)
+        XCTAssertEqual(model.visibleMessages.last?.tone, .danger)
+    }
+
     func test_visibleMessages_lockAndErrorTonesAreDanger() async {
         let stub = StubAuthService()
         stub.setVerifyEmailOTPHandler { _, _ in throw AppError.validationRetryable(message: "bad", code: nil) }

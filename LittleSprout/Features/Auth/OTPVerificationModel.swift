@@ -122,7 +122,13 @@ final class OTPVerificationModel {
         }
         if let seconds = verifyRateLimitSecondsRemaining {
             messages.append(OTPMessage(text: verifyRateLimitDisplayMessage(seconds: seconds), tone: .neutral))
-        } else if let errorMessage {
+        }
+        // R4（LS-92 PR #155 review R3 m3）：上面這格黏著時（`verifyRateLimitSecondsRemaining`
+        // 停在 0——解不出真實秒數、沒有計時器會把它歸零）不能用 `else if` 蓋掉 `errorMessage`。
+        // 具體情境：verify() 撞過一次「解不出秒數」的限流後，使用者改按「重新寄一次」卻因為
+        // 網路／伺服器錯誤失敗（只寫 `errorMessage`）——這則失敗訊息不該被那則黏著的舊限流
+        // 訊息蓋住，跟 F6 是同一種「兩件事，兩句話」，改成疊加。
+        if let errorMessage {
             messages.append(OTPMessage(text: errorMessage, tone: .danger))
         }
         return messages
@@ -131,17 +137,28 @@ final class OTPVerificationModel {
     /// R3 F7：verify 限流訊息的語氣跟「碼錯」／「次數用盡」不同，不該共用紅框驚嘆號那套
     /// 文法——這裡只影響顏色／icon 選擇，`View` 端對照 `tone` 渲染。
     private func verifyRateLimitDisplayMessage(seconds: Int) -> String {
-        seconds > 0
-            ? "太多次嘗試了，請等 \(Self.humanReadableWaitTime(seconds: seconds))再試。"
-            : "太多次嘗試了，請稍候一下再試一次。"
+        guard seconds > 0 else { return "太多次嘗試了，請稍候一下再試一次。" }
+        return "太多次嘗試了，\(Self.waitClause(seconds: seconds))。"
     }
 
-    /// R3 F8：秒數 ≥90 換成「約 N 分鐘」，長輩不需要精確到秒的等待預期，換算成分鐘更好懂；
-    /// 四捨五入到分。<90 才照原樣顯示秒數。
-    static func humanReadableWaitTime(seconds: Int) -> String {
-        guard seconds >= 90 else { return "\(seconds) 秒" }
-        let minutes = Int((Double(seconds) / 60).rounded())
-        return "約 \(minutes) 分鐘"
+    /// R3 F8／R4 m1／m2（LS-92 PR #155 review R2／R3）：把「請等」到「秒／分鐘／小時」之間
+    /// 該不該留半形空格，一起交給這個函式決定——不能讓呼叫端用同一個「請等 \(X)」樣板去接
+    /// 不同分支的回傳值：「等 30 秒」數字前面留一格是既有慣例，但「約 2 分鐘」前面的
+    /// 「約」是漢字，多留一格反而多一個看得出來的半形空格（R4 m1 修正）。三個級距——
+    /// <90 秒顯示秒數、90–3599 秒換算分鐘、≥3600 秒換算小時（m2）——各自是完整的
+    /// 「請等…再試」子句，四捨五入方向一致（`Double.rounded()`：3600 秒＝約 1 小時、
+    /// 5400 秒＝約 2 小時）。呼叫端只接上自己的原因（「太多次嘗試了，」／「寄太頻繁了，」）
+    /// 與結尾標點，不再自己插入空格或組合語句。
+    static func waitClause(seconds: Int) -> String {
+        if seconds >= 3600 {
+            let hours = Int((Double(seconds) / 3600).rounded())
+            return "請等約 \(hours) 小時再試"
+        }
+        if seconds >= 90 {
+            let minutes = Int((Double(seconds) / 60).rounded())
+            return "請等約 \(minutes) 分鐘再試"
+        }
+        return "請等 \(seconds) 秒再試"
     }
 
     func updateCode(_ newValue: String) {
