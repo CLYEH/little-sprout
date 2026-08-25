@@ -8,6 +8,19 @@
 -- 同理，schema private 的函式建立時預設 `grant execute to public`，
 -- 而 authenticated 是 PUBLIC 的一員又持有 schema private 的 USAGE，
 -- 等於任何登入者都能直接呼叫 SECURITY DEFINER 的 trigger 函式。
+--
+-- ---------------------------------------------------------------------------
+-- Mutation 自證（LS-84，開發期用本機 Supabase CLI 映像手動驗證，非本檔自動執行；
+-- 套用後已改回原狀）：
+--   M1：在一個 begin…rollback 交易內對 `private.enforce_child_not_deleted()`
+--       （merge-reviewer PR #124 review F4 點名的漏網函式——原本不在第 2 段任何
+--       名單裡，改成通掃後才會被涵蓋）追加 `grant execute ... to authenticated`
+--       → 第 2 段的通掃斷言變紅（實測：v_leaky 精準點名
+--       `private.enforce_child_not_deleted()`，訊息「schema private 這些函式
+--       （不在允許清單／例外清單內）對 authenticated 或 anon 開放了 EXECUTE」）；
+--       `revoke execute ... from authenticated` 還原後再次執行變綠。證明通掃真的
+--       會抓到名單外的 grant，不是恆綠的空案。
+-- ---------------------------------------------------------------------------
 
 \set ON_ERROR_STOP on
 
@@ -40,43 +53,78 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- 2. schema private 的函式：trigger 函式不對外，policy 用的集合函式照常可用
+-- 2. schema private 的函式：通掃＋允許清單（LS-84 收斂 merge-reviewer PR #124
+--    review F4——結構性假綠）
+--
+-- LS-84 之前這裡是手寫列舉「不得對 authenticated/anon 開放的 private trigger
+-- 函式」，名單外的函式（已確認漏列 private.enforce_child_not_deleted()／
+-- private.enforce_children_family_immutable()）若日後被 grant execute 給
+-- authenticated，這裡與第 3 段（只管 PUBLIC，管不到直接 grant 給 authenticated）
+-- 都掃不到，三道 gate 全綠——是結構性假綠，不是這兩支剛好被漏記。
+--
+-- 改法：對 schema private「全體」函式通掃，扣掉 v_allow_fns（RLS policy／storage
+-- policy 求值時必須留給 authenticated 的函式，正向對照見下方迴圈）與 v_exceptions
+-- （額外的顯式例外，目前為空；若日後新增例外，必須在此附理由），剩下的每一支都
+-- 斷言 authenticated／anon 皆無 EXECUTE。日後任何新的 private 函式，只要沒有被
+-- 明確登記進允許清單，一律會被這道通掃檢查到——不必再靠人手動記得補列舉。
 -- ---------------------------------------------------------------------------
 do $$
 declare
   v_fn text;
-begin
-  -- SECURITY DEFINER 的 trigger 函式：登入者直接呼叫沒有任何正當用途
-  foreach v_fn in array array[
-    'private.add_creator_as_owner()',
-    'private.enforce_family_has_owner()',
-    'private.feed_sync_albums()',
-    'private.feed_sync_media()',
-    'private.feed_sync_diaries()',
-    'private.media_storage_sync()',
-    'private.enforce_deletion_attribution()'
-  ] loop
-    if has_function_privilege('authenticated', v_fn, 'execute') then
-      raise exception 'FAIL：authenticated 可以直接執行 %（SECURITY DEFINER trigger 函式）', v_fn;
-    end if;
-    if has_function_privilege('anon', v_fn, 'execute') then
-      raise exception 'FAIL：anon 可以直接執行 %', v_fn;
-    end if;
-  end loop;
-  raise notice 'ok：private 的 trigger 函式對 anon/authenticated 都沒有 EXECUTE';
-
-  -- 正向對照：policy 依賴的函式必須留給 authenticated，否則整組 RLS 判斷會噴權限錯。
-  -- LS-40 的 private.is_media_object_path(text) 不是集合函式（是路徑規約的判斷式，
-  -- 給 storage.objects 的 INSERT／UPDATE WITH CHECK 用），但同樣是「policy 求值時會被
-  -- 呼叫、少了 EXECUTE 整條上傳路徑就炸」的東西，所以登記在同一份清單裡。
-  foreach v_fn in array array[
+  v_allow_fns text[] := array[
     'private.family_ids()',
     'private.owned_family_ids()',
     'private.contributor_family_ids()',
     'private.uploadable_family_ids()',
     'private.peer_profile_ids()',
     'private.is_media_object_path(text)'
-  ] loop
+  ];
+  v_exceptions text[] := array[]::text[];  -- 目前無例外；若新增，必須附理由註解
+  v_allow_oids oid[];
+  v_exc_oids oid[];
+  v_swept int;
+  v_leaky text;
+begin
+  select array_agg(f::regprocedure::oid) into v_allow_oids from unnest(v_allow_fns) as f;
+  select coalesce(array_agg(f::regprocedure::oid), array[]::oid[])
+    into v_exc_oids from unnest(v_exceptions) as f;
+
+  -- fail-open 防呆（比照第 9 段）：v_swept 是通掃出來要檢查的函式數量，
+  -- 若為 0（例如允許清單／例外清單意外涵蓋了全部函式，或這段查詢本身寫壞了），
+  -- 代表這道檢查形同沒跑，必須直接 FAIL，不能悄悄地對全體 private 函式視而不見。
+  select count(*) into v_swept
+    from pg_proc p
+   where p.pronamespace = 'private'::regnamespace
+     and p.oid <> all (v_allow_oids)
+     and p.oid <> all (v_exc_oids);
+
+  if v_swept = 0 then
+    raise exception 'FAIL：§2 通掃結果為 0 支 private 函式——允許清單／例外清單意外涵蓋了全部函式，或這段檢查本身寫壞了，防呆攔截';
+  end if;
+
+  select string_agg(p.oid::regprocedure::text, '、' order by p.oid::regprocedure::text)
+    into v_leaky
+    from pg_proc p
+   where p.pronamespace = 'private'::regnamespace
+     and p.oid <> all (v_allow_oids)
+     and p.oid <> all (v_exc_oids)
+     and (
+       has_function_privilege('authenticated', p.oid, 'execute')
+       or has_function_privilege('anon', p.oid, 'execute')
+     );
+
+  if v_leaky is not null then
+    raise exception
+      'FAIL：schema private 這些函式（不在允許清單／例外清單內）對 authenticated 或 anon 開放了 EXECUTE —— %（新增 private 函式若要開放給 authenticated，先到本段 v_allow_fns 登記並附理由；純內部用的 trigger／輔助函式不必登記，維持通掃覆蓋）',
+      v_leaky;
+  end if;
+  raise notice 'ok：schema private 通掃 % 支非允許清單函式，authenticated／anon 皆無 EXECUTE', v_swept;
+
+  -- 正向對照：policy 依賴的函式必須留給 authenticated，否則整組 RLS 判斷會噴權限錯。
+  -- LS-40 的 private.is_media_object_path(text) 不是集合函式（是路徑規約的判斷式，
+  -- 給 storage.objects 的 INSERT／UPDATE WITH CHECK 用），但同樣是「policy 求值時會被
+  -- 呼叫、少了 EXECUTE 整條上傳路徑就炸」的東西，所以登記在同一份清單裡。
+  foreach v_fn in array v_allow_fns loop
     if not has_function_privilege('authenticated', v_fn, 'execute') then
       raise exception 'FAIL：authenticated 失去 % 的 EXECUTE，所有 RLS policy 都會失效', v_fn;
     end if;
@@ -84,7 +132,7 @@ begin
       raise exception 'FAIL：anon 不該有 % 的 EXECUTE', v_fn;
     end if;
   end loop;
-  raise notice 'ok：policy 用的六支 private 函式只有 authenticated 可執行';
+  raise notice 'ok：允許清單內的 % 支 private 函式只有 authenticated 可執行', array_length(v_allow_fns, 1);
 end;
 $$;
 
