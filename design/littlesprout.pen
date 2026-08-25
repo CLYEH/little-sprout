@@ -6110,7 +6110,7 @@
           "id": "vE2OF",
           "name": "Top",
           "width": "fill_container",
-          "height": 452.6,
+          "height": 486.6,
           "layout": "vertical",
           "children": [
             {
@@ -6137,12 +6137,12 @@
               "id": "SzLhU",
               "name": "Print Stage",
               "width": "fill_container",
-              "height": 390.6,
+              "height": 424.6,
               "layout": "none",
               "children": [
                 {
                   "type": "frame",
-                  "id": "C3aJWF",
+                  "id": "DZdZP",
                   "x": 16,
                   "y": 0,
                   "name": "Wordmark Strip",
@@ -6168,13 +6168,19 @@
                     "blur": 6
                   },
                   "layout": "vertical",
-                  "padding": 4,
+                  "gap": "$sp-label",
+                  "padding": [
+                    4,
+                    4,
+                    8,
+                    4
+                  ],
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "G3kSy",
+                      "id": "AyjZc",
                       "name": "App Name (Wordmark)",
                       "metadata": {
                         "type": "a11y",
@@ -6190,6 +6196,20 @@
                         "url": "mengya-diary-crayon-v3.png",
                         "mode": "fit"
                       }
+                    },
+                    {
+                      "type": "text",
+                      "id": "w7SKOJ",
+                      "name": "Tagline",
+                      "fill": "$print-ink-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "給家人的私密相簿",
+                      "lineHeight": 1.5,
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -6197,7 +6217,7 @@
                   "type": "frame",
                   "id": "nfB0j",
                   "x": 16,
-                  "y": 103.6,
+                  "y": 141.6,
                   "name": "Print",
                   "width": 361,
                   "fill": [
@@ -6389,7 +6409,7 @@
                   "ref": "GEBcf",
                   "name": "Corner BL",
                   "x": 11,
-                  "y": 312.7,
+                  "y": 350.7,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M0 26 L0 0 L26 26 Z"
@@ -6405,7 +6425,7 @@
                   "ref": "GEBcf",
                   "name": "Corner BR",
                   "x": 356,
-                  "y": 312.7,
+                  "y": 350.7,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M26 26 L26 0 L0 26 Z"
@@ -6421,7 +6441,7 @@
                   "ref": "GEBcf",
                   "name": "Corner TL",
                   "x": 11,
-                  "y": 98.6,
+                  "y": 136.6,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M0 0 L26 0 L0 26 Z"
@@ -6437,7 +6457,7 @@
                   "ref": "GEBcf",
                   "name": "Corner TR",
                   "x": 356,
-                  "y": 98.6,
+                  "y": 136.6,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M26 0 L0 0 L26 26 Z"
@@ -6474,19 +6494,6 @@
               "layout": "vertical",
               "gap": "$sp-label",
               "children": [
-                {
-                  "type": "text",
-                  "id": "qG4sS",
-                  "name": "Tagline",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "給家人的私密相簿",
-                  "lineHeight": 1.5,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-body",
-                  "fontWeight": "normal"
-                },
                 {
                   "type": "frame",
                   "id": "dczy0",
