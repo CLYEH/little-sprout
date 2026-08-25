@@ -3,8 +3,9 @@
 #
 # 前饋：.claude/agents/*.md 的 frontmatter `tools:` 是**窮舉**白名單——列了就只有那些工具。qa／merge-reviewer 的「裁決必貼
 # commit status」靠 Bash 跑 scripts/ops/post-status.sh、讀票寫 comment 靠三支 Linear 工具；qa 視覺驗收對設計稿路徑靠
-# mcp__pencil__get_app_state；ui-designer／visual-reviewer 操作／截圖 .pen 靠 mcp__pencil__execute。白名單漏列任何一支，
-# 該規約就靜默不可執行（CI 四項全綠、下一次派工才發現——R2 I3 指出、R2 F1 實際發生在 qa 漏了 pencil）。
+# mcp__pencil__get_app_state、實際取圖靠 mcp__pencil__execute（唯讀用途，見 qa.md；LS-91）；ui-designer／visual-reviewer
+# 操作／截圖 .pen 也靠 mcp__pencil__execute。白名單漏列任何一支，該規約就靜默不可執行（CI 四項全綠、下一次派工才發現——
+# R2 I3 指出、R2 F1 實際發生在 qa 漏了 pencil）。
 # 這裡驗每份被點名的 agent 定義：檔案存在、frontmatter 閉合、`tools:` 行含全部必要工具（整字比對：`BashOutput` 不算 `Bash`）。
 # 沒有 `tools:` 行＝繼承全部工具 → 放行並註明（白名單不存在就漏不了）。工具名是否真的存在於 MCP server 只有連上 server
 # 才驗得到（CI 驗不了）——那是盲區；擋得住的是「白名單漏掉必要工具」。
@@ -33,12 +34,17 @@ if [ ! -d "$dir" ]; then
 fi
 
 # 規則表：<agent>|<必要工具（空白分隔）>——加規約時在這裡加一行（前饋必有反饋）
+# LS-91：qa 補釘 mcp__pencil__execute——qa.md 視覺驗收唯讀截圖靠它（get_app_state 對路徑後以 execute 的
+# TakeScreenshot／Get 取圖），先前規則表只釘了 get_app_state，漏了實際取圖要用的工具。
+# ios-dev 沒有 tools: 行（繼承全部工具），這裡仍列一行（必要工具留空）：確保「無 tools: 行＝放行」這條路徑
+# 有樣本覆蓋，不只是隱含行為。
 LINEAR3="mcp__linear__get_issue mcp__linear__list_comments mcp__linear__save_comment"
 RULES="merge-reviewer|Bash ${LINEAR3}
-qa|Bash ${LINEAR3} mcp__pencil__get_app_state
+qa|Bash ${LINEAR3} mcp__pencil__get_app_state mcp__pencil__execute
 dead-code-sweeper|Bash mcp__linear__get_issue mcp__linear__list_comments
 ui-designer|mcp__pencil__execute
-visual-reviewer|mcp__pencil__execute"
+visual-reviewer|mcp__pencil__execute
+ios-dev|"
 
 hits=""; n=0
 while IFS='|' read -r agent required; do
