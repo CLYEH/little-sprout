@@ -180,20 +180,24 @@ struct WelcomeView: View {
     private var actionsSection: some View {
         // 任一登入方式在跑（Apple 或 Google）都要讓另外兩顆鈕暫時不可按——只是「in-flight
         // disable」，不是驗證型 disable（elder-constraints 硬約束，見 OTPVerificationModel.
-        // isLocked 註解）。
+        // isLocked 註解）。R1 review F1：三顆鈕的互斥狀態集中在 `authButtonsState`（純值型別
+        // `AuthButtonsState`，見檔尾 extension），跟 `legalOrStatusSlot` 共用同一份，避免兩處
+        // 各自用 `isSigningInWithApple` 兜邏輯而漏掉其中一處（原 bug：Apple 鈕沒吃到 Google
+        // 在跑時要 disable 的規則）。
         VStack(spacing: AppSpacing.group) {
             AppleSignInButton(
-                isSigningIn: isSigningInWithApple,
+                isSigningIn: authButtonsState.appleShowsInFlight,
+                isDisabled: authButtonsState.appleIsDisabled,
                 onRequest: configureAppleRequest,
                 onCompletion: handleAppleCompletion
             )
-            GoogleSignInButton(isDimmed: isSigningInWithApple || isSigningInWithGoogle) {
+            GoogleSignInButton(isDimmed: authButtonsState.googleIsDimmed) {
                 handleGoogleSignIn()
             }
             SecondaryButton(
                 icon: "envelope",
                 title: "使用 Email 登入",
-                isDimmed: isSigningInWithApple || isSigningInWithGoogle
+                isDimmed: authButtonsState.emailIsDimmed
             ) {
                 path.append(.emailInput)
             }
@@ -206,8 +210,11 @@ struct WelcomeView: View {
     /// 不能裁切（spec 明記 AX3「legal wraps to 64pt, no slot」）。
     private var legalOrStatusSlot: some View {
         Group {
-            if isSigningInWithApple {
-                Text("正在與 Apple 確認你的身分，請稍候。")
+            // R1 review F1：任一登入方式在跑都要有回饋（原本只有 Apple 有）——Google 面板
+            // 關閉、PKCE code exchange 仍在跑的那幾秒，原本會三顆鈕全灰卻零提示，長輩會
+            // 誤以為沒反應而改按別顆，造成兩條登入流程並行。
+            if let statusMessage = authButtonsState.statusMessage {
+                Text(statusMessage)
                     .appFont(.note)
                     .foregroundStyle(Color.lsTextPrimary)
             } else {
@@ -300,14 +307,34 @@ struct WelcomeView: View {
                         callbackURLScheme: "littlesprout"
                     )
                 }
-            } catch let cancelError as ASWebAuthenticationSessionError where cancelError.code == .canceledLogin {
-                // 使用者在系統瀏覽器面板主動取消：跟 Apple 的 `.canceled` 分支同語意，
-                // 靜默、不算失敗（見 `AuthService.signInWithGoogle` 協定文件）。
-                return
             } catch {
+                // 使用者在系統瀏覽器面板主動取消：跟 Apple 的 `.canceled` 分支同語意，
+                // 靜默、不算失敗（見 `AuthService.signInWithGoogle` 協定文件）。判定抽成
+                // `Self.isUserCanceledGoogleSignIn`（R1 review I2）：這條規則原本整段內嵌
+                // 在 catch 分支裡，被整段誤刪也不會有測試變紅——抽出後這條判定本身有單元
+                // 測試釘住（`AuthButtonsStateTests.swift`）。
+                guard !Self.isUserCanceledGoogleSignIn(error) else { return }
                 googleErrorMessage = AppError.map(error).userFacingMessage
             }
         }
+    }
+}
+
+// MARK: - R1 review F1／I2（PR #163）：抽成 extension 而不是塞進上面的 struct body，是刻意
+// 避開 SwiftLint `type_body_length`（該 struct 本來就已經逼近上限，同檔案 extension 的成員
+// 依 SE-0169 仍能存取 `private` 的 `@State` 屬性，計數卻是分開算的，同 OTPVerificationModel
+// 系列測試檔拆檔的理由——只是這裡拆的是 extension 不是檔案）。
+extension WelcomeView {
+    /// 三顆鈕互斥狀態的集中計算，見 `AuthButtonsState.swift`（純值型別，可單元測試，
+    /// `actionsSection`／`legalOrStatusSlot` 共用同一份，避免各自用 `isSigningInWithApple`
+    /// 兜邏輯而漏掉其中一處）。
+    private var authButtonsState: AuthButtonsState {
+        AuthButtonsState(isSigningInWithApple: isSigningInWithApple, isSigningInWithGoogle: isSigningInWithGoogle)
+    }
+
+    /// Google 登入面板「使用者主動取消」的判定：獨立、可測試的純函式（R1 review I2）。
+    static func isUserCanceledGoogleSignIn(_ error: Error) -> Bool {
+        (error as? ASWebAuthenticationSessionError)?.code == .canceledLogin
     }
 }
 
