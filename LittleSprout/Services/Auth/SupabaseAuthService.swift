@@ -20,7 +20,9 @@ final class SupabaseAuthService: AuthService {
     private let cachedSession: OSAllocatedUnfairLock<AuthSession?>
     private let observeAuthChangesTask: Task<Void, Never>
     // `sessionUpdates` 由同一條 `authStateChanges` 監聽迴圈驅動（見下面 init），不是另外
-    // 重打一份 SDK 呼叫——維持跟 `cachedSession` 完全同步的一份事實來源（LS-82）。
+    // 重打一份 SDK 呼叫——維持跟 `cachedSession` 完全同步的一份事實來源（LS-82）。一次性訂閱：
+    // 消費者取消後這條 stream 永久終止，`sessionUpdates` 與訂閱它的 `AuthStore` 必須同生共死
+    // （見 `AuthService.sessionUpdates` 協定文件；LS-82 PR #147 review F1）。
     private let sessionUpdatesContinuation: AsyncStream<AuthSession?>.Continuation
     let sessionUpdates: AsyncStream<AuthSession?>
 

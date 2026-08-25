@@ -13,24 +13,27 @@ import Observation
 /// 真正驅動 `session` 的是 init 起的 `sessionUpdates` 訂閱（見下方 `observeSessionUpdatesTask`）
 /// ——涵蓋「SDK 端偵測到 refresh token 被撤銷／重用而發 signedOut，但沒有經過這個 store 任何
 /// 方法呼叫」的情況（LS-17 R2 merge-reviewer N5／LS-82）。init／mutating 方法後／
-/// `refreshSnapshot()` 這三個快照時機仍然保留，但只是補位：真正即時的訊號一律以訂閱到的
-/// `sessionUpdates` 事件為準，快照只是「訂閱事件還沒送達前」的過渡值，兩邊寫的都是同一個
-/// `AuthService` 的事實，不會互相矛盾。
+/// `refreshSnapshot()` 這三個快照時機仍然保留，但只是補位。**權威值一律是
+/// `authService.currentSession`**：`sessionUpdates` 只當「有事發生、該重新讀」的訊號，訂閱迴圈
+/// 收到事件後不直接採用事件攜帶的值，而是重讀 `currentSession`——`SupabaseAuthService` 對
+/// `cachedSession` 是先寫後 yield，構造上 `currentSession` 不可能比已送達的 stream 事件更舊
+/// （LS-82 PR #147 review F2）。快照路徑與訂閱路徑因此不會互相覆蓋成更舊的值，但暫態上仍可能
+/// 不同步（例如背景累積多個事件、`refreshSnapshot()` 先跑一次再被訂閱迴圈追上）——會收斂，不
+/// 保證每個中間值都對到一次重繪。
 @MainActor
 @Observable
 final class AuthStore {
     private let authService: AuthService
     // Optional（有隱含預設值 nil）而非 let：讓下面 init 裡 `[weak self]` 捕捉可以放在任何位置，
     // 不受「escaping closure 捕捉 self 前，這個屬性本身必須先被賦值」這條 definite
-    // initialization 規則卡住（該規則連 weak 捕捉也算「使用 self」）。`nonisolated(unsafe)`：
-    // `deinit` 是 nonisolated（隨時可能在任何 thread 執行），但只需要呼叫 `Task.cancel()`
-    // 這個本身 thread-safe 的操作——沒有其他地方會並發寫這個屬性（唯一寫入點是 init，唯一
-    // 讀取點是 deinit）。`@ObservationIgnored`：這是內部實作細節（背景 task handle），不是
-    // 該讓 View 依它重繪的狀態，本來就不該進 `@Observable` 的追蹤——順便繞開「`nonisolated`
-    // 不能套用在 `@Observable` 巨集轉換過的 mutable 屬性」這條限制，讓 `nonisolated(unsafe)`
-    // 生效（`Task<Void, Never>` 是 `Sendable`，這裡的用法安全，見上方說明）。
+    // initialization 規則卡住（該規則連 weak 捕捉也算「使用 self」）。`@ObservationIgnored`：
+    // 排除在 `@Observable` 巨集的追蹤之外（本來就不是該讓 View 依它重繪的狀態），順便讓這個
+    // `Sendable`（`Task<Void, Never>`）屬性能被 nonisolated 的 `deinit` 直接讀取／呼叫
+    // `cancel()`（LS-82 PR #147 review F3 實測：`@ObservationIgnored` 就夠，不需要再疊
+    // `nonisolated(unsafe)`——那會把這個屬性永久移出 isolation 檢查，日後若有其他地方從
+    // nonisolated context 重新指派它，編譯器不會攔）。
     @ObservationIgnored
-    private nonisolated(unsafe) var observeSessionUpdatesTask: Task<Void, Never>?
+    private var observeSessionUpdatesTask: Task<Void, Never>?
 
     private(set) var session: AuthSession?
 
@@ -38,13 +41,18 @@ final class AuthStore {
         self.authService = authService
         self.session = authService.currentSession
         observeSessionUpdatesTask = Task { [weak self] in
-            for await session in authService.sessionUpdates {
+            for await _ in authService.sessionUpdates {
                 guard let self, !Task.isCancelled else { return }
-                self.session = session
+                self.session = authService.currentSession
             }
         }
     }
 
+    // 這裡的 cancel 不只停掉這個 store 自己的訂閱迴圈——`sessionUpdates` 是一次性訂閱，
+    // consumer 取消後底層 stream 永久終止（實測，見 `AuthService.sessionUpdates` 協定文件）。
+    // 目前生產路徑 `authService` 與 `AuthStore` 在 `LittleSproutApp` 成對建立、同生共死，
+    // 沒有現行 bug；但若日後 `authService` 被提升為跨多個 store 共用的實例，這裡的 cancel
+    // 會讓下一個訂閱它的 store 永遠收不到事件、且不會有任何錯誤（LS-82 PR #147 review F1）。
     deinit {
         observeSessionUpdatesTask?.cancel()
     }

@@ -212,9 +212,9 @@ final class SupabaseAuthServiceTests: XCTestCase {
     }
 
     func test_sessionUpdates_backgroundRefresh_forwardsSameSessionAsCache() async throws {
-        // LS-82：`sessionUpdates` 由 `authStateChanges` 同一條監聽迴圈驅動，情境同上一條
-        // （繞過 SupabaseAuthService 自己的方法，直接呼叫底層 `client.auth.refreshSession()`）
-        // ——這裡改成直接消費 `sessionUpdates` 等到目標值，驗證訂閱端真的收得到。
+        // LS-82 review F4：舊版用 `first(where:)` 沒有逾時——轉發邏輯壞掉時（stream 不再
+        // yield 目標值也不 finish）會永久掛住，直到 CI 40 分鐘 job timeout 才失敗（reviewer
+        // 實測）。改用跟其餘測試一致的 2 秒 expectation：逾時就是一條看得到名字的紅測試。
         let client = TestSupabaseClient.make { [testUserID] request in
             if request.url?.query?.contains("grant_type=id_token") == true {
                 return MockURLProtocol.StubResponse(
@@ -230,11 +230,22 @@ final class SupabaseAuthServiceTests: XCTestCase {
         let service = SupabaseAuthService(client: client)
         _ = try await service.signInWithApple(idToken: "fake-id-token", nonce: "fake-nonce")
 
-        async let forwarded = service.sessionUpdates.first { $0?.email == "background-refreshed@example.com" }
-        _ = try await client.auth.refreshSession()
+        let forwardedEmail = OSAllocatedUnfairLock<String?>(initialState: nil)
+        let expectation = expectation(description: "sessionUpdates 收到背景刷新後的 session")
+        let consumeTask = Task {
+            for await session in service.sessionUpdates {
+                guard session?.email == "background-refreshed@example.com" else { continue }
+                forwardedEmail.withLock { $0 = session?.email }
+                expectation.fulfill()
+                break
+            }
+        }
 
-        let result = (await forwarded) ?? nil // flatten AuthSession?? → AuthSession?
-        XCTAssertEqual(result?.email, "background-refreshed@example.com")
+        _ = try await client.auth.refreshSession()
+        await fulfillment(of: [expectation], timeout: 2)
+        consumeTask.cancel()
+
+        XCTAssertEqual(forwardedEmail.withLock { $0 }, "background-refreshed@example.com")
     }
 
     func test_initialSession_offlineWithExpiredLocalSession_doesNotClearCache() async throws {

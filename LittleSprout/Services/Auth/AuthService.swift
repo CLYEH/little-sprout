@@ -33,6 +33,15 @@ protocol AuthService: Sendable {
     ///
     /// 實作只需要保證單一消費者訂閱後能收到之後所有事件——app 內只有一個 `AuthStore` 會訂閱，
     /// 不需要支援多消費者廣播。
+    ///
+    /// **訂閱是一次性的**：消費者（`for await` 所在的 `Task`）一旦被取消，底層 stream 就會
+    /// **永久終止**——不是「這個消費者停止收」，是整條 stream 死掉，之後即使換一個新的
+    /// `for await` 重新訂閱也收不到任何事件、迴圈直接結束，且不會有任何錯誤或訊號指出這件事
+    /// （LS-82 PR #147 review F1，實測）。因此持有這個 `AuthService` 實例的物件，與訂閱
+    /// `sessionUpdates` 的 `AuthStore`，兩者必須成對建立、同生共死（目前生產路徑
+    /// `LittleSproutApp` 就是這樣接的）。若日後（例如 LS-18）把 `AuthService` 實例提升為跨
+    /// 多個元件共用、而 `AuthStore` 可能被重建，這裡會靜默失效，須另外處理（例如改
+    /// `sessionUpdates` 為每次取用註冊新 continuation 的 computed property）。
     var sessionUpdates: AsyncStream<AuthSession?> { get }
 
     /// 用 Sign in with Apple 拿到的 ID token 交換 Supabase session。
