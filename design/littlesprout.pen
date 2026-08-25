@@ -504,7 +504,6 @@
                   "y": 5,
                   "name": "Print",
                   "width": 361,
-                  "height": 286,
                   "fill": [
                     "$print-paper",
                     {
@@ -623,7 +622,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -689,7 +693,7 @@
                   "ref": "GEBcf",
                   "name": "Corner BL",
                   "x": 11,
-                  "y": 270,
+                  "y": 214.1,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M0 26 L0 0 L26 26 Z"
@@ -705,7 +709,7 @@
                   "ref": "GEBcf",
                   "name": "Corner BR",
                   "x": 356,
-                  "y": 270,
+                  "y": 214.1,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M26 26 L26 0 L0 26 Z"
@@ -4705,7 +4709,12 @@
           },
           "layout": "vertical",
           "gap": 7,
-          "padding": "$sp-label",
+          "padding": [
+            "$print-edge",
+            "$print-edge",
+            "$print-edge-bottom",
+            "$print-edge"
+          ],
           "children": [
             {
               "type": "frame",
@@ -5570,7 +5579,6 @@
                   "y": 5,
                   "name": "Print",
                   "width": 361,
-                  "height": 224.85,
                   "fill": [
                     "$print-paper",
                     {
@@ -5689,7 +5697,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -6185,7 +6198,6 @@
                   "y": 103.6,
                   "name": "Print",
                   "width": 361,
-                  "height": 286,
                   "fill": [
                     "$print-paper",
                     {
@@ -6304,7 +6316,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -6370,7 +6387,7 @@
                   "ref": "GEBcf",
                   "name": "Corner BL",
                   "x": 11,
-                  "y": 368.6,
+                  "y": 312.7,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M0 26 L0 0 L26 26 Z"
@@ -6386,7 +6403,7 @@
                   "ref": "GEBcf",
                   "name": "Corner BR",
                   "x": 356,
-                  "y": 368.6,
+                  "y": 312.7,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M26 26 L26 0 L0 26 Z"
@@ -33970,7 +33987,6 @@
                   "y": 5,
                   "name": "Print",
                   "width": 361,
-                  "height": 286,
                   "fill": [
                     "$print-paper",
                     {
@@ -34089,7 +34105,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -34155,7 +34176,7 @@
                   "ref": "GEBcf",
                   "name": "Corner BL",
                   "x": 11,
-                  "y": 270,
+                  "y": 214.1,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M0 26 L0 0 L26 26 Z"
@@ -34171,7 +34192,7 @@
                   "ref": "GEBcf",
                   "name": "Corner BR",
                   "x": 356,
-                  "y": 270,
+                  "y": 214.1,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M26 26 L26 0 L0 26 Z"
@@ -35654,7 +35675,6 @@
                   "id": "c4dCtT",
                   "name": "Print A",
                   "width": 361,
-                  "height": 336,
                   "fill": [
                     "$print-paper",
                     {
@@ -35773,7 +35793,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -35858,7 +35883,6 @@
                   "id": "bHTsM",
                   "name": "Print B (cold fluorescent)",
                   "width": 361,
-                  "height": 336,
                   "fill": [
                     "$print-paper",
                     {
@@ -35977,7 +36001,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -36062,7 +36091,6 @@
                   "id": "Ip8Kd",
                   "name": "Print C (night flash)",
                   "width": 361,
-                  "height": 336,
                   "fill": [
                     "$print-paper",
                     {
@@ -36181,7 +36209,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -38453,6 +38486,14 @@
     "print-ink-secondary": {
       "type": "color",
       "value": "#553040"
+    },
+    "print-edge": {
+      "type": "number",
+      "value": 8
+    },
+    "print-edge-bottom": {
+      "type": "number",
+      "value": 8
     }
   },
   "fileToken": "f75220c0-d224-4bd8-af4b-2429e968cb8e"
