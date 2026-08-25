@@ -365,3 +365,39 @@ create trigger albums_deletion_attribution
 create trigger comments_deletion_attribution
   before update on public.comments
   for each row execute function private.enforce_deletion_attribution();
+
+-- ---------------------------------------------------------------------------
+-- LS-66 I1 對齊（orchestrator 裁決，2026-08-25）：children 的 family_id 不可變
+-- trigger 改用裸 42501，撤 LS040
+--
+-- LS-66（`20260825030000_children_write_path_and_soft_delete.sql`）對 children 的
+-- family_id 不可變用了專屬碼 LS040＋專屬 trigger
+-- `private.enforce_children_family_immutable()`；本票（LS-57）對 diaries／albums／
+-- comments 的同一種規則（trigger 見上）用裸 42501，不開專屬碼。merge-reviewer PR
+-- #98 review I1 指出兩張 PR 同時開著會讓同一條規則長出兩種慣例，orchestrator 裁決
+-- 統一改用裸 42501，LS040 撤碼。
+--
+-- 這裡改用 `CREATE OR REPLACE FUNCTION` 覆寫函式本體（只改 errcode，其餘邏輯逐字
+-- 不變），**不修改** `20260825030000_children_write_path_and_soft_delete.sql` 那個
+-- 檔案本身——那支 migration 已經併入 main（PR #102／#103），其他環境已經套用過
+-- 同一個版本號，不會重新套用，直接改那個檔案的內容不會反映到已經跑過它的環境；
+-- 只有「新增一支後續 migration 去 CREATE OR REPLACE 同一個函式」才是對已上線
+-- migration 做行為變更的正確方式（append-only 慣例）。函式簽章不變
+-- （`enforce_children_family_immutable()`，無參數），掛著它的
+-- `children_family_immutable` trigger（定義在 20260825030000 那個檔案，本檔不動）
+-- 不需要重建，`CREATE OR REPLACE` 會直接讓既有 trigger 呼叫到這支新版本。
+-- ---------------------------------------------------------------------------
+create or replace function private.enforce_children_family_immutable()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.family_id is distinct from old.family_id then
+    raise exception '孩子檔案建立後不能被搬到別的家庭（family_id 不可變）'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;

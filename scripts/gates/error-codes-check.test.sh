@@ -156,8 +156,23 @@ expect 1 '⑨ API.md 有、migrations 沒有（後端從不丟）' "$work/m.md" 
 migrations "$work/m_case" "  RAISE EXCEPTION 'x' USING ERRCODE='LS001';" "  raise exception 'y' using errcode   =   'LS010';"
 expect 0 '⑨ ERRCODE 大小寫／空白不拘（正向對照）' "$work/m.md" "$work/m.swift" "$work/m_case"
 
-# LS-56 R1 I10：§7 對照表寫死「19 組」——樣本被砍或 expect 呼叫漏掉時這裡紅，數字不會靜默漂移
-[ "$count" -eq 19 ] || { echo "✗ 樣本數應為 19，實得 ${count}" >&2; exit 1; }
+# ⑩ LS-57 R2-b：retired_mig_codes 白名單（LS040 目前是清單裡唯一一筆——見
+#    error-codes-check.sh 的 retired_mig_codes_raw）。migrations 裡有 LS040 的
+#    errcode 文字、但 API.md／Swift 都沒有它，仍然要綠——這正是它被登記進白名單
+#    要處理的情況（LS-66 已併入 main 的舊 migration 留著的歷史文字）。
+api_doc "$work/retired_ok.md" LS001 LS010
+swift_enum "$work/retired_ok.swift" LS001 LS010
+migrations "$work/retired_ok_mig" LS001 LS010 LS040
+expect 0 '⑩ 白名單登記的退役碼（LS040）只在 migrations 出現，不算不一致'   "$work/retired_ok.md" "$work/retired_ok.swift" "$work/retired_ok_mig"
+#    反向：白名單登記退役的碼如果又被寫回 API.md（代表其實沒有真的退役），必須紅，
+#    不能被白名單的排除靜默遮住。
+api_doc "$work/retired_back.md" LS001 LS010 LS040
+swift_enum "$work/retired_back.swift" LS001 LS010 LS040
+migrations "$work/retired_back_mig" LS001 LS010 LS040
+expect 1 '⑩ 白名單登記退役的碼若又出現在 API.md，必須紅（不是真的退役）'   "$work/retired_back.md" "$work/retired_back.swift" "$work/retired_back_mig"   '白名單登記退役，但 API.md §5 又把它列回來了'
+
+# LS-56 R1 I10：§7 對照表寫死「21 組」——樣本被砍或 expect 呼叫漏掉時這裡紅，數字不會靜默漂移
+[ "$count" -eq 21 ] || { echo "✗ 樣本數應為 21，實得 ${count}" >&2; exit 1; }
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ error-codes-check 自測通過（${count} 組樣本）"
