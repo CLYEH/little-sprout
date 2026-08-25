@@ -44160,6 +44160,248 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "UhhwS",
+          "name": "N R2 修訂重點（取代已過期的 R1 描述）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "tp9St",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "R2 修訂重點（取代已過期的 R1 描述）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "n0jhXb",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "rx2bC",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R2 · F1/F9",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "q6Ct7O",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "08/09b 的 Footer 改用 flex spacer（Body 不再是 space_between），螢幕高度回頭量測補足（08＝910、09b＝910、AX3-08＝1900）；不要再照抄 R1 版 Handoff 的『08/09/09b 44 斷點』段落數字，畫面本身已含這條斷點且已重量測。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IL2Ak",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "m0apeG",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R2 · I4/F2/F3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "jhoP5",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "時間軸沖印卡（10/10-iPad）的年齡改成壓印行內純文字（`· 2 歲 3 個月`，$print-ink-secondary），不再用 cmp/Pill——原本的膠囊深色不反轉造成 1.28:1 對比失敗與蓋住 caption 的 bug 一次解決。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mhqWN",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TKdVJ",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R2 · F9/F12",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "L66Kyz",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "分段控制改成共用軌道（$surface-2）＋等分等分段＋選中段 $surface 浮起，不再是各自獨立描邊的裸 chip；10/10b/10深/AX3-10 補上 cmp/Tab Bar（底部浮動膠囊，時間軸／相簿／寶貝／設定），FAB 上移到 tab bar 之上；iPad 版移除 FAB 改用內容區右上角的工具列＋鈕（sidebar 已有導覽，不需要 FAB）。新增 `Stress / 10 · 3 個寶貝＋超長名字` 壓測板：3 位真實長名字（陳彥廷／小饅頭／Emma Chen）下分段控制本身就會溢出——結論是『>3 才下拉』的門檻不夠，實作應改用『segments 文字總寬度超過可用寬度就自動下拉』，不要寫死用數量判斷。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Y2POc6",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "qYwNf",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R2 · F14",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "L2ie5W",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "10-iPad sidebar 第三項由「孩子」改為「寶貝」，與全票其他地方一致；CLAUDE.md 原文寫的是「孩子」，這裡是刻意的用語精修，建議 CLAUDE.md 的 tab 命名之後一併回改成「寶貝」（本輪未動 CLAUDE.md，留給人核可）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "da1Zo",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "nrSnj",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R2 · I1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Y0sgTT",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "09 每列不再常駐「編輯／移除」兩個文字動作；整列就是一個 tap target（帶 chevron）進 09b，移除只留在 09b 底部——降低列表的視覺噪音與誤觸風險。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Q1FvVE",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "hvfko",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R2 · F8/I7",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "jvacY",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "09 空狀態與 08 的頭像選擇器都换成空白沖印品（白邊＋角托＋壓印行單一空白或即時姓名預覽），不再用 image-off／相機圓形 icon；08-iPad 更把選照片按鈕本身放大成左欄整張沖印品。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
