@@ -1,7 +1,7 @@
 #!/bin/bash
 # pr-body-check.sh 的自測（LS-63）。CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對 gate 本身也適用：若檢查退化成全文子字串比對（第二段有票號就放行、LS-630 滿足 LS-63）、
-# 模板形狀「## Ticket／空行／LS-<n>」被誤擋、或缺檔／非工作分支時靜默放行，這裡會紅。
+# 模板形狀「## Ticket／空行／LS-<n>」被誤擋、缺檔／非工作分支時靜默放行、或失敗輸出丟掉「CI 不會自動重跑」止血指示，這裡會紅。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -45,6 +45,7 @@ expect 1 '② 票號只在第二個內容段落（全文子字串比對會放行
 expect 1 '② 相似票號 LS-630 不算（整字比對）' 'LS-630' $'Ticket: LS-630\n' --branch "$B"
 expect 1 '② 小寫 ls-63 不算' '沒有本票票號' $'Ticket: ls-63\n' --branch "$B"
 expect 1 '② 模板未填（LS- 沒有數字）' 'LS-」還沒填' $'## Ticket\n\nLS-\n\n## 變更摘要\n' --branch "$B"
+expect 1 '② 紅時附止血指示：修 body 後 CI 不會自動重跑（PR #93 review F1）' 'close/reopen' $'Ticket: LS-\n' --branch "$B"
 expect 1 '② 空 body' '空的' '' --branch "$B"
 expect 1 '② 只有空白與空行' '空的' $'\n  \r\n\n' --branch "$B"
 
@@ -84,6 +85,6 @@ out="$(run_in_repo "$work/body7")"; got=$?
 if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF 'DETACHED'; then echo "✓ ④ detached HEAD 且未傳 --branch → exit 2"; else echo "✗ ④ detached HEAD（期望 exit 2，實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ pr-body-check 自測通過（21 組樣本）"
+  echo "✓ pr-body-check 自測通過（22 組樣本）"
 fi
 exit "$fail"

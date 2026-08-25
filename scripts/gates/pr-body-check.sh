@@ -17,6 +17,8 @@
 # 票號比對：整字——`LS-63` 不被 `LS-630` 滿足；大小寫敏感（分支 regex 亦然）。檔頭段之後貼錯內容（第二段起
 #   是別票的 body）看不出來，靠 merge-reviewer scope 維度。
 # exit 0＝檔頭段含本票票號；1＝違規（空 body、模板未填、票號不在檔頭段、檔頭段是他票）；2＝參數／分支錯誤（fail closed）。
+# 紅了之後：改 PR body 不會讓 CI 自動重跑（on: pull_request 不含 edited；gh run rerun 重放舊 payload），要 close/reopen PR
+#   或再 push 一個 commit——失敗輸出會提示（PR #93 review F1；LS-37 在 DESTRUCTIVE-APPROVED 踩過同坑，COLLABORATION §6）。
 set -uo pipefail
 
 branch=; file=
@@ -56,8 +58,11 @@ while IFS= read -r line || [ -n "$line" ]; do
   esac
 done < "$file"
 
+rerun_hint="  修好 body 後 CI 不會自動重跑（pull_request 觸發不含 edited；gh run rerun 也只重放舊 body）——請 close/reopen PR 或再 push 一個 commit（LS-37 實測，COLLABORATION §6）。"
+
 if [ -z "$head_text" ]; then
   echo "✗ pr-body-check：PR body 是空的（或只有空白）——檔頭段必須含本票票號 ${ticket}。" >&2
+  echo "$rerun_hint" >&2
   exit 1
 fi
 
@@ -70,8 +75,9 @@ others=$(printf '%s' "$head_text" | grep -oE 'LS-[1-9][0-9]*' | sort -u | paste 
 echo "✗ pr-body-check：PR body 檔頭段沒有本票票號 ${ticket}（分支 ${branch}）：" >&2
 printf '%s' "$head_text" | sed 's/^/    | /' >&2
 if [ -n "$others" ]; then
-  echo "  檔頭段提到的是 ${others}——疑似貼錯 body：暫存檔被平行 agent 覆寫？（LS-53／LS-56 事故；COLLABORATION §3：暫存檔一律 LS-<n>-<用途>.<ext>）" >&2
+  echo "  檔頭段含其他票號（${others}）：若為刻意引用可忽略此句、只需補上 ${ticket}；若非，請確認 body 檔是否被平行 agent 覆寫（LS-53／LS-56 事故；COLLABORATION §3：暫存檔一律 LS-<n>-<用途>.<ext>）。" >&2
 else
   echo "  檔頭段沒有任何 LS-<n>：PR 模板的「LS-」還沒填，或票號寫在更下面——請在檔頭段（Ticket 行）寫 ${ticket}。" >&2
 fi
+echo "$rerun_hint" >&2
 exit 1
