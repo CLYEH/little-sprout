@@ -5,6 +5,7 @@
 # 三分支漂移漏標（test ⊄ development 立即、main ⊄ development 超過 stale）或剛併入的 hotfix 被誤標（LS-85）、
 # 乾淨或剛建好的 worktree 被誤標、保護分支或 detached worktree 混進表、--json 不合法、gh 不可用整支炸掉、
 # gate hooks 沒裝（core.hooksPath 不是 .githooks／hook 不可執行）不標或裝好了誤標（LS-87）、
+# >1 台非 demo-* 模擬器同時 Booted 卻沒標、demo-* 沒被豁免、或只有一台就誤標（LS-100）、
 # 或 SessionStart hook 輸出不合法 JSON／非 0 退出／settings.json 沒掛上——這裡會紅。
 # 合成 repo：file:// 裸 repo 當 origin（main／development／test），clone 當主 checkout，八個 worktree 各一種形狀；最後把 origin 指向會掛住的 ext:: 位址驗 fetch 看門狗。
 set -uo pipefail
@@ -21,6 +22,12 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 # LS-70：Supabase lock 段讀合成 lock 目錄，不碰真的 /tmp/supabase-lock-*（⑪ 之前一律 free）
 export SUPABASE_LOCK_DIR="$work/lock"
+# LS-100：預設把 Booted 模擬器段餵一份「沒有裝置」的合成 JSON，不碰本機真正的模擬器——本機在跑其他
+# worktree／agent 時可能真的有機器 Booted，不隔離的話 ①～⑬ 這些不關心模擬器的既有斷言會被本機當下
+# 狀態污染而偶發紅（環境相依、不可重現）。⑭（既有：PATH 換 xcrun stub 驗 stale 裝置判定）與
+# ⑮～⑰（本票：驗 Booted 判定）各自在呼叫時明講 SIMCTL_LIST_JSON（⑭ 特意設成空字串讓它照舊落回
+# PATH 裡的 xcrun stub——patrol.sh 用 `${SIMCTL_LIST_JSON:-…}`，空字串與未設值同樣觸發預設值）。
+export SIMCTL_LIST_JSON='{"devices":{}}'
 
 # 臨時 repo 與本機全域／系統 git 設定隔離：自測結果不能因人而異
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
@@ -388,7 +395,7 @@ exit 1
 STUB
 chmod +x "$work/bin/xcrun"
 
-out14="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+out14="$(SIMCTL_LIST_JSON= PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 has   '⑭ 老裝置（lastBootedAt 超過 7 天）→ 列出並印 simctl delete' "$out14" 'LS-90-iPhoneAir（SIM-OLD）'
 has   '⑭ 指令含 xcrun simctl delete SIM-OLD' "$out14" 'xcrun simctl delete SIM-OLD'
 hasnt '⑭ 剛用過的（lastBootedAt 近期）不列' "$out14" 'SIM-FRESH'
@@ -399,15 +406,123 @@ hasnt '⑭ 名稱不符 <票號>-<機型> 樣式不管' "$out14" 'SIM-OTHER'
 # 印過一筆要清空，不然檔尾這些收尾大括號會把最後一筆重複印出（曾經的迴歸：只在最後一台裝置身上發生）
 lastold_count=$(printf '%s' "$out14" | grep -c 'LS-95-iPhoneAir（SIM-LASTOLD）' || true)
 if [ "$lastold_count" -eq 1 ]; then echo "✓ ⑭ 檔尾裝置（最後一筆）只列一次，不被收尾大括號重複印出"; else echo "✗ ⑭ 檔尾裝置列了 ${lastold_count} 次（應為 1）" >&2; fail=1; fi
-brief14="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+brief14="$(SIMCTL_LIST_JSON= PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '⑭ --brief 也看得到（掛 add_flag）' "$brief14" '[專屬模擬器 LS-90-iPhoneAir]'
 has   '⑭ --brief 表頭「專屬模擬器逾期」數＝4（sim_flagged 有被讀，LS-83 R2 m2）' "$brief14" '專屬模擬器逾期 4'
-json14="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+json14="$(SIMCTL_LIST_JSON= PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
 jq_ok '⑭ --json：stale_simulators 只含四筆老裝置（SIM-OLD／SIM-OLDDIR／SIM-LASTOLD／SIM-10D），不含 SIM-FRESH（未超過門檻不列入）' "$json14" \
   '([.stale_simulators[].udid] | sort) == (["SIM-10D","SIM-LASTOLD","SIM-OLD","SIM-OLDDIR"] | sort)'
-out14b="$(STUB_XCRUN_FAIL=1 PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
+out14b="$(SIMCTL_LIST_JSON= STUB_XCRUN_FAIL=1 PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
 rc_is '⑭ xcrun 本身失敗（非 macOS／查詢出錯）→ 仍 exit 0，不當異常炸掉' 0 "$rc" "$out14b"
 hasnt '⑭ xcrun 失敗時不誤列任何裝置' "$out14b" 'xcrun simctl delete'
+
+# ---- ⑮ Booted 模擬器（LS-100）：demo-* 豁免；>1 台非豁免同時 Booted → 逐台 ⚠ 並印 shutdown 指令；
+#        --brief／--json 都看得到。直接用 SIMCTL_LIST_JSON 餵合成 JSON（不必偽裝整支 xcrun）——
+#        patrol.sh 讀 sim_raw 時「SIMCTL_LIST_JSON 有設就用它，沒設才真的呼叫 xcrun」。----
+booted_json='{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-0" : [
+      {
+        "udid" : "BOOT-A",
+        "name" : "LS-90-iPhoneAir",
+        "state" : "Booted"
+      },
+      {
+        "udid" : "BOOT-B",
+        "name" : "LS-95-iPhoneAir",
+        "state" : "Booted"
+      },
+      {
+        "udid" : "BOOT-DEMO",
+        "name" : "demo-iPhone17Pro",
+        "state" : "Booted"
+      },
+      {
+        "udid" : "SHUT-C",
+        "name" : "LS-97-iPhoneAir",
+        "state" : "Shutdown"
+      }
+    ]
+  }
+}'
+out15="$(SIMCTL_LIST_JSON="$booted_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑮ 兩台非 demo-* Booted → 各自列出並印 shutdown 指令' "$out15" '⚠ LS-90-iPhoneAir（BOOT-A）→ xcrun simctl shutdown BOOT-A'
+has   '⑮ 第二台也列出' "$out15" '⚠ LS-95-iPhoneAir（BOOT-B）→ xcrun simctl shutdown BOOT-B'
+hasnt '⑮ demo-* 豁免不列入 shutdown 建議' "$out15" 'shutdown BOOT-DEMO'
+hasnt '⑮ Shutdown 狀態的裝置不列入' "$out15" 'SHUT-C'
+brief15="$(SIMCTL_LIST_JSON="$booted_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '⑮ --brief 也印 Booted 異常（掛 add_flag）' "$brief15" '[Booted 模擬器 LS-90-iPhoneAir]'
+has   '⑮ --brief 表頭含 Booted 異常數＝2' "$brief15" 'Booted 異常 2'
+json15="$(SIMCTL_LIST_JSON="$booted_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '⑮ --json：booted_simulators 含三台 Booted（含 demo，exempt 各自標記正確）、booted_flagged=2' "$json15" \
+  '(.booted_simulators | length) == 3 and .booted_flagged == 2
+   and ([.booted_simulators[] | select(.name=="demo-iPhone17Pro") | .exempt] | first) == true
+   and ([.booted_simulators[] | select(.name=="LS-90-iPhoneAir") | .exempt] | first) == false'
+
+# ---- ⑯ 只有一台非 demo-* Booted（混一台 demo）→ 單台屬正常使用中，不算異常 ----
+one_json='{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-0" : [
+      {
+        "udid" : "BOOT-ONLY",
+        "name" : "LS-101-iPhone17Pro",
+        "state" : "Booted"
+      },
+      {
+        "udid" : "BOOT-DEMO2",
+        "name" : "demo-iPhone17Pro",
+        "state" : "Booted"
+      }
+    ]
+  }
+}'
+out16="$(SIMCTL_LIST_JSON="$one_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '⑯ 只有一台非 demo-* Booted → 不標異常' "$out16" '[Booted 模擬器'
+has   '⑯ 仍列出無異常摘要（Booted 2 台、非 demo-* 1 台）' "$out16" '無異常；Booted 2 台，非 demo-* 1 台'
+
+# ---- ⑰ 完全沒有 Booted 裝置 → 該段顯示無異常 ----
+none_json='{"devices":{"com.apple.CoreSimulator.SimRuntime.iOS-26-0":[
+  {
+    "udid" : "SHUT-ONLY",
+    "name" : "LS-1-iPhoneAir",
+    "state" : "Shutdown"
+  }
+]}}'
+out17="$(SIMCTL_LIST_JSON="$none_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑰ 無 Booted 裝置 → 無異常（Booted 0 台）' "$out17" '無異常；Booted 0 台，非 demo-* 0 台'
+brief17="$(SIMCTL_LIST_JSON="$none_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '⑰ --brief 表頭 Booted 異常數＝0' "$brief17" 'Booted 異常 0'
+
+# ---- ⑱ Booted 模擬器命中鎖目錄（PR #164 R1 I1）：兩台非 demo-* Booted，其中一台的
+#        /tmp/simulator-lock-<udid>（scripts/ops/simulator-lock.sh 用的同一個目錄命名慣例）存在，
+#        代表 push-gate 正在跑 xcodebuild test——這台該標「鎖中，勿關」，不印 shutdown 建議；另一台
+#        沒鎖，照常建議 shutdown。暫存鎖目錄用 $$ 帶出唯一性，避免與其他併行跑的自測互相干擾 ----
+lock_udid="LOCKED-UDID-$$"
+lockdir="/tmp/simulator-lock-${lock_udid}"
+rm -rf "$lockdir"; mkdir -p "$lockdir"
+locked_json='{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-0" : [
+      {
+        "udid" : "BOOT-A",
+        "name" : "LS-90-iPhoneAir",
+        "state" : "Booted"
+      },
+      {
+        "udid" : "'"$lock_udid"'",
+        "name" : "main-iPhone17",
+        "state" : "Booted"
+      }
+    ]
+  }
+}'
+out18="$(SIMCTL_LIST_JSON="$locked_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑱ 鎖中的那台標「鎖中，勿關」' "$out18" "main-iPhone17（${lock_udid}）鎖中（push gate 進行中），勿關"
+hasnt '⑱ 鎖中的那台不印 shutdown 建議' "$out18" "shutdown ${lock_udid}"
+has   '⑱ 沒鎖的那台仍建議 shutdown' "$out18" '⚠ LS-90-iPhoneAir（BOOT-A）→ xcrun simctl shutdown BOOT-A'
+brief18="$(SIMCTL_LIST_JSON="$locked_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '⑱ --brief 也印「鎖中」異常' "$brief18" '鎖中（push gate 進行中）——勿關'
+rm -rf "$lockdir"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"

@@ -216,6 +216,17 @@ else
   fail=1
 fi
 
+# ---- ⑩ demo-* 常駐機排第一台時仍選到原廠機（PR #164 R1 F2）：demo 環境的持久機（`demo-<機型無空白>`）
+#        一樣含 "iPhone" 子字串、且不是本腳本管的「本 worktree 專屬機」——一旦它排在清單較前面（例如某
+#        OS 分節唯一的候選就是它），原本會被誤判成「共用第一台」，連帶被 push-gate.sh 的模擬器用完必關
+#        （LS-100）選中並關掉，而 demo 機理應豁免。db 裡先放 demo 機、再放原廠機，驗證挑選仍正確跳過 ----
+db10="$work/db10"
+printf 'demo-iPhoneAir\tFAKE-DEMO-UDID\t26.0\niPhone 17 Pro\tREAL-STOCK-UDID2\t26.0\n' > "$db10"
+mkdir -p "$work/wt/LS-105"
+out10=$(STUB_DB="$db10" CI=true run_in "$work/wt/LS-105")
+u10=$(id_of "$out10")
+if [ "$u10" = REAL-STOCK-UDID2 ]; then echo "✓ ⑩ demo-* 常駐機排第一台時仍正確選到原廠機"; else echo "✗ ⑩ 應為 REAL-STOCK-UDID2，實得 ${u10}（挑到 demo 機了？）" >&2; fail=1; fi
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ detect-simulator／simulator-lock 自測通過"
 fi
