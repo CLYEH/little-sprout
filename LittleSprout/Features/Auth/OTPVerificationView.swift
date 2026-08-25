@@ -83,30 +83,36 @@ struct OTPVerificationView: View {
 
     @ViewBuilder
     private var resendRow: some View {
-        if model.canResend {
-            Button(action: resend) {
-                HStack(spacing: AppSpacing.tight) {
-                    Image(systemName: "arrow.clockwise").appIconFrame(.medium)
-                    Text("重新寄一次驗證碼").appFont(.body)
+        // LS-17 QA1：兩態共用 `.padding(.vertical, AppSpacing.group)`，讓可互動態的點擊區
+        // ≥44pt（長輩硬約束）之餘，倒數態高度跟著一起長，避免冷卻結束切到可按態時版面跳動。
+        Group {
+            if model.canResend {
+                Button(action: resend) {
+                    HStack(spacing: AppSpacing.tight) {
+                        Image(systemName: "arrow.clockwise").appIconFrame(.medium)
+                        Text("重新寄一次驗證碼").appFont(.body)
+                    }
+                    .contentShape(Rectangle())
                 }
+                .foregroundStyle(Color.lsTextPrimary)
+                .disabled(model.isResending || model.isVerifying)
+            } else {
+                // 四個各自獨立的 Text 在 AX3 下會各自換行，逐行讀出來變成打散的欄位（R3 review
+                // B4：「沒收到｜　｜秒後可」三欄式亂序）。併成單一 Text 讓它像一般段落那樣整段
+                // 換行，數字段用 monospacedDigit 避免倒數時寬度跳動。
+                HStack(spacing: AppSpacing.tight) {
+                    Image(systemName: "clock")
+                        .appIconFrame(.medium)
+                        .foregroundStyle(Color.lsTextSecondary)
+                    Text("沒收到驗證碼？\(model.resendCooldown) 秒後可重新寄送")
+                        .appFont(.body)
+                        .monospacedDigit()
+                        .foregroundStyle(Color.lsTextSecondary)
+                }
+                .accessibilityElement(children: .combine)
             }
-            .foregroundStyle(Color.lsTextPrimary)
-            .disabled(model.isResending || model.isVerifying)
-        } else {
-            // 四個各自獨立的 Text 在 AX3 下會各自換行，逐行讀出來變成打散的欄位（R3 review
-            // B4：「沒收到｜　｜秒後可」三欄式亂序）。併成單一 Text 讓它像一般段落那樣整段
-            // 換行，數字段用 monospacedDigit 避免倒數時寬度跳動。
-            HStack(spacing: AppSpacing.tight) {
-                Image(systemName: "clock")
-                    .appIconFrame(.medium)
-                    .foregroundStyle(Color.lsTextSecondary)
-                Text("沒收到驗證碼？\(model.resendCooldown) 秒後可重新寄送")
-                    .appFont(.body)
-                    .monospacedDigit()
-                    .foregroundStyle(Color.lsTextSecondary)
-            }
-            .accessibilityElement(children: .combine)
         }
+        .padding(.vertical, AppSpacing.group)
     }
 
     private func verify() {

@@ -27,8 +27,16 @@ struct SettingsView: View {
             } description: {
                 Text("家庭管理、成員邀請與帳號設定會顯示在這裡。")
             }
-            Button("登出", role: .destructive, action: signOut)
-                .disabled(isSigningOut)
+            // LS-17 QA1：原 `Button("登出", role: .destructive, action: signOut)` 實測
+            // 32×19pt，違反長輩硬約束 ≥44pt 點擊目標。改用 label closure 加不可見 padding
+            // 撐大點擊區，視覺仍是純文字紅字、不加框、不改樣式。
+            Button(role: .destructive, action: signOut) {
+                Text("登出")
+                    .padding(.vertical, AppSpacing.item)
+                    .padding(.horizontal, AppSpacing.item)
+                    .contentShape(Rectangle())
+            }
+            .disabled(isSigningOut)
         }
         .alert(
             "登出失敗",
