@@ -160,6 +160,31 @@ if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1;
     -destination "$dest" \
     -parallel-testing-enabled NO \
     -quiet
+
+  # 1b) Xcode 版本比對（LS-106；PR #165 head 8b7a0fa 同型：8b7a0fa 已修好 1a 的 xcodegen 漂移，
+  #     但 KeyboardHeightObserver.swift 仍留著 UIScreen.main.bounds，CI 用 .xcode-version 釘住的
+  #     Xcode／SDK 對它的 MainActor 隔離判斷較嚴格判成編譯錯，本機當時裝的版本較寬鬆沒攔到——
+  #     本機兩次綠、CI 才紅）。`.xcode-version` 是本機與 CI 共同讀的單一來源（`.github/workflows/ci.yml`
+  #     的 xcode-select 步驟也讀它）；本機無法真的切換已安裝的 Xcode 版本，退而求其次：版本不一致時
+  #     額外對同一個 destination 跑一次 `SWIFT_STRICT_CONCURRENCY=complete` 的 build（不 test，省
+  #     時間）當替代驗證——把型別檢查嚴格度的落差提早在本機攤開，不必等 CI 才發現；一樣包進
+  #     simulator-lock.sh（同一把以 UDID 為鍵的鎖，避免與上面的 test 或另一個 worktree 撞台）。
+  #     檔案不存在時沒有門檻可比，略過整段（不擋——單一來源缺席本身不是本票 scope）。
+  if [ -f .xcode-version ]; then
+    xcode_pin="$(tr -d '[:space:]' < .xcode-version)"
+    local_xcode_ver="$(xcodebuild -version | awk 'NR==1{print $2}')"
+    if [ "$local_xcode_ver" != "$xcode_pin" ]; then
+      echo "⚠ push gate：Xcode 主次版號不一致（本機 ${local_xcode_ver}／.xcode-version 指定 ${xcode_pin}）——額外執行一次 SWIFT_STRICT_CONCURRENCY=complete 的 build 當替代驗證" >&2
+      bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
+        xcodebuild build \
+        -scheme "$XCODE_SCHEME" \
+        -destination "$dest" \
+        -quiet \
+        SWIFT_STRICT_CONCURRENCY=complete
+    else
+      echo "→ push gate：Xcode 主次版號一致，略過替代檢查（本機／.xcode-version 皆 ${local_xcode_ver}）"
+    fi
+  fi
 else
   echo "⚠ push gate：尚未建立 Xcode 專案，跳過 unit tests（Phase 0-1 完成後自動生效）"
 fi

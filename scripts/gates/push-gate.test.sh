@@ -96,10 +96,17 @@ STUB
 chmod +x "$work/bin/xcrun"
 cat > "$work/bin/xcodebuild" <<'STUB'
 #!/bin/bash
+# LS-106：1b 步先呼叫 `xcodebuild -version`（固定第一個參數）；版本不一致時再呼叫
+# `xcodebuild build …`（帶 SWIFT_STRICT_CONCURRENCY=complete）——記到 $BUILD_LOG 供 ⑩／⑪ 斷言用。
+if [ "$1" = -version ]; then
+  printf 'Xcode %s\nBuild version %s\n' "${STUB_XCODE_VERSION:-99.9}" "${STUB_XCODE_BUILD:-ZZ000Z}"
+  exit 0
+fi
 for a in "$@"; do
   case "$a" in
     -resolvePackageDependencies) exit 0 ;;
     test) exit "${STUB_TEST_RC:-0}" ;;
+    build) printf '%s\n' "$*" >> "${BUILD_LOG:-/dev/null}"; exit "${STUB_BUILD_RC:-0}" ;;
   esac
 done
 exit 0
@@ -170,7 +177,10 @@ fi
 # ---- ④ 接線順序：sim_udid 算出來 → KEEP_SIMULATOR 判斷 → 專屬機判斷函式定義（內含真正的
 #        shutdown 呼叫）→ EXIT／INT／TERM 三個 trap 都設好，全部在 simulator-lock.sh 包住的
 #        xcodebuild test 真正執行「之前」（不是只在旁邊的註解提到；跳過註解行，同
-#        detect-simulator.test.sh ⑨ 的模式）----
+#        detect-simulator.test.sh ⑨ 的模式）。simulator-lock.sh／xcodebuild test 兩個 pattern 只取
+#        「第一次」出現（LS-106 1b 在後面又加了一次 simulator-lock.sh 包 xcodebuild build 當替代
+#        檢查——若不加 !saw_lock／!saw_test guard，取到的會是那第二次呼叫的行號，把本來就成立的
+#        順序誤判成不成立）----
 wired=$(awk '
   /^[ \t]*#/ { next }
   /sim_udid=/ && !saw_udid { saw_udid = NR }
@@ -180,8 +190,8 @@ wired=$(awk '
   /trap shutdown_dedicated_simulator EXIT/ { saw_exit = NR }
   /trap .*exit 130.*INT/ { saw_int = NR }
   /trap .*exit 143.*TERM/ { saw_term = NR }
-  /simulator-lock\.sh/ { saw_lock = NR }
-  /xcodebuild test/ { saw_test = NR }
+  /simulator-lock\.sh/ && !saw_lock { saw_lock = NR }
+  /xcodebuild test/ && !saw_test { saw_test = NR }
   END {
     if (saw_udid && saw_keep && saw_func && saw_call && saw_exit && saw_int && saw_term && saw_lock && saw_test \
         && saw_udid < saw_keep && saw_keep < saw_func && saw_func < saw_call && saw_call < saw_exit \
@@ -299,6 +309,9 @@ mk_race_repo() {
   printf '#!/bin/bash\nsleep 3\nexit 0\n' > "$d/scripts/gates/error-codes-check.sh"
   chmod +x "$d/scripts/gates/error-codes-check.sh"
   mkdir -p "$d/Fake.xcodeproj"
+  # LS-106：1b 步要求 .xcode-version 存在；版本與 racebin 的 stub xcodebuild -version 預設值相同，
+  # 讓這組時序重現案例的 1b 判定一致、直接略過，不干擾本案例要驗的東西（見下方 racebin/xcodebuild）。
+  printf '99.9\n' > "$d/.xcode-version"
 }
 mk_race_repo "$race_root/A"
 mk_race_repo "$race_root/B"
@@ -317,6 +330,10 @@ STUB
 chmod +x "$work/racebin/xcrun"
 cat > "$work/racebin/xcodebuild" <<'STUB'
 #!/bin/bash
+if [ "$1" = -version ]; then
+  printf 'Xcode 99.9\nBuild version ZZ000Z\n'
+  exit 0
+fi
 for a in "$@"; do case "$a" in
   -resolvePackageDependencies) exit 0 ;;
   test) printf '%s\t%s\tTEST_START\n' "$(date +%s.%N)" "${WHO:-?}" >> "$RACE_LOG"
@@ -393,6 +410,47 @@ if [ "$rc10" -ne 0 ] && printf '%s' "$out10" | grep -qF '不同步——改 proj
 else
   echo "✗ ⑩ XcodeGen 漂移沒有被擋下（exit ${rc10}）" >&2
   printf '%s\n' "$out10" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+
+# ---- ⑪ Xcode 版本與 .xcode-version 不一致（LS-106；PR #165 head 8b7a0fa 同型）→ 只警告，並額外呼叫
+#        一次帶 SWIFT_STRICT_CONCURRENCY=complete 的 xcodebuild build（只 build 不測）當替代檢查。沿用
+#        $R（已有 detect-simulator／xcrun／xcodebuild 佈線），暫時把 .xcode-version 換成不一致的版本號、
+#        跑完就換回，不影響後面（若有）案例 ----
+build_log11="$work/build11.log"; : > "$build_log11"
+printf '1.0\n' > "$R/.xcode-version"
+out11=$(run_gate STUB_TEST_RC=0 BUILD_LOG="$build_log11")
+printf '99.9\n' > "$R/.xcode-version"   # 還原
+if grep -qF 'SWIFT_STRICT_CONCURRENCY=complete' "$build_log11"; then
+  echo "✓ ⑪ 版本不一致 → 呼叫了帶 SWIFT_STRICT_CONCURRENCY=complete 的 xcodebuild build"
+else
+  echo "✗ ⑪ 版本不一致卻沒有呼叫替代 build，或缺 SWIFT_STRICT_CONCURRENCY=complete" >&2
+  echo "    build_log 內容：$(cat "$build_log11" 2>/dev/null)" >&2
+  printf '%s\n' "$out11" | sed 's/^/    /' >&2
+  fail=1
+fi
+if printf '%s' "$out11" | grep -qF '主次版號不一致'; then
+  echo "✓ ⑪ 印出版本不一致的警告訊息"
+else
+  echo "✗ ⑪ 未印出版本不一致警告訊息" >&2
+  fail=1
+fi
+
+# ---- ⑫ Xcode 版本與 .xcode-version 一致（LS-106）→ 略過替代檢查，不呼叫額外的 build ----
+build_log12="$work/build12.log"; : > "$build_log12"
+out12=$(run_gate STUB_TEST_RC=0 BUILD_LOG="$build_log12")
+if [ ! -s "$build_log12" ]; then
+  echo "✓ ⑫ 版本一致 → 沒有呼叫替代 build"
+else
+  echo "✗ ⑫ 版本一致卻仍呼叫了替代 build：$(cat "$build_log12")" >&2
+  fail=1
+fi
+if printf '%s' "$out12" | grep -qF '主次版號一致，略過替代檢查'; then
+  echo "✓ ⑫ 印出版本一致、略過替代檢查的訊息"
+else
+  echo "✗ ⑫ 未印出版本一致訊息" >&2
+  printf '%s\n' "$out12" | sed 's/^/    /' >&2
   fail=1
 fi
 

@@ -385,6 +385,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # LS-106：`.xcode-version` 是本機 push-gate 與這裡共用的單一來源（macos-15 runner 預裝多個
+      # Xcode 版本，這裡選定的版本會漂移；先前沒有明寫，PR #165 head 8b7a0fa 本機較寬鬆的 Xcode 版本
+      # 沒攔到、CI 用的版本判編譯錯，本機兩次綠 CI 才紅）。明寫 xcode-select，讓「CI 實際用的 Xcode」
+      # 有檔案可查、push-gate 才有東西可比對。
+      - name: xcode-select（讀 .xcode-version 單一來源，LS-106）
+        run: |
+          pin="$(tr -d '[:space:]' < .xcode-version)"
+          sudo xcode-select -s "/Applications/Xcode_${pin}.app/Contents/Developer"
+          xcodebuild -version
+
       # 前饋規則「改 project.yml 須重跑 xcodegen 一併 commit」的機械 gate（§7）；
       # 生成物 byte-identical（LS-5 review 實證），不會 flaky。反向漂移（GUI 改
       # .xcodeproj 沒回填 project.yml）同樣會被抓到。
