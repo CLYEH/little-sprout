@@ -74,13 +74,38 @@ final class OTPVerificationModel {
         }
     }
 
+    /// 這幾個後端錯誤碼不是「這組碼打錯了」——即使打的碼完全正確也會出現，不該算使用者
+    /// 用掉一次嘗試（R3 review B3）：`otp_expired` 是碼本身過期（在 `.validationRetryable`
+    /// 或 `.rejected` 都觀察到過，見 `AppErrorTests` 400 案例與正式環境實測的 403 案例，
+    /// `mapAPIStatus` 只依 HTTP 狀態碼分層、不看 `code`），三個 rate-limit 碼是打太快，
+    /// 兩者都該提示使用者換一個動作（重寄／等一下），不是暗示「碼打錯了」。
+    private static let nonAttemptConsumingCodes: Set<String> = [
+        "otp_expired",
+        "over_request_rate_limit",
+        "over_email_send_rate_limit",
+        "over_sms_send_rate_limit"
+    ]
+
     private func applyVerificationFailure(_ error: Error) {
         let appError = AppError.map(error)
         switch appError {
-        case .validationRetryable, .rejected:
-            recordFailure()
+        case .validationRetryable(_, let code), .rejected(_, let code):
+            if let code, Self.nonAttemptConsumingCodes.contains(code) {
+                errorMessage = message(forNonAttemptConsumingCode: code)
+            } else {
+                recordFailure()
+            }
         case .network, .retryableSystem, .server:
             errorMessage = appError.userFacingMessage
+        }
+    }
+
+    private func message(forNonAttemptConsumingCode code: String) -> String {
+        switch code {
+        case "otp_expired":
+            return "這組驗證碼已經過期了，請重新寄一組新的再試。"
+        default:
+            return "太多次嘗試了，請稍候一下再試一次。"
         }
     }
 
