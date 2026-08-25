@@ -123,6 +123,13 @@ jobs:
           bash scripts/gates/evidence-path-check.test.sh || rc=1
           exit "$rc"
 
+      # LS-71：ops 腳本自測——patrol.sh（巡檢）用合成 repo（file:// 裸 origin＋七個 worktree）驗各停滯型態判定的
+      # 正負樣本、--json 合法、gh 不可用不炸；session-start.sh（SessionStart hook）驗輸出合法 JSON 且 fail-soft、
+      # .claude/settings.json 有掛上。獨立 step、不併進上面的 gate 自測 step（同 LS-51 的理由：避開與同時在飛的
+      # harness 票改同一 step 撞衝突；巡檢也不是 merge gate）。
+      - name: Ops 腳本自測（patrol／session-start，LS-71）
+        run: bash scripts/ops/patrol.test.sh
+
       # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
       # errcode 三方雙向對帳（本機 push-gate 的伺服器端兜底）。所有 PR 都跑：純檔案比對、
       # 不依賴 PR body 標記，沒有 promote／back-merge 誤擋的問題（同 secrets 掃描）。
