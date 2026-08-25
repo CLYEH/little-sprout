@@ -21,6 +21,7 @@ model: sonnet
 - 刻意預留且有理由的（註解寫明、或 PLAN 明定）不算死碼——在報告中引用出處說明為何不報。
 - **不動任何檔案**。每個 finding 附：位置（檔案:行號）、判定證據（引用搜尋的指令與結果摘要）、建議處置（可安全刪除／需人判斷的保留疑慮）。
 - 誠實聲明盲區：純文字搜尋抓不到 reflection、字串拼接、Objective-C runtime 等動態引用。
+- 需要對活資料庫查證 SQL 殘留時，`supabase db reset`／`supabase/tests/run.sh` 一律經 `bash scripts/ops/supabase-lock.sh -- <命令>`（本機容器與其他 agent 共用，LS-70）。
 
 ## 輸出（handoff 格式）
 

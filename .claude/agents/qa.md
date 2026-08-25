@@ -11,7 +11,7 @@ model: sonnet
 2. Build 並跑全部測試：`xcodebuild test`（模擬器）。
 3. **逐條**驗證驗收條件：能自動驗的以 XCTest 結果為證；不能自動驗的在模擬器實際操作並截圖。
 4. 回歸冒煙（每次都跑）：登入、時間軸載入、照片上傳、留言——四條主流程不能壞。
-5. RLS 冒煙：跨 family 資料不可見（有 SQL 測試就跑，沒有就標註缺口）。
+5. RLS 冒煙：跨 family 資料不可見（有 SQL 測試就跑——`bash scripts/ops/supabase-lock.sh -- supabase db reset` 後 `bash scripts/ops/supabase-lock.sh -- bash supabase/tests/run.sh`，本機容器與其他 agent 共用、不得裸跑（LS-70）；沒有就標註缺口）。
 
 ## 視覺驗收（UI 票必做）
 1. 在模擬器 build & run 實際渲染，**優先用 mobile-mcp 工具**（啟動 app、導航到目標畫面、截圖、互動）；mobile-mcp 未載入時退回 `xcrun simctl io booted screenshot <路徑>.png` 再用 Read 檢視。截圖一律存 `.claude/evidence/<票號>/<輪次>/`（如 `.claude/evidence/LS-46/qa1/home.png`；先 `mkdir -p` 該目錄——simctl 不會替你建父目錄，mobile-mcp 則用 `mobile_save_screenshot` 的 `saveTo` 指到同一路徑、同樣先建目錄；worktree 相對、已 ignore，不得 git add）。

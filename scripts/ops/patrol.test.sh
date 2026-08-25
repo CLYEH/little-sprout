@@ -17,6 +17,8 @@ command -v jq >/dev/null 2>&1 || { echo "✗ patrol 自測需要 jq（驗 --json
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
+# LS-70：Supabase lock 段讀合成 lock 目錄，不碰真的 /tmp/supabase-lock-*（⑪ 之前一律 free）
+export SUPABASE_LOCK_DIR="$work/lock"
 
 # 臨時 repo 與本機全域／系統 git 設定隔離：自測結果不能因人而異
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
@@ -209,6 +211,33 @@ jq_ok '⑩ --json：fetched false、fetch_warning 有逾時句（PATROL_FETCH_TI
 hj10="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_FETCH_TIMEOUT=2 bash "$hook" 2>/dev/null)"
 jq_ok '⑩ hook：逾時句進 context、仍合法 JSON' "$hj10" '.hookSpecificOutput.additionalContext | test("fetch 逾時") and test("CronCreate")'
 out11="$(PATROL_FETCH_TIMEOUT=abc bash "$patrol" --repo "$repo" --no-pr "$STALE" 2>&1)"; rc_is '⑩ PATROL_FETCH_TIMEOUT 非整數 → exit 2' 2 "$?" "$out11"
+
+# ---- ⑪ Supabase lock 持有者（LS-70）：free／held／stale 進 human 與 --json，--brief 只在持有中印 ----
+out11="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑪ human 模式有 Supabase lock 段' "$out11" '== Supabase lock'
+has   '⑪ 未持有 → free' "$(printf '%s\n' "$out11" | sed -n '/== Supabase lock/{n;p;}')" 'free'
+hasnt '⑪ --brief 未持有不印 lock 行' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)" 'Supabase lock'
+mkdir -p "$SUPABASE_LOCK_DIR"
+printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=%s\nbranch=feature/LS-9-holder\ncmd=supabase db reset\n' "$$" "$(date +%s)" "$(hostname)" "$wts/LS-9" > "$SUPABASE_LOCK_DIR/holder"
+out11="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑪ 持有中 → held pid=' "$out11" "held pid=$$"
+has   '⑪ 持有中 → 顯示 cmd' "$out11" 'cmd=supabase db reset'
+hasnt '⑪ 持有者活著 → lock 行不標 stale（表頭的「stale ≥」不算）' "$(printf '%s\n' "$out11" | sed -n '/== Supabase lock/{n;p;}')" 'stale'
+brief11="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '⑪ --brief 持有中印 lock 行' "$brief11" 'Supabase lock：held'
+json11="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '⑪ --json 合法且 supabase_lock 欄位為 held' "$json11" '.supabase_lock | test("held pid=")'
+dead=$(sh -c 'echo $$')
+printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=/x\nbranch=b\ncmd=c\n' "$dead" "$(date +%s)" "$(hostname)" > "$SUPABASE_LOCK_DIR/holder"
+has   '⑪ 持有者 pid 不存在 → 標 stale' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)" 'stale'
+# 殘留 tomb（搬回失敗留下的 <lock>.stale.*）要看得到——§7 lock 列 ⚠️ 的反饋靠這裡（PR #122 R2 F2）
+mkdir -p "$SUPABASE_LOCK_DIR.stale.1.2"
+out11="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑪ 殘留 tomb → human 段列出 ⚠ tomb' "$out11" '⚠ tomb'
+has   '⑪ 殘留 tomb → 列出目錄名' "$out11" "$(basename "$SUPABASE_LOCK_DIR").stale.1.2"
+has   '⑪ 殘留 tomb → --brief 也印' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)" '⚠ tomb'
+jq_ok '⑪ --json supabase_lock 含 tomb 行' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)" '.supabase_lock | test("tomb")'
+rm -rf "$SUPABASE_LOCK_DIR" "$SUPABASE_LOCK_DIR.stale.1.2"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
