@@ -1,5 +1,6 @@
 #!/bin/bash
-# Push gate（pre-push）：全 repo lint + unit tests + API 契約／錯誤碼對帳 + migration 版本號撞號／分級。規約見 docs/COLLABORATION.md §4。
+# Push gate（pre-push）：目標 ref 分類（刪除／tag 早退；test／main 只准 promote.sh 的 FF 晉升）+ 全 repo lint + unit tests +
+# API 契約／錯誤碼對帳 + migration 版本號撞號／分級。規約見 docs/COLLABORATION.md §4。
 set -euo pipefail
 
 # LS-73：pre-push hook 由 git 啟動時會 export GIT_DIR／GIT_WORK_TREE／GIT_INDEX_FILE（linked worktree 指向
@@ -9,6 +10,20 @@ set -euo pipefail
 unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_PREFIX
 
 cd "$(git rev-parse --show-toplevel)"
+
+# 0) 目標 ref 分類（LS-85 G4／LS-87 G4；scripts/gates/push-ref-check.sh 讀 pre-push 的 stdin）：
+#    刪除分支／tag → 沒有要驗的內容，早退（29 條分支刪除與 2 個 tag 各跑了整套 gate）；目標 test／main → 只准
+#    scripts/ops/promote.sh（PROMOTE_VIA_SCRIPT=1）且 fast-forward，否則擋；通過也早退——被推的是 origin/<from> 的 SHA，
+#    check 由 promote.sh 與 GitHub required checks 驗，本機 lint／tests 跑的是當前 worktree、與它無關。
+#    stdin 是 tty（手動執行）或空 → 維持既有：跑完整 gate。
+if [ ! -t 0 ]; then
+  rc=0; bash "$(git rev-parse --show-toplevel)/scripts/gates/push-ref-check.sh" || rc=$?
+  case "$rc" in
+    0) ;;
+    3) echo "✓ push gate：本次 push 無需完整 gate（刪除／tag／promote.sh 的 FF 晉升）"; exit 0 ;;
+    *) exit "$rc" ;;
+  esac
+fi
 
 # 1) SwiftLint（有 Swift 檔才要求；有檔沒工具 → fail loud）
 if [ -n "$(git ls-files '*.swift')" ]; then

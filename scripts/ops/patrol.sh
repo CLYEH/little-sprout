@@ -1,5 +1,5 @@
 #!/bin/bash
-# 巡檢（LS-71）：列出「無依賴卻沒人動」的 PR／分支／worktree＋Supabase lock 持有者（LS-70），只讀不寫（唯一的寫入是 git fetch origin）。
+# 巡檢（LS-71）：列出「無依賴卻沒人動」的 PR／分支／worktree＋Supabase lock 持有者（LS-70）＋三分支祖先鏈漂移（LS-85），只讀不寫（唯一的寫入是 git fetch origin）。
 # 給 orchestrator 的巡檢 cron（每 26 分鐘，prompt 模板見 docs/COLLABORATION.md §4-b）與 SessionStart hook
 # （scripts/ops/session-start.sh）用。Linear 那一半（Ready 無人接／In Progress 無 worktree／QA 但 test 未含）
 # 要 orchestrator 用 MCP list_issues 對照，這裡只印提醒。自測：scripts/ops/patrol.test.sh（合成 repo，掛 CI rules job）。
@@ -24,6 +24,10 @@
 #     commit，拿它的時間會把剛建好的 worktree 誤判成停滯（scratchpad 原型的 bug）。0 commit 時改看 dirty 檔的
 #     mtime（date -r <file> +%s，macOS／GNU 皆可）與 worktree 建立時間（<worktree>/.git 檔的 mtime）。
 #   主 checkout（main）落後 origin/main 也標：agent 定義與 harness 讀自主 checkout，落後就派工＝用舊規約（§2）。
+#   三分支   祖先鏈 test ⊂ development、main ⊂ development（晉升＝promote.sh 的 FF push，LS-85）：test 有 commit 不在 development
+#            立即標（test 只能由 development FF 而來，出現＝手動 push／舊式 back-merge）；main 有 commit 不在 development 是 hotfix
+#            併入後待 back-merge、屬預期，最早那筆 first-parent（＝最早未 back-merge 的 PR merge）超過 stale 才標；main 不在 test
+#            不標（下次 promote 帶到）。
 # 時間一律用 epoch：commit 用 git log --format=%ct、PR 用 gh 內建 jq 的 fromdateiso8601，不碰 date -j／date -d。
 # exit 0＝巡檢完成（有無異常都 0，異常在輸出）；2＝參數／repo 錯誤。
 set -uo pipefail
@@ -135,10 +139,24 @@ EOF
 fi
 pr_of_branch() { printf '%s' "$PR_HEADS" | awk -F'\t' -v b="$1" '$1 == b { print $2; exit }'; }
 
-# ---- 三分支落後數 ----
-dev_main=$(count origin/development..origin/main)
-test_main=$(count origin/test..origin/main)
-test_dev=$(count origin/test..origin/development)
+# ---- 三分支（祖先鏈 test ⊂ development、main ⊂ development；晉升＝promote.sh FF push，LS-85）----
+dev_main=$(count origin/development..origin/main)    # main 有、development 沒有：hotfix 併入後待 back-merge（超過 stale 才標）
+test_main=$(count origin/test..origin/main)          # main 有、test 沒有：下次 promote 帶到，不標
+test_dev=$(count origin/test..origin/development)    # development 有、test 沒有：待晉升
+dev_test=$(count origin/development..origin/test)    # test 有、development 沒有：不該發生（test 只能由 development FF 而來）
+drift_flag=; main_ahead_m=
+if [ "$dev_test" != "?" ] && [ "$dev_test" -gt 0 ]; then
+  drift_flag="⚠ 分支漂移：test 有 ${dev_test} commit 不在 development（test 只能由 promote.sh 自 development FF 而來——手動 push／舊式 back-merge？→ 以 hotfix/LS-<n>-backmerge-development 把 origin/test 併回 development，§2）"
+fi
+if [ "$dev_main" != "?" ] && [ "$dev_main" -gt 0 ]; then
+  # 最早那筆 first-parent（＝最早併入 main 而未 back-merge 的 PR merge）的 commit 時間；hotfix 分支自己的 commit 更早，不拿
+  oldest=$(git -C "$ROOT" log --first-parent --format=%ct origin/development..origin/main 2>/dev/null | awk 'NR == 1 || $1 < m { m = $1 } END { if (NR) print m }')
+  [ -n "$oldest" ] && main_ahead_m=$(mins_since "$oldest")
+  if [ "${main_ahead_m:-0}" -ge "$STALE" ]; then
+    drift_flag="${drift_flag:+${drift_flag}；}⚠ 分支漂移：main 有 ${dev_main} commit 不在 development 已 ${main_ahead_m}m 未 back-merge（hotfix 併入後 → gh pr create --head main --base development，§2）"
+  fi
+fi
+[ -n "$drift_flag" ] && add_flag "[三分支] ${drift_flag}"
 
 # ---- 主 checkout（agent 定義與 harness 讀自這裡）----
 mc_branch=$(git -C "$ROOT" symbolic-ref --short -q HEAD 2>/dev/null || echo DETACHED)
@@ -248,10 +266,10 @@ fi
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
-      "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" \
+      "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
       "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$J_FLAGS"
     ;;
   brief)
@@ -265,8 +283,11 @@ case "$MODE" in
     [ -n "$fetch_warn" ] && echo "  ${fetch_warn}"
     echo "== PR（open）"
     if [ -n "$pr_skip" ]; then echo "  PR：略過（${pr_skip}）"; elif [ "$pr_total" -eq 0 ]; then echo "  （無 open PR）"; else printf '%s' "$PR_LINES"; fi
-    echo "== 三分支"
-    echo "  dev 落後 main: ${dev_main}  test 落後 main: ${test_main}  test 落後 dev: ${test_dev}"
+    echo "== 三分支（祖先鏈 test ⊂ development、main ⊂ development；晉升 promote.sh＝FF push，LS-85）"
+    echo "  dev 落後 main: ${dev_main}  test 落後 main: ${test_main}  test 落後 dev: ${test_dev}  test 不在 dev: ${dev_test}"
+    if [ -n "$drift_flag" ]; then echo "  ${drift_flag}"
+    elif [ "$dev_main" != "?" ] && [ "$dev_main" -gt 0 ]; then echo "  main 領先 development ${dev_main}（最早 ${main_ahead_m:-?}m 前；hotfix 併入後待 back-merge，≥${STALE}m 才標）"
+    else echo "  祖先鏈 ok"; fi
     echo "== 主 checkout"
     echo "  ${mc_branch} 落後 origin/main ${mc_behind} dirty=${mc_dirty}  ${mc_flag:-ok}"
     echo "== worktree（local vs remote／未 push／dirty 停滯；base＝hotfix→origin/main、其餘→origin/development）"

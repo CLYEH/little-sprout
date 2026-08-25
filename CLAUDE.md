@@ -15,7 +15,7 @@
 
 ## 每個 agent 都要遵守
 
-- 分支流向：`feature|fix/* → development → test → main`；`hotfix/*` 與 harness 檔從 `main` 切、PR 回 `main` 後 back-merge。保護分支禁直接 commit（hook＋GitHub 都會擋）。
+- 分支流向：`feature|fix/* → development ⇒(FF) test ⇒(FF) main`——晉升一律 `bash scripts/ops/promote.sh <from> <to>`（fast-forward push，不開 PR、不 back-merge），禁手動 push 到 `test`／`main`（push-gate 擋）；`hotfix/*` 與 harness 檔從 `main` 切、PR 回 `main` 後只補一支 back-merge `main`→`development`。保護分支禁直接 commit（hook＋GitHub 都會擋）。
 - 一張 ticket＝一個 worktree（`.claude/worktrees/LS-<n>`）＝一條 branch（`feature/LS-<n>-slug`）；禁止跨 worktree 編輯。
 - Commit 第一行：`<type>(<scope>): LS-<n> <摘要>`（commit-msg hook 會驗）；禁止 `--no-verify`。
 - Handoff 格式：Ticket／已完成／已驗證（怎麼驗）／未完成（**必列 reviewer 全部 informational 的處置**：已修／另票 LS-<m>／不修＋理由，一條不能省）／風險／產出位置。
