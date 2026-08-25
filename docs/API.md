@@ -36,7 +36,9 @@
 - 所有資料表與 RPC 都在 `public` schema（`supabase/config.toml` 的 `api.schemas` 只暴露
   `public`／`graphql_public`）；`private` schema 的函式**不對外**，client 永遠呼叫不到，
   不需要也不應該嘗試。
-- 認證：Supabase Auth（Sign in with Apple／Email OTP，LS-17）。所有表與 RPC 的權限判斷
+- 認證：Supabase Auth（Sign in with Apple／Email OTP，LS-17；Google OAuth，LS-39——走
+  `signInWithOAuth`＋`ASWebAuthenticationSession`／SwiftUI `WebAuthenticationSession`，
+  redirect URL `littlesprout://auth/callback`，不裝 Google Sign-In SDK）。所有表與 RPC 的權限判斷
   一律吃 `auth.uid()`（登入後的 JWT `sub`），未登入呼叫任何一支表或 RPC 都會被 RLS／
   RPC 內部檢查擋下（`42501`）。
 - **沒有 `anon` 角色的資料存取**：`anon` 對 16＋1 張表與全部 12 支 RPC 都沒有任何權限

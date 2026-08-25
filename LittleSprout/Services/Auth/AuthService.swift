@@ -51,6 +51,28 @@ protocol AuthService: Sendable {
     @discardableResult
     func signInWithApple(idToken: String, nonce: String) async throws -> AuthSession
 
+    /// 用 Supabase OAuth（`provider: .google`）＋`ASWebAuthenticationSession` 登入（LS-39；
+    /// 定案不裝 Google Sign-In SDK、不建 iOS 類型 OAuth client）。
+    ///
+    /// - Parameter launchFlow: 實際跑 `ASWebAuthenticationSession`（或 SwiftUI
+    ///   `WebAuthenticationSession`）、把使用者導去 Google 同意畫面、拿到 callback URL 的閉包。
+    ///   這個協定刻意不知道「怎麼呈現」——presentation context（哪個 window/scene）只有呼叫端
+    ///   （SwiftUI `View`，見 `WelcomeView` 用 `@Environment(\.webAuthenticationSession)`）
+    ///   才有；`AuthService` 只負責把拿到的 callback URL 交給 Supabase 做 PKCE code exchange
+    ///   （`SupabaseAuthService` 轉呼叫 `AuthClient.signInWithOAuth(... launchFlow:)`，
+    ///   supabase-swift 本身就是為了這個用途開放這個泛型 closure 版本）。
+    ///
+    /// - Important: 跟這個協定其他方法不同，這裡**不保證**失敗一律映射成 `AppError`——使用者
+    ///   在系統瀏覽器面板按取消時，`launchFlow` 丟出的 `ASWebAuthenticationSessionError`
+    ///   （`.canceledLogin`）會原樣往上拋，不包進 `AppError`（`SupabaseAuthService` 特別放行
+    ///   這個型別）。呼叫端必須先用 `as? ASWebAuthenticationSessionError` 辨認取消、靜默處理，
+    ///   剩下的才走 `AppError.map` 顯示錯誤——包了會讓呼叫端拿不到原始型別、分不出「取消」跟
+    ///   其他失敗。
+    @discardableResult
+    func signInWithGoogle(
+        launchFlow: @MainActor @Sendable (_ url: URL) async throws -> URL
+    ) async throws -> AuthSession
+
     /// 寄送 Email OTP 到指定信箱。
     func sendEmailOTP(email: String) async throws
 

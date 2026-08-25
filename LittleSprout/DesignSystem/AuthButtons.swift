@@ -68,9 +68,9 @@ struct SecondaryButton: View {
 /// Google 的四色「G」標是受商標保護的圖形（LS-101 point 3）：`GoogleG` 資產直接取自 Google
 /// 官方 CDN（`fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg`，Google Sign-In branding
 /// guidelines 指定資產），非手繪重製，`template-rendering-intent: original` 防止被當 template
-/// 圖示套色。Google 登入本身仍是 stub（無 GoogleSignIn SDK、未接真實流程——見環境規約），接上
-/// 真的 Google 登入時應改用 GoogleSignIn SDK 提供的官方按鈕（Handoff Notes「三方登入鍵的色彩
-/// 豁免」）。
+/// 圖示套色。LS-39 定案：Google 登入走 Supabase OAuth＋`ASWebAuthenticationSession`（不裝
+/// GoogleSignIn SDK、不建 iOS 類型 OAuth client），這顆自畫鈕即為正式實作，不再是 stub
+/// （Handoff Notes「三方登入鍵的色彩豁免」允許自畫、不強制用 SDK 官方按鈕）。
 struct GoogleSignInButton: View {
     var isDimmed = false
     let action: () -> Void

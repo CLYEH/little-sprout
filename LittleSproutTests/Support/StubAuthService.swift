@@ -8,6 +8,8 @@ import os
 final class StubAuthService: AuthService, @unchecked Sendable {
     typealias EmailHandler = @Sendable (String) async throws -> Void
     typealias SessionHandler = @Sendable (String, String) async throws -> AuthSession
+    // Google 走 OAuth，沒有 idToken/nonce 這類輸入可以斷言——測試只需要控制它回傳/丟出什麼。
+    typealias GoogleSessionHandler = @Sendable () async throws -> AuthSession
 
     enum StubError: Error {
         case unconfigured
@@ -18,6 +20,7 @@ final class StubAuthService: AuthService, @unchecked Sendable {
         var sendEmailOTPHandler: EmailHandler = { _ in }
         var verifyEmailOTPHandler: SessionHandler = { _, _ in throw StubError.unconfigured }
         var signInWithAppleHandler: SessionHandler = { _, _ in throw StubError.unconfigured }
+        var signInWithGoogleHandler: GoogleSessionHandler = { throw StubError.unconfigured }
         var signOutHandler: @Sendable () async throws -> Void = {}
         var sentEmails: [String] = []
         var verifyAttempts: [(email: String, token: String)] = []
@@ -74,6 +77,10 @@ final class StubAuthService: AuthService, @unchecked Sendable {
         box.withLock { $0.signInWithAppleHandler = handler }
     }
 
+    func setSignInWithGoogleHandler(_ handler: @escaping GoogleSessionHandler) {
+        box.withLock { $0.signInWithGoogleHandler = handler }
+    }
+
     func setSignOutHandler(_ handler: @escaping @Sendable () async throws -> Void) {
         box.withLock { $0.signOutHandler = handler }
     }
@@ -81,6 +88,17 @@ final class StubAuthService: AuthService, @unchecked Sendable {
     func signInWithApple(idToken: String, nonce: String) async throws -> AuthSession {
         let handler = box.withLock { $0.signInWithAppleHandler }
         let session = try await handler(idToken, nonce)
+        box.withLock { $0.currentSession = session }
+        return session
+    }
+
+    // launchFlow 不在這裡呼叫：測試只關心「AuthStore 怎麼處理 handler 回傳/丟出的結果」，
+    // 不重跑一次真的 ASWebAuthenticationSession（那是手動模擬器驗證與 WelcomeView 的事）。
+    func signInWithGoogle(
+        launchFlow: @MainActor @Sendable (_ url: URL) async throws -> URL
+    ) async throws -> AuthSession {
+        let handler = box.withLock { $0.signInWithGoogleHandler }
+        let session = try await handler()
         box.withLock { $0.currentSession = session }
         return session
     }

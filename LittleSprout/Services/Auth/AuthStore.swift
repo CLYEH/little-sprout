@@ -75,6 +75,18 @@ final class AuthStore {
         return session
     }
 
+    /// 見 `AuthService.signInWithGoogle` 協定文件：使用者取消時 `authService` 會原樣拋
+    /// `ASWebAuthenticationSessionError`（不是 `AppError`）——這裡不做任何特殊判斷，跟其他
+    /// 失敗一樣原封不動往上傳；辨識「取消該靜默」是呼叫端（`WelcomeView`）的責任。
+    @discardableResult
+    func signInWithGoogle(
+        launchFlow: @MainActor @Sendable (_ url: URL) async throws -> URL
+    ) async throws -> AuthSession {
+        let session = try await authService.signInWithGoogle(launchFlow: launchFlow)
+        self.session = session
+        return session
+    }
+
     func sendEmailOTP(email: String) async throws {
         try await authService.sendEmailOTP(email: email)
     }

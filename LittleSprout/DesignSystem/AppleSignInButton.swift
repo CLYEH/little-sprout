@@ -31,6 +31,11 @@ import SwiftUI
 /// 因此**這裡刻意不修**，AX3 下 Apple 與 Google／Email 的字級發散是接受的已知限制，不是缺陷。
 struct AppleSignInButton: View {
     let isSigningIn: Bool
+    /// R1 review F1（PR #163）：跟 `isSigningIn` 分開的第二個輸入——`isSigningIn` 只反映
+    /// Apple 自己有沒有在跑（決定要不要顯示官方鈕的「登入中…」疊層），`isDisabled` 額外
+    /// 反映「別的登入方式在跑，這顆鈕先不可按」。兩者都要讓按鈕不可互動，但不能合併成一個
+    /// 布林——那會讓 Google 在跑時誤顯示 Apple 自己的「登入中…」疊層。
+    let isDisabled: Bool
     let onRequest: (ASAuthorizationAppleIDRequest) -> Void
     let onCompletion: (Result<ASAuthorization, Error>) -> Void
 
@@ -45,7 +50,7 @@ struct AppleSignInButton: View {
                 // 圓角對齊 Primary／Secondary／Google 鈕同一個 token（LS-101 point 2）：
                 // 官方按鈕預設 cornerRadius 是 6pt，不套 token 會與其他三顆鈕（14pt）不齊。
                 .cornerRadius(AppSpacing.radiusMedium)
-                .disabled(isSigningIn)
+                .disabled(isSigningIn || isDisabled)
                 .opacity(isSigningIn ? 0 : 1)
                 .accessibilityHidden(isSigningIn)
 
@@ -63,5 +68,10 @@ struct AppleSignInButton: View {
                 .accessibilityLabel("正在使用 Apple 登入")
             }
         }
+        // R2 review F1-A (c)：`.disabled()` 對官方 `SignInWithAppleButton` 可能是 no-op（見
+        // `AuthButtonsState.shouldAcceptAppleCompletion` 檔頭說明），這裡在外層再加一道
+        // SwiftUI 層的攔點擊——`allowsHitTesting` 對 UIViewRepresentable 有效，是第二道防線；
+        // model 層的 guard 才是主要防線，這裡不會出現「有反應但沒吃到」的空窗。
+        .allowsHitTesting(!isDisabled)
     }
 }

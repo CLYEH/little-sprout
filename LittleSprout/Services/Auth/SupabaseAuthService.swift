@@ -1,4 +1,5 @@
 import Auth
+import AuthenticationServices
 import Foundation
 import os
 import Supabase
@@ -8,6 +9,11 @@ import Supabase
 /// （`SupabaseClient` 預設用 Keychain 儲存＋PKCE flow＋autoRefreshToken=true，
 /// 見 `SupabaseClientFactory`），這裡不重做一份。
 final class SupabaseAuthService: AuthService {
+    // LS-39：Google OAuth 的 redirect URL，須與 Info.plist 的 CFBundleURLTypes（`littlesprout`
+    // scheme）＋ Supabase dashboard → Authentication → URL Configuration → Redirect URLs
+    // 三處一致（後者是使用者操作，見 ticket comment 2026-08-25）。
+    private static let googleRedirectURL = URL(string: "littlesprout://auth/callback")!
+
     private let client: SupabaseClient
     // `AuthClient.currentSession` 每次讀取都會跑 storage migration 檢查再 SecItemCopyMatching
     // 一次同步 Keychain 存取（LS-49 PR #63 review F5）——若 `currentSession` 被用在 SwiftUI
@@ -69,6 +75,26 @@ final class SupabaseAuthService: AuthService {
                 credentials: OpenIDConnectCredentials(provider: .apple, idToken: idToken, nonce: nonce)
             )
             return updateCache(session: session)
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    /// 見 `AuthService.signInWithGoogle` 協定文件：`ASWebAuthenticationSessionError`（使用者
+    /// 取消）原樣放行，不包進 `AppError`——只有這個 catch 分支之外的錯誤才走一般映射。
+    @discardableResult
+    func signInWithGoogle(
+        launchFlow: @MainActor @Sendable (_ url: URL) async throws -> URL
+    ) async throws -> AuthSession {
+        do {
+            let session = try await client.auth.signInWithOAuth(
+                provider: .google,
+                redirectTo: Self.googleRedirectURL,
+                launchFlow: launchFlow
+            )
+            return updateCache(session: session)
+        } catch let cancelError as ASWebAuthenticationSessionError {
+            throw cancelError
         } catch {
             throw AppError.map(error)
         }

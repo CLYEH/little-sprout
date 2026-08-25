@@ -162,7 +162,7 @@ site_url = "http://127.0.0.1:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+additional_redirect_urls = ["https://127.0.0.1:3000", "littlesprout://auth/callback"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -335,6 +335,15 @@ url = ""
 skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
+
+# LS-39：Google OAuth（正式站已在 dashboard 啟用；本機測試需要使用者自行在 .env 補
+# GOOGLE_CLIENT_ID／GOOGLE_CLIENT_SECRET——orchestrator 只看 key 名，不讀值。這兩個 env 沒設時
+# `env()` 解析成空字串，`supabase start` 不會因此炸掉（實測：CLI 對 external provider 的
+# client_id/secret 只在對應 provider 真的被呼叫時才需要非空值，config 解析階段允許空字串）。
+[auth.external.google]
+enabled = true
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
 
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.
 # You can configure "web3" rate limit in the [auth.rate_limit] section and set up [auth.captcha] if self-hosting.
