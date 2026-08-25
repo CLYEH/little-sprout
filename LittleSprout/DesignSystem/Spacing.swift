@@ -28,4 +28,10 @@ enum AppSpacing {
 
     static let printEdge: CGFloat = 8
     static let printEdgeBottom: CGFloat = 8
+
+    /// LS-98：01-iPad 稿面（`design/littlesprout.pen` frame `BDrtd`／`App Name (Wordmark)`
+    /// 節點 `A6DnYR`）量到的字標框尺寸，`WelcomeView.regularLayout` 用；iPhone 版字標尺寸
+    /// （190×91）維持原本內嵌值不變，不因此改成 token。
+    static let wordmarkWidthIPad: CGFloat = 247
+    static let wordmarkHeightIPad: CGFloat = 118
 }
