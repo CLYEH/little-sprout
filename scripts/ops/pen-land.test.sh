@@ -225,13 +225,14 @@ else
   bad "⑨a 結構無差異應預設 exit 非 0 且不 cp（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 
-# ⑨b --allow-unchanged：刻意確認本輪無變更時放行
+# ⑨b --allow-unchanged：刻意確認本輪無變更時放行，且印顯著標記（R3 I3）
 reset; write_backup "$WANT_2NODE"
 out="$(run "$wt" --expect-nodes 2 --allow-unchanged 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '結構無差異'; then
-  ok '⑨b --allow-unchanged：結構無差異時刻意放行 → exit 0'
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '結構無差異' \
+  && printf '%s' "$out" | grep -qF '⚠ allow-unchanged：本輪零變更，刻意放行'; then
+  ok '⑨b --allow-unchanged：結構無差異時刻意放行 → exit 0，印顯著標記（R3 I3）'
 else
-  bad "⑨b --allow-unchanged 應 exit 0（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+  bad "⑨b --allow-unchanged 應 exit 0 且印顯著標記（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 
 # ⑨c --after：backup mtime 早於指定 epoch（未來時間戳）→ 拒，印兩邊時間，不 cp（backup 內容本身有差異，

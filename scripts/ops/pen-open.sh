@@ -21,14 +21,17 @@
 #   1＝（open 模式限定）輪詢逾時仍與目標路徑不一致（含清場後仍不一致，或判定不安全而未清場）
 #   2＝Pen 沒開／pen CLI 未登入／連線失敗／用法錯誤／清場失敗需人工介入（fail closed；--status 讀不到路徑也是這個）
 #
-# R2（自動清場，使用者核可 2026-08-25）：目標路徑已在背景視窗開著時，`open -a Pen` 不會奪回 active（見下方
-# 「已知坑」）。輪詢逾時仍不一致 → 從目前 active 路徑（last_seen）推回它的 worktree 根 → 對該根跑
-# `pen-land.sh <that-root> --dry-run`（不帶 --allow-unchanged，藉此把它預設的「結構無差異」拒絕當成「沒有
-# 未落地變更」的安全信號來解讀：dry-run 印出真的有差異＝不安全，不動；只有 exit 1 且訊息明確是「本輪零變更或
-# autosave 還沒追上」才視為安全）→ 安全才嘗試 `osascript -e 'tell application "Pen" to quit'`（優雅退出，給
-# 4 秒）→ 還在就 `kill -TERM`（不用 SIGKILL）→ 總計等程序消失 ≤10 秒 → 重新 `open -a Pen` 並再跑一輪輪詢。
-# 不安全（有未落地變更／無法確認）就不清場，印出提示「先 pen-land <that-root>」，exit 1。`--no-quit` 關掉整段
-# 自動清場，只做原本的對帳。
+# R2／R3（自動清場，使用者核可 2026-08-25）：目標路徑已在背景視窗開著時，`open -a Pen` 不會奪回 active（見
+# 下方「已知坑」）。輪詢逾時仍不一致 → **`kill` 殺的是 Pen 主行程＝全部視窗一起結束**，所以安全判定必須涵蓋
+# 「目前所有開著的 .pen」，不能只驗目前 active 那一份（R2 版本只驗了 active 那份就漏了：目標路徑本身必定也
+# 開在另一個背景視窗，否則一開始就不會走到這裡——那份從未被驗過就被 kill，R3 merge-reviewer 抓到）。做法：
+# 用 `ps -Ao command | grep 'Pen Helper' | grep -oE 'file://.../design/littlesprout\.pen'` 唯讀枚舉目前所有
+# renderer 行程命令列帶的檔案路徑（每個開著的文件是獨立的 renderer 行程），聯集上目前 active 路徑與目標路徑、
+# 去重 → 每一個候選路徑各自推回 worktree 根、各自跑 `pen-land.sh <root> --dry-run`（不帶 --allow-unchanged，
+# 藉此把它預設的「結構無差異」拒絕當成「沒有未落地變更」的安全信號來解讀）→ **全部**都安全才嘗試
+# `osascript -e 'tell application "Pen" to quit'`（優雅退出，給 4 秒）→ 還在就 `kill -TERM`（不用 SIGKILL）→
+# 總計等程序消失 ≤10 秒 → 重新 `open -a Pen` 並再跑一輪輪詢。任一份不安全／無法確認就完全不清場，印出提示
+# 「先 pen-land <root>」，exit 1。`--no-quit` 關掉整段自動清場，只做原本的對帳。
 #
 # macOS 沒有 coreutils timeout：每次 pen interactive 呼叫用背景程序＋背景 sleep 到期就 kill 的看門狗模式
 # （同 scripts/ops/patrol.sh 的 fetch_with_timeout；此處用 stdin/stdout 重導向而非管線，$! 才是 pen 程序本身的
@@ -47,11 +50,12 @@
 # UTF-8 位元組也吃進變數名稱，觸發 `set -u` 的 unbound variable（例："$want」" 炸成「want�: unbound variable」）。
 # 一律用 `${var}` 明確收尾；本檔與訊息字串中所有變數皆已改寫，新增訊息比照。
 #
-# 已知坑（本票實測，重要；R2 起由自動清場處理）：`open -a Pen <path>` 只在該路徑**尚未在別的背景視窗開著**時
+# 已知坑（本票實測，重要；R2／R3 起由自動清場處理）：`open -a Pen <path>` 只在該路徑**尚未在別的背景視窗開著**時
 # 可靠——這台機器累積了 5 個過去票留下的背景 renderer（LS-17-impl／LS-72／LS-81／LS-91／主 checkout 各一），
 # 對其中任一已開著的路徑重新 `open -a Pen` 並輪詢 30 秒（遠超本腳本預設的 15s）仍讀不到切換；get_app_state
 # 回報的是「上次真正被切到的那個」，不會因為再 open 同一路徑而重新奪回 active。**唯一驗證有效的復原手段**：
-# 確認目前 active 文件沒有未落地變更後 `kill -TERM <Pen 主行程 pid>` 乾淨結束，再 `open -a Pen <目標路徑>`
+# 確認目前所有開著的 .pen 皆無未落地變更後（R3：不只驗 active 那份，見上方 R2／R3 段）
+# `kill -TERM <Pen 主行程 pid>` 乾淨結束，再 `open -a Pen <目標路徑>`
 # 重開——全新行程對「當下沒有背景視窗」的路徑立即可切（本票 R1 階段實測：`osascript ... to quit` 在這個 session
 # 的沙盒環境裡對 Pen 沒有效果，行程仍在——研判是 Automation 權限被擋，同一 session 內 `tell application
 # "System Events"` 也讀不到 Pen 的視窗清單，同一種症狀；`kill -TERM <pid>` 由 PID 直接送訊號則確實有效、乾淨
@@ -182,29 +186,76 @@ if [ "$no_quit" -eq 1 ]; then
   exit 1
 fi
 
-# ---- R2 自動清場：先驗證安全，安全才 quit＋重開＋重試一輪 ----
+# ---- R2 自動清場（R3 F1 修正：`kill` 殺的是 Pen 主行程＝全部視窗一起結束，必須驗過「全部目前開著的
+# .pen」才能 quit，只驗 LAST_SEEN 那一份不夠——$want 本身必定也開在另一個背景視窗，否則一開始就不會走到
+# 這裡）----
 suffix="/design/littlesprout.pen"
-that_root=""
-case "$LAST_SEEN" in
-  */design/littlesprout.pen) that_root=${LAST_SEEN%$suffix} ;;
-esac
-if [ -z "$that_root" ] || [ ! -d "$that_root" ]; then
-  echo "  無法從「${LAST_SEEN}」推出 worktree 根目錄，或該目錄已不存在——不嘗試自動清場，回報人工處理" >&2
-  exit 1
-fi
+
+# 列出目前所有 Pen renderer 行程命令列裡帶的 design/littlesprout.pen file:// URI（唯讀查詢，R3 實測可行：
+# 每個開著的文件各自是一個獨立的 `Pen Helper (Renderer)` 行程，`--init-params` 帶著它的 fileURI）。
+list_open_pen_paths() {
+  ps -Ao command 2>/dev/null | grep 'Pen Helper' | grep -oE 'file://[^"]*/design/littlesprout\.pen' | sed 's#^file://##'
+}
 
 script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-land_out=$(bash "${script_root}/scripts/ops/pen-land.sh" "$that_root" --dry-run 2>&1)
-land_rc=$?
-if [ "$land_rc" -ne 1 ] || ! printf '%s' "$land_out" | grep -qF '本輪零變更或 autosave 還沒追上'; then
-  echo "  「${LAST_SEEN}」可能有尚未落地的變更（pen-land.sh --dry-run 顯示有差異，或無法確認）——不自動 quit。先跑：bash scripts/ops/pen-land.sh ${that_root}" >&2
-  printf '%s\n' "$land_out" | sed 's/^/    /' >&2
+
+# check_root_safe <root>：用 pen-land.sh --dry-run 判斷這個 root 是否「沒有未落地的變更」（安全信號見
+# pen-land.sh 說明；不帶 --allow-unchanged，把它預設的「結構無差異」拒絕當成「安全」的訊號來解讀）。
+# 印診斷到 stderr；回傳 0＝安全，1＝不安全或無法判定（fail closed）。
+check_root_safe() {
+  local root=$1 out rc
+  if [ ! -d "$root" ]; then
+    echo "  「${root}」不存在（可能已移除）——無法確認安全，視為不安全" >&2
+    return 1
+  fi
+  out=$(bash "${script_root}/scripts/ops/pen-land.sh" "$root" --dry-run 2>&1)
+  rc=$?
+  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -qF '本輪零變更或 autosave 還沒追上'; then
+    return 0
+  fi
+  echo "  「${root}」可能有尚未落地的變更（pen-land.sh --dry-run 顯示有差異，或無法確認）——先跑：bash scripts/ops/pen-land.sh ${root}" >&2
+  printf '%s\n' "$out" | sed 's/^/    /' >&2
+  return 1
+}
+
+# 候選清單＝目前 active 文件（LAST_SEEN）＋目標文件（want，必定也開在某個背景視窗，否則不會走到這裡）＋
+# ps 命令列枚舉到的全部開著的 .pen，去重（每個候選路徑對應唯一 root，去重路徑＝去重 root）。
+candidates=$(
+  {
+    printf '%s\n' "$LAST_SEEN"
+    printf '%s\n' "$want"
+    list_open_pen_paths
+  } | grep -v '^$' | sort -u
+)
+echo "  目前偵測到開著的 .pen 文件：" >&2
+printf '%s\n' "$candidates" | sed 's/^/    /' >&2
+
+all_safe=1
+while IFS= read -r p; do
+  [ -n "$p" ] || continue
+  case "$p" in
+    */design/littlesprout.pen) root=${p%$suffix} ;;
+    *)
+      echo "  「${p}」不是預期的 .../design/littlesprout.pen 形狀——無法安全判定，視為不安全" >&2
+      all_safe=0
+      continue
+      ;;
+  esac
+  check_root_safe "$root" || all_safe=0
+done <<PATHS
+$candidates
+PATHS
+
+if [ "$all_safe" -ne 1 ]; then
+  echo "✗ pen-open：目前開著的 .pen 中至少一份可能有未落地變更（或無法確認安全）——不自動 quit，見上方訊息，逐一 pen-land 後再試" >&2
   exit 1
 fi
-echo "  已確認「${that_root}」沒有未落地變更，嘗試安全結束 Pen 並重開……" >&2
+echo "  已確認全部開著的 .pen 皆無未落地變更，嘗試安全結束 Pen 並重開……" >&2
 
 pen_pid=$(pgrep -f 'Pen\.app/Contents/MacOS/Pen$' 2>/dev/null | head -1)
-if [ -n "$pen_pid" ]; then
+if [ -z "$pen_pid" ]; then
+  echo "  找不到 Pen 主行程（pgrep 沒有結果）——跳過清場步驟，直接嘗試重開" >&2
+else
   osascript -e 'tell application "Pen" to quit' >/dev/null 2>&1
   quit_start=$SECONDS
   quit_deadline=$((quit_start + QUIT_TIMEOUT))

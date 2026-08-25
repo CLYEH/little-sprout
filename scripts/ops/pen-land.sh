@@ -24,12 +24,17 @@
 #      （排除 children，避免整棵子樹洗版）。印出變更清單。
 #   4. meta 變了，或 diff 本身失敗（JSON 壞掉、頂層非物件等）→ 不 cp，exit 1。
 #   5. 結構完全無差異（R1 F1）→ 預設也視為失敗（本輪零變更或 autosave 沒追上，兩者從結構上分不出來，
-#      寧可誤擋不誤放）、印訊息、exit 1；刻意確認本輪真的沒有變更就加 `--allow-unchanged` 放行。
+#      寧可誤擋不誤放）、印訊息、exit 1；刻意確認本輪真的沒有變更就加 `--allow-unchanged` 放行（R3 I3：
+#      放行時印顯著標記 `⚠ allow-unchanged：本輪零變更，刻意放行`，這是這道把關唯一的逃生口，讓 handoff／
+#      PR review 一眼看得到它被用掉了）。
 #   6. --expect-nodes 省略時（R1 F3）**不會**帶去餵 design-landing-check.sh，避免它印出「節點數與畫布
 #      一致」這種其實只是「backup 跟自己比」的誤導訊息；改印明確警告「僅與 backup 自身對帳」。
 #   7. --dry-run：印完清單就結束，不 cp、不跑 landing gate（零副作用）。
 #   8. 否則：cp backup → 暫存檔 → 跑 design-landing-check.sh 驗暫存檔 → 過了才 `mv -f` 覆蓋 want，
-#      沒過就刪暫存檔、原始檔完全不動（R1 F2：避免 gate 紅時留下半成品或用殘缺 backup 蓋掉合法舊稿）。
+#      沒過就（trap 自動）清暫存檔、原始檔完全不動（R1 F2：避免 gate 紅時留下半成品或用殘缺 backup 蓋掉
+#      合法舊稿）。暫存檔一律掛 `trap 'rm -f "$tmp"' EXIT`（R3 I2：Ctrl-C／外部 kill 這種異常中斷也不留下
+#      未追蹤的殘留檔；`mv` 本身失敗這種需要人工檢查暫存檔的情況會先 `trap - EXIT` 關掉再退出，暫存檔才
+#      真的留得住）。
 #
 # 測試用可覆寫 backup 目錄（$PEN_BACKUP_DIR，預設 ~/.pencil/backup）：自測用合成 fixture，不碰真正的
 # ~/.pencil/backup 或 design/littlesprout.pen（真檔落地仍由 orchestrator 執行，auto-mode 分類器會擋 agent
@@ -228,9 +233,13 @@ if [ -z "$nodes" ] || [ -z "$unchanged" ]; then
   exit 1
 fi
 
-if [ "$unchanged" = 1 ] && [ "$allow_unchanged" -ne 1 ]; then
-  echo "✗ pen-land：本輪零變更或 autosave 還沒追上（結構與落地檔完全相同）——刻意確認本輪真的沒有變更就加 --allow-unchanged" >&2
-  exit 1
+if [ "$unchanged" = 1 ]; then
+  if [ "$allow_unchanged" -ne 1 ]; then
+    echo "✗ pen-land：本輪零變更或 autosave 還沒追上（結構與落地檔完全相同）——刻意確認本輪真的沒有變更就加 --allow-unchanged" >&2
+    exit 1
+  fi
+  # R3 I3：--allow-unchanged 是這道把關唯一的逃生口，印顯著標記讓 handoff／PR review 一眼看得到它被用掉了。
+  echo "⚠ allow-unchanged：本輪零變更，刻意放行"
 fi
 
 if [ "$dry_run" -eq 1 ]; then
@@ -239,9 +248,11 @@ if [ "$dry_run" -eq 1 ]; then
 fi
 
 tmp="${want}.pen-land.tmp.$$"
+# R3 I2：異常中斷（Ctrl-C／外部 kill）沒有這個 trap 會在 worktree 留下未追蹤的暫存檔；同目錄才能保證
+# mv -f 是同檔案系統的原子操作，trap 對正常結束（含成功 mv 之後 tmp 已不存在）是無害的 no-op。
+trap 'rm -f "$tmp"' EXIT
 cp "$backup" "$tmp" || {
   echo "✗ pen-land：cp「${backup}」→「${tmp}」失敗" >&2
-  rm -f "$tmp"
   exit 1
 }
 
@@ -257,12 +268,14 @@ else
 fi
 
 if [ "$gate_rc" -ne 0 ]; then
-  rm -f "$tmp"
   echo "✗ pen-land：landing gate 未過（見上方訊息）——原始檔「${want}」未動" >&2
   exit "$gate_rc"
 fi
 
 mv -f "$tmp" "$want" || {
+  # mv 失敗是異常狀況（同目錄理論上不該跨檔案系統）：關掉 EXIT trap，保留暫存檔供人工檢查——
+  # 訊息說「留在」就真的要留在，不能被 trap 悄悄清掉。
+  trap - EXIT
   echo "✗ pen-land：mv「${tmp}」→「${want}」失敗——暫存檔留在「${tmp}」，原始檔「${want}」未動" >&2
   exit 1
 }
