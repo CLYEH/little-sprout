@@ -23,7 +23,7 @@ struct AppleSignInButton: View {
         ZStack {
             SignInWithAppleButton(.signIn, onRequest: onRequest, onCompletion: onCompletion)
                 .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
-                .frame(height: 56)
+                .frame(minHeight: 56)
                 .disabled(isSigningIn)
                 .opacity(isSigningIn ? 0 : 1)
                 .accessibilityHidden(isSigningIn)
@@ -34,7 +34,7 @@ struct AppleSignInButton: View {
                     Text("登入中…").appFont(.body).foregroundStyle(Color.lsAppleForeground)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 56)
+                .frame(minHeight: 56)
                 .background(Color.lsAppleBackground, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("正在使用 Apple 登入")

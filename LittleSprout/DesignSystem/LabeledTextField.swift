@@ -29,7 +29,8 @@ struct LabeledTextField: View {
                 .submitLabel(submitLabel)
                 .onSubmit { onSubmit?() }
                 .padding(.horizontal, AppSpacing.insetCard)
-                .frame(height: 60)
+                .padding(.vertical, AppSpacing.controlPaddingMedium)
+                .frame(minHeight: 60)
                 .background(Color.lsSurface, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
                 .overlay(
                     RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)

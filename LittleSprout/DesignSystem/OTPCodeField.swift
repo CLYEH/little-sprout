@@ -34,7 +34,6 @@ struct OTPCodeField: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("驗證碼輸入，共 \(cellCount) 位數字")
         .accessibilityValue(code.isEmpty ? "尚未輸入" : code.map(String.init).joined(separator: " "))
-        .accessibilityAddTraits(.isKeyboardKey)
     }
 
     private func cell(at index: Int) -> some View {
@@ -43,7 +42,8 @@ struct OTPCodeField: View {
             .appNumericFont(.otp)
             .foregroundStyle(Color.lsTextPrimary)
             .frame(maxWidth: .infinity)
-            .frame(height: 72)
+            .padding(.vertical, AppSpacing.controlPaddingMedium)
+            .frame(minHeight: 72)
             .background(Color.lsSurface, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
             .overlay(
                 RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
