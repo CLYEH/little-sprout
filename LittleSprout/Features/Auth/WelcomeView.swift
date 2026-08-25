@@ -4,18 +4,23 @@ import SwiftUI
 /// LS-17 / 01 歡迎登入（含 01b 登入中、01c 深色模式、01-iPad、AX3 變體）。
 ///
 /// 版式依 `.claude/evidence/LS-17/spec/`（LS-46 R11 進場條件）：B 版式蠟筆字標、深色模式
-/// 字標＋Tagline 搬到相片上緣的紙條上、Apple 為主要動作、Google 為 stub、Email 為次要動作。
+/// 字標＋Tagline 搬到相片上緣的紙條上、Apple 為主要動作、Google 為次要動作（LS-39 起接真流程，
+/// 不再是 stub）、Email 為次要動作。
 struct WelcomeView: View {
     let authStore: AuthStore
 
     @State private var path: [AuthRoute] = []
     @State private var isSigningInWithApple = false
     @State private var appleErrorMessage: String?
-    @State private var isGoogleStubAlertPresented = false
+    @State private var isSigningInWithGoogle = false
+    @State private var googleErrorMessage: String?
     @State private var currentAppleNonce: String?
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
+    // LS-39：presentation context 由 SwiftUI 環境提供（iOS 16+），不必自己寫
+    // `ASWebAuthenticationPresentationContextProviding` 去找 key window。
+    @Environment(\.webAuthenticationSession) private var webAuthenticationSession
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -52,8 +57,14 @@ struct WelcomeView: View {
         } message: { message in
             Text(message)
         }
-        .alert("Google 登入即將推出", isPresented: $isGoogleStubAlertPresented) {
+        .alert(
+            "無法使用 Google 登入",
+            isPresented: Binding(get: { googleErrorMessage != nil }, set: { if !$0 { googleErrorMessage = nil } }),
+            presenting: googleErrorMessage
+        ) { _ in
             Button("好", role: .cancel) {}
+        } message: { message in
+            Text(message)
         }
     }
 
@@ -167,16 +178,23 @@ struct WelcomeView: View {
     // 間距一致為 12pt，且不低於改動前任一段（見 handoff）。設計稿 01 板的 12／20 不等距回頭
     // 對齊本值，記 LS-96。
     private var actionsSection: some View {
+        // 任一登入方式在跑（Apple 或 Google）都要讓另外兩顆鈕暫時不可按——只是「in-flight
+        // disable」，不是驗證型 disable（elder-constraints 硬約束，見 OTPVerificationModel.
+        // isLocked 註解）。
         VStack(spacing: AppSpacing.group) {
             AppleSignInButton(
                 isSigningIn: isSigningInWithApple,
                 onRequest: configureAppleRequest,
                 onCompletion: handleAppleCompletion
             )
-            GoogleSignInButton(isDimmed: isSigningInWithApple) {
-                isGoogleStubAlertPresented = true
+            GoogleSignInButton(isDimmed: isSigningInWithApple || isSigningInWithGoogle) {
+                handleGoogleSignIn()
             }
-            SecondaryButton(icon: "envelope", title: "使用 Email 登入", isDimmed: isSigningInWithApple) {
+            SecondaryButton(
+                icon: "envelope",
+                title: "使用 Email 登入",
+                isDimmed: isSigningInWithApple || isSigningInWithGoogle
+            ) {
                 path.append(.emailInput)
             }
         }
@@ -263,6 +281,32 @@ struct WelcomeView: View {
                 return
             }
             appleErrorMessage = AppError.map(error).userFacingMessage
+        }
+    }
+
+    // MARK: - Sign in with Google
+
+    private func handleGoogleSignIn() {
+        isSigningInWithGoogle = true
+        Task {
+            defer { isSigningInWithGoogle = false }
+            do {
+                try await authStore.signInWithGoogle { url in
+                    // `callback:`（`ASWebAuthenticationSession.Callback`）版本要 iOS 17.4+；
+                    // 專案部署目標是 17.0（project.yml），改用舊版 `callbackURLScheme:` 字串
+                    // 多載（iOS 16+ 起可用，行為等價，只是還沒吃到 17.4 的新 Callback 型別）。
+                    try await webAuthenticationSession.authenticate(
+                        using: url,
+                        callbackURLScheme: "littlesprout"
+                    )
+                }
+            } catch let cancelError as ASWebAuthenticationSessionError where cancelError.code == .canceledLogin {
+                // 使用者在系統瀏覽器面板主動取消：跟 Apple 的 `.canceled` 分支同語意，
+                // 靜默、不算失敗（見 `AuthService.signInWithGoogle` 協定文件）。
+                return
+            } catch {
+                googleErrorMessage = AppError.map(error).userFacingMessage
+            }
         }
     }
 }
