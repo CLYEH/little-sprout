@@ -38,7 +38,7 @@ struct PrintPhotoCard: View {
         .padding(.horizontal, AppSpacing.printEdge)
         .padding(.bottom, AppSpacing.printEdgeBottom)
         .background(Color.lsPrintPaper)
-        .background(mountPoolGlow)
+        .background(mountPoolGlow.clipped())
         .overlay(PhotoCornerOverlay(size: cornerSize))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(imprintAccessibilityLabel)
