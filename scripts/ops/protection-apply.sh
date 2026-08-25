@@ -53,8 +53,9 @@ after="$OUT/protection-${branch}-after.json"
 summary() {  # 一行摘要：require_pr／checks／enforce_admins／force_push／deletions／linear／restrictions
   jq -r '"require_pr=\(.required_pull_request_reviews != null) checks=\([.required_status_checks.checks[]? | "\(.context)@\(if .app_id == null or .app_id == -1 then "any" else .app_id end)"] | join(",")) strict=\(.required_status_checks.strict) enforce_admins=\(.enforce_admins.enabled) force_push=\(.allow_force_pushes.enabled) deletions=\(.allow_deletions.enabled) linear_history=\(.required_linear_history.enabled) restrictions=\(.restrictions != null)"' "$1"
 }
-# 目標狀態：merge-review@any（GET 回讀 -1 或 null 都算「任何 app」）＋五個 context 齊。test／main：四個 Actions check@15368，另驗
-# require PR 關、enforce_admins、禁 force push／刪除；development：其餘四個 check 的 context／app_id 與 before 相同（只加 merge-review）
+# 目標狀態：merge-review@any（GET 回讀 -1 或 null 都算「任何 app」）。test／main：五個 context 齊、四個 Actions check@15368，另驗
+# require PR 關、enforce_admins、禁 force push／刪除；development：contexts＝before 的 contexts ∪ merge-review、其餘 check 的
+# context／app_id 與 before 相同（與 request 同源、不硬寫五個——development 的 required checks 日後增減不會讓 verify 誤報，R3 F3）
 # ＋require PR 仍開（其餘欄位本腳本不動）
 CHECKS_OK='(.required_status_checks.strict | not)
     and ([.required_status_checks.checks[].context] | sort == ["ci","db","lint","merge-review","rules"])
@@ -73,7 +74,7 @@ verify() {  # 回讀是否等於目標狀態
       def others: [.required_status_checks.checks[] | select(.context != "merge-review") | {context, app_id: (.app_id // -1)}] | sort_by(.context);
       (.required_pull_request_reviews != null)
       and (.required_status_checks.strict | not)
-      and ([.required_status_checks.checks[].context] | sort == ["ci","db","lint","merge-review","rules"])
+      and (([.required_status_checks.checks[].context] | unique) == (([$b[0].required_status_checks.checks[].context] + ["merge-review"]) | unique))
       and ([.required_status_checks.checks[] | select(.context == "merge-review") | .app_id] | all(. == null or . == -1))
       and (others == ($b[0] | others))' "$1" >/dev/null ;;
   esac
