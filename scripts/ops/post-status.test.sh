@@ -1,7 +1,8 @@
 #!/bin/bash
 # post-status.sh 的自測（LS-87）。CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對貼 status 的封裝也適用：若退化成短 SHA／錯 context／錯 state 照貼、空 description 照貼、貼的 endpoint 或
-# 欄位不對（GitHub 收到的是另一個 SHA／context）、gh 失敗當成已貼、回讀不符當成已貼、--url 沒傳成 target_url——這裡會紅。
+# 欄位不對（GitHub 收到的是另一個 SHA／context）、gh 失敗當成已貼、回讀不符當成已貼、--url 沒傳成 target_url、--expect 與 sha
+# 不同（審查期間 head 已前進）仍照貼——這裡會紅。
 # gh 用 PATH 上的 stub：記錄整串參數、把 -f key=value 組回 JSON 當 GitHub 回應（--jq 交給真 jq 跑，驗的是腳本自己的表達式）；
 # GH_STUB_FAIL=1 模擬 HTTP 失敗；GH_STUB_STATE=<x> 讓回應的 state 與送出的不同（驗回讀核對）。
 set -uo pipefail
@@ -107,8 +108,17 @@ mkdir -p "$work/nobin"; ln -s "$(command -v bash)" "$work/nobin/bash"; ln -s "$(
 out="$(cd "$repo" && env PATH="$work/nobin" "$work/nobin/bash" "$post" "$SHA" qa success 'x' 2>&1)"; rc=$?
 if [ "$rc" -eq 2 ] && printf '%s' "$out" | grep -qF '需要 gh'; then echo "✓ ⑦ gh 未安裝 → exit 2"; else echo "✗ ⑦ gh 未安裝應 exit 2（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 
+# ---- ⑧ --expect（R2 M1）：與 <sha> 相同才貼；不同＝審查期間 head 已前進 → exit 2、不呼叫 gh ----
+expect 0 '⑧ --expect 同 SHA → 照貼 exit 0' 'status merge-review=success' "$SHA" merge-review success 'APPROVE R1 · linear:x' --expect "$SHA"
+OTHER=fedcba9876543210fedcba9876543210fedcba98
+expect 2 '⑧ --expect 不同 SHA（head 已前進）→ exit 2' 'head 已前進' "$SHA" merge-review success 'APPROVE R1 · linear:x' --expect "$OTHER"; no_gh '⑧ head 已前進不呼叫 gh'
+expect 2 '⑧ --expect 在前也比對' 'head 已前進' --expect "$OTHER" "$SHA" merge-review success 'x'; no_gh '⑧ --expect 在前不呼叫 gh'
+expect 2 '⑧ --expect 短 SHA → exit 2' '長度 7≠40' "$SHA" merge-review success 'x' --expect 0123456; no_gh '⑧ --expect 短 SHA 不呼叫 gh'
+expect 2 '⑧ --expect 非 hex → exit 2' '不是小寫 40 位' "$SHA" merge-review success 'x' --expect 0123456789ABCDEF0123456789abcdef01234567
+expect 2 '⑧ --expect 缺值 → exit 2' '--expect 缺值' "$SHA" merge-review success 'x' --expect
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ post-status 自測失敗" >&2
   exit 1
 fi
-echo "✓ post-status 自測通過（7 組樣本）"
+echo "✓ post-status 自測通過（8 組樣本）"
