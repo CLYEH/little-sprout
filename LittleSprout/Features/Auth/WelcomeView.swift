@@ -161,10 +161,13 @@ struct WelcomeView: View {
 
     // 三顆鈕間距一致（LS-101 point 1）：單一 VStack `spacing` token 是唯一的間距來源；
     // 舊版每顆鈕自身還疊加 `.padding(.top:)`（Google +4、Email +$sp-group），量測後段距
-    // 分別是 12pt／20pt，並不等距。改成只用 `AppSpacing.label`（8pt）本身當唯一 token，
-    // 三段間距量測後一致為 8pt（見 handoff）。
+    // 分別是 12pt／20pt，並不等距。R1 review I1：三顆並列的頂層控制項語意上是一個 group，
+    // 取 `AppSpacing.group`（12pt，`$sp-group`）而非 `AppSpacing.label`（8pt）——8pt 會把原本
+    // 最小的那段（12pt）反而壓得更緊，卡到 HIG 相鄰點擊目標下限，對長輩是反方向；改後三段
+    // 間距一致為 12pt，且不低於改動前任一段（見 handoff）。設計稿 01 板的 12／20 不等距回頭
+    // 對齊本值，記 LS-96。
     private var actionsSection: some View {
-        VStack(spacing: AppSpacing.label) {
+        VStack(spacing: AppSpacing.group) {
             AppleSignInButton(
                 isSigningIn: isSigningInWithApple,
                 onRequest: configureAppleRequest,

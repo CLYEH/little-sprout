@@ -98,10 +98,21 @@ struct GoogleSignInButton: View {
     }
 }
 
-#Preview {
+// R1 review F3：`PrimaryButton`（`.body` 17pt，EmailSignInView／OTPVerificationView 用）與
+// `SecondaryButton`／`GoogleSignInButton`（`.lead` 22pt medium，只有 WelcomeView 用，LS-101
+// point 5 對齊 Apple 官方鈕實測值）字級不同——分成兩個 Preview，各自反映實際出現的畫面情境，
+// 不要把兩種字級併在同一張預覽裡看起來像沒對齊。
+
+#Preview("Primary（EmailSignInView／OTPVerificationView）") {
     VStack(spacing: AppSpacing.label) {
         PrimaryButton(icon: "paperplane", title: "寄送驗證碼", action: {})
         PrimaryButton(icon: "paperplane", title: "寄送驗證碼", isLoading: true, action: {})
+    }
+    .padding()
+}
+
+#Preview("Secondary／Google（WelcomeView）") {
+    VStack(spacing: AppSpacing.group) {
         SecondaryButton(icon: "envelope", title: "使用 Email 登入", action: {})
         SecondaryButton(icon: "envelope", title: "使用 Email 登入", isDimmed: true, action: {})
         GoogleSignInButton(action: {})
