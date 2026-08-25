@@ -39062,8 +39062,6 @@
                           "gap": "$sp-label",
                           "padding": [
                             "$sp-item",
-                            "$inset-card",
-                            "$sp-group",
                             "$inset-card"
                           ],
                           "children": [
@@ -39129,86 +39127,16 @@
                                       ]
                                     }
                                   ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "XHjkO",
-                              "name": "Actions",
-                              "gap": "$sp-block",
-                              "padding": [
-                                "$sp-tight",
-                                0,
-                                0,
-                                0
-                              ],
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "DVbJi",
-                                  "name": "Edit",
-                                  "gap": "$sp-tight",
-                                  "padding": [
-                                    "$ctl-pad-tap",
-                                    0
-                                  ],
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "Q9RFB",
-                                      "name": "Edit Icon",
-                                      "width": 18,
-                                      "height": 18,
-                                      "icon": "pencil",
-                                      "library": "lucide",
-                                      "fill": "$text-primary"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "C4Sxyy",
-                                      "name": "Edit Label",
-                                      "fill": "$text-primary",
-                                      "content": "編輯",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "600"
-                                    }
-                                  ]
                                 },
                                 {
-                                  "type": "frame",
-                                  "id": "MIEWh",
-                                  "name": "Delete",
-                                  "gap": "$sp-tight",
-                                  "padding": [
-                                    "$ctl-pad-tap",
-                                    0
-                                  ],
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "yNcpS",
-                                      "name": "Delete Icon",
-                                      "width": 18,
-                                      "height": 18,
-                                      "icon": "trash-2",
-                                      "library": "lucide",
-                                      "fill": "$danger"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "HFDHq",
-                                      "name": "Delete Label",
-                                      "fill": "$danger",
-                                      "content": "移除這個寶貝",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "600"
-                                    }
-                                  ]
+                                  "type": "icon",
+                                  "id": "pxHep",
+                                  "name": "Chevron",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "chevron-right",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
                                 }
                               ]
                             }
@@ -39231,8 +39159,6 @@
                           "gap": "$sp-label",
                           "padding": [
                             "$sp-item",
-                            "$inset-card",
-                            "$sp-group",
                             "$inset-card"
                           ],
                           "children": [
@@ -39298,86 +39224,16 @@
                                       ]
                                     }
                                   ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "y52fd",
-                              "name": "Actions",
-                              "gap": "$sp-block",
-                              "padding": [
-                                "$sp-tight",
-                                0,
-                                0,
-                                0
-                              ],
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "YKDEK",
-                                  "name": "Edit",
-                                  "gap": "$sp-tight",
-                                  "padding": [
-                                    "$ctl-pad-tap",
-                                    0
-                                  ],
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "SJ0x4",
-                                      "name": "Edit Icon",
-                                      "width": 18,
-                                      "height": 18,
-                                      "icon": "pencil",
-                                      "library": "lucide",
-                                      "fill": "$text-primary"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "rWfK5",
-                                      "name": "Edit Label",
-                                      "fill": "$text-primary",
-                                      "content": "編輯",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "600"
-                                    }
-                                  ]
                                 },
                                 {
-                                  "type": "frame",
-                                  "id": "ZxAiy",
-                                  "name": "Delete",
-                                  "gap": "$sp-tight",
-                                  "padding": [
-                                    "$ctl-pad-tap",
-                                    0
-                                  ],
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "Y3hOI5",
-                                      "name": "Delete Icon",
-                                      "width": 18,
-                                      "height": 18,
-                                      "icon": "trash-2",
-                                      "library": "lucide",
-                                      "fill": "$danger"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "nvB5I",
-                                      "name": "Delete Label",
-                                      "fill": "$danger",
-                                      "content": "移除這個寶貝",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "600"
-                                    }
-                                  ]
+                                  "type": "icon",
+                                  "id": "HTqoQ",
+                                  "name": "Chevron",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "chevron-right",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
                                 }
                               ]
                             }
@@ -39597,7 +39453,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "「陳家」還沒有寶貝的檔案。",
+                      "content": "「陳家」目前沒有寶貝的檔案。",
                       "lineHeight": 1.6,
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -39623,49 +39479,125 @@
                       "id": "elWPK",
                       "name": "Children Card",
                       "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-lg",
-                      "stroke": "$border",
+                      "fill": "$print-paper",
+                      "stroke": "$paper-edge",
                       "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
                       "layout": "vertical",
-                      "gap": "$sp-label",
-                      "padding": "$sp-section",
-                      "justifyContent": "center",
+                      "gap": 7,
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "id": "LBDL9",
-                          "name": "Empty Icon",
-                          "width": 32,
-                          "height": 32,
-                          "icon": "image-off",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "MX68p",
-                          "name": "Empty Title",
-                          "fill": "$text-primary",
-                          "content": "還沒有寶貝的檔案",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "uohlU",
-                          "name": "Empty Body",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
+                          "type": "frame",
+                          "id": "n5j2xu",
+                          "name": "Photo Wrap",
+                          "clip": true,
                           "width": "fill_container",
-                          "content": "點下面的按鈕，幫第一個寶貝建立檔案。",
-                          "lineHeight": 1.5,
-                          "textAlign": "center",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
+                          "height": 175,
+                          "fill": "$surface-2"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "XoVVx",
+                          "name": "Imprint Row",
+                          "width": "fill_container",
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "l4Vz5A",
+                              "name": "Caption",
+                              "fill": "$print-ink",
+                              "content": " ",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-lead",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "H3b7gk",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "oj6h0",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 324,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "SUi6K",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": 209,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "nSjs7",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 324,
+                          "y": 209,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
                         }
                       ]
                     }
@@ -39946,8 +39878,8 @@
                               "type": "icon",
                               "id": "OsE9i",
                               "name": "Camera Icon",
-                              "width": 16,
-                              "height": 16,
+                              "width": 18,
+                              "height": 18,
                               "icon": "camera",
                               "library": "lucide",
                               "fill": "$text-primary"
@@ -40234,7 +40166,7 @@
           "x": 0,
           "y": 0,
           "name": "Scrim",
-          "opacity": 0.7,
+          "opacity": 0.45,
           "width": 393,
           "height": 852,
           "fill": "$paper-shadow"
@@ -40299,16 +40231,6 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "meayc",
-                      "name": "Head Icon",
-                      "width": 26,
-                      "height": 26,
-                      "icon": "circle-alert",
-                      "library": "lucide",
-                      "fill": "$danger"
-                    },
-                    {
                       "type": "text",
                       "id": "tcmzL",
                       "name": "Head Title",
@@ -40331,7 +40253,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "移除後，陳小安的檔案會從寶貝清單消失，但已經拍過的照片和寫過的日記不會不見。30 天內你可以隨時把檔案還原回來，過了 30 天才會真的清除。",
+                  "content": "移除後，陳小安不會再出現在寶貝清單裡。照片和日記都會留著，不會刪掉。30 天內你隨時可以把他還原回來；過了 30 天，就不能再還原了。",
                   "lineHeight": 1.6,
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
@@ -40409,1168 +40331,6 @@
                   ]
                 }
               ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "yeNHs",
-      "x": 4865,
-      "y": 22061,
-      "name": "LS-47 / 09 寶貝管理 · 深色",
-      "theme": {
-        "mode": "dark"
-      },
-      "clip": true,
-      "width": 393,
-      "height": 852,
-      "fill": {
-        "type": "gradient",
-        "gradientType": "radial",
-        "enabled": true,
-        "rotation": 0,
-        "size": {
-          "width": 1.6997455470737914,
-          "height": 1.3497652582159625
-        },
-        "colors": [
-          {
-            "color": "$bg-lit",
-            "position": 0
-          },
-          {
-            "color": "$bg",
-            "position": 1
-          }
-        ],
-        "center": {
-          "x": 0.13994910941475827,
-          "y": 0.01995305164319249
-        }
-      },
-      "cornerRadius": 44,
-      "layout": "vertical",
-      "children": [
-        {
-          "id": "M5unx",
-          "type": "ref",
-          "ref": "OeXop",
-          "name": "Status Bar",
-          "width": "fill_container"
-        },
-        {
-          "id": "IjFtE",
-          "type": "ref",
-          "ref": "W6qTyS",
-          "name": "Nav Back",
-          "width": "fill_container"
-        },
-        {
-          "type": "frame",
-          "id": "bJLxA",
-          "name": "Body",
-          "width": "fill_container",
-          "height": "fill_container",
-          "layout": "vertical",
-          "padding": [
-            16,
-            "$screen-pad",
-            0,
-            "$screen-pad"
-          ],
-          "justifyContent": "space_between",
-          "children": [
-            {
-              "type": "frame",
-              "id": "X5bev",
-              "name": "Top",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-block",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "jKbaE",
-                  "name": "Header",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-label",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "dOKgQ",
-                      "name": "Title",
-                      "fill": "$text-primary",
-                      "content": "寶貝",
-                      "lineHeight": 1.25,
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-display",
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "PhVcj",
-                      "name": "Subtitle",
-                      "fill": "$text-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "「陳家」目前有 2 個寶貝的檔案。",
-                      "lineHeight": 1.6,
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-body",
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "yTdO1",
-                  "name": "Card Wrap",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "padding": [
-                    "$sp-section",
-                    0,
-                    0,
-                    0
-                  ],
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "Afw6j",
-                      "name": "Children Card",
-                      "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-lg",
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "layout": "vertical",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "ACsVW",
-                          "name": "Row 1",
-                          "width": "fill_container",
-                          "layout": "vertical",
-                          "gap": "$sp-label",
-                          "padding": [
-                            "$sp-item",
-                            "$inset-card",
-                            "$sp-group",
-                            "$inset-card"
-                          ],
-                          "children": [
-                            {
-                              "type": "frame",
-                              "id": "HXYd0",
-                              "name": "Identity",
-                              "width": "fill_container",
-                              "gap": "$sp-group",
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "id": "sHTbh",
-                                  "type": "ref",
-                                  "ref": "RaaIf",
-                                  "name": "Avatar",
-                                  "descendants": {
-                                    "A30rIX": {
-                                      "content": "安"
-                                    }
-                                  }
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "j5SUmK",
-                                  "name": "Person Text",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": "$sp-tight",
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "QFNPb",
-                                      "name": "Name",
-                                      "fill": "$text-primary",
-                                      "content": "陳小安",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "700"
-                                    },
-                                    {
-                                      "type": "frame",
-                                      "id": "cWetZ",
-                                      "name": "Meta",
-                                      "gap": "$sp-group",
-                                      "alignItems": "center",
-                                      "children": [
-                                        {
-                                          "id": "r5sFas",
-                                          "type": "ref",
-                                          "ref": "AqN3F",
-                                          "name": "Age Pill",
-                                          "descendants": {
-                                            "KR7zN": {
-                                              "icon": "cake"
-                                            },
-                                            "g7Fnj": {
-                                              "content": "2 歲 3 個月",
-                                              "fill": "$text-secondary"
-                                            }
-                                          }
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "nJbpX",
-                              "name": "Actions",
-                              "gap": "$sp-block",
-                              "padding": [
-                                "$sp-tight",
-                                0,
-                                0,
-                                0
-                              ],
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "hS0xj",
-                                  "name": "Edit",
-                                  "gap": "$sp-tight",
-                                  "padding": [
-                                    "$ctl-pad-tap",
-                                    0
-                                  ],
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "R5PYoT",
-                                      "name": "Edit Icon",
-                                      "width": 18,
-                                      "height": 18,
-                                      "icon": "pencil",
-                                      "library": "lucide",
-                                      "fill": "$text-primary"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "oGlnA",
-                                      "name": "Edit Label",
-                                      "fill": "$text-primary",
-                                      "content": "編輯",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "QtOHo",
-                                  "name": "Delete",
-                                  "gap": "$sp-tight",
-                                  "padding": [
-                                    "$ctl-pad-tap",
-                                    0
-                                  ],
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "LS6jh",
-                                      "name": "Delete Icon",
-                                      "width": 18,
-                                      "height": 18,
-                                      "icon": "trash-2",
-                                      "library": "lucide",
-                                      "fill": "$danger"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "VOWjM",
-                                      "name": "Delete Label",
-                                      "fill": "$danger",
-                                      "content": "移除這個寶貝",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "rectangle",
-                          "id": "KmtaU",
-                          "name": "Divider",
-                          "fill": "$border",
-                          "width": "fill_container",
-                          "height": 1
-                        },
-                        {
-                          "type": "frame",
-                          "id": "DU99K",
-                          "name": "Row 2",
-                          "width": "fill_container",
-                          "layout": "vertical",
-                          "gap": "$sp-label",
-                          "padding": [
-                            "$sp-item",
-                            "$inset-card",
-                            "$sp-group",
-                            "$inset-card"
-                          ],
-                          "children": [
-                            {
-                              "type": "frame",
-                              "id": "mPTAM",
-                              "name": "Identity",
-                              "width": "fill_container",
-                              "gap": "$sp-group",
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "id": "I0exYe",
-                                  "type": "ref",
-                                  "ref": "RaaIf",
-                                  "name": "Avatar",
-                                  "descendants": {
-                                    "A30rIX": {
-                                      "content": "軒"
-                                    }
-                                  }
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "tr1kt",
-                                  "name": "Person Text",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": "$sp-tight",
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "vegjn",
-                                      "name": "Name",
-                                      "fill": "$text-primary",
-                                      "content": "陳小軒",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "700"
-                                    },
-                                    {
-                                      "type": "frame",
-                                      "id": "wuMdg",
-                                      "name": "Meta",
-                                      "gap": "$sp-group",
-                                      "alignItems": "center",
-                                      "children": [
-                                        {
-                                          "id": "naEYr",
-                                          "type": "ref",
-                                          "ref": "AqN3F",
-                                          "name": "Age Pill",
-                                          "descendants": {
-                                            "KR7zN": {
-                                              "icon": "cake"
-                                            },
-                                            "g7Fnj": {
-                                              "content": "6 個月大",
-                                              "fill": "$text-secondary"
-                                            }
-                                          }
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "zUvkd",
-                              "name": "Actions",
-                              "gap": "$sp-block",
-                              "padding": [
-                                "$sp-tight",
-                                0,
-                                0,
-                                0
-                              ],
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "FNT7r",
-                                  "name": "Edit",
-                                  "gap": "$sp-tight",
-                                  "padding": [
-                                    "$ctl-pad-tap",
-                                    0
-                                  ],
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "v2JVuw",
-                                      "name": "Edit Icon",
-                                      "width": 18,
-                                      "height": 18,
-                                      "icon": "pencil",
-                                      "library": "lucide",
-                                      "fill": "$text-primary"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "haw1X",
-                                      "name": "Edit Label",
-                                      "fill": "$text-primary",
-                                      "content": "編輯",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "bhRly",
-                                  "name": "Delete",
-                                  "gap": "$sp-tight",
-                                  "padding": [
-                                    "$ctl-pad-tap",
-                                    0
-                                  ],
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "Ej1Zo",
-                                      "name": "Delete Icon",
-                                      "width": 18,
-                                      "height": 18,
-                                      "icon": "trash-2",
-                                      "library": "lucide",
-                                      "fill": "$danger"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "QMepl",
-                                      "name": "Delete Label",
-                                      "fill": "$danger",
-                                      "content": "移除這個寶貝",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "L4e5d",
-                  "name": "Removed Disclosure",
-                  "width": "fill_container",
-                  "gap": "$sp-label",
-                  "padding": [
-                    "$ctl-pad-tap",
-                    0
-                  ],
-                  "justifyContent": "space_between",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "IyzAP",
-                      "name": "Left",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "XK04u",
-                          "name": "Archive Icon",
-                          "width": 20,
-                          "height": 20,
-                          "icon": "archive",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "QL45Y",
-                          "name": "Removed Label",
-                          "fill": "$text-secondary",
-                          "content": "已移除的寶貝（1）",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "icon",
-                      "id": "SVmbJ",
-                      "name": "Chevron Down",
-                      "width": 20,
-                      "height": 20,
-                      "icon": "chevron-down",
-                      "library": "lucide",
-                      "fill": "$text-secondary"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "JPLjy",
-              "name": "Footer",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-group",
-              "padding": [
-                0,
-                0,
-                "$sp-item",
-                0
-              ],
-              "children": [
-                {
-                  "id": "Alx9g",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Add Child Button",
-                  "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "user-round-plus"
-                    },
-                    "w7CUP": {
-                      "content": "新增寶貝"
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "uzHug",
-          "name": "Home Indicator Area",
-          "width": "fill_container",
-          "height": 34,
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "rectangle",
-              "cornerRadius": "$radius-full",
-              "id": "L1r0YC",
-              "name": "Home Indicator",
-              "fill": "$home-indicator",
-              "width": 140,
-              "height": 5
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "KI2bX",
-      "x": 5378,
-      "y": 22061,
-      "name": "A11y / 09 寶貝管理 · Dynamic Type AX3（body 40pt）",
-      "theme": {
-        "size": "ax3"
-      },
-      "clip": true,
-      "width": 393,
-      "height": 1700,
-      "fill": {
-        "type": "gradient",
-        "gradientType": "radial",
-        "enabled": true,
-        "rotation": 0,
-        "size": {
-          "width": 1.6997455470737914,
-          "height": 1.3497652582159625
-        },
-        "colors": [
-          {
-            "color": "$bg-lit",
-            "position": 0
-          },
-          {
-            "color": "$bg",
-            "position": 1
-          }
-        ],
-        "center": {
-          "x": 0.13994910941475827,
-          "y": 0.01995305164319249
-        }
-      },
-      "cornerRadius": 44,
-      "layout": "vertical",
-      "children": [
-        {
-          "id": "R2nTn2",
-          "type": "ref",
-          "ref": "OeXop",
-          "name": "Status Bar",
-          "width": "fill_container"
-        },
-        {
-          "id": "BspjQ",
-          "type": "ref",
-          "ref": "W6qTyS",
-          "name": "Nav Back",
-          "width": "fill_container"
-        },
-        {
-          "type": "frame",
-          "id": "ntnV4",
-          "name": "Body",
-          "width": "fill_container",
-          "height": "fill_container",
-          "layout": "vertical",
-          "padding": [
-            16,
-            "$screen-pad",
-            0,
-            "$screen-pad"
-          ],
-          "justifyContent": "space_between",
-          "children": [
-            {
-              "type": "frame",
-              "id": "jm6O3",
-              "name": "Top",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-block",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "OO35r",
-                  "name": "Header",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-label",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "oLZ5G",
-                      "name": "Title",
-                      "fill": "$text-primary",
-                      "content": "寶貝",
-                      "lineHeight": 1.25,
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-display",
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "H0Koj8",
-                      "name": "Subtitle",
-                      "fill": "$text-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "「陳家」目前有 2 個寶貝的檔案。",
-                      "lineHeight": 1.6,
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-body",
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "NUz6i",
-                  "name": "Card Wrap",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "padding": [
-                    "$sp-section",
-                    0,
-                    0,
-                    0
-                  ],
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "yKU95",
-                      "name": "Children Card",
-                      "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-lg",
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "layout": "vertical",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "jwYfw",
-                          "name": "Row 1",
-                          "width": "fill_container",
-                          "layout": "vertical",
-                          "gap": "$sp-label",
-                          "padding": [
-                            "$sp-item",
-                            "$inset-card",
-                            "$sp-group",
-                            "$inset-card"
-                          ],
-                          "children": [
-                            {
-                              "type": "frame",
-                              "id": "CaVXN",
-                              "name": "Identity",
-                              "width": "fill_container",
-                              "gap": "$sp-group",
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "id": "CpyHb",
-                                  "type": "ref",
-                                  "ref": "RaaIf",
-                                  "name": "Avatar",
-                                  "descendants": {
-                                    "A30rIX": {
-                                      "content": "安"
-                                    }
-                                  }
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "MEMLq",
-                                  "name": "Person Text",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": "$sp-tight",
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "ARyUB",
-                                      "name": "Name",
-                                      "fill": "$text-primary",
-                                      "content": "陳小安",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "700"
-                                    },
-                                    {
-                                      "type": "frame",
-                                      "id": "U8Gqh",
-                                      "name": "Meta",
-                                      "gap": "$sp-group",
-                                      "alignItems": "center",
-                                      "children": [
-                                        {
-                                          "id": "vOla1",
-                                          "type": "ref",
-                                          "ref": "AqN3F",
-                                          "name": "Age Pill",
-                                          "descendants": {
-                                            "KR7zN": {
-                                              "icon": "cake"
-                                            },
-                                            "g7Fnj": {
-                                              "content": "2 歲 3 個月",
-                                              "fill": "$text-secondary"
-                                            }
-                                          }
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "OaMuL",
-                              "name": "Actions",
-                              "layout": "vertical",
-                              "gap": "$sp-tight",
-                              "padding": [
-                                "$sp-tight",
-                                0,
-                                0,
-                                0
-                              ],
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "EC89a",
-                                  "name": "Edit",
-                                  "gap": "$sp-tight",
-                                  "padding": [
-                                    "$ctl-pad-tap",
-                                    0
-                                  ],
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "j8u3pG",
-                                      "name": "Edit Icon",
-                                      "width": 18,
-                                      "height": 18,
-                                      "icon": "pencil",
-                                      "library": "lucide",
-                                      "fill": "$text-primary"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "Vj0db",
-                                      "name": "Edit Label",
-                                      "fill": "$text-primary",
-                                      "content": "編輯",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "rHPbU",
-                                  "name": "Delete",
-                                  "gap": "$sp-tight",
-                                  "padding": [
-                                    "$ctl-pad-tap",
-                                    0
-                                  ],
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "foSfN",
-                                      "name": "Delete Icon",
-                                      "width": 18,
-                                      "height": 18,
-                                      "icon": "trash-2",
-                                      "library": "lucide",
-                                      "fill": "$danger"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "fakE8",
-                                      "name": "Delete Label",
-                                      "fill": "$danger",
-                                      "content": "移除這個寶貝",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "rectangle",
-                          "id": "wNwcc",
-                          "name": "Divider",
-                          "fill": "$border",
-                          "width": "fill_container",
-                          "height": 1
-                        },
-                        {
-                          "type": "frame",
-                          "id": "M5AZYW",
-                          "name": "Row 2",
-                          "width": "fill_container",
-                          "layout": "vertical",
-                          "gap": "$sp-label",
-                          "padding": [
-                            "$sp-item",
-                            "$inset-card",
-                            "$sp-group",
-                            "$inset-card"
-                          ],
-                          "children": [
-                            {
-                              "type": "frame",
-                              "id": "L8rUHW",
-                              "name": "Identity",
-                              "width": "fill_container",
-                              "gap": "$sp-group",
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "id": "wEB4c",
-                                  "type": "ref",
-                                  "ref": "RaaIf",
-                                  "name": "Avatar",
-                                  "descendants": {
-                                    "A30rIX": {
-                                      "content": "軒"
-                                    }
-                                  }
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "JAqAp",
-                                  "name": "Person Text",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": "$sp-tight",
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "Sqbfr",
-                                      "name": "Name",
-                                      "fill": "$text-primary",
-                                      "content": "陳小軒",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "700"
-                                    },
-                                    {
-                                      "type": "frame",
-                                      "id": "wjxFl",
-                                      "name": "Meta",
-                                      "gap": "$sp-group",
-                                      "alignItems": "center",
-                                      "children": [
-                                        {
-                                          "id": "thoLk",
-                                          "type": "ref",
-                                          "ref": "AqN3F",
-                                          "name": "Age Pill",
-                                          "descendants": {
-                                            "KR7zN": {
-                                              "icon": "cake"
-                                            },
-                                            "g7Fnj": {
-                                              "content": "6 個月大",
-                                              "fill": "$text-secondary"
-                                            }
-                                          }
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "e91XA",
-                              "name": "Actions",
-                              "layout": "vertical",
-                              "gap": "$sp-tight",
-                              "padding": [
-                                "$sp-tight",
-                                0,
-                                0,
-                                0
-                              ],
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "c9uia",
-                                  "name": "Edit",
-                                  "gap": "$sp-tight",
-                                  "padding": [
-                                    "$ctl-pad-tap",
-                                    0
-                                  ],
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "J8MqbT",
-                                      "name": "Edit Icon",
-                                      "width": 18,
-                                      "height": 18,
-                                      "icon": "pencil",
-                                      "library": "lucide",
-                                      "fill": "$text-primary"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "Kenpn",
-                                      "name": "Edit Label",
-                                      "fill": "$text-primary",
-                                      "content": "編輯",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "FI7zN",
-                                  "name": "Delete",
-                                  "gap": "$sp-tight",
-                                  "padding": [
-                                    "$ctl-pad-tap",
-                                    0
-                                  ],
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "GV0eR",
-                                      "name": "Delete Icon",
-                                      "width": 18,
-                                      "height": 18,
-                                      "icon": "trash-2",
-                                      "library": "lucide",
-                                      "fill": "$danger"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "Y7FHVE",
-                                      "name": "Delete Label",
-                                      "fill": "$danger",
-                                      "content": "移除這個寶貝",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-body",
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "lN6IZ",
-                  "name": "Removed Disclosure",
-                  "width": "fill_container",
-                  "gap": "$sp-label",
-                  "padding": [
-                    "$ctl-pad-tap",
-                    0
-                  ],
-                  "justifyContent": "space_between",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "M5GQTe",
-                      "name": "Left",
-                      "width": "fill_container",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "G0qsyH",
-                          "name": "Archive Icon",
-                          "width": 20,
-                          "height": 20,
-                          "icon": "archive",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "IfGbs",
-                          "name": "Removed Label",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "已移除的寶貝（1）",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "icon",
-                      "id": "Q2hRea",
-                      "name": "Chevron Down",
-                      "width": 20,
-                      "height": 20,
-                      "icon": "chevron-down",
-                      "library": "lucide",
-                      "fill": "$text-secondary"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "uQ6jI",
-              "name": "Footer",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-group",
-              "padding": [
-                0,
-                0,
-                "$sp-item",
-                0
-              ],
-              "children": [
-                {
-                  "id": "v6AXb",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Add Child Button",
-                  "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "user-round-plus"
-                    },
-                    "w7CUP": {
-                      "content": "新增寶貝"
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "U4cmiA",
-          "name": "Home Indicator Area",
-          "width": "fill_container",
-          "height": 34,
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "rectangle",
-              "cornerRadius": "$radius-full",
-              "id": "W3pddQ",
-              "name": "Home Indicator",
-              "fill": "$home-indicator",
-              "width": 140,
-              "height": 5
             }
           ]
         }
@@ -41791,16 +40551,16 @@
                   ]
                 },
                 {
-                  "id": "VVjVS",
+                  "id": "OqQUC",
                   "type": "ref",
-                  "ref": "OKSJI",
+                  "ref": "XggYA",
                   "name": "Add Child Button",
                   "width": "fill_container",
                   "descendants": {
-                    "s9bME2": {
+                    "G4R75k": {
                       "icon": "user-round-plus"
                     },
-                    "w7CUP": {
+                    "yxwnz": {
                       "content": "新增寶貝"
                     }
                   }
@@ -42035,6 +40795,104 @@
                               "icon": "chevron-right",
                               "library": "lucide",
                               "fill": "$text-secondary"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BypKM",
+                      "name": "Recent Photos",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "mnscT",
+                          "name": "Recent Label",
+                          "fill": "$text-primary",
+                          "content": "最近的照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yIhDj",
+                          "name": "Thumb Row",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "AnVfy",
+                              "name": "Thumb",
+                              "metadata": {
+                                "type": "unsplash",
+                                "username": "brookebalentine",
+                                "link": "https://unsplash.com/@brookebalentine",
+                                "author": "Brooke Balentine"
+                              },
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 120,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "https://images.unsplash.com/photo-1774641373821-1fc8fdec8e68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODc2NzA1NDZ8&ixlib=rb-4.1.0&q=80&w=1080",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "JA9ZA",
+                              "name": "Thumb",
+                              "metadata": {
+                                "type": "unsplash",
+                                "username": "ovidiugruescu",
+                                "link": "https://unsplash.com/@ovidiugruescu",
+                                "author": "Gruescu Ovidiu"
+                              },
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 120,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "https://images.unsplash.com/photo-1760128294835-1217f4cb97e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODc2NzA1NDd8&ixlib=rb-4.1.0&q=80&w=1080",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Xp2nv",
+                              "name": "Thumb",
+                              "metadata": {
+                                "type": "unsplash",
+                                "username": "nci",
+                                "link": "https://unsplash.com/@nci",
+                                "author": "National Cancer Institute"
+                              },
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 120,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "https://images.unsplash.com/photo-1577897113051-1a0395bfc3e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODc2NzA1NDh8&ixlib=rb-4.1.0&q=80&w=1080",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md"
                             }
                           ]
                         }
@@ -47267,6 +46125,859 @@
               "type": "rectangle",
               "cornerRadius": "$radius-full",
               "id": "nwtq9",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Wpdoh",
+      "x": 4352,
+      "y": 21049,
+      "name": "LS-47 / 09 寶貝管理 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "vFNwp",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "SpMUa",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "F24H5",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "G7aMJ",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "z7XCB",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "R53Y9u",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "寶貝",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "oxxvB",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "「陳家」目前有 2 個寶貝的檔案。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "tIDch",
+                  "name": "Card Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "P8c3h",
+                      "name": "Children Card",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-lg",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "QlIIs",
+                          "name": "Row 1",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-label",
+                          "padding": [
+                            "$sp-item",
+                            "$inset-card"
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "a5WUg",
+                              "name": "Identity",
+                              "width": "fill_container",
+                              "gap": "$sp-group",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "Q6Cyc",
+                                  "type": "ref",
+                                  "ref": "RaaIf",
+                                  "name": "Avatar",
+                                  "descendants": {
+                                    "A30rIX": {
+                                      "content": "安"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "YyvLg",
+                                  "name": "Person Text",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "gAo6D",
+                                      "name": "Name",
+                                      "fill": "$text-primary",
+                                      "content": "陳小安",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-body",
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "FTYo4",
+                                      "name": "Meta",
+                                      "gap": "$sp-group",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "nfPAw",
+                                          "type": "ref",
+                                          "ref": "AqN3F",
+                                          "name": "Age Pill",
+                                          "descendants": {
+                                            "KR7zN": {
+                                              "icon": "cake"
+                                            },
+                                            "g7Fnj": {
+                                              "content": "2 歲 3 個月",
+                                              "fill": "$text-secondary"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "o9eoc",
+                                  "name": "Chevron",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "chevron-right",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "NFSze",
+                          "name": "Divider",
+                          "fill": "$border",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "OUugr",
+                          "name": "Row 2",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-label",
+                          "padding": [
+                            "$sp-item",
+                            "$inset-card"
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "NJGRX",
+                              "name": "Identity",
+                              "width": "fill_container",
+                              "gap": "$sp-group",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "oWVme",
+                                  "type": "ref",
+                                  "ref": "RaaIf",
+                                  "name": "Avatar",
+                                  "descendants": {
+                                    "A30rIX": {
+                                      "content": "軒"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "NHzRj",
+                                  "name": "Person Text",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "PKUiW",
+                                      "name": "Name",
+                                      "fill": "$text-primary",
+                                      "content": "陳小軒",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-body",
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "VKMQJ",
+                                      "name": "Meta",
+                                      "gap": "$sp-group",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "d42up",
+                                          "type": "ref",
+                                          "ref": "AqN3F",
+                                          "name": "Age Pill",
+                                          "descendants": {
+                                            "KR7zN": {
+                                              "icon": "cake"
+                                            },
+                                            "g7Fnj": {
+                                              "content": "6 個月大",
+                                              "fill": "$text-secondary"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "mmWiT",
+                                  "name": "Chevron",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "chevron-right",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "l0N1y",
+                  "name": "Removed Disclosure",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-tap",
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "wAvd9",
+                      "name": "Left",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "f5yh3",
+                          "name": "Archive Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "archive",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "BdRLg",
+                          "name": "Removed Label",
+                          "fill": "$text-secondary",
+                          "content": "已移除的寶貝（1）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "yHkgW",
+                      "name": "Chevron Down",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "axknR",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "id": "JsNbG",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Add Child Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "user-round-plus"
+                    },
+                    "w7CUP": {
+                      "content": "新增寶貝"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "N0Lzcc",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "fqb2k",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "lytlO",
+      "x": 4865,
+      "y": 21049,
+      "name": "A11y / 09 寶貝管理 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1300,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "w64QVX",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "JDkx5",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "FzjqI",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "jmgwk",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "oZWBJ",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "cNf31",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "寶貝",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "AjRFo",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "「陳家」目前有 2 個寶貝的檔案。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "A91K6",
+                  "name": "Card Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "yv5YU",
+                      "name": "Children Card",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-lg",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ap9WF",
+                          "name": "Row 1",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-label",
+                          "padding": [
+                            "$sp-item",
+                            "$inset-card"
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "UCyMW",
+                              "name": "Identity",
+                              "width": "fill_container",
+                              "gap": "$sp-group",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "nHvzP",
+                                  "type": "ref",
+                                  "ref": "RaaIf",
+                                  "name": "Avatar",
+                                  "descendants": {
+                                    "A30rIX": {
+                                      "content": "安"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "rHLJ3",
+                                  "name": "Person Text",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "LfsBS",
+                                      "name": "Name",
+                                      "fill": "$text-primary",
+                                      "content": "陳小安",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-body",
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "gHvv6",
+                                      "name": "Meta",
+                                      "gap": "$sp-group",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "xlE2l",
+                                          "type": "ref",
+                                          "ref": "AqN3F",
+                                          "name": "Age Pill",
+                                          "descendants": {
+                                            "KR7zN": {
+                                              "icon": "cake"
+                                            },
+                                            "g7Fnj": {
+                                              "content": "2 歲 3 個月",
+                                              "fill": "$text-secondary"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "HWGqG",
+                          "name": "Divider",
+                          "fill": "$border",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "QvYGM",
+                          "name": "Row 2",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-label",
+                          "padding": [
+                            "$sp-item",
+                            "$inset-card"
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "EDVPK",
+                              "name": "Identity",
+                              "width": "fill_container",
+                              "gap": "$sp-group",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "AWdec",
+                                  "type": "ref",
+                                  "ref": "RaaIf",
+                                  "name": "Avatar",
+                                  "descendants": {
+                                    "A30rIX": {
+                                      "content": "軒"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "EW8A2",
+                                  "name": "Person Text",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "MpdFd",
+                                      "name": "Name",
+                                      "fill": "$text-primary",
+                                      "content": "陳小軒",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-body",
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "D4D21l",
+                                      "name": "Meta",
+                                      "gap": "$sp-group",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "Z9NUGi",
+                                          "type": "ref",
+                                          "ref": "AqN3F",
+                                          "name": "Age Pill",
+                                          "descendants": {
+                                            "KR7zN": {
+                                              "icon": "cake"
+                                            },
+                                            "g7Fnj": {
+                                              "content": "6 個月大",
+                                              "fill": "$text-secondary"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "kmELN",
+                  "name": "Removed Disclosure",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-tap",
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "pdqDR",
+                      "name": "Left",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "TwOaD",
+                          "name": "Archive Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "archive",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "S5gIf",
+                          "name": "Removed Label",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "已移除的寶貝（1）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "jY7HF",
+                      "name": "Chevron Down",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "w4ozR",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "id": "ea1GB",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Add Child Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "user-round-plus"
+                    },
+                    "w7CUP": {
+                      "content": "新增寶貝"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "lHtd5",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "o8I18",
               "name": "Home Indicator",
               "fill": "$home-indicator",
               "width": 140,
