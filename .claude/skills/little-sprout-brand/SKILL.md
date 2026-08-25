@@ -5,7 +5,7 @@ description: Little Sprout（萌芽日記）設計語言定案——LS-46 十一
 
 # Little Sprout 設計語言（定案版）
 
-定案來源：`design/littlesprout.pen`（LS-46 R11 APPROVE，HEAD `651a9ff`，2654 節點；LS-72 補 Tokens 板實測值）。本 skill 是它的文字鏡像——**稿與本檔衝突時以稿為準，並回頭修本檔**。
+定案來源：`design/littlesprout.pen`（LS-46 R11 APPROVE，HEAD `651a9ff`，2654 節點；LS-72 補 Tokens 板實測值後現況 **2676 節點**——基線隨最新 landing 更新，見 COLLABORATION §7 design-landing 列）。本 skill 是它的文字鏡像——**稿與本檔衝突時以稿為準，並回頭修本檔**。
 
 ## 靈魂（一句話）
 
@@ -46,7 +46,7 @@ description: Little Sprout（萌芽日記）設計語言定案——LS-46 十一
 - 實測對比（WCAG 2.1，淺／深）：print-ink on print-paper **14.92／12.55**；print-ink-secondary **9.66／8.13**；text-primary on bg 12.21／15.31；text-secondary 7.91／9.41；on-accent 7.30／9.99。
 - Legal／Status 槽 **38pt** 固定高（01／01b／01c 共用；AX3 折行 64 不套槽）。
 - 邀請碼：**8 位、32 字元、40 bit**（後端 `create_invite` 契約，已上線有測試）；輸入 **4+4** 分組，八格應變規格（`fs-otp` AX3 52→42、`fs-code` 60→52、單一 tap target）見 `references/motifs.md` 邀請碼。稿上 06 家族仍是 6 格、LS-46 定案文字「6 碼」——偏差已明寫，實作前先轉八格。
-- 已知溢出 51 項是設計意圖（出血 13／角托 34／`mXQJh` 1／AX3 法務 3）——自動化版面檢查以此為白名單基線。
+- 已知溢出白名單：R11 基線 51 項（出血 13／角托 34／`mXQJh` 1／AX3 法務 3）是設計意圖；**LS-72 後現況 nodes 2676／FLAGGED 50**（−1 LS-72 自述不可歸因、未獨立複驗）。自動化版面檢查以**最新 landing 的實測值**為白名單基線（基線隨最新 landing 更新，見 COLLABORATION §7 design-landing 列），不要寫死 51。
 
 ## 不包含（另有出處）
 

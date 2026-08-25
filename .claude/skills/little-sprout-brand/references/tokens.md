@@ -34,14 +34,14 @@
 | `on-accent` | #FBEBEC | #190E12 | 壓在 accent 上的字 | 7.30／9.99 AAA |
 | `danger` | #6B1809 | #FFA48F | 錯誤。唯一家族外的色相（磚紅 hue 9 vs accent hue 340） | 8.46／9.85 AAA |
 | `success` | #1E4732 | #82C79E | 成功語意，一個流程最多用一次 | 7.44／9.54 AAA |
-| `photo-corner` | #C89AA3 | #6E4E59 | 角托紙。裝飾，不承載狀態，申報豁免 3:1 | 2.11／2.22 |
+| `photo-corner` | #C89AA3 | #6E4E59 | 角托紙。裝飾，不承載狀態，申報豁免 3:1 | 2.11／2.22（板上 `WEjnC` 原文；此列量測底是 `$surface`，對 `$bg` 為 1.73／2.60——與同表其他列基準不同，板端待下一張動 Tokens 板的票統一） |
 | `corner-fold` | #FBEBEC8C | #F6E3E559 | 角托的摺光。光源一律左上 | 裝飾 |
 | `paper-shadow` | #2B141C2E | #00000073 | 紙落在頁面上的影。方向永遠右下（光在左上） | 裝飾 |
 | `home-indicator` | #2B141C59 | #F6E3E573 | Home indicator | 系統 |
 | `apple-bg` / `apple-fg` | #000000 / #FFFFFF | #FFFFFF / #000000 | Apple 登入鍵。HIG 規範，色值不得改 | 21.00 |
 | `google-bg` / `google-fg` | #FFFFFF / #1F1F1F | #131314 / #E3E3E3 | Google 登入鍵。Google 品牌規範，色值不得改 | 16.48／14.47 |
 | `google-line` | #747775 | #8E918F | Google 鍵外框（品牌規範）；G 標四色 #4285F4／#EA4335／#FBBC05／#34A853 不得取用為 UI 色 | 4.53／5.83 |
-| `on-photo` | #FBEBEC | #FBEBEC | 壓在照片／印相罩上的字。兩個模式同一個值——照片上永遠要淺色 | 印相罩最不利點 7.36／8.71 AAA |
+| `on-photo` | #FBEBEC | #FBEBEC | 壓在照片／印相罩上的字。兩個模式同一個值——照片上永遠要淺色 | 7.36／8.71 AAA（板上 `sQsj1` 原文標「印相罩最不利點」，但印相罩 R4 已除役；數字實為深色套 `$photo-dim` 後的最不利點，複算 8.65——標籤過期、數字有效，板端待修） |
 
 ### 其他（Asset Catalog 有、板上主表之外；值出自 `tokens.json`）
 
@@ -81,7 +81,7 @@
 | `fs-otp` | 36 | 52 | OTP 六格數字（等寬）；也是邀請碼輸入格的字級——**八格（4+4）時 AX3 須降 52→42**（`h7EnT` R6 ②，見 motifs.md 邀請碼） | `.system(size:).monospacedDigit()` |
 | `fs-code` | 60 | 72（Tokens 板格子 `F7Swz6`；`$fs-code` size=ax3 變數仍是 76——**落後的是變數**：`h7EnT`④「六位 AX3 76 會溢出 8.6，已降 72」。**待補（需 Pen）**＝下一張開 Pen 的票把變數改成板上值） | 邀請碼大字（等寬；**8 位 4+4 分組時 60→52、AX3 ≤52**——`h7EnT` R6 ④，見 motifs.md 邀請碼） | `.system(size:).monospacedDigit()` |
 | `fs-note` | 17 | 40 | 使用者**必須讀**的次要文字：錯誤、載入中、輸入指示、核准依據（申請人 email／身分／等待時間）。與 body 同為 17 是刻意的——分兩個 token 是為了讓實作區分角色：note 一定伴隨狀態色或狀態圖示 | `.body`＋狀態色（錯誤用 danger） |
-| `fs-meta` | 13 | 33 | 只剩三類：法務行、欄位微標籤（其值已用大字呈現，如「邀請碼」）、純時間戳。其餘一律升 note | `.footnote` |
+| `fs-meta` | 13 | 33 | 只剩三類（`NHDwj` 原文）：①法務行（登入即表示…）②微標籤（邀請碼／加入申請這種放在 60pt 主體上方的眉標）③設計註記（游標位置）。其餘一律升 note | `.footnote` |
 | `fs-imprint` | 12 | 12（固定） | 沖印廠牌壓印 LITTLE SPROUT，字距 3.5；**唯一不吃 Dynamic Type 的一級**——它是那張相紙的一部分，不是 UI。代價：不得承載任何唯一資訊；`.accessibilityHidden(true)` 或併進相片 alt 尾段，二選一不得兩者皆無 | 固定 12pt |
 | （設計註記） | 13 | — | 「▸…（設計註記）」斜體：給 ios-dev 看的稿面說明，不是 UI 文字，不要實作 | — |
 
