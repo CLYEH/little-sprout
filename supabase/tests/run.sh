@@ -267,6 +267,18 @@ race_case "同一人對同一目標：雙 toggle_reaction 必須序列化且淨�
   reaction_toggle_race_setup.sql reaction_toggle_race_s1.sql \
   reaction_toggle_race_s2.sql reaction_toggle_race_verify.sql
 
+# LS-66 併發場景：同一個孩子檔案的編輯（update_child）與軟刪（set_child_deleted）
+# 同時發生。兩個方向缺一不可，理由同 diary_edit_vs_delete（LS-48）——只跑單一方向，
+# 先動的那邊反正會在自己的 UPDATE 上取鎖，測不出後動那支 RPC 自己的 `for update`
+# 有沒有真的存在。children 跟 diaries 同型（已被軟刪不能編輯，拿 LS041），不是
+# albums 那種「兩者皆生效」的型。
+race_case "同一個孩子檔案：編輯先動，軟刪必須被阻塞後才成功" \
+  children_edit_vs_delete_setup.sql children_edit_vs_delete_s1_update.sql \
+  children_edit_vs_delete_s2_delete.sql children_edit_vs_delete_verify_update_won.sql
+race_case "同一個孩子檔案：軟刪先動，編輯必須被阻塞後拿到 LS041" \
+  children_edit_vs_delete_setup.sql children_edit_vs_delete_s1_delete.sql \
+  children_edit_vs_delete_s2_update.sql children_edit_vs_delete_verify_delete_won.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 delete from public.families where id in (
@@ -277,7 +289,8 @@ delete from public.families where id in (
   'f3000000-0000-4000-8000-000000000001',
   'f4000000-0000-4000-8000-000000000001',
   'f6000000-0000-4000-8000-000000000001',
-  'f8000000-0000-4000-8000-000000000001'
+  'f8000000-0000-4000-8000-000000000001',
+  'f5000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -294,7 +307,9 @@ delete from auth.users where id in (
   'a6000000-0000-4000-8000-000000000001',
   'a5000000-0000-4000-8000-000000000001',
   'a4000000-0000-4000-8000-000000000001',
-  'a1000000-0000-4000-8000-000000000001'
+  'a1000000-0000-4000-8000-000000000001',
+  'a3000000-0000-4000-8000-000000000001',
+  'a2000000-0000-4000-8000-000000000001'
 );
 SQL
 run_sql "$cleanup" > /dev/null

@@ -13,7 +13,7 @@
 > `docs/COLLABORATION.md` §7。
 >
 > **這份文件涵蓋的分支狀態**：以 `development` 分支當下的 migrations 為準（含 LS-6／LS-15／
-> LS-33／LS-36／LS-37／LS-40／LS-48／LS-52／LS-58）。
+> LS-33／LS-36／LS-37／LS-40／LS-48／LS-52／LS-58／LS-66）。
 
 ## 目錄
 
@@ -61,7 +61,7 @@
 | `families` | 我所屬的家庭 | 任何登入者（自建家庭） | `name`／`require_approval` 兩欄，owner-only | ❌ 無 delete policy | `storage_quota_bytes`／`storage_used_bytes` 兩個額度欄位永遠唯讀——不論身分，client 都改不動（只有 `media` 表的 trigger 與 `service_role` 能寫） |
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
-| `children` | 我所屬家庭的孩子 | owner-only | owner-only | owner-only | Member/Viewer 唯讀 |
+| `children` | 我所屬家庭的孩子；**已軟刪的列（`deleted_at` 非 NULL）只有 owner 讀得到**，member／viewer 完全查不到那些列（`children_select` policy 已收斂，LS-66） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | owner-only（硬刪，policy 未變） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原，超過拿 `LS043`；照片／日記掛在 `child_id` 下者不隨軟刪連動，見 §8 |
 | `media` | 我所屬家庭的檔案中繼資料 | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | 硬刪僅 owner（一般刪除走 `deleted_at`） | `byte_size`／`storage_path`／`family_id`／`uploaded_by` 一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3 |
 | `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己） | 🔀 **混合模式（LS-52）**：內容（title／child_id／cover_media_id）僅建立者本人直接 `.update()`；軟刪／還原（`deleted_at`）建立者自己的可直接 `.update()`，owner 對別人相簿僅能用 `set_album_deleted` RPC | owner-only | Viewer 不可建立相簿；owner 對別人相簿的內容**沒有**直接 `.update()` 路徑——見 §3「為什麼 albums／comments／diaries 用了三套不同的寫入模型」 |
 | `album_media` | 同上 | owner／member | owner／member | owner／member | 連結表自帶 `family_id`，policy 不必 join 回 `albums` |
@@ -77,11 +77,12 @@
 | `notification_events` | 🔒 **完全不可讀**（成員無 grant 也無 policy） | 🔒 唯讀（trigger 維護） | 🔒 唯讀 | 🔒 唯讀 | LS-58：推播彙總佇列的資料面，只給 `service_role`（LS-22 的 Edge Function）讀寫；見 §3 |
 
 **寫入路徑小結（給 iOS 呼叫端的心智模型）**：`family_members`／`invites`／`join_requests`／
-`diaries`／`comments`／`reactions` 六張表**完全不能**用 `.insert()`／`.update()`／
-`.delete()`（`family_members` 的 `role`／`can_upload` 例外，見上表；`diaries`／`comments`
-的硬刪 `.delete()` 仍走 policy 直接允許，見上表），一律呼叫對應 RPC；其餘表可用
-PostgREST 的 `.from(...)` 直接讀寫，但每張表都有欄位級或列級限制，寫超出範圍會拿到
-`42501`（grant 層）或該欄位的 `CHECK`/`NOT NULL` 違反碼（policy 通過但值不合法）。
+`diaries`／`comments`／`reactions`／`children` 七張表**完全不能**用 `.insert()`／
+`.update()`／`.delete()`（`family_members` 的 `role`／`can_upload` 例外，見上表；
+`diaries`／`comments`／`children` 的硬刪 `.delete()` 仍走 policy 直接允許，見上表），
+一律呼叫對應 RPC；其餘表可用 PostgREST 的 `.from(...)` 直接讀寫，但每張表都有欄位級
+或列級限制，寫超出範圍會拿到 `42501`（grant 層）或該欄位的 `CHECK`/`NOT NULL` 違反碼
+（policy 通過但值不合法）。
 
 **例外（LS-52，僅 `albums` 適用）：owner 越權 `.update()` 不會回 `42501`，而是靜默影響
 0 列**——`albums_update` 的 USING 子句只有「建立者本人」這一個分支，owner 對別人的
@@ -141,7 +142,25 @@ LS-58 把 `comments` 的寫入面整個收斂成 RPC-only（同 `diaries`），�
 ### `children`
 - `family_id, id` 有複合 UNIQUE，供 `albums`/`diaries` 的複合外鍵綁定同家庭。
 - 一個 family 可以有多個 children（1 家庭 : N 孩子），見 §8。
-- 只有 owner 能建立／編輯／刪除；member／viewer 唯讀。
+- **寫入面 RPC-only（LS-66）**：新增用 `create_child`（owner／member 皆可）、編輯用
+  `update_child`（owner／member 皆可，仍是該家庭成員才行，被降級成 viewer 之後不能
+  再編輯）、軟刪／還原用 `set_child_deleted`（**僅 owner**，比 `create_child`／
+  `update_child` 窄——刪除是比新增／編輯重的破壞性動作）。直接 `.insert()`／
+  `.update()` 一律 `42501`（見 §2）。硬刪（`.delete()`）仍是 owner-only 的直接
+  policy，未受本次收斂影響。
+- **`family_id` 建立後不可變**：`update_child` 的參數本來就不含 `family_id`，另外
+  還有一支 DB trigger（`children_family_immutable`）做二次防護——任何試圖改動
+  `family_id` 的 UPDATE 都會被擋下（`LS040`），即使未來的 RPC 改版不慎誤寫也擋得住。
+- **軟刪＝30 天內可還原**（`deleted_at`／`deleted_by`，LS-66；LS-47 定案第④題）：
+  `set_child_deleted(p_deleted = true)` 軟刪；`p_deleted = false` 還原，但
+  **`deleted_at` 超過 30 天前會被拒絕（`LS043`）**——30 天後的實際清除／保留策略
+  留給排程票，本票只做「30 天內可還原」這個邊界語意，RPC 層面就先擋，不留給 UI
+  自己判斷時限。**照片／日記掛在這個孩子的 `child_id` 下者不會隨軟刪連動**——
+  `albums`/`diaries` 那些列完全不受影響，繼續存在、繼續可讀（見 §8）。
+- **軟刪旗標的可見性**：已軟刪的孩子檔案（`deleted_at` 非 NULL）**只有該家庭的
+  owner 讀得到**——`children_select` policy 已收斂，member／viewer 的 SELECT（不論
+  是直接 `.from("children").select()` 還是呼叫 `list_children`）完全篩不到那些列，
+  不是「篩得到但欄位被隱藏」。
 
 ### `media`
 - `storage_path` 必須符合 `{family_id}/{yyyy}/{mm}/{media_id}.{ext}`（見 §6），且有
@@ -708,6 +727,54 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `public.get_family_timeline` 的完整說明與
   `supabase/tests/50_rls_plan_no_percall_subquery.sql` 的專屬效能回歸段落。
 
+### `create_child(p_family_id uuid, p_name text, p_birthday date, p_avatar_url text) -> uuid`
+- **誰能呼叫**：該家庭的 owner／member（LS-47 定案第②題：新增／編輯 owner＋member
+  皆可）。Viewer 不行。
+- **用途**：建立孩子檔案。不接受呼叫端指定 `id`／`deleted_at`，只有這四個欄位。
+- **錯誤碼**：未登入 `42501`；不是該家庭 owner/member `42501`。
+- **併發**：純 INSERT，無鎖需求。
+
+### `update_child(p_child_id uuid, p_name text, p_birthday date, p_avatar_url text) -> void`
+- **誰能呼叫**：仍是該家庭 owner／member 的成員（動態檢查，不是「建立者」——`children`
+  沒有建立者欄位，任何仍是 owner/member 的人都能編任何一個孩子的檔案）。已被降級成
+  viewer 就不能再編輯，即使他當初建立了這個孩子檔案。
+- **用途**：PUT 語意整組替換 `name`／`birthday`／`avatar_url`（不是逐欄 PATCH）。
+  已被軟刪除的孩子檔案不能編輯——要嘛先用 `set_child_deleted` 還原，要嘛就是被移除
+  了，兩種情況都不該讓內容在那個狀態下被改動（理由同 `update_diary_entry`）。
+- **錯誤碼**：未登入 `42501`；孩子檔案不存在或已被軟刪除須先還原 `LS041`；不是仍是
+  該家庭 owner/member 的成員 `LS042`。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住，與 `set_child_deleted` 之間序列化（回歸測試
+  見 `supabase/tests/concurrency/children_edit_vs_delete_*.sql`）。
+
+### `set_child_deleted(p_child_id uuid, p_deleted boolean) -> void`
+- **誰能呼叫**：**僅該家庭 owner**——比 `create_child`／`update_child` 窄，也比
+  `set_album_deleted`／`set_comment_deleted`（建立者本人或 owner）窄：`children`
+  沒有建立者欄位，且刪除孩子檔案是比刪一篇日記／一本相簿重得多的破壞性動作，門檻
+  對齊 §10「Owner 移除內容」，不下放給 member（LS-47 定案第②題：「刪除僅 owner」）。
+- **用途**：軟刪（`p_deleted = true`）／還原（`p_deleted = false`），寫
+  `deleted_at`／`deleted_by`。**還原有 30 天邊界**：`deleted_at` 已超過 30 天前時，
+  `p_deleted = false` 會被拒絕（`LS043`），不執行還原；30 天後的清除／保留策略是
+  排程票的範圍，這支 RPC 只負責這個邊界判斷本身。軟刪本身沒有時間限制，且對已軟刪
+  的孩子再次呼叫 `true` 是 idempotent（`deleted_at`／`deleted_by` 刷新成這次呼叫）；
+  對本來就是 active 的孩子呼叫 `false` 是 no-op。**照片／日記不連動**：這支 RPC 只碰
+  `children` 一張表的 `deleted_at`／`deleted_by` 兩欄，掛在這個孩子 `child_id` 下的
+  `albums`／`diaries` 完全不受影響，見 §8。
+- **錯誤碼**：未登入 `42501`；孩子檔案不存在 `LS041`；不是該家庭 owner `42501`；
+  還原但已超過 30 天 `LS043`。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住（理由與回歸測試同 `update_child` 條目）。
+
+### `list_children(p_family_id uuid) -> table(id uuid, name text, birthday date, avatar_url text, deleted_at timestamptz, created_at timestamptz)`
+- **誰能呼叫**：任何已登入使用者，但只查得到自己所屬家庭的資料——`p_family_id` 傳一個
+  自己不屬於的家庭不會報錯，只會回傳 0 列（`security invoker`，完全依賴 `children`
+  既有的 `children_select` RLS policy，見 §3）。
+- **用途**：列出一個家庭的孩子檔案，依 `birthday` 排序。**`deleted_at` 非 NULL 的列
+  （已軟刪的孩子）只有該家庭的 owner 查得到**——member／viewer 呼叫這支 RPC 時，
+  RLS 直接把那些列篩掉，不是「回傳了但欄位被隱藏」；owner 呼叫則會看到全部（active
+  ＋已軟刪）。呼叫端要區分「篩選清單只列 active」與「owner 的管理畫面含已軟刪」，
+  用同一支 RPC、依 `deleted_at` 是否為 NULL 自行分流即可，不需要兩支不同的 RPC。
+- **錯誤碼**：無自訂碼；未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列。
+- **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
+
 ---
 
 ## 5. 錯誤碼全表
@@ -736,7 +803,11 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS024` | 留言不存在 | `update_comment`／`set_comment_deleted` |
 | `LS025` | 不是留言作者本人，或雖是作者但已離開該家庭 | `update_comment` |
 | `LS026` | 留言／按讚的 target 存在，但屬於別的家庭 | `create_comment`／`toggle_reaction` |
-| `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
+| `LS040` | 孩子檔案的 `family_id` 不可變（trigger 擋下，正常操作不可能觸發） | 對 `public.children` 的任何 UPDATE（RPC 或例外路徑皆可能撞到，但 `update_child`／`set_child_deleted` 從不寫入 `family_id`，正常呼叫不會遇到） |
+| `LS041` | 孩子檔案不存在，或（`update_child` 情境）已被軟刪除須先還原 | `update_child`／`set_child_deleted` |
+| `LS042` | 不是仍是該家庭 owner/member 的成員，無法編輯孩子檔案 | `update_child` |
+| `LS043` | 孩子檔案已被移除超過 30 天，無法還原 | `set_child_deleted`（`p_deleted = false`） |
+| `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE、`children` INSERT/UPDATE）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
 
 **沒有被上面任何一支 RPC 包住、可能直接從 PostgREST 冒出來的標準 Postgres 錯誤碼**
 （直接 `.insert()`/`.update()` 到允許直寫的表時可能撞到，client 應該當成一般失敗處理，
@@ -758,7 +829,10 @@ LS-49 推翻）**：`LSErrorCode` 已逐碼涵蓋上表全部自訂碼——`LS0
 `LS025`（LS-58 補齊，歸層 `rejected`——跟 `LS021`／`LS023`／`LS024` 同一類：不是作者本人、或
 雖是作者但已離開家庭，換輸入沒有用，UI 該做的是隱藏編輯入口而不是讓使用者重試）、`LS026`
 （LS-58 R1 補齊，歸層 `rejected`——target 存在但屬於別的家庭，這是呼叫端組錯參數／資料
-被竄改的訊號，不是「換個輸入再試」能解的，UI 該做的是回上一頁或重新整理而不是原地重試）；
+被竄改的訊號，不是「換個輸入再試」能解的，UI 該做的是回上一頁或重新整理而不是原地重試）、
+`LS040`–`LS043`（LS-66 補齊，歸層皆 `rejected`——`LS040` 是不可能被正常操作觸發的
+trigger 防護；`LS041`／`LS042` 分別對齊 `LS020`／`LS021` 的理由；`LS043`（還原超過
+30 天）換輸入或重試同一個呼叫都不會成功，UI 該做的是不再顯示「還原」這個動作）；
 `LS016` 另於 LS-55 從 `validationRetryable` 改歸新增的 `retryableSystem` 層（見上方 `LS016`
 列註記）。三層（`validationRetryable`／`retryableSystem`／`rejected`）歸類由
 `LittleSproutTests/AppErrorTests.swift` 的列舉測試逐碼釘住。
@@ -886,6 +960,23 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
   等於該值），**`media` 類項目一律不出現**——因為 `media` 沒有直接的 `child_id`
   可比對，見上一條。這與「查某個孩子的所有照片」是兩件不同的事：後者要走上一條的
   join 路徑，`get_family_timeline` 的單寶貝篩選目前只涵蓋日記與相簿本身。
+- **軟刪孩子與時間軸／照片日記的關係（LS-66；LS-47 定案第④題）**：軟刪一個孩子
+  （`set_child_deleted`）**只改 `children` 這一張表的 `deleted_at`／`deleted_by`
+  兩欄**，不會連動改到任何 `albums`／`diaries`／`feed_items` 的列——那些內容的
+  `child_id` 外鍵指向的孩子列依然存在（只是 `deleted_at` 非 NULL），不會觸發
+  `on delete set null`（那是給硬刪，即真正 `DELETE` 那一列時才會發生的事）。因此：
+  - `get_family_timeline` 對一個已軟刪孩子的行為**完全不變**——`p_child_id` 傳這個
+    孩子的 id 一樣正常回傳他的日記／相簿項目；`p_child_id` 為 `NULL`（查全部）時，
+    這些項目原本就會出現，軟刪前後沒有差異。這支 RPC 從不查 `children.deleted_at`，
+    也不需要查，它只依賴 `feed_items.child_id` 這個外鍵值本身還在。
+  - 「篩選清單裡不列出已軟刪的孩子、但『全部』仍看得到他的內容」是 **UI 層**的邏輯
+    （子選單的候選清單來自 `list_children` 只給 owner 看到已軟刪的孩子，UI 據此決定
+    要不要把他放進篩選候選；`get_family_timeline` 本身沒有、也不需要知道某個
+    `child_id` 是否對應一個已軟刪的孩子），不是後端限制。
+  - 30 天還原邊界只作用在 `children` 這張表本身（`set_child_deleted` 的 `LS043`），
+    不影響任何時間軸／照片／日記的可讀性——即使一個孩子已軟刪超過 30 天、事實上
+    再也無法還原，他名下的日記與相簿依然完整保留、依然可查（本票不含刪除策略，
+    只有 `deleted_at` 語意，見 §3）。
 
 ---
 
@@ -904,21 +995,25 @@ schema 或本文要修，不是 gate 要調。
 
 <!-- API-CONTRACT:RPC
 approve_join(uuid)
+create_child(uuid, text, date, text)
 create_comment(uuid, text, uuid, text)
 create_diary_entry(uuid, uuid, text, date)
 create_invite(uuid, text, timestamptz, integer)
 get_family_timeline(uuid, uuid, timestamptz, uuid, integer)
 get_my_join_request()
 get_reaction_counts(uuid, text, uuid[])
+list_children(uuid)
 list_comments(uuid, text, uuid, timestamptz, uuid, integer)
 list_join_requests()
 register_device_token(text, text)
 reject_join(uuid)
 request_join(text)
 set_album_deleted(uuid, boolean)
+set_child_deleted(uuid, boolean)
 set_comment_deleted(uuid, boolean)
 set_diary_deleted(uuid, boolean)
 toggle_reaction(uuid, text, uuid)
+update_child(uuid, text, date, text)
 update_comment(uuid, text)
 update_diary_entry(uuid, text, date, uuid)
 withdraw_join(uuid)
