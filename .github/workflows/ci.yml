@@ -2,6 +2,8 @@
 # rules job 是「前饋必有反饋」原則的機械 gate（docs/COLLABORATION.md §0、§7）。
 # hooks 隨分支內容走、且可被 --no-verify 繞過，所以 commit message／branch 命名／
 # secrets 在此都有伺服器端兜底——本機 hook 只是快速回饋，CI 才是強制。
+# LS-85：push（development／test／main）也跑四 job——晉升改 fast-forward push（scripts/ops/promote.sh），每個進到
+# test／main 的 SHA 都要有四個綠 check，branch protection 的 required checks 對推上去的 SHA 生效（server-side 硬 gate）。
 name: CI
 
 on:
@@ -15,9 +17,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # 規約檢查（ubuntu，快且免費）
+  # 規約檢查（ubuntu，快且免費）。pull_request 與 push 都跑（LS-85）：rules 若在 push 事件下整 job 跳過，該 SHA 的
+  # check-run conclusion 是 skipped——promote.sh 拒、GitHub required checks 也不算綠。缺 PR 上下文（base_ref／head_ref／
+  # PR body）的 step 各自標 if: github.event_name == 'pull_request'；用 startsWith(github.head_ref, …) 的 step 在 push 下
+  # head_ref 為空、自然不跑；純檔案比對與自測 step 兩種事件都跑。
   rules:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -30,6 +34,7 @@ jobs:
           fetch-depth: 0
 
       - name: PR direction matrix
+        if: github.event_name == 'pull_request'
         run: |
           ok=false
           case "$BASE" in
@@ -46,6 +51,7 @@ jobs:
           fi
 
       - name: Branch naming / commit messages / secrets（hooks 的伺服器端兜底）
+        if: github.event_name == 'pull_request'
         run: |
           base_sha=$(git merge-base "origin/$BASE" HEAD)
           # 工作分支才驗命名與逐筆 commit message（back-merge/promote/revert 的
@@ -106,9 +112,10 @@ jobs:
       # （migration-breaking-check／breaking-section-check）、「migration 版本號撞號」（migration-version-check，LS-70）、
       # 「分支不夾帶他票 commit／push 前無合併衝突」
       # （branch-ticket-check／merge-conflict-check）、「PR body 檔頭段含本票票號」（pr-body-check）與
-      # 「審查取證不進版控」（evidence-path-check）與「品牌 skill 接線」（brand-skill-check，LS-30）的偵測不退化
+      # 「審查取證不進版控」（evidence-path-check）與「品牌 skill 接線」（brand-skill-check，LS-30）與「push 目標 ref 分類：
+      # 刪除／tag 早退、test／main 只准 promote.sh FF」（push-ref-check，LS-85）的偵測不退化
       # （前饋必有反饋，對 gate 本身也適用）。集中在同一個 step，維持「一個地方跑所有 gate 自測」。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check）
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -124,6 +131,7 @@ jobs:
           bash scripts/gates/pr-body-check.test.sh || rc=1
           bash scripts/gates/evidence-path-check.test.sh || rc=1
           bash scripts/gates/brand-skill-check.test.sh || rc=1
+          bash scripts/gates/push-ref-check.test.sh || rc=1
           exit "$rc"
 
       # LS-30：品牌 skill 接線——前饋是 ui-designer／visual-reviewer 定義「開工先載入 little-sprout-brand」，載入動作
@@ -139,11 +147,14 @@ jobs:
       # harness 票改同一 step 撞衝突；巡檢也不是 merge gate）。
       # LS-70：supabase-lock.sh（本機容器序列化 lock）自測也在這裡——合成 lock 目錄驗互斥／exit code／逾時／死鎖回收與
       # 不誤殺剛建的鎖／重入／TERM 釋放／run.sh 自動經 lock，不碰容器。各收各的 rc、最後一起 exit（同 LS-54 N5）。
-      - name: Ops 腳本自測（patrol／session-start／supabase-lock，LS-71／LS-70）
+      # LS-85：promote.sh（晉升＝FF push）自測——合成 repo＋stub gh 驗方向錯拒、非 FF 拒、check 紅／缺／skipped／未完成拒、
+      # 同名多筆取最新、正常放行且 push 帶 PROMOTE_VIA_SCRIPT=1；patrol.test.sh 加三分支漂移案例。
+      - name: Ops 腳本自測（patrol／session-start／supabase-lock／promote，LS-71／LS-70／LS-85）
         run: |
           rc=0
           bash scripts/ops/patrol.test.sh || rc=1
           bash scripts/ops/supabase-lock.test.sh || rc=1
+          bash scripts/ops/promote.test.sh || rc=1
           exit "$rc"
 
       # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
@@ -232,6 +243,7 @@ jobs:
       # LS-26：.pen 落地結構兜底（本機 commit-gate 的伺服器端對應；
       # 無 --expect-nodes——「落地比記憶體舊」的深度驗證靠收工程序＋handoff 證據）
       - name: .pen 落地結構檢查
+        if: github.event_name == 'pull_request'
         run: |
           base_sha=$(git merge-base "origin/$BASE" HEAD)
           pens=$(git -c core.quotePath=false diff --name-only --diff-filter=ACM "$base_sha"...HEAD -- '*.pen' || true)

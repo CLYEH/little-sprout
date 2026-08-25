@@ -2,6 +2,7 @@
 # patrol.sh／session-start.sh 的自測（LS-71）。CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對巡檢本身也適用：若判定退化——拿 base commit 的時間當「最後 commit」把新 worktree 誤判成
 # 停滯（scratchpad 原型的 bug）、領先 remote／從未 push／dirty 停滯／尚未開工／主 checkout 落後任一漏標、
+# 三分支漂移漏標（test ⊄ development 立即、main ⊄ development 超過 stale）或剛併入的 hotfix 被誤標（LS-85）、
 # 乾淨或剛建好的 worktree 被誤標、保護分支或 detached worktree 混進表、--json 不合法、gh 不可用整支炸掉、
 # 或 SessionStart hook 輸出不合法 JSON／非 0 退出／settings.json 沒掛上——這裡會紅。
 # 合成 repo：file:// 裸 repo 當 origin（main／development／test），clone 當主 checkout，八個 worktree 各一種形狀；最後把 origin 指向會掛住的 ext:: 位址驗 fetch 看門狗。
@@ -195,6 +196,42 @@ if jq -e '.hooks.SessionStart[].hooks[] | select(.type == "command") | .command'
 else
   echo "✗ ⑨ .claude/settings.json 沒有掛 SessionStart → scripts/ops/session-start.sh（或 JSON 壞了）" >&2; fail=1
 fi
+
+# ---- ⑫ 三分支祖先鏈漂移（LS-85 G5；放在 ⑩ 之前——⑩ 之後 origin 指向黑洞，這裡要真的 fetch）----
+# 現況：main 領先 development 1 commit（① 的 'main moves'，剛 commit）→ 未達 stale：不標、只印待 back-merge；test ⊂ development 成立
+out12="$(bash "$patrol" --repo "$repo" --no-pr "$STALE" 2>&1)"
+has   '⑫ main 剛領先 development（<stale）→ 印待 back-merge、不標' "$out12" '待 back-merge'
+hasnt '⑫ 未達 stale 不標分支漂移' "$out12" '分支漂移'
+has   '⑫ 三分支行印 test 不在 dev: 0' "$out12" 'test 不在 dev: 0'
+json12="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '⑫ --json：test_not_in_development 0、main_ahead_minutes 數字且 <stale、drift 空' "$json12" '.branches.test_not_in_development == 0 and (.branches.main_ahead_minutes | type == "number") and .branches.main_ahead_minutes < 30 and .branches.drift == ""'
+# main 再併入一個很老的 hotfix（first-parent 最早那筆超過 stale）→ ⚠ 分支漂移 main、指示 back-merge PR
+echo h >> "$seed/file.txt"; gold -C "$seed" commit -qam 'chore: LS-0 old hotfix on main'; g -C "$seed" push -q origin main
+out12="$(bash "$patrol" --repo "$repo" --no-pr "$STALE" 2>&1)"
+has   '⑫ main 有老 commit 不在 development ≥ stale → ⚠ 分支漂移 main' "$out12" '⚠ 分支漂移：main 有 2 commit 不在 development'
+has   '⑫ 指示 back-merge PR main→development' "$out12" '--head main --base development'
+brief12="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '⑫ --brief 印漂移' "$brief12" '分支漂移：main'
+json12="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '⑫ --json：development_behind_main 2、main_ahead_minutes ≥ stale、drift 有句、flags 含一筆' "$json12" '.branches.development_behind_main == 2 and .branches.main_ahead_minutes >= 30 and (.branches.drift | test("main 有 2 commit")) and ([.flags[] | select(test("分支漂移"))] | length == 1)'
+# back-merge main→development（seed 先對齊 origin/development 再 merge、push）→ 漂移消失
+g -C "$seed" fetch -q origin; g -C "$seed" checkout -q development; g -C "$seed" reset -q --hard origin/development
+g -C "$seed" merge -q --no-edit main; g -C "$seed" push -q origin development
+out12="$(bash "$patrol" --repo "$repo" --no-pr "$STALE" 2>&1)"
+hasnt '⑫ back-merge 後不再標 main 漂移' "$out12" '分支漂移'
+has   '⑫ back-merge 後 dev 落後 main: 0、祖先鏈 ok' "$out12" '祖先鏈 ok'
+# test 被直接 push 一個 commit（test ⊄ development：舊式 back-merge／手動 push 的形狀）→ 立即 ⚠，不看時間
+g -C "$seed" checkout -q test; echo t > "$seed/t.txt"; g -C "$seed" add -A; g -C "$seed" commit -qm 'chore: LS-0 direct push to test'
+g -C "$seed" push -q origin test
+out12="$(bash "$patrol" --repo "$repo" --no-pr "$STALE" 2>&1)"
+has   '⑫ test 有 commit 不在 development → 立即 ⚠ 分支漂移 test' "$out12" '⚠ 分支漂移：test 有 1 commit 不在 development'
+has   '⑫ 指示把 origin/test 併回 development' "$out12" 'backmerge-development'
+json12="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '⑫ --json：test_not_in_development 1、drift 有句' "$json12" '.branches.test_not_in_development == 1 and (.branches.drift | test("test 有 1 commit"))'
+# 把 test 併回 development（hotfix/LS-<n>-backmerge-development 的效果）→ 消失
+g -C "$seed" checkout -q development; g -C "$seed" merge -q --no-edit test; g -C "$seed" push -q origin development
+out12="$(bash "$patrol" --repo "$repo" --no-pr --brief "$STALE" 2>&1)"
+hasnt '⑫ test 併回 development 後不再標' "$out12" '分支漂移'
 
 # ---- ⑩ fetch 看門狗：origin 指向會永遠掛住的位址（ext:: 遠端 helper＝sleep），預設 10s 看門狗要在 ≤15s 內放行、exit 0、
 #        印「fetch 逾時，用本機 ref 繼續」並照常巡檢（PR #99 R1：黑洞位址實測 75s，會把 hook 的 timeout 30 撐爆）----
