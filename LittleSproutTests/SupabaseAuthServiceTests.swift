@@ -231,21 +231,45 @@ final class SupabaseAuthServiceTests: XCTestCase {
             credentials: OpenIDConnectCredentials(provider: .apple, idToken: "fake", nonce: "fake")
         )
 
+        // LS-62（LS-55 PR #77 R2 I-A）：舊版靠固定 sleep 等 supabase-swift 內建的重試攔截器
+        // 把離線請求的重試序列跑完，等於把 SDK 目前的重試次數／退避秒數寫死進測試——SDK
+        // 升版調整這些常數，固定 sleep 就可能在重試還沒跑完時就斷言，抓不到旗標退化（無聲
+        // 假綠）。改法：離線 stub 計數被呼叫次數（下面用來斷言「真的走過離線路徑」），至於
+        // 「重試真的跑完了沒」不用猜時間或次數，讓呼叫端自己也對同一個 client 額外
+        // await 一次 `session`——過期 session 會走到 SDK 內部同一條 refresh 路徑，
+        // 該路徑用 in-flight task 讓同一個 refresh token 的所有併發呼叫共用同一個任務，
+        // 所以這裡 await 到的就是 `SupabaseAuthService` 初始化時 SDK 內部觸發的那個
+        // 背景重試序列本身「真的執行完畢」，不管它這次重試了幾輪、退避多久，測試都不用
+        // 知道那個數字。合流成立的條件是測試呼叫抵達時 in-flight task 仍存活；否則測試
+        // 自建序列、可能提早斷言（PR #120 R1 F2）。
+        let offlineCallCount = OSAllocatedUnfairLock(initialState: 0)
         let offlineClient = TestSupabaseClient.make(storage: sharedStorage) { _ in
+            offlineCallCount.withLock { $0 += 1 }
             throw URLError(.notConnectedToInternet)
         }
         let service = SupabaseAuthService(client: offlineClient)
 
-        // `authStateChanges` 的 `.initialSession` 事件是背景排程送達的（見 SupabaseAuthService
-        // init 的註解），這裡用 sleep 給非同步事件足夠時間跑完後再斷言（要驗的正是「保持
-        // 不變」，沒有一個「變成某個值」的終態可以拿來 poll）。300ms 曾經不夠：
-        // supabase-swift 的 `RetryRequestInterceptor`（`retryLimit: 2`／指數退避
-        // `pow(2, retryCount) * 0.5` 秒）替 `.notConnectedToInternet` 這類錯誤重試一次，
-        // 光是第一次重試前的等待就有 1 秒——sleep 300ms 時舊行為（false）根本還沒重試完、
-        // `.initialSession(nil)` 事件根本還沒送達，測試在旗標是 false 時也會誤判綠燈
-        // （PR #77 R1 M1 紅╱綠證明實測抓到）。2.5 秒留足夠餘裕蓋過重試延遲。
-        try await Task.sleep(nanoseconds: 2_500_000_000)
+        do {
+            // 離線時這裡必須 throw：如果哪天不再 throw（SDK 不再對過期 session 走網路
+            // refresh），代表上面「等到 SDK 內部重試序列跑完」的假設已經失效，這條測試
+            // 的等待跟著失效——用 XCTFail 把這個情況變成看得到的紅，不要悄悄放過
+            // （PR #120 R1 F1）。
+            _ = try await offlineClient.auth.session
+            XCTFail("離線時 auth.session 應該 throw——沒 throw 代表 SDK 不再走網路 refresh，這條測試的等待已失效")
+        } catch {}
 
+        // 短 settle：上面的 await 只保證「重試序列跑完了」，`authStateChanges` 背景監聽
+        // 把對應的 `.initialSession` 事件消化進 `SupabaseAuthService` 快取仍需要一點
+        // Task 排程時間（純記憶體操作、無 I/O）——留一點緩衝再斷言。實測：settle 降到
+        // 1ms 時，旗標 false 的 RED case 仍 8/8 全紅，150ms 約有 150 倍餘裕；以後若遇到
+        // 間歇性 flake，先查上面 F2 提到的合流時序假設是否成立，不要直接調大這個常數
+        // （PR #120 R1 F3）。
+        try await Task.sleep(nanoseconds: 150_000_000)
+
+        XCTAssertGreaterThan(
+            offlineCallCount.withLock { $0 }, 0,
+            "離線 stub 應該至少被呼叫過一次，確認這條測試真的走了離線重試路徑"
+        )
         XCTAssertEqual(
             service.currentSession?.userID, testUserID,
             "離線開 app 時，先前登入過的快取不該被 SDK 的 .initialSession(nil) 事件抹成 nil（N1）"
