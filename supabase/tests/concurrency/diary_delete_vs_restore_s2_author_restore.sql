@@ -1,23 +1,36 @@
 -- 併發場景（LS-57：owner 軟刪先動）的 session 2：作者在 owner 還沒 commit 軟刪的
 -- 時候呼叫還原。
 --
--- 這是 `set_diary_deleted` 開頭那句 `select ... for update` 對 LS-57 還原鎖真正
--- 必要的地方：這支 RPC 的還原鎖（private.enforce_deletion_attribution() trigger）
--- 判斷「這篇是不是別人刪的」靠的是 `old.deleted_by`——若 S2 的初始 SELECT 沒有鎖住
--- 這一列，READ COMMITTED 下它會在 S1 commit 之前就讀到舊快照：`deleted_at`／
--- `deleted_by` 都還是 NULL（S1 的軟刪對 S2 而言不可見，因為還沒 commit）。S2 接著
--- 執行的 UPDATE 會把 `deleted_at` 設回 NULL——這件事本身是 no-op（改之前就是
--- NULL），但問題是 S2 的整個授權路徑（RPC 的成員檢查＋trigger 的還原鎖）全部是用
--- 這份過期快照做判斷，不是「先等 S1 講清楚這篇現在被誰刪除、再決定能不能還原」。
--- 有 `for update`：S2 的 SELECT 會等 S1 commit 之後才讀到列，讀到的 `deleted_by`
--- 已經是 owner，`set_diary_deleted` 的還原鎖（見 migration）正確地噴出 `LS027`，
--- `deleted_at` 完全沒被 S2 的 UPDATE 動過（見 verify 檔）。
+-- R1（merge-reviewer PR #98 review B4）指出：這裡原本宣稱「set_diary_deleted 開頭
+-- 那句 `for update` 是這個場景被正確擋下的必要條件」——實測（拿掉 `for update`、
+-- 重跑這個場景）證實這個宣稱不成立，改記錄事實：
 --
--- Mutation 證據（本機用 Supabase CLI 映像實測）：把 `set_diary_deleted` 開頭
--- `select d.* into v_diary from public.diaries d where d.id = p_diary_id for
--- update;` 的 `for update` 拿掉，重跑這個場景：S2 不再被阻塞（等待時間遠低於
--- 0.5 秒）、也沒有拿到 `LS027`——這個檔案的兩條斷言與 verify 檔的斷言都會變紅，
--- 證實這把鎖對 LS-57 的還原鎖同樣是行為必要的，不是防禦性寫法。
+-- 這個場景真正被擋下（S2 被阻塞、解除阻塞後拿到 LS027）靠的是 diaries 表本身
+-- 掛的 `enforce_deletion_attribution()` BEFORE UPDATE trigger——Postgres 對「目標列
+-- 有 BEFORE ROW UPDATE trigger」的 UPDATE 語句，執行期的 `GetTupleForTrigger()` 本來
+-- 就會在觸發 trigger 之前對那一列取 `LockTupleExclusive`；若鎖不到（另一個交易的
+-- UPDATE 正持有鎖），會等待、解鎖後用 EvalPlanQual 重取最新版本當 trigger 的
+-- `OLD`。這件事**不需要**呼叫端的 SELECT 帶 `FOR UPDATE`——S1 自己那句
+-- `update ... set deleted_at = ...`（不論它前面的診斷用 SELECT 有沒有鎖）本身就會
+-- 持有列鎖直到 commit；S2 的 `set_diary_deleted` 最終那句 UPDATE 撞上這把鎖時，
+-- 一樣會被阻塞，解除阻塞後 trigger 讀到的 `OLD.deleted_by` 已經是 owner，正確噴出
+-- `LS027`。`for update` 拿掉之後重跑本檔：兩條斷言（`v_elapsed`／`v_ls027`）與
+-- verify 檔的斷言全部維持通過，不會變紅。
+--
+-- `set_diary_deleted` 的 `for update` 因此對**這個場景**是多餘的、不是必要條件——
+-- 但這不代表它是可以刪掉的死碼：LS-48 既有的 `diary_edit_vs_delete` 併發場景
+-- （`update_diary_entry` vs `set_diary_deleted`）仍然是這把鎖曾經被 mutation
+-- 證實過必要的地方，只是必要性來自**另一支函式**（`update_diary_entry` 自己那句
+-- `for update`，保護它自己「是否已軟刪除」的檢查不用到過期快照），不是
+-- `set_diary_deleted` 這一支——本檔重新用同一個 mutation（拿掉 `set_diary_deleted`
+-- 的 `for update`）對 `diary_edit_vs_delete` 方向 B 重跑過，兩條斷言與 verify 一樣
+-- 全綠，代表 `set_diary_deleted` 自己那句 `for update` 在目前全部已知場景下都是
+-- 冗餘的（保留它是保守選擇，不是本票要清理的範圍——移除屬於後續票的技術債，這裡
+-- 只誠實記錄現況，不擅自刪碼）。
+--
+-- 本檔仍然是有意義的回歸測試：它驗證的是「owner 軟刪 vs 作者還原」這個 race 的
+-- **最終行為**（作者必須被正確擋下、拿到 LS027，不能用過期資料矇混過關）——只是
+-- 承擔這件事的機制是 trigger 的列鎖，不是這支 RPC 自己的 `for update`。
 
 \set ON_ERROR_STOP on
 

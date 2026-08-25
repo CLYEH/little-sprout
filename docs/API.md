@@ -187,13 +187,20 @@ enforce_deletion_attribution()` trigger 擋下的規則」（見 §4 `set_album_
     `.update()` 寬——只要求仍是該家庭任一角色的成員，被降級成 viewer 也適用
     （F5：對齊 `diaries`／`comments` 的同名 RPC，見 §4）。
   - 硬刪（真正 `DELETE` 整列）仍是 owner-only 的直接 policy，未被收斂進 RPC。
-  - **`deleted_by`／還原鎖（LS-57）**：`deleted_at` 被誰設下，由
-    `private.enforce_deletion_attribution()` trigger 記在新欄位 `deleted_by`（呼叫端
-    無法指定）。這欄同時管到建立者的直接 `.update()` 與 `set_album_deleted` RPC 兩條
-    路徑：建立者只能清空（還原）`deleted_by` 是自己的 `deleted_at`；owner 軟刪的，
-    建立者不論走哪條路徑都會被擋下（直接 `.update()` 拿 `LS027`；RPC 也是同一個碼，
-    見 §4），只有 owner 能還原。本欄位新增之前就已軟刪除的既有相簿 `deleted_by` 為
-    `NULL`，維持 LS-57 之前的行為（建立者仍可自行還原）。
+  - **`deleted_by`／還原鎖（LS-57，PR #98 review 修過的版本）**：`deleted_at` 被誰
+    設下，由 `private.enforce_deletion_attribution()` trigger 記在新欄位
+    `deleted_by`（呼叫端無法指定）。這欄同時管到建立者的直接 `.update()` 與
+    `set_album_deleted` RPC 兩條路徑：建立者只能清空（還原）或重新觸碰 `deleted_by`
+    是自己的 `deleted_at`；owner 軟刪的，建立者不論走哪條路徑（還原或重複軟刪）都
+    會被擋下（直接 `.update()` 拿 `LS027`；RPC 也是同一個碼，見 §4），只有 owner
+    能還原。**owner 後手移除＝歸屬升級**：owner 對一本已經被建立者自刪的相簿再次
+    移除（或還原），`deleted_by` 會改寫成 owner 自己，不會維持建立者不變——owner
+    的動作永遠是最新、最權威的一次，建立者不能靠「先自刪一次」讓歸屬停留在自己
+    名下、之後還能自行還原。`deleted_by` 為 `NULL` 有兩種成因：（a）本欄位新增之前
+    就已軟刪除的既有資料，或（b）移除者的帳號後來被刪除（`deleted_by` 的 FK 是
+    `on delete set null`，帳號刪除的 RI 動作會清成 `NULL`，這支 trigger 特別放行
+    這個動作本身，不會讓帳號刪不掉）——兩種情況都視為「移除者不明」，**只有
+    owner 能還原**，不是「任何人都能還原」（不再是 LS-57 初版的行為）。
   - **`family_id` 不可變（LS-57）**：同一支 trigger 擋下建立者把自己的相簿直接
     `.update()` 搬到別的家庭——`albums_update` policy 本身只檢查「改完之後的
     `family_id` 是不是自己也是 contributor 的家庭」，沒有檢查「這欄有沒有被動過」，
@@ -204,7 +211,8 @@ enforce_deletion_attribution()` trigger 擋下的規則」（見 §4 `set_album_
     `comments` 自 LS-58 起也是這個模式，見 §3「comments / reactions」段。
   - Owner 對別人日記**只有軟刪權**（`set_diary_deleted`），**沒有**編輯內容的權限。
   - 硬刪（真正 `DELETE` 整列）仍是 owner-only 的直接 policy，未被收斂進 RPC。
-  - **`deleted_by`／還原鎖（LS-57）**：規則同上（albums 段），差別只在 `diaries`
+  - **`deleted_by`／還原鎖（LS-57）**：規則同上（albums 段，含 owner 後手移除的
+    歸屬升級、`deleted_by` 為 `NULL` 一律 owner-only 還原），差別只在 `diaries`
     唯一寫入路徑是 `set_diary_deleted` RPC——沒有直接 `.update()` 這條路可以踩，
     `family_id` 也因此已經不可能被移動（`update_diary_entry` 簽章本來就不接受
     `family_id` 參數），trigger 對 `diaries` 是額外一層防線，不是解決一個當下真的
@@ -281,7 +289,8 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   policy 從來沒有這條限制，`albums_update` 的作者分支現在也還是沒有，這不是要通用套用
   到每張表的規則，是 `diaries` 自己的產品決定。owner 對別人留言的軟刪／還原要呼叫
   `set_comment_deleted` RPC（見 §4，LS-52 建立），對內容沒有任何直接寫入路徑。
-  **`deleted_by`／還原鎖（LS-57）**：規則同 `diaries`——唯一寫入路徑是
+  **`deleted_by`／還原鎖（LS-57）**：規則同 `diaries`（含 owner 後手移除的歸屬
+  升級、`deleted_by` 為 `NULL` 一律 owner-only 還原）——唯一寫入路徑是
   `set_comment_deleted` RPC，`deleted_by` 由 `private.enforce_deletion_attribution()`
   trigger 記錄，作者只能還原自己設下的、owner 軟刪的作者無法自行還原（`LS027`，見
   §4）。`family_id` 同樣已經不可能被移動（`update_comment` 簽章不接受 `family_id`
@@ -511,20 +520,30 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   （物理上不會執行到 `body`／`entry_date`／`child_id` 的 `UPDATE`）。
 - **副作用**：軟刪後該篇立即從 `feed_items`／`get_family_timeline` 消失，還原後立即
   回來（既有 trigger 行為，見 `supabase/tests/40_triggers_feed_and_storage.sql`）。
-  **`deleted_by` 記錄與還原鎖（LS-57）**：軟刪時 `deleted_by` 由
-  `private.enforce_deletion_attribution()` trigger 自動寫成呼叫者本人，呼叫端無法
-  指定；還原時，**作者只能還原 `deleted_by` 是自己的那一篇**——若這篇日記是 owner
-  軟刪的，作者呼叫 `set_diary_deleted(id, false)` 會拿到 `LS027`，即使他通過了上面
-  「仍是該家庭成員」的授權檢查也一樣（這是還原方向多一層的檢查，不是取代上面那層）；
-  **owner 可以還原任何一篇，不限於自己刪的**。本欄位新增之前就已軟刪除的既有日記
-  `deleted_by` 為 `NULL`，這種情況下維持 LS-57 之前的行為（作者仍可自行還原），見
-  migration 說明。
+  **`deleted_by` 記錄與還原鎖（LS-57，PR #98 review B1/B2/B3 修過）**：軟刪時
+  `deleted_by` 由 `private.enforce_deletion_attribution()` trigger 自動寫成呼叫者
+  本人，呼叫端無法指定；還原或重新軟刪時，**作者只能觸碰 `deleted_by` 是自己的
+  那一篇**——若這篇日記是 owner 軟刪的，作者呼叫 `set_diary_deleted`（不論
+  `p_deleted` 是 `true` 還是 `false`）都會拿到 `LS027`，即使他通過了上面「仍是該
+  家庭成員」的授權檢查也一樣（這是還原方向多一層的檢查，不是取代上面那層）；
+  **owner 可以還原任何一篇、也可以對已被作者自刪的日記再次移除——後者會把
+  `deleted_by` 升級成 owner 自己（不是維持作者不變），owner 的動作永遠壓過作者
+  的自刪**。`deleted_by` 為 `NULL` 有兩種成因：本欄位新增之前就已軟刪除的既有
+  資料，或移除者的帳號後來被刪除（`references profiles(id) on delete set null`，
+  這支 trigger 會放行帳號刪除觸發的 RI 動作本身，不會讓帳號刪不掉）——兩種情況
+  都視為「移除者不明」，**一律只有 owner 能還原，不是任何人都能還原**。
 - **錯誤碼**：未登入 `42501`；日記不存在 `LS020`；不是作者也不是該家 owner，或雖是
-  作者但已離開家庭 `42501`；作者想還原 owner 移除的日記 `LS027`（LS-57）。
+  作者但已離開家庭 `42501`；作者想還原或重新軟刪 owner 移除的日記（含 `deleted_by`
+  為 `NULL` 的情況）`LS027`（LS-57）。
 - **併發**：對目標列用 `FOR UPDATE` 鎖住；與 `update_diary_entry` 的互斥關係見上。
-  這把鎖同時保證「owner 軟刪 vs 作者還原」同時發生時，後動的一方讀到的是先動一方
-  已 commit 的 `deleted_by`，不會用過期資料做出錯誤的還原判斷（回歸測試見
-  `supabase/tests/concurrency/diary_delete_vs_restore_*.sql`）。
+  **這把鎖對「owner 軟刪 vs 作者還原」這個 race 不是必要條件**（merge-reviewer
+  PR #98 review B4，實測拿掉這把鎖重跑
+  `supabase/tests/concurrency/diary_delete_vs_restore_*.sql` 仍然全綠）——這個 race
+  真正被擋下靠的是 `diaries` 表本身的 `enforce_deletion_attribution()` BEFORE
+  UPDATE trigger：Postgres 對有 BEFORE ROW UPDATE trigger 的表，任何一句 UPDATE
+  本身就會在觸發 trigger 前鎖住目標列、解鎖後用 EvalPlanQual 重取最新版本，不需要
+  呼叫端額外帶 `FOR UPDATE`。這把鎖真正必要的地方是保護 `update_diary_entry` 自己
+  「是否已軟刪除」的檢查不用到過期快照（見上一支 RPC 的併發說明），不是這裡。
 
 ### `set_album_deleted(p_album_id uuid, p_deleted boolean) -> void`
 - **誰能呼叫**：建立者本人（**只要求仍是該家庭任一角色的成員**，orchestrator PR
@@ -545,24 +564,28 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   會被 policy 排除、靜默影響 0 列（見 §2「寫入路徑小結」的例外說明），**不會**
   拿到錯誤；這支 RPC 才是 owner 想確認成功／失敗的正確呼叫方式，失敗會拿到明確的
   錯誤碼。
-  **`deleted_by` 記錄與還原鎖（LS-57）**：不論走這支 RPC 還是建立者的直接
-  `.update()`，`deleted_by` 都由 `private.enforce_deletion_attribution()` trigger
-  統一推導寫入（呼叫端無法指定，也無法透過直接 `.update()` 繞過）——建立者只能
-  還原 `deleted_by` 是自己的那一本；owner 軟刪的相簿，建立者不論用這支 RPC 還是
-  直接 `.update({deleted_at: null})`，一律拿到 `LS027`；owner 可以還原任何一本，
-  不限於自己刪的。本欄位新增之前就已軟刪除的既有相簿 `deleted_by` 為 `NULL`，這種
-  情況下維持 LS-57 之前的行為。
+  **`deleted_by` 記錄與還原鎖（LS-57，PR #98 review B1/B2/B3 修過）**：不論走這支
+  RPC 還是建立者的直接 `.update()`，`deleted_by` 都由
+  `private.enforce_deletion_attribution()` trigger 統一推導寫入（呼叫端無法指定，
+  也無法透過直接 `.update()` 繞過）——建立者只能觸碰 `deleted_by` 是自己的那一本；
+  owner 軟刪的相簿，建立者不論用這支 RPC 還是直接 `.update({deleted_at: null})`，
+  一律拿到 `LS027`；**owner 可以還原任何一本，也可以對已被建立者自刪的相簿再次
+  移除——後者會把 `deleted_by` 升級成 owner 自己，owner 的動作永遠壓過建立者的
+  自刪**。`deleted_by` 為 `NULL`（本欄位新增之前就已軟刪除的既有資料，或移除者
+  帳號後來被刪除）一律視為「移除者不明」，只有 owner 能還原。
   **`family_id` 不可變（LS-57）**：同一支 trigger 也擋下建立者把自己的相簿直接
   `.update()` 搬到別的家庭——不論這本相簿有沒有軟刪除，改 `family_id` 一律拿到
   `42501`（見 §3「albums / diaries」）。
 - **錯誤碼**：未登入 `42501`；相簿不存在 `LS023`；不是建立者也不是該家 owner，或
-  雖是建立者但已完全離開該家庭 `42501`；建立者想還原 owner 移除的相簿 `LS027`
-  （LS-57）。
-- **併發**：對目標列用 `FOR UPDATE` 鎖住——這把鎖保證「owner 軟刪 vs 建立者還原」
-  同時發生時，後動的一方讀到的是先動一方已 commit 的 `deleted_by`，不會用過期
-  資料做出錯誤的還原判斷（回歸測試見
-  `supabase/tests/concurrency/diary_delete_vs_restore_*.sql`；albums／comments 走
-  同一支共用 trigger，機制相同，不重複另立一組相簿專屬的併發測試）。
+  雖是建立者但已完全離開該家庭 `42501`；建立者想還原或重新軟刪 owner 移除的相簿
+  （含 `deleted_by` 為 `NULL` 的情況）`LS027`（LS-57）。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住。**這把鎖對「owner 軟刪 vs 建立者還原」
+  這個 race 不是必要條件**（merge-reviewer PR #98 review B4，實測拿掉這把鎖重跑
+  `diary_delete_vs_restore_*.sql` 這組場景仍然全綠——albums／comments 走同一支
+  共用 trigger，機制相同，不重複另立一組相簿專屬的併發測試；理由見
+  `set_diary_deleted` 的併發說明）：這個 race 真正被擋下靠的是 `albums` 表本身的
+  `enforce_deletion_attribution()` BEFORE UPDATE trigger 的內建列鎖，不是這支 RPC
+  的 `FOR UPDATE`。
   **`family_id` 搬家 race 已隨 LS-57 退役**：這把鎖原本還額外防著「建立者把相簿直接
   `.update()` 搬到別的家庭、同時原家庭 owner 呼叫這支 RPC 軟刪」的跨家庭越權
   race——`family_id` 現在是不可變欄（見上），建立者的搬家 UPDATE 本身就會被
@@ -570,9 +593,9 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `album_edit_vs_delete_s1_move_family.sql`／`s2_delete_after_move.sql`／
   `verify_move_blocked.sql` 這組回歸測試因此隨本票一起退役（比照 LS-58 讓 comments
   版同一場景退役的處理方式，見 `supabase/tests/run.sh` 對應段落）。`FOR UPDATE`
-  鎖本身仍然保留（migration 是歷史紀錄不回頭改），繼續為一般序列化把關，回歸測試
-  見 `album_edit_vs_delete_s1_update.sql`／`s1_delete.sql` 兩組（作者改 `title`、
-  owner 軟刪同時發生）。
+  鎖本身仍是保守保留（不是本票要清理的既有技術債，migration 也是歷史紀錄不回頭
+  改），繼續為一般序列化把關，回歸測試見 `album_edit_vs_delete_s1_update.sql`／
+  `s1_delete.sql` 兩組（作者改 `title`、owner 軟刪同時發生）。
 
 ### `set_comment_deleted(p_comment_id uuid, p_deleted boolean) -> void`
 - **誰能呼叫**：作者本人（**只要求仍是該家庭任一角色的成員**，包含被降級成 viewer
@@ -587,14 +610,17 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   comments 都會拿到明確的 `42501`（見 §2「寫入路徑小結」），不再有「靜默 0 列」這種
   模稜兩可的結果——這支 RPC 現在不只是「owner 想確認成功／失敗的正確呼叫方式」，
   是唯一能碰 `deleted_at` 的路徑。
-- **`deleted_by` 記錄與還原鎖（LS-57）**：軟刪時 `deleted_by` 由
-  `private.enforce_deletion_attribution()` trigger 自動寫成呼叫者本人，呼叫端無法
-  指定；作者只能還原 `deleted_by` 是自己的那一則——owner 軟刪的留言，作者呼叫
-  `set_comment_deleted(id, false)` 會拿到 `LS027`；owner 可以還原任何一則，不限於
-  自己刪的。本欄位新增之前就已軟刪除的既有留言 `deleted_by` 為 `NULL`，這種情況下
-  維持 LS-57 之前的行為。
+- **`deleted_by` 記錄與還原鎖（LS-57，PR #98 review B1/B2/B3 修過）**：軟刪時
+  `deleted_by` 由 `private.enforce_deletion_attribution()` trigger 自動寫成呼叫者
+  本人，呼叫端無法指定；作者只能觸碰 `deleted_by` 是自己的那一則——owner 軟刪的
+  留言，作者呼叫 `set_comment_deleted`（不論 `p_deleted` 是 `true` 還是 `false`）
+  都會拿到 `LS027`；**owner 可以還原任何一則，也可以對已被作者自刪的留言再次
+  移除——後者會把 `deleted_by` 升級成 owner 自己，owner 的動作永遠壓過作者的
+  自刪**。`deleted_by` 為 `NULL`（本欄位新增之前就已軟刪除的既有資料，或移除者
+  帳號後來被刪除）一律視為「移除者不明」，只有 owner 能還原。
 - **錯誤碼**：未登入 `42501`；留言不存在 `LS024`；不是作者也不是該家 owner，或
-  雖是作者但已離開家庭 `42501`；作者想還原 owner 移除的留言 `LS027`（LS-57）。
+  雖是作者但已離開家庭 `42501`；作者想還原或重新軟刪 owner 移除的留言（含
+  `deleted_by` 為 `NULL` 的情況）`LS027`（LS-57）。
 - **併發**：對目標列用 `FOR UPDATE` 鎖住。這把鎖原本是為了擋住「作者把留言直接
   `.update()` 搬到另一個家庭、同時 owner 對原家庭那一列軟刪」的跨家庭越權
   race——`comments` 收斂成 RPC-only 之後，`update_comment` 的參數只有 `body`，
@@ -790,7 +816,7 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS024` | 留言不存在 | `update_comment`／`set_comment_deleted` |
 | `LS025` | 不是留言作者本人，或雖是作者但已離開該家庭 | `update_comment` |
 | `LS026` | 留言／按讚的 target 存在，但屬於別的家庭 | `create_comment`／`toggle_reaction` |
-| `LS027` | 這篇日記／這本相簿／這則留言已被家庭管理者移除，只有管理者能還原 | `set_diary_deleted`／`set_album_deleted`／`set_comment_deleted`（還原方向；由 `private.enforce_deletion_attribution()` trigger 統一 raise，LS-57） |
+| `LS027` | 這篇日記／這本相簿／這則留言已被家庭管理者移除，只有管理者能還原 | `set_diary_deleted`／`set_album_deleted`／`set_comment_deleted`（還原方向或重新軟刪方向皆可能；albums 的建立者直接 `.update()` 路徑也會撞到；由 `private.enforce_deletion_attribution()` trigger 統一 raise，LS-57，PR #98 review 擴大到重新軟刪方向並涵蓋 `deleted_by` 為 `NULL` 的情況） |
 | `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
 
 **沒有被上面任何一支 RPC 包住、可能直接從 PostgREST 冒出來的標準 Postgres 錯誤碼**

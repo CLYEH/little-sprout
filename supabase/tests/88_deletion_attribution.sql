@@ -3,38 +3,64 @@
 -- 對應 20260825040000_deletion_attribution.sql 的 private.enforce_deletion_attribution()
 -- trigger。85_diaries_timeline.sql／86_albums_comments_owner_scope.sql 的角色矩陣段落
 -- 已經逐表驗過「owner 軟刪的內容，作者呼叫對應 RPC 還原會拿到 LS027；owner 可以還原
--- 任何一篇／本／則；作者仍可還原自己設下的」——這裡不重複那組矩陣，只補三件那邊測不到
--- 的事：
---   1. `deleted_by` 欄位本身的值（不只是「還原有沒有生效」），包含「對已被 owner 刪除的
---      內容重複軟刪，不會把 deleted_by 的歸屬偷天換日成重複軟刪的那個人」這個關鍵防線
---      （見 migration 對 deleted_by 推導規則第三條的說明）。
+-- 任何一篇／本／則；作者仍可還原自己設下的」——這裡不重複那組矩陣，只補那邊測不到的
+-- 事，含 merge-reviewer PR #98 review（R1）B1/B2/B3 三個問題的回歸：
+--   1. `deleted_by` 欄位本身的值（不只是「還原有沒有生效」），包含「owner 對已被
+--      作者自刪的內容再次移除，deleted_by 必須升級成 owner」（B2）。
 --   2. albums 的 hybrid 直接 UPDATE 路徑本身（不透過 RPC）：family_id 不可變、以及
 --      直接 UPDATE 清空 owner 設下的 deleted_at 同樣被擋。86_ 的 §B 只測 RPC 路徑。
---   3. migration 套用之前就已軟刪除、`deleted_by` 為 NULL 的既有列，維持舊行為
---      （作者仍可自行還原）。
+--   3. 刪除一個「名下有目前仍是軟刪狀態、且 deleted_by 是他」的內容的使用者帳號，
+--      trigger 必須放行 FK 的 `on delete set null` RI 動作，不能讓帳號刪不掉（B1，
+--      merge-reviewer 實測出的 blocker）。
+--   4. `deleted_by` 為 NULL（無論是 migration 套用前就已軟刪除的既有資料，還是
+--      移除者帳號後來被刪除）一律視為「移除者不明」，只有 owner 能還原——不是
+--      LS-57 初版「作者仍可自行還原」的行為（B3）。
+--   5. 已軟刪除的留言仍可用 update_comment 編輯內容（LS-58 既有行為）不能被這支
+--      trigger 誤傷——trigger 的推導/還原鎖只在「這次 UPDATE 真的有動 deleted_at」
+--      時才介入。
 --
 -- 角色矩陣沿用 00_fixtures.sql 的 A 家：owner=a1、member=a2、viewer=a3。
 --
+-- 同一交易內連續呼叫 RPC 的已知限制：Postgres 的 `now()` 在同一個交易內是常數
+-- （transaction_timestamp 語意）。§1 的 B2 場景需要「先有一筆較早的軟刪紀錄，再讓
+-- owner 用不同的時間戳觸發一次新的 UPDATE」，若兩次都在同一交易內呼叫 RPC，
+-- `deleted_at` 會拿到同一個 `now()` 值，trigger 的「deleted_at 完全沒變 → 直接放行」
+-- 短路會誤判成「沒有觸碰 deleted_at 的一般欄位編輯」而略過推導與升級邏輯（這正是
+-- 開發期間第一版手測撞到的假陰性）。修法：STEP1 的「已被作者自刪」狀態改用
+-- postgres 身分直接 INSERT 一筆帶著明顯更早時間戳（`now() - interval '1 hour'`）的
+-- 既有列（INSERT 不觸發 BEFORE UPDATE trigger），STEP2 owner 再用真正的 RPC 呼叫
+-- （拿到當下的 `now()`）—— 兩者的 `deleted_at` 保證不同，才踩得到真正的
+-- transition 邏輯，等價於生產環境「兩次呼叫必然是不同交易、`now()` 必然不同」的
+-- 情況。
+--
 -- Mutation 自證（開發期用本機 Supabase CLI 映像實跑 `supabase db reset` +
--- `supabase/tests/run.sh` 手動驗證，非本檔自動執行）：
---   M1：把 trigger 裡 deleted_by 推導的第三條分支（`else new.deleted_by := old.
---       deleted_by`）改成 `else new.deleted_by := v_uid`（重複軟刪也洗成呼叫者）
---       → §1「owner 刪除後作者重複軟刪，deleted_by 不變」斷言變紅；連帶讓
---       §1 後段「作者對自己剛偷到的 deleted_by 呼叫還原」從 FAIL（預期拿到 LS027
---       卻成功了）變成真的成功——證實這條分支是還原鎖的必要前提，不是多餘的判斷。
+-- 手動套用/還原單一函式定義驗證，非本檔自動執行）：
+--   M1：把 trigger owner 分支的 `new.deleted_by := v_uid` 改成
+--       `new.deleted_by := old.deleted_by`（owner 後手移除不再升級歸屬）
+--       → §1 STEP2「owner 再次移除後 deleted_by 必須是 owner」斷言變紅（仍是作者），
+--         連帶讓 STEP3「作者對已被 owner 接手的內容呼叫還原必須是 LS027」從
+--         FAIL（預期拿到 LS027 卻成功了）變成真的成功。
 --   M2：拿掉 trigger 裡 `new.family_id is distinct from old.family_id` 那段 raise
---       → §2「建立者直接 UPDATE 把自己的相簿搬到另一個家庭」斷言變紅（family_id
---         真的被改掉，且沒有任何錯誤）。
---   M3：把還原鎖的條件從 `new.deleted_at is null`（只管還原方向）改成移除這個條件
---       （兩個方向都擋）→ 不影響本檔任何斷言（本檔沒有測「作者對 owner 刪的重複
---       軟刪」該不該被擋——依 migration 的裁量，這個方向刻意不擋，YAGNI），但會讓
---       §1 的重複軟刪那一步從「成功」變成「LS027」，因為 M1 沒套用的情況下重複軟刪
---       走的也是「觸碰 deleted_at」這個分支——這組 mutation 留給 review 時對照
---       migration 檔頭「還原鎖只管還原方向」那段說明用，不是本檔自動驗證的項目。
+--       → §2「建立者直接 UPDATE 把自己的相簿搬到另一個家庭」斷言變紅。
+--   M3：把還原鎖的條件 `old.deleted_by is distinct from v_uid` 改成
+--       `old.deleted_by is not null and old.deleted_by is distinct from v_uid`
+--       （退回 LS-57 初版、NULL 不擋的行為）→ §4「deleted_by 為 NULL 時作者不能
+--       自行還原」斷言變紅（作者還原成功）。
+--   M4：拿掉 trigger 開頭 B1 那段 RI 放行判定式——**本機實測這條 mutation 不會讓
+--       §3 變紅**：B1 判定式與檔頭「deleted_by 的推導規則」段落另一句「deleted_at
+--       沒變就直接放行」的判定式在效果上重疊（RI 的 SET NULL 動作定義上不會動
+--       deleted_at，後面那句本來就會放行），單獨拿掉 B1 不構成回歸。這不是本檔
+--       宣稱錯誤，是誠實記錄這個重疊——保留 B1 判定式的理由（獨立語意標註／
+--       不依賴另一句判定式的存在）見 migration 檔頭 B1 段落補記。要讓 §3 真的
+--       變紅，必須同時拿掉 B1 判定式**與**「deleted_at 沒變就放行」判定式（等於
+--       完全不放行任何「deleted_at 沒變」的 UPDATE），本機也實測過確實會讓 §3
+--       撞上 `23503 foreign key violation`。
+--   前三個 mutation 各自單獨套用（其餘保持修好的版本）、跑本檔驗證都精準命中對應
+--   斷言、其餘斷言正常通過；M4 的驗證方式見上，不是「跑了但沒變紅就代表沒測」。
 --
 -- ===========================================================================
--- 1. deleted_by 推導：全新軟刪／還原對稱清空／owner 軟刪後作者重複軟刪不偷走歸屬／
---    偷不到歸屬所以還原鎖持續生效（diaries 代表；albums／comments 走同一支 trigger）
+-- 1. deleted_by 推導：全新軟刪／還原對稱清空／owner 後手移除＝歸屬升級（B2）／
+--    升級後作者無法再自行還原（reviewer 原始 STEP1–3 情境，必須在 STEP3 得 LS027）
 -- ===========================================================================
 \set ON_ERROR_STOP on
 
@@ -49,7 +75,6 @@ declare
   v_diary uuid;
   v_deleted_at timestamptz;
   v_deleted_by uuid;
-  v_deleted_at_2 timestamptz;
 begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
@@ -71,51 +96,65 @@ begin
   end if;
   reset role;
   raise notice 'ok：作者自己軟刪／還原時，deleted_by 正確寫入自己／對稱清空';
+end;
+$$;
 
-  -- owner 軟刪：deleted_by 寫成 owner
+rollback;
+
+-- reviewer STEP1–3（B2）：獨立一段，用直接 INSERT 模擬 STEP1（見檔頭「同一交易內
+-- 連續呼叫」說明），避免 now() 常數陷阱。
+begin;
+
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_child uuid := '2a000000-0000-4000-8000-000000000001';
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_author uuid := 'a0000000-0000-4000-8000-000000000002';
+  v_diary uuid;
+  v_deleted_by uuid;
+begin
+  -- STEP1：作者自刪（模擬既有狀態，直接 INSERT，時間戳刻意早 1 小時）
+  set local role postgres;
+  insert into public.diaries (family_id, child_id, author_id, body, entry_date, deleted_at, deleted_by)
+  values (v_family, v_child, v_author, 'STEP1：作者自刪的日記', current_date,
+          now() - interval '1 hour', v_author)
+  returning id into v_diary;
+  reset role;
+
+  select deleted_by into v_deleted_by from public.diaries where id = v_diary;
+  if v_deleted_by is distinct from v_author then
+    raise exception 'FAIL SETUP：STEP1 的 deleted_by 應該是作者 %，實際 %', v_author, v_deleted_by;
+  end if;
+
+  -- STEP2：owner 對「已被作者自刪」的日記再次移除——這是 B2 要修的核心場景：
+  -- deleted_by 必須升級成 owner，不能維持作者不變。
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
   perform public.set_diary_deleted(v_diary, true);
   reset role;
-  select deleted_at, deleted_by into v_deleted_at, v_deleted_by from public.diaries where id = v_diary;
-  if v_deleted_at is null or v_deleted_by is distinct from v_owner then
-    raise exception 'FAIL：owner 軟刪後，deleted_by 應該是 owner（%），實際 %', v_owner, v_deleted_by;
-  end if;
 
-  -- 關鍵防線：作者（仍是成員，通過 RPC 的基本授權檢查）對這篇「owner 已刪除」的日記
-  -- 重複呼叫軟刪（p_deleted=true）——這個方向不受還原鎖限制（見 migration），呼叫
-  -- 本身會成功（不噴例外），但 deleted_by 必須維持 owner 不變，不能被這次呼叫洗成
-  -- 作者自己。時間戳不拿來斷言——`now()` 在同一個交易內是常數
-  -- （transaction_timestamp 語意），這個測試檔从頭到尾都在同一個 begin/rollback
-  -- 交易裡，兩次呼叫的 deleted_at 本來就會是同一個值，不是判準。
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
-  set local role authenticated;
-  perform public.set_diary_deleted(v_diary, true);
-  reset role;
-  select deleted_at, deleted_by into v_deleted_at_2, v_deleted_by from public.diaries where id = v_diary;
-  if v_deleted_at_2 is null then
-    raise exception 'FAIL：作者對 owner 軟刪的日記重複軟刪應該成功（仍是刪除狀態），實際 deleted_at 變成 NULL 了';
-  end if;
+  select deleted_by into v_deleted_by from public.diaries where id = v_diary;
   if v_deleted_by is distinct from v_owner then
-    raise exception 'FAIL：作者對 owner 刪除的日記重複軟刪，deleted_by 竟然被洗成 %（應該仍是 owner %）——這是還原鎖能被繞過的漏洞',
-      v_deleted_by, v_owner;
+    raise exception 'FAIL B2：owner 對已被作者自刪的日記再次移除，deleted_by 應該升級成 owner（%），實際仍是 %——owner 移除等於沒有生效',
+      v_owner, v_deleted_by;
   end if;
-  raise notice 'ok：作者對 owner 軟刪的日記重複軟刪成功，deleted_by 仍是 owner（歸屬沒有被偷走）';
+  raise notice 'ok：owner 對已被作者自刪的日記再次移除，deleted_by 正確升級成 owner（B2）';
 
-  -- 承上：既然歸屬沒有被偷走，作者現在呼叫還原仍然會被擋（不是繞過還原鎖之後才擋）。
+  -- STEP3：作者現在呼叫還原，必須拿到 LS027——owner 的後手移除已經生效，不是
+  -- no-op，作者不能因為「這是我自己先刪的」就繞過。
   perform set_config('request.jwt.claims',
-    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin
     perform public.set_diary_deleted(v_diary, false);
-    raise exception 'FAIL：作者重複軟刪之後，竟然能還原 owner 軟刪的日記——重複軟刪繞過了還原鎖';
+    raise exception 'FAIL STEP3：作者竟然能還原一篇已經被 owner 接手移除的日記——B2 的升級規則沒有真的擋住還原';
   exception when sqlstate 'LS027' then
     null;
   end;
   reset role;
-  raise notice 'ok：重複軟刪之後，作者呼叫還原仍然拿到 LS027（歸屬確實沒有被偷走）';
+  raise notice 'ok：STEP3 作者呼叫還原正確拿到 LS027（owner 的後手移除真的擋住了作者的還原，reviewer STEP1–3 情境已修正）';
 end;
 $$;
 
@@ -204,8 +243,9 @@ $$;
 rollback;
 
 -- ===========================================================================
--- 3. 既有資料相容性：本欄位新增之前就已軟刪除、deleted_by 為 NULL 的列，
---    維持 LS-57 之前的行為（作者仍可自行還原）
+-- 3.（B1，merge-reviewer PR #98 review blocker）刪除一個「名下有目前仍是軟刪狀態、
+--    且 deleted_by 是他」的內容的使用者帳號，必須成功——trigger 要放行 FK 的
+--    on delete set null RI 動作，不能讓帳號刪不掉
 -- ===========================================================================
 begin;
 
@@ -213,6 +253,62 @@ do $$
 declare
   v_family uuid := 'fa000000-0000-4000-8000-000000000001';
   v_child uuid := '2a000000-0000-4000-8000-000000000001';
+  v_owner1 uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_diary uuid;
+  v_deleted_at timestamptz;
+  v_deleted_by uuid;
+begin
+  -- 先確保刪掉 owner1 之後家庭仍有 owner（帳號刪除本身不是本票範圍，這裡只借用
+  -- 「先轉移 owner、再刪帳號」這個 MVP 支援的流程作為 B1 的測試前提——reviewer
+  -- 原始 repro 特別指出「先轉移 owner 也沒用」，這裡完整重現這個順序）。
+  update public.family_members set role = 'owner'
+   where family_id = v_family and user_id = 'a0000000-0000-4000-8000-000000000003';
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner1, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_diary := public.create_diary_entry(v_family, v_child, 'B1：owner1 軟刪的日記', current_date);
+  perform public.set_diary_deleted(v_diary, true);
+  reset role;
+
+  select deleted_at, deleted_by into v_deleted_at, v_deleted_by from public.diaries where id = v_diary;
+  if v_deleted_by is distinct from v_owner1 then
+    raise exception 'FAIL SETUP：deleted_by 應該是 owner1（%），實際 %', v_owner1, v_deleted_by;
+  end if;
+
+  -- B1：刪除 owner1 的帳號（auth.users，cascade 到 profiles、family_members；
+  -- diaries.deleted_by 走 FK 的 on delete set null）——這句 DELETE 之前若沒有 B1
+  -- 的放行判定式，會在 RI 動作寫回 diaries.deleted_by 時被這支 trigger 打回
+  -- owner1 的舊值，FK 檢查噴 23503（見 migration 檔頭 B1 段落的實測重現）。
+  set local role postgres;
+  delete from auth.users where id = v_owner1;
+  reset role;
+  raise notice 'ok：刪除曾軟刪過內容的使用者帳號（已轉移 owner 身分）成功，沒有被 trigger 打死（B1）';
+
+  select deleted_at, deleted_by into v_deleted_at, v_deleted_by from public.diaries where id = v_diary;
+  if v_deleted_at is null then
+    raise exception 'FAIL B1：owner1 帳號刪除後，這篇日記竟然不是刪除狀態了（deleted_at 變 NULL）——RI 動作不該連帶清掉 deleted_at';
+  end if;
+  if v_deleted_by is not null then
+    raise exception 'FAIL B1：owner1 帳號刪除後，deleted_by 應該被 RI 動作清成 NULL，實際仍是 %', v_deleted_by;
+  end if;
+  raise notice 'ok：owner1 帳號刪除後，內容仍是已刪除狀態，deleted_by 正確被 RI 動作清成 NULL（B1）';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 4.（B3，merge-reviewer PR #98 review 應修）deleted_by 為 NULL 一律視為「移除者
+--    不明」，只有 owner 能還原——不論 NULL 的成因是既有資料還是帳號被刪除
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_child uuid := '2a000000-0000-4000-8000-000000000001';
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
   v_member uuid := 'a0000000-0000-4000-8000-000000000002';
   v_diary uuid;
   v_deleted_at timestamptz;
@@ -231,18 +327,87 @@ begin
     raise exception 'FAIL SETUP：模擬的既有列 deleted_by 應該是 NULL';
   end if;
 
-  -- 作者（仍是成員）呼叫還原：deleted_by 是 NULL，不落入還原鎖的任何一個條件
-  -- （`old.deleted_by is not null` 不成立），維持 LS-57 之前的行為，應該成功。
+  -- B3：作者（仍是成員，通過「還是不是這個家庭成員」的基本授權檢查）呼叫還原，
+  -- deleted_by 是 NULL——視為「移除者不明」，一律擋下，不是 LS-57 初版「NULL 就
+  -- 放行」的行為。
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.set_diary_deleted(v_diary, false);
+    raise exception 'FAIL B3：作者竟然能還原一篇 deleted_by 為 NULL 的既有已刪除日記——NULL 應該視為「只有 owner 能還原」';
+  exception when sqlstate 'LS027' then
+    null;
+  end;
+  reset role;
+  select deleted_at into v_deleted_at from public.diaries where id = v_diary;
+  if v_deleted_at is null then
+    raise exception 'FAIL：被 LS027 擋下的還原呼叫，deleted_at 竟然還是被清掉了';
+  end if;
+  raise notice 'ok：deleted_by 為 NULL 的既有已刪除日記，作者呼叫還原拿到 LS027（B3：NULL 視為移除者不明，只有 owner 能還原）';
+
+  -- owner 可以還原 deleted_by 為 NULL 的內容，不受影響。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
   perform public.set_diary_deleted(v_diary, false);
   reset role;
   select deleted_at into v_deleted_at from public.diaries where id = v_diary;
   if v_deleted_at is not null then
-    raise exception 'FAIL：deleted_by 為 NULL 的既有已刪除日記，作者呼叫還原應該成功，實際還是刪除狀態';
+    raise exception 'FAIL：owner 還原 deleted_by 為 NULL 的既有已刪除日記應該成功';
   end if;
-  raise notice 'ok：deleted_by 為 NULL 的既有已刪除日記，作者仍可自行還原（LS-57 之前的行為，不回溯鎖死既有資料）';
+  raise notice 'ok：owner 可以還原 deleted_by 為 NULL 的既有已刪除日記（B3）';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 5. 回歸：trigger 的推導／還原鎖不能誤傷「沒有觸碰 deleted_at」的一般欄位編輯
+--    ——update_comment 對已軟刪留言的編輯（LS-58 既有行為）
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_author uuid := 'a0000000-0000-4000-8000-000000000002';
+  v_media uuid := '3a000000-0000-4000-8000-000000000001';
+  v_comment uuid;
+  v_body text;
+  v_deleted_at timestamptz;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_comment := public.create_comment(v_family, 'media', v_media, '原始留言');
+  reset role;
+
+  -- owner 軟刪這則留言（作者不是這則留言 deleted_by 的人）。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.set_comment_deleted(v_comment, true);
+  reset role;
+
+  -- 作者用 update_comment 編輯內容——這支 RPC 完全不碰 deleted_at（LS-58 定案：
+  -- 已軟刪除的留言仍可編輯），trigger 不該因為「old.deleted_by 是 owner、不是我」
+  -- 就誤擋這次呼叫（trigger 只在 deleted_at 真的被觸碰時才推導／檢查還原鎖）。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.update_comment(v_comment, '軟刪後仍能改（LS-57 trigger 不該誤傷）');
+  reset role;
+
+  select body, deleted_at into v_body, v_deleted_at from public.comments where id = v_comment;
+  if v_body <> '軟刪後仍能改（LS-57 trigger 不該誤傷）' then
+    raise exception 'FAIL：owner 軟刪的留言，作者用 update_comment 編輯內容應該仍然成功，實際 body=「%」', v_body;
+  end if;
+  if v_deleted_at is null then
+    raise exception 'FAIL：update_comment 不該動到 deleted_at，但軟刪狀態竟然被清掉了';
+  end if;
+  raise notice 'ok：owner 軟刪的留言，作者仍可用 update_comment 編輯內容且不觸發 LS027（trigger 沒有誤傷沒有觸碰 deleted_at 的一般編輯）——LS-57 R1 回歸';
 end;
 $$;
 
