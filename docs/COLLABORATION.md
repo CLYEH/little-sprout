@@ -49,7 +49,9 @@
 - 多張 ticket 平行時各自 worktree，**禁止跨 worktree 編輯檔案**；合併完成後移除 worktree。
 - 首次 clone 後執行 `git config core.hooksPath .githooks` 啟用 gate hooks（worktree 共用同一份 config，不必重設）。
 
-**Harness 變更例外**：協作規約與 harness 檔（`CLAUDE.md`、`docs/COLLABORATION.md`、`.claude/agents/`、`scripts/gates/`、`.githooks/`、`.github/`、`.mcp.json`）不走 feature→QA 全流程，比照 hotfix：從 `main` 切 `hotfix/LS-<n>-*` branch、PR 回 `main`（CI 照跑），合併後 back-merge 到 `test` 與 `development`——這些檔案必須在所有分支即時一致。
+**Harness 變更例外**：協作規約與 harness 檔（`CLAUDE.md`、`docs/COLLABORATION.md`、`.claude/agents/`、`.claude/settings.json`、`scripts/gates/`、`scripts/ops/`、`.githooks/`、`.github/`、`.mcp.json`）不走 feature→QA 全流程，比照 hotfix：從 `main` 切 `hotfix/LS-<n>-*` branch、PR 回 `main`（CI 照跑），合併後 back-merge 到 `test` 與 `development`——這些檔案必須在所有分支即時一致。
+
+**harness PR 併入 `main` 後，先 pull 主 checkout 再派 agent（LS-71）**：agent 定義（`.claude/agents/`）、`CLAUDE.md`、專案層 `.claude/settings.json` 與 gate 腳本都是從**主 checkout**（repo 根目錄，不是 worktree）讀的——harness PR 併了但主 checkout 沒 `git pull --ff-only origin main`，接下來派出的每個 agent 都在用舊規約。SessionStart hook 會在 session 開頭偵測主 checkout 落後 `origin/main` 並提示（§4-b）；session 中途併入的靠 orchestrator 在 merge 後立刻 pull（§7）。**並行 harness PR 的合併順序**：兩張 harness 票同時在飛時幾乎必撞 `docs/COLLABORATION.md` §7 對照表尾與 `.github/workflows/ci.yml` 的自測 step——先併者不動，**後併者負責 `git merge origin/main` 解衝突再 push**（PR 頁 CONFLICTING 不會跑 CI，`merge-conflict-check` 只驗 push 當下，§7）。
 
 **本地合併版 back-merge 的分支命名（LS-56 補記）**：GitHub 偶爾把 `main`→`development`／`test` 的 back-merge PR 誤判 CONFLICTING（本地 `git merge-tree` 零衝突——LS-54 PR #71 實測）。此時改在本地把 `main` merge 進目標分支的臨時分支再開 PR，該分支**必須命名 `hotfix/LS-<n>-backmerge-<target>`**（例：`hotfix/LS-54-backmerge-development`）。**本變通只適用 `<target>=development`**：方向矩陣 `base=test` 只收 `development|main|revert-*`，`hotfix/*` 開向 `test` 會被擋死；`test` 端若誤判 CONFLICTING，改 close／reopen 該 PR 或重推一個 head=`main` 的 PR，不放寬矩陣。命名成 `back-merge/*` 會被擋：CI 由 `rules` job 方向矩陣擋（PR #73 被擋、#74 改名後通過）、本機由 `commit-gate.sh` 的 branch 命名 regex 擋，不必另開規則。
 
@@ -73,12 +75,19 @@ type ∈ `feat|fix|chore|docs|refactor|test|perf|design`；scope 可省略。禁
 
 **暫存檔（scratchpad）**：agent 的暫存檔（PR body、handoff 草稿、取證輸出…）檔名一律 `LS-<n>-<用途>.<ext>`，或放進 `mktemp -d` 子目錄；禁止 `pr-body.md` 這類無票號通名——平行 agent 共用同一個 scratchpad 目錄會互相覆寫（2026-08-24 LS-53／LS-56 撞檔，LS-56 的 body 被 `gh pr edit` 貼上 PR #78，LS-63）。檔名本身無機械 gate，靠上列 PR body 檢查攔它要防的結果。
 
+**派工 prompt 固定五條（LS-71）**——orchestrator 派任何會寫檔／開 PR 的 agent 都貼進 prompt（general-purpose agent 不讀本檔，只有 prompt 到得了）：
+1. 暫存檔一律 `LS-<n>-<用途>.<ext>` 或 `mktemp -d`（上段；LS-63 事故）。
+2. `gh pr create/edit --body-file <f>` 前先 `bash scripts/gates/pr-body-check.sh <f>`（CI 亦驗檔頭段含分支票號）。
+3. `.test.sh` 失敗分支用 `${name}`，不寫 `"$name（"`（bash 3.2 會炸，LS-59）。
+4. 分段落地：長工作每完成一項就落地＋commit（.pen 存檔、程式 commit-gate 過就 commit），不准累積到最後一次交——LS-46 R8 第一次派工 4.5 小時無存檔。
+5. handoff「未完成／剩餘」欄必列 reviewer 每一條 informational 的處置（已修／另票 LS-<m>／不修＋理由），一條不能省（CLAUDE.md「每個 agent 都要遵守」）。
+
 **Handoff 訊息**（subagent 完成或交接時，一律用此格式）：
 ```
 Ticket：LS-<n>
 已完成：（逐項）
 已驗證：（怎麼驗的：測試名稱／指令輸出／截圖）
-未完成／剩餘：
+未完成／剩餘：（reviewer 全部 informational 的處置逐條列：已修／另票 LS-<m>／不修＋理由）
 風險與已知問題：
 產出位置：branch／PR／.pen frame 名稱
 ```
@@ -96,6 +105,25 @@ Ticket：LS-<n>
 | **收尾 gate** | QA 過後、Done 之前 | ① dead-code-sweeper 巡檢 feature 引入的死碼（findings 開 fix 票或併入下票）② orchestrator 的 **lesson learning review**：gate 攔截／漏接、返工原因、harness 與設定改善項（開票）、工具缺口、model 政策調整。兩者記於 ticket comment，缺一不得進 Done | dead-code-sweeper + orchestrator |
 
 Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。gate 工具缺失（如有 Swift 檔但 SwiftLint 未裝）→ 直接 fail，不得靜默跳過。
+
+## 4-b. Orchestrator 巡檢與 session 連續性（LS-71）
+
+巡檢要抓的是「**無依賴卻沒人動**」的項——PR 開著沒人審／審過沒人併、分支領先 remote 沒 push（agent 等自己的背景 push 不醒）、worktree 有變更卻長時間沒 commit（設計 agent 4.5h 無存檔）、Ready 沒人接、QA 票 test 分支沒含。這些不會自己好、也沒有人會通知，靠 orchestrator 定期巡（2026-08-25 三種停滯的來源）。
+
+**工具**：`bash scripts/ops/patrol.sh [stale_minutes] [--brief|--json] [--no-fetch] [--no-pr] [--repo <path>]`——只讀不寫（唯一寫入是 `git fetch origin`），列 open PR（mergeState／review／幾分鐘沒更新）、三分支落後數、主 checkout 是否落後 `origin/main`、每個 worktree 的 local vs remote／未 push／dirty 停滯；`--brief` 只印表頭＋異常行（hook 用），`--json` 給程式讀；時間一律 epoch（`git log --format=%ct`、gh 內建 jq 的 `fromdateiso8601`），macOS／GNU 都能跑；gh 未裝或失敗只標「略過」不炸。自測 `scripts/ops/patrol.test.sh`（合成 repo，掛 CI `rules` job）。Linear 那一半要用 MCP `list_issues` 對照，腳本只印提醒。
+
+**三種停滯型態**（腳本判定規則；stale＝參數分鐘數，預設 45）：
+1. **PR 停滯**：CONFLICTING／UNSTABLE／BEHIND／CHANGES_REQUESTED 立即標；CLEAN 且 reviewDecision＝APPROVED 立即標「可併」；其餘 CLEAN／BLOCKED 超過 stale 沒更新標 ⏳（草稿不標）。
+2. **分支停滯**：有 commit 但分支從未 push；領先 remote 且最後 commit 超過 stale（push gate 卡）；落後 remote（別處 push 過）；已 push、無 open PR、最後 commit 超過 stale。
+3. **工作區停滯**：有未提交變更（不含 untracked）且最後改動超過 stale；worktree 建好超過 stale 仍 0 commit 無變更（尚未開工）；分支已併入 base（自 merge-base 0 commit、但分支 reflog 有過 commit）而 worktree 未移除（§2：合併完成後移除 worktree）。「最後 commit 幾分鐘前」只在分支自 merge-base 後有 commit 時才看——新 worktree 的 HEAD 就是 base commit，拿它的時間會把剛建好的 worktree 誤判成停滯（scratchpad 原型的 bug）；0 commit 時看 dirty 檔 mtime 與 worktree 的 `.git` 檔 mtime。
+
+**Session 連續性**（新 session 不靠記憶檔就能接手）：
+- **SessionStart hook**（專案層 `.claude/settings.json`，入版控 → `scripts/ops/session-start.sh`，timeout 30s）：startup／resume／clear／compact 後跑 `patrol.sh --brief`，把巡檢摘要＋兩條指示注入 context——①主 checkout 落後 `origin/main` 時先 `git pull --ff-only origin main` 再派工（§2）；②本 session 尚未建巡檢 cron 就立即建（下方模板）。fail-soft：patrol 炸掉／repo 找不到仍輸出合法 JSON、exit 0，錯誤寫在 context 裡，不擋 session。與使用者層的 SessionStart hook 並存不覆蓋；改 `settings.json` 後 settings watcher 要 `/hooks` 或重啟才載入。驗法：`echo '{}' | bash scripts/ops/session-start.sh | jq -e '.hookSpecificOutput.additionalContext'`。
+- **巡檢 cron**（`CronCreate`，`*/26 * * * *`；session-only、7 天到期，所以每個新 session 都由 hook 提醒重建）——prompt 模板（hook 引用的就是這段）：
+
+  > 跑 `bash scripts/ops/patrol.sh 40`＋linear `list_issues`（Ready／In Progress／In Review／QA），只處理無依賴卻沒人動的項：CLEAN 且已 APPROVE 的 PR → 併；CLEAN 無 review → 派 merge-reviewer；分支領先 remote >40 分鐘 → 催／重派；Ready 無人接 → 派工；In Progress >60 分鐘無 commit 且無 dirty → 查勤；QA 但 test 未含 → 晉升；有動作記一行，全正常回『巡檢：無異常』
+
+- 巡檢有動作時在對應 ticket 留 comment（§6 Checkpoint 同理），讓下一個 session 看得到誰在等什麼。
 
 ## 5. Linear（協作狀態機）
 
@@ -124,6 +152,7 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 - **Secrets**：金鑰一律不進 repo。Client 端用 gitignored 的 `Secrets.xcconfig`；CI 用 GitHub Secrets；`service_role` key 永不出現在 client 或 repo。
 - **回滾**：正式站問題以 revert PR 處理（GitHub Revert 按鈕產生的 `revert-*` head 在 CI 方向矩陣中對三條保護分支皆合法）；保護分支禁止 force-push。
 - **雲端資料庫只透過 migration 變更**：schema／policy 變更一律走 `supabase/migrations`＋PR，**禁止用 Supabase MCP 或 dashboard 直接改正式專案**。機械面：`.mcp.json` 的 supabase MCP 以 `--read-only --project-ref` 鎖唯讀與專案（LS-43 起走 PAT/stdio，PAT 存 .env），需要寫入時由使用者本人臨時解鎖。**注意：PAT 是帳號層級、具完整寫入權的 Management API 憑證，唯讀鎖只在本機 client 端生效，且 Management API 路徑繞過 RLS——`.env` 的保管等級＝正式站的保管等級**。`project_ref` 視為公開資訊（本來就會出現在 app 的 API URL）。
+- **正式站 `supabase db push` 每次需使用者當次授權（LS-71）**：對正式專案執行 `supabase db push`（及任何會改雲端 schema／資料的 CLI 指令）每一次都要使用者本人**當次**口頭授權——不得沿用上一次的授權、不得寫進 permissions allow 清單、不得由 agent 代跑。auto-mode 的分類器會擋這類指令：被擋就停下回報使用者，**不改寫指令繞過**（拆 pipe、包進腳本、換工具都算繞）。schema 內容本身仍走上列「雲端資料庫只透過 migration 變更」（migration＋PR＋CI）；這條管的是「按下部署」那一步。
 - **API 變更紀律（LS-41）**：契約的真身＝migrations＋錯誤碼＋RLS 行為，`docs/API.md` 是 iOS 端唯一可消費的契約文件——變更 RPC 簽章／表／錯誤碼／回傳形狀必須與 migration **同一 PR** 更新 API.md（gate：`api-contract-check`——本機 push-gate 文字解析 best-effort、CI `--catalog` 查活 DB 為權威；錯誤碼表 ↔ Swift `LSErrorCode` 的集合一致自 LS-54 起由 `error-codes-check` 對帳，但 migration 內 raise 的碼 ↔ 錯誤碼表、與 `RETURNS TABLE` 欄位仍無機械涵蓋，靠 merge-reviewer）。**UI 上線前可自由改**：某 RPC 尚無出貨的 iOS 呼叫端時，改簽章或語意不需相容層，doc＋tests 同 PR 動即可。**UI 首次上線後傾向 additive-only**：該 RPC 已有出貨 client 之後，變更以「新增」為原則（新參數帶 default、新語意開 `_v2`），不破壞既有簽章；確有必要的破壞性變更須在 PR body 以 `BREAKING:` 段落寫明受影響的 app 版本與遷移路徑，並在 API.md 該條目加相容性註記。「已上線」的判定依據＝API.md **§4 逐支 RPC 條目**標記 `shipped: <app 版本>`（**不得寫進 §9 機械對帳區塊**，那裡是逐行精確比對）；標記自 LS-25 TestFlight 起維護（補齊全部 RPC 的 `shipped:` 是 LS-25 的驗收條件之一），**fail-safe（逐條保守）**：LS-25 完成後，§4 條目**未標** `shipped:` 者一律視為已上線，確定未出貨者須顯式寫 `shipped: none`（漏標倒向「多做相容層」而非無聲放行；此形狀可機械化：檢查每個 §4 條目底下皆有 `shipped:` 行）；LS-25 之前全部 RPC 視為上線前。**此三條的機械涵蓋（LS-53 起）**：migration 被 `migration-breaking-check` 判 BREAKING 時，CI 驗 `BREAKING:` 行錨定段落＋`docs/API.md` 同 PR 變更（見上方 DB migration gate 條）；additive-only 本身、`shipped:` 標記、以及不經 migration 的破壞性變更（只改 API.md 語意、Swift 端）仍靠 merge-reviewer 與 orchestrator 人工把關；§7 對照表分列。
 - **Checkpoint**：每張 ticket 完成，orchestrator 把 handoff 訊息留在 Linear ticket comment，讓狀態可還原、可交接。
 - **Feature 收尾儀式**：「feature」的粒度由 orchestrator 判斷並記錄——單張 feature 票，或同批 promote 的票群共用一次。① dead-code-sweeper 巡檢（範圍＝該 feature 的累積 diff）；② orchestrator retro（lesson learning review）——固定檢視：各 gate 的攔截／漏接記錄、review 輪數與返工原因、agent 派工與 model 選擇是否恰當、需要補的工具或 MCP、規約與 gate script 的改善項。改善項一律開票（harness 票走 hotfix 流程），不留口頭。純 harness 票可免 dead-code 巡檢，retro 照做（輕量版）。
@@ -166,3 +195,8 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 | feature 收尾必經 dead-code 巡檢＋retro | 掛在狀態機：兩者的 ticket comment 是進 Done 的前置條件，orchestrator 執行狀態轉換時把關 | ⚠️ 人工（狀態機承載） |
 | API 上線後 additive-only／`BREAKING:` 段落／`shipped:` 標記（§6，LS-41） | `BREAKING:` 段落：經 migration 觸發者自 LS-53 起機械驗（上列）；不經 migration 的破壞性變更（只改 API.md 語意、Swift 端）與 additive-only 本身無機械 gate——merge-reviewer 與 orchestrator 人工把關；`shipped:` 逐條存在性可機械化（待補） | ⚠️ 混合 |
 | 審查取證（截圖／匯出／掃描輸出）不入版控，固定落在 `.claude/evidence/<票號>/<輪次>/`（worktree 相對；ui-designer `r<n>/`、visual-reviewer `r<n>-review/`、qa `qa<n>/`） | 根 `.gitignore` ignore `.claude/evidence/`（`git add -f` 硬加由 `tracked-ignored-check` 擋）＋pre-commit `scripts/gates/evidence-path-check.sh`（commit-gate 第 4 步）：staged 路徑（index，`git diff --cached --name-only -z --diff-filter=d`：NUL 分隔讀取，含 `"`／`\`／換行的檔名不會因 `--name-only` 加引號而漏掉——PR #94 R1 I1；新增／修改／rename 目的地，不含刪除——清掉歷史誤入版控的取證要放行）任一目錄層以 `review` 開頭或含 `-review`（`review*`／`*-review*`；不是 `*review*`——那會誤擋 Xcode 預設的 `Preview Content/`，orchestrator 裁決收窄）、或以 `ls<數字>` 開頭，或 `*.png` 不在 `design/`／`LittleSprout/Assets.xcassets/`／`LittleSprout/Preview Content/`（Xcode 模板的 `Preview Assets.xcassets`）／`docs/img/` 白名單即紅並列出檔案與解法（白名單原為整個 `docs/`——repo 最常寫的目錄、放行不 fail loud，R1 M1 收窄成 `docs/img/`；`Assets*` 會吃掉 `AssetsFake/`，R1 I4 改精確目錄名）；所有比對 `shopt -s nocasematch` 大小寫不敏感（`LS46r9/`、`Review-shots/`、`.PNG` 皆擋，白名單亦然——macOS 檔案系統本就不分大小寫，R1 I3）；目錄名規則不看白名單（`docs/img/` 底下也不准有 `*-review/`），檔名層不算（`visual-reviewer.md`、`ls46-notes.md` 放行）；帶路徑參數時目錄不存在或 `git diff` 失敗一律 exit 2 fail closed（R1 I2）；自測 `evidence-path-check.test.sh`（24 組）掛 CI `rules` job（LS-61）。盲區：只看 index——**未追蹤**的取證目錄不管（歷史散落的 `ls46r7-review/`、`ls46r8/`、`ls46r8-review/` 留在 LS-46 worktree 不搬），`git status` 乾淨靠三支 agent 的存放指示；目錄規則只認歷史形狀（`ls<n>`、`review*`／`*-review*`）——新慣例的輪次目錄名 `r<n>/`／`qa<n>/` 或其他名字（`screens/`）誤落在 worktree 根時只剩 png 規則擋得住，非 png 的掃描輸出會漏（R1 I5，靠 merge-reviewer scope）；白名單外的新資產路徑（如未來的 `LittleSprout/Resources/`、第二個 `.xcassets`）要改腳本白名單（fail loud，不會靜默放行）；CI 只跑自測、不對 PR diff 重跑，`--no-verify` 繞過後無伺服器端兜底（`--base` 模式另票，R1 I10） | ✅ hook（CI 自測；未追蹤取證⚠️人工） |
+| 新 session 開頭必巡檢（open PR／分支領先 remote／dirty 停滯／尚未開工／主 checkout 落後 `origin/main`，§4-b） | 專案層 `.claude/settings.json` SessionStart hook → `scripts/ops/session-start.sh`：跑 `patrol.sh --brief`，摘要＋指示注入 `hookSpecificOutput.additionalContext`；fail-soft（patrol 炸掉／repo 找不到仍輸出合法 JSON、exit 0，錯誤寫在 context 裡，不擋 session）；`scripts/ops/patrol.test.sh` 用合成 repo（file:// 裸 origin＋七個 worktree）驗各停滯型態判定的正負樣本、`--json` 合法、gh 不可用不炸、hook 輸出合法 JSON 且 settings.json 有掛上，掛 CI `rules` job（LS-71）。盲區：hook 只在 startup／resume／clear／compact 觸發，session 中途靠 cron；settings 改了要 `/hooks` 或重啟才載入；Linear 那一半（Ready 無人接／QA 但 test 未含）靠 orchestrator 用 MCP 對照 | ✅ hook（CI 自測） |
+| 每個 session 要有巡檢 cron（`*/26 * * * *`，§4-b） | 同上 hook 每次注入「尚未建就立即 CronCreate」——cron 建了沒有無法從 hook 端驗（CronCreate 是 session 內工具、7 天到期），靠 orchestrator 照做 | ⚠️ 提示非強制 |
+| harness PR 併入 main 後先 pull 主 checkout 再派工（§2） | 同上 hook：主 checkout 落後 `origin/main` 即在 context 提示先 `git pull --ff-only origin main`；session 中途併入的靠 cron 的 patrol 輸出＋orchestrator 自律 | ⚠️ 混合（session 開頭機械、中途人工） |
+| 正式站 `supabase db push` 每次需使用者當次授權（§6） | auto-mode 分類器擋雲端寫入指令（Claude Code 層、非 repo 內 gate；被擋就停下回報）；「不改寫指令繞過」靠規約 | ⚠️ 混合 |
+| handoff「未完成／剩餘」欄必列 reviewer 全部 informational 的處置（CLAUDE.md；派工 prompt 五條之五，§3） | 無機械 gate——orchestrator 驗 handoff 時逐條對照 merge-reviewer 輸出，缺一退回 | ⚠️ 人工 |
