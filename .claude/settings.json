@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-.}/scripts/ops/session-start.sh\"",
+            "timeout": 30,
+            "statusMessage": "巡檢中（scripts/ops/patrol.sh --brief）…"
+          }
+        ]
+      }
+    ]
+  }
+}
