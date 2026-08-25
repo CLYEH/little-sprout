@@ -6062,7 +6062,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 880,
+      "height": 852,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -6095,7 +6095,7 @@
           "id": "vE2OF",
           "name": "Top",
           "width": "fill_container",
-          "height": 358,
+          "height": 456.6,
           "layout": "vertical",
           "children": [
             {
@@ -6119,17 +6119,70 @@
             },
             {
               "type": "frame",
-              "id": "WUvnT",
+              "id": "SzLhU",
               "name": "Print Stage",
               "width": "fill_container",
-              "height": 296,
+              "height": 394.6,
               "layout": "none",
               "children": [
                 {
                   "type": "frame",
-                  "id": "WjpXB",
+                  "id": "C3aJWF",
                   "x": 16,
-                  "y": 5,
+                  "y": 0,
+                  "name": "Wordmark Strip",
+                  "width": 361,
+                  "fill": "$print-paper",
+                  "cornerRadius": [
+                    0,
+                    0,
+                    "$radius-md",
+                    "$radius-md"
+                  ],
+                  "stroke": "$paper-edge",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "outer",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 6
+                  },
+                  "layout": "vertical",
+                  "padding": 4,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "G3kSy",
+                      "name": "App Name (Wordmark)",
+                      "metadata": {
+                        "type": "a11y",
+                        "accessibilityLabel": "萌芽日記",
+                        "exemptDynamicType": true,
+                        "role": "image"
+                      },
+                      "width": 190,
+                      "height": 90.6,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "mengya-diary-crayon-v3.png",
+                        "mode": "fit"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "nfB0j",
+                  "x": 16,
+                  "y": 103.6,
                   "name": "Print",
                   "width": 361,
                   "height": 286,
@@ -6255,7 +6308,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "V6irj",
+                      "id": "Xwbgh",
                       "name": "Photo Wrap",
                       "clip": true,
                       "width": "fill_container",
@@ -6264,7 +6317,7 @@
                       "children": [
                         {
                           "type": "rectangle",
-                          "id": "NSz7I",
+                          "id": "NCn3t",
                           "x": 0,
                           "y": -84,
                           "name": "Hero Photo",
@@ -6279,7 +6332,7 @@
                         },
                         {
                           "type": "rectangle",
-                          "id": "iUXDF",
+                          "id": "xioo1",
                           "x": 0,
                           "y": 0,
                           "name": "Night Dim",
@@ -6291,14 +6344,14 @@
                     },
                     {
                       "type": "frame",
-                      "id": "GFqXe",
+                      "id": "EsL8D",
                       "name": "Imprint Row",
                       "width": "fill_container",
                       "justifyContent": "center",
                       "children": [
                         {
                           "type": "text",
-                          "id": "bPhGg",
+                          "id": "n4riFd",
                           "name": "Lab Imprint",
                           "fill": "$print-ink-secondary",
                           "content": "LITTLE SPROUT",
@@ -6312,12 +6365,12 @@
                   ]
                 },
                 {
-                  "id": "OMOpW",
+                  "id": "VUrCa",
                   "type": "ref",
                   "ref": "GEBcf",
                   "name": "Corner BL",
                   "x": 11,
-                  "y": 270,
+                  "y": 368.6,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M0 26 L0 0 L26 26 Z"
@@ -6328,12 +6381,12 @@
                   }
                 },
                 {
-                  "id": "OukhO",
+                  "id": "s3NQB",
                   "type": "ref",
                   "ref": "GEBcf",
                   "name": "Corner BR",
                   "x": 356,
-                  "y": 270,
+                  "y": 368.6,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M26 26 L26 0 L0 26 Z"
@@ -6344,12 +6397,12 @@
                   }
                 },
                 {
-                  "id": "ffSGE",
+                  "id": "MSHDo",
                   "type": "ref",
                   "ref": "GEBcf",
                   "name": "Corner TL",
                   "x": 11,
-                  "y": 0,
+                  "y": 98.6,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M0 0 L26 0 L0 26 Z"
@@ -6360,12 +6413,12 @@
                   }
                 },
                 {
-                  "id": "AX4zX",
+                  "id": "Or86v",
                   "type": "ref",
                   "ref": "GEBcf",
                   "name": "Corner TR",
                   "x": 356,
-                  "y": 0,
+                  "y": 98.6,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M26 0 L0 0 L26 26 Z"
@@ -6402,37 +6455,6 @@
               "layout": "vertical",
               "gap": "$sp-label",
               "children": [
-                {
-                  "type": "frame",
-                  "id": "YR66p",
-                  "name": "Wordmark Plate",
-                  "fill": "$print-paper",
-                  "cornerRadius": "$radius-md",
-                  "stroke": "$paper-edge",
-                  "strokeWidth": 1,
-                  "padding": 10,
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "m5JDVm",
-                      "name": "App Name (Wordmark)",
-                      "metadata": {
-                        "type": "a11y",
-                        "accessibilityLabel": "萌芽日記",
-                        "exemptDynamicType": true,
-                        "role": "image"
-                      },
-                      "width": 190,
-                      "height": 90.6,
-                      "fill": {
-                        "type": "image",
-                        "enabled": true,
-                        "url": "mengya-diary-crayon-v3.png",
-                        "mode": "fit"
-                      }
-                    }
-                  ]
-                },
                 {
                   "type": "text",
                   "id": "qG4sS",
@@ -27086,7 +27108,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "【R9 改寫，取代 R6 的 A′ 描述——晨報核可字標位置定案為 B】產品中文名「萌芽日記」（英文 Little Sprout 不變）。B 現況：蠟筆字標（mengya-diary-crayon-v3.png，四字等大，image fill）搬到標題列 Head、置於 Tagline 之上——iPhone 190pt、iPad 247pt（同比例縮放 0.95×，非各自定值）；AX3 下仍固定尺寸不隨字級放大（metadata.exemptDynamicType:true＋accessibilityLabel=\"萌芽日記\" 補 VoiceOver）。沖印品白邊 Imprint Row 改放小字「LITTLE SPROUT」（Lab Imprint 樣式：$fs-imprint、letterSpacing 3.5、$text-secondary），不再是大字標。白邊上的英文小字是 B 版新增；Brand 板 S1FuR 的退場規則本輪（R9-4）已收窄同步：LITTLE SPROUT 英文小字僅存在於歡迎頁相片白邊（印刷標記語意，跟隨 B 版式），app 其他 UI 一律不出現，不再與此段矛盾。四字等大理由不變：四個等大的字是一個詞，拆成「萌芽＋日記」會被讀成品牌＋品類。\n\n【R9 新發現：深色模式對比】字標搬到 Head 後直接畫在 app 深色背景上，深墨字標幾乎不可視（對比失敗，違反長輩優先高對比硬約束）。01c（ufdIl）加了一塊 $print-paper 底板包住字標（padding 10、cornerRadius $radius-md、stroke $paper-edge）撐住可讀性，但底板墊高導致 01c 宣告高度從 852 特例升到 880（其餘歡迎頁仍是 852，01c 是唯一例外）。下一輪如果要讓 01c 高度回歸 852 與其餘畫面一致，可考慮改用專用淺墨深色版字標素材（R4 曾產出 mengya-diary-crayon-v3-dark.png，R7 因舊設計不再需要而正式刪除；B 版重新需要它，需重新產生），改用素材後可拿掉底板。\n\n【R9-4 給 ios-dev 的實作註記】深色歡迎頁（01c）字標底板為設計例外——實作時直接沿用同一個 $print-paper token 當底板色，不需要另外出一份深色版字標素材或圖片資產。",
+                  "content": "【R9 改寫，取代 R6 的 A′ 描述——晨報核可字標位置定案為 B】產品中文名「萌芽日記」（英文 Little Sprout 不變）。B 現況：蠟筆字標（mengya-diary-crayon-v3.png，四字等大，image fill）搬到標題列 Head、置於 Tagline 之上——iPhone 190pt、iPad 247pt（同比例縮放 0.95×，非各自定值）；AX3 下仍固定尺寸不隨字級放大（metadata.exemptDynamicType:true＋accessibilityLabel=\"萌芽日記\" 補 VoiceOver）。沖印品白邊 Imprint Row 改放小字「LITTLE SPROUT」（Lab Imprint 樣式：$fs-imprint、letterSpacing 3.5、$text-secondary→R10 改 $print-ink-secondary），不再是大字標。白邊上的英文小字是 B 版新增；Brand 板 S1FuR 的退場規則本輪（R9-4）已收窄同步：LITTLE SPROUT 英文小字僅存在於歡迎頁相片白邊（印刷標記語意，跟隨 B 版式），app 其他 UI 一律不出現，不再與此段矛盾。四字等大理由不變：四個等大的字是一個詞，拆成「萌芽＋日記」會被讀成品牌＋品類。\n\n【R10 改寫，取代 R9 的底板方案】字標搬到 Head 後直接畫在 app 深色背景上，深墨字標對比失敗（違反長輩優先高對比硬約束）。R9 曾用 $print-paper 底板卡片包住字標撐住可讀性，但底板把手繪墨跡裝進框裡（讀起來像貼紙），且墊高 01c 宣告高度到 880（其餘歡迎頁仍是 852，成為特例）。R10 改為：字標從 Head 移到 Print Stage 頂緣的一張紙條上——紙條與相片同寬 361pt、貼齊 Print Stage 上緣，字標坐在紙條上；Head 只留 Tagline／Trust Row，省下的高度轉移給 Print Stage 吸收紙條所需空間，IUJ5Q 宣告高度回到與其餘歡迎頁一致的 852（無特例，slack 0.4pt 同 svedU 基準）。\n\n【深色模式字標紙條＝設計例外】同 $print-paper token 當紙條色，無需淺色資產（mengya-diary-crayon-v3-dark.png 不需重新產生）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
