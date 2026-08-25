@@ -7,6 +7,11 @@ import Foundation
 private final class PreviewAuthService: AuthService, @unchecked Sendable {
     var currentSession: AuthSession?
 
+    // Preview 不需要背景 session 變化；回傳一個永遠不會 yield 的空序列即可滿足協定。
+    var sessionUpdates: AsyncStream<AuthSession?> {
+        AsyncStream { _ in }
+    }
+
     func signInWithApple(idToken: String, nonce: String) async throws -> AuthSession {
         AuthSession(userID: UUID(), email: "preview@example.com", expiresAt: .distantFuture)
     }

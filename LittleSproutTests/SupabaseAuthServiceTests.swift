@@ -211,6 +211,43 @@ final class SupabaseAuthServiceTests: XCTestCase {
         XCTAssertEqual(service.currentSession?.email, "background-refreshed@example.com")
     }
 
+    func test_sessionUpdates_backgroundRefresh_forwardsSameSessionAsCache() async throws {
+        // LS-82 review F4：舊版用 `first(where:)` 沒有逾時——轉發邏輯壞掉時（stream 不再
+        // yield 目標值也不 finish）會永久掛住，直到 CI 40 分鐘 job timeout 才失敗（reviewer
+        // 實測）。改用跟其餘測試一致的 2 秒 expectation：逾時就是一條看得到名字的紅測試。
+        let client = TestSupabaseClient.make { [testUserID] request in
+            if request.url?.query?.contains("grant_type=id_token") == true {
+                return MockURLProtocol.StubResponse(
+                    statusCode: 200,
+                    body: SessionFixture.json(userID: testUserID, email: "parent@example.com")
+                )
+            }
+            return MockURLProtocol.StubResponse(
+                statusCode: 200,
+                body: SessionFixture.json(userID: testUserID, email: "background-refreshed@example.com")
+            )
+        }
+        let service = SupabaseAuthService(client: client)
+        _ = try await service.signInWithApple(idToken: "fake-id-token", nonce: "fake-nonce")
+
+        let forwardedEmail = OSAllocatedUnfairLock<String?>(initialState: nil)
+        let expectation = expectation(description: "sessionUpdates 收到背景刷新後的 session")
+        let consumeTask = Task {
+            for await session in service.sessionUpdates {
+                guard session?.email == "background-refreshed@example.com" else { continue }
+                forwardedEmail.withLock { $0 = session?.email }
+                expectation.fulfill()
+                break
+            }
+        }
+
+        _ = try await client.auth.refreshSession()
+        await fulfillment(of: [expectation], timeout: 2)
+        consumeTask.cancel()
+
+        XCTAssertEqual(forwardedEmail.withLock { $0 }, "background-refreshed@example.com")
+    }
+
     func test_initialSession_offlineWithExpiredLocalSession_doesNotClearCache() async throws {
         // N1：模擬「先前登入過、session 已過期，重開 app 時網路不通」——離線回訪不該被誤判
         // 成未登入。先用一個「線上」client 登入拿到一份已過期的 session（登入 RPC 本身不驗

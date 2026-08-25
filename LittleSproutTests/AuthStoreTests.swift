@@ -109,4 +109,58 @@ final class AuthStoreTests: XCTestCase {
 
         XCTAssertEqual(store.session, refreshed)
     }
+
+    // MARK: - sessionUpdates 訂閱（LS-17 R2 merge-reviewer N5／LS-82）
+
+    func test_sessionUpdates_signedOut_clearsSessionAndDeauthenticates() async throws {
+        // SDK 端偵測到 refresh token 被撤銷／重用會發 signedOut，這條路徑不經過任何
+        // AuthStore 方法呼叫——必須靠訂閱 sessionUpdates 才能反映，不能只靠 init／
+        // mutating 方法後／scenePhase 這三個既有快照時機（否則使用者會停在一個已登出
+        // 的 app 裡，見 ticket 描述）。RootView 的 root routing 直接讀
+        // `authStore.isAuthenticated()`，這裡在 store 層驗證同一個判斷。
+        let session = AuthSession(userID: userID, email: "a@example.com", expiresAt: .distantFuture)
+        let stub = StubAuthService(currentSession: session)
+        let store = AuthStore(authService: stub)
+        XCTAssertTrue(store.isAuthenticated())
+
+        stub.emitSessionUpdate(nil)
+
+        let expectation = expectation(description: "sessionUpdates 的 signedOut 事件把 session 寫回 nil")
+        let pollTask = Task {
+            while store.session != nil {
+                try await Task.sleep(nanoseconds: 5_000_000)
+            }
+            expectation.fulfill()
+        }
+        await fulfillment(of: [expectation], timeout: 2)
+        pollTask.cancel()
+
+        XCTAssertNil(store.session)
+        XCTAssertFalse(store.isAuthenticated(), "RootView 靠這個判斷決定要不要繼續顯示已登入內容")
+    }
+
+    func test_sessionUpdates_tokenRefreshed_doesNotClearSession() async throws {
+        // 對照上一條：tokenRefreshed 事件帶的是仍然有效的新 session，訂閱不能把它誤判成
+        // 登出——這裡直接把值轉發（不篩事件種類）就自然滿足，這條測試釘住這個預期不會
+        // 之後被「乾脆只在收到 nil 時才更新」之類的簡化悄悄破壞。
+        let stub = StubAuthService()
+        let store = AuthStore(authService: stub)
+        XCTAssertNil(store.session)
+
+        let refreshed = AuthSession(userID: userID, email: "refreshed@example.com", expiresAt: .distantFuture)
+        stub.emitSessionUpdate(refreshed)
+
+        let expectation = expectation(description: "sessionUpdates 的 tokenRefreshed 事件把新 session 寫進去，不是清成 nil")
+        let pollTask = Task {
+            while store.session == nil {
+                try await Task.sleep(nanoseconds: 5_000_000)
+            }
+            expectation.fulfill()
+        }
+        await fulfillment(of: [expectation], timeout: 2)
+        pollTask.cancel()
+
+        XCTAssertEqual(store.session, refreshed)
+        XCTAssertTrue(store.isAuthenticated())
+    }
 }
