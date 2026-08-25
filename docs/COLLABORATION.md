@@ -15,6 +15,7 @@
 - **qa subagent**：在 `test` branch 上依驗收條件驗收，UI 票必做視覺驗收（模擬器實際渲染，優先用 mobile-mcp，備援 `xcrun simctl` 截圖）。
 - **dead-code-sweeper subagent**：feature 收尾時巡檢該 feature 引入的死碼與殘留物（只報告不刪改）。
 - **visual-reviewer subagent**：對抗性視覺審查。**任何設計稿在送 orchestrator／使用者核可之前必須先過它**——以極嚴視覺標準獵殺 AI slop 與模板感，預設 ITERATE（退修；verdict 詞彙唯一：ITERATE／APPROVE），設計須自證三個記憶點才能通過。只審查不動檔。
+- **ui-designer 與 visual-reviewer 開工必先用 Skill 工具載入專案 skill `little-sprout-brand`**（`.claude/skills/little-sprout-brand/`：LS-46 定案的 tokens 與實測對比、字標與品牌、沖印品母題、長輩硬約束、專案版 slop 禁例、實作進場條件 12 項；載入失敗不得靜默、handoff／verdict 明說），skill 本體與兩份定義的接線由 `scripts/gates/brand-skill-check.sh` 在 CI 驗（LS-30，§7）。
 
 **Agent model 政策**（agent 定義檔的 `model:` 為預設；orchestrator 派工時得以 Agent 工具的 `model` 參數覆寫升級）：
 
@@ -206,6 +207,7 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 | 新畫面必有 .pen 設計稿 | CI 掃 diff 新增行的 View 宣告＋驗 body `Design:` 欄（換行式 conformance 掃不到，LS-10 起限定 feature|fix|hotfix head 執行——promote／back-merge 的內容已在來源 feature PR 驗過，PR body 標記也不會隨 promote 携帶）；設計稿真偽由 orchestrator 核 | ⚠️ 混合 |
 | 設計稿須過 visual-reviewer 對抗審查（≥3 輪迭代）才送人核 | 掛在 Design 狀態出口：ticket 須有**三輪以上輪次標記的審查記錄**＋末輪 APPROVE，orchestrator 轉換狀態時逐輪清點 | ⚠️ 人工（狀態機承載） |
 | ui-designer 必先載入 frontend-design skill | 無機械 gate——skill 載入發生在 subagent 內部；handoff checklist 有「skill 影響了哪些取捨」欄（載入失敗須明說），orchestrator 驗 handoff 兜底（LS-32） | ⚠️ 人工 |
+| ui-designer／visual-reviewer 必先載入專案 skill `little-sprout-brand`（LS-46 定案的設計語言：tokens／字標／母題／長輩硬約束／專案版 slop 禁例／進場條件 12 項；§1，LS-30） | `scripts/gates/brand-skill-check.sh`：驗 `.claude/skills/little-sprout-brand/SKILL.md` 存在可讀、frontmatter 第一行 `---` 且閉合、`name:` 等於目錄名 `little-sprout-brand`、`description:` 非空（name／description 是 Claude Code 列出 skill 的唯一依據，缺了 skill 就靜默不存在）、SKILL.md 引用的 `references/*.md` 全部存在（progressive disclosure 指標不得指到空檔）、`.claude/agents/ui-designer.md` 與 `visual-reviewer.md` 各含 `little-sprout-brand` 字樣（必載指示被拿掉即紅）；一次列出全部違規、exit 1；路徑／參數錯 exit 2 fail closed。掛 CI `rules` job（純檔案比對，所有 PR 都跑）；自測 `brand-skill-check.test.sh`（19 組，含對本 repo 實際接線跑一次）掛同 job。盲區：**載入動作本身在 subagent 內部、repo 側驗不到**——與 frontend-design 同型，靠 ui-designer handoff「skill 影響了哪些取捨」欄與 visual-reviewer verdict 開頭的載入狀態＋orchestrator 驗；**skill 內容是否與 `design/littlesprout.pen` Tokens 板同步無機械對帳**（動 Tokens 板／母題規則的設計票須同 PR 更新 skill，靠 merge-reviewer scope 維度；skill 內標「待補（需 Pen）」的值即待回填清單） | ✅ CI（接線機械；載入⚠️人工、內容同步⚠️人工） |
 | .pen 設計稿必須真實落地（Pencil 無 save 工具，編輯只在 app 記憶體） | `scripts/gates/design-landing-check.sh`：0 bytes／壞 JSON／空結構即紅，`--expect-nodes` 驗與畫布一致；**commit-gate 對 staged .pen 自動觸發＋CI rules job 對 diff 內 .pen 兜底**（皆無 N——「落地比記憶體舊」的深度驗證靠收工程序步驟 2/4，PR review 驗 handoff 輸出）（LS-26） | ✅ hook＋CI（深度驗證⚠️程序） |
 | MCP 必要 env 變數必須存在（FIGMA_PERSONAL_ACCESS_TOKEN、SUPABASE_ACCESS_TOKEN） | `.mcp.json` 的 `${VAR:?}` 展開——缺失／空值時 server 啟動即炸，`/mcp` 可見（LS-42） | ✅（fail loud 設計） |
 | project.yml ↔ .xcodeproj 同步（XcodeGen 雙來源） | CI：重跑 `xcodegen generate` 後 `git add -A -- LittleSprout.xcodeproj && git diff --cached --exit-code`（涵蓋 xcodegen 產生的全新 untracked 檔，LS-10 補上原本只比對已追蹤檔案的盲區；生成物 byte-identical，不 flaky；雙向漂移皆攔） | ✅ |
