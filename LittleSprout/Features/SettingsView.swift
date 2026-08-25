@@ -13,9 +13,15 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: AppSpacing.block) {
-            // `ContentUnavailableView(label:description:actions:)` 的 actions 插槽在本專案
-            // 用的 iOS 版本上實測不會渲染（模擬器手動點過，accessibility tree 也看不到）——
-            // 改用手排版面，登出鈕才是真的按得到的（LS-17 R2 review N7）。
+            // `ContentUnavailableView(label:description:actions:)` 的 actions 插槽在本畫面的
+            // 容器組合下（`RootView → AuthenticatedRootView → SectionTabView →
+            // SectionContentView`）確實會渲染（R2 handoff 原先寫「完全不渲染」不夠精確，
+            // R3 review B6 指出後重新量測更正）；但實測與 description 只隔約 20pt，視覺上
+            // 像 description 段落的延伸而非獨立動作（`.claude/evidence/LS-17/r3/
+            // b6-settings-before-production-hierarchy.png`，iPhone 17 Pro／iOS 26.0.1）。
+            // 改用手排版面後，`ContentUnavailableView` 只剩 label/description 兩段、不再
+            // 用 `.frame(maxHeight: .infinity)` 把整個 VStack 撐滿，登出鈕因此落在畫面下段、
+            // 與說明文字明顯分開（同目錄 `b6-settings-after-production-hierarchy.png`）。
             ContentUnavailableView {
                 Label("設定", systemImage: "gearshape")
             } description: {
