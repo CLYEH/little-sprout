@@ -370,6 +370,29 @@ else
 fi
 rm -rf "$race_lock"
 
+# ---- ⑨ 本 worktree 專屬機、xcrun simctl shutdown 本身失敗（STUB_SHUTDOWN_RC 非 0；LS-106 順手項——
+#        STUB_SHUTDOWN_RC 這個旋鈕原本沒有任何案例真的把它設成非 0）：shutdown_dedicated_simulator()
+#        用 `|| true` 接住 xcrun 的失敗，不能讓 shutdown 本身失敗拖垮整支 gate 的 exit code ----
+: > "$SHUTDOWN_LOG"
+out9a=$(run_gate STUB_TEST_RC=0); rc9a=$?
+: > "$SHUTDOWN_LOG"
+out9b=$(run_gate STUB_TEST_RC=0 STUB_SHUTDOWN_RC=1); rc9b=$?
+if grep -qF "shutdown ${ded_udid}" "$SHUTDOWN_LOG"; then
+  echo "✓ ⑨ shutdown 失敗（STUB_SHUTDOWN_RC=1）仍有嘗試呼叫 xcrun simctl shutdown"
+else
+  echo "✗ ⑨ shutdown 失敗時沒有嘗試呼叫 shutdown" >&2
+  printf '%s\n' "$out9b" | sed 's/^/    /' >&2
+  fail=1
+fi
+if [ "$rc9a" -eq "$rc9b" ]; then
+  echo "✓ ⑨ shutdown 失敗不影響 push-gate.sh 整體 exit code（成功與失敗時相同：${rc9a}）"
+else
+  echo "✗ ⑨ shutdown 失敗改變了 push-gate.sh 整體 exit code（成功時 ${rc9a}、失敗時 ${rc9b}）" >&2
+  printf '%s\n' "$out9b" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+
 # ---- ⑩ XcodeGen 漂移（LS-106；PR #165 head 4a3bfa9 同型）：project.yml 生出的 project.pbxproj 與
 #        commit 的不同 → push-gate.sh 在到達 xcodebuild 之前就擋，印出與 CI 相同的錯誤訊息。獨立小型
 #        synth repo（不共用 $R）——這組案例的重點是 1a 步本身，不需要 $R 既有的模擬器／shutdown 佈線 ----
