@@ -195,6 +195,64 @@ else
   echo '⚠ 略過 jq-缺-python3-備援 測試（本機找不到 python3）'
 fi
 
+# ============================================================
+# R1 F4（major）：放行形式原本是整條字串比對，鏈式命令裡一段放行形式會讓另一段的真違規免疫
+# ============================================================
+expect 'F4① grep key-only 段 ; 真違規段（deny，原本被免疫）' 2 "$(bash_json "grep -oE '^[A-Z_]+=' .env; cat .env")"
+expect 'F4② cut key-only 段 && 真違規段（deny）' 2 "$(bash_json 'cut -d= -f1 .env && cat .env')"
+expect 'F4③ source .env; cat .env（deny——source 從不在放行判定裡，cat 才是觸發點；§7／PR body 曾記成「這是已知盲區」是文件記錯洞，已修正）' 2 "$(bash_json 'source .env; cat .env')"
+expect 'F4④ 全段皆放行形式、無真違規（allow）' 0 "$(bash_json "grep -oE '^[A-Z_]+=' .env; echo done")"
+
+# ============================================================
+# R1 F6（major）：git commit -n（--no-verify 官方短旗標）；git push -n 是 --dry-run 不算
+# ============================================================
+expect 'F6① git commit -n（deny）' 2 "$(bash_json 'git commit -n -m x')"
+expect 'F6② git commit --no-verify -n 同時出現（deny，H1a 先命中也行）' 2 "$(bash_json 'git commit --no-verify -n -m x')"
+expect 'F6③ git push -n（allow，--dry-run 語意不同）' 0 "$(bash_json 'git push -n origin main')"
+expect 'F6④ git commit 一般用法（allow）' 0 "$(bash_json "git commit -m 'x'")"
+
+# ============================================================
+# R1 F7（major）：內建 Grep 工具的 path／glob 指向 .env，原本 matcher 沒蓋到
+# ============================================================
+expect 'F7① Grep path=.env（deny）' 2 '{"tool_name":"Grep","tool_input":{"pattern":".","path":".env","output_mode":"content"}}'
+expect 'F7② Grep glob=.env*（deny）' 2 '{"tool_name":"Grep","tool_input":{"pattern":"SECRET","glob":".env*"}}'
+expect 'F7③ Grep path 為目錄（allow）' 0 '{"tool_name":"Grep","tool_input":{"pattern":"TODO","path":"scripts"}}'
+expect 'F7④ Grep 一般用法（allow）' 0 '{"tool_name":"Grep","tool_input":{"pattern":"TODO","path":"scripts","glob":"*.sh"}}'
+
+# ============================================================
+# R1 F5（major）：自測完全沒有覆蓋 trap——把 trap 那行拿掉重跑，31 組原本全綠（票文驗收「腳本
+# 被弄壞時仍 deny」不成立）。做兩份暫存副本：都在 `input=` 之後插入 `exit 1`（模擬腳本中途一個
+# 沒被任何 if／&&／|| 包住、未捕捉的失敗），一份保留 trap、一份把 trap 那行拿掉——若移除 trap
+# 這件事不會改變行為，代表這組測試沒測到 trap 的作用（假綠）；本測試斷言兩者行為確實不同。
+# ============================================================
+mut_dir=$(mktemp -d)
+build_mutant() {   # $1=輸出路徑 $2=yes/no（是否保留 trap）
+  awk -v keep="$2" '
+    $0 == "trap on_exit EXIT" && keep != "yes" { next }
+    { print }
+    $0 == "input=" { print "exit 1  # LS-88 R2 mutation-test：模擬腳本中途未捕捉錯誤" }
+  ' "$pretool" > "$1"
+}
+build_mutant "$mut_dir/with_trap.sh" yes
+build_mutant "$mut_dir/no_trap.sh" no
+
+out=$(printf '%s' "$(bash_json 'echo hi')" | bash "$mut_dir/with_trap.sh" 2>&1); got=$?
+if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+  echo '✓ F5：trap on_exit EXIT 在——腳本中途未捕捉錯誤（注入 exit 1）仍 deny（exit 2）'
+else
+  echo "✗ F5：trap 在時應 deny（實得 exit ${got}：${out}）" >&2
+  fail=1
+fi
+
+out=$(printf '%s' "$(bash_json 'echo hi')" | bash "$mut_dir/no_trap.sh" 2>&1); got=$?
+if [ "$got" -ne 2 ] || ! case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+  echo '✓ F5：拿掉 trap 後同樣的中途錯誤不再變成 deny（證明 trap 是關鍵、不是巧合過關）'
+else
+  echo "✗ F5：拿掉 trap 後行為竟然沒變——這組測試沒測到 trap 的效果（實得 exit ${got}：${out}）" >&2
+  fail=1
+fi
+rm -rf "$mut_dir"
+
 rm -rf "$work"
 trap - EXIT
 

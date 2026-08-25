@@ -157,6 +157,13 @@ case "$tool_name" in
       final_deny "H1：命令含 --no-verify，繞過 commit/push gate，見 ${COLL_REF}"
     fi
 
+    # R1 F6：git commit 帶獨立 -n（--no-verify 的官方短旗標，效果相同，跳過 pre-commit／
+    # commit-msg）。限定只在 git commit 生效——git push -n 是 --dry-run，語意不同，擋了就是
+    # 誤擋（review 原話）。
+    if m "$command" -- 'git[[:space:]]+commit' && m "$command" -- '(^|[[:space:]])-n([[:space:]]|$)'; then
+      final_deny "H1：git commit -n 等同 --no-verify，繞過 commit gate，見 ${COLL_REF}"
+    fi
+
     # H1b：git push --force／-f／+<ref> 且目標字面提到受保護分支
     if m "$command" -- 'git[[:space:]]+push'; then
       if m "$command" -- '(^|[[:space:]])(--force(-with-lease)?|-f)([[:space:]]|$)' \
@@ -181,37 +188,70 @@ case "$tool_name" in
     fi
 
     # H2：以 cat／less／head／tail／sed／awk／grep／cut 或 `<` 重導向讀出 .env（含 .env.*）內容。
-    # 邊界（R1 F3）同 run.sh：前界＝開頭或非英數底線（`'`、`"`、`(`、`<`、`$`、`;` 都算）；
-    # 後界＝結尾或非英數底線點線（`;`、引號、`)` 都算），涵蓋 `cat .env;`、`cat '.env'`、
-    # `cat ".env"`、`< .env`、`$(cat .env)` 這些原本漏放的形狀。
-    if m "$command" -- '(^|[^A-Za-z0-9_])\.env(\.[A-Za-z0-9_.-]+)?($|[^A-Za-z0-9_.-])'; then
-      if m "$command" -- '\b(cat|less|head|tail|awk|cut|sed|grep)\b' \
-        || m "$command" -- "<[[:space:]]*['\"]?\\.env"; then
-        allowed=0
-        # 放行①：grep -o... '<pattern 以 = 結尾>'（擷取不到值，只到 key=）
-        if m "$command" -- '\bgrep\b' \
-          && m "$command" -- '-[A-Za-z]*o[A-Za-z]*\b' \
-          && m "$command" -- "=['\"]"; then
-          allowed=1
-        fi
-        # 放行②：cut -d= -f1（只取 key 欄）
-        if [ "$allowed" -ne 1 ] \
-          && m "$command" -- '\bcut\b' \
-          && m "$command" -- '-d[[:space:]]*=' \
-          && m "$command" -- '-f[[:space:]]*1\b'; then
-          allowed=1
-        fi
-        if [ "$allowed" -ne 1 ]; then
-          final_deny "H2：以 cat／less／head／tail／sed／awk／grep／cut 讀出 .env 內容（非 key-only 形式），見 ${COLL_REF}"
-        fi
+    # 邊界（R1 F3）：前界＝開頭或非英數底線（`'`、`"`、`(`、`<`、`$`、`;` 都算）；後界＝結尾或
+    # 非英數底線點線（`;`、引號、`)` 都算），涵蓋 `cat .env;`、`cat '.env'`、`cat ".env"`、
+    # `< .env`、`$(cat .env)` 這些原本漏放的形狀。
+    # R1 F4：放行形式原本是整條命令字串比對，`grep -oE '^[A-Z_]+=' .env; cat .env` 這種鏈式
+    # 命令會被第一段的放行形式免疫掉第二段真正讀值的 cat（實測：`source .env; cat .env`
+    # 其實本來就會 deny——cat 才是觸發點，source 從來不在放行判定裡；真正的洞是「放行形式」
+    # 出現在鏈的某一段，讓另一段的違規免疫）。先用 `;`／`&&`／`||`／`|`／換行保守切段（不追求
+    # 完整 shell parser，引號內含這些字元會被誤切——已知限制見檔頭），逐段判定，任一段命中
+    # 讀值且該段本身不是放行形式即 deny；放行只在該段本身命中放行形式時才成立。
+    h2_env_ref() { m "$1" -- '(^|[^A-Za-z0-9_])\.env(\.[A-Za-z0-9_.-]+)?($|[^A-Za-z0-9_.-])'; }
+    h2_trigger() {
+      m "$1" -- '\b(cat|less|head|tail|awk|cut|sed|grep)\b' \
+        || m "$1" -- "<[[:space:]]*['\"]?\\.env"
+    }
+    h2_allow() {
+      # 放行①：grep -o... '<pattern 以 = 結尾>'（擷取不到值，只到 key=）
+      if m "$1" -- '\bgrep\b' && m "$1" -- '-[A-Za-z]*o[A-Za-z]*\b' && m "$1" -- "=['\"]"; then
+        return 0
       fi
-    fi
+      # 放行②：cut -d= -f1（只取 key 欄）
+      if m "$1" -- '\bcut\b' && m "$1" -- '-d[[:space:]]*=' && m "$1" -- '-f[[:space:]]*1\b'; then
+        return 0
+      fi
+      return 1
+    }
+    h2_sep=$'\x1e'
+    # 純 bash 參數展開切段，不倚賴外部 tr（tr 若缺席會讓這裡切出 0 段、H2 整段靜默不擋——
+    # 用 param expansion 避免再多一個「缺了就 fail-open」的外部指令依賴）。
+    h2_segs=$command
+    h2_segs=${h2_segs//;/$h2_sep}
+    h2_segs=${h2_segs//&/$h2_sep}
+    h2_segs=${h2_segs//|/$h2_sep}
+    h2_segs=${h2_segs//$'\n'/$h2_sep}
+    while IFS= read -r -d "$h2_sep" h2_seg || [ -n "$h2_seg" ]; do
+      [ -n "$h2_seg" ] || continue
+      if h2_env_ref "$h2_seg" && h2_trigger "$h2_seg" && ! h2_allow "$h2_seg"; then
+        final_deny "H2：以 cat／less／head／tail／sed／awk／grep／cut 讀出 .env 內容（非 key-only 形式），見 ${COLL_REF}"
+      fi
+    done <<<"${h2_segs}${h2_sep}"
     ;;
   Read)
     base=${file_path##*/}
     case "$base" in
       .env|.env.*)
         final_deny "H2：Read 工具直接讀取 .env 檔內容，見 ${COLL_REF}"
+        ;;
+    esac
+    ;;
+  Grep)
+    # R1 F7：內建 Grep 工具不經 Bash／Read，`tool_input.path`／`glob` 直接指向 .env 一樣能吐出
+    # 內容，原本完全沒擋。只比對 basename（目錄型 path，如 "supabase/" 不受影響）。
+    gp=${grep_path##*/}
+    case "$gp" in
+      .env|.env.*)
+        final_deny "H2：Grep 工具的 path 指向 .env 檔案，見 ${COLL_REF}"
+        ;;
+    esac
+    gg=${grep_glob##*/}
+    # glob 本身就是萬用字元語法（`.env*` 這種字面星號很常見的寫法），用 `.env*` 一種形狀就夠
+    # （case 的 `*` 本來就會吃掉任何延伸，`.env.production`／`.env-local`／單純 `.env` 都算）；
+    # 跟 grep_path／file_path（字面檔名，非 glob）刻意不同，那兩處只認 `.env`／`.env.<suffix>`。
+    case "$gg" in
+      .env*)
+        final_deny "H2：Grep 工具的 glob 鎖定 .env 檔案，見 ${COLL_REF}"
         ;;
     esac
     ;;
