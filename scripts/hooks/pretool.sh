@@ -38,7 +38,11 @@
 #   - 字面變體可繞：把命令寫進暫存腳本再 `bash tmp.sh` 執行、拆成多個工具呼叫、變數組字串再 eval，
 #     這些都不在字面比對範圍內——H1–H3 抓的是「直接、字面可辨」的動作，不是完整 shell 語意解析。
 #   - H2 的偵測是「整條命令字串先切段」比對，不是完整 shell parser：只用 `;`／`&&`／`||`／`|`／換行
-#     切段（保守切法），不處理引號內含這些字元的情況（如 `echo ";" > .env` 會被誤切）——已知限制。
+#     切段（保守切法），不處理引號內含這些字元的情況（如 `grep -E "a|b" .env` 的 `|` 在引號內）——
+#     R2 F1 修正：引號內分隔字元會把同一句命令切成「動詞在這段、.env 在另一段」，兩段各自都不
+#     成立，於是改成「歧義即 deny」：整條命令同時符合 .env 引用與讀取動詞，但沒有任何一段同時
+#     符合兩者，就當作切壞了直接 deny（誤擋方向，不是漏放）；殘餘限制是切段本身仍不是完整
+#     shell parser，只是新增了「切不出雙重命中就別放行」這道保險。
 #   - H1 的保護分支比對是整字字面命中（`development`／`test`／`main` 出現在命令字串任何位置即算），
 #     不解析目前實際 checkout 的分支；`git push --force`（未寫明目標）不在字面比對範圍內；`git commit`
 #     與 `-n` 是否同屬一個子命令不看順序／位置，鏈式命令中兩者分屬不同子命令時可能誤擋（fail-safe
@@ -258,12 +262,26 @@ case "$tool_name" in
     h2_segs=${h2_segs//&/$h2_sep}
     h2_segs=${h2_segs//|/$h2_sep}
     h2_segs=${h2_segs//$'\n'/$h2_sep}
+    h2_any_both=0
     while IFS= read -r -d "$h2_sep" h2_seg || [ -n "$h2_seg" ]; do
       [ -n "$h2_seg" ] || continue
-      if h2_env_ref "$h2_seg" && h2_trigger "$h2_seg" && ! h2_allow "$h2_seg"; then
-        final_deny "H2：以 cat／less／head／tail／sed／awk／grep／cut 讀出 .env 內容（非 key-only 形式），見 ${COLL_REF}"
+      if h2_env_ref "$h2_seg" && h2_trigger "$h2_seg"; then
+        h2_any_both=1
+        if ! h2_allow "$h2_seg"; then
+          final_deny "H2：以 cat／less／head／tail／sed／awk／grep／cut 讀出 .env 內容（非 key-only 形式），見 ${COLL_REF}"
+        fi
       fi
     done <<<"${h2_segs}${h2_sep}"
+    # R2-F1（merge-reviewer R2）：切段不看引號本身是回歸來源——`grep -E "^(SUPABASE|ANON)=" .env`
+    # 這類分隔字元其實在引號內的命令，會被切成「動詞在這段、.env 在另一段」，兩段各自都通不過
+    # env_ref＋trigger 的雙重條件，於是整條被誤放行（跟 R1 F4 修的「放行形式讓另一段違規免疫」是
+    # 不同成因，這裡是切段本身把同一個邏輯命令切壞了）。修法：若「整條」命令本身同時符合 .env
+    # 引用與讀取動詞觸發，但切出來的段落沒有任何一段同時符合兩者——代表切段大概率把同一句命令
+    # 切壞了（歧義），寧可誤擋也不要漏放；`grep -oE '^[A-Z_]+=' .env | sort` 這類放行形式不受
+    # 影響，因為放行段本身就同時命中兩者（真正的 `|` 在放行段之外，不會把它切散）。
+    if [ "$h2_any_both" -ne 1 ] && h2_env_ref "$command" && h2_trigger "$command"; then
+      final_deny "H2：命令切段後 .env 引用與讀取動詞分屬不同段，可能是引號內分隔字元被誤切（歧義即 deny），見 ${COLL_REF}"
+    fi
     ;;
   Read)
     base=${file_path##*/}

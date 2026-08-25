@@ -214,6 +214,19 @@ expect 'F4③ source .env; cat .env（deny——source 從不在放行判定裡�
 expect 'F4④ 全段皆放行形式、無真違規（allow）' 0 "$(bash_json "grep -oE '^[A-Z_]+=' .env; echo done")"
 
 # ============================================================
+# R2 F1（merge-reviewer R2 blocker，F4 切段引入的回歸）：切段不看引號，分隔字元其實在引號內時
+# 會把「動詞在這段、.env 在另一段」，兩段各自都不成立、整條被誤放行。修法：整條命令同時符合
+# .env 引用與讀取動詞，但沒有任何一段同時符合兩者——歧義即 deny。
+# ============================================================
+expect 'R2F1① grep -E 雙引號內含 |（deny，回歸）' 2 "$(bash_json 'grep -E \"^(SUPABASE|ANON)=\" .env')"
+expect 'R2F1② grep -E 單引號內含 |（deny，回歸）' 2 "$(bash_json "grep -E 'SECRET|TOKEN' .env")"
+expect 'R2F1③ awk 欄位分隔字元在引號內（deny，回歸）' 2 "$(bash_json "awk -F'|' '{print \$2}' .env")"
+expect 'R2F1④ sed -e 腳本內含 ;（deny，回歸）' 2 "$(bash_json "sed -e 's/a/b/;s/c/d/' .env")"
+expect 'R2F1⑤ grep 樣式內含 ;（deny，回歸）' 2 "$(bash_json "grep 'a;b' .env")"
+expect 'R2F1⑥ 放行形式＋真正的管線到 sort（allow，不受影響——放行段本身就同時命中兩者）' 0 "$(bash_json "grep -oE '^[A-Z_]+=' .env | sort")"
+expect 'R2F1⑦ 無關命令不受影響（allow）' 0 "$(bash_json 'grep -E \"a|b\" notes.txt')"
+
+# ============================================================
 # R1 F6（major）：git commit -n（--no-verify 官方短旗標）；git push -n 是 --dry-run 不算
 # ============================================================
 expect 'F6① git commit -n（deny）' 2 "$(bash_json 'git commit -n -m x')"
