@@ -8,8 +8,8 @@
 #   1. .claude/skills/little-sprout-brand/SKILL.md 存在且可讀
 #   2. frontmatter 齊：第一行 `---`、有閉合的第二個 `---`、其間有 `name: little-sprout-brand`（＝目錄名）與非空 `description:`
 #      （name／description 是 Claude Code 列出 skill 的唯一依據；缺了 skill 就靜默不存在，Skill 工具找不到）
-#   3. SKILL.md 內引用的 references/<x>.md 全部存在（progressive disclosure 的指標指到空檔＝載入後仍拿不到內容）
-#   4. .claude/agents/ui-designer.md 與 visual-reviewer.md 各含 `little-sprout-brand` 字樣（接線被人改掉即紅）
+#   3. SKILL.md 內引用的 references/<x>.md 全部存在且非空（`-s`：0 bytes 也算指到空檔——progressive disclosure 的指標指到空檔＝載入後仍拿不到內容）
+#   4. .claude/agents/ui-designer.md 與 visual-reviewer.md 各含同一行的「載入…little-sprout-brand」必載指示（只剩註解／歷史提及不算；接線被人改掉即紅）
 # 任一缺即紅並列出全部違規（不在第一條就停），exit 1；參數／路徑錯誤 exit 2（fail closed）。
 # 掛 CI rules job（所有 PR，純檔案比對）；自測 brand-skill-check.test.sh。規約見 docs/COLLABORATION.md §1、§7。
 #
@@ -35,7 +35,7 @@ fi
 
 skill_dir="${repo}/.claude/skills/little-sprout-brand"
 skill="${skill_dir}/SKILL.md"
-agents="${repo}/.claude/agents/ui-designer.md ${repo}/.claude/agents/visual-reviewer.md"
+agents=("${repo}/.claude/agents/ui-designer.md" "${repo}/.claude/agents/visual-reviewer.md")
 hits=""
 
 # 1. SKILL.md 存在且可讀
@@ -73,32 +73,32 @@ else
       hits+="    ${rel}：frontmatter 缺 \`description:\` 或其值為空（description 是 skill 被觸發的唯一依據）"$'\n'
     fi
   fi
-  # 3. SKILL.md 引用的 references/<x>.md 全部存在
+  # 3. SKILL.md 引用的 references/<x>.md 全部存在且非空（-s：0-byte 檔＝指到空檔）
   refs=$(grep -oE 'references/[A-Za-z0-9_.-]+\.md' "$skill" | sort -u || true)
   if [ -n "$refs" ]; then
     while IFS= read -r ref; do
       [ -n "$ref" ] || continue
-      if [ ! -r "${skill_dir}/${ref}" ]; then
-        hits+="    ${rel} 引用 ${ref}，但 ${skill_dir#"$repo"/}/${ref} 不存在"$'\n'
+      if [ ! -s "${skill_dir}/${ref}" ]; then
+        hits+="    ${rel} 引用 ${ref}，但 ${skill_dir#"$repo"/}/${ref} 不存在或為 0 bytes"$'\n'
       fi
     done <<< "$refs"
   fi
 fi
 
-# 4. 兩份 agent 定義含 little-sprout-brand 字樣
-for a in $agents; do
+# 4. 兩份 agent 定義各含「載入…little-sprout-brand」必載指示（陣列逐檔，路徑含空白不分詞）
+for a in "${agents[@]}"; do
   rel=${a#"$repo"/}
   if [ ! -r "$a" ]; then
     hits+="    ${rel}：不存在或不可讀（agent 定義缺失，接線無從驗起）"$'\n'
-  elif ! grep -qF 'little-sprout-brand' "$a"; then
-    hits+="    ${rel}：不含 \`little-sprout-brand\` 字樣（必載指示被拿掉了）"$'\n'
+  elif ! grep -qE '載入.*little-sprout-brand' "$a"; then
+    hits+="    ${rel}：不含「載入…little-sprout-brand」必載指示（被拿掉了，或只剩註解／歷史提及）"$'\n'
   fi
 done
 
 if [ -n "$hits" ]; then
   echo "✗ brand-skill gate：little-sprout-brand skill 接線不完整（LS-30）：" >&2
   printf '%s' "$hits" >&2
-  echo "  規則：ui-designer／visual-reviewer 開工必載入 .claude/skills/little-sprout-brand（docs/COLLABORATION.md §1、§7）；skill 本體要有 frontmatter name／description、references 指到的檔要存在、兩份 agent 定義要保留必載指示。" >&2
+  echo "  規則：ui-designer／visual-reviewer 開工必載入 .claude/skills/little-sprout-brand（docs/COLLABORATION.md §1、§7）；skill 本體要有 frontmatter name／description、references 指到的檔要存在且非空、兩份 agent 定義要保留「載入…little-sprout-brand」必載指示。" >&2
   exit 1
 fi
 echo "✓ brand-skill gate：little-sprout-brand skill 本體齊全、ui-designer／visual-reviewer 已接線"
