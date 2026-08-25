@@ -313,7 +313,9 @@ if [ -n "$sim_raw" ]; then
     sim_epoch=
     if [ -n "$sim_last" ] && [ "$sim_last" != - ]; then
       # lastBootedAt 是 ISO8601 UTC（如 2026-08-25T06:58:38Z）；BSD／GNU date 二選一能解就用，都解不了才退回目錄 mtime。
-      sim_epoch=$(date -j -f '%Y-%m-%dT%H:%M:%SZ' "$sim_last" +%s 2>/dev/null) \
+      # BSD `date -j -f` 的格式字串裡那個 "Z" 只是字面字元、不是時區指示，不加 TZ=UTC 會照本機時區解讀，
+      # 時區不是 UTC 的機器算出來的 epoch 會偏掉（LS-83 R2 m5；GNU `date -d` 認得結尾 Z，不受影響）。
+      sim_epoch=$(TZ=UTC date -j -f '%Y-%m-%dT%H:%M:%SZ' "$sim_last" +%s 2>/dev/null) \
         || sim_epoch=$(date -d "$sim_last" +%s 2>/dev/null) || sim_epoch=
     fi
     if [ -z "$sim_epoch" ] && [ -n "$sim_dpath" ]; then
@@ -345,7 +347,7 @@ case "$MODE" in
       "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$J_SIM" "$J_FLAGS"
     ;;
   brief)
-    echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev}"
+    echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev} · 專屬模擬器逾期 ${sim_flagged}"
     [ -n "$fetch_warn" ] && echo "${fetch_warn}"
     case "$lock_line" in free) ;; *) echo "Supabase lock：${lock_line}" ;; esac
     if [ -n "$FLAGS" ]; then printf '%s' "$FLAGS"; else echo "巡檢：無異常（git／PR 面；Linear 對照仍需 list_issues）"; fi

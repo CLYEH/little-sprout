@@ -322,6 +322,11 @@ rm -rf "$SUPABASE_LOCK_DIR" "$SUPABASE_LOCK_DIR.stale.1.2"
 mkdir -p "$work/bin" "$work/simdevs/SIM-OLDDIR/data"
 touch -t "$OLD_T" "$work/simdevs/SIM-OLDDIR"   # 無 lastBootedAt 的裝置：靠這個目錄的 mtime 判老
 now_iso=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+# 門檻兩側各取一個樣本才能釘住「-gt 7」這個確切數字（LS-83 R2 m4）：SIM-OLD／OLDDIR／LASTOLD 都老到
+# 2020 年，就算門檻被誤改成 -gt 30 一樣會被判老，測不出退化；10 天前落在 7～30 之間，只有門檻真的是
+# 7 天才會被列——門檻被改鬆（如 -gt 30）這條斷言就必須紅。
+ten_days_epoch=$(( $(date +%s) - 10 * 86400 ))
+ten_days_iso=$(date -u -r "$ten_days_epoch" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d "@${ten_days_epoch}" +%Y-%m-%dT%H:%M:%SZ)
 esc_dpath=$(printf '%s' "$work/simdevs/SIM-OLDDIR/data" | sed 's/\//\\\//g')
 cat > "$work/simdevices.json" <<JSON
 {
@@ -360,6 +365,13 @@ cat > "$work/simdevices.json" <<JSON
         "udid" : "SIM-LASTOLD",
         "state" : "Shutdown",
         "name" : "LS-95-iPhoneAir"
+      },
+      {
+        "lastBootedAt" : "${ten_days_iso}",
+        "dataPath" : "\/tmp\/unused-10d\/data",
+        "udid" : "SIM-10D",
+        "state" : "Shutdown",
+        "name" : "LS-97-iPhoneAir"
       }
     ]
   }
@@ -381,6 +393,7 @@ has   '⑭ 老裝置（lastBootedAt 超過 7 天）→ 列出並印 simctl delet
 has   '⑭ 指令含 xcrun simctl delete SIM-OLD' "$out14" 'xcrun simctl delete SIM-OLD'
 hasnt '⑭ 剛用過的（lastBootedAt 近期）不列' "$out14" 'SIM-FRESH'
 has   '⑭ 無 lastBootedAt 退回目錄 mtime 判定為老 → 列出' "$out14" 'main-iPhone17（SIM-OLDDIR）'
+has   '⑭ 10 天前（釘住門檻是 -gt 7；LS-83 R2 m4）→ 列出' "$out14" 'LS-97-iPhoneAir（SIM-10D）'
 hasnt '⑭ 名稱不符 <票號>-<機型> 樣式不管' "$out14" 'SIM-OTHER'
 # 陣列／檔案最後一台裝置（SIM-LASTOLD）之後還有多個收尾大括號（"]"／物件 "}"／外層 "}"）——awk 狀態機
 # 印過一筆要清空，不然檔尾這些收尾大括號會把最後一筆重複印出（曾經的迴歸：只在最後一台裝置身上發生）
@@ -388,9 +401,10 @@ lastold_count=$(printf '%s' "$out14" | grep -c 'LS-95-iPhoneAir（SIM-LASTOLD）
 if [ "$lastold_count" -eq 1 ]; then echo "✓ ⑭ 檔尾裝置（最後一筆）只列一次，不被收尾大括號重複印出"; else echo "✗ ⑭ 檔尾裝置列了 ${lastold_count} 次（應為 1）" >&2; fail=1; fi
 brief14="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '⑭ --brief 也看得到（掛 add_flag）' "$brief14" '[專屬模擬器 LS-90-iPhoneAir]'
+has   '⑭ --brief 表頭「專屬模擬器逾期」數＝4（sim_flagged 有被讀，LS-83 R2 m2）' "$brief14" '專屬模擬器逾期 4'
 json14="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
-jq_ok '⑭ --json：stale_simulators 只含三筆老裝置（SIM-OLD／SIM-OLDDIR／SIM-LASTOLD），不含 SIM-FRESH（未超過門檻不列入）' "$json14" \
-  '([.stale_simulators[].udid] | sort) == (["SIM-LASTOLD","SIM-OLD","SIM-OLDDIR"] | sort)'
+jq_ok '⑭ --json：stale_simulators 只含四筆老裝置（SIM-OLD／SIM-OLDDIR／SIM-LASTOLD／SIM-10D），不含 SIM-FRESH（未超過門檻不列入）' "$json14" \
+  '([.stale_simulators[].udid] | sort) == (["SIM-10D","SIM-LASTOLD","SIM-OLD","SIM-OLDDIR"] | sort)'
 out14b="$(STUB_XCRUN_FAIL=1 PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
 rc_is '⑭ xcrun 本身失敗（非 macOS／查詢出錯）→ 仍 exit 0，不當異常炸掉' 0 "$rc" "$out14b"
 hasnt '⑭ xcrun 失敗時不誤列任何裝置' "$out14b" 'xcrun simctl delete'
