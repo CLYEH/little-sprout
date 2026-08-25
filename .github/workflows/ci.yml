@@ -160,13 +160,19 @@ jobs:
       # LS-87：post-status.sh（裁決貼 commit status）自測——stub gh 驗 endpoint／欄位、短 SHA／錯 context／錯 state／空或過長
       # description 拒、gh 失敗與回讀不符不當成已貼；promote.test.sh 加 merge-review／qa status 缺／failure／pending 拒；
       # patrol.test.sh 加 hooksPath／hook 可執行檢查。
-      - name: Ops 腳本自測（patrol／session-start／supabase-lock／promote／post-status，LS-71／LS-70／LS-85／LS-87）
+      # LS-91：pen-open.sh（Pen app 開檔路徑對帳）／pen-land.sh（.pen 落地機械化，取代 LS-26 手動 SOP）自測——
+      # 前者 stub open／pen 驗一致／不一致／Pen 未開／看門狗逾時／--status／參數與環境錯誤；後者用合成
+      # backup／worktree fixture（$PEN_BACKUP_DIR 覆寫）驗合法落地／--expect-nodes 傳遞／backup 缺／meta 三鍵
+      # 各一組即拒／壞 JSON／dry-run 零副作用／參數形狀，全程不碰真正的 ~/.pencil/backup 或 design/littlesprout.pen。
+      - name: Ops 腳本自測（patrol／session-start／supabase-lock／promote／post-status／pen-open／pen-land，LS-71／LS-70／LS-85／LS-87／LS-91）
         run: |
           rc=0
           bash scripts/ops/patrol.test.sh || rc=1
           bash scripts/ops/supabase-lock.test.sh || rc=1
           bash scripts/ops/promote.test.sh || rc=1
           bash scripts/ops/post-status.test.sh || rc=1
+          bash scripts/ops/pen-open.test.sh || rc=1
+          bash scripts/ops/pen-land.test.sh || rc=1
           exit "$rc"
 
       # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
