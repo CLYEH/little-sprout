@@ -187,13 +187,26 @@ final class AppErrorTests: XCTestCase {
             .targetFamilyMismatch,
             // LS022：游標是 app 自己組的，使用者沒有輸入可換，重試同一呼叫不會成功——
             // 留在 validationRetryable 違反 N9 的定義（PR #77 R1 B2(b)；orchestrator 裁決）。
-            .timelineCursorIncomplete
+            .timelineCursorIncomplete,
+            // LS040（LS-66）：孩子檔案的 family_id 不可變 trigger 擋下，正常操作不可能
+            // 觸發，只可能是後端 bug，UI 沒有任何「換個動作」能繞過。
+            .childFamilyImmutable,
+            // LS041（LS-66）：孩子檔案不存在，或已被軟刪除須先還原，同 LS020 的理由。
+            .childNotFoundOrDeleted,
+            // LS042（LS-66）：不是仍是該家庭 owner/member 的成員，同 LS021 的理由。
+            .childNotEditableByCaller,
+            // LS043（LS-66）：孩子檔案已被移除超過 30 天，無法還原——換輸入或重試同一個
+            // set_child_deleted 呼叫都不會變成功。
+            .childRestoreWindowExpired
         ]
         let expectedValidationRetryable: Set<LSErrorCode> = [
             .inviteCodeNotFound,
             .inviteCodeExpired,
             .inviteCodeExhausted,
-            .inviteParamsInvalid
+            .inviteParamsInvalid,
+            // LS044（R1）：p_child_id 是使用者從孩子清單挑出來的輸入，挑到的孩子剛好已
+            // 被軟刪，換一個（或改成不指定）之後同一個呼叫就會成功。
+            .childDeletedCannotAttachContent
         ]
         // LS-55 N9：LS016 從 .validationRetryable 移到這個新層——重試會成功，但不是使用者
         // 輸入有誤（見 LSErrorCode.tier 的 case .inviteCodeGenerationCollision 註解）。
