@@ -19,7 +19,7 @@ enum AppFontToken {
     /// 13pt，法務行／已用大字呈現過的欄位微標籤／純時間戳。
     case meta
     /// 36pt，OTP 六格數字（`.system(size:).monospacedDigit()`，見 `appNumericFont`；
-    /// R5 review major A：Courier Prime 從未真的在 bundle 裡，且 `Font.custom(_:size:)`
+    /// review comment `78b4455c` major A：Courier Prime 從未真的在 bundle 裡，且 `Font.custom(_:size:)`
     /// 會對 `@ScaledMetric` 已縮放過的 size 再依 body text style 縮放一次，雙重縮放）。
     case otp
 
@@ -74,7 +74,7 @@ extension View {
     }
 
     /// OTP／邀請碼展示級距數字專用：系統字體＋`.monospacedDigit()`，走 `AppFontToken.otp`／
-    /// `.lead` 這類 ≥36pt 的 token（R5 review major A：不再走 `Font.custom`，見 `.otp` case
+    /// `.lead` 這類 ≥36pt 的 token（review comment `78b4455c` major A：不再走 `Font.custom`，見 `.otp` case
     /// 註解——`Font.custom(_:size:)` 對已縮放過的 size 會再依 body text style 縮放一次）。
     func appNumericFont(_ token: AppFontToken, weight: Font.Weight = .regular) -> some View {
         modifier(ScaledFontModifier(token: token, weight: weight, design: .default, monospacedDigit: true))
