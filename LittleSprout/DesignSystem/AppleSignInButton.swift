@@ -68,5 +68,10 @@ struct AppleSignInButton: View {
                 .accessibilityLabel("正在使用 Apple 登入")
             }
         }
+        // R2 review F1-A (c)：`.disabled()` 對官方 `SignInWithAppleButton` 可能是 no-op（見
+        // `AuthButtonsState.shouldAcceptAppleCompletion` 檔頭說明），這裡在外層再加一道
+        // SwiftUI 層的攔點擊——`allowsHitTesting` 對 UIViewRepresentable 有效，是第二道防線；
+        // model 層的 guard 才是主要防線，這裡不會出現「有反應但沒吃到」的空窗。
+        .allowsHitTesting(!isDisabled)
     }
 }

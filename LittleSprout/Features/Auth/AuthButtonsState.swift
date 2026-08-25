@@ -31,3 +31,20 @@ struct AuthButtonsState {
         return nil
     }
 }
+
+extension AuthButtonsState {
+    /// R2 review F1-A（PR #163）：`AppleSignInButton.swift` 的 `.disabled()` 對官方
+    /// `SignInWithAppleButton` 很可能是 no-op——reviewer 對 iOS 26.5 模擬器的
+    /// `_AuthenticationServices_SwiftUI` binary 做了三項靜態核對（`nm`／`dyld_info -imports`／
+    /// `strings`），都指向這個私有 `UIViewRepresentable` 從不讀 `EnvironmentValues.isEnabled`，
+    /// 也沒有把停用狀態轉發給內部 `ASAuthorizationAppleIDButton`。view 層的 disable 因此只能
+    /// 當 UX 提示，不能當「Apple／Google／Email 三選一互斥」的唯一防線。
+    ///
+    /// 這裡在 `WelcomeView.handleAppleCompletion` 入口補一道不依賴任何 UIKit／SwiftUI enable
+    /// 語意的 model 層守門，純值、可單元測試釘住（符合 CLAUDE.md「規則必有機械 gate」）。任一
+    /// 其他登入方式在跑就拒收——呼叫端要整段提早 return，不動 `isSigningInWithApple` 旗標、
+    /// 不顯示錯誤 alert（使用者沒做錯事，只是官方鈕在別的方式跑的時候仍被點到）。
+    static func shouldAcceptAppleCompletion(isSigningInWithGoogle: Bool, isNavigatingToEmail: Bool) -> Bool {
+        !isSigningInWithGoogle && !isNavigatingToEmail
+    }
+}

@@ -262,35 +262,6 @@ struct WelcomeView: View {
         request.nonce = AppleSignInNonce.sha256(nonce)
     }
 
-    private func handleAppleCompletion(_ result: Result<ASAuthorization, Error>) {
-        switch result {
-        case .success(let authorization):
-            guard
-                let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
-                let tokenData = credential.identityToken,
-                let idToken = String(data: tokenData, encoding: .utf8),
-                let nonce = currentAppleNonce
-            else {
-                appleErrorMessage = "無法取得 Apple 登入憑證，請再試一次。"
-                return
-            }
-            isSigningInWithApple = true
-            Task {
-                defer { isSigningInWithApple = false }
-                do {
-                    try await authStore.signInWithApple(idToken: idToken, nonce: nonce)
-                } catch {
-                    appleErrorMessage = AppError.map(error).userFacingMessage
-                }
-            }
-        case .failure(let error):
-            if let authError = error as? ASAuthorizationError, authError.code == .canceled {
-                return
-            }
-            appleErrorMessage = AppError.map(error).userFacingMessage
-        }
-    }
-
     // MARK: - Sign in with Google
 
     private func handleGoogleSignIn() {
@@ -320,10 +291,10 @@ struct WelcomeView: View {
     }
 }
 
-// MARK: - R1 review F1／I2（PR #163）：抽成 extension 而不是塞進上面的 struct body，是刻意
-// 避開 SwiftLint `type_body_length`（該 struct 本來就已經逼近上限，同檔案 extension 的成員
-// 依 SE-0169 仍能存取 `private` 的 `@State` 屬性，計數卻是分開算的，同 OTPVerificationModel
-// 系列測試檔拆檔的理由——只是這裡拆的是 extension 不是檔案）。
+// MARK: - R1 review F1／I2、R2 review F1-A（PR #163）：抽成 extension 而不是塞進上面的
+// struct body，是刻意避開 SwiftLint `type_body_length`（該 struct 本來就已經逼近上限，同檔案
+// extension 的成員依 SE-0169 仍能存取 `private` 的 `@State` 屬性，計數卻是分開算的，同
+// OTPVerificationModel 系列測試檔拆檔的理由——只是這裡拆的是 extension 不是檔案）。
 extension WelcomeView {
     /// 三顆鈕互斥狀態的集中計算，見 `AuthButtonsState.swift`（純值型別，可單元測試，
     /// `actionsSection`／`legalOrStatusSlot` 共用同一份，避免各自用 `isSigningInWithApple`
@@ -335,6 +306,46 @@ extension WelcomeView {
     /// Google 登入面板「使用者主動取消」的判定：獨立、可測試的純函式（R1 review I2）。
     static func isUserCanceledGoogleSignIn(_ error: Error) -> Bool {
         (error as? ASWebAuthenticationSessionError)?.code == .canceledLogin
+    }
+
+    /// Apple `SignInWithAppleButton` 的 completion callback（R2 review F1-A：`.disabled()`
+    /// 對官方鈕可能是 no-op，見 `AuthButtonsState.shouldAcceptAppleCompletion` 檔頭說明）。
+    /// 開頭先過 model 層守門，任一其他方式在跑就整段提早 return——不動 `isSigningInWithApple`
+    /// 旗標、不顯示錯誤 alert，使用者沒做錯事，只是官方鈕在別的方式跑的時候仍被點到。
+    private func handleAppleCompletion(_ result: Result<ASAuthorization, Error>) {
+        guard
+            AuthButtonsState.shouldAcceptAppleCompletion(
+                isSigningInWithGoogle: isSigningInWithGoogle,
+                isNavigatingToEmail: !path.isEmpty
+            )
+        else { return }
+
+        switch result {
+        case .success(let authorization):
+            guard
+                let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                let tokenData = credential.identityToken,
+                let idToken = String(data: tokenData, encoding: .utf8),
+                let nonce = currentAppleNonce
+            else {
+                appleErrorMessage = "無法取得 Apple 登入憑證，請再試一次。"
+                return
+            }
+            isSigningInWithApple = true
+            Task {
+                defer { isSigningInWithApple = false }
+                do {
+                    try await authStore.signInWithApple(idToken: idToken, nonce: nonce)
+                } catch {
+                    appleErrorMessage = AppError.map(error).userFacingMessage
+                }
+            }
+        case .failure(let error):
+            if let authError = error as? ASAuthorizationError, authError.code == .canceled {
+                return
+            }
+            appleErrorMessage = AppError.map(error).userFacingMessage
+        }
     }
 }
 
