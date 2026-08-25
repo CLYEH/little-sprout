@@ -16,6 +16,13 @@ private final class PreviewAuthService: AuthService, @unchecked Sendable {
         AuthSession(userID: UUID(), email: "preview@example.com", expiresAt: .distantFuture)
     }
 
+    // Preview 不需要真的跑 ASWebAuthenticationSession，忽略 launchFlow 直接回傳一份假 session。
+    func signInWithGoogle(
+        launchFlow: @MainActor @Sendable (_ url: URL) async throws -> URL
+    ) async throws -> AuthSession {
+        AuthSession(userID: UUID(), email: "preview-google@example.com", expiresAt: .distantFuture)
+    }
+
     func sendEmailOTP(email: String) async throws {}
 
     func verifyEmailOTP(email: String, token: String) async throws -> AuthSession {

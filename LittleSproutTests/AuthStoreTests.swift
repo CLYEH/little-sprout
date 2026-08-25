@@ -1,3 +1,4 @@
+import AuthenticationServices
 import Foundation
 @testable import LittleSprout
 import XCTest
@@ -69,6 +70,66 @@ final class AuthStoreTests: XCTestCase {
 
         XCTAssertEqual(store.session, expected)
         XCTAssertTrue(store.isAuthenticated())
+    }
+
+    // MARK: - signInWithGoogle（LS-39）
+    //
+    // `StubAuthService.signInWithGoogle` 不會真的呼叫 `launchFlow`（見該檔註解）——這裡的
+    // `noopLaunchFlow` 純粹是滿足協定簽名的佔位輸入，測試只斷言 `AuthStore` 怎麼處理
+    // handler 回傳/丟出的結果。真正的 ASWebAuthenticationSession／取消行為靠模擬器手動驗證
+    // （見 handoff）。
+
+    private var noopLaunchFlow: @MainActor @Sendable (_ url: URL) async throws -> URL {
+        { url in url }
+    }
+
+    func test_signInWithGoogle_success_updatesSession() async throws {
+        let stub = StubAuthService()
+        let expected = AuthSession(userID: userID, email: "google@example.com", expiresAt: .distantFuture)
+        stub.setSignInWithGoogleHandler { expected }
+        let store = AuthStore(authService: stub)
+        XCTAssertNil(store.session)
+
+        try await store.signInWithGoogle(launchFlow: noopLaunchFlow)
+
+        XCTAssertEqual(store.session, expected)
+        XCTAssertTrue(store.isAuthenticated())
+    }
+
+    func test_signInWithGoogle_userCanceled_propagatesRawErrorWithoutUpdatingSession() async {
+        // 使用者在系統瀏覽器面板取消：`AuthService.signInWithGoogle` 協定文件定案這種情況原樣
+        // 拋 `ASWebAuthenticationSessionError`（不包成 `AppError`）——這裡釘住 `AuthStore` 對
+        // 這個型別不做任何特殊判斷（不吞、不誤判成功），也沒有汙染 session；辨識「取消該
+        // 靜默」是 `WelcomeView` 的責任，不是這一層。
+        let stub = StubAuthService()
+        stub.setSignInWithGoogleHandler { throw ASWebAuthenticationSessionError(.canceledLogin) }
+        let store = AuthStore(authService: stub)
+
+        do {
+            try await store.signInWithGoogle(launchFlow: noopLaunchFlow)
+            XCTFail("使用者取消時必須把錯誤原樣往上拋，不能吞掉")
+        } catch let error as ASWebAuthenticationSessionError {
+            XCTAssertEqual(error.code, .canceledLogin)
+        } catch {
+            XCTFail("預期原樣拋出 ASWebAuthenticationSessionError，實際拿到 \(error)")
+        }
+
+        XCTAssertNil(store.session)
+    }
+
+    func test_signInWithGoogle_failure_propagatesAppErrorWithoutUpdatingSession() async {
+        let stub = StubAuthService()
+        stub.setSignInWithGoogleHandler { throw AppError.network(message: "offline") }
+        let store = AuthStore(authService: stub)
+
+        do {
+            try await store.signInWithGoogle(launchFlow: noopLaunchFlow)
+            XCTFail("失敗時必須把錯誤往上拋，不能吞掉")
+        } catch {
+            XCTAssertEqual(AppError.map(error), .network(message: "offline"))
+        }
+
+        XCTAssertNil(store.session)
     }
 
     func test_verifyEmailOTP_success_updatesSession() async throws {
