@@ -18,6 +18,10 @@ export SUPABASE_LOCK_DIR="$work/lock"
 export SUPABASE_LOCK_POLL=0.2
 unset SUPABASE_LOCK_HELD SUPABASE_LOCK_TIMEOUT
 
+# 自測裡每一次呼叫 run.sh 都帶這組：DB 指向不存在的 port／容器（離散參數，不寫含帳密的連線字串——secrets 掃描會擋）。
+# 就算時序滑掉、run.sh 真的拿到 lock，也只會在連線那一步很快失敗（exit 1），絕不碰共用容器（R2 自測曾因持有者
+# 提前結束而實跑到 docker exec 的容器——這組參數是防線，不是最佳化）。
+NO_DB=(env -u SUPABASE_DB_URL SUPABASE_DB_HOST=127.0.0.1 SUPABASE_DB_PORT=1 SUPABASE_DB_CONTAINER=no-such-container-LS70)
 L() { bash "$lock_sh" "$@"; }   # 前景用；背景持有者一律直接 bash "$lock_sh" … &——經函式背景化時 $! 是子 shell、不是 lock 腳本本身（pid／kill 都會對錯）
 has()   { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✓ $1"; else echo "✗ ${1}（輸出應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; fi; }
 hasnt() { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✗ ${1}（輸出不應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; else echo "✓ $1"; fi; }
@@ -137,10 +141,11 @@ gone  '⑩ TERM 後 lock 釋放'
 
 # ---- ⑫ run.sh 未在 lock 內會自己經 lock 重跑（A 持有 2s、逾時 1s → 124，且沒走到連線那一步）----
 if [ -f "$run_sh" ]; then
-  bash "$lock_sh" -- sleep 2 2>/dev/null &
+  bash "$lock_sh" -- sleep 4 2>/dev/null &
   a=$!
   sleep 0.3
-  out="$(SUPABASE_LOCK_TIMEOUT=1 bash "$run_sh" 2>&1)"; rc=$?
+  has   '⑫ 前提：A 持有中' "$(L --status 2>&1)" "held pid=${a}"
+  out="$("${NO_DB[@]}" SUPABASE_LOCK_TIMEOUT=1 bash "$run_sh" 2>&1)"; rc=$?
   wait "$a"
   rc_is '⑫ run.sh 裸跑 → 經 lock 等待、逾時 124' 124 "$rc" "$out"
   has   '⑫ run.sh 印「改經 lock 重新執行」' "$out" '重新執行'
@@ -202,6 +207,38 @@ a=$!
 sleep 0.3
 SUPABASE_LOCK_HELD="$SUPABASE_LOCK_DIR" L --held 2>/dev/null; rc_is '⑮ --held：別人持有（目錄真的在）、假變數 → 1' 1 "$?" ''
 wait "$a"
+
+# ---- ⑯ m3（PR #122 R1）：run.sh 不信環境變數——假的／殘留的 SUPABASE_LOCK_HELD 不得繞過 lock ----
+bash "$lock_sh" -- sleep 6 2>/dev/null &
+a=$!
+sleep 0.3
+has   '⑯ 前提：A 持有中（案例一）' "$(L --status 2>&1)" "held pid=${a}"
+out="$("${NO_DB[@]}" SUPABASE_LOCK_HELD=/tmp/does-not-exist-LS70 SUPABASE_LOCK_TIMEOUT=1 bash "$run_sh" 2>&1)"; rc=$?
+rc_is '⑯ m3：假路徑變數 → run.sh 仍經 lock 等待、逾時 124' 124 "$rc" "$out"
+hasnt '⑯ m3：沒連 DB' "$out" '連線方式'
+has   '⑯ 前提：A 持有中（案例二）' "$(L --status 2>&1)" "held pid=${a}"
+out="$("${NO_DB[@]}" SUPABASE_LOCK_HELD="$SUPABASE_LOCK_DIR" SUPABASE_LOCK_TIMEOUT=1 bash "$run_sh" 2>&1)"; rc=$?
+rc_is '⑯ m3：變數指向真的 lock 目錄、持有者不是祖先 → 仍等待、逾時 124' 124 "$rc" "$out"
+hasnt '⑯ m3：沒連 DB（真目錄假變數）' "$out" '連線方式'
+wait "$a"
+
+# ---- ⑰ m2（PR #122 R1）：lock 內、變數被洗掉 → run.sh 不得 exec 回 lock 無窮迴圈，要走過前言到連線那一步 ----
+# DB 一樣指向不存在的 port／容器（NO_DB）：走到連線就很快失敗（exit 1）；看門狗 20s 防迴圈（迴圈是單一程序
+# 連環 exec，殺 lock 包裝的子程序即可）。
+with_watchdog() {   # $1=秒 其餘=命令；逾時殺命令的子程序與命令、回 124
+  local secs=$1 pid wd rc; shift
+  "$@" & pid=$!
+  ( sleep "$secs"; pkill -P "$pid" 2>/dev/null; kill "$pid" 2>/dev/null ) >/dev/null 2>&1 & wd=$!
+  wait "$pid"; rc=$?
+  kill "$wd" 2>/dev/null; wait "$wd" 2>/dev/null
+  [ "$rc" -eq 143 ] && return 124
+  return "$rc"
+}
+out="$(with_watchdog 20 bash "$lock_sh" -- "${NO_DB[@]}" env -u SUPABASE_LOCK_HELD bash "$run_sh" 2>&1)"; rc=$?
+rc_is '⑰ m2：不迴圈、走到連線失敗 exit 1（非看門狗 124）' 1 "$rc" "$out"
+hasnt '⑰ m2：前言沒有 exec 回 lock' "$out" '重新執行'
+if printf '%s' "$out" | grep -qE '連線方式|找不到 psql'; then echo "✓ ⑰ m2：已走過前言到連線那一步"; else echo "✗ ⑰ m2：沒走到連線那一步" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+gone  '⑰ m2：結束後 lock 釋放'
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ supabase-lock 自測通過"

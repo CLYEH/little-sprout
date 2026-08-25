@@ -17,14 +17,16 @@ set -Eeuo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # LS-70：本機容器是所有 worktree 共用的（LS-57／LS-66 同時 reset 互踩）——未在 scripts/ops/supabase-lock.sh 的
-# lock 內就經 lock 重新執行自己（lock 取得後 export SUPABASE_LOCK_HELD，這裡看到就不再包一層；lock 腳本自己另以
-# holder pid 是否祖先判重入，殘留的環境變數繞不過它）。lock 腳本不在（舊分支）只警告，照跑。
-if [ -z "${SUPABASE_LOCK_HELD:-}" ]; then
-  lock_sh="$here/../../scripts/ops/supabase-lock.sh"
-  if [ -f "$lock_sh" ]; then
+# lock 內就經 lock 重新執行自己。「在不在 lock 內」只問 lock 腳本（--held：holder pid 是否本程序祖先），不讀
+# SUPABASE_LOCK_HELD——環境變數可被殘留／假造（PR #122 R1 m3：假變數直接連上共用容器）或被洗掉（R1 m2：
+# run.sh ⟷ lock 無窮 exec）；祖先關係兩種情況都判得對，遞迴自然終止。lock 腳本不在（舊分支）只警告，照跑。
+lock_sh="$here/../../scripts/ops/supabase-lock.sh"
+if [ -f "$lock_sh" ]; then
+  if ! bash "$lock_sh" --held 2>/dev/null; then
     echo "→ 未在 Supabase lock 內，改經 scripts/ops/supabase-lock.sh 重新執行（等其他 worktree 的 reset／測試結束）"
     exec bash "$lock_sh" -- bash "${BASH_SOURCE[0]}" "$@"
   fi
+else
   echo "⚠ 找不到 ${lock_sh}：未經 lock 直接執行，與其他 worktree 的 supabase db reset 可能互踩（LS-70）" >&2
 fi
 
