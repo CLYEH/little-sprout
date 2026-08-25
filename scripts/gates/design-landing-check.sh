@@ -39,7 +39,7 @@ try:
     with open(p, encoding="utf-8") as fh:
         d = json.load(fh)
 except json.JSONDecodeError as e:
-    print(f"✗ design-landing gate：{p} 不是有效 JSON（{e.msg} @ line {e.lineno}）——落地檔損壞，回收工程序步驟 2 重新複製", file=sys.stderr); sys.exit(1)
+    print(f"✗ design-landing gate：{p} 不是有效 JSON（{e.msg} @ line {e.lineno}）——落地檔損壞，重跑 scripts/ops/pen-land.sh 重新從 backup 落地（LS-91）", file=sys.stderr); sys.exit(1)
 except (OSError, UnicodeDecodeError) as e:
     print(f"✗ design-landing gate：{p} 讀取失敗（{type(e).__name__}: {e}）——這不是落地問題，先修檔案權限／編碼", file=sys.stderr); sys.exit(1)
 except RecursionError:
@@ -58,7 +58,7 @@ if not ver or nodes < 1:
     print(f"✗ design-landing gate：{p} 結構空（version={ver}，nodes={nodes}）", file=sys.stderr); sys.exit(1)
 if expect:
     if nodes != int(expect):
-        print(f"✗ design-landing gate：{p} 節點數 {nodes} ≠ 畫布預期 {expect}——落地檔比記憶體舊（autosave 未含最新編輯），回收工程序步驟 2", file=sys.stderr); sys.exit(1)
+        print(f"✗ design-landing gate：{p} 節點數 {nodes} ≠ 畫布預期 {expect}——落地檔比記憶體舊（autosave 未含最新編輯），等 autosave 追上後重跑 scripts/ops/pen-land.sh（帶 --after 可機械擋這種情況，LS-91）", file=sys.stderr); sys.exit(1)
 themes = list((d.get("themes") or {}).keys())
 extra = f"，節點數與畫布一致（{expect}）" if expect else ""
 print(f"✓ design-landing gate 通過：version={ver}，nodes={nodes}，themes={themes}，{size} bytes{extra}")

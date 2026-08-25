@@ -12,6 +12,7 @@ model: sonnet
 - 一律透過 Pencil MCP 工具（mcp__pencil__*）在 `design/littlesprout.pen` 上設計（不存在就建立）。
 - .pen 檔**只能用 Pencil MCP 工具讀寫，絕不可用 Read/Grep 開啟**（檔案實為明文 JSON；這條是避免把整份設計內容灌進 context——落地檢查腳本用 python 只讀結構統計，不在此限）。
 - 開始前先呼叫 `get_app_state`（include_schema＋include_canvas_design＋include_scripts_and_shaders: false——三個 flag 皆必填）取得 schema 與操作文件，再以 `execute` 操作畫布；成品用現行 API 的截圖／匯出功能逐 frame 驗證再回報（API 曾改版，以 ToolSearch 實際載到的工具為準；截圖／匯出檔一律存 `.claude/evidence/<票號>/<輪次>/`，如 `.claude/evidence/LS-46/r8/`——worktree 相對、已 ignore，不得 git add）。
+- **開工第一步核對 Pen 路徑（LS-91；R2 F4 定義精確化）**：`get_app_state` 回傳的目前 active 文件路徑，若**不等於** `$(git rev-parse --show-toplevel)/design/littlesprout.pen`（機械可求值，不是模糊的「自己 worktree」），立即停下回報 orchestrator（可能是 Pen 開錯檔——orchestrator 派工前應已跑 `scripts/ops/pen-open.sh` 切檔），**不得在錯誤的文件上繼續作業**。
 - 只設計 ticket 範圍內的畫面，不擅自擴充功能（scope 原則同樣適用於設計）。
 
 ## Pencil 已知限制（實證，違者該輪白做）
@@ -19,12 +20,12 @@ model: sonnet
 - `flipX`／`flipY` 渲染會錯位（LS-17 實測，42 組角托棄 flip 改四方位變體後 0 錯位）：**一律禁用**，需要鏡像改畫方位變體。
 - 每次 Update 後必須讀回或截圖驗證真的寫入——宣稱需量測支撐。
 
-## 收工程序（硬性，LS-26）
-1. 用 get_app_state 確認所有變更都在畫布上，**記下畫布節點總數 N**（含遞迴 children）。
-2. **確認 autosave 已含最新編輯**：備份檔＝`~/.pencil/backup/$(printf '%s' "file://<檔案絕對路徑>" | shasum | awk '{print $1}')`（檔名＝檔案 URI 的 sha1、無副檔名；路徑含空白／非 ASCII 時 sha1 可能對不上——對不上時 cp 會報錯不會靜默）。檢查備份 mtime **晚於你最後一次 execute**；還沒就等 autosave（可在 app 內做一次微小變更再還原來觸發），逾時仍舊＝fail loud 回報，**不得硬複製**。
-3. **落地**：`cp <備份檔> <檔案絕對路徑>`。這是單向覆寫——跳過步驟 2 就複製，可能拿舊備份蓋掉較新的落地檔。
-4. 跑 `"$(git rev-parse --show-toplevel)/scripts/gates/design-landing-check.sh" <檔案路徑> --expect-nodes N`——**綠燈（含節點數與畫布一致）才算落地**；紅燈照訊息處理（節點數不符＝備份舊，回步驟 2；讀取失敗＝權限／編碼問題，不是重複製能解的）。注意 N 只驗結構——純屬性變更（改色、改字）不改節點數，屬性層真正把關的是步驟 2 的 mtime，兩步缺一不可。
-5. 之後才 commit／回報；handoff 附檢查輸出。commit 時 commit-gate 會對 staged .pen 自動再跑結構檢查（機械兜底，但它沒有 N——深度驗證靠本程序）。
+## 收工程序（硬性，LS-26／LS-91 起每輪落地改呼叫 pen-land.sh；R2 F1 恢復新鮮度把關）
+1. 用 get_app_state 確認所有變更都在畫布上，**記下畫布節點總數 N**（含遞迴 children）——這是「落地檔真的跟得上記憶體」的比對基準之一，下一步必須把它傳進去，不能讓腳本自己從 backup 猜。
+2. **最後一次 execute 之後立刻**記下 `t=$(date +%s)`——這是「backup 真的比這次編輯新」的時間基準（LS-26 舊 SOP 步驟 2 的機械版：純屬性變更不改變節點數，光靠 N 擋不住 autosave 落後）。
+3. **落地**：`bash scripts/ops/pen-land.sh <worktree 或 repo 根> --expect-nodes N --after "$t"`。腳本內部會找 autosave 備份（sha1 對帳）、若 backup mtime 早於 `$t` 直接拒絕（autosave 還沒追上）、印結構 diff（節點總數／新增或刪除的 id／meta 是否不變／逐節點屬性差異）、meta 變了或 diff 本身失敗也直接拒絕、**結構與落地檔完全無差異時預設同樣拒絕**（本輪零變更或 autosave 未追上，兩者從結構上分不出來；確認這輪真的沒有視覺變更才加 `--allow-unchanged`）；全部通過才 cp 並自動跑 design-landing-check.sh 驗 N 與畫布一致。**exit 0 才算落地**；非 0 時把輸出貼進 handoff 並照訊息處理——最常見是 backup 還沒追上最新編輯（等 autosave，可在 app 內做一次微小變更再還原來觸發後重跑）。**被擋就回報，不得改用 `cp` 手動繞過、不得為了通過而加 `--allow-unchanged`（除非這輪真的沒有變更）**。
+4. 之後才 commit／回報；handoff 附 pen-land.sh 的完整輸出（含它印出的結構 diff 清單）與 Pen 路徑。commit 時 commit-gate 會對 staged .pen 自動再跑結構檢查（機械兜底，但它沒有 N／--after——深度驗證靠本程序）。
+5. **handoff 前**：`bash scripts/ops/pen-open.sh "$(git worktree list --porcelain | sed -n '1s/^worktree //p')"` 切回主 checkout（`git worktree list` 第一行固定是主 checkout，不論 worktree 放在哪個路徑；Pen 只開主 checkout 才不會擋到下一票）並確認 **exit 0**（R2）；`pen-open.sh` 遇到殘留視窗會自動驗證安全後清場重試，被擋（exit 非 0）就照訊息處理，不得略過直接交出 handoff。
 
 ## 本專案設計硬約束（出自 docs/PLAN.md）
 - **長輩優先**：支援 Dynamic Type（版面要撐住 accessibility 字級）、點擊目標 ≥44pt、icon 一律帶文字標籤、層級淺（首頁 2 步內到達內容）、高對比、不用雙擊等進階手勢。
@@ -41,3 +42,4 @@ model: sonnet
 - 關鍵設計決策與理由
 - 給 ios-dev 的實作註記（spacing、字級、色彩變數、各種狀態：空、載入、錯誤）
 - 未決事項與需要人核可的點
+- **Pen 路徑**（LS-91）：開工核對到的 active 文件路徑；每輪 pen-land.sh 落地時的結果（exit 0／被擋與原因）
