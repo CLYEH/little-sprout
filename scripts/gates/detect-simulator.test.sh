@@ -76,8 +76,10 @@ esac
 STUB
 chmod +x "$work/bin/xcrun"
 # 測試用 xcodebuild 假身（LS-83 R2 F1）：只吃一個「秒數」參數，睡那麼久後印一個可辨識的完成標記——
-# 用來驗證 push-gate.sh 現在把整段 xcodebuild test 包進 simulator-lock.sh（鍵＝UDID）這個機制本身，
-# 不需要真的跑 xcodebuild 或依賴 push-gate.sh。
+# 用來驗證 simulator-lock.sh 本身「同一把鎖下第二個呼叫要等第一個放掉」這個序列化行為（push-gate.sh
+# 賴以生效的機制），不需要真的跑 xcodebuild。**這不驗證 push-gate.sh 是否真的把 xcodebuild test 接上
+# 這條路徑**——push-gate.sh 拿掉 simulator-lock.sh 包裹、只留 stub 本身測綠一樣會全過（merge-reviewer
+# R2 F3 實測）；接線本身由後面讀 push-gate.sh 原文的斷言（⑨）負責。
 cat > "$work/bin/xcodebuild" <<'STUB'
 #!/bin/bash
 sleep "${1:-0}"
@@ -193,6 +195,26 @@ mkdir -p "$work/wt/LS-104"
 out8=$(STUB_DB="$db8" CI=true run_in "$work/wt/LS-104")
 u8=$(id_of "$out8")
 if [ "$u8" = REAL-STOCK-UDID ]; then echo "✓ ⑧ 專屬機排第一台時仍正確選到原廠機"; else echo "✗ ⑧ 應為 REAL-STOCK-UDID，實得 ${u8}（挑到專屬機了？）" >&2; fail=1; fi
+
+
+# ---- ⑨ 接線斷言（比照 scripts/gates/push-ref-check.test.sh:73 的模式）：push-gate.sh 實際執行
+#        xcodebuild test 那一行必須被 scripts/ops/simulator-lock.sh 包住，不能只是在旁邊的註解提到
+#        （merge-reviewer R2 F3：R1 的修復本體——push-gate.sh 真的把 xcodebuild test 包進 lock——
+#        沒有任何斷言釘住；reviewer 實測把 push-gate.sh 的 simulator-lock.sh 包裹拿掉，⑤ 照樣全綠，
+#        因為 ⑤ 只驗 simulator-lock.sh 自己會不會排隊，從不讀 push-gate.sh 的原文）。跳過註解行
+#        （`^[ \t]*#`）只認真正呼叫的程式碼行，避免「鎖被拿掉但緊鄰的註解還在」造成誤判為已接線 ----
+gate="${root}/scripts/gates/push-gate.sh"
+wired=$(awk '
+  /^[ \t]*#/ { next }
+  /scripts\/ops\/simulator-lock\.sh/ { saw_lock = NR; next }
+  /xcodebuild test/ { if (saw_lock != "" && NR == saw_lock + 1) { print "yes"; exit } }
+' "$gate")
+if [ "$wired" = yes ]; then
+  echo "✓ ⑨ push-gate.sh 的 xcodebuild test 確實被 scripts/ops/simulator-lock.sh 包住（不是只在註解提到）"
+else
+  echo "✗ ⑨ push-gate.sh 的 xcodebuild test 沒有被 scripts/ops/simulator-lock.sh 包住——接線斷了" >&2
+  fail=1
+fi
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ detect-simulator／simulator-lock 自測通過"
