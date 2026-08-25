@@ -1301,7 +1301,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -2116,7 +2121,12 @@
                           },
                           "layout": "vertical",
                           "gap": 7,
-                          "padding": "$sp-label",
+                          "padding": [
+                            "$print-edge",
+                            "$print-edge",
+                            "$print-edge-bottom",
+                            "$print-edge"
+                          ],
                           "children": [
                             {
                               "type": "frame",
@@ -2716,7 +2726,12 @@
               },
               "layout": "vertical",
               "gap": 7,
-              "padding": "$sp-label",
+              "padding": [
+                "$print-edge",
+                "$print-edge",
+                "$print-edge-bottom",
+                "$print-edge"
+              ],
               "children": [
                 {
                   "type": "frame",
@@ -4008,7 +4023,12 @@
                         "blur": 12
                       },
                       "layout": "vertical",
-                      "padding": "$sp-label",
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
                       "children": [
                         {
                           "type": "frame",
@@ -6996,7 +7016,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -7879,7 +7904,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -11753,7 +11783,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -12214,7 +12249,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -35030,7 +35070,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -36769,7 +36814,12 @@
                       },
                       "layout": "vertical",
                       "gap": 7,
-                      "padding": "$sp-label",
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
                       "children": [
                         {
                           "type": "frame",
@@ -37051,7 +37101,12 @@
                       },
                       "layout": "vertical",
                       "gap": 7,
-                      "padding": "$sp-label",
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
                       "children": [
                         {
                           "type": "frame",
@@ -37333,7 +37388,12 @@
                       },
                       "layout": "vertical",
                       "gap": 7,
-                      "padding": "$sp-label",
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
                       "children": [
                         {
                           "type": "frame",
