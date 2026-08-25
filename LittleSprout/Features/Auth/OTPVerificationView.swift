@@ -83,12 +83,19 @@ struct OTPVerificationView: View {
 
     @ViewBuilder
     private var resendRow: some View {
+        // LS-17 QA1 R2 F1：padding 移進 Button label（原本掛在外層 Group／Button 外面，
+        // SwiftUI 的 padding 不參與 hit test，可點區量不到——merge-reviewer R1 blocker F1）；
+        // `.contentShape(Rectangle())` 接在 `.padding()` 之後（I1）。倒數態 HStack 自留同一行
+        // padding，一般字級下兩態高度仍一致；I2：這個「等高」只在一般字級成立，AX 字級下倒數
+        // 態文案較長會多換一行、比可按態高，屬既有行為、非本次引入，不強求逐 px 相等。
         if model.canResend {
             Button(action: resend) {
                 HStack(spacing: AppSpacing.tight) {
                     Image(systemName: "arrow.clockwise").appIconFrame(.medium)
                     Text("重新寄一次驗證碼").appFont(.body)
                 }
+                .padding(.vertical, AppSpacing.group)
+                .contentShape(Rectangle())
             }
             .foregroundStyle(Color.lsTextPrimary)
             .disabled(model.isResending || model.isVerifying)
@@ -105,6 +112,7 @@ struct OTPVerificationView: View {
                     .monospacedDigit()
                     .foregroundStyle(Color.lsTextSecondary)
             }
+            .padding(.vertical, AppSpacing.group)
             .accessibilityElement(children: .combine)
         }
     }
