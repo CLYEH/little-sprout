@@ -384,16 +384,28 @@ begin
       v_row.deleted_at, v_row.deleted_by;
   end if;
 
-  -- R1 I1：重複軟刪必須是 no-op——deleted_at 完全不刷新（否則 owner 可以無限延後
-  -- 30 天邊界）。這是 mutation 自證：拿掉 set_child_deleted 裡「只在 deleted_at is
-  -- null 才寫入」的 if guard，這裡會直接變紅（deleted_at 會被刷新成 pg_sleep 之後
-  -- 的新時間）。
+  -- R1 I1／R2 F2 訂正：重複軟刪必須是 no-op——deleted_at 完全不刷新（否則 owner 可以
+  -- 無限延後 30 天邊界）。R1 原本的版本在同一個 DO 區塊（同一交易）內用
+  -- `pg_sleep()` 想製造時間差，但 `now()` 就是 `transaction_timestamp()`，同一交易
+  -- 內是凍結的——`pg_sleep` 完全推不動它，就算把 set_child_deleted 裡的 no-op guard
+  -- 拿掉、真的執行了 `set deleted_at = now()`，寫回去的值仍然跟凍結前一樣，斷言永遠
+  -- 不會開火（merge-reviewer PR #95 review R2 F2 實測：把軟刪分支改成
+  -- `deleted_at = now(), deleted_by = coalesce(v_child.deleted_by, v_uid)`——時鐘退化
+  -- 的 bug 回來了，但 deleted_by 仍凍結——這樣的 mutation 下，R1 那個版本的斷言整包
+  -- 綠著放行）。修法比照下面第 6 段的既有手法：用 postgres 身分把 deleted_at 直接
+  -- 回填成一個明確的過去時間（10 天前，非交易內的相對時間，不受 `now()` 凍結影響），
+  -- 再呼叫一次重複軟刪，斷言 deleted_at 沒有被刷新回「現在」。
+  reset role;
+  update public.children set deleted_at = now() - interval '10 days' where id = v_child;
   select deleted_at into v_deleted_at_1 from public.children where id = v_child;
-  perform pg_sleep(0.05);
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
   perform public.set_child_deleted(v_child, true);
   select deleted_at into v_deleted_at_2 from public.children where id = v_child;
   if v_deleted_at_2 is distinct from v_deleted_at_1 then
-    raise exception 'FAIL：重複軟刪之後 deleted_at 被刷新了（原本 %，現在 %）——30 天時鐘可以被無限延後',
+    raise exception 'FAIL：重複軟刪之後 deleted_at 被刷新了（原本 10 天前的 %，現在變成 %）——30 天時鐘可以被無限延後',
       v_deleted_at_1, v_deleted_at_2;
   end if;
   reset role;

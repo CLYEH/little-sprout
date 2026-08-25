@@ -397,6 +397,18 @@ grant execute on function public.list_children(uuid) to authenticated;
 -- 綁在「RLS 目前剛好這樣設」這個可能會變動的前提上，直接繞過 RLS 讀最真實的狀態）。
 -- 兩張表共用同一支函式：邏輯完全相同（都只依賴 child_id／family_id 兩個同名欄位），
 -- 沒有理由分別各寫一份、日後各自漂移。
+--
+-- **已知限制（R2 I7，merge-reviewer PR #95 review，接受不修）**：這支 trigger 讀
+-- `children` 時沒有取任何鎖，存在一個毫秒級的 TOCTOU 窗口——session A 開始
+-- `create_diary_entry(child_id=X)`（trigger 讀到 X 還是 active，INSERT 通過）但
+-- 交易還沒 commit；同時 session B 呼叫 `set_child_deleted(X, true)` 並先 commit；
+-- A 之後才 commit，結果是一則 `child_id = X` 的日記掛在一個當下已經軟刪的孩子
+-- 底下。這與本票「既有內容保留」的設計相容（時間軸照樣顯示、`list_children` 照樣
+-- 解析得到名字），只讓「已移除的孩子不會再累積新內容」這句話有個 ε 例外，不是
+-- 資料完整性問題（`child_id` 依然指向一個真實存在、同家庭的孩子）。收斂的代價是
+-- 把 `exists(...)` 改成 `select 1 from public.children where id = new.child_id
+-- for key share`——每次 diaries/albums 寫入都對 children 列多加一次鎖，換一個
+-- 極窄時間窗口的邊界情況，判斷不值得，故意留著，不開後續票。
 -- ---------------------------------------------------------------------------
 
 create or replace function private.enforce_child_not_deleted()

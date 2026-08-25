@@ -859,7 +859,7 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS042` | 不是仍是該家庭 owner/member 的成員，無法編輯孩子檔案 | `update_child` |
 | `LS043` | 孩子檔案已被移除超過 30 天，無法還原 | `set_child_deleted`（`p_deleted = false`） |
 | `LS044` | 寶貝已移除，無法歸屬新內容 | `diaries`／`albums` 的 `BEFORE INSERT/UPDATE` trigger——`create_diary_entry`／`update_diary_entry`（把 `child_id` 指向一個已軟刪的孩子）與直接寫 `albums`（owner／member INSERT，建立者 UPDATE `child_id`）皆可能撞到；只在 `child_id` 真的被指定成新值時檢查，不影響既有內容繼續軟刪／還原／編輯自己（R1 I3） |
-| `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE、`children` INSERT/UPDATE）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
+| `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE、`children` INSERT/UPDATE/DELETE——`children` 的 `DELETE` 自 R1 I5 起也收斂，連 owner 都拿這個碼）會拿到的標準碼——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
 
 **沒有被上面任何一支 RPC 包住、可能直接從 PostgREST 冒出來的標準 Postgres 錯誤碼**
 （直接 `.insert()`/`.update()` 到允許直寫的表時可能撞到，client 應該當成一般失敗處理，
@@ -882,11 +882,17 @@ LS-49 推翻）**：`LSErrorCode` 已逐碼涵蓋上表全部自訂碼——`LS0
 雖是作者但已離開家庭，換輸入沒有用，UI 該做的是隱藏編輯入口而不是讓使用者重試）、`LS026`
 （LS-58 R1 補齊，歸層 `rejected`——target 存在但屬於別的家庭，這是呼叫端組錯參數／資料
 被竄改的訊號，不是「換個輸入再試」能解的，UI 該做的是回上一頁或重新整理而不是原地重試）、
-`LS040`–`LS044`（LS-66 補齊，歸層皆 `rejected`——`LS040` 是不可能被正常操作觸發的
+`LS040`–`LS043`（LS-66 補齊，歸層皆 `rejected`——`LS040` 是不可能被正常操作觸發的
 trigger 防護；`LS041`／`LS042` 分別對齊 `LS020`／`LS021` 的理由；`LS043`（還原超過
-30 天）換輸入或重試同一個呼叫都不會成功，UI 該做的是不再顯示「還原」這個動作；
-`LS044`（R1 補齊，寶貝已移除無法歸屬新內容）換輸入沒有用，呼叫端該做的是換一個
-沒被軟刪的孩子或不指定，不是原地重試同一個 `child_id`）；
+30 天）換輸入或重試同一個呼叫都不會成功，UI 該做的是不再顯示「還原」這個動作）；
+`LS044`（R1 補齊，歸層 **`validationRetryable`**——跟上面幾碼不同層：`p_child_id`
+是使用者從孩子清單挑出來的輸入，跟 `inviteCodeNotFound` 那組同一類，挑到的孩子剛好
+已被軟刪多半是清單快取過期，換一個沒被軟刪的孩子（或不指定）之後同一個
+`create_diary_entry`／`update_diary_entry` 呼叫就會成功，符合「使用者能換輸入」的
+`validationRetryable` 準則——R2（merge-reviewer PR #95 review F1）訂正：這裡原本誤寫
+成跟 `LS040`–`LS043` 一起歸 `rejected`，與 `LSErrorCode.tier` 的 `case
+.childDeletedCannotAttachContent` 實際回傳的 `validationRetryable` 矛盾，以程式碼
+（`AppErrorTests.swift` 的列舉測試釘住）為準）；
 `LS016` 另於 LS-55 從 `validationRetryable` 改歸新增的 `retryableSystem` 層（見上方 `LS016`
 列註記）。三層（`validationRetryable`／`retryableSystem`／`rejected`）歸類由
 `LittleSproutTests/AppErrorTests.swift` 的列舉測試逐碼釘住。
@@ -1034,7 +1040,13 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
     製造過這個洞，見 §3 對應段落的裁量說明。
   - **已軟刪的孩子不能再被指定為新內容的 `child_id`**（R1 I3，`LS044`，見 §3／§5）
     ——這條規則管的是「未來要不要允許歸屬」，跟上面兩條「過去已經歸屬的內容繼續
-    保留、繼續可查」是互補而非矛盾：舊帳不翻、新帳不開。
+    保留、繼續可查」是互補而非矛盾：舊帳不翻、新帳不開。**已知限制（R2 I7，接受
+    不修）**：擋這條規則的 trigger 讀 `children` 時不取鎖，存在毫秒級 TOCTOU
+    窗口——兩個交易重疊時，理論上仍可能有一則內容在自己的 INSERT/UPDATE commit
+    之前，孩子被另一個交易軟刪，最終落地成一則 `child_id` 指向已軟刪孩子的新內容。
+    這與「既有內容保留」的設計相容（時間軸、`list_children` 都能正常顯示／解析），
+    只是讓「已移除的孩子不會再累積新內容」這句話有個 ε 例外；不視為需要修的 bug，
+    見 migration 對 `private.enforce_child_not_deleted()` 的裁量說明。
   - 30 天還原邊界只作用在 `children` 這張表本身（`set_child_deleted` 的 `LS043`），
     不影響任何時間軸／照片／日記的可讀性——即使一個孩子已軟刪超過 30 天、事實上
     再也無法還原，他名下的日記與相簿依然完整保留、依然可查（本票不含刪除策略，
