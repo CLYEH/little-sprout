@@ -77,11 +77,19 @@ as $$
 begin
   if new.family_id is distinct from old.family_id then
     raise exception '孩子檔案建立後不能被搬到別的家庭（family_id 不可變）'
-      using errcode = 'LS040';
+      using errcode = '42501';
   end if;
   return new;
 end;
 $$;
+-- LS-57 R2／I1（orchestrator 裁決，2026-08-25，授權併入本檔）：原本用專屬碼 LS040，
+-- 與 diaries／albums／comments 的 family_id 不可變 trigger（LS-57，裸 42501）是同一種
+-- 規則卻分岔成兩種慣例，兩張 PR 同時開著時會各自長大。改成與三表一致的裸 42501，
+-- LS040 撤碼——這裡直接改寫本函式定義（CREATE OR REPLACE，不是新開一支 migration
+-- 疊代），因為本檔在 LS-57 對齊當下才剛併入 development 幾小時、尚未進到
+-- test／main，且錯誤碼撤碼本身需要 docs/API.md／LSErrorCode／95_ 三處同步移除
+-- LS040 的所有痕跡才能讓 error-codes-check 三方對帳過，留著兩份定義（一份 LS040、
+-- 一份 42501）反而會造成「這支 trigger 到底丟哪個碼」的兩份事實。
 
 create trigger children_family_immutable
   before update on public.children
@@ -139,7 +147,10 @@ comment on table public.children is
 -- 錯誤碼延續既有序號（最新是 LS026，LS-58）。orchestrator 指派：本票新碼從 LS040
 -- 起跳，避開 LS-57（同時在飛，實際佔用 LS027——見
 -- 20260825040000_deletion_attribution.sql，本票與其不撞號）：
---   LS040 孩子檔案的 family_id 不可變（trigger，見上）
+--   LS040 孩子檔案的 family_id 不可變（trigger，見上）——LS-57 R2／I1 撤碼，改用裸
+--         42501，與 diaries／albums／comments 的同型 trigger 一致（見上方函式定義
+--         後的說明）；LS041 起的號碼維持原樣，不因 LS040 撤碼而往前遞補，保留
+--         「LS040 這個號碼曾經存在過、現在不用了」這個事實，不悄悄消失。
 --   LS041 孩子檔案不存在，或（update_child 情境）已被軟刪除須先還原
 --   LS042 不是仍是該家庭 owner/member 的成員，無法編輯孩子檔案
 --   LS043 這個孩子檔案已被移除超過 30 天，無法還原

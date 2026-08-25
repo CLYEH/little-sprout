@@ -130,24 +130,28 @@ begin
   end if;
   raise notice 'ok：member（非作者）／viewer／非本家庭成員 對相簿 title 的直接 UPDATE 皆影響 0 列';
 
-  -- F3（merge-reviewer PR #70 review）：owner 直接 UPDATE 的目標欄位換成
-  -- deleted_at——owner 在 RPC 路徑本來就准動的唯一欄位——依然是 0 列。USING
-  -- 比對不上這一列的門檻在「是不是建立者」，不在乎這次想改哪個欄位；
-  -- docs/API.md §2「寫入路徑小結」已明寫這個行為，這裡補機械驗證，不只是
-  -- 文件宣稱。
+  -- F3（merge-reviewer PR #70 review；LS-57 R2 起行為改變，見下）：owner 直接
+  -- UPDATE 的目標欄位換成 deleted_at。R1 及之前：USING 比對不上這一列（owner
+  -- 不是建立者），影響 0 列、不噴錯——deleted_at 當時對 authenticated 還是整表
+  -- grant 的一部分，能到達 RLS 判斷。LS-57 R2（N1/N2 根治）之後：deleted_at／
+  -- deleted_by／family_id 三欄對 authenticated 已無 UPDATE 欄位級 grant，不論
+  -- 呼叫者是誰、改的是不是自己的相簿，這句 UPDATE 在到達 RLS 之前就先在 grant
+  -- 層被拒絕，明確拿到 42501，不再是「靜默 0 列」——docs/API.md §2 的例外說明
+  -- 已同步改寫（限縮到內容欄位），這裡補機械驗證這個行為變化，不只是文件宣稱。
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  update public.albums set deleted_at = now() where id = v_album;
-  get diagnostics v_n = row_count;
+  begin
+    update public.albums set deleted_at = now() where id = v_album;
+    raise exception 'FAIL：owner 直接 UPDATE 別人相簿的 deleted_at 竟然成功了——deleted_at 的欄位級 grant 沒有收回';
+  exception when sqlstate '42501' then
+    null;
+  end;
   reset role;
-  if v_n <> 0 then
-    raise exception 'FAIL：owner 直接 UPDATE 別人相簿的 deleted_at 竟然生效了（影響 % 列）——即使是 RPC 路徑准動的欄位，直接 UPDATE 仍應影響 0 列', v_n;
-  end if;
   if (select deleted_at from public.albums where id = v_album) is not null then
     raise exception 'FAIL：owner 直接 UPDATE 別人相簿的 deleted_at 竟然真的寫入了';
   end if;
-  raise notice 'ok：owner 直接 UPDATE 別人相簿的 deleted_at（RPC 路徑准動的唯一欄位）同樣影響 0 列（F3）';
+  raise notice 'ok：owner 直接 UPDATE 別人相簿的 deleted_at 一律 42501（欄位級 grant 收回，LS-57 R2）——F3 回歸，行為已從「靜默 0 列」改為明確錯誤';
 
   -- 作者已離開家庭：完全不在 family_members 裡了
   delete from public.family_members where family_id = v_family and user_id = v_author;
@@ -660,11 +664,17 @@ rollback;
 -- ===========================================================================
 -- §E. 授權兩層對帳
 --
--- albums 這次的收斂**沒有**動表級 grant（跟 LS-48 對 diaries 整個 revoke 不同——
--- 這裡作者仍走直接 UPDATE，grant 本來就該留著），所以下面驗的是正向回歸：grant
--- 這一層原封不動還在，縮權完全是靠上面兩段驗過的 policy 窄化，不是靠關掉 grant。
+-- albums 在 LS-52 當時**沒有**動表級 grant（跟 LS-48 對 diaries 整個 revoke
+-- 不同——那時作者仍走直接 UPDATE，grant 留著整表）；**LS-57 R2 起這個現況已經
+-- 改變**：deleted_at／deleted_by／family_id 三欄的欄位級 grant 被收回，只保留
+-- title／child_id／cover_media_id 三欄（N1/N2 根治，見
+-- 20260825040000_deletion_attribution.sql 檔頭），`has_table_privilege(...,
+-- 'update')`（檢查的是整表 relacl，不含欄位級 attacl）因此從 R1 之前的 `true`
+-- 變成 `false`——下面的斷言已同步改寫成驗這個新現況，不是複製 R1 之前的舊斷言；
+-- 88_deletion_attribution.sql／60_default_privileges.sql 有更細的欄位級
+-- has_column_privilege 斷言，這裡驗的是表級／整體現況的回歸對照。
 --
--- comments 則相反：LS-58（20260825020000_comments_reactions_notifications.sql）
+-- comments 則不同：LS-58（20260825020000_comments_reactions_notifications.sql）
 -- 把 comments 的寫入面從這裡原本測的 hybrid 模式進一步收斂成 RPC-only，INSERT／
 -- UPDATE 的表級 grant 已被整個 revoke（比照 diaries），只剩 SELECT／DELETE 兩個
 -- grant 還在——下面改成驗這個新現況，不是複製 albums 那份斷言。
@@ -676,8 +686,13 @@ rollback;
 -- ---------------------------------------------------------------------------
 do $$
 begin
-  if not has_table_privilege('authenticated', 'public.albums', 'update') then
-    raise exception 'FAIL 回歸：authenticated 失去 albums 的表級 UPDATE grant——作者直接編輯內容的路徑會跟著壞掉';
+  -- LS-57 R2：albums 的表級 UPDATE grant 已被收回（只留欄位級子集合），
+  -- has_table_privilege 對整表 UPDATE 應該回 false——這是正向回歸，不是漏洞。
+  if has_table_privilege('authenticated', 'public.albums', 'update') then
+    raise exception 'FAIL 回歸：authenticated 竟然還有 albums 的表級 UPDATE grant——LS-57 R2 應該已收回整表 UPDATE、只留欄位級子集合（title/child_id/cover_media_id）';
+  end if;
+  if not has_column_privilege('authenticated', 'public.albums', 'title', 'update') then
+    raise exception 'FAIL 回歸：authenticated 失去 albums.title 的欄位級 UPDATE——作者直接編輯內容的路徑會跟著壞掉';
   end if;
   if not has_table_privilege('authenticated', 'public.albums', 'select') then
     raise exception 'FAIL 回歸：authenticated 失去 albums 的 SELECT grant';
@@ -688,7 +703,7 @@ begin
   if not has_table_privilege('authenticated', 'public.albums', 'delete') then
     raise exception 'FAIL 回歸：authenticated 失去 albums 的 DELETE grant（owner 硬刪的路徑）';
   end if;
-  raise notice 'ok 回歸：albums 的 SELECT/INSERT/UPDATE/DELETE 表級 grant 原封不動——LS-52 完全靠 policy 窄化與新 RPC 達成縮權，沒有動 grant';
+  raise notice 'ok 回歸：albums 的 SELECT/INSERT/DELETE 表級 grant 原封不動，UPDATE 已收斂成欄位級子集合（LS-57 R2）——縮權靠 policy 窄化＋欄位級 grant 兩層，不再只靠 policy';
 
   -- LS-58：comments 的 INSERT／UPDATE grant 已被整個 revoke（RPC-only，同 diaries）。
   if has_table_privilege('authenticated', 'public.comments', 'insert') then

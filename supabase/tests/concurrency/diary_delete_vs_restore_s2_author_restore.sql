@@ -25,8 +25,16 @@
 -- `set_diary_deleted` 這一支——本檔重新用同一個 mutation（拿掉 `set_diary_deleted`
 -- 的 `for update`）對 `diary_edit_vs_delete` 方向 B 重跑過，兩條斷言與 verify 一樣
 -- 全綠，代表 `set_diary_deleted` 自己那句 `for update` 在目前全部已知場景下都是
--- 冗餘的（保留它是保守選擇，不是本票要清理的範圍——移除屬於後續票的技術債，這裡
--- 只誠實記錄現況，不擅自刪碼）。
+-- 冗餘的。R2（merge-reviewer PR #98 review N1/N2）之後：`albums`／`diaries`／
+-- `comments` 三表的 `deleted_at`／`deleted_by`／`family_id` 三欄已對 authenticated
+-- 收回 UPDATE 欄位級 grant（見 `20260825040000_deletion_attribution.sql`），
+-- `family_id` 無法再由任何呼叫端（不論單句或多句）直接改動，`set_album_deleted`
+-- 那組 race 原本擔心的「授權讀取當下 family_id 是過期值」的 TOCTOU 前提已經不存在
+-- ——`for update` 仍然保留，作為授權讀取（`select ... for update` 讀 `family_id`／
+-- `author_id` 做授權判斷）的 TOCTOU 防線：這是防禦性寫法，不是回應一個目前測得到
+-- 的具體場景（家族三支 RPC 內部邏輯若未來變動、或有繞過欄位級 grant 的路徑
+-- 出現，這把鎖能繼續擋住同一類「讀的時候還沒變、寫的時候已經變了」的問題），
+-- 移除它需要先確認所有相依場景都真的用不到，不在本票範圍內處理。
 --
 -- 本檔仍然是有意義的回歸測試：它驗證的是「owner 軟刪 vs 作者還原」這個 race 的
 -- **最終行為**（作者必須被正確擋下、拿到 LS027，不能用過期資料矇混過關）——只是
@@ -42,7 +50,7 @@ declare
   v_other text := null;
 begin
   perform set_config('request.jwt.claims',
-    '{"sub":"a3000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+    '{"sub":"d2000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
   set local role authenticated;
 
   -- 讓 session 1 的 set_diary_deleted（含取鎖）先跑完

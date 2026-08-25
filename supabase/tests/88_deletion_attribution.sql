@@ -7,8 +7,11 @@
 -- 事，含 merge-reviewer PR #98 review（R1）B1/B2/B3 三個問題的回歸：
 --   1. `deleted_by` 欄位本身的值（不只是「還原有沒有生效」），包含「owner 對已被
 --      作者自刪的內容再次移除，deleted_by 必須升級成 owner」（B2）。
---   2. albums 的 hybrid 直接 UPDATE 路徑本身（不透過 RPC）：family_id 不可變、以及
---      直接 UPDATE 清空 owner 設下的 deleted_at 同樣被擋。86_ 的 §B 只測 RPC 路徑。
+--   2. albums 的 hybrid 直接 UPDATE 路徑本身（不透過 RPC）：deleted_at／
+--      deleted_by／family_id 三欄 R2 起改用欄位級 grant 收斂（N1/N2 根治，見
+--      migration 檔頭），直接 UPDATE 這三欄一律 42501；trigger 的 family_id
+--      防線對繞過 grant 的路徑（postgres／表擁有者身分、SECURITY DEFINER RPC）
+--      仍然是唯一防線，§2c 用 postgres 身分單獨驗這一層。86_ 的 §B 只測 RPC 路徑。
 --   3. 刪除一個「名下有目前仍是軟刪狀態、且 deleted_by 是他」的內容的使用者帳號，
 --      trigger 必須放行 FK 的 `on delete set null` RI 動作，不能讓帳號刪不掉（B1，
 --      merge-reviewer 實測出的 blocker）。
@@ -41,7 +44,14 @@
 --         連帶讓 STEP3「作者對已被 owner 接手的內容呼叫還原必須是 LS027」從
 --         FAIL（預期拿到 LS027 卻成功了）變成真的成功。
 --   M2：拿掉 trigger 裡 `new.family_id is distinct from old.family_id` 那段 raise
---       → §2「建立者直接 UPDATE 把自己的相簿搬到另一個家庭」斷言變紅。
+--       → **不會**讓 §2／§2b 的 authenticated 角色斷言變紅（R2 起 family_id 對
+--       authenticated 已無 UPDATE 欄位級 grant，那些斷言本來就是被 grant 擋下、
+--       不是被這段 trigger 邏輯擋下，拿掉 trigger 邏輯不影響它們）——會讓 §2c
+--       「postgres 身分（繞過 grant／RLS）直接搬家」那條斷言變紅，這條才是真正
+--       測到 trigger 自身 family_id 防線的地方（見 §2c 說明：grant 層只防得住
+--       authenticated 這個角色，SECURITY DEFINER RPC 與任何以資料表擁有者／
+--       postgres 身分執行的寫入都繞過 grant，family_id 不可變在這些路徑上仍然
+--       只靠 trigger 這一層）。
 --   M3：把還原鎖的條件 `old.deleted_by is distinct from v_uid` 改成
 --       `old.deleted_by is not null and old.deleted_by is distinct from v_uid`
 --       （退回 LS-57 初版、NULL 不擋的行為）→ §4「deleted_by 為 NULL 時作者不能
@@ -161,8 +171,10 @@ $$;
 rollback;
 
 -- ===========================================================================
--- 2. albums：hybrid 直接 UPDATE 路徑（不透過 RPC）——family_id 不可變、
---    清空 owner 設下的 deleted_at 同樣被擋
+-- 2. albums：hybrid 直接 UPDATE 路徑（不透過 RPC）——deleted_at／deleted_by／
+--    family_id 三欄 R2 起改成欄位級 grant 收斂（N1/N2 根治），直接 UPDATE 這三欄
+--    一律 42501（PostgreSQL 在到達 RLS／trigger 之前就先擋，不是 trigger 擋的）；
+--    內容欄位（title 等）不受影響，仍可直接編輯
 -- ===========================================================================
 begin;
 
@@ -173,14 +185,13 @@ declare
   v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
   v_author uuid := 'a0000000-0000-4000-8000-000000000002';
   v_album uuid;
-  v_n int;
   v_family_after uuid;
   v_deleted_at timestamptz;
   v_deleted_by uuid;
 begin
   set local role postgres;
   -- 讓作者也是 B 家的 owner，才有「自己也是 contributor 的另一個家庭」可以搬過去
-  -- （呼應收斂前 N1 的攻擊前提；LS-57 要驗的正是這條路現在走不通）。
+  -- （呼應收斂前 N1/N2 的攻擊前提；LS-57 要驗的正是這條路現在走不通）。
   insert into public.family_members (family_id, user_id, role, can_upload)
   values (v_family_b, v_author, 'owner', true)
   on conflict do nothing;
@@ -191,13 +202,15 @@ begin
   reset role;
 
   -- 建立者直接 UPDATE 想把自己的相簿搬到另一個家庭：LS-57 之前這條路本來走得通
-  -- （N1 跨家庭越權 race 的前提），trigger 補上之後一律 42501，family_id 完全不變。
+  -- （N1 跨家庭越權 race 的前提）。R2 起 family_id 對 authenticated 已無 UPDATE
+  -- 欄位級 grant，一律 42501——PostgreSQL 在解析 UPDATE 語句時就直接拒絕，
+  -- 不會走到 RLS 或 trigger。
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin
     update public.albums set family_id = v_family_b where id = v_album;
-    raise exception 'FAIL：建立者直接 UPDATE 竟然能把自己的相簿搬到別的家庭——family_id 不可變的 trigger 沒有生效';
+    raise exception 'FAIL：建立者直接 UPDATE 竟然能把自己的相簿搬到別的家庭——family_id 的欄位級 grant 沒有收回';
   exception when sqlstate '42501' then
     null;
   end;
@@ -206,7 +219,25 @@ begin
   if v_family_after <> v_family then
     raise exception 'FAIL：family_id 竟然被改掉了（現在是 %，應該仍是 %）', v_family_after, v_family;
   end if;
-  raise notice 'ok：建立者直接 UPDATE 相簿的 family_id 一律 42501，family_id 維持不變——LS-57';
+  raise notice 'ok：建立者直接 UPDATE 相簿的 family_id 一律 42501（欄位級 grant 收回），family_id 維持不變——LS-57 R2';
+
+  -- N1（merge-reviewer PR #98 review R2 blocker）：建立者直接 UPDATE 想指定
+  -- deleted_by——這本相簿此時甚至還沒被刪除（deleted_at 仍是 NULL），純粹測
+  -- deleted_by 這一欄本身有沒有欄位級 grant，不牽涉還原鎖的授權邏輯。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    update public.albums set deleted_by = v_author where id = v_album;
+    raise exception 'FAIL N1：建立者直接 UPDATE 竟然能指定 deleted_by——deleted_by 的欄位級 grant 沒有收回';
+  exception when sqlstate '42501' then
+    null;
+  end;
+  reset role;
+  if (select deleted_by from public.albums where id = v_album) is not null then
+    raise exception 'FAIL：deleted_by 竟然被寫入了（應該仍是 NULL）';
+  end if;
+  raise notice 'ok N1：建立者直接 UPDATE 相簿的 deleted_by 一律 42501（欄位級 grant 收回）——LS-57 R2';
 
   -- owner 用 RPC 軟刪這本相簿，deleted_by 記成 owner。
   perform set_config('request.jwt.claims',
@@ -221,22 +252,200 @@ begin
 
   -- 建立者改用「直接 UPDATE」（不透過 set_album_deleted RPC）清空 deleted_at，
   -- 想繞過 RPC 裡的邏輯還原——86_albums_comments_owner_scope.sql §B 只測過 RPC
-  -- 路徑，這裡補的正是 hybrid 模式獨有的第二條寫入路徑，trigger 必須在這裡也擋下。
+  -- 路徑，這裡補的正是 hybrid 模式獨有的第二條寫入路徑。R2 起 deleted_at 的欄位級
+  -- grant 也收回了，這句 UPDATE 連 RLS／trigger 都到不了，直接在 grant 層拿
+  -- 42501（R1 版本是靠 trigger 擋、拿到的是 LS027；grant 層擋下比 trigger 更早、
+  -- 更徹底，見 migration 檔頭 N1/N2 段落的裁量說明）。
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin
     update public.albums set deleted_at = null where id = v_album;
-    raise exception 'FAIL：建立者直接 UPDATE 竟然能清空 owner 軟刪的 deleted_at——LS-57 的還原鎖只擋了 RPC 路徑，沒擋 hybrid 直接 UPDATE 路徑';
-  exception when sqlstate 'LS027' then
+    raise exception 'FAIL：建立者直接 UPDATE 竟然能清空 owner 軟刪的 deleted_at——deleted_at 的欄位級 grant 沒有收回';
+  exception when sqlstate '42501' then
     null;
   end;
   reset role;
   select deleted_at into v_deleted_at from public.albums where id = v_album;
   if v_deleted_at is null then
-    raise exception 'FAIL：被 LS027 擋下的直接 UPDATE，deleted_at 竟然還是被清掉了';
+    raise exception 'FAIL：被 42501 擋下的直接 UPDATE，deleted_at 竟然還是被清掉了';
   end if;
-  raise notice 'ok：建立者直接 UPDATE 清空 owner 軟刪的 deleted_at 同樣拿到 LS027（hybrid 路徑與 RPC 路徑受同一支 trigger 保護）——LS-57';
+  raise notice 'ok：建立者直接 UPDATE 清空 owner 軟刪的 deleted_at 一律 42501（欄位級 grant 收回，比 trigger 更早擋下）——LS-57 R2';
+
+  -- 正向對照：內容欄位（title）完全不受影響，建立者仍可直接編輯自己的相簿。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  update public.albums set title = '內容欄位仍可直接編輯' where id = v_album;
+  reset role;
+  if (select title from public.albums where id = v_album) <> '內容欄位仍可直接編輯' then
+    raise exception 'FAIL：title 應該仍可被建立者直接 UPDATE，欄位級 grant 誤傷了內容欄位';
+  end if;
+  raise notice 'ok：title 等內容欄位不受欄位級 grant 收斂影響，建立者仍可直接編輯——LS-57 R2 正向對照';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 2b.（N1/N2，merge-reviewer PR #98 review R2 blocker，reviewer 原始 X0-X3／
+--     Y0-Y2 情境）欄位級 grant 收斂之後，這兩條攻擊鏈完全走不通——不需要靠
+--     trigger 判斷順序或整列比對，第一句就在 grant 層被擋
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_family_b uuid := 'fb000000-0000-4000-8000-000000000001';
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_author uuid := 'a0000000-0000-4000-8000-000000000002';
+  v_album uuid;
+  v_deleted_by uuid;
+  v_deleted_at timestamptz;
+  v_family_after uuid;
+begin
+  set local role postgres;
+  insert into public.family_members (family_id, user_id, role, can_upload)
+  values (v_family_b, v_author, 'owner', true)
+  on conflict do nothing;
+  insert into public.albums (family_id, title, created_by)
+  values (v_family, 'X0-X3／Y0-Y2 情境', v_author)
+  returning id into v_album;
+  reset role;
+
+  -- X0：owner 移除相簿。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.set_album_deleted(v_album, true);
+  reset role;
+
+  -- X1：作者直接還原（對照，見上面§2；這裡重複一次確保與 X2/X3 同一個 album 上
+  -- 的狀態一致，不影響後續斷言）。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    update public.albums set deleted_at = null where id = v_album;
+    raise exception 'FAIL X1：作者直接還原竟然成功';
+  exception when sqlstate '42501' then
+    null;
+  end;
+  reset role;
+
+  -- X2：作者把 deleted_by 改成自己——reviewer 原始報告裡這句「放行」是 N1 的核心
+  -- 攻擊點；R2 之後這句本身就在 grant 層被擋，不會走到 X3。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    update public.albums set deleted_by = v_author where id = v_album;
+    raise exception 'FAIL X2：作者把 deleted_by 改成自己竟然成功——N1 的攻擊點沒有被堵住';
+  exception when sqlstate '42501' then
+    null;
+  end;
+  reset role;
+  select deleted_by into v_deleted_by from public.albums where id = v_album;
+  if v_deleted_by is distinct from v_owner then
+    raise exception 'FAIL X2：deleted_by 竟然不是 owner 了（%）——即使 UPDATE 語句本身噴錯，也要確認完全沒有副作用', v_deleted_by;
+  end if;
+
+  -- X3：既然 X2 已經被擋、deleted_by 仍是 owner，作者現在還原一樣要被擋。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    update public.albums set deleted_at = null where id = v_album;
+    raise exception 'FAIL X3：X2 沒有真的成功，作者卻還是能還原 owner 移除的相簿';
+  exception when sqlstate '42501' then
+    null;
+  end;
+  reset role;
+  select deleted_at into v_deleted_at from public.albums where id = v_album;
+  if v_deleted_at is null then
+    raise exception 'FAIL X3：owner 移除的相簿被還原了';
+  end if;
+  raise notice 'ok：reviewer 原始 X0-X3 情境——X2（塞 deleted_by）在 grant 層就被擋下，X3（還原）連帶不成立，owner 的移除保持有效——LS-57 R2（N1 根治）';
+
+  -- Y0：全新相簿（從未被刪除過），deleted_at／deleted_by 皆 NULL。
+  set local role postgres;
+  insert into public.albums (family_id, title, created_by)
+  values (v_family, 'Y0-Y2 情境', v_author)
+  returning id into v_album;
+  reset role;
+
+  -- Y1：作者直接把 deleted_by 塞成自己（在還沒有任何軟刪的情況下）。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    update public.albums set deleted_by = v_author where id = v_album;
+    raise exception 'FAIL Y1：作者在相簿從未被刪除的狀態下，竟然能塞 deleted_by';
+  exception when sqlstate '42501' then
+    null;
+  end;
+  reset role;
+
+  -- Y2：單句同時搬家＋清空 deleted_by（reviewer 原始「兩句版」濃縮成單句攻擊，
+  -- 兩種寫法都必須擋下——這裡驗單句版；雙句版見上面「combined move+clear」與
+  -- §2 的搬家測試，兩者合起來涵蓋 reviewer 報告列出的兩種攻擊形狀）。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    update public.albums set family_id = v_family_b, deleted_by = null where id = v_album;
+    raise exception 'FAIL Y2：單句搬家＋清空 deleted_by 竟然成功';
+  exception when sqlstate '42501' then
+    null;
+  end;
+  reset role;
+  select family_id into v_family_after from public.albums where id = v_album;
+  if v_family_after <> v_family then
+    raise exception 'FAIL Y2：family_id 竟然被改掉了';
+  end if;
+  raise notice 'ok：reviewer 原始 Y0-Y2 情境——單句「搬家＋清空 deleted_by」在 grant 層就被擋下，family_id 與 deleted_by 皆維持原樣——LS-57 R2（N1/N2 根治）';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 2c. trigger 自身的 family_id 防線（不是靠 grant）：以 postgres／表擁有者身分
+--     （繞過 authenticated 的欄位級 grant 與 RLS）直接 UPDATE family_id，仍然被
+--     enforce_deletion_attribution() 擋下——§2／§2b 的斷言全部是 authenticated
+--     角色，只證明得了 grant 層擋住；SECURITY DEFINER RPC（set_album_deleted 等）
+--     與任何以表擁有者身分執行的寫入（例如未來的批次維運腳本）都繞過欄位級
+--     grant，family_id 不可變在這些路徑上唯一的防線就是這裡驗的 trigger 本身。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_family_b uuid := 'fb000000-0000-4000-8000-000000000001';
+  v_author uuid := 'a0000000-0000-4000-8000-000000000002';
+  v_album uuid;
+  v_family_after uuid;
+begin
+  set local role postgres;
+  insert into public.albums (family_id, title, created_by)
+  values (v_family, 'trigger 自身防線測試', v_author)
+  returning id into v_album;
+
+  begin
+    update public.albums set family_id = v_family_b where id = v_album;
+    raise exception 'FAIL：postgres 身分（繞過 grant／RLS）直接搬家竟然成功——trigger 本身的 family_id 防線沒有生效';
+  exception when sqlstate '42501' then
+    null;
+  end;
+  reset role;
+
+  select family_id into v_family_after from public.albums where id = v_album;
+  if v_family_after <> v_family then
+    raise exception 'FAIL：family_id 竟然被改掉了（現在是 %，應該仍是 %）', v_family_after, v_family;
+  end if;
+  raise notice 'ok：postgres 身分（繞過 grant／RLS）直接搬家仍被 trigger 擋下——family_id 不可變在非 authenticated 路徑上唯一靠 trigger（M2 mutation 對照見檔頭）';
 end;
 $$;
 

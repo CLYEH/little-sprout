@@ -201,14 +201,69 @@ comment on column public.diaries.deleted_by is
   '移除時，deleted_by 會升級成 owner（B2）；作者對 owner 刪的（含 deleted_by 為'
   ' NULL 的情況）呼叫還原或重複軟刪都會拿到 LS027。';
 comment on column public.albums.deleted_by is
-  '軟刪這本相簿的人（LS-57，set_album_deleted 或建立者直接 UPDATE deleted_at 皆由'
+  '軟刪這本相簿的人（LS-57，set_album_deleted 內部由'
   ' private.enforce_deletion_attribution() trigger 推導寫入，呼叫端無法指定）。規則'
-  '同 diaries（NULL 語意見該欄位註解）；albums 額外由同一支 trigger 擋下「直接'
-  ' UPDATE 竄改 family_id」。';
+  '同 diaries（NULL 語意見該欄位註解）。R2 起 authenticated 對 deleted_at／'
+  'deleted_by／family_id 三欄已無 UPDATE 欄位級 grant（見下方 REVOKE/GRANT），'
+  '建立者不可能再透過直接 UPDATE 碰到這三欄，只能走 set_album_deleted RPC；trigger'
+  ' 對這三欄的把關現在是 RPC 路徑與 RI 動作的防線，不再是直接 UPDATE 路徑的唯一'
+  '防線（R1 曾經是，N1/N2 review 指出光靠 trigger 守不住，見下方 REVOKE/GRANT 段落'
+  '與函式本體的裁量說明）。';
 comment on column public.comments.deleted_by is
   '軟刪這則留言的人（LS-57，set_comment_deleted 內部由'
   ' private.enforce_deletion_attribution() trigger 推導寫入，呼叫端無法指定）。規則'
   '同 diaries（NULL 語意見該欄位註解）。';
+
+-- ---------------------------------------------------------------------------
+-- N1／N2 根治（merge-reviewer PR #98 review R2；orchestrator 裁決）：albums 的
+-- deleted_at／deleted_by／family_id 三欄改成欄位級 grant 收斂
+--
+-- R1 版本只靠 trigger 擋「建立者直接 UPDATE 竄改 deleted_by／family_id」，R2 review
+-- 實測出兩個繞得過去的洞：
+--   N1：albums 對 authenticated 是整表 UPDATE grant（LS-52 沿用至今，涵蓋
+--       deleted_by 這個新欄位），`albums_update` policy 的 WITH CHECK 只比對
+--       created_by／family_id，完全不看 deleted_by——建立者可以送一句只改
+--       deleted_by（不碰 deleted_at）的 UPDATE，把 owner 設下的歸屬直接改成自己，
+--       trigger 的「deleted_at 沒變就放行」短路對這句 UPDATE 完全不設防（NEW.
+--       deleted_by 原封不動寫進資料庫），下一句還原就暢通無阻。
+--   N2：B1 放行判定式排在 family_id 檢查之前、又只比對 deleted_at 沒變，family_id
+--       可以被同一句 UPDATE 夾帶過去（單句 `set family_id=…, deleted_by=null`）。
+-- 兩個洞的根因相同：albums 的 hybrid 直接 UPDATE 路徑讓呼叫端的 UPDATE 語句碰得到
+-- 這三個屬於「治理」而非「內容」的欄位，trigger 只能在 RLS／trigger 執行的當下
+-- 補救，補不了「呼叫端到底想在同一句 UPDATE 裡塞什麼」這件事——唯一能徹底堵死的
+-- 施力點是 grant 層：讓 authenticated 對這三欄根本沒有 UPDATE 權限，PostgreSQL
+-- 會在到達 RLS／trigger之前就直接拒絕，不必依賴 trigger 邏輯多完備。
+--
+-- 做法：先把 albums 的整表 UPDATE grant 收回，再只對允許直接編輯的內容欄位
+-- （title／child_id／cover_media_id）重新開 grant——這是本 schema 既有的慣例
+-- （families 只給 name、media 只給 taken_at/deleted_at/width/height，皆是
+-- init_schema.sql 的「先收回整表、只開放允許的欄位」寫法，不是新發明）。**不能**
+-- 直接對已有整表 grant 的角色下 `revoke update (col) … from role`——本機用
+-- Supabase CLI 映像實測過：對一個已經有 `grant update on t to role`（整表）的
+-- 角色，另外下 `revoke update (col) on t from role`，`has_column_privilege` 對那
+-- 一欄仍然回 true（col 的權限來源是 relacl 整表授權，不是 attacl 欄位授權，
+-- REVOKE 欄位級只動得到 attacl，動不到 relacl，兩者是 OR 關係，整表授權還在，
+-- 欄位就還是能寫）——這正是 orchestrator 裁決原文字面上寫的做法在 albums 這張表
+-- （目前是整表 grant）不會生效的原因，必須先 REVOKE 整表再 GRANT 子集合，不能只
+-- 下一句欄位級 REVOKE。
+--
+-- diaries／comments 兩張表的 UPDATE 對 authenticated 早已整表 revoke（LS-48／
+-- LS-58），沒有 relacl 可以撿漏，理論上不需要再加欄位級 revoke。這裡仍然照
+-- orchestrator 裁決加上（「雙保險」）：純粹是文件與意圖層面的顯式聲明，讓「這三欄
+-- 是治理欄位、不該被直接寫」這件事在 grant 層也留下紀錄；欄位級 REVOKE 在沒有任何
+-- 底層 grant（整表或欄位）可撤的情況下是 no-op，不會報錯，也不會意外收緊已經是
+-- `false` 的權限。這份 REVOKE 唯一真正有效力的前提是「diaries／comments 未來若
+-- 不慎重新打開整表 UPDATE grant」——但如前段實測所述，欄位級 REVOKE 擋不住之後
+-- 才下的整表 GRANT（OR 語意），所以這份「雙保險」對「未來的整表 grant」其實無法
+-- 提供保護，只對「未來只重開這三欄以外欄位的欄位級 grant、卻不小心連這三欄一起
+-- 開」這種更窄的疏漏有效。這個限制誠實記在這裡，不誇大這句 REVOKE 的實際保護範圍。
+-- ---------------------------------------------------------------------------
+
+revoke update on public.albums from authenticated;
+grant update (title, child_id, cover_media_id) on public.albums to authenticated;
+
+revoke update (deleted_at, deleted_by, family_id) on public.diaries from authenticated;
+revoke update (deleted_at, deleted_by, family_id) on public.comments from authenticated;
 
 create or replace function private.enforce_deletion_attribution()
 returns trigger
@@ -221,15 +276,6 @@ declare
   v_label text;
   v_is_owner boolean;
 begin
-  -- B1：FK 的 on delete set null RI 動作——判定式見檔頭「B1：放行 FK RI 動作」。
-  -- 必須是全函式第一件事：不需要 auth.uid()，也不該對 RI 動作套用 family_id／
-  -- 授權判斷。
-  if new.deleted_by is null
-     and old.deleted_by is not null
-     and new.deleted_at is not distinct from old.deleted_at then
-    return new;
-  end if;
-
   v_label := case tg_table_name
                when 'diaries' then '這篇日記'
                when 'albums' then '這本相簿'
@@ -237,10 +283,27 @@ begin
                else '這筆內容'
              end;
 
-  -- family_id 不可變：不受「deleted_at 有沒有變」影響，任何一次 UPDATE 都檢查。
+  -- family_id 不可變：檢查順序移到最前（N2，merge-reviewer PR #98 review R2）——
+  -- 不受任何後續短路影響，任何一次 UPDATE 都先過這一關，包含下面的 B1 放行判定式。
+  -- 原本 B1 判定式排在這關之前，且只比對 deleted_at 沒變，沒有比對 family_id 有沒有
+  -- 被同一句 UPDATE 夾帶著一起改掉——單句 `update albums set family_id=…,
+  -- deleted_by=null` 因此能繞過還原鎖，把一本被 owner 移除的相簿直接搬到另一個
+  -- 家庭並清空歸屬（N2 實測重現）。family_id 檢查移到最前，這個夾帶路徑物理上
+  -- 不可能再成立：不管 UPDATE 裡還夾帶了什麼，family_id 一變就先噴這裡的 42501。
   if new.family_id is distinct from old.family_id then
     raise exception '% 所屬的家庭不可變更（family_id 是不可變欄位，LS-57）', v_label
       using errcode = '42501';
+  end if;
+
+  -- B1：放行 FK 的 on delete set null RI 動作——判定式收緊成「整列除了 deleted_by
+  -- 以外完全沒有變動」（N2 同一輪 review：原本只比 deleted_at 沒變，同樣沒有比對
+  -- 是否有其他欄位被夾帶；family_id 已經在上面單獨擋過一次，這裡用 to_jsonb 整列
+  -- 相減比對是更一般化的防線，不只針對 family_id 這一種夾帶）。不需要 auth.uid()，
+  -- 也不該對 RI 動作套用授權判斷——RI 動作不代表任何使用者身分。
+  if new.deleted_by is null
+     and old.deleted_by is not null
+     and to_jsonb(new) - 'deleted_by' = to_jsonb(old) - 'deleted_by' then
+    return new;
   end if;
 
   -- deleted_at 完全沒變的一般欄位編輯：deleted_by／還原鎖不必介入，見檔頭「deleted_by

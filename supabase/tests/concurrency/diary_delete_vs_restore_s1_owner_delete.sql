@@ -6,7 +6,7 @@
 begin;
 
 select set_config('request.jwt.claims',
-  '{"sub":"a2000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+  '{"sub":"d1000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 set local role authenticated;
 
 select public.set_diary_deleted('57000000-0000-4000-8000-000000000001', true);
