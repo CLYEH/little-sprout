@@ -31,6 +31,10 @@ list=$(xcrun simctl list devices available)
 #     它一樣含 "iPhone" 子字串，一旦排在清單較前面（例如原廠機被刪除重建、或未來 simctl 排序改變），
 #     name 會被誤判成這台專屬機，後續 devicetype／runtime 查找全部落空、shared_udid 也指錯裝置
 #     （merge-reviewer R2 F2 用「專屬機排第一」重現）。
+#   - PR #164 R1 F2：demo 環境的持久機（`demo-<機型無空白>`，如 `demo-iPhone17Pro`）同樣含 "iPhone" 子
+#     字串、且不是這裡管的「本 worktree 專屬機」，原本沒被排除——一旦它排在清單較前面（例如某個 OS
+#     分節唯一的候選就是它），會被誤判成「共用第一台」，連帶被 push-gate.sh 的模擬器用完必關（LS-100）
+#     選中並關掉，而 demo 機在其餘三處（push-gate.sh／patrol.sh／§6）都刻意豁免。
 first=$(printf '%s\n' "$list" | awk '
   /^-- iOS / {
     os = $0
@@ -43,7 +47,7 @@ first=$(printf '%s\n' "$list" | awk '
     cand = line
     sub(/^[ \t]*/, "", cand)
     sub(/ *\(.*/, "", cand)
-    if (cand ~ /^(LS-[0-9]+|main)-/) next
+    if (cand ~ /^(LS-[0-9]+|main|demo)-/) next
     name = cand
     udid = line
     sub(/^[^(]*\(/, "", udid)

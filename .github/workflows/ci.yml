@@ -116,7 +116,7 @@ jobs:
       # 刪除／tag 早退、test／main 只准 promote.sh FF」（push-ref-check，LS-85）與「agent 定義 tools: 白名單含必要工具」
       # （agent-tools-check，LS-87）與「PreToolUse H1-H3 fail-closed 分派」（pretool，LS-88）的偵測不退化
       # （前饋必有反饋，對 gate 本身也適用）。集中在同一個 step，維持「一個地方跑所有 gate 自測」。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／pretool）
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -135,6 +135,7 @@ jobs:
           bash scripts/gates/push-ref-check.test.sh || rc=1
           bash scripts/gates/agent-tools-check.test.sh || rc=1
           bash scripts/gates/detect-simulator.test.sh || rc=1
+          bash scripts/gates/push-gate.test.sh || rc=1
           bash scripts/hooks/pretool.test.sh || rc=1
           exit "$rc"
 

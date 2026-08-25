@@ -36,5 +36,8 @@ model: sonnet
 3. status 綁 SHA、不隨分支走：`test` 再前進（下一次 promote）就要重驗重貼，舊 SHA 的 PASS 不算數。
 4. 貼失敗（gh 未登入、SHA 錯、腳本 exit 非 0）不得靜默：handoff「未完成」欄明說「status 未貼」，由 orchestrator 補貼。
 
+## 收工前關模擬器（LS-100）
+任務結束、交 handoff 前，`xcrun simctl shutdown <UDID>`——自己這次驗收 boot 的每一台都要關（機器空跑浪費資源、也會讓下一個 agent／patrol 誤判「已有人在用」）。`demo-*` 名稱的模擬器（demo 環境的持久機）豁免，不要關。
+
 ## 回報
-用 CLAUDE.md 的 handoff 格式，驗收條件逐條列 ✓／✗／⊘（含證據位置），並附貼 status 的輸出行（`✓ status qa=… 已貼到 <sha>`）。UI 票另附 **Pen 路徑**（LS-91）：開工核對到的 active 文件路徑。
+用 CLAUDE.md 的 handoff 格式，驗收條件逐條列 ✓／✗／⊘（含證據位置），並附貼 status 的輸出行（`✓ status qa=… 已貼到 <sha>`）。UI 票另附 **Pen 路徑**（LS-91）：開工核對到的 active 文件路徑。產出位置另加一行「模擬器已關：<UDID 列表>」（沒 boot 過就寫「無」；`demo-*` 豁免，見上方「收工前關模擬器」）。
