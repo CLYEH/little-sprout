@@ -37961,6 +37961,1487 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "RaaIf",
+      "x": 2466,
+      "y": 220,
+      "name": "cmp/Child Avatar",
+      "reusable": true,
+      "width": 48,
+      "height": 48,
+      "fill": "$accent-soft",
+      "cornerRadius": "$radius-full",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "A30rIX",
+          "name": "Initial",
+          "fill": "$text-primary",
+          "content": "安",
+          "fontFamily": "$font",
+          "fontSize": "$fs-body",
+          "fontWeight": "700"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "P27HS",
+      "x": 2300,
+      "y": 17835,
+      "name": "LS-47 / 08 幫寶貝建檔",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "Ys2RN",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "jQaeS",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "R1YCkF",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Ya7jD",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "PFvVX",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "X4i78d",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "幫寶貝建立檔案",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "o2l5w",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "之後隨時可以在家庭頁修改，現在不填也沒關係。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "w2CJx6",
+                  "name": "Avatar Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ezs6w",
+                      "name": "Avatar Picker",
+                      "width": 88,
+                      "height": 88,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-full",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "IDbyH",
+                          "name": "Camera Icon",
+                          "width": 26,
+                          "height": 26,
+                          "icon": "camera",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "l12vKu",
+                      "name": "Avatar Label",
+                      "fill": "$text-secondary",
+                      "content": "新增照片",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "id": "BSG6L",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Name Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "姓名或暱稱"
+                    },
+                    "iu3Q8": {
+                      "content": "陳小安",
+                      "fill": "$text-primary"
+                    },
+                    "ikuz2": {
+                      "content": "家人在時間軸上會看到這個名字。"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "R3ZQaE",
+                  "name": "Birthday Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Y5D6V",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "生日",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YBUvn",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "K6j5f",
+                          "name": "Left",
+                          "gap": "$sp-label",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "LI8lZ",
+                              "name": "Calendar Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Ub4cT",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "content": "2024年3月12日",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "dVfUK",
+                          "name": "Chevron",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fBR2m",
+                      "name": "Field Help",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$sp-tight",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "bBHWj",
+                          "name": "Field Help Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "info",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Sgm54",
+                          "name": "Field Help Text",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "之後可以再修改，家人加入後才看得到。",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "INnHs",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "id": "d3k2J",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Create Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "check"
+                    },
+                    "w7CUP": {
+                      "content": "建立寶貝檔案"
+                    }
+                  }
+                },
+                {
+                  "id": "F9I2x6",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Skip Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "之後再說"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "X5f5W",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "PEO2w",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ZCtnR",
+      "x": 2813,
+      "y": 17835,
+      "name": "LS-47 / 08c 幫寶貝建檔 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "RHaB7",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "fOHYd",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "YJr6c",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "WSTMK",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "sgrMX",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "G3nnI",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "幫寶貝建立檔案",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ceDOm",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "之後隨時可以在家庭頁修改，現在不填也沒關係。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "MXBGy",
+                  "name": "Avatar Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "UpKpf",
+                      "name": "Avatar Picker",
+                      "width": 88,
+                      "height": 88,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-full",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "E1vFs",
+                          "name": "Camera Icon",
+                          "width": 26,
+                          "height": 26,
+                          "icon": "camera",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "uDXby",
+                      "name": "Avatar Label",
+                      "fill": "$text-secondary",
+                      "content": "新增照片",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "id": "UuiQT",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Name Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "姓名或暱稱"
+                    },
+                    "iu3Q8": {
+                      "content": "陳小安",
+                      "fill": "$text-primary"
+                    },
+                    "ikuz2": {
+                      "content": "家人在時間軸上會看到這個名字。"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "elSjl",
+                  "name": "Birthday Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "cmCuN",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "生日",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "d6EOiw",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "N8op1",
+                          "name": "Left",
+                          "gap": "$sp-label",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "tnnWx",
+                              "name": "Calendar Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "g3Tuk",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "content": "2024年3月12日",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "jyUig",
+                          "name": "Chevron",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HBsih",
+                      "name": "Field Help",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$sp-tight",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "S0vKY1",
+                          "name": "Field Help Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "info",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "mxTm7",
+                          "name": "Field Help Text",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "之後可以再修改，家人加入後才看得到。",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ehJ6P",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "id": "w6JTk4",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Create Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "check"
+                    },
+                    "w7CUP": {
+                      "content": "建立寶貝檔案"
+                    }
+                  }
+                },
+                {
+                  "id": "NAGLx",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Skip Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "之後再說"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "s4ofjU",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "IrU3f",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Ck0dZ",
+      "x": 3326,
+      "y": 17835,
+      "name": "A11y / 08 幫寶貝建檔 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1700,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "EB42U",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "bJQO0",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "y2hrOS",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "dToh3",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "UJ3J7",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "AdL6j",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "幫寶貝建立檔案",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Y4G0oy",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "之後隨時可以在家庭頁修改，現在不填也沒關係。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OuUdM",
+                  "name": "Avatar Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ns9ls",
+                      "name": "Avatar Picker",
+                      "width": 88,
+                      "height": 88,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-full",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "B0S2GH",
+                          "name": "Camera Icon",
+                          "width": 26,
+                          "height": 26,
+                          "icon": "camera",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "x5NDXv",
+                      "name": "Avatar Label",
+                      "fill": "$text-secondary",
+                      "content": "新增照片",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "id": "bxwBW",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Name Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "姓名或暱稱"
+                    },
+                    "iu3Q8": {
+                      "content": "陳小安",
+                      "fill": "$text-primary"
+                    },
+                    "ikuz2": {
+                      "content": "家人在時間軸上會看到這個名字。"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "kHyb2",
+                  "name": "Birthday Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "cXOib",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "生日",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "he1uV",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        "$ctl-pad-cta",
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "y5Xgj8",
+                          "name": "Left",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "B8CKY",
+                              "name": "Calendar Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "t1Xev",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "2024年3月12日",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "N7kRV",
+                          "name": "Chevron",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "u8mUYR",
+                      "name": "Field Help",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$sp-tight",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "UgV0h",
+                          "name": "Field Help Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "info",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "BKySY",
+                          "name": "Field Help Text",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "之後可以再修改，家人加入後才看得到。",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "yG5Q0",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "id": "sBWEf",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Create Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "check"
+                    },
+                    "w7CUP": {
+                      "content": "建立寶貝檔案"
+                    }
+                  }
+                },
+                {
+                  "id": "Dpg0Y",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Skip Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "之後再說"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "NhSPG",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "u6kMve",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "J8TvbH",
+      "x": 3326,
+      "y": 19695,
+      "name": "LS-47 / 08-iPad 幫寶貝建檔 (iPad 11\")",
+      "clip": true,
+      "width": 834,
+      "height": 1194,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 0.8009592326139089,
+          "height": 0.9631490787269682
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.06594724220623502,
+          "y": 0.01423785594639866
+        }
+      },
+      "cornerRadius": 28,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "eg1A5",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "h3x33",
+          "name": "Main",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": "$sp-section",
+          "padding": [
+            "$screen-pad-lg",
+            "$screen-pad-lg",
+            0,
+            "$screen-pad-lg"
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "wrX2m",
+              "name": "Photo Wrap",
+              "width": 420,
+              "height": 520,
+              "fill": "$surface",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "O8rdRX",
+                  "name": "Avatar Picker",
+                  "width": 160,
+                  "height": 160,
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "$control-line",
+                  "strokeWidth": 1.5,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "vY1RR",
+                      "name": "Camera Icon",
+                      "width": 40,
+                      "height": 40,
+                      "icon": "camera",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "ME5YA",
+                  "name": "Avatar Label",
+                  "fill": "$text-secondary",
+                  "content": "新增照片",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eHMra",
+              "name": "Column",
+              "width": 294,
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "g2QMu",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "c7f4S",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "幫寶貝建立檔案",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "NC33L",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "之後隨時可以在家庭頁修改，現在不填也沒關係。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "UdSAP",
+                  "name": "Field Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "baKQv",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Name Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "姓名或暱稱"
+                        },
+                        "iu3Q8": {
+                          "content": "陳小安",
+                          "fill": "$text-primary"
+                        },
+                        "ikuz2": {
+                          "content": "家人在時間軸上會看到這個名字。"
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LvfEo",
+                      "name": "Birthday Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "N9P9V",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "生日",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "gt65n",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "height": 60,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "padding": [
+                            0,
+                            "$inset-card"
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "OG5eD",
+                              "name": "Left",
+                              "gap": "$sp-label",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "JZnjU",
+                                  "name": "Calendar Icon",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "calendar",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ICDfV",
+                                  "name": "Field Value",
+                                  "fill": "$text-primary",
+                                  "content": "2024年3月12日",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon",
+                              "id": "U6WrbG",
+                              "name": "Chevron",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "chevron-right",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ZHQJ3",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "cJS6Y",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Create Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "check"
+                        },
+                        "w7CUP": {
+                          "content": "建立寶貝檔案"
+                        }
+                      }
+                    },
+                    {
+                      "id": "xWMA4",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Skip Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "之後再說"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "zgkdY",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "f5ktf",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 200,
+              "height": 5
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
