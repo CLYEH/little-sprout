@@ -58,6 +58,8 @@ struct EmailSignInView: View {
             PrimaryButton(icon: "paperplane.fill", title: "寄送驗證碼", isLoading: model.isSending, action: send)
                 .padding(.horizontal, AppSpacing.screenPad)
                 .padding(.bottom, AppSpacing.item)
+                // PR #165 review I1：理由同 OTPVerificationView。
+                .background(Color.lsBackground)
         }
         .appBackground()
         .navigationBarTitleDisplayMode(.inline)

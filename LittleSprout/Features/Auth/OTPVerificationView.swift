@@ -42,6 +42,10 @@ struct OTPVerificationView: View {
             }
             .padding(.horizontal, AppSpacing.screenPad)
             .padding(.bottom, AppSpacing.item)
+            // PR #165 review I1：AX3 內容高過一屏時，可捲動文字會從這塊透明間隙後面滑過去；
+            // 補底色擋住（`AppBackground` 在畫面下半部本來就已收斂成 `lsBackground` 純色，
+            // 這裡補同色不會有視覺接縫）。
+            .background(Color.lsBackground)
         }
         .appBackground()
         .navigationBarTitleDisplayMode(.inline)

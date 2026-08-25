@@ -16,20 +16,46 @@ final class KeyboardHeightObserver {
 
     init() {
         let willChange = NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)
-            .compactMap { note -> CGFloat? in
-                guard let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else {
+            .compactMap { note -> (height: CGFloat, duration: TimeInterval)? in
+                guard let endFrame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else {
                     return nil
                 }
-                // 鍵盤 frame 在螢幕座標系已是「貼齊底部」的高度，不需再對 UIScreen 做算術
-                // （UIScreen.main 在 MainActor 隔離下不可從非隔離 context 取用；frame.height
-                // 本身就等價於原本 screenHeight - frame.origin.y 的結果）。
-                return frame.height
+                let duration = note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0.25
+                return (Self.height(endFrame: endFrame, screenBounds: Self.foregroundScreenBounds()), duration)
             }
         let willHide = NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
-            .map { _ in CGFloat(0) }
+            .map { note -> (height: CGFloat, duration: TimeInterval) in
+                let duration = note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0.25
+                return (0, duration)
+            }
 
+        // PR #165 review F4：高度變化跟著系統鍵盤動畫的 duration 一起做，CTA／
+        // contentMargins 才不會跟丟——長輩對「內容忽然跳一格」的容忍度低。
         willChange.merge(with: willHide)
-            .sink { [weak self] in self?.height = $0 }
+            .sink { [weak self] value in
+                withAnimation(.easeOut(duration: value.duration)) {
+                    self?.height = value.height
+                }
+            }
             .store(in: &cancellables)
+    }
+
+    // PR #165 review F3：`UIScreen.main` 是單一裝置螢幕，多 scene（`Info.plist`
+    // `UIApplicationSupportsMultipleScenes = true`）下不保證是「這個 observer 所在的
+    // scene」；改成取目前 foreground-active 的 `UIWindowScene`。
+    private static func foregroundScreenBounds() -> CGRect {
+        let windowScenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let scene = windowScenes.first { $0.activationState == .foregroundActive } ?? windowScenes.first
+        return scene?.screen.bounds ?? .zero
+    }
+
+    // PR #165 review I2：抽成不碰 UIKit 的純函式，可直接單元測試（KeyboardHeightObserverTests）。
+    // 只有鍵盤下緣真的貼齊螢幕底（一般鍵盤、分離／懸浮鍵盤靠邊停靠時）才視為遮住底部 UI；
+    // 懸浮鍵盤浮在畫面中間、下緣不貼底時回傳 0——不佔用 contentMargins／CTA 空間（review F3）。
+    nonisolated static func height(endFrame: CGRect, screenBounds: CGRect) -> CGFloat {
+        guard endFrame.maxY >= screenBounds.maxY - 1 else {
+            return 0
+        }
+        return max(0, screenBounds.maxY - endFrame.minY)
     }
 }
