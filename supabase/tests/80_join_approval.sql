@@ -232,6 +232,21 @@ insert into public.invites (id, family_id, code, role, created_by, max_uses, exp
   ('1a000000-0000-4000-8000-000000000033', 'fa000000-0000-4000-8000-000000000001',
    'EXP22222', 'member', 'a0000000-0000-4000-8000-000000000001', 5, now() - interval '1 day');
 
+-- LS-90 R1 F2：為 2b 段準備一支「曾經真實存在、被本票 migration 標記失效」的
+-- 8 碼舊格式邀請。先插入一支尚未過期的 8 碼邀請（代表遷移套用前正式站可能存在
+-- 的既有資料），再原封不動執行本票 migration 第 3 段那句 UPDATE
+-- （`supabase/migrations/20260825070627_invite_code_6.sql`）；多加的
+-- `and id = ...` 只是把這句 UPDATE 的作用範圍限定在這裡自己造的這一列，避免
+-- 波及 ls33.code_main／code_last／code_viewer／code_dup 這幾支本檔後面很多段落
+-- 都還要用、此刻也還沒過期的碼——不加限定詞的話，同一句 UPDATE 會把它們一併
+-- 打過期，後面依賴它們仍有效的段落會連環 FAIL。判準（`expires_at > now()`）本身
+-- 與遷移那句完全相同，這裡驗的正是那個判準的效果。
+insert into public.invites (id, family_id, code, role, created_by, max_uses, expires_at) values
+  ('1a000000-0000-4000-8000-000000000090', 'fa000000-0000-4000-8000-000000000001',
+   'LEGACY8C', 'member', 'a0000000-0000-4000-8000-000000000001', 1, now() + interval '7 days');
+update public.invites set expires_at = now()
+ where expires_at > now() and id = '1a000000-0000-4000-8000-000000000090';
+
 select set_config('request.jwt.claims',
   '{"sub":"e0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 set local role authenticated;
@@ -255,21 +270,36 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- 2b. LS-90：8 碼舊格式一律被拒
+-- 2b. LS-90：8 碼舊格式邀請被拒——結果取決於那支碼原本是不是真的存在過
 --
--- 依據：request_join 沒有專屬的長度／格式檢查（見本票 migration 第 2 段的說明），
--- 8 碼舊格式碼天生查不到任何列，回既有的 LS010——這裡驗的正是這個「沒有格式檢查
--- 也能正確拒絕」的行為。'ABCDEFGH' 8 碼、字元全部落在合法字元集內（跟一支
--- 「長得很像真碼」的舊格式輸入是同一種東西），刻意不用 create_invite 產生
--- （它現在只會產出 6 碼，沒有辦法用它造出一支 8 碼的碼來測）。
+-- R1 F1 訂正：request_join 沒有專屬的長度／格式檢查，直接交給既有的三段檢查
+-- 分流，8 碼舊格式碼因此不是單一結果：
+--   - 'LEGACY8C'：上面已插入並被本票 migration 那句 UPDATE 標記過期的列——
+--     列還在，code 完全比對找得到，但 expires_at 已是過去 → LS011（已過期）。
+--   - 'ABCDEFGH'：從來沒被 create_invite（不論 6 碼或 8 碼年代）產生過、也沒被
+--     任何 insert 造過的字串，查無此列 → LS010（不存在）。
+-- 兩者的差異正是「失效＝UPDATE 標記過期、列還在」與「單純打錯／亂猜」的差異。
+--
+-- Mutation 自證：把上面那句 `update ... set expires_at = now() where
+-- expires_at > now() and id = ...` 拿掉，本段 LEGACY8C 那個 begin/exception 會
+-- 因為 request_join 直接成功（回 pending，不噴任何錯誤）而落到「沒有 exception
+-- 可接」，`perform` 之後的 raise exception 'FAIL：...' 會執行，本檔案 FAIL——
+-- 已於本機驗證（見 PR body／handoff）。
 -- ---------------------------------------------------------------------------
 do $$
 begin
   begin
+    perform public.request_join('LEGACY8C');
+    raise exception 'FAIL：被本票 migration 標記失效的 8 碼舊格式邀請竟然通過';
+  exception when sqlstate 'LS011' then
+    raise notice 'ok：既有 8 碼邀請被標記失效後 → LS011（列還在、只是過期，R1 F1 訂正）';
+  end;
+
+  begin
     perform public.request_join('ABCDEFGH');
-    raise exception 'FAIL：8 碼舊格式的邀請碼竟然通過（LS-90 應改用 6 碼）';
+    raise exception 'FAIL：從未存在過的邀請碼竟然通過';
   exception when sqlstate 'LS010' then
-    raise notice 'ok：8 碼舊格式 → LS010（沿用「邀請碼不存在」，未新增格式錯誤碼）';
+    raise notice 'ok：從未存在過的碼（對照組）→ LS010，未被誤判成過期';
   end;
 end;
 $$;

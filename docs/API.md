@@ -163,7 +163,10 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
 （`update invites set expires_at = now() where expires_at > now()`）——正式站當時
 沒有真實家庭在使用邀請碼，用失效（改 `expires_at`）而不是刪除，稽核紀錄與底下
 已核准／拒絕的 `join_requests` 都保留。`request_join` 沒有變動：它本來就不對
-輸入碼做長度／格式檢查，8 碼舊格式碼查不到任何列，回既有的 `LS010`（見 §4）。
+輸入碼做長度／格式檢查，直接交給既有的三段檢查分流，這對 8 碼舊格式碼會有兩種
+結果（R1 F1 訂正）：**曾經真實存在、被上面那句 UPDATE 標記過期的列**（列還在，
+只是 `expires_at` 已是過去）→ 找得到列但已過期 → `LS011`；**從來沒被
+`create_invite` 產生過的字串**（單純打錯或亂猜）→ 查無此列 → `LS010`（見 §4）。
 
 ### `children`
 - `family_id, id` 有複合 UNIQUE，供 `albums`/`diaries` 的複合外鍵綁定同家庭。
