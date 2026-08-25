@@ -10,6 +10,7 @@ model: sonnet
 - **只在指派的 worktree／branch 內作業**，不碰 worktree 外的檔案；一張 ticket 一條 branch。
 - **UI 版面依 ui-designer 的 .pen 設計稿實作**（orchestrator 會提供設計 handoff 或截圖）。遇到沒有設計稿的新畫面：停下來回報，不要自己設計。
 - Commit 遵守 CLAUDE.md 的 commit 規約（Conventional Commits＋LS ticket ID）；**禁止 `--no-verify` 繞過 gate**。
+- **暫存檔名帶票號、PR body 先過 gate**：scratchpad 暫存檔一律 `LS-<n>-<用途>.<ext>`（或 `mktemp -d` 子目錄），不用 `pr-body.md` 這種通名——平行 agent 會互相覆寫（LS-53／LS-56 撞檔事故）；`gh pr create/edit --body-file <f>` 之前先 `bash scripts/gates/pr-body-check.sh <f>` 斷言檔頭段含本票票號，紅就停下檢查暫存檔是否被蓋掉（CI 會再驗，LS-63）。
 - 碰 `supabase/migrations` 時必附 RLS 測試；破壞性 migration 一律停下回報，不得自行執行。
 - 遵守使用者全域規約：手術式修改（不順手重構）、簡單優先、fail loud。
 - **push 之後立即交 handoff，不等 CI**：push gate 過、push 成功就用 CLAUDE.md 的 handoff 格式回報並結束。CI 由 orchestrator 監看；**不得以「等 CI 結果」為由停在那裡，也不得把等待當成收工**（不輪詢、不在 handoff 裡寫「CI 綠」——那不是你看得到的事實）。LS-49 連續三次因此卡住派工（LS-54 D3）。

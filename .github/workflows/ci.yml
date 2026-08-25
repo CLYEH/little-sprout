@@ -90,13 +90,24 @@ jobs:
           printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body.txt"
           bash scripts/gates/branch-ticket-check.sh --branch "$HEAD" --base "origin/$BASE" --pr-body "$RUNNER_TEMP/pr-body.txt"
 
-      # LS-45／LS-41／LS-54／LS-53／LS-50：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
+      # LS-63：PR body 檔頭段須含 head 分支票號（scripts/gates/pr-body-check.sh；agent 在 gh pr create/edit 前對 body 檔
+      # 呼叫同一支腳本，這裡是伺服器端兜底）。來源：LS-53／LS-56 兩個 agent 共用 scratchpad/pr-body.md 撞檔，
+      # LS-53 的 gh pr edit 把 LS-56 的 body 貼上 PR #78——暫存檔命名規約在 repo 外無法機械驗，驗它要防的結果。
+      # 同 LS-50 只在工作分支 head 執行：promote／back-merge 的 head 是保護分支，沒有「本票」可比。
+      - name: PR body 檔頭段含本票票號（pr-body-check，LS-63）
+        if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
+        run: |
+          printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-check.txt"
+          bash scripts/gates/pr-body-check.sh --branch "$HEAD" "$RUNNER_TEMP/pr-body-check.txt"
+
+      # LS-45／LS-41／LS-54／LS-53／LS-50／LS-63：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
       # 放行」（destructive-approval-check）、「schema／文件對帳」（api-contract-check）、
       # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）、「migration 兩級分級／BREAKING: 段落」
-      # （migration-breaking-check／breaking-section-check）與「分支不夾帶他票 commit／push 前無合併衝突」
-      # （branch-ticket-check／merge-conflict-check）與「審查取證不進版控」（evidence-path-check）的偵測不退化（前饋必有反饋，
-      # 對 gate 本身也適用）。集中在同一個 step，維持「一個地方跑所有 gate 自測」。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／breaking-section-check／branch-ticket-check／merge-conflict-check／evidence-path-check）
+      # （migration-breaking-check／breaking-section-check）、「分支不夾帶他票 commit／push 前無合併衝突」
+      # （branch-ticket-check／merge-conflict-check）、「PR body 檔頭段含本票票號」（pr-body-check）與
+      # 「審查取證不進版控」（evidence-path-check）的偵測不退化（前饋必有反饋，對 gate 本身也適用）。
+      # 集中在同一個 step，維持「一個地方跑所有 gate 自測」。
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -108,6 +119,7 @@ jobs:
           bash scripts/gates/breaking-section-check.test.sh || rc=1
           bash scripts/gates/branch-ticket-check.test.sh || rc=1
           bash scripts/gates/merge-conflict-check.test.sh || rc=1
+          bash scripts/gates/pr-body-check.test.sh || rc=1
           bash scripts/gates/evidence-path-check.test.sh || rc=1
           exit "$rc"
 
