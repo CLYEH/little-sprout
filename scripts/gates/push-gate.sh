@@ -2,6 +2,12 @@
 # Push gate（pre-push）：全 repo lint + unit tests + API 契約／錯誤碼對帳 + migration 分級。規約見 docs/COLLABORATION.md §4。
 set -euo pipefail
 
+# LS-73：pre-push hook 由 git 啟動時會 export GIT_DIR／GIT_WORK_TREE／GIT_INDEX_FILE（linked worktree 指向
+# .git/worktrees/<n>）。xcodebuild 內嵌的 SPM 用 git 操作相依套件 mirror 時會繼承它們，跑去本 repo 找套件的
+# tree → 「fatal: unable to read tree <sha>」（LS-46 merge 帶進新相依時 100% 重現；先前被誤判為 SPM 瞬斷）。
+# 在任何 git／xcodebuild 呼叫前一律清掉；本腳本自己的 git 指令以 cwd 為準不受影響。
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_PREFIX
+
 cd "$(git rev-parse --show-toplevel)"
 
 # 1) SwiftLint（有 Swift 檔才要求；有檔沒工具 → fail loud）
