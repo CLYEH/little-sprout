@@ -1,0 +1,802 @@
+<!doctype html><meta charset="utf-8">
+<body style="margin:0;font:12px monospace;background:#fff">
+<div id="out" style="padding:8px;white-space:pre"></div>
+<script>
+/* 在真的瀏覽器裡把設計稿上的每一句宣稱量一次。
+   結果丟給 measure.mjs 寫進 measured.json，verify.mjs 再對它下判斷。
+   —— 第 2 輪三盞燈接錯線（grep helper 定義、只掃 gap、全幅量死帶），
+      所以這一輪全部改成「掃使用點的 computed style」。 */
+(async () => {
+  const CAP = 0.72;
+  /* 「凹」的兩族。build.mjs 的 INSET_FAM 是同一張表的另一半 ——
+     這裡驗的是「畫面上帶 inset 的元素，角色有沒有在自己那一族的白名單上」。 */
+  const INSET_OK = { fillable: ['field','cell','codeslot','tray','switchTrack'], mount: ['photo','avatar'] };
+  const PAUSE = 120;   // 呼吸帶門檻：手機與 iPad 同一條
+  const R = { boards: [], inset: [], insetBad: [], cta: {}, h1: [], voids: [], err: [],
+              contrast: { n: 0, min: 99, worst: '', fails: [], overPhoto: 0,
+                          grainMin: 99, grainWorst: '', grainFails: [], onGrad: 0 },
+              grads: [], gradBad: [], flatBad: [], flatOk: [], trayDelta: [], trays: [],
+              lightBad: [], lightSeen: [], insetDepth: {}, brand: [], brandBad: [], knobs: [], src: [],
+              orphans: [], approve: [], taps: [], darkMotifs: {}, motifs: {},
+              pauses: [], pauseBad: [], lips: {}, lipNone: [], lipTotal: 0,
+              toggles: [], mainBtn: [], photos: [],
+              /* 第 5 輪新增的量測（D4-01/03/04/06/07） */
+              perf: [], scale: [], photoPix: [], widths: {}, ranks: [], axFit: [], brandLab: [],
+              exemptSeen: [], exemptBad: [], glass: [],
+              expiredRects: [] };
+
+  /* ── 具名豁免登記簿（D4-07②）──────────────────────────────────
+     第 4 輪：`data-light` 加上**任何值**都能整個豁免 G24，而且沒有任何一份清單記得誰被豁免
+     （reviewer 的 M1b 就是這樣全綠的）。現在 probe 只認 _exempt.json 上具名的
+     marker+role+板名；不在清單上的標記不生效，而且會被記下來讓 MG2 咬。 */
+  const EX = await (await fetch('_exempt.json')).json();
+  const exemptOK = (n, marker, file) => {
+    const holder = n.closest('[' + marker + ']');
+    if (!holder) return false;
+    const role = holder.getAttribute(marker);
+    const ok = EX.some((e) => e.marker === marker && e.role === role && e.files.includes(file));
+    if (!ok) R.exemptBad.push(file + ':' + marker + '="' + role + '" 不在具名清單上 —— 豁免不生效');
+    return ok;
+  };
+
+  const cv = await (await fetch('canvas.json')).json();
+
+  /* R9 第二版②：把**實際 fetch 到**的每一份原文雜湊起來回報。
+     build 端算的是磁碟上的、這裡算的是瀏覽器真的讀到的 —— 兩者不同就代表
+     server 的根目錄不是這一份產物（就算它的 _root.json 抄得一模一樣）。
+     用的是與 tokens.mjs 的 hash12 相同的 SHA-256 前 12 個 hex。 */
+  const enc = new TextEncoder();
+  const hash12 = async (str) => {
+    const buf = await crypto.subtle.digest('SHA-256', enc.encode(str));
+    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 12);
+  };
+
+  /* 把 computed box-shadow 拆成一層一層（括號內的逗號不算分隔）。
+     G24 的光方向與凹的深度量測共用這一份 —— 兩處各寫一份就會漂移。 */
+  const shadowLayers = (css) => {
+    const out = []; let depth = 0, cur = '';
+    for (const ch of css) {
+      if (ch === '(') depth++;
+      if (ch === ')') depth--;
+      if (ch === ',' && depth === 0) { out.push(cur.trim()); cur = ''; continue; }
+      cur += ch;
+    }
+    if (cur.trim()) out.push(cur.trim());
+    return out;
+  };
+  const shadowNums = (layer) => [...layer.replace(/\([^)]*\)/g, '').matchAll(/(-?[\d.]+)px/g)].map((x) => +x[1]);
+  const hexToRgb = (s) => { const m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(s); return m ? [+m[1], +m[2], +m[3], m[4] === undefined ? 1 : +m[4]] : null; };
+  const lum = (c) => { const s = c.slice(0,3).map(v => { v /= 255; return v <= .03928 ? v/12.92 : ((v+.055)/1.055)**2.4; }); return .2126*s[0] + .7152*s[1] + .0722*s[2]; };
+  const cr = (a, b) => { const l1 = lum(a), l2 = lum(b); const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1]; return (hi+.05)/(lo+.05); };
+  const over = (fg, bg) => fg.map((v,i) => i<3 ? v*fg[3] + bg[i]*(1-fg[3]) : 1);
+  const mul = (c, k) => [c[0]*k, c[1]*k, c[2]*k, c.length > 3 ? c[3] : 1];
+  /* CIELAB（D65／sRGB）—— 與 tokens.mjs 的 lab() 是同一條算式，這裡量的是
+     **畫面上算出來的顏色**（漸層取樣後的），所以不能直接用 token 值算。 */
+  const lab76 = (c) => {
+    const f = (t) => (t > 216/24389 ? Math.cbrt(t) : (841/108)*t + 4/29);
+    const [r,g,b] = c.slice(0,3).map(v => { v /= 255; return v <= .04045 ? v/12.92 : ((v+.055)/1.055)**2.4; });
+    const x = f((.4124564*r + .3575761*g + .1804375*b)/.95047);
+    const y = f(.2126729*r + .7151522*g + .0721750*b);
+    const z = f((.0193339*r + .1191920*g + .9503041*b)/1.08883);
+    return [116*y - 16, 500*(x - y), 200*(y - z)];
+  };
+  const dE76 = (a, b) => { const p = lab76(a), q = lab76(b); return Math.hypot(p[0]-q[0], p[1]-q[1], p[2]-q[2]); };
+
+  /* ── 漸層：解析、方向判定、任一高度取色 ───────────────────────────────
+     這一稿每一張紙、每一個可按的面、每一個開窗都帶漸層，所以「文字對比」不再是
+     一個底色對一個字色 —— 一段字蓋到的是漸層的一「段」，對比要以**那一段裡最不利的
+     一點**計。做得到這件事的前提是漸層可解析：
+       · 只有 180deg（＝ to bottom，Chrome 會把預設方向正規化掉）的線性漸層，
+         色停才能沿著 y 軸唯一決定 —— 斜的漸層在同一個 y 上有不只一個顏色，量不了。
+       · 量不了就不准壓字：方向不合的一律進 gradBad，verify 直接 FAIL。
+     漸層的鋪設區域是 padding box（background-origin 的預設值），所以要扣掉框線。 */
+  const parseStops = (css) => {
+    const inner = css.slice(css.indexOf('(') + 1, css.lastIndexOf(')'));
+    const parts = []; let depth = 0, cur = '';
+    for (const ch of inner) {
+      if (ch === '(') depth++;
+      if (ch === ')') depth--;
+      if (ch === ',' && depth === 0) { parts.push(cur.trim()); cur = ''; continue; }
+      cur += ch;
+    }
+    parts.push(cur.trim());
+    const stops = [];
+    for (const p of parts) {
+      const c = hexToRgb(p);
+      if (!c) continue;
+      const m = /([\d.]+)%\s*$/.exec(p);
+      stops.push({ c, at: m ? +m[1] / 100 : null });
+    }
+    if (stops.length < 2) return null;
+    if (stops[0].at === null) stops[0].at = 0;
+    if (stops[stops.length - 1].at === null) stops[stops.length - 1].at = 1;
+    for (let i = 1; i < stops.length - 1; i++) if (stops[i].at === null) stops[i].at = i / (stops.length - 1);
+    return stops;
+  };
+  const stopAt = (stops, f) => {
+    f = Math.max(0, Math.min(1, f));
+    for (let i = 1; i < stops.length; i++) {
+      if (f <= stops[i].at || i === stops.length - 1) {
+        const a = stops[i - 1], b = stops[i];
+        const span = b.at - a.at || 1, k = Math.max(0, Math.min(1, (f - a.at) / span));
+        return [0,1,2,3].map((j) => a.c[j] + (b.c[j] - a.c[j]) * k);
+      }
+    }
+    return stops[0].c.slice();
+  };
+
+  /* 每個元素只算一次 computed style：文字節點的取樣會沿著祖先鏈重複走同一批元素。 */
+  const SC = new WeakMap();
+  const info = (n, baseTop) => {
+    let v = SC.get(n);
+    if (v) return v;
+    const cs = getComputedStyle(n);
+    const bc = hexToRgb(cs.backgroundColor) || [0,0,0,0];
+    const bi = cs.backgroundImage;
+    let grad = null;
+    if (bi && bi !== 'none' && /(^|,)\s*(repeating-)?linear-gradient\(/.test(bi)) {
+      const vertical = /^linear-gradient\(\s*rgba?\(/.test(bi) || /^linear-gradient\(\s*180deg/.test(bi);
+      const stops = vertical ? parseStops(bi) : null;
+      const r = n.getBoundingClientRect();
+      const bt = parseFloat(cs.borderTopWidth) || 0, bb = parseFloat(cs.borderBottomWidth) || 0;
+      grad = { css: bi, vertical, stops, top: r.top - baseTop + bt, h: Math.max(1, r.height - bt - bb) };
+    }
+    v = { bc, grad };
+    SC.set(n, v);
+    return v;
+  };
+
+  const bgAt = (node, y, baseTop, root) => {
+    let acc = [0,0,0,0];
+    for (let cur = node; cur; cur = cur.parentElement) {
+      const { bc, grad } = info(cur, baseTop);
+      let layer = bc;
+      if (grad && grad.stops) layer = over(stopAt(grad.stops, (y - grad.top) / grad.h), layer);
+      if (layer[3] > 0) acc = acc[3] > 0 ? over(acc, layer) : layer;
+      if (acc[3] >= 1) return acc;
+      if (cur === root) break;
+    }
+    return acc[3] > 0 ? over(acc, [255,255,255,1]) : [255,255,255,1];
+  };
+  const onGrad = (node, root) => {
+    for (let cur = node; cur; cur = cur.parentElement) {
+      const v = SC.get(cur);
+      if (v && v.grad && v.grad.stops) return true;
+      if (cur === root) break;
+    }
+    return false;
+  };
+
+  for (const ab of cv.artboards) {
+    const file = ab.file, W = ab.w, FH = ab.h;
+    const html = await (await fetch(file)).text();
+    R.src.push(file + ':' + await hash12(html));
+    const d = new DOMParser().parseFromString(html, 'text/html');
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:absolute;left:0;top:0;width:' + W + 'px';
+    const st = d.querySelector('helmet style'); if (st) holder.appendChild(st.cloneNode(true));
+    holder.appendChild(d.querySelector('x-dc > div').cloneNode(true));
+    document.body.appendChild(holder);
+    const el = holder.lastElementChild, base = el.getBoundingClientRect();
+    // 照片要等它真的載進來才量得到 naturalWidth（沒等的話裁切量會是 0，等於白量）
+    await Promise.all([...el.querySelectorAll('img')].map((im) => (im.complete && im.naturalWidth
+      ? null : new Promise((res) => { im.onload = im.onerror = res; }))));
+    const name = file.replace('.dc.html', '');
+    const isDark = /Dark$/.test(name);
+    const rel = (n) => { const r = n.getBoundingClientRect(); return { t: r.top-base.top, b: r.bottom-base.top, l: r.left-base.left, r: r.right-base.left, w: r.width, h: r.height }; };
+
+    /* ── 0. 過期標記換行鎖（第 12 輪 D11-02，G35④）───────────────────
+       G35 的 ::after 規線是疊在文字上面畫的一條水平線（見 build.mjs 的 helmet()）——
+       它假設 <s data-expired> 裡的文字**只有一行**。真的排出兩行的話，規線只會
+       疊在其中一行上，另一行沒有規線、或規線飄到行間——「劃掉」這件事本身
+       就讀不出來了。getClientRects() 量的是真的排版之後的行框：一行＝1 個矩形，
+       多行＝多個。這裡在真瀏覽器的版面裡量，不是猜字數。
+       陷阱（量測時當場踩到，記下來免得下一個人重踩）：holder 是 _probe.html
+       自己 <body> 底下的一個 <div>，helmet style 裡的 `body{font-family:…}`
+       規則因此配不到任何東西——複製進來的內容裡沒有真的 <body> 可以配。
+       量到的字這裡會退回 _probe.html 自己 <body> 的 font:12px monospace，
+       逐字元寬度跟真的比例字體差很多，換不換行因此量得不準（初版就是這樣
+       把這一句誤判成 2 行）。這裡量之前把 body 那條規則裡的 font-family
+       抽出來、暫時扣到 el 上，量完立刻還原——只影響這一段量測，不影響同一個
+       el 後面其他量測讀到的字型（那些量測本來就不在乎字寬，維持原樣）。 */
+    {
+      const bodyFontM = st ? /\bbody\{[^}]*?font-family:\s*([^;]+);/.exec(st.textContent) : null;
+      const savedFont = el.style.fontFamily;
+      if (bodyFontM) el.style.fontFamily = bodyFontM[1];
+      for (const sEl of el.querySelectorAll('s[data-expired]')) {
+        R.expiredRects.push({ file: name, n: sEl.getClientRects().length, text: (sEl.textContent || '').slice(0, 24) });
+      }
+      el.style.fontFamily = savedFont;
+    }
+
+    /* ── 1. inset 的使用點（不是 helper 定義）── */
+    for (const n of el.querySelectorAll('*')) {
+      const cs = getComputedStyle(n);
+      if (!cs.boxShadow.includes('inset')) continue;
+      if (exemptOK(n, 'data-sys', name)) continue;    // 系統 chrome 的光不歸我們管（具名豁免，清單在 _exempt.json）
+      /* 摺邊（fold）：紙的裁邊只有一道受光的邊，沒有槽。它用 inset 畫，但它不是凹 ——
+         所以獨立記帳（G5 驗它「只有一層、沒有模糊」，凹的兩族各自驗自己）。 */
+      if (n.getAttribute('data-s') === 'fold') {
+        const layers = shadowLayers(cs.boxShadow).filter((l) => /inset/.test(l));
+        R.folds = R.folds || [];
+        R.folds.push({ file: name, n: layers.length, blur: Math.max(0, ...layers.map((l) => shadowNums(l)[2] || 0)) });
+        continue;
+      }
+      const role = n.getAttribute('data-role') || '';
+      const fam = n.getAttribute('data-inset') || '';
+      R.inset.push(role);
+      if (!fam || !INSET_OK[fam] || !INSET_OK[fam].includes(role)) {
+        R.insetBad.push(name + ':' + (role || n.tagName.toLowerCase()) + '[' + (fam || '沒標族') + '] ' + cs.boxShadow.slice(0, 48));
+        continue;
+      }
+      /* 兩族的**實測深度**：取 inset 那幾層裡最大的模糊半徑。
+         fillable 必須比 mount 深 —— 不然兩族只是兩個標籤。 */
+      let blur = 0;
+      for (const layer of shadowLayers(cs.boxShadow)) {
+        if (!/inset/.test(layer)) continue;
+        const nums = shadowNums(layer);
+        if (nums.length >= 3) blur = Math.max(blur, nums[2]);
+      }
+      (R.insetDepth[fam] = R.insetDepth[fam] || []).push(blur);
+    }
+
+    /* ── 2. 陶土：只算「最外層」的陶土區塊 ── */
+    const ctaEls = [...el.querySelectorAll('[data-cta]')];
+    R.cta[name] = ctaEls.filter(n => !n.parentElement.closest('[data-cta]')).length;
+
+    /* ── 3. 母題指紋 ── */
+    const ms = new Set([...el.querySelectorAll('[data-m]')].map(n => n.getAttribute('data-m')));
+    R.motifs[name] = [...ms];
+    if (isDark) for (const m of ms) R.darkMotifs[m] = (R.darkMotifs[m] || 0) + 1;
+
+    /* ── 4. H1 cap-height 起跑線 ── */
+    for (const hEl of el.querySelectorAll('h1')) {
+      const cs = getComputedStyle(hEl), fs = parseFloat(cs.fontSize), lh = parseFloat(cs.lineHeight) || fs*1.2;
+      const capTop = rel(hEl).t + (lh - fs)/2 + fs*(1-CAP);
+      R.h1.push({ file: name, y: Math.round(capTop*10)/10, fs, rail: !!el.querySelector('[data-rail]'),
+                  cap: hEl.getAttribute('data-cap') || '' });
+    }
+    for (const cEl of el.querySelectorAll('[data-cap]:not(h1)')) {
+      const cs = getComputedStyle(cEl), fs = parseFloat(cs.fontSize), lh = parseFloat(cs.lineHeight) || fs*1.2;
+      R.h1.push({ file: name, y: Math.round((rel(cEl).t + (lh-fs)/2 + fs*(1-CAP))*10)/10, fs, rail: false, cap: cEl.getAttribute('data-cap') });
+    }
+
+    /* ── 5. 呼吸帶：分欄，而且只算「有字或有圖」的帶
+           （底色會把整欄塗滿，全幅量測因此看不見欄內空白）── */
+    const cols = [...el.querySelectorAll('[data-col]')];
+    const regions = cols.length ? cols : [el];
+    let boardLast = 0;
+    for (const region of regions) {
+      const rr = rel(region), key = region.getAttribute('data-col') || 'frame';
+      /* 算「內容」的規則：字、圖，加上「空的元件本身」——
+         六個還沒填數字的驗證碼格是內容，不是空白；
+         但容器的底色不算，否則整欄被塗滿就量不到欄內的空白（第 2 輪就是這樣被遮蔽的）。
+         所以只認「葉子級」的表面：它自己是宣告過的表面，而且裡面沒有別的內容。 */
+      const spans = [];
+      const walk = (root) => {
+        const it = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        for (let t = it.nextNode(); t; t = it.nextNode()) {
+          if (!t.textContent.trim()) continue;
+          const rg = document.createRange(); rg.selectNodeContents(t);
+          for (const r of rg.getClientRects()) if (r.height > 0) spans.push([r.top-base.top, r.bottom-base.top]);
+        }
+        for (const n of root.querySelectorAll('img,svg')) { const r = rel(n); if (r.h > 1) spans.push([r.t, r.b]); }
+        for (const n of root.querySelectorAll('[data-s],[data-err]')) {
+          if (n.querySelector('img,svg,[data-s],[data-err]')) continue;
+          if ((n.textContent || '').trim()) continue;
+          const r = rel(n); if (r.h > 0) spans.push([r.t, r.b]);
+        }
+      };
+      walk(region);
+      if (!spans.length) continue;
+      const top = Math.max(0, Math.round(rr.t)), bot = Math.min(FH, Math.round(rr.b));
+      const cov = new Uint8Array(FH + 2);
+      let first = 1e9, last = -1;
+      for (const [a, b] of spans) {
+        first = Math.min(first, a); last = Math.max(last, b);
+        for (let y = Math.max(top, Math.floor(a)); y < Math.min(bot, Math.ceil(b)); y++) cov[y] = 1;
+      }
+      first = Math.max(top, Math.floor(first)); last = Math.min(bot, Math.ceil(last));
+      boardLast = Math.max(boardLast, last);
+      /* 每一段連續空白都要記，不是只記最長的那一段 ——
+         第 3 輪的規則是「每一段 >120px 都要掛牌」，只看最大值會漏掉第二段。 */
+      const runs = [];
+      let cur = 0, cs2 = 0;
+      for (let y = first; y <= last; y++) {
+        if (y < last && !cov[y]) { if (!cur) cs2 = y; cur++; }
+        else if (cur) { runs.push([cs2, cur]); cur = 0; }
+      }
+      const best = runs.reduce((a, r) => (r[1] > a[1] ? r : a), [0, 0]);
+      /* 掛牌規則：>120px 的空白，必須有一個帶 data-pause 的元素「在這段空白裡開始」
+         ——「這一塊之前的留白是刻意的，理由是…」。標在外層容器上不算數（那會變成
+         一張牌赦免整欄），所以比對的是元素自己的上緣落點。 */
+      const marks = [...region.querySelectorAll('[data-pause]')].map((n) => ({ t: rel(n).t, why: n.getAttribute('data-pause') }));
+      for (const [at, len] of runs) {
+        if (len <= PAUSE) continue;
+        const m = marks.find((mk) => mk.t >= at - 4 && mk.t <= at + len + 4);
+        const row = { file: name, col: key, len, at, why: m ? m.why : '' };
+        if (m) R.pauses.push(row); else R.pauseBad.push(row);
+      }
+      R.voids.push({ file: name, col: key, interior: best[1], at: best[0], lead: first - top, trail: bot - last, pad: /IPad/.test(name) });
+    }
+
+    /* ── 5b. 唇邊：3pt＝該表面的深一階。逐個浮起「表面」量 computed border-bottom
+           （底線連結不是表面，不算）。沒有唇邊的一律列名，例外必須自己現形。 ── */
+    const rootVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    const cssRgb = (v) => { const p = document.createElement('span'); p.style.color = v; document.body.appendChild(p); const c = getComputedStyle(p).color; p.remove(); return c; };
+    const lipNames = { ctaDeep: cssRgb(rootVar('--ls-cta-deep')), ctaBusy: cssRgb(rootVar('--ls-cta-busy')),
+                       board3: cssRgb(rootVar('--ls-board-3')), edge: cssRgb(rootVar('--ls-edge')),
+                       pen: cssRgb(rootVar('--ls-pen')), googleLine: cssRgb(rootVar('--ls-google-line')) };
+    for (const n of el.querySelectorAll('[data-s="raise"]')) {
+      if (n.getAttribute('data-role') === 'link') continue;
+      R.lipTotal++;
+      const cs = getComputedStyle(n), w = Math.round(parseFloat(cs.borderBottomWidth));
+      /* 唇邊是「只有下緣有」的那一道實體邊 —— 四邊等寬的是**描邊**，不是唇邊
+         （第 1 輪 R6：上一稿讓 Google 的 1px 規範描邊兼差當 3px 唇邊，
+         這裡的判準改成幾何的，那種事就再也算不進來）。 */
+      const bt = Math.round(parseFloat(cs.borderTopWidth) || 0);
+      if (!w || w <= bt) { R.lipNone.push(name + ':' + (n.getAttribute('data-role') || '?') + (n.getAttribute('data-brand') ? '/' + n.getAttribute('data-brand') : '')); continue; }
+      const hit = Object.entries(lipNames).find(([, v]) => v === cs.borderBottomColor);
+      const key = (hit ? hit[0] : cs.borderBottomColor) + '@' + w;
+      R.lips[key] = (R.lips[key] || 0) + 1;
+    }
+
+    /* ── 5c. 開關列的位置（R4：四個狀態同一條線）＋ 主按鈕中心 ── */
+    for (const n of el.querySelectorAll('[data-role="toggleRow"]')) R.toggles.push({ file: name, top: Math.round(rel(n).t) });
+    // 主按鈕＝該板被推薦的那個動作：陶土的按鈕或陶土的選項卡（三岔路的主要那條路）。
+    const btns = [...el.querySelectorAll('[data-role="button"],[data-role="choice"]')];
+    const main = btns.find((n) => n.hasAttribute('data-cta')) || btns.find((n) => n.getAttribute('data-role') === 'button');
+    if (main) { const r = rel(main); R.mainBtn.push({ file: name, mid: Math.round(r.t + r.h / 2), h: FH, cta: main.hasAttribute('data-cta') }); }
+
+    /* ── 5d. 照片的實際裁切：量框、量原圖，算出哪一軸真的被裁 ── */
+    for (const im of el.querySelectorAll('img')) {
+      const r = rel(im), cs = getComputedStyle(im);
+      const nw = im.naturalWidth, nh = im.naturalHeight;
+      const s = Math.max(r.w / nw, r.h / nh);
+      R.photos.push({ file: name, bw: Math.round(r.w), bh: Math.round(r.h), nw, nh,
+                      cropX: Math.round((nw * s - r.w) * 10) / 10, cropY: Math.round((nh * s - r.h) * 10) / 10,
+                      pos: cs.objectPosition, fit: cs.objectFit });
+    }
+
+    /* ── 6. 裁切 ── */
+    let lastPaint = 0;
+    for (const n of el.querySelectorAll('*')) {
+      const r = rel(n), cs = getComputedStyle(n);
+      const paints = cs.backgroundColor !== 'rgba(0, 0, 0, 0)' || cs.borderBottomWidth !== '0px' || n.tagName === 'IMG' || n.tagName.toLowerCase() === 'svg' || [...n.childNodes].some(c => c.nodeType === 3 && c.textContent.trim());
+      if (paints && r.h > 0 && r.w > 0) lastPaint = Math.max(lastPaint, r.b);
+    }
+    R.boards.push({ file: name, lastPaint: Math.round(lastPaint), h: FH, clipped: Math.max(0, Math.round(lastPaint) - FH),
+                    trail: Math.round(FH - boardLast) });
+
+    /* ── 7. 錯誤幾何 vs 可按幾何 ── */
+    const lips = [...el.querySelectorAll('[data-s="raise"]')].map(rel);
+    for (const e of el.querySelectorAll('[data-err]')) {
+      const er = rel(e);
+      let min = 1e9, hit = false;
+      for (const lp of lips) {
+        const lipBand = { t: lp.b - 3, b: lp.b, l: lp.l, r: lp.r };
+        const xo = Math.min(er.r, lipBand.r) - Math.max(er.l, lipBand.l);
+        if (xo <= 0) continue;
+        const yo = Math.min(er.b, lipBand.b) - Math.max(er.t, lipBand.t);
+        if (yo > 0) hit = true;
+        min = Math.min(min, yo > 0 ? 0 : Math.min(Math.abs(er.t - lipBand.b), Math.abs(lipBand.t - er.b)));
+      }
+      R.err.push({ file: name, h: Math.round(er.h*10)/10, gap: min === 1e9 ? 999 : Math.round(min*10)/10, overlap: hit });
+    }
+
+    /* ── 7b. G24 光的方向：逐個使用點解析 computed box-shadow ──────────────────
+       第 2 輪 reviewer 的 M3 突變（把 87 個 inset 從凹翻成凸）全綠通過，因為 G5 只做
+       **字串比對**（「有沒有出現 inset」「helper 定義裡有沒有那一段」），沒有一項在問
+       「光從哪一邊來」。而且管線自己也有同一個病的真實版本：深色的 bevelTop／bevelBot
+       沒有鏡像，同一個元件上兩個互相牴觸的光源。
+       所以這裡量的是**顏色的明度**，不是字串：
+         ① 凹（win）：把上緣那層與下緣那層各自疊到元件自己的底色上，比誰亮。
+            淺色（dir=+1）必須上暗下亮，深色（dir=−1）相反。
+         ② 浮（raise）：落影的 y 位移必須與 dir 同號（淺色往下投、深色往上投）。
+         ③ 凹的柔影：y 位移同樣要與 dir 同號（陰影落在近光源那一緣）。
+       系統 chrome（[data-sys]）整個子樹豁免 —— 它的高光由系統決定，理由印在 GlassSeam 板。 */
+    {
+      /* 光的方向不用檔名猜：helmet 把 dir 寫成 --ls-dir，混色的板（GlassSeam 同時有
+         淺色與深色兩支手機）另外在容器上掛 data-mode，就近取用。 */
+      const rootDir = +getComputedStyle(document.documentElement).getPropertyValue('--ls-dir') || 1;
+      const dirOf = (n) => { const m = n.closest('[data-mode]'); return m ? (m.getAttribute('data-mode') === 'dark' ? -1 : 1) : rootDir; };
+      const layerLum = (spec, base) => {
+        const c = hexToRgb(spec);
+        if (!c) return null;
+        return lum(c[3] < 1 ? over(c, base) : c);
+      };
+      for (const n of el.querySelectorAll('[data-s],[data-role="knob"]')) {
+        const kind = n.getAttribute('data-s') || n.getAttribute('data-role');
+        if (exemptOK(n, 'data-sys', name) || exemptOK(n, 'data-light', name)) continue;
+        const cs = getComputedStyle(n);
+        if (cs.boxShadow === 'none') continue;
+        const dir = dirOf(n);
+        const rr = rel(n);
+        const under = bgAt(n, rr.t + rr.h / 2, base.top, el);
+        const who = name + ':' + kind + '/' + (n.getAttribute('data-role') || '?');
+        let top = null, bot = null;
+        for (const sh of shadowLayers(cs.boxShadow)) {
+          const isInset = /inset/.test(sh);
+          const nums = shadowNums(sh);
+          if (nums.length < 2) continue;
+          const dy = nums[1], blur = nums[2] || 0;
+          const L = layerLum(sh, under);
+          if (L === null) continue;
+          if (isInset && blur === 0 && dy !== 0) { if (dy > 0) top = L; else bot = L; continue; }
+          // 有模糊的那一層（凹的柔影 / 浮的落影）：只驗方向
+          if (dy !== 0 && blur > 0) {
+            /* 第 5 輪：看過的也要記。只記錯的那一版，母體是空的也一樣全綠 ——
+               所有浮起面的落影一起消失時，G24 會一句話都不說（MG1 咬的就是這種空格）。 */
+            const good = Math.sign(dy) === dir;
+            R.lightSeen.push({ file: name, who, dir, kind: kind === 'raise' ? 'raise' : kind, layer: 'shadow', dy, ok: good });
+            if (!good) R.lightBad.push(who + ' 影子往 ' + (dy > 0 ? '下' : '上') + '（dir=' + dir + ' 要往 ' + (dir > 0 ? '下' : '上') + '）' + sh.slice(0, 40));
+          }
+        }
+        if (top !== null && bot !== null) {
+          const okDir = dir > 0 ? top < bot : top > bot;
+          R.lightSeen.push({ file: name, who, dir, kind, layer: 'bevel', top: Math.round(top * 1e4) / 1e4, bot: Math.round(bot * 1e4) / 1e4, ok: okDir });
+          if (!okDir) R.lightBad.push(who + ' 上緣 Y=' + top.toFixed(4) + '、下緣 Y=' + bot.toFixed(4) + '（dir=' + dir + ' 要求上' + (dir > 0 ? '暗下亮' : '亮下暗') + '）');
+        }
+      }
+    }
+
+    /* ── 7c. G25 品牌鍵不接光 ──────────────────────────────────────────
+       第 2 輪 reviewer 的 M4c：把漸層貼到 Google 鍵上 —— 「兩顆鍵不加漸層」這條規則
+       只寫在 Tokens 板的散文裡，零個 gate 在掃。這裡掃 [data-brand] **與它的整個子樹**的
+       computed 裝飾：背景圖（漸層）、box-shadow、text-shadow 一律 FAIL；
+       描邊只准品牌規範指定的那一種（Apple 無描邊、Google 四邊等寬 1px）。
+       這一條會在本輪一開始就咬到我們自己：兩顆鍵原本都掛著我們的 lift 落影。 */
+    for (const b of el.querySelectorAll('[data-brand]')) {
+      const brandName = b.getAttribute('data-brand');
+      const spec = brandName === 'google' ? 1 : 0;   // 規範描邊寬度（px）
+      for (const n of [b, ...b.querySelectorAll('*')]) {
+        const cs = getComputedStyle(n), self = n === b;
+        const why = [];
+        if (cs.backgroundImage && cs.backgroundImage !== 'none') why.push('背景圖 ' + cs.backgroundImage.slice(0, 40));
+        if (cs.boxShadow && cs.boxShadow !== 'none') why.push('box-shadow ' + cs.boxShadow.slice(0, 40));
+        if (cs.textShadow && cs.textShadow !== 'none') why.push('text-shadow ' + cs.textShadow.slice(0, 40));
+        const bw = ['Top', 'Right', 'Bottom', 'Left'].map((k) => Math.round(parseFloat(cs['border' + k + 'Width']) || 0));
+        if (self) { if (bw.some((w) => w !== spec)) why.push('描邊 ' + bw.join('/') + '（規範 ' + spec + ' 均寬）'); }
+        else if (bw.some((w) => w !== 0)) why.push('子元素描邊 ' + bw.join('/'));
+        if (why.length) R.brandBad.push(name + ':' + brandName + (self ? '' : '>' + n.tagName.toLowerCase()) + ' ' + why.join(' · '));
+      }
+      R.brand.push(name + ':' + brandName);
+    }
+
+    /* ── 7d. 開關：把手對軌道的對比、以及行程 ──────────────────────────── */
+    for (const tr of el.querySelectorAll('[data-role="switchTrack"]')) {
+      const kn = tr.querySelector('[data-role="knob"]');
+      if (!kn) continue;
+      const kr = rel(kn), tw = rel(tr);
+      const kc = hexToRgb(getComputedStyle(kn).backgroundColor);
+      const y = kr.t + kr.h / 2;
+      const track = bgAt(tr, y, base.top, el);
+      R.knobs.push({ file: name, on: tr.getAttribute('data-on') === '1',
+                     cr: Math.round(cr(kc, track) * 100) / 100,
+                     cx: Math.round((kr.l + kr.r) / 2 - tw.l), tw: Math.round(tw.w) });
+    }
+
+    /* ── 8a. 漸層清冊：畫面上實際出現的每一個漸層使用點 ──
+           方向不是垂直的一律進 gradBad（量不了最不利點 → 不准壓字 → 直接不准出現）。 */
+    for (const n of el.querySelectorAll('*')) {
+      const { grad } = info(n, base.top);
+      if (!grad) continue;
+      const kind = n.getAttribute('data-grad') || '';
+      const repeating = /^repeating-/.test(grad.css);
+      R.grads.push({ file: name, kind, css: grad.css, vertical: grad.vertical, repeating,
+                     tag: (n.getAttribute('data-s') || '') + '/' + (n.getAttribute('data-role') || '') });
+      if (!grad.vertical && !repeating) R.gradBad.push(name + ' ' + grad.css.slice(0, 70));
+    }
+
+    /* ── 8c. 平印面上不准有漸層（G23②）──
+           規則「平印＝只能讀＝不接光＝沒有漸層」以前只寫在註解裡，沒有任何一項在掃它 ——
+           上一輪 reviewer 把台紙漸層加到平印面上，71 項 gate 沒有一項會叫。
+           現在掃的是**使用點與它所有後代**的 computed background-image：
+           平印元素底下出現 linear-gradient，除非它自己掛了 data-grad 而且是
+           號碼帶（stub*）或騎縫線（perf），否則一律進 flatBad。 */
+    for (const fl of el.querySelectorAll('[data-s="flat"]')) {
+      // 掃的是這個平印面**自己的皮**：從它往下走，遇到另一個宣告過的表面
+      //（data-s：凹窗、浮起面、另一張平印卡）就停 —— 別人坐在我上面不算我的皮。
+      const skin = [fl];
+      const walkSkin = (node) => {
+        for (const c of node.children) { if (c.hasAttribute('data-s')) continue; skin.push(c); walkSkin(c); }
+      };
+      walkSkin(fl);
+      for (const n of skin) {
+        const bi = getComputedStyle(n).backgroundImage;
+        if (!bi || bi === 'none' || !/gradient/.test(bi)) continue;
+        const k = n.getAttribute('data-grad') || '';
+        if (/^(stub\d|perf)$/.test(k)) { R.flatOk.push(name + ':' + k); continue; }
+        R.flatBad.push(name + ':' + (n.getAttribute('data-role') || n.tagName.toLowerCase()) + (k ? '[' + k + ']' : '[沒掛牌]') + ' ' + bi.slice(0, 56));
+      }
+    }
+
+    /* ── 8d. 登入鍵與它坐的那個面之間的 ΔE（R5 的證據）──
+           第 1 輪：歡迎頁最重的兩塊是別人的品牌（Apple 對台紙 ΔE 81.7、Google 14.5、
+           我們自己的 0），而深色 Email 鍵對台紙只有 2.5（在可辨識門檻邊緣）。
+           這一輪三顆鍵坐進凹下去的托盤，所以量的是「鍵的面 vs 托盤的面」。 */
+    for (const tray of el.querySelectorAll('[data-role="tray"]')) {
+      const tr = rel(tray);
+      for (const b of tray.querySelectorAll('[data-role="button"]')) {
+        const r = rel(b), y = r.t + r.h / 2;
+        const own = bgAt(b, y, base.top, el), back = bgAt(tray, y, base.top, el);
+        R.trayDelta.push({ file: name, who: b.getAttribute('data-brand') || 'email',
+                           dE: Math.round(dE76(own, back) * 100) / 100 });
+      }
+      R.trays.push({ file: name, w: Math.round(tr.w), h: Math.round(tr.h) });
+    }
+
+    /* ── 8b. 節點級對比：以「字蓋到的那一段漸層裡最不利的一點」計 ──
+           不是取元素中心、不是取兩端平均 —— 沿著每一行字的上下緣取樣，取對比最低的那一點。
+           另外把紙的顆粒層一起算一次：它是 multiply，會把底乘暗（淺色時對比會掉），
+           所以再以「顆粒最暗的那一格」重算一次當下限，兩個數都印在板上。 */
+    const SAMPLES = 9;
+    let grainOp = 0;
+    for (const g of el.querySelectorAll('.g')) {
+      const o = parseFloat(getComputedStyle(g, '::after').opacity);
+      if (o > grainOp) grainOp = o;
+    }
+    if (getComputedStyle(el, '::after').content !== 'none') {
+      const o = parseFloat(getComputedStyle(el, '::after').opacity);
+      if (o > grainOp) grainOp = o;
+    }
+    const photoRects = [...el.querySelectorAll('img')].map(rel);
+    const it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let t = it.nextNode(); t; t = it.nextNode()) {
+      const txt = t.textContent.trim();
+      if (!txt) continue;
+      const p = t.parentElement, cs = getComputedStyle(p);
+      const fg0 = hexToRgb(cs.color); if (!fg0) continue;
+      R.contrast.n++;
+      const rg = document.createRange(); rg.selectNodeContents(t);
+      const rects = [...rg.getClientRects()];
+      let v = 99, at = 0;
+      const bands = rects.length ? rects.map((rc) => [rc.top - base.top, rc.bottom - base.top])
+                                 : [[rel(p).t, rel(p).b]];
+      for (const [a, b] of bands) {
+        for (let i = 0; i < SAMPLES; i++) {
+          const y = a + (b - a) * (i / (SAMPLES - 1));
+          const bg = bgAt(p, y, base.top, el);
+          const c = cr(fg0[3] < 1 ? over(fg0, bg) : fg0, bg);
+          if (c < v) { v = c; at = Math.round(y); }
+        }
+      }
+      if (onGrad(p, el)) R.contrast.onGrad++;
+      for (const rc of rects) {
+        const tr = { t: rc.top-base.top, b: rc.bottom-base.top, l: rc.left-base.left, r: rc.right-base.left };
+        for (const pr of photoRects) {
+          if (tr.l < pr.r && tr.r > pr.l && tr.t < pr.b && tr.b > pr.t) {
+            let opaque = false, cur = p;
+            while (cur && cur !== el) { const c = hexToRgb(getComputedStyle(cur).backgroundColor); if (c && c[3] === 1) { opaque = true; break; } cur = cur.parentElement; }
+            if (!opaque) R.contrast.overPhoto++;
+          }
+        }
+      }
+      const where = name + ' 「' + txt.slice(0,14) + '」@y' + at;
+      if (v < R.contrast.min) { R.contrast.min = v; R.contrast.worst = where; }
+      if (v < 7) R.contrast.fails.push(name + ' 「' + txt.slice(0,16) + '」 ' + v.toFixed(2) + ' @y' + at);
+      if (grainOp > 0) {
+        const bg = bgAt(p, at, base.top, el), k = 1 - grainOp;
+        const gv = cr(mul(fg0[3] < 1 ? over(fg0, bg) : fg0, k), mul(bg, k));
+        if (gv < R.contrast.grainMin) { R.contrast.grainMin = gv; R.contrast.grainWorst = where; }
+        if (gv < 6) R.contrast.grainFails.push(name + ' 「' + txt.slice(0,16) + '」 ' + gv.toFixed(2));
+      }
+    }
+
+    /* ── 9. 孤兒斷行：以「一個文字區塊」為單位，不是以文字節點為單位 ——
+           <wbr> 會把一段 Email 切成好幾個文字節點，逐節點量就看不見整段的末行。 */
+    for (const blk of el.querySelectorAll('*')) {
+      if (getComputedStyle(blk).display === 'inline') continue;
+      if (!(blk.textContent || '').trim()) continue;
+      if ([...blk.querySelectorAll('*')].some((c) => (c.textContent || '').trim() && getComputedStyle(c).display !== 'inline')) continue;
+      const chars = [];
+      const it2 = document.createTreeWalker(blk, NodeFilter.SHOW_TEXT);
+      for (let t = it2.nextNode(); t; t = it2.nextNode()) {
+        for (let i = 0; i < t.length; i++) {
+          if (!t.textContent[i].trim()) continue;
+          const rg2 = document.createRange(); rg2.setStart(t, i); rg2.setEnd(t, i + 1);
+          const rl = rg2.getClientRects()[0];
+          if (rl) chars.push([Math.round(rl.top), t.textContent[i]]);
+        }
+      }
+      if (chars.length < 4) continue;
+      const tops = [...new Set(chars.map((c) => c[0]))];
+      if (tops.length < 2) continue;
+      const lastTop = Math.max(...tops);
+      const lastLine = chars.filter((c) => c[0] === lastTop);
+      const cjk = /[　-鿿＀-￯]/.test(lastLine.map((c) => c[1]).join(''));
+      if (lastLine.length < (cjk ? 2 : 3))
+        R.orphans.push(name + ' 「' + (blk.textContent || '').trim().slice(0, 20) + '」 末行 ' + lastLine.length + ' 字「' + lastLine.map((c) => c[1]).join('') + '」');
+    }
+
+    /* ── 10. 核准↔拒絕、底線連結命中盒（原 _tap2）── */
+    const aps = [...el.querySelectorAll('*')].filter(n => /^核准加入$/.test((n.textContent||'').trim()) && n.children.length === 1);
+    const rjs = [...el.querySelectorAll('*')].filter(n => /^拒絕這個申請$/.test((n.textContent||'').trim()) && !n.children.length);
+    for (let i = 0; i < Math.min(aps.length, rjs.length); i++) {
+      const a = rel(aps[i]), r = rel(rjs[i]);
+      R.approve.push({ file: name, gap: Math.round(r.t - a.b), rejectW: Math.round(r.w), approveW: Math.round(a.w) });
+    }
+    for (const n of el.querySelectorAll('*')) {
+      const cs = getComputedStyle(n), r = rel(n);
+      if (cs.textDecorationLine.includes('underline') && r.h > 0 && r.h < 44 && r.w > 24 && (n.textContent||'').trim())
+        R.taps.push(name + ':' + Math.round(r.h) + 'px 「' + (n.textContent||'').trim().slice(0,14) + '」');
+    }
+
+    /* ── 11. 騎縫線是紙的形狀（D4-04）──────────────────────────────
+           量的是 computed mask：有沒有真的挖洞（radial-gradient + transparent）、
+           齒距（mask-size 的 x）、三層取交集、以及缺口在哪一緣。
+           joined 的一對還要對得上：上半的下緣 ＝ 下半的上緣（合起來才是完整的圓孔）。 */
+    for (const n of el.querySelectorAll('[data-perf]')) {
+      const cs = getComputedStyle(n), r = rel(n);
+      const mi = (cs.maskImage && cs.maskImage !== 'none') ? cs.maskImage : cs.webkitMaskImage;
+      const ms = (cs.maskSize && cs.maskSize !== 'auto') ? cs.maskSize : cs.webkitMaskSize;
+      const mc = cs.maskComposite || cs.webkitMaskComposite || '';
+      const layers = shadowLayers(mi || '');
+      const sizes = shadowLayers(ms || '');
+      R.perf.push({
+        file: name, kind: n.getAttribute('data-perf'),
+        layers: layers.length,
+        holes: layers.filter((l) => /radial-gradient/.test(l) && /transparent|rgba\(0, 0, 0, 0\)/.test(l)).length,
+        pitch: sizes.length ? Math.round(parseFloat(sizes[0])) : null,
+        /* 撕口的斷面唇（D5-06）：drop-shadow 吃的是遮罩之後的輪廓，所以它沿著扇貝的弧走。
+           量的是 computed filter —— 位移方向與顏色都要對得上 dir。 */
+        lip: cs.filter && cs.filter !== 'none' ? cs.filter : '',
+        /* 每一顆齒的半徑（不等大）與圓心（不等距）：從遮罩的每一層 radial-gradient 讀。
+           等距等大 ＝ 打孔機；抖動 ＝ 手撕。這兩個陣列讓 G27⑤ 判得出來。 */
+        radii: layers.filter((l) => /radial-gradient/.test(l)).map((l) => { const m2 = /radial-gradient\((?:circle\s+)?([\d.]+)px/.exec(l); return m2 ? +m2[1] : null; }),
+        cxs: layers.filter((l) => /radial-gradient/.test(l)).map((l) => { const m2 = /at\s+([\d.]+)px/.exec(l); return m2 ? +m2[1] : null; }),
+        composite: mc.split(',')[0].trim(),
+        top: Math.round(r.t), bottom: Math.round(r.b), w: Math.round(r.w),
+        edgeY: /-b$/.test(n.getAttribute('data-perf')) ? Math.round(r.b) : Math.round(r.t),
+      });
+    }
+
+    /* ── 12. 三格刻度：逐格量顏色與銷記（D4-01）────────────────────
+           量的是**畫面上算出來的顏色**（漸層取樣後的），不是 token；
+           銷記的墨與覆蓋率另外記，verify 用它合成「這一格看起來的顏色」。 */
+    for (const sc of el.querySelectorAll('[data-scale]')) {
+      const cells = [...sc.querySelectorAll('[data-cell]')].map((c) => {
+        const r = rel(c);
+        const mark = c.querySelector('[data-cancel]');
+        return {
+          state: c.getAttribute('data-cell'),
+          bg: bgAt(c, r.t + r.h / 2, base.top, el).slice(0, 3).map((v) => Math.round(v * 100) / 100),
+          ink: mark ? (hexToRgb(getComputedStyle(mark).fill) || []).slice(0, 3) : null,
+          w: Math.round(r.w), h: Math.round(r.h),
+        };
+      });
+      const tk = sc.closest('[data-m="ticket"]');
+      const band = tk ? tk.querySelector('[data-band="code"]') : null;
+      const br = band ? rel(band) : null;
+      /* 模式不用檔名猜：規格板上同時排了淺色與深色兩組，深色那一組掛 data-mode="dark"
+         （與 GlassSeam 板同一個慣例）。 */
+      R.scale.push({ file: name, uses: sc.getAttribute('data-scale'), dark: isDark || !!sc.closest('[data-mode="dark"]'), cells,
+        band: band ? bgAt(band, br.t + br.h / 2, base.top, el).slice(0, 3).map((v) => Math.round(v * 100) / 100) : null });
+    }
+
+    /* ── 13. 深色的照片少一格光（D4-03）────────────────────────────
+           逐像素量：把 img 畫進 canvas，**套用它 computed 的 filter**（畫面上是什麼就量什麼），
+           算平均亮度與 p99。拿掉 filter 這裡的數就會跟淺色一樣，G31 立刻 FAIL。 */
+    for (const im of el.querySelectorAll('img[data-photo]')) {
+      const cs = getComputedStyle(im);
+      const cw = 160, ch = Math.max(1, Math.round(cw * im.naturalHeight / im.naturalWidth));
+      const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+      const ctx = cv.getContext('2d', { willReadFrequently: true });
+      ctx.filter = (cs.filter && cs.filter !== 'none') ? cs.filter : 'none';
+      ctx.drawImage(im, 0, 0, cw, ch);
+      const d = ctx.getImageData(0, 0, cw, ch).data;
+      const ys = []; let sum = 0;
+      for (let i = 0; i < d.length; i += 4) { const Y = lum([d[i], d[i + 1], d[i + 2]]); ys.push(Y); sum += Y; }
+      ys.sort((a, b) => a - b);
+      R.photoPix.push({ file: name, mode: im.getAttribute('data-photo'), filter: cs.filter,
+        mean: Math.round(sum / ys.length * 1e5) / 1e5, p99: Math.round(ys[Math.floor(ys.length * 0.99)] * 1e5) / 1e5 });
+    }
+
+    /* ── 14. 版式的寬度階（D4-06）──────────────────────────────────
+           ① 每一張板上，區塊到底有幾種寬度（第 4 輪：156 個區塊只有 6 種、七成同一個）
+           ② 掛了 data-w 的區塊，與它父層內容盒的差 —— 出血是正的、旁註是負的。 */
+    {
+      const list = [];
+      for (const n of el.querySelectorAll('[data-s],[data-w]')) {
+        const r = rel(n);
+        if (r.w < 200 || r.h < 8) continue;
+        if (n.getAttribute('data-role') === 'link') continue;
+        list.push(Math.round(r.w));
+      }
+      R.widths[name] = { list: [...new Set(list)].sort((a, b) => a - b), kinds: new Set(list).size, n: list.length };
+      for (const n of el.querySelectorAll('[data-w]')) {
+        const r = rel(n), pnt = n.parentElement, pr = rel(pnt), pcs = getComputedStyle(pnt);
+        const inner = pr.w - (parseFloat(pcs.paddingLeft) || 0) - (parseFloat(pcs.paddingRight) || 0)
+          - (parseFloat(pcs.borderLeftWidth) || 0) - (parseFloat(pcs.borderRightWidth) || 0);
+        R.ranks.push({ file: name, rank: n.getAttribute('data-w'), w: Math.round(r.w), inner: Math.round(inner), delta: Math.round(r.w - inner) });
+      }
+    }
+
+    /* ── 15. 登入鍵組的標籤（D4-05；第 6 輪 D5-01 母體從「品牌鍵」改成「登入鍵組的每一顆」）──
+           第 5 輪掃的是 [data-brand]，那只有 Apple 與 Google —— 我們自己那顆 Email
+           兩樣都不是，於是它在 AX5 掉成「登入」而沒有任何一條 gate 看得到。
+           現在掃的是 [data-signin]（三顆全在），[data-brand] 留給 G25「品牌鍵不接光」用。
+           ① 標籤有沒有折行、內容有沒有超出按鈕
+           ② 可見文字有沒有被無障礙名稱包住（WCAG 2.5.3 Label in Name）
+           ③ 板上那兩條示範行：容器寬 vs 標籤真正需要的寬（一條放不下、一條放得下） */
+    for (const b of el.querySelectorAll('[data-signin]')) {
+      const kids = [...b.children].map(rel);
+      const bcs = getComputedStyle(b), br2 = rel(b);
+      const gap = parseFloat(bcs.gap) || 0;
+      const need = kids.reduce((a, k) => a + k.w, 0) + gap * Math.max(0, kids.length - 1)
+        + (parseFloat(bcs.paddingLeft) || 0) + (parseFloat(bcs.paddingRight) || 0);
+      /* 標籤是**標出來的**（data-signin-label），不是「第一個 span」——
+         我們自己那顆在一般字級有一個信封 icon 包在 span 裡排在標籤前面，
+         用「第一個 span」會量到那個 icon：文字空字串、行數 2 行。 */
+      const lab = b.querySelector('[data-signin-label]');
+      const lcs = lab ? getComputedStyle(lab) : null;
+      const lh = lcs ? (parseFloat(lcs.lineHeight) || parseFloat(lcs.fontSize) * 1.2) : 1;
+      const vis = lab ? lab.textContent.trim() : '';
+      /* 無障礙名稱（第 8 輪 D7-03：補齊算名字的順序）。
+         第 6 輪只認 aria-label —— 那不是「無障礙名稱」，那是它的其中一個來源。
+         accname 的順序是 aria-labelledby → aria-label → 內容 → title；
+         只認一個來源的話，用 aria-labelledby 或 title 命名的按鈕會被算成「名稱＝可見文字」，
+         2.5.3 的比對於是比了一個不存在的東西。四個來源都認，並且回報**名字從哪裡來的**。
+         2.5.3 要的是「名稱**包含**可見文字」，所以這裡回報兩個字串，判斷留給 G32⑤。 */
+      const byIds = (b.getAttribute('aria-labelledby') || '').split(/\s+/).filter(Boolean)
+        .map((id) => { const n2 = el.querySelector(`#${CSS.escape(id)}`); return n2 ? n2.textContent.trim() : ''; }).filter(Boolean).join(' ');
+      const aria = b.getAttribute('aria-label');
+      const title = b.getAttribute('title');
+      const from = byIds ? 'labelledby' : (aria !== null ? 'label' : (vis ? 'content' : (title ? 'title' : 'none')));
+      const nm = byIds || (aria !== null ? aria : (vis || title || ''));
+      R.brandLab.push({ file: name, brand: b.getAttribute('data-signin'), title: b.getAttribute('data-title'),
+        lines: lab ? Math.round(rel(lab).h / lh) : 0, over: Math.round(need - br2.w), text: vis,
+        /* role：這幾顆是 div，沒有 role 就**根本不在無障礙樹裡**（第 5 輪 r5 抓到的那一顆
+           就是這樣）。可見文字對得上、名稱算得出來，都不代表 VoiceOver 找得到它。 */
+        role: b.getAttribute('role'), nameFrom: from,
+        aria: aria === null ? null : aria, name: nm });
+    }
+    for (const n of el.querySelectorAll('[data-fit]')) {
+      const lab = n.querySelector('[data-fit-label]');
+      if (!lab) continue;
+      const room = Math.round(rel(n).w), need = Math.round(lab.getBoundingClientRect().width);
+      R.axFit.push({ file: name, id: n.getAttribute('data-fit'), room, need, short: need - room });
+    }
+
+    /* ── 16. 具名豁免的使用點（D4-07②）＋ 玻璃交界的兩條規則（D4-11）── */
+    /* 連**根節點自己**一起掃：整張板的豁免（data-veto）掛在板根上，
+       querySelectorAll 不含根 —— 少了這一句，「登記了卻沒用到」會誤報。 */
+    for (const n of [el, ...el.querySelectorAll('[data-sys],[data-light],[data-cancel],[data-veto]')]) {
+      for (const mk of ['data-sys', 'data-light', 'data-cancel', 'data-veto']) {
+        if (n.hasAttribute(mk)) R.exemptSeen.push({ file: name, marker: mk, role: n.getAttribute(mk) });
+      }
+    }
+    for (const sys of el.querySelectorAll('[data-sys="glass"]')) {
+      const sr = rel(sys);
+      const under = [];
+      for (const n of el.querySelectorAll('*')) {
+        if (sys.contains(n)) continue;
+        const r = rel(n), cs = getComputedStyle(n);
+        if (!(r.l < sr.r && r.r > sr.l && r.t < sr.b && r.b > sr.t)) continue;
+        const bg = hexToRgb(cs.backgroundColor);
+        const paints = (cs.backgroundImage && cs.backgroundImage !== 'none') || (bg && bg[3] > 0);
+        if (!paints) continue;
+        under.push(n.getAttribute('data-grad') || n.getAttribute('data-role') || n.tagName.toLowerCase());
+      }
+      let near = 1e9;
+      for (const rz of el.querySelectorAll('[data-s="raise"]')) {
+        if (sys.contains(rz) || rz.getAttribute('data-role') === 'link') continue;
+        const r = rel(rz);
+        near = Math.min(near, Math.abs(r.b - sr.t), Math.abs(r.t - sr.t));
+      }
+      const md = sys.closest('[data-mode]');
+      R.glass.push({ file: name, mode: md ? md.getAttribute('data-mode') : (isDark ? 'dark' : 'light'),
+        under: [...new Set(under)].sort(), nearRaise: near === 1e9 ? null : Math.round(near),
+        textN: [...sys.querySelectorAll('*')].filter((n) => [...n.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim())).length });
+    }
+
+    holder.remove();
+  }
+
+  R.contrast.min = Math.round(R.contrast.min*100)/100;
+  // R9②：把「瀏覽器真的讀到的那幾份原文」的雜湊回報給 measure.mjs
+  R.contentFp = await hash12(JSON.stringify(R.src.slice().sort()));
+  document.getElementById('out').textContent = 'JSON>>' + JSON.stringify(R) + '<<JSON';
+})();
+</script>
+</body>

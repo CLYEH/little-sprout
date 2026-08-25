@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- ls-measured:aeeb7eef2602 -->
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>
+    /* ── Little Sprout M1 tokens（值即實作值，ios-dev 直接抄）── */
+    :root{
+      --ls-board:#EFE3D0; --ls-board-2:#E3D2B8; --ls-board-3:#D9C7AB; --ls-lit:#FBF4E8;
+      --ls-ink:#241A12; --ls-ink-2:#413327;
+      --ls-cta:#8A3016; --ls-cta-deep:#6B2410; --ls-on-cta:#FFFFFF;
+      --ls-wine:#6E1424; --ls-sprout:#1F5230; --ls-edge:#7D6342;
+      --ls-r-window:12px; --ls-r-control:14px; --ls-r-card:18px;
+      --ls-sp-1:4px; --ls-sp-2:8px; --ls-sp-3:12px; --ls-sp-4:16px;
+      --ls-sp-5:24px; --ls-sp-6:32px; --ls-tap-min:44px;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Helvetica Neue", sans-serif;-webkit-font-smoothing:antialiased;background:#EFE3D0;color:#241A12;text-wrap:pretty}
+    a{color:#241A12;text-decoration:underline} a:hover{color:#8A3016}
+    /* 紙的紋理：卡紙不是純色。全稿唯一用到透明度的地方。 */
+    .g::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.055;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+      mix-blend-mode:multiply}
+  </style></helmet>
+<div class="g" data-col="phone" style="position:relative;width:390px;height:844px;background:#EFE3D0;overflow:hidden;display:flex;flex-direction:column">
+  <div style="padding:59px 24px 0"><div data-s="raise" data-role="link" style="min-height:44px;display:flex;align-items:center;gap:4px;margin-left:-6px;color:#241A12">
+      <span style="display:flex"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5 8 12l6.5 7"/></svg></span><span style="font-size:17px;line-height:25px;font-weight:600">陳家</span>
+   </div></div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:16px 24px 0">
+    <h1 style="font-size:28px;line-height:34px;font-weight:700;letter-spacing:-.01em;color:#241A12;margin:0">有 1 個人想加入</h1>
+    <p style="font-size:17px;line-height:25px;font-weight:400;color:#413327;margin:0">看清楚是不是你認識的人，再按核准。</p>
+  </div>
+<div style="display:flex;flex-direction:column;gap:24px;padding:24px 24px 34px;flex-grow:1">
+  
+  <div data-s="flat" style="border:1px solid #7D6342;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;gap:12px;align-items:center">
+      <div data-s="win" data-role="avatar" style="flex:none;width:52px;height:52px;background:#D9C7AB;border:1px solid #7D6342;border-radius:50%;box-shadow:inset 0 1.5px 0 rgba(36,26,18,.34), inset 0 4px 6px -3px rgba(36,26,18,.22), inset 0 -1.5px 0 rgba(255,250,238,.75);padding:0;display:flex;align-items:center;justify-content:center">
+        <span style="font-size:22px;line-height:28px;font-weight:600;letter-spacing:-.005em;color:#413327">怡</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+        <span style="font-size:17px;line-height:25px;font-weight:600;color:#241A12;text-shadow:0 1px 0 rgba(255,250,238,.75);overflow-wrap:break-word">王怡君</span>
+        <span style="font-size:13px;line-height:18px;font-weight:500;color:#413327;overflow-wrap:break-word">yijun@<wbr>gmail.<wbr>com</span>
+        <span style="font-size:13px;line-height:18px;font-weight:500;color:#413327">3 分鐘前用 742 936 送出</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-size:15px;line-height:21px;font-weight:600;color:#413327">讓他用什麼身分加入</span>
+      <div style="display:flex;gap:8px;align-items:stretch">
+        <div data-s="win" data-role="choiceSel" style="flex:1;background:#FBF4E8;border:2px solid #241A12;border-radius:14px;box-shadow:inset 0 2px 5px -2px rgba(36,26,18,.22);min-height:44px;padding:12px;display:flex;flex-direction:column;gap:4px">
+       <div style="display:flex;align-items:center;gap:4px;color:#241A12">
+         <span style="display:flex;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.8 12.4 4.6 4.6 9.8-10"/></svg></span>
+         <span style="font-size:15px;line-height:21px;font-weight:600;color:#241A12">家人</span>
+       </div>
+       <span style="font-size:13px;line-height:18px;font-weight:500;color:#241A12">看、留言、也能上傳</span>
+     </div>
+        <div data-s="raise" data-role="choice" style="flex:1;background:#D9C7AB;border-radius:14px;border-bottom:3px solid #7D6342;box-shadow:0 1px 0 rgba(36,26,18,.20), 0 8px 16px -10px rgba(36,26,18,.55);min-height:44px;padding:12px;display:flex;flex-direction:column;gap:4px">
+       <span style="font-size:15px;line-height:21px;font-weight:600;color:#241A12">親友</span>
+       <span style="font-size:13px;line-height:18px;font-weight:500;color:#413327">只能看和留言</span>
+     </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:32px">
+      <div data-s="raise" data-role="button" data-cta="1" style="background:#8A3016;border-radius:14px;border-bottom:3px solid #6B2410;box-shadow:0 1px 0 rgba(36,26,18,.20), 0 8px 16px -10px rgba(36,26,18,.55);min-height:56px;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 16px;color:#FFFFFF">
+      
+      <span style="font-size:17px;line-height:25px;font-weight:600;color:#FFFFFF;text-align:center">核准加入</span>
+    </div>
+      <span data-s="raise" data-role="link" style="align-self:center;min-height:44px;display:inline-flex;align-items:center;padding:0 8px;font-size:17px;line-height:25px;font-weight:600;color:#241A12;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px">拒絕這個申請</span>
+    </div>
+  </div>
+  
+  <div style="height:1px;background:#7D6342"></div>
+  
+  <div data-s="flat" style="border:1px solid #7D6342;border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <span style="font-size:17px;line-height:25px;font-weight:600;color:#241A12;text-shadow:0 1px 0 rgba(255,250,238,.75)">邀請碼 742 936</span>
+    <span style="font-size:13px;line-height:18px;font-weight:500;color:#413327;text-shadow:0 1px 0 rgba(255,250,238,.75)">8/30 到期 · 還可用 3 次</span>
+  </div>
+  <span data-s="raise" data-role="link" style="align-self:center;min-height:44px;display:inline-flex;align-items:center;padding:0 8px;font-size:17px;line-height:25px;font-weight:600;color:#241A12;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px">換一組新的號碼</span>
+</div></div>
+</x-dc>
+</body>
+</html>
