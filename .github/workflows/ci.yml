@@ -57,6 +57,13 @@ jobs:
                 exit 1
               fi
               bad=0
+              # LS-10：排除已經在任一保護分支上的 commit（--not origin/main
+              # origin/development origin/test）。工作分支若曾把保護分支 merge
+              # 回來（例如解衝突），base_sha..HEAD 會連帶包含保護分支自己的歷史
+              # commit；這些 commit 已經在它們原本的 PR 驗過格式，且可能是格式
+              # 規約生效之前的舊 commit（例如 harness bootstrap）。不排除的話，
+              # 一旦保護分支上出現一個不合規的歷史 commit，往後每一個把該分支
+              # merge 回來的 feature PR 都會被這裡永久卡死。
               while IFS= read -r line; do
                 case "$line" in
                   Merge\ *|Revert\ *|fixup!*|squash!*) continue ;;
@@ -65,7 +72,7 @@ jobs:
                   echo "::error::commit message 不符規約：$line"
                   bad=1
                 fi
-              done < <(git log --format=%s "$base_sha..HEAD")
+              done < <(git log "$base_sha..HEAD" --not origin/main origin/development origin/test --format=%s)
               [ "$bad" -eq 0 ]
               ;;
           esac
@@ -73,7 +80,83 @@ jobs:
           git diff "$base_sha"...HEAD | grep '^+' | grep -v '^+++' \
             | bash scripts/gates/scan-secrets.sh
 
+      # LS-50：分支起點乾淨度（push-gate 第 6 步的伺服器端兜底）——工作分支自 merge-base 以來的非 merge commit
+      # 票號必須等於分支票號；夾帶他票須 commit body 與 PR body 各有獨佔一行的 `Bundles: LS-<m>`（逃生口使用在
+      # PR 可見）。只在工作分支 head 執行：promote／back-merge 的 head 是保護分支，沒有「本票」可比（同 LS-10）。
+      # 姊妹規則 merge-conflict-check（push-gate 第 7 步）CI 無法承載：GitHub 對不可合併的 PR 根本不觸發本 workflow。
+      - name: 分支起點乾淨度（工作分支不得夾帶他票 commit；branch-ticket-check，LS-50）
+        if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
+        run: |
+          printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body.txt"
+          bash scripts/gates/branch-ticket-check.sh --branch "$HEAD" --base "origin/$BASE" --pr-body "$RUNNER_TEMP/pr-body.txt"
+
+      # LS-63：PR body 檔頭段須含 head 分支票號（scripts/gates/pr-body-check.sh；agent 在 gh pr create/edit 前對 body 檔
+      # 呼叫同一支腳本，這裡是伺服器端兜底）。來源：LS-53／LS-56 兩個 agent 共用 scratchpad/pr-body.md 撞檔，
+      # LS-53 的 gh pr edit 把 LS-56 的 body 貼上 PR #78——暫存檔命名規約在 repo 外無法機械驗，驗它要防的結果。
+      # 同 LS-50 只在工作分支 head 執行：promote／back-merge 的 head 是保護分支，沒有「本票」可比。
+      - name: PR body 檔頭段含本票票號（pr-body-check，LS-63）
+        if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
+        run: |
+          printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-check.txt"
+          bash scripts/gates/pr-body-check.sh --branch "$HEAD" "$RUNNER_TEMP/pr-body-check.txt"
+
+      # LS-45／LS-41／LS-54／LS-53／LS-50／LS-63：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
+      # 放行」（destructive-approval-check）、「schema／文件對帳」（api-contract-check）、
+      # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）、「migration 兩級分級／BREAKING: 段落」
+      # （migration-breaking-check／breaking-section-check）、「分支不夾帶他票 commit／push 前無合併衝突」
+      # （branch-ticket-check／merge-conflict-check）、「PR body 檔頭段含本票票號」（pr-body-check）與
+      # 「審查取證不進版控」（evidence-path-check）的偵測不退化（前饋必有反饋，對 gate 本身也適用）。
+      # 集中在同一個 step，維持「一個地方跑所有 gate 自測」。
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check）
+        run: |
+          # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
+          # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
+          rc=0
+          bash scripts/gates/destructive-approval-check.test.sh || rc=1
+          bash scripts/gates/api-contract-check.test.sh || rc=1
+          bash scripts/gates/error-codes-check.test.sh || rc=1
+          bash scripts/gates/migration-breaking-check.test.sh || rc=1
+          bash scripts/gates/breaking-section-check.test.sh || rc=1
+          bash scripts/gates/branch-ticket-check.test.sh || rc=1
+          bash scripts/gates/merge-conflict-check.test.sh || rc=1
+          bash scripts/gates/pr-body-check.test.sh || rc=1
+          bash scripts/gates/evidence-path-check.test.sh || rc=1
+          exit "$rc"
+
+      # LS-71：ops 腳本自測——patrol.sh（巡檢）用合成 repo（file:// 裸 origin＋七個 worktree）驗各停滯型態判定的
+      # 正負樣本、--json 合法、gh 不可用不炸；session-start.sh（SessionStart hook）驗輸出合法 JSON 且 fail-soft、
+      # .claude/settings.json 有掛上。獨立 step、不併進上面的 gate 自測 step（同 LS-51 的理由：避開與同時在飛的
+      # harness 票改同一 step 撞衝突；巡檢也不是 merge gate）。
+      - name: Ops 腳本自測（patrol／session-start，LS-71）
+        run: bash scripts/ops/patrol.test.sh
+
+      # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
+      # errcode 三方雙向對帳（本機 push-gate 的伺服器端兜底）。所有 PR 都跑：純檔案比對、
+      # 不依賴 PR body 標記，沒有 promote／back-merge 誤擋的問題（同 secrets 掃描）。
+      - name: 錯誤碼三方對帳（docs/API.md §5 ↔ LSErrorCode ↔ migrations errcode，LS-54／LS-56）
+        run: bash scripts/gates/error-codes-check.sh
+
+      # LS-51：設計畫布（design-canvas*/）執行產物由根 .gitignore 統一 ignore，但 ignore 規則
+      # 管不到「已經在 index 裡」的檔（規則落地前就 commit 進去的、或 git add -f 硬加的）——
+      # 三軌的 _shotcheck.html 正是這個形狀。所以再驗 index 內沒有任何已追蹤檔命中 repo 內的
+      # .gitignore（pre-commit 的伺服器端兜底）。純檔案比對、不依賴 PR body，所有 PR 都跑。
+      # 自測與正式檢查同一 step、自測先跑：自測紅＝gate 沒牙，正式檢查的綠不可信。
+      # （獨立 step 而不併進上面「Gate 腳本自測」，是為了避開同時在飛的 LS-53 改同一 step；
+      #   LS-53 併入後可併回去，維持「一個地方跑所有 gate 自測」。）
+      - name: 已追蹤檔不得命中 .gitignore（tracked-ignored-check，LS-51）
+        run: |
+          bash scripts/gates/tracked-ignored-check.test.sh
+          bash scripts/gates/tracked-ignored-check.sh
+
+      # LS-10：Migration rules 與 Design gate 這兩段內容檢查改比照上面的
+      # commit-message 檢查，只在工作分支（feature|fix|hotfix）head 執行。
+      # promote（development→test、test→main）與 back-merge 的累積 diff 會
+      # 重複觸發已經在來源 feature PR 驗過的內容（且 DESTRUCTIVE-APPROVED／
+      # Design: 這類 PR body 標記不會隨 promote PR 自動携帶，會被誤擋——
+      # PR #10 promote 實測撞過 Design gate）。secrets 掃描沒有這個問題
+      # （掃描本身不依賴 PR body 標記），維持對全部 PR 執行。
       - name: Migration rules
+        if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
         run: |
           base_sha=$(git merge-base "origin/$BASE" HEAD)
           mig=$(git diff --name-only "$base_sha"...HEAD -- supabase/migrations/ || true)
@@ -83,14 +166,38 @@ jobs:
               echo "::error::migration 變更必須伴隨 supabase/tests/ 的 RLS 測試變更（DB migration gate）"
               exit 1
             fi
-            destructive=$(git diff "$base_sha"...HEAD -- supabase/migrations/ | grep '^+' | grep -icE 'DROP TABLE|DROP COLUMN|DROP POLICY|DROP FUNCTION|DROP TRIGGER|DROP INDEX|DROP SCHEMA|DROP CONSTRAINT|DROP NOT NULL|TRUNCATE|DISABLE ROW LEVEL SECURITY|ALTER (TABLE|COLUMN).* TYPE ' || true)
-            if [ "${destructive:-0}" -gt 0 ] && ! printf '%s' "$PR_BODY" | grep -q 'DESTRUCTIVE-APPROVED'; then
-              echo "::error::偵測到破壞性 migration。此類變更需使用者本人依規約核可（docs/COLLABORATION.md §6）；agent 遇此錯誤必須停下回報使用者，不得自行處理"
+            # LS-53：分級改由 scripts/gates/migration-breaking-check.sh 做 statement 級判定（單一 pass 剝
+            # --／/* */ 註解後以 ; 切句；多行敘述、單一字面值的 execute '…' 動態 SQL 也認得——`||` 串接拆開的
+            # 多字關鍵字認不得，見該檔檔頭已知限制；規則表同檔頭）。
+            # 舊版逐行關鍵字 grep 命中 DROP POLICY 卻放過同義的 ALTER POLICY … (false)／REVOKE
+            # （PR #60 review F7，LS-48 曾以「不觸發偵測器」為選型理由）——想避開 gate 就換寫法的前例。
+            findings=$(bash scripts/gates/migration-breaking-check.sh --base "$base_sha") || exit 1
+            if [ -n "$findings" ]; then
+              printf 'migration 分級結果（級別<TAB>敘述）：\n%s\n' "$findings"
+            fi
+            # DESTRUCTIVE：維持既有——使用者本人在 PR body 蓋核可標記，LS-45 起整行錨定
+            # （scripts/gates/destructive-approval-check.sh；純子字串比對曾被散文提及誤放行，PR #55 run 32626369903）
+            if printf '%s\n' "$findings" | grep -q '^DESTRUCTIVE' \
+               && ! printf '%s' "$PR_BODY" | bash scripts/gates/destructive-approval-check.sh; then
+              echo "::error::偵測到破壞性 migration（見上方 DESTRUCTIVE 列）。此類變更需使用者本人依規約核可（docs/COLLABORATION.md §6）；agent 遇此錯誤必須停下回報使用者，不得自行處理"
               exit 1
+            fi
+            # BREAKING：既有呼叫端行為改變——PR body 須有行首的 BREAKING: 段落（scripts/gates/breaking-section-check.sh），
+            # 且 docs/API.md 同 PR 有變更（§6 API 變更紀律：契約文件跟著改）
+            if printf '%s\n' "$findings" | grep -q '^BREAKING'; then
+              if ! printf '%s' "$PR_BODY" | bash scripts/gates/breaking-section-check.sh; then
+                echo "::error::migration 改變既有呼叫端行為（見上方 BREAKING 列：ALTER POLICY／REVOKE／既有函式重定義等）。PR body 必須有行首的 BREAKING: 段落，同一行寫受影響的呼叫端與遷移路徑（docs/COLLABORATION.md §6）"
+                exit 1
+              fi
+              if [ -z "$(git diff --name-only "$base_sha"...HEAD -- docs/API.md)" ]; then
+                echo "::error::migration 被判 BREAKING 但 docs/API.md 在本 PR 沒有變更——呼叫端契約（權限／policy／RPC 行為）改了就要同 PR 更新契約文件（docs/COLLABORATION.md §6）"
+                exit 1
+              fi
             fi
           fi
 
       - name: Design gate（新增 SwiftUI View 需附設計稿標記）
+        if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
         run: |
           base_sha=$(git merge-base "origin/$BASE" HEAD)
           # 掃所有變更 Swift 檔的「新增行」，涵蓋新檔與寫進既有檔的新 View；
@@ -100,6 +207,18 @@ jobs:
           if [ "${new_views:-0}" -gt 0 ] && ! printf '%s' "$PR_BODY" | grep -qE 'Design:[[:space:]]*[^[:space:]]'; then
             echo "::error::PR 新增了 SwiftUI View 但 body 的 Design: 欄位是空的——新畫面必須先有 ui-designer 的 .pen 設計稿並填上 frame 名稱"
             exit 1
+          fi
+
+      # LS-26：.pen 落地結構兜底（本機 commit-gate 的伺服器端對應；
+      # 無 --expect-nodes——「落地比記憶體舊」的深度驗證靠收工程序＋handoff 證據）
+      - name: .pen 落地結構檢查
+        run: |
+          base_sha=$(git merge-base "origin/$BASE" HEAD)
+          pens=$(git -c core.quotePath=false diff --name-only --diff-filter=ACM "$base_sha"...HEAD -- '*.pen' || true)
+          if [ -n "$pens" ]; then
+            while IFS= read -r p; do
+              bash scripts/gates/design-landing-check.sh "$p"
+            done <<< "$pens"
           fi
 
   # DB migration gate 的執行面（LS-11）：CI 實際跑 supabase/tests/run.sh（RLS 隔離／owner
@@ -143,12 +262,55 @@ jobs:
         if: steps.detect.outputs.skip == 'false'
         run: supabase db reset
 
+      # LS-41（PR #58 review 主修）：docs/API.md ↔ migrations 對帳，改用套用完
+      # migrations 的活資料庫 pg_catalog 當權威來源（--catalog 模式），不是重新剖析
+      # SQL 原始碼——不受文字解析器的已知限制影響。放在 db reset 之後、run.sh
+      # 之前：這是一個純比對、幾十毫秒等級的檢查，不該排在兩分鐘的 run.sh 後面才被
+      # 發現紅燈（F10）。不開新 job（與 db job 共用同一個活資料庫），也不必額外把
+      # job 名稱加進 branch protection 的 required checks（db 本身已是 required）。
+      # 自成一段擷取 SUPABASE_DB_URL，不與下面 run.sh 那步共用變數：兩步是各自
+      # 獨立的 GitHub Actions run: shell，不共享 shell 狀態，維持各自完整可讀。
+      - name: API 契約對帳（docs/API.md ↔ 活資料庫 catalog，LS-41）
+        if: steps.detect.outputs.skip == 'false'
+        run: |
+          SUPABASE_DB_URL="$(supabase status -o env | grep '^DB_URL=' | head -n1 | cut -d= -f2- | tr -d '"' || true)"
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::supabase status -o env 未能取得 DB_URL，SUPABASE_DB_URL 為空——中止，避免用空連線字串誤跑測試"
+            exit 1
+          fi
+          export SUPABASE_DB_URL
+          bash scripts/gates/api-contract-check.sh --catalog
+
       - name: RLS／owner 不變量／trigger／併發測試（supabase/tests/run.sh）
         if: steps.detect.outputs.skip == 'false'
         run: |
-          SUPABASE_DB_URL="$(supabase status -o env | grep '^DB_URL=' | head -n1 | cut -d= -f2- | tr -d '"')"
+          # LS-10（PR #15 review）：run: 區塊在 pipefail 下，`grep '^DB_URL='` 若
+          # 沒命中（例如 `supabase status -o env` 輸出格式改了）會讓整段管線非 0
+          # 結束，而賦值語句在 -e 下會直接讓 job 中止、只留一段看不懂的通用錯誤。
+          # 加 `|| true` 讓擷取失敗時能往下走到明確的非空檢查，印出好懂的
+          # ::error:: 訊息再中止，不要讓 pipefail 直接吃掉診斷資訊。
+          SUPABASE_DB_URL="$(supabase status -o env | grep '^DB_URL=' | head -n1 | cut -d= -f2- | tr -d '"' || true)"
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::supabase status -o env 未能取得 DB_URL，SUPABASE_DB_URL 為空——中止，避免用空連線字串誤跑測試"
+            exit 1
+          fi
           export SUPABASE_DB_URL
           bash supabase/tests/run.sh
+
+      # LS-54 D2：EXPLAIN 證據（supabase/tests/evidence/）不再進 repo——計時、規劃器估計值、
+      # buffers hit 數、stderr/stdout 交錯順序每次都變，tracked 會讓本機跑一次測試就弄髒工作區。
+      # LS-6 驗收條件 c 的「留存」改落在這裡：每次 db job 綠燈都上傳成 artifact，保留天數
+      # 顯式寫死 retention-days: 90（LS-56 F3：不押 repo／org 的環境預設，預設值改了驗收條件
+      # 不會跟著靜默漂移）。run.sh 只在全部測試通過後才寫 evidence，所以不用 always()；綠了
+      # 卻沒檔案是 run.sh 壞了，if-no-files-found: error 直接紅，不靜默略過。
+      - name: 上傳 RLS plan 證據（supabase/tests/evidence → artifact）
+        if: steps.detect.outputs.skip == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rls-plan-evidence
+          path: supabase/tests/evidence/
+          if-no-files-found: error
+          retention-days: 90
 
   lint:
     runs-on: macos-15
@@ -181,7 +343,12 @@ jobs:
           fi
           brew install xcodegen
           xcodegen generate
-          git diff --exit-code -- LittleSprout.xcodeproj || {
+          # LS-10：先 git add -A 再對 staged 內容 diff，涵蓋 xcodegen 產生的全新
+          # untracked 檔（例如新 target 的 .xcscheme）。單純 `git diff --exit-code`
+          # 只比對「已追蹤檔案」的工作目錄與 index 差異，看不到全新的 untracked
+          # 檔——這是原本的盲區（PR #6 review 實測重現）。
+          git add -A -- LittleSprout.xcodeproj
+          git diff --cached --exit-code -- LittleSprout.xcodeproj || {
             echo "::error::project.yml 與 LittleSprout.xcodeproj 不同步——改 project.yml 後須重跑 xcodegen generate 一併 commit；若是在 Xcode GUI 改了設定，請把改動搬回 project.yml"
             exit 1
           }
@@ -193,7 +360,11 @@ jobs:
             exit 0
           fi
           dest=$(bash scripts/gates/detect-simulator.sh)
+          # LS-54 N8：測試序列執行——MockURLProtocol 的 handler 是全域 static，平行測試會
+          # 互相汙染。scheme（project.yml）已明寫 parallelizable: false，這裡再明確帶旗標，
+          # 不把正確性押在 scheme 預設值上。
           xcodebuild test \
             -scheme LittleSprout \
-            -destination "platform=iOS Simulator,name=${dest}" \
+            -destination "$dest" \
+            -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO

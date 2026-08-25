@@ -13,9 +13,17 @@ options:
     iOS: "17.0"
   createIntermediateGroups: true
 
+# LS-49：supabase-swift 版本鎖死（exactVersion，非 from:）——CI runner 的 Xcode 版本不可控，
+# 選這個版本是因為它是 swift-tools-version:5.10（相容範圍比新版要求的 6.1 寬，降低 CI 解析失敗
+# 風險）；升級前務必先確認 CI 的 macOS runner Xcode 版本支援目標版本的 swift-tools-version。
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    exactVersion: 2.49.0
+
 settings:
   base:
-    SWIFT_VERSION: "5.0"
+    SWIFT_VERSION: "6.0"
     # iPhone + iPad universal（PLAN §9-C3 已定案）
     TARGETED_DEVICE_FAMILY: "1,2"
     MARKETING_VERSION: "0.1.0"
@@ -27,24 +35,28 @@ targets:
     platform: iOS
     sources:
       - path: LittleSprout
+    # LS-49：Debug/Release 共用同一份 xcconfig。Base.xcconfig 本身有安全佔位值，
+    # 只在本機存在 Config/Secrets.xcconfig（gitignored）時才會被覆蓋成真實 Supabase 專案值
+    # （見該檔內 #include? 說明）——CI 與新 clone 的機器不需要它就能 build/test。
+    configFiles:
+      Debug: Config/Base.xcconfig
+      Release: Config/Base.xcconfig
+    dependencies:
+      - package: Supabase
     settings:
       base:
         # 佔位 bundle ID：須與 LS-8（Apple Developer 註冊）建立的 App ID 對齊後才定案。
         PRODUCT_BUNDLE_IDENTIFIER: com.leoyeh.littlesprout
-        GENERATE_INFOPLIST_FILE: true
-        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
-        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
-        INFOPLIST_KEY_UILaunchScreen_Generation: true
-        INFOPLIST_KEY_CFBundleDisplayName: Little Sprout
-        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: >-
-          UIInterfaceOrientationPortrait
-          UIInterfaceOrientationLandscapeLeft
-          UIInterfaceOrientationLandscapeRight
-        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: >-
-          UIInterfaceOrientationPortrait
-          UIInterfaceOrientationPortraitUpsideDown
-          UIInterfaceOrientationLandscapeLeft
-          UIInterfaceOrientationLandscapeRight
+        # LS-49 實測推翻原本的假設：GENERATE_INFOPLIST_FILE 的 INFOPLIST_KEY_<Key> 機制
+        # 只認 Apple 預先登記的已知 key（CFBundleDisplayName、UIApplicationSceneManifest 這類）
+        # ——不是「任意 key 都生效」，塞 SupabaseURL/SupabaseAnonKey 這種自訂 key 會被靜默忽略
+        # （build setting 值本身是對的，xcodebuild -showBuildSettings 也印得出來，但合成出來的
+        # Info.plist 就是不含這兩個 key，AppConfig 的 precondition 因此在啟動時必定崩潰——
+        # 不是 race/快取問題，兩者都改用 CI 全新模擬器仍會 100% 重現）。
+        # 改回傳統機制：實體 Info.plist（見 LittleSprout/Info.plist）+ $(VAR) 取代，
+        # 這條路徑不分 key 是否「已知」都保證生效。原本靠 INFOPLIST_KEY_* 合成的內容
+        # 原樣搬進那個檔案，行為不變。
+        INFOPLIST_FILE: LittleSprout/Info.plist
 
   LittleSproutTests:
     type: bundle.unit-test
@@ -53,6 +65,10 @@ targets:
       - path: LittleSproutTests
     dependencies:
       - target: LittleSprout
+      # LS-49：測試要建構 SupabaseClient（自訂 URLSession 攔截請求＋記憶體版 AuthLocalStorage）
+      # 來驗證 SupabaseAuthService／SupabaseFamilyAPIClient 的錯誤映射與狀態轉換，因此需要能
+      # import Supabase/Auth/PostgREST 型別（Session、AuthError、PostgrestError 等）。
+      - package: Supabase
     settings:
       base:
         GENERATE_INFOPLIST_FILE: true
@@ -69,4 +85,9 @@ schemes:
     test:
       config: Debug
       targets:
-        - LittleSproutTests
+        # LS-54 N8：明確序列執行。MockURLProtocol 的 handler 是全域 static（各測試檔的
+        # tearDown 清掉它是靠「同一時間只有一個測試在跑」才成立），平行測試會互相汙染。
+        # XcodeGen 預設本來就是 false，這裡寫死是讓意圖進 repo、不靠預設值；CI 與
+        # push-gate 的 xcodebuild 另外帶 -parallel-testing-enabled NO 雙保險。
+        - name: LittleSproutTests
+          parallelizable: false

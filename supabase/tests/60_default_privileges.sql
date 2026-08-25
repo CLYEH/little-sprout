@@ -64,13 +64,17 @@ begin
   end loop;
   raise notice 'ok：private 的 trigger 函式對 anon/authenticated 都沒有 EXECUTE';
 
-  -- 正向對照：policy 依賴的集合函式必須留給 authenticated，否則整組 RLS 判斷會噴權限錯
+  -- 正向對照：policy 依賴的函式必須留給 authenticated，否則整組 RLS 判斷會噴權限錯。
+  -- LS-40 的 private.is_media_object_path(text) 不是集合函式（是路徑規約的判斷式，
+  -- 給 storage.objects 的 INSERT／UPDATE WITH CHECK 用），但同樣是「policy 求值時會被
+  -- 呼叫、少了 EXECUTE 整條上傳路徑就炸」的東西，所以登記在同一份清單裡。
   foreach v_fn in array array[
     'private.family_ids()',
     'private.owned_family_ids()',
     'private.contributor_family_ids()',
     'private.uploadable_family_ids()',
-    'private.peer_profile_ids()'
+    'private.peer_profile_ids()',
+    'private.is_media_object_path(text)'
   ] loop
     if not has_function_privilege('authenticated', v_fn, 'execute') then
       raise exception 'FAIL：authenticated 失去 % 的 EXECUTE，所有 RLS policy 都會失效', v_fn;
@@ -79,7 +83,7 @@ begin
       raise exception 'FAIL：anon 不該有 % 的 EXECUTE', v_fn;
     end if;
   end loop;
-  raise notice 'ok：policy 用的五支集合函式只有 authenticated 可執行';
+  raise notice 'ok：policy 用的六支 private 函式只有 authenticated 可執行';
 end;
 $$;
 
@@ -210,6 +214,12 @@ begin
   end if;
 
   raise notice 'ok default privileges：新建的 function 對 anon/authenticated 沒有 EXECUTE、service_role 由我們自己的 migration 保證';
+
+  -- merge-reviewer PR #60 review N3（第 2 輪）：第 8 段把「清單外函式」的掃描範圍
+  -- 從「只看 SECURITY DEFINER」放寬到「public schema 的所有函式」之後，這支探針
+  -- 函式若留著不清，會被第 8 段誤判成一支沒登記的未知 RPC（它本來就只是這裡的
+  -- 拋棄式測試道具，從來不是 API 的一部分）。用完即丟，不要留到後面的段落去。
+  drop function public.ls15_default_priv_probe_fn();
 end;
 $$;
 
@@ -316,6 +326,219 @@ begin
     raise exception 'FAIL：anon 不該可以執行 register_device_token';
   end if;
   raise notice 'ok 回歸：register_device_token 對 authenticated 仍可執行、anon 仍不可執行';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 8. LS-34：public schema 的 RPC 逐支登記授權（白名單列舉）
+--
+-- 第 3 段只列舉 schema private 的函式，管的是「trigger 函式不對外」；public 的 RPC
+-- 是給前端呼叫的 API 邊界，授權方式不同（LS-15 定下的 per-RPC 顯式 grant 慣例），
+-- 漏 grant 的後果也不同：呼叫端會直接炸掉，但目前沒有任何測試會指出「你忘了 grant」
+-- （LS-33 review 觀察，見票面追加事項）。
+--
+-- 這裡反過來做「白名單」而不是逐支挑著測，分兩張表：
+--   - v_definer_rpcs：SECURITY DEFINER 的 RPC。authenticated 必須可 EXECUTE、anon 與
+--     PUBLIC 都不可，且必須是 SECURITY DEFINER＋search_path 收斂（LS-34 review F2：
+--     這兩條防護原本只在 80_join_approval.sql §11 驗過，且只涵蓋那裡的 7 支——
+--     register_device_token 的 definer／search_path 至今零測試覆蓋。統一併到這裡，
+--     白名單內每一支都驗，不再兩份清單各管各的、互相漂移；80_ §11 已縮成指路註解）。
+--   - v_invoker_rpcs（merge-reviewer PR #60 review N3，第 2 輪）：SECURITY INVOKER
+--     的 RPC，目前只有 get_family_timeline 一支。授權面驗法跟 definer 那組一樣
+--     （authenticated 可執行、anon／PUBLIC 不可），但**不**驗「必須是 SECURITY
+--     DEFINER」——這支函式刻意是 invoker（依賴 feed_items 既有的 RLS 做隔離，不需要
+--     繞過 RLS），硬套 definer 檢查只會逼著它去符合一個不該套用在它身上的規則。
+--
+-- N3 的問題背景：第 1 輪把 get_family_timeline 從白名單裡整支排除（因為它不是
+-- definer），順帶把它排除到了下面「清單外函式」那段掃描的**輸入條件**之外——那段
+-- 原本只掃 `p.prosecdef` 為真的函式，於是 get_family_timeline 對這道 gate 完全隱形：
+-- reviewer 實測，手動對它 `grant execute ... to anon` 之後，60_ 與 85_ 兩個測試檔
+-- 都還是全綠。修法：
+--   a) 為它單獨補 EXECUTE 正負斷言（下面 v_invoker_rpcs 那段迴圈）；
+--   b) 把「清單外函式」的掃描條件從「`p.prosecdef` 為真」放寬到「public schema 的
+--      所有函式」，白名單改成 v_definer_rpcs ∪ v_invoker_rpcs 兩張表的聯集——這樣
+--      任何未登記的 public 函式，不論是不是 definer，都逃不過這道 gate。
+--
+-- 排除 public.rls_auto_enable()：Supabase 平台自帶的 event trigger 支撐函式（見第 6 段），
+-- 不是本專案的 API RPC，本機開發映像沒有它，其收權已由第 6 段獨立驗證，不重複登記。
+--
+-- 單一清單來源（LS-34 review F3，N3 沿用同一個原則）：v_definer_rpcs／v_invoker_rpcs
+-- 是唯一手寫的白名單，oid 版本（給「清單外函式」那段用）在 begin 之後由它們 cast
+-- 導出——不分開各自宣告一份 oid 陣列，漏改其中一份會讓兩段檢查看到不同的清單而
+-- 悄悄漏測（fail-open）。若清單裡寫錯函式簽名或該函式不存在，下面 array_agg 那句
+-- cast 會直接噴出含函式簽名的錯誤，訊息可讀。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_fn text;
+  v_definer_rpcs text[] := array[
+    'public.create_invite(uuid, text, timestamptz, integer)',
+    'public.request_join(text)',
+    'public.approve_join(uuid)',
+    'public.reject_join(uuid)',
+    'public.withdraw_join(uuid)',
+    'public.list_join_requests()',
+    'public.get_my_join_request()',
+    'public.register_device_token(text, text)',
+    'public.create_diary_entry(uuid, uuid, text, date)',
+    'public.update_diary_entry(uuid, text, date, uuid)',
+    'public.set_diary_deleted(uuid, boolean)',
+    'public.set_album_deleted(uuid, boolean)',
+    'public.set_comment_deleted(uuid, boolean)',
+    'public.create_comment(uuid, text, uuid, text)',
+    'public.update_comment(uuid, text)',
+    'public.toggle_reaction(uuid, text, uuid)',
+    'public.list_comments(uuid, text, uuid, timestamptz, uuid, integer)',
+    'public.create_child(uuid, text, date, text)',
+    'public.update_child(uuid, text, date, text)',
+    'public.set_child_deleted(uuid, boolean)'
+  ];
+  v_invoker_rpcs text[] := array[
+    'public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)',
+    'public.get_reaction_counts(uuid, text, uuid[])',
+    'public.list_children(uuid)'
+  ];
+  v_whitelist oid[];
+  v_unknown text;
+begin
+  select array_agg(f::regprocedure::oid)
+    into v_whitelist
+    from unnest(v_definer_rpcs || v_invoker_rpcs) as f;
+
+  foreach v_fn in array v_definer_rpcs loop
+    if not has_function_privilege('authenticated', v_fn, 'execute') then
+      raise exception 'FAIL：authenticated 不能執行白名單 RPC %，呼叫端會炸卻沒有測試指出原因', v_fn;
+    end if;
+    if has_function_privilege('anon', v_fn, 'execute') then
+      raise exception 'FAIL：anon 可以執行白名單 RPC %（未登入者能操作這支 RPC）', v_fn;
+    end if;
+    if exists (select 1 from pg_proc p, aclexplode(p.proacl) a
+                where p.oid = v_fn::regprocedure and a.grantee = 0
+                  and a.privilege_type = 'EXECUTE') then
+      raise exception 'FAIL：白名單 RPC % 仍對 PUBLIC 開放 EXECUTE', v_fn;
+    end if;
+    -- definer 函式的兩個標準防護：以擁有者身分執行 + search_path 收斂（F2：原本只在
+    -- 80_join_approval.sql §11 驗、且不含 register_device_token，統一併到這裡）
+    if not exists (select 1 from pg_proc p
+                    where p.oid = v_fn::regprocedure and p.prosecdef
+                      and p.proconfig @> array['search_path=""']) then
+      raise exception 'FAIL：白名單 RPC % 不是 SECURITY DEFINER 或沒有 set search_path = ''''', v_fn;
+    end if;
+  end loop;
+  raise notice
+    'ok：白名單內的 % 支 public SECURITY DEFINER RPC 授權與 definer／search_path 硬化皆正確（authenticated 可執行、anon／PUBLIC 不可）',
+    array_length(v_definer_rpcs, 1);
+
+  -- N3：invoker RPC 只驗授權面（authenticated 可、anon／PUBLIC 不可），不驗
+  -- definer／search_path——這支刻意是 invoker，硬套 definer 檢查會誤判成失敗。
+  foreach v_fn in array v_invoker_rpcs loop
+    if not has_function_privilege('authenticated', v_fn, 'execute') then
+      raise exception 'FAIL：authenticated 不能執行白名單 RPC %，呼叫端會炸卻沒有測試指出原因', v_fn;
+    end if;
+    if has_function_privilege('anon', v_fn, 'execute') then
+      raise exception 'FAIL：anon 可以執行白名單 RPC %（未登入者能操作這支 RPC——即使它是 security invoker，未登入呼叫仍不該被允許）', v_fn;
+    end if;
+    if exists (select 1 from pg_proc p, aclexplode(p.proacl) a
+                where p.oid = v_fn::regprocedure and a.grantee = 0
+                  and a.privilege_type = 'EXECUTE') then
+      raise exception 'FAIL：白名單 RPC % 仍對 PUBLIC 開放 EXECUTE', v_fn;
+    end if;
+  end loop;
+  raise notice
+    'ok：白名單內的 % 支 public SECURITY INVOKER RPC 授權正確（authenticated 可執行、anon／PUBLIC 不可）——N3',
+    array_length(v_invoker_rpcs, 1);
+
+  -- 清單外的 public 函式：直接 FAIL（新 RPC 必須先來這裡登記）。N3：掃描條件從
+  -- 「p.prosecdef 為真」放寬到「public schema 的所有函式」，不再只顧得到 definer——
+  -- 這正是 get_family_timeline 曾經對這道 gate 隱形的原因（它不是 definer，原本的
+  -- 條件把它跟任何未來的 invoker RPC 一起漏掉了）。
+  select string_agg(p.oid::regprocedure::text, '、' order by p.oid::regprocedure::text)
+    into v_unknown
+    from pg_proc p
+   where p.pronamespace = 'public'::regnamespace
+     and p.oid <> all(v_whitelist)
+     and p.oid is distinct from to_regprocedure('public.rls_auto_enable()');
+
+  if v_unknown is not null then
+    raise exception
+      'FAIL：public schema 出現清單外的函式 —— %（新增 public RPC 必須先到本檔第 8 段的白名單登記授權，否則漏 grant 時呼叫端會炸但沒有測試指出原因；不分是不是 SECURITY DEFINER，N3 之後 invoker RPC 也逃不過這道 gate）',
+      v_unknown;
+  end if;
+  raise notice 'ok：public schema 沒有清單外的函式（definer／invoker 皆已涵蓋）';
+end;
+$$;
+
+-- 9. LS-40：schema private 的函式必須 SECURITY DEFINER＋search_path 收斂，例外逐支登記
+--
+-- 前提對帳（LS-40 review F8 的宣稱與實況）：review 說 supabase/tests 裡 grep 不到
+-- prosecdef／proconfig。實況是**有的**——第 8 段（LS-34 併入）就在驗，
+-- 但它的範圍是 `public` schema 的 RPC 白名單。private schema 這一側在此之前確實
+-- 沒有任何 definer／search_path 的機械檢查：第 3 段只管「不對 PUBLIC 開放 EXECUTE」，
+-- 第 2 段只管「authenticated 有沒有 EXECUTE」，兩者都不看函式怎麼硬化。
+-- 所以 review 的結論（要補）是對的，理由（grep 不到）不對，兩件事分開記。
+--
+-- 為什麼 private 這一側需要這道 gate：schema private 的函式幾乎都是 policy 與 trigger
+-- 用的，它們要讀 family_members 這種自己也帶 RLS 的表，非 definer 不可；而 definer
+-- 沒有 `set search_path = ''` 就會被呼叫端的 search_path 挾持。這兩件事現在靠人記得，
+-- 漏掉不會有任何錯誤訊息。
+--
+-- 例外清單（invoker 函式）——刻意的，不是漏網：
+--   private.is_media_object_path(text)：只對參數做 regex，不碰任何資料庫物件，
+--   沒有 search_path 挾持的面；而帶 SET 子句的 SQL 函式**無法被規劃器 inline**，
+--   會變成每列一次真正的函式呼叫。它掛在 storage.objects 的 INSERT／UPDATE
+--   WITH CHECK 上，逐列跑，所以刻意留成 invoker 且不加 SET 以換取 inline。
+--   （新增 private 函式若也要走這條例外，必須先來這裡登記並寫明理由。）
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  -- 單一清單來源（比照第 8 段）：oid 版本由文字版 cast 導出，清單裡的函式不存在時
+  -- 這句 cast 會直接噴出含簽名的錯誤，不會無聲漂移。
+  v_exceptions text[] := array[
+    'private.is_media_object_path(text)'
+  ];
+  v_exc_oids oid[];
+  v_leaky text;
+  v_stale text;
+begin
+  -- coalesce 是必要的不是裝飾：v_exceptions 若被清空，array_agg 對零列取值會回 NULL，
+  -- 下面的 `p.oid <> all (v_exc_oids)` 遇到 NULL 陣列恆得 NULL，WHERE 篩不出任何一列
+  -- ——例外清單空了，這段檢查反而對全體 private 函式靜默通過（fail-open）。
+  select coalesce(array_agg(f::regprocedure::oid), array[]::oid[])
+    into v_exc_oids from unnest(v_exceptions) as f;
+
+  -- 清單外的每一支都必須 definer + search_path=""。
+  -- coalesce 是必要的不是裝飾：proconfig 為 NULL（＝沒有任何 SET 子句）時
+  -- `NULL @> array[...]` 是 NULL，`prosecdef and NULL` 對 definer 函式會得到 NULL，
+  -- WHERE 篩不出來——正好漏掉「是 definer 但忘了收 search_path」這個最該抓的情況。
+  select string_agg(p.oid::regprocedure::text, '、' order by p.oid::regprocedure::text)
+    into v_leaky
+    from pg_proc p
+   where p.pronamespace = 'private'::regnamespace
+     and p.oid <> all (v_exc_oids)
+     and not (p.prosecdef
+              and coalesce(p.proconfig, array[]::text[]) @> array['search_path=""']);
+
+  if v_leaky is not null then
+    raise exception
+      'FAIL：schema private 的這些函式不是 SECURITY DEFINER 或沒有 set search_path = '''' —— %（policy／trigger 函式要讀帶 RLS 的表必須是 definer；definer 沒收 search_path 會被呼叫端挾持。若是刻意的 invoker 例外，先到本檔第 9 段登記並寫明理由）',
+      v_leaky;
+  end if;
+
+  -- 反向對照：例外清單裡的函式如果其實已經是 definer 了，代表清單過期沒清掉
+  select string_agg(p.oid::regprocedure::text, '、' order by p.oid::regprocedure::text)
+    into v_stale
+    from pg_proc p
+   where p.oid = any (v_exc_oids) and p.prosecdef;
+
+  if v_stale is not null then
+    raise exception
+      'FAIL：例外清單裡的這些函式其實已經是 SECURITY DEFINER 了，清單過期——請從第 9 段的 v_exceptions 移除：%',
+      v_stale;
+  end if;
+
+  raise notice
+    'ok：schema private 的函式除了登記在案的 % 支 invoker 例外，都是 SECURITY DEFINER＋search_path 收斂',
+    coalesce(array_length(v_exceptions, 1), 0);
 end;
 $$;
 

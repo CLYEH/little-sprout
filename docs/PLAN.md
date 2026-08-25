@@ -44,7 +44,7 @@
 
 ### 客戶端：Swift + SwiftUI（原生 iOS）
 
-- 最低支援 iOS 17，用 SwiftUI + Swift Concurrency（async/await）。
+- 最低支援 iOS 17，用 SwiftUI + Swift Concurrency（async/await）。Swift 6 語言模式（strict concurrency）——LS-12 核定，資料競態於編譯期攔截。
 - **iPhone + iPad 通用（universal）** ✅ 已定。**第一天就用適配式版面**：`NavigationSplitView` + size class，不要先做 iPhone 單層 stack 再回頭塞 iPad —— 導航層事後重寫是本專案少數「agent 也救不了」的返工，因為它會牽動每一個畫面。
 - 照片選取用 `PhotosPicker`；上傳前在裝置端壓縮（照片轉 HEIC/JPEG ~2048px 長邊、影片用 `AVAssetExportSession` 壓到 1080p），大幅省儲存費用與上傳時間。
 - 圖片快取：縮圖 + 原圖分開存，列表只載縮圖。
@@ -95,7 +95,9 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 
 **`feed_items` 為什麼第一天就要有**：時間軸要混排相簿/照片/日記，跨三張表 union 再排序，用 OFFSET 分頁在資料長大後會慢且會跳項。用一張由 trigger 維護的扁平表配 keyset 分頁（`WHERE occurred_at < $cursor ORDER BY occurred_at DESC LIMIT n`）。事後補要重寫整個首頁查詢，所以不列為優化項。
 
-**RLS**：所有內容表都帶 `family_id`，policy 一律檢查 `family_id IN (使用者所屬家庭)`。但**不要直接內嵌子查詢** —— `family_id IN (SELECT ... FROM family_members WHERE user_id = auth.uid())` 會對每一列重算。包成 `STABLE SECURITY DEFINER` 函式（或把 family 清單放進 JWT custom claim）。
+**`feed_items` 的索引／外鍵變更規則（LS-48 收尾）**：這張表每筆 media／album／diary 各一列，是最快長大的表；自 LS-48 起對它新增索引一律 `CREATE INDEX CONCURRENTLY`、新增外鍵一律 `ADD CONSTRAINT … NOT VALID` 之後再 `VALIDATE CONSTRAINT`（都不會長時間鎖表）。兩者都不能在交易區塊內執行，所以這類變更要拆成獨立的非交易 migration 檔，不與其他 DDL 混在同一個檔案。
+
+**RLS**：所有內容表都帶 `family_id`，policy 一律檢查 `family_id IN (使用者所屬家庭)`。**不要直接內嵌子查詢**——一律包成 `STABLE SECURITY DEFINER` 函式（或把 family 清單放進 JWT custom claim）。必定逐列重算、必慢的形狀是 **aggregate／correlated 子查詢**（子查詢裡引用了外層資料列的欄位，且包在聚合函式內，規劃器無法拉平成 join，只能逐列跑一次 SubPlan），例如 `(SELECT count(*) FROM family_members fm WHERE fm.family_id = m.family_id AND fm.user_id = auth.uid()) > 0`。**等值形**（如 `family_id IN (SELECT family_id FROM family_members WHERE user_id = auth.uid())`，子查詢不引用外層欄位）規劃器通常會拉平成 hashed SubPlan／semi-join 一次求值，但那是規劃器依估計列數與 `work_mem` 做的選擇，**不是保證**——雜湊表放不進 `work_mem` 時一樣會退化成逐列的 `(SubPlan N)`，一樣會被 `supabase/tests/50_rls_plan_no_percall_subquery.sql` 的偵測器擋下（判的是 plan 形狀，不是 SQL 寫法）。這正是規則寫成「一律包函式」而不是「等值形可以裸寫」的原因：包函式不必賭資料量會不會超過 `work_mem`。
 
 **其他約束**：
 - `invites` 的 `max_uses` / `used_count` 是隱私要求不是便利功能 —— 可無限重用的邀請碼一旦外流就是陌生人進家庭，與「私密」定位直接衝突。
@@ -106,6 +108,19 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 - **`families.storage_quota_bytes` / `storage_used_bytes` 是公開上架的必要防線**（§10-A）：公開之後任何人都能註冊並上傳到你付費的 bucket，沒有上限就是把信用卡交給陌生人。`storage_used_bytes` 由上傳/刪除時的 trigger 維護，超額時擋下上傳。欄位現在加幾乎免費，事後補要回頭算所有既有資料。
 
 **檔案路徑規約**：`{family_id}/{yyyy}/{mm}/{media_id}.{ext}` + `..._thumb.jpg`，未來 S3 sync 到 NAS 時整個前綴搬走即可。`{yyyy}/{mm}` **取上傳時間，不取 `taken_at`** —— 這個前綴的用途是搬移分片而非查詢，用 `taken_at` 會讓回填舊照片時分片散開。
+
+**Storage 邊界**（LS-40，`supabase/migrations/20260823030000_storage_policies.sql`）：檔案放在 private 的 `media` bucket（單檔 50 MiB、僅 HEIC/HEIF/JPEG/PNG/MP4/MOV）。`storage.objects` 沒有 `family_id` 欄位，RLS 只能以**路徑第一段**判歸屬——讀＝同家庭成員（含 viewer），寫＝有 `can_upload` 的成員**且第一段必須是自己所屬的 family_id**，改／刪＝上傳者本人（須**當下仍有**上傳權）或家庭 owner。上面那條路徑規約因此不再只是約定，而是被 policy 強制的安全邊界，客戶端必須遵守四件事：
+
+- **UUID 一律小寫正規形**。Swift 的 `UUID.uuidString` 預設是大寫，要 `.lowercased()`。policy 比對的是 `uuid::text`（Postgres 恆輸出小寫），也與 `media.storage_path` 的 `media_storage_path_family_prefix` CHECK 對齊；大寫路徑會在上傳當下被拒（42501），不會有半套狀態。
+- **列表只載 `_thumb.jpg`，原圖等進大圖再載，且一律走簽名 URL**（bucket 私有，檔案沒有公開網址）。這是 §7 egress 那一項的主要防線，不只是速度。
+- **上傳順序：先檔後列**（先 upload 到 Storage，成功之後才 insert `media` 列）。反過來的話，上傳失敗會留下一列指向不存在檔案的 `media`——時間軸出現破圖，而清掉它需要 media 的寫入權；照這個順序失敗則只留下一個孤兒物件，而 policy 明確允許上傳者自己刪掉它。**代價要知道**：`families.storage_used_bytes` 是 `media` 的 trigger 依 `byte_size` 維護的，所以**額度只在 media 列這一層綁得住**——檔案已經進 bucket 了才輪到額度判斷，Storage 的實際 bytes 一定 ≥ 帳面值。這不是可以靠調順序解決的問題（反過來就變成破圖），只能靠**離線對帳**收斂：以 `media.storage_path` ↔ `storage.objects.name` 為基準，`media` 沒有對應列的物件即孤兒。縮圖不在 `media` 裡，推導規則是 `regexp_replace(storage_path, '\.\w+$', '_thumb.jpg')`；**`storage_used_bytes` 不含縮圖**，所以對帳時要把縮圖那份從「孤兒」裡排除，也要知道帳面值天生低估。
+- **刪除順序**：照片的「刪除」是 `media.deleted_at` 軟刪除，**不動檔案**（§5 長輩誤刪要有救援路徑）；policy 讓上傳者刪得掉自己的檔案，只是為了清掉上一條說的那種孤兒物件。上傳者分支要求「**當下仍**在有上傳權的成員名單裡」——`can_upload` 被 owner 收回之後，那個人連自己以前上傳的檔案也動不了（`can_upload` 的語義是「這個人現在不該再寫這個 bucket」，留一條「但他還能刪」的縫等於權限只撤了一半）。因此**被撤權成員留下的孤兒物件由家庭 owner 清理**，這是契約的一部分，不是漏洞。
+
+**Storage 的雲端部署驗證清單**（本機測不到、只在雲端才成立的三件事；`db push` 綠燈不能取代這三條）：
+
+1. **`storage.prefixes`**：較新的 storage-api 會建這張表並用 trigger 維護，官方本機開發映像沒有它。→ 部署後跑 `select to_regclass('storage.prefixes');`，非 NULL 就再跑 `select relrowsecurity from pg_class where oid = 'storage.prefixes'::regclass;` 與 `select polname from pg_policy where polrelid = 'storage.prefixes'::regclass;`；**啟用了 RLS 又沒有任何 policy** 就是上傳會在雲端被擋的形狀。最終判準是**做一次真實上傳**：本機同路徑可過、雲端回 403／RLS 錯誤，就是這一條。
+2. **`owner` / `owner_id` 由誰填**：policy 兩欄都認，五種組合的行為已由 `supabase/tests/90_storage_policies.sql` 第 6 段釘住，所以這裡只剩一個事實查詢——真實上傳一張照片後跑 `select owner, owner_id from storage.objects where bucket_id = 'media' limit 1;`，**至少一欄非 NULL** 即可。兩欄皆 NULL 不是安全問題（退化成只有家庭 owner 能動），但表示「上傳者自刪孤兒物件」在雲端不會生效。若真實上傳回 **42501 而路徑本身無誤**，先懷疑是 UPDATE/INSERT 那組 owner／owner_id 釘樁擋下——查 `storage.objects` 該兩欄實際被填了什麼（storage-api 版本可能填出與 `auth.uid()` 不同形態的值）。
+3. **`storage.buckets` 沒有給 authenticated 任何 policy**：客戶端 `listBuckets()` 回空陣列是**預期行為**（bucket 名稱寫死在 app 裡），不是要修的 bug。→ `select count(*) from pg_policy where polrelid = 'storage.buckets'::regclass;` 應為 0；哪天不是 0，表示有人從 dashboard 加了東西。
 
 ## 6. 開發路線圖
 

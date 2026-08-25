@@ -7,15 +7,38 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0510B5801E753003A86A2B04 /* AuthSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BEB4DA6A1BCCFD8355575E /* AuthSession.swift */; };
 		13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */; };
+		15E53C663EE9CEDBF1E4FCCE /* SupabaseFamilyAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B90F66016EC2C905347224 /* SupabaseFamilyAPIClientTests.swift */; };
+		1C5AF463F2A7DF887C811BCB /* FamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50E6303411CD369F8AFC507 /* FamilyAPIClient.swift */; };
 		1D03D9D4C76C029973315865 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C608A0E7AB49C7BAF3669796 /* RootView.swift */; };
 		32824AF2CC5F64CE44CBB595 /* AppSectionUniquenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */; };
+		336A7171428B83A957574DFF /* InMemoryAuthLocalStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96263CE935C656C186FDEC99 /* InMemoryAuthLocalStorage.swift */; };
+		34CA41320091E645AE354AA2 /* SupabaseClientFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1BE3C8BA19FA35C011C2A4 /* SupabaseClientFactory.swift */; };
 		38FACDC15B0DA2AF7A373639 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8351A5DED54BE71EBD0A9161 /* SettingsView.swift */; };
+		42714D8DFF10852534591190 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 3A53E62BFF6A8E95027C112E /* Supabase */; };
+		47F024E1268E315400D0BC8A /* SupabaseFamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6994C01308D56E827DA85A61 /* SupabaseFamilyAPIClient.swift */; };
 		486C91604E18A60B2E5A0A87 /* AlbumsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5291088D9B29980248B2BCF /* AlbumsView.swift */; };
+		4FBA0B132FA839140B2E7FB4 /* SupabaseClientFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E69B95CA3E637FEF6DFCCB /* SupabaseClientFactoryTests.swift */; };
 		54686C08900304A03BBC33F0 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF988A929E58294A2FD895A6 /* TimelineView.swift */; };
+		5526B3A33052BAFCF2286C04 /* SessionFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */; };
+		649D627F2BC3D16B5A550488 /* AppConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C74E777AB0094919EC703B2 /* AppConfigTests.swift */; };
+		6B5B2506E29C7F8F412E9CB3 /* SupabaseAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514F93B80A8AD4C99FE4654C /* SupabaseAuthService.swift */; };
 		6EFC06689B8E4216F5308FDA /* AppSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9530233ED3E9B6D3A43AD99 /* AppSection.swift */; };
+		6F71D1FB09D499364D5D1E32 /* FamilyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF4B6F33EBC80A3AA56E8FC /* FamilyModels.swift */; };
+		76B16560EF93FFF134B8FDE7 /* AppleSignInNonceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A912608AE602C827E4786763 /* AppleSignInNonceTests.swift */; };
+		838BEA28E6C05A825D649B22 /* SupabaseFamilyAPIClientJoinTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */; };
+		87E501CF0FB428B9FB3A0DCF /* MockURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */; };
+		8A5D00A06F596E432294806B /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D45C2CD0AC1D735E5576ABB /* AppConfig.swift */; };
+		912E644926254F979A9250AB /* AppErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A788B6CC504D5166582012 /* AppErrorTests.swift */; };
 		B32E3D152F36E50526D8E1B7 /* ChildrenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCAE2B57E7D3907D0578AC21 /* ChildrenView.swift */; };
+		C3C4C4F16FFBC3D5561F3DB8 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A8630C948451C3739D8A263 /* AuthService.swift */; };
+		C5A680937E6BD7F0B4673749 /* AppleSignInNonce.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587B330E759DA2D787F4E63C /* AppleSignInNonce.swift */; };
+		DDBF77E8E686704D89F1ABA1 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F28DE483C3DA54A9672BFDFF /* Supabase */; };
+		F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */; };
+		F462FED59ADC341536F34B8A /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76C79515621CA9052803B7EA /* AppError.swift */; };
 		F90747ADA6446C8F7FA27137 /* LittleSproutApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ADE9B28C92582D4C51FF485 /* LittleSproutApp.swift */; };
+		FDE17BE504613C437ADC4F9C /* TestSupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468EF1C61FA7C2B35E756487 /* TestSupabaseClient.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,33 +53,133 @@
 
 /* Begin PBXFileReference section */
 		09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSectionTests.swift; sourceTree = "<group>"; };
+		0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFixture.swift; sourceTree = "<group>"; };
+		10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAuthServiceTests.swift; sourceTree = "<group>"; };
+		2D45C2CD0AC1D735E5576ABB /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		3A1BE3C8BA19FA35C011C2A4 /* SupabaseClientFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClientFactory.swift; sourceTree = "<group>"; };
 		3ADE9B28C92582D4C51FF485 /* LittleSproutApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LittleSproutApp.swift; sourceTree = "<group>"; };
+		468EF1C61FA7C2B35E756487 /* TestSupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupabaseClient.swift; sourceTree = "<group>"; };
+		514F93B80A8AD4C99FE4654C /* SupabaseAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAuthService.swift; sourceTree = "<group>"; };
+		587B330E759DA2D787F4E63C /* AppleSignInNonce.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInNonce.swift; sourceTree = "<group>"; };
+		59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLProtocol.swift; sourceTree = "<group>"; };
 		64398867FF6A776CAD323AB7 /* LittleSprout.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LittleSprout.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6559B92B7B6A289D59C6481F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSectionUniquenessTests.swift; sourceTree = "<group>"; };
+		6994C01308D56E827DA85A61 /* SupabaseFamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClient.swift; sourceTree = "<group>"; };
+		6A8630C948451C3739D8A263 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		76C79515621CA9052803B7EA /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
+		7C508BEDC841E4E6D1F86FC5 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		8351A5DED54BE71EBD0A9161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		8C74E777AB0094919EC703B2 /* AppConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigTests.swift; sourceTree = "<group>"; };
+		94B90F66016EC2C905347224 /* SupabaseFamilyAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClientTests.swift; sourceTree = "<group>"; };
+		95BEB4DA6A1BCCFD8355575E /* AuthSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSession.swift; sourceTree = "<group>"; };
+		96263CE935C656C186FDEC99 /* InMemoryAuthLocalStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryAuthLocalStorage.swift; sourceTree = "<group>"; };
+		A50E6303411CD369F8AFC507 /* FamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyAPIClient.swift; sourceTree = "<group>"; };
+		A912608AE602C827E4786763 /* AppleSignInNonceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInNonceTests.swift; sourceTree = "<group>"; };
 		A9530233ED3E9B6D3A43AD99 /* AppSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSection.swift; sourceTree = "<group>"; };
 		B7011C61D613644C595C9208 /* LittleSproutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LittleSproutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5291088D9B29980248B2BCF /* AlbumsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsView.swift; sourceTree = "<group>"; };
 		C608A0E7AB49C7BAF3669796 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		DCAE2B57E7D3907D0578AC21 /* ChildrenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenView.swift; sourceTree = "<group>"; };
+		DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClientJoinTests.swift; sourceTree = "<group>"; };
+		EEF4B6F33EBC80A3AA56E8FC /* FamilyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyModels.swift; sourceTree = "<group>"; };
 		EF988A929E58294A2FD895A6 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
+		F5E69B95CA3E637FEF6DFCCB /* SupabaseClientFactoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClientFactoryTests.swift; sourceTree = "<group>"; };
+		F6A788B6CC504D5166582012 /* AppErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppErrorTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		A3378DEBCDDEC06B78FD0AF6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DDBF77E8E686704D89F1ABA1 /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E6E0310CF54880E120BFFA17 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				42714D8DFF10852534591190 /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
+		08D03861B539BFBE4EC358B4 /* Family */ = {
+			isa = PBXGroup;
+			children = (
+				A50E6303411CD369F8AFC507 /* FamilyAPIClient.swift */,
+				EEF4B6F33EBC80A3AA56E8FC /* FamilyModels.swift */,
+				6994C01308D56E827DA85A61 /* SupabaseFamilyAPIClient.swift */,
+			);
+			path = Family;
+			sourceTree = "<group>";
+		};
 		2EAF9B3EA49C21C14C5F57EE = {
 			isa = PBXGroup;
 			children = (
+				3A8B32DFECD3766BEB34D411 /* Config */,
 				7FBBA188103B61D6C48AA664 /* LittleSprout */,
 				51FBBB4E3BA4ACB67A77A695 /* LittleSproutTests */,
 				89C4C5B26A276CA79F42EF35 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
+		3A8B32DFECD3766BEB34D411 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				7C508BEDC841E4E6D1F86FC5 /* Base.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		41D6EB65C7B8ABC169D5E9CD /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				2D45C2CD0AC1D735E5576ABB /* AppConfig.swift */,
+				3A1BE3C8BA19FA35C011C2A4 /* SupabaseClientFactory.swift */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		459A0B1D845C2292804A8309 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				96263CE935C656C186FDEC99 /* InMemoryAuthLocalStorage.swift */,
+				59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */,
+				0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */,
+				468EF1C61FA7C2B35E756487 /* TestSupabaseClient.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		459A382988641CE24F38B81F /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				587B330E759DA2D787F4E63C /* AppleSignInNonce.swift */,
+				6A8630C948451C3739D8A263 /* AuthService.swift */,
+				95BEB4DA6A1BCCFD8355575E /* AuthSession.swift */,
+				514F93B80A8AD4C99FE4654C /* SupabaseAuthService.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
 		51FBBB4E3BA4ACB67A77A695 /* LittleSproutTests */ = {
 			isa = PBXGroup;
 			children = (
+				8C74E777AB0094919EC703B2 /* AppConfigTests.swift */,
+				F6A788B6CC504D5166582012 /* AppErrorTests.swift */,
+				A912608AE602C827E4786763 /* AppleSignInNonceTests.swift */,
 				09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */,
 				694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */,
+				10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */,
+				F5E69B95CA3E637FEF6DFCCB /* SupabaseClientFactoryTests.swift */,
+				DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */,
+				94B90F66016EC2C905347224 /* SupabaseFamilyAPIClientTests.swift */,
+				459A0B1D845C2292804A8309 /* Support */,
 			);
 			path = LittleSproutTests;
 			sourceTree = "<group>";
@@ -73,11 +196,24 @@
 		7FBBA188103B61D6C48AA664 /* LittleSprout */ = {
 			isa = PBXGroup;
 			children = (
+				6559B92B7B6A289D59C6481F /* Info.plist */,
 				3ADE9B28C92582D4C51FF485 /* LittleSproutApp.swift */,
+				41D6EB65C7B8ABC169D5E9CD /* Config */,
+				EB1CA7BFF05C8BD5B8A91BBD /* Errors */,
 				C8659333F128C336F0E65D3A /* Features */,
 				616C205FC36548C87FABD96E /* Navigation */,
+				83D70BC6677D8C0927EB217F /* Services */,
 			);
 			path = LittleSprout;
+			sourceTree = "<group>";
+		};
+		83D70BC6677D8C0927EB217F /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				459A382988641CE24F38B81F /* Auth */,
+				08D03861B539BFBE4EC358B4 /* Family */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 		89C4C5B26A276CA79F42EF35 /* Products */ = {
@@ -100,6 +236,14 @@
 			path = Features;
 			sourceTree = "<group>";
 		};
+		EB1CA7BFF05C8BD5B8A91BBD /* Errors */ = {
+			isa = PBXGroup;
+			children = (
+				76C79515621CA9052803B7EA /* AppError.swift */,
+			);
+			path = Errors;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -108,6 +252,7 @@
 			buildConfigurationList = D77F09B9CA5863DC966210C6 /* Build configuration list for PBXNativeTarget "LittleSproutTests" */;
 			buildPhases = (
 				FA33D78060E320305125EE35 /* Sources */,
+				E6E0310CF54880E120BFFA17 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -116,6 +261,7 @@
 			);
 			name = LittleSproutTests;
 			packageProductDependencies = (
+				3A53E62BFF6A8E95027C112E /* Supabase */,
 			);
 			productName = LittleSproutTests;
 			productReference = B7011C61D613644C595C9208 /* LittleSproutTests.xctest */;
@@ -126,6 +272,7 @@
 			buildConfigurationList = D275162D36D215C3FB0ECC37 /* Build configuration list for PBXNativeTarget "LittleSprout" */;
 			buildPhases = (
 				4264715F4DE92769B3E41C51 /* Sources */,
+				A3378DEBCDDEC06B78FD0AF6 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -133,6 +280,7 @@
 			);
 			name = LittleSprout;
 			packageProductDependencies = (
+				F28DE483C3DA54A9672BFDFF /* Supabase */,
 			);
 			productName = LittleSprout;
 			productReference = 64398867FF6A776CAD323AB7 /* LittleSprout.app */;
@@ -158,6 +306,9 @@
 			);
 			mainGroup = 2EAF9B3EA49C21C14C5F57EE;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A72A8F1BDF686D35E4A9C9FC /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 89C4C5B26A276CA79F42EF35 /* Products */;
 			projectDirPath = "";
@@ -175,11 +326,21 @@
 			buildActionMask = 2147483647;
 			files = (
 				486C91604E18A60B2E5A0A87 /* AlbumsView.swift in Sources */,
+				8A5D00A06F596E432294806B /* AppConfig.swift in Sources */,
+				F462FED59ADC341536F34B8A /* AppError.swift in Sources */,
 				6EFC06689B8E4216F5308FDA /* AppSection.swift in Sources */,
+				C5A680937E6BD7F0B4673749 /* AppleSignInNonce.swift in Sources */,
+				C3C4C4F16FFBC3D5561F3DB8 /* AuthService.swift in Sources */,
+				0510B5801E753003A86A2B04 /* AuthSession.swift in Sources */,
 				B32E3D152F36E50526D8E1B7 /* ChildrenView.swift in Sources */,
+				1C5AF463F2A7DF887C811BCB /* FamilyAPIClient.swift in Sources */,
+				6F71D1FB09D499364D5D1E32 /* FamilyModels.swift in Sources */,
 				F90747ADA6446C8F7FA27137 /* LittleSproutApp.swift in Sources */,
 				1D03D9D4C76C029973315865 /* RootView.swift in Sources */,
 				38FACDC15B0DA2AF7A373639 /* SettingsView.swift in Sources */,
+				6B5B2506E29C7F8F412E9CB3 /* SupabaseAuthService.swift in Sources */,
+				34CA41320091E645AE354AA2 /* SupabaseClientFactory.swift in Sources */,
+				47F024E1268E315400D0BC8A /* SupabaseFamilyAPIClient.swift in Sources */,
 				54686C08900304A03BBC33F0 /* TimelineView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -188,8 +349,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				649D627F2BC3D16B5A550488 /* AppConfigTests.swift in Sources */,
+				912E644926254F979A9250AB /* AppErrorTests.swift in Sources */,
 				13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */,
 				32824AF2CC5F64CE44CBB595 /* AppSectionUniquenessTests.swift in Sources */,
+				76B16560EF93FFF134B8FDE7 /* AppleSignInNonceTests.swift in Sources */,
+				336A7171428B83A957574DFF /* InMemoryAuthLocalStorage.swift in Sources */,
+				87E501CF0FB428B9FB3A0DCF /* MockURLProtocol.swift in Sources */,
+				5526B3A33052BAFCF2286C04 /* SessionFixture.swift in Sources */,
+				F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */,
+				4FBA0B132FA839140B2E7FB4 /* SupabaseClientFactoryTests.swift in Sources */,
+				838BEA28E6C05A825D649B22 /* SupabaseFamilyAPIClientJoinTests.swift in Sources */,
+				15E53C663EE9CEDBF1E4FCCE /* SupabaseFamilyAPIClientTests.swift in Sources */,
+				FDE17BE504613C437ADC4F9C /* TestSupabaseClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -206,16 +378,11 @@
 /* Begin XCBuildConfiguration section */
 		0569F249C29FC89A2E713D6C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7C508BEDC841E4E6D1F86FC5 /* Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Little Sprout";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_FILE = LittleSprout/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -304,23 +471,18 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
 		4D2113961DAF6684CBDBF44D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7C508BEDC841E4E6D1F86FC5 /* Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Little Sprout";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_FILE = LittleSprout/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -385,7 +547,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -438,6 +600,30 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A72A8F1BDF686D35E4A9C9FC /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = exactVersion;
+				version = 2.49.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3A53E62BFF6A8E95027C112E /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A72A8F1BDF686D35E4A9C9FC /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		F28DE483C3DA54A9672BFDFF /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A72A8F1BDF686D35E4A9C9FC /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3FD113F87A60C4A70D92B16B /* Project object */;
 }

@@ -9,7 +9,7 @@
 ## 誰做什麼（硬規定）
 
 - **Orchestrator（主 session）**：開票、派工、把關 gate；不寫功能程式碼（harness 除外）。
-- **所有 UI 畫面設計必須由 ui-designer subagent 用 Pencil MCP 產出 .pen 設計稿**（`design/littlesprout.pen`）；沒有設計稿不得實作新畫面。
+- **所有 UI 畫面設計必須由 ui-designer subagent 用 Pencil MCP 產出 .pen 設計稿**（`design/littlesprout.pen`）；沒有設計稿不得實作新畫面。**設計稿送人核可前必先與 visual-reviewer 完成至少 3 輪對抗迭代**（獵殺 slop；前 2 輪一律退修抬標準，第 3 輪起才可 APPROVE）。
 - ios-dev 實作；merge-reviewer 審 PR（race condition／運算效能／平行優化／scope）；qa 在 `test` branch 驗收（UI 票含模擬器視覺驗收）。model 政策見 COLLABORATION §1。
 - **Feature 收尾儀式**（QA 過後、Done 之前，缺一不可）：dead-code-sweeper 巡檢該 feature 引入的死碼＋orchestrator 做 lesson learning review（harness 改善、設定優化、工具缺口），兩者皆記於 ticket comment——是 Done 的前置條件。見 COLLABORATION §6。
 
@@ -18,11 +18,12 @@
 - 分支流向：`feature|fix/* → development → test → main`；`hotfix/*` 與 harness 檔從 `main` 切、PR 回 `main` 後 back-merge。保護分支禁直接 commit（hook＋GitHub 都會擋）。
 - 一張 ticket＝一個 worktree（`.claude/worktrees/LS-<n>`）＝一條 branch（`feature/LS-<n>-slug`）；禁止跨 worktree 編輯。
 - Commit 第一行：`<type>(<scope>): LS-<n> <摘要>`（commit-msg hook 會驗）；禁止 `--no-verify`。
-- Handoff 格式：Ticket／已完成／已驗證（怎麼驗）／未完成／風險／產出位置。
+- Handoff 格式：Ticket／已完成／已驗證（怎麼驗）／未完成（**必列 reviewer 全部 informational 的處置**：已修／另票 LS-<m>／不修＋理由，一條不能省）／風險／產出位置。
 - **Linear 是唯一任務狀態來源**（LS team；Backlog→Spec→Design→Ready→In Progress→In Review→QA→Done）。
 - Secrets 永不進 repo（pre-commit 會掃）。
+- 暫存檔一律 `LS-<n>-<用途>.<ext>`（或 `mktemp -d`）；`gh pr create/edit` 前先 `bash scripts/gates/pr-body-check.sh <body>`（CI 亦驗 PR body 檔頭段含分支票號）。
 
 ## Index
 
 - `docs/PLAN.md` — 產品定位、技術架構、資料模型、開發路線圖、上架準備
-- `docs/COLLABORATION.md` — 完整協作規約：gates 細節、分支與 worktree 規約、命名與訊息範本、Linear 狀態機、agent model 政策、前饋↔反饋對照表
+- `docs/COLLABORATION.md` — 完整協作規約：gates 細節、分支與 worktree 規約、命名與訊息範本、巡檢與 session 連續性（§4-b）、Linear 狀態機、agent model 政策、前饋↔反饋對照表
