@@ -8,7 +8,8 @@
 #   stale_minutes  幾分鐘沒動算停滯（預設 45）
 #   --brief        只印表頭＋異常行（hook 注入 context 用）；全正常時末行「巡檢：無異常」
 #   --json         單一 JSON 物件（欄位見檔尾 json 分支），不依賴 jq
-#   --no-fetch     不先 git fetch origin（預設會 fetch；fetch 失敗只警告，以本機 origin/* 續跑）
+#   --no-fetch     不先 git fetch origin（預設會 fetch，看門狗 PATROL_FETCH_TIMEOUT 秒、預設 10；逾時或失敗只警告，
+#                  退回本機 origin/* 續跑——hook timeout 30s 不能被黑洞位址的 TCP 逾時（實測 75s）撐爆）
 #   --no-pr        略過 gh pr list（自測用；gh 未裝或失敗時本來就會自動略過並標示原因，不會炸）
 #   --repo <path>  指定 repo（任一 worktree 路徑皆可；預設取腳本所在 repo）；主 checkout 由 git-common-dir 推得
 #
@@ -67,23 +68,44 @@ json_num() { case "$1" in ''|*[!0-9]*) printf 'null' ;; *) printf '%s' "$1" ;; e
 FLAGS=; J_FLAGS=
 add_flag() { FLAGS="${FLAGS}${1}"$'\n'; J_FLAGS="${J_FLAGS:+${J_FLAGS},}$(json_str "$1")"; }
 
-# ---- fetch（失敗只警告）----
+# ---- fetch（看門狗：逾時／失敗只警告，退回本機 origin/* 續巡；PR #99 R1）----
+# macOS 沒有 coreutils timeout：背景跑 git fetch、另一個背景 sleep 到期就 kill 它；被 SIGTERM 的 git 回 143 → 視為逾時。
+# 所有背景子程序的 fd 都接 /dev/null——殘留的 sleep／ssh 若還握著本程序的 stdout，呼叫端的 $() 會等到它們結束才收到 EOF。
+FETCH_TIMEOUT=${PATROL_FETCH_TIMEOUT:-10}
+case "$FETCH_TIMEOUT" in ''|*[!0-9]*) echo "✗ patrol：PATROL_FETCH_TIMEOUT 須為整數秒（得到「${FETCH_TIMEOUT}」）" >&2; exit 2 ;; esac
+fetch_with_timeout() {  # exit 0＝成功；124＝逾時；其他＝fetch 本身失敗
+  (
+    GIT_TERMINAL_PROMPT=0 git -C "$ROOT" fetch -q origin >/dev/null 2>&1 &
+    fpid=$!
+    ( sleep "$FETCH_TIMEOUT"; kill "$fpid" 2>/dev/null ) >/dev/null 2>&1 &
+    wpid=$!
+    wait "$fpid"; rc=$?
+    kill "$wpid" 2>/dev/null
+    [ "$rc" -eq 143 ] && exit 124
+    exit "$rc"
+  ) 2>/dev/null
+}
 FETCHED=false; fetch_warn=
 if [ "$DO_FETCH" -eq 1 ]; then
-  if GIT_TERMINAL_PROMPT=0 git -C "$ROOT" fetch -q origin >/dev/null 2>&1; then FETCHED=true
-  else fetch_warn="⚠ git fetch origin 失敗（離線？）——以下以本機 origin/* 為準，可能過期"; fi
+  fetch_with_timeout; frc=$?
+  if [ "$frc" -eq 0 ]; then FETCHED=true
+  elif [ "$frc" -eq 124 ]; then fetch_warn="⚠ fetch 逾時（git fetch origin >${FETCH_TIMEOUT}s 無回應：離線或遠端不可達？），用本機 ref 繼續——以下 origin/* 可能過期"
+  else fetch_warn="⚠ git fetch origin 失敗（離線？），用本機 ref 繼續——以下 origin/* 可能過期"; fi
 fi
 
 # ---- PR（open）：gh 未裝／失敗一律略過並標示原因，不炸 ----
 PR_CHECKED=0; pr_skip=; pr_total=0; pr_flagged=0; PR_LINES=; J_PRS=; PR_HEADS=; pr_raw=
+# gh 的 stderr 另存暫存檔，不併進 TSV（2>&1 會把警告行當成一筆 PR 讀進去；PR #99 R1）
+gh_err=$(mktemp "${TMPDIR:-/tmp}/patrol-gh.XXXXXX") || { echo "✗ patrol：mktemp 失敗" >&2; exit 2; }
+trap 'rm -f "$gh_err"' EXIT
 if [ "$DO_PR" -eq 0 ]; then pr_skip="--no-pr"
 elif ! command -v gh >/dev/null 2>&1; then pr_skip="gh 未安裝"
 elif pr_raw=$(cd "$ROOT" && gh pr list --state open --limit 50 \
       --json number,title,headRefName,baseRefName,mergeStateStatus,updatedAt,reviewDecision,isDraft \
-      -q '.[] | [.number, .mergeStateStatus, (if (.reviewDecision // "") == "" then "-" else .reviewDecision end), (((now - (.updatedAt | fromdateiso8601)) / 60) | floor), .headRefName, .baseRefName, (.isDraft | tostring), .title] | @tsv' 2>&1); then
+      -q '.[] | [.number, .mergeStateStatus, (if (.reviewDecision // "") == "" then "-" else .reviewDecision end), (((now - (.updatedAt | fromdateiso8601)) / 60) | floor), .headRefName, .baseRefName, (.isDraft | tostring), .title] | @tsv' 2>"$gh_err"); then
   PR_CHECKED=1
 else
-  pr_skip="gh 失敗：$(printf '%s' "$pr_raw" | head -1)"
+  pr_skip="gh 失敗：$(head -1 "$gh_err" 2>/dev/null)"
 fi
 if [ "$PR_CHECKED" -eq 1 ] && [ -n "$pr_raw" ]; then
   while IFS=$'\t' read -r n st rd age head base draft title; do
@@ -146,7 +168,8 @@ process_wt() {
     flag="⚠ 目錄不存在（git worktree prune）"
     wt_flagged=$((wt_flagged + 1)); add_flag "[worktree ${name} ${b}] ${flag}"
     WT_LINES="${WT_LINES}  $(printf '%-14s %-34s' "$name" "$b") ${flag}"$'\n'
-    J_WTS="${J_WTS:+${J_WTS},}{\"path\":$(json_str "$w"),\"name\":$(json_str "$name"),\"branch\":$(json_str "$b"),\"missing\":true,\"flag\":$(json_str "$flag")}"
+    # 欄位與正常 worktree 同一套（值 null），消費端不必分兩種形狀（PR #99 R1）
+    J_WTS="${J_WTS:+${J_WTS},}{\"path\":$(json_str "$w"),\"name\":$(json_str "$name"),\"branch\":$(json_str "$b"),\"missing\":true,\"local\":null,\"remote\":null,\"ahead\":null,\"behind_remote\":null,\"commits_since_base\":null,\"merged_into_base\":null,\"last_commit_minutes\":null,\"dirty\":null,\"dirty_minutes\":null,\"worktree_minutes\":null,\"pr\":null,\"flag\":$(json_str "$flag")}"
     return
   fi
   l=$(git -C "$ROOT" rev-parse --short "$b" 2>/dev/null || echo '?')

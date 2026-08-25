@@ -4,7 +4,7 @@
 # 停滯（scratchpad 原型的 bug）、領先 remote／從未 push／dirty 停滯／尚未開工／主 checkout 落後任一漏標、
 # 乾淨或剛建好的 worktree 被誤標、保護分支或 detached worktree 混進表、--json 不合法、gh 不可用整支炸掉、
 # 或 SessionStart hook 輸出不合法 JSON／非 0 退出／settings.json 沒掛上——這裡會紅。
-# 合成 repo：file:// 裸 repo 當 origin（main／development／test），clone 當主 checkout，七個 worktree 各一種形狀。
+# 合成 repo：file:// 裸 repo 當 origin（main／development／test），clone 當主 checkout，八個 worktree 各一種形狀；最後把 origin 指向會掛住的 ext:: 位址驗 fetch 看門狗。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -63,6 +63,9 @@ wt -b feature/LS-5-idle "$wts/LS-5" origin/development
 touch -t "$OLD_T" "$wts/LS-5/.git"
 # ⑥ LS-6 剛建好：0 commit、無變更（負向；base commit 很老也不得誤標）；路徑帶引號與空白，順便驗 --json 跳脫
 wt -b feature/LS-6-fresh "$wts/LS-6 \"q\"" origin/development
+# ⑧ LS-8 目錄被刪但沒 git worktree remove（prunable）：要標、--json 欄位要與正常 worktree 同一套
+wt -b feature/LS-8-gone "$wts/LS-8" origin/development
+rm -rf "$wts/LS-8"
 # 保護分支 worktree 與 detached worktree：不得進 worktree 表、也不能讓腳本炸
 wt "$work/dev-wt" development
 wt --detach "$work/detached"
@@ -105,6 +108,8 @@ l7=$(row "$out" 'feature/LS-7-merged')
 has   '① LS-7 自 base 0 commit 但 reflog 有 commit → 已併入 base、worktree 未移除' "$l7" '已併入 base'
 hasnt '① LS-7 不得誤標尚未開工' "$l7" '尚未開工'
 hasnt '① LS-5 沒動過 → 不是已併入' "$l5" '已併入'
+l8=$(row "$out" 'feature/LS-8-gone')
+has   '① LS-8 目錄不存在 → 標 prune' "$l8" '目錄不存在'
 hasnt '① 保護分支 worktree 不進表' "$out" 'dev-wt'
 has   '① detached worktree 只標略過、不炸' "$out" 'detached，略過'
 
@@ -124,7 +129,7 @@ hasnt '② 有異常時不印「無異常」' "$brief" '巡檢：無異常'
 json="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"; rc=$?
 rc_is '③ --json exit 0' 0 "$rc" "$json"
 jq_ok '③ 合法 JSON' "$json" '.'
-jq_ok '③ 七個 worktree（保護分支／detached 不算）' "$json" '.worktrees | length == 7'
+jq_ok '③ 八個 worktree（保護分支／detached 不算）' "$json" '.worktrees | length == 8'
 jq_ok '③ development 分支不在 worktree 表' "$json" '[.worktrees[].branch] | index("development") == null'
 jq_ok '③ LS-1：ahead 1、自 base 2 commit、flag 領先' "$json" '.worktrees[] | select(.branch=="feature/LS-1-ahead") | .ahead == 1 and .commits_since_base == 2 and (.flag | test("領先 remote"))'
 jq_ok '③ LS-2：0 commit → last_commit_minutes null；dirty 1 且超過 stale' "$json" '.worktrees[] | select(.branch=="feature/LS-2-dirty") | .commits_since_base == 0 and .last_commit_minutes == null and .dirty == 1 and .dirty_minutes >= 30'
@@ -134,10 +139,12 @@ jq_ok '③ LS-5：worktree_minutes 超過 stale、flag 尚未開工' "$json" '.w
 jq_ok '③ LS-6：無 flag；路徑含引號被正確跳脫' "$json" '.worktrees[] | select(.branch=="feature/LS-6-fresh") | .flag == "" and (.path | test("\"q\""))'
 jq_ok '③ LS-7：0 commit 自 base、merged_into_base true、flag 已併入' "$json" '.worktrees[] | select(.branch=="feature/LS-7-merged") | .commits_since_base == 0 and .merged_into_base == true and (.flag | test("已併入"))'
 jq_ok '③ LS-5：merged_into_base false' "$json" '.worktrees[] | select(.branch=="feature/LS-5-idle") | .merged_into_base == false'
+jq_ok '③ LS-8：missing true、flag 目錄不存在、數值欄 null' "$json" '.worktrees[] | select(.branch=="feature/LS-8-gone") | .missing == true and (.flag | test("目錄不存在")) and .local == null and .ahead == null'
+jq_ok '③ LS-8：欄位集合與正常 worktree 完全相同' "$json" '([.worktrees[] | select(.branch=="feature/LS-8-gone") | keys] | first) == ([.worktrees[] | select(.branch=="feature/LS-3-clean") | keys] | first)'
 jq_ok '③ 主 checkout：main、落後 1、flag 有句' "$json" '.main_checkout.branch == "main" and .main_checkout.behind_origin_main == 1 and (.main_checkout.flag | test("落後 origin/main"))'
 jq_ok '③ 三分支數字' "$json" '.branches.development_behind_main == 1 and .branches.test_behind_main == 1 and .branches.test_behind_development == 1'
 jq_ok '③ PR 略過原因與空陣列' "$json" '.prs_skipped == "--no-pr" and .prs == []'
-jq_ok '③ flags 彙總六筆（LS-1／2／4／5／7＋主 checkout）' "$json" '.flags | length == 6'
+jq_ok '③ flags 彙總七筆（LS-1／2／4／5／7／8＋主 checkout）' "$json" '.flags | length == 7'
 
 # ---- ④ gh 不可用（未裝、或 origin 不是 GitHub）→ 略過並標示，不炸 ----
 out4="$(bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"; rc=$?
@@ -175,6 +182,7 @@ jq_ok '⑦ pull 後 hook 不再指示 pull' "$hj3" '.hookSpecificOutput.addition
 for n in LS-1 LS-2 LS-4 LS-5 LS-7; do
   g -C "$repo" worktree remove --force "$wts/$n" >/dev/null 2>&1 || { echo "✗ ⑧ 移除 worktree ${n} 失敗" >&2; fail=1; }
 done
+g -C "$repo" worktree prune
 brief3="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '⑧ 全正常 → 末行「巡檢：無異常」' "$brief3" '巡檢：無異常'
 hasnt '⑧ 全正常 → 無 ⚠' "$brief3" '⚠'
@@ -185,6 +193,22 @@ if jq -e '.hooks.SessionStart[].hooks[] | select(.type == "command") | .command'
 else
   echo "✗ ⑨ .claude/settings.json 沒有掛 SessionStart → scripts/ops/session-start.sh（或 JSON 壞了）" >&2; fail=1
 fi
+
+# ---- ⑩ fetch 看門狗：origin 指向會永遠掛住的位址（ext:: 遠端 helper＝sleep），預設 10s 看門狗要在 ≤15s 內放行、exit 0、
+#        印「fetch 逾時，用本機 ref 繼續」並照常巡檢（PR #99 R1：黑洞位址實測 75s，會把 hook 的 timeout 30 撐爆）----
+g -C "$repo" config protocol.ext.allow always
+g -C "$repo" remote set-url origin 'ext::sleep 30'
+t0=$(date +%s); out10="$(bash "$patrol" --repo "$repo" --no-pr --brief "$STALE" 2>&1)"; rc=$?; t1=$(date +%s)
+rc_is '⑩ fetch 掛住：預設看門狗仍 exit 0' 0 "$rc" "$out10"
+if [ $((t1 - t0)) -le 15 ]; then echo "✓ ⑩ fetch 掛住：$((t1 - t0))s 內完成（≤15s）"; else echo "✗ ⑩ fetch 掛住：花了 $((t1 - t0))s（應 ≤15s）" >&2; fail=1; fi
+has   '⑩ 印 fetch 逾時' "$out10" 'fetch 逾時'
+has   '⑩ 印用本機 ref 繼續' "$out10" '用本機 ref 繼續'
+has   '⑩ 逾時後仍照常巡檢（有表頭）' "$out10" '巡檢 '
+json10="$(PATROL_FETCH_TIMEOUT=2 bash "$patrol" --repo "$repo" --no-pr --json "$STALE" 2>/dev/null)"
+jq_ok '⑩ --json：fetched false、fetch_warning 有逾時句（PATROL_FETCH_TIMEOUT=2）' "$json10" '.fetched == false and (.fetch_warning | test("fetch 逾時"))'
+hj10="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_FETCH_TIMEOUT=2 bash "$hook" 2>/dev/null)"
+jq_ok '⑩ hook：逾時句進 context、仍合法 JSON' "$hj10" '.hookSpecificOutput.additionalContext | test("fetch 逾時") and test("CronCreate")'
+out11="$(PATROL_FETCH_TIMEOUT=abc bash "$patrol" --repo "$repo" --no-pr "$STALE" 2>&1)"; rc_is '⑩ PATROL_FETCH_TIMEOUT 非整數 → exit 2' 2 "$?" "$out11"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
