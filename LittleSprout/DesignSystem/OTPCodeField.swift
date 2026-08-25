@@ -40,10 +40,6 @@ struct OTPCodeField: View {
         let isCurrent = index == code.count && isFocused
         return Text(character(at: index))
             .appNumericFont(.otp)
-            // AX3 下 fs-otp 36 的字身寬（~50pt）逼近格寬（實測 53.7pt），數字會跨過格線
-            // 壓到鄰格（R4 review B3′）。允許縮到 0.8 倍讓 SwiftUI 在快頂到格寬時自動
-            // 收斂，不裁切、也不必改動格子本身的版面。
-            .minimumScaleFactor(0.8)
             .foregroundStyle(Color.lsTextPrimary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingMedium)

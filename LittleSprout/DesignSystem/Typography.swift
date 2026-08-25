@@ -18,7 +18,9 @@ enum AppFontToken {
     case note
     /// 13pt，法務行／已用大字呈現過的欄位微標籤／純時間戳。
     case meta
-    /// 36pt，OTP 六格數字（走 Courier Prime，見 `AppFontToken.numericFamily`）。
+    /// 36pt，OTP 六格數字（`.system(size:).monospacedDigit()`，見 `appNumericFont`；
+    /// R5 review major A：Courier Prime 從未真的在 bundle 裡，且 `Font.custom(_:size:)`
+    /// 會對 `@ScaledMetric` 已縮放過的 size 再依 body text style 縮放一次，雙重縮放）。
     case otp
 
     var size: CGFloat {
@@ -42,32 +44,22 @@ enum AppFontToken {
     }
 }
 
-/// 展示級距數字（邀請碼／OTP，≥36pt）專用打字機字體；Tokens 板「② 漸層」以下「字級」段
-/// 的 Courier Prime 限縮規則——行內數字一律 Noto Sans TC + `.monospacedDigit()`，不要在這裡
-/// 之外的地方使用這個字體家族。
-enum AppNumericFont {
-    static let family = "Courier Prime"
-}
-
 private struct ScaledFontModifier: ViewModifier {
     @ScaledMetric private var size: CGFloat
     let weight: Font.Weight
     let design: Font.Design
-    let fontName: String?
+    let monospacedDigit: Bool
 
-    init(token: AppFontToken, weight: Font.Weight, design: Font.Design, fontName: String?) {
+    init(token: AppFontToken, weight: Font.Weight, design: Font.Design, monospacedDigit: Bool) {
         _size = ScaledMetric(wrappedValue: token.size, relativeTo: token.relativeStyle)
         self.weight = weight
         self.design = design
-        self.fontName = fontName
+        self.monospacedDigit = monospacedDigit
     }
 
     func body(content: Content) -> some View {
-        if let fontName {
-            content.font(.custom(fontName, size: size).weight(weight))
-        } else {
-            content.font(.system(size: size, weight: weight, design: design))
-        }
+        let font = Font.system(size: size, weight: weight, design: design)
+        content.font(monospacedDigit ? font.monospacedDigit() : font)
     }
 }
 
@@ -78,13 +70,14 @@ extension View {
         weight: Font.Weight = .regular,
         design: Font.Design = .default
     ) -> some View {
-        modifier(ScaledFontModifier(token: token, weight: weight, design: design, fontName: nil))
+        modifier(ScaledFontModifier(token: token, weight: weight, design: design, monospacedDigit: false))
     }
 
-    /// OTP／邀請碼展示級距數字專用：Courier Prime，走 `AppFontToken.otp`／`.lead` 這類
-    /// ≥36pt 的 token。
+    /// OTP／邀請碼展示級距數字專用：系統字體＋`.monospacedDigit()`，走 `AppFontToken.otp`／
+    /// `.lead` 這類 ≥36pt 的 token（R5 review major A：不再走 `Font.custom`，見 `.otp` case
+    /// 註解——`Font.custom(_:size:)` 對已縮放過的 size 會再依 body text style 縮放一次）。
     func appNumericFont(_ token: AppFontToken, weight: Font.Weight = .regular) -> some View {
-        modifier(ScaledFontModifier(token: token, weight: weight, design: .default, fontName: AppNumericFont.family))
+        modifier(ScaledFontModifier(token: token, weight: weight, design: .default, monospacedDigit: true))
     }
 }
 
