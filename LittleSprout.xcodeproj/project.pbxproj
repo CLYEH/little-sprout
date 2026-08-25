@@ -7,34 +7,60 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01978C27E89C317B0515118F /* ScrollableFillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 216769BEF4D15D89E66AF64B /* ScrollableFillView.swift */; };
+		02E21F9DC4DC1A797657A859 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D28B773C8EDDC2BA7C7D993 /* Typography.swift */; };
 		0510B5801E753003A86A2B04 /* AuthSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BEB4DA6A1BCCFD8355575E /* AuthSession.swift */; };
+		0F72FB6A09D4EA5C229698CF /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCF885D756104B3EBAAD6DB2 /* WelcomeView.swift */; };
 		13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */; };
 		15E53C663EE9CEDBF1E4FCCE /* SupabaseFamilyAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B90F66016EC2C905347224 /* SupabaseFamilyAPIClientTests.swift */; };
 		1C5AF463F2A7DF887C811BCB /* FamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50E6303411CD369F8AFC507 /* FamilyAPIClient.swift */; };
 		1D03D9D4C76C029973315865 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C608A0E7AB49C7BAF3669796 /* RootView.swift */; };
+		1D8CD9A1C4FB43018038FB4B /* StubAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462D42E5774046BDAEAA69E2 /* StubAuthService.swift */; };
+		1F25A631ACCC133CEE190ABF /* OTPVerificationModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C295C45BFA6330DF97EDAD /* OTPVerificationModelTests.swift */; };
+		2D03B61ACA5DD6A649155EDC /* OTPCodeField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 577DBA3D01933EB35214704B /* OTPCodeField.swift */; };
 		32824AF2CC5F64CE44CBB595 /* AppSectionUniquenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */; };
 		336A7171428B83A957574DFF /* InMemoryAuthLocalStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96263CE935C656C186FDEC99 /* InMemoryAuthLocalStorage.swift */; };
 		34CA41320091E645AE354AA2 /* SupabaseClientFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1BE3C8BA19FA35C011C2A4 /* SupabaseClientFactory.swift */; };
+		38CA95B73E034159909A0F90 /* EmailSignInModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A890D7141A740E1F67B93BD7 /* EmailSignInModel.swift */; };
 		38FACDC15B0DA2AF7A373639 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8351A5DED54BE71EBD0A9161 /* SettingsView.swift */; };
+		3E851BE2E0FD96463C07D775 /* PhotoCornerShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD268EF45ACA8D3FE3F11E2 /* PhotoCornerShape.swift */; };
+		3EFC0C57ED75313D4F4AA023 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18AB0FEB21BA55A39EB67982 /* Assets.xcassets */; };
+		4095733E802A0A772A5F047D /* OTPVerificationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E25074609E9AF1D1EC50AD1E /* OTPVerificationModel.swift */; };
 		42714D8DFF10852534591190 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 3A53E62BFF6A8E95027C112E /* Supabase */; };
+		4779DBBACB425B20189D11F6 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = B29793798CE839C104E800B1 /* Spacing.swift */; };
 		47F024E1268E315400D0BC8A /* SupabaseFamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6994C01308D56E827DA85A61 /* SupabaseFamilyAPIClient.swift */; };
 		486C91604E18A60B2E5A0A87 /* AlbumsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5291088D9B29980248B2BCF /* AlbumsView.swift */; };
+		4915FC7996D1C5E5ED31B250 /* PrintPhotoCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1FE65622DA3D1DE00028F27 /* PrintPhotoCard.swift */; };
+		4C96C7336D3E00C30D6E5075 /* EmailFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FA71F5E5B2E516BEC50662 /* EmailFormat.swift */; };
+		4DAC292C1F7A6F7721709114 /* AppBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A53A1F6D147A58F55F72D3F /* AppBackground.swift */; };
 		4FBA0B132FA839140B2E7FB4 /* SupabaseClientFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E69B95CA3E637FEF6DFCCB /* SupabaseClientFactoryTests.swift */; };
+		533B01F1B4098A3628E1B7B5 /* EmailSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35722FF8F70D0F6329F4069C /* EmailSignInView.swift */; };
 		54686C08900304A03BBC33F0 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF988A929E58294A2FD895A6 /* TimelineView.swift */; };
 		5526B3A33052BAFCF2286C04 /* SessionFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */; };
+		5BBAB29B23BB37B83B46D487 /* EmailSignInModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226B824755111DECCA1F2AEE /* EmailSignInModelTests.swift */; };
 		649D627F2BC3D16B5A550488 /* AppConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C74E777AB0094919EC703B2 /* AppConfigTests.swift */; };
 		6B5B2506E29C7F8F412E9CB3 /* SupabaseAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514F93B80A8AD4C99FE4654C /* SupabaseAuthService.swift */; };
 		6EFC06689B8E4216F5308FDA /* AppSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9530233ED3E9B6D3A43AD99 /* AppSection.swift */; };
 		6F71D1FB09D499364D5D1E32 /* FamilyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF4B6F33EBC80A3AA56E8FC /* FamilyModels.swift */; };
 		76B16560EF93FFF134B8FDE7 /* AppleSignInNonceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A912608AE602C827E4786763 /* AppleSignInNonceTests.swift */; };
+		7C64D41B5C041B3BFA66B7A8 /* EmailFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D71D805DBF9E7B36AF16BE8 /* EmailFormatTests.swift */; };
 		838BEA28E6C05A825D649B22 /* SupabaseFamilyAPIClientJoinTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */; };
 		87E501CF0FB428B9FB3A0DCF /* MockURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */; };
 		8A5D00A06F596E432294806B /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D45C2CD0AC1D735E5576ABB /* AppConfig.swift */; };
 		912E644926254F979A9250AB /* AppErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A788B6CC504D5166582012 /* AppErrorTests.swift */; };
+		9A7D2E907F863BA4912D5745 /* OTPVerificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C8A6A59E9D7E1205CC9E65 /* OTPVerificationView.swift */; };
+		9BF2965CF886A8C6DD81755A /* AuthButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14AB4F80381DABD0E6FE12B0 /* AuthButtons.swift */; };
+		AD97CCF615FB05DEBB63BF09 /* LabeledTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F56FB37A90BCA2F75055D3D7 /* LabeledTextField.swift */; };
 		B32E3D152F36E50526D8E1B7 /* ChildrenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCAE2B57E7D3907D0578AC21 /* ChildrenView.swift */; };
+		B9BDE1E1AD633D323BBC2B5D /* AuthStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EA929B8CFBB700BE9E073B4 /* AuthStoreTests.swift */; };
+		BEF3B2012A0964248A8D983B /* AppleSignInButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A80BDD3D72B37E3451EAC03 /* AppleSignInButton.swift */; };
 		C3C4C4F16FFBC3D5561F3DB8 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A8630C948451C3739D8A263 /* AuthService.swift */; };
 		C5A680937E6BD7F0B4673749 /* AppleSignInNonce.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587B330E759DA2D787F4E63C /* AppleSignInNonce.swift */; };
 		DDBF77E8E686704D89F1ABA1 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F28DE483C3DA54A9672BFDFF /* Supabase */; };
+		E2E9E24C6F7E93396FD38F4B /* AuthRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95B92F29867CB3855772E654 /* AuthRoute.swift */; };
+		E96D464C2FD698F14A9B2604 /* ColorTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8702562330091E614920D1 /* ColorTokens.swift */; };
+		E9D2117BDEB489D4DE815852 /* AuthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 722D8ED2CA2CA763DF21AAB7 /* AuthStore.swift */; };
+		EAE0F09527AC42C2D246F300 /* PreviewAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 942E474356C1903582E00247 /* PreviewAuthService.swift */; };
 		F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */; };
 		F462FED59ADC341536F34B8A /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76C79515621CA9052803B7EA /* AppError.swift */; };
 		F90747ADA6446C8F7FA27137 /* LittleSproutApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ADE9B28C92582D4C51FF485 /* LittleSproutApp.swift */; };
@@ -54,12 +80,22 @@
 /* Begin PBXFileReference section */
 		09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSectionTests.swift; sourceTree = "<group>"; };
 		0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFixture.swift; sourceTree = "<group>"; };
+		0E8702562330091E614920D1 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
 		10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAuthServiceTests.swift; sourceTree = "<group>"; };
+		14AB4F80381DABD0E6FE12B0 /* AuthButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthButtons.swift; sourceTree = "<group>"; };
+		18AB0FEB21BA55A39EB67982 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		216769BEF4D15D89E66AF64B /* ScrollableFillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableFillView.swift; sourceTree = "<group>"; };
+		226B824755111DECCA1F2AEE /* EmailSignInModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInModelTests.swift; sourceTree = "<group>"; };
 		2D45C2CD0AC1D735E5576ABB /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		2D71D805DBF9E7B36AF16BE8 /* EmailFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailFormatTests.swift; sourceTree = "<group>"; };
+		35722FF8F70D0F6329F4069C /* EmailSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInView.swift; sourceTree = "<group>"; };
 		3A1BE3C8BA19FA35C011C2A4 /* SupabaseClientFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClientFactory.swift; sourceTree = "<group>"; };
 		3ADE9B28C92582D4C51FF485 /* LittleSproutApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LittleSproutApp.swift; sourceTree = "<group>"; };
+		462D42E5774046BDAEAA69E2 /* StubAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubAuthService.swift; sourceTree = "<group>"; };
 		468EF1C61FA7C2B35E756487 /* TestSupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupabaseClient.swift; sourceTree = "<group>"; };
+		4A53A1F6D147A58F55F72D3F /* AppBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBackground.swift; sourceTree = "<group>"; };
 		514F93B80A8AD4C99FE4654C /* SupabaseAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAuthService.swift; sourceTree = "<group>"; };
+		577DBA3D01933EB35214704B /* OTPCodeField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPCodeField.swift; sourceTree = "<group>"; };
 		587B330E759DA2D787F4E63C /* AppleSignInNonce.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInNonce.swift; sourceTree = "<group>"; };
 		59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLProtocol.swift; sourceTree = "<group>"; };
 		64398867FF6A776CAD323AB7 /* LittleSprout.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LittleSprout.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -67,23 +103,39 @@
 		694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSectionUniquenessTests.swift; sourceTree = "<group>"; };
 		6994C01308D56E827DA85A61 /* SupabaseFamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClient.swift; sourceTree = "<group>"; };
 		6A8630C948451C3739D8A263 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		722D8ED2CA2CA763DF21AAB7 /* AuthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStore.swift; sourceTree = "<group>"; };
 		76C79515621CA9052803B7EA /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
+		7A80BDD3D72B37E3451EAC03 /* AppleSignInButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInButton.swift; sourceTree = "<group>"; };
 		7C508BEDC841E4E6D1F86FC5 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		8351A5DED54BE71EBD0A9161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		8C74E777AB0094919EC703B2 /* AppConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigTests.swift; sourceTree = "<group>"; };
+		8D28B773C8EDDC2BA7C7D993 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		8FD268EF45ACA8D3FE3F11E2 /* PhotoCornerShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCornerShape.swift; sourceTree = "<group>"; };
+		942E474356C1903582E00247 /* PreviewAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewAuthService.swift; sourceTree = "<group>"; };
 		94B90F66016EC2C905347224 /* SupabaseFamilyAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClientTests.swift; sourceTree = "<group>"; };
+		95B92F29867CB3855772E654 /* AuthRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthRoute.swift; sourceTree = "<group>"; };
 		95BEB4DA6A1BCCFD8355575E /* AuthSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSession.swift; sourceTree = "<group>"; };
 		96263CE935C656C186FDEC99 /* InMemoryAuthLocalStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryAuthLocalStorage.swift; sourceTree = "<group>"; };
+		9EA929B8CFBB700BE9E073B4 /* AuthStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStoreTests.swift; sourceTree = "<group>"; };
+		A1FE65622DA3D1DE00028F27 /* PrintPhotoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintPhotoCard.swift; sourceTree = "<group>"; };
 		A50E6303411CD369F8AFC507 /* FamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyAPIClient.swift; sourceTree = "<group>"; };
+		A890D7141A740E1F67B93BD7 /* EmailSignInModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInModel.swift; sourceTree = "<group>"; };
 		A912608AE602C827E4786763 /* AppleSignInNonceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInNonceTests.swift; sourceTree = "<group>"; };
 		A9530233ED3E9B6D3A43AD99 /* AppSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSection.swift; sourceTree = "<group>"; };
+		B29793798CE839C104E800B1 /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
 		B7011C61D613644C595C9208 /* LittleSproutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LittleSproutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BCF885D756104B3EBAAD6DB2 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		C5291088D9B29980248B2BCF /* AlbumsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsView.swift; sourceTree = "<group>"; };
 		C608A0E7AB49C7BAF3669796 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		D0FA71F5E5B2E516BEC50662 /* EmailFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailFormat.swift; sourceTree = "<group>"; };
+		D5C295C45BFA6330DF97EDAD /* OTPVerificationModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationModelTests.swift; sourceTree = "<group>"; };
+		D5C8A6A59E9D7E1205CC9E65 /* OTPVerificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationView.swift; sourceTree = "<group>"; };
 		DCAE2B57E7D3907D0578AC21 /* ChildrenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenView.swift; sourceTree = "<group>"; };
 		DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClientJoinTests.swift; sourceTree = "<group>"; };
+		E25074609E9AF1D1EC50AD1E /* OTPVerificationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationModel.swift; sourceTree = "<group>"; };
 		EEF4B6F33EBC80A3AA56E8FC /* FamilyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyModels.swift; sourceTree = "<group>"; };
 		EF988A929E58294A2FD895A6 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
+		F56FB37A90BCA2F75055D3D7 /* LabeledTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabeledTextField.swift; sourceTree = "<group>"; };
 		F5E69B95CA3E637FEF6DFCCB /* SupabaseClientFactoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClientFactoryTests.swift; sourceTree = "<group>"; };
 		F6A788B6CC504D5166582012 /* AppErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppErrorTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -116,6 +168,20 @@
 				6994C01308D56E827DA85A61 /* SupabaseFamilyAPIClient.swift */,
 			);
 			path = Family;
+			sourceTree = "<group>";
+		};
+		2CB34B4A4D2A89ADD3AF2E2A /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				95B92F29867CB3855772E654 /* AuthRoute.swift */,
+				D0FA71F5E5B2E516BEC50662 /* EmailFormat.swift */,
+				A890D7141A740E1F67B93BD7 /* EmailSignInModel.swift */,
+				35722FF8F70D0F6329F4069C /* EmailSignInView.swift */,
+				E25074609E9AF1D1EC50AD1E /* OTPVerificationModel.swift */,
+				D5C8A6A59E9D7E1205CC9E65 /* OTPVerificationView.swift */,
+				BCF885D756104B3EBAAD6DB2 /* WelcomeView.swift */,
+			);
+			path = Auth;
 			sourceTree = "<group>";
 		};
 		2EAF9B3EA49C21C14C5F57EE = {
@@ -151,6 +217,7 @@
 				96263CE935C656C186FDEC99 /* InMemoryAuthLocalStorage.swift */,
 				59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */,
 				0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */,
+				462D42E5774046BDAEAA69E2 /* StubAuthService.swift */,
 				468EF1C61FA7C2B35E756487 /* TestSupabaseClient.swift */,
 			);
 			path = Support;
@@ -162,6 +229,7 @@
 				587B330E759DA2D787F4E63C /* AppleSignInNonce.swift */,
 				6A8630C948451C3739D8A263 /* AuthService.swift */,
 				95BEB4DA6A1BCCFD8355575E /* AuthSession.swift */,
+				722D8ED2CA2CA763DF21AAB7 /* AuthStore.swift */,
 				514F93B80A8AD4C99FE4654C /* SupabaseAuthService.swift */,
 			);
 			path = Auth;
@@ -175,6 +243,10 @@
 				A912608AE602C827E4786763 /* AppleSignInNonceTests.swift */,
 				09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */,
 				694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */,
+				9EA929B8CFBB700BE9E073B4 /* AuthStoreTests.swift */,
+				2D71D805DBF9E7B36AF16BE8 /* EmailFormatTests.swift */,
+				226B824755111DECCA1F2AEE /* EmailSignInModelTests.swift */,
+				D5C295C45BFA6330DF97EDAD /* OTPVerificationModelTests.swift */,
 				10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */,
 				F5E69B95CA3E637FEF6DFCCB /* SupabaseClientFactoryTests.swift */,
 				DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */,
@@ -196,13 +268,16 @@
 		7FBBA188103B61D6C48AA664 /* LittleSprout */ = {
 			isa = PBXGroup;
 			children = (
+				18AB0FEB21BA55A39EB67982 /* Assets.xcassets */,
 				6559B92B7B6A289D59C6481F /* Info.plist */,
 				3ADE9B28C92582D4C51FF485 /* LittleSproutApp.swift */,
 				41D6EB65C7B8ABC169D5E9CD /* Config */,
+				F37C4D2CC8D26BE260ED5702 /* DesignSystem */,
 				EB1CA7BFF05C8BD5B8A91BBD /* Errors */,
 				C8659333F128C336F0E65D3A /* Features */,
 				616C205FC36548C87FABD96E /* Navigation */,
 				83D70BC6677D8C0927EB217F /* Services */,
+				F6DF23C2C2B81A0093D9BF61 /* Support */,
 			);
 			path = LittleSprout;
 			sourceTree = "<group>";
@@ -232,6 +307,7 @@
 				DCAE2B57E7D3907D0578AC21 /* ChildrenView.swift */,
 				8351A5DED54BE71EBD0A9161 /* SettingsView.swift */,
 				EF988A929E58294A2FD895A6 /* TimelineView.swift */,
+				2CB34B4A4D2A89ADD3AF2E2A /* Auth */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -242,6 +318,32 @@
 				76C79515621CA9052803B7EA /* AppError.swift */,
 			);
 			path = Errors;
+			sourceTree = "<group>";
+		};
+		F37C4D2CC8D26BE260ED5702 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				4A53A1F6D147A58F55F72D3F /* AppBackground.swift */,
+				7A80BDD3D72B37E3451EAC03 /* AppleSignInButton.swift */,
+				14AB4F80381DABD0E6FE12B0 /* AuthButtons.swift */,
+				0E8702562330091E614920D1 /* ColorTokens.swift */,
+				F56FB37A90BCA2F75055D3D7 /* LabeledTextField.swift */,
+				577DBA3D01933EB35214704B /* OTPCodeField.swift */,
+				8FD268EF45ACA8D3FE3F11E2 /* PhotoCornerShape.swift */,
+				A1FE65622DA3D1DE00028F27 /* PrintPhotoCard.swift */,
+				216769BEF4D15D89E66AF64B /* ScrollableFillView.swift */,
+				B29793798CE839C104E800B1 /* Spacing.swift */,
+				8D28B773C8EDDC2BA7C7D993 /* Typography.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		F6DF23C2C2B81A0093D9BF61 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				942E474356C1903582E00247 /* PreviewAuthService.swift */,
+			);
+			path = Support;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -272,6 +374,7 @@
 			buildConfigurationList = D275162D36D215C3FB0ECC37 /* Build configuration list for PBXNativeTarget "LittleSprout" */;
 			buildPhases = (
 				4264715F4DE92769B3E41C51 /* Sources */,
+				74F3B502521BDB845622E12A /* Resources */,
 				A3378DEBCDDEC06B78FD0AF6 /* Frameworks */,
 			);
 			buildRules = (
@@ -320,28 +423,59 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		74F3B502521BDB845622E12A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3EFC0C57ED75313D4F4AA023 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		4264715F4DE92769B3E41C51 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				486C91604E18A60B2E5A0A87 /* AlbumsView.swift in Sources */,
+				4DAC292C1F7A6F7721709114 /* AppBackground.swift in Sources */,
 				8A5D00A06F596E432294806B /* AppConfig.swift in Sources */,
 				F462FED59ADC341536F34B8A /* AppError.swift in Sources */,
 				6EFC06689B8E4216F5308FDA /* AppSection.swift in Sources */,
+				BEF3B2012A0964248A8D983B /* AppleSignInButton.swift in Sources */,
 				C5A680937E6BD7F0B4673749 /* AppleSignInNonce.swift in Sources */,
+				9BF2965CF886A8C6DD81755A /* AuthButtons.swift in Sources */,
+				E2E9E24C6F7E93396FD38F4B /* AuthRoute.swift in Sources */,
 				C3C4C4F16FFBC3D5561F3DB8 /* AuthService.swift in Sources */,
 				0510B5801E753003A86A2B04 /* AuthSession.swift in Sources */,
+				E9D2117BDEB489D4DE815852 /* AuthStore.swift in Sources */,
 				B32E3D152F36E50526D8E1B7 /* ChildrenView.swift in Sources */,
+				E96D464C2FD698F14A9B2604 /* ColorTokens.swift in Sources */,
+				4C96C7336D3E00C30D6E5075 /* EmailFormat.swift in Sources */,
+				38CA95B73E034159909A0F90 /* EmailSignInModel.swift in Sources */,
+				533B01F1B4098A3628E1B7B5 /* EmailSignInView.swift in Sources */,
 				1C5AF463F2A7DF887C811BCB /* FamilyAPIClient.swift in Sources */,
 				6F71D1FB09D499364D5D1E32 /* FamilyModels.swift in Sources */,
+				AD97CCF615FB05DEBB63BF09 /* LabeledTextField.swift in Sources */,
 				F90747ADA6446C8F7FA27137 /* LittleSproutApp.swift in Sources */,
+				2D03B61ACA5DD6A649155EDC /* OTPCodeField.swift in Sources */,
+				4095733E802A0A772A5F047D /* OTPVerificationModel.swift in Sources */,
+				9A7D2E907F863BA4912D5745 /* OTPVerificationView.swift in Sources */,
+				3E851BE2E0FD96463C07D775 /* PhotoCornerShape.swift in Sources */,
+				EAE0F09527AC42C2D246F300 /* PreviewAuthService.swift in Sources */,
+				4915FC7996D1C5E5ED31B250 /* PrintPhotoCard.swift in Sources */,
 				1D03D9D4C76C029973315865 /* RootView.swift in Sources */,
+				01978C27E89C317B0515118F /* ScrollableFillView.swift in Sources */,
 				38FACDC15B0DA2AF7A373639 /* SettingsView.swift in Sources */,
+				4779DBBACB425B20189D11F6 /* Spacing.swift in Sources */,
 				6B5B2506E29C7F8F412E9CB3 /* SupabaseAuthService.swift in Sources */,
 				34CA41320091E645AE354AA2 /* SupabaseClientFactory.swift in Sources */,
 				47F024E1268E315400D0BC8A /* SupabaseFamilyAPIClient.swift in Sources */,
 				54686C08900304A03BBC33F0 /* TimelineView.swift in Sources */,
+				02E21F9DC4DC1A797657A859 /* Typography.swift in Sources */,
+				0F72FB6A09D4EA5C229698CF /* WelcomeView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -354,9 +488,14 @@
 				13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */,
 				32824AF2CC5F64CE44CBB595 /* AppSectionUniquenessTests.swift in Sources */,
 				76B16560EF93FFF134B8FDE7 /* AppleSignInNonceTests.swift in Sources */,
+				B9BDE1E1AD633D323BBC2B5D /* AuthStoreTests.swift in Sources */,
+				7C64D41B5C041B3BFA66B7A8 /* EmailFormatTests.swift in Sources */,
+				5BBAB29B23BB37B83B46D487 /* EmailSignInModelTests.swift in Sources */,
 				336A7171428B83A957574DFF /* InMemoryAuthLocalStorage.swift in Sources */,
 				87E501CF0FB428B9FB3A0DCF /* MockURLProtocol.swift in Sources */,
+				1F25A631ACCC133CEE190ABF /* OTPVerificationModelTests.swift in Sources */,
 				5526B3A33052BAFCF2286C04 /* SessionFixture.swift in Sources */,
+				1D8CD9A1C4FB43018038FB4B /* StubAuthService.swift in Sources */,
 				F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */,
 				4FBA0B132FA839140B2E7FB4 /* SupabaseClientFactoryTests.swift in Sources */,
 				838BEA28E6C05A825D649B22 /* SupabaseFamilyAPIClientJoinTests.swift in Sources */,
