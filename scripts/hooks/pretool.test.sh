@@ -75,7 +75,17 @@ expect 'H3① 裸跑 supabase db reset（deny）' 2 "$(bash_json 'supabase db re
 expect 'H3② 裸跑 run.sh（deny）' 2 "$(bash_json 'bash supabase/tests/run.sh')"
 expect 'H3③ 包在 supabase-lock.sh --（allow）' 0 "$(bash_json 'bash scripts/ops/supabase-lock.sh -- supabase db reset')"
 expect 'H3④ 帶 --timeout 仍算包裹（allow）' 0 "$(bash_json 'bash scripts/ops/supabase-lock.sh --timeout 30 -- supabase db reset')"
-expect 'H3⑤ 重入：SUPABASE_LOCK_HELD 已設（allow）' 0 "$(bash_json 'supabase db reset')" SUPABASE_LOCK_HELD=/tmp/fake-lock
+# R1 informational I2：重入判定原本讀 SUPABASE_LOCK_HELD（hook 是獨立行程、不繼承那個環境
+# 變數，這條分支實務上永遠不會為真——見 pretool.sh h3_reentrant() 的檔頭說明），改用
+# supabase-lock.sh 真正的祖先判定：讀 SUPABASE_LOCK_DIR/holder 的 `pid=` 行，往上走本行程
+# 祖先鏈。用假的 lock 目錄測，不碰真正的 /tmp/supabase-lock-<project_id>。
+i2_lockdir=$(mktemp -d)
+printf 'pid=%s\n' "$$" > "$i2_lockdir/holder"
+expect 'H3⑤a 重入：holder pid 是本程序的祖先（allow）' 0 "$(bash_json 'supabase db reset')" SUPABASE_LOCK_DIR="$i2_lockdir"
+printf 'pid=1\n' > "$i2_lockdir/holder"
+expect 'H3⑤b 重入：holder pid 不是祖先（deny，同 supabase-lock.sh is_ancestor 對 pid 1／0 一律視為到頂放棄）' 2 "$(bash_json 'supabase db reset')" SUPABASE_LOCK_DIR="$i2_lockdir"
+rm -rf "$i2_lockdir"
+expect 'H3⑤c 舊機制 SUPABASE_LOCK_HELD 不再有效（deny，證明真的換掉了、不是兩條路徑並存）' 2 "$(bash_json 'supabase db reset')" SUPABASE_LOCK_HELD=/tmp/fake-lock
 expect 'H3⑥ 無關命令（allow）' 0 "$(bash_json 'ls supabase/migrations')"
 
 # ============================================================
@@ -218,6 +228,38 @@ expect 'F7① Grep path=.env（deny）' 2 '{"tool_name":"Grep","tool_input":{"pa
 expect 'F7② Grep glob=.env*（deny）' 2 '{"tool_name":"Grep","tool_input":{"pattern":"SECRET","glob":".env*"}}'
 expect 'F7③ Grep path 為目錄（allow）' 0 '{"tool_name":"Grep","tool_input":{"pattern":"TODO","path":"scripts"}}'
 expect 'F7④ Grep 一般用法（allow）' 0 '{"tool_name":"Grep","tool_input":{"pattern":"TODO","path":"scripts","glob":"*.sh"}}'
+
+# ============================================================
+# R1 I1（informational，便宜順修）：H2 讀取動詞白名單擴充 bat／xxd／base64／strings／rg／wc
+# ============================================================
+expect 'I1① bat .env（deny）' 2 "$(bash_json 'bat .env')"
+expect 'I1② xxd .env（deny）' 2 "$(bash_json 'xxd .env')"
+expect 'I1③ base64 .env（deny）' 2 "$(bash_json 'base64 .env')"
+expect 'I1④ strings .env（deny）' 2 "$(bash_json 'strings .env')"
+expect 'I1⑤ rg SECRET .env（deny）' 2 "$(bash_json 'rg SECRET .env')"
+expect 'I1⑥ wc -l .env（deny）' 2 "$(bash_json 'wc -l .env')"
+
+# ============================================================
+# R1 I6（informational，便宜順修）：settings.json 的 PreToolUse 真的接著 pretool.sh、matcher
+# 含 Grep、且用 `|| exit 2` 把 wiring 層的 fail-open 關起來（I4）——把 PreToolUse 區塊刪掉／
+# matcher 漏列 Grep／忘了 `|| exit 2` 之前 CI 全綠，這裡補上直接讀 settings.json 斷言。
+# ============================================================
+settings_json="${root}/.claude/settings.json"
+i6_cmd=$(jq -r '.hooks.PreToolUse[] | select(.matcher == "Bash|Read|Grep") | .hooks[] | select(.type == "command") | .command' "$settings_json" 2>/dev/null)
+if [ -n "$i6_cmd" ]; then
+  echo '✓ I6①：settings.json 的 PreToolUse matcher 含 Bash|Read|Grep 且接著 command'
+else
+  echo "✗ I6①：settings.json 找不到 matcher=Bash|Read|Grep 的 PreToolUse command" >&2
+  fail=1
+fi
+case "$i6_cmd" in
+  *pretool.sh*) echo '✓ I6②：command 確實呼叫 pretool.sh' ;;
+  *) echo "✗ I6②：command 沒有呼叫 pretool.sh（實得：${i6_cmd}）" >&2; fail=1 ;;
+esac
+case "$i6_cmd" in
+  *'|| exit 2'*) echo '✓ I6③：command 帶 || exit 2（I4，腳本缺席／執行失敗時 wiring 層仍 fail-closed）' ;;
+  *) echo "✗ I6③：command 沒有 || exit 2（實得：${i6_cmd}）" >&2; fail=1 ;;
+esac
 
 # ============================================================
 # R1 F5（major）：自測完全沒有覆蓋 trap——把 trap 那行拿掉重跑，31 組原本全綠（票文驗收「腳本

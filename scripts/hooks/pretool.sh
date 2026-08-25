@@ -8,12 +8,14 @@
 #   H1（Bash）：命令含 `--no-verify`／`git commit` 帶獨立 `-n`；或 `git push` 帶 `--force`／`-f`／
 #               `+<ref>` 且命令字面提到 development／test／main（受保護分支禁止 force push；
 #               CLAUDE.md 純文字規約）。
-#   H2（Bash／Read／Grep）：以 cat／less／head／tail／sed／awk／grep／cut 或 `<` 重導向讀出 `.env`
-#               （含 `.env.*`）的內容；Read 工具直接讀 `.env`；Grep 工具的 `path`／`glob` 指向 `.env`。
-#               放行 key-only 形式：`grep -o... '…='`（擷取式樣以 `=` 結尾，擷取不到值）、`cut -d= -f1`、
-#               `source .env`／`. .env`（注入不印出）。
+#   H2（Bash／Read／Grep）：以 cat／less／head／tail／sed／awk／grep／cut／bat／xxd／base64／
+#               strings／rg／wc 或 `<` 重導向讀出 `.env`（含 `.env.*`）的內容；Read 工具直接讀
+#               `.env`；Grep 工具的 `path`／`glob` 指向 `.env`。放行判定逐段（`;`／`&&`／`||`／`|`／
+#               換行切段）：key-only 形式 `grep -o... '…='`（擷取式樣以 `=` 結尾，擷取不到值）、
+#               `cut -d= -f1`、`source .env`／`. .env`（注入不印出）。
 #   H3（Bash）：`supabase db reset`／`run.sh` 未包在 `scripts/ops/supabase-lock.sh -- ` 之後、且非重入
-#               （容器跨 worktree 共用，LS-70）。
+#               （讀 `supabase-lock.sh` 同一套 lock 目錄的 holder pid、走本行程祖先鏈判定，不信
+#               環境變數；容器跨 worktree 共用，LS-70）。
 #
 # deny 輸出：`{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny",
 #   "permissionDecisionReason":"H<n>：…見 docs/COLLABORATION.md §7"}}`，exit 2（Claude Code 的
@@ -178,10 +180,42 @@ case "$tool_name" in
     # 邊界（R1 F3）：前界＝字串開頭或前一字元非英數底線（含引號／`(`／`<`／`$`／`;`／`&`／`|` 等）；
     # 後界＝字串結尾或後一字元非英數底線點線（`;`、引號、`)`、換行都算，但 `.`／`-` 不算，避免把
     # `run.sh` 誤判成延伸到 `run.sh.bak`／`run.sh-old` 這類不同檔名的邊界）。
+    #
+    # R1 informational I2：重入判定原本讀 `SUPABASE_LOCK_HELD` 環境變數，但 hook 是 Claude Code
+    # 直接 spawn 的獨立行程，不繼承「被鎖包住那個 shell」的環境（agent 在 Bash 工具裡 export
+    # 也傳不到這支 hook）——這條分支實務上永遠不會為真，是死路（方向是多擋、不是漏放，但
+    # `supabase-lock.sh` 檔頭明寫「判定只看祖先關係、不信環境變數」，這裡剛好採信了它宣告
+    # 不可信的東西，方向不一致）。改用同一套祖先判定：讀 lock 目錄（預設
+    # `/tmp/supabase-lock-<project_id>`，`project_id` 取自 `supabase/config.toml`；
+    # `SUPABASE_LOCK_DIR` 可覆寫，供自測用、比照 supabase-lock.sh 既有慣例）的 holder 檔
+    # `pid=` 那行，往上走本行程的 ppid 鏈（≤64 層）看是否碰得到那個 pid。
+    h3_reentrant() {
+      local lock_dir proj root holder_pid p n
+      if [ -n "${SUPABASE_LOCK_DIR:-}" ]; then
+        lock_dir=$SUPABASE_LOCK_DIR
+      else
+        root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)" || return 1
+        proj=$(sed -nE 's/^project_id[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$root/supabase/config.toml" 2>/dev/null | head -1)
+        [ -n "$proj" ] || return 1
+        lock_dir="/tmp/supabase-lock-${proj}"
+      fi
+      [ -f "$lock_dir/holder" ] || return 1
+      holder_pid=$(sed -nE 's/^pid=([0-9]+)$/\1/p' "$lock_dir/holder" 2>/dev/null | head -1)
+      [ -n "$holder_pid" ] || return 1
+      p=$$
+      n=0
+      while [ "$n" -lt 64 ]; do
+        [ "$p" = "$holder_pid" ] && return 0
+        p=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d ' ')
+        case "$p" in ''|*[!0-9]*|0|1) return 1 ;; esac
+        n=$((n + 1))
+      done
+      return 1
+    }
     if m "$command" -- 'supabase[[:space:]]+db[[:space:]]+reset' \
       || m "$command" -- '(^|[^A-Za-z0-9_])run\.sh($|[^A-Za-z0-9_.-])'; then
       if ! m "$command" -- 'supabase-lock\.sh\b.*[[:space:]]--([[:space:]]|$)'; then
-        if [ -z "${SUPABASE_LOCK_HELD:-}" ]; then
+        if ! h3_reentrant; then
           final_deny "H3：supabase db reset／run.sh 未經 scripts/ops/supabase-lock.sh -- 包裹（本機容器跨 worktree 共用，LS-70），見 ${COLL_REF}"
         fi
       fi
@@ -199,7 +233,10 @@ case "$tool_name" in
     # 讀值且該段本身不是放行形式即 deny；放行只在該段本身命中放行形式時才成立。
     h2_env_ref() { m "$1" -- '(^|[^A-Za-z0-9_])\.env(\.[A-Za-z0-9_.-]+)?($|[^A-Za-z0-9_.-])'; }
     h2_trigger() {
-      m "$1" -- '\b(cat|less|head|tail|awk|cut|sed|grep)\b' \
+      # R1 informational I1：動詞白名單加 bat／xxd／base64／strings／rg／wc（review 實測放行
+      # 的讀取動詞裡「便宜」可納入的幾個；其餘（od、more、nl、tac、vim、open、code、
+      # python3 -c "print(open('.env').read())" 等）記入 LS-96 待辦池）。
+      m "$1" -- '\b(cat|less|head|tail|awk|cut|sed|grep|bat|xxd|base64|strings|rg|wc)\b' \
         || m "$1" -- "<[[:space:]]*['\"]?\\.env"
     }
     h2_allow() {
