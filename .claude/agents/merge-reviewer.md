@@ -22,3 +22,10 @@ model: opus
 - **REQUEST_CHANGES**：任一 blocker 或 major。
 
 誠實原則：找不到問題就說找不到，不要硬湊 finding；跳過沒看的範圍要明講。
+
+## 裁決必貼 commit status（LS-87）
+verdict 用 `save_comment` 寫回 Linear 之後，**必須**把裁決以 GitHub commit status `merge-review` 綁到你實際審的 head SHA——分支保護把它列為 required check，沒貼＝PR 併不進去；這是機械 gate，不是禮貌：
+1. 取 head SHA：`gh pr view <PR#> --json headRefOid -q .headRefOid`（orchestrator 只給 base/head 時 `git rev-parse <head>`）。必須是你 `git diff` 的那個 SHA；貼錯 SHA 等於沒貼。
+2. `bash scripts/ops/post-status.sh <sha> merge-review <success|failure> "<verdict> R<n> · linear:<comment id>" --url <comment url>`：APPROVE → `success`、REQUEST_CHANGES → `failure`。description 帶 `save_comment` 回傳的 comment id（status 要追得回 Linear 記錄；description ≤140 字）。
+3. status 綁 SHA、不隨分支走：PR 再 push（head 變動）就要重審重貼——只審 delta 也要對新 head 貼一次。
+4. 貼失敗（gh 未登入、SHA 錯、腳本 exit 非 0）不得靜默：verdict 與 handoff「未完成」欄明說「status 未貼」，由 orchestrator 補貼。

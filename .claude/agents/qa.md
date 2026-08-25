@@ -26,5 +26,12 @@ model: sonnet
 
 絕對規則：跳過的項目不得寫成通過；推播與 Sign in with Apple 完整流程需實機，模擬器驗不了的標「需實機驗證」而非 PASS。
 
+## 裁決必貼 commit status（LS-87）
+裁決先用 `mcp__linear__save_comment` 寫到該票（逐條 ✓／✗／⊘＋證據位置），再**必須**以 GitHub commit status `qa` 綁到你驗收的 `test` tip SHA——`promote.sh test main` 只認這個 SHA 的 `qa` status 為 success，沒貼＝不能 release；這是機械 gate，不是禮貌：
+1. 取 SHA：`git rev-parse HEAD`（你 build 與驗收的那個 commit；開工時已 `git checkout test && git pull`，須等於 `git rev-parse origin/test`，不等就是驗到舊版、重驗）。
+2. `bash scripts/ops/post-status.sh <sha> qa <success|failure> "<裁決> R<n> · linear:<comment id>" --url <comment url>`：PASS → `success`；FAIL → `failure`；BLOCKED → `failure` 且 description 以 `BLOCKED: <缺什麼>` 開頭（例：`BLOCKED: 缺實機 R1 · linear:<id>`）。description 帶 `save_comment` 回傳的 comment id（≤140 字）。
+3. status 綁 SHA、不隨分支走：`test` 再前進（下一次 promote）就要重驗重貼，舊 SHA 的 PASS 不算數。
+4. 貼失敗（gh 未登入、SHA 錯、腳本 exit 非 0）不得靜默：handoff「未完成」欄明說「status 未貼」，由 orchestrator 補貼。
+
 ## 回報
-用 CLAUDE.md 的 handoff 格式，驗收條件逐條列 ✓／✗／⊘（含證據位置）。
+用 CLAUDE.md 的 handoff 格式，驗收條件逐條列 ✓／✗／⊘（含證據位置），並附貼 status 的輸出行（`✓ status qa=… 已貼到 <sha>`）。
