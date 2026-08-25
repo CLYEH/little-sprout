@@ -278,19 +278,76 @@ else
   lock_line="（無 ${here}/supabase-lock.sh）"
 fi
 
+# ---- 專屬模擬器（LS-83）：detect-simulator.sh 建的 <票號>-<機型無空白> 用完不刪，>7 天未用只列不刪＋印
+#      simctl delete 指令，交人判斷是否真的沒人在用；不在這裡自動砍（機型與 UDID 對不對得上人工判斷更保險）。
+#      無 xcrun（非 macOS、或這次 simctl 查詢本身失敗）就整段跳過，不當成異常（PR/worktree 段的 fail-soft 同款）。
+#      simctl list devices -j 不用 jq 解析（patrol.sh 一貫不依賴 jq，只有測試驗證用它）：純文字 pretty-print
+#      每個裝置物件一行一個 key，用 awk 以「單行 {／}」為物件邊界的簡易狀態機取四個欄位。
+SIM_LINES=; J_SIM=; sim_flagged=0
+sim_raw=$(xcrun simctl list devices -j 2>/dev/null) || sim_raw=
+if [ -n "$sim_raw" ]; then
+  sim_rows=$(printf '%s\n' "$sim_raw" | awk '
+    { t = $0; sub(/^[ \t]*/, "", t); sub(/[ \t]*$/, "", t) }
+    t == "{" { name=""; udid=""; last=""; dpath=""; next }
+    t ~ /^"name"[ \t]*:/        { v=t; sub(/^"name"[ \t]*:[ \t]*"/, "", v); sub(/",?$/, "", v); name=v; next }
+    t ~ /^"udid"[ \t]*:/        { v=t; sub(/^"udid"[ \t]*:[ \t]*"/, "", v); sub(/",?$/, "", v); udid=v; next }
+    t ~ /^"lastBootedAt"[ \t]*:/{ v=t; sub(/^"lastBootedAt"[ \t]*:[ \t]*"/, "", v); sub(/",?$/, "", v); last=v; next }
+    t ~ /^"dataPath"[ \t]*:/    { v=t; sub(/^"dataPath"[ \t]*:[ \t]*"/, "", v); sub(/",?$/, "", v); gsub(/\\\//, "/", v); dpath=v; next }
+    t ~ /^}/ {
+      # 陣列／物件收尾（"]"、外層 "}"）也可能以裸 "}" 開頭（尾端多個收尾大括號連在一起）——印過就清空，
+      # 避免最後一台裝置的紀錄被檔尾那些收尾大括號重複印出。
+      if (name != "" && udid != "") {
+        # tab 是 bash `read` 永遠視為「IFS 空白」的字元、連續 tab 會被當一個分隔符壓縮、空欄位會被吞掉
+        # （即使 IFS 只設成單一 tab 也一樣）——lastBootedAt 缺欄位時改印 "-" 佔位，不留空欄位。
+        printf "%s\t%s\t%s\t%s\n", name, udid, (last == "" ? "-" : last), dpath
+        name=""; udid=""; last=""; dpath=""
+      }
+    }
+  ')
+  while IFS=$'\t' read -r sim_name sim_udid sim_last sim_dpath; do
+    [ -n "$sim_name" ] || continue
+    case "$sim_name" in
+      LS-[0-9]*-*|main-*) ;;   # 只管 detect-simulator.sh 建的專屬裝置，其餘模擬器不是巡檢管轄範圍
+      *) continue ;;
+    esac
+    sim_epoch=
+    if [ -n "$sim_last" ] && [ "$sim_last" != - ]; then
+      # lastBootedAt 是 ISO8601 UTC（如 2026-08-25T06:58:38Z）；BSD／GNU date 二選一能解就用，都解不了才退回目錄 mtime。
+      # BSD `date -j -f` 的格式字串裡那個 "Z" 只是字面字元、不是時區指示，不加 TZ=UTC 會照本機時區解讀，
+      # 時區不是 UTC 的機器算出來的 epoch 會偏掉（LS-83 R2 m5；GNU `date -d` 認得結尾 Z，不受影響）。
+      sim_epoch=$(TZ=UTC date -j -f '%Y-%m-%dT%H:%M:%SZ' "$sim_last" +%s 2>/dev/null) \
+        || sim_epoch=$(date -d "$sim_last" +%s 2>/dev/null) || sim_epoch=
+    fi
+    if [ -z "$sim_epoch" ] && [ -n "$sim_dpath" ]; then
+      sim_dir=$(dirname "$sim_dpath")
+      [ -e "$sim_dir" ] && sim_epoch=$(file_epoch "$sim_dir")
+    fi
+    [ -n "$sim_epoch" ] || continue   # 兩種時間都拿不到就不判——沒證據不亂標
+    sim_age_days=$(( (now - sim_epoch) / 86400 ))
+    if [ "$sim_age_days" -gt 7 ]; then
+      sim_flagged=$((sim_flagged + 1))
+      J_SIM="${J_SIM:+${J_SIM},}{\"name\":$(json_str "$sim_name"),\"udid\":$(json_str "$sim_udid"),\"age_days\":$(json_num "$sim_age_days")}"
+      SIM_LINES="${SIM_LINES}  ⚠ ${sim_name}（${sim_udid}）${sim_age_days} 天未用 → xcrun simctl delete ${sim_udid}"$'\n'
+      add_flag "[專屬模擬器 ${sim_name}] ${sim_age_days} 天未用 → xcrun simctl delete ${sim_udid}"
+    fi
+  done <<EOF
+$sim_rows
+EOF
+fi
+
 # ---- 輸出 ----
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"stale_simulators":[%s],"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
-      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$J_FLAGS"
+      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$J_SIM" "$J_FLAGS"
     ;;
   brief)
-    echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev}"
+    echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev} · 專屬模擬器逾期 ${sim_flagged}"
     [ -n "$fetch_warn" ] && echo "${fetch_warn}"
     case "$lock_line" in free) ;; *) echo "Supabase lock：${lock_line}" ;; esac
     if [ -n "$FLAGS" ]; then printf '%s' "$FLAGS"; else echo "巡檢：無異常（git／PR 面；Linear 對照仍需 list_issues）"; fi
@@ -313,6 +370,8 @@ case "$MODE" in
     if [ -n "$WT_LINES" ]; then printf '%s' "$WT_LINES"; else echo "  （無）"; fi
     echo "== Supabase lock（本機容器序列化，scripts/ops/supabase-lock.sh；LS-70；⚠ tomb＝上次回收異常的殘留）"
     printf '%s\n' "$lock_line" | sed 's/^/  /'
+    echo "== 專屬模擬器（scripts/gates/detect-simulator.sh 建的 <票號>-<機型>；LS-83；>7 天未用只列不刪）"
+    if [ -n "$SIM_LINES" ]; then printf '%s' "$SIM_LINES"; else echo "  （無 xcrun 或無 >7 天未用的專屬模擬器）"; fi
     echo "== Linear（需 orchestrator 用 MCP 對照：Ready 無人接／In Progress 無 worktree／QA 但 test 未含）"
     echo "  → list_issues state in (Ready, In Progress, In Review, QA)，對照上表 worktree／PR"
     ;;

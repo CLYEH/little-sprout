@@ -41,6 +41,12 @@ if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1;
     echo "✗ push gate：模擬器偵測失敗。" >&2
     exit 1
   }
+  # LS-83 R2 F1：真正會併發撞台的是「執行 xcodebuild test」這一段，不是 detect-simulator.sh 印字那幾行
+  # （R1 把鎖包在那裡等於沒鎖——鎖早釋放了，兩個 worktree 退回共用機時 xcodebuild 照樣同時打上去）。
+  # 以 destination 帶的 UDID 為鍵包住整段 xcodebuild test：專屬機彼此 UDID 不同、鎖從不競爭；
+  # 退回共用第一台時多個 worktree 才會真的排隊序列跑。
+  sim_udid=$(printf '%s' "$dest" | sed -n 's/.*id=//p')
+  [ -n "$sim_udid" ] || { echo "✗ push gate：解不出 destination 的 UDID（${dest}）。" >&2; exit 1; }
   # LS-56：fresh worktree 首次 SPM 解析偶發瞬斷（xcodebuild「Could not resolve package
   # dependencies / Couldn't check out revision」，重跑即過——LS-54 back-merge 實測）。先單獨
   # 解析一次、失敗隔 10 秒再重試一次：LS-56 自己的首次 push 實測「立刻重試」3 秒後仍紅、
@@ -53,7 +59,9 @@ if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1;
   fi
   echo "→ push gate：執行 unit tests（scheme: ${XCODE_SCHEME}, destination: ${dest}）…"
   # LS-54 N8：與 CI 一致，明確序列執行（MockURLProtocol 全域 handler 不可平行）
-  xcodebuild test \
+  # LS-83 R2 F1：整段包進 simulator-lock.sh，鍵＝目的地 UDID（scripts/ops/simulator-lock.sh 檔頭注解）
+  bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "/tmp/simulator-lock-${sim_udid}" -- \
+    xcodebuild test \
     -scheme "$XCODE_SCHEME" \
     -destination "$dest" \
     -parallel-testing-enabled NO \
