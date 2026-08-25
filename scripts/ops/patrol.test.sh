@@ -4,6 +4,7 @@
 # 停滯（scratchpad 原型的 bug）、領先 remote／從未 push／dirty 停滯／尚未開工／主 checkout 落後任一漏標、
 # 三分支漂移漏標（test ⊄ development 立即、main ⊄ development 超過 stale）或剛併入的 hotfix 被誤標（LS-85）、
 # 乾淨或剛建好的 worktree 被誤標、保護分支或 detached worktree 混進表、--json 不合法、gh 不可用整支炸掉、
+# gate hooks 沒裝（core.hooksPath 不是 .githooks／hook 不可執行）不標或裝好了誤標（LS-87）、
 # 或 SessionStart hook 輸出不合法 JSON／非 0 退出／settings.json 沒掛上——這裡會紅。
 # 合成 repo：file:// 裸 repo 當 origin（main／development／test），clone 當主 checkout，八個 worktree 各一種形狀；最後把 origin 指向會掛住的 ext:: 位址驗 fetch 看門狗。
 set -uo pipefail
@@ -43,6 +44,10 @@ gold -C "$seed" commit -qm 'chore: LS-0 seed'     # base commit 刻意很老：�
 g -C "$seed" branch development; g -C "$seed" branch test
 g -C "$seed" remote add origin "$remote"; g -C "$seed" push -q origin main development test
 repo="$work/repo"; g clone -q "$remote" "$repo"
+# gate hooks 裝好（§2 首次 clone 後的 git config core.hooksPath .githooks；三支 hook 可執行）——⑬ 之前一律視為正常
+mkdir -p "$repo/.githooks"
+for h in commit-msg pre-commit pre-push; do printf '#!/bin/sh\nexit 0\n' > "$repo/.githooks/$h"; chmod +x "$repo/.githooks/$h"; done
+g -C "$repo" config core.hooksPath .githooks
 wts="$repo/.claude/worktrees"; mkdir -p "$wts"
 wt() { g -C "$repo" worktree add "$@" >/dev/null 2>&1 || { echo "✗ 建 worktree 失敗：$*" >&2; exit 1; }; }
 
@@ -115,6 +120,8 @@ l8=$(row "$out" 'feature/LS-8-gone')
 has   '① LS-8 目錄不存在 → 標 prune' "$l8" '目錄不存在'
 hasnt '① 保護分支 worktree 不進表' "$out" 'dev-wt'
 has   '① detached worktree 只標略過、不炸' "$out" 'detached，略過'
+has   '① hooks 裝好 → gate hooks 段 ok' "$(row "$out" 'hooksPath=')" ' ok'
+hasnt '① hooks 裝好不標' "$out" '⚠ core.hooksPath'
 
 # ---- ② --brief：只有表頭＋異常行 ----
 brief="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"; rc=$?
@@ -148,6 +155,7 @@ jq_ok '③ 主 checkout：main、落後 1、flag 有句' "$json" '.main_checkout
 jq_ok '③ 三分支數字' "$json" '.branches.development_behind_main == 1 and .branches.test_behind_main == 1 and .branches.test_behind_development == 1'
 jq_ok '③ PR 略過原因與空陣列' "$json" '.prs_skipped == "--no-pr" and .prs == []'
 jq_ok '③ flags 彙總七筆（LS-1／2／4／5／7／8＋主 checkout）' "$json" '.flags | length == 7'
+jq_ok '③ hooks 欄位：path .githooks、flag 空' "$json" '.hooks.path == ".githooks" and .hooks.flag == ""'
 
 # ---- ④ gh 不可用（未裝、或 origin 不是 GitHub）→ 略過並標示，不炸 ----
 out4="$(bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"; rc=$?
@@ -196,6 +204,38 @@ if jq -e '.hooks.SessionStart[].hooks[] | select(.type == "command") | .command'
 else
   echo "✗ ⑨ .claude/settings.json 沒有掛 SessionStart → scripts/ops/session-start.sh（或 JSON 壞了）" >&2; fail=1
 fi
+
+# ---- ⑬ gate hooks 安裝檢查（LS-87 G5）：hooksPath 未設／設錯／hook 不可執行都標，裝回去就消失；hook 注入指示 ----
+g -C "$repo" config --unset core.hooksPath
+out13="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑬ hooksPath 未設定 → gate hooks 段 ⚠' "$out13" 'hooksPath=（未設定）  ⚠ core.hooksPath 未設定'
+has   '⑬ 指示含設定指令' "$out13" 'git config core.hooksPath .githooks'
+brief13="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '⑬ --brief 也印 [hooks]' "$brief13" '[hooks] ⚠'
+json13="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '⑬ --json：hooks.path 空、flag 有句、flags 含一筆' "$json13" '.hooks.path == "" and (.hooks.flag | test("未設定")) and ([.flags[] | select(startswith("[hooks]"))] | length == 1)'
+hj13="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" PATROL_FETCH_TIMEOUT=2 bash "$hook" 2>/dev/null)"
+jq_ok '⑬ SessionStart hook：context 含 gate hooks 未裝好的指示' "$hj13" '.hookSpecificOutput.additionalContext | test("gate hooks 未裝好") and test("git config core.hooksPath .githooks")'
+g -C "$repo" config core.hooksPath hooks-elsewhere
+out13="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑬ hooksPath 設錯 → ⚠ 印現值' "$out13" 'core.hooksPath 是「hooks-elsewhere」而非 .githooks'
+g -C "$repo" config core.hooksPath "$repo/.githooks"
+out13="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '⑬ hooksPath 為 repo 內 .githooks 的絕對路徑 → 也算裝好' "$out13" '[hooks]'
+g -C "$repo" config core.hooksPath .githooks
+chmod -x "$repo/.githooks/pre-push"
+out13="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑬ pre-push 不可執行 → ⚠ 點名並指示 chmod +x' "$out13" '.githooks/pre-push 缺或不可執行 → chmod +x .githooks/pre-push'
+hasnt '⑬ 其他兩支可執行 → 不點名' "$out13" '.githooks/pre-commit 缺'
+rm -f "$repo/.githooks/commit-msg"
+out13="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑬ commit-msg 缺檔 → 也標' "$out13" '.githooks/commit-msg 缺或不可執行'
+has   '⑬ 兩支都標（以；連接）' "$out13" '.githooks/commit-msg 缺或不可執行 → chmod +x .githooks/commit-msg；⚠ .githooks/pre-push 缺或不可執行'
+printf '#!/bin/sh\nexit 0\n' > "$repo/.githooks/commit-msg"; chmod +x "$repo/.githooks/commit-msg" "$repo/.githooks/pre-push"
+out13="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '⑬ 裝回去 → 不再標' "$out13" '[hooks]'
+hj13="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" PATROL_FETCH_TIMEOUT=2 bash "$hook" 2>/dev/null)"
+jq_ok '⑬ 裝好後 hook 不再指示' "$hj13" '.hookSpecificOutput.additionalContext | test("gate hooks 未裝好") | not'
 
 # ---- ⑫ 三分支祖先鏈漂移（LS-85 G5；放在 ⑩ 之前——⑩ 之後 origin 指向黑洞，這裡要真的 fetch）----
 # 現況：main 領先 development 1 commit（① 的 'main moves'，剛 commit）→ 未達 stale：不標、只印待 back-merge；test ⊂ development 成立
