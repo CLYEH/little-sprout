@@ -30,6 +30,10 @@ struct PrimaryButton: View {
 /// `cmp/Button Secondary`：無填色、`$control-line` 外框——次要動作樣式，不是停用樣式
 /// （Handoff Notes 通用節「全稿『看起來不能用』掃描」）。`isDimmed` 對應 01b 登入中時
 /// Google／Email 鍵轉 `$surface-2` 的暫時態，不是永久的 disabled 視覺語彙。
+///
+/// 字級／字重見 LS-101 point 5：官方 `SignInWithAppleButton` 不開放自訂字型（見
+/// `AppleSignInButton.swift` R3/R4 review 定論），因此文字改對齊 Apple 鈕實測值，而不是反過來。
+/// 這裡只在 WelcomeView 用（見用量檢查），不影響其他畫面。
 struct SecondaryButton: View {
     let icon: String
     let title: String
@@ -40,7 +44,7 @@ struct SecondaryButton: View {
         Button(action: action) {
             HStack(spacing: AppSpacing.label) {
                 Image(systemName: icon).appIconFrame(.medium)
-                Text(title).appFont(.body)
+                Text(title).appFont(.lead, weight: .medium)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingMedium)
@@ -75,7 +79,7 @@ struct GoogleSignInButton: View {
         Button(action: action) {
             HStack(spacing: AppSpacing.group) {
                 Image("GoogleG").resizable().scaledToFit().appIconFrame(.google)
-                Text("使用 Google 登入").appFont(.body)
+                Text("使用 Google 登入").appFont(.lead, weight: .medium)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingMedium)
