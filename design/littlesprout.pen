@@ -464,22 +464,22 @@
       "children": [
         {
           "type": "frame",
-          "id": "JMeh3",
+          "id": "t3ZTXJ",
           "name": "Top",
           "width": "fill_container",
-          "height": 408,
+          "height": 358,
           "layout": "vertical",
           "children": [
             {
               "type": "frame",
-              "id": "L1ZKCG",
+              "id": "J8jaG",
               "name": "Status Bar Area",
               "width": "fill_container",
               "height": 62,
               "layout": "none",
               "children": [
                 {
-                  "id": "Y347zp",
+                  "id": "Azz8y",
                   "type": "ref",
                   "ref": "OeXop",
                   "name": "Status Bar",
@@ -491,20 +491,20 @@
             },
             {
               "type": "frame",
-              "id": "tnzcK",
+              "id": "HqrJw",
               "name": "Print Stage",
               "width": "fill_container",
-              "height": 346,
+              "height": 296,
               "layout": "none",
               "children": [
                 {
                   "type": "frame",
-                  "id": "GcGWI",
+                  "id": "XekQz",
                   "x": 16,
                   "y": 5,
                   "name": "Print",
                   "width": 361,
-                  "height": 336,
+                  "height": 286,
                   "fill": [
                     "$print-paper",
                     {
@@ -627,16 +627,16 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "aQ5oZ",
+                      "id": "WzfEX",
                       "name": "Photo Wrap",
                       "clip": true,
                       "width": "fill_container",
-                      "height": 217.6,
+                      "height": 190.1,
                       "layout": "none",
                       "children": [
                         {
                           "type": "rectangle",
-                          "id": "wlkPM",
+                          "id": "ilY9O",
                           "x": 0,
                           "y": -84,
                           "name": "Hero Photo",
@@ -651,53 +651,45 @@
                         },
                         {
                           "type": "rectangle",
-                          "id": "hnZg8",
+                          "id": "NUPWz",
                           "x": 0,
                           "y": 0,
                           "name": "Night Dim",
                           "fill": "$photo-dim",
                           "width": 345,
-                          "height": 217.6
+                          "height": 190.1
                         }
                       ]
                     },
                     {
                       "type": "frame",
-                      "id": "G3h8vo",
+                      "id": "pWZET",
                       "name": "Imprint Row",
                       "width": "fill_container",
                       "justifyContent": "center",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "k6DrE",
-                          "name": "Imprint Mark",
-                          "metadata": {
-                            "type": "a11y",
-                            "accessibilityLabel": "萌芽日記",
-                            "role": "image",
-                            "exemptDynamicType": true
-                          },
-                          "width": 200,
-                          "height": 95.4,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "mengya-diary-crayon-v3.png",
-                            "mode": "fit"
-                          }
+                          "type": "text",
+                          "id": "f9z0p",
+                          "name": "Lab Imprint",
+                          "fill": "$text-secondary",
+                          "content": "LITTLE SPROUT",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-imprint",
+                          "fontWeight": "600",
+                          "letterSpacing": 3.5
                         }
                       ]
                     }
                   ]
                 },
                 {
-                  "id": "WMb4d",
+                  "id": "pYE38",
                   "type": "ref",
                   "ref": "GEBcf",
                   "name": "Corner BL",
                   "x": 11,
-                  "y": 320,
+                  "y": 270,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M0 26 L0 0 L26 26 Z"
@@ -708,12 +700,12 @@
                   }
                 },
                 {
-                  "id": "qCGzA",
+                  "id": "rtNqP",
                   "type": "ref",
                   "ref": "GEBcf",
                   "name": "Corner BR",
                   "x": 356,
-                  "y": 320,
+                  "y": 270,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M26 26 L26 0 L0 26 Z"
@@ -724,7 +716,7 @@
                   }
                 },
                 {
-                  "id": "VxnnV",
+                  "id": "g7B7X",
                   "type": "ref",
                   "ref": "GEBcf",
                   "name": "Corner TL",
@@ -740,7 +732,7 @@
                   }
                 },
                 {
-                  "id": "IjUKT",
+                  "id": "Mlugc",
                   "type": "ref",
                   "ref": "GEBcf",
                   "name": "Corner TR",
@@ -776,15 +768,34 @@
           "children": [
             {
               "type": "frame",
-              "id": "HjtNY",
+              "id": "RS9KP",
               "name": "Head",
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
               "children": [
                 {
+                  "type": "frame",
+                  "id": "oiaQe",
+                  "name": "App Name (Wordmark)",
+                  "metadata": {
+                    "type": "a11y",
+                    "accessibilityLabel": "萌芽日記",
+                    "exemptDynamicType": true,
+                    "role": "image"
+                  },
+                  "width": 190,
+                  "height": 90.6,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "mengya-diary-crayon-v3.png",
+                    "mode": "fit"
+                  }
+                },
+                {
                   "type": "text",
-                  "id": "Ix2j3",
+                  "id": "L6Yea",
                   "name": "Tagline",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -792,19 +803,19 @@
                   "content": "給家人的私密相簿",
                   "lineHeight": 1.5,
                   "fontFamily": "$font",
-                  "fontSize": "$fs-display",
+                  "fontSize": "$fs-body",
                   "fontWeight": "normal"
                 },
                 {
                   "type": "frame",
-                  "id": "yiVrx",
+                  "id": "F2XK2",
                   "name": "Trust Row",
                   "gap": "$sp-label",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon",
-                      "id": "RgGr5",
+                      "id": "Yy2GU",
                       "name": "Trust Icon",
                       "width": 18,
                       "height": 18,
@@ -814,7 +825,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "Yzsch",
+                      "id": "G3v96",
                       "name": "Trust Text",
                       "fill": "$text-primary",
                       "content": "只有你邀請的家人看得到",
@@ -34114,7 +34125,7 @@
       "id": "XUAAQ",
       "x": 0,
       "y": 5563,
-      "name": "LS-17 / 01-alt-B 字標留 Head (iPhone) [比較用]",
+      "name": "LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone)",
       "clip": true,
       "width": 393,
       "height": 852,
@@ -34147,22 +34158,22 @@
       "children": [
         {
           "type": "frame",
-          "id": "u9c5rG",
+          "id": "Ph0s5",
           "name": "Top",
           "width": "fill_container",
-          "height": 358,
+          "height": 408,
           "layout": "vertical",
           "children": [
             {
               "type": "frame",
-              "id": "hVE4J",
+              "id": "mMt9s",
               "name": "Status Bar Area",
               "width": "fill_container",
               "height": 62,
               "layout": "none",
               "children": [
                 {
-                  "id": "fSjPL",
+                  "id": "k166j0",
                   "type": "ref",
                   "ref": "OeXop",
                   "name": "Status Bar",
@@ -34174,20 +34185,20 @@
             },
             {
               "type": "frame",
-              "id": "FYWCS",
+              "id": "v6j7V7",
               "name": "Print Stage",
               "width": "fill_container",
-              "height": 296,
+              "height": 346,
               "layout": "none",
               "children": [
                 {
                   "type": "frame",
-                  "id": "TxMeh",
+                  "id": "JfQJ3",
                   "x": 16,
                   "y": 5,
                   "name": "Print",
                   "width": 361,
-                  "height": 286,
+                  "height": 336,
                   "fill": [
                     "$print-paper",
                     {
@@ -34310,16 +34321,16 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "ounTs",
+                      "id": "SMCTp",
                       "name": "Photo Wrap",
                       "clip": true,
                       "width": "fill_container",
-                      "height": 190.1,
+                      "height": 217.6,
                       "layout": "none",
                       "children": [
                         {
                           "type": "rectangle",
-                          "id": "rkNnr",
+                          "id": "v0lw6",
                           "x": 0,
                           "y": -84,
                           "name": "Hero Photo",
@@ -34334,45 +34345,53 @@
                         },
                         {
                           "type": "rectangle",
-                          "id": "UvyHS",
+                          "id": "ZWtgz",
                           "x": 0,
                           "y": 0,
                           "name": "Night Dim",
                           "fill": "$photo-dim",
                           "width": 345,
-                          "height": 190.1
+                          "height": 217.6
                         }
                       ]
                     },
                     {
                       "type": "frame",
-                      "id": "QNrYQ",
+                      "id": "l5FLS",
                       "name": "Imprint Row",
                       "width": "fill_container",
                       "justifyContent": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "ec2D9",
-                          "name": "Lab Imprint",
-                          "fill": "$text-secondary",
-                          "content": "LITTLE SPROUT",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-imprint",
-                          "fontWeight": "600",
-                          "letterSpacing": 3.5
+                          "type": "frame",
+                          "id": "vEgm5",
+                          "name": "Imprint Mark",
+                          "metadata": {
+                            "type": "a11y",
+                            "accessibilityLabel": "萌芽日記",
+                            "role": "image",
+                            "exemptDynamicType": true
+                          },
+                          "width": 200,
+                          "height": 95.4,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "mengya-diary-crayon-v3.png",
+                            "mode": "fit"
+                          }
                         }
                       ]
                     }
                   ]
                 },
                 {
-                  "id": "efbQH",
+                  "id": "E0sov",
                   "type": "ref",
                   "ref": "GEBcf",
                   "name": "Corner BL",
                   "x": 11,
-                  "y": 270,
+                  "y": 320,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M0 26 L0 0 L26 26 Z"
@@ -34383,12 +34402,12 @@
                   }
                 },
                 {
-                  "id": "uLEDJ",
+                  "id": "tzB8c",
                   "type": "ref",
                   "ref": "GEBcf",
                   "name": "Corner BR",
                   "x": 356,
-                  "y": 270,
+                  "y": 320,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M26 26 L26 0 L0 26 Z"
@@ -34399,7 +34418,7 @@
                   }
                 },
                 {
-                  "id": "m43AT",
+                  "id": "jUZCY",
                   "type": "ref",
                   "ref": "GEBcf",
                   "name": "Corner TL",
@@ -34415,7 +34434,7 @@
                   }
                 },
                 {
-                  "id": "xiePN",
+                  "id": "O1r9l",
                   "type": "ref",
                   "ref": "GEBcf",
                   "name": "Corner TR",
@@ -34451,34 +34470,15 @@
           "children": [
             {
               "type": "frame",
-              "id": "wz0Hr",
+              "id": "tC75Y",
               "name": "Head",
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
               "children": [
                 {
-                  "type": "frame",
-                  "id": "qFjRu",
-                  "name": "App Name (Wordmark)",
-                  "metadata": {
-                    "type": "a11y",
-                    "accessibilityLabel": "萌芽日記",
-                    "exemptDynamicType": true,
-                    "role": "image"
-                  },
-                  "width": 190,
-                  "height": 90.6,
-                  "fill": {
-                    "type": "image",
-                    "enabled": true,
-                    "url": "mengya-diary-crayon-v3.png",
-                    "mode": "fit"
-                  }
-                },
-                {
                   "type": "text",
-                  "id": "T1MLb",
+                  "id": "h2TCrQ",
                   "name": "Tagline",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -34486,19 +34486,19 @@
                   "content": "給家人的私密相簿",
                   "lineHeight": 1.5,
                   "fontFamily": "$font",
-                  "fontSize": "$fs-body",
+                  "fontSize": "$fs-display",
                   "fontWeight": "normal"
                 },
                 {
                   "type": "frame",
-                  "id": "lrZIN",
+                  "id": "vGGnM",
                   "name": "Trust Row",
                   "gap": "$sp-label",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon",
-                      "id": "WlJML",
+                      "id": "Z6QY2",
                       "name": "Trust Icon",
                       "width": 18,
                       "height": 18,
@@ -34508,7 +34508,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "e8N6Y6",
+                      "id": "bU9iT",
                       "name": "Trust Text",
                       "fill": "$text-primary",
                       "content": "只有你邀請的家人看得到",
