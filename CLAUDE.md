@@ -21,6 +21,7 @@
 - Handoff 格式：Ticket／已完成／已驗證（怎麼驗）／未完成／風險／產出位置。
 - **Linear 是唯一任務狀態來源**（LS team；Backlog→Spec→Design→Ready→In Progress→In Review→QA→Done）。
 - Secrets 永不進 repo（pre-commit 會掃）。
+- 暫存檔一律 `LS-<n>-<用途>.<ext>`（或 `mktemp -d`）；`gh pr create/edit` 前先 `bash scripts/gates/pr-body-check.sh <body>`（CI 亦驗 PR body 檔頭段含分支票號）。
 
 ## Index
 
