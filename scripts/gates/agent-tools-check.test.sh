@@ -47,21 +47,24 @@ reset() {
   mk dead-code-sweeper "Bash, Read, Grep, Glob, mcp__linear__get_issue, mcp__linear__list_comments"
   mk ui-designer NONE
   mk visual-reviewer NONE
+  mk ios-dev NONE
 }
 
 # ---- ① 合法 ----
-reset; expect 0 '① 五份齊、白名單含必要工具 → exit 0' '✓ agent-tools gate 通過（5 份' 'ui-designer.md：無 tools: 行（繼承全部工具）→ 放行'
+reset; expect 0 '① 六份齊、白名單含必要工具 → exit 0' '✓ agent-tools gate 通過（6 份' 'ios-dev.md：無 tools: 行（繼承全部工具）→ 放行'
 out="$(bash "$checker" 2>&1)"; got=$?   # 不帶參數＝真 repo 的 .claude/agents
 if [ "$got" -eq 0 ]; then ok '① 真 repo 的 .claude/agents 通過'; else echo "✗ ① 真 repo 應通過（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 reset; mk ui-designer "Read, mcp__pencil__get_app_state, mcp__pencil__execute"; expect 0 '① ui-designer 有 tools: 且含 execute → exit 0' '通過'
-reset; mk qa "  Bash ,  ${LINEAR3},mcp__pencil__get_app_state  "; expect 0 '① 空白／逗號變體 → exit 0' '通過'
-reset; printf -- '---\r\nname: qa\r\ndescription: x\r\ntools: Bash, %s, mcp__pencil__get_app_state\r\nmodel: sonnet\r\n---\r\n' "$LINEAR3" > "$agents/qa.md"; expect 0 '① CRLF 行尾 → exit 0' '通過'
+reset; mk qa "  Bash ,  ${LINEAR3},mcp__pencil__get_app_state,mcp__pencil__execute  "; expect 0 '① 空白／逗號變體 → exit 0' '通過'
+reset; printf -- '---\r\nname: qa\r\ndescription: x\r\ntools: Bash, %s, mcp__pencil__get_app_state, mcp__pencil__execute\r\nmodel: sonnet\r\n---\r\n' "$LINEAR3" > "$agents/qa.md"; expect 0 '① CRLF 行尾 → exit 0' '通過'
 
 # ---- ② 缺工具 ----
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state"; expect 1 '② qa 少 Bash → exit 1' 'qa.md：tools: 缺 Bash'
 reset; mk qa "BashOutput, ${LINEAR3}, mcp__pencil__get_app_state"; expect 1 '② BashOutput 不算 Bash（整字比對）→ exit 1' 'qa.md：tools: 缺 Bash'
 reset; mk merge-reviewer "Bash, mcp__linear__get_issue, mcp__linear__list_comments"; expect 1 '② merge-reviewer 少 save_comment → exit 1' 'merge-reviewer.md：tools: 缺 mcp__linear__save_comment'
 reset; mk qa "Bash, ${LINEAR3}"; expect 1 '② qa 少 mcp__pencil__get_app_state → exit 1' 'qa.md：tools: 缺 mcp__pencil__get_app_state'
+reset; mk qa "Bash, ${LINEAR3}, mcp__pencil__get_app_state"; expect 1 '② qa 少 mcp__pencil__execute（LS-91 補釘）→ exit 1' 'qa.md：tools: 缺 mcp__pencil__execute'
+reset; mk ios-dev "Read, Edit"; expect 0 '② ios-dev 有 tools: 行但必要工具留空 → 仍 exit 0（規則表無要求）' '通過'
 reset; mk ui-designer "Read, mcp__pencil__get_app_state"; expect 1 '② ui-designer 有 tools: 但缺 execute → exit 1' 'ui-designer.md：tools: 缺 mcp__pencil__execute'
 reset; mk visual-reviewer "Read"; expect 1 '② visual-reviewer 有 tools: 但缺 execute → exit 1' 'visual-reviewer.md：tools: 缺 mcp__pencil__execute'
 reset; mk dead-code-sweeper "Read, mcp__linear__get_issue"; expect 1 '② dead-code-sweeper 少 Bash 與 list_comments → 一行列兩支' 'dead-code-sweeper.md：tools: 缺 Bash mcp__linear__list_comments'
