@@ -12,6 +12,13 @@ import SwiftUI
 /// **已知限制**：Sign in with Apple entitlement 依賴 LS-8（Apple Developer Program，尚未
 /// 完成），本機／模擬器沒有 capability 時點下去會拿到系統層的授權錯誤，是預期中的阻塞，
 /// 不是這裡的邏輯錯誤（`AppleSignInNonce.swift` 已有相同前提說明）。
+///
+/// **已知限制（R3 review A2）**：`SignInWithAppleButton` 包的 `ASAuthorizationAppleIDButton`
+/// 標題字級由系統依按鈕高度等比推導，本身不吃 Dynamic Type——AX3 實測（iPhone 17 Pro
+/// 模擬器，iOS 26）鈕高固定在 56pt，與一般字級完全相同；同畫面的 Google／Email 鍵在 AX3
+/// 分別長到 119pt／79pt（見 `.claude/evidence/LS-17/r3/01-welcome-ax3-iphone17pro.png`）。
+/// 這是系統元件的限制，不是這裡漏做 `minHeight`——Apple 官方規範要求使用官方按鈕、不得
+/// 換皮／自繪，56pt 仍遠高於 44pt 可點擊標準，接受凍結在 56pt。
 struct AppleSignInButton: View {
     let isSigningIn: Bool
     let onRequest: (ASAuthorizationAppleIDRequest) -> Void
