@@ -427,27 +427,61 @@ begin
   values (v_family, v_member, 'member', true);
   raise notice 'ok：已離開家庭的前作者無法軟刪／還原過去寫的日記 (42501)——F2 回歸';
 
-  -- 已降級 viewer：仍在 family_members 裡，只是角色變成 viewer → 仍可軟刪／還原自己的
-  -- 日記。這與 update_diary_entry 不同（那支要求仍是 owner/member）：set_diary_deleted
-  -- 的作者分支只要求「仍是成員」，是 migration 裡寫明的產品決定，不是漏補。
-  -- 此時 v_diary 處於 deleted=true（上一段 owner 軟刪的結果），這裡用還原（false）
-  -- 順便驗證「仍可雙向切換」，不是只測得到其中一個方向。
+  -- 已降級 viewer：仍在 family_members 裡，只是角色變成 viewer。set_diary_deleted 的
+  -- 作者分支只要求「仍是成員」，不要求 owner/member，這件事本身不受 LS-57 影響——見
+  -- migration 裡寫明的產品決定；下面先驗 LS-57 新增的還原鎖，再驗「降級不影響自己
+  -- 東西的處置權」這件事仍然成立。
   update public.family_members set role = 'viewer'
    where family_id = v_family and user_id = v_member;
 
+  -- LS-57：此時 v_diary 處於 deleted=true、deleted_by=v_owner（上一段 owner 軟刪的
+  -- 結果）。降級成 viewer 的前作者呼叫還原，即使通過了「仍是成員」這關，還是會被
+  -- 還原鎖擋下——這篇不是他自己刪的，只有 owner 能還原。
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
   set local role authenticated;
+  begin
+    perform public.set_diary_deleted(v_diary, false);
+    raise exception 'FAIL：被降級成 viewer 的前作者，竟然還原了 owner 軟刪的日記——LS-57 的還原鎖沒有生效';
+  exception when sqlstate 'LS027' then
+    null;
+  end;
+  reset role;
+  select deleted_at into v_deleted_at from public.diaries where id = v_diary;
+  if v_deleted_at is null then
+    raise exception 'FAIL：被 LS027 擋下的還原呼叫，deleted_at 竟然還是被清掉了';
+  end if;
+  raise notice 'ok：被降級成 viewer 的前作者無法還原 owner 軟刪的日記（LS027）——LS-57';
+
+  -- owner 可以還原任何一篇，不限於自己刪的。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.set_diary_deleted(v_diary, false);
+  reset role;
+  select deleted_at into v_deleted_at from public.diaries where id = v_diary;
+  if v_deleted_at is not null then
+    raise exception 'FAIL：owner 還原別人日記（自己不是原作者）卻沒有生效';
+  end if;
+  raise notice 'ok：owner 可以還原家庭內任何一篇日記，不限於自己軟刪的——LS-57';
+
+  -- 降級成 viewer 的作者仍可軟刪／還原「自己」設下的 deleted_at——降級本身不影響對
+  -- 自己內容的處置權，這是 F2 既有結論，LS-57 沒有改變這件事，只是新增了「別人（owner）
+  -- 設下的不能自行還原」這一層。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.set_diary_deleted(v_diary, true);
   perform public.set_diary_deleted(v_diary, false);
   select deleted_at into v_deleted_at from public.diaries where id = v_diary;
   if v_deleted_at is not null then
-    raise exception 'FAIL：被降級成 viewer 的前作者，還原自己的日記卻沒有生效';
+    raise exception 'FAIL：被降級成 viewer 的作者，軟刪／還原自己設下的 deleted_at 卻沒有生效';
   end if;
   reset role;
 
   update public.family_members set role = 'member'
    where family_id = v_family and user_id = v_member;
-  raise notice 'ok：被降級成 viewer 的作者仍可軟刪／還原自己的日記（只要求仍是成員，不要求 owner/member）——F2 回歸';
+  raise notice 'ok：被降級成 viewer 的作者仍可軟刪／還原「自己」設下的 deleted_at（只要求仍是成員，不要求 owner/member）——F2 回歸，LS-57 未改變這件事';
 
   -- 不存在的日記 → LS020
   perform set_config('request.jwt.claims',

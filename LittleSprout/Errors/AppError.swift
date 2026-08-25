@@ -67,6 +67,7 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     case commentNotFound = "LS024"
     case commentNotEditableByCaller = "LS025"
     case targetFamilyMismatch = "LS026"
+    case removedByOwnerNotRestorable = "LS027"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -85,7 +86,7 @@ enum LSErrorCode: String, CaseIterable, Sendable {
              .alreadyMember, .alreadyHasPendingRequest, .requestNotFoundOrProcessed,
              .diaryNotFoundOrDeleted, .diaryNotEditableByCaller,
              .albumNotFound, .commentNotFound, .commentNotEditableByCaller,
-             .targetFamilyMismatch, .timelineCursorIncomplete:
+             .targetFamilyMismatch, .timelineCursorIncomplete, .removedByOwnerNotRestorable:
             // 以下碼為 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
@@ -108,6 +109,10 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // 原地重試同一個呼叫不會變成功，該修的是呼叫端組游標的程式碼（或乾脆不帶游標
             // 重新查詢）。歸在這裡而不是 validationRetryable，才符合 N9 定的準則——
             // 「使用者能換輸入」才算 validationRetryable（PR #77 R1 B2(b)；orchestrator 裁決）。
+            // removedByOwnerNotRestorable（LS-57 補齊 LS027，set_diary_deleted／
+            // set_album_deleted／set_comment_deleted）：作者想還原一個 owner 已經移除的
+            // 內容，換輸入沒有用（沒有輸入可換），只有請該家庭的 owner 出手還原這一條路，
+            // UI 該做的是隱藏「還原」入口或提示「已被管理者移除」，不是讓使用者原地重試。
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:
             // 碼本身是「輸入」——打錯字換一個、或請 owner 給一支新的碼，都是同一個 UI 動作

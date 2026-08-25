@@ -244,21 +244,27 @@ race_case "同一則留言：軟刪先動，直接編輯必須被阻塞後才成
 
 # LS-52 併發場景，方向 C（merge-reviewer PR #70 review N1，第 2 輪）：作者把自己的
 # 相簿直接 UPDATE 搬到自己也是 owner 的另一個家庭，與原家庭 owner 呼叫
-# set_album_deleted 同時發生。這組才是真正驗到 `for update` 必要性的場景——方向
-# A／B 改的是 title，不是授權判斷會讀的 family_id，測不出拿掉 `for update` 會不會
-# 造成跨家庭越權；這組改 family_id，拿掉 `for update` 會讓斷言變紅（原家庭 owner
-# 對已搬到別家的相簿完成軟刪）。詳細技術說明與 mutation 證據見對應
-# s2_delete_after_move.sql 檔頭。
+# set_album_deleted 同時發生——這組場景（album_edit_vs_delete_s1_move_family.sql／
+# s2_delete_after_move.sql／verify_move_blocked.sql，原本在這裡）已隨 LS-57 一起
+# 退役：LS-57 把 albums／diaries／comments 的 family_id 收斂成不可變欄
+# （private.enforce_deletion_attribution() trigger，見
+# supabase/migrations/20260825030000_deletion_attribution.sql），作者的搬家 UPDATE
+# 本身現在會直接被這支 trigger 擋下 42501，「family_id 可以被搬動」這個攻擊面在
+# 前提上已經不成立，不需要再靠併發時序去驗證 `for update` 有沒有守住這個特定 race——
+# 比照 LS-58 讓 comments 版同一場景退役的處理方式（見上一段這裡原本留的說明）。
+# `FOR UPDATE` 鎖本身仍然保留在 set_album_deleted 裡（migration 是歷史紀錄不回頭
+# 改），繼續為方向 A／B 的一般序列化把關。
 #
-# LS-58：comments 版的同一組場景（原本在這裡）已隨 comments 收斂成 RPC-only 一起
-# 退役——update_comment 的參數只有 body，comments 的 UPDATE grant 也整個被收回，
-# authenticated 已經沒有任何路徑能搬動一則留言的 family_id，這個攻擊面在前提上就
-# 不成立了，不是靠鎖擋住。albums 目前仍是 hybrid 模式（作者直接 UPDATE 保留），
-# 這組場景對 albums 依然成立，繼續保留。詳見
-# supabase/tests/concurrency/comment_edit_vs_delete_s2_delete.sql 的說明。
-race_case "同一本相簿：作者搬家先動，owner 的軟刪必須被阻塞後正確拿到 42501" \
-  album_edit_vs_delete_setup.sql album_edit_vs_delete_s1_move_family.sql \
-  album_edit_vs_delete_s2_delete_after_move.sql album_edit_vs_delete_verify_move_blocked.sql
+# LS-57 併發場景：owner 軟刪 vs 作者同時嘗試還原——`for update` 鎖必須讓後動的一方
+# 讀到先動一方已 commit 的 deleted_by，才能正確判斷「這不是我刪的」而擋下 LS027。
+# 用 diaries 當代表（三張表走同一支共用 trigger、同一種鎖的形狀，機制相同，不重複
+# 三份）。方向只需一個：owner 先動、作者後動——反過來（作者的還原先動）在這個資料
+# 狀態下一定會先撞上還原鎖本身（作者對「當下還沒被任何人刪除」的日記呼叫還原是
+# no-op，不構成有意義的 race），跟 diary_edit_vs_delete／album_edit_vs_delete 那種
+# 「兩個方向各自證明一支 RPC 自己的鎖」不是同一種需要雙向覆蓋的情境。
+race_case "同一篇日記：owner 軟刪先動，作者的還原必須被阻塞後正確拿到 LS027" \
+  diary_delete_vs_restore_setup.sql diary_delete_vs_restore_s1_owner_delete.sql \
+  diary_delete_vs_restore_s2_author_restore.sql diary_delete_vs_restore_verify.sql
 
 # LS-58 併發場景：同一人對同一目標的兩次 toggle_reaction 幾乎同時發出，必須被
 # pg_advisory_xact_lock 序列化——沒有這把鎖，兩次呼叫都會查到「還沒按過」而各自
@@ -277,7 +283,7 @@ delete from public.families where id in (
   'f3000000-0000-4000-8000-000000000001',
   'f4000000-0000-4000-8000-000000000001',
   'f6000000-0000-4000-8000-000000000001',
-  'f8000000-0000-4000-8000-000000000001'
+  'f7000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -294,6 +300,8 @@ delete from auth.users where id in (
   'a6000000-0000-4000-8000-000000000001',
   'a5000000-0000-4000-8000-000000000001',
   'a4000000-0000-4000-8000-000000000001',
+  'a3000000-0000-4000-8000-000000000001',
+  'a2000000-0000-4000-8000-000000000001',
   'a1000000-0000-4000-8000-000000000001'
 );
 SQL

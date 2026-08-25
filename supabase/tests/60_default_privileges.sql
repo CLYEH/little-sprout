@@ -53,7 +53,8 @@ begin
     'private.feed_sync_albums()',
     'private.feed_sync_media()',
     'private.feed_sync_diaries()',
-    'private.media_storage_sync()'
+    'private.media_storage_sync()',
+    'private.enforce_deletion_attribution()'
   ] loop
     if has_function_privilege('authenticated', v_fn, 'execute') then
       raise exception 'FAIL：authenticated 可以直接執行 %（SECURITY DEFINER trigger 函式）', v_fn;

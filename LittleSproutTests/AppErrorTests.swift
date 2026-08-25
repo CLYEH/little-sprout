@@ -187,7 +187,10 @@ final class AppErrorTests: XCTestCase {
             .targetFamilyMismatch,
             // LS022：游標是 app 自己組的，使用者沒有輸入可換，重試同一呼叫不會成功——
             // 留在 validationRetryable 違反 N9 的定義（PR #77 R1 B2(b)；orchestrator 裁決）。
-            .timelineCursorIncomplete
+            .timelineCursorIncomplete,
+            // LS027（LS-57，set_diary_deleted／set_album_deleted／set_comment_deleted）：
+            // 作者想還原 owner 已移除的內容，沒有輸入可換，只有 owner 能還原。
+            .removedByOwnerNotRestorable
         ]
         let expectedValidationRetryable: Set<LSErrorCode> = [
             .inviteCodeNotFound,

@@ -228,7 +228,7 @@ begin
   -- 後面拿 owner 那次的結果去跟這個已經被污染的 baseline 比對，兩邊相等、斷言假綠。
   -- 用 `to_jsonb(row) - 'deleted_at'` 整列比對（而不是隻列舉 title 一欄）：日後這
   -- 兩張表加新欄位會自動被涵蓋，不必回頭記得在這裡加一行新的欄位比對。
-  select to_jsonb(a) - 'deleted_at' into v_snapshot from public.albums a where a.id = v_album;
+  select to_jsonb(a) - 'deleted_at' - 'deleted_by' into v_snapshot from public.albums a where a.id = v_album;
   reset role;
 
   -- 作者本人（仍是家庭成員）：軟刪／還原自己的
@@ -241,7 +241,7 @@ begin
   if v_deleted_at is null then
     raise exception 'FAIL：作者軟刪自己的相簿沒有生效';
   end if;
-  if (select to_jsonb(a) - 'deleted_at' from public.albums a where a.id = v_album)
+  if (select to_jsonb(a) - 'deleted_at' - 'deleted_by' from public.albums a where a.id = v_album)
      is distinct from v_snapshot then
     raise exception 'FAIL：作者軟刪自己的相簿時，deleted_at 以外的欄位被動到了';
   end if;
@@ -255,7 +255,7 @@ begin
   if v_deleted_at is not null then
     raise exception 'FAIL：作者還原自己的相簿沒有生效';
   end if;
-  if (select to_jsonb(a) - 'deleted_at' from public.albums a where a.id = v_album)
+  if (select to_jsonb(a) - 'deleted_at' - 'deleted_by' from public.albums a where a.id = v_album)
      is distinct from v_snapshot then
     raise exception 'FAIL：作者還原自己的相簿時，deleted_at 以外的欄位被動到了';
   end if;
@@ -273,7 +273,7 @@ begin
   if v_deleted_at is null then
     raise exception 'FAIL：owner 用 set_album_deleted 軟刪別人的相簿沒有生效';
   end if;
-  if (select to_jsonb(a) - 'deleted_at' from public.albums a where a.id = v_album)
+  if (select to_jsonb(a) - 'deleted_at' - 'deleted_by' from public.albums a where a.id = v_album)
      is distinct from v_snapshot then
     raise exception 'FAIL：owner 軟刪別人的相簿時，deleted_at 以外的欄位被動到了（title/child_id/cover_media_id 有一項跟 INSERT 當下的值不一樣）——set_album_deleted 不該碰得到內容欄位';
   end if;
@@ -333,30 +333,63 @@ begin
   raise notice 'ok：已離開家庭的前作者無法用 set_album_deleted 動自己過去建立的相簿';
 
   -- F5（orchestrator PR #70 review 裁決）：作者被降級成 viewer——仍在
-  -- family_members 裡，只是角色變成 viewer——現在**可以**軟刪／還原自己的相簿。
-  -- 對齊 LS-48 set_diary_deleted／本票 set_comment_deleted：移除／還原自己的東西
-  -- 只要求「當下仍是成員」，不要求仍是 contributor；「改內容」（§A 的直接 UPDATE）
-  -- 仍要求仍是 contributor，兩者是不同性質的操作，見 migration 對這支函式的裁量
-  -- 說明。此時相簿處於已軟刪狀態（上一段 owner 軟刪的結果），這裡用還原（false）
-  -- 順便驗證「降級後仍可雙向切換」，不是只測得到其中一個方向。
+  -- family_members 裡，只是角色變成 viewer——「移除／還原自己的東西」只要求「當下
+  -- 仍是成員」，不要求仍是 contributor；「改內容」（§A 的直接 UPDATE）仍要求仍是
+  -- contributor，兩者是不同性質的操作，見 migration 對這支函式的裁量說明。
+  --
+  -- 此時相簿處於已軟刪狀態、deleted_by=v_owner（上一段 owner 軟刪的結果）——LS-57：
+  -- 降級成 viewer 的前作者呼叫還原，即使通過了「仍是成員」這關，還是會被還原鎖擋下
+  -- （LS027，這本不是他自己刪的）。
   update public.family_members set role = 'viewer'
    where family_id = v_family and user_id = v_author;
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
   set local role authenticated;
+  begin
+    perform public.set_album_deleted(v_album, false);
+    raise exception 'FAIL：被降級成 viewer 的前作者，竟然還原了 owner 軟刪的相簿——LS-57 的還原鎖沒有生效';
+  exception when sqlstate 'LS027' then
+    null;
+  end;
+  reset role;
+  select deleted_at into v_deleted_at from public.albums where id = v_album;
+  if v_deleted_at is null then
+    raise exception 'FAIL：被 LS027 擋下的還原呼叫，deleted_at 竟然還是被清掉了';
+  end if;
+  raise notice 'ok：被降級成 viewer 的前作者無法用 set_album_deleted 還原 owner 軟刪的相簿（LS027）——LS-57';
+
+  -- owner 可以還原任何一本，不限於自己刪的。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
   perform public.set_album_deleted(v_album, false);
   reset role;
   select deleted_at into v_deleted_at from public.albums where id = v_album;
   if v_deleted_at is not null then
-    raise exception 'FAIL：被降級成 viewer 的前作者，用 set_album_deleted 還原自己的相簿卻沒有生效';
+    raise exception 'FAIL：owner 還原別人相簿（自己不是原建立者）卻沒有生效';
   end if;
-  if (select to_jsonb(a) - 'deleted_at' from public.albums a where a.id = v_album)
+  raise notice 'ok：owner 可以還原家庭內任何一本相簿，不限於自己軟刪的——LS-57';
+
+  -- 降級成 viewer 的作者仍可軟刪／還原「自己」設下的 deleted_at——降級本身不影響
+  -- 對自己內容的處置權，這是 F5 既有結論，LS-57 沒有改變這件事，只是新增了「別人
+  -- （owner）設下的不能自行還原」這一層。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.set_album_deleted(v_album, true);
+  perform public.set_album_deleted(v_album, false);
+  reset role;
+  select deleted_at into v_deleted_at from public.albums where id = v_album;
+  if v_deleted_at is not null then
+    raise exception 'FAIL：被降級成 viewer 的作者，軟刪／還原自己設下的 deleted_at 卻沒有生效';
+  end if;
+  if (select to_jsonb(a) - 'deleted_at' - 'deleted_by' from public.albums a where a.id = v_album)
      is distinct from v_snapshot then
-    raise exception 'FAIL：被降級成 viewer 的前作者還原相簿時，deleted_at 以外的欄位被動到了';
+    raise exception 'FAIL：被降級成 viewer 的作者軟刪／還原自己相簿時，deleted_at 以外的欄位被動到了';
   end if;
   update public.family_members set role = 'member'
    where family_id = v_family and user_id = v_author;
-  raise notice 'ok：被降級成 viewer 的前作者仍可用 set_album_deleted 軟刪／還原自己的相簿（F5：對齊 diaries／comments，只要求仍是成員，不要求仍是 contributor）';
+  raise notice 'ok：被降級成 viewer 的作者仍可用 set_album_deleted 軟刪／還原「自己」設下的 deleted_at（只要求仍是成員，不要求仍是 contributor）——F5 回歸，LS-57 未改變這件事';
 
   -- 不存在的相簿 → LS023
   perform set_config('request.jwt.claims',
@@ -454,7 +487,7 @@ begin
   -- F1（merge-reviewer PR #70 review，同 §B 的說明）：baseline 必須在任何 RPC
   -- 呼叫之前擷取，且改成整列比對（`to_jsonb(row) - 'deleted_at'`）而不是只列舉
   -- body 一欄。
-  select to_jsonb(c) - 'deleted_at' into v_snapshot from public.comments c where c.id = v_comment;
+  select to_jsonb(c) - 'deleted_at' - 'deleted_by' into v_snapshot from public.comments c where c.id = v_comment;
   reset role;
 
   -- 作者本人（仍是任一角色成員）：軟刪／還原自己的
@@ -467,7 +500,7 @@ begin
   if v_deleted_at is null then
     raise exception 'FAIL：作者軟刪自己的留言沒有生效';
   end if;
-  if (select to_jsonb(c) - 'deleted_at' from public.comments c where c.id = v_comment)
+  if (select to_jsonb(c) - 'deleted_at' - 'deleted_by' from public.comments c where c.id = v_comment)
      is distinct from v_snapshot then
     raise exception 'FAIL：作者軟刪自己的留言時，deleted_at 以外的欄位被動到了';
   end if;
@@ -481,7 +514,7 @@ begin
   if v_deleted_at is not null then
     raise exception 'FAIL：作者還原自己的留言沒有生效';
   end if;
-  if (select to_jsonb(c) - 'deleted_at' from public.comments c where c.id = v_comment)
+  if (select to_jsonb(c) - 'deleted_at' - 'deleted_by' from public.comments c where c.id = v_comment)
      is distinct from v_snapshot then
     raise exception 'FAIL：作者還原自己的留言時，deleted_at 以外的欄位被動到了';
   end if;
@@ -498,7 +531,7 @@ begin
   if v_deleted_at is null then
     raise exception 'FAIL：owner 用 set_comment_deleted 軟刪別人的留言沒有生效';
   end if;
-  if (select to_jsonb(c) - 'deleted_at' from public.comments c where c.id = v_comment)
+  if (select to_jsonb(c) - 'deleted_at' - 'deleted_by' from public.comments c where c.id = v_comment)
      is distinct from v_snapshot then
     raise exception 'FAIL：owner 軟刪別人的留言時，deleted_at 以外的欄位被動到了（body 跟 INSERT 當下的值不一樣）——set_comment_deleted 不該碰得到內容欄位';
   end if;
@@ -555,22 +588,57 @@ begin
   values (v_family, v_author, 'member', true);
   raise notice 'ok：已離開家庭的前作者無法用 set_comment_deleted 動自己過去的留言';
 
-  -- 作者被降級成 viewer：仍可軟刪／還原自己的（跟直接 UPDATE 的判準一致，
-  -- comments 的作者分支只要求仍是任一角色的成員）
+  -- 作者被降級成 viewer：仍在 family_members 裡（跟直接 UPDATE 的判準一致，
+  -- comments 的作者分支只要求仍是任一角色的成員）。此時留言處於已軟刪狀態、
+  -- deleted_by=v_owner（上一段 owner 軟刪的結果）——LS-57：降級成 viewer 的前作者
+  -- 呼叫還原，即使通過了「仍是成員」這關，還是會被還原鎖擋下（LS027，這則不是他
+  -- 自己刪的）。
   update public.family_members set role = 'viewer'
    where family_id = v_family and user_id = v_author;
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
   set local role authenticated;
+  begin
+    perform public.set_comment_deleted(v_comment, false);
+    raise exception 'FAIL：被降級成 viewer 的前作者，竟然還原了 owner 軟刪的留言——LS-57 的還原鎖沒有生效';
+  exception when sqlstate 'LS027' then
+    null;
+  end;
+  reset role;
+  select deleted_at into v_deleted_at from public.comments where id = v_comment;
+  if v_deleted_at is null then
+    raise exception 'FAIL：被 LS027 擋下的還原呼叫，deleted_at 竟然還是被清掉了';
+  end if;
+  raise notice 'ok：被降級成 viewer 的前作者無法用 set_comment_deleted 還原 owner 軟刪的留言（LS027）——LS-57';
+
+  -- owner 可以還原任何一則，不限於自己刪的。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
   perform public.set_comment_deleted(v_comment, false);
   reset role;
   select deleted_at into v_deleted_at from public.comments where id = v_comment;
   if v_deleted_at is not null then
-    raise exception 'FAIL：被降級成 viewer 的前作者，用 set_comment_deleted 還原自己的留言卻沒有生效';
+    raise exception 'FAIL：owner 還原別人留言（自己不是原作者）卻沒有生效';
+  end if;
+  raise notice 'ok：owner 可以還原家庭內任何一則留言，不限於自己軟刪的——LS-57';
+
+  -- 降級成 viewer 的作者仍可軟刪／還原「自己」設下的 deleted_at——降級本身不影響
+  -- 對自己內容的處置權，LS-57 沒有改變這件事，只是新增了「別人（owner）設下的
+  -- 不能自行還原」這一層。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.set_comment_deleted(v_comment, true);
+  perform public.set_comment_deleted(v_comment, false);
+  reset role;
+  select deleted_at into v_deleted_at from public.comments where id = v_comment;
+  if v_deleted_at is not null then
+    raise exception 'FAIL：被降級成 viewer 的作者，軟刪／還原自己設下的 deleted_at 卻沒有生效';
   end if;
   update public.family_members set role = 'member'
    where family_id = v_family and user_id = v_author;
-  raise notice 'ok：被降級成 viewer 的前作者仍可用 set_comment_deleted 軟刪／還原自己的留言（作者分支只要求仍是任一角色的成員，跟直接 UPDATE 一致）';
+  raise notice 'ok：被降級成 viewer 的作者仍可用 set_comment_deleted 軟刪／還原「自己」設下的 deleted_at（作者分支只要求仍是任一角色的成員，跟直接 UPDATE 一致）——LS-57 未改變這件事';
 
   -- 不存在的留言 → LS024
   perform set_config('request.jwt.claims',
