@@ -101,7 +101,10 @@ out="$(cd "$repo" && GH_STUB_STATE=error bash "$post" "$SHA" merge-review succes
 if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -qF '回讀不符'; then echo "✓ ⑥ 回讀 state 不符 → exit 1"; else echo "✗ ⑥ 回讀不符應 exit 1（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 
 # ---- ⑦ gh 未安裝 → exit 2 ----
-out="$(cd "$repo" && PATH="$work/nobin:/usr/bin:/bin" bash "$post" "$SHA" qa success 'x' 2>&1)"; rc=$?
+# PATH 只留 nobin（裡面只有 bash／git 的 symlink），不能再掛 /usr/bin：Linux runner 的真 gh 就在 /usr/bin/gh，`command -v gh` 命中後
+# 腳本走到 POST、因無 token 而 exit 1（非 2）→ CI rules 紅（R2 B1）；有 GH_TOKEN 的環境更會真的對假 SHA 發 POST——自測不得碰網路。
+mkdir -p "$work/nobin"; ln -s "$(command -v bash)" "$work/nobin/bash"; ln -s "$(command -v git)" "$work/nobin/git"
+out="$(cd "$repo" && env PATH="$work/nobin" "$work/nobin/bash" "$post" "$SHA" qa success 'x' 2>&1)"; rc=$?
 if [ "$rc" -eq 2 ] && printf '%s' "$out" | grep -qF '需要 gh'; then echo "✓ ⑦ gh 未安裝 → exit 2"; else echo "✗ ⑦ gh 未安裝應 exit 2（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 
 if [ "$fail" -ne 0 ]; then
