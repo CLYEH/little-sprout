@@ -93,19 +93,16 @@ struct OTPVerificationView: View {
             .foregroundStyle(Color.lsTextPrimary)
             .disabled(model.isResending || model.isVerifying)
         } else {
+            // 四個各自獨立的 Text 在 AX3 下會各自換行，逐行讀出來變成打散的欄位（R3 review
+            // B4：「沒收到｜　｜秒後可」三欄式亂序）。併成單一 Text 讓它像一般段落那樣整段
+            // 換行，數字段用 monospacedDigit 避免倒數時寬度跳動。
             HStack(spacing: AppSpacing.tight) {
-                Text("沒收到驗證碼？")
-                    .appFont(.body)
-                    .foregroundStyle(Color.lsTextSecondary)
                 Image(systemName: "clock")
                     .appIconFrame(.medium)
                     .foregroundStyle(Color.lsTextSecondary)
-                Text("\(model.resendCooldown)")
+                Text("沒收到驗證碼？\(model.resendCooldown) 秒後可重新寄送")
                     .appFont(.body)
                     .monospacedDigit()
-                    .foregroundStyle(Color.lsTextSecondary)
-                Text("秒後可重新寄送")
-                    .appFont(.body)
                     .foregroundStyle(Color.lsTextSecondary)
             }
             .accessibilityElement(children: .combine)
