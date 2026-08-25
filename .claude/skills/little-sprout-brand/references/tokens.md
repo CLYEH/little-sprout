@@ -78,8 +78,8 @@
 | `fs-display` | 34 | 55 | 畫面標題。每畫面 1 個，不重複 | `.largeTitle` / `.bold` |
 | `fs-lead` | 22 | 44 | 唯一主卡標題或區塊標題。每畫面最多 1 個 | `.title2` / `.bold` |
 | `fs-body` | 17 | 40 | 正文、按鈕標籤、欄位值、清單列。主／次以字重＋色分 | `.body` |
-| `fs-otp` | 36 | 52 | OTP 六格數字（等寬） | `.system(size:).monospacedDigit()` |
-| `fs-code` | 60 | 72（Tokens 板；`tokens.json` 抽出 76——兩處不一致，**待補（需 Pen）** 對 `$fs-code` size=ax3 變數值） | 邀請碼大字（等寬，3+3 分組） | `.system(size:).monospacedDigit()` |
+| `fs-otp` | 36 | 52 | OTP 六格數字（等寬）；也是邀請碼輸入格的字級——**八格（4+4）時 AX3 須降 52→42**（`h7EnT` R6 ②，見 motifs.md 邀請碼） | `.system(size:).monospacedDigit()` |
+| `fs-code` | 60 | 72（Tokens 板格子 `F7Swz6`；`$fs-code` size=ax3 變數仍是 76——**落後的是變數**：`h7EnT`④「六位 AX3 76 會溢出 8.6，已降 72」。**待補（需 Pen）**＝下一張開 Pen 的票把變數改成板上值） | 邀請碼大字（等寬；**8 位 4+4 分組時 60→52、AX3 ≤52**——`h7EnT` R6 ④，見 motifs.md 邀請碼） | `.system(size:).monospacedDigit()` |
 | `fs-note` | 17 | 40 | 使用者**必須讀**的次要文字：錯誤、載入中、輸入指示、核准依據（申請人 email／身分／等待時間）。與 body 同為 17 是刻意的——分兩個 token 是為了讓實作區分角色：note 一定伴隨狀態色或狀態圖示 | `.body`＋狀態色（錯誤用 danger） |
 | `fs-meta` | 13 | 33 | 只剩三類：法務行、欄位微標籤（其值已用大字呈現，如「邀請碼」）、純時間戳。其餘一律升 note | `.footnote` |
 | `fs-imprint` | 12 | 12（固定） | 沖印廠牌壓印 LITTLE SPROUT，字距 3.5；**唯一不吃 Dynamic Type 的一級**——它是那張相紙的一部分，不是 UI。代價：不得承載任何唯一資訊；`.accessibilityHidden(true)` 或併進相片 alt 尾段，二選一不得兩者皆無 | 固定 12pt |
