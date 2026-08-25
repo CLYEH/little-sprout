@@ -45,7 +45,7 @@ description: Little Sprout（萌芽日記）設計語言定案——LS-46 十一
 - App icon＝**photo-stack**（三張扇疊照片；`design/app-icon-photo-stack.png` 1024）。「芽」字 icon 概念已被使用者否決。
 - 實測對比（WCAG 2.1，淺／深）：print-ink on print-paper **14.92／12.55**；print-ink-secondary **9.66／8.13**；text-primary on bg 12.21／15.31；text-secondary 7.91／9.41；on-accent 7.30／9.99。
 - Legal／Status 槽 **38pt** 固定高（01／01b／01c 共用；AX3 折行 64 不套槽）。
-- 邀請碼：**8 位、32 字元、40 bit**（後端 `create_invite` 契約，已上線有測試）；輸入 **4+4** 分組，八格應變規格（`fs-otp` AX3 52→42、`fs-code` 60→52、單一 tap target）見 `references/motifs.md` 邀請碼。稿上 06 家族仍是 6 格、LS-46 定案文字「6 碼」——偏差已明寫，實作前先轉八格。
+- 邀請碼：**6 碼、32 字元表（排除 0／O／1／I）、30 bit、3+3 分組、核准必開**（使用者 2026-08-25 裁決 LS-89；後端 LS-90 對齊中——現行部署仍 8 碼／40 bit，**LS-90 併入前設計稿不得改 8 格**）。八格應變規格（`fs-otp` AX3 52→42、`fs-code` 60→52、單一 tap target）是已擱置備案，見 `references/motifs.md` 邀請碼。
 - 已知溢出白名單：R11 基線 51 項（出血 13／角托 34／`mXQJh` 1／AX3 法務 3）是設計意圖；**LS-72 後現況 nodes 2676／FLAGGED 50**（−1 LS-72 自述不可歸因、未獨立複驗）。自動化版面檢查以**最新 landing 的實測值**為白名單基線（基線隨最新 landing 更新，見 COLLABORATION §7 design-landing 列），不要寫死 51。
 
 ## 不包含（另有出處）
