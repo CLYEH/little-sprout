@@ -9,23 +9,28 @@
 #      主 checkout／非票號分支用 `main`）：存在就直接用它的 UDID；不存在就用清單第一台可用 iPhone 的
 #      devicetype／runtime `simctl create` 一台，用完不刪（>7 天未用由 scripts/ops/patrol.sh 只列不刪，
 #      印 `simctl delete` 指令）。
-#   2. 建立失敗，或 `DETECT_SIMULATOR_SHARED=1`（手動強制） → 退回共用第一台，經
-#      scripts/ops/simulator-lock.sh（mkdir 原子 lock，鍵＝共用裝置 UDID，演算法比照 supabase-lock.sh，LS-70）。
-#   3. CI（`CI=true`）維持共用第一台、不建、不 lock——CI 是單一 runner，本來就序列，且 CI 容器每次都是全新
-#      環境，`simctl create` 建出的專屬模擬器不會被下一輪重用，只會白建。
-# 呼叫端（push-gate.sh／CI）不變：仍只是把整段輸出塞進 `-destination`。
+#   2. 建立失敗，或 `DETECT_SIMULATOR_SHARED=1`（手動強制） → 直接退回共用第一台的 UDID，**這裡不再持鎖**
+#      （R1 的鎖只包住這支腳本自己印字那一瞬間，兩個 worktree 若同時走 fallback，鎖早就放掉、後面各自的
+#      `xcodebuild test` 依然併發打同一台——鎖錯地方，merge-reviewer R2 F1 抓到）。真正需要序列化的是
+#      「執行 xcodebuild test」那一段，改由呼叫端（`push-gate.sh`）以這裡輸出的 UDID 為鍵，把
+#      `xcodebuild test` 整段包進 `scripts/ops/simulator-lock.sh`（mkdir 原子 lock，比照 supabase-lock.sh
+#      最小複製，LS-70）——專屬機彼此 UDID 不同，鎖不會互相競爭；只有退回共用第一台時才會真的排隊。
+#   3. CI（`CI=true`）維持共用第一台、不建、不查專屬機——CI 是單一 runner、且每個 workflow run 在各自獨立
+#      的 VM 上，devices 互不共用，`simctl create` 建出的專屬模擬器也不會被下一輪重用，只會白建。
+# 呼叫端（push-gate.sh／CI）不變：仍只是把整段輸出塞進 `-destination`；push-gate.sh 另外用這裡的 UDID 包鎖。
 #
-# LS-10 的坑仍在：`simctl list devices available` 的分節標題只印 major.minor，但 `-destination`／`simctl create`
-# 要精確比對到實際安裝的 runtime 版本，用 `simctl list runtimes` 查出來；查不到就退回分節標題本身。
+# LS-10 的坑仍在：`simctl list devices available` 的分節標題只印 major.minor，但 `simctl create` 的
+# runtime 參數要精確比對到實際安裝的版本，用 `simctl list runtimes` 查出來；查不到就退回分節標題本身。
 set -uo pipefail
-
-here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 list=$(xcrun simctl list devices available)
 
-# 單一 pass 取「清單第一台可用 iPhone」的 os 分節標題、機型名、UDID：
-#   - os／name 沿用 LS-10 的邏輯不變；
-#   - udid 是共用 fallback 用的第一台裝置 UDID，也用來在強制共用模式下當 lock 的鍵。
+# 單一 pass 取「清單第一台可用、非本腳本建立的 iPhone」的 os 分節標題、機型名、UDID：
+#   - name／udid 是共用 fallback 用的第一台裝置；devicetype／runtime 建專屬機也靠它們當範本。
+#   - LS-83 R2 F2：必須排除本腳本自己建的專屬機（名稱 `<票號>-<機型無空白>`，如 `LS-101-iPhone17Pro`）——
+#     它一樣含 "iPhone" 子字串，一旦排在清單較前面（例如原廠機被刪除重建、或未來 simctl 排序改變），
+#     name 會被誤判成這台專屬機，後續 devicetype／runtime 查找全部落空、shared_udid 也指錯裝置
+#     （merge-reviewer R2 F2 用「專屬機排第一」重現）。
 first=$(printf '%s\n' "$list" | awk '
   /^-- iOS / {
     os = $0
@@ -35,9 +40,11 @@ first=$(printf '%s\n' "$list" | awk '
   }
   /iPhone/ {
     line = $0
-    name = line
-    sub(/^[ \t]*/, "", name)
-    sub(/ *\(.*/, "", name)
+    cand = line
+    sub(/^[ \t]*/, "", cand)
+    sub(/ *\(.*/, "", cand)
+    if (cand ~ /^(LS-[0-9]+|main)-/) next
+    name = cand
     udid = line
     sub(/^[^(]*\(/, "", udid)
     sub(/\).*/, "", udid)
@@ -54,10 +61,6 @@ if [ -z "$name" ] || [ -z "$header_os" ] || [ -z "$shared_udid" ]; then
   exit 1
 fi
 
-exact_os=$(xcrun simctl list runtimes | grep -m1 "^iOS ${header_os} " \
-  | sed -E 's/^iOS [0-9.]+ \(([0-9.]+)( - .*)?\).*/\1/')
-os="${exact_os:-$header_os}"
-
 # ---- 本 worktree 專屬模擬器的名稱：<票號>-<機型無空白>（票號取自 worktree 目錄名或分支名，抓不到用 main）----
 extract_ticket() { printf '%s' "$1" | grep -oE 'LS-[0-9]+' | head -1; }
 toplevel=$(git rev-parse --show-toplevel 2>/dev/null) || toplevel=$(pwd)
@@ -68,8 +71,12 @@ ticket=$(extract_ticket "$(basename "$toplevel")")
 model_slug=$(printf '%s' "$name" | tr -d '[:space:]')
 dedicated_name="${ticket}-${model_slug}"
 
-find_udid_by_name() {   # $1＝精確裝置名；印第一個相符裝置（任何 runtime、任何狀態）的 UDID，沒有就空字串
-  xcrun simctl list devices 2>/dev/null | awk -v n="$1" '
+find_udid_by_name() {   # $1＝精確裝置名；印第一個相符「可用」裝置（任何 runtime）的 UDID，沒有就空字串
+  # LS-83 R2 m3：查 `devices available`（非全部 devices）——Xcode／runtime 升級後舊 runtime 被移除，
+  # 專屬機會變成 unavailable 但仍留在「全部 devices」清單裡；若還照樣選中它，`xcodebuild test` 對一台
+  # unavailable 的裝置永遠打不動，push-gate 從此對這個 worktree 永久紅。查不到「可用」的就會落空，
+  # 呼叫端自然改用 create_dedicated() 建一台新的（同名可以並存，不影響）。
+  xcrun simctl list devices available 2>/dev/null | awk -v n="$1" '
     {
       line = $0
       nm = line
@@ -107,7 +114,7 @@ udid=
 if [ "${CI:-}" = true ]; then
   udid=$shared_udid
 else
-  # DETECT_SIMULATOR_SHARED=1：強制走共用＋lock，連本 worktree 專屬模擬器是否已存在都不查
+  # DETECT_SIMULATOR_SHARED=1：強制走共用，連本 worktree 專屬模擬器是否已存在都不查
   # （這支旗標本身就是「不要用專屬模擬器」的手動逃生口／自測用）。
   if [ "${DETECT_SIMULATOR_SHARED:-0}" != 1 ]; then
     udid=$(find_udid_by_name "$dedicated_name")
@@ -115,13 +122,7 @@ else
       udid=$(create_dedicated) || udid=
     fi
   fi
-  if [ -z "$udid" ]; then
-    lock_dir="${DETECT_SIMULATOR_LOCK_DIR:-/tmp/simulator-lock-${shared_udid}}"
-    udid=$(bash "$here/../ops/simulator-lock.sh" --dir "$lock_dir" -- printf '%s' "$shared_udid") || {
-      echo "✗ detect-simulator：等待共用模擬器 lock 失敗（${lock_dir}）" >&2
-      exit 1
-    }
-  fi
+  [ -n "$udid" ] || udid=$shared_udid   # 找不到／建立失敗／強制共用：直接回共用第一台，序列化交給呼叫端
 fi
 
 printf 'platform=iOS Simulator,id=%s\n' "$udid"

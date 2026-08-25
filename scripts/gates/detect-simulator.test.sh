@@ -75,8 +75,16 @@ case "$cmd" in
 esac
 STUB
 chmod +x "$work/bin/xcrun"
+# 測試用 xcodebuild 假身（LS-83 R2 F1）：只吃一個「秒數」參數，睡那麼久後印一個可辨識的完成標記——
+# 用來驗證 push-gate.sh 現在把整段 xcodebuild test 包進 simulator-lock.sh（鍵＝UDID）這個機制本身，
+# 不需要真的跑 xcodebuild 或依賴 push-gate.sh。
+cat > "$work/bin/xcodebuild" <<'STUB'
+#!/bin/bash
+sleep "${1:-0}"
+echo "xcodebuild-stub-done"
+STUB
+chmod +x "$work/bin/xcodebuild"
 export PATH="$work/bin:$PATH"
-export DETECT_SIMULATOR_LOCK_DIR="$work/simlock"   # 全程用測試自己的鎖目錄，不碰本機真正 /tmp/simulator-lock-*
 # GitHub Actions runner 對每個 step 都設 CI=true——不清掉的話，本檔案繼承來的環境會讓 detect-simulator.sh
 # 把每個情境都判成 CI 模式（不查／不建專屬模擬器、不鎖），非 CI 情境的斷言全部假紅（PR #154 CI rules 紅、
 # coordinator 2026-08-25 回報）。這裡統一清成「非 CI」，需要 CI 模式的情境（⑥）自己用 `CI=true` 前綴覆蓋
@@ -115,27 +123,39 @@ out3=$(STUB_DB="$db3" run_in "$work/wt/maincheckout")
 is_dest_ok '③ 主 checkout（無票號）輸出合法' "$out3"
 has '③ db 記到 main- 開頭的專屬裝置' "$(cat "$db3")" 'main-iPhone17Pro'
 
-# ---- ④ DETECT_SIMULATOR_SHARED=1：直接退回共用第一台，不查也不建專屬 ----
+# ---- ④ DETECT_SIMULATOR_SHARED=1：直接退回共用第一台，不查也不建專屬、也不再持鎖（LS-83 R2 F1：
+#        R1 版本會在這裡短暫持鎖，但鎖了也沒用——早在 xcodebuild test 真正跑之前就放掉；序列化現在
+#        整個移到 push-gate.sh 包 xcodebuild 那段。detect-simulator.sh 自己應該立刻回、不等任何東西，
+#        即使湊巧有東西佔著一個同名的舊式鎖路徑也一樣，才不會憑空多一個等待點）----
 db4="$work/db4"; fresh_db "$db4"
-out4=$(STUB_DB="$db4" DETECT_SIMULATOR_SHARED=1 run_in "$work/wt/LS-101")
-u4=$(id_of "$out4")
-if [ "$u4" = SHARED-UDID ]; then echo "✓ ④ 強制共用 → 回共用第一台 UDID"; else echo "✗ ④ 應為 SHARED-UDID，實得 ${u4}" >&2; fail=1; fi
-if grep -qF 'LS-101' "$db4"; then echo "✗ ④ 強制共用不該建立專屬裝置" >&2; fail=1; else echo "✓ ④ 強制共用未建立專屬裝置"; fi
-
-# ---- ⑤ DETECT_SIMULATOR_SHARED=1 第二個等 lock：先背景佔住共用 lock，第二次呼叫要等它放掉才回 ----
-db5="$work/db5"; fresh_db "$db5"
-rm -rf "$work/simlock"
-bash "${root}/scripts/ops/simulator-lock.sh" --dir "$work/simlock" -- sleep 3 &
+rm -rf "$work/stale-old-style-lock"
+bash "${root}/scripts/ops/simulator-lock.sh" --dir "$work/stale-old-style-lock" -- sleep 5 &
 holder_pid=$!
 sleep 0.5
 t0=$(date +%s)
-out5=$(STUB_DB="$db5" DETECT_SIMULATOR_SHARED=1 run_in "$work/wt/LS-102")
+out4=$(STUB_DB="$db4" DETECT_SIMULATOR_SHARED=1 run_in "$work/wt/LS-101")
+t1=$(date +%s)
+kill "$holder_pid" 2>/dev/null; wait "$holder_pid" 2>/dev/null
+u4=$(id_of "$out4")
+if [ "$u4" = SHARED-UDID ]; then echo "✓ ④ 強制共用 → 回共用第一台 UDID"; else echo "✗ ④ 應為 SHARED-UDID，實得 ${u4}" >&2; fail=1; fi
+if grep -qF 'LS-101' "$db4"; then echo "✗ ④ 強制共用不該建立專屬裝置" >&2; fail=1; else echo "✓ ④ 強制共用未建立專屬裝置"; fi
+if [ $((t1 - t0)) -le 1 ]; then echo "✓ ④ 立即回傳、detect-simulator.sh 自己不再持鎖（$((t1 - t0))s）"; else echo "✗ ④ 應立即回傳，實花 $((t1 - t0))s（detect-simulator.sh 是不是還在碰鎖？）" >&2; fail=1; fi
+
+# ---- ⑤ push-gate 現在把「執行 xcodebuild test」整段包進 simulator-lock.sh、以 destination 的 UDID 為鍵
+#        （LS-83 R2 F1）：這裡直接驗那個機制——同一把鎖下先背景佔住（模擬第一個 worktree 正在跑 xcodebuild
+#        test），第二個 xcodebuild（stub）呼叫要等它放掉才跑，且確實執行到（有輸出），不是被跳過 ----
+lock5="$work/pushgate-lock"
+rm -rf "$lock5"
+bash "${root}/scripts/ops/simulator-lock.sh" --dir "$lock5" -- xcodebuild 3 >/dev/null 2>&1 &
+holder_pid=$!
+sleep 0.5
+t0=$(date +%s)
+out5=$(bash "${root}/scripts/ops/simulator-lock.sh" --dir "$lock5" -- xcodebuild 0 2>/dev/null)
 t1=$(date +%s)
 wait "$holder_pid" 2>/dev/null
 waited=$((t1 - t0))
-if [ "$waited" -ge 2 ]; then echo "✓ ⑤ 強制共用時第二個等了約 ${waited}s（lock 被佔用）"; else echo "✗ ⑤ 應等待 ≥2s，實得 ${waited}s（lock 沒發揮作用？）" >&2; fail=1; fi
-u5=$(id_of "$out5")
-if [ "$u5" = SHARED-UDID ]; then echo "✓ ⑤ 等到 lock 後仍回共用第一台 UDID"; else echo "✗ ⑤ 應為 SHARED-UDID，實得 ${u5}" >&2; fail=1; fi
+if [ "$waited" -ge 2 ]; then echo "✓ ⑤ 同一 UDID 第二個 xcodebuild（stub）等了約 ${waited}s 才跑"; else echo "✗ ⑤ 應等待 ≥2s，實得 ${waited}s（push-gate 用的鎖沒發揮作用？）" >&2; fail=1; fi
+has '⑤ 等到 lock 後第二個 xcodebuild 確實有執行（有輸出，不是被跳過）' "$out5" 'xcodebuild-stub-done'
 
 # ---- ⑥ CI 模式（CI=true）：不建、不 lock、直接回共用第一台，即使 lock 被佔住也不必等 ----
 db6="$work/db6"; fresh_db "$db6"
@@ -163,6 +183,16 @@ t1=$(date +%s)
 u7=$(id_of "$out7")
 if [ "$u7" = SHARED-UDID ]; then echo "✓ ⑦ 建立失敗 → 退回共用第一台 UDID"; else echo "✗ ⑦ 應為 SHARED-UDID，實得 ${u7}" >&2; fail=1; fi
 if [ $((t1 - t0)) -le 2 ]; then echo "✓ ⑦ lock 無人佔用時立即回（$((t1 - t0))s）"; else echo "✗ ⑦ 不該等待（花了 $((t1 - t0))s）" >&2; fail=1; fi
+
+# ---- ⑧ 專屬機排第一台時仍選到原廠機（LS-83 R2 F2）：db 裡先放一台名稱像專屬機的裝置（一樣含 "iPhone"
+#        子字串），再放真正的原廠機——「清單第一台可用 iPhone」的偵測不能被同名污染挑錯，否則後續
+#        devicetype／runtime 查找全部落空、shared_udid 也會指錯裝置 ----
+db8="$work/db8"
+printf 'LS-999-iPhoneAir\tFAKE-DEDICATED-UDID\t26.0\niPhone 17 Pro\tREAL-STOCK-UDID\t26.0\n' > "$db8"
+mkdir -p "$work/wt/LS-104"
+out8=$(STUB_DB="$db8" CI=true run_in "$work/wt/LS-104")
+u8=$(id_of "$out8")
+if [ "$u8" = REAL-STOCK-UDID ]; then echo "✓ ⑧ 專屬機排第一台時仍正確選到原廠機"; else echo "✗ ⑧ 應為 REAL-STOCK-UDID，實得 ${u8}（挑到專屬機了？）" >&2; fail=1; fi
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ detect-simulator／simulator-lock 自測通過"
