@@ -1301,7 +1301,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -2116,7 +2121,12 @@
                           },
                           "layout": "vertical",
                           "gap": 7,
-                          "padding": "$sp-label",
+                          "padding": [
+                            "$print-edge",
+                            "$print-edge",
+                            "$print-edge-bottom",
+                            "$print-edge"
+                          ],
                           "children": [
                             {
                               "type": "frame",
@@ -2716,7 +2726,12 @@
               },
               "layout": "vertical",
               "gap": 7,
-              "padding": "$sp-label",
+              "padding": [
+                "$print-edge",
+                "$print-edge",
+                "$print-edge-bottom",
+                "$print-edge"
+              ],
               "children": [
                 {
                   "type": "frame",
@@ -4008,7 +4023,12 @@
                         "blur": 12
                       },
                       "layout": "vertical",
-                      "padding": "$sp-label",
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
                       "children": [
                         {
                           "type": "frame",
@@ -6996,7 +7016,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -7879,7 +7904,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -11753,7 +11783,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -12214,7 +12249,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -13770,7 +13810,7 @@
                           "fill": "#553040",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "紙永遠是淺表面、墨永遠是深色，不隨關燈反轉",
+                          "content": "紙永遠是淺表面、墨永遠是深色，不隨關燈反轉。在 $print-paper 上：14.92:1 淺紙／12.55:1 深紙",
                           "lineHeight": 1.45,
                           "fontFamily": "Noto Sans TC",
                           "fontSize": 13,
@@ -13931,7 +13971,7 @@
                           "fill": "#553040",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "同上；Lab Imprint 為裝飾性文字，建議標 accessibilityHidden",
+                          "content": "同上；Lab Imprint 為裝飾性文字，建議標 accessibilityHidden。在 $print-paper 上：9.66:1 淺紙／8.13:1 深紙",
                           "lineHeight": 1.45,
                           "fontFamily": "Noto Sans TC",
                           "fontSize": 13,
@@ -20629,6 +20669,276 @@
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "最緊，表示「這兩個是一件事」",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "r6QNL2",
+                  "name": "r0",
+                  "width": "fill_container",
+                  "fill": "#FBEBEC",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "oJ0CX",
+                      "name": "c",
+                      "width": 186,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "E6aKL",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "print-edge",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zeYoq",
+                      "name": "c",
+                      "width": 110,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "s90Dz3",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "8",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-num",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZwWxa",
+                      "name": "c",
+                      "width": 110,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "nCwmX",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "8",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-num",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "D7TYO",
+                      "name": "c",
+                      "width": 408,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "R7dWeF",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "沖印品白邊：上／右／左三邊",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "b7QyOo",
+                      "name": "c",
+                      "width": 408,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "uBRLQ",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "與 print-edge-bottom 現值相同（8）但刻意不合併——語意各自獨立（上緣三邊 vs 下緣壓印行），合併需重新處理所有已引用兩個 token 的沖印品 Print（LS-72 F6）",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "EWCvp",
+                  "name": "r0",
+                  "width": "fill_container",
+                  "fill": "#F5E1E3",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "f15Nd4",
+                      "name": "c",
+                      "width": 186,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "f3294",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "print-edge-bottom",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nREyH",
+                      "name": "c",
+                      "width": 110,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "oXUvm",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "8",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-num",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Ex4zx",
+                      "name": "c",
+                      "width": 110,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "hEKZO",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "8",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-num",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BPOmO",
+                      "name": "c",
+                      "width": 408,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "SBhgD",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "沖印品白邊：下緣（壓印行 Imprint Row 所在）",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "eQ1Ac",
+                      "name": "c",
+                      "width": 408,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Hg9VJ",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "下緣厚度由壓印行（日期戳等）「掙來」，未來若壓印行內容加高，下緣會與上緣分歧——保留獨立 token 才撐得住這個差異",
                           "lineHeight": 1.45,
                           "fontFamily": "Noto Sans TC",
                           "fontSize": 13,
@@ -31925,7 +32235,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": 180,
-                      "content": "字標素材：v1（生成初版）逐像素比對後判定為各向異性拉伸偽造等大、非重畫，已淘汰。v3（真重畫）2026-08-24 複驗通過：四字高 423/423/423/423px（差 0.0%）、寬 344/279/265/387px（與原稿/v2 全異＝真重畫非拉伸）、筆寬比 0.886-0.973、覆蓋率極差 7.63pp、字距中心距差 1.4%（非單調）。素材：mengya-diary-crayon-v3.png（1860×887，透明）。舊檔 mengya-diary-crayon-equal.png 保留於 design/ 供對照，不再引用。",
+                      "content": "字標素材：v1（生成初版）逐像素比對後判定為各向異性拉伸偽造等大、非重畫，已淘汰。v3（真重畫）2026-08-24 複驗通過：四字高 423/423/423/423px（差 0.0%）、寬 344/279/265/387px（與原稿/v2 全異＝真重畫非拉伸）、筆寬比 0.886-0.973、覆蓋率極差 7.63pp、字距中心距差 1.4%（非單調）。素材：mengya-diary-crayon-v3.png（1860×887，透明）。舊檔 mengya-diary-crayon-equal.png 已刪，歷史版本 git 可取回。",
                       "lineHeight": 1.4,
                       "fontFamily": "Noto Sans TC",
                       "fontSize": 12,
@@ -34760,7 +35070,12 @@
                   },
                   "layout": "vertical",
                   "gap": 7,
-                  "padding": "$sp-label",
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -36499,7 +36814,12 @@
                       },
                       "layout": "vertical",
                       "gap": 7,
-                      "padding": "$sp-label",
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
                       "children": [
                         {
                           "type": "frame",
@@ -36781,7 +37101,12 @@
                       },
                       "layout": "vertical",
                       "gap": 7,
-                      "padding": "$sp-label",
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
                       "children": [
                         {
                           "type": "frame",
@@ -37063,7 +37388,12 @@
                       },
                       "layout": "vertical",
                       "gap": 7,
-                      "padding": "$sp-label",
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
                       "children": [
                         {
                           "type": "frame",
