@@ -94,6 +94,29 @@ final class AuthStoreTests: XCTestCase {
         XCTAssertFalse(store.isAuthenticated())
     }
 
+    func test_signOut_failure_doesNotClearSessionAndPropagatesError() async {
+        // 順修（LS-17 收尾 sweeper F2）：`StubAuthService.setSignOutHandler` 原本零呼叫點，
+        // `SettingsView.signOut()` 的 `errorMessage` alert 分支（`catch { errorMessage =
+        // AppError.map(error).userFacingMessage }`）也從未被驗證過——`authService.signOut()`
+        // 丟錯時，`AuthStore.signOut()` 裡 `session = nil` 那行（見該方法實作）根本執行不到，
+        // 錯誤必須原樣往上拋，SettingsView 的 catch 分支才接得住並顯示 alert。
+        let session = AuthSession(userID: userID, email: "a@example.com", expiresAt: .distantFuture)
+        let stub = StubAuthService(currentSession: session)
+        stub.setSignOutHandler { throw AppError.network(message: "offline") }
+        let store = AuthStore(authService: stub)
+        XCTAssertNotNil(store.session)
+
+        do {
+            try await store.signOut()
+            XCTFail("signOut() 失敗時必須把錯誤往上拋，不能吞掉")
+        } catch {
+            XCTAssertEqual(AppError.map(error), .network(message: "offline"))
+        }
+
+        XCTAssertNotNil(store.session, "signOut 失敗不該清掉 session——使用者仍是登入狀態")
+        XCTAssertTrue(store.isAuthenticated())
+    }
+
     func test_refreshSnapshot_picksUpBackgroundChange() {
         // 模擬「這個 store 沒有主動呼叫、但背景已經改變 session」（例如 SDK 的
         // autoRefreshToken 計時器）——RootView 在 scenePhase 轉 active 時呼叫這個方法補撿。
