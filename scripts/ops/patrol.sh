@@ -284,27 +284,50 @@ fi
 #      simctl list devices -j 不用 jq 解析（patrol.sh 一貫不依賴 jq，只有測試驗證用它）：純文字 pretty-print
 #      每個裝置物件一行一個 key，用 awk 以「單行 {／}」為物件邊界的簡易狀態機取四個欄位。
 SIM_LINES=; J_SIM=; sim_flagged=0
-sim_raw=$(xcrun simctl list devices -j 2>/dev/null) || sim_raw=
+BOOT_LINES=; J_BOOT=; boot_total=0; boot_flagged=0; boot_nonexempt=
+# LS-100：可注入 SIMCTL_LIST_JSON 直接餵合成 JSON（patrol.test.sh 用）；未設就照常呼叫真的 xcrun。
+sim_raw="${SIMCTL_LIST_JSON:-$(xcrun simctl list devices -j 2>/dev/null)}" || sim_raw=
 if [ -n "$sim_raw" ]; then
   sim_rows=$(printf '%s\n' "$sim_raw" | awk '
     { t = $0; sub(/^[ \t]*/, "", t); sub(/[ \t]*$/, "", t) }
-    t == "{" { name=""; udid=""; last=""; dpath=""; next }
+    t == "{" { name=""; udid=""; last=""; dpath=""; state=""; next }
     t ~ /^"name"[ \t]*:/        { v=t; sub(/^"name"[ \t]*:[ \t]*"/, "", v); sub(/",?$/, "", v); name=v; next }
     t ~ /^"udid"[ \t]*:/        { v=t; sub(/^"udid"[ \t]*:[ \t]*"/, "", v); sub(/",?$/, "", v); udid=v; next }
     t ~ /^"lastBootedAt"[ \t]*:/{ v=t; sub(/^"lastBootedAt"[ \t]*:[ \t]*"/, "", v); sub(/",?$/, "", v); last=v; next }
     t ~ /^"dataPath"[ \t]*:/    { v=t; sub(/^"dataPath"[ \t]*:[ \t]*"/, "", v); sub(/",?$/, "", v); gsub(/\\\//, "/", v); dpath=v; next }
+    t ~ /^"state"[ \t]*:/      { v=t; sub(/^"state"[ \t]*:[ \t]*"/, "", v); sub(/",?$/, "", v); state=v; next }
     t ~ /^}/ {
       # 陣列／物件收尾（"]"、外層 "}"）也可能以裸 "}" 開頭（尾端多個收尾大括號連在一起）——印過就清空，
       # 避免最後一台裝置的紀錄被檔尾那些收尾大括號重複印出。
       if (name != "" && udid != "") {
         # tab 是 bash `read` 永遠視為「IFS 空白」的字元、連續 tab 會被當一個分隔符壓縮、空欄位會被吞掉
-        # （即使 IFS 只設成單一 tab 也一樣）——lastBootedAt 缺欄位時改印 "-" 佔位，不留空欄位。
-        printf "%s\t%s\t%s\t%s\n", name, udid, (last == "" ? "-" : last), dpath
-        name=""; udid=""; last=""; dpath=""
+        # （即使 IFS 只設成單一 tab 也一樣，LS-100 加 state 這個新尾欄時實測踩到：dpath 缺欄位留空、
+        # 後面的 state 就被吞掉、往前遞補到 dpath 的位置）——lastBootedAt／dataPath／state 缺欄位一律
+        # 改印 "-" 佔位，不留空欄位。
+        printf "%s\t%s\t%s\t%s\t%s\n", name, udid, (last == "" ? "-" : last), (dpath == "" ? "-" : dpath), (state == "" ? "-" : state)
+        name=""; udid=""; last=""; dpath=""; state=""
       }
     }
   ')
-  while IFS=$'\t' read -r sim_name sim_udid sim_last sim_dpath; do
+  # ---- Booted 模擬器（LS-100）：任何時候不該有 >1 台非 demo-* 的模擬器同時 Booted（用完忘記關）；
+  #      demo-* 開頭的名稱豁免（demo worktree 的持久機，見 docs/COLLABORATION.md）。共用上面同一份
+  #      sim_rows（同一次 xcrun 呼叫），不再多打一次。
+  while IFS=$'\t' read -r boot_name boot_udid _boot_last _boot_dpath boot_state; do
+    [ -n "$boot_name" ] || continue
+    [ "$boot_state" = Booted ] || continue
+    boot_total=$((boot_total + 1))
+    case "$boot_name" in
+      demo-*) boot_exempt=true ;;
+      *) boot_exempt=false ;;
+    esac
+    J_BOOT="${J_BOOT:+${J_BOOT},}{\"name\":$(json_str "$boot_name"),\"udid\":$(json_str "$boot_udid"),\"exempt\":${boot_exempt}}"
+    if [ "$boot_exempt" = false ]; then
+      boot_nonexempt="${boot_nonexempt}${boot_name}"$'\t'"${boot_udid}"$'\n'
+    fi
+  done <<EOF
+$sim_rows
+EOF
+  while IFS=$'\t' read -r sim_name sim_udid sim_last sim_dpath sim_state; do
     [ -n "$sim_name" ] || continue
     case "$sim_name" in
       LS-[0-9]*-*|main-*) ;;   # 只管 detect-simulator.sh 建的專屬裝置，其餘模擬器不是巡檢管轄範圍
@@ -318,7 +341,7 @@ if [ -n "$sim_raw" ]; then
       sim_epoch=$(TZ=UTC date -j -f '%Y-%m-%dT%H:%M:%SZ' "$sim_last" +%s 2>/dev/null) \
         || sim_epoch=$(date -d "$sim_last" +%s 2>/dev/null) || sim_epoch=
     fi
-    if [ -z "$sim_epoch" ] && [ -n "$sim_dpath" ]; then
+    if [ -z "$sim_epoch" ] && [ -n "$sim_dpath" ] && [ "$sim_dpath" != - ]; then
       sim_dir=$(dirname "$sim_dpath")
       [ -e "$sim_dir" ] && sim_epoch=$(file_epoch "$sim_dir")
     fi
@@ -334,20 +357,33 @@ if [ -n "$sim_raw" ]; then
 $sim_rows
 EOF
 fi
+# 只在「同時有 >1 台非 demo-* 的 Booted 裝置」才算異常（單台通常是正在用的那台，不該標）；
+# 逐台各發一筆 flag（同專屬模擬器段的慣例），--brief／--json 都靠既有的 add_flag／J_FLAGS 機制帶出去。
+nonexempt_boot_count=$(printf '%s' "$boot_nonexempt" | awk 'END{print NR+0}')
+if [ "$nonexempt_boot_count" -gt 1 ]; then
+  while IFS=$'\t' read -r boot_name boot_udid; do
+    [ -n "$boot_name" ] || continue
+    boot_flagged=$((boot_flagged + 1))
+    BOOT_LINES="${BOOT_LINES}  ⚠ ${boot_name}（${boot_udid}）→ xcrun simctl shutdown ${boot_udid}"$'\n'
+    add_flag "[Booted 模擬器 ${boot_name}] 同時有 ${nonexempt_boot_count} 台非 demo-* 模擬器 Booted、用完沒關 → xcrun simctl shutdown ${boot_udid}"
+  done <<EOF
+$boot_nonexempt
+EOF
+fi
 
 # ---- 輸出 ----
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"stale_simulators":[%s],"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"stale_simulators":[%s],"booted_simulators":[%s],"booted_flagged":%s,"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
-      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$J_SIM" "$J_FLAGS"
+      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$J_SIM" "$J_BOOT" "$(json_num "$boot_flagged")" "$J_FLAGS"
     ;;
   brief)
-    echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev} · 專屬模擬器逾期 ${sim_flagged}"
+    echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev} · 專屬模擬器逾期 ${sim_flagged} · Booted 異常 ${boot_flagged}"
     [ -n "$fetch_warn" ] && echo "${fetch_warn}"
     case "$lock_line" in free) ;; *) echo "Supabase lock：${lock_line}" ;; esac
     if [ -n "$FLAGS" ]; then printf '%s' "$FLAGS"; else echo "巡檢：無異常（git／PR 面；Linear 對照仍需 list_issues）"; fi
@@ -372,6 +408,8 @@ case "$MODE" in
     printf '%s\n' "$lock_line" | sed 's/^/  /'
     echo "== 專屬模擬器（scripts/gates/detect-simulator.sh 建的 <票號>-<機型>；LS-83；>7 天未用只列不刪）"
     if [ -n "$SIM_LINES" ]; then printf '%s' "$SIM_LINES"; else echo "  （無 xcrun 或無 >7 天未用的專屬模擬器）"; fi
+    echo "== Booted 模擬器（LS-100；demo-* 豁免；>1 台非豁免同時 Booted＝用完沒關）"
+    if [ -n "$BOOT_LINES" ]; then printf '%s' "$BOOT_LINES"; else echo "  （無異常；Booted ${boot_total} 台，非 demo-* ${nonexempt_boot_count} 台）"; fi
     echo "== Linear（需 orchestrator 用 MCP 對照：Ready 無人接／In Progress 無 worktree／QA 但 test 未含）"
     echo "  → list_issues state in (Ready, In Progress, In Review, QA)，對照上表 worktree／PR"
     ;;
