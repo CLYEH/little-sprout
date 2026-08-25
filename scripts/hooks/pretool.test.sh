@@ -1,6 +1,9 @@
 #!/bin/bash
-# pretool.sh 自測（LS-88）。CI rules job 每個 PR 都跑。「前饋必有反饋」對 gate 本身也適用：
-# H1–H3 若退化（字面比對變寬鬆、fail-closed 漏接）這裡會紅。
+# pretool.sh 自測（LS-88；R2 補 merge-reviewer R1 blocker/major/informational——
+# https://github.com/CLYEH/little-sprout/pull/157#issuecomment-5413222970）。CI rules job
+# 每個 PR 都跑。「前饋必有反饋」對 gate 本身也適用：H1–H3 若退化（字面比對變寬鬆、fail-closed
+# 漏接）這裡會紅。R1 抓到的洞（多行 command 只看第一行、grep 異常當沒命中放行、.env／run.sh
+# 邊界要求空白或行尾、放行形式整條字串比對）都各自補了對應的正負樣本，避免同一個洞回來。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -81,20 +84,77 @@ expect 'H3⑥ 無關命令（allow）' 0 "$(bash_json 'ls supabase/migrations')"
 expect '非 Bash／Read（Write，allow）' 0 '{"tool_name":"Write","tool_input":{"file_path":"foo.txt"}}'
 
 # ============================================================
-# fail-closed：JSON 壞掉／stdin 空／解析工具皆缺
+# R1 F1（blocker）：多行 command 只評估第一行——H1/H2/H3 各補一組「違規在第二行」
+# ============================================================
+# 注意：JSON 字串裡的換行必須是 `\n`（反斜線加 n 兩個字元，讓 jq／python3 解成真正的換行），
+# 不能是原始換行位元組——原始換行在嚴格 JSON 裡是未跳脫的控制字元，jq／python3 兩邊都會直接
+# parse error（試過：兩邊都拒絕），那樣測到的只是「JSON 壞掉」的 fail-closed 分支，不是 F1 真正
+# 要驗的「多行 command 有沒有被完整讀進來」。
+expect 'F1-H1 多行：違規在第二行（deny）' 2 "$(bash_json 'git add -A\ngit commit --no-verify -m x')"
+expect 'F1-H1b 多行：force push 在第二行（deny）' 2 "$(bash_json 'echo prep\ngit push --force origin main')"
+expect 'F1-H2 多行：cat .env 在第二行（deny，R1 實測案例）' 2 "$(bash_json 'cd /tmp\ncat .env')"
+expect 'F1-H3 多行：db reset 在第二行（deny）' 2 "$(bash_json 'echo start\nsupabase db reset')"
+expect 'F1 多行：違規在第一行、第二行無關（deny，回歸）' 2 "$(bash_json 'cat .env\necho done')"
+
+# ============================================================
+# R1 F2（blocker）：grep 異常（非 0/1）須 fail-closed，不當「沒命中」放行
+# ============================================================
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+bash_bin=$(bash -c 'type -P bash' 2>/dev/null || echo /bin/bash)
+real_jq=$(bash -c 'type -P jq' 2>/dev/null || true)
+real_python3=$(bash -c 'type -P python3' 2>/dev/null || true)
+real_grep=$(bash -c 'type -P grep' 2>/dev/null || echo /usr/bin/grep)
+
+mkdir -p "$work/empty" "$work/nogrep" "$work/badgrep"
+[ -n "$real_jq" ] && ln -sf "$real_jq" "$work/nogrep/jq"
+[ -n "$real_python3" ] && ln -sf "$real_python3" "$work/nogrep/python3"
+[ -n "$real_jq" ] && ln -sf "$real_jq" "$work/badgrep/jq"
+[ -n "$real_python3" ] && ln -sf "$real_python3" "$work/badgrep/python3"
+cat > "$work/badgrep/grep" <<'STUB'
+#!/bin/bash
+exit 2
+STUB
+chmod +x "$work/badgrep/grep"
+
+out=$(printf '%s' "$(bash_json 'echo hi')" | env PATH="$work/nogrep" "$bash_bin" "$pretool" 2>&1); got=$?
+if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+  echo '✓ F2：PATH 缺 grep（deny）'
+else
+  echo "✗ F2：PATH 缺 grep 應 deny（實得 exit ${got}：${out}）" >&2
+  fail=1
+fi
+
+out=$(printf '%s' "$(bash_json 'cat .env')" | env PATH="$work/badgrep" "$bash_bin" "$pretool" 2>&1); got=$?
+if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+  echo '✓ F2：grep 執行異常（regex 弄壞的等價情境，rc=2 一律 deny）'
+else
+  echo "✗ F2：grep 異常應 deny（實得 exit ${got}：${out}）" >&2
+  fail=1
+fi
+
+# ============================================================
+# R1 F3（blocker）：.env／run.sh 邊界要求後接空白或行尾，漏放引號／分號／重導向／命令替換
+# ============================================================
+expect 'F3① cat .env;（deny）' 2 "$(bash_json 'cat .env; echo hi')"
+expect 'F3② cat .env;ls 無空白（deny）' 2 "$(bash_json 'cat .env;ls')"
+expect 'F3③ 單引號包住 .env（deny）' 2 "$(bash_json "cat '.env'")"
+expect 'F3④ 雙引號包住 .env（deny）' 2 "$(bash_json 'cat ".env"')"
+expect 'F3⑤ 命令替換 $(cat .env)（deny）' 2 "$(bash_json 'echo $(cat .env)')"
+expect 'F3⑥ < 重導向讀 .env（deny，無需具名動詞）' 2 "$(bash_json 'while read l; do echo $l; done < .env')"
+expect 'F3⑦ H3：run.sh 帶結尾分號（deny）' 2 "$(bash_json 'bash supabase/tests/run.sh;')"
+expect 'F3⑧ 回歸：路徑前綴 config/.env 仍判定（deny）' 2 "$(bash_json 'cat config/.env')"
+expect 'F3⑨ 回歸：不相關檔名 myapp.environment 不誤判（allow）' 0 "$(bash_json 'cat myapp.environment')"
+
+# ============================================================
+# 空 stdin／JSON 壞掉／解析工具皆缺
 # ============================================================
 expect 'fail-closed：空 stdin（deny）' 2 ''
 expect 'fail-closed：JSON 語法壞掉（deny）' 2 '{"tool_name":"Bash",'
 expect 'fail-closed：JSON 頂層不是物件（deny）' 2 '[1,2,3]'
 
-# jq／python3 皆缺（PATH 清空）——bash 內建解析全炸，最終仍要 deny。用絕對路徑呼叫 bash
-# 本身（env 底下的 PATH 已清空，裸 "bash" 找不到自己）。
-bash_bin=$(command -v bash || echo /bin/bash)
-work=$(mktemp -d)
-trap 'rm -rf "$work"' EXIT
-mkdir -p "$work/empty" "$work/py-only"
-ln -sf /usr/bin/grep "$work/py-only/grep" 2>/dev/null || true
-real_python3=$(bash -c 'type -P python3' 2>/dev/null || true)
+mkdir -p "$work/py-only"
+[ -n "$real_grep" ] && ln -sf "$real_grep" "$work/py-only/grep"
 [ -n "$real_python3" ] && ln -sf "$real_python3" "$work/py-only/python3"
 
 out=$(printf '%s' "$(bash_json 'echo hi')" | env PATH="$work/empty" "$bash_bin" "$pretool" 2>&1)
@@ -106,8 +166,6 @@ else
   fail=1
 fi
 
-# jq 缺、python3 在（備援成功）：H1 規則仍要正確判斷——證明備援路徑真的有解析出 tool_input，
-# 不是「反正都 deny」矇對。本機／CI 找不到 python3 才略過（極端環境）。
 if [ -n "$real_python3" ]; then
   out=$(printf '%s' "$(bash_json 'git push --no-verify')" | env PATH="$work/py-only" "$bash_bin" "$pretool" 2>&1)
   got=$?
@@ -125,9 +183,20 @@ if [ -n "$real_python3" ]; then
     echo "✗ fail-closed：jq 缺、python3 備援（無關命令期望 exit 0 allow，實得 exit ${got}：${out}）" >&2
     fail=1
   fi
+  out=$(printf '%s' "$(bash_json 'cd /tmp\ncat .env')" | env PATH="$work/py-only" "$bash_bin" "$pretool" 2>&1)
+  got=$?
+  if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+    echo '✓ fail-closed：jq 缺、python3 備援成功（多行 command 仍能正確判定 H2，見 F1）'
+  else
+    echo "✗ fail-closed：jq 缺、python3 備援（多行 command 期望 exit 2 deny，實得 exit ${got}：${out}）" >&2
+    fail=1
+  fi
 else
   echo '⚠ 略過 jq-缺-python3-備援 測試（本機找不到 python3）'
 fi
+
+rm -rf "$work"
+trap - EXIT
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ pretool.sh 自測通過"
