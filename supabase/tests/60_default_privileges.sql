@@ -53,7 +53,8 @@ begin
     'private.feed_sync_albums()',
     'private.feed_sync_media()',
     'private.feed_sync_diaries()',
-    'private.media_storage_sync()'
+    'private.media_storage_sync()',
+    'private.enforce_deletion_attribution()'
   ] loop
     if has_function_privilege('authenticated', v_fn, 'execute') then
       raise exception 'FAIL：authenticated 可以直接執行 %（SECURITY DEFINER trigger 函式）', v_fn;
@@ -539,6 +540,79 @@ begin
   raise notice
     'ok：schema private 的函式除了登記在案的 % 支 invoker 例外，都是 SECURITY DEFINER＋search_path 收斂',
     coalesce(array_length(v_exceptions, 1), 0);
+end;
+$$;
+
+rollback;
+
+begin;
+
+-- ---------------------------------------------------------------------------
+-- 10. LS-57 R2（N1/N2 根治）：albums／diaries／comments 三表的 deleted_at／
+--     deleted_by／family_id 三欄，authenticated 皆不得有 UPDATE 欄位級權限
+--
+-- 為什麼要有這一關：20260825040000_deletion_attribution.sql 的 R1 版本只靠
+-- enforce_deletion_attribution() trigger 擋「建立者直接 UPDATE 竄改 deleted_by／
+-- family_id」，merge-reviewer PR #98 review R2（N1/N2）實測出 albums 的整表
+-- UPDATE grant 讓這個防線繞得過去——trigger 只在「這句 UPDATE 真的執行到」的
+-- 當下才能判斷，判斷不了「呼叫端到底想在同一句 UPDATE 裡塞什麼」。R2 改成欄位級
+-- grant 收斂，這裡機械驗證收斂真的生效——不是等 88_ 用實際 UPDATE 語句間接測出
+-- 來，是直接查 pg_attribute 的 ACL。
+--
+-- diaries／comments 兩張表的整表 UPDATE 早在 LS-48／LS-58 就已經對 authenticated
+-- revoke（RPC-only），這三欄理論上本來就摸不到；這裡仍然逐欄驗證，跟 migration
+-- 加的「雙保險」REVOKE 對應，也讓「這三欄是治理欄位」這件事在測試裡有一個機械
+-- 斷言可以看，不必回頭讀 migration 註解才知道。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_leaky text;
+  v_probe record;
+begin
+  -- 三表三欄，authenticated 對 update 皆須是 false。
+  for v_probe in
+    select * from (values
+      ('albums', 'deleted_at'), ('albums', 'deleted_by'), ('albums', 'family_id'),
+      ('diaries', 'deleted_at'), ('diaries', 'deleted_by'), ('diaries', 'family_id'),
+      ('comments', 'deleted_at'), ('comments', 'deleted_by'), ('comments', 'family_id')
+    ) as t(tbl, col)
+  loop
+    if has_column_privilege('authenticated', format('public.%I', v_probe.tbl), v_probe.col, 'update') then
+      v_leaky := coalesce(v_leaky || '、', '') || format('%s.%s', v_probe.tbl, v_probe.col);
+    end if;
+  end loop;
+
+  if v_leaky is not null then
+    raise exception
+      'FAIL：authenticated 對這些欄位仍有 UPDATE 權限，N1/N2 的欄位級 grant 收斂沒有生效 —— %',
+      v_leaky;
+  end if;
+  raise notice 'ok：albums／diaries／comments 的 deleted_at／deleted_by／family_id 九個欄位，authenticated 皆無 UPDATE 權限（LS-57 R2 N1/N2）';
+end;
+$$;
+
+-- 正向對照：albums 的內容欄位（title／child_id／cover_media_id）不受影響，
+-- 建立者仍能直接編輯——欄位級收斂不能誤傷這三欄，否則 §3「albums」hybrid 模式
+-- 的建立者直接 UPDATE 路徑整個失效。
+do $$
+declare
+  v_missing text;
+  v_probe record;
+begin
+  for v_probe in
+    select * from (values ('title'), ('child_id'), ('cover_media_id')) as t(col)
+  loop
+    if not has_column_privilege('authenticated', 'public.albums', v_probe.col, 'update') then
+      v_missing := coalesce(v_missing || '、', '') || v_probe.col;
+    end if;
+  end loop;
+
+  if v_missing is not null then
+    raise exception
+      'FAIL：albums 的這些內容欄位，authenticated 應該仍有 UPDATE 權限，卻被誤收回了 —— %',
+      v_missing;
+  end if;
+  raise notice 'ok：albums 的 title／child_id／cover_media_id 三個內容欄位，authenticated 仍有 UPDATE 權限（欄位級收斂沒有誤傷 hybrid 模式的建立者直接編輯路徑）';
 end;
 $$;
 
