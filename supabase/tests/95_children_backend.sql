@@ -275,9 +275,10 @@ $$;
 rollback;
 
 -- ===========================================================================
--- 4. family_id 不可變 trigger：任何 UPDATE 想搬動 family_id 一律被擋 (LS040)，
---    不論呼叫者是誰——這裡直接以資料庫層級的身分（bypass RLS）驗證，證明防線不是
---    只靠 RPC 參數沒有 p_family_id，是 trigger 本身真的會擋。
+-- 4. family_id 不可變 trigger：任何 UPDATE 想搬動 family_id 一律被擋 (42501，
+--    LS-57 R2／I1 撤 LS040 對齊 diaries／albums／comments 的裸 42501)，不論呼叫者
+--    是誰——這裡直接以資料庫層級的身分（bypass RLS）驗證，證明防線不是只靠 RPC
+--    參數沒有 p_family_id，是 trigger 本身真的會擋。
 -- ===========================================================================
 begin;
 
@@ -294,12 +295,12 @@ begin
   begin
     update public.children set family_id = v_family_b where id = v_child;
     raise exception 'FAIL：children 的 family_id 竟然可以被直接改掉——immutable trigger 沒有生效';
-  exception when sqlstate 'LS040' then
+  exception when sqlstate '42501' then
     null;  -- ok
   end;
 
   if (select family_id from public.children where id = v_child) <> v_family_a then
-    raise exception 'FAIL：即使拿到 LS040，family_id 實際上還是被改動了';
+    raise exception 'FAIL：即使拿到 42501，family_id 實際上還是被改動了';
   end if;
 
   -- 正向對照：改別的欄位（不含 family_id）不受 trigger 影響
@@ -308,7 +309,7 @@ begin
     raise exception 'FAIL：trigger 誤擋了不含 family_id 的 UPDATE';
   end if;
 
-  raise notice 'ok：children.family_id 建立後不可變 (LS040)，其餘欄位的 UPDATE 不受影響';
+  raise notice 'ok：children.family_id 建立後不可變 (42501，LS-57 R2／I1 撤 LS040)，其餘欄位的 UPDATE 不受影響';
 end;
 $$;
 
