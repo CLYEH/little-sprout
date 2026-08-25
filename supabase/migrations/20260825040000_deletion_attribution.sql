@@ -202,13 +202,16 @@ comment on column public.diaries.deleted_by is
   ' NULL 的情況）呼叫還原或重複軟刪都會拿到 LS027。';
 comment on column public.albums.deleted_by is
   '軟刪這本相簿的人（LS-57，set_album_deleted 內部由'
-  ' private.enforce_deletion_attribution() trigger 推導寫入，呼叫端無法指定）。規則'
-  '同 diaries（NULL 語意見該欄位註解）。R2 起 authenticated 對 deleted_at／'
-  'deleted_by／family_id 三欄已無 UPDATE 欄位級 grant（見下方 REVOKE/GRANT），'
-  '建立者不可能再透過直接 UPDATE 碰到這三欄，只能走 set_album_deleted RPC；trigger'
+  ' private.enforce_deletion_attribution() trigger 推導寫入）。規則同 diaries'
+  '（NULL 語意見該欄位註解）。R2 起 authenticated 對 deleted_at／deleted_by／'
+  'family_id 三欄已無 UPDATE 欄位級 grant（見下方 REVOKE/GRANT），無法透過'
+  ' UPDATE（含直接 .update()）指定或改動，只能走 set_album_deleted RPC；trigger'
   ' 對這三欄的把關現在是 RPC 路徑與 RI 動作的防線，不再是直接 UPDATE 路徑的唯一'
   '防線（R1 曾經是，N1/N2 review 指出光靠 trigger 守不住，見下方 REVOKE/GRANT 段落'
-  '與函式本體的裁量說明）。';
+  '與函式本體的裁量說明）。INSERT 方向不受這個保證涵蓋（R3 F4）：albums 對'
+  ' authenticated 仍是整表 INSERT grant，建立者可以在新增時自己塞 deleted_by，但'
+  ' albums_insert 的 WITH CHECK 綁 created_by = auth.uid()，新建的這一列本來就是'
+  '他自己的，不構成越權，不需要額外收斂（YAGNI）。';
 comment on column public.comments.deleted_by is
   '軟刪這則留言的人（LS-57，set_comment_deleted 內部由'
   ' private.enforce_deletion_attribution() trigger 推導寫入，呼叫端無法指定）。規則'

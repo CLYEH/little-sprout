@@ -171,8 +171,53 @@ swift_enum "$work/retired_back.swift" LS001 LS010 LS040
 migrations "$work/retired_back_mig" LS001 LS010 LS040
 expect 1 '⑩ 白名單登記退役的碼若又出現在 API.md，必須紅（不是真的退役）'   "$work/retired_back.md" "$work/retired_back.swift" "$work/retired_back_mig"   '白名單登記退役，但 API.md §5 又把它列回來了'
 
-# LS-56 R1 I10：§7 對照表寫死「21 組」——樣本被砍或 expect 呼叫漏掉時這裡紅，數字不會靜默漂移
-[ "$count" -eq 21 ] || { echo "✗ 樣本數應為 21，實得 ${count}" >&2; exit 1; }
+# ⑪ LS-57 R3 F1：殭屍方向（白名單登記退役、但 migrations 裡其實已經找不到這個
+#    errcode 了）只在走 repo 預設路徑（未傳自訂 migrations 目錄，即 $3 為空）時
+#    執行——self-test 沒辦法直接餵 $3 給這個分支（一傳 $3 就會被判定為非預設路徑，
+#    正是這個 gating 存在的理由），改用一個臨時的假 git repo：`git rev-parse
+#    --show-toplevel` 會解析到這個假 repo，`root` 因此指向這裡，checker 完全不帶
+#    參數呼叫就會走到真正的預設路徑分支，且三個檔案都是這裡準備的合成內容，不會
+#    動到真正的 repo。
+fake_repo="$work/fake_repo_stale"
+mkdir -p "$fake_repo/docs" "$fake_repo/LittleSprout/Errors" "$fake_repo/supabase/migrations"
+git -C "$fake_repo" init -q
+api_doc "$fake_repo/docs/API.md" LS001 LS010
+swift_enum "$fake_repo/LittleSprout/Errors/AppError.swift" LS001 LS010
+migrations "$fake_repo/supabase/migrations" LS001 LS010   # 刻意不含 LS040
+count=$((count + 1))
+out="$(cd "$fake_repo" && bash "$checker" 2>&1)"
+got=$?
+if [ "$got" -ne 1 ]; then
+  echo "✗ ⑪ 預設路徑下、白名單登記退役的碼在 migrations 裡找不到，必須紅（期望 exit 1，實得 $got）" >&2
+  printf '%s
+' "$out" | sed 's/^/    /' >&2
+  fail=1
+elif ! printf '%s
+' "$out" | grep -qF -- '殭屍條目'; then
+  echo "✗ ⑪（exit 對了，但輸出缺少「殭屍條目」——紅的理由不對）" >&2
+  printf '%s
+' "$out" | sed 's/^/    /' >&2
+  fail=1
+else
+  echo "✓ ⑪ 預設路徑（未傳 migrations-dir）下，白名單登記但 migrations 裡找不到的碼會被判成殭屍條目"
+fi
+#    正向對照：同一個假 repo，migrations 裡真的有 LS040 時，殭屍檢查不該誤觸發
+#    （否則這個分支會對「正常、退役碼還在」的情況也一律紅，gate 就沒用了）。
+migrations "$fake_repo/supabase/migrations" LS001 LS010 LS040
+count=$((count + 1))
+out="$(cd "$fake_repo" && bash "$checker" 2>&1)"
+got=$?
+if [ "$got" -ne 0 ]; then
+  echo "✗ ⑪ 正向對照：白名單登記的碼如果 migrations 裡真的還在，預設路徑不該誤判成殭屍條目（期望 exit 0，實得 $got）" >&2
+  printf '%s
+' "$out" | sed 's/^/    /' >&2
+  fail=1
+else
+  echo "✓ ⑪ 正向對照：預設路徑下，白名單登記的碼若 migrations 裡真的還在，不會誤判成殭屍條目"
+fi
+
+# LS-56 R1 I10：§7 對照表寫死「23 組」——樣本被砍或 expect 呼叫漏掉時這裡紅，數字不會靜默漂移
+[ "$count" -eq 23 ] || { echo "✗ 樣本數應為 23，實得 ${count}" >&2; exit 1; }
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ error-codes-check 自測通過（${count} 組樣本）"

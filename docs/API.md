@@ -243,8 +243,14 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
     不受本次收斂影響。
   - **`deleted_by`／還原鎖**：`deleted_at` 被誰設下，由
     `private.enforce_deletion_attribution()` trigger 記在新欄位 `deleted_by`
-    （呼叫端無法指定，也無法透過直接 `.update()` 指定——R2 起這一欄同樣無 UPDATE
-    欄位級 grant，見下）。建立者只能還原（或重新觸碰）`deleted_by` 是自己的
+    （**無法透過 `UPDATE` 指定**——R2 起這一欄同樣無 UPDATE 欄位級 grant，見下。
+    `INSERT` 方向不受影響：`albums` 對 `authenticated` 仍是整表 INSERT grant，
+    建立者技術上可以在新增時自己塞一個 `deleted_by` 值，但 `albums_insert` 的
+    WITH CHECK 是 `created_by = auth.uid() and family_id in
+    contributor_family_ids()`，只能在自己所屬的家庭、以自己的名義新建一列，這一列
+    本來就歸他處置——不構成越權，只是稽核欄位可能被自己填成任意值，見 §4
+    `set_album_deleted` 的同一則說明，merge-reviewer PR #98 review R3 F4）。
+    建立者只能還原（或重新觸碰）`deleted_by` 是自己的
     `deleted_at`；owner 軟刪的，建立者呼叫 `set_album_deleted` 一律拿 `LS027`。
     **owner 後手移除＝歸屬升級**：owner 對一本已經被建立者自刪的相簿再次移除
     （或還原），`deleted_by` 會改寫成 owner 自己，不會維持建立者不變——owner 的
@@ -640,8 +646,15 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   RPC 是建立者與 owner 共同的唯一路徑；被降級成 viewer 的建立者仍可呼叫（只要求
   仍是該家庭任一角色的成員，不要求仍是 contributor，見上）。
 - **`deleted_by` 記錄與還原鎖**：`deleted_by` 由
-  `private.enforce_deletion_attribution()` trigger 統一推導寫入（呼叫端無法指定，
-  也無法透過直接 `.update()` 繞過——R2 起這欄同樣無 UPDATE 欄位級 grant）——建立者
+  `private.enforce_deletion_attribution()` trigger 統一推導寫入，**無法透過
+  `UPDATE`（不論是這支 RPC 內部還是直接 `.update()`）指定**——R2 起這欄同樣無
+  UPDATE 欄位級 grant。**`INSERT` 方向不受這個保證涵蓋**（merge-reviewer PR #98
+  review R3 F4）：`albums` 對 `authenticated` 仍是整表 INSERT grant，建立者
+  `insert into albums (…, deleted_by) values (…)` 技術上會成功，但
+  `albums_insert` 的 WITH CHECK 只允許 `created_by = auth.uid()` 且屬於自己
+  contributor 的家庭——新建的這一列本來就是他自己的，塞一個任意 `deleted_by`
+  值不構成越權（頂多是自己騙自己「這篇被 owner 移除過」），不是需要另開
+  `BEFORE INSERT` 分支或收 INSERT 欄位級 grant 去堵的洞（YAGNI）。建立者
   只能觸碰 `deleted_by` 是自己的那一本；owner 軟刪的相簿，建立者呼叫這支 RPC
   一律拿到 `LS027`；**owner 可以還原任何一本，也可以對已被建立者自刪的相簿再次
   移除——後者會把 `deleted_by` 升級成 owner 自己，owner 的動作永遠壓過建立者的

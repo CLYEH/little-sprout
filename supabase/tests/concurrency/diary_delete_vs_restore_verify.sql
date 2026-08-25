@@ -16,7 +16,7 @@ begin
   end if;
   if v_deleted_by is distinct from 'd1000000-0000-4000-8000-000000000001'::uuid then
     raise exception
-      'FAIL 併發：deleted_by 應該仍是 owner（a2...1），實際是 %——作者的被擋還原不該動到這一欄',
+      'FAIL 併發：deleted_by 應該仍是 owner（d1...1），實際是 %——作者的被擋還原不該動到這一欄',
       v_deleted_by;
   end if;
 
