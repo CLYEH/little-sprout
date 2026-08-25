@@ -1,7 +1,7 @@
 #!/bin/bash
 # evidence-path-check.sh 的自測（LS-61）。CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對 gate 本身也適用：若檢查退化成只看第一層目錄、把檔名當目錄、漏掉 rename 目的地、
-# 把白名單外的 png 放行、或反過來擋了刪除／掃起工作區，這裡會紅。
+# 把白名單外的 png 放行、大小寫敏感、被引號檔名騙過、非 repo 假綠、或反過來擋了刪除／掃起工作區，這裡會紅。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -53,14 +53,14 @@ g rm -q --cached ls99r1/x.png
 # ④ 非 png 的掃描輸出，靠目錄名擋：ls99r1-review/scan.html → 紅
 mk ls99r1-review/scan.html
 g add ls99r1-review/scan.html
-expect 1 '④ ls99r1-review/scan.html（非 png，目錄層 *review*/）→ 紅' 'ls99r1-review/scan.html'
+expect 1 '④ ls99r1-review/scan.html（非 png，目錄層 *-review*/）→ 紅' 'ls99r1-review/scan.html'
 g rm -q --cached ls99r1-review/scan.html
 
-# ⑤ 目錄名規則看任一層、且不看白名單：docs/design-review/r3/notes.md → 紅
-mk docs/design-review/r3/notes.md
-g add docs/design-review/r3/notes.md
-expect 1 '⑤ 深層目錄 docs/design-review/…（白名單內仍擋）→ 紅' 'docs/design-review/r3/notes.md'
-g rm -q --cached docs/design-review/r3/notes.md
+# ⑤ 目錄名規則看任一層、且不看 png 白名單：docs/img/design-review/r3/shot.png → 紅
+mk docs/img/design-review/r3/shot.png
+g add docs/img/design-review/r3/shot.png
+expect 1 '⑤ 深層目錄 docs/img/design-review/…（png 在白名單內仍擋）→ 紅' 'docs/img/design-review/r3/shot.png'
+g rm -q --cached docs/img/design-review/r3/shot.png
 
 # ⑥ 目錄名無異狀、但 png 落在白名單外 → 紅
 mk Screenshots/home.png
@@ -128,6 +128,42 @@ mk 'LittleSprout/Preview Content/Preview Assets.xcassets/sample.imageset/sample.
 g add 'LittleSprout/Preview Content/Preview Assets.xcassets/sample.imageset/sample.png'
 expect 0 '⑮ LittleSprout/Preview Content/…/sample.png（白名單）→ 綠'
 g rm -q --cached 'LittleSprout/Preview Content/Preview Assets.xcassets/sample.imageset/sample.png'
+
+# ⑯ R1 M1：png 白名單是 docs/img/，不是整個 docs/（repo 最常寫的目錄，放行不會 fail loud）
+mk docs/screenshots/home.png
+g add docs/screenshots/home.png
+expect 1 '⑯ docs/screenshots/home.png（docs/ 非 docs/img/）→ 紅' 'docs/screenshots/home.png'
+g rm -q --cached docs/screenshots/home.png
+
+# ⑰ R1 I4：白名單是精確的 LittleSprout/Assets.xcassets/——Assets* 會吃掉 AssetsFake/
+mk LittleSprout/AssetsFake/x.png
+g add LittleSprout/AssetsFake/x.png
+expect 1 '⑰ LittleSprout/AssetsFake/x.png → 紅' 'LittleSprout/AssetsFake/x.png'
+g rm -q --cached LittleSprout/AssetsFake/x.png
+
+# ⑱ R1 I3：目錄規則大小寫不敏感（非 png 只有目錄規則擋得住）
+mk LS46r9/scan.html Review-shots/x.html
+g add LS46r9/scan.html Review-shots/x.html
+expect 1 '⑱ LS46r9/scan.html（大寫 LS）→ 紅' 'LS46r9/scan.html'
+expect 1 '⑱′ Review-shots/x.html（大寫 Review）→ 紅' 'Review-shots/x.html'
+g rm -q --cached LS46r9/scan.html Review-shots/x.html
+
+# ⑲ R1 I1：檔名含 " 時 --name-only 會加引號輸出、*.png 對不上；-z 讀取後仍要擋且原樣點名
+mk 'ls99r1/sh"ot.png'
+g add 'ls99r1/sh"ot.png'
+expect 1 '⑲ ls99r1/sh"ot.png（引號檔名）→ 紅' 'sh"ot.png'
+g rm -q --cached 'ls99r1/sh"ot.png'
+
+# ⑳ R1 I2：帶路徑參數指到非 git 目錄 → exit 2 fail closed（不是印 ✓ 假綠）
+mkdir -p "$work/notrepo"
+out="$(bash "$checker" "$work/notrepo" 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF 'fail closed'; then
+  echo '✓ ⑳ 非 git 目錄 → exit 2 fail closed'
+else
+  echo "✗ ⑳ 非 git 目錄 → exit 2 fail closed（期望 exit 2、輸出含「fail closed」，實得 ${got}）" >&2
+  printf '%s\n' "$out" | sed 's/^/    /' >&2
+  fail=1
+fi
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ evidence-path-check 自測失敗" >&2

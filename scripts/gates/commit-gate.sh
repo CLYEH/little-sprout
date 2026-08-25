@@ -33,7 +33,7 @@ printf '%s\n' "$added" | bash "$(git rev-parse --show-toplevel)/scripts/gates/sc
 bash "$(git rev-parse --show-toplevel)/scripts/gates/tracked-ignored-check.sh"
 
 # 審查取證不得進版控（LS-61：staged 路徑任一目錄層命中 review*／*-review*／ls[0-9]*、或 *.png 不在 design/／
-# LittleSprout/Assets*／LittleSprout/Preview Content/／docs/ 白名單即擋——.gitignore 只認固定位置 .claude/evidence/，散落路徑沒規則可 ignore）
+# LittleSprout/Assets.xcassets/／LittleSprout/Preview Content/／docs/img/ 白名單即擋（大小寫不敏感）——.gitignore 只認固定位置 .claude/evidence/，散落路徑沒規則可 ignore）
 bash "$(git rev-parse --show-toplevel)/scripts/gates/evidence-path-check.sh"
 
 # staged .pen 設計稿落地檢查（LS-26：機械觸發點——不靠 agent 記得跑收工程序）
