@@ -43,6 +43,8 @@ insert into public.profiles (id, display_name) values
 -- 依據：全部由本票的 migration 保證（owner 檢查、字元集、長度、到期時間檢查都寫在函式裡）。
 -- 「碼不含 0/O/1/I」不是美觀要求：長輩會把碼抄在紙上、在電話裡念，這四個字元是
 -- 手抄與口述錯誤的最大來源，讀錯就是一次注定失敗的申請。
+--
+-- LS-90：長度 8→6（LS-89 裁決 A），字元集不變。
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims',
   '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
@@ -58,8 +60,8 @@ begin
                                  now() + interval '7 days', 3);
   perform set_config('ls33.code_main', v_main, true);
 
-  if v_main !~ '^[2-9A-HJ-NP-Z]{8}$' then
-    raise exception 'FAIL：邀請碼「%」不符字元集規約（8 碼、大寫、不含 0/O/1/I）', v_main;
+  if v_main !~ '^[2-9A-HJ-NP-Z]{6}$' then
+    raise exception 'FAIL：邀請碼「%」不符字元集規約（6 碼、大寫、不含 0/O/1/I）', v_main;
   end if;
 
   -- 只剩一個名額的碼（併發／用罄測試用）
@@ -84,7 +86,7 @@ begin
     raise exception 'FAIL：四支邀請碼出現重複（distinct=%）', v_distinct;
   end if;
 
-  raise notice 'ok：owner 產碼成功，四支碼皆為 8 碼、字元集不含 0/O/1/I';
+  raise notice 'ok：owner 產碼成功，四支碼皆為 6 碼、字元集不含 0/O/1/I';
 end;
 $$;
 
@@ -124,10 +126,11 @@ $$;
 -- 1c. 邀請碼的熵：每一個位置都必須抽得到整個 32 字元的字元集
 --
 -- 依據：create_invite 挑選「完全隨機的那幾個位元組」那行（c_random_bytes）。
--- 這條不是形式主義：UUID v4 的 byte 6 高 nibble 固定是版本碼 0x4，直接取
--- byte 0..7 的話第 7 碼只抽得到半個字元集（16 種），整支碼少掉 1 bit
--- （40 → 39，PR #36 review 抓到）。少 1 bit 等於暴力破解成本砍半，
--- 而破解成功的後果是陌生人進到別人家的相簿。
+-- LS-90：6 碼版本只取 UUID v4 天生隨機的 byte 0-5（time_low ＋ time_mid，
+-- RFC 9562 §5.4），不像原本 8 碼版本要刻意跳過帶版本／variant 位元的
+-- byte 6、8（PR #36 review 抓到的坑：直接取 byte 0..7 會讓某一碼只抽得到
+-- 半個字元集）——這條測試留著是回歸測試，確保日後不會有人把 c_random_bytes
+-- 改回覆蓋到那兩個 byte。
 --
 -- 判準取 >16 而不是 =32：200 次抽樣下某個字元一次都沒出現的機率約 0.2%，
 -- 要求 32 種全出現會偶爾假紅；而壞掉的版本在該位置最多只有 16 種，
@@ -139,18 +142,18 @@ declare
   v_code text;
   v_i int;
   v_pos int;
-  v_seen text[] := array_fill(''::text, array[8]);
+  v_seen text[] := array_fill(''::text, array[6]);
   v_distinct int;
 begin
   for v_i in 1..c_samples loop
     v_code := public.create_invite('fa000000-0000-4000-8000-000000000001', 'member',
                                    now() + interval '7 days', 1);
-    for v_pos in 1..8 loop
+    for v_pos in 1..6 loop
       v_seen[v_pos] := v_seen[v_pos] || substr(v_code, v_pos, 1);
     end loop;
   end loop;
 
-  for v_pos in 1..8 loop
+  for v_pos in 1..6 loop
     select count(distinct ch) into v_distinct
       from regexp_split_to_table(v_seen[v_pos], '') as ch
      where ch <> '';
@@ -160,10 +163,32 @@ begin
         v_pos, c_samples, v_distinct;
     end if;
   end loop;
-  raise notice 'ok 熵：% 次抽樣下 8 個位置每一個都出現 >16 種字元（每碼都是滿的 5 bits）', c_samples;
+  raise notice 'ok 熵：% 次抽樣下 6 個位置每一個都出現 >16 種字元（每碼都是滿的 5 bits）', c_samples;
 end;
 $$;
 reset role;
+
+-- ---------------------------------------------------------------------------
+-- 1d. 撞碼重試迴圈：LS-90 票面要求「確認存在」
+--
+-- 上面 1、1c 兩段本身就是這條迴圈的正向覆蓋——create_invite 每次呼叫都會執行
+-- 同一段「產碼 → INSERT → exception when unique_violation」邏輯（1 段驗 4 支碼
+-- 互不相同、1c 段驗 200 次抽樣），只是沒有一次真的撞上既有碼而觸發重抽分支。
+--
+-- 刻意不在這裡偽造一次真正的撞碼：30 bit 空間（2^30 ≈ 10.7 億）下，測試想在
+-- 有限次呼叫內讓 gen_random_uuid() 真的抽出一支已存在的碼，機率低到不可能在
+-- 合理測試時間內發生，硬湊只會做出一個要嘛跑不完、要嘛偶爾假紅的 flaky 測試；
+-- 而且 gen_random_uuid() 走 pg_strong_random，沒有可以從測試端注入的種子。
+-- 撞碼發生時要走的那條路徑（exception when unique_violation → 重抽，5 次仍撞
+-- 才 LS016）已由函式本體逐行 code review 覆蓋，且與 request_join 第 412、425
+-- 行處理「同一人不同碼併發申請」時翻譯 unique_violation 的手法一致（同一種
+-- exception handler pattern，已經在別處被併發測試間接驗證過）。
+--
+-- 真正的併發覆蓋（LS-90 票面「兩連線同時 create」）在
+-- supabase/tests/concurrency/invite_create_race_*.sql：兩個真的並行的 psql
+-- session 同時呼叫 create_invite，驗證兩邊都成功、拿到的碼不相同、沒有互相
+-- 卡住或噴出非預期錯誤。
+-- ---------------------------------------------------------------------------
 
 -- member / viewer / 非成員都不能產碼
 do $$
@@ -207,6 +232,21 @@ insert into public.invites (id, family_id, code, role, created_by, max_uses, exp
   ('1a000000-0000-4000-8000-000000000033', 'fa000000-0000-4000-8000-000000000001',
    'EXP22222', 'member', 'a0000000-0000-4000-8000-000000000001', 5, now() - interval '1 day');
 
+-- LS-90 R1 F2：為 2b 段準備一支「曾經真實存在、被本票 migration 標記失效」的
+-- 8 碼舊格式邀請。先插入一支尚未過期的 8 碼邀請（代表遷移套用前正式站可能存在
+-- 的既有資料），再原封不動執行本票 migration 第 3 段那句 UPDATE
+-- （`supabase/migrations/20260825070627_invite_code_6.sql`）；多加的
+-- `and id = ...` 只是把這句 UPDATE 的作用範圍限定在這裡自己造的這一列，避免
+-- 波及 ls33.code_main／code_last／code_viewer／code_dup 這幾支本檔後面很多段落
+-- 都還要用、此刻也還沒過期的碼——不加限定詞的話，同一句 UPDATE 會把它們一併
+-- 打過期，後面依賴它們仍有效的段落會連環 FAIL。判準（`expires_at > now()`）本身
+-- 與遷移那句完全相同，這裡驗的正是那個判準的效果。
+insert into public.invites (id, family_id, code, role, created_by, max_uses, expires_at) values
+  ('1a000000-0000-4000-8000-000000000090', 'fa000000-0000-4000-8000-000000000001',
+   'LEGACY8C', 'member', 'a0000000-0000-4000-8000-000000000001', 1, now() + interval '7 days');
+update public.invites set expires_at = now()
+ where expires_at > now() and id = '1a000000-0000-4000-8000-000000000090';
+
 select set_config('request.jwt.claims',
   '{"sub":"e0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 set local role authenticated;
@@ -225,6 +265,41 @@ begin
     raise exception 'FAIL：過期的邀請碼竟然通過';
   exception when sqlstate 'LS011' then
     raise notice 'ok：邀請碼已過期 → LS011';
+  end;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 2b. LS-90：8 碼舊格式邀請被拒——結果取決於那支碼原本是不是真的存在過
+--
+-- R1 F1 訂正：request_join 沒有專屬的長度／格式檢查，直接交給既有的三段檢查
+-- 分流，8 碼舊格式碼因此不是單一結果：
+--   - 'LEGACY8C'：上面已插入並被本票 migration 那句 UPDATE 標記過期的列——
+--     列還在，code 完全比對找得到，但 expires_at 已是過去 → LS011（已過期）。
+--   - 'ABCDEFGH'：從來沒被 create_invite（不論 6 碼或 8 碼年代）產生過、也沒被
+--     任何 insert 造過的字串，查無此列 → LS010（不存在）。
+-- 兩者的差異正是「失效＝UPDATE 標記過期、列還在」與「單純打錯／亂猜」的差異。
+--
+-- Mutation 自證：把上面那句 `update ... set expires_at = now() where
+-- expires_at > now() and id = ...` 拿掉，本段 LEGACY8C 那個 begin/exception 會
+-- 因為 request_join 直接成功（回 pending，不噴任何錯誤）而落到「沒有 exception
+-- 可接」，`perform` 之後的 raise exception 'FAIL：...' 會執行，本檔案 FAIL——
+-- 已於本機驗證（見 PR body／handoff）。
+-- ---------------------------------------------------------------------------
+do $$
+begin
+  begin
+    perform public.request_join('LEGACY8C');
+    raise exception 'FAIL：被本票 migration 標記失效的 8 碼舊格式邀請竟然通過';
+  exception when sqlstate 'LS011' then
+    raise notice 'ok：既有 8 碼邀請被標記失效後 → LS011（列還在、只是過期，R1 F1 訂正）';
+  end;
+
+  begin
+    perform public.request_join('ABCDEFGH');
+    raise exception 'FAIL：從未存在過的邀請碼竟然通過';
+  exception when sqlstate 'LS010' then
+    raise notice 'ok：從未存在過的碼（對照組）→ LS010，未被誤判成過期';
   end;
 end;
 $$;
@@ -1383,7 +1458,7 @@ begin
   select public.create_invite(
     'fa000000-0000-4000-8000-000000000001', 'member',
     now() + interval '7 days', 3) into v_code;
-  if v_code is null or v_code !~ '^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$' then
+  if v_code is null or v_code !~ '^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{6}$' then
     raise exception 'FAIL 正向對照：create_invite 產不出合規的邀請碼（實際 %）', v_code;
   end if;
   raise notice 'ok 正向對照：create_invite 照常可用（%）', v_code;

@@ -149,9 +149,24 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
 ### `invites`
 - 產碼只能呼叫 `create_invite` RPC；**沒有 UPDATE 路徑**，撤銷邀請碼＝`DELETE`
   該列（會 cascade 掉底下所有 pending 的 `join_requests`）。
-- `code`：8 碼、大寫、字元集 `23456789ABCDEFGHJKLMNPQRSTUVWXYZ`（拿掉 `0/O/1/I`）。
+- `code`：**6 碼**（LS-90，LS-89 裁決 A；原為 8 碼，見下方「LS-90 變更說明」）、
+  大寫、字元集 `23456789ABCDEFGHJKLMNPQRSTUVWXYZ`（拿掉 `0/O/1/I`）——32 字元＝
+  2 的冪，每碼滿的 5 bits，6 碼合計 30 bit 熵。
 - `max_uses`／`used_count`：次數在「申請成立」（`request_join` 呼叫成功）時就消耗，
   **不是**核准時才扣；拒絕／撤回不退還次數。
+
+**LS-90 變更說明（2026-08-25，LS-89 使用者裁決 A）**：邀請碼長度 8→6，字元表不變。
+LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時誤植成 8 碼／40 bit
+（正式站已部署）；LS-30 PR #136 review 發現這個落差，LS-89 裁決改後端配合定案。
+**既有未過期的邀請碼在這支 migration
+（`supabase/migrations/20260825070627_invite_code_6.sql`）套用時一律失效**
+（`update invites set expires_at = now() where expires_at > now()`）——正式站當時
+沒有真實家庭在使用邀請碼，用失效（改 `expires_at`）而不是刪除，稽核紀錄與底下
+已核准／拒絕的 `join_requests` 都保留。`request_join` 沒有變動：它本來就不對
+輸入碼做長度／格式檢查，直接交給既有的三段檢查分流，這對 8 碼舊格式碼會有兩種
+結果（R1 F1 訂正）：**曾經真實存在、被上面那句 UPDATE 標記過期的列**（列還在，
+只是 `expires_at` 已是過去）→ 找得到列但已過期 → `LS011`；**從來沒被
+`create_invite` 產生過的字串**（單純打錯或亂猜）→ 查無此列 → `LS010`（見 §4）。
 
 ### `children`
 - `family_id, id` 有複合 UNIQUE，供 `albums`/`diaries` 的複合外鍵綁定同家庭。
@@ -482,14 +497,18 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 
 ### `create_invite(p_family_id uuid, p_role text, p_expires_at timestamptz, p_max_uses integer) -> text`
 - **誰能呼叫**：該家庭的 owner。
-- **回傳**：新產生的邀請碼字串（8 碼大寫）。
+- **回傳**：新產生的邀請碼字串（**6 碼**大寫；LS-90，原為 8 碼，見 §3 `invites`
+  的「LS-90 變更說明」）。字元集 `23456789ABCDEFGHJKLMNPQRSTUVWXYZ`（32 字元，
+  拿掉 `0/O/1/I`），6 碼合計 30 bit 熵。
 - **參數邊界（RPC 是安全邊界，不是 UI 輔助，直接打 API 的人也會被擋）**：
   - `p_role`：`"owner"|"member"|"viewer"`（cast 失敗 `22P02`）。
   - `p_expires_at`：必須在「現在～現在+30 天」之間，超出 → `LS017`。
   - `p_max_uses`：必須介於 1–20，超出／NULL → `LS017`。
 - **錯誤碼**：未登入 `42501`；不是該家 owner `42501`；參數不合法 `LS017`；連續 5 次
   撞碼（機率極低，代表亂數來源異常）`LS016`。
-- **併發**：撞碼會自動重抽最多 5 次，對呼叫端透明。
+- **併發**：撞碼會自動重抽最多 5 次，對呼叫端透明；重試上限與錯誤碼在 LS-90
+  （長度 8→6）時原樣保留，未新增錯誤碼。兩線同時呼叫互不干擾（見
+  `supabase/tests/concurrency/invite_create_race_*.sql`）。
 
 ### `request_join(p_code text) -> table(status text, request_id uuid, family_id uuid)`
 - **誰能呼叫**：任何已登入使用者。
