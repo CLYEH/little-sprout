@@ -1,9 +1,13 @@
 #!/bin/bash
-# pen-open.sh 的自測（LS-91）。CI 自測 step 每個 PR 都跑。
-# stub `open`（記錄呼叫，不做任何事）與 `pen`（依控制檔決定 get_app_state 的輸出：命中目標路徑／命中別的
-# 路徑／讀不到／掛住）——不碰真正的 Pen app 或 pen CLI session。
+# pen-open.sh 的自測（LS-91；R2 補自動清場 3 組）。CI 自測 step 每個 PR 都跑。
+# stub `open`（記錄呼叫；依 $PEN_STUB_OPEN_SUCCEED_AT 決定第幾次呼叫才真的切換 active document，模擬
+# 「清場後重開才成功」）、`pen`（依控制檔決定 get_app_state 的輸出：命中目標路徑／命中別的路徑／讀不到／
+# 掛住）、`pgrep`（回傳測試自己起的假 Pen 行程 pid）、`osascript`（依 $PEN_STUB_OSASCRIPT_KILLS 決定「優雅
+# 退出」是否真的把假行程殺掉，藉此驗兩條路徑：osascript 成功、osascript 沒反應時 fall back 到 `kill -TERM`——
+# 這兩個字都是真的 shell 內建 `kill`，作用在測試自己 `sleep &` 出來的真行程上，不需要另外 stub `kill`）——
+# 全程不碰真正的 Pen app 或 pen CLI session。
 # 「前饋必有反饋」對 gate 本身也適用：若路徑比對退化成子字串、逾時判斷漏放行不一致案例、
-# Pen 未開時誤放行、或 --status 模式意外呼叫了 `open`，這裡會紅。
+# Pen 未開時誤放行、--status 模式意外呼叫了 `open`、清場前沒先驗安全就 quit、或清場後沒有真的重試，這裡會紅。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -14,7 +18,11 @@ ok() { echo "✓ $1"; n=$((n + 1)); }
 bad() { echo "✗ $1" >&2; fail=1; }
 
 work="$(mktemp -d)"
-trap 'rm -rf "$work"' EXIT
+cleanup() {
+  [ -f "${work}/fake_pen.pid" ] && kill -9 "$(cat "${work}/fake_pen.pid")" 2>/dev/null
+  rm -rf "$work"
+}
+trap cleanup EXIT
 
 bin="${work}/bin"
 mkdir -p "$bin"
@@ -27,15 +35,46 @@ want="$(cd "${wt}/design" && pwd -P)/littlesprout.pen"
 
 export PEN_STUB_STATE="${work}/state"
 export PEN_STUB_OPEN_LOG="${work}/open.log"
+export PEN_STUB_OPEN_COUNT="${work}/open.count"
+export PEN_STUB_PID_FILE="${work}/fake_pen.pid"
 : > "$PEN_STUB_OPEN_LOG"
 
-# stub `open`：只記錄呼叫參數，不真的開任何 app
+# stub `open`：記錄呼叫參數；第 3 個參數是目標路徑。預設（PEN_STUB_OPEN_SUCCEED_AT 未設或 0）永遠不切換
+# active document（模擬「殘留視窗擋住」）；設成 N 時，第 N 次呼叫會把 $PEN_STUB_STATE 寫成該次的目標路徑
+# （模擬「清場後這次真的開成功」）。
 cat > "${bin}/open" <<'STUB'
 #!/bin/bash
 printf '%s\n' "$*" >> "${PEN_STUB_OPEN_LOG:?}"
+target_path=$3
+count=$(( $(cat "${PEN_STUB_OPEN_COUNT:?}" 2>/dev/null || echo 0) + 1 ))
+printf '%s' "$count" > "${PEN_STUB_OPEN_COUNT}"
+succeed_at="${PEN_STUB_OPEN_SUCCEED_AT:-0}"
+if [ "$succeed_at" != 0 ] && [ "$count" -ge "$succeed_at" ]; then
+  printf 'PATH:%s' "$target_path" > "${PEN_STUB_STATE:?}"
+fi
 exit 0
 STUB
 chmod +x "${bin}/open"
+
+# stub `pgrep`：只回傳測試自己起的假 Pen 行程 pid（$PEN_STUB_PID_FILE 有內容就印出來，沒有就不印任何東西，
+# 模擬「找不到殘留行程」）。
+cat > "${bin}/pgrep" <<'STUB'
+#!/bin/bash
+[ -s "${PEN_STUB_PID_FILE:?}" ] && cat "${PEN_STUB_PID_FILE}"
+exit 0
+STUB
+chmod +x "${bin}/pgrep"
+
+# stub `osascript`：依 $PEN_STUB_OSASCRIPT_KILLS（1｜0，預設 0）決定「優雅退出」是否真的把假行程殺掉；
+# 0 時什麼都不做，讓 pen-open.sh 自己之後補的 `kill -TERM`（真指令，不是 stub）去善後。
+cat > "${bin}/osascript" <<'STUB'
+#!/bin/bash
+if [ "${PEN_STUB_OSASCRIPT_KILLS:-0}" = 1 ] && [ -s "${PEN_STUB_PID_FILE:?}" ]; then
+  kill -TERM "$(cat "${PEN_STUB_PID_FILE}")" 2>/dev/null
+fi
+exit 0
+STUB
+chmod +x "${bin}/osascript"
 
 # stub `pen`：只認 `interactive --app desktop`（忽略餵進去的 stdin 內容），依 $PEN_STUB_STATE 決定輸出——
 #   PATH:<path> → 印 get_app_state 格式的那一行；HANG → sleep 5（測 ATTEMPT_TIMEOUT 看門狗）；其他 → 模擬讀不到
@@ -60,9 +99,34 @@ chmod +x "${bin}/pen"
 
 export PATH="${bin}:${PATH}"
 export PEN_OPEN_TIMEOUT=2 PEN_OPEN_ATTEMPT_TIMEOUT=1 PEN_OPEN_POLL_INTERVAL=1
+export PEN_OPEN_QUIT_TIMEOUT=3 PEN_OPEN_QUIT_GRACE=1
+export PEN_BACKUP_DIR="${work}/backup"
+mkdir -p "$PEN_BACKUP_DIR"
 
 set_state() { printf '%s' "$1" > "$PEN_STUB_STATE"; }
 open_calls() { wc -l < "$PEN_STUB_OPEN_LOG" | tr -d ' '; }
+reset_open_tracking() { : > "$PEN_STUB_OPEN_LOG"; rm -f "$PEN_STUB_OPEN_COUNT"; unset PEN_STUB_OPEN_SUCCEED_AT; }
+
+# start_fake_pen：起一支真的背景 sleep 當「假 Pen 主行程」，pid 寫進 $PEN_STUB_PID_FILE 給 pgrep stub 讀。
+# fake_pen_alive：該行程是否還活著（kill -0，不 stub，因為這是測試自己起的真行程）。
+start_fake_pen() { sleep 100 & echo $! > "$PEN_STUB_PID_FILE"; }
+fake_pen_alive() { kill -0 "$(cat "$PEN_STUB_PID_FILE" 2>/dev/null)" 2>/dev/null; }
+# clear_fake_pen：測試場景交接用——先把上一輪可能還活著的假行程收乾淨（避免遺留 `sleep 100` 一路跑到自然到期），
+# 再清掉 pid 檔記錄。
+clear_fake_pen() {
+  [ -s "$PEN_STUB_PID_FILE" ] && kill -9 "$(cat "$PEN_STUB_PID_FILE")" 2>/dev/null
+  rm -f "$PEN_STUB_PID_FILE"
+}
+
+# wt2：第二個 worktree fixture，供「殘留視窗」情境的安全性檢查（pen-land.sh --dry-run）用。
+wt2="${work}/wt2"
+mkdir -p "${wt2}/design"
+WT2_SAFE='{"version":1,"fileToken":"tok1","variables":{},"themes":{},"children":[{"id":"m1","x":1,"children":[]}]}'
+printf '%s' "$WT2_SAFE" > "${wt2}/design/littlesprout.pen"
+want2="$(cd "${wt2}/design" && pwd -P)/littlesprout.pen"
+wt2_resolved="$(cd "$wt2" && pwd -P)"
+wt2_backup_safe() { printf '%s' "$WT2_SAFE" > "${PEN_BACKUP_DIR}/$(printf '%s' "file://${want2}" | shasum | awk '{print $1}')"; }
+wt2_backup_unsafe() { printf '%s' '{"version":1,"fileToken":"tok1","variables":{},"themes":{},"children":[{"id":"m1","x":1,"children":[{"id":"m2","y":9,"children":[]}]}]}' > "${PEN_BACKUP_DIR}/$(printf '%s' "file://${want2}" | shasum | awk '{print $1}')"; }
 
 run() { bash "$script" "$@"; }
 
@@ -82,8 +146,9 @@ fi
 other="${work}/wt-other/design/littlesprout.pen"
 set_state "PATH:${other}"
 out="$(run "$wt" 2>&1)"; got=$?
-if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF "${want}" && printf '%s' "$out" | grep -qF "${other}"; then
-  ok '不一致：Pen 目前是別的檔 → exit 1，訊息含兩邊路徑'
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF "${want}" && printf '%s' "$out" | grep -qF "${other}" \
+  && printf '%s' "$out" | grep -qF '不嘗試自動清場'; then
+  ok '不一致：Pen 目前是別的檔（推出的 worktree 根不存在）→ exit 1，訊息含兩邊路徑，不嘗試清場'
 else
   bad "不一致案例應 exit 1 且印兩邊路徑（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
@@ -146,6 +211,62 @@ if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '找不到目錄'; then ok 
 mkdir -p "${work}/no-pen-file/design"
 out="$(run "${work}/no-pen-file" 2>&1)"; got=$?
 if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '找不到'; then ok 'design/littlesprout.pen 不存在 → exit 2'; else bad ".pen 缺應 exit 2（實得 ${got}）"; fi
+
+# ---- R2：自動清場（殘留視窗指向真的存在、可判斷安不安全的 worktree）----
+
+# ⑪a 殘留＋安全（wt2 的 backup 與磁碟檔一致，沒有未落地變更）→ osascript 優雅退出成功 → 重開切換成功
+reset_open_tracking; clear_fake_pen; wt2_backup_safe
+set_state "PATH:${want2}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=1
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
+  && printf '%s' "$out" | grep -qF '已確認' && ! fake_pen_alive; then
+  ok '⑪a 殘留＋安全：osascript 優雅退出成功 → 重開切換成功，假行程真的結束'
+else
+  bad "⑪a 應 exit 0 且假行程結束（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+
+# ⑪b 殘留＋安全，但 osascript 沒反應（模擬 Automation 權限被擋，同本票實機發現）→ fall back 到 kill -TERM
+reset_open_tracking; clear_fake_pen; wt2_backup_safe
+set_state "PATH:${want2}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=0
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" && ! fake_pen_alive; then
+  ok '⑪b 殘留＋安全：osascript 沒反應 → fall back kill -TERM → 假行程結束、重開切換成功'
+else
+  bad "⑪b 應 exit 0 且假行程結束（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+
+# ⑪c 殘留＋有未落地變更（wt2 的 backup 與磁碟檔不同）→ 不 quit、不第二次 open，exit 1
+reset_open_tracking; clear_fake_pen; wt2_backup_unsafe
+set_state "PATH:${want2}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF "先跑：bash scripts/ops/pen-land.sh ${wt2_resolved}" \
+  && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑪c 殘留＋有未落地變更：不 quit、不重開，exit 1，假行程仍活著'
+else
+  bad "⑪c 應 exit 1 且不動假行程（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT
+
+# ⑪d --no-quit：殘留時完全不嘗試清場（即使 wt2 其實安全），exit 1
+reset_open_tracking; clear_fake_pen; wt2_backup_safe
+set_state "PATH:${want2}"
+start_fake_pen
+out="$(run "$wt" --no-quit 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF -- '--no-quit：不嘗試清場' \
+  && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑪d --no-quit：殘留時不清場，exit 1，假行程不受影響'
+else
+  bad "⑪d 應 exit 1 且不清場（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-open-check 自測失敗" >&2
