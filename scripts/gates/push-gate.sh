@@ -52,10 +52,47 @@ if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1;
   # （涵蓋失敗：set -e 觸發的 exit 一樣算 EXIT，且涵蓋腳本本身之後任何一步失敗）；INT／TERM 另外顯式
   # trap 成 `exit <code>`——同 scripts/ops/simulator-lock.sh 檔頭理由，訊號不保證會讓還在等前景指令的
   # bash 立刻觸發 EXIT trap，顯式接成 exit 才可靠。KEEP_SIMULATOR=1 可跳過（除錯時想留著看畫面）。
+  #
+  # PR #164 R1 F1：只關「本 worktree 專屬機」，不分青紅皂白關掉 detect-simulator.sh:125 退回的共用
+  # 第一台——共用機路徑上多個 worktree 可能拿到同一顆 UDID，鎖只包住下面「執行 xcodebuild test」那
+  # 一段，EXIT trap 要等本腳本剩下的第 3～7 步（真環境好幾秒）跑完才觸發，那時鎖早已釋放：A 跑完自己
+  # 剩下的 gate、trap 觸發關機時，B 可能正拿著同一顆共用機在鎖內跑測試，會被 A 關掉（stub 重現的時間
+  # 軸見 PR #164 R1 F1）。設 trap 前先查這顆 UDID 對應的裝置名稱，只有專屬機（`<票號>-<機型>`，含主
+  # checkout 用的 `main-`）才設；共用機／R1 F2 提到的 demo-* 常駐機都落在下面 pattern 之外，不設
+  # trap、不關。第二道防線：即使是專屬機，shutdown 前若鎖目錄仍在就跳過並印一行——不在 trap 內重新
+  # 取鎖，中斷情境下持鎖的子行程可能還活著，重新取鎖會卡到 simulator-lock.sh 的 timeout（該腳本檔頭
+  # 理由）。
+  # I2：鎖目錄路徑可用 SIMULATOR_LOCK_DIR 覆寫（自測用；預設仍是 /tmp/simulator-lock-<udid>），讓多份
+  # push-gate.test.sh 併行時各自用 mktemp -d 出來的路徑，不會互刪對方的鎖目錄。
+  sim_lock_dir="${SIMULATOR_LOCK_DIR:-/tmp/simulator-lock-${sim_udid}}"
   if [ "${KEEP_SIMULATOR:-0}" != 1 ]; then
-    trap 'xcrun simctl shutdown "$sim_udid" >/dev/null 2>&1 || true' EXIT
-    trap 'exit 130' INT
-    trap 'exit 143' TERM
+    sim_name=$(xcrun simctl list devices available 2>/dev/null | awk -v u="$sim_udid" '
+      { line = $0
+        udid = line
+        sub(/^[^(]*\(/, "", udid)
+        sub(/\).*/, "", udid)
+        if (udid != u) next
+        nm = line
+        sub(/^[ \t]*/, "", nm)
+        sub(/ *\(.*/, "", nm)
+        print nm
+        exit
+      }
+    ')
+    if [[ "$sim_name" =~ ^(LS-[0-9]+|main)- ]]; then
+      shutdown_dedicated_simulator() {
+        if [ -d "$sim_lock_dir" ]; then
+          echo "→ push gate：${sim_lock_dir} 仍在，跳過 shutdown ${sim_udid}（可能有其他呼叫使用中）" >&2
+          return 0
+        fi
+        xcrun simctl shutdown "$sim_udid" >/dev/null 2>&1 || true
+      }
+      trap shutdown_dedicated_simulator EXIT
+      trap 'exit 130' INT
+      trap 'exit 143' TERM
+    else
+      echo "→ push gate：模擬器 ${sim_udid}（${sim_name:-未知裝置}）非本 worktree 專屬機，跳過 shutdown（避免關掉共用機／demo 常駐機，PR #164 R1 F1／F2）" >&2
+    fi
   fi
   # LS-56：fresh worktree 首次 SPM 解析偶發瞬斷（xcodebuild「Could not resolve package
   # dependencies / Couldn't check out revision」，重跑即過——LS-54 back-merge 實測）。先單獨
@@ -70,7 +107,7 @@ if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1;
   echo "→ push gate：執行 unit tests（scheme: ${XCODE_SCHEME}, destination: ${dest}）…"
   # LS-54 N8：與 CI 一致，明確序列執行（MockURLProtocol 全域 handler 不可平行）
   # LS-83 R2 F1：整段包進 simulator-lock.sh，鍵＝目的地 UDID（scripts/ops/simulator-lock.sh 檔頭注解）
-  bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "/tmp/simulator-lock-${sim_udid}" -- \
+  bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
     xcodebuild test \
     -scheme "$XCODE_SCHEME" \
     -destination "$dest" \
