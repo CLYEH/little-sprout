@@ -236,7 +236,17 @@ extension AppError {
         switch statusCode {
         case 401, 403:
             return .rejected(message: message, code: code)
-        case 400, 404, 422, 429:
+        case 429:
+            // 429（Too Many Requests）本身就是 HTTP 語意定義好的限流狀態碼；`code` 會是 nil
+            // 的情況只發生在解不出結構化 error body 時（見 `map(_:)` 的 `HTTPError` 分支，
+            // 例如反向代理直接吐出裸 429、沒有 GoTrue 的 JSON body）。呼叫端（例如
+            // `OTPVerificationModel.nonAttemptConsumingCodes`）依 `code` 字串判斷是不是
+            // 頻率限制，`code` 一旦是 nil 就會被誤判成一般驗證失敗而扣掉使用者的嘗試次數
+            // ——這裡補一個可辨識的 sentinel，讓「裸 429」跟其他真的沒有 code 的
+            // `.validationRetryable`（例如既有測試裡代表「純粹碼打錯」的
+            // `code: nil`）區分開來（LS-92 R2 F4）。
+            return .validationRetryable(message: message, code: code ?? "bare_http_429")
+        case 400, 404, 422:
             return .validationRetryable(message: message, code: code)
         default:
             // 涵蓋 5xx 與任何其他未預期的狀態碼：後端沒有給出使用者能自行修正的訊號。

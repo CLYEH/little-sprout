@@ -60,23 +60,36 @@ struct OTPVerificationView: View {
         VStack(alignment: .leading, spacing: AppSpacing.group) {
             OTPCodeField(
                 code: Binding(get: { model.code }, set: { model.updateCode($0) }),
-                isError: model.errorMessage != nil
+                isError: isOTPFieldError,
+                isLocked: model.isLocked
             )
-            if let errorMessage = model.errorMessage {
+            .sensoryFeedback(.error, trigger: model.lockedInputFeedbackTick)
+            // R3（LS-92 PR #155 review R2）F6：鎖定理由與「這次操作的結果」兩句併陳，不是
+            // `??` 二選一——`model.visibleMessages` 已經處理好順序與是否同時出現，這裡只負責
+            // 依 `tone` 選顏色與 icon（F7：verify 限流不是「碼錯」，用中性語氣，不用 danger
+            // 紅框驚嘆號）。
+            ForEach(model.visibleMessages, id: \.text) { message in
                 HStack(spacing: AppSpacing.tight) {
-                    Image(systemName: "exclamationmark.circle.fill")
+                    Image(systemName: message.tone == .danger ? "exclamationmark.circle.fill" : "clock")
                         .appIconFrame(.small)
-                        .foregroundStyle(Color.lsDanger)
-                    Text(errorMessage)
+                        .foregroundStyle(message.tone == .danger ? Color.lsDanger : Color.lsTextPrimary)
+                        .symbolEffect(.bounce, value: model.lockedInputFeedbackTick)
+                    Text(message.text)
                         .appFont(.note)
-                        .foregroundStyle(Color.lsDanger)
+                        .foregroundStyle(message.tone == .danger ? Color.lsDanger : Color.lsTextPrimary)
                 }
             }
         }
     }
 
+    // R3 F7：OTP 欄位紅框只在真的「danger」語氣（碼錯／次數用盡）時出現；verify 限流是
+    // 中性語氣，不該讓欄位看起來像「這組碼打錯了」。
+    private var isOTPFieldError: Bool {
+        model.visibleMessages.contains { $0.tone == .danger }
+    }
+
     private var footerNoteText: String {
-        model.errorMessage == nil
+        model.visibleMessages.isEmpty
             ? "驗證碼 10 分鐘內有效。找不到信時，請看一下垃圾郵件匣。"
             : "驗證碼 10 分鐘內有效。沒看到信？看一下垃圾郵件匣。"
     }
@@ -102,12 +115,15 @@ struct OTPVerificationView: View {
         } else {
             // 四個各自獨立的 Text 在 AX3 下會各自換行，逐行讀出來變成打散的欄位（R3 review
             // B4：「沒收到｜　｜秒後可」三欄式亂序）。併成單一 Text 讓它像一般段落那樣整段
-            // 換行，數字段用 monospacedDigit 避免倒數時寬度跳動。
+            // 換行，數字段用 monospacedDigit 避免倒數時寬度跳動。I-3／R2（LS-92）：resend()
+            // 自己的 429 沿用同一列版面，只在 `model.isResendRateLimited` 時換一句文案，
+            // 有真實秒數（`resendRateLimitSecondsAreReal`）才顯示數字並倒數（R2 F3），
+            // 不另畫新版面。
             HStack(spacing: AppSpacing.tight) {
                 Image(systemName: "clock")
                     .appIconFrame(.medium)
                     .foregroundStyle(Color.lsTextSecondary)
-                Text("沒收到驗證碼？\(model.resendCooldown) 秒後可重新寄送")
+                Text(cooldownText)
                     .appFont(.body)
                     .monospacedDigit()
                     .foregroundStyle(Color.lsTextSecondary)
@@ -115,6 +131,18 @@ struct OTPVerificationView: View {
             .padding(.vertical, AppSpacing.group)
             .accessibilityElement(children: .combine)
         }
+    }
+
+    private var cooldownText: String {
+        guard model.isResendRateLimited else {
+            return "沒收到驗證碼？\(model.resendCooldown) 秒後可重新寄送"
+        }
+        // R3 F8／R4 m1／m2：秒數 ≥90 換算成分鐘、≥3600 換算成小時，不逐秒報數字給長輩看；
+        // `waitClause` 自己決定「請等」到數字之間該不該留空格，這裡不再自己組字串（R4 m1）。
+        guard model.resendRateLimitSecondsAreReal else {
+            return "寄送太頻繁了，請稍後再試"
+        }
+        return "寄太頻繁了，\(OTPVerificationModel.waitClause(seconds: model.resendCooldown))"
     }
 
     private func verify() {
