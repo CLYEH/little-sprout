@@ -214,6 +214,12 @@ race_case() {  # $1=場景名 $2=setup $3=s1 $4=s2 $5=verify
 race_case "兩人同搶邀請碼最後一個名額" \
   join_race_setup.sql join_race_s1.sql join_race_s2.sql join_race_verify.sql
 
+# LS-90：邀請碼改 6 碼後，撞碼重試迴圈的併發覆蓋——兩線同時 create_invite
+# 不應互相干擾（不卡死、不噴非預期錯誤、兩邊碼互不相同）。
+race_case "兩連線同時 create_invite" \
+  invite_create_race_setup.sql invite_create_race_s1.sql invite_create_race_s2.sql \
+  invite_create_race_verify.sql
+
 # 核准／拒絕的競態要跑兩個方向：先動的那一邊反正會在自己的 UPDATE 上取得列鎖，
 # 所以單一方向只證明得了「後動的那支 RPC」有鎖。兩個方向合起來才涵蓋
 # approve_join 與 reject_join 各自的 `for update`（mutation test 逼出來的結論：
@@ -321,7 +327,8 @@ delete from public.families where id in (
   'f4000000-0000-4000-8000-000000000001',
   'f6000000-0000-4000-8000-000000000001',
   'f7000000-0000-4000-8000-000000000001',
-  'f5000000-0000-4000-8000-000000000001'
+  'f5000000-0000-4000-8000-000000000001',
+  '9a000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -334,6 +341,7 @@ delete from auth.users where id in (
   'eb000000-0000-4000-8000-000000000001',
   'eb000000-0000-4000-8000-000000000002',
   'eb000000-0000-4000-8000-000000000003',
+  'ec000000-0000-4000-8000-000000000001',
   'a9000000-0000-4000-8000-000000000001',
   'a8000000-0000-4000-8000-000000000001',
   'a7000000-0000-4000-8000-000000000001',
