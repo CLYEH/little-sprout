@@ -37996,7 +37996,7 @@
       "name": "LS-47 / 08 幫寶貝建檔",
       "clip": true,
       "width": 393,
-      "height": 1040,
+      "height": 852,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -38058,7 +38058,6 @@
               "name": "Top",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": "$sp-block",
               "children": [
                 {
                   "type": "frame",
@@ -38088,7 +38087,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "之後隨時可以在家庭頁修改，現在不填也沒關係。",
+                      "content": "填好基本資料，就能開始記錄他的成長了。",
                       "lineHeight": 1.6,
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -38116,7 +38115,109 @@
                       "id": "z4C4f",
                       "name": "Photo Print",
                       "width": "fill_container",
-                      "fill": "$print-paper",
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.429,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 1.0909090909090908
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.275,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 1.0909090909090908
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.36700000000000005,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 1.0909090909090908
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.245,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 1.0909090909090908
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
                       "stroke": "$paper-edge",
                       "strokeWidth": 1,
                       "strokeAlignment": "outer",
@@ -38145,7 +38246,7 @@
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
-                          "height": 200,
+                          "height": 88,
                           "fill": "$surface-2",
                           "layout": "vertical",
                           "gap": "$sp-label",
@@ -38266,6 +38367,17 @@
                   ]
                 },
                 {
+                  "type": "frame",
+                  "id": "K4qvK6",
+                  "name": "Spacer 16",
+                  "width": "fill_container",
+                  "height": 16,
+                  "padding": [
+                    "$sp-label",
+                    0
+                  ]
+                },
+                {
                   "id": "BSG6L",
                   "type": "ref",
                   "ref": "UcO8T",
@@ -38283,6 +38395,17 @@
                       "content": "家人在時間軸上會看到這個名字。"
                     }
                   }
+                },
+                {
+                  "type": "frame",
+                  "id": "W8W1cB",
+                  "name": "Spacer 16",
+                  "width": "fill_container",
+                  "height": 16,
+                  "padding": [
+                    "$sp-label",
+                    0
+                  ]
                 },
                 {
                   "type": "frame",
@@ -38545,7 +38668,109 @@
               "name": "Photo Wrap",
               "width": 420,
               "height": 520,
-              "fill": "$print-paper",
+              "fill": [
+                "$print-paper",
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.376,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.37142857142857144,
+                    "height": 0.3
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.191,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.37142857142857144,
+                    "height": 0.3
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.15,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.37142857142857144,
+                    "height": 0.3
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 1
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.045,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.37142857142857144,
+                    "height": 0.3
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 1
+                  }
+                }
+              ],
               "stroke": "$paper-edge",
               "strokeWidth": 1,
               "strokeAlignment": "outer",
@@ -38586,8 +38811,8 @@
                       "type": "icon",
                       "id": "p6WX3r",
                       "name": "Camera Icon",
-                      "width": 40,
-                      "height": 40,
+                      "width": 26,
+                      "height": 26,
                       "icon": "camera",
                       "library": "lucide",
                       "fill": "$text-secondary"
@@ -39267,8 +39492,8 @@
                           "type": "icon",
                           "id": "alzNd",
                           "name": "Archive Icon",
-                          "width": 20,
-                          "height": 20,
+                          "width": 18,
+                          "height": 18,
                           "icon": "archive",
                           "library": "lucide",
                           "fill": "$text-secondary"
@@ -39289,8 +39514,8 @@
                       "type": "icon",
                       "id": "VSDvF",
                       "name": "Chevron Down",
-                      "width": 20,
-                      "height": 20,
+                      "width": 18,
+                      "height": 18,
                       "icon": "chevron-down",
                       "library": "lucide",
                       "fill": "$text-secondary"
@@ -39479,7 +39704,109 @@
                       "id": "elWPK",
                       "name": "Children Card",
                       "width": "fill_container",
-                      "fill": "$print-paper",
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.418,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.6782608695652174
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.271,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.6782608695652174
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.32,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.6782608695652174
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.215,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.6782608695652174
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
                       "stroke": "$paper-edge",
                       "strokeWidth": 1,
                       "strokeAlignment": "outer",
@@ -39627,8 +39954,8 @@
                           "type": "icon",
                           "id": "RsXsY",
                           "name": "Archive Icon",
-                          "width": 20,
-                          "height": 20,
+                          "width": 18,
+                          "height": 18,
                           "icon": "archive",
                           "library": "lucide",
                           "fill": "$text-secondary"
@@ -39649,8 +39976,8 @@
                       "type": "icon",
                       "id": "Re9dR",
                       "name": "Chevron Down",
-                      "width": 20,
-                      "height": 20,
+                      "width": 18,
+                      "height": 18,
                       "icon": "chevron-down",
                       "library": "lucide",
                       "fill": "$text-secondary"
@@ -41248,7 +41575,9 @@
               "type": "frame",
               "id": "Z5QPXf",
               "name": "Content",
+              "clip": true,
               "width": "fill_container",
+              "height": 320,
               "layout": "vertical",
               "gap": "$sp-block",
               "padding": [
@@ -41263,7 +41592,109 @@
                   "id": "c9EwP",
                   "name": "Photo Print",
                   "width": "fill_container",
-                  "fill": "$print-paper",
+                  "fill": [
+                    "$print-paper",
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.386,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.45217391304347826,
+                        "height": 0.582089552238806
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.255,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.45217391304347826,
+                        "height": 0.582089552238806
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.27,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.45217391304347826,
+                        "height": 0.582089552238806
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 1
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.18,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.45217391304347826,
+                        "height": 0.582089552238806
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 1
+                      }
+                    }
+                  ],
                   "stroke": "$paper-edge",
                   "strokeWidth": 1,
                   "strokeAlignment": "outer",
@@ -41319,27 +41750,9 @@
                           "id": "TuSJf",
                           "name": "Caption",
                           "fill": "$print-ink",
-                          "content": "小安在公園盪鞦韆",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "G6O4Sc",
-                          "name": "Sep",
-                          "fill": "$print-ink-secondary",
-                          "content": "·",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "Chxf5",
-                          "name": "Age",
-                          "fill": "$print-ink-secondary",
-                          "content": "2 歲 3 個月",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安在公園盪鞦韆 · 2 歲 3 個月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -41440,8 +41853,8 @@
                           "type": "icon",
                           "id": "EERGs",
                           "name": "Icon",
-                          "width": 20,
-                          "height": 20,
+                          "width": 18,
+                          "height": 18,
                           "icon": "notebook-pen",
                           "library": "lucide",
                           "fill": "$text-secondary"
@@ -41482,7 +41895,7 @@
           "id": "dJM15",
           "layoutPosition": "absolute",
           "x": 313,
-          "y": 700,
+          "y": 682,
           "name": "FAB",
           "width": 56,
           "height": 56,
@@ -41540,7 +41953,7 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 776
+          "y": 754
         }
       ]
     },
@@ -41651,8 +42064,8 @@
                   "type": "icon",
                   "id": "XtKh4",
                   "name": "Chevron",
-                  "width": 20,
-                  "height": 20,
+                  "width": 18,
+                  "height": 18,
                   "icon": "chevron-down",
                   "library": "lucide",
                   "fill": "$text-primary"
@@ -42012,7 +42425,7 @@
           "id": "gFJ8N",
           "layoutPosition": "absolute",
           "x": 313,
-          "y": 700,
+          "y": 682,
           "name": "FAB",
           "width": 56,
           "height": 56,
@@ -42070,7 +42483,7 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 776
+          "y": 754
         }
       ]
     },
@@ -42790,7 +43203,109 @@
                       "id": "O3mGu",
                       "name": "Photo Print",
                       "width": "fill_container",
-                      "fill": "$print-paper",
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.331,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.6129666011787819,
+                            "height": 0.4020618556701031
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.163,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.6129666011787819,
+                            "height": 0.4020618556701031
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.19699999999999998,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.6129666011787819,
+                            "height": 0.4020618556701031
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.076,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.6129666011787819,
+                            "height": 0.4020618556701031
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
                       "stroke": "$paper-edge",
                       "strokeWidth": 1,
                       "strokeAlignment": "outer",
@@ -42846,27 +43361,9 @@
                               "id": "o0fYEM",
                               "name": "Caption",
                               "fill": "$print-ink",
-                              "content": "小安盪鞦韆",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
-                            },
-                            {
-                              "type": "text",
-                              "id": "PBqIG",
-                              "name": "Sep",
-                              "fill": "$print-ink-secondary",
-                              "content": "·",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
-                            },
-                            {
-                              "type": "text",
-                              "id": "G5TQR",
-                              "name": "Age",
-                              "fill": "$print-ink-secondary",
-                              "content": "2 歲 3 個月",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "小安盪鞦韆 · 2 歲 3 個月",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
                               "fontWeight": "600"
@@ -42948,7 +43445,109 @@
                       "id": "ONbzX",
                       "name": "Photo Print",
                       "width": "fill_container",
-                      "fill": "$print-paper",
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.146,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.6129666011787819,
+                            "height": 0.4020618556701031
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.03,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.6129666011787819,
+                            "height": 0.4020618556701031
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.062,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.6129666011787819,
+                            "height": 0.4020618556701031
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.03,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.6129666011787819,
+                            "height": 0.4020618556701031
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
                       "stroke": "$paper-edge",
                       "strokeWidth": 1,
                       "strokeAlignment": "outer",
@@ -43004,27 +43603,9 @@
                               "id": "r3aqZj",
                               "name": "Caption",
                               "fill": "$print-ink",
-                              "content": "小軒爬滑梯",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
-                            },
-                            {
-                              "type": "text",
-                              "id": "fQ6Gh",
-                              "name": "Sep",
-                              "fill": "$print-ink-secondary",
-                              "content": "·",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
-                            },
-                            {
-                              "type": "text",
-                              "id": "LWwMD",
-                              "name": "Age",
-                              "fill": "$print-ink-secondary",
-                              "content": "6 個月大",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "小軒爬滑梯 · 6 個月大",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
                               "fontWeight": "600"
@@ -44321,7 +44902,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "10-iPad sidebar 第三項由「孩子」改為「寶貝」，與全票其他地方一致；CLAUDE.md 原文寫的是「孩子」，這裡是刻意的用語精修，建議 CLAUDE.md 的 tab 命名之後一併回改成「寶貝」（本輪未動 CLAUDE.md，留給人核可）。",
+                  "content": "R2 review 更正：CLAUDE.md 全文沒有「時間軸／相簿／孩子／設定」這行，PLAN.md 的「孩子」是領域名詞（孩子檔案）不是分頁名；該字串只出現在 .claude/agents/ui-designer.md 第32行（agent 定義本身）。稿面「寶貝」維持不變、正確，不需要人核可，也不必回改 CLAUDE.md——後續只是 orchestrator 更新 ui-designer.md L32 的 harness 小事，非設計缺陷。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -44402,6 +44983,392 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "hJNhV",
+          "name": "N R3 修訂重點",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "tXuip",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "R3 修訂重點（APPROVE 門檻逐條回應）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "Gr5b3",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "eDNUn",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R3 · F24",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "q2RMv",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "9 張沖印品補齊染料池（8 張印品×4顆＋10-iPad 2 張=9）：08/08c/AX3-08/08-iPad/09空/10/10深 各1張、10-iPad 2張。opacity=0.03+0.5·lit(角座標)，R=78（角托邊長26×3），座標各自取該畫面 Print 在 viewport 的實際落點——不是複製01的值。四角opacity各自為：08/08c(TL.429 TR.275 BL.367 BR.245)、AX3-08(.293/.197/.168/.099)、08-iPad(.376/.191/.150/.045)、09空(.418/.271/.320/.215)、10/10深(.386/.255/.270/.180)、10-iPad-L(.331/.163/.197/.076)、10-iPad-R(.146/.030/.062/.030，兩角已觸地板0.03)。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "YWULC",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "V2offN",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R3 · F16",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "y5q2Z0",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "08/08c 高度回到 852：改法是 (a) 塞回852，非改用ScrollView。副標改為單行「填好基本資料，就能開始記錄他的成長了。」（順便解決I14的重複語意）；Top 的 gap 由 $sp-block(24) 改 0，改用兩顆顯式 16pt spacer（Avatar Field 自己的 44 padding-top 保留作為唯一章節斷點，不再疊加多餘的24）；Photo Wrap 200→88（仍容得下相機icon+文字，且陳小安即時姓名預覽維持在壓印行）。結果：Top 561、Footer 132、flex Spacer 收斂到 3（自然剩餘，非硬寫）、Footer 完整落在 y580–712，CTA「建立寶貝檔案」在 y686–746，全部在852折線內。AX3-08 不動（AX3板本來就假設ScrollView，1900高本屬既有慣例，未在F16範圍內）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vFOML",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "sVOaa",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R3 · F10/F11",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "V7iZp",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "下拉選單改為「以觸發器底緣+$sp-label(8) 計算」而非任何字面 y：10b 觸發器底緣199→選單y=207（與原值一致，驗證無誤）；AX3-10 觸發器底緣263→選單y=271（原本硬寫207是錯的，現已修正，稿面截圖可見「全部⌄」完整露出在選單上緣之上）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TP48E",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "yP11q",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R3 · F17",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "HgpMh",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "10/10深/10-iPad×2 共4張沖印卡的壓印行，「caption · age」由 Caption/Sep/Age 三節點合併為單一 text 節點（例：「小安在公園盪鞦韆 · 2 歲 3 個月」），不再有孤兒「·」。10-iPad 的兩張卡本身就是短caption（「小安盪鞦韆」5字、「小軒爬滑梯」5字）+「2 歲 3 個月」「6 個月大」的組合，合併後同樣正確，不受caption長度影響——這正是單節點方案優於三節點方案之處。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XmA88",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "c9Sscw",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R3 · F15",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "qiHO6",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "12 顆 20pt icon 全部改 18（09/09空/09深/AX3-09 的 Archive Icon＋Chevron Down 共8顆、10/10深的 Icon 共2顆、10b/AX3-10 的 Chevron 共2顆）；另外本輪為滿足A.8新增到AX3-10的 Diary Card 內 notebook-pen icon 也一併定為18（與10/10深同款icon同尺寸）。08-iPad 的 Camera Icon 40→26（icon-lg，主鈕級圖示，不再借用AX3尺寸給預設狀態）。全稿機械掃描確認：18張畫面icon只剩18/22/26（AX3板另含32/40/48），0 例外。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "g3UoPO",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "l3rePZ",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R3 · F20/F19",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Zx8GJ",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Tab Bar 下緣統一改到 y754（頂 y754–底818），與 Home Indicator Area(818起) 相接不相交；FAB 隨之上移到 y682–738（與 Tab Bar 留 16pt=$sp-item）。10/10深的 Content 加 clip:true、高度收到320（只完整顯示 Photo Print，Diary Card 整張退到折線下，需要捲動才看到）——Photo Print 底(620) 到 FAB 頂(682) 淨距 62pt，超過原訂 44pt 門檻。跨-parent 掃描確認 FAB×Snippet 交集=0。AX3-10 同步：Tab Bar y1174、FAB y1102、Home Indicator y1238，板高 1300→1272（由內容決定，非任意值）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "E7hreZ",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "p2Hvgo",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R3 · F21/F22",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "L5cfY3",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "cmp/Tab Bar（元件層級改一次、四張畫面全部生效）：四個 Label 的 fontSize 由硬寫 11 改回 $fs-meta（=13，符合13pt成員資格：icon+標籤並存、不讀也能靠icon完成任務）。選中語言統一為「$surface 浮起」：Tab Bar 底改 $surface-2（原本相反的$surface）、選中頁籤改 $surface＋輕陰影（比照 Child Filter 的 Segment 選中樣式），與分段控制、iPad sidebar 的「亮=選中」語言一致。附帶採納 I15：Tab Bar 邊框 $border(1.86:1)→$control-line(≥3:1)。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ux6LI",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "cgNsg",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R3 · F25",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "wHAyM",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Stress/10 板整個重建：舊版是另外搭建的假控件（軌高34，非真控件的65）。新版直接 Copy 真實 ebuFg（10 的 Child Filter）為「Child Filter（真控件）」，4個真實 segment（全部/陳彥廷/小饅頭/Emma Chen），fill_container 等分擠壓下 avatar 與文字明顯重疊溢出——證實 (345−6)/113≈3，第3個寶貝就會擠爆。新增第二張比對「Dropdown（真控件對照）」：同一份4人名單改用真實 Dropdown Menu 呈現，4列全部完整可讀，證明門檻應該用寬度判斷、不是數量。板高由180(舊)→501，內容到底無虛構留白。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "KZgcw",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "zgBq5",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R3 · F9 定案（不送人核可）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "UyOqE",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "裁定採納 reviewer 的「寬度判斷」：分段控制可用寬 ≥ Σ(各段自然寬)＋內距時用分段；否則用下拉。真控件 113pt/段，(345−6)/113≈3——「全部＋2個寶貝」已是分段控制上限，第3個寶貝起一律改下拉。AX3 一律強制下拉（既有規則不變）。此為 spec 初稿措辭的精確化，不是使用者裁決的硬約束變更，故不送人核可，已寫入 Stress/10 板作為壓測依據。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gidBV",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "yoZUG",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R3 · AX3-10 內容補完（門檻 A.8）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "JRfQt",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "原本 Content 是純色佔位方塊（無照片、無角托、無文字）。改為直接 Copy 10 的 Photo Print（含真照片＋4角托＋染料池＋壓印行）與 Diary Card 到 AX3-10 的 Content；Diary Card 的 Head（icon+日期）在 $fs-note 放大到 AX3(40pt) 後會超寬，改 Head 為 fill_container 換行、alignItems:start，不再溢出。0 clip 確認，板高由內容重新收斂到 1272。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -44416,7 +45383,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1040,
+      "height": 852,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -44478,7 +45445,6 @@
               "name": "Top",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": "$sp-block",
               "children": [
                 {
                   "type": "frame",
@@ -44508,7 +45474,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "之後隨時可以在家庭頁修改，現在不填也沒關係。",
+                      "content": "填好基本資料，就能開始記錄他的成長了。",
                       "lineHeight": 1.6,
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -44536,7 +45502,109 @@
                       "id": "hduZn",
                       "name": "Photo Print",
                       "width": "fill_container",
-                      "fill": "$print-paper",
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.429,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 1.0909090909090908
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.275,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 1.0909090909090908
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.36700000000000005,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 1.0909090909090908
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.245,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 1.0909090909090908
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
                       "stroke": "$paper-edge",
                       "strokeWidth": 1,
                       "strokeAlignment": "outer",
@@ -44565,7 +45633,7 @@
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
-                          "height": 200,
+                          "height": 88,
                           "fill": "$surface-2",
                           "layout": "vertical",
                           "gap": "$sp-label",
@@ -44686,6 +45754,13 @@
                   ]
                 },
                 {
+                  "type": "frame",
+                  "id": "aGcLA",
+                  "name": "Spacer 16",
+                  "width": "fill_container",
+                  "height": 16
+                },
+                {
                   "id": "Tf91R",
                   "type": "ref",
                   "ref": "UcO8T",
@@ -44703,6 +45778,13 @@
                       "content": "家人在時間軸上會看到這個名字。"
                     }
                   }
+                },
+                {
+                  "type": "frame",
+                  "id": "d1mBx",
+                  "name": "Spacer 16",
+                  "width": "fill_container",
+                  "height": 16
                 },
                 {
                   "type": "frame",
@@ -45031,7 +46113,109 @@
                       "id": "KHaDM",
                       "name": "Photo Print",
                       "width": "fill_container",
-                      "fill": "$print-paper",
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.293,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.5435540069686411
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.19699999999999998,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.5435540069686411
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.168,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.5435540069686411
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.099,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.5435540069686411
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
                       "stroke": "$paper-edge",
                       "strokeWidth": 1,
                       "strokeAlignment": "outer",
@@ -45745,8 +46929,8 @@
                           "type": "icon",
                           "id": "f5yh3",
                           "name": "Archive Icon",
-                          "width": 20,
-                          "height": 20,
+                          "width": 18,
+                          "height": 18,
                           "icon": "archive",
                           "library": "lucide",
                           "fill": "$text-secondary"
@@ -45767,8 +46951,8 @@
                       "type": "icon",
                       "id": "yHkgW",
                       "name": "Chevron Down",
-                      "width": 20,
-                      "height": 20,
+                      "width": 18,
+                      "height": 18,
                       "icon": "chevron-down",
                       "library": "lucide",
                       "fill": "$text-secondary"
@@ -46161,8 +47345,8 @@
                           "type": "icon",
                           "id": "TwOaD",
                           "name": "Archive Icon",
-                          "width": 20,
-                          "height": 20,
+                          "width": 18,
+                          "height": 18,
                           "icon": "archive",
                           "library": "lucide",
                           "fill": "$text-secondary"
@@ -46185,8 +47369,8 @@
                       "type": "icon",
                       "id": "jY7HF",
                       "name": "Chevron Down",
-                      "width": 20,
-                      "height": 20,
+                      "width": 18,
+                      "height": 18,
                       "icon": "chevron-down",
                       "library": "lucide",
                       "fill": "$text-secondary"
@@ -46259,9 +47443,9 @@
       "reusable": true,
       "width": 361,
       "height": 64,
-      "fill": "$surface",
+      "fill": "$surface-2",
       "cornerRadius": "$radius-full",
-      "stroke": "$border",
+      "stroke": "$control-line",
       "strokeWidth": 1,
       "effect": {
         "type": "shadow",
@@ -46283,8 +47467,18 @@
           "name": "時間軸",
           "width": "fill_container",
           "height": "fill_container",
-          "fill": "$surface-2",
+          "fill": "$surface",
           "cornerRadius": "$radius-full",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 0,
+              "y": 1
+            },
+            "blur": 3
+          },
           "layout": "vertical",
           "gap": 2,
           "justifyContent": "center",
@@ -46307,7 +47501,7 @@
               "fill": "$text-primary",
               "content": "時間軸",
               "fontFamily": "$font",
-              "fontSize": 11,
+              "fontSize": "$fs-meta",
               "fontWeight": "700"
             }
           ]
@@ -46342,7 +47536,7 @@
               "fill": "$text-secondary",
               "content": "相簿",
               "fontFamily": "$font",
-              "fontSize": 11,
+              "fontSize": "$fs-meta",
               "fontWeight": "600"
             }
           ]
@@ -46377,7 +47571,7 @@
               "fill": "$text-secondary",
               "content": "寶貝",
               "fontFamily": "$font",
-              "fontSize": 11,
+              "fontSize": "$fs-meta",
               "fontWeight": "600"
             }
           ]
@@ -46412,7 +47606,7 @@
               "fill": "$text-secondary",
               "content": "設定",
               "fontFamily": "$font",
-              "fontSize": 11,
+              "fontSize": "$fs-meta",
               "fontWeight": "600"
             }
           ]
@@ -46430,7 +47624,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1300,
+      "height": 1272,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -46529,8 +47723,8 @@
                   "type": "icon",
                   "id": "qy6WE",
                   "name": "Chevron",
-                  "width": 20,
-                  "height": 20,
+                  "width": 18,
+                  "height": 18,
                   "icon": "chevron-down",
                   "library": "lucide",
                   "fill": "$text-primary"
@@ -46553,12 +47747,304 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "l2KoAe",
-                  "name": "Photo Print Placeholder",
+                  "id": "c9IkRY",
+                  "name": "Photo Print",
                   "width": "fill_container",
-                  "height": 230,
-                  "fill": "$print-paper",
-                  "cornerRadius": "$radius-md"
+                  "fill": [
+                    "$print-paper",
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.386,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.45217391304347826,
+                        "height": 0.582089552238806
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.255,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.45217391304347826,
+                        "height": 0.582089552238806
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.27,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.45217391304347826,
+                        "height": 0.582089552238806
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 1
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.18,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.45217391304347826,
+                        "height": 0.582089552238806
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 1
+                      }
+                    }
+                  ],
+                  "stroke": "$paper-edge",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "outer",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 0,
+                      "y": 3
+                    },
+                    "blur": 12
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "SHzYD",
+                      "name": "Photo Wrap",
+                      "metadata": {
+                        "type": "unsplash",
+                        "username": "mclee",
+                        "link": "https://unsplash.com/@mclee",
+                        "author": "MChe Lee"
+                      },
+                      "clip": true,
+                      "width": "fill_container",
+                      "height": 220,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1781366616767-28e8dfceb676?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODc2NjgwOTF8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "xHxEb",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "KyKwL",
+                          "name": "Caption",
+                          "fill": "$print-ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安在公園盪鞦韆 · 2 歲 3 個月",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "gEYpf",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TL",
+                      "layoutPosition": "absolute",
+                      "x": -5,
+                      "y": -5,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 0 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "FkOcN",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TR",
+                      "layoutPosition": "absolute",
+                      "x": 324,
+                      "y": -5,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 0 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "PRyQO",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BL",
+                      "layoutPosition": "absolute",
+                      "x": -5,
+                      "y": 247,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 26 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "tVUkg",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BR",
+                      "layoutPosition": "absolute",
+                      "x": 324,
+                      "y": 247,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 26 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "sPFcE",
+                  "name": "Diary Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "YO68n",
+                      "name": "Head",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "D2SWV0",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "notebook-pen",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Ob4LS",
+                          "name": "Meta",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小軒的日記 · 8月18日",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "KXkvg",
+                      "name": "Snippet",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "今天第一次自己爬上溜滑梯，笑得好開心。",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
                 }
               ]
             }
@@ -46569,7 +48055,7 @@
           "id": "zGEet",
           "layoutPosition": "absolute",
           "x": 24,
-          "y": 207,
+          "y": 271,
           "name": "Dropdown Menu",
           "width": 340,
           "fill": "$surface",
@@ -46890,7 +48376,7 @@
           "id": "G5vY5",
           "layoutPosition": "absolute",
           "x": 313,
-          "y": 1148,
+          "y": 1102,
           "name": "FAB",
           "width": 56,
           "height": 56,
@@ -46948,7 +48434,7 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 1224
+          "y": 1174
         }
       ]
     },
@@ -47213,7 +48699,9 @@
               "type": "frame",
               "id": "GrgFP",
               "name": "Content",
+              "clip": true,
               "width": "fill_container",
+              "height": 320,
               "layout": "vertical",
               "gap": "$sp-block",
               "padding": [
@@ -47228,7 +48716,109 @@
                   "id": "L3pRn",
                   "name": "Photo Print",
                   "width": "fill_container",
-                  "fill": "$print-paper",
+                  "fill": [
+                    "$print-paper",
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.386,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.45217391304347826,
+                        "height": 0.582089552238806
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.255,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.45217391304347826,
+                        "height": 0.582089552238806
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.27,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.45217391304347826,
+                        "height": 0.582089552238806
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 1
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.18,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.45217391304347826,
+                        "height": 0.582089552238806
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 1
+                      }
+                    }
+                  ],
                   "stroke": "$paper-edge",
                   "strokeWidth": 1,
                   "strokeAlignment": "outer",
@@ -47284,27 +48874,9 @@
                           "id": "K7BDd",
                           "name": "Caption",
                           "fill": "$print-ink",
-                          "content": "小安在公園盪鞦韆",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "KIXaH",
-                          "name": "Sep",
-                          "fill": "$print-ink-secondary",
-                          "content": "·",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "text",
-                          "id": "B1XGpM",
-                          "name": "Age",
-                          "fill": "$print-ink-secondary",
-                          "content": "2 歲 3 個月",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安在公園盪鞦韆 · 2 歲 3 個月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -47405,8 +48977,8 @@
                           "type": "icon",
                           "id": "ms231",
                           "name": "Icon",
-                          "width": 20,
-                          "height": 20,
+                          "width": 18,
+                          "height": 18,
                           "icon": "notebook-pen",
                           "library": "lucide",
                           "fill": "$text-secondary"
@@ -47447,7 +49019,7 @@
           "id": "yqWq9",
           "layoutPosition": "absolute",
           "x": 313,
-          "y": 700,
+          "y": 682,
           "name": "FAB",
           "width": 56,
           "height": 56,
@@ -47505,7 +49077,7 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 776
+          "y": 754
         }
       ]
     },
@@ -47517,7 +49089,7 @@
       "name": "Stress / 10 · 3 個寶貝＋超長名字",
       "clip": true,
       "width": 393,
-      "height": 280,
+      "height": 501,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -47561,15 +49133,25 @@
               "fill": "$text-secondary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "壓測：3 個寶貝＋超長名字（陳彥廷／小饅頭／Emma Chen）— 分段控制在此門檻是否還撐得住",
+              "content": "壓測：3 個寶貝＋超長名字（陳彥廷／小饅頭／Emma Chen）。真控件軌道 345pt，(345−6)/113≈3——「全部＋2 個寶貝」已是分段控制的上限，第 3 個寶貝就會擠爆。",
               "fontFamily": "$font",
               "fontSize": "$fs-meta",
               "fontWeight": "600"
             },
             {
+              "type": "text",
+              "id": "lgI03",
+              "name": "Label A",
+              "fill": "$danger",
+              "content": "情境 A・分段控制（4 段）— 溢出",
+              "fontFamily": "$font",
+              "fontSize": "$fs-meta",
+              "fontWeight": "700"
+            },
+            {
               "type": "frame",
-              "id": "KII9I",
-              "name": "Child Filter",
+              "id": "pV7bg",
+              "name": "Child Filter (真控件)",
               "width": "fill_container",
               "fill": "$surface-2",
               "cornerRadius": "$radius-full",
@@ -47577,18 +49159,33 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "z17mxw",
+                  "id": "GAsTW",
                   "name": "Segment",
                   "width": "fill_container",
                   "fill": "$surface",
                   "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 0,
+                      "y": 1
+                    },
+                    "blur": 3
+                  },
                   "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "text",
-                      "id": "FoScs",
+                      "id": "cSM9L",
                       "name": "Label",
                       "fill": "$text-primary",
                       "content": "全部",
@@ -47600,17 +49197,22 @@
                 },
                 {
                   "type": "frame",
-                  "id": "SjRO6",
+                  "id": "sgoMe",
                   "name": "Segment",
                   "width": "fill_container",
                   "fill": "#00000000",
                   "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
                   "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
-                      "id": "jPOy7",
+                      "id": "ePBRY",
                       "type": "ref",
                       "ref": "RaaIf",
                       "name": "Avatar",
@@ -47618,13 +49220,14 @@
                       "height": 28,
                       "descendants": {
                         "A30rIX": {
-                          "content": "彥"
+                          "content": "廷",
+                          "fontSize": "$fs-body"
                         }
                       }
                     },
                     {
                       "type": "text",
-                      "id": "S5mM9H",
+                      "id": "t5XoDK",
                       "name": "Label",
                       "fill": "$text-secondary",
                       "content": "陳彥廷",
@@ -47636,17 +49239,22 @@
                 },
                 {
                   "type": "frame",
-                  "id": "nROVn",
+                  "id": "KHj2n",
                   "name": "Segment",
                   "width": "fill_container",
                   "fill": "#00000000",
                   "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
                   "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
-                      "id": "DCz5M",
+                      "id": "TRGKv",
                       "type": "ref",
                       "ref": "RaaIf",
                       "name": "Avatar",
@@ -47654,13 +49262,14 @@
                       "height": 28,
                       "descendants": {
                         "A30rIX": {
-                          "content": "饅"
+                          "content": "饅",
+                          "fontSize": "$fs-body"
                         }
                       }
                     },
                     {
                       "type": "text",
-                      "id": "xl3ut",
+                      "id": "h6ySC4",
                       "name": "Label",
                       "fill": "$text-secondary",
                       "content": "小饅頭",
@@ -47672,17 +49281,22 @@
                 },
                 {
                   "type": "frame",
-                  "id": "K6LKbD",
+                  "id": "AgrcE",
                   "name": "Segment",
                   "width": "fill_container",
                   "fill": "#00000000",
                   "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
                   "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
-                      "id": "HODJS",
+                      "id": "fXckR",
                       "type": "ref",
                       "ref": "RaaIf",
                       "name": "Avatar",
@@ -47690,15 +49304,216 @@
                       "height": 28,
                       "descendants": {
                         "A30rIX": {
-                          "content": "E"
+                          "content": "E",
+                          "fontSize": "$fs-body"
                         }
                       }
                     },
                     {
                       "type": "text",
-                      "id": "yi32C",
+                      "id": "k8PVy",
                       "name": "Label",
                       "fill": "$text-secondary",
+                      "content": "Emma Chen",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "gYcwC",
+              "name": "Label B",
+              "fill": "$success",
+              "content": "情境 B・改用下拉（同名單）— 正常",
+              "fontFamily": "$font",
+              "fontSize": "$fs-meta",
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "wZ5ej",
+              "name": "Dropdown (真控件對照)",
+              "width": 240,
+              "fill": "$surface",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 6
+                },
+                "blur": 20
+              },
+              "layout": "vertical",
+              "padding": "$sp-tight",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "MlN2P",
+                  "name": "Menu Row",
+                  "width": "fill_container",
+                  "fill": "$accent-soft",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-tap",
+                    "$sp-label"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "TYBgh",
+                      "name": "All Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "users-round",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "eonDv",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "全部",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "q8bTD8",
+                      "name": "Check",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "check",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "bSOf1",
+                  "name": "Menu Row",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-tap",
+                    "$sp-label"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "tT6rF",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "廷",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "r207wj",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "陳彥廷",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "rP3dv",
+                  "name": "Menu Row",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-tap",
+                    "$sp-label"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "mXscT",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "饅",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "Nc8Md",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "小饅頭",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "sz2ks",
+                  "name": "Menu Row",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-tap",
+                    "$sp-label"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "q9T67",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "E",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "gMM1x",
+                      "name": "Label",
+                      "fill": "$text-primary",
                       "content": "Emma Chen",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
