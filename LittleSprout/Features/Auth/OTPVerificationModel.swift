@@ -41,8 +41,15 @@ final class OTPVerificationModel {
 
     var canResend: Bool { resendCooldown <= 0 }
     var isCodeComplete: Bool { code.count == 6 }
+    /// 次數用盡：這組碼已經不可能再驗證成功，只剩「重新寄一組」這條路（I-2，LS-92）。
+    /// 用來擋掉 `updateCode` 的無意義輸入；刻意不用來把 `PrimaryButton`／`OTPCodeField`
+    /// 畫成灰階或按不下去的樣子——elder-constraints「驗證型 disable＝0，只在 in-flight
+    /// 才 disable」是 gate 級硬約束。輸入與按鈕看起來仍可操作，動作被 `verify()` 的 guard
+    /// 與這裡溫和擋下，用文字（已經在畫面上的 `errorMessage`）說明原因，不靠視覺停用。
+    var isLocked: Bool { remainingAttempts <= 0 }
 
     func updateCode(_ newValue: String) {
+        guard !isLocked else { return }
         code = String(newValue.filter(\.isNumber).prefix(6))
     }
 
@@ -54,7 +61,7 @@ final class OTPVerificationModel {
     func verify() async -> Bool {
         guard !isVerifying, isCodeComplete else { return false }
         guard remainingAttempts > 0 else {
-            errorMessage = "已經試了 \(maxAttempts) 次，請重新寄一組驗證碼再試。"
+            errorMessage = attemptsExhaustedMessage
             return false
         }
         isVerifying = true
@@ -104,9 +111,19 @@ final class OTPVerificationModel {
         }
     }
 
+    /// I-2（LS-92，review comment `78b4455c` informational）：歸零那一次不能再顯示
+    /// 「還可以再試 0 次」——長輩看得到「0」還說「可以再試」，是矛盾句。改用跟 `verify()`
+    /// guard 分支共用的同一份「已達上限」文案（`attemptsExhaustedMessage`），兩處不能
+    /// 各喊各的措辭。
     private func recordFailure() {
         remainingAttempts = max(0, remainingAttempts - 1)
-        errorMessage = "驗證碼不對或已經過期，還可以再試 \(remainingAttempts) 次；沒收到的話請重新寄一組。"
+        errorMessage = remainingAttempts == 0
+            ? attemptsExhaustedMessage
+            : "驗證碼不對或已經過期，還可以再試 \(remainingAttempts) 次；沒收到的話請重新寄一組。"
+    }
+
+    private var attemptsExhaustedMessage: String {
+        "已經試了 \(maxAttempts) 次，已達上限，請重新寄一組驗證碼再試。"
     }
 
     @discardableResult

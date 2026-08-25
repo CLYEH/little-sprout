@@ -8,7 +8,10 @@ import XCTest
 final class OTPVerificationModelTests: XCTestCase {
     private let userID = UUID(uuidString: "33333333-3333-3333-3333-333333333333")!
 
-    private func makeModel(
+    /// 沒有標 `private`：`OTPVerificationModelLockoutTests.swift`／
+    /// `OTPVerificationModelRateLimitTests.swift`（I-2／I-3 拆檔，見各檔開頭註解——
+    /// 單純為了 SwiftLint `type_body_length`）以 extension 共用這個工廠方法。
+    func makeModel(
         maxAttempts: Int = 5,
         cooldownSeconds: Int = 60,
         stub: StubAuthService = StubAuthService()
@@ -83,7 +86,8 @@ final class OTPVerificationModelTests: XCTestCase {
         XCTAssertEqual(model.remainingAttempts, 1)
         _ = await model.verify()
         XCTAssertEqual(model.remainingAttempts, 0)
-        XCTAssertEqual(model.errorMessage, "驗證碼不對或已經過期，還可以再試 0 次；沒收到的話請重新寄一組。")
+        // I-2（LS-92）：歸零那次不能再顯示「還可以再試 0 次」矛盾句，改用「已達上限」文案。
+        XCTAssertEqual(model.errorMessage, "已經試了 3 次，已達上限，請重新寄一組驗證碼再試。")
     }
 
     func test_verify_afterAttemptsExhausted_doesNotCallAuthServiceAgain() async {
