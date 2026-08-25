@@ -24,6 +24,17 @@ protocol AuthService: Sendable {
     /// `currentSession` 驅動畫面路由邏輯（LS-55 N7）。
     var currentSession: AuthSession? { get }
 
+    /// Session 狀態變化的非同步序列，直接對應底層 SDK 的 `authStateChanges`（測試假實作可自行
+    /// 決定何時推送）。這是唯一能讓訂閱端跟上「SDK 端背景改變 session、且沒有經過呼叫端任何
+    /// `AuthService` 方法」這種情況的訊號來源——例如 SDK 偵測到 refresh token 被撤銷／重用而
+    /// 發 `signedOut`，`currentSession` 快取會變 nil，但這件事本身不會通知任何人（LS-17 R2
+    /// merge-reviewer N5／LS-82）。`AuthStore` 用它驅動 `session`，取代單靠 init／mutating
+    /// 方法後／`scenePhase` 這三個快照時機。
+    ///
+    /// 實作只需要保證單一消費者訂閱後能收到之後所有事件——app 內只有一個 `AuthStore` 會訂閱，
+    /// 不需要支援多消費者廣播。
+    var sessionUpdates: AsyncStream<AuthSession?> { get }
+
     /// 用 Sign in with Apple 拿到的 ID token 交換 Supabase session。
     /// - Parameters:
     ///   - idToken: `ASAuthorizationAppleIDCredential.identityToken` 解出的 JWT 字串。

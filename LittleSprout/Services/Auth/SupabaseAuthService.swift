@@ -19,6 +19,10 @@ final class SupabaseAuthService: AuthService {
     // （這個 race 是實測抓到的，不是猜的——第一版只做②時單元測試會間歇性失敗）。
     private let cachedSession: OSAllocatedUnfairLock<AuthSession?>
     private let observeAuthChangesTask: Task<Void, Never>
+    // `sessionUpdates` 由同一條 `authStateChanges` 監聽迴圈驅動（見下面 init），不是另外
+    // 重打一份 SDK 呼叫——維持跟 `cachedSession` 完全同步的一份事實來源（LS-82）。
+    private let sessionUpdatesContinuation: AsyncStream<AuthSession?>.Continuation
+    let sessionUpdates: AsyncStream<AuthSession?>
 
     init(client: SupabaseClient) {
         self.client = client
@@ -26,15 +30,26 @@ final class SupabaseAuthService: AuthService {
             initialState: client.auth.currentSession.map { AuthSession(session: $0) }
         )
         cachedSession = box
+
+        // `.makeStream` 回傳的 continuation 是 `let`（`Sendable`），可以直接被下面的 Task
+        // closure 捕捉，不必像 `AsyncStream { $0 }` 那樣繞一層 `var` optional（那種寫法在
+        // Swift 6 strict concurrency 下會被判定為「在 escaping closure 裡捕捉可變 var」）。
+        let (stream, continuation) = AsyncStream.makeStream(of: AuthSession?.self)
+        sessionUpdates = stream
+        sessionUpdatesContinuation = continuation
+
         observeAuthChangesTask = Task {
             for await (_, session) in client.auth.authStateChanges {
-                box.withLock { $0 = session.map { AuthSession(session: $0) } }
+                let authSession = session.map { AuthSession(session: $0) }
+                box.withLock { $0 = authSession }
+                continuation.yield(authSession)
             }
         }
     }
 
     deinit {
         observeAuthChangesTask.cancel()
+        sessionUpdatesContinuation.finish()
     }
 
     /// 目前的登入狀態快取（純記憶體讀取，不打 Keychain，讀取本身可以安全放在 SwiftUI body

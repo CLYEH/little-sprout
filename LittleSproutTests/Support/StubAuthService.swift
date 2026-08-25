@@ -24,13 +24,30 @@ final class StubAuthService: AuthService, @unchecked Sendable {
     }
 
     private let box: OSAllocatedUnfairLock<Box>
+    private let sessionUpdatesContinuation: AsyncStream<AuthSession?>.Continuation
+    let sessionUpdates: AsyncStream<AuthSession?>
 
     init(currentSession: AuthSession? = nil) {
         box = OSAllocatedUnfairLock(initialState: Box(currentSession: currentSession))
+        let (stream, continuation) = AsyncStream.makeStream(of: AuthSession?.self)
+        sessionUpdates = stream
+        sessionUpdatesContinuation = continuation
+    }
+
+    deinit {
+        sessionUpdatesContinuation.finish()
     }
 
     var currentSession: AuthSession? {
         box.withLock { $0.currentSession }
+    }
+
+    /// 供測試模擬「SDK 端背景改變 session」（例如偵測到 refresh token 被撤銷／重用而發
+    /// signedOut、或 autoRefreshToken 定時刷新發 tokenRefreshed）——不經過任何
+    /// `AuthService` 方法呼叫，直接把值推進 `sessionUpdates`（LS-82）。
+    func emitSessionUpdate(_ session: AuthSession?) {
+        box.withLock { $0.currentSession = session }
+        sessionUpdatesContinuation.yield(session)
     }
 
     var sentEmails: [String] {
