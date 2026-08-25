@@ -103,7 +103,7 @@ struct WelcomeView: View {
             if colorScheme == .dark {
                 wordmarkPaperStrip
             }
-            PrintPhotoCard(accessibilityLabel: "祖母抱著嬰兒在晨光中的合照")
+            PrintPhotoCard(imageName: "HeroGrandma", accessibilityLabel: "祖母抱著嬰兒在晨光中的合照")
                 .padding(.top, 5)
         }
         .padding(.horizontal, 16)

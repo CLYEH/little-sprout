@@ -4,13 +4,16 @@ import SwiftUI
 /// 相片，不是單純的底圖或卡片。全 app 共用同一套規則（Handoff Notes「角托三段規則」／
 /// 「照片」段）。
 ///
-/// 設計稿的照片素材（`hero-grandma.png` 等）是待審核的人像 placeholder，不進 Asset Catalog
-/// （環境規約）——這裡改用 SF Symbol 縮圖占位，角托／白邊／染料池等版式規則原樣實作。
+/// LS-101 point 4：封面照片改用 `HeroGrandma` 資產（`design/hero-grandma.png` 壓成長邊
+/// ≤1024px、品質 ~80 的 JPEG，深色模式沿用同一張、靠 `lsPhotoDim` 疊層變暗，不是換圖）。
+/// `imageName` 給 nil 時退回 SF Symbol 縮圖占位，讓既有 Preview／未來未帶真實照片的呼叫端
+/// 不必跟著改。
 struct PrintPhotoCard: View {
     var photoHeight: CGFloat = 190
     var cornerSize: CGFloat = 26
     var mountPoolOpacity: MountPoolOpacity = .welcome
     var showsImprint = true
+    var imageName: String?
     var accessibilityLabel: String = "家庭照片"
 
     struct MountPoolOpacity {
@@ -48,9 +51,15 @@ struct PrintPhotoCard: View {
     private var photo: some View {
         ZStack {
             Color.lsSurface2
-            Image(systemName: "person.2.fill")
-                .font(.system(size: photoHeight * 0.4))
-                .foregroundStyle(Color.lsTextSecondary.opacity(0.5))
+            if let imageName {
+                Image(imageName)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: photoHeight * 0.4))
+                    .foregroundStyle(Color.lsTextSecondary.opacity(0.5))
+            }
             Color.lsPhotoDim
         }
         .frame(height: photoHeight)
