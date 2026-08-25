@@ -15,8 +15,10 @@
 #   否則全部卡住（LS-87：實際套用由 orchestrator 在 back-merge PR 併入後執行）。
 # restrictions（限制推送者）：GitHub 只對 organization repo 開放，本 repo 為 user-owned（PUT 帶 users 會 422）→ 一律 null；
 #   「僅使用者本人可推」由 collaborators 清單承載，本腳本印出有 push 權限者供核對。
-# required checks 的 app_id 四個都明寫 15368（GitHub Actions）——原設定 lint／rules 為 null（任何 app 都能滿足），四個 check 都只來自
-#   Actions，寫死是收緊、不是改變；merge-review 寫 -1（顯式「任何 app」——省略時 GitHub 會自動綁最近貼過的 app，狀態靠人貼、沒有 app）。
+# required checks 的 app_id：test／main 四個都明寫 15368（GitHub Actions；現況已是）；merge-review 寫 -1（顯式「任何 app」——省略時
+#   GitHub 會自動綁最近貼過的 app，狀態靠人貼、沒有 app）。development 只加 merge-review，其餘 check 的 context／app_id 照 GET 回來的
+#   原樣送回（null 以同義的 -1 送出；省略反而會被自動綁 Actions）——票文 G1 只要求加 merge-review，不順手把 development 的
+#   lint／rules 從 any 收緊成 15368（R2 M2）。
 # exit 0＝套用且 GET 回讀與預期一致（或 dry-run）；1＝套用後回讀不符；2＝參數／gh／jq 錯誤。規約：docs/COLLABORATION.md §2、§7。
 set -uo pipefail
 
@@ -51,8 +53,9 @@ after="$OUT/protection-${branch}-after.json"
 summary() {  # 一行摘要：require_pr／checks／enforce_admins／force_push／deletions／linear／restrictions
   jq -r '"require_pr=\(.required_pull_request_reviews != null) checks=\([.required_status_checks.checks[]? | "\(.context)@\(if .app_id == null or .app_id == -1 then "any" else .app_id end)"] | join(",")) strict=\(.required_status_checks.strict) enforce_admins=\(.enforce_admins.enabled) force_push=\(.allow_force_pushes.enabled) deletions=\(.allow_deletions.enabled) linear_history=\(.required_linear_history.enabled) restrictions=\(.restrictions != null)"' "$1"
 }
-# 目標狀態：四個 Actions check@15368＋merge-review@any（GET 回讀 -1 或 null 都算「任何 app」）；test／main 另驗 require PR 關、
-# enforce_admins、禁 force push／刪除；development 只驗 checks 段＋require PR 仍開（其餘欄位本腳本不動）
+# 目標狀態：merge-review@any（GET 回讀 -1 或 null 都算「任何 app」）＋五個 context 齊。test／main：四個 Actions check@15368，另驗
+# require PR 關、enforce_admins、禁 force push／刪除；development：其餘四個 check 的 context／app_id 與 before 相同（只加 merge-review）
+# ＋require PR 仍開（其餘欄位本腳本不動）
 CHECKS_OK='(.required_status_checks.strict | not)
     and ([.required_status_checks.checks[].context] | sort == ["ci","db","lint","merge-review","rules"])
     and ([.required_status_checks.checks[] | select(.context != "merge-review") | .app_id] | all(. == 15368))
@@ -66,7 +69,13 @@ verify() {  # 回讀是否等於目標狀態
       and (.required_linear_history.enabled | not)
       and ${CHECKS_OK}
       and (.restrictions == null)" "$1" >/dev/null ;;
-    patch) jq -e "(.required_pull_request_reviews != null) and ${CHECKS_OK}" "$1" >/dev/null ;;
+    patch) jq -e --slurpfile b "$before" '
+      def others: [.required_status_checks.checks[] | select(.context != "merge-review") | {context, app_id: (.app_id // -1)}] | sort_by(.context);
+      (.required_pull_request_reviews != null)
+      and (.required_status_checks.strict | not)
+      and ([.required_status_checks.checks[].context] | sort == ["ci","db","lint","merge-review","rules"])
+      and ([.required_status_checks.checks[] | select(.context == "merge-review") | .app_id] | all(. == null or . == -1))
+      and (others == ($b[0] | others))' "$1" >/dev/null ;;
   esac
 }
 
@@ -74,6 +83,7 @@ gh api "$EP" > "$before" || { echo "✗ protection-apply：GET ${EP} 失敗（�
 echo "== branch protection ${branch}"
 echo "  before: $(summary "$before")"
 
+# test／main（PUT）的 checks 段；development 不用這份——由 before 產生、只加 merge-review（見 patch）
 CHECKS_JSON='{
     "strict": false,
     "checks": [
@@ -103,8 +113,11 @@ case "$MODE" in
 EOF
     echo "  request: PUT ${EP}" ;;
   patch)
-    printf '%s\n' "$CHECKS_JSON" | sed 's/^  //' > "$request"
-    echo "  request: PATCH ${EP_CHECKS}（require PR 等其餘設定不動）" ;;
+    # 只加 merge-review：其餘 check 照 before 原樣（context／app_id；null→-1 同義「任何 app」），不順手收緊（R2 M2）
+    if ! jq '{strict: false, checks: ([.required_status_checks.checks[] | select(.context != "merge-review") | {context, app_id: (.app_id // -1)}] + [{context: "merge-review", app_id: -1}])}' "$before" > "$request"; then
+      echo "✗ protection-apply：從 ${before} 產生 request 失敗" >&2; exit 2
+    fi
+    echo "  request: PATCH ${EP_CHECKS}（只加 merge-review；其餘 check 照現況、require PR 等其餘設定不動）" ;;
 esac
 sed 's/^/    /' "$request"
 echo "  可推送者（collaborators 有 push 權限；user-owned repo 無 restrictions 可設）："
