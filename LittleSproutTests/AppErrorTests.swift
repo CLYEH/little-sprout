@@ -164,6 +164,18 @@ final class AppErrorTests: XCTestCase {
         }
     }
 
+    func test_map_httpError_429_getsSentinelCodeWhenBodyUnparseable() {
+        // LS-92 R2 F4：HTTPError 分支解不出結構化 error body 時固定傳 code: nil（見
+        // `map(_:)`）——裸 429 若原樣傳出 nil，呼叫端（`OTPVerificationModel.
+        // nonAttemptConsumingCodes`）會把它跟「純粹碼打錯」的 nil code 混為一談，誤扣使用者
+        // 次數。這裡釘住：裸 429 必須帶一個可辨識的 sentinel，不能是 nil。
+        let error = makeHTTPError(statusCode: 429, body: "")
+        guard case .validationRetryable(_, let code) = AppError.map(error) else {
+            return XCTFail("429 應映射為 .validationRetryable")
+        }
+        XCTAssertEqual(code, "bare_http_429", "裸 429（無法解析出 error_code）必須帶可辨識 sentinel，不能是 nil")
+    }
+
     // MARK: - LSErrorCode 逐碼列舉（docs/API.md §5；LS-49 PR #63 review F4）
 
     func test_lsErrorCode_tierClassification_isExhaustiveAndCorrect() {
