@@ -1,0 +1,23 @@
+{
+  "_": "第 10 輪 D9-01 P1a／P1c。value ＋ sha ＝ 這條門檻第一次登記時的樣子（20 條全部第一次出現在同一次 commit：第 6 輪 974fd99d49ed36dd1d63bec423bba74dc301d03e，round 8 的 f9a721d 只補了 evid／wide／noEvid 這些證據欄，沒有動過任何一條的 value）。wide ＝ 這次凍結（第 10 輪，本檔案建立時）當下那條門檻有沒有掛著 wide —— 之後只准消失、不准從沒有變成有（MG4⑧）。verify.mjs 的 MG4⑦ 讀這裡：value 對不上就要有具名 moved 動議，wide 從 false 變 true 直接 FAIL，沒有例外。第 12 輪 D11-01 MG4⑩ 追加：wide 現在錨定在這個檔案自己第一次出現的 commit（4dbe881e192dbc649bc93585bcf2bf3f7dd1ff58，也就是這次凍結本身），回那次 commit 的 verify.mjs 核對每一條有沒有掛 wide 欄位——核對時抓到 HUE_MIN.span 在那次 commit 裡從來沒有掛過 wide（它的餘裕比 1.17 是三條 HUE_MIN 裡最貼線的一條，⑤ 的 wide 敘述原文只提「span 1.17 < cool 1.55 < warm 1.57」，從沒把 span 算進「留寬」那一類），這裡的 wide:true 是複製隔壁 cool／warm 兩條時漏改的殘留，不是哪一輪刻意登記的。已改回 false，讓凍結快照對上歷史真的長什麼樣子——改的是這裡的記錄，不是 verify.mjs 裡 HUE_MIN.span 那條門檻本身，所以不算「門檻被移動」，不需要 moved 動議。",
+  "CONTRAST.aaa": { "value": 7, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "SP.tap": { "value": 44, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "KNOB_CR": { "value": 3, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "HUE_DE_MIN": { "value": 1, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "PHOTO_STOP": { "value": 0.5, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "PHOTO_DIM": { "value": null, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "SCALE_DE.band": { "value": null, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "SCALE_DE.adj": { "value": null, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "SCALE_DE.ends": { "value": null, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "CONTRAST.grain": { "value": 6, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "PHOTO_STOP_TOL": { "value": 0.04, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": true },
+  "RULE.pause": { "value": 120, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "RULE.btnPct": { "value": 70, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "SP.l": { "value": 16, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "TEMP_TOL": { "value": 3, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": true },
+  "HUE_MIN.cool": { "value": 6, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": true },
+  "HUE_MIN.warm": { "value": 3, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": true },
+  "HUE_MIN.span": { "value": 12, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "LIGHT_DH": { "value": 7, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": false },
+  "TIME_DH": { "value": 15, "sha": "974fd99d49ed36dd1d63bec423bba74dc301d03e", "wide": true }
+}
