@@ -6014,7 +6014,7 @@
                 {
                   "type": "frame",
                   "id": "zOBxh",
-                  "name": "Legal Wrap",
+                  "name": "Legal / Status Slot",
                   "width": "fill_container",
                   "height": 38,
                   "layout": "vertical",
@@ -6028,7 +6028,7 @@
                     {
                       "type": "text",
                       "id": "UU587",
-                      "name": "Legal",
+                      "name": "Signing Status",
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
@@ -28283,7 +28283,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "載入：01b 登入中、05b 送出中（欄位鎖定 + lock icon）、07c 產生中（骨架條）。載入一律要有文字，不能只有轉圈——長輩看不懂純 spinner。【R4】07c 的三顆控件在載入期間的狀態已逐一畫出（主鍵 Working、複製與重新產生 disabled），不要只做主鍵。",
+                  "content": "載入：01b 登入中、05b 送出中（欄位鎖定 + lock icon）、07c 產生中（骨架條）。載入一律要有文字，不能只有轉圈——長輩看不懂純 spinner。【R4】07c 的三顆控件在載入期間的狀態已逐一畫出（主鍵 Working、複製與重新產生 disabled），不要只做主鍵。 01b 的法務行由狀態行「正在與 Apple 確認你的身分，請稍候。」取代（同一個 38pt 插槽 Legal / Status Slot，兩者不併存；節點名 Signing Status，勿誤讀為法務內容）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
