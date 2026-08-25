@@ -26,12 +26,11 @@ begin
     raise notice 'ok：viewer 不能上傳照片 (42501)';
   end;
 
-  -- 但留言可以（§3）
-  insert into public.comments (family_id, target_type, target_id, author_id, body)
-  values ('fa000000-0000-4000-8000-000000000001', 'media',
-          '3a000000-0000-4000-8000-000000000001',
-          'a0000000-0000-4000-8000-000000000003', 'viewer 的留言');
-  raise notice 'ok：viewer 可以留言';
+  -- 但留言可以（§3）。LS-58：comments 的 INSERT 收斂成 RPC-only（create_comment），
+  -- 直接 .insert() 已被 revoke，這裡改呼叫 RPC。
+  perform public.create_comment('fa000000-0000-4000-8000-000000000001', 'media',
+    '3a000000-0000-4000-8000-000000000001', 'viewer 的留言');
+  raise notice 'ok：viewer 可以留言（create_comment RPC）';
 
   -- 也不能管理成員
   begin
@@ -92,10 +91,11 @@ begin
     raise notice 'ok：can_upload=false 的 member 不能上傳 (42501)';
   end;
 
-  -- 但仍然是 member，可以寫日記（can_upload 只管照片）
-  insert into public.diaries (family_id, author_id, body)
-  values ('fa000000-0000-4000-8000-000000000001',
-          'a0000000-0000-4000-8000-000000000002', 'can_upload 關掉也還是能寫日記');
+  -- 但仍然是 member，可以寫日記（can_upload 只管照片）。LS-48 之後 diaries 的寫入
+  -- 唯一路徑是 create_diary_entry（RPC），不再是直接 INSERT——見
+  -- supabase/tests/85_diaries_timeline.sql 對這條收斂本身的完整驗收。
+  perform public.create_diary_entry(
+    'fa000000-0000-4000-8000-000000000001', null, 'can_upload 關掉也還是能寫日記', null);
   raise notice 'ok：can_upload=false 的 member 仍可寫日記';
 end;
 $$;

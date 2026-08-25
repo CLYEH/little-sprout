@@ -1,0 +1,122 @@
+{
+  "candidate": "/private/tmp/claude-501/-Users-clyeh-little-sprout/6e4c757c-a7ba-4756-8bed-60b72847734c/scratchpad/brush-gen2/mengya-diary-crayon-v3.png",
+  "canvas": [
+    1860,
+    887
+  ],
+  "characters": [
+    {
+      "char": "萌",
+      "bbox": [
+        128,
+        232,
+        472,
+        655
+      ],
+      "width": 344,
+      "height": 423,
+      "coverage": 0.4335656165814503,
+      "stroke_ratio": 0.8857142857142857,
+      "horizontal_stroke_width": 31.0,
+      "vertical_stroke_width": 35.0,
+      "center_x": 300.0,
+      "isotropic_scaling_applied": true,
+      "isotropic_scale_factor": 0.975
+    },
+    {
+      "char": "芽",
+      "bbox": [
+        580,
+        232,
+        859,
+        655
+      ],
+      "width": 279,
+      "height": 423,
+      "coverage": 0.3939262987535694,
+      "stroke_ratio": 0.8857142857142857,
+      "horizontal_stroke_width": 31.0,
+      "vertical_stroke_width": 35.0,
+      "center_x": 719.5,
+      "isotropic_scaling_applied": true,
+      "isotropic_scale_factor": 0.968
+    },
+    {
+      "char": "日",
+      "bbox": [
+        1012,
+        232,
+        1277,
+        655
+      ],
+      "width": 265,
+      "height": 423,
+      "coverage": 0.44447120745795976,
+      "stroke_ratio": 0.972972972972973,
+      "horizontal_stroke_width": 36.0,
+      "vertical_stroke_width": 37.0,
+      "center_x": 1144.5,
+      "isotropic_scaling_applied": true,
+      "isotropic_scale_factor": 1.034
+    },
+    {
+      "char": "記",
+      "bbox": [
+        1370,
+        232,
+        1757,
+        655
+      ],
+      "width": 387,
+      "height": 423,
+      "coverage": 0.36812236944184823,
+      "stroke_ratio": 0.918918918918919,
+      "horizontal_stroke_width": 34.0,
+      "vertical_stroke_width": 37.0,
+      "center_x": 1563.5,
+      "isotropic_scaling_applied": true,
+      "isotropic_scale_factor": 1.019
+    }
+  ],
+  "height_max_difference_percent": 0.0,
+  "original_widths": [
+    703,
+    572,
+    407,
+    674
+  ],
+  "v2_widths": [
+    265,
+    237,
+    187,
+    303
+  ],
+  "candidate_widths": [
+    344,
+    279,
+    265,
+    387
+  ],
+  "widths_different_from_original_draft": true,
+  "widths_different_from_v2": true,
+  "post_processing": {
+    "anisotropic_transform_applied": false,
+    "operation_order": "per-character isotropic scaling, then center re-spacing"
+  },
+  "all_widths_different": true,
+  "coverage_range_percentage_points": 7.634883801611153,
+  "center_distances": [
+    419.5,
+    425.0,
+    419.0
+  ],
+  "center_distance_range_percent": 1.411764705882353,
+  "not_monotonically_decreasing": true,
+  "passes": {
+    "height": true,
+    "widths_different": true,
+    "stroke_ratio": true,
+    "coverage": true,
+    "spacing": true
+  }
+}

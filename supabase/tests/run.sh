@@ -55,7 +55,11 @@ elif docker exec "$container" true >/dev/null 2>&1; then
       psql -U "$db_user" -d "$db_name" -v ON_ERROR_STOP=1 --no-psqlrc -q < "$1"
   }
 else
-  echo "✗ 找不到 psql，也連不到 DB container（$container）。請先執行 supabase start。" >&2
+  # ${container} 的大括號是必要的，不是風格：macOS 內建的 bash 3.2 會把緊接在後面的
+  # 全形括號「）」的位元組當成變數名稱的一部分，`$container）` 於是變成查一個不存在的
+  # 變數，在 set -u 下直接以「unbound variable」中止——正好發生在「連不到 DB、
+  # 要印出診斷訊息」的那條路徑上，把真正的失敗原因蓋掉（LS-34 開發時實際踩到）。
+  echo "✗ 找不到 psql，也連不到 DB container（${container}）。請先執行 supabase start。" >&2
   exit 1
 fi
 
@@ -130,8 +134,12 @@ owner_guard_case() {  # $1=場景名 $2=S1 檔名 $3=S2 檔名
   rc1="$(cat "$s1_out.rc")"; rc2="$(cat "$s2_out.rc")"
   sed 's/^/    S1 /' "$s1_out"
   sed 's/^/    S2 /' "$s2_out"
-  [ "$rc1" = 0 ] || { echo "  ✗ S1 非 0 結束（rc=$rc1）" >&2; failed=1; }
-  [ "$rc2" = 0 ] || { echo "  ✗ S2 非 0 結束（rc=$rc2）" >&2; failed=1; }
+  # ${rc1}／${rc2} 的大括號是必要的，不是風格：macOS 內建的 bash 3.2 會把緊接在後面的
+  # 全形括號「）」的位元組當成變數名稱的一部分，`$rc1）` 於是變成查一個不存在的
+  # 變數，在 set -u 下直接以「unbound variable」中止——正好發生在「測試失敗、
+  # 要印出診斷訊息」的那條路徑上，把真正的失敗原因蓋掉（LS-34 開發時實際踩到）。
+  [ "$rc1" = 0 ] || { echo "  ✗ S1 非 0 結束（rc=${rc1}）" >&2; failed=1; }
+  [ "$rc2" = 0 ] || { echo "  ✗ S2 非 0 結束（rc=${rc2}）" >&2; failed=1; }
 
   if ! run_sql "$cc_dir/owner_guard_verify.sql" > "$tmp/owner_guard_verify.out" 2>&1; then
     sed 's/^/    /' "$tmp/owner_guard_verify.out" >&2; failed=1
@@ -146,17 +154,182 @@ owner_guard_case() {  # $1=場景名 $2=S1 檔名 $3=S2 檔名
 owner_guard_case "同時降級兩位 owner" owner_guard_s1_demote.sql owner_guard_s2_demote.sql
 owner_guard_case "同時移除兩位 owner" owner_guard_s1_delete.sql owner_guard_s2_delete.sql
 
+# ---------------------------------------------------------------------------
+# LS-33 併發測試：邀請碼名額競態、同一筆申請同時核准與拒絕
+#
+# 作法與上面的 owner_guard_case 相同（兩個真的並行的 psql，用時間差對齊時序），
+# 差別在於這兩個場景的資料與最終狀態斷言各自不同，所以把 setup/s1/s2/verify
+# 四個檔案參數化。owner_guard_case 維持原樣不動——它的 setup 與 verify 是寫死的。
+# ---------------------------------------------------------------------------
+race_case() {  # $1=場景名 $2=setup $3=s1 $4=s2 $5=verify
+  local label="$1" setup="$cc_dir/$2" s1="$cc_dir/$3" s2="$cc_dir/$4" verify="$cc_dir/$5"
+  local setup_out="$tmp/$2.out" s1_out="$tmp/$3.out" s2_out="$tmp/$4.out" verify_out="$tmp/$5.out"
+  echo "→ 併發：$label"
+
+  if ! run_sql "$setup" > "$setup_out" 2>&1; then
+    echo "  ✗ 併發場景資料建立失敗：" >&2; sed 's/^/    /' "$setup_out" >&2; exit 1
+  fi
+  sed 's/^/    setup /' "$setup_out"
+
+  run_sql_bg "$s1" "$s1_out"
+  run_sql_bg "$s2" "$s2_out"
+  wait
+
+  local rc1 rc2 failed=0
+  rc1="$(cat "$s1_out.rc")"; rc2="$(cat "$s2_out.rc")"
+  sed 's/^/    S1 /' "$s1_out"
+  sed 's/^/    S2 /' "$s2_out"
+  # ${rc1} 的大括號是必要的，不是風格：macOS 內建的 bash 3.2 會把緊接在後面的
+  # 全形括號「）」的位元組當成變數名稱的一部分，`$rc1）` 於是變成查一個不存在的
+  # 變數，在 set -u 下直接以「unbound variable」中止——正好發生在「測試失敗、
+  # 要印出診斷訊息」的那條路徑上，把真正的失敗原因蓋掉（本票開發時實際踩到）。
+  [ "$rc1" = 0 ] || { echo "  ✗ S1 非 0 結束（rc=${rc1}）" >&2; failed=1; }
+  [ "$rc2" = 0 ] || { echo "  ✗ S2 非 0 結束（rc=${rc2}）" >&2; failed=1; }
+
+  if ! run_sql "$verify" > "$verify_out" 2>&1; then
+    sed 's/^/    /' "$verify_out" >&2; failed=1
+  else
+    sed 's/^/    /' "$verify_out"
+  fi
+
+  [ "$failed" = 0 ] || { echo "  ✗ 併發：$label 失敗" >&2; exit 1; }
+  echo "  ✓ 併發：$label"
+}
+
+race_case "兩人同搶邀請碼最後一個名額" \
+  join_race_setup.sql join_race_s1.sql join_race_s2.sql join_race_verify.sql
+
+# 核准／拒絕的競態要跑兩個方向：先動的那一邊反正會在自己的 UPDATE 上取得列鎖，
+# 所以單一方向只證明得了「後動的那支 RPC」有鎖。兩個方向合起來才涵蓋
+# approve_join 與 reject_join 各自的 `for update`（mutation test 逼出來的結論：
+# 只有方向 A 時，拿掉 approve_join 的鎖，整組測試仍然全綠）。
+race_case "同一筆申請：核准先動，拒絕必須被擋下" \
+  approve_reject_race_setup.sql approve_reject_race_s1_approve.sql \
+  approve_reject_race_s2_reject.sql approve_reject_race_verify_approved.sql
+race_case "同一筆申請：拒絕先動，核准必須被擋下" \
+  approve_reject_race_setup.sql approve_reject_race_s1_reject.sql \
+  approve_reject_race_s2_approve.sql approve_reject_race_verify_rejected.sql
+
+# LS-48 併發場景（merge-reviewer PR #60 review F5）：同一篇日記的編輯（update_diary_entry）
+# 與軟刪（set_diary_deleted）同時發生。兩個方向缺一不可，理由同上一組
+# approve_reject_race（mutation test 的教訓）：只跑單一方向，先動的那邊反正會在自己的
+# UPDATE 上取鎖，測不出後動那支 RPC 自己的 `for update` 有沒有真的存在。
+race_case "同一篇日記：編輯先動，軟刪必須被阻塞後才成功" \
+  diary_edit_vs_delete_setup.sql diary_edit_vs_delete_s1_update.sql \
+  diary_edit_vs_delete_s2_delete.sql diary_edit_vs_delete_verify_update_won.sql
+race_case "同一篇日記：軟刪先動，編輯必須被阻塞後拿到 LS020" \
+  diary_edit_vs_delete_setup.sql diary_edit_vs_delete_s1_delete.sql \
+  diary_edit_vs_delete_s2_update.sql diary_edit_vs_delete_verify_delete_won.sql
+
+# LS-52 併發場景（merge-reviewer PR #70 review F2）：同一本相簿的直接 UPDATE（內容
+# 編輯）與 set_album_deleted（軟刪）同時發生。兩個方向缺一不可，理由同上一組——只跑
+# 單一方向，先動的那邊反正會在自己的 UPDATE 上取鎖，測不出後動那邊的寫入有沒有真的
+# 被序列化。**與 diary_edit_vs_delete 不同**：albums 沒有「已軟刪除不能編輯」的規則，
+# 兩個方向的最終狀態都是「編輯與軟刪皆生效」，不是其中一邊被擋下——見對應 verify
+# 檔案與 s2_update.sql 檔頭的說明。
+race_case "同一本相簿：直接編輯先動，軟刪必須被阻塞後才成功" \
+  album_edit_vs_delete_setup.sql album_edit_vs_delete_s1_update.sql \
+  album_edit_vs_delete_s2_delete.sql album_edit_vs_delete_verify_edit_first.sql
+race_case "同一本相簿：軟刪先動，直接編輯必須被阻塞後才成功" \
+  album_edit_vs_delete_setup.sql album_edit_vs_delete_s1_delete.sql \
+  album_edit_vs_delete_s2_update.sql album_edit_vs_delete_verify_delete_first.sql
+
+# LS-52 併發場景，comments 版本，結構同上。
+race_case "同一則留言：直接編輯先動，軟刪必須被阻塞後才成功" \
+  comment_edit_vs_delete_setup.sql comment_edit_vs_delete_s1_update.sql \
+  comment_edit_vs_delete_s2_delete.sql comment_edit_vs_delete_verify_edit_first.sql
+race_case "同一則留言：軟刪先動，直接編輯必須被阻塞後才成功" \
+  comment_edit_vs_delete_setup.sql comment_edit_vs_delete_s1_delete.sql \
+  comment_edit_vs_delete_s2_update.sql comment_edit_vs_delete_verify_delete_first.sql
+
+# LS-52 併發場景，方向 C（merge-reviewer PR #70 review N1，第 2 輪）：作者把自己的
+# 相簿直接 UPDATE 搬到自己也是 owner 的另一個家庭，與原家庭 owner 呼叫
+# set_album_deleted 同時發生。這組才是真正驗到 `for update` 必要性的場景——方向
+# A／B 改的是 title，不是授權判斷會讀的 family_id，測不出拿掉 `for update` 會不會
+# 造成跨家庭越權；這組改 family_id，拿掉 `for update` 會讓斷言變紅（原家庭 owner
+# 對已搬到別家的相簿完成軟刪）。詳細技術說明與 mutation 證據見對應
+# s2_delete_after_move.sql 檔頭。
+#
+# LS-58：comments 版的同一組場景（原本在這裡）已隨 comments 收斂成 RPC-only 一起
+# 退役——update_comment 的參數只有 body，comments 的 UPDATE grant 也整個被收回，
+# authenticated 已經沒有任何路徑能搬動一則留言的 family_id，這個攻擊面在前提上就
+# 不成立了，不是靠鎖擋住。albums 目前仍是 hybrid 模式（作者直接 UPDATE 保留），
+# 這組場景對 albums 依然成立，繼續保留。詳見
+# supabase/tests/concurrency/comment_edit_vs_delete_s2_delete.sql 的說明。
+race_case "同一本相簿：作者搬家先動，owner 的軟刪必須被阻塞後正確拿到 42501" \
+  album_edit_vs_delete_setup.sql album_edit_vs_delete_s1_move_family.sql \
+  album_edit_vs_delete_s2_delete_after_move.sql album_edit_vs_delete_verify_move_blocked.sql
+
+# LS-58 併發場景：同一人對同一目標的兩次 toggle_reaction 幾乎同時發出，必須被
+# pg_advisory_xact_lock 序列化——沒有這把鎖，兩次呼叫都會查到「還沒按過」而各自
+# INSERT，第二次會撞 reactions_target_user_key 的 23505。
+race_case "同一人對同一目標：雙 toggle_reaction 必須序列化且淨效果歸零" \
+  reaction_toggle_race_setup.sql reaction_toggle_race_s1.sql \
+  reaction_toggle_race_s2.sql reaction_toggle_race_verify.sql
+
+# LS-66 併發場景：同一個孩子檔案的編輯（update_child）與軟刪（set_child_deleted）
+# 同時發生。兩個方向都跑，但兩者的用途不對稱（R1 merge-reviewer PR #95 review M1
+# 訂正——原本這裡宣稱「拿掉其中一支 RPC 的鎖，測試仍然是綠的」是兩個方向共同的理由，
+# 四種 mutation 實測後發現不成立：阻塞永遠來自**先動那一邊自己的 UPDATE 語句**
+# 持有的列鎖，這是 Postgres 對任何 UPDATE 的通用行為，跟後動那支 RPC 開頭有沒有寫
+# `for update` 無關；兩個方向都只證明得了「後動那一邊」自己的 `for update` 是否
+# 必要——本組只有「軟刪先動、update_child 後動」這個方向（第二個 race_case）真的
+# 會在拿掉 update_child 的 `for update` 時變紅，因為 update_child 靠那句鎖住的
+# SELECT 重讀 `deleted_at` 才不會用 READ COMMITTED 的舊快照放行一次不該成立的編輯；
+# 「編輯先動、set_child_deleted 後動」這個方向（第一個 race_case）測不到
+# set_child_deleted 開頭那句 `for update` 是否必要——那句鎖是讀 family_id 做授權
+# 判斷的 TOCTOU 防線（LS-52 定下的規則），純防禦性，不是這組併發測試的必要條件，
+# 詳細說明見 `children_edit_vs_delete_s2_delete.sql`／`_s1_delete.sql` 檔頭。
+# children 跟 diaries 同型（已被軟刪不能編輯，拿 LS041），不是 albums 那種「兩者皆
+# 生效」的型。
+race_case "同一個孩子檔案：編輯先動，軟刪必須被阻塞後才成功" \
+  children_edit_vs_delete_setup.sql children_edit_vs_delete_s1_update.sql \
+  children_edit_vs_delete_s2_delete.sql children_edit_vs_delete_verify_update_won.sql
+race_case "同一個孩子檔案：軟刪先動，編輯必須被阻塞後拿到 LS041" \
+  children_edit_vs_delete_setup.sql children_edit_vs_delete_s1_delete.sql \
+  children_edit_vs_delete_s2_update.sql children_edit_vs_delete_verify_delete_won.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
-delete from public.families where id = 'fd000000-0000-4000-8000-000000000001';
+delete from public.families where id in (
+  'fd000000-0000-4000-8000-000000000001',
+  'fe000000-0000-4000-8000-000000000001',
+  'ff000000-0000-4000-8000-000000000001',
+  'f2000000-0000-4000-8000-000000000001',
+  'f3000000-0000-4000-8000-000000000001',
+  'f4000000-0000-4000-8000-000000000001',
+  'f6000000-0000-4000-8000-000000000001',
+  'f8000000-0000-4000-8000-000000000001',
+  'f5000000-0000-4000-8000-000000000001'
+);
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
-  'd0000000-0000-4000-8000-000000000002'
+  'd0000000-0000-4000-8000-000000000002',
+  'ea000000-0000-4000-8000-000000000001',
+  'ea000000-0000-4000-8000-000000000002',
+  'ea000000-0000-4000-8000-000000000003',
+  'eb000000-0000-4000-8000-000000000001',
+  'eb000000-0000-4000-8000-000000000002',
+  'eb000000-0000-4000-8000-000000000003',
+  'a9000000-0000-4000-8000-000000000001',
+  'a8000000-0000-4000-8000-000000000001',
+  'a7000000-0000-4000-8000-000000000001',
+  'a6000000-0000-4000-8000-000000000001',
+  'a5000000-0000-4000-8000-000000000001',
+  'a4000000-0000-4000-8000-000000000001',
+  'a1000000-0000-4000-8000-000000000001',
+  'a3000000-0000-4000-8000-000000000001',
+  'a2000000-0000-4000-8000-000000000001'
 );
 SQL
 run_sql "$cleanup" > /dev/null
 
 # EXPLAIN 證據存檔（驗收條件 c 要求留存）
+# LS-54 D2：evidence/ 已 gitignore，不再進 repo——產生時間、EXPLAIN ANALYZE 計時、規劃器估計值
+# （ANALYZE 隨機取樣）、buffers hit 數、以及 NOTICE（stderr）與查詢輸出（stdout）在合流檔裡的
+# 交錯順序每次跑都會變（本票實測：逐一遮掉前三種之後第五次仍在 buffers 上漂移），tracked 就是
+# 本機跑一次測試必弄髒工作區。留存改由 CI db job 每次以 artifact 上傳（.github/workflows/ci.yml
+# 的「上傳 RLS plan 證據」step），本機產出只給自己看。
 perf_out="$tmp/50_rls_plan_no_percall_subquery.sql.out"
 if [ -f "$perf_out" ]; then
   {
@@ -165,8 +338,8 @@ if [ -f "$perf_out" ]; then
     # 連線通道與 server 版本一起記下來：證據要能自己說明它是在哪裡跑出來的
     echo "# 連線：$channel"
     echo "# Server：$(printf 'select version();' > "$tmp/ver.sql"; run_sql "$tmp/ver.sql" 2>/dev/null | sed -n '3p' | sed 's/^ *//')"
-    echo "# 資料量：public.media 5 萬列（家庭 fc000000-0000-4000-8000-000000000001）"
-    echo "# 判準：plan 不得出現 (SubPlan N) 形式的 qual 引用，且所有節點 loops=1"
+    echo "# 資料量：public.media 5 萬列、public.join_requests 2 千列、storage.objects 2 萬列（家庭 fc000000-0000-4000-8000-000000000001）"
+    echo "# 判準：plan 不得出現 (SubPlan N) 形式的 qual 引用（hashed SubPlan 不命中此判準，不算違規），且所有節點 loops=1"
     echo
     cat "$perf_out"
   } > "$evidence_dir/explain_rls_plan.txt"
