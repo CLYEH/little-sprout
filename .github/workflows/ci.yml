@@ -149,12 +149,16 @@ jobs:
       # 不誤殺剛建的鎖／重入／TERM 釋放／run.sh 自動經 lock，不碰容器。各收各的 rc、最後一起 exit（同 LS-54 N5）。
       # LS-85：promote.sh（晉升＝FF push）自測——合成 repo＋stub gh 驗方向錯拒、非 FF 拒、check 紅／缺／skipped／未完成拒、
       # 同名多筆取最新、正常放行且 push 帶 PROMOTE_VIA_SCRIPT=1；patrol.test.sh 加三分支漂移案例。
-      - name: Ops 腳本自測（patrol／session-start／supabase-lock／promote，LS-71／LS-70／LS-85）
+      # LS-87：post-status.sh（裁決貼 commit status）自測——stub gh 驗 endpoint／欄位、短 SHA／錯 context／錯 state／空或過長
+      # description 拒、gh 失敗與回讀不符不當成已貼；promote.test.sh 加 merge-review／qa status 缺／failure／pending 拒；
+      # patrol.test.sh 加 hooksPath／hook 可執行檢查。
+      - name: Ops 腳本自測（patrol／session-start／supabase-lock／promote／post-status，LS-71／LS-70／LS-85／LS-87）
         run: |
           rc=0
           bash scripts/ops/patrol.test.sh || rc=1
           bash scripts/ops/supabase-lock.test.sh || rc=1
           bash scripts/ops/promote.test.sh || rc=1
+          bash scripts/ops/post-status.test.sh || rc=1
           exit "$rc"
 
       # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
