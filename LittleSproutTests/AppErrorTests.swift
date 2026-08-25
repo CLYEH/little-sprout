@@ -203,7 +203,10 @@ final class AppErrorTests: XCTestCase {
             .inviteCodeNotFound,
             .inviteCodeExpired,
             .inviteCodeExhausted,
-            .inviteParamsInvalid
+            .inviteParamsInvalid,
+            // LS044（R1）：p_child_id 是使用者從孩子清單挑出來的輸入，挑到的孩子剛好已
+            // 被軟刪，換一個（或改成不指定）之後同一個呼叫就會成功。
+            .childDeletedCannotAttachContent
         ]
         // LS-55 N9：LS016 從 .validationRetryable 移到這個新層——重試會成功，但不是使用者
         // 輸入有誤（見 LSErrorCode.tier 的 case .inviteCodeGenerationCollision 註解）。

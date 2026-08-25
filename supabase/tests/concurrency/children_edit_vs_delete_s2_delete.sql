@@ -1,8 +1,24 @@
 -- 併發場景（方向 A：編輯先動）的 session 2：owner 在 member 還沒 commit 編輯的時候軟刪。
 --
+-- R1（merge-reviewer PR #95 review M1）訂正：阻塞的來源是 member 那筆
+-- update_child 交易**自己的 UPDATE 語句**尚未 commit——任何一句 UPDATE 都會對命中
+-- 的列取得排他列鎖直到交易結束，這是 Postgres 通用的列鎖行為，跟 set_child_deleted
+-- 有沒有在自己開頭多寫一句 `for update` 無關。四種 mutation 實測過（拿掉
+-- update_child 的 `for update`／拿掉 set_child_deleted 的 `for update`，各自在方向
+-- A／方向B 各跑一次）：本檔（方向A 的 session 2）在兩種 mutation 下都維持綠燈，
+-- 對兩支 RPC 的鎖都是不可證偽的——本檔驗的是「阻塞確實發生、且 owner 的軟刪解除
+-- 阻塞後正常成功」這個時序保證本身，不是任何一支 RPC 特定那句 `for update` 的
+-- 回歸覆蓋（那句覆蓋由方向B、`children_edit_vs_delete_s2_update.sql` 提供——拿掉
+-- update_child 的 `for update` 會讓那個方向真的變紅，見該檔案說明）。
+--
+-- set_child_deleted 開頭那句 `select ... for update` 仍然刻意保留：它是讀
+-- `family_id`（授權判斷用）當下上鎖的 TOCTOU 防線（LS-52 定下的規則——任何 RPC
+-- 授權判斷讀到的列都要先鎖住，避免讀完到真正 UPDATE 之間那個資料被搬家），是純防禦
+-- 性的正確作法，只是本檔的計時斷言證明不了它——`family_id` 有 immutable trigger
+-- 擋著搬家，這裡也沒有建構出讓它單獨扮演關鍵角色的情境。
+--
 -- 兩條斷言：
---   1. 必須「被阻塞」——update_child 用 `for update` 鎖住孩子檔案列，
---      set_child_deleted 的 `for update` 才會在同一列上排隊等待。
+--   1. 必須「被阻塞」——阻塞來自 member 那筆 update_child 交易尚未 commit（見上）。
 --   2. 解除阻塞後必須**成功**（不是錯誤）：set_child_deleted 完全不檢查內容或
 --      「這個孩子檔案是否正在被編輯」，它只在乎能不能拿到列鎖。拿到鎖之後，軟刪本來
 --      就該直接成功——這裡驗的是「編輯的內容先落地，軟刪才動作」這個順序，不是驗
@@ -39,7 +55,7 @@ begin
 
   if v_elapsed < 0.5 then
     raise exception
-      'FAIL 併發：owner 的軟刪沒有被 member 的編輯阻塞（僅等待 % 秒）—— update_child 沒有對孩子檔案列取鎖',
+      'FAIL 併發：owner 的軟刪沒有被 member 的編輯阻塞（僅等待 % 秒）—— member 那筆 update_child 交易應該還沒 commit、仍持有列鎖',
       round(v_elapsed::numeric, 2);
   end if;
 

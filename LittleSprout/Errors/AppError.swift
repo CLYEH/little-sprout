@@ -71,6 +71,7 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     case childNotFoundOrDeleted = "LS041"
     case childNotEditableByCaller = "LS042"
     case childRestoreWindowExpired = "LS043"
+    case childDeletedCannotAttachContent = "LS044"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -137,6 +138,14 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             return .retryableSystem
         case .inviteParamsInvalid:
             // 參數本身不合法（邀請設定超出範圍）：修正輸入之後同一個呼叫就會成功。
+            return .validationRetryable
+        case .childDeletedCannotAttachContent:
+            // childDeletedCannotAttachContent（LS044，R1 補齊）：p_child_id 是使用者
+            // 從孩子清單挑出來的「輸入」（同 inviteCodeNotFound 那組的理由，不是
+            // childNotFoundOrDeleted 那種內部狀態檢查）——挑到的孩子剛好已被軟刪
+            // （多半是清單快取過期），UI 該做的動作是重新整理孩子清單、讓使用者換一個
+            // （或改成不指定），換輸入之後同一個 create_diary_entry／update_diary_entry
+            // 呼叫就會成功，符合 N9「使用者能換輸入」的 validationRetryable 準則。
             return .validationRetryable
         }
     }

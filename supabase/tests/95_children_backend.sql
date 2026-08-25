@@ -12,7 +12,8 @@
 \set ON_ERROR_STOP on
 
 -- ===========================================================================
--- 1. 寫入面收斂：children 的直接 INSERT／UPDATE 對所有角色都必須被擋（policy + grant 兩層）
+-- 1. 寫入面收斂：children 的直接 INSERT／UPDATE／DELETE 對所有角色都必須被擋
+--    （policy + grant 兩層）——DELETE 自 R1 I5 起也收斂，連 owner 都沒有硬刪路徑
 -- ===========================================================================
 begin;
 
@@ -47,16 +48,25 @@ begin
       null;  -- ok
     end;
 
+    -- R1 I5：連 owner 也不能直接硬刪——這是本段唯一「連 owner 都該被擋下」的操作
+    -- （INSERT/UPDATE 本來就是全員擋，DELETE 現在也是全員擋，不是只擋非 owner）。
+    begin
+      delete from public.children where id = v_child;
+      raise exception 'FAIL：% 竟然可以直接 DELETE children——30 天可還原的保護形同虛設', v_user;
+    exception when insufficient_privilege then
+      null;  -- ok
+    end;
+
     reset role;
   end loop;
 
-  raise notice 'ok：owner/member/viewer/非成員 對 children 的直接 INSERT／UPDATE 皆被擋下 (42501)';
+  raise notice 'ok：owner/member/viewer/非成員 對 children 的直接 INSERT／UPDATE／DELETE 皆被擋下 (42501)——DELETE 連 owner 也不例外';
 end;
 $$;
 
 -- 欄位級對帳：連「有沒有任何一欄的 UPDATE/INSERT grant」都要驗過（同 85_ 對 diaries 的
--- 慣例），只驗整表的斷言測不出欄位級 grant 忘了收回。SELECT／DELETE 的正向對照確保
--- 收斂沒有連帶把讀取與硬刪的路徑也關掉。
+-- 慣例），只驗整表的斷言測不出欄位級 grant 忘了收回。SELECT 的正向對照確保收斂沒有
+-- 連帶把讀取路徑也關掉。
 do $$
 begin
   if has_any_column_privilege('authenticated', 'public.children', 'insert') then
@@ -65,13 +75,13 @@ begin
   if has_any_column_privilege('authenticated', 'public.children', 'update') then
     raise exception 'FAIL：authenticated 還有 children 的 UPDATE 授權（表級或任一欄位級）—— update_child/set_child_deleted 的邊界形同虛設';
   end if;
+  if has_table_privilege('authenticated', 'public.children', 'delete') then
+    raise exception 'FAIL：authenticated 還有 children 的 DELETE 授權（R1 I5：連 owner 也不該有直接硬刪路徑）';
+  end if;
   if not has_table_privilege('authenticated', 'public.children', 'select') then
     raise exception 'FAIL 回歸：authenticated 失去 children 的 SELECT grant';
   end if;
-  if not has_table_privilege('authenticated', 'public.children', 'delete') then
-    raise exception 'FAIL 回歸：authenticated 失去 children 的 DELETE grant（owner 硬刪的路徑，未受本票影響）';
-  end if;
-  raise notice 'ok：children 授權兩層對帳——INSERT/UPDATE 無任何形態的 grant，SELECT/DELETE 原樣保留';
+  raise notice 'ok：children 授權對帳——INSERT/UPDATE/DELETE 無任何形態的 grant，SELECT 原樣保留（R1 I5：DELETE 收斂）';
 end;
 $$;
 
@@ -305,8 +315,8 @@ $$;
 rollback;
 
 -- ===========================================================================
--- 5. set_child_deleted：僅 owner；寫 deleted_at／deleted_by；軟刪／還原皆 idempotent；
---    不存在的孩子 (LS041)
+-- 5. set_child_deleted：僅 owner；寫 deleted_at／deleted_by；重複軟刪是 no-op
+--    （R1 I1/I2，merge-reviewer PR #95 review）；不存在的孩子 (LS041)
 -- ===========================================================================
 begin;
 
@@ -319,6 +329,8 @@ declare
   v_outsider uuid := 'b0000000-0000-4000-8000-000000000001';
   v_child uuid;
   v_row public.children%rowtype;
+  v_deleted_at_1 timestamptz;
+  v_deleted_at_2 timestamptz;
 begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
@@ -372,15 +384,44 @@ begin
       v_row.deleted_at, v_row.deleted_by;
   end if;
 
-  -- 軟刪 idempotent：再次呼叫 true 會刷新 deleted_at（不報錯）
-  perform pg_sleep(0.01);
+  -- R1 I1：重複軟刪必須是 no-op——deleted_at 完全不刷新（否則 owner 可以無限延後
+  -- 30 天邊界）。這是 mutation 自證：拿掉 set_child_deleted 裡「只在 deleted_at is
+  -- null 才寫入」的 if guard，這裡會直接變紅（deleted_at 會被刷新成 pg_sleep 之後
+  -- 的新時間）。
+  select deleted_at into v_deleted_at_1 from public.children where id = v_child;
+  perform pg_sleep(0.05);
   perform public.set_child_deleted(v_child, true);
-  select deleted_at into v_row.deleted_at from public.children where id = v_child;
-  if v_row.deleted_at is null then
-    raise exception 'FAIL：重複軟刪之後 deleted_at 變成 NULL';
+  select deleted_at into v_deleted_at_2 from public.children where id = v_child;
+  if v_deleted_at_2 is distinct from v_deleted_at_1 then
+    raise exception 'FAIL：重複軟刪之後 deleted_at 被刷新了（原本 %，現在 %）——30 天時鐘可以被無限延後',
+      v_deleted_at_1, v_deleted_at_2;
   end if;
+  reset role;
+
+  -- R1 I1：重複軟刪也不能把 deleted_by 的歸屬洗成別人——promote member 成第二位
+  -- owner，用他重複呼叫一次 true，deleted_by 必須維持原本那位 owner，不會變成這位
+  -- 第二 owner。這是 mutation 自證的另一半：只驗 deleted_at 凍結測不出 deleted_by
+  -- 也凍結，兩者是 set_child_deleted 尾端同一句 UPDATE 的兩個獨立欄位，各自可能漏改。
+  update public.family_members set role = 'owner'
+   where family_id = v_family and user_id = v_member;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.set_child_deleted(v_child, true);
+  select deleted_by into v_row.deleted_by from public.children where id = v_child;
+  if v_row.deleted_by <> v_owner then
+    raise exception 'FAIL：第二位 owner 重複軟刪之後 deleted_by 被洗成 %（應維持原本的 %）',
+      v_row.deleted_by, v_owner;
+  end if;
+  reset role;
+  update public.family_members set role = 'member'
+   where family_id = v_family and user_id = v_member;
+  raise notice 'ok：重複軟刪是 no-op——deleted_at 不刷新（30 天時鐘不重設）、deleted_by 不被洗成後來重複呼叫的人';
 
   -- owner 還原：30 天內，deleted_at／deleted_by 清成 NULL
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
   perform public.set_child_deleted(v_child, false);
   select * into v_row from public.children where id = v_child;
   if v_row.deleted_at is not null or v_row.deleted_by is not null then
@@ -393,8 +434,17 @@ begin
   if (select deleted_at from public.children where id = v_child) is not null then
     raise exception 'FAIL：對 active 的孩子呼叫還原（no-op）之後 deleted_at 竟然非 NULL';
   end if;
+
+  -- R1 I2：還原後再重新軟刪，必須重新計時／重新歸屬（不是繼續凍結）——因為那時
+  -- deleted_at 已經是 NULL，屬於「從 active 到已軟刪」的真正轉換。
+  perform public.set_child_deleted(v_child, true);
+  select * into v_row from public.children where id = v_child;
+  if v_row.deleted_at is null or v_row.deleted_by <> v_owner then
+    raise exception 'FAIL：還原後重新軟刪，deleted_at/deleted_by 沒有重新寫入（deleted_at=%，deleted_by=%）',
+      v_row.deleted_at, v_row.deleted_by;
+  end if;
   reset role;
-  raise notice 'ok：owner 軟刪／還原正確寫入 deleted_at／deleted_by，兩個方向皆 idempotent';
+  raise notice 'ok：還原之後再重新軟刪會重新計時、重新歸屬（不是繼續凍結在還原前的狀態）';
 
   -- 不存在的孩子
   perform set_config('request.jwt.claims',
@@ -490,8 +540,10 @@ $$;
 rollback;
 
 -- ===========================================================================
--- 7. list_children：成員可讀；已軟刪的列（含旗標）只有 owner 看得到，
---    member／viewer 完全查不到那些列（不是欄位被隱藏，是整列消失）
+-- 7. list_children：成員可讀，**不分角色、不分軟刪與否**（R1 I3/I4，merge-reviewer
+--    PR #95 review：get_family_timeline 對軟刪孩子的行為不變，若讀取權限收斂成僅
+--    owner 可見，member/viewer 會拿到自己解不開的 child_id）——只有「還原」這個
+--    動作限 owner，讀取本身對所有角色一視同仁。
 -- ===========================================================================
 begin;
 
@@ -501,10 +553,12 @@ declare
   v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
   v_member uuid := 'a0000000-0000-4000-8000-000000000002';
   v_viewer uuid := 'a0000000-0000-4000-8000-000000000003';
+  v_outsider uuid := 'b0000000-0000-4000-8000-000000000001';
   v_active uuid;
   v_deleted uuid;
   v_count int;
   v_deleted_at timestamptz;
+  v_role uuid;
 begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
@@ -512,55 +566,45 @@ begin
   v_active := public.create_child(v_family, 'Active 孩子', date '2025-01-01', null);
   v_deleted := public.create_child(v_family, 'Deleted 孩子', date '2025-01-01', null);
   perform public.set_child_deleted(v_deleted, true);
-
-  -- owner：看得到 active + 已軟刪兩列，且已軟刪那列的 deleted_at 有值（旗標可見）
-  select count(*) into v_count from public.list_children(v_family)
-   where id in (v_active, v_deleted);
-  if v_count <> 2 then
-    raise exception 'FAIL：owner 呼叫 list_children 應看到 2 列（active＋已軟刪），實際 %', v_count;
-  end if;
-  select deleted_at into v_deleted_at from public.list_children(v_family) where id = v_deleted;
-  if v_deleted_at is null then
-    raise exception 'FAIL：owner 呼叫 list_children，已軟刪孩子的 deleted_at 旗標竟然是 NULL';
-  end if;
   reset role;
-  raise notice 'ok：owner 呼叫 list_children 看得到 active＋已軟刪兩列，旗標（deleted_at）正確可見';
 
-  -- member：只看得到 active 那一列，已軟刪的完全不在結果裡
+  -- owner／member／viewer：全都看得到 active + 已軟刪兩列，且已軟刪那列的
+  -- deleted_at 對每個角色都有值（旗標對所有人可見，不只 owner）
+  foreach v_role in array array[v_owner, v_member, v_viewer] loop
+    perform set_config('request.jwt.claims',
+      json_build_object('sub', v_role, 'role', 'authenticated')::text, true);
+    set local role authenticated;
+
+    select count(*) into v_count from public.list_children(v_family)
+     where id in (v_active, v_deleted);
+    if v_count <> 2 then
+      raise exception 'FAIL：% 呼叫 list_children 應看到 2 列（active＋已軟刪），實際 %', v_role, v_count;
+    end if;
+
+    select deleted_at into v_deleted_at from public.list_children(v_family) where id = v_deleted;
+    if v_deleted_at is null then
+      raise exception 'FAIL：% 呼叫 list_children，已軟刪孩子的 deleted_at 旗標竟然是 NULL', v_role;
+    end if;
+
+    -- 直接 .from("children").select() 走同一條 RLS，行為必須與 RPC 一致
+    select count(*) into v_count from public.children where id = v_deleted;
+    if v_count <> 1 then
+      raise exception 'FAIL：% 直接 SELECT children 竟然看不到已軟刪的孩子', v_role;
+    end if;
+
+    reset role;
+  end loop;
+  raise notice 'ok：owner／member／viewer 呼叫 list_children（與直接 SELECT children）都看得到 active＋已軟刪兩列，deleted_at 旗標對所有角色可見';
+
+  -- 非本家庭成員：0 列，不報錯（family_ids() 自然過濾，不特殊處理已軟刪與否）
   perform set_config('request.jwt.claims',
-    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+    json_build_object('sub', v_outsider, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  select count(*) into v_count from public.list_children(v_family) where id = v_active;
-  if v_count <> 1 then
-    raise exception 'FAIL：member 呼叫 list_children 看不到 active 孩子';
-  end if;
-  select count(*) into v_count from public.list_children(v_family) where id = v_deleted;
+  select count(*) into v_count from public.list_children(v_family);
   if v_count <> 0 then
-    raise exception 'FAIL：member 呼叫 list_children 竟然看得到已軟刪的孩子（應完全篩掉，不是 % 列）', v_count;
+    raise exception 'FAIL：非本家庭成員呼叫 list_children 竟然回傳非 0 列';
   end if;
   reset role;
-
-  -- viewer：同 member
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', v_viewer, 'role', 'authenticated')::text, true);
-  set local role authenticated;
-  select count(*) into v_count from public.list_children(v_family) where id = v_deleted;
-  if v_count <> 0 then
-    raise exception 'FAIL：viewer 呼叫 list_children 竟然看得到已軟刪的孩子';
-  end if;
-  reset role;
-  raise notice 'ok：member／viewer 呼叫 list_children 只看得到 active 孩子，已軟刪的整列消失（非欄位隱藏）';
-
-  -- 直接 .from("children").select() 走同一條 RLS，行為必須與 RPC 一致
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
-  set local role authenticated;
-  select count(*) into v_count from public.children where id = v_deleted;
-  if v_count <> 0 then
-    raise exception 'FAIL：member 直接 SELECT children 竟然看得到已軟刪的孩子——RLS 沒有真的收斂';
-  end if;
-  reset role;
-  raise notice 'ok：直接 .from("children").select() 與 list_children 行為一致，收斂在 RLS 這一層';
 
   -- 未登入：0 列，不報錯
   perform set_config('request.jwt.claims', '{}', true);
@@ -570,7 +614,22 @@ begin
     raise exception 'FAIL：未登入呼叫 list_children 竟然回傳非 0 列';
   end if;
   reset role;
-  raise notice 'ok：未登入呼叫 list_children 回傳 0 列，不報錯';
+  raise notice 'ok：非本家庭成員／未登入呼叫 list_children 皆回傳 0 列，不報錯';
+
+  -- 只有「還原」這個動作限 owner——member/viewer 雖然讀得到已軟刪的孩子，
+  -- 呼叫 set_child_deleted 想還原仍然是 42501（角色矩陣已在第 5 段驗過，這裡
+  -- 只驗「讀得到」跟「能還原」是兩件事，不會因為放寬讀取就連帶放寬還原）。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.set_child_deleted(v_deleted, false);
+    raise exception 'FAIL：member 讀得到已軟刪的孩子，竟然也能還原他';
+  exception when sqlstate '42501' then
+    null;  -- ok
+  end;
+  reset role;
+  raise notice 'ok：member 讀得到已軟刪的孩子，但還原動作仍然限 owner (42501)——讀取放寬不等於動作放寬';
 end;
 $$;
 
@@ -618,6 +677,115 @@ begin
 
   reset role;
   raise notice 'ok：軟刪孩子完全不連動——掛在他底下的相簿／日記保留，get_family_timeline 的單寶貝篩選行為不變';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 9. 已軟刪的孩子不能再被指定為新內容的 child_id（R1 I3，LS044）——只在 child_id
+--    真的被指定成新值時檢查，既有內容繼續能軟刪／還原／編輯自己（「既有內容不動」）
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_child_active uuid := '2a000000-0000-4000-8000-000000000001';
+  v_child_deleted uuid;
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_member uuid := 'a0000000-0000-4000-8000-000000000002';
+  v_diary uuid;
+  v_album uuid;
+  v_body text;
+begin
+  -- 建一個新孩子專門當「已軟刪」的目標，不動 00_fixtures 既有的兩個孩子
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_child_deleted := public.create_child(v_family, '已軟刪的孩子', date '2025-01-01', null);
+  perform public.set_child_deleted(v_child_deleted, true);
+  reset role;
+
+  -- (a) create_diary_entry：child_id 指向已軟刪的孩子 → LS044
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.create_diary_entry(v_family, v_child_deleted, '想掛在已刪孩子底下', current_date);
+    raise exception 'FAIL：create_diary_entry 竟然能把日記掛到已軟刪的孩子底下';
+  exception when sqlstate 'LS044' then
+    null;  -- ok
+  end;
+
+  -- 正向對照：child_id 指向 active 的孩子完全不受影響
+  v_diary := public.create_diary_entry(v_family, v_child_active, '掛在還活著的孩子底下', current_date);
+  if v_diary is null then
+    raise exception 'FAIL：create_diary_entry 指向 active 孩子時竟然失敗了';
+  end if;
+  reset role;
+  raise notice 'ok：create_diary_entry 指向已軟刪孩子拿 LS044，指向 active 孩子不受影響（正向對照）';
+
+  -- (b) update_diary_entry：把 child_id 改成已軟刪的孩子 → LS044
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.update_diary_entry(v_diary, '想改掛到已刪孩子底下', current_date, v_child_deleted);
+    raise exception 'FAIL：update_diary_entry 竟然能把 child_id 改成已軟刪的孩子';
+  exception when sqlstate 'LS044' then
+    null;  -- ok
+  end;
+
+  -- (c)「既有內容不動」的正面證明：update_diary_entry 傳跟原本一樣的 child_id
+  -- （active，不是已軟刪那個）改 body，完全不受這支 trigger 影響——這裡驗的是
+  -- trigger 沒有「不分青紅皂白地每次 UPDATE 都重新驗證 child_id」，只在 child_id
+  -- 真的被改成新值時才檢查。
+  perform public.update_diary_entry(v_diary, '只改內容，child_id 沒變', current_date, v_child_active);
+  select body into v_body from public.diaries where id = v_diary;
+  if v_body <> '只改內容，child_id 沒變' then
+    raise exception 'FAIL：child_id 沒變時，update_diary_entry 改內容失敗了';
+  end if;
+  reset role;
+  raise notice 'ok：update_diary_entry 把 child_id 改成已軟刪孩子拿 LS044；child_id 不變時單純改內容不受影響';
+
+  -- (d) 直接 albums INSERT：child_id 指向已軟刪的孩子 → LS044（owner／member 都走
+  -- 直接寫入，不是 RPC，證明這支 trigger 對兩條寫入路徑都有效）
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    insert into public.albums (family_id, child_id, title, created_by)
+    values (v_family, v_child_deleted, '想建在已刪孩子底下的相簿', v_owner);
+    raise exception 'FAIL：直接 INSERT albums 竟然能把相簿掛到已軟刪的孩子底下';
+  exception when sqlstate 'LS044' then
+    null;  -- ok
+  end;
+
+  insert into public.albums (family_id, child_id, title, created_by)
+  values (v_family, v_child_active, '建在還活著的孩子底下的相簿', v_owner)
+  returning id into v_album;
+  if v_album is null then
+    raise exception 'FAIL：直接 INSERT albums 指向 active 孩子時竟然失敗了';
+  end if;
+  raise notice 'ok：直接 INSERT albums 指向已軟刪孩子拿 LS044，指向 active 孩子不受影響（正向對照）';
+
+  -- (e)「既有內容不動」對 albums 也成立：owner 對這本相簿呼叫 set_album_deleted
+  -- （只碰 deleted_at，不碰 child_id）完全不受這支 trigger 影響，即使 child_id
+  -- 指向的孩子之後被軟刪也一樣——這裡直接把這本相簿的孩子也軟刪掉，再驗證
+  -- set_album_deleted 依然能正常運作。
+  perform public.set_child_deleted(v_child_active, true);  -- 把這本相簿的孩子也軟刪
+  begin
+    perform public.set_album_deleted(v_album, true);
+  exception when others then
+    raise exception 'FAIL：孩子被軟刪之後，掛在他底下的相簿連軟刪自己都做不到了（錯誤碼 %）——「既有內容不動」被破壞', sqlstate;
+  end;
+  if (select deleted_at from public.albums where id = v_album) is null then
+    raise exception 'FAIL：set_album_deleted 執行後 deleted_at 竟然還是 NULL';
+  end if;
+  perform public.set_child_deleted(v_child_active, false);  -- 還原，避免影響後面的測試檔
+  reset role;
+  raise notice 'ok：孩子被軟刪之後，掛在他底下的既有相簿仍能正常軟刪自己（LS044 只管「新歸屬」，不管「既有內容的其他操作」）';
 end;
 $$;
 
