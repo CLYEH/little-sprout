@@ -2,7 +2,8 @@
 # push-ref-check（LS-85 G4／LS-87 G4）：pre-push stdin 逐條 ref 分類，決定 push-gate 要不要跑、能不能推。
 #   stdin 每行 <local ref> <local sha> <remote ref> <remote sha>（git pre-push 格式；push-gate.sh 把自己的 stdin 交給本腳本）
 #   ・remote ref 不是 refs/heads/*（tag）或 local sha 全 0（刪除分支）→ 不需 gate（2026-08-25 29 條分支刪除與 2 個 tag 推送各跑了
-#     整套 lint＋unit tests——刪除／tag 沒有「要驗的內容」）
+#     整套 lint＋unit tests——刪除／tag 沒有「要驗的內容」）。刪除 test／main（git push origin :test）也走這條早退、client 不擋，
+#     靠 server 端 allow_deletions=false（scripts/ops/protection-apply.sh；PR #141 R1 F6）
 #   ・remote ref 是 refs/heads/test 或 refs/heads/main → 只准 scripts/ops/promote.sh（PROMOTE_VIA_SCRIPT=1）且 fast-forward
 #     （remote sha 是 local sha 的祖先；remote sha 本機沒有＝沒 fetch，fail closed）；通過＝晉升，該 SHA 的 check 由
 #     promote.sh 與 GitHub required checks 驗，本機 lint／tests 跑的是當前 worktree、與被推的 SHA 無關 → 不需 gate

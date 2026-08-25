@@ -1,7 +1,8 @@
 #!/bin/bash
 # promote.sh 的自測（LS-85）。CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對晉升腳本也適用：若退化成方向不擋、非 FF 照推、check 紅／缺／skipped／未完成照推、同名多筆只看舊的
-# 一筆而不是最新、gh 失敗當成綠、或推送時沒帶 PROMOTE_VIA_SCRIPT=1（真的晉升會被 push-gate 擋）——這裡會紅。
+# 一筆而不是最新、別的 app 貼的同名 check 也算（R1 F5）、推的不是驗過的 SHA 而是 ref（R1 F1：巡檢 fetch 會移動 remote-tracking
+# ref）、gh 失敗當成綠、或推送時沒帶 PROMOTE_VIA_SCRIPT=1（真的晉升會被 push-gate 擋）——這裡會紅。
 # 合成 repo：file:// 裸 origin（main／development／test）＋clone；gh 用 PATH 上的 stub（把 --jq 交給真 jq 對罐頭 JSON 跑，
 # 驗的是腳本自己的 jq 表達式）；clone 掛一個 pre-push hook 記錄環境變數與 stdin，驗 (e) 與 push-gate 的契約。
 set -uo pipefail
@@ -28,13 +29,17 @@ if [ -n "$expr" ]; then jq -r "$expr" "${GH_STUB_JSON:?}"; else cat "${GH_STUB_J
 EOF
 chmod +x "$work/bin/gh"
 export PATH="$work/bin:$PATH" GH_STUB_LOG="$work/gh.log" GH_STUB_JSON="$work/runs.json"
-# runs <name:status:conclusion>…：產生 check-runs 罐頭 JSON，id 依序遞增（越後面越新）；conclusion 寫 null 即 JSON null
+# runs <name:status:conclusion[:app_id]>…：產生 check-runs 罐頭 JSON，id 依序遞增（越後面越新）；conclusion 寫 null 即 JSON null；
+# app_id 省略＝15368（GitHub Actions）
 runs() {
-  local id=100 items= spec n rest s c
+  local id=100 items= spec n rest s c app
   for spec in "$@"; do
-    n=${spec%%:*}; rest=${spec#*:}; s=${rest%%:*}; c=${rest#*:}
+    n=${spec%%:*}; rest=${spec#*:}
+    s=${rest%%:*}; rest=${rest#*:}
+    c=${rest%%:*}
+    case "$rest" in *:*) app=${rest#*:} ;; *) app=15368 ;; esac
     if [ "$c" = null ]; then c=null; else c="\"${c}\""; fi
-    items="${items:+${items},}{\"id\":${id},\"name\":\"${n}\",\"status\":\"${s}\",\"conclusion\":${c},\"html_url\":\"https://x/${id}\",\"app\":{\"id\":15368}}"
+    items="${items:+${items},}{\"id\":${id},\"name\":\"${n}\",\"status\":\"${s}\",\"conclusion\":${c},\"html_url\":\"https://x/${id}\",\"app\":{\"id\":${app}}}"
     id=$((id + 1))
   done
   printf '{"total_count":%s,"check_runs":[%s]}' "$#" "$items" > "$GH_STUB_JSON"
@@ -79,6 +84,7 @@ is()    { if [ "$2" = "$3" ]; then echo "✓ $1"; else echo "✗ ${1}（期望�
 has()   { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✓ $1"; else echo "✗ ${1}（應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; fi; }
 hasnt() { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✗ ${1}（不應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; else echo "✓ $1"; fi; }
 reset_logs() { : > "$GH_STUB_LOG"; rm -f "$PREPUSH_LOG"; }
+pushed_sha() { awk 'NR == 2 { print $2 }' "$PREPUSH_LOG" 2>/dev/null; }   # pre-push stdin 第 2 欄＝實際推出去的 local sha
 no_push() { if [ -f "$PREPUSH_LOG" ]; then echo "✗ ${1}（不該嘗試 push，但 pre-push 被觸發）" >&2; fail=1; else echo "✓ $1"; fi; }
 
 # ---- ① 方向：只准 development→test、test→main；其餘 exit 2、不碰 gh、不推 ----
@@ -149,7 +155,8 @@ has   '⑧ 摘要：FF 與 commit 數' "$out" '晉升 1 commit'
 has   '⑧ 摘要：四個 check 綠' "$out" 'check rules: ✓ success'
 hasnt '⑧ dev→test 不印 tag 提醒' "$out" 'tag'
 has   '⑧ pre-push 收到 PROMOTE_VIA_SCRIPT=1' "$(cat "$PREPUSH_LOG" 2>/dev/null)" 'PROMOTE_VIA_SCRIPT=1'
-has   '⑧ pre-push stdin：local ref＝refs/remotes/origin/development、目標 refs/heads/test、remote sha＝舊 test' "$(cat "$PREPUSH_LOG" 2>/dev/null)" "refs/remotes/origin/development ${dev1} refs/heads/test ${base}"
+has   '⑧ pre-push stdin：目標 refs/heads/test、remote sha＝舊 test' "$(cat "$PREPUSH_LOG" 2>/dev/null)" " refs/heads/test ${base}"
+is    '⑧ pre-push 收到的 local sha＝(c)(d) 驗過的 origin/development sha（推 SHA 不推 ref，R1 F1）' "$(pushed_sha)" "$dev1"
 
 # ---- ⑨ 已是最新：再跑一次 → exit 0、不呼叫 gh、不推 ----
 reset_logs
@@ -180,7 +187,8 @@ expect 0 '⑫ test→main 全綠 → exit 0' '已晉升 main' test main
 is    '⑫ remote main 前進到 origin/test' "$(rsha main)" "$dev1"
 has   '⑫ test→main 提醒打 tag' "$out" 'tag'
 has   '⑫ 查的是 origin/test 的 SHA' "$(cat "$GH_STUB_LOG")" "commits/${dev1}/check-runs"
-has   '⑫ pre-push stdin：目標 refs/heads/main' "$(cat "$PREPUSH_LOG" 2>/dev/null)" "refs/remotes/origin/test ${dev1} refs/heads/main ${base}"
+has   '⑫ pre-push stdin：目標 refs/heads/main、remote sha＝舊 main' "$(cat "$PREPUSH_LOG" 2>/dev/null)" " refs/heads/main ${base}"
+is    '⑫ pre-push 收到的 local sha＝驗過的 origin/test sha（R1 F1）' "$(pushed_sha)" "$dev1"
 is    '⑫ remote test 未動（dev2 仍待晉升）' "$(rsha test)" "$dev1"
 is    '⑫ development 未動' "$(rsha development)" "$dev2"
 
@@ -188,8 +196,19 @@ is    '⑫ development 未動' "$(rsha development)" "$dev2"
 out="$(cd "$work" && bash "$promote" development test 2>&1)"; rc=$?
 if [ "$rc" -eq 2 ] && printf '%s' "$out" | grep -qF '不在 git repo'; then echo "✓ ⑬ 不在 git repo → exit 2"; else echo "✗ ⑬ 不在 git repo 應 exit 2（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 
+# ---- ⑭ 只認 GitHub Actions（app 15368）的 check-run（R1 F5）：development（dev2）仍領先 test（dev1）----
+runs "ci:completed:success:999" "db:completed:success" "lint:completed:success" "rules:completed:success"
+reset_logs
+expect 1 '⑭ ci 只有別的 app（999）的 success → 視為缺 → exit 1' 'check ci: 缺' development test
+no_push '⑭ 別 app 的綠不推'
+runs "ci:completed:failure" "db:completed:success" "lint:completed:success" "rules:completed:success" "ci:completed:success:999"
+reset_logs
+expect 1 '⑭ Actions 的 ci 紅、別 app 同名綠且更新 → 只看 Actions → exit 1' 'check ci: ✗ completed/failure' development test
+no_push '⑭ 仍不推'
+is    '⑭ remote test 未動' "$(rsha test)" "$dev1"
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ promote 自測失敗" >&2
   exit 1
 fi
-echo "✓ promote 自測通過（13 組樣本）"
+echo "✓ promote 自測通過（14 組樣本）"

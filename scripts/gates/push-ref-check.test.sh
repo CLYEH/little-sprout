@@ -40,11 +40,14 @@ PROMO_TEST="refs/remotes/origin/development ${c1} refs/heads/test ${c0}"$'\n'
 PROMO_MAIN_NONFF="refs/remotes/origin/test ${c2} refs/heads/main ${c1}"$'\n'
 PROMO_MAIN_UNKNOWN="refs/remotes/origin/test ${c1} refs/heads/main ${NOPE}"$'\n'
 PROMO_TEST_NEW="refs/remotes/origin/development ${c1} refs/heads/test ${ZERO}"$'\n'
+PROMO_TEST_SHA="${c1} ${c1} refs/heads/test ${c0}"$'\n'            # promote.sh 推 <sha>:refs/heads/test 的形狀（R1 F1）
+DEL_TEST="(delete) ${ZERO} refs/heads/test ${c1}"$'\n'
 
 # ---- 早退（LS-87 G4）----
 expect 3 '① 刪除分支 → exit 3 不需 gate' '刪除 refs/heads/feature/LS-1-x' "$DEL"
 expect 3 '② 推 tag → exit 3 不需 gate' '非分支' "$TAG"
 expect 3 '③ 刪除＋tag 同一次 push → exit 3' '' "${DEL}${TAG}"
+expect 3 '③′ 刪除 test（git push origin :test）→ client 早退、靠 server allow_deletions=false（R1 F6）' '刪除 refs/heads/test' "$DEL_TEST"
 
 # ---- 需要完整 gate ----
 expect 0 '④ feature 分支 push → exit 0（跑完整 gate）' '' "$FEAT"
@@ -56,6 +59,7 @@ expect 0 '⑦ 空 stdin（手動執行）→ exit 0 維持既有行為' '' ''
 expect 1 '⑧ 手動 push test（無 PROMOTE_VIA_SCRIPT）→ 擋' 'promote.sh' "$PROMO_TEST"
 expect 1 '⑨ PROMOTE_VIA_SCRIPT=yes（不是 1）→ 擋' 'promote.sh' "$PROMO_TEST" PROMOTE_VIA_SCRIPT=yes
 expect 3 '⑩ promote.sh 且 FF → exit 3（晉升，不需完整 gate）' 'fast-forward' "$PROMO_TEST" PROMOTE_VIA_SCRIPT=1
+expect 3 '⑩′ promote.sh 推 <sha>:refs/heads/test（local ref 欄是 sha）且 FF → exit 3' 'fast-forward' "$PROMO_TEST_SHA" PROMOTE_VIA_SCRIPT=1
 expect 1 '⑪ promote.sh 但非 FF → 擋並指示 back-merge' 'back-merge' "$PROMO_MAIN_NONFF" PROMOTE_VIA_SCRIPT=1
 expect 1 '⑫ promote.sh 但遠端 tip 本機沒有 → 擋（先 fetch，fail closed）' 'git fetch origin' "$PROMO_MAIN_UNKNOWN" PROMOTE_VIA_SCRIPT=1
 expect 1 '⑬ promote.sh 但遠端沒有 test → 擋' '遠端沒有 test' "$PROMO_TEST_NEW" PROMOTE_VIA_SCRIPT=1
@@ -79,4 +83,4 @@ if [ "$fail" -ne 0 ]; then
   echo "✗ push-ref-check 自測失敗" >&2
   exit 1
 fi
-echo "✓ push-ref-check 自測通過（16 組＋接線 4 項）"
+echo "✓ push-ref-check 自測通過（18 組＋接線 4 項）"

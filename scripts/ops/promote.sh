@@ -12,10 +12,13 @@
 # 步驟：(a) git fetch origin
 #       (b) 方向
 #       (c) FF：origin/<to> 須為 origin/<from> 的祖先，否則拒絕並指示先 back-merge
-#       (d) origin/<from> 的 SHA 在 GitHub 的 check-runs：ci／db／lint／rules 各取最新一筆（id 最大；同一 SHA 推到 test
-#           後會再跑一輪，與 GitHub 分支保護「看最新一筆」一致），status completed 且 conclusion success 才放行；
-#           缺／skipped／failure／in_progress 皆拒絕並印出是哪一個
-#       (e) PROMOTE_VIA_SCRIPT=1 git push origin origin/<from>:refs/heads/<to>（push-gate 憑此變數＋FF 放行並早退）
+#       (d) origin/<from> 的 SHA 在 GitHub 的 check-runs：只認 GitHub Actions（app id 15368，與分支保護 required checks 限 app
+#           一致——別的 app 貼同名 check 不算，PR #141 R1 F5）的 ci／db／lint／rules，各取最新一筆（id 最大；同一 SHA 推到 test
+#           後會再跑一輪，與 GitHub 分支保護「看最新一筆」一致），status completed 且 conclusion success 才放行；缺／skipped／
+#           failure／in_progress 皆拒絕並印出是哪一個
+#       (e) PROMOTE_VIA_SCRIPT=1 git push origin <驗過的 sha>:refs/heads/<to>——推 (c)(d) 驗過的那個 SHA、不推 origin/<from> ref：
+#           巡檢 cron 每 26 分鐘 fetch 會移動 remote-tracking ref，ref 與驗過的 SHA 之間有空窗（PR #141 R1 F1）；push-gate 憑此
+#           變數＋FF 放行並早退
 #       (f) 印 from／to／sha／check 摘要；test→main 提醒打 tag
 # exit 0＝已晉升（或 origin/<to> 已等於 origin/<from>，無需動作）；1＝拒絕（非 FF／check 未全綠／遠端拒收）；
 #      2＝參數或環境錯誤（方向不合法、不在 git repo、fetch／gh 失敗——fail closed，不猜）
@@ -23,6 +26,7 @@
 set -uo pipefail
 
 REQUIRED_CHECKS="ci db lint rules"
+CHECKS_APP_ID=15368   # GitHub Actions；分支保護的 required checks 也限這個 app（scripts/ops/protection-apply.sh）
 
 usage() { echo "用法：promote.sh <from> <to>（development test ／ test main）" >&2; exit 2; }
 [ $# -eq 2 ] || usage
@@ -68,13 +72,13 @@ echo "  FF  origin/${to} 是 origin/${from} 的祖先（晉升 ${ahead} commit�
 
 # (d)
 runs=$(gh api "repos/{owner}/{repo}/commits/${from_sha}/check-runs?per_page=100" \
-  --jq '.check_runs | sort_by(.id) | .[] | [.name, .status, (.conclusion // "-"), (.html_url // "-")] | @tsv') || {
+  --jq '.check_runs | map(select(.app.id == '"${CHECKS_APP_ID}"')) | sort_by(.id) | .[] | [.name, .status, (.conclusion // "-"), (.html_url // "-")] | @tsv') || {
   echo "✗ promote：gh api check-runs 失敗（未登入？離線？）——不猜，拒絕晉升。" >&2; exit 2; }
 bad=0
 for name in $REQUIRED_CHECKS; do
   line=$(printf '%s\n' "$runs" | awk -F'\t' -v n="$name" '$1 == n' | tail -1)
   if [ -z "$line" ]; then
-    echo "  check ${name}: 缺（該 SHA 沒有這個 check-run——CI 還沒對 push 跑？.github/workflows/ci.yml 的 ${name} job 在 push 事件下要跑）"
+    echo "  check ${name}: 缺（該 SHA 沒有 GitHub Actions（app ${CHECKS_APP_ID}）的這個 check-run——CI 還沒對 push 跑？.github/workflows/ci.yml 的 ${name} job 在 push 事件下要跑）"
     bad=1; continue
   fi
   st=$(printf '%s' "$line" | cut -f2); cc=$(printf '%s' "$line" | cut -f3); url=$(printf '%s' "$line" | cut -f4)
@@ -90,8 +94,8 @@ if [ "$bad" -ne 0 ]; then
 fi
 
 # (e)
-echo "→ PROMOTE_VIA_SCRIPT=1 git push origin origin/${from}:refs/heads/${to}"
-if ! PROMOTE_VIA_SCRIPT=1 git push origin "refs/remotes/origin/${from}:refs/heads/${to}"; then
+echo "→ PROMOTE_VIA_SCRIPT=1 git push origin ${from_sha}:refs/heads/${to}"
+if ! PROMOTE_VIA_SCRIPT=1 git push origin "${from_sha}:refs/heads/${to}"; then
   echo "✗ promote：push 被拒（遠端在 fetch 之後又前進？分支保護的 required checks 對該 SHA 未滿足？）——重跑一次；仍紅看上方 remote 訊息。" >&2
   exit 1
 fi
