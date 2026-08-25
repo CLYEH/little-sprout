@@ -89,7 +89,7 @@ begin
   select coalesce(array_agg(f::regprocedure::oid), array[]::oid[])
     into v_exc_oids from unnest(v_exceptions) as f;
 
-  -- fail-open 防呆（比照第 9 段 60_:506）：v_swept 是通掃出來要檢查的函式數量，
+  -- fail-open 防呆（比照第 9 段）：v_swept 是通掃出來要檢查的函式數量，
   -- 若為 0（例如允許清單／例外清單意外涵蓋了全部函式，或這段查詢本身寫壞了），
   -- 代表這道檢查形同沒跑，必須直接 FAIL，不能悄悄地對全體 private 函式視而不見。
   select count(*) into v_swept

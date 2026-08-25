@@ -56,7 +56,7 @@
 --       F2）補充：六支之中只有 record_notification_event／target_family_id 兩支
 --       的紅是這裡描述的 v_err=NULL（成功）情境；其餘四支 notify_* 是 `returns
 --       trigger` 的函式，實測到的紅是 sqlstate=0A000「trigger functions can
---       only be called as triggers」，不是 NULL——理由見 §8 開頭 :1003-1010 的
+--       only be called as triggers」，不是 NULL——理由見 §8 開頭的
 --       因果說明（EXECUTE 權限檢查先於「是不是 trigger 函式」的檢查，但沒有
 --       EXECUTE 時卡在 42501；一旦 grant 了 EXECUTE，才會繼續往下走到「不是被
 --       trigger 機制呼叫」這個 0A000）。
