@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- ls-measured:9d1d470197da -->
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>
+    /* ── Little Sprout M1 tokens（值即實作值，ios-dev 直接抄）── */
+    :root{
+      --ls-board:#261416; --ls-board-2:#1F1013; --ls-board-3:#372020; --ls-lit:#462B28;
+      --ls-ink:#F8E7E2; --ls-ink-2:#DCBEBC;
+      --ls-cta:#E3A9C4; --ls-cta-deep:#995F7F; --ls-cta-busy:#C39BAE; --ls-on-cta:#261416;
+      --ls-pen:#FFAC9E; --ls-sprout:#8FD2A6; --ls-edge:#A0807C; --ls-google-line:#8E918F;
+      /* 漸層：兩端各自是 token，寫法只有一種（180deg，上→下）。 */
+      --ls-g-paper:linear-gradient(180deg, #1F1015 0%, #2B1915 100%);
+      --ls-g-win:linear-gradient(180deg, #251417 0%, #180B0E 100%);
+      --ls-g-win3:linear-gradient(180deg, #3F2626 0%, #2E1A1A 100%);
+      --ls-g-face:linear-gradient(180deg, #2E1A1A 0%, #3F2626 100%);
+      --ls-g-cta:linear-gradient(180deg, #D998B4 0%, #E9B3CE 100%);
+      --ls-g-well:linear-gradient(180deg, #261418 0%, #1D0C10 100%);
+      --ls-g-stub3:linear-gradient(180deg, #22131C 0%, #331F1A 35%, #34211A 100%);
+      --ls-g-stub2:linear-gradient(180deg, #27171C 0%, #31211C 35%, #32221C 100%);
+      --ls-g-stub1:linear-gradient(180deg, #2A1D1C 0%, #30231E 35%, #30231E 100%);
+      --ls-g-stub0:linear-gradient(180deg, #2C221F 0%, #2E2420 35%, #2E2420 100%);
+      --ls-g-seam:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.62) 100%);
+      /* 光從哪一邊來（+1 上、−1 下）。G24 讀它決定每一個表面該長什麼樣，
+         所以「這一張板是哪一種光」不再靠檔名猜。 */
+      --ls-dir:-1;
+      --ls-r-window:12px; --ls-r-control:14px; --ls-r-card:18px;
+      --ls-sp-1:4px; --ls-sp-2:8px; --ls-sp-3:12px; --ls-sp-4:16px;
+      --ls-sp-5:24px; --ls-sp-6:32px; --ls-tap-min:44px;
+      /* 過期句規線（第 10 輪 D9-02）：粗細與垂直位置，見 tokens.mjs 的 EXPIRED_RULE。 */
+      --ls-expired-rule-w:2px; --ls-expired-rule-y:60%;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Helvetica Neue", sans-serif;-webkit-font-smoothing:antialiased;background:#261416;color:#F8E7E2;text-wrap:pretty}
+    a{color:#F8E7E2;text-decoration:underline} a:hover{color:#E3A9C4}
+    /* 紙的紋理：卡紙不是純色。全稿唯一用到透明度的地方。 */
+    .g::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.09;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+      mix-blend-mode:multiply}
+    /* 過期句劃掉：不用瀏覽器內建 line-through（落在 CJK 橫畫帶，見 tokens.mjs 的
+       EXPIRED_RULE 註解）。**不能用 background-image 畫這條線**——量測 probe
+       的對比／漸層清冊是逐元素走 backgroundColor／backgroundImage 祖先鏈算的
+       （見 _probe.html 的 bgAt()／onGrad()），畫在 <s> 自己的背景上，這條規線
+       會被誤判成「這段文字站在一支沒登記的漸層上」（G22③／G23②），而且背景
+       原地疊在字底下會把對比直接量成規線色 vs 字色（第 10 輪初版踩過這個坑：
+       AAA 從 7.12 掉成 2.68）。改成 ::after 疊在文字**上面**（正常流內容先畫、
+       絕對定位的偽元素後畫，天生疊在最上層），regine 用純色 background（不是
+       linear-gradient()，掃描才不會誤認），量測祖先鏈只看真的 DOM 元素，
+       不會走到偽元素，兩條 gate 都不會被誤觸。粗細／位置一樣出自具名 token。 */
+    s[data-expired]{text-decoration:none;color:#DCBEBC;position:relative}
+    s[data-expired]::after{content:"";position:absolute;left:0;right:0;top:var(--ls-expired-rule-y);height:var(--ls-expired-rule-w);background:#A0807C;pointer-events:none}
+  </style></helmet>
+<div class="g" data-col="phone" data-grad="paper" style="position:relative;width:390px;height:844px;background:linear-gradient(180deg, #1F1015 0%, #2B1915 100%);overflow:hidden;display:flex;flex-direction:column">
+  <div style="padding:59px 24px 0"><div data-s="raise" data-role="link" style="min-height:44px;display:flex;align-items:center;gap:4px;margin-left:-6px;color:#F8E7E2">
+      <span style="display:flex"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5 8 12l6.5 7"/></svg></span><span style="font-size:17px;line-height:25px;font-weight:600">陳家</span>
+   </div></div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:16px 24px 0">
+    <h1 style="font-size:28px;line-height:34px;font-weight:700;letter-spacing:-.01em;color:#F8E7E2;margin:0">邀請家人</h1>
+    <p style="font-size:17px;line-height:25px;font-weight:400;color:#DCBEBC;margin:0">號碼有期限，也有可用次數。</p>
+  </div>
+<div style="display:flex;flex-direction:column;gap:24px;padding:24px 24px 34px;flex-grow:1">
+  <div data-s="flat" data-m="ticket" data-w="bleed" style="border:1px solid #A0807C;border-radius:0px;padding:0;overflow:hidden;margin:0 -24px">
+    <div data-perf="joined-b" data-grad="stub3" data-band="code" style="background:linear-gradient(180deg, #22131C 0%, #331F1A 35%, #34211A 100%);-webkit-mask-image:radial-gradient(circle 4px at 9.00px 100%, transparent 4px, #000 4.5px), radial-gradient(circle 3.28px at 30.24px 100%, transparent 3.28px, #000 3.78px), radial-gradient(circle 4.56px at 42.84px 100%, transparent 4.56px, #000 5.06px), radial-gradient(circle 3.72px at 64.26px 100%, transparent 3.72px, #000 4.220000000000001px), radial-gradient(circle 4.24px at 77.22px 100%, transparent 4.24px, #000 4.74px), radial-gradient(circle 10px at 0 100%, transparent 10px, #000 10.5px), radial-gradient(circle 10px at 100% 100%, transparent 10px, #000 10.5px);-webkit-mask-size:90px 100%, 90px 100%, 90px 100%, 90px 100%, 90px 100%, 100% 100%, 100% 100%;-webkit-mask-repeat:repeat-x, repeat-x, repeat-x, repeat-x, repeat-x, no-repeat, no-repeat;-webkit-mask-composite:source-in,source-in,source-in,source-in,source-in,source-in;mask-image:radial-gradient(circle 4px at 9.00px 100%, transparent 4px, #000 4.5px), radial-gradient(circle 3.28px at 30.24px 100%, transparent 3.28px, #000 3.78px), radial-gradient(circle 4.56px at 42.84px 100%, transparent 4.56px, #000 5.06px), radial-gradient(circle 3.72px at 64.26px 100%, transparent 3.72px, #000 4.220000000000001px), radial-gradient(circle 4.24px at 77.22px 100%, transparent 4.24px, #000 4.74px), radial-gradient(circle 10px at 0 100%, transparent 10px, #000 10.5px), radial-gradient(circle 10px at 100% 100%, transparent 10px, #000 10.5px);mask-size:90px 100%, 90px 100%, 90px 100%, 90px 100%, 90px 100%, 100% 100%, 100% 100%;mask-repeat:repeat-x, repeat-x, repeat-x, repeat-x, repeat-x, no-repeat, no-repeat;mask-composite:intersect,intersect,intersect,intersect,intersect,intersect;filter:drop-shadow(0 1px 0 rgba(255,214,208,.26));padding:24px;display:flex;flex-direction:column;align-items:center;gap:12px">
+      <span style="font-size:13px;line-height:18px;font-weight:500;color:#DCBEBC;letter-spacing:.16em;text-shadow:0 -1px 0 rgba(255,214,208,.22)">邀 請 碼</span>
+      <div style="height:64px;display:flex;align-items:center;justify-content:center;gap:12px"><span style="display:flex;gap:24px;font-family:ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;font-variant-numeric:tabular-nums;font-size:60px;line-height:64px;font-weight:600;letter-spacing:.04em;color:#F8E7E2;text-shadow:0 -1px 0 rgba(255,214,208,.22)"><span>K7M</span><span>2QD</span></span></div>
+    </div>
+    <div data-perf="joined-t" style="-webkit-mask-image:radial-gradient(circle 4px at 9.00px 0, transparent 4px, #000 4.5px), radial-gradient(circle 3.28px at 30.24px 0, transparent 3.28px, #000 3.78px), radial-gradient(circle 4.56px at 42.84px 0, transparent 4.56px, #000 5.06px), radial-gradient(circle 3.72px at 64.26px 0, transparent 3.72px, #000 4.220000000000001px), radial-gradient(circle 4.24px at 77.22px 0, transparent 4.24px, #000 4.74px), radial-gradient(circle 10px at 0 0, transparent 10px, #000 10.5px), radial-gradient(circle 10px at 100% 0, transparent 10px, #000 10.5px);-webkit-mask-size:90px 100%, 90px 100%, 90px 100%, 90px 100%, 90px 100%, 100% 100%, 100% 100%;-webkit-mask-repeat:repeat-x, repeat-x, repeat-x, repeat-x, repeat-x, no-repeat, no-repeat;-webkit-mask-composite:source-in,source-in,source-in,source-in,source-in,source-in;mask-image:radial-gradient(circle 4px at 9.00px 0, transparent 4px, #000 4.5px), radial-gradient(circle 3.28px at 30.24px 0, transparent 3.28px, #000 3.78px), radial-gradient(circle 4.56px at 42.84px 0, transparent 4.56px, #000 5.06px), radial-gradient(circle 3.72px at 64.26px 0, transparent 3.72px, #000 4.220000000000001px), radial-gradient(circle 4.24px at 77.22px 0, transparent 4.24px, #000 4.74px), radial-gradient(circle 10px at 0 0, transparent 10px, #000 10.5px), radial-gradient(circle 10px at 100% 0, transparent 10px, #000 10.5px);mask-size:90px 100%, 90px 100%, 90px 100%, 90px 100%, 90px 100%, 100% 100%, 100% 100%;mask-repeat:repeat-x, repeat-x, repeat-x, repeat-x, repeat-x, no-repeat, no-repeat;mask-composite:intersect,intersect,intersect,intersect,intersect,intersect;filter:drop-shadow(0 -1px 0 rgba(0,0,0,.62));padding:12px 24px;display:flex;flex-direction:column;gap:4px;background:#372020"><span style="display:inline-flex;align-items:center;gap:8px"><span data-scale="3" style="display:inline-flex;align-items:center;gap:4px;flex:none">
+      <span data-cell="left" data-grad="stub3" style="position:relative;width:34px;height:20px;border-radius:2px;border:1px solid #A0807C;background:linear-gradient(180deg, #22131C 0%, #331F1A 35%, #34211A 100%)"></span><span data-cell="left" data-grad="stub3" style="position:relative;width:34px;height:20px;border-radius:2px;border:1px solid #A0807C;background:linear-gradient(180deg, #22131C 0%, #331F1A 35%, #34211A 100%)"></span><span data-cell="left" data-grad="stub3" style="position:relative;width:34px;height:20px;border-radius:2px;border:1px solid #A0807C;background:linear-gradient(180deg, #22131C 0%, #331F1A 35%, #34211A 100%)"></span>
+    </span><span style="font-size:17px;line-height:25px;font-weight:600;color:#F8E7E2;text-shadow:0 -1px 0 rgba(255,214,208,.22);white-space:nowrap">還可以用 3 次</span></span>
+         <span style="font-size:13px;line-height:18px;font-weight:500;color:#DCBEBC;text-shadow:0 -1px 0 rgba(255,214,208,.22)">有效到 8 月 30 日</span></div>
+  </div>
+<div data-s="raise" data-role="toggleRow" style="background:linear-gradient(180deg, #2E1A1A 0%, #3F2626 100%);border-radius:14px;border-bottom:3px solid #A0807C;box-shadow:0 -1px 0 rgba(0,0,0,.5), 0 -8px 16px -10px rgba(0,0,0,.9);padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="flex-grow:1;display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:17px;line-height:25px;font-weight:600;color:#F8E7E2">新成員要我核准才能進來</span>
+          <span style="font-size:13px;line-height:18px;font-weight:500;color:#DCBEBC">關掉的話，只要輸入正確的碼就直接進家庭。</span>
+        </div>
+        <div data-s="win" data-role="switchTrack" data-inset="fillable" data-m="switch" data-on="1" style="flex:none;width:51px;height:31px;background:#8FD2A6;border-radius:999px;box-shadow:inset 0 1.5px 0 rgba(255,214,208,.26), inset 0 -4px 6px -3px rgba(0,0,0,.45), inset 0 -1.5px 0 rgba(0,0,0,.62);padding:2px;display:flex;align-items:center;justify-content:flex-end"><div data-role="knob" style="width:27px;height:27px;border-radius:50%;background:#FFFFFF"></div></div>
+      </div>
+      
+    </div>
+
+      <span style="font-size:13px;line-height:18px;font-weight:500;color:#DCBEBC">號碼給誰，就等於邀請誰。請只給你認得的家人。</span>
+      <div data-s="raise" data-role="button" data-cta="1" style="background:linear-gradient(180deg, #D998B4 0%, #E9B3CE 100%);border-radius:14px;border-bottom:3px solid #995F7F;box-shadow:0 -1px 0 rgba(0,0,0,.5), 0 -8px 16px -10px rgba(0,0,0,.9);min-height:56px;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 16px;color:#261416">
+      <span style="display:flex;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 3.4 3.6 10.2l6.6 2.8 2.8 6.6Z"/><path d="m10.2 13 4.2-4.2"/></svg></span>
+      <span style="font-size:17px;line-height:25px;font-weight:600;color:#261416;text-align:center">傳給家人</span>
+    </div>
+      <div data-s="raise" data-role="button" style="background:linear-gradient(180deg, #2E1A1A 0%, #3F2626 100%);border-radius:14px;border-bottom:3px solid #A0807C;box-shadow:0 -1px 0 rgba(0,0,0,.5), 0 -8px 16px -10px rgba(0,0,0,.9);min-height:56px;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 16px;color:#F8E7E2">
+      <span style="display:flex;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.6" y="8.6" width="11.6" height="11.6" rx="2.2"/><path d="M15.4 5.4H5.8a2 2 0 0 0-2 2v9.6"/></svg></span>
+      <span style="font-size:17px;line-height:25px;font-weight:600;color:#F8E7E2;text-align:center">複製號碼</span>
+    </div>
+      <span data-s="raise" data-role="link" style="align-self:center;min-height:44px;display:inline-flex;align-items:center;padding:0 8px;font-size:17px;line-height:25px;font-weight:600;color:#F8E7E2;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px">換一組新的號碼</span></div></div>
+</x-dc>
+</body>
+</html>
