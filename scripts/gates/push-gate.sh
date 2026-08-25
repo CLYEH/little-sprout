@@ -47,6 +47,16 @@ if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1;
   # 退回共用第一台時多個 worktree 才會真的排隊序列跑。
   sim_udid=$(printf '%s' "$dest" | sed -n 's/.*id=//p')
   [ -n "$sim_udid" ] || { echo "✗ push gate：解不出 destination 的 UDID（${dest}）。" >&2; exit 1; }
+  # LS-100：模擬器用完必關——不論下面的 test 跑成功、跑失敗、或整支 push gate 途中被中斷，都要關掉這次
+  # 用到的模擬器；機器空跑浪費資源，也會讓下一個 agent／patrol.sh 誤判「已有人在用」。用 EXIT trap 做
+  # （涵蓋失敗：set -e 觸發的 exit 一樣算 EXIT，且涵蓋腳本本身之後任何一步失敗）；INT／TERM 另外顯式
+  # trap 成 `exit <code>`——同 scripts/ops/simulator-lock.sh 檔頭理由，訊號不保證會讓還在等前景指令的
+  # bash 立刻觸發 EXIT trap，顯式接成 exit 才可靠。KEEP_SIMULATOR=1 可跳過（除錯時想留著看畫面）。
+  if [ "${KEEP_SIMULATOR:-0}" != 1 ]; then
+    trap 'xcrun simctl shutdown "$sim_udid" >/dev/null 2>&1 || true' EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+  fi
   # LS-56：fresh worktree 首次 SPM 解析偶發瞬斷（xcodebuild「Could not resolve package
   # dependencies / Couldn't check out revision」，重跑即過——LS-54 back-merge 實測）。先單獨
   # 解析一次、失敗隔 10 秒再重試一次：LS-56 自己的首次 push 實測「立刻重試」3 秒後仍紅、
