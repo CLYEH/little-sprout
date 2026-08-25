@@ -1343,8 +1343,8 @@
                       "ref": "GEBcf",
                       "name": "Corner TL",
                       "layoutPosition": "absolute",
-                      "x": 3,
-                      "y": 3,
+                      "x": -5,
+                      "y": -5,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 0 L26 0 L0 26 Z"
@@ -1361,7 +1361,7 @@
                       "name": "Corner TR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 3,
+                      "y": -5,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 0 L0 0 L26 26 Z"
@@ -1377,8 +1377,8 @@
                       "ref": "GEBcf",
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
-                      "x": 3,
-                      "y": 159,
+                      "x": -5,
+                      "y": 154,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -1395,7 +1395,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 159,
+                      "y": 154,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -2223,7 +2223,7 @@
                           "name": "Corner BL",
                           "layoutPosition": "absolute",
                           "x": 3,
-                          "y": 239,
+                          "y": 242,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M0 26 L0 0 L26 26 Z"
@@ -2240,7 +2240,7 @@
                           "name": "Corner BR",
                           "layoutPosition": "absolute",
                           "x": 348,
-                          "y": 239,
+                          "y": 242,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M26 26 L26 0 L0 26 Z"
@@ -2768,8 +2768,8 @@
                   "ref": "GEBcf",
                   "name": "Corner TL",
                   "layoutPosition": "absolute",
-                  "x": 3,
-                  "y": 3,
+                  "x": -5,
+                  "y": -5,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M0 0 L26 0 L0 26 Z"
@@ -2786,7 +2786,7 @@
                   "name": "Corner TR",
                   "layoutPosition": "absolute",
                   "x": 324,
-                  "y": 3,
+                  "y": -5,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M26 0 L0 0 L26 26 Z"
@@ -2802,8 +2802,8 @@
                   "ref": "GEBcf",
                   "name": "Corner BL",
                   "layoutPosition": "absolute",
-                  "x": 3,
-                  "y": 159,
+                  "x": -5,
+                  "y": 154,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M0 26 L0 0 L26 26 Z"
@@ -2820,7 +2820,7 @@
                   "name": "Corner BR",
                   "layoutPosition": "absolute",
                   "x": 324,
-                  "y": 159,
+                  "y": 154,
                   "descendants": {
                     "sD5Ma": {
                       "geometry": "M26 26 L26 0 L0 26 Z"
@@ -4845,7 +4845,7 @@
           "ref": "GEBcf",
           "name": "Corner BL",
           "x": 35,
-          "y": 713,
+          "y": 820,
           "width": 40,
           "height": 40,
           "descendants": {
@@ -4867,7 +4867,7 @@
           "ref": "GEBcf",
           "name": "Corner BR",
           "x": 425,
-          "y": 713,
+          "y": 820,
           "width": 40,
           "height": 40,
           "descendants": {
@@ -7058,8 +7058,8 @@
                       "ref": "GEBcf",
                       "name": "Corner TL",
                       "layoutPosition": "absolute",
-                      "x": 3,
-                      "y": 3,
+                      "x": -5,
+                      "y": -5,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 0 L26 0 L0 26 Z"
@@ -7076,7 +7076,7 @@
                       "name": "Corner TR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 3,
+                      "y": -5,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 0 L0 0 L26 26 Z"
@@ -7092,8 +7092,8 @@
                       "ref": "GEBcf",
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
-                      "x": 3,
-                      "y": 159,
+                      "x": -5,
+                      "y": 154,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -7110,7 +7110,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 159,
+                      "y": 154,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -7946,8 +7946,8 @@
                       "ref": "GEBcf",
                       "name": "Corner TL",
                       "layoutPosition": "absolute",
-                      "x": 3,
-                      "y": 3,
+                      "x": -5,
+                      "y": -5,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 0 L26 0 L0 26 Z"
@@ -7964,7 +7964,7 @@
                       "name": "Corner TR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 3,
+                      "y": -5,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 0 L0 0 L26 26 Z"
@@ -7980,8 +7980,8 @@
                       "ref": "GEBcf",
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
-                      "x": 3,
-                      "y": 159,
+                      "x": -5,
+                      "y": 154,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -7998,7 +7998,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 159,
+                      "y": 154,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -11828,8 +11828,8 @@
                       "ref": "GEBcf",
                       "name": "Corner TL",
                       "layoutPosition": "absolute",
-                      "x": 3,
-                      "y": 3,
+                      "x": -5,
+                      "y": -5,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 0 L26 0 L0 26 Z"
@@ -11846,7 +11846,7 @@
                       "name": "Corner TR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 3,
+                      "y": -5,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 0 L0 0 L26 26 Z"
@@ -11862,8 +11862,8 @@
                       "ref": "GEBcf",
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
-                      "x": 3,
-                      "y": 159,
+                      "x": -5,
+                      "y": 154,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -11880,7 +11880,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 159,
+                      "y": 154,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -12294,8 +12294,8 @@
                       "ref": "GEBcf",
                       "name": "Corner TL",
                       "layoutPosition": "absolute",
-                      "x": 3,
-                      "y": 3,
+                      "x": -5,
+                      "y": -5,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 0 L26 0 L0 26 Z"
@@ -12312,7 +12312,7 @@
                       "name": "Corner TR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 3,
+                      "y": -5,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 0 L0 0 L26 26 Z"
@@ -12328,8 +12328,8 @@
                       "ref": "GEBcf",
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
-                      "x": 3,
-                      "y": 159,
+                      "x": -5,
+                      "y": 154,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -12346,7 +12346,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 159,
+                      "y": 154,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -16053,7 +16053,7 @@
                           "fill": "#553040",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "2.11／2.22",
+                          "content": "2.11／2.22（基準 $surface，非 $bg；同表其他列基準不同）",
                           "lineHeight": 1.45,
                           "fontFamily": "Noto Sans TC",
                           "fontSize": 13,
@@ -17663,7 +17663,7 @@
                           "fill": "#553040",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "印相罩最不利點 7.36／8.71 AAA",
+                          "content": "$photo-dim 最不利點 7.36／8.71 AAA（原「印相罩」標籤已過期，R4 起 print-scrim 除役）",
                           "lineHeight": 1.45,
                           "fontFamily": "Noto Sans TC",
                           "fontSize": 13,
@@ -29610,7 +29610,7 @@
                   "fill": "#8E2447",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "R7 · 全域\n原 R2",
+                  "content": "LS-81 · 全域\n原 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -29624,7 +29624,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "【R2 · 邀請碼字母集（設計對後端的規格請求）】排除易混字元 Q O 0 I L 1（Crockford Base32 前例）。剩餘 30 字元：2-9 ＋ A B C D E F G H J K M N P R S T U V W X Y Z。6 位 → 30^6 ≈ 7.29×10^8 ≈ 29.4 bit。⚠ 若 LS-33 需維持 40 bit，6 位英數不可能達成（需 ~100 個符號），要嘛加到 8 位（30^8 ≈ 39.2 bit）要嘛放寬字母集——設計端立場：寧可 7-8 位也不要讓長輩把 O 唸成零。稿內示例碼已由「K7M 2QD」改為「K7M 2FD」，06/06b/06c 輸入格第 5 格 Q → F。\n【R6 · 八格應變規格（如果裁決是 8 位，這是它長什麼樣，不必再開一輪設計）】\n① 格寬：卡片內寬固定 305（345 − 2×$inset-card 20）。六格＝(305 − 5×8)/6 ＝ 44.17（gap $sp-label 8）。八格改 4+4 分組：格間 gap 降到 $sp-tight 6（6 道）＋中間一道分組間隙 $sp-item 16，格寬 ＝ (305 − 6×6 − 16)/8 ＝ 31.63。\n② 字級：fs-otp 36，Courier Prime 數字前進寬約 0.6em ＝ 21.6，格內扣掉 2pt 邊框剩 27.6，左右各餘 3.0 ✓。AX3 的 52 會爆（31.2 > 27.6），八格時 fs-otp 的 AX3 值由 52 降到 42（25.2，左右各餘 1.2）。這是八格唯一需要改的 token 值。\n③ 分組：六格 3+3、八格 4+4。分組間隙是版面元素不是格線，AX 下不放大。\n④ fs-code 降階（07／07b 的顯示用大字；模型補回 letterSpacing 4：n×(0.6·fs+4)+16）：60 在八位時 8×(0.6×60+4)+16 ＝ 336，超出內寬 305 達 31pt，沒有安全邊界；八位時 fs-code 降到 52（8×(0.6×52+4)+16 ＝ 297.6，餘 7.4，非先前誤算的 39），八位 AX3 需 ≤52。六位 AX3 76 會溢出 8.6，已降 72。\n⑤ 單一 tap target（前提，不是附註）：六格與八格都是「一個隱形輸入框 ＋ N 個顯示格」，整列是單一 tap target（高 72 ≥44），不是 N 個各自可點的小方塊。31.63pt 寬的格子本來就構不成 44pt 命中目標——這條註記是八格能成立的前提，實作不得把每格做成獨立按鈕。\n⑥ 切換成本一句：改位數是「一個 cellCount ＋ 兩個 AX3 字級值」的事，不是重排版面——六格與八格共用同一張卡、同一個 72 高、同一條錯誤態文法；真正要重畫的只有 07／07b 的顯示碼與分享文案裡的示例字串。",
+                  "content": "【LS-81 更正】上述「排除 Q／L」的 30 字元方案未被採用（見下方過期段落）。LS-89 使用者裁決＋LS-90 後端定案：6 位、32 字元表 23456789ABCDEFGHJKLMNPQRSTUVWXYZ（僅排除易混字元 0／O／1／I，含 Q、含 L），32^6 ＝ 2^30 ＝ 30 bit，字母集不必為湊位數退讓。稿內示例碼「K7M 2FD」的 F 本就在 32 字元表內，仍是有效示例，不需回改。\n【R2 · 邀請碼字母集（設計對後端的規格請求，已作廢，見上）】排除易混字元 Q O 0 I L 1（Crockford Base32 前例）。剩餘 30 字元：2-9 ＋ A B C D E F G H J K M N P R S T U V W X Y Z。6 位 → 30^6 ≈ 7.29×10^8 ≈ 29.4 bit。⚠ 若 LS-33 需維持 40 bit，6 位英數不可能達成（需 ~100 個符號），要嘛加到 8 位（30^8 ≈ 39.2 bit）要嘛放寬字母集——設計端立場：寧可 7-8 位也不要讓長輩把 O 唸成零。稿內示例碼已由「K7M 2QD」改為「K7M 2FD」，06/06b/06c 輸入格第 5 格 Q → F。\n【R6 · 八格應變規格（如果裁決是 8 位，這是它長什麼樣，不必再開一輪設計）】\n① 格寬：卡片內寬固定 305（345 − 2×$inset-card 20）。六格＝(305 − 5×8)/6 ＝ 44.17（gap $sp-label 8）。八格改 4+4 分組：格間 gap 降到 $sp-tight 6（6 道）＋中間一道分組間隙 $sp-item 16，格寬 ＝ (305 − 6×6 − 16)/8 ＝ 31.63。\n② 字級：fs-otp 36，Courier Prime 數字前進寬約 0.6em ＝ 21.6，格內扣掉 2pt 邊框剩 27.6，左右各餘 3.0 ✓。AX3 的 52 會爆（31.2 > 27.6），八格時 fs-otp 的 AX3 值由 52 降到 42（25.2，左右各餘 1.2）。這是八格唯一需要改的 token 值。\n③ 分組：六格 3+3、八格 4+4。分組間隙是版面元素不是格線，AX 下不放大。\n④ fs-code 降階（07／07b 的顯示用大字；模型補回 letterSpacing 4：n×(0.6·fs+4)+16）：60 在八位時 8×(0.6×60+4)+16 ＝ 336，超出內寬 305 達 31pt，沒有安全邊界；八位時 fs-code 降到 52（8×(0.6×52+4)+16 ＝ 297.6，餘 7.4，非先前誤算的 39），八位 AX3 需 ≤52。六位 AX3 76 會溢出 8.6，已降 72。\n⑤ 單一 tap target（前提，不是附註）：六格與八格都是「一個隱形輸入框 ＋ N 個顯示格」，整列是單一 tap target（高 72 ≥44），不是 N 個各自可點的小方塊。31.63pt 寬的格子本來就構不成 44pt 命中目標——這條註記是八格能成立的前提，實作不得把每格做成獨立按鈕。\n⑥ 切換成本一句：改位數是「一個 cellCount ＋ 兩個 AX3 字級值」的事，不是重排版面——六格與八格共用同一張卡、同一個 72 高、同一條錯誤態文法；真正要重畫的只有 07／07b 的顯示碼與分享文案裡的示例字串。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -36916,7 +36916,7 @@
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
                       "x": 3,
-                      "y": 239,
+                      "y": 242,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -36933,7 +36933,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 348,
-                      "y": 239,
+                      "y": 242,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -37203,7 +37203,7 @@
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
                       "x": 3,
-                      "y": 239,
+                      "y": 242,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -37220,7 +37220,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 348,
-                      "y": 239,
+                      "y": 242,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -37490,7 +37490,7 @@
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
                       "x": 3,
-                      "y": 239,
+                      "y": 242,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -37507,7 +37507,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 348,
-                      "y": 239,
+                      "y": 242,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -38381,7 +38381,7 @@
           }
         },
         {
-          "value": 76,
+          "value": 72,
           "theme": {
             "size": "ax3"
           }
