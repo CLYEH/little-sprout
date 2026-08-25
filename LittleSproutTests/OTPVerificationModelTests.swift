@@ -86,8 +86,10 @@ final class OTPVerificationModelTests: XCTestCase {
         XCTAssertEqual(model.remainingAttempts, 1)
         _ = await model.verify()
         XCTAssertEqual(model.remainingAttempts, 0)
-        // I-2（LS-92）：歸零那次不能再顯示「還可以再試 0 次」矛盾句，改用「已達上限」文案。
-        XCTAssertEqual(model.errorMessage, "已經試了 3 次，已達上限，請重新寄一組驗證碼再試。")
+        // I-2（LS-92）：歸零那次不能再顯示「還可以再試 0 次」矛盾句，改用「已達上限」文案；
+        // R2 F1：這句話寫進獨立的 lockMessage，不是 errorMessage（errorMessage 應同步清空）。
+        XCTAssertNil(model.errorMessage)
+        XCTAssertEqual(model.lockMessage, "已經試了 3 次，已達上限，請重新寄一組驗證碼再試。")
     }
 
     func test_verify_afterAttemptsExhausted_doesNotCallAuthServiceAgain() async {
@@ -167,9 +169,9 @@ final class OTPVerificationModelTests: XCTestCase {
         let result = await model.verify()
 
         XCTAssertFalse(result)
-        XCTAssertNotNil(model.errorMessage, "次數用盡後按下確認登入不能靜默無反應")
+        XCTAssertNotNil(model.lockMessage, "次數用盡後按下確認登入不能靜默無反應")
         XCTAssertNotEqual(
-            model.errorMessage, "驗證碼不對或已經過期，還可以再試 0 次；沒收到的話請重新寄一組。",
+            model.lockMessage, "驗證碼不對或已經過期，還可以再試 0 次；沒收到的話請重新寄一組。",
             "應給出可重寄的明確出路，不是沿用舊的計次訊息"
         )
     }

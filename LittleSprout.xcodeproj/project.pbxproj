@@ -55,6 +55,7 @@
 		B9BDE1E1AD633D323BBC2B5D /* AuthStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EA929B8CFBB700BE9E073B4 /* AuthStoreTests.swift */; };
 		BEF3B2012A0964248A8D983B /* AppleSignInButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A80BDD3D72B37E3451EAC03 /* AppleSignInButton.swift */; };
 		C3C4C4F16FFBC3D5561F3DB8 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A8630C948451C3739D8A263 /* AuthService.swift */; };
+		C49D2DD7EC2EF00A346703EB /* OTPVerificationModelVerifyRateLimitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28F1472213F03BCFC33624F8 /* OTPVerificationModelVerifyRateLimitTests.swift */; };
 		C5A680937E6BD7F0B4673749 /* AppleSignInNonce.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587B330E759DA2D787F4E63C /* AppleSignInNonce.swift */; };
 		DDBF77E8E686704D89F1ABA1 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F28DE483C3DA54A9672BFDFF /* Supabase */; };
 		E2E9E24C6F7E93396FD38F4B /* AuthRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95B92F29867CB3855772E654 /* AuthRoute.swift */; };
@@ -88,6 +89,7 @@
 		18AB0FEB21BA55A39EB67982 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		216769BEF4D15D89E66AF64B /* ScrollableFillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableFillView.swift; sourceTree = "<group>"; };
 		226B824755111DECCA1F2AEE /* EmailSignInModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInModelTests.swift; sourceTree = "<group>"; };
+		28F1472213F03BCFC33624F8 /* OTPVerificationModelVerifyRateLimitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationModelVerifyRateLimitTests.swift; sourceTree = "<group>"; };
 		2D45C2CD0AC1D735E5576ABB /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		2D71D805DBF9E7B36AF16BE8 /* EmailFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailFormatTests.swift; sourceTree = "<group>"; };
 		35722FF8F70D0F6329F4069C /* EmailSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInView.swift; sourceTree = "<group>"; };
@@ -253,6 +255,7 @@
 				A5C9C0FFAC9911BA268EBA27 /* OTPVerificationModelLockoutTests.swift */,
 				E466449A44696816AA484F94 /* OTPVerificationModelRateLimitTests.swift */,
 				D5C295C45BFA6330DF97EDAD /* OTPVerificationModelTests.swift */,
+				28F1472213F03BCFC33624F8 /* OTPVerificationModelVerifyRateLimitTests.swift */,
 				10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */,
 				F5E69B95CA3E637FEF6DFCCB /* SupabaseClientFactoryTests.swift */,
 				DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */,
@@ -502,6 +505,7 @@
 				E5D68ECAE74FF9EBBC782E5D /* OTPVerificationModelLockoutTests.swift in Sources */,
 				FD1569202C44723F87AD94C3 /* OTPVerificationModelRateLimitTests.swift in Sources */,
 				1F25A631ACCC133CEE190ABF /* OTPVerificationModelTests.swift in Sources */,
+				C49D2DD7EC2EF00A346703EB /* OTPVerificationModelVerifyRateLimitTests.swift in Sources */,
 				5526B3A33052BAFCF2286C04 /* SessionFixture.swift in Sources */,
 				1D8CD9A1C4FB43018038FB4B /* StubAuthService.swift in Sources */,
 				F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */,

@@ -60,14 +60,17 @@ struct OTPVerificationView: View {
         VStack(alignment: .leading, spacing: AppSpacing.group) {
             OTPCodeField(
                 code: Binding(get: { model.code }, set: { model.updateCode($0) }),
-                isError: model.errorMessage != nil
+                isError: isOTPFieldError,
+                isLocked: model.isLocked
             )
-            if let errorMessage = model.errorMessage {
+            .sensoryFeedback(.error, trigger: model.lockedInputFeedbackTick)
+            if let message = otpMessage {
                 HStack(spacing: AppSpacing.tight) {
                     Image(systemName: "exclamationmark.circle.fill")
                         .appIconFrame(.small)
                         .foregroundStyle(Color.lsDanger)
-                    Text(errorMessage)
+                        .symbolEffect(.bounce, value: model.lockedInputFeedbackTick)
+                    Text(message)
                         .appFont(.note)
                         .foregroundStyle(Color.lsDanger)
                 }
@@ -75,8 +78,28 @@ struct OTPVerificationView: View {
         }
     }
 
+    // R2（LS-92 review R1）F1：`lockMessage`（次數用盡）與 `verifyRateLimitMessage`
+    // （verify() 自己的 429）是兩個獨立、互不清除的狀態，這裡依優先序合併成單一顯示字串——
+    // 兩者實務上互斥（`isLocked` 一旦成立，`verify()` 會在打後端前就 guard 掉，不可能再撞到
+    // rate limit），但合併邏輯本身不依賴這個互斥假設，各自獨立也不會顯示錯內容。
+    private var otpMessage: String? {
+        model.lockMessage ?? verifyRateLimitMessage ?? model.errorMessage
+    }
+
+    private var verifyRateLimitMessage: String? {
+        guard let seconds = model.verifyRateLimitSecondsRemaining else { return nil }
+        // R2 F3：秒數為 0 代表「有訊息、但解不出真實秒數」——不承諾等待時間。
+        return seconds > 0
+            ? "太多次嘗試了，請等 \(seconds) 秒再試。"
+            : "太多次嘗試了，請稍候一下再試一次。"
+    }
+
+    private var isOTPFieldError: Bool {
+        model.lockMessage != nil || model.verifyRateLimitSecondsRemaining != nil || model.errorMessage != nil
+    }
+
     private var footerNoteText: String {
-        model.errorMessage == nil
+        otpMessage == nil
             ? "驗證碼 10 分鐘內有效。找不到信時，請看一下垃圾郵件匣。"
             : "驗證碼 10 分鐘內有效。沒看到信？看一下垃圾郵件匣。"
     }
@@ -102,8 +125,10 @@ struct OTPVerificationView: View {
         } else {
             // 四個各自獨立的 Text 在 AX3 下會各自換行，逐行讀出來變成打散的欄位（R3 review
             // B4：「沒收到｜　｜秒後可」三欄式亂序）。併成單一 Text 讓它像一般段落那樣整段
-            // 換行，數字段用 monospacedDigit 避免倒數時寬度跳動。I-3（LS-92）：429 冷卻
-            // 沿用同一列版面，只在 `model.isRateLimited` 時換一句文案，不另畫新版面。
+            // 換行，數字段用 monospacedDigit 避免倒數時寬度跳動。I-3／R2（LS-92）：resend()
+            // 自己的 429 沿用同一列版面，只在 `model.isResendRateLimited` 時換一句文案，
+            // 有真實秒數（`resendRateLimitSecondsAreReal`）才顯示數字並倒數（R2 F3），
+            // 不另畫新版面。
             HStack(spacing: AppSpacing.tight) {
                 Image(systemName: "clock")
                     .appIconFrame(.medium)
@@ -119,9 +144,12 @@ struct OTPVerificationView: View {
     }
 
     private var cooldownText: String {
-        model.isRateLimited
+        guard model.isResendRateLimited else {
+            return "沒收到驗證碼？\(model.resendCooldown) 秒後可重新寄送"
+        }
+        return model.resendRateLimitSecondsAreReal
             ? "寄太頻繁了，請等 \(model.resendCooldown) 秒再試"
-            : "沒收到驗證碼？\(model.resendCooldown) 秒後可重新寄送"
+            : "寄送太頻繁了，請稍後再試"
     }
 
     private func verify() {

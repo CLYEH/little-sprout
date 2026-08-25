@@ -8,6 +8,10 @@ struct OTPCodeField: View {
     @Binding var code: String
     var isError: Bool
     var cellCount: Int = 6
+    /// 次數用盡（R2，LS-92 PR #155 review R1 F5）：鎖定當下自動收鍵盤——沒有理由繼續叫出
+    /// 數字鍵盤打新號碼。不影響之後再點一次欄位重新叫出鍵盤（刪字／清空仍然放行，見
+    /// `OTPVerificationModel.updateCode`），只是不再自動彈出。
+    var isLocked: Bool = false
 
     @FocusState private var isFocused: Bool
 
@@ -31,6 +35,9 @@ struct OTPCodeField: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { isFocused = true }
+        .onChange(of: isLocked) { _, locked in
+            if locked { isFocused = false }
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("驗證碼輸入，共 \(cellCount) 位數字")
         .accessibilityValue(code.isEmpty ? "尚未輸入" : code.map(String.init).joined(separator: " "))
