@@ -120,4 +120,69 @@ extension OTPVerificationModelTests {
 
         XCTAssertEqual(model.remainingAttempts, 5, "裸 429 不該扣使用者的嘗試次數")
     }
+
+    // MARK: - R3 F7：verify 限流語氣是中性，不是 danger（不暗示「碼錯」）
+
+    func test_verify_rateLimited_messageToneIsNeutralNotDanger() async {
+        let stub = StubAuthService()
+        stub.setVerifyEmailOTPHandler { _, _ in
+            throw AppError.validationRetryable(message: "please wait", code: "over_request_rate_limit")
+        }
+        let (model, _) = makeModel(stub: stub)
+        model.updateCode("111111")
+
+        _ = await model.verify()
+
+        XCTAssertEqual(
+            model.visibleMessages.map(\.tone), [.neutral],
+            "F7：verify 限流不是「這組碼錯了」，不該用 danger 那套紅框驚嘆號語氣"
+        )
+    }
+
+    // MARK: - R3 F8：秒數 ≥90 換算成「約 N 分鐘」
+
+    func test_humanReadableWaitTime_belowNinety_showsRawSeconds() {
+        XCTAssertEqual(OTPVerificationModel.humanReadableWaitTime(seconds: 89), "89 秒")
+    }
+
+    func test_humanReadableWaitTime_atOrAboveNinety_showsMinutes() {
+        XCTAssertEqual(OTPVerificationModel.humanReadableWaitTime(seconds: 90), "約 2 分鐘")
+        XCTAssertEqual(OTPVerificationModel.humanReadableWaitTime(seconds: 125), "約 2 分鐘")
+    }
+
+    func test_verify_rateLimited_longWait_messageUsesMinutesNotRawSeconds() async {
+        let stub = StubAuthService()
+        stub.setVerifyEmailOTPHandler { _, _ in
+            throw AppError.validationRetryable(
+                message: "For security purposes, you can only request this after 125 seconds.",
+                code: "over_request_rate_limit"
+            )
+        }
+        let (model, _) = makeModel(stub: stub)
+        model.updateCode("111111")
+
+        _ = await model.verify()
+
+        XCTAssertEqual(model.visibleMessages.first?.text, "太多次嘗試了，請等 約 2 分鐘再試。", "F8：≥90 秒要換算成分鐘，不是報 125 秒")
+    }
+
+    // MARK: - R3 F9：verify 限流中按「確認登入」給予回饋
+
+    func test_verify_whileRateLimitGuardActive_incrementsFeedbackTickOnEveryPress() async {
+        let stub = StubAuthService()
+        stub.setVerifyEmailOTPHandler { _, _ in
+            throw AppError.validationRetryable(
+                message: "For security purposes, you can only request this after 30 seconds.",
+                code: "over_request_rate_limit"
+            )
+        }
+        let (model, _) = makeModel(stub: stub)
+        model.updateCode("111111")
+        _ = await model.verify()
+        let before = model.lockedInputFeedbackTick
+
+        _ = await model.verify()
+
+        XCTAssertEqual(model.lockedInputFeedbackTick, before + 1, "F9：限流中按「確認登入」也要有回饋")
+    }
 }

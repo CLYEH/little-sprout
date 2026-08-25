@@ -64,42 +64,32 @@ struct OTPVerificationView: View {
                 isLocked: model.isLocked
             )
             .sensoryFeedback(.error, trigger: model.lockedInputFeedbackTick)
-            if let message = otpMessage {
+            // R3（LS-92 PR #155 review R2）F6：鎖定理由與「這次操作的結果」兩句併陳，不是
+            // `??` 二選一——`model.visibleMessages` 已經處理好順序與是否同時出現，這裡只負責
+            // 依 `tone` 選顏色與 icon（F7：verify 限流不是「碼錯」，用中性語氣，不用 danger
+            // 紅框驚嘆號）。
+            ForEach(model.visibleMessages, id: \.text) { message in
                 HStack(spacing: AppSpacing.tight) {
-                    Image(systemName: "exclamationmark.circle.fill")
+                    Image(systemName: message.tone == .danger ? "exclamationmark.circle.fill" : "clock")
                         .appIconFrame(.small)
-                        .foregroundStyle(Color.lsDanger)
+                        .foregroundStyle(message.tone == .danger ? Color.lsDanger : Color.lsTextPrimary)
                         .symbolEffect(.bounce, value: model.lockedInputFeedbackTick)
-                    Text(message)
+                    Text(message.text)
                         .appFont(.note)
-                        .foregroundStyle(Color.lsDanger)
+                        .foregroundStyle(message.tone == .danger ? Color.lsDanger : Color.lsTextPrimary)
                 }
             }
         }
     }
 
-    // R2（LS-92 review R1）F1：`lockMessage`（次數用盡）與 `verifyRateLimitMessage`
-    // （verify() 自己的 429）是兩個獨立、互不清除的狀態，這裡依優先序合併成單一顯示字串——
-    // 兩者實務上互斥（`isLocked` 一旦成立，`verify()` 會在打後端前就 guard 掉，不可能再撞到
-    // rate limit），但合併邏輯本身不依賴這個互斥假設，各自獨立也不會顯示錯內容。
-    private var otpMessage: String? {
-        model.lockMessage ?? verifyRateLimitMessage ?? model.errorMessage
-    }
-
-    private var verifyRateLimitMessage: String? {
-        guard let seconds = model.verifyRateLimitSecondsRemaining else { return nil }
-        // R2 F3：秒數為 0 代表「有訊息、但解不出真實秒數」——不承諾等待時間。
-        return seconds > 0
-            ? "太多次嘗試了，請等 \(seconds) 秒再試。"
-            : "太多次嘗試了，請稍候一下再試一次。"
-    }
-
+    // R3 F7：OTP 欄位紅框只在真的「danger」語氣（碼錯／次數用盡）時出現；verify 限流是
+    // 中性語氣，不該讓欄位看起來像「這組碼打錯了」。
     private var isOTPFieldError: Bool {
-        model.lockMessage != nil || model.verifyRateLimitSecondsRemaining != nil || model.errorMessage != nil
+        model.visibleMessages.contains { $0.tone == .danger }
     }
 
     private var footerNoteText: String {
-        otpMessage == nil
+        model.visibleMessages.isEmpty
             ? "驗證碼 10 分鐘內有效。找不到信時，請看一下垃圾郵件匣。"
             : "驗證碼 10 分鐘內有效。沒看到信？看一下垃圾郵件匣。"
     }
@@ -147,8 +137,9 @@ struct OTPVerificationView: View {
         guard model.isResendRateLimited else {
             return "沒收到驗證碼？\(model.resendCooldown) 秒後可重新寄送"
         }
+        // R3 F8：秒數 ≥90 換算成「約 N 分鐘」，不逐秒報數字給長輩看。
         return model.resendRateLimitSecondsAreReal
-            ? "寄太頻繁了，請等 \(model.resendCooldown) 秒再試"
+            ? "寄太頻繁了，請等 \(OTPVerificationModel.humanReadableWaitTime(seconds: model.resendCooldown))再試"
             : "寄送太頻繁了，請稍後再試"
     }
 

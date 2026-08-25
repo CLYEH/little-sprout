@@ -89,4 +89,58 @@ extension OTPVerificationModelTests {
         XCTAssertFalse(model.isLocked, "重寄成功後次數重置為滿額，輸入鎖定隨之解除")
         XCTAssertEqual(model.code, "")
     }
+
+    // MARK: - 鎖定理由與「這次操作結果」兩句併陳（R3，LS-92 PR #155 review R2 F6）
+
+    func test_visibleMessages_whenLockedAndResendFailsWithNetworkError_showsBothMessages() async {
+        // 原 bug：`lockMessage ?? … ?? errorMessage` 二選一，鎖定時 errorMessage 永遠顯示
+        // 不出來——但鎖定時唯一能做的動作是 resend()，它因網路／伺服器錯誤失敗（只寫
+        // errorMessage，不是 rate-limit）時，長輩按「重新寄一次」畫面必須看得到反應。
+        let stub = StubAuthService()
+        stub.setVerifyEmailOTPHandler { _, _ in throw AppError.validationRetryable(message: "bad", code: nil) }
+        let (model, _) = makeModel(maxAttempts: 1, cooldownSeconds: 1, stub: stub)
+        model.updateCode("111111")
+        _ = await model.verify()
+        XCTAssertTrue(model.isLocked)
+        let lockMessageBeforeResend = model.lockMessage
+        XCTAssertNotNil(lockMessageBeforeResend)
+        model.tickCooldown()
+        XCTAssertTrue(model.canResend)
+        stub.setSendEmailOTPHandler { _ in throw AppError.network(message: "offline") }
+
+        let result = await model.resend()
+
+        XCTAssertFalse(result)
+        XCTAssertEqual(model.visibleMessages.count, 2, "F6：鎖定理由與 resend 失敗訊息要兩句併陳，不能二選一")
+        XCTAssertEqual(model.visibleMessages.first?.text, lockMessageBeforeResend)
+        XCTAssertEqual(model.visibleMessages.last?.text, AppError.network(message: "offline").userFacingMessage)
+        XCTAssertTrue(model.isLocked, "resend 失敗不該解除鎖定——次數仍是 0")
+    }
+
+    func test_visibleMessages_lockAndErrorTonesAreDanger() async {
+        let stub = StubAuthService()
+        stub.setVerifyEmailOTPHandler { _, _ in throw AppError.validationRetryable(message: "bad", code: nil) }
+        let (model, _) = makeModel(maxAttempts: 1, stub: stub)
+        model.updateCode("111111")
+
+        _ = await model.verify()
+
+        XCTAssertEqual(model.visibleMessages.map(\.tone), [.danger], "F7：鎖定理由維持 danger 語氣")
+    }
+
+    // MARK: - 鎖定／限流下按「確認登入」給予回饋（R3 F9）
+
+    func test_verify_whileLocked_incrementsFeedbackTickOnEveryPress() async {
+        let stub = StubAuthService()
+        stub.setVerifyEmailOTPHandler { _, _ in throw AppError.validationRetryable(message: "bad", code: nil) }
+        let (model, _) = makeModel(maxAttempts: 1, stub: stub)
+        model.updateCode("111111")
+        _ = await model.verify()
+        XCTAssertTrue(model.isLocked)
+        let before = model.lockedInputFeedbackTick
+
+        _ = await model.verify()
+
+        XCTAssertEqual(model.lockedInputFeedbackTick, before + 1, "F9：鎖定中按「確認登入」也要有回饋，不是靜默無反應")
+    }
 }

@@ -13,6 +13,20 @@ import Observation
 /// （verify() 自己的 429，完全不碰 `resendCooldown`）、`isResendRateLimited`＋
 /// `resendRateLimitSecondsAreReal`（resend() 自己的 429，沿用 `resendCooldown` 但秒數必須
 /// 是從伺服器訊息解出來的真實值，解不出來就不承諾秒數）。
+/// R3（LS-92 PR #155 review R2 F6／F7）：`OTPVerificationModel.visibleMessages` 的一則訊息。
+/// `tone` 只影響顏色與 icon（`View` 端渲染），不影響訊息本身是否顯示。
+struct OTPMessage: Equatable {
+    enum Tone: Equatable {
+        /// 「這組碼不對」／「次數用盡」：紅框＋驚嘆號。
+        case danger
+        /// 「打太快，等一下」：不是碼錯，不該用 danger 那套文法（R3 F7）。
+        case neutral
+    }
+
+    let text: String
+    let tone: Tone
+}
+
 @MainActor
 @Observable
 final class OTPVerificationModel {
@@ -54,8 +68,9 @@ final class OTPVerificationModel {
     /// `resendCooldown` 重設回滿格，等於每按一次「確認登入」就把「重新寄一次」的冷卻往後
     /// 推——這裡兩條冷卻線徹底分開，互不觸碰）。
     private(set) var verifyRateLimitSecondsRemaining: Int?
-    /// 次數用盡後使用者仍試著打新號碼的次數（R2 F5）：畫面觀察這個值的變化觸發按鍵回饋
-    /// （震動／訊息輕微強調），不讓「打了沒反應」看起來像鍵盤壞掉。
+    /// 「按了沒有作用」的動作發生時遞增：次數用盡後仍試著打新號碼（R2 F5）、鎖定或
+    /// verify() 限流中按下「確認登入」（R3 F9）。畫面觀察這個值的變化觸發按鍵回饋
+    /// （震動／訊息輕微強調），不讓「按了沒反應」看起來像鍵盤壞掉或按鈕失靈。
     private(set) var lockedInputFeedbackTick = 0
     /// 沒有配 `deinit` 取消它：`@MainActor` class 的 `deinit` 不能同步存取 isolated 屬性，
     /// 這裡改用 `[weak self]`（見 `startCooldown()`）——model 被釋放後迴圈下一次
@@ -90,6 +105,45 @@ final class OTPVerificationModel {
     /// 依據就不擋，讓使用者可以馬上再試一次，而不是被一個編出來的等待時間卡住。
     private var isVerifyRateLimitGuardActive: Bool { (verifyRateLimitSecondsRemaining ?? 0) > 0 }
 
+    /// R3（LS-92 PR #155 review R2 F6）：OTP 錯誤列該顯示的訊息，依序疊加、不二選一。
+    /// 舊版用 `lockMessage ?? verifyRateLimitMessage ?? errorMessage`——鎖定時 `errorMessage`
+    /// 永遠顯示不出來；但鎖定時唯一能做的動作是 `resend()`，若它因為網路／伺服器錯誤失敗
+    /// （只寫 `errorMessage`，不是 rate-limit），長輩按「重新寄一次」畫面會零變化，看起來
+    /// 像沒反應。這裡改成陣列：鎖定理由（若有）永遠先顯示，後面再接上「這次操作的結果」
+    /// （verify 限流或一般錯誤，二擇一，因為兩者本來就不會同時發生）。
+    ///
+    /// 每則訊息帶 `tone`（R3 F7）：verify 限流不是「這組碼錯了」，不該用 danger 紅框／
+    /// 驚嘆號那套「碼錯」的文法，用中性語氣（`.neutral`）；鎖定理由與一般錯誤維持
+    /// `.danger`。View 只依 `tone` 選顏色與 icon，不做其他判斷。
+    var visibleMessages: [OTPMessage] {
+        var messages: [OTPMessage] = []
+        if let lockMessage {
+            messages.append(OTPMessage(text: lockMessage, tone: .danger))
+        }
+        if let seconds = verifyRateLimitSecondsRemaining {
+            messages.append(OTPMessage(text: verifyRateLimitDisplayMessage(seconds: seconds), tone: .neutral))
+        } else if let errorMessage {
+            messages.append(OTPMessage(text: errorMessage, tone: .danger))
+        }
+        return messages
+    }
+
+    /// R3 F7：verify 限流訊息的語氣跟「碼錯」／「次數用盡」不同，不該共用紅框驚嘆號那套
+    /// 文法——這裡只影響顏色／icon 選擇，`View` 端對照 `tone` 渲染。
+    private func verifyRateLimitDisplayMessage(seconds: Int) -> String {
+        seconds > 0
+            ? "太多次嘗試了，請等 \(Self.humanReadableWaitTime(seconds: seconds))再試。"
+            : "太多次嘗試了，請稍候一下再試一次。"
+    }
+
+    /// R3 F8：秒數 ≥90 換成「約 N 分鐘」，長輩不需要精確到秒的等待預期，換算成分鐘更好懂；
+    /// 四捨五入到分。<90 才照原樣顯示秒數。
+    static func humanReadableWaitTime(seconds: Int) -> String {
+        guard seconds >= 90 else { return "\(seconds) 秒" }
+        let minutes = Int((Double(seconds) / 60).rounded())
+        return "約 \(minutes) 分鐘"
+    }
+
     func updateCode(_ newValue: String) {
         let filtered = String(newValue.filter(\.isNumber).prefix(6))
         // 鎖定時只放行「從目前碼尾端刪除」得到的結果（含清空）——`code.hasPrefix(filtered)`
@@ -112,11 +166,17 @@ final class OTPVerificationModel {
         guard remainingAttempts > 0 else {
             errorMessage = nil
             lockMessage = attemptsExhaustedMessage
+            // R3 F9：鎖定下按「確認登入」本來就是沒有作用的動作（guard 早退），但長輩需要
+            // 感覺到「有按到」——沿用跟 F5 相同的 tick，讓訊息列一起閃一下、觸發震動。
+            lockedInputFeedbackTick += 1
             return false
         }
         // R2 F2：verify() 自己的頻率限制有真實倒數在擋，就不再重打伺服器——每按一次都重打
         // 原本是問題根因之一（連帶把 resendCooldown 重設回滿格，見 beginResendRateLimit）。
-        guard !isVerifyRateLimitGuardActive else { return false }
+        guard !isVerifyRateLimitGuardActive else {
+            lockedInputFeedbackTick += 1 // R3 F9：同上，限流中按下也要有回饋。
+            return false
+        }
         verifyRateLimitTask?.cancel()
         verifyRateLimitSecondsRemaining = nil
         isVerifying = true
@@ -210,6 +270,9 @@ final class OTPVerificationModel {
     /// （`isVerifyRateLimitGuardActive`）；沒有就只留一句靜態訊息，讓使用者可以馬上再試
     /// （R2 F3：不編一個假的等待時間出來擋人）。
     private func beginVerifyRateLimit(rawMessage: String) {
+        // R3 F6：`visibleMessages` 只在沒有限流時才落回 `errorMessage`——清掉舊值，
+        // 避免它是上一次不同失敗留下的殘影，跟這次的限流訊息混在一起顯示錯內容。
+        errorMessage = nil
         verifyRateLimitTask?.cancel()
         guard let seconds = Self.parseRealRetryAfterSeconds(from: rawMessage) else {
             verifyRateLimitSecondsRemaining = 0

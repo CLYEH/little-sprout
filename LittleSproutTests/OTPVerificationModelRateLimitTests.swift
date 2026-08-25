@@ -128,4 +128,24 @@ extension OTPVerificationModelTests {
         XCTAssertFalse(model.isResendRateLimited, "冷卻歸零後要解除冷卻狀態")
         XCTAssertFalse(model.resendRateLimitSecondsAreReal)
     }
+
+    // MARK: - R3 F8：長等待時間存的仍是原始秒數，換算成分鐘是 View 端用 humanReadableWaitTime 的事
+
+    func test_resend_rateLimited_longWait_storesRawSecondsForViewToFormat() async {
+        let stub = StubAuthService()
+        stub.setSendEmailOTPHandler { _ in
+            throw AppError.validationRetryable(
+                message: "For security purposes, you can only request this after 125 seconds.",
+                code: "over_email_send_rate_limit"
+            )
+        }
+        let (model, _) = makeModel(stub: stub)
+        for _ in 0..<100 { model.tickCooldown() }
+
+        _ = await model.resend()
+
+        XCTAssertTrue(model.resendRateLimitSecondsAreReal)
+        XCTAssertEqual(model.resendCooldown, 125, "model 存原始秒數；F8 的「約 N 分鐘」換算是 View 用 humanReadableWaitTime 做的")
+        XCTAssertEqual(OTPVerificationModel.humanReadableWaitTime(seconds: model.resendCooldown), "約 2 分鐘")
+    }
 }
