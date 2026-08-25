@@ -672,7 +672,7 @@
                           "type": "text",
                           "id": "f9z0p",
                           "name": "Lab Imprint",
-                          "fill": "$text-secondary",
+                          "fill": "$print-ink-secondary",
                           "content": "LITTLE SPROUT",
                           "fontFamily": "$font",
                           "fontSize": "$fs-imprint",
@@ -1319,7 +1319,7 @@
                           "type": "text",
                           "id": "DDXKr",
                           "name": "Family Caption",
-                          "fill": "$text-primary",
+                          "fill": "$print-ink",
                           "content": "example.com",
                           "fontFamily": "$font",
                           "fontSize": "$fs-lead",
@@ -2734,7 +2734,7 @@
                       "type": "text",
                       "id": "GgbFw",
                       "name": "Family Caption",
-                      "fill": "$text-primary",
+                      "fill": "$print-ink",
                       "content": "陳家",
                       "fontFamily": "$font",
                       "fontSize": "$fs-lead",
@@ -4754,7 +4754,7 @@
                   "type": "text",
                   "id": "EosH7",
                   "name": "Lab Imprint",
-                  "fill": "$text-secondary",
+                  "fill": "$print-ink-secondary",
                   "content": "LITTLE SPROUT",
                   "fontFamily": "$font",
                   "fontSize": "$fs-imprint",
@@ -5738,7 +5738,7 @@
                           "type": "text",
                           "id": "qLi3v",
                           "name": "Lab Imprint",
-                          "fill": "$text-secondary",
+                          "fill": "$print-ink-secondary",
                           "content": "LITTLE SPROUT",
                           "fontFamily": "$font",
                           "fontSize": "$fs-imprint",
@@ -6300,7 +6300,7 @@
                           "type": "text",
                           "id": "bPhGg",
                           "name": "Lab Imprint",
-                          "fill": "$text-secondary",
+                          "fill": "$print-ink-secondary",
                           "content": "LITTLE SPROUT",
                           "fontFamily": "$font",
                           "fontSize": "$fs-imprint",
@@ -6970,7 +6970,7 @@
                           "type": "text",
                           "id": "XRttH",
                           "name": "Family Caption",
-                          "fill": "$text-primary",
+                          "fill": "$print-ink",
                           "content": "example.com",
                           "fontFamily": "$font",
                           "fontSize": "$fs-lead",
@@ -7853,7 +7853,7 @@
                           "type": "text",
                           "id": "hlHfZ",
                           "name": "Family Caption",
-                          "fill": "$text-primary",
+                          "fill": "$print-ink",
                           "content": "陳家",
                           "fontFamily": "$font",
                           "fontSize": "$fs-lead",
@@ -11727,7 +11727,7 @@
                           "type": "text",
                           "id": "WQ9Us",
                           "name": "Family Caption",
-                          "fill": "$text-primary",
+                          "fill": "$print-ink",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "陳家的小小世界…",
@@ -12188,7 +12188,7 @@
                           "type": "text",
                           "id": "yOHuy",
                           "name": "Family Caption",
-                          "fill": "$text-primary",
+                          "fill": "$print-ink",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": " ",
@@ -13561,6 +13561,328 @@
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "淺與 surface 同值；深自訂暖米白",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "i7Fx5",
+                  "name": "Row 2c",
+                  "width": "fill_container",
+                  "fill": "#FBEBEC",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "unFlC",
+                      "name": "C0",
+                      "width": 190,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "D4JEhr",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "print-ink（R10）",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FRldv",
+                      "name": "C1",
+                      "width": 230,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 7,
+                          "id": "qcVjl",
+                          "name": "sw",
+                          "fill": "#2B141C",
+                          "width": 26,
+                          "height": 26,
+                          "stroke": "#2B141C1F",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "Qky25",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "content": "#2B141C",
+                          "fontFamily": "$font-num",
+                          "fontSize": 12,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UD0XL",
+                      "name": "C2",
+                      "width": 230,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 7,
+                          "id": "rI81H",
+                          "name": "sw",
+                          "fill": "#2B141C",
+                          "width": 26,
+                          "height": 26,
+                          "stroke": "#2B141C1F",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "m0DkVT",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "content": "#2B141C",
+                          "fontFamily": "$font-num",
+                          "fontSize": 12,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "E5hyOr",
+                      "name": "C",
+                      "width": 330,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "R69c2Q",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "紙上的墨（Family Caption 等）：不掛 theme 的單值 token，任何模式皆＝淺色 $text-primary 值",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "T5qa43",
+                      "name": "C",
+                      "width": 280,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "IuREY",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "紙永遠是淺表面、墨永遠是深色，不隨關燈反轉",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "MajbP",
+                  "name": "Row 2d",
+                  "width": "fill_container",
+                  "fill": "#FBEBEC",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "gYOtK",
+                      "name": "C0",
+                      "width": 190,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Txz3L",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "print-ink-secondary（R10）",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "twx9i",
+                      "name": "C1",
+                      "width": 230,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 7,
+                          "id": "WtB6f",
+                          "name": "sw",
+                          "fill": "#553040",
+                          "width": 26,
+                          "height": 26,
+                          "stroke": "#2B141C1F",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "sT4A1",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "content": "#553040",
+                          "fontFamily": "$font-num",
+                          "fontSize": 12,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Bgz7U",
+                      "name": "C2",
+                      "width": 230,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 7,
+                          "id": "nyABq",
+                          "name": "sw",
+                          "fill": "#553040",
+                          "width": 26,
+                          "height": 26,
+                          "stroke": "#2B141C1F",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "uGl0b",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "content": "#553040",
+                          "fontFamily": "$font-num",
+                          "fontSize": 12,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "aPhQ5",
+                      "name": "C",
+                      "width": 330,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "aiE9j",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "紙上的墨（Lab Imprint 等）：不掛 theme 的單值 token，任何模式皆＝淺色 $text-secondary 值",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZQpya",
+                      "name": "C",
+                      "width": 280,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "xInPT",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "同上；Lab Imprint 為裝飾性文字，建議標 accessibilityHidden",
                           "lineHeight": 1.45,
                           "fontFamily": "Noto Sans TC",
                           "fontSize": 13,
@@ -33794,7 +34116,7 @@
                           "type": "text",
                           "id": "U3WdWh",
                           "name": "Lab Imprint",
-                          "fill": "$text-secondary",
+                          "fill": "$print-ink-secondary",
                           "content": "LITTLE SPROUT",
                           "fontFamily": "$font",
                           "fontSize": "$fs-imprint",
@@ -35478,7 +35800,7 @@
                           "type": "text",
                           "id": "gyhxt",
                           "name": "Lab Imprint",
-                          "fill": "$text-secondary",
+                          "fill": "$print-ink-secondary",
                           "content": "LITTLE SPROUT",
                           "fontFamily": "$font",
                           "fontSize": "$fs-imprint",
@@ -35682,7 +36004,7 @@
                           "type": "text",
                           "id": "bFwr7",
                           "name": "Lab Imprint",
-                          "fill": "$text-secondary",
+                          "fill": "$print-ink-secondary",
                           "content": "LITTLE SPROUT",
                           "fontFamily": "$font",
                           "fontSize": "$fs-imprint",
@@ -35886,7 +36208,7 @@
                           "type": "text",
                           "id": "zzyRh",
                           "name": "Lab Imprint",
-                          "fill": "$text-secondary",
+                          "fill": "$print-ink-secondary",
                           "content": "LITTLE SPROUT",
                           "fontFamily": "$font",
                           "fontSize": "$fs-imprint",
@@ -38101,6 +38423,14 @@
           }
         }
       ]
+    },
+    "print-ink": {
+      "type": "color",
+      "value": "#2B141C"
+    },
+    "print-ink-secondary": {
+      "type": "color",
+      "value": "#553040"
     }
   },
   "fileToken": "f75220c0-d224-4bd8-af4b-2429e968cb8e"
