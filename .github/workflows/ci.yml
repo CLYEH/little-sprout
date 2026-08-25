@@ -106,9 +106,9 @@ jobs:
       # （migration-breaking-check／breaking-section-check）、「migration 版本號撞號」（migration-version-check，LS-70）、
       # 「分支不夾帶他票 commit／push 前無合併衝突」
       # （branch-ticket-check／merge-conflict-check）、「PR body 檔頭段含本票票號」（pr-body-check）與
-      # 「審查取證不進版控」（evidence-path-check）的偵測不退化（前饋必有反饋，對 gate 本身也適用）。
-      # 集中在同一個 step，維持「一個地方跑所有 gate 自測」。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check）
+      # 「審查取證不進版控」（evidence-path-check）與「品牌 skill 接線」（brand-skill-check，LS-30）的偵測不退化
+      # （前饋必有反饋，對 gate 本身也適用）。集中在同一個 step，維持「一個地方跑所有 gate 自測」。
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -123,7 +123,15 @@ jobs:
           bash scripts/gates/merge-conflict-check.test.sh || rc=1
           bash scripts/gates/pr-body-check.test.sh || rc=1
           bash scripts/gates/evidence-path-check.test.sh || rc=1
+          bash scripts/gates/brand-skill-check.test.sh || rc=1
           exit "$rc"
+
+      # LS-30：品牌 skill 接線——前饋是 ui-designer／visual-reviewer 定義「開工先載入 little-sprout-brand」，載入動作
+      # 發生在 subagent 內部、repo 側驗不到；這裡驗它的前提：.claude/skills/little-sprout-brand/SKILL.md 存在且
+      # frontmatter name／description 齊、SKILL.md 引用的 references/*.md 都在、兩份 agent 定義仍含必載指示。
+      # 純檔案比對、不依賴 PR body，所有 PR 都跑（同 secrets 掃描／tracked-ignored）。
+      - name: 品牌 skill 接線（brand-skill-check，LS-30）
+        run: bash scripts/gates/brand-skill-check.sh
 
       # LS-71：ops 腳本自測——patrol.sh（巡檢）用合成 repo（file:// 裸 origin＋七個 worktree）驗各停滯型態判定的
       # 正負樣本、--json 合法、gh 不可用不炸；session-start.sh（SessionStart hook）驗輸出合法 JSON 且 fail-soft、
