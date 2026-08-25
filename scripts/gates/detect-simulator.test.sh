@@ -77,6 +77,11 @@ STUB
 chmod +x "$work/bin/xcrun"
 export PATH="$work/bin:$PATH"
 export DETECT_SIMULATOR_LOCK_DIR="$work/simlock"   # 全程用測試自己的鎖目錄，不碰本機真正 /tmp/simulator-lock-*
+# GitHub Actions runner 對每個 step 都設 CI=true——不清掉的話，本檔案繼承來的環境會讓 detect-simulator.sh
+# 把每個情境都判成 CI 模式（不查／不建專屬模擬器、不鎖），非 CI 情境的斷言全部假紅（PR #154 CI rules 紅、
+# coordinator 2026-08-25 回報）。這裡統一清成「非 CI」，需要 CI 模式的情境（⑥）自己用 `CI=true` 前綴覆蓋
+# ——bash 的臨時變數指定對函式呼叫一樣有效，只在該次呼叫生效，不影響這裡 unset 之後的其餘情境。
+unset CI
 
 fresh_db() { : > "$1"; printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\n' > "$1"; }   # 每個情境各一份新 db，只帶「共用第一台」
 
