@@ -10,6 +10,7 @@
 		01978C27E89C317B0515118F /* ScrollableFillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 216769BEF4D15D89E66AF64B /* ScrollableFillView.swift */; };
 		02E21F9DC4DC1A797657A859 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D28B773C8EDDC2BA7C7D993 /* Typography.swift */; };
 		0510B5801E753003A86A2B04 /* AuthSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BEB4DA6A1BCCFD8355575E /* AuthSession.swift */; };
+		0783F95A1496D17C21C9305E /* KeyboardHeightObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A9887FF91CF65FB62A256E /* KeyboardHeightObserverTests.swift */; };
 		0F72FB6A09D4EA5C229698CF /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCF885D756104B3EBAAD6DB2 /* WelcomeView.swift */; };
 		13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */; };
 		15E53C663EE9CEDBF1E4FCCE /* SupabaseFamilyAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B90F66016EC2C905347224 /* SupabaseFamilyAPIClientTests.swift */; };
@@ -60,6 +61,7 @@
 		C49D2DD7EC2EF00A346703EB /* OTPVerificationModelVerifyRateLimitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28F1472213F03BCFC33624F8 /* OTPVerificationModelVerifyRateLimitTests.swift */; };
 		C5A680937E6BD7F0B4673749 /* AppleSignInNonce.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587B330E759DA2D787F4E63C /* AppleSignInNonce.swift */; };
 		DDBF77E8E686704D89F1ABA1 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F28DE483C3DA54A9672BFDFF /* Supabase */; };
+		E18D07FCED03683A17ED47CE /* KeyboardHeightObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 743A14E1E7666B9B37F94689 /* KeyboardHeightObserver.swift */; };
 		E2E9E24C6F7E93396FD38F4B /* AuthRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95B92F29867CB3855772E654 /* AuthRoute.swift */; };
 		E5D68ECAE74FF9EBBC782E5D /* OTPVerificationModelLockoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C9C0FFAC9911BA268EBA27 /* OTPVerificationModelLockoutTests.swift */; };
 		E96D464C2FD698F14A9B2604 /* ColorTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8702562330091E614920D1 /* ColorTokens.swift */; };
@@ -109,8 +111,10 @@
 		6559B92B7B6A289D59C6481F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSectionUniquenessTests.swift; sourceTree = "<group>"; };
 		6994C01308D56E827DA85A61 /* SupabaseFamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClient.swift; sourceTree = "<group>"; };
+		69A9887FF91CF65FB62A256E /* KeyboardHeightObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHeightObserverTests.swift; sourceTree = "<group>"; };
 		6A8630C948451C3739D8A263 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		722D8ED2CA2CA763DF21AAB7 /* AuthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStore.swift; sourceTree = "<group>"; };
+		743A14E1E7666B9B37F94689 /* KeyboardHeightObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHeightObserver.swift; sourceTree = "<group>"; };
 		76C79515621CA9052803B7EA /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
 		7A80BDD3D72B37E3451EAC03 /* AppleSignInButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInButton.swift; sourceTree = "<group>"; };
 		7C508BEDC841E4E6D1F86FC5 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
@@ -258,6 +262,7 @@
 				9EA929B8CFBB700BE9E073B4 /* AuthStoreTests.swift */,
 				2D71D805DBF9E7B36AF16BE8 /* EmailFormatTests.swift */,
 				226B824755111DECCA1F2AEE /* EmailSignInModelTests.swift */,
+				69A9887FF91CF65FB62A256E /* KeyboardHeightObserverTests.swift */,
 				A5C9C0FFAC9911BA268EBA27 /* OTPVerificationModelLockoutTests.swift */,
 				E466449A44696816AA484F94 /* OTPVerificationModelRateLimitTests.swift */,
 				D5C295C45BFA6330DF97EDAD /* OTPVerificationModelTests.swift */,
@@ -342,6 +347,7 @@
 				7A80BDD3D72B37E3451EAC03 /* AppleSignInButton.swift */,
 				14AB4F80381DABD0E6FE12B0 /* AuthButtons.swift */,
 				0E8702562330091E614920D1 /* ColorTokens.swift */,
+				743A14E1E7666B9B37F94689 /* KeyboardHeightObserver.swift */,
 				F56FB37A90BCA2F75055D3D7 /* LabeledTextField.swift */,
 				577DBA3D01933EB35214704B /* OTPCodeField.swift */,
 				8FD268EF45ACA8D3FE3F11E2 /* PhotoCornerShape.swift */,
@@ -474,6 +480,7 @@
 				533B01F1B4098A3628E1B7B5 /* EmailSignInView.swift in Sources */,
 				1C5AF463F2A7DF887C811BCB /* FamilyAPIClient.swift in Sources */,
 				6F71D1FB09D499364D5D1E32 /* FamilyModels.swift in Sources */,
+				E18D07FCED03683A17ED47CE /* KeyboardHeightObserver.swift in Sources */,
 				AD97CCF615FB05DEBB63BF09 /* LabeledTextField.swift in Sources */,
 				F90747ADA6446C8F7FA27137 /* LittleSproutApp.swift in Sources */,
 				2D03B61ACA5DD6A649155EDC /* OTPCodeField.swift in Sources */,
@@ -509,6 +516,7 @@
 				7C64D41B5C041B3BFA66B7A8 /* EmailFormatTests.swift in Sources */,
 				5BBAB29B23BB37B83B46D487 /* EmailSignInModelTests.swift in Sources */,
 				336A7171428B83A957574DFF /* InMemoryAuthLocalStorage.swift in Sources */,
+				0783F95A1496D17C21C9305E /* KeyboardHeightObserverTests.swift in Sources */,
 				87E501CF0FB428B9FB3A0DCF /* MockURLProtocol.swift in Sources */,
 				E5D68ECAE74FF9EBBC782E5D /* OTPVerificationModelLockoutTests.swift in Sources */,
 				FD1569202C44723F87AD94C3 /* OTPVerificationModelRateLimitTests.swift in Sources */,

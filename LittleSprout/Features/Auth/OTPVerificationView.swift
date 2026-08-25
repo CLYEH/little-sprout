@@ -7,6 +7,7 @@ struct OTPVerificationView: View {
     let onVerified: () -> Void
 
     @State private var model: OTPVerificationModel
+    @State private var keyboard = KeyboardHeightObserver()
 
     init(email: String, authStore: AuthStore, onVerified: @escaping () -> Void) {
         self.email = email
@@ -17,25 +18,34 @@ struct OTPVerificationView: View {
 
     var body: some View {
         ScrollableFillView {
-            VStack(alignment: .leading, spacing: 0) {
-                VStack(alignment: .leading, spacing: AppSpacing.block) {
-                    header
-                    otpSection
-                    Text(footerNoteText)
-                        .appFont(.note)
-                        .foregroundStyle(Color.lsTextPrimary)
-                }
-
-                Spacer(minLength: AppSpacing.item)
-
-                VStack(spacing: AppSpacing.label) {
-                    resendRow
-                    PrimaryButton(icon: "arrow.right", title: "確認登入", isLoading: model.isVerifying, action: verify)
-                }
-                .padding(.bottom, AppSpacing.item)
+            VStack(alignment: .leading, spacing: AppSpacing.block) {
+                header
+                otpSection
+                Text(footerNoteText)
+                    .appFont(.note)
+                    .foregroundStyle(Color.lsTextPrimary)
             }
             .padding(.horizontal, AppSpacing.screenPad)
             .padding(.top, AppSpacing.label)
+        }
+        // LS-105：safeAreaInset 的 CTA 會正確貼齊鍵盤上緣，但 ScrollView 本身不會跟著收縮可視
+        // 範圍（KeyboardHeightObserver 檔頭注解有實測說明）；補這行讓可捲動內容的底界跟著鍵盤
+        // 收縮，兩者才不會互相蓋到。
+        .contentMargins(.bottom, keyboard.height, for: .scrollContent)
+        // LS-105：CTA 移出可捲動內容、固定在鍵盤上方（safeAreaInset）——AX3 數字鍵盤不隨
+        // Dynamic Type 縮放、蓋住整個下半屏時，「確認登入」仍不需捲動就看得到（長輩是 AX
+        // 字級主要使用者，可見優先於可捲動；EmailSignInView 同型同法）。
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: AppSpacing.label) {
+                resendRow
+                PrimaryButton(icon: "arrow.right", title: "確認登入", isLoading: model.isVerifying, action: verify)
+            }
+            .padding(.horizontal, AppSpacing.screenPad)
+            .padding(.bottom, AppSpacing.item)
+            // PR #165 review I1：AX3 內容高過一屏時，可捲動文字會從這塊透明間隙後面滑過去；
+            // 補底色擋住（`AppBackground` 在畫面下半部本來就已收斂成 `lsBackground` 純色，
+            // 這裡補同色不會有視覺接縫）。
+            .background(Color.lsBackground)
         }
         .appBackground()
         .navigationBarTitleDisplayMode(.inline)
