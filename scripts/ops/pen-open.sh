@@ -2,10 +2,12 @@
 # LS-91：Pen app 開檔路徑機械對帳。
 #
 # 背景（LS-81／LS-91 comment A 實測，pen CLI 0.3.4）：Pencil MCP 的 execute `filePath` 參數無效，所有編輯落在
-# Pen app 目前的 active document；pen CLI 連線模式（`pen interactive --app desktop --in <file>`）的 `--in` 同樣無效
-# （get_app_state 仍回舊路徑）。唯一機械可行的切檔方法是 `open -a Pen <path>`——app 立即把該路徑設為 active
-# document（A 段實測確認）。本腳本：`open -a Pen` 切檔 → 輪詢（總預算 ≤15s）用
-# `pen interactive --app desktop` 跑 `get_app_state()` 讀目前 active canvas editor 路徑 → 與目標路徑比對。
+# Pen app 目前的 active document；pen CLI 連線模式的 `--in <file>` 在「不帶 --in 的後續呼叫」上不生效——本票
+# 復驗：`pen interactive --app desktop --in <file>` 確實會讓**那一次**呼叫的 get_app_state 回報 `<file>`，但這只是
+# 該次 CLI 連線的 session-local 覆寫，不影響 app 真正的 active document／不影響其後不帶 --in 的呼叫（含 Pencil
+# MCP）——不是真正的切檔手段。唯一機械可行的切檔方法仍是 `open -a Pen <path>`。本腳本：`open -a Pen` 切檔 →
+# 輪詢（總預算 ≤15s）用 `pen interactive --app desktop` 跑 `get_app_state()` 讀目前 active canvas editor 路徑 →
+# 與目標路徑比對。
 #
 # 用法：
 #   pen-open.sh <worktree-or-repo-root>   把 Pen 切到 <root>/design/littlesprout.pen 並輪詢對帳
@@ -26,6 +28,15 @@
 # 已知坑（本票實測）：這台機器的 bash 3.2 在 LC_CTYPE=UTF-8 下，裸 `$var` 緊接全形標點（如「」／：）會把該標點的
 # UTF-8 位元組也吃進變數名稱，觸發 `set -u` 的 unbound variable（例："$want」" 炸成「want�: unbound variable」）。
 # 一律用 `${var}` 明確收尾；本檔與訊息字串中所有變數皆已改寫，新增訊息比照。
+#
+# 已知坑（本票實測，重要）：`open -a Pen <path>` 只在該路徑**尚未在別的背景視窗開著**時可靠——這台機器累積了
+# 5 個過去票留下的背景 renderer（LS-17-impl／LS-72／LS-81／LS-91／主 checkout 各一），對其中任一已開著的路徑
+# 重新 `open -a Pen` 並輪詢 30 秒（遠超本腳本預設的 15s）仍讀不到切換；get_app_state 回報的是「上次真正被切到
+# 的那個」，不會因為再 open 同一路徑而重新奪回 active。**唯一驗證有效的復原手段**：確認全部視窗
+# `documentState.isDirty` 皆為 false（`ps aux | grep Pen.app` 看得到每個 renderer 的 `--init-params`）後
+# `kill -TERM <Pen 主行程 pid>` 乾淨結束，再 `open -a Pen <目標路徑>` 重開——全新行程對「當下沒有背景視窗」的
+# 路徑立即可切（原本 A 段實測就是這個乾淨狀態下測出來的）。本腳本**不自動做這件事**：自動 quit 使用者的 GUI
+# app 若誤判 dirty 狀態會丟編輯，風險不對稱，交由人工／orchestrator 判斷（逾時本腳本 exit 1，照常回報）。
 set -uo pipefail
 
 usage() {
