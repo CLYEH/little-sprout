@@ -177,16 +177,30 @@ struct WelcomeView: View {
         }
     }
 
-    @ViewBuilder
+    /// 法務／狀態行是一個 38pt 固定高度插槽（進場條件⑥）：`.meta`(13pt) 的法務行與
+    /// `.note`(17pt) 的狀態句行高不同，沒有這個插槽 01→01b 切換會把上方按鈕整體推移。用
+    /// `minHeight` 而不是 `height`——AX3 下兩者都會換行超過 38pt，此時插槽要能跟著長高，
+    /// 不能裁切（spec 明記 AX3「legal wraps to 64pt, no slot」）。
     private var legalOrStatusSlot: some View {
-        if isSigningInWithApple {
-            Text("正在與 Apple 確認你的身分，請稍候。")
-                .appFont(.note)
-                .foregroundStyle(Color.lsTextPrimary)
-        } else {
-            Text(legalAttributedString)
-                .appFont(.meta)
+        Group {
+            if isSigningInWithApple {
+                Text("正在與 Apple 確認你的身分，請稍候。")
+                    .appFont(.note)
+                    .foregroundStyle(Color.lsTextPrimary)
+            } else {
+                // 法務行在一般字級下一行放得下、AX3 放不下（稿面量測 462+33pt vs 345pt 容器
+                // 寬）：`ViewThatFits` 先試單行，放不下才落到會自動換行的第二個候選（進場條件⑧，
+                // 不照抄 .pen 稿面的固定四段式節點排版，因為那不會自動換行）。
+                ViewThatFits(in: .horizontal) {
+                    Text(legalAttributedString)
+                        .appFont(.meta)
+                        .fixedSize(horizontal: true, vertical: false)
+                    Text(legalAttributedString)
+                        .appFont(.meta)
+                }
+            }
         }
+        .frame(minHeight: 38, alignment: .leading)
     }
 
     private var legalAttributedString: AttributedString {
