@@ -102,12 +102,13 @@ struct OTPVerificationView: View {
         } else {
             // 四個各自獨立的 Text 在 AX3 下會各自換行，逐行讀出來變成打散的欄位（R3 review
             // B4：「沒收到｜　｜秒後可」三欄式亂序）。併成單一 Text 讓它像一般段落那樣整段
-            // 換行，數字段用 monospacedDigit 避免倒數時寬度跳動。
+            // 換行，數字段用 monospacedDigit 避免倒數時寬度跳動。I-3（LS-92）：429 冷卻
+            // 沿用同一列版面，只在 `model.isRateLimited` 時換一句文案，不另畫新版面。
             HStack(spacing: AppSpacing.tight) {
                 Image(systemName: "clock")
                     .appIconFrame(.medium)
                     .foregroundStyle(Color.lsTextSecondary)
-                Text("沒收到驗證碼？\(model.resendCooldown) 秒後可重新寄送")
+                Text(cooldownText)
                     .appFont(.body)
                     .monospacedDigit()
                     .foregroundStyle(Color.lsTextSecondary)
@@ -115,6 +116,12 @@ struct OTPVerificationView: View {
             .padding(.vertical, AppSpacing.group)
             .accessibilityElement(children: .combine)
         }
+    }
+
+    private var cooldownText: String {
+        model.isRateLimited
+            ? "寄太頻繁了，請等 \(model.resendCooldown) 秒再試"
+            : "沒收到驗證碼？\(model.resendCooldown) 秒後可重新寄送"
     }
 
     private func verify() {

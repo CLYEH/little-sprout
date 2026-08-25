@@ -21,6 +21,10 @@ final class OTPVerificationModel {
     private(set) var isVerifying = false
     private(set) var isResending = false
     private(set) var resendCooldown: Int
+    /// 429／`over_request_rate_limit`／`over_email_send_rate_limit` 冷卻中（I-3，LS-92）：
+    /// 只是「打太快」，不是碼錯，所以不走 `errorMessage`／OTP 欄位紅框那條文法，改讓
+    /// `resendRow`（LS-17 R3 B4 已定案、AX3 單行不折欄的版面）文案換一句，版面本身不動。
+    private(set) var isRateLimited = false
     /// 沒有配 `deinit` 取消它：`@MainActor` class 的 `deinit` 不能同步存取 isolated 屬性，
     /// 這裡改用 `[weak self]`（見 `startCooldown()`）——model 被釋放後迴圈下一次
     /// `guard let self` 就會自然結束，不需要額外的取消路徑。
@@ -102,7 +106,7 @@ final class OTPVerificationModel {
         switch appError {
         case .validationRetryable(_, let code), .rejected(_, let code):
             if let code, Self.nonAttemptConsumingCodes.contains(code) {
-                errorMessage = "太多次嘗試了，請稍候一下再試一次。"
+                beginRateLimitCooldown()
             } else {
                 recordFailure()
             }
@@ -126,6 +130,18 @@ final class OTPVerificationModel {
         "已經試了 \(maxAttempts) 次，已達上限，請重新寄一組驗證碼再試。"
     }
 
+    /// I-3（LS-92）：429／`over_request_rate_limit`（`verify()`）與
+    /// `over_email_send_rate_limit`（`resend()`）殊途同歸——都是「打太快，等一下」，不是
+    /// 「這組碼錯了」，所以不設 `errorMessage`（那會誤觸發 OTP 欄位的紅框，暗示碼本身有
+    /// 問題）。改沿用既有的 `resendCooldown`／`startCooldown()` 冷卻機制：`resendRow`
+    /// （LS-17 R3 B4 已定案、AX3 單行不折欄的版面）在 `isRateLimited` 為真時換一句文案，
+    /// 顯示剩餘秒數，版面本身不動一像素。
+    private func beginRateLimitCooldown() {
+        isRateLimited = true
+        errorMessage = nil
+        startCooldown()
+    }
+
     @discardableResult
     func resend() async -> Bool {
         guard canResend, !isResending else { return false }
@@ -137,10 +153,21 @@ final class OTPVerificationModel {
             code = ""
             remainingAttempts = maxAttempts
             errorMessage = nil
+            isRateLimited = false
             startCooldown()
             return true
         } catch {
-            errorMessage = AppError.map(error).userFacingMessage
+            let appError = AppError.map(error)
+            switch appError {
+            case .validationRetryable(_, let code), .rejected(_, let code):
+                if let code, Self.nonAttemptConsumingCodes.contains(code) {
+                    beginRateLimitCooldown()
+                } else {
+                    errorMessage = appError.userFacingMessage
+                }
+            case .network, .retryableSystem, .server:
+                errorMessage = appError.userFacingMessage
+            }
             return false
         }
     }
@@ -161,5 +188,8 @@ final class OTPVerificationModel {
     /// `Task.sleep` 就驗證倒數邏輯（Rule 5：不用模型跑計時器測試，用確定性的呼叫）。
     func tickCooldown() {
         resendCooldown = max(0, resendCooldown - 1)
+        if resendCooldown == 0 {
+            isRateLimited = false
+        }
     }
 }

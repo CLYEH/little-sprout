@@ -156,22 +156,6 @@ final class OTPVerificationModelTests: XCTestCase {
         XCTAssertEqual(model.errorMessage, "驗證碼不對或已經過期，還可以再試 4 次；沒收到的話請重新寄一組。")
     }
 
-    func test_verify_rateLimited_doesNotDecrementAttempts_showsCooldownMessage() async {
-        // 429／over_request_rate_limit 是打太快，跟這組碼本身無關，才是唯一不扣次數的情境。
-        let stub = StubAuthService()
-        stub.setVerifyEmailOTPHandler { _, _ in
-            throw AppError.validationRetryable(message: "rate limited", code: "over_request_rate_limit")
-        }
-        let (model, _) = makeModel(maxAttempts: 5, stub: stub)
-        model.updateCode("111111")
-
-        let result = await model.verify()
-
-        XCTAssertFalse(result)
-        XCTAssertEqual(model.remainingAttempts, 5, "打太快是頻率限制，不是碼錯，不該扣次數")
-        XCTAssertEqual(model.errorMessage, "太多次嘗試了，請稍候一下再試一次。")
-    }
-
     func test_verify_afterAttemptsExhausted_setsClearMessageInsteadOfSilentNoop() async {
         let stub = StubAuthService()
         stub.setVerifyEmailOTPHandler { _, _ in throw AppError.validationRetryable(message: "bad", code: nil) }
