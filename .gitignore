@@ -15,6 +15,12 @@ Secrets.xcconfig
 # Claude Code
 .claude/worktrees/
 .claude/settings.local.json
+# LS-61：審查取證（visual-reviewer／ui-designer／qa 的截圖、匯出、掃描輸出）固定落在
+# .claude/evidence/<票號>/<輪次>/，不入版控；沒照規矩放又 staged 進來的散落路徑（ls46r*/、*-review/、
+# 白名單外 *.png）由 scripts/gates/evidence-path-check.sh 在 pre-commit 擋
+.claude/evidence/
+# LS-71：harness 鏡像的記憶目錄（auto-memory 的專案側副本），不入版控
+.claude/memory/
 
 # LS-54 D2：RLS plan 證據每次執行都不同（計時／規劃器估計／buffers／stderr 交錯順序），
 # 由 CI db job 上傳 artifact 留存，不進 repo

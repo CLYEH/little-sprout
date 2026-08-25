@@ -273,6 +273,28 @@ race_case "同一人對同一目標：雙 toggle_reaction 必須序列化且淨�
   reaction_toggle_race_setup.sql reaction_toggle_race_s1.sql \
   reaction_toggle_race_s2.sql reaction_toggle_race_verify.sql
 
+# LS-66 併發場景：同一個孩子檔案的編輯（update_child）與軟刪（set_child_deleted）
+# 同時發生。兩個方向都跑，但兩者的用途不對稱（R1 merge-reviewer PR #95 review M1
+# 訂正——原本這裡宣稱「拿掉其中一支 RPC 的鎖，測試仍然是綠的」是兩個方向共同的理由，
+# 四種 mutation 實測後發現不成立：阻塞永遠來自**先動那一邊自己的 UPDATE 語句**
+# 持有的列鎖，這是 Postgres 對任何 UPDATE 的通用行為，跟後動那支 RPC 開頭有沒有寫
+# `for update` 無關；兩個方向都只證明得了「後動那一邊」自己的 `for update` 是否
+# 必要——本組只有「軟刪先動、update_child 後動」這個方向（第二個 race_case）真的
+# 會在拿掉 update_child 的 `for update` 時變紅，因為 update_child 靠那句鎖住的
+# SELECT 重讀 `deleted_at` 才不會用 READ COMMITTED 的舊快照放行一次不該成立的編輯；
+# 「編輯先動、set_child_deleted 後動」這個方向（第一個 race_case）測不到
+# set_child_deleted 開頭那句 `for update` 是否必要——那句鎖是讀 family_id 做授權
+# 判斷的 TOCTOU 防線（LS-52 定下的規則），純防禦性，不是這組併發測試的必要條件，
+# 詳細說明見 `children_edit_vs_delete_s2_delete.sql`／`_s1_delete.sql` 檔頭。
+# children 跟 diaries 同型（已被軟刪不能編輯，拿 LS041），不是 albums 那種「兩者皆
+# 生效」的型。
+race_case "同一個孩子檔案：編輯先動，軟刪必須被阻塞後才成功" \
+  children_edit_vs_delete_setup.sql children_edit_vs_delete_s1_update.sql \
+  children_edit_vs_delete_s2_delete.sql children_edit_vs_delete_verify_update_won.sql
+race_case "同一個孩子檔案：軟刪先動，編輯必須被阻塞後拿到 LS041" \
+  children_edit_vs_delete_setup.sql children_edit_vs_delete_s1_delete.sql \
+  children_edit_vs_delete_s2_update.sql children_edit_vs_delete_verify_delete_won.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 delete from public.families where id in (
@@ -283,7 +305,9 @@ delete from public.families where id in (
   'f3000000-0000-4000-8000-000000000001',
   'f4000000-0000-4000-8000-000000000001',
   'f6000000-0000-4000-8000-000000000001',
-  'f7000000-0000-4000-8000-000000000001'
+  'f7000000-0000-4000-8000-000000000001',
+  'f8000000-0000-4000-8000-000000000001',
+  'f5000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',

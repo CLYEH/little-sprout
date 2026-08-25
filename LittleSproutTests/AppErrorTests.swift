@@ -190,13 +190,25 @@ final class AppErrorTests: XCTestCase {
             .timelineCursorIncomplete,
             // LS027（LS-57，set_diary_deleted／set_album_deleted／set_comment_deleted）：
             // 作者想還原 owner 已移除的內容，沒有輸入可換，只有 owner 能還原。
-            .removedByOwnerNotRestorable
+            .removedByOwnerNotRestorable,
+            // LS041（LS-66）：孩子檔案不存在，或已被軟刪除須先還原，同 LS020 的理由。
+            .childNotFoundOrDeleted,
+            // LS042（LS-66）：不是仍是該家庭 owner/member 的成員，同 LS021 的理由。
+            .childNotEditableByCaller,
+            // LS043（LS-66）：孩子檔案已被移除超過 30 天，無法還原——換輸入或重試同一個
+            // set_child_deleted 呼叫都不會變成功。
+            .childRestoreWindowExpired
+            // LS040（childFamilyImmutable）已於 LS-57 I1 撤碼，family_id 不可變改用裸
+            // 42501（同 diaries／albums／comments），不再是 LSErrorCode 的一個 case。
         ]
         let expectedValidationRetryable: Set<LSErrorCode> = [
             .inviteCodeNotFound,
             .inviteCodeExpired,
             .inviteCodeExhausted,
-            .inviteParamsInvalid
+            .inviteParamsInvalid,
+            // LS044（R1）：p_child_id 是使用者從孩子清單挑出來的輸入，挑到的孩子剛好已
+            // 被軟刪，換一個（或改成不指定）之後同一個呼叫就會成功。
+            .childDeletedCannotAttachContent
         ]
         // LS-55 N9：LS016 從 .validationRetryable 移到這個新層——重試會成功，但不是使用者
         // 輸入有誤（見 LSErrorCode.tier 的 case .inviteCodeGenerationCollision 註解）。

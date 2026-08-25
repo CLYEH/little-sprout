@@ -68,6 +68,13 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     case commentNotEditableByCaller = "LS025"
     case targetFamilyMismatch = "LS026"
     case removedByOwnerNotRestorable = "LS027"
+    // LS040（childFamilyImmutable）已於 LS-57 I1（orchestrator 裁決，2026-08-25）撤碼：
+    // children 的 family_id 不可變 trigger 對齊 diaries／albums／comments，改用裸
+    // 42501，不再有專屬碼，見下方 tier 與 §5 對應調整。
+    case childNotFoundOrDeleted = "LS041"
+    case childNotEditableByCaller = "LS042"
+    case childRestoreWindowExpired = "LS043"
+    case childDeletedCannotAttachContent = "LS044"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -86,7 +93,8 @@ enum LSErrorCode: String, CaseIterable, Sendable {
              .alreadyMember, .alreadyHasPendingRequest, .requestNotFoundOrProcessed,
              .diaryNotFoundOrDeleted, .diaryNotEditableByCaller,
              .albumNotFound, .commentNotFound, .commentNotEditableByCaller,
-             .targetFamilyMismatch, .timelineCursorIncomplete, .removedByOwnerNotRestorable:
+             .targetFamilyMismatch, .timelineCursorIncomplete, .removedByOwnerNotRestorable,
+             .childNotFoundOrDeleted, .childNotEditableByCaller, .childRestoreWindowExpired:
             // 以下碼為 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
@@ -113,6 +121,15 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // set_album_deleted／set_comment_deleted）：作者想還原一個 owner 已經移除的
             // 內容，換輸入沒有用（沒有輸入可換），只有請該家庭的 owner 出手還原這一條路，
             // UI 該做的是隱藏「還原」入口或提示「已被管理者移除」，不是讓使用者原地重試。
+            // childNotFoundOrDeleted（LS041，LS-66）：孩子檔案不存在，或（update_child
+            // 情境）已被軟刪除須先還原，同 diaryNotFoundOrDeleted 的理由。
+            // childNotEditableByCaller（LS042，LS-66）：不是仍是該家庭 owner/member 的
+            // 成員，同 diaryNotEditableByCaller 的理由——換輸入沒有用，UI 該隱藏編輯入口。
+            // childRestoreWindowExpired（LS043，LS-66）：孩子檔案已被移除超過 30 天，
+            // 無法還原——這是本票獨有的邊界，換輸入或重試同一個 set_child_deleted 呼叫
+            // 都不會變成功，UI 該做的是不再顯示「還原」這個動作，不是引導使用者重試。
+            // （childFamilyImmutable／LS040 已撤碼，見上方 case 列的說明——family_id
+            // 不可變現在跟 diaries／albums／comments 一致，走下面 switch 的裸 "42501" 分支。）
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:
             // 碼本身是「輸入」——打錯字換一個、或請 owner 給一支新的碼，都是同一個 UI 動作
@@ -126,6 +143,14 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             return .retryableSystem
         case .inviteParamsInvalid:
             // 參數本身不合法（邀請設定超出範圍）：修正輸入之後同一個呼叫就會成功。
+            return .validationRetryable
+        case .childDeletedCannotAttachContent:
+            // childDeletedCannotAttachContent（LS044，R1 補齊）：p_child_id 是使用者
+            // 從孩子清單挑出來的「輸入」（同 inviteCodeNotFound 那組的理由，不是
+            // childNotFoundOrDeleted 那種內部狀態檢查）——挑到的孩子剛好已被軟刪
+            // （多半是清單快取過期），UI 該做的動作是重新整理孩子清單、讓使用者換一個
+            // （或改成不指定），換輸入之後同一個 create_diary_entry／update_diary_entry
+            // 呼叫就會成功，符合 N9「使用者能換輸入」的 validationRetryable 準則。
             return .validationRetryable
         }
     }

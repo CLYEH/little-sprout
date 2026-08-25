@@ -60,6 +60,19 @@ select 'fc000000-0000-4000-8000-000000000001',
        'rejected', now() - (i * interval '1 minute')
   from generate_series(1, 2000) i;
 
+-- R1（LS-66 merge-reviewer PR #95 review M2）：children_select 自 R1 起是單一子查詢
+-- `family_id in (select private.family_ids())`（跟主查詢 2 對 media 的 policy 同型），
+-- 但這支表在本票之前完全沒有進過這個檔案——`list_children`（LS-66 新增，倚賴這條
+-- policy 的 invoker RPC）比照 get_family_timeline／get_reaction_counts 的既有慣例，
+-- 每一支倚賴 RLS 的新 invoker RPC 都該補一段迴歸，這裡補上，關掉 review 抓到的
+-- gate 缺口。3 千列，量級同 join_requests（不需要 media 那種 5 萬列——那個量級是
+-- 為了驗索引選擇，這裡只是要讓「loops=1」不是空表上的恆真句）。
+insert into public.children (family_id, name, birthday)
+select 'fc000000-0000-4000-8000-000000000001',
+       '效能測試孩子 ' || i,
+       date '2020-01-01' + (i % 2000)
+  from generate_series(1, 3000) i;
+
 -- LS-40：storage.objects 的 policy 是全 schema 唯一「不靠 family_id 欄位、靠路徑第一段」
 -- 判家庭的一組，形狀與其他表不同（qual 左邊是 `(storage.foldername(name))[1]`），
 -- 所以不能靠上面那幾條查詢代驗。2 萬列的理由同 join_requests：判的是 plan 形狀，
@@ -87,6 +100,7 @@ analyze public.media;
 analyze public.feed_items;
 analyze public.family_members;
 analyze public.join_requests;
+analyze public.children;
 analyze storage.objects;
 
 do $$
@@ -112,7 +126,12 @@ begin
   if v_n < 20000 then
     raise exception 'FAIL：storage.objects 的 plan 判準需要 ≥2 萬列，實際只有 %', v_n;
   end if;
-  raise notice 'ok：已灌入 5 萬列 media（feed_items 由 trigger 同步產生 5 萬列）、2 千列 join_requests、2 萬列 storage.objects';
+  select count(*) into v_n from public.children
+   where family_id = 'fc000000-0000-4000-8000-000000000001';
+  if v_n < 3000 then
+    raise exception 'FAIL：children 的 plan 判準需要 ≥3000 列，實際只有 %（空表上 loops=1 是恆真句）', v_n;
+  end if;
+  raise notice 'ok：已灌入 5 萬列 media（feed_items 由 trigger 同步產生 5 萬列）、2 千列 join_requests、2 萬列 storage.objects、3 千列 children';
 end;
 $$;
 
@@ -157,8 +176,20 @@ begin
       ('主查詢 5：Storage 物件清單（policy 靠路徑第一段判家庭）',
        'select id, name from storage.objects
          where bucket_id = ''media''
-         order by created_at desc limit 50')
-      -- 主查詢 6（Storage 物件改寫，UPDATE 的 USING＋WITH CHECK）不放在這個迴圈裡：
+         order by created_at desc limit 50'),
+      -- R1（LS-66 merge-reviewer PR #95 review M2）：children_select 是
+      -- `family_id in (select private.family_ids())` 這條單一子查詢（跟主查詢 2 對
+      -- media 的 policy 同型）。直接查 `children` 表本身而不是透過 `list_children`——
+      -- `list_children` 是 `language sql` 且帶 `set search_path = ''`，這樣的函式
+      -- **不會被規劃器 inline**（原因見 `get_family_timeline` 在 API.md 的效能說明），
+      -- EXPLAIN 對它只會看到一個不透明的 Function Scan 節點，看不進函式內部真正執行的
+      -- 查詢、驗不到 policy 的 plan 形狀；直接對 `children` 下 SELECT 才是
+      -- `list_children` 實際執行的查詢會產生的 plan，這裡驗的正是這條 plan。
+      ('主查詢 6：孩子清單（children，list_children 倚賴的 policy）',
+       'select id, name, deleted_at from public.children
+         where family_id = ''fc000000-0000-4000-8000-000000000001''
+         order by birthday, id limit 50')
+      -- 主查詢 7（Storage 物件改寫，UPDATE 的 USING＋WITH CHECK）不放在這個迴圈裡：
       -- 它會真的 UPDATE 這 2 萬列，若跑在檔尾證據 EXPLAIN 之前，後面「證據 4：
       -- Storage 物件清單」量到的 buffers/cost 會摻進這次 UPDATE 留下的死元組
       -- （同一交易內死元組仍佔頁面，即使最終 rollback）。定點複驗 N4：搬到本檔
@@ -263,7 +294,7 @@ select m.id from public.media m
  limit 50;
 
 -- ---------------------------------------------------------------------------
--- 主查詢 6：Storage 物件改寫（UPDATE 的 USING＋WITH CHECK 一起求值）
+-- 主查詢 7：Storage 物件改寫（UPDATE 的 USING＋WITH CHECK 一起求值）
 --
 -- LS-40 review F6：讀取那條（主查詢 5）只走 SELECT policy 的單一 qual。UPDATE 這條
 -- 才會同時求值 USING 與 WITH CHECK，且 USING 裡有 OR 兩側（owned／uploader）與
@@ -276,7 +307,7 @@ select m.id from public.media m
 -- 那些 Function Scan 的 loops 會直接變成 2 萬。兩條判準在這裡分工不同，不是互為備援。
 --
 -- 定點複驗 N4：這條刻意搬到這裡（所有「證據」EXPLAIN 都印完之後、真正 rollback
--- 之前），不與主查詢 1-5 放在同一個判準迴圈裡——它會真的 UPDATE 這 2 萬列
+-- 之前），不與主查詢 1-6 放在同一個判準迴圈裡——它會真的 UPDATE 這 2 萬列
 -- storage.objects，同一交易內接下來的查詢仍看得到這次 UPDATE 留下的死元組
 -- （MVCC 只在跨交易時才不可見），若排在「證據 4：Storage 物件清單」之前執行，
 -- 量到的 buffers/cost 就不是乾淨的讀取基準。搬到這裡之後，證據 1-4 與對照組
@@ -297,17 +328,17 @@ begin
   end loop;
 
   if v_plan ~ '\(SubPlan [0-9]+\)' then
-    raise exception E'FAIL 效能：主查詢 6 的 plan 出現 per-row correlated SubPlan\n%', v_plan;
+    raise exception E'FAIL 效能：主查詢 7 的 plan 出現 per-row correlated SubPlan\n%', v_plan;
   end if;
 
   select coalesce(max((x[1])::bigint), 1) into v_loops
     from regexp_matches(v_plan, 'loops=([0-9]+)', 'g') as x;
   if v_loops > 1 then
-    raise exception E'FAIL 效能：主查詢 6 的 plan 有節點被執行 % 次（policy 遭逐列重算）\n%',
+    raise exception E'FAIL 效能：主查詢 7 的 plan 有節點被執行 % 次（policy 遭逐列重算）\n%',
       v_loops, v_plan;
   end if;
 
-  raise notice 'ok 效能：主查詢 6 —— 無 correlated SubPlan，所有節點 loops=1';
+  raise notice 'ok 效能：主查詢 7 —— 無 correlated SubPlan，所有節點 loops=1';
 end;
 $$;
 
@@ -372,13 +403,15 @@ $$;
 --     分開都對就邏輯上推出——這正是 N1 指出的缺口）。
 -- ---------------------------------------------------------------------------
 
--- 上面「主查詢 6」那段一路沿用檔案開頭的 `set local role authenticated;`（同一個
+-- 上面「主查詢 7」那段一路沿用檔案開頭的 `set local role authenticated;`（同一個
 -- transaction 內持續有效，不會自己過期）。這裡的 fixture 準備（建孩子、灌 20 萬列
 -- feed_items）需要繞過 RLS／grant，比照全檔其他 fixture 準備段落的慣例先切回
 -- postgres，稍後呼叫 get_family_timeline 前再切回 authenticated。
 reset role;
 
--- 效能家（fc）原本沒有孩子；補一個給稀疏 child 篩選測試用
+-- 補一個帶固定 id 的孩子給稀疏 child 篩選測試用（R1 起 fc 已因本檔上方 M2 迴歸多了
+-- 3000 個隨機 id 的 children，那批純粹是撐 children_select 的 plan 判準用、跟這裡
+-- 的 feed_items 完全無關；這裡固定 id 是因為下面要用同一個 id 反查 feed_items）。
 insert into public.children (id, family_id, name, birthday)
 values ('2c000000-0000-4000-8000-000000000001', 'fc000000-0000-4000-8000-000000000001',
         '效能測試孩子', date '2025-01-01')

@@ -14,7 +14,7 @@ model: sonnet
 5. RLS 冒煙：跨 family 資料不可見（有 SQL 測試就跑，沒有就標註缺口）。
 
 ## 視覺驗收（UI 票必做）
-1. 在模擬器 build & run 實際渲染，**優先用 mobile-mcp 工具**（啟動 app、導航到目標畫面、截圖、互動）；mobile-mcp 未載入時退回 `xcrun simctl io booted screenshot <路徑>.png` 再用 Read 檢視。
+1. 在模擬器 build & run 實際渲染，**優先用 mobile-mcp 工具**（啟動 app、導航到目標畫面、截圖、互動）；mobile-mcp 未載入時退回 `xcrun simctl io booted screenshot <路徑>.png` 再用 Read 檢視。截圖一律存 `.claude/evidence/<票號>/<輪次>/`（如 `.claude/evidence/LS-46/qa1/home.png`；先 `mkdir -p` 該目錄——simctl 不會替你建父目錄，mobile-mcp 則用 `mobile_save_screenshot` 的 `saveTo` 指到同一路徑、同樣先建目錄；worktree 相對、已 ignore，不得 git add）。
 2. 截圖與該票的 .pen 設計稿比對：版面結構、字級層次、間距、色彩、各狀態（空／載入／錯誤）。
 3. 長輩優先硬約束抽查：Dynamic Type 放大到 accessibility 字級不破版、點擊目標 ≥44pt、icon 帶文字。
 4. **截圖是 PASS 的必要證據**——沒有截圖的 UI 驗收視同未驗。
