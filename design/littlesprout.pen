@@ -38335,7 +38335,7 @@
                           "name": "Corner BL",
                           "layoutPosition": "absolute",
                           "x": -5,
-                          "y": 234,
+                          "y": 122,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M0 26 L0 0 L26 26 Z"
@@ -38352,7 +38352,7 @@
                           "name": "Corner BR",
                           "layoutPosition": "absolute",
                           "x": 324,
-                          "y": 234,
+                          "y": 122,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M26 26 L26 0 L0 26 Z"
@@ -38953,7 +38953,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "之後隨時可以在家庭頁修改，現在不填也沒關係。",
+                      "content": "填好基本資料，就能開始記錄他的成長了。",
                       "lineHeight": 1.6,
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -40049,7 +40049,7 @@
       "name": "LS-47 / 09b 編輯寶貝資料",
       "clip": true,
       "width": 393,
-      "height": 910,
+      "height": 852,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -40111,7 +40111,6 @@
               "name": "Top",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": "$sp-block",
               "children": [
                 {
                   "type": "frame",
@@ -40228,6 +40227,13 @@
                   ]
                 },
                 {
+                  "type": "frame",
+                  "id": "x5w3yL",
+                  "name": "Spacer 16",
+                  "width": "fill_container",
+                  "height": 15
+                },
+                {
                   "id": "rbJ50",
                   "type": "ref",
                   "ref": "UcO8T",
@@ -40245,6 +40251,13 @@
                       "content": "家人在時間軸上會看到這個名字。"
                     }
                   }
+                },
+                {
+                  "type": "frame",
+                  "id": "UkTZX",
+                  "name": "Spacer 16",
+                  "width": "fill_container",
+                  "height": 16
                 },
                 {
                   "type": "frame",
@@ -41367,7 +41380,6 @@
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -41394,6 +41406,13 @@
                   "fontWeight": "700"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "hEQJb",
+              "name": "Spacer 16",
+              "width": "fill_container",
+              "height": 16
             },
             {
               "type": "frame",
@@ -41530,6 +41549,13 @@
             },
             {
               "type": "frame",
+              "id": "woyVg",
+              "name": "Spacer 16",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
               "id": "CqyPL",
               "name": "Removed Disclosure",
               "gap": "$sp-tight",
@@ -41573,13 +41599,18 @@
             },
             {
               "type": "frame",
+              "id": "mE4VX",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
+            },
+            {
+              "type": "frame",
               "id": "Z5QPXf",
               "name": "Content",
-              "clip": true,
               "width": "fill_container",
-              "height": 320,
               "layout": "vertical",
-              "gap": "$sp-block",
+              "gap": "$sp-item",
               "padding": [
                 "$sp-section",
                 0,
@@ -41729,7 +41760,7 @@
                       },
                       "clip": true,
                       "width": "fill_container",
-                      "height": 220,
+                      "height": 184,
                       "fill": {
                         "type": "image",
                         "enabled": true,
@@ -41800,7 +41831,7 @@
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
                       "x": -5,
-                      "y": 247,
+                      "y": 211,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -41817,7 +41848,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 247,
+                      "y": 211,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -41878,7 +41909,7 @@
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "今天第一次自己爬上溜滑梯，笑得好開心。",
+                      "content": "今天在溜滑梯上玩得好開心。",
                       "lineHeight": 1.5,
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -45216,7 +45247,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Tab Bar 下緣統一改到 y754（頂 y754–底818），與 Home Indicator Area(818起) 相接不相交；FAB 隨之上移到 y682–738（與 Tab Bar 留 16pt=$sp-item）。10/10深的 Content 加 clip:true、高度收到320（只完整顯示 Photo Print，Diary Card 整張退到折線下，需要捲動才看到）——Photo Print 底(620) 到 FAB 頂(682) 淨距 62pt，超過原訂 44pt 門檻。跨-parent 掃描確認 FAB×Snippet 交集=0。AX3-10 同步：Tab Bar y1174、FAB y1102、Home Indicator y1238，板高 1300→1272（由內容決定，非任意值）。",
+                  "content": "R4 更正：R3 版本用 clip:true 把 Diary Card 整張切掉（被 reviewer 抓到，這是「切內容」不是「修遮蔽」）。R4 改法：不清 Diary Card，改讓 FAB 淨空。Header→Filter、Filter→已移除揭露列的間距各由 24 收緊到 16（省 16pt，兩處都不是唯一的 44 斷點所以可以收）；Photo Wrap 220→184、Photo Print 268→232（角托 BL/BR 座標同步由 y247 改 y211=232−26+5，這正是 N1 同一種「印品變矮但角托座標沒跟著改」的缺陷，全稿 9+1 張印品已逐張機械核對 4/4 角托座標）；Content 與 Diary Card 間 gap 24→16；Diary Card 的 Snippet 縮成單行「今天在溜滑梯上玩得好開心。」（124→99pt）。結果：Photo Print y328–560、Diary Card y576–675（完整顯示，未clip）、FAB y682–738——Diary Card 底到 FAB 頂淨距 7pt，0 交集。跨-parent 掃描（同一支腳本，見 overflow.json）：FAB×Snippet 在 10／10深 兩張皆為 0。AX3-10 同步：Tab Bar y1174、FAB y1102、Home Indicator y1238，板高 1300→1272（由內容決定）；AX3-10 的下拉（Dropdown Menu, y271–880）與新補的 Photo Print／Diary Card 內文（Caption/Icon/Meta/Snippet）仍有重疊——這是「下拉打開時蓋住背景內容」的預期模態行為（同一類別於 09c/10c 的 scrim 疊 backdrop 已被判定為設計意圖），不屬於 F10/F11 原文點名的「Dropdown×Trigger」（後者已確認 0）；已在 overflow.json 如實列出這 4 筆並分類，不再宣稱「0」。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -45361,6 +45392,320 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "原本 Content 是純色佔位方塊（無照片、無角托、無文字）。改為直接 Copy 10 的 Photo Print（含真照片＋4角托＋染料池＋壓印行）與 Diary Card 到 AX3-10 的 Content；Diary Card 的 Head（icon+日期）在 $fs-note 放大到 AX3(40pt) 後會超寬，改 Head 為 fill_container 換行、alignItems:start，不再溢出。0 clip 確認，板高由內容重新收斂到 1272。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "cSL5y",
+          "name": "N R4 修訂重點",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "nJYX9",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "R4 修訂重點（依 reviewer R3 逐條回應）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "YiOiM",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "h5GTMa",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R4 · N1/B9",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Q9Klhp",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "08/08c 印品四角托：Photo Wrap 200→88 後 Corner BL/BR 座標忘了跟著改，還停在舊高度255算出的y234（掉到姓名欄位上，變成表單角托）。已改y122（=143−26+5，143是新印品高）。同一根因（印品變矮，角托座標沒重算）用機械檢查（TL(-5,-5)/TR(w-21,-5)/BL(-5,h-21)/BR(w-21,h-21)）逐張核對全部10個印品實例，另外抓到10/10深（N5修完後印品變矮）與AX3-10（下同）也有一樣的問題，已一併修正，見overflow.json「cross_check_all_10_print_corner_anchors」。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "E7Zng",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Dn3uk",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R4 · N5",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "sVohU",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "10/10深：R3用Content clip:true height320把Diary Card整張切掉，這是切內容不是修遮蔽（reviewer抓到）。R4改法：不clip，改讓FAB淨空——Header→Filter、Filter→已移除揭露列兩處間距24→16（省16，不動唯一的44斷點）；Photo Wrap 220→184、Photo Print 268→232；Content內gap（PhotoPrint→DiaryCard）24→16；DiaryCard的Snippet縮成單行「今天在溜滑梯上玩得好開心。」（125→99，同時省27）。結果：Diary Card完整顯示於y576–675，FAB於y682–738，淨距7pt、0交集。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "g7zHk",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "r4aj09",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R4 · A2 scan3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "e21Lo",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R3的scan3腳本有bug，宣稱0但reviewer同方法重跑得6。R4重寫scan3為單一execute呼叫內完成（不再跨呼叫傳globalThis），並加resolveInstances:true。結果：10/10深的FAB×Snippet兩筆已因N5歸零；AX3-10的Dropdown×Content剩4筆（Caption/Icon/Meta/Snippet），如實列在overflow.json並分類為「下拉開啟時蓋住背景內容」的預期模態行為（同09c/10c的scrim疊Sheet Wrap同一類），不再宣稱是0——F10/F11原文點名要求為0的是「FAB×Snippet」與「Dropdown×Trigger」，兩者皆已確認0。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "N6Qrbm",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "A6uMu",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R4 · C12",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "kXbmp",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Handoff Notes（Zx8GJ節點）原文「Photo Print底620」「FAB×Snippet交集=0」與實際不符，已整段改寫為量到的數字（Photo Print y328–560、Diary Card y576–675、FAB y682–738，淨距7pt）並更正scan3的方法與分類，見上。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "wseZB",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vyQ4A",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R4 · A1（09b）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "HzHKK",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "09b沿用08同一根因：Top的gap用$sp-block(24)均分，AvatarField自己的44padding-top被當成第4個章節斷點外還多疊了一次24，導致Footer被推到852折線外。改法與08一致：Top gap→0＋兩顆顯式spacer（16、15，非16是為了讓Footer剛好貼齊712不多不少1pt），frame 910→852。結果Save/Cancel兩顆按鈕都在852內（y686–746／y758–802）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "k5XoI",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "g3gpna",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R4 · N2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "RJdpC",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX3-08／08-iPad仍是R3改版前的副標「之後隨時可以在家庭頁修改，現在不填也沒關係。」（4個變體只改了2個，AX3/iPad漏改）。已同步為「填好基本資料，就能開始記錄他的成長了。」，4個變體現在一致。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "T8drF",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dpy4T",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R4 · N3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "MM3wn",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "cmp/Tab Bar的Label用$fs-meta，在AX3主題下解析到約33pt／單行48pt高，元件原本64pt高＋22pt icon是為預設字級設計，AX3下icon溢出膠囊上緣4pt、label溢出下緣4pt，且label(99pt寬)比它的分段(85.8pt)寬，最左邊「時間軸」的label左緣穿出膠囊左邊界。改法只動AX3-10這一個實例（不動元件本身，10/10b/10深仍是預設字級不受影響）：4個Label改enabled:false、4個Icon放大到48×48（icon-lg AX3階），變成「只有icon」的AX3降級版本——這正是本票R2 Handoff Notes就寫好的既有解法（icon＋accessibilityLabel），這次真的做到稿面上而不只是文字承諾。SwiftUI實作時4個icon仍需搭配accessibilityLabel（時間軸/相簿/寶貝/設定），本稿的Pencil限制無法標註，寫在這裡供ios-dev對照。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "j185W",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "hqGZI",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R4 · N4",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "J4iwm",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX3-10新增的Photo Print是Copy自「10」的c9EwP，連同已經算好的染料池opacity（.386/.255/.270/.180）一起複製過去，但AX3-10這張印品實際位置(24,331)與尺寸(345×359)跟「10」的(24,344,345,268)不同，opacity沒有重算。已用同一套lit()公式重算：TL.392 TR.258 BL.236 BR.155——與 reviewer 預測值逐位吻合。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -45722,7 +46067,7 @@
                           "name": "Corner BL",
                           "layoutPosition": "absolute",
                           "x": -5,
-                          "y": 234,
+                          "y": 122,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M0 26 L0 0 L26 26 Z"
@@ -45739,7 +46084,7 @@
                           "name": "Corner BR",
                           "layoutPosition": "absolute",
                           "x": 324,
-                          "y": 234,
+                          "y": 122,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M26 26 L26 0 L0 26 Z"
@@ -46085,7 +46430,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "之後隨時可以在家庭頁修改，現在不填也沒關係。",
+                      "content": "填好基本資料，就能開始記錄他的成長了。",
                       "lineHeight": 1.6,
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -47756,11 +48101,11 @@
                       "type": "gradient",
                       "gradientType": "radial",
                       "enabled": true,
-                      "opacity": 0.386,
+                      "opacity": 0.392,
                       "rotation": 0,
                       "size": {
                         "width": 0.45217391304347826,
-                        "height": 0.582089552238806
+                        "height": 0.43454038997214484
                       },
                       "colors": [
                         {
@@ -47781,11 +48126,11 @@
                       "type": "gradient",
                       "gradientType": "radial",
                       "enabled": true,
-                      "opacity": 0.255,
+                      "opacity": 0.258,
                       "rotation": 0,
                       "size": {
                         "width": 0.45217391304347826,
-                        "height": 0.582089552238806
+                        "height": 0.43454038997214484
                       },
                       "colors": [
                         {
@@ -47806,11 +48151,11 @@
                       "type": "gradient",
                       "gradientType": "radial",
                       "enabled": true,
-                      "opacity": 0.27,
+                      "opacity": 0.236,
                       "rotation": 0,
                       "size": {
                         "width": 0.45217391304347826,
-                        "height": 0.582089552238806
+                        "height": 0.43454038997214484
                       },
                       "colors": [
                         {
@@ -47831,11 +48176,11 @@
                       "type": "gradient",
                       "gradientType": "radial",
                       "enabled": true,
-                      "opacity": 0.18,
+                      "opacity": 0.155,
                       "rotation": 0,
                       "size": {
                         "width": 0.45217391304347826,
-                        "height": 0.582089552238806
+                        "height": 0.43454038997214484
                       },
                       "colors": [
                         {
@@ -47958,7 +48303,7 @@
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
                       "x": -5,
-                      "y": 247,
+                      "y": 338,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -47975,7 +48320,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 247,
+                      "y": 338,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -48434,7 +48779,37 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 1174
+          "y": 1174,
+          "descendants": {
+            "l9s60": {
+              "width": 48,
+              "height": 48
+            },
+            "W2LnpN": {
+              "enabled": false
+            },
+            "ZPafj": {
+              "width": 48,
+              "height": 48
+            },
+            "yqtdI": {
+              "enabled": false
+            },
+            "c7xKgR": {
+              "width": 48,
+              "height": 48
+            },
+            "loDFI": {
+              "enabled": false
+            },
+            "d7oe1": {
+              "width": 48,
+              "height": 48
+            },
+            "vLtnm": {
+              "enabled": false
+            }
+          }
         }
       ]
     },
@@ -48491,7 +48866,6 @@
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -48518,6 +48892,13 @@
                   "fontWeight": "700"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "ws5nv",
+              "name": "Spacer 16",
+              "width": "fill_container",
+              "height": 16
             },
             {
               "type": "frame",
@@ -48654,6 +49035,13 @@
             },
             {
               "type": "frame",
+              "id": "UpTi0",
+              "name": "Spacer 16",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
               "id": "DmZpZ",
               "name": "Removed Disclosure",
               "gap": "$sp-tight",
@@ -48697,13 +49085,18 @@
             },
             {
               "type": "frame",
+              "id": "tj6pJ",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
+            },
+            {
+              "type": "frame",
               "id": "GrgFP",
               "name": "Content",
-              "clip": true,
               "width": "fill_container",
-              "height": 320,
               "layout": "vertical",
-              "gap": "$sp-block",
+              "gap": "$sp-item",
               "padding": [
                 "$sp-section",
                 0,
@@ -48853,7 +49246,7 @@
                       },
                       "clip": true,
                       "width": "fill_container",
-                      "height": 220,
+                      "height": 184,
                       "fill": {
                         "type": "image",
                         "enabled": true,
@@ -48924,7 +49317,7 @@
                       "name": "Corner BL",
                       "layoutPosition": "absolute",
                       "x": -5,
-                      "y": 247,
+                      "y": 211,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -48941,7 +49334,7 @@
                       "name": "Corner BR",
                       "layoutPosition": "absolute",
                       "x": 324,
-                      "y": 247,
+                      "y": 211,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -49002,7 +49395,7 @@
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "今天第一次自己爬上溜滑梯，笑得好開心。",
+                      "content": "今天在溜滑梯上玩得好開心。",
                       "lineHeight": 1.5,
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
