@@ -14,7 +14,7 @@ struct RootView: View {
     var body: some View {
         Group {
             if authStore.isAuthenticated() {
-                AuthenticatedRootView()
+                AuthenticatedRootView(authStore: authStore)
             } else {
                 WelcomeView(authStore: authStore)
             }
@@ -32,27 +32,30 @@ struct RootView: View {
 /// selection 存在這一層而非各自的子視圖，所以 iPad 旋轉／分割畫面造成 size class
 /// 改變時，使用者停留的區塊會被保留。
 struct AuthenticatedRootView: View {
+    let authStore: AuthStore
+
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selection: AppSection = .timeline
 
     var body: some View {
         if horizontalSizeClass == .regular {
-            SectionSplitView(selection: $selection)
+            SectionSplitView(authStore: authStore, selection: $selection)
         } else {
-            SectionTabView(selection: $selection)
+            SectionTabView(authStore: authStore, selection: $selection)
         }
     }
 }
 
 /// Compact（iPhone 直向）：四分頁 TabView。
 private struct SectionTabView: View {
+    let authStore: AuthStore
     @Binding var selection: AppSection
 
     var body: some View {
         TabView(selection: $selection) {
             ForEach(AppSection.allCases) { section in
                 NavigationStack {
-                    SectionContentView(section: section)
+                    SectionContentView(section: section, authStore: authStore)
                 }
                 .tabItem { Label(section.title, systemImage: section.systemImage) }
                 .tag(section)
@@ -63,6 +66,7 @@ private struct SectionTabView: View {
 
 /// Regular（iPad、iPhone 橫向 Max）：sidebar 列四區塊的 NavigationSplitView。
 private struct SectionSplitView: View {
+    let authStore: AuthStore
     @Binding var selection: AppSection
 
     var body: some View {
@@ -75,7 +79,7 @@ private struct SectionSplitView: View {
             // 已知債：detail 欄共用單一 NavigationStack；第一張含 push destination 的票
             // 需處理「iPad 切換 section 重置 detail stack」（可用 .id(selection)）。
             NavigationStack {
-                SectionContentView(section: selection)
+                SectionContentView(section: selection, authStore: authStore)
             }
         }
     }
@@ -94,6 +98,7 @@ private struct SectionSplitView: View {
 /// 兩種版面共用的內容切換器，確保 compact／regular 顯示的是同一組畫面。
 struct SectionContentView: View {
     let section: AppSection
+    let authStore: AuthStore
 
     var body: some View {
         content
@@ -106,17 +111,17 @@ struct SectionContentView: View {
         case .timeline: TimelineView()
         case .albums: AlbumsView()
         case .children: ChildrenView()
-        case .settings: SettingsView()
+        case .settings: SettingsView(authStore: authStore)
         }
     }
 }
 
 #Preview("Compact") {
-    AuthenticatedRootView()
+    AuthenticatedRootView(authStore: .preview())
         .environment(\.horizontalSizeClass, .compact)
 }
 
 #Preview("Regular") {
-    AuthenticatedRootView()
+    AuthenticatedRootView(authStore: .preview())
         .environment(\.horizontalSizeClass, .regular)
 }
