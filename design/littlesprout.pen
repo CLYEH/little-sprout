@@ -5542,7 +5542,7 @@
           "id": "oJUdR",
           "name": "Top",
           "width": "fill_container",
-          "height": 296.85,
+          "height": 358,
           "layout": "vertical",
           "children": [
             {
@@ -5569,7 +5569,7 @@
               "id": "mpeJ1",
               "name": "Print Stage",
               "width": "fill_container",
-              "height": 234.85,
+              "height": 296,
               "layout": "none",
               "children": [
                 {
@@ -5836,7 +5836,7 @@
           "name": "Welcome Block",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-item",
+          "gap": 12.4,
           "padding": [
             "$sp-section",
             "$screen-pad",
@@ -33917,7 +33917,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1141,
+      "height": 1073,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
