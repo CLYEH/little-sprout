@@ -61,10 +61,12 @@ struct SecondaryButton: View {
 
 /// `cmp/Button Google`：品牌硬規定的官方樣式（底色／外框／字色三個 token 不得改）。
 ///
-/// Google 的四色「G」標是受商標保護的圖形，本票 Google 登入為 stub（無 GoogleSignIn SDK、
-/// 未接真實流程——見環境規約），因此這裡用中性 SF Symbol 佔位，不手繪 G 標；接上真的
-/// Google 登入時應改用 GoogleSignIn SDK 提供的官方按鈕／G 標資產（Handoff Notes「三方登入鍵
-/// 的色彩豁免」）。
+/// Google 的四色「G」標是受商標保護的圖形（LS-101 point 3）：`GoogleG` 資產直接取自 Google
+/// 官方 CDN（`fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg`，Google Sign-In branding
+/// guidelines 指定資產），非手繪重製，`template-rendering-intent: original` 防止被當 template
+/// 圖示套色。Google 登入本身仍是 stub（無 GoogleSignIn SDK、未接真實流程——見環境規約），接上
+/// 真的 Google 登入時應改用 GoogleSignIn SDK 提供的官方按鈕（Handoff Notes「三方登入鍵的色彩
+/// 豁免」）。
 struct GoogleSignInButton: View {
     var isDimmed = false
     let action: () -> Void
@@ -72,7 +74,7 @@ struct GoogleSignInButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: AppSpacing.group) {
-                Image(systemName: "g.circle.fill").appIconFrame(.google)
+                Image("GoogleG").resizable().scaledToFit().appIconFrame(.google)
                 Text("使用 Google 登入").appFont(.body)
             }
             .frame(maxWidth: .infinity)
