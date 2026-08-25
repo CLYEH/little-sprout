@@ -493,6 +493,37 @@ has   '⑰ 無 Booted 裝置 → 無異常（Booted 0 台）' "$out17" '無異�
 brief17="$(SIMCTL_LIST_JSON="$none_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '⑰ --brief 表頭 Booted 異常數＝0' "$brief17" 'Booted 異常 0'
 
+# ---- ⑱ Booted 模擬器命中鎖目錄（PR #164 R1 I1）：兩台非 demo-* Booted，其中一台的
+#        /tmp/simulator-lock-<udid>（scripts/ops/simulator-lock.sh 用的同一個目錄命名慣例）存在，
+#        代表 push-gate 正在跑 xcodebuild test——這台該標「鎖中，勿關」，不印 shutdown 建議；另一台
+#        沒鎖，照常建議 shutdown。暫存鎖目錄用 $$ 帶出唯一性，避免與其他併行跑的自測互相干擾 ----
+lock_udid="LOCKED-UDID-$$"
+lockdir="/tmp/simulator-lock-${lock_udid}"
+rm -rf "$lockdir"; mkdir -p "$lockdir"
+locked_json='{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-0" : [
+      {
+        "udid" : "BOOT-A",
+        "name" : "LS-90-iPhoneAir",
+        "state" : "Booted"
+      },
+      {
+        "udid" : "'"$lock_udid"'",
+        "name" : "main-iPhone17",
+        "state" : "Booted"
+      }
+    ]
+  }
+}'
+out18="$(SIMCTL_LIST_JSON="$locked_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑱ 鎖中的那台標「鎖中，勿關」' "$out18" "main-iPhone17（${lock_udid}）鎖中（push gate 進行中），勿關"
+hasnt '⑱ 鎖中的那台不印 shutdown 建議' "$out18" "shutdown ${lock_udid}"
+has   '⑱ 沒鎖的那台仍建議 shutdown' "$out18" '⚠ LS-90-iPhoneAir（BOOT-A）→ xcrun simctl shutdown BOOT-A'
+brief18="$(SIMCTL_LIST_JSON="$locked_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '⑱ --brief 也印「鎖中」異常' "$brief18" '鎖中（push gate 進行中）——勿關'
+rm -rf "$lockdir"
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
 fi

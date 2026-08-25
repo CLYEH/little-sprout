@@ -364,8 +364,16 @@ if [ "$nonexempt_boot_count" -gt 1 ]; then
   while IFS=$'\t' read -r boot_name boot_udid; do
     [ -n "$boot_name" ] || continue
     boot_flagged=$((boot_flagged + 1))
-    BOOT_LINES="${BOOT_LINES}  ⚠ ${boot_name}（${boot_udid}）→ xcrun simctl shutdown ${boot_udid}"$'\n'
-    add_flag "[Booted 模擬器 ${boot_name}] 同時有 ${nonexempt_boot_count} 台非 demo-* 模擬器 Booted、用完沒關 → xcrun simctl shutdown ${boot_udid}"
+    # PR #164 R1 I1：這台若還握著 push-gate.sh 用的鎖（scripts/ops/simulator-lock.sh，鍵＝UDID）就是
+    # 正在跑 xcodebuild test，不是「用完沒關」——標「鎖中」、不建議關，避免巡檢自己造成 F1 那種
+    # 「把還在測的機器關掉」的 race（§4-b 巡檢模板同步標「鎖中不關」）。
+    if [ -d "/tmp/simulator-lock-${boot_udid}" ]; then
+      BOOT_LINES="${BOOT_LINES}  ⚠ ${boot_name}（${boot_udid}）鎖中（push gate 進行中），勿關"$'\n'
+      add_flag "[Booted 模擬器 ${boot_name}] 鎖中（push gate 進行中）——勿關，等它跑完自己會關"
+    else
+      BOOT_LINES="${BOOT_LINES}  ⚠ ${boot_name}（${boot_udid}）→ xcrun simctl shutdown ${boot_udid}"$'\n'
+      add_flag "[Booted 模擬器 ${boot_name}] 同時有 ${nonexempt_boot_count} 台非 demo-* 模擬器 Booted、用完沒關 → xcrun simctl shutdown ${boot_udid}"
+    fi
   done <<EOF
 $boot_nonexempt
 EOF
