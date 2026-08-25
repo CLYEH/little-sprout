@@ -1,5 +1,5 @@
 #!/bin/bash
-# Push gate（pre-push）：全 repo lint + unit tests + API 契約／錯誤碼對帳 + migration 分級。規約見 docs/COLLABORATION.md §4。
+# Push gate（pre-push）：全 repo lint + unit tests + API 契約／錯誤碼對帳 + migration 版本號撞號／分級。規約見 docs/COLLABORATION.md §4。
 set -euo pipefail
 
 # LS-73：pre-push hook 由 git 啟動時會 export GIT_DIR／GIT_WORK_TREE／GIT_INDEX_FILE（linked worktree 指向
@@ -74,6 +74,11 @@ if [ -d supabase/migrations ]; then
         echo "✗ push gate：找不到 ${base_ref}（先 git fetch origin），無法做 migration 分級。" >&2
         exit 1
       fi
+      # 4b) Migration 版本號撞號（LS-70）：本分支 tree 內版本號唯一、且不與 base_ref 既有版本撞號（同版本、
+      #     不同檔名——LS-57／LS-66 同取 20260825030000，先併的把後併的擠掉）。放在分級之前：撞號的檔連套用
+      #     順序都未定義，分級沒有意義。對 base 當前 tip 比、不是 merge-base（撞號正是別張票先併進去）；
+      #     CI Migration rules step 對 origin/$BASE 再驗一次（伺服器端兜底）。
+      bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-version-check.sh" --target "$base_ref"
       base_sha=$(git merge-base "$base_ref" HEAD)
       findings=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-breaking-check.sh" --base "$base_sha")
       if printf '%s\n' "$findings" | grep -q '^DESTRUCTIVE'; then

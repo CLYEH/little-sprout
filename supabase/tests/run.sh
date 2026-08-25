@@ -3,8 +3,8 @@
 #
 # 用法：
 #   supabase start（或只要 DB：supabase db start）
-#   supabase db reset          # 套用 supabase/migrations
-#   bash supabase/tests/run.sh
+#   bash scripts/ops/supabase-lock.sh -- supabase db reset   # 套用 supabase/migrations（經 lock：容器是所有 worktree 共用的，LS-70）
+#   bash supabase/tests/run.sh                                 # 未在 lock 內會自己經 lock 重跑
 #
 # LS-11：CI（.github/workflows/ci.yml 的 db job）額外帶 SUPABASE_DB_URL＝
 # `supabase status -o env` 印出的 DB_URL，走 host psql 那條路；本機／QA 備援沿用
@@ -15,6 +15,21 @@
 set -Eeuo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# LS-70：本機容器是所有 worktree 共用的（LS-57／LS-66 同時 reset 互踩）——未在 scripts/ops/supabase-lock.sh 的
+# lock 內就經 lock 重新執行自己。「在不在 lock 內」只問 lock 腳本（--held：holder pid 是否本程序祖先），不讀
+# SUPABASE_LOCK_HELD——環境變數可被殘留／假造（PR #122 R1 m3：假變數直接連上共用容器）或被洗掉（R1 m2：
+# run.sh ⟷ lock 無窮 exec）；祖先關係兩種情況都判得對，遞迴自然終止。lock 腳本不在（舊分支）只警告，照跑。
+lock_sh="$here/../../scripts/ops/supabase-lock.sh"
+if [ -f "$lock_sh" ]; then
+  if ! bash "$lock_sh" --held 2>/dev/null; then
+    echo "→ 未在 Supabase lock 內，改經 scripts/ops/supabase-lock.sh 重新執行（等其他 worktree 的 reset／測試結束）"
+    exec bash "$lock_sh" -- bash "${BASH_SOURCE[0]}" "$@"
+  fi
+else
+  echo "⚠ 找不到 ${lock_sh}：未經 lock 直接執行，與其他 worktree 的 supabase db reset 可能互踩（LS-70）" >&2
+fi
+
 evidence_dir="$here/evidence"
 
 # 連線參數拆開放，不組成含帳密的連線字串：一來 repo 裡不出現任何形似金鑰的字串，
