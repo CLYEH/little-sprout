@@ -1,0 +1,105 @@
+#!/bin/bash
+# Agent 定義工具白名單檢查（LS-87 R3 F2）。
+#
+# 前饋：.claude/agents/*.md 的 frontmatter `tools:` 是**窮舉**白名單——列了就只有那些工具。qa／merge-reviewer 的「裁決必貼
+# commit status」靠 Bash 跑 scripts/ops/post-status.sh、讀票寫 comment 靠三支 Linear 工具；qa 視覺驗收對設計稿路徑靠
+# mcp__pencil__get_app_state；ui-designer／visual-reviewer 操作／截圖 .pen 靠 mcp__pencil__execute。白名單漏列任何一支，
+# 該規約就靜默不可執行（CI 四項全綠、下一次派工才發現——R2 I3 指出、R2 F1 實際發生在 qa 漏了 pencil）。
+# 這裡驗每份被點名的 agent 定義：檔案存在、frontmatter 閉合、`tools:` 行含全部必要工具（整字比對：`BashOutput` 不算 `Bash`）。
+# 沒有 `tools:` 行＝繼承全部工具 → 放行並註明（白名單不存在就漏不了）。工具名是否真的存在於 MCP server 只有連上 server
+# 才驗得到（CI 驗不了）——那是盲區；擋得住的是「白名單漏掉必要工具」。
+# 任一違規即紅並列出全部（不在第一條就停），exit 1；參數／路徑錯誤 exit 2（fail closed）。
+# 掛 CI rules job（所有 PR，純檔案比對）；自測 agent-tools-check.test.sh。規約見 docs/COLLABORATION.md §1、§7。
+#
+# 用法：agent-tools-check.sh [<agents 目錄>]（參數只給自測餵臨時目錄用；CI 不帶參數＝<repo>/.claude/agents）
+set -uo pipefail
+
+if [ $# -gt 1 ]; then
+  echo "✗ agent-tools gate：只接受一個 agents 目錄參數（多給了 $2）" >&2
+  exit 2
+fi
+if [ $# -eq 1 ]; then
+  dir=$1
+else
+  root=$(git rev-parse --show-toplevel 2>/dev/null) || {
+    echo "✗ agent-tools gate：不在 git repo 內且未給 agents 目錄（fail closed）" >&2
+    exit 2
+  }
+  dir="${root}/.claude/agents"
+fi
+if [ ! -d "$dir" ]; then
+  echo "✗ agent-tools gate：找不到目錄「${dir}」（fail closed）" >&2
+  exit 2
+fi
+
+# 規則表：<agent>|<必要工具（空白分隔）>——加規約時在這裡加一行（前饋必有反饋）
+LINEAR3="mcp__linear__get_issue mcp__linear__list_comments mcp__linear__save_comment"
+RULES="merge-reviewer|Bash ${LINEAR3}
+qa|Bash ${LINEAR3} mcp__pencil__get_app_state
+dead-code-sweeper|Bash mcp__linear__get_issue mcp__linear__list_comments
+ui-designer|mcp__pencil__execute
+visual-reviewer|mcp__pencil__execute"
+
+hits=""; n=0
+while IFS='|' read -r agent required; do
+  [ -n "$agent" ] || continue
+  n=$((n + 1))
+  f="${dir}/${agent}.md"
+  if [ ! -r "$f" ]; then
+    hits+="    ${agent}.md：不存在或不可讀"$'\n'
+    continue
+  fi
+  # frontmatter（純 bash 3.2 逐行；`|| [ -n "$line" ]` 讓末行無換行也讀得到）：只看第一個 --- 到第二個 --- 之間的 tools:，
+  # 正文提到的「tools:」不算
+  first=1; in_fm=0; closed=0; has_tools=0; tools_line=
+  while IFS= read -r line || [ -n "$line" ]; do
+    line=${line%$'\r'}
+    if [ "$first" -eq 1 ]; then
+      first=0
+      if [ "$line" = "---" ]; then in_fm=1; continue; fi
+      break
+    fi
+    if [ "$in_fm" -eq 1 ]; then
+      if [ "$line" = "---" ]; then closed=1; break; fi
+      case "$line" in
+        tools:*) has_tools=1; tools_line=${line#tools:} ;;
+      esac
+    fi
+  done < "$f"
+  if [ "$in_fm" -ne 1 ] || [ "$closed" -ne 1 ]; then
+    hits+="    ${agent}.md：frontmatter 缺失或未閉合（第一行須 ---、其後須再有一行 ---）"$'\n'
+    continue
+  fi
+  if [ "$has_tools" -eq 0 ]; then
+    echo "  ${agent}.md：無 tools: 行（繼承全部工具）→ 放行"
+    continue
+  fi
+  # 逗號→空白、壓成單一空白、前後各補一格：整字比對用 *" <tool> "*
+  toks=" $(printf '%s' "$tools_line" | tr ',' ' ' | tr -s '[:space:]' ' ') "
+  case "$toks" in
+    *[![:space:]]*) ;;
+    *) hits+="    ${agent}.md：tools: 值為空（YAML 多行清單不支援——請寫成同一行逗號分隔）"$'\n'; continue ;;
+  esac
+  missing=
+  for t in $required; do
+    case "$toks" in
+      *" ${t} "*) ;;
+      *) missing+=" ${t}" ;;
+    esac
+  done
+  if [ -n "$missing" ]; then
+    hits+="    ${agent}.md：tools: 缺${missing}"$'\n'
+  else
+    echo "  ${agent}.md：tools: 含必要工具（${required}）"
+  fi
+done <<RULES_EOF
+$RULES
+RULES_EOF
+
+if [ -n "$hits" ]; then
+  echo "✗ agent-tools gate：agent 定義的 tools: 白名單缺必要工具（或檔案／frontmatter 有問題）：" >&2
+  printf '%s' "$hits" >&2
+  echo "  少了工具的規約會靜默不可執行（qa／merge-reviewer 少 Bash → 貼不了 status；qa 少 pencil → 開不了設計稿）。修 .claude/agents/<agent>.md 的 tools: 行（整字、逗號分隔）；沒有 tools: 行＝繼承全部工具。" >&2
+  exit 1
+fi
+echo "✓ agent-tools gate 通過（${n} 份 agent 定義）"
