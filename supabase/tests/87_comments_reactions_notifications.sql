@@ -43,6 +43,16 @@
 --       防禦性一致（跟 update_diary_entry／set_*_deleted 同一套「讀了列就該
 --       鎖住」的寫法慣例），不是靠這裡的 mutation 撐住——如實記錄，不假裝
 --       撐得住的斷言存在。
+--   M4（LS-64，§8 私有函式授權邊界）：暫時對 `private.record_notification_event`
+--       追加 `grant execute ... to authenticated`（其餘五支函式各自重複同一步驟
+--       驗證）→ §8 對應那一句 `if v_err is distinct from '42501'` 斷言變紅（實測：
+--       authenticated 直呼成功，v_err=NULL，訊息印出「（無，成功——授權邊界形同
+--       虛設）」），確認斷言不是恆真的空案；`revoke execute ... from authenticated`
+--       還原後再次執行變綠。六支函式（record_notification_event／
+--       target_family_id／notify_comment_created／notify_reaction_added／
+--       notify_diary_created／notify_album_created）逐支重複這個 grant→紅→
+--       revoke→綠的循環，全部驗過，套用後皆已改回原狀（migration 檔本身未變更，
+--       只在本機交易內臨時 grant 過又 rollback，不留痕跡）。
 -- ---------------------------------------------------------------------------
 
 \set ON_ERROR_STOP on
@@ -966,6 +976,173 @@ begin
   end if;
 
   raise notice 'ok：service_role 能實際 SELECT 讀到待送事件、UPDATE 標記 sent_at（不只是 grant 位元，整個流程走過一遍）';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- §8. private 函式授權邊界（LS-64，LS-58 收尾小修）：schema private 對
+--     authenticated／anon 完全不可執行——本檔 §7 尾端已經用 postgres 身分
+--     （表擁有者，不受一般 grant 限制）直呼 private.record_notification_event
+--     驗過合併鍵邏輯，但那是刻意繞過授權層去驗別的東西，不是在驗授權邊界本身；
+--     `supabase/tests/60_default_privileges.sql` §2 雖然已經用
+--     `has_function_privilege` 位元檢查收斂了 LS-6 當時就存在的七支 private
+--     trigger 函式，但 LS-58 這批新函式（target_family_id／
+--     record_notification_event／四支 notify_*）從未被那份白名單收錄過（純粹
+--     遺漏，不是刻意排除該範圍）。
+--
+--     放進本檔而不是回頭補 60_ 的理由：60_ 驗的是「grant 位元存不存在」
+--     （has_function_privilege），本票要驗的是「實際呼叫的結果」（sqlstate）——
+--     這是更強的斷言，位元檢查只證明沒有這個 grant，不代表真的呼叫不動（理論上
+--     還是可能有其他授權路徑讓呼叫成功）；而且本檔已經為這批函式建好完整的
+--     family_id／notification_kind／content_target_type fixture 慣例（§7），
+--     不必在 60_ 另外重建一份。60_ 保留給它原本的職責（純位元對照），本票不擴大
+--     它的範圍。
+--
+--     四支 notify_* 是 `returns trigger` 的 statement-level trigger 函式，正常
+--     只能被 trigger 機制呼叫；直接 `SELECT`／`PERFORM` 呼叫它們時，Postgres 的
+--     EXECUTE 權限檢查發生在「這是不是 trigger 函式」的檢查之前（本機實測：沒有
+--     EXECUTE 權限時一律先拿到 `permission denied for function ...`／`anon`
+--     另外可能先卡在 `permission denied for schema private`，兩者 sqlstate 皆為
+--     `42501`，不會先看到 `trigger functions can only be called as triggers`
+--     那個 0A000），所以這四支也能用同一種「直接呼叫＋斷言 42501」的手法驗證。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_target uuid := 'ffffffff-0000-4000-8000-000000000010';
+  v_actor uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_err text;
+begin
+  set local role authenticated;
+
+  v_err := null;
+  begin
+    perform private.record_notification_event(v_family, 'comment', 'media', v_target, v_actor);
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err is distinct from '42501' then
+    raise exception 'FAIL：authenticated 直呼 private.record_notification_event 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  end if;
+
+  v_err := null;
+  begin
+    perform private.target_family_id('media', v_target);
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err is distinct from '42501' then
+    raise exception 'FAIL：authenticated 直呼 private.target_family_id 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  end if;
+
+  v_err := null;
+  begin
+    perform private.notify_comment_created();
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err is distinct from '42501' then
+    raise exception 'FAIL：authenticated 直呼 private.notify_comment_created 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  end if;
+
+  v_err := null;
+  begin
+    perform private.notify_reaction_added();
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err is distinct from '42501' then
+    raise exception 'FAIL：authenticated 直呼 private.notify_reaction_added 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  end if;
+
+  v_err := null;
+  begin
+    perform private.notify_diary_created();
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err is distinct from '42501' then
+    raise exception 'FAIL：authenticated 直呼 private.notify_diary_created 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  end if;
+
+  v_err := null;
+  begin
+    perform private.notify_album_created();
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err is distinct from '42501' then
+    raise exception 'FAIL：authenticated 直呼 private.notify_album_created 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  end if;
+
+  reset role;
+  raise notice 'ok：authenticated 直呼六支 LS-58 private 函式（record_notification_event／target_family_id／四支 notify_*）皆 42501';
+end;
+$$;
+
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_target uuid := 'ffffffff-0000-4000-8000-000000000011';
+  v_actor uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_err text;
+begin
+  set local role anon;
+
+  v_err := null;
+  begin
+    perform private.record_notification_event(v_family, 'comment', 'media', v_target, v_actor);
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err is distinct from '42501' then
+    raise exception 'FAIL：anon 直呼 private.record_notification_event 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  end if;
+
+  v_err := null;
+  begin
+    perform private.target_family_id('media', v_target);
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err is distinct from '42501' then
+    raise exception 'FAIL：anon 直呼 private.target_family_id 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  end if;
+
+  v_err := null;
+  begin
+    perform private.notify_comment_created();
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err is distinct from '42501' then
+    raise exception 'FAIL：anon 直呼 private.notify_comment_created 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  end if;
+
+  v_err := null;
+  begin
+    perform private.notify_reaction_added();
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err is distinct from '42501' then
+    raise exception 'FAIL：anon 直呼 private.notify_reaction_added 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  end if;
+
+  v_err := null;
+  begin
+    perform private.notify_diary_created();
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err is distinct from '42501' then
+    raise exception 'FAIL：anon 直呼 private.notify_diary_created 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  end if;
+
+  v_err := null;
+  begin
+    perform private.notify_album_created();
+  exception when others then v_err := sqlstate;
+  end;
+  if v_err is distinct from '42501' then
+    raise exception 'FAIL：anon 直呼 private.notify_album_created 應該是 42501，實際 %', coalesce(v_err, '（無，成功——授權邊界形同虛設）');
+  end if;
+
+  reset role;
+  raise notice 'ok：anon 直呼六支 LS-58 private 函式（record_notification_event／target_family_id／四支 notify_*）皆 42501';
 end;
 $$;
 
