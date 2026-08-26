@@ -1,13 +1,25 @@
 -- LS-110 — profiles 由 auth.users insert trigger 自動建立＋回填
 --
--- 對應 20260826005443_profiles_auto_create_trigger.sql。六段各自 begin/rollback，
--- 互不污染，也不影響 00_fixtures.sql 建好的共用資料：
+-- 對應 20260826005443_profiles_auto_create_trigger.sql。除第 7 段外，各段各自
+-- begin/rollback，互不污染，也不影響 00_fixtures.sql 建好的共用資料：
 --   1-4：display_name／avatar_url 推導（full_name 優先、退回 name、都沒有時退回
 --        email 帳號部分、avatar_url 一併帶入）
 --   5：trigger 建立列之後，呼叫端（LS-107 ensureProfileExists／既有 fixture 慣例）
 --      再冪等 insert 一次不會撞 23505，也不會覆蓋 trigger 已推導出的值
 --   6：回填語句本身冪等——模擬「trigger 佈署前就存在的 auth.users 缺列」，跑一次
 --      回填補上，再跑一次驗證不噴錯、不產生第二列
+--   7：結構性斷言（R1 F2）——不靠「postgres 身分能跑」推論安全，直接查
+--      private.handle_new_auth_user() 是 SECURITY DEFINER、owner 對 profiles 有
+--      INSERT、trigger 未被停用；純讀 catalog，不需要交易保護
+--   8-11：display_name 正規化邊界值（R1 F1）——超長截斷、full_name 空字串視同沒有
+--        （退回 name）、full_name 全空白且無 name 時退回 email 帳號部分、email 與
+--        metadata 都落空時保底 '新成員'。「full_name 缺但 name 在」已由第 2 段覆蓋，
+--        這裡不重複
+--
+-- 正式路徑角色（supabase_auth_admin）探針另外放在 auth_admin/
+-- profiles_trigger_probe_insert.sql／_verify.sql（R1 F2）——需要換連線身分，不能
+-- 用本檔案共用的 postgres 連線跑，見該兩檔與 supabase/tests/run.sh 的
+-- run_sql_as_auth_admin。
 
 \set ON_ERROR_STOP on
 
@@ -240,6 +252,165 @@ begin
     raise exception 'FAIL：回填語句重跑後應仍是 1 列（實際 %）——回填不冪等', v_count;
   end if;
   raise notice 'ok：回填語句重跑後仍是 1 列，冪等成立';
+end;
+$$;
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- 7. 結構性斷言（R1 F2）：前六段都是以本檔案執行者（本機／CI 一般是 postgres）
+--    身分驗證「trigger 能跑」，這件事本身不是保證——若函式哪天被改成
+--    SECURITY INVOKER、owner 換人、或 trigger 被停用，前六段仍會全綠，紅燈只會
+--    出現在正式站的 GoTrue 500。這裡直接查 catalog，把三個前提釘住。純讀，不
+--    需要交易保護。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_prosecdef boolean;
+  v_owner_has_insert boolean;
+  v_tgenabled "char";
+begin
+  select p.prosecdef into v_prosecdef
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'private' and p.proname = 'handle_new_auth_user';
+  if v_prosecdef is not true then
+    raise exception 'FAIL：private.handle_new_auth_user() 必須是 SECURITY DEFINER（prosecdef=true），實際 %', v_prosecdef;
+  end if;
+
+  select has_table_privilege(p.proowner, 'public.profiles', 'INSERT') into v_owner_has_insert
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'private' and p.proname = 'handle_new_auth_user';
+  if v_owner_has_insert is not true then
+    raise exception 'FAIL：private.handle_new_auth_user() 的 owner 對 public.profiles 沒有 INSERT 權限';
+  end if;
+
+  select t.tgenabled into v_tgenabled
+    from pg_trigger t
+    join pg_class c on c.oid = t.tgrelid
+    join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'auth' and c.relname = 'users' and t.tgname = 'on_auth_user_created';
+  if v_tgenabled is null then
+    raise exception 'FAIL：找不到 auth.users 上的 on_auth_user_created trigger';
+  end if;
+  if v_tgenabled = 'D' then
+    raise exception 'FAIL：on_auth_user_created trigger 被停用（tgenabled=D）';
+  end if;
+
+  raise notice 'ok：函式 SECURITY DEFINER、owner 對 profiles 有 INSERT、trigger 未停用（tgenabled=%）', v_tgenabled;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 8. display_name 正規化（R1 F1）：超長 full_name 必須被截斷到 50 字，而不是讓
+--    profiles_display_name_check 炸掉整個 auth.users 的 INSERT 交易
+-- ---------------------------------------------------------------------------
+begin;
+
+insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at,
+                        raw_app_meta_data, raw_user_meta_data)
+values ('f1000000-0000-4000-8000-000000000007', '00000000-0000-0000-0000-000000000000',
+        'authenticated', 'authenticated', 'ls110-toolong@ls110.test', now(), now(), '{}',
+        jsonb_build_object('full_name', repeat('威', 80)));
+
+do $$
+declare
+  v_name text;
+begin
+  select display_name into v_name from public.profiles
+   where id = 'f1000000-0000-4000-8000-000000000007';
+  if char_length(v_name) < 1 or char_length(v_name) > 50 then
+    raise exception 'FAIL：超長 display_name 沒有被截斷到 1~50 字（實際長度 %）', char_length(v_name);
+  end if;
+  if v_name <> left(repeat('威', 80), 50) then
+    raise exception 'FAIL：超長 display_name 截斷內容不對（實際「%」）', v_name;
+  end if;
+  raise notice 'ok：超長 display_name 截斷為 50 字（display_name=%）', v_name;
+end;
+$$;
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- 9. display_name 正規化（R1 F1）：full_name 是空字串時要視同沒有這個候選、退回
+--    name，而不是把空字串直接塞進 profiles_display_name_check（->> 對空字串回傳
+--    的是長度 0 的字串，不是 NULL，coalesce 本身不會跳過）
+-- ---------------------------------------------------------------------------
+begin;
+
+insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at,
+                        raw_app_meta_data, raw_user_meta_data)
+values ('f1000000-0000-4000-8000-000000000008', '00000000-0000-0000-0000-000000000000',
+        'authenticated', 'authenticated', 'ls110-emptyfull@ls110.test', now(), now(), '{}',
+        '{"full_name": "", "name": "空字串退回測試"}');
+
+do $$
+declare
+  v_name text;
+begin
+  select display_name into v_name from public.profiles
+   where id = 'f1000000-0000-4000-8000-000000000008';
+  if v_name <> '空字串退回測試' then
+    raise exception 'FAIL：full_name 是空字串時應視同沒有、退回 name（實際「%」）', v_name;
+  end if;
+  raise notice 'ok：full_name 空字串正確視同沒有，退回 name（display_name=%）', v_name;
+end;
+$$;
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- 10. display_name 正規化（R1 F1）：full_name 全是空白字元、且沒有 name 時，要
+--     退回 email 帳號部分，而不是把全空白字串塞進 check constraint
+-- ---------------------------------------------------------------------------
+begin;
+
+insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at,
+                        raw_app_meta_data, raw_user_meta_data)
+values ('f1000000-0000-4000-8000-000000000009', '00000000-0000-0000-0000-000000000000',
+        'authenticated', 'authenticated', 'ls110-blank@ls110.test', now(), now(), '{}',
+        '{"full_name": "   "}');
+
+do $$
+declare
+  v_name text;
+begin
+  select display_name into v_name from public.profiles
+   where id = 'f1000000-0000-4000-8000-000000000009';
+  if v_name <> 'ls110-blank' then
+    raise exception 'FAIL：full_name 全是空白時應視同沒有、退回 email 帳號部分（實際「%」）', v_name;
+  end if;
+  raise notice 'ok：全空白 full_name 正確視同沒有，退回 email 帳號部分（display_name=%）', v_name;
+end;
+$$;
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- 11. display_name 正規化（R1 F1）：email 也是 NULL（anon 使用者的形狀，目前
+--     config.toml 的 enable_anonymous_sign_ins=false 擋著，但這是設定擋、不是
+--     schema 擋，函式本身要對這個輸入形狀負責）且 metadata 沒有任何候選時，
+--     最終保底 '新成員'，不能讓 not-null 違反把整個 auth.users 的 INSERT 交易
+--     rollback
+-- ---------------------------------------------------------------------------
+begin;
+
+insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at,
+                        raw_app_meta_data, raw_user_meta_data)
+values ('f1000000-0000-4000-8000-00000000000a', '00000000-0000-0000-0000-000000000000',
+        'authenticated', 'authenticated', null, now(), now(), '{}', '{}');
+
+do $$
+declare
+  v_name text;
+begin
+  select display_name into v_name from public.profiles
+   where id = 'f1000000-0000-4000-8000-00000000000a';
+  if v_name <> '新成員' then
+    raise exception 'FAIL：email 與 metadata 都沒有候選值時應保底為新成員（實際「%」）', v_name;
+  end if;
+  raise notice 'ok：三個候選都落空時保底為新成員（display_name=%）', v_name;
 end;
 $$;
 
