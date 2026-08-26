@@ -1,0 +1,338 @@
+import SwiftUI
+import UIKit
+
+/// LS-18 / 07 邀請家人（空／載入／已產生三態，含 07a／07c）。版式依
+/// `design/littlesprout.pen` frame `z6DOE`（07a）／`CHLio`（07c）／`kcGJa`（07）：三態共用同一個
+/// 骨架——Header → 狀態相關的視覺卡 → `ApprovalStatusRow`（核准必開鎖定狀態列）→ 狀態相關的
+/// 動作區 → （產生中／已產生才有）破壞性重新產生區。
+///
+/// 角色（member／viewer）選擇：**LS-46 核可的設計稿沒有這個 UI**（07a/07/07c 都只有單一
+/// 「產生邀請碼」動作，隱含固定角色）；票文（LS-107 Scope 第 4 點）明確要求「角色只給
+/// member／viewer 附白話說明」。`rolePicker` 是用既有 token 拼出的陽春二選一列，不是新畫面、
+/// 沒有發明新視覺語言，但沒有經過 ui-designer／visual-reviewer 審過——見 handoff 風險欄。
+struct InviteFamilyView: View {
+    let familyStore: FamilyStore
+
+    @State private var selectedRole: FamilyRole = .member
+    @State private var showsRegenerateConfirmation = false
+    @State private var showsCopiedFeedback = false
+
+    private enum Phase {
+        case empty
+        case generating
+        case generated(GeneratedInvite)
+
+        var showsDestructiveSection: Bool {
+            if case .empty = self { return false }
+            return true
+        }
+    }
+
+    private var phase: Phase {
+        if familyStore.createInviteState.isSubmitting { return .generating }
+        if let invite = familyStore.latestInvite { return .generated(invite) }
+        return .empty
+    }
+
+    var body: some View {
+        ScrollableFillView {
+            VStack(alignment: .leading, spacing: 0) {
+                headerSection
+                visualCard
+                    .padding(.top, AppSpacing.item)
+                if case .failure(let error) = familyStore.createInviteState {
+                    errorRow(error)
+                        .padding(.top, AppSpacing.item)
+                }
+                ApprovalStatusRow()
+                    .padding(.top, AppSpacing.section)
+                actionsSection
+                    .padding(.top, AppSpacing.block)
+                if phase.showsDestructiveSection {
+                    destructiveSection
+                        .padding(.top, AppSpacing.block)
+                }
+            }
+            .padding(.horizontal, AppSpacing.screenPad)
+            .padding(.top, AppSpacing.block)
+            .padding(.bottom, AppSpacing.item)
+        }
+        .appBackground()
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear { familyStore.resetCreateInviteState() }
+        .confirmationDialog(
+            "重新產生邀請碼？",
+            isPresented: $showsRegenerateConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("重新產生", role: .destructive, action: generate)
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("舊的邀請碼就不能再用了。已經拿到舊邀請碼的家人，要再跟你要一次新的。")
+        }
+    }
+
+    // MARK: - Header
+
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.label) {
+            Text(headerTitle)
+                .appFont(.display, weight: .bold)
+                .foregroundStyle(Color.lsTextPrimary)
+            Text(headerSubtitle)
+                .appFont(.body)
+                .foregroundStyle(Color.lsTextSecondary)
+        }
+    }
+
+    private var headerTitle: String {
+        switch phase {
+        case .empty: "邀請家人一起看"
+        case .generating, .generated: "邀請家人"
+        }
+    }
+
+    private var headerSubtitle: String {
+        let familyName = familyStore.myFamily?.name ?? ""
+        switch phase {
+        case .empty:
+            return "把邀請碼給家人，他們輸入後向你送出申請，你核准就能一起看「\(familyName)」的照片和日記。"
+        case .generating:
+            return "正在為你產生一組新的邀請碼。通常幾秒鐘就好，請稍等一下。"
+        case .generated:
+            return "把邀請碼給家人，他們輸入後向你送出申請，你核准就完成。"
+        }
+    }
+
+    // MARK: - Visual card（依狀態切換）
+
+    @ViewBuilder
+    private var visualCard: some View {
+        switch phase {
+        case .empty:
+            VStack(alignment: .leading, spacing: AppSpacing.label) {
+                PrintPhotoCard(
+                    photoHeight: 194,
+                    cornerSize: 26,
+                    mountPoolOpacity: .inviteSample,
+                    showsImprint: false,
+                    imageName: "InviteGrandma",
+                    accessibilityLabel: "家人在陽台上開心互動的合照"
+                )
+                HStack(spacing: AppSpacing.label) {
+                    Pill(icon: "eye", text: "範例")
+                    Text("家人核准之後看到的就是這些")
+                        .appFont(.note)
+                        .foregroundStyle(Color.lsTextSecondary)
+                }
+            }
+        case .generating:
+            codeCardShell {
+                Text("正在產生邀請碼…")
+                    .appFont(.meta, weight: .bold)
+                    .tracking(2)
+                    .foregroundStyle(Color.lsTextSecondary)
+                RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
+                    .fill(Color.lsSurface2)
+                    .frame(width: 256, height: 60)
+                HStack(spacing: AppSpacing.label) {
+                    Capsule().fill(Color.lsSurface2).frame(width: 122, height: 41)
+                    Capsule().fill(Color.lsSurface2).frame(width: 133, height: 41)
+                }
+            }
+        case .generated(let invite):
+            codeCardShell {
+                Text("邀請碼")
+                    .appFont(.meta, weight: .bold)
+                    .tracking(2)
+                    .foregroundStyle(Color.lsTextSecondary)
+                HStack(spacing: AppSpacing.item) {
+                    Text(codeFirstHalf(invite.code))
+                    Text(codeSecondHalf(invite.code))
+                }
+                .appNumericFont(.code, weight: .bold)
+                .tracking(4)
+                .foregroundStyle(Color.lsTextPrimary)
+                HStack(spacing: AppSpacing.label) {
+                    Pill(icon: "calendar", text: "\(formattedExpiry(invite.expiresAt)) 到期")
+                    Pill(icon: "person.2", text: "還可用 \(invite.maxUses) 次")
+                }
+            }
+        }
+    }
+
+    private func codeCardShell(@ViewBuilder content: () -> some View) -> some View {
+        VStack(spacing: AppSpacing.item) {
+            content()
+        }
+        .frame(maxWidth: .infinity)
+        .padding(AppSpacing.insetCard)
+        .background(Color.lsSurface, in: RoundedRectangle(cornerRadius: AppSpacing.radiusLarge))
+    }
+
+    // MARK: - Actions（依狀態切換）
+
+    @ViewBuilder
+    private var actionsSection: some View {
+        switch phase {
+        case .empty:
+            VStack(alignment: .leading, spacing: AppSpacing.label) {
+                rolePicker
+                PrimaryButton(icon: "plus", title: "產生邀請碼", action: generate)
+                    .padding(.top, AppSpacing.label)
+                Text("產生後 7 天內有效，最多 5 位家人可以用。")
+                    .appFont(.note)
+                    .foregroundStyle(Color.lsTextSecondary)
+            }
+        case .generating:
+            VStack(alignment: .leading, spacing: AppSpacing.label) {
+                PrimaryButton(
+                    icon: "square.and.arrow.up",
+                    title: "分享邀請連結",
+                    isLoading: true,
+                    loadingTitle: "正在產生邀請碼…",
+                    action: {}
+                )
+                SecondaryButton(icon: "doc.on.doc", title: "複製邀請碼", isDimmed: true) {}
+            }
+        case .generated(let invite):
+            VStack(alignment: .leading, spacing: AppSpacing.label) {
+                ShareLink(
+                    item: inviteURL(invite.code),
+                    subject: Text("邀請你加入「\(familyStore.myFamily?.name ?? "")」")
+                ) {
+                    HStack(spacing: AppSpacing.label) {
+                        Image(systemName: "square.and.arrow.up").appIconFrame(.medium)
+                        Text("分享邀請連結").appFont(.body, weight: .bold)
+                    }
+                    .foregroundStyle(Color.lsOnAccent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, AppSpacing.controlPaddingCTA)
+                    .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+                }
+                SecondaryButton(icon: "doc.on.doc", title: copyButtonTitle, action: { copyCode(invite.code) })
+            }
+        }
+    }
+
+    private var copyButtonTitle: String {
+        showsCopiedFeedback ? "已複製！" : "複製邀請碼"
+    }
+
+}
+
+// MARK: - R1（SwiftLint `type_body_length`）：以下皆抽成 extension，理由同 `WelcomeView` 檔尾
+// extension 的註解——同檔案 extension 成員依 SE-0169 仍能存取 `private` 的 `@State` 屬性與
+// 上面 struct 的 `private` 成員，計數卻是分開算的。
+extension InviteFamilyView {
+    // MARK: - 角色選擇（見檔頭註解——本畫面獨有的無設計稿補充）
+
+    private var rolePicker: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.label) {
+            Text("邀請身份")
+                .appFont(.body, weight: .semibold)
+                .foregroundStyle(Color.lsTextPrimary)
+            roleOptionRow(role: .member, title: "一般成員", description: "可以上傳照片、寫日記，也能留言互動。")
+            roleOptionRow(role: .viewer, title: "只能瀏覽", description: "可以看照片和日記，不能上傳或編輯。")
+        }
+    }
+
+    private func roleOptionRow(role: FamilyRole, title: String, description: String) -> some View {
+        let isSelected = selectedRole == role
+        return Button {
+            selectedRole = role
+        } label: {
+            HStack(alignment: .top, spacing: AppSpacing.label) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .appIconFrame(.medium)
+                    .foregroundStyle(isSelected ? Color.lsAccent : Color.lsTextSecondary)
+                VStack(alignment: .leading, spacing: AppSpacing.tight) {
+                    Text(title).appFont(.body, weight: .semibold).foregroundStyle(Color.lsTextPrimary)
+                    Text(description).appFont(.note).foregroundStyle(Color.lsTextSecondary)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(AppSpacing.item)
+            .background(Color.lsSurface, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+            .overlay(
+                RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
+                    .strokeBorder(isSelected ? Color.lsAccent : Color.lsControlLine, lineWidth: isSelected ? 2 : 1.5)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - 破壞性重新產生
+
+    private var destructiveSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.group) {
+            Text("重新產生邀請碼")
+                .appFont(.note, weight: .bold)
+                .foregroundStyle(Color.lsTextPrimary)
+            Text("重新產生後，舊的邀請碼就不能再用了。已經拿到舊邀請碼的家人，要再跟你要一次新的。")
+                .appFont(.note)
+                .foregroundStyle(Color.lsTextPrimary)
+            Button {
+                showsRegenerateConfirmation = true
+            } label: {
+                HStack(spacing: AppSpacing.label) {
+                    Image(systemName: "arrow.triangle.2.circlepath").appIconFrame(.medium)
+                    Text("重新產生一組").appFont(.body, weight: .semibold)
+                }
+                .foregroundStyle(Color.lsDanger)
+            }
+            .disabled(familyStore.createInviteState.isSubmitting)
+        }
+    }
+
+    private func errorRow(_ error: AppError) -> some View {
+        HStack(alignment: .top, spacing: AppSpacing.label) {
+            Image(systemName: "exclamationmark.circle.fill")
+                .appIconFrame(.small)
+                .foregroundStyle(Color.lsDanger)
+            Text(error.userFacingMessage)
+                .appFont(.note)
+                .foregroundStyle(Color.lsDanger)
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func generate() {
+        Task { await familyStore.createInvite(role: selectedRole) }
+    }
+
+    private func copyCode(_ code: String) {
+        UIPasteboard.general.string = code
+        showsCopiedFeedback = true
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            showsCopiedFeedback = false
+        }
+    }
+
+    private func inviteURL(_ code: String) -> URL {
+        URL(string: "littlesprout://invite/\(code)") ?? URL(string: "littlesprout://invite")!
+    }
+
+    /// 6 碼邀請碼（LS-90：`23456789ABCDEFGHJKLMNPQRSTUVWXYZ`，32 字元表）3+3 分組顯示；
+    /// `prefix`/`suffix` 對任何長度都安全，不假設剛好 6 碼才不會在資料異常時整段崩潰。
+    private func codeFirstHalf(_ code: String) -> String {
+        String(code.prefix(3))
+    }
+
+    private func codeSecondHalf(_ code: String) -> String {
+        String(code.suffix(max(0, code.count - 3)))
+    }
+
+    private func formattedExpiry(_ date: Date) -> String {
+        let components = Calendar.current.dateComponents([.month, .day], from: date)
+        return "\(components.month ?? 0)/\(components.day ?? 0)"
+    }
+}
+
+#Preview("空") {
+    NavigationStack {
+        InviteFamilyView(familyStore: .preview())
+    }
+}

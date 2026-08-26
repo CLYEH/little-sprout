@@ -28,6 +28,27 @@ struct SettingsView: View {
             } description: {
                 Text("家庭管理與帳號設定會顯示在這裡。")
             }
+            // LS-107：這個畫面原本的 description 就寫著「成員邀請會顯示在這裡」——這裡填上
+            // 那個承諾，不是新畫面（07 邀請家人本身有 LS-46 核可的設計稿，這顆列只是導航
+            // 入口，沿用既有列樣式，不需要另外走設計 gate）。只有已經有家庭才顯示：還在三岔路
+            // 階段的使用者不會看到這顆設定分頁。
+            if familyStore.myFamily != nil {
+                NavigationLink {
+                    InviteFamilyView(familyStore: familyStore)
+                } label: {
+                    HStack {
+                        Label("邀請家人", systemImage: "person.badge.plus")
+                            .appFont(.body)
+                            .foregroundStyle(Color.lsTextPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(Color.lsTextSecondary)
+                    }
+                    .padding(.vertical, AppSpacing.item)
+                    .padding(.horizontal, AppSpacing.item)
+                    .contentShape(Rectangle())
+                }
+            }
             // LS-17 QA1：原 `Button("登出", role: .destructive, action: signOut)` 實測
             // 32×19pt，違反長輩硬約束 ≥44pt 點擊目標。改用 label closure 加不可見 padding
             // 撐大點擊區，視覺仍是純文字紅字、不加框、不改樣式。

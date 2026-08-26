@@ -22,6 +22,9 @@ enum AppFontToken {
     /// review comment `78b4455c` major A：Courier Prime 從未真的在 bundle 裡，且 `Font.custom(_:size:)`
     /// 會對 `@ScaledMetric` 已縮放過的 size 再依 body text style 縮放一次，雙重縮放）。
     case otp
+    /// 60pt，07 邀請家人展示用邀請碼（`$fs-code`，design/littlesprout.pen variables；同
+    /// `.otp` 一樣走系統字體＋`appNumericFont`，不是 Courier Prime——理由同 `.otp` 註解）。
+    case code
 
     var size: CGFloat {
         switch self {
@@ -30,6 +33,7 @@ enum AppFontToken {
         case .body, .note: 17
         case .meta: 13
         case .otp: 36
+        case .code: 60
         }
     }
 
@@ -39,7 +43,7 @@ enum AppFontToken {
         case .lead: .title2
         case .body, .note: .body
         case .meta: .footnote
-        case .otp: .largeTitle
+        case .otp, .code: .largeTitle
         }
     }
 }
