@@ -104,8 +104,11 @@ final class FamilyStoreTests: XCTestCase {
 
         let firstCallTask = Task { await store.createFamily(name: "葉家") }
         // 讓第一次呼叫先把狀態切成 .submitting，才具代表性地驗證第二次呼叫會被擋下。
+        // `Task.yield()` 只保證「讓出這一次」，不保證 MainActor 排程器接下來一定先跑
+        // firstCallTask（整個測試套件併發跑、佇列上還有其他工作時不可靠，實測會偶發失敗）；
+        // 改用 `AuthStoreTests` 已驗證過會動的短輪詢寫法（`try await Task.sleep(nanoseconds:)`）。
         while store.createFamilyState != .submitting {
-            await Task.yield()
+            try? await Task.sleep(nanoseconds: 5_000_000)
         }
 
         let secondCallSucceeded = await store.createFamily(name: "葉家")
