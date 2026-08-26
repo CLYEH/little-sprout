@@ -3328,7 +3328,7 @@
       "name": "LS-18 / 07 邀請家人 · 已產生邀請碼",
       "clip": true,
       "width": 393,
-      "height": 1261,
+      "height": 1086,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -3595,7 +3595,7 @@
             {
               "type": "frame",
               "id": "Ivfpz",
-              "name": "Role Section Wrap",
+              "name": "Role Status Wrap",
               "width": "fill_container",
               "layout": "vertical",
               "padding": [
@@ -3606,10 +3606,10 @@
               ],
               "children": [
                 {
-                  "id": "a2eIB",
+                  "id": "U9UW7k",
                   "type": "ref",
-                  "ref": "eEP8A",
-                  "name": "Role Section",
+                  "ref": "D56s3k",
+                  "name": "Role Status",
                   "width": "fill_container"
                 }
               ]
@@ -3790,7 +3790,7 @@
       "name": "LS-18 / 07a 邀請家人 · 尚未產生（空狀態）",
       "clip": true,
       "width": 393,
-      "height": 1134,
+      "height": 1031,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -3857,7 +3857,7 @@
           "id": "p5m28",
           "name": "Body",
           "width": "fill_container",
-          "height": 994,
+          "height": 891,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -4183,7 +4183,9 @@
                       "id": "cLgzg",
                       "name": "Sample Caption Text",
                       "fill": "$text-secondary",
-                      "content": "家人核准之後看到的就是這些",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "家人核准之後看到的就是這些，他們也能把自己的照片放上來。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
@@ -4216,40 +4218,13 @@
             },
             {
               "type": "frame",
-              "id": "WcTa9",
-              "name": "Approval Section",
-              "width": "fill_container",
-              "layout": "vertical",
-              "padding": [
-                "$sp-block",
-                0,
-                0,
-                0
-              ],
-              "children": [
-                {
-                  "id": "vZRvj",
-                  "type": "ref",
-                  "ref": "PXPcH",
-                  "name": "Approval Toggle",
-                  "width": "fill_container",
-                  "descendants": {
-                    "vSWWm": {
-                      "content": "為了保護家人隱私，這項設定固定開啟，無法關閉。"
-                    }
-                  }
-                }
-              ]
-            },
-            {
-              "type": "frame",
               "id": "XZ3pM",
               "name": "Actions",
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
               "padding": [
-                "$sp-block",
+                "$sp-section",
                 0,
                 0,
                 0
@@ -4278,6 +4253,19 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "產生後 7 天內有效，最多 5 位家人可以用。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "FCdOF",
+                  "name": "Approval Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "新成員一律要你核准才能加入，這項設定無法關閉。",
                   "lineHeight": 1.5,
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
@@ -9075,7 +9063,7 @@
       "name": "LS-18 / 07c 邀請家人 · 產生中（載入）",
       "clip": true,
       "width": 393,
-      "height": 996,
+      "height": 1086,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -9262,12 +9250,34 @@
             },
             {
               "type": "frame",
+              "id": "iXmqB",
+              "name": "Role Status Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "id": "hYsYo",
+                  "type": "ref",
+                  "ref": "D56s3k",
+                  "name": "Role Status",
+                  "width": "fill_container"
+                }
+              ]
+            },
+            {
+              "type": "frame",
               "id": "qu8Kq",
               "name": "Approval Section",
               "width": "fill_container",
               "layout": "vertical",
               "padding": [
-                "$sp-section",
+                "$sp-block",
                 0,
                 0,
                 0
@@ -28047,7 +28057,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "04 三岔路：主次已反轉。「我有邀請碼」＝含照片的主大卡（沖印品 319×238 ＋ 文字 ＋ accent 動作條 60pt），整張卡可點；「我要自己建立家庭」＝底部一條列。【R4】卡上的照片是真沖印品（8pt 白邊 ＋ paper-edge），因此依角托規則第①段補成四顆角托（R3 只有上兩顆），池 .494/.288/.36/.236（LS-107 R1 I2：改前為 .438/.287/.335/.232，經與 frame RxXvq/ppXvK 實測比對更正）。",
+                  "content": "04 三岔路：主次已反轉。「我有邀請碼」＝含照片的主大卡（沖印品 319×238 ＋ 文字 ＋ accent 動作條 60pt），整張卡可點；「我要自己建立家庭」＝底部一條列。【R4】卡上的照片是真沖印品（8pt 白邊 ＋ paper-edge），因此依角托規則第①段補成四顆角托（R3 只有上兩顆），池 .494/.288/.36/.236（LS-107 R1 I2：與 frame RxXvq/ppXvK 目前的實際值對齊，改前 Notes 誤植 .438/.287/.335/.232）。【LS-111 R2 附註】對 ppXvK 的板內座標套 mount-pool 的 lit() 公式重算，理論值應為 .434/.279/.327/.221——與現行 .494/.288/.36/.236 最大差 0.06（TL），研判是從 01 複製時沿用了 01 的池值、位置變了但沒有重算（01 本身 .494/.288 兩角也命中公式、另兩角不命中，同一款舊佈局殘值）。frame 本身是否重算不在 LS-111 範圍內（scope 限 07 家族＋Handoff Notes），本條只如實記錄兩個數字的落差與可能成因，不逕自動 ppXvK；是否修正 frame 請 orchestrator 另開票裁決。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -28583,6 +28593,42 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "角色選擇列（cmp/Role Option ×2 → cmp/Role Section）：LS-46 合併時遺失的角色列補回，位置在 Sample Mount／Code Card Wrap 之後、Approval Section 之前——原本掛在 Approval Section 上的 44pt 章節斷點（$sp-section）移到新插入的 Role Section Wrap，Approval Section 自身的頂距改回 $sp-block 24（同一組垂直堆疊裡兩個相關設定沒必要各自佔一次 44）。\n\nToken 全部沿用既有值，未新增色：卡片 fill $surface、stroke 未選中 $control-line 1px／選中 $accent 2.5px——與 OTP／驗證碼輸入格的 focus ring 同一手法（$accent 只用在邊框，不是實心，不記入『每畫面一次實心』配額）；leading icon 未選中 circle／$text-secondary、選中 circle-check／$accent，22pt（icon-md）；標題 $fs-body 17／600／$text-primary、說明 $fs-note 17／400／$text-secondary，逐一比對都與旁邊的 Approval Toggle 卡同款；區段小標「邀請身份」$fs-note 17／700／$text-primary，比照 Danger Label 樣式。點擊區含 padding 後實測 97pt（一般成員）／123pt（只能看，兩行說明），遠高於 44pt 門檻。\n\n文案（逐字，AX3 相同）：一般成員──『可以發文、留言，也能上傳照片。』；只能看──『只能看相簿和日記，不能發文或留言。』預設選中一般成員。\n\n各板行為差異（同一元件，視覺不變，行為需 ios-dev 分開處理）：07a（尚未產生）＝可互動選擇，決定接下來『產生邀請碼』要帶哪個角色；07（已產生邀請碼）／AX3／07d（深色）＝顯示目前這支作用中邀請碼的角色為選中態，非互動——角色在 create_invite 當下就烘焙進 invite 列，換角色等於換碼，走既有『重新產生一組』二次確認流程（Danger Consequence 文案目前只講碼失效，不提角色，不需要改，因為換碼本來就等於換角色）。\n\n【依賴的後端能力】create_invite(p_family_id uuid, p_role text, p_expires_at timestamptz, p_max_uses integer)（supabase/migrations/20260823010000_join_approval.sql）已經接受 p_role、直接寫進 invites.role（public.family_role enum：owner／member／viewer，UI 不出現 owner），LS-90（6 碼／30 bit）沒有動這個參數。ios-dev 只要把兩張卡的選中狀態映成 'member'／'viewer' 傳給 p_role，不需要新的後端變更；若 07a 送出時仍用舊的固定呼叫（未帶 p_role 或寫死 'member'），要一併修掉，否則『只能看』選了也不會生效。\n\n07 家族先前沒有深色板；07d 是本輪新增，內容為 07a 全量複製＋theme:{mode:dark}，沒有另外設計語彙——用來滿足『07 家族四板皆含角色列』驗收，不是本票以外的擴充。三支溢出掃描（ctx.problems／sibling 交集／跨-parent 遮蔽）R1 對四板全跑過，Role Section 新增內容 0 命中；既有的 Sample Photo／四角托 partially clipped 是沿用 04·07a 既有的沖印品出血手法，非本輪新增。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FL3rN",
+              "name": "i17",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ELhqR",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-111 R2 · 07a·07·AX3·07c·07a深色",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "SAoBS",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R2 依 visual-reviewer R1 全面重做角色列，非小修：\n\n① cmp/Role Option 從『獨立卡片』改成『卡內一列』——移除自己的 fill/stroke/圓角，alignItems 改 flex-start（原本 center 讓圖示隨兩行說明往下飄，AX3 下勾勾與標題錯位 111pt，R1 F5）；padding 20→$sp-item 16。cmp/Role Section 新增一層外層卡（fill $surface、stroke $control-line 1.5、radius $radius-lg、clip:true）包住兩列＋一條 $border 1px 分隔線，兩個角色選項現在是『一張卡兩列』，不是『兩張卡並排』（R1 F2）。區段小標與說明文字字級從 $fs-note 改回 $fs-body（R1 F8：note 的角色定義是『必須讀＋伴狀態色』，角色說明沒有狀態，兩處都跟 fs-note 借錯了語意，視覺不變仍是 17）。『只能看』說明句縮成一行『只能看照片和日記，不能發文。』，兩列現在等高 89/89（原 97/123，R1 F4）。\n\n② 選中態換掉語彙：不再用 stroke:$accent 2.5（那是這份文件裡 OTP／驗證碼輸入格『游標停在這格』的專屬語彙，R1 誤用，R1 F7），改成選中列 fill:$accent-soft（token 定義本來就是『淡玫瑰填色：badge、icon 底』）＋ icon 從 circle 換成 circle-check、顏色改 $text-primary（形狀已經是選中訊號，不需要再借顏色）。全稿 accent 出現次數回到每屏 1 次（只剩 Share/Generate 按鈕實心）。深色模式複核：accent-soft 淺 #F6DDE2／深 #3A2028 都是低調填色，不會像原本的 accent 描邊那樣在淺色是暗酒紅細線、深色卻變成整區最亮的發光環（R1 F11 的『主題間重量反轉』疑慮，改用 accent-soft 後兩個主題都低調，已用 07a 深色板肉眼複核）。\n\n③ 新增 cmp/Role Status（唯讀單列，D56s3k）：與 cmp/Approval Status 同款式（fill $surface、stroke $control-line 1——注意這裡故意用 1 不是 1.5，$control-line 1 在全稿是『唯讀狀態列』的粗細，1.5 是『可互動控件』的粗細，兩個數字現在各自有主人，R1 F6 一併解決）、icon lock／$text-primary、標題『這支邀請碼的身份：一般成員』($fs-body/600)、說明『要換身份，請重新產生一組。』($fs-note/$text-secondary，把使用者導向既有的重新產生流程而不是留一個戳不動的控件，R1 F3)。已產生態（kcGJa／AX3 的 VRq1c）與載入態（CHLio／07c）三板的角色列全部換成這個唯讀單列，不再顯示『只能看』這個沒被選中的選項——唯讀畫面該講的是『這支碼是什麼』，不是『這支碼不是什麼』。CHLio 原本沒有角色列，07a→07c→07 的過場會在角色列出現的瞬間讓下方 309pt 內容整個跳動（R1 F10），現在三態都有同一顆唯讀列，07c(946)／07(946) body 高度一致，過場不再跳動。\n\n④【不採納 R1 F3 對 07a 深色板（原 f0gNN）的分類】reviewer 把 f0gNN 與 kcGJa／VRq1c 並列為『該唯讀』，但同一份審查的 F11 自己核對節點後confirmed『07a 30 個節點、07d 30 個節點，唯一差異是板名』——即 07d 結構上就是 07a（未產生態）的深色複製，不是『已產生態』的深色版。已產生態目前沒有深色版（如同 AX3 目前也只做了已產生態，07 家族本來就沒有『每個狀態都出三種變體』的先例）。維持 07a 深色＝可互動角色列，並依 R1 F11 建議改名為『LS-18 / 07a 邀請家人 · 深色模式』（拿掉 07d 這個字母，07 家族的 a/b/c 已經用來表狀態，不該再借同一組字母表主題）。\n\n⑤ 核准鎖定卡在 07a／07a深色降級：原本『Approval Section』整張卡（139pt）從 Role Section 與 Actions 之間移除，改成 Actions 區塊內 CTA 下方新增一行說明『新成員一律要你核准才能加入，這項設定無法關閉。』(fs-note/$text-secondary，與既有『產生後 7 天內有效…』同款）；Actions 頂距同時從 $sp-block 24 改回 $sp-section 44，讓 07a 恢復『範例｜設定｜動作』三章文法，與 kcGJa 的 44/24/44 對齊（R1 F9）。**這個改動只動 07a／07a深色兩板的『Approval Section 這個位置放什麼』，cmp/Approval Status 元件本身與它在 05／06／07(kcGJa)／CHLio 的既有用法完全沒動**——05/06 不在本票範圍，07(kcGJa)/CHLio 上核准列仍是完整卡片（因為那兩板已經沒有『三張卡片排隊』問題，降級沒有必要）。板高 z6DOE：1134→1031（原始 852 基準只多 179，R1 是多 282）；CTA 按鈕絕對 y 810–870（原 R1 是 982–1042，完全在摺線外），現在只比 852 視口多出 18pt，已用截圖覆核。\n\n⑥ 靈魂修補（R1 F12）：Sample Caption 從『家人核准之後看到的就是這些』改成『家人核准之後看到的就是這些，他們也能把自己的照片放上來。』——把角色選擇的後果接回上方那張範例沖印品，而不是讓角色列變成一段跟照片無關的設定。改成 textGrowth:fixed-width 讓長句自然換行（2 行），Sample Mount 高度隨內容 275→284。**ios-dev 待辦**：這句文案要綁定目前選中的角色即時改寫；選『只能看』時改成『家人核准之後看到的就是這些，他們只會看、不會加東西。』——稿面只做得出靜態的『一般成員』版本（因為預設選中一般成員），『只能看』版本文案在此提供，SwiftUI 端請用 selectedRole 驅動這段文字，不要照抄稿面的固定字串。\n\n⑦ a11y（回應 R1 F13，原 R1 note 沒交待）：兩張角色列各自 `.accessibilityElement(children:.combine)`（標題＋說明合成一個元素）；選中列額外 `.accessibilityAddTraits(.isSelected)`（顏色與 fill 對 VoiceOver 不存在，選中語意要靠 trait）；整組在程式碼裡宣告為單選群組（radio group 語意，二選一互斥）；cmp/Role Status（唯讀列）不得帶 `.isButton`／不得可 focus 成互動元素——它是陳述句，VoiceOver 語序照 Approval Status 現有寫法；Role Icon（circle / circle-check）是裝飾，語意由文字＋trait 承載，加 `.accessibilityHidden(true)`。\n\n⑧ 高度總覽（R1→R2，均為板高含 chrome/home indicator）：z6DOE 852→1134→**1031**；kcGJa 996→1261→**1086**；VRq1c 2114→2771→**2513**；CHLio（07c，R1 未動）996→**1086**（本輪新增角色列骨架）；07a 深色（原 f0gNN 1134，現改名重建）→**1031**。\n\n⑨ R1 findings 處置總表：F1（CTA 掉出摺線）已改善但非零溢出（見⑤，18pt）；F2（三卡排隊）已解（合併單卡+分隔線）；F3（唯讀列假互動）已解（cmp/Role Status）；F4（兩卡不等高）已解（文案壓一行，89/89）；F5（勾勾錯位）已解（flex-start）；F6（描邊粗細借錯）已解（1.5 給互動、1 給唯讀）；F7（借用 focus 語彙）已解（accent-soft＋text-primary）；F8（fs-note 語意借錯）已解（改 fs-body）；F9（章節文法不一致）已解（Actions 44）；F10（07c 缺角色列造成跳動）已解；F11（07d 湊數／深色重量反轉未驗）已解（改名＋accent-soft 複核＋不採納讀-only 分類，見④）；F12（角色列與照片無對話）已解（Sample Caption 綁定，靜態稿只做預設態，動態綁定留給 ios-dev）；F13（缺 a11y）已解（見⑦）；F14（染料池數字方向）**部分採納**——採納了『不要宣稱已驗證』的措辭警告，改寫 MonEa 為『如實記錄落差與可能成因，不逕自動 ppXvK』；**不採納**『改 ppXvK 本身數值』，因為該 frame 屬 04（LS-18 首次進入），在 07 家族與 Handoff Notes 之外，超出 LS-111 scope，若要修正請 orchestrator 另開票。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -35584,7 +35630,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2771,
+      "height": 2513,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -35852,7 +35898,7 @@
             {
               "type": "frame",
               "id": "mV5fC",
-              "name": "Role Section Wrap",
+              "name": "Role Status Wrap",
               "width": "fill_container",
               "layout": "vertical",
               "padding": [
@@ -35863,10 +35909,10 @@
               ],
               "children": [
                 {
-                  "id": "K0fCfK",
+                  "id": "shJ48",
                   "type": "ref",
-                  "ref": "eEP8A",
-                  "name": "Role Section",
+                  "ref": "D56s3k",
+                  "name": "Role Status",
                   "width": "fill_container"
                 }
               ]
@@ -50029,13 +50075,10 @@
       "name": "cmp/Role Option",
       "reusable": true,
       "width": 345,
-      "fill": "$surface",
-      "cornerRadius": "$radius-lg",
-      "stroke": "$control-line",
-      "strokeWidth": 1,
+      "fill": "#00000000",
+      "stroke": "#00000000",
       "gap": "$sp-item",
-      "padding": "$inset-card",
-      "alignItems": "center",
+      "padding": "$sp-item",
       "children": [
         {
           "type": "icon",
@@ -50075,7 +50118,7 @@
               "content": "可以發文、留言，也能上傳照片。",
               "lineHeight": 1.5,
               "fontFamily": "$font",
-              "fontSize": "$fs-note",
+              "fontSize": "$fs-body",
               "fontWeight": "normal"
             }
           ]
@@ -50100,16 +50143,20 @@
           "fill": "$text-primary",
           "content": "邀請身份",
           "fontFamily": "$font",
-          "fontSize": "$fs-note",
+          "fontSize": "$fs-body",
           "fontWeight": "700"
         },
         {
           "type": "frame",
           "id": "n6JtDU",
           "name": "Role Options",
+          "clip": true,
           "width": "fill_container",
+          "fill": "$surface",
+          "cornerRadius": "$radius-lg",
+          "stroke": "$control-line",
+          "strokeWidth": 1.5,
           "layout": "vertical",
-          "gap": "$sp-group",
           "children": [
             {
               "id": "X7DYDo",
@@ -50117,12 +50164,13 @@
               "ref": "F5dSlm",
               "name": "Role Option · 一般成員",
               "width": "fill_container",
-              "stroke": "$accent",
-              "strokeWidth": 2.5,
+              "stroke": "#00000000",
+              "strokeWidth": 0,
+              "fill": "$accent-soft",
               "descendants": {
                 "j6ZNWo": {
                   "icon": "circle-check",
-                  "fill": "$accent"
+                  "fill": "$text-primary"
                 },
                 "vL7kl": {
                   "content": "一般成員"
@@ -50131,6 +50179,14 @@
                   "content": "可以發文、留言，也能上傳照片。"
                 }
               }
+            },
+            {
+              "type": "rectangle",
+              "id": "MACIr",
+              "name": "Role Divider",
+              "fill": "$border",
+              "width": "fill_container",
+              "height": 1
             },
             {
               "id": "ZA8G7",
@@ -50143,7 +50199,7 @@
                   "content": "只能看"
                 },
                 "zWpl1": {
-                  "content": "只能看相簿和日記，不能發文或留言。"
+                  "content": "只能看照片和日記，不能發文。"
                 }
               }
             }
@@ -50153,16 +50209,78 @@
     },
     {
       "type": "frame",
-      "id": "f0gNN",
+      "id": "D56s3k",
+      "x": 2560,
+      "y": 824,
+      "name": "cmp/Role Status",
+      "reusable": true,
+      "width": 345,
+      "fill": "$surface",
+      "cornerRadius": "$radius-lg",
+      "stroke": "$control-line",
+      "strokeWidth": 1,
+      "gap": "$sp-item",
+      "padding": "$sp-item",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "yxZuj",
+          "name": "Role Status Icon",
+          "width": 22,
+          "height": 22,
+          "icon": "lock",
+          "library": "lucide",
+          "fill": "$text-primary"
+        },
+        {
+          "type": "frame",
+          "id": "jsikM",
+          "name": "Role Status Text",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-label",
+          "children": [
+            {
+              "type": "text",
+              "id": "L5jJQX",
+              "name": "Role Status Title",
+              "fill": "$text-primary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "這支邀請碼的身份：一般成員",
+              "fontFamily": "$font",
+              "fontSize": "$fs-body",
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "s1Jrtk",
+              "name": "Role Status Subtitle",
+              "fill": "$text-secondary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "要換身份，請重新產生一組。",
+              "fontFamily": "$font",
+              "fontSize": "$fs-note",
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "BTBTs",
       "x": 2773,
       "y": 2600,
-      "name": "LS-18 / 07d 邀請家人 · 深色模式",
+      "name": "LS-18 / 07a 邀請家人 · 深色模式",
       "theme": {
         "mode": "dark"
       },
       "clip": true,
       "width": 393,
-      "height": 1134,
+      "height": 1031,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -50192,7 +50310,7 @@
       "children": [
         {
           "type": "frame",
-          "id": "DIiHG",
+          "id": "YaHb3",
           "name": "Chrome",
           "width": "fill_container",
           "fill": "#00000000",
@@ -50209,14 +50327,14 @@
           "layout": "vertical",
           "children": [
             {
-              "id": "oyFrY",
+              "id": "xc5Xl",
               "type": "ref",
               "ref": "OeXop",
               "name": "Status Bar",
               "width": "fill_container"
             },
             {
-              "id": "uEnAN",
+              "id": "IGapE",
               "type": "ref",
               "ref": "W6qTyS",
               "name": "Nav Back",
@@ -50226,10 +50344,10 @@
         },
         {
           "type": "frame",
-          "id": "IsG1P",
+          "id": "gDyjM",
           "name": "Body",
           "width": "fill_container",
-          "height": 994,
+          "height": 891,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -50238,7 +50356,7 @@
           "children": [
             {
               "type": "frame",
-              "id": "pLDPx",
+              "id": "OB67t",
               "name": "Header",
               "width": "fill_container",
               "layout": "vertical",
@@ -50246,7 +50364,7 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "k7OzO",
+                  "id": "YaixE",
                   "name": "Title",
                   "fill": "$text-primary",
                   "content": "邀請家人一起看",
@@ -50257,7 +50375,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "Gn5UC",
+                  "id": "mghA5",
                   "name": "Subtitle",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -50272,7 +50390,7 @@
             },
             {
               "type": "frame",
-              "id": "ofLua",
+              "id": "klWhb",
               "name": "Sample Mount",
               "width": "fill_container",
               "layout": "vertical",
@@ -50286,7 +50404,7 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "b9Zh76",
+                  "id": "Q76hZ",
                   "name": "Print Stage",
                   "width": "fill_container",
                   "height": 210,
@@ -50294,7 +50412,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "qefdZ",
+                      "id": "cPl1o",
                       "x": 0,
                       "y": 0,
                       "name": "Sample Print",
@@ -50426,7 +50544,7 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "MycLx",
+                          "id": "MMpc2",
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
@@ -50435,7 +50553,7 @@
                           "children": [
                             {
                               "type": "rectangle",
-                              "id": "XHlnR",
+                              "id": "Dhgd4",
                               "x": 0,
                               "y": -64,
                               "name": "Sample Photo",
@@ -50450,7 +50568,7 @@
                             },
                             {
                               "type": "rectangle",
-                              "id": "gwRJ2",
+                              "id": "WRkb8",
                               "x": 0,
                               "y": 0,
                               "name": "Night Dim",
@@ -50463,7 +50581,7 @@
                       ]
                     },
                     {
-                      "id": "qJaO8",
+                      "id": "AXf4H",
                       "type": "ref",
                       "ref": "GEBcf",
                       "name": "Corner TL",
@@ -50479,7 +50597,7 @@
                       }
                     },
                     {
-                      "id": "vufhA",
+                      "id": "Lns4o",
                       "type": "ref",
                       "ref": "GEBcf",
                       "name": "Corner TR",
@@ -50495,7 +50613,7 @@
                       }
                     },
                     {
-                      "id": "zHG9B",
+                      "id": "haMqk",
                       "type": "ref",
                       "ref": "GEBcf",
                       "name": "Corner BL",
@@ -50511,7 +50629,7 @@
                       }
                     },
                     {
-                      "id": "yWw8D",
+                      "id": "Izo3e",
                       "type": "ref",
                       "ref": "GEBcf",
                       "name": "Corner BR",
@@ -50530,14 +50648,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "hl1uR",
+                  "id": "BZnyF",
                   "name": "Sample Caption",
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "alignItems": "center",
                   "children": [
                     {
-                      "id": "QhYyP",
+                      "id": "e79i9",
                       "type": "ref",
                       "ref": "AqN3F",
                       "name": "Pill Sample",
@@ -50552,10 +50670,12 @@
                     },
                     {
                       "type": "text",
-                      "id": "Sb3GW",
+                      "id": "jbuaE",
                       "name": "Sample Caption Text",
                       "fill": "$text-secondary",
-                      "content": "家人核准之後看到的就是這些",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "家人核准之後看到的就是這些，他們也能把自己的照片放上來。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
@@ -50566,7 +50686,7 @@
             },
             {
               "type": "frame",
-              "id": "do84L",
+              "id": "fl6ib",
               "name": "Role Section Wrap",
               "width": "fill_container",
               "layout": "vertical",
@@ -50578,7 +50698,7 @@
               ],
               "children": [
                 {
-                  "id": "UnO7p",
+                  "id": "eAkxC",
                   "type": "ref",
                   "ref": "eEP8A",
                   "name": "Role Section",
@@ -50588,47 +50708,20 @@
             },
             {
               "type": "frame",
-              "id": "IDi02",
-              "name": "Approval Section",
-              "width": "fill_container",
-              "layout": "vertical",
-              "padding": [
-                "$sp-block",
-                0,
-                0,
-                0
-              ],
-              "children": [
-                {
-                  "id": "s9V7Kv",
-                  "type": "ref",
-                  "ref": "PXPcH",
-                  "name": "Approval Toggle",
-                  "width": "fill_container",
-                  "descendants": {
-                    "vSWWm": {
-                      "content": "為了保護家人隱私，這項設定固定開啟，無法關閉。"
-                    }
-                  }
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "D1mDh1",
+              "id": "ecv5L",
               "name": "Actions",
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
               "padding": [
-                "$sp-block",
+                "$sp-section",
                 0,
                 0,
                 0
               ],
               "children": [
                 {
-                  "id": "xY53Z",
+                  "id": "gKj0r",
                   "type": "ref",
                   "ref": "OKSJI",
                   "name": "Share Button",
@@ -50644,12 +50737,25 @@
                 },
                 {
                   "type": "text",
-                  "id": "czKWu",
+                  "id": "s5DA9",
                   "name": "Regenerate Note",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "產生後 7 天內有效，最多 5 位家人可以用。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "FyaVJ",
+                  "name": "Approval Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "新成員一律要你核准才能加入，這項設定無法關閉。",
                   "lineHeight": 1.5,
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
@@ -50661,7 +50767,7 @@
         },
         {
           "type": "frame",
-          "id": "I7qtP",
+          "id": "QUoqG",
           "name": "Home Indicator Area",
           "width": "fill_container",
           "height": 34,
@@ -50671,7 +50777,7 @@
             {
               "type": "rectangle",
               "cornerRadius": "$radius-full",
-              "id": "Zmjvg",
+              "id": "wru6O",
               "name": "Home Indicator",
               "fill": "$home-indicator",
               "width": 140,
