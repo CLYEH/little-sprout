@@ -48,11 +48,12 @@ case "$common" in /*) ;; *) common="${REPO}/${common}" ;; esac
 ROOT=$(cd "$(dirname "$common")" && pwd)
 
 # .env 在主 checkout 根（跨 worktree 共用，同 patrol.sh 的 ROOT 解法），不是每個 worktree 各一份。
+# R1 F4：不用 set -a——那會把 .env 裡「全部」key（本機實測含 Supabase DB 密碼／access token／Figma PAT
+# 等與本功能無關的 secret）export 進之後所有子程序（patrol.sh／git／xcrun／python3／curl）。只需要
+# LINEAR_API_KEY，下面已明確 export 那一個。
 if [ -f "${ROOT}/.env" ]; then
-  set -a
   # shellcheck disable=SC1091
   source "${ROOT}/.env"
-  set +a
 fi
 
 if [ -z "${LINEAR_API_KEY:-}" ]; then

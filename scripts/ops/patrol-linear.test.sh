@@ -152,6 +152,15 @@ else
   echo "✓ ② 正常跑一輪 exit 0"
 fi
 
+# ---- ②b R1 F3：token 不進 curl argv（stub curl 把完整 argv 記進 log，token 只能走 stdin config）----
+if grep -qF 'test-token-not-real' "$CURL_STUB_LOG"; then
+  echo "✗ ②b token 出現在 curl argv（應只走 stdin --config，見 R1 F3）" >&2
+  sed 's/^/    /' "$CURL_STUB_LOG" >&2
+  fail=1
+else
+  echo "✓ ②b token 沒有出現在 curl argv"
+fi
+
 export OUT_JSON="$out_json"
 py_out="$(python3 - <<'PYEOF'
 import json, os, sys

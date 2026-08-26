@@ -79,15 +79,20 @@ query($cycleId: ID!) {
 
 def gql(token, query, variables, timeout=25):
     body = json.dumps({"query": query, "variables": variables})
+    # R1 F3：token 不能走 argv——curl 存活的那幾百毫秒內，同機同使用者任何行程都能用 ps 讀到完整 argv
+    # （本 repo 就有腳本在做全表列舉，見 pen-open.sh 的 `ps -Ao command`），而這是遠端長期 PAT，外洩面比
+    # demo-otp.sh 那支本機 service_role 更需要收斂。改用 `curl -K -`（--config 從 stdin 讀），只把
+    # Authorization 這一行放進 config／走 stdin；URL／Content-Type／body 不含密鑰，仍走 argv。
+    config = 'header = "Authorization: %s"\n' % token
     try:
         proc = subprocess.run(
             [
                 "curl", "-sS", "--max-time", str(timeout), "-X", "POST", GRAPHQL_URL,
-                "-H", "Authorization: %s" % token,
                 "-H", "Content-Type: application/json",
                 "--data", body,
+                "-K", "-",
             ],
-            capture_output=True, text=True, timeout=timeout + 5,
+            input=config, capture_output=True, text=True, timeout=timeout + 5,
         )
     except Exception as exc:  # noqa: BLE001 - fail loud, 印出來讓人判斷
         sys.stderr.write("✗ patrol-linear：curl 呼叫失敗（%s）\n" % exc)
