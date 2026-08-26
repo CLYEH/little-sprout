@@ -34,9 +34,118 @@ if [ -n "$(git ls-files '*.swift')" ]; then
   swiftlint lint --strict --quiet
 fi
 
-# 2) Unit tests（Xcode 專案存在才跑；Phase 0 建專案時如 scheme 不同請更新此處與 CI）
+# scheme 名稱：1b／2 兩步都要用，提到最前面單一定義（Phase 0 建專案時如 scheme 不同請更新此處與 CI）
 XCODE_SCHEME="${XCODE_SCHEME:-LittleSprout}"
+
+# 1a) XcodeGen 漂移檢查（project.yml ↔ .xcodeproj；LS-106，前移到 xcodebuild 之前——同 LS-65
+#     劃定的位置，便宜檢查排在昂貴的 xcodebuild 之前）。PR #165 head 4a3bfa9：commit 的 project.pbxproj
+#     不是乾淨 xcodegen generate 產物（新檔 GUID 不同），本機兩次綠、CI 才紅——本機從未有一關會跑這個檢查。
+#     比對「暫存目錄剛產生出來那份 .xcodeproj 的檔案集合」逐檔對 repo 側同路徑（R1 F1：舊版只比
+#     project.pbxproj，漏掉 project.xcworkspace/xcshareddata、xcshareddata/xcschemes/*.xcscheme
+#     這類同樣是 xcodegen 產物、CI 也會比對的檔案——實測改 project.yml 的 parallelizable 設定不
+#     重跑 xcodegen，只有 .xcscheme 變、pbxproj 不變，本機因此漏放）。以「新產生側」的檔案集合為
+#     準天然不含 project.xcworkspace/xcshareddata/swiftpm/**／Package.resolved（xcodebuild 解析
+#     SPM 時才寫入、不是 xcodegen 產物，新產生的專案不會有這些檔案），不會像整目錄比對那樣假紅。
+#     暫存目錄不能直接指到系統 tmp——xcodegen 以 spec 所在目錄為基準輸出**相對**路徑、且不解析
+#     symlink（R1 I1 校正：與暫存目錄跟 repo 根的絕對深度是否一致無關，先前的說法把「輸出相對
+#     路徑」的成因誤記成「深度需一致」）。解法：在暫存目錄內用符號連結鏡射 repo 根的每個項目
+#     （排除 .git 與既有的 LittleSprout.xcodeproj——後者若被連結，xcodegen 寫入時會直接透過
+#     符號連結覆寫到真正的專案，等於這個唯讀檢查偷偷改了工作目錄），讓 xcodegen 在暫存目錄內
+#     產生時看到的相對路徑與 repo 根一致（本票實測：鏡射後的 project.pbxproj 與 repo 根生成的
+#     版本逐位元組相同）。
+if [ -f project.yml ]; then
+  if ! command -v xcodegen >/dev/null 2>&1; then
+    echo "✗ push gate：repo 內有 project.yml 但未安裝 xcodegen（brew install xcodegen）。" >&2
+    exit 1
+  fi
+  # CI 用 `brew install xcodegen` 裝當下最新版、未鎖版號，沒有固定值可比對——只印本機版本供人判斷，
+  # 不擋（版本差異若真的造成產物不同，會直接反映在下面的 diff 結果上）。
+  echo "→ push gate：本機 xcodegen（$(xcodegen --version 2>/dev/null | tr '\n' ' ')）；CI 以 brew install xcodegen 裝當下最新版、未鎖版號，可能不同" >&2
+  xg_work=$(mktemp -d)
+  # R1 I5：ln -s 中途失敗（set -e）或 Ctrl-C 時暫存目錄先前不會被清掉——trap 一設好就涵蓋接下來
+  # 所有離開路徑；成功路徑結尾用 `trap - EXIT` 收掉，讓後面 section 2 的模擬器 shutdown trap
+  # 可以乾淨接手同一個 EXIT slot（此時 xg_work 已經 rm -rf 過，即使沒清掉 trap 也只是多一次
+  # 對已不存在目錄的 no-op rm -rf，不會有副作用）。
+  trap 'rm -rf "$xg_work"' EXIT
+  xg_repo_root="$(pwd)"
+  for xg_entry in "$xg_repo_root"/* "$xg_repo_root"/.[!.]*; do
+    [ -e "$xg_entry" ] || continue
+    xg_base=$(basename "$xg_entry")
+    case "$xg_base" in
+      .git|LittleSprout.xcodeproj) continue ;;
+    esac
+    ln -s "$xg_entry" "$xg_work/$xg_base"
+  done
+  if ! (cd "$xg_work" && xcodegen generate --spec project.yml --project . -q); then
+    echo "✗ push gate：xcodegen generate 失敗（漂移檢查）。" >&2
+    exit 1
+  fi
+  # R1 F1：走訪暫存目錄剛產生出來的 .xcodeproj 裡的每個檔案，逐一與 repo 版比對（不是固定只比
+  # project.pbxproj）——「新產生側」的檔案集合天生不含 CI 也不比的 swiftpm/**，不會假紅。
+  xg_diff_files=""
+  while IFS= read -r xg_rel; do
+    [ -n "$xg_rel" ] || continue
+    if ! diff -q "$xg_work/LittleSprout.xcodeproj/$xg_rel" "LittleSprout.xcodeproj/$xg_rel" >/dev/null 2>&1; then
+      xg_diff_files="${xg_diff_files}${xg_rel}
+"
+    fi
+  done < <(cd "$xg_work/LittleSprout.xcodeproj" && find . -type f | sed 's#^\./##')
+  if [ -n "$xg_diff_files" ]; then
+    # R1 F4：擋下時列出差異檔＋diff 摘要（不再丟 /dev/null），並提示未追蹤 .swift 檔這個常見誤擋
+    # 成因（xcodegen 掃工作目錄，CI checkout 只有 tracked 檔——未追蹤的 .swift 會讓 pbxproj 改變、
+    # 本機因此紅、CI 卻是綠）。
+    echo "✗ push gate：project.yml 與 LittleSprout.xcodeproj 不同步——改 project.yml 後須重跑 xcodegen generate 一併 commit；若是在 Xcode GUI 改了設定，請把改動搬回 project.yml；有未追蹤／未 commit 的 Swift 檔也會造成這個結果（xcodegen 掃工作目錄、CI 只看 tracked 檔），請先 git add 或刪除" >&2
+    echo "  差異檔：" >&2
+    printf '%s' "$xg_diff_files" | sed 's/^/    /' >&2
+    printf '%s' "$xg_diff_files" | while IFS= read -r xg_rel; do
+      [ -n "$xg_rel" ] || continue
+      echo "  --- ${xg_rel} ---" >&2
+      diff -u "LittleSprout.xcodeproj/$xg_rel" "$xg_work/LittleSprout.xcodeproj/$xg_rel" 2>&1 | head -n 20 >&2
+    done
+    exit 1
+  fi
+  trap - EXIT
+  rm -rf "$xg_work"
+fi
+
+# 2) Unit tests（Xcode 專案存在才跑；Phase 0 建專案時如 scheme 不同請更新此處與 CI）
 if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1; then
+  # 1b) Xcode 版本對齊（LS-106 R1 F2／F5；PR #165 head 8b7a0fa 同型：8b7a0fa 已修好 1a 的 xcodegen
+  #     漂移，但 KeyboardHeightObserver.swift 仍留著 UIScreen.main.bounds，CI 用 .xcode-version
+  #     釘住的 Xcode／SDK 對它的 MainActor 隔離判斷較嚴格判成編譯錯，本機當時裝的版本較寬鬆沒
+  #     攔到——本機兩次綠、CI 才紅）。`.xcode-version` 是本機與 CI 共用的單一來源
+  #     （`.github/workflows/ci.yml` 的 `ci` job 第一步 xcode-select 無條件讀它，缺檔直接紅）；
+  #     本機比照 fail-closed，不再靜默略過整段（R1 F5）。
+  #     舊版「版本不一致→額外跑一次 SWIFT_STRICT_CONCURRENCY=complete 的 build」對本專案是
+  #     no-op（R1 F2：project.pbxproj 兩個 build config 的 SWIFT_VERSION 已是 6.0，語言模式本身
+  #     就隱含 complete 且是 error；`swiftc` 對照 v6／v6+complete／v5／v5+complete 四組診斷逐字
+  #     相同）——那個旗標分不出「本機工具鏈」跟「CI 工具鏈」，等於每次 push 白付一次全量重編、
+  #     診斷卻是零。真正能讓本機重現 CI 那個工具鏈的診斷嚴格度，只有真的換掉 xcodebuild 用的
+  #     工具鏈：pin 的 Xcode 若本機有裝（預設 `/Applications/Xcode_<pin>.app`，可用
+  #     XCODE_APPS_DIR 覆寫路徑；已經是目前 xcode-select 選定版本的情況會在下面比對時直接顯示
+  #     一致，不需要另外接 DEVELOPER_DIR），整支 push-gate 剩下的 xcodebuild 呼叫（SPM 解析／
+  #     test）全部改用它的 DEVELOPER_DIR——這才是真的讓「8b7a0fa 本機轉紅」成立的做法。沒裝就
+  #     只印一行警告＋安裝指引，不再跑那個沒有意義的替代 build（R1 F3 隨之自然解——沒有
+  #     build-only 步驟需要顧慮是否佔用以 UDID 為鍵的模擬器鎖）。
+  if [ ! -f .xcode-version ]; then
+    echo "✗ push gate：缺 .xcode-version，CI 會紅（ci job 的 xcode-select 步驟讀不到單一來源）。" >&2
+    exit 1
+  fi
+  xcode_pin="$(tr -d '[:space:]' < .xcode-version)"
+  xcode_apps_dir="${XCODE_APPS_DIR:-/Applications}"
+  xcode_pinned_dev_dir="${xcode_apps_dir}/Xcode_${xcode_pin}.app/Contents/Developer"
+  if [ -d "$xcode_pinned_dev_dir" ]; then
+    export DEVELOPER_DIR="$xcode_pinned_dev_dir"
+    echo "→ push gate：pin 的 Xcode ${xcode_pin}（${xcode_pinned_dev_dir}）本機已安裝，本次 push gate 剩下的 xcodebuild 全部改用此版本執行（與 CI 對齊）"
+  else
+    local_xcode_ver="$(xcodebuild -version | awk 'NR==1{print $2}')"
+    if [ "$local_xcode_ver" != "$xcode_pin" ]; then
+      echo "⚠ push gate：Xcode 主次版號不一致（本機 ${local_xcode_ver}／.xcode-version 指定 ${xcode_pin}），且本機未安裝 pin 版本（找不到 ${xcode_pinned_dev_dir}）——本機驗證的嚴格度可能與 CI 不同。可執行 \`xcodes install ${xcode_pin}\` 或至 https://developer.apple.com/download/all/ 下載安裝後再 push。" >&2
+    else
+      echo "→ push gate：Xcode 主次版號一致，略過對齊（本機／.xcode-version 皆 ${local_xcode_ver}）"
+    fi
+  fi
+
   dest=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/detect-simulator.sh") || {
     echo "✗ push gate：模擬器偵測失敗。" >&2
     exit 1

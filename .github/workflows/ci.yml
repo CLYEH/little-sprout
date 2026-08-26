@@ -385,6 +385,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # LS-106：`.xcode-version` 是本機 push-gate 與這裡共用的單一來源（macos-15 runner 預裝多個
+      # Xcode 版本，這裡選定的版本會漂移；先前沒有明寫，PR #165 head 8b7a0fa 本機較寬鬆的 Xcode 版本
+      # 沒攔到、CI 用的版本判編譯錯，本機兩次綠 CI 才紅）。明寫 xcode-select，讓「CI 實際用的 Xcode」
+      # 有檔案可查、push-gate 才有東西可比對。
+      # R1 F6：runner image 會定期淘汰舊 Xcode，pin 的版本消失時 `xcode-select -s` 只會吐一行原生
+      # 「invalid developer directory」錯誤，不會指出「去改 .xcode-version」——先檢查目錄是否存在，
+      # 不存在就明確報錯並列出這台 runner 實際可用的 Xcode 版本。
+      - name: xcode-select（讀 .xcode-version 單一來源，LS-106）
+        run: |
+          pin="$(tr -d '[:space:]' < .xcode-version)"
+          dev="/Applications/Xcode_${pin}.app/Contents/Developer"
+          [ -d "$dev" ] || { echo "::error::.xcode-version 指定的 Xcode_${pin} 不在此 runner image；可用：$(ls -d /Applications/Xcode*.app 2>/dev/null | tr '\n' ' ')"; exit 1; }
+          sudo xcode-select -s "$dev"
+          xcodebuild -version
+
       # 前饋規則「改 project.yml 須重跑 xcodegen 一併 commit」的機械 gate（§7）；
       # 生成物 byte-identical（LS-5 review 實證），不會 flaky。反向漂移（GUI 改
       # .xcodeproj 沒回填 project.yml）同樣會被抓到。
