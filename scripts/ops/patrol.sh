@@ -384,6 +384,32 @@ $boot_nonexempt
 EOF
 fi
 
+# ---- --linear（LS-103）：先把 patrol-linear.sh 跑完，rc 才能影響下面的「異常」判定 ----
+# R1 F6：不可讓 patrol-linear.sh 非 0 exit 被吞掉——舊版放在輸出區塊「之後」才呼叫，brief 模式的
+# 「巡檢：無異常」摘要行早就印完，Linear 段失敗（PAT 過期／curl 錯誤）在 stdout 完全看不到、只有
+# stderr 一行。改成提前執行、把輸出與 rc 存起來：非 0 就併入 add_flag（跟其他停滯型態同一套機制，
+# 讓 FLAGS／J_FLAGS 反映出來，brief 的「無異常」行才不會誤判）；輸出區塊之後只印已經拿到的內容，
+# 不重跑（避免呼叫兩次 patrol-linear.sh，它內部還會再呼叫一次 patrol.sh 取 Booted 模擬器段，成本加倍）。
+linear_out=; linear_rc=0; linear_ran=0
+plsh="${PATROL_LINEAR_SH:-${here}/patrol-linear.sh}"   # 可覆寫供自測餵假身模擬非 0 exit（R1 F6）
+if [ "$DO_LINEAR" -eq 1 ] && [ "$MODE" != json ]; then
+  linear_ran=1
+  if [ -x "$plsh" ]; then
+    if [ "$MODE" = brief ]; then
+      linear_out=$(bash "$plsh" --brief --repo "$ROOT" 2>&1)
+    else
+      linear_out=$(bash "$plsh" --repo "$ROOT" 2>&1)
+    fi
+    linear_rc=$?
+  else
+    linear_out="⚠ patrol：--linear 但找不到 ${plsh}"
+    linear_rc=1
+  fi
+  if [ "$linear_rc" -ne 0 ]; then
+    add_flag "[Linear] 段失敗（exit ${linear_rc}）"
+  fi
+fi
+
 # ---- 輸出 ----
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
@@ -428,19 +454,14 @@ case "$MODE" in
     ;;
 esac
 
-# ---- --linear（LS-103）：human／brief 模式串接 patrol-linear.sh 的動作清單；--json 不合併（見檔頭） ----
+# ---- --linear 輸出（內容已在上面跑好；--json 維持原提示，不合併，見檔頭）----
 if [ "$DO_LINEAR" -eq 1 ]; then
   if [ "$MODE" = json ]; then
     echo "⚠ patrol：--linear 與 --json 不支援合併（Linear 半段是獨立 JSON 物件）→ 另跑 bash scripts/ops/patrol-linear.sh --json" >&2
-  elif [ -x "${here}/patrol-linear.sh" ]; then
+  elif [ "$linear_ran" -eq 1 ]; then
     echo
-    if [ "$MODE" = brief ]; then
-      bash "${here}/patrol-linear.sh" --brief --repo "$ROOT"
-    else
-      bash "${here}/patrol-linear.sh" --repo "$ROOT"
-    fi
-  else
-    echo "⚠ patrol：--linear 但找不到 ${here}/patrol-linear.sh" >&2
+    printf '%s\n' "$linear_out"
+    [ "$linear_rc" -ne 0 ] && echo "⚠ Linear 半段失敗（exit ${linear_rc}）——見上方輸出／stderr"
   fi
 fi
 exit 0

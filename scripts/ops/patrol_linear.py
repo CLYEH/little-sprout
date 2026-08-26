@@ -22,6 +22,7 @@ Supabase lock／simulator 常數的既有模式）。
 """
 import argparse
 import datetime
+import hashlib
 import json
 import os
 import re
@@ -29,6 +30,7 @@ import subprocess
 import sys
 
 GRAPHQL_URL = "https://api.linear.app/graphql"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  # pen-open.sh 與本檔同目錄（R1 F2）
 
 # docs/COLLABORATION.md §5-b：同 lane 狀態 In Progress + In Review 的票數上限。lane:product 不派工、
 # 不在這裡列（永遠跳過）。改了上限要同步這裡與 §5-b 表格，兩邊沒有機械對帳（巡檢承載，同既有模式）。
@@ -62,7 +64,20 @@ query($after: String, $teamKey: String!) {
 }
 """
 
-CYCLES_QUERY = """
+# R1 F7：先用 isActive filter 精準抓「目前作用中」的 cycle——原本 first:20 無 filter，cycle 累積超過
+# 20 個且預設排序沒把 active 排進第一頁時會抓不到，退回選「endsAt 最大的過去 cycle」把在飛票的
+# cycle 動作全部指回舊 cycle（PLAUSIBLE 事故）。加 filter 讓 API 端保證回傳的就是 active，不靠猜。
+CYCLES_QUERY_ACTIVE = """
+query($teamId: String!) {
+  team(id: $teamId) {
+    cycles(first: 20, filter: { isActive: { eq: true } }) { nodes { id number startsAt endsAt isActive } }
+  }
+}
+"""
+
+# 找不到 active（例如兩個 cycle 交接空檔）才退回這支無 filter 查詢找 upcoming——僅在上面那支查詢
+# 為空時才呼叫，正常情況（永遠有一個 active cycle）只打一次。
+CYCLES_QUERY_ALL = """
 query($teamId: String!) {
   team(id: $teamId) {
     cycles(first: 20) { nodes { id number startsAt endsAt isActive } }
@@ -73,6 +88,15 @@ query($teamId: String!) {
 DOCUMENTS_QUERY = """
 query($cycleId: ID!) {
   documents(filter: { cycle: { id: { eq: $cycleId } } }) { nodes { id title } }
+}
+"""
+
+# R1 F1：恢復「cycle 一行（編號／剩餘天數／票數 完成/總數）」需要的票數統計——ISSUES_QUERY 為了狀態對照
+# 只抓非 completed/canceled 的票，算不出「完成」數，所以另開一支只查目前 cycle 底下所有票的 state.type
+# （不受該 filter 限制）。first:250 是合理上限（cycle 週期短，實務不會超過）。
+CYCLE_ISSUES_QUERY = """
+query($cycleId: ID!) {
+  cycle(id: $cycleId) { issues(first: 250) { nodes { state { type } } } }
 }
 """
 
@@ -131,7 +155,12 @@ def fetch_issues(token, team_key):
 
 
 def fetch_cycles(token, team_id):
-    data = gql(token, CYCLES_QUERY, {"teamId": team_id})
+    data = gql(token, CYCLES_QUERY_ACTIVE, {"teamId": team_id})
+    team = data.get("team")
+    active = team["cycles"]["nodes"] if team else []
+    if active:
+        return active
+    data = gql(token, CYCLES_QUERY_ALL, {"teamId": team_id})
     team = data.get("team")
     if not team:
         return []
@@ -141,6 +170,23 @@ def fetch_cycles(token, team_id):
 def fetch_cycle_documents(token, cycle_id):
     data = gql(token, DOCUMENTS_QUERY, {"cycleId": cycle_id})
     return data["documents"]["nodes"]
+
+
+def fetch_cycle_issue_states(token, cycle_id):
+    data = gql(token, CYCLE_ISSUES_QUERY, {"cycleId": cycle_id})
+    cyc = data.get("cycle") or {}
+    return [n["state"]["type"] for n in (cyc.get("issues") or {}).get("nodes", [])]
+
+
+def cycle_progress(token, current):
+    """回傳 (完成票數, 總票數)；current 為 None／缺 id 回 (None, None)——這是巡檢摘要的附加資訊，
+    查不到不 fail loud（不擋主流程）。"""
+    if not current or not current.get("id"):
+        return None, None
+    states = fetch_cycle_issue_states(token, current["id"])
+    total = len(states)
+    done = sum(1 for t in states if t == "completed")
+    return done, total
 
 
 def parse_iso(ts):
@@ -234,8 +280,68 @@ def cycle_number_of(issue):
     return c.get("number") if c else None
 
 
-def lane_wip(issues, lane):
-    return sum(1 for i in issues if lane_of(i) == lane and i["state"]["name"] in WIP_STATES)
+def pen_open_status(script_dir):
+    """呼叫 pen-open.sh --status，回傳目前 Pen active 文件路徑；讀不到／出錯回傳 None。這是
+    design_forced_full() 的盡力而為輸入之一，不是硬 gate——查不到就當作這條路徑無法判定，改看
+    backup mtime 那條路徑（見 design_forced_full）。可用 PEN_OPEN_SH 覆寫路徑（自測 stub 用）。"""
+    script = os.environ.get("PEN_OPEN_SH") or os.path.join(script_dir, "pen-open.sh")
+    if not (os.path.isfile(script) and os.access(script, os.X_OK)):
+        return None
+    try:
+        proc = subprocess.run([script, "--status"], capture_output=True, text=True, timeout=20)
+    except Exception:  # noqa: BLE001 - best-effort，不 fail loud
+        return None
+    if proc.returncode != 0:
+        return None
+    out = proc.stdout.strip()
+    return out or None
+
+
+def design_forced_full(issues, root, script_dir):
+    """R1 F2（§5-b 例外）：design 與 ui 共用單一 Pen 全域實例，ui 票在讀取設計稿階段期間 design lane
+    視為滿——否則巡檢可能同時補位派出兩張要動 Pen 的票，撞同一份文件（LS-81／LS-91 同型事故）。
+
+    機械判定二擇一：① `pen-open.sh --status` 回傳的目前 active 路徑＝該 ui 票 worktree 的
+    design/littlesprout.pen；② 該檔案的 Pen autosave backup（sha1(file://<abs path>)，同
+    pen-land.sh 的算法）mtime 落在 30 分鐘內。任一步找不到 worktree／pen-open.sh 不可執行／backup
+    目錄不存在都當作「無法判定為滿」，不 fail loud——這是盡力而為的輔助判斷，§5-b 主要仍靠規約承載
+    （patrol-linear.sh 不追蹤 Pen 是否真的忙碌到什麼程度，只做這個粗略、保守但非完備的信號）。
+    """
+    ui_in_progress = [i for i in issues if lane_of(i) == "lane:ui" and i["state"]["name"] == "In Progress"]
+    if not ui_in_progress:
+        return False
+    worktrees = worktree_tickets(root)
+    active_path = pen_open_status(script_dir)
+    active_real = os.path.realpath(active_path) if active_path else None
+    now = datetime.datetime.now(datetime.timezone.utc).timestamp()
+    backup_dir = os.environ.get("PEN_BACKUP_DIR") or os.path.join(os.path.expanduser("~"), ".pencil", "backup")
+    for issue in ui_in_progress:
+        n = ticket_number(issue["identifier"])
+        if n is None:
+            continue
+        wt = worktrees.get(n)
+        if not wt:
+            continue
+        want = os.path.join(wt, "design", "littlesprout.pen")
+        if active_real and active_real == os.path.realpath(want):
+            return True
+        sha = hashlib.sha1(("file://%s" % want).encode("utf-8")).hexdigest()
+        backup = os.path.join(backup_dir, sha)
+        try:
+            mtime = os.path.getmtime(backup)
+        except OSError:
+            continue
+        if now - mtime < 1800:
+            return True
+    return False
+
+
+def lane_wip(issues, lane, root=None, script_dir=None):
+    wip = sum(1 for i in issues if lane_of(i) == lane and i["state"]["name"] in WIP_STATES)
+    if lane == "lane:design" and root is not None and script_dir is not None:
+        if design_forced_full(issues, root, script_dir):
+            wip = max(wip, LANE_LIMITS[lane])
+    return wip
 
 
 def lane_candidates(issues, lane, current_cycle_number):
@@ -252,6 +358,18 @@ def lane_candidates(issues, lane, current_cycle_number):
         (i for i in all_ok if cycle_number_of(i) != current_cycle_number), key=sort_key
     )
     return [], outside_ok, bool(outside_ok)
+
+
+def lane_pending(issues, lane):
+    """R1 F1：classify_candidate() 算出的 'spec'／'structure' 排除原因之前只用來丟棄候補，沒有輸出
+    出口——票文缺「## 驗收」或缺 project／Phase 票缺 milestone 的票會靜默停滯，沒人知道要去補。
+    回傳 (待 Spec identifier 清單, 待結構 identifier 清單)，依票號排序。"""
+    lane_issues = [i for i in issues if lane_of(i) == lane]
+    pending_spec = [i["identifier"] for i in lane_issues if classify_candidate(i) == "spec"]
+    pending_structure = [i["identifier"] for i in lane_issues if classify_candidate(i) == "structure"]
+    pending_spec.sort(key=lambda ident: ticket_number(ident) or 0)
+    pending_structure.sort(key=lambda ident: ticket_number(ident) or 0)
+    return pending_spec, pending_structure
 
 
 # ---------------- git 對照（狀態對照段；section 1）----------------
@@ -332,15 +450,15 @@ def state_crosscheck(root, issues):
 # ---------------- cycle 對帳（section 2）----------------
 
 def pick_current_cycle(cycles, now_epoch):
+    """R1 F7：不再退回「endsAt 最大的過去 cycle」——選到已結束的 cycle 會讓 cycle 對帳 (a) 把所有
+    在飛票的 cycle 動作指回舊 cycle（PLAUSIBLE 事故）。找不到 active／upcoming 就回 None，交由
+    呼叫端印「無法判定」，不硬猜一個。"""
     active = [c for c in cycles if c.get("isActive")]
     if active:
         return active[0]
     upcoming = [c for c in cycles if parse_iso(c.get("startsAt")) > now_epoch]
     if upcoming:
         return min(upcoming, key=lambda c: parse_iso(c.get("startsAt")))
-    past = [c for c in cycles if c.get("endsAt")]
-    if past:
-        return max(past, key=lambda c: parse_iso(c.get("endsAt")))
     return None
 
 
@@ -377,9 +495,13 @@ def cycle_reconciliation(token, issues, current, now_epoch):
 # ---------------- 開票結構（section 4）----------------
 
 def ticket_structure(issues):
+    """R1 I1：LS-96（常駐待辦池）永不派、永不進 cycle，票文本身不打算補 size／project——結構檢查
+    豁免它，否則每輪都命中 (e) 且永遠不會被清掉，會訓練出「結構段可以忽略」的習慣。"""
     result = {"a": [], "b": [], "c": [], "d": [], "e": []}
     for issue in issues:
         ident = issue["identifier"]
+        if ident == SKIP_ISSUE:
+            continue
         project = issue.get("project")
         if not project:
             result["a"].append(ident)
@@ -410,10 +532,11 @@ def build_report(token, root, team_key, team_id, sim_lines):
     lanes = {}
     lane_actions = []
     for lane, limit in LANE_LIMITS.items():
-        wip = lane_wip(issues, lane)
+        wip = lane_wip(issues, lane, root=root, script_dir=SCRIPT_DIR)
         in_cycle_ok, all_ok, needs_scope = lane_candidates(
             issues, lane, current["number"] if current else None
         )
+        pending_spec, pending_structure = lane_pending(issues, lane)
         candidates_shown = in_cycle_ok if in_cycle_ok else all_ok
         entry = {
             "limit": limit,
@@ -421,6 +544,8 @@ def build_report(token, root, team_key, team_id, sim_lines):
             "candidates": [i["identifier"] for i in candidates_shown],
             "chosen": None,
             "needs_scope_plus": needs_scope,
+            "pending_spec": pending_spec,
+            "pending_structure": pending_structure,
             "actions": [],
         }
         if wip < limit and candidates_shown:
@@ -439,11 +564,23 @@ def build_report(token, root, team_key, team_id, sim_lines):
 
     actions = list(cycle_actions) + list(lane_actions)
 
+    # R1 F1：恢復 cycle 一行（編號／剩餘天數／票數 完成/總數）
+    remaining_days = None
+    if current and current.get("endsAt"):
+        remaining_days = (parse_iso(current["endsAt"]) - now_epoch) / 86400.0
+    tickets_done, tickets_total = cycle_progress(token, current)
+
     return {
         "skipped": False,
         "generated_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "current_cycle": (
-            {"number": current["number"], "id": current.get("id")} if current else None
+            {
+                "number": current["number"],
+                "id": current.get("id"),
+                "remaining_days": remaining_days,
+                "tickets_done": tickets_done,
+                "tickets_total": tickets_total,
+            } if current else None
         ),
         "state_crosscheck": crosscheck,
         "cycle_check": cycle_check,
@@ -454,10 +591,45 @@ def build_report(token, root, team_key, team_id, sim_lines):
     }
 
 
+def format_cycle_line(cc):
+    """R1 F1：cycle 一行——編號／剩餘天數／票數 完成/總數（§4-b 舊模板第 6 步的內容，機械化後恢復）。"""
+    if not cc:
+        return "current cycle：無法判定"
+    rd = cc.get("remaining_days")
+    rd_str = ("%.1f 天" % rd) if rd is not None else "不明"
+    total = cc.get("tickets_total")
+    count_str = ("%s/%s 完成" % (cc.get("tickets_done"), total)) if total is not None else "不明"
+    return "current cycle：%s（剩 %s；票數 %s）" % (cc["number"], rd_str, count_str)
+
+
+def format_lane_line(lane, entry):
+    """R1 F1／I2：五欄——上限／在飛／候補／待 Spec／待結構；候補全部來自 cycle 外（scope+）時標明
+    並只印前 3 張，避免誤以為 cycle 內現成有這麼多候補（I2：真實跑過 12 張全 cycle 外的案例）。"""
+    cand_list = entry["candidates"]
+    if entry.get("needs_scope_plus") and cand_list:
+        shown = cand_list[:3]
+        more = "…" if len(cand_list) > 3 else ""
+        cand = "%s%s（cycle 外，取第一張需 scope+）" % (", ".join(shown), more)
+    elif cand_list:
+        cand = ", ".join(cand_list)
+    else:
+        cand = "（無候補）"
+    pend_spec = ", ".join(entry["pending_spec"]) if entry["pending_spec"] else "無"
+    pend_structure = ", ".join(entry["pending_structure"]) if entry["pending_structure"] else "無"
+    return "  %-14s 上限%d 在飛%d  候補：%s  待Spec：%s  待結構：%s" % (
+        lane, entry["limit"], entry["wip"], cand, pend_spec, pend_structure
+    )
+
+
 def format_human(report, brief=False):
     lines = []
+    cc = report["current_cycle"]
     if brief:
-        lines.append("巡檢（Linear 半段，動作清單）：")
+        lines.append("巡檢（Linear 半段）%s" % format_cycle_line(cc))
+        lines.append("Lane 狀態：")
+        for lane, entry in report["lanes"].items():
+            lines.append(format_lane_line(lane, entry))
+        lines.append("動作清單：")
         if report["actions"]:
             lines.extend(report["actions"])
         else:
@@ -465,8 +637,7 @@ def format_human(report, brief=False):
         return "\n".join(lines)
 
     lines.append("== 巡檢（Linear 半段）%s" % report["generated_at"])
-    cc = report["current_cycle"]
-    lines.append("   current cycle：%s" % (cc["number"] if cc else "無法判定"))
+    lines.append("   %s" % format_cycle_line(cc))
 
     lines.append("== 1. 狀態對照（對照 git worktree／origin/test）")
     if report["state_crosscheck"]:
@@ -490,8 +661,7 @@ def format_human(report, brief=False):
 
     lines.append("== 3. Lane 補位")
     for lane, entry in report["lanes"].items():
-        cand = ", ".join(entry["candidates"]) if entry["candidates"] else "（無候補）"
-        lines.append("  %-14s 上限%d 在飛%d  候補：%s" % (lane, entry["limit"], entry["wip"], cand))
+        lines.append(format_lane_line(lane, entry))
         for a in entry["actions"]:
             lines.append("    %s" % a)
 

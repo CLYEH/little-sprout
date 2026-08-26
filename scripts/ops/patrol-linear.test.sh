@@ -50,6 +50,17 @@ cat > "$fx/documents.json" <<'EOF'
 {"data":{"documents":{"nodes":[{"id":"doc-1","title":"Cycle 5 規劃"}]}}}
 EOF
 
+# R1 F1：cycle 5 底下的票 state（不受 ISSUES_QUERY 的 nin completed/canceled 限制）——2 completed、
+# 1 started、1 backlog，總數 4、完成 2，供「票數 完成/總數」斷言用。
+cat > "$fx/cycle_issues.json" <<'EOF'
+{"data":{"cycle":{"issues":{"nodes":[
+  {"state":{"type":"completed"}},
+  {"state":{"type":"completed"}},
+  {"state":{"type":"started"}},
+  {"state":{"type":"backlog"}}
+]}}}}
+EOF
+
 # page1：LS-201（size:M）、LS-202（size:S，priority 同分但 size 較小，排序應排 202 在 201 之前）、
 # LS-203（blockedBy 未解——阻擋票 state.type=started）。hasNextPage=true，endCursor=CURSOR1。
 cat > "$fx/issues_page1.json" <<'EOF'
@@ -71,8 +82,9 @@ EOF
 
 # page2（after=CURSOR1）：LS-204（blockedBy 已 Canceled——視為已解，priority Urgent 應排第一）、
 # LS-205（缺 size：候補排最後＋結構 (e) 命中）、LS-96（常駐待辦池，priority 故意設最高也永不列為候補，
-# 但結構 (e) 一樣命中——它本身也是 lane:harness 缺 size）、LS-210（lane:backend、In Progress、
-# cycle=4≠目前 cycle 5 → cycle 對帳 (a) 命中）。hasNextPage=false。
+# R1 I1 起結構 (e) 豁免它——它自己也缺 size 但不該再被列出）、LS-210（lane:backend、In Progress、
+# cycle=4≠目前 cycle 5 → cycle 對帳 (a) 命中）、LS-206（缺「## 驗收」→ R1 F1 待 Spec）、
+# LS-207（缺 project → R1 F1 待結構）。hasNextPage=false。
 cat > "$fx/issues_page2.json" <<'EOF'
 {"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
   {"identifier":"LS-204","title":"harness C","description":"## 驗收\n過","priority":1,"createdAt":"2026-01-04T00:00:00.000Z",
@@ -89,6 +101,14 @@ cat > "$fx/issues_page2.json" <<'EOF'
   {"identifier":"LS-210","title":"backend in progress","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
    "state":{"name":"In Progress","type":"started"},"labels":{"nodes":[{"name":"lane:backend"}]},
    "cycle":{"id":"cyc-4","number":4},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-206","title":"harness 缺驗收段","description":"沒有驗收段落","priority":2,"createdAt":"2026-01-06T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"},{"name":"size:S"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-207","title":"harness 缺 project","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-07T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"},{"name":"size:S"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":null,"projectMilestone":null,"parent":null,
    "inverseRelations":{"nodes":[]}}
 ]}}}
 EOF
@@ -109,6 +129,7 @@ while [ \$# -gt 0 ]; do
 done
 case "\$data" in
   *'documents('*) cat "\$fx/documents.json" ;;
+  *'cycle(id:'*) cat "\$fx/cycle_issues.json" ;;
   *'cycles('*) cat "\$fx/cycles.json" ;;
   *'issues('*)
     case "\$data" in
@@ -191,8 +212,18 @@ check("② lane:harness WIP=0、選中 LS-204、動作含 save_issue Ready",
       and any("save_issue LS-204 state=Ready cycle=5" in a for a in harness["actions"]))
 
 structure_e = set(d["structure"]["e"])
-check("② 缺 size 的 lane:harness 票列結構 (e)（LS-205、LS-96 皆命中）",
-      {"LS-205", "LS-96"} <= structure_e)
+check("② 缺 size 的 lane:harness 票列結構 (e)（LS-205 命中）", "LS-205" in structure_e)
+check("② R1 I1：LS-96 常駐待辦池結構檢查豁免，不列 (e)（否則永遠清不掉、訓練出忽略習慣）",
+      "LS-96" not in structure_e)
+
+check("② R1 F1：current_cycle 附帶剩餘天數／票數 完成-總數",
+      isinstance((d.get("current_cycle") or {}).get("remaining_days"), (int, float))
+      and (d["current_cycle"]["tickets_done"], d["current_cycle"]["tickets_total"]) == (2, 4))
+
+check("② R1 F1：LS-206 缺「## 驗收」→ pending_spec 命中", "LS-206" in harness.get("pending_spec", []))
+check("② R1 F1：LS-207 缺 project → pending_structure 命中", "LS-207" in harness.get("pending_structure", []))
+check("② R1 F1：LS-206／LS-207 分類被排除，不進候補清單",
+      "LS-206" not in harness["candidates"] and "LS-207" not in harness["candidates"])
 
 check("② cycle 外 active 票（LS-210，cycle=4≠目前 cycle 5）列 cycle 對帳 (a)",
       "LS-210" in d["cycle_check"]["a"])
@@ -219,6 +250,16 @@ out_human="$(bash "$plsh" --repo "$repo" 2>&1)"; rc=$?
 if [ "$rc" -eq 0 ] && printf '%s' "$out_human" | grep -qF '動作清單'; then echo "✓ ④ human 模式 exit 0 且含動作清單段"; else echo "✗ ④ human 模式異常（exit ${rc}）" >&2; printf '%s\n' "$out_human" | sed 's/^/    /' >&2; fail=1; fi
 out_brief="$(bash "$plsh" --repo "$repo" --brief 2>&1)"; rc=$?
 if [ "$rc" -eq 0 ] && printf '%s' "$out_brief" | grep -qF 'save_issue LS-204 state=Ready cycle=5'; then echo "✓ ④ --brief 模式印動作清單（含 save_issue LS-204）"; else echo "✗ ④ --brief 模式異常（exit ${rc}）" >&2; printf '%s\n' "$out_brief" | sed 's/^/    /' >&2; fail=1; fi
+
+# ---- ④b R1 F1：human／--brief 的 lane 表五欄（上限／在飛／候補／待Spec／待結構）與 cycle 一行
+#        （編號／剩餘天數／票數 完成/總數）都要印出來——不是只在 --json 才有 ----
+has_in() { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✓ $1"; else echo "✗ ${1}（應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; fi; }
+has_in '④b human：cycle 一行含編號與票數 完成/總數' "$out_human" 'current cycle：5（剩'
+has_in '④b human：cycle 一行含票數 2/4 完成' "$out_human" '票數 2/4 完成'
+has_in '④b human：lane:harness 行含待 Spec（LS-206）' "$out_human" '待Spec：LS-206'
+has_in '④b human：lane:harness 行含待結構（LS-207）' "$out_human" '待結構：LS-207'
+has_in '④b --brief：也印 Lane 狀態表與待 Spec／待結構' "$out_brief" '待Spec：LS-206'
+has_in '④b --brief：cycle 一行同樣在（不是只有 --json 才有）' "$out_brief" 'current cycle：5（剩'
 
 # ---- ⑤ 參數錯誤 fail closed ----
 out="$(bash "$plsh" --repo 2>&1)"; rc=$?
