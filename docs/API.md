@@ -59,7 +59,7 @@
 
 | 表 | 讀 | 新增 | 修改 | 刪除 | 備註 |
 |---|---|---|---|---|---|
-| `profiles` | 同家庭成員互看 | 自己（登入時建立） | 僅自己 | ❌ 無 delete policy | 帳號刪除走 Auth 側 cascade |
+| `profiles` | 同家庭成員互看 | 🔒 由 `auth.users` insert trigger 自動建立（LS-110），client 不直接 insert | 僅自己 | ❌ 無 delete policy | 帳號刪除走 Auth 側 cascade |
 | `families` | 我所屬的家庭 | 任何登入者（自建家庭） | `name`／`require_approval` 兩欄，owner-only | ❌ 無 delete policy | `storage_quota_bytes`／`storage_used_bytes` 兩個額度欄位永遠唯讀——不論身分，client 都改不動（只有 `media` 表的 trigger 與 `service_role` 能寫） |
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
@@ -122,8 +122,12 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
 與 `20260823010000_join_approval.sql` 為準。
 
 ### `profiles`
-- `id`＝`auth.users.id`（登入後自動存在，不必自己建立列——若尚未存在，登入流程要先
-  `insert` 一列，`display_name` 必填、1–50 字）。
+- `id`＝`auth.users.id`。**由 `auth.users` 的 AFTER INSERT trigger
+  （`private.handle_new_auth_user()`，LS-110）自動建立**，登入流程不需要、也不應該
+  自己 `insert` 一列——`display_name` 依序取 `raw_user_meta_data->>'full_name'`、
+  `->>'name'`、email 帳號部分（三者擇一，永遠非空）；`avatar_url` 取
+  `raw_user_meta_data->>'avatar_url'`（沒有就是 `NULL`）。client 只做 `update`
+  （改自己的 `display_name`／`avatar_url`）。
 - 只看得到：自己 ＋ 與自己同家庭的人（`private.peer_profile_ids()`）。陌生使用者的
   `display_name`／`avatar_url` 不會外洩。
 

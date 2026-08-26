@@ -30,9 +30,11 @@ values
   ('a4000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000',
    'authenticated', 'authenticated', 'comment-race-member@ls52.test', now(), now(), '{}', '{}');
 
+-- LS-110：auth.users insert 已觸發 trigger 自動建立 profiles，這裡蓋成固定名稱。
 insert into public.profiles (id, display_name) values
   ('a5000000-0000-4000-8000-000000000001', '留言競態家 owner'),
-  ('a4000000-0000-4000-8000-000000000001', '留言競態家 作者');
+  ('a4000000-0000-4000-8000-000000000001', '留言競態家 作者')
+on conflict (id) do update set display_name = excluded.display_name;
 
 -- created_by 由 add_creator_as_owner trigger 寫成 owner
 insert into public.families (id, name, created_by) values

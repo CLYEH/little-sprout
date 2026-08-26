@@ -320,7 +320,10 @@ begin
                           raw_app_meta_data, raw_user_meta_data)
   values (v_other_member, '00000000-0000-0000-0000-000000000000',
           'authenticated', 'authenticated', 'a4-member@ls58.test', now(), now(), '{}', '{}');
-  insert into public.profiles (id, display_name) values (v_other_member, 'A 家第 4 位成員');
+  -- LS-110：auth.users insert 已觸發 trigger 自動建立 profiles，這裡蓋成固定名稱
+  -- （下面 list_comments 斷言依賴的是這個名字，不是 trigger 推導出來的 email 前綴）。
+  insert into public.profiles (id, display_name) values (v_other_member, 'A 家第 4 位成員')
+    on conflict (id) do update set display_name = excluded.display_name;
   insert into public.family_members (family_id, user_id, role, can_upload)
   values (v_family, v_other_member, 'member', true);
   reset role;

@@ -25,10 +25,12 @@ values
   ('eb000000-0000-4000-8000-000000000003', '00000000-0000-0000-0000-000000000000',
    'authenticated', 'authenticated', 'eb-applicant@ls33.test', now(), now(), '{}', '{}');
 
+-- LS-110：auth.users insert 已觸發 trigger 自動建立 profiles，這裡蓋成固定名稱。
 insert into public.profiles (id, display_name) values
   ('eb000000-0000-4000-8000-000000000001', '審核競態家 爸爸'),
   ('eb000000-0000-4000-8000-000000000002', '審核競態家 媽媽'),
-  ('eb000000-0000-4000-8000-000000000003', '等待審核的申請人');
+  ('eb000000-0000-4000-8000-000000000003', '等待審核的申請人')
+on conflict (id) do update set display_name = excluded.display_name;
 
 insert into public.families (id, name, created_by) values
   ('ff000000-0000-4000-8000-000000000001', '審核競態家', 'eb000000-0000-4000-8000-000000000001');
