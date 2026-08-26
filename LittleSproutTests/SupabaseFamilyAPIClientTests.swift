@@ -27,6 +27,16 @@ final class SupabaseFamilyAPIClientTests: XCTestCase {
                     body: SessionFixture.json(userID: userID, email: "owner@example.com")
                 )
             }
+            // LS-107：`createFamily` 先補一筆 `profiles`（見 `ensureProfileExists` 文件註解），
+            // 才走 `families` INSERT——這裡兩段都要接住，用路徑分流而不是假設呼叫順序。
+            if request.url?.path == "/rest/v1/profiles" {
+                XCTAssertEqual(request.httpMethod, "POST")
+                let body = try XCTUnwrap(request.bodyData)
+                let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: String])
+                XCTAssertEqual(payload["id"], userID.uuidString)
+                XCTAssertEqual(payload["display_name"], "owner")
+                return MockURLProtocol.StubResponse(statusCode: 201, body: Data("[]".utf8))
+            }
             XCTAssertEqual(request.url?.path, "/rest/v1/families")
             XCTAssertEqual(request.httpMethod, "POST")
 
@@ -56,6 +66,41 @@ final class SupabaseFamilyAPIClientTests: XCTestCase {
         XCTAssertEqual(family.name, "葉家")
         XCTAssertEqual(family.createdBy, userID)
         XCTAssertTrue(family.requireApproval)
+    }
+
+    func test_fetchMyFamily_hasFamily_decodesFirstResult() async throws {
+        let client = TestSupabaseClient.make { [familyID, userID] request in
+            XCTAssertEqual(request.url?.path, "/rest/v1/families")
+            XCTAssertEqual(request.httpMethod, "GET")
+            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+            [{
+              "id": "\(familyID.uuidString)",
+              "name": "葉家",
+              "created_by": "\(userID.uuidString)",
+              "created_at": "2026-08-24T00:00:00Z",
+              "require_approval": true
+            }]
+            """.utf8))
+        }
+        let apiClient = SupabaseFamilyAPIClient(client: client)
+
+        let family = try await apiClient.fetchMyFamily()
+
+        XCTAssertEqual(family?.id, familyID)
+        XCTAssertEqual(family?.name, "葉家")
+    }
+
+    func test_fetchMyFamily_noFamily_returnsNil() async throws {
+        // 全新帳號、還沒建立或加入任何家庭：`families_select` RLS 只收斂到呼叫者所屬的家庭，
+        // 沒有任何一筆時 PostgREST 回 200 + `[]`，不是錯誤。
+        let client = TestSupabaseClient.make { _ in
+            MockURLProtocol.StubResponse(statusCode: 200, body: Data("[]".utf8))
+        }
+        let apiClient = SupabaseFamilyAPIClient(client: client)
+
+        let family = try await apiClient.fetchMyFamily()
+
+        XCTAssertNil(family)
     }
 
     func test_createFamily_notSignedIn_throwsRejectedWithoutSendingRequest() async {

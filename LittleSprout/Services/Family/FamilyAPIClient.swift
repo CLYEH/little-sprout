@@ -5,6 +5,9 @@ import Foundation
 /// 方法 ↔ RPC／資料表對照（供 LS-41 docs/API.md 對帳）：
 ///   - `createFamily`         → INSERT `public.families`（`private.add_creator_as_owner` trigger
 ///                              把建立者寫成第一位 owner；沒有對應 RPC，走 REST + RLS）
+///   - `fetchMyFamily`        → SELECT `public.families`（`families_select` policy的
+///                              `id in (private.family_ids())` 分支自然把結果收斂到呼叫者所屬
+///                              的家庭；LS-107，Phase 1 單一家庭 MVP 只取第一筆）
 ///   - `updateFamilyName`     → UPDATE `public.families` (name)
 ///   - `setRequireApproval`   → UPDATE `public.families` (require_approval)
 ///   - `createInvite`         → RPC `create_invite(p_family_id, p_role, p_expires_at, p_max_uses)`
@@ -19,6 +22,10 @@ import Foundation
 protocol FamilyAPIClient: Sendable {
     /// 建立新家庭；呼叫者自動成為第一位 owner（DB trigger 保證）。
     func createFamily(name: String) async throws -> Family
+
+    /// 呼叫者目前所屬的家庭（Phase 1 單一家庭 MVP：一個使用者最多一個家庭）；從未建立或加入過
+    /// 任何家庭則回傳 nil——LS-107 root routing 用這個結果判斷「已登入但無家庭」該不該進三岔路。
+    func fetchMyFamily() async throws -> Family?
 
     /// 只有該家庭 owner 能成功（RLS 收斂）。
     func updateFamilyName(familyID: UUID, name: String) async throws
