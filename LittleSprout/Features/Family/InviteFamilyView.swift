@@ -16,6 +16,10 @@ struct InviteFamilyView: View {
     @State private var selectedRole: FamilyRole = .member
     @State private var showsRegenerateConfirmation = false
     @State private var showsCopiedFeedback = false
+    // R1 F10：兩秒內連按兩次「複製邀請碼」，第一個 Task 到期時會把第二次的「已複製！」提前
+    // 清掉；離開畫面時前一次的 Task 也該跟著取消，不要在使用者已經看不到這個畫面時還跑一個
+    // 空等兩秒才把 `@State` 改回去的殘留 Task。
+    @State private var copiedFeedbackTask: Task<Void, Never>?
 
     private enum Phase {
         case empty
@@ -59,7 +63,19 @@ struct InviteFamilyView: View {
         }
         .appBackground()
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { familyStore.resetCreateInviteState() }
+        // R1 F9：`ScrollableFillView` 內容捲到底時，透明 nav bar 讓返回鍵跟標題文字重疊
+        // （既有元件的既有問題，不是本票引入——見 handoff）；這裡不改共用元件，只在本畫面
+        // 補一個不透明的 nav bar 背景。
+        .toolbarBackground(.visible, for: .navigationBar)
+        .onAppear {
+            familyStore.resetCreateInviteState()
+            // R1 F4：進場先查這個家庭現有有沒有一支還有效的邀請碼，顯示既有碼而非空狀態
+            // ——避免每次重開 app 都讓使用者以為自己沒有邀請碼、再產生一支新的。
+            Task { await familyStore.refreshLatestInvite() }
+        }
+        .onDisappear {
+            copiedFeedbackTask?.cancel()
+        }
         .confirmationDialog(
             "重新產生邀請碼？",
             isPresented: $showsRegenerateConfirmation,
@@ -155,7 +171,9 @@ struct InviteFamilyView: View {
                 .foregroundStyle(Color.lsTextPrimary)
                 HStack(spacing: AppSpacing.label) {
                     Pill(icon: "calendar", text: "\(formattedExpiry(invite.expiresAt)) 到期")
-                    Pill(icon: "person.2", text: "還可用 \(invite.maxUses) 次")
+                    // R1 F4：過去這裡直接顯示 maxUses，永遠不會反映真的用掉幾次；
+                    // `remainingUses` 從 F4 反查回來的 `usedCount` 算出真實剩餘量。
+                    Pill(icon: "person.2", text: "還可用 \(invite.remainingUses) 次")
                 }
             }
         }
@@ -211,6 +229,13 @@ struct InviteFamilyView: View {
                     .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
                 }
                 SecondaryButton(icon: "doc.on.doc", title: copyButtonTitle, action: { copyCode(invite.code) })
+                // R1 F3：票文 Scope 第 3 點要求的名額文案（`used_count` 不退還，Linear comment
+                // `4f10699c`）——`.pen` 07c 沒有這句（全稿「名額」只在 06b/06c 申請人側出現），
+                // 措辭與位置比照既有的 07a 政策小字（`.note`／`$text-secondary`，見上方
+                // `.empty` case 的到期／人數說明）。
+                Text("名額不退還，需要更多名額請重新產生。")
+                    .appFont(.note)
+                    .foregroundStyle(Color.lsTextSecondary)
             }
         }
     }
@@ -305,8 +330,12 @@ extension InviteFamilyView {
     private func copyCode(_ code: String) {
         UIPasteboard.general.string = code
         showsCopiedFeedback = true
-        Task {
+        // R1 F10：先取消前一次還在等待的回饋 Task，兩秒內連按兩次才不會讓第一次的 Task
+        // 到期把第二次剛設回 true 的 `showsCopiedFeedback` 提前清掉。
+        copiedFeedbackTask?.cancel()
+        copiedFeedbackTask = Task {
             try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else { return }
             showsCopiedFeedback = false
         }
     }

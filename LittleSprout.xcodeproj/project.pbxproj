@@ -61,6 +61,7 @@
 		912E644926254F979A9250AB /* AppErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A788B6CC504D5166582012 /* AppErrorTests.swift */; };
 		9A7D2E907F863BA4912D5745 /* OTPVerificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C8A6A59E9D7E1205CC9E65 /* OTPVerificationView.swift */; };
 		9BF2965CF886A8C6DD81755A /* AuthButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14AB4F80381DABD0E6FE12B0 /* AuthButtons.swift */; };
+		A3EF30A323D55F605B593614 /* AppFontTokenClampTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC5027E02B9CD08C0E248406 /* AppFontTokenClampTests.swift */; };
 		AD97CCF615FB05DEBB63BF09 /* LabeledTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F56FB37A90BCA2F75055D3D7 /* LabeledTextField.swift */; };
 		B32E3D152F36E50526D8E1B7 /* ChildrenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCAE2B57E7D3907D0578AC21 /* ChildrenView.swift */; };
 		B9BDE1E1AD633D323BBC2B5D /* AuthStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EA929B8CFBB700BE9E073B4 /* AuthStoreTests.swift */; };
@@ -170,6 +171,7 @@
 		D5C295C45BFA6330DF97EDAD /* OTPVerificationModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationModelTests.swift; sourceTree = "<group>"; };
 		D5C8A6A59E9D7E1205CC9E65 /* OTPVerificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationView.swift; sourceTree = "<group>"; };
 		D6FB791F1C8D6FD682B0ABDB /* AuthButtonsStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthButtonsStateTests.swift; sourceTree = "<group>"; };
+		DC5027E02B9CD08C0E248406 /* AppFontTokenClampTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFontTokenClampTests.swift; sourceTree = "<group>"; };
 		DCAE2B57E7D3907D0578AC21 /* ChildrenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenView.swift; sourceTree = "<group>"; };
 		DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClientJoinTests.swift; sourceTree = "<group>"; };
 		E081EE9B36770F60F62A483B /* JoinFamilyPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinFamilyPlaceholderView.swift; sourceTree = "<group>"; };
@@ -287,6 +289,7 @@
 			children = (
 				8C74E777AB0094919EC703B2 /* AppConfigTests.swift */,
 				F6A788B6CC504D5166582012 /* AppErrorTests.swift */,
+				DC5027E02B9CD08C0E248406 /* AppFontTokenClampTests.swift */,
 				A912608AE602C827E4786763 /* AppleSignInNonceTests.swift */,
 				09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */,
 				694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */,
@@ -571,6 +574,7 @@
 			files = (
 				649D627F2BC3D16B5A550488 /* AppConfigTests.swift in Sources */,
 				912E644926254F979A9250AB /* AppErrorTests.swift in Sources */,
+				A3EF30A323D55F605B593614 /* AppFontTokenClampTests.swift in Sources */,
 				13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */,
 				32824AF2CC5F64CE44CBB595 /* AppSectionUniquenessTests.swift in Sources */,
 				76B16560EF93FFF134B8FDE7 /* AppleSignInNonceTests.swift in Sources */,
