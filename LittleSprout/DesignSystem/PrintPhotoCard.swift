@@ -40,8 +40,12 @@ struct PrintPhotoCard: View {
         .padding(.top, AppSpacing.printEdge)
         .padding(.horizontal, AppSpacing.printEdge)
         .padding(.bottom, AppSpacing.printEdgeBottom)
-        .background(Color.lsPrintPaper)
+        // LS-98 QA1 FAIL 修正：`.background` 鏈越晚呼叫、疊層越底。改之前 paper 先呼叫、
+        // glow 後呼叫，於是不透明台紙蓋在染料池「前面」把它整片蓋住（QA1 四角取樣完全看不到
+        // 染料池）。正確順序是台紙最底、染料池疊在台紙之上、照片與壓印行在最前——所以 glow
+        // 這行要寫在 paper 之前（先呼叫的落在後呼叫的之上）。
         .background(mountPoolGlow.clipped())
+        .background(Color.lsPrintPaper)
         .overlay(PhotoCornerOverlay(size: cornerSize))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(imprintAccessibilityLabel)
