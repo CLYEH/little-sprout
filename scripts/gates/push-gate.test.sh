@@ -63,6 +63,12 @@ cp "${root}/scripts/ops/simulator-lock.sh" "$R/scripts/ops/simulator-lock.sh"
 cp "$R/scripts/ops/simulator-lock.sh" "$work/simulator-lock.sh.real"
 # 觸發 push-gate.sh「Xcode 專案存在」那個分支；ls -d 只認目錄存在，內容不重要
 mkdir -p "$R/Fake.xcodeproj"
+# R1 I3：新版 1b 對 .xcode-version 缺檔 fail-closed（F5），所以這裡從一開始就要有這個檔——
+# 舊版在 ⑪ 才用「還原」的名義第一次建立它，但 $R 從頭到尾沒有這個檔，那句「還原」其實是建立
+# （R1 I3 finding）；搬到 setup 這裡建立，後面案例要測不一致/缺檔時才是真的「暫時改掉、跑完還原」。
+# 內容與下面 xcodebuild 假身的 STUB_XCODE_VERSION 預設值一致（99.9），讓①～⑨這些不關心 1b 的
+# 案例維持「版本一致，略過對齊」路徑，不需要為了 1b 額外調整。
+printf '99.9\n' > "$R/.xcode-version"
 
 # ---- detect-simulator.sh 假身：直接回傳 FAKE_DEST_UDID 指定的 UDID（預設本 worktree 專屬機），
 #      隔離測試 push-gate.sh 自己的 dedicated／shared／demo 判斷與 shutdown 邏輯 ----
@@ -96,8 +102,12 @@ STUB
 chmod +x "$work/bin/xcrun"
 cat > "$work/bin/xcodebuild" <<'STUB'
 #!/bin/bash
-# LS-106：1b 步先呼叫 `xcodebuild -version`（固定第一個參數）；版本不一致時再呼叫
-# `xcodebuild build …`（帶 SWIFT_STRICT_CONCURRENCY=complete）——記到 $BUILD_LOG 供 ⑩／⑪ 斷言用。
+# R1：$DEVELOPER_DIR_LOG 設定時，每次呼叫都記一行「第一個參數\tDEVELOPER_DIR 當下的值」，供
+# ⑬ 斷言 push-gate.sh 的 1b 真的把 DEVELOPER_DIR 接到後面每一次 xcodebuild 呼叫（resolve／test）。
+if [ -n "${DEVELOPER_DIR_LOG:-}" ]; then
+  printf '%s\t%s\n' "${1:-<none>}" "${DEVELOPER_DIR:-<unset>}" >> "$DEVELOPER_DIR_LOG"
+fi
+# 1b 步先呼叫 `xcodebuild -version`（固定第一個參數）判斷主次版與 .xcode-version 是否一致。
 if [ "$1" = -version ]; then
   printf 'Xcode %s\nBuild version %s\n' "${STUB_XCODE_VERSION:-99.9}" "${STUB_XCODE_BUILD:-ZZ000Z}"
   exit 0
@@ -131,7 +141,11 @@ export SIMULATOR_LOCK_DIR="$work/simlock"
 # 預設本 worktree 專屬機（$ded_udid），呼叫端可在 "$@" 覆寫成共用機／demo 機的 UDID。
 run_gate() {
   rm -rf "$SIMULATOR_LOCK_DIR"
-  ( cd "$R" && env FAKE_DEST_UDID="$ded_udid" PATH="$work/bin:$PATH" "$@" \
+  # R1：XCODE_APPS_DIR 預設指到一個不存在的目錄，讓 1b 的 pin 目錄查找在每個案例裡都是「找不到」
+  # 起跳、且不受這台跑測試的機器實際裝了什麼 Xcode 影響（否則本機若剛好有 /Applications/Xcode_99.9.app
+  # 這種巧合，測試結果會跟著本機環境漂移）；⑬ 用 "$@" 覆寫成真的有 Xcode_<pin>.app 的 stub 目錄。
+  ( cd "$R" && env FAKE_DEST_UDID="$ded_udid" PATH="$work/bin:$PATH" \
+      XCODE_APPS_DIR="$work/no-such-apps" "$@" \
       bash scripts/gates/push-gate.sh </dev/null 2>&1 )
 }
 
@@ -405,13 +419,15 @@ git -C "$xg_root" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commi
 cp "$gate_src" "$xg_root/scripts/gates/push-gate.sh"
 cp "${root}/scripts/gates/push-ref-check.sh" "$xg_root/scripts/gates/push-ref-check.sh"
 echo 'name: Fake' > "$xg_root/project.yml"
-mkdir -p "$xg_root/LittleSprout.xcodeproj"
+mkdir -p "$xg_root/LittleSprout.xcodeproj/xcshareddata/xcschemes"
 printf 'PBX-COMMITTED\n' > "$xg_root/LittleSprout.xcodeproj/project.pbxproj"
+# R1 F1：committed 版本也要有 xcscheme，才能驗「pbxproj 相同、xcscheme 不同」這個舊版漏放的案例（⑪）。
+printf 'SCHEME-COMMITTED\n' > "$xg_root/LittleSprout.xcodeproj/xcshareddata/xcschemes/LittleSprout.xcscheme"
 printf '99.9\n' > "$xg_root/.xcode-version"
 mkdir -p "$work/xgbin"
-# 假身 xcodegen：不真的解析 project.yml，`generate` 直接把 $STUB_XCODEGEN_OUTPUT 的內容寫成
-# project.pbxproj——本組案例要驗的是 push-gate.sh 對 generate 結果與 commit 版本的 diff 判斷，
-# 不是 xcodegen 本身的正確性（那由 ubuntu-latest 的 rules job 環境跑不動真正的 xcodegen／Xcode）。
+# 假身 xcodegen：不真的解析 project.yml，`generate` 直接把 $STUB_XCODEGEN_OUTPUT／$STUB_XCODEGEN_SCHEME
+# 的內容寫成 project.pbxproj／xcscheme——本組案例要驗的是 push-gate.sh 對 generate 結果與 commit 版本的
+# diff 判斷，不是 xcodegen 本身的正確性（那由 ubuntu-latest 的 rules job 環境跑不動真正的 xcodegen／Xcode）。
 cat > "$work/xgbin/xcodegen" <<'STUB'
 #!/bin/bash
 if [ "$1" = --version ]; then
@@ -419,8 +435,9 @@ if [ "$1" = --version ]; then
   exit 0
 fi
 if [ "$1" = generate ]; then
-  mkdir -p LittleSprout.xcodeproj
+  mkdir -p LittleSprout.xcodeproj/xcshareddata/xcschemes
   printf '%s\n' "${STUB_XCODEGEN_OUTPUT:-PBX-COMMITTED}" > LittleSprout.xcodeproj/project.pbxproj
+  printf '%s\n' "${STUB_XCODEGEN_SCHEME:-SCHEME-COMMITTED}" > LittleSprout.xcodeproj/xcshareddata/xcschemes/LittleSprout.xcscheme
   exit 0
 fi
 exit 1
@@ -436,44 +453,84 @@ else
   fail=1
 fi
 
-
-# ---- ⑪ Xcode 版本與 .xcode-version 不一致（LS-106；PR #165 head 8b7a0fa 同型）→ 只警告，並額外呼叫
-#        一次帶 SWIFT_STRICT_CONCURRENCY=complete 的 xcodebuild build（只 build 不測）當替代檢查。沿用
-#        $R（已有 detect-simulator／xcrun／xcodebuild 佈線），暫時把 .xcode-version 換成不一致的版本號、
-#        跑完就換回，不影響後面（若有）案例 ----
-build_log11="$work/build11.log"; : > "$build_log11"
-printf '1.0\n' > "$R/.xcode-version"
-out11=$(run_gate STUB_TEST_RC=0 BUILD_LOG="$build_log11")
-printf '99.9\n' > "$R/.xcode-version"   # 還原
-if grep -qF 'SWIFT_STRICT_CONCURRENCY=complete' "$build_log11"; then
-  echo "✓ ⑪ 版本不一致 → 呼叫了帶 SWIFT_STRICT_CONCURRENCY=complete 的 xcodebuild build"
+# ---- ⑪ XcodeGen 漂移：project.pbxproj 相同、只有 xcscheme 不同（R1 F1；PR review 實測重現——改
+#        project.yml 的 parallelizable 卻沒重跑 xcodegen 同型）→ 舊版 1a 只 diff project.pbxproj，這個
+#        情境會本機綠、CI 紅；新版走訪暫存目錄產生側的整個檔案集合逐檔比對，仍要擋下 ----
+out11=$( cd "$xg_root" && env PATH="$work/xgbin:$PATH" STUB_XCODEGEN_SCHEME="SCHEME-DIFFERENT" \
+  bash scripts/gates/push-gate.sh </dev/null 2>&1 ); rc11=$?
+if [ "$rc11" -ne 0 ] && printf '%s' "$out11" | grep -qF 'xcshareddata/xcschemes/LittleSprout.xcscheme'; then
+  echo "✓ ⑪ project.pbxproj 相同、僅 xcscheme 不同 → 仍被擋下（exit ${rc11}），差異檔清單含 xcscheme（R1 F1 負向控制：拿掉 F1 修法這組會轉綠）"
 else
-  echo "✗ ⑪ 版本不一致卻沒有呼叫替代 build，或缺 SWIFT_STRICT_CONCURRENCY=complete" >&2
-  echo "    build_log 內容：$(cat "$build_log11" 2>/dev/null)" >&2
+  echo "✗ ⑪ project.pbxproj 相同但 xcscheme 不同時沒有被擋下（exit ${rc11}）——舊版「只比 project.pbxproj」的洞還在" >&2
   printf '%s\n' "$out11" | sed 's/^/    /' >&2
   fail=1
 fi
-if printf '%s' "$out11" | grep -qF '主次版號不一致'; then
-  echo "✓ ⑪ 印出版本不一致的警告訊息"
+
+# ---- ⑫ .xcode-version 不存在（R1 F5）→ push-gate.sh fail-closed 擋下，與 CI 的 xcode-select 步驟
+#        缺檔必紅一致；暫時搬走、跑完搬回，不影響後面案例 ----
+mv "$R/.xcode-version" "$work/xcode-version.bak"
+out12=$(run_gate); rc12=$?
+mv "$work/xcode-version.bak" "$R/.xcode-version"
+if [ "$rc12" -ne 0 ] && printf '%s' "$out12" | grep -qF '缺 .xcode-version'; then
+  echo "✓ ⑫ .xcode-version 不存在 → push-gate.sh 擋下（exit ${rc12}），fail-closed 與 CI 一致"
 else
-  echo "✗ ⑪ 未印出版本不一致警告訊息" >&2
+  echo "✗ ⑫ .xcode-version 缺檔時沒有被擋下（exit ${rc12}）" >&2
+  printf '%s\n' "$out12" | sed 's/^/    /' >&2
   fail=1
 fi
 
-# ---- ⑫ Xcode 版本與 .xcode-version 一致（LS-106）→ 略過替代檢查，不呼叫額外的 build ----
-build_log12="$work/build12.log"; : > "$build_log12"
-out12=$(run_gate STUB_TEST_RC=0 BUILD_LOG="$build_log12")
-if [ ! -s "$build_log12" ]; then
-  echo "✓ ⑫ 版本一致 → 沒有呼叫替代 build"
+# ---- ⑬ pin 的 Xcode 本機已安裝（R1 F2 (b)；stub XCODE_APPS_DIR 模擬 /Applications/Xcode_<pin>.app
+#        存在）→ 整支 gate 剩下的 xcodebuild 呼叫全部改用該 DEVELOPER_DIR，不論本機預設工具鏈版本
+#        是否已經一致 ----
+devdir_log13="$work/devdir13.log"; : > "$devdir_log13"
+pinned_root13="$work/pinned-apps-13"
+mkdir -p "$pinned_root13/Xcode_99.9.app/Contents/Developer"
+out13=$(run_gate STUB_TEST_RC=0 DEVELOPER_DIR_LOG="$devdir_log13" XCODE_APPS_DIR="$pinned_root13")
+if printf '%s' "$out13" | grep -qF '本次 push gate 剩下的 xcodebuild 全部改用此版本執行'; then
+  echo "✓ ⑬ pin 的 Xcode 本機已安裝（stub 目錄）→ 印出對齊訊息"
 else
-  echo "✗ ⑫ 版本一致卻仍呼叫了替代 build：$(cat "$build_log12")" >&2
+  echo "✗ ⑬ pin 目錄存在卻沒有印出對齊訊息" >&2
+  printf '%s\n' "$out13" | sed 's/^/    /' >&2
   fail=1
 fi
-if printf '%s' "$out12" | grep -qF '主次版號一致，略過替代檢查'; then
-  echo "✓ ⑫ 印出版本一致、略過替代檢查的訊息"
+resolve_line13=$(printf '%s\t%s' '-resolvePackageDependencies' "${pinned_root13}/Xcode_99.9.app/Contents/Developer")
+test_line13=$(printf '%s\t%s' 'test' "${pinned_root13}/Xcode_99.9.app/Contents/Developer")
+if grep -qF "$resolve_line13" "$devdir_log13" && grep -qF "$test_line13" "$devdir_log13"; then
+  echo "✓ ⑬ DEVELOPER_DIR 確實接線到 xcodebuild 的 SPM 解析與 test 呼叫（真的對齊，不是只印訊息）"
 else
-  echo "✗ ⑫ 未印出版本一致訊息" >&2
-  printf '%s\n' "$out12" | sed 's/^/    /' >&2
+  echo "✗ ⑬ DEVELOPER_DIR 沒有接線到 xcodebuild 呼叫" >&2
+  echo "    devdir_log 內容：$(cat "$devdir_log13" 2>/dev/null)" >&2
+  fail=1
+fi
+
+# ---- ⑭ pin 的 Xcode 本機未安裝、且與本機預設版本不一致（R1 F2 (a)）→ 只印警告＋安裝建議，不再
+#        呼叫任何額外 build（R1 F3 隨之自然解：沒有 build-only 步驟需要顧慮鎖） ----
+build_log14="$work/build14.log"; : > "$build_log14"
+printf '1.0\n' > "$R/.xcode-version"
+out14=$(run_gate STUB_TEST_RC=0 BUILD_LOG="$build_log14")
+printf '99.9\n' > "$R/.xcode-version"   # 還原（setup 建立的版本）
+if printf '%s' "$out14" | grep -qF '本機未安裝 pin 版本' && printf '%s' "$out14" | grep -qF 'xcodes install 1.0'; then
+  echo "✓ ⑭ 版本不一致且 pin 目錄不存在 → 印出警告＋安裝建議"
+else
+  echo "✗ ⑭ 版本不一致時的警告訊息不完整" >&2
+  printf '%s\n' "$out14" | sed 's/^/    /' >&2
+  fail=1
+fi
+if [ ! -s "$build_log14" ]; then
+  echo "✓ ⑭ 沒有呼叫任何額外 build（替代 build 已移除）"
+else
+  echo "✗ ⑭ 版本不一致卻仍呼叫了額外 build：$(cat "$build_log14")" >&2
+  fail=1
+fi
+
+# ---- ⑮ 版本一致（本機／.xcode-version 皆預設值，pin 目錄不存在）→ 印出略過對齊訊息，不需要
+#        DEVELOPER_DIR 介入 ----
+out15=$(run_gate STUB_TEST_RC=0)
+if printf '%s' "$out15" | grep -qF '主次版號一致，略過對齊'; then
+  echo "✓ ⑮ 版本一致 → 印出略過對齊訊息"
+else
+  echo "✗ ⑮ 版本一致時未印出略過對齊訊息" >&2
+  printf '%s\n' "$out15" | sed 's/^/    /' >&2
   fail=1
 fi
 
