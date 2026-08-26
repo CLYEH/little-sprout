@@ -3328,7 +3328,7 @@
       "name": "LS-18 / 07 邀請家人 · 已產生邀請碼",
       "clip": true,
       "width": 393,
-      "height": 996,
+      "height": 1261,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -3594,12 +3594,34 @@
             },
             {
               "type": "frame",
+              "id": "Ivfpz",
+              "name": "Role Section Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "id": "a2eIB",
+                  "type": "ref",
+                  "ref": "eEP8A",
+                  "name": "Role Section",
+                  "width": "fill_container"
+                }
+              ]
+            },
+            {
+              "type": "frame",
               "id": "rFWA3",
               "name": "Approval Section",
               "width": "fill_container",
               "layout": "vertical",
               "padding": [
-                "$sp-section",
+                "$sp-block",
                 0,
                 0,
                 0
@@ -3768,7 +3790,7 @@
       "name": "LS-18 / 07a 邀請家人 · 尚未產生（空狀態）",
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 1134,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -3835,7 +3857,7 @@
           "id": "p5m28",
           "name": "Body",
           "width": "fill_container",
-          "height": 712,
+          "height": 994,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -4172,12 +4194,34 @@
             },
             {
               "type": "frame",
+              "id": "s0AH3g",
+              "name": "Role Section Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "id": "osCBD",
+                  "type": "ref",
+                  "ref": "eEP8A",
+                  "name": "Role Section",
+                  "width": "fill_container"
+                }
+              ]
+            },
+            {
+              "type": "frame",
               "id": "WcTa9",
               "name": "Approval Section",
               "width": "fill_container",
               "layout": "vertical",
               "padding": [
-                "$sp-section",
+                "$sp-block",
                 0,
                 0,
                 0
@@ -28003,7 +28047,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "04 三岔路：主次已反轉。「我有邀請碼」＝含照片的主大卡（沖印品 319×238 ＋ 文字 ＋ accent 動作條 60pt），整張卡可點；「我要自己建立家庭」＝底部一條列。【R4】卡上的照片是真沖印品（8pt 白邊 ＋ paper-edge），因此依角托規則第①段補成四顆角托（R3 只有上兩顆），池 .438/.287/.335/.232。",
+                  "content": "04 三岔路：主次已反轉。「我有邀請碼」＝含照片的主大卡（沖印品 319×238 ＋ 文字 ＋ accent 動作條 60pt），整張卡可點；「我要自己建立家庭」＝底部一條列。【R4】卡上的照片是真沖印品（8pt 白邊 ＋ paper-edge），因此依角托規則第①段補成四顆角托（R3 只有上兩顆），池 .494/.288/.36/.236（LS-107 R1 I2：改前為 .438/.287/.335/.232，經與 frame RxXvq/ppXvK 實測比對更正）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -28503,6 +28547,42 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "為什麼邀請碼是 3+3 手動輸入分組、OTP 驗證碼是六等格自動填——兩個都是六位數字，介面卻不同，是刻意的，不是不一致：\n邀請碼（06 輸入邀請碼）是「人傳人」——長輩通常是用另一支手機、或用嘴巴把碼唸給對方聽，收碼的人再手動打進自己手機。3+3 分組（念的時候分兩組）是為了唸/聽/打這條路徑：三碼一口氣唸完剛好是短期記憶能扛住的量，分兩組唸完再打完全不需要來回看螢幕。\nOTP（03b 驗證碼）走的是同一支手機收簡訊、系統會自動抓碼——iOS 原生就把六位數驗證碼辨識成「來自簡訊的一次性密碼」，鍵盤上方會跳出建議列，點一下就填滿六格；六等格本身也是 iOS Passcode／OTP 的原生視覺語彙，使用者見過很多次，不用教。用 3+3 分組畫 OTP 反而是捨棄這個系統紅利，逼使用者手動一格一格打。\n一句話：邀請碼分組是為了「唸出來、打進去」，OTP 六格是為了「系統幫你填」——介面服務的是完全不同的輸入方式，長得不一樣是正確答案。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "N1HV5",
+              "name": "i16",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "JKgvN",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-111 R1 · 07a·07·AX3·07d",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "gytID",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "角色選擇列（cmp/Role Option ×2 → cmp/Role Section）：LS-46 合併時遺失的角色列補回，位置在 Sample Mount／Code Card Wrap 之後、Approval Section 之前——原本掛在 Approval Section 上的 44pt 章節斷點（$sp-section）移到新插入的 Role Section Wrap，Approval Section 自身的頂距改回 $sp-block 24（同一組垂直堆疊裡兩個相關設定沒必要各自佔一次 44）。\n\nToken 全部沿用既有值，未新增色：卡片 fill $surface、stroke 未選中 $control-line 1px／選中 $accent 2.5px——與 OTP／驗證碼輸入格的 focus ring 同一手法（$accent 只用在邊框，不是實心，不記入『每畫面一次實心』配額）；leading icon 未選中 circle／$text-secondary、選中 circle-check／$accent，22pt（icon-md）；標題 $fs-body 17／600／$text-primary、說明 $fs-note 17／400／$text-secondary，逐一比對都與旁邊的 Approval Toggle 卡同款；區段小標「邀請身份」$fs-note 17／700／$text-primary，比照 Danger Label 樣式。點擊區含 padding 後實測 97pt（一般成員）／123pt（只能看，兩行說明），遠高於 44pt 門檻。\n\n文案（逐字，AX3 相同）：一般成員──『可以發文、留言，也能上傳照片。』；只能看──『只能看相簿和日記，不能發文或留言。』預設選中一般成員。\n\n各板行為差異（同一元件，視覺不變，行為需 ios-dev 分開處理）：07a（尚未產生）＝可互動選擇，決定接下來『產生邀請碼』要帶哪個角色；07（已產生邀請碼）／AX3／07d（深色）＝顯示目前這支作用中邀請碼的角色為選中態，非互動——角色在 create_invite 當下就烘焙進 invite 列，換角色等於換碼，走既有『重新產生一組』二次確認流程（Danger Consequence 文案目前只講碼失效，不提角色，不需要改，因為換碼本來就等於換角色）。\n\n【依賴的後端能力】create_invite(p_family_id uuid, p_role text, p_expires_at timestamptz, p_max_uses integer)（supabase/migrations/20260823010000_join_approval.sql）已經接受 p_role、直接寫進 invites.role（public.family_role enum：owner／member／viewer，UI 不出現 owner），LS-90（6 碼／30 bit）沒有動這個參數。ios-dev 只要把兩張卡的選中狀態映成 'member'／'viewer' 傳給 p_role，不需要新的後端變更；若 07a 送出時仍用舊的固定呼叫（未帶 p_role 或寫死 'member'），要一併修掉，否則『只能看』選了也不會生效。\n\n07 家族先前沒有深色板；07d 是本輪新增，內容為 07a 全量複製＋theme:{mode:dark}，沒有另外設計語彙——用來滿足『07 家族四板皆含角色列』驗收，不是本票以外的擴充。三支溢出掃描（ctx.problems／sibling 交集／跨-parent 遮蔽）R1 對四板全跑過，Role Section 新增內容 0 命中；既有的 Sample Photo／四角托 partially clipped 是沿用 04·07a 既有的沖印品出血手法，非本輪新增。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -35504,7 +35584,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2114,
+      "height": 2771,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -35771,12 +35851,34 @@
             },
             {
               "type": "frame",
+              "id": "mV5fC",
+              "name": "Role Section Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "id": "K0fCfK",
+                  "type": "ref",
+                  "ref": "eEP8A",
+                  "name": "Role Section",
+                  "width": "fill_container"
+                }
+              ]
+            },
+            {
+              "type": "frame",
               "id": "S0U1UC",
               "name": "Approval Section",
               "width": "fill_container",
               "layout": "vertical",
               "padding": [
-                "$sp-section",
+                "$sp-block",
                 0,
                 0,
                 0
@@ -40488,7 +40590,6 @@
           "y": 0.01995305164319249
         }
       },
-      "placeholder": true,
       "cornerRadius": 44,
       "layout": "vertical",
       "children": [
@@ -49915,6 +50016,666 @@
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "F5dSlm",
+      "x": 2560,
+      "y": 395,
+      "name": "cmp/Role Option",
+      "reusable": true,
+      "width": 345,
+      "fill": "$surface",
+      "cornerRadius": "$radius-lg",
+      "stroke": "$control-line",
+      "strokeWidth": 1,
+      "gap": "$sp-item",
+      "padding": "$inset-card",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "j6ZNWo",
+          "name": "Role Icon",
+          "width": 22,
+          "height": 22,
+          "icon": "circle",
+          "library": "lucide",
+          "fill": "$text-secondary"
+        },
+        {
+          "type": "frame",
+          "id": "go3YL",
+          "name": "Role Text",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-tight",
+          "children": [
+            {
+              "type": "text",
+              "id": "vL7kl",
+              "name": "Role Title",
+              "fill": "$text-primary",
+              "content": "一般成員",
+              "fontFamily": "$font",
+              "fontSize": "$fs-body",
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "zWpl1",
+              "name": "Role Desc",
+              "fill": "$text-secondary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "可以發文、留言，也能上傳照片。",
+              "lineHeight": 1.5,
+              "fontFamily": "$font",
+              "fontSize": "$fs-note",
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "eEP8A",
+      "x": 2560,
+      "y": 552,
+      "name": "cmp/Role Section",
+      "reusable": true,
+      "width": 345,
+      "layout": "vertical",
+      "gap": "$sp-label",
+      "children": [
+        {
+          "type": "text",
+          "id": "UC7U7",
+          "name": "Role Section Label",
+          "fill": "$text-primary",
+          "content": "邀請身份",
+          "fontFamily": "$font",
+          "fontSize": "$fs-note",
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "n6JtDU",
+          "name": "Role Options",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-group",
+          "children": [
+            {
+              "id": "X7DYDo",
+              "type": "ref",
+              "ref": "F5dSlm",
+              "name": "Role Option · 一般成員",
+              "width": "fill_container",
+              "stroke": "$accent",
+              "strokeWidth": 2.5,
+              "descendants": {
+                "j6ZNWo": {
+                  "icon": "circle-check",
+                  "fill": "$accent"
+                },
+                "vL7kl": {
+                  "content": "一般成員"
+                },
+                "zWpl1": {
+                  "content": "可以發文、留言，也能上傳照片。"
+                }
+              }
+            },
+            {
+              "id": "ZA8G7",
+              "type": "ref",
+              "ref": "F5dSlm",
+              "name": "Role Option · 只能看",
+              "width": "fill_container",
+              "descendants": {
+                "vL7kl": {
+                  "content": "只能看"
+                },
+                "zWpl1": {
+                  "content": "只能看相簿和日記，不能發文或留言。"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "f0gNN",
+      "x": 2773,
+      "y": 2600,
+      "name": "LS-18 / 07d 邀請家人 · 深色模式",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1134,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "DIiHG",
+          "name": "Chrome",
+          "width": "fill_container",
+          "fill": "#00000000",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 0,
+              "y": 3
+            },
+            "blur": 12
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "id": "oyFrY",
+              "type": "ref",
+              "ref": "OeXop",
+              "name": "Status Bar",
+              "width": "fill_container"
+            },
+            {
+              "id": "uEnAN",
+              "type": "ref",
+              "ref": "W6qTyS",
+              "name": "Nav Back",
+              "width": "fill_container"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "IsG1P",
+          "name": "Body",
+          "width": "fill_container",
+          "height": 994,
+          "layout": "vertical",
+          "padding": [
+            "$sp-block",
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "pLDPx",
+              "name": "Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "k7OzO",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "邀請家人一起看",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Gn5UC",
+                  "name": "Subtitle",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "把邀請碼給家人，他們輸入後向你送出申請，你核准就能一起看「陳家」的照片和日記。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ofLua",
+              "name": "Sample Mount",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "padding": [
+                "$sp-item",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "b9Zh76",
+                  "name": "Print Stage",
+                  "width": "fill_container",
+                  "height": 210,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "qefdZ",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Sample Print",
+                      "width": 345,
+                      "height": 210,
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.43200000000000005,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.7428571428571429
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.277,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.7428571428571429
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.342,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.7428571428571429
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.23,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.7428571428571429
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "layout": "vertical",
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "MycLx",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 194,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "id": "XHlnR",
+                              "x": 0,
+                              "y": -64,
+                              "name": "Sample Photo",
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "invite-grandma.png",
+                                "mode": "fill"
+                              },
+                              "width": 329,
+                              "height": 494
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "gwRJ2",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Night Dim",
+                              "fill": "$photo-dim",
+                              "width": 329,
+                              "height": 194
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "qJaO8",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TL",
+                      "x": -5,
+                      "y": -5,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 0 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "vufhA",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TR",
+                      "x": 324,
+                      "y": -5,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 0 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "zHG9B",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BL",
+                      "x": -5,
+                      "y": 189,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 26 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "yWw8D",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BR",
+                      "x": 324,
+                      "y": 189,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 26 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hl1uR",
+                  "name": "Sample Caption",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "QhYyP",
+                      "type": "ref",
+                      "ref": "AqN3F",
+                      "name": "Pill Sample",
+                      "descendants": {
+                        "KR7zN": {
+                          "icon": "eye"
+                        },
+                        "g7Fnj": {
+                          "content": "範例"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "Sb3GW",
+                      "name": "Sample Caption Text",
+                      "fill": "$text-secondary",
+                      "content": "家人核准之後看到的就是這些",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "do84L",
+              "name": "Role Section Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "id": "UnO7p",
+                  "type": "ref",
+                  "ref": "eEP8A",
+                  "name": "Role Section",
+                  "width": "fill_container"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IDi02",
+              "name": "Approval Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-block",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "id": "s9V7Kv",
+                  "type": "ref",
+                  "ref": "PXPcH",
+                  "name": "Approval Toggle",
+                  "width": "fill_container",
+                  "descendants": {
+                    "vSWWm": {
+                      "content": "為了保護家人隱私，這項設定固定開啟，無法關閉。"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "D1mDh1",
+              "name": "Actions",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "padding": [
+                "$sp-block",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "id": "xY53Z",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Share Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "plus"
+                    },
+                    "w7CUP": {
+                      "content": "產生邀請碼"
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "czKWu",
+                  "name": "Regenerate Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "產生後 7 天內有效，最多 5 位家人可以用。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "I7qtP",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "Zmjvg",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
             }
           ]
         }
