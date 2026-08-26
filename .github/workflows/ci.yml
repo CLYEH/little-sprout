@@ -167,7 +167,12 @@ jobs:
       # 前者 stub open／pen 驗一致／不一致／Pen 未開／看門狗逾時／--status／參數與環境錯誤；後者用合成
       # backup／worktree fixture（$PEN_BACKUP_DIR 覆寫）驗合法落地／--expect-nodes 傳遞／backup 缺／meta 三鍵
       # 各一組即拒／壞 JSON／dry-run 零副作用／參數形狀，全程不碰真正的 ~/.pencil/backup 或 design/littlesprout.pen。
-      - name: Ops 腳本自測（patrol／session-start／supabase-lock／promote／post-status／pen-open／pen-land，LS-71／LS-70／LS-85／LS-87／LS-91）
+      # LS-103：patrol-linear.sh（巡檢的 Linear 半段機械化：狀態對照／cycle 對帳／lane 補位候補／開票結構）
+      # 自測——PATH 前置假 curl 回固定 GraphQL JSON fixture，不打真 API；驗候補排序（priority→size→
+      # createdAt）、blockedBy 未解跳過、Canceled 視為已解、缺 size 列結構 (e)、cycle 外 active 票列 cycle
+      # 對帳 (a)、LS-96 永不列為候補、分頁、無 LINEAR_API_KEY 略過且不呼叫 curl。CI 本身沒有
+      # LINEAR_API_KEY，跑的是這支自測；真正打 Linear 只在本機有 .env 時發生。
+      - name: Ops 腳本自測（patrol／session-start／supabase-lock／promote／post-status／pen-open／pen-land／patrol-linear，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103）
         run: |
           rc=0
           bash scripts/ops/patrol.test.sh || rc=1
@@ -176,6 +181,7 @@ jobs:
           bash scripts/ops/post-status.test.sh || rc=1
           bash scripts/ops/pen-open.test.sh || rc=1
           bash scripts/ops/pen-land.test.sh || rc=1
+          bash scripts/ops/patrol-linear.test.sh || rc=1
           exit "$rc"
 
       # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
