@@ -86,13 +86,18 @@ final class FamilyStoreTests: XCTestCase {
 
     func test_createFamily_whileSubmitting_ignoresDuplicateCall() async {
         // in-flight disable（不是驗證型 disable）：使用者連點兩下「建立家庭」不該送出兩個
-        // request。用一個不會自己結束的 handler 卡住第一次呼叫，驗證第二次呼叫被 guard 擋下。
+        // request。用一個由測試自己控制何時放行的 handler 卡住第一次呼叫（不用真的
+        // `Task.sleep` 卡固定秒數——那會讓這條測試在整個測試套件一起跑時變成一個真的要等待
+        // 的背景 Task，拖慢或拖亂其他測試，Rule 5：不用計時器測並行，用確定性訊號），驗證
+        // 第二次呼叫被 guard 擋下。
         let stub = StubFamilyAPIClient()
         let callCount = OSAllocatedUnfairLock(initialState: 0)
+        let (gate, gateContinuation) = AsyncStream<Void>.makeStream()
         let family = makeFamily()
         stub.setCreateFamilyHandler { _ in
             callCount.withLock { $0 += 1 }
-            try await Task.sleep(for: .seconds(60))
+            var iterator = gate.makeAsyncIterator()
+            _ = await iterator.next() // 卡住，直到測試呼叫 gateContinuation.finish() 才放行
             return family
         }
         let store = FamilyStore(apiClient: stub)
@@ -107,7 +112,10 @@ final class FamilyStoreTests: XCTestCase {
 
         XCTAssertFalse(secondCallSucceeded, "送出中應該擋下第二次呼叫")
         XCTAssertEqual(callCount.withLock { $0 }, 1, "底層 API 只該被呼叫一次")
-        firstCallTask.cancel()
+
+        gateContinuation.finish()
+        let firstCallSucceeded = await firstCallTask.value
+        XCTAssertTrue(firstCallSucceeded, "放行後第一次呼叫應該正常完成")
     }
 
     func test_resetCreateFamilyState_clearsFailureButNotSuccess() {
