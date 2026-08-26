@@ -41,9 +41,13 @@ select ('c1000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid,
        'perf-applicant-' || i || '@ls33.test', now(), now(), '{}', '{}'
   from generate_series(1, 5) i;
 
+-- LS-110：auth.users insert 已觸發 trigger 自動建立 profiles，on conflict do update
+-- 蓋成這裡要的固定名稱（本檔只驗 plan 形狀，名稱本身不影響判準，但維持與其他
+-- fixture 一致的慣例）。
 insert into public.profiles (id, display_name)
 select ('c1000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid, '效能測試申請人 ' || i
-  from generate_series(1, 5) i;
+  from generate_series(1, 5) i
+on conflict (id) do update set display_name = excluded.display_name;
 
 insert into public.invites (id, family_id, code, role, created_by, max_uses, expires_at)
 values ('1c000000-0000-4000-8000-000000000001', 'fc000000-0000-4000-8000-000000000001',
@@ -619,10 +623,12 @@ begin
     from generate_series(1, 20) i
    on conflict (id) do nothing;
 
+  -- LS-110：改成 do update（原本的 do nothing 在 trigger 已自動建列的情況下會讓
+  -- display_name 停留在 trigger 推導出的值，而不是這裡想要的固定名稱）。
   insert into public.profiles (id, display_name)
   select ('c2000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid, '效能測試反應者 ' || i
     from generate_series(1, 20) i
-   on conflict (id) do nothing;
+   on conflict (id) do update set display_name = excluded.display_name;
 
   select array_agg(('4c000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid)
     into v_targets

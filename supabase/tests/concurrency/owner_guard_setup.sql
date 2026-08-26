@@ -21,9 +21,11 @@ values
   ('d0000000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000',
    'authenticated', 'authenticated', 'd-owner2@ls6.test', now(), now(), '{}', '{}');
 
+-- LS-110：auth.users insert 已觸發 trigger 自動建立 profiles，這裡蓋成固定名稱。
 insert into public.profiles (id, display_name) values
   ('d0000000-0000-4000-8000-000000000001', 'D 家 owner 1'),
-  ('d0000000-0000-4000-8000-000000000002', 'D 家 owner 2');
+  ('d0000000-0000-4000-8000-000000000002', 'D 家 owner 2')
+on conflict (id) do update set display_name = excluded.display_name;
 
 -- created_by 由 add_creator_as_owner trigger 寫成第一位 owner
 insert into public.families (id, name, created_by) values

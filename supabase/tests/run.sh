@@ -51,11 +51,22 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$evidence_dir"
 
+# LS-110 R1 F2：96_ 的角色路徑探針（auth_admin/profiles_trigger_probe.sql）要用
+# supabase_auth_admin（GoTrue 寫 auth.users 用的身分）連線，不能沿用上面 $db_user
+# 的連線。密碼固定用 supabase CLI local stack 的預設值（config.toml 沒有自訂
+# [db] 密碼，本機／CI 皆同）——不是硬掰的字面常數，可用 SUPABASE_DB_AUTH_ADMIN_PASSWORD
+# 覆蓋。
+auth_admin_password="${SUPABASE_DB_AUTH_ADMIN_PASSWORD:-postgres}"
+
 # psql 不一定裝在 host 上；沒有的話就借用 supabase 的 DB container 裡那一份。
 if command -v psql >/dev/null 2>&1 && [ -n "$db_url" ]; then
   channel="host psql → SUPABASE_DB_URL"
   run_sql() {
     psql "$db_url" -v ON_ERROR_STOP=1 --no-psqlrc -q -f "$1"
+  }
+  run_sql_as_auth_admin() {
+    psql "$(printf '%s' "$db_url" | sed -E "s#//[^:@/]+(:[^@/]*)?@#//supabase_auth_admin:${auth_admin_password}@#")" \
+      -v ON_ERROR_STOP=1 --no-psqlrc -q -f "$1"
   }
 elif command -v psql >/dev/null 2>&1; then
   channel="host psql → ${db_host}:${db_port}/${db_name}"
@@ -63,11 +74,23 @@ elif command -v psql >/dev/null 2>&1; then
     psql -h "$db_host" -p "$db_port" -U "$db_user" -d "$db_name" \
       -v ON_ERROR_STOP=1 --no-psqlrc -q -f "$1"
   }
+  run_sql_as_auth_admin() {
+    PGPASSWORD="$auth_admin_password" psql -h "$db_host" -p "$db_port" -U supabase_auth_admin -d "$db_name" \
+      -v ON_ERROR_STOP=1 --no-psqlrc -q -f "$1"
+  }
 elif docker exec "$container" true >/dev/null 2>&1; then
   channel="docker exec $container psql"
   run_sql() {
     docker exec -i "$container" \
       psql -U "$db_user" -d "$db_name" -v ON_ERROR_STOP=1 --no-psqlrc -q < "$1"
+  }
+  # docker exec 走 unix socket＋peer auth，非 $db_user 的角色一律驗證失敗（實測：
+  # supabase_auth_admin 會拿「Peer authentication failed」）；容器內部一定聽 TCP
+  # 5432（不論外部 port mapping 是哪一個 port），改連那邊即可換角色連線。
+  run_sql_as_auth_admin() {
+    docker exec -i "$container" \
+      psql "host=127.0.0.1 port=5432 user=supabase_auth_admin dbname=${db_name} password=${auth_admin_password}" \
+      -v ON_ERROR_STOP=1 --no-psqlrc -q < "$1"
   }
 else
   # ${container} 的大括號是必要的，不是風格：macOS 內建的 bash 3.2 會把緊接在後面的
@@ -115,6 +138,35 @@ for f in "$here"/[0-9][0-9]_*.sql; do
     exit 1
   fi
 done
+
+# ---------------------------------------------------------------------------
+# LS-110 R1 F2：96_profiles_auto_create.sql 的六段情境測試都是以 $db_user（本機／CI
+# 預設 postgres）身分驗證 trigger；正式站寫 auth.users 的是 GoTrue 的
+# supabase_auth_admin，這裡另外用真正的角色連線插入一次，確認 trigger 在該角色下
+# 仍成功、profiles 確實拿到列——不只是「postgres 能跑」（該檔第 7 段已把 owner／
+# SECURITY DEFINER／trigger 啟用狀態釘成結構性斷言，這裡補上實際連線的證據）。
+# 插入與驗證分兩檔／兩種連線身分：supabase_auth_admin 對 public.profiles 沒有任何
+# grant（正式路徑上不需要，也不應該有），驗證與清理必須換回一般連線才讀得到。
+# ---------------------------------------------------------------------------
+auth_admin_insert="$here/auth_admin/profiles_trigger_probe_insert.sql"
+auth_admin_verify="$here/auth_admin/profiles_trigger_probe_verify.sql"
+name="auth_admin/profiles_trigger_probe（supabase_auth_admin 角色路徑）"
+insert_out="$tmp/auth_admin_probe_insert.out"
+verify_out="$tmp/auth_admin_probe_verify.out"
+echo "→ $name"
+if ! run_sql_as_auth_admin "$auth_admin_insert" > "$insert_out" 2>&1; then
+  echo "  ✗ $name 失敗（supabase_auth_admin insert）：" >&2
+  sed 's/^/    /' "$insert_out" >&2
+  exit 1
+fi
+sed 's/^/    /' "$insert_out"
+if ! run_sql "$auth_admin_verify" > "$verify_out" 2>&1; then
+  echo "  ✗ $name 失敗（驗證／清理）：" >&2
+  sed 's/^/    /' "$verify_out" >&2
+  exit 1
+fi
+sed 's/^/    /' "$verify_out"
+echo "  ✓ $name"
 
 # ---------------------------------------------------------------------------
 # 併發測試：owner 不變量在 READ COMMITTED 下的序列化

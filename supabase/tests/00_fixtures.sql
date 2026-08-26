@@ -46,13 +46,18 @@ values
   ('c0000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000',
    'authenticated', 'authenticated', 'perf@ls6.test',     now(), now(), '{}', '{}');
 
+-- LS-110：上面的 auth.users insert 已經觸發 trigger 自動建立 profiles 列（display_name
+-- 推導自 email 帳號部分），這裡用 on conflict do update 覆寫成 fixture 要的固定名稱
+-- ——後面測試（例如 87_comments_reactions_notifications.sql 驗 author_display_name）
+-- 依賴的是這裡的名字，不是 trigger 推導出來的。
 insert into public.profiles (id, display_name) values
   ('a0000000-0000-4000-8000-000000000001', 'A 家爸爸'),
   ('a0000000-0000-4000-8000-000000000002', 'A 家媽媽'),
   ('a0000000-0000-4000-8000-000000000003', 'A 家阿嬤'),
   ('b0000000-0000-4000-8000-000000000001', 'B 家爸爸'),
   ('b0000000-0000-4000-8000-000000000002', 'B 家媽媽'),
-  ('c0000000-0000-4000-8000-000000000001', '效能測試帳號');
+  ('c0000000-0000-4000-8000-000000000001', '效能測試帳號')
+on conflict (id) do update set display_name = excluded.display_name;
 
 insert into public.families (id, name, created_by) values
   ('fa000000-0000-4000-8000-000000000001', 'A 家',   'a0000000-0000-4000-8000-000000000001'),
