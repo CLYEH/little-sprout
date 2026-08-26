@@ -5,7 +5,7 @@
 # （scripts/ops/session-start.sh）用。Linear 那一半（Ready 無人接／In Progress 無 worktree／QA 但 test 未含）
 # 要 orchestrator 用 MCP list_issues 對照，這裡只印提醒。自測：scripts/ops/patrol.test.sh（合成 repo，掛 CI rules job）。
 #
-# 用法：patrol.sh [stale_minutes] [--brief|--json] [--no-fetch] [--no-pr] [--repo <path>]
+# 用法：patrol.sh [stale_minutes] [--brief|--json] [--no-fetch] [--no-pr] [--repo <path>] [--linear]
 #   stale_minutes  幾分鐘沒動算停滯（預設 45）
 #   --brief        只印表頭＋異常行（hook 注入 context 用）；全正常時末行「巡檢：無異常」
 #   --json         單一 JSON 物件（欄位見檔尾 json 分支），不依賴 jq
@@ -13,6 +13,10 @@
 #                  退回本機 origin/* 續跑——hook timeout 30s 不能被黑洞位址的 TCP 逾時（實測 75s）撐爆）
 #   --no-pr        略過 gh pr list（自測用；gh 未裝或失敗時本來就會自動略過並標示原因，不會炸）
 #   --repo <path>  指定 repo（任一 worktree 路徑皆可；預設取腳本所在 repo）；主 checkout 由 git-common-dir 推得
+#   --linear       human／brief 模式末段串接 scripts/ops/patrol-linear.sh（狀態對照／cycle 對帳／lane 補位／
+#                  開票結構的 Linear 半段機械化，LS-103）；缺 LINEAR_API_KEY 時它自己印「略過」不炸。與 --json
+#                  合併未支援（Linear 半段是獨立 JSON 物件，契約不合併）——這裡只印警告，另跑
+#                  `patrol-linear.sh --json`。
 #
 # 停滯判定（§4-b 三型態；stale＝上面的分鐘數）：
 #   PR       CONFLICTING／UNSTABLE／BEHIND／CHANGES_REQUESTED 立即標；CLEAN 且 APPROVED 立即標「可併」；
@@ -35,18 +39,19 @@
 # exit 0＝巡檢完成（有無異常都 0，異常在輸出）；2＝參數／repo 錯誤。
 set -uo pipefail
 
-STALE=45; MODE=human; DO_FETCH=1; DO_PR=1; REPO=
+STALE=45; MODE=human; DO_FETCH=1; DO_PR=1; REPO=; DO_LINEAR=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --brief) MODE=brief ;;
     --json) MODE=json ;;
     --no-fetch) DO_FETCH=0 ;;
     --no-pr) DO_PR=0 ;;
+    --linear) DO_LINEAR=1 ;;
     --repo)
       [ -n "${2:-}" ] || { echo "✗ patrol：--repo 缺值" >&2; exit 2; }
       REPO=$2; shift ;;
     -h|--help)
-      echo "用法：patrol.sh [stale_minutes] [--brief|--json] [--no-fetch] [--no-pr] [--repo <path>]（說明見檔頭註解）"; exit 0 ;;
+      echo "用法：patrol.sh [stale_minutes] [--brief|--json] [--no-fetch] [--no-pr] [--repo <path>] [--linear]（說明見檔頭註解）"; exit 0 ;;
     -*) echo "✗ patrol：未知參數 $1" >&2; exit 2 ;;
     *)
       case "$1" in ''|*[!0-9]*) echo "✗ patrol：stale 分鐘須為整數（得到「$1」）" >&2; exit 2 ;; esac
@@ -422,4 +427,20 @@ case "$MODE" in
     echo "  → list_issues state in (Ready, In Progress, In Review, QA)，對照上表 worktree／PR"
     ;;
 esac
+
+# ---- --linear（LS-103）：human／brief 模式串接 patrol-linear.sh 的動作清單；--json 不合併（見檔頭） ----
+if [ "$DO_LINEAR" -eq 1 ]; then
+  if [ "$MODE" = json ]; then
+    echo "⚠ patrol：--linear 與 --json 不支援合併（Linear 半段是獨立 JSON 物件）→ 另跑 bash scripts/ops/patrol-linear.sh --json" >&2
+  elif [ -x "${here}/patrol-linear.sh" ]; then
+    echo
+    if [ "$MODE" = brief ]; then
+      bash "${here}/patrol-linear.sh" --brief --repo "$ROOT"
+    else
+      bash "${here}/patrol-linear.sh" --repo "$ROOT"
+    fi
+  else
+    echo "⚠ patrol：--linear 但找不到 ${here}/patrol-linear.sh" >&2
+  fi
+fi
 exit 0

@@ -524,6 +524,22 @@ brief18="$(SIMCTL_LIST_JSON="$locked_json" bash "$patrol" --repo "$repo" --no-pr
 has   '⑱ --brief 也印「鎖中」異常' "$brief18" '鎖中（push gate 進行中）——勿關'
 rm -rf "$lockdir"
 
+# ---- ⑲ --linear（LS-103）：串接 patrol-linear.sh；合成 repo 沒有 .env，所以只驗「有串接、優雅略過」，
+#        不驗 Linear 查詢邏輯本身（那是 patrol-linear.test.sh 的範圍）。--json 與 --linear 合併時只警告、
+#        不破壞 --json 單一物件的契約（stdout 仍是合法 JSON，warning 走 stderr）----
+out19="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --linear "$STALE" 2>&1)"
+has '⑲ --linear human 模式串接 patrol-linear.sh（無 .env → 印略過）' "$out19" '略過（無 LINEAR_API_KEY）'
+brief19="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief --linear "$STALE" 2>&1)"
+has '⑲ --linear --brief 也串接（略過訊息仍在）' "$brief19" '略過（無 LINEAR_API_KEY）'
+json19_err="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json --linear "$STALE" 2>&1 1>/dev/null)"
+has '⑲ --linear 與 --json 合併只警告（不支援合併）' "$json19_err" '不支援合併'
+json19_out="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json --linear "$STALE" 2>/dev/null)"
+if printf '%s' "$json19_out" | python3 -c 'import json,sys; json.load(sys.stdin)' 2>/dev/null; then
+  echo "✓ ⑲ --linear --json 的 stdout 仍是合法單一 JSON 物件"
+else
+  echo "✗ ⑲ --linear --json 的 stdout 不是合法 JSON" >&2; printf '%s\n' "$json19_out" | sed 's/^/    /' >&2; fail=1
+fi
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
 fi
