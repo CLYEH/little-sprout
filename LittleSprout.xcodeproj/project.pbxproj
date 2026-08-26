@@ -52,6 +52,7 @@
 		6F71D1FB09D499364D5D1E32 /* FamilyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF4B6F33EBC80A3AA56E8FC /* FamilyModels.swift */; };
 		76B16560EF93FFF134B8FDE7 /* AppleSignInNonceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A912608AE602C827E4786763 /* AppleSignInNonceTests.swift */; };
 		7C64D41B5C041B3BFA66B7A8 /* EmailFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D71D805DBF9E7B36AF16BE8 /* EmailFormatTests.swift */; };
+		7DA98586E59FA617D07C323D /* SupabaseFamilyAPIClientInviteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64087AB29C1A51AC86834868 /* SupabaseFamilyAPIClientInviteTests.swift */; };
 		838BEA28E6C05A825D649B22 /* SupabaseFamilyAPIClientJoinTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */; };
 		87E501CF0FB428B9FB3A0DCF /* MockURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */; };
 		8A5D00A06F596E432294806B /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D45C2CD0AC1D735E5576ABB /* AppConfig.swift */; };
@@ -66,6 +67,7 @@
 		BA9894A590C79F2FDA2FB85D /* ApprovalStatusRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1154E2337B7278510C8971B1 /* ApprovalStatusRow.swift */; };
 		BC3FB92A8F2F032CC1F8797B /* StubFamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CC227F2B168D39029462E5 /* StubFamilyAPIClient.swift */; };
 		BEF3B2012A0964248A8D983B /* AppleSignInButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A80BDD3D72B37E3451EAC03 /* AppleSignInButton.swift */; };
+		C25CB47B6E864AD71513F432 /* FamilyStoreInviteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B134F4114955711989F4A4 /* FamilyStoreInviteTests.swift */; };
 		C3C4C4F16FFBC3D5561F3DB8 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A8630C948451C3739D8A263 /* AuthService.swift */; };
 		C49D2DD7EC2EF00A346703EB /* OTPVerificationModelVerifyRateLimitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28F1472213F03BCFC33624F8 /* OTPVerificationModelVerifyRateLimitTests.swift */; };
 		C5A680937E6BD7F0B4673749 /* AppleSignInNonce.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587B330E759DA2D787F4E63C /* AppleSignInNonce.swift */; };
@@ -127,8 +129,10 @@
 		577DBA3D01933EB35214704B /* OTPCodeField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPCodeField.swift; sourceTree = "<group>"; };
 		587B330E759DA2D787F4E63C /* AppleSignInNonce.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInNonce.swift; sourceTree = "<group>"; };
 		59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLProtocol.swift; sourceTree = "<group>"; };
+		64087AB29C1A51AC86834868 /* SupabaseFamilyAPIClientInviteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClientInviteTests.swift; sourceTree = "<group>"; };
 		64398867FF6A776CAD323AB7 /* LittleSprout.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LittleSprout.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6559B92B7B6A289D59C6481F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		65B134F4114955711989F4A4 /* FamilyStoreInviteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreInviteTests.swift; sourceTree = "<group>"; };
 		694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSectionUniquenessTests.swift; sourceTree = "<group>"; };
 		6994C01308D56E827DA85A61 /* SupabaseFamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClient.swift; sourceTree = "<group>"; };
 		69A9887FF91CF65FB62A256E /* KeyboardHeightObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHeightObserverTests.swift; sourceTree = "<group>"; };
@@ -291,6 +295,7 @@
 				48C785FE3D7CCF80C7870997 /* EmailDisplayNameTests.swift */,
 				2D71D805DBF9E7B36AF16BE8 /* EmailFormatTests.swift */,
 				226B824755111DECCA1F2AEE /* EmailSignInModelTests.swift */,
+				65B134F4114955711989F4A4 /* FamilyStoreInviteTests.swift */,
 				BA9BCE3B67830009105F917D /* FamilyStoreTests.swift */,
 				69A9887FF91CF65FB62A256E /* KeyboardHeightObserverTests.swift */,
 				A5C9C0FFAC9911BA268EBA27 /* OTPVerificationModelLockoutTests.swift */,
@@ -299,6 +304,7 @@
 				28F1472213F03BCFC33624F8 /* OTPVerificationModelVerifyRateLimitTests.swift */,
 				10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */,
 				F5E69B95CA3E637FEF6DFCCB /* SupabaseClientFactoryTests.swift */,
+				64087AB29C1A51AC86834868 /* SupabaseFamilyAPIClientInviteTests.swift */,
 				DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */,
 				94B90F66016EC2C905347224 /* SupabaseFamilyAPIClientTests.swift */,
 				459A0B1D845C2292804A8309 /* Support */,
@@ -573,6 +579,7 @@
 				C643708C9CD676EABE8E33F6 /* EmailDisplayNameTests.swift in Sources */,
 				7C64D41B5C041B3BFA66B7A8 /* EmailFormatTests.swift in Sources */,
 				5BBAB29B23BB37B83B46D487 /* EmailSignInModelTests.swift in Sources */,
+				C25CB47B6E864AD71513F432 /* FamilyStoreInviteTests.swift in Sources */,
 				2923B118178851D5C29651A5 /* FamilyStoreTests.swift in Sources */,
 				336A7171428B83A957574DFF /* InMemoryAuthLocalStorage.swift in Sources */,
 				0783F95A1496D17C21C9305E /* KeyboardHeightObserverTests.swift in Sources */,
@@ -586,6 +593,7 @@
 				BC3FB92A8F2F032CC1F8797B /* StubFamilyAPIClient.swift in Sources */,
 				F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */,
 				4FBA0B132FA839140B2E7FB4 /* SupabaseClientFactoryTests.swift in Sources */,
+				7DA98586E59FA617D07C323D /* SupabaseFamilyAPIClientInviteTests.swift in Sources */,
 				838BEA28E6C05A825D649B22 /* SupabaseFamilyAPIClientJoinTests.swift in Sources */,
 				15E53C663EE9CEDBF1E4FCCE /* SupabaseFamilyAPIClientTests.swift in Sources */,
 				FDE17BE504613C437ADC4F9C /* TestSupabaseClient.swift in Sources */,

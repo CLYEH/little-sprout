@@ -9,7 +9,9 @@ import os
 final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
     typealias CreateFamilyHandler = @Sendable (String) async throws -> Family
     typealias FetchMyFamilyHandler = @Sendable () async throws -> Family?
-    typealias CreateInviteHandler = @Sendable (UUID, FamilyRole, Date, Int) async throws -> String
+    typealias CreateInviteHandler = @Sendable (UUID, FamilyRole, Date, Int) async throws -> InviteRecord
+    typealias FetchLatestActiveInviteHandler = @Sendable (UUID) async throws -> InviteRecord?
+    typealias RevokeInviteHandler = @Sendable (UUID) async throws -> Void
 
     enum StubError: Error {
         case unconfigured
@@ -28,12 +30,19 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
         var fetchMyFamilyHandler: FetchMyFamilyHandler = { nil }
         var createInviteHandler: CreateInviteHandler = { _, _, _, _ in throw StubError.unconfigured }
         var createInviteCalls: [CreateInviteCall] = []
+        var fetchLatestActiveInviteHandler: FetchLatestActiveInviteHandler = { _ in nil }
+        var revokeInviteHandler: RevokeInviteHandler = { _ in throw StubError.unconfigured }
+        var revokeInviteCalls: [UUID] = []
     }
 
     private let box = OSAllocatedUnfairLock(initialState: Box())
 
     var createInviteCalls: [CreateInviteCall] {
         box.withLock { $0.createInviteCalls }
+    }
+
+    var revokeInviteCalls: [UUID] {
+        box.withLock { $0.revokeInviteCalls }
     }
 
     func setCreateFamilyHandler(_ handler: @escaping CreateFamilyHandler) {
@@ -48,6 +57,14 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
         box.withLock { $0.createInviteHandler = handler }
     }
 
+    func setFetchLatestActiveInviteHandler(_ handler: @escaping FetchLatestActiveInviteHandler) {
+        box.withLock { $0.fetchLatestActiveInviteHandler = handler }
+    }
+
+    func setRevokeInviteHandler(_ handler: @escaping RevokeInviteHandler) {
+        box.withLock { $0.revokeInviteHandler = handler }
+    }
+
     func createFamily(name: String) async throws -> Family {
         let handler = box.withLock { $0.createFamilyHandler }
         return try await handler(name)
@@ -58,11 +75,22 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
         return try await handler()
     }
 
-    func createInvite(familyID: UUID, role: FamilyRole, expiresAt: Date, maxUses: Int) async throws -> String {
+    func createInvite(familyID: UUID, role: FamilyRole, expiresAt: Date, maxUses: Int) async throws -> InviteRecord {
         let call = CreateInviteCall(familyID: familyID, role: role, expiresAt: expiresAt, maxUses: maxUses)
         box.withLock { $0.createInviteCalls.append(call) }
         let handler = box.withLock { $0.createInviteHandler }
         return try await handler(familyID, role, expiresAt, maxUses)
+    }
+
+    func fetchLatestActiveInvite(familyID: UUID) async throws -> InviteRecord? {
+        let handler = box.withLock { $0.fetchLatestActiveInviteHandler }
+        return try await handler(familyID)
+    }
+
+    func revokeInvite(id: UUID) async throws {
+        box.withLock { $0.revokeInviteCalls.append(id) }
+        let handler = box.withLock { $0.revokeInviteHandler }
+        try await handler(id)
     }
 
     func updateFamilyName(familyID: UUID, name: String) async throws { throw StubError.unconfigured }

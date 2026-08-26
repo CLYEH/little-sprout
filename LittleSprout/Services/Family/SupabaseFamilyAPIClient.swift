@@ -111,7 +111,7 @@ final class SupabaseFamilyAPIClient: FamilyAPIClient {
         }
     }
 
-    func createInvite(familyID: UUID, role: FamilyRole, expiresAt: Date, maxUses: Int) async throws -> String {
+    func createInvite(familyID: UUID, role: FamilyRole, expiresAt: Date, maxUses: Int) async throws -> InviteRecord {
         do {
             let params = CreateInviteParams(
                 familyID: familyID,
@@ -127,7 +127,60 @@ final class SupabaseFamilyAPIClient: FamilyAPIClient {
             let response: PostgrestResponse<String> = try await client
                 .rpc("create_invite", params: params)
                 .execute()
-            return response.value
+            // R1 F2/F4：create_invite 只回傳 code（見 RPC 簽章，20260825070627_invite_code_6.sql）；
+            // code 是 unique 欄位，反查剛建立的那一列拿到 id（撤銷用）／used_count（顯示用）。
+            return try await fetchInvite(byCode: response.value)
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    private func fetchInvite(byCode code: String) async throws -> InviteRecord {
+        let response: PostgrestResponse<InviteRecord> = try await client
+            .from("invites")
+            .select()
+            .eq("code", value: code)
+            .single()
+            .execute()
+        return response.value
+    }
+
+    func fetchLatestActiveInvite(familyID: UUID) async throws -> InviteRecord? {
+        do {
+            // PostgREST 的 filter 不支援欄位對欄位比較（used_count < max_uses 兩邊都是
+            // 欄位），這裡只能先撈「未過期」的候選列——單一家庭的邀請碼數量級是個位數，
+            // limit 5 綽綽有餘——「還有名額」交給呼叫端在記憶體裡篩（R1 F4）。排序用
+            // expires_at 而非 created_at，理由見 `InviteRecord` 文件註解。
+            let response: PostgrestResponse<[InviteRecord]> = try await client
+                .from("invites")
+                .select()
+                .eq("family_id", value: familyID)
+                .gt("expires_at", value: Self.iso8601String(from: Date()))
+                .order("expires_at", ascending: false)
+                .limit(5)
+                .execute()
+            return response.value.first { $0.usedCount < $0.maxUses }
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    /// R1 F2：撤銷邀請碼——後端沒有 `revoke_invite` RPC，DELETE 是唯一路徑（`invites_delete`
+    /// policy 只放行 owner，見 `20260822120200_rls_policies.sql:182`）。跟
+    /// `requireUpdatedRow` 同樣理由：DELETE 對不符合 RLS 的列會静默匹配 0 筆，`.select()`
+    /// 回應是空陣列而不是錯誤，這裡明確把「0 列受影響」轉成錯誤，不讓呼叫端誤以為舊碼真的
+    /// 被撤銷了。
+    func revokeInvite(id: UUID) async throws {
+        do {
+            let response: PostgrestResponse<[InviteRecord]> = try await client
+                .from("invites")
+                .delete()
+                .eq("id", value: id)
+                .select()
+                .execute()
+            guard !response.value.isEmpty else {
+                throw AppError.rejected(message: "沒有權限撤銷這支邀請碼，或邀請碼已經不存在", code: "no_rows_deleted")
+            }
         } catch {
             throw AppError.map(error)
         }

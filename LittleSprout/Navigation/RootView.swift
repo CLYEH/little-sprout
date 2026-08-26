@@ -35,6 +35,13 @@ struct RootView: View {
 ///
 /// 查詢失敗時刻意不當成「沒有家庭」處理：那樣會讓已經有家庭、只是網路暫時失敗的使用者被
 /// 誤導進三岔路、看起來像能重新建立一個家庭。
+///
+/// R1 F1：`.task(id: authStore.session?.userID)`——不是單純的 `.task { if lookupState ==
+/// .idle { ... } }`。`familyStore` 隨 app 存活，登出不會重置它；若只看 `lookupState`，
+/// 第二位在同一台裝置登入的使用者會因為 store 裡還殘留第一位的 `.success` 狀態而被整個
+/// 跳過查詢，直接沿用第一位的家庭與邀請碼。這裡改成每次 user id 變動（含首次登入、含
+/// 登出時變 nil）都呼叫 `familyStore.syncOwner(to:)`——id 不同就先歸零再視情況重查，見該
+/// 方法文件註解。
 private struct AuthenticatedGate: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
@@ -56,10 +63,8 @@ private struct AuthenticatedGate: View {
                 }
             }
         }
-        .task {
-            if familyStore.lookupState == .idle {
-                await familyStore.refreshMyFamily()
-            }
+        .task(id: authStore.session?.userID) {
+            await familyStore.syncOwner(to: authStore.session?.userID)
         }
     }
 }

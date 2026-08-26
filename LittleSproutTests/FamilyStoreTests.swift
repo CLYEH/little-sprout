@@ -13,6 +13,17 @@ final class FamilyStoreTests: XCTestCase {
         Family(id: id ?? familyID, name: name, createdBy: UUID(), createdAt: Date(), requireApproval: true)
     }
 
+    private func makeInviteRecord(
+        id: UUID = UUID(),
+        code: String = "K7M2FD",
+        role: FamilyRole = .member,
+        maxUses: Int = FamilyStore.defaultInviteMaxUses,
+        usedCount: Int = 0,
+        expiresAt: Date = Date().addingTimeInterval(7 * 86400)
+    ) -> InviteRecord {
+        InviteRecord(id: id, code: code, role: role, maxUses: maxUses, usedCount: usedCount, expiresAt: expiresAt)
+    }
+
     // MARK: - refreshMyFamily（三岔路 root routing 依這個結果判斷）
 
     func test_refreshMyFamily_hasFamily_setsMyFamilyAndSuccess() async {
@@ -50,6 +61,42 @@ final class FamilyStoreTests: XCTestCase {
 
         XCTAssertNil(result)
         XCTAssertEqual(store.lookupState, .failure(.network(message: "offline")))
+    }
+
+    func test_refreshMyFamily_whileSubmitting_ignoresDuplicateCallAndOnlyCallsAPIOnce() async {
+        // R1 F8：跟 createFamily／createInvite 對稱的 in-flight guard——`syncOwner` 落地後
+        // `refreshMyFamily` 多了第二個觸發點，兩個併發呼叫的完成順序原本會決定最終
+        // `myFamily`，這裡驗證第二次呼叫直接被擋下，不重新發一次請求。
+        let stub = StubFamilyAPIClient()
+        let callCount = OSAllocatedUnfairLock(initialState: 0)
+        let (gate, gateContinuation) = AsyncStream<Void>.makeStream()
+        let family = makeFamily()
+        stub.setFetchMyFamilyHandler {
+            callCount.withLock { $0 += 1 }
+            var iterator = gate.makeAsyncIterator()
+            _ = await iterator.next()
+            return family
+        }
+        let store = FamilyStore(apiClient: stub)
+
+        let firstCallTask = Task { await store.refreshMyFamily() }
+        var guardIterations = 0
+        while store.lookupState != .submitting {
+            guardIterations += 1
+            guard guardIterations < 200 else {
+                gateContinuation.finish()
+                return XCTFail("等待 lookupState 進入 .submitting 逾時")
+            }
+            try? await Task.sleep(nanoseconds: 5_000_000)
+        }
+
+        let secondResult = await store.refreshMyFamily()
+
+        XCTAssertEqual(secondResult, nil, "送出中應該直接回傳目前值（尚未有結果，是 nil）")
+        XCTAssertEqual(callCount.withLock { $0 }, 1, "底層 API 只該被呼叫一次")
+
+        gateContinuation.finish()
+        _ = await firstCallTask.value
     }
 
     // MARK: - createFamily（05 建立家庭）
@@ -107,7 +154,16 @@ final class FamilyStoreTests: XCTestCase {
         // `Task.yield()` 只保證「讓出這一次」，不保證 MainActor 排程器接下來一定先跑
         // firstCallTask（整個測試套件併發跑、佇列上還有其他工作時不可靠，實測會偶發失敗）；
         // 改用 `AuthStoreTests` 已驗證過會動的短輪詢寫法（`try await Task.sleep(nanoseconds:)`）。
+        // R1 F7：輪詢加上限＋`XCTFail`——原本 `while ... { try? await Task.sleep(...) }`
+        // 若 store 從此不進 `.submitting`，不是測試失敗而是掛到 XCTest timeout（診斷訊息
+        // 沒用）；若這個 Task 被取消，`Task.sleep` 立即 throw、`try?` 吞掉會變成熱迴圈空轉。
+        var guardIterations = 0
         while store.createFamilyState != .submitting {
+            guardIterations += 1
+            guard guardIterations < 200 else {
+                gateContinuation.finish()
+                return XCTFail("等待 createFamilyState 進入 .submitting 逾時（1 秒）")
+            }
             try? await Task.sleep(nanoseconds: 5_000_000)
         }
 
@@ -121,87 +177,36 @@ final class FamilyStoreTests: XCTestCase {
         XCTAssertTrue(firstCallSucceeded, "放行後第一次呼叫應該正常完成")
     }
 
-    func test_resetCreateFamilyState_clearsFailureButNotSuccess() {
+    // R1 F6：原本的 `test_resetCreateFamilyState_clearsFailureButNotSuccess` 只斷言
+    // idle → idle，既沒測「清掉 failure」也沒測「保留 success」——把 `resetCreateFamilyState`
+    // 的 `guard case .failure` 拿掉、或反過來寫成清掉 success，那條測試照樣綠。拆成兩條，
+    // 對照 `test_resetCreateInviteState_clearsFailureOnly` 的樣子。
+
+    func test_resetCreateFamilyState_clearsFailure() async {
         let stub = StubFamilyAPIClient()
+        stub.setCreateFamilyHandler { _ in throw AppError.network(message: "offline") }
         let store = FamilyStore(apiClient: stub)
-
-        store.resetCreateFamilyState()
-        XCTAssertEqual(store.createFamilyState, .idle, "本來就是 idle，重置後仍是 idle")
-    }
-
-    // MARK: - createInvite（07 邀請家人）
-
-    func test_createInvite_success_setsLatestInviteAndSuccessState() async {
-        let stub = StubFamilyAPIClient()
-        let family = makeFamily()
-        stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
-        await store.refreshMyFamily()
-        stub.setCreateInviteHandler { _, _, _, _ in "K7M2FD" }
-
-        let code = await store.createInvite(role: .member)
-
-        XCTAssertEqual(code, "K7M2FD")
-        XCTAssertEqual(store.latestInvite?.code, "K7M2FD")
-        XCTAssertEqual(store.latestInvite?.role, .member)
-        XCTAssertEqual(store.latestInvite?.maxUses, FamilyStore.defaultInviteMaxUses)
-        XCTAssertEqual(store.createInviteState, .success)
-        // 07 沒有 UI 讓使用者自訂期限與次數——固定用既定決策（7 天／5 次）。
-        XCTAssertEqual(stub.createInviteCalls.last?.maxUses, FamilyStore.defaultInviteMaxUses)
-    }
-
-    func test_createInvite_withoutFamily_failsWithoutCallingAPI() async {
-        // 呼叫端自己組錯前置條件（沒有家庭卻想建邀請碼），不對應任何後端錯誤碼——不該真的打
-        // 一次網路才發現這件事。
-        let stub = StubFamilyAPIClient()
-        stub.setCreateInviteHandler { _, _, _, _ in
-            XCTFail("沒有家庭時不該呼叫 createInvite")
-            throw StubFamilyAPIClient.StubError.unconfigured
-        }
-        let store = FamilyStore(apiClient: stub)
-
-        let code = await store.createInvite(role: .member)
-
-        XCTAssertNil(code)
-        guard case .failure = store.createInviteState else {
-            return XCTFail("沒有家庭應該落在 .failure，實際是 \(store.createInviteState)")
-        }
-    }
-
-    func test_createInvite_generationCollision_mapsToRetryableSystemTier() async {
-        // LS016（邀請碼產生連續撞碼）：`AppError.LSErrorCode.tier` 定案歸 `retryableSystem`
-        // （見 `AppError.swift`），跟「換個輸入」的 validationRetryable 不同層——這裡驗證
-        // `FamilyStore` 原封不動把已經歸好層的錯誤存進 `createInviteState`，UI 才能依層級
-        // 挑對文案（「請再試一次」而不是「檢查輸入」）。
-        let stub = StubFamilyAPIClient()
-        let family = makeFamily()
-        stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
-        await store.refreshMyFamily()
-        stub.setCreateInviteHandler { _, _, _, _ in
-            throw AppError.retryableSystem(message: "請再試一次", code: "LS016")
-        }
-
-        let code = await store.createInvite(role: .member)
-
-        XCTAssertNil(code)
-        XCTAssertEqual(store.createInviteState, .failure(.retryableSystem(message: "請再試一次", code: "LS016")))
-    }
-
-    func test_resetCreateInviteState_clearsFailureOnly() async {
-        let stub = StubFamilyAPIClient()
-        let family = makeFamily()
-        stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
-        await store.refreshMyFamily()
-        stub.setCreateInviteHandler { _, _, _, _ in throw AppError.network(message: "offline") }
-        _ = await store.createInvite(role: .member)
-        guard case .failure = store.createInviteState else {
+        _ = await store.createFamily(name: "葉家")
+        guard case .failure = store.createFamilyState else {
             return XCTFail("前置條件失敗：預期先進入 .failure")
         }
 
-        store.resetCreateInviteState()
+        store.resetCreateFamilyState()
 
-        XCTAssertEqual(store.createInviteState, .idle)
+        XCTAssertEqual(store.createFamilyState, .idle)
     }
+
+    func test_resetCreateFamilyState_doesNotClearSuccess() async {
+        let stub = StubFamilyAPIClient()
+        let family = makeFamily(name: "葉家")
+        stub.setCreateFamilyHandler { _ in family }
+        let store = FamilyStore(apiClient: stub)
+        _ = await store.createFamily(name: "葉家")
+        XCTAssertEqual(store.createFamilyState, .success, "前置條件失敗：預期先進入 .success")
+
+        store.resetCreateFamilyState()
+
+        XCTAssertEqual(store.createFamilyState, .success, "guard case .failure 只該清 failure，success 不該被動到")
+    }
+
 }

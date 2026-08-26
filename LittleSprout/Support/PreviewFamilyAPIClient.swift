@@ -15,9 +15,13 @@ private final class PreviewFamilyAPIClient: FamilyAPIClient, @unchecked Sendable
 
     func setRequireApproval(familyID: UUID, requireApproval: Bool) async throws {}
 
-    func createInvite(familyID: UUID, role: FamilyRole, expiresAt: Date, maxUses: Int) async throws -> String {
-        "K7M2FD"
+    func createInvite(familyID: UUID, role: FamilyRole, expiresAt: Date, maxUses: Int) async throws -> InviteRecord {
+        InviteRecord(id: UUID(), code: "K7M2FD", role: role, maxUses: maxUses, usedCount: 0, expiresAt: expiresAt)
     }
+
+    func fetchLatestActiveInvite(familyID: UUID) async throws -> InviteRecord? { nil }
+
+    func revokeInvite(id: UUID) async throws {}
 
     func requestJoin(code: String) async throws -> JoinRequestOutcome {
         .joined(familyID: UUID())
