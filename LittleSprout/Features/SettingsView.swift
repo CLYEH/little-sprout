@@ -7,6 +7,7 @@ import SwiftUI
 /// `AuthStore.signOut()` 已實作並測過，成本很低，先接上這一顆。
 struct SettingsView: View {
     let authStore: AuthStore
+    let familyStore: FamilyStore
 
     @State private var isSigningOut = false
     @State private var errorMessage: String?
@@ -25,7 +26,7 @@ struct SettingsView: View {
             ContentUnavailableView {
                 Label("設定", systemImage: "gearshape")
             } description: {
-                Text("家庭管理、成員邀請與帳號設定會顯示在這裡。")
+                Text("家庭管理與帳號設定會顯示在這裡。")
             }
             // LS-17 QA1：原 `Button("登出", role: .destructive, action: signOut)` 實測
             // 32×19pt，違反長輩硬約束 ≥44pt 點擊目標。改用 label closure 加不可見 padding
@@ -64,5 +65,5 @@ struct SettingsView: View {
 }
 
 #Preview {
-    NavigationStack { SettingsView(authStore: .preview()) }
+    NavigationStack { SettingsView(authStore: .preview(), familyStore: .preview()) }
 }

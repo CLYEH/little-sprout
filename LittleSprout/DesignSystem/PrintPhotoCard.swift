@@ -28,6 +28,18 @@ struct PrintPhotoCard: View {
         static let iPad = MountPoolOpacity(
             topLeading: 0.418, topTrailing: 0.207, bottomLeading: 0.132, bottomTrailing: 0.03
         )
+        /// LS-107：04 三岔路「我有邀請碼」卡的沖印品（實測 `design/littlesprout.pen`
+        /// frame `RxXvq` 節點 `ppXvK` 的四顆漸層，與 `.welcome` 剛好同值——04 與歡迎頁共用
+        /// 同一組池子，不是巧合，是同一批 8 張家人合照沖印品共用的池子規格之一）。
+        static let fork = welcome
+        /// LS-107：04-iPad「我有邀請碼」卡（frame `RHhJ1` 節點 `WceLk`）。
+        static let forkIPad = MountPoolOpacity(
+            topLeading: 0.403, topTrailing: 0.054, bottomLeading: 0.173, bottomTrailing: 0.03
+        )
+        /// LS-107：07a 邀請家人空狀態的範例沖印品（frame `z6DOE` 節點 `kOZbf`）。
+        static let inviteSample = MountPoolOpacity(
+            topLeading: 0.432, topTrailing: 0.277, bottomLeading: 0.342, bottomTrailing: 0.23
+        )
     }
 
     var body: some View {
