@@ -70,11 +70,24 @@ begin
 end;
 $$;
 
-drop trigger if exists on_auth_user_created on auth.users;
-
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function private.handle_new_auth_user();
+-- orchestrator 訂正（不等 DESTRUCTIVE-APPROVED）：原本這裡是 `drop trigger if
+-- exists` 再 `create trigger`，會被 migration-breaking-check.sh 判成 DESTRUCTIVE
+-- （不分是否 IF EXISTS），需要使用者本人在 PR body 蓋 DESTRUCTIVE-APPROVED 才能過
+-- CI。改成純 DO 區塊守衛：trigger 已存在就跳過，不存在才建——沒有 DROP，一樣冪等
+-- （函式本身已是 create or replace，trigger 定義若之後要改，本來就得靠新 migration
+-- 明確處理，不是這裡該管的事）。
+do $$
+begin
+  if not exists (
+    select 1 from pg_trigger
+     where tgname = 'on_auth_user_created' and tgrelid = 'auth.users'::regclass
+  ) then
+    create trigger on_auth_user_created
+      after insert on auth.users
+      for each row execute function private.handle_new_auth_user();
+  end if;
+end;
+$$;
 
 -- ---------------------------------------------------------------------------
 -- 回填：trigger 佈署之前就已存在、缺 profiles 列的 auth.users
