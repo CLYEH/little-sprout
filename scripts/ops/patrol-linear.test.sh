@@ -84,7 +84,9 @@ EOF
 # LS-205（缺 size：候補排最後＋結構 (e) 命中）、LS-96（常駐待辦池，priority 故意設最高也永不列為候補，
 # R1 I1 起結構 (e) 豁免它——它自己也缺 size 但不該再被列出）、LS-210（lane:backend、In Progress、
 # cycle=4≠目前 cycle 5 → cycle 對帳 (a) 命中）、LS-206（缺「## 驗收」→ R1 F1 待 Spec）、
-# LS-207（缺 project → R1 F1 待結構）。hasNextPage=false。
+# LS-207（缺 project → R1 F1 待結構）、LS-211（R1 I2：lane:backend、Backlog、cycle=4≠目前 cycle 5，
+# 是該 lane 唯一候補但在 cycle 外 → needs_scope_plus，human/brief 應標「cycle 外，取第一張需 scope+」）。
+# hasNextPage=false。
 cat > "$fx/issues_page2.json" <<'EOF'
 {"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
   {"identifier":"LS-204","title":"harness C","description":"## 驗收\n過","priority":1,"createdAt":"2026-01-04T00:00:00.000Z",
@@ -109,6 +111,10 @@ cat > "$fx/issues_page2.json" <<'EOF'
   {"identifier":"LS-207","title":"harness 缺 project","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-07T00:00:00.000Z",
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"},{"name":"size:S"}]},
    "cycle":{"id":"cyc-5","number":5},"project":null,"projectMilestone":null,"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-211","title":"backend cycle 外候補","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-08T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:backend"}]},
+   "cycle":{"id":"cyc-4","number":4},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
    "inverseRelations":{"nodes":[]}}
 ]}}}
 EOF
@@ -230,6 +236,17 @@ check("② cycle 外 active 票（LS-210，cycle=4≠目前 cycle 5）列 cycle 
 check("② cycle 對帳 (a) 動作含 save_issue LS-210 cycle=5",
       any("save_issue LS-210 cycle=5" in a for a in d["actions"]))
 
+check("② R1 F5：cycle 對帳 (b)（LS-203 在目前 cycle 內、Backlog、blockedBy 未解）命中",
+      "LS-203" in d["cycle_check"]["b"])
+
+backend = d["lanes"]["lane:backend"]
+check("② R1 I2：lane:backend 唯一候補 LS-211 在 cycle 外 → needs_scope_plus",
+      backend["candidates"] == ["LS-211"] and backend["needs_scope_plus"] is True)
+check("② R1 I2：lane:backend 選中 LS-211，動作含 scope+ 與 Ready 兩行",
+      backend["chosen"] == "LS-211"
+      and any("save_issue LS-211 cycle=5（scope+，取自 cycle 外）" in a for a in backend["actions"])
+      and any("save_issue LS-211 state=Ready cycle=5" in a for a in backend["actions"]))
+
 print("OK" if ok else "FAIL")
 PYEOF
 )"
@@ -260,6 +277,8 @@ has_in '④b human：lane:harness 行含待 Spec（LS-206）' "$out_human" '待S
 has_in '④b human：lane:harness 行含待結構（LS-207）' "$out_human" '待結構：LS-207'
 has_in '④b --brief：也印 Lane 狀態表與待 Spec／待結構' "$out_brief" '待Spec：LS-206'
 has_in '④b --brief：cycle 一行同樣在（不是只有 --json 才有）' "$out_brief" 'current cycle：5（剩'
+has_in '④b R1 I2：human lane:backend 候補標示 cycle 外需 scope+' "$out_human" 'LS-211（cycle 外，取第一張需 scope+）'
+has_in '④b R1 I2：--brief 同樣標示 cycle 外 scope+' "$out_brief" 'LS-211（cycle 外，取第一張需 scope+）'
 
 # ---- ⑤ 參數錯誤 fail closed ----
 out="$(bash "$plsh" --repo 2>&1)"; rc=$?
@@ -268,6 +287,237 @@ out="$(bash "$plsh" --bogus 2>&1)"; rc=$?
 if [ "$rc" -eq 2 ] && printf '%s' "$out" | grep -qF '未知參數'; then echo "✓ ⑤ 未知參數 → exit 2"; else echo "✗ ⑤ 未知參數應 exit 2（實得 ${rc}）" >&2; fail=1; fi
 out="$(bash "$plsh" --repo "$work/nope" 2>&1)"; rc=$?
 if [ "$rc" -eq 2 ]; then echo "✓ ⑤ --repo 不存在 → exit 2"; else echo "✗ ⑤ --repo 不存在應 exit 2（實得 ${rc}）" >&2; fail=1; fi
+
+# ---- ⑥ R1 F5：fail-loud 負向控制（GraphQL errors／curl 非 0 exit／非法 JSON／缺 data 物件）----
+# 用一支獨立的假 curl（依 CURL_FAIL_MODE 決定回應），只在單一指令前綴 PATH 蓋過 $work/bin，不影響
+# 其他測項；重用 $repo（已有 .env token）即可，這幾種失敗都在 gql() 第一次呼叫（issues 查詢）就會炸。
+mkdir -p "$work/bin_fail"
+cat > "$work/bin_fail/curl" <<'EOF'
+#!/bin/bash
+mode="${CURL_FAIL_MODE:?}"
+case "$mode" in
+  errors) echo '{"errors":[{"message":"stub：模擬 GraphQL 錯誤"}]}' ;;
+  badjson) echo '不是 JSON' ;;
+  nulldata) echo '{"data":null}' ;;
+  exit7) exit 7 ;;
+esac
+EOF
+chmod +x "$work/bin_fail/curl"
+
+check_fail_mode() {
+  local label="$1" mode="$2" out rc
+  out="$(CURL_FAIL_MODE="$mode" PATH="$work/bin_fail:$PATH" bash "$plsh" --repo "$repo" --json 2>&1)"; rc=$?
+  if [ "$rc" -eq 1 ]; then
+    echo "✓ ⑥ ${label} → exit 1（fail loud）"
+  else
+    echo "✗ ⑥ ${label} 應 exit 1（實得 ${rc}）" >&2
+    printf '%s\n' "$out" | sed 's/^/    /' >&2
+    fail=1
+  fi
+}
+check_fail_mode 'GraphQL errors 欄位' errors
+check_fail_mode 'curl 非 0 exit（連線失敗）' exit7
+check_fail_mode '回應不是合法 JSON' badjson
+check_fail_mode 'R1 F5：合法 JSON 但缺 data 物件（{"data":null}）' nulldata
+
+# ---- ⑦ R1 F5：cycle 對帳 (d)（剩餘時間 <24h）——用執行當下算出的動態時間戳，不寫死日期，
+#        避免測試在特定日期之後失效；獨立 repo／fixture，不與 ② 的固定 2099 endsAt 互相干擾 ----
+repo_d="$work/repo_d"
+git init -q -b main "$repo_d"
+git -C "$repo_d" config user.email test@example.com
+git -C "$repo_d" config user.name Test
+: > "$repo_d/.gitkeep"; git -C "$repo_d" add .gitkeep; git -C "$repo_d" -c commit.gpgsign=false commit -q -m 'chore: init'
+printf 'LINEAR_API_KEY=test-token-not-real\n' > "$repo_d/.env"
+
+fx_d="$work/fixtures_d"
+mkdir -p "$fx_d"
+now_epoch=$(date -u +%s)
+end_epoch=$((now_epoch + 36000))     # 10 小時後 → remaining_h ≈10 <24，應觸發 (d)
+start_epoch=$((now_epoch - 259200))  # 3 天前，只是避免 age_days 判定跑到非預期分支
+end_iso=$(date -u -r "$end_epoch" +"%Y-%m-%dT%H:%M:%S.000Z")
+start_iso=$(date -u -r "$start_epoch" +"%Y-%m-%dT%H:%M:%S.000Z")
+cat > "$fx_d/cycles.json" <<EOF
+{"data":{"team":{"cycles":{"nodes":[
+  {"id":"cyc-9","number":9,"startsAt":"${start_iso}","endsAt":"${end_iso}","isActive":true}
+]}}}}
+EOF
+cat > "$fx_d/documents.json" <<'EOF'
+{"data":{"documents":{"nodes":[{"id":"doc-9","title":"Cycle 9 規劃"}]}}}
+EOF
+cat > "$fx_d/cycle_issues.json" <<'EOF'
+{"data":{"cycle":{"issues":{"nodes":[]}}}}
+EOF
+cat > "$fx_d/issues_page1.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}
+EOF
+mkdir -p "$work/bin_d"
+cat > "$work/bin_d/curl" <<EOF
+#!/bin/bash
+fx="${fx_d}"
+data=""
+while [ \$# -gt 0 ]; do
+  case "\$1" in
+    --data) data=\$2; shift ;;
+  esac
+  shift
+done
+case "\$data" in
+  *'documents('*) cat "\$fx/documents.json" ;;
+  *'cycle(id:'*) cat "\$fx/cycle_issues.json" ;;
+  *'cycles('*) cat "\$fx/cycles.json" ;;
+  *'issues('*) cat "\$fx/issues_page1.json" ;;
+  *) echo '{"errors":[{"message":"stub curl：認不出的 query"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_d/curl"
+
+out_d="$(PATH="$work/bin_d:$PATH" bash "$plsh" --repo "$repo_d" --json 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ]; then
+  echo "✓ ⑦ cycle (d) fixture 跑一輪 exit 0"
+else
+  echo "✗ ⑦ cycle (d) fixture 應 exit 0（實得 ${rc}）" >&2
+  printf '%s\n' "$out_d" | sed 's/^/    /' >&2
+  fail=1
+fi
+if printf '%s' "$out_d" | grep -qF 'Cycle 9 剩'; then
+  echo "✓ ⑦ R1 F5：cycle 對帳 (d) 命中（剩 <24h）"
+else
+  echo "✗ ⑦ cycle 對帳 (d) 應命中（剩 <24h）" >&2
+  printf '%s\n' "$out_d" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ---- ⑧ R1 F2：design_forced_full()／pen_open_status()——ui 票 In Progress 讀取 Pen 時
+#        design lane 視為滿（wip=limit），不會誤補派 design 票。獨立 repo／worktree／fixture。----
+repo_pen="$work/repo_pen"
+git init -q -b main "$repo_pen"
+git -C "$repo_pen" config user.email test@example.com
+git -C "$repo_pen" config user.name Test
+: > "$repo_pen/.gitkeep"; git -C "$repo_pen" add .gitkeep; git -C "$repo_pen" -c commit.gpgsign=false commit -q -m 'chore: init'
+printf 'LINEAR_API_KEY=test-token-not-real\n' > "$repo_pen/.env"
+
+# LS-950 這張 ui 票的 worktree：worktree_tickets() 靠資料夾名稱 LS-<n> 辨識；want_path 取
+# git 實際回報的路徑（不用 bash cd/pwd 自算，避免 macOS /tmp↔/private/tmp 之類的 symlink
+# 正規化落差讓 os.path.realpath() 比對不到）。
+git -C "$repo_pen" worktree add -q "$work/wt/LS-950" -b ls950-branch
+mkdir -p "$work/wt/LS-950/design"
+: > "$work/wt/LS-950/design/littlesprout.pen"
+wt_reported=$(git -C "$repo_pen" worktree list --porcelain | awk '/^worktree /{print $2}' | grep '/LS-950$')
+want_path="${wt_reported}/design/littlesprout.pen"
+
+fx_pen="$work/fixtures_pen"
+mkdir -p "$fx_pen"
+cat > "$fx_pen/cycles.json" <<'EOF'
+{"data":{"team":{"cycles":{"nodes":[
+  {"id":"cyc-5","number":5,"startsAt":"2020-01-01T00:00:00.000Z","endsAt":"2099-01-01T00:00:00.000Z","isActive":true}
+]}}}}
+EOF
+cat > "$fx_pen/documents.json" <<'EOF'
+{"data":{"documents":{"nodes":[{"id":"doc-1","title":"Cycle 5 規劃"}]}}}
+EOF
+cat > "$fx_pen/cycle_issues.json" <<'EOF'
+{"data":{"cycle":{"issues":{"nodes":[]}}}}
+EOF
+# LS-950：lane:ui、In Progress（design_forced_full 的觸發條件）。LS-951：lane:design、Backlog，
+# 票文完整（有效候補）——用來檢驗「design lane 被判定為滿時不會選中它」。
+cat > "$fx_pen/issues_page1.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+  {"identifier":"LS-950","title":"ui 讀稿中","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
+   "state":{"name":"In Progress","type":"started"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-951","title":"design 候補","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-02T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:design"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}}
+]}}}
+EOF
+mkdir -p "$work/bin_pen"
+cat > "$work/bin_pen/curl" <<EOF
+#!/bin/bash
+fx="${fx_pen}"
+data=""
+while [ \$# -gt 0 ]; do
+  case "\$1" in
+    --data) data=\$2; shift ;;
+  esac
+  shift
+done
+case "\$data" in
+  *'documents('*) cat "\$fx/documents.json" ;;
+  *'cycle(id:'*) cat "\$fx/cycle_issues.json" ;;
+  *'cycles('*) cat "\$fx/cycles.json" ;;
+  *'issues('*) cat "\$fx/issues_page1.json" ;;
+  *) echo '{"errors":[{"message":"stub curl：認不出的 query"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_pen/curl"
+
+assert_design_lane() {
+  local label="$1" out_var="$2" want_wip_forced="$3" out
+  out="$(eval "printf '%s' \"\$$out_var\"")"
+  export ASSERT_DESIGN_OUT="$out"
+  local py
+  py="$(python3 - <<'PYEOF'
+import json, os
+d = json.loads(os.environ["ASSERT_DESIGN_OUT"])
+design = d["lanes"]["lane:design"]
+print("%s\t%s\t%s" % (design["wip"], design["limit"], design["chosen"]))
+PYEOF
+)"
+  local wip limit chosen
+  wip=$(printf '%s' "$py" | cut -f1)
+  limit=$(printf '%s' "$py" | cut -f2)
+  chosen=$(printf '%s' "$py" | cut -f3)
+  if [ "$want_wip_forced" = yes ]; then
+    if [ "$wip" = "$limit" ] && [ "$chosen" = None ]; then
+      echo "✓ ${label}（wip=${wip}=limit，未選中 LS-951）"
+    else
+      echo "✗ ${label} 失敗（wip=${wip} limit=${limit} chosen=${chosen}）" >&2
+      fail=1
+    fi
+  else
+    if [ "$wip" = 0 ] && [ "$chosen" = LS-951 ]; then
+      echo "✓ ${label}（wip=0，正常選中 LS-951）"
+    else
+      echo "✗ ${label} 失敗（wip=${wip} limit=${limit} chosen=${chosen}）" >&2
+      fail=1
+    fi
+  fi
+}
+
+# ⑧a：pen-open.sh --status 回傳的路徑就是這張 ui 票 worktree 的 .pen → design lane 視為滿
+mkdir -p "$work/bin_pen_status_hit"
+cat > "$work/bin_pen_status_hit/pen-open.sh" <<EOF
+#!/bin/bash
+echo "${want_path}"
+EOF
+chmod +x "$work/bin_pen_status_hit/pen-open.sh"
+out_pen_a="$(PEN_OPEN_SH="$work/bin_pen_status_hit/pen-open.sh" PATH="$work/bin_pen:$PATH" bash "$plsh" --repo "$repo_pen" --json 2>&1)"; rc=$?
+if [ "$rc" -ne 0 ]; then echo "✗ ⑧a 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out_pen_a" | sed 's/^/    /' >&2; fail=1; fi
+assert_design_lane '⑧a R1 F2：pen-open.sh --status 命中 → design lane 視為滿' out_pen_a yes
+
+# ⑧b：pen-open.sh --status 查不到（exit 非 0）、也沒有近期 backup → design lane 不視為滿
+mkdir -p "$work/bin_pen_status_miss"
+cat > "$work/bin_pen_status_miss/pen-open.sh" <<'EOF'
+#!/bin/bash
+exit 1
+EOF
+chmod +x "$work/bin_pen_status_miss/pen-open.sh"
+backup_dir_empty="$work/pen-backup-empty"
+mkdir -p "$backup_dir_empty"
+out_pen_b="$(PEN_OPEN_SH="$work/bin_pen_status_miss/pen-open.sh" PEN_BACKUP_DIR="$backup_dir_empty" PATH="$work/bin_pen:$PATH" bash "$plsh" --repo "$repo_pen" --json 2>&1)"; rc=$?
+if [ "$rc" -ne 0 ]; then echo "✗ ⑧b 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out_pen_b" | sed 's/^/    /' >&2; fail=1; fi
+assert_design_lane '⑧b R1 F2：查不到 active 路徑也無近期 backup → design lane 不視為滿' out_pen_b no
+
+# ⑧c：active 路徑查不到，但該 .pen 的 autosave backup mtime 在 30 分鐘內 → 也視為滿
+backup_dir_hit="$work/pen-backup-hit"
+mkdir -p "$backup_dir_hit"
+sha=$(python3 -c "import hashlib,sys; print(hashlib.sha1(('file://'+sys.argv[1]).encode('utf-8')).hexdigest())" "$want_path")
+: > "$backup_dir_hit/$sha"
+out_pen_c="$(PEN_OPEN_SH="$work/bin_pen_status_miss/pen-open.sh" PEN_BACKUP_DIR="$backup_dir_hit" PATH="$work/bin_pen:$PATH" bash "$plsh" --repo "$repo_pen" --json 2>&1)"; rc=$?
+if [ "$rc" -ne 0 ]; then echo "✗ ⑧c 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out_pen_c" | sed 's/^/    /' >&2; fail=1; fi
+assert_design_lane '⑧c R1 F2：active 路徑查不到但 autosave backup mtime 30 分鐘內 → design lane 仍視為滿' out_pen_c yes
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ patrol-linear 自測失敗" >&2
