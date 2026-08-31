@@ -304,8 +304,11 @@ esac
 EOF
 chmod +x "$work/bin_fail/curl"
 
+# R2 m3：只驗 rc -eq 1 沒有鑑別力——fetch_issues() 對 None 取 subscript 也會拋 TypeError、Python
+# 同樣 exit 1（把 R2 新加的 gql() 缺 data 檢查那 5 行整段移除後重跑，這四組原本仍全綠）。改成每組
+# 都額外驗訊息內容含各自的 fail-loud 字樣（且不是原始 Traceback），才能真的守住各自的錯誤路徑。
 check_fail_mode() {
-  local label="$1" mode="$2" out rc
+  local label="$1" mode="$2" want_substr="$3" out rc
   out="$(CURL_FAIL_MODE="$mode" PATH="$work/bin_fail:$PATH" bash "$plsh" --repo "$repo" --json 2>&1)"; rc=$?
   if [ "$rc" -eq 1 ]; then
     echo "✓ ⑥ ${label} → exit 1（fail loud）"
@@ -314,11 +317,18 @@ check_fail_mode() {
     printf '%s\n' "$out" | sed 's/^/    /' >&2
     fail=1
   fi
+  if printf '%s' "$out" | grep -qF "$want_substr"; then
+    echo "✓ ⑥ ${label} 訊息含「${want_substr}」（非 Traceback，斷言有鑑別力）"
+  else
+    echo "✗ ⑥ ${label} 訊息應含「${want_substr}」（可能只是巧合 exit 1，非預期的 fail-loud 路徑）" >&2
+    printf '%s\n' "$out" | sed 's/^/    /' >&2
+    fail=1
+  fi
 }
-check_fail_mode 'GraphQL errors 欄位' errors
-check_fail_mode 'curl 非 0 exit（連線失敗）' exit7
-check_fail_mode '回應不是合法 JSON' badjson
-check_fail_mode 'R1 F5：合法 JSON 但缺 data 物件（{"data":null}）' nulldata
+check_fail_mode 'GraphQL errors 欄位' errors 'GraphQL 錯誤'
+check_fail_mode 'curl 非 0 exit（連線失敗）' exit7 'curl 失敗'
+check_fail_mode '回應不是合法 JSON' badjson '不是合法 JSON'
+check_fail_mode 'R1 F5：合法 JSON 但缺 data 物件（{"data":null}）' nulldata '缺少可用的 data 物件'
 
 # ---- ⑦ R1 F5：cycle 對帳 (d)（剩餘時間 <24h）——用執行當下算出的動態時間戳，不寫死日期，
 #        避免測試在特定日期之後失效；獨立 repo／fixture，不與 ② 的固定 2099 endsAt 互相干擾 ----
@@ -522,6 +532,93 @@ sha=$(python3 -c "import hashlib,sys; print(hashlib.sha1(('file://'+sys.argv[1])
 out_pen_c="$(PEN_OPEN_SH="$work/bin_pen_status_miss/pen-open.sh" PEN_BACKUP_DIR="$backup_dir_hit" PATH="$work/bin_pen:$PATH" bash "$plsh" --repo "$repo_pen" --json 2>&1)"; rc=$?
 if [ "$rc" -ne 0 ]; then echo "✗ ⑧c 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out_pen_c" | sed 's/^/    /' >&2; fail=1; fi
 assert_design_lane '⑧c R1 F2：active 路徑查不到但 autosave backup mtime 30 分鐘內 → design lane 仍視為滿' out_pen_c yes
+
+# ---- ⑨ R2 m1：current cycle 無法判定（cycles 查詢為空，沒有 active 也沒有 upcoming）時，
+#        lane 補位不應選中候補、不應印出 "cycle=?"（之前 lane_candidates() 的 current_cycle_number
+#        為 None 時，會把 cycle 也是 null 的候補誤判成「在目前 cycle 內」而選中並印不可執行的動作行）----
+repo_none="$work/repo_none"
+git init -q -b main "$repo_none"
+git -C "$repo_none" config user.email test@example.com
+git -C "$repo_none" config user.name Test
+: > "$repo_none/.gitkeep"; git -C "$repo_none" add .gitkeep; git -C "$repo_none" -c commit.gpgsign=false commit -q -m 'chore: init'
+printf 'LINEAR_API_KEY=test-token-not-real\n' > "$repo_none/.env"
+
+fx_none="$work/fixtures_none"
+mkdir -p "$fx_none"
+cat > "$fx_none/cycles.json" <<'EOF'
+{"data":{"team":{"cycles":{"nodes":[]}}}}
+EOF
+# LS-960：lane:harness、Backlog、cycle=null（尚未排 cycle）、票文完整（classify_candidate 應為 ok）。
+cat > "$fx_none/issues_page1.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+  {"identifier":"LS-960","title":"harness 尚未排 cycle","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"},{"name":"size:S"}]},
+   "cycle":null,"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}}
+]}}}
+EOF
+mkdir -p "$work/bin_none"
+cat > "$work/bin_none/curl" <<EOF
+#!/bin/bash
+fx="${fx_none}"
+data=""
+while [ \$# -gt 0 ]; do
+  case "\$1" in
+    --data) data=\$2; shift ;;
+  esac
+  shift
+done
+case "\$data" in
+  *'cycles('*) cat "\$fx/cycles.json" ;;
+  *'issues('*) cat "\$fx/issues_page1.json" ;;
+  *) echo '{"errors":[{"message":"stub curl：不應被呼叫（current 為 None 時不查 documents／cycle issues）"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_none/curl"
+
+out_none_json="$(PATH="$work/bin_none:$PATH" bash "$plsh" --repo "$repo_none" --json 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ]; then echo "✓ ⑨ current 為 None 的 fixture 跑一輪 exit 0"; else echo "✗ ⑨ 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out_none_json" | sed 's/^/    /' >&2; fail=1; fi
+
+export OUT_NONE_JSON="$out_none_json"
+py_none="$(python3 - <<'PYEOF'
+import json, os
+d = json.loads(os.environ["OUT_NONE_JSON"])
+ok = True
+def check(name, cond):
+    global ok
+    print(("✓ " if cond else "✗ ") + name)
+    if not cond:
+        ok = False
+
+check("⑨ current_cycle 為 null", d.get("current_cycle") is None)
+harness = d["lanes"]["lane:harness"]
+check("⑨ current 為 None 時不選中候補（chosen 仍是 None）", harness["chosen"] is None)
+check("⑨ current 為 None 時不產生動作（actions 為空）", harness["actions"] == [])
+check("⑨ 全部動作清單也不含任何動作（current 未知，跨 lane 皆不派）", d["actions"] == [])
+print("OK" if ok else "FAIL")
+PYEOF
+)"
+printf '%s\n' "$py_none"
+if printf '%s' "$py_none" | tail -1 | grep -qx OK; then :; else fail=1; fi
+if printf '%s' "$out_none_json" | grep -qF 'cycle=?'; then
+  echo "✗ ⑨ JSON 輸出不應出現 cycle=?（不可執行的動作字面）" >&2; fail=1
+else
+  echo "✓ ⑨ JSON 輸出不含 cycle=?"
+fi
+
+out_none_human="$(PATH="$work/bin_none:$PATH" bash "$plsh" --repo "$repo_none" 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ] && printf '%s' "$out_none_human" | grep -qF 'current cycle：無法判定'; then
+  echo "✓ ⑨ human 模式印「current cycle：無法判定」"
+else
+  echo "✗ ⑨ human 模式應印「current cycle：無法判定」（exit ${rc}）" >&2
+  printf '%s\n' "$out_none_human" | sed 's/^/    /' >&2
+  fail=1
+fi
+if printf '%s' "$out_none_human" | grep -qF 'cycle=?'; then
+  echo "✗ ⑨ human 輸出不應出現 cycle=?" >&2; fail=1
+else
+  echo "✓ ⑨ human 輸出不含 cycle=?"
+fi
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ patrol-linear 自測失敗" >&2

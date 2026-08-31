@@ -187,11 +187,19 @@ def fetch_cycle_issue_states(token, cycle_id):
 
 
 def cycle_progress(token, current):
-    """回傳 (完成票數, 總票數)；current 為 None／缺 id 回 (None, None)——這是巡檢摘要的附加資訊，
-    查不到不 fail loud（不擋主流程）。"""
+    """回傳 (完成票數, 總票數)；current 為 None／缺 id，或底層查詢本身失敗（GraphQL 錯誤／curl
+    失敗／回應格式不對，即 gql() 對這次呼叫 sys.exit(1)）都回 (None, None)——這是巡檢摘要的附加
+    資訊，真正 best-effort：查不到只讓「票數」印「不明」，不擋主流程、不打掉整份報表（R2 m4：
+    這裡之前只處理了 current 為 None 的情況，docstring 卻宣稱『查不到不 fail loud』，實際上
+    CYCLE_ISSUES_QUERY 一旦查詢失敗仍會透過 gql() 的 sys.exit(1) 把整份報表打掉——那正是 B1
+    的放大器；改用 try/except SystemExit 真正吸收掉，只有這個查詢享有這個例外，其餘查詢仍照舊
+    fail loud）。"""
     if not current or not current.get("id"):
         return None, None
-    states = fetch_cycle_issue_states(token, current["id"])
+    try:
+        states = fetch_cycle_issue_states(token, current["id"])
+    except SystemExit:
+        return None, None
     total = len(states)
     done = sum(1 for t in states if t == "completed")
     return done, total
@@ -556,16 +564,20 @@ def build_report(token, root, team_key, team_id, sim_lines):
             "pending_structure": pending_structure,
             "actions": [],
         }
-        if wip < limit and candidates_shown:
+        # R2 m1：current 為 None 時（無法判定當前 cycle）不產生動作——與 cycle_reconciliation()
+        # 的處置一致。之前這裡在 current 為 None 時仍會選中候補並印 "cycle=?"，不是可執行指令；
+        # 且 lane_candidates() 的 in_cycle_ok 比對在 current_cycle_number=None 時，會把「本來就沒
+        # 排 cycle」的票（cycle_number_of(i) 也是 None）誤判成「在目前 cycle 內」而選中。
+        if current is not None and wip < limit and candidates_shown:
             chosen = candidates_shown[0]
             entry["chosen"] = chosen["identifier"]
             if needs_scope:
                 entry["actions"].append(
-                    "→ save_issue %s cycle=%s（scope+，取自 cycle 外）" % (chosen["identifier"], current["number"] if current else "?")
+                    "→ save_issue %s cycle=%s（scope+，取自 cycle 外）" % (chosen["identifier"], current["number"])
                 )
             entry["actions"].append(
                 "→ save_issue %s state=Ready cycle=%s"
-                % (chosen["identifier"], current["number"] if current else "?")
+                % (chosen["identifier"], current["number"])
             )
             lane_actions.extend(entry["actions"])
         lanes[lane] = entry
