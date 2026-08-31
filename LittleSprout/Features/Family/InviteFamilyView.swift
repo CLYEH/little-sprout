@@ -186,6 +186,8 @@ struct InviteFamilyView: View {
                 .appNumericFont(.code, weight: .bold)
                 .tracking(4)
                 .foregroundStyle(Color.lsTextPrimary)
+                // LS-107 QA1 fail①（QA `a37fb964`）：寬字母碼在 AX3 超出半版寬會逐字硬斷行；下一行不斷行且放不下時縮字級。
+                .lineLimit(1).minimumScaleFactor(0.5)
                 HStack(spacing: AppSpacing.label) {
                     Pill(icon: "calendar", text: "\(formattedExpiry(invite.expiresAt)) 到期")
                     // R1 F4：過去這裡直接顯示 maxUses，永遠不會反映真的用掉幾次；
