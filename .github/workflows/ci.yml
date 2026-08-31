@@ -372,7 +372,7 @@ jobs:
           retention-days: 90
 
   lint:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -386,7 +386,7 @@ jobs:
           swiftlint lint --strict
 
   ci:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
