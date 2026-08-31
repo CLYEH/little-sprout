@@ -167,7 +167,7 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 | `lane:harness` | 1 |
 | `lane:backend` | 2 → **3**（lock 落地後：`scripts/ops/supabase-lock.sh` 隨 LS-70 於 2026-08-25 併入 main 起生效） |
 | `lane:design` | 1（Pencil 單一實例） |
-| `lane:ui` | ＝已核可設計稿對應的畫面群數（目前 LS-46 → 1；LS-67 核可後 +1） |
+| `lane:ui` | ＝已核可設計稿對應的畫面群數（1 → **2**：LS-46＋LS-67，2026-08-31 核可） |
 | `lane:product` | 不派工，無上限 |
 
 - **依賴只用 Linear `blockedBy` 關係**（`save_issue` 的 `blockedBy`），**不用文字**；「依賴已解」＝所有 blockedBy 皆 Done。
