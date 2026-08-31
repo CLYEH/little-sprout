@@ -3839,7 +3839,7 @@
       "name": "LS-18 / 07a 邀請家人 · 尚未產生（空狀態）",
       "clip": true,
       "width": 393,
-      "height": 906,
+      "height": 926,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -3906,7 +3906,7 @@
           "id": "p5m28",
           "name": "Body",
           "width": "fill_container",
-          "height": 639,
+          "height": 659,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -4255,7 +4255,7 @@
               "width": "fill_container",
               "layout": "vertical",
               "padding": [
-                "$sp-block",
+                "$sp-section",
                 0,
                 0,
                 0
@@ -50543,7 +50543,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 906,
+      "height": 926,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -50610,7 +50610,7 @@
           "id": "gDyjM",
           "name": "Body",
           "width": "fill_container",
-          "height": 639,
+          "height": 659,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -50959,7 +50959,7 @@
               "width": "fill_container",
               "layout": "vertical",
               "padding": [
-                "$sp-block",
+                "$sp-section",
                 0,
                 0,
                 0
@@ -51069,7 +51069,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2042,
+      "height": 2062,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -51136,7 +51136,7 @@
           "id": "wjU2n",
           "name": "Body",
           "width": "fill_container",
-          "height": 1556,
+          "height": 1576,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -51485,7 +51485,7 @@
               "width": "fill_container",
               "layout": "vertical",
               "padding": [
-                "$sp-block",
+                "$sp-section",
                 0,
                 0,
                 0
@@ -51618,7 +51618,7 @@
       "name": "LS-18 / 07a 邀請家人 · 只能看選中",
       "clip": true,
       "width": 393,
-      "height": 906,
+      "height": 926,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -51685,7 +51685,7 @@
           "id": "qiF6K",
           "name": "Body",
           "width": "fill_container",
-          "height": 639,
+          "height": 659,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -52034,7 +52034,7 @@
               "width": "fill_container",
               "layout": "vertical",
               "padding": [
-                "$sp-block",
+                "$sp-section",
                 0,
                 0,
                 0
