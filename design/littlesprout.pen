@@ -51424,6 +51424,552 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "K0hWL",
+      "x": 1380,
+      "y": 4874,
+      "name": "LS-18 / 07a 邀請家人 · 只能看選中",
+      "clip": true,
+      "width": 393,
+      "height": 970,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "RWJE8",
+          "name": "Chrome",
+          "width": "fill_container",
+          "fill": "#00000000",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 0,
+              "y": 3
+            },
+            "blur": 12
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "id": "ge41h",
+              "type": "ref",
+              "ref": "OeXop",
+              "name": "Status Bar",
+              "width": "fill_container"
+            },
+            {
+              "id": "iNH9i",
+              "type": "ref",
+              "ref": "W6qTyS",
+              "name": "Nav Back",
+              "width": "fill_container"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "qiF6K",
+          "name": "Body",
+          "width": "fill_container",
+          "height": 830,
+          "layout": "vertical",
+          "padding": [
+            "$sp-block",
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "BAuTH",
+              "name": "Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PERLA",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "邀請家人一起看",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "sV7h2",
+                  "name": "Subtitle",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "把邀請碼給家人，他們輸入後向你送出申請，你核准就能一起看「陳家」的照片和日記。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "WsopB",
+              "name": "Sample Mount",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "padding": [
+                "$sp-item",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "EFHY4",
+                  "name": "Print Stage",
+                  "width": "fill_container",
+                  "height": 198,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "b1LeyW",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Sample Print",
+                      "width": 345,
+                      "height": 198,
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.43200000000000005,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.7428571428571429
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.277,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.7428571428571429
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.342,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.7428571428571429
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.23,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.7428571428571429
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "layout": "vertical",
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "V3OQK5",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 182,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "id": "jjRtv",
+                              "x": 0,
+                              "y": -64,
+                              "name": "Sample Photo",
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "invite-grandma.png",
+                                "mode": "fill"
+                              },
+                              "width": 329,
+                              "height": 494
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "EqdoB",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Night Dim",
+                              "fill": "$photo-dim",
+                              "width": 329,
+                              "height": 182
+                            },
+                            {
+                              "id": "U3zfVZ",
+                              "type": "ref",
+                              "ref": "AqN3F",
+                              "name": "Pill Sample",
+                              "layoutPosition": "absolute",
+                              "x": 8,
+                              "y": 8,
+                              "descendants": {
+                                "KR7zN": {
+                                  "icon": "eye"
+                                },
+                                "g7Fnj": {
+                                  "content": "範例"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "OJ1xr",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TL",
+                      "x": -5,
+                      "y": -5,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 0 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "KSTqZ",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TR",
+                      "x": 324,
+                      "y": -5,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 0 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "Rqmus",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BL",
+                      "x": -5,
+                      "y": 177,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 26 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "W7VlAp",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BR",
+                      "x": 324,
+                      "y": 177,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 26 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "proYK",
+                  "name": "Sample Caption",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "VrDb2",
+                      "name": "Sample Caption Text",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "家人核准之後看到的就是這些，他們只會看、不會加東西。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XbEv1",
+              "name": "Role Section Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-block",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "id": "i0rI5c",
+                  "type": "ref",
+                  "ref": "eEP8A",
+                  "name": "Role Section",
+                  "width": "fill_container",
+                  "descendants": {
+                    "X7DYDo": {
+                      "fill": "#00000000"
+                    },
+                    "X7DYDo/j6ZNWo": {
+                      "fill": "$text-secondary"
+                    },
+                    "X7DYDo/vL7kl": {
+                      "fontWeight": "600"
+                    },
+                    "X7DYDo/uHUe1": {
+                      "fill": "#00000000"
+                    },
+                    "ZA8G7": {
+                      "fill": "$accent-soft"
+                    },
+                    "ZA8G7/j6ZNWo": {
+                      "fill": "$text-primary"
+                    },
+                    "ZA8G7/vL7kl": {
+                      "fontWeight": "700"
+                    },
+                    "ZA8G7/uHUe1": {
+                      "fill": "$text-primary"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ct0bZ",
+              "name": "Actions",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "id": "un50A",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Share Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "plus"
+                    },
+                    "w7CUP": {
+                      "content": "產生邀請碼"
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "qJZlI",
+                  "name": "Regenerate Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "產生後 7 天內有效，最多 5 位家人可以用。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "IKDG3",
+                  "name": "Approval Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "新成員一律要你核准才能加入，這項設定無法關閉。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "uq9Hp",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "cD1Do",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
