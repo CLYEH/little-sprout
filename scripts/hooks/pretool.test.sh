@@ -107,45 +107,58 @@ expect 'F1-H3 多行：db reset 在第二行（deny）' 2 "$(bash_json 'echo sta
 expect 'F1 多行：違規在第一行、第二行無關（deny，回歸）' 2 "$(bash_json 'cat .env\necho done')"
 
 # ============================================================
-# R1 F2（blocker）：grep 異常（非 0/1）須 fail-closed，不當「沒命中」放行
+# R1 F2（blocker，原文測 grep 異常）／R2（H1/H2/H3 全改叫 pretool_engine.py，見 pretool.sh
+# run_bash_engine）：pretool_engine.py 無法正常執行（python3 缺席／腳本以非 0/2 的 rc 結束）
+# 須 fail-closed，不當「沒命中」放行——Rule 8：R1 這裡原本測的是「grep 異常」，R2 把 H1/H2/H3
+# 的比對全部搬去 python3 之後 grep 已經不是任何 Bash 判定的依賴，原測資測不出邏輯改掉（假綠），
+# 換成對等的 python3 情境（PATH 缺 python3／python3 是會以非預期 rc 結束的假腳本）。
 # ============================================================
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 bash_bin=$(bash -c 'type -P bash' 2>/dev/null || echo /bin/bash)
 real_jq=$(bash -c 'type -P jq' 2>/dev/null || true)
 real_python3=$(bash -c 'type -P python3' 2>/dev/null || true)
-real_grep=$(bash -c 'type -P grep' 2>/dev/null || echo /usr/bin/grep)
 
-mkdir -p "$work/empty" "$work/nogrep" "$work/badgrep"
-[ -n "$real_jq" ] && ln -sf "$real_jq" "$work/nogrep/jq"
-[ -n "$real_python3" ] && ln -sf "$real_python3" "$work/nogrep/python3"
-[ -n "$real_jq" ] && ln -sf "$real_jq" "$work/badgrep/jq"
-[ -n "$real_python3" ] && ln -sf "$real_python3" "$work/badgrep/python3"
-cat > "$work/badgrep/grep" <<'STUB'
+mkdir -p "$work/empty" "$work/nopy" "$work/badpy"
+[ -n "$real_jq" ] && ln -sf "$real_jq" "$work/nopy/jq"
+[ -n "$real_jq" ] && ln -sf "$real_jq" "$work/badpy/jq"
+[ -n "$real_python3" ] && ln -sf "$real_python3" "$work/badpy/python3.real"
+cat > "$work/badpy/python3" <<'STUB'
 #!/bin/bash
-exit 2
+exit 137
 STUB
-chmod +x "$work/badgrep/grep"
+chmod +x "$work/badpy/python3"
 
-out=$(printf '%s' "$(bash_json 'echo hi')" | env PATH="$work/nogrep" "$bash_bin" "$pretool" 2>&1); got=$?
+out=$(printf '%s' "$(bash_json 'echo hi')" | env PATH="$work/nopy" "$bash_bin" "$pretool" 2>&1); got=$?
 if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
-  echo '✓ F2：PATH 缺 grep（deny）'
+  echo '✓ F2：PATH 缺 python3（deny，H1/H2/H3 評估引擎無法執行）'
 else
-  echo "✗ F2：PATH 缺 grep 應 deny（實得 exit ${got}：${out}）" >&2
+  echo "✗ F2：PATH 缺 python3 應 deny（實得 exit ${got}：${out}）" >&2
   fail=1
 fi
 
-# LS-104：H1/H2 的字面比對全部改用 bash 內建 `[[ =~ ]]`（見 tokenize／analyze_segment），不再
-# 呼叫外部 grep；`m()`／外部 grep 現在只剩 H3 的 supabase-lock.sh 包裹字串檢查會用到，換成
-# `supabase db reset` 當 payload 才踩得到這條路徑（原本的 `cat .env` 不會再呼叫 grep，會變成
-# 「grep 壞掉也測不出來」的假綠——Rule 8：測試要能在邏輯改掉時真的紅）。
-out=$(printf '%s' "$(bash_json 'supabase db reset')" | env PATH="$work/badgrep" "$bash_bin" "$pretool" 2>&1); got=$?
+out=$(printf '%s' "$(bash_json 'echo hi')" | env PATH="$work/badpy" "$bash_bin" "$pretool" 2>&1); got=$?
 if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
-  echo '✓ F2：grep 執行異常（regex 弄壞的等價情境，rc=2 一律 deny，LS-104 改走 H3 包裹檢查）'
+  echo '✓ F2：python3 以非預期 rc 結束（deny，rc 不是 0/2 一律 fail-closed）'
 else
-  echo "✗ F2：grep 異常應 deny（實得 exit ${got}：${out}）" >&2
+  echo "✗ F2：python3 異常應 deny（實得 exit ${got}：${out}）" >&2
   fail=1
 fi
+
+# pretool_engine.py 檔案本身不存在（例如佈署時漏拷貝）也要 fail-closed，不能因為 python3
+# 找不到檔案印出的是 stderr（被 2>/dev/null 丟掉）、stdout 空字串，就被 run_bash_engine 的
+# `DENY_MSG=$out` 用空字串蓋掉、`[ -n "$DENY_MSG" ]` 判斷成「沒有 deny」而誤放行。
+missing_py_work=$(mktemp -d)
+cp "$pretool" "$missing_py_work/pretool.sh"
+# 故意不拷貝 pretool_engine.py，模擬部署時漏了這個檔案
+out=$(printf '%s' "$(bash_json 'echo hi')" | "$bash_bin" "$missing_py_work/pretool.sh" 2>&1); got=$?
+if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+  echo '✓ F2：pretool_engine.py 檔案不存在（deny，空 stdout 不會被誤判成沒有 deny）'
+else
+  echo "✗ F2：pretool_engine.py 缺席應 deny（實得 exit ${got}：${out}）" >&2
+  fail=1
+fi
+rm -rf "$missing_py_work"
 
 # ============================================================
 # R1 F3（blocker）：.env／run.sh 邊界要求後接空白或行尾，漏放引號／分號／重導向／命令替換
@@ -167,8 +180,10 @@ expect 'fail-closed：空 stdin（deny）' 2 ''
 expect 'fail-closed：JSON 語法壞掉（deny）' 2 '{"tool_name":"Bash",'
 expect 'fail-closed：JSON 頂層不是物件（deny）' 2 '[1,2,3]'
 
+# py-only：jq 缺、只有 python3——R2 起 JSON 解析備援與 H1/H2/H3 評估都只需要 python3，
+# 不再需要 grep（R1 的 py-only 目錄還會順便符連 grep，因為當時 H3 的 wrapper 字面比對走
+# grep；R2 這條路徑已經沒有任何步驟呼叫外部 grep 了）。
 mkdir -p "$work/py-only"
-[ -n "$real_grep" ] && ln -sf "$real_grep" "$work/py-only/grep"
 [ -n "$real_python3" ] && ln -sf "$real_python3" "$work/py-only/python3"
 
 out=$(printf '%s' "$(bash_json 'echo hi')" | env PATH="$work/empty" "$bash_bin" "$pretool" 2>&1)
@@ -342,12 +357,66 @@ expect 'LS104-msg① commit message 提到 --no-verify（allow，訊息內文不
 expect 'LS104-msg② 對照 msg①：旗標本身在引號外（deny）' 2 "$(bash_json "git commit --no-verify -m 'docs update'")"
 
 # 位置比對收窄到「命令位置」後，若不處理 bash -c／sh -c，會把違規包一層變成新的繞過路徑
-# （cmd 變成 bash／sh，真正的動詞被吞進一個引號內的 token）——必須遞迴評估payload，見
-# analyze_segment() 的 bash/sh -c 分支。
+# （cmd 變成 bash／sh，真正的動詞被吞進一個引號內的 token）——必須遞迴評估 payload，見
+# pretool_engine.py 的 check_precise()「RECURSE」分支。
 expect 'LS104-shc① bash -c 包住真違規（deny，證明位置比對收窄沒開新繞路）' 2 "$(bash_json "bash -c 'cat .env'")"
 expect 'LS104-shc② sh -c 包住 --no-verify（deny）' 2 "$(bash_json "sh -c 'git push --no-verify'")"
 expect 'LS104-shc③ env 包一層再 bash -c（deny，env FOO=bar bash -c 的形狀）' 2 \
   "$(bash_json "env FOO=bar bash -c 'supabase db reset'")"
+
+# ============================================================
+# LS-104 R2：merge-reviewer R1 comment 7a97f88a（2 blocker／3 major）——每個攻擊類別至少收
+# 一組進永久回歸（reviewer 的 probe.py／probe2.py 130 組留在 /tmp 當開發期回歸套件，不進 repo；
+# 這裡是「代表性案例」，每類至少一組，見票文驗收段）。
+# ============================================================
+
+# ---- F1（blocker）：命令位置認不得就退回整段字面比對，封住括號黏連／絕對路徑／shell 關鍵字
+#      開頭／xargs／find -exec／eval／alias／函式定義這些「命令位置認得才精確比對」繞過的路徑 ----
+expect 'R2F1-a 透明前綴詞 command（deny，command git commit --no-verify）' 2 "$(bash_json 'command git commit --no-verify')"
+expect 'R2F1-b 絕對路徑（deny，/usr/bin/git commit --no-verify）' 2 "$(bash_json '/usr/bin/git commit --no-verify')"
+expect 'R2F1-c 括號黏連 subshell（deny，(supabase db reset)）' 2 "$(bash_json '(supabase db reset)')"
+expect 'R2F1-d brace group（deny，{ git commit --no-verify; }）' 2 "$(bash_json '{ git commit --no-verify; }')"
+expect 'R2F1-e shell 關鍵字開頭 if/then（deny，agent 最自然會寫出的形狀）' 2 \
+  "$(bash_json 'if true; then supabase db reset; fi')"
+expect 'R2F1-f shell 關鍵字開頭 for/do（deny，for … do bash run.sh … done）' 2 \
+  "$(bash_json 'for f in a b; do bash supabase/tests/run.sh; done')"
+expect 'R2F1-g case/esac（deny）' 2 "$(bash_json 'case x in x) supabase db reset;; esac')"
+expect 'R2F1-h xargs 間接執行（deny，echo x | xargs git commit --no-verify）' 2 \
+  "$(bash_json 'echo x | xargs git commit --no-verify')"
+expect 'R2F1-i find -exec 間接執行（deny）' 2 \
+  "$(bash_json "find . -name f -exec git commit --no-verify {} \\;")"
+expect 'R2F1-j 函式定義 name() { … } 同段呼叫真違規（deny）' 2 \
+  "$(bash_json 'f() { git commit --no-verify; }')"
+expect 'R2F1-k alias 定義後同段呼叫（deny，alias g=git; g commit --no-verify）' 2 \
+  "$(bash_json 'alias g=git; g commit --no-verify')"
+expect 'R2F1-l 引號旗標仍比對（deny，quoting 不影響傳給 git 的 argv，reviewer probe a06）' 2 \
+  "$(bash_json 'git commit "--no-verify"')"
+expect 'R2F1-m 正常前綴詞＋一般命令不誤擋（allow，sudo 只是很少見但不危險）' 0 "$(bash_json 'sudo ls -la')"
+expect 'R2F1-n 正常 xargs 用法不誤擋（allow，找不到違規字面）' 0 "$(bash_json 'echo file.txt | xargs cat')"
+
+# ---- F3（blocker）：反斜線跳脫先前完全不處理，導致引號提前關閉／token 被切碎＝漏放 ----
+expect 'R2F3-a 反斜線接命令名（deny，\git commit --no-verify）' 2 "$(bash_json '\git commit --no-verify')"
+expect 'R2F3-b 反斜線插在旗標中間（deny，git commit --no\-verify 真實 shell 還原成 --no-verify）' 2 \
+  "$(bash_json 'git commit --no\-verify')"
+expect 'R2F3-c 巢狀跳脫引號 bash -c 仍抓得到違規（deny）' 2 \
+  "$(bash_json 'bash -c "bash -c \"cat .env\""')"
+expect 'R2F3-d 續行反斜線不影響比對（deny，git commit \ 換行 --no-verify）' 2 \
+  "$(bash_json 'git commit \\\n  --no-verify')"
+
+# ---- F2（blocker）：假 heredoc（引號內／comment 內的 <<TAG 字面）不再吞掉後續真命令 ----
+expect 'R2F2-a 引號內的 <<TAG 字面不觸發 heredoc（deny，後面真的 supabase db reset）' 2 \
+  "$(bash_json 'echo "x <<T"\nsupabase db reset\nT')"
+expect 'R2F2-b comment 內的 <<TAG 字面不觸發 heredoc（deny，後面真的 supabase db reset）' 2 \
+  "$(bash_json 'true # <<T\nsupabase db reset\nT')"
+expect 'R2F2-c 真正的 heredoc 仍正確剝除（allow，<<- 搭配 tab 縮排的合法用法）' 0 \
+  "$(bash_json "cat <<-EOF\n\tsome text --no-verify\n\tEOF\n")"
+
+# ---- F5（原 F1 acceptance 的延伸；informational 但列進 130 probe acceptance）：glob／${IFS} 繞路 ----
+expect 'R2F5-a .env 加 glob 萬用字元（deny，cat .env*）' 2 "$(bash_json 'cat .env*')"
+expect 'R2F5-b ${IFS} 取代空白（deny，cat${IFS}.env 展開後就是 cat .env）' 2 "$(bash_json 'cat${IFS}.env')"
+
+# ---- ANSI-C quoting（reviewer probe2 x06）----
+expect 'R2-ansic $便宜單引號（deny，cat \$'"'"'.env'"'"' 展開後就是 .env）' 2 "$(bash_json "cat \$'.env'")"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ pretool.sh 自測通過"
