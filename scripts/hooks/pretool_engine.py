@@ -54,6 +54,14 @@ r"""LS-104 R3：pretool.sh 的 Bash 命令評估引擎（取代 R1 版本的 bas
     R4 修法（票文採 reviewer 建議 (1)：修，不是文件化）：把 `zsh`／`dash`／`ksh` 併入
     `SHELLC_SHELLS` 集合，與 `bash`／`sh` 走同一套 `-c` 遞迴＋OK-fallback 邏輯——payload
     遞迴重評時新 shell 也在集合內，`bash -c 'zsh -c "..."'` 這類巢狀繞路自動被遞迴接住。
+  R5（merge-reviewer R4 comment cd011475，F1-residual-2 major）：R4 收了 zsh/dash/ksh，
+    但同樣預裝於 macOS 的 `csh`／`tcsh` 沒收——結構與 R4 完全同型（乾淨識別字、
+    check_precise 回 OK、OK-fallback 排除在外 → 裸放行），`csh -c "supabase db reset"`
+    同樣是 LS-70 事故路徑。reviewer 實測 `csh`／`tcsh` 的 `-c` 旗標語法與 bash 相容
+    （含 `-bc` 併旗標團，走同一 `BASH_SHORT_FLAG_RE`），append 兩個字串即可涵蓋、零
+    額外解析成本，故不接受文件化為已知殘留。R5 修法：`SHELLC_SHELLS` 併入 `csh`／
+    `tcsh`——至此 macOS 預裝、有 `-c` 語意的 shell 為封閉集合
+    {bash,sh,zsh,dash,ksh,csh,tcsh}，補完不再加輪。
   H2 檔名比對（ENV_FILE_RE）容忍尾端 glob 萬用字元（`*`／`?`／`[`／`]`），修 R1 F5
     的 glob 繞路（`.env*` 這類）。
   H3 重入判定／wrapper 字面比對：整條命令（pass1 剝除後）字面比對，語意同 R1（wrapper
@@ -98,7 +106,11 @@ BASH_SHORT_FLAG_RE = re.compile(r"^-[A-Za-z]+$")
 # 對它們不做任何檢查、OK-fallback 又把它們排除，於是三者的 `-c` payload 裸放行——
 # `zsh -c "supabase db reset"` 正是 LS-70 事故的路徑，main 擋、R3 版放行。修法：與
 # bash/sh 走同一套邏輯，不另立新機制。
-SHELLC_SHELLS = ("bash", "sh", "zsh", "dash", "ksh")
+# R5（merge-reviewer R4 comment cd011475，F1-residual-2 major）：同型的洞在 `csh`/`tcsh`
+# （同樣預裝於 macOS，`/bin/csh`/`/bin/tcsh` 皆在）身上依然存在——reviewer 實測其 `-c`
+# 旗標語法與 bash 相容（`-bc` 併旗標團也走 BASH_SHORT_FLAG_RE），append 即涵蓋、零額外
+# 解析成本，故併入而非文件化。至此 macOS 預裝、具 `-c` 語意的 shell 為封閉集合，補完。
+SHELLC_SHELLS = ("bash", "sh", "zsh", "dash", "ksh", "csh", "tcsh")
 
 READ_VERBS = {
     "cat", "less", "head", "tail", "awk", "cut", "sed", "grep", "bat", "xxd",

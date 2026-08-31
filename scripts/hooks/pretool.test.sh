@@ -5,7 +5,9 @@
 # 併入短旗標團／前面插旗標都測不到，同時繞過 H1/H2/H3；R4 補 merge-reviewer R3 blocker，
 # comment 59e21b88（F1-residual）：R3 的兩半兜底只套在 bash/sh，zsh/dash/ksh 這三支
 # macOS 預裝的 sibling shell 仍 fail open，`zsh -c "supabase db reset"` 正是 LS-70
-# 事故的路徑）。CI rules job 每個 PR 都跑。
+# 事故的路徑；R5 補 merge-reviewer R4 blocker，comment cd011475（F1-residual-2）：
+# 同型的洞在 csh/tcsh 身上依然存在，補完後 macOS 預裝 -c shell 為封閉集合）。
+# CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對 gate 本身也適用：H1–H3 若退化（字面比對變寬鬆、fail-closed
 # 漏接）這裡會紅。R1 抓到的洞（多行 command 只看第一行、grep 異常當沒命中放行、.env／run.sh
 # 邊界要求空白或行尾、放行形式整條字串比對）都各自補了對應的正負樣本，避免同一個洞回來。
@@ -463,6 +465,25 @@ expect 'R4F1-f 對照：zsh -c 包 benign payload 不誤擋（allow）' 0 \
   "$(bash_json "zsh -c 'echo hi'")"
 expect 'R4F1-g 對照：zsh 呼叫純腳本不受影響（allow，OK 兜底沒有變成逢 zsh 必擋）' 0 \
   "$(bash_json 'zsh scripts/hooks/pretool.test.sh')"
+
+# ============================================================
+# LS-104 R5（merge-reviewer R4 blocker，comment cd011475，F1-residual-2）：R4 收了
+# zsh／dash／ksh，但同型的洞在 csh／tcsh 身上依然存在（同樣預裝於 macOS，同樣的
+# -c 語意）——`csh -c "supabase db reset"` 同樣是 LS-70 事故路徑。R5 把 csh／tcsh
+# 併入 SHELLC_SHELLS，與其餘 shell 走同一套邏輯；至此 macOS 預裝、具 -c 語意的
+# shell 為封閉集合 {bash,sh,zsh,dash,ksh,csh,tcsh}。
+# ============================================================
+expect 'R5F1-a csh -c 裸跑 db reset（deny，H3，LS-70 事故路徑）' 2 \
+  "$(bash_json "csh -c 'supabase db reset'")"
+expect 'R5F1-b tcsh -c 讀 .env（deny，H2）' 2 "$(bash_json "tcsh -c 'cat .env'")"
+expect 'R5F1-c 巢狀 bash -c 包 csh -c 讀 .env（deny，遞迴接住 csh）' 2 \
+  "$(bash_json 'bash -c '"'"'csh -c "cat .env"'"'"'')"
+expect 'R5F1-d csh 併入短旗標團 -bc 同樣抓到（deny，H3）' 2 \
+  "$(bash_json "csh -bc 'supabase db reset'")"
+expect 'R5F1-e 對照：csh -c 包 benign payload 不誤擋（allow）' 0 \
+  "$(bash_json "csh -c 'echo hi'")"
+expect 'R5F1-f 對照：csh 呼叫純腳本不受影響（allow，OK 兜底沒有變成逢 csh 必擋）' 0 \
+  "$(bash_json 'csh scripts/hooks/pretool.test.sh')"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ pretool.sh 自測通過"
