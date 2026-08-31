@@ -45,6 +45,15 @@ r"""LS-104 R3：pretool.sh 的 Bash 命令評估引擎（取代 R1 版本的 bas
     例如純腳本呼叫 `bash foo.sh args`，或未來仍有漏的旗標形狀）時，`evaluate()` 額外對該
     段原始文字補跑一次 `check_fallback`，任何「認得 bash/sh 但沒解析出 payload」的路徑都
     不會裸放行。
+  R4（merge-reviewer R3 comment 59e21b88，F1-residual major）：R3 的兩半兜底只套在
+    `cmd/pos_tok in ("bash", "sh")`——但 macOS 預裝 `zsh`／`dash`／`ksh`（sibling shells），
+    它們是乾淨識別字，`resolve_position` 判 recognized=True，`check_precise` 卻對它們完全
+    不做任何檢查（cmd 不等於 git／READ_VERBS／python3／supabase／bash／sh 中任何一個）而
+    回 OK，OK-fallback 又把它們排除在外，於是三兄弟 shell 的 `-c` payload 裸放行（
+    `zsh -c "supabase db reset"` 正是 LS-70 事故的原始路徑，main 現行 hook 擋、R3 版放行）。
+    R4 修法（票文採 reviewer 建議 (1)：修，不是文件化）：把 `zsh`／`dash`／`ksh` 併入
+    `SHELLC_SHELLS` 集合，與 `bash`／`sh` 走同一套 `-c` 遞迴＋OK-fallback 邏輯——payload
+    遞迴重評時新 shell 也在集合內，`bash -c 'zsh -c "..."'` 這類巢狀繞路自動被遞迴接住。
   H2 檔名比對（ENV_FILE_RE）容忍尾端 glob 萬用字元（`*`／`?`／`[`／`]`），修 R1 F5
     的 glob 繞路（`.env*` 這類）。
   H3 重入判定／wrapper 字面比對：整條命令（pass1 剝除後）字面比對，語意同 R1（wrapper
@@ -82,6 +91,14 @@ ASSIGN_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 # 對 bash/sh 的 OK 結果一律再補跑一次 check_fallback(raw) 兜底（見 evaluate()），任何「認得
 # bash/sh 但沒解析出 payload」的路徑都不會裸放行。
 BASH_SHORT_FLAG_RE = re.compile(r"^-[A-Za-z]+$")
+
+# R4（merge-reviewer R3 comment 59e21b88，F1-residual major）：上面這一整套（`-c` 偵測＋
+# OK-fallback）原本只套在 `bash`/`sh`。macOS 預裝 `zsh`/`dash`/`ksh`（sibling shells，
+# `/bin/zsh`/`/bin/dash`/`/bin/ksh` 皆在），命令位置認得它們（乾淨識別字）但 `check_precise`
+# 對它們不做任何檢查、OK-fallback 又把它們排除，於是三者的 `-c` payload 裸放行——
+# `zsh -c "supabase db reset"` 正是 LS-70 事故的路徑，main 擋、R3 版放行。修法：與
+# bash/sh 走同一套邏輯，不另立新機制。
+SHELLC_SHELLS = ("bash", "sh", "zsh", "dash", "ksh")
 
 READ_VERBS = {
     "cat", "less", "head", "tail", "awk", "cut", "sed", "grep", "bat", "xxd",
@@ -623,16 +640,16 @@ def check_precise(cmd, tokens):
 
         if cmd == "supabase" and prevtok == "db" and text == "reset":
             h3_supabase_reset = True
-        if cmd in ("bash", "sh") and RUNSH_RE.match(text) and text != cmd:
+        if cmd in SHELLC_SHELLS and RUNSH_RE.match(text) and text != cmd:
             h3_run_sh = True
 
-        # R3 F1：cmd（命令位置）已經是 bash/sh 才會進到這個函式；不再要求 `-c` 緊接在
-        # bash/sh 後面——`-e -c`／`-o pipefail -c`／`--norc -c` 這類前面插旗標、或 `-lc`／
-        # `-cx` 這類併入短旗標團的寫法，都在這裡被同一條規則抓到（見 BASH_SHORT_FLAG_RE
-        # 定義處的說明）。
+        # R3 F1／R4（見 SHELLC_SHELLS 定義處說明）：cmd（命令位置）已經是 bash/sh/zsh/dash/ksh
+        # 才會進到這個函式；不再要求 `-c` 緊接在 shell 名稱後面——`-e -c`／`-o pipefail -c`／
+        # `--norc -c` 這類前面插旗標、或 `-lc`／`-cx` 這類併入短旗標團的寫法，都在這裡被同一條
+        # 規則抓到（見 BASH_SHORT_FLAG_RE 定義處的說明）。
         if awaiting_c_payload:
             return ("RECURSE", raw_text)
-        if cmd in ("bash", "sh") and BASH_SHORT_FLAG_RE.match(text) and "c" in text[1:]:
+        if cmd in SHELLC_SHELLS and BASH_SHORT_FLAG_RE.match(text) and "c" in text[1:]:
             awaiting_c_payload = True
 
         prevtok = text
@@ -721,12 +738,13 @@ def evaluate(cmd, depth, wrapper_haystack):
                 r = evaluate(payload, depth + 1, wrapper_haystack)
                 if r:
                     return r
-            if kind == "OK" and pos_tok in ("bash", "sh"):
-                # R3（merge-reviewer R2 comment 5a170052，F1 blocker 修法的兜底那一半）：命令位置
-                # 認得是 bash/sh，但 check_precise 沒能遞迴出一個 -c payload（例如純粹呼叫
-                # 一支腳本檔 `bash foo.sh args`，或未來 -c 偵測仍有漏的旗標形狀）——不得因為
-                # 「認得 bash/sh」就直接放行，對這一段的原始文字再補跑一次舊版整段字面比對。
-                # 「認得但沒解析出 payload」一律當「認不得」處理，方向與 F1 其他情形一致。
+            if kind == "OK" and pos_tok in SHELLC_SHELLS:
+                # R3（merge-reviewer R2 comment 5a170052，F1 blocker 修法的兜底那一半）／R4
+                # （merge-reviewer R3 comment 59e21b88，擴大到 zsh/dash/ksh）：命令位置認得是
+                # 某個 shell，但 check_precise 沒能遞迴出一個 -c payload（例如純粹呼叫一支腳本檔
+                # `bash foo.sh args`，或未來 -c 偵測仍有漏的旗標形狀）——不得因為「認得這個 shell」
+                # 就直接放行，對這一段的原始文字再補跑一次舊版整段字面比對。「認得但沒解析出
+                # payload」一律當「認不得」處理，方向與 F1 其他情形一致。
                 reason = check_fallback(raw)
                 if reason == "H3_TRIGGER":
                     reason = _h3_check(wrapper_haystack)
