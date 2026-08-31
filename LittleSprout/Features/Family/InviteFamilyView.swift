@@ -64,10 +64,8 @@ struct InviteFamilyView: View {
         }
         .appBackground()
         .navigationBarTitleDisplayMode(.inline)
-        // R1 F9：`ScrollableFillView` 內容捲到底時，透明 nav bar 讓返回鍵跟標題文字重疊
-        // （既有元件的既有問題，不是本票引入——見 handoff）；這裡不改共用元件，只在本畫面
-        // 補一個不透明的 nav bar 背景。
-        .toolbarBackground(.visible, for: .navigationBar)
+        // R1 F9 補不透明 nav bar 背景；QA1 fail②改 `Color.lsBackground`（原 `.visible` 捲動後色帶＋分隔線跟 05 不一致）。
+        .toolbarBackground(Color.lsBackground, for: .navigationBar)
         .onAppear {
             familyStore.resetCreateInviteState()
             // R1 F4：進場先查這個家庭現有有沒有一支還有效的邀請碼，顯示既有碼而非空狀態
