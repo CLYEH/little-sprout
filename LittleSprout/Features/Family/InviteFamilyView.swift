@@ -64,10 +64,8 @@ struct InviteFamilyView: View {
         }
         .appBackground()
         .navigationBarTitleDisplayMode(.inline)
-        // R1 F9：`ScrollableFillView` 內容捲到底時，透明 nav bar 讓返回鍵跟標題文字重疊
-        // （既有元件的既有問題，不是本票引入——見 handoff）；這裡不改共用元件，只在本畫面
-        // 補一個不透明的 nav bar 背景。
-        .toolbarBackground(.visible, for: .navigationBar)
+        // R1 F9 補不透明 nav bar 背景；QA1 fail②改 `Color.lsBackground`（原 `.visible` 捲動後色帶＋分隔線跟 05 不一致）。
+        .toolbarBackground(Color.lsBackground, for: .navigationBar)
         .onAppear {
             familyStore.resetCreateInviteState()
             // R1 F4：進場先查這個家庭現有有沒有一支還有效的邀請碼，顯示既有碼而非空狀態
@@ -181,13 +179,12 @@ struct InviteFamilyView: View {
                     .appFont(.meta, weight: .bold)
                     .tracking(2)
                     .foregroundStyle(Color.lsTextSecondary)
-                HStack(spacing: AppSpacing.item) {
-                    Text(codeFirstHalf(invite.code))
-                    Text(codeSecondHalf(invite.code))
-                }
-                .appNumericFont(.code, weight: .bold)
-                .tracking(4)
-                .foregroundStyle(Color.lsTextPrimary)
+                // LS-107 R1 M1（`4b6ee413`）：雙 `Text` 各自縮放不同步（實測差 6.8%），改單一 `Text`。
+                Text(formattedCode(invite.code))
+                    .appNumericFont(.code, weight: .bold)
+                    .tracking(4)
+                    .foregroundStyle(Color.lsTextPrimary)
+                    .lineLimit(1).minimumScaleFactor(0.5)
                 HStack(spacing: AppSpacing.label) {
                     Pill(icon: "calendar", text: "\(formattedExpiry(invite.expiresAt)) 到期")
                     // R1 F4：過去這裡直接顯示 maxUses，永遠不會反映真的用掉幾次；
@@ -384,6 +381,10 @@ extension InviteFamilyView {
 
     private func codeSecondHalf(_ code: String) -> String {
         String(code.suffix(max(0, code.count - 3)))
+    }
+
+    private func formattedCode(_ code: String) -> String {
+        "\(codeFirstHalf(code))\u{2002}\(codeSecondHalf(code))"
     }
 
     private func formattedExpiry(_ date: Date) -> String {
