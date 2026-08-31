@@ -28,12 +28,19 @@ fi
 # 0b) 純文件變更偵測（LS-76）：純文件／harness 設定的 PR 也會跑到第 1／2 步（SwiftLint／xcodebuild
 #     test），沒有 Swift 檔可 lint、也沒有任何行為受影響，卻一樣要吃模擬器 flake（PR #113 R1 push 案例：
 #     一行文件變更被模擬器啟動 app 失敗擋下，重推即過）。判定本分支相對 target 的 diff 是否含
-#     LittleSprout/、LittleSproutTests/、project.yml、*.xcodeproj、Package.resolved、.swiftlint.yml——
-#     皆無才跳過第 1／2 步；CI 的 ci job 不受影響（仍無條件全跑，這裡只省本機時間，不動 CI 那道強制層）。
-#     方向矩陣與下面第 5／7 步一致（hotfix/* 對 origin/main，其餘對 origin/development）；保護分支
-#     （main/test/development）與 detached HEAD 沒有自然的「相對 target」概念，維持原行為（不跳過，兩步
-#     照跑）。target ref 不存在（未 fetch）時同樣不跳過——這只是本機最佳化，抓不到就退回原行為，不新增
-#     一個「找不到 ref」的失敗模式（與第 5／7 步刻意 fail-closed 不同：那兩步是正確性把關，這裡只是省時間）。
+#     LittleSprout/、LittleSproutTests/、project.yml、*.xcodeproj、Package.resolved、.swiftlint.yml、
+#     *.xcconfig、.xcode-version——皆無才跳過第 1／2 步；CI 的 ci job 不受影響（仍無條件全跑，這裡只省
+#     本機時間，不動 CI 那道強制層）。方向矩陣與下面第 5／7 步一致（hotfix/* 對 origin/main，其餘對
+#     origin/development）；保護分支（main/test/development）與 detached HEAD 沒有自然的「相對 target」
+#     概念，維持原行為（不跳過，兩步照跑）。target ref 不存在（未 fetch）時同樣不跳過——這只是本機最佳化，
+#     抓不到就退回原行為，不新增一個「找不到 ref」的失敗模式（與第 5／7 步刻意 fail-closed 不同：那兩步
+#     是正確性把關，這裡只是省時間）。
+#     R1 F1（major）：allowlist 原漏 `Config/*.xcconfig`——`project.yml` 的 configFiles 對 Debug/Release
+#     都指向 `Config/Base.xcconfig`，注入 SUPABASE_URL／ANON_KEY 等 build settings，格式錯會讓 AppConfig
+#     的 precondition 在啟動時崩潰（LS-49）；xcconfig 內容不寫進 pbxproj，只改它的 PR 不會命中
+#     `.xcodeproj`／`project.yml`，若不單獨列出會被誤判「無變更」而跳過本機 build/test——該跑卻跳，是本
+#     機制唯一該避免的 unsafe 方向。R1 F2（minor）：`.xcode-version` 同理補上，避免只改它時連帶跳過 1b
+#     工具鏈對齊步。
 skip_swift_steps=0
 diff_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
 case "$diff_branch" in
@@ -42,7 +49,7 @@ case "$diff_branch" in
     case "$diff_branch" in hotfix/*) diff_target_ref=origin/main ;; *) diff_target_ref=origin/development ;; esac
     if git rev-parse -q --verify "$diff_target_ref" >/dev/null; then
       diff_changed=$(git diff --name-only "$diff_target_ref"...HEAD)
-      if ! printf '%s\n' "$diff_changed" | grep -qE '(^|/)LittleSprout/|(^|/)LittleSproutTests/|(^|/)project\.yml$|\.xcodeproj(/|$)|(^|/)Package\.resolved$|(^|/)\.swiftlint\.yml$'; then
+      if ! printf '%s\n' "$diff_changed" | grep -qE '(^|/)LittleSprout/|(^|/)LittleSproutTests/|(^|/)project\.yml$|\.xcodeproj(/|$)|(^|/)Package\.resolved$|(^|/)\.swiftlint\.yml$|(^|/)Config/.*\.xcconfig$|(^|/)\.xcode-version$'; then
         skip_swift_steps=1
       fi
     fi

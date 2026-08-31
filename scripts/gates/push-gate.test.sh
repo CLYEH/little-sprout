@@ -543,9 +543,12 @@ else
 fi
 
 
-# ---- ⑯～⑲（LS-76）：本分支相對 target 無 Swift／專案檔變更 → 跳過 SwiftLint／unit tests 兩步；有
-#        Swift／`.swiftlint.yml` 變更 → 兩步照跑；target ref 未 fetch → 不跳過（安全預設，退回原行為，
-#        不是新的失敗模式）。沿用 $R（已有 Fake.xcodeproj／.xcode-version／stub bin）——①～⑮ 全程跑在
+# ---- ⑯～㉑（LS-76）：本分支相對 target 無 Swift／專案檔變更 → 跳過 SwiftLint／unit tests 兩步；有
+#        Swift／`.swiftlint.yml`／`Config/*.xcconfig`／`.xcode-version` 變更 → 兩步照跑；target ref 未
+#        fetch → 不跳過（安全預設，退回原行為，不是新的失敗模式）。⑳／㉑（R1 F1／F2）：xcconfig 與
+#        .xcode-version 是 R1 review 抓到的 allowlist 缺口——xcconfig 是 project.yml configFiles 指向的
+#        live build-config（LS-49：格式錯會啟動崩潰），內容不寫進 pbxproj，改前不會命中任何既有 pattern。
+#        沿用 $R（已有 Fake.xcodeproj／.xcode-version／stub bin）——①～⑮ 全程跑在
 #        $R 的 main 分支，落在新邏輯的排除清單（main/test/development/DETACHED）內，skip_swift_steps
 #        恆為 0，這就是為什麼那十五組案例完全不必為了本票修改就能繼續通過（見 push-gate.sh 0b 節的排除
 #        清單）；本節案例切到 feature／hotfix 分支，會第一次讓 push-gate.sh 走到第 6／7 步
@@ -641,7 +644,46 @@ else
 fi
 g update-ref refs/remotes/origin/development HEAD   # 還原，避免影響後面若有更多案例
 
-# ---- ⑳（LS-76）：hotfix/* 分支的 target 是 origin/main，不是 origin/development（方向矩陣須與第
+# ⑳ R1 F1（major）：只改 Config/Base.xcconfig（非 .swift／.xcodeproj／project.yml）→ 仍判定為「有變更」，
+#    不跳過——這是 project.yml 的 configFiles 指向的 live build-config（注入 SUPABASE_URL／ANON_KEY，
+#    LS-49：格式錯會啟動崩潰），xcconfig 內容不寫進 pbxproj，改前（R1 review 當下）不會命中任何既有
+#    pattern，是本票 R1 才補上的 allowlist 缺口
+g checkout -q -b feature/LS-76-xcconfig origin/development
+: > "$SHUTDOWN_LOG"
+mkdir -p "$R/Config"; printf 'SUPABASE_URL = https://example.test\n' > "$R/Config/Base.xcconfig"
+g add Config/Base.xcconfig; g commit -qm 'chore: LS-76 demo xcconfig'
+out20=$(run_gate STUB_TEST_RC=0)
+if printf '%s' "$out20" | grep -qF '無 Swift 變更'; then
+  echo "✗ ⑳ 只改 Config/Base.xcconfig 卻仍被判定跳過（R1 F1 的回歸：live build-config 誤跳本機 build/test）" >&2
+  printf '%s\n' "$out20" | sed 's/^/    /' >&2
+  fail=1
+else
+  echo "✓ ⑳ 只改 Config/Base.xcconfig（非 .swift／.xcodeproj／project.yml）→ 仍判定為有變更，不跳過（R1 F1）"
+fi
+if printf '%s' "$out20" | grep -qF '執行 unit tests' && grep -qF "shutdown ${ded_udid}" "$SHUTDOWN_LOG"; then
+  echo "✓ ⑳ 只改 xcconfig → unit tests 真的照跑（不是只印訊息，模擬器有 shutdown）"
+else
+  echo "✗ ⑳ 只改 xcconfig 時 unit tests 沒有正常執行" >&2
+  printf '%s\n' "$out20" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ㉑ R1 F2（minor）：只改 .xcode-version（bump Xcode pin）→ 同理仍判定為有變更，不跳過（連帶不會誤跳
+#    1b 工具鏈對齊步）
+g checkout -q -b feature/LS-76-xcodeversion origin/development
+printf '100.0\n' > "$R/.xcode-version"
+g add .xcode-version; g commit -qm 'chore: LS-76 demo xcode-version bump'
+out21=$(run_gate STUB_TEST_RC=0)
+printf '99.9\n' > "$R/.xcode-version"   # 還原（setup 建立的版本；未 commit，run_gate 用的是 working tree 內容）
+if printf '%s' "$out21" | grep -qF '無 Swift 變更'; then
+  echo "✗ ㉑ 只改 .xcode-version 卻仍被判定跳過（R1 F2 的回歸：連帶誤跳 1b 工具鏈對齊）" >&2
+  printf '%s\n' "$out21" | sed 's/^/    /' >&2
+  fail=1
+else
+  echo "✓ ㉑ 只改 .xcode-version（非 .swift／.xcodeproj／project.yml）→ 仍判定為有變更，不跳過（R1 F2）"
+fi
+
+# ---- ㉒（LS-76）：hotfix/* 分支的 target 是 origin/main，不是 origin/development（方向矩陣須與第
 #        5／7 步一致）。獨立小 repo：origin/main 落後（僅純文件狀態）、origin/development 領先一個
 #        Swift 變更（模擬 development 已經合併別票）；hotfix 分支從 origin/development 切出、只再加一個
 #        文件變更——若誤用 origin/development 當 target，會判定「無 Swift 變更」而跳過；用正確的
@@ -673,16 +715,16 @@ gh_ update-ref refs/remotes/origin/development HEAD
 gh_ checkout -q -b hotfix/LS-76-demo
 mkdir -p "$hf_root/docs"; echo doc > "$hf_root/docs/hotfix.md"
 gh_ add docs/hotfix.md; gh_ commit -qm 'docs: LS-76 hotfix demo'
-out20=$( cd "$hf_root" && env PATH="$work/bin:$PATH" bash scripts/gates/push-gate.sh </dev/null 2>&1 ); rc20=$?
-if printf '%s' "$out20" | grep -qF '無 Swift 變更，跳過 unit tests'; then
-  echo "✗ ⑳ hotfix 分支被誤判「無 Swift 變更」——方向矩陣可能誤用了 origin/development 當 target" >&2
-  printf '%s\n' "$out20" | sed 's/^/    /' >&2
+out22=$( cd "$hf_root" && env PATH="$work/bin:$PATH" bash scripts/gates/push-gate.sh </dev/null 2>&1 ); rc22=$?
+if printf '%s' "$out22" | grep -qF '無 Swift 變更，跳過 unit tests'; then
+  echo "✗ ㉒ hotfix 分支被誤判「無 Swift 變更」——方向矩陣可能誤用了 origin/development 當 target" >&2
+  printf '%s\n' "$out22" | sed 's/^/    /' >&2
   fail=1
-elif printf '%s' "$out20" | grep -qF '尚未建立 Xcode 專案，跳過 unit tests'; then
-  echo "✓ ⑳ hotfix/* 分支的 target 正確地是 origin/main（不是 origin/development）：相對 main 判定為有 Swift 變更（Bar.swift 是 development 已領先的內容），不誤判跳過"
+elif printf '%s' "$out22" | grep -qF '尚未建立 Xcode 專案，跳過 unit tests'; then
+  echo "✓ ㉒ hotfix/* 分支的 target 正確地是 origin/main（不是 origin/development）：相對 main 判定為有 Swift 變更（Bar.swift 是 development 已領先的內容），不誤判跳過"
 else
-  echo "✗ ⑳ 預期看到「尚未建立 Xcode 專案」訊息（本 synth repo 沒有 xcodeproj），實際輸出不符（exit ${rc20}）" >&2
-  printf '%s\n' "$out20" | sed 's/^/    /' >&2
+  echo "✗ ㉒ 預期看到「尚未建立 Xcode 專案」訊息（本 synth repo 沒有 xcodeproj），實際輸出不符（exit ${rc22}）" >&2
+  printf '%s\n' "$out22" | sed 's/^/    /' >&2
   fail=1
 fi
 
