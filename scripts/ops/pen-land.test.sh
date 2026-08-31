@@ -260,6 +260,48 @@ else
   bad "⑨d --after 過去時間戳應正常落地（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 
+# ---- ⑪ LS-117：僅白名單屬性（placeholder）差異的診斷訊息 ----
+
+# ⑪a 單一節點僅 placeholder 差異、節點總數不變 → 印「僅偵測到白名單屬性」，仍是 exit 0（dry-run 對真實
+#     diff 一律 exit 0，這裡只驗訊息有沒有印對，不是驗 exit code 本身變了）
+reset; write_backup '{"version":1,"fileToken":"tok1","variables":{"a":1},"themes":{"light":{}},"children":[{"id":"n1","x":1,"placeholder":true,"children":[{"id":"n2","y":2,"children":[]}]}]}'
+out="$(run "$wt" --dry-run 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '僅偵測到白名單屬性' \
+  && printf '%s' "$out" | grep -qF "節點 n1 屬性變更：['placeholder']"; then
+  ok '⑪a 僅 placeholder 差異、節點總數不變 → 印「僅偵測到白名單屬性」診斷訊息'
+else
+  bad "⑪a 應印僅白名單屬性訊息（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑪b 同一節點除了 placeholder 還有別的屬性變了（如 x）→ 不是「僅白名單」，不印該訊息
+reset; write_backup '{"version":1,"fileToken":"tok1","variables":{"a":1},"themes":{"light":{}},"children":[{"id":"n1","x":99,"placeholder":true,"children":[{"id":"n2","y":2,"children":[]}]}]}'
+out="$(run "$wt" --dry-run 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '僅偵測到白名單屬性' \
+  && printf '%s' "$out" | grep -qF "節點 n1 屬性變更"; then
+  ok '⑪b 同節點混雜非白名單屬性變更 → 不印「僅偵測到白名單屬性」'
+else
+  bad "⑪b 不應印僅白名單屬性訊息（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑪c 節點總數改變（新增節點），即使既有節點只有 placeholder 差異 → 不是「僅白名單」，不印該訊息
+reset; write_backup '{"version":1,"fileToken":"tok1","variables":{"a":1},"themes":{"light":{}},"children":[{"id":"n1","x":1,"placeholder":true,"children":[{"id":"n2","y":2,"children":[]},{"id":"n3","z":3,"children":[]}]}]}'
+out="$(run "$wt" --dry-run 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '僅偵測到白名單屬性' \
+  && printf '%s' "$out" | grep -qF '新增節點'; then
+  ok '⑪c 節點總數改變（新增節點）→ 即使既有節點僅 placeholder 差異，也不印「僅偵測到白名單屬性」'
+else
+  bad "⑪c 節點增減時不應印僅白名單屬性訊息（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑪d 完全無差異（既有的 UNCHANGED 案例）不應該同時印「僅偵測到白名單屬性」——兩種訊息互斥
+reset; write_backup "$WANT_2NODE"
+out="$(run "$wt" --expect-nodes 2 2>&1)"
+if ! printf '%s' "$out" | grep -qF '僅偵測到白名單屬性'; then
+  ok '⑪d 結構完全無差異時不印「僅偵測到白名單屬性」（與 UNCHANGED 訊息互斥）'
+else
+  bad "⑪d 零變更案例不應印僅白名單屬性訊息"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
 # ---- ⑩ R1 F3：省略 --expect-nodes 時印明確警告，且 gate 輸出不得宣稱「與畫布一致」 ----
 reset; write_backup "$BACKUP_3NODE"
 out="$(run "$wt" 2>&1)"; got=$?
