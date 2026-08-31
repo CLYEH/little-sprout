@@ -3839,7 +3839,7 @@
       "name": "LS-18 / 07a 邀請家人 · 尚未產生（空狀態）",
       "clip": true,
       "width": 393,
-      "height": 926,
+      "height": 934,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -3906,7 +3906,7 @@
           "id": "p5m28",
           "name": "Body",
           "width": "fill_container",
-          "height": 659,
+          "height": 667,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -4267,6 +4267,13 @@
                   "ref": "eEP8A",
                   "name": "Role Section",
                   "width": "fill_container"
+                },
+                {
+                  "type": "frame",
+                  "id": "tN6DH",
+                  "name": "Fold Buffer",
+                  "width": "fill_container",
+                  "height": 8
                 }
               ]
             }
@@ -50543,7 +50550,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 926,
+      "height": 934,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -50610,7 +50617,7 @@
           "id": "gDyjM",
           "name": "Body",
           "width": "fill_container",
-          "height": 659,
+          "height": 667,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -50971,6 +50978,13 @@
                   "ref": "eEP8A",
                   "name": "Role Section",
                   "width": "fill_container"
+                },
+                {
+                  "type": "frame",
+                  "id": "X4EuA",
+                  "name": "Fold Buffer",
+                  "width": "fill_container",
+                  "height": 8
                 }
               ]
             }
@@ -51069,7 +51083,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2062,
+      "height": 2070,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -51136,7 +51150,7 @@
           "id": "wjU2n",
           "name": "Body",
           "width": "fill_container",
-          "height": 1576,
+          "height": 1584,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -51523,6 +51537,13 @@
                       "x": 289
                     }
                   }
+                },
+                {
+                  "type": "frame",
+                  "id": "ffd1e",
+                  "name": "Fold Buffer",
+                  "width": "fill_container",
+                  "height": 8
                 }
               ]
             }
@@ -51618,7 +51639,7 @@
       "name": "LS-18 / 07a 邀請家人 · 只能看選中",
       "clip": true,
       "width": 393,
-      "height": 926,
+      "height": 934,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -51685,7 +51706,7 @@
           "id": "qiF6K",
           "name": "Body",
           "width": "fill_container",
-          "height": 659,
+          "height": 667,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -52113,6 +52134,13 @@
                       "fill": "$print-ink"
                     }
                   }
+                },
+                {
+                  "type": "frame",
+                  "id": "K0FKHz",
+                  "name": "Fold Buffer",
+                  "width": "fill_container",
+                  "height": 8
                 }
               ]
             }
