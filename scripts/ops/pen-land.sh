@@ -21,7 +21,10 @@
 #      程序一律要傳）。
 #   3. python3 結構 diff：want（落地檔／舊）vs backup（Pen 記憶體／新）——節點總數（含巢狀 children）、
 #      id 集合（新增／刪除）、meta（variables／themes／fileToken）是否不變、逐 (id, prop) 差異
-#      （排除 children，避免整棵子樹洗版）。印出變更清單。
+#      （排除 children，避免整棵子樹洗版）。印出變更清單。LS-117：節點總數／id 集合不變、且所有屬性差異都
+#      落在白名單內（目前僅 `placeholder`，pen-dev skill 定義的「工作中」UI 態旗標）時，額外印一行「僅偵測到
+#      白名單屬性…」的訊息——供 `pen-open.sh` 的 `check_root_safe` 辨識為可安全捨棄的 autosave 漂移，不影響
+#      本腳本自身的 exit code／是否落地（純資訊性，不改變既有行為）。
 #   4. meta 變了，或 diff 本身失敗（JSON 壞掉、頂層非物件等）→ 不 cp，exit 1。
 #   5. 結構完全無差異（R1 F1）→ 預設也視為失敗（本輪零變更或 autosave 沒追上，兩者從結構上分不出來，
 #      寧可誤擋不誤放）、印訊息、exit 1；刻意確認本輪真的沒有變更就加 `--allow-unchanged` 放行（R3 I3：
@@ -198,7 +201,13 @@ if added:
 if removed:
     print(f"刪除節點（{len(removed)}）：{removed}")
 
+# LS-117：僅變更這些屬性視為「UI 態」漂移（例如 ui-designer 收工前的 placeholder 開關），不是實質內容——
+# 供 pen-open.sh 的 check_root_safe 判斷是否可安全捨棄自動 quit 前偵測到的 autosave 差異。單一集合，這裡與
+# check_root_safe 各自認定同一份白名單（目前只有 placeholder），新增白名單鍵時兩處要一起改。
+PLACEHOLDER_SAFE_KEYS = {"placeholder"}
+
 prop_changes = 0
+non_whitelisted_prop_change = False
 for nid in sorted(set(old_nodes) & set(new_nodes), key=str):
     o, n = old_nodes[nid], new_nodes[nid]
     keys = (set(o) | set(n)) - {"children"}
@@ -206,11 +215,28 @@ for nid in sorted(set(old_nodes) & set(new_nodes), key=str):
     if diffs:
         prop_changes += 1
         print(f"節點 {nid} 屬性變更：{diffs}")
+        if not set(diffs) <= PLACEHOLDER_SAFE_KEYS:
+            non_whitelisted_prop_change = True
 
 print(f"節點總數：落地檔 {old_count} → backup {new_count}")
 unchanged = not added and not removed and prop_changes == 0 and old_count == new_count
 if unchanged:
     print("（結構無差異——本輪零變更或 autosave 還沒追上，兩者從結構上分不出來）")
+
+# LS-117 defect 1：節點總數／id 集合不變，且所有屬性差異都落在白名單內（目前僅 placeholder）——這類差異
+# 印出獨立可稽核的訊息，供 check_root_safe 辨識為「UI 態漂移、可安全捨棄」，不是「有未落地變更」。
+placeholder_only = (
+    not added
+    and not removed
+    and old_count == new_count
+    and prop_changes > 0
+    and not non_whitelisted_prop_change
+)
+if placeholder_only:
+    print(
+        f"（僅偵測到白名單屬性（{sorted(PLACEHOLDER_SAFE_KEYS)}）差異，節點總數與 id 集合不變——"
+        "視為可安全捨棄的 UI 態 autosave 漂移，非實質內容變更）"
+    )
 
 print(f"NODES={new_count}")
 print(f"META_OK={1 if meta_ok else 0}")

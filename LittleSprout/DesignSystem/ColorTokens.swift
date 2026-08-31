@@ -32,6 +32,7 @@ extension Color {
     static let lsPrintInk = Color("print-ink")
     static let lsPrintInkSecondary = Color("print-ink-secondary")
     static let lsPrintPaper = Color("print-paper")
+    static let lsSuccess = Color("success")
     static let lsSurface = Color("surface")
     static let lsSurface2 = Color("surface-2")
     static let lsTextPrimary = Color("text-primary")

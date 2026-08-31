@@ -68,7 +68,11 @@ struct GeneratedInvite: Equatable, Sendable {
 @MainActor
 @Observable
 final class FamilyStore {
-    private let apiClient: FamilyAPIClient
+    // LS-108：不是 `private`——`FamilyStore+JoinRequests.swift` 的加入路徑方法（另一個檔案的
+    // extension）需要用它打 request_join／approve_join 等 RPC；Swift 的 `private` 存取層級只到
+    // 「同檔案」，跨檔案 extension 碰不到。退而求其次用預設的 internal（模組內可讀，對外
+    // target 沒有暴露任何新表面，跟這個型別其餘所有狀態的可見度一致）。
+    let apiClient: FamilyAPIClient
 
     private(set) var myFamily: Family?
     private(set) var lookupState: FamilyOperationState = .idle
@@ -89,6 +93,18 @@ final class FamilyStore {
     /// 環境 `dismiss()` 時，`.fullScreenCover(isPresented:)` 的雙向 binding 會自動把這裡寫回
     /// `false`，不需要額外的完成回呼。
     private(set) var showsChildOnboarding = false
+
+    // LS-108 加入路徑（申請人：request_join／get_my_join_request／withdraw_join；owner：
+    // list_join_requests／approve_join／reject_join）——狀態宣告在這裡（Swift extension 不能
+    // 加 stored property），對應的方法拆去 `FamilyStore+JoinRequests.swift`（主檔已經逼近
+    // SwiftLint `file_length` 400 行上限）。不是 `private(set)`：理由同上方 `apiClient`。
+    var requestJoinState: FamilyOperationState = .idle
+    var myJoinRequest: MyJoinRequest?
+    var withdrawJoinState: FamilyOperationState = .idle
+    var listJoinRequestsState: FamilyOperationState = .idle
+    var pendingJoinRequests: [PendingJoinRequest] = []
+    var joinRequestActionError: AppError?
+    var processingJoinRequestIDs: Set<UUID> = []
 
     /// 目前這份狀態是查給哪個使用者看的——R1 F1：`FamilyStore` 是 app 層單例、隨 app 存活，
     /// 單純登出不會重置它。`syncOwner(to:)` 拿它跟 `AuthenticatedGate` 傳進來的
@@ -139,6 +155,7 @@ final class FamilyStore {
         createInviteState = .idle
         lookupInviteState = .idle
         showsChildOnboarding = false
+        resetJoinRequestsState()
     }
 
     /// 查詢呼叫者目前所屬的家庭；`RootView` 在「已登入」但還不確定有沒有家庭時呼叫一次。

@@ -43,12 +43,4 @@ enum InvitePhase: Equatable {
         if case .generating = self { return true }
         return false
     }
-
-    /// 這個狀態下，「產生邀請碼」是不是一個可以顯示／按下去的動作——R2 N1 的核心防線：
-    /// 查詢中／查詢失敗（不知道有沒有既有碼）一律不可按，只有確定查詢已成功且沒有既有碼
-    /// （`.empty`）才可以。
-    var allowsGenerate: Bool {
-        if case .empty = self { return true }
-        return false
-    }
 }
