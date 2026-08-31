@@ -7,7 +7,6 @@ struct OTPVerificationView: View {
     let onVerified: () -> Void
 
     @State private var model: OTPVerificationModel
-    @State private var keyboard = KeyboardHeightObserver()
 
     init(email: String, authStore: AuthStore, onVerified: @escaping () -> Void) {
         self.email = email
@@ -28,10 +27,9 @@ struct OTPVerificationView: View {
             .padding(.horizontal, AppSpacing.screenPad)
             .padding(.top, AppSpacing.label)
         }
-        // LS-105：safeAreaInset 的 CTA 會正確貼齊鍵盤上緣，但 ScrollView 本身不會跟著收縮可視
-        // 範圍（KeyboardHeightObserver 檔頭注解有實測說明）；補這行讓可捲動內容的底界跟著鍵盤
-        // 收縮，兩者才不會互相蓋到。
-        .contentMargins(.bottom, keyboard.height, for: .scrollContent)
+        // LS-109：LS-105 QA1 4(d) 像素量測發現這行跟系統既有的鍵盤 safe-area inset 疊加，
+        // 造成鍵盤開啟時內容底部雙倍留白（OTP 畫面 ≈245pt）；ScrollView 已自帶鍵盤 inset，
+        // 不需要再手動補 `keyboard.height`（移除，理由同 EmailSignInView）。
         // LS-105：CTA 移出可捲動內容、固定在鍵盤上方（safeAreaInset）——AX3 數字鍵盤不隨
         // Dynamic Type 縮放、蓋住整個下半屏時，「確認登入」仍不需捲動就看得到（長輩是 AX
         // 字級主要使用者，可見優先於可捲動；EmailSignInView 同型同法）。
