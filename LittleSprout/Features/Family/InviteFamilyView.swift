@@ -2,27 +2,33 @@ import SwiftUI
 import UIKit
 
 /// LS-18 / 07 邀請家人（空／載入／已產生三態，含 07a／07c）。版式依
-/// `design/littlesprout.pen` frame `z6DOE`（07a）／`CHLio`（07c）／`kcGJa`（07）：三態共用同一個
-/// 骨架——Header → 狀態相關的視覺卡 → `ApprovalStatusRow`（核准必開鎖定狀態列）→ 狀態相關的
-/// 動作區 → （產生中／已產生才有）破壞性重新產生區。
+/// `design/littlesprout.pen` frame `z6DOE`（07a）／`CHLio`（07c）／`kcGJa`（07）：Header →
+/// 狀態相關的視覺卡 → 角色列（互動選擇／唯讀狀態，見 LS-111）→（已產生／載入才有）
+/// `ApprovalStatusRow` → 次要動作（複製碼／名額文案）→（owner 有待審申請才有）審核清單
+/// （LS-108，見 `InviteFamilyView+PendingApprovals.swift`）→ 破壞性重新產生區 → 釘底 Action Bar
+/// （LS-111 R6 起「畫面有且僅有一顆貫穿全狀態主 CTA」的釘底動作帶慣例：hairline ＋ 依狀態變化
+/// 的主要動作，`.safeAreaInset(edge: .bottom)`，內容區維持可捲動）。
 ///
-/// 角色（member／viewer）選擇：**LS-46 核可的設計稿沒有這個 UI**（07a/07/07c 都只有單一
-/// 「產生邀請碼」動作，隱含固定角色）；票文（LS-107 Scope 第 4 點）明確要求「角色只給
-/// member／viewer 附白話說明」。`rolePicker` 是用既有 token 拼出的陽春二選一列，不是新畫面、
-/// 沒有發明新視覺語言，但沒有經過 ui-designer／visual-reviewer 審過——見 handoff 風險欄。
+/// 角色（member／viewer）選擇（LS-111 併入本票落地，取代 R2 未經審過的陽春版）：互動列
+/// （07a）依 `cmp/Role Section` 現況設計——未選中列透明躺在背景上，選中列浮起一張
+/// `$print-paper` 紙（沖印品母題延伸到 UI 元件，四通道編碼：icon 語意圖示 pencil/eye＋絕對定位
+/// checkmark＋字重 700/600＋紙面 vs 透明背景）；已產生／載入態（07／07c）改用唯讀
+/// `cmp/Role Status` 單列，顯示這支邀請碼實際烘焙進去的角色，要換角色只能走「重新產生」。
 struct InviteFamilyView: View {
     let familyStore: FamilyStore
 
-    @State private var selectedRole: FamilyRole = .member
+    // LS-111：不是 `private`——`InviteFamilyView+Role.swift`（另一個檔案的 extension）需要讀寫
+    // 它，理由同該檔文件註解。
+    @State var selectedRole: FamilyRole = .member
     @State private var showsRegenerateConfirmation = false
-    @State private var showsCopiedFeedback = false
+    @State var showsCopiedFeedback = false
     // R1 F10：兩秒內連按兩次「複製邀請碼」，第一個 Task 到期時會把第二次的「已複製！」提前
     // 清掉；離開畫面時前一次的 Task 也該跟著取消，不要在使用者已經看不到這個畫面時還跑一個
     // 空等兩秒才把 `@State` 改回去的殘留 Task。
     @State private var copiedFeedbackTask: Task<Void, Never>?
 
     /// R2 N1：狀態計算搬去獨立、可單元測試的 `InvitePhase`（見該檔文件註解）。
-    private var phase: InvitePhase {
+    var phase: InvitePhase {
         InvitePhase(
             lookupInviteState: familyStore.lookupInviteState,
             createInviteState: familyStore.createInviteState,
@@ -49,28 +55,41 @@ struct InviteFamilyView: View {
                     errorRow(error)
                         .padding(.top, AppSpacing.item)
                 }
-                ApprovalStatusRow()
-                    .padding(.top, AppSpacing.section)
-                actionsSection
-                    .padding(.top, AppSpacing.block)
+                if case .empty = phase {
+                    interactiveRoleSection
+                        .padding(.top, AppSpacing.section)
+                }
                 if phase.showsDestructiveSection {
-                    destructiveSection
+                    roleStatusSection
                         .padding(.top, AppSpacing.block)
+                    ApprovalStatusRow()
+                        .padding(.top, AppSpacing.section)
+                    secondaryActionsSection
+                        .padding(.top, AppSpacing.section)
+                    if !familyStore.pendingJoinRequests.isEmpty {
+                        pendingApprovalsSection
+                            .padding(.top, AppSpacing.section)
+                    }
+                    destructiveSection
+                        .padding(.top, AppSpacing.section)
                 }
             }
             .padding(.horizontal, AppSpacing.screenPad)
             .padding(.top, AppSpacing.block)
             .padding(.bottom, AppSpacing.item)
         }
+        .safeAreaInset(edge: .bottom) { actionBarContainer }
         .appBackground()
         .navigationBarTitleDisplayMode(.inline)
-        // R1 F9 補不透明 nav bar 背景；QA1 fail②改 `Color.lsBackground`（原 `.visible` 捲動後色帶＋分隔線跟 05 不一致）。
-        .toolbarBackground(Color.lsBackground, for: .navigationBar)
         .onAppear {
             familyStore.resetCreateInviteState()
             // R1 F4：進場先查這個家庭現有有沒有一支還有效的邀請碼，顯示既有碼而非空狀態
-            // ——避免每次重開 app 都讓使用者以為自己沒有邀請碼、再產生一支新的。
-            Task { await familyStore.refreshLatestInvite() }
+            // ——避免每次重開 app 都讓使用者以為自己沒有邀請碼、再產生一支新的。LS-108：順帶
+            // 查一次待審清單（owner 審核，見 `InviteFamilyView+PendingApprovals.swift`）。
+            Task {
+                await familyStore.refreshLatestInvite()
+                await familyStore.refreshPendingJoinRequests()
+            }
         }
         .onDisappear {
             copiedFeedbackTask?.cancel()
@@ -204,112 +223,12 @@ struct InviteFamilyView: View {
         .background(Color.lsSurface, in: RoundedRectangle(cornerRadius: AppSpacing.radiusLarge))
     }
 
-    // MARK: - Actions（依狀態切換）
-
-    @ViewBuilder
-    private var actionsSection: some View {
-        switch phase {
-        case .checkingExisting:
-            EmptyView()
-        case .lookupFailed:
-            // R2 N1：查詢失敗時不知道這個家庭有沒有既有碼，不能顯示「產生邀請碼」（會重複
-            // 建立、舊碼撤不掉）——只給重試，跟 `RootView.FamilyLookupFailedView` 同一個
-            // 兜底邏輯，錯誤文字已經在上面的 `errorRow` 顯示過。
-            SecondaryButton(icon: "arrow.clockwise", title: "重試", action: retryLookup)
-        case .empty:
-            VStack(alignment: .leading, spacing: AppSpacing.label) {
-                rolePicker
-                PrimaryButton(icon: "plus", title: "產生邀請碼", action: generate)
-                    .padding(.top, AppSpacing.label)
-                Text("產生後 7 天內有效，最多 5 位家人可以用。")
-                    .appFont(.note)
-                    .foregroundStyle(Color.lsTextSecondary)
-            }
-        case .generating:
-            VStack(alignment: .leading, spacing: AppSpacing.label) {
-                PrimaryButton(
-                    icon: "square.and.arrow.up",
-                    title: "分享邀請連結",
-                    isLoading: true,
-                    loadingTitle: "正在產生邀請碼…",
-                    action: {}
-                )
-                SecondaryButton(icon: "doc.on.doc", title: "複製邀請碼", isDimmed: true) {}
-            }
-        case .generated(let invite):
-            VStack(alignment: .leading, spacing: AppSpacing.label) {
-                ShareLink(
-                    item: inviteURL(invite.code),
-                    subject: Text("邀請你加入「\(familyStore.myFamily?.name ?? "")」")
-                ) {
-                    HStack(spacing: AppSpacing.label) {
-                        Image(systemName: "square.and.arrow.up").appIconFrame(.medium)
-                        Text("分享邀請連結").appFont(.body, weight: .bold)
-                    }
-                    .foregroundStyle(Color.lsOnAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, AppSpacing.controlPaddingCTA)
-                    .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-                }
-                SecondaryButton(icon: "doc.on.doc", title: copyButtonTitle, action: { copyCode(invite.code) })
-                // R1 F3：票文 Scope 第 3 點要求的名額文案（`used_count` 不退還，Linear comment
-                // `4f10699c`）——`.pen` 07c 沒有這句（全稿「名額」只在 06b/06c 申請人側出現），
-                // 措辭與位置比照既有的 07a 政策小字（`.note`／`$text-secondary`，見上方
-                // `.empty` case 的到期／人數說明）。
-                Text("名額不退還，需要更多名額請重新產生。")
-                    .appFont(.note)
-                    .foregroundStyle(Color.lsTextSecondary)
-            }
-        }
-    }
-
-    private var copyButtonTitle: String {
-        showsCopiedFeedback ? "已複製！" : "複製邀請碼"
-    }
-
 }
 
 // MARK: - R1（SwiftLint `type_body_length`）：以下皆抽成 extension，理由同 `WelcomeView` 檔尾
 // extension 的註解——同檔案 extension 成員依 SE-0169 仍能存取 `private` 的 `@State` 屬性與
 // 上面 struct 的 `private` 成員，計數卻是分開算的。
 extension InviteFamilyView {
-    // MARK: - 角色選擇（見檔頭註解——本畫面獨有的無設計稿補充）
-
-    private var rolePicker: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.label) {
-            Text("邀請身份")
-                .appFont(.body, weight: .semibold)
-                .foregroundStyle(Color.lsTextPrimary)
-            roleOptionRow(role: .member, title: "一般成員", description: "可以上傳照片、寫日記，也能留言互動。")
-            roleOptionRow(role: .viewer, title: "只能瀏覽", description: "可以看照片和日記，不能上傳或編輯。")
-        }
-    }
-
-    private func roleOptionRow(role: FamilyRole, title: String, description: String) -> some View {
-        let isSelected = selectedRole == role
-        return Button {
-            selectedRole = role
-        } label: {
-            HStack(alignment: .top, spacing: AppSpacing.label) {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .appIconFrame(.medium)
-                    .foregroundStyle(isSelected ? Color.lsAccent : Color.lsTextSecondary)
-                VStack(alignment: .leading, spacing: AppSpacing.tight) {
-                    Text(title).appFont(.body, weight: .semibold).foregroundStyle(Color.lsTextPrimary)
-                    Text(description).appFont(.note).foregroundStyle(Color.lsTextSecondary)
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(AppSpacing.item)
-            .background(Color.lsSurface, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-            .overlay(
-                RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
-                    .strokeBorder(isSelected ? Color.lsAccent : Color.lsControlLine, lineWidth: isSelected ? 2 : 1.5)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
     // MARK: - 破壞性重新產生
 
     private var destructiveSection: some View {
@@ -346,17 +265,17 @@ extension InviteFamilyView {
 
     // MARK: - Helpers
 
-    private func generate() {
+    func generate() {
         Task { await familyStore.createInvite(role: selectedRole) }
     }
 
     /// R2 N1：查詢失敗態的重試——呼叫跟 `onAppear` 相同的方法，成功會把 `lookupInviteState`
     /// 蓋回 `.success` 並帶出結果（或沒有既有碼就落回 `.empty`），不需要另外呼叫 reset。
-    private func retryLookup() {
+    func retryLookup() {
         Task { await familyStore.refreshLatestInvite() }
     }
 
-    private func copyCode(_ code: String) {
+    func copyCode(_ code: String) {
         UIPasteboard.general.string = code
         showsCopiedFeedback = true
         // R1 F10：先取消前一次還在等待的回饋 Task，兩秒內連按兩次才不會讓第一次的 Task
@@ -369,7 +288,7 @@ extension InviteFamilyView {
         }
     }
 
-    private func inviteURL(_ code: String) -> URL {
+    func inviteURL(_ code: String) -> URL {
         URL(string: "littlesprout://invite/\(code)") ?? URL(string: "littlesprout://invite")!
     }
 

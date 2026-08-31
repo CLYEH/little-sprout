@@ -9,13 +9,15 @@ import SwiftUI
 struct RootView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
+    /// LS-108 deep link：見 `ForkView` 文件註解，這裡只是原樣轉手往下傳。
+    @Binding var pendingInviteCode: String?
 
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
             if authStore.isAuthenticated() {
-                AuthenticatedGate(authStore: authStore, familyStore: familyStore)
+                AuthenticatedGate(authStore: authStore, familyStore: familyStore, pendingInviteCode: $pendingInviteCode)
             } else {
                 WelcomeView(authStore: authStore)
             }
@@ -51,6 +53,7 @@ struct RootView: View {
 private struct AuthenticatedGate: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
+    @Binding var pendingInviteCode: String?
 
     var body: some View {
         Group {
@@ -65,7 +68,7 @@ private struct AuthenticatedGate: View {
                 if familyStore.myFamily != nil {
                     AuthenticatedRootView(authStore: authStore, familyStore: familyStore)
                 } else {
-                    ForkView(authStore: authStore, familyStore: familyStore)
+                    ForkView(authStore: authStore, familyStore: familyStore, pendingInviteCode: $pendingInviteCode)
                 }
             }
         }
