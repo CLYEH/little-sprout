@@ -4,8 +4,9 @@ import SwiftUI
 /// `cmp/Button Apple`：官方樣式（`.black`／深色 `.white`）是品牌硬規定，實作務必用官方
 /// `SignInWithAppleButton`（Handoff Notes「三方登入鍵的色彩豁免」）——不得自畫黑底白字鈕。
 ///
-/// 官方元件的文案（「透過 Apple 登入」）與圖示由系統依裝置語系決定，無法換成設計稿上的
-/// 自訂中文「使用 Apple 登入」／「登入中…」（Apple API 沒有開放客製文字）。01b 的「登入中」
+/// 官方元件的文案（「透過 Apple 登入」）與圖示由系統依 app 宣告的 localization 決定（本專案
+/// 宣告 zh-Hant 為唯一語系，見 `project.yml` `options.developmentLanguage`，LS-112），無法換成
+/// 設計稿上的自訂中文「使用 Apple 登入」／「登入中…」（Apple API 沒有開放客製文字）。01b 的「登入中」
 /// 態改用同尺寸、同底色的疊層蓋住官方按鈕顯示 spinner＋文字，維持官方元件在非 in-flight
 /// 狀態下始終是唯一可互動的層——不是繞過官方元件重畫一顆假的。
 ///
