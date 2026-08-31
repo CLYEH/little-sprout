@@ -8,6 +8,7 @@ import SwiftUI
 /// 不隨深色模式反轉（LS-46 R11 進場條件②「紙永遠是淺表面、墨永遠是深色」）。
 extension Color {
     static let lsAccent = Color("accent")
+    static let lsAccentSoft = Color("accent-soft")
     static let lsAppleBackground = Color("apple-bg")
     static let lsAppleForeground = Color("apple-fg")
     static let lsBackground = Color("bg")

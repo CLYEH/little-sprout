@@ -87,6 +87,13 @@ final class FamilyStore {
     private(set) var lookupInviteState: FamilyOperationState = .idle
     private(set) var latestInvite: GeneratedInvite?
 
+    /// LS-113：剛建立完家庭，還沒決定要不要建立第一個寶貝檔案——`RootView` 依這個旗標用
+    /// `.fullScreenCover` 蓋一層 `CreateChildView`（08）在主畫面之上，讓「建立家庭後可接、
+    /// 可跳過」的寶貝建檔步驟接上（見 `CreateChildView` 文件註解）。`CreateChildView` 呼叫
+    /// 環境 `dismiss()` 時，`.fullScreenCover(isPresented:)` 的雙向 binding 會自動把這裡寫回
+    /// `false`，不需要額外的完成回呼。
+    private(set) var showsChildOnboarding = false
+
     // LS-108 加入路徑（申請人：request_join／get_my_join_request／withdraw_join；owner：
     // list_join_requests／approve_join／reject_join）——狀態宣告在這裡（Swift extension 不能
     // 加 stored property），對應的方法拆去 `FamilyStore+JoinRequests.swift`（主檔已經逼近
@@ -147,6 +154,7 @@ final class FamilyStore {
         createFamilyState = .idle
         createInviteState = .idle
         lookupInviteState = .idle
+        showsChildOnboarding = false
         resetJoinRequestsState()
     }
 
@@ -178,11 +186,20 @@ final class FamilyStore {
             let family = try await apiClient.createFamily(name: name)
             myFamily = family
             createFamilyState = .success
+            // LS-113：接上「建立家庭後可接、可跳過」的寶貝建檔步驟——見 `showsChildOnboarding`
+            // 文件註解。
+            showsChildOnboarding = true
             return true
         } catch {
             createFamilyState = .failure(AppError.map(error))
             return false
         }
+    }
+
+    /// `RootView` 的 `.fullScreenCover` 在使用者建立寶貝檔案成功或按「之後再說」（`dismiss()`
+    /// 觸發 binding 的 `set` 分支）時呼叫，把旗標寫回 `false`。
+    func dismissChildOnboarding() {
+        showsChildOnboarding = false
     }
 
     /// 重新導航回這個畫面時，把上一次失敗的殘影清掉——`createFamilyState` 是 store 層的狀態、
