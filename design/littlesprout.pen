@@ -50189,7 +50189,7 @@
               "name": "Role Title",
               "fill": "$text-primary",
               "textGrowth": "fixed-width",
-              "width": "fill_container",
+              "width": 253,
               "content": "一般成員",
               "fontFamily": "$font",
               "fontSize": "$fs-body",
@@ -51322,7 +51322,25 @@
                   "type": "ref",
                   "ref": "eEP8A",
                   "name": "Role Section",
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "descendants": {
+                    "X7DYDo/vL7kl": {
+                      "width": 235
+                    },
+                    "X7DYDo/uHUe1": {
+                      "width": 40,
+                      "height": 40,
+                      "x": 289
+                    },
+                    "ZA8G7/vL7kl": {
+                      "width": 235
+                    },
+                    "ZA8G7/uHUe1": {
+                      "width": 40,
+                      "height": 40,
+                      "x": 289
+                    }
+                  }
                 }
               ]
             },
