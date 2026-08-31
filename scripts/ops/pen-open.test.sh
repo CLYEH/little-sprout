@@ -164,6 +164,43 @@ printf '%s' "$WT3_SAFE" > "${wt3}/design/littlesprout.pen"
 want3="$(cd "${wt3}/design" && pwd -P)/littlesprout.pen"
 wt3_backup_unsafe() { printf '%s' '{"version":1,"fileToken":"tok1","variables":{},"themes":{},"children":[{"id":"z1","x":1,"children":[{"id":"z2","y":2,"children":[]}]}]}' > "${PEN_BACKUP_DIR}/$(printf '%s' "file://${want3}" | shasum | awk '{print $1}')"; }
 
+# wtP：LS-117 defect 1／2 用——真的 git 倉庫，.pen 已 commit（模擬「主 checkout：保護分支，本就不該被直接
+# 編輯」），供 placeholder-only 漂移的安全判定測試。
+wtP="${work}/wtP"
+mkdir -p "${wtP}/design"
+WTP_CLEAN='{"version":1,"fileToken":"tokP","variables":{},"themes":{},"children":[{"id":"iq3Ic","x":1,"placeholder":false,"children":[]}]}'
+printf '%s' "$WTP_CLEAN" > "${wtP}/design/littlesprout.pen"
+( cd "$wtP" && git init -q && git add -A && git -c user.email=test@example.com -c user.name=test commit -q -m init ) >/dev/null 2>&1
+wantP="$(cd "${wtP}/design" && pwd -P)/littlesprout.pen"
+wtP_backup() { printf '%s' "$1" > "${PEN_BACKUP_DIR}/$(printf '%s' "file://${wantP}" | shasum | awk '{print $1}')"; }
+# 僅 iq3Ic 的 placeholder false→true，節點總數／id 不變：defect 1 的白名單漂移。
+wtP_backup_placeholder_only() { wtP_backup '{"version":1,"fileToken":"tokP","variables":{},"themes":{},"children":[{"id":"iq3Ic","x":1,"placeholder":true,"children":[]}]}'; }
+# 同時改了 x（非白名單屬性），即使節點總數不變也不是「僅白名單」。
+wtP_backup_realdiff() { wtP_backup '{"version":1,"fileToken":"tokP","variables":{},"themes":{},"children":[{"id":"iq3Ic","x":2,"placeholder":true,"children":[]}]}'; }
+# 弄髒 wtP 的落地檔本身（模擬「其實有人直接改了主 checkout 內容」）——仍是合法 JSON，只改 x。
+wtP_make_dirty() { printf '%s' '{"version":1,"fileToken":"tokP","variables":{},"themes":{},"children":[{"id":"iq3Ic","x":5,"placeholder":false,"children":[]}]}' > "${wtP}/design/littlesprout.pen"; }
+# backup 對齊「已弄髒」的落地檔，只多 placeholder 差異——結構上仍是「僅白名單」，但落地檔對 git 不 clean。
+wtP_backup_placeholder_only_dirty() { wtP_backup '{"version":1,"fileToken":"tokP","variables":{},"themes":{},"children":[{"id":"iq3Ic","x":5,"placeholder":true,"children":[]}]}'; }
+wtP_reset_clean() { git -C "$wtP" checkout -q -- design/littlesprout.pen; }
+
+# wt4：LS-117 defect 3 用——從未被 Pen 開過的路徑，$PEN_BACKUP_DIR 裡刻意不建立對應 backup。
+wt4="${work}/wt4"
+mkdir -p "${wt4}/design"
+printf '%s' '{"version":1,"children":[]}' > "${wt4}/design/littlesprout.pen"
+want4="$(cd "${wt4}/design" && pwd -P)/littlesprout.pen"
+
+# 「頑固」假 Pen 主行程：忽略 SIGTERM（`trap '' TERM` 的 ignore 處置在 `exec` 之後仍保留，符合真實
+# Automation 權限被擋時 osascript／SIGTERM 皆無效的情境），只有 SIGKILL 殺得掉——驗證 LS-117 defect 2 的
+# 強制路徑。用 `exec` 讓最終只有一個行程（就是 sleep 本身），不留孤兒行程。
+stubborn_script="${work}/stubborn_pen.sh"
+cat > "$stubborn_script" <<'STUB'
+#!/bin/bash
+trap '' TERM
+exec sleep 20
+STUB
+chmod +x "$stubborn_script"
+start_fake_pen_stubborn() { "$stubborn_script" & echo $! > "$PEN_STUB_PID_FILE"; disown; }
+
 run() { bash "$script" "$@"; }
 
 # ---- 一致 ----
@@ -319,6 +356,97 @@ if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF "${want3}"   && printf '%s'
   ok '⑪e ps 枚舉揪出隱藏第三視窗不安全 → 即使 active／目標本身安全仍不清場（R3 F1 完整修法）'
 else
   bad "⑪e 應偵測隱藏視窗並拒絕清場（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen; clear_ps_pen_files
+
+# ---- LS-117：三個缺陷 ----
+
+# ⑫a defect 1（正案例）：wtP 僅 placeholder 差異、節點總數不變，且對 git 全程 clean → 視為安全，自動清場
+#     切檔成功（不需人工 SIGKILL）。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wtP_backup_placeholder_only; wt_backup_safe
+set_state "PATH:${wantP}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=0
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
+  && printf '%s' "$out" | grep -qF '僅偵測到白名單' && ! fake_pen_alive; then
+  ok '⑫a placeholder-only＋git-clean：視為安全 → 自動切檔成功，不需人工 SIGKILL（defect 1）'
+else
+  bad "⑫a 應 exit 0 且自動切檔成功（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+
+# ⑫b defect 1（負案例）：backup 結構上仍是「僅白名單差異」，但落地檔本身對 git 不 clean（有人直接改了
+#     主 checkout 內容）→ 不視為安全，不清場，exit 1。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files
+wtP_make_dirty; wtP_backup_placeholder_only_dirty
+set_state "PATH:${wantP}"
+start_fake_pen
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '不是 git-clean' && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑫b placeholder-only 但落地檔對 git 不 clean → 不視為安全，不清場（defect 1 邊界）'
+else
+  bad "⑫b 應 exit 1 且不清場（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+wtP_reset_clean
+
+# ⑫c defect 1（邊界）：節點總數不變，但除了 placeholder 還有非白名單屬性（x）差異、git 也 clean → 仍不是
+#     「僅白名單」，不視為安全，不清場，exit 1。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wtP_backup_realdiff
+set_state "PATH:${wantP}"
+start_fake_pen
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑫c 節點總數不變但混雜非白名單屬性差異 → 仍不視為安全，不清場（defect 1 邊界）'
+else
+  bad "⑫c 應 exit 1 且不清場（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# ⑫d defect 3：查無 backup（從未被 Pen 開過的路徑）→ 視為安全訊號（非「無法確認」），自動清場切檔成功。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe
+set_state "PATH:${want4}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=0
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
+  && printf '%s' "$out" | grep -qF '查無 Pen backup' && ! fake_pen_alive; then
+  ok '⑫d 查無 backup（從未編輯過）→ 視為安全，自動切檔成功（defect 3）'
+else
+  bad "⑫d 應 exit 0 且自動切檔成功（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+
+# ⑫e defect 2（正案例）：osascript／SIGTERM 對「頑固」假行程皆無效，但 SIGKILL 前重新確認仍安全 →
+#     escalate SIGKILL，印稽核行，成功重開。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt2_backup_safe; wt_backup_safe
+set_state "PATH:${want2}"
+start_fake_pen_stubborn
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=0
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '稽核' && printf '%s' "$out" | grep -qF 'SIGKILL' \
+  && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" && ! fake_pen_alive; then
+  ok '⑫e SIGTERM 對頑固行程無效，重新確認仍安全 → escalate SIGKILL，印稽核行，重開成功（defect 2）'
+else
+  bad "⑫e 應 exit 0 且成功 SIGKILL 後重開（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+
+# ⑫f defect 2（負案例）：TERM 等待期間，原本安全的候選變得不安全（模擬「等待清場的空檔又生出實質變更」）
+#     → SIGKILL 前重新確認發現有實質結構差異 → 拒絕強殺，需人工介入，行程仍活著。時間軸（本案例覆寫逾時
+#     參數留出餘裕）：初次安全判定約在 t≈1-2s 完成（此時 backup 仍安全）；t=3s 背景工作把 wt2 的 backup
+#     換成有實質差異；SIGKILL 前的重新確認落在 quit 等待結束後、約 t≈6-7s，此時應偵測到差異並拒絕。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt2_backup_safe; wt_backup_safe
+set_state "PATH:${want2}"
+start_fake_pen_stubborn
+( sleep 3; wt2_backup_unsafe ) &
+disown
+out="$(PEN_OPEN_TIMEOUT=1 PEN_OPEN_QUIT_GRACE=1 PEN_OPEN_QUIT_TIMEOUT=5 run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '拒絕強殺' && fake_pen_alive; then
+  ok '⑫f 等待期間變得不安全 → SIGKILL 前重新確認拒絕強殺（defect 2 拒絕路徑）'
+else
+  bad "⑫f 應 exit 2 且拒絕 SIGKILL（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 clear_fake_pen; clear_ps_pen_files
 
