@@ -80,6 +80,21 @@ branch feature/LS-5-rename development
 g mv "$M/20260101000000_init.sql" "$M/20260101000000_init_v2.sql"; g commit -qm 'chore(db): LS-1 rename'
 expect 1 '④ 改名既有 migration（內容不變）→ exit 1' '改名：supabase/migrations/20260101000000_init.sql → supabase/migrations/20260101000000_init_v2.sql' --base development
 
+# ④b typechange：既有 migration 換成 symlink（指到別的檔）→ 紅（R1 major：--diff-filter=MRD 漏收 T，
+# 已改 MRDT；攻擊構造照 R1 review 實跑重現的形狀）
+branch feature/LS-5b-symlink development
+rm -f "$R/$M/20260101000000_init.sql"
+printf 'drop table foo; -- EVIL\n' > "$R/$M/evil.sql"
+ln -s evil.sql "$R/$M/20260101000000_init.sql"
+g add -A; g commit -qm 'fix(db): LS-1 symlink swap'
+expect 1 '④b typechange：既有 migration 換成 symlink → exit 1' '類型變更（檔↔symlink／submodule）：supabase/migrations/20260101000000_init.sql' --base development
+
+# ④c typechange：既有 migration 換成 gitlink（160000，submodule 形狀）→ 紅
+branch feature/LS-5c-gitlink development
+g update-index --add --cacheinfo 160000,0000000000000000000000000000000000000001,"$M/20260101000000_init.sql"
+g commit -qm 'fix(db): LS-1 gitlink swap'
+expect 1 '④c typechange：既有 migration 換成 gitlink → exit 1' '類型變更（檔↔symlink／submodule）：supabase/migrations/20260101000000_init.sql' --base development
+
 # ⑤ 只改 README，未碰 migrations → 綠
 branch feature/LS-6-readme development
 echo r >> "$R/README.md"; g add -A; g commit -qm 'docs: LS-1 readme'

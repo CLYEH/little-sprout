@@ -19,11 +19,15 @@
 #              否則 exit 1（逃生口使用必須在 PR 可見，同 branch-ticket-check 的 Bundles 機制）。push-gate
 #              不傳這個旗標（本機沒有 PR body 可驗），只印提醒。
 #
-# 判定：`git diff -M --diff-filter=MRD --name-status <merge-base> <head> -- supabase/migrations/`——
+# 判定：`git diff -M --diff-filter=MRDT --name-status <merge-base> <head> -- supabase/migrations/`——
 #   M <path>：修改既有檔；D <path>：刪除既有檔；R<pct> <old> <new>：改名，**舊路徑消失就算改動已存在檔**
-#   （即使新舊內容完全相同也算——已 apply 到別人資料庫的 migration 不該被改名，supabase CLI 認的是檔名）。
-#   `<merge-base>` 端不存在的檔（本分支自己新增、狀態 A）不受影響：--diff-filter=MRD 天然只回報「兩端都存在、
-#   算得出對應關係」的路徑，純新增檔在 base 端不存在，只會落在 A、不會被誤判成 M/R/D（本票已用合成 repo
+#   （即使新舊內容完全相同也算——已 apply 到別人資料庫的 migration 不該被改名，supabase CLI 認的是檔名）；
+#   T <path>：typechange——既有檔的物件類型變了（regular file 100644 ↔ symlink 120000 或 gitlink/submodule
+#   160000）。R1 review 實跑重現：把既有 migration 換成指向別的檔的 symlink（或 gitlink）在 git 眼中不是
+#   M/R/D，原本 `--diff-filter=MRD` 漏收、整條 gate 誤判無違規——但該 migration 的**有效內容**已被換掉
+#   （`supabase db reset` 讀檔會解到 symlink target），正是要防的 drift，一樣當違規擋。
+#   `<merge-base>` 端不存在的檔（本分支自己新增、狀態 A）不受影響：--diff-filter=MRDT 天然只回報「兩端都存在、
+#   算得出對應關係」的路徑，純新增檔在 base 端不存在，只會落在 A、不會被誤判成 M/R/D/T（本票已用合成 repo
 #   驗證：git diff --name-only 對 rename 只印新路徑，所以訊息組裝改用 --name-status 才能同時秀出舊路徑）。
 #
 # 逃生口（僅限尚未部署到正式站的檔，需人判斷、故要標記——比照 LS-45 DESTRUCTIVE-APPROVED／LS-50 Bundles 的
@@ -68,7 +72,7 @@ fi
 
 mb=$(git merge-base "$base" "$head") || { echo "✗ migration-immutable-check：${base} 與 ${head} 沒有共同祖先（merge-base 失敗）。" >&2; exit 2; }
 
-status=$(git -c core.quotePath=false diff -M --diff-filter=MRD --name-status "$mb" "$head" -- supabase/migrations/) \
+status=$(git -c core.quotePath=false diff -M --diff-filter=MRDT --name-status "$mb" "$head" -- supabase/migrations/) \
   || { echo "✗ migration-immutable-check：git diff ${mb}..${head} 失敗" >&2; exit 2; }
 
 if [ -z "$status" ]; then
@@ -85,6 +89,7 @@ while IFS="$TAB" read -r code a b; do
     M) violations="${violations}    修改：${a}"$'\n' ;;
     D) violations="${violations}    刪除：${a}"$'\n' ;;
     R*) violations="${violations}    改名：${a} → ${b}"$'\n' ;;
+    T) violations="${violations}    類型變更（檔↔symlink／submodule）：${a}"$'\n' ;;
     *) violations="${violations}    ${code}：${a}"$'\n' ;;
   esac
 done <<< "$status"
