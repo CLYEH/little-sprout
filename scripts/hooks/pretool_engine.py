@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-r"""LS-104 R2：pretool.sh 的 Bash 命令評估引擎（取代 R1 版本的 bash O(n^2) 逐字迴圈）。
+r"""LS-104 R3：pretool.sh 的 Bash 命令評估引擎（取代 R1 版本的 bash O(n^2) 逐字迴圈）。
 
 被 scripts/hooks/pretool.sh 呼叫：命令字串經 stdin 傳入（避免 argv 跳脫問題），
 輸出只在 deny 時印一行 reason 文字，exit code 2＝deny、0＝allow。任何未預期例外
@@ -33,7 +33,18 @@ r"""LS-104 R2：pretool.sh 的 Bash 命令評估引擎（取代 R1 版本的 bas
     之前 H1/H2/H3 的字面比對邏輯）——寧可誤擋也不漏放（R1 F1／F5 的共同修法）。
     命令位置認得的段落，才用「exact token equality」的精確比對（LS-104 R1 的原始設計，
     誤擋面小）。
-  `$(...)`／反引號／`bash -c`／`sh -c` payload 遞迴：同 R1，深度上限 8。
+  `$(...)`／反引號／`bash -c`／`sh -c` payload 遞迴：深度上限 8。R3（merge-reviewer R2
+    comment 5a170052，F1 blocker）：R2 版的 `-c` 偵測只認「`-c` 這個 token 緊接在
+    `bash`／`sh` 後面」，`-lc`／`-cx`／`-ic` 這類併入短旗標團、或 `-e -c`／`-o pipefail -c`／
+    `--norc -c` 這類前面插旗標，都偵測不到、也不遞迴——且 `evaluate()` 對 `check_precise`
+    回 OK 沒有任何 fallback，等於命令位置認得 bash/sh 但沒解析出 payload 就整條放行（比
+    main 現行 hook 弱，回歸）。R3 修法（見票文建議兩者都做）：(1) 廣義化 `-c` 偵測——只要
+    命令位置已經是 bash/sh，任何單一 `-` 開頭、全字母、含字母 c 的旗標 token（`-c`／
+    `-lc`／`-cx`／...）都視為「之後下一個 token 是 -c payload」，不再要求它緊接在
+    bash/sh 後面；(2) 兜底——`check_precise` 對 bash/sh 段落回 OK（代表沒能遞迴出 payload，
+    例如純腳本呼叫 `bash foo.sh args`，或未來仍有漏的旗標形狀）時，`evaluate()` 額外對該
+    段原始文字補跑一次 `check_fallback`，任何「認得 bash/sh 但沒解析出 payload」的路徑都
+    不會裸放行。
   H2 檔名比對（ENV_FILE_RE）容忍尾端 glob 萬用字元（`*`／`?`／`[`／`]`），修 R1 F5
     的 glob 繞路（`.env*` 這類）。
   H3 重入判定／wrapper 字面比對：整條命令（pass1 剝除後）字面比對，語意同 R1（wrapper
@@ -59,6 +70,18 @@ RESERVED_KEYWORDS = {
 }
 IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.+-]*$")
 ASSIGN_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+
+# R3（merge-reviewer R2 comment 5a170052，F1 blocker）：`bash`/`sh` 的 `-c` 偵測原本只認
+# 「`-c` 這個 token 緊接在 `bash`/`sh` 後面」這一種形狀，`-c` 併入短旗標團（`-lc`/`-cx`/`-ic`）
+# 或前面插了其他旗標（`-e -c`/`-o pipefail -c`/`--norc -c`）都偵測不到、也不會遞迴，且
+# `evaluate()` 對 `check_precise` 回 OK 沒有 fallback 兜底，等於整條放行——比 main 現行 hook 弱
+# （回歸）。修法：只看「命令位置已認得是 bash/sh」這件事本身（不要求 -c 前一個 token 恰好是
+# bash/sh），凡是單一 `-` 開頭、其餘全為字母的旗標 token（可以是 `-c` 本身或任意順序的短旗標團
+# 如 `-lc`/`-cx`）只要含字母 c，就把它之後的下一個 token 當成 -c 的 payload 遞迴（雙寫 `--norc`
+# 這種長旗標因為開頭是 `--` 不會誤觸發）。此偵測本身若因為未來新旗標形狀而漏接，evaluate()
+# 對 bash/sh 的 OK 結果一律再補跑一次 check_fallback(raw) 兜底（見 evaluate()），任何「認得
+# bash/sh 但沒解析出 payload」的路徑都不會裸放行。
+BASH_SHORT_FLAG_RE = re.compile(r"^-[A-Za-z]+$")
 
 READ_VERBS = {
     "cat", "less", "head", "tail", "awk", "cut", "sed", "grep", "bat", "xxd",
@@ -536,7 +559,7 @@ def check_precise(cmd, tokens):
     h3_run_sh = h3_supabase_reset = False
     expect_redir = False
     prevtok = ""
-    shellc_prev = ""
+    awaiting_c_payload = False
 
     if RUNSH_RE.match(cmd):
         h3_run_sh = True
@@ -603,10 +626,14 @@ def check_precise(cmd, tokens):
         if cmd in ("bash", "sh") and RUNSH_RE.match(text) and text != cmd:
             h3_run_sh = True
 
-        if prevtok == "-c" and shellc_prev in ("bash", "sh"):
+        # R3 F1：cmd（命令位置）已經是 bash/sh 才會進到這個函式；不再要求 `-c` 緊接在
+        # bash/sh 後面——`-e -c`／`-o pipefail -c`／`--norc -c` 這類前面插旗標、或 `-lc`／
+        # `-cx` 這類併入短旗標團的寫法，都在這裡被同一條規則抓到（見 BASH_SHORT_FLAG_RE
+        # 定義處的說明）。
+        if awaiting_c_payload:
             return ("RECURSE", raw_text)
-        if text == "-c":
-            shellc_prev = prevtok
+        if cmd in ("bash", "sh") and BASH_SHORT_FLAG_RE.match(text) and "c" in text[1:]:
+            awaiting_c_payload = True
 
         prevtok = text
 
@@ -694,6 +721,17 @@ def evaluate(cmd, depth, wrapper_haystack):
                 r = evaluate(payload, depth + 1, wrapper_haystack)
                 if r:
                     return r
+            if kind == "OK" and pos_tok in ("bash", "sh"):
+                # R3（merge-reviewer R2 comment 5a170052，F1 blocker 修法的兜底那一半）：命令位置
+                # 認得是 bash/sh，但 check_precise 沒能遞迴出一個 -c payload（例如純粹呼叫
+                # 一支腳本檔 `bash foo.sh args`，或未來 -c 偵測仍有漏的旗標形狀）——不得因為
+                # 「認得 bash/sh」就直接放行，對這一段的原始文字再補跑一次舊版整段字面比對。
+                # 「認得但沒解析出 payload」一律當「認不得」處理，方向與 F1 其他情形一致。
+                reason = check_fallback(raw)
+                if reason == "H3_TRIGGER":
+                    reason = _h3_check(wrapper_haystack)
+                if reason:
+                    return reason
         else:
             reason = check_fallback(raw)
             if reason == "H3_TRIGGER":
