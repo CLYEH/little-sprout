@@ -50293,7 +50293,7 @@
           "height": 22,
           "icon": "eye",
           "library": "lucide",
-          "fill": "$text-secondary"
+          "fill": "$print-ink-secondary"
         },
         {
           "type": "frame",
@@ -50307,7 +50307,7 @@
               "type": "text",
               "id": "vL7kl",
               "name": "Role Title",
-              "fill": "$text-primary",
+              "fill": "$print-ink",
               "textGrowth": "fixed-width",
               "width": 253,
               "content": "一般成員",
@@ -50319,7 +50319,7 @@
               "type": "text",
               "id": "zWpl1",
               "name": "Role Desc",
-              "fill": "$text-secondary",
+              "fill": "$print-ink-secondary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
               "content": "可以發文、留言，也能上傳照片。",
@@ -50362,10 +50362,20 @@
           "name": "Role Options",
           "clip": true,
           "width": "fill_container",
-          "fill": "$surface",
+          "fill": "$print-paper",
           "cornerRadius": "$radius-lg",
-          "stroke": "$control-line",
-          "strokeWidth": 1.5,
+          "stroke": "$paper-edge",
+          "strokeWidth": 1,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 0,
+              "y": 2
+            },
+            "blur": 6
+          },
           "layout": "vertical",
           "children": [
             {
@@ -50384,10 +50394,12 @@
                 },
                 "vL7kl": {
                   "content": "一般成員",
-                  "fontWeight": "700"
+                  "fontWeight": "700",
+                  "fill": "$text-primary"
                 },
                 "zWpl1": {
-                  "content": "可以發文、留言，也能上傳照片。"
+                  "content": "可以發文、留言，也能上傳照片。",
+                  "fill": "$text-secondary"
                 },
                 "uHUe1": {
                   "fill": "$text-primary"
@@ -50398,7 +50410,7 @@
               "type": "rectangle",
               "id": "MACIr",
               "name": "Role Divider",
-              "fill": "$control-line",
+              "fill": "$border",
               "width": "fill_container",
               "height": 1
             },
@@ -52046,7 +52058,7 @@
                       "fill": "#00000000"
                     },
                     "X7DYDo/j6ZNWo": {
-                      "fill": "$text-secondary"
+                      "fill": "$print-ink-secondary"
                     },
                     "X7DYDo/vL7kl": {
                       "fontWeight": "600"
@@ -52061,7 +52073,11 @@
                       "fill": "$text-primary"
                     },
                     "ZA8G7/vL7kl": {
-                      "fontWeight": "700"
+                      "fontWeight": "700",
+                      "fill": "$text-primary"
+                    },
+                    "ZA8G7/zWpl1": {
+                      "fill": "$text-secondary"
                     },
                     "ZA8G7/uHUe1": {
                       "fill": "$text-primary"
