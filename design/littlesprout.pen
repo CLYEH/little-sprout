@@ -3839,7 +3839,7 @@
       "name": "LS-18 / 07a 邀請家人 · 尚未產生（空狀態）",
       "clip": true,
       "width": 393,
-      "height": 1002,
+      "height": 906,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -3906,7 +3906,7 @@
           "id": "p5m28",
           "name": "Body",
           "width": "fill_container",
-          "height": 769,
+          "height": 639,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -4269,48 +4269,6 @@
                   "width": "fill_container"
                 }
               ]
-            },
-            {
-              "type": "frame",
-              "id": "XZ3pM",
-              "name": "Terms",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-label",
-              "padding": [
-                "$sp-section",
-                0,
-                0,
-                0
-              ],
-              "children": [
-                {
-                  "type": "text",
-                  "id": "c5MJu",
-                  "name": "Regenerate Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "產生後 7 天內有效，最多 5 位家人可以用。",
-                  "lineHeight": 1.5,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
-                },
-                {
-                  "type": "text",
-                  "id": "FCdOF",
-                  "name": "Approval Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "新成員一律要你核准才能加入，這項設定無法關閉。",
-                  "lineHeight": 1.5,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
-                }
-              ]
             }
           ]
         },
@@ -4335,11 +4293,26 @@
               "id": "xaC9E",
               "name": "Bar Button Wrap",
               "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
               "padding": [
                 "$sp-item",
                 "$screen-pad"
               ],
               "children": [
+                {
+                  "type": "text",
+                  "id": "c5MJu",
+                  "name": "Regenerate Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "產生後 7 天內有效，最多 5 位家人可以用。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
                 {
                   "id": "opG80",
                   "type": "ref",
@@ -50537,7 +50510,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1002,
+      "height": 906,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -50604,7 +50577,7 @@
           "id": "gDyjM",
           "name": "Body",
           "width": "fill_container",
-          "height": 769,
+          "height": 639,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -50967,48 +50940,6 @@
                   "width": "fill_container"
                 }
               ]
-            },
-            {
-              "type": "frame",
-              "id": "ecv5L",
-              "name": "Terms",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-label",
-              "padding": [
-                "$sp-section",
-                0,
-                0,
-                0
-              ],
-              "children": [
-                {
-                  "type": "text",
-                  "id": "s5DA9",
-                  "name": "Regenerate Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "產生後 7 天內有效，最多 5 位家人可以用。",
-                  "lineHeight": 1.5,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
-                },
-                {
-                  "type": "text",
-                  "id": "FyaVJ",
-                  "name": "Approval Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "新成員一律要你核准才能加入，這項設定無法關閉。",
-                  "lineHeight": 1.5,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
-                }
-              ]
             }
           ]
         },
@@ -51033,11 +50964,26 @@
               "id": "QVZpY",
               "name": "Bar Button Wrap",
               "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
               "padding": [
                 "$sp-item",
                 "$screen-pad"
               ],
               "children": [
+                {
+                  "type": "text",
+                  "id": "s5DA9",
+                  "name": "Regenerate Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "產生後 7 天內有效，最多 5 位家人可以用。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
                 {
                   "id": "gKj0r",
                   "type": "ref",
@@ -51090,7 +51036,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2266,
+      "height": 2042,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -51157,7 +51103,7 @@
           "id": "wjU2n",
           "name": "Body",
           "width": "fill_container",
-          "height": 1968,
+          "height": 1556,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -51538,48 +51484,6 @@
                   }
                 }
               ]
-            },
-            {
-              "type": "frame",
-              "id": "bYmZf",
-              "name": "Terms",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-label",
-              "padding": [
-                "$sp-section",
-                0,
-                0,
-                0
-              ],
-              "children": [
-                {
-                  "type": "text",
-                  "id": "u4xy5k",
-                  "name": "Regenerate Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "產生後 7 天內有效，最多 5 位家人可以用。",
-                  "lineHeight": 1.5,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
-                },
-                {
-                  "type": "text",
-                  "id": "JAJyA",
-                  "name": "Approval Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "新成員一律要你核准才能加入，這項設定無法關閉。",
-                  "lineHeight": 1.5,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
-                }
-              ]
             }
           ]
         },
@@ -51604,11 +51508,26 @@
               "id": "MmcRz",
               "name": "Bar Button Wrap",
               "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
               "padding": [
                 "$sp-item",
                 "$screen-pad"
               ],
               "children": [
+                {
+                  "type": "text",
+                  "id": "u4xy5k",
+                  "name": "Regenerate Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "產生後 7 天內有效，最多 5 位家人可以用。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
                 {
                   "id": "z2vjub",
                   "type": "ref",
@@ -51658,7 +51577,7 @@
       "name": "LS-18 / 07a 邀請家人 · 只能看選中",
       "clip": true,
       "width": 393,
-      "height": 1002,
+      "height": 906,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -51725,7 +51644,7 @@
           "id": "qiF6K",
           "name": "Body",
           "width": "fill_container",
-          "height": 769,
+          "height": 639,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -52155,48 +52074,6 @@
                   }
                 }
               ]
-            },
-            {
-              "type": "frame",
-              "id": "ct0bZ",
-              "name": "Terms",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-label",
-              "padding": [
-                "$sp-section",
-                0,
-                0,
-                0
-              ],
-              "children": [
-                {
-                  "type": "text",
-                  "id": "qJZlI",
-                  "name": "Regenerate Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "產生後 7 天內有效，最多 5 位家人可以用。",
-                  "lineHeight": 1.5,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
-                },
-                {
-                  "type": "text",
-                  "id": "IKDG3",
-                  "name": "Approval Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "新成員一律要你核准才能加入，這項設定無法關閉。",
-                  "lineHeight": 1.5,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
-                }
-              ]
             }
           ]
         },
@@ -52221,11 +52098,26 @@
               "id": "KkRD0",
               "name": "Bar Button Wrap",
               "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
               "padding": [
                 "$sp-item",
                 "$screen-pad"
               ],
               "children": [
+                {
+                  "type": "text",
+                  "id": "qJZlI",
+                  "name": "Regenerate Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "產生後 7 天內有效，最多 5 位家人可以用。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
                 {
                   "id": "un50A",
                   "type": "ref",
