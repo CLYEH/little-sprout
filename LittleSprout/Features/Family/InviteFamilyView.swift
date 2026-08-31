@@ -21,21 +21,22 @@ struct InviteFamilyView: View {
     // 空等兩秒才把 `@State` 改回去的殘留 Task。
     @State private var copiedFeedbackTask: Task<Void, Never>?
 
-    private enum Phase {
-        case empty
-        case generating
-        case generated(GeneratedInvite)
-
-        var showsDestructiveSection: Bool {
-            if case .empty = self { return false }
-            return true
-        }
+    /// R2 N1：狀態計算搬去獨立、可單元測試的 `InvitePhase`（見該檔文件註解）。
+    private var phase: InvitePhase {
+        InvitePhase(
+            lookupInviteState: familyStore.lookupInviteState,
+            createInviteState: familyStore.createInviteState,
+            latestInvite: familyStore.latestInvite
+        )
     }
 
-    private var phase: Phase {
-        if familyStore.createInviteState.isSubmitting { return .generating }
-        if let invite = familyStore.latestInvite { return .generated(invite) }
-        return .empty
+    /// 查詢失敗（`InvitePhase.lookupFailed`）或建立失敗（`createInviteState`）都要顯示同一顆
+    /// `errorRow`——R2 N1：兩者現在是分開的狀態，這裡合併成單一顯示條件，畫面上同時只會有
+    /// 一種失敗（互斥，見 `FamilyStore` 兩支方法的 guard）。
+    private var currentError: AppError? {
+        if case .lookupFailed(let error) = phase { return error }
+        if case .failure(let error) = familyStore.createInviteState { return error }
+        return nil
     }
 
     var body: some View {
@@ -44,7 +45,7 @@ struct InviteFamilyView: View {
                 headerSection
                 visualCard
                     .padding(.top, AppSpacing.item)
-                if case .failure(let error) = familyStore.createInviteState {
+                if let error = currentError {
                     errorRow(error)
                         .padding(.top, AppSpacing.item)
                 }
@@ -103,7 +104,7 @@ struct InviteFamilyView: View {
 
     private var headerTitle: String {
         switch phase {
-        case .empty: "邀請家人一起看"
+        case .empty, .checkingExisting, .lookupFailed: "邀請家人一起看"
         case .generating, .generated: "邀請家人"
         }
     }
@@ -113,6 +114,13 @@ struct InviteFamilyView: View {
         switch phase {
         case .empty:
             return "把邀請碼給家人，他們輸入後向你送出申請，你核准就能一起看「\(familyName)」的照片和日記。"
+        case .checkingExisting:
+            // R2 N1：進場先查這個家庭有沒有既有邀請碼——沒有對應的 .pen 設計稿，是純技術性
+            // 的查詢等待（同 RootView.FamilyLookupFailedView 的兜底定位），不套用「產生中」
+            // 07c 的沖印品母題視覺。
+            return "正在確認你的家庭有沒有邀請碼，請稍等一下。"
+        case .lookupFailed:
+            return "查詢邀請碼時發生問題，請重試一次。"
         case .generating:
             return "正在為你產生一組新的邀請碼。通常幾秒鐘就好，請稍等一下。"
         case .generated:
@@ -125,7 +133,18 @@ struct InviteFamilyView: View {
     @ViewBuilder
     private var visualCard: some View {
         switch phase {
-        case .empty:
+        case .checkingExisting:
+            // 沒有對應設計稿的純技術等待態——沿用 `codeCardShell` 骨架但只放一個系統
+            // `ProgressView`，不冒充 07c「產生中」的沖印品視覺（那是使用者主動觸發的動作，
+            // 這裡是進場自動查詢）。
+            codeCardShell {
+                ProgressView()
+                Text("正在確認邀請碼…")
+                    .appFont(.meta, weight: .bold)
+                    .tracking(2)
+                    .foregroundStyle(Color.lsTextSecondary)
+            }
+        case .empty, .lookupFailed:
             VStack(alignment: .leading, spacing: AppSpacing.label) {
                 PrintPhotoCard(
                     photoHeight: 194,
@@ -193,6 +212,13 @@ struct InviteFamilyView: View {
     @ViewBuilder
     private var actionsSection: some View {
         switch phase {
+        case .checkingExisting:
+            EmptyView()
+        case .lookupFailed:
+            // R2 N1：查詢失敗時不知道這個家庭有沒有既有碼，不能顯示「產生邀請碼」（會重複
+            // 建立、舊碼撤不掉）——只給重試，跟 `RootView.FamilyLookupFailedView` 同一個
+            // 兜底邏輯，錯誤文字已經在上面的 `errorRow` 顯示過。
+            SecondaryButton(icon: "arrow.clockwise", title: "重試", action: retryLookup)
         case .empty:
             VStack(alignment: .leading, spacing: AppSpacing.label) {
                 rolePicker
@@ -325,6 +351,12 @@ extension InviteFamilyView {
 
     private func generate() {
         Task { await familyStore.createInvite(role: selectedRole) }
+    }
+
+    /// R2 N1：查詢失敗態的重試——呼叫跟 `onAppear` 相同的方法，成功會把 `lookupInviteState`
+    /// 蓋回 `.success` 並帶出結果（或沒有既有碼就落回 `.empty`），不需要另外呼叫 reset。
+    private func retryLookup() {
+        Task { await familyStore.refreshLatestInvite() }
     }
 
     private func copyCode(_ code: String) {
