@@ -95,7 +95,7 @@ query($cycleId: ID!) {
 # 只抓非 completed/canceled 的票，算不出「完成」數，所以另開一支只查目前 cycle 底下所有票的 state.type
 # （不受該 filter 限制）。first:250 是合理上限（cycle 週期短，實務不會超過）。
 CYCLE_ISSUES_QUERY = """
-query($cycleId: ID!) {
+query($cycleId: String!) {
   cycle(id: $cycleId) { issues(first: 250) { nodes { state { type } } } }
 }
 """
