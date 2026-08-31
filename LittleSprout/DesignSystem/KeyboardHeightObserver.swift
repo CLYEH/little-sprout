@@ -53,7 +53,10 @@ final class KeyboardHeightObserver {
     // 只有鍵盤下緣真的貼齊螢幕底（一般鍵盤、分離／懸浮鍵盤靠邊停靠時）才視為遮住底部 UI；
     // 懸浮鍵盤浮在畫面中間、下緣不貼底時回傳 0——不佔用 contentMargins／CTA 空間（review F3）。
     nonisolated static func height(endFrame: CGRect, screenBounds: CGRect) -> CGFloat {
-        guard endFrame.maxY >= screenBounds.maxY - 1 else {
+        // LS-109 R2-I6：容差，吸收 `endFrame`／`screenBounds` 換算浮點誤差（實測差值 <1pt），
+        // 避免「其實貼底」的鍵盤因為零點幾 pt 誤差被判定成懸浮。
+        let dockedTolerance: CGFloat = 1
+        guard endFrame.maxY >= screenBounds.maxY - dockedTolerance else {
             return 0
         }
         return max(0, screenBounds.maxY - endFrame.minY)
