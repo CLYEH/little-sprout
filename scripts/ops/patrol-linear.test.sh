@@ -334,8 +334,12 @@ mkdir -p "$fx_d"
 now_epoch=$(date -u +%s)
 end_epoch=$((now_epoch + 36000))     # 10 小時後 → remaining_h ≈10 <24，應觸發 (d)
 start_epoch=$((now_epoch - 259200))  # 3 天前，只是避免 age_days 判定跑到非預期分支
-end_iso=$(date -u -r "$end_epoch" +"%Y-%m-%dT%H:%M:%S.000Z")
-start_iso=$(date -u -r "$start_epoch" +"%Y-%m-%dT%H:%M:%S.000Z")
+# R2 B2：`date -u -r <epoch>` 是 BSD/macOS 語法；ubuntu CI 的 GNU coreutils 把 `-r` 當「讀檔案
+# mtime」，epoch 數字被當檔名找不到檔案 → 印 iso 空字串，fixture 的 endsAt 跟著空、(d) 測項在 CI
+# 上永遠不命中。改用同 repo patrol.test.sh:336 已有的可攜寫法：BSD 語法失敗（GNU 環境）就 fallback
+# GNU 的 `date -u -d "@<epoch>"`。
+end_iso=$(date -u -r "$end_epoch" +"%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null || date -u -d "@${end_epoch}" +"%Y-%m-%dT%H:%M:%S.000Z")
+start_iso=$(date -u -r "$start_epoch" +"%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null || date -u -d "@${start_epoch}" +"%Y-%m-%dT%H:%M:%S.000Z")
 cat > "$fx_d/cycles.json" <<EOF
 {"data":{"team":{"cycles":{"nodes":[
   {"id":"cyc-9","number":9,"startsAt":"${start_iso}","endsAt":"${end_iso}","isActive":true}
