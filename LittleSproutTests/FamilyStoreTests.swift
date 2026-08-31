@@ -106,6 +106,55 @@ final class FamilyStoreTests: XCTestCase {
         XCTAssertEqual(store.createFamilyState, .success)
     }
 
+    // MARK: - showsChildOnboarding（LS-113：建立家庭後可接、可跳過的寶貝建檔步驟）
+
+    func test_createFamily_success_setsShowsChildOnboarding() async {
+        let stub = StubFamilyAPIClient()
+        let family = makeFamily(name: "葉家")
+        stub.setCreateFamilyHandler { _ in family }
+        let store = FamilyStore(apiClient: stub)
+
+        _ = await store.createFamily(name: "葉家")
+
+        XCTAssertTrue(store.showsChildOnboarding)
+    }
+
+    func test_createFamily_failure_doesNotSetShowsChildOnboarding() async {
+        let stub = StubFamilyAPIClient()
+        stub.setCreateFamilyHandler { _ in throw AppError.rejected(message: "沒有權限", code: "42501") }
+        let store = FamilyStore(apiClient: stub)
+
+        _ = await store.createFamily(name: "葉家")
+
+        XCTAssertFalse(store.showsChildOnboarding)
+    }
+
+    func test_dismissChildOnboarding_clearsFlag() async {
+        let stub = StubFamilyAPIClient()
+        let family = makeFamily(name: "葉家")
+        stub.setCreateFamilyHandler { _ in family }
+        let store = FamilyStore(apiClient: stub)
+        _ = await store.createFamily(name: "葉家")
+        XCTAssertTrue(store.showsChildOnboarding)
+
+        store.dismissChildOnboarding()
+
+        XCTAssertFalse(store.showsChildOnboarding)
+    }
+
+    func test_reset_clearsShowsChildOnboarding() async {
+        let stub = StubFamilyAPIClient()
+        let family = makeFamily(name: "葉家")
+        stub.setCreateFamilyHandler { _ in family }
+        let store = FamilyStore(apiClient: stub)
+        _ = await store.createFamily(name: "葉家")
+        XCTAssertTrue(store.showsChildOnboarding)
+
+        store.reset()
+
+        XCTAssertFalse(store.showsChildOnboarding)
+    }
+
     func test_createFamily_rlsRejection_setsFailureStateWithRejectedTier() async {
         // 42501（未登入／權限不足）對映 `AppError.rejected`——store 必須原封不動把
         // `SupabaseFamilyAPIClient` 已經歸好層的錯誤存進 `createFamilyState`，不能自己再猜。

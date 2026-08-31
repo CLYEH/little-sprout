@@ -9,13 +9,14 @@ import SwiftUI
 struct RootView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
+    let childrenStore: ChildrenStore
 
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
             if authStore.isAuthenticated() {
-                AuthenticatedGate(authStore: authStore, familyStore: familyStore)
+                AuthenticatedGate(authStore: authStore, familyStore: familyStore, childrenStore: childrenStore)
             } else {
                 WelcomeView(authStore: authStore)
             }
@@ -51,6 +52,7 @@ struct RootView: View {
 private struct AuthenticatedGate: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
+    let childrenStore: ChildrenStore
 
     var body: some View {
         Group {
@@ -63,7 +65,7 @@ private struct AuthenticatedGate: View {
                 }
             case .success:
                 if familyStore.myFamily != nil {
-                    AuthenticatedRootView(authStore: authStore, familyStore: familyStore)
+                    AuthenticatedRootView(authStore: authStore, familyStore: familyStore, childrenStore: childrenStore)
                 } else {
                     ForkView(authStore: authStore, familyStore: familyStore)
                 }
@@ -101,15 +103,36 @@ private struct FamilyLookupFailedView: View {
 struct AuthenticatedRootView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
+    let childrenStore: ChildrenStore
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selection: AppSection = .timeline
 
     var body: some View {
-        if horizontalSizeClass == .regular {
-            SectionSplitView(authStore: authStore, familyStore: familyStore, selection: $selection)
-        } else {
-            SectionTabView(authStore: authStore, familyStore: familyStore, selection: $selection)
+        Group {
+            if horizontalSizeClass == .regular {
+                SectionSplitView(
+                    authStore: authStore, familyStore: familyStore, childrenStore: childrenStore, selection: $selection
+                )
+            } else {
+                SectionTabView(
+                    authStore: authStore, familyStore: familyStore, childrenStore: childrenStore, selection: $selection
+                )
+            }
+        }
+        // LS-113：建立家庭後可接、可跳過的寶貝建檔步驟（見 `FamilyStore.showsChildOnboarding`
+        // 文件註解）。`CreateChildView` 呼叫環境 `dismiss()` 時，這裡的 `set` 分支會呼叫
+        // `dismissChildOnboarding()` 把旗標寫回 false——不是直接綁 `private(set)` 屬性
+        // （`FamilyStore` 一貫的作法是只透過方法變動狀態，不對外暴露可寫入的屬性）。
+        .fullScreenCover(isPresented: Binding(
+            get: { familyStore.showsChildOnboarding },
+            set: { isPresented in
+                if !isPresented { familyStore.dismissChildOnboarding() }
+            }
+        )) {
+            NavigationStack {
+                CreateChildView(childrenStore: childrenStore)
+            }
         }
     }
 }
@@ -118,13 +141,16 @@ struct AuthenticatedRootView: View {
 private struct SectionTabView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
+    let childrenStore: ChildrenStore
     @Binding var selection: AppSection
 
     var body: some View {
         TabView(selection: $selection) {
             ForEach(AppSection.allCases) { section in
                 NavigationStack {
-                    SectionContentView(section: section, authStore: authStore, familyStore: familyStore)
+                    SectionContentView(
+                        section: section, authStore: authStore, familyStore: familyStore, childrenStore: childrenStore
+                    )
                 }
                 .tabItem { Label(section.title, systemImage: section.systemImage) }
                 .tag(section)
@@ -137,6 +163,7 @@ private struct SectionTabView: View {
 private struct SectionSplitView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
+    let childrenStore: ChildrenStore
     @Binding var selection: AppSection
 
     var body: some View {
@@ -149,7 +176,9 @@ private struct SectionSplitView: View {
             // 已知債：detail 欄共用單一 NavigationStack；第一張含 push destination 的票
             // 需處理「iPad 切換 section 重置 detail stack」（可用 .id(selection)）。
             NavigationStack {
-                SectionContentView(section: selection, authStore: authStore, familyStore: familyStore)
+                SectionContentView(
+                    section: selection, authStore: authStore, familyStore: familyStore, childrenStore: childrenStore
+                )
             }
         }
     }
@@ -170,6 +199,7 @@ struct SectionContentView: View {
     let section: AppSection
     let authStore: AuthStore
     let familyStore: FamilyStore
+    let childrenStore: ChildrenStore
 
     var body: some View {
         content
@@ -179,20 +209,20 @@ struct SectionContentView: View {
     @ViewBuilder
     private var content: some View {
         switch section {
-        case .timeline: TimelineView()
+        case .timeline: TimelineView(familyStore: familyStore, childrenStore: childrenStore)
         case .albums: AlbumsView()
-        case .children: ChildrenView()
-        case .settings: SettingsView(authStore: authStore, familyStore: familyStore)
+        case .children: ChildrenManagementView(familyStore: familyStore, childrenStore: childrenStore)
+        case .settings: SettingsView(authStore: authStore, familyStore: familyStore, childrenStore: childrenStore)
         }
     }
 }
 
 #Preview("Compact") {
-    AuthenticatedRootView(authStore: .preview(), familyStore: .preview())
+    AuthenticatedRootView(authStore: .preview(), familyStore: .preview(), childrenStore: .preview())
         .environment(\.horizontalSizeClass, .compact)
 }
 
 #Preview("Regular") {
-    AuthenticatedRootView(authStore: .preview(), familyStore: .preview())
+    AuthenticatedRootView(authStore: .preview(), familyStore: .preview(), childrenStore: .preview())
         .environment(\.horizontalSizeClass, .regular)
 }

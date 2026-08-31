@@ -8,6 +8,7 @@ import SwiftUI
 struct SettingsView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
+    let childrenStore: ChildrenStore
 
     @State private var isSigningOut = false
     @State private var errorMessage: String?
@@ -84,6 +85,9 @@ struct SettingsView: View {
                 // `latestInvite` 會在記憶體裡留到下一位使用者登入前（見 `FamilyStore.reset()`
                 // 文件註解／`syncOwner` 對「同一人重登入不重查」以外情境的假設）。
                 familyStore.reset()
+                // LS-113：`ChildrenStore` 隨 app 存活，同 `FamilyStore` 的理由——登出不清掉
+                // 的話，下一位在同一台裝置登入的使用者會沿用上一位的孩子清單。
+                childrenStore.reset()
             } catch {
                 errorMessage = AppError.map(error).userFacingMessage
             }
@@ -92,5 +96,5 @@ struct SettingsView: View {
 }
 
 #Preview {
-    NavigationStack { SettingsView(authStore: .preview(), familyStore: .preview()) }
+    NavigationStack { SettingsView(authStore: .preview(), familyStore: .preview(), childrenStore: .preview()) }
 }
