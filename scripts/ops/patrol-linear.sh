@@ -69,7 +69,9 @@ command -v curl >/dev/null 2>&1 || { echo "✗ patrol-linear：需要 curl" >&2;
 
 # ---- Booted 模擬器段沿用 patrol.sh：抓 --brief 輸出裡「[Booted 模擬器 …]」開頭的旗標行 ----
 sim_lines_file=$(mktemp "${TMPDIR:-/tmp}/patrol-linear-sim.XXXXXX") || { echo "✗ patrol-linear：mktemp 失敗" >&2; exit 2; }
-trap 'rm -f "$sim_lines_file"' EXIT
+# R1 I5：trap 也要清 .raw——原本只清 base 檔，中途被中斷（patrol.sh 那段卡住／收到訊號）會把
+# 這個暫存檔留在 TMPDIR。
+trap 'rm -f "$sim_lines_file" "${sim_lines_file}.raw"' EXIT
 if [ -x "${here}/patrol.sh" ]; then
   bash "${here}/patrol.sh" --brief --no-pr --no-fetch --repo "$ROOT" 2>/dev/null > "${sim_lines_file}.raw" || true
   while IFS= read -r line; do

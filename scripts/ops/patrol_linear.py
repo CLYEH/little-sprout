@@ -136,6 +136,14 @@ def gql(token, query, variables, timeout=25):
             "✗ patrol-linear：GraphQL 錯誤：%s\n" % json.dumps(data["errors"], ensure_ascii=False)
         )
         sys.exit(1)
+    # R1 F5：回應是合法 JSON、沒有 errors，但也沒有可用的 data 物件（例如 {"data":null}）——
+    # 不補這個檢查會讓呼叫端（fetch_issues 等）對 None 取 subscript 炸出原始 Python traceback，
+    # 不是可讀的 fail-loud 訊息。
+    if not isinstance(data.get("data"), dict):
+        sys.stderr.write(
+            "✗ patrol-linear：GraphQL 回應缺少可用的 data 物件：%s\n" % proc.stdout[:300]
+        )
+        sys.exit(1)
     return data["data"]
 
 
