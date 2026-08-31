@@ -25,13 +25,41 @@ if [ ! -t 0 ]; then
   esac
 fi
 
-# 1) SwiftLint（有 Swift 檔才要求；有檔沒工具 → fail loud）
+# 0b) 純文件變更偵測（LS-76）：純文件／harness 設定的 PR 也會跑到第 1／2 步（SwiftLint／xcodebuild
+#     test），沒有 Swift 檔可 lint、也沒有任何行為受影響，卻一樣要吃模擬器 flake（PR #113 R1 push 案例：
+#     一行文件變更被模擬器啟動 app 失敗擋下，重推即過）。判定本分支相對 target 的 diff 是否含
+#     LittleSprout/、LittleSproutTests/、project.yml、*.xcodeproj、Package.resolved、.swiftlint.yml——
+#     皆無才跳過第 1／2 步；CI 的 ci job 不受影響（仍無條件全跑，這裡只省本機時間，不動 CI 那道強制層）。
+#     方向矩陣與下面第 5／7 步一致（hotfix/* 對 origin/main，其餘對 origin/development）；保護分支
+#     （main/test/development）與 detached HEAD 沒有自然的「相對 target」概念，維持原行為（不跳過，兩步
+#     照跑）。target ref 不存在（未 fetch）時同樣不跳過——這只是本機最佳化，抓不到就退回原行為，不新增
+#     一個「找不到 ref」的失敗模式（與第 5／7 步刻意 fail-closed 不同：那兩步是正確性把關，這裡只是省時間）。
+skip_swift_steps=0
+diff_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
+case "$diff_branch" in
+  main|test|development|DETACHED) ;;
+  *)
+    case "$diff_branch" in hotfix/*) diff_target_ref=origin/main ;; *) diff_target_ref=origin/development ;; esac
+    if git rev-parse -q --verify "$diff_target_ref" >/dev/null; then
+      diff_changed=$(git diff --name-only "$diff_target_ref"...HEAD)
+      if ! printf '%s\n' "$diff_changed" | grep -qE '(^|/)LittleSprout/|(^|/)LittleSproutTests/|(^|/)project\.yml$|\.xcodeproj(/|$)|(^|/)Package\.resolved$|(^|/)\.swiftlint\.yml$'; then
+        skip_swift_steps=1
+      fi
+    fi
+    ;;
+esac
+
+# 1) SwiftLint（有 Swift 檔才要求；有檔沒工具 → fail loud；LS-76：無 Swift／專案檔變更則跳過）
 if [ -n "$(git ls-files '*.swift')" ]; then
-  if ! command -v swiftlint >/dev/null 2>&1; then
-    echo "✗ push gate：repo 內有 Swift 檔但未安裝 SwiftLint（brew install swiftlint）。" >&2
-    exit 1
+  if [ "$skip_swift_steps" = 1 ]; then
+    echo "→ push gate：無 Swift 變更，跳過 SwiftLint（CI 仍跑）"
+  else
+    if ! command -v swiftlint >/dev/null 2>&1; then
+      echo "✗ push gate：repo 內有 Swift 檔但未安裝 SwiftLint（brew install swiftlint）。" >&2
+      exit 1
+    fi
+    swiftlint lint --strict --quiet
   fi
-  swiftlint lint --strict --quiet
 fi
 
 # scheme 名稱：1b／2 兩步都要用，提到最前面單一定義（Phase 0 建專案時如 scheme 不同請更新此處與 CI）
@@ -108,8 +136,11 @@ if [ -f project.yml ]; then
   rm -rf "$xg_work"
 fi
 
-# 2) Unit tests（Xcode 專案存在才跑；Phase 0 建專案時如 scheme 不同請更新此處與 CI）
-if ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1; then
+# 2) Unit tests（Xcode 專案存在才跑；Phase 0 建專案時如 scheme 不同請更新此處與 CI；LS-76：無 Swift／
+#    專案檔變更則跳過整段——省純文件 harness PR 吃模擬器 flake 的成本，CI 的 ci job 不受影響仍全跑）
+if [ "$skip_swift_steps" = 1 ]; then
+  echo "✓ push gate：無 Swift 變更，跳過 unit tests（CI 仍跑）"
+elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1; then
   # 1b) Xcode 版本對齊（LS-106 R1 F2／F5；PR #165 head 8b7a0fa 同型：8b7a0fa 已修好 1a 的 xcodegen
   #     漂移，但 KeyboardHeightObserver.swift 仍留著 UIScreen.main.bounds，CI 用 .xcode-version
   #     釘住的 Xcode／SDK 對它的 MainActor 隔離判斷較嚴格判成編譯錯，本機當時裝的版本較寬鬆沒
