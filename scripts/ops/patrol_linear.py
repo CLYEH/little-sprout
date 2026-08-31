@@ -34,7 +34,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  # pen-open.sh 與本檔
 
 # docs/COLLABORATION.md §5-b：同 lane 狀態 In Progress + In Review 的票數上限。lane:product 不派工、
 # 不在這裡列（永遠跳過）。改了上限要同步這裡與 §5-b 表格，兩邊沒有機械對帳（巡檢承載，同既有模式）。
-LANE_LIMITS = {"lane:harness": 1, "lane:backend": 3, "lane:design": 1, "lane:ui": 1}
+LANE_LIMITS = {"lane:harness": 1, "lane:backend": 3, "lane:design": 1, "lane:ui": 2}  # lane:ui：LS-46＋LS-67（2026-08-31 核可）；上限＝已核可設計稿畫面群數（§5-b）
 WIP_STATES = ("In Progress", "In Review")
 BACKLOG_STATES = ("Backlog", "Spec")
 # cycle 對帳 (a) 的「active」定義抄自 §4-b 巡檢 cron 模板本文（狀態名稱，不是 state.type）
