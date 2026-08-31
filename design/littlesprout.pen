@@ -3839,7 +3839,7 @@
       "name": "LS-18 / 07a 邀請家人 · 尚未產生（空狀態）",
       "clip": true,
       "width": 393,
-      "height": 995,
+      "height": 1002,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -3906,7 +3906,7 @@
           "id": "p5m28",
           "name": "Body",
           "width": "fill_container",
-          "height": 762,
+          "height": 769,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -50329,7 +50329,7 @@
           "height": 22,
           "icon": "eye",
           "library": "lucide",
-          "fill": "$print-ink-secondary"
+          "fill": "$text-secondary"
         },
         {
           "type": "frame",
@@ -50343,7 +50343,7 @@
               "type": "text",
               "id": "vL7kl",
               "name": "Role Title",
-              "fill": "$print-ink",
+              "fill": "$text-primary",
               "textGrowth": "fixed-width",
               "width": 253,
               "content": "一般成員",
@@ -50355,7 +50355,7 @@
               "type": "text",
               "id": "zWpl1",
               "name": "Role Desc",
-              "fill": "$print-ink-secondary",
+              "fill": "$text-secondary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
               "content": "可以發文、留言，也能上傳照片。",
@@ -50396,23 +50396,17 @@
           "type": "frame",
           "id": "n6JtDU",
           "name": "Role Options",
-          "clip": true,
           "width": "fill_container",
-          "fill": "$print-paper",
-          "cornerRadius": "$radius-lg",
-          "stroke": "$paper-edge",
-          "strokeWidth": 1,
+          "fill": "#00000000",
+          "stroke": "#00000000",
           "effect": {
             "type": "shadow",
             "shadowType": "outer",
-            "color": "$paper-shadow",
-            "offset": {
-              "x": 0,
-              "y": 2
-            },
-            "blur": 6
+            "enabled": false,
+            "color": "#000000"
           },
           "layout": "vertical",
+          "gap": "$sp-label",
           "children": [
             {
               "id": "X7DYDo",
@@ -50420,35 +50414,38 @@
               "ref": "F5dSlm",
               "name": "Role Option · 一般成員",
               "width": "fill_container",
-              "stroke": "#00000000",
-              "strokeWidth": 0,
-              "fill": "$accent-soft",
+              "stroke": "$paper-edge",
+              "strokeWidth": 1,
+              "fill": "$print-paper",
+              "cornerRadius": "$radius-lg",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 2
+                },
+                "blur": 6
+              },
               "descendants": {
                 "j6ZNWo": {
                   "icon": "pencil",
-                  "fill": "$text-primary"
+                  "fill": "$print-ink"
                 },
                 "vL7kl": {
                   "content": "一般成員",
                   "fontWeight": "700",
-                  "fill": "$text-primary"
+                  "fill": "$print-ink"
                 },
                 "zWpl1": {
                   "content": "可以發文、留言，也能上傳照片。",
-                  "fill": "$text-secondary"
+                  "fill": "$print-ink-secondary"
                 },
                 "uHUe1": {
-                  "fill": "$text-primary"
+                  "fill": "$print-ink"
                 }
               }
-            },
-            {
-              "type": "rectangle",
-              "id": "MACIr",
-              "name": "Role Divider",
-              "fill": "$border",
-              "width": "fill_container",
-              "height": 1
             },
             {
               "id": "ZA8G7",
@@ -50540,7 +50537,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 995,
+      "height": 1002,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -50607,7 +50604,7 @@
           "id": "gDyjM",
           "name": "Body",
           "width": "fill_container",
-          "height": 762,
+          "height": 769,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -51093,7 +51090,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2259,
+      "height": 2266,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -51160,7 +51157,7 @@
           "id": "wjU2n",
           "name": "Body",
           "width": "fill_container",
-          "height": 1961,
+          "height": 1968,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -51661,7 +51658,7 @@
       "name": "LS-18 / 07a 邀請家人 · 只能看選中",
       "clip": true,
       "width": 393,
-      "height": 995,
+      "height": 1002,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -51728,7 +51725,7 @@
           "id": "qiF6K",
           "name": "Body",
           "width": "fill_container",
-          "height": 762,
+          "height": 769,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -52091,32 +52088,69 @@
                   "width": "fill_container",
                   "descendants": {
                     "X7DYDo": {
-                      "fill": "#00000000"
+                      "fill": "#00000000",
+                      "stroke": "#00000000",
+                      "strokeWidth": 0,
+                      "cornerRadius": 0,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "enabled": false,
+                        "color": "#00000000",
+                        "offset": {
+                          "x": 0,
+                          "y": 2
+                        },
+                        "blur": 6
+                      }
                     },
                     "X7DYDo/j6ZNWo": {
-                      "fill": "$print-ink-secondary"
+                      "fill": "$text-secondary",
+                      "icon": "pencil"
                     },
                     "X7DYDo/vL7kl": {
-                      "fontWeight": "600"
+                      "fontWeight": "600",
+                      "content": "一般成員",
+                      "fill": "$text-primary"
+                    },
+                    "X7DYDo/zWpl1": {
+                      "content": "可以發文、留言，也能上傳照片。",
+                      "fill": "$text-secondary"
                     },
                     "X7DYDo/uHUe1": {
                       "fill": "#00000000"
                     },
                     "ZA8G7": {
-                      "fill": "$accent-soft"
+                      "fill": "$print-paper",
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "cornerRadius": "$radius-lg",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 2
+                        },
+                        "blur": 6
+                      }
                     },
                     "ZA8G7/j6ZNWo": {
-                      "fill": "$text-primary"
+                      "fill": "$print-ink",
+                      "icon": "eye"
                     },
                     "ZA8G7/vL7kl": {
                       "fontWeight": "700",
-                      "fill": "$text-primary"
+                      "fill": "$print-ink",
+                      "content": "只能看"
                     },
                     "ZA8G7/zWpl1": {
-                      "fill": "$text-secondary"
+                      "fill": "$print-ink-secondary",
+                      "content": "只能看照片和日記，不能發文。"
                     },
                     "ZA8G7/uHUe1": {
-                      "fill": "$text-primary"
+                      "fill": "$print-ink"
                     }
                   }
                 }
