@@ -135,9 +135,13 @@ else
   fail=1
 fi
 
-out=$(printf '%s' "$(bash_json 'cat .env')" | env PATH="$work/badgrep" "$bash_bin" "$pretool" 2>&1); got=$?
+# LS-104：H1/H2 的字面比對全部改用 bash 內建 `[[ =~ ]]`（見 tokenize／analyze_segment），不再
+# 呼叫外部 grep；`m()`／外部 grep 現在只剩 H3 的 supabase-lock.sh 包裹字串檢查會用到，換成
+# `supabase db reset` 當 payload 才踩得到這條路徑（原本的 `cat .env` 不會再呼叫 grep，會變成
+# 「grep 壞掉也測不出來」的假綠——Rule 8：測試要能在邏輯改掉時真的紅）。
+out=$(printf '%s' "$(bash_json 'supabase db reset')" | env PATH="$work/badgrep" "$bash_bin" "$pretool" 2>&1); got=$?
 if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
-  echo '✓ F2：grep 執行異常（regex 弄壞的等價情境，rc=2 一律 deny）'
+  echo '✓ F2：grep 執行異常（regex 弄壞的等價情境，rc=2 一律 deny，LS-104 改走 H3 包裹檢查）'
 else
   echo "✗ F2：grep 異常應 deny（實得 exit ${got}：${out}）" >&2
   fail=1
@@ -310,6 +314,40 @@ rm -rf "$mut_dir"
 
 rm -rf "$work"
 trap - EXIT
+
+# ============================================================
+# LS-104：只在「命令位置」比對，heredoc／引號字串／echo·printf 內容排除出比對範圍，$(...)／
+# 反引號內容仍比對（那是真的執行）。三組事故原始重現（必須從誤擋改回 allow）＋三組對照
+# （拿掉「文字內容」外殼、真的執行同一件事，必須仍然 deny——證明narrowing 沒有打開繞過路徑）。
+# ============================================================
+expect 'LS104-inc① heredoc 內文含 --no-verify 字面（allow，事故①原始重現：寫記憶檔提到旗標字面不是真的執行）' 0 \
+  "$(bash_json "cat <<'EOF' > /tmp/mem.md\n這裡示範 --no-verify 的用法\nEOF\ngit add /tmp/mem.md")"
+expect 'LS104-inc② heredoc 內文含 supabase db reset 字面（allow，事故②原始重現：寫文件說明規則不是真的執行）' 0 \
+  "$(bash_json "cat <<'EOF' >> docs/NOTES.md\nH3 規則：supabase db reset 必須包 lock\nEOF")"
+expect 'LS104-inc③ echo 提到 .env 檔名、另一段用 tail 讀無關檔（allow，事故③原始重現：echo 參數不是讀取動詞的引數）' 0 \
+  "$(bash_json "echo '.env 是否存在的檢查'; tail -n 5 /var/log/app.log")"
+
+expect 'LS104-ctl① 對照 inc①：真的 --no-verify（非 heredoc 內文，deny）' 2 "$(bash_json 'git push --no-verify')"
+expect 'LS104-ctl② 對照 inc②：真的裸跑 supabase db reset（非 heredoc 內文，deny）' 2 "$(bash_json 'supabase db reset')"
+expect 'LS104-ctl③ 對照 inc③：真的用 tail 讀 .env（非 echo 提及檔名，deny）' 2 "$(bash_json 'tail -n 5 .env')"
+
+# 票文驗收另立一條：「引號不平衡 → deny」（切段失敗即歧義，見 evaluate() 的 AMBIGUOUS 分支）。
+expect 'LS104-amb① 單引號未閉合（deny，切段失敗即歧義）' 2 "$(bash_json "cat .env'")"
+expect 'LS104-amb② 命令替換 \$(...) 未閉合（deny，同一歧義規則）' 2 "$(bash_json 'echo $(cat .env')"
+
+# 本票的自指性：ios-dev／orchestrator 自己的 commit message、PR body、handoff 常常需要描述這三條
+# 規則本身（例如這個 commit message 就在講 --no-verify）——引號內的文字內容不該被當成旗標本身。
+expect 'LS104-msg① commit message 提到 --no-verify（allow，訊息內文不是旗標）' 0 \
+  "$(bash_json "git commit -m 'docs: 說明 --no-verify 規則'")"
+expect 'LS104-msg② 對照 msg①：旗標本身在引號外（deny）' 2 "$(bash_json "git commit --no-verify -m 'docs update'")"
+
+# 位置比對收窄到「命令位置」後，若不處理 bash -c／sh -c，會把違規包一層變成新的繞過路徑
+# （cmd 變成 bash／sh，真正的動詞被吞進一個引號內的 token）——必須遞迴評估payload，見
+# analyze_segment() 的 bash/sh -c 分支。
+expect 'LS104-shc① bash -c 包住真違規（deny，證明位置比對收窄沒開新繞路）' 2 "$(bash_json "bash -c 'cat .env'")"
+expect 'LS104-shc② sh -c 包住 --no-verify（deny）' 2 "$(bash_json "sh -c 'git push --no-verify'")"
+expect 'LS104-shc③ env 包一層再 bash -c（deny，env FOO=bar bash -c 的形狀）' 2 \
+  "$(bash_json "env FOO=bar bash -c 'supabase db reset'")"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ pretool.sh 自測通過"
