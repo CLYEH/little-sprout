@@ -28800,6 +28800,39 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "kFFzb",
+              "name": "i20",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "O5stw",
+                  "name": "stamp",
+                  "fill": "$text-secondary",
+                  "content": "LS-111 R8 · z6DOE·BTBTs·kcGJa·CHLio·VRq1c·Qyv1K·K0hWL·只能看選中",
+                  "fontFamily": "$font",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "oGvFN",
+                  "name": "l",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R8 依 visual-reviewer R7 verdict（Linear comment 78aebbe6）逐項落地，優先序照 R7「最短收斂路徑」執行：\n\n① 【B1，主要交付】HpB9V 三處染料池描述改回實測值：四顆角托紙層各有 4 顆 $mount-pool gradient（opacity .432/.277/.342/.230，kOZbf/cPl1o/vc4x9/b1LeyW 同值，Get(id).fill 可複驗），並記錄「R5 判定零染料池有誤→R6 未複驗照改造成反向錯誤→R7 發現→R8 回復」的沿革；kcGJa 的邀請碼卡（zfEIM，fill 僅 $surface）才是全稿唯一沒有染料池的 Print 類節點。yRI6y ⑧-1 新增維護規則：依 reviewer verdict 的事實主張刪改稿面前，落地前必須自己 Get 複驗，不能只憑 reviewer 陳述改稿——這是同一失效點連五輪後的止血規則。\n\n② 【M1】7 個 Bar Hairline（Rg5Ry/T0llPv/pvuLp/g1NI2P/bLf7Q/H0aUo/X3s3Rv）fill 由 $control-line 改 $border，與全稿其他 18 條 1pt 分隔線一致；motifs.md 同步改字。\n\n③ 【B2+H1，靈魂面交付】角色列選中機制改版：Role Options 容器（n6JtDU）拿掉大卡 fill/stroke/角/影，改透明；F5dSlm 元件層級（未選中基準態）文字改回 $text-primary/$text-secondary（theme-aware，因為未選中列直接躺在 $bg 上、不是紙）；eEP8A 的 X7DYDo（預設選中）與 K0hWL i0rI5c 覆寫的 ZA8G7（該板選中）改成各自成為一張獨立 $print-paper 紙（$paper-edge 1pt + $paper-shadow + $radius-lg），文字用 $print-ink/$print-ink-secondary（不掛 theme，紙上墨）。MACIr 分隔線刪除，列間改 gap $sp-label(8)。深色模式下選中列現在是一張從清單裡浮起的暖米白紙，未選中列文字維持 theme-aware 可讀（實測修正前 print-ink on $bg-dark 僅 1.1:1，修正後 text-primary on bg-dark 沿用 skill 已記錄的 15.31:1）。複驗：預設列高 91/91、AX3 278/278 皆不變，三支溢出掃描 20 項全落既有白名單零新增。z6DOE/BTBTs/Qyv1K/K0hWL 四板 root/Body 高度 +7（190=91+8+91 vs 舊 183）。motifs.md 對應章節重寫，修正 I-d 指出的「白邊」誤稱為「紙面基底與紙緣亮邊／落影」。\n\n④ 【H2】z6DOE/BTBTs/Qyv1K/K0hWL 四板：c5MJu「產生後 7 天內有效，最多 5 位家人可以用。」搬進 Action Bar、疊在 CTA 之上（$fs-note/$text-secondary，距 CTA $sp-label 8）——與 CTA 永遠同框，首屏可見率 0%→100%，解 H2 核心訴求。FCdOF「新成員一律要你核准才能加入」與 Header 副標語意重疊，刪除；Terms 容器清空後一併刪除。Bar Button Wrap 改 layout:vertical+gap，Action Bar 高度自動撐開 93→127（AX3 126→314）。Body/root 淨效果是內容變矮（Terms 刪除的量 > Action Bar 增高的量）：四板 root 906/2042，比 R7 當下更矮。**殘餘揭露**：首屏視窗（852-Chrome-ActionBar-HomeInd）由 619 降到 585，Role Section Wrap 現底緣 615，超出摺線 30pt——僅「只能看」（非預設選中）列的描述文字尾段落在摺線下，icon/標題/勾選狀態仍在首屏內；核心必讀條款已與 CTA 同框，不受此殘餘影響。未強行壓縮 Sample Print 345×198（多處引用的沖印品母題錨定值）或改寫 Header 副標來消除這 30pt，是否要進一步壓縮由使用者核可時定奪。\n\n⑤ 【M2】Qyv1K wAWsn 新增 X7DYDo/ZA8G7 的 j6ZNWo（pencil/eye）40×40 覆寫，與同列 check 同尺寸；vL7kl AX3 寬度 235→217（345-16-40-16-40-16）。Pencil height 屬性丟棄 $variable 的限制對 icon width/height 同樣成立（實測 Update 後讀回仍是字面值），沿用 uHUe1 既有解法在實例層級寫死數字。複驗列高 278/278、91/91 不變。\n\n⑥ Informational 處置：I-a（LS-107 fs-code 對帳，comment 5aa95719/f637dc73）——寫入 motifs.md 邀請碼節③-1，承認「AX3 對寬碼無放大效果、下限由卡片內寬決定」是版面寬度的物理下限，不強行改版式（會牽動 07/07b 既有版式），承認現況而非改稿掩蓋。I-b（E4DlKu 13pt 載入文案）——維持建議記入 LS-96，本輪未動、未惡化。I-c（PXPcH AX3 錯位 196pt）——維持另票，本輪未動、未惡化。I-d（motifs.md「白邊」誤稱）——已隨③一併修正為「紙面基底與紙緣亮邊／落影」。I-e（Action Bar 慣例波及評估）——motifs.md 該節標題加註「暫定：n=1，待第二次套用後定案」，下一張套用本慣例的票需把「第二次套用」列進驗收條件。I-f（07b 核准鍵在首屏外）——維持建議記入 LS-96，本輪未觸及 07b。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
