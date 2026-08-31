@@ -3328,7 +3328,7 @@
       "name": "LS-18 / 07 邀請家人 · 已產生邀請碼",
       "clip": true,
       "width": 393,
-      "height": 1164,
+      "height": 1189,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -3639,7 +3639,7 @@
             {
               "type": "frame",
               "id": "dKdib",
-              "name": "Share Actions",
+              "name": "Secondary Actions",
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
@@ -3650,21 +3650,6 @@
                 0
               ],
               "children": [
-                {
-                  "id": "Sbx9o",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Share Button",
-                  "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "share-2"
-                    },
-                    "w7CUP": {
-                      "content": "分享邀請連結"
-                    }
-                  }
-                },
                 {
                   "type": "frame",
                   "id": "kFw7c",
@@ -3781,6 +3766,51 @@
         },
         {
           "type": "frame",
+          "id": "FWTm2",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "pvuLp",
+              "name": "Bar Hairline",
+              "fill": "$control-line",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "q9DXc",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "Sbx9o",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Share Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "share-2"
+                    },
+                    "w7CUP": {
+                      "content": "分享邀請連結"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
           "id": "mYgmV",
           "name": "Home Indicator Area",
           "width": "fill_container",
@@ -3809,7 +3839,7 @@
       "name": "LS-18 / 07a 邀請家人 · 尚未產生（空狀態）",
       "clip": true,
       "width": 393,
-      "height": 970,
+      "height": 995,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -3876,7 +3906,7 @@
           "id": "p5m28",
           "name": "Body",
           "width": "fill_container",
-          "height": 830,
+          "height": 762,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -4243,7 +4273,7 @@
             {
               "type": "frame",
               "id": "XZ3pM",
-              "name": "Actions",
+              "name": "Terms",
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
@@ -4254,21 +4284,6 @@
                 0
               ],
               "children": [
-                {
-                  "id": "opG80",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Share Button",
-                  "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "plus"
-                    },
-                    "w7CUP": {
-                      "content": "產生邀請碼"
-                    }
-                  }
-                },
                 {
                   "type": "text",
                   "id": "c5MJu",
@@ -4294,6 +4309,51 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
                   "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "mHBsr",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "Rg5Ry",
+              "name": "Bar Hairline",
+              "fill": "$control-line",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "xaC9E",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "opG80",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Share Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "plus"
+                    },
+                    "w7CUP": {
+                      "content": "產生邀請碼"
+                    }
+                  }
                 }
               ]
             }
@@ -9087,7 +9147,7 @@
       "name": "LS-18 / 07c 邀請家人 · 產生中（載入）",
       "clip": true,
       "width": 393,
-      "height": 1130,
+      "height": 1155,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -9319,7 +9379,7 @@
             {
               "type": "frame",
               "id": "V6UVZW",
-              "name": "Share Actions",
+              "name": "Secondary Actions",
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
@@ -9330,18 +9390,6 @@
                 0
               ],
               "children": [
-                {
-                  "id": "T7vt2",
-                  "type": "ref",
-                  "ref": "e6nnU",
-                  "name": "Share Button Working",
-                  "width": "fill_container",
-                  "descendants": {
-                    "R2lJ0U": {
-                      "content": "正在產生邀請碼…"
-                    }
-                  }
-                },
                 {
                   "type": "frame",
                   "id": "h205GA",
@@ -9443,6 +9491,48 @@
                       }
                     }
                   ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Y06XpM",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "g1NI2P",
+              "name": "Bar Hairline",
+              "fill": "$control-line",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "zGde5",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "T7vt2",
+                  "type": "ref",
+                  "ref": "e6nnU",
+                  "name": "Share Button Working",
+                  "width": "fill_container",
+                  "descendants": {
+                    "R2lJ0U": {
+                      "content": "正在產生邀請碼…"
+                    }
+                  }
                 }
               ]
             }
@@ -35696,7 +35786,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2745,
+      "height": 2770,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -36008,7 +36098,7 @@
             {
               "type": "frame",
               "id": "u4ntyB",
-              "name": "Share Actions",
+              "name": "Secondary Actions",
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
@@ -36019,21 +36109,6 @@
                 0
               ],
               "children": [
-                {
-                  "id": "xz4yG",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Share Button",
-                  "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "share-2"
-                    },
-                    "w7CUP": {
-                      "content": "分享邀請連結"
-                    }
-                  }
-                },
                 {
                   "type": "frame",
                   "id": "osj2h",
@@ -36143,6 +36218,51 @@
                       }
                     }
                   ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "A4tx4k",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "bLf7Q",
+              "name": "Bar Hairline",
+              "fill": "$control-line",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "hFkEZ",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "xz4yG",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Share Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "share-2"
+                    },
+                    "w7CUP": {
+                      "content": "分享邀請連結"
+                    }
+                  }
                 }
               ]
             }
@@ -50372,7 +50492,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 970,
+      "height": 995,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -50439,7 +50559,7 @@
           "id": "gDyjM",
           "name": "Body",
           "width": "fill_container",
-          "height": 830,
+          "height": 762,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -50806,7 +50926,7 @@
             {
               "type": "frame",
               "id": "ecv5L",
-              "name": "Actions",
+              "name": "Terms",
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
@@ -50817,21 +50937,6 @@
                 0
               ],
               "children": [
-                {
-                  "id": "gKj0r",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Share Button",
-                  "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "plus"
-                    },
-                    "w7CUP": {
-                      "content": "產生邀請碼"
-                    }
-                  }
-                },
                 {
                   "type": "text",
                   "id": "s5DA9",
@@ -50857,6 +50962,51 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
                   "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "EUe2A",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "T0llPv",
+              "name": "Bar Hairline",
+              "fill": "$control-line",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "QVZpY",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "gKj0r",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Share Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "plus"
+                    },
+                    "w7CUP": {
+                      "content": "產生邀請碼"
+                    }
+                  }
                 }
               ]
             }
@@ -50895,7 +51045,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2234,
+      "height": 2259,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -50962,7 +51112,7 @@
           "id": "wjU2n",
           "name": "Body",
           "width": "fill_container",
-          "height": 2062,
+          "height": 1961,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -51347,7 +51497,7 @@
             {
               "type": "frame",
               "id": "bYmZf",
-              "name": "Actions",
+              "name": "Terms",
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
@@ -51358,21 +51508,6 @@
                 0
               ],
               "children": [
-                {
-                  "id": "z2vjub",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Share Button",
-                  "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "plus"
-                    },
-                    "w7CUP": {
-                      "content": "產生邀請碼"
-                    }
-                  }
-                },
                 {
                   "type": "text",
                   "id": "u4xy5k",
@@ -51398,6 +51533,51 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
                   "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "JSZul",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "H0aUo",
+              "name": "Bar Hairline",
+              "fill": "$control-line",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "MmcRz",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "z2vjub",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Share Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "plus"
+                    },
+                    "w7CUP": {
+                      "content": "產生邀請碼"
+                    }
+                  }
                 }
               ]
             }
@@ -51433,7 +51613,7 @@
       "name": "LS-18 / 07a 邀請家人 · 只能看選中",
       "clip": true,
       "width": 393,
-      "height": 970,
+      "height": 995,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -51500,7 +51680,7 @@
           "id": "qiF6K",
           "name": "Body",
           "width": "fill_container",
-          "height": 830,
+          "height": 762,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -51893,7 +52073,7 @@
             {
               "type": "frame",
               "id": "ct0bZ",
-              "name": "Actions",
+              "name": "Terms",
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
@@ -51904,21 +52084,6 @@
                 0
               ],
               "children": [
-                {
-                  "id": "un50A",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Share Button",
-                  "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "plus"
-                    },
-                    "w7CUP": {
-                      "content": "產生邀請碼"
-                    }
-                  }
-                },
                 {
                   "type": "text",
                   "id": "qJZlI",
@@ -51944,6 +52109,51 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
                   "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "A79nLj",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "X3s3Rv",
+              "name": "Bar Hairline",
+              "fill": "$control-line",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "KkRD0",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "un50A",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Share Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "plus"
+                    },
+                    "w7CUP": {
+                      "content": "產生邀請碼"
+                    }
+                  }
                 }
               ]
             }
