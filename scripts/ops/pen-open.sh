@@ -7,24 +7,35 @@
 # active document／不影響其後不帶 --in 的呼叫（含 Pencil MCP）——不是真正的切檔手段。唯一機械可行的切檔方法
 # 仍是 `open -a Pen <path>`。**LS-117**：Pencil MCP `execute`（及 `browser`）工具現行 schema 已把 `filePath`
 # 列為**必要參數**（`required: ["filePath"]`）——LS-81／LS-91 comment A 當時「execute 的 filePath 參數無效」
-# 的結論已過期，該參數現在確實用來指定要操作的 `.pen` 檔，供讀寫呼叫直接指定 worktree 檔、不必先搶下 active
-# document。本票僅以工具 schema 佐證這項變化（未對 live Pen app 實跑 execute 復驗——同一時段另有 UI agent
-# 在用 Pen，依規約不得為了復驗去動它；下次有安全空檔時應找機會補一次端對端驗證）。**這件事本身不取代
-# pen-open.sh**：filePath 目前解決的是「execute 操作哪個檔」，不是「Pen app 的 active/可見視窗切到哪個檔」——
-# QA／視覺審查這類唯讀查詢已可用 filePath 直接指定檔案，但 ui-designer 實際編輯設計稿、或任何需要使用者在
-# Pen app 視窗裡看到正確畫面的情境，仍要先用本腳本把 active document 切過去。本腳本：`open -a Pen` 切檔 →
+# 的結論已過期，該參數確實會被拿來比對目前 Pen 已知的文件。**LS-118 撤回並修正 LS-117 當時「不必先搶下
+# active document」這個過度樂觀的結論**：本票用合成 fixture 實測（見 `pen-read.sh` 與 handoff）確認
+# `filePath` 只在目標路徑剛好命中 Pen**目前某個 renderer 記得的文件**時才「命中」，且命中時服務的是那個
+# renderer 記憶體裡的快照——不會因為磁碟檔案之後被 git（checkout／merge／pull）更新而自動變新，重新
+# `open -a Pen` 想搶回 active 也不會讓既有 renderer 重新讀取磁碟（唯一會重新讀取磁碟的是全新 renderer，
+# 只有清場重開才生得出來）；目標路徑若從未被任何 renderer 開過，`execute` 甚至不會報錯或建立新文件，而是
+# **默默**改服務目前 active document 的內容——沒有任何錯誤或警告訊號可以區分「讀到目標檔」與「讀到別的
+# 文件」。因此 filePath 對唯讀查詢**不能取代**先把目標檔案變成 active document 這一步；`pen-read.sh`
+# （封裝本腳本的 `--force-reload`）是供 QA／視覺審查安全讀稿用的入口。本腳本：`open -a Pen` 切檔 →
 # 輪詢（總預算 ≤15s）用 `pen interactive --app desktop` 跑 `get_app_state()` 讀目前 active canvas editor 路徑 →
 # 與目標路徑比對；不一致時嘗試自動清場後重試一次（R2，見下）。
 #
 # 用法：
-#   pen-open.sh <worktree-or-repo-root> [--no-quit]   把 Pen 切到 <root>/design/littlesprout.pen 並輪詢對帳；
+#   pen-open.sh <worktree-or-repo-root> [--no-quit|--force-reload]
+#                                                       把 Pen 切到 <root>/design/littlesprout.pen 並輪詢對帳；
 #                                                       不一致時預設嘗試自動清場重試，`--no-quit` 關掉這步
-#                                                       （只對帳、不清場，等同 R2 之前的行為）
+#                                                       （只對帳、不清場，等同 R2 之前的行為）。**LS-118**：
+#                                                       `--force-reload` 略過「目前已經 active 就直接算成功」
+#                                                       的捷徑，一律走清場（安全判定＋kill＋重開）流程——
+#                                                       目標路徑即使已經是 active，既有 renderer 仍可能停在
+#                                                       上次讀到磁碟的時間點，只有清場重開生出的全新 renderer
+#                                                       才保證讀到目前磁碟內容（見上方 LS-118 段）；`pen-read.sh`
+#                                                       即為此模式的唯讀封裝，供 QA／視覺審查讀稿用。
 #   pen-open.sh --status                               不 open，只輪詢一次目前路徑並印到 stdout（供巡檢／派工前
 #                                                       對帳用；不比對，比對交給呼叫端——見 §4-b）
 #
 # Exit code：
-#   0＝（open 模式）路徑已一致（含自動清場重試後一致）；（--status）成功讀到路徑並印出
+#   0＝（open 模式）路徑已一致（含自動清場重試後一致，`--force-reload` 一律經過清場才算數）；
+#      （--status）成功讀到路徑並印出
 #   1＝（open 模式限定）輪詢逾時仍與目標路徑不一致（含清場後仍不一致，或判定不安全而未清場）
 #   2＝Pen 沒開／pen CLI 未登入／連線失敗／用法錯誤／清場失敗需人工介入（fail closed；--status 讀不到路徑也是這個）
 #
@@ -60,6 +71,21 @@
 #      這個路徑、不可能有未落地的變更，是**安全**訊號，舊版本卻把它跟其他 exit 2（讀不到 backup mtime 等
 #      真正無法確認的情況）混在一起當「不安全」。修法：`check_root_safe()` 認得這個特定訊息，直接判定安全。
 #
+# LS-118（`--force-reload`，補一個既有邏輯沒涵蓋到的缺口）：本腳本原本的成功判定只看「目前 active 路徑
+# 是否等於目標路徑」，一致就立刻 exit 0，不管這個「一致」是這次呼叫剛清場重開才達成的，還是目標路徑本來就
+# 已經是 active（例如它從未被切走過，或另一個 agent 前一刻才切過去）。本票合成 fixture 實測發現：一個
+# 已經在跑的 renderer，即使之後又被重新 `open -a Pen` 同一路徑重新奪回 active，服務的內容仍是它自己那次
+# 讀取磁碟當下的舊快照——不會因為磁碟檔案在那之後被 git 改過而自動變新（`execute` 的 `filePath` 命中同一個
+# renderer 時也是同樣的舊快照，見上方 LS-118 段）。換句話說，舊版「一致即成功」的判定對「目標路徑本來就是
+# active，但那個 renderer 已經讀過一次舊磁碟內容」這種情況會誤判成功——QA／視覺審查如果照著這個「已一致」
+# 的訊號去讀稿，讀到的可能是別的 commit 的內容而不自知。`--force-reload` 的修法：一旦帶了這個旗標，
+# 「目前已經一致」不再視為終點，而是無條件併入下面既有的自動清場流程（安全判定＋kill＋重開）——複用同一套
+# `check_root_safe()`／候選枚舉／SIGTERM→SIGKILL escalation，不重寫一份新邏輯；清場後重新 `open -a Pen`
+# 生出的全新 renderer 才保證這次是真的從磁碟讀出目前內容。若安全判定認為目前開著的任一份 .pen 可能有未落地
+# 的真實變更，仍然 fail closed（exit 1，印出該去哪個 root 先 `pen-land.sh`），不會為了保證新鮮度而默默丟掉
+# 別人真正的未落地設計工作。`pen-read.sh` 就是這個模式的唯讀封裝，供 reviewer／QA 安全讀取指定 worktree 的
+# 設計稿；自測見 pen-open.test.sh 的 `--force-reload` 案例與 `pen-read.test.sh`。
+#
 # macOS 沒有 coreutils timeout：每次 pen interactive 呼叫用背景程序＋背景 sleep 到期就 kill 的看門狗模式
 # （同 scripts/ops/patrol.sh 的 fetch_with_timeout；此處用 stdin/stdout 重導向而非管線，$! 才是 pen 程序本身的
 # PID，kill 不會留下管線另一端的孤兒程序）。
@@ -91,7 +117,7 @@
 set -uo pipefail
 
 usage() {
-  echo "用法：pen-open.sh <worktree-or-repo-root> [--no-quit]｜pen-open.sh --status" >&2
+  echo "用法：pen-open.sh <worktree-or-repo-root> [--no-quit|--force-reload]｜pen-open.sh --status" >&2
 }
 
 PEN_BIN=${PEN_BIN:-pen}
@@ -114,6 +140,7 @@ fi
 mode=open
 target=$1
 no_quit=0
+force_reload=0
 if [ "$1" = "--status" ]; then
   if [ $# -ne 1 ]; then
     usage
@@ -124,6 +151,8 @@ if [ "$1" = "--status" ]; then
 elif [ $# -eq 2 ]; then
   if [ "$2" = "--no-quit" ]; then
     no_quit=1
+  elif [ "$2" = "--force-reload" ]; then
+    force_reload=1
   else
     usage
     exit 2
@@ -197,7 +226,7 @@ poll_until_match() {
 open -a Pen "$want" >/dev/null 2>&1
 poll_until_match
 poll_rc=$?
-if [ "$poll_rc" -eq 0 ]; then
+if [ "$poll_rc" -eq 0 ] && [ "$force_reload" -ne 1 ]; then
   echo "✓ pen-open：Pen 目前文件＝${want}"
   exit 0
 fi
@@ -206,7 +235,13 @@ if [ "$poll_rc" -eq 2 ]; then
   exit 2
 fi
 
-echo "✗ pen-open：路徑不一致——目標「${want}」，Pen 目前「${LAST_SEEN}」" >&2
+if [ "$poll_rc" -eq 0 ]; then
+  # LS-118：--force-reload 且已經一致——不信任這個「一致」，既有 renderer 可能是停在舊磁碟內容的殘留行程，
+  # 無條件併入下面的清場流程，確保換成全新 renderer 才算數。
+  echo "  --force-reload：目前文件已是「${want}」，但既有 renderer 可能停在上次讀到磁碟時的舊快照（LS-118：filePath／重新 open -a Pen 都不保證重新讀取磁碟）——強制清場重開" >&2
+else
+  echo "✗ pen-open：路徑不一致——目標「${want}」，Pen 目前「${LAST_SEEN}」" >&2
+fi
 
 if [ "$no_quit" -eq 1 ]; then
   echo "  （--no-quit：不嘗試清場，僅回報）" >&2

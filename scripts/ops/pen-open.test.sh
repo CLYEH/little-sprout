@@ -154,6 +154,9 @@ wt2_backup_unsafe() { printf '%s' '{"version":1,"fileToken":"tok1","variables":{
 # wt 自己（目標文件）也要能標成安全，供 ⑪e 驗證「隱藏第三視窗」單獨拒絕清場的情境。
 WT_SAFE='{"version":1,"children":[]}'
 wt_backup_safe() { printf '%s' "$WT_SAFE" > "${PEN_BACKUP_DIR}/$(printf '%s' "file://${want}" | shasum | awk '{print $1}')"; }
+# LS-118 ⑬b：wt 自己的 backup 帶一個落地檔沒有的節點——真實（非白名單）差異，供「目標即使已是 active
+# 仍可能有未落地變更」的 --force-reload 拒絕案例。
+wt_backup_unsafe() { printf '%s' '{"version":1,"children":[{"id":"newnode","x":1,"children":[]}]}' > "${PEN_BACKUP_DIR}/$(printf '%s' "file://${want}" | shasum | awk '{print $1}')"; }
 
 # wt3：只透過 ps 枚舉才會被看見的「隱藏」第三個視窗（LAST_SEEN／want 都不指向它）——驗證 R3 F1 完整修法：
 # 沒有它，get_app_state 只回得出一個 active，這份不安全的視窗永遠不會被檢查到。
@@ -449,6 +452,40 @@ else
   bad "⑫f 應 exit 2 且拒絕 SIGKILL（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 clear_fake_pen; clear_ps_pen_files
+
+# ---- LS-118：--force-reload ----
+
+# ⑬a 目前已一致＋安全，仍強制清場重開（不信任舊 renderer 可能停在磁碟更新前的舊快照）——驗證新增的
+#     「不因已一致就早退」邏輯，且清場前後仍照既有安全判定把關、重開後才真正算成功。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe
+set_state "PATH:${want}"
+start_fake_pen
+export PEN_STUB_OSASCRIPT_KILLS=1
+out="$(run "$wt" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF -- '--force-reload' \
+  && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
+  && ! fake_pen_alive && [ "$(open_calls)" -eq 2 ]; then
+  ok '⑬a --force-reload：目前已一致仍強制清場重開，假行程真的被換掉（LS-118）'
+else
+  bad "⑬a 應 exit 0 且真的清場重開（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OSASCRIPT_KILLS
+clear_fake_pen
+
+# ⑬b 目前已一致，但目標自己的 renderer 有未落地變更——即使已經 active，--force-reload 仍不能為了保
+#     新鮮度而默默丟掉真實變更，fail closed 拒絕清場。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_unsafe
+set_state "PATH:${want}"
+start_fake_pen
+out="$(run "$wt" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF -- '--force-reload' \
+  && printf '%s' "$out" | grep -qF '不自動 quit' \
+  && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑬b --force-reload：目標自己有未落地變更 → 即使已一致仍拒絕清場（LS-118）'
+else
+  bad "⑬b 應 exit 1 且不清場（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-open-check 自測失敗" >&2
