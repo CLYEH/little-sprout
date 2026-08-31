@@ -1,7 +1,9 @@
 #!/bin/bash
 # pretool.sh 自測（LS-88；R2 補 merge-reviewer R1 blocker/major/informational——
-# https://github.com/CLYEH/little-sprout/pull/157#issuecomment-5413222970）。CI rules job
-# 每個 PR 都跑。「前饋必有反饋」對 gate 本身也適用：H1–H3 若退化（字面比對變寬鬆、fail-closed
+# https://github.com/CLYEH/little-sprout/pull/157#issuecomment-5413222970；R3 補 LS-104
+# merge-reviewer R2 blocker，comment 5a170052：bash/sh -c 偵測要求緊接在 bash/sh 後面，
+# 併入短旗標團／前面插旗標都測不到，同時繞過 H1/H2/H3）。CI rules job 每個 PR 都跑。
+# 「前饋必有反饋」對 gate 本身也適用：H1–H3 若退化（字面比對變寬鬆、fail-closed
 # 漏接）這裡會紅。R1 抓到的洞（多行 command 只看第一行、grep 異常當沒命中放行、.env／run.sh
 # 邊界要求空白或行尾、放行形式整條字串比對）都各自補了對應的正負樣本，避免同一個洞回來。
 set -uo pipefail
@@ -417,6 +419,25 @@ expect 'R2F5-b ${IFS} 取代空白（deny，cat${IFS}.env 展開後就是 cat .e
 
 # ---- ANSI-C quoting（reviewer probe2 x06）----
 expect 'R2-ansic $便宜單引號（deny，cat \$'"'"'.env'"'"' 展開後就是 .env）' 2 "$(bash_json "cat \$'.env'")"
+
+# ============================================================
+# LS-104 R3（merge-reviewer R2 blocker，comment 5a170052）：命令位置認得 bash/sh 時，
+# `-c` 偵測原本只認「`-c` 這個 token 緊接在 bash/sh 後面」——併入短旗標團（-lc/-cx）或
+# 前面插其他旗標（-e -c/--norc -c）都測不到、也不遞迴，且 evaluate() 對 check_precise
+# 回 OK 沒有 fallback 兜底，等於整條放行（同時繞過 H1/H2/H3，比 main 現行 hook 弱）。
+# 廣義化 -c 偵測＋OK 結果補跑 check_fallback 兜底後，這些形狀都必須跟裸 `bash -c` 一樣
+# 被遞迴抓到違規。
+# ============================================================
+expect 'R3F1-a -c 併入短旗標團 -lc（deny，bash -lc 讀 .env）' 2 "$(bash_json "bash -lc 'cat .env'")"
+expect 'R3F1-b -c 併入短旗標團 -cx，c 在前（deny）' 2 "$(bash_json "bash -cx 'cat .env'")"
+expect 'R3F1-c -c 前插旗標 -e -c（deny）' 2 "$(bash_json "bash -e -c 'cat .env'")"
+expect 'R3F1-d -c 前插長旗標 --norc -c（deny，H3 supabase db reset）' 2 \
+  "$(bash_json "bash --norc -c 'supabase db reset'")"
+expect 'R3F1-e 對照：sh 併入短旗標團 -ec 同樣抓到（deny）' 2 "$(bash_json "sh -ec 'cat .env'")"
+expect 'R3F1-f 對照：bash -c 包 benign payload 不誤擋（allow，廣義化沒有變成逢 -c 必擋）' 0 \
+  "$(bash_json "bash -c 'echo hi'")"
+expect 'R3F1-g 對照：純腳本呼叫無 -c 不受影響（allow，OK 兜底沒有變成逢 bash/sh 必擋）' 0 \
+  "$(bash_json 'bash scripts/hooks/pretool.test.sh')"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ pretool.sh 自測通過"
