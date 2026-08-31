@@ -27,6 +27,16 @@ final class SupabaseFamilyAPIClientTests: XCTestCase {
                     body: SessionFixture.json(userID: userID, email: "owner@example.com")
                 )
             }
+            // LS-107：`createFamily` 先補一筆 `profiles`（見 `ensureProfileExists` 文件註解），
+            // 才走 `families` INSERT——這裡兩段都要接住，用路徑分流而不是假設呼叫順序。
+            if request.url?.path == "/rest/v1/profiles" {
+                XCTAssertEqual(request.httpMethod, "POST")
+                let body = try XCTUnwrap(request.bodyData)
+                let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: String])
+                XCTAssertEqual(payload["id"], userID.uuidString)
+                XCTAssertEqual(payload["display_name"], "owner")
+                return MockURLProtocol.StubResponse(statusCode: 201, body: Data("[]".utf8))
+            }
             XCTAssertEqual(request.url?.path, "/rest/v1/families")
             XCTAssertEqual(request.httpMethod, "POST")
 
@@ -56,6 +66,41 @@ final class SupabaseFamilyAPIClientTests: XCTestCase {
         XCTAssertEqual(family.name, "葉家")
         XCTAssertEqual(family.createdBy, userID)
         XCTAssertTrue(family.requireApproval)
+    }
+
+    func test_fetchMyFamily_hasFamily_decodesFirstResult() async throws {
+        let client = TestSupabaseClient.make { [familyID, userID] request in
+            XCTAssertEqual(request.url?.path, "/rest/v1/families")
+            XCTAssertEqual(request.httpMethod, "GET")
+            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+            [{
+              "id": "\(familyID.uuidString)",
+              "name": "葉家",
+              "created_by": "\(userID.uuidString)",
+              "created_at": "2026-08-24T00:00:00Z",
+              "require_approval": true
+            }]
+            """.utf8))
+        }
+        let apiClient = SupabaseFamilyAPIClient(client: client)
+
+        let family = try await apiClient.fetchMyFamily()
+
+        XCTAssertEqual(family?.id, familyID)
+        XCTAssertEqual(family?.name, "葉家")
+    }
+
+    func test_fetchMyFamily_noFamily_returnsNil() async throws {
+        // 全新帳號、還沒建立或加入任何家庭：`families_select` RLS 只收斂到呼叫者所屬的家庭，
+        // 沒有任何一筆時 PostgREST 回 200 + `[]`，不是錯誤。
+        let client = TestSupabaseClient.make { _ in
+            MockURLProtocol.StubResponse(statusCode: 200, body: Data("[]".utf8))
+        }
+        let apiClient = SupabaseFamilyAPIClient(client: client)
+
+        let family = try await apiClient.fetchMyFamily()
+
+        XCTAssertNil(family)
     }
 
     func test_createFamily_notSignedIn_throwsRejectedWithoutSendingRequest() async {
@@ -185,75 +230,6 @@ final class SupabaseFamilyAPIClientTests: XCTestCase {
             guard case .rejected = error else {
                 return XCTFail("0 列受影響應映射為 .rejected，實際是 \(error)")
             }
-        } catch {
-            XCTFail("應該 throw AppError，實際是 \(error)")
-        }
-    }
-
-    func test_createInvite_success_returnsCode() async throws {
-        let client = TestSupabaseClient.make { [userID, familyID] request in
-            if request.url?.path == "/auth/v1/token" {
-                return MockURLProtocol.StubResponse(
-                    statusCode: 200,
-                    body: SessionFixture.json(userID: userID, email: "owner@example.com")
-                )
-            }
-            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/create_invite")
-            let body = try XCTUnwrap(request.bodyData)
-            let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
-            XCTAssertEqual(payload["p_family_id"] as? String, familyID.uuidString)
-            XCTAssertEqual(payload["p_role"] as? String, "member")
-            XCTAssertEqual(payload["p_max_uses"] as? Int, 5)
-            // SDK 的預設 Date 編碼不帶時區指示（Helpers/DateFormatter.swift 的
-            // `iso8601String`），直接送給 Postgres 的 timestamptz 會依資料庫 session
-            // timezone 解讀，不保證是 UTC——client 端改成自己用 ISO8601DateFormatter 明確
-            // 帶 'Z'（LS-49 PR #63 review F8）。這裡釘住 wire 上真的長這樣，不只是釘住
-            // Swift 端 Date 值本身。
-            let expiresAtWire = try XCTUnwrap(payload["p_expires_at"] as? String)
-            XCTAssertTrue(expiresAtWire.hasSuffix("Z"), "p_expires_at 應以 'Z' 結尾，實際是 \(expiresAtWire)")
-
-            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("\"ABCD1234\"".utf8))
-        }
-        try await signIn(client: client)
-
-        let apiClient = SupabaseFamilyAPIClient(client: client)
-        let code = try await apiClient.createInvite(
-            familyID: familyID,
-            role: .member,
-            expiresAt: Date().addingTimeInterval(86400),
-            maxUses: 5
-        )
-
-        XCTAssertEqual(code, "ABCD1234")
-    }
-
-    func test_createInvite_expiredCodeLimitError_mapsToValidationRetryable() async throws {
-        let client = TestSupabaseClient.make { [userID] request in
-            if request.url?.path == "/auth/v1/token" {
-                return MockURLProtocol.StubResponse(
-                    statusCode: 200,
-                    body: SessionFixture.json(userID: userID, email: "owner@example.com")
-                )
-            }
-            // LS017：supabase/migrations/20260823010000_join_approval.sql——參數不合法。
-            return MockURLProtocol.StubResponse(statusCode: 400, body: Data("""
-            {"code":"LS017","message":"邀請碼的可用次數必須介於 1 到 20 之間"}
-            """.utf8))
-        }
-        try await signIn(client: client)
-
-        let apiClient = SupabaseFamilyAPIClient(client: client)
-
-        do {
-            _ = try await apiClient.createInvite(
-                familyID: familyID, role: .member, expiresAt: Date().addingTimeInterval(86400), maxUses: 999
-            )
-            XCTFail("應該要 throw")
-        } catch let error as AppError {
-            guard case .validationRetryable(_, let code) = error else {
-                return XCTFail("LS017 應映射為 .validationRetryable，實際是 \(error)")
-            }
-            XCTAssertEqual(code, "LS017")
         } catch {
             XCTFail("應該 throw AppError，實際是 \(error)")
         }

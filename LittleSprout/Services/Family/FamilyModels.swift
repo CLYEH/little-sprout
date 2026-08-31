@@ -33,6 +33,29 @@ enum JoinRequestOutcome: Equatable, Sendable {
     case joined(familyID: UUID)
 }
 
+/// 對應 `public.invites` 可讀欄位子集——R1 F2/F4：`create_invite` RPC 只回傳 `code`，
+/// 但撤銷（`revokeInvite`，需要 `id`）與顯示真實剩餘名額（`GeneratedInvite.remainingUses`，
+/// 需要 `usedCount`）都得反查這張表。`invites` 沒有 `created_at` 欄位（見
+/// `supabase/migrations/20260822120000_init_schema.sql`），`fetchLatestActiveInvite` 用
+/// `expiresAt` 排序當替代——本 app 每支碼一律用固定 7 天期限（`FamilyStore
+/// .defaultInviteValidityDays`），expires_at 遞增與建立時間遞增同序；日後若開放自訂期限，
+/// 這個排序假設就不成立，屆時要補一個真正的 created_at 欄位。
+struct InviteRecord: Equatable, Sendable, Decodable {
+    let id: UUID
+    let code: String
+    let role: FamilyRole
+    let maxUses: Int
+    let usedCount: Int
+    let expiresAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, code, role
+        case maxUses = "max_uses"
+        case usedCount = "used_count"
+        case expiresAt = "expires_at"
+    }
+}
+
 /// `list_join_requests` RPC 回傳列——owner 的待審清單。
 struct PendingJoinRequest: Equatable, Sendable, Decodable {
     let requestID: UUID

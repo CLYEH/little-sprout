@@ -18,6 +18,13 @@ final class SupabaseFamilyAPIClient: FamilyAPIClient {
             // （被 AppError.map 收斂成 .rejected），過期時會先嘗試刷新——不必自己重造一個
             // 「未登入」的自訂錯誤碼。
             let session = try await client.auth.session
+            // LS-107：docs/API.md §3 `profiles` 明定「登入後若尚未存在，登入流程要先 insert
+            // 一列，display_name 必填」，但目前 repo 沒有任何登入路徑做這件事（`AuthStore`／
+            // `SupabaseAuthService` 都不寫 `profiles`）。`families.created_by` 外鍵指到
+            // `profiles(id)`，全新帳號第一次呼叫這裡若跳過這步會直接撞 23503
+            // （foreign_key_violation）——在真正需要 profiles 列存在的第一個呼叫點補上，見
+            // `ensureProfileExists` 文件註解。
+            try await ensureProfileExists(userID: session.user.id, email: session.user.email)
             let payload = CreateFamilyPayload(name: name, createdBy: session.user.id)
             let response: PostgrestResponse<Family> = try await client
                 .from("families")
@@ -26,6 +33,42 @@ final class SupabaseFamilyAPIClient: FamilyAPIClient {
                 .single()
                 .execute()
             return response.value
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    /// LS-107：見 `createFamily` 呼叫處的說明——這裡補的是「登入流程」原本該做但目前沒有任何
+    /// 檔案做的事（docs/API.md §3 `profiles`）。刻意不動 `AuthStore`／`SupabaseAuthService`／
+    /// 登入流程本身：`display_name` 從哪來是產品層問題（目前用 email 本地部分當預設值，見
+    /// `EmailDisplayName`），改動範圍應留給專門處理「使用者顯示名稱」的票，這裡只解決「建立
+    /// 家庭前 profiles 列必須存在」這個窄範圍的阻塞（見 handoff 風險欄）。
+    ///
+    /// `ignoreDuplicates: true`：已存在的 profiles 列（例如日後有專屬的顯示名稱設定畫面寫入過
+    /// 真實姓名）不會被這裡的預設值覆蓋——底層送出 `Prefer: resolution=ignore-duplicates`，
+    /// Postgres 端等同 `insert ... on conflict do nothing`，撞到既有列時完全不執行 UPDATE，
+    /// 因此只需要 `profiles_insert` policy（`id = auth.uid()`），不需要 `profiles_update`。
+    private func ensureProfileExists(userID: UUID, email: String?) async throws {
+        let payload = ProfileUpsertPayload(id: userID, displayName: EmailDisplayName.derive(fromEmail: email) ?? "新成員")
+        try await client
+            .from("profiles")
+            .upsert(payload, onConflict: "id", ignoreDuplicates: true)
+            .execute()
+    }
+
+    func fetchMyFamily() async throws -> Family? {
+        do {
+            // families_select 的 RLS 把結果收斂到「id in (private.family_ids())」（見
+            // supabase/migrations/20260822120200_rls_policies.sql）——呼叫者看不到自己不在
+            // 其中的家庭，這裡不需要另外帶 user_id 篩選條件。Phase 1 單一家庭 MVP：一個使用者
+            // 最多一個家庭，取 created_at 最早的一筆即可（正常情況下也只會有一筆）。
+            let response: PostgrestResponse<[Family]> = try await client
+                .from("families")
+                .select()
+                .order("created_at", ascending: true)
+                .limit(1)
+                .execute()
+            return response.value.first
         } catch {
             throw AppError.map(error)
         }
@@ -68,7 +111,7 @@ final class SupabaseFamilyAPIClient: FamilyAPIClient {
         }
     }
 
-    func createInvite(familyID: UUID, role: FamilyRole, expiresAt: Date, maxUses: Int) async throws -> String {
+    func createInvite(familyID: UUID, role: FamilyRole, expiresAt: Date, maxUses: Int) async throws -> InviteRecord {
         do {
             let params = CreateInviteParams(
                 familyID: familyID,
@@ -84,7 +127,60 @@ final class SupabaseFamilyAPIClient: FamilyAPIClient {
             let response: PostgrestResponse<String> = try await client
                 .rpc("create_invite", params: params)
                 .execute()
-            return response.value
+            // R1 F2/F4：create_invite 只回傳 code（見 RPC 簽章，20260825070627_invite_code_6.sql）；
+            // code 是 unique 欄位，反查剛建立的那一列拿到 id（撤銷用）／used_count（顯示用）。
+            return try await fetchInvite(byCode: response.value)
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    private func fetchInvite(byCode code: String) async throws -> InviteRecord {
+        let response: PostgrestResponse<InviteRecord> = try await client
+            .from("invites")
+            .select()
+            .eq("code", value: code)
+            .single()
+            .execute()
+        return response.value
+    }
+
+    func fetchLatestActiveInvite(familyID: UUID) async throws -> InviteRecord? {
+        do {
+            // PostgREST 的 filter 不支援欄位對欄位比較（used_count < max_uses 兩邊都是
+            // 欄位），這裡只能先撈「未過期」的候選列——單一家庭的邀請碼數量級是個位數，
+            // limit 5 綽綽有餘——「還有名額」交給呼叫端在記憶體裡篩（R1 F4）。排序用
+            // expires_at 而非 created_at，理由見 `InviteRecord` 文件註解。
+            let response: PostgrestResponse<[InviteRecord]> = try await client
+                .from("invites")
+                .select()
+                .eq("family_id", value: familyID)
+                .gt("expires_at", value: Self.iso8601String(from: Date()))
+                .order("expires_at", ascending: false)
+                .limit(5)
+                .execute()
+            return response.value.first { $0.usedCount < $0.maxUses }
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    /// R1 F2：撤銷邀請碼——後端沒有 `revoke_invite` RPC，DELETE 是唯一路徑（`invites_delete`
+    /// policy 只放行 owner，見 `20260822120200_rls_policies.sql:182`）。跟
+    /// `requireUpdatedRow` 同樣理由：DELETE 對不符合 RLS 的列會静默匹配 0 筆，`.select()`
+    /// 回應是空陣列而不是錯誤，這裡明確把「0 列受影響」轉成錯誤，不讓呼叫端誤以為舊碼真的
+    /// 被撤銷了。
+    func revokeInvite(id: UUID) async throws {
+        do {
+            let response: PostgrestResponse<[InviteRecord]> = try await client
+                .from("invites")
+                .delete()
+                .eq("id", value: id)
+                .select()
+                .execute()
+            guard !response.value.isEmpty else {
+                throw AppError.rejected(message: "沒有權限撤銷這支邀請碼，或邀請碼已經不存在", code: "no_rows_deleted")
+            }
         } catch {
             throw AppError.map(error)
         }
@@ -168,6 +264,16 @@ private struct CreateFamilyPayload: Encodable {
     enum CodingKeys: String, CodingKey {
         case name
         case createdBy = "created_by"
+    }
+}
+
+private struct ProfileUpsertPayload: Encodable {
+    let id: UUID
+    let displayName: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case displayName = "display_name"
     }
 }
 

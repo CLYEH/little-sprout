@@ -5,6 +5,10 @@ struct PrimaryButton: View {
     let icon: String
     let title: String
     var isLoading = false
+    // LS-107：07c「產生中」用「正在產生邀請碼…」取代這裡原本寫死的「正在處理…」（cmp/Button
+    // Working 節點 `R2lJ0U` 的實際內容，見 design/littlesprout.pen frame `CHLio`）。預設值
+    // 維持舊文案，既有呼叫端（WelcomeView 以外目前沒有其他呼叫點在跑）不用跟著改。
+    var loadingTitle = "正在處理…"
     let action: () -> Void
 
     var body: some View {
@@ -15,7 +19,7 @@ struct PrimaryButton: View {
                 } else {
                     Image(systemName: icon).appIconFrame(.medium)
                 }
-                Text(isLoading ? "正在處理…" : title).appFont(.body)
+                Text(isLoading ? loadingTitle : title).appFont(.body)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingCTA)
