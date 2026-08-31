@@ -2,7 +2,10 @@
 # pretool.sh 自測（LS-88；R2 補 merge-reviewer R1 blocker/major/informational——
 # https://github.com/CLYEH/little-sprout/pull/157#issuecomment-5413222970；R3 補 LS-104
 # merge-reviewer R2 blocker，comment 5a170052：bash/sh -c 偵測要求緊接在 bash/sh 後面，
-# 併入短旗標團／前面插旗標都測不到，同時繞過 H1/H2/H3）。CI rules job 每個 PR 都跑。
+# 併入短旗標團／前面插旗標都測不到，同時繞過 H1/H2/H3；R4 補 merge-reviewer R3 blocker，
+# comment 59e21b88（F1-residual）：R3 的兩半兜底只套在 bash/sh，zsh/dash/ksh 這三支
+# macOS 預裝的 sibling shell 仍 fail open，`zsh -c "supabase db reset"` 正是 LS-70
+# 事故的路徑）。CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對 gate 本身也適用：H1–H3 若退化（字面比對變寬鬆、fail-closed
 # 漏接）這裡會紅。R1 抓到的洞（多行 command 只看第一行、grep 異常當沒命中放行、.env／run.sh
 # 邊界要求空白或行尾、放行形式整條字串比對）都各自補了對應的正負樣本，避免同一個洞回來。
@@ -438,6 +441,28 @@ expect 'R3F1-f 對照：bash -c 包 benign payload 不誤擋（allow，廣義化
   "$(bash_json "bash -c 'echo hi'")"
 expect 'R3F1-g 對照：純腳本呼叫無 -c 不受影響（allow，OK 兜底沒有變成逢 bash/sh 必擋）' 0 \
   "$(bash_json 'bash scripts/hooks/pretool.test.sh')"
+
+# ============================================================
+# LS-104 R4（merge-reviewer R3 blocker，comment 59e21b88，F1-residual）：R3 的
+# `-c` 遞迴＋OK-fallback 只套在 cmd/pos_tok in ("bash", "sh")——macOS 預裝的 zsh／
+# dash／ksh 是乾淨識別字，check_precise 對它們不做任何檢查而回 OK、OK-fallback 又
+# 排除它們，於是三兄弟 shell 的 -c payload 裸放行（`zsh -c "supabase db reset"`
+# 正是 LS-70 事故的原始路徑，main 擋、R3 版放行）。R4 把 zsh／dash／ksh 併入
+# SHELLC_SHELLS，與 bash/sh 走同一套邏輯；payload 遞迴重評時新 shell 也在集合內，
+# 巢狀（bash -c 包 zsh -c）自動被接住。
+# ============================================================
+expect 'R4F1-a zsh -c 裸跑 db reset（deny，H3，LS-70 事故原始路徑）' 2 \
+  "$(bash_json "zsh -c 'supabase db reset'")"
+expect 'R4F1-b dash -c 讀 .env（deny，H2）' 2 "$(bash_json "dash -c 'cat .env'")"
+expect 'R4F1-c ksh -c --no-verify（deny，H1）' 2 \
+  "$(bash_json "ksh -c 'git commit --no-verify'")"
+expect 'R4F1-d 巢狀 bash -c 包 zsh -c 讀 .env（deny，遞迴接住兄弟 shell）' 2 \
+  "$(bash_json 'bash -c '"'"'zsh -c "cat .env"'"'"'')"
+expect 'R4F1-e zsh 併入短旗標團 -lc 同樣抓到（deny）' 2 "$(bash_json "zsh -lc 'cat .env'")"
+expect 'R4F1-f 對照：zsh -c 包 benign payload 不誤擋（allow）' 0 \
+  "$(bash_json "zsh -c 'echo hi'")"
+expect 'R4F1-g 對照：zsh 呼叫純腳本不受影響（allow，OK 兜底沒有變成逢 zsh 必擋）' 0 \
+  "$(bash_json 'zsh scripts/hooks/pretool.test.sh')"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ pretool.sh 自測通過"
