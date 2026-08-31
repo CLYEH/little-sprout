@@ -3776,7 +3776,7 @@
               "type": "rectangle",
               "id": "pvuLp",
               "name": "Bar Hairline",
-              "fill": "$control-line",
+              "fill": "$border",
               "width": "fill_container",
               "height": 1
             },
@@ -4326,7 +4326,7 @@
               "type": "rectangle",
               "id": "Rg5Ry",
               "name": "Bar Hairline",
-              "fill": "$control-line",
+              "fill": "$border",
               "width": "fill_container",
               "height": 1
             },
@@ -9508,7 +9508,7 @@
               "type": "rectangle",
               "id": "g1NI2P",
               "name": "Bar Hairline",
-              "fill": "$control-line",
+              "fill": "$border",
               "width": "fill_container",
               "height": 1
             },
@@ -36271,7 +36271,7 @@
               "type": "rectangle",
               "id": "bLf7Q",
               "name": "Bar Hairline",
-              "fill": "$control-line",
+              "fill": "$border",
               "width": "fill_container",
               "height": 1
             },
@@ -51027,7 +51027,7 @@
               "type": "rectangle",
               "id": "T0llPv",
               "name": "Bar Hairline",
-              "fill": "$control-line",
+              "fill": "$border",
               "width": "fill_container",
               "height": 1
             },
@@ -51598,7 +51598,7 @@
               "type": "rectangle",
               "id": "H0aUo",
               "name": "Bar Hairline",
-              "fill": "$control-line",
+              "fill": "$border",
               "width": "fill_container",
               "height": 1
             },
@@ -52178,7 +52178,7 @@
               "type": "rectangle",
               "id": "X3s3Rv",
               "name": "Bar Hairline",
-              "fill": "$control-line",
+              "fill": "$border",
               "width": "fill_container",
               "height": 1
             },

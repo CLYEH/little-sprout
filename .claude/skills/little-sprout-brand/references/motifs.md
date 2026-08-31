@@ -33,7 +33,7 @@
 
 畫面若有**貫穿全狀態的單一主 CTA**（`$accent` 實心，每畫面限一次）且**內容量會隨狀態變動**（載入中／已產生／AX3 等），主 CTA 改用「釘底動作帶」，不要讓 CTA 座標由上方內容累加決定。
 
-- **結構**：畫面根 frame 維持 Chrome → 內容區 → Home Indicator Area 三段，中間插入第四段 **Action Bar**（內容區之後、Home Indicator Area 之前）：Action Bar＝1pt `$control-line` 頂部 hairline ＋ Button Wrap（padding `[$sp-item, $screen-pad, $sp-item, $screen-pad]`＝16/24/16/24，fill `$surface`）包住主 CTA。原本與 CTA 同框的次要文案（到期日／必讀條款／次要按鈕）留在內容區，排在角色列／內容之後、CTA 之前——**閱讀順序條款永遠先於 CTA**，CTA 永遠可見不需要理由。
+- **結構**：畫面根 frame 維持 Chrome → 內容區 → Home Indicator Area 三段，中間插入第四段 **Action Bar**（內容區之後、Home Indicator Area 之前）：Action Bar＝1pt `$border` 頂部 hairline（純裝飾分組線，與全稿其他 18 條 1pt 分隔線同一 token；**不要用 `$control-line`**——那個 token 保留給輸入框／外框鈕等有意義的邊界，R7-M1 曾誤用又被同批 commit 自己的 Q2 改動打臉）＋ Button Wrap（padding `[$sp-item, $screen-pad, $sp-item, $screen-pad]`＝16/24/16/24，fill `$surface`）包住主 CTA。原本與 CTA 同框的次要文案中，**真正必須在按下 CTA 前讀到的那一行**（例如到期日／名額這類「有效幾天／還可以用幾次」的數字，brand 規則 6 要求 ≥17 且要讀得到）跟著搬進 Button Wrap、疊在 CTA 之上（`$fs-note`／`$text-secondary`，與 CTA 間距 `$sp-label` 8）——這樣它永遠在首屏內，不受內容區長度影響；語意與別處重複的次要條款（例如已在畫面標題／副標講過的政策句）直接精簡或刪除，不要因為「反正有地方放」就把兩句都留著讓首屏被摺線吃掉。
 - **安全區**：Action Bar 不吸收 home indicator 安全區，Home Indicator Area（34pt）仍是獨立的最後一段。CTA 底緣到裝置實體底緣＝ Button Wrap padding-bottom（16）＋ Home Indicator Area（34）＝**50pt 定值**，與內容區長度無關——這是本慣例要保證的不變式，換掉哪一段內容都不该改變這個數字。
 - **與捲動內容的關係**：內容區維持可捲動；Action Bar 對應實作端 `.safeAreaInset(edge:.bottom)` 釘在 ScrollView 外，不要把 CTA 塞進 ScrollView 內容裡。
 - **不適用**：內容恆定、不隨狀態變動的一次性表單（06 碼輸入家族既有的 Upper／Footer flex-spacer 慣例——單一 fixed-height 畫面＋`height:fill_container` spacer 把 Footer 頂到底）不需要改用本慣例，兩者是因應不同前提的兩套解法。
