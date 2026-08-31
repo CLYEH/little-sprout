@@ -487,11 +487,11 @@
 				};
 			};
 			buildConfigurationList = 704A5E765DFC6DD74D9C2202 /* Build configuration list for PBXProject "LittleSprout" */;
-			developmentRegion = en;
+			developmentRegion = "zh-Hant";
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
-				en,
+				"zh-Hant",
 			);
 			mainGroup = 2EAF9B3EA49C21C14C5F57EE;
 			minimizedProjectReferenceProxies = 1;
