@@ -122,6 +122,14 @@ done
 exit 0
 STUB
 chmod +x "$work/bin/xcodebuild"
+# ⑯～⑳（LS-76）：真的加了 .swift 檔到 $R 之後 step 1 的 `git ls-files '*.swift'` 不再是空的，會走到
+# 「有 Swift 檔」分支——stub 掉 swiftlint（PATH 前置，蓋過本機真的 swiftlint），不依賴 rules job（ubuntu）
+# 是否裝了 swiftlint，也不對這個合成的假 repo 真的跑 lint。
+cat > "$work/bin/swiftlint" <<'STUB'
+#!/bin/bash
+exit "${STUB_SWIFTLINT_RC:-0}"
+STUB
+chmod +x "$work/bin/swiftlint"
 
 db="$work/devices.db"
 printf '%s\t%s\n%s\t%s\n%s\t%s\n' \
@@ -534,6 +542,191 @@ else
   fail=1
 fi
 
+
+# ---- ⑯～㉑（LS-76）：本分支相對 target 無 Swift／專案檔變更 → 跳過 SwiftLint／unit tests 兩步；有
+#        Swift／`.swiftlint.yml`／`Config/*.xcconfig`／`.xcode-version` 變更 → 兩步照跑；target ref 未
+#        fetch → 不跳過（安全預設，退回原行為，不是新的失敗模式）。⑳／㉑（R1 F1／F2）：xcconfig 與
+#        .xcode-version 是 R1 review 抓到的 allowlist 缺口——xcconfig 是 project.yml configFiles 指向的
+#        live build-config（LS-49：格式錯會啟動崩潰），內容不寫進 pbxproj，改前不會命中任何既有 pattern。
+#        沿用 $R（已有 Fake.xcodeproj／.xcode-version／stub bin）——①～⑮ 全程跑在
+#        $R 的 main 分支，落在新邏輯的排除清單（main/test/development/DETACHED）內，skip_swift_steps
+#        恆為 0，這就是為什麼那十五組案例完全不必為了本票修改就能繼續通過（見 push-gate.sh 0b 節的排除
+#        清單）；本節案例切到 feature／hotfix 分支，會第一次讓 push-gate.sh 走到第 6／7 步
+#        （branch-ticket-check.sh／merge-conflict-check.sh，非保護分支一律要跑）——這兩支各自有專屬
+#        自測（branch-ticket-check.test.sh／merge-conflict-check.test.sh），這裡不重覆驗證它們的行為，
+#        比照本檔案對 detect-simulator.sh 的既有作法，換成無條件放行的假身，只隔離驗證本票新增的
+#        skip_swift_steps 邏輯。先加一個「基準」Swift 檔到 origin/development，讓 git ls-files 探得到
+#        Swift 檔（觸發 SwiftLint 步驟的外層判斷），但這個基準檔本身不在任何一個案例分支「相對
+#        origin/development 的 diff」裡（早就在 target 裡了），不影響各案例的跳過判定 ----
+cat > "$R/scripts/gates/branch-ticket-check.sh" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+chmod +x "$R/scripts/gates/branch-ticket-check.sh"
+cat > "$R/scripts/gates/merge-conflict-check.sh" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+chmod +x "$R/scripts/gates/merge-conflict-check.sh"
+mkdir -p "$R/LittleSprout"
+echo 'struct Baseline {}' > "$R/LittleSprout/Baseline.swift"
+g add LittleSprout/Baseline.swift
+g commit -qm 'chore: LS-0 baseline swift for ls-files probe'
+g update-ref refs/remotes/origin/development HEAD
+
+# ⑯ feature 分支只改文件（docs/foo.md）→ SwiftLint／unit tests 兩步都印跳過訊息，且完全不呼叫模擬器
+#    （驗收：純文件 PR 在 30 秒內完成——不進 xcodebuild 分支就不會被模擬器啟動 flake 拖住）
+: > "$SHUTDOWN_LOG"
+g checkout -q -b feature/LS-76-docs-only origin/development
+mkdir -p "$R/docs"; echo doc > "$R/docs/foo.md"; g add docs/foo.md; g commit -qm 'docs: LS-76 demo'
+out16=$(run_gate STUB_TEST_RC=0)
+if printf '%s' "$out16" | grep -qF '無 Swift 變更，跳過 SwiftLint' && printf '%s' "$out16" | grep -qF '無 Swift 變更，跳過 unit tests'; then
+  echo "✓ ⑯ 只改文件（相對 origin/development）→ SwiftLint／unit tests 兩步都印出跳過訊息"
+else
+  echo "✗ ⑯ 只改文件時沒有印出兩步的跳過訊息" >&2
+  printf '%s\n' "$out16" | sed 's/^/    /' >&2
+  fail=1
+fi
+if [ ! -s "$SHUTDOWN_LOG" ]; then
+  echo "✓ ⑯ 只改文件 → 完全沒有模擬器 shutdown 呼叫（沒有進 xcodebuild test 分支）"
+else
+  echo "✗ ⑯ 只改文件卻仍呼叫了模擬器 shutdown（不該進 xcodebuild 分支）" >&2
+  fail=1
+fi
+
+# ⑰ 同一分支再改一個 Swift 檔（LittleSprout/Foo.swift）→ 兩步都照跑（不印跳過訊息，真的執行 unit
+#    tests、模擬器有 shutdown）——驗「含 Swift 變更的 PR 行為不變」
+: > "$SHUTDOWN_LOG"
+mkdir -p "$R/LittleSprout"; echo 'struct Foo {}' > "$R/LittleSprout/Foo.swift"; g add LittleSprout/Foo.swift; g commit -qm 'feat: LS-76 demo swift'
+out17=$(run_gate STUB_TEST_RC=0)
+if printf '%s' "$out17" | grep -qF '無 Swift 變更'; then
+  echo "✗ ⑰ 改了 Swift 檔卻仍被判定跳過" >&2
+  printf '%s\n' "$out17" | sed 's/^/    /' >&2
+  fail=1
+else
+  echo "✓ ⑰ 改 Swift 檔 → 不印跳過訊息"
+fi
+if printf '%s' "$out17" | grep -qF '執行 unit tests' && grep -qF "shutdown ${ded_udid}" "$SHUTDOWN_LOG"; then
+  echo "✓ ⑰ 改 Swift 檔 → unit tests 正常照跑（真的執行、模擬器有 shutdown，行為與改動前一致）"
+else
+  echo "✗ ⑰ 改 Swift 檔時 unit tests 沒有正常執行" >&2
+  printf '%s\n' "$out17" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ⑱ 只改 .swiftlint.yml（非 .swift 檔本身）→ 仍判定為「有變更」，不跳過（regex 命中 .swiftlint.yml 分支，
+#    獨立乾淨分支，不與 ⑰ 的 Foo.swift 糾纏）
+g checkout -q -b feature/LS-76-lintcfg origin/development
+printf 'disabled_rules: []\n' > "$R/.swiftlint.yml"
+g add .swiftlint.yml; g commit -qm 'chore: LS-76 demo swiftlint yml'
+out18=$(run_gate STUB_TEST_RC=0)
+if printf '%s' "$out18" | grep -qF '無 Swift 變更'; then
+  echo "✗ ⑱ 只改 .swiftlint.yml 卻仍被判定跳過" >&2
+  printf '%s\n' "$out18" | sed 's/^/    /' >&2
+  fail=1
+else
+  echo "✓ ⑱ 只改 .swiftlint.yml（非 .swift 檔）→ 仍判定為有變更，不跳過"
+fi
+
+# ⑲ target ref 未 fetch（origin/development 被刪除，模擬本機還沒 fetch 過）→ 不跳過，退回原行為
+#    （安全預設：抓不到 target 就不省這步，不是新的失敗模式）
+g checkout -q -b feature/LS-76-noref origin/development
+mkdir -p "$R/docs"; echo doc > "$R/docs/bar.md"; g add docs/bar.md; g commit -qm 'docs: LS-76 demo no ref'
+g update-ref -d refs/remotes/origin/development
+: > "$SHUTDOWN_LOG"
+out19=$(run_gate STUB_TEST_RC=0)
+if printf '%s' "$out19" | grep -qF '無 Swift 變更'; then
+  echo "✗ ⑲ target ref 不存在時不應跳過，卻印出了跳過訊息" >&2
+  printf '%s\n' "$out19" | sed 's/^/    /' >&2
+  fail=1
+else
+  echo "✓ ⑲ origin/development 不存在（未 fetch）→ 不跳過，退回原行為（安全預設）"
+fi
+g update-ref refs/remotes/origin/development HEAD   # 還原，避免影響後面若有更多案例
+
+# ⑳ R1 F1（major）：只改 Config/Base.xcconfig（非 .swift／.xcodeproj／project.yml）→ 仍判定為「有變更」，
+#    不跳過——這是 project.yml 的 configFiles 指向的 live build-config（注入 SUPABASE_URL／ANON_KEY，
+#    LS-49：格式錯會啟動崩潰），xcconfig 內容不寫進 pbxproj，改前（R1 review 當下）不會命中任何既有
+#    pattern，是本票 R1 才補上的 allowlist 缺口
+g checkout -q -b feature/LS-76-xcconfig origin/development
+: > "$SHUTDOWN_LOG"
+mkdir -p "$R/Config"; printf 'SUPABASE_URL = https://example.test\n' > "$R/Config/Base.xcconfig"
+g add Config/Base.xcconfig; g commit -qm 'chore: LS-76 demo xcconfig'
+out20=$(run_gate STUB_TEST_RC=0)
+if printf '%s' "$out20" | grep -qF '無 Swift 變更'; then
+  echo "✗ ⑳ 只改 Config/Base.xcconfig 卻仍被判定跳過（R1 F1 的回歸：live build-config 誤跳本機 build/test）" >&2
+  printf '%s\n' "$out20" | sed 's/^/    /' >&2
+  fail=1
+else
+  echo "✓ ⑳ 只改 Config/Base.xcconfig（非 .swift／.xcodeproj／project.yml）→ 仍判定為有變更，不跳過（R1 F1）"
+fi
+if printf '%s' "$out20" | grep -qF '執行 unit tests' && grep -qF "shutdown ${ded_udid}" "$SHUTDOWN_LOG"; then
+  echo "✓ ⑳ 只改 xcconfig → unit tests 真的照跑（不是只印訊息，模擬器有 shutdown）"
+else
+  echo "✗ ⑳ 只改 xcconfig 時 unit tests 沒有正常執行" >&2
+  printf '%s\n' "$out20" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ㉑ R1 F2（minor）：只改 .xcode-version（bump Xcode pin）→ 同理仍判定為有變更，不跳過（連帶不會誤跳
+#    1b 工具鏈對齊步）
+g checkout -q -b feature/LS-76-xcodeversion origin/development
+printf '100.0\n' > "$R/.xcode-version"
+g add .xcode-version; g commit -qm 'chore: LS-76 demo xcode-version bump'
+out21=$(run_gate STUB_TEST_RC=0)
+printf '99.9\n' > "$R/.xcode-version"   # 還原（setup 建立的版本；未 commit，run_gate 用的是 working tree 內容）
+if printf '%s' "$out21" | grep -qF '無 Swift 變更'; then
+  echo "✗ ㉑ 只改 .xcode-version 卻仍被判定跳過（R1 F2 的回歸：連帶誤跳 1b 工具鏈對齊）" >&2
+  printf '%s\n' "$out21" | sed 's/^/    /' >&2
+  fail=1
+else
+  echo "✓ ㉑ 只改 .xcode-version（非 .swift／.xcodeproj／project.yml）→ 仍判定為有變更，不跳過（R1 F2）"
+fi
+
+# ---- ㉒（LS-76）：hotfix/* 分支的 target 是 origin/main，不是 origin/development（方向矩陣須與第
+#        5／7 步一致）。獨立小 repo：origin/main 落後（僅純文件狀態）、origin/development 領先一個
+#        Swift 變更（模擬 development 已經合併別票）；hotfix 分支從 origin/development 切出、只再加一個
+#        文件變更——若誤用 origin/development 當 target，會判定「無 Swift 變更」而跳過；用正確的
+#        origin/main 才會判定「有 Swift 變更」（Bar.swift 相對 main 是新增）而不跳過。用 push-gate.sh 既有
+#        「尚未建立 Xcode 專案」訊息（此 repo 沒有 xcodeproj）與 LS-76 的「無 Swift 變更，跳過」訊息互斥，
+#        精準區分兩種路徑 ----
+hf_root="$work/hotfix-target"
+mkdir -p "$hf_root/scripts/gates"
+git -C "$hf_root" init -q -b main
+gh_() { git -C "$hf_root" -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
+echo a > "$hf_root/f.txt"; gh_ add -A; gh_ commit -qm 'chore: LS-0 seed'
+cp "$gate_src" "$hf_root/scripts/gates/push-gate.sh"
+cp "${root}/scripts/gates/push-ref-check.sh" "$hf_root/scripts/gates/push-ref-check.sh"
+cat > "$hf_root/scripts/gates/branch-ticket-check.sh" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+chmod +x "$hf_root/scripts/gates/branch-ticket-check.sh"
+cat > "$hf_root/scripts/gates/merge-conflict-check.sh" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+chmod +x "$hf_root/scripts/gates/merge-conflict-check.sh"
+gh_ update-ref refs/remotes/origin/main HEAD
+gh_ checkout -q -b development
+mkdir -p "$hf_root/LittleSprout"; echo 'struct Bar {}' > "$hf_root/LittleSprout/Bar.swift"
+gh_ add LittleSprout/Bar.swift; gh_ commit -qm 'feat: LS-77 demo swift on development'
+gh_ update-ref refs/remotes/origin/development HEAD
+gh_ checkout -q -b hotfix/LS-76-demo
+mkdir -p "$hf_root/docs"; echo doc > "$hf_root/docs/hotfix.md"
+gh_ add docs/hotfix.md; gh_ commit -qm 'docs: LS-76 hotfix demo'
+out22=$( cd "$hf_root" && env PATH="$work/bin:$PATH" bash scripts/gates/push-gate.sh </dev/null 2>&1 ); rc22=$?
+if printf '%s' "$out22" | grep -qF '無 Swift 變更，跳過 unit tests'; then
+  echo "✗ ㉒ hotfix 分支被誤判「無 Swift 變更」——方向矩陣可能誤用了 origin/development 當 target" >&2
+  printf '%s\n' "$out22" | sed 's/^/    /' >&2
+  fail=1
+elif printf '%s' "$out22" | grep -qF '尚未建立 Xcode 專案，跳過 unit tests'; then
+  echo "✓ ㉒ hotfix/* 分支的 target 正確地是 origin/main（不是 origin/development）：相對 main 判定為有 Swift 變更（Bar.swift 是 development 已領先的內容），不誤判跳過"
+else
+  echo "✗ ㉒ 預期看到「尚未建立 Xcode 專案」訊息（本 synth repo 沒有 xcodeproj），實際輸出不符（exit ${rc22}）" >&2
+  printf '%s\n' "$out22" | sed 's/^/    /' >&2
+  fail=1
+fi
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ push-gate 模擬器自測通過"
