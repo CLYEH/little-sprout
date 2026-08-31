@@ -3790,7 +3790,7 @@
       "name": "LS-18 / 07a 邀請家人 · 尚未產生（空狀態）",
       "clip": true,
       "width": 393,
-      "height": 1031,
+      "height": 966,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -3857,7 +3857,7 @@
           "id": "p5m28",
           "name": "Body",
           "width": "fill_container",
-          "height": 891,
+          "height": 826,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -3917,7 +3917,7 @@
                   "id": "yYF9A",
                   "name": "Print Stage",
                   "width": "fill_container",
-                  "height": 210,
+                  "height": 198,
                   "layout": "none",
                   "children": [
                     {
@@ -3927,7 +3927,7 @@
                       "y": 0,
                       "name": "Sample Print",
                       "width": 345,
-                      "height": 210,
+                      "height": 198,
                       "fill": [
                         "$print-paper",
                         {
@@ -4058,7 +4058,7 @@
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
-                          "height": 194,
+                          "height": 182,
                           "layout": "none",
                           "children": [
                             {
@@ -4084,7 +4084,7 @@
                               "name": "Night Dim",
                               "fill": "$photo-dim",
                               "width": 329,
-                              "height": 194
+                              "height": 182
                             }
                           ]
                         }
@@ -4128,7 +4128,7 @@
                       "ref": "GEBcf",
                       "name": "Corner BL",
                       "x": -5,
-                      "y": 189,
+                      "y": 177,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -4144,7 +4144,7 @@
                       "ref": "GEBcf",
                       "name": "Corner BR",
                       "x": 324,
-                      "y": 189,
+                      "y": 177,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -4201,7 +4201,7 @@
               "width": "fill_container",
               "layout": "vertical",
               "padding": [
-                "$sp-section",
+                "$sp-block",
                 0,
                 0,
                 0
@@ -28057,7 +28057,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "04 三岔路：主次已反轉。「我有邀請碼」＝含照片的主大卡（沖印品 319×238 ＋ 文字 ＋ accent 動作條 60pt），整張卡可點；「我要自己建立家庭」＝底部一條列。【R4】卡上的照片是真沖印品（8pt 白邊 ＋ paper-edge），因此依角托規則第①段補成四顆角托（R3 只有上兩顆），池 .494/.288/.36/.236（LS-107 R1 I2：與 frame RxXvq/ppXvK 目前的實際值對齊，改前 Notes 誤植 .438/.287/.335/.232）。【LS-111 R2 附註】對 ppXvK 的板內座標套 mount-pool 的 lit() 公式重算，理論值應為 .434/.279/.327/.221——與現行 .494/.288/.36/.236 最大差 0.06（TL），研判是從 01 複製時沿用了 01 的池值、位置變了但沒有重算（01 本身 .494/.288 兩角也命中公式、另兩角不命中，同一款舊佈局殘值）。frame 本身是否重算不在 LS-111 範圍內（scope 限 07 家族＋Handoff Notes），本條只如實記錄兩個數字的落差與可能成因，不逕自動 ppXvK；是否修正 frame 請 orchestrator 另開票裁決。",
+                  "content": "04 三岔路：主次已反轉。「我有邀請碼」＝含照片的主大卡（沖印品 319×238 ＋ 文字 ＋ accent 動作條 60pt），整張卡可點；「我要自己建立家庭」＝底部一條列。【R4】卡上的照片是真沖印品（8pt 白邊 ＋ paper-edge），因此依角托規則第①段補成四顆角托（R3 只有上兩顆）。【LS-111 R2 附註，2026-08-26；待裁決】frame RxXvq/ppXvK 的染料池數值是否需要重算尚待裁決——對 ppXvK 板內座標套 mount-pool 的 lit() 公式計算，理論值為 .434/.279/.327/.221，與現行池值 .494/.288/.36/.236 最大差 0.06（TL）；研判成因是從 01 複製時沿用了 01 的池值、位置變了但未重算（01 本身兩角命中公式、另兩角不命中，同一款舊佈局殘值）。frame 本身是否重算不在 LS-111 範圍內（scope 限 07 家族＋Handoff Notes），本條只如實記錄落差與可能成因，不逕自動 ppXvK；追蹤於 LS-96（harness 待辦池，2026-08-31 已記錄該筆 comment，size:S，無觸發事故）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -50086,7 +50086,7 @@
           "name": "Role Icon",
           "width": 22,
           "height": 22,
-          "icon": "circle",
+          "icon": "eye",
           "library": "lucide",
           "fill": "$text-secondary"
         },
@@ -50122,6 +50122,19 @@
               "fontWeight": "normal"
             }
           ]
+        },
+        {
+          "type": "icon",
+          "id": "uHUe1",
+          "layoutPosition": "absolute",
+          "x": 307,
+          "y": 16,
+          "name": "Role Check",
+          "width": 22,
+          "height": 22,
+          "icon": "check",
+          "library": "lucide",
+          "fill": "#00000000"
         }
       ]
     },
@@ -50136,16 +50149,6 @@
       "layout": "vertical",
       "gap": "$sp-label",
       "children": [
-        {
-          "type": "text",
-          "id": "UC7U7",
-          "name": "Role Section Label",
-          "fill": "$text-primary",
-          "content": "邀請身份",
-          "fontFamily": "$font",
-          "fontSize": "$fs-body",
-          "fontWeight": "700"
-        },
         {
           "type": "frame",
           "id": "n6JtDU",
@@ -50169,14 +50172,18 @@
               "fill": "$accent-soft",
               "descendants": {
                 "j6ZNWo": {
-                  "icon": "circle-check",
+                  "icon": "pencil",
                   "fill": "$text-primary"
                 },
                 "vL7kl": {
-                  "content": "一般成員"
+                  "content": "一般成員",
+                  "fontWeight": "700"
                 },
                 "zWpl1": {
                   "content": "可以發文、留言，也能上傳照片。"
+                },
+                "uHUe1": {
+                  "fill": "$text-primary"
                 }
               }
             },
@@ -50184,7 +50191,7 @@
               "type": "rectangle",
               "id": "MACIr",
               "name": "Role Divider",
-              "fill": "$border",
+              "fill": "$control-line",
               "width": "fill_container",
               "height": 1
             },
@@ -50215,13 +50222,11 @@
       "name": "cmp/Role Status",
       "reusable": true,
       "width": 345,
-      "fill": "$surface",
+      "fill": "#00000000",
       "cornerRadius": "$radius-lg",
-      "stroke": "$control-line",
-      "strokeWidth": 1,
+      "stroke": "#00000000",
       "gap": "$sp-item",
       "padding": "$sp-item",
-      "alignItems": "center",
       "children": [
         {
           "type": "icon",
@@ -50229,7 +50234,7 @@
           "name": "Role Status Icon",
           "width": 22,
           "height": 22,
-          "icon": "lock",
+          "icon": "pencil",
           "library": "lucide",
           "fill": "$text-primary"
         },
@@ -50280,7 +50285,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1031,
+      "height": 966,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -50347,7 +50352,7 @@
           "id": "gDyjM",
           "name": "Body",
           "width": "fill_container",
-          "height": 891,
+          "height": 826,
           "layout": "vertical",
           "padding": [
             "$sp-block",
@@ -50407,7 +50412,7 @@
                   "id": "Q76hZ",
                   "name": "Print Stage",
                   "width": "fill_container",
-                  "height": 210,
+                  "height": 198,
                   "layout": "none",
                   "children": [
                     {
@@ -50417,7 +50422,7 @@
                       "y": 0,
                       "name": "Sample Print",
                       "width": 345,
-                      "height": 210,
+                      "height": 198,
                       "fill": [
                         "$print-paper",
                         {
@@ -50548,7 +50553,7 @@
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
-                          "height": 194,
+                          "height": 182,
                           "layout": "none",
                           "children": [
                             {
@@ -50574,7 +50579,7 @@
                               "name": "Night Dim",
                               "fill": "$photo-dim",
                               "width": 329,
-                              "height": 194
+                              "height": 182
                             }
                           ]
                         }
@@ -50618,7 +50623,7 @@
                       "ref": "GEBcf",
                       "name": "Corner BL",
                       "x": -5,
-                      "y": 189,
+                      "y": 177,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M0 26 L0 0 L26 26 Z"
@@ -50634,7 +50639,7 @@
                       "ref": "GEBcf",
                       "name": "Corner BR",
                       "x": 324,
-                      "y": 189,
+                      "y": 177,
                       "descendants": {
                         "sD5Ma": {
                           "geometry": "M26 26 L26 0 L0 26 Z"
@@ -50691,7 +50696,7 @@
               "width": "fill_container",
               "layout": "vertical",
               "padding": [
-                "$sp-section",
+                "$sp-block",
                 0,
                 0,
                 0
