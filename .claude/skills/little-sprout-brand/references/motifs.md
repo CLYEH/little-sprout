@@ -23,6 +23,22 @@
 - 角托是四方位變體（TL／TR／BL／BR），**禁用 flipX／flipY**（Pencil 渲染錯位）。摺光 `$corner-fold` 光源一律左上。
 - 深色紙條（01c）：上兩顆角托壓在紙條與相紙接縫上，把兩張紙釘成一個物件。
 
+### 紙面基底可以借給非照片元件，角托不行（LS-111 R6）
+
+零角托不等於「不能用紙」。`$print-paper`＋白邊／陰影語彙可以借給**非照片、非邀請碼的持久性設定列**，只要那個元件不是「會過期的東西」：07 邀請家人角色選擇列（`cmp/Role Section`）容器改用 `$print-paper`＋`$paper-edge` 1pt 描邊＋`$paper-shadow` outer shadow，但**不加角托**——角托的稀缺性只留給①段的家人照片，借去給設定列會稀釋規則本身。判準：這個元件是「你會再點開看一次的收藏」還是「你設定一次就忘記的清單」？前者才有資格談角托，後者只能借紙面與白邊。
+
+紙面上的文字一律換成「紙上墨」`$print-ink`／`$print-ink-secondary`（不掛 theme），但**只限直接躺在裸紙上的內容**——若該元件內某些子區塊疊了另一層 theme-aware 底色（例如選中列疊 `$accent-soft`），那個子區塊要維持 `$text-primary`／`$text-secondary`，不要跟著換成 print-ink：深色模式下 print-ink 恆暗、`$accent-soft` 深色也恆暗，兩個「恆暗」疊在一起就是暗上暗看不見。一個容器裡可以同時存在「裸紙用 print-ink」與「疊色用 text-primary」兩種文字，這不是不一致，是兩種底色各自的正確配色。
+
+## 釘底動作帶 Action Bar（LS-111 R6 起，全 app 版式慣例）
+
+畫面若有**貫穿全狀態的單一主 CTA**（`$accent` 實心，每畫面限一次）且**內容量會隨狀態變動**（載入中／已產生／AX3 等），主 CTA 改用「釘底動作帶」，不要讓 CTA 座標由上方內容累加決定。
+
+- **結構**：畫面根 frame 維持 Chrome → 內容區 → Home Indicator Area 三段，中間插入第四段 **Action Bar**（內容區之後、Home Indicator Area 之前）：Action Bar＝1pt `$control-line` 頂部 hairline ＋ Button Wrap（padding `[$sp-item, $screen-pad, $sp-item, $screen-pad]`＝16/24/16/24，fill `$surface`）包住主 CTA。原本與 CTA 同框的次要文案（到期日／必讀條款／次要按鈕）留在內容區，排在角色列／內容之後、CTA 之前——**閱讀順序條款永遠先於 CTA**，CTA 永遠可見不需要理由。
+- **安全區**：Action Bar 不吸收 home indicator 安全區，Home Indicator Area（34pt）仍是獨立的最後一段。CTA 底緣到裝置實體底緣＝ Button Wrap padding-bottom（16）＋ Home Indicator Area（34）＝**50pt 定值**，與內容區長度無關——這是本慣例要保證的不變式，換掉哪一段內容都不该改變這個數字。
+- **與捲動內容的關係**：內容區維持可捲動；Action Bar 對應實作端 `.safeAreaInset(edge:.bottom)` 釘在 ScrollView 外，不要把 CTA 塞進 ScrollView 內容裡。
+- **不適用**：內容恆定、不隨狀態變動的一次性表單（06 碼輸入家族既有的 Upper／Footer flex-spacer 慣例——單一 fixed-height 畫面＋`height:fill_container` spacer 把 Footer 頂到底）不需要改用本慣例，兩者是因應不同前提的兩套解法。
+- **Pencil 實作陷阱**：root frame 與內容區 frame 的 `height` 常是硬寫數字（不是 `fit_content`），改動子內容後必須手動重算並更新這兩層的 `height`，否則 `clip:true` 會靜默裁掉超出宣告高度的 Action Bar／Home Indicator Area 而毫無報錯。
+
 ## 染料池 mount-pool
 
 - 每顆角托一顆，R＝角托邊長×3，opacity＝0.03＋0.50×lit(角座標)；lit 以 viewport 座標算（窗光在 55,17，橢圓 668×1150）。池深＝那個角的光強度——規則自己執行自己。
