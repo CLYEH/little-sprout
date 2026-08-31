@@ -296,6 +296,10 @@ if [ -d supabase/migrations ]; then
       #     順序都未定義，分級沒有意義。對 base 當前 tip 比、不是 merge-base（撞號正是別張票先併進去）；
       #     CI Migration rules step 對 origin/$BASE 再驗一次（伺服器端兜底）。
       bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-version-check.sh" --target "$base_ref"
+      # 4c) 已併入 base 的 migration 檔不可變（LS-80）：擋在分級之前——已被悄悄改掉內容的檔，分級／覆寫
+      #     判斷都沒有意義。本機沒有 PR body 可驗，只驗 commit body 的逃生口宣告；CI Migration rules
+      #     step 另外對 PR body 再驗一次（伺服器端兜底，逃生口使用必須在 PR 可見）。
+      bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-immutable-check.sh" --base "$base_ref"
       base_sha=$(git merge-base "$base_ref" HEAD)
       findings=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-breaking-check.sh" --base "$base_sha")
       if printf '%s\n' "$findings" | grep -q '^DESTRUCTIVE'; then
