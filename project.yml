@@ -12,6 +12,10 @@ options:
   deploymentTarget:
     iOS: "17.0"
   createIntermediateGroups: true
+  # LS-112：app 全文案寫死繁中，宣告 zh-Hant 為唯一開發語言，讓 Apple 官方
+  # SignInWithAppleButton（文字由系統依 app 宣告的 localization 決定，無法自訂）
+  # 也渲染中文，與自畫的 Google／Email 鈕一致。刻意不加 en：見 LS-112 票文。
+  developmentLanguage: zh-Hant
 
 # LS-49：supabase-swift 版本鎖死（exactVersion，非 from:）——CI runner 的 Xcode 版本不可控，
 # 選這個版本是因為它是 swift-tools-version:5.10（相容範圍比新版要求的 6.1 寬，降低 CI 解析失敗
