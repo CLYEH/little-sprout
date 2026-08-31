@@ -179,15 +179,12 @@ struct InviteFamilyView: View {
                     .appFont(.meta, weight: .bold)
                     .tracking(2)
                     .foregroundStyle(Color.lsTextSecondary)
-                HStack(spacing: AppSpacing.item) {
-                    Text(codeFirstHalf(invite.code))
-                    Text(codeSecondHalf(invite.code))
-                }
-                .appNumericFont(.code, weight: .bold)
-                .tracking(4)
-                .foregroundStyle(Color.lsTextPrimary)
-                // LS-107 QA1 fail①（QA `a37fb964`）：寬字母碼在 AX3 超出半版寬會逐字硬斷行；下一行不斷行且放不下時縮字級。
-                .lineLimit(1).minimumScaleFactor(0.5)
+                // LS-107 R1 M1（`4b6ee413`）：雙 `Text` 各自縮放不同步（實測差 6.8%），改單一 `Text`。
+                Text(formattedCode(invite.code))
+                    .appNumericFont(.code, weight: .bold)
+                    .tracking(4)
+                    .foregroundStyle(Color.lsTextPrimary)
+                    .lineLimit(1).minimumScaleFactor(0.5)
                 HStack(spacing: AppSpacing.label) {
                     Pill(icon: "calendar", text: "\(formattedExpiry(invite.expiresAt)) 到期")
                     // R1 F4：過去這裡直接顯示 maxUses，永遠不會反映真的用掉幾次；
@@ -384,6 +381,10 @@ extension InviteFamilyView {
 
     private func codeSecondHalf(_ code: String) -> String {
         String(code.suffix(max(0, code.count - 3)))
+    }
+
+    private func formattedCode(_ code: String) -> String {
+        "\(codeFirstHalf(code))\u{2002}\(codeSecondHalf(code))"
     }
 
     private func formattedExpiry(_ date: Date) -> String {

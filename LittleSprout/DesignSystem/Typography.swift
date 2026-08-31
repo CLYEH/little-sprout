@@ -51,6 +51,11 @@ enum AppFontToken {
     /// `design/littlesprout.pen` variables 明確給了兩檔——`fs-code` default 60／AX3 72，
     /// 刻意只讓它長 1.2×，不是照系統曲線外插。72pt 是這個 token 的硬上限；`nil` 表示沿用
     /// 系統 Dynamic Type 曲線，不設上限（其餘 token 都不需要，包含只差 6% 的 `.otp`）。
+    ///
+    /// R1 M1/N1（merge-review `4b6ee413`）：72pt 是硬上限，**不是保證值**——call site
+    /// （`InviteFamilyView`）疊加 `.minimumScaleFactor` 兜底寬字母碼溢出，AX3 實測寬碼會被
+    /// 縮到 72pt 以下（甚至低於一般字級 60pt）；稿面取捨已交 LS-111 對帳，這裡只提醒別把
+    /// 72pt 當成邀請碼在 AX3 一定拿到的字級。
     var maxScaledSize: CGFloat? {
         switch self {
         case .code: 72
