@@ -6,8 +6,6 @@ import XCTest
 /// 這份純值型別，才能在沒有 ViewInspector 的情況下單元測試釘住「查詢中／查詢失敗都不能顯示
 /// 可按的產生鈕」這條核心防線（同 `AuthButtonsState`／`AuthButtonsStateTests` 的理由）。
 final class InvitePhaseTests: XCTestCase {
-    private let familyID = UUID(uuidString: "33333333-3333-3333-3333-333333333333")!
-
     private func makeInvite(code: String = "K7M2FD") -> GeneratedInvite {
         GeneratedInvite(
             id: UUID(),
@@ -46,23 +44,20 @@ final class InvitePhaseTests: XCTestCase {
     func test_lookupSubmitting_noLatestInvite_isCheckingExisting_notEmpty() {
         let phase = InvitePhase(lookupInviteState: .submitting, createInviteState: .idle, latestInvite: nil)
 
-        XCTAssertEqual(phase, .checkingExisting)
-        XCTAssertFalse(phase.allowsGenerate, "查詢中不知道這個家庭有沒有既有碼，不能顯示可按的產生鈕")
+        XCTAssertEqual(phase, .checkingExisting, "查詢中不知道這個家庭有沒有既有碼，不能落回 .empty（會顯示可按的產生鈕）")
     }
 
     func test_lookupFailed_noLatestInvite_isLookupFailed_notEmpty() {
         let error = AppError.network(message: "offline")
         let phase = InvitePhase(lookupInviteState: .failure(error), createInviteState: .idle, latestInvite: nil)
 
-        XCTAssertEqual(phase, .lookupFailed(error))
-        XCTAssertFalse(phase.allowsGenerate, "查詢失敗一樣不知道有沒有既有碼，不能顯示可按的產生鈕，只能重試")
+        XCTAssertEqual(phase, .lookupFailed(error), "查詢失敗一樣不知道有沒有既有碼，不能落回 .empty，只能重試")
     }
 
-    func test_lookupSucceededWithNoInvite_isEmpty_allowsGenerate() {
+    func test_lookupSucceededWithNoInvite_isEmpty() {
         let phase = InvitePhase(lookupInviteState: .success, createInviteState: .idle, latestInvite: nil)
 
-        XCTAssertEqual(phase, .empty)
-        XCTAssertTrue(phase.allowsGenerate, "查詢成功且確定沒有既有碼，才是唯一允許產生的狀態")
+        XCTAssertEqual(phase, .empty, "查詢成功且確定沒有既有碼，才是唯一允許產生的狀態")
     }
 
     func test_lookupIdle_noLatestInvite_isEmpty() {
@@ -81,15 +76,5 @@ final class InvitePhaseTests: XCTestCase {
         XCTAssertFalse(InvitePhase.lookupFailed(.network(message: "offline")).showsDestructiveSection)
         XCTAssertTrue(InvitePhase.generating.showsDestructiveSection)
         XCTAssertTrue(InvitePhase.generated(makeInvite()).showsDestructiveSection)
-    }
-
-    // MARK: - allowsGenerate：只有 .empty
-
-    func test_allowsGenerate_onlyEmpty() {
-        XCTAssertTrue(InvitePhase.empty.allowsGenerate)
-        XCTAssertFalse(InvitePhase.checkingExisting.allowsGenerate)
-        XCTAssertFalse(InvitePhase.lookupFailed(.network(message: "offline")).allowsGenerate)
-        XCTAssertFalse(InvitePhase.generating.allowsGenerate)
-        XCTAssertFalse(InvitePhase.generated(makeInvite()).allowsGenerate)
     }
 }
