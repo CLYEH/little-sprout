@@ -524,6 +524,44 @@ brief18="$(SIMCTL_LIST_JSON="$locked_json" bash "$patrol" --repo "$repo" --no-pr
 has   '⑱ --brief 也印「鎖中」異常' "$brief18" '鎖中（push gate 進行中）——勿關'
 rm -rf "$lockdir"
 
+# ---- ⑲ --linear（LS-103）：串接 patrol-linear.sh；合成 repo 沒有 .env，所以只驗「有串接、優雅略過」，
+#        不驗 Linear 查詢邏輯本身（那是 patrol-linear.test.sh 的範圍）。--json 與 --linear 合併時只警告、
+#        不破壞 --json 單一物件的契約（stdout 仍是合法 JSON，warning 走 stderr）----
+out19="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --linear "$STALE" 2>&1)"
+has '⑲ --linear human 模式串接 patrol-linear.sh（無 .env → 印略過）' "$out19" '略過（無 LINEAR_API_KEY）'
+brief19="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief --linear "$STALE" 2>&1)"
+has '⑲ --linear --brief 也串接（略過訊息仍在）' "$brief19" '略過（無 LINEAR_API_KEY）'
+json19_err="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json --linear "$STALE" 2>&1 1>/dev/null)"
+has '⑲ --linear 與 --json 合併只警告（不支援合併）' "$json19_err" '不支援合併'
+json19_out="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json --linear "$STALE" 2>/dev/null)"
+if printf '%s' "$json19_out" | python3 -c 'import json,sys; json.load(sys.stdin)' 2>/dev/null; then
+  echo "✓ ⑲ --linear --json 的 stdout 仍是合法單一 JSON 物件"
+else
+  echo "✗ ⑲ --linear --json 的 stdout 不是合法 JSON" >&2; printf '%s\n' "$json19_out" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ⑳ R1 F6：patrol-linear.sh 非 0 exit 不可被吞——PATROL_LINEAR_SH 換一支假身模擬失敗，
+#        brief 摘要行不得再宣稱「無異常」，且 stdout 要看得到「Linear 半段失敗」----
+fake_plsh="$work/bin/fake-patrol-linear.sh"
+mkdir -p "$work/bin"
+cat > "$fake_plsh" <<'EOF'
+#!/bin/bash
+echo "模擬 Linear 段炸掉" >&2
+exit 7
+EOF
+chmod +x "$fake_plsh"
+out20="$(PATROL_LINEAR_SH="$fake_plsh" bash "$patrol" --repo "$repo" --no-pr --no-fetch --linear "$STALE" 2>&1)"
+has   '⑳ human 模式印出 Linear 半段失敗（exit 7）' "$out20" 'Linear 半段失敗（exit 7）'
+brief20="$(PATROL_LINEAR_SH="$fake_plsh" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief --linear "$STALE" 2>&1)"
+hasnt '⑳ --brief 不得再宣稱「巡檢：無異常」（Linear 段已失敗）' "$brief20" '巡檢：無異常'
+has   '⑳ --brief 摘要行含 [Linear] 段失敗 flag' "$brief20" '[Linear] 段失敗（exit 7）'
+json20_out="$(PATROL_LINEAR_SH="$fake_plsh" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json --linear "$STALE" 2>/dev/null)"
+if printf '%s' "$json20_out" | python3 -c 'import json,sys; json.load(sys.stdin)' 2>/dev/null; then
+  echo "✓ ⑳ --json（與 --linear 合併時）仍是合法 JSON——json 模式本就不跑 Linear 段，不受影響"
+else
+  echo "✗ ⑳ --json 不是合法 JSON" >&2; printf '%s\n' "$json20_out" | sed 's/^/    /' >&2; fail=1
+fi
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
 fi
