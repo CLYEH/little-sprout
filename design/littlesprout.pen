@@ -51465,16 +51465,24 @@
                   "name": "Role Section",
                   "width": "fill_container",
                   "descendants": {
+                    "X7DYDo/j6ZNWo": {
+                      "width": 40,
+                      "height": 40
+                    },
                     "X7DYDo/vL7kl": {
-                      "width": 235
+                      "width": 217
                     },
                     "X7DYDo/uHUe1": {
                       "width": 40,
                       "height": 40,
                       "x": 289
                     },
+                    "ZA8G7/j6ZNWo": {
+                      "width": 40,
+                      "height": 40
+                    },
                     "ZA8G7/vL7kl": {
-                      "width": 235
+                      "width": 217
                     },
                     "ZA8G7/uHUe1": {
                       "width": 40,
