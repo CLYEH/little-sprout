@@ -1,11 +1,18 @@
 #!/bin/bash
 # LS-91：Pen app 開檔路徑機械對帳。
 #
-# 背景（LS-81／LS-91 comment A 實測，pen CLI 0.3.4）：Pencil MCP 的 execute `filePath` 參數無效，所有編輯落在
-# Pen app 目前的 active document；pen CLI 連線模式的 `--in <file>` 在「不帶 --in 的後續呼叫」上不生效——本票
-# 復驗：`pen interactive --app desktop --in <file>` 確實會讓**那一次**呼叫的 get_app_state 回報 `<file>`，但這只是
-# 該次 CLI 連線的 session-local 覆寫，不影響 app 真正的 active document／不影響其後不帶 --in 的呼叫（含 Pencil
-# MCP）——不是真正的切檔手段。唯一機械可行的切檔方法仍是 `open -a Pen <path>`。本腳本：`open -a Pen` 切檔 →
+# 背景（LS-81／LS-91 comment A 實測，pen CLI 0.3.4；**LS-117 更新**——舊結論已過期，見下）：pen CLI 連線模式
+# 的 `--in <file>` 在「不帶 --in 的後續呼叫」上不生效——`pen interactive --app desktop --in <file>` 確實會讓
+# **那一次**呼叫的 get_app_state 回報 `<file>`，但這只是該次 CLI 連線的 session-local 覆寫，不影響 app 真正的
+# active document／不影響其後不帶 --in 的呼叫（含 Pencil MCP）——不是真正的切檔手段。唯一機械可行的切檔方法
+# 仍是 `open -a Pen <path>`。**LS-117**：Pencil MCP `execute`（及 `browser`）工具現行 schema 已把 `filePath`
+# 列為**必要參數**（`required: ["filePath"]`）——LS-81／LS-91 comment A 當時「execute 的 filePath 參數無效」
+# 的結論已過期，該參數現在確實用來指定要操作的 `.pen` 檔，供讀寫呼叫直接指定 worktree 檔、不必先搶下 active
+# document。本票僅以工具 schema 佐證這項變化（未對 live Pen app 實跑 execute 復驗——同一時段另有 UI agent
+# 在用 Pen，依規約不得為了復驗去動它；下次有安全空檔時應找機會補一次端對端驗證）。**這件事本身不取代
+# pen-open.sh**：filePath 目前解決的是「execute 操作哪個檔」，不是「Pen app 的 active/可見視窗切到哪個檔」——
+# QA／視覺審查這類唯讀查詢已可用 filePath 直接指定檔案，但 ui-designer 實際編輯設計稿、或任何需要使用者在
+# Pen app 視窗裡看到正確畫面的情境，仍要先用本腳本把 active document 切過去。本腳本：`open -a Pen` 切檔 →
 # 輪詢（總預算 ≤15s）用 `pen interactive --app desktop` 跑 `get_app_state()` 讀目前 active canvas editor 路徑 →
 # 與目標路徑比對；不一致時嘗試自動清場後重試一次（R2，見下）。
 #
@@ -32,6 +39,26 @@
 # `osascript -e 'tell application "Pen" to quit'`（優雅退出，給 4 秒）→ 還在就 `kill -TERM`（不用 SIGKILL）→
 # 總計等程序消失 ≤10 秒 → 重新 `open -a Pen` 並再跑一輪輪詢。任一份不安全／無法確認就完全不清場，印出提示
 # 「先 pen-land <root>」，exit 1。`--no-quit` 關掉整段自動清場，只做原本的對帳。
+#
+# LS-117（三個相關缺陷，同批修）：
+#   1. placeholder autosave 漂移擋切檔——主 checkout 每次被切走都會在 Pen 記憶體／backup 累積一個純
+#      `placeholder`（pen-dev skill 定義的「工作中」UI 態旗標，見 ui-designer 收工前開關）屬性變更的漂移，
+#      節點總數與 id 集合不變、且該檔對 git 全程 clean（漂移只在 Pen 記憶體，未進 git）。這類差異在
+#      `pen-land.sh --dry-run` 眼中曾被當成「有結構差異」直接判定不安全，即使沒有任何實質內容被捨棄，
+#      每次都要人工 SIGKILL 才能繼續派下一張設計票。修法：`pen-land.sh` 的 python 結構 diff 新增一個
+#      「僅白名單屬性差異」判定（見該檔），`check_root_safe()` 認得這個訊號，**加驗** `git status --porcelain`
+#      對該 root 的 `design/littlesprout.pen` 全程 clean（防止「landed 檔本身其實也被直接改過內容」這種
+#      情況被誤放行）才視為安全。
+#   2. Pen 無回應時無強制路徑——`osascript` quit 彈「儲存變更？」對話框回 `-128 User canceled`、`SIGTERM`
+#      也無反應時，舊版本無路可走、只能印「需人工介入」然後 exit 2。修法：既然清場前已對**全部**候選 root
+#      跑過 `check_root_safe()` 確認安全，`SIGTERM` 逾時後改為**在送出 SIGKILL 前重新對全部候選 root 跑一次
+#      `check_root_safe()`**（防止等待期間 Pen 又寫入新的實質變更——TOCTOU 視窗雖短但存在）；重新確認仍安全
+#      才 `kill -KILL`，並印一行稽核訊息（捨棄了哪些候選路徑、為何判定安全）；重新確認發現任一候選有實質
+#      結構差異（非純白名單屬性）就**拒絕** SIGKILL，印「拒絕強殺」、exit 2，需人工介入——與 R1-R3 一貫的
+#      「安全才動作」原則一致，只是把「安全」的定義從「零差異」放寬到「零差異或僅白名單屬性差異＋git-clean」。
+#   3. `check_root_safe()` 誤判——查無 backup（`pen-land.sh` 印「找不到 backup」、exit 2）代表 Pen 從未開過
+#      這個路徑、不可能有未落地的變更，是**安全**訊號，舊版本卻把它跟其他 exit 2（讀不到 backup mtime 等
+#      真正無法確認的情況）混在一起當「不安全」。修法：`check_root_safe()` 認得這個特定訊息，直接判定安全。
 #
 # macOS 沒有 coreutils timeout：每次 pen interactive 呼叫用背景程序＋背景 sleep 到期就 kill 的看門狗模式
 # （同 scripts/ops/patrol.sh 的 fetch_with_timeout；此處用 stdin/stdout 重導向而非管線，$! 才是 pen 程序本身的
@@ -199,9 +226,14 @@ list_open_pen_paths() {
 
 script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-# check_root_safe <root>：用 pen-land.sh --dry-run 判斷這個 root 是否「沒有未落地的變更」（安全信號見
-# pen-land.sh 說明；不帶 --allow-unchanged，把它預設的「結構無差異」拒絕當成「安全」的訊號來解讀）。
-# 印診斷到 stderr；回傳 0＝安全，1＝不安全或無法判定（fail closed）。
+# check_root_safe <root>：用 pen-land.sh --dry-run 判斷這個 root 是否「沒有未落地的變更、或只有可安全捨棄的
+# UI 態漂移」。回傳 0＝安全，1＝不安全或無法判定（fail closed）；印診斷到 stderr。三種安全訊號（LS-117）：
+#   a. rc=1＋「本輪零變更或 autosave 還沒追上」——backup 與落地檔結構完全相同。
+#   b. rc=2＋「找不到 backup」——Pen 從未開過這個路徑，不可能有未落地變更（defect 3：這是安全訊號，不是
+#      「無法確認」）。
+#   c. rc=0＋「僅偵測到白名單屬性」（見 pen-land.sh）——節點總數／id 集合不變，只有 placeholder 這類 UI 態
+#      屬性有差異；**額外要求**目標檔對 git 全程 clean（`git status --porcelain` 該路徑無輸出）才視為安全
+#      （defect 1：防止落地檔本身其實也被直接改過內容、只是恰好也帶了 placeholder 差異的邊界情況被誤放行）。
 check_root_safe() {
   local root=$1 out rc
   if [ ! -d "$root" ]; then
@@ -211,7 +243,20 @@ check_root_safe() {
   out=$(bash "${script_root}/scripts/ops/pen-land.sh" "$root" --dry-run 2>&1)
   rc=$?
   if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -qF '本輪零變更或 autosave 還沒追上'; then
+    echo "  「${root}」安全：本輪零變更（backup 與落地檔結構相同）" >&2
     return 0
+  fi
+  if [ "$rc" -eq 2 ] && printf '%s' "$out" | grep -qF '找不到 backup'; then
+    echo "  「${root}」安全：查無 Pen backup（從未編輯過這個路徑）" >&2
+    return 0
+  fi
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -qF '僅偵測到白名單屬性'; then
+    if git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+      && [ -z "$(git -C "$root" status --porcelain -- design/littlesprout.pen 2>/dev/null)" ]; then
+      echo "  「${root}」安全：僅偵測到白名單（placeholder）UI 態差異，節點總數不變，且 design/littlesprout.pen 對 git 全程 clean——視為可安全捨棄的 autosave 漂移" >&2
+      return 0
+    fi
+    echo "  「${root}」僅偵測到白名單屬性差異，但 design/littlesprout.pen 不是 git-clean（或無法確認是否為 git 倉庫）——不視為安全，需人工確認" >&2
   fi
   echo "  「${root}」可能有尚未落地的變更（pen-land.sh --dry-run 顯示有差異，或無法確認）——先跑：bash scripts/ops/pen-land.sh ${root}" >&2
   printf '%s\n' "$out" | sed 's/^/    /' >&2
@@ -230,27 +275,33 @@ candidates=$(
 echo "  目前偵測到開著的 .pen 文件：" >&2
 printf '%s\n' "$candidates" | sed 's/^/    /' >&2
 
-all_safe=1
-while IFS= read -r p; do
-  [ -n "$p" ] || continue
-  case "$p" in
-    */design/littlesprout.pen) root=${p%$suffix} ;;
-    *)
-      echo "  「${p}」不是預期的 .../design/littlesprout.pen 形狀——無法安全判定，視為不安全" >&2
-      all_safe=0
-      continue
-      ;;
-  esac
-  check_root_safe "$root" || all_safe=0
-done <<PATHS
+# check_all_candidates_safe：對 $candidates 逐一 check_root_safe，全部安全才回傳 0——初次判定與（LS-117）
+# SIGKILL 前重新確認共用同一份邏輯，避免兩處判定漂移。
+check_all_candidates_safe() {
+  local p root ok
+  ok=1
+  while IFS= read -r p; do
+    [ -n "$p" ] || continue
+    case "$p" in
+      */design/littlesprout.pen) root=${p%$suffix} ;;
+      *)
+        echo "  「${p}」不是預期的 .../design/littlesprout.pen 形狀——無法安全判定，視為不安全" >&2
+        ok=0
+        continue
+        ;;
+    esac
+    check_root_safe "$root" || ok=0
+  done <<PATHS
 $candidates
 PATHS
+  [ "$ok" -eq 1 ]
+}
 
-if [ "$all_safe" -ne 1 ]; then
+if ! check_all_candidates_safe; then
   echo "✗ pen-open：目前開著的 .pen 中至少一份可能有未落地變更（或無法確認安全）——不自動 quit，見上方訊息，逐一 pen-land 後再試" >&2
   exit 1
 fi
-echo "  已確認全部開著的 .pen 皆無未落地變更，嘗試安全結束 Pen 並重開……" >&2
+echo "  已確認全部開著的 .pen 皆無未落地變更（或僅屬可安全捨棄的 UI 態漂移，見上方逐一判定），嘗試安全結束 Pen 並重開……" >&2
 
 pen_pid=$(pgrep -f 'Pen\.app/Contents/MacOS/Pen$' 2>/dev/null | head -1)
 if [ -z "$pen_pid" ]; then
@@ -268,8 +319,25 @@ else
     sleep 1
   done
   if kill -0 "$pen_pid" 2>/dev/null; then
-    echo "✗ pen-open：Pen（pid ${pen_pid}）在 ${QUIT_TIMEOUT}s 內無法安全結束——需人工介入，不強殺（SIGKILL）" >&2
-    exit 2
+    # LS-117 defect 2：優雅退出／SIGTERM 都無反應時，過去無路可走。既然清場前已對全部候選 root 判定過安全，
+    # 這裡不是「沒有把關就強殺」——而是在 SIGKILL 前**重新確認**（防等待期間又生變更的 TOCTOU 窗口），
+    # 重新確認仍安全才印稽核行並 escalate；發現任一候選轉為不安全就拒絕，不強殺。
+    echo "  Pen（pid ${pen_pid}）優雅退出／SIGTERM 後 ${QUIT_TIMEOUT}s 內仍未結束——SIGKILL 前重新確認全部候選 .pen 仍安全……" >&2
+    if ! check_all_candidates_safe; then
+      echo "✗ pen-open：SIGKILL 前重新確認發現有實質結構差異——拒絕強殺，需人工介入（pid ${pen_pid} 仍存活）" >&2
+      exit 2
+    fi
+    echo "  稽核：重新確認全部候選 .pen 仍安全（零變更／查無 backup／僅白名單 UI 態漂移＋git-clean，見上方逐一判定），SIGKILL pid=${pen_pid}，捨棄對象：" >&2
+    printf '%s\n' "$candidates" | sed 's/^/    /' >&2
+    kill -KILL "$pen_pid" 2>/dev/null
+    kill_deadline=$((SECONDS + 5))
+    while [ "$SECONDS" -lt "$kill_deadline" ] && kill -0 "$pen_pid" 2>/dev/null; do
+      sleep 1
+    done
+    if kill -0 "$pen_pid" 2>/dev/null; then
+      echo "✗ pen-open：Pen（pid ${pen_pid}）SIGKILL 後仍存活——需人工介入" >&2
+      exit 2
+    fi
   fi
 fi
 
