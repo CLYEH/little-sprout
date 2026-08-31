@@ -78,6 +78,12 @@ struct SettingsView: View {
             defer { isSigningOut = false }
             do {
                 try await authStore.signOut()
+                // R2 N5：`AuthenticatedGate`（含它的 `.task(id:)`）在登出當下整個從畫面樹被
+                // 移除，只會被取消、不會以 nil 重跑一次——`FamilyStore.reset()` 因此需要一個
+                // 真的會被呼叫到的入口，這裡是登出成功後唯一一個。沒有這行，`myFamily`／
+                // `latestInvite` 會在記憶體裡留到下一位使用者登入前（見 `FamilyStore.reset()`
+                // 文件註解／`syncOwner` 對「同一人重登入不重查」以外情境的假設）。
+                familyStore.reset()
             } catch {
                 errorMessage = AppError.map(error).userFacingMessage
             }

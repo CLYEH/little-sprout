@@ -80,6 +80,11 @@ final class SupabaseFamilyAPIClientInviteTests: XCTestCase {
         let client = TestSupabaseClient.make { [familyID, inviteID] request in
             XCTAssertEqual(request.url?.path, "/rest/v1/invites")
             XCTAssertEqual(request.httpMethod, "GET")
+            // R2 N6：「未過期」只靠這一行 `.gt("expires_at", ...)` filter 撐著（「還有名額」有
+            // 記憶體端過濾＋專門測試，這個沒有）——拿掉那一行三條 fetchLatestActiveInvite 測試
+            // 照樣綠，後果是過期碼被當有效碼顯示給 owner。這裡釘住 wire 上真的送了這個 filter，
+            // 比照同檔 `createInvite` 已經在驗 wire 的作法（R2 comment `9dfd1a9c`）。
+            XCTAssertEqual(request.url?.query?.contains("expires_at=gt."), true)
             return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
             [{
               "id": "\(inviteID.uuidString)",

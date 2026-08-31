@@ -13,17 +13,6 @@ final class FamilyStoreTests: XCTestCase {
         Family(id: id ?? familyID, name: name, createdBy: UUID(), createdAt: Date(), requireApproval: true)
     }
 
-    private func makeInviteRecord(
-        id: UUID = UUID(),
-        code: String = "K7M2FD",
-        role: FamilyRole = .member,
-        maxUses: Int = FamilyStore.defaultInviteMaxUses,
-        usedCount: Int = 0,
-        expiresAt: Date = Date().addingTimeInterval(7 * 86400)
-    ) -> InviteRecord {
-        InviteRecord(id: id, code: code, role: role, maxUses: maxUses, usedCount: usedCount, expiresAt: expiresAt)
-    }
-
     // MARK: - refreshMyFamily（三岔路 root routing 依這個結果判斷）
 
     func test_refreshMyFamily_hasFamily_setsMyFamilyAndSuccess() async {

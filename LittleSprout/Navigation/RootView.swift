@@ -39,9 +39,15 @@ struct RootView: View {
 /// R1 F1：`.task(id: authStore.session?.userID)`——不是單純的 `.task { if lookupState ==
 /// .idle { ... } }`。`familyStore` 隨 app 存活，登出不會重置它；若只看 `lookupState`，
 /// 第二位在同一台裝置登入的使用者會因為 store 裡還殘留第一位的 `.success` 狀態而被整個
-/// 跳過查詢，直接沿用第一位的家庭與邀請碼。這裡改成每次 user id 變動（含首次登入、含
-/// 登出時變 nil）都呼叫 `familyStore.syncOwner(to:)`——id 不同就先歸零再視情況重查，見該
-/// 方法文件註解。
+/// 跳過查詢，直接沿用第一位的家庭與邀請碼。這裡改成每次 user id 變動都呼叫
+/// `familyStore.syncOwner(to:)`——id 不同就先歸零再視情況重查，見該方法文件註解。
+///
+/// R2 N5 訂正：「登出」不是這支 `.task(id:)` 處理的——`AuthenticatedGate` 本身（連同這個
+/// `.task`）會在 `authStore.isAuthenticated()` 變 false 的當下整個被 `RootView.body` 移出畫面
+/// 樹，`.task(id:)` 只會被**取消**，不會再以 `id: nil` 重新啟動一次；`syncOwner(to: nil)`
+/// 因此在這條路徑上永遠不會被呼叫到。登出時真正負責歸零 `FamilyStore` 的是
+/// `SettingsView.signOut()` 成功後直接呼叫的 `familyStore.reset()`——兩個入口分工：這裡管
+/// 「已登入狀態下換人／首次登入」，登出清理是另一條路徑。
 private struct AuthenticatedGate: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
