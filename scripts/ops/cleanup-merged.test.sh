@@ -1,13 +1,20 @@
 #!/bin/bash
-# cleanup-merged.sh 的自測（LS-86）。CI rules job 每個 PR 都跑。
+# cleanup-merged.sh 的自測（LS-86；R2 起涵蓋 merge-review R1 逐條重演）。CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對清理腳本也適用：若退化成——已併入卻不列／不刪、未併入卻被刪、dirty worktree
-# 被清掉（含白名單以外的殘留）、保護分支或目前所在目錄被碰、遠端分支明明有 open PR 卻被
-# push --delete、gh 不可用時悍然刪除、dry-run 產生副作用、LS-<n> 篩選誤中鄰近票號（LS-20 誤中
-# LS-200）——這裡會紅。
-# 合成 repo：file:// 裸 origin（main／development）＋clone 當主 checkout；多個 worktree／本機
-# 分支／遠端分支各一種形狀。所有「已併入」的分支各自建好、push 後用一條 integrate 分支一次
-# merge 齊全再單次 push 到 development（避免逐一 push 到 development 時彼此不是對方祖先、
-# fast-forward 互撞）。gh 用 PATH 上的 stub（依 --head 決定回報幾個 open PR）。
+# 被清掉（含白名單以外的殘留、gitignore 掉但有價值的內容）、保護分支或目前所在目錄（含子目錄）
+# 被碰、遠端分支明明有 open PR 卻被 push --delete、gh 不可用時悍然刪除、dry-run 產生副作用、
+# LS-<n> 篩選誤中鄰近票號（LS-20 誤中 LS-200）、只同步過（pull --ff-only／reset --hard／rebase）
+# 卻被當成已併入、本機 remote-tracking ref 未 prune 造成假陽性、剛併入（可能仍在飛）就被清、
+# 失敗的動作被算成已清理——這裡會紅。
+# ①-⑥ 用同一個合成 repo：file:// 裸 origin（main／development）＋clone 當主 checkout；多個
+# worktree／本機分支／遠端分支各一種形狀。所有「已併入」的分支各自建好、push 後用一條
+# integrate 分支一次 merge 齊全再單次 push 到 development（避免逐一 push 到 development 時
+# 彼此不是對方祖先、fast-forward 互撞）；commit 一律用 gold（老時間戳，同 patrol.test.sh 的
+# OLD／gold 慣例）——cleanup-merged.sh 預設 --min-age 10 分鐘，不 backdate 全部會被年齡門檻擋下
+# 變成假綠。gh 用 PATH 上的 stub（模擬 `gh pr list --state open --json headRefName` 這一次批次
+# 查詢，依 GH_STUB_PR_OPEN 清單回報哪些分支有 open PR）。
+# ⑦-⑭ 各自用獨立的迷你合成 repo（同攻擊腳本 scratchpad LS-86-attack2.sh／LS-86-attack3.sh 的
+# 重現手法）逐條驗證 merge-review R1 的 B1／M1／M2／m1／M3／M4-a／M4-b／m3。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -18,6 +25,11 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 g() { git -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
+# R2（merge-review R1 M4-b）：cleanup-merged.sh 預設 --min-age 10（分鐘）——最後 commit 太新一律
+# 略過。凡是這個檔案裡「應該被判定已併入、可清」的 fixture，commit 都要用 gold（老時間戳）建，
+# 不然全部會被年齡門檻擋下、變成假綠（同 patrol.test.sh 的 OLD／gold 慣例）。
+OLD=2020-01-01T00:00:00Z
+gold() { env GIT_AUTHOR_DATE="$OLD" GIT_COMMITTER_DATE="$OLD" git -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
 
 has()   { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✓ $1"; else echo "✗ ${1}（輸出應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; fi; }
 rc_is() { if [ "$3" -eq "$2" ]; then echo "✓ $1"; else echo "✗ ${1}（期望 exit ${2}，實得 ${3}）" >&2; printf '%s\n' "$4" | sed 's/^/    /' >&2; fail=1; fi; }
@@ -28,16 +40,13 @@ no_branch()  { git -C "$1" show-ref --verify -q "refs/heads/$2" && { echo "✗ $
 has_remote() { git -C "$1" ls-remote --exit-code "$2" "refs/heads/$3" >/dev/null 2>&1 && echo "✓ $4" || { echo "✗ ${4}（遠端分支 $3 不見了，本不該被刪）" >&2; fail=1; }; }
 no_remote()  { git -C "$1" ls-remote --exit-code "$2" "refs/heads/$3" >/dev/null 2>&1 && { echo "✗ ${4}（遠端分支 $3 仍在，本該被刪）" >&2; fail=1; } || echo "✓ $4"; }
 
-# ---- stub gh：依 --head 決定回報幾個 open PR（GH_STUB_PR_OPEN 空白分隔的分支清單）----
+# ---- stub gh：模擬 `gh pr list --state open --json headRefName --limit N -q '.[].headRefName'`
+#      （m2 起 cleanup-merged.sh 只打這一次批次查詢，不再逐分支呼叫 --head）——印出
+#      GH_STUB_PR_OPEN（空白分隔）清單，每行一個分支名，代表這些分支目前各有一個 open PR。
 mkdir -p "$work/bin"
 cat > "$work/bin/gh" <<'EOF'
 #!/bin/bash
-head=
-while [ $# -gt 0 ]; do case "$1" in --head) head=$2; shift ;; esac; shift; done
-case " ${GH_STUB_PR_OPEN:-} " in
-  *" ${head} "*) echo 1 ;;
-  *) echo 0 ;;
-esac
+for b in ${GH_STUB_PR_OPEN:-}; do printf '%s\n' "$b"; done
 EOF
 chmod +x "$work/bin/gh"
 export PATH="$work/bin:$PATH" GH_STUB_PR_OPEN="LS-11-remote-haspr"
@@ -62,7 +71,7 @@ wt() { g -C "$repo" worktree add "$@" >/dev/null 2>&1 || { echo "✗ 建 worktre
 merged_branches="LS-1-merged-clean LS-3-dirty-merged LS-4-whitelist LS-5-temp-merged LS-7-selfprotect LS-8-local-merged LS-20-bound LS-200-bound"
 for b in $merged_branches; do
   wt -b "$b" "$wts/$b" origin/development
-  echo "$b" > "$wts/$b/${b}.txt"; g -C "$wts/$b" add -A; g -C "$wts/$b" commit -qm "feat: ${b}"
+  echo "$b" > "$wts/$b/${b}.txt"; g -C "$wts/$b" add -A; gold -C "$wts/$b" commit -qm "feat: ${b}"
   g -C "$wts/$b" push -q origin "$b"
 done
 
@@ -71,7 +80,7 @@ done
 remote_only="LS-10-remote-nopr LS-11-remote-haspr LS-12-remote-nogh"
 for b in $remote_only; do
   wt -b "$b" "$work/scratch-$b" origin/development
-  echo "$b" > "$work/scratch-$b/${b}.txt"; g -C "$work/scratch-$b" add -A; g -C "$work/scratch-$b" commit -qm "feat: ${b}"
+  echo "$b" > "$work/scratch-$b/${b}.txt"; g -C "$work/scratch-$b" add -A; gold -C "$work/scratch-$b" commit -qm "feat: ${b}"
   g -C "$work/scratch-$b" push -q origin "$b"
   g -C "$repo" worktree remove "$work/scratch-$b"
 done
@@ -137,16 +146,16 @@ rc_is '① dry-run exit 0' 0 "$rc" "$out"
 has   '① dry-run 標示模式' "$out" 'cleanup-merged（dry-run 模式'
 has   '① 列出 LS-1-merged-clean 已併入且乾淨（將移除）' "$out" '（LS-1-merged-clean，已併入且乾淨）'
 has   '① 列出 LS-2-unmerged 未併入、略過' "$out" 'LS-2-unmerged：未併入（尚有獨有 commit），略過'
-has   '① 列出 LS-3-dirty-merged dirty、略過' "$out" 'LS-3-dirty-merged：dirty，略過'
-has   '① 列出 LS-4-whitelist dirty、略過（未加 --force）' "$out" 'LS-4-whitelist：dirty，略過'
+has   '① 列出 LS-3-dirty-merged dirty、略過' "$out" 'LS-3-dirty-merged：dirty 或有 ignored 殘留，略過'
+has   '① 列出 LS-4-whitelist dirty、略過（未加 --force）' "$out" 'LS-4-whitelist：dirty 或有 ignored 殘留，略過'
 has   '① 列出 LS-5-temp-merged 標「暫存殘留」' "$out" '（暫存殘留）（LS-5-temp-merged，已併入且乾淨）'
 has_dev_absent=$(printf '%s' "$out" | grep -c 'dev-wt'); [ "$has_dev_absent" -eq 0 ] && echo "✓ ① 保護分支 worktree（development）不進表" || { echo "✗ ① 保護分支 worktree 不應進表" >&2; fail=1; }
 has_det_absent=$(printf '%s' "$out" | grep -c 'detached-wt'); [ "$has_det_absent" -eq 0 ] && echo "✓ ① detached worktree 不進表" || { echo "✗ ① detached worktree 不應進表" >&2; fail=1; }
 has   '① LS-8-local-merged 本機分支將被刪（已併入、無 worktree）' "$out" 'LS-8-local-merged（已併入、無 worktree）'
 has   '① LS-9-local-unmerged 未併入、略過' "$out" 'LS-9-local-unmerged：未併入或尚未開工，略過'
 has   '① LS-10-remote-nopr 遠端將被刪（已併入、無 open PR）' "$out" 'origin/LS-10-remote-nopr（已併入、無 open PR）'
-has   '① LS-11-remote-haspr 遠端有 open PR、略過' "$out" 'LS-11-remote-haspr：已併入但仍有 1 個 open PR，略過'
-has   '① LS-13-fresh-never-started 尚未開工、略過（不得誤判已併入而清掉）' "$out" 'LS-13-fresh-never-started：尚未開工（與 base 相同、從未有過獨有 commit），略過'
+has   '① LS-11-remote-haspr 遠端有 open PR、略過' "$out" 'LS-11-remote-haspr：已併入但仍有 open PR，略過'
+has   '① LS-13-fresh-never-started 尚未開工、略過（不得誤判已併入而清掉）' "$out" 'LS-13-fresh-never-started：尚未開工（與 base 相同、從未有過自己的 commit），略過'
 after_wt_count=$(git -C "$repo" worktree list --porcelain | grep -c '^worktree ')
 after_branches=$(git -C "$repo" for-each-ref --format='%(refname:short)' refs/heads/ | sort)
 [ "$before_wt_count" -eq "$after_wt_count" ] && echo "✓ ① dry-run 未變動 worktree 數量" || { echo "✗ ① dry-run 不應變動 worktree 數量（前 ${before_wt_count} 後 ${after_wt_count}）" >&2; fail=1; }
@@ -163,7 +172,7 @@ has_remote "$repo" "$remote" LS-12-remote-nogh '② gh 不可用時未刪遠端�
 #        用篩選 LS-7 把這次 apply 限定在它自己身上，避免這一步順便處理掉其他票 ----
 out3="$(cd "$wts/LS-7-selfprotect" && bash "$cleanup" --apply --repo "$repo" LS-7 2>&1)"; rc3=$?
 rc_is '③ cwd 自我保護 exit 0' 0 "$rc3" "$out3"
-has   '③ 標示「目前所在目錄，絕不碰」' "$out3" '目前所在目錄，絕不碰'
+has   '③ 標示「目前所在目錄，絕不碰」' "$out3" '目前所在目錄'
 exists_wt "$wts/LS-7-selfprotect" '③ LS-7-selfprotect worktree 仍在（cwd 保護生效）'
 has_branch "$repo" LS-7-selfprotect '③ LS-7-selfprotect 本機分支仍在'
 
@@ -173,9 +182,9 @@ rc_is '④ 篩選 LS-20 exit 0' 0 "$rc4" "$out4"
 no_branch  "$repo" LS-20-bound  '④ LS-20-bound 已刪（篩選命中）'
 has_branch "$repo" LS-200-bound '④ LS-200-bound 未受影響（LS-20 不誤中 LS-200，word-boundary）'
 
-# ---- ⑤ --apply（不加 --force，不篩選）：merged+clean 全部清掉；dirty／unmerged／
-#        whitelist（未加 --force）／保護分支／detached／haspr 一律不動 ----
-out5="$(bash "$cleanup" --apply --repo "$repo" 2>&1)"; rc5=$?
+# ---- ⑤ --apply（不加 --force，不篩選，M4-a 起要求明確 --all）：merged+clean 全部清掉；
+#        dirty／unmerged／whitelist（未加 --force）／保護分支／detached／haspr 一律不動 ----
+out5="$(bash "$cleanup" --apply --all --repo "$repo" 2>&1)"; rc5=$?
 rc_is '⑤ apply exit 0（無失敗）' 0 "$rc5" "$out5"
 has   '⑤ 摘要列出實際刪除數' "$out5" '摘要（apply）'
 gone_wt "$wts/LS-1-merged-clean" '⑤ LS-1-merged-clean worktree 已移除'
@@ -205,11 +214,203 @@ has   '⑥ --force 訊息含「殘留為白名單」' "$out6" '殘留為白名�
 gone_wt "$wts/LS-4-whitelist" '⑥ LS-4-whitelist worktree 已用 --force 移除'
 no_branch "$repo" LS-4-whitelist '⑥ LS-4-whitelist 本機分支已刪'
 
-# ---- ⑦ 參數與環境錯誤 fail closed ----
-out7="$(bash "$cleanup" --unknown-flag --repo "$repo" 2>&1)"; rc7=$?
-rc_is '⑦ 未知旗標 exit 2' 2 "$rc7" "$out7"
-out8="$(bash "$cleanup" --repo "$work" 2>&1)"; rc8=$?
-rc_is '⑧ --repo 指到非 git 目錄 exit 2' 2 "$rc8" "$out8"
+# ==== merge-review R1 逐條重演（B1／M1／M2／m1／M3／M4-a／M4-b／m3）====
+# 每條各自用一個獨立的迷你合成 repo（同攻擊腳本 scratchpad LS-86-attack2.sh／LS-86-attack3.sh
+# 的重現手法），避免跟上面 ①-⑥ 共用的主測試 repo 互相干擾。
+
+# ---- ⑦ B1：worktree 從落後的本機 development 切出，開工前只 `pull --ff-only` 同步一次
+#        （沒有自己的 commit）→ tip 與 base 相同但 reflog 有非 Created/checkout 條目，
+#        has_real_history 修法前會誤判「已併入」而清掉 ----
+b1=$work/b1; mkdir -p "$b1"
+g init -q --bare -b main "$b1/remote.git"
+g init -q -b main "$b1/seed"
+echo a > "$b1/seed/f.txt"; g -C "$b1/seed" add -A; g -C "$b1/seed" commit -qm seed
+g -C "$b1/seed" branch development
+g -C "$b1/seed" remote add origin "$b1/remote.git"; g -C "$b1/seed" push -q origin main development
+g clone -q "$b1/remote.git" "$b1/repo"; mkdir -p "$b1/repo/.claude/worktrees"
+g -C "$b1/repo" branch devlocal origin/development
+g -C "$b1/repo" worktree add -q -b LS-901-sync "$b1/repo/.claude/worktrees/LS-901-sync" devlocal
+echo b >> "$b1/seed/f.txt"; g -C "$b1/seed" checkout -q development; g -C "$b1/seed" commit -qam adv; g -C "$b1/seed" push -q origin development
+g -C "$b1/repo" fetch -q origin
+g -C "$b1/repo/.claude/worktrees/LS-901-sync" pull -q --ff-only origin development
+out7="$(bash "$cleanup" --apply --repo "$b1/repo" LS-901 2>&1)"; rc7=$?
+rc_is '⑦ B1 exit 0' 0 "$rc7" "$out7"
+has   '⑦ B1 判定尚未開工（只同步過、非已併入可清）' "$out7" '尚未開工'
+exists_wt "$b1/repo/.claude/worktrees/LS-901-sync" '⑦ B1 worktree 仍在（has_real_history 擋下誤殺）'
+has_branch "$b1/repo" LS-901-sync '⑦ B1 本機分支仍在'
+
+# ---- ⑧ M1：cwd 在 worktree 的子目錄（不是根目錄本身）→ 自我保護仍須生效 ----
+m1w=$work/m1w; mkdir -p "$m1w"
+g init -q --bare -b main "$m1w/remote.git"
+g init -q -b main "$m1w/seed"
+echo a > "$m1w/seed/f.txt"; g -C "$m1w/seed" add -A; g -C "$m1w/seed" commit -qm seed
+g -C "$m1w/seed" branch development
+g -C "$m1w/seed" remote add origin "$m1w/remote.git"; g -C "$m1w/seed" push -q origin main development
+g clone -q "$m1w/remote.git" "$m1w/repo"; mkdir -p "$m1w/repo/.claude/worktrees"
+g -C "$m1w/repo" worktree add -q -b LS-902-sub "$m1w/repo/.claude/worktrees/LS-902-sub" origin/development
+mkdir -p "$m1w/repo/.claude/worktrees/LS-902-sub/scripts"
+echo x > "$m1w/repo/.claude/worktrees/LS-902-sub/x.txt"; g -C "$m1w/repo/.claude/worktrees/LS-902-sub" add -A
+gold -C "$m1w/repo/.claude/worktrees/LS-902-sub" commit -qm x
+g -C "$m1w/repo/.claude/worktrees/LS-902-sub" push -q origin LS-902-sub
+g -C "$m1w/seed" fetch -q origin; g -C "$m1w/seed" checkout -q development
+g -C "$m1w/seed" merge -q --no-edit origin/LS-902-sub; g -C "$m1w/seed" push -q origin development
+g -C "$m1w/repo" fetch -q origin
+out8="$(cd "$m1w/repo/.claude/worktrees/LS-902-sub/scripts" && bash "$cleanup" --apply --repo "$m1w/repo" LS-902 2>&1)"; rc8=$?
+rc_is '⑧ M1 exit 0' 0 "$rc8" "$out8"
+has   '⑧ M1 標示目前所在目錄（子目錄）保護' "$out8" '目前所在目錄'
+exists_wt "$m1w/repo/.claude/worktrees/LS-902-sub" '⑧ M1 worktree 仍在（cwd 在子目錄也受保護）'
+has_branch "$m1w/repo" LS-902-sub '⑧ M1 本機分支仍在'
+
+# ---- ⑨ M2：遠端分支已被刪除（GitHub auto-delete 或他人手動刪），本機 remote-tracking ref
+#        未 prune → fetch --prune 後這條 ref 應直接消失，(c) 段不該再看到它、更不該因為
+#        對幽靈 ref push --delete 而失敗 ----
+m2=$work/m2; mkdir -p "$m2"
+g init -q --bare -b main "$m2/remote.git"
+g init -q -b main "$m2/seed"
+echo a > "$m2/seed/f.txt"; g -C "$m2/seed" add -A; g -C "$m2/seed" commit -qm seed
+g -C "$m2/seed" branch development
+g -C "$m2/seed" remote add origin "$m2/remote.git"; g -C "$m2/seed" push -q origin main development
+g clone -q "$m2/remote.git" "$m2/repo"; mkdir -p "$m2/repo/.claude/worktrees"
+g -C "$m2/repo" worktree add -q -b LS-903-gone "$m2/repo/.claude/worktrees/LS-903-gone" origin/development
+echo c > "$m2/repo/.claude/worktrees/LS-903-gone/c.txt"; g -C "$m2/repo/.claude/worktrees/LS-903-gone" add -A
+gold -C "$m2/repo/.claude/worktrees/LS-903-gone" commit -qm c
+g -C "$m2/repo/.claude/worktrees/LS-903-gone" push -q origin LS-903-gone
+g -C "$m2/seed" fetch -q origin; g -C "$m2/seed" checkout -q development
+g -C "$m2/seed" merge -q --no-edit origin/LS-903-gone; g -C "$m2/seed" push -q origin development
+g -C "$m2/seed" push -q origin --delete LS-903-gone
+g -C "$m2/repo" worktree remove "$m2/repo/.claude/worktrees/LS-903-gone"; g -C "$m2/repo" branch -D LS-903-gone >/dev/null
+# 刻意不先 fetch --prune：repo 這時本機仍帶著 stale 的 refs/remotes/origin/LS-903-gone
+out9="$(bash "$cleanup" --apply --repo "$m2/repo" LS-903 2>&1)"; rc9=$?
+rc_is '⑨ M2 exit 0（--prune 後幽靈 ref 已消失，不會因它失敗）' 0 "$rc9" "$out9"
+if printf '%s' "$out9" | grep -q '失敗'; then echo "✗ ⑨ M2 不應印出任何失敗（stale ref 應已被 fetch --prune 清掉）" >&2; printf '%s\n' "$out9" | sed 's/^/    /' >&2; fail=1; else echo "✓ ⑨ M2 無失敗訊息"; fi
+stale_ref=$(git -C "$m2/repo" for-each-ref --format='%(refname)' refs/remotes/origin/LS-903-gone)
+[ -z "$stale_ref" ] && echo "✓ ⑨ M2 stale ref 已被 fetch --prune 清掉" || { echo "✗ ⑨ M2 stale ref 仍在（fetch 沒有 --prune）" >&2; fail=1; }
+
+# ---- ⑩ m1：--force 白名單須對「路徑」做精確元件比對，不是對整行文字做子字串／字尾比對 ----
+m1x=$work/m1x; mkdir -p "$m1x"
+g init -q --bare -b main "$m1x/remote.git"
+g init -q -b main "$m1x/seed"
+echo a > "$m1x/seed/f.txt"; g -C "$m1x/seed" add -A; g -C "$m1x/seed" commit -qm seed
+g -C "$m1x/seed" branch development
+g -C "$m1x/seed" remote add origin "$m1x/remote.git"; g -C "$m1x/seed" push -q origin main development
+g clone -q "$m1x/remote.git" "$m1x/repo"; mkdir -p "$m1x/repo/.claude/worktrees"
+g -C "$m1x/repo" worktree add -q -b LS-904-wl "$m1x/repo/.claude/worktrees/LS-904-wl" origin/development
+echo d > "$m1x/repo/.claude/worktrees/LS-904-wl/d.txt"; g -C "$m1x/repo/.claude/worktrees/LS-904-wl" add -A
+gold -C "$m1x/repo/.claude/worktrees/LS-904-wl" commit -qm d
+g -C "$m1x/repo/.claude/worktrees/LS-904-wl" push -q origin LS-904-wl
+g -C "$m1x/seed" fetch -q origin; g -C "$m1x/seed" checkout -q development
+g -C "$m1x/seed" merge -q --no-edit origin/LS-904-wl; g -C "$m1x/seed" push -q origin development
+g -C "$m1x/repo" fetch -q origin
+printf 'IRREPLACEABLE\n' > "$m1x/repo/.claude/worktrees/LS-904-wl/notes-on-__pycache__-cleanup.md"
+printf 'precious\n' > "$m1x/repo/.claude/worktrees/LS-904-wl/evidence.DS_Store"
+out10="$(bash "$cleanup" --apply --force --repo "$m1x/repo" LS-904 2>&1)"; rc10=$?
+rc_is '⑩ m1 exit 0' 0 "$rc10" "$out10"
+exists_wt "$m1x/repo/.claude/worktrees/LS-904-wl" '⑩ m1 worktree 仍在（子字串／字尾誤命中白名單已修正）'
+has_branch "$m1x/repo" LS-904-wl '⑩ m1 本機分支仍在'
+[ -e "$m1x/repo/.claude/worktrees/LS-904-wl/notes-on-__pycache__-cleanup.md" ] && echo "✓ ⑩ m1 notes-on-__pycache__-cleanup.md 仍在" || { echo "✗ ⑩ m1 notes-on-__pycache__-cleanup.md 被誤刪" >&2; fail=1; }
+[ -e "$m1x/repo/.claude/worktrees/LS-904-wl/evidence.DS_Store" ] && echo "✓ ⑩ m1 evidence.DS_Store 仍在" || { echo "✗ ⑩ m1 evidence.DS_Store 被誤刪" >&2; fail=1; }
+
+# ---- ⑪ M3：worktree 依 plain porcelain 判定「乾淨」，但實際上有 gitignore 掉的 QA
+#        evidence／.env——這些內容不得因「乾淨」而隨 worktree remove 一起消失，且不得因
+#        --force 被當成白名單放行 ----
+m3=$work/m3ignore; mkdir -p "$m3"
+g init -q --bare -b main "$m3/remote.git"
+g init -q -b main "$m3/seed"
+printf '.env\n.claude/evidence/\n' > "$m3/seed/.gitignore"
+echo a > "$m3/seed/f.txt"; g -C "$m3/seed" add -A; g -C "$m3/seed" commit -qm seed
+g -C "$m3/seed" branch development
+g -C "$m3/seed" remote add origin "$m3/remote.git"; g -C "$m3/seed" push -q origin main development
+g clone -q "$m3/remote.git" "$m3/repo"; mkdir -p "$m3/repo/.claude/worktrees"
+g -C "$m3/repo" worktree add -q -b LS-905-live "$m3/repo/.claude/worktrees/LS-905-live" origin/development
+echo e > "$m3/repo/.claude/worktrees/LS-905-live/e.txt"; g -C "$m3/repo/.claude/worktrees/LS-905-live" add -A
+gold -C "$m3/repo/.claude/worktrees/LS-905-live" commit -qm e
+g -C "$m3/repo/.claude/worktrees/LS-905-live" push -q origin LS-905-live
+g -C "$m3/seed" fetch -q origin; g -C "$m3/seed" checkout -q development
+g -C "$m3/seed" merge -q --no-edit origin/LS-905-live; g -C "$m3/seed" push -q origin development
+g -C "$m3/repo" fetch -q origin
+mkdir -p "$m3/repo/.claude/worktrees/LS-905-live/.claude/evidence/LS-905/r1-review"
+printf 'PNG-evidence-唯一一份\n' > "$m3/repo/.claude/worktrees/LS-905-live/.claude/evidence/LS-905/r1-review/shot.png"
+printf 'SUPABASE_KEY=xxx\n' > "$m3/repo/.claude/worktrees/LS-905-live/.env"
+plain_status=$(git -C "$m3/repo/.claude/worktrees/LS-905-live" status --porcelain)
+[ -z "$plain_status" ] && echo "✓ ⑪ M3 前提成立：plain porcelain 認定乾淨（不含 ignored）" || { echo "✗ ⑪ M3 前提不成立" >&2; fail=1; }
+out11="$(bash "$cleanup" --apply --repo "$m3/repo" LS-905 2>&1)"; rc11=$?
+rc_is '⑪ M3（無 --force）exit 0' 0 "$rc11" "$out11"
+exists_wt "$m3/repo/.claude/worktrees/LS-905-live" '⑪ M3 worktree 仍在（ignored 內容視為 dirty）'
+[ -e "$m3/repo/.claude/worktrees/LS-905-live/.claude/evidence/LS-905/r1-review/shot.png" ] && echo "✓ ⑪ M3 QA evidence PNG 仍在" || { echo "✗ ⑪ M3 QA evidence PNG 被刪除（不可復原）" >&2; fail=1; }
+[ -e "$m3/repo/.claude/worktrees/LS-905-live/.env" ] && echo "✓ ⑪ M3 .env 仍在" || { echo "✗ ⑪ M3 .env 被刪除" >&2; fail=1; }
+out11f="$(bash "$cleanup" --apply --force --repo "$m3/repo" LS-905 2>&1)"; rc11f=$?
+rc_is '⑪ M3（--force）exit 0' 0 "$rc11f" "$out11f"
+exists_wt "$m3/repo/.claude/worktrees/LS-905-live" '⑪ M3 worktree 仍在（--force 不放行非白名單的 ignored 內容）'
+[ -e "$m3/repo/.claude/worktrees/LS-905-live/.claude/evidence/LS-905/r1-review/shot.png" ] && echo "✓ ⑪ M3 --force 後 QA evidence PNG 仍在" || { echo "✗ ⑪ M3 --force 誤刪 QA evidence PNG" >&2; fail=1; }
+
+# ---- ⑫ M4-a：--apply 不帶 LS-<n> 也不帶 --all → 直接拒絕、不做任何事（用主測試 repo，
+#        驗證「拒絕」本身不會有任何副作用）----
+before12_wt=$(git -C "$repo" worktree list --porcelain | grep -c '^worktree ')
+before12_branches=$(git -C "$repo" for-each-ref --format='%(refname:short)' refs/heads/ | sort)
+out12="$(bash "$cleanup" --apply --repo "$repo" 2>&1)"; rc12=$?
+rc_is '⑫ M4-a 不帶票號且不帶 --all → exit 2' 2 "$rc12" "$out12"
+has   '⑫ M4-a 訊息提示 LS-<n> 或 --all' "$out12" '--all'
+after12_wt=$(git -C "$repo" worktree list --porcelain | grep -c '^worktree ')
+after12_branches=$(git -C "$repo" for-each-ref --format='%(refname:short)' refs/heads/ | sort)
+[ "$before12_wt" -eq "$after12_wt" ] && echo "✓ ⑫ M4-a 被拒絕時未變動 worktree 數量" || { echo "✗ ⑫ M4-a 不應變動 worktree 數量" >&2; fail=1; }
+[ "$before12_branches" = "$after12_branches" ] && echo "✓ ⑫ M4-a 被拒絕時未變動本機分支清單" || { echo "✗ ⑫ M4-a 不應變動本機分支清單" >&2; fail=1; }
+
+# ---- ⑬ M4-b：分支剛併入（commit 時間新，非 gold），即使加 --all 也不得清——避免清掉
+#        「agent 剛完成這一輪、準備在同一個 worktree 續作下一輪」的在飛工作 ----
+m4=$work/m4; mkdir -p "$m4"
+g init -q --bare -b main "$m4/remote.git"
+g init -q -b main "$m4/seed"
+echo a > "$m4/seed/f.txt"; g -C "$m4/seed" add -A; g -C "$m4/seed" commit -qm seed
+g -C "$m4/seed" branch development
+g -C "$m4/seed" remote add origin "$m4/remote.git"; g -C "$m4/seed" push -q origin main development
+g clone -q "$m4/remote.git" "$m4/repo"; mkdir -p "$m4/repo/.claude/worktrees"
+g -C "$m4/repo" worktree add -q -b LS-906-round2 "$m4/repo/.claude/worktrees/LS-906-round2" origin/development
+echo f > "$m4/repo/.claude/worktrees/LS-906-round2/f2.txt"; g -C "$m4/repo/.claude/worktrees/LS-906-round2" add -A
+g -C "$m4/repo/.claude/worktrees/LS-906-round2" commit -qm f2   # 刻意不用 gold：模擬「剛剛才 commit」
+g -C "$m4/repo/.claude/worktrees/LS-906-round2" push -q origin LS-906-round2
+g -C "$m4/seed" fetch -q origin; g -C "$m4/seed" checkout -q development
+g -C "$m4/seed" merge -q --no-edit origin/LS-906-round2; g -C "$m4/seed" push -q origin development
+g -C "$m4/repo" fetch -q origin
+out13="$(bash "$cleanup" --apply --all --repo "$m4/repo" 2>&1)"; rc13=$?
+rc_is '⑬ M4-b exit 0' 0 "$rc13" "$out13"
+has   '⑬ M4-b 標示最後 commit 未滿 min-age、略過' "$out13" '未滿'
+exists_wt "$m4/repo/.claude/worktrees/LS-906-round2" '⑬ M4-b worktree 仍在（剛併入、--all 也不清）'
+has_branch "$m4/repo" LS-906-round2 '⑬ M4-b 本機分支仍在'
+
+# ---- ⑭ m3：實際失敗的動作不得計入已清理數——遠端寫入權限被拒（模擬推送失敗，非 stale ref）
+#        時，摘要應誠實反映「遠端分支 0」且整體 exit 1（fail loud）。用 chmod 唯讀模擬寫入被拒，
+#        對 root 無效（root 無視檔案權限）——以 root 執行時（少數 CI／容器環境）略過此案例，
+#        不假裝驗證了什麼。 ----
+if [ "$(id -u)" = 0 ]; then
+  echo "⚠ ⑭ m3 略過（以 root 執行，chmod 唯讀對 root 無效，無法模擬推送失敗）"
+else
+  m3f=$work/m3fail; mkdir -p "$m3f"
+  g init -q --bare -b main "$m3f/remote.git"
+  g init -q -b main "$m3f/seed"
+  echo a > "$m3f/seed/f.txt"; g -C "$m3f/seed" add -A; g -C "$m3f/seed" commit -qm seed
+  g -C "$m3f/seed" branch development
+  g -C "$m3f/seed" remote add origin "$m3f/remote.git"; g -C "$m3f/seed" push -q origin main development
+  g clone -q "$m3f/remote.git" "$m3f/repo"; mkdir -p "$m3f/repo/.claude/worktrees"
+  g -C "$m3f/repo" worktree add -q -b LS-907-writeperm "$m3f/repo/.claude/worktrees/LS-907-writeperm" origin/development
+  echo g > "$m3f/repo/.claude/worktrees/LS-907-writeperm/g.txt"; g -C "$m3f/repo/.claude/worktrees/LS-907-writeperm" add -A
+  gold -C "$m3f/repo/.claude/worktrees/LS-907-writeperm" commit -qm g
+  g -C "$m3f/repo/.claude/worktrees/LS-907-writeperm" push -q origin LS-907-writeperm
+  g -C "$m3f/seed" fetch -q origin; g -C "$m3f/seed" checkout -q development
+  g -C "$m3f/seed" merge -q --no-edit origin/LS-907-writeperm; g -C "$m3f/seed" push -q origin development
+  g -C "$m3f/repo" worktree remove "$m3f/repo/.claude/worktrees/LS-907-writeperm"; g -C "$m3f/repo" branch -D LS-907-writeperm >/dev/null
+  chmod -R a-w "$m3f/remote.git"   # fetch（唯讀）不受影響；push --delete 會因無寫入權限失敗
+  out14="$(bash "$cleanup" --apply --repo "$m3f/repo" LS-907 2>&1)"; rc14=$?
+  chmod -R u+w "$m3f/remote.git"   # 還原權限，讓收尾 trap 能刪掉 $work
+  rc_is '⑭ m3 exit 1（推送失敗，fail loud）' 1 "$rc14" "$out14"
+  has   '⑭ m3 印出失敗訊息' "$out14" '失敗'
+  has   '⑭ m3 摘要遠端分支計數為 0（失敗不得算進已清理）' "$out14" '遠端分支 0'
+fi
+
+# ---- ⑮⑯ 參數與環境錯誤 fail closed ----
+out15="$(bash "$cleanup" --unknown-flag --repo "$repo" 2>&1)"; rc15=$?
+rc_is '⑮ 未知旗標 exit 2' 2 "$rc15" "$out15"
+out16="$(bash "$cleanup" --repo "$work" 2>&1)"; rc16=$?
+rc_is '⑯ --repo 指到非 git 目錄 exit 2' 2 "$rc16" "$out16"
 
 if [ "$fail" -eq 0 ]; then echo "✓ cleanup-merged.test.sh 全綠"; else echo "✗ cleanup-merged.test.sh 有失敗" >&2; fi
 exit "$fail"
