@@ -1,11 +1,13 @@
 #!/bin/bash
-# scripts/gates/linear-issue-check.test.sh（LS-77）
+# scripts/gates/linear-issue-check.test.sh（LS-77／LS-79）
 #
 # 自測 scripts/gates/linear-issue-check.sh：六情境（建票缺 project／Phase 缺 milestone／
-# Task 缺 parent／無 lane／合規／更新票一律放行）＋ labels 多於一個 lane:* ＋ fail-closed
-# 三態（空 stdin／JSON 壞掉／jq 與 python3 皆缺）＋ jq 缺時 python3 備援＋四條 deny 規則各一個
-# mutant（拿掉該規則區塊後，原本會 deny 的同一份 payload 必須改判 allow，證明測試真的測到
-# 那個區塊、不是同一份 payload 湊巧一直 allow——同 scripts/hooks/pretool.test.sh 的 F5 慣例）。
+# Task 缺 parent／無 lane／合規／更新票一律放行）＋ labels 多於一個 lane:* ＋ state／cycle
+# 交界情境（規則 E，建票／更新票各自 deny／allow、state 缺席、state 非 Ready/In Progress
+# 皆不觸發、cycle 為空字串視同未帶）＋ fail-closed 三態（空 stdin／JSON 壞掉／jq 與 python3
+# 皆缺）＋ jq 缺時 python3 備援＋五條 deny 規則（A-E）各一個 mutant（拿掉該規則區塊後，
+# 原本會 deny 的同一份 payload 必須改判 allow，證明測試真的測到那個區塊、不是同一份
+# payload 湊巧一直 allow——同 scripts/hooks/pretool.test.sh 的 F5 慣例）。
 # CI rules job 每個 PR 都跑。
 set -uo pipefail
 
@@ -63,6 +65,21 @@ expect '⑥b 更新票：id 為空字串不算「有 id」（視同建票，仍�
 expect '⑦ labels 多於一個 lane:*（deny）' 2 "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness","lane:ui"]}')"
 
 # ============================================================
+# state／cycle 交界情境（規則 E，LS-79）——建票與更新票兩條路徑都要驗到，且要證明
+# 「state 沒出現」「state 不是 Ready/In Progress」兩種情況都不觸發（維持 LS-77 既有行為）。
+# ============================================================
+expect 'E1 建票 state=Ready 無 cycle（deny）' 2 "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"],"state":"Ready"}')"
+expect 'E2 建票 state=Ready 有 cycle（allow）' 0 "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"],"state":"Ready","cycle":"7"}')"
+expect 'E3 建票 state=In Progress 無 cycle（deny）' 2 "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"],"state":"In Progress"}')"
+expect 'E4 建票 state=In Progress 有 cycle（allow）' 0 "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"],"state":"In Progress","cycle":"7"}')"
+expect 'E5 建票 state=Backlog 無 cycle（不觸發規則 E，allow）' 0 "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"],"state":"Backlog"}')"
+expect 'E6 建票 state=Ready 但 cycle 為空字串（視同未帶，deny）' 2 "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"],"state":"Ready","cycle":""}')"
+expect 'E7 更新票（有 id）state 改成 Ready 但無 cycle（deny——與「更新一律放行」的交界）' 2 "$(payload '{"id":"LS-79","state":"Ready"}')"
+expect 'E8 更新票（有 id）state 改成 In Progress 且帶 cycle（allow）' 0 "$(payload '{"id":"LS-79","state":"In Progress","cycle":"7"}')"
+expect 'E9 更新票（有 id）state 改成 Done 無 cycle（不觸發規則 E，allow）' 0 "$(payload '{"id":"LS-79","state":"Done"}')"
+expect 'E10 更新票（有 id）沒有 state 欄位（不觸發規則 E，其餘欄位仍不驗，allow）' 0 "$(payload '{"id":"LS-79","labels":[]}')"
+
+# ============================================================
 # fail-closed：空 stdin／JSON 壞掉／頂層非物件
 # ============================================================
 expect 'fail-closed：空 stdin（deny）' 2 ''
@@ -113,19 +130,27 @@ if [ -n "$real_python3" ]; then
     echo "✗ fail-closed：jq 缺、python3 備援（更新票期望 exit 0 allow，實得 exit ${got}：${out}）" >&2
     fail=1
   fi
+  out=$(printf '%s' "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"],"state":"Ready"}')" | env PATH="$work/py-only" "$bash_bin" "$gate" 2>&1)
+  got=$?
+  if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+    echo '✓ fail-closed：jq 缺、python3 備援成功（規則 E：state=Ready 無 cycle 仍判定為 deny）'
+  else
+    echo "✗ fail-closed：jq 缺、python3 備援（規則 E 期望 exit 2 deny，實得 exit ${got}：${out}）" >&2
+    fail=1
+  fi
 else
   echo '⚠ 略過 jq-缺-python3-備援 測試（本機找不到 python3）'
 fi
 rm -rf "$work"
 
 # ============================================================
-# mutation 負控：四條 deny 規則各拿掉一個，同一份原本會 deny 的 payload 必須改判 allow——
-# 證明「該規則的判斷式」是真正造成 deny 的原因，不是這份測試湊巧沒踩到別的規則
+# mutation 負控：五條 deny 規則（A-E）各拿掉一個，同一份原本會 deny 的 payload 必須改判
+# allow——證明「該規則的判斷式」是真正造成 deny 的原因，不是這份測試湊巧沒踩到別的規則
 # （同 scripts/hooks/pretool.test.sh 的 F5 trap-mutation 慣例）。
 # ============================================================
 mut_dir=$(mktemp -d)
 
-build_mutant() {  # $1=規則字母（A/B/C/D） $2=輸出路徑
+build_mutant() {  # $1=規則字母（A/B/C/D/E） $2=輸出路徑
   awk -v tag="RULE-${1}-START" -v endtag="RULE-${1}-END" '
     index($0, tag) > 0 { skip = 1 }
     skip != 1 { print }
@@ -158,9 +183,12 @@ run_mutant "$mut_dir/mutant-c.sh" "C（Task 缺 parentId）" "$(payload '{"proje
 build_mutant D "$mut_dir/mutant-d.sh"
 run_mutant "$mut_dir/mutant-d.sh" "D（無 lane 標籤）" "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":[]}')"
 
+build_mutant E "$mut_dir/mutant-e.sh"
+run_mutant "$mut_dir/mutant-e.sh" "E（state=Ready 無 cycle）" "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"],"state":"Ready"}')"
+
 # 反向確認：mutant 腳本裡真的看不到被拿掉的那段文字（避免 awk pattern 打錯字、其實整份原封不動
 # 複製過去，讓上面「改判 allow」是因為別的原因湊巧 allow，而非規則真的被移除）。
-for pair in "A:${mut_dir}/mutant-a.sh" "B:${mut_dir}/mutant-b.sh" "C:${mut_dir}/mutant-c.sh" "D:${mut_dir}/mutant-d.sh"; do
+for pair in "A:${mut_dir}/mutant-a.sh" "B:${mut_dir}/mutant-b.sh" "C:${mut_dir}/mutant-c.sh" "D:${mut_dir}/mutant-d.sh" "E:${mut_dir}/mutant-e.sh"; do
   letter=${pair%%:*}
   path=${pair#*:}
   if grep -q "RULE-${letter}-START" "$path"; then
