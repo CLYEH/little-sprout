@@ -293,7 +293,21 @@ check_root_safe() {
     fi
     echo "  「${root}」僅偵測到白名單屬性差異，但 design/littlesprout.pen 不是 git-clean（或無法確認是否為 git 倉庫）——不視為安全，需人工確認" >&2
   fi
-  echo "  「${root}」可能有尚未落地的變更（pen-land.sh --dry-run 顯示有差異，或無法確認）——先跑：bash scripts/ops/pen-land.sh ${root}" >&2
+  # LS-118 R1 F2（merge-review）：mtime 方向訊號——落地檔比 backup 新，代表 backup 是陳舊快取（本票要治的
+  # 場景：QA git pull 後 Pen 那份 renderer／autosave 還停在舊版），不是「有真實未落地編輯」。這種情況下
+  # 捨棄 backup、強制重新載入是安全的；**絕不能**指示跑 pen-land.sh——那會用這份陳舊快照覆蓋較新的落地檔
+  # （R1 reviewer fixture 實證：2 節點落地檔被改寫成 1 節點 backup 版還印「✓ 已落地」）。仍要求 git-clean
+  # （同 rule c 的理由：防止落地檔本身其實也被直接改過內容的邊界情況被誤放行）；不 clean 或無法確認就不
+  # 提前 return，落到下面的通用訊息（其中已把「陳舊快取」列為優先假設）。
+  if printf '%s' "$out" | grep -qF '落地檔 mtime 晚於 backup'; then
+    if git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+      && [ -z "$(git -C "$root" status --porcelain -- design/littlesprout.pen 2>/dev/null)" ]; then
+      echo "  「${root}」安全：backup mtime 早於落地檔——落地檔在 Pen 上次 autosave 之後被更新（例如 git checkout／merge／pull），backup 是陳舊快取而非未落地的新編輯，且落地檔對 git 全程 clean——視為安全，不要跑 pen-land.sh（會用舊快照覆蓋較新的落地檔），直接強制重新載入即可" >&2
+      return 0
+    fi
+    echo "  「${root}」backup mtime 早於落地檔（疑似陳舊快取），但落地檔對 git 不是 clean（或無法確認是否為 git 倉庫）——不視為安全，需人工確認方向" >&2
+  fi
+  echo "  「${root}」有結構差異，方向不明——**最常見成因是 Pen 快取陳舊**（backup 落後落地檔，例如 git pull／merge 之後 Pen 那份 renderer 還沒追上；此時不該跑 pen-land.sh，會用舊快照覆蓋較新的落地檔），也可能是真有未落地編輯（backup 領先落地檔，此時才該跑 bash scripts/ops/pen-land.sh ${root}）——人工核對 mtime／內容方向後再動作，不要預設跑 pen-land.sh" >&2
   printf '%s\n' "$out" | sed 's/^/    /' >&2
   return 1
 }
@@ -340,6 +354,14 @@ echo "  已確認全部開著的 .pen 皆無未落地變更（或僅屬可安全
 
 pen_pid=$(pgrep -f 'Pen\.app/Contents/MacOS/Pen$' 2>/dev/null | head -1)
 if [ -z "$pen_pid" ]; then
+  if [ "$force_reload" -eq 1 ]; then
+    # LS-118 R1 F1（merge-review）：--force-reload 的唯一存在理由是「exit 0 ⇒ 換成全新 renderer 剛讀過磁碟」。
+    # pgrep 找不到主行程時無從確認接下來的 open -a Pen 是重開了全新行程還是只是重新聚焦既有行程（樣式不符／
+    # 改名／pgrep 缺失都可能讓 pgrep 撲空，但 Pen 其實還在跑）——不能假裝清場過，fail closed。預設模式
+    # （不帶 --force-reload）維持原行為：它的成功語意本來就只有「路徑一致」，不含「保證全新 renderer」。
+    echo "✗ pen-open：--force-reload 但找不到 Pen 主行程（pgrep 沒有結果）——無法確認接下來會是全新 renderer 還是既有行程被重新聚焦，不繼續（fail closed）" >&2
+    exit 2
+  fi
   echo "  找不到 Pen 主行程（pgrep 沒有結果）——跳過清場步驟，直接嘗試重開" >&2
 else
   osascript -e 'tell application "Pen" to quit' >/dev/null 2>&1

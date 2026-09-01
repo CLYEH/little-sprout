@@ -140,7 +140,7 @@ fi
 # python 結構 diff：清單印到 stdout，最後三行印 `NODES=<N>`／`META_OK=0|1`／`UNCHANGED=0|1` 供 shell
 # 解析，事後濾掉。
 diff_out=$(PYTHONIOENCODING=utf-8 python3 - "$want" "$backup" <<'PY'
-import json, sys
+import json, os, sys
 
 old_path, new_path = sys.argv[1], sys.argv[2]
 
@@ -217,6 +217,20 @@ for nid in sorted(set(old_nodes) & set(new_nodes), key=str):
         print(f"節點 {nid} 屬性變更：{diffs}")
         if not set(diffs) <= PLACEHOLDER_SAFE_KEYS:
             non_whitelisted_prop_change = True
+
+# LS-118 R1 F2（merge-review）：純節點內容 diff 分不出「backup 落後落地檔」（Pen 快取陳舊——落地檔在 Pen
+# 上次 autosave 之後被 git checkout／merge／pull 更新，例如 QA `git pull` 後第一次讀稿必踩）與「backup 領先
+# 落地檔」（Pen 有真實未落地編輯）兩個方向，過去一律判「可能有未落地變更」，逼呼叫端在陳舊方向也去跑
+# pen-land.sh——那會用舊快照覆蓋較新的落地檔。mtime 是現成的方向訊號：落地檔 mtime 晚於 backup ＝ backup
+# 寫入之後落地檔又被別的東西（通常是 git）動過，是陳舊快取而非新編輯；只印一行讓 pen-open.sh 的
+# check_root_safe 判斷（是否安全捨棄仍需另外核對 git-clean，見該檔），不影響本腳本自身的 exit code。
+try:
+    old_mtime = os.path.getmtime(old_path)
+    new_mtime = os.path.getmtime(new_path)
+    if old_mtime > new_mtime:
+        print("（落地檔 mtime 晚於 backup——落地檔在 Pen 上次 autosave 之後被更新，backup 可能是陳舊快取而非未落地的新編輯）")
+except OSError:
+    pass
 
 print(f"節點總數：落地檔 {old_count} → backup {new_count}")
 unchanged = not added and not removed and prop_changes == 0 and old_count == new_count

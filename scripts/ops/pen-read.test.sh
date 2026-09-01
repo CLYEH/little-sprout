@@ -145,6 +145,44 @@ else
 fi
 clear_fake_pen
 
+# ---- LS-118 R1（merge-review F1）：pgrep 找不到 Pen 主行程時不能假裝清場過，exit 2 ----
+reset_open_tracking; clear_fake_pen; wt_backup_safe
+set_state "PATH:${want}"
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF -- '--force-reload 但找不到 Pen 主行程'; then
+  ok 'pen-read.sh <root>：pgrep 找不到主行程 → fail closed exit 2（LS-118 R1 F1）'
+else
+  bad "應 exit 2（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ---- LS-118 R1（merge-review F2）：backup 是陳舊快取（mtime 早於落地檔）且落地檔 git-clean → 視為安全，
+#      強制清場重開成功，訊息絕不指示 pen-land.sh（會用舊快照覆蓋較新的落地檔）----
+wtQ="${work}/wtQ"
+mkdir -p "${wtQ}/design"
+printf '%s' '{"version":1,"fileToken":"tokQ","variables":{},"themes":{},"children":[{"id":"q1","x":1,"children":[]},{"id":"q2","x":2,"children":[]}]}' > "${wtQ}/design/littlesprout.pen"
+( cd "$wtQ" && git init -q && git add -A && git -c user.email=test@example.com -c user.name=test commit -q -m init ) >/dev/null 2>&1
+wantQ="$(cd "${wtQ}/design" && pwd -P)/littlesprout.pen"
+shaQ="$(printf '%s' "file://${wantQ}" | shasum | awk '{print $1}')"
+printf '%s' '{"version":1,"fileToken":"tokQ","variables":{},"themes":{},"children":[{"id":"q1","x":1,"children":[]}]}' > "${PEN_BACKUP_DIR}/${shaQ}"
+touch -t 202501010000 "${PEN_BACKUP_DIR}/${shaQ}"
+touch "${wtQ}/design/littlesprout.pen"
+
+reset_open_tracking; clear_fake_pen; wt_backup_safe
+set_state "PATH:${wantQ}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=1
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF 'backup mtime 早於落地檔' \
+  && printf '%s' "$out" | grep -qF '不要跑 pen-land.sh' \
+  && ! printf '%s' "$out" | grep -qF '先跑：bash scripts/ops/pen-land.sh' \
+  && ! fake_pen_alive; then
+  ok 'pen-read.sh <root>：陳舊快取＋git-clean → 視為安全，強制清場重開，不指示 pen-land（LS-118 R1 F2）'
+else
+  bad "應 exit 0 且不指示 pen-land（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+clear_fake_pen
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-read-check 自測失敗" >&2
   exit 1

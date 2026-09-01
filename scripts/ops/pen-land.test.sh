@@ -302,6 +302,30 @@ else
   bad "⑪d 零變更案例不應印僅白名單屬性訊息"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 
+# ---- ⑫ LS-118 R1 F2（merge-review）：backup mtime 早於落地檔的方向訊號，供 pen-open.sh 的
+#      check_root_safe 判斷「backup 落後落地檔（陳舊快取）」vs「backup 領先（真實未落地編輯）」----
+
+# ⑫a 落地檔 mtime 晚於 backup（backup 陳舊，本票要治的場景：git pull／merge 後 Pen 那份 renderer 還沒
+#     追上）→ 印方向訊號診斷行
+reset; write_backup "$BACKUP_3NODE"
+touch -t 202501010000 "${backup_dir}/$(sha_of)"
+out="$(run "$wt" --dry-run 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '落地檔 mtime 晚於 backup'; then
+  ok '⑫a 落地檔 mtime 晚於 backup（陳舊快取方向）→ 印方向訊號診斷行（LS-118 R1 F2）'
+else
+  bad "⑫a 應印方向訊號診斷行（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑫b backup mtime 晚於落地檔（backup 較新＝真實未落地編輯情境）→ 不印方向訊號，維持保守
+reset; write_backup "$BACKUP_3NODE"
+touch -t 203001010000 "${backup_dir}/$(sha_of)"
+out="$(run "$wt" --dry-run 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '落地檔 mtime 晚於 backup'; then
+  ok '⑫b backup mtime 晚於落地檔（真實未落地編輯情境）→ 不印方向訊號（LS-118 R1 F2）'
+else
+  bad "⑫b 不應印方向訊號（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
 # ---- ⑩ R1 F3：省略 --expect-nodes 時印明確警告，且 gate 輸出不得宣稱「與畫布一致」 ----
 reset; write_backup "$BACKUP_3NODE"
 out="$(run "$wt" 2>&1)"; got=$?
