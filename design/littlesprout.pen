@@ -53286,6 +53286,912 @@
           "y": 754
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "Qxema",
+      "x": 8324,
+      "y": 29019,
+      "name": "LS-21 / 11b 時間軸 · 空狀態",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "z59Lw",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "PFhXP",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "dNSFm",
+              "name": "Header Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ez7aR",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "時間軸",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zbBKv",
+              "name": "Child Filter",
+              "width": "fill_container",
+              "fill": "$surface-2",
+              "cornerRadius": "$radius-full",
+              "padding": 3,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "l0CHBX",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 0,
+                      "y": 1
+                    },
+                    "blur": 3
+                  },
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "IvJYo",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "全部",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "qrH2N",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "aNuOA",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "安",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "tYaCt",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "小安",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "UY5Bg",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "v3zUWG",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "軒",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "zoVfs",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "小軒",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "UhAvz",
+              "name": "Spacer 16",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "GeJ1J",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "oQPaw",
+              "name": "Feed",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                60,
+                0,
+                0,
+                0
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "SjTGB",
+                  "name": "Empty Print",
+                  "width": 345,
+                  "fill": "$print-paper",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$paper-edge",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "outer",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 0,
+                      "y": 3
+                    },
+                    "blur": 12
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "gKBS7",
+                      "name": "Photo Wrap",
+                      "clip": true,
+                      "width": "fill_container",
+                      "height": 184,
+                      "fill": "$surface-2",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "IlY16",
+                          "name": "Placeholder Icon",
+                          "width": 36,
+                          "height": 36,
+                          "icon": "image",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bG6cD",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "j36VD",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "content": "等待第一份回憶",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "aY7S5",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TL",
+                      "layoutPosition": "absolute",
+                      "x": -5,
+                      "y": -5,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 0 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "BbDZH",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TR",
+                      "layoutPosition": "absolute",
+                      "x": 324,
+                      "y": -5,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 0 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "fsveQ",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BL",
+                      "layoutPosition": "absolute",
+                      "x": -5,
+                      "y": 211,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 26 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "wSSFB",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BR",
+                      "layoutPosition": "absolute",
+                      "x": 324,
+                      "y": 211,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 26 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "qfAXo",
+                  "name": "Guidance",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "KwOmL",
+                      "name": "Headline",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "這裡還沒有任何回憶",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "RIfpP",
+                      "name": "Subhead",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "點右下角的「＋」寫下第一篇日記，或上傳一張照片。",
+                      "lineHeight": 1.5,
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "pTpJd",
+          "layoutPosition": "absolute",
+          "x": 313,
+          "y": 682,
+          "name": "FAB",
+          "width": 56,
+          "height": 56,
+          "fill": "$accent",
+          "cornerRadius": "$radius-full",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 0,
+              "y": 4
+            },
+            "blur": 14
+          },
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "dIpgw",
+              "name": "Plus Icon",
+              "width": 26,
+              "height": 26,
+              "icon": "plus",
+              "library": "lucide",
+              "fill": "$on-accent"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "mNyLd",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "vyy8j",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "eRy14",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 754
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "a67Na",
+      "x": 8817,
+      "y": 29019,
+      "name": "LS-21 / 11c 時間軸 · 下拉更新中",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "EwImI",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "x5Vmg",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Q4zc7",
+              "name": "Header Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "NUU1K",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "時間軸",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "L9HX4G",
+              "name": "Child Filter",
+              "width": "fill_container",
+              "fill": "$surface-2",
+              "cornerRadius": "$radius-full",
+              "padding": 3,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "MireL",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 0,
+                      "y": 1
+                    },
+                    "blur": 3
+                  },
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "G1UuzL",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "全部",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "y1kkg",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "Omix2",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "安",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "ZNGS1",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "小安",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Zqalj",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "ZRJdk",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "軒",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "wqEsy",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "小軒",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CjVOX",
+              "name": "Spacer 16",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "gLLsC",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "aNcaB",
+              "name": "Feed",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "MboTQ",
+                  "name": "Pull Refresh Row",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-item",
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "KFv8T",
+                      "name": "Refresh Spinner",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "loader-circle",
+                      "library": "lucide",
+                      "fill": "$accent"
+                    },
+                    {
+                      "type": "text",
+                      "id": "JvYtC",
+                      "name": "Refresh Label",
+                      "fill": "$text-secondary",
+                      "content": "更新中…",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "id": "iDGRv",
+                  "type": "ref",
+                  "ref": "umJHD",
+                  "name": "Card Photo 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "y1aDCR",
+                  "type": "ref",
+                  "ref": "fqhSH",
+                  "name": "Card Diary 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "p6lWH",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "G5NbSN",
+                  "type": "ref",
+                  "ref": "fqhSH",
+                  "name": "Card Diary 2",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9Z2Rs": {
+                      "icon": "notebook-pen"
+                    },
+                    "bRiyR": {
+                      "content": "日記"
+                    },
+                    "iMDUx": {
+                      "enabled": false
+                    },
+                    "IssRo": {
+                      "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "EjQ9X",
+                  "name": "Load More",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-block",
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "U0Keq",
+                      "name": "Spinner",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "loader",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "j5tQiE",
+                      "name": "Load More Label",
+                      "fill": "$text-secondary",
+                      "content": "載入更多回憶中…",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LMvK3",
+          "layoutPosition": "absolute",
+          "x": 313,
+          "y": 682,
+          "name": "FAB",
+          "width": 56,
+          "height": 56,
+          "fill": "$accent",
+          "cornerRadius": "$radius-full",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 0,
+              "y": 4
+            },
+            "blur": 14
+          },
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "Mx8XE",
+              "name": "Plus Icon",
+              "width": 26,
+              "height": 26,
+              "icon": "plus",
+              "library": "lucide",
+              "fill": "$on-accent"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "xbs62",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "VBIuP",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "OR1hw",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 754
+        }
+      ]
     }
   ],
   "themes": {
