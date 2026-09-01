@@ -8,12 +8,22 @@
 # （.pen JSON、`design/evidence/<票>-r<n>-overflow.json` 等）不受限——LS-68 的溢出掃描收據就落在
 # 後者，必須不受影響。
 #
-# 二進位判定：不重造輪子，直接借用 git 自己的判斷——`git diff --numstat` 對 git 視為二進位的檔案
-# （NUL byte 開頭 sniff，或 .gitattributes 的 -diff／binary 屬性覆寫）在新增／刪除欄位印 "-"，這正是
-# git 決定「這個 blob 能不能 delta-pack」的同一套判準，與本票 pack 實測的根因直接對應：不可 delta
-# 的二進位 blob 才是真正的體積負債；文字檔無論多大都能 delta，本來就不該擋。不用 `file --mime-type`
-# （外部工具依賴，且判斷邏輯與 git 自己怎麼打包無關）、不自己重新掃 NUL byte（git 已經算過，重算只是
-# 重複邏輯又可能與 git 實際打包行為兜不起來）。
+# 二進位判定：不重造輪子，借用 git 自己的判斷——`git diff --numstat` 對 git 視為二進位的檔案
+# （`buffer_is_binary()`：只看內容前 8000 bytes 有沒有 NUL byte，或 .gitattributes 的 diff／-diff／
+# binary 屬性覆寫）在新增／刪除欄位印 "-"。
+#
+# 誠實澄清（merge-review R1 F2，2026-09 實測推翻本行原先「與 delta-pack 同一套判準」的說法）：這**不是**
+# git 決定「這個 blob 能不能 delta-pack」的同一套判準——pack 端的 delta 決策看的是版間內容是否相似
+# （`gc --aggressive` 實測：整批換內容的 600 KB 級 base64 文字，5 版 pack 後仍佔 raw 的 78%；同尺寸每版
+# 小改的大型文字則只佔 4%），跟 `--numstat` 的二進位旗標無關；`.gitattributes` 加一行 `design/*.png diff`
+# 可以讓超標 PNG 在 numstat 顯示成文字，但對 pack 決策毫無影響。這裡只是借用一個**便宜的代理指標**：
+# 對本 repo 真正的負債大宗（`design/*.png`）判定完全準確——真 PNG/JPEG 標頭在前 16 bytes 就含 NUL，
+# 不會誤放；獨立量測 `design/littlesprout.pen`（86 版，raw 138.13 MB → pack 0.83 MB，0.6%）對比
+# `design/*.png`（9 個 blob，raw 14.41 MB → pack 14.11 MB，98.0%，佔封包 72%）證實 LS-72 的體積歸因
+# 在 86 版之後依然成立——但「巨大、低壓縮性的文字內容」（base64 內嵌圖片的 SVG／JSON、前段長 ASCII
+# 的向量 PDF）會被判定為文字而放行，是已知盲區（§7「盲區」欄，記入 LS-96）。不用 `file --mime-type`
+# （外部工具依賴，且判斷邏輯一樣不等於 pack 決策）、不自己重新掃 NUL byte（git 已經算過，重算只是
+# 重複邏輯又可能與 git 實際掃描行為兜不起來）。
 #
 # LFS pointer 例外：刻意不留。LS-74 票文三選項中的方案 1（git-lfs）裁決緩議——repo 未設定
 # `.gitattributes` 的 lfs filter、`git lfs` 未安裝，沒有 LFS 就不會有 LFS pointer 檔案，留一條
@@ -114,7 +124,7 @@ done < "$list"
 if [ -n "$hits" ]; then
   echo "✗ design-asset-size gate（${mode_desc}）：design/ 下列二進位檔超過 500 KB：" >&2
   printf '%s' "$hits" >&2
-  echo "  解法：改用壓縮素材——設計稿內照片 placeholder 改 ≤1024px JPEG；字標／icon 素材保留 PNG 但限制尺寸（見 .claude/agents/ui-designer.md）。文字檔（.pen、design/evidence/*.json）不受限、不算在內。既有、這次沒碰到的大檔不受影響——只擋這次新增或修改的檔。" >&2
+  echo "  解法：新增／修改的素材請先壓縮——設計稿內照片 placeholder 改 ≤1024px JPEG；字標／icon 素材保留 PNG 但限制尺寸（見 .claude/agents/ui-designer.md）。**若這個檔案是既有大檔的純搬移／改名（內容未變）**，壓縮並不能解決問題——本 gate 刻意把「改名」也視為觸碰而擋下（設計選擇，見上方「範圍」段），純搬移目前沒有機械逃生口，請回報 orchestrator 個案處理，不要為了通過而重壓一批本來合法的既有素材。文字檔（.pen、design/evidence/*.json）不受限、不算在內。既有、這次沒碰到的大檔不受影響——只擋這次新增或修改的檔。" >&2
   exit 1
 fi
 echo "✓ design-asset-size gate（${mode_desc}）：design/ 無超過 500 KB 的二進位新增／修改"

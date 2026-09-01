@@ -3,6 +3,12 @@
 # 「前饋必有反饋」對 gate 本身也適用：若判定退化成用副檔名猜二進位（誤放行沒有 .png 副檔名的二進位、
 # 或誤擋大型文字檔）、門檻反轉（>／< 顛倒）、邊界算錯（500 KB 本身該放行卻被擋、500 KB+1 該擋卻放行）、
 # 誤把既有未觸碰的大檔一併掃到、誤擋刪除、或 --base 模式沒真的接上，這裡會紅。
+#
+# merge-review R1 F1（2026-09）：R1 版本的每個二進位樣本檔名都是 *.png、每個文字樣本都是
+# .pen／.json／.txt——副檔名與內容從未分歧，導致「退化成副檔名判定」與「pathspec 收窄成
+# design/*.png」兩個 mutant 在 17 組全綠存活（自測宣稱抓得到但實際抓不到）。案例 ②′ 補上
+# design/ 下二進位、非 .png 副檔名（無副檔名）的樣本，同時殺死這兩個 mutant（前者靠內容判定
+# 落到 else 分支才會紅，後者靠 pathspec 若被收窄則這個路徑根本不會進入 diff 而假綠）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -48,6 +54,14 @@ mkbin design/big.png 600000
 g add design/big.png
 expect 1 '② design/big.png（二進位，600000 bytes）→ 紅' 'design/big.png'
 g rm -q --cached design/big.png
+
+# ②′ design/ 下二進位、非 .png 副檔名（無副檔名）→ 紅（merge-review R1 F1：釘住「退化成副檔名判定」
+# 與「pathspec 收窄成 design/*.png」兩個 mutant——這個檔案內容是二進位但檔名不含 .png，兩種退化
+# 實作都會誤放行）
+mkbin design/blob 600000
+g add design/blob
+expect 1 '②′ design/blob（無副檔名二進位，600000 bytes）→ 紅（F1 mutant 釘子）' 'design/blob'
+g rm -q --cached design/blob
 
 # ③ design/ 下大型文字檔（.pen JSON 模擬，600000 bytes）→ 綠（文字不限）
 mktxt design/littlesprout.pen 600000
