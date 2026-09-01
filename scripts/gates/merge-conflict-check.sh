@@ -54,7 +54,11 @@ case "$rc" in
     echo "  請先 git merge ${target}（解衝突、commit）再 push。" >&2
     exit 1 ;;
   *)
-    echo "✗ merge-conflict-check：git merge-tree 失敗（exit ${rc}；--write-tree 需 git ≥ 2.38）：" >&2
+    if printf '%s' "$out" | grep -qi 'unrelated histories'; then
+      echo "✗ merge-conflict-check：git merge-tree 失敗（exit ${rc}；${target} 與本分支沒有共同祖先，refusing to merge unrelated histories——分支起點可能切錯了）：" >&2
+    else
+      echo "✗ merge-conflict-check：git merge-tree 失敗（exit ${rc}；--write-tree 需 git ≥ 2.38，或其他 git 本身的錯誤，詳見下方輸出）：" >&2
+    fi
     printf '%s\n' "$out" | sed 's/^/    /' >&2
     exit 2 ;;
 esac

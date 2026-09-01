@@ -65,7 +65,7 @@ expect() {
   out="$(bash "$checker" "$doc" "$swift" "$mig" 2>&1)"
   got=$?
   if [ "$got" -ne "$want" ]; then
-    echo "✗ $name（期望 exit $want，實得 $got）" >&2
+    echo "✗ ${name}（期望 exit ${want}，實得 ${got}）" >&2
     printf '%s\n' "$out" | sed 's/^/    /' >&2
     fail=1
   elif [ -n "$must" ] && ! printf '%s\n' "$out" | grep -qF -- "$must"; then
@@ -188,7 +188,7 @@ count=$((count + 1))
 out="$(cd "$fake_repo" && bash "$checker" 2>&1)"
 got=$?
 if [ "$got" -ne 1 ]; then
-  echo "✗ ⑪ 預設路徑下、白名單登記退役的碼在 migrations 裡找不到，必須紅（期望 exit 1，實得 $got）" >&2
+  echo "✗ ⑪ 預設路徑下、白名單登記退役的碼在 migrations 裡找不到，必須紅（期望 exit 1，實得 ${got}）" >&2
   printf '%s
 ' "$out" | sed 's/^/    /' >&2
   fail=1
@@ -208,7 +208,7 @@ count=$((count + 1))
 out="$(cd "$fake_repo" && bash "$checker" 2>&1)"
 got=$?
 if [ "$got" -ne 0 ]; then
-  echo "✗ ⑪ 正向對照：白名單登記的碼如果 migrations 裡真的還在，預設路徑不該誤判成殭屍條目（期望 exit 0，實得 $got）" >&2
+  echo "✗ ⑪ 正向對照：白名單登記的碼如果 migrations 裡真的還在，預設路徑不該誤判成殭屍條目（期望 exit 0，實得 ${got}）" >&2
   printf '%s
 ' "$out" | sed 's/^/    /' >&2
   fail=1

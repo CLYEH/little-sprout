@@ -86,7 +86,11 @@ if [ -n "$noticket" ] || [ -n "$undeclared" ]; then
     printf '%s' "$foreign_lines" | grep -F "[${t}]" >&2
   done
   echo "  非刻意：回各自 worktree、把這些 commit 從本分支拿掉（rebase）。" >&2
-  echo "  刻意夾帶：本票 commit body 加獨佔一行 \`Bundles: $(printf '%s' "$undeclared" | paste -s -d, - | sed 's/,/, /g')\`（理由寫下一行），PR body 同步宣告（CI 驗）。" >&2
+  if [ -n "$undeclared" ]; then
+    echo "  刻意夾帶：本票 commit body 加獨佔一行 \`Bundles: $(printf '%s' "$undeclared" | paste -s -d, - | sed 's/,/, /g')\`（理由寫下一行），PR body 同步宣告（CI 驗）。" >&2
+  else
+    echo "  先補票號：上面列的是 [無票號] 的 commit，Bundles 逃生口只認得「已有票號、屬於其他票」的 commit，這裡不適用——先幫它們補上正確的 LS-<n> 票號再 push。" >&2
+  fi
   exit 1
 fi
 
