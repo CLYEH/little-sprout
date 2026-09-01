@@ -5,7 +5,8 @@
 ## 沖印品 Print（白邊＋壓印行）
 
 - 結構（由外而內）：台紙（`$bg`＋窗光）→ 紙（`$print-paper`，1pt `$paper-edge` 亮邊，`$paper-shadow` 右下影）→ 照片（Photo Wrap，`clip:true`）→ 壓印行 Imprint Row → 角托（最上層，壓過紙緣 5pt）。
-- 白邊 padding 一律綁 `$print-edge`／`$print-edge-bottom`（`["$print-edge","$print-edge","$print-edge-bottom","$print-edge"]`），**不是** `$sp-label`（LS-72 F8 改掉 12 張）。四邊解析 8/8/8/8；下緣視覺 32＝8＋gap 7＋Imprint Row 17＋8，厚度由壓印那行字掙來，不要當成 padding 去調。
+- 白邊 padding 一律綁 `$print-edge`／`$print-edge-bottom`（`["$print-edge","$print-edge","$print-edge-bottom","$print-edge"]`），**不是** `$sp-label`（LS-72 F8 改掉 12 張）。四邊解析 8/8/8/8；下緣視覺 32＝8＋gap 7＋Imprint Row 17＋8，厚度由壓印那行字掙來，不要當成 padding 去調。這是**壓印小字型**（單一 caption，一行 17pt）的公式。
+- **caption 型印品**（LS-119 R3）：當壓印行改成承載較長內容的單一文字（例如「情境句 · 年齡／張數」合併成一行、可能自然換行到 2–3 行），Imprint Row 不再固定 17，改為該文字 `fit_content` 的實際高度（實測單行 25、雙行 ~50、AX3 三行 ~116）。下緣視覺厚度公式改寫為 **8＋gap 7＋Imprint Row(fit_content)＋8**——「掙來」的仍是那行字，只是字本身長度可變，不是固定一行。角托 y／x 因此必須隨印品實測高度／寬度重算（見「角托一律壓過紙緣」條與 entry-conditions／LS-119 Handoff Notes 的核對表），**不能沿用舊的固定 211/324 座標**。
 - Print 一律 `fit_content`，**板高跟著內容走，不從板高倒推 Print 高**（R9-B：倒推出的 63.9 白邊沒有主人；R10 修正後八張 Print 全部閉合 230.1／iPad 582）。
 - 照片出血：Hero Photo 刻意大於 `clip:true` 容器，靠 frame 裁出構圖（01 家族 345×190.1 的窗、Hero 本體 345×515 y−84）。這類 partially clipped 是設計意圖，計入已知溢出白名單（R11 51／LS-72 後 50，見 SKILL.md 數字速查）。
 - 壓印行內容：歡迎家族＝「LITTLE SPROUT」（置中、fs-imprint）；建立家庭＝家庭名 Family Caption（`$print-ink`，超長以 `.lineLimit(1).truncationMode(.tail)` 真截斷）；空欄位態＝單一空白 `" "`（保住 Imprint Row 32pt 行高、卡高 175 不塌縮，**不可整列隱藏**）。
@@ -36,9 +37,9 @@
 
 這個版本同時解決了「角色列自己的記憶點」問題：紙不再只是背景色，而是一個會從清單裡浮起來的實體物件，遮住 logo 依然認得出。
 
-## 釘底動作帶 Action Bar（LS-111 R6 起，全 app 版式慣例——**暫定：n=1，待第二次套用後定案**）
+## 釘底動作帶 Action Bar（LS-111 R6 起，全 app 版式慣例——**n=2，已轉正**）
 
-R7 掃過全部 393 寬、非 A11y/Stress 的螢幕板：27 張有實心 accent，其中 20 張其他板剛好 852、內容不溢出，只有 07 家族 5 張用到本慣例——目前沒有第二個畫面真的套用過它。下一張「單一 CTA＋內容隨狀態變動」的票（08 幫寶貝建檔／09b 加入照片挑選態較可能）套用時，把「本慣例第二次套用」列進驗收條件，屆時再把這行「暫定」拿掉。
+R7 掃過全部 393 寬、非 A11y/Stress 的螢幕板：27 張有實心 accent，其中 20 張其他板剛好 852、內容不溢出，只有 07 家族 5 張用到本慣例——當時沒有第二個畫面真的套用過它。**第二次套用＝LS-119 日記編輯器家族 6 板**（12/12b/12c/12 深色/12-iPad/A11y-12）：6/6 板結構一致（`Bar Hairline` `$border` 1pt＋`Bar Button Wrap` padding 16/24）、CTA 底緣→板底 6/6 板皆 50pt（含 `peiRC` 錯誤列讓 Action Bar 從 93 長到 159 仍守 50），慣例本身在跨畫面／跨狀態下證明可轉正，本行「暫定」拿掉。
 
 畫面若有**貫穿全狀態的單一主 CTA**（`$accent` 實心，每畫面限一次）且**內容量會隨狀態變動**（載入中／已產生／AX3 等），主 CTA 改用「釘底動作帶」，不要讓 CTA 座標由上方內容累加決定。
 
@@ -46,7 +47,25 @@ R7 掃過全部 393 寬、非 A11y/Stress 的螢幕板：27 張有實心 accent�
 - **安全區**：Action Bar 不吸收 home indicator 安全區，Home Indicator Area（34pt）仍是獨立的最後一段。CTA 底緣到裝置實體底緣＝ Button Wrap padding-bottom（16）＋ Home Indicator Area（34）＝**50pt 定值**，與內容區長度無關——這是本慣例要保證的不變式，換掉哪一段內容都不该改變這個數字。
 - **與捲動內容的關係**：內容區維持可捲動；Action Bar 對應實作端 `.safeAreaInset(edge:.bottom)` 釘在 ScrollView 外，不要把 CTA 塞進 ScrollView 內容裡。
 - **不適用**：內容恆定、不隨狀態變動的一次性表單（06 碼輸入家族既有的 Upper／Footer flex-spacer 慣例——單一 fixed-height 畫面＋`height:fill_container` spacer 把 Footer 頂到底）不需要改用本慣例，兩者是因應不同前提的兩套解法。
+- **不適用（LS-119 R3 新增例外）：Tab-root 畫面**（iPhone TabView 的四個分頁本身，例如時間軸首頁）。這類畫面底部已有一顆全 app 共用、絕對定位的浮動膠囊 `cmp/Tab Bar`（361×64，x16，y＝板高−98）；若再疊一條釘底 Action Bar，Tab Bar 的 y 必須跟著上移，但其他分頁沒有這段新增內容，Tab Bar 位置會隨分頁不同而跳動——這比單一畫面內的版面穩定更根本（跨分頁，不是跨狀態）。這類畫面的單一主要動作改放**導覽列／Header Row 具名按鈕**（見下「時間軸建立入口」條），不套用本慣例。
 - **Pencil 實作陷阱**：root frame 與內容區 frame 的 `height` 常是硬寫數字（不是 `fit_content`），改動子內容後必須手動重算並更新這兩層的 `height`，否則 `clip:true` 會靜默裁掉超出宣告高度的 Action Bar／Home Indicator Area 而毫無報錯。
+
+### 時間軸建立入口：導覽列按鈕（LS-119 R3，取代 FAB）
+
+- 時間軸首頁的建立動作用 `cmp/Create Entry Button`（前身 `cmp/FAB`，同一元件 id 就地改造）：pill 形、`fill:$accent`、padding `[$ctl-pad-tap, $sp-item]`＝44pt 高（padding 推導，非硬寫）、icon-sm＋`fs-body` label（「＋ 新增回憶」），放進 Header Row（與畫面標題同列，`justifyContent:space_between`），**不用絕對定位**。
+- 這是本規則唯一目前已知需要放棄「釘底動作帶」慣例的畫面類型（見上「不適用：Tab-root 畫面」），理由是浮動／釘底元素都無法在不影響 Tab Bar 全域位置的前提下與 Tab Bar 共存；把入口收進固定版面的 Header Row，結構上保證它不會疊到任何捲動中的卡片內容。
+- 空狀態（無內容時）的引導文案應指向這顆按鈕實際所在的位置（「點上方的『新增回憶』…」），不要寫死方向詞而不對照實際座標——文案與版面必須同步更新。
+
+## 日期章 Day Divider（LS-119 R3 新增，跨畫面 signature）
+
+- `cmp/Day Divider`：一枚微旋轉（預設 −4°）的圖章，`$print-paper` 底、`$print-ink-secondary` 墨、`fit_content` 尺寸（padding `[$sp-tight,$sp-label]`）。在 Feed 中用作**日期分組標頭**（同一天的卡片跟著它，組間 `$sp-section` 44、標頭到首卡 `$sp-label` 8）；在日記詳情頁放大（`fontSize` 覆寫至 `$fs-lead` 22）用作**畫面錨點**——同一枚章在兩種尺度出現是同一個元件的兩個 instance，不是兩個平行語彙。
+- **Ghost（重影）**：模擬二次蓋章的視覺，做法是 `Copy` 主 Stamp 本身（不是另建一個獨立尺寸的框），疊在後方，位移固定 `(-3, +3)`、旋轉差固定 `3°`，`opacity` 套在整個 Ghost frame（不是只淡文字）——這樣深色模式下才有紙底一起淡出，不會變成「純文字漂在暗背景上」。**Ghost 的文字內容必須手動同步主 Stamp 的內容**（兩者是各自獨立的 `fit_content` 節點，靠相同內容才會算出相同尺寸），新增或修改 Day Divider 實例時務必兩處一起改。
+- 角托三段規則不因此新增第四段：日期章不裱照片、零角托、零染料池，屬於「借紙面基底給非照片元件」的既有規則（見上「紙面基底可以借給非照片元件」），不是角托文法的延伸。
+
+## 相簿卡疊紙 Stack Sheet（LS-119 R3，區分「一張照片」與「一疊照片」）
+
+- `cmp/Card Album` 在 Photo Print 下緣新增兩條 4pt 薄片（`fill:$print-paper`＋`stroke:$paper-shadow`），暗示這張紙底下還有更多張，取代早期誤用 `$photo-corner`（角托色）畫底線的做法——**底下那疊紙用紙的顏色，不是角托的顏色**，借用角托色會稀釋角托規則本身（同「紙面基底」條的道理）。
+- 位置避開角托涵蓋區：`x=21` 起、寬＝印品寬−42（兩端各留 21pt 淨空，正好是角托 26pt 涵蓋區扣掉 5pt corner-out 出血後的淨寬）；`y`＝印品高與印品高+7，隨每個 instance 的實測印品高分別覆寫（同角托 y 的工具限制與核對紀律，見 entry-conditions／LS-119 Handoff Notes）。
 
 ## 染料池 mount-pool
 
