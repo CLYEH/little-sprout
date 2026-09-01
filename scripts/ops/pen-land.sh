@@ -11,7 +11,7 @@
 # `open -a Pen` 之後）。路徑含空白／非 ASCII 時 sha1 可能對不上（R1 I2；本票對含空白路徑實測引號處理
 # 正確，只是若真的對不上，找不到 backup 的錯誤訊息要能提示往這個方向查）。
 #
-# 用法：pen-land.sh <worktree-or-repo-root> [--expect-nodes N] [--after EPOCH] [--allow-unchanged] [--dry-run]
+# 用法：pen-land.sh <worktree-or-repo-root> [--expect-nodes N] [--after EPOCH [--marker STRING]] [--allow-unchanged] [--dry-run]
 #
 # 流程：
 #   1. 算 want = <root>/design/littlesprout.pen 的絕對路徑；sha1(file://want) 找 backup。
@@ -19,6 +19,16 @@
 #      不往下跑——ui-designer 在最後一次 execute 之後立刻 `t=$(date +%s)`，用 `--after $t` 呼叫，擋住
 #      「autosave 還沒追上最新編輯」這種假落地。省略則不做新鮮度檢查（相容舊呼叫，但 ui-designer 的收工
 #      程序一律要傳）。
+#      **LS-44**：這道 mtime 比對本身有 ~5 秒等級的競態——`date +%s` 只有整秒精度、autosave 是非同步寫入，
+#      backup mtime 落在 EPOCH 前一兩秒不代表 backup 內容真的落後最後一次 execute，也可能只是寫入時間點被
+#      秒級精度或排程延遲誤判成「早於」。mtime 因此只適合當**快篩**（明顯落後太多——例如落後幾分鐘——直接
+#      擋掉多半是對的），不該是唯一的**決斷**依據。`--marker STRING`（與 `--after` 搭配、單獨給不生效）：
+#      mtime 快篩判定「落後」時，若給了 `--marker` 且 backup 檔案原始內容（純文字 grep，非 JSON 解析）含有
+#      這個字串，視為內容證明——backup 確實已包含本輪最後一筆編輯——覆蓋 mtime 的判斷，繼續往下跑結構 diff
+#      （印出信任內容證明的稽核訊息）；沒給 `--marker` 或給了但沒命中，維持原本行為：印訊息、exit 1。
+#      ui-designer 在最後一次 execute 之後，除了記 `t=$(date +%s)`，也應記下那次編輯裡的一個獨特字串（例如
+#      剛設定的 content／name／新 id），落地時一併傳 `--marker`；沒有獨特字串可用（例如純屬性數值變更、
+#      沒有可搜文字）就不傳，退回純 mtime 快篩＋等待重跑。
 #   3. python3 結構 diff：want（落地檔／舊）vs backup（Pen 記憶體／新）——節點總數（含巢狀 children）、
 #      id 集合（新增／刪除）、meta（variables／themes／fileToken）是否不變、逐 (id, prop) 差異
 #      （排除 children，避免整棵子樹洗版）。印出變更清單。LS-117：節點總數／id 集合不變、且所有屬性差異都
@@ -48,7 +58,7 @@
 set -uo pipefail
 
 usage() {
-  echo "用法：pen-land.sh <worktree-or-repo-root> [--expect-nodes N] [--after EPOCH] [--allow-unchanged] [--dry-run]" >&2
+  echo "用法：pen-land.sh <worktree-or-repo-root> [--expect-nodes N] [--after EPOCH [--marker STRING]] [--allow-unchanged] [--dry-run]" >&2
 }
 
 if [ $# -lt 1 ]; then
@@ -61,6 +71,8 @@ shift
 expect=""
 after=""
 after_given=0
+marker=""
+marker_given=0
 allow_unchanged=0
 dry_run=0
 while [ $# -gt 0 ]; do
@@ -82,6 +94,15 @@ while [ $# -gt 0 ]; do
       after_given=1
       shift 2
       ;;
+    --marker)
+      if [ $# -lt 2 ] || [ -z "${2:-}" ]; then
+        echo "✗ pen-land：--marker 需要一個非空字串參數" >&2
+        exit 2
+      fi
+      marker=$2
+      marker_given=1
+      shift 2
+      ;;
     --allow-unchanged)
       allow_unchanged=1
       shift
@@ -97,6 +118,11 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+if [ "$marker_given" -eq 1 ] && [ "$after_given" -ne 1 ]; then
+  echo "✗ pen-land：--marker 須與 --after 搭配（沒有 mtime 快篩就沒有需要覆蓋的判斷，單獨給不生效）" >&2
+  exit 2
+fi
 
 root=$(cd "$target" 2>/dev/null && pwd -P) || {
   echo "✗ pen-land：找不到目錄「${target}」" >&2
@@ -132,8 +158,16 @@ print(int(os.path.getmtime(sys.argv[1])))' "$backup" 2>/dev/null) || {
   }
   if [ "$backup_mtime" -lt "$after" ]; then
     stale=$((after - backup_mtime))
-    echo "✗ pen-land：backup 太舊——backup mtime=${backup_mtime}（epoch），--after=${after}（epoch），backup 落後 ${stale} 秒——autosave 還沒追上最後一次 execute，等 autosave 後重跑（不得改用 cp 手動繞過）" >&2
-    exit 1
+    if [ "$marker_given" -eq 1 ] && grep -qF -- "$marker" "$backup" 2>/dev/null; then
+      echo "  mtime 快篩：backup mtime=${backup_mtime}（epoch），--after=${after}（epoch），落後 ${stale} 秒——但 --marker 命中 backup 內容（本輪最後一筆編輯的特徵字串已在 backup 中），視為內容證明覆蓋 mtime 判斷，繼續（LS-44：mtime 只是快篩，內容證明才是決斷）" >&2
+    else
+      if [ "$marker_given" -eq 1 ]; then
+        echo "✗ pen-land：backup 太舊——backup mtime=${backup_mtime}（epoch），--after=${after}（epoch），backup 落後 ${stale} 秒，且 --marker「${marker}」未在 backup 中命中——autosave 還沒追上最後一次 execute，等 autosave 後重跑（不得改用 cp 手動繞過）" >&2
+      else
+        echo "✗ pen-land：backup 太舊——backup mtime=${backup_mtime}（epoch），--after=${after}（epoch），backup 落後 ${stale} 秒——autosave 還沒追上最後一次 execute，等 autosave 後重跑（不得改用 cp 手動繞過；若能找出這次編輯的獨特字串，可加 --marker 用內容證明取代 mtime 快篩）" >&2
+      fi
+      exit 1
+    fi
   fi
 fi
 

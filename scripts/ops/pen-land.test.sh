@@ -260,6 +260,49 @@ else
   bad "⑨d --after 過去時間戳應正常落地（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 
+# ---- ⑬ LS-44：--marker 內容證明覆蓋 mtime 快篩（mtime ~5 秒等級競態的機械解） ----
+
+# ⑬a --marker 沒有 --after 陪同 → exit 2（單獨給不生效，fail loud 而非靜默忽略）
+reset; write_backup "$BACKUP_3NODE"
+out="$(run "$wt" --expect-nodes 3 --marker '"z":3' 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '須與 --after 搭配'; then
+  ok '⑬a --marker 缺 --after → exit 2'
+else
+  bad "⑬a --marker 缺 --after 應 exit 2（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑬b --marker 缺值 → exit 2
+out="$(run "$wt" --after "$(date +%s)" --marker 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '需要一個非空字串參數'; then
+  ok '⑬b --marker 缺值 → exit 2'
+else
+  bad "⑬b --marker 缺值應 exit 2（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑬c mtime 快篩判定「落後」（未來 --after），但 --marker 命中 backup 原始內容 → 視為內容證明，覆蓋
+#     mtime 判斷、繼續往下正常落地（模擬 ~5 秒等級的 mtime 誤判：backup 其實已含本輪最後一筆編輯）
+reset; write_backup "$BACKUP_3NODE"
+future=$(( $(date +%s) + 300 ))
+out="$(run "$wt" --expect-nodes 3 --after "$future" --marker '"z":3' 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '內容證明覆蓋 mtime 判斷' \
+  && grep -qF '"x":99' "${wt}/design/littlesprout.pen"; then
+  ok '⑬c --marker 命中：mtime 顯示落後仍以內容證明覆蓋，正常落地'
+else
+  bad "⑬c --marker 命中應覆蓋 mtime 快篩並正常落地（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑬d mtime 快篩判定「落後」，--marker 有給但沒有命中 backup 內容 → 維持原本拒絕（不得被無關字串誤放行）
+reset; write_backup "$BACKUP_3NODE"
+before="$(cat "${wt}/design/littlesprout.pen")"
+future=$(( $(date +%s) + 300 ))
+out="$(run "$wt" --expect-nodes 3 --after "$future" --marker 'NOPE-NOT-PRESENT-IN-BACKUP' 2>&1)"; got=$?
+after_content="$(cat "${wt}/design/littlesprout.pen")"
+if [ "$got" -ne 0 ] && printf '%s' "$out" | grep -qF '未在 backup 中命中' && [ "$before" = "$after_content" ]; then
+  ok '⑬d --marker 未命中：維持拒絕，不 cp'
+else
+  bad "⑬d --marker 未命中應維持拒絕（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
 # ---- ⑪ LS-117：僅白名單屬性（placeholder）差異的診斷訊息 ----
 
 # ⑪a 單一節點僅 placeholder 差異、節點總數不變 → 印「僅偵測到白名單屬性」，仍是 exit 0（dry-run 對真實
