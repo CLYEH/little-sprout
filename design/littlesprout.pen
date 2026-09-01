@@ -55108,6 +55108,293 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "lKoZG",
+      "x": 10737,
+      "y": 29019,
+      "name": "A11y / 11 時間軸 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1500,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "N2xd1",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "YulfE",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "pyAxq",
+              "name": "Header Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "b55XxS",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "時間軸",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Y7wQa",
+              "name": "Filter Button",
+              "fill": "$surface",
+              "cornerRadius": "$radius-full",
+              "stroke": "$control-line",
+              "strokeWidth": 1.5,
+              "gap": "$sp-tight",
+              "padding": [
+                "$ctl-pad-md",
+                "$sp-item"
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "XmnMx",
+                  "name": "Label",
+                  "fill": "$text-primary",
+                  "content": "全部",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "icon",
+                  "id": "cGEQ3",
+                  "name": "Chevron",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "chevron-down",
+                  "library": "lucide",
+                  "fill": "$text-primary"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "S1NnZB",
+              "name": "Spacer 16",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "qKwo5",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "LJJLP",
+              "name": "Feed",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "id": "iQ4kb",
+                  "type": "ref",
+                  "ref": "umJHD",
+                  "name": "Card Photo 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "Y0ycD",
+                  "type": "ref",
+                  "ref": "fqhSH",
+                  "name": "Card Diary 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "cgfKf",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "tNotZ",
+                  "type": "ref",
+                  "ref": "fqhSH",
+                  "name": "Card Diary 2",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9Z2Rs": {
+                      "icon": "notebook-pen"
+                    },
+                    "bRiyR": {
+                      "content": "日記"
+                    },
+                    "iMDUx": {
+                      "enabled": false
+                    },
+                    "IssRo": {
+                      "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "CvUlD",
+                  "name": "Load More",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-block",
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "g433aF",
+                      "name": "Spinner",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "loader",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "PHDYS",
+                      "name": "Load More Label",
+                      "fill": "$text-secondary",
+                      "content": "載入更多回憶中…",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "DQ4z8",
+          "layoutPosition": "absolute",
+          "x": 313,
+          "y": 1330,
+          "name": "FAB",
+          "width": 56,
+          "height": 56,
+          "fill": "$accent",
+          "cornerRadius": "$radius-full",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 0,
+              "y": 4
+            },
+            "blur": 14
+          },
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "O1COCz",
+              "name": "Plus Icon",
+              "width": 26,
+              "height": 26,
+              "icon": "plus",
+              "library": "lucide",
+              "fill": "$on-accent"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yCAHb",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "wKI5d",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "QVGNJ",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 1402
+        }
+      ]
     }
   ],
   "themes": {
