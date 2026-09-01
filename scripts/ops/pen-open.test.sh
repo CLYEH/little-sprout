@@ -154,6 +154,9 @@ wt2_backup_unsafe() { printf '%s' '{"version":1,"fileToken":"tok1","variables":{
 # wt 自己（目標文件）也要能標成安全，供 ⑪e 驗證「隱藏第三視窗」單獨拒絕清場的情境。
 WT_SAFE='{"version":1,"children":[]}'
 wt_backup_safe() { printf '%s' "$WT_SAFE" > "${PEN_BACKUP_DIR}/$(printf '%s' "file://${want}" | shasum | awk '{print $1}')"; }
+# LS-118 ⑬b：wt 自己的 backup 帶一個落地檔沒有的節點——真實（非白名單）差異，供「目標即使已是 active
+# 仍可能有未落地變更」的 --force-reload 拒絕案例。
+wt_backup_unsafe() { printf '%s' '{"version":1,"children":[{"id":"newnode","x":1,"children":[]}]}' > "${PEN_BACKUP_DIR}/$(printf '%s' "file://${want}" | shasum | awk '{print $1}')"; }
 
 # wt3：只透過 ps 枚舉才會被看見的「隱藏」第三個視窗（LAST_SEEN／want 都不指向它）——驗證 R3 F1 完整修法：
 # 沒有它，get_app_state 只回得出一個 active，這份不安全的視窗永遠不會被檢查到。
@@ -182,6 +185,24 @@ wtP_make_dirty() { printf '%s' '{"version":1,"fileToken":"tokP","variables":{},"
 # backup 對齊「已弄髒」的落地檔，只多 placeholder 差異——結構上仍是「僅白名單」，但落地檔對 git 不 clean。
 wtP_backup_placeholder_only_dirty() { wtP_backup '{"version":1,"fileToken":"tokP","variables":{},"themes":{},"children":[{"id":"iq3Ic","x":5,"placeholder":true,"children":[]}]}'; }
 wtP_reset_clean() { git -C "$wtP" checkout -q -- design/littlesprout.pen; }
+
+# wtQ：LS-118 R1 F2 用（merge-review）——真的 git 倉庫，落地檔 2 節點且 git-clean，backup 是舊快照
+# （1 節點，backup mtime 明確早於落地檔）——mtime 方向偵測的正案例／邊界案例共用 fixture。
+wtQ="${work}/wtQ"
+mkdir -p "${wtQ}/design"
+WTQ_CLEAN='{"version":1,"fileToken":"tokQ","variables":{},"themes":{},"children":[{"id":"q1","x":1,"children":[]},{"id":"q2","x":2,"children":[]}]}'
+printf '%s' "$WTQ_CLEAN" > "${wtQ}/design/littlesprout.pen"
+( cd "$wtQ" && git init -q && git add -A && git -c user.email=test@example.com -c user.name=test commit -q -m init ) >/dev/null 2>&1
+wantQ="$(cd "${wtQ}/design" && pwd -P)/littlesprout.pen"
+# backup＝落地檔的舊子集（少 q2），mtime 刻意設成很早，再把落地檔 touch 成「現在」確保方向明確不受時序影響。
+wtQ_backup_stale() {
+  printf '%s' '{"version":1,"fileToken":"tokQ","variables":{},"themes":{},"children":[{"id":"q1","x":1,"children":[]}]}' > "${PEN_BACKUP_DIR}/$(printf '%s' "file://${wantQ}" | shasum | awk '{print $1}')"
+  touch -t 202501010000 "${PEN_BACKUP_DIR}/$(printf '%s' "file://${wantQ}" | shasum | awk '{print $1}')"
+  touch "${wtQ}/design/littlesprout.pen"
+}
+# 弄髒落地檔本身（模擬「其實有人直接改了內容」），mtime 方向仍是落地檔較新，但不該被判定安全。
+wtQ_make_dirty() { printf '%s' '{"version":1,"fileToken":"tokQ","variables":{},"themes":{},"children":[{"id":"q1","x":9,"children":[]},{"id":"q2","x":2,"children":[]}]}' > "${wtQ}/design/littlesprout.pen"; }
+wtQ_reset_clean() { git -C "$wtQ" checkout -q -- design/littlesprout.pen; }
 
 # wt4：LS-117 defect 3 用——從未被 Pen 開過的路徑，$PEN_BACKUP_DIR 裡刻意不建立對應 backup。
 wt4="${work}/wt4"
@@ -323,9 +344,9 @@ set_state "PATH:${want2}"
 start_fake_pen
 export PEN_STUB_OPEN_SUCCEED_AT=2
 out="$(run "$wt" 2>&1)"; got=$?
-if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF "先跑：bash scripts/ops/pen-land.sh ${wt2_resolved}" \
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF "bash scripts/ops/pen-land.sh ${wt2_resolved}" \
   && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
-  ok '⑪c 殘留＋有未落地變更：不 quit、不重開，exit 1，假行程仍活著'
+  ok '⑪c 殘留＋有未落地變更：不 quit、不重開，exit 1，假行程仍活著（LS-118 R1：訊息改為方向感知措辭，仍提及 pen-land.sh）'
 else
   bad "⑪c 應 exit 1 且不動假行程（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
@@ -449,6 +470,100 @@ else
   bad "⑫f 應 exit 2 且拒絕 SIGKILL（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 clear_fake_pen; clear_ps_pen_files
+
+# ---- LS-118：--force-reload ----
+
+# ⑬a 目前已一致＋安全，仍強制清場重開（不信任舊 renderer 可能停在磁碟更新前的舊快照）——驗證新增的
+#     「不因已一致就早退」邏輯，且清場前後仍照既有安全判定把關、重開後才真正算成功。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe
+set_state "PATH:${want}"
+start_fake_pen
+export PEN_STUB_OSASCRIPT_KILLS=1
+out="$(run "$wt" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF -- '--force-reload' \
+  && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
+  && ! fake_pen_alive && [ "$(open_calls)" -eq 2 ]; then
+  ok '⑬a --force-reload：目前已一致仍強制清場重開，假行程真的被換掉（LS-118）'
+else
+  bad "⑬a 應 exit 0 且真的清場重開（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OSASCRIPT_KILLS
+clear_fake_pen
+
+# ⑬b 目前已一致，但目標自己的 renderer 有未落地變更——即使已經 active，--force-reload 仍不能為了保
+#     新鮮度而默默丟掉真實變更，fail closed 拒絕清場。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_unsafe
+set_state "PATH:${want}"
+start_fake_pen
+out="$(run "$wt" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF -- '--force-reload' \
+  && printf '%s' "$out" | grep -qF '不自動 quit' \
+  && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑬b --force-reload：目標自己有未落地變更 → 即使已一致仍拒絕清場（LS-118）'
+else
+  bad "⑬b 應 exit 1 且不清場（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# ---- LS-118 R1（merge-review F1／F2）----
+
+# ⑬c F1 正案例：--force-reload 且 pgrep 找不到 Pen 主行程（樣式不符／改名／pgrep 缺失，Pen 其實還在跑）
+#     → 不能假裝清場過，fail closed exit 2（不像修前那樣印 ✓ 並 exit 0，但沒真的換 renderer）。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe
+set_state "PATH:${want}"
+out="$(run "$wt" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF -- '--force-reload 但找不到 Pen 主行程'; then
+  ok '⑬c --force-reload：pgrep 找不到主行程 → fail closed exit 2，不假裝清場過（LS-118 R1 F1）'
+else
+  bad "⑬c 應 exit 2（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑬d F1 對照：預設模式（不帶 --force-reload）pgrep 找不到主行程時維持原行為——它的成功語意本來就只有
+#     「路徑一致」，不含「保證全新 renderer」，跳過清場、直接重開即可視為成功。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt2_backup_safe
+set_state "PATH:${want2}"
+export PEN_STUB_OPEN_SUCCEED_AT=2
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '跳過清場步驟，直接嘗試重開' \
+  && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}"; then
+  ok '⑬d 預設模式 pgrep 找不到主行程：跳過清場、直接重開，不受 --force-reload 新規則影響（LS-118 R1 F1 對照）'
+else
+  bad "⑬d 應 exit 0（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT
+
+# ⑬e F2 正案例：backup 是陳舊快取（mtime 早於落地檔）且落地檔對 git 全程 clean → 視為安全，強制清場重開
+#     成功；訊息絕不能指示 pen-land.sh（會用舊快照覆蓋較新的落地檔）。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wtQ_backup_stale; wt_backup_safe
+set_state "PATH:${wantQ}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=1
+out="$(run "$wt" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF 'backup mtime 早於落地檔' \
+  && printf '%s' "$out" | grep -qF '不要跑 pen-land.sh' \
+  && ! printf '%s' "$out" | grep -qF '先跑：bash scripts/ops/pen-land.sh' \
+  && ! fake_pen_alive; then
+  ok '⑬e mtime 方向感知正案例：陳舊快取＋git-clean → 視為安全，強制清場重開，不指示 pen-land（LS-118 R1 F2）'
+else
+  bad "⑬e 應 exit 0 且不指示 pen-land（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+clear_fake_pen
+
+# ⑬f F2 邊界：backup 陳舊（mtime 方向相同）但落地檔對 git 不 clean → 不視為安全，不清場，exit 1（防止
+#     「落地檔本身也被直接改過內容」被誤放行，同 rule c 的理由）。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wtQ_backup_stale; wtQ_make_dirty
+set_state "PATH:${wantQ}"
+start_fake_pen
+out="$(run "$wt" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '疑似陳舊快取' \
+  && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑬f mtime 方向感知邊界：backup 陳舊但落地檔對 git 不 clean → 不視為安全，不清場（LS-118 R1 F2 邊界）'
+else
+  bad "⑬f 應 exit 1 且不清場（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+wtQ_reset_clean
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-open-check 自測失敗" >&2
