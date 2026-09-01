@@ -159,7 +159,17 @@ print(int(os.path.getmtime(sys.argv[1])))' "$backup" 2>/dev/null) || {
   if [ "$backup_mtime" -lt "$after" ]; then
     stale=$((after - backup_mtime))
     if [ "$marker_given" -eq 1 ] && grep -qF -- "$marker" "$backup" 2>/dev/null; then
-      echo "  mtime 快篩：backup mtime=${backup_mtime}（epoch），--after=${after}（epoch），落後 ${stale} 秒——但 --marker 命中 backup 內容（本輪最後一筆編輯的特徵字串已在 backup 中），視為內容證明覆蓋 mtime 判斷，繼續（LS-44：mtime 只是快篩，內容證明才是決斷）" >&2
+      # LS-44 R2 F1（merge-review major）：命中 backup 不足以證明鑑別力——若同一字串在「落地檔」
+      # （上一輪內容）也存在，代表它可能只是沿用的舊字串，對「backup 是否含本輪最後一筆編輯」零
+      # 證明力（reviewer 合成 fixture 實證：舊字串命中會讓未 autosave 的最後一筆屬性變更靜默消
+      # 失，正是 --after 要擋的競態）。必須再驗一次：字串同時出現在 want 就拒絕、要求換一個。
+      if grep -qF -- "$marker" "$want" 2>/dev/null; then
+        echo "✗ pen-land：--marker「${marker}」在落地檔（上一輪內容）中也存在——這個字串無法證明 backup 含本輪最後一筆編輯（可能只是沿用的舊內容），沒有鑑別力，不接受。換一個本輪新出現的獨特字串（新 content／name／新節點 id 皆可），或等 autosave 後重跑" >&2
+        exit 2
+      fi
+      # LS-44 R2 F3（merge-review minor）：逃生口稽核標記比照 --allow-unchanged 慣例——stdout＋
+      # `⚠` 開頭的顯著標記，讓 handoff／PR review 一眼看得到新鮮度把關被 marker 覆蓋掉。
+      echo "⚠ marker-override：mtime 快篩顯示 backup mtime=${backup_mtime}（epoch）落後 --after=${after}（epoch）共 ${stale} 秒，但 --marker 命中 backup 內容且未出現在落地檔中（本輪新內容的鑑別性證明），視為內容證明覆蓋 mtime 判斷，繼續（LS-44：mtime 只是快篩，內容證明才是決斷）"
     else
       if [ "$marker_given" -eq 1 ]; then
         echo "✗ pen-land：backup 太舊——backup mtime=${backup_mtime}（epoch），--after=${after}（epoch），backup 落後 ${stale} 秒，且 --marker「${marker}」未在 backup 中命中——autosave 還沒追上最後一次 execute，等 autosave 後重跑（不得改用 cp 手動繞過）" >&2

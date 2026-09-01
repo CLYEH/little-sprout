@@ -27,9 +27,15 @@ model: sonnet
 - 每次 Update 後必須讀回或截圖驗證真的寫入——宣稱需量測支撐。
 
 ## 收工程序（硬性，LS-26／LS-91 起每輪落地改呼叫 pen-land.sh；R2 F1 恢復新鮮度把關）
-1. 用 get_app_state 確認所有變更都在畫布上，**記下畫布節點總數 N**（含遞迴 children）——這是「落地檔真的跟得上記憶體」的比對基準之一，下一步必須把它傳進去，不能讓腳本自己從 backup 猜。
-2. **最後一次 execute 之後立刻**記下 `t=$(date +%s)`——這是「backup 真的比這次編輯新」的時間基準（LS-26 舊 SOP 步驟 2 的機械版：純屬性變更不改變節點數，光靠 N 擋不住 autosave 落後）。**LS-44**：`--after` 的 mtime 比對只有整秒精度、autosave 是非同步寫入，兩者之間有 ~5 秒等級的競態——backup mtime 落後 `$t` 一兩秒不代表 backup 真的沒追上這次編輯。同時記下這次編輯裡的一個獨特字串（剛設定的 `content`／`name`／新建節點 id 之類，能被純文字 grep 命中的），若下一步落地被 mtime 快篩誤擋，可用它讓內容證明覆蓋 mtime 判斷；純數值屬性變更等真的找不到獨特字串就不用管，退回純 mtime 快篩＋等待重跑即可。
-3. **落地**：`bash scripts/ops/pen-land.sh <worktree 或 repo 根> --expect-nodes N --after "$t"`（記到獨特字串就加 `--marker '<字串>'`）。腳本內部會找 autosave 備份（sha1 對帳）、若 backup mtime 早於 `$t` 先當快篩擋一次——這時若有給 `--marker` 且該字串確實出現在 backup 原始內容中，視為內容證明、覆蓋 mtime 判斷繼續往下跑；沒給 `--marker` 或給了沒命中，才真的拒絕（autosave 還沒追上）——印結構 diff（節點總數／新增或刪除的 id／meta 是否不變／逐節點屬性差異）、meta 變了或 diff 本身失敗也直接拒絕、**結構與落地檔完全無差異時預設同樣拒絕**（本輪零變更或 autosave 未追上，兩者從結構上分不出來；確認這輪真的沒有視覺變更才加 `--allow-unchanged`）；全部通過才 cp 並自動跑 design-landing-check.sh 驗 N 與畫布一致。**exit 0 才算落地**；非 0 時把輸出貼進 handoff 並照訊息處理——最常見是 backup 還沒追上最新編輯（等 autosave，可在 app 內做一次微小變更再還原來觸發後重跑）。**被擋就回報，不得改用 `cp` 手動繞過、不得為了通過而加 `--allow-unchanged`（除非這輪真的沒有變更）**。
+1. 用 `get_app_state()` 確認所有變更都在畫布上（active 文件路徑／選取狀態）。**LS-44 R2 F2**：`get_app_state()` 現行不回傳節點總數，**記下 N 改用 `execute` 內 `Get` 走訪全樹計數**（與 `pen-land.sh` 結構 diff 的計數語意一致——含遞迴 `children`、不算 `document` 本身），例如：
+   ```js
+   let count = 0;
+   Get((node, ctx) => { count++; });
+   Print("N=", count);
+   ```
+   這是「落地檔真的跟得上記憶體」的比對基準之一，下一步必須把它傳進去，不能讓腳本自己從 backup 猜。
+2. **最後一次 execute 之後立刻**記下 `t=$(date +%s)`——這是「backup 真的比這次編輯新」的時間基準（LS-26 舊 SOP 步驟 2 的機械版：純屬性變更不改變節點數，光靠 N 擋不住 autosave 落後）。**LS-44**：`--after` 的 mtime 比對只有整秒精度、autosave 是非同步寫入，兩者之間有 ~5 秒等級的競態——backup mtime 落後 `$t` 一兩秒不代表 backup 真的沒追上這次編輯。同時記下這次編輯裡的一個獨特字串，**必須是本輪才出現、上一輪落地檔裡沒有的內容**（剛設定的 `content`／`name`／新建節點 id 最保險——新 id 每次都是全新亂數，一定沒在上一輪出現過；改了又改回的舊值、既有 token 名、既有節點名的子字串都不合格），若下一步落地被 mtime 快篩誤擋，可用它讓內容證明覆蓋 mtime 判斷。**選錯字串（本輪之前就存在的）會被 `pen-land.sh` 拒絕**（LS-44 R2 F1：它會額外檢查這個字串是否也出現在落地檔裡，同時出現就代表這個字串證明不了「backup 已追上本輪最後一筆」，直接 exit 2 並要求換一個）；純數值屬性變更等真的找不到獨特字串就不用管，退回純 mtime 快篩＋等待重跑即可。
+3. **落地**：`bash scripts/ops/pen-land.sh <worktree 或 repo 根> --expect-nodes N --after "$t"`（記到獨特字串就加 `--marker '<字串>'`）。腳本內部會找 autosave 備份（sha1 對帳）、若 backup mtime 早於 `$t` 先當快篩擋一次——這時若有給 `--marker` 且該字串確實出現在 backup 原始內容中，**且不在落地檔（上一輪內容）中出現**（LS-44 R2 F1 的鑑別力檢查），視為內容證明、覆蓋 mtime 判斷繼續往下跑；沒給 `--marker`、給了沒命中 backup、或字串在落地檔中也找得到（沒有鑑別力，exit 2），才真的拒絕（autosave 還沒追上，或換一個字串重試）——印結構 diff（節點總數／新增或刪除的 id／meta 是否不變／逐節點屬性差異）、meta 變了或 diff 本身失敗也直接拒絕、**結構與落地檔完全無差異時預設同樣拒絕**（本輪零變更或 autosave 未追上，兩者從結構上分不出來；確認這輪真的沒有視覺變更才加 `--allow-unchanged`）；全部通過才 cp 並自動跑 design-landing-check.sh 驗 N 與畫布一致。**exit 0 才算落地**；非 0 時把輸出貼進 handoff 並照訊息處理——最常見是 backup 還沒追上最新編輯（等 autosave，可在 app 內做一次微小變更再還原來觸發後重跑）。**被擋就回報，不得改用 `cp` 手動繞過、不得為了通過而加 `--allow-unchanged`（除非這輪真的沒有變更）**。
 4. 之後才 commit／回報；handoff 附 pen-land.sh 的完整輸出（含它印出的結構 diff 清單）與 Pen 路徑。commit 時 commit-gate 會對 staged .pen 自動再跑結構檢查（機械兜底，但它沒有 N／--after——深度驗證靠本程序）。
 5. **handoff 前**：`bash scripts/ops/pen-open.sh "$(git worktree list --porcelain | sed -n '1s/^worktree //p')"` 切回主 checkout（`git worktree list` 第一行固定是主 checkout，不論 worktree 放在哪個路徑；Pen 只開主 checkout 才不會擋到下一票）並確認 **exit 0**（R2）；`pen-open.sh` 遇到殘留視窗會自動驗證安全後清場重試，被擋（exit 非 0）就照訊息處理，不得略過直接交出 handoff。
 
