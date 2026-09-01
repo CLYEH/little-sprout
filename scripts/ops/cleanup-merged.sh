@@ -87,6 +87,19 @@ is_merged_ref() {  # $1 = commit-ish；對 BASES 任一為 ancestor 即算已併
   done
   return 1
 }
+has_real_history() {  # $1 = 本機分支名；true＝reflog 顯示曾經動過（不只是「建立／checkout」）
+  # 只看 is_merged_ref 會誤殺剛建好、還沒開工的 worktree／分支：新分支從 origin/development
+  # 切出來、0 commit 時，它的 tip 本來就等於（因此是祖先於）origin/development，會被
+  # is_merged_ref 判定「已併入」——但那不是「已併入被遺忘」，是「還沒開始工作」，刪了就是把
+  # 剛建好、準備要用的 worktree 基礎設施砍掉（同 patrol.sh 的 merged 判定：since=0 還要 reflog
+  # 有真的動過才算「已併入」，不然算「尚未開工」）。只對本機分支有意義（reflog 是本機概念）；
+  # (c) 段的純遠端分支不用這個檢查——遠端分支要存在必須先有人 push 過至少一個 commit，正常
+  # workflow 不會出現「push 一個跟 base 一模一樣、從未有內容的分支」這種情況。
+  local had
+  had=$(git -C "$ROOT" reflog show --format=%gs "refs/heads/$1" 2>/dev/null | grep -vcE '^(branch: Created|checkout: )' || true)
+  case "${had:-0}" in ''|*[!0-9]*) return 1 ;; esac
+  [ "${had:-0}" -gt 0 ]
+}
 is_temp_path() {  # mktemp -d 產生、路徑未經整理的暫存 worktree：只看 basename 是否為 mktemp -d
   # 的預設樣式 tmp.XXXXXXXX——不看祖先目錄是否落在系統暫存目錄下，那樣太寬：本機或 CI 的整個
   # repo checkout／自測 work 目錄本身常常就在 $TMPDIR 之下（本票自測的合成 repo 正是這樣），
@@ -156,12 +169,12 @@ process_wt() {
   is_temp_path "$w" && temp_tag="（暫存殘留）"
 
   if [ ! -d "$w" ]; then
-    if is_merged_ref "$b"; then
+    if is_merged_ref "$b" && has_real_history "$b"; then
       act "prune 已消失的 worktree 記錄 ${name}${temp_tag}（${b}，已併入）" git -C "$ROOT" worktree prune
       act "刪除本機分支 ${b}（已併入）" git -C "$ROOT" branch -D "$b"
       wt_removed=$((wt_removed + 1))
     else
-      OUT_WT="${OUT_WT}  ⚠ ${name}${temp_tag} ${b}：目錄已不存在但分支未併入 → 只 prune 記錄、不刪分支"$'\n'
+      OUT_WT="${OUT_WT}  ⚠ ${name}${temp_tag} ${b}：目錄已不存在但分支未併入（或從未開工）→ 只 prune 記錄、不刪分支"$'\n'
       act "prune 已消失的 worktree 記錄 ${name}（分支未併入，不刪分支）" git -C "$ROOT" worktree prune
       wt_skipped_unmerged=$((wt_skipped_unmerged + 1))
     fi
@@ -180,7 +193,7 @@ process_wt() {
     fi
   fi
 
-  if is_merged_ref "$b"; then
+  if is_merged_ref "$b" && has_real_history "$b"; then
     if [ "$force_needed" -eq 1 ]; then
       act "移除 worktree ${name}${temp_tag}（${b}，殘留為白名單 __pycache__/.DS_Store，--force）" \
         git -C "$ROOT" worktree remove --force "$w"
@@ -189,6 +202,11 @@ process_wt() {
     fi
     act "刪除本機分支 ${b}（已併入）" git -C "$ROOT" branch -D "$b"
     wt_removed=$((wt_removed + 1))
+  elif is_merged_ref "$b"; then
+    # tip 與 base 相同、但 reflog 從未真的動過——這是「剛建好、還沒開工」，不是「已併入被遺忘」；
+    # 刪了就是把準備要用的 worktree 基礎設施砍掉，絕不能碰（has_real_history 檔頭註解）。
+    wt_skipped_unmerged=$((wt_skipped_unmerged + 1))
+    OUT_WT="${OUT_WT}  ${name}${temp_tag} ${b}：尚未開工（與 base 相同、從未有過獨有 commit），略過"$'\n'
   else
     wt_skipped_unmerged=$((wt_skipped_unmerged + 1))
     OUT_WT="${OUT_WT}  ${name}${temp_tag} ${b}：未併入（尚有獨有 commit），略過"$'\n'
@@ -216,12 +234,12 @@ while IFS= read -r b; do
   [ -n "$main_branch" ] && [ "$b" = "$main_branch" ] && continue
   printf '%s' "$WT_BRANCHES" | grep -qxF "$b" && continue
   matches_filter "$b" || continue
-  if is_merged_ref "$b"; then
+  if is_merged_ref "$b" && has_real_history "$b"; then
     act "刪除本機分支 ${b}（已併入、無 worktree）" git -C "$ROOT" branch -D "$b"
     br_removed=$((br_removed + 1))
   else
     br_skipped_unmerged=$((br_skipped_unmerged + 1))
-    OUT_BR="${OUT_BR}  ${b}：未併入，略過"$'\n'
+    OUT_BR="${OUT_BR}  ${b}：未併入或尚未開工，略過"$'\n'
   fi
 done < <(git -C "$ROOT" for-each-ref --format='%(refname:short)' refs/heads/ 2>/dev/null)
 

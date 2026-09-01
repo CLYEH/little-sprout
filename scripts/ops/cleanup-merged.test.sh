@@ -49,66 +49,83 @@ echo a > "$seed/file.txt"; g -C "$seed" add -A; g -C "$seed" commit -qm 'chore: 
 g -C "$seed" branch development
 g -C "$seed" remote add origin "$remote"; g -C "$seed" push -q origin main development
 
-# 每個要模擬「已併入」的項目各自一條分支＋一個 commit，各自 push 自己的分支名；全部建完後用
-# integrate 分支依序 merge、單次 push 到 development（避免互不為祖先造成 FF 互撞）。
-merged_branches="LS-1-merged-clean LS-3-dirty-merged LS-4-whitelist LS-5-temp-merged LS-7-selfprotect LS-10-remote-nopr LS-11-remote-haspr LS-12-remote-nogh"
-for b in $merged_branches; do
-  g -C "$seed" checkout -q main
-  g -C "$seed" checkout -q -b "$b"
-  echo "$b" > "$seed/${b}.txt"; g -C "$seed" add -A; g -C "$seed" commit -qm "feat: ${b}"
-  g -C "$seed" push -q origin "$b"
-done
-g -C "$seed" checkout -q main
-g -C "$seed" checkout -q -b integrate origin/development
-for b in $merged_branches; do g -C "$seed" merge -q --no-edit "$b"; done
-g -C "$seed" push -q origin integrate:development
-g -C "$seed" checkout -q main
-g -C "$seed" branch -D integrate
-for b in $merged_branches; do g -C "$seed" branch -D "$b"; done
-
 repo="$work/repo"; g clone -q "$remote" "$repo"
 wts="$repo/.claude/worktrees"; mkdir -p "$wts"
 wt() { g -C "$repo" worktree add "$@" >/dev/null 2>&1 || { echo "✗ 建 worktree 失敗：$*" >&2; exit 1; }; }
 
-# ① LS-1-merged-clean：worktree，內容取自已併入 development 的 origin 分支，乾淨
-wt -b LS-1-merged-clean "$wts/LS-1-merged-clean" origin/LS-1-merged-clean
+# 每個要模擬「已併入」的 worktree／本機分支項目：從 origin/development 切出、**在這個 worktree
+# 自己身上真的 commit**（reflog 記在這條分支自己頭上——has_real_history 驗的正是這個，不能用
+# 「憑空建一條指到某個 commit 的分支」蒙混，那樣 reflog 只有 branch: Created，會被判定「尚未
+# 開工」而不是「已併入」，同 cleanup-merged.sh 的安全設計），push 自己的分支名。全部建完＋push
+# 後（見下方）用一條 integrate 分支一次 merge 齊全再單次 push 到 development（避免逐一 push
+# 到 development 時彼此不是對方祖先、fast-forward 互撞）。
+merged_branches="LS-1-merged-clean LS-3-dirty-merged LS-4-whitelist LS-5-temp-merged LS-7-selfprotect LS-8-local-merged LS-20-bound LS-200-bound"
+for b in $merged_branches; do
+  wt -b "$b" "$wts/$b" origin/development
+  echo "$b" > "$wts/$b/${b}.txt"; g -C "$wts/$b" add -A; g -C "$wts/$b" commit -qm "feat: ${b}"
+  g -C "$wts/$b" push -q origin "$b"
+done
 
-# ② LS-2-unmerged：worktree，從 development 切出後自己加一個獨有 commit，未併入
+# 純遠端案例（無本機分支／worktree，not has_real_history 涵蓋範圍——那只看本機分支 reflog）：
+# 同樣要有真的 commit，用暫時 worktree 建好、push 後整個丟掉即可。
+remote_only="LS-10-remote-nopr LS-11-remote-haspr LS-12-remote-nogh"
+for b in $remote_only; do
+  wt -b "$b" "$work/scratch-$b" origin/development
+  echo "$b" > "$work/scratch-$b/${b}.txt"; g -C "$work/scratch-$b" add -A; g -C "$work/scratch-$b" commit -qm "feat: ${b}"
+  g -C "$work/scratch-$b" push -q origin "$b"
+  g -C "$repo" worktree remove "$work/scratch-$b"
+done
+
+# seed 這邊 fetch 見到所有分支（皆已 push 到 origin），integrate 一次 merge 齊全、單次 push 到
+# development——development 只被推一次，不會有逐一 push 互相不是祖先的 FF 衝突。
+g -C "$seed" fetch -q origin
+g -C "$seed" checkout -q -b integrate origin/development
+for b in $merged_branches $remote_only; do g -C "$seed" merge -q --no-edit "origin/${b}"; done
+g -C "$seed" push -q origin integrate:development
+g -C "$seed" checkout -q main
+g -C "$seed" branch -D integrate
+
+# ⑧⑨ 本機分支（無 worktree）：LS-8-local-merged 已在上面迴圈建好 worktree＋commit＋push，
+# development 也已併入它——現在移除 worktree（但保留分支本身，reflog 仍留著剛才的 commit
+# 紀錄），模擬「worktree 已被移除、本機分支殘留」這個 (b) 段真正要處理的形狀。
+g -C "$repo" worktree remove "$wts/LS-8-local-merged"
+
+# LS-<n> 篩選邊界（LS-20 不得誤中 LS-200）同理：worktree 已建好＋commit＋push＋併入，移除
+# worktree 只留本機分支。
+g -C "$repo" worktree remove "$wts/LS-20-bound"
+g -C "$repo" worktree remove "$wts/LS-200-bound"
+
+g -C "$repo" fetch -q origin
+
+# ② LS-2-unmerged：worktree，從（已推進的）development 切出後自己加一個獨有 commit，未併入
 wt -b LS-2-unmerged "$wts/LS-2-unmerged" origin/development
 echo 2 > "$wts/LS-2-unmerged/two.txt"; g -C "$wts/LS-2-unmerged" add -A; g -C "$wts/LS-2-unmerged" commit -qm 'feat: two'
 
-# ③ LS-3-dirty-merged：worktree，內容已併入，但有未提交的 tracked 變更
-wt -b LS-3-dirty-merged "$wts/LS-3-dirty-merged" origin/LS-3-dirty-merged
-echo dirty >> "$wts/LS-3-dirty-merged/LS-3-dirty-merged.txt"
+# ⑨ LS-9-local-unmerged：本機分支（無 worktree），從 development 切出後加一個獨有 commit
+g -C "$repo" branch LS-9-local-unmerged origin/development
+( cd "$repo" && g checkout -q LS-9-local-unmerged && echo 9 > nine.txt && g add nine.txt && g commit -qm 'feat: nine' && g checkout -q main )
 
-# ④ LS-4-whitelist：worktree，內容已併入，殘留只有白名單（__pycache__/、.DS_Store）
-wt -b LS-4-whitelist "$wts/LS-4-whitelist" origin/LS-4-whitelist
+# ③④ 追加 dirty／殘留內容（LS-3、LS-4 的 worktree 已存在，內容已併入；這裡只加測項要驗的
+# 額外狀態，不動 has_real_history 需要的原始 commit）
+echo dirty >> "$wts/LS-3-dirty-merged/LS-3-dirty-merged.txt"
 mkdir -p "$wts/LS-4-whitelist/__pycache__"; echo x > "$wts/LS-4-whitelist/__pycache__/x.pyc"
 touch "$wts/LS-4-whitelist/.DS_Store"
 
-# ⑤ LS-5-temp-merged：暫存路徑（mktemp -d，非 .claude/worktrees 下），內容已併入、乾淨
+# ⑤ LS-5-temp-merged 的 worktree 目前在 .claude/worktrees 下（上面迴圈建的），搬到暫存路徑
+# （mktemp -d，basename 符合 tmp.* 樣式）驗「暫存殘留」標記——先 remove 再用 origin 分支重建
+# 在暫存路徑，reflog 仍是原分支的，has_real_history 不受影響。
+g -C "$repo" worktree remove "$wts/LS-5-temp-merged"
 tmp_wt="$(mktemp -d "${TMPDIR:-/tmp}/tmp.XXXXXX")"; rmdir "$tmp_wt"
-wt -b LS-5-temp-merged "$tmp_wt" origin/LS-5-temp-merged
+g -C "$repo" worktree add -q "$tmp_wt" LS-5-temp-merged >/dev/null 2>&1 || { echo "✗ 重建 LS-5-temp-merged 於暫存路徑失敗" >&2; exit 1; }
 
 # ⑥ 保護分支 worktree（development）與 detached worktree：絕不可被列出或碰
 wt "$work/dev-wt" development
 wt --detach "$work/detached-wt"
 
-# ⑦ LS-7-selfprotect：worktree，內容已併入、乾淨，但呼叫時 cwd 就在裡面 → 絕不可被動
-wt -b LS-7-selfprotect "$wts/LS-7-selfprotect" origin/LS-7-selfprotect
-
-# ⑧⑨ 本機分支（無 worktree）：一個已併入、一個未併入（皆從 development 切，事後才知道結果）
-g -C "$repo" fetch -q origin
-g -C "$repo" branch LS-8-local-merged origin/development
-g -C "$repo" branch LS-9-local-unmerged origin/development
-( cd "$repo" && g checkout -q LS-9-local-unmerged && echo 9 > nine.txt && g add nine.txt && g commit -qm 'feat: nine' && g checkout -q main )
-
-# LS-<n> 篩選邊界：LS-20 不得誤中 LS-200（皆已併入的本機分支）
-g -C "$repo" branch LS-20-bound origin/development
-g -C "$repo" branch LS-200-bound origin/development
-
-# LS-10/11/12（純遠端、無本機分支／worktree）已經在 merged_branches 迴圈 push 過，development
-# 也已併入它們——不需要在 repo 這邊另外建任何東西。
+# ⑬ LS-13-fresh-never-started：worktree 剛從 development 切出、0 commit、從未異動過——
+# 即使 tip 與 base 相同（is_merged_ref 會判 true），has_real_history 應擋下，不得被當成
+# 「已併入」清掉（這正是本票新增的安全修正：剛建好、還沒開工的 worktree 不能被誤殺）。
+wt -b LS-13-fresh-never-started "$wts/LS-13-fresh-never-started" origin/development
 
 g -C "$repo" fetch -q origin
 
@@ -126,9 +143,10 @@ has   '① 列出 LS-5-temp-merged 標「暫存殘留」' "$out" '（暫存殘�
 has_dev_absent=$(printf '%s' "$out" | grep -c 'dev-wt'); [ "$has_dev_absent" -eq 0 ] && echo "✓ ① 保護分支 worktree（development）不進表" || { echo "✗ ① 保護分支 worktree 不應進表" >&2; fail=1; }
 has_det_absent=$(printf '%s' "$out" | grep -c 'detached-wt'); [ "$has_det_absent" -eq 0 ] && echo "✓ ① detached worktree 不進表" || { echo "✗ ① detached worktree 不應進表" >&2; fail=1; }
 has   '① LS-8-local-merged 本機分支將被刪（已併入、無 worktree）' "$out" 'LS-8-local-merged（已併入、無 worktree）'
-has   '① LS-9-local-unmerged 未併入、略過' "$out" 'LS-9-local-unmerged：未併入，略過'
+has   '① LS-9-local-unmerged 未併入、略過' "$out" 'LS-9-local-unmerged：未併入或尚未開工，略過'
 has   '① LS-10-remote-nopr 遠端將被刪（已併入、無 open PR）' "$out" 'origin/LS-10-remote-nopr（已併入、無 open PR）'
 has   '① LS-11-remote-haspr 遠端有 open PR、略過' "$out" 'LS-11-remote-haspr：已併入但仍有 1 個 open PR，略過'
+has   '① LS-13-fresh-never-started 尚未開工、略過（不得誤判已併入而清掉）' "$out" 'LS-13-fresh-never-started：尚未開工（與 base 相同、從未有過獨有 commit），略過'
 after_wt_count=$(git -C "$repo" worktree list --porcelain | grep -c '^worktree ')
 after_branches=$(git -C "$repo" for-each-ref --format='%(refname:short)' refs/heads/ | sort)
 [ "$before_wt_count" -eq "$after_wt_count" ] && echo "✓ ① dry-run 未變動 worktree 數量" || { echo "✗ ① dry-run 不應變動 worktree 數量（前 ${before_wt_count} 後 ${after_wt_count}）" >&2; fail=1; }
@@ -172,6 +190,8 @@ gone_wt "$tmp_wt" '⑤ LS-5-temp-merged（暫存路徑）worktree 已移除'
 no_branch "$repo" LS-5-temp-merged '⑤ LS-5-temp-merged 本機分支已刪'
 exists_wt "$work/dev-wt" '⑤ development worktree 仍在（保護分支絕不碰）'
 exists_wt "$work/detached-wt" '⑤ detached worktree 仍在（detached 絕不碰）'
+exists_wt "$wts/LS-13-fresh-never-started" '⑤ LS-13-fresh-never-started worktree 仍在（尚未開工，has_real_history 擋下誤殺）'
+has_branch "$repo" LS-13-fresh-never-started '⑤ LS-13-fresh-never-started 本機分支仍在'
 no_branch "$repo" LS-8-local-merged '⑤ LS-8-local-merged 本機分支已刪（已併入、無 worktree）'
 has_branch "$repo" LS-9-local-unmerged '⑤ LS-9-local-unmerged 本機分支仍在（未併入）'
 no_remote "$repo" "$remote" LS-10-remote-nopr '⑤ LS-10-remote-nopr 遠端分支已刪（已併入、無 open PR）'
