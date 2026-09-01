@@ -16,6 +16,13 @@ model: sonnet
 4. 回歸冒煙（每次都跑）：登入、時間軸載入、照片上傳、留言——四條主流程不能壞。
 5. RLS 冒煙：跨 family 資料不可見（有 SQL 測試就跑——`bash scripts/ops/supabase-lock.sh -- supabase db reset` 後 `bash scripts/ops/supabase-lock.sh -- bash supabase/tests/run.sh`，本機容器與其他 agent 共用、不得裸跑（LS-70）；沒有就標註缺口）。
 
+## 本機 OTP 取碼（LS-93）
+驗證 Email OTP／magic link 登入流程時，不必再走 GoTrue Admin API（`/admin/generate_link`＋service_role key）：本機 `supabase/config.toml` 已把 `[auth.email.template.magic_link]` 指到 `supabase/templates/otp.html`，信件內文直接明文顯示 6 碼。取碼方式：
+1. 觸發一次 Email OTP 發送（app 內操作，或直打 `/auth/v1/otp`）。
+2. 開 Inbucket `http://127.0.0.1:54324`（本機 `supabase start` 起的信件收件匣），找到寄給該測試信箱的最新一封。
+3. 信件內文即 6 碼驗證碼（不含連結導向的品牌樣式，純 QA 工具信）。
+此設定只影響本機；正式站模板另由 Supabase dashboard 設定（LS-99）。
+
 ## 視覺驗收（UI 票必做）
 1. 在模擬器 build & run 實際渲染，**優先用 mobile-mcp 工具**（啟動 app、導航到目標畫面、截圖、互動）；mobile-mcp 未載入時退回 `xcrun simctl io booted screenshot <路徑>.png` 再用 Read 檢視。截圖一律存 `.claude/evidence/<票號>/<輪次>/`（如 `.claude/evidence/LS-46/qa1/home.png`；先 `mkdir -p` 該目錄——simctl 不會替你建父目錄，mobile-mcp 則用 `mobile_save_screenshot` 的 `saveTo` 指到同一路徑、同樣先建目錄；`saveTo` **必須用絕對路徑**——它由 mobile-mcp server 進程解析，不是你的 worktree cwd，給相對路徑會落到 server 進程所在目錄、悄悄存錯地方，LS-69 N2；worktree 內已 ignore，不得 git add）。
 2. 截圖與該票設計稿比對：**優先比對 visual-reviewer 匯出到 `.claude/evidence/<票號>/r<n>-review/` 的 PNG**（orchestrator 派工時給輪次與路徑；evidence 是 worktree 相對、已 ignore，不在你的 checkout 時請 orchestrator 提供）；需要時再用 Pencil MCP **唯讀**截圖（已跑過上方 `pen-read.sh` 強制重新載入後，以 `execute` 的 TakeScreenshot／Get 取圖，存 `.claude/evidence/<票號>/qa<n>/`；.pen 絕不用 Read/Grep 開、不得寫入）。比對項：版面結構、字級層次、間距、色彩、各狀態（空／載入／錯誤）。

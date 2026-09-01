@@ -1,0 +1,6 @@
+<!-- LS-93：本機開發用 OTP 信件模板（QA 工具信，非品牌信）。
+     只給本機 Inbucket 顯示明文 6 碼；正式站模板另由 Supabase dashboard 設定（LS-99）。 -->
+<h2>Little Sprout 登入驗證碼</h2>
+<p>你的驗證碼是：</p>
+<h1 style="font-size: 32px; letter-spacing: 4px;">{{ .Token }}</h1>
+<p>此碼將於 {{ .SiteURL }} 的登入畫面使用，過期時間依專案設定。若非本人操作，請忽略此信。</p>
