@@ -15,7 +15,7 @@ expect() {
   if [ "$got" -eq "$want" ]; then
     echo "✓ $name"
   else
-    echo "✗ $name（期望 exit $want，實得 $got）" >&2
+    echo "✗ ${name}（期望 exit ${want}，實得 ${got}）" >&2
     fail=1
   fi
 }

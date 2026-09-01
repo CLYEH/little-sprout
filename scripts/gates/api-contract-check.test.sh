@@ -43,7 +43,7 @@ expect() {
   if [ "$got" -eq "$want" ]; then
     echo "✓ $name"
   else
-    echo "✗ $name（期望 exit $want，實得 $got）" >&2
+    echo "✗ ${name}（期望 exit ${want}，實得 ${got}）" >&2
     printf '%s\n' "$out" | sed 's/^/    /' >&2
     fail=1
   fi
@@ -164,7 +164,7 @@ expect_catalog() {  # <期望 exit code> <樣本名稱> <API.md> <rpc_file> <tab
   if [ "$got" -eq "$want" ]; then
     echo "✓ $name"
   else
-    echo "✗ $name（期望 exit $want，實得 $got）" >&2
+    echo "✗ ${name}（期望 exit ${want}，實得 ${got}）" >&2
     printf '%s\n' "$out" | sed 's/^/    /' >&2
     fail=1
   fi
