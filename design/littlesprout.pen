@@ -61617,8 +61617,19 @@
               "id": "xlLIo",
               "name": "Stamp",
               "rotation": -4,
+              "fill": "$print-paper",
               "stroke": "$print-ink-secondary",
               "strokeWidth": 1.5,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 2
+                },
+                "blur": 6
+              },
               "padding": [
                 "$sp-tight",
                 "$sp-label"
