@@ -121,6 +121,7 @@ has   '① LS-6 顯示「尚無 commit」' "$l6" '尚無 commit'
 hasnt '① LS-6 無 ⏳' "$l6" '⏳'
 l7=$(row "$out" 'feature/LS-7-merged')
 has   '① LS-7 自 base 0 commit 但 reflog 有 commit → 已併入 base、worktree 未移除' "$l7" '已併入 base'
+has   '① LS-7 提示可跑 cleanup-merged.sh（LS-86）並帶出票號 LS-7' "$l7" 'cleanup-merged.sh --dry-run LS-7'
 hasnt '① LS-7 不得誤標尚未開工' "$l7" '尚未開工'
 hasnt '① LS-5 沒動過 → 不是已併入' "$l5" '已併入'
 l8=$(row "$out" 'feature/LS-8-gone')

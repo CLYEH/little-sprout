@@ -196,7 +196,7 @@ done
 wt_total=0; wt_flagged=0; WT_LINES=; J_WTS=
 process_wt() {
   local w=$1 b=$2 det=$3
-  local name l r= ahead=0 behind=0 base mb since=0 had=0 lc lm= dirty=0 dmax=0 dm= wt_ts wm= pr= flag= info= f t commit_txt dirty_txt merged=false
+  local name l r= ahead=0 behind=0 base mb since=0 had=0 lc lm= dirty=0 dmax=0 dm= wt_ts wm= pr= flag= info= f t commit_txt dirty_txt merged=false wt_ticket=
   name=$(basename "$w")
   if [ "$det" -eq 1 ] || [ -z "$b" ]; then
     WT_LINES="${WT_LINES}  $(printf '%-14s' "$name") detached，略過"$'\n'; return
@@ -243,7 +243,12 @@ process_wt() {
   if [ -n "$r" ] && [ "$behind" != "?" ] && [ "$behind" -gt 0 ]; then flag="${flag:+${flag}；}⚠ 落後 remote ${behind} commit（remote 有本機沒有的 commit）"; fi
   if [ "$dirty" -gt 0 ] && [ "${dm:-0}" -ge "$STALE" ]; then flag="${flag:+${flag}；}⏳ ${dirty} 個未提交變更、最後改動 ${dm}m 前（停滯？）"; fi
   if [ "$since" = 0 ] && [ "$dirty" -eq 0 ]; then
-    if [ "$merged" = true ]; then flag="${flag:+${flag}；}⚠ 分支已併入 base、worktree 未移除（git worktree remove）"
+    if [ "$merged" = true ]; then
+      # LS-86：判定與 cleanup-merged.sh 的 (a) 一致（since=0＝分支已是 base 祖先），直接指到那支
+      # 腳本而非裸 git worktree remove——它多做了 dirty／保護分支／目前所在目錄的安全檢查，先
+      # dry-run 看清單再 --apply。能從 worktree 目錄名解出票號（<票號>-<slug> 慣例）就帶上去。
+      wt_ticket=$(printf '%s' "$name" | grep -oE '^LS-[0-9]+' || true)
+      flag="${flag:+${flag}；}⚠ 分支已併入 base、worktree 未移除 → bash scripts/ops/cleanup-merged.sh --dry-run${wt_ticket:+ ${wt_ticket}}（確認後 --apply，LS-86）"
     elif [ "$wm" -ge "$STALE" ]; then flag="${flag:+${flag}；}⏳ 建好 ${wm}m 仍 0 commit、無變更（尚未開工？）"; fi
   fi
   if [ "$PR_CHECKED" -eq 1 ] && [ -z "$pr" ] && [ -n "$r" ] && [ "$ahead" = 0 ] && [ "$since" != "?" ] && [ "$since" -gt 0 ] && [ "${lm:-0}" -ge "$STALE" ]; then
