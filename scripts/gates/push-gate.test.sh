@@ -21,12 +21,16 @@
 # I2（PR #164 R1）：鎖目錄一律用 `SIMULATOR_LOCK_DIR` 覆寫到 `mktemp -d` 底下的路徑，不再用固定的
 # `/tmp/simulator-lock-SHARED-UDID`——多份 push-gate.test.sh 併行時才不會互刪對方的鎖目錄。
 #
-# 合成 repo 沒有 docs/API.md／LittleSprout/Errors/AppError.swift／supabase/migrations，所以 push-gate.sh
-# 第 4 步（error-codes-check.sh，無條件跑）在①～⑥、⑧一定會失敗（找不到這支腳本），push-gate.sh 整體
-# exit code 因此不會是 0——這是預期的、刻意不追求的「全綠」，因為它與本票要驗的行為（模擬器用完必關）
-# 無關：trap 在 sim_udid 算出來、判完專屬／共用之後就設好了，不論後面第幾步造成整支腳本退出，trap 都會
-# 在那個當下觸發；下面只斷言「xcrun simctl shutdown 有沒有被叫到、UDID 對不對」，不斷言 push-gate.sh
-# 整體的最終 exit code（②除外——那組刻意驗 xcodebuild test 失敗本身會讓整支腳本非 0）。
+# 合成 repo 沒有 docs/API.md／LittleSprout/Errors/AppError.swift／supabase/migrations，所以 api 契約對帳
+# （步驟 3）／migration 分級（步驟 5）等「目錄存在才跑」的步驟自然跳過；但 error-codes-check.sh（步驟 4）
+# 無條件跑，合成 repo 沒有這支腳本本身。LS-65 之前，步驟 2（xcodebuild）在步驟 4 之前，trap 早已設好，
+# 之後不論第幾步造成整支腳本退出都無所謂，這裡才能放著不管、任由步驟 4 找不到腳本而失敗。LS-65 把
+# 步驟 3／3b／4／5／6／7 前移到步驟 2 之前後，這個「放著不管」會變成「步驟 2（本檔案真正要驗的模擬器
+# shutdown 行為）根本沒機會執行」——所以 setup 一開始就把 error-codes-check.sh stub 成 `exit 0`（⑦
+# 另外換成會 sleep 的假身測「鎖仍在時跳過 shutdown」，跑完會還原回這裡的預設假身；hf_root／hf2_root 兩個
+# 獨立合成 repo 同理各自補上）。下面只斷言「xcrun simctl shutdown 有沒有被叫到、UDID 對不對」，不糾結
+# push-gate.sh 整體的最終 exit code（②除外——那組刻意驗 xcodebuild test 失敗本身會讓整支腳本非 0；⑨
+# 另外驗 shutdown 本身失敗不影響整體 exit code）。
 # INT／TERM 訊號傳遞的時機在 bash 裡對「還在等前景指令」的情況沒有跨平台一致保證（同
 # scripts/ops/simulator-lock.sh 檔頭理由——它也因此另外顯式接 INT／TERM 成 exit，不只靠裸 EXIT
 # trap），所以這裡不模擬真的送訊號中斷，改用靜態接線斷言（同 detect-simulator.test.sh 的 ⑨）釘住
@@ -130,6 +134,14 @@ cat > "$work/bin/swiftlint" <<'STUB'
 exit "${STUB_SWIFTLINT_RC:-0}"
 STUB
 chmod +x "$work/bin/swiftlint"
+
+# LS-65：步驟 4（error-codes-check.sh）前移到步驟 2 之前無條件執行，合成 repo 沒有這支腳本——理由見
+# 檔頭「合成 repo 沒有 docs/API.md…」那段——這裡先給一個永遠成功的假身，①起的案例才走得到步驟 2。
+cat > "$R/scripts/gates/error-codes-check.sh" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+chmod +x "$R/scripts/gates/error-codes-check.sh"
 
 db="$work/devices.db"
 printf '%s\t%s\n%s\t%s\n%s\t%s\n' \
@@ -265,13 +277,15 @@ else
 fi
 
 # ---- ⑦ 本 worktree 專屬機，但 shutdown 那一刻鎖目錄仍在（第二道防線；PR #164 R1 F1「另加第二道」）：
-#        error-codes-check.sh 換成會 sleep 的假身，貼出一段時間窗——push-gate.sh 自己那段
-#        xcodebuild test 的鎖用完幾乎瞬間就放；給它 1 秒頭香確保先跑，接著背景程序合法搶到同一把鎖
-#        （模擬「另一個 worktree 正在用這台專屬機」），握著遠比 error-codes-check 的 sleep 長的時間；
-#        push-gate.sh 的 EXIT trap 觸發時鎖仍在 → 應跳過 shutdown、印出訊息，且不能在 trap 內重新
-#        取鎖（否則會卡到 simulator-lock.sh 的 timeout，同該腳本檔頭理由）。simulator-lock.sh 換成
-#        不真的加鎖的假身，避免我們自己手動製造的時序被 push-gate.sh 內部「執行 xcodebuild test」
-#        那段鎖擋住（那段鎖不是本案例要驗的對象——⑧ 才是驗真鎖排隊的時序）----
+#        error-codes-check.sh 換成會 sleep 的假身，貼出一段時間窗（LS-65 之後這段 sleep 跑在
+#        「執行 xcodebuild test」之前，不是之後——本案例要驗的只是「trap 觸發那一刻鎖是否仍在」，
+#        跟 sleep 排在前後無關）：給背景程序 1 秒頭香確保先跑，接著它合法搶到同一把鎖（模擬「另一個
+#        worktree 正在用這台專屬機」），握著遠比 error-codes-check 的 sleep 長的時間；push-gate.sh
+#        自己那段 xcodebuild test 用的是下面的假鎖（近乎瞬間跑完），trap 因此幾乎緊接在 sleep 結束後
+#        觸發，此時背景程序仍握著鎖 → 應跳過 shutdown、印出訊息，且不能在 trap 內重新取鎖（否則會卡到
+#        simulator-lock.sh 的 timeout，同該腳本檔頭理由）。simulator-lock.sh 換成不真的加鎖的假身，
+#        避免我們自己手動製造的時序被 push-gate.sh 內部「執行 xcodebuild test」那段鎖擋住（那段鎖不是
+#        本案例要驗的對象——⑧ 才是驗真鎖排隊的時序）----
 : > "$SHUTDOWN_LOG"
 lock7="$work/lock7-dir"
 rm -rf "$lock7"
@@ -296,6 +310,13 @@ bash "$work/simulator-lock.sh.real" --dir "$lock7" -- sleep 6 >/dev/null 2>&1 &
 holder7_pid=$!
 wait "$a7_pid"
 cp "$work/simulator-lock.sh.real" "$R/scripts/ops/simulator-lock.sh"   # 還原給後面案例用（目前 ⑦ 是最後一個用 $R 的案例，保守起見仍還原）
+# LS-65：⑦專用的 sleep 4 假身還原回 setup 節的預設「成功」假身——不還原的話，後面重複用 $R 的
+# 案例（⑨、⑫～㉖）每個 run_gate 都會平白多等 4 秒（步驟 4 現在跑在步驟 2 之前）。
+cat > "$R/scripts/gates/error-codes-check.sh" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+chmod +x "$R/scripts/gates/error-codes-check.sh"
 if [ ! -s "$SHUTDOWN_LOG" ]; then
   echo "✓ ⑦ shutdown 當下鎖目錄仍在（另一個持有者）→ 跳過，不呼叫 shutdown"
 else
@@ -332,7 +353,9 @@ mk_race_repo() {
   cp "${root}/scripts/gates/push-ref-check.sh" "$d/scripts/gates/push-ref-check.sh"
   cp "${root}/scripts/gates/detect-simulator.sh" "$d/scripts/gates/detect-simulator.sh"
   cp "${root}/scripts/ops/simulator-lock.sh" "$d/scripts/ops/simulator-lock.sh"
-  # 模擬 push-gate 第 3～7 步耗時（真環境要好幾秒；貼近 reviewer 重現腳本）
+  # 模擬 push-gate 第 3～7 步耗時（真環境要好幾秒；LS-65 之後這幾步跑在「執行 xcodebuild test」之前，
+  # 不是之後——sleep 一樣代表這段耗時，只是現在發生在兩個 worktree 各自搶鎖之前，不影響下面 ⑧ 要驗的
+  # 東西：真鎖有沒有讓兩邊的 xcodebuild test 各自序列排隊、共用機全程不設 shutdown trap）
   printf '#!/bin/bash\nsleep 3\nexit 0\n' > "$d/scripts/gates/error-codes-check.sh"
   chmod +x "$d/scripts/gates/error-codes-check.sh"
   mkdir -p "$d/Fake.xcodeproj"
@@ -730,6 +753,13 @@ cat > "$hf_root/scripts/gates/merge-conflict-check.sh" <<'STUB'
 exit 0
 STUB
 chmod +x "$hf_root/scripts/gates/merge-conflict-check.sh"
+# LS-65：步驟 4 前移到步驟 2（本案例要驗的「尚未建立 Xcode 專案」訊息就在步驟 2 裡）之前，
+# 同 setup 節理由，這個獨立合成 repo 也要補一份會成功的假身。
+cat > "$hf_root/scripts/gates/error-codes-check.sh" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+chmod +x "$hf_root/scripts/gates/error-codes-check.sh"
 gh_ update-ref refs/remotes/origin/main HEAD
 gh_ checkout -q -b development
 mkdir -p "$hf_root/LittleSprout"; echo 'struct Bar {}' > "$hf_root/LittleSprout/Bar.swift"
@@ -831,7 +861,9 @@ cat > "$hf2_root/scripts/gates/detect-simulator.sh" <<EOF
 printf 'platform=iOS Simulator,id=%s\n' "\${FAKE_DEST_UDID:-$ded_udid}"
 EOF
 chmod +x "$hf2_root/scripts/gates/detect-simulator.sh"
-for s in branch-ticket-check.sh merge-conflict-check.sh; do
+# LS-65：error-codes-check.sh（步驟 4）併入這裡一起 stub——同 hf_root／setup 節理由，步驟 4 前移到
+# 步驟 2（本案例要驗的 tap-target-check.sh 呼叫就在步驟 2 裡）之前，找不到腳本會讓步驟 2 永遠跑不到。
+for s in branch-ticket-check.sh merge-conflict-check.sh error-codes-check.sh; do
   cat > "$hf2_root/scripts/gates/$s" <<'STUB'
 #!/bin/bash
 exit 0
@@ -868,6 +900,31 @@ if grep -qF 'called' "$TAP_TARGET_LOG"; then
 else
   echo "✗ ㉖ hotfix/* 分支的 tap-target 觸發區塊可能誤用了 origin/development 當 target（漏算 Features/ 變更）" >&2
   printf '%s\n' "$out26" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+
+# ---- ㉗（LS-65 merge-review R1 M1）：本票唯一的 deliverable 是「便宜檢查排在 xcodebuild 之前」
+#        這個物理順序，先前沒有任何一個 case 釘住它——把 push-gate.sh 整個換回 base 9803b0d（完整
+#        回退 LS-65）拿本檔案跑，37/37 照樣全綠，日後順序被誰不小心搬回去、或新插一個昂貴步驟在
+#        便宜檢查之前，自測不會有任何訊號。照 ④（:223-245）同一套 idiom：對 $gate_src 取第一個
+#        非註解（跳過 `^[ \t]*#` 開頭的行）的 error-codes-check.sh／merge-conflict-check.sh 呼叫行號，
+#        斷言兩者都小於第一個非註解 `xcodebuild test` 行號——回退即紅（reviewer 實測：head 171／230 <
+#        352；base 318／377 > 265）----
+ordered=$(awk '
+  /^[ \t]*#/ { next }
+  /error-codes-check\.sh/ && !saw_errcodes { saw_errcodes = NR }
+  /merge-conflict-check\.sh/ && !saw_mergeconflict { saw_mergeconflict = NR }
+  /xcodebuild test/ && !saw_xcodebuild_test { saw_xcodebuild_test = NR }
+  END {
+    if (saw_errcodes && saw_mergeconflict && saw_xcodebuild_test \
+        && saw_errcodes < saw_xcodebuild_test && saw_mergeconflict < saw_xcodebuild_test) print "yes"
+  }
+' "$gate_src")
+if [ "$ordered" = yes ]; then
+  echo "✓ ㉗ error-codes-check.sh／merge-conflict-check.sh 的呼叫行號都在 xcodebuild test 之前（LS-65 順序沒有被回退）"
+else
+  echo "✗ ㉗ error-codes-check.sh／merge-conflict-check.sh 沒有都排在 xcodebuild test 之前——LS-65 的便宜檢查前移順序被回退了" >&2
   fail=1
 fi
 
