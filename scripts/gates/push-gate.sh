@@ -1,6 +1,7 @@
 #!/bin/bash
-# Push gate（pre-push）：目標 ref 分類（刪除／tag 早退；test／main 只准 promote.sh 的 FF 晉升）+ 全 repo lint + unit tests +
-# API 契約／錯誤碼對帳 + migration 版本號撞號／分級。規約見 docs/COLLABORATION.md §4。
+# Push gate（pre-push）：目標 ref 分類（刪除／tag 早退；test／main 只准 promote.sh 的 FF 晉升）+ 全 repo lint +
+# API 契約／錯誤碼對帳 + migration 版本號撞號／分級 + unit tests（LS-65：秒級便宜檢查前移到 xcodebuild 之前執行）。
+# 規約見 docs/COLLABORATION.md §4。
 set -euo pipefail
 
 # LS-73：pre-push hook 由 git 啟動時會 export GIT_DIR／GIT_WORK_TREE／GIT_INDEX_FILE（linked worktree 指向
@@ -146,8 +147,94 @@ if [ -f project.yml ]; then
   rm -rf "$xg_work"
 fi
 
+# 3) API 契約對帳（docs/API.md ↔ supabase/migrations，LS-41）：有 migrations 才跑。
+#    本機固定用文字模式（best-effort，不需要活資料庫）；CI 的 db job 另外用
+#    --catalog 模式對套用完 migrations 的活資料庫做權威對帳（PR #58 review）。
+#    LS-65：步驟 3／3b／4／5／6／7（本組秒級便宜檢查）前移到步驟 2（xcodebuild，分鐘級）之前——
+#    原順序 1→2→3→4→5→6→7，改為 1→3→4→5→6→7→2；不衝突／不撞號才值得等測試跑完，衝突或票號
+#    錯不必等數分鐘的 xcodebuild 才被擋（LS-50 PR #90 review I6）。步驟編號不變，只動物理順序。
+if [ -d supabase/migrations ]; then
+  bash "$(git rev-parse --show-toplevel)/scripts/gates/api-contract-check.sh"
+fi
+
+# 3b) 點擊目標畫面覆蓋對帳（LS-95 M1，merge-review R1）：純文字比對 Features/**/*View.swift
+#     對 TapTargetGateScreenName／tap-target-exemptions.txt，不需要 Xcode／模擬器，無條件跑
+#     （有 Features 目錄才跑——Phase 0-1 完成前這個目錄不存在）。跟第 2 步的 Features/ diff
+#     判斷不同：那個是「這次要不要跑 XCUITest 量測」，這個是「畫面清單本身有沒有被靜默漏掉」，
+#     兩者互補、不能互相取代。
+if [ -d LittleSprout/Features ]; then
+  bash "$(git rev-parse --show-toplevel)/scripts/gates/tap-target-registry-check.sh"
+fi
+
+# 4) 錯誤碼三方對帳（docs/API.md §5 ↔ LSErrorCode ↔ migrations errcode，LS-54／LS-56）：
+#    無條件跑——三個來源任一搬家就直接紅，逼著同 PR 更新這裡與 CI 的路徑，不靜默跳過。
+bash "$(git rev-parse --show-toplevel)/scripts/gates/error-codes-check.sh"
+
+# 5) Migration 分級（LS-53）：對「本分支相對 base 的 migrations 新增行」跑
+#    scripts/gates/migration-breaking-check.sh（規則表見該檔檔頭）。PR body 標記（核可標記／
+#    BREAKING: 段落）只有 CI 看得到，這裡只印分級提醒；但 BREAKING 要求的「docs/API.md 同 PR 有變更」
+#    本機就驗得到，直接擋，省一趟 CI 來回。base：hotfix/* 對 origin/main，其餘對 origin/development
+#    （fetch 過才準；找不到 base ref 直接紅，不靜默跳過）。保護分支與 detached HEAD 不做——
+#    沒有「相對 base 的變更」可言。
+if [ -d supabase/migrations ]; then
+  branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
+  case "$branch" in
+    main|test|development|DETACHED) ;;
+    *)
+      case "$branch" in hotfix/*) base_ref=origin/main ;; *) base_ref=origin/development ;; esac
+      if ! git rev-parse -q --verify "$base_ref" >/dev/null; then
+        echo "✗ push gate：找不到 ${base_ref}（先 git fetch origin），無法做 migration 分級。" >&2
+        exit 1
+      fi
+      # 4b) Migration 版本號撞號（LS-70）：本分支 tree 內版本號唯一、且不與 base_ref 既有版本撞號（同版本、
+      #     不同檔名——LS-57／LS-66 同取 20260825030000，先併的把後併的擠掉）。放在分級之前：撞號的檔連套用
+      #     順序都未定義，分級沒有意義。對 base 當前 tip 比、不是 merge-base（撞號正是別張票先併進去）；
+      #     CI Migration rules step 對 origin/$BASE 再驗一次（伺服器端兜底）。
+      bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-version-check.sh" --target "$base_ref"
+      # 4c) 已併入 base 的 migration 檔不可變（LS-80）：擋在分級之前——已被悄悄改掉內容的檔，分級／覆寫
+      #     判斷都沒有意義。本機沒有 PR body 可驗，只驗 commit body 的逃生口宣告；CI Migration rules
+      #     step 另外對 PR body 再驗一次（伺服器端兜底，逃生口使用必須在 PR 可見）。
+      bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-immutable-check.sh" --base "$base_ref"
+      base_sha=$(git merge-base "$base_ref" HEAD)
+      findings=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-breaking-check.sh" --base "$base_sha")
+      if printf '%s\n' "$findings" | grep -q '^DESTRUCTIVE'; then
+        echo "⚠ push gate：migration 含 DESTRUCTIVE 敘述——PR body 需使用者本人蓋核可標記，CI 會擋（COLLABORATION §6）：" >&2
+        printf '%s\n' "$findings" | grep '^DESTRUCTIVE' | sed 's/^/    /' >&2
+      fi
+      if printf '%s\n' "$findings" | grep -q '^BREAKING'; then
+        echo "⚠ push gate：migration 含 BREAKING 敘述——PR body 需行首 BREAKING: 段落，CI 會擋（COLLABORATION §6）：" >&2
+        printf '%s\n' "$findings" | grep '^BREAKING' | sed 's/^/    /' >&2
+        if [ -z "$(git diff --name-only "$base_sha"...HEAD -- docs/API.md)" ]; then
+          echo "✗ push gate：migration 被判 BREAKING 但本分支沒動 docs/API.md——契約文件須同 PR 更新（COLLABORATION §6）。" >&2
+          exit 1
+        fi
+      fi
+      ;;
+  esac
+fi
+
+# 6) 分支起點乾淨度（LS-50）：工作分支自 merge-base 以來的每個非 merge commit，subject 票號必須等於分支票號
+#    （scripts/gates/branch-ticket-check.sh，規則與逃生口見該檔檔頭）——LS-38 分支疊了 LS-31 三個從未開 PR 的
+#    commit 而沒有任何 gate 攔到。刻意夾帶：本票 commit body 獨佔一行 `Bundles: LS-<m>`，PR body 同步宣告（CI 驗）。
+# 7) 合併衝突預檢（LS-50，PR #77 事件）：`git merge-tree --write-tree origin/<target> HEAD` 有衝突即擋
+#    （scripts/gates/merge-conflict-check.sh；本機 origin/<target> 落後遠端也擋，先 fetch）。GitHub 對不可合併的
+#    PR 不觸發 pull_request workflow——CI 零紀錄、沒有任何機械訊號，這一關只有本機 push 前做得到。
+# 兩步共用第 5 步的方向矩陣（hotfix/* 對 origin/main，其餘對 origin/development）；保護分支與 detached HEAD
+# 跳過；找不到 origin/<target> 由腳本直接紅，不靜默跳過。
+branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
+case "$branch" in
+  main|test|development|DETACHED) ;;
+  *)
+    case "$branch" in hotfix/*) target_ref=origin/main ;; *) target_ref=origin/development ;; esac
+    bash "$(git rev-parse --show-toplevel)/scripts/gates/branch-ticket-check.sh" --base "$target_ref"
+    bash "$(git rev-parse --show-toplevel)/scripts/gates/merge-conflict-check.sh" --target "$target_ref"
+    ;;
+esac
+
 # 2) Unit tests（Xcode 專案存在才跑；Phase 0 建專案時如 scheme 不同請更新此處與 CI；LS-76：無 Swift／
 #    專案檔變更則跳過整段——省純文件 harness PR 吃模擬器 flake 的成本，CI 的 ci job 不受影響仍全跑）
+#    LS-65：本步驟（xcodebuild，分鐘級）移到步驟 3／3b／4／5／6／7（秒級便宜檢查）之後執行，
+#    理由與位置見上方步驟 3 註記。
 if [ "$skip_swift_steps" = 1 ]; then
   echo "✓ push gate：無 Swift 變更，跳過 unit tests（CI 仍跑）"
 elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1; then
@@ -296,86 +383,5 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
 else
   echo "⚠ push gate：尚未建立 Xcode 專案，跳過 unit tests（Phase 0-1 完成後自動生效）"
 fi
-
-# 3) API 契約對帳（docs/API.md ↔ supabase/migrations，LS-41）：有 migrations 才跑。
-#    本機固定用文字模式（best-effort，不需要活資料庫）；CI 的 db job 另外用
-#    --catalog 模式對套用完 migrations 的活資料庫做權威對帳（PR #58 review）。
-if [ -d supabase/migrations ]; then
-  bash "$(git rev-parse --show-toplevel)/scripts/gates/api-contract-check.sh"
-fi
-
-# 3b) 點擊目標畫面覆蓋對帳（LS-95 M1，merge-review R1）：純文字比對 Features/**/*View.swift
-#     對 TapTargetGateScreenName／tap-target-exemptions.txt，不需要 Xcode／模擬器，無條件跑
-#     （有 Features 目錄才跑——Phase 0-1 完成前這個目錄不存在）。跟第 2 步的 Features/ diff
-#     判斷不同：那個是「這次要不要跑 XCUITest 量測」，這個是「畫面清單本身有沒有被靜默漏掉」，
-#     兩者互補、不能互相取代。
-if [ -d LittleSprout/Features ]; then
-  bash "$(git rev-parse --show-toplevel)/scripts/gates/tap-target-registry-check.sh"
-fi
-
-# 4) 錯誤碼三方對帳（docs/API.md §5 ↔ LSErrorCode ↔ migrations errcode，LS-54／LS-56）：
-#    無條件跑——三個來源任一搬家就直接紅，逼著同 PR 更新這裡與 CI 的路徑，不靜默跳過。
-bash "$(git rev-parse --show-toplevel)/scripts/gates/error-codes-check.sh"
-
-# 5) Migration 分級（LS-53）：對「本分支相對 base 的 migrations 新增行」跑
-#    scripts/gates/migration-breaking-check.sh（規則表見該檔檔頭）。PR body 標記（核可標記／
-#    BREAKING: 段落）只有 CI 看得到，這裡只印分級提醒；但 BREAKING 要求的「docs/API.md 同 PR 有變更」
-#    本機就驗得到，直接擋，省一趟 CI 來回。base：hotfix/* 對 origin/main，其餘對 origin/development
-#    （fetch 過才準；找不到 base ref 直接紅，不靜默跳過）。保護分支與 detached HEAD 不做——
-#    沒有「相對 base 的變更」可言。
-if [ -d supabase/migrations ]; then
-  branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
-  case "$branch" in
-    main|test|development|DETACHED) ;;
-    *)
-      case "$branch" in hotfix/*) base_ref=origin/main ;; *) base_ref=origin/development ;; esac
-      if ! git rev-parse -q --verify "$base_ref" >/dev/null; then
-        echo "✗ push gate：找不到 ${base_ref}（先 git fetch origin），無法做 migration 分級。" >&2
-        exit 1
-      fi
-      # 4b) Migration 版本號撞號（LS-70）：本分支 tree 內版本號唯一、且不與 base_ref 既有版本撞號（同版本、
-      #     不同檔名——LS-57／LS-66 同取 20260825030000，先併的把後併的擠掉）。放在分級之前：撞號的檔連套用
-      #     順序都未定義，分級沒有意義。對 base 當前 tip 比、不是 merge-base（撞號正是別張票先併進去）；
-      #     CI Migration rules step 對 origin/$BASE 再驗一次（伺服器端兜底）。
-      bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-version-check.sh" --target "$base_ref"
-      # 4c) 已併入 base 的 migration 檔不可變（LS-80）：擋在分級之前——已被悄悄改掉內容的檔，分級／覆寫
-      #     判斷都沒有意義。本機沒有 PR body 可驗，只驗 commit body 的逃生口宣告；CI Migration rules
-      #     step 另外對 PR body 再驗一次（伺服器端兜底，逃生口使用必須在 PR 可見）。
-      bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-immutable-check.sh" --base "$base_ref"
-      base_sha=$(git merge-base "$base_ref" HEAD)
-      findings=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-breaking-check.sh" --base "$base_sha")
-      if printf '%s\n' "$findings" | grep -q '^DESTRUCTIVE'; then
-        echo "⚠ push gate：migration 含 DESTRUCTIVE 敘述——PR body 需使用者本人蓋核可標記，CI 會擋（COLLABORATION §6）：" >&2
-        printf '%s\n' "$findings" | grep '^DESTRUCTIVE' | sed 's/^/    /' >&2
-      fi
-      if printf '%s\n' "$findings" | grep -q '^BREAKING'; then
-        echo "⚠ push gate：migration 含 BREAKING 敘述——PR body 需行首 BREAKING: 段落，CI 會擋（COLLABORATION §6）：" >&2
-        printf '%s\n' "$findings" | grep '^BREAKING' | sed 's/^/    /' >&2
-        if [ -z "$(git diff --name-only "$base_sha"...HEAD -- docs/API.md)" ]; then
-          echo "✗ push gate：migration 被判 BREAKING 但本分支沒動 docs/API.md——契約文件須同 PR 更新（COLLABORATION §6）。" >&2
-          exit 1
-        fi
-      fi
-      ;;
-  esac
-fi
-
-# 6) 分支起點乾淨度（LS-50）：工作分支自 merge-base 以來的每個非 merge commit，subject 票號必須等於分支票號
-#    （scripts/gates/branch-ticket-check.sh，規則與逃生口見該檔檔頭）——LS-38 分支疊了 LS-31 三個從未開 PR 的
-#    commit 而沒有任何 gate 攔到。刻意夾帶：本票 commit body 獨佔一行 `Bundles: LS-<m>`，PR body 同步宣告（CI 驗）。
-# 7) 合併衝突預檢（LS-50，PR #77 事件）：`git merge-tree --write-tree origin/<target> HEAD` 有衝突即擋
-#    （scripts/gates/merge-conflict-check.sh；本機 origin/<target> 落後遠端也擋，先 fetch）。GitHub 對不可合併的
-#    PR 不觸發 pull_request workflow——CI 零紀錄、沒有任何機械訊號，這一關只有本機 push 前做得到。
-# 兩步共用第 5 步的方向矩陣（hotfix/* 對 origin/main，其餘對 origin/development）；保護分支與 detached HEAD
-# 跳過；找不到 origin/<target> 由腳本直接紅，不靜默跳過。
-branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
-case "$branch" in
-  main|test|development|DETACHED) ;;
-  *)
-    case "$branch" in hotfix/*) target_ref=origin/main ;; *) target_ref=origin/development ;; esac
-    bash "$(git rev-parse --show-toplevel)/scripts/gates/branch-ticket-check.sh" --base "$target_ref"
-    bash "$(git rev-parse --show-toplevel)/scripts/gates/merge-conflict-check.sh" --target "$target_ref"
-    ;;
-esac
 
 echo "✓ push gate 通過"

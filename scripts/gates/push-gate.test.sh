@@ -21,12 +21,16 @@
 # I2（PR #164 R1）：鎖目錄一律用 `SIMULATOR_LOCK_DIR` 覆寫到 `mktemp -d` 底下的路徑，不再用固定的
 # `/tmp/simulator-lock-SHARED-UDID`——多份 push-gate.test.sh 併行時才不會互刪對方的鎖目錄。
 #
-# 合成 repo 沒有 docs/API.md／LittleSprout/Errors/AppError.swift／supabase/migrations，所以 push-gate.sh
-# 第 4 步（error-codes-check.sh，無條件跑）在①～⑥、⑧一定會失敗（找不到這支腳本），push-gate.sh 整體
-# exit code 因此不會是 0——這是預期的、刻意不追求的「全綠」，因為它與本票要驗的行為（模擬器用完必關）
-# 無關：trap 在 sim_udid 算出來、判完專屬／共用之後就設好了，不論後面第幾步造成整支腳本退出，trap 都會
-# 在那個當下觸發；下面只斷言「xcrun simctl shutdown 有沒有被叫到、UDID 對不對」，不斷言 push-gate.sh
-# 整體的最終 exit code（②除外——那組刻意驗 xcodebuild test 失敗本身會讓整支腳本非 0）。
+# 合成 repo 沒有 docs/API.md／LittleSprout/Errors/AppError.swift／supabase/migrations，所以 api 契約對帳
+# （步驟 3）／migration 分級（步驟 5）等「目錄存在才跑」的步驟自然跳過；但 error-codes-check.sh（步驟 4）
+# 無條件跑，合成 repo 沒有這支腳本本身。LS-65 之前，步驟 2（xcodebuild）在步驟 4 之前，trap 早已設好，
+# 之後不論第幾步造成整支腳本退出都無所謂，這裡才能放著不管、任由步驟 4 找不到腳本而失敗。LS-65 把
+# 步驟 3／3b／4／5／6／7 前移到步驟 2 之前後，這個「放著不管」會變成「步驟 2（本檔案真正要驗的模擬器
+# shutdown 行為）根本沒機會執行」——所以 setup 一開始就把 error-codes-check.sh stub 成 `exit 0`（⑦
+# 另外換成會 sleep 的假身測「鎖仍在時跳過 shutdown」，跑完會還原回這裡的預設假身；hf_root／hf2_root 兩個
+# 獨立合成 repo 同理各自補上）。下面只斷言「xcrun simctl shutdown 有沒有被叫到、UDID 對不對」，不糾結
+# push-gate.sh 整體的最終 exit code（②除外——那組刻意驗 xcodebuild test 失敗本身會讓整支腳本非 0；⑨
+# 另外驗 shutdown 本身失敗不影響整體 exit code）。
 # INT／TERM 訊號傳遞的時機在 bash 裡對「還在等前景指令」的情況沒有跨平台一致保證（同
 # scripts/ops/simulator-lock.sh 檔頭理由——它也因此另外顯式接 INT／TERM 成 exit，不只靠裸 EXIT
 # trap），所以這裡不模擬真的送訊號中斷，改用靜態接線斷言（同 detect-simulator.test.sh 的 ⑨）釘住
@@ -130,6 +134,14 @@ cat > "$work/bin/swiftlint" <<'STUB'
 exit "${STUB_SWIFTLINT_RC:-0}"
 STUB
 chmod +x "$work/bin/swiftlint"
+
+# LS-65：步驟 4（error-codes-check.sh）前移到步驟 2 之前無條件執行，合成 repo 沒有這支腳本——理由見
+# 檔頭「合成 repo 沒有 docs/API.md…」那段——這裡先給一個永遠成功的假身，①起的案例才走得到步驟 2。
+cat > "$R/scripts/gates/error-codes-check.sh" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+chmod +x "$R/scripts/gates/error-codes-check.sh"
 
 db="$work/devices.db"
 printf '%s\t%s\n%s\t%s\n%s\t%s\n' \
@@ -296,6 +308,13 @@ bash "$work/simulator-lock.sh.real" --dir "$lock7" -- sleep 6 >/dev/null 2>&1 &
 holder7_pid=$!
 wait "$a7_pid"
 cp "$work/simulator-lock.sh.real" "$R/scripts/ops/simulator-lock.sh"   # 還原給後面案例用（目前 ⑦ 是最後一個用 $R 的案例，保守起見仍還原）
+# LS-65：⑦專用的 sleep 4 假身還原回 setup 節的預設「成功」假身——不還原的話，後面重複用 $R 的
+# 案例（⑨、⑫～㉖）每個 run_gate 都會平白多等 4 秒（步驟 4 現在跑在步驟 2 之前）。
+cat > "$R/scripts/gates/error-codes-check.sh" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+chmod +x "$R/scripts/gates/error-codes-check.sh"
 if [ ! -s "$SHUTDOWN_LOG" ]; then
   echo "✓ ⑦ shutdown 當下鎖目錄仍在（另一個持有者）→ 跳過，不呼叫 shutdown"
 else
@@ -730,6 +749,13 @@ cat > "$hf_root/scripts/gates/merge-conflict-check.sh" <<'STUB'
 exit 0
 STUB
 chmod +x "$hf_root/scripts/gates/merge-conflict-check.sh"
+# LS-65：步驟 4 前移到步驟 2（本案例要驗的「尚未建立 Xcode 專案」訊息就在步驟 2 裡）之前，
+# 同 setup 節理由，這個獨立合成 repo 也要補一份會成功的假身。
+cat > "$hf_root/scripts/gates/error-codes-check.sh" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+chmod +x "$hf_root/scripts/gates/error-codes-check.sh"
 gh_ update-ref refs/remotes/origin/main HEAD
 gh_ checkout -q -b development
 mkdir -p "$hf_root/LittleSprout"; echo 'struct Bar {}' > "$hf_root/LittleSprout/Bar.swift"
@@ -831,7 +857,9 @@ cat > "$hf2_root/scripts/gates/detect-simulator.sh" <<EOF
 printf 'platform=iOS Simulator,id=%s\n' "\${FAKE_DEST_UDID:-$ded_udid}"
 EOF
 chmod +x "$hf2_root/scripts/gates/detect-simulator.sh"
-for s in branch-ticket-check.sh merge-conflict-check.sh; do
+# LS-65：error-codes-check.sh（步驟 4）併入這裡一起 stub——同 hf_root／setup 節理由，步驟 4 前移到
+# 步驟 2（本案例要驗的 tap-target-check.sh 呼叫就在步驟 2 裡）之前，找不到腳本會讓步驟 2 永遠跑不到。
+for s in branch-ticket-check.sh merge-conflict-check.sh error-codes-check.sh; do
   cat > "$hf2_root/scripts/gates/$s" <<'STUB'
 #!/bin/bash
 exit 0
