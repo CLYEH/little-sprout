@@ -174,7 +174,10 @@ jobs:
       # createdAt）、blockedBy 未解跳過、Canceled 視為已解、缺 size 列結構 (e)、cycle 外 active 票列 cycle
       # 對帳 (a)、LS-96 永不列為候補、分頁、無 LINEAR_API_KEY 略過且不呼叫 curl。CI 本身沒有
       # LINEAR_API_KEY，跑的是這支自測；真正打 Linear 只在本機有 .env 時發生。
-      - name: Ops 腳本自測（patrol／session-start／supabase-lock／promote／post-status／pen-open／pen-land／patrol-linear，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103）
+      # LS-118：pen-open.sh 新增 `--force-reload`（不信任「目前已一致」、無條件併入既有清場流程，見該檔
+      # 檔頭 LS-118 段）加兩組自測；pen-read.sh（`pen-open.sh <root> --force-reload` 的唯讀封裝，供
+      # reviewer／QA 安全讀稿）自己的自測驗證正確轉呼叫並如實回傳結果。
+      - name: Ops 腳本自測（patrol／session-start／supabase-lock／promote／post-status／pen-open／pen-read／pen-land／patrol-linear，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118）
         run: |
           rc=0
           bash scripts/ops/patrol.test.sh || rc=1
@@ -182,6 +185,7 @@ jobs:
           bash scripts/ops/promote.test.sh || rc=1
           bash scripts/ops/post-status.test.sh || rc=1
           bash scripts/ops/pen-open.test.sh || rc=1
+          bash scripts/ops/pen-read.test.sh || rc=1
           bash scripts/ops/pen-land.test.sh || rc=1
           bash scripts/ops/patrol-linear.test.sh || rc=1
           exit "$rc"
