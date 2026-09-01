@@ -254,12 +254,38 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
   echo "→ push gate：執行 unit tests（scheme: ${XCODE_SCHEME}, destination: ${dest}）…"
   # LS-54 N8：與 CI 一致，明確序列執行（MockURLProtocol 全域 handler 不可平行）
   # LS-83 R2 F1：整段包進 simulator-lock.sh，鍵＝目的地 UDID（scripts/ops/simulator-lock.sh 檔頭注解）
+  # LS-95：明確帶 -only-testing:LittleSproutTests——scheme 新增了 LittleSproutUITests
+  # target（≥44pt 點擊目標 gate）之後，不帶篩選的話這裡會連 UI test 一起跑，讓每次 push
+  # 都多付一次開 app 的成本；UI test 是否要跑另外由下面的 tap-target-check.sh 依 Features/
+  # diff 決定，此處維持原本只跑 unit tests 的範圍與耗時不變。
   bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
     xcodebuild test \
     -scheme "$XCODE_SCHEME" \
     -destination "$dest" \
+    -only-testing:LittleSproutTests \
     -parallel-testing-enabled NO \
     -quiet
+
+  # LS-95：≥44pt 點擊目標機械 gate。Swift diff 含 Features/ 才跑（COLLABORATION §4／§7）——
+  # 非 UI 票的 Swift 變更（例如只動 Services/／Models/）不需要多付一次 XCUITest 開 app 的
+  # 成本。復用第 5／7 步同一套方向矩陣（hotfix/* 對 origin/main，其餘對 origin/development）；
+  # 保護分支與 detached HEAD 跳過；找不到 target ref 就不跑（跟第 0b 步一致，這裡不是正確性
+  # 把關，找不到就略過，不新增一個「找不到 ref」的失敗模式）。
+  tap_target_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
+  case "$tap_target_branch" in
+    main|test|development|DETACHED) ;;
+    *)
+      case "$tap_target_branch" in hotfix/*) tap_target_base=origin/main ;; *) tap_target_base=origin/development ;; esac
+      if git rev-parse -q --verify "$tap_target_base" >/dev/null; then
+        tap_target_diff=$(git diff --name-only "$tap_target_base"...HEAD)
+        if printf '%s\n' "$tap_target_diff" | grep -qE '(^|/)Features/'; then
+          echo "→ push gate：Swift diff 含 Features/，執行 ≥44pt 點擊目標 gate（LS-95）…"
+          bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
+            bash "$(git rev-parse --show-toplevel)/scripts/gates/tap-target-check.sh" "$sim_udid" "$XCODE_SCHEME"
+        fi
+      fi
+      ;;
+  esac
 else
   echo "⚠ push gate：尚未建立 Xcode 專案，跳過 unit tests（Phase 0-1 完成後自動生效）"
 fi

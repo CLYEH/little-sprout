@@ -455,8 +455,25 @@ jobs:
           # LS-54 N8：測試序列執行——MockURLProtocol 的 handler 是全域 static，平行測試會
           # 互相汙染。scheme（project.yml）已明寫 parallelizable: false，這裡再明確帶旗標，
           # 不把正確性押在 scheme 預設值上。
+          # LS-95：明確帶 -only-testing:LittleSproutTests，不連 LittleSproutUITests（≥44pt
+          # 點擊目標 gate）一起跑——那個 target 由下一步 tap-target-check.sh 單獨執行。
           xcodebuild test \
             -scheme LittleSprout \
             -destination "$dest" \
+            -only-testing:LittleSproutTests \
             -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: 點擊目標 gate（LS-95：≥44pt，長輩硬約束）
+        run: |
+          if ! ls -d ./*.xcodeproj >/dev/null 2>&1 && ! ls -d ./*.xcworkspace >/dev/null 2>&1; then
+            echo "::warning::尚未建立 Xcode 專案，略過（Phase 0-1 完成後生效）"
+            exit 0
+          fi
+          # 跟上一步的 Build & Test 一樣無條件跑（不像 push-gate.sh 依 Features/ diff 判斷）：
+          # CI 這台 runner（macos-26）本來就有 detect-simulator.sh 找得到的模擬器（上一步已經
+          # 靠它跑完 unit tests），多跑一次 UI test target 的成本不高，當成每個 PR 的伺服器端
+          # 兜底——push-gate.sh 的本機判斷若因為 diff 方向矩陣算錯（例如 fetch 不到 target ref）
+          # 而漏跑，這裡仍會抓到。
+          dest=$(bash scripts/gates/detect-simulator.sh)
+          bash scripts/gates/tap-target-check.sh "$(printf '%s' "$dest" | sed -n 's/.*id=//p')" LittleSprout
