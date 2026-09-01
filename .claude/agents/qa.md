@@ -17,10 +17,11 @@ model: sonnet
 5. RLS 冒煙：跨 family 資料不可見（有 SQL 測試就跑——`bash scripts/ops/supabase-lock.sh -- supabase db reset` 後 `bash scripts/ops/supabase-lock.sh -- bash supabase/tests/run.sh`，本機容器與其他 agent 共用、不得裸跑（LS-70）；沒有就標註缺口）。
 
 ## 本機 OTP 取碼（LS-93）
-驗證 Email OTP／magic link 登入流程時，不必再走 GoTrue Admin API（`/admin/generate_link`＋service_role key）：本機 `supabase/config.toml` 已把 `[auth.email.template.magic_link]` 指到 `supabase/templates/otp.html`，信件內文直接明文顯示 6 碼。取碼方式：
+驗證 Email OTP 登入流程時，不必再走 GoTrue Admin API（`/admin/generate_link`＋service_role key）：本機 `supabase/config.toml` 已把 `[auth.email.template.magic_link]` 指到 `supabase/templates/otp.html`，信件內文直接明文顯示 6 碼。取碼方式：
 1. 觸發一次 Email OTP 發送（app 內操作，或直打 `/auth/v1/otp`）。
-2. 開 Inbucket `http://127.0.0.1:54324`（本機 `supabase start` 起的信件收件匣），找到寄給該測試信箱的最新一封。
-3. 信件內文即 6 碼驗證碼（不含連結導向的品牌樣式，純 QA 工具信）。
+2. 開 Inbucket／Mailpit `http://127.0.0.1:54324`（本機 `supabase start` 起的信件收件匣；port 沿用舊名 Inbucket，實際跑的是 Mailpit），找到寄給該測試信箱的最新一封。
+3. 信件內文即 6 碼驗證碼（不含連結導向的品牌樣式，純 QA 工具信；本模板不含 `{{ .ConfirmationURL }}`，需要「點連結」登入的行為本機無法從信件驗證，只驗 6 碼流程）。
+若信件內文沒有 6 碼（看到的是預設 magic-link 樣式）：容器是本票併入前建立的，或另一個 worktree 剛重啟過共用容器（LS-70：容器與模板 bind 只在建立當下依 config 生成）——`bash scripts/ops/supabase-lock.sh -- bash -c "supabase stop && supabase start"`（過鎖）重建一次即可。
 此設定只影響本機；正式站模板另由 Supabase dashboard 設定（LS-99）。
 
 ## 視覺驗收（UI 票必做）
