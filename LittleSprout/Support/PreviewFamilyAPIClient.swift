@@ -43,5 +43,17 @@ extension FamilyStore {
     static func preview() -> FamilyStore {
         FamilyStore(apiClient: PreviewFamilyAPIClient())
     }
+
+    /// LS-95 merge-review R1 M1(b)：帶著家庭狀態的 preview store。`SettingsView` 的「邀請家人」
+    /// 列只在 `myFamily != nil` 才渲染（LS-107）——沒有這個工廠方法，`tap-target-check` 的
+    /// harness 永遠量不到那顆列（golden run 的 `testSettingsView` 因此只點名了「登出」一顆，
+    /// reviewer 實測確認）。同步呼叫 `seedMyFamilyForPreview`（見 `FamilyStore.swift`），不經過
+    /// async fetch，沒有時序窗口。
+    @MainActor
+    static func preview(withFamily family: Family) -> FamilyStore {
+        let store = FamilyStore(apiClient: PreviewFamilyAPIClient())
+        store.seedMyFamilyForPreview(family)
+        return store
+    }
 }
 #endif

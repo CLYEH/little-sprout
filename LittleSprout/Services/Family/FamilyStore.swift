@@ -122,6 +122,21 @@ final class FamilyStore {
         self.apiClient = apiClient
     }
 
+    #if DEBUG
+    /// 只給 SwiftUI `#Preview`／LS-95 `tap-target-check` harness 用：同步把 `myFamily` 設成
+    /// 給定值，不需要真的走一次 async fetch。`myFamily` 是 `private(set)`（同檔案才能寫），
+    /// 這支方法因此只能加在這裡，不能加在別檔案的 extension（見 `PreviewFamilyAPIClient.swift`
+    /// 的 `FamilyStore.preview(withFamily:)`，那邊呼叫這支）。
+    ///
+    /// merge-review R1 M1(b)：`SettingsView` 的「邀請家人」列只在 `myFamily != nil` 才渲染
+    /// （LS-107），若靠 `.task` 之類非同步載入才能看到「已有家庭」狀態，UI test 的量測 snapshot
+    /// 有機會取在載入完成之前（同 B1 (d) 的時序問題）——這裡改成建構時就同步賦值，沒有這個
+    /// 時序窗口。
+    func seedMyFamilyForPreview(_ family: Family) {
+        myFamily = family
+    }
+    #endif
+
     /// R1 F1：`AuthenticatedGate` 用 `.task(id: authStore.session?.userID)` 驅動這支——
     /// id 跟 `ownerUserID` 不同（含首次登入、含已登入狀態下切換帳號）就先整份歸零再視情況
     /// 重查；同一個使用者的其餘重繪（例如 `scenePhase` 觸發的 session snapshot 刷新造成

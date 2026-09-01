@@ -33,7 +33,16 @@ enum TapTargetGateHarness {
             }
         case .settings:
             NavigationStack {
-                SettingsView(authStore: .preview(), familyStore: .preview(), childrenStore: .preview())
+                // merge-review R1 M1(b)：「邀請家人」列只在 `familyStore.myFamily != nil` 才
+                // 渲染（LS-107）——`.preview(withFamily:)` 同步餵一個家庭狀態，那顆列才會被量到
+                // （見 `FamilyStore.seedMyFamilyForPreview`／`PreviewFamilyAPIClient.swift`）。
+                SettingsView(
+                    authStore: .preview(),
+                    familyStore: .preview(withFamily: Family(
+                        id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
+                    )),
+                    childrenStore: .preview()
+                )
             }
         case .selfTestTooSmall:
             // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
