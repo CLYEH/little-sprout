@@ -53,7 +53,12 @@ if xcodebuild test \
   -only-testing:LittleSproutUITests \
   -parallel-testing-enabled NO \
   > "$log" 2>&1; then
-  echo "✓ tap-target-check：所有量測畫面的 Button／tappable 元件皆 ≥44×44pt（一般字級 content_size large 量測）"
+  # merge-review R1 M1：不印「所有量測畫面」這種聽起來像全域覆蓋的措辭——目前只有
+  # LittleSprout/TapTargetGateScreenName.swift 註冊的畫面會被實際量到（其餘 Features 畫面見
+  # scripts/gates/tap-target-exemptions.txt 具名排除，或尚待補進註冊表），明確點名以免誤導。
+  checked=$(grep -oE '= "[A-Za-z0-9]+View"' "$(git rev-parse --show-toplevel)/LittleSprout/TapTargetGateScreenName.swift" \
+    | sed -E 's/= "(.*)"/\1/' | paste -sd '、' -)
+  echo "✓ tap-target-check：已量測畫面（${checked:-無}）的 Button／tappable 元件皆 ≥44×44pt（一般字級 content_size large 量測）；其餘 Features 畫面覆蓋見 tap-target-exemptions.txt"
   exit 0
 fi
 

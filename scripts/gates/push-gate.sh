@@ -40,7 +40,10 @@ fi
 #     的 precondition 在啟動時崩潰（LS-49）；xcconfig 內容不寫進 pbxproj，只改它的 PR 不會命中
 #     `.xcodeproj`／`project.yml`，若不單獨列出會被誤判「無變更」而跳過本機 build/test——該跑卻跳，是本
 #     機制唯一該避免的 unsafe 方向。R1 F2（minor）：`.xcode-version` 同理補上，避免只改它時連帶跳過 1b
-#     工具鏈對齊步。
+#     工具鏈對齊步。LS-95 merge-review R1 m2：`(^|/)LittleSprout/` 只匹配「LittleSprout/」這個精確路徑
+#     片段，不會匹配 `LittleSproutUITests/`（同名前綴、不同資料夾）——只改該目錄下既有 Swift 檔會被誤判
+#     「無變更」而跳過本機 SwiftLint／unit tests／tap-target 三步，是同一種「該跑卻跳」的 unsafe 方向，
+#     單獨補上。
 skip_swift_steps=0
 diff_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
 case "$diff_branch" in
@@ -49,7 +52,7 @@ case "$diff_branch" in
     case "$diff_branch" in hotfix/*) diff_target_ref=origin/main ;; *) diff_target_ref=origin/development ;; esac
     if git rev-parse -q --verify "$diff_target_ref" >/dev/null; then
       diff_changed=$(git diff --name-only "$diff_target_ref"...HEAD)
-      if ! printf '%s\n' "$diff_changed" | grep -qE '(^|/)LittleSprout/|(^|/)LittleSproutTests/|(^|/)project\.yml$|\.xcodeproj(/|$)|(^|/)Package\.resolved$|(^|/)\.swiftlint\.yml$|(^|/)Config/.*\.xcconfig$|(^|/)\.xcode-version$'; then
+      if ! printf '%s\n' "$diff_changed" | grep -qE '(^|/)LittleSprout/|(^|/)LittleSproutTests/|(^|/)LittleSproutUITests/|(^|/)project\.yml$|\.xcodeproj(/|$)|(^|/)Package\.resolved$|(^|/)\.swiftlint\.yml$|(^|/)Config/.*\.xcconfig$|(^|/)\.xcode-version$'; then
         skip_swift_steps=1
       fi
     fi
@@ -266,11 +269,15 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
     -parallel-testing-enabled NO \
     -quiet
 
-  # LS-95：≥44pt 點擊目標機械 gate。Swift diff 含 Features/ 才跑（COLLABORATION §4／§7）——
-  # 非 UI 票的 Swift 變更（例如只動 Services/／Models/）不需要多付一次 XCUITest 開 app 的
-  # 成本。復用第 5／7 步同一套方向矩陣（hotfix/* 對 origin/main，其餘對 origin/development）；
-  # 保護分支與 detached HEAD 跳過；找不到 target ref 就不跑（跟第 0b 步一致，這裡不是正確性
-  # 把關，找不到就略過，不新增一個「找不到 ref」的失敗模式）。
+  # LS-95：≥44pt 點擊目標機械 gate。Swift diff 含 Features/ 或 DesignSystem/ 才跑（COLLABORATION
+  # §4／§7）——非 UI 票的 Swift 變更（例如只動 Services/／Models/）不需要多付一次 XCUITest 開 app
+  # 的成本。merge-review R1 m1：點擊區 padding 的 token（`AppSpacing`）與共用按鈕元件
+  # （`PrimaryButton`／`AuthButtons`／`Pill`）都住在 `DesignSystem/`，只改那裡（例如把
+  # `AppSpacing.item` 調小）原本不會觸發本機這一步——CI 的 `ci` job 無條件跑會兜住，但本機這裡
+  # 該一併認列，不要讓「UI 票」的定義漏掉點擊區 token 的來源。復用第 5／7 步同一套方向矩陣
+  # （hotfix/* 對 origin/main，其餘對 origin/development）；保護分支與 detached HEAD 跳過；找不到
+  # target ref 就不跑（跟第 0b 步一致，這裡不是正確性把關，找不到就略過，不新增一個「找不到 ref」
+  # 的失敗模式）。
   tap_target_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
   case "$tap_target_branch" in
     main|test|development|DETACHED) ;;
@@ -278,8 +285,8 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
       case "$tap_target_branch" in hotfix/*) tap_target_base=origin/main ;; *) tap_target_base=origin/development ;; esac
       if git rev-parse -q --verify "$tap_target_base" >/dev/null; then
         tap_target_diff=$(git diff --name-only "$tap_target_base"...HEAD)
-        if printf '%s\n' "$tap_target_diff" | grep -qE '(^|/)Features/'; then
-          echo "→ push gate：Swift diff 含 Features/，執行 ≥44pt 點擊目標 gate（LS-95）…"
+        if printf '%s\n' "$tap_target_diff" | grep -qE '(^|/)(Features|DesignSystem)/'; then
+          echo "→ push gate：Swift diff 含 Features/ 或 DesignSystem/，執行 ≥44pt 點擊目標 gate（LS-95）…"
           bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
             bash "$(git rev-parse --show-toplevel)/scripts/gates/tap-target-check.sh" "$sim_udid" "$XCODE_SCHEME"
         fi
@@ -295,6 +302,15 @@ fi
 #    --catalog 模式對套用完 migrations 的活資料庫做權威對帳（PR #58 review）。
 if [ -d supabase/migrations ]; then
   bash "$(git rev-parse --show-toplevel)/scripts/gates/api-contract-check.sh"
+fi
+
+# 3b) 點擊目標畫面覆蓋對帳（LS-95 M1，merge-review R1）：純文字比對 Features/**/*View.swift
+#     對 TapTargetGateScreenName／tap-target-exemptions.txt，不需要 Xcode／模擬器，無條件跑
+#     （有 Features 目錄才跑——Phase 0-1 完成前這個目錄不存在）。跟第 2 步的 Features/ diff
+#     判斷不同：那個是「這次要不要跑 XCUITest 量測」，這個是「畫面清單本身有沒有被靜默漏掉」，
+#     兩者互補、不能互相取代。
+if [ -d LittleSprout/Features ]; then
+  bash "$(git rev-parse --show-toplevel)/scripts/gates/tap-target-registry-check.sh"
 fi
 
 # 4) 錯誤碼三方對帳（docs/API.md §5 ↔ LSErrorCode ↔ migrations errcode，LS-54／LS-56）：
