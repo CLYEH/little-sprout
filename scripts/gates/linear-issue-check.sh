@@ -8,7 +8,7 @@
 #   B：`project` 以 "Phase" 開頭且缺 `milestone`  → deny（Milestone＝feature 群）
 #   C：`title` 以「Task：」／「Task:」開頭且缺 `parentId` → deny（Sub-issue＝task 須掛 parent）
 #   D：`labels` 內 `lane:*` 標籤數 ≠ 1             → deny（§5-b 每張票必帶恰一個 lane 標籤）
-# 更新既有票（`tool_input.id` 非空）對 A-D 一律放行——避免改狀態／改其他欄位被誤攔
+# 更新既有票（`tool_input.id` 為非空**字串**）對 A-D 一律放行——避免改狀態／改其他欄位被誤攔
 # （LS-77 票文明定）。
 #
 # 規則 E（LS-79，docs/COLLABORATION.md §5-c）：`state` 為 `Ready` 或 `In Progress` 且未帶
@@ -17,6 +17,10 @@
 # 欄位（project／milestone／parentId／labels）仍照舊不驗；`state` 未出現在這次 `tool_input`
 # （沒有要改狀態）或值不是這兩者之一（含 `Backlog`／`Done`／其他）→ 不觸發，交由 A-D 的既有
 # 放行規則處理。故意排在「有 id 就放行」與 A-D 之前判斷，讓它對兩種呼叫都生效。
+#
+# `id` 型別防呆（LS-79，池項 F6）：`tool_input.id` 只有在是 **JSON 字串**時才算「有 id」；
+# 傳 `{}`／`[]`（物件／陣列）等非字串型別視同沒有 id（仍走建票的完整規則），避免用型別
+# 混淆繞過 A-D。
 #
 # fail-closed（同 scripts/hooks/pretool.sh 慣例）：空 stdin／JSON 解析失敗（jq 與 python3
 # 皆失敗、或兩者皆不存在於 PATH）／腳本自身中途未預期中止（trap on_exit EXIT），一律 deny。
@@ -29,9 +33,10 @@
 # 使用者可控內容一律不帶進 reason），故組字串不需要跑時對它們做 JSON escaping（同 pretool.sh
 # json_deny 的既有設計原則）。
 #
-# 自測：scripts/gates/linear-issue-check.test.sh（六情境＋labels 過多＋state／cycle 交界
-# 情境（規則 E：建票／更新各自 deny＋allow＋state 缺席＋state 非 Ready/In Progress 皆不
-# 觸發）＋fail-closed 三態＋五條 deny 規則各一個 mutant 負控），掛 CI rules job。
+# 自測：scripts/gates/linear-issue-check.test.sh（八情境＋labels 過多＋id 型別防呆兩組＋
+# state／cycle 交界情境（建票／更新各自 deny＋allow＋state 缺席＋state 非 Ready/In Progress
+# 皆不觸發）＋fail-closed 三態＋settings.json 接線斷言＋trap 移除 mutation 負控＋五條 deny
+# 規則各一個 mutant 負控），掛 CI rules job。
 #
 # 已知盲區：使用者在 Linear UI 手動建票／改狀態不經此 hook（見 docs/COLLABORATION.md §7／
 # LS-77 票文「盲區」段）——開票結構 (a)-(e) 由巡檢 `scripts/ops/patrol_linear.py` 的
@@ -78,14 +83,16 @@ IFS= read -r -d '' input || true
 # ---- 解析 JSON：jq 優先，缺才退 python3；兩者都解不出（缺工具或 JSON 壞）→ deny ----
 # 八個欄位：id／project／milestone／title／parentId／labels（逗號合併——lane／size 標籤名稱
 # 本身不含逗號，足夠安全）／state／cycle（LS-79 新增，用於規則 E）；同 pretool.sh 用 \x1f
-# 當欄位分隔字元，避免與欄位值本身的分隔符衝突。
+# 當欄位分隔字元，避免與欄位值本身的分隔符衝突；`read -d ''`（NUL 分隔，同 pretool.sh:182）
+# 取代預設換行分隔，讓欄位值裡的換行不會被截斷（LS-104 R1 F1 根因的同類修法，LS-79 池項 F3）；
+# herestring `<<<` 結尾會多補一個換行，會被吃進最後一個欄位（`cyclev`），用完後去掉尾端換行。
 SEP=$'\x1f'
 parsed=0
 
 if command -v jq >/dev/null 2>&1; then
   if out=$(printf '%s' "$input" | jq -r --arg sep "$SEP" '
       [
-        (.tool_input.id // "" | tostring),
+        (.tool_input.id | if type == "string" then . else "" end),
         (.tool_input.project // "" | tostring),
         (.tool_input.milestone // "" | tostring),
         (.tool_input.title // "" | tostring),
@@ -95,7 +102,7 @@ if command -v jq >/dev/null 2>&1; then
         (.tool_input.cycle // "" | tostring)
       ] | map(gsub($sep; " ")) | join($sep)
     ' 2>/dev/null); then
-    IFS="$SEP" read -r idv projectv milestonev titlev parentidv labelsv statev cyclev <<<"$out" || true
+    IFS="$SEP" read -r -d '' idv projectv milestonev titlev parentidv labelsv statev cyclev <<<"$out" || true
     cyclev=${cyclev%$'\n'}
     parsed=1
   fi
@@ -117,14 +124,16 @@ try:
     if not isinstance(labels, list):
         raise ValueError("labels not a list")
     labels_str = ",".join(str(x) for x in labels)
+    id_val = ti.get("id")
+    id_str = id_val if isinstance(id_val, str) else ""
 except Exception:
     sys.exit(1)
 def esc(s):
     return str(s).replace("\x1f", " ")
-fields = [ti.get("id") or "", ti.get("project") or "", ti.get("milestone") or "", ti.get("title") or "", ti.get("parentId") or "", labels_str, ti.get("state") or "", ti.get("cycle") or ""]
+fields = [id_str, ti.get("project") or "", ti.get("milestone") or "", ti.get("title") or "", ti.get("parentId") or "", labels_str, ti.get("state") or "", ti.get("cycle") or ""]
 sys.stdout.write("\x1f".join(esc(f) for f in fields))
 ' 2>/dev/null); then
-    IFS="$SEP" read -r idv projectv milestonev titlev parentidv labelsv statev cyclev <<<"$out" || true
+    IFS="$SEP" read -r -d '' idv projectv milestonev titlev parentidv labelsv statev cyclev <<<"$out" || true
     cyclev=${cyclev%$'\n'}
     parsed=1
   fi
@@ -147,8 +156,8 @@ if [ -n "${statev:-}" ]; then
 fi
 # ---- RULE-E-END ----
 
-# 更新既有票（有 id）一律放行——票文明定：避免改狀態／改其他欄位被誤攔；state／cycle 已由
-# 上面的規則 E 驗過。
+# 更新既有票（有 id，且 id 為字串型別——見上方「id 型別防呆」）：A-D 一律放行，票文明定：
+# 避免改狀態／改其他欄位被誤攔；state／cycle 已由上面的規則 E 驗過。
 if [ -n "${idv:-}" ]; then
   final_allow
 fi

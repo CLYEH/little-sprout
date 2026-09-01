@@ -1,19 +1,31 @@
 #!/bin/bash
 # scripts/gates/linear-issue-check.test.sh（LS-77／LS-79）
 #
-# 自測 scripts/gates/linear-issue-check.sh：六情境（建票缺 project／Phase 缺 milestone／
-# Task 缺 parent／無 lane／合規／更新票一律放行）＋ labels 多於一個 lane:* ＋ state／cycle
-# 交界情境（規則 E，建票／更新票各自 deny／allow、state 缺席、state 非 Ready/In Progress
-# 皆不觸發、cycle 為空字串視同未帶）＋ fail-closed 三態（空 stdin／JSON 壞掉／jq 與 python3
-# 皆缺）＋ jq 缺時 python3 備援＋五條 deny 規則（A-E）各一個 mutant（拿掉該規則區塊後，
-# 原本會 deny 的同一份 payload 必須改判 allow，證明測試真的測到那個區塊、不是同一份
-# payload 湊巧一直 allow——同 scripts/hooks/pretool.test.sh 的 F5 慣例）。
+# 自測 scripts/gates/linear-issue-check.sh：八情境（建票缺 project／Phase 缺 milestone／
+# Task 缺 parent／無 lane／合規／更新票一律放行／id 型別防呆兩組）＋ labels 多於一個
+# lane:* ＋ state／cycle 交界情境（規則 E，建票／更新票各自 deny／allow、state 缺席、
+# state 非 Ready/In Progress 皆不觸發、cycle 為空字串視同未帶）＋ fail-closed 三態（空
+# stdin／JSON 壞掉／jq 與 python3 皆缺）＋ jq 缺時 python3 備援＋ settings.json 接線斷言
+# （LS-96 待辦池 F1）＋ trap 移除 mutation 負控（LS-96 待辦池 F2，同 pretool.test.sh F5
+# 慣例）＋五條 deny 規則（A-E）各一個 mutant（拿掉該規則區塊後，原本會 deny 的同一份
+# payload 必須改判 allow，證明測試真的測到那個區塊、不是同一份 payload 湊巧一直 allow）。
 # CI rules job 每個 PR 都跑。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 gate="${root}/scripts/gates/linear-issue-check.sh"
 fail=0
+
+# ---- 暫存目錄集中清理（LS-96 待辦池 F9：先前只在正常流程尾端 rm -rf，早退／中途失敗會
+# 留殘留目錄；改用 trap 兜底，正常流程仍照舊清一次，trap 再清一次是 no-op）----
+_tmp_dirs=()
+_cleanup_tmp() {
+  local d
+  for d in "${_tmp_dirs[@]:-}"; do
+    [ -n "$d" ] && rm -rf "$d"
+  done
+}
+trap _cleanup_tmp EXIT
 
 # ---- payload 建構：只需要 tool_input，不需要 tool_name（matcher 本身已限定工具）----
 payload() {  # $1=JSON 字串（tool_input 的內容）
@@ -47,7 +59,7 @@ expect() {
 }
 
 # ============================================================
-# 六情境（票文／派工 prompt 列的清單）
+# 八情境（票文／派工 prompt 列的清單）
 # ============================================================
 expect '① 建票缺 project（deny）' 2 "$(payload '{"title":"Foo","labels":["lane:harness"]}')"
 expect '② Phase 專案缺 milestone（deny）' 2 "$(payload '{"project":"Phase 1","title":"Foo","labels":["lane:harness"]}')"
@@ -60,6 +72,8 @@ expect '⑤b 合規建票：Phase 專案帶 milestone（allow）' 0 "$(payload '
 expect '⑤c 合規建票：Task 標題帶 parentId（allow）' 0 "$(payload '{"project":"Harness 與協作基建","title":"Task：LS-1 foo","parentId":"LS-9","labels":["lane:harness"]}')"
 expect '⑥ 更新票（有 id）一律放行——即使其餘欄位全缺（allow）' 0 "$(payload '{"id":"LS-77","labels":[]}')"
 expect '⑥b 更新票：id 為空字串不算「有 id」（視同建票，仍套規則，deny）' 2 "$(payload '{"id":"","title":"Foo","labels":["lane:harness"]}')"
+expect '⑧ id 為物件 {}（型別非字串，不算「有 id」，視同建票仍套規則，deny）' 2 "$(payload '{"id":{},"title":"Foo","labels":["lane:harness"]}')"
+expect '⑧b id 為陣列 []（同上，deny）' 2 "$(payload '{"id":[],"title":"Foo","labels":["lane:harness"]}')"
 
 # labels 多於一個 lane:*（票文「或多於一個」半句）
 expect '⑦ labels 多於一個 lane:*（deny）' 2 "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness","lane:ui"]}')"
@@ -92,7 +106,7 @@ expect 'fail-closed：labels 不是陣列（deny，型別異常視同解析失�
 # ============================================================
 bash_bin=$(bash -c 'type -P bash' 2>/dev/null || echo /bin/bash)
 real_python3=$(bash -c 'type -P python3' 2>/dev/null || true)
-work=$(mktemp -d)
+work=$(mktemp -d); _tmp_dirs+=("$work")
 mkdir -p "$work/empty" "$work/py-only"
 [ -n "$real_python3" ] && ln -sf "$real_python3" "$work/py-only/python3"
 
@@ -144,11 +158,66 @@ fi
 rm -rf "$work"
 
 # ============================================================
+# LS-96 待辦池 F1：settings.json 接線斷言（比照 pretool.test.sh I6）——把 PreToolUse 區塊
+# 刪掉／matcher 打錯／忘了 || exit 2，此前 CI 全綠、hook 已死也不會被抓到。
+# ============================================================
+settings_json="${root}/.claude/settings.json"
+wiring_cmd=$(jq -r '.hooks.PreToolUse[] | select(.matcher == "mcp__linear__save_issue") | .hooks[] | select(.type == "command") | .command' "$settings_json" 2>/dev/null)
+if [ -n "$wiring_cmd" ]; then
+  echo '✓ F1①：settings.json 的 PreToolUse matcher 含 mcp__linear__save_issue 且接著 command'
+else
+  echo "✗ F1①：settings.json 找不到 matcher=mcp__linear__save_issue 的 PreToolUse command" >&2
+  fail=1
+fi
+case "$wiring_cmd" in
+  *linear-issue-check.sh*) echo '✓ F1②：command 確實呼叫 linear-issue-check.sh' ;;
+  *) echo "✗ F1②：command 沒有呼叫 linear-issue-check.sh（實得：${wiring_cmd}）" >&2; fail=1 ;;
+esac
+case "$wiring_cmd" in
+  *'|| exit 2'*) echo '✓ F1③：command 帶 || exit 2（腳本缺席／執行失敗時 wiring 層仍 fail-closed）' ;;
+  *) echo "✗ F1③：command 沒有 || exit 2（實得：${wiring_cmd}）" >&2; fail=1 ;;
+esac
+
+# ============================================================
+# LS-96 待辦池 F2：trap 移除 mutation 負控（同 pretool.test.sh F5 慣例）——把 trap 那行拿掉
+# 重跑，注入一個中途未被任何 if／&&／|| 包住的失敗（`exit 1`），若移除 trap 這件事不會改變
+# 行為，代表這組測試沒測到 trap 的作用（假綠）；本測試斷言兩者行為確實不同。
+# ============================================================
+trap_mut_dir=$(mktemp -d); _tmp_dirs+=("$trap_mut_dir")
+build_trap_mutant() {   # $1=輸出路徑 $2=yes/no（是否保留 trap）
+  awk -v keep="$2" '
+    $0 == "trap on_exit EXIT" && keep != "yes" { next }
+    { print }
+    $0 == "input=" { print "exit 1  # LS-79 mutation-test：模擬腳本中途未捕捉錯誤" }
+  ' "$gate" > "$1"
+  chmod +x "$1"
+}
+build_trap_mutant "$trap_mut_dir/with_trap.sh" yes
+build_trap_mutant "$trap_mut_dir/no_trap.sh" no
+
+out=$(printf '%s' "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"]}')" | bash "$trap_mut_dir/with_trap.sh" 2>&1); got=$?
+if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+  echo '✓ F2：trap on_exit EXIT 在——腳本中途未捕捉錯誤（注入 exit 1）仍 deny（exit 2）'
+else
+  echo "✗ F2：trap 在時應 deny（實得 exit ${got}：${out}）" >&2
+  fail=1
+fi
+
+out=$(printf '%s' "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"]}')" | bash "$trap_mut_dir/no_trap.sh" 2>&1); got=$?
+if [ "$got" -ne 2 ] || ! case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+  echo '✓ F2：拿掉 trap 後同樣的中途錯誤不再變成 deny（證明 trap 是關鍵、不是巧合過關）'
+else
+  echo "✗ F2：拿掉 trap 後行為竟然沒變——這組測試沒測到 trap 的效果（實得 exit ${got}：${out}）" >&2
+  fail=1
+fi
+rm -rf "$trap_mut_dir"
+
+# ============================================================
 # mutation 負控：五條 deny 規則（A-E）各拿掉一個，同一份原本會 deny 的 payload 必須改判
 # allow——證明「該規則的判斷式」是真正造成 deny 的原因，不是這份測試湊巧沒踩到別的規則
 # （同 scripts/hooks/pretool.test.sh 的 F5 trap-mutation 慣例）。
 # ============================================================
-mut_dir=$(mktemp -d)
+mut_dir=$(mktemp -d); _tmp_dirs+=("$mut_dir")
 
 build_mutant() {  # $1=規則字母（A/B/C/D/E） $2=輸出路徑
   awk -v tag="RULE-${1}-START" -v endtag="RULE-${1}-END" '
