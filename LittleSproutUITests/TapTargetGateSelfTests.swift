@@ -14,18 +14,21 @@ import XCTest
 final class TapTargetGateSelfTests: XCTestCase {
     func testTooSmallSampleIsFlagged() {
         let app = TapTargetMeasurement.launch(.selfTestTooSmall)
+        TapTargetMeasurement.assertScreenRendered(.selfTestTooSmall, in: app)
         let violations = TapTargetMeasurement.violations(in: app)
         XCTAssertEqual(violations.count, 1, "22×22pt 樣本應該被抓到剛好 1 個違規，實得：\(violations)")
     }
 
     func testGoodSamplePasses() {
         let app = TapTargetMeasurement.launch(.selfTestGood)
+        TapTargetMeasurement.assertScreenRendered(.selfTestGood, in: app)
         let violations = TapTargetMeasurement.violations(in: app)
         XCTAssertTrue(violations.isEmpty, "44×44pt 樣本不應該有違規，實得：\(violations)")
     }
 
     func testPaddingOutsideButtonSampleIsFlagged() {
         let app = TapTargetMeasurement.launch(.selfTestPaddingOutsideButton)
+        TapTargetMeasurement.assertScreenRendered(.selfTestPaddingOutsideButton, in: app)
         let violations = TapTargetMeasurement.violations(in: app)
         XCTAssertEqual(
             violations.count, 1,
