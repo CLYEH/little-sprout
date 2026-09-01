@@ -59676,6 +59676,524 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "vzYXz",
+      "x": 13643,
+      "y": 32369,
+      "name": "LS-21 / 13 日記詳情 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "Hrihm",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "jqnI4",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "時間軸"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "iUM2a",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "KDHsx",
+              "name": "Diary Note",
+              "width": "fill_container",
+              "fill": "$print-paper",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$paper-edge",
+              "strokeWidth": 1,
+              "strokeAlignment": "outer",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 3
+                },
+                "blur": 12
+              },
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "padding": "$inset-card",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "NW9sQ",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "YYajf",
+                      "name": "Who",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "hwbc4",
+                          "name": "Diary Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "notebook-pen",
+                          "library": "lucide",
+                          "fill": "$print-ink-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "n5BJn",
+                          "name": "Who Label",
+                          "fill": "$print-ink",
+                          "content": "小安的日記",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "O3uCm",
+                      "name": "Meta",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "bqSAG",
+                          "type": "ref",
+                          "ref": "AqN3F",
+                          "name": "Age Pill",
+                          "descendants": {
+                            "KR7zN": {
+                              "icon": "cake",
+                              "fill": "$print-ink-secondary"
+                            },
+                            "g7Fnj": {
+                              "content": "2 歲 3 個月",
+                              "fill": "$print-ink-secondary"
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Aya7k",
+                          "name": "Date Stamp",
+                          "rotation": -4,
+                          "stroke": "$print-ink-secondary",
+                          "strokeWidth": 1.5,
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$sp-tight",
+                            "$sp-label"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "gnK9N",
+                              "name": "Stamp Icon",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "nlilX",
+                              "name": "Stamp Date",
+                              "fill": "$print-ink-secondary",
+                              "content": "08.31",
+                              "fontFamily": "$font-num",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "700",
+                              "letterSpacing": 0.5
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "ANX6N",
+                  "name": "Full Text",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "今天在溜滑梯上玩得好開心，還交了一個新朋友，說好下次要一起帶挖沙工具來。回家路上一直問我明天可不可以再去，我說要看天氣，他就開始祈禱明天不要下雨，講得很認真，笑死我了。晚餐吃得比平常多一碗，應該是玩累了肚子餓。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CJ2BA",
+              "name": "Spacer 16",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "VkCVo",
+              "name": "Photo Print",
+              "width": "fill_container",
+              "fill": [
+                "$print-paper",
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.393,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.452,
+                    "height": 0.672
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.259,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.452,
+                    "height": 0.672
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.293,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.452,
+                    "height": 0.672
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 1
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.19699999999999998,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.452,
+                    "height": 0.672
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 1
+                  }
+                }
+              ],
+              "cornerRadius": "$radius-lg",
+              "stroke": "$paper-edge",
+              "strokeWidth": 1,
+              "strokeAlignment": "outer",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 3
+                },
+                "blur": 12
+              },
+              "layout": "vertical",
+              "gap": 7,
+              "padding": [
+                "$print-edge",
+                "$print-edge",
+                "$print-edge-bottom",
+                "$print-edge"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "h2PM0w",
+                  "name": "Photo Wrap",
+                  "metadata": {
+                    "type": "unsplash",
+                    "username": "bambicorro",
+                    "link": "https://unsplash.com/@bambicorro",
+                    "author": "Bambi Corro"
+                  },
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 184,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "https://images.unsplash.com/flagged/photo-1551398766-dd525d7c6175?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjU4NzF8&ixlib=rb-4.1.0&q=80&w=1080",
+                    "mode": "fill"
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "eULUZ",
+                  "name": "Imprint Row",
+                  "width": "fill_container",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "P6Ijdm",
+                      "name": "Caption",
+                      "fill": "$print-ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "溜滑梯上的新朋友",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "id": "ei3GJ",
+                  "type": "ref",
+                  "ref": "GEBcf",
+                  "name": "Corner TL",
+                  "layoutPosition": "absolute",
+                  "x": -5,
+                  "y": -5,
+                  "descendants": {
+                    "sD5Ma": {
+                      "geometry": "M0 0 L26 0 L0 26 Z"
+                    },
+                    "DhOiK": {
+                      "geometry": "M26 0 L0 26"
+                    }
+                  }
+                },
+                {
+                  "id": "LspKx",
+                  "type": "ref",
+                  "ref": "GEBcf",
+                  "name": "Corner TR",
+                  "layoutPosition": "absolute",
+                  "x": 324,
+                  "y": -5,
+                  "descendants": {
+                    "sD5Ma": {
+                      "geometry": "M26 0 L0 0 L26 26 Z"
+                    },
+                    "DhOiK": {
+                      "geometry": "M0 0 L26 26"
+                    }
+                  }
+                },
+                {
+                  "id": "njoi7",
+                  "type": "ref",
+                  "ref": "GEBcf",
+                  "name": "Corner BL",
+                  "layoutPosition": "absolute",
+                  "x": -5,
+                  "y": 211,
+                  "descendants": {
+                    "sD5Ma": {
+                      "geometry": "M0 26 L0 0 L26 26 Z"
+                    },
+                    "DhOiK": {
+                      "geometry": "M0 0 L26 26"
+                    }
+                  }
+                },
+                {
+                  "id": "Iocoj",
+                  "type": "ref",
+                  "ref": "GEBcf",
+                  "name": "Corner BR",
+                  "layoutPosition": "absolute",
+                  "x": 324,
+                  "y": 211,
+                  "descendants": {
+                    "sD5Ma": {
+                      "geometry": "M26 26 L26 0 L0 26 Z"
+                    },
+                    "DhOiK": {
+                      "geometry": "M26 0 L0 26"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "im7DS",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "qBnvn",
+              "name": "Comments Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "d70kTz",
+                  "name": "Comments Header",
+                  "gap": "$sp-tight",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "ZoaYE",
+                      "name": "Icon",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "message-circle",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "y8Uqt",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "留言",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "e9xHmd",
+                  "name": "Comments Placeholder",
+                  "fill": "$text-secondary",
+                  "content": "留言功能即將推出，敬請期待。",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
