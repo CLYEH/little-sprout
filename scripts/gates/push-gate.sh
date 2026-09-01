@@ -292,10 +292,13 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
   #
   # PR #164 R1 F1：只關「本 worktree 專屬機」，不分青紅皂白關掉 detect-simulator.sh:125 退回的共用
   # 第一台——共用機路徑上多個 worktree 可能拿到同一顆 UDID，鎖只包住下面「執行 xcodebuild test」那
-  # 一段，EXIT trap 要等本腳本剩下的第 3～7 步（真環境好幾秒）跑完才觸發，那時鎖早已釋放：A 跑完自己
+  # 一段，EXIT trap 原本要等本腳本剩下的第 3～7 步（真環境好幾秒）跑完才觸發，那時鎖早已釋放：A 跑完自己
   # 剩下的 gate、trap 觸發關機時，B 可能正拿著同一顆共用機在鎖內跑測試，會被 A 關掉（stub 重現的時間
-  # 軸見 PR #164 R1 F1）。設 trap 前先查這顆 UDID 對應的裝置名稱，只有專屬機（`<票號>-<機型>`，含主
-  # checkout 用的 `main-`）才設；共用機／R1 F2 提到的 demo-* 常駐機都落在下面 pattern 之外，不設
+  # 軸見 PR #164 R1 F1）。LS-65：第 3～7 步已前移到本步驟之前執行，trap 觸發前不再等它們——只剩下面
+  # 視 diff 而定的 LS-95 點擊目標量測（未觸發時幾乎是鎖一釋放就觸發），窗口因此大幅縮小，但不是歸零
+  # （仍可能與其他 worktree 的鎖持有時間重疊）；共用機不設 trap、以及下面「shutdown 前查鎖目錄是否仍
+  # 在」這第二道防線都仍然必要，不能因為窗口縮小就拿掉。設 trap 前先查這顆 UDID 對應的裝置名稱，只有
+  # 專屬機（`<票號>-<機型>`，含主 checkout 用的 `main-`）才設；共用機／R1 F2 提到的 demo-* 常駐機都落在下面 pattern 之外，不設
   # trap、不關。第二道防線：即使是專屬機，shutdown 前若鎖目錄仍在就跳過並印一行——不在 trap 內重新
   # 取鎖，中斷情境下持鎖的子行程可能還活著，重新取鎖會卡到 simulator-lock.sh 的 timeout（該腳本檔頭
   # 理由）。

@@ -277,13 +277,15 @@ else
 fi
 
 # ---- ⑦ 本 worktree 專屬機，但 shutdown 那一刻鎖目錄仍在（第二道防線；PR #164 R1 F1「另加第二道」）：
-#        error-codes-check.sh 換成會 sleep 的假身，貼出一段時間窗——push-gate.sh 自己那段
-#        xcodebuild test 的鎖用完幾乎瞬間就放；給它 1 秒頭香確保先跑，接著背景程序合法搶到同一把鎖
-#        （模擬「另一個 worktree 正在用這台專屬機」），握著遠比 error-codes-check 的 sleep 長的時間；
-#        push-gate.sh 的 EXIT trap 觸發時鎖仍在 → 應跳過 shutdown、印出訊息，且不能在 trap 內重新
-#        取鎖（否則會卡到 simulator-lock.sh 的 timeout，同該腳本檔頭理由）。simulator-lock.sh 換成
-#        不真的加鎖的假身，避免我們自己手動製造的時序被 push-gate.sh 內部「執行 xcodebuild test」
-#        那段鎖擋住（那段鎖不是本案例要驗的對象——⑧ 才是驗真鎖排隊的時序）----
+#        error-codes-check.sh 換成會 sleep 的假身，貼出一段時間窗（LS-65 之後這段 sleep 跑在
+#        「執行 xcodebuild test」之前，不是之後——本案例要驗的只是「trap 觸發那一刻鎖是否仍在」，
+#        跟 sleep 排在前後無關）：給背景程序 1 秒頭香確保先跑，接著它合法搶到同一把鎖（模擬「另一個
+#        worktree 正在用這台專屬機」），握著遠比 error-codes-check 的 sleep 長的時間；push-gate.sh
+#        自己那段 xcodebuild test 用的是下面的假鎖（近乎瞬間跑完），trap 因此幾乎緊接在 sleep 結束後
+#        觸發，此時背景程序仍握著鎖 → 應跳過 shutdown、印出訊息，且不能在 trap 內重新取鎖（否則會卡到
+#        simulator-lock.sh 的 timeout，同該腳本檔頭理由）。simulator-lock.sh 換成不真的加鎖的假身，
+#        避免我們自己手動製造的時序被 push-gate.sh 內部「執行 xcodebuild test」那段鎖擋住（那段鎖不是
+#        本案例要驗的對象——⑧ 才是驗真鎖排隊的時序）----
 : > "$SHUTDOWN_LOG"
 lock7="$work/lock7-dir"
 rm -rf "$lock7"
@@ -351,7 +353,9 @@ mk_race_repo() {
   cp "${root}/scripts/gates/push-ref-check.sh" "$d/scripts/gates/push-ref-check.sh"
   cp "${root}/scripts/gates/detect-simulator.sh" "$d/scripts/gates/detect-simulator.sh"
   cp "${root}/scripts/ops/simulator-lock.sh" "$d/scripts/ops/simulator-lock.sh"
-  # 模擬 push-gate 第 3～7 步耗時（真環境要好幾秒；貼近 reviewer 重現腳本）
+  # 模擬 push-gate 第 3～7 步耗時（真環境要好幾秒；LS-65 之後這幾步跑在「執行 xcodebuild test」之前，
+  # 不是之後——sleep 一樣代表這段耗時，只是現在發生在兩個 worktree 各自搶鎖之前，不影響下面 ⑧ 要驗的
+  # 東西：真鎖有沒有讓兩邊的 xcodebuild test 各自序列排隊、共用機全程不設 shutdown trap）
   printf '#!/bin/bash\nsleep 3\nexit 0\n' > "$d/scripts/gates/error-codes-check.sh"
   chmod +x "$d/scripts/gates/error-codes-check.sh"
   mkdir -p "$d/Fake.xcodeproj"
@@ -896,6 +900,31 @@ if grep -qF 'called' "$TAP_TARGET_LOG"; then
 else
   echo "✗ ㉖ hotfix/* 分支的 tap-target 觸發區塊可能誤用了 origin/development 當 target（漏算 Features/ 變更）" >&2
   printf '%s\n' "$out26" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+
+# ---- ㉗（LS-65 merge-review R1 M1）：本票唯一的 deliverable 是「便宜檢查排在 xcodebuild 之前」
+#        這個物理順序，先前沒有任何一個 case 釘住它——把 push-gate.sh 整個換回 base 9803b0d（完整
+#        回退 LS-65）拿本檔案跑，37/37 照樣全綠，日後順序被誰不小心搬回去、或新插一個昂貴步驟在
+#        便宜檢查之前，自測不會有任何訊號。照 ④（:223-245）同一套 idiom：對 $gate_src 取第一個
+#        非註解（跳過 `^[ \t]*#` 開頭的行）的 error-codes-check.sh／merge-conflict-check.sh 呼叫行號，
+#        斷言兩者都小於第一個非註解 `xcodebuild test` 行號——回退即紅（reviewer 實測：head 171／230 <
+#        352；base 318／377 > 265）----
+ordered=$(awk '
+  /^[ \t]*#/ { next }
+  /error-codes-check\.sh/ && !saw_errcodes { saw_errcodes = NR }
+  /merge-conflict-check\.sh/ && !saw_mergeconflict { saw_mergeconflict = NR }
+  /xcodebuild test/ && !saw_xcodebuild_test { saw_xcodebuild_test = NR }
+  END {
+    if (saw_errcodes && saw_mergeconflict && saw_xcodebuild_test \
+        && saw_errcodes < saw_xcodebuild_test && saw_mergeconflict < saw_xcodebuild_test) print "yes"
+  }
+' "$gate_src")
+if [ "$ordered" = yes ]; then
+  echo "✓ ㉗ error-codes-check.sh／merge-conflict-check.sh 的呼叫行號都在 xcodebuild test 之前（LS-65 順序沒有被回退）"
+else
+  echo "✗ ㉗ error-codes-check.sh／merge-conflict-check.sh 沒有都排在 xcodebuild test 之前——LS-65 的便宜檢查前移順序被回退了" >&2
   fail=1
 fi
 
