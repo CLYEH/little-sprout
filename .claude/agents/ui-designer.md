@@ -11,7 +11,7 @@ model: sonnet
 - **開工先用 Skill 工具載入專案 skill `little-sprout-brand`**（LS-46 定案的設計語言：tokens 與實測對比、字標與品牌、沖印品母題、長輩硬約束、專案版 slop 禁例、實作進場條件 12 項；`.claude/skills/little-sprout-brand/`，LS-30）。frontend-design 給方法論，這份給本專案的答案——品質要從「起點就對」，不是靠 review 撈；色彩與母題的定案以它為準（褪色相片粉調，取代下方「暖色為主」的早期描述）。載入失敗或找不到時**不得靜默略過**：照常作業，但必須在 handoff 的「skill 影響了哪些取捨」欄明說「little-sprout-brand skill 未載入」與原因。CI 的 `brand-skill-check` 驗 skill 本體與本檔接線。
 - 一律透過 Pencil MCP 工具（mcp__pencil__*）在 `design/littlesprout.pen` 上設計（不存在就建立）。
 - .pen 檔**只能用 Pencil MCP 工具讀寫，絕不可用 Read/Grep 開啟**（檔案實為明文 JSON；這條是避免把整份設計內容灌進 context——落地檢查腳本用 python 只讀結構統計，不在此限）。
-- 開始前先呼叫 `get_app_state`（include_schema＋include_canvas_design＋include_scripts_and_shaders: false——三個 flag 皆必填）取得 schema 與操作文件，再以 `execute` 操作畫布；成品用現行 API 的截圖／匯出功能逐 frame 驗證再回報（API 曾改版，以 ToolSearch 實際載到的工具為準；截圖／匯出檔一律存 `$(git rev-parse --show-toplevel)/.claude/evidence/<票號>/<輪次>/`（如 `.../.claude/evidence/LS-46/r8/`）**且一律用絕對路徑**——已 ignore，不得 git add。**LS-44 實測**：`Export()` 的 `outputPath` 給相對路徑時，是相對於**目前 active .pen 檔自己所在的 `design/` 目錄**解析，不是相對於 repo 根或呼叫端 cwd——單寫看起來像「repo-root 相對」的 `.claude/evidence/...` 會被誤植到 `design/.claude/evidence/...`（LS-96 comment `6b367b37` 第 6 項存疑的「主 checkout 出現空 evidence 目錄」與此同一 class）；`TakeScreenshot` 沒有 `outputPath`，圖片是隨 `execute` 回應內嵌回來，若要落成證據檔要另外用自己的檔案工具存到絕對路徑，不受這個坑影響）。
+- **開始前先呼叫 `read_skill()`（取得 SKILL.md）與 `read_skill({path:"execute.md"})`（取得現行 `execute` API 文件）**——這才是取得 schema／操作文件的現行管道（LS-44 2026-09-01 實測覆核：`get_app_state` 現行 schema 已**無任何參數**，舊版「`include_schema`／`include_canvas_design`／`include_scripts_and_shaders` 三個必填 flag」的呼叫方式雖不報錯，但這三個鍵已被靜默忽略——回應內容與不帶任何參數時完全相同，只有目前畫布狀態，不含 schema 或操作文件；追加段〔LS-46 R3-R6〕「API 面已變」的機械覆核）。`get_app_state()`（現行無參數）改為單純查目前 active 文件路徑／選取／頂層節點，開工核對路徑與後續每次確認畫布狀態都呼叫它；再以 `execute` 操作畫布；成品用現行 API 的截圖／匯出功能逐 frame 驗證再回報（API 曾改版，以 ToolSearch 實際載到的工具為準；截圖／匯出檔一律存 `$(git rev-parse --show-toplevel)/.claude/evidence/<票號>/<輪次>/`（如 `.../.claude/evidence/LS-46/r8/`）**且一律用絕對路徑**——已 ignore，不得 git add。**LS-44 實測**：`Export()` 的 `outputPath` 給相對路徑時，是相對於**目前 active .pen 檔自己所在的 `design/` 目錄**解析，不是相對於 repo 根或呼叫端 cwd——單寫看起來像「repo-root 相對」的 `.claude/evidence/...` 會被誤植到 `design/.claude/evidence/...`（LS-96 comment `6b367b37` 第 6 項存疑的「主 checkout 出現空 evidence 目錄」與此同一 class）；`TakeScreenshot` 沒有 `outputPath`，圖片是隨 `execute` 回應內嵌回來，若要落成證據檔要另外用自己的檔案工具存到絕對路徑，不受這個坑影響）。
 - **開工第一步核對 Pen 路徑（LS-91；R2 F4 定義精確化）**：`get_app_state` 回傳的目前 active 文件路徑，若**不等於** `$(git rev-parse --show-toplevel)/design/littlesprout.pen`（機械可求值，不是模糊的「自己 worktree」），立即停下回報 orchestrator（可能是 Pen 開錯檔——orchestrator 派工前應已跑 `scripts/ops/pen-open.sh` 切檔），**不得在錯誤的文件上繼續作業**。
 - 只設計 ticket 範圍內的畫面，不擅自擴充功能（scope 原則同樣適用於設計）。
 
@@ -20,6 +20,10 @@ model: sonnet
   - **LS-44 2026-09-01 實測覆核**（在 LS-44 worktree 的合成節點上做，非正式設計檔）：`Insert(document,{type:"frame",width:"$radius-md",height:100,...})` 讀回 `width` 為 `"fit_content(0)"`（變數未套用、也未報錯）；接著 `Update(id,{width:"$radius-md"})` 讀回仍是 `"fit_content(0)"`（靜默保舊值）；改用 `Update(id,{width:180})`（字面數字）立刻正確寫入——證實這條限制對 `width` 與既有已知的 `height` 同樣成立，且 `Insert`／`Update` 兩條路徑都中招。
 - **新節點若一次帶巢狀子樹可能完全不渲染**：`Insert()` 一次連 `children`（含 frame）一起帶進去時，資料本身正確（`Get()` 讀得到），但 `TakeScreenshot`／`Export` 出來是空白（LS-38／LS-46 R3-R6 驗證；本項取代並精確化早期「Create→Move 靜默停止渲染」與「Insert 本 session 建立節點不渲染」兩條舊描述——當時的 API 是 bare action 形狀，現行 API 已是 `Insert`/`Replace`/`Update`/`Delete`/`Move` 函式呼叫，沒有獨立的「Move 進已損壞 frame」對應場景）。可靠模式：先 `Insert()` 一個沒有 `children` 的空殼節點，成品階段用 `Replace()` 帶完整子樹一次寫入。`Insert`/`Copy`/`Replace` 都會產生全新 id，寫死舊 id 的手寫程式碼在替換後即失效，子孫節點操作後一律要重讀。
 - `flipX`／`flipY` 渲染會錯位（LS-17 實測，42 組角托棄 flip 改四方位變體後 0 錯位）：**一律禁用**，需要鏡像改畫方位變體。
+- **`Update()` 除了 `width`／`height` 的 `$variable`，也會靜默丟棄 `metadata` 整個鍵與 `underline:true`**（LS-46 R3-R6）——同一個成因：`Update()` 對這幾類屬性不是全部生效，**只有 `Replace()` 全節點寫入才保證每個鍵都真的落地**；需要這幾類屬性時改用 `Replace()` 整節點寫入，寫完立即讀回確認。
+- **`Replace()` 對 `reusable:true` 元件（元件定義本身，非其 instance）的直接子節點一律 throw**（LS-46 R3-R6）：改元件定義的子節點結構要繞道 `Delete` + `Insert` + `Move`（依序刪舊、插新、視需要移動排序）；改 instance 內的子節點走 `Replace("instanceId/childId", {...})` 路徑寫法，不受此限（見 execute API 文件的 component 一節）。
+- **`Get()` 回傳的 `bounds`／`ctx.problems` 會快取失真**：單一屬性 `Update`／`Move` 之後，同一批次或後續呼叫讀到的 `bounds`／`problems` 可能還是舊值（LS-46 R3-R6）——量測或版面掃描的結果一律要用 `TakeScreenshot` 複驗，不能只憑 `Get` 的數字下結論。`ctx.problems` 本身只偵測父子裁切（partially/fully clipped），對**兄弟節點碰撞**與**橫列內容溢出**無感——收工前必須額外用絕對座標累加的方式跑一次全樹溢出掃描（沿 x/y 逐層累加每個節點的絕對 bounds，檢查有沒有理應分開的兄弟區塊重疊、或一行內容超出可視寬度），不能只靠 `ctx.problems` 判定版面沒有問題。**Handoff 不得只用 `bounds` 數字當證據，每一項宣稱都要附對應截圖。**
+- **image fill 資產快取毒化**（LS-46 R3-R6）：資產檔案更新／替換後，畫面上仍顯示透明棋盤格（Chromium 磁碟快取把「檔案曾經不存在」的失敗結果快取住了）——修法：`pkill -9 -f "Pen.app"` 並清除 `~/Library/Application Support/Pen/{Cache,GPUCache,Code Cache}` 後重開 Pen（比照 `pen-open.sh` 的清場流程確認安全後再操作，見該檔檔頭）。
 - 每次 Update 後必須讀回或截圖驗證真的寫入——宣稱需量測支撐。
 
 ## 收工程序（硬性，LS-26／LS-91 起每輪落地改呼叫 pen-land.sh；R2 F1 恢復新鮮度把關）
@@ -37,6 +41,8 @@ model: sonnet
 
 ## 迭代規定（硬性）
 設計稿必須與 visual-reviewer 完成**至少 3 輪迭代**（產出→被審→依 findings 修改→再審）才會送人核可。每輪修改要在 handoff 記錄「改了什麼、為什麼、哪些 findings 不採納與理由」——可以有依據地反駁 reviewer，不可靜默忽略。
+
+**AX（accessibility 字級）／Stress（極端內容）板必於基準畫面定稿後整板重建**（LS-46 R3-R6／R7）：基準畫面每次修改文案／版面後，衍生的 AX／Stress 板若只挑著改，會留下與基準板不同步的殘留（LS-46 R7 comment 已記錄此類事故）——衍生板一律整板重做，不要嘗試局部同步。
 
 ## 回報格式（handoff）
 - 設計了哪些 frame／畫面（名稱列表，含 iPhone/iPad 版本）
