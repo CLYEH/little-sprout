@@ -33,7 +33,7 @@ expect() {
   if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; }; then
     echo "✓ $name"
   else
-    echo "✗ $name（期望 exit $want${must:+、輸出含「$must」}，實得 $got）" >&2
+    echo "✗ ${name}（期望 exit $want${must:+、輸出含「${must}」}，實得 ${got}）" >&2
     printf '%s\n' "$out" | sed 's/^/    /' >&2
     fail=1
   fi
