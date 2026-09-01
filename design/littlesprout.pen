@@ -52227,6 +52227,1065 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "fqhSH",
+      "x": 5891,
+      "y": 28671,
+      "name": "cmp/Card Diary",
+      "reusable": true,
+      "width": 345,
+      "fill": "$print-paper",
+      "cornerRadius": "$radius-lg",
+      "stroke": "$paper-edge",
+      "strokeWidth": 1,
+      "strokeAlignment": "outer",
+      "effect": {
+        "type": "shadow",
+        "shadowType": "outer",
+        "color": "$paper-shadow",
+        "offset": {
+          "x": 0,
+          "y": 3
+        },
+        "blur": 12
+      },
+      "layout": "vertical",
+      "gap": "$sp-label",
+      "padding": "$inset-card",
+      "children": [
+        {
+          "type": "frame",
+          "id": "aIoW9",
+          "name": "Head",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-tight",
+          "children": [
+            {
+              "type": "frame",
+              "id": "J6S8V",
+              "name": "Who",
+              "gap": "$sp-tight",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "s9Z2Rs",
+                  "name": "Diary Icon",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "notebook-pen",
+                  "library": "lucide",
+                  "fill": "$print-ink-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "bRiyR",
+                  "name": "Who Label",
+                  "fill": "$print-ink",
+                  "content": "小安的日記",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "G3RIoO",
+              "name": "Meta",
+              "gap": "$sp-tight",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "iMDUx",
+                  "type": "ref",
+                  "ref": "AqN3F",
+                  "name": "Age Pill",
+                  "descendants": {
+                    "KR7zN": {
+                      "icon": "cake",
+                      "fill": "$print-ink-secondary"
+                    },
+                    "g7Fnj": {
+                      "content": "2 歲 3 個月",
+                      "fill": "$print-ink-secondary"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "kcrvQ",
+                  "name": "Date Stamp",
+                  "rotation": -4,
+                  "stroke": "$print-ink-secondary",
+                  "strokeWidth": 1.5,
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    "$sp-label"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "BVi5c",
+                      "name": "Stamp Icon",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "calendar",
+                      "library": "lucide",
+                      "fill": "$print-ink-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "LBoYH",
+                      "name": "Stamp Date",
+                      "fill": "$print-ink-secondary",
+                      "content": "08.31",
+                      "fontFamily": "$font-num",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "700",
+                      "letterSpacing": 0.5
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "IssRo",
+          "name": "Snippet",
+          "fill": "$print-ink",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "今天在溜滑梯上玩得好開心，還交了一個新朋友，說好下次要一起帶挖沙工具來。",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": "$fs-body",
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "bhroo",
+      "x": 6316,
+      "y": 28671,
+      "name": "cmp/Card Album",
+      "reusable": true,
+      "width": 345,
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "r6cYjT",
+          "name": "Photo Print",
+          "width": "fill_container",
+          "fill": [
+            "$print-paper",
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "opacity": 0.393,
+              "rotation": 0,
+              "size": {
+                "width": 0.452,
+                "height": 0.672
+              },
+              "colors": [
+                {
+                  "color": "$mount-pool",
+                  "position": 0
+                },
+                {
+                  "color": "$mount-pool-0",
+                  "position": 1
+                }
+              ],
+              "center": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "opacity": 0.259,
+              "rotation": 0,
+              "size": {
+                "width": 0.452,
+                "height": 0.672
+              },
+              "colors": [
+                {
+                  "color": "$mount-pool",
+                  "position": 0
+                },
+                {
+                  "color": "$mount-pool-0",
+                  "position": 1
+                }
+              ],
+              "center": {
+                "x": 1,
+                "y": 0
+              }
+            },
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "opacity": 0.293,
+              "rotation": 0,
+              "size": {
+                "width": 0.452,
+                "height": 0.672
+              },
+              "colors": [
+                {
+                  "color": "$mount-pool",
+                  "position": 0
+                },
+                {
+                  "color": "$mount-pool-0",
+                  "position": 1
+                }
+              ],
+              "center": {
+                "x": 0,
+                "y": 1
+              }
+            },
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "opacity": 0.19699999999999998,
+              "rotation": 0,
+              "size": {
+                "width": 0.452,
+                "height": 0.672
+              },
+              "colors": [
+                {
+                  "color": "$mount-pool",
+                  "position": 0
+                },
+                {
+                  "color": "$mount-pool-0",
+                  "position": 1
+                }
+              ],
+              "center": {
+                "x": 1,
+                "y": 1
+              }
+            }
+          ],
+          "cornerRadius": "$radius-lg",
+          "stroke": "$paper-edge",
+          "strokeWidth": 1,
+          "strokeAlignment": "outer",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 0,
+              "y": 3
+            },
+            "blur": 12
+          },
+          "layout": "vertical",
+          "gap": 7,
+          "padding": [
+            "$print-edge",
+            "$print-edge",
+            "$print-edge-bottom",
+            "$print-edge"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "s8eO3j",
+              "name": "Photo Wrap",
+              "clip": true,
+              "width": "fill_container",
+              "height": 184,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                "mode": "fill"
+              }
+            },
+            {
+              "type": "frame",
+              "id": "IXmLN",
+              "name": "Imprint Row",
+              "width": "fill_container",
+              "gap": "$sp-tight",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "MIxHp",
+                  "name": "Caption",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "上禮拜的動物園一日遊",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "600"
+                },
+                {
+                  "id": "zqGzO",
+                  "type": "ref",
+                  "ref": "AqN3F",
+                  "name": "Count Pill",
+                  "descendants": {
+                    "KR7zN": {
+                      "icon": "images",
+                      "fill": "$print-ink-secondary"
+                    },
+                    "g7Fnj": {
+                      "content": "12 張",
+                      "fill": "$print-ink-secondary"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "DjW91",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TL",
+              "layoutPosition": "absolute",
+              "x": -5,
+              "y": -5,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 0 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            },
+            {
+              "id": "JgUK8",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TR",
+              "layoutPosition": "absolute",
+              "x": 324,
+              "y": -5,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 0 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            },
+            {
+              "id": "mlORb",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BL",
+              "layoutPosition": "absolute",
+              "x": -5,
+              "y": 211,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 26 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            },
+            {
+              "id": "atAkU",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BR",
+              "layoutPosition": "absolute",
+              "x": 324,
+              "y": 211,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 26 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "umJHD",
+      "x": 7831,
+      "y": 28671,
+      "name": "cmp/Card Photo",
+      "reusable": true,
+      "width": 345,
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "boZpu",
+          "name": "Photo Print",
+          "width": "fill_container",
+          "fill": [
+            "$print-paper",
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "opacity": 0.393,
+              "rotation": 0,
+              "size": {
+                "width": 0.452,
+                "height": 0.672
+              },
+              "colors": [
+                {
+                  "color": "$mount-pool",
+                  "position": 0
+                },
+                {
+                  "color": "$mount-pool-0",
+                  "position": 1
+                }
+              ],
+              "center": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "opacity": 0.259,
+              "rotation": 0,
+              "size": {
+                "width": 0.452,
+                "height": 0.672
+              },
+              "colors": [
+                {
+                  "color": "$mount-pool",
+                  "position": 0
+                },
+                {
+                  "color": "$mount-pool-0",
+                  "position": 1
+                }
+              ],
+              "center": {
+                "x": 1,
+                "y": 0
+              }
+            },
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "opacity": 0.293,
+              "rotation": 0,
+              "size": {
+                "width": 0.452,
+                "height": 0.672
+              },
+              "colors": [
+                {
+                  "color": "$mount-pool",
+                  "position": 0
+                },
+                {
+                  "color": "$mount-pool-0",
+                  "position": 1
+                }
+              ],
+              "center": {
+                "x": 0,
+                "y": 1
+              }
+            },
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "opacity": 0.19699999999999998,
+              "rotation": 0,
+              "size": {
+                "width": 0.452,
+                "height": 0.672
+              },
+              "colors": [
+                {
+                  "color": "$mount-pool",
+                  "position": 0
+                },
+                {
+                  "color": "$mount-pool-0",
+                  "position": 1
+                }
+              ],
+              "center": {
+                "x": 1,
+                "y": 1
+              }
+            }
+          ],
+          "cornerRadius": "$radius-lg",
+          "stroke": "$paper-edge",
+          "strokeWidth": 1,
+          "strokeAlignment": "outer",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 0,
+              "y": 3
+            },
+            "blur": 12
+          },
+          "layout": "vertical",
+          "gap": 7,
+          "padding": [
+            "$print-edge",
+            "$print-edge",
+            "$print-edge-bottom",
+            "$print-edge"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "bjq5n",
+              "name": "Photo Wrap",
+              "metadata": {
+                "type": "unsplash",
+                "username": "mpadb",
+                "link": "https://unsplash.com/@mpadb",
+                "author": "Shaylyn"
+              },
+              "clip": true,
+              "width": "fill_container",
+              "height": 184,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "https://images.unsplash.com/photo-1638339972126-fbf92a92dd74?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjQ1Mzl8&ixlib=rb-4.1.0&q=80&w=1080",
+                "mode": "fill"
+              }
+            },
+            {
+              "type": "frame",
+              "id": "KRUtz",
+              "name": "Imprint Row",
+              "width": "fill_container",
+              "gap": "$sp-tight",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "VywUw",
+                  "name": "Caption",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "小安在公園盪鞦韆",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "600"
+                },
+                {
+                  "id": "djjiK",
+                  "type": "ref",
+                  "ref": "AqN3F",
+                  "name": "Age Pill",
+                  "descendants": {
+                    "KR7zN": {
+                      "icon": "cake",
+                      "fill": "$print-ink-secondary"
+                    },
+                    "g7Fnj": {
+                      "content": "2 歲 3 個月",
+                      "fill": "$print-ink-secondary"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "INXbk",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TL",
+              "layoutPosition": "absolute",
+              "x": -5,
+              "y": -5,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 0 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            },
+            {
+              "id": "O6ami",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TR",
+              "layoutPosition": "absolute",
+              "x": 324,
+              "y": -5,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 0 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            },
+            {
+              "id": "SNbd8",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BL",
+              "layoutPosition": "absolute",
+              "x": -5,
+              "y": 211,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 26 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            },
+            {
+              "id": "P15GB",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BR",
+              "layoutPosition": "absolute",
+              "x": 324,
+              "y": 211,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 26 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "yXSht",
+      "x": 7831,
+      "y": 29019,
+      "name": "LS-21 / 11 時間軸 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "nHtpD",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "n7gPAe",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "FCiMS",
+              "name": "Header Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ZAiyx",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "時間軸",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IMkLw",
+              "name": "Child Filter",
+              "width": "fill_container",
+              "fill": "$surface-2",
+              "cornerRadius": "$radius-full",
+              "padding": 3,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "R9qeU",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 0,
+                      "y": 1
+                    },
+                    "blur": 3
+                  },
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ZYQmU",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "全部",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Uf8ZK",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "xHy82",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "安",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "lzeOL",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "小安",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "F9WM7B",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "LAb3o",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "軒",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "woheX",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "小軒",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "THS7Z",
+              "name": "Spacer 16",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "H2Ga9h",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "dTdm3",
+              "name": "Feed",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "id": "g7Y7w",
+                  "type": "ref",
+                  "ref": "umJHD",
+                  "name": "Card Photo 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "FyDq0",
+                  "type": "ref",
+                  "ref": "fqhSH",
+                  "name": "Card Diary 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "sv88I",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "pHmHO",
+                  "type": "ref",
+                  "ref": "fqhSH",
+                  "name": "Card Diary 2",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9Z2Rs": {
+                      "icon": "notebook-pen"
+                    },
+                    "bRiyR": {
+                      "content": "日記"
+                    },
+                    "iMDUx": {
+                      "enabled": false
+                    },
+                    "IssRo": {
+                      "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "rAPVD",
+                  "name": "Load More",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-block",
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Hi8vp",
+                      "name": "Spinner",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "loader",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "w0DI9",
+                      "name": "Load More Label",
+                      "fill": "$text-secondary",
+                      "content": "載入更多回憶中…",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "YCgOb",
+          "layoutPosition": "absolute",
+          "x": 313,
+          "y": 682,
+          "name": "FAB",
+          "width": 56,
+          "height": 56,
+          "fill": "$accent",
+          "cornerRadius": "$radius-full",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 0,
+              "y": 4
+            },
+            "blur": 14
+          },
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "bkdWT",
+              "name": "Plus Icon",
+              "width": 26,
+              "height": 26,
+              "icon": "plus",
+              "library": "lucide",
+              "fill": "$on-accent"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "D7QGE8",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "A8aRSn",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "Egn9A",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 754
+        }
+      ]
     }
   ],
   "themes": {
