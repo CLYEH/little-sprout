@@ -260,6 +260,82 @@ else
   bad "⑨d --after 過去時間戳應正常落地（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 
+# ---- ⑬ LS-44：--marker 內容證明覆蓋 mtime 快篩（mtime ~5 秒等級競態的機械解） ----
+
+# ⑬a --marker 沒有 --after 陪同 → exit 2（單獨給不生效，fail loud 而非靜默忽略）
+reset; write_backup "$BACKUP_3NODE"
+out="$(run "$wt" --expect-nodes 3 --marker '"z":3' 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '須與 --after 搭配'; then
+  ok '⑬a --marker 缺 --after → exit 2'
+else
+  bad "⑬a --marker 缺 --after 應 exit 2（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑬b --marker 缺值 → exit 2
+out="$(run "$wt" --after "$(date +%s)" --marker 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '需要一個非空字串參數'; then
+  ok '⑬b --marker 缺值 → exit 2'
+else
+  bad "⑬b --marker 缺值應 exit 2（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑬b2 LS-44 R2 F4（merge-review minor）：--marker '' 顯式空字串 → exit 2（⑬b 只驗完全沒帶值的
+#     $# -lt 2 分支，:98 的 [ -z "${2:-}" ] 守衛本身零覆蓋——拿掉它自測仍全綠；沒有這組，
+#     `grep -qF -- "" "$backup"` 會命中任何檔案，新鮮度把關被無條件關閉）
+out="$(run "$wt" --after "$(date +%s)" --marker '' 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '需要一個非空字串參數'; then
+  ok '⑬b2 --marker 顯式空字串 → exit 2（釘住 :98 的 -z 守衛）'
+else
+  bad "⑬b2 --marker 顯式空字串應 exit 2（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑬c mtime 快篩判定「落後」（未來 --after），但 --marker 命中 backup 原始內容、且不在落地檔（want）
+#     中出現（本輪新內容，具鑑別力）→ 視為內容證明，覆蓋 mtime 判斷、繼續往下正常落地並印
+#     ⚠ marker-override 到 stdout（LS-44 R2 F3：比照 --allow-unchanged 稽核慣例）
+reset; write_backup "$BACKUP_3NODE"
+future=$(( $(date +%s) + 300 ))
+out="$(run "$wt" --expect-nodes 3 --after "$future" --marker '"z":3' 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '⚠ marker-override' \
+  && printf '%s' "$out" | grep -qF '內容證明覆蓋 mtime 判斷' \
+  && grep -qF '"x":99' "${wt}/design/littlesprout.pen"; then
+  ok '⑬c --marker 命中且具鑑別力：mtime 顯示落後仍以內容證明覆蓋，正常落地，印 ⚠ marker-override'
+else
+  bad "⑬c --marker 命中應覆蓋 mtime 快篩並正常落地（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑬d mtime 快篩判定「落後」，--marker 有給但沒有命中 backup 內容 → 維持原本拒絕（不得被無關字串誤放行）
+reset; write_backup "$BACKUP_3NODE"
+before="$(cat "${wt}/design/littlesprout.pen")"
+future=$(( $(date +%s) + 300 ))
+out="$(run "$wt" --expect-nodes 3 --after "$future" --marker 'NOPE-NOT-PRESENT-IN-BACKUP' 2>&1)"; got=$?
+after_content="$(cat "${wt}/design/littlesprout.pen")"
+if [ "$got" -ne 0 ] && printf '%s' "$out" | grep -qF '未在 backup 中命中' && [ "$before" = "$after_content" ]; then
+  ok '⑬d --marker 未命中：維持拒絕，不 cp'
+else
+  bad "⑬d --marker 未命中應維持拒絕（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑬e LS-44 R2 F1（merge-review major）：--marker 命中 backup，但同一字串在落地檔（want，代表上一輪
+#     內容）中也存在——對「backup 是否含本輪最後一筆編輯」零證明力，必須拒絕，不得放行覆蓋 mtime。
+#     重現 reviewer 合成 fixture 的情境 A：n1.content 沿用舊字串「萌芽日記」未變，本輪只改了
+#     n1.fill（尚未 autosave）；backup 另外把 n2.x 從 1 改成 5（已 autosave）。若把「萌芽日記」當
+#     marker，它在 want／backup 都找得到——不能證明 backup 已經追上 fill 的那一筆。
+reset
+cat > "${wt}/design/littlesprout.pen" <<'JSON'
+{"version":1,"fileToken":"tok1","variables":{"a":1},"themes":{"light":{}},"children":[{"id":"n1","content":"萌芽日記","fill":"#AAAAAA","children":[{"id":"n2","x":1,"children":[]}]}]}
+JSON
+write_backup '{"version":1,"fileToken":"tok1","variables":{"a":1},"themes":{"light":{}},"children":[{"id":"n1","content":"萌芽日記","fill":"#AAAAAA","children":[{"id":"n2","x":5,"children":[]}]}]}'
+before="$(cat "${wt}/design/littlesprout.pen")"
+future=$(( $(date +%s) + 300 ))
+out="$(run "$wt" --expect-nodes 2 --after "$future" --marker '萌芽日記' 2>&1)"; got=$?
+after_content="$(cat "${wt}/design/littlesprout.pen")"
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '在落地檔（上一輪內容）中也存在' \
+  && printf '%s' "$out" | grep -qF '沒有鑑別力' && [ "$before" = "$after_content" ]; then
+  ok '⑬e --marker 命中 backup 但也在落地檔中存在（無鑑別力）→ 拒絕，不 cp（reviewer F1 合成情境 A）'
+else
+  bad "⑬e 無鑑別力的 marker 應拒絕、不 cp（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
 # ---- ⑪ LS-117：僅白名單屬性（placeholder）差異的診斷訊息 ----
 
 # ⑪a 單一節點僅 placeholder 差異、節點總數不變 → 印「僅偵測到白名單屬性」，仍是 exit 0（dry-run 對真實
