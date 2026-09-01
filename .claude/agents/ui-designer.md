@@ -22,7 +22,21 @@ model: sonnet
 - `flipX`／`flipY` 渲染會錯位（LS-17 實測，42 組角托棄 flip 改四方位變體後 0 錯位）：**一律禁用**，需要鏡像改畫方位變體。
 - **`Update()` 除了 `width`／`height` 的 `$variable`，也會靜默丟棄 `metadata` 整個鍵與 `underline:true`**（LS-46 R3-R6）——同一個成因：`Update()` 對這幾類屬性不是全部生效，**只有 `Replace()` 全節點寫入才保證每個鍵都真的落地**；需要這幾類屬性時改用 `Replace()` 整節點寫入，寫完立即讀回確認。
 - **`Replace()` 對 `reusable:true` 元件（元件定義本身，非其 instance）的直接子節點一律 throw**（LS-46 R3-R6）：改元件定義的子節點結構要繞道 `Delete` + `Insert` + `Move`（依序刪舊、插新、視需要移動排序）；改 instance 內的子節點走 `Replace("instanceId/childId", {...})` 路徑寫法，不受此限（見 execute API 文件的 component 一節）。
-- **`Get()` 回傳的 `bounds`／`ctx.problems` 會快取失真**：單一屬性 `Update`／`Move` 之後，同一批次或後續呼叫讀到的 `bounds`／`problems` 可能還是舊值（LS-46 R3-R6）——量測或版面掃描的結果一律要用 `TakeScreenshot` 複驗，不能只憑 `Get` 的數字下結論。`ctx.problems` 本身只偵測父子裁切（partially/fully clipped），對**兄弟節點碰撞**與**橫列內容溢出**無感——收工前必須額外用絕對座標累加的方式跑一次全樹溢出掃描（沿 x/y 逐層累加每個節點的絕對 bounds，檢查有沒有理應分開的兄弟區塊重疊、或一行內容超出可視寬度），不能只靠 `ctx.problems` 判定版面沒有問題。**Handoff 不得只用 `bounds` 數字當證據，每一項宣稱都要附對應截圖。**
+- **`Get()` 回傳的 `bounds`／`ctx.problems` 會快取失真**：單一屬性 `Update`／`Move` 之後，同一批次或後續呼叫讀到的 `bounds`／`problems` 可能還是舊值（LS-46 R3-R6）——量測或版面掃描的結果一律要用 `TakeScreenshot` 複驗，不能只憑 `Get` 的數字下結論。`ctx.problems` 本身只偵測父子裁切（partially/fully clipped），對**兄弟節點碰撞**與**橫列內容溢出**無感——**收工前必須跑兩支獨立的全樹溢出掃描（LS-68；LS-67 R1 事故：只跑 `ctx.problems` 就對 5 張畫面宣稱 FLAGGED=0，實際主鈕蓋住隱私揭露文字，visual-reviewer 用絕對座標交集才抓到真碰撞）**，不能只做其中一支或只憑 `ctx.problems` 就判定版面沒問題：
+  1. **兄弟交集掃描**：沿 x/y 逐層累加每個節點的絕對 bounds，對同一父節點下每對兄弟節點做矩形交集判定，找出理應分開卻重疊的區塊。
+  2. **橫列溢出掃描**：對每一列／橫向排列的內容，比較內容寬度與容器可視寬度，找出超出可視範圍的文字或元件。
+  兩支掃描的結果都要寫成收據 `design/evidence/<票號>-r<n>-overflow.json`（明文 JSON、要進版控，不是 `.claude/evidence/` 那種 gitignored 取證），**欄位名稱必須精確符合**（CI `scripts/gates/design-evidence-check.sh` 逐鍵比對，欄位名打錯即紅）：
+     ```json
+     {
+       "ticket": "LS-<n>", "round": <輪次>, "head_sha": "<落地 .pen 那次 commit 的 40 碼 sha>",
+       "total_nodes": <與 pen-land.sh／design-landing-check.sh 算出的節點數一致的整數>,
+       "scans": {
+         "sibling_intersection": {"flagged": [{"node_a": "...", "node_b": "...", "classification": "..."}]},
+         "row_overflow": {"flagged": [{"node": "...", "classification": "..."}]}
+       }
+     }
+     ```
+     `flagged` 陣列可以是空陣列（這輪沒掃到問題），但 `scans.sibling_intersection`／`scans.row_overflow` 兩個鍵本身必須都在——只交一支會被 CI 擋（LS-67 R1 的兩支掃描規則）；有 `flagged` 項目時每一筆都要有非空 `classification`。**`head_sha` 必須用兩支分開的 commit 才填得對**：一個 commit 不可能把自己最終的 sha 寫進自己的內容裡（自我指涉不可能）——正確順序是①先照收工程序 commit＋push `.pen` 的落地（這一步天然對應規則 3 的分段落地）②`git rev-parse HEAD` 讀出這次落地 commit 的 sha ③把這個 sha 填進收據的 `head_sha`，收據另開一支 commit＋push（不要跟 `.pen` 擠在同一個 commit 裡）。CI 驗的是「`head_sha` 是不是這個 PR 自己對這份 `.pen` 的其中一次 commit」，不是要求它等於 PR 最終那個 commit——所以即使收據是最後一支 commit 也沒關係，只要 `head_sha` 填的是稍早那支落地 commit 的 sha。CI `design-evidence-check.sh` 驗此收據的 `head_sha` 屬於本 PR、`total_nodes` 與 `design-landing-check.sh --print-nodes` 算出的節點數一致（順帶擋住「收據寫完後 `.pen` 又被改過卻忘記更新收據」）、`flagged` 每筆有分類（LS-68）。**Handoff 不得只用 `bounds` 數字當證據，每一項宣稱都要附對應截圖。**
 - **image fill 資產快取毒化**（LS-46 R3-R6）：資產檔案更新／替換後，畫面上仍顯示透明棋盤格（Chromium 磁碟快取把「檔案曾經不存在」的失敗結果快取住了）——修法：`pkill -9 -f "Pen.app"` 並清除 `~/Library/Application Support/Pen/{Cache,GPUCache,Code Cache}` 後重開 Pen（比照 `pen-open.sh` 的清場流程確認安全後再操作，見該檔檔頭）。
 - 每次 Update 後必須讀回或截圖驗證真的寫入——宣稱需量測支撐。
 
@@ -36,7 +50,7 @@ model: sonnet
    這是「落地檔真的跟得上記憶體」的比對基準之一，下一步必須把它傳進去，不能讓腳本自己從 backup 猜。
 2. **最後一次 execute 之後立刻**記下 `t=$(date +%s)`——這是「backup 真的比這次編輯新」的時間基準（LS-26 舊 SOP 步驟 2 的機械版：純屬性變更不改變節點數，光靠 N 擋不住 autosave 落後）。**LS-44**：`--after` 的 mtime 比對只有整秒精度、autosave 是非同步寫入，兩者之間有 ~5 秒等級的競態——backup mtime 落後 `$t` 一兩秒不代表 backup 真的沒追上這次編輯。同時記下這次編輯裡的一個獨特字串，**必須是本輪才出現、上一輪落地檔裡沒有的內容**（剛設定的 `content`／`name`／新建節點 id 最保險——新 id 每次都是全新亂數，一定沒在上一輪出現過；改了又改回的舊值、既有 token 名、既有節點名的子字串都不合格），若下一步落地被 mtime 快篩誤擋，可用它讓內容證明覆蓋 mtime 判斷。**選錯字串（本輪之前就存在的）會被 `pen-land.sh` 拒絕**（LS-44 R2 F1：它會額外檢查這個字串是否也出現在落地檔裡，同時出現就代表這個字串證明不了「backup 已追上本輪最後一筆」，直接 exit 2 並要求換一個）；純數值屬性變更等真的找不到獨特字串就不用管，退回純 mtime 快篩＋等待重跑即可。
 3. **落地**：`bash scripts/ops/pen-land.sh <worktree 或 repo 根> --expect-nodes N --after "$t"`（記到獨特字串就加 `--marker '<字串>'`）。腳本內部會找 autosave 備份（sha1 對帳）、若 backup mtime 早於 `$t` 先當快篩擋一次——這時若有給 `--marker` 且該字串確實出現在 backup 原始內容中，**且不在落地檔（上一輪內容）中出現**（LS-44 R2 F1 的鑑別力檢查），視為內容證明、覆蓋 mtime 判斷繼續往下跑；沒給 `--marker`、給了沒命中 backup、或字串在落地檔中也找得到（沒有鑑別力，exit 2），才真的拒絕（autosave 還沒追上，或換一個字串重試）——印結構 diff（節點總數／新增或刪除的 id／meta 是否不變／逐節點屬性差異）、meta 變了或 diff 本身失敗也直接拒絕、**結構與落地檔完全無差異時預設同樣拒絕**（本輪零變更或 autosave 未追上，兩者從結構上分不出來；確認這輪真的沒有視覺變更才加 `--allow-unchanged`）；全部通過才 cp 並自動跑 design-landing-check.sh 驗 N 與畫布一致。**exit 0 才算落地**；非 0 時把輸出貼進 handoff 並照訊息處理——最常見是 backup 還沒追上最新編輯（等 autosave，可在 app 內做一次微小變更再還原來觸發後重跑）。**被擋就回報，不得改用 `cp` 手動繞過、不得為了通過而加 `--allow-unchanged`（除非這輪真的沒有變更）**。
-4. 之後才 commit／回報；handoff 附 pen-land.sh 的完整輸出（含它印出的結構 diff 清單）與 Pen 路徑。commit 時 commit-gate 會對 staged .pen 自動再跑結構檢查（機械兜底，但它沒有 N／--after——深度驗證靠本程序）。
+4. **之後立刻 commit＋push（LS-68）**：每完成一項落地即 commit＋push 到工作分支，不要等到整輪甚至整票結束才交——`.pen` 是不透明檔案，事後無法把一次編輯拆成多筆 commit（LS-46 R8 教訓：第一次派工 4.5 小時無存檔，只有邊做邊落地＋commit＋push 才保得住進度）。commit 時 commit-gate 會對 staged .pen 自動再跑結構檢查（機械兜底，但它沒有 N／--after——深度驗證靠本程序）；handoff 附 pen-land.sh 的完整輸出（含它印出的結構 diff 清單）與 Pen 路徑。
 5. **handoff 前**：`bash scripts/ops/pen-open.sh "$(git worktree list --porcelain | sed -n '1s/^worktree //p')"` 切回主 checkout（`git worktree list` 第一行固定是主 checkout，不論 worktree 放在哪個路徑；Pen 只開主 checkout 才不會擋到下一票）並確認 **exit 0**（R2）；`pen-open.sh` 遇到殘留視窗會自動驗證安全後清場重試，被擋（exit 非 0）就照訊息處理，不得略過直接交出 handoff。
 
 ## 本專案設計硬約束（出自 docs/PLAN.md）
@@ -58,3 +72,4 @@ model: sonnet
 - 未決事項與需要人核可的點
 - **Pen 路徑**（LS-91）：開工核對到的 active 文件路徑；每輪 pen-land.sh 落地時的結果（exit 0／被擋與原因，含是否用了 `--marker` 內容證明覆蓋 mtime，LS-44）
 - **尺寸類（`width`／`height`）token 的規格值族與硬寫次數**（LS-44：這兩個屬性綁不了 `$variable`，只能寫字面值——列出本輪新增／修改了哪些寬高字面值、各自對應哪個規格 token 家族，方便之後真能綁定時知道要同步改哪裡）
+- **溢出掃描收據**（LS-68）：本輪 `design/evidence/<票號>-r<n>-overflow.json` 的路徑與內容摘要（TOTAL_NODES、兩支掃描各自的 FLAGGED 筆數與分類、HEAD sha）；連同 .pen 一起 commit＋push
