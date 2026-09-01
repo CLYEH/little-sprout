@@ -1,5 +1,6 @@
 #!/bin/bash
-# 本機 demo（LS-102）：向本機 GoTrue Admin API 取一組 6 碼 Email OTP（不寄信、不吃 email 額度；本機信件模板無 6 碼，LS-93）。
+# 本機 demo（LS-102）：向本機 GoTrue Admin API 取一組 6 碼 Email OTP（不寄信、不吃 email 額度；
+# 本機信件模板自 LS-93 起已含明文 6 碼，此腳本仍走 Admin API 是為了在 demo 時不必真的寄信）。
 # 用法：bash scripts/ops/demo-otp.sh <email>     只對本機 127.0.0.1:54321；service_role 從 `supabase status` 讀取、不印出。
 set -uo pipefail
 email=${1:?用法：demo-otp.sh <email>}
