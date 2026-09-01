@@ -115,9 +115,14 @@ jobs:
       # 「審查取證不進版控」（evidence-path-check）與「品牌 skill 接線」（brand-skill-check，LS-30）與「push 目標 ref 分類：
       # 刪除／tag 早退、test／main 只准 promote.sh FF」（push-ref-check，LS-85）與「agent 定義 tools: 白名單含必要工具」
       # （agent-tools-check，LS-87）與「PreToolUse H1-H3 fail-closed 分派」（pretool，LS-88）與「已併入 base 的 migration
-      # 檔不可變」（migration-immutable-check，LS-80）的偵測不退化
+      # 檔不可變」（migration-immutable-check，LS-80）與「≥44pt 點擊目標 gate 腳本本身」（tap-target-check，LS-95）與
+      # 「Features 畫面覆蓋對帳」（tap-target-registry-check，LS-95 M1）的偵測不退化
       # （前饋必有反饋，對 gate 本身也適用）。集中在同一個 step，維持「一個地方跑所有 gate 自測」。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool）
+      #
+      # LS-95 merge-review R1 B2：tap-target-check.test.sh 原本只有腳本本體、沒有接進這裡——
+      # COLLABORATION §7 宣稱「自測掛 CI rules job」但實際沒掛，兩條刻意寫的 mutation-style
+      # 負控（多違規要全點名、失敗無標記不能誤判成通過）從未在 CI 執行過。
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／tap-target-check／tap-target-registry-check）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -138,6 +143,8 @@ jobs:
           bash scripts/gates/agent-tools-check.test.sh || rc=1
           bash scripts/gates/detect-simulator.test.sh || rc=1
           bash scripts/gates/push-gate.test.sh || rc=1
+          bash scripts/gates/tap-target-check.test.sh || rc=1
+          bash scripts/gates/tap-target-registry-check.test.sh || rc=1
           bash scripts/hooks/pretool.test.sh || rc=1
           exit "$rc"
 
@@ -407,7 +414,12 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 40
     steps:
+      # LS-95 merge-review R1 m3：full history（同 rules job）——下面「點擊目標 gate」步驟要對
+      # PR 的 base ref 做 git diff 判斷是否真的碰了 Features/／DesignSystem/，預設的淺 clone
+      # （depth 1）沒有 base ref 的歷史，diff 會失敗或不可靠。
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # LS-106：`.xcode-version` 是本機 push-gate 與這裡共用的單一來源（macos-15 runner 預裝多個
       # Xcode 版本，這裡選定的版本會漂移；先前沒有明寫，PR #165 head 8b7a0fa 本機較寬鬆的 Xcode 版本
@@ -455,8 +467,37 @@ jobs:
           # LS-54 N8：測試序列執行——MockURLProtocol 的 handler 是全域 static，平行測試會
           # 互相汙染。scheme（project.yml）已明寫 parallelizable: false，這裡再明確帶旗標，
           # 不把正確性押在 scheme 預設值上。
+          # LS-95：明確帶 -only-testing:LittleSproutTests，不連 LittleSproutUITests（≥44pt
+          # 點擊目標 gate）一起跑——那個 target 由下一步 tap-target-check.sh 單獨執行。
           xcodebuild test \
             -scheme LittleSprout \
             -destination "$dest" \
+            -only-testing:LittleSproutTests \
             -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: 點擊目標 gate（LS-95：≥44pt，長輩硬約束）
+        run: |
+          if ! ls -d ./*.xcodeproj >/dev/null 2>&1 && ! ls -d ./*.xcworkspace >/dev/null 2>&1; then
+            echo "::warning::尚未建立 Xcode 專案，略過（Phase 0-1 完成後生效）"
+            exit 0
+          fi
+          # LS-95 merge-review R1 m3：先前這裡寫「成本不高」，reviewer 對本 PR 那次 run
+          # （33468479846）實測 step 級時間——`點擊目標 gate` 本身 5m06s，把 `ci` job 關鍵路徑
+          # 從約 6m 推到 11m29s，幾乎翻倍，且原本無條件套用在每個 PR（含純文件／純 DB／純
+          # harness 票）。改成對 pull_request 的 base ref 做 diff（`$GITHUB_BASE_REF`，只有
+          # pull_request 事件才有值）判斷 Features/／DesignSystem/ 是否真的有變更，沒有就跳過；
+          # push 事件（promote.sh 晉升 development/test/main）沒有「相對 base」概念，維持無條件
+          # 跑，當成晉升前的最後一道伺服器端兜底（成本可接受：晉升頻率遠低於 PR 數）。
+          if [ -n "${GITHUB_BASE_REF:-}" ]; then
+            git fetch --quiet origin "$GITHUB_BASE_REF" 2>/dev/null || true
+            if git rev-parse -q --verify "origin/$GITHUB_BASE_REF" >/dev/null; then
+              changed=$(git diff --name-only "origin/$GITHUB_BASE_REF"...HEAD)
+              if ! printf '%s\n' "$changed" | grep -qE '(^|/)(Features|DesignSystem)/'; then
+                echo "→ diff 對 origin/${GITHUB_BASE_REF} 不含 Features/ 或 DesignSystem/，略過（成本見上方註解）"
+                exit 0
+              fi
+            fi
+          fi
+          dest=$(bash scripts/gates/detect-simulator.sh)
+          bash scripts/gates/tap-target-check.sh "$(printf '%s' "$dest" | sed -n 's/.*id=//p')" LittleSprout

@@ -50,6 +50,17 @@
                ReferencedContainer = "container:LittleSprout.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "563269728BE7057217010E1B"
+               BuildableName = "LittleSproutUITests.xctest"
+               BlueprintName = "LittleSproutUITests"
+               ReferencedContainer = "container:LittleSprout.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

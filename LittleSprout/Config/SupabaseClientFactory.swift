@@ -34,7 +34,7 @@ enum SupabaseClientFactory {
         // 這個狀態下呼叫 makeClient()：不排除 XCTest 行程的話，這個 assert 在 CI 上 100% 會炸
         // （PR #63 review 第 2 輪實測：本機因為已經有 Secrets.xcconfig 而沒踩到，CI 才踩到）。
         assert(
-            isRunningUnderXCTest || url.host != "placeholder.supabase.co",
+            isRunningUnderXCTest || isRunningUnderTapTargetGate || url.host != "placeholder.supabase.co",
             "Config/Secrets.xcconfig 未設定（目前用的是 Config/Base.xcconfig 的安全佔位值）——" +
             "本機開發請複製 Config/Secrets.xcconfig.example 為 Config/Secrets.xcconfig 並填入真實值。"
         )
@@ -49,7 +49,22 @@ enum SupabaseClientFactory {
 
     /// Xcode／`xcodebuild test` 執行 XCTest bundle 時一律會設這個環境變數——業界慣用的偵測法，
     /// 正式發佈的 app（TestFlight／App Store）絕對不會有它。
+    ///
+    /// 只涵蓋 unit test（`LittleSproutTests`）：那種測試把 XCTest 注入「同一個」app 行程
+    /// （`TEST_HOST`），這個環境變數才會出現在這裡讀到的 `ProcessInfo` 裡。
     private static var isRunningUnderXCTest: Bool {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
+
+    /// LS-95：≥44pt 點擊目標機械 gate 用 XCUITest 把 app 當「獨立行程」啟動（`TEST_TARGET_NAME`
+    /// 機制——實際執行 XCTestCase 的是另一個 XCTRunner 行程，app-under-test 是重新啟動的一份
+    /// 全新行程），上面 `isRunningUnderXCTest` 讀的 `XCTestConfigurationFilePath` 因此偵測
+    /// 不到（實測：不加這條，`LittleSproutUITests` 啟動 app 當場在這個 assert 炸掉——
+    /// `TapTargetGateHarness` 顯示的畫面本身不打真網路，不需要真的 Supabase 專案）。
+    /// 直接認 `TapTargetGateHarness` 用的同一把環境變數鍵值，不透過 `#if DEBUG` 限定的
+    /// `TapTargetGateHarness` 型別本身（這支檔案沒有 `#if DEBUG`，`assert` 本身已經是
+    /// Release build 會被編譯器整段移除的機制，不需要疊第二層條件編譯）。
+    private static var isRunningUnderTapTargetGate: Bool {
+        ProcessInfo.processInfo.environment["LS_TAP_TARGET_GATE_SCREEN"] != nil
     }
 }
