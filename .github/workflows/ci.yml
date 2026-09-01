@@ -106,6 +106,15 @@ jobs:
           printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-check.txt"
           bash scripts/gates/pr-body-check.sh --branch "$HEAD" "$RUNNER_TEMP/pr-body-check.txt"
 
+      # LS-69：evidence-path-check 原本只在本機 pre-commit 跑（看 --cached／staged），`--no-verify` 繞過後
+      # CI 沒有兜底——PR 上 commit-msg／secrets 都有伺服器端兜底、唯獨這條沒有（R1 I10）。這裡用新增的
+      # `--base` 模式對 `origin/$BASE...HEAD`（PR merge ref 相對 base 的全部新增／改名路徑）重跑同一套規則；
+      # 所有 PR 方向都跑（不像 branch-ticket-check 只在工作分支 head 執行）：development／test／main 都可能是
+      # PR 的 base（PR direction matrix 允許 test→main、development→test 等走 PR），取證形狀不分方向都要擋。
+      - name: 審查取證不進版控（PR diff 對帳，evidence-path-check --base，LS-69）
+        if: github.event_name == 'pull_request'
+        run: bash scripts/gates/evidence-path-check.sh --base "origin/$BASE"
+
       # LS-45／LS-41／LS-54／LS-53／LS-50／LS-63：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
       # 放行」（destructive-approval-check）、「schema／文件對帳」（api-contract-check）、
       # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）、「migration 兩級分級／BREAKING: 段落」

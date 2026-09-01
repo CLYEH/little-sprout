@@ -1,7 +1,9 @@
 #!/bin/bash
-# evidence-path-check.sh 的自測（LS-61）。CI rules job 每個 PR 都跑。
+# evidence-path-check.sh 的自測（LS-61；--base 模式與 N1 為 LS-69）。CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對 gate 本身也適用：若檢查退化成只看第一層目錄、把檔名當目錄、漏掉 rename 目的地、
 # 把白名單外的 png 放行、大小寫敏感、被引號檔名騙過、非 repo 假綠、或反過來擋了刪除／掃起工作區，這裡會紅。
+# 也驗非 git 目錄不再噴 ~100 行 git diff usage（N1）、--base 模式真的接上（--base 被忽略／悄悄退回
+# --cached 時，committed-not-staged 的違規檔會從期望的紅假綠成綠，當場抓到）、--base 缺參數／無效 ref 都 fail closed。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -154,16 +156,70 @@ g add 'ls99r1/sh"ot.png'
 expect 1 '⑲ ls99r1/sh"ot.png（引號檔名）→ 紅' 'sh"ot.png'
 g rm -q --cached 'ls99r1/sh"ot.png'
 
-# ⑳ R1 I2：帶路徑參數指到非 git 目錄 → exit 2 fail closed（不是印 ✓ 假綠）
+# ⑳ R1 I2／LS-69 N1：帶路徑參數指到非 git 目錄 → exit 2 fail closed（不是印 ✓ 假綠），且是一行明確錯誤、
+# 不是 git diff 誤把路徑當 --no-index <path> <path> 噴出的 ~100 行 usage（回退 N1 的 --git-dir 探測會讓這裡紅）
 mkdir -p "$work/notrepo"
 out="$(bash "$checker" "$work/notrepo" 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF 'fail closed'; then
-  echo '✓ ⑳ 非 git 目錄 → exit 2 fail closed'
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF 'fail closed' && ! printf '%s' "$out" | grep -qF 'usage: git diff'; then
+  echo '✓ ⑳ 非 git 目錄 → exit 2 fail closed、無 usage 噴版'
 else
-  echo "✗ ⑳ 非 git 目錄 → exit 2 fail closed（期望 exit 2、輸出含「fail closed」，實得 ${got}）" >&2
+  echo "✗ ⑳ 非 git 目錄 → exit 2 fail closed、無 usage 噴版（期望 exit 2、輸出含「fail closed」且不含「usage: git diff」，實得 ${got}）" >&2
   printf '%s\n' "$out" | sed 's/^/    /' >&2
   fail=1
 fi
+
+# ㉑ LS-69：--base 缺 ref 參數 → exit 2 fail closed（不是吃掉下一個參數當 repo 路徑）
+out="$(bash "$checker" --base 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF 'fail closed'; then
+  echo '✓ ㉑ --base 缺 ref 參數 → exit 2 fail closed'
+else
+  echo "✗ ㉑ --base 缺 ref 參數 → exit 2 fail closed（實得 ${got}）" >&2
+  printf '%s\n' "$out" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ㉒ LS-69：--base 指到不存在的 ref → exit 2 fail closed（不是誤判綠，也不是噴 git 原始長版錯誤淹沒重點）
+out="$(bash "$checker" --base does-not-exist-ref "$work/repo" 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF 'fail closed'; then
+  echo '✓ ㉒ --base 指到不存在的 ref → exit 2 fail closed'
+else
+  echo "✗ ㉒ --base 指到不存在的 ref → exit 2 fail closed（實得 ${got}）" >&2
+  printf '%s\n' "$out" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ㉓／㉔ LS-69：--base 模式對 base...HEAD 套同一套規則——CI rules job 對 PR merge ref 跑的正是這個模式，
+# 「規則要靠 mutation 負控」已由上面 24 組 --cached 案例涵蓋同一份判斷邏輯（反轉 why 判斷會讓那些全紅）；
+# 這裡專測「--base 這條路是否真的接上」：若實作忽略 --base、悄悄退回看 --cached（staged 是空的，因為
+# 違規檔是 commit 進 head 分支、不是 staged），㉓ 會從期望的紅假綠成綠，當場抓到接線斷掉。
+base_ref="$(g rev-parse HEAD)"
+g checkout -qb pr-violates "$base_ref"
+mk ls99r5/violate.png
+g add ls99r5/violate.png
+g commit -qm violate
+out="$(bash "$checker" --base "$base_ref" "$work/repo" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF 'ls99r5/violate.png'; then
+  echo '✓ ㉓ --base 模式：head 分支 committed（非 staged）違規檔 → 紅，點名路徑'
+else
+  echo "✗ ㉓ --base 模式：head 分支 committed 違規檔 → 紅，點名路徑（期望 exit 1、輸出含「ls99r5/violate.png」，實得 ${got}）" >&2
+  printf '%s\n' "$out" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+g checkout -q "$base_ref"
+g checkout -qb pr-clean "$base_ref"
+mk LittleSprout/Features/Clean.swift
+g add LittleSprout/Features/Clean.swift
+g commit -qm clean
+out="$(bash "$checker" --base "$base_ref" "$work/repo" 2>&1)"; got=$?
+if [ "$got" -eq 0 ]; then
+  echo '✓ ㉔ --base 模式：head 分支只有乾淨變更 → 綠'
+else
+  echo "✗ ㉔ --base 模式：head 分支只有乾淨變更 → 綠（期望 exit 0，實得 ${got}）" >&2
+  printf '%s\n' "$out" | sed 's/^/    /' >&2
+  fail=1
+fi
+g checkout -q "$base_ref"
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ evidence-path-check 自測失敗" >&2
