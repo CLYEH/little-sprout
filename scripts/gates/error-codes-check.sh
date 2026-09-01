@@ -24,8 +24,12 @@
 #     註解裡的 `code = "LS023"` 會被抓成幽靈碼）。已知限制：多行 /* */ 塊註解內
 #     縮排寫的 case 行仍會被算進去。
 #   - migrations 側：剝掉 `--` 行尾註解後，抓 `errcode = 'LSnnn'`（errcode 大小寫不拘）。
-#     migrations 是 append-only 的歷史紀錄：若日後有碼被後續 migration 退役，這裡會紅、
-#     逼著顯式處理；已知限制同 LS-34：`/* */` 塊註解不剝。
+#     migrations 是 append-only 的歷史紀錄，這裡取的是歷史**聯集**——兩個方向都要注意：
+#     把某碼從 §5／Swift 拿掉、但舊 migration 裡那句 raise 文字還在時，這裡會紅（fail-loud，
+#     逼著顯式處理）；反之，若後續 migration 以 `CREATE OR REPLACE FUNCTION` 拿掉了某個
+#     raise、卻沒人同步清掉 §5／Swift，舊 migration 仍含該碼文字，三方聯集仍然綠——
+#     假綠方向，只能靠下方退役碼白名單顯式登記才會被攔下（見 `retired_mig_codes`）。
+#     已知限制同 LS-34：`/* */` 塊註解不剝。
 #   - 退役碼白名單（LS-57 R2-b 補的機制，見下方 `retired_mig_codes`）：某支已經合併進
 #     main／test、append-only 不能回頭改的 migration 裡，若有 `errcode = 'LSnnn'` 被
 #     後續一支新 migration 用 `CREATE OR REPLACE FUNCTION` 覆寫成別的碼，舊檔案裡那句
