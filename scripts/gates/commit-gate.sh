@@ -1,5 +1,6 @@
 #!/bin/bash
-# Commit gate（pre-commit）：保護分支、branch 命名、secrets 掃描、staged Swift 檔 lint。
+# Commit gate（pre-commit）：保護分支、branch 命名、secrets 掃描、已追蹤檔不得命中 .gitignore、
+# 審查取證不進版控、staged .pen 落地檢查、staged Swift 檔 lint。
 # 規約見 docs/COLLABORATION.md §4、§7。
 set -euo pipefail
 
