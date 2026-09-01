@@ -141,6 +141,11 @@ export STUB_DB="$db"
 SHUTDOWN_LOG="$work/shutdown.log"; export SHUTDOWN_LOG
 : > "$SHUTDOWN_LOG"
 
+# LS-95（merge-review R1 m4）：tap-target-check.sh 假身寫入這個 log，證明 push-gate.sh 新增的
+# Features/／DesignSystem/ 觸發區塊「有沒有呼叫它」（見上方 tap-target-check.sh stub）。
+TAP_TARGET_LOG="$work/tap-target.log"; export TAP_TARGET_LOG
+: > "$TAP_TARGET_LOG"
+
 # I2：鎖目錄固定指到 $work 底下（mktemp -d 出來的路徑），不再用 /tmp/simulator-lock-<固定字面值>。
 export SIMULATOR_LOCK_DIR="$work/simlock"
 
@@ -574,6 +579,24 @@ g add LittleSprout/Baseline.swift
 g commit -qm 'chore: LS-0 baseline swift for ls-files probe'
 g update-ref refs/remotes/origin/development HEAD
 
+# LS-95（merge-review R1 m4）：tap-target-check.sh 假身——記一行到 $TAP_TARGET_LOG 證明「真的被
+# 呼叫」，不驗 XCUITest 量測本身（那是 tap-target-check.test.sh／LittleSproutUITests 的責任，見
+# tap-target-check.sh 檔頭注解），只驗 push-gate.sh 新增的 Features/／DesignSystem/ 觸發區塊
+# 有沒有正確決定「這次要不要呼叫它」。
+cat > "$R/scripts/gates/tap-target-check.sh" <<'STUB'
+#!/bin/bash
+printf 'called udid=%s scheme=%s\n' "$1" "$2" >> "${TAP_TARGET_LOG:?TAP_TARGET_LOG 未設定}"
+exit "${STUB_TAP_TARGET_RC:-0}"
+STUB
+chmod +x "$R/scripts/gates/tap-target-check.sh"
+# 3b（LS-95 M1）新增的 Features 畫面覆蓋對帳步驟——一旦 $R 出現 LittleSprout/Features/ 目錄
+# 就會無條件跑，跟本檔要驗的「tap-target-check.sh 觸發區塊」是不同的關注點，這裡放行即可。
+cat > "$R/scripts/gates/tap-target-registry-check.sh" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+chmod +x "$R/scripts/gates/tap-target-registry-check.sh"
+
 # ⑯ feature 分支只改文件（docs/foo.md）→ SwiftLint／unit tests 兩步都印跳過訊息，且完全不呼叫模擬器
 #    （驗收：純文件 PR 在 30 秒內完成——不進 xcodebuild 分支就不會被模擬器啟動 flake 拖住）
 : > "$SHUTDOWN_LOG"
@@ -725,6 +748,126 @@ elif printf '%s' "$out22" | grep -qF '尚未建立 Xcode 專案，跳過 unit te
 else
   echo "✗ ㉒ 預期看到「尚未建立 Xcode 專案」訊息（本 synth repo 沒有 xcodeproj），實際輸出不符（exit ${rc22}）" >&2
   printf '%s\n' "$out22" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ---- ㉓～㉖（LS-95 merge-review R1 m4）：push-gate.sh 新增的 ≥44pt 點擊目標 gate 觸發區塊
+#        （Features/／DesignSystem/ diff 比對、方向矩陣、target ref 找不到就跳過）先前一條測試
+#        都沒有——既有 ⑯～㉒ 全部只驗 LS-76 那組 skip_swift_steps 判斷，寫反了不會有任何測試
+#        紅。這裡用上面新增的 tap-target-check.sh 假身（記錄呼叫到 $TAP_TARGET_LOG）驗證 ----
+
+# ㉑ 最後一步把 .xcode-version 工作目錄內容改回 99.9 但沒 commit（該分支 HEAD 仍是 100.0）——
+# 這裡是本檔第一個在 ㉑ 之後於 $R 上再切分支的案例，先 commit 這個還原，工作目錄才乾淨、能切
+# 分支（否則 `git checkout -b` 會因為 .xcode-version 有未 commit 的異動而拒絕，且不會是「切換
+# 失敗、指令中止」這麼乾脆——後面的 mkdir/commit 會誤植到還沒切走的舊分支上，讓案例之間互相
+# 汙染而給出偽陽性）。
+g add .xcode-version; g commit -qm 'chore: LS-95 test checkpoint restore xcode-version to 99.9'
+
+# ㉓ feature 分支 diff 含 Features/ → tap-target-check.sh 被呼叫
+g checkout -q -b feature/LS-95-features-diff origin/development
+printf '99.9\n' > "$R/.xcode-version"   # origin/development 從未含這個檔（同 ⑯～㉑ 的既有作法：未 commit、只在工作目錄）
+mkdir -p "$R/LittleSprout/Features"; echo 'struct NewScreen: View {}' > "$R/LittleSprout/Features/NewScreenView.swift"
+g add LittleSprout/Features/NewScreenView.swift; g commit -qm 'feat: LS-95 demo features diff'
+: > "$TAP_TARGET_LOG"
+out23=$(run_gate STUB_TEST_RC=0)
+if grep -qF 'called' "$TAP_TARGET_LOG"; then
+  echo "✓ ㉓ diff 含 Features/ → tap-target-check.sh 有被呼叫"
+else
+  echo "✗ ㉓ diff 含 Features/ 卻沒有呼叫 tap-target-check.sh" >&2
+  printf '%s\n' "$out23" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ㉔ feature 分支 diff 含 DesignSystem/（merge-review R1 m1）→ tap-target-check.sh 被呼叫
+g checkout -q -b feature/LS-95-designsystem-diff origin/development
+printf '99.9\n' > "$R/.xcode-version"
+mkdir -p "$R/LittleSprout/DesignSystem"; echo 'struct NewToken {}' > "$R/LittleSprout/DesignSystem/NewToken.swift"
+g add LittleSprout/DesignSystem/NewToken.swift; g commit -qm 'feat: LS-95 demo designsystem diff'
+: > "$TAP_TARGET_LOG"
+out24=$(run_gate STUB_TEST_RC=0)
+if grep -qF 'called' "$TAP_TARGET_LOG"; then
+  echo "✓ ㉔ diff 含 DesignSystem/ → tap-target-check.sh 有被呼叫（R1 m1）"
+else
+  echo "✗ ㉔ diff 含 DesignSystem/ 卻沒有呼叫 tap-target-check.sh（R1 m1 的回歸）" >&2
+  printf '%s\n' "$out24" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ㉕ mutation-style 負控：feature 分支 diff 只有非 UI 的 Swift 變更（Services/）→ 不該呼叫
+#    tap-target-check.sh（不是每個 Swift 變更都要付 XCUITest 開 app 的成本）
+g checkout -q -b feature/LS-95-services-diff origin/development
+printf '99.9\n' > "$R/.xcode-version"
+mkdir -p "$R/LittleSprout/Services"; echo 'struct NewService {}' > "$R/LittleSprout/Services/NewService.swift"
+g add LittleSprout/Services/NewService.swift; g commit -qm 'feat: LS-95 demo services-only diff'
+: > "$TAP_TARGET_LOG"
+out25=$(run_gate STUB_TEST_RC=0)
+if [ ! -s "$TAP_TARGET_LOG" ]; then
+  echo "✓ ㉕ diff 只有 Services/（非 Features／DesignSystem）→ 不呼叫 tap-target-check.sh"
+else
+  echo "✗ ㉕ diff 只有 Services/ 卻仍呼叫了 tap-target-check.sh（觸發條件過寬）" >&2
+  printf '%s\n' "$out25" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ㉖ hotfix/* 分支的方向矩陣須用 origin/main（同 ㉒ 的道理，但這裡驗的是 tap-target 觸發區塊，
+#    不是 LS-76 skip_swift_steps）：獨立小 repo，origin/main 落後、origin/development 領先一個
+#    Features 變更（模擬 development 已合併別票），hotfix 分支從 origin/development 切出、只再
+#    加一個 Features 變更——若誤用 origin/development 當 target，NewOnDev.swift 已經在 target
+#    裡、不會出現在「相對 target 的 diff」中，只剩 hotfix 自己那個 Features 檔——兩種 target 這裡
+#    都會觸發，所以改用「只加一個非 UI 檔在 hotfix 分支、Features 變更留在 development」來讓兩個
+#    target 產生不同結果：用 origin/development 當 target（誤）→ diff 不含 Features/，不觸發；
+#    用 origin/main 當 target（對）→ diff 含 development 帶來的 Features/，觸發
+hf2_root="$work/hotfix-target-2"
+mkdir -p "$hf2_root/scripts/gates" "$hf2_root/scripts/ops" "$hf2_root/Fake.xcodeproj"
+git -C "$hf2_root" init -q -b main
+gh2_() { git -C "$hf2_root" -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
+echo a > "$hf2_root/f.txt"; gh2_ add -A; gh2_ commit -qm 'chore: LS-0 seed'
+printf '99.9\n' > "$hf2_root/.xcode-version"
+cp "$gate_src" "$hf2_root/scripts/gates/push-gate.sh"
+cp "${root}/scripts/gates/push-ref-check.sh" "$hf2_root/scripts/gates/push-ref-check.sh"
+cp "${root}/scripts/ops/simulator-lock.sh" "$hf2_root/scripts/ops/simulator-lock.sh"
+cat > "$hf2_root/scripts/gates/detect-simulator.sh" <<EOF
+#!/bin/bash
+printf 'platform=iOS Simulator,id=%s\n' "\${FAKE_DEST_UDID:-$ded_udid}"
+EOF
+chmod +x "$hf2_root/scripts/gates/detect-simulator.sh"
+for s in branch-ticket-check.sh merge-conflict-check.sh; do
+  cat > "$hf2_root/scripts/gates/$s" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+  chmod +x "$hf2_root/scripts/gates/$s"
+done
+cat > "$hf2_root/scripts/gates/tap-target-check.sh" <<'STUB'
+#!/bin/bash
+printf 'called udid=%s scheme=%s\n' "$1" "$2" >> "${TAP_TARGET_LOG:?TAP_TARGET_LOG 未設定}"
+exit "${STUB_TAP_TARGET_RC:-0}"
+STUB
+chmod +x "$hf2_root/scripts/gates/tap-target-check.sh"
+cat > "$hf2_root/scripts/gates/tap-target-registry-check.sh" <<'STUB'
+#!/bin/bash
+exit 0
+STUB
+chmod +x "$hf2_root/scripts/gates/tap-target-registry-check.sh"
+gh2_ update-ref refs/remotes/origin/main HEAD
+gh2_ checkout -q -b development
+mkdir -p "$hf2_root/LittleSprout/Features"
+echo 'struct OnDev: View {}' > "$hf2_root/LittleSprout/Features/OnDevView.swift"
+gh2_ add LittleSprout/Features/OnDevView.swift; gh2_ commit -qm 'feat: LS-95 demo features on development'
+gh2_ update-ref refs/remotes/origin/development HEAD
+gh2_ checkout -q -b hotfix/LS-95-demo
+mkdir -p "$hf2_root/LittleSprout/Services"
+echo 'struct HotfixOnly {}' > "$hf2_root/LittleSprout/Services/HotfixOnly.swift"
+gh2_ add LittleSprout/Services/HotfixOnly.swift; gh2_ commit -qm 'fix: LS-95 hotfix demo non-ui change'
+: > "$TAP_TARGET_LOG"
+out26=$( cd "$hf2_root" && env FAKE_DEST_UDID="$ded_udid" PATH="$work/bin:$PATH" \
+    XCODE_APPS_DIR="$work/no-such-apps" TAP_TARGET_LOG="$TAP_TARGET_LOG" STUB_TEST_RC=0 \
+    bash scripts/gates/push-gate.sh </dev/null 2>&1 )
+if grep -qF 'called' "$TAP_TARGET_LOG"; then
+  echo "✓ ㉖ hotfix/* 分支的 tap-target 觸發方向矩陣正確用 origin/main（development 帶進的 Features/ 變更有被算進 diff）"
+else
+  echo "✗ ㉖ hotfix/* 分支的 tap-target 觸發區塊可能誤用了 origin/development 當 target（漏算 Features/ 變更）" >&2
+  printf '%s\n' "$out26" | sed 's/^/    /' >&2
   fail=1
 fi
 

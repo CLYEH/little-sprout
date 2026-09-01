@@ -25,16 +25,33 @@ struct LittleSproutApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView(
-                authStore: authStore,
-                familyStore: familyStore,
-                childrenStore: childrenStore,
-                pendingInviteCode: $pendingInviteCode
-            )
-            .onOpenURL { url in
-                if let code = InviteCodeParser.code(fromDeepLink: url) {
-                    pendingInviteCode = code
-                }
+            // LS-95：≥44pt 點擊目標機械 gate 的掛載點——`TapTargetGateHarness.activeScreen`
+            // 只有在 `TapTargetGateTests`／`TapTargetGateSelfTests` 設了
+            // `LS_TAP_TARGET_GATE_SCREEN` 這個 launch environment 變數時才非 nil，一般使用者
+            // 啟動 app 一定走下面的 `RootView` 路徑，行為與這行加入前完全一致（見該檔文件註解）。
+            #if DEBUG
+            if let screen = TapTargetGateHarness.activeScreen {
+                TapTargetGateHarness.hostView(for: screen)
+            } else {
+                rootView
+            }
+            #else
+            rootView
+            #endif
+        }
+    }
+
+    @ViewBuilder
+    private var rootView: some View {
+        RootView(
+            authStore: authStore,
+            familyStore: familyStore,
+            childrenStore: childrenStore,
+            pendingInviteCode: $pendingInviteCode
+        )
+        .onOpenURL { url in
+            if let code = InviteCodeParser.code(fromDeepLink: url) {
+                pendingInviteCode = code
             }
         }
     }

@@ -8,11 +8,18 @@ struct OTPVerificationView: View {
 
     @State private var model: OTPVerificationModel
 
-    init(email: String, authStore: AuthStore, onVerified: @escaping () -> Void) {
+    /// `cooldownSeconds` 只有 `TapTargetGateHarness`（LS-95）會覆寫成 0：重寄鈕預設在 60 秒
+    /// 冷卻期間被「沒收到驗證碼？N 秒後可重新寄送」這段純文字取代（見 `resendRow`），不是
+    /// Button、量不到 tap target；點擊目標 gate 要驗的正是那顆重寄 Button，這裡讓 harness
+    /// 能直接生成「一開畫面 `canResend` 就是 true」的狀態，不必真的等 60 秒冷卻。所有正式呼叫
+    /// 端（`WelcomeView`／`#Preview`）都省略這個參數，沿用預設 60 秒、行為不變。
+    init(email: String, authStore: AuthStore, cooldownSeconds: Int = 60, onVerified: @escaping () -> Void) {
         self.email = email
         self.authStore = authStore
         self.onVerified = onVerified
-        _model = State(initialValue: OTPVerificationModel(email: email, authStore: authStore))
+        _model = State(initialValue: OTPVerificationModel(
+            email: email, authStore: authStore, cooldownSeconds: cooldownSeconds
+        ))
     }
 
     var body: some View {

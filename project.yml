@@ -77,6 +77,25 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: true
 
+  # LS-95：≥44pt 點擊目標機械 gate。simctl 沒有 accessibility dump 子指令、本機也未裝 idb
+  # （`which idb`／`idb_companion` 皆找不到）——XCUITest 是這台 Xcode 26.6 環境唯一能實際
+  # 量到 SwiftUI Button 真實 hit-test frame 的路徑，且與現有 LittleSproutTests 同一套
+  # xcodebuild 工具鏈，不需要額外裝 CLI。
+  LittleSproutUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: LittleSproutUITests
+      # LS-95：XCUITest 跑在跟被測 app 分離的獨立行程，不能 `import LittleSprout` 直接引用
+      # app target 的型別——這個檔案只有 rawValue 字串常數，兩邊靠它溝通（見該檔文件註解），
+      # 因此同一份檔案同時屬於 LittleSprout 與這個 target（下面 `path` 直接指向單一檔案）。
+      - path: LittleSprout/TapTargetGateScreenName.swift
+    dependencies:
+      - target: LittleSprout
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+
 schemes:
   # CI（.github/workflows/ci.yml）與 push gate 都寫死 -scheme LittleSprout，
   # 且 XcodeGen 產生的 scheme 一律是 shared，runner 才找得到。
@@ -94,4 +113,11 @@ schemes:
         # XcodeGen 預設本來就是 false，這裡寫死是讓意圖進 repo、不靠預設值；CI 與
         # push-gate 的 xcodebuild 另外帶 -parallel-testing-enabled NO 雙保險。
         - name: LittleSproutTests
+          parallelizable: false
+        # LS-95：≥44pt 點擊目標機械 gate。放進同一個 scheme 才能對它下
+        # `-only-testing:LittleSproutUITests`（xcodebuild 要求 -only-testing 指名的 target
+        # 必須在 scheme 的 Test action 裡）；push-gate.sh／CI 既有的 unit test 呼叫另外明確帶
+        # `-only-testing:LittleSproutTests`，維持只跑 unit tests 的原有行為與耗時，不會因為
+        # 這裡新增了一個 target 就連帶多跑一次 UI test（tap-target-check.sh 是獨立呼叫）。
+        - name: LittleSproutUITests
           parallelizable: false

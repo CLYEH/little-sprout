@@ -1,0 +1,19 @@
+# LS-95 M1（merge-review R1）：Features/**/*View.swift 尚未進 TapTargetGateScreenName 註冊表的
+# 畫面，具名排除並附理由——「要嘛被量、要嘛大聲排除，不准靜默通過」。格式：<ViewName>：<理由>
+# （純文字，一行一支；`#` 開頭與空行忽略）。scripts/gates/tap-target-registry-check.sh 逐一核對。
+#
+# 新增 UI 票時：能用既有 .preview() 系列建構出免登入狀態的畫面，優先補進
+# LittleSprout/TapTargetGateScreenName.swift 註冊（該檔文件註解）；建構成本高（多步驟表單、
+# 需要特定流程狀態）才排除到這裡，理由要講清楚為什麼現在不補、下一步在哪。
+AlbumsView：placeholder 畫面（ContentUnavailableView，無互動元件），追蹤於 LS-96，待補正式內容後再評估
+EmailSignInView：需要模擬鍵盤輸入與驗證流程狀態，追蹤於 LS-96
+WelcomeView：入口鈕含 Apple 官方 SignInWithAppleButton（系統渲染、非我方 SwiftUI Button，量測意義有限），追蹤於 LS-96
+ChildrenManagementView：需要 ChildrenStore preview 帶多筆假資料才有代表性，追蹤於 LS-96
+CreateChildView：多步驟表單流程，追蹤於 LS-96
+EditChildView：多步驟表單流程，追蹤於 LS-96
+CreateFamilyView：表單流程，追蹤於 LS-96
+ForkView：三岔路導覽邏輯（依 deep link／家庭狀態切換），追蹤於 LS-96
+InviteFamilyView：需要 FamilyStore preview 帶邀請碼產生狀態，追蹤於 LS-96
+JoinCodeView：表單流程，追蹤於 LS-96
+JoinWaitingView：需要模擬待審核狀態，追蹤於 LS-96
+TimelineView：需要多筆假資料與捲動狀態才有代表性，追蹤於 LS-96
