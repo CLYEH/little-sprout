@@ -37,6 +37,10 @@ bash "$(git rev-parse --show-toplevel)/scripts/gates/tracked-ignored-check.sh"
 # LittleSprout/Assets.xcassets/／LittleSprout/Preview Content/／docs/img/ 白名單即擋（大小寫不敏感）——.gitignore 只認固定位置 .claude/evidence/，散落路徑沒規則可 ignore）
 bash "$(git rev-parse --show-toplevel)/scripts/gates/evidence-path-check.sh"
 
+# design/ 大檔二進位體積 gate（LS-74）：design/ 下新增／修改的二進位檔 >500 KB 即擋，文字檔（.pen JSON、
+# design/evidence/*.json）不限——只擋這次 diff 觸碰到的檔，既有未動的大檔不受影響
+bash "$(git rev-parse --show-toplevel)/scripts/gates/design-asset-size-check.sh"
+
 # staged .pen 設計稿落地檢查（LS-26：機械觸發點——不靠 agent 記得跑收工程序）
 # for 迴圈而非 pipe|while：檢查失敗要能中止整個 gate，不被 subshell 吞掉
 staged_pen=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACM | grep '\.pen$' || true)
