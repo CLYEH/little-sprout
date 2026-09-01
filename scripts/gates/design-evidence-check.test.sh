@@ -182,6 +182,64 @@ expect 2 '⑧ --ticket 格式錯 → exit 2' '不是 LS-<n> 格式' \
 expect 2 '⑧ 找不到 .pen 檔 → exit 2' '找不到' \
   "$R/design/does-not-exist.pen" --ticket LS-67 --base "$base_ref"
 
+# ⑨ merge-review R1 F1 重現（假陽性）：一個 PR 累積 r1／r2 兩份收據（設計票 ≥3 輪迭代的常態，
+# CLAUDE.md／§1）——r1 記錄第 1 輪那個時點的 .pen（3 節點），r2 記錄第 2 輪之後（4 節點）。
+# R1 版本會把 r1 也拿去比對「工作區當下」那份 .pen（此刻是 4 節點）→ r1 誤判紅。
+# R2 修正：每份收據對帳自己 head_sha 那個時點的快照——r1 對 3 節點的快照、r2 對 4 節點的快照，
+# 兩份都應該綠（若退回 R1 的做法，r1 會被誤判紅，這裡就會抓到）。
+g checkout -q -b pr-r1r2 "$base_ref"
+cat > "$R/design/littlesprout.pen" <<'EOF'
+{"version": 1, "children": [{"id": "a", "children": []}, {"id": "b", "children": []}, {"id": "c", "children": []}]}
+EOF
+g add design/littlesprout.pen
+g commit -qm 'design(pen): LS-67 r1 落地（3 節點）'
+r1_sha="$(g rev-parse HEAD)"
+write_receipt "$R/design/evidence/LS-67-r1-overflow.json" "$r1_sha" 3 1 1 1
+g add design/evidence/LS-67-r1-overflow.json
+g commit -qm 'design(evidence): LS-67 r1 收據'
+
+cat > "$R/design/littlesprout.pen" <<'EOF'
+{"version": 1, "children": [{"id": "a", "children": []}, {"id": "b", "children": []}, {"id": "c", "children": []}, {"id": "e", "children": []}]}
+EOF
+g add design/littlesprout.pen
+g commit -qm 'design(pen): LS-67 r2 落地（4 節點）'
+r2_sha="$(g rev-parse HEAD)"
+write_receipt "$R/design/evidence/LS-67-r2-overflow.json" "$r2_sha" 4 1 1 1
+g add design/evidence/LS-67-r2-overflow.json
+g commit -qm 'design(evidence): LS-67 r2 收據'
+expect 0 '⑨ F1 重現：同一 PR 累積 r1(3節點)/r2(4節點) 收據，各對各的時點 → 兩份皆綠' '' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ⑩ merge-review R1 F2 重現（假陰性）：commit A 落地 .pen（a、b 重疊）→ commit B 交收據引用 A →
+# commit C 修正版面（搬動／改寬高，**節點數不變**——這是溢出修正的標準動作，不是巧合）但沒有補
+# 新收據。R1 版本只驗 head_sha 屬於本 PR（A 確實是本 PR 的 commit）→ 誤判綠，C 這次真正的修正完
+# 全沒有收據把關。R2 修正：輪次最高（這裡只有 r1，所以就是它）的收據 head_sha 必須等於本 PR 對
+# 這份 .pen 最後一次的 commit（C），不是 A → 應該紅。
+g checkout -q -b pr-f2 "$base_ref"
+cat > "$R/design/littlesprout.pen" <<'EOF'
+{"version": 1, "children": [{"id": "a", "note": "overlap-with-b", "children": []}, {"id": "b", "children": []}, {"id": "c", "children": []}, {"id": "d", "children": []}]}
+EOF
+g add design/littlesprout.pen
+g commit -qm 'design(pen): LS-67 r1 落地（a 與 b 重疊）'
+commit_a="$(g rev-parse HEAD)"
+write_receipt "$R/design/evidence/LS-67-r1-overflow.json" "$commit_a" 4 1 1 1
+g add design/evidence/LS-67-r1-overflow.json
+g commit -qm 'design(evidence): LS-67 r1 收據（引用 commit A）'
+# commit C：修正版面（把 a 的 note 換成「已搬開」），節點數仍是 4，且不補新收據
+cat > "$R/design/littlesprout.pen" <<'EOF'
+{"version": 1, "children": [{"id": "a", "note": "moved-away-from-b", "children": []}, {"id": "b", "children": []}, {"id": "c", "children": []}, {"id": "d", "children": []}]}
+EOF
+g add design/littlesprout.pen
+g commit -qm 'design(pen): 修正版面（a 移開，未補收據）'
+commit_c="$(g rev-parse HEAD)"
+if [ "$commit_a" = "$commit_c" ]; then
+  echo "✗ ⑩ 前置條件：commit_c 應與 commit_a 不同（自測環境異常）" >&2
+  fail=1
+fi
+expect 1 '⑩ F2 重現：最新收據引用較早的 commit A，最後一次 .pen commit 是 C（節點數不變）→ 紅' \
+  '規則 4 F2' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
 if [ "$fail" -eq 0 ]; then
   echo "design-evidence-check.test.sh：全數通過"
 else
