@@ -57552,6 +57552,2130 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "c1Uk7",
+      "x": 12216,
+      "y": 30619,
+      "name": "LS-21 / 12 日記編輯器 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "T0TLJ2",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "V4QvF",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "取消"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "tBO4J",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "VHSyk",
+              "name": "Title",
+              "fill": "$text-primary",
+              "content": "寫日記",
+              "fontFamily": "$font",
+              "fontSize": "$fs-display",
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "aGE3h",
+              "name": "Spacer 16 A",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "lG5Uu",
+              "name": "Text Field",
+              "width": "fill_container",
+              "height": 116,
+              "fill": "$surface",
+              "cornerRadius": "$radius-md",
+              "stroke": "$control-line",
+              "strokeWidth": 1.5,
+              "padding": "$inset-card",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "O66xr",
+                  "name": "Body Text",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "今天在溜滑梯上玩得好開心，還交了一個新朋友，說好下次要一起帶挖沙工具來。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qNp8O",
+              "name": "Spacer 16 B",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "P17SSf",
+              "name": "Photos",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "NCkdm",
+                  "name": "Photos Label",
+                  "fill": "$text-primary",
+                  "content": "附加照片",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "Y6R2D1",
+                  "name": "Photo Strip",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Yxuqx",
+                      "name": "Photo 1",
+                      "width": 72,
+                      "height": 72,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "E8Sad6",
+                          "layoutPosition": "absolute",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Wrap",
+                          "metadata": {
+                            "type": "unsplash",
+                            "username": "lucy_10",
+                            "link": "https://unsplash.com/@lucy_10",
+                            "author": "Lucy Davis"
+                          },
+                          "clip": true,
+                          "width": 72,
+                          "height": 72,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTB8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "I8jjg",
+                          "layoutPosition": "absolute",
+                          "x": 29,
+                          "y": 29,
+                          "name": "Grip",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "grip-vertical",
+                          "library": "lucide",
+                          "fill": "$on-photo"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "iTT0E",
+                          "layoutPosition": "absolute",
+                          "x": 52,
+                          "y": -8,
+                          "name": "Remove Badge",
+                          "width": 20,
+                          "height": 20,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-full",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 3
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "MQLC5",
+                              "name": "X",
+                              "width": 12,
+                              "height": 12,
+                              "icon": "x",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "J8bUq",
+                      "name": "Photo 2",
+                      "width": 72,
+                      "height": 72,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "WStca",
+                          "layoutPosition": "absolute",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Wrap",
+                          "metadata": {
+                            "type": "unsplash",
+                            "username": "photoken123",
+                            "link": "https://unsplash.com/@photoken123",
+                            "author": "Iain"
+                          },
+                          "clip": true,
+                          "width": 72,
+                          "height": 72,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTF8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "j3Q9n",
+                          "layoutPosition": "absolute",
+                          "x": 29,
+                          "y": 29,
+                          "name": "Grip",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "grip-vertical",
+                          "library": "lucide",
+                          "fill": "$on-photo"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "y6vr5",
+                          "layoutPosition": "absolute",
+                          "x": 52,
+                          "y": -8,
+                          "name": "Remove Badge",
+                          "width": 20,
+                          "height": 20,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-full",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 3
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Um7Bq",
+                              "name": "X",
+                              "width": 12,
+                              "height": 12,
+                              "icon": "x",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "U5RaB",
+                      "name": "Photo 3",
+                      "width": 72,
+                      "height": 72,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "D9M3lb",
+                          "layoutPosition": "absolute",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Wrap",
+                          "metadata": {
+                            "type": "unsplash",
+                            "username": "rewired41",
+                            "link": "https://unsplash.com/@rewired41",
+                            "author": "Rewired Digital"
+                          },
+                          "clip": true,
+                          "width": 72,
+                          "height": 72,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTJ8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "X8ZJh3",
+                          "layoutPosition": "absolute",
+                          "x": 29,
+                          "y": 29,
+                          "name": "Grip",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "grip-vertical",
+                          "library": "lucide",
+                          "fill": "$on-photo"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "V2Vjs",
+                          "layoutPosition": "absolute",
+                          "x": 52,
+                          "y": -8,
+                          "name": "Remove Badge",
+                          "width": 20,
+                          "height": 20,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-full",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 3
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "noCwC",
+                              "name": "X",
+                              "width": 12,
+                              "height": 12,
+                              "icon": "x",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kHuNI",
+                      "name": "Add Photo",
+                      "width": 72,
+                      "height": 72,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "p20eo",
+                          "name": "Plus",
+                          "width": 24,
+                          "height": 24,
+                          "icon": "plus",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "v7avT",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "GPeHv",
+              "name": "Date Field",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "XbcJN",
+                  "name": "Field Label",
+                  "fill": "$text-primary",
+                  "content": "記錄日期",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "d7WWg",
+                  "name": "Field Box",
+                  "width": "fill_container",
+                  "height": 60,
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$control-line",
+                  "strokeWidth": 1.5,
+                  "padding": [
+                    0,
+                    "$inset-card"
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "d0wm7",
+                      "name": "Left",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "q43F3",
+                          "name": "Calendar Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "calendar",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "iVRwZ",
+                          "name": "Field Value",
+                          "fill": "$text-primary",
+                          "content": "8月31日（昨天）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "YplR5",
+                      "name": "Chevron",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "V7tNe",
+                  "name": "Field Help",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "L8MDl",
+                      "name": "Field Help Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "info",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "jVLmX",
+                      "name": "Field Help Text",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "預設是今天，也可以往前選，補寫之前忘記寫的日子。",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "GZkbE",
+              "name": "Spacer 16 C",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "Q5GBnK",
+              "name": "Child Field",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "sMSaj",
+                  "name": "Field Label",
+                  "fill": "$text-primary",
+                  "content": "這篇日記是哪個寶貝的？",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "CCQvv",
+                  "name": "Field Box",
+                  "width": "fill_container",
+                  "height": 60,
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$control-line",
+                  "strokeWidth": 1.5,
+                  "padding": [
+                    0,
+                    "$inset-card"
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "gMqUl",
+                      "name": "Left",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "habtN",
+                          "type": "ref",
+                          "ref": "RaaIf",
+                          "name": "Avatar",
+                          "width": 32,
+                          "height": 32,
+                          "descendants": {
+                            "A30rIX": {
+                              "content": "安",
+                              "fontSize": "$fs-note"
+                            }
+                          }
+                        },
+                        {
+                          "type": "text",
+                          "id": "RnjIi",
+                          "name": "Field Value",
+                          "fill": "$text-primary",
+                          "content": "小安",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "nGCtJ",
+                      "name": "Chevron",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yXYMO",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "e73m1",
+              "name": "Bar Hairline",
+              "fill": "$border",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "ZjOas",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "E7y1aH",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Publish Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "send"
+                    },
+                    "w7CUP": {
+                      "content": "發佈日記"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "fk1Wx",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "Ws3rk",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "b3PELj",
+      "x": 12709,
+      "y": 30619,
+      "name": "LS-21 / 12-iPad 日記編輯器 (iPad 11\")",
+      "clip": true,
+      "width": 834,
+      "height": 1194,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 0.8009592326139089,
+          "height": 0.9631490787269682
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.06594724220623502,
+          "y": 0.01423785594639866
+        }
+      },
+      "cornerRadius": 28,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "I6XdX5",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "m74vV",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "取消"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "uetEZ",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": "$screen-pad-lg",
+          "padding": [
+            8,
+            "$screen-pad-lg",
+            0,
+            "$screen-pad-lg"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "WpPJP",
+              "name": "Left",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "lfCXQ",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "寫日記",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "ihnZR",
+                  "name": "Text Field",
+                  "width": "fill_container",
+                  "height": 280,
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$control-line",
+                  "strokeWidth": 1.5,
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "jQoxa",
+                      "name": "Body Text",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "今天在溜滑梯上玩得好開心，還交了一個新朋友，說好下次要一起帶挖沙工具來。",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "H6rsD",
+                  "name": "Photos",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "OnWDy",
+                      "name": "Photos Label",
+                      "fill": "$text-primary",
+                      "content": "附加照片",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "csN9H",
+                      "name": "Photo Strip",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "vJlsI",
+                          "name": "Photo 1",
+                          "width": 80,
+                          "height": 80,
+                          "fill": "$surface-2",
+                          "cornerRadius": "$radius-md",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "VswBQ",
+                              "layoutPosition": "absolute",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Wrap",
+                              "metadata": {
+                                "type": "unsplash",
+                                "username": "silvana_carlos",
+                                "link": "https://unsplash.com/@silvana_carlos",
+                                "author": "Silvana Carlos"
+                              },
+                              "clip": true,
+                              "width": 80,
+                              "height": 80,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "https://images.unsplash.com/photo-1644401649990-16f4d5fa13ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjU2NDd8&ixlib=rb-4.1.0&q=80&w=1080",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "P84Hkb",
+                              "layoutPosition": "absolute",
+                              "x": 33,
+                              "y": 33,
+                              "name": "Grip",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "grip-vertical",
+                              "library": "lucide",
+                              "fill": "$on-photo"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "oMAjj",
+                              "layoutPosition": "absolute",
+                              "x": 60,
+                              "y": -8,
+                              "name": "Remove Badge",
+                              "width": 20,
+                              "height": 20,
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-full",
+                              "effect": {
+                                "type": "shadow",
+                                "shadowType": "outer",
+                                "color": "$paper-shadow",
+                                "offset": {
+                                  "x": 0,
+                                  "y": 1
+                                },
+                                "blur": 3
+                              },
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "Pgg0X",
+                                  "name": "X",
+                                  "width": 12,
+                                  "height": 12,
+                                  "icon": "x",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "hB2r0",
+                          "name": "Photo 2",
+                          "width": 80,
+                          "height": 80,
+                          "fill": "$surface-2",
+                          "cornerRadius": "$radius-md",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "i2LokW",
+                              "layoutPosition": "absolute",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Wrap",
+                              "metadata": {
+                                "type": "unsplash",
+                                "username": "agmmatheus",
+                                "link": "https://unsplash.com/@agmmatheus",
+                                "author": "Matheus Araujo"
+                              },
+                              "clip": true,
+                              "width": 80,
+                              "height": 80,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "https://images.unsplash.com/photo-1786417340611-926fccab0dcc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjU2NDh8&ixlib=rb-4.1.0&q=80&w=1080",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "f75QpV",
+                              "layoutPosition": "absolute",
+                              "x": 33,
+                              "y": 33,
+                              "name": "Grip",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "grip-vertical",
+                              "library": "lucide",
+                              "fill": "$on-photo"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "a6P96s",
+                              "layoutPosition": "absolute",
+                              "x": 60,
+                              "y": -8,
+                              "name": "Remove Badge",
+                              "width": 20,
+                              "height": 20,
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-full",
+                              "effect": {
+                                "type": "shadow",
+                                "shadowType": "outer",
+                                "color": "$paper-shadow",
+                                "offset": {
+                                  "x": 0,
+                                  "y": 1
+                                },
+                                "blur": 3
+                              },
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "wNLr5",
+                                  "name": "X",
+                                  "width": 12,
+                                  "height": 12,
+                                  "icon": "x",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "QbslW",
+                          "name": "Photo 3",
+                          "width": 80,
+                          "height": 80,
+                          "fill": "$surface-2",
+                          "cornerRadius": "$radius-md",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "RmlcM",
+                              "layoutPosition": "absolute",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Wrap",
+                              "metadata": {
+                                "type": "unsplash",
+                                "username": "haberdoedas",
+                                "link": "https://unsplash.com/@haberdoedas",
+                                "author": "Haberdoedas"
+                              },
+                              "clip": true,
+                              "width": 80,
+                              "height": 80,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "https://images.unsplash.com/photo-1786357295953-66ba0bf347f8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjU2NDl8&ixlib=rb-4.1.0&q=80&w=1080",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "UW1pB",
+                              "layoutPosition": "absolute",
+                              "x": 33,
+                              "y": 33,
+                              "name": "Grip",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "grip-vertical",
+                              "library": "lucide",
+                              "fill": "$on-photo"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "IsLwZ",
+                              "layoutPosition": "absolute",
+                              "x": 60,
+                              "y": -8,
+                              "name": "Remove Badge",
+                              "width": 20,
+                              "height": 20,
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-full",
+                              "effect": {
+                                "type": "shadow",
+                                "shadowType": "outer",
+                                "color": "$paper-shadow",
+                                "offset": {
+                                  "x": 0,
+                                  "y": 1
+                                },
+                                "blur": 3
+                              },
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "OFfXU",
+                                  "name": "X",
+                                  "width": 12,
+                                  "height": 12,
+                                  "icon": "x",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "mST2l",
+                          "name": "Add Photo",
+                          "width": 80,
+                          "height": 80,
+                          "fill": "$surface-2",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Wib4O",
+                              "name": "Plus",
+                              "width": 24,
+                              "height": 24,
+                              "icon": "plus",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "DkGJs",
+              "name": "Right",
+              "width": 294,
+              "layout": "vertical",
+              "gap": "$sp-section",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "k63wy1",
+                  "name": "Date Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "gGthf",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "記錄日期",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "MBU1o",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "I4li5",
+                          "name": "Left",
+                          "gap": "$sp-label",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "d5ADj",
+                              "name": "Calendar Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Q4vsM2",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "content": "8月31日（昨天）",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "mRmOf",
+                          "name": "Chevron",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BPIH6",
+                      "name": "Field Help",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$sp-tight",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "L50uk",
+                          "name": "Field Help Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "info",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "R2kpND",
+                          "name": "Field Help Text",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "預設是今天，也可以往前選，補寫之前忘記寫的日子。",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "eZDDD",
+                  "name": "Child Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "CtOJh",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "這篇日記是哪個寶貝的？",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zXSaT",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "FMCE5",
+                          "name": "Left",
+                          "gap": "$sp-label",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "id": "yALlm",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar",
+                              "width": 32,
+                              "height": 32,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "安",
+                                  "fontSize": "$fs-note"
+                                }
+                              }
+                            },
+                            {
+                              "type": "text",
+                              "id": "sOwbq",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "content": "小安",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "DbDbI",
+                          "name": "Chevron",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "HAqi6",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "a810Q5",
+              "name": "Bar Hairline",
+              "fill": "$border",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "q5TLxq",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-item",
+                "$screen-pad-lg"
+              ],
+              "alignItems": "end",
+              "children": [
+                {
+                  "id": "lFehJ",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Publish Button",
+                  "width": 280,
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "send"
+                    },
+                    "w7CUP": {
+                      "content": "發佈日記"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "X5dXa1",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "WGkfi",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 200,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "MOLyd",
+      "x": 13643,
+      "y": 30619,
+      "name": "A11y / 12 日記編輯器 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1650,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "tkPyE",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "ZWUZL",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "取消"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "RebTE",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "l17Jqe",
+              "name": "Title",
+              "fill": "$text-primary",
+              "content": "寫日記",
+              "fontFamily": "$font",
+              "fontSize": "$fs-display",
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "E3gY4t",
+              "name": "Spacer 16 A",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "Y53tN",
+              "name": "Text Field",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": "$radius-md",
+              "stroke": "$control-line",
+              "strokeWidth": 1.5,
+              "padding": "$inset-card",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Py1j6",
+                  "name": "Body Text",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "今天在溜滑梯上玩得好開心，還交了一個新朋友，說好下次要一起帶挖沙工具來。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "l7UTRN",
+              "name": "Spacer 16 B",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "LeGdk",
+              "name": "Photos",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "jOBjP",
+                  "name": "Photos Label",
+                  "fill": "$text-primary",
+                  "content": "附加照片",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "P429WB",
+                  "name": "Photo Strip",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Sd6Kr",
+                      "name": "Photo 1",
+                      "width": 72,
+                      "height": 72,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "vv8Vm",
+                          "layoutPosition": "absolute",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Wrap",
+                          "metadata": {
+                            "type": "unsplash",
+                            "username": "lucy_10",
+                            "link": "https://unsplash.com/@lucy_10",
+                            "author": "Lucy Davis"
+                          },
+                          "clip": true,
+                          "width": 72,
+                          "height": 72,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTB8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "i56J4j",
+                          "layoutPosition": "absolute",
+                          "x": 29,
+                          "y": 29,
+                          "name": "Grip",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "grip-vertical",
+                          "library": "lucide",
+                          "fill": "$on-photo"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "O9blP7",
+                          "layoutPosition": "absolute",
+                          "x": 52,
+                          "y": -8,
+                          "name": "Remove Badge",
+                          "width": 20,
+                          "height": 20,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-full",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 3
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "pSXUf",
+                              "name": "X",
+                              "width": 12,
+                              "height": 12,
+                              "icon": "x",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "v2olPR",
+                      "name": "Photo 2",
+                      "width": 72,
+                      "height": 72,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "FPTUl",
+                          "layoutPosition": "absolute",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Wrap",
+                          "metadata": {
+                            "type": "unsplash",
+                            "username": "photoken123",
+                            "link": "https://unsplash.com/@photoken123",
+                            "author": "Iain"
+                          },
+                          "clip": true,
+                          "width": 72,
+                          "height": 72,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTF8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "e0ajR",
+                          "layoutPosition": "absolute",
+                          "x": 29,
+                          "y": 29,
+                          "name": "Grip",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "grip-vertical",
+                          "library": "lucide",
+                          "fill": "$on-photo"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "RiUUl",
+                          "layoutPosition": "absolute",
+                          "x": 52,
+                          "y": -8,
+                          "name": "Remove Badge",
+                          "width": 20,
+                          "height": 20,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-full",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 3
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "EZ2y5",
+                              "name": "X",
+                              "width": 12,
+                              "height": 12,
+                              "icon": "x",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nUP2e",
+                      "name": "Photo 3",
+                      "width": 72,
+                      "height": 72,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "A2ajU",
+                          "layoutPosition": "absolute",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Wrap",
+                          "metadata": {
+                            "type": "unsplash",
+                            "username": "rewired41",
+                            "link": "https://unsplash.com/@rewired41",
+                            "author": "Rewired Digital"
+                          },
+                          "clip": true,
+                          "width": 72,
+                          "height": 72,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTJ8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "E4t8D",
+                          "layoutPosition": "absolute",
+                          "x": 29,
+                          "y": 29,
+                          "name": "Grip",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "grip-vertical",
+                          "library": "lucide",
+                          "fill": "$on-photo"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "r7cCbF",
+                          "layoutPosition": "absolute",
+                          "x": 52,
+                          "y": -8,
+                          "name": "Remove Badge",
+                          "width": 20,
+                          "height": 20,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-full",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 3
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "CZbIs",
+                              "name": "X",
+                              "width": 12,
+                              "height": 12,
+                              "icon": "x",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "lYHtj",
+                      "name": "Add Photo",
+                      "width": 72,
+                      "height": 72,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "TrnSM",
+                          "name": "Plus",
+                          "width": 24,
+                          "height": 24,
+                          "icon": "plus",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "n8U9XW",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "a0C5aQ",
+              "name": "Date Field",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "j3dXLV",
+                  "name": "Field Label",
+                  "fill": "$text-primary",
+                  "content": "記錄日期",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "HIMRu",
+                  "name": "Field Box",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$control-line",
+                  "strokeWidth": 1.5,
+                  "padding": [
+                    "$sp-item",
+                    "$inset-card"
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "SeQHO",
+                      "name": "Left",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "b5T4E",
+                          "name": "Calendar Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "calendar",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "M24sR",
+                          "name": "Field Value",
+                          "fill": "$text-primary",
+                          "content": "8/31",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "pBOew",
+                      "name": "Chevron",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "i2Emho",
+                  "name": "Field Help",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "g0yPq",
+                      "name": "Field Help Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "info",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "lhHjc",
+                      "name": "Field Help Text",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "預設是今天，也可以往前選，補寫之前忘記寫的日子。",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "T2Q3vG",
+              "name": "Spacer 16 C",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "m9CRvc",
+              "name": "Child Field",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "cWV8V",
+                  "name": "Field Label",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "這篇日記是哪個寶貝的？",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "jCfSO",
+                  "name": "Field Box",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$control-line",
+                  "strokeWidth": 1.5,
+                  "padding": [
+                    "$sp-item",
+                    "$inset-card"
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "DZMv5",
+                      "name": "Left",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "Ku7Jp",
+                          "type": "ref",
+                          "ref": "RaaIf",
+                          "name": "Avatar",
+                          "width": 32,
+                          "height": 32,
+                          "descendants": {
+                            "A30rIX": {
+                              "content": "安",
+                              "fontSize": "$fs-note"
+                            }
+                          }
+                        },
+                        {
+                          "type": "text",
+                          "id": "yBVRo",
+                          "name": "Field Value",
+                          "fill": "$text-primary",
+                          "content": "小安",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "f3C4En",
+                      "name": "Chevron",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "k47KjW",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "BrGVy",
+              "name": "Bar Hairline",
+              "fill": "$border",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "S7zmw",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "Eaqba",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Publish Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "send"
+                    },
+                    "w7CUP": {
+                      "content": "發佈日記"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Qntrl",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "XfKCj",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
