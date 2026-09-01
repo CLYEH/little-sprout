@@ -52230,7 +52230,7 @@
     },
     {
       "type": "frame",
-      "id": "fqhSH",
+      "id": "qtCd7",
       "x": 5891,
       "y": 28671,
       "name": "cmp/Card Diary",
@@ -52256,109 +52256,8 @@
       "padding": "$inset-card",
       "children": [
         {
-          "type": "frame",
-          "id": "aIoW9",
-          "name": "Head",
-          "width": "fill_container",
-          "layout": "vertical",
-          "gap": "$sp-tight",
-          "children": [
-            {
-              "type": "frame",
-              "id": "J6S8V",
-              "name": "Who",
-              "gap": "$sp-tight",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "s9Z2Rs",
-                  "name": "Diary Icon",
-                  "width": 18,
-                  "height": 18,
-                  "icon": "notebook-pen",
-                  "library": "lucide",
-                  "fill": "$print-ink-secondary"
-                },
-                {
-                  "type": "text",
-                  "id": "bRiyR",
-                  "name": "Who Label",
-                  "fill": "$print-ink",
-                  "content": "小安的日記",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "G3RIoO",
-              "name": "Meta",
-              "gap": "$sp-tight",
-              "alignItems": "center",
-              "children": [
-                {
-                  "id": "iMDUx",
-                  "type": "ref",
-                  "ref": "AqN3F",
-                  "name": "Age Pill",
-                  "descendants": {
-                    "KR7zN": {
-                      "icon": "cake",
-                      "fill": "$print-ink-secondary"
-                    },
-                    "g7Fnj": {
-                      "content": "2 歲 3 個月",
-                      "fill": "$print-ink-secondary"
-                    }
-                  }
-                },
-                {
-                  "type": "frame",
-                  "id": "kcrvQ",
-                  "name": "Date Stamp",
-                  "rotation": -4,
-                  "stroke": "$print-ink-secondary",
-                  "strokeWidth": 1.5,
-                  "gap": "$sp-tight",
-                  "padding": [
-                    "$sp-tight",
-                    "$sp-label"
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon",
-                      "id": "BVi5c",
-                      "name": "Stamp Icon",
-                      "width": 14,
-                      "height": 14,
-                      "icon": "calendar",
-                      "library": "lucide",
-                      "fill": "$print-ink-secondary"
-                    },
-                    {
-                      "type": "text",
-                      "id": "LBoYH",
-                      "name": "Stamp Date",
-                      "fill": "$print-ink-secondary",
-                      "content": "08.31",
-                      "fontFamily": "$font-num",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "700",
-                      "letterSpacing": 0.5
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
           "type": "text",
-          "id": "IssRo",
+          "id": "p2odx",
           "name": "Snippet",
           "fill": "$print-ink",
           "textGrowth": "fixed-width",
@@ -52368,6 +52267,97 @@
           "fontFamily": "$font",
           "fontSize": "$fs-body",
           "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "id": "u59KAY",
+          "name": "Sign-off Rule",
+          "fill": "$border",
+          "width": "fill_container",
+          "height": 1
+        },
+        {
+          "type": "frame",
+          "id": "Jqwww",
+          "name": "Signature",
+          "width": "fill_container",
+          "gap": "$sp-tight",
+          "justifyContent": "end",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "wXsHJ",
+              "name": "Who Group",
+              "gap": "$sp-tight",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "foOV8",
+                  "name": "Diary Icon",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "notebook-pen",
+                  "library": "lucide",
+                  "fill": "$print-ink-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "d41MUZ",
+                  "name": "Name",
+                  "fill": "$print-ink",
+                  "content": "小安",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "fOgHd",
+              "name": "Age Group",
+              "gap": "$sp-tight",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "WmQcz",
+                  "name": "Sep",
+                  "fill": "$print-ink-secondary",
+                  "content": " · ",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "zk1yE",
+                  "name": "Age",
+                  "fill": "$print-ink-secondary",
+                  "content": "2 歲 3 個月",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "icon",
+          "id": "DdGVy",
+          "layoutPosition": "absolute",
+          "x": 14,
+          "y": -16,
+          "name": "Paperclip",
+          "rotation": -12.000000000000002,
+          "width": 30,
+          "height": 30,
+          "icon": "paperclip",
+          "library": "lucide",
+          "fill": "$photo-corner"
         }
       ]
     },
@@ -52489,7 +52479,6 @@
               }
             }
           ],
-          "cornerRadius": "$radius-lg",
           "stroke": "$paper-edge",
           "strokeWidth": 1,
           "strokeAlignment": "outer",
@@ -52541,28 +52530,41 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "上禮拜的動物園一日遊",
+                  "content": "上禮拜的動物園一日遊 · 12 張相片",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "600"
-                },
-                {
-                  "id": "zqGzO",
-                  "type": "ref",
-                  "ref": "AqN3F",
-                  "name": "Count Pill",
-                  "descendants": {
-                    "KR7zN": {
-                      "icon": "images",
-                      "fill": "$print-ink-secondary"
-                    },
-                    "g7Fnj": {
-                      "content": "12 張",
-                      "fill": "$print-ink-secondary"
-                    }
-                  }
                 }
               ]
+            },
+            {
+              "type": "rectangle",
+              "id": "y2KOL",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 230,
+              "name": "Stack Edge",
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 90,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "$paper-edge",
+                    "position": 0
+                  },
+                  {
+                    "color": "$photo-corner",
+                    "position": 1
+                  }
+                ]
+              },
+              "width": 345,
+              "height": 7
             },
             {
               "id": "DjW91",
@@ -52754,7 +52756,6 @@
               }
             }
           ],
-          "cornerRadius": "$radius-lg",
           "stroke": "$paper-edge",
           "strokeWidth": 1,
           "strokeAlignment": "outer",
@@ -52812,26 +52813,10 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安在公園盪鞦韆",
+                  "content": "小安在公園盪鞦韆 · 2 歲 3 個月",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "600"
-                },
-                {
-                  "id": "djjiK",
-                  "type": "ref",
-                  "ref": "AqN3F",
-                  "name": "Age Pill",
-                  "descendants": {
-                    "KR7zN": {
-                      "icon": "cake",
-                      "fill": "$print-ink-secondary"
-                    },
-                    "g7Fnj": {
-                      "content": "2 歲 3 個月",
-                      "fill": "$print-ink-secondary"
-                    }
-                  }
                 }
               ]
             },
@@ -52983,6 +52968,13 @@
                   "fontWeight": "700"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "JXNVJ",
+              "name": "Spacer 16 HF",
+              "width": "fill_container",
+              "height": 16
             },
             {
               "type": "frame",
@@ -53140,43 +53132,66 @@
               "gap": "$sp-item",
               "children": [
                 {
-                  "id": "g7Y7w",
+                  "id": "Z4TsQ",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Day Divider 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "xrCoj",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo 1",
                   "width": "fill_container"
                 },
                 {
-                  "id": "FyDq0",
+                  "id": "WitwS",
                   "type": "ref",
-                  "ref": "fqhSH",
+                  "ref": "qtCd7",
                   "name": "Card Diary 1",
                   "width": "fill_container"
                 },
                 {
-                  "id": "sv88I",
+                  "type": "frame",
+                  "id": "ilGtN",
+                  "name": "Spacer To Section",
+                  "width": "fill_container",
+                  "height": 28
+                },
+                {
+                  "id": "Rt3cR",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Day Divider 2",
+                  "width": "fill_container",
+                  "descendants": {
+                    "kULro": {
+                      "rotation": 3.0000000000000004
+                    },
+                    "xlLIo": {
+                      "rotation": -6.000000000000001
+                    },
+                    "ci8cq": {
+                      "content": "8月30日（昨天）"
+                    }
+                  }
+                },
+                {
+                  "id": "qd5ej",
                   "type": "ref",
                   "ref": "bhroo",
                   "name": "Card Album 1",
                   "width": "fill_container"
                 },
                 {
-                  "id": "pHmHO",
+                  "id": "c2pJ7R",
                   "type": "ref",
-                  "ref": "fqhSH",
+                  "ref": "qtCd7",
                   "name": "Card Diary 2",
                   "width": "fill_container",
                   "descendants": {
-                    "s9Z2Rs": {
-                      "icon": "notebook-pen"
-                    },
-                    "bRiyR": {
-                      "content": "日記"
-                    },
-                    "iMDUx": {
-                      "enabled": false
-                    },
-                    "IssRo": {
+                    "p2odx": {
                       "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
                     }
                   }
@@ -53221,40 +53236,15 @@
           ]
         },
         {
-          "type": "frame",
-          "id": "YCgOb",
-          "layoutPosition": "absolute",
-          "x": 313,
-          "y": 682,
+          "id": "PPRIN",
+          "type": "ref",
+          "ref": "zy3Ps",
           "name": "FAB",
-          "width": 56,
-          "height": 56,
-          "fill": "$accent",
-          "cornerRadius": "$radius-full",
-          "effect": {
-            "type": "shadow",
-            "shadowType": "outer",
-            "color": "$paper-shadow",
-            "offset": {
-              "x": 0,
-              "y": 4
-            },
-            "blur": 14
-          },
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "icon",
-              "id": "bkdWT",
-              "name": "Plus Icon",
-              "width": 26,
-              "height": 26,
-              "icon": "plus",
-              "library": "lucide",
-              "fill": "$on-accent"
-            }
-          ]
+          "layoutPosition": "absolute",
+          "x": 225,
+          "y": 678,
+          "width": 144,
+          "height": 60
         },
         {
           "type": "frame",
@@ -53363,6 +53353,13 @@
                   "fontWeight": "700"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "p0JkR",
+              "name": "Spacer 16 HF",
+              "width": "fill_container",
+              "height": 16
             },
             {
               "type": "frame",
@@ -53519,7 +53516,7 @@
               "layout": "vertical",
               "gap": "$sp-block",
               "padding": [
-                60,
+                "$sp-section",
                 0,
                 0,
                 0
@@ -53531,8 +53528,109 @@
                   "id": "SjTGB",
                   "name": "Empty Print",
                   "width": 345,
-                  "fill": "$print-paper",
-                  "cornerRadius": "$radius-lg",
+                  "fill": [
+                    "$print-paper",
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.393,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.452,
+                        "height": 0.672
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.259,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.452,
+                        "height": 0.672
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.293,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.452,
+                        "height": 0.672
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 1
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.19699999999999998,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.452,
+                        "height": 0.672
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 1
+                      }
+                    }
+                  ],
                   "stroke": "$paper-edge",
                   "strokeWidth": 1,
                   "strokeAlignment": "outer",
@@ -53562,21 +53660,9 @@
                       "clip": true,
                       "width": "fill_container",
                       "height": 184,
-                      "fill": "$surface-2",
+                      "fill": "$print-paper",
                       "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "IlY16",
-                          "name": "Placeholder Icon",
-                          "width": 36,
-                          "height": 36,
-                          "icon": "image",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
-                        }
-                      ]
+                      "alignItems": "center"
                     },
                     {
                       "type": "frame",
@@ -53696,7 +53782,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "點右下角的「＋」寫下第一篇日記，或上傳一張照片。",
+                      "content": "點下方的「新增回憶」寫下第一篇日記，或上傳一張照片。",
                       "lineHeight": 1.5,
                       "textAlign": "center",
                       "fontFamily": "$font",
@@ -53710,40 +53796,15 @@
           ]
         },
         {
-          "type": "frame",
-          "id": "pTpJd",
-          "layoutPosition": "absolute",
-          "x": 313,
-          "y": 682,
+          "id": "PI6V6",
+          "type": "ref",
+          "ref": "zy3Ps",
           "name": "FAB",
-          "width": 56,
-          "height": 56,
-          "fill": "$accent",
-          "cornerRadius": "$radius-full",
-          "effect": {
-            "type": "shadow",
-            "shadowType": "outer",
-            "color": "$paper-shadow",
-            "offset": {
-              "x": 0,
-              "y": 4
-            },
-            "blur": 14
-          },
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "icon",
-              "id": "dIpgw",
-              "name": "Plus Icon",
-              "width": 26,
-              "height": 26,
-              "icon": "plus",
-              "library": "lucide",
-              "fill": "$on-accent"
-            }
-          ]
+          "layoutPosition": "absolute",
+          "x": 225,
+          "y": 678,
+          "width": 144,
+          "height": 60
         },
         {
           "type": "frame",
@@ -53852,6 +53913,13 @@
                   "fontWeight": "700"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "X5SHX",
+              "name": "Spacer 16 HF",
+              "width": "fill_container",
+              "height": 16
             },
             {
               "type": "frame",
@@ -54046,43 +54114,71 @@
                   ]
                 },
                 {
-                  "id": "iDGRv",
+                  "id": "kJbpq",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Day Divider 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "pqE2P",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo 1",
                   "width": "fill_container"
                 },
                 {
-                  "id": "y1aDCR",
+                  "id": "y6JCGh",
                   "type": "ref",
-                  "ref": "fqhSH",
+                  "ref": "qtCd7",
                   "name": "Card Diary 1",
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "descendants": {
+                    "p2odx": {
+                      "content": "今天在溜滑梯上玩得好開心。"
+                    }
+                  }
                 },
                 {
-                  "id": "p6lWH",
+                  "type": "frame",
+                  "id": "R8GeZ",
+                  "name": "Spacer To Section",
+                  "width": "fill_container",
+                  "height": 28
+                },
+                {
+                  "id": "I7v2cm",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Day Divider 2",
+                  "width": "fill_container",
+                  "descendants": {
+                    "kULro": {
+                      "rotation": 3.0000000000000004
+                    },
+                    "xlLIo": {
+                      "rotation": -6.000000000000001
+                    },
+                    "ci8cq": {
+                      "content": "8月30日（昨天）"
+                    }
+                  }
+                },
+                {
+                  "id": "K3Q7ZT",
                   "type": "ref",
                   "ref": "bhroo",
                   "name": "Card Album 1",
                   "width": "fill_container"
                 },
                 {
-                  "id": "G5NbSN",
+                  "id": "rGi9s",
                   "type": "ref",
-                  "ref": "fqhSH",
+                  "ref": "qtCd7",
                   "name": "Card Diary 2",
                   "width": "fill_container",
                   "descendants": {
-                    "s9Z2Rs": {
-                      "icon": "notebook-pen"
-                    },
-                    "bRiyR": {
-                      "content": "日記"
-                    },
-                    "iMDUx": {
-                      "enabled": false
-                    },
-                    "IssRo": {
+                    "p2odx": {
                       "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
                     }
                   }
@@ -54127,40 +54223,15 @@
           ]
         },
         {
-          "type": "frame",
-          "id": "LMvK3",
-          "layoutPosition": "absolute",
-          "x": 313,
-          "y": 682,
+          "id": "Nnkaw",
+          "type": "ref",
+          "ref": "zy3Ps",
           "name": "FAB",
-          "width": 56,
-          "height": 56,
-          "fill": "$accent",
-          "cornerRadius": "$radius-full",
-          "effect": {
-            "type": "shadow",
-            "shadowType": "outer",
-            "color": "$paper-shadow",
-            "offset": {
-              "x": 0,
-              "y": 4
-            },
-            "blur": 14
-          },
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "icon",
-              "id": "Mx8XE",
-              "name": "Plus Icon",
-              "width": 26,
-              "height": 26,
-              "icon": "plus",
-              "library": "lucide",
-              "fill": "$on-accent"
-            }
-          ]
+          "layoutPosition": "absolute",
+          "x": 225,
+          "y": 678,
+          "width": 144,
+          "height": 60
         },
         {
           "type": "frame",
@@ -54272,6 +54343,13 @@
                   "fontWeight": "700"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "GnIZt",
+              "name": "Spacer 16 HF",
+              "width": "fill_container",
+              "height": 16
             },
             {
               "type": "frame",
@@ -54429,43 +54507,66 @@
               "gap": "$sp-item",
               "children": [
                 {
-                  "id": "JWWKM",
+                  "id": "e9A2Wk",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Day Divider 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "ngQDX",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo 1",
                   "width": "fill_container"
                 },
                 {
-                  "id": "dyn4Q",
+                  "id": "o3QzV",
                   "type": "ref",
-                  "ref": "fqhSH",
+                  "ref": "qtCd7",
                   "name": "Card Diary 1",
                   "width": "fill_container"
                 },
                 {
-                  "id": "btBUb",
+                  "type": "frame",
+                  "id": "v0F5d",
+                  "name": "Spacer To Section",
+                  "width": "fill_container",
+                  "height": 28
+                },
+                {
+                  "id": "Z3r6xn",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Day Divider 2",
+                  "width": "fill_container",
+                  "descendants": {
+                    "kULro": {
+                      "rotation": 3.0000000000000004
+                    },
+                    "xlLIo": {
+                      "rotation": -6.000000000000001
+                    },
+                    "ci8cq": {
+                      "content": "8月30日（昨天）"
+                    }
+                  }
+                },
+                {
+                  "id": "MFpwo",
                   "type": "ref",
                   "ref": "bhroo",
                   "name": "Card Album 1",
                   "width": "fill_container"
                 },
                 {
-                  "id": "NMEzT",
+                  "id": "FIeHM",
                   "type": "ref",
-                  "ref": "fqhSH",
+                  "ref": "qtCd7",
                   "name": "Card Diary 2",
                   "width": "fill_container",
                   "descendants": {
-                    "s9Z2Rs": {
-                      "icon": "notebook-pen"
-                    },
-                    "bRiyR": {
-                      "content": "日記"
-                    },
-                    "iMDUx": {
-                      "enabled": false
-                    },
-                    "IssRo": {
+                    "p2odx": {
                       "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
                     }
                   }
@@ -54510,40 +54611,15 @@
           ]
         },
         {
-          "type": "frame",
-          "id": "SFfB5",
-          "layoutPosition": "absolute",
-          "x": 313,
-          "y": 682,
+          "id": "J71aC",
+          "type": "ref",
+          "ref": "zy3Ps",
           "name": "FAB",
-          "width": 56,
-          "height": 56,
-          "fill": "$accent",
-          "cornerRadius": "$radius-full",
-          "effect": {
-            "type": "shadow",
-            "shadowType": "outer",
-            "color": "$paper-shadow",
-            "offset": {
-              "x": 0,
-              "y": 4
-            },
-            "blur": 14
-          },
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "icon",
-              "id": "fIjna",
-              "name": "Plus Icon",
-              "width": 26,
-              "height": 26,
-              "icon": "plus",
-              "library": "lucide",
-              "fill": "$on-accent"
-            }
-          ]
+          "layoutPosition": "absolute",
+          "x": 225,
+          "y": 678,
+          "width": 144,
+          "height": 60
         },
         {
           "type": "frame",
@@ -54813,7 +54889,6 @@
                   "id": "bT28M",
                   "name": "Header Row",
                   "width": "fill_container",
-                  "justifyContent": "space_between",
                   "alignItems": "center",
                   "children": [
                     {
@@ -54825,39 +54900,6 @@
                       "fontFamily": "$font",
                       "fontSize": "$fs-display",
                       "fontWeight": "700"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "fZAXx",
-                      "name": "Add Button",
-                      "width": 44,
-                      "height": 44,
-                      "fill": "$accent",
-                      "cornerRadius": "$radius-full",
-                      "effect": {
-                        "type": "shadow",
-                        "shadowType": "outer",
-                        "color": "$paper-shadow",
-                        "offset": {
-                          "x": 0,
-                          "y": 2
-                        },
-                        "blur": 8
-                      },
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "khgVs",
-                          "name": "Plus Icon",
-                          "width": 22,
-                          "height": 22,
-                          "icon": "plus",
-                          "library": "lucide",
-                          "fill": "$on-accent"
-                        }
-                      ]
                     }
                   ]
                 },
@@ -55020,7 +55062,7 @@
                           "width": "fill_container",
                           "descendants": {
                             "VywUw": {
-                              "content": "小安盪鞦韆"
+                              "content": "小安盪鞦韆 · 2歲3個月"
                             },
                             "O6ami": {
                               "x": 233.5
@@ -55038,7 +55080,7 @@
                           "width": "fill_container",
                           "descendants": {
                             "MIxHp": {
-                              "content": "動物園一日遊"
+                              "content": "動物園一日遊 · 12張相片"
                             },
                             "JgUK8": {
                               "x": 233.5
@@ -55051,29 +55093,20 @@
                       ]
                     },
                     {
-                      "id": "iCfKN",
+                      "id": "rsoPm",
                       "type": "ref",
-                      "ref": "fqhSH",
+                      "ref": "qtCd7",
                       "name": "Card Diary 1",
                       "width": "fill_container"
                     },
                     {
-                      "id": "S607k",
+                      "id": "ARVAU",
                       "type": "ref",
-                      "ref": "fqhSH",
+                      "ref": "qtCd7",
                       "name": "Card Diary 2",
                       "width": "fill_container",
                       "descendants": {
-                        "s9Z2Rs": {
-                          "icon": "notebook-pen"
-                        },
-                        "bRiyR": {
-                          "content": "日記"
-                        },
-                        "iMDUx": {
-                          "enabled": false
-                        },
-                        "IssRo": {
+                        "p2odx": {
                           "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
                         }
                       }
@@ -55118,6 +55151,17 @@
               ]
             }
           ]
+        },
+        {
+          "id": "xzGrl",
+          "type": "ref",
+          "ref": "zy3Ps",
+          "name": "FAB",
+          "layoutPosition": "absolute",
+          "x": 650,
+          "y": 1094,
+          "width": 144,
+          "height": 60
         }
       ]
     },
@@ -55203,6 +55247,13 @@
             },
             {
               "type": "frame",
+              "id": "QacBo",
+              "name": "Spacer 16 HF",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
               "id": "Y7wQa",
               "name": "Filter Button",
               "fill": "$surface",
@@ -55261,56 +55312,86 @@
               "gap": "$sp-item",
               "children": [
                 {
-                  "id": "iQ4kb",
+                  "id": "f9KM0G",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Day Divider 1",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "NBUy0",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo 1",
                   "width": "fill_container"
                 },
                 {
-                  "id": "Y0ycD",
+                  "id": "MiQyy",
                   "type": "ref",
-                  "ref": "fqhSH",
+                  "ref": "qtCd7",
                   "name": "Card Diary 1",
                   "width": "fill_container",
                   "descendants": {
-                    "G3RIoO": {
+                    "Jqwww": {
                       "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "alignItems": "start"
+                      "alignItems": "end"
                     }
                   }
                 },
                 {
-                  "id": "cgfKf",
+                  "type": "frame",
+                  "id": "UCXlx",
+                  "name": "Spacer To Section",
+                  "width": "fill_container",
+                  "height": 28
+                },
+                {
+                  "id": "Tuw0p",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Day Divider 2",
+                  "width": "fill_container",
+                  "descendants": {
+                    "kULro": {
+                      "rotation": 3.0000000000000004
+                    },
+                    "xlLIo": {
+                      "rotation": -6.000000000000001
+                    },
+                    "ci8cq": {
+                      "content": "8月30日（昨天）"
+                    }
+                  }
+                },
+                {
+                  "id": "ECLEc",
                   "type": "ref",
                   "ref": "bhroo",
                   "name": "Card Album 1",
                   "width": "fill_container"
                 },
                 {
-                  "id": "tNotZ",
+                  "id": "gw8vW",
                   "type": "ref",
-                  "ref": "fqhSH",
+                  "ref": "qtCd7",
                   "name": "Card Diary 2",
                   "width": "fill_container",
                   "descendants": {
-                    "s9Z2Rs": {
-                      "icon": "notebook-pen"
+                    "p2odx": {
+                      "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
                     },
-                    "bRiyR": {
+                    "Jqwww": {
+                      "layout": "vertical",
+                      "alignItems": "end"
+                    },
+                    "d41MUZ": {
                       "content": "日記"
                     },
-                    "G3RIoO": {
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "alignItems": "start"
-                    },
-                    "iMDUx": {
+                    "WmQcz": {
                       "enabled": false
                     },
-                    "IssRo": {
-                      "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
+                    "zk1yE": {
+                      "enabled": false
                     }
                   }
                 },
@@ -55354,40 +55435,15 @@
           ]
         },
         {
-          "type": "frame",
-          "id": "DQ4z8",
-          "layoutPosition": "absolute",
-          "x": 313,
-          "y": 1274,
+          "id": "IRLCP",
+          "type": "ref",
+          "ref": "zy3Ps",
           "name": "FAB",
-          "width": 56,
-          "height": 56,
-          "fill": "$accent",
-          "cornerRadius": "$radius-full",
-          "effect": {
-            "type": "shadow",
-            "shadowType": "outer",
-            "color": "$paper-shadow",
-            "offset": {
-              "x": 0,
-              "y": 4
-            },
-            "blur": 14
-          },
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "icon",
-              "id": "O1COCz",
-              "name": "Plus Icon",
-              "width": 26,
-              "height": 26,
-              "icon": "plus",
-              "library": "lucide",
-              "fill": "$on-accent"
-            }
-          ]
+          "layoutPosition": "absolute",
+          "x": 133,
+          "y": 1293,
+          "width": "fit_content",
+          "height": "fit_content"
         },
         {
           "type": "frame",
@@ -55415,10 +55471,10 @@
           "ref": "J2GxJV",
           "name": "Tab Bar",
           "layoutPosition": "absolute",
-          "x": 0,
-          "y": 1346,
-          "width": 393,
-          "height": 120
+          "x": 16,
+          "y": 1402,
+          "width": 361,
+          "height": 64
         }
       ]
     },
@@ -55430,7 +55486,7 @@
       "name": "LS-21 / 12 日記編輯器 (iPhone)",
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 927,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -55482,7 +55538,6 @@
           "id": "r7wAI",
           "name": "Body",
           "width": "fill_container",
-          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -55569,20 +55624,16 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "oXDMm",
+                      "id": "EeIaO",
                       "name": "Photo 1",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "o7cLWE",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
+                          "id": "Tflwe",
+                          "name": "Thumb",
                           "metadata": {
                             "type": "unsplash",
                             "username": "lucy_10",
@@ -55590,8 +55641,8 @@
                             "author": "Lucy Davis"
                           },
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -55601,51 +55652,38 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "f9vG0O",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "S83FI",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
+                          "id": "w9kbR",
+                          "name": "Remove Button",
+                          "width": 96,
+                          "height": 44,
                           "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "jruha",
+                              "id": "i5L7E",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
                               "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "L7a8p",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -55653,20 +55691,16 @@
                     },
                     {
                       "type": "frame",
-                      "id": "c2uan",
+                      "id": "RusMe",
                       "name": "Photo 2",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "vf4vj",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
+                          "id": "Fftjv",
+                          "name": "Thumb",
                           "metadata": {
                             "type": "unsplash",
                             "username": "photoken123",
@@ -55674,8 +55708,8 @@
                             "author": "Iain"
                           },
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -55685,51 +55719,38 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "s45lRw",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "Sg3RW",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
+                          "id": "nkRfF",
+                          "name": "Remove Button",
+                          "width": 96,
+                          "height": 44,
                           "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "BMOpp",
+                              "id": "DLde4",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
                               "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "j74oBh",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -55737,20 +55758,16 @@
                     },
                     {
                       "type": "frame",
-                      "id": "dttoz",
+                      "id": "ZqHRh",
                       "name": "Photo 3",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "v2e2s",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
+                          "id": "AHM1q",
+                          "name": "Thumb",
                           "metadata": {
                             "type": "unsplash",
                             "username": "rewired41",
@@ -55758,8 +55775,8 @@
                             "author": "Rewired Digital"
                           },
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -55769,51 +55786,38 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "IlGlz",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "pyMAO",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
+                          "id": "KQT0T",
+                          "name": "Remove Button",
+                          "width": 96,
+                          "height": 44,
                           "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "aCoN9",
+                              "id": "x12Jqf",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
                               "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "zwfhc",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -55821,26 +55825,38 @@
                     },
                     {
                       "type": "frame",
-                      "id": "nEWAD",
+                      "id": "j4XJxb",
                       "name": "Add Photo",
-                      "width": 72,
-                      "height": 72,
+                      "width": 96,
+                      "height": 146,
                       "fill": "$surface-2",
                       "cornerRadius": "$radius-md",
                       "stroke": "$control-line",
                       "strokeWidth": 1.5,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
                         {
                           "type": "icon",
-                          "id": "MRhkt",
+                          "id": "WlwpN",
                           "name": "Plus",
-                          "width": 24,
-                          "height": 24,
+                          "width": 26,
+                          "height": 26,
                           "icon": "plus",
                           "library": "lucide",
                           "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "oNbOO",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "新增照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
                         }
                       ]
                     }
@@ -56138,7 +56154,7 @@
       "name": "LS-21 / 12b 日記編輯器 · 發佈中",
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 927,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -56190,7 +56206,6 @@
           "id": "hJIRx",
           "name": "Body",
           "width": "fill_container",
-          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -56277,20 +56292,16 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "V0yEVA",
+                      "id": "jcCF9",
                       "name": "Photo 1",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "F24JVC",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
+                          "id": "TTAmq",
+                          "name": "Thumb",
                           "metadata": {
                             "type": "unsplash",
                             "username": "lucy_10",
@@ -56298,8 +56309,8 @@
                             "author": "Lucy Davis"
                           },
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -56309,51 +56320,38 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "ugkqU",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "Mp6z2",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
-                          "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "id": "HfhjQ",
+                          "name": "Remove Button",
+                          "width": 96,
+                          "height": 44,
+                          "fill": "$surface-2",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$surface-2",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "AdXIK",
+                              "id": "TfSIk",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
-                              "fill": "$text-primary"
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "c5HIt",
+                              "name": "Label",
+                              "fill": "$text-secondary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -56361,20 +56359,16 @@
                     },
                     {
                       "type": "frame",
-                      "id": "kGCzq",
+                      "id": "U46yhR",
                       "name": "Photo 2",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "Uo48U",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
+                          "id": "u2TOdI",
+                          "name": "Thumb",
                           "metadata": {
                             "type": "unsplash",
                             "username": "photoken123",
@@ -56382,8 +56376,8 @@
                             "author": "Iain"
                           },
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -56393,51 +56387,38 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "TRP3w",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "hfTm8",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
-                          "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "id": "j6GJc4",
+                          "name": "Remove Button",
+                          "width": 96,
+                          "height": 44,
+                          "fill": "$surface-2",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$surface-2",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "CWhPG",
+                              "id": "EBl5J",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
-                              "fill": "$text-primary"
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "JwnEo",
+                              "name": "Label",
+                              "fill": "$text-secondary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -56445,20 +56426,16 @@
                     },
                     {
                       "type": "frame",
-                      "id": "Tljxc",
+                      "id": "Ny3xC",
                       "name": "Photo 3",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "FIgkd",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
+                          "id": "L0nO12",
+                          "name": "Thumb",
                           "metadata": {
                             "type": "unsplash",
                             "username": "rewired41",
@@ -56466,8 +56443,8 @@
                             "author": "Rewired Digital"
                           },
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -56477,51 +56454,38 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "D63A8w",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "rFEyx",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
-                          "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "id": "NppLk",
+                          "name": "Remove Button",
+                          "width": 96,
+                          "height": 44,
+                          "fill": "$surface-2",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$surface-2",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "O58c8",
+                              "id": "d2HbZ3",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
-                              "fill": "$text-primary"
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "KUDE2",
+                              "name": "Label",
+                              "fill": "$text-secondary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -56529,26 +56493,38 @@
                     },
                     {
                       "type": "frame",
-                      "id": "Wjhd2",
+                      "id": "gKxbE",
                       "name": "Add Photo",
-                      "width": 72,
-                      "height": 72,
+                      "width": 96,
+                      "height": 146,
                       "fill": "$surface-2",
                       "cornerRadius": "$radius-md",
                       "stroke": "$surface-2",
                       "strokeWidth": 1.5,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
                         {
                           "type": "icon",
-                          "id": "seuy5",
+                          "id": "ve6Cg",
                           "name": "Plus",
-                          "width": 24,
-                          "height": 24,
+                          "width": 26,
+                          "height": 26,
                           "icon": "plus",
                           "library": "lucide",
                           "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "l6GpTW",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "新增照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
                         }
                       ]
                     }
@@ -56846,7 +56822,7 @@
       "name": "LS-21 / 12c 日記編輯器 · 發佈失敗",
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 993,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -56898,7 +56874,6 @@
           "id": "PNKjc",
           "name": "Body",
           "width": "fill_container",
-          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -56985,20 +56960,16 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "pdirW",
+                      "id": "SniWu",
                       "name": "Photo 1",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "nwEPx",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
+                          "id": "au0mj",
+                          "name": "Thumb",
                           "metadata": {
                             "type": "unsplash",
                             "username": "lucy_10",
@@ -57006,8 +56977,8 @@
                             "author": "Lucy Davis"
                           },
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -57017,51 +56988,38 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "yMfqX",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "xCpoe",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
+                          "id": "a3uPs7",
+                          "name": "Remove Button",
+                          "width": 96,
+                          "height": 44,
                           "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "IzS0I",
+                              "id": "NLB7v",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
                               "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "EwWRo",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -57069,20 +57027,16 @@
                     },
                     {
                       "type": "frame",
-                      "id": "hVx3t",
+                      "id": "PIwwq",
                       "name": "Photo 2",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "WI3a2",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
+                          "id": "r4LUS",
+                          "name": "Thumb",
                           "metadata": {
                             "type": "unsplash",
                             "username": "photoken123",
@@ -57090,8 +57044,8 @@
                             "author": "Iain"
                           },
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -57101,51 +57055,38 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "DovDI",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "HBIZX",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
+                          "id": "M7kW72",
+                          "name": "Remove Button",
+                          "width": 96,
+                          "height": 44,
                           "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "Z9Frxk",
+                              "id": "isWwD",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
                               "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "JreAF",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -57153,20 +57094,16 @@
                     },
                     {
                       "type": "frame",
-                      "id": "lpjy2",
+                      "id": "Mnoqd",
                       "name": "Photo 3",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "NkuPQ",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
+                          "id": "CVMX8",
+                          "name": "Thumb",
                           "metadata": {
                             "type": "unsplash",
                             "username": "rewired41",
@@ -57174,8 +57111,8 @@
                             "author": "Rewired Digital"
                           },
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -57185,51 +57122,38 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "S0RAwo",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "dlPNm",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
+                          "id": "ZXqVm",
+                          "name": "Remove Button",
+                          "width": 96,
+                          "height": 44,
                           "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "fZ9PZ",
+                              "id": "kavHZ",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
                               "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "n3Qpd",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -57237,26 +57161,38 @@
                     },
                     {
                       "type": "frame",
-                      "id": "Khmuf",
+                      "id": "y7Y0p",
                       "name": "Add Photo",
-                      "width": 72,
-                      "height": 72,
+                      "width": 96,
+                      "height": 146,
                       "fill": "$surface-2",
                       "cornerRadius": "$radius-md",
                       "stroke": "$control-line",
                       "strokeWidth": 1.5,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
                         {
                           "type": "icon",
-                          "id": "gIPVJ",
+                          "id": "LTXO9",
                           "name": "Plus",
-                          "width": 24,
-                          "height": 24,
+                          "width": 26,
+                          "height": 26,
                           "icon": "plus",
                           "library": "lucide",
                           "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pqbnz",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "新增照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
                         }
                       ]
                     }
@@ -57539,6 +57475,16 @@
                   ]
                 },
                 {
+                  "type": "text",
+                  "id": "WgacT",
+                  "name": "Keep Reassure",
+                  "fill": "$text-secondary",
+                  "content": "你寫的內容還在，可以直接重試。",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
                   "id": "RxCPe",
                   "type": "ref",
                   "ref": "OKSJI",
@@ -57590,7 +57536,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 927,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -57642,7 +57588,6 @@
           "id": "tBO4J",
           "name": "Body",
           "width": "fill_container",
-          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -57729,20 +57674,16 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "Yxuqx",
+                      "id": "RgLOa",
                       "name": "Photo 1",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "E8Sad6",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
+                          "id": "i0XLo",
+                          "name": "Thumb",
                           "metadata": {
                             "type": "unsplash",
                             "username": "lucy_10",
@@ -57750,8 +57691,8 @@
                             "author": "Lucy Davis"
                           },
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -57761,51 +57702,38 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "I8jjg",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "iTT0E",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
+                          "id": "Za43k",
+                          "name": "Remove Button",
+                          "width": 96,
+                          "height": 44,
                           "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "MQLC5",
+                              "id": "vbmfZ",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
                               "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "x9cSjp",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -57813,20 +57741,16 @@
                     },
                     {
                       "type": "frame",
-                      "id": "J8bUq",
+                      "id": "Xk7sd",
                       "name": "Photo 2",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "WStca",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
+                          "id": "ymBY4",
+                          "name": "Thumb",
                           "metadata": {
                             "type": "unsplash",
                             "username": "photoken123",
@@ -57834,8 +57758,8 @@
                             "author": "Iain"
                           },
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -57845,51 +57769,38 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "j3Q9n",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "y6vr5",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
+                          "id": "UEfqG",
+                          "name": "Remove Button",
+                          "width": 96,
+                          "height": 44,
                           "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "Um7Bq",
+                              "id": "P6vwCk",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
                               "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "lf92i",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -57897,20 +57808,16 @@
                     },
                     {
                       "type": "frame",
-                      "id": "U5RaB",
+                      "id": "H6ub5",
                       "name": "Photo 3",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "D9M3lb",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
+                          "id": "Qio4q",
+                          "name": "Thumb",
                           "metadata": {
                             "type": "unsplash",
                             "username": "rewired41",
@@ -57918,8 +57825,8 @@
                             "author": "Rewired Digital"
                           },
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -57929,51 +57836,38 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "X8ZJh3",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "V2Vjs",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
+                          "id": "lZHO4",
+                          "name": "Remove Button",
+                          "width": 96,
+                          "height": 44,
                           "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "noCwC",
+                              "id": "Z1PoF",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
                               "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Ei4bE",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -57981,26 +57875,38 @@
                     },
                     {
                       "type": "frame",
-                      "id": "kHuNI",
+                      "id": "p5FZw",
                       "name": "Add Photo",
-                      "width": 72,
-                      "height": 72,
+                      "width": 96,
+                      "height": 146,
                       "fill": "$surface-2",
                       "cornerRadius": "$radius-md",
                       "stroke": "$control-line",
                       "strokeWidth": 1.5,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
                         {
                           "type": "icon",
-                          "id": "p20eo",
+                          "id": "DdZwe",
                           "name": "Plus",
-                          "width": 24,
-                          "height": 24,
+                          "width": 26,
+                          "height": 26,
                           "icon": "plus",
                           "library": "lucide",
                           "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "EvAtr",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "新增照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
                         }
                       ]
                     }
@@ -58431,29 +58337,19 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "vJlsI",
+                          "id": "xlnG0",
                           "name": "Photo 1",
-                          "width": 80,
-                          "height": 80,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-md",
+                          "width": 112,
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "VswBQ",
-                              "layoutPosition": "absolute",
-                              "x": 0,
-                              "y": 0,
-                              "name": "Wrap",
-                              "metadata": {
-                                "type": "unsplash",
-                                "username": "silvana_carlos",
-                                "link": "https://unsplash.com/@silvana_carlos",
-                                "author": "Silvana Carlos"
-                              },
+                              "id": "hJxya",
+                              "name": "Thumb",
                               "clip": true,
-                              "width": 80,
-                              "height": 80,
+                              "width": 112,
+                              "height": 112,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -58463,51 +58359,38 @@
                               "cornerRadius": "$radius-md"
                             },
                             {
-                              "type": "icon",
-                              "id": "P84Hkb",
-                              "layoutPosition": "absolute",
-                              "x": 33,
-                              "y": 33,
-                              "name": "Grip",
-                              "width": 14,
-                              "height": 14,
-                              "icon": "grip-vertical",
-                              "library": "lucide",
-                              "fill": "$on-photo"
-                            },
-                            {
                               "type": "frame",
-                              "id": "oMAjj",
-                              "layoutPosition": "absolute",
-                              "x": 60,
-                              "y": -8,
-                              "name": "Remove Badge",
-                              "width": 20,
-                              "height": 20,
+                              "id": "O07FK",
+                              "name": "Remove Button",
+                              "width": 112,
+                              "height": 44,
                               "fill": "$surface",
-                              "cornerRadius": "$radius-full",
-                              "effect": {
-                                "type": "shadow",
-                                "shadowType": "outer",
-                                "color": "$paper-shadow",
-                                "offset": {
-                                  "x": 0,
-                                  "y": 1
-                                },
-                                "blur": 3
-                              },
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1,
+                              "gap": "$sp-tight",
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
                                 {
                                   "type": "icon",
-                                  "id": "Pgg0X",
+                                  "id": "kVvHP",
                                   "name": "X",
-                                  "width": 12,
-                                  "height": 12,
+                                  "width": 16,
+                                  "height": 16,
                                   "icon": "x",
                                   "library": "lucide",
                                   "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Z3OBHW",
+                                  "name": "Label",
+                                  "fill": "$text-primary",
+                                  "content": "移除",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
                                 }
                               ]
                             }
@@ -58515,29 +58398,19 @@
                         },
                         {
                           "type": "frame",
-                          "id": "hB2r0",
+                          "id": "y1JWK",
                           "name": "Photo 2",
-                          "width": 80,
-                          "height": 80,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-md",
+                          "width": 112,
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "i2LokW",
-                              "layoutPosition": "absolute",
-                              "x": 0,
-                              "y": 0,
-                              "name": "Wrap",
-                              "metadata": {
-                                "type": "unsplash",
-                                "username": "agmmatheus",
-                                "link": "https://unsplash.com/@agmmatheus",
-                                "author": "Matheus Araujo"
-                              },
+                              "id": "bEbsq",
+                              "name": "Thumb",
                               "clip": true,
-                              "width": 80,
-                              "height": 80,
+                              "width": 112,
+                              "height": 112,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -58547,51 +58420,38 @@
                               "cornerRadius": "$radius-md"
                             },
                             {
-                              "type": "icon",
-                              "id": "f75QpV",
-                              "layoutPosition": "absolute",
-                              "x": 33,
-                              "y": 33,
-                              "name": "Grip",
-                              "width": 14,
-                              "height": 14,
-                              "icon": "grip-vertical",
-                              "library": "lucide",
-                              "fill": "$on-photo"
-                            },
-                            {
                               "type": "frame",
-                              "id": "a6P96s",
-                              "layoutPosition": "absolute",
-                              "x": 60,
-                              "y": -8,
-                              "name": "Remove Badge",
-                              "width": 20,
-                              "height": 20,
+                              "id": "qZa1s",
+                              "name": "Remove Button",
+                              "width": 112,
+                              "height": 44,
                               "fill": "$surface",
-                              "cornerRadius": "$radius-full",
-                              "effect": {
-                                "type": "shadow",
-                                "shadowType": "outer",
-                                "color": "$paper-shadow",
-                                "offset": {
-                                  "x": 0,
-                                  "y": 1
-                                },
-                                "blur": 3
-                              },
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1,
+                              "gap": "$sp-tight",
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
                                 {
                                   "type": "icon",
-                                  "id": "wNLr5",
+                                  "id": "i1Pp9",
                                   "name": "X",
-                                  "width": 12,
-                                  "height": 12,
+                                  "width": 16,
+                                  "height": 16,
                                   "icon": "x",
                                   "library": "lucide",
                                   "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "LkGt4",
+                                  "name": "Label",
+                                  "fill": "$text-primary",
+                                  "content": "移除",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
                                 }
                               ]
                             }
@@ -58599,29 +58459,19 @@
                         },
                         {
                           "type": "frame",
-                          "id": "QbslW",
+                          "id": "NRfAC",
                           "name": "Photo 3",
-                          "width": 80,
-                          "height": 80,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-md",
+                          "width": 112,
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "RmlcM",
-                              "layoutPosition": "absolute",
-                              "x": 0,
-                              "y": 0,
-                              "name": "Wrap",
-                              "metadata": {
-                                "type": "unsplash",
-                                "username": "haberdoedas",
-                                "link": "https://unsplash.com/@haberdoedas",
-                                "author": "Haberdoedas"
-                              },
+                              "id": "EtDE1",
+                              "name": "Thumb",
                               "clip": true,
-                              "width": 80,
-                              "height": 80,
+                              "width": 112,
+                              "height": 112,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -58631,51 +58481,38 @@
                               "cornerRadius": "$radius-md"
                             },
                             {
-                              "type": "icon",
-                              "id": "UW1pB",
-                              "layoutPosition": "absolute",
-                              "x": 33,
-                              "y": 33,
-                              "name": "Grip",
-                              "width": 14,
-                              "height": 14,
-                              "icon": "grip-vertical",
-                              "library": "lucide",
-                              "fill": "$on-photo"
-                            },
-                            {
                               "type": "frame",
-                              "id": "IsLwZ",
-                              "layoutPosition": "absolute",
-                              "x": 60,
-                              "y": -8,
-                              "name": "Remove Badge",
-                              "width": 20,
-                              "height": 20,
+                              "id": "e18v8",
+                              "name": "Remove Button",
+                              "width": 112,
+                              "height": 44,
                               "fill": "$surface",
-                              "cornerRadius": "$radius-full",
-                              "effect": {
-                                "type": "shadow",
-                                "shadowType": "outer",
-                                "color": "$paper-shadow",
-                                "offset": {
-                                  "x": 0,
-                                  "y": 1
-                                },
-                                "blur": 3
-                              },
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1,
+                              "gap": "$sp-tight",
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
                                 {
                                   "type": "icon",
-                                  "id": "OFfXU",
+                                  "id": "skGPN",
                                   "name": "X",
-                                  "width": 12,
-                                  "height": 12,
+                                  "width": 16,
+                                  "height": 16,
                                   "icon": "x",
                                   "library": "lucide",
                                   "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Fnzk9",
+                                  "name": "Label",
+                                  "fill": "$text-primary",
+                                  "content": "移除",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
                                 }
                               ]
                             }
@@ -58683,26 +58520,38 @@
                         },
                         {
                           "type": "frame",
-                          "id": "mST2l",
+                          "id": "a6JKhB",
                           "name": "Add Photo",
-                          "width": 80,
-                          "height": 80,
+                          "width": 112,
+                          "height": 168,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
                           "stroke": "$control-line",
                           "strokeWidth": 1.5,
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "Wib4O",
+                              "id": "F5SBG",
                               "name": "Plus",
-                              "width": 24,
-                              "height": 24,
+                              "width": 26,
+                              "height": 26,
                               "icon": "plus",
                               "library": "lucide",
                               "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "doKlZ",
+                              "name": "Label",
+                              "fill": "$text-secondary",
+                              "content": "新增照片",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -58919,6 +58768,41 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Fv0fG",
+                  "name": "Tip Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-label",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "LxqE1",
+                      "name": "Tip Icon",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "sparkles",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "pco6D",
+                      "name": "Tip Text",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "發佈後，這篇日記會出現在全家人的時間軸上，大家都能看到、留言。",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
                 }
               ]
             }
@@ -58957,7 +58841,7 @@
                   "type": "ref",
                   "ref": "OKSJI",
                   "name": "Publish Button",
-                  "width": 280,
+                  "width": 294,
                   "descendants": {
                     "s9bME2": {
                       "icon": "send"
@@ -59004,7 +58888,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1650,
+      "height": 1790,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -59056,7 +58940,6 @@
           "id": "RebTE",
           "name": "Body",
           "width": "fill_container",
-          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -59142,29 +59025,20 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "Sd6Kr",
+                      "id": "HFnuZ",
                       "name": "Photo 1",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "vv8Vm",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
-                          "metadata": {
-                            "type": "unsplash",
-                            "username": "lucy_10",
-                            "link": "https://unsplash.com/@lucy_10",
-                            "author": "Lucy Davis"
-                          },
+                          "id": "rvars",
+                          "name": "Thumb",
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -59174,51 +59048,40 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "i56J4j",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "O9blP7",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
+                          "id": "yhOEl",
+                          "name": "Remove Button",
                           "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$sp-tight",
+                            "$sp-label"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "pSXUf",
+                              "id": "T68k5r",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
                               "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "BTtsl",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -59226,29 +59089,20 @@
                     },
                     {
                       "type": "frame",
-                      "id": "v2olPR",
+                      "id": "IdS6a",
                       "name": "Photo 2",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "FPTUl",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
-                          "metadata": {
-                            "type": "unsplash",
-                            "username": "photoken123",
-                            "link": "https://unsplash.com/@photoken123",
-                            "author": "Iain"
-                          },
+                          "id": "no9Qh",
+                          "name": "Thumb",
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -59258,51 +59112,40 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "e0ajR",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "RiUUl",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
+                          "id": "TNsUh",
+                          "name": "Remove Button",
                           "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$sp-tight",
+                            "$sp-label"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "EZ2y5",
+                              "id": "bDw6i",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
                               "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "k6bmr",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -59310,29 +59153,20 @@
                     },
                     {
                       "type": "frame",
-                      "id": "nUP2e",
+                      "id": "piomL",
                       "name": "Photo 3",
-                      "width": 72,
-                      "height": 72,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "A2ajU",
-                          "layoutPosition": "absolute",
-                          "x": 0,
-                          "y": 0,
-                          "name": "Wrap",
-                          "metadata": {
-                            "type": "unsplash",
-                            "username": "rewired41",
-                            "link": "https://unsplash.com/@rewired41",
-                            "author": "Rewired Digital"
-                          },
+                          "id": "xn6j8",
+                          "name": "Thumb",
                           "clip": true,
-                          "width": 72,
-                          "height": 72,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -59342,51 +59176,40 @@
                           "cornerRadius": "$radius-md"
                         },
                         {
-                          "type": "icon",
-                          "id": "E4t8D",
-                          "layoutPosition": "absolute",
-                          "x": 29,
-                          "y": 29,
-                          "name": "Grip",
-                          "width": 14,
-                          "height": 14,
-                          "icon": "grip-vertical",
-                          "library": "lucide",
-                          "fill": "$on-photo"
-                        },
-                        {
                           "type": "frame",
-                          "id": "r7cCbF",
-                          "layoutPosition": "absolute",
-                          "x": 52,
-                          "y": -8,
-                          "name": "Remove Badge",
-                          "width": 20,
-                          "height": 20,
+                          "id": "NlgxY",
+                          "name": "Remove Button",
                           "fill": "$surface",
-                          "cornerRadius": "$radius-full",
-                          "effect": {
-                            "type": "shadow",
-                            "shadowType": "outer",
-                            "color": "$paper-shadow",
-                            "offset": {
-                              "x": 0,
-                              "y": 1
-                            },
-                            "blur": 3
-                          },
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1,
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$sp-tight",
+                            "$sp-label"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "CZbIs",
+                              "id": "N7erjY",
                               "name": "X",
-                              "width": 12,
-                              "height": 12,
+                              "width": 16,
+                              "height": 16,
                               "icon": "x",
                               "library": "lucide",
                               "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "HV1w8",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "移除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             }
                           ]
                         }
@@ -59394,26 +59217,36 @@
                     },
                     {
                       "type": "frame",
-                      "id": "lYHtj",
+                      "id": "cY2Nd",
                       "name": "Add Photo",
-                      "width": 72,
-                      "height": 72,
                       "fill": "$surface-2",
                       "cornerRadius": "$radius-md",
                       "stroke": "$control-line",
                       "strokeWidth": 1.5,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
                         {
                           "type": "icon",
-                          "id": "TrnSM",
+                          "id": "wod7V",
                           "name": "Plus",
-                          "width": 24,
-                          "height": 24,
+                          "width": 26,
+                          "height": 26,
                           "icon": "plus",
                           "library": "lucide",
                           "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "SfOUu",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "新增照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
                         }
                       ]
                     }
@@ -59466,6 +59299,7 @@
                       "type": "frame",
                       "id": "SeQHO",
                       "name": "Left",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
@@ -59484,7 +59318,9 @@
                           "id": "M24sR",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8/31",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "8月31日（昨天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -59797,109 +59633,8 @@
               "padding": "$inset-card",
               "children": [
                 {
-                  "type": "frame",
-                  "id": "NW9sQ",
-                  "name": "Head",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "YYajf",
-                      "name": "Who",
-                      "gap": "$sp-tight",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "hwbc4",
-                          "name": "Diary Icon",
-                          "width": 22,
-                          "height": 22,
-                          "icon": "notebook-pen",
-                          "library": "lucide",
-                          "fill": "$print-ink-secondary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "n5BJn",
-                          "name": "Who Label",
-                          "fill": "$print-ink",
-                          "content": "小安的日記",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-lead",
-                          "fontWeight": "700"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "O3uCm",
-                      "name": "Meta",
-                      "gap": "$sp-tight",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "id": "bqSAG",
-                          "type": "ref",
-                          "ref": "AqN3F",
-                          "name": "Age Pill",
-                          "descendants": {
-                            "KR7zN": {
-                              "icon": "cake",
-                              "fill": "$print-ink-secondary"
-                            },
-                            "g7Fnj": {
-                              "content": "2 歲 3 個月",
-                              "fill": "$print-ink-secondary"
-                            }
-                          }
-                        },
-                        {
-                          "type": "frame",
-                          "id": "Aya7k",
-                          "name": "Date Stamp",
-                          "rotation": -4,
-                          "stroke": "$print-ink-secondary",
-                          "strokeWidth": 1.5,
-                          "gap": "$sp-tight",
-                          "padding": [
-                            "$sp-tight",
-                            "$sp-label"
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "gnK9N",
-                              "name": "Stamp Icon",
-                              "width": 14,
-                              "height": 14,
-                              "icon": "calendar",
-                              "library": "lucide",
-                              "fill": "$print-ink-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "nlilX",
-                              "name": "Stamp Date",
-                              "fill": "$print-ink-secondary",
-                              "content": "08.31",
-                              "fontFamily": "$font-num",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700",
-                              "letterSpacing": 0.5
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
                   "type": "text",
-                  "id": "ANX6N",
+                  "id": "qdwkR",
                   "name": "Full Text",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -59909,6 +59644,97 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
+                },
+                {
+                  "type": "rectangle",
+                  "id": "NXyTR",
+                  "name": "Sign-off Rule",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "qb0a5",
+                  "name": "Signature",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "justifyContent": "end",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "SDK0O",
+                      "name": "Who Group",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "kZMsi",
+                          "name": "Diary Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "notebook-pen",
+                          "library": "lucide",
+                          "fill": "$print-ink-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "WfQ3d",
+                          "name": "Name",
+                          "fill": "$print-ink",
+                          "content": "小安",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WzOqn",
+                      "name": "Age Group",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "FaaSq",
+                          "name": "Sep",
+                          "fill": "$print-ink-secondary",
+                          "content": " · ",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "NPQSl",
+                          "name": "Age",
+                          "fill": "$print-ink-secondary",
+                          "content": "2 歲 3 個月",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "icon",
+                  "id": "dtVs2",
+                  "layoutPosition": "absolute",
+                  "x": 14,
+                  "y": -16,
+                  "name": "Paperclip",
+                  "rotation": -12.000000000000002,
+                  "width": 30,
+                  "height": 30,
+                  "icon": "paperclip",
+                  "library": "lucide",
+                  "fill": "$photo-corner"
                 }
               ]
             },
@@ -60027,7 +59853,6 @@
                   }
                 }
               ],
-              "cornerRadius": "$radius-lg",
               "stroke": "$paper-edge",
               "strokeWidth": 1,
               "strokeAlignment": "outer",
@@ -60318,109 +60143,8 @@
               "padding": "$inset-card",
               "children": [
                 {
-                  "type": "frame",
-                  "id": "jjBnS",
-                  "name": "Head",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "JGyOQ",
-                      "name": "Who",
-                      "gap": "$sp-tight",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "oXVqp",
-                          "name": "Diary Icon",
-                          "width": 22,
-                          "height": 22,
-                          "icon": "notebook-pen",
-                          "library": "lucide",
-                          "fill": "$print-ink-secondary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "SFTR7",
-                          "name": "Who Label",
-                          "fill": "$print-ink",
-                          "content": "小安的日記",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-lead",
-                          "fontWeight": "700"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "d5b6RI",
-                      "name": "Meta",
-                      "gap": "$sp-tight",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "id": "m1IRT",
-                          "type": "ref",
-                          "ref": "AqN3F",
-                          "name": "Age Pill",
-                          "descendants": {
-                            "KR7zN": {
-                              "icon": "cake",
-                              "fill": "$print-ink-secondary"
-                            },
-                            "g7Fnj": {
-                              "content": "2 歲 3 個月",
-                              "fill": "$print-ink-secondary"
-                            }
-                          }
-                        },
-                        {
-                          "type": "frame",
-                          "id": "Gv8jE",
-                          "name": "Date Stamp",
-                          "rotation": -4,
-                          "stroke": "$print-ink-secondary",
-                          "strokeWidth": 1.5,
-                          "gap": "$sp-tight",
-                          "padding": [
-                            "$sp-tight",
-                            "$sp-label"
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "rrzRt",
-                              "name": "Stamp Icon",
-                              "width": 14,
-                              "height": 14,
-                              "icon": "calendar",
-                              "library": "lucide",
-                              "fill": "$print-ink-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "uhUHN",
-                              "name": "Stamp Date",
-                              "fill": "$print-ink-secondary",
-                              "content": "08.31",
-                              "fontFamily": "$font-num",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700",
-                              "letterSpacing": 0.5
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
                   "type": "text",
-                  "id": "Wa1rG",
+                  "id": "SJiWO",
                   "name": "Full Text",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -60430,6 +60154,97 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
+                },
+                {
+                  "type": "rectangle",
+                  "id": "hvMuf",
+                  "name": "Sign-off Rule",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "R61pa",
+                  "name": "Signature",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "justifyContent": "end",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "o8z0I",
+                      "name": "Who Group",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "OgbxJ",
+                          "name": "Diary Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "notebook-pen",
+                          "library": "lucide",
+                          "fill": "$print-ink-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "K1gzp",
+                          "name": "Name",
+                          "fill": "$print-ink",
+                          "content": "小安",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "cmzIK",
+                      "name": "Age Group",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "KsyXD",
+                          "name": "Sep",
+                          "fill": "$print-ink-secondary",
+                          "content": " · ",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "a6KhKM",
+                          "name": "Age",
+                          "fill": "$print-ink-secondary",
+                          "content": "2 歲 3 個月",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "icon",
+                  "id": "gJQfi",
+                  "layoutPosition": "absolute",
+                  "x": 14,
+                  "y": -16,
+                  "name": "Paperclip",
+                  "rotation": -12.000000000000002,
+                  "width": 30,
+                  "height": 30,
+                  "icon": "paperclip",
+                  "library": "lucide",
+                  "fill": "$photo-corner"
                 }
               ]
             },
@@ -60548,7 +60363,6 @@
                   }
                 }
               ],
-              "cornerRadius": "$radius-lg",
               "stroke": "$paper-edge",
               "strokeWidth": 1,
               "strokeAlignment": "outer",
@@ -60926,7 +60740,6 @@
                       }
                     }
                   ],
-                  "cornerRadius": "$radius-lg",
                   "stroke": "$paper-edge",
                   "strokeWidth": 1,
                   "strokeAlignment": "outer",
@@ -61095,109 +60908,8 @@
                   "padding": "$inset-card",
                   "children": [
                     {
-                      "type": "frame",
-                      "id": "bXCtJ",
-                      "name": "Head",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "uMyhv",
-                          "name": "Who",
-                          "gap": "$sp-tight",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "N9VNMY",
-                              "name": "Diary Icon",
-                              "width": 22,
-                              "height": 22,
-                              "icon": "notebook-pen",
-                              "library": "lucide",
-                              "fill": "$print-ink-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "n8lMcH",
-                              "name": "Who Label",
-                              "fill": "$print-ink",
-                              "content": "小安的日記",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-lead",
-                              "fontWeight": "700"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "wCsfv",
-                          "name": "Meta",
-                          "gap": "$sp-tight",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "id": "gjBNB",
-                              "type": "ref",
-                              "ref": "AqN3F",
-                              "name": "Age Pill",
-                              "descendants": {
-                                "KR7zN": {
-                                  "icon": "cake",
-                                  "fill": "$print-ink-secondary"
-                                },
-                                "g7Fnj": {
-                                  "content": "2 歲 3 個月",
-                                  "fill": "$print-ink-secondary"
-                                }
-                              }
-                            },
-                            {
-                              "type": "frame",
-                              "id": "LG7i1",
-                              "name": "Date Stamp",
-                              "rotation": -4,
-                              "stroke": "$print-ink-secondary",
-                              "strokeWidth": 1.5,
-                              "gap": "$sp-tight",
-                              "padding": [
-                                "$sp-tight",
-                                "$sp-label"
-                              ],
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "id": "ws5AE",
-                                  "name": "Stamp Icon",
-                                  "width": 14,
-                                  "height": 14,
-                                  "icon": "calendar",
-                                  "library": "lucide",
-                                  "fill": "$print-ink-secondary"
-                                },
-                                {
-                                  "type": "text",
-                                  "id": "ZIMoq",
-                                  "name": "Stamp Date",
-                                  "fill": "$print-ink-secondary",
-                                  "content": "08.31",
-                                  "fontFamily": "$font-num",
-                                  "fontSize": "$fs-note",
-                                  "fontWeight": "700",
-                                  "letterSpacing": 0.5
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
                       "type": "text",
-                      "id": "grrjI",
+                      "id": "Y5oWa",
                       "name": "Full Text",
                       "fill": "$print-ink",
                       "textGrowth": "fixed-width",
@@ -61207,6 +60919,97 @@
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "Bwh36",
+                      "name": "Sign-off Rule",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "l2sm6N",
+                      "name": "Signature",
+                      "width": "fill_container",
+                      "gap": "$sp-tight",
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "HlzQP",
+                          "name": "Who Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "IJaxi",
+                              "name": "Diary Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "notebook-pen",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "DUszO",
+                              "name": "Name",
+                              "fill": "$print-ink",
+                              "content": "小安",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "LT58W",
+                          "name": "Age Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "V34SrB",
+                              "name": "Sep",
+                              "fill": "$print-ink-secondary",
+                              "content": " · ",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "caIbm",
+                              "name": "Age",
+                              "fill": "$print-ink-secondary",
+                              "content": "2 歲 3 個月",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "q6twn0",
+                      "layoutPosition": "absolute",
+                      "x": 14,
+                      "y": -16,
+                      "name": "Paperclip",
+                      "rotation": -12.000000000000002,
+                      "width": 30,
+                      "height": 30,
+                      "icon": "paperclip",
+                      "library": "lucide",
+                      "fill": "$photo-corner"
                     }
                   ]
                 },
@@ -61215,8 +61018,14 @@
                   "id": "irzyy",
                   "name": "Comments Section",
                   "width": "fill_container",
+                  "height": 200,
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
                   "layout": "vertical",
                   "gap": "$sp-label",
+                  "padding": "$inset-card",
+                  "justifyContent": "center",
+                  "alignItems": "center",
                   "children": [
                     {
                       "type": "frame",
@@ -61328,7 +61137,6 @@
           "id": "NE4b4",
           "name": "Body",
           "width": "fill_container",
-          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -61362,109 +61170,8 @@
               "padding": "$inset-card",
               "children": [
                 {
-                  "type": "frame",
-                  "id": "olr8F",
-                  "name": "Head",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "KOy2P",
-                      "name": "Who",
-                      "gap": "$sp-tight",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "OlDUL",
-                          "name": "Diary Icon",
-                          "width": 22,
-                          "height": 22,
-                          "icon": "notebook-pen",
-                          "library": "lucide",
-                          "fill": "$print-ink-secondary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "poMlR",
-                          "name": "Who Label",
-                          "fill": "$print-ink",
-                          "content": "小安的日記",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-lead",
-                          "fontWeight": "700"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "sDW8n",
-                      "name": "Meta",
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "children": [
-                        {
-                          "id": "fB9Ya",
-                          "type": "ref",
-                          "ref": "AqN3F",
-                          "name": "Age Pill",
-                          "descendants": {
-                            "KR7zN": {
-                              "icon": "cake",
-                              "fill": "$print-ink-secondary"
-                            },
-                            "g7Fnj": {
-                              "content": "2 歲 3 個月",
-                              "fill": "$print-ink-secondary"
-                            }
-                          }
-                        },
-                        {
-                          "type": "frame",
-                          "id": "i9Y7HQ",
-                          "name": "Date Stamp",
-                          "rotation": -4,
-                          "stroke": "$print-ink-secondary",
-                          "strokeWidth": 1.5,
-                          "gap": "$sp-tight",
-                          "padding": [
-                            "$sp-tight",
-                            "$sp-label"
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "U9MZY",
-                              "name": "Stamp Icon",
-                              "width": 14,
-                              "height": 14,
-                              "icon": "calendar",
-                              "library": "lucide",
-                              "fill": "$print-ink-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "l4kes5",
-                              "name": "Stamp Date",
-                              "fill": "$print-ink-secondary",
-                              "content": "08.31",
-                              "fontFamily": "$font-num",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700",
-                              "letterSpacing": 0.5
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
                   "type": "text",
-                  "id": "tLBAZ",
+                  "id": "cSV5Y",
                   "name": "Full Text",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -61474,6 +61181,98 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
+                },
+                {
+                  "type": "rectangle",
+                  "id": "dZ9WT",
+                  "name": "Sign-off Rule",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "jE1Qc",
+                  "name": "Signature",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "justifyContent": "end",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "pOaQC",
+                      "name": "Who Group",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "XpX3B",
+                          "name": "Diary Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "notebook-pen",
+                          "library": "lucide",
+                          "fill": "$print-ink-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "V5Xvc",
+                          "name": "Name",
+                          "fill": "$print-ink",
+                          "content": "小安",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "QTyp5",
+                      "name": "Age Group",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "IgfOu",
+                          "name": "Sep",
+                          "fill": "$print-ink-secondary",
+                          "content": " · ",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "G8JdV",
+                          "name": "Age",
+                          "fill": "$print-ink-secondary",
+                          "content": "2 歲 3 個月",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "icon",
+                  "id": "g6ok4",
+                  "layoutPosition": "absolute",
+                  "x": 14,
+                  "y": -16,
+                  "name": "Paperclip",
+                  "rotation": -12.000000000000002,
+                  "width": 30,
+                  "height": 30,
+                  "icon": "paperclip",
+                  "library": "lucide",
+                  "fill": "$photo-corner"
                 }
               ]
             },
@@ -61592,7 +61391,6 @@
                   }
                 }
               ],
-              "cornerRadius": "$radius-lg",
               "stroke": "$paper-edge",
               "strokeWidth": 1,
               "strokeAlignment": "outer",
@@ -61783,6 +61581,163 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "oLN0e",
+      "x": 8176,
+      "y": 28671,
+      "name": "cmp/Day Divider",
+      "reusable": true,
+      "width": 345,
+      "children": [
+        {
+          "type": "frame",
+          "id": "OCYqN",
+          "name": "Stamp Wrap",
+          "children": [
+            {
+              "type": "frame",
+              "id": "kULro",
+              "layoutPosition": "absolute",
+              "x": -3,
+              "y": 3,
+              "name": "Ghost",
+              "opacity": 0.3,
+              "rotation": -7,
+              "width": 112,
+              "height": 33,
+              "stroke": "$print-ink-secondary",
+              "strokeWidth": 1
+            },
+            {
+              "type": "frame",
+              "id": "xlLIo",
+              "name": "Stamp",
+              "rotation": -4,
+              "stroke": "$print-ink-secondary",
+              "strokeWidth": 1.5,
+              "padding": [
+                "$sp-tight",
+                "$sp-label"
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ci8cq",
+                  "name": "Date Text",
+                  "fill": "$print-ink-secondary",
+                  "content": "8月31日（今天）",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "700",
+                  "letterSpacing": 0.3
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "zy3Ps",
+      "x": 8521,
+      "y": 28671,
+      "name": "cmp/FAB",
+      "reusable": true,
+      "fill": "$accent",
+      "cornerRadius": "$radius-full",
+      "effect": {
+        "type": "shadow",
+        "shadowType": "outer",
+        "color": "$paper-shadow",
+        "offset": {
+          "x": 0,
+          "y": 4
+        },
+        "blur": 14
+      },
+      "gap": "$sp-tight",
+      "padding": [
+        "$ctl-pad-cta",
+        "$sp-block"
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "G0L1jH",
+          "name": "Plus Icon",
+          "width": 22,
+          "height": 22,
+          "icon": "plus",
+          "library": "lucide",
+          "fill": "$on-accent"
+        },
+        {
+          "type": "text",
+          "id": "lzBgm",
+          "name": "Label",
+          "fill": "$on-accent",
+          "content": "新增回憶",
+          "fontFamily": "$font",
+          "fontSize": "$fs-body",
+          "fontWeight": "700"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Tr8Kd",
+      "x": 10737,
+      "y": 31546,
+      "name": "Stress / 11 時間軸 · 長文字壓測",
+      "width": 393,
+      "fill": "$bg",
+      "layout": "vertical",
+      "gap": "$sp-item",
+      "padding": 24,
+      "children": [
+        {
+          "id": "g6pjom",
+          "type": "ref",
+          "ref": "oLN0e",
+          "name": "Day Divider",
+          "width": "fill_container",
+          "descendants": {
+            "ci8cq": {
+              "content": "7月2日"
+            }
+          }
+        },
+        {
+          "id": "q3tlmR",
+          "type": "ref",
+          "ref": "umJHD",
+          "name": "Card Photo Long Caption",
+          "width": "fill_container",
+          "descendants": {
+            "VywUw": {
+              "content": "在阿嬤家後院用水管噴水玩到全身濕透，笑到停不下來，還說明年夏天要再來一次 · 3 歲 0 個月"
+            }
+          }
+        },
+        {
+          "id": "LL4lr",
+          "type": "ref",
+          "ref": "qtCd7",
+          "name": "Card Diary Long Text",
+          "width": "fill_container",
+          "descendants": {
+            "p2odx": {
+              "content": "今天是很特別的一天。早上先去阿公家吃早餐，阿嬤煮了他最愛的蛋餅，還加了額外的起司，他一口氣吃了兩份。中午我們去了附近新開的公園，裡面有好大的沙坑跟三種不同的溜滑梯，他從最高的那座溜下來時尖叫了一聲，然後馬上又跑去排隊要再玩一次。下午天氣有點轉涼，我們就提早回家了，路上他在推車裡就睡著了，看他這麼累但笑得這麼開心，覺得今天很值得記下來。"
+            }
+          }
         }
       ]
     }
