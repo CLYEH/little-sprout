@@ -115,6 +115,13 @@ jobs:
         if: github.event_name == 'pull_request'
         run: bash scripts/gates/evidence-path-check.sh --base "origin/$BASE"
 
+      # LS-74：design-asset-size-check 原本只在本機 pre-commit 跑（看 --cached／staged），`--no-verify`
+      # 繞過後 CI 沒有兜底（同 LS-69 evidence-path-check 的坑）。這裡用同一套 `--base` 模式對
+      # `origin/$BASE...HEAD` 重跑同一套規則。所有 PR 方向都跑，理由同上一步。
+      - name: design/ 大檔二進位體積（PR diff 對帳，design-asset-size-check --base，LS-74）
+        if: github.event_name == 'pull_request'
+        run: bash scripts/gates/design-asset-size-check.sh --base "origin/$BASE"
+
       # LS-45／LS-41／LS-54／LS-53／LS-50／LS-63：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
       # 放行」（destructive-approval-check）、「schema／文件對帳」（api-contract-check）、
       # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）、「migration 兩級分級／BREAKING: 段落」
@@ -131,7 +138,7 @@ jobs:
       # LS-95 merge-review R1 B2：tap-target-check.test.sh 原本只有腳本本體、沒有接進這裡——
       # COLLABORATION §7 宣稱「自測掛 CI rules job」但實際沒掛，兩條刻意寫的 mutation-style
       # 負控（多違規要全點名、失敗無標記不能誤判成通過）從未在 CI 執行過。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／tap-target-check／tap-target-registry-check／design-landing-check／design-evidence-check）
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／tap-target-check／tap-target-registry-check／design-landing-check／design-evidence-check／design-asset-size-check）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -156,6 +163,7 @@ jobs:
           bash scripts/gates/tap-target-registry-check.test.sh || rc=1
           bash scripts/gates/design-landing-check.test.sh || rc=1
           bash scripts/gates/design-evidence-check.test.sh || rc=1
+          bash scripts/gates/design-asset-size-check.test.sh || rc=1
           bash scripts/hooks/pretool.test.sh || rc=1
           exit "$rc"
 
