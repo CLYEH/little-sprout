@@ -35,7 +35,12 @@ declare
   v_tables text[] := array[
     'family_members', 'invites', 'children', 'media', 'albums', 'album_media',
     'diaries', 'diary_media', 'comments', 'reactions', 'feed_items',
-    'content_reports', 'blocked_users'
+    'content_reports', 'blocked_users',
+    -- LS-121 R2（merge-reviewer PR #218 review M3）：三張新連結表補進跨家庭隔離
+    -- 覆蓋——之前只驗了「非成員直接寫入被 42501 擋下」（97_multi_child_tags.sql
+    -- §1），沒有驗過跨家庭 SELECT 是否外洩，見這幾張表各自的 RLS policy 判準
+    -- 與其他表一致（family_id in private.family_ids()）。
+    'diary_children', 'album_children', 'feed_item_children'
   ];
 begin
   foreach v_user in array array[
@@ -75,7 +80,7 @@ begin
     end if;
   end loop;
 
-  raise notice 'ok 隔離：A 家 owner/member/viewer 對 B 家 14 張表 + profiles + device_tokens 皆為 0 列';
+  raise notice 'ok 隔離：A 家 owner/member/viewer 對 B 家 17 張表 + profiles + device_tokens 皆為 0 列';
 end;
 $$;
 
@@ -97,7 +102,8 @@ begin
   foreach v_table in array array[
     'family_members', 'invites', 'children', 'media', 'albums', 'album_media',
     'diaries', 'diary_media', 'comments', 'reactions', 'feed_items',
-    'content_reports', 'blocked_users'
+    'content_reports', 'blocked_users',
+    'diary_children', 'album_children', 'feed_item_children'
   ] loop
     execute format('select count(*) from public.%I where family_id = $1', v_table)
       into v_n using v_mine;
@@ -106,7 +112,7 @@ begin
     end if;
   end loop;
 
-  raise notice 'ok 正向對照：A 家 owner 在自家 14 張表都查得到資料';
+  raise notice 'ok 正向對照：A 家 owner 在自家 17 張表都查得到資料';
 end;
 $$;
 
@@ -197,7 +203,8 @@ begin
     foreach v_table in array array[
       'family_members', 'invites', 'children', 'media', 'albums', 'album_media',
       'diaries', 'diary_media', 'comments', 'reactions', 'feed_items',
-      'content_reports', 'blocked_users'
+      'content_reports', 'blocked_users',
+      'diary_children', 'album_children', 'feed_item_children'
     ] loop
       execute format('select count(*) from public.%I where family_id = $1', v_table)
         into v_n using v_other;
@@ -208,7 +215,7 @@ begin
     end loop;
   end loop;
 
-  raise notice 'ok 隔離（反方向）：B 家 owner/member 對 A 家 14 張表皆為 0 列';
+  raise notice 'ok 隔離（反方向）：B 家 owner/member 對 A 家 17 張表皆為 0 列';
 end;
 $$;
 

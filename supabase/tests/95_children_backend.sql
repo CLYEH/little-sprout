@@ -795,7 +795,16 @@ begin
   values (v_family, '建在還活著的孩子底下的相簿', v_owner)
   returning id into v_album;
   perform public.set_album_children(v_album, array[v_child_active]::uuid[]);
-  raise notice 'ok：set_album_children 指向已軟刪孩子拿 LS044，指向 active 孩子不受影響（正向對照）';
+  -- LS-121 R2（merge-reviewer PR #218 review m2）：R1 版本這裡只呼叫沒斷言——若
+  -- set_album_children 對 active 孩子靜默不做事，這段仍會印出 ok。補一句正向斷言
+  -- 證明標記真的落地（97_multi_child_tags.sql §3 已有帶 array_agg 比對的完整正向
+  -- 覆蓋，這裡只需要證明「沒有被 LS044 誤傷」，用 exists 就夠，不必重複那份比對）。
+  if not exists (
+    select 1 from public.album_children where album_id = v_album and child_id = v_child_active
+  ) then
+    raise exception 'FAIL：set_album_children 指向 active 孩子時竟然沒有落地任何標記';
+  end if;
+  raise notice 'ok：set_album_children 指向已軟刪孩子拿 LS044，指向 active 孩子正確落地標記（正向對照）';
 
   -- (e)「既有內容不動」對 albums 也成立：owner 對這本相簿呼叫 set_album_deleted
   -- （只碰 deleted_at，不碰孩子標記）完全不受這支 trigger 影響，即使標記指向的

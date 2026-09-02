@@ -397,14 +397,25 @@ $$;
 -- 資料量：效能家（fc）原本的 5 萬列 media 都沒有 child_id 可用；這裡另外準備
 --   - 20 萬列合成的 diary 型別 feed_items（不經過 create_diary_entry／trigger，直接寫
 --     feed_items——這張表對 diaries 本來就沒有外鍵，是已知且被接受的多型關聯設計，
---     見 init_schema.sql 對 feed_items 的註解），child_id 全部 NULL，用來撐出「深頁
---     分頁」的資料量；
---   - 5 列帶同一個 child_id、時間穿插在最新附近，模擬「稀疏 child 篩選」：20 萬多列
---     裡只有 5 列符合，若規劃器沒有真的選用 child 索引，篩選代價會跟資料總量成正比
---     ——分支 3／4 都吃這批資料，分支 4 額外驗到「篩 child 又帶游標」同時成立時
---     索引仍然被正確選用（分支 3 的等值條件與分支 2 的游標條件各自驗過，但兩者
---     同時出現在同一條分支時，是否仍然各自被規劃器正確處理，不能從分支 2／3
---     分開都對就邏輯上推出——這正是 N1 指出的缺口）。
+--     見 init_schema.sql 對 feed_items 的註解），完全不帶任何 diary_children 標記，
+--     用來撐出「深頁分頁」的資料量、也代表「大部分內容其實沒有標記任何孩子」這個
+--     常態。
+--   - 150 天、每天 4 篇「真實」日記（600 篇），每篇標 2 個孩子——LS-121 R2
+--     merge-reviewer PR #218 review M1：R1 版本只灌 5 列「稀疏」標記（20 萬列裡
+--     只有 5 列符合），這批列全是合成 feed_items（沒有真實 diaries 列背書），
+--     get_family_timeline 的 child_ids 聚合因此在 diary_children／album_children
+--     上探到的永遠是空表——四條分支的 buffers 量到的不是本票新增的熱路徑，是一張
+--     空表的成本。reviewer 實測「每篇日記都標 2 個孩子」是常態情境，不是邊界案例，
+--     且篩 child、limit=20（產品預設）的真實成本達 136 buffers（原本的門檻只有
+--     120）。這裡改灌真實資料集：`diary_children` 對 `diaries` 有外鍵，不能像
+--     feed_items 那樣造假 ref_id，必須是真的 diaries 列——直接以 postgres 身分寫
+--     `diaries`／`diary_children`（不經 `create_diary_entry`／`update_diary_entry`，
+--     純粹是效能 fixture，同檔其他準備段落的既有慣例），INSERT 本身會觸發既有的
+--     `feed_sync_diaries`／`feed_sync_diary_children` trigger 自動展開
+--     `feed_items`／`feed_item_children`，不需要另外手動維護。時間跨度（150 天）
+--     刻意蓋過 `v_deep_cursor_tagged`（見下方 DO 區塊）的深度，讓分支 4（篩 child
+--     ＋帶游標）真的能回一整頁，不是像 R1 版本那樣游標落在整批資料的時間範圍之外、
+--     回傳 0 列。
 -- ---------------------------------------------------------------------------
 
 -- 上面「主查詢 7」那段一路沿用檔案開頭的 `set local role authenticated;`（同一個
@@ -413,12 +424,16 @@ $$;
 -- postgres，稍後呼叫 get_family_timeline 前再切回 authenticated。
 reset role;
 
--- 補一個帶固定 id 的孩子給稀疏 child 篩選測試用（R1 起 fc 已因本檔上方 M2 迴歸多了
--- 3000 個隨機 id 的 children，那批純粹是撐 children_select 的 plan 判準用、跟這裡
--- 的 feed_items 完全無關；這裡固定 id 是因為下面要用同一個 id 反查 feed_items）。
+-- 兩個孩子：child_target 是分支 3／4 實際篩選的對象，child_cotag 是「每篇同時標
+-- 第二個孩子」用（R1 起 fc 已因本檔上方 M2 迴歸多了 3000 個隨機 id 的 children，
+-- 那批純粹是撐 children_select 的 plan 判準用、跟這裡完全無關；這裡固定 id 是因為
+-- 下面要用同一個 id 反查標記資料）。
 insert into public.children (id, family_id, name, birthday)
-values ('2c000000-0000-4000-8000-000000000001', 'fc000000-0000-4000-8000-000000000001',
-        '效能測試孩子', date '2025-01-01')
+values
+  ('2c000000-0000-4000-8000-000000000001', 'fc000000-0000-4000-8000-000000000001',
+   '效能測試孩子（篩選目標）', date '2025-01-01'),
+  ('2c000000-0000-4000-8000-000000000002', 'fc000000-0000-4000-8000-000000000001',
+   '效能測試孩子（共同標記）', date '2025-01-02')
 on conflict (id) do nothing;
 
 insert into public.feed_items (family_id, kind, ref_id, occurred_at)
@@ -426,26 +441,34 @@ select 'fc000000-0000-4000-8000-000000000001', 'diary', gen_random_uuid(),
        now() - (i * interval '1 minute')
   from generate_series(1, 200000) i;
 
--- LS-121：feed_items 不再有 child_id 欄位——「稀疏 child 篩選」改成同時寫一筆
--- feed_items（不帶孩子標記，跟其他 20 萬列一樣）與一筆 feed_item_children（帶孩子
--- 標記，get_family_timeline 篩 child 時實際查的是這張表，見該函式與 migration
--- 第 0 段的設計選擇）。用 RETURNING 把 gen_random_uuid() 產生的 ref_id／occurred_at
--- 帶到第二句 INSERT，兩張表對同一批 5 個項目的 ref_id 才會一致（這 5 列同樣不經過
--- create_diary_entry／diary_children，是純粹撐資料量的合成資料，跟 diaries 表本來
--- 就沒有外鍵關聯，feed_item_children 對 feed_items 的外鍵（kind, ref_id）不受影響
--- ——見 init_schema.sql 對 feed_items 多型關聯的既有註解，同一種裁量延伸到這裡）。
-with inserted as (
-  insert into public.feed_items (family_id, kind, ref_id, occurred_at)
-  select 'fc000000-0000-4000-8000-000000000001', 'diary', gen_random_uuid(),
-         now() - (i * interval '17 minutes')
-    from generate_series(1, 5) i
-  returning ref_id, occurred_at
-)
-insert into public.feed_item_children (family_id, kind, ref_id, child_id, occurred_at)
-select 'fc000000-0000-4000-8000-000000000001', 'diary', ref_id,
-       '2c000000-0000-4000-8000-000000000001', occurred_at
-  from inserted;
+-- 標記資料集（見上方檔頭說明）。用暫存表而不是串接 CTE：`diaries` 的
+-- INSERT 要先完整跑完、讓 `feed_sync_diaries` 的 AFTER STATEMENT trigger 展開
+-- `feed_items` 之後，`diary_children` 的 INSERT 才能在自己的 `feed_sync_diary_
+-- children` trigger 裡 join 到剛展開的 `feed_items` 列拿到 occurred_at——串在同一句
+-- data-modifying CTE 裡，兩個 trigger 的執行時序沒有寫進 SQL 標準、不該依賴，拆成
+-- 兩個獨立敘述才是這個依賴關係唯一乾淨的表達方式（同 migration 內 create_diary_
+-- entry 先插 diaries、再插 diary_children 的既有兩步順序一致）。
+create temporary table tmp_perf_tagged_diaries as
+select gen_random_uuid() as id, current_date - d as entry_date
+  from generate_series(1, 150) d, generate_series(1, 4) n;
 
+insert into public.diaries (id, family_id, author_id, body, entry_date)
+select id, 'fc000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000001',
+       '效能測試日記', entry_date
+  from tmp_perf_tagged_diaries;
+
+insert into public.diary_children (family_id, diary_id, child_id)
+select 'fc000000-0000-4000-8000-000000000001', t.id, c.child_id
+  from tmp_perf_tagged_diaries t
+  cross join (values
+    ('2c000000-0000-4000-8000-000000000001'::uuid),
+    ('2c000000-0000-4000-8000-000000000002'::uuid)
+  ) as c(child_id);
+
+drop table tmp_perf_tagged_diaries;
+
+analyze public.diaries;
+analyze public.diary_children;
 analyze public.feed_items;
 analyze public.feed_item_children;
 analyze public.children;
@@ -463,13 +486,27 @@ declare
   v_hit bigint;
   v_read bigint;
   v_deep_cursor constant timestamptz := now() - interval '150000 minutes';
+  -- LS-121 R2（review M1）：分支 4 篩 child 的深頁游標要落在「標記資料集」自己的
+  -- 150 天深度以內，不能沿用分支 2 那個對著 20 萬列合成 bulk（跨度 200000 分鐘
+  -- ≈139 天）算出來的游標——R1 版本兩個分支共用同一個 v_deep_cursor，但標記資料集
+  -- 當時只有 5 列、時間穿插在最新附近，深游標落在資料範圍外，分支 4 回傳的其實是
+  -- 0 列（一次空的索引探查，不是一頁 20 列的成本，reviewer 實測指出）。這裡改用
+  -- 專屬游標，對齊新資料集的天數座標（第 75 天，落在 1～150 天中段，兩側都還有
+  -- 足夠列數，不會卡在邊界）。
+  v_deep_cursor_tagged constant timestamptz := (current_date - 75)::timestamp at time zone 'utc';
   v_max_uuid constant uuid := 'ffffffff-ffff-ffff-ffff-ffffffffffff';
   v_child constant uuid := '2c000000-0000-4000-8000-000000000001';
   v_family constant uuid := 'fc000000-0000-4000-8000-000000000001';
-  -- review 實測壞掉的版本是 3516／4638 buffers；warm-up 之後（見下）量到的是穩定
-  -- 成本，120 依然比壞掉的版本低了超過一個數量級，但比留了「首呼一次性成本」餘裕的
-  -- 200 更貼近真實的健康值，才不會讓門檻鬆到形同虛設。
-  c_buffer_budget constant bigint := 120;
+  -- LS-121 R2（review M1）：R1 的 120 是對著「child_ids 聚合探到空表」量出來的，
+  -- 不是本票新增熱路徑的真實成本——改成真實標記資料集（見上方 fixture 說明）後，
+  -- 實測四條分支穩定落在 30～140 buffers（篩 child 兩支分支的頁面每一列都要對
+  -- diary_children 做 2 次 PK 查找，成本隨 p_limit 線性成長、與資料總量無關——
+  -- reviewer 實測「篩 child，limit=20（產品預設）」136、「limit=100」406，
+  -- 約 3–7 buffers/列；這個形狀本身是健康的 keyset 行為，200 這個門檻只是給這個
+  -- 健康形狀足夠餘裕，不是在放寬對「退化成掃全表／退化成先 join 再排序」的偵測——
+  -- 那種退化是數量級級的（R1 review 實測壞掉的版本 3516／4638），200 依然低了一個
+  -- 數量級以上）。
+  c_buffer_budget constant bigint := 200;
   q record;
 begin
   -- warm-up：session 第一次呼叫 plpgsql 函式有一次性的 parse／plan cache 建置成本
@@ -478,7 +515,18 @@ begin
   perform * from public.get_family_timeline(v_family, null, null, null, 1);
 
   -- 四條分支「一律」透過真正呼叫 get_family_timeline() 本身量測（N1：不留手抄 SQL
-  -- 副本）。分支 4（篩 child＋帶游標）是這一輪新補的——第 1 輪只驗過分支 2／3。
+  -- 副本）。分支 4（篩 child＋帶游標）是 LS-48 review 第 2 輪新補的——第 1 輪只驗過
+  -- 分支 2／3。
+  --
+  -- LS-121 R2（review M1）：拿掉了原本的 `if v_plan ~ '\(SubPlan [0-9]+\)'` 斷言——
+  -- 這條對 plpgsql 函式呼叫恆為偽，不是門檻鬆了。reviewer 實測：
+  -- `explain (analyze, verbose, buffers) select * from get_family_timeline(...)`
+  -- 的完整輸出就是單一行 `Function Scan on public.get_family_timeline (...)`，
+  -- EXPLAIN 不會下鑽進 plpgsql 函式本體，本票新增的 correlated 子查詢（child_ids
+  -- 聚合）永遠不會被外層 EXPLAIN 看見，這條斷言從第一天就測不到任何東西、也不可能
+  -- 測到——不是本票造成的退化，是移除一個從未真的生效過的假防線，誠實反映「這四條
+  -- 分支的實質防線只剩 buffers」（見上方 c_buffer_budget 說明），不留一條看起來
+  -- 在把關、實際上是恆真句的斷言。
   for q in
     select * from (values
       (1, '分支 1：不篩 child、無游標（首頁）',
@@ -487,12 +535,12 @@ begin
       (2, '分支 2：不篩 child、有游標（深頁分頁）',
        format('select * from public.get_family_timeline(%L::uuid, null, %L::timestamptz, %L::uuid, 20)',
          v_family, v_deep_cursor, v_max_uuid)),
-      (3, '分支 3：篩 child、無游標（稀疏 child 第一頁）',
+      (3, '分支 3：篩 child、無游標（第一頁，資料集見上方 fixture 說明）',
        format('select * from public.get_family_timeline(%L::uuid, %L::uuid, null, null, 20)',
          v_family, v_child)),
-      (4, '分支 4：篩 child、有游標（稀疏 child 深頁——N1 補的缺口）',
+      (4, '分支 4：篩 child、有游標（深頁，落在標記資料集的第 75 天）',
        format('select * from public.get_family_timeline(%L::uuid, %L::uuid, %L::timestamptz, %L::uuid, 20)',
-         v_family, v_child, v_deep_cursor, v_max_uuid))
+         v_family, v_child, v_deep_cursor_tagged, v_max_uuid))
     ) as t(idx, label, stmt)
     order by idx
   loop
@@ -500,11 +548,6 @@ begin
     for v_line in execute 'explain (analyze, verbose, buffers) ' || q.stmt loop
       v_plan := v_plan || v_line || E'\n';
     end loop;
-
-    if v_plan ~ '\(SubPlan [0-9]+\)' then
-      raise exception E'FAIL 效能：get_family_timeline %（分支 %）的 plan 出現 correlated SubPlan\n%',
-        q.label, q.idx, v_plan;
-    end if;
 
     -- N2：buffers 同時加總 shared hit= 與 read=（不只算 hit，冷快取的 read= 一樣是
     -- 真實發生的頁面存取，只算 hit 會低估實際 I/O 成本）。
@@ -517,6 +560,21 @@ begin
     if v_buffers > c_buffer_budget then
       raise exception E'FAIL 效能：get_family_timeline %（分支 %）buffers=%（hit=% read=%，門檻 %）—— 疑似索引沒被正確選用，掃描量與資料總量成正比而不是與 limit 成正比\n%',
         q.label, q.idx, v_buffers, v_hit, v_read, c_buffer_budget, v_plan;
+    end if;
+
+    -- 分支 3／4 的頁面應該全部命中標記資料集（每列 kind=diary、真的走 diary_children
+    -- 聚合），不是 0 列的空探查——R1 review 的核心指控就是「分支 4 回傳 0 列」，這裡
+    -- 補一個正向斷言，之後有人不小心讓游標又跑到資料範圍外會直接紅，不必等人工複查
+    -- buffers 數字才發現。
+    if q.idx in (3, 4) then
+      declare
+        v_rowcount int;
+      begin
+        execute 'select count(*) from (' || q.stmt || ') t' into v_rowcount;
+        if v_rowcount = 0 then
+          raise exception 'FAIL 效能：get_family_timeline %（分支 %）回傳 0 列——游標或資料集範圍算錯了，這條分支量到的是空探查不是一頁真實資料', q.label, q.idx;
+        end if;
+      end;
     end if;
 
     raise notice 'ok 效能：get_family_timeline %（分支 %） buffers=%（hit=% read=%，門檻 ≤%）',

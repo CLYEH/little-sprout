@@ -377,6 +377,14 @@ race_case "同一篇日記：兩連線同時覆蓋孩子標記，終態必須是
   diary_children_race_setup.sql diary_children_race_s1.sql \
   diary_children_race_s2.sql diary_children_race_verify.sql
 
+# LS-121 R2（merge-reviewer PR #218 review M2）：set_album_children 完全沒有對
+# albums 下 UPDATE，開頭那句 `for update` 是唯一的序列化點（不像 update_diary_entry
+# 還有一句對 diaries 本體的 UPDATE 順便取鎖）——這組是這把鎖唯一有鑑別力的回歸測試，
+# mutation 自證見 PR handoff。
+race_case "同一本相簿：兩連線同時覆蓋孩子標記，終態必須是後 commit 一方的完整集合" \
+  album_children_race_setup.sql album_children_race_s1.sql \
+  album_children_race_s2.sql album_children_race_verify.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 delete from public.families where id in (
@@ -390,6 +398,7 @@ delete from public.families where id in (
   'f7000000-0000-4000-8000-000000000001',
   'f5000000-0000-4000-8000-000000000001',
   'f8000000-0000-4000-8000-000000000001',
+  'f0000000-0000-4000-8000-000000000001',
   '9a000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
@@ -405,6 +414,7 @@ delete from auth.users where id in (
   'eb000000-0000-4000-8000-000000000003',
   'ec000000-0000-4000-8000-000000000001',
   'e1000000-0000-4000-8000-000000000001',
+  'e2000000-0000-4000-8000-000000000001',
   'a9000000-0000-4000-8000-000000000001',
   'a8000000-0000-4000-8000-000000000001',
   'a7000000-0000-4000-8000-000000000001',
