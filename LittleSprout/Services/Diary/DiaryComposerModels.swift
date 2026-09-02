@@ -107,9 +107,14 @@ enum DiaryPhotoAddOutcome: Equatable {
 /// `DiaryComposerStore.resolveDiaryID` 的 memoized 分支比對用——`childIDs` 特意存成 `Set`
 /// 而不是 `[UUID]`：`selectedChildIDs` 本身就是集合，兩次呼叫之間即使集合內容相同，`Array(
 /// selectedChildIDs)` 的走訪順序也不保證一致，用陣列比較會有假陰性（誤判成「內容變了」，
-/// 白白多打一次 `update_diary_entry`）（merge-review R2 N1）。
+/// 白白多打一次 `update_diary_entry`）（merge-review R2 N1）。`entryDate` 存的是
+/// `BirthdayFormat.wireString(from:)` 算出來的字串、不是原始 `Date`（merge-review R3 q2）：
+/// `SupabaseDiaryAPIClient` 送出去的本來就只有年月日（`entryDate: BirthdayFormat.wireString
+/// (from: entryDate)`），比對全精度的 `Date` 會比實際送出的內容更嚴格——`DatePicker
+/// (displayedComponents: .date)` 目前產不出「同一天、不同時刻」的兩個值，所以今天不會誤判，
+/// 但比對範圍精準對齊「真正送出去的東西」，不留下未來漂移的空間。
 struct DiaryContentSnapshot: Equatable {
     let body: String
-    let entryDate: Date
+    let entryDateWireString: String
     let childIDs: Set<UUID>
 }

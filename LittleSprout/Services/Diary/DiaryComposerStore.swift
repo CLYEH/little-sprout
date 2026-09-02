@@ -225,7 +225,9 @@ final class DiaryComposerStore {
     /// `updateDiaryEntry`（全專案唯一沒有呼叫端的 RPC，見 R1 I5），確保重試送出的是使用者
     /// 剛剛編輯過的版本，不是靜默沿用舊內容。
     private func resolveDiaryID(body: String, entryDate: Date, childIDs: [UUID]) async throws -> UUID {
-        let snapshot = DiaryContentSnapshot(body: body, entryDate: entryDate, childIDs: Set(childIDs))
+        let snapshot = DiaryContentSnapshot(
+            body: body, entryDateWireString: BirthdayFormat.wireString(from: entryDate), childIDs: Set(childIDs)
+        )
         if let createdDiaryID {
             if createdDiarySnapshot != snapshot {
                 try await diaryAPIClient.updateDiaryEntry(
