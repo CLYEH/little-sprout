@@ -16,6 +16,12 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.settings)
     }
 
+    /// LS-126 delta 復審 m2：`TimelineView` 整體仍在 `tap-target-exemptions.txt`（其餘元件
+    /// 需要 seed 資料），這裡只蓋 Header 建立鈕（`.preview()` 空狀態即可渲染）。
+    func testTimelineViewDefaultState() {
+        assertAllTappablesMeetMinimum(.timelineDefaultState)
+    }
+
     /// 任一元件 <44pt 就用 `XCTFail` 記一筆——逐一累計，不是遇到第一個違規就提前結束，讓
     /// `tap-target-check.sh` 能一次點名所有違規者（LS-17 QA1 就是同一畫面上不只一顆違規）。
     /// merge-review R1 B1：先斷言畫面真的渲染出來，harness 靜默失效不會被誤判成「這個畫面

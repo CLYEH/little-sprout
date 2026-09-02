@@ -45,6 +45,13 @@ enum TapTargetGateHarness {
                     timelineStore: .preview()
                 )
             }
+        case .timelineDefaultState:
+            // `.preview()` 三個 store 皆空狀態（無家庭／無寶貝／無 feed），`ChildFilterBar`
+            // 因 `childrenStore.activeChildren.isEmpty` 不會渲染，畫面上唯一的可點元件就是
+            // Header 的「新增回憶」建立鈕——不需要任何 seed 資料就有代表性。
+            NavigationStack {
+                TimelineView(familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview())
+            }
         case .selfTestTooSmall:
             // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
             // accessibility／hit-test frame 實測仍貼著文字本身的天然大小，不會被外層 `.frame`
