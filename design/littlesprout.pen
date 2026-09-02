@@ -62916,7 +62916,7 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "sSpZK",
+                  "id": "FnLHJ",
                   "name": "Photo Grid",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -62924,14 +62924,14 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "djqGT",
+                      "id": "Nu0N4",
                       "name": "Grid Row",
                       "width": "fill_container",
                       "gap": 16,
                       "children": [
                         {
                           "type": "frame",
-                          "id": "fVDCo",
+                          "id": "WAP7d",
                           "name": "Print Cell",
                           "width": 172,
                           "fill": [
@@ -63059,11 +63059,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "u4pOfG",
+                              "id": "dbEG2",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 420,
+                              "height": 117,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -63072,7 +63072,7 @@
                               }
                             },
                             {
-                              "id": "J38eS6",
+                              "id": "sbFDN",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -63089,7 +63089,7 @@
                               }
                             },
                             {
-                              "id": "STgSL",
+                              "id": "oHkwF",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -63106,13 +63106,13 @@
                               }
                             },
                             {
-                              "id": "KZm8Z",
+                              "id": "v9ci6",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 439,
+                              "y": 136,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -63123,13 +63123,13 @@
                               }
                             },
                             {
-                              "id": "f6idx7",
+                              "id": "CHuKu",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 151,
-                              "y": 439,
+                              "y": 136,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -63143,7 +63143,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "R9jx7",
+                          "id": "NiHtE",
                           "name": "Print Cell",
                           "width": 172,
                           "fill": [
@@ -63271,11 +63271,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "s5Lhl",
+                              "id": "jZftL",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 420,
+                              "height": 208,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -63284,7 +63284,7 @@
                               }
                             },
                             {
-                              "id": "C3KDf",
+                              "id": "rM13O",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -63301,7 +63301,7 @@
                               }
                             },
                             {
-                              "id": "LIswW",
+                              "id": "rs4ih",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -63318,13 +63318,13 @@
                               }
                             },
                             {
-                              "id": "hPh4P",
+                              "id": "uF32v",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 439,
+                              "y": 227,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -63335,13 +63335,13 @@
                               }
                             },
                             {
-                              "id": "eDclL",
+                              "id": "gitDs",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 151,
-                              "y": 439,
+                              "y": 227,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -63357,14 +63357,14 @@
                     },
                     {
                       "type": "frame",
-                      "id": "PRTG1",
+                      "id": "zb7wg",
                       "name": "Grid Row",
                       "width": "fill_container",
                       "gap": 16,
                       "children": [
                         {
                           "type": "frame",
-                          "id": "v2Jsy",
+                          "id": "xnlYE",
                           "name": "Print Cell",
                           "width": 172,
                           "fill": [
@@ -63492,11 +63492,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "R1IHiO",
+                              "id": "LaA8i",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 420,
+                              "height": 156,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -63505,7 +63505,7 @@
                               }
                             },
                             {
-                              "id": "VAjKu",
+                              "id": "JDAaX",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -63522,7 +63522,7 @@
                               }
                             },
                             {
-                              "id": "Ic9FT",
+                              "id": "FUZRG",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -63539,13 +63539,13 @@
                               }
                             },
                             {
-                              "id": "tq7ik",
+                              "id": "e9211v",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 439,
+                              "y": 175,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -63556,13 +63556,13 @@
                               }
                             },
                             {
-                              "id": "Eb2wy",
+                              "id": "UC7rW",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 151,
-                              "y": 439,
+                              "y": 175,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -63576,7 +63576,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "QPmsB",
+                          "id": "dNDjr",
                           "name": "Print Cell",
                           "width": 172,
                           "fill": [
@@ -63704,11 +63704,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "ffGQ2",
+                              "id": "qhDcP",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 420,
+                              "height": 117,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -63717,7 +63717,7 @@
                               }
                             },
                             {
-                              "id": "p04uH",
+                              "id": "BE92j",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -63734,7 +63734,7 @@
                               }
                             },
                             {
-                              "id": "nNyu9",
+                              "id": "y2mOTu",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -63751,13 +63751,13 @@
                               }
                             },
                             {
-                              "id": "BUxWW",
+                              "id": "i5bYWP",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 439,
+                              "y": 136,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -63768,13 +63768,13 @@
                               }
                             },
                             {
-                              "id": "kOd5P",
+                              "id": "YFepf",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 151,
-                              "y": 439,
+                              "y": 136,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -67937,6 +67937,42 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "**掃描三：跨 parent 絕對座標碰撞**（sibling 交集掃描抓不到、`ctx.problems` 也抓不到的類別——BL-2 專屬）。方法：鎖定『容易出血的絕對定位類別』（Corner TL/TR/BL/BR、Selected Badge、Video Badge、Dragging Photo、Drop Target、Insert Line、Stack Sheet），逐板累加絕對座標，兩兩比對不同 parent 的矩形交集。**LS-119 全部 29 板結果：0 筆真缺陷**（唯二命中的『Drop Target × Insert Line』是刻意的父子包含關係——Insert Line 本來就畫在 Drop Target 內部，不是跨格碰撞，予以排除）。過程中額外抓到一個新問題：`f1wVw`／`bs8aE` 的 Insert Line（MJ-1 修復時新增）原本置中在 Drop Target 內（x=47），但 Dragging Photo 移開後的曝光區域是 Drop Target 右側 42.6pt，插入線置中反而落在被蓋住的區域——已改 x=75，重跑碰撞掃描確認插入線與拖曳縮圖 0 重疊。**掃描四：橫列溢出掃描修正方法論**（R5／R5-review 兩支掃描都沒開 `resolveInstances`，導致每個 parent 只記錄『最靠右的一個子節點』，系統性漏掉同位置的第二個溢出子節點——這正是 MJ-6 影片徽章被裁掉 8pt 卻兩支掃描都沒抓到的根因）。R6 改法：①`{resolveInstances:true}` ②同一 parent 下『所有』溢出子節點都記錄，不只最大的一個。重跑結果：52 個分類、284 筆（R5 收據 18 筆代表・宣告 115、reviewer 實測 233，本輪方法論修正後的真實數字更高，因為現在真正夠深入 instance descendants、且不再遺漏同位置的第二個溢出子節點如 Corner BR）。**逐類複核**：73＋73 筆 Print Cell 角托出血（TR/BR，既有母題規則）、27+27 筆 Photo Print 角托出血（resolveInstances 後才看得到的既有全站已知類別）、8+2+1×17 筆既有橫向可捲動 Photo Strip 延伸、4 筆 More Scrim/More Count 溢出（**查證為 disabled 子樹 bounds 快取失真假警報**——只有 `WitwS` 一個實例真的 enabled，該實例本身零溢出，其餘 4 筆全部掛在未 enable 的 Card Diary 實例上，非真缺陷）、1 筆 `Stress/05 建立家庭超長家庭名` Field Value 溢出（LS-18 既有畫面，非 LS-119 scope）、其餘為既有母題白名單類別（Selected Badge、Legal 連結、Google G Mark 等）。**無新增未分類真缺陷**。兩支新掃描的結果本身不寫進收據 JSON（維持 CI 現行 schema 不加鍵），完整記錄在此與 R6 handoff。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "xSSfb",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "kaM9e",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R7 · 照片改自然長寬比（使用者裁決，取代 R5「空白<20%」目標）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "pqf8T",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "使用者看 R6 核可頁後指出：`MjRcr` 左欄 2×2 格被拉成 156×420（1:2.69 直條）、`KjDsM` 3 欄同型——為了填滿欄高把照片拉成不合常理的細長條，不像真實照片。**使用者裁決：照片一律保持一般長寬比（4:3 橫／3:4 直／1:1，依素材），不得為填滿欄位而拉長或裁成細條；空白比例不再是硬指標（取代 R5 reviewer 的「<20%」目標，MJ-11／MJ-12 的空白比例數字自本輪起作廢，不再是驗收條件）。**改法：`MjRcr` 4 格改自然比例混排（左上 4:3 橫 117、右上 3:4 直 208、左下 1:1 方 156、右下 4:3 橫 117，cellW 172 不變，Photo Wrap 寬固定 156，只有高度依比例算），呈現「磚牆式」錯落版面而非齊高網格；欄底留白就留白（實測 Left 底 468 vs Right 底 435，兩欄現在自然接近，不需要刻意撐滿）。`KjDsM`（20 張壓測板）比照辦理：cellW 109.33（3 欄不變），高度依 3 種比例循環（4:3＝70、3:4＝124、1:1＝93）逐格指定，20 格呈現真實相簿常見的橫直穿插效果。**角托 y 隨每格實際 H 重算**（`H=8+wrapH+32`，`corner y=H−21`，公式沿用 R6 建立的統一算法，只是 wrapH 現在依格不同）：MjRcr 4 格／KjDsM 20 格皆重跑核對，**0 mismatch**（見下）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -79194,7 +79230,7 @@
       "name": "Stress / 13-iPad 日記詳情 · 20 張照片壓測",
       "clip": true,
       "width": 834,
-      "height": 1434,
+      "height": 1392,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -79263,7 +79299,7 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "kPVjQ",
+                  "id": "mLPvF",
                   "name": "Photo Grid",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -79271,14 +79307,14 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "TfEpx",
+                      "id": "MCDId",
                       "name": "Grid Row",
                       "width": "fill_container",
                       "gap": 16,
                       "children": [
                         {
                           "type": "frame",
-                          "id": "tkVJA",
+                          "id": "kK1cC",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -79406,11 +79442,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "rg5cf",
+                              "id": "X4kxS",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -79419,7 +79455,7 @@
                               }
                             },
                             {
-                              "id": "kLxTs",
+                              "id": "BaIQ9",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -79436,7 +79472,7 @@
                               }
                             },
                             {
-                              "id": "SPtMQ",
+                              "id": "fRvGE",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -79453,13 +79489,13 @@
                               }
                             },
                             {
-                              "id": "n2ODdd",
+                              "id": "xofNS",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -79470,13 +79506,13 @@
                               }
                             },
                             {
-                              "id": "OTB4X",
+                              "id": "aHVGe",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -79490,7 +79526,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "eYyiM",
+                          "id": "ToCGH",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -79618,11 +79654,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "ciBcR",
+                              "id": "laO3D",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 124,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -79631,7 +79667,7 @@
                               }
                             },
                             {
-                              "id": "Eyq3Z",
+                              "id": "Ua21G",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -79648,7 +79684,7 @@
                               }
                             },
                             {
-                              "id": "jUeaA",
+                              "id": "Qt7SA",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -79665,13 +79701,13 @@
                               }
                             },
                             {
-                              "id": "C28KYW",
+                              "id": "F1IHqS",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -79682,13 +79718,13 @@
                               }
                             },
                             {
-                              "id": "FriyW",
+                              "id": "kpFQ0",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -79702,7 +79738,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "tuyLC",
+                          "id": "uYFu3",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -79830,11 +79866,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "Plqpm",
+                              "id": "fYzs8",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 93,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -79843,7 +79879,7 @@
                               }
                             },
                             {
-                              "id": "TDssE",
+                              "id": "pygOt",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -79860,7 +79896,7 @@
                               }
                             },
                             {
-                              "id": "CRplk",
+                              "id": "xEkxh",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -79877,13 +79913,13 @@
                               }
                             },
                             {
-                              "id": "WBqRs",
+                              "id": "n3oys",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 112,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -79894,13 +79930,13 @@
                               }
                             },
                             {
-                              "id": "IulE0",
+                              "id": "RwhY4",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 112,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -79916,14 +79952,14 @@
                     },
                     {
                       "type": "frame",
-                      "id": "cf57a",
+                      "id": "IaSEL",
                       "name": "Grid Row",
                       "width": "fill_container",
                       "gap": 16,
                       "children": [
                         {
                           "type": "frame",
-                          "id": "dDdzw",
+                          "id": "r7RIi",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -80051,11 +80087,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "G0gYl",
+                              "id": "ogXG9",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -80064,7 +80100,7 @@
                               }
                             },
                             {
-                              "id": "B9aIQ",
+                              "id": "CDnNs",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -80081,7 +80117,7 @@
                               }
                             },
                             {
-                              "id": "satxx",
+                              "id": "l3Nh6F",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -80098,13 +80134,13 @@
                               }
                             },
                             {
-                              "id": "V7SuDS",
+                              "id": "TR46J",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -80115,13 +80151,13 @@
                               }
                             },
                             {
-                              "id": "D760Y",
+                              "id": "EHJLR",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -80135,7 +80171,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "Dw62w",
+                          "id": "jYCaE",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -80263,11 +80299,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "pZI4s",
+                              "id": "SPmzn",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 124,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -80276,7 +80312,7 @@
                               }
                             },
                             {
-                              "id": "HHj7V",
+                              "id": "MVyCe",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -80293,7 +80329,7 @@
                               }
                             },
                             {
-                              "id": "BiVXe",
+                              "id": "jT2CD",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -80310,13 +80346,13 @@
                               }
                             },
                             {
-                              "id": "i2kA8",
+                              "id": "ChbBQ",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -80327,13 +80363,13 @@
                               }
                             },
                             {
-                              "id": "K5r2sz",
+                              "id": "Tr4rW",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -80347,7 +80383,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "sUOSB",
+                          "id": "W81mI",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -80475,11 +80511,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "nFXTd",
+                              "id": "IGEW5",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 93,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -80488,7 +80524,7 @@
                               }
                             },
                             {
-                              "id": "isKub",
+                              "id": "SrgJq",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -80505,7 +80541,7 @@
                               }
                             },
                             {
-                              "id": "W0PQ3d",
+                              "id": "kooVR",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -80522,13 +80558,13 @@
                               }
                             },
                             {
-                              "id": "lk9HW",
+                              "id": "xYDhy",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 112,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -80539,13 +80575,13 @@
                               }
                             },
                             {
-                              "id": "V2Vts6",
+                              "id": "ZFJiY",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 112,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -80561,14 +80597,14 @@
                     },
                     {
                       "type": "frame",
-                      "id": "eGo0M",
+                      "id": "FwNw7",
                       "name": "Grid Row",
                       "width": "fill_container",
                       "gap": 16,
                       "children": [
                         {
                           "type": "frame",
-                          "id": "MkxPN",
+                          "id": "D79iU",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -80696,11 +80732,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "eBIko",
+                              "id": "n4Tlt",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -80709,7 +80745,7 @@
                               }
                             },
                             {
-                              "id": "JLCbl",
+                              "id": "K2e2q",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -80726,7 +80762,7 @@
                               }
                             },
                             {
-                              "id": "lnh4B",
+                              "id": "y8Bv9Y",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -80743,13 +80779,13 @@
                               }
                             },
                             {
-                              "id": "fAl5B",
+                              "id": "vvgPf",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -80760,13 +80796,13 @@
                               }
                             },
                             {
-                              "id": "voS3p",
+                              "id": "koGZJ",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -80780,7 +80816,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "KRPk7",
+                          "id": "IEg6w",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -80908,11 +80944,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "xyglU",
+                              "id": "uVmFc",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 124,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -80921,7 +80957,7 @@
                               }
                             },
                             {
-                              "id": "L3Tqz",
+                              "id": "hUJfD",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -80938,7 +80974,7 @@
                               }
                             },
                             {
-                              "id": "soRXF",
+                              "id": "g0AiB",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -80955,13 +80991,13 @@
                               }
                             },
                             {
-                              "id": "rpQCg",
+                              "id": "o9kgFX",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -80972,13 +81008,13 @@
                               }
                             },
                             {
-                              "id": "JT09s",
+                              "id": "zFfxb",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -80992,7 +81028,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "aiMzs",
+                          "id": "BsYFt",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -81120,11 +81156,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "otL3G",
+                              "id": "goPIk",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 93,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -81133,7 +81169,7 @@
                               }
                             },
                             {
-                              "id": "RLSe0",
+                              "id": "X50du9",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -81150,7 +81186,7 @@
                               }
                             },
                             {
-                              "id": "Kw5xX",
+                              "id": "cgLM2",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -81167,13 +81203,13 @@
                               }
                             },
                             {
-                              "id": "BFPtD",
+                              "id": "giNEQ",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 112,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -81184,13 +81220,13 @@
                               }
                             },
                             {
-                              "id": "FFg3v",
+                              "id": "KfZnY",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 112,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -81206,14 +81242,14 @@
                     },
                     {
                       "type": "frame",
-                      "id": "qqsSb",
+                      "id": "i0tYZV",
                       "name": "Grid Row",
                       "width": "fill_container",
                       "gap": 16,
                       "children": [
                         {
                           "type": "frame",
-                          "id": "wSMqo",
+                          "id": "d5IbCL",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -81341,11 +81377,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "kFTGw",
+                              "id": "foitK",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -81354,7 +81390,7 @@
                               }
                             },
                             {
-                              "id": "P9xcvc",
+                              "id": "FvUcl",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -81371,7 +81407,7 @@
                               }
                             },
                             {
-                              "id": "LHJN8",
+                              "id": "O9qd3",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -81388,13 +81424,13 @@
                               }
                             },
                             {
-                              "id": "p11Syl",
+                              "id": "AU3Fr",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -81405,13 +81441,13 @@
                               }
                             },
                             {
-                              "id": "ki8pC",
+                              "id": "UOEmP",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -81425,7 +81461,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "VxhRq",
+                          "id": "q5x3b",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -81553,11 +81589,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "k1qtq2",
+                              "id": "I3jvq",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 124,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -81566,7 +81602,7 @@
                               }
                             },
                             {
-                              "id": "N27C3",
+                              "id": "J4N6Y",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -81583,7 +81619,7 @@
                               }
                             },
                             {
-                              "id": "IYroT",
+                              "id": "hv0UG",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -81600,13 +81636,13 @@
                               }
                             },
                             {
-                              "id": "GSArZ",
+                              "id": "lZDWp",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -81617,13 +81653,13 @@
                               }
                             },
                             {
-                              "id": "Xl47a",
+                              "id": "U9Zayl",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -81637,7 +81673,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "lJrDb",
+                          "id": "QMpd1",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -81765,11 +81801,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "SbQm8",
+                              "id": "BllV0",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 93,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -81778,7 +81814,7 @@
                               }
                             },
                             {
-                              "id": "PshGm",
+                              "id": "CfTrx",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -81795,7 +81831,7 @@
                               }
                             },
                             {
-                              "id": "cxYqk",
+                              "id": "GEhNV",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -81812,13 +81848,13 @@
                               }
                             },
                             {
-                              "id": "XU4BA",
+                              "id": "kDjEk",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 112,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -81829,13 +81865,13 @@
                               }
                             },
                             {
-                              "id": "c9IZ9",
+                              "id": "u8Bgo8",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 112,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -81851,14 +81887,14 @@
                     },
                     {
                       "type": "frame",
-                      "id": "eK9Ja",
+                      "id": "Kpv0H",
                       "name": "Grid Row",
                       "width": "fill_container",
                       "gap": 16,
                       "children": [
                         {
                           "type": "frame",
-                          "id": "oCUp8",
+                          "id": "wa7wK",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -81986,11 +82022,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "Q0roj8",
+                              "id": "I3wluh",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -81999,7 +82035,7 @@
                               }
                             },
                             {
-                              "id": "uioTG",
+                              "id": "uI8ml",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -82016,7 +82052,7 @@
                               }
                             },
                             {
-                              "id": "v2jcSF",
+                              "id": "BWZEm",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -82033,13 +82069,13 @@
                               }
                             },
                             {
-                              "id": "s4U3AW",
+                              "id": "sKD3o",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -82050,13 +82086,13 @@
                               }
                             },
                             {
-                              "id": "KUQNK",
+                              "id": "CDFtq",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -82070,7 +82106,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "F1gSi",
+                          "id": "IcK2k",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -82198,11 +82234,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "MRna1",
+                              "id": "TrL92",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 124,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -82211,7 +82247,7 @@
                               }
                             },
                             {
-                              "id": "T8bHzh",
+                              "id": "AMzmu",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -82228,7 +82264,7 @@
                               }
                             },
                             {
-                              "id": "pf2Xr",
+                              "id": "cLaKC",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -82245,13 +82281,13 @@
                               }
                             },
                             {
-                              "id": "On2WL",
+                              "id": "aybix",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -82262,13 +82298,13 @@
                               }
                             },
                             {
-                              "id": "Eg9bF",
+                              "id": "f62RYt",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -82282,7 +82318,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "Q9awrT",
+                          "id": "bEG26",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -82410,11 +82446,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "P7WhB",
+                              "id": "m4QRj",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 93,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -82423,7 +82459,7 @@
                               }
                             },
                             {
-                              "id": "hrrTK",
+                              "id": "nlDQd",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -82440,7 +82476,7 @@
                               }
                             },
                             {
-                              "id": "IPZ7b",
+                              "id": "NTvVq",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -82457,13 +82493,13 @@
                               }
                             },
                             {
-                              "id": "t0WCw7",
+                              "id": "WcBfI",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 112,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -82474,13 +82510,13 @@
                               }
                             },
                             {
-                              "id": "gXzh4",
+                              "id": "yN5GH",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 112,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -82496,14 +82532,14 @@
                     },
                     {
                       "type": "frame",
-                      "id": "aLDpl",
+                      "id": "G7KT0",
                       "name": "Grid Row",
                       "width": "fill_container",
                       "gap": 16,
                       "children": [
                         {
                           "type": "frame",
-                          "id": "sh8UV",
+                          "id": "HuqHR",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -82631,11 +82667,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "r3ZBwb",
+                              "id": "Aw3xE",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -82644,7 +82680,7 @@
                               }
                             },
                             {
-                              "id": "pF53t",
+                              "id": "qZPAb",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -82661,7 +82697,7 @@
                               }
                             },
                             {
-                              "id": "QLibL",
+                              "id": "aYa0y",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -82678,13 +82714,13 @@
                               }
                             },
                             {
-                              "id": "p5Th2",
+                              "id": "iFIgV",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -82695,13 +82731,13 @@
                               }
                             },
                             {
-                              "id": "O878h",
+                              "id": "TmFuA",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -82715,7 +82751,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "zFQnJ",
+                          "id": "z0Xgu6",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -82843,11 +82879,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "H5F7T",
+                              "id": "lOvGm",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 124,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -82856,7 +82892,7 @@
                               }
                             },
                             {
-                              "id": "QwtKp",
+                              "id": "qcKm0",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -82873,7 +82909,7 @@
                               }
                             },
                             {
-                              "id": "q1gTTd",
+                              "id": "txbMJ",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -82890,13 +82926,13 @@
                               }
                             },
                             {
-                              "id": "kx90h",
+                              "id": "O6Grh",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -82907,13 +82943,13 @@
                               }
                             },
                             {
-                              "id": "cbBJH",
+                              "id": "O25IUu",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -82927,7 +82963,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "cUz24",
+                          "id": "TTYM2",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -83055,11 +83091,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "R5Qs8C",
+                              "id": "C1JTM5",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 93,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -83068,7 +83104,7 @@
                               }
                             },
                             {
-                              "id": "gQA3t",
+                              "id": "rVUfr",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -83085,7 +83121,7 @@
                               }
                             },
                             {
-                              "id": "D4HvDq",
+                              "id": "A4og7z",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -83102,13 +83138,13 @@
                               }
                             },
                             {
-                              "id": "jtSSs",
+                              "id": "uorz3",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 112,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -83119,13 +83155,13 @@
                               }
                             },
                             {
-                              "id": "n3HtN",
+                              "id": "j1bsRb",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 112,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -83141,14 +83177,14 @@
                     },
                     {
                       "type": "frame",
-                      "id": "h5o6EV",
+                      "id": "UJfvw",
                       "name": "Grid Row",
                       "width": "fill_container",
                       "gap": 16,
                       "children": [
                         {
                           "type": "frame",
-                          "id": "xnA2V",
+                          "id": "ksOjY",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -83276,11 +83312,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "E308H",
+                              "id": "JAEbd",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -83289,7 +83325,7 @@
                               }
                             },
                             {
-                              "id": "pgtVC",
+                              "id": "V19qZ2",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -83306,7 +83342,7 @@
                               }
                             },
                             {
-                              "id": "g7waW",
+                              "id": "AvLa1",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -83323,13 +83359,13 @@
                               }
                             },
                             {
-                              "id": "j3wyl2",
+                              "id": "O7whA",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -83340,13 +83376,13 @@
                               }
                             },
                             {
-                              "id": "Fvl0j",
+                              "id": "zhNXH",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -83360,7 +83396,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "l2hQK",
+                          "id": "kID81",
                           "name": "Print Cell",
                           "width": 109.33,
                           "fill": [
@@ -83488,11 +83524,11 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "niqdg",
+                              "id": "G8bGiu",
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 130,
+                              "height": 124,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -83501,7 +83537,7 @@
                               }
                             },
                             {
-                              "id": "jwv9C",
+                              "id": "gXBTa",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TL",
@@ -83518,7 +83554,7 @@
                               }
                             },
                             {
-                              "id": "a1WTp5",
+                              "id": "sEFs0",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner TR",
@@ -83535,13 +83571,13 @@
                               }
                             },
                             {
-                              "id": "VN0IF",
+                              "id": "S5Emf",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -83552,13 +83588,13 @@
                               }
                             },
                             {
-                              "id": "h6yif",
+                              "id": "NSaL5",
                               "type": "ref",
                               "ref": "GEBcf",
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 149,
+                              "y": 143,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
