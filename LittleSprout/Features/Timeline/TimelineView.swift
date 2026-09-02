@@ -92,7 +92,7 @@ struct TimelineView: View {
     private func feedScrollView(columns: Int) -> some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: AppSpacing.section) {
-                if timelineStore.entries.isEmpty {
+                if renderableEntries.isEmpty {
                     emptyOrLoadingState
                         .padding(.horizontal, AppSpacing.screenPad)
                         .padding(.top, AppSpacing.section)
@@ -112,8 +112,15 @@ struct TimelineView: View {
         }
     }
 
+    /// merge-review R1 m3：`content == nil`（指到的 diary／album／media 因硬刪或 RLS 讀不到、
+    /// 批次組裝那支剛好失敗）的項目 `cardView` 畫的是 `EmptyView()`——濾掉這種項目再分組，
+    /// 不然會出現「只有 Day Divider、底下沒有卡片」的一天，看起來像空狀態卻不是空狀態畫面。
+    private var renderableEntries: [TimelineEntry] {
+        timelineStore.entries.filter { $0.content != nil }
+    }
+
     private var dayGroups: [TimelineDayGrouping.Group] {
-        TimelineDayGrouping.group(timelineStore.entries)
+        TimelineDayGrouping.group(renderableEntries)
     }
 
     @ViewBuilder
@@ -157,10 +164,26 @@ struct TimelineView: View {
     }
 
     /// 捲到最後幾筆時觸發載入下一頁——不是捲到絕對底部才觸發，避免使用者要等到看到
-    /// 螢幕最底才補資料的空拍。
+    /// 螢幕最底才補資料的空拍。merge-review R1 m2：失敗時不能只留一個轉不停也不會重試的
+    /// `ProgressView`——`.task` 只在這個 view 第一次出現時跑一次，`loadMoreState` 變成
+    /// `.failure` 後 `hasMorePages` 依然是 true，轉圈會停在畫面底部卡住。失敗時改顯示
+    /// 錯誤訊息＋可點的「重新載入」，不再顯示轉圈（因此也沒有懸而不決的 `.task`）。
+    @ViewBuilder
     private var loadMoreTrigger: some View {
-        Group {
-            if timelineStore.hasMorePages {
+        if timelineStore.hasMorePages {
+            if case .failure(let error) = timelineStore.loadMoreState {
+                VStack(spacing: AppSpacing.tight) {
+                    Text(error.userFacingMessage)
+                        .appFont(.note)
+                        .foregroundStyle(Color.lsTextSecondary)
+                    Button("重新載入") {
+                        Task { await timelineStore.loadMore() }
+                    }
+                    .appFont(.body, weight: .semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, AppSpacing.item)
+            } else {
                 ProgressView()
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, AppSpacing.item)
@@ -171,12 +194,33 @@ struct TimelineView: View {
         }
     }
 
+    /// merge-review R1 m1：`refreshState == .failure` 之前跟「還沒有回憶」共用同一個空狀態
+    /// 文案——離線或 RPC 500 會被呈現成「你家還沒有內容」，且沒有重試入口。失敗時改顯示
+    /// 錯誤訊息＋「重新載入」，跟 `DiaryDetailView` 的行內錯誤提示一致（同一套語彙：
+    /// `$text-primary` ＋ circle-alert，不用 danger，見 brand skill 規則 8）。
     @ViewBuilder
     private var emptyOrLoadingState: some View {
-        if timelineStore.refreshState.isSubmitting {
+        switch timelineStore.refreshState {
+        case .submitting:
             ProgressView()
                 .frame(maxWidth: .infinity)
-        } else {
+        case .failure(let error):
+            VStack(spacing: AppSpacing.item) {
+                HStack(spacing: AppSpacing.tight) {
+                    Image(systemName: "exclamationmark.circle").appIconFrame(.small)
+                    Text(error.userFacingMessage).appFont(.note)
+                }
+                .foregroundStyle(Color.lsTextPrimary)
+                Button("重新載入") {
+                    Task {
+                        guard let familyID = familyStore.myFamily?.id else { return }
+                        await timelineStore.refresh(familyID: familyID, childID: selectedChildID)
+                    }
+                }
+                .appFont(.body, weight: .semibold)
+            }
+            .frame(maxWidth: .infinity)
+        case .idle, .success:
             ContentUnavailableView(
                 "還沒有回憶",
                 systemImage: "photo.stack",

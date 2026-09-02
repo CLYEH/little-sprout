@@ -68,13 +68,17 @@ struct DiaryDetailView: View {
                 photoWallSection
                 commentsPlaceholder
             }
-            .padding(AppSpacing.screenPad)
+            // merge-review R1 M6：`.background` 必須掛在 `.padding` 之前（同 `ChildFilterBar`
+            // 的既有寫法，見該檔）——`.background` 接在 `.padding` 之後量到的是「已經加上
+            // padding 那一層」的 frame，會比照片牆真正可用的內容寬多 2×`screenPad`（48pt），
+            // 讓 `MasonryLayout.place` 算出過寬的欄寬、照片牆貼齊螢幕邊緣，24pt 版心留白消失。
             .background(
                 GeometryReader { proxy in
                     Color.clear.onAppear { photoWallWidth = proxy.size.width }
                         .onChange(of: proxy.size.width) { _, newValue in photoWallWidth = newValue }
                 }
             )
+            .padding(AppSpacing.screenPad)
         }
     }
 
@@ -84,8 +88,7 @@ struct DiaryDetailView: View {
         ScrollView {
             HStack(alignment: .top, spacing: AppSpacing.block) {
                 MasonryPhotoWallView(
-                    photos: photos, containerWidth: 360, timelineStore: timelineStore,
-                    onTapVideo: { playingVideo = PlayingVideo(url: $0.signedURL ?? URL(string: "about:blank")!) }
+                    photos: photos, containerWidth: 360, timelineStore: timelineStore, onTapVideo: playVideo
                 )
                 .frame(width: 360, alignment: .leading)
 
@@ -113,6 +116,13 @@ struct DiaryDetailView: View {
         }
     }
 
+    /// merge-review R1 m4：簽名失敗（`signedURL == nil`）的影片格不該還能點開一個播不出
+    /// 東西的全螢幕播放器——原寫法 `?? URL(string: "about:blank")!` 會讓這種格仍然可點。
+    private func playVideo(_ media: MediaContent) {
+        guard let url = media.signedURL else { return }
+        playingVideo = PlayingVideo(url: url)
+    }
+
     private func bodyText(_ content: DiaryContent) -> some View {
         Text(content.body)
             .appFont(.body)
@@ -123,8 +133,7 @@ struct DiaryDetailView: View {
     private var photoWallSection: some View {
         if !photos.isEmpty {
             MasonryPhotoWallView(
-                photos: photos, containerWidth: photoWallWidth, timelineStore: timelineStore,
-                onTapVideo: { playingVideo = PlayingVideo(url: $0.signedURL ?? URL(string: "about:blank")!) }
+                photos: photos, containerWidth: photoWallWidth, timelineStore: timelineStore, onTapVideo: playVideo
             )
         } else if case .failure(let error) = loadState {
             // 日記內文本身載入成功、但附照那支查詢失敗時的行內提示——不吞掉錯誤
