@@ -43062,121 +43062,195 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "qZYHy",
+                      "id": "bn6ny",
                       "name": "Option Row",
                       "width": "fill_container",
                       "fill": "#00000000",
                       "cornerRadius": "$radius-md",
-                      "gap": "$sp-label",
                       "padding": [
                         "$ctl-pad-md",
                         "$sp-label"
                       ],
+                      "justifyContent": "space_between",
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "id": "adhYR",
-                          "name": "Icon",
-                          "width": 26,
-                          "height": 26,
-                          "icon": "circle-slash",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
+                          "type": "frame",
+                          "id": "nsJqg",
+                          "name": "Left",
+                          "gap": "$sp-label",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "w1Rd1C",
+                              "name": "Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "circle-slash",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "CER2W",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "不指定",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "600"
+                            }
+                          ]
                         },
                         {
-                          "type": "text",
-                          "id": "Q93nd",
-                          "name": "Label",
-                          "fill": "$text-primary",
-                          "content": "不指定",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "600"
+                          "type": "frame",
+                          "id": "ikX7c",
+                          "name": "Checkbox",
+                          "width": 22,
+                          "height": 22,
+                          "fill": "#00000000",
+                          "cornerRadius": "$radius-full",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5
                         }
                       ]
                     },
                     {
                       "type": "frame",
-                      "id": "grRNS",
+                      "id": "FGQ59",
                       "name": "Option Row",
                       "width": "fill_container",
                       "fill": "$accent-soft",
                       "cornerRadius": "$radius-md",
-                      "gap": "$sp-label",
                       "padding": [
                         "$ctl-pad-md",
                         "$sp-label"
                       ],
+                      "justifyContent": "space_between",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "RA5YB",
-                          "type": "ref",
-                          "ref": "RaaIf",
-                          "name": "Avatar",
-                          "descendants": {
-                            "A30rIX": {
-                              "content": "安"
+                          "type": "frame",
+                          "id": "E92x46",
+                          "name": "Left",
+                          "gap": "$sp-label",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "id": "cGewx",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar",
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "安"
+                                }
+                              }
+                            },
+                            {
+                              "type": "text",
+                              "id": "AdPex",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "小安",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "700"
                             }
-                          }
+                          ]
                         },
                         {
-                          "type": "text",
-                          "id": "uYn8V",
-                          "name": "Label",
-                          "fill": "$text-primary",
-                          "content": "小安",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "icon",
-                          "id": "LGHPd",
-                          "name": "Check",
+                          "type": "frame",
+                          "id": "zcA75",
+                          "name": "Checkbox",
                           "width": 22,
                           "height": 22,
-                          "icon": "check",
-                          "library": "lucide",
-                          "fill": "$text-primary"
+                          "fill": "$text-primary",
+                          "cornerRadius": "$radius-full",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Q2dA6v",
+                              "name": "Check",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "check",
+                              "library": "lucide",
+                              "fill": "$surface"
+                            }
+                          ]
                         }
                       ]
                     },
                     {
                       "type": "frame",
-                      "id": "oKZwI",
+                      "id": "XexY9",
                       "name": "Option Row",
                       "width": "fill_container",
-                      "fill": "#00000000",
+                      "fill": "$accent-soft",
                       "cornerRadius": "$radius-md",
-                      "gap": "$sp-label",
                       "padding": [
                         "$ctl-pad-md",
                         "$sp-label"
                       ],
+                      "justifyContent": "space_between",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "rWP4d",
-                          "type": "ref",
-                          "ref": "RaaIf",
-                          "name": "Avatar",
-                          "descendants": {
-                            "A30rIX": {
-                              "content": "軒"
+                          "type": "frame",
+                          "id": "MwiV9",
+                          "name": "Left",
+                          "gap": "$sp-label",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "id": "XiZBt",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar",
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "軒"
+                                }
+                              }
+                            },
+                            {
+                              "type": "text",
+                              "id": "wOeJB",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "小軒",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "700"
                             }
-                          }
+                          ]
                         },
                         {
-                          "type": "text",
-                          "id": "rH0oA",
-                          "name": "Label",
+                          "type": "frame",
+                          "id": "x8RqGQ",
+                          "name": "Checkbox",
+                          "width": 22,
+                          "height": 22,
                           "fill": "$text-primary",
-                          "content": "小軒",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "600"
+                          "cornerRadius": "$radius-full",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "BCt9d",
+                              "name": "Check",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "check",
+                              "library": "lucide",
+                              "fill": "$surface"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -52464,6 +52538,22 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "text",
+              "id": "x7k2o6",
+              "x": 0,
+              "y": 0,
+              "name": "Multi Caption",
+              "enabled": false,
+              "fill": "$print-ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container(0)",
+              "content": "小安 2 歲 3 個月 · 小明 8 個月",
+              "textAlign": "right",
+              "fontFamily": "$font",
+              "fontSize": "$fs-note",
+              "fontWeight": "600"
             }
           ]
         }
@@ -55894,7 +55984,7 @@
       "name": "LS-21 / 12 日記編輯器 (iPhone)",
       "clip": true,
       "width": 393,
-      "height": 910,
+      "height": 906,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -56549,16 +56639,15 @@
                 },
                 {
                   "type": "frame",
-                  "id": "Pair2",
+                  "id": "NZY98",
                   "name": "Field Box",
                   "width": "fill_container",
-                  "height": 60,
                   "fill": "$surface",
                   "cornerRadius": "$radius-md",
                   "stroke": "$control-line",
                   "strokeWidth": 1.5,
                   "padding": [
-                    0,
+                    "$sp-group",
                     "$inset-card"
                   ],
                   "justifyContent": "space_between",
@@ -56566,31 +56655,60 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "s701h4",
+                      "id": "fQSXO",
                       "name": "Left",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "wplxa",
-                          "type": "ref",
-                          "ref": "RaaIf",
-                          "name": "Avatar",
-                          "width": 32,
+                          "type": "frame",
+                          "id": "i47OjS",
+                          "name": "Avatar Stack",
+                          "width": 52,
                           "height": 32,
-                          "descendants": {
-                            "A30rIX": {
-                              "content": "安",
-                              "fontSize": "$fs-note"
+                          "children": [
+                            {
+                              "id": "abfZE",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 1",
+                              "width": 32,
+                              "height": 32,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "安"
+                                }
+                              }
+                            },
+                            {
+                              "id": "wOzaO",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 2",
+                              "width": 32,
+                              "height": 32,
+                              "layoutPosition": "absolute",
+                              "x": 20,
+                              "y": 0,
+                              "stroke": "$surface",
+                              "strokeWidth": 2,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "軒"
+                                }
+                              }
                             }
-                          }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "ELsD6",
+                          "id": "cRhTj",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "小安",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安、小軒",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -56599,7 +56717,7 @@
                     },
                     {
                       "type": "icon",
-                      "id": "jv63R",
+                      "id": "DYE1x",
                       "name": "Chevron",
                       "width": 22,
                       "height": 22,
@@ -56691,7 +56809,7 @@
       "name": "LS-21 / 12b 日記編輯器 · 發佈中",
       "clip": true,
       "width": 393,
-      "height": 910,
+      "height": 906,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -57302,16 +57420,15 @@
                 },
                 {
                   "type": "frame",
-                  "id": "H6TF5",
+                  "id": "dYsj9",
                   "name": "Field Box",
                   "width": "fill_container",
-                  "height": 60,
-                  "fill": "$surface-2",
+                  "fill": "$surface",
                   "cornerRadius": "$radius-md",
-                  "stroke": "$surface-2",
+                  "stroke": "$control-line",
                   "strokeWidth": 1.5,
                   "padding": [
-                    0,
+                    "$sp-group",
                     "$inset-card"
                   ],
                   "justifyContent": "space_between",
@@ -57319,31 +57436,62 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "LIX7l",
+                      "id": "SYNeb",
                       "name": "Left",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "ZtFRj",
-                          "type": "ref",
-                          "ref": "RaaIf",
-                          "name": "Avatar",
-                          "width": 32,
+                          "type": "frame",
+                          "id": "TRWXE",
+                          "name": "Avatar Stack",
+                          "width": 52,
                           "height": 32,
-                          "descendants": {
-                            "A30rIX": {
-                              "content": "安",
-                              "fontSize": "$fs-note"
+                          "children": [
+                            {
+                              "id": "ErQS0",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 1",
+                              "width": 32,
+                              "height": 32,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "安",
+                                  "fontSize": 14
+                                }
+                              }
+                            },
+                            {
+                              "id": "hrCUF",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 2",
+                              "width": 32,
+                              "height": 32,
+                              "layoutPosition": "absolute",
+                              "x": 20,
+                              "y": 0,
+                              "stroke": "$surface",
+                              "strokeWidth": 2,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "軒",
+                                  "fontSize": 14
+                                }
+                              }
                             }
-                          }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "wBSDO",
+                          "id": "Y1CSj",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "小安",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安、小軒",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -57352,7 +57500,7 @@
                     },
                     {
                       "type": "icon",
-                      "id": "w52SOO",
+                      "id": "LGjVB",
                       "name": "Chevron",
                       "width": 22,
                       "height": 22,
@@ -57442,7 +57590,7 @@
       "name": "LS-21 / 12c 日記編輯器 · 發佈失敗",
       "clip": true,
       "width": 393,
-      "height": 976,
+      "height": 972,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -58053,16 +58201,15 @@
                 },
                 {
                   "type": "frame",
-                  "id": "O4RvAI",
+                  "id": "Jrny6",
                   "name": "Field Box",
                   "width": "fill_container",
-                  "height": 60,
                   "fill": "$surface",
                   "cornerRadius": "$radius-md",
                   "stroke": "$control-line",
                   "strokeWidth": 1.5,
                   "padding": [
-                    0,
+                    "$sp-group",
                     "$inset-card"
                   ],
                   "justifyContent": "space_between",
@@ -58070,31 +58217,62 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "oTLS6",
+                      "id": "H1Sso",
                       "name": "Left",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "ddStq",
-                          "type": "ref",
-                          "ref": "RaaIf",
-                          "name": "Avatar",
-                          "width": 32,
+                          "type": "frame",
+                          "id": "SnF5L",
+                          "name": "Avatar Stack",
+                          "width": 52,
                           "height": 32,
-                          "descendants": {
-                            "A30rIX": {
-                              "content": "安",
-                              "fontSize": "$fs-note"
+                          "children": [
+                            {
+                              "id": "unT5D",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 1",
+                              "width": 32,
+                              "height": 32,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "安",
+                                  "fontSize": 14
+                                }
+                              }
+                            },
+                            {
+                              "id": "q0LFk",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 2",
+                              "width": 32,
+                              "height": 32,
+                              "layoutPosition": "absolute",
+                              "x": 20,
+                              "y": 0,
+                              "stroke": "$surface",
+                              "strokeWidth": 2,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "軒",
+                                  "fontSize": 14
+                                }
+                              }
                             }
-                          }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "JgkKF",
+                          "id": "fY7B3",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "小安",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安、小軒",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -58103,7 +58281,7 @@
                     },
                     {
                       "type": "icon",
-                      "id": "hLryC",
+                      "id": "MWbTQ",
                       "name": "Chevron",
                       "width": 22,
                       "height": 22,
@@ -58243,7 +58421,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 910,
+      "height": 906,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -58854,16 +59032,15 @@
                 },
                 {
                   "type": "frame",
-                  "id": "CCQvv",
+                  "id": "EvrJz",
                   "name": "Field Box",
                   "width": "fill_container",
-                  "height": 60,
                   "fill": "$surface",
                   "cornerRadius": "$radius-md",
                   "stroke": "$control-line",
                   "strokeWidth": 1.5,
                   "padding": [
-                    0,
+                    "$sp-group",
                     "$inset-card"
                   ],
                   "justifyContent": "space_between",
@@ -58871,31 +59048,62 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "gMqUl",
+                      "id": "KuENB",
                       "name": "Left",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "habtN",
-                          "type": "ref",
-                          "ref": "RaaIf",
-                          "name": "Avatar",
-                          "width": 32,
+                          "type": "frame",
+                          "id": "GPHax",
+                          "name": "Avatar Stack",
+                          "width": 52,
                           "height": 32,
-                          "descendants": {
-                            "A30rIX": {
-                              "content": "安",
-                              "fontSize": "$fs-note"
+                          "children": [
+                            {
+                              "id": "GU32G",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 1",
+                              "width": 32,
+                              "height": 32,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "安",
+                                  "fontSize": 14
+                                }
+                              }
+                            },
+                            {
+                              "id": "Vg3FR",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 2",
+                              "width": 32,
+                              "height": 32,
+                              "layoutPosition": "absolute",
+                              "x": 20,
+                              "y": 0,
+                              "stroke": "$surface",
+                              "strokeWidth": 2,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "軒",
+                                  "fontSize": 14
+                                }
+                              }
                             }
-                          }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "RnjIi",
+                          "id": "qsLn7",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "小安",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安、小軒",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -58904,7 +59112,7 @@
                     },
                     {
                       "type": "icon",
-                      "id": "nGCtJ",
+                      "id": "f4krHc",
                       "name": "Chevron",
                       "width": 22,
                       "height": 22,
@@ -59583,16 +59791,15 @@
                     },
                     {
                       "type": "frame",
-                      "id": "zXSaT",
+                      "id": "epXGZ",
                       "name": "Field Box",
                       "width": "fill_container",
-                      "height": 60,
                       "fill": "$surface",
                       "cornerRadius": "$radius-md",
                       "stroke": "$control-line",
                       "strokeWidth": 1.5,
                       "padding": [
-                        0,
+                        "$sp-group",
                         "$inset-card"
                       ],
                       "justifyContent": "space_between",
@@ -59600,31 +59807,62 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "FMCE5",
+                          "id": "U0zPt",
                           "name": "Left",
+                          "width": "fill_container",
                           "gap": "$sp-label",
                           "alignItems": "center",
                           "children": [
                             {
-                              "id": "yALlm",
-                              "type": "ref",
-                              "ref": "RaaIf",
-                              "name": "Avatar",
-                              "width": 32,
+                              "type": "frame",
+                              "id": "CLup0",
+                              "name": "Avatar Stack",
+                              "width": 52,
                               "height": 32,
-                              "descendants": {
-                                "A30rIX": {
-                                  "content": "安",
-                                  "fontSize": "$fs-note"
+                              "children": [
+                                {
+                                  "id": "gt3bM",
+                                  "type": "ref",
+                                  "ref": "RaaIf",
+                                  "name": "Avatar 1",
+                                  "width": 32,
+                                  "height": 32,
+                                  "descendants": {
+                                    "A30rIX": {
+                                      "content": "安",
+                                      "fontSize": 14
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "Qoqrx",
+                                  "type": "ref",
+                                  "ref": "RaaIf",
+                                  "name": "Avatar 2",
+                                  "width": 32,
+                                  "height": 32,
+                                  "layoutPosition": "absolute",
+                                  "x": 20,
+                                  "y": 0,
+                                  "stroke": "$surface",
+                                  "strokeWidth": 2,
+                                  "descendants": {
+                                    "A30rIX": {
+                                      "content": "軒",
+                                      "fontSize": 14
+                                    }
+                                  }
                                 }
-                              }
+                              ]
                             },
                             {
                               "type": "text",
-                              "id": "sOwbq",
+                              "id": "bKlpQ",
                               "name": "Field Value",
                               "fill": "$text-primary",
-                              "content": "小安",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "小安、小軒",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
                               "fontWeight": "600"
@@ -59633,7 +59871,7 @@
                         },
                         {
                           "type": "icon",
-                          "id": "DbDbI",
+                          "id": "b5waP",
                           "name": "Chevron",
                           "width": 22,
                           "height": 22,
@@ -59766,7 +60004,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1918,
+      "height": 1962,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -60423,7 +60661,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "jCfSO",
+                  "id": "EiJEK",
                   "name": "Field Box",
                   "width": "fill_container",
                   "fill": "$surface",
@@ -60431,7 +60669,7 @@
                   "stroke": "$control-line",
                   "strokeWidth": 1.5,
                   "padding": [
-                    "$sp-item",
+                    "$sp-group",
                     "$inset-card"
                   ],
                   "justifyContent": "space_between",
@@ -60439,31 +60677,62 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "DZMv5",
+                      "id": "ILE4u",
                       "name": "Left",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "Ku7Jp",
-                          "type": "ref",
-                          "ref": "RaaIf",
-                          "name": "Avatar",
-                          "width": 64,
+                          "type": "frame",
+                          "id": "dChVw",
+                          "name": "Avatar Stack",
+                          "width": 104,
                           "height": 64,
-                          "descendants": {
-                            "A30rIX": {
-                              "content": "安",
-                              "fontSize": "$fs-note"
+                          "children": [
+                            {
+                              "id": "i6qSEH",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 1",
+                              "width": 64,
+                              "height": 64,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "安",
+                                  "fontSize": "$fs-note"
+                                }
+                              }
+                            },
+                            {
+                              "id": "XjUxK",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 2",
+                              "width": 64,
+                              "height": 64,
+                              "layoutPosition": "absolute",
+                              "x": 40,
+                              "y": 0,
+                              "stroke": "$surface",
+                              "strokeWidth": 2,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "軒",
+                                  "fontSize": "$fs-note"
+                                }
+                              }
                             }
-                          }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "yBVRo",
+                          "id": "TGlvp",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "小安",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安、小軒",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -60472,10 +60741,10 @@
                     },
                     {
                       "type": "icon",
-                      "id": "f3C4En",
+                      "id": "v2VeeJ",
                       "name": "Chevron",
-                      "width": 40,
-                      "height": 40,
+                      "width": 22,
+                      "height": 22,
                       "icon": "chevron-right",
                       "library": "lucide",
                       "fill": "$text-secondary"
@@ -65217,7 +65486,7 @@
       "name": "LS-21 / 12d 日記編輯器 · 照片多選（待移除）",
       "clip": true,
       "width": 393,
-      "height": 967,
+      "height": 963,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -65827,16 +66096,15 @@
                 },
                 {
                   "type": "frame",
-                  "id": "VM6xz",
+                  "id": "M4jru",
                   "name": "Field Box",
                   "width": "fill_container",
-                  "height": 60,
                   "fill": "$surface",
                   "cornerRadius": "$radius-md",
                   "stroke": "$control-line",
                   "strokeWidth": 1.5,
                   "padding": [
-                    0,
+                    "$sp-group",
                     "$inset-card"
                   ],
                   "justifyContent": "space_between",
@@ -65844,31 +66112,62 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "pBgvF",
+                      "id": "CjVJJ",
                       "name": "Left",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "oAFOZ",
-                          "type": "ref",
-                          "ref": "RaaIf",
-                          "name": "Avatar",
-                          "width": 32,
+                          "type": "frame",
+                          "id": "NFO5m",
+                          "name": "Avatar Stack",
+                          "width": 52,
                           "height": 32,
-                          "descendants": {
-                            "A30rIX": {
-                              "content": "安",
-                              "fontSize": "$fs-note"
+                          "children": [
+                            {
+                              "id": "DHvqU",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 1",
+                              "width": 32,
+                              "height": 32,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "安",
+                                  "fontSize": 14
+                                }
+                              }
+                            },
+                            {
+                              "id": "flJ3c",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 2",
+                              "width": 32,
+                              "height": 32,
+                              "layoutPosition": "absolute",
+                              "x": 20,
+                              "y": 0,
+                              "stroke": "$surface",
+                              "strokeWidth": 2,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "軒",
+                                  "fontSize": 14
+                                }
+                              }
                             }
-                          }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "b49zZ",
+                          "id": "P1ZgTF",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "小安",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安、小軒",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -65877,7 +66176,7 @@
                     },
                     {
                       "type": "icon",
-                      "id": "akjXe",
+                      "id": "G47bql",
                       "name": "Chevron",
                       "width": 22,
                       "height": 22,
@@ -66832,6 +67131,42 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "m1gJeI",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Qxtba",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R5 · 時間軸卡多寶貝年齡寫法",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ca7bA",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "兩個以上寶貝的年齡寫法（designer 提案，格式＝『姓名 年齡 · 姓名 年齡』，`·` 在此處是『下一個人』的分隔，不是姓名年齡的微連接——同一人姓名與年齡之間只用空格，這一點與單寶貝既有格式『姓名 · 年齡』的頓點語意不同，是刻意的新規則，不要混用）。`cmp/Card Diary`（qtCd7）Signature 新增『Multi Caption』文字節點（`$print-ink`／`$fs-note`／`textAlign:right`，`textGrowth:fixed-width`+`fill_container` 結構免疫），預設 enabled:false；多寶貝實例覆寫關閉 Who Group／Age Group、開啟 Multi Caption。`cmp/Card Photo`／`cmp/Card Album` 的 Caption 是單一 text 節點，多寶貝情境直接整串改寫內容字串（如「小安和小明在公園盪鞦韆 · 小安 2 歲 3 個月 · 小明 8 個月」），沒有另外拆節點——沖印品白邊／角托規則完全不受影響（Caption 只是 Imprint Row 裡的文字，不動印品幾何）。新增專屬壓測板「A11y / 11 時間軸 · 兩位寶貝聯合標記 · Dynamic Type AX3（body 40pt）」（`HLXo3`，Copy 自 `lKoZG` 但完全獨立節點、未動 `lKoZG` 本身，兩處都各自的 IN-1 缺陷各自獨立存在），示範 Card Photo／Card Diary 兩種卡片的多寶貝 caption 在 AX3 下正確換行、不溢出、不孤懸標點。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -67492,6 +67827,78 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "wOABd",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PwEku",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R5 · 多寶貝標記（推翻 8/25 單選裁決）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "v5NWm",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "使用者 2026-09-02 裁決：日記與相簿都可以同時標記多個寶貝，推翻 LS-47 ⑤（2026-08-25）的單選裁決——後端另開 Task 票（parent LS-21）處理多對多資料模型，本票只動設計。**Attribution Sheet（`zgVn0`，LS-47/10c 共用元件）改多選**：Option Row 由『整列高亮才有勾號』改成每列都有獨立 checkbox（右側 pin：未選＝空心圓＋`$control-line` 1.5pt、已選＝`$text-primary` 實心圓＋`$surface` 勾——刻意重用照片多選 Selected Badge 的同一套視覺語彙，讓兩處『打勾＝已選』的手感一致）。『不指定』與其他選項互斥（有勾其他寶貝時『不指定』自動清空，反之亦然）——本稿只畫多選態（小安＋小軒皆選中），互斥邏輯是行為規格，SwiftUI 端維護一個 `Set<ChildID>` 加一個『不指定』布林旗標，兩者互斥賦值。**重要**：`zgVn0` 是 LS-47/10c 與相簿共用元件，這次改動兩邊都會跟著變——相簿發佈流程若有自己的 Attribution 畫面副本，需要同步核對。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vUBIk",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "B5Tahj",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R5 · 編輯器寶貝摘要列（多寶貝呈現）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "DvA2A",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Child Field 的 Field Box 從固定高 60 改 padding 推導（`$sp-group`/`$inset-card`＝12/20，單寶貝時自然高度 ≈56，AX 字級下自動長高——符合『控件高度由 padding 推導』規則，順帶修正這個既有欄位過去寫死 60 的技術債）。多寶貝時 Left 區塊改『頭像堆疊＋姓名並列』：Avatar Stack 用兩個 `cmp/Child Avatar` 絕對定位疊放（預設密度 32×32、重疊 12pt，第二顆加 2pt `$surface` 描邊避免緊貼；iPad 沿用預設密度；AX3（MOLyd／bs8aE）沿用 R3 既有『64×64＋`$fs-note` token』修正案，重疊 24pt），姓名文字『小安、小軒』（頓號『、』——與年齡標籤內部用的『·』刻意不同字：頓號＝列出兩個獨立的人，`·` ＝同一人姓名與年齡的微連接）。已同步套用到全部 11 個編輯器板（含 12d 多選態、12e/12e-AX3 拖曳中、12f 上限、12g 影片超長），確保『改一個地方、其餘板一起跟上』不留過期示範。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -67730,6 +68137,42 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "詳情頁點一下影片項要開全螢幕系統播放器（QuickTime／AVPlayerViewController 等系統元件），本稿只畫「觸發前」的靜態態，不畫播放器本身。示範：`vzYXz` 格狀照片牆第 2 格（`wnBM1` Photo Wrap）疊同款影片徽章（縮小版：78×20，字級 11 固定，同上一條『不吃 Dynamic Type』的例外理由）。`$print-ink`／`$on-photo` 皆為不掛 theme 的固定值token，深色模式（QCJfh 對應格）會自動套用相同視覺、不需要另外做一份深色示範。SwiftUI 對應：整個 Print Cell 疊一個 `.onTapGesture`，media_type=video 時呼叫系統播放器 present，不在應用內自繪任何播放控制列。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "LyoWh",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "o5wnu",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R5 · 詳情頁多寶貝 caption",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "LBrKT",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "詳情頁沿用時間軸同一套多寶貝年齡格式（見『N 時間軸 (11) 版面節奏』R5 段），Photo Grid 每格 Caption 目前皆留空（見 R5 · 20 張上限段），多寶貝差異只會體現在 Diary Note 的 Signature（若該篇日記標記多寶貝）——沿用 Card Diary 的 Multi Caption 節點與判斷邏輯，此處不重複貼一次規格。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -68301,7 +68744,7 @@
       "name": "LS-21 / 12e 日記編輯器 · 照片排序（拖曳中）",
       "clip": true,
       "width": 393,
-      "height": 910,
+      "height": 906,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -68820,16 +69263,15 @@
                 },
                 {
                   "type": "frame",
-                  "id": "PjBbr",
+                  "id": "K2bQ0",
                   "name": "Field Box",
                   "width": "fill_container",
-                  "height": 60,
                   "fill": "$surface",
                   "cornerRadius": "$radius-md",
                   "stroke": "$control-line",
                   "strokeWidth": 1.5,
                   "padding": [
-                    0,
+                    "$sp-group",
                     "$inset-card"
                   ],
                   "justifyContent": "space_between",
@@ -68837,31 +69279,62 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "eaSX2",
+                      "id": "d6mD7",
                       "name": "Left",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "FPbqR",
-                          "type": "ref",
-                          "ref": "RaaIf",
-                          "name": "Avatar",
-                          "width": 32,
+                          "type": "frame",
+                          "id": "ic04D",
+                          "name": "Avatar Stack",
+                          "width": 52,
                           "height": 32,
-                          "descendants": {
-                            "A30rIX": {
-                              "content": "安",
-                              "fontSize": "$fs-note"
+                          "children": [
+                            {
+                              "id": "Z9yiQ",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 1",
+                              "width": 32,
+                              "height": 32,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "安",
+                                  "fontSize": 14
+                                }
+                              }
+                            },
+                            {
+                              "id": "juJ2P",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 2",
+                              "width": 32,
+                              "height": 32,
+                              "layoutPosition": "absolute",
+                              "x": 20,
+                              "y": 0,
+                              "stroke": "$surface",
+                              "strokeWidth": 2,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "軒",
+                                  "fontSize": 14
+                                }
+                              }
                             }
-                          }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "I8Zbz",
+                          "id": "hff2l",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "小安",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安、小軒",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -68870,7 +69343,7 @@
                     },
                     {
                       "type": "icon",
-                      "id": "dvbYl",
+                      "id": "MUDhi",
                       "name": "Chevron",
                       "width": 22,
                       "height": 22,
@@ -68965,7 +69438,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1918,
+      "height": 1962,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -69486,7 +69959,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "Ud2Zb",
+                  "id": "G5nOyQ",
                   "name": "Field Box",
                   "width": "fill_container",
                   "fill": "$surface",
@@ -69494,7 +69967,7 @@
                   "stroke": "$control-line",
                   "strokeWidth": 1.5,
                   "padding": [
-                    "$sp-item",
+                    "$sp-group",
                     "$inset-card"
                   ],
                   "justifyContent": "space_between",
@@ -69502,31 +69975,62 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "SwZkW",
+                      "id": "g0Eh2j",
                       "name": "Left",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "mtuw0",
-                          "type": "ref",
-                          "ref": "RaaIf",
-                          "name": "Avatar",
-                          "width": 64,
+                          "type": "frame",
+                          "id": "DV56W",
+                          "name": "Avatar Stack",
+                          "width": 104,
                           "height": 64,
-                          "descendants": {
-                            "A30rIX": {
-                              "content": "安",
-                              "fontSize": "$fs-note"
+                          "children": [
+                            {
+                              "id": "BxMD3",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 1",
+                              "width": 64,
+                              "height": 64,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "安",
+                                  "fontSize": "$fs-note"
+                                }
+                              }
+                            },
+                            {
+                              "id": "Q52Tml",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 2",
+                              "width": 64,
+                              "height": 64,
+                              "layoutPosition": "absolute",
+                              "x": 40,
+                              "y": 0,
+                              "stroke": "$surface",
+                              "strokeWidth": 2,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "軒",
+                                  "fontSize": "$fs-note"
+                                }
+                              }
                             }
-                          }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "F9XzMQ",
+                          "id": "FZb7U",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "小安",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安、小軒",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -69535,10 +70039,10 @@
                     },
                     {
                       "type": "icon",
-                      "id": "of75v",
+                      "id": "z06K6x",
                       "name": "Chevron",
-                      "width": 40,
-                      "height": 40,
+                      "width": 22,
+                      "height": 22,
                       "icon": "chevron-right",
                       "library": "lucide",
                       "fill": "$text-secondary"
@@ -84881,7 +85385,7 @@
       "name": "LS-21 / 12f 日記編輯器 · 已達 20 張上限",
       "clip": true,
       "width": 393,
-      "height": 949,
+      "height": 945,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -86566,16 +87070,15 @@
                 },
                 {
                   "type": "frame",
-                  "id": "eS1cD",
+                  "id": "A3Lgr",
                   "name": "Field Box",
                   "width": "fill_container",
-                  "height": 60,
                   "fill": "$surface",
                   "cornerRadius": "$radius-md",
                   "stroke": "$control-line",
                   "strokeWidth": 1.5,
                   "padding": [
-                    0,
+                    "$sp-group",
                     "$inset-card"
                   ],
                   "justifyContent": "space_between",
@@ -86583,31 +87086,62 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "EXywI",
+                      "id": "rr6uH",
                       "name": "Left",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "A5X699",
-                          "type": "ref",
-                          "ref": "RaaIf",
-                          "name": "Avatar",
-                          "width": 32,
+                          "type": "frame",
+                          "id": "P4PUA",
+                          "name": "Avatar Stack",
+                          "width": 52,
                           "height": 32,
-                          "descendants": {
-                            "A30rIX": {
-                              "content": "安",
-                              "fontSize": "$fs-note"
+                          "children": [
+                            {
+                              "id": "FmF6h",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 1",
+                              "width": 32,
+                              "height": 32,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "安",
+                                  "fontSize": 14
+                                }
+                              }
+                            },
+                            {
+                              "id": "syRy6",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 2",
+                              "width": 32,
+                              "height": 32,
+                              "layoutPosition": "absolute",
+                              "x": 20,
+                              "y": 0,
+                              "stroke": "$surface",
+                              "strokeWidth": 2,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "軒",
+                                  "fontSize": 14
+                                }
+                              }
                             }
-                          }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "J6XVx8",
+                          "id": "S5WUcx",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "小安",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安、小軒",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -86616,7 +87150,7 @@
                     },
                     {
                       "type": "icon",
-                      "id": "QoeZc",
+                      "id": "F7noQo",
                       "name": "Chevron",
                       "width": 22,
                       "height": 22,
@@ -86708,7 +87242,7 @@
       "name": "LS-21 / 12g 日記編輯器 · 影片超過 1 分鐘",
       "clip": true,
       "width": 393,
-      "height": 949,
+      "height": 945,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -87443,16 +87977,15 @@
                 },
                 {
                   "type": "frame",
-                  "id": "oSj9r",
+                  "id": "kQuPA",
                   "name": "Field Box",
                   "width": "fill_container",
-                  "height": 60,
                   "fill": "$surface",
                   "cornerRadius": "$radius-md",
                   "stroke": "$control-line",
                   "strokeWidth": 1.5,
                   "padding": [
-                    0,
+                    "$sp-group",
                     "$inset-card"
                   ],
                   "justifyContent": "space_between",
@@ -87460,31 +87993,62 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "O1RQr",
+                      "id": "ParZa",
                       "name": "Left",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "nJvdg",
-                          "type": "ref",
-                          "ref": "RaaIf",
-                          "name": "Avatar",
-                          "width": 32,
+                          "type": "frame",
+                          "id": "EJ5X3",
+                          "name": "Avatar Stack",
+                          "width": 52,
                           "height": 32,
-                          "descendants": {
-                            "A30rIX": {
-                              "content": "安",
-                              "fontSize": "$fs-note"
+                          "children": [
+                            {
+                              "id": "JEhMW",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 1",
+                              "width": 32,
+                              "height": 32,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "安",
+                                  "fontSize": 14
+                                }
+                              }
+                            },
+                            {
+                              "id": "gWQcA",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar 2",
+                              "width": 32,
+                              "height": 32,
+                              "layoutPosition": "absolute",
+                              "x": 20,
+                              "y": 0,
+                              "stroke": "$surface",
+                              "strokeWidth": 2,
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "軒",
+                                  "fontSize": 14
+                                }
+                              }
                             }
-                          }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "CnTOt",
+                          "id": "RY5UZ",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "小安",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安、小軒",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -87493,7 +88057,7 @@
                     },
                     {
                       "type": "icon",
-                      "id": "ktkcG",
+                      "id": "L6NtIW",
                       "name": "Chevron",
                       "width": 22,
                       "height": 22,
@@ -87574,6 +88138,389 @@
               "height": 5
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "HLXo3",
+      "x": 19315,
+      "y": 30619,
+      "name": "A11y / 11 時間軸 · 兩位寶貝聯合標記 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1500,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "uMFSQ",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "aedfE",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "MQVDf",
+              "name": "Header Row",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RmBjX",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "時間軸",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "id": "v24Deq",
+                  "type": "ref",
+                  "ref": "zy3Ps",
+                  "name": "Create Entry Button",
+                  "descendants": {
+                    "G0L1jH": {
+                      "width": 32,
+                      "height": 32
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qTgix",
+              "name": "Spacer 16 HF",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "nwepJ",
+              "name": "Filter Button",
+              "fill": "$surface",
+              "cornerRadius": "$radius-full",
+              "stroke": "$control-line",
+              "strokeWidth": 1.5,
+              "gap": "$sp-tight",
+              "padding": [
+                "$ctl-pad-md",
+                "$sp-item"
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RbxnU",
+                  "name": "Label",
+                  "fill": "$text-primary",
+                  "content": "全部",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "icon",
+                  "id": "xapWW",
+                  "name": "Chevron",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "chevron-down",
+                  "library": "lucide",
+                  "fill": "$text-primary"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "h3c3Jo",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "GaYB6",
+              "name": "Feed",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-section",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "RF3WN",
+                  "name": "Day Group 1",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "id": "J9Z22p",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "Day Divider 1",
+                      "width": "fill_container"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DHh1U",
+                      "name": "Cards",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "id": "P1CltA",
+                          "type": "ref",
+                          "ref": "umJHD",
+                          "name": "Card Photo 1",
+                          "width": "fill_container",
+                          "descendants": {
+                            "VywUw": {
+                              "content": "小安和小明在公園盪鞦韆 · 小安 2 歲 3 個月 · 小明 8 個月"
+                            },
+                            "SNbd8": {
+                              "y": 302
+                            },
+                            "P15GB": {
+                              "y": 302
+                            }
+                          }
+                        },
+                        {
+                          "id": "fZ3KF",
+                          "type": "ref",
+                          "ref": "qtCd7",
+                          "name": "Card Diary 1",
+                          "width": "fill_container",
+                          "descendants": {
+                            "p2odx": {
+                              "content": "今天小安和小明一起在公園盪鞦韆，兩個人比賽誰盪得高，笑得好大聲。"
+                            },
+                            "Jqwww": {
+                              "layout": "vertical",
+                              "alignItems": "end"
+                            },
+                            "wXsHJ": {
+                              "enabled": false
+                            },
+                            "fOgHd": {
+                              "enabled": false
+                            },
+                            "WmQcz": {
+                              "enabled": false
+                            },
+                            "x7k2o6": {
+                              "enabled": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "R6oxZ",
+                  "name": "Day Group 2",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "id": "kGF7O",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "Day Divider 2",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tBi8u": {
+                          "rotation": -3.0000000000000004
+                        },
+                        "VDOco": {
+                          "content": "8月30日（昨天）"
+                        },
+                        "xlLIo": {
+                          "rotation": -6.000000000000001
+                        },
+                        "ci8cq": {
+                          "content": "8月30日（昨天）"
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Oox2k",
+                      "name": "Cards",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "id": "CFlP7",
+                          "type": "ref",
+                          "ref": "bhroo",
+                          "name": "Card Album 1",
+                          "width": "fill_container",
+                          "descendants": {
+                            "Qjdzx": {
+                              "y": 330
+                            },
+                            "o5O1GD": {
+                              "y": 323
+                            },
+                            "mlORb": {
+                              "y": 302
+                            },
+                            "atAkU": {
+                              "y": 302
+                            }
+                          }
+                        },
+                        {
+                          "id": "i6X3f",
+                          "type": "ref",
+                          "ref": "qtCd7",
+                          "name": "Card Diary 2",
+                          "width": "fill_container",
+                          "descendants": {
+                            "p2odx": {
+                              "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
+                            },
+                            "Jqwww": {
+                              "layout": "vertical",
+                              "alignItems": "end"
+                            },
+                            "d41MUZ": {
+                              "content": "日記"
+                            },
+                            "WmQcz": {
+                              "enabled": false
+                            },
+                            "zk1yE": {
+                              "enabled": false
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PqQEK",
+                  "name": "Load More",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-block",
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "TcYQA",
+                      "name": "Spinner",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "loader",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "AFta3",
+                      "name": "Load More Label",
+                      "fill": "$text-secondary",
+                      "content": "載入更多回憶中…",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "qP3vo",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "l49hNj",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "V4oYH",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 1402,
+          "width": 361,
+          "height": 64
         }
       ]
     }
