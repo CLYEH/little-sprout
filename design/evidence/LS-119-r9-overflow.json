@@ -1,0 +1,1517 @@
+{
+  "ticket": "LS-119",
+  "round": 9,
+  "head_sha": "aecba0a95ae63cb99835f04636cdce96d58a2ff0",
+  "total_nodes": 5569,
+  "scans": {
+    "sibling_intersection": {
+      "flagged": [
+        {
+          "node_a": "pYE38/sD5Ma",
+          "node_b": "pYE38/DhOiK",
+          "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷（同類 126 例）"
+        },
+        {
+          "node_a": "rtNqP/sD5Ma",
+          "node_b": "rtNqP/DhOiK",
+          "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷（同類 126 例）"
+        },
+        {
+          "node_a": "g7B7X/sD5Ma",
+          "node_b": "g7B7X/DhOiK",
+          "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷（同類 126 例）"
+        },
+        {
+          "node_a": "Mlugc/sD5Ma",
+          "node_b": "Mlugc/DhOiK",
+          "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷（同類 126 例）"
+        },
+        {
+          "node_a": "wZTzm",
+          "node_b": "w88OF",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 73 例）"
+        },
+        {
+          "node_a": "wZTzm",
+          "node_b": "geuIN",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 73 例）"
+        },
+        {
+          "node_a": "kfuha",
+          "node_b": "qfxbb",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 27 例）"
+        },
+        {
+          "node_a": "kfuha",
+          "node_b": "YG4hG",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 27 例）"
+        },
+        {
+          "node_a": "yxEFh",
+          "node_b": "Wo9Ox",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 27 例）"
+        },
+        {
+          "node_a": "yxEFh",
+          "node_b": "efA3a",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 27 例）"
+        },
+        {
+          "node_a": "Z4TsQ/tBi8u",
+          "node_b": "Z4TsQ/xlLIo",
+          "classification": "既有日期章／墨水暈染母題內部疊層（Stamp Wrap），R11/LS-72 既有白名單類別，本輪未觸碰（同類 23 例）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "NUPWz",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 13 例）"
+        },
+        {
+          "node_a": "WU8Te/sD5Ma",
+          "node_b": "WU8Te/DhOiK",
+          "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷（同類 13 例）"
+        },
+        {
+          "node_a": "L7ke3/sD5Ma",
+          "node_b": "L7ke3/DhOiK",
+          "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷（同類 13 例）"
+        },
+        {
+          "node_a": "abfZE",
+          "node_b": "wOzaO",
+          "classification": "R5 新增：編輯器多寶貝摘要列頭像堆疊，刻意重疊，設計意圖非缺陷，本輪未觸碰（同類 11 例）"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "pYE38",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 9 例）"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "rtNqP",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 9 例）"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "g7B7X",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 9 例）"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "Mlugc",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 9 例）"
+        },
+        {
+          "node_a": "yqk1S/GuOM0",
+          "node_b": "yqk1S/j7iqM",
+          "classification": "R5–R8 未觸碰之既有 Google 登入按鈕 logo 元件內部 SVG arc 拼接，非缺陷（同類 7 例）"
+        },
+        {
+          "node_a": "yqk1S/aQq5T",
+          "node_b": "yqk1S/SieME",
+          "classification": "R5–R8 未觸碰之既有 Google 登入按鈕 logo 元件內部 SVG arc 拼接，非缺陷（同類 7 例）"
+        },
+        {
+          "node_a": "yqk1S/SieME",
+          "node_b": "yqk1S/j7iqM",
+          "classification": "R5–R8 未觸碰之既有 Google 登入按鈕 logo 元件內部 SVG arc 拼接，非缺陷（同類 7 例）"
+        },
+        {
+          "node_a": "osCBD/X7DYDo/go3YL",
+          "node_b": "osCBD/X7DYDo/uHUe1",
+          "classification": "既有 Role Option 元件內部 icon 與文字排版，本輪未觸碰 LS-46 角色選擇列（同類 5 例）"
+        },
+        {
+          "node_a": "osCBD/ZA8G7/go3YL",
+          "node_b": "osCBD/ZA8G7/uHUe1",
+          "classification": "既有 Role Option 元件內部 icon 與文字排版，本輪未觸碰 LS-46 角色選擇列（同類 5 例）"
+        },
+        {
+          "node_a": "MOWjB",
+          "node_b": "Iqtt4",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 4 例）"
+        },
+        {
+          "node_a": "MOWjB",
+          "node_b": "XjToq",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 4 例）"
+        },
+        {
+          "node_a": "lSghl",
+          "node_b": "zymKZ",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 4 例）"
+        },
+        {
+          "node_a": "lSghl",
+          "node_b": "jin0Q",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 4 例）"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "M98qs",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 4 例）"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "j2z1C0",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 4 例）"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "xfmAg",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 4 例）"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "DIMqR",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 4 例）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "YRtyF",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 4 例）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "e8hcYl",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 4 例）"
+        },
+        {
+          "node_a": "YRtyF",
+          "node_b": "e8hcYl",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 4 例）"
+        },
+        {
+          "node_a": "z2l5f",
+          "node_b": "xKQDP",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 3 例）"
+        },
+        {
+          "node_a": "z2l5f",
+          "node_b": "K8naK",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 3 例）"
+        },
+        {
+          "node_a": "F9Gvz2",
+          "node_b": "EfgyZ",
+          "classification": "既有刪除線（Strike Rule）母題內部疊層，R5–R8 未觸碰（同類 3 例）"
+        },
+        {
+          "node_a": "Ur6DB",
+          "node_b": "W7Ycw",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "Ur6DB",
+          "node_b": "tlJFt",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "F9Iva",
+          "node_b": "jOrlo",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "F9Iva",
+          "node_b": "ny0ec",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "MxnWP",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "I5vhg",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "WceLk",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "E6reS5",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "B5E1ig",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "br1l7",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "qnP3W",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "I5vhg",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 2 例）"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "WceLk",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 2 例）"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "E6reS5",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "B5E1ig",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "WceLk",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 2 例）"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "E6reS5",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "B5E1ig",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "E6reS5",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "B5E1ig",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "br1l7",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "qnP3W",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node_a": "zBeVi",
+          "node_b": "L5YAG",
+          "classification": "R5–R8 未觸碰之既有邀請碼輸入格元件，沿用既有白名單分類（同類 2 例）"
+        },
+        {
+          "node_a": "LaaxQ",
+          "node_b": "WU8Te",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 2 例）"
+        },
+        {
+          "node_a": "LaaxQ",
+          "node_b": "L7ke3",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 2 例）"
+        },
+        {
+          "node_a": "xlMQk",
+          "node_b": "M72IeN",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 2 例）"
+        },
+        {
+          "node_a": "xlMQk",
+          "node_b": "sPdfs",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 2 例）"
+        },
+        {
+          "node_a": "RPTGa",
+          "node_b": "repj6",
+          "classification": "R5/R6 既有：長按拖曳示範板，縮圖被提起時故意疊在鄰近格子上方，設計意圖，本輪未觸碰（同類 2 例）"
+        },
+        {
+          "node_a": "kdCWx",
+          "node_b": "repj6",
+          "classification": "R5/R6 既有：長按拖曳示範板，縮圖被提起時故意疊在鄰近格子上方，設計意圖，本輪未觸碰（同類 2 例）"
+        },
+        {
+          "node_a": "kcGJa",
+          "node_b": "RHhJ1",
+          "classification": "非 UI 缺陷：兩個獨立畫面在無限畫布上的擺放位置相鄰，不影響任何實際渲染畫面的內容（同類 1 例）"
+        },
+        {
+          "node_a": "z6DOE",
+          "node_b": "bqbKN",
+          "classification": "非 UI 缺陷：兩個獨立畫面在無限畫布上的擺放位置相鄰，不影響任何實際渲染畫面的內容（同類 1 例）"
+        },
+        {
+          "node_a": "RHhJ1",
+          "node_b": "bqbKN",
+          "classification": "非 UI 缺陷：兩個獨立畫面在無限畫布上的擺放位置相鄰，不影響任何實際渲染畫面的內容（同類 1 例）"
+        },
+        {
+          "node_a": "CHLio",
+          "node_b": "nhCrq",
+          "classification": "非 UI 缺陷：兩個獨立畫面在無限畫布上的擺放位置相鄰，不影響任何實際渲染畫面的內容（同類 1 例）"
+        },
+        {
+          "node_a": "XhwG6",
+          "node_b": "qxVMy",
+          "classification": "非 UI 缺陷：兩個獨立畫面在無限畫布上的擺放位置相鄰，不影響任何實際渲染畫面的內容（同類 1 例）"
+        },
+        {
+          "node_a": "ZBIhu",
+          "node_b": "hKSu1",
+          "classification": "非 UI 缺陷：兩個獨立畫面在無限畫布上的擺放位置相鄰，不影響任何實際渲染畫面的內容（同類 1 例）"
+        },
+        {
+          "node_a": "VRq1c",
+          "node_b": "tNqvY",
+          "classification": "非 UI 缺陷：兩個獨立畫面在無限畫布上的擺放位置相鄰，不影響任何實際渲染畫面的內容（同類 1 例）"
+        },
+        {
+          "node_a": "VRq1c",
+          "node_b": "Rtq1m",
+          "classification": "非 UI 缺陷：兩個獨立畫面在無限畫布上的擺放位置相鄰，不影響任何實際渲染畫面的內容（同類 1 例）"
+        },
+        {
+          "node_a": "rx2TP",
+          "node_b": "LCpNO",
+          "classification": "非 UI 缺陷：兩個獨立畫面在無限畫布上的擺放位置相鄰，不影響任何實際渲染畫面的內容（同類 1 例）"
+        },
+        {
+          "node_a": "MOLyd",
+          "node_b": "vzYXz",
+          "classification": "非 UI 缺陷：兩個獨立畫面在無限畫布上的擺放位置相鄰，不影響任何實際渲染畫面的內容（同類 1 例）"
+        },
+        {
+          "node_a": "b66CZc",
+          "node_b": "BXbTE",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "I8sWT8",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "OIwlW",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "kSfzp",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "mIStI",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "sD5Ma",
+          "node_b": "DhOiK",
+          "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷（同類 1 例）"
+        },
+        {
+          "node_a": "PMV0W",
+          "node_b": "GWAHq",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "PMV0W",
+          "node_b": "SV5Ka",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "uXS8K",
+          "node_b": "GWAHq",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "uXS8K",
+          "node_b": "SV5Ka",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "aflVw",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "dCV1r",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "Evspf",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "B919I",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "fyZfa",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "dCV1r",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "Evspf",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "B919I",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "fyZfa",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "PSBOi",
+          "node_b": "OtK4n",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "PSBOi",
+          "node_b": "brcXK",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "Ac3zU",
+          "node_b": "ClTOX",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "Ac3zU",
+          "node_b": "WjZtu",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "cTC2J",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "k2V3ms",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "mzo0K",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "cTC2J",
+          "node_b": "mzo0K",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "cTC2J",
+          "node_b": "OxuA8",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "k2V3ms",
+          "node_b": "mzo0K",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "k2V3ms",
+          "node_b": "LMc6c",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "mzo0K",
+          "node_b": "OxuA8",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "mzo0K",
+          "node_b": "LMc6c",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "a1ycjz",
+          "node_b": "bWK8K",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "a1ycjz",
+          "node_b": "y5UWXf",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "h0ZQd",
+          "node_b": "E7kbRB",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "h0ZQd",
+          "node_b": "Pqqdp",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "m780n",
+          "node_b": "uARGy",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "m780n",
+          "node_b": "mFP87",
+          "classification": "R5–R8 未觸碰之既有 icon 探索板（LS-17/LS-18）元件內部排版，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "khLYx",
+          "node_b": "vRQFQ",
+          "classification": "既有刪除線（Strike Rule）母題內部疊層，R5–R8 未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "lxZzb",
+          "node_b": "gJOJT",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "lxZzb",
+          "node_b": "RZcIs",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "TeX44",
+          "node_b": "RZcIs",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "JE6tE",
+          "node_b": "Vmezj",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "JE6tE",
+          "node_b": "PaCtI",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "rrzzl",
+          "node_b": "p2dJpQ",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "rrzzl",
+          "node_b": "Wrztr",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "n5j2xu",
+          "node_b": "H3b7gk",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "n5j2xu",
+          "node_b": "oj6h0",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "XoVVx",
+          "node_b": "SUi6K",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "XoVVx",
+          "node_b": "nSjs7",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "cPbyp",
+          "node_b": "XMVoJ",
+          "classification": "R5–R8 未觸碰之既有 bottom sheet 疊層版式（Scrim／Sheet Wrap），沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "cPbyp",
+          "node_b": "MBQx8",
+          "classification": "R5–R8 未觸碰之既有 bottom sheet 疊層版式（Scrim／Sheet Wrap），沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "XMVoJ",
+          "node_b": "MBQx8",
+          "classification": "R5–R8 未觸碰之既有 bottom sheet 疊層版式（Scrim／Sheet Wrap），沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "A14LnU",
+          "node_b": "dJM15",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "A14LnU",
+          "node_b": "EoToI",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "xgx94",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "gFJ8N",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "qx4xE",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "xTL71",
+          "node_b": "DZjmG",
+          "classification": "R5–R8 未觸碰之既有 bottom sheet 疊層版式（Scrim／Sheet Wrap），沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "xTL71",
+          "node_b": "gbW37",
+          "classification": "R5–R8 未觸碰之既有 bottom sheet 疊層版式（Scrim／Sheet Wrap），沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "DZjmG",
+          "node_b": "gbW37",
+          "classification": "R5–R8 未觸碰之既有 bottom sheet 疊層版式（Scrim／Sheet Wrap），沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "zGEet",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "G5vY5",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "qCMDY",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "bq8pa",
+          "node_b": "yqWq9",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "bq8pa",
+          "node_b": "C57OVI",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "go3YL",
+          "node_b": "uHUe1",
+          "classification": "既有 Role Option 元件內部 icon 與文字排版，本輪未觸碰 LS-46 角色選擇列（同類 1 例）"
+        },
+        {
+          "node_a": "n7gPAe",
+          "node_b": "Egn9A",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "WitwS/uZ5Lt",
+          "node_b": "WitwS/kVUWa",
+          "classification": "R5 新增：Card Diary 照片預覽列第 3 格疊紙側邊探出，沿用 Card Album 既有 Stack Sheet 母題，刻意重疊，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "WitwS/ekqx4",
+          "node_b": "WitwS/GCEdk",
+          "classification": "R5 新增：Card Diary 第 3 格『還有 N 張』暗蓋刻意疊在縮圖上，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "PFhXP",
+          "node_b": "eRy14",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "gKBS7",
+          "node_b": "aY7S5",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "gKBS7",
+          "node_b": "BbDZH",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "bG6cD",
+          "node_b": "fsveQ",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "bG6cD",
+          "node_b": "wSSFB",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node_a": "x5Vmg",
+          "node_b": "OR1hw",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "Q600X",
+          "node_b": "bmk5H",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "YulfE",
+          "node_b": "QVGNJ",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "CV0TW",
+          "node_b": "iCUJF",
+          "classification": "既有徽章絕對定位疊縮圖右上角慣例（選中態勾號），R3/R4 已列入白名單，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "TSxZo",
+          "node_b": "v7MGOT",
+          "classification": "既有徽章絕對定位疊縮圖右上角慣例（選中態勾號），R3/R4 已列入白名單，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "o73UY",
+          "node_b": "M4PUm",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node_a": "aedfE",
+          "node_b": "V4oYH",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        }
+      ]
+    },
+    "row_overflow": {
+      "flagged": [
+        {
+          "node": "geuIN",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 73 例）"
+        },
+        {
+          "node": "wLAPv",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 73 例）"
+        },
+        {
+          "node": "YG4hG",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 27 例）"
+        },
+        {
+          "node": "efA3a",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 27 例）"
+        },
+        {
+          "node": "jCGWG",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 8 例）"
+        },
+        {
+          "node": "X9BSMc/A30rIX",
+          "classification": "cmp/Child Avatar 元件內部姓名縮寫文字在極端字寬下的既有微溢出，本輪未修改該元件本體（同類 5 例）"
+        },
+        {
+          "node": "XjToq",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 4 例）"
+        },
+        {
+          "node": "jin0Q",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 4 例）"
+        },
+        {
+          "node": "j2z1C0",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 4 例）"
+        },
+        {
+          "node": "DIMqR",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 4 例）"
+        },
+        {
+          "node": "B5E1ig",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 3 例）"
+        },
+        {
+          "node": "qnP3W",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 3 例）"
+        },
+        {
+          "node": "tlJFt",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node": "ny0ec",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 2 例）"
+        },
+        {
+          "node": "flduf",
+          "classification": "LS-17/38/46/47 既有畫面既有微溢出，本輪完全未觸碰對應元件（同類 2 例）"
+        },
+        {
+          "node": "QVGNJ/W2LnpN",
+          "classification": "LS-17/38/46/47 既有畫面既有微溢出，本輪完全未觸碰對應元件（同類 2 例）"
+        },
+        {
+          "node": "aNTzo/OCYqN",
+          "classification": "LS-17/38/46/47 既有畫面既有微溢出，本輪完全未觸碰對應元件（同類 2 例）"
+        },
+        {
+          "node": "iO0Ko",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 2 例）"
+        },
+        {
+          "node": "BXbTE",
+          "classification": "LS-17/38/46/47 既有畫面既有微溢出，本輪完全未觸碰對應元件（同類 1 例）"
+        },
+        {
+          "node": "qX0b8",
+          "classification": "R5–R8 未觸碰之既有畫面／元件，沿用既有白名單分類，非本輪新增或修改（同類 1 例）"
+        },
+        {
+          "node": "FBRlf/iu3Q8",
+          "classification": "LS-17/38/46/47 既有畫面既有微溢出，本輪完全未觸碰對應元件（同類 1 例）"
+        },
+        {
+          "node": "Evspf",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node": "fyZfa",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node": "XtNLC",
+          "classification": "LS-17/38/46/47 既有畫面既有微溢出，本輪完全未觸碰對應元件（同類 1 例）"
+        },
+        {
+          "node": "z0ATW/yxwnz",
+          "classification": "LS-17/38/46/47 既有畫面既有微溢出，本輪完全未觸碰對應元件（同類 1 例）"
+        },
+        {
+          "node": "oj6h0",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node": "nSjs7",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node": "k8PVy",
+          "classification": "LS-17/38/46/47 既有畫面既有微溢出，本輪完全未觸碰對應元件（同類 1 例）"
+        },
+        {
+          "node": "WitwS/uZ5Lt",
+          "classification": "R5 新增：Card Diary 第 3 格疊紙刻意側邊探出容器邊界（母題本身），非缺陷，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node": "WitwS/kVUWa",
+          "classification": "R5 新增：Card Diary 第 3 格疊紙刻意側邊探出容器邊界（母題本身），非缺陷，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node": "BbDZH",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node": "wSSFB",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，非本輪新增（同類 1 例）"
+        },
+        {
+          "node": "iCUJF",
+          "classification": "既有徽章絕對定位疊縮圖右上角慣例，R3/R4 已列入白名單，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node": "v7MGOT",
+          "classification": "既有徽章絕對定位疊縮圖右上角慣例，R3/R4 已列入白名單，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node": "r0E2vG",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "dbyDu",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "B2PYlk",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "DgWAS",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "to36g",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "UwOm5",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "L1Gvi",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "a93IH",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "tJr7O",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "f4znT9",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "QnhMi",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "cvkFS",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "G636T",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "TdVUk",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "P8eEXh",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "HxDU4",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        },
+        {
+          "node": "MBCZw",
+          "classification": "既有橫向可捲動照片佇列自然延伸出可視寬度（R4 白名單類別），編輯器佇列本輪未觸碰，非缺陷（同類 1 例）"
+        }
+      ]
+    },
+    "cross_parent_collision": {
+      "flagged": [
+        {
+          "node_a": "CJ2BA",
+          "node_b": "w88OF",
+          "classification": "R8 本輪新增：日記詳情板頁尾『Spacer 16』版尾留白框與角托 corner-out 5pt 出血區在 2D 投影上重疊，Spacer 16 為不可見排版框（zero-opacity layout aid，非可視內容），角托本身壓過紙緣是既有母題規則——兩者交集為既有出血規則的自然延伸，不影響任何可視渲染，已記入 g41UR Notes 透明化說明（同類 2 例）"
+        },
+        {
+          "node_a": "CJ2BA",
+          "node_b": "geuIN",
+          "classification": "R8 本輪新增：日記詳情板頁尾『Spacer 16』版尾留白框與角托 corner-out 5pt 出血區在 2D 投影上重疊，Spacer 16 為不可見排版框（zero-opacity layout aid，非可視內容），角托本身壓過紙緣是既有母題規則——兩者交集為既有出血規則的自然延伸，不影響任何可視渲染，已記入 g41UR Notes 透明化說明（同類 2 例）"
+        },
+        {
+          "node_a": "gnVLw",
+          "node_b": "b5MmX",
+          "classification": "R8 本輪新增：日記詳情板頁尾『Spacer 16』版尾留白框與角托 corner-out 5pt 出血區在 2D 投影上重疊，Spacer 16 為不可見排版框（zero-opacity layout aid，非可視內容），角托本身壓過紙緣是既有母題規則——兩者交集為既有出血規則的自然延伸，不影響任何可視渲染，已記入 g41UR Notes 透明化說明（同類 2 例）"
+        },
+        {
+          "node_a": "gnVLw",
+          "node_b": "K1il5t",
+          "classification": "R8 本輪新增：日記詳情板頁尾『Spacer 16』版尾留白框與角托 corner-out 5pt 出血區在 2D 投影上重疊，Spacer 16 為不可見排版框（zero-opacity layout aid，非可視內容），角托本身壓過紙緣是既有母題規則——兩者交集為既有出血規則的自然延伸，不影響任何可視渲染，已記入 g41UR Notes 透明化說明（同類 2 例）"
+        },
+        {
+          "node_a": "UEhNU",
+          "node_b": "eskmI",
+          "classification": "R8 本輪新增：日記詳情板頁尾『Spacer 16』版尾留白框與角托 corner-out 5pt 出血區在 2D 投影上重疊，Spacer 16 為不可見排版框（zero-opacity layout aid，非可視內容），角托本身壓過紙緣是既有母題規則——兩者交集為既有出血規則的自然延伸，不影響任何可視渲染，已記入 g41UR Notes 透明化說明（同類 2 例）"
+        },
+        {
+          "node_a": "UEhNU",
+          "node_b": "V2tqX",
+          "classification": "R8 本輪新增：日記詳情板頁尾『Spacer 16』版尾留白框與角托 corner-out 5pt 出血區在 2D 投影上重疊，Spacer 16 為不可見排版框（zero-opacity layout aid，非可視內容），角托本身壓過紙緣是既有母題規則——兩者交集為既有出血規則的自然延伸，不影響任何可視渲染，已記入 g41UR Notes 透明化說明（同類 2 例）"
+        },
+        {
+          "node_a": "KBTFi",
+          "node_b": "KddmC",
+          "classification": "R8 本輪新增：日記詳情板頁尾『Spacer 16』版尾留白框與角托 corner-out 5pt 出血區在 2D 投影上重疊，Spacer 16 為不可見排版框（zero-opacity layout aid，非可視內容），角托本身壓過紙緣是既有母題規則——兩者交集為既有出血規則的自然延伸，不影響任何可視渲染，已記入 g41UR Notes 透明化說明（同類 2 例）"
+        },
+        {
+          "node_a": "KBTFi",
+          "node_b": "pGFDG",
+          "classification": "R8 本輪新增：日記詳情板頁尾『Spacer 16』版尾留白框與角托 corner-out 5pt 出血區在 2D 投影上重疊，Spacer 16 為不可見排版框（zero-opacity layout aid，非可視內容），角托本身壓過紙緣是既有母題規則——兩者交集為既有出血規則的自然延伸，不影響任何可視渲染，已記入 g41UR Notes 透明化說明（同類 2 例）"
+        },
+        {
+          "node_a": "WsQdq",
+          "node_b": "l1sen",
+          "classification": "R8 本輪新增：日記詳情板頁尾『Spacer 16』版尾留白框與角托 corner-out 5pt 出血區在 2D 投影上重疊，Spacer 16 為不可見排版框（zero-opacity layout aid，非可視內容），角托本身壓過紙緣是既有母題規則——兩者交集為既有出血規則的自然延伸，不影響任何可視渲染，已記入 g41UR Notes 透明化說明（同類 2 例）"
+        },
+        {
+          "node_a": "WsQdq",
+          "node_b": "g2T6rx",
+          "classification": "R8 本輪新增：日記詳情板頁尾『Spacer 16』版尾留白框與角托 corner-out 5pt 出血區在 2D 投影上重疊，Spacer 16 為不可見排版框（zero-opacity layout aid，非可視內容），角托本身壓過紙緣是既有母題規則——兩者交集為既有出血規則的自然延伸，不影響任何可視渲染，已記入 g41UR Notes 透明化說明（同類 2 例）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "pYE38",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "rtNqP",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "g7B7X",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "Mlugc",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "M98qs",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "j2z1C0",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "xfmAg",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "DIMqR",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "I8sWT8",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "OIwlW",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "kSfzp",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "mIStI",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "E6reS5",
+          "classification": "R5–R8 未觸碰之既有加入家庭頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "B5E1ig",
+          "classification": "R5–R8 未觸碰之既有加入家庭頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "br1l7",
+          "classification": "R5–R8 未觸碰之既有加入家庭頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "qnP3W",
+          "classification": "R5–R8 未觸碰之既有加入家庭頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "F03KZ",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "IdIpj",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "CQ1DR",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "R13bes",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "VUrCa",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "s3NQB",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "MSHDo",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "Or86v",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "vh3wA",
+          "classification": "R5–R8 未觸碰之既有加入家庭頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "a9D8tu",
+          "classification": "R5–R8 未觸碰之既有加入家庭頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "GWAHq",
+          "classification": "R5–R8 未觸碰之既有加入家庭頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "SV5Ka",
+          "classification": "R5–R8 未觸碰之既有加入家庭頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "GWAHq",
+          "node_b": "CpjLh",
+          "classification": "R5–R8 未觸碰之既有加入或建立頁角托與卡片文字跨 parent 接近，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "SV5Ka",
+          "node_b": "CpjLh",
+          "classification": "R5–R8 未觸碰之既有加入或建立頁角托與卡片文字跨 parent 接近，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "HQIu3",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "sqAra",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "XNlL6",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "YtTc7",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "E0sov",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "tzB8c",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "jUZCY",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "O1r9l",
+          "classification": "R5–R8 未觸碰之既有歡迎頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "Wo9Ox",
+          "node_b": "K4qvK6",
+          "classification": "R5–R8 未觸碰之既有建檔頁角托 corner-out 5pt 出血跨 parent 表現，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "efA3a",
+          "node_b": "K4qvK6",
+          "classification": "R5–R8 未觸碰之既有建檔頁角托 corner-out 5pt 出血跨 parent 表現，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "E5X7Nk",
+          "node_b": "aGcLA",
+          "classification": "R5–R8 未觸碰之既有建檔頁角托 corner-out 5pt 出血跨 parent 表現，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "cM5Hi",
+          "node_b": "aGcLA",
+          "classification": "R5–R8 未觸碰之既有建檔頁角托 corner-out 5pt 出血跨 parent 表現，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "gEYpf",
+          "node_b": "zGEet",
+          "classification": "R5–R8 未觸碰之既有時間軸切換下拉選單開啟態，角托跨 parent 被選單暫時覆蓋，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "FkOcN",
+          "node_b": "zGEet",
+          "classification": "R5–R8 未觸碰之既有時間軸切換下拉選單開啟態，角托跨 parent 被選單暫時覆蓋，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "PRyQO",
+          "node_b": "zGEet",
+          "classification": "R5–R8 未觸碰之既有時間軸切換下拉選單開啟態，角托跨 parent 被選單暫時覆蓋，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "tVUkg",
+          "node_b": "zGEet",
+          "classification": "R5–R8 未觸碰之既有時間軸切換下拉選單開啟態，角托跨 parent 被選單暫時覆蓋，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "AXf4H",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "Lns4o",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "haMqk",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "Izo3e",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "XHfST",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "kbkHy",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "q2Dth",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "VGqGL",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "OJ1xr",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "KSTqZ",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "Rqmus",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "W7VlAp",
+          "classification": "R5–R8 未觸碰之既有邀請頁角托 corner-out 5pt 出血跨 parent 表現，R11/LS-72 白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "aY7S5",
+          "classification": "R7/R8 觸碰之日記詳情板版面留白框（Spacer Section）與角托 corner-out 出血區跨 parent 交集，不可見排版框、非可視缺陷，已記入 Notes（同類 1 例）"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "BbDZH",
+          "classification": "R7/R8 觸碰之日記詳情板版面留白框（Spacer Section）與角托 corner-out 出血區跨 parent 交集，不可見排版框、非可視缺陷，已記入 Notes（同類 1 例）"
+        },
+        {
+          "node_a": "MFpwo/DjW91",
+          "node_b": "sbsqF",
+          "classification": "R5–R8 未觸碰之既有時間軸深色／Stress 板角托跨 parent 出血覆蓋 Tab Bar／Home Indicator 區，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "MFpwo/DjW91",
+          "node_b": "bmk5H",
+          "classification": "R5–R8 未觸碰之既有時間軸深色／Stress 板角托跨 parent 出血覆蓋 Tab Bar／Home Indicator 區，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "MFpwo/JgUK8",
+          "node_b": "sbsqF",
+          "classification": "R5–R8 未觸碰之既有時間軸深色／Stress 板角托跨 parent 出血覆蓋 Tab Bar／Home Indicator 區，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "MFpwo/JgUK8",
+          "node_b": "bmk5H",
+          "classification": "R5–R8 未觸碰之既有時間軸深色／Stress 板角托跨 parent 出血覆蓋 Tab Bar／Home Indicator 區，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "NlAQF",
+          "node_b": "im7DS",
+          "classification": "R7/R8 觸碰之日記詳情板版面留白框（Spacer Section）與角托 corner-out 出血區跨 parent 交集，不可見排版框、非可視缺陷，已記入 Notes（同類 1 例）"
+        },
+        {
+          "node_a": "U8o75p",
+          "node_b": "im7DS",
+          "classification": "R7/R8 觸碰之日記詳情板版面留白框（Spacer Section）與角托 corner-out 出血區跨 parent 交集，不可見排版框、非可視缺陷，已記入 Notes（同類 1 例）"
+        },
+        {
+          "node_a": "g8ywZ3",
+          "node_b": "Yz0R7",
+          "classification": "R7/R8 觸碰之日記詳情板版面留白框（Spacer Section）與角托 corner-out 出血區跨 parent 交集，不可見排版框、非可視缺陷，已記入 Notes（同類 1 例）"
+        },
+        {
+          "node_a": "CX3sc",
+          "node_b": "Yz0R7",
+          "classification": "R7/R8 觸碰之日記詳情板版面留白框（Spacer Section）與角托 corner-out 出血區跨 parent 交集，不可見排版框、非可視缺陷，已記入 Notes（同類 1 例）"
+        },
+        {
+          "node_a": "duIxD",
+          "node_b": "EgTrf",
+          "classification": "R7/R8 觸碰之日記詳情板版面留白框（Spacer Section）與角托 corner-out 出血區跨 parent 交集，不可見排版框、非可視缺陷，已記入 Notes（同類 1 例）"
+        },
+        {
+          "node_a": "CgLN7",
+          "node_b": "EgTrf",
+          "classification": "R7/R8 觸碰之日記詳情板版面留白框（Spacer Section）與角托 corner-out 出血區跨 parent 交集，不可見排版框、非可視缺陷，已記入 Notes（同類 1 例）"
+        },
+        {
+          "node_a": "u01Pc/DjW91",
+          "node_b": "u87Nb",
+          "classification": "R5–R8 未觸碰之既有時間軸深色／Stress 板角托跨 parent 出血覆蓋 Tab Bar／Home Indicator 區，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "u01Pc/DjW91",
+          "node_b": "M4PUm",
+          "classification": "R5–R8 未觸碰之既有時間軸深色／Stress 板角托跨 parent 出血覆蓋 Tab Bar／Home Indicator 區，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "u01Pc/JgUK8",
+          "node_b": "u87Nb",
+          "classification": "R5–R8 未觸碰之既有時間軸深色／Stress 板角托跨 parent 出血覆蓋 Tab Bar／Home Indicator 區，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "u01Pc/JgUK8",
+          "node_b": "M4PUm",
+          "classification": "R5–R8 未觸碰之既有時間軸深色／Stress 板角托跨 parent 出血覆蓋 Tab Bar／Home Indicator 區，白名單延續（同類 1 例）"
+        },
+        {
+          "node_a": "s1LfAj",
+          "node_b": "repj6",
+          "classification": "R5/R6 既有：長按拖曳示範板，縮圖被提起時故意疊在鄰近格子上方，設計意圖，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "IDOjx",
+          "node_b": "h3zyP",
+          "classification": "R5/R6 既有：長按拖曳示範板，縮圖被提起時故意疊在鄰近格子上方，設計意圖，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "F34mkw",
+          "node_b": "UGZbZ",
+          "classification": "R7/R8 觸碰之日記詳情板版面留白框（Spacer Section）與角托 corner-out 出血區跨 parent 交集，不可見排版框、非可視缺陷，已記入 Notes（同類 1 例）"
+        },
+        {
+          "node_a": "VYRlA",
+          "node_b": "UGZbZ",
+          "classification": "R7/R8 觸碰之日記詳情板版面留白框（Spacer Section）與角托 corner-out 出血區跨 parent 交集，不可見排版框、非可視缺陷，已記入 Notes（同類 1 例）"
+        },
+        {
+          "node_a": "lM7jG",
+          "node_b": "z12HU",
+          "classification": "R7/R8 觸碰之日記詳情板版面留白框（Spacer Section）與角托 corner-out 出血區跨 parent 交集，不可見排版框、非可視缺陷，已記入 Notes（同類 1 例）"
+        },
+        {
+          "node_a": "P4TzC",
+          "node_b": "z12HU",
+          "classification": "R7/R8 觸碰之日記詳情板版面留白框（Spacer Section）與角托 corner-out 出血區跨 parent 交集，不可見排版框、非可視缺陷，已記入 Notes（同類 1 例）"
+        }
+      ]
+    },
+    "corner_anchor": {
+      "boards": [
+        "zgVn0",
+        "qtCd7",
+        "bhroo",
+        "umJHD",
+        "yXSht",
+        "Qxema",
+        "a67Na",
+        "V4Ktak",
+        "go7f9",
+        "lKoZG",
+        "mkxzU",
+        "OnUvi",
+        "peiRC",
+        "c1Uk7",
+        "b3PELj",
+        "MOLyd",
+        "vzYXz",
+        "QCJfh",
+        "MjRcr",
+        "cqgkc",
+        "oLN0e",
+        "zy3Ps",
+        "Tr8Kd",
+        "Ir63D",
+        "A33la",
+        "M7CZQ",
+        "yec61",
+        "f1wVw",
+        "bs8aE",
+        "IH80C",
+        "GgtNs",
+        "KjDsM",
+        "bimlL",
+        "P3DW1",
+        "HLXo3"
+      ],
+      "containers": 93,
+      "points": 744,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 126,
+      "document_points": 1008,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "unresolved": []
+    }
+  }
+}

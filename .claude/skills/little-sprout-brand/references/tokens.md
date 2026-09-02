@@ -51,6 +51,7 @@
 | `paper-edge` | #FFF7F8 | #432932 | 沖印紙的 1pt 亮邊（堆疊順序：台紙 → 紙（1pt paper-edge）→ 角托） | 待補（需 Pen） |
 | `photo-dim` | #FFFFFF00 | #190E122E | 深色模式照片「少一格光」的罩（相紙不會在晚上一樣亮） | 待補（需 Pen） |
 | `disabled-fg` | #9F878C | #716366 | **只給 in-flight**（Button Working）；驗證型 disable 全稿為 0 | 待補（需 Pen） |
+| `paper-rule`（LS-119 R3） | #5530404D | #5530404D | 紙上的分隔線（Card Diary Sign-off Rule）：`$print-ink-secondary` 30.2% alpha（4D＝77/255＝30.2%；R3 曾誤記為 25%，LS-119 R4 更正），不掛 theme——躺在紙上的線不該跟著 theme 反轉（同 print-ink 系列邏輯）。取代誤用 `$border`（theme-aware）疊在 `$print-paper`（不掛 theme）上導致深色對比暴衝 3 倍的 bug | 疊在 `$print-paper` 上：淺 1.73:1／深 1.67:1（LS-119 R4 實測回填；新 token 本身無 theme 差異，此欄取代先前「不再適用」的空白）|
 | `knob-edge` / `knob-shadow` | #8A6470 / #2B141C4D | #D3AEB2 / #00000073 | 開關把手描邊／影（核准開關已改為固定 Approval Status，token 留存） | 待補（需 Pen） |
 | `switch-knob` / `switch-off` | #FFFFFF / #E4C8CD | #190E12 / #3B252D | 同上 | 待補（需 Pen） |
 
