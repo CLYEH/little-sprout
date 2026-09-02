@@ -60,33 +60,56 @@ struct TimelineView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: AppSpacing.item) {
-            Text("時間軸")
-                .appFont(.display, weight: .bold)
-                .foregroundStyle(Color.lsTextPrimary)
+            headerRow
             if !childrenStore.activeChildren.isEmpty {
                 ChildFilterBar(childrenStore: childrenStore, selectedChildID: $selectedChildID)
             }
-            createMemoryButton
         }
         .padding(.horizontal, AppSpacing.screenPad)
-        .padding(.top, AppSpacing.item)
-        .padding(.bottom, AppSpacing.item)
+        .padding(.top, AppSpacing.label)
+    }
+
+    /// Pen 對稿修正：LS-119 稿（`design/littlesprout.pen` frame `yXSht`／`Header Row` `FCiMS`）
+    /// 標題與建立鈕同列（`justifyContent: space_between`），不是分開兩層；稿面 Body 頂距也是
+    /// `$sp-label`（8pt）而非原本誤用的 `$sp-item`（16pt）。
+    private var headerRow: some View {
+        HStack(alignment: .center) {
+            Text("時間軸")
+                .appFont(.display, weight: .bold)
+                .foregroundStyle(Color.lsTextPrimary)
+            Spacer()
+            createMemoryButton
+        }
     }
 
     /// Header 停靠的具名建立鈕（Tab-root 慣例）——刻意**不**套 `motifs.md` 的釘底動作帶：
     /// 那個慣例服務「單一 CTA 貫穿全狀態、內容隨狀態變動」的表單類畫面，時間軸是內容持續
     /// 累積的 feed，CTA 屬於畫面「入口」而不是「收尾」，位置在上不在下。
+    ///
+    /// Pen 對稿修正：稿面 `cmp/Create Entry Button`（`zy3Ps`）是緊湊 pill（`cornerRadius:999`／
+    /// `gap:6`／`padding:[9.5,16]`／icon 18×18 純加號，無外框圓），不是原本的全寬色塊——
+    /// `padding-vertical` 對到既有 token `controlPaddingTap`（同一組值，`JoinWaitingView` 已有
+    /// 相同 padding＋icon＋semibold 文字的先例）；icon 換成裸 `"plus"` `.small`（18pt）對應
+    /// lucide 的純加號，不用會多畫一個圓的 `plus.circle.fill`。
     private var createMemoryButton: some View {
         Button(action: onCreateMemory) {
-            HStack(spacing: AppSpacing.label) {
-                Image(systemName: "plus.circle.fill").appIconFrame(.medium)
+            HStack(spacing: AppSpacing.tight) {
+                Image(systemName: "plus").appIconFrame(.small)
                 Text("新增回憶").appFont(.body, weight: .semibold)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, AppSpacing.controlPaddingCTA)
+            .padding(.vertical, AppSpacing.controlPaddingTap)
+            .padding(.horizontal, AppSpacing.item)
+            .background(Color.lsAccent, in: Capsule())
+            // 稿面的 pill 純用內容高度（icon 18pt／17pt 字＋9.5pt 上下 padding）估算落在
+            // 44pt 邊界附近，且此檔在 tap-target-check 的豁免名單上（見
+            // `scripts/gates/tap-target-exemptions.txt`）沒有自動化覆蓋兜底——同
+            // `SettingsView` 登出鈕／`loadMoreTrigger` 重新載入鈕的既有手法，用不可見的
+            // `minHeight` 撐大點擊區，不改變上面已經畫好的視覺 pill 尺寸（`.background`
+            // 掛在 `.frame` 之前，胖的是外層透明點擊區，不是看得到的色塊）。
+            .frame(minHeight: AppSpacing.section)
+            .contentShape(Rectangle())
         }
         .foregroundStyle(Color.lsOnAccent)
-        .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
     }
 
     private func feedScrollView(columns: Int) -> some View {
@@ -94,8 +117,6 @@ struct TimelineView: View {
             LazyVStack(alignment: .leading, spacing: AppSpacing.section) {
                 if renderableEntries.isEmpty {
                     emptyOrLoadingState
-                        .padding(.horizontal, AppSpacing.screenPad)
-                        .padding(.top, AppSpacing.section)
                 } else {
                     ForEach(dayGroups) { group in
                         daySection(group, columns: columns)
@@ -103,7 +124,12 @@ struct TimelineView: View {
                     loadMoreTrigger
                 }
             }
+            // Pen 對稿修正：稿面 ChildFilter 與 Feed 之間有獨立的 `Spacer Section`（44pt，
+            // `yXSht` 節點 `H2Ga9h`）——原本這段落差全靠 `header` 的 16pt 底部 padding，
+            // 稿面要求的 44pt「每畫面至少一次」地標間距沒有出現在這裡（只出現在 Day Group
+            // 之間）。改成在這裡補上，並讓 `header` 不再自帶底部 padding，避免疊加。
             .padding(.horizontal, AppSpacing.screenPad)
+            .padding(.top, AppSpacing.section)
             .padding(.bottom, AppSpacing.section)
         }
         .refreshable {
@@ -123,9 +149,13 @@ struct TimelineView: View {
         TimelineDayGrouping.group(renderableEntries)
     }
 
+    /// Pen 對稿修正：iPhone 單欄版稿面 Day Group（`yXSht` 節點 `b6iPyc`）Day Divider 與卡片
+    /// 區塊之間是 `$sp-label`（8pt），不是卡片彼此之間用的 `$sp-item`（16pt，見下方內層
+    /// `VStack`，那層維持不變）。iPad 多欄版型本輪對稿範圍未涵蓋（見 PR body「未驗」），
+    /// `columns > 1` 分支維持原值，不在本次一併調整。
     @ViewBuilder
     private func daySection(_ group: TimelineDayGrouping.Group, columns: Int) -> some View {
-        VStack(alignment: .leading, spacing: columns > 1 ? AppSpacing.block : AppSpacing.item) {
+        VStack(alignment: .leading, spacing: columns > 1 ? AppSpacing.block : AppSpacing.label) {
             DayDividerView(date: group.day)
             if columns > 1 {
                 LazyVGrid(
