@@ -108,7 +108,9 @@ for c in items:
     user = c.get("user") or {}
     if user.get("login") != owner:
         continue
-    out.write("%s %s\n%s\0" % (c.get("id"), c.get("created_at"), c.get("body") or ""))
+    # NUL 是記錄分隔符，body 內的 NUL 一律剝掉，免得一則被切成兩筆（merge-review R1 i-1；真實 API 不會回 NUL）
+    body = (c.get("body") or "").replace("\0", "")
+    out.write("%s %s\n%s\0" % (c.get("id"), c.get("created_at"), body))
 PY
 rc=$?
 [ "$rc" -eq 0 ] || exit 2
@@ -119,7 +121,11 @@ while IFS= read -r -d '' rec; do
   total=$((total + 1))
   meta=${rec%%"$nl"*}
   body=${rec#*"$nl"}
-  if printf '%s' "$body" | "$@"; then
+  # body 先落檔再重導給 gate，不用 pipe（merge-review R1 minor）：gate 端 grep -q 命中即退出，body 超過 pipe 容量
+  # （64 KiB）時 printf 收 SIGPIPE 回 141，pipefail 下整條 pipeline 被判失敗——使用者「首行蓋章＋貼一大段 log」
+  # 會被誤判無命中（GitHub comment 上限 65,536 字元，CJK 3 bytes 可達 ~190 KB）。
+  printf '%s' "$body" > "$work/body"
+  if "$@" < "$work/body"; then
     echo "✓ approval-comment-check：PR #${pr} 使用者本人（${owner}）的 comment 命中核可標記（comment ${meta%% *} @ ${meta#* }）"
     exit 0
   fi

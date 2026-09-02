@@ -130,6 +130,22 @@ expect 1 '⑪ user 為 null → exit 1（不炸）' '共 0 則' 218 bash "$gate"
 fixture '[{"id":12,"created_at":"2026-09-02T03:08:00Z","user":{"login":"CLYEH","type":"User"},"body":null}]'
 expect 1 '⑪ owner body 為 null → exit 1（不炸）' '共 1 則' 218 bash "$gate"
 
+# ⑪b 大 body（merge-review R1 minor）：使用者「首行蓋章＋貼一大段 log」——body 超過 pipe 容量（64 KiB）時，
+#     gate 端 grep -q 命中即退出，pipe 寫入端收 SIGPIPE 回 141，pipefail 下整條 pipeline 被判失敗 → 誤判無命中
+#     （reviewer 實跑：首行標記＋202 KB → exit 1；GitHub comment 上限 65,536 字元、CJK 3 bytes 可達 ~190 KB）。
+#     修法是 body 先落檔再 `"$@" < 檔`，這兩組防退化。
+big=$(head -c 200000 /dev/zero | tr '\0' 'x')
+fixture "[{\"id\":15,\"created_at\":\"2026-09-02T03:11:00Z\",\"user\":{\"login\":\"CLYEH\",\"type\":\"User\"},\"body\":\"DESTRUCTIVE-APPROVED\\n${big}\"}]"
+expect 0 '⑪b 首行標記＋200 KB 內文（超過 pipe 容量）→ exit 0' 'comment 15 @' 218 bash "$gate"
+fixture "[{\"id\":16,\"created_at\":\"2026-09-02T03:12:00Z\",\"user\":{\"login\":\"CLYEH\",\"type\":\"User\"},\"body\":\"log:\\n${big}\"}]"
+expect 1 '⑪b 200 KB 內文無標記 → exit 1' '無一則命中' 218 bash "$gate"
+unset big
+
+# ⑪c body 內的 NUL 不得偽造記錄邊界（R1 i-1）：`AAA\0DESTRUCTIVE-APPROVED` 原本會被切成兩筆、第二筆誤判命中；
+#     剝掉 NUL 後是 `AAADESTRUCTIVE-APPROVED`，非獨佔一行 → 紅
+fixture '[{"id":17,"created_at":"2026-09-02T03:13:00Z","user":{"login":"CLYEH","type":"User"},"body":"AAA\u0000DESTRUCTIVE-APPROVED"}]'
+expect 1 '⑪c body 含 NUL 不切成兩筆 → exit 1' '共 1 則' 218 bash "$gate"
+
 # ⑫ gate 命令是通用 stdin 契約：migration-immutable-check 的逃生口 regex 也能直接傳
 MIG_RE='^[[:space:]]*MIGRATION-REWRITE-APPROVED:[[:space:]]*LS-[1-9][0-9]*[[:space:]]*$'
 fixture '[{"id":13,"created_at":"2026-09-02T03:09:00Z","user":{"login":"CLYEH","type":"User"},"body":"MIGRATION-REWRITE-APPROVED: LS-8\n理由：尚未部署"}]'
