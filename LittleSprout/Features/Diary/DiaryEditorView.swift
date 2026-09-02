@@ -102,8 +102,12 @@ struct DiaryEditorView: View {
         .padding(.bottom, AppSpacing.item)
     }
 
+    /// R5 對稿（`design/littlesprout.pen` `b3PELj`）：右欄固定寬度原本是截圖比例估算的
+    /// `360`，量到的實際值是 `294`；左右欄之間的 `HStack` gap 量到 `$screen-pad-lg`（40），
+    /// 不是 `$sp-section`（44）；右欄內部（日期→寶貝→提示卡）三個區塊之間的間距量到全部是
+    /// `$sp-section`（44），不是原本各自沿用的 `.item`／`.block`。
     private var regularColumns: some View {
-        HStack(alignment: .top, spacing: AppSpacing.section) {
+        HStack(alignment: .top, spacing: AppSpacing.screenPadLarge) {
             VStack(alignment: .leading, spacing: 0) {
                 titleSection
                 bodyTextField
@@ -116,11 +120,11 @@ struct DiaryEditorView: View {
             VStack(alignment: .leading, spacing: 0) {
                 dateFieldSection
                 childFieldSection
-                    .padding(.top, AppSpacing.item)
+                    .padding(.top, AppSpacing.section)
                 publishInfoCard
-                    .padding(.top, AppSpacing.block)
+                    .padding(.top, AppSpacing.section)
             }
-            .frame(width: 360)
+            .frame(width: 294)
         }
         .padding(.top, AppSpacing.item)
     }
