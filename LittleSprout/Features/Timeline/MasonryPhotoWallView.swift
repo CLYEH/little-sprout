@@ -46,7 +46,10 @@ struct MasonryPhotoWallView: View {
             onTapVideo(photo)
         }
         .task(id: photo.id) {
-            guard photo.type == .video, let url = photo.signedURL else { return }
+            // R2-M1（merge-review `b7ecfbf4`）：`isThumbnail` 時 `photo.signedURL` 是縮圖
+            // JPEG，不是可解出時長的影片檔——讀取必定失敗，從源頭跳過，見 `PhotoCardView`
+            // 同款註解。
+            guard photo.needsVideoDurationLookup, let url = photo.signedURL else { return }
             await timelineStore.loadVideoDuration(mediaID: photo.id, url: url)
         }
         .accessibilityLabel(accessibilityLabel(for: photo))

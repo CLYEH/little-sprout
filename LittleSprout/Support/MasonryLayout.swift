@@ -43,7 +43,7 @@ enum MasonryLayout {
         return max(1, Int((raw + epsilon).rounded(.down)))
     }
 
-    static func columnWidth(forWidth width: CGFloat, columnCount: Int, gap: CGFloat = 16) -> CGFloat {
+    private static func columnWidth(forWidth width: CGFloat, columnCount: Int, gap: CGFloat = 16) -> CGFloat {
         guard columnCount > 0 else { return width }
         return (width - CGFloat(columnCount - 1) * gap) / CGFloat(columnCount)
     }

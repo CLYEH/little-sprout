@@ -95,9 +95,18 @@ struct DiaryCardView: View {
             body: "今天第一次自己翻身，笑得好開心，全家都在旁邊歡呼。",
             entryDate: Date(),
             previewPhotos: [
-                MediaContent(id: UUID(), type: .photo, width: 4, height: 3, signedURL: nil),
-                MediaContent(id: UUID(), type: .photo, width: 3, height: 4, signedURL: nil),
-                MediaContent(id: UUID(), type: .photo, width: 1, height: 1, signedURL: nil)
+                MediaContent(
+                    id: UUID(), type: .photo, width: 4, height: 3, thumbWidth: nil, thumbHeight: nil,
+                    storagePath: "preview/1.jpg", isThumbnail: false, signedURL: nil
+                ),
+                MediaContent(
+                    id: UUID(), type: .photo, width: 3, height: 4, thumbWidth: nil, thumbHeight: nil,
+                    storagePath: "preview/2.jpg", isThumbnail: false, signedURL: nil
+                ),
+                MediaContent(
+                    id: UUID(), type: .photo, width: 1, height: 1, thumbWidth: nil, thumbHeight: nil,
+                    storagePath: "preview/3.jpg", isThumbnail: false, signedURL: nil
+                )
             ],
             totalPhotoCount: 6
         ),

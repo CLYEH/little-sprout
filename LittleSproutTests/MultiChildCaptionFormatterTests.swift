@@ -17,25 +17,31 @@ final class MultiChildCaptionFormatterTests: XCTestCase {
         BirthdayFormat.date(fromWireString: isoString)!
     }
 
-    // MARK: - 單寶貝：「姓名 · 年齡」
+    // MARK: - 單寶貝：「姓名 · 年齡」／多寶貝：「姓名 年齡、姓名 年齡」（頓號分人，不用「·」）
+    //
+    // LS-130 順手項（dead-code-sweeper，comment f696170c）：這三條原本斷言
+    // `MultiChildCaptionFormatter.plainText(...)`（純文字版）的輸出，但 `plainText` 在生產
+    // 程式碼裡沒有任何呼叫端——`DiaryCardView`／`DiaryDetailView` 都用
+    // `.accessibilityElement(children: .combine)`，VoiceOver 直接讀 `attributed(...)` 產出的
+    // `Text` 內容，不需要另一份純文字字串。已刪除 `plainText`；格式規則（單寶貝 `·`、多寶貝
+    // `、`、不斷行空格）改斷言在實際使用的 `attributed(...)` 輸出上，不流失原本的測試意圖。
 
-    func test_plainText_singleChild_usesMiddleDotFormat() {
+    func test_attributed_singleChild_usesMiddleDotFormat() {
         let anan = child(name: "陳小安", birthday: date("2024-06-02"))
-        let text = MultiChildCaptionFormatter.plainText(
+        let attributed = MultiChildCaptionFormatter.attributed(
             children: [anan], asOf: date("2026-09-02"), calendar: utcCalendar
         )
         // 2024-06-02 → 2026-09-02：2 歲 3 個月。
-        XCTAssertEqual(text, "陳小安 · 2\u{00A0}歲\u{00A0}3\u{00A0}個月")
+        XCTAssertEqual(String(attributed.characters), "陳小安 · 2\u{00A0}歲\u{00A0}3\u{00A0}個月")
     }
 
-    // MARK: - 多寶貝：「姓名 年齡、姓名 年齡」（頓號分人，不用「·」）
-
-    func test_plainText_multipleChildren_usesCommaFormatWithoutMiddleDot() {
+    func test_attributed_multipleChildren_usesCommaFormatWithoutMiddleDot() {
         let anan = child(name: "陳小安", birthday: date("2024-06-02"))
         let xuan = child(name: "陳小軒", birthday: date("2020-01-15"))
-        let text = MultiChildCaptionFormatter.plainText(
+        let attributed = MultiChildCaptionFormatter.attributed(
             children: [anan, xuan], asOf: date("2026-09-02"), calendar: utcCalendar
         )
+        let text = String(attributed.characters)
         XCTAssertFalse(text.contains("·"), "多寶貝格式不用「·」")
         XCTAssertTrue(text.contains("、"), "多寶貝格式用頓號分人")
         XCTAssertEqual(
@@ -43,12 +49,12 @@ final class MultiChildCaptionFormatterTests: XCTestCase {
         )
     }
 
-    func test_plainText_youngChild_monthsOnlyForm() {
+    func test_attributed_youngChild_monthsOnlyForm() {
         let baby = child(name: "小寶", birthday: date("2026-05-02"))
-        let text = MultiChildCaptionFormatter.plainText(
+        let attributed = MultiChildCaptionFormatter.attributed(
             children: [baby], asOf: date("2026-09-02"), calendar: utcCalendar
         )
-        XCTAssertEqual(text, "小寶 · 4\u{00A0}個月大")
+        XCTAssertEqual(String(attributed.characters), "小寶 · 4\u{00A0}個月大")
     }
 
     // MARK: - 不斷行空格：數字與單位間一律 NBSP，不用一般空格

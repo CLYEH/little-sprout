@@ -78,6 +78,11 @@ enum TimelineContentAssembler {
 
     /// 日記詳情的瀑布流用——`diaryID` 這篇日記**全部**附照（依 `sort_order` 排序），不是
     /// 時間軸卡片只露的前 3 張。
+    ///
+    /// LS-130 簽名策略調整：這裡簽的是縮圖（`displayPath`，thumb 優先／NULL 退回原圖），
+    /// 供瀑布流格內顯示；全尺寸原檔**不**在這裡簽——放大檢視／播放影片才由呼叫端另外呼叫
+    /// `TimelineStore.signFullSizeURL(storagePath:)` 現簽（`MediaContent.storagePath` 留著
+    /// 供那個時機用），見 docs/API.md §6「簽名 URL 與 egress 防線」。
     static func fetchDiaryPhotos(diaryID: UUID, apiClient: TimelineAPIClient) async throws -> [MediaContent] {
         let links = try await apiClient.fetchDiaryMediaLinks(diaryIds: [diaryID])
         let sortedLinks = links.sorted { $0.sortOrder < $1.sortOrder }
@@ -90,7 +95,9 @@ enum TimelineContentAssembler {
             guard let row = rowById[link.mediaId] else { return nil }
             return MediaContent(
                 id: row.id, type: row.type, width: row.width, height: row.height,
-                signedURL: signed[row.storagePath]
+                thumbWidth: row.thumbWidth, thumbHeight: row.thumbHeight,
+                storagePath: row.storagePath, isThumbnail: row.thumbPath != nil,
+                signedURL: signed[displayPath(row)]
             )
         }
     }
@@ -130,7 +137,9 @@ enum TimelineContentAssembler {
                 guard let row = mediaById[link.mediaId] else { return nil }
                 return MediaContent(
                     id: row.id, type: row.type, width: row.width, height: row.height,
-                    signedURL: signed[row.storagePath]
+                    thumbWidth: row.thumbWidth, thumbHeight: row.thumbHeight,
+                    storagePath: row.storagePath, isThumbnail: row.thumbPath != nil,
+                    signedURL: signed[displayPath(row)]
                 )
             }
             result[diary.id] = DiaryContent(
@@ -155,7 +164,9 @@ enum TimelineContentAssembler {
             let cover: MediaContent? = album.coverMediaId.flatMap { mediaById[$0] }.map { row in
                 MediaContent(
                     id: row.id, type: row.type, width: row.width, height: row.height,
-                    signedURL: signed[row.storagePath]
+                    thumbWidth: row.thumbWidth, thumbHeight: row.thumbHeight,
+                    storagePath: row.storagePath, isThumbnail: row.thumbPath != nil,
+                    signedURL: signed[displayPath(row)]
                 )
             }
             result[album.id] = AlbumContent(title: album.title, cover: cover)
@@ -171,15 +182,25 @@ enum TimelineContentAssembler {
         return Dictionary(uniqueKeysWithValues: rows.map { row in
             (row.id, MediaContent(
                 id: row.id, type: row.type, width: row.width, height: row.height,
-                signedURL: signed[row.storagePath]
+                thumbWidth: row.thumbWidth, thumbHeight: row.thumbHeight,
+                storagePath: row.storagePath, isThumbnail: row.thumbPath != nil,
+                signedURL: signed[displayPath(row)]
             ))
         })
+    }
+
+    /// 列表／詳情情境要簽的路徑——`thumb_path` 優先、`NULL` 時退回 `storage_path`（過渡期
+    /// 既有列、縮圖產生失敗的列），見 docs/API.md §6「簽名 URL 與 egress 防線」。全尺寸原檔
+    /// 不透過這支函式簽——只在放大檢視／影片播放時由呼叫端另外呼叫
+    /// `TimelineStore.signFullSizeURL(storagePath:)` 現簽。
+    private static func displayPath(_ row: MediaRow) -> String {
+        row.thumbPath ?? row.storagePath
     }
 
     private static func signedURLs(
         for mediaRows: [MediaRow], apiClient: TimelineAPIClient
     ) async throws -> [String: URL] {
         guard !mediaRows.isEmpty else { return [:] }
-        return try await apiClient.signedURLs(forStoragePaths: mediaRows.map(\.storagePath))
+        return try await apiClient.signedURLs(forStoragePaths: mediaRows.map(displayPath))
     }
 }

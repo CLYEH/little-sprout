@@ -27,12 +27,20 @@ final class StubTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
         var fetchAlbumsHandler: FetchAlbumsHandler = { _ in [] }
         var fetchMediaHandler: FetchMediaHandler = { _ in [] }
         var signedURLsHandler: SignedURLsHandler = { _ in [:] }
+        /// LS-130：每次 `signedURLs(forStoragePaths:)` 呼叫收到的路徑陣列，依呼叫順序——
+        /// 供測試斷言「全尺寸只在放大／播放時簽」：計數呼叫次數、檢查每次傳入的路徑是縮圖
+        /// 還是原圖，不能只看最終結果字典（字典看不出簽了幾次、每次簽了什麼）。
+        var signedURLsCalls: [[String]] = []
     }
 
     private let box = OSAllocatedUnfairLock(initialState: Box())
 
     var fetchPointersCalls: [FetchPointersCall] {
         box.withLock { $0.fetchPointersCalls }
+    }
+
+    var signedURLsCalls: [[String]] {
+        box.withLock { $0.signedURLsCalls }
     }
 
     func setFetchPointersHandler(_ handler: @escaping FetchPointersHandler) {
@@ -89,6 +97,7 @@ final class StubTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
     }
 
     func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL] {
+        box.withLock { $0.signedURLsCalls.append(paths) }
         let handler = box.withLock { $0.signedURLsHandler }
         return try await handler(paths)
     }

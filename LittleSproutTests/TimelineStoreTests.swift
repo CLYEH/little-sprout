@@ -328,6 +328,10 @@ final class TimelineStoreTests: XCTestCase {
         XCTAssertEqual(store.refreshState, .idle)
         XCTAssertTrue(store.hasMorePages)
     }
+
+    // LS-130 signFullSizeURL／R2-M1 loadVideoDuration 測試已搬到
+    // `TimelineStoreVideoTests.swift`（extension，SwiftLint `type_body_length`／
+    // `file_length` 拆檔，同 `OTPVerificationModelRateLimitTests.swift` 先例）。
 }
 
 /// 單次開關的非同步閘門，讓 `test_refresh_whileAlreadySubmitting_secondCallIsIgnored` 的 stub
