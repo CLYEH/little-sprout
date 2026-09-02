@@ -66499,7 +66499,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "撤回 R2「PLAN.md 明訂 FAB」的引據——經查 docs/PLAN.md 全檔 269 行 0 命中 FAB／浮動／floating action，屬虛構。時間軸首頁的建立入口改為導覽列右側具名按鈕「+ 新增回憶」（cmp/Create Entry Button，前身 cmp/FAB 就地改造，id 不變）：pill 形，padding [$ctl-pad-tap 9.5, $sp-item 16]，icon-sm 18＋fs-body 17 label，高度由 padding 推導＝44pt（實測 44）。放進 Header Row（與畫面標題同列，justifyContent:space_between），不再絕對定位、不再浮在捲動內容之上。",
+                  "content": "撤回 R2「PLAN.md 明訂 FAB」的引據——經查 docs/PLAN.md 全檔 269 行 0 命中 FAB／浮動／floating action，屬虛構。時間軸首頁的建立入口改為導覽列右側具名按鈕「+ 新增回憶」（新建 reusable cmp/Create Entry Button（zy3Ps）；LS-47 四板內嵌 FAB frame 未動，同步另記 LS-96）：pill 形，padding [$ctl-pad-tap 9.5, $sp-item 16]，icon-sm 18＋fs-body 17 label，高度由 padding 推導＝44pt（實測 44）。放進 Header Row（與畫面標題同列，justifyContent:space_between），不再絕對定位、不再浮在捲動內容之上。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
