@@ -37,6 +37,15 @@ struct TimelineView: View {
             }
         }
         .appBackground()
+        // QA 視覺對稿 FAIL（LS-126 comment `461bdc15`）：`SectionContentView.content` 對
+        // 每個 tab 套 `.navigationTitle(section.title)`，這裡沒有另外覆寫時系統會在最上方
+        // 疊一個 large title「時間軸」，跟 `headerRow` 自己畫的「時間軸」＋pill 疊出兩個
+        // 標題（4/4 變體：預設／深色／AX3／iPad 皆重現）。只在這個畫面覆寫隱藏系統 nav
+        // bar，不動 `RootView`／`SectionContentView` 共用的 `.navigationTitle`（其他三個
+        // tab 不受影響）；系統標題被隱藏後唯一的可見標題來源是 `headerRow` 的自訂 Text，
+        // 兩處都補 `.accessibilityAddTraits(.isHeader)` 保留 heading 語意（不然 VoiceOver
+        // 會少一個原本系統 large title 免費附帶的 heading landmark）。
+        .toolbar(.hidden, for: .navigationBar)
         .task(id: familyStore.myFamily?.id) {
             guard let familyID = familyStore.myFamily?.id else { return }
             await childrenStore.refresh(familyID: familyID)
@@ -101,6 +110,7 @@ struct TimelineView: View {
                 Text("時間軸")
                     .appFont(.display, weight: .bold)
                     .foregroundStyle(Color.lsTextPrimary)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
                 createMemoryButton
             }
@@ -108,6 +118,7 @@ struct TimelineView: View {
                 Text("時間軸")
                     .appFont(.display, weight: .bold)
                     .foregroundStyle(Color.lsTextPrimary)
+                    .accessibilityAddTraits(.isHeader)
                 createMemoryButton
             }
         }
