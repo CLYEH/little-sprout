@@ -10,14 +10,18 @@
 # 悄悄改掉。migration 是 append-only 帳本：已 apply 到本機或正式站的內容被改，會造成兩邊 schema drift（同一個
 # 版本號在不同機器上實際套用過不同的 SQL）。
 #
-# 用法：migration-immutable-check.sh --base <ref> [--head <rev>] [--pr-body <file>]
+# 用法：migration-immutable-check.sh --base <ref> [--head <rev>] [--pr-body <file>] [--pr-number <n>]
 #   --base     target 分支 ref（push-gate 依方向矩陣傳 origin/development／origin/main；CI 傳 origin/$BASE）。
 #              本腳本自己對 --head 算 merge-base，呼叫端不必先算好；傳已經是 merge-base 的 SHA 也一樣正確
 #              （merge-base(mb, head) = mb，冪等）。找不到 → exit 2（先 git fetch origin），不靜默跳過。
 #   --head     要驗的 rev，預設 HEAD（CI 的 checkout 是 detached merge ref，用預設值即可）。
-#   --pr-body  PR body 檔（CI 用）：commit body 宣告逃生口時，同樣的獨佔一行宣告必須也出現在 PR body，
-#              否則 exit 1（逃生口使用必須在 PR 可見，同 branch-ticket-check 的 Bundles 機制）。push-gate
-#              不傳這個旗標（本機沒有 PR body 可驗），只印提醒。
+#   --pr-body  PR body 檔（CI 用）：commit body 宣告逃生口時，同樣的獨佔一行宣告必須也出現在 PR body（或下列
+#              --pr-number 查到的使用者本人 PR comment），否則 exit 1（逃生口使用必須在 PR 可見，同
+#              branch-ticket-check 的 Bundles 機制）。push-gate 不傳這個旗標（本機沒有 PR body 可驗），只印提醒。
+#   --pr-number PR 編號（CI 用，LS-123）：PR body 沒有宣告時，再以姊妹腳本 approval-comment-check.sh 抓該 PR 的
+#              issue comments、只取使用者本人（repo owner）的留言逐則驗同一條 regex，任一則獨佔一行宣告即算
+#              「PR 可見」。建議放 comment——`gh pr edit --body-file` 整份覆寫 body 會洗掉 body 裡的宣告（LS-121
+#              PR #218 事故）。body 已宣告就不查 comment（不打 API）；gh 失敗視為未宣告（fail closed）。
 #
 # 判定：`git diff -M --diff-filter=MRDT --name-status <merge-base> <head> -- supabase/migrations/`——
 #   M <path>：修改既有檔；D <path>：刪除既有檔；R<pct> <old> <new>：改名，**舊路徑消失就算改動已存在檔**
@@ -32,15 +36,19 @@
 #
 # 逃生口（僅限尚未部署到正式站的檔，需人判斷、故要標記——比照 LS-45 DESTRUCTIVE-APPROVED／LS-50 Bundles 的
 # 整行錨定寫法）：本分支任一 commit body **獨佔一行** `MIGRATION-REWRITE-APPROVED: LS-<n>`（允許前後空白；
-# 同一行不得有其他字，粗體／反引號包起／前綴／尾隨文字皆不算，理由建議寫下一行），且給了 --pr-body 時
-# 同樣獨佔一行的宣告必須也出現在 PR body。涵蓋本分支**全部**違規，不逐檔列舉核可對象——核可是否合理（該檔
-# 是否真的尚未部署）靠 merge-reviewer 與 orchestrator 人工把關，本 gate 只驗形式。
+# 同一行不得有其他字，粗體／反引號包起／前綴／尾隨文字皆不算，理由建議寫下一行），且給了 --pr-body／
+# --pr-number 時同樣獨佔一行的宣告必須也出現在 PR body 或使用者本人的 PR comment（LS-123）。涵蓋本分支**全部**
+# 違規，不逐檔列舉核可對象——核可是否合理（該檔是否真的尚未部署）靠 merge-reviewer 與 orchestrator 人工把關，
+# 本 gate 只驗形式。
 #
-# exit 0＝無違規，或違規已由 commit body（＋給了 --pr-body 時的 PR body）雙重宣告；
-# exit 1＝違規未宣告，或宣告了但 PR body 沒有同步；exit 2＝參數／git 錯誤（fail closed）。
+# exit 0＝無違規，或違規已由 commit body（＋給了 --pr-body／--pr-number 時的 PR body 或使用者本人 PR comment）
+# 雙重宣告；exit 1＝違規未宣告，或宣告了但 PR 上沒有同步；exit 2＝參數／git 錯誤（fail closed）。
 set -uo pipefail
 
-base=; head=HEAD; pr_body=
+# 先記本腳本所在目錄：下面會 cd 到被驗 repo 的 toplevel（自測用合成 repo），姊妹腳本要從這裡找
+here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+base=; head=HEAD; pr_body=; pr_number=
 while [ $# -gt 0 ]; do
   case "$1" in
     --base)
@@ -52,6 +60,9 @@ while [ $# -gt 0 ]; do
     --pr-body)
       [ -n "${2:-}" ] || { echo "✗ migration-immutable-check：--pr-body 缺值" >&2; exit 2; }
       pr_body=$2; shift 2 ;;
+    --pr-number)
+      printf '%s' "${2:-}" | grep -qE '^[1-9][0-9]*$' || { echo "✗ migration-immutable-check：--pr-number 缺值或非正整數（實得「${2:-}」）" >&2; exit 2; }
+      pr_number=$2; shift 2 ;;
     *) echo "✗ migration-immutable-check：未知參數 $1" >&2; exit 2 ;;
   esac
 done
@@ -110,7 +121,7 @@ if [ -z "$declared" ]; then
   echo "✗ migration-immutable-check：以下已併入 ${base} 的 migration 檔被本分支修改／改名／刪除（migration 是 append-only 帳本，已 apply 的內容被改會造成本機與正式站 drift，COLLABORATION §6）：" >&2
   printf '%s' "$violations" >&2
   echo "  正確做法：新增一張新版本號的 migration（date -u +%Y%m%d%H%M%S）去修正／覆寫（例如 CREATE OR REPLACE FUNCTION），不要動已併入的檔。" >&2
-  echo "  逃生口（極罕見，僅限尚未部署到正式站的檔，需人判斷）：任一 commit body 獨佔一行 \`MIGRATION-REWRITE-APPROVED: LS-<n>\`（理由建議寫下一行），PR body 同段落宣告。" >&2
+  echo "  逃生口（極罕見，僅限尚未部署到正式站的檔，需人判斷）：任一 commit body 獨佔一行 \`MIGRATION-REWRITE-APPROVED: LS-<n>\`（理由建議寫下一行），並由使用者本人在 PR 留 comment 同樣獨佔一行宣告（建議；PR body 亦可，LS-123）。" >&2
   exit 1
 fi
 
@@ -118,14 +129,19 @@ echo "→ 偵測到已併入 ${base} 的 migration 被修改／改名／刪除�
 printf '%s' "$violations" >&2
 printf '%s\n' "$declared" | sed 's/^/    /' >&2
 
-if [ -n "$pr_body" ]; then
-  if ! grep -qE "$marker_re" "$pr_body"; then
-    echo "✗ migration-immutable-check：commit body 宣告了 MIGRATION-REWRITE-APPROVED，但 PR body 沒有同樣獨佔一行的宣告——逃生口使用必須在 PR 可見（COLLABORATION §6）。" >&2
+# PR 可見的宣告（CI）：PR body 或使用者本人的 PR comment 任一有同樣獨佔一行即可（LS-123）。body 先驗、沒有才查
+# comment；approval-comment-check.sh 非 0（含 gh 失敗的 exit 2）一律當未宣告，fail closed。
+if [ -n "$pr_body" ] || [ -n "$pr_number" ]; then
+  if [ -n "$pr_body" ] && grep -qE "$marker_re" "$pr_body"; then
+    echo "✓ PR body 已宣告逃生口"
+  elif [ -n "$pr_number" ] && bash "${here}/approval-comment-check.sh" "$pr_number" grep -qE "$marker_re"; then
+    echo "✓ 使用者本人 PR comment 已宣告逃生口（LS-123）"
+  else
+    echo "✗ migration-immutable-check：commit body 宣告了 MIGRATION-REWRITE-APPROVED，但 PR body 與使用者本人 PR comment 都沒有同樣獨佔一行的宣告——逃生口使用必須在 PR 可見（COLLABORATION §6；建議由使用者本人留 comment，LS-123）。" >&2
     exit 1
   fi
-  echo "✓ PR body 已宣告逃生口"
 else
-  echo "  （push-gate 只驗得到 commit body；PR body 須同段落宣告，CI 會擋）" >&2
+  echo "  （push-gate 只驗得到 commit body；PR body 或使用者本人 PR comment 須同樣獨佔一行宣告，CI 會擋）" >&2
 fi
 
 exit 0
