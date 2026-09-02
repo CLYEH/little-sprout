@@ -199,7 +199,7 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   `.update()` 一律 `42501`（見 §2）。**硬刪路徑不存在**（R1 I5）：`children_delete`
   policy 已改成一律拒絕、`DELETE` grant 也收回，連 owner 都沒有直接
   `.delete()` 的路徑——原本 owner-only 的直接硬刪會繞過 30 天可還原的保護（把整列
-  連 `albums`/`diaries` 的 `child_id` 反查關聯一起清光），LS-47 定案的硬刪流程本該
+  連 `diary_children`/`album_children` 底下掛著的標記一起清光），LS-47 定案的硬刪流程本該
   走 §10 破壞性流程，不該是這裡順手留下的後門。「30 天後真正怎麼清除或永久保留」
   留給排程票，屆時若要開放硬刪，須是那張票另外設計、走 §10 授權。
 - **`family_id` 建立後不可變**：`update_child` 的參數本來就不含 `family_id`，另外
@@ -693,7 +693,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   （`family_members` 裡已經沒有這一列），這支 RPC 對他完全關閉。
 - **用途**：軟刪（`p_deleted = true`）／還原（`p_deleted = false`）。**唯一能寫
   `diaries.deleted_at` 的路徑**——這支只碰這一欄，owner 分支不可能被拿來竄改內容
-  （物理上不會執行到 `body`／`entry_date`／`child_id` 的 `UPDATE`）。
+  （物理上不會執行到 `body`／`entry_date` 的 `UPDATE`，也不會碰 `diary_children`）。
 - **副作用**：軟刪後該篇立即從 `feed_items`／`get_family_timeline` 消失，還原後立即
   回來（既有 trigger 行為，見 `supabase/tests/40_triggers_feed_and_storage.sql`）。
   **`deleted_by` 記錄與還原鎖（LS-57，PR #98 review B1/B2/B3 修過）**：軟刪時
@@ -732,8 +732,8 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **用途**：軟刪（`p_deleted = true`）／還原（`p_deleted = false`）。**LS-57 R2
   起是唯一能寫 `deleted_at` 的路徑**——建立者與 owner 皆同，直接 `.update()` 這欄
   一律 `42501`（欄位級 grant 收回，見 §2/§3）。這支 RPC 只碰 `deleted_at`／
-  `deleted_by` 兩欄，物理上不可能被拿來竄改 `title`／`child_id`／`cover_media_id`
-  （不會執行到那些欄位的 `UPDATE`）。R1 版本建立者原本還能改用直接 `.update()`
+  `deleted_by` 兩欄，物理上不可能被拿來竄改 `title`／`cover_media_id`（不會執行
+  到那些欄位的 `UPDATE`），也不會碰 `album_children`。R1 版本建立者原本還能改用直接 `.update()`
   軟刪／還原自己的相簿（兩條路徑並存），R2 起這條路徑已經不存在（見 §3），這支
   RPC 是建立者與 owner 共同的唯一路徑；被降級成 viewer 的建立者仍可呼叫（只要求
   仍是該家庭任一角色的成員，不要求仍是 contributor，見上）。
