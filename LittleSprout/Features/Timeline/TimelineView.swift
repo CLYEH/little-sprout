@@ -72,13 +72,32 @@ struct TimelineView: View {
     /// Pen 對稿修正：LS-119 稿（`design/littlesprout.pen` frame `yXSht`／`Header Row` `FCiMS`）
     /// 標題與建立鈕同列（`justifyContent: space_between`），不是分開兩層；稿面 Body 頂距也是
     /// `$sp-label`（8pt）而非原本誤用的 `$sp-item`（16pt）。
+    ///
+    /// delta 復審 m1：AX3 下「時間軸」標題（`.display` 字級隨 Dynamic Type 放大到 40pt）＋
+    /// pill 同列會溢出（reviewer 實測約需 396pt、可用寬只有 393-2×24=345pt）。稿面 AX3 變體
+    /// （`lKoZG`／`HLXo3`）的 Header Row 節點本身帶了明確 `gap:8`——這個 gap 值只在「標題與
+    /// pill 分兩列、上下堆疊」時才有意義（同列 space-between 排法不需要、也不會標一個獨立
+    /// gap 值），但對稿當下沒有機會再往下一層讀 Header Row 在 AX3 的實際子節點排法確認
+    /// （Pen 現在被 LS-125 佔用，不能切檔補讀）——用讀到的這個間接線索定調：AX3 下改堆疊兩列
+    /// （標題在上、pill 靠左在下），列距用稿面同一個 `gap:8` 值（`AppSpacing.label`）。
+    /// `ViewThatFits` 依實際量到的寬度自動切換，不綁 `dynamicTypeSize` 門檻值（門檻值本身
+    /// 也沒有稿面依據）——中英文字數不同時的溢出點本來就該用實測寬度判斷，不是猜一個字級
+    /// 級距分界。若稿面實際排法與此不同，MUST 待 Pen 釋放後另補一輪確認（見 PR body）。
     private var headerRow: some View {
-        HStack(alignment: .center) {
-            Text("時間軸")
-                .appFont(.display, weight: .bold)
-                .foregroundStyle(Color.lsTextPrimary)
-            Spacer()
-            createMemoryButton
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center) {
+                Text("時間軸")
+                    .appFont(.display, weight: .bold)
+                    .foregroundStyle(Color.lsTextPrimary)
+                Spacer()
+                createMemoryButton
+            }
+            VStack(alignment: .leading, spacing: AppSpacing.label) {
+                Text("時間軸")
+                    .appFont(.display, weight: .bold)
+                    .foregroundStyle(Color.lsTextPrimary)
+                createMemoryButton
+            }
         }
     }
 
@@ -94,18 +113,26 @@ struct TimelineView: View {
     private var createMemoryButton: some View {
         Button(action: onCreateMemory) {
             HStack(spacing: AppSpacing.tight) {
-                Image(systemName: "plus").appIconFrame(.small)
+                // delta 復審 m2：這顆現在被 `TapTargetGateScreenName.timelineDefaultState`
+                // 正式量測，sentinel／違規訊息都靠 accessibility label 精準對到「新增回憶」
+                // 這個字串——icon 若不隱藏，SF Symbol 預設的「Plus」會併進同一個 Button
+                // 的合併 label，字串比對就對不上，隱藏成純裝飾（同 `PhotoCardView` 已有
+                // 的 `accessibilityHidden` 先例：圖示旁邊已有文字時圖示本身不需要再唸一次）。
+                Image(systemName: "plus").appIconFrame(.small).accessibilityHidden(true)
                 Text("新增回憶").appFont(.body, weight: .semibold)
             }
             .padding(.vertical, AppSpacing.controlPaddingTap)
             .padding(.horizontal, AppSpacing.item)
             .background(Color.lsAccent, in: Capsule())
             // 稿面的 pill 純用內容高度（icon 18pt／17pt 字＋9.5pt 上下 padding）估算落在
-            // 44pt 邊界附近，且此檔在 tap-target-check 的豁免名單上（見
-            // `scripts/gates/tap-target-exemptions.txt`）沒有自動化覆蓋兜底——同
-            // `SettingsView` 登出鈕／`loadMoreTrigger` 重新載入鈕的既有手法，用不可見的
-            // `minHeight` 撐大點擊區，不改變上面已經畫好的視覺 pill 尺寸（`.background`
-            // 掛在 `.frame` 之前，胖的是外層透明點擊區，不是看得到的色塊）。
+            // 44pt 邊界附近——用不可見的 `minHeight` 撐大點擊區，不改變上面已經畫好的視覺
+            // pill 尺寸（`.background` 掛在 `.frame` 之前，胖的是外層透明點擊區，不是看得到
+            // 的色塊），同 `SettingsView` 登出鈕／`loadMoreTrigger` 重新載入鈕的既有手法。
+            // delta 復審 m2：這顆本身已被 `TapTargetGateScreenName.timelineDefaultState`
+            // 正式量測（見 `TapTargetGateHarness.swift`），是 `TimelineView` 目前唯一走出
+            // `tap-target-exemptions.txt` 豁免路徑、有自動化覆蓋的元件；同畫面其餘元件（日
+            // 分組卡片、捲底載入、失敗態重新載入鈕）仍需要 seed 資料與捲動狀態，豁免理由
+            // 不變。
             .frame(minHeight: AppSpacing.section)
             .contentShape(Rectangle())
         }
