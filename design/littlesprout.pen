@@ -53461,7 +53461,7 @@
               "id": "H2Ga9h",
               "name": "Spacer Section",
               "width": "fill_container",
-              "height": 0
+              "height": 44
             },
             {
               "type": "frame",
@@ -53537,16 +53537,10 @@
                 {
                   "type": "frame",
                   "id": "j30wKR",
-                  "name": "Day Group 2",
+                  "name": "Day Group 2（padding-top＝捲動位置模擬，見 Notes LuHbv）",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
-                  "padding": [
-                    48,
-                    0,
-                    0,
-                    0
-                  ],
                   "children": [
                     {
                       "id": "Rt3cR",
@@ -54449,7 +54443,7 @@
               "id": "gLLsC",
               "name": "Spacer Section",
               "width": "fill_container",
-              "height": 0
+              "height": 44
             },
             {
               "type": "frame",
@@ -54545,12 +54539,12 @@
                 {
                   "type": "frame",
                   "id": "TSDse",
-                  "name": "Day Group 2",
+                  "name": "Day Group 2（padding-top＝捲動位置模擬，見 Notes LuHbv）",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "padding": [
-                    71,
+                    24,
                     0,
                     0,
                     0
@@ -54972,12 +54966,12 @@
                 {
                   "type": "frame",
                   "id": "I1QFH",
-                  "name": "Day Group 2",
+                  "name": "Day Group 2（padding-top＝捲動位置模擬，見 Notes LuHbv）",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "padding": [
-                    112,
+                    8,
                     0,
                     0,
                     0
@@ -55939,12 +55933,12 @@
                 {
                   "type": "frame",
                   "id": "wOwLU",
-                  "name": "Day Group 2",
+                  "name": "Day Group 2（padding-top＝捲動位置模擬，見 Notes LuHbv）",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "padding": [
-                    114,
+                    96,
                     0,
                     0,
                     0
@@ -66236,12 +66230,12 @@
                 {
                   "type": "frame",
                   "id": "S3daS",
-                  "name": "Day Group 2",
+                  "name": "Day Group 2（padding-top＝捲動位置模擬，見 Notes LuHbv）",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "padding": [
-                    112,
+                    8,
                     0,
                     0,
                     0
@@ -69394,7 +69388,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "R4 還原全部 6 板板高回 852／1500（R3 的 896/876/888/888/1600/1648 作廢），Tab Bar y 回到既有公式輸出值 754／1378——這兩個數字現在對全 app 所有 Tab-root 板完全一致，膠囊真的釘在裝置安全區，不再隨畫面內容量跳動。改用兩個內容側的旋鈕，皆為 padding／gap，不是板空間：①**preShift**——3 板（yXSht／a67Na／HLXo3）把 Body 內、Feed 之前的既有 `Spacer Section` 節點（原 44）**降到 0**，讓 Feed 整體上移 44，清空 Day Group 1 最後一則內容（Who Group 簽名列／Multi Caption）與膠囊的交集，margin 分別 2.6／25.6／29.2；V4Ktak／A33la／lKoZG 這 3 板 Day Group 1 本來就不重疊，preShift＝0。②**Day Group 2 padding-top**——6 板各自在 `Day Group 2` 節點加 `padding:[X,0,0,0]`，把 Day Group 2（含旋轉的 Day Divider 2 stamp/ghost）整段往下推到板底之外（entirely past，不是卡在膠囊和板底中間）：yXSht 48／a67Na 71／V4Ktak 112／A33la 112／lKoZG 114／HLXo3 108（皆為 `board底−原始 stamp 頂+preShift+44` 的精算值＋3.5~4.5pt margin，非拍腦袋數字，見下段公式）。**踩雷記錄**：第一次嘗試改 `Feed` 本身的 `gap`（$sp-section 44→G）想只推 Day Group 2，但 `gap` 是 Feed 對全部子節點統一套用的屬性——`a67Na` 多一個 `Pull Refresh Row` 排在 Day Group 1 之前，同一個 gap 改動連它與 Day Group 1 的間距也一起變了，反而把 Day Group 1 推到膠囊裡（新增 5 筆重疊）。改成只對 `Day Group 2` 自己加 `padding-top`，不動 Feed 的共用 gap，才不會波及其他手足。",
+                  "content": "【R5 補充：本段開頭「板高回 852／1500」部分仍然正確、未變；但本段後半描述的 preShift／Day Group 2 padding-top 機制數字已被 R5 BL-8 更新（3 板 Spacer Section 從 0 還原回 44、Day Group 2 padding-top 全部重算），見下方 R5 段，勿依本段舊數字（yXSht 48／a67Na 71／V4Ktak 112／A33la 112／lKoZG 114／HLXo3 108）實作】\n\nR4 還原全部 6 板板高回 852／1500（R3 的 896/876/888/888/1600/1648 作廢），Tab Bar y 回到既有公式輸出值 754／1378——這兩個數字現在對全 app 所有 Tab-root 板完全一致，膠囊真的釘在裝置安全區，不再隨畫面內容量跳動。改用兩個內容側的旋鈕，皆為 padding／gap，不是板空間：①**preShift**——3 板（yXSht／a67Na／HLXo3）把 Body 內、Feed 之前的既有 `Spacer Section` 節點（原 44）**降到 0**，讓 Feed 整體上移 44，清空 Day Group 1 最後一則內容（Who Group 簽名列／Multi Caption）與膠囊的交集，margin 分別 2.6／25.6／29.2；V4Ktak／A33la／lKoZG 這 3 板 Day Group 1 本來就不重疊，preShift＝0。②**Day Group 2 padding-top**——6 板各自在 `Day Group 2` 節點加 `padding:[X,0,0,0]`，把 Day Group 2（含旋轉的 Day Divider 2 stamp/ghost）整段往下推到板底之外（entirely past，不是卡在膠囊和板底中間）：yXSht 48／a67Na 71／V4Ktak 112／A33la 112／lKoZG 114／HLXo3 108（皆為 `board底−原始 stamp 頂+preShift+44` 的精算值＋3.5~4.5pt margin，非拍腦袋數字，見下段公式）。**踩雷記錄**：第一次嘗試改 `Feed` 本身的 `gap`（$sp-section 44→G）想只推 Day Group 2，但 `gap` 是 Feed 對全部子節點統一套用的屬性——`a67Na` 多一個 `Pull Refresh Row` 排在 Day Group 1 之前，同一個 gap 改動連它與 Day Group 1 的間距也一起變了，反而把 Day Group 1 推到膠囊裡（新增 5 筆重疊）。改成只對 `Day Group 2` 自己加 `padding-top`，不動 Feed 的共用 gap，才不會波及其他手足。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -69430,7 +69424,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "R2／R3 的判準（沿 parentCtx 鏈單純累加 x/y）對 `cmp/Day Divider` 的 `Stamp`（-6°）／`Ghost`（-3°）兩個旋轉節點完全失效——`ctx.bounds` 回傳的是未旋轉的區域框，旋轉是渲染時另外套用的視覺變換，不影響 layout 計算出的 x/y/w/h。R4 改用**中心點旋轉**模型（實測校準確認，非文件推測）：`Get` 的 `node.rotation` 對節點本身的 w/h 取中心點 `(x+w/2, y+h/2)`、旋轉後的包絡框 `Hp = w·|sinθ|+h·|cosθ|`、`Wp = w·|cosθ|+h·|sinθ|`，範圍＝`[center−Hp/2, center+Hp/2]`。**校準證據**：對 `HLXo3` 的 `kGF7O/xlLIo`（Stamp，rotation −6°，未旋轉 local w=335.51／h=104.11）代入本公式，算出 Y 範圍 **1439.60..1578.21**，與 R3 review comment `5ca82a26` 獨立算出的 **1439.6..1578.2** 完全吻合（差距 <0.01pt）——**確認 Pencil 對 `rotation` 是繞節點自身包絡框的『中心點』旋轉，不是 execute.md 文件字面寫的『左上角』**（文件與實作不一致，屬工具限制新發現，比照既有 width/height $variable 落空的性質記錄）。掃描規則：任何節點自身 `rotation≠0` 時，用旋轉後的包絡框取代其原始 AABB 做交集判定，並且不再往下展開子節點（因為子節點的精確旋轉位置需要進一步的階層矩陣合成，而『整顆 Stamp／Ghost 的旋轉包絡框』已經是保守上界，涵蓋其內任何文字的實際位置——用整顆的包絡框判定，不去猜文字在裡面的精確座標，寧可保守也不要算錯方向）。",
+                  "content": "【R5 作廢，見下方 R5 段——MJ-11 訂正：本段「中心點旋轉」模型與雙重旋轉公式是錯的，`ctx.bounds` 對旋轉節點回傳的其實已經是旋轉後的包絡框，不需要再套 Hp/Wp 公式；下方「校準證據」能對上數字純屬巧合，是 R3 review comment `5ca82a26` 與本段各自獨立對同一組已旋轉 bounds 又套一次公式的雙重旋轉，兩次錯誤剛好互相對上。保留原文供稽核，勿依本段實作】\n\nR2／R3 的判準（沿 parentCtx 鏈單純累加 x/y）對 `cmp/Day Divider` 的 `Stamp`（-6°）／`Ghost`（-3°）兩個旋轉節點完全失效——`ctx.bounds` 回傳的是未旋轉的區域框，旋轉是渲染時另外套用的視覺變換，不影響 layout 計算出的 x/y/w/h。R4 改用**中心點旋轉**模型（實測校準確認，非文件推測）：`Get` 的 `node.rotation` 對節點本身的 w/h 取中心點 `(x+w/2, y+h/2)`、旋轉後的包絡框 `Hp = w·|sinθ|+h·|cosθ|`、`Wp = w·|cosθ|+h·|sinθ|`，範圍＝`[center−Hp/2, center+Hp/2]`。**校準證據**：對 `HLXo3` 的 `kGF7O/xlLIo`（Stamp，rotation −6°，未旋轉 local w=335.51／h=104.11）代入本公式，算出 Y 範圍 **1439.60..1578.21**，與 R3 review comment `5ca82a26` 獨立算出的 **1439.6..1578.2** 完全吻合（差距 <0.01pt）——**確認 Pencil 對 `rotation` 是繞節點自身包絡框的『中心點』旋轉，不是 execute.md 文件字面寫的『左上角』**（文件與實作不一致，屬工具限制新發現，比照既有 width/height $variable 落空的性質記錄）。掃描規則：任何節點自身 `rotation≠0` 時，用旋轉後的包絡框取代其原始 AABB 做交集判定，並且不再往下展開子節點（因為子節點的精確旋轉位置需要進一步的階層矩陣合成，而『整顆 Stamp／Ghost 的旋轉包絡框』已經是保守上界，涵蓋其內任何文字的實際位置——用整顆的包絡框判定，不去猜文字在裡面的精確座標，寧可保守也不要算錯方向）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -69466,7 +69460,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "6 板皆用同一組判準重新掃描：①與膠囊矩形垂直交集的葉節點／旋轉包絡框數＝0（BL-5）②落在膠囊下緣到板底 34pt 安全區內的節點數＝0（BL-6）。逐板：`yXSht` 膠囊 754.0-818.0／板底 852.0，0/0；`a67Na` 膠囊 754.0-818.0／板底 852.0，0/0；`V4Ktak` 膠囊 754.0-818.0／板底 852.0，0/0；`A33la` 膠囊 754.0-818.0／板底 852.0，0/0；`lKoZG` 膠囊 1378.0-1466.0／板底 1500.0，0/0；`HLXo3` 膠囊 1378.0-1466.0／板底 1500.0，0/0（同一板同時清空 Multi Caption 與 Day Divider 2 兩個獨立違反源）。**MJ-10**：MN-9（不修壓測板的理由）原本建立在「HLXo3 已驗證 0 交集」上，R3 的舊判準得出的『0』是假的（BL-5 抓到）；R4 用旋轉感知判準重新給出的『0』才是可獨立複驗的真結論——見上「BL-5 旋轉感知判準」段的校準證據與本段的逐板數字，`HLXo3` 現在確實是全稿唯一同時具備「多寶貝最長 caption＋AX3＋Tab Bar」且旋轉感知判準下 0 交集的板，MN-9 不修的理由至此才真正成立。",
+                  "content": "【R5 作廢，見下方 R5 段——本段「0/0」結論雖然數字本身沒錯，但是用 BL-5（已作廢）的雙重旋轉錯誤模型算出來的，屬巧合正確，不能引用其推導過程；R5 用訂正後的正確模型（simple accumulation＋skipChildren，不套額外旋轉公式）重新複驗，結果見下方 R5 段】\n\n6 板皆用同一組判準重新掃描：①與膠囊矩形垂直交集的葉節點／旋轉包絡框數＝0（BL-5）②落在膠囊下緣到板底 34pt 安全區內的節點數＝0（BL-6）。逐板：`yXSht` 膠囊 754.0-818.0／板底 852.0，0/0；`a67Na` 膠囊 754.0-818.0／板底 852.0，0/0；`V4Ktak` 膠囊 754.0-818.0／板底 852.0，0/0；`A33la` 膠囊 754.0-818.0／板底 852.0，0/0；`lKoZG` 膠囊 1378.0-1466.0／板底 1500.0，0/0；`HLXo3` 膠囊 1378.0-1466.0／板底 1500.0，0/0（同一板同時清空 Multi Caption 與 Day Divider 2 兩個獨立違反源）。**MJ-10**：MN-9（不修壓測板的理由）原本建立在「HLXo3 已驗證 0 交集」上，R3 的舊判準得出的『0』是假的（BL-5 抓到）；R4 用旋轉感知判準重新給出的『0』才是可獨立複驗的真結論——見上「BL-5 旋轉感知判準」段的校準證據與本段的逐板數字，`HLXo3` 現在確實是全稿唯一同時具備「多寶貝最長 caption＋AX3＋Tab Bar」且旋轉感知判準下 0 交集的板，MN-9 不修的理由至此才真正成立。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -69503,6 +69497,150 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "**MJ-8**：`Lo8Ae`（8 個）＋`cKFJq`（4 個）共 12 個四態 demo instance 的選中 `Indicator` `strokeWidth` 原本硬寫 1，與元件本身（`ofQi3` 已於 R3 MN-8 改 1.5）不一致；R4 把 12 個 instance 的 `descendants` 全部重新生成，選中片 `strokeWidth` 改 1.5、未選中維持 1（與元件對應節點的值一致），未採用「從 override 移除」的替代做法——因為本檔的 override 架構是逐節點顯式指定 fill/stroke/effect 來表達「這顆此刻是不是選中」，不是靠繼承元件某個固定插槽的身份，移除 strokeWidth 反而會讓「選中」與「未選中」兩態在 stroke 相關屬性上出現不對稱的顯式/隱式混用，不如四個屬性統一顯式覆寫、只是數值跟緊元件。**MJ-9**：收據頂層新增 `scan_scope`（值 `\"boards\"`）與 `scan_note` 兩個欄位，如實說明 `document_containers/points/mismatch` 三個整數在本輪（及 R3）其實是 `boards` 範圍內的重複值、不是全文件真值（`design-evidence-check.sh` 要求這三個鍵是非負整數，不能設 null，只能用旁註欄位講清楚）；LS-96 `83392d32`（收據 schema gate 半邊）與新貼的 BL-5 旋轉盲點池項互相參照。**MN-10**：6 個 `Bottom Inset 98/122` 節點（R3 新增、放在板外看不見的地方）已刪除——inset 契約值已經完整寫在本段落與 motifs.md，稿面上一個永遠不會被渲染的隱形節點只是多一個要維護的東西，沒有額外資訊量。**MN-11**：`$icon-tab-md`（26）與既有 `$icon-lg`（26）預設值剛好相同、只有 AX3 不同（40 vs 48）——稿面上單看一個字面 26 無法分辨是哪個 token；本段特別註記：**Tab Bar 內的 26 一律讀作 `$icon-tab-md`，不要誤讀成 `$icon-lg`**，tokens.md 表格本身已寫清楚，這裡只是給看稿的人一個顯眼提醒。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zgaNb",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "NWUto",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R5 · BL-8 preShift 還原",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "lCqSu",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R4 review（e394a014）判定 preShift（3 板 Spacer Section 44→0）造成三個問題：Child Filter 底到第一枚日期章間距歸零、脫離 8/16/24/44 節奏；同畫面淺深不一致（yXSht=0 vs V4Ktak=44）；Card Diary 1 未回 R1 基線（503.4..815.4 vs R1 547.4..815.4，差 44）。reviewer 放寬判準：內容『完全遮在膠囊後面』是合法的真機捲動狀態，只有『被膠囊邊緣部分覆蓋』與『卡進膠囊下緣到板底的 34pt 帶』才算違規（判準全文見 motifs.md）。修法：3 板（yXSht `H2Ga9h`／a67Na `gLLsC`／HLXo3 `h3c3Jo`）Spacer Section 全部還原＝44，與另 3 板（V4Ktak／A33la／lKoZG，本來就沒降過）一致，6 板 Spacer Section 統一＝44，回到 R1 基線。複驗：yXSht `Card Diary 1`（`WitwS`）board-local y=547.44..815.44，與 R1 基線 547.4..815.4 一致（差 <0.05pt，浮點誤差）；Child Filter 底→首枚日期章間距 6 板統一 44pt（yXSht／V4Ktak／A33la／lKoZG／HLXo3 皆 44；a67Na 因下拉更新狀態多一個 `Pull Refresh Row` 手足節點量出 129pt，屬預期內容差異，非違規）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sYloO",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "nKkiD",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R5 · MJ-11 旋轉 bounds 模型訂正",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "oiW5Z",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MJ-11：R4「BL-5 旋轉感知判準」段（`e9QEG`/`FyCQU`，已標記作廢）與 motifs.md 舊版寫的『Pencil rotation 繞包絡框中心、不是 execute.md 文件字面寫的左上角』是錯的假工具限制——`ctx.bounds` 對 rotation≠0 的節點回傳的其實已經是旋轉後的包絡框（在 parent 座標空間裡），不是未旋轉的原始框。R3／R4 的『校準證據』（HLXo3 `kGF7O/xlLIo` 算出 Y 範圍 1439.60..1578.21 與獨立覆核吻合）之所以『對上』，是因為兩邊都對同一組已經旋轉過的 bounds 又各自外加套了一次 Hp/Wp 公式（雙重旋轉），兩次獨立錯誤剛好互相抵銷式地『驗證通過』，是循環論證。本輪直接對 live .pen 覆核：`kGF7O/xlLIo`（Stamp，rotation −6°）bounds={bx:0,by:0,bw:335.51,bh:104.11}；`kGF7O/tBi8u`（Ghost，−3°）bounds={bx:-6.66,by:3.00,bw:333.21,bh:87.17}——與 reviewer 獨立算出的數字精確吻合（<0.01pt）。`kGF7O/ci8cq`（Date Text，Stamp 子節點）bounds={bx:8,by:6,bw:314,bh:58}，是相對 Stamp『未旋轉』本地座標系的純本地值，證實往下展開子節點會算錯（已用 `ctx.skipChildren()` 正確避開）。正確判準：沿 parentCtx 鏈單純累加 x/y 到 Stamp／Ghost 節點本身即可直接使用，不套任何額外旋轉公式，也不再往下展開子節點。已修正：①motifs.md「旋轉節點的 bounds」段整段重寫，刪除假工具限制敘述；②本 Notes `e9QEG`/`FyCQU`、`Ge6o5`/`XP8XA` 標記作廢並保留原文供稽核；③到 LS-96 對 `89ed8de0` 貼更正 comment（呼應 orchestrator 撤回 comment `4d8ce8dd`），comment id 見 R5 handoff。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Bie3p",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "grCmH",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R5 · Day Group 2 padding-top 逐板精算＋11 板複驗",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "u7aYzd",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "訂正後模型＋放寬後判準下，6 板 Day Group 2 padding-top 重算（節點已改名為『Day Group 2（padding-top＝捲動位置模擬，見 Notes LuHbv）』，MN-12）：yXSht(`j30wKR`) 0、a67Na(`TSDse`) 24、V4Ktak(`I1QFH`) 8、A33la(`S3daS`) 8、lKoZG(`wOwLU`) 96、HLXo3(`R6oxZ`) 48。逐板 Stamp/Ghost 分類（capTop/capBottom＝膠囊上緣/下緣，board-local）：yXSht 膠囊754-818／板底852，Stamp 859.44-912.02＝off-board；a67Na 膠囊754-818／板底852，Stamp 860.44-913.02＝off-board（0 padding 時是836.44-889.02，落在34pt帶內，違規，故加24）；V4Ktak 膠囊754-818／板底852，Stamp 759.44-812.02＝fully-hidden-in-capsule；A33la 同V4Ktak，759.44-812.02＝fully-hidden-in-capsule；lKoZG 膠囊1378-1466／板底1500，Stamp 1502.85-1606.96＝off-board（AX3 Stamp 高104.11＞膠囊高88，物理上不可能fully-hidden-in-capsule，只能推出板外）；HLXo3 同理，1504.85-1608.96＝off-board。Ghost 一律比對應 Stamp 更靠內（margin更大），同分類。6 板皆 0 partial-coverage、0 落在34pt帶。11 板總覆核（V5bD0/PIwjk/oP9Ey/VLg6j/Qxema 5 板無旋轉 Stamp/Ghost，n/a，本來就無此類違規來源）：全數 0 違規。MN-13：yXSht 簽名列（`WitwS/Jqwww`）還原後 board-local top=770.44／bottom=795.44，落在膠囊754-818區間內側（距膠囊上緣16.44pt、距下緣22.56pt），完全遮在膠囊後面，不再是R4版本『2.6pt margin、無owner』的邊緣狀態，reviewer預期的自我解決已確認。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "u5wMnW",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "mU8rl",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R5 · LS-96 更正記錄",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "mwFjX",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "對自己 R4 貼的 LS-96 comment `89ed8de0`（旋轉盲點主張）貼更正 reply，comment id `596d3bca-95b3-4e69-91c7-9cfca64465ae`，呼應 orchestrator 撤回 comment `4d8ce8dd`（同時撤回 `83694378`）。內容：正確模型是 `ctx.bounds` 對旋轉節點已含旋轉，直接用即可，不需額外套旋轉公式；pool item `83392d32` 的第5/6支掃描不需旋轉感知處理。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -87493,7 +87631,7 @@
               "id": "h3c3Jo",
               "name": "Spacer Section",
               "width": "fill_container",
-              "height": 0
+              "height": 44
             },
             {
               "type": "frame",
@@ -87580,12 +87718,12 @@
                 {
                   "type": "frame",
                   "id": "R6oxZ",
-                  "name": "Day Group 2",
+                  "name": "Day Group 2（padding-top＝捲動位置模擬，見 Notes LuHbv）",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "padding": [
-                    108,
+                    48,
                     0,
                     0,
                     0
