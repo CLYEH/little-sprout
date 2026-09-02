@@ -421,17 +421,33 @@ values ('2c000000-0000-4000-8000-000000000001', 'fc000000-0000-4000-8000-0000000
         '效能測試孩子', date '2025-01-01')
 on conflict (id) do nothing;
 
-insert into public.feed_items (family_id, kind, ref_id, occurred_at, child_id)
+insert into public.feed_items (family_id, kind, ref_id, occurred_at)
 select 'fc000000-0000-4000-8000-000000000001', 'diary', gen_random_uuid(),
-       now() - (i * interval '1 minute'), null
+       now() - (i * interval '1 minute')
   from generate_series(1, 200000) i;
 
-insert into public.feed_items (family_id, kind, ref_id, occurred_at, child_id)
-select 'fc000000-0000-4000-8000-000000000001', 'diary', gen_random_uuid(),
-       now() - (i * interval '17 minutes'), '2c000000-0000-4000-8000-000000000001'
-  from generate_series(1, 5) i;
+-- LS-121：feed_items 不再有 child_id 欄位——「稀疏 child 篩選」改成同時寫一筆
+-- feed_items（不帶孩子標記，跟其他 20 萬列一樣）與一筆 feed_item_children（帶孩子
+-- 標記，get_family_timeline 篩 child 時實際查的是這張表，見該函式與 migration
+-- 第 0 段的設計選擇）。用 RETURNING 把 gen_random_uuid() 產生的 ref_id／occurred_at
+-- 帶到第二句 INSERT，兩張表對同一批 5 個項目的 ref_id 才會一致（這 5 列同樣不經過
+-- create_diary_entry／diary_children，是純粹撐資料量的合成資料，跟 diaries 表本來
+-- 就沒有外鍵關聯，feed_item_children 對 feed_items 的外鍵（kind, ref_id）不受影響
+-- ——見 init_schema.sql 對 feed_items 多型關聯的既有註解，同一種裁量延伸到這裡）。
+with inserted as (
+  insert into public.feed_items (family_id, kind, ref_id, occurred_at)
+  select 'fc000000-0000-4000-8000-000000000001', 'diary', gen_random_uuid(),
+         now() - (i * interval '17 minutes')
+    from generate_series(1, 5) i
+  returning ref_id, occurred_at
+)
+insert into public.feed_item_children (family_id, kind, ref_id, child_id, occurred_at)
+select 'fc000000-0000-4000-8000-000000000001', 'diary', ref_id,
+       '2c000000-0000-4000-8000-000000000001', occurred_at
+  from inserted;
 
 analyze public.feed_items;
+analyze public.feed_item_children;
 analyze public.children;
 
 -- 切回 authenticated（jwt claims 沿用檔案開頭已經 set_config 過的 c0000000...，

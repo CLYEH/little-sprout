@@ -649,8 +649,10 @@ $$;
 rollback;
 
 -- ===========================================================================
--- 8. 軟刪不連動：照片／日記掛在被軟刪孩子的 child_id 下者完全保留
---    （重用 00_fixtures 既有的 album 4a／diary 5a，兩者都掛在 child 2a 底下）
+-- 8. 軟刪不連動：照片／日記掛在被軟刪孩子底下的標記完全保留
+--    （重用 00_fixtures 既有的 album 4a／diary 5a，兩者都經 album_children／
+--    diary_children 掛在 child 2a 底下——LS-121：child_id 從 albums/diaries 的
+--    單一欄位改成連結表，這裡驗的是連結表本身的列，不是欄位）
 -- ===========================================================================
 begin;
 
@@ -669,15 +671,21 @@ begin
   perform public.set_child_deleted(v_child, true);
 
   select title into v_album_title from public.albums
-   where id = '4a000000-0000-4000-8000-000000000001' and child_id = v_child;
-  if v_album_title is null then
-    raise exception 'FAIL：孩子被軟刪之後，掛在他底下的相簿消失或 child_id 被改動了';
+   where id = '4a000000-0000-4000-8000-000000000001';
+  if v_album_title is null or not exists (
+    select 1 from public.album_children
+     where album_id = '4a000000-0000-4000-8000-000000000001' and child_id = v_child
+  ) then
+    raise exception 'FAIL：孩子被軟刪之後，掛在他底下的相簿消失或 album_children 的標記被拿掉了';
   end if;
 
   select body into v_diary_body from public.diaries
-   where id = '5a000000-0000-4000-8000-000000000001' and child_id = v_child;
-  if v_diary_body is null then
-    raise exception 'FAIL：孩子被軟刪之後，掛在他底下的日記消失或 child_id 被改動了';
+   where id = '5a000000-0000-4000-8000-000000000001';
+  if v_diary_body is null or not exists (
+    select 1 from public.diary_children
+     where diary_id = '5a000000-0000-4000-8000-000000000001' and child_id = v_child
+  ) then
+    raise exception 'FAIL：孩子被軟刪之後，掛在他底下的日記消失或 diary_children 的標記被拿掉了';
   end if;
 
   -- get_family_timeline 對這個孩子的篩選行為完全不變（後端從不查 children.deleted_at）
@@ -689,15 +697,17 @@ begin
   end if;
 
   reset role;
-  raise notice 'ok：軟刪孩子完全不連動——掛在他底下的相簿／日記保留，get_family_timeline 的單寶貝篩選行為不變';
+  raise notice 'ok：軟刪孩子完全不連動——掛在他底下的相簿／日記標記保留，get_family_timeline 的單寶貝篩選行為不變';
 end;
 $$;
 
 rollback;
 
 -- ===========================================================================
--- 9. 已軟刪的孩子不能再被指定為新內容的 child_id（R1 I3，LS044）——只在 child_id
---    真的被指定成新值時檢查，既有內容繼續能軟刪／還原／編輯自己（「既有內容不動」）
+-- 9. 已軟刪的孩子不能再被指定為新內容的 child_id（R1 I3，LS044；LS-121 起守門
+--    trigger 搬到 diary_children／album_children 連結表上，見 migration 第 5 段）
+--    ——只在建立新標記時檢查，既有標記／內容繼續能軟刪／還原／編輯自己
+--    （「既有內容不動」）
 -- ===========================================================================
 begin;
 
@@ -710,6 +720,7 @@ declare
   v_member uuid := 'a0000000-0000-4000-8000-000000000002';
   v_diary uuid;
   v_album uuid;
+  v_album_probe uuid;
   v_body text;
 begin
   -- 建一個新孩子專門當「已軟刪」的目標，不動 00_fixtures 既有的兩個孩子
@@ -720,72 +731,75 @@ begin
   perform public.set_child_deleted(v_child_deleted, true);
   reset role;
 
-  -- (a) create_diary_entry：child_id 指向已軟刪的孩子 → LS044
+  -- (a) create_diary_entry：p_child_ids 含已軟刪的孩子 → LS044
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin
-    perform public.create_diary_entry(v_family, v_child_deleted, '想掛在已刪孩子底下', current_date);
+    perform public.create_diary_entry(v_family, array[v_child_deleted]::uuid[], '想掛在已刪孩子底下', current_date);
     raise exception 'FAIL：create_diary_entry 竟然能把日記掛到已軟刪的孩子底下';
   exception when sqlstate 'LS044' then
     null;  -- ok
   end;
 
   -- 正向對照：child_id 指向 active 的孩子完全不受影響
-  v_diary := public.create_diary_entry(v_family, v_child_active, '掛在還活著的孩子底下', current_date);
+  v_diary := public.create_diary_entry(v_family, array[v_child_active]::uuid[], '掛在還活著的孩子底下', current_date);
   if v_diary is null then
     raise exception 'FAIL：create_diary_entry 指向 active 孩子時竟然失敗了';
   end if;
   reset role;
   raise notice 'ok：create_diary_entry 指向已軟刪孩子拿 LS044，指向 active 孩子不受影響（正向對照）';
 
-  -- (b) update_diary_entry：把 child_id 改成已軟刪的孩子 → LS044
+  -- (b) update_diary_entry：把 p_child_ids 改成含已軟刪的孩子 → LS044
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin
-    perform public.update_diary_entry(v_diary, '想改掛到已刪孩子底下', current_date, v_child_deleted);
-    raise exception 'FAIL：update_diary_entry 竟然能把 child_id 改成已軟刪的孩子';
+    perform public.update_diary_entry(v_diary, '想改掛到已刪孩子底下', current_date, array[v_child_deleted]::uuid[]);
+    raise exception 'FAIL：update_diary_entry 竟然能把日記改掛到已軟刪的孩子底下';
   exception when sqlstate 'LS044' then
     null;  -- ok
   end;
 
-  -- (c)「既有內容不動」的正面證明：update_diary_entry 傳跟原本一樣的 child_id
+  -- (c)「既有內容不動」的正面證明：update_diary_entry 傳跟原本一樣的孩子集合
   -- （active，不是已軟刪那個）改 body，完全不受這支 trigger 影響——這裡驗的是
-  -- trigger 沒有「不分青紅皂白地每次 UPDATE 都重新驗證 child_id」，只在 child_id
-  -- 真的被改成新值時才檢查。
-  perform public.update_diary_entry(v_diary, '只改內容，child_id 沒變', current_date, v_child_active);
+  -- diary_children 的 BEFORE INSERT trigger 只在真的插入新列時才檢查，覆蓋語意下
+  -- 「刪多補少」對集合不變的孩子不會產生新的 INSERT（見 update_diary_entry 的
+  -- 「刪多補少」實作：不在新集合裡的才刪、不在舊集合裡的才插，值沒變就兩邊都不動）。
+  perform public.update_diary_entry(v_diary, '只改內容，孩子標記沒變', current_date, array[v_child_active]::uuid[]);
   select body into v_body from public.diaries where id = v_diary;
-  if v_body <> '只改內容，child_id 沒變' then
-    raise exception 'FAIL：child_id 沒變時，update_diary_entry 改內容失敗了';
+  if v_body <> '只改內容，孩子標記沒變' then
+    raise exception 'FAIL：孩子標記不變時，update_diary_entry 改內容失敗了';
   end if;
   reset role;
-  raise notice 'ok：update_diary_entry 把 child_id 改成已軟刪孩子拿 LS044；child_id 不變時單純改內容不受影響';
+  raise notice 'ok：update_diary_entry 把孩子標記改成已軟刪孩子拿 LS044；標記不變時單純改內容不受影響';
 
-  -- (d) 直接 albums INSERT：child_id 指向已軟刪的孩子 → LS044（owner／member 都走
-  -- 直接寫入，不是 RPC，證明這支 trigger 對兩條寫入路徑都有效）
+  -- (d) set_album_children：child_id 指向已軟刪的孩子 → LS044（LS-121 起
+  -- album_children 對 authenticated 完全沒有直接寫入 grant，唯一路徑是這支 RPC
+  -- ——albums 本體仍是 owner/member 直接 .insert()，只有孩子標記收斂進連結表，
+  -- 這裡分兩步驗證同一支 trigger 對這條 RPC 寫入路徑一樣有效）
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
+  insert into public.albums (family_id, title, created_by)
+  values (v_family, '想建在已刪孩子底下的相簿', v_owner)
+  returning id into v_album_probe;
   begin
-    insert into public.albums (family_id, child_id, title, created_by)
-    values (v_family, v_child_deleted, '想建在已刪孩子底下的相簿', v_owner);
-    raise exception 'FAIL：直接 INSERT albums 竟然能把相簿掛到已軟刪的孩子底下';
+    perform public.set_album_children(v_album_probe, array[v_child_deleted]::uuid[]);
+    raise exception 'FAIL：set_album_children 竟然能把相簿標記掛到已軟刪的孩子底下';
   exception when sqlstate 'LS044' then
     null;  -- ok
   end;
 
-  insert into public.albums (family_id, child_id, title, created_by)
-  values (v_family, v_child_active, '建在還活著的孩子底下的相簿', v_owner)
+  insert into public.albums (family_id, title, created_by)
+  values (v_family, '建在還活著的孩子底下的相簿', v_owner)
   returning id into v_album;
-  if v_album is null then
-    raise exception 'FAIL：直接 INSERT albums 指向 active 孩子時竟然失敗了';
-  end if;
-  raise notice 'ok：直接 INSERT albums 指向已軟刪孩子拿 LS044，指向 active 孩子不受影響（正向對照）';
+  perform public.set_album_children(v_album, array[v_child_active]::uuid[]);
+  raise notice 'ok：set_album_children 指向已軟刪孩子拿 LS044，指向 active 孩子不受影響（正向對照）';
 
   -- (e)「既有內容不動」對 albums 也成立：owner 對這本相簿呼叫 set_album_deleted
-  -- （只碰 deleted_at，不碰 child_id）完全不受這支 trigger 影響，即使 child_id
-  -- 指向的孩子之後被軟刪也一樣——這裡直接把這本相簿的孩子也軟刪掉，再驗證
+  -- （只碰 deleted_at，不碰孩子標記）完全不受這支 trigger 影響，即使標記指向的
+  -- 孩子之後被軟刪也一樣——這裡直接把這本相簿的孩子也軟刪掉，再驗證
   -- set_album_deleted 依然能正常運作。
   perform public.set_child_deleted(v_child_active, true);  -- 把這本相簿的孩子也軟刪
   begin
@@ -798,7 +812,7 @@ begin
   end if;
   perform public.set_child_deleted(v_child_active, false);  -- 還原，避免影響後面的測試檔
   reset role;
-  raise notice 'ok：孩子被軟刪之後，掛在他底下的既有相簿仍能正常軟刪自己（LS044 只管「新歸屬」，不管「既有內容的其他操作」）';
+  raise notice 'ok：孩子被軟刪之後，掛在他底下的既有相簿仍能正常軟刪自己（LS044 只管「新標記」，不管「既有內容的其他操作」）';
 end;
 $$;
 

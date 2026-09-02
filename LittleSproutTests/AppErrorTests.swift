@@ -209,7 +209,10 @@ final class AppErrorTests: XCTestCase {
             .childNotEditableByCaller,
             // LS043（LS-66）：孩子檔案已被移除超過 30 天，無法還原——換輸入或重試同一個
             // set_child_deleted 呼叫都不會變成功。
-            .childRestoreWindowExpired
+            .childRestoreWindowExpired,
+            // LS045（LS-121，set_album_children）：不是相簿建立者本人、或雖是建立者但
+            // 已不是該家庭 owner/member，同 LS021／LS025／LS042 的理由。
+            .albumChildrenNotEditableByCaller
             // LS040（childFamilyImmutable）已於 LS-57 I1 撤碼，family_id 不可變改用裸
             // 42501（同 diaries／albums／comments），不再是 LSErrorCode 的一個 case。
         ]

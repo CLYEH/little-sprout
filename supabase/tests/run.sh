@@ -368,6 +368,15 @@ race_case "同一個孩子檔案：軟刪先動，編輯必須被阻塞後拿到
   children_edit_vs_delete_setup.sql children_edit_vs_delete_s1_delete.sql \
   children_edit_vs_delete_s2_update.sql children_edit_vs_delete_verify_delete_won.sql
 
+# LS-121 併發場景：兩個連線同時 update_diary_entry 覆蓋同一篇日記的孩子標記
+# （不同的目標集合）。終態必須是其中一方的完整集合，不能混合——與
+# diary_edit_vs_delete 那組不同，這裡兩個方向的 RPC 相同（都是 update_diary_entry），
+# 驗的是同一支 RPC 內部「刪多補少」與 `for update` 鎖的交互，不是兩支不同 RPC
+# 互斥，所以只需要一個方向（S1 先動、S2 後動）。
+race_case "同一篇日記：兩連線同時覆蓋孩子標記，終態必須是後 commit 一方的完整集合" \
+  diary_children_race_setup.sql diary_children_race_s1.sql \
+  diary_children_race_s2.sql diary_children_race_verify.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 delete from public.families where id in (
@@ -380,6 +389,7 @@ delete from public.families where id in (
   'f6000000-0000-4000-8000-000000000001',
   'f7000000-0000-4000-8000-000000000001',
   'f5000000-0000-4000-8000-000000000001',
+  'f8000000-0000-4000-8000-000000000001',
   '9a000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
@@ -394,6 +404,7 @@ delete from auth.users where id in (
   'eb000000-0000-4000-8000-000000000002',
   'eb000000-0000-4000-8000-000000000003',
   'ec000000-0000-4000-8000-000000000001',
+  'e1000000-0000-4000-8000-000000000001',
   'a9000000-0000-4000-8000-000000000001',
   'a8000000-0000-4000-8000-000000000001',
   'a7000000-0000-4000-8000-000000000001',
