@@ -78,7 +78,12 @@ struct DiaryDetailView: View {
                         .onChange(of: proxy.size.width) { _, newValue in photoWallWidth = newValue }
                 }
             )
-            .padding(AppSpacing.screenPad)
+            // Pen 對稿修正：稿面（`design/littlesprout.pen` frame `vzYXz`／`Body` 節點
+            // `iUM2a`）Body padding 是 `[8,$screen-pad,0,$screen-pad]`——上緣只有
+            // `$sp-label`（8pt，Nav Back 已經佔掉大半上緣空間）、下緣 0（交給內容自己的
+            // 間距與安全區），不是四邊等值的 `screenPad`（24pt）。
+            .padding(.horizontal, AppSpacing.screenPad)
+            .padding(.top, AppSpacing.label)
         }
     }
 
