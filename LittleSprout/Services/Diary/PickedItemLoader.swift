@@ -67,7 +67,10 @@ enum PickedItemLoader {
         return .video(
             fileURL: transferred.url, fileExtension: fileExtension,
             duration: CMTimeGetSeconds(durationValue), pixelSize: pixelSize,
-            previewImage: await firstFrame(of: asset)
+            // merge-review R2 n4／R3 P2：`firstFrame(of:)` 是同步函式，這裡先前多帶了一個
+            // `await`（Swift 只警告不報錯，未被 CI 攔到；R3 申報「已修」但實際未落地，本輪
+            // 才真的拿掉）。
+            previewImage: firstFrame(of: asset)
         )
     }
 
