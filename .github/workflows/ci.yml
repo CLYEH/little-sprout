@@ -332,8 +332,8 @@ jobs:
       # 機械可查項：head_sha 是不是這個 PR 自己對這份 .pen 的其中一次 commit（不是等於 PR 最終 head sha——
       # 一個 commit 無法把自己最終的 sha 寫進自己的內容裡，見 design-evidence-check.sh 檔頭說明）、TOTAL_NODES
       # 與這裡的落地檔節點數一致、FLAGGED 每筆有分類、四支掃描皆有輸出且 corner_anchor.mismatch=0（LS-122：兄弟交集／
-      # 橫列溢出／跨 parent 碰撞／角托錨點，正典腳本 scripts/design/overflow-scan.js；round ≤ 5 且早於 gate 落地的既有
-      # 收據沿用兩支）。
+      # 橫列溢出／跨 parent 碰撞／角托錨點，正典腳本 scripts/design/overflow-scan.js；mismatch 只算收據 boards 內、boards
+      # 須覆蓋本 PR 對 .pen 頂層節點有變更的板；早於 gate 落地的既有收據沿用兩支）。
       # 限 feature|fix|hotfix head（同 LS-10／LS-50 的票號來源限制——promote／back-merge 沒有本票）。
       - name: .pen 掃描收據 gate（LS-68）
         if: github.event_name == 'pull_request' && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/'))

@@ -18,13 +18,16 @@
 #     真碰撞——本 gate 要求兩支掃描的輸出都要在，不能只交一支）
 #   - 每一支掃描下 flagged 陣列裡的每一筆都要有非空的 classification（分類表）
 #   - **LS-122：四支掃描**——scans 另須含 cross_parent_collision（跨 parent 絕對座標碰撞，flagged 每筆有分類）與
-#     corner_anchor（角托錨點核對：containers／points／mismatch 三個整數，**mismatch 必為 0、flagged 必為空**——角托錯位
-#     不接受白名單）。LS-119 R5 的兩個 BLOCKER（角托縮進紙面 148 點、相鄰格角托跨 parent 重疊 80 筆）與 MJ-6
-#     （instance descendants 才 enable 的徽章被裁）都是兩支既有掃描結構上抓不到的類別；四支的正典腳本是
-#     scripts/design/overflow-scan.js（供 Pencil execute 載入，node 自測 overflow-scan.test.js）。
-#     **舊 schema 不回溯紅**：輪次 round ≤ 5 **且** head_sha 那次 commit 的 committer 時間早於 LEGACY_CUTOFF
-#     （2026-09-02T04:00Z，本 gate 落地時點）的收據沿用兩支 schema——「既有收據」＝本 gate 之前就落地的收據
-#     （目前只有 LS-119 r5）；之後任何票的任何輪次（含新票 r1）都要四支，不讓「round ≤ 5」成為新票前五輪的永久漏洞。
+#     corner_anchor（角托錨點核對：containers／points／mismatch／document_mismatch 四個非負整數，**mismatch 必為 0、
+#     flagged 必為空**——角托錯位不接受白名單；`boards`＝本票觸碰的 root frame id 清單、非空，每個都要是 head_sha 快照的
+#     頂層節點，且 merge-base→head_sha 之間頂層節點有變更（含新增）的板都必須列在其中——mismatch 只算 boards 內，
+#     全稿另列 document_mismatch 供參考不擋（orchestrator 裁定 a106f940：他票 43 點舊債另開 chore）；`unresolved`
+#     ＝找不到吻合紙面的角托容器清單，每筆須有 classification）。LS-119 R5 的兩個 BLOCKER（角托縮進紙面 148 點、
+#     相鄰格角托跨 parent 重疊 80 筆）與 MJ-6（instance descendants 才 enable 的徽章被裁）都是兩支既有掃描結構上抓不到
+#     的類別；四支的正典腳本是 scripts/design/overflow-scan.js（供 Pencil execute 載入，node 自測 overflow-scan.test.js）。
+#     **舊 schema 不回溯紅**：head_sha 那次 commit 的 committer 時間早於 LEGACY_CUTOFF（2026-09-02T04:00Z，本 gate
+#     落地時點）的收據沿用兩支 schema——「既有收據」＝本 gate 之前就落地的收據（LS-119 r5／r6），不看輪次（merge-review
+#     R1 MJ-1：R1 版另加 round ≤ 5 會把 cutoff 前的 LS-119 r6 踢紅）；之後任何票的任何輪次（含新票 r1）都要四支。
 # 掃描「有沒有真的跑對」（演算法本身正確性）不是這支腳本能驗的——那需要 Pen 的版面引擎，只能靠
 # visual-reviewer 用同方法重掃比對（見 .claude/agents/visual-reviewer.md）。
 #
@@ -55,7 +58,9 @@
 #     "sibling_intersection": {"flagged": [{"node_a": "...", "node_b": "...", "classification": "..."}]},
 #     "row_overflow": {"flagged": [{"node": "...", "classification": "..."}]},
 #     "cross_parent_collision": {"flagged": [{"node_a": "...", "node_b": "...", "classification": "..."}]},
-#     "corner_anchor": {"containers": 88, "points": 352, "mismatch": 0, "flagged": []}
+#     "corner_anchor": {"boards": ["<root frame id>", ...], "containers": 91, "points": 728, "mismatch": 0, "flagged": [],
+#                       "document_containers": 130, "document_points": 1040, "document_mismatch": 43, "document_flagged": [...],
+#                       "unresolved": [{"container": "...", "classification": "..."}]}
 #   }
 # }
 #
@@ -164,16 +169,29 @@ for ev in "${candidates[@]}"; do
   is_latest=0
   [ "$round" = "$max_round" ] && is_latest=1
 
-  if ! PYTHONIOENCODING=utf-8 python3 - "$ev" "$pen_commits" "$last_pen_commit" "$is_latest" "$pen_relpath" "$landing_script" "$round" <<'PY'
+  if ! PYTHONIOENCODING=utf-8 python3 - "$ev" "$pen_commits" "$last_pen_commit" "$is_latest" "$pen_relpath" "$landing_script" "$base_sha" <<'PY'
 import json, os, subprocess, sys, tempfile
 
-p, pen_commits_s, last_pen_commit, is_latest_s, pen_relpath, landing_script, round_s = sys.argv[1:8]
+p, pen_commits_s, last_pen_commit, is_latest_s, pen_relpath, landing_script, base_sha = sys.argv[1:8]
 pen_commits = set(pen_commits_s.split())
 is_latest = is_latest_s == "1"
-round_n = int(round_s)
-# LS-122：舊 schema（兩支）只給本 gate 落地前就存在的收據——round ≤ 5 且 head_sha 的 committer 時間早於此時點。
+# LS-122：舊 schema（兩支）只給本 gate 落地前就存在的收據——head_sha 的 committer 時間早於此時點（不看輪次，MJ-1）。
 LEGACY_CUTOFF = 1788321600  # 2026-09-02T04:00:00Z
 FOUR = ("sibling_intersection", "row_overflow", "cross_parent_collision", "corner_anchor")
+
+def top_level(blob):
+    """.pen 快照的頂層節點 {id: 正規化 JSON}（board／元件定義都在這一層）；解析失敗回 None。"""
+    try:
+        doc = json.loads(blob.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(doc, dict):
+        return None
+    out = {}
+    for c in doc.get("children") or []:
+        if isinstance(c, dict) and isinstance(c.get("id"), str):
+            out[c["id"]] = (c.get("name") or "", json.dumps(c, sort_keys=True, ensure_ascii=False))
+    return out
 
 try:
     with open(p, encoding="utf-8") as fh:
@@ -189,6 +207,7 @@ if not isinstance(d, dict):
 errs = []
 sha = d.get("head_sha")
 want_nodes = None
+head_roots = None
 
 if not isinstance(sha, str) or sha not in pen_commits:
     errs.append(
@@ -205,6 +224,7 @@ else:
             f"無法用 git show 讀出 {sha}:{pen_relpath}（{show.stderr.decode('utf-8', 'replace').strip()}）"
         )
     else:
+        head_roots = top_level(show.stdout)
         tmp_path = None
         try:
             with tempfile.NamedTemporaryFile(suffix=".pen", delete=False) as tf:
@@ -243,13 +263,47 @@ if want_nodes is not None and nodes != want_nodes:
     )
 
 legacy = False
-if round_n <= 5 and isinstance(sha, str) and sha in pen_commits:
+if isinstance(sha, str) and sha in pen_commits:
     ct = subprocess.run(["git", "show", "-s", "--format=%ct", sha], capture_output=True, text=True)
     legacy = ct.returncode == 0 and ct.stdout.strip().isdigit() and int(ct.stdout.strip()) < LEGACY_CUTOFF
 required = FOUR[:2] if legacy else FOUR
 why = "兩支掃描（兄弟交集／橫列溢出）都必須有輸出（LS-67 R1）" if legacy else (
-    "四支掃描（兄弟交集／橫列溢出／跨 parent 碰撞／角托錨點）都必須有輸出（LS-122；round ≤ 5 且落地早於 2026-09-02T04:00Z 的既有收據才沿用兩支）"
+    "四支掃描（兄弟交集／橫列溢出／跨 parent 碰撞／角托錨點）都必須有輸出（LS-122；只有 .pen 落地早於 2026-09-02T04:00Z 的既有收據沿用兩支）"
 )
+
+
+def check_corner_anchor(scan, flagged):
+    """LS-122 corner_anchor 區塊：計數整數、mismatch==0、boards 覆蓋本 PR 觸碰的板、unresolved 每筆有分類。"""
+    for k in ("containers", "points", "mismatch", "document_mismatch"):
+        v = scan.get(k)
+        if isinstance(v, bool) or not isinstance(v, int) or v < 0:
+            errs.append(f"scans.corner_anchor.{k} 必須是非負整數（收據={v!r}）")
+    if scan.get("mismatch") != 0 or flagged:
+        errs.append(
+            f"scans.corner_anchor.mismatch 必須為 0 且 flagged 必須為空（收據 mismatch={scan.get('mismatch')!r}，flagged {len(flagged)} 筆）"
+            "——角托錯位不接受白名單，回稿把角托外緣壓過紙緣 corner-out 5pt（期望＝紙面邊 − 角托實測寬高 + 5，見 flagged 的 expected）後重跑 scripts/design/overflow-scan.js（LS-122）"
+        )
+    boards = scan.get("boards")
+    if not isinstance(boards, list) or not boards or any(not isinstance(b, str) or not b.strip() for b in boards):
+        errs.append("scans.corner_anchor.boards 必須是非空字串陣列（本票觸碰的 root frame id；Pencil 端先設 SCAN_BOARDS 再跑正典腳本，a106f940）")
+    elif head_roots is not None:
+        unknown = [b for b in boards if b not in head_roots]
+        if unknown:
+            errs.append(f"scans.corner_anchor.boards 含不存在於 head_sha 快照頂層的 id：{unknown}")
+        base_show = subprocess.run(["git", "show", f"{base_sha}:{pen_relpath}"], capture_output=True)
+        base_roots = top_level(base_show.stdout) if base_show.returncode == 0 else {}
+        touched = [rid for rid, (_, blob) in head_roots.items() if rid not in base_roots or base_roots[rid][1] != blob]
+        missing = [rid for rid in touched if rid not in boards]
+        if missing:
+            names = ", ".join(f"{rid}（{head_roots[rid][0]}）" for rid in missing)
+            errs.append(f"scans.corner_anchor.boards 漏列本 PR 對 .pen 有變更的頂層節點：{names}——本票觸碰的板都要在範圍內，不得靠縮小 boards 讓自己的角托錯位進 document_mismatch")
+    unresolved = scan.get("unresolved")
+    if not isinstance(unresolved, list):
+        errs.append("scans.corner_anchor.unresolved 必須是陣列（找不到吻合紙面的角托容器清單，可為空）")
+    else:
+        for i, item in enumerate(unresolved):
+            if not isinstance(item, dict) or not str(item.get("classification") or "").strip():
+                errs.append(f"scans.corner_anchor.unresolved[{i}] 缺分類（classification）——找不到紙面的角托容器要說明原因")
 
 scans = d.get("scans")
 if not isinstance(scans, dict):
@@ -265,18 +319,7 @@ else:
             errs.append(f"scans.{key}.flagged 必須是陣列")
             continue
         if key == "corner_anchor":
-            counts = {}
-            for k in ("containers", "points", "mismatch"):
-                v = scan.get(k)
-                if isinstance(v, bool) or not isinstance(v, int) or v < 0:
-                    errs.append(f"scans.corner_anchor.{k} 必須是非負整數（收據={v!r}）")
-                else:
-                    counts[k] = v
-            if counts.get("mismatch", 0) != 0 or flagged:
-                errs.append(
-                    f"scans.corner_anchor.mismatch 必須為 0 且 flagged 必須為空（收據 mismatch={scan.get('mismatch')!r}，flagged {len(flagged)} 筆）"
-                    "——角托錯位不接受白名單，回稿修 Corner TR/BR x=W−21、BL/BR y=H−21 後重跑 scripts/design/overflow-scan.js（LS-122）"
-                )
+            check_corner_anchor(scan, flagged)
             continue
         for i, item in enumerate(flagged):
             if not isinstance(item, dict) or not str(item.get("classification") or "").strip():
@@ -290,7 +333,7 @@ if errs:
 
 sha_disp = sha[:7] if isinstance(sha, str) else sha
 tag = "（本輪最新）" if is_latest else ""
-schema = "兩支掃描皆有輸出（round ≤ 5 既有收據，舊 schema）" if legacy else "四支掃描皆有輸出、corner_anchor.mismatch=0"
+schema = "兩支掃描皆有輸出（gate 落地前的既有收據，舊 schema）" if legacy else "四支掃描皆有輸出、corner_anchor.mismatch=0、boards 覆蓋本 PR 觸碰的板"
 print(f"✓ design-evidence gate 通過：{p}（head_sha={sha_disp}{tag}，total_nodes={want_nodes}，{schema}）")
 PY
   then

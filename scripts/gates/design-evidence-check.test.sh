@@ -8,10 +8,11 @@
 # 一個 commit 不可能把自己最終的 sha 寫進自己的內容裡，見 design-evidence-check.sh 檔頭說明）。正向樣本
 # 因此用兩支分開的 commit：先落地 .pen（commit A）、記下它的 sha，再另開一支 commit 加收據引用 sha A。
 #
-# LS-122：四支掃描 schema——①～⑩ 的兩支收據是「既有收據」（round ≤ 5 且 .pen commit 早於 LEGACY_CUTOFF
-# 2026-09-02T04:00Z），靠 GIT_COMMITTER_DATE 釘在 cutoff 之前才綠；⑪～⑯ 驗四支：缺任一支紅、corner_anchor.mismatch>0
-# 紅、計數缺失紅、跨 parent 碰撞缺分類紅、四支齊全且 mismatch=0 綠、以及**cutoff 之後的 round 1 兩支收據也紅**
-# （新票前五輪不得沿用舊 schema）。
+# LS-122：四支掃描 schema——①～⑩ 的兩支收據是「既有收據」（.pen commit 早於 LEGACY_CUTOFF 2026-09-02T04:00Z），
+# 靠 GIT_COMMITTER_DATE 釘在 cutoff 之前才綠；⑪～⑳ 驗四支：缺任一支紅、corner_anchor.mismatch>0 紅、計數缺失紅、
+# 跨 parent 碰撞缺分類紅、四支齊全且 mismatch=0 綠、**cutoff 之後的 round 1 兩支收據紅**（新票不得沿用舊 schema）、
+# **cutoff 之前的 round 6 兩支收據綠**（既有收據不看輪次，merge-review R1 MJ-1）、boards 漏列本 PR 觸碰的頂層節點紅、
+# boards 含不存在的 id 紅、unresolved 缺分類紅。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -253,16 +254,20 @@ expect 1 '⑩ F2 重現：最新收據引用較早的 commit A，最後一次 .p
 export GIT_COMMITTER_DATE='2026-09-03T00:00:00Z'
 
 write_receipt4() {
-  # write_receipt4 <path> <head_sha> <total_nodes> <mismatch> <mode: full|nocounts|noclass>
-  local path=$1 sha=$2 n=$3 mismatch=$4 mode=$5 corner cross
+  # write_receipt4 <path> <head_sha> <total_nodes> <mismatch> <mode: full|nocounts|noclass|noboard|badboard|unres>
+  #   land4 的 .pen 相對 base 只有頂層 d 是新增／變更（a、c 不變）→ boards 至少要列 d
+  local path=$1 sha=$2 n=$3 mismatch=$4 mode=$5 corner cross boards='["d"]' unres='[]' flagged='[]'
   case "$mode" in
-    nocounts) corner='"corner_anchor":{"containers":1,"mismatch":0,"flagged":[]}' ;;
-    *)
-      if [ "$mismatch" = 0 ]; then
-        corner='"corner_anchor":{"containers":1,"points":4,"mismatch":0,"flagged":[]}'
-      else
-        corner='"corner_anchor":{"containers":1,"points":4,"mismatch":'"$mismatch"',"flagged":[{"container":"a","corner":"b","axis":"y","expected":157,"actual":149}]}'
-      fi ;;
+    noboard)  boards='["a"]' ;;
+    badboard) boards='["d","zzz"]' ;;
+    unres)    unres='[{"container":"a","reason":"找不到吻合的紙面"}]' ;;
+  esac
+  if [ "$mismatch" != 0 ]; then
+    flagged='[{"container":"a","corner":"b","axis":"y","expected":157,"actual":149}]'
+  fi
+  case "$mode" in
+    nocounts) corner='"corner_anchor":{"boards":'"$boards"',"containers":1,"mismatch":0,"document_mismatch":0,"flagged":[],"unresolved":[]}' ;;
+    *) corner='"corner_anchor":{"boards":'"$boards"',"containers":1,"points":8,"mismatch":'"$mismatch"',"document_mismatch":'"$mismatch"',"flagged":'"$flagged"',"unresolved":'"$unres"'}' ;;
   esac
   if [ "$mode" = noclass ]; then
     cross='"cross_parent_collision":{"flagged":[{"node_a":"a","node_b":"c"}]}'
@@ -334,6 +339,41 @@ write_receipt "$R/design/evidence/LS-67-r1-overflow.json" "$sha16" 4 1 1 1
 g add design/evidence/LS-67-r1-overflow.json
 g commit -qm 'design(evidence): LS-67 r1 收據（cutoff 之後的兩支收據）'
 expect 1 '⑯ cutoff 之後的 round 1 兩支收據 → 紅（不得沿用舊 schema）' '四支掃描' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ⑰ merge-review R1 MJ-1 重現：cutoff **之前**的 round 6 兩支收據（＝LS-119 r6 的情境）→ 綠——「既有收據」只看落地時間，不看輪次
+#    （R1 版的 round ≤ 5 conjunct 沒有任何負控覆蓋，唯一效果是把 LS-119 r6 踢紅；這一格就是漏掉的那格）
+export GIT_COMMITTER_DATE='2026-09-01T00:00:00Z'
+sha17="$(land4 pr-r6-before-cutoff)"
+write_receipt "$R/design/evidence/LS-67-r6-overflow.json" "$sha17" 4 1 1 1
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（cutoff 之前，兩支）'
+expect 0 '⑰ cutoff 之前的 round 6 兩支收據 → 綠（既有收據不看輪次，MJ-1）' '舊 schema' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+export GIT_COMMITTER_DATE='2026-09-03T00:00:00Z'
+
+# ⑱ boards 漏列本 PR 觸碰的頂層節點 d（只列沒動的 a）→ 紅（不得靠縮小 boards 把自己的錯位推進 document_mismatch）
+sha18="$(land4 pr-r6-noboard)"
+write_receipt4 "$R/design/evidence/LS-67-r6-overflow.json" "$sha18" 4 0 noboard
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（boards 漏列 d）'
+expect 1 '⑱ boards 漏列本 PR 觸碰的頂層節點 → 紅' '漏列本 PR 對 .pen 有變更的頂層節點：d' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ⑲ boards 含 head_sha 快照頂層不存在的 id → 紅
+sha19="$(land4 pr-r6-badboard)"
+write_receipt4 "$R/design/evidence/LS-67-r6-overflow.json" "$sha19" 4 0 badboard
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（boards 含不存在的 id）'
+expect 1 '⑲ boards 含不存在於頂層的 id → 紅' "不存在於 head_sha 快照頂層的 id：['zzz']" \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ⑳ unresolved 有一筆缺分類 → 紅（找不到紙面的角托容器要說明原因，不能默默略過）
+sha20="$(land4 pr-r6-unres)"
+write_receipt4 "$R/design/evidence/LS-67-r6-overflow.json" "$sha20" 4 0 unres
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（unresolved 缺分類）'
+expect 1 '⑳ corner_anchor.unresolved 有一筆缺分類 → 紅' 'unresolved[0] 缺分類' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
 
 if [ "$fail" -eq 0 ]; then
