@@ -89,15 +89,18 @@ R7 掃過全部 393 寬、非 A11y/Stress 的螢幕板：27 張有實心 accent�
 - 07b 兩筆核准同權重（都外框），不誘導長輩按最醒目的那顆。
 - 06 家族 Upper／Footer 用 flex spacer（`height:fill_container` 置於 Upper 末尾、Body 不用 `space_between`），把「改用貼上邀請連結」永遠釘在拇指區；不許魔術數 spacer（232／100）。
 
-## Tab Bar 全字級純 icon（LS-120）
+## Tab Bar 全字級純 icon（LS-120，R2 修訂——取代 R1 描述）
 
-`cmp/Tab Bar` 全字級（含預設，不只 AX）純 icon，不掛文字——取代 R 前「icon＋fs-meta 文字」兩層結構；文字標籤路徑改由 VoiceOver `accessibilityLabel` 與 iOS Large Content Viewer 承載，是 `elder-constraints.md`「icon 一律帶文字標籤」的第二條明文例外。四顆 icon：時間軸＝gallery-vertical（垂直堆疊卡片＝時間序 feed）、相簿＝layout-grid（田字網格＝整理過的收藏，改自舊版 images 以與時間軸的堆疊剪影明顯區分）、寶貝＝baby、設定＝settings——四種剪影零文字仍可辨。
+`cmp/Tab Bar` 全字級（含預設，不只 AX）純 icon，不掛文字——取代 R 前「icon＋fs-meta 文字」兩層結構；文字標籤路徑靠**兩條**（非單靠長按，見下「非手勢替代路徑」）承載，是 `elder-constraints.md`「icon 一律帶文字標籤」的第二條明文例外。四顆 icon：時間軸＝gallery-vertical（單一直立矩形＋橫線＝一條持續往下捲動的 feed）、相簿＝**images**（兩張交疊相框＝一疊隨時可翻開的收藏，呼應 app icon photo-stack 的疊放照片意象；R1 曾改 layout-grid，因與 iOS 相片 app「田字＝所有照片、疊起＝相簿」的平台先驗相反且讓 Tab Bar 上找不到一張「照片」，R2 review MJ-2 判定失敗，改回）、寶貝＝baby、設定＝settings——差異軸「一條流 vs 一疊收藏」，四種剪影零文字仍可辨。
 
-- **選中態＝形狀＋對比同時變化，非只換色**：透明→`$surface` 圓角實心＋outer shadow（紙的落影語彙）；icon 由 `$icon-md` 放大到 `$icon-lg`；色由 `$text-secondary` 轉 `$text-primary`。三個維度疊加，缺一不成立。
-- **尺寸**：unselected icon＝`$icon-md`（22／AX3 40），selected icon＝`$icon-lg`（26／AX3 48），indicator padding 固定 `$sp-tight`（6，不隨 AX3 放大——間距節奏本來就不隨字級變化，見 tokens.md ④）。外層膠囊 361×64（預設，不變）；AX3 因選中膠囊需要內容高度 48+2×6=60，但 64−2×6=52 不夠，改 361×80（僅高度變，寬度 361 對 AX3 仍綽綽有餘：cell 寬 85.8 遠大於 60pt 選中膠囊）。
-- **y 位移**：Tab-root 板既有公式「y＝板高−98」（見下「時間軸建立入口」條，對應 34pt 底部安全邊界＋64pt 膠囊高）在 AX3 板改為「y＝板高−114」（34＋80），保持與裝置底緣固定 34pt 邊界不變，不是把膠囊往下擠壓縮邊界。
+- **選中態＝四個維度同時變化，非只換色**（R1 只有三個，深色實測退化成事實上一個——見下量測）：①背景透明→`$surface` 圓角實心＋outer shadow（紙的落影語彙）②新增 1pt `$control-line` 描邊（未選中描邊同色 `$surface-2`＝無框）③icon 由 `$icon-tab-md` 放大到 `$icon-tab-lg`④色由 `$text-secondary` 轉 `$text-primary`。**量測**（WCAG 2.1 相對亮度，非形容詞）：`$control-line` 對 `$surface-2`＝淺 **3.249:1**／深 **3.527:1**（兩主題同向皆 ≥3:1）；R1 只靠明度分離時是淺 1.354:1／深 1.140:1（深色比軌道更暗、方向反轉），這正是為什麼「形狀＋對比要強」不能只是斷言，必須附測量法與數字。
+- **尺寸**：`$icon-tab-md`（unselected，26／AX3 40）、`$icon-tab-lg`（selected，32／AX3 48）——比一般 `$icon-md`/`$icon-lg` 大一階，理由：導覽用的圖示不是「一般圖示」，拿掉文字後空間要還給 icon。indicator padding 固定 `$sp-tight`（6，不隨 AX3 放大，見 tokens.md ④）。選中 Indicator＝icon+12：預設 32+12=**44**（恰為觸控下限，膠囊本身即合格目標）、AX3 48+12=**60**。外層膠囊：預設 361×64 不變（content area 64−12=52，52−44=8=`$sp-label`，殘量落在節奏上）；AX3 361×**88**（不是 R1 的 80——content area 88−12=76，76−60=16、每側 8=`$sp-label`，殘量落在節奏上；R1 的 80 是 68−60=8、每側 4，4 不在節奏上，MN-1 倒推餘數）。
+- **y 位移**：Tab-root 板既有公式「y＝板高−98」（34pt 底部安全邊界＋64pt 膠囊高，見下「時間軸建立入口」條）不變；AX3 板改為「y＝板高−**122**」（34＋88，取代 R1 用舊高度算出的 114），同樣保持與裝置底緣固定 34pt 邊界不變。
+- **捲動內容底部 inset 契約**（實作契約，寫給 ios-dev；R1 遺漏，R2 補）：Tab-root 畫面捲動容器的 `safeAreaInset(edge:.bottom)`／`contentInset.bottom` ＝ `34 ＋ 膠囊高`——預設 **98**、AX3 **122**。沒有這段 inset，內容會滾到浮動膠囊底下被蓋住甚至切一半（LS-120 R1 review BL-2：6 張板實測命中，逐板量測與修法見 `design/littlesprout.pen` Handoff Notes `LuHbv` R2 · BL-2 段）。
+- **非手勢替代路徑**（前提⑤，比照 LS-119 拖曳例外前提④同型；`elder-constraints.md` 例外二同步補）：四個 tab 對應的目的地畫面，**display 標題＝該 tab 名稱**（時間軸／相簿／寶貝／設定）——這是拿掉可見 tab 文字後、不依賴長按 Large Content Viewer 也能對照「這顆圖示是什麼」的路徑，是 Tab-root 畫面的硬規則。長按彈出的系統大字標籤是額外加強，不是唯一路徑。目前只有「時間軸」畫面存在且已符合；「寶貝」現用「LS-47 / 09 寶貝管理」（非精確比對，記入 LS-96 池）；相簿／設定畫面尚未存在，未來畫面票必須遵守本規則，不得自由發揮標題。
+- **定案形態全畫出**（MJ-4）：`cmp/Tab Bar` 旁新增 `cmp/Tab Bar · 四態對照（LS-120 R2）`（`Lo8Ae`）——兩排（預設／AX3）× 四欄（時間軸/相簿/寶貝/設定各自選中）共 8 個 instance，是驗收條件 1–2「有定案形態、全 app 一條規則」在四個狀態都畫出來意義下的證據；override 配方＝每個 instance 的 `descendants` 顯式覆寫全部 4 顆 Indicator（fill/stroke/strokeWidth/effect）＋4 顆 Icon（fill/width/height）＋4 個 cell 的 `metadata.selected`。
 - **iPad 不適用**：iPad 用 NavigationSplitView（PLAN.md），全文件掃描確認沒有任何板在 iPad 寬度使用本元件，維持現狀即可，不需要造一個 iPad 版本；若未來出現這種用法，屬於「該畫面不該用 Tab Bar」的問題，不是本元件要改尺寸。
-- Pencil 實作細節（AX3 override 對照表、逐 instance id、8 個尺寸字面值清單）見 `design/littlesprout.pen` Handoff Notes `LuHbv`（LS-120 段）。
+- Pencil 實作細節（BL-1/BL-2/MJ-4 完整量測與逐板 spacer 值、AX3 override 對照表、逐 instance id）見 `design/littlesprout.pen` Handoff Notes `LuHbv`（LS-120／LS-120 R2 段）。
 
 ## 章節斷點 44 與畫面高度
 
