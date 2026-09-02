@@ -247,12 +247,19 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   `CHECK` 強制前綴＝`family_id`，且 `UNIQUE`（`media_thumb_path_key`）；
   `thumb_width`／`thumb_height` 有值時必須 `> 0`。**三欄一旦隨 `INSERT` 寫入即不可
   再 `UPDATE`**（無欄位級 grant，同 `storage_path`／`byte_size`）——不存在「先建
-  `media` 列、之後才補上縮圖」的合法路徑，見下一點的上傳流程順序。
+  `media` 列、之後才補上縮圖」的合法路徑，見下一點的上傳流程順序。**代價**：以
+  `thumb_path` 為 `NULL` 寫入的列（縮圖產生失敗、或既有舊資料）在目前的欄位級 grant
+  下，**客戶端沒有合法路徑事後補寫縮圖**——只能永遠退回原圖（見 §6「簽名 URL 與
+  egress 防線」）。日後若要支援「事後補縮圖」，需要一支新的非破壞性 migration 開放
+  `update (thumb_path, thumb_width, thumb_height)` 欄位級 grant，並用 trigger 限制只
+  允許 `NULL → 非 NULL` 的單向轉換（否則會連帶放掉 `storage_path` 等級的不可變保證）。
 - **上傳流程順序很重要**：Storage 物件與 `media` 列是兩份獨立資料，DB 不會替你保證兩者
   一致。正確順序：① 先把原始檔案 PUT 進 Storage（`storage.objects`，見 §6）
   ② **同步產生縮圖並 PUT 進 Storage**（長邊 ≤ 512px、JPEG 品質 0.8；影片取首幀轉成同
-  規格 JPEG；路徑 `{family_id}/{yyyy}/{mm}/{media_id}_thumb.jpg`，見 §6）③ 兩者皆成功
-  後才 `insert` 對應的 `media` 列（`storage_path`／`thumb_path`／`thumb_width`／
+  規格 JPEG；路徑 `{family_id}/{yyyy}/{mm}/{media_id}_thumb.jpg`，見 §6）——①②互不
+  相依（縮圖只需要本機解碼後的圖像資料，不需要等原檔上傳完成），**可以並行 PUT**
+  （例如 `async let`／`TaskGroup`，佇列量大時搭配並發上限），不必序列化跑——③ 兩者皆
+  成功後才 `insert` 對應的 `media` 列（`storage_path`／`thumb_path`／`thumb_width`／
   `thumb_height` 一次寫入，不分兩次）。若①②任一步失敗就不要 `insert`；若第③步因
   `LS002`（額度爆了）或其他原因失敗，**已經上傳的 Storage 物件（原檔與縮圖）都會變成
   孤兒**——上傳者對自己剛上傳的物件有 Storage `DELETE` 權限（見 §6），失敗時 client
