@@ -22,9 +22,14 @@
 -- 範圍）。
 --
 -- CHECK(> 0) 而不是 >= 0：0 秒的影片不是合法媒體（沒有畫面可播放），比照既有
--- width／height／byte_size 皆為正數的既有慣例（width/height CHECK > 0，
--- 20260822120000_init_schema.sql）。整數秒、裁切後長度向上取整——見 API.md §3
--- 「影片時長量測與寫入」。
+-- width／height 皆為正數的既有慣例（CHECK > 0，20260822120000_init_schema.sql；
+-- byte_size 是 CHECK >= 0、允許 0，不適用此例——merge-review R1 delta n1）。
+-- 整數秒，裁切後長度取 max(1, floor(d))——與
+-- LittleSprout/Support/VideoDurationFormat.swift／DiaryDurationFormat.swift 同源
+-- （無條件捨去、不進位，同一支影片在編輯器與時間軸卡片顯示同一個數字）；量測
+-- 失敗、或量到 duration ≤ 0 秒時留 NULL，不得寫 0（避免原檔與縮圖皆已 PUT 進
+-- Storage 後才在 INSERT 撞本檔的 CHECK 留下孤兒物件）——見 API.md §3 `media` 表
+-- 「影片時長（`duration_seconds`，LS-134）」條目。
 --
 -- 不加 UPDATE 欄位級 grant：比照 thumb_path／storage_path／byte_size／family_id／
 -- uploaded_by 的既有慣例（20260902101842_media_thumb_path.sql）——上傳流程契約是
@@ -44,8 +49,10 @@ alter table public.media
     check (duration_seconds is null or duration_seconds > 0);
 
 comment on column public.media.duration_seconds is
-  '影片時長（整數秒，向上取整）。type = ''photo'' 時應為 NULL；type = ''video'' 時
-  由上傳端以 AVAsset 量測寫入（裁切過的影片以裁切後長度為準）——此契約由 docs/API.md
-  §3 與上傳端負責，DB 只驗「有值時必須 > 0」（media_duration_seconds_positive），
-  不驗與 type 的相依關係（既有 video 列在本 migration 套用當下皆為 NULL，見檔頭）。
-  一旦隨 INSERT 寫入即不可再 UPDATE（無欄位級 grant，同 storage_path，LS-134）。';
+  '影片時長（整數秒，max(1, floor(d))，與 VideoDurationFormat 同源；量測失敗或
+  duration <= 0 秒時留 NULL，不得寫 0）。type = ''photo'' 時應為 NULL；
+  type = ''video'' 時由上傳端以 AVAsset 量測寫入（裁切過的影片以裁切後長度為準）
+  ——此契約由 docs/API.md §3 與上傳端負責，DB 只驗「有值時必須 > 0」
+  （media_duration_seconds_positive），不驗與 type 的相依關係（既有 video 列在本
+  migration 套用當下皆為 NULL，見檔頭）。一旦隨 INSERT 寫入即不可再 UPDATE
+  （無欄位級 grant，同 storage_path，LS-134）。';
