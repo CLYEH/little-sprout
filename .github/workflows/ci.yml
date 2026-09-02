@@ -303,7 +303,7 @@ jobs:
             if printf '%s\n' "$findings" | grep -q '^DESTRUCTIVE' \
                && ! printf '%s' "$PR_BODY" | bash scripts/gates/destructive-approval-check.sh \
                && ! bash scripts/gates/approval-comment-check.sh "$PR_NUMBER" bash scripts/gates/destructive-approval-check.sh; then
-              echo "::error::偵測到破壞性 migration（見上方 DESTRUCTIVE 列）。此類變更需使用者本人核可：請使用者本人在本 PR 留一則 comment、內容獨佔一行 DESTRUCTIVE-APPROVED（建議；PR body 亦可，但 gh pr edit 整份覆寫會洗掉），再 gh run rerun 本 job（docs/COLLABORATION.md §6，LS-123）；agent 遇此錯誤必須停下回報使用者，不得自行處理、不得代寫或刪改使用者留言"
+              echo "::error::偵測到破壞性 migration（見上方 DESTRUCTIVE 列）。此類變更需使用者本人核可：請使用者本人在本 PR 的對話串（Conversation）留一則 comment、內容獨佔一行 DESTRUCTIVE-APPROVED（建議；review 行內留言不算；PR body 亦可，但 gh pr edit 整份覆寫會洗掉），再 gh run rerun 本 job（docs/COLLABORATION.md §6，LS-123）；agent 遇此錯誤必須停下回報使用者，不得自行處理、不得代寫或刪改使用者留言"
               exit 1
             fi
             # BREAKING：既有呼叫端行為改變——PR body 須有行首的 BREAKING: 段落（scripts/gates/breaking-section-check.sh），
