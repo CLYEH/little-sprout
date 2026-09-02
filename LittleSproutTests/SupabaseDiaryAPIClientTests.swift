@@ -134,6 +134,27 @@ final class SupabaseDiaryAPIClientTests: XCTestCase {
         try await apiClient.attachMedia(diaryID: diaryID, familyID: familyID, mediaIDs: [mediaID1, mediaID2])
     }
 
+    /// merge-review R2 n1：`attachMedia` 改用 `upsert(..., ignoreDuplicates: true)`（不是
+    /// `insert`），驗證 SDK 真的把這兩個選項編碼進請求——`on_conflict` query param（PK 欄位）
+    /// 跟 `Prefer` header 帶 `resolution=ignore-duplicates`，撞主鍵時安靜跳過而不是 `23505`。
+    func test_attachMedia_usesUpsertWithIgnoreDuplicatesOnConflictKey() async throws {
+        let client = TestSupabaseClient.make { [mediaID1] request in
+            XCTAssertEqual(
+                request.url?.query?.contains("on_conflict=diary_id%2Cmedia_id") ?? false, true,
+                "PK 是 (diary_id, media_id)，撞號要靠這個 on_conflict 才能被安靜跳過"
+            )
+            let prefer = try XCTUnwrap(request.value(forHTTPHeaderField: "Prefer"))
+            XCTAssertTrue(
+                prefer.contains("resolution=ignore-duplicates"),
+                "Prefer header 應該帶 ignore-duplicates，不是預設的 merge-duplicates，Prefer 實際值：\(prefer)"
+            )
+            return MockURLProtocol.StubResponse(statusCode: 201, body: Data())
+        }
+        let apiClient = SupabaseDiaryAPIClient(client: client)
+
+        try await apiClient.attachMedia(diaryID: diaryID, familyID: familyID, mediaIDs: [mediaID1])
+    }
+
     func test_attachMedia_emptyArray_doesNotSendRequest() async throws {
         let client = TestSupabaseClient.make { _ in
             XCTFail("空陣列不該打任何請求")

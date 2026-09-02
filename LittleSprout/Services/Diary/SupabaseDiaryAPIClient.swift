@@ -41,14 +41,22 @@ final class SupabaseDiaryAPIClient: DiaryAPIClient {
     }
 
     /// `diary_media` 不是 RPC-only（見 `docs/API.md` §2「寫入路徑小結」）——owner／member
-    /// 可直接 `.insert()`，`sort_order` 用陣列 index 表達佇列順序。
+    /// 可直接寫，`sort_order` 用陣列 index 表達佇列順序。
+    ///
+    /// 用 `upsert` 而不是 `insert`（merge-review R2 n1）：PK 是 `(diary_id, media_id)`
+    /// （`20260822120000_init_schema.sql`）。`DiaryComposerStore` 的續傳保護保證重試一定
+    /// 用同一個 `diaryID`／同一批 media id 呼叫這裡——若上一次其實已經寫入成功、只是回應在
+    /// 網路上遺失（client 因此誤判失敗），純 `insert` 重試會撞主鍵拿 `23505`，變成永遠發不
+    /// 出去的死路。`ignoreDuplicates: true` 讓已經存在的那幾列被安靜跳過，不擋住整個呼叫。
     func attachMedia(diaryID: UUID, familyID: UUID, mediaIDs: [UUID]) async throws {
         guard !mediaIDs.isEmpty else { return }
         do {
             let rows = mediaIDs.enumerated().map { index, mediaID in
                 DiaryMediaRow(diaryID: diaryID, mediaID: mediaID, familyID: familyID, sortOrder: index)
             }
-            try await client.from("diary_media").insert(rows).execute()
+            try await client.from("diary_media")
+                .upsert(rows, onConflict: "diary_id,media_id", ignoreDuplicates: true)
+                .execute()
         } catch {
             throw AppError.map(error)
         }
