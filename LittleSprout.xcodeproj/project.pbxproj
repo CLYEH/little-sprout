@@ -27,6 +27,7 @@
 		0F2F86603BE0C13DB1C9E552 /* ForkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B061439F3147E44FA344DFC /* ForkView.swift */; };
 		0F72FB6A09D4EA5C229698CF /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCF885D756104B3EBAAD6DB2 /* WelcomeView.swift */; };
 		0FE5CB1F362B73DC140F24CC /* TimelineContentAssembler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1A187F8B4D813F1BCB0135 /* TimelineContentAssembler.swift */; };
+		10CB97ED4D75A21D2579F3CF /* DiaryCardVideoBadgeGeometryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17ADF30BD9D82AA5300EFF5B /* DiaryCardVideoBadgeGeometryTests.swift */; };
 		10E2D7F9A2832475BCC8728F /* DayDividerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9229E1129C9AC40092028D3 /* DayDividerView.swift */; };
 		1290BE425DE9479722124001 /* SupabaseDiaryAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA263D0058EB232AD178E89C /* SupabaseDiaryAPIClientTests.swift */; };
 		1330DE1A2C8A701F1C64DE82 /* TapTargetGateScreenName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 962EAB3D4E7C6E203A5790AE /* TapTargetGateScreenName.swift */; };
@@ -232,6 +233,7 @@
 		14AB4F80381DABD0E6FE12B0 /* AuthButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthButtons.swift; sourceTree = "<group>"; };
 		1607F0D7FCD5EB97C60556C4 /* SupabaseTimelineAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseTimelineAPIClient.swift; sourceTree = "<group>"; };
 		16F94CB4C84E1E0211A97014 /* TimelineRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineRoute.swift; sourceTree = "<group>"; };
+		17ADF30BD9D82AA5300EFF5B /* DiaryCardVideoBadgeGeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryCardVideoBadgeGeometryTests.swift; sourceTree = "<group>"; };
 		17B6EDB33CABFA69510857AF /* InviteCodeField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeField.swift; sourceTree = "<group>"; };
 		18AB0FEB21BA55A39EB67982 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1AAA98C9E8EC8946FC45F0FF /* InviteFamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteFamilyView.swift; sourceTree = "<group>"; };
@@ -445,6 +447,7 @@
 		1DA7979F5CC775A4EC407A14 /* LittleSproutUITests */ = {
 			isa = PBXGroup;
 			children = (
+				17ADF30BD9D82AA5300EFF5B /* DiaryCardVideoBadgeGeometryTests.swift */,
 				DC9F969B2673823F6B3CE0A7 /* TapTargetGateSelfTests.swift */,
 				38210395D04923BEFD0ED94B /* TapTargetGateTests.swift */,
 				C8613F9B6DA141E7F034F153 /* TapTargetMeasurement.swift */,
@@ -1026,6 +1029,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				10CB97ED4D75A21D2579F3CF /* DiaryCardVideoBadgeGeometryTests.swift in Sources */,
 				C2C151B3DF9E8CDB42DB6753 /* TapTargetGateScreenName.swift in Sources */,
 				79BA4B8CFEC8729A6BA34391 /* TapTargetGateSelfTests.swift in Sources */,
 				5C9E6ED512A86D8A37DC15EA /* TapTargetGateTests.swift in Sources */,

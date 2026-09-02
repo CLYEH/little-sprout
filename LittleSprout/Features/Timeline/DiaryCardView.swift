@@ -14,6 +14,18 @@ struct DiaryCardView: View {
     /// 依賴）。
     let timelineStore: TimelineStore
 
+    /// merge-review `443ec21a` i2（既有 LS-126 幾何缺陷，本輪順手修——同一 surface，QA 會
+    /// 撞到）：`previewPhotosRow` 實際渲染出的寬度。`HStack` 內每格疊 `.frame(maxWidth:
+    /// .infinity)` ＋ `.aspectRatio(1, contentMode: .fit)` 在無界高度提案下不會真的把格子
+    /// 壓成正方形（`.aspectRatio` 拿不到明確的寬度提案可以「fit」），量測證據：日記卡貼到
+    /// 螢幕右緣、格子 146.7×110pt 而非稿面規格的 ~99×99pt 正方。改成量實際寬度後
+    /// 顯式算出每格的邊長（同 `DiaryDetailView.photoWallWidth` 的既有量寬手法），不再靠
+    /// `.aspectRatio` 自己「猜」。初始值用螢幕寬扣掉時間軸版心（`screenPad`）與卡片自身
+    /// padding（`insetCard`）估一個合理值，避免第一幀量到 0 而整排塌縮——`GeometryReader`
+    /// 量到真實寬度後立刻覆蓋。
+    @State private var previewPhotosRowWidth: CGFloat = UIScreen.main.bounds.width
+        - 2 * AppSpacing.screenPad - 2 * AppSpacing.insetCard
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.group) {
             if !taggedChildren.isEmpty {
@@ -43,8 +55,27 @@ struct DiaryCardView: View {
             ForEach(Array(content.previewPhotos.enumerated()), id: \.element.id) { index, photo in
                 let isLast = index == content.previewPhotos.count - 1
                 previewThumbnail(photo, showsRemainingBadge: isLast && remainingPhotoCount > 0)
+                    .frame(width: previewTileSize, height: previewTileSize)
             }
         }
+        // merge-review `443ec21a` i2：量實際渲染寬度，見 `previewPhotosRowWidth` 文件註解
+        // ——同 `DiaryDetailView.compactLayout` 量 `photoWallWidth` 的既有手法，`.background`
+        // 掛在 `.padding` 之前（這裡沒有額外 padding，`HStack` 本身就是要量的寬度）。
+        .background(
+            GeometryReader { proxy in
+                Color.clear.onAppear { previewPhotosRowWidth = proxy.size.width }
+                    .onChange(of: proxy.size.width) { _, newValue in previewPhotosRowWidth = newValue }
+            }
+        )
+    }
+
+    /// 每格正方形邊長——用量到的實際列寬反推，不再靠 `.aspectRatio(1, contentMode: .fit)`
+    /// 在 `HStack` 無界高度提案下「猜」（見 `previewPhotosRowWidth` 文件註解）。
+    private var previewTileSize: CGFloat {
+        let count = content.previewPhotos.count
+        guard count > 0 else { return 0 }
+        let totalGap = AppSpacing.label * CGFloat(max(0, count - 1))
+        return max(0, (previewPhotosRowWidth - totalGap) / CGFloat(count))
     }
 
     @ViewBuilder
@@ -88,9 +119,12 @@ struct DiaryCardView: View {
                         .padding(AppSpacing.tight)
                     }
                 }
+                // merge-review `443ec21a` M1：`.clipShape` 移到 `.overlay` 之後——修前掛在
+                // `thumbnailImage` 內部、在 overlay 疊加之前就裁了，徽章／暗蓋一旦比格子大
+                // 就會畫出圓角格子外側（實測右緣畫到卡片邊界外）。搬到這裡確保無論徽章多寬
+                // 都不會溢出格子可視範圍——`previewTileSize` 已經是主要防線，這裡是保底。
+                .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
         }
-        .frame(maxWidth: .infinity)
-        .aspectRatio(1, contentMode: .fit)
         .task(id: photo.id) {
             // 同 `PhotoCardView` 的理由：`needsVideoDurationLookup` 為 false（縮圖列）時
             // 這裡連第一次嘗試都不該發生——`signedURL` 對它們是縮圖 JPEG，讀時長必定失敗。
@@ -114,7 +148,6 @@ struct DiaryCardView: View {
                 Color.lsSurface2
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
     }
 }
 
