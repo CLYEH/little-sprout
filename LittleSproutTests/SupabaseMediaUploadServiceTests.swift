@@ -41,18 +41,22 @@ final class SupabaseMediaUploadServiceTests: XCTestCase {
         XCTAssertTrue(path.contains("/\(expectedYear)/\(expectedMonth)/"), "yyyy/mm 應取上傳當下（UTC）")
     }
 
-    // MARK: - 50 MiB 超限錯誤文案
+    // MARK: - 50 MiB 超限：code 分流（螢幕文案本身由 DiaryPublishErrorMessageTests 釘住）
 
-    func test_mapUploadError_payloadTooLarge_returnsFriendlyValidationRetryable() {
+    /// R1 M1：這裡只驗 `code` 有沒有被正確標記成 `payloadTooLarge`——`message` 是給 log／
+    /// 除錯用的（`AppError.swift` 檔頭契約），不是螢幕上會出現的字，不在這裡斷言其內容；
+    /// 「螢幕上顯示什麼」的斷言在 `DiaryPublishErrorMessageTests`（merge-review R1 I4 指出
+    /// 的缺口：先前這裡斷言 `message.contains("50MB")` 測到的是 log 欄位，不是使用者看得到
+    /// 的畫面文字）。
+    func test_mapUploadError_payloadTooLarge_marksCodeForScreenDispatch() {
         let storageError = StorageError(statusCode: "413", message: "The object exceeded the maximum allowed size")
 
         let mapped = SupabaseMediaUploadService.mapUploadError(storageError)
 
-        guard case .validationRetryable(let message, let code) = mapped else {
+        guard case .validationRetryable(_, let code) = mapped else {
             return XCTFail("413 應映射為 .validationRetryable，實際是 \(mapped)")
         }
-        XCTAssertTrue(message.contains("50MB"), "文案要讓使用者看得懂超限的是什麼")
-        XCTAssertEqual(code, "storage_413")
+        XCTAssertEqual(code, DiaryMediaErrorCode.payloadTooLarge)
     }
 
     func test_mapUploadError_otherStorageError_fallsThroughToAppErrorMap() {
@@ -60,7 +64,7 @@ final class SupabaseMediaUploadServiceTests: XCTestCase {
 
         let mapped = SupabaseMediaUploadService.mapUploadError(storageError)
 
-        if case .validationRetryable(_, let code) = mapped, code == "storage_413" {
+        if case .validationRetryable(_, let code) = mapped, code == DiaryMediaErrorCode.payloadTooLarge {
             XCTFail("非 413 不該被誤判成超限文案")
         }
     }
@@ -136,11 +140,38 @@ final class SupabaseMediaUploadServiceTests: XCTestCase {
             )
             XCTFail("超過 50 MiB 應該要 throw")
         } catch let error as AppError {
-            guard case .validationRetryable(let message, let code) = error else {
+            guard case .validationRetryable(_, let code) = error else {
                 return XCTFail("應映射為 .validationRetryable，實際是 \(error)")
             }
-            XCTAssertEqual(code, "storage_413")
-            XCTAssertTrue(message.contains("50MB"))
+            // R1 M1／I4：`message` 是 log 用的，畫面文案的斷言在 DiaryPublishErrorMessageTests。
+            XCTAssertEqual(code, DiaryMediaErrorCode.payloadTooLarge)
+        } catch {
+            XCTFail("應該 throw AppError，實際是 \(error)")
+        }
+    }
+
+    /// merge-review R1 m8：讀不到本機暫存檔大小時要 throw，不能靜默把 `byte_size` 寫成 0
+    /// ——那一欄是 `families.storage_used_bytes` trigger 的加總來源，寫 0 等於這支影片不佔
+    /// 額度。用一個不存在的檔案路徑重現「讀不到屬性」，且不該打任何網路請求（在真的上傳
+    /// 之前就該擋下）。
+    func test_uploadVideo_missingFileSize_throwsWithoutUploadingOrInsertingRow() async {
+        let client = TestSupabaseClient.make { request in
+            XCTFail("讀檔案大小失敗應該在打任何網路請求之前就 throw：\(request.url?.path ?? "nil")")
+            return MockURLProtocol.StubResponse(statusCode: 500, body: Data())
+        }
+        let service = SupabaseMediaUploadService(client: client)
+        let missingFileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("does-not-exist-\(UUID().uuidString)")
+            .appendingPathExtension("mp4")
+
+        do {
+            _ = try await service.uploadVideo(
+                familyID: familyID, fileURL: missingFileURL, fileExtension: "mp4",
+                pixelSize: PixelSize(width: 1920, height: 1080)
+            )
+            XCTFail("讀不到檔案大小應該要 throw")
+        } catch is AppError {
+            // fail loud：不靜默把 byte_size 寫成 0，見上方文件註解。
         } catch {
             XCTFail("應該 throw AppError，實際是 \(error)")
         }

@@ -53,7 +53,15 @@ final class SupabaseMediaUploadService: MediaUploadService {
     func uploadVideo(familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
         let mediaID = UUID()
         let path = Self.storagePath(familyID: familyID, mediaID: mediaID, fileExtension: fileExtension)
-        let byteSize = (try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int) ?? nil
+        // merge-review R1 m8：讀不到檔案大小時直接 throw，不要靜默寫 0——`byte_size` 是
+        // `families.storage_used_bytes` trigger 的加總來源，寫 0 等於這支影片不佔額度
+        // （`init_schema.sql` 對這欄的可信度有明文要求，見協定檔對照）。
+        let byteSize: Int
+        do {
+            byteSize = try Self.fileByteSize(at: fileURL)
+        } catch {
+            throw AppError.map(error)
+        }
         do {
             try await client.storage.from(Self.bucketID).upload(
                 path, fileURL: fileURL,
@@ -66,7 +74,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
             try await insertMediaRow(
                 id: mediaID, familyID: familyID,
                 descriptor: MediaRowDescriptor(
-                    storagePath: path, type: "video", byteSize: byteSize ?? 0, pixelSize: pixelSize
+                    storagePath: path, type: "video", byteSize: byteSize, pixelSize: pixelSize
                 )
             )
         } catch {
@@ -121,14 +129,33 @@ final class SupabaseMediaUploadService: MediaUploadService {
 
     /// Storage 的 `file_size_limit`（50 MiB，
     /// `supabase/migrations/20260823030000_storage_policies.sql`）被撞到時回傳
-    /// `statusCode "413"`——挑出來給使用者看得懂的文案；其餘一律走既有 `AppError.map`
-    /// （涵蓋網路／JWT 過期等既有分類）。
+    /// `statusCode "413"`——`code` 用 `DiaryMediaErrorCode.payloadTooLarge` 這個 client 合成
+    /// sentinel 標記，讓畫面層（`DiaryEditorView+ActionBar.swift`）能依 `code` 分流出專屬文案
+    /// （merge-review R1 M1：`message` 只供 log／除錯用，不會直接顯示給使用者，見
+    /// `AppError.swift` 檔頭契約）；其餘一律走既有 `AppError.map`（涵蓋網路／JWT 過期等既有
+    /// 分類）。
     static func mapUploadError(_ error: Error) -> AppError {
         if let storageError = error as? StorageError, storageError.statusCode == "413" {
-            return .validationRetryable(message: "檔案超過 50MB 上限，請選擇較小的照片或影片。", code: "storage_413")
+            return .validationRetryable(
+                message: "Storage 413：檔案超過 50 MiB 上限", code: DiaryMediaErrorCode.payloadTooLarge
+            )
         }
         return AppError.map(error)
     }
+
+    private static func fileByteSize(at url: URL) throws -> Int {
+        let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+        guard let size = attributes[.size] as? Int else {
+            throw MediaUploadFileError.missingFileSize
+        }
+        return size
+    }
+}
+
+/// 讀本機暫存檔屬性失敗時的內部錯誤——不對應任何後端碼，`AppError.map` 對辨認不出來的型別
+/// 一律落 `.server`（fail loud：不會有第五種「未知」分類讓呼叫端誤以為可以安全忽略）。
+private enum MediaUploadFileError: Error {
+    case missingFileSize
 }
 
 /// `insertMediaRow` 的輸入分組——把 `storagePath`／`type`／`byteSize`／`pixelSize` 收成一個

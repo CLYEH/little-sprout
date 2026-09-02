@@ -135,18 +135,26 @@ struct DiaryEditorView: View {
 
     private var bodyTextField: some View {
         @Bindable var store = store
-        return TextEditor(text: $store.body)
-            .appFont(.body)
-            .foregroundStyle(Color.lsTextPrimary)
-            .scrollContentBackground(.hidden)
-            .frame(minHeight: 116)
-            .padding(AppSpacing.label)
-            .background(fieldBackground, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-            .overlay(
-                RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
-                    .strokeBorder(Color.lsControlLine, lineWidth: 1.5)
-            )
-            .disabled(store.publishState.isInFlight)
+        return VStack(alignment: .leading, spacing: AppSpacing.label) {
+            TextEditor(text: $store.body)
+                .appFont(.body)
+                .foregroundStyle(Color.lsTextPrimary)
+                .scrollContentBackground(.hidden)
+                .frame(minHeight: 116)
+                .padding(AppSpacing.label)
+                .background(fieldBackground, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
+                        .strokeBorder(Color.lsControlLine, lineWidth: 1.5)
+                )
+                .disabled(store.publishState.isInFlight)
+            // merge-review R1 M1／m10：空內文不是「發佈失敗」，不借用 Action Bar 的失敗態
+            // （那裡的文案「你寫的內容還在，可以直接重試」對「根本還沒送出過」語意矛盾）——
+            // 就地顯示在內文欄位旁，跟其他表單的「還沒做完」提示同一套視覺。
+            if store.showsEmptyBodyMessage {
+                replyRow(text: "日記還沒寫內容，加幾個字再發佈吧。")
+            }
+        }
     }
 
     private var publishInfoCard: some View {
@@ -182,6 +190,10 @@ struct DiaryEditorView: View {
             .padding(.vertical, AppSpacing.controlPaddingMedium)
             .contentShape(Rectangle())
         }
+        // merge-review R1 m1：發佈中如果還能取消，畫面會直接 dismiss，但上傳／
+        // `create_diary_entry` 沒有被中止，日記照樣送出——其餘控制項在 in-flight 時都有這條
+        // `.disabled`，這裡原本漏掛。
+        .disabled(store.publishState.isInFlight)
     }
 
     var fieldBackground: Color {

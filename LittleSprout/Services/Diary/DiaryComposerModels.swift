@@ -9,6 +9,40 @@ struct PixelSize: Equatable {
     let height: Int
 }
 
+/// 佇列縮圖的版面常數——`DiaryEditorView+Photos.swift`（縮圖 `frame`）、`PickedItemLoader`
+/// （縮圖產生時的目標像素預算）、`DiaryPhotoReorderMath`（拖曳落點換算的格距）三處共用同一個
+/// 值，避免各自硬寫字面值、改一處忘了改另一處時安靜地量錯（merge-review R1 m12）。
+enum DiaryPhotoQueueLayout {
+    /// 縮圖顯示尺寸（pt），佇列裡的照片／影片格與「新增照片」cell 共用。
+    static let thumbnailSize: CGFloat = 96
+    /// 縮圖產生時的目標像素邊長——3× 顯示尺寸，涵蓋 3x Retina 螢幕不失真，遠低於原圖解析度
+    /// （merge-review R1 M4：`previewImage` 不該是全解析度原圖）。
+    static let thumbnailPixelBudget: CGFloat = thumbnailSize * 3
+}
+
+/// Storage 413（payload too large）映射出來的 `AppError.code`——client 自己合成的 sentinel，
+/// **不是**後端 SQLSTATE／`LSErrorCode`（`AppError.swift` 檔頭契約：`code` 保留給「後端原始
+/// 錯誤碼」）。刻意用 `client_` 前綴宣告這個區別：`error-codes-check.sh` 的三方對帳只掃
+/// `LS[0-9]{3}` 形狀的碼，這個字面值不會被誤認成漏登記的後端自訂碼（merge-review R1 m3）。
+enum DiaryMediaErrorCode {
+    static let payloadTooLarge = "client_storage_413"
+}
+
+/// 12c 失敗態螢幕上實際顯示的文案——依 `AppError.code` 分流（同 `JoinCodePhase.swift` 對
+/// `LSErrorCode.inviteCodeExpired`／`inviteCodeExhausted` 的既有慣例）。抽成獨立、跟
+/// SwiftUI 脫鉤的純函式（不是留在 `DiaryEditorView+ActionBar.swift` 裡的 private 方法），
+/// 才能被單元測試直接釘住「螢幕上出現的字」——`AppError.userFacingMessage` 忽略
+/// associated value，光測到 `AppError` 本身測不出這個問題（merge-review R1 M1／I4：先前
+/// 測試只驗到 `message.contains("50MB")`，但那是 log 用的 `message` 欄位，從未出現在畫面上）。
+enum DiaryPublishErrorMessage {
+    static func displayText(for error: AppError) -> String {
+        if case .validationRetryable(_, let code) = error, code == DiaryMediaErrorCode.payloadTooLarge {
+            return "檔案超過 50MB 上限，請選擇較小的照片或影片再試一次。"
+        }
+        return error.userFacingMessage
+    }
+}
+
 /// 日記編輯器照片佇列裡的一格草稿（尚未上傳）。`id` 是本機穩定識別碼，用來驅動選取／拖曳排序
 /// ／VoiceOver 自訂動作（`design/littlesprout.pen` Handoff Notes `v0tLp`：`Set<PhotoID>`）。
 struct DiaryPhotoDraft: Identifiable, Equatable {

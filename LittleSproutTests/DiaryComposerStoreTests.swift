@@ -1,10 +1,10 @@
 import Foundation
 @testable import LittleSprout
-import os
 import XCTest
 
 /// `DiaryComposerStore`（LS-125 日記編輯器狀態機）：佇列容量／選取移除／拖曳排序／VoiceOver
-/// 邊界／寶貝歸屬互斥／送出流程（成功／驗證失敗／API 失敗時草稿不清空）。
+/// 邊界／寶貝歸屬互斥。送出流程（`publish()`）測試在 `DiaryComposerStorePublishTests.swift`
+/// （拆檔理由：本檔加上送出流程測試會超過 SwiftLint `type_body_length`/`file_length`）。
 @MainActor
 final class DiaryComposerStoreTests: XCTestCase {
     private let familyID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
@@ -166,172 +166,33 @@ final class DiaryComposerStoreTests: XCTestCase {
     }
 
     // MARK: - 寶貝歸屬（`zgVn0`：不指定＝空集合，互斥）
+    //
+    // merge-review R1 m5：`toggleChild`／`selectUnspecifiedChild` 兩支 store 方法已移除
+    // ——`AttributionSheet` 是通用元件，互斥切換邏輯就地寫在它自己收到的 `Binding<Set<UUID>>`
+    // 上（見該檔 `toggle(_:)`），從未呼叫過 store 這兩支方法，是新引入的死碼。這裡直接對
+    // `selectedChildIDs` 賦值，測的是 `isUnspecifiedChild` 這個真正被 UI 讀取的計算屬性。
 
-    func test_isUnspecifiedChild_trueWhenEmpty_falseAfterToggle() {
+    func test_isUnspecifiedChild_trueWhenEmpty_falseWhenPopulated() {
         let store = makeStore()
         XCTAssertTrue(store.isUnspecifiedChild)
 
-        store.toggleChild(childA)
+        store.selectedChildIDs = [childA]
         XCTAssertFalse(store.isUnspecifiedChild)
-        XCTAssertEqual(store.selectedChildIDs, [childA])
     }
 
-    func test_toggleChild_multiSelect_bothRetained() {
+    func test_isUnspecifiedChild_multiSelect_bothRetained() {
         let store = makeStore()
-        store.toggleChild(childA)
-        store.toggleChild(childB)
+        store.selectedChildIDs = [childA, childB]
         XCTAssertEqual(store.selectedChildIDs, [childA, childB])
+        XCTAssertFalse(store.isUnspecifiedChild)
     }
 
-    func test_selectUnspecifiedChild_clearsExistingSelection() {
+    func test_isUnspecifiedChild_emptyingSelection_returnsToUnspecified() {
         let store = makeStore()
-        store.toggleChild(childA)
-        store.toggleChild(childB)
+        store.selectedChildIDs = [childA, childB]
 
-        store.selectUnspecifiedChild()
+        store.selectedChildIDs = []
 
         XCTAssertTrue(store.isUnspecifiedChild)
-        XCTAssertTrue(store.selectedChildIDs.isEmpty)
-    }
-
-    func test_toggleChild_deselectingLastChild_returnsToUnspecified() {
-        let store = makeStore()
-        store.toggleChild(childA)
-        store.toggleChild(childA)
-        XCTAssertTrue(store.isUnspecifiedChild, "移除最後一個選中的寶貝後應自動回到不指定狀態")
-    }
-
-    // MARK: - 送出（publish）
-
-    func test_publish_emptyBody_failsValidationWithoutCallingAPI() async {
-        let diaryClient = StubDiaryAPIClient()
-        let store = makeStore(diaryAPIClient: diaryClient)
-        store.body = "   "
-
-        let result = await store.publish()
-
-        XCTAssertFalse(result)
-        guard case .failure(let error) = store.publishState else {
-            return XCTFail("空白內文應該落在 .failure")
-        }
-        guard case .validationRetryable = error else {
-            return XCTFail("空白內文應該映射為 .validationRetryable，實際是 \(error)")
-        }
-        XCTAssertTrue(diaryClient.createCalls.isEmpty, "驗證失敗不該打任何 API")
-    }
-
-    func test_publish_success_uploadsPhotosInOrderThenCreatesEntryThenAttachesMedia() async {
-        let diaryClient = StubDiaryAPIClient()
-        let mediaService = StubMediaUploadService()
-        let firstMediaID = UUID()
-        let secondMediaID = UUID()
-        let uploadedIDs = OSAllocatedUnfairLockBox([firstMediaID, secondMediaID])
-        mediaService.setUploadPhotoHandler { _, _, _, _ in uploadedIDs.popFirst() }
-        let newDiaryID = UUID()
-        diaryClient.setCreateHandler { _, _, _, _ in newDiaryID }
-
-        let store = makeStore(diaryAPIClient: diaryClient, mediaUploadService: mediaService)
-        store.body = "今天玩得很開心"
-        store.toggleChild(childA)
-        addPhoto(store, tag: "first")
-        addPhoto(store, tag: "second")
-
-        let result = await store.publish()
-
-        XCTAssertTrue(result)
-        XCTAssertEqual(store.publishState, .success)
-        XCTAssertEqual(mediaService.uploadPhotoCalls.count, 2)
-        XCTAssertEqual(diaryClient.createCalls.count, 1)
-        XCTAssertEqual(diaryClient.createCalls.first?.body, "今天玩得很開心")
-        XCTAssertEqual(diaryClient.createCalls.first?.childIDs, [childA])
-        XCTAssertEqual(diaryClient.attachMediaCalls.count, 1)
-        XCTAssertEqual(diaryClient.attachMediaCalls.first?.diaryID, newDiaryID)
-        XCTAssertEqual(diaryClient.attachMediaCalls.first?.mediaIDs, [firstMediaID, secondMediaID], "掛照片的順序要跟佇列順序一致")
-    }
-
-    func test_publish_unspecifiedChild_sendsEmptyChildIDs() async {
-        let diaryClient = StubDiaryAPIClient()
-        let store = makeStore(diaryAPIClient: diaryClient)
-        store.body = "沒有指定寶貝"
-
-        _ = await store.publish()
-
-        XCTAssertEqual(diaryClient.createCalls.first?.childIDs, [])
-    }
-
-    func test_publish_apiFailure_preservesDraftContent() async {
-        let diaryClient = StubDiaryAPIClient()
-        diaryClient.setCreateHandler { _, _, _, _ in throw AppError.network(message: "offline") }
-        let store = makeStore(diaryAPIClient: diaryClient)
-        store.body = "你寫的內容還在"
-        addPhoto(store)
-
-        let result = await store.publish()
-
-        XCTAssertFalse(result)
-        XCTAssertEqual(store.publishState, .failure(.network(message: "offline")))
-        XCTAssertEqual(store.body, "你寫的內容還在", "12c：失敗後草稿內容不可被清空")
-        XCTAssertEqual(store.photos.count, 1, "12c：失敗後照片佇列不可被清空")
-    }
-
-    func test_publish_whileInFlight_ignoresDuplicateCall() async {
-        let diaryClient = StubDiaryAPIClient()
-        let (gate, gateContinuation) = AsyncStream<Void>.makeStream()
-        diaryClient.setCreateHandler { _, _, _, _ in
-            var iterator = gate.makeAsyncIterator()
-            _ = await iterator.next()
-            return UUID()
-        }
-        let store = makeStore(diaryAPIClient: diaryClient)
-        store.body = "內容"
-
-        let firstTask = Task { await store.publish() }
-        var guardIterations = 0
-        while !store.publishState.isInFlight {
-            guardIterations += 1
-            guard guardIterations < 200 else {
-                gateContinuation.finish()
-                return XCTFail("等待 publishState 進入 .uploading 逾時")
-            }
-            try? await Task.sleep(nanoseconds: 5_000_000)
-        }
-
-        let duplicateResult = await store.publish()
-        XCTAssertFalse(duplicateResult, "送出進行中時重複呼叫應該被擋下")
-
-        gateContinuation.finish()
-        _ = await firstTask.value
-        XCTAssertEqual(diaryClient.createCalls.count, 1)
-    }
-
-    func test_resetPublishFailure_onlyResetsFromFailure() async {
-        let diaryClient = StubDiaryAPIClient()
-        diaryClient.setCreateHandler { _, _, _, _ in throw AppError.network(message: "offline") }
-        let store = makeStore(diaryAPIClient: diaryClient)
-        store.body = "內容"
-        _ = await store.publish()
-
-        store.resetPublishFailure()
-        XCTAssertEqual(store.publishState, .idle)
-
-        store.resetPublishFailure()
-        XCTAssertEqual(store.publishState, .idle, "非 .failure 狀態呼叫應該是 no-op")
-    }
-}
-
-/// `test_publish_success_...` 需要一個執行緒安全、可以依序彈出預先準備好的假 id 的小容器
-/// （模擬「第一次呼叫回第一個 id、第二次回第二個」），驗證掛照片的順序真的對應佇列順序。
-private final class OSAllocatedUnfairLockBox: @unchecked Sendable {
-    private let lock = OSAllocatedUnfairLock<[UUID]>(initialState: [])
-
-    init(_ values: [UUID]) {
-        lock.withLock { $0 = values }
-    }
-
-    func popFirst() -> UUID {
-        lock.withLock { state in
-            guard !state.isEmpty else { return UUID() }
-            return state.removeFirst()
-        }
     }
 }

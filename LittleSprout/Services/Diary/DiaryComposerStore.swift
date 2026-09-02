@@ -19,14 +19,48 @@ final class DiaryComposerStore {
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
 
-    var body = ""
+    /// `didSet` 兩件事：① 開始有內容就清掉「還沒寫內容」提示；② 使用者在 12c 失敗態下修改
+    /// 內容代表要重試了，先把舊的失敗態收掉（merge-review R1 m5：`resetPublishFailure` 原本
+    /// 是沒有任何呼叫端的死碼，這裡接上）。
+    var body = "" {
+        didSet {
+            if !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                showsEmptyBodyMessage = false
+            }
+            resetPublishFailure()
+        }
+    }
     var entryDate = Date()
     private(set) var photos: [DiaryPhotoDraft] = []
     var selectedPhotoIDs: Set<UUID> = []
     /// 空集合＝「不指定」（`design/littlesprout.pen` `zgVn0`：兩者互斥，空集合天然就是不指定，
-    /// 不另外維護一顆會跟這裡失去同步的布林旗標）。
+    /// 不另外維護一顆會跟這裡失去同步的布林旗標）。`AttributionSheet` 是通用元件（只認
+    /// `Binding<Set<UUID>>`，未來相簿也要重用），互斥切換邏輯就地寫在那裡的 `Binding`
+    /// 上，不透過 store 方法（merge-review R1 m5：先前在這裡另外放了一份
+    /// `toggleChild`/`selectUnspecifiedChild`，`AttributionSheet` 從未呼叫、是新引入的
+    /// 死碼，已移除；本輪新增的測試改直接對 `selectedChildIDs` 賦值）。
     var selectedChildIDs: Set<UUID> = []
     private(set) var publishState: DiaryPublishState = .idle
+    /// 空內文不算「送出失敗」——沒有打過任何網路請求，借用 `.failure(AppError)` 會讓畫面顯示
+    /// 「你寫的內容還在，可以直接重試」這種對「根本還沒送出」語意矛盾的文案（merge-review R1
+    /// M1／m10）。改成獨立旗標，UI 端在內文欄位旁就地顯示提示，不進 Action Bar 的失敗態。
+    private(set) var showsEmptyBodyMessage = false
+    /// `loadPicked`（`DiaryEditorView+Photos.swift`）逐張非同步解碼期間為 `true`——`publish()`
+    /// 用它擋下「照片還在載入時按發佈」會靜默漏掉尚未 append 進 `photos` 的照片這個問題
+    /// （merge-review R1 M3）；發佈鈕與「新增照片」cell 也讀這顆旗標決定要不要停用（M3／m6
+    /// 同一顆旗標一起解，見 Handoff）。
+    private(set) var isLoadingPickedItems = false
+    /// 上一批挑選裡有幾個檔案因格式不支援被跳過（`PickedItemLoader.LoadedItem
+    /// .unsupportedFormat`）——常駐回話列用，下一批挑選開始時歸零（merge-review R1 m4）。
+    private(set) var unsupportedFormatSkippedCount = 0
+
+    /// 已成功建立的日記 id——`publish()` 失敗後重試時若已經有值就跳過 `createDiaryEntry`，
+    /// 避免重複建立（merge-review R1 M2）。
+    private var createdDiaryID: UUID?
+    /// 草稿 id → 已上傳成功的 media id——重試時已經上傳過的照片／影片不會重傳
+    /// （merge-review R1 M2）。用草稿 id 對應（不是陣列 index）：使用者可能在失敗後、重試前
+    /// 編輯佇列（移除某張），這樣做仍能正確地「這張傳過了就不用再傳，那張沒傳過的繼續傳」。
+    private var uploadedMediaByDraftID: [UUID: UUID] = [:]
 
     init(familyID: UUID, diaryAPIClient: DiaryAPIClient, mediaUploadService: MediaUploadService) {
         self.familyID = familyID
@@ -67,6 +101,22 @@ final class DiaryComposerStore {
             previewImage: previewImage, pixelSize: pixelSize
         ))
         return .added
+    }
+
+    // MARK: - 挑選載入中（M3／m6）
+
+    func beginLoadingPickedItems() {
+        isLoadingPickedItems = true
+        unsupportedFormatSkippedCount = 0
+    }
+
+    func endLoadingPickedItems() {
+        isLoadingPickedItems = false
+    }
+
+    func reportUnsupportedFormatSkipped(count: Int) {
+        guard count > 0 else { return }
+        unsupportedFormatSkippedCount += count
     }
 
     // MARK: - 選取／移除（12d：單擊縮圖＝勾選，可複選）
@@ -112,23 +162,13 @@ final class DiaryComposerStore {
         photos.swapAt(index, index + 1)
     }
 
-    // MARK: - 寶貝歸屬（`zgVn0`：多選，「不指定」與其他互斥）
-
-    func toggleChild(_ id: UUID) {
-        if selectedChildIDs.remove(id) == nil {
-            selectedChildIDs.insert(id)
-        }
-    }
-
-    func selectUnspecifiedChild() {
-        selectedChildIDs.removeAll()
-    }
-
     var isUnspecifiedChild: Bool { selectedChildIDs.isEmpty }
 
     // MARK: - 送出狀態重置
 
-    /// 12c 發佈失敗後使用者修改內容再試一次前呼叫；成功／進行中不動作。
+    /// 12c 發佈失敗後使用者修改內容再試一次前呼叫（`body` 的 `didSet` 已接上）；成功／進行中
+    /// ／閒置不動作。刻意**不**清空 `createdDiaryID`／`uploadedMediaByDraftID`：清掉會讓 M2
+    /// 的續傳保護失效，使用者只是在失敗後改個字，不代表要放棄已經成功的那幾步。
     func resetPublishFailure() {
         guard case .failure = publishState else { return }
         publishState = .idle
@@ -138,28 +178,20 @@ final class DiaryComposerStore {
     // 方法組必須留在本檔，不能像 `+Photos.swift`／`+Fields.swift` 那樣切到另一個 extension
     // 檔，否則寫不到這個屬性；本檔目前長度還在 SwiftLint 預設上限內，不需要為了拆檔犧牲
     // 封裝，見 DoD「送出流程」段）。
-    //
-    // 已知取捨（重試不是續傳）：失敗後使用者按「發佈日記」會整個重新跑一次
-    // `uploadAllMedia()`，不會記得上一次已經成功上傳到一半的照片——若失敗發生在第 N 張之後，
-    // 前 N 張會在 Storage／`media` 留下沒有掛上任何日記的孤兒列（不影響功能，只是浪費一點
-    // 儲存額度）。做到「續傳、不重複上傳」需要在草稿裡追蹤「這張的 media id 是否已經成功」，
-    // 屬於本票 Scope 沒有要求的完整度，記在 handoff 風險欄，留給之後有真實重試率數據時再評估
-    // 要不要做。
 
     @discardableResult
     func publish() async -> Bool {
-        guard !publishState.isInFlight else { return false }
+        guard !publishState.isInFlight, !isLoadingPickedItems else { return false }
         let trimmedBody = body.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedBody.isEmpty else {
-            publishState = .failure(.validationRetryable(message: "日記還沒寫內容，加幾個字再發佈吧。", code: nil))
+            showsEmptyBodyMessage = true
             return false
         }
+        showsEmptyBodyMessage = false
         publishState = .uploading
         do {
             let mediaIDs = try await uploadAllMedia()
-            let diaryID = try await diaryAPIClient.createDiaryEntry(
-                familyID: familyID, body: trimmedBody, entryDate: entryDate, childIDs: Array(selectedChildIDs)
-            )
+            let diaryID = try await resolveDiaryID(body: trimmedBody, childIDs: Array(selectedChildIDs))
             try await diaryAPIClient.attachMedia(diaryID: diaryID, familyID: familyID, mediaIDs: mediaIDs)
             publishState = .success
             return true
@@ -172,31 +204,63 @@ final class DiaryComposerStore {
         }
     }
 
+    /// 已經成功建立過就直接回傳既有 id，不再重複呼叫 `create_diary_entry`（merge-review R1
+    /// M2：失敗態常見成因是 `attachMedia` 撞到連線中斷，而不是 `createDiaryEntry` 本身失敗
+    /// ——那一步的成果不該被重試白白丟棄，否則使用者重試幾次、時間軸上就多幾篇重複貼文）。
+    private func resolveDiaryID(body: String, childIDs: [UUID]) async throws -> UUID {
+        if let createdDiaryID { return createdDiaryID }
+        let diaryID = try await diaryAPIClient.createDiaryEntry(
+            familyID: familyID, body: body, entryDate: entryDate, childIDs: childIDs
+        )
+        createdDiaryID = diaryID
+        return diaryID
+    }
+
     /// 依佇列順序逐張上傳（刻意序列、不平行：20 張上限下平行上傳省下的時間有限，序列化換來
-    /// 「失敗時只有一張正在傳、容易對應到是哪一張」的除錯簡單性，見 handoff）。影片超過 60 秒
-    /// 先用 `VideoTrimmer` 裁切壓縮，回傳的暫存檔才是真正拿去上傳的那份。
+    /// 「失敗時只有一張正在傳、容易對應到是哪一張」的除錯簡單性，見 handoff／merge-review R1
+    /// m2 已知取捨）。已經上傳成功過的草稿（`uploadedMediaByDraftID` 有記錄）直接沿用舊 id、
+    /// 不重傳（M2）。影片超過 60 秒先用 `VideoTrimmer` 裁切壓縮，回傳的暫存檔才是真正拿去
+    /// 上傳的那份；上傳成功後清掉本機暫存檔（merge-review R1 m9：先前上傳完全不清，選幾支
+    /// 影片試玩幾次就會在 tmp 目錄累積數百 MB）。
     private func uploadAllMedia() async throws -> [UUID] {
         var mediaIDs: [UUID] = []
         for draft in photos {
-            switch draft.kind {
-            case .photo(let data, let fileExtension):
-                let id = try await mediaUploadService.uploadPhoto(
-                    familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: draft.pixelSize
-                )
-                mediaIDs.append(id)
-            case .video(let fileURL, let fileExtension, let duration):
-                let source = try await VideoTrimmer.trimmedIfNeeded(
-                    fileURL: fileURL, fileExtension: fileExtension, duration: duration
-                )
-                let id = try await mediaUploadService.uploadVideo(
-                    familyID: familyID, fileURL: source.fileURL, fileExtension: source.fileExtension,
-                    // 裁切／壓縮輸出保持原始比例夾在 1080p 內，沿用原始草稿量到的像素尺寸——
-                    // 見 VideoTrimmer 文件註解的已知取捨。
-                    pixelSize: draft.pixelSize
-                )
-                mediaIDs.append(id)
+            if let existing = uploadedMediaByDraftID[draft.id] {
+                mediaIDs.append(existing)
+                continue
             }
+            let id = try await uploadSingle(draft)
+            uploadedMediaByDraftID[draft.id] = id
+            mediaIDs.append(id)
         }
         return mediaIDs
+    }
+
+    private func uploadSingle(_ draft: DiaryPhotoDraft) async throws -> UUID {
+        switch draft.kind {
+        case .photo(let data, let fileExtension):
+            return try await mediaUploadService.uploadPhoto(
+                familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: draft.pixelSize
+            )
+        case .video(let fileURL, let fileExtension, let duration):
+            let source = try await VideoTrimmer.trimmedIfNeeded(
+                fileURL: fileURL, fileExtension: fileExtension, duration: duration
+            )
+            // merge-review R1 m7：裁切過的話用輸出的實際像素尺寸；未裁切則沿用草稿原本量到的。
+            let id = try await mediaUploadService.uploadVideo(
+                familyID: familyID, fileURL: source.fileURL, fileExtension: source.fileExtension,
+                pixelSize: source.pixelSize ?? draft.pixelSize
+            )
+            Self.cleanupVideoTempFiles(originalURL: fileURL, uploadedURL: source.fileURL)
+            return id
+        }
+    }
+
+    /// best-effort：清不掉不影響上傳結果，本來就是暫存檔衛生問題（merge-review R1 m9）。
+    private static func cleanupVideoTempFiles(originalURL: URL, uploadedURL: URL) {
+        try? FileManager.default.removeItem(at: originalURL)
+        if uploadedURL != originalURL {
+            try? FileManager.default.removeItem(at: uploadedURL)
+        }
     }
 }
