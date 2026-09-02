@@ -64,7 +64,7 @@
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子；**不分角色、不分軟刪與否**——owner／member／viewer 都讀得到全部列，含已軟刪的（`deleted_at`／`deleted_by` 對所有人都是可見的唯讀旗標，R1 I3/I4） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | 🔒 **無 DELETE 路徑**（R1 I5：直接硬刪會繞過 30 天保護，policy 與 grant 兩層都關，連 owner 也沒有） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原（重複軟刪 no-op，不刷新時鐘，見 §4），超過拿 `LS043`；已軟刪的孩子不能再被指定為新內容的標記（`LS044`，LS-121 起守門搬到 `diary_children`／`album_children` 連結表的 `BEFORE INSERT` trigger）；既有標記不隨軟刪連動，見 §8 |
-| `media` | 我所屬家庭的檔案中繼資料 | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | 硬刪僅 owner（一般刪除走 `deleted_at`） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3 |
+| `media` | 我所屬家庭的檔案中繼資料 | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | 硬刪僅 owner（一般刪除走 `deleted_at`） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）／`duration_seconds`（LS-134）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3 |
 | `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己） | 🔀 **混合模式（LS-52；LS-57 R2 起範圍限縮；LS-121 起 `child_id` 移出本表）**：內容（title／cover_media_id）僅建立者本人直接 `.update()`；`deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起對 `authenticated` 已無 UPDATE 欄位級 grant，唯一路徑是 `set_album_deleted` RPC；寶貝標記唯一路徑是 `set_album_children` RPC（見 §4） | owner-only | Viewer 不可建立相簿；owner 對別人相簿的內容**沒有**直接 `.update()` 路徑——見 §3「為什麼 albums／comments／diaries 曾經、現在用了不同的寫入模型」；`album_children`（見下）任何一列的 `child_id` 指向一個已軟刪的孩子時 INSERT 皆拿 `LS044`，見 §8 |
 | `album_media` | 同上 | owner／member | owner／member | owner／member | 連結表自帶 `family_id`，policy 不必 join 回 `albums` |
 | `album_children`（LS-121） | 我所屬家庭，任一角色（含 viewer） | 🔒 **RPC-only**（`set_album_children`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 語意**——覆蓋是同一交易內先刪後插，不是對既有列 UPDATE | 🔒 **RPC-only**（`set_album_children`，直接 DELETE 已被 revoke） | 相簿 ↔ 孩子多對多標記，取代舊版 `albums.child_id` 單一欄位；見 §8 |
@@ -266,6 +266,25 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   自己要清掉，DB 不會幫你清。**縮圖產生失敗但原檔上傳成功時**：不阻斷整體上傳——
   `thumb_path`／`thumb_width`／`thumb_height` 三欄留空插入 `media` 列即可（過渡期
   退回原圖，語意與既有無縮圖的舊資料一致），不需要重試整個上傳。
+- **影片時長（`duration_seconds`，LS-134）**：nullable，`CHECK`（有值時必須 `> 0`，
+  `media_duration_seconds_positive`）。`type = 'photo'` 時應留 `NULL`；
+  `type = 'video'` 時由上傳端以 `AVAsset.load(.duration)` 量測寫入——**若影片經過
+  裁切，以裁切後的長度為準**，不是原始檔案的長度。整數秒，**`max(1, floor(d))`**
+  （`d` 為量測到的秒數：不足 1 秒的影片記為 1，不進位、不寫 0）——**與
+  `VideoDurationFormat`／`DiaryDurationFormat` 同源**：merge-review R1 i2 裁定
+  「`M:SS` 是給人看的粗略時長，不是精確時間戳，捨去比進位更符合『這支影片還有多
+  長』的直覺」，這裡沿用同一個取整方向，同一支影片在日記編輯器與時間軸卡片才會
+  顯示同一個數字（見 `LittleSprout/Support/VideoDurationFormat.swift`／
+  `DiaryDurationFormat.swift` 檔頭）。**量測失敗、或量到的長度 `≤ 0` 秒時，留
+  `NULL`，不得寫 `0`**——`0` 會被 `media_duration_seconds_positive` 擋下，而此時
+  原檔與縮圖多半已依「上傳流程順序」PUT 進 Storage 完成，`INSERT` 才失敗會留下
+  兩個孤兒物件；留 `NULL` 走的是既有的過渡路徑（§6「`NULL` 退回純文字『影片』」），
+  不會失敗。DB 只驗「有值時必須 `> 0`」，**不驗與 `type` 的相依關係**——既有
+  video 列在本欄位新增當下（LS-134 migration 套用時）皆為 `NULL`，加一條「video
+  必填」的 `CHECK` 會讓既有列直接違反約束，因此這條相依關係是**上傳端契約義務**，
+  不是機械可驗證的資料庫不變量；日後若要補這條約束，需要先回填既有 video 列。
+  **一旦隨 `INSERT` 寫入即不可再 `UPDATE`**（無欄位級 grant，同
+  `storage_path`／`thumb_path`）。
 - `byte_size` 是 `families.storage_used_bytes` 額度計算的唯一依據（`media` 表的
   statement-level trigger 依 `byte_size` 加總），**不是**看 Storage 物件實際大小。
   這代表：如果 client 上傳到 Storage 的檔案大小與 `media.byte_size` 填的值不一致，
@@ -1255,14 +1274,23 @@ PR #95 review F1）訂正：這裡原本誤寫成跟 `LS041`–`LS043` 一起歸
   簽名 URL**——不要因為沒有縮圖就整列不顯示。這是 client 實作責任，DB 只保證
   `thumb_path` 有值時的路徑格式與尺寸合法（LS-128 的 `CHECK`），不保證、也無法保證
   誰在什麼時候簽了哪一個路徑。
+- **影片時長徽章讀取策略（`duration_seconds`，LS-134）**：時間軸／相簿列表的影片卡
+  「影片 M:SS」徽章一律**直接讀 `media.duration_seconds` 查表值**，不對縮圖或原圖
+  做媒體解碼（縮圖是 JPEG 靜態圖，`AVURLAsset.load(.duration)` 對它本來就量不出時
+  長——這正是 LS-130 徽章退化成純文字「影片」的成因）。`duration_seconds` 為 `NULL`
+  時（既有 video 舊資料、上傳端量測失敗的過渡列）**退回純文字「影片」**（無時長字
+  樣），不要為了補這個徽章去簽全尺寸原圖做客戶端解碼——那正是本欄位存在的目的：
+  用一次 DB 查詢換掉一次全尺寸 egress。與下方 LS-130 的縮圖優先簽名策略互補：即使
+  `duration_seconds` 缺失，也只會讓徽章退化成純文字，不會反過來觸發全尺寸簽名。
   **iOS 消費者現況（LS-130）**：時間軸卡片流（`TimelineContentAssembler.
   fetchDiaryContents`／`fetchAlbumContents`／`fetchMediaContents`，經 `PrintPhotoCard.
   remoteURL` 呼叫端 `AlbumCardView`／`PhotoCardView`／`DiaryCardView` 顯示）與日記詳情瀑布流
   （`fetchDiaryPhotos`，`MasonryPhotoWallView` 顯示；比例改用 `thumb_width`／`thumb_height`，
   同一條 NULL 退回規則）已落地，全尺寸原檔改由 `TimelineStore.signFullSizeURL(storagePath:)`
-  在播放影片當下現簽（`DiaryDetailView.playVideo`）。**相簿列表畫面尚未實作**（LS-126 票文
-  「不做：相簿畫面」）——本節這條規則在契約層面已對它生效，待該畫面實作時比照
-  `fetchAlbumContents` 的 `displayPath` 選路寫法即可，不需要另外裁決簽名策略。
+  在播放影片當下現簽（`DiaryDetailView.playVideo`）——影片時長徽章不依賴這裡簽出的 URL，
+  改查上方「影片時長徽章讀取策略」的 `media.duration_seconds`。**相簿列表畫面尚未實作**
+  （LS-126 票文「不做：相簿畫面」）——本節這條規則在契約層面已對它生效，待該畫面實作時
+  比照 `fetchAlbumContents` 的 `displayPath` 選路寫法即可，不需要另外裁決簽名策略。
 
 ---
 
