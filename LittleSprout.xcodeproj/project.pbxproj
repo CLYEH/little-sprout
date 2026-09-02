@@ -108,6 +108,7 @@
 		A60D73B16AE34E1F3385992D /* PickedItemLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 673C41FF62F64795F7752D25 /* PickedItemLoader.swift */; };
 		AB80326EE03DC9EC0DC5DD8F /* JoinWaitingPhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AEBD63E7E59131E2B285E4 /* JoinWaitingPhaseTests.swift */; };
 		AD97CCF615FB05DEBB63BF09 /* LabeledTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F56FB37A90BCA2F75055D3D7 /* LabeledTextField.swift */; };
+		AE349DC5C77A050FEB6B3158 /* DiaryComposerStorePublishRetryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 715344039FD455DD3BD4E744 /* DiaryComposerStorePublishRetryTests.swift */; };
 		B0FA3B419745F9D231E75C58 /* VideoTrimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E13DE0D017682C31FBABE1 /* VideoTrimmer.swift */; };
 		B6F140BBE36A520831E94856 /* JoinCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B283C4309A804140F52F79A /* JoinCodeView.swift */; };
 		B8F8BE27E4E503916384E97E /* InviteFamilyView+ActionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FFB8F471134452A808BD4E /* InviteFamilyView+ActionBar.swift */; };
@@ -151,6 +152,7 @@
 		EC02D246C2D6898E7F55215E /* EditChildView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CE3353D44311219CE17B533 /* EditChildView.swift */; };
 		F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */; };
 		F346107C7C4ED65779715E73 /* JoinCodePhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604B48C433197767C7EAA5D6 /* JoinCodePhaseTests.swift */; };
+		F3549AB9A9912E8CFBAF3B2D /* PickedItemLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED4F4FC901701044230BA42 /* PickedItemLoaderTests.swift */; };
 		F462FED59ADC341536F34B8A /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76C79515621CA9052803B7EA /* AppError.swift */; };
 		F90747ADA6446C8F7FA27137 /* LittleSproutApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ADE9B28C92582D4C51FF485 /* LittleSproutApp.swift */; };
 		FBB9F48BA840757FD27584F8 /* InviteCodeParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD69D0A2456BC4F954E29446 /* InviteCodeParserTests.swift */; };
@@ -187,6 +189,7 @@
 		0DE21E4A220A9C7AF7F79450 /* JoinWaitingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinWaitingView.swift; sourceTree = "<group>"; };
 		0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFixture.swift; sourceTree = "<group>"; };
 		0E8702562330091E614920D1 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
+		0ED4F4FC901701044230BA42 /* PickedItemLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickedItemLoaderTests.swift; sourceTree = "<group>"; };
 		10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAuthServiceTests.swift; sourceTree = "<group>"; };
 		1154E2337B7278510C8971B1 /* ApprovalStatusRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovalStatusRow.swift; sourceTree = "<group>"; };
 		1316439F5231DB2C470519A8 /* SupabaseMediaUploadServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseMediaUploadServiceTests.swift; sourceTree = "<group>"; };
@@ -248,6 +251,7 @@
 		69A9887FF91CF65FB62A256E /* KeyboardHeightObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHeightObserverTests.swift; sourceTree = "<group>"; };
 		6A8630C948451C3739D8A263 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		6C7E229440047D04B81BCE30 /* ChildrenStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenStoreTests.swift; sourceTree = "<group>"; };
+		715344039FD455DD3BD4E744 /* DiaryComposerStorePublishRetryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStorePublishRetryTests.swift; sourceTree = "<group>"; };
 		71B810AF479E06C95BAFE863 /* InviteCodeFieldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeFieldTests.swift; sourceTree = "<group>"; };
 		722D8ED2CA2CA763DF21AAB7 /* AuthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStore.swift; sourceTree = "<group>"; };
 		72BAB19B1C35B0F183EE2699 /* DiaryComposerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStore.swift; sourceTree = "<group>"; };
@@ -470,6 +474,7 @@
 				63669E8DAD14B79A6DCAD9FD /* ChildAvatarInitialTests.swift */,
 				5E699460134CBD4E0FE83B9A /* ChildFilterLayoutTests.swift */,
 				6C7E229440047D04B81BCE30 /* ChildrenStoreTests.swift */,
+				715344039FD455DD3BD4E744 /* DiaryComposerStorePublishRetryTests.swift */,
 				451694C23C0044D0DCDD0356 /* DiaryComposerStorePublishTests.swift */,
 				4731B4832AABBF59324EDBC8 /* DiaryComposerStoreTests.swift */,
 				B13A37E8CC8794D85456D566 /* DiaryDateFormatTests.swift */,
@@ -494,6 +499,7 @@
 				E466449A44696816AA484F94 /* OTPVerificationModelRateLimitTests.swift */,
 				D5C295C45BFA6330DF97EDAD /* OTPVerificationModelTests.swift */,
 				28F1472213F03BCFC33624F8 /* OTPVerificationModelVerifyRateLimitTests.swift */,
+				0ED4F4FC901701044230BA42 /* PickedItemLoaderTests.swift */,
 				10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */,
 				D1CD6635FE0F483577B007AB /* SupabaseChildAPIClientTests.swift */,
 				F5E69B95CA3E637FEF6DFCCB /* SupabaseClientFactoryTests.swift */,
@@ -912,6 +918,7 @@
 				575E3F2F213D7274D1D10C68 /* ChildAvatarInitialTests.swift in Sources */,
 				8D8794877BA169209A1BB4ED /* ChildFilterLayoutTests.swift in Sources */,
 				0373CF2DC8FA481EBC64CFF3 /* ChildrenStoreTests.swift in Sources */,
+				AE349DC5C77A050FEB6B3158 /* DiaryComposerStorePublishRetryTests.swift in Sources */,
 				65C40F1D88260A5EE89C8AAF /* DiaryComposerStorePublishTests.swift in Sources */,
 				41F32D3B2C6BA0F84DAEEA49 /* DiaryComposerStoreTests.swift in Sources */,
 				BF0DA22255D22BCE9AAEC439 /* DiaryDateFormatTests.swift in Sources */,
@@ -938,6 +945,7 @@
 				FD1569202C44723F87AD94C3 /* OTPVerificationModelRateLimitTests.swift in Sources */,
 				1F25A631ACCC133CEE190ABF /* OTPVerificationModelTests.swift in Sources */,
 				C49D2DD7EC2EF00A346703EB /* OTPVerificationModelVerifyRateLimitTests.swift in Sources */,
+				F3549AB9A9912E8CFBAF3B2D /* PickedItemLoaderTests.swift in Sources */,
 				5526B3A33052BAFCF2286C04 /* SessionFixture.swift in Sources */,
 				1D8CD9A1C4FB43018038FB4B /* StubAuthService.swift in Sources */,
 				4B00D9F0878757751BECB467 /* StubChildAPIClient.swift in Sources */,

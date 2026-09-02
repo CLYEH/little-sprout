@@ -35,9 +35,18 @@ enum PickedItemLoader {
     static func load(_ item: PhotosPickerItem) async -> LoadedItem? {
         let isVideo = item.supportedContentTypes.contains(where: { $0.conforms(to: .movie) })
         let ext = fileExtension(for: item, fallback: isVideo ? "mp4" : "jpg").lowercased()
-        let supported = isVideo ? supportedVideoExtensions : supportedPhotoExtensions
-        guard supported.contains(ext) else { return .unsupportedFormat }
+        guard isSupportedExtension(ext, isVideo: isVideo) else { return .unsupportedFormat }
         return isVideo ? await loadVideo(item, fileExtension: ext) : await loadPhoto(item, fileExtension: ext)
+    }
+
+    /// 副檔名是否落在 Storage bucket 允許的集合內——抽成獨立、跟 `PhotosPickerItem` 脫鉤的
+    /// 純函式，才能被單元測試直接覆蓋「哪些格式該被擋」這個決策（merge-review R2 n5：先前
+    /// 判斷埋在 `load(_:)` 內部，`PickedItemLoader` 整支檔案因依賴真實 `PhotosPickerItem`
+    /// 自陳不可單元測試，連帶讓這個決策點零覆蓋）。`ext` 預期已經是小寫（呼叫端統一在傳進
+    /// 來之前 `.lowercased()` 一次）。
+    static func isSupportedExtension(_ ext: String, isVideo: Bool) -> Bool {
+        let allowed = isVideo ? supportedVideoExtensions : supportedPhotoExtensions
+        return allowed.contains(ext)
     }
 
     private static func loadPhoto(_ item: PhotosPickerItem, fileExtension: String) async -> LoadedItem? {
