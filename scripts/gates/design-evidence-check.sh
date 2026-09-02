@@ -285,7 +285,7 @@ def check_corner_anchor(scan, flagged):
         )
     boards = scan.get("boards")
     if not isinstance(boards, list) or not boards or any(not isinstance(b, str) or not b.strip() for b in boards):
-        errs.append("scans.corner_anchor.boards 必須是非空字串陣列（本票觸碰的 root frame id；Pencil 端先設 SCAN_BOARDS 再跑正典腳本，a106f940）")
+        errs.append("scans.corner_anchor.boards 必須是非空字串陣列（本票觸碰的 root frame id；Pencil 端在腳本 snippet 第一行加 SCAN_BOARDS 再跑正典腳本，a106f940）")
     elif head_roots is not None:
         unknown = [b for b in boards if b not in head_roots]
         if unknown:
