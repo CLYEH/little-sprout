@@ -87692,12 +87692,6 @@
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
-                  "padding": [
-                    510,
-                    0,
-                    0,
-                    0
-                  ],
                   "children": [
                     {
                       "id": "kGF7O",
@@ -87736,7 +87730,7 @@
                           "width": "fill_container",
                           "descendants": {
                             "p2odx": {
-                              "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
+                              "content": "社區公園旁新開了一家麵包店。"
                             },
                             "Jqwww": {
                               "layout": "vertical",
@@ -87760,8 +87754,11 @@
                 {
                   "type": "frame",
                   "id": "PqQEK",
+                  "x": 0,
+                  "y": 1014.9600454078538,
                   "name": "Load More",
-                  "width": "fill_container",
+                  "enabled": false,
+                  "width": "fill_container(345)",
                   "gap": "$sp-tight",
                   "padding": [
                     "$sp-block",
