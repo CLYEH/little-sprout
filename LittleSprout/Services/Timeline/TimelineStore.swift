@@ -36,18 +36,25 @@ final class TimelineStore {
     private var familyID: UUID?
     private var childID: UUID?
     private var loadingDurations: Set<UUID> = []
-    /// 世代計數器（merge-review R1 M1／M2）：每次 `refresh` 呼叫都遞增並記下自己的世代號，
-    /// await 回來要寫回 `entries`／`hasMorePages`／`refreshState`（或 `loadMoreState`）前
-    /// 先確認世代號仍等於目前最新——不等於就代表這次呼叫已經被更新的一次 `refresh` 取代，
-    /// 安靜丟棄結果，不寫回過期資料，也不誤把「被取代」寫成 `.failure`。
+    /// 世代計數器（merge-review R1 M1／M2；R2-M1 修正）：每次 `refresh` 呼叫都遞增並記下
+    /// 自己的世代號，await 回來要寫回 `entries`／`hasMorePages`／`refreshState`（或
+    /// `loadMoreState`）前先確認世代號仍等於目前最新——不等於就代表這次呼叫已經被更新的
+    /// 一次 `refresh` 取代，安靜丟棄結果，不寫回過期資料，也不誤把「被取代」寫成 `.failure`。
     ///
     /// 取代舊做法（`guard !refreshState.isSubmitting else { return false }`）：舊做法會讓
     /// 「换了 `childID` 的新呼叫」被還在飛的舊呼叫擋下、連參數（`self.childID`）都沒被記錄
     /// ——使用者切換 `ChildFilterBar` 時第一頁若還沒回來，新的篩選會整個不生效，畫面停在
-    /// 舊篩選內容或空狀態，直到使用者再互動一次。`loadMore` 同理沿用同一個世代號：`refresh`
-    /// 若在 `loadMore` 飛在半空時把 `entries` 換成新的基底，`loadMore` 用舊游標查到的結果
-    /// 已經不對應任何有效分頁位置，靠世代號檢查讓它作廢，不會 `append` 到新列表後面造成
-    /// 跳項／混篩選／重複 id。
+    /// 舊篩選內容或空狀態，直到使用者再互動一次。
+    ///
+    /// **世代號單獨用在 `loadMore` 不夠**（merge-review R2-M1）：世代號只在 `refresh`
+    /// **開始**時遞增，`refresh` **完成**時不會再動它。若 `loadMore` 是在一個 `refresh`
+    /// 已經開始、但還沒完成的期間才起跑，兩者會拿到**同一個**世代號——`refresh` 完成後把
+    /// `entries` 整批換掉，`loadMore` 稍後回來時世代號檢查依然通過（因為世代號沒有變），
+    /// 就會把用「舊 `entries.last` 算出的游標」查到的頁 `append` 到已經被換成別的基底的
+    /// `entries` 後面（跳項／混篩選／重複 id）。修法：`loadMore` 額外釘住自己出發當下
+    /// `entries` 的尾端身分（`baseTailID`），寫回前**世代號與尾端身分都要吻合**才算數——
+    /// 光世代號吻合不夠，因為它答不出「entries 有沒有在我等待期間被別的呼叫整批換掉」
+    /// 這個問題，只有尾端身分能直接回答。
     private var generation = 0
 
     init(apiClient: TimelineAPIClient) {
@@ -90,14 +97,17 @@ final class TimelineStore {
 
     /// 捲到底載入下一頁——沿用 `refresh` 記下的 `familyID`／`childID`，游標取自目前最後一筆
     /// （`get_family_timeline` 回傳序＝`(occurred_at desc, ref_id desc)`，最後一筆就是最舊的
-    /// 那一筆）。世代號在呼叫當下就記錄（不遞增，只有 `refresh` 遞增）：等待期間若有新的
-    /// `refresh` 把 `entries` 換成別的基底，這批結果就已經不對應任何有效分頁位置，寫回前的
-    /// 世代號檢查會讓它安靜作廢。仍保留 `!loadMoreState.isSubmitting` 擋同一世代內的重複呼叫
-    /// （例如捲動觸發器意外重入兩次）——這條跟 M1 是不同的情境，同參數重入本來就該擋。
+    /// 那一筆）。世代號與「出發當下的尾端身分」都在呼叫當下記錄（都不遞增，只有 `refresh`
+    /// 遞增世代號）：寫回前兩者都要吻合目前現況，任一個對不上就代表 `entries` 已經被
+    /// 別的呼叫換過基底，這批結果不再對應任何有效分頁位置，安靜作廢（見上方 `generation`
+    /// 文件註解的 R2-M1 段——世代號單獨用不夠，見該處理由）。仍保留
+    /// `!loadMoreState.isSubmitting` 擋同一世代內的重複呼叫（例如捲動觸發器意外重入兩次）
+    /// ——這條跟 M1／R2-M1 是不同的情境，同參數重入本來就該擋。
     @discardableResult
     func loadMore() async -> Bool {
         guard !loadMoreState.isSubmitting, hasMorePages, let familyID, let last = entries.last else { return false }
         let myGeneration = generation
+        let baseTailID = last.id
         loadMoreState = .submitting
         do {
             let cursor = TimelineCursor(occurredAt: last.occurredAt, refId: last.refId)
@@ -105,8 +115,8 @@ final class TimelineStore {
                 familyID: familyID, childID: childID, cursor: cursor, limit: Self.pageSize
             )
             let newEntries = try await TimelineContentAssembler.assemble(pointers: pointers, apiClient: apiClient)
-            guard myGeneration == generation else {
-                // entries 基底已經被更新的 refresh 換掉——安靜丟棄，但要把 loadMoreState
+            guard myGeneration == generation, entries.last?.id == baseTailID else {
+                // entries 基底已經被更新的呼叫換掉——安靜丟棄，但要把 loadMoreState
                 // 收回非 submitting，不然下一次使用者捲到底會被卡住的 in-flight guard
                 // 永久擋住（見上方 `generation` 文件註解）。
                 loadMoreState = .idle
@@ -117,7 +127,7 @@ final class TimelineStore {
             loadMoreState = .success
             return true
         } catch {
-            guard myGeneration == generation else {
+            guard myGeneration == generation, entries.last?.id == baseTailID else {
                 loadMoreState = .idle
                 return false
             }

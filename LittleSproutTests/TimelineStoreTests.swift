@@ -197,6 +197,69 @@ final class TimelineStoreTests: XCTestCase {
         )
     }
 
+    /// R2-M1 核心場景（R1 的世代號檢查漏掉的第三種交錯）：`refresh` 先開始（世代號先遞增）
+    /// 且還沒完成時，`loadMore` 才起跑——兩者拿到**同一個**世代號。`refresh` 先完成、把
+    /// `entries` 整批換掉；`loadMore` 用「舊 entries 尾端」算出的游標稍後才回來，此時單靠
+    /// 世代號比對會誤判成「沒有被取代」（世代號確實沒變）而繼續 `append`，造成跳項／混
+    /// 篩選／重複 id——必須額外釘住出發當下的尾端身分（`baseTailID`）才抓得到。拿掉
+    /// `loadMore()` 寫回前的 `entries.last?.id == baseTailID` 檢查，本測試應該轉紅。
+    func test_loadMore_startedDuringInFlightRefresh_discardsStaleResultsEvenWithSameGeneration() async {
+        let stub = StubTimelineAPIClient()
+        let oldLastID = UUID()
+        let oldFirstPageDate = Date().addingTimeInterval(-1000)
+        let oldFirstPage = (0..<(TimelineStore.pageSize - 1)).map { index in
+            timelinePointer(refId: UUID(), occurredAt: oldFirstPageDate.addingTimeInterval(TimeInterval(index + 1)))
+        } + [timelinePointer(refId: oldLastID, occurredAt: oldFirstPageDate)]
+        stub.setFetchPointersHandler { _, _, cursor, _ in cursor == nil ? oldFirstPage : [] }
+
+        let store = TimelineStore(apiClient: stub)
+        await store.refresh(familyID: familyID, childID: nil)
+        XCTAssertTrue(store.hasMorePages)
+        XCTAssertEqual(store.entries.last?.refId, oldLastID)
+
+        // 換 handler：refresh（無游標）與 loadMore（帶「舊」游標）分別卡在各自的閘門，
+        // 讓測試能精準控制「誰先完成」——本測試要的順序是 refresh 先完成、loadMore 晚到。
+        let refreshGate = AsyncGate()
+        let loadMoreGate = AsyncGate()
+        let refreshedID = UUID()
+        let staleLoadMoreID = UUID()
+        stub.setFetchPointersHandler { _, _, cursor, _ in
+            if cursor == nil {
+                await refreshGate.wait()
+                return [timelinePointer(refId: refreshedID, occurredAt: Date())]
+            } else {
+                await loadMoreGate.wait()
+                return [timelinePointer(refId: staleLoadMoreID, occurredAt: oldFirstPageDate.addingTimeInterval(-2000))]
+            }
+        }
+
+        // refresh 先開始（世代號先遞增），還卡在閘門裡。
+        let refreshTask = Task { await store.refresh(familyID: familyID, childID: nil) }
+        while store.refreshState != .submitting { await Task.yield() }
+
+        // refresh 還沒完成時，loadMore 才起跑——此時 entries 仍是「舊」的一頁，
+        // loadMore 在這裡捕捉到的 baseTailID 就是 oldLastID、世代號跟 refresh 相同。
+        let loadMoreTask = Task { await store.loadMore() }
+        while store.loadMoreState != .submitting { await Task.yield() }
+
+        // 先放行 refresh：完成後 entries 整批換成 [refreshedID]。
+        await refreshGate.open()
+        _ = await refreshTask.value
+        XCTAssertEqual(store.entries.map(\.refId), [refreshedID])
+
+        // 再放行 loadMore：世代號沒變（跟 refresh 完成時同一個），但 entries 尾端已經不是
+        // loadMore 出發時的 oldLastID，寫回前必須被擋下。
+        await loadMoreGate.open()
+        let loadMoreSucceeded = await loadMoreTask.value
+
+        XCTAssertFalse(loadMoreSucceeded, "世代號相同但 entries 基底已經被換掉的 loadMore 不該回報成功")
+        XCTAssertEqual(
+            store.entries.map(\.refId), [refreshedID],
+            "loadMore 用舊游標查到的結果不能 append 到已經被 refresh 換掉的新列表上，即使世代號一樣"
+        )
+        XCTAssertEqual(store.loadMoreState, .idle, "loadMoreState 必須被收回非 submitting，不然下一次捲到底會永久卡住")
+    }
+
     /// 同參數重入仍然要擋（跟 M1「換參數」是不同情境，這條沒有變）。
     func test_loadMore_whileAlreadySubmitting_secondCallIsIgnored() async {
         let stub = StubTimelineAPIClient()
