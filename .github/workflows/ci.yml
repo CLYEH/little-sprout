@@ -24,10 +24,21 @@ jobs:
   rules:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # LS-123：核可標記改認使用者本人的 PR comment——approval-comment-check.sh 以 gh api 讀 issue comments，
+    # GITHUB_TOKEN 要有 issues／pull-requests 的讀權（repo 預設 token 是受限模式時只有 contents: read，讀 comment
+    # 會 403「Resource not accessible by integration」）；其餘一律唯讀，本 job 沒有任何寫入。
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
     env:
       BASE: ${{ github.base_ref }}
       HEAD: ${{ github.head_ref }}
       PR_BODY: ${{ github.event.pull_request.body }}
+      # LS-123：PR 編號給 approval-comment-check.sh 抓 comment；GH_TOKEN 讓 runner 內建的 gh 直接可用。push 事件沒有
+      # PR（兩者為空），用到它們的 Migration rules step 限 feature|fix|hotfix head，push 下 head_ref 為空自然不跑。
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -123,7 +134,8 @@ jobs:
         run: bash scripts/gates/design-asset-size-check.sh --base "origin/$BASE"
 
       # LS-45／LS-41／LS-54／LS-53／LS-50／LS-63：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
-      # 放行」（destructive-approval-check）、「schema／文件對帳」（api-contract-check）、
+      # 放行」（destructive-approval-check）、「核可標記改認使用者本人 PR comment：只認 owner、逐則送既有 gate、
+      # gh 失敗 fail closed、分頁第二頁也看」（approval-comment-check，LS-123）、「schema／文件對帳」（api-contract-check）、
       # 「錯誤碼表／LSErrorCode 對帳」（error-codes-check）、「migration 兩級分級／BREAKING: 段落」
       # （migration-breaking-check／breaking-section-check）、「migration 版本號撞號」（migration-version-check，LS-70）、
       # 「分支不夾帶他票 commit／push 前無合併衝突」
@@ -138,12 +150,13 @@ jobs:
       # LS-95 merge-review R1 B2：tap-target-check.test.sh 原本只有腳本本體、沒有接進這裡——
       # COLLABORATION §7 宣稱「自測掛 CI rules job」但實際沒掛，兩條刻意寫的 mutation-style
       # 負控（多違規要全點名、失敗無標記不能誤判成通過）從未在 CI 執行過。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／tap-target-check／tap-target-registry-check／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／tap-target-check／tap-target-registry-check／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
           rc=0
           bash scripts/gates/destructive-approval-check.test.sh || rc=1
+          bash scripts/gates/approval-comment-check.test.sh || rc=1
           bash scripts/gates/api-contract-check.test.sh || rc=1
           bash scripts/gates/error-codes-check.test.sh || rc=1
           bash scripts/gates/migration-breaking-check.test.sh || rc=1
@@ -268,9 +281,10 @@ jobs:
             # （LS-57／LS-66 同取 20260825030000）。
             bash scripts/gates/migration-version-check.sh --target "origin/$BASE" || exit 1
             # LS-80：已併入 origin/$BASE 的 migration 檔不可變（push-gate 4c 的伺服器端兜底）——擋在分級之前，
-            # 撞號都還沒過的話覆寫判斷沒有意義。PR body 寫進暫存檔驗逃生口是否同步宣告（逃生口使用須在 PR 可見）。
+            # 撞號都還沒過的話覆寫判斷沒有意義。PR body 寫進暫存檔驗逃生口是否同步宣告（逃生口使用須在 PR 可見）；
+            # LS-123：--pr-number 讓它在 body 沒宣告時再查使用者本人的 PR comment（同 DESTRUCTIVE 的 comment 來源）。
             printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-migration-immutable.txt"
-            bash scripts/gates/migration-immutable-check.sh --base "origin/$BASE" --pr-body "$RUNNER_TEMP/pr-body-migration-immutable.txt" || exit 1
+            bash scripts/gates/migration-immutable-check.sh --base "origin/$BASE" --pr-body "$RUNNER_TEMP/pr-body-migration-immutable.txt" --pr-number "$PR_NUMBER" || exit 1
             # LS-53：分級改由 scripts/gates/migration-breaking-check.sh 做 statement 級判定（單一 pass 剝
             # --／/* */ 註解後以 ; 切句；多行敘述、單一字面值的 execute '…' 動態 SQL 也認得——`||` 串接拆開的
             # 多字關鍵字認不得，見該檔檔頭已知限制；規則表同檔頭）。
@@ -280,11 +294,16 @@ jobs:
             if [ -n "$findings" ]; then
               printf 'migration 分級結果（級別<TAB>敘述）：\n%s\n' "$findings"
             fi
-            # DESTRUCTIVE：維持既有——使用者本人在 PR body 蓋核可標記，LS-45 起整行錨定
-            # （scripts/gates/destructive-approval-check.sh；純子字串比對曾被散文提及誤放行，PR #55 run 32626369903）
+            # DESTRUCTIVE：使用者本人核可——LS-123 起認 PR body（既有，LS-45 整行錨定；純子字串比對曾被散文提及誤放行，
+            # PR #55 run 32626369903）**或**使用者本人的 PR comment：approval-comment-check.sh 以 gh api 抓 issue comments、
+            # 只取 user.login＝repository_owner、逐則送同一支 destructive-approval-check.sh；它 exit 2（gh 失敗／非 JSON）時
+            # 這裡的 ! 讓它照樣紅（fail closed）。來源：LS-121 PR #218 ios-dev `gh pr edit --body-file` 整份覆寫 body 把使用者
+            # 的標記洗掉；comment 不隨 body 覆寫消失、且是 gate 執行時經 API 即時抓——留 comment 後 `gh run rerun --failed`
+            # 就看得到，不必 close/reopen（body 是事件 payload 快照，才需要 close/reopen）。
             if printf '%s\n' "$findings" | grep -q '^DESTRUCTIVE' \
-               && ! printf '%s' "$PR_BODY" | bash scripts/gates/destructive-approval-check.sh; then
-              echo "::error::偵測到破壞性 migration（見上方 DESTRUCTIVE 列）。此類變更需使用者本人依規約核可（docs/COLLABORATION.md §6）；agent 遇此錯誤必須停下回報使用者，不得自行處理"
+               && ! printf '%s' "$PR_BODY" | bash scripts/gates/destructive-approval-check.sh \
+               && ! bash scripts/gates/approval-comment-check.sh "$PR_NUMBER" bash scripts/gates/destructive-approval-check.sh; then
+              echo "::error::偵測到破壞性 migration（見上方 DESTRUCTIVE 列）。此類變更需使用者本人核可：請使用者本人在本 PR 的對話串（Conversation）留一則 comment、內容獨佔一行 DESTRUCTIVE-APPROVED（建議；review 行內留言不算；PR body 亦可，但 gh pr edit 整份覆寫會洗掉），再 gh run rerun 本 job（docs/COLLABORATION.md §6，LS-123）；agent 遇此錯誤必須停下回報使用者，不得自行處理、不得代寫或刪改使用者留言"
               exit 1
             fi
             # BREAKING：既有呼叫端行為改變——PR body 須有行首的 BREAKING: 段落（scripts/gates/breaking-section-check.sh），

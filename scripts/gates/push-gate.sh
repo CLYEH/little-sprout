@@ -171,8 +171,8 @@ fi
 bash "$(git rev-parse --show-toplevel)/scripts/gates/error-codes-check.sh"
 
 # 5) Migration 分級（LS-53）：對「本分支相對 base 的 migrations 新增行」跑
-#    scripts/gates/migration-breaking-check.sh（規則表見該檔檔頭）。PR body 標記（核可標記／
-#    BREAKING: 段落）只有 CI 看得到，這裡只印分級提醒；但 BREAKING 要求的「docs/API.md 同 PR 有變更」
+#    scripts/gates/migration-breaking-check.sh（規則表見該檔檔頭）。PR 上的標記（核可標記——使用者本人的
+#    PR comment 或 body，LS-123；BREAKING: 段落）只有 CI 看得到，這裡只印分級提醒；但 BREAKING 要求的「docs/API.md 同 PR 有變更」
 #    本機就驗得到，直接擋，省一趟 CI 來回。base：hotfix/* 對 origin/main，其餘對 origin/development
 #    （fetch 過才準；找不到 base ref 直接紅，不靜默跳過）。保護分支與 detached HEAD 不做——
 #    沒有「相對 base 的變更」可言。
@@ -193,12 +193,12 @@ if [ -d supabase/migrations ]; then
       bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-version-check.sh" --target "$base_ref"
       # 4c) 已併入 base 的 migration 檔不可變（LS-80）：擋在分級之前——已被悄悄改掉內容的檔，分級／覆寫
       #     判斷都沒有意義。本機沒有 PR body 可驗，只驗 commit body 的逃生口宣告；CI Migration rules
-      #     step 另外對 PR body 再驗一次（伺服器端兜底，逃生口使用必須在 PR 可見）。
+      #     step 另外對 PR body／使用者本人 PR comment 再驗一次（伺服器端兜底，逃生口使用必須在 PR 可見；LS-123）。
       bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-immutable-check.sh" --base "$base_ref"
       base_sha=$(git merge-base "$base_ref" HEAD)
       findings=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/migration-breaking-check.sh" --base "$base_sha")
       if printf '%s\n' "$findings" | grep -q '^DESTRUCTIVE'; then
-        echo "⚠ push gate：migration 含 DESTRUCTIVE 敘述——PR body 需使用者本人蓋核可標記，CI 會擋（COLLABORATION §6）：" >&2
+        echo "⚠ push gate：migration 含 DESTRUCTIVE 敘述——需使用者本人在 PR 留 comment 獨佔一行 DESTRUCTIVE-APPROVED（建議；PR body 亦可），CI 會擋（COLLABORATION §6，LS-123）：" >&2
         printf '%s\n' "$findings" | grep '^DESTRUCTIVE' | sed 's/^/    /' >&2
       fi
       if printf '%s\n' "$findings" | grep -q '^BREAKING'; then
