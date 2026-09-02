@@ -22771,6 +22771,276 @@
                 },
                 {
                   "type": "frame",
+                  "id": "dzT8P",
+                  "name": "r0",
+                  "width": "fill_container",
+                  "fill": "#F5E1E3",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "J6n6d",
+                      "name": "c",
+                      "width": 186,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "cJZHu",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "icon-tab-md",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "k2UGD",
+                      "name": "c",
+                      "width": 110,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "O89AJ",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "26",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-num",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "z85Z12",
+                      "name": "c",
+                      "width": 110,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "SQLvU",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "40",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-num",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "cY4Nt",
+                      "name": "c",
+                      "width": 408,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "tzLgG",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "cmp/Tab Bar 未選中圖示（LS-120 R9 補宣告）。",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zSqHG",
+                      "name": "c",
+                      "width": 408,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "DpMeD",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "【規格值 · 硬寫 72 處（26×26 51 處＋AX3 40×40 21 處）】 Pencil width/height 不接受 $variable 綁定（已知工具限制），逐一改動風險高，未動；token 只作為規格值來源，硬寫值需與此手動同步，見 motifs.md／Notes LuHbv R9 段。",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "M3k4U",
+                  "name": "r0",
+                  "width": "fill_container",
+                  "fill": "#F5E1E3",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Gh3Ll",
+                      "name": "c",
+                      "width": 186,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "xLmzq",
+                          "name": "t",
+                          "fill": "#2B141C",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "icon-tab-lg",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nZCiH",
+                      "name": "c",
+                      "width": 110,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "GrTaW",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "32",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-num",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "R9ViD",
+                      "name": "c",
+                      "width": 110,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "V1S5r",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "48",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-num",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pXdTL",
+                      "name": "c",
+                      "width": 408,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "VhTRQ",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "cmp/Tab Bar 選中圖示（LS-120 R9 補宣告）。",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "b0Rn4",
+                      "name": "c",
+                      "width": 408,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "rdMBc",
+                          "name": "t",
+                          "fill": "#553040",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "【規格值 · 硬寫 24 處（32×32 17 處＋AX3 48×48 7 處）】 Pencil width/height 不接受 $variable 綁定（已知工具限制），逐一改動風險高，未動；token 只作為規格值來源，硬寫值需與此手動同步，見 motifs.md／Notes LuHbv R9 段。",
+                          "lineHeight": 1.45,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
                   "id": "u4yIC",
                   "name": "r0",
                   "width": "fill_container",
@@ -69160,7 +69430,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "新增區塊 `cmp/Tab Bar · 四態對照（LS-120 R2）`（`Lo8Ae`，緊鄰 `J2GxJV` 下方）：兩排（預設／AX3）× 四欄（時間軸/相簿/寶貝/設定各自選中），共 8 個 `J2GxJV` instance，每個用 `descendants` 顯式覆寫全部 4 顆 Indicator（fill/stroke/strokeWidth/effect）＋4 顆 Icon（fill/width/height）＋4 個 cell 的 metadata.selected——這正是「換選中要改哪些屬性」的 override 配方本身：2 節點類型 × 4 屬性、四顆 cell 全列（不是只列被改的兩顆），因為 R1 曾經想只覆寫「差異的兩顆」但發現 Indicator 的透明態若不顯式給值會沿用元件當時的預設選中態，MN-2 之後的對稱結構解決了這個問題。此區塊本身即驗收條件 1（有定案形態）與 2（全 app 一條規則）在「四個狀態都畫出來」意義下的證據，不只是時間軸一種。",
+                  "content": "【R9 訂正：本段「＋4 個 cell 的 metadata.selected」一句是錯的——全檔 metadata.selected 只有 4 筆，全部屬於 cmp/Tab Bar 元件定義本身（z2egdT/nMfej/kHQai/Js28q），12 個 demo instance（含本段講的 8 個＋R3 深色排 4 個）一律不覆寫 metadata.selected，只覆寫 4 顆 Indicator＋4 顆 Icon 共 8 個節點的視覺屬性。已知後續影響（未修）：demo 對照板上非時間軸 cell 視覺上畫成選中時，其 a11y selected 中繼資料仍讀回元件預設值，與畫面視覺不一致；因是純視覺 demo 板、非使用者會導覽到的真實畫面，優先度低，見 motifs.md 同段訂正。原文保留於下供稽核】\n\n新增區塊 `cmp/Tab Bar · 四態對照（LS-120 R2）`（`Lo8Ae`，緊鄰 `J2GxJV` 下方）：兩排（預設／AX3）× 四欄（時間軸/相簿/寶貝/設定各自選中），共 8 個 `J2GxJV` instance，每個用 `descendants` 顯式覆寫全部 4 顆 Indicator（fill/stroke/strokeWidth/effect）＋4 顆 Icon（fill/width/height）＋4 個 cell 的 metadata.selected——這正是「換選中要改哪些屬性」的 override 配方本身：2 節點類型 × 4 屬性、四顆 cell 全列（不是只列被改的兩顆），因為 R1 曾經想只覆寫「差異的兩顆」但發現 Indicator 的透明態若不顯式給值會沿用元件當時的預設選中態，MN-2 之後的對稱結構解決了這個問題。此區塊本身即驗收條件 1（有定案形態）與 2（全 app 一條規則）在「四個狀態都畫出來」意義下的證據，不只是時間軸一種。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -69592,7 +69862,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "訂正後模型＋放寬後判準下，6 板 Day Group 2 padding-top 重算（節點已改名為『Day Group 2（padding-top＝捲動位置模擬，見 Notes LuHbv）』，MN-12）：yXSht(`j30wKR`) 0、a67Na(`TSDse`) 24、V4Ktak(`I1QFH`) 8、A33la(`S3daS`) 8、lKoZG(`wOwLU`) 96、HLXo3(`R6oxZ`) 48。逐板 Stamp/Ghost 分類（capTop/capBottom＝膠囊上緣/下緣，board-local）：yXSht 膠囊754-818／板底852，Stamp 859.44-912.02＝off-board；a67Na 膠囊754-818／板底852，Stamp 860.44-913.02＝off-board（0 padding 時是836.44-889.02，落在34pt帶內，違規，故加24）；V4Ktak 膠囊754-818／板底852，Stamp 759.44-812.02＝fully-hidden-in-capsule；A33la 同V4Ktak，759.44-812.02＝fully-hidden-in-capsule；lKoZG 膠囊1378-1466／板底1500，Stamp 1502.85-1606.96＝off-board（AX3 Stamp 高104.11＞膠囊高88，物理上不可能fully-hidden-in-capsule，只能推出板外）；HLXo3 同理，1504.85-1608.96＝off-board。Ghost 一律比對應 Stamp 更靠內（margin更大），同分類。6 板皆 0 partial-coverage、0 落在34pt帶。11 板總覆核（V5bD0/PIwjk/oP9Ey/VLg6j/Qxema 5 板無旋轉 Stamp/Ghost，n/a，本來就無此類違規來源）：全數 0 違規。MN-13：yXSht 簽名列（`WitwS/Jqwww`）還原後 board-local top=770.44／bottom=795.44，落在膠囊754-818區間內側（距膠囊上緣16.44pt、距下緣22.56pt），完全遮在膠囊後面，不再是R4版本『2.6pt margin、無owner』的邊緣狀態，reviewer預期的自我解決已確認。",
+                  "content": "【R9 訂正：本段 HLXo3(`R6oxZ`) padding-top＝48 與 Stamp off-board（1504.85-1608.96）已作廢——R6 為修 BL-9 把 HLXo3 Day Group 1 減為一張卡＋刪除 Day Group 2 的 Card Album 1，padding 一度衝高到 510；R7 再改回 padding-top＝0（讓 Day Divider 2／Snippet／Name 自然落在膠囊之上，不推出板外），是目前的真值。其餘 5 板（yXSht 0／a67Na 24／V4Ktak 8／A33la 8／lKoZG 96）自本段起未變，仍正確。細節見 Notes R6／R7 段。原文保留於下供稽核】\n\n訂正後模型＋放寬後判準下，6 板 Day Group 2 padding-top 重算（節點已改名為『Day Group 2（padding-top＝捲動位置模擬，見 Notes LuHbv）』，MN-12）：yXSht(`j30wKR`) 0、a67Na(`TSDse`) 24、V4Ktak(`I1QFH`) 8、A33la(`S3daS`) 8、lKoZG(`wOwLU`) 96、HLXo3(`R6oxZ`) 48。逐板 Stamp/Ghost 分類（capTop/capBottom＝膠囊上緣/下緣，board-local）：yXSht 膠囊754-818／板底852，Stamp 859.44-912.02＝off-board；a67Na 膠囊754-818／板底852，Stamp 860.44-913.02＝off-board（0 padding 時是836.44-889.02，落在34pt帶內，違規，故加24）；V4Ktak 膠囊754-818／板底852，Stamp 759.44-812.02＝fully-hidden-in-capsule；A33la 同V4Ktak，759.44-812.02＝fully-hidden-in-capsule；lKoZG 膠囊1378-1466／板底1500，Stamp 1502.85-1606.96＝off-board（AX3 Stamp 高104.11＞膠囊高88，物理上不可能fully-hidden-in-capsule，只能推出板外）；HLXo3 同理，1504.85-1608.96＝off-board。Ghost 一律比對應 Stamp 更靠內（margin更大），同分類。6 板皆 0 partial-coverage、0 落在34pt帶。11 板總覆核（V5bD0/PIwjk/oP9Ey/VLg6j/Qxema 5 板無旋轉 Stamp/Ghost，n/a，本來就無此類違規來源）：全數 0 違規。MN-13：yXSht 簽名列（`WitwS/Jqwww`）還原後 board-local top=770.44／bottom=795.44，落在膠囊754-818區間內側（距膠囊上緣16.44pt、距下緣22.56pt），完全遮在膠囊後面，不再是R4版本『2.6pt margin、無owner』的邊緣狀態，reviewer預期的自我解決已確認。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -69701,6 +69971,114 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "visual-review R7 APPROVE（comment 5b5c2fb9）核可後補記：Tab-root 板（含 cmp/Tab Bar 的任何板）與捲動內容的關係，經 R5-R7 反覆驗證收斂為以下**通用判準**（不限本票，後續任何新增或修改的 Tab-root 板都比照）——兩條，缺一不可：①板內任何文字／icon 葉節點不得被膠囊矩形的邊緣**部分**覆蓋（上緣穿出膠囊上緣、或下緣穿出膠囊下緣但還沒到板底，兩者皆算違規）；②膠囊下緣到板底的 34pt home indicator 帶內不得有任何文字／icon 葉節點的哪怕一部分。內容合法的終態只有三種：完全在膠囊頂之上、完全被膠囊整個吞掉在內（不穿出膠囊任一邊緣）、或完全在板底之外（被 clip 裁掉）。旋轉節點（如 cmp/Day Divider 的 Stamp／Ghost）用其自身 bounds 判定，不展開子節點（見 R5 · MJ-11 段）；判定時要 respect 節點的 `enabled` 鏈（停用節點與其子樹不參與判定，見 R8 · HLXo3 Load More 段）。**標準範例：`a67Na`**（LS-21/11c 時間軸·下拉更新中）——Day Group 1 只放一張卡（Card Photo 1），內容天然結束在膠囊之上有餘裕的位置，Day Group 2 只需極小 padding-top（24）就能讓其全部內容（含旋轉的 Day Divider 2）完全落在板底之外，不需要大 padding 硬推、不需要事後刪卡救火——是這條判準底下結構最乾淨、最少特例的構圖，後續新增的 Tab-root 板優先照抄這個「Day Group 1 收斂到剛好清空膠囊、Day Group 2 順勢自然落在板外或膠囊後」的構圖邏輯，而不是每次都逐板重新試錯 padding 數值。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "DwNS1",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "jTttj",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R6 · BL-9 部分覆蓋修正＋MJ-12",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "HPvum",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R5 review（17e0a4eb）判 BL-9（BLOCKER）：放寬判準下 34pt 帶 11 板全 0，但部分覆蓋仍有 2 板非 0——`a67Na` 署名列/icon 只露字頂 6.6/2.1pt、`HLXo3` Multi Caption 底被切 14.8pt，reviewer 證明平移無解（a67Na 需 +6.6/-18.4 互斥；HLXo3 caption 高 116>AX3 膠囊帶 88）。修法：`a67Na` Day Group 1 刪 `y6JCGh`（Card Diary 1，問題來源），只留 `pqE2P`（Card Photo 1，示範重點是 Pull Refresh Row）；`HLXo3` Day Group 1 刪 `P1CltA`（Card Photo 1），保留 `fZ3KF`（Card Diary 1，Multi Caption 正是本板「兩位寶貝聯合標記」demo 重點）。**追加發現**（重跑 11 板逐葉節點複驗才抓到）：HLXo3 Day Group 1 縮短後，Day Group 2 自己的 `CFlP7`（Card Album 1）曝出新的部分覆蓋——該卡片（Photo Wrap 184pt＋Caption 116pt＝315pt）在任何 padding 下都無法同時滿足「完全在膠囊之上」（natural bottom 已過膠囊頂）與「完全過板底」（需 padding≥386，會把同 Day Group 2 的 Stamp 一起推進膠囊），與 BL-9 同一類「平移無解」，比照移除；`R6oxZ`（Day Group 2）padding-top 48→**510** 把剩餘 `i6X3f`（Card Diary 2）與 Stamp/Ghost 一併推出板外。11 板逐葉節點（text/icon，respect enabled，rotation-aware skipChildren）全樹複驗：邊緣部分覆蓋＝0、34pt 帶＝0。**MJ-12**：r5 收據 `scan_scope:\"boards\"`＋`scan_note`（宣稱逐板 loop）與 `document_containers/points`=126/1008 矛盾——這組數字與 R1/R2（全文件掃描成功期）真值一致，證明 R5 其實是全文件掃描，scan_note 只是沿用 R4 舊敘述沒更新（r5 收據本身數字沒錯，是敘述疏失，不回改舊收據）。r6 收據 `scan_scope` 改為如實記錄 `\"document\"`；LS-96 `32754383-a538-41d0-8307-d086af8ca0db` 補充 comment `767eb2cb-f52a-4ad6-ab11-97f841e550ee`：timeout 間歇發生（同一份文件同一邏輯，陣列累加寫法逾時、map 遍歷寫法立刻成功），不是節點規模穩定門檻。收據 `design/evidence/LS-120-r6-overflow.json`，head_sha `718da81`。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "DklIY",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "r75Eqw",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R7 · BL-10 空洞修正",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "hVdTp",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R6 review（64c56c12）判 BL-10（BLOCKER）：R6 自陳副作用——`HLXo3` padding-top 510 造成 Multi Caption 底到膠囊頂 440.2pt 空洞（板高 29.3%），與 R2 BL-4 判 217.6pt 為 BLOCKER 的先例衝突，是「推出畫布」手法的兩倍大小。ui-designer 同意此裁定，未升級使用者仲裁。reviewer 建議正解（照抄 a67Na）：padding-top 設 0，靠 Feed.gap 自然接續。逐葉實測發現不夠：「Snippet」（`i6X3f/p2odx`，日記文字預覽，360pt）比 reviewer 粗估的 Multi Caption 更早出現、天然跨膠囊上緣與 34pt 帶；`PqQEK`（Load More 載入列，Feed 直屬子節點、Day Group 2 手足，不受其 padding-top 控制）縮短 Snippet 後也跨進危險帶。**嘗試備案**（reviewer 授權：「Day Group 1 放回一張 caption 較短的卡」，照抄 lKoZG 兩張卡結構）：複製 lKoZG 的 AX3 Card Photo 1（`NBUy0`→`G1z44`）插回 HLXo3 Day Group 1（Card Diary 1 之後），證明數學無解——AX3 Day Divider 2 旋轉包絡框 104.11pt，加卡後 Day1 底變 1296.85，Divider natural bottom=1444.96，超出膠囊頂 66.96pt，任何 padding 都無法同時讓 Divider「完全在膠囊之上」與 Card Diary 2 的 Snippet「完全過板底」；已還原（`Delete(\"G1z44\")`），Day Group 1 回到只有 Card Diary 1（R6 定案）。**最終修法**（維持 Day Group 1 不變）：`R6oxZ` padding-top 510→**0**；`i6X3f`（Card Diary 2，非 Card Diary 1，不影響本板核心 demo）的 `p2odx`（Snippet）文字從長句縮短為「社區公園旁新開了一家麵包店。」（同語意，渲染高度不再跨界）；`PqQEK`（Load More，純載入態裝飾）`enabled:false`。結果：Day Divider 2＋Snippet＋Name「日記」標籤全部可見，最後一項可見內容（Name）底到膠囊頂僅 **49.04pt**（與 lKoZG 的 35.2pt 同量級，遠優於 a67Na 的 137.6pt 與 R6 的 440.2pt）。11 板逐葉節點複驗：邊緣部分覆蓋＝0、34pt 帶＝0。四支掃描數字與 R6 完全相同（本輪變更不影響既有重疊/角托關係）。收據 `design/evidence/LS-120-r7-overflow.json`，head_sha `73f0de4`。visual-review R7 APPROVE（`5b5c2fb9`）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PNdfb",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "cEfu6",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R9 · merge-review minor 收尾",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "CKa74",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "merge-review APPROVE（LS-120 comment `72db975c`，status success 於 `01d1435`）併入前的 4 個 docs↔稿面 minor 收尾，只改 tokens／Notes／docs，不動任何版面：①`$icon-tab-md`／`$icon-tab-lg` 用 `SetVariables` 正式宣告（26/40、32/48，size 主題軸），並補進 Tokens 板 `XhwG6` 的 Size Table（`dzT8P`／`M3k4U`，緊接 `icon-lg` 之後）——**Pencil 的 width/height 屬性不接受 `$variable` 引用是已證實的工具限制**（本輪對 `OTQOw` 實測 `Update(id,{width:\"$icon-tab-lg\"})` 後讀回仍是字面 32，證實限制成立），所以 72＋24 處硬寫的 26/32/40/48 沒有、也不可能真的綁定變數，token 只作為規格值來源，需要手動同步——已在 Tokens 板每列的用法欄位精確列出硬寫處數；②motifs.md:98 的「膠囊 y 只有 754/1378 兩值」訂正為公式（板高−34−膠囊高）＋三組現況值（含 `oP9Ey` 的 1272/88/1150）；③motifs.md:105 與本 Notes R2·MJ-4 段（`jn8Vp`）的「12 個 demo instance 覆寫 metadata.selected」訂正為「只覆寫 8 個視覺屬性節點，不覆寫 metadata.selected（全檔僅 4 筆，皆屬元件本身）」，並記錄一個未修的後續影響（demo 對照板 11 個視覺選中 cell 的 a11y selected 中繼資料與畫面不一致，因非真實導覽畫面優先度低）；④補齊本 Notes 缺的 R6／R7 段（`DwNS1`／`DklIY`），訂正 motifs.md:102 與 Notes R5 段（`u7aYzd`）對 HLXo3 padding-top 仍寫 48（R7 已為 0）的舊數字。**Informational（依 gate 規則不回改舊收據，僅此記錄）**：r5 收據 `design/evidence/LS-120-r5-overflow.json` 的 `scan_scope:\"boards\"` 與其 `document_containers/points`=126/1008（全文件真值）自相矛盾——MJ-12 已在 R6 訂正方法論、R6 收據起如實記錄，r5 收據本身數字沒錯（`corner_anchor.mismatch` 仍為 0），只是 `scan_scope` 標籤與 `scan_note` 敘述不準確，不影響 gate 判定，不回改。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
