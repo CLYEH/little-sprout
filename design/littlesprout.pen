@@ -43054,201 +43054,266 @@
                 },
                 {
                   "type": "frame",
-                  "id": "igrW4",
+                  "id": "na6Qp",
                   "name": "Options",
                   "width": "fill_container",
                   "layout": "vertical",
-                  "gap": "$sp-tight",
+                  "gap": "$sp-block",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "bn6ny",
-                      "name": "Option Row",
+                      "id": "NbMVf",
+                      "name": "Unspecified Group",
                       "width": "fill_container",
-                      "fill": "#00000000",
-                      "cornerRadius": "$radius-md",
-                      "padding": [
-                        "$ctl-pad-md",
-                        "$sp-label"
-                      ],
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "nsJqg",
-                          "name": "Left",
-                          "gap": "$sp-label",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "w1Rd1C",
-                              "name": "Icon",
-                              "width": 26,
-                              "height": 26,
-                              "icon": "circle-slash",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "CER2W",
-                              "name": "Label",
-                              "fill": "$text-primary",
-                              "content": "不指定",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "ikX7c",
-                          "name": "Checkbox",
-                          "width": 22,
-                          "height": 22,
+                          "id": "Eht0M",
+                          "name": "Option Row",
+                          "width": "fill_container",
                           "fill": "#00000000",
-                          "cornerRadius": "$radius-full",
-                          "stroke": "$control-line",
-                          "strokeWidth": 1.5
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "FGQ59",
-                      "name": "Option Row",
-                      "width": "fill_container",
-                      "fill": "$accent-soft",
-                      "cornerRadius": "$radius-md",
-                      "padding": [
-                        "$ctl-pad-md",
-                        "$sp-label"
-                      ],
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "E92x46",
-                          "name": "Left",
-                          "gap": "$sp-label",
+                          "cornerRadius": "$radius-md",
+                          "padding": [
+                            "$ctl-pad-md",
+                            "$sp-label"
+                          ],
+                          "justifyContent": "space_between",
                           "alignItems": "center",
                           "children": [
                             {
-                              "id": "cGewx",
-                              "type": "ref",
-                              "ref": "RaaIf",
-                              "name": "Avatar",
-                              "descendants": {
-                                "A30rIX": {
-                                  "content": "安"
+                              "type": "frame",
+                              "id": "XGH1q",
+                              "name": "Left",
+                              "gap": "$sp-label",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "Q7pwq",
+                                  "name": "Icon Wrap",
+                                  "width": 48,
+                                  "height": 48,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "wcniF",
+                                      "name": "Icon",
+                                      "width": 26,
+                                      "height": 26,
+                                      "icon": "circle-slash",
+                                      "library": "lucide",
+                                      "fill": "$text-secondary"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "rK0pk",
+                                  "name": "Label",
+                                  "fill": "$text-primary",
+                                  "content": "不指定",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
                                 }
-                              }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "AdPex",
-                              "name": "Label",
-                              "fill": "$text-primary",
-                              "content": "小安",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "700"
+                              "type": "frame",
+                              "id": "YIfcF",
+                              "name": "Checkbox",
+                              "width": 22,
+                              "height": 22,
+                              "fill": "#00000000",
+                              "cornerRadius": "$radius-full",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5
                             }
                           ]
                         },
                         {
                           "type": "frame",
-                          "id": "zcA75",
-                          "name": "Checkbox",
-                          "width": 22,
-                          "height": 22,
-                          "fill": "$text-primary",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
+                          "id": "nejy8",
+                          "name": "Explain Wrap",
+                          "width": "fill_container",
+                          "padding": [
+                            0,
+                            0,
+                            0,
+                            "$sp-label"
+                          ],
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "Q2dA6v",
-                              "name": "Check",
-                              "width": 14,
-                              "height": 14,
-                              "icon": "check",
-                              "library": "lucide",
-                              "fill": "$surface"
+                              "type": "text",
+                              "id": "U4Adm",
+                              "name": "Explain",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "選了這個就不會標記任何寶貝",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
                             }
                           ]
                         }
                       ]
                     },
                     {
-                      "type": "frame",
-                      "id": "XexY9",
-                      "name": "Option Row",
+                      "type": "rectangle",
+                      "id": "j0LKp",
+                      "name": "Divider",
+                      "fill": "$border",
                       "width": "fill_container",
-                      "fill": "$accent-soft",
-                      "cornerRadius": "$radius-md",
-                      "padding": [
-                        "$ctl-pad-md",
-                        "$sp-label"
-                      ],
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fSwO0",
+                      "name": "Children Group",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "MwiV9",
-                          "name": "Left",
-                          "gap": "$sp-label",
+                          "id": "SFFMH",
+                          "name": "Option Row",
+                          "width": "fill_container",
+                          "fill": "$accent-soft",
+                          "cornerRadius": "$radius-md",
+                          "padding": [
+                            "$ctl-pad-md",
+                            "$sp-label"
+                          ],
+                          "justifyContent": "space_between",
                           "alignItems": "center",
                           "children": [
                             {
-                              "id": "XiZBt",
-                              "type": "ref",
-                              "ref": "RaaIf",
-                              "name": "Avatar",
-                              "descendants": {
-                                "A30rIX": {
-                                  "content": "軒"
+                              "type": "frame",
+                              "id": "UjhXq",
+                              "name": "Left",
+                              "gap": "$sp-label",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "qKrZ9",
+                                  "type": "ref",
+                                  "ref": "RaaIf",
+                                  "name": "Avatar",
+                                  "descendants": {
+                                    "A30rIX": {
+                                      "content": "安"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "eBtTg",
+                                  "name": "Label",
+                                  "fill": "$text-primary",
+                                  "content": "小安",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "700"
                                 }
-                              }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "wOeJB",
-                              "name": "Label",
+                              "type": "frame",
+                              "id": "bgAmP",
+                              "name": "Checkbox",
+                              "width": 22,
+                              "height": 22,
                               "fill": "$text-primary",
-                              "content": "小軒",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "700"
+                              "cornerRadius": "$radius-full",
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "IRbpl",
+                                  "name": "Check",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "check",
+                                  "library": "lucide",
+                                  "fill": "$surface"
+                                }
+                              ]
                             }
                           ]
                         },
                         {
                           "type": "frame",
-                          "id": "x8RqGQ",
-                          "name": "Checkbox",
-                          "width": 22,
-                          "height": 22,
-                          "fill": "$text-primary",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
+                          "id": "iehft",
+                          "name": "Option Row",
+                          "width": "fill_container",
+                          "fill": "$accent-soft",
+                          "cornerRadius": "$radius-md",
+                          "padding": [
+                            "$ctl-pad-md",
+                            "$sp-label"
+                          ],
+                          "justifyContent": "space_between",
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "BCt9d",
-                              "name": "Check",
-                              "width": 14,
-                              "height": 14,
-                              "icon": "check",
-                              "library": "lucide",
-                              "fill": "$surface"
+                              "type": "frame",
+                              "id": "mmZqY",
+                              "name": "Left",
+                              "gap": "$sp-label",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "ZDOlF",
+                                  "type": "ref",
+                                  "ref": "RaaIf",
+                                  "name": "Avatar",
+                                  "descendants": {
+                                    "A30rIX": {
+                                      "content": "軒"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "TGGHg",
+                                  "name": "Label",
+                                  "fill": "$text-primary",
+                                  "content": "小軒",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "OiKYw",
+                              "name": "Checkbox",
+                              "width": 22,
+                              "height": 22,
+                              "fill": "$text-primary",
+                              "cornerRadius": "$radius-full",
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "fvew5",
+                                  "name": "Check",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "check",
+                                  "library": "lucide",
+                                  "fill": "$surface"
+                                }
+                              ]
                             }
                           ]
                         }
@@ -52440,7 +52505,7 @@
                   "y": 0,
                   "name": "More Scrim",
                   "enabled": false,
-                  "opacity": 0.55,
+                  "opacity": 0.75,
                   "width": 96.3,
                   "height": 100,
                   "fill": "$print-ink",
@@ -52453,7 +52518,7 @@
                       "id": "CQpms",
                       "name": "More Count",
                       "fill": "$on-photo",
-                      "content": "還有 0 張",
+                      "content": "還有 2 張",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "700"
@@ -52997,19 +53062,16 @@
                   "type": "frame",
                   "id": "sIJPp",
                   "layoutPosition": "absolute",
-                  "x": 237,
-                  "y": 150,
+                  "x": 239,
+                  "y": 155,
                   "name": "Video Badge",
                   "enabled": false,
-                  "opacity": 0.75,
-                  "width": 100,
-                  "height": 26,
-                  "fill": "$print-ink",
+                  "fill": "#2B141CBF",
                   "cornerRadius": "$radius-full",
                   "gap": "$sp-tight",
                   "padding": [
-                    3,
-                    "$sp-item"
+                    2,
+                    "$sp-tight"
                   ],
                   "justifyContent": "center",
                   "alignItems": "center",
@@ -53018,8 +53080,8 @@
                       "type": "icon",
                       "id": "QdjHX",
                       "name": "Play Icon",
-                      "width": 14,
-                      "height": 14,
+                      "width": 12,
+                      "height": 12,
                       "icon": "play",
                       "library": "lucide",
                       "fill": "$on-photo"
@@ -53031,7 +53093,7 @@
                       "fill": "$on-photo",
                       "content": "影片 0:32",
                       "fontFamily": "$font",
-                      "fontSize": 14,
+                      "fontSize": 12,
                       "fontWeight": "700"
                     }
                   ]
@@ -56281,13 +56343,10 @@
                               "type": "frame",
                               "id": "GCSTr",
                               "layoutPosition": "absolute",
-                              "x": 4,
-                              "y": 70,
+                              "x": 6,
+                              "y": 67,
                               "name": "Video Badge",
-                              "opacity": 0.75,
-                              "width": 88,
-                              "height": 22,
-                              "fill": "$print-ink",
+                              "fill": "#2B141CBF",
                               "cornerRadius": "$radius-full",
                               "gap": "$sp-tight",
                               "padding": [
@@ -56314,7 +56373,7 @@
                                   "fill": "$on-photo",
                                   "content": "影片 0:32",
                                   "fontFamily": "$font",
-                                  "fontSize": 13,
+                                  "fontSize": 12,
                                   "fontWeight": "700"
                                 }
                               ]
@@ -56474,13 +56533,10 @@
                     },
                     {
                       "type": "text",
-                      "id": "Gotfj",
+                      "id": "G34yS",
                       "name": "Label",
                       "fill": "$danger",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
                       "content": "移除所選 0 張",
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "600"
@@ -57255,13 +57311,10 @@
                     },
                     {
                       "type": "text",
-                      "id": "KVUm0",
+                      "id": "Gi65R",
                       "name": "Label",
                       "fill": "$danger",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
                       "content": "移除所選 0 張",
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "600"
@@ -58036,13 +58089,10 @@
                     },
                     {
                       "type": "text",
-                      "id": "KQEY2",
+                      "id": "hdyua",
                       "name": "Label",
                       "fill": "$danger",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
                       "content": "移除所選 0 張",
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "600"
@@ -58867,13 +58917,10 @@
                     },
                     {
                       "type": "text",
-                      "id": "l3dsOu",
+                      "id": "mgxjE",
                       "name": "Label",
                       "fill": "$danger",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
                       "content": "移除所選 0 張",
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "600"
@@ -59628,13 +59675,10 @@
                         },
                         {
                           "type": "text",
-                          "id": "tt0ee",
+                          "id": "cNGIP",
                           "name": "Label",
                           "fill": "$danger",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
                           "content": "移除所選 0 張",
-                          "textAlign": "center",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "600"
@@ -60004,7 +60048,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1962,
+      "height": 2010,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -60299,13 +60343,10 @@
                               "type": "frame",
                               "id": "ZOg73",
                               "layoutPosition": "absolute",
-                              "x": 4,
-                              "y": 70,
+                              "x": 6,
+                              "y": 67,
                               "name": "Video Badge",
-                              "opacity": 0.75,
-                              "width": 88,
-                              "height": 22,
-                              "fill": "$print-ink",
+                              "fill": "#2B141CBF",
                               "cornerRadius": "$radius-full",
                               "gap": "$sp-tight",
                               "padding": [
@@ -60332,12 +60373,25 @@
                                   "fill": "$on-photo",
                                   "content": "影片 0:32",
                                   "fontFamily": "$font",
-                                  "fontSize": 13,
+                                  "fontSize": 12,
                                   "fontWeight": "700"
                                 }
                               ]
                             }
                           ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "H7XkXl",
+                          "name": "Video Label AX3",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": 96,
+                          "content": "影片 0:32",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
                         },
                         {
                           "type": "frame",
@@ -60492,13 +60546,10 @@
                     },
                     {
                       "type": "text",
-                      "id": "drEQn",
+                      "id": "H5jcX",
                       "name": "Label",
                       "fill": "$danger",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
                       "content": "移除所選 0 張",
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "600"
@@ -61407,7 +61458,48 @@
                             "enabled": true,
                             "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTF8&ixlib=rb-4.1.0&q=80&w=1080",
                             "mode": "fill"
-                          }
+                          },
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "kFUrb",
+                              "layoutPosition": "absolute",
+                              "x": 58.5,
+                              "y": 101,
+                              "name": "Video Badge",
+                              "fill": "#2B141CBF",
+                              "cornerRadius": "$radius-full",
+                              "gap": "$sp-tight",
+                              "padding": [
+                                2,
+                                "$sp-tight"
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "g1TIf",
+                                  "name": "Play Icon",
+                                  "width": 12,
+                                  "height": 12,
+                                  "icon": "play",
+                                  "library": "lucide",
+                                  "fill": "$on-photo"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "cwhlF",
+                                  "name": "Duration Label",
+                                  "fill": "$on-photo",
+                                  "content": "影片 0:32",
+                                  "fontFamily": "$font",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
                         },
                         {
                           "id": "d537l",
@@ -65534,13 +65626,10 @@
                     },
                     {
                       "type": "text",
-                      "id": "qPUeT",
+                      "id": "SKAMt",
                       "name": "Label",
                       "fill": "$danger",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
                       "content": "移除所選 2 張",
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "600"
@@ -67782,6 +67871,78 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "IztQC",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "QX2qD",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R6 · 角托核對表重跑（BL-1/BL-2 修復後）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "B6ozSF",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R5 的角托 y 公式假設 Imprint Row 渲染高＝17（字面值），實際渲染 25（預設密度）／58（AX3），造成下緣角托全部內縮 8–41pt（BL-1，352 點 148 mismatch）。**根治改法**：Photo Grid 的 Print Cell 拿掉 Imprint Row，改用固定 `padding:[8,8,32,8]`（下緣厚度 32＝既有『gap 7＋Imprint Row 17＋print-edge-bottom 8』視覺厚度，改用不吃 Dynamic Type 的固定值承載，不再由一行空白字撐出），角托 y 統一用『該格實測 H−21』——因為 H 現在是常數（8+wrapH+32），AX3 與預設密度自動得到同一個正確值，BL-1／MJ-4／MJ-8 三個 finding 一次收斂成同一個修法。**重跑結果（LS-119 全部 29 板範圍，`resolveInstances:true`）：91 個印品容器／364 個角托點／0 mismatch**（R5 申報 88／352／148 mismatch，R4 基線 20／80／0 mismatch——現在容器數因新增 20 張壓測板等大幅成長，仍然 0 mismatch）。**跨格角托碰撞（BL-2，R5 沒有掃描能抓到的類別）**：Photo Grid 的 `gap` 由 8 改 `$sp-block` 16（corner-out 5+5=10 < 16，淨空 6pt），重跑跨 parent 絕對座標碰撞掃描（見下）：80 筆 → **0 筆**。**額外發現並修正**：全文件範圍（不限 LS-119）掃描角托核對，另外找到 43 個 mismatch，**全部屬於 LS-17／LS-18／App icon 探索頁等其他票的既有畫面**（`Print Stage`／`LS-17 01-iPad 歡迎登入`／`LS-18 04-iPad 首次進入`），與 LS-119 無關、本輪未觸碰、不在本票 scope 內修——記錄備查，建議記入 LS-96 待辦池供對應票號後續處理。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Wc2jV",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "jdkk5",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R6 · 兩支新掃描（reviewer 方法論要求）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "a9VIPu",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "**掃描三：跨 parent 絕對座標碰撞**（sibling 交集掃描抓不到、`ctx.problems` 也抓不到的類別——BL-2 專屬）。方法：鎖定『容易出血的絕對定位類別』（Corner TL/TR/BL/BR、Selected Badge、Video Badge、Dragging Photo、Drop Target、Insert Line、Stack Sheet），逐板累加絕對座標，兩兩比對不同 parent 的矩形交集。**LS-119 全部 29 板結果：0 筆真缺陷**（唯二命中的『Drop Target × Insert Line』是刻意的父子包含關係——Insert Line 本來就畫在 Drop Target 內部，不是跨格碰撞，予以排除）。過程中額外抓到一個新問題：`f1wVw`／`bs8aE` 的 Insert Line（MJ-1 修復時新增）原本置中在 Drop Target 內（x=47），但 Dragging Photo 移開後的曝光區域是 Drop Target 右側 42.6pt，插入線置中反而落在被蓋住的區域——已改 x=75，重跑碰撞掃描確認插入線與拖曳縮圖 0 重疊。**掃描四：橫列溢出掃描修正方法論**（R5／R5-review 兩支掃描都沒開 `resolveInstances`，導致每個 parent 只記錄『最靠右的一個子節點』，系統性漏掉同位置的第二個溢出子節點——這正是 MJ-6 影片徽章被裁掉 8pt 卻兩支掃描都沒抓到的根因）。R6 改法：①`{resolveInstances:true}` ②同一 parent 下『所有』溢出子節點都記錄，不只最大的一個。重跑結果：52 個分類、284 筆（R5 收據 18 筆代表・宣告 115、reviewer 實測 233，本輪方法論修正後的真實數字更高，因為現在真正夠深入 instance descendants、且不再遺漏同位置的第二個溢出子節點如 Corner BR）。**逐類複核**：73＋73 筆 Print Cell 角托出血（TR/BR，既有母題規則）、27+27 筆 Photo Print 角托出血（resolveInstances 後才看得到的既有全站已知類別）、8+2+1×17 筆既有橫向可捲動 Photo Strip 延伸、4 筆 More Scrim/More Count 溢出（**查證為 disabled 子樹 bounds 快取失真假警報**——只有 `WitwS` 一個實例真的 enabled，該實例本身零溢出，其餘 4 筆全部掛在未 enable 的 Card Diary 實例上，非真缺陷）、1 筆 `Stress/05 建立家庭超長家庭名` Field Value 溢出（LS-18 既有畫面，非 LS-119 scope）、其餘為既有母題白名單類別（Selected Badge、Legal 連結、Google G Mark 等）。**無新增未分類真缺陷**。兩支新掃描的結果本身不寫進收據 JSON（維持 CI 現行 schema 不加鍵），完整記錄在此與 R6 handoff。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -68592,7 +68753,7 @@
                           "type": "rectangle",
                           "id": "KRH6n",
                           "layoutPosition": "absolute",
-                          "x": 47,
+                          "x": 75,
                           "y": 0,
                           "name": "Insert Line",
                           "fill": "$control-line",
@@ -68714,13 +68875,10 @@
                     },
                     {
                       "type": "text",
-                      "id": "JgUam",
+                      "id": "y2byCN",
                       "name": "Label",
                       "fill": "$danger",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
                       "content": "移除所選 0 張",
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "600"
@@ -69297,7 +69455,7 @@
                           "type": "rectangle",
                           "id": "gdRk0",
                           "layoutPosition": "absolute",
-                          "x": 47,
+                          "x": 75,
                           "y": 0,
                           "name": "Insert Line",
                           "fill": "$control-line",
@@ -69419,13 +69577,10 @@
                     },
                     {
                       "type": "text",
-                      "id": "IXwej",
+                      "id": "Eb5uF",
                       "name": "Label",
                       "fill": "$danger",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
                       "content": "移除所選 0 張",
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "600"
@@ -85178,13 +85333,10 @@
                     },
                     {
                       "type": "text",
-                      "id": "mXrHg",
+                      "id": "j7L3ls",
                       "name": "Label",
                       "fill": "$danger",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
                       "content": "移除所選 0 張",
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "600"
@@ -85812,13 +85964,10 @@
                               "type": "frame",
                               "id": "HyS26",
                               "layoutPosition": "absolute",
-                              "x": 4,
-                              "y": 70,
+                              "x": 6,
+                              "y": 67,
                               "name": "Video Badge",
-                              "opacity": 0.75,
-                              "width": 88,
-                              "height": 22,
-                              "fill": "$print-ink",
+                              "fill": "#2B141CBF",
                               "cornerRadius": "$radius-full",
                               "gap": "$sp-tight",
                               "padding": [
@@ -85845,7 +85994,7 @@
                                   "fill": "$on-photo",
                                   "content": "影片 1:24",
                                   "fontFamily": "$font",
-                                  "fontSize": 13,
+                                  "fontSize": 12,
                                   "fontWeight": "700"
                                 }
                               ]
@@ -85992,7 +86141,7 @@
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "影片最長 1 分鐘，會保留前 60 秒",
+                      "content": "這支影片 1:24，發佈時會保留前 60 秒",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "600"
@@ -86043,13 +86192,10 @@
                     },
                     {
                       "type": "text",
-                      "id": "tduuU",
+                      "id": "Ibf1B",
                       "name": "Label",
                       "fill": "$danger",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
                       "content": "移除所選 0 張",
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "600"
