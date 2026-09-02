@@ -27,16 +27,6 @@ enum MultiChildCaptionFormatter {
         }
     }
 
-    /// 「姓名 · 年齡」／「姓名 年齡、姓名 年齡」的純文字版（供 accessibility label／
-    /// 純文字情境使用；樣式版見 `attributed(children:asOf:calendar:)`）。
-    static func plainText(children: [Child], asOf date: Date, calendar: Calendar = .current) -> String {
-        let segs = segments(children: children, asOf: date, calendar: calendar)
-        if segs.count == 1, let only = segs.first {
-            return "\(only.name) · \(only.age)"
-        }
-        return segs.map { "\($0.name) \($0.age)" }.joined(separator: "、")
-    }
-
     /// 年齡段降一階（MN-15）：姓名 `.body`／`.semibold`／`$text-primary`，年齡
     /// `.footnote`（對齊 `AppFontToken.meta` 的 `relativeStyle`，同一個 token 步階往下走
     /// 一階剛好落在這裡）／`$text-secondary`。用 SwiftUI 語意字級（`.body`／`.footnote`）
