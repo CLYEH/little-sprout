@@ -89,6 +89,16 @@ R7 掃過全部 393 寬、非 A11y/Stress 的螢幕板：27 張有實心 accent�
 - 07b 兩筆核准同權重（都外框），不誘導長輩按最醒目的那顆。
 - 06 家族 Upper／Footer 用 flex spacer（`height:fill_container` 置於 Upper 末尾、Body 不用 `space_between`），把「改用貼上邀請連結」永遠釘在拇指區；不許魔術數 spacer（232／100）。
 
+## Tab Bar 全字級純 icon（LS-120）
+
+`cmp/Tab Bar` 全字級（含預設，不只 AX）純 icon，不掛文字——取代 R 前「icon＋fs-meta 文字」兩層結構；文字標籤路徑改由 VoiceOver `accessibilityLabel` 與 iOS Large Content Viewer 承載，是 `elder-constraints.md`「icon 一律帶文字標籤」的第二條明文例外。四顆 icon：時間軸＝gallery-vertical（垂直堆疊卡片＝時間序 feed）、相簿＝layout-grid（田字網格＝整理過的收藏，改自舊版 images 以與時間軸的堆疊剪影明顯區分）、寶貝＝baby、設定＝settings——四種剪影零文字仍可辨。
+
+- **選中態＝形狀＋對比同時變化，非只換色**：透明→`$surface` 圓角實心＋outer shadow（紙的落影語彙）；icon 由 `$icon-md` 放大到 `$icon-lg`；色由 `$text-secondary` 轉 `$text-primary`。三個維度疊加，缺一不成立。
+- **尺寸**：unselected icon＝`$icon-md`（22／AX3 40），selected icon＝`$icon-lg`（26／AX3 48），indicator padding 固定 `$sp-tight`（6，不隨 AX3 放大——間距節奏本來就不隨字級變化，見 tokens.md ④）。外層膠囊 361×64（預設，不變）；AX3 因選中膠囊需要內容高度 48+2×6=60，但 64−2×6=52 不夠，改 361×80（僅高度變，寬度 361 對 AX3 仍綽綽有餘：cell 寬 85.8 遠大於 60pt 選中膠囊）。
+- **y 位移**：Tab-root 板既有公式「y＝板高−98」（見下「時間軸建立入口」條，對應 34pt 底部安全邊界＋64pt 膠囊高）在 AX3 板改為「y＝板高−114」（34＋80），保持與裝置底緣固定 34pt 邊界不變，不是把膠囊往下擠壓縮邊界。
+- **iPad 不適用**：iPad 用 NavigationSplitView（PLAN.md），全文件掃描確認沒有任何板在 iPad 寬度使用本元件，維持現狀即可，不需要造一個 iPad 版本；若未來出現這種用法，屬於「該畫面不該用 Tab Bar」的問題，不是本元件要改尺寸。
+- Pencil 實作細節（AX3 override 對照表、逐 instance id、8 個尺寸字面值清單）見 `design/littlesprout.pen` Handoff Notes `LuHbv`（LS-120 段）。
+
 ## 章節斷點 44 與畫面高度
 
 - 每畫面必須出現一次 `$sp-section` 44（真 gap 或 padding 皆可）；實建 18/25，**碼輸入家族 7 張具名豁免**（06／06b／06c／06d＋03 家族 3 張），Tokens 板 `JkWvW` 與 Handoff `t4ZGwX` 兩處措辭一致。
