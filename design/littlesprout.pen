@@ -48364,9 +48364,9 @@
               "id": "ofQi3",
               "name": "Indicator 1",
               "fill": "$surface",
-              "cornerRadius": "$radius-full",
+              "cornerRadius": "$radius-md",
               "stroke": "$control-line",
-              "strokeWidth": 1,
+              "strokeWidth": 1.5,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -48418,7 +48418,7 @@
               "id": "tex0O",
               "name": "Indicator 2",
               "fill": "$surface-2",
-              "cornerRadius": "$radius-full",
+              "cornerRadius": "$radius-md",
               "stroke": "$surface-2",
               "strokeWidth": 1,
               "effect": {
@@ -48467,7 +48467,7 @@
               "id": "ASYTp",
               "name": "Indicator 3",
               "fill": "$surface-2",
-              "cornerRadius": "$radius-full",
+              "cornerRadius": "$radius-md",
               "stroke": "$surface-2",
               "strokeWidth": 1,
               "effect": {
@@ -48516,7 +48516,7 @@
               "id": "emlAT",
               "name": "Indicator 4",
               "fill": "$surface-2",
-              "cornerRadius": "$radius-full",
+              "cornerRadius": "$radius-md",
               "stroke": "$surface-2",
               "strokeWidth": 1,
               "effect": {
@@ -49311,7 +49311,7 @@
           "id": "G5vY5",
           "layoutPosition": "absolute",
           "x": 313,
-          "y": 1090,
+          "y": 1086,
           "name": "FAB",
           "width": 56,
           "height": 56,
@@ -53241,7 +53241,7 @@
       "name": "LS-21 / 11 時間軸 (iPhone)",
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 896,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -53507,13 +53507,6 @@
                           }
                         },
                         {
-                          "type": "frame",
-                          "id": "O6iGH",
-                          "name": "Tab Bar Clearance Spacer",
-                          "width": "fill_container",
-                          "height": 290
-                        },
-                        {
                           "id": "WitwS",
                           "type": "ref",
                           "ref": "qtCd7",
@@ -53644,6 +53637,13 @@
                       "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "eKsj5",
+                  "name": "Bottom Inset 98",
+                  "width": "fill_container",
+                  "height": 98
                 }
               ]
             }
@@ -53676,7 +53676,7 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 754
+          "y": 798
         }
       ]
     },
@@ -54230,7 +54230,7 @@
       "name": "LS-21 / 11c 時間軸 · 下拉更新中",
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 876,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -54528,13 +54528,6 @@
                           "width": "fill_container"
                         },
                         {
-                          "type": "frame",
-                          "id": "f97ly",
-                          "name": "Tab Bar Clearance Spacer",
-                          "width": "fill_container",
-                          "height": 205
-                        },
-                        {
                           "id": "y6JCGh",
                           "type": "ref",
                           "ref": "qtCd7",
@@ -54653,6 +54646,13 @@
                       "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "EsABB",
+                  "name": "Bottom Inset 98",
+                  "width": "fill_container",
+                  "height": 98
                 }
               ]
             }
@@ -54685,7 +54685,7 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 754
+          "y": 778
         }
       ]
     },
@@ -54700,7 +54700,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 888,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -54973,13 +54973,6 @@
                 },
                 {
                   "type": "frame",
-                  "id": "z0znPv",
-                  "name": "Tab Bar Clearance Spacer",
-                  "width": "fill_container",
-                  "height": 95
-                },
-                {
-                  "type": "frame",
                   "id": "I1QFH",
                   "name": "Day Group 2",
                   "width": "fill_container",
@@ -55081,6 +55074,13 @@
                       "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "i2yOV",
+                  "name": "Bottom Inset 98",
+                  "width": "fill_container",
+                  "height": 98
                 }
               ]
             }
@@ -55113,7 +55113,7 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 754
+          "y": 790
         }
       ]
     },
@@ -55741,7 +55741,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1500,
+      "height": 1600,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -55941,13 +55941,6 @@
                 },
                 {
                   "type": "frame",
-                  "id": "zeko3",
-                  "name": "Tab Bar Clearance Spacer",
-                  "width": "fill_container",
-                  "height": 88
-                },
-                {
-                  "type": "frame",
                   "id": "wOwLU",
                   "name": "Day Group 2",
                   "width": "fill_container",
@@ -56067,6 +56060,13 @@
                       "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zjQtN",
+                  "name": "Bottom Inset 122",
+                  "width": "fill_container",
+                  "height": 122
                 }
               ]
             }
@@ -56099,7 +56099,7 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 1378,
+          "y": 1478,
           "width": 361,
           "height": 88,
           "descendants": {
@@ -66008,7 +66008,7 @@
       "name": "Stress / 11 時間軸 · 單一寶貝 filter",
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 888,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -66239,13 +66239,6 @@
                 },
                 {
                   "type": "frame",
-                  "id": "hqWsh",
-                  "name": "Tab Bar Clearance Spacer",
-                  "width": "fill_container",
-                  "height": 95
-                },
-                {
-                  "type": "frame",
                   "id": "S3daS",
                   "name": "Day Group 2",
                   "width": "fill_container",
@@ -66347,6 +66340,13 @@
                       "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "iYip9",
+                  "name": "Bottom Inset 98",
+                  "width": "fill_container",
+                  "height": 98
                 }
               ]
             }
@@ -66379,7 +66379,7 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 754
+          "y": 790
         }
       ]
     },
@@ -69147,7 +69147,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "**實作契約**（寫給 ios-dev）：Tab-root 畫面的捲動容器底部 `safeAreaInset(edge:.bottom)`／`contentInset.bottom` ＝ `34 ＋ 膠囊高`——預設 `34+64=98`，AX3 `34+88=122`（R1 誤用舊 AX3 高度 80 算出的 114 已作廢）。**.pen 靜態稿的對應處理**：稿面是單一 852/1500/1272pt 高的固定 viewport 快照（無真滾動），不能靠 Body padding-bottom 模擬 inset（實測 Body 是 fill_container 但 Feed 子節點會自然溢出 Body 自身的框、只受外層 board 的 `clip:true` 裁切，padding-bottom 對已溢出的子節點無效——R2 過程中的一次失敗嘗試，已改正）。改為在會被膠囊蓋住的內容前面插入一個具名 `Tab Bar Clearance Spacer`（height＝精算值，逐板量測後端到端驗證 0 重疊，非套用同一個數字）：yXSht 82→290（含後續發現 Photos Row 也被波及後的修正值）、a67Na 105→205、V4Ktak 95、lKoZG 88、A33la 95、HLXo3 38；qCMDY／VLg6j／V5bD0／PIwjk／Qxema 五板原生 0 重疊、未加 spacer。逐板數值差異來自各板 Feed 內容量與 Day Group 結構不同，是量測結果不是設計節奏值，不要當 token 沿用。",
+                  "content": "【R3 修正，取代 R2「端到端驗證 0 重疊」——那句是假斷言，已被 R2 review BL-4 用機械複驗否證】R2 的修法（spacer 插在 feed index 1）是回歸：把 spacer 放在兩則內容之間製造一個洞，且把 Card Diary 1／Day Group 2／Load More 推出板外被 clip 吃掉，6 板洞從 +217.6pt 到 −34.8pt（HLXo3 仍重疊）不等。R3 判準改寫為可機械複驗的一條：**板內任何 type=text／icon 的葉節點，其絕對 Y 範圍與 Tab Bar 矩形的 Y 範圍零交集**（entirely above 或 entirely past，不是「0 個像素重疊」這種模糊講法）。R3 修法＝**延伸板高**（不是插 spacer）：這 6 板的宣告高（852／1500）長期不等於「內容高＋Tab Bar 淨空」，違反 motifs.md 既有規則「畫面宣告高＝內容高」；既然板高本來就該由內容反推，重新量測後把板高調整到內容實際需要的高度，Tab Bar 的既有公式（y＝板高−34−膠囊高）完全不用改，套用後自然清空——這是修一個既有規則被違反的地方，不是發明新機制。逐板結果與精確違反量見下一段「LS-120 R3 · BL-4 逐板結果」。原本 6 個 `Tab Bar Clearance Spacer` 節點已刪除；取代方案是在 6 個 Feed 的**最後一個子節點**新增 `Bottom Inset 98`／`Bottom Inset 122`（高度＝實作契約值本身，不是量測值），供 ios-dev 對照 `safeAreaInset` 契約，純文件用途、不影響版面（已在可視範圍之外）。Home Indicator Area／Body 皆為 flex 自動跟隨新板高，未手動調整。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -69219,7 +69219,151 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "R1 review MN-4：`LS-47 / 10` 的 `cmp/Child Filter`（`ebuFg` 軌／`k1JgL` 選中片）用同一組 `$surface-2`／`$surface` 弱對比選中語彙（1.354／1.140:1，與 BL-1 修前的 Tab Bar 完全同構）。本票範圍是 `cmp/Tab Bar`，不擴大修 `Child Filter`——記入 LS-96 待辦池（來源：LS-120 review comment `6c2c9af9` MN-4），待後續 design chore 處理，處置方式建議比照本票 BL-1（加 `$control-line` 描邊）。",
+                  "content": "【R3 修正，取代 R2「記入 LS-96 待辦池」——R2 那句是空話，R2 review MJ-5 查證 LS-96 當時查無此紀錄】R3 已真的貼兩則 LS-96 comment：①`cmp/Child Filter` 同構弱對比（來源 R1 MN-4／R2 MJ-5），comment id `55468488-b900-4a47-b151-dbe01526bc43`；②`LS-47/09 寶貝管理` 標題與 Tab-root 契約不精確比對（來源 R1 MJ-3(a)／R2 MJ-6），comment id `c2dd0ed2-28e2-48b2-9312-c5eb82c7322c`。兩則皆 P3・size:XS，本票不修（範圍外），僅記錄。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TezWE",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "DGvMe",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R3 · BL-4 逐板結果",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "vQH6B",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "6 板延伸板高與違反量精確對照（violation＝R3 開工時、spacer 移除後、板高延伸前的原始違反量＝offending 葉節點 bottom − 原 tabTop；margin＝實際延伸量−violation）：yXSht 違反 41.4／延伸 44／margin 2.6；a67Na 違反 18.4／延伸 24／margin 5.6；V4Ktak 違反 31.4／延伸 36／margin 4.6；A33la 違反 31.4／延伸 36／margin 4.6；lKoZG 違反 95.8／延伸 100／margin 4.2；HLXo3 違反 145.8（Day Group 2 divider `kGF7O`，比 BL-3 指名的 Multi Caption `fZ3KF` 14.8 違反量更大，取兩者較大值延伸一次解決）／延伸 148／margin 2.2。R3 收工前對全部 6 板重跑「葉節點 × Tab Bar 矩形 Y 交集」掃描，overlapCount 全部 0（含 HLXo3 的 Multi Caption 與 Day Divider 2 兩個各自的違反來源）。方法：`Get(board, visitor, {resolveInstances:true})` 累加 `parentCtx` 鏈得絕對座標，過濾 `type==='text'||'icon'` 且 `h<200`（排除 `Multi Caption` 節點本身因既有 Pencil flexbox 警告導致的異常高度讀數，該節點是另一個已知的、與 Tab Bar 無關的既有缺陷，見下 MN 段）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "q673sp",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Hie9R",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R3 · MJ-6 Tab-root 標題對照表",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "BeHLC",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "四個 tab 的目的地畫面 display 標題現況（R3 稽核，寫入 `entry-conditions.md` ⑬ 為硬規則）：時間軸→`LS-21/11` 等既有畫面，標題「時間軸」✅；相簿→畫面尚未存在，未來畫面票需遵守；寶貝→`LS-47/09 寶貝管理`，標題「寶貝管理」❌ 不精確比對「寶貝」，記入 LS-96（comment `c2dd0ed2`）；設定→畫面尚未存在，未來畫面票需遵守。機械化 gate 候選（本票只寫規格，由 harness 票實作）：XCUITest 對每個 Tab-root 首屏斷言存在文字內容等於 tab 名稱的 heading（`app.staticTexts[tabName].firstMatch.exists`），比照既有 `tap-target-check.sh` 同型作法。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "U9SWwp",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "aOgSC",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R3 · MJ-7 深色四態對照",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "bfXl4",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`Lo8Ae`（預設＋AX3 兩排）補第三排失敗：巢狀 `theme:{mode:\"dark\"}`（設在 Lo8Ae 內部子 frame 上）在 `Get(resolveVariables:true)` 的資料層讀回正確深色 hex，但 `TakeScreenshot` 的渲染引擎不吃巢狀 theme（截圖仍是淺色），這是本輪新發現的 Pencil 限制（現有已知限制清單只記錄了 width/height/metadata/flipX，未涵蓋 nested theme scoping，記錄於此供後續票參考）。改法：深色排改成獨立頂層板 `cmp/Tab Bar · 四態對照 · 深色（LS-120 R3）`（節點 `cKFJq`，`theme:{mode:\"dark\"}` 設在板本身，比照既有深色板 `VLg6j` 等的慣例），四個 instance 各自選中一顆，程式化驗證 fill:$surface 的 Indicator 各自恰好 1 顆且對應正確 tab。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "EFS7M",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TMXNc",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R3 · MN-5~9 處置",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "aQjFa",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MN-5（FAB 淨空 4pt 手調）已修：`G5vY5` y 改公式導出＝膠囊頂(1150)−`$sp-label`(8)−FAB 高(56)＝1086，複驗淨空剛好 8.0＝`$sp-label`，不再手調。MN-6（圓形 indicator 對方形 glyph 對角淨空過緊）已修：4 顆 Indicator 的 `cornerRadius` 由 `$radius-full` 改 `$radius-md`（14）——圓角方形四向淨空一致（`$sp-tight` 6，44/60 邊長下無對角擠壓風險），且更貼近「一張紙」母題，順帶讓 `Lo8Ae`／`cKFJq` 全部繼承（未逐一 override，單點修好全部好）。MN-7（Notes 與稿互打：offset/blur 兩個 key 沒寫進稿）已修文字：改為如實描述「未選中 Indicator 的 shadow 不設 offset／blur，Pencil 對等於預設值（0）的屬性不序列化這兩個 key，效果與顯式 0 相同（同色壓同色看不出差異）」，不再宣稱「顯式寫入」。MN-8（選中片描邊加粗）已修：`strokeWidth` 1→1.5（`ofQi3`），零新 token、零額外配額，膠囊本體維持 1pt 不動。MN-9（缺最長內容×膠囊的整屏壓測板）**不修，理由**：R3 的 BL-4 修法（延伸板高）是內容無關的通用機制——量測「offending 葉節點 bottom − tabTop」再延伸板高清空，不假設任何特定內容形狀；`HLXo3` 已是全稿唯一同時具備「多寶貝最長 caption＋AX3＋Tab Bar」的板且已在 R3 驗證 0 交集（違反量 145.8，非最小值），足以證明修法在接近最壞情況下成立。新增一張「最長日期戳＋最長 caption」的獨立壓測板屬於日記詳情頁／日期章模組的內容壓測，與 Tab Bar 元件本身的驗收無直接關聯，超出本票 scope，不在本輪新增。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -87080,7 +87224,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1500,
+      "height": 1648,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -87296,13 +87440,6 @@
                 },
                 {
                   "type": "frame",
-                  "id": "wrapK",
-                  "name": "Tab Bar Clearance Spacer",
-                  "width": "fill_container",
-                  "height": 38
-                },
-                {
-                  "type": "frame",
                   "id": "R6oxZ",
                   "name": "Day Group 2",
                   "width": "fill_container",
@@ -87422,6 +87559,13 @@
                       "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "d4fqQA",
+                  "name": "Bottom Inset 122",
+                  "width": "fill_container",
+                  "height": 122
                 }
               ]
             }
@@ -87454,7 +87598,7 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 1378,
+          "y": 1526,
           "width": 361,
           "height": 88,
           "descendants": {
@@ -88309,6 +88453,421 @@
                       "fontWeight": "normal"
                     }
                   ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "cKFJq",
+      "x": 3025,
+      "y": 785,
+      "name": "cmp/Tab Bar · 四態對照 · 深色（LS-120 R3）",
+      "theme": {
+        "mode": "dark"
+      },
+      "fill": "$bg",
+      "cornerRadius": 16,
+      "layout": "vertical",
+      "gap": 8,
+      "padding": 24,
+      "children": [
+        {
+          "type": "text",
+          "id": "MIl6a",
+          "name": "Header",
+          "fill": "$text-primary",
+          "content": "四態對照 · 深色（LS-120 R3，MJ-7）",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "vX929",
+          "name": "深色 Cols",
+          "gap": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "y6Smj",
+              "name": "時間軸 選中（深色）",
+              "layout": "vertical",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "EgkF9",
+                  "type": "ref",
+                  "ref": "J2GxJV",
+                  "name": "Tab Bar",
+                  "width": 361,
+                  "height": 64,
+                  "descendants": {
+                    "ofQi3": {
+                      "fill": "$surface",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 1
+                        },
+                        "blur": 3
+                      }
+                    },
+                    "OTQOw": {
+                      "fill": "$text-primary",
+                      "width": 32,
+                      "height": 32
+                    },
+                    "tex0O": {
+                      "fill": "$surface-2",
+                      "stroke": "$surface-2",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow"
+                      }
+                    },
+                    "PcO8y": {
+                      "fill": "$text-secondary",
+                      "width": 26,
+                      "height": 26
+                    },
+                    "ASYTp": {
+                      "fill": "$surface-2",
+                      "stroke": "$surface-2",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow"
+                      }
+                    },
+                    "tld9r": {
+                      "fill": "$text-secondary",
+                      "width": 26,
+                      "height": 26
+                    },
+                    "emlAT": {
+                      "fill": "$surface-2",
+                      "stroke": "$surface-2",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow"
+                      }
+                    },
+                    "aOco6": {
+                      "fill": "$text-secondary",
+                      "width": 26,
+                      "height": 26
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "aw498",
+                  "name": "Caption",
+                  "fill": "$text-secondary",
+                  "content": "時間軸選中",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "BHaOh",
+              "name": "相簿 選中（深色）",
+              "layout": "vertical",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "G6ZyZR",
+                  "type": "ref",
+                  "ref": "J2GxJV",
+                  "name": "Tab Bar",
+                  "width": 361,
+                  "height": 64,
+                  "descendants": {
+                    "ofQi3": {
+                      "fill": "$surface-2",
+                      "stroke": "$surface-2",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow"
+                      }
+                    },
+                    "OTQOw": {
+                      "fill": "$text-secondary",
+                      "width": 26,
+                      "height": 26
+                    },
+                    "tex0O": {
+                      "fill": "$surface",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 1
+                        },
+                        "blur": 3
+                      }
+                    },
+                    "PcO8y": {
+                      "fill": "$text-primary",
+                      "width": 32,
+                      "height": 32
+                    },
+                    "ASYTp": {
+                      "fill": "$surface-2",
+                      "stroke": "$surface-2",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow"
+                      }
+                    },
+                    "tld9r": {
+                      "fill": "$text-secondary",
+                      "width": 26,
+                      "height": 26
+                    },
+                    "emlAT": {
+                      "fill": "$surface-2",
+                      "stroke": "$surface-2",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow"
+                      }
+                    },
+                    "aOco6": {
+                      "fill": "$text-secondary",
+                      "width": 26,
+                      "height": 26
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "srgSG",
+                  "name": "Caption",
+                  "fill": "$text-secondary",
+                  "content": "相簿選中",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "DPhQr",
+              "name": "寶貝 選中（深色）",
+              "layout": "vertical",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "bVyqb",
+                  "type": "ref",
+                  "ref": "J2GxJV",
+                  "name": "Tab Bar",
+                  "width": 361,
+                  "height": 64,
+                  "descendants": {
+                    "ofQi3": {
+                      "fill": "$surface-2",
+                      "stroke": "$surface-2",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow"
+                      }
+                    },
+                    "OTQOw": {
+                      "fill": "$text-secondary",
+                      "width": 26,
+                      "height": 26
+                    },
+                    "tex0O": {
+                      "fill": "$surface-2",
+                      "stroke": "$surface-2",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow"
+                      }
+                    },
+                    "PcO8y": {
+                      "fill": "$text-secondary",
+                      "width": 26,
+                      "height": 26
+                    },
+                    "ASYTp": {
+                      "fill": "$surface",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 1
+                        },
+                        "blur": 3
+                      }
+                    },
+                    "tld9r": {
+                      "fill": "$text-primary",
+                      "width": 32,
+                      "height": 32
+                    },
+                    "emlAT": {
+                      "fill": "$surface-2",
+                      "stroke": "$surface-2",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow"
+                      }
+                    },
+                    "aOco6": {
+                      "fill": "$text-secondary",
+                      "width": 26,
+                      "height": 26
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "w3prcR",
+                  "name": "Caption",
+                  "fill": "$text-secondary",
+                  "content": "寶貝選中",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "RVkEy",
+              "name": "設定 選中（深色）",
+              "layout": "vertical",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "Wv69D",
+                  "type": "ref",
+                  "ref": "J2GxJV",
+                  "name": "Tab Bar",
+                  "width": 361,
+                  "height": 64,
+                  "descendants": {
+                    "ofQi3": {
+                      "fill": "$surface-2",
+                      "stroke": "$surface-2",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow"
+                      }
+                    },
+                    "OTQOw": {
+                      "fill": "$text-secondary",
+                      "width": 26,
+                      "height": 26
+                    },
+                    "tex0O": {
+                      "fill": "$surface-2",
+                      "stroke": "$surface-2",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow"
+                      }
+                    },
+                    "PcO8y": {
+                      "fill": "$text-secondary",
+                      "width": 26,
+                      "height": 26
+                    },
+                    "ASYTp": {
+                      "fill": "$surface-2",
+                      "stroke": "$surface-2",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow"
+                      }
+                    },
+                    "tld9r": {
+                      "fill": "$text-secondary",
+                      "width": 26,
+                      "height": 26
+                    },
+                    "emlAT": {
+                      "fill": "$surface",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 1
+                        },
+                        "blur": 3
+                      }
+                    },
+                    "aOco6": {
+                      "fill": "$text-primary",
+                      "width": 32,
+                      "height": 32
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "MSn8Z",
+                  "name": "Caption",
+                  "fill": "$text-secondary",
+                  "content": "設定選中",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             }
