@@ -266,6 +266,16 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   自己要清掉，DB 不會幫你清。**縮圖產生失敗但原檔上傳成功時**：不阻斷整體上傳——
   `thumb_path`／`thumb_width`／`thumb_height` 三欄留空插入 `media` 列即可（過渡期
   退回原圖，語意與既有無縮圖的舊資料一致），不需要重試整個上傳。
+- **影片時長（`duration_seconds`，LS-134）**：nullable，`CHECK`（有值時必須 `> 0`，
+  `media_duration_seconds_positive`）。`type = 'photo'` 時應留 `NULL`；
+  `type = 'video'` 時由上傳端以 `AVAsset.load(.duration)` 量測寫入——**若影片經過
+  裁切，以裁切後的長度為準**，不是原始檔案的長度。整數秒，**向上取整**（不足 1 秒
+  的零頭進位，避免徽章顯示 `0:00`）。DB 只驗「有值時必須 `> 0`」，**不驗與 `type`
+  的相依關係**——既有 video 列在本欄位新增當下（LS-134 migration 套用時）皆為
+  `NULL`，加一條「video 必填」的 `CHECK` 會讓既有列直接違反約束，因此這條相依關係
+  是**上傳端契約義務**，不是機械可驗證的資料庫不變量；日後若要補這條約束，需要先
+  回填既有 video 列。**一旦隨 `INSERT` 寫入即不可再 `UPDATE`**（無欄位級 grant，同
+  `storage_path`／`thumb_path`）。
 - `byte_size` 是 `families.storage_used_bytes` 額度計算的唯一依據（`media` 表的
   statement-level trigger 依 `byte_size` 加總），**不是**看 Storage 物件實際大小。
   這代表：如果 client 上傳到 Storage 的檔案大小與 `media.byte_size` 填的值不一致，
@@ -1255,6 +1265,13 @@ PR #95 review F1）訂正：這裡原本誤寫成跟 `LS041`–`LS043` 一起歸
   簽名 URL**——不要因為沒有縮圖就整列不顯示。這是 client 實作責任，DB 只保證
   `thumb_path` 有值時的路徑格式與尺寸合法（LS-128 的 `CHECK`），不保證、也無法保證
   誰在什麼時候簽了哪一個路徑。
+- **影片時長徽章讀取策略（`duration_seconds`，LS-134）**：時間軸／相簿列表的影片卡
+  「影片 M:SS」徽章一律**直接讀 `media.duration_seconds` 查表值**，不對縮圖或原圖
+  做媒體解碼（縮圖是 JPEG 靜態圖，`AVURLAsset.load(.duration)` 對它本來就量不出時
+  長——這正是 LS-130 徽章退化成純文字「影片」的成因）。`duration_seconds` 為 `NULL`
+  時（既有 video 舊資料、上傳端量測失敗的過渡列）**退回純文字「影片」**（無時長字
+  樣），不要為了補這個徽章去簽全尺寸原圖做客戶端解碼——那正是本欄位存在的目的：
+  用一次 DB 查詢換掉一次全尺寸 egress。
 
 ---
 
