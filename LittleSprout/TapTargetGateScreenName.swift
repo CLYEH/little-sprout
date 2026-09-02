@@ -15,6 +15,12 @@
 enum TapTargetGateScreenName: String {
     case otpVerification = "OTPVerificationView"
     case settings = "SettingsView"
+    // merge-review R1 M5：`DiaryEditorView` 原本具名排除在 tap-target-exemptions.txt，理由
+    // 「多步驟表單流程」不成立——初始態不需要任何 seeding（`PreviewDiaryAPIClient`／
+    // `PreviewMediaUploadService` 已經是 `#Preview` 在用的假 client，`ChildrenStore.preview()`
+    // 同理），初始態本身就有 5 顆可點元件會被量到（取消鈕／新增照片 cell／日期欄位／歸屬欄位／
+    // 發佈鈕）——改註冊進 harness，讓這個畫面之後的回歸能被機械 gate 抓到。
+    case diaryEditor = "DiaryEditorView"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -33,6 +39,7 @@ enum TapTargetGateScreenName: String {
         switch self {
         case .otpVerification: return .staticText("輸入驗證碼")
         case .settings: return .button("登出")
+        case .diaryEditor: return .staticText("寫日記")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

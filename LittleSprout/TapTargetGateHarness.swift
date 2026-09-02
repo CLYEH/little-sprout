@@ -44,6 +44,17 @@ enum TapTargetGateHarness {
                     childrenStore: .preview()
                 )
             }
+        case .diaryEditor:
+            // merge-review R1 M5：初始態不需要任何 seeding——`PreviewDiaryAPIClient`／
+            // `PreviewMediaUploadService`（`Support/PreviewDiaryAPIClient.swift`，同樣是
+            // `#Preview` 在用的假 client）＋既有 `ChildrenStore.preview()`，跟 `DiaryEditorView`
+            // 自己的 `#Preview("空白")` 是同一組建構。
+            NavigationStack {
+                DiaryEditorView(
+                    familyID: UUID(), diaryAPIClient: PreviewDiaryAPIClient(),
+                    mediaUploadService: PreviewMediaUploadService(), childrenStore: .preview()
+                )
+            }
         case .selfTestTooSmall:
             // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
             // accessibility／hit-test frame 實測仍貼著文字本身的天然大小，不會被外層 `.frame`
