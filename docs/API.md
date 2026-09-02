@@ -64,7 +64,7 @@
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子；**不分角色、不分軟刪與否**——owner／member／viewer 都讀得到全部列，含已軟刪的（`deleted_at`／`deleted_by` 對所有人都是可見的唯讀旗標，R1 I3/I4） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | 🔒 **無 DELETE 路徑**（R1 I5：直接硬刪會繞過 30 天保護，policy 與 grant 兩層都關，連 owner 也沒有） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原（重複軟刪 no-op，不刷新時鐘，見 §4），超過拿 `LS043`；已軟刪的孩子不能再被指定為新內容的標記（`LS044`，LS-121 起守門搬到 `diary_children`／`album_children` 連結表的 `BEFORE INSERT` trigger）；既有標記不隨軟刪連動，見 §8 |
-| `media` | 我所屬家庭的檔案中繼資料 | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | 硬刪僅 owner（一般刪除走 `deleted_at`） | `byte_size`／`storage_path`／`family_id`／`uploaded_by` 一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3 |
+| `media` | 我所屬家庭的檔案中繼資料 | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | 硬刪僅 owner（一般刪除走 `deleted_at`） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3 |
 | `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己） | 🔀 **混合模式（LS-52；LS-57 R2 起範圍限縮；LS-121 起 `child_id` 移出本表）**：內容（title／cover_media_id）僅建立者本人直接 `.update()`；`deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起對 `authenticated` 已無 UPDATE 欄位級 grant，唯一路徑是 `set_album_deleted` RPC；寶貝標記唯一路徑是 `set_album_children` RPC（見 §4） | owner-only | Viewer 不可建立相簿；owner 對別人相簿的內容**沒有**直接 `.update()` 路徑——見 §3「為什麼 albums／comments／diaries 曾經、現在用了不同的寫入模型」；`album_children`（見下）任何一列的 `child_id` 指向一個已軟刪的孩子時 INSERT 皆拿 `LS044`，見 §8 |
 | `album_media` | 同上 | owner／member | owner／member | owner／member | 連結表自帶 `family_id`，policy 不必 join 回 `albums` |
 | `album_children`（LS-121） | 我所屬家庭，任一角色（含 viewer） | 🔒 **RPC-only**（`set_album_children`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 語意**——覆蓋是同一交易內先刪後插，不是對既有列 UPDATE | 🔒 **RPC-only**（`set_album_children`，直接 DELETE 已被 revoke） | 相簿 ↔ 孩子多對多標記，取代舊版 `albums.child_id` 單一欄位；見 §8 |
@@ -240,11 +240,25 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
 ### `media`
 - `storage_path` 必須符合 `{family_id}/{yyyy}/{mm}/{media_id}.{ext}`（見 §6），且有
   `CHECK` 強制前綴＝`family_id`。
+- **縮圖三欄（`thumb_path`／`thumb_width`／`thumb_height`，LS-128）**：皆 nullable，
+  三欄同為 `NULL` 或同為非 `NULL`（`media_thumb_dimensions_consistency` `CHECK`）——
+  沒有縮圖的過渡期列（既有資料、縮圖產生失敗）三欄留空即可，讀取端退回原圖
+  `storage_path`（見 §6「簽名 URL 與 egress 防線」）。`thumb_path` 有值時同樣受
+  `CHECK` 強制前綴＝`family_id`，且 `UNIQUE`（`media_thumb_path_key`）；
+  `thumb_width`／`thumb_height` 有值時必須 `> 0`。**三欄一旦隨 `INSERT` 寫入即不可
+  再 `UPDATE`**（無欄位級 grant，同 `storage_path`／`byte_size`）——不存在「先建
+  `media` 列、之後才補上縮圖」的合法路徑，見下一點的上傳流程順序。
 - **上傳流程順序很重要**：Storage 物件與 `media` 列是兩份獨立資料，DB 不會替你保證兩者
-  一致。正確順序：① 先把檔案 PUT 進 Storage（`storage.objects`，見 §6）② 成功後才
-  `insert` 對應的 `media` 列。若第②步因 `LS002`（額度爆了）或其他原因失敗，**已經上傳
-  的 Storage 物件會變成孤兒**——上傳者對自己剛上傳的物件有 Storage `DELETE` 權限
-  （見 §6），失敗時 client 自己要清掉，DB 不會幫你清。
+  一致。正確順序：① 先把原始檔案 PUT 進 Storage（`storage.objects`，見 §6）
+  ② **同步產生縮圖並 PUT 進 Storage**（長邊 ≤ 512px、JPEG 品質 0.8；影片取首幀轉成同
+  規格 JPEG；路徑 `{family_id}/{yyyy}/{mm}/{media_id}_thumb.jpg`，見 §6）③ 兩者皆成功
+  後才 `insert` 對應的 `media` 列（`storage_path`／`thumb_path`／`thumb_width`／
+  `thumb_height` 一次寫入，不分兩次）。若①②任一步失敗就不要 `insert`；若第③步因
+  `LS002`（額度爆了）或其他原因失敗，**已經上傳的 Storage 物件（原檔與縮圖）都會變成
+  孤兒**——上傳者對自己剛上傳的物件有 Storage `DELETE` 權限（見 §6），失敗時 client
+  自己要清掉，DB 不會幫你清。**縮圖產生失敗但原檔上傳成功時**：不阻斷整體上傳——
+  `thumb_path`／`thumb_width`／`thumb_height` 三欄留空插入 `media` 列即可（過渡期
+  退回原圖，語意與既有無縮圖的舊資料一致），不需要重試整個上傳。
 - `byte_size` 是 `families.storage_used_bytes` 額度計算的唯一依據（`media` 表的
   statement-level trigger 依 `byte_size` 加總），**不是**看 Storage 物件實際大小。
   這代表：如果 client 上傳到 Storage 的檔案大小與 `media.byte_size` 填的值不一致，
@@ -1206,6 +1220,12 @@ PR #95 review F1）訂正：這裡原本誤寫成跟 `LS041`–`LS043` 一起歸
   硬性要求。
 - 副檔名只接受：`jpg`／`jpeg`／`png`／`heic`／`heif`／`mp4`／`mov`，或縮圖固定
   `_thumb.jpg`。
+- **縮圖產生規格（LS-128，客戶端契約，DB 不驗內容只驗路徑與尺寸為正）**：長邊
+  ≤ 512px、JPEG 品質 0.8；來源是影片（`type = 'video'`）時取**首幀**、依同規格轉成
+  JPEG（縮圖副檔名恆為 `.jpg`，不隨原始檔案型別變化）。縮圖與原始檔案同步產生、
+  同步 PUT 進 Storage，寫入路徑對應 `public.media.thumb_path`（見上方 `media` 表，
+  §3）；`thumb_width`／`thumb_height` 填縮圖實際輸出的像素寬高，不是原圖的等比縮放
+  理論值。
 
 ### storage.objects 的 RLS（四條 policy，皆 `to authenticated`）
 
@@ -1221,8 +1241,13 @@ PR #95 review F1）訂正：這裡原本誤寫成跟 `LS041`–`LS043` 一起歸
   一邊，代價是「被撤權成員留下的孤兒物件改由家庭 owner 清理」，寫進這裡供 UI 文案
   參考（例如撤銷上傳權的確認對話框可以提一句）。
 - **簽名 URL 與 egress 防線**（PLAN §7／§8：長輩會反覆滑同一批照片，這項比想像中容易
-  吃流量）：列表畫面只載縮圖（`_thumb.jpg`）簽名 URL，點開大圖才拿原檔簽名 URL——
-  這是 client 實作責任，不是 DB 能強制的事，這裡只記策略。
+  吃流量）：時間軸列表（`get_family_timeline` 消費者依 §4 分組批次查 `media` 那一支）、
+  日記詳情的照片牆、相簿列表一律用 `media.thumb_path`（有值時）簽名 URL；全尺寸原檔
+  （`media.storage_path`）**只在放大檢視／影片播放時**才簽。**`thumb_path` 為 `NULL`
+  時**（既有資料、縮圖產生失敗的過渡列，見上方 `media` 表）**退回 `storage_path`
+  簽名 URL**——不要因為沒有縮圖就整列不顯示。這是 client 實作責任，DB 只保證
+  `thumb_path` 有值時的路徑格式與尺寸合法（LS-128 的 `CHECK`），不保證、也無法保證
+  誰在什麼時候簽了哪一個路徑。
 
 ---
 
