@@ -28,20 +28,30 @@ protocol MediaUploadService: Sendable {
 
 final class SupabaseMediaUploadService: MediaUploadService {
     private let client: SupabaseClient
+    /// merge-review R1 m1：原檔與縮圖路徑必須共用同一個時間點，見 `uploadPhoto`／`uploadVideo`
+    /// 「一次上傳只讀一次 `now()`」的呼叫方式；預設 `Date.init`，測試可注入固定／可控 clock
+    /// 釘住「兩條路徑真的共用同一次讀值」（`SupabaseMediaUploadServiceThumbnailTests`）。
+    private let now: @Sendable () -> Date
     private static let bucketID = "media"
     /// 縮圖規格（`docs/API.md` §6）：長邊 ≤512px、JPEG 品質 0.8。
     private static let thumbnailMaxPixelSize: CGFloat = 512
     private static let thumbnailJPEGQuality: CGFloat = 0.8
     private static let thumbnailContentType = "image/jpeg"
 
-    init(client: SupabaseClient) {
+    init(client: SupabaseClient, now: @escaping @Sendable () -> Date = Date.init) {
         self.client = client
+        self.now = now
     }
 
     func uploadPhoto(familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
         let mediaID = UUID()
-        let path = Self.storagePath(familyID: familyID, mediaID: mediaID, fileExtension: fileExtension)
-        let pendingThumb = Self.makePhotoPendingThumbnail(from: data, familyID: familyID, mediaID: mediaID)
+        // merge-review R1 m1：只讀一次 `now()`，原檔與縮圖路徑共用同一個時間點——見下方
+        // `storagePath`／`makePhotoPendingThumbnail` 呼叫都吃這個值，不各自重新讀「現在」。
+        let uploadTime = now()
+        let path = Self.storagePath(familyID: familyID, mediaID: mediaID, fileExtension: fileExtension, now: uploadTime)
+        let pendingThumb = Self.makePhotoPendingThumbnail(
+            from: data, familyID: familyID, mediaID: mediaID, now: uploadTime
+        )
         do {
             try await uploadOriginalAndThumb(pendingThumb: pendingThumb) { [client] in
                 try await client.storage.from(Self.bucketID).upload(
@@ -76,7 +86,9 @@ final class SupabaseMediaUploadService: MediaUploadService {
 
     func uploadVideo(familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
         let mediaID = UUID()
-        let path = Self.storagePath(familyID: familyID, mediaID: mediaID, fileExtension: fileExtension)
+        // merge-review R1 m1：同 uploadPhoto，只讀一次 `now()`，原檔與縮圖路徑共用同一個時間點。
+        let uploadTime = now()
+        let path = Self.storagePath(familyID: familyID, mediaID: mediaID, fileExtension: fileExtension, now: uploadTime)
         // merge-review R1 m8：讀不到檔案大小時直接 throw，不要靜默寫 0——`byte_size` 是
         // `families.storage_used_bytes` trigger 的加總來源，寫 0 等於這支影片不佔額度
         // （`init_schema.sql` 對這欄的可信度有明文要求，見協定檔對照）。
@@ -86,7 +98,9 @@ final class SupabaseMediaUploadService: MediaUploadService {
         } catch {
             throw AppError.map(error)
         }
-        let pendingThumb = Self.makeVideoPendingThumbnail(fileURL: fileURL, familyID: familyID, mediaID: mediaID)
+        let pendingThumb = Self.makeVideoPendingThumbnail(
+            fileURL: fileURL, familyID: familyID, mediaID: mediaID, now: uploadTime
+        )
         do {
             try await uploadOriginalAndThumb(pendingThumb: pendingThumb) { [client] in
                 try await client.storage.from(Self.bucketID).upload(
@@ -119,14 +133,14 @@ final class SupabaseMediaUploadService: MediaUploadService {
     // MARK: - 原檔＋縮圖並行 PUT
 
     /// 原檔＋縮圖並行 PUT（`docs/API.md` §3「①②互不相依，可以並行 PUT」）。用 `TaskGroup`
-    /// 而不是 `async let`（同 `TimelineContentAssembler.fetchContentMaps` 的既有慣例，見該檔
-    /// 文件註解）：`async let` bind 的兩個 child task 只在**函式 scope 結束**時才會被隱式
-    /// cancel/await，若其中一個先 throw，另一個仍可能還在飛行中——這時候呼叫端已經進了
-    /// `catch` 準備清理，會有「清理當下該物件其實還沒真的建立（或還沒真的失敗）」的競態。
-    /// `TaskGroup` 的 `for try await` 保證兩個 child task 都真正跑完（不論成功、失敗、或被
-    /// cancel 後跑完）才會把第一個錯誤丟出，`catch` 區塊執行時兩邊的網路呼叫都已經確定
-    /// 結束，`cleanupOrphans` 才不會撲空或漏清。沒有縮圖（`pendingThumb == nil`，生成失敗的
-    /// 過渡情形）時只有原檔一個 child task，等同單一 PUT。
+    /// 而不是 `async let`——**merge-review R1 i2**：這不是正確性差異。`async let` 的兩個
+    /// child task 一樣在**函式 scope 結束**時被隱式 cancel／await，而這裡的 do/catch 在
+    /// 呼叫端（`uploadPhoto`／`uploadVideo`），這支函式的 scope 早就結束了，兩種寫法在這個
+    /// 形狀下都不會有「`catch` 執行時另一個 child task 還在飛行中」的競態。選 `TaskGroup`
+    /// 純粹是因為 child task 數量可變（有沒有縮圖）時寫法更自然，且與
+    /// `TimelineContentAssembler.fetchContentMaps` 的既有慣例一致（見該檔文件註解）。沒有
+    /// 縮圖（`pendingThumb == nil`，生成失敗的過渡情形）時只有原檔一個 child task，等同單一
+    /// PUT。
     private func uploadOriginalAndThumb(
         pendingThumb: PendingThumbnail?, putOriginal: @escaping @Sendable () async throws -> Void
     ) async throws {
@@ -169,25 +183,31 @@ final class SupabaseMediaUploadService: MediaUploadService {
 
     /// `{family_id}/{yyyy}/{mm}/{media_id}`（`docs/API.md` §6）：`yyyy/mm` 取**上傳時間**
     /// （UTC，避免裝置時區造成月份邊界判斷不一致）；`family_id`／`media_id` 一律小寫正規形
-    /// UUID——`UUID().uuidString` 預設大寫，這裡強制 `.lowercased()`。原檔與縮圖共用同一組
-    /// `yyyy/mm`／`media_id`，只有尾綴不同（`storagePath` 接 `.{ext}`，`thumbStoragePath`
-    /// 接 `_thumb.jpg`），抽出共用前綴避免兩處分別各自算一次日期。
-    private static func objectPathPrefix(familyID: UUID, mediaID: UUID) -> String {
+    /// UUID——`UUID().uuidString` 預設大寫，這裡強制 `.lowercased()`。
+    ///
+    /// **merge-review R1 m1**：`now` 由呼叫端傳入、這支函式本身不讀「現在」——`storagePath`／
+    /// `thumbStoragePath` 各自呼叫一次 `objectPathPrefix`，若各自預設讀一次 `Date()`，剛好跨
+    /// UTC 月界時原檔與縮圖會落在不同 `yyyy/mm`（先前版本的錯誤所在：程式碼共用了函式本身，
+    /// 但沒有共用「日期讀取」，註解卻宣稱後者也成立）。真正的共用點在
+    /// `uploadPhoto`／`uploadVideo`：兩處只呼叫一次 `now()`、把同一個 `Date` 往下傳給
+    /// `storagePath` 與 `makePhotoPendingThumbnail`/`makeVideoPendingThumbnail`（→
+    /// `thumbStoragePath`），這裡才是「原檔與縮圖共用同一組 `yyyy/mm`」保證成立的地方。
+    private static func objectPathPrefix(familyID: UUID, mediaID: UUID, now: Date) -> String {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
-        let components = calendar.dateComponents([.year, .month], from: Date())
+        let components = calendar.dateComponents([.year, .month], from: now)
         let year = String(format: "%04d", components.year ?? 1970)
         let month = String(format: "%02d", components.month ?? 1)
         return "\(familyID.uuidString.lowercased())/\(year)/\(month)/\(mediaID.uuidString.lowercased())"
     }
 
-    static func storagePath(familyID: UUID, mediaID: UUID, fileExtension: String) -> String {
-        "\(objectPathPrefix(familyID: familyID, mediaID: mediaID)).\(fileExtension.lowercased())"
+    static func storagePath(familyID: UUID, mediaID: UUID, fileExtension: String, now: Date = Date()) -> String {
+        "\(objectPathPrefix(familyID: familyID, mediaID: mediaID, now: now)).\(fileExtension.lowercased())"
     }
 
     /// 縮圖物件路徑（`docs/API.md` §6：`{family_id}/{yyyy}/{mm}/{media_id}_thumb.jpg`）。
-    static func thumbStoragePath(familyID: UUID, mediaID: UUID) -> String {
-        "\(objectPathPrefix(familyID: familyID, mediaID: mediaID))_thumb.jpg"
+    static func thumbStoragePath(familyID: UUID, mediaID: UUID, now: Date = Date()) -> String {
+        "\(objectPathPrefix(familyID: familyID, mediaID: mediaID, now: now))_thumb.jpg"
     }
 
     private static func contentType(forExtension ext: String) -> String {
@@ -233,7 +253,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
     /// 理由，只是這裡操作對象是上傳前的 `Data`，不是已經解碼好的 `UIImage`）。生成失敗（來源
     /// 資料看不懂）回傳 `nil`——呼叫端把它當「這次沒有縮圖」處理，不阻斷原檔上傳。
     private static func makePhotoPendingThumbnail(
-        from data: Data, familyID: UUID, mediaID: UUID
+        from data: Data, familyID: UUID, mediaID: UUID, now: Date
     ) -> PendingThumbnail? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         let options: [CFString: Any] = [
@@ -246,7 +266,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
             return nil
         }
         return PendingThumbnail(
-            path: thumbStoragePath(familyID: familyID, mediaID: mediaID),
+            path: thumbStoragePath(familyID: familyID, mediaID: mediaID, now: now),
             data: jpegData, pixelSize: PixelSize(width: cgImage.width, height: cgImage.height)
         )
     }
@@ -256,7 +276,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
     /// （呼叫端若先用 `VideoTrimmer` 裁切過，這裡收到的已經是裁切後的暫存檔——縮圖要反映
     /// 實際上傳的內容，不是使用者選片當下的原始檔）。生成失敗同上，回傳 `nil`。
     private static func makeVideoPendingThumbnail(
-        fileURL: URL, familyID: UUID, mediaID: UUID
+        fileURL: URL, familyID: UUID, mediaID: UUID, now: Date
     ) -> PendingThumbnail? {
         let asset = AVURLAsset(url: fileURL)
         let generator = AVAssetImageGenerator(asset: asset)
@@ -267,7 +287,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
             return nil
         }
         return PendingThumbnail(
-            path: thumbStoragePath(familyID: familyID, mediaID: mediaID),
+            path: thumbStoragePath(familyID: familyID, mediaID: mediaID, now: now),
             data: jpegData, pixelSize: PixelSize(width: cgImage.width, height: cgImage.height)
         )
     }
