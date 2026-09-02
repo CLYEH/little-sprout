@@ -178,14 +178,20 @@ struct TimelineView: View {
                         .foregroundStyle(Color.lsTextSecondary)
                     // merge-review R2-M2：純文字 Button 沒有 padding／contentShape 時命中區
                     // 只有文字外框（repo 內同構造 `OTPVerificationView` 重寄鈕實測過
-                    // 163.0×22.0pt，遠低於 44pt），改用 label closure 加垂直 padding 撐大
-                    // 點擊區（同 `80af9e2` 既有慣例）。
+                    // 163.0×22.0pt，遠低於 44pt），改用 label closure 加 padding 撐大點擊區
+                    // （同 `80af9e2` 既有慣例）。merge-review R3 r3-m1：原本只用
+                    // `AppSpacing.group`（12pt）垂直 padding，換算命中區 ≈44.3pt，離 44pt
+                    // 下限只有 0.3pt 餘裕、又剛好在 tap-target gate 豁免路徑（見下方
+                    // 「未完成」欄）沒有自動化覆蓋兜底——改用 `SettingsView` 登出鈕同一個
+                    // token（`AppSpacing.item`，16pt，垂直＋水平都套），命中區拉高到
+                    // ≈52.3pt，留足夠餘裕。
                     Button {
                         Task { await timelineStore.loadMore() }
                     } label: {
                         Text("重新載入")
                             .appFont(.body, weight: .semibold)
-                            .padding(.vertical, AppSpacing.group)
+                            .padding(.vertical, AppSpacing.item)
+                            .padding(.horizontal, AppSpacing.item)
                             .contentShape(Rectangle())
                     }
                 }
@@ -220,7 +226,9 @@ struct TimelineView: View {
                 }
                 .foregroundStyle(Color.lsTextPrimary)
                 // merge-review R2-M2：同 `loadMoreTrigger` 的「重新載入」——label closure
-                // 加垂直 padding＋`contentShape`，不是裸 `Button(_:action:)`。
+                // 加 padding＋`contentShape`，不是裸 `Button(_:action:)`。merge-review R3
+                // r3-m1：padding token 同上方 `loadMoreTrigger` 的理由，改用
+                // `AppSpacing.item`（同 `SettingsView` 登出鈕），命中區 ≈52.3pt。
                 Button {
                     Task {
                         guard let familyID = familyStore.myFamily?.id else { return }
@@ -229,7 +237,8 @@ struct TimelineView: View {
                 } label: {
                     Text("重新載入")
                         .appFont(.body, weight: .semibold)
-                        .padding(.vertical, AppSpacing.group)
+                        .padding(.vertical, AppSpacing.item)
+                        .padding(.horizontal, AppSpacing.item)
                         .contentShape(Rectangle())
                 }
             }
