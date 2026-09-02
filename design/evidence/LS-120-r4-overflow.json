@@ -1,0 +1,268 @@
+{
+  "ticket": "LS-120",
+  "round": 4,
+  "head_sha": "03d35277fee46cd6c4d3b53e995898f7b65a4ce1",
+  "total_nodes": 5660,
+  "scan_scope": "boards",
+  "scan_note": "corner_anchor.document_containers/document_points/document_mismatch 是 boards 範圍內的重複值，不是全文件真值——scripts/design/overflow-scan.js 全文件 resolveInstances 掃描在 ~5654 節點規模穩定觸發 Pencil execute InternalError: interrupted（R3/R4 均實測，包括 4 次重試均在不同位置中斷，符合逾時特徵、非邏輯錯誤），改用逐板呼叫 Get(boardId, visitor, {resolveInstances:true}) 累加合併繞過（scanned_nodes 因此是 1614，非全文件展開後的 8xxx 級數字）。design-evidence-check.sh 只驗 corner_anchor 在 boards 範圍內的 mismatch，不受影響，但 document_* 三個整數欄位不能直接當成全文件結論讀。技術限制已記入 LS-96 comment 32754383（效能）與 83392d32（收據 schema 半邊）。",
+  "scans": {
+    "sibling_intersection": {
+      "flagged": [
+        {
+          "node_a": "a7XZXt/sD5Ma",
+          "node_b": "a7XZXt/DhOiK",
+          "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷；本輪 LS-120 未觸碰此元件（同類 16 例）"
+        },
+        {
+          "node_a": "ktcMa/sD5Ma",
+          "node_b": "ktcMa/DhOiK",
+          "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷；本輪 LS-120 未觸碰此元件（同類 16 例）"
+        },
+        {
+          "node_a": "VjYrh/sD5Ma",
+          "node_b": "VjYrh/DhOiK",
+          "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷；本輪 LS-120 未觸碰此元件（同類 16 例）"
+        },
+        {
+          "node_a": "MarqY/sD5Ma",
+          "node_b": "MarqY/DhOiK",
+          "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷；本輪 LS-120 未觸碰此元件（同類 16 例）"
+        },
+        {
+          "node_a": "tRNca",
+          "node_b": "a7XZXt",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 15 例）"
+        },
+        {
+          "node_a": "tRNca",
+          "node_b": "ktcMa",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 15 例）"
+        },
+        {
+          "node_a": "IiEo9",
+          "node_b": "VjYrh",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 15 例）"
+        },
+        {
+          "node_a": "IiEo9",
+          "node_b": "MarqY",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 15 例）"
+        },
+        {
+          "node_a": "Z4TsQ/tBi8u",
+          "node_b": "Z4TsQ/xlLIo",
+          "classification": "既有日期章／墨水重影母題內部疊層（Stamp Wrap 的 Ghost 二次蓋章效果），設計意圖非缺陷，本輪未觸碰（同類 12 例）"
+        },
+        {
+          "node_a": "A14LnU",
+          "node_b": "dJM15",
+          "classification": "既有絕對定位浮動元件（FAB／Dropdown Menu）疊在 Body 內容區之上，overlay 設計的預期行為，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "A14LnU",
+          "node_b": "EoToI",
+          "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 只改了 cmp/Tab Bar 內部子節點（icon-only 化）與 3 個 AX3 instance 的 height/y（見 motifs.md AX3 段），未改變它作為浮動 overlay 疊在畫面內容之上這件事本身，此交集在本輪之前已存在（同類 1 例）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "xgx94",
+          "classification": "既有：Dropdown Menu 是絕對定位浮動選單，疊在 Body（角托出血區）之上同屬「浮動覆蓋層蓋住其下方普通內容」的既有結構，與 Tab Bar/FAB 同一類別，非本輪引入、非缺陷（同類 1 例）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "gFJ8N",
+          "classification": "既有絕對定位浮動元件（FAB／Dropdown Menu）疊在 Body 內容區之上，overlay 設計的預期行為，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "qx4xE",
+          "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 只改了 cmp/Tab Bar 內部子節點（icon-only 化）與 3 個 AX3 instance 的 height/y（見 motifs.md AX3 段），未改變它作為浮動 overlay 疊在畫面內容之上這件事本身，此交集在本輪之前已存在（同類 1 例）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "zGEet",
+          "classification": "既有：Dropdown Menu 是絕對定位浮動選單，疊在 Body（角托出血區）之上同屬「浮動覆蓋層蓋住其下方普通內容」的既有結構，與 Tab Bar/FAB 同一類別，非本輪引入、非缺陷（同類 1 例）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "G5vY5",
+          "classification": "既有絕對定位浮動元件（FAB／Dropdown Menu）疊在 Body 內容區之上，overlay 設計的預期行為，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "qCMDY",
+          "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 只改了 cmp/Tab Bar 內部子節點（icon-only 化）與 3 個 AX3 instance 的 height/y（見 motifs.md AX3 段），未改變它作為浮動 overlay 疊在畫面內容之上這件事本身，此交集在本輪之前已存在（同類 1 例）"
+        },
+        {
+          "node_a": "bq8pa",
+          "node_b": "yqWq9",
+          "classification": "既有絕對定位浮動元件（FAB／Dropdown Menu）疊在 Body 內容區之上，overlay 設計的預期行為，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "bq8pa",
+          "node_b": "C57OVI",
+          "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 只改了 cmp/Tab Bar 內部子節點（icon-only 化）與 3 個 AX3 instance 的 height/y（見 motifs.md AX3 段），未改變它作為浮動 overlay 疊在畫面內容之上這件事本身，此交集在本輪之前已存在（同類 1 例）"
+        },
+        {
+          "node_a": "n7gPAe",
+          "node_b": "Egn9A",
+          "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 只改了 cmp/Tab Bar 內部子節點（icon-only 化）與 3 個 AX3 instance 的 height/y（見 motifs.md AX3 段），未改變它作為浮動 overlay 疊在畫面內容之上這件事本身，此交集在本輪之前已存在（同類 1 例）"
+        },
+        {
+          "node_a": "WitwS/uZ5Lt",
+          "node_b": "WitwS/kVUWa",
+          "classification": "既有相簿卡疊紙母題（Stack Sheet／More Scrim），縮圖側邊探出或暗蓋刻意重疊，非缺陷，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "WitwS/ekqx4",
+          "node_b": "WitwS/GCEdk",
+          "classification": "既有 bottom sheet 疊層版式（Status Bar Backdrop／Scrim／Sheet Wrap），本輪未觸碰，沿用既有白名單分類（同類 1 例）"
+        },
+        {
+          "node_a": "PFhXP",
+          "node_b": "eRy14",
+          "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 只改了 cmp/Tab Bar 內部子節點（icon-only 化）與 3 個 AX3 instance 的 height/y（見 motifs.md AX3 段），未改變它作為浮動 overlay 疊在畫面內容之上這件事本身，此交集在本輪之前已存在（同類 1 例）"
+        },
+        {
+          "node_a": "gKBS7",
+          "node_b": "aY7S5",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "gKBS7",
+          "node_b": "BbDZH",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "bG6cD",
+          "node_b": "fsveQ",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "bG6cD",
+          "node_b": "wSSFB",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "x5Vmg",
+          "node_b": "OR1hw",
+          "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 只改了 cmp/Tab Bar 內部子節點（icon-only 化）與 3 個 AX3 instance 的 height/y（見 motifs.md AX3 段），未改變它作為浮動 overlay 疊在畫面內容之上這件事本身，此交集在本輪之前已存在（同類 1 例）"
+        },
+        {
+          "node_a": "Q600X",
+          "node_b": "bmk5H",
+          "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 只改了 cmp/Tab Bar 內部子節點（icon-only 化）與 3 個 AX3 instance 的 height/y（見 motifs.md AX3 段），未改變它作為浮動 overlay 疊在畫面內容之上這件事本身，此交集在本輪之前已存在（同類 1 例）"
+        },
+        {
+          "node_a": "YulfE",
+          "node_b": "QVGNJ",
+          "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 只改了 cmp/Tab Bar 內部子節點（icon-only 化）與 3 個 AX3 instance 的 height/y（見 motifs.md AX3 段），未改變它作為浮動 overlay 疊在畫面內容之上這件事本身，此交集在本輪之前已存在（同類 1 例）"
+        },
+        {
+          "node_a": "o73UY",
+          "node_b": "M4PUm",
+          "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 只改了 cmp/Tab Bar 內部子節點（icon-only 化）與 3 個 AX3 instance 的 height/y（見 motifs.md AX3 段），未改變它作為浮動 overlay 疊在畫面內容之上這件事本身，此交集在本輪之前已存在（同類 1 例）"
+        },
+        {
+          "node_a": "aedfE",
+          "node_b": "V4oYH",
+          "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 只改了 cmp/Tab Bar 內部子節點（icon-only 化）與 3 個 AX3 instance 的 height/y（見 motifs.md AX3 段），未改變它作為浮動 overlay 疊在畫面內容之上這件事本身，此交集在本輪之前已存在（同類 1 例）"
+        }
+      ]
+    },
+    "row_overflow": {
+      "flagged": [
+        {
+          "node": "ktcMa",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 15 例）"
+        },
+        {
+          "node": "MarqY",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 15 例）"
+        },
+        {
+          "node": "X9BSMc/A30rIX",
+          "classification": "cmp/Child Avatar 元件內部姓名縮寫文字在極端字寬下的既有微溢出，本輪未修改該元件本體（同類 5 例）"
+        },
+        {
+          "node": "WitwS/uZ5Lt",
+          "classification": "既有相簿卡疊紙母題刻意側邊探出容器邊界（母題本身），非缺陷，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node": "WitwS/kVUWa",
+          "classification": "既有相簿卡疊紙母題刻意側邊探出容器邊界（母題本身），非缺陷，本輪未觸碰（同類 1 例）"
+        },
+        {
+          "node": "BbDZH",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 1 例）"
+        },
+        {
+          "node": "wSSFB",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續，R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 1 例）"
+        }
+      ]
+    },
+    "cross_parent_collision": {
+      "flagged": [
+        {
+          "node_a": "gEYpf",
+          "node_b": "zGEet",
+          "classification": "既有：Dropdown Menu 是絕對定位浮動選單，疊在 Corner TL（角托出血區）之上同屬「浮動覆蓋層蓋住其下方普通內容」的既有結構，與 Tab Bar/FAB 同一類別，非本輪引入、非缺陷（同類 1 例）"
+        },
+        {
+          "node_a": "FkOcN",
+          "node_b": "zGEet",
+          "classification": "既有：Dropdown Menu 是絕對定位浮動選單，疊在 Corner TR（角托出血區）之上同屬「浮動覆蓋層蓋住其下方普通內容」的既有結構，與 Tab Bar/FAB 同一類別，非本輪引入、非缺陷（同類 1 例）"
+        },
+        {
+          "node_a": "PRyQO",
+          "node_b": "zGEet",
+          "classification": "既有：Dropdown Menu 是絕對定位浮動選單，疊在 Corner BL（角托出血區）之上同屬「浮動覆蓋層蓋住其下方普通內容」的既有結構，與 Tab Bar/FAB 同一類別，非本輪引入、非缺陷（同類 1 例）"
+        },
+        {
+          "node_a": "tVUkg",
+          "node_b": "zGEet",
+          "classification": "既有：Dropdown Menu 是絕對定位浮動選單，疊在 Corner BR（角托出血區）之上同屬「浮動覆蓋層蓋住其下方普通內容」的既有結構，與 Tab Bar/FAB 同一類別，非本輪引入、非缺陷（同類 1 例）"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "aY7S5",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 1 例）"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "BbDZH",
+          "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 未觸碰（同類 1 例）"
+        }
+      ]
+    },
+    "corner_anchor": {
+      "boards": [
+        "J2GxJV",
+        "yec61",
+        "Lo8Ae",
+        "cKFJq",
+        "V5bD0",
+        "PIwjk",
+        "oP9Ey",
+        "VLg6j",
+        "yXSht",
+        "Qxema",
+        "a67Na",
+        "V4Ktak",
+        "lKoZG",
+        "A33la",
+        "HLXo3"
+      ],
+      "containers": 16,
+      "points": 128,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 16,
+      "document_points": 128,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "unresolved": []
+    }
+  }
+}

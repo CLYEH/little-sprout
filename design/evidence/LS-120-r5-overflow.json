@@ -1,0 +1,1495 @@
+{
+ "ticket": "LS-120",
+ "round": 5,
+ "head_sha": "2065ecb2299579ec9beb6311b9be368353e43732",
+ "total_nodes": 5672,
+ "scan_scope": "boards",
+ "scan_note": "corner_anchor.document_containers/document_points/document_mismatch 是 boards 範圍內的重複值，不是全文件真值——scripts/design/overflow-scan.js 全文件 resolveInstances 掃描在 ~5670 節點規模穩定觸發 Pencil execute InternalError: interrupted（R3/R4/R5 均實測），改用逐板呼叫 Get(boardId, visitor, {resolveInstances:true}) 累加合併繞過（scanned_nodes 因此是 boards 範圍內展開後的節點數，非全文件展開後的數字）。design-evidence-check.sh 只驗 corner_anchor 在 boards 範圍內的 mismatch，不受影響，但 document_* 三個整數欄位不能直接當成全文件結論讀。sibling_intersection／row_overflow／cross_parent_collision 三支掃描本身不分 boards（overflow-scan.js 既有語意），是對整份文件跑的，所以 flagged 筆數會隨其他票（LS-17/18/46/47 等）對文件的變更而成長，與本輪 R5 是否有問題無關——R5 逐一核對後，沒有任何一筆 flagged 涉及本輪變更的節點（3 個 Spacer Section：H2Ga9h/gLLsC/h3c3Jo；6 個 Day Group 2：j30wKR/TSDse/I1QFH/S3daS/wOwLU/R6oxZ；或 cmp/Tab Bar 本身），classification 逐筆註記「本輪 LS-120 R5 未觸碰」。技術限制已記入 LS-96 comment 32754383（效能）與 83392d32（收據 schema 半邊）。",
+ "scans": {
+  "sibling_intersection": {
+   "flagged": [
+    {
+     "node_a": "kcGJa",
+     "node_b": "RHhJ1",
+     "classification": "既有畫布版面排列：兩個不相關頂層設計板（「LS-18 / 07 邀請家人 · 已產生邀請碼」／「LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\")」）在畫布座標上相鄰或重疊，是設計檔畫布的板位配置問題，不是任何一個畫面渲染出來的視覺缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "z6DOE",
+     "node_b": "bqbKN",
+     "classification": "既有畫布版面排列：兩個不相關頂層設計板（「LS-18 / 07a 邀請家人 · 尚未產生（空狀態）」／「設計註記 · 多寶貝預留（LS-46 / LS-47）」）在畫布座標上相鄰或重疊，是設計檔畫布的板位配置問題，不是任何一個畫面渲染出來的視覺缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "RHhJ1",
+     "node_b": "bqbKN",
+     "classification": "既有畫布版面排列：兩個不相關頂層設計板（「LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\")」／「設計註記 · 多寶貝預留（LS-46 / LS-47）」）在畫布座標上相鄰或重疊，是設計檔畫布的板位配置問題，不是任何一個畫面渲染出來的視覺缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "CHLio",
+     "node_b": "nhCrq",
+     "classification": "既有畫布版面排列：兩個不相關頂層設計板（「LS-18 / 07c 邀請家人 · 產生中（載入）」／「LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起」）在畫布座標上相鄰或重疊，是設計檔畫布的板位配置問題，不是任何一個畫面渲染出來的視覺缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "XhwG6",
+     "node_b": "qxVMy",
+     "classification": "既有畫布版面排列：兩個不相關頂層設計板（「設計語言 v3.3 · 褪色相片粉調 Design Tokens」／「設計註記 · $print-paper token（LS-46 R4 N8）」）在畫布座標上相鄰或重疊，是設計檔畫布的板位配置問題，不是任何一個畫面渲染出來的視覺缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "ZBIhu",
+     "node_b": "hKSu1",
+     "classification": "既有畫布版面排列：兩個不相關頂層設計板（「設計註記 · Legal 連結 AX3 溢出（LS-46 R3）」／「A11y / 06 輸入邀請碼 · Dynamic Type AX3（body 40pt）」）在畫布座標上相鄰或重疊，是設計檔畫布的板位配置問題，不是任何一個畫面渲染出來的視覺缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "VRq1c",
+     "node_b": "tNqvY",
+     "classification": "既有畫布版面排列：兩個不相關頂層設計板（「A11y / 07 邀請家人 · Dynamic Type AX3（body 40pt）」／「Stress / 01 沖印品 · 不合調光源三態比較（LS-46 R4 F16）」）在畫布座標上相鄰或重疊，是設計檔畫布的板位配置問題，不是任何一個畫面渲染出來的視覺缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "VRq1c",
+     "node_b": "Rtq1m",
+     "classification": "既有畫布版面排列：兩個不相關頂層設計板（「A11y / 07 邀請家人 · Dynamic Type AX3（body 40pt）」／「Stress / 04 角托＋Fade Pools · 不合調光源三態比較（LS-46 R4 F16）」）在畫布座標上相鄰或重疊，是設計檔畫布的板位配置問題，不是任何一個畫面渲染出來的視覺缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "rx2TP",
+     "node_b": "LCpNO",
+     "classification": "既有畫布版面排列：兩個不相關頂層設計板（「LS-47 / 實作註記 · Handoff Notes (ios-dev)」／「Stress / 10 · 3 個寶貝＋超長名字」）在畫布座標上相鄰或重疊，是設計檔畫布的板位配置問題，不是任何一個畫面渲染出來的視覺缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "MOLyd",
+     "node_b": "vzYXz",
+     "classification": "既有畫布版面排列：兩個不相關頂層設計板（「A11y / 12 日記編輯器 · Dynamic Type AX3（body 40pt）」／「LS-21 / 13 日記詳情 (iPhone)」）在畫布座標上相鄰或重疊，是設計檔畫布的板位配置問題，不是任何一個畫面渲染出來的視覺缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "XekQz",
+     "node_b": "pYE38",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 9 例）"
+    },
+    {
+     "node_a": "XekQz",
+     "node_b": "rtNqP",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 9 例）"
+    },
+    {
+     "node_a": "XekQz",
+     "node_b": "g7B7X",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 9 例）"
+    },
+    {
+     "node_a": "XekQz",
+     "node_b": "Mlugc",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 9 例）"
+    },
+    {
+     "node_a": "ilY9O",
+     "node_b": "NUPWz",
+     "classification": "既有相片沖印母題內部疊層（Photo Wrap 的 Night Dim／Fade Pools／Join Photo／Print Paper／Pill Sample 等裝飾層彼此疊放，屬同一視覺堆疊，非各自獨立內容），本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 13 例）"
+    },
+    {
+     "node_a": "pYE38/sD5Ma",
+     "node_b": "pYE38/DhOiK",
+     "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 126 例）"
+    },
+    {
+     "node_a": "rtNqP/sD5Ma",
+     "node_b": "rtNqP/DhOiK",
+     "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 126 例）"
+    },
+    {
+     "node_a": "g7B7X/sD5Ma",
+     "node_b": "g7B7X/DhOiK",
+     "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 126 例）"
+    },
+    {
+     "node_a": "Mlugc/sD5Ma",
+     "node_b": "Mlugc/DhOiK",
+     "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 126 例）"
+    },
+    {
+     "node_a": "yqk1S/GuOM0",
+     "node_b": "yqk1S/j7iqM",
+     "classification": "既有 Google G Mark 元件內部四個色塊圓弧交疊構成 G 字圖形，既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 7 例）"
+    },
+    {
+     "node_a": "yqk1S/aQq5T",
+     "node_b": "yqk1S/SieME",
+     "classification": "既有 Google G Mark 元件內部四個色塊圓弧交疊構成 G 字圖形，既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 7 例）"
+    },
+    {
+     "node_a": "yqk1S/SieME",
+     "node_b": "yqk1S/j7iqM",
+     "classification": "既有 Google G Mark 元件內部四個色塊圓弧交疊構成 G 字圖形，既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 7 例）"
+    },
+    {
+     "node_a": "Ur6DB",
+     "node_b": "W7Ycw",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "Ur6DB",
+     "node_b": "tlJFt",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "F9Iva",
+     "node_b": "jOrlo",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "F9Iva",
+     "node_b": "ny0ec",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "b66CZc",
+     "node_b": "BXbTE",
+     "classification": "既有 Card Join Family 內部 Print Stage Spacer 與 Print Stage 版位重疊（元件內部排版），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node_a": "MOWjB",
+     "node_b": "Iqtt4",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node_a": "MOWjB",
+     "node_b": "XjToq",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node_a": "lSghl",
+     "node_b": "zymKZ",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node_a": "lSghl",
+     "node_b": "jin0Q",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node_a": "kOZbf",
+     "node_b": "M98qs",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node_a": "kOZbf",
+     "node_b": "j2z1C0",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node_a": "kOZbf",
+     "node_b": "xfmAg",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node_a": "kOZbf",
+     "node_b": "DIMqR",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node_a": "Z5w2S",
+     "node_b": "YRtyF",
+     "classification": "既有相片沖印母題內部疊層（Photo Wrap 的 Night Dim／Fade Pools／Join Photo／Print Paper／Pill Sample 等裝飾層彼此疊放，屬同一視覺堆疊，非各自獨立內容），本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node_a": "Z5w2S",
+     "node_b": "e8hcYl",
+     "classification": "既有相片沖印母題內部疊層（Photo Wrap 的 Night Dim／Fade Pools／Join Photo／Print Paper／Pill Sample 等裝飾層彼此疊放，屬同一視覺堆疊，非各自獨立內容），本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node_a": "YRtyF",
+     "node_b": "e8hcYl",
+     "classification": "既有相片沖印母題內部疊層（Photo Wrap 的 Night Dim／Fade Pools／Join Photo／Print Paper／Pill Sample 等裝飾層彼此疊放，屬同一視覺堆疊，非各自獨立內容），本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node_a": "osCBD/X7DYDo/go3YL",
+     "node_b": "osCBD/X7DYDo/uHUe1",
+     "classification": "既有 Role Option 元件內部文字與勾選圖示疊放（勾選狀態的視覺呈現），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 5 例）"
+    },
+    {
+     "node_a": "osCBD/ZA8G7/go3YL",
+     "node_b": "osCBD/ZA8G7/uHUe1",
+     "classification": "既有 Role Option 元件內部文字與勾選圖示疊放（勾選狀態的視覺呈現），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 5 例）"
+    },
+    {
+     "node_a": "eS0jX",
+     "node_b": "I8sWT8",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "eS0jX",
+     "node_b": "OIwlW",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "eS0jX",
+     "node_b": "kSfzp",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "eS0jX",
+     "node_b": "mIStI",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "WlYmP",
+     "node_b": "MxnWP",
+     "classification": "既有相片沖印母題內部疊層（Photo Wrap 的 Night Dim／Fade Pools／Join Photo／Print Paper／Pill Sample 等裝飾層彼此疊放，屬同一視覺堆疊，非各自獨立內容），本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "WlYmP",
+     "node_b": "I5vhg",
+     "classification": "既有相片沖印母題內部疊層（Photo Wrap 的 Night Dim／Fade Pools／Join Photo／Print Paper／Pill Sample 等裝飾層彼此疊放，屬同一視覺堆疊，非各自獨立內容），本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "WlYmP",
+     "node_b": "WceLk",
+     "classification": "既有相片沖印母題內部疊層（Photo Wrap 的 Night Dim／Fade Pools／Join Photo／Print Paper／Pill Sample 等裝飾層彼此疊放，屬同一視覺堆疊，非各自獨立內容），本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "WlYmP",
+     "node_b": "E6reS5",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "WlYmP",
+     "node_b": "B5E1ig",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "WlYmP",
+     "node_b": "br1l7",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "WlYmP",
+     "node_b": "qnP3W",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "MxnWP",
+     "node_b": "I5vhg",
+     "classification": "既有相片沖印母題內部疊層（Photo Wrap 的 Night Dim／Fade Pools／Join Photo／Print Paper／Pill Sample 等裝飾層彼此疊放，屬同一視覺堆疊，非各自獨立內容），本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "MxnWP",
+     "node_b": "WceLk",
+     "classification": "既有相片沖印母題內部疊層（Photo Wrap 的 Night Dim／Fade Pools／Join Photo／Print Paper／Pill Sample 等裝飾層彼此疊放，屬同一視覺堆疊，非各自獨立內容），本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "MxnWP",
+     "node_b": "E6reS5",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "MxnWP",
+     "node_b": "B5E1ig",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "I5vhg",
+     "node_b": "WceLk",
+     "classification": "既有相片沖印母題內部疊層（Photo Wrap 的 Night Dim／Fade Pools／Join Photo／Print Paper／Pill Sample 等裝飾層彼此疊放，屬同一視覺堆疊，非各自獨立內容），本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "I5vhg",
+     "node_b": "E6reS5",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "I5vhg",
+     "node_b": "B5E1ig",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "WceLk",
+     "node_b": "E6reS5",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "WceLk",
+     "node_b": "B5E1ig",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "WceLk",
+     "node_b": "br1l7",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "WceLk",
+     "node_b": "qnP3W",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "sD5Ma",
+     "node_b": "DhOiK",
+     "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "zBeVi",
+     "node_b": "L5YAG",
+     "classification": "既有 OTP Cell 元件內部 Code 與 Focus Ring 疊放（輸入焦點視覺效果），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 2 例）"
+    },
+    {
+     "node_a": "PMV0W",
+     "node_b": "GWAHq",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "PMV0W",
+     "node_b": "SV5Ka",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "uXS8K",
+     "node_b": "GWAHq",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "uXS8K",
+     "node_b": "SV5Ka",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "RfKvh",
+     "node_b": "aflVw",
+     "classification": "既有相片沖印母題內部疊層（Photo Wrap 的 Night Dim／Fade Pools／Join Photo／Print Paper／Pill Sample 等裝飾層彼此疊放，屬同一視覺堆疊，非各自獨立內容），本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "RfKvh",
+     "node_b": "dCV1r",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "RfKvh",
+     "node_b": "Evspf",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "RfKvh",
+     "node_b": "B919I",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "RfKvh",
+     "node_b": "fyZfa",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "aflVw",
+     "node_b": "dCV1r",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "aflVw",
+     "node_b": "Evspf",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "aflVw",
+     "node_b": "B919I",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "aflVw",
+     "node_b": "fyZfa",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "LaaxQ",
+     "node_b": "WU8Te",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "LaaxQ",
+     "node_b": "L7ke3",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "WU8Te/sD5Ma",
+     "node_b": "WU8Te/DhOiK",
+     "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 13 例）"
+    },
+    {
+     "node_a": "L7ke3/sD5Ma",
+     "node_b": "L7ke3/DhOiK",
+     "classification": "cmp/Photo Corner 元件內部兩條 SVG path 本來就疊在一起構成同一顆角托，元件設計必然重疊，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 13 例）"
+    },
+    {
+     "node_a": "xlMQk",
+     "node_b": "M72IeN",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "xlMQk",
+     "node_b": "sPdfs",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "z2l5f",
+     "node_b": "xKQDP",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 3 例）"
+    },
+    {
+     "node_a": "z2l5f",
+     "node_b": "K8naK",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 3 例）"
+    },
+    {
+     "node_a": "F9Gvz2",
+     "node_b": "EfgyZ",
+     "classification": "既有刪除線母題（Struck Text 與 Strike Rule 疊放表示刪除線效果），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 3 例）"
+    },
+    {
+     "node_a": "PSBOi",
+     "node_b": "OtK4n",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "PSBOi",
+     "node_b": "brcXK",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "Ac3zU",
+     "node_b": "ClTOX",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "Ac3zU",
+     "node_b": "WjZtu",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "ldyto",
+     "node_b": "cTC2J",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "ldyto",
+     "node_b": "k2V3ms",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "ldyto",
+     "node_b": "mzo0K",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "cTC2J",
+     "node_b": "mzo0K",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "cTC2J",
+     "node_b": "OxuA8",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "k2V3ms",
+     "node_b": "mzo0K",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "k2V3ms",
+     "node_b": "LMc6c",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "mzo0K",
+     "node_b": "OxuA8",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "mzo0K",
+     "node_b": "LMc6c",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "a1ycjz",
+     "node_b": "bWK8K",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "a1ycjz",
+     "node_b": "y5UWXf",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "h0ZQd",
+     "node_b": "E7kbRB",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "h0ZQd",
+     "node_b": "Pqqdp",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "m780n",
+     "node_b": "uARGy",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "m780n",
+     "node_b": "mFP87",
+     "classification": "既有裝飾群組內部節點彼此疊放（icon 遮罩／描邊／焦點環等同一視覺堆疊的組成部分），非各自獨立內容，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "khLYx",
+     "node_b": "vRQFQ",
+     "classification": "既有刪除線母題（Struck Text 與 Strike Rule 疊放表示刪除線效果），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node_a": "lxZzb",
+     "node_b": "gJOJT",
+     "classification": "既有：Accessory Bar 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "lxZzb",
+     "node_b": "RZcIs",
+     "classification": "既有：Keyboard 系統鍵盤（示意，336pt） 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "TeX44",
+     "node_b": "RZcIs",
+     "classification": "既有：Keyboard／Home Indicator Area 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "kfuha",
+     "node_b": "qfxbb",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 27 例）"
+    },
+    {
+     "node_a": "kfuha",
+     "node_b": "YG4hG",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 27 例）"
+    },
+    {
+     "node_a": "yxEFh",
+     "node_b": "Wo9Ox",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 27 例）"
+    },
+    {
+     "node_a": "yxEFh",
+     "node_b": "efA3a",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 27 例）"
+    },
+    {
+     "node_a": "JE6tE",
+     "node_b": "Vmezj",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "JE6tE",
+     "node_b": "PaCtI",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "rrzzl",
+     "node_b": "p2dJpQ",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "rrzzl",
+     "node_b": "Wrztr",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "n5j2xu",
+     "node_b": "H3b7gk",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "n5j2xu",
+     "node_b": "oj6h0",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "XoVVx",
+     "node_b": "SUi6K",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "XoVVx",
+     "node_b": "nSjs7",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "cPbyp",
+     "node_b": "XMVoJ",
+     "classification": "既有：Status Bar (Backdrop)／Scrim 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "cPbyp",
+     "node_b": "MBQx8",
+     "classification": "既有：Status Bar (Backdrop)／Sheet Wrap 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "XMVoJ",
+     "node_b": "MBQx8",
+     "classification": "既有：Scrim／Sheet Wrap 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "A14LnU",
+     "node_b": "dJM15",
+     "classification": "既有：FAB 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "A14LnU",
+     "node_b": "EoToI",
+     "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 R5 只改了 3 板 Spacer Section 高度與 6 板 Day Group 2 的 padding-top／名稱（皆在 Body 內容區內部），未改變 Tab Bar 本身的位置／尺寸或它作為浮動 overlay 疊在畫面內容之上這件事，此交集在 R5 之前已存在（LS-47 / 10 時間軸 · 寶貝切換，同類 1 例）"
+    },
+    {
+     "node_a": "I1Rtb",
+     "node_b": "xgx94",
+     "classification": "既有：Dropdown Menu 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "I1Rtb",
+     "node_b": "gFJ8N",
+     "classification": "既有：FAB 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "I1Rtb",
+     "node_b": "qx4xE",
+     "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 R5 只改了 3 板 Spacer Section 高度與 6 板 Day Group 2 的 padding-top／名稱（皆在 Body 內容區內部），未改變 Tab Bar 本身的位置／尺寸或它作為浮動 overlay 疊在畫面內容之上這件事，此交集在 R5 之前已存在（LS-47 / 10b 時間軸 · 寶貝切換（下拉，>3），同類 1 例）"
+    },
+    {
+     "node_a": "xTL71",
+     "node_b": "DZjmG",
+     "classification": "既有：Status Bar (Backdrop)／Scrim 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "xTL71",
+     "node_b": "gbW37",
+     "classification": "既有：Status Bar (Backdrop)／Sheet Wrap 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "DZjmG",
+     "node_b": "gbW37",
+     "classification": "既有：Scrim／Sheet Wrap 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "o4llU",
+     "node_b": "zGEet",
+     "classification": "既有：Dropdown Menu 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "o4llU",
+     "node_b": "G5vY5",
+     "classification": "既有：FAB 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "o4llU",
+     "node_b": "qCMDY",
+     "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 R5 只改了 3 板 Spacer Section 高度與 6 板 Day Group 2 的 padding-top／名稱（皆在 Body 內容區內部），未改變 Tab Bar 本身的位置／尺寸或它作為浮動 overlay 疊在畫面內容之上這件事，此交集在 R5 之前已存在（A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉），同類 1 例）"
+    },
+    {
+     "node_a": "bq8pa",
+     "node_b": "yqWq9",
+     "classification": "既有：FAB 是絕對定位浮動元件，疊在 Body 內容區之上是既有 overlay 設計的預期行為，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "bq8pa",
+     "node_b": "C57OVI",
+     "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 R5 只改了 3 板 Spacer Section 高度與 6 板 Day Group 2 的 padding-top／名稱（皆在 Body 內容區內部），未改變 Tab Bar 本身的位置／尺寸或它作為浮動 overlay 疊在畫面內容之上這件事，此交集在 R5 之前已存在（LS-47 / 10 時間軸 · 寶貝切換 · 深色，同類 1 例）"
+    },
+    {
+     "node_a": "go3YL",
+     "node_b": "uHUe1",
+     "classification": "既有 Role Option 元件內部文字與勾選圖示疊放（勾選狀態的視覺呈現），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node_a": "n7gPAe",
+     "node_b": "Egn9A",
+     "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 R5 只改了 3 板 Spacer Section 高度與 6 板 Day Group 2 的 padding-top／名稱（皆在 Body 內容區內部），未改變 Tab Bar 本身的位置／尺寸或它作為浮動 overlay 疊在畫面內容之上這件事，此交集在 R5 之前已存在（LS-21 / 11 時間軸 (iPhone)，同類 1 例）"
+    },
+    {
+     "node_a": "Z4TsQ/tBi8u",
+     "node_b": "Z4TsQ/xlLIo",
+     "classification": "既有日期章／墨水重影母題內部疊層（Stamp Wrap 的 Ghost 二次蓋章效果），設計意圖非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 23 例）"
+    },
+    {
+     "node_a": "WitwS/uZ5Lt",
+     "node_b": "WitwS/kVUWa",
+     "classification": "Stack Sheet 2 × Stack Sheet 1 @ Photo C，既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node_a": "WitwS/ekqx4",
+     "node_b": "WitwS/GCEdk",
+     "classification": "Thumb C × More Scrim @ Photo C，既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node_a": "PFhXP",
+     "node_b": "eRy14",
+     "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 R5 只改了 3 板 Spacer Section 高度與 6 板 Day Group 2 的 padding-top／名稱（皆在 Body 內容區內部），未改變 Tab Bar 本身的位置／尺寸或它作為浮動 overlay 疊在畫面內容之上這件事，此交集在 R5 之前已存在（LS-21 / 11b 時間軸 · 空狀態，同類 1 例）"
+    },
+    {
+     "node_a": "gKBS7",
+     "node_b": "aY7S5",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "gKBS7",
+     "node_b": "BbDZH",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "bG6cD",
+     "node_b": "fsveQ",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "bG6cD",
+     "node_b": "wSSFB",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "x5Vmg",
+     "node_b": "OR1hw",
+     "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 R5 只改了 3 板 Spacer Section 高度與 6 板 Day Group 2 的 padding-top／名稱（皆在 Body 內容區內部），未改變 Tab Bar 本身的位置／尺寸或它作為浮動 overlay 疊在畫面內容之上這件事，此交集在 R5 之前已存在（LS-21 / 11c 時間軸 · 下拉更新中，同類 1 例）"
+    },
+    {
+     "node_a": "Q600X",
+     "node_b": "bmk5H",
+     "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 R5 只改了 3 板 Spacer Section 高度與 6 板 Day Group 2 的 padding-top／名稱（皆在 Body 內容區內部），未改變 Tab Bar 本身的位置／尺寸或它作為浮動 overlay 疊在畫面內容之上這件事，此交集在 R5 之前已存在（LS-21 / 11 時間軸 · 深色，同類 1 例）"
+    },
+    {
+     "node_a": "YulfE",
+     "node_b": "QVGNJ",
+     "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 R5 只改了 3 板 Spacer Section 高度與 6 板 Day Group 2 的 padding-top／名稱（皆在 Body 內容區內部），未改變 Tab Bar 本身的位置／尺寸或它作為浮動 overlay 疊在畫面內容之上這件事，此交集在 R5 之前已存在（A11y / 11 時間軸 · Dynamic Type AX3（body 40pt），同類 1 例）"
+    },
+    {
+     "node_a": "abfZE",
+     "node_b": "wOzaO",
+     "classification": "既有頭像疊放母題（Avatar Stack 的 Avatar 1／Avatar 2 刻意重疊表示「多人」），設計意圖非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 11 例）"
+    },
+    {
+     "node_a": "V9wQZl",
+     "node_b": "OJNI5",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 73 例）"
+    },
+    {
+     "node_a": "V9wQZl",
+     "node_b": "C57TMC",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 73 例）"
+    },
+    {
+     "node_a": "CV0TW",
+     "node_b": "iCUJF",
+     "classification": "既有已選取徽章母題（Selected Badge 疊在 Thumb 縮圖右上角表示選取狀態），設計意圖非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "TSxZo",
+     "node_b": "v7MGOT",
+     "classification": "既有已選取徽章母題（Selected Badge 疊在 Thumb 縮圖右上角表示選取狀態），設計意圖非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "o73UY",
+     "node_b": "M4PUm",
+     "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 R5 只改了 3 板 Spacer Section 高度與 6 板 Day Group 2 的 padding-top／名稱（皆在 Body 內容區內部），未改變 Tab Bar 本身的位置／尺寸或它作為浮動 overlay 疊在畫面內容之上這件事，此交集在 R5 之前已存在（Stress / 11 時間軸 · 單一寶貝 filter，同類 1 例）"
+    },
+    {
+     "node_a": "RPTGa",
+     "node_b": "repj6",
+     "classification": "既有拖曳排序母題（Dragging Photo 是被提起的縮圖獨立節點，本來就疊在 Drop Target／相鄰縮圖之上表示「正在拖曳」），設計意圖非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "kdCWx",
+     "node_b": "repj6",
+     "classification": "既有拖曳排序母題（Dragging Photo 是被提起的縮圖獨立節點，本來就疊在 Drop Target／相鄰縮圖之上表示「正在拖曳」），設計意圖非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "aedfE",
+     "node_b": "V4oYH",
+     "classification": "既有：cmp/Tab Bar 是絕對定位浮動膠囊，疊在 Body 的 AABB 之上是既有 overlay 設計的預期行為，非缺陷。本輪 LS-120 R5 只改了 3 板 Spacer Section 高度與 6 板 Day Group 2 的 padding-top／名稱（皆在 Body 內容區內部），未改變 Tab Bar 本身的位置／尺寸或它作為浮動 overlay 疊在畫面內容之上這件事，此交集在 R5 之前已存在（A11y / 11 時間軸 · 兩位寶貝聯合標記 · Dynamic Type AX3（body 40pt），同類 1 例）"
+    }
+   ]
+  },
+  "row_overflow": {
+   "flagged": [
+    {
+     "node": "tlJFt",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node": "ny0ec",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node": "BXbTE",
+     "classification": "既有 Card Join Family 內部 Print Stage 版位比父容器寬（元件內部排版），非本輪範圍，既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node": "XjToq",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node": "jin0Q",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node": "j2z1C0",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node": "DIMqR",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 4 例）"
+    },
+    {
+     "node": "qX0b8",
+     "classification": "Photo Wrap :: Hero Photo，既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node": "B5E1ig",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 3 例）"
+    },
+    {
+     "node": "qnP3W",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 3 例）"
+    },
+    {
+     "node": "FBRlf/iu3Q8",
+     "classification": "既有 Field Box 內部 Field Value 文字寬度比容器寬（長內容自然撐開的既有欄位樣式），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node": "Evspf",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "fyZfa",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "flduf",
+     "classification": "既有 Legal 區塊內部 Legal Link／Legal Seg 文字排版（法律聲明長文字換行前的量測基準，既有樣式），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 2 例）"
+    },
+    {
+     "node": "XtNLC",
+     "classification": "既有 Legal 區塊內部 Legal Link／Legal Seg 文字排版（法律聲明長文字換行前的量測基準，既有樣式），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node": "z0ATW/yxwnz",
+     "classification": "既有 Paste Link Button 內部 Secondary Label 些微超出容器（既有按鈕內距樣式），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node": "YG4hG",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 27 例）"
+    },
+    {
+     "node": "efA3a",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 27 例）"
+    },
+    {
+     "node": "oj6h0",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "nSjs7",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "X9BSMc/A30rIX",
+     "classification": "既有 Avatar 元件內部 Initial 文字些微超出容器（單字大寫縮寫的既有排版），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 5 例）"
+    },
+    {
+     "node": "k8PVy",
+     "classification": "既有 Segment 元件內部 Label 文字些微超出容器（既有分段控制項樣式），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node": "WitwS/uZ5Lt",
+     "classification": "既有 Photo C（多張堆疊縮圖）內部 Stack Sheet 疊放層些微超出容器（堆疊視覺效果的既有樣式），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node": "WitwS/kVUWa",
+     "classification": "既有 Photo C（多張堆疊縮圖）內部 Stack Sheet 疊放層些微超出容器（堆疊視覺效果的既有樣式），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 1 例）"
+    },
+    {
+     "node": "BbDZH",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "wSSFB",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "jCGWG",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 8 例）"
+    },
+    {
+     "node": "C57TMC",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 73 例）"
+    },
+    {
+     "node": "x4NnCv",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 73 例）"
+    },
+    {
+     "node": "aNTzo/OCYqN",
+     "classification": "既有日記詳情頁 Date Anchor 內部 Stamp Wrap 些微超出容器（既有日期章版位樣式，非 Tab-root Day Divider），既有版面結構或母題重複使用樣式，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰，屬其他既有票券內容或既有母題慣例（同類 2 例）"
+    },
+    {
+     "node": "iCUJF",
+     "classification": "既有已選取徽章母題（Selected Badge 疊在 Thumb 縮圖右上角表示選取狀態），設計意圖非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "v7MGOT",
+     "classification": "既有已選取徽章母題（Selected Badge 疊在 Thumb 縮圖右上角表示選取狀態），設計意圖非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "iO0Ko",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node": "r0E2vG",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "dbyDu",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "B2PYlk",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "DgWAS",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "to36g",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "UwOm5",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "L1Gvi",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "a93IH",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "tJr7O",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "f4znT9",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "QnhMi",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "cvkFS",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "G636T",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "TdVUk",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "P8eEXh",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "HxDU4",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node": "MBCZw",
+     "classification": "既有壓測板（Stress，20 張照片壓測／拖曳排序）刻意讓 Photo Strip 內縮圖橫向排滿甚至溢出容器可視範圍，用來驗證捲動手勢與極端張數下的版面極限，是壓測板的設計目的本身，非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    }
+   ]
+  },
+  "cross_parent_collision": {
+   "flagged": [
+    {
+     "node_a": "ilY9O",
+     "node_b": "pYE38",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "ilY9O",
+     "node_b": "rtNqP",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "ilY9O",
+     "node_b": "g7B7X",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "ilY9O",
+     "node_b": "Mlugc",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "Z5w2S",
+     "node_b": "M98qs",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "Z5w2S",
+     "node_b": "j2z1C0",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "Z5w2S",
+     "node_b": "xfmAg",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "Z5w2S",
+     "node_b": "DIMqR",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "qX0b8",
+     "node_b": "I8sWT8",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "qX0b8",
+     "node_b": "OIwlW",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "qX0b8",
+     "node_b": "kSfzp",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "qX0b8",
+     "node_b": "mIStI",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "tLP6F",
+     "node_b": "E6reS5",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "tLP6F",
+     "node_b": "B5E1ig",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "tLP6F",
+     "node_b": "br1l7",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "tLP6F",
+     "node_b": "qnP3W",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "BBwPe",
+     "node_b": "F03KZ",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "BBwPe",
+     "node_b": "IdIpj",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "BBwPe",
+     "node_b": "CQ1DR",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "BBwPe",
+     "node_b": "R13bes",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "NCn3t",
+     "node_b": "VUrCa",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "NCn3t",
+     "node_b": "s3NQB",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "NCn3t",
+     "node_b": "MSHDo",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "NCn3t",
+     "node_b": "Or86v",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "E9deU",
+     "node_b": "vh3wA",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "E9deU",
+     "node_b": "a9D8tu",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "E9deU",
+     "node_b": "GWAHq",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "E9deU",
+     "node_b": "SV5Ka",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "GWAHq",
+     "node_b": "CpjLh",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "SV5Ka",
+     "node_b": "CpjLh",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "lbwCd",
+     "node_b": "HQIu3",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "lbwCd",
+     "node_b": "sqAra",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "lbwCd",
+     "node_b": "XNlL6",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "lbwCd",
+     "node_b": "YtTc7",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "v0lw6",
+     "node_b": "E0sov",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "v0lw6",
+     "node_b": "tzB8c",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "v0lw6",
+     "node_b": "jUZCY",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "v0lw6",
+     "node_b": "O1r9l",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "Wo9Ox",
+     "node_b": "K4qvK6",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "efA3a",
+     "node_b": "K4qvK6",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "E5X7Nk",
+     "node_b": "aGcLA",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "cM5Hi",
+     "node_b": "aGcLA",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "gEYpf",
+     "node_b": "zGEet",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "FkOcN",
+     "node_b": "zGEet",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "PRyQO",
+     "node_b": "zGEet",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "tVUkg",
+     "node_b": "zGEet",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "Dhgd4",
+     "node_b": "AXf4H",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "Dhgd4",
+     "node_b": "Lns4o",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "Dhgd4",
+     "node_b": "haMqk",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "Dhgd4",
+     "node_b": "Izo3e",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "SY3sp",
+     "node_b": "XHfST",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "SY3sp",
+     "node_b": "kbkHy",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "SY3sp",
+     "node_b": "q2Dth",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "SY3sp",
+     "node_b": "VGqGL",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "jjRtv",
+     "node_b": "OJ1xr",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "jjRtv",
+     "node_b": "KSTqZ",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "jjRtv",
+     "node_b": "Rqmus",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "jjRtv",
+     "node_b": "W7VlAp",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "GeJ1J",
+     "node_b": "aY7S5",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "GeJ1J",
+     "node_b": "BbDZH",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "MFpwo/DjW91",
+     "node_b": "sbsqF",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）（此類同時涉及 Corner 出血與 Tab Bar／Home Indicator Area 淨空帶，兩者皆為既有沖印母題與裝置安全區慣例的疊加，非本輪 R5 變更範圍——R5 只動了 Spacer Section 高度與 Day Group 2 padding-top/名稱，未動角托或 Tab Bar/Home Indicator Area 本身）"
+    },
+    {
+     "node_a": "MFpwo/DjW91",
+     "node_b": "bmk5H",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）（此類同時涉及 Corner 出血與 Tab Bar／Home Indicator Area 淨空帶，兩者皆為既有沖印母題與裝置安全區慣例的疊加，非本輪 R5 變更範圍——R5 只動了 Spacer Section 高度與 Day Group 2 padding-top/名稱，未動角托或 Tab Bar/Home Indicator Area 本身）"
+    },
+    {
+     "node_a": "MFpwo/JgUK8",
+     "node_b": "sbsqF",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）（此類同時涉及 Corner 出血與 Tab Bar／Home Indicator Area 淨空帶，兩者皆為既有沖印母題與裝置安全區慣例的疊加，非本輪 R5 變更範圍——R5 只動了 Spacer Section 高度與 Day Group 2 padding-top/名稱，未動角托或 Tab Bar/Home Indicator Area 本身）"
+    },
+    {
+     "node_a": "MFpwo/JgUK8",
+     "node_b": "bmk5H",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）（此類同時涉及 Corner 出血與 Tab Bar／Home Indicator Area 淨空帶，兩者皆為既有沖印母題與裝置安全區慣例的疊加，非本輪 R5 變更範圍——R5 只動了 Spacer Section 高度與 Day Group 2 padding-top/名稱，未動角托或 Tab Bar/Home Indicator Area 本身）"
+    },
+    {
+     "node_a": "CJ2BA",
+     "node_b": "OJNI5",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "CJ2BA",
+     "node_b": "C57TMC",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "FO005",
+     "node_b": "im7DS",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "a3oZ2",
+     "node_b": "im7DS",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "gnVLw",
+     "node_b": "OiUoO",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "gnVLw",
+     "node_b": "IB5r1",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "Kd1aN",
+     "node_b": "Yz0R7",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "Y21UsQ",
+     "node_b": "Yz0R7",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "UEhNU",
+     "node_b": "kakSb",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "UEhNU",
+     "node_b": "F0Tzj",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "E1nSH9",
+     "node_b": "EgTrf",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "UoKog",
+     "node_b": "EgTrf",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "u01Pc/DjW91",
+     "node_b": "u87Nb",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）（此類同時涉及 Corner 出血與 Tab Bar／Home Indicator Area 淨空帶，兩者皆為既有沖印母題與裝置安全區慣例的疊加，非本輪 R5 變更範圍——R5 只動了 Spacer Section 高度與 Day Group 2 padding-top/名稱，未動角托或 Tab Bar/Home Indicator Area 本身）"
+    },
+    {
+     "node_a": "u01Pc/DjW91",
+     "node_b": "M4PUm",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）（此類同時涉及 Corner 出血與 Tab Bar／Home Indicator Area 淨空帶，兩者皆為既有沖印母題與裝置安全區慣例的疊加，非本輪 R5 變更範圍——R5 只動了 Spacer Section 高度與 Day Group 2 padding-top/名稱，未動角托或 Tab Bar/Home Indicator Area 本身）"
+    },
+    {
+     "node_a": "u01Pc/JgUK8",
+     "node_b": "u87Nb",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）（此類同時涉及 Corner 出血與 Tab Bar／Home Indicator Area 淨空帶，兩者皆為既有沖印母題與裝置安全區慣例的疊加，非本輪 R5 變更範圍——R5 只動了 Spacer Section 高度與 Day Group 2 padding-top/名稱，未動角托或 Tab Bar/Home Indicator Area 本身）"
+    },
+    {
+     "node_a": "u01Pc/JgUK8",
+     "node_b": "M4PUm",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）（此類同時涉及 Corner 出血與 Tab Bar／Home Indicator Area 淨空帶，兩者皆為既有沖印母題與裝置安全區慣例的疊加，非本輪 R5 變更範圍——R5 只動了 Spacer Section 高度與 Day Group 2 padding-top/名稱，未動角托或 Tab Bar/Home Indicator Area 本身）"
+    },
+    {
+     "node_a": "s1LfAj",
+     "node_b": "repj6",
+     "classification": "既有拖曳排序母題（Dragging Photo 是被提起的縮圖獨立節點，本來就疊在 Drop Target／相鄰縮圖之上表示「正在拖曳」），設計意圖非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "IDOjx",
+     "node_b": "h3zyP",
+     "classification": "既有拖曳排序母題（Dragging Photo 是被提起的縮圖獨立節點，本來就疊在 Drop Target／相鄰縮圖之上表示「正在拖曳」），設計意圖非缺陷，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "KBTFi",
+     "node_b": "OkHbz",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "KBTFi",
+     "node_b": "RefMF",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "PU1lk",
+     "node_b": "UGZbZ",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "S7qlEV",
+     "node_b": "UGZbZ",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "WsQdq",
+     "node_b": "Fw3Lw",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "WsQdq",
+     "node_b": "PWKoD",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 2 例）"
+    },
+    {
+     "node_a": "IcuGv",
+     "node_b": "z12HU",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    },
+    {
+     "node_a": "kTGk5",
+     "node_b": "z12HU",
+     "classification": "角托 corner-out 5pt 出血，既有沖印品母題規則延續（motifs.md「角托一律壓過紙緣 corner-out 5pt」），R11/LS-72 白名單類別，本輪 LS-120 R5（BL-8 preShift 還原＋Day Group 2 padding-top 重算／MJ-11 旋轉模型訂正／MN-12 節點改名）未觸碰（同類 1 例）"
+    }
+   ]
+  },
+  "corner_anchor": {
+   "boards": [
+    "J2GxJV",
+    "yec61",
+    "Lo8Ae",
+    "cKFJq",
+    "V5bD0",
+    "PIwjk",
+    "oP9Ey",
+    "VLg6j",
+    "yXSht",
+    "Qxema",
+    "a67Na",
+    "V4Ktak",
+    "lKoZG",
+    "A33la",
+    "HLXo3"
+   ],
+   "containers": 16,
+   "points": 128,
+   "mismatch": 0,
+   "flagged": [],
+   "document_containers": 126,
+   "document_points": 1008,
+   "document_mismatch": 0,
+   "document_flagged": [],
+   "unresolved": []
+  }
+ }
+}

@@ -30,6 +30,17 @@
 
 ⑫ **已知溢出 51 項是設計意圖，不是 bug**：出血 13／角托 34／`mXQJh` 1／AX3 法務 3。任何自動化版面檢查要以這組數字當白名單基線。
 
+⑬ **Tab-root 目的地畫面 display 標題＝該 tab 名稱**（LS-120 R2 elder-constraints.md 例外二第⑤前提，R3 補機械化）：`cmp/Tab Bar` 四個 tab 的目的地畫面，首屏 display 標題字串必須逐字等於該 tab 的可見名稱——這是拿掉可見 tab 文字後的非手勢替代路徑，不是建議。四列現況（LS-120 R3 稽核，見 `.pen` Notes `LuHbv`「Tab-root 標題對照表」）：
+
+| tab | 標題應為 | 目的地畫面 | 現況標題 | 符合？ |
+|---|---|---|---|---|
+| 時間軸 | 時間軸 | `LS-21 / 11 時間軸` 等 | 時間軸 | ✅ |
+| 相簿 | 相簿 | （尚未存在） | — | 待新畫面票遵守 |
+| 寶貝 | 寶貝 | `LS-47 / 09 寶貝管理` | 寶貝管理 | ❌（LS-96 comment `c2dd0ed2`） |
+| 設定 | 設定 | （尚未存在） | — | 待新畫面票遵守 |
+
+任何新增「相簿」／「設定」畫面票，或修改「寶貝管理」標題的票，**開工前先核對這張表**；標題不符不得進場。**機械化 gate 候選**（本票只寫規格，gate 由 harness 票實作）：比照既有 `tap-target-check.sh` 同型的 XCUITest 斷言——每個 Tab-root 首屏渲染後，斷言畫面上存在一個 `accessibilityIdentifier` 或文字內容等於該 tab 中文名稱的 heading 元素（`app.staticTexts[tabName].firstMatch.exists`，四個 tab 各一組），失敗即紅；新增畫面或改標題的 PR 若破壞比對，測試會在 CI 擋下，不需要人工複查這張表。
+
 ---
 
 補充（同一 comment 的「值得保留的清單」，實作時勿倒洗澡水）：沖印品白邊 8/8/32/8 且下緣厚度由 Imprint Row 掙來（勿改回 24）｜Lab Imprint 置中｜`print-ink`／`print-ink-secondary` 單值 token 與 Tokens 板 Row 2c/2d｜深色紙條與相片同寬 361、角托釘住接縫、紙條本身無暗角｜紙條內字標→tagline 8pt＝淺色 Head 內同一數字｜角托壓過紙緣 5pt｜iPad 直式大印品＋右欄登入的非對稱構圖｜AX3 鎖頭包 wrap 對第一行中線｜`yOHuy` 的單一空白｜06 家族 Upper/Footer flex spacer｜44pt 七張豁免的兩板一致措辭｜01/01b pt 589 以上逐像素相同。

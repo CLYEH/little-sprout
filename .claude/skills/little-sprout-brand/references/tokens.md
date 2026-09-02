@@ -121,6 +121,8 @@
 | `icon-sm` | 18 | 32 | 行內小圖示（信任列鎖頭 18） |
 | `icon-md` | 22 | 40 | 一般圖示 |
 | `icon-lg` | 26 | 48 | 主鈕圖示 |
+| `icon-tab-md`（LS-120 R2） | 26 | 40 | Tab Bar 未選中圖示。比 `icon-md` 大一階（導覽圖示不是「一般圖示」，拿掉文字標籤後空間要還給 icon）；AX3 與 `icon-md` AX3 同值，僅預設階不同 |
+| `icon-tab-lg`（LS-120 R2） | 32 | 48 | Tab Bar 選中圖示。選中 indicator＝icon+2×`sp-tight`(6)：預設 32+12=44（恰為觸控下限）、AX3 48+12=60；AX3 與 `icon-lg` AX3 同值，僅預設階不同 |
 | `icon-apple` | 24 | 56 | Apple 鍵符號（官方資產） |
 | `icon-google` | 20 | 47 | Google G 標（官方資產） |
 | `kbd-h` | 336 | — | 系統鍵盤（iPhone 393 直式含建議列），規格值 |
