@@ -28,7 +28,11 @@ struct PhotoCardView: View {
             }
         }
         .task(id: content.id) {
-            guard content.type == .video, let url = content.signedURL else { return }
+            // R2-M1（merge-review `b7ecfbf4`）：`isThumbnail` 時 `signedURL` 是縮圖 JPEG，
+            // 不是可解出時長的影片檔——讀取必定失敗，從源頭跳過，不要浪費一次網路請求
+            // （`TimelineStore.loadVideoDuration` 的 `failedDurations` 是給其他失敗情境的
+            // 硬化，兩者互補，這裡不能只靠那一層擋，縮圖列連第一次嘗試都不該發生）。
+            guard content.needsVideoDurationLookup, let url = content.signedURL else { return }
             await timelineStore.loadVideoDuration(mediaID: content.id, url: url)
         }
     }
@@ -57,14 +61,14 @@ struct PhotoCardView: View {
         PhotoCardView(
             content: MediaContent(
                 id: UUID(), type: .photo, width: 4, height: 3, thumbWidth: nil, thumbHeight: nil,
-                storagePath: "preview/photo.jpg", signedURL: nil
+                storagePath: "preview/photo.jpg", isThumbnail: false, signedURL: nil
             ),
             timelineStore: .preview()
         )
         PhotoCardView(
             content: MediaContent(
                 id: UUID(), type: .video, width: 16, height: 9, thumbWidth: nil, thumbHeight: nil,
-                storagePath: "preview/video.mp4", signedURL: nil
+                storagePath: "preview/video.mp4", isThumbnail: false, signedURL: nil
             ),
             timelineStore: .preview()
         )

@@ -96,7 +96,8 @@ enum TimelineContentAssembler {
             return MediaContent(
                 id: row.id, type: row.type, width: row.width, height: row.height,
                 thumbWidth: row.thumbWidth, thumbHeight: row.thumbHeight,
-                storagePath: row.storagePath, signedURL: signed[displayPath(row)]
+                storagePath: row.storagePath, isThumbnail: row.thumbPath != nil,
+                signedURL: signed[displayPath(row)]
             )
         }
     }
@@ -137,7 +138,8 @@ enum TimelineContentAssembler {
                 return MediaContent(
                     id: row.id, type: row.type, width: row.width, height: row.height,
                     thumbWidth: row.thumbWidth, thumbHeight: row.thumbHeight,
-                    storagePath: row.storagePath, signedURL: signed[displayPath(row)]
+                    storagePath: row.storagePath, isThumbnail: row.thumbPath != nil,
+                    signedURL: signed[displayPath(row)]
                 )
             }
             result[diary.id] = DiaryContent(
@@ -163,7 +165,8 @@ enum TimelineContentAssembler {
                 MediaContent(
                     id: row.id, type: row.type, width: row.width, height: row.height,
                     thumbWidth: row.thumbWidth, thumbHeight: row.thumbHeight,
-                    storagePath: row.storagePath, signedURL: signed[displayPath(row)]
+                    storagePath: row.storagePath, isThumbnail: row.thumbPath != nil,
+                    signedURL: signed[displayPath(row)]
                 )
             }
             result[album.id] = AlbumContent(title: album.title, cover: cover)
@@ -180,7 +183,8 @@ enum TimelineContentAssembler {
             (row.id, MediaContent(
                 id: row.id, type: row.type, width: row.width, height: row.height,
                 thumbWidth: row.thumbWidth, thumbHeight: row.thumbHeight,
-                storagePath: row.storagePath, signedURL: signed[displayPath(row)]
+                storagePath: row.storagePath, isThumbnail: row.thumbPath != nil,
+                signedURL: signed[displayPath(row)]
             ))
         })
     }

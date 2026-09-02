@@ -140,6 +140,15 @@ struct MediaContent: Equatable, Sendable, Identifiable {
     /// 全尺寸 URL（`TimelineStore.signFullSizeURL`）用，列表／縮圖情境不使用這個路徑
     /// 簽名（見 `signedURL`、docs/API.md §6「簽名 URL 與 egress 防線」）。
     let storagePath: String
+    /// R2-M1（merge-review `b7ecfbf4` M1）：`true`＝`signedURL` 現在指向的是縮圖 JPEG，不是
+    /// 可播放／可解出時長的原始檔案——`type == .video` 且這個欄位為 `true` 時，呼叫端
+    /// （`PhotoCardView`／`MasonryPhotoWallView`）不該再拿 `signedURL` 去打
+    /// `TimelineStore.loadVideoDuration`，那必定失敗且沒有必要浪費一次網路請求。跟
+    /// `thumbWidth != nil` 邏輯上等價（DB `media_thumb_dimensions_consistency` CHECK 保證
+    /// 縮圖三欄同進退），但獨立成顯式欄位、不倚賴那個不變式——語意更直接，這裡的判準只看
+    /// 「這個 `signedURL` 是不是縮圖」，跟 CHECK 保證的是不是三欄一致是兩個問題，未來就算
+    /// CHECK 調整也不會悄悄牽動這裡。
+    let isThumbnail: Bool
     /// 列表／縮圖情境用的簽名 URL：`thumb_path` 有值時簽縮圖，NULL 時退回 `storagePath`
     /// （見 `TimelineContentAssembler.displayPath`）。簽名失敗（見
     /// `TimelineAPIClient.signedURLs`）時為 nil——呼叫端顯示占位圖，不讓整頁因為單一
@@ -156,6 +165,16 @@ struct MediaContent: Equatable, Sendable, Identifiable {
         let effectiveHeight = thumbHeight ?? height
         guard effectiveWidth > 0, effectiveHeight > 0 else { return 1 }
         return CGFloat(effectiveWidth) / CGFloat(effectiveHeight)
+    }
+
+    /// R2-M1（merge-review `b7ecfbf4`）：`PhotoCardView`／`MasonryPhotoWallView` 的
+    /// `.task(id:)` 該不該呼叫 `TimelineStore.loadVideoDuration` 的判斷——只有影片、且
+    /// `signedURL` 不是縮圖時才值得讀時長；縮圖 JPEG 解不出時長，讀了必定失敗。抽成獨立、
+    /// 可單元測試的屬性，而不是散落在兩個呼叫端各自的 `.task` guard 裡：SwiftUI View 的
+    /// `.task` 本身在這個 repo 沒有可執行的單元測試路徑（見 `PhotoCardView`／
+    /// `MasonryPhotoWallView` 皆無對應測試檔），但這條規則的邏輯本身不需要 View 就能釘住。
+    var needsVideoDurationLookup: Bool {
+        type == .video && !isThumbnail
     }
 }
 

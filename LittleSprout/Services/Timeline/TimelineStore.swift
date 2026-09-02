@@ -23,6 +23,11 @@ final class TimelineStore {
     static let pageSize = 20
 
     private let apiClient: TimelineAPIClient
+    /// R2-M1（merge-review `b7ecfbf4`）：`loadVideoDuration` 讀時長的實際動作抽成可注入的
+    /// 閉包，預設是真正的 `AVURLAsset(url:).load(.duration)`——只有這樣測試才能斷言「同一個
+    /// mediaID 兩次呼叫只真正嘗試載入一次」（`failedDurations` 擋第二次），不必真的打網路
+    /// 也不用等 AVFoundation 對一個必失敗的 URL 逾時。
+    private let durationLoader: @Sendable (URL) async throws -> CMTime
 
     private(set) var entries: [TimelineEntry] = []
     private(set) var refreshState: TimelineOperationState = .idle
@@ -36,6 +41,14 @@ final class TimelineStore {
     private var familyID: UUID?
     private var childID: UUID?
     private var loadingDurations: Set<UUID> = []
+    /// R2-M1：讀取時長失敗過的 id——`loadVideoDuration` 原本失敗後什麼都不記，LS-130 讓
+    /// 有縮圖的影片必定走進這條失敗路徑（`signedURL` 對它們是縮圖 JPEG，不是可解出時長的
+    /// 影片檔），`.task(id:)` 隨卡片重建（例如捲出、捲回 `LazyVStack` 存活視窗）就會重跑，
+    /// 沒有這個集合會讓請求數隨捲動次數線性成長——直接抵銷本票要爭取的 egress。呼叫端另外
+    /// 用 `MediaContent.isThumbnail` 從源頭跳過縮圖列（見 `PhotoCardView`／
+    /// `MasonryPhotoWallView`），這裡的集合是給其他真正失敗的情況（檔案格式看不懂、網路失敗
+    /// 等既有情境）通用的硬化，兩者互補、不互斥。
+    private var failedDurations: Set<UUID> = []
     /// 世代計數器（merge-review R1 M1／M2；R2-M1 修正）：每次 `refresh` 呼叫都遞增並記下
     /// 自己的世代號，await 回來要寫回 `entries`／`hasMorePages`／`refreshState`（或
     /// `loadMoreState`）前先確認世代號仍等於目前最新——不等於就代表這次呼叫已經被更新的
@@ -57,8 +70,14 @@ final class TimelineStore {
     /// 這個問題，只有尾端身分能直接回答。
     private var generation = 0
 
-    init(apiClient: TimelineAPIClient) {
+    init(
+        apiClient: TimelineAPIClient,
+        durationLoader: @escaping @Sendable (URL) async throws -> CMTime = { url in
+            try await AVURLAsset(url: url).load(.duration)
+        }
+    ) {
         self.apiClient = apiClient
+        self.durationLoader = durationLoader
     }
 
     /// 第一頁／篩選條件改變時呼叫——整批換掉 `entries`。刻意**不**用 `isSubmitting` 擋重入
@@ -168,21 +187,26 @@ final class TimelineStore {
         hasMorePages = true
         videoDurations = [:]
         loadingDurations = []
+        failedDurations = []
         familyID = nil
         childID = nil
         generation += 1
     }
 
-    /// 讀一支影片的時長並快取；已經讀過或正在讀的 id 直接跳過（避免同一支影片的卡片
-    /// 多次觸發 `.task` 時重複打 Storage）。讀取失敗（例如檔案格式看不懂、網路失敗）時
-    /// 靜默放棄——呼叫端（`videoDurations[id]` 仍是 nil）退回只顯示「影片」不帶秒數，
-    /// 不是整張卡片失敗。
+    /// 讀一支影片的時長並快取；已經讀過、正在讀、或讀過且失敗的 id 直接跳過（避免同一支
+    /// 影片的卡片多次觸發 `.task` 時重複打 Storage——R2-M1：失敗也要記，不是只記成功，見
+    /// `failedDurations` 文件註解）。讀取失敗（例如檔案格式看不懂、網路失敗、縮圖 JPEG 本來
+    /// 就解不出時長）時靜默放棄——呼叫端（`videoDurations[id]` 仍是 nil）退回只顯示「影片」
+    /// 不帶秒數，不是整張卡片失敗。
     func loadVideoDuration(mediaID: UUID, url: URL) async {
-        guard videoDurations[mediaID] == nil, !loadingDurations.contains(mediaID) else { return }
+        guard videoDurations[mediaID] == nil, !loadingDurations.contains(mediaID),
+              !failedDurations.contains(mediaID) else { return }
         loadingDurations.insert(mediaID)
         defer { loadingDurations.remove(mediaID) }
-        let asset = AVURLAsset(url: url)
-        guard let duration = try? await asset.load(.duration), duration.isValid, !duration.isIndefinite else { return }
+        guard let duration = try? await durationLoader(url), duration.isValid, !duration.isIndefinite else {
+            failedDurations.insert(mediaID)
+            return
+        }
         videoDurations[mediaID] = CMTimeGetSeconds(duration)
     }
 }

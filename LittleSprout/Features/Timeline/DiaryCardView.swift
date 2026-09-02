@@ -97,15 +97,15 @@ struct DiaryCardView: View {
             previewPhotos: [
                 MediaContent(
                     id: UUID(), type: .photo, width: 4, height: 3, thumbWidth: nil, thumbHeight: nil,
-                    storagePath: "preview/1.jpg", signedURL: nil
+                    storagePath: "preview/1.jpg", isThumbnail: false, signedURL: nil
                 ),
                 MediaContent(
                     id: UUID(), type: .photo, width: 3, height: 4, thumbWidth: nil, thumbHeight: nil,
-                    storagePath: "preview/2.jpg", signedURL: nil
+                    storagePath: "preview/2.jpg", isThumbnail: false, signedURL: nil
                 ),
                 MediaContent(
                     id: UUID(), type: .photo, width: 1, height: 1, thumbWidth: nil, thumbHeight: nil,
-                    storagePath: "preview/3.jpg", signedURL: nil
+                    storagePath: "preview/3.jpg", isThumbnail: false, signedURL: nil
                 )
             ],
             totalPhotoCount: 6
