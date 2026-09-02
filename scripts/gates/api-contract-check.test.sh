@@ -3,7 +3,7 @@
 # 「前饋必有反饋」對 gate 本身也適用：文字解析器（本機 push-gate 用的 best-effort
 # 模式）若退化或漏判，這裡會紅。
 #
-# 範圍：①-⑫ 走 --text（文字解析）模式；⑬-⑮ 用合成的 catalog 輸入檔直接餵
+# 範圍：①-⑬ 走 --text（文字解析）模式；⑭-⑯ 用合成的 catalog 輸入檔直接餵
 # api_contract_check.py --catalog（LS-54 N3），驗的是解析與大小寫 fail-loud——psql 對
 # 活資料庫的查詢本身仍不在這裡（需要已套用 migrations 的活 DB，不適合塞進這個快速、
 # 不起 DB 的 rules job），由 CI db job 自己每次真的執行來回歸驗證（LS-41 開發時也已用
@@ -153,6 +153,24 @@ SQL
 contract_doc "$d/API.md" "bar(text, integer[])" ""
 expect 0 '⑫ inout／variadic 保留型別（LS-54 N1）' "$d/migrations" "$d/API.md"
 
+# ⑬ 同一支（或稍後一支）migration 內 DROP 舊簽名、CREATE 回完全相同的簽名，只是
+#    改了回傳型別（`CREATE OR REPLACE FUNCTION` 不允許改變回傳型別，例如
+#    `RETURNS TABLE(...)` 的欄位改名／改型別，只能先 DROP 再重建）——「先蒐集全部
+#    CREATE、再套用全部 DROP」的兩批次模式會把這種合法寫法誤判成「這支 RPC 已經
+#    不存在」（LS-121 實測踩到：get_family_timeline 的 DROP＋CREATE 用了完全相同的
+#    參數簽章，只改了 RETURNS TABLE 的欄位）；改成依文字出現順序單一序列重播後，
+#    DROP 之後又出現的同簽名 CREATE 要正確地重新加回去
+d=$(new_case case13_drop_then_recreate_same_sig)
+cat > "$d/migrations/001.sql" <<'SQL'
+create function public.foo(a uuid) returns table(x uuid) language sql as $$ select a $$;
+SQL
+cat > "$d/migrations/002.sql" <<'SQL'
+drop function public.foo(uuid);
+create function public.foo(a uuid) returns table(x uuid[]) language sql as $$ select array[a] $$;
+SQL
+contract_doc "$d/API.md" "foo(uuid)" ""
+expect 0 '⑬ 同簽名 drop 之後又 create 回來（只改回傳型別）要視為仍存在（LS-121）' "$d/migrations" "$d/API.md"
+
 # --catalog 模式的合成輸入（LS-54 N3）：不起 DB，直接餵 api_contract_check.py 兩個
 # 「psql 查出來的樣子」的檔案，驗的是解析與大小寫 fail-loud，不是 psql 查詢本身
 # （那部分仍靠 CI db job 實跑）。
@@ -170,29 +188,29 @@ expect_catalog() {  # <期望 exit code> <樣本名稱> <API.md> <rpc_file> <tab
   fi
 }
 
-# ⑬ catalog 正向：pg_get_function_identity_arguments 的真實形狀（保留參數名、INOUT／
+# ⑭ catalog 正向：pg_get_function_identity_arguments 的真實形狀（保留參數名、INOUT／
 #    VARIADIC 大寫前綴、零參數是空括號）都解析得對，與 doc 一致要綠
-d=$(new_case case13_catalog_ok)
+d=$(new_case case14_catalog_ok)
 printf '%s\n' 'foo(p_a text, p_b uuid)' 'bar(INOUT a text, VARIADIC b integer[])' 'baz()' > "$d/rpcs.txt"
 printf '%s\n' 'widgets' > "$d/tables.txt"
 contract_doc "$d/API.md" $'foo(text, uuid)\nbar(text, integer[])\nbaz()' "widgets"
-expect_catalog 0 '⑬ catalog 合成輸入正向（含 INOUT／VARIADIC／零參數）' "$d/API.md" "$d/rpcs.txt" "$d/tables.txt"
+expect_catalog 0 '⑭ catalog 合成輸入正向（含 INOUT／VARIADIC／零參數）' "$d/API.md" "$d/rpcs.txt" "$d/tables.txt"
 
-# ⑭ catalog 含大寫表名（只可能來自 "Widgets" 引號識別字）必須紅，不得 .lower() 後靜默對上（LS-54 N3）
-d=$(new_case case14_catalog_uppercase_table)
+# ⑮ catalog 含大寫表名（只可能來自 "Widgets" 引號識別字）必須紅，不得 .lower() 後靜默對上（LS-54 N3）
+d=$(new_case case15_catalog_uppercase_table)
 printf '%s\n' 'foo(p_a text)' > "$d/rpcs.txt"
 printf '%s\n' 'Widgets' > "$d/tables.txt"
 contract_doc "$d/API.md" "foo(text)" "widgets"
-expect_catalog 1 '⑭ catalog 大寫表名 fail loud（LS-54 N3）' "$d/API.md" "$d/rpcs.txt" "$d/tables.txt"
+expect_catalog 1 '⑮ catalog 大寫表名 fail loud（LS-54 N3）' "$d/API.md" "$d/rpcs.txt" "$d/tables.txt"
 
-# ⑮ 同上，RPC 名稱含大寫
-d=$(new_case case15_catalog_uppercase_rpc)
+# ⑯ 同上，RPC 名稱含大寫
+d=$(new_case case16_catalog_uppercase_rpc)
 printf '%s\n' 'Foo(p_a text)' > "$d/rpcs.txt"
 printf '%s\n' 'widgets' > "$d/tables.txt"
 contract_doc "$d/API.md" "foo(text)" "widgets"
-expect_catalog 1 '⑮ catalog 大寫 RPC 名 fail loud（LS-54 N3）' "$d/API.md" "$d/rpcs.txt" "$d/tables.txt"
+expect_catalog 1 '⑯ catalog 大寫 RPC 名 fail loud（LS-54 N3）' "$d/API.md" "$d/rpcs.txt" "$d/tables.txt"
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ api-contract-check 自測通過（15 組樣本：①-⑫ --text、⑬-⑮ --catalog 合成輸入；psql 查活 DB 靠 CI db job 本身回歸）"
+  echo "✓ api-contract-check 自測通過（16 組樣本：①-⑬ --text、⑭-⑯ --catalog 合成輸入；psql 查活 DB 靠 CI db job 本身回歸）"
 fi
 exit "$fail"
