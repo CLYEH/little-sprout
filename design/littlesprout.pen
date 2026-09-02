@@ -79333,7 +79333,7 @@
       "name": "Stress / 13-iPad 日記詳情 · 20 張照片壓測",
       "clip": true,
       "width": 834,
-      "height": 1400,
+      "height": 1408,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -79407,6 +79407,12 @@
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": 16,
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-label",
+                    0
+                  ],
                   "children": [
                     {
                       "type": "frame",
@@ -79420,6 +79426,7 @@
                           "id": "QqQTn",
                           "name": "Print Cell",
                           "width": 109.33,
+                          "height": 110,
                           "fill": [
                             "$print-paper",
                             {
@@ -79549,7 +79556,7 @@
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 70.9,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -79598,7 +79605,7 @@
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -79615,7 +79622,7 @@
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -80489,6 +80496,7 @@
                           "id": "T0CAaE",
                           "name": "Print Cell",
                           "width": 109.33,
+                          "height": 110,
                           "fill": [
                             "$print-paper",
                             {
@@ -80618,7 +80626,7 @@
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 70.9,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -80667,7 +80675,7 @@
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -80684,7 +80692,7 @@
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -80922,6 +80930,7 @@
                           "id": "XsAVC",
                           "name": "Print Cell",
                           "width": 109.33,
+                          "height": 110,
                           "fill": [
                             "$print-paper",
                             {
@@ -81051,7 +81060,7 @@
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 70.9,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -81100,7 +81109,7 @@
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -81117,7 +81126,7 @@
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -81355,6 +81364,7 @@
                           "id": "wNBQ9",
                           "name": "Print Cell",
                           "width": 109.33,
+                          "height": 110,
                           "fill": [
                             "$print-paper",
                             {
@@ -81484,7 +81494,7 @@
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 70.9,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -81533,7 +81543,7 @@
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -81550,7 +81560,7 @@
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -82424,6 +82434,7 @@
                           "id": "QsSvL",
                           "name": "Print Cell",
                           "width": 109.33,
+                          "height": 110,
                           "fill": [
                             "$print-paper",
                             {
@@ -82553,7 +82564,7 @@
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 70.9,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -82602,7 +82613,7 @@
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -82619,7 +82630,7 @@
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -82857,6 +82868,7 @@
                           "id": "Y3BZu7",
                           "name": "Print Cell",
                           "width": 109.33,
+                          "height": 110,
                           "fill": [
                             "$print-paper",
                             {
@@ -82986,7 +82998,7 @@
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 70.9,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -83035,7 +83047,7 @@
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -83052,7 +83064,7 @@
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -83290,6 +83302,7 @@
                           "id": "I2ojmY",
                           "name": "Print Cell",
                           "width": 109.33,
+                          "height": 110,
                           "fill": [
                             "$print-paper",
                             {
@@ -83419,7 +83432,7 @@
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 70.9,
+                              "height": 70,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -83468,7 +83481,7 @@
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -83485,7 +83498,7 @@
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 88.33,
-                              "y": 89.9,
+                              "y": 89,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
