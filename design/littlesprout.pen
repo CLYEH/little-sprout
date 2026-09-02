@@ -54519,18 +54519,6 @@
                           "ref": "umJHD",
                           "name": "Card Photo 1",
                           "width": "fill_container"
-                        },
-                        {
-                          "id": "y6JCGh",
-                          "type": "ref",
-                          "ref": "qtCd7",
-                          "name": "Card Diary 1",
-                          "width": "fill_container",
-                          "descendants": {
-                            "p2odx": {
-                              "content": "今天在溜滑梯上玩得好開心，還交了一個新朋友，說好下次要一起帶挖沙工具來。"
-                            }
-                          }
                         }
                       ]
                     }
@@ -87665,24 +87653,6 @@
                       "gap": "$sp-item",
                       "children": [
                         {
-                          "id": "P1CltA",
-                          "type": "ref",
-                          "ref": "umJHD",
-                          "name": "Card Photo 1",
-                          "width": "fill_container",
-                          "descendants": {
-                            "VywUw": {
-                              "content": "小安和小明在公園盪鞦韆 · 小安 2 歲 3 個月、小明 8 個月"
-                            },
-                            "SNbd8": {
-                              "y": 418
-                            },
-                            "P15GB": {
-                              "y": 418
-                            }
-                          }
-                        },
-                        {
                           "id": "fZ3KF",
                           "type": "ref",
                           "ref": "qtCd7",
@@ -87723,7 +87693,7 @@
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "padding": [
-                    48,
+                    510,
                     0,
                     0,
                     0
@@ -87758,27 +87728,6 @@
                       "layout": "vertical",
                       "gap": "$sp-item",
                       "children": [
-                        {
-                          "id": "CFlP7",
-                          "type": "ref",
-                          "ref": "bhroo",
-                          "name": "Card Album 1",
-                          "width": "fill_container",
-                          "descendants": {
-                            "Qjdzx": {
-                              "y": 330
-                            },
-                            "o5O1GD": {
-                              "y": 323
-                            },
-                            "mlORb": {
-                              "y": 302
-                            },
-                            "atAkU": {
-                              "y": 302
-                            }
-                          }
-                        },
                         {
                           "id": "i6X3f",
                           "type": "ref",
