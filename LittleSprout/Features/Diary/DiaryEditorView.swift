@@ -6,8 +6,9 @@ import SwiftUI
 /// 日期／寶貝歸屬兩個欄位（`DiaryEditorView+Fields.swift`）→ 釘底 Action Bar（`safeAreaInset`，
 /// 同 `InviteFamilyView` 的既有慣例）。
 ///
-/// 目前唯一入口是 `TimelineView` 導覽列的暫時「+」鈕（時間軸正式的建立入口／FAB 是 LS-126
-/// 範圍，見該檔文件註解）——本票只保證「編輯器本身」對照核可稿，不做時間軸／Tab Bar。
+/// 入口是 `TimelineView` Header 停靠的具名建立鈕「＋ 新增回憶」（LS-126 依 LS-119 核可稿落地，
+/// 取代了本票原本導覽列的暫時「+」鈕，已整顆移除，見該檔文件註解）——本票只保證「編輯器
+/// 本身」對照核可稿，不做時間軸／Tab Bar。
 struct DiaryEditorView: View {
     // 不是 private：`+Photos.swift`／`+Fields.swift`／`+ActionBar.swift` 需要讀寫（同下方
     // `@State` 群的既有慣例說明）。

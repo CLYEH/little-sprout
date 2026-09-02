@@ -86,6 +86,41 @@ final class DiaryComposerStorePublishTests: XCTestCase {
         )
     }
 
+    /// 順手項（LS-125／126 收尾 dead-code-sweeper，comment 52289daf）：`StubMediaUploadService`
+    /// 的 `uploadVideoCalls`／`setUploadVideoHandler` 先前沒有任何呼叫端——`publish()` 對影片
+    /// 草稿只餵過 `uploadPhoto` 的整合測試，沒有測過影片這條路徑真的會呼叫 `uploadVideo`、
+    /// 參數對不對得上。12 秒（60 秒內）不會被 `VideoTrimmer` 裁切（`trimmedIfNeeded` 早退
+    /// 分支，見該檔文件註解），沿用草稿原始檔案路徑／尺寸——不需要真的影片檔案就能驗證整條
+    /// 路徑接得對。
+    func test_publish_withVideoDraft_callsUploadVideoWithDraftParameters() async {
+        let diaryClient = StubDiaryAPIClient()
+        let mediaService = StubMediaUploadService()
+        let videoMediaID = UUID()
+        mediaService.setUploadVideoHandler { _, _, _, _ in videoMediaID }
+        diaryClient.setCreateHandler { _, _, _, _ in UUID() }
+        let store = makeStore(diaryAPIClient: diaryClient, mediaUploadService: mediaService)
+        store.body = "今天拍了一段影片"
+        let videoURL = URL(fileURLWithPath: "/tmp/publish-video-\(UUID().uuidString).mp4")
+        store.addVideo(
+            fileURL: videoURL, fileExtension: "mp4", duration: 12,
+            pixelSize: PixelSize(width: 1920, height: 1080), previewImage: nil
+        )
+
+        let result = await store.publish()
+
+        XCTAssertTrue(result)
+        XCTAssertEqual(mediaService.uploadPhotoCalls.count, 0, "純影片草稿不該呼叫 uploadPhoto")
+        guard let call = mediaService.uploadVideoCalls.first else {
+            return XCTFail("應該呼叫一次 uploadVideo")
+        }
+        XCTAssertEqual(mediaService.uploadVideoCalls.count, 1)
+        XCTAssertEqual(call.familyID, familyID)
+        XCTAssertEqual(call.fileURL, videoURL, "60 秒內未裁切，應該沿用草稿原始檔案路徑")
+        XCTAssertEqual(call.fileExtension, "mp4")
+        XCTAssertEqual(call.pixelSize, PixelSize(width: 1920, height: 1080), "未裁切應該沿用草稿原本量到的尺寸")
+        XCTAssertEqual(diaryClient.attachMediaCalls.first?.mediaIDs, [videoMediaID])
+    }
+
     func test_publish_unspecifiedChild_sendsEmptyChildIDs() async {
         let diaryClient = StubDiaryAPIClient()
         let store = makeStore(diaryAPIClient: diaryClient)
