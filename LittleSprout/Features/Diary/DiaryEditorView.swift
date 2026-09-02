@@ -56,6 +56,10 @@ struct DiaryEditorView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        // QA 視覺對稿 FAIL（LS-125 comment `ed017e85`）：稿面 canvas 高度預算完全沒有 Tab
+        // Bar（Status Bar+Nav+Body+Action Bar+Home Indicator=906），但這裡只隱藏了
+        // navigation bar，推入這個畫面時 App 的 Tab Bar 仍在 Action Bar 下方完整顯示。
+        .toolbar(.hidden, for: .tabBar)
         .sheet(isPresented: $showsDatePicker) {
             DiaryDatePickerSheet(selection: $store.entryDate)
         }
