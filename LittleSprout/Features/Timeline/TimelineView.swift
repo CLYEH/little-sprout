@@ -4,16 +4,20 @@ import SwiftUI
 /// （日記便箋卡／相簿卡／照片卡）、Day Divider 日分組、`ChildFilterBar` 篩選、下拉更新／
 /// 捲底載入、Header 停靠「＋ 新增回憶」具名建立鈕。
 ///
-/// `onCreateMemory`：LS-125（日記編輯器）的入口以閉包預留（票文環境段：「不得依賴其未併入的
-/// 型別」）——LS-125 併入後由呼叫端（`SectionContentView`）換成真正導向編輯器的閉包，這裡
-/// 完全不 import 任何 LS-125 的型別。
+/// merge LS-125（日記編輯器）：`onCreateMemory` 閉包預留（LS-125 併入前的暫時做法，票文
+/// 環境段「不得依賴其未併入的型別」）在 LS-125 併入後改直接持有 `diaryAPIClient`／
+/// `mediaUploadService`、`showsDiaryEditor` 狀態與導覽——同 LS-125 原本（舊路徑
+/// `Features/TimelineView.swift`）的做法，Header 的「新增回憶」具名鈕取代原本導覽列的暫時
+/// 「+」鈕（已整顆移除）。
 struct TimelineView: View {
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
     let timelineStore: TimelineStore
-    var onCreateMemory: () -> Void = {}
+    let diaryAPIClient: DiaryAPIClient
+    let mediaUploadService: MediaUploadService
 
     @State private var selectedChildID: UUID?
+    @State private var showsDiaryEditor = false
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     /// 家庭與寶貝篩選任一改變都要重新整理時間軸——合成單一 Hashable key，避免家庭
@@ -45,6 +49,14 @@ struct TimelineView: View {
             switch route {
             case .diaryDetail(let diaryID):
                 DiaryDetailView(diaryID: diaryID, timelineStore: timelineStore, childrenStore: childrenStore)
+            }
+        }
+        .navigationDestination(isPresented: $showsDiaryEditor) {
+            if let familyID = familyStore.myFamily?.id {
+                DiaryEditorView(
+                    familyID: familyID, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
+                    childrenStore: childrenStore
+                )
             }
         }
     }
@@ -111,7 +123,7 @@ struct TimelineView: View {
     /// 相同 padding＋icon＋semibold 文字的先例）；icon 換成裸 `"plus"` `.small`（18pt）對應
     /// lucide 的純加號，不用會多畫一個圓的 `plus.circle.fill`。
     private var createMemoryButton: some View {
-        Button(action: onCreateMemory) {
+        Button { showsDiaryEditor = true } label: {
             HStack(spacing: AppSpacing.tight) {
                 // delta 復審 m2：這顆現在被 `TapTargetGateScreenName.timelineDefaultState`
                 // 正式量測，sentinel／違規訊息都靠 accessibility label 精準對到「新增回憶」
@@ -312,6 +324,9 @@ struct TimelineView: View {
 
 #Preview {
     NavigationStack {
-        TimelineView(familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview())
+        TimelineView(
+            familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
+            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
+        )
     }
 }

@@ -15,6 +15,12 @@
 enum TapTargetGateScreenName: String {
     case otpVerification = "OTPVerificationView"
     case settings = "SettingsView"
+    // merge-review R1 M5：`DiaryEditorView` 原本具名排除在 tap-target-exemptions.txt，理由
+    // 「多步驟表單流程」不成立——初始態不需要任何 seeding（`PreviewDiaryAPIClient`／
+    // `PreviewMediaUploadService` 已經是 `#Preview` 在用的假 client，`ChildrenStore.preview()`
+    // 同理），初始態本身就有 5 顆可點元件會被量到（取消鈕／新增照片 cell／日期欄位／歸屬欄位／
+    // 發佈鈕）——改註冊進 harness，讓這個畫面之後的回歸能被機械 gate 抓到。
+    case diaryEditor = "DiaryEditorView"
     // LS-126 delta 復審 m2：`TimelineView` 整體仍在 `tap-target-exemptions.txt`（日分組卡片／
     // 捲底載入需要多筆假資料與捲動狀態才有代表性）——但 Header 停靠的「新增回憶」建立鈕不看
     // 任何 feed 資料，`.preview()` 空狀態就會渲染，是這個畫面唯一「不需要 seed 就有代表性」
@@ -38,6 +44,7 @@ enum TapTargetGateScreenName: String {
         switch self {
         case .otpVerification: return .staticText("輸入驗證碼")
         case .settings: return .button("登出")
+        case .diaryEditor: return .staticText("寫日記")
         case .timelineDefaultState: return .button("新增回憶")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")

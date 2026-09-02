@@ -13,6 +13,12 @@ struct LittleSproutApp: App {
     // LS-126：跟 `childrenStore` 同理，隨 app 存活——時間軸的 keyset 分頁狀態（`entries`／
     // `hasMorePages`／游標）若每次重繪都重建會遺失，切分頁再切回來會整頁重新從第一頁載入。
     @State private var timelineStore: TimelineStore
+    /// LS-125：日記編輯器（`DiaryEditorView`）用的 client——不是 `@State`：兩者都是不可變的
+    /// 純 service 物件（同 `familyStore` 內部包的 `SupabaseFamilyAPIClient`），本身不 Observable
+    /// 也不需要跨重繪保留可變狀態，草稿狀態的持久性由 `DiaryComposerStore`（畫面等級，見該檔）
+    /// 負責，不需要在這裡另外包一層 store。
+    let diaryAPIClient: DiaryAPIClient
+    let mediaUploadService: MediaUploadService
     /// LS-108：`littlesprout://invite/<code>` deep link（LS-39 已註冊 scheme）冷／熱啟動皆走
     /// `.onOpenURL`——寫進這裡，`ForkView` 是唯一消費者（見該檔文件）。這一層只負責接住 URL、
     /// 解析出碼，不判斷「現在該不該導頁」，那是 `ForkView` 才知道的事（是否已登入、是否已有
@@ -25,6 +31,8 @@ struct LittleSproutApp: App {
         _familyStore = State(initialValue: FamilyStore(apiClient: SupabaseFamilyAPIClient(client: client)))
         _childrenStore = State(initialValue: ChildrenStore(apiClient: SupabaseChildAPIClient(client: client)))
         _timelineStore = State(initialValue: TimelineStore(apiClient: SupabaseTimelineAPIClient(client: client)))
+        diaryAPIClient = SupabaseDiaryAPIClient(client: client)
+        mediaUploadService = SupabaseMediaUploadService(client: client)
     }
 
     var body: some Scene {
@@ -52,6 +60,8 @@ struct LittleSproutApp: App {
             familyStore: familyStore,
             childrenStore: childrenStore,
             timelineStore: timelineStore,
+            diaryAPIClient: diaryAPIClient,
+            mediaUploadService: mediaUploadService,
             pendingInviteCode: $pendingInviteCode
         )
         .onOpenURL { url in
