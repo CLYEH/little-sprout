@@ -56553,7 +56553,7 @@
                           "id": "o672s",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月31日（昨天）",
+                          "content": "8月31日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -57334,7 +57334,7 @@
                           "id": "mX38v",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月31日（昨天）",
+                          "content": "8月31日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -58115,7 +58115,7 @@
                           "id": "CNEzG",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月31日（昨天）",
+                          "content": "8月31日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -58946,7 +58946,7 @@
                           "id": "iVRwZ",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月31日（昨天）",
+                          "content": "8月31日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -59710,7 +59710,7 @@
                               "id": "Q4vsM2",
                               "name": "Field Value",
                               "fill": "$text-primary",
-                              "content": "8月31日（昨天）",
+                              "content": "8月31日（今天）",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
                               "fontWeight": "normal"
@@ -60573,7 +60573,7 @@
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "8月31日（昨天）",
+                          "content": "8月31日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -66010,7 +66010,7 @@
                           "id": "EjvWf",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月31日（昨天）",
+                          "content": "8月31日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -69177,7 +69177,7 @@
                           "id": "kimoc",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月31日（昨天）",
+                          "content": "8月31日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -69871,7 +69871,7 @@
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "8月31日（昨天）",
+                          "content": "8月31日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -86984,7 +86984,7 @@
                           "id": "VBQ3A",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月31日（昨天）",
+                          "content": "8月31日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -87537,48 +87537,6 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "A2a9e",
-                              "layoutPosition": "absolute",
-                              "x": 4,
-                              "y": 70,
-                              "name": "Video Badge",
-                              "opacity": 0.75,
-                              "width": 88,
-                              "height": 22,
-                              "fill": "$print-ink",
-                              "cornerRadius": "$radius-full",
-                              "gap": "$sp-tight",
-                              "padding": [
-                                2,
-                                "$sp-tight"
-                              ],
-                              "justifyContent": "center",
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "id": "bxYNa",
-                                  "name": "Play Icon",
-                                  "width": 12,
-                                  "height": 12,
-                                  "icon": "play",
-                                  "library": "lucide",
-                                  "fill": "$on-photo"
-                                },
-                                {
-                                  "type": "text",
-                                  "id": "oomYx",
-                                  "name": "Duration Label",
-                                  "fill": "$on-photo",
-                                  "content": "影片 0:32",
-                                  "fontFamily": "$font",
-                                  "fontSize": 13,
-                                  "fontWeight": "700"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
                               "id": "HyS26",
                               "layoutPosition": "absolute",
                               "x": 4,
@@ -87891,7 +87849,7 @@
                           "id": "a4ZAo",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月31日（昨天）",
+                          "content": "8月31日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
