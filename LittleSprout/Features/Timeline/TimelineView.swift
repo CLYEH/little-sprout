@@ -176,10 +176,18 @@ struct TimelineView: View {
                     Text(error.userFacingMessage)
                         .appFont(.note)
                         .foregroundStyle(Color.lsTextSecondary)
-                    Button("重新載入") {
+                    // merge-review R2-M2：純文字 Button 沒有 padding／contentShape 時命中區
+                    // 只有文字外框（repo 內同構造 `OTPVerificationView` 重寄鈕實測過
+                    // 163.0×22.0pt，遠低於 44pt），改用 label closure 加垂直 padding 撐大
+                    // 點擊區（同 `80af9e2` 既有慣例）。
+                    Button {
                         Task { await timelineStore.loadMore() }
+                    } label: {
+                        Text("重新載入")
+                            .appFont(.body, weight: .semibold)
+                            .padding(.vertical, AppSpacing.group)
+                            .contentShape(Rectangle())
                     }
-                    .appFont(.body, weight: .semibold)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, AppSpacing.item)
@@ -211,13 +219,19 @@ struct TimelineView: View {
                     Text(error.userFacingMessage).appFont(.note)
                 }
                 .foregroundStyle(Color.lsTextPrimary)
-                Button("重新載入") {
+                // merge-review R2-M2：同 `loadMoreTrigger` 的「重新載入」——label closure
+                // 加垂直 padding＋`contentShape`，不是裸 `Button(_:action:)`。
+                Button {
                     Task {
                         guard let familyID = familyStore.myFamily?.id else { return }
                         await timelineStore.refresh(familyID: familyID, childID: selectedChildID)
                     }
+                } label: {
+                    Text("重新載入")
+                        .appFont(.body, weight: .semibold)
+                        .padding(.vertical, AppSpacing.group)
+                        .contentShape(Rectangle())
                 }
-                .appFont(.body, weight: .semibold)
             }
             .frame(maxWidth: .infinity)
         case .idle, .success:
