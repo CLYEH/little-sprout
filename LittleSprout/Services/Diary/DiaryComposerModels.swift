@@ -103,3 +103,13 @@ enum DiaryPhotoAddOutcome: Equatable {
     case added
     case capacityReached
 }
+
+/// `DiaryComposerStore.resolveDiaryID` 的 memoized 分支比對用——`childIDs` 特意存成 `Set`
+/// 而不是 `[UUID]`：`selectedChildIDs` 本身就是集合，兩次呼叫之間即使集合內容相同，`Array(
+/// selectedChildIDs)` 的走訪順序也不保證一致，用陣列比較會有假陰性（誤判成「內容變了」，
+/// 白白多打一次 `update_diary_entry`）（merge-review R2 N1）。
+struct DiaryContentSnapshot: Equatable {
+    let body: String
+    let entryDate: Date
+    let childIDs: Set<UUID>
+}

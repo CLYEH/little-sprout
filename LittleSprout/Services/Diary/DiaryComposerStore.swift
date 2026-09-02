@@ -57,6 +57,14 @@ final class DiaryComposerStore {
     /// 已成功建立的日記 id——`publish()` 失敗後重試時若已經有值就跳過 `createDiaryEntry`，
     /// 避免重複建立（merge-review R1 M2）。
     private var createdDiaryID: UUID?
+    /// 建立／最近一次同步到後端當下的內容——重試時若目前的 `body`／`entryDate`／
+    /// `selectedChildIDs` 跟這份快照不同，代表使用者在失敗後編輯過（`resetPublishFailure`
+    /// 讓失敗態下這三個欄位都還能編輯），要先呼叫 `updateDiaryEntry` 把新內容送上去，不能
+    /// 只是重用舊 id 直接跳去 `attachMedia`（merge-review R2 N1：先前的 memoized 分支收了
+    /// `body`／`childIDs` 參數卻整組沒用，重試會用「建立當下」的舊內容成功、`publishState`
+    /// 變成 `.success`、畫面 dismiss，但時間軸上留下的是改之前的版本——使用者看到「成功」，
+    /// 實際送出去的不是他剛剛改過的內容）。
+    private var createdDiarySnapshot: DiaryContentSnapshot?
     /// 草稿 id → 已上傳成功的 media id——重試時已經上傳過的照片／影片不會重傳
     /// （merge-review R1 M2）。用草稿 id 對應（不是陣列 index）：使用者可能在失敗後、重試前
     /// 編輯佇列（移除某張），這樣做仍能正確地「這張傳過了就不用再傳，那張沒傳過的繼續傳」。
@@ -181,7 +189,11 @@ final class DiaryComposerStore {
 
     @discardableResult
     func publish() async -> Bool {
-        guard !publishState.isInFlight, !isLoadingPickedItems else { return false }
+        // merge-review R2 n2（防禦性）：成功之後理論上呼叫端會立刻 dismiss、不會再呼叫
+        // `publish()`（`store` 是畫面等級的 `@State`，成功後那個實例就沒有下一次送出的機會），
+        // 但 `resolveDiaryID` 的記憶本身沒有任何 invalidate 條件，這裡補一道底線，不完全依賴
+        // 呼叫端的使用方式維持正確性。
+        guard !publishState.isInFlight, publishState != .success, !isLoadingPickedItems else { return false }
         let trimmedBody = body.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedBody.isEmpty else {
             showsEmptyBodyMessage = true
@@ -191,7 +203,9 @@ final class DiaryComposerStore {
         publishState = .uploading
         do {
             let mediaIDs = try await uploadAllMedia()
-            let diaryID = try await resolveDiaryID(body: trimmedBody, childIDs: Array(selectedChildIDs))
+            let diaryID = try await resolveDiaryID(
+                body: trimmedBody, entryDate: entryDate, childIDs: Array(selectedChildIDs)
+            )
             try await diaryAPIClient.attachMedia(diaryID: diaryID, familyID: familyID, mediaIDs: mediaIDs)
             publishState = .success
             return true
@@ -207,12 +221,25 @@ final class DiaryComposerStore {
     /// 已經成功建立過就直接回傳既有 id，不再重複呼叫 `create_diary_entry`（merge-review R1
     /// M2：失敗態常見成因是 `attachMedia` 撞到連線中斷，而不是 `createDiaryEntry` 本身失敗
     /// ——那一步的成果不該被重試白白丟棄，否則使用者重試幾次、時間軸上就多幾篇重複貼文）。
-    private func resolveDiaryID(body: String, childIDs: [UUID]) async throws -> UUID {
-        if let createdDiaryID { return createdDiaryID }
+    /// **R2 N1**：memoized 分支現在會比對 `createdDiarySnapshot`——內容跟建立當下不同就先
+    /// `updateDiaryEntry`（全專案唯一沒有呼叫端的 RPC，見 R1 I5），確保重試送出的是使用者
+    /// 剛剛編輯過的版本，不是靜默沿用舊內容。
+    private func resolveDiaryID(body: String, entryDate: Date, childIDs: [UUID]) async throws -> UUID {
+        let snapshot = DiaryContentSnapshot(body: body, entryDate: entryDate, childIDs: Set(childIDs))
+        if let createdDiaryID {
+            if createdDiarySnapshot != snapshot {
+                try await diaryAPIClient.updateDiaryEntry(
+                    diaryID: createdDiaryID, body: body, entryDate: entryDate, childIDs: childIDs
+                )
+                createdDiarySnapshot = snapshot
+            }
+            return createdDiaryID
+        }
         let diaryID = try await diaryAPIClient.createDiaryEntry(
             familyID: familyID, body: body, entryDate: entryDate, childIDs: childIDs
         )
         createdDiaryID = diaryID
+        createdDiarySnapshot = snapshot
         return diaryID
     }
 

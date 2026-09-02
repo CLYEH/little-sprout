@@ -4,10 +4,10 @@ import os
 import XCTest
 
 /// `DiaryComposerStore.publish()` 送出流程：空內文提示（不借用失敗態）、成功依序上傳＋建立
-/// ＋掛 media、API 失敗草稿不清空、進行中擋重複呼叫、失敗後重試不重複建立 diary／不重傳
-/// 已成功的照片（merge-review R1 M2）、照片還在載入時擋下送出（M3）、不支援格式的常駐回話
-/// （m4）。跟 `DiaryComposerStoreTests`（佇列／選取／排序／歸屬）分開檔案，理由見該檔文件
-/// 註解。
+/// ＋掛 media、API 失敗草稿不清空、進行中擋重複呼叫、照片還在載入時擋下送出（M3）、不支援
+/// 格式的常駐回話（m4）。跟 `DiaryComposerStoreTests`（佇列／選取／排序／歸屬）分開檔案，
+/// 理由見該檔文件註解；重試路徑（M2／R2 N1／R2 n2）另外拆到
+/// `DiaryComposerStorePublishRetryTests`，理由見該檔文件註解。
 @MainActor
 final class DiaryComposerStorePublishTests: XCTestCase {
     private let familyID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
@@ -170,80 +170,6 @@ final class DiaryComposerStorePublishTests: XCTestCase {
         store.body = "內容，改過了"
 
         XCTAssertEqual(store.publishState, .idle)
-    }
-
-    // MARK: - 重試不重複建立 diary／不重傳已成功的照片（merge-review R1 M2）
-
-    func test_publish_retryAfterAttachMediaFailure_doesNotRecreateDiaryOrReuploadPhotos() async {
-        let diaryClient = StubDiaryAPIClient()
-        let mediaService = StubMediaUploadService()
-        let newDiaryID = UUID()
-        diaryClient.setCreateHandler { _, _, _, _ in newDiaryID }
-        // `@Sendable` handler 不能直接捕捉可變的區域 `var`（Swift 6 嚴格並發）——同
-        // `test_publish_success_...` 的 `OSAllocatedUnfairLockBox` 理由，這裡改用鎖包住的計數。
-        let attachMediaAttempts = OSAllocatedUnfairLock<Int>(initialState: 0)
-        diaryClient.setAttachMediaHandler { _, _, _ in
-            let attempt = attachMediaAttempts.withLock { state in
-                state += 1
-                return state
-            }
-            if attempt == 1 { throw AppError.network(message: "connection dropped") }
-        }
-        let store = makeStore(diaryAPIClient: diaryClient, mediaUploadService: mediaService)
-        store.body = "8 張照片"
-        addPhoto(store, tag: "a")
-        addPhoto(store, tag: "b")
-
-        let firstResult = await store.publish()
-        XCTAssertFalse(firstResult)
-        XCTAssertEqual(diaryClient.createCalls.count, 1, "第一次嘗試應該建立 diary")
-        XCTAssertEqual(mediaService.uploadPhotoCalls.count, 2, "第一次嘗試應該上傳兩張照片")
-
-        let secondResult = await store.publish()
-
-        XCTAssertTrue(secondResult)
-        XCTAssertEqual(
-            diaryClient.createCalls.count, 1, "重試不該再呼叫 create_diary_entry，否則時間軸上會出現重複貼文"
-        )
-        XCTAssertEqual(
-            mediaService.uploadPhotoCalls.count, 2, "已經上傳成功的照片重試不該重傳，否則會留下孤兒 media 列"
-        )
-        XCTAssertEqual(diaryClient.attachMediaCalls.count, 2, "attachMedia 本身失敗了要重新呼叫")
-        XCTAssertEqual(diaryClient.attachMediaCalls.last?.diaryID, newDiaryID, "第二次呼叫要用同一篇 diary 的 id")
-    }
-
-    func test_publish_retryAfterUploadFailure_onlyReuploadsRemainingPhotos() async {
-        let diaryClient = StubDiaryAPIClient()
-        let mediaService = StubMediaUploadService()
-        let uploadAttempts = OSAllocatedUnfairLock<Int>(initialState: 0)
-        let secondPhotoID = UUID()
-        mediaService.setUploadPhotoHandler { _, data, _, _ in
-            let attempt = uploadAttempts.withLock { state in
-                state += 1
-                return state
-            }
-            // 第一張（tag "a"）永遠成功；第二張（tag "b"）第一次失敗、第二次成功。
-            if String(data: data, encoding: .utf8) == "b", attempt <= 2 {
-                throw AppError.network(message: "dropped mid-upload")
-            }
-            return secondPhotoID
-        }
-        let store = makeStore(diaryAPIClient: diaryClient, mediaUploadService: mediaService)
-        store.body = "內容"
-        addPhoto(store, tag: "a")
-        addPhoto(store, tag: "b")
-
-        let firstResult = await store.publish()
-        XCTAssertFalse(firstResult)
-        let uploadCallsAfterFirstAttempt = mediaService.uploadPhotoCalls.count
-
-        let secondResult = await store.publish()
-
-        XCTAssertTrue(secondResult)
-        XCTAssertEqual(
-            mediaService.uploadPhotoCalls.count, uploadCallsAfterFirstAttempt + 1,
-            "重試只該補傳第一次失敗的那一張，不是把兩張全部重傳"
-        )
     }
 
     // MARK: - 照片還在載入時擋下送出（merge-review R1 M3）
