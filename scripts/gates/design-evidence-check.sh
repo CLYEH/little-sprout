@@ -11,8 +11,9 @@
 #     也不是別票／別分支留下的舊收據）
 #   - 每一份收據的 total_nodes 必須等於 design-landing-check.sh 對「該收據 head_sha 那個時點的 .pen
 #     快照」算出的節點數（R2 F1：不是比對工作區當下／PR 最終那份 .pen——見下方「R2 修正」）
-#   - **輪次最高（最新）那份收據**的 head_sha 必須等於 base..HEAD 範圍內「最後一次觸碰這份 .pen 的
-#     commit」（R2 F2：見下方「R2 修正」），較早輪次的收據只驗自己那個時點的快照，不必是最後一次
+#   - **輪次最高（最新）那份收據**的 head_sha 必須等於 base..head 範圍內「最後一次觸碰這份 .pen 的
+#     commit」（R2 F2：見下方「R2 修正」；head 本機＝HEAD、CI＝--head-sha 傳入的 PR head，LS-127），較早輪次的收據
+#     只驗自己那個時點的快照，不必是最後一次
 #   - 收據必須同時含兩支掃描的輸出：scans.sibling_intersection／scans.row_overflow（LS-67 R1：
 #     ui-designer 只跑對兄弟碰撞無感的 ctx.problems 就宣稱 FLAGGED=0，reviewer 用絕對座標交集才抓到
 #     真碰撞——本 gate 要求兩支掃描的輸出都要在，不能只交一支）
@@ -64,12 +65,20 @@
 #   }
 # }
 #
-# 用法：design-evidence-check.sh <path.pen> --ticket <LS-n> --base <ref>
+# 用法：design-evidence-check.sh <path.pen> --ticket <LS-n> --base <ref> [--head-sha <sha>]
 #   --base 用來算 merge-base（同 branch-ticket-check.sh 的作法）：找出這個 PR 自己新增的收據檔
-#   （<ref>...HEAD 三點語法）與這個 PR 自己對 <path.pen> 的 commit 清單（<merge-base(ref,HEAD)>..HEAD）。
+#   （<ref>...<head> 三點語法）與這個 PR 自己對 <path.pen> 的 commit 清單（<merge-base(ref,head)>..<head>）。
+#   --head-sha（LS-127，CI 用）：<head> 預設是 HEAD。CI 的 actions/checkout 把 HEAD 放在 refs/pull/N/merge（PR head＋base tip
+#   的雙親合併 commit），以它為終點時 merge-base(ref, HEAD) 退化成 base tip，base 自分出後對 .pen 的變更與合併 commit 本身
+#   都被算成本 PR 的（PR #223：LS-114 動的 PXPcH 被列為漏列板、合併 commit c47edc0 被當成最後一次 .pen commit）。CI 改傳
+#   --head-sha ${{ github.event.pull_request.head.sha }}，所有「本 PR 的範圍」一律以 merge-base(ref, head)..head 計算；本機
+#   不給時沿用 HEAD、行為不變。另 (a)：每份收據「本 PR 觸碰的頂層節點」的基準是 merge-base(<merge-base(ref,head)>, 該收據
+#   head_sha)、不是 merge-base(ref,head) 本身——PR 分支自己把 base 併進來後，後者會前進到併入點，歷史收據（快照停在 base
+#   變更前）拿它當基準會把 base 側變更算成自己漏列的板（LS-119 merge-review comment 3d5851ac 實測）。total_nodes 對帳不受
+#   影響，仍以收據 head_sha 那個時點的快照計算；LEGACY_CUTOFF 仍看收據 head_sha 的 committer time（設計分支不得 rebase）。
 set -euo pipefail
 
-pen=""; ticket=""; base=""
+pen=""; ticket=""; base=""; head_sha=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --ticket)
@@ -78,6 +87,9 @@ while [ $# -gt 0 ]; do
     --base)
       [ -n "${2:-}" ] || { echo "✗ design-evidence gate：--base 缺值" >&2; exit 2; }
       base="$2"; shift 2 ;;
+    --head-sha)
+      [ -n "${2:-}" ] || { echo "✗ design-evidence gate：--head-sha 缺值" >&2; exit 2; }
+      head_sha="$2"; shift 2 ;;
     -*) echo "✗ design-evidence gate：未知參數 $1" >&2; exit 2 ;;
     *)
       if [ -n "$pen" ]; then echo "✗ design-evidence gate：只接受一個 .pen 路徑（多給了 $1）" >&2; exit 2; fi
@@ -99,8 +111,17 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-base_sha=$(git merge-base "$base" HEAD 2>/dev/null) || {
-  echo "✗ design-evidence gate：找不到 ${base} 與 HEAD 的共同祖先（fail closed）" >&2
+# LS-127：CI 傳 --head-sha <PR head>，本 PR 的範圍一律以 merge-base(base, head)..head 計算（見檔頭「用法」）；本機沿用 HEAD。
+head="HEAD"
+if [ -n "$head_sha" ]; then
+  head=$(git rev-parse --verify --quiet "${head_sha}^{commit}") || {
+    echo "✗ design-evidence gate：--head-sha「${head_sha}」不是可解析的 commit（fail closed）" >&2
+    exit 2
+  }
+fi
+
+base_sha=$(git merge-base "$base" "$head" 2>/dev/null) || {
+  echo "✗ design-evidence gate：找不到 ${base} 與 ${head} 的共同祖先（fail closed）" >&2
   exit 2
 }
 
@@ -109,8 +130,8 @@ landing_script="${gate_dir}/design-landing-check.sh"
 
 list=$(mktemp)
 trap 'rm -f "$list"' EXIT
-if ! git diff --name-only -z --diff-filter=ACM "${base}...HEAD" -- "design/evidence/${ticket}-r*-overflow.json" > "$list"; then
-  echo "✗ design-evidence gate：git diff（${base}...HEAD）失敗" >&2
+if ! git diff --name-only -z --diff-filter=ACM "${base}...${head}" -- "design/evidence/${ticket}-r*-overflow.json" > "$list"; then
+  echo "✗ design-evidence gate：git diff（${base}...${head}）失敗" >&2
   exit 2
 fi
 
@@ -136,12 +157,12 @@ fi
 # git rev-list 預設由新到舊排序，第一筆就是「最後一次觸碰這份 .pen 的 commit」，R2 F2 要用）。
 # 收據的 head_sha 必須是這個集合的成員——不能是 PR 最終那個 commit（自我指涉不可能），
 # 也不能是別票／別分支複製過來的舊 sha。
-pen_commits=$(git rev-list "${base_sha}..HEAD" -- "$pen") || {
-  echo "✗ design-evidence gate：無法列出 ${base_sha}..HEAD 對 ${pen} 的 commit 清單" >&2
+pen_commits=$(git rev-list "${base_sha}..${head}" -- "$pen") || {
+  echo "✗ design-evidence gate：無法列出 ${base_sha}..${head} 對 ${pen} 的 commit 清單" >&2
   exit 2
 }
 if [ -z "$pen_commits" ]; then
-  echo "✗ design-evidence gate：${base_sha}..HEAD 範圍內找不到任何觸碰 ${pen} 的 commit（不應該發生——呼叫端應只在 .pen 有變更時才呼叫本腳本）" >&2
+  echo "✗ design-evidence gate：${base_sha}..${head} 範圍內找不到任何觸碰 ${pen} 的 commit（不應該發生——呼叫端應只在 .pen 有變更時才呼叫本腳本）" >&2
   exit 2
 fi
 last_pen_commit=$(printf '%s\n' "$pen_commits" | head -1)
@@ -290,13 +311,21 @@ def check_corner_anchor(scan, flagged):
         unknown = [b for b in boards if b not in head_roots]
         if unknown:
             errs.append(f"scans.corner_anchor.boards 含不存在於 head_sha 快照頂層的 id：{unknown}")
-        base_show = subprocess.run(["git", "show", f"{base_sha}:{pen_relpath}"], capture_output=True)
-        base_roots = top_level(base_show.stdout) if base_show.returncode == 0 else {}
-        touched = [rid for rid, (_, blob) in head_roots.items() if rid not in base_roots or base_roots[rid][1] != blob]
-        missing = [rid for rid in touched if rid not in boards]
-        if missing:
-            names = ", ".join(f"{rid}（{head_roots[rid][0]}）" for rid in missing)
-            errs.append(f"scans.corner_anchor.boards 漏列本 PR 對 .pen 有變更的頂層節點：{names}——本票觸碰的板都要在範圍內，不得靠縮小 boards 讓自己的角托錯位進 document_mismatch")
+        # LS-127 (a)：「本 PR 觸碰的頂層節點」的基準是這份收據自己的共同祖先 merge-base(base_sha, head_sha)，不是 base_sha 本身——
+        # PR 分支把 base 併進來後 base_sha 會前進到併入點，歷史收據（快照停在 base 變更前）若拿 base_sha 快照當基準，base 側的
+        # 變更會被算成它漏列的板（LS-119 merge-review comment 3d5851ac 實測：base 前進後歷史收據全紅）。
+        mb = subprocess.run(["git", "merge-base", base_sha, sha], capture_output=True, text=True)
+        touch_base = mb.stdout.strip() if mb.returncode == 0 else ""
+        if not touch_base:
+            errs.append(f"無法算出 merge-base({base_sha[:7]}, {sha[:7]})，不能判定本 PR 觸碰的頂層節點（fail closed）")
+        else:
+            base_show = subprocess.run(["git", "show", f"{touch_base}:{pen_relpath}"], capture_output=True)
+            base_roots = top_level(base_show.stdout) if base_show.returncode == 0 else {}
+            touched = [rid for rid, (_, blob) in head_roots.items() if rid not in base_roots or base_roots[rid][1] != blob]
+            missing = [rid for rid in touched if rid not in boards]
+            if missing:
+                names = ", ".join(f"{rid}（{head_roots[rid][0]}）" for rid in missing)
+                errs.append(f"scans.corner_anchor.boards 漏列本 PR 對 .pen 有變更的頂層節點：{names}——本票觸碰的板都要在範圍內，不得靠縮小 boards 讓自己的角托錯位進 document_mismatch")
     unresolved = scan.get("unresolved")
     if not isinstance(unresolved, list):
         errs.append("scans.corner_anchor.unresolved 必須是陣列（找不到吻合紙面的角托容器清單，可為空）")

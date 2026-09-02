@@ -354,11 +354,18 @@ jobs:
       # 橫列溢出／跨 parent 碰撞／角托錨點，正典腳本 scripts/design/overflow-scan.js；mismatch 只算收據 boards 內、boards
       # 須覆蓋本 PR 對 .pen 頂層節點有變更的板；早於 gate 落地的既有收據沿用兩支）。
       # 限 feature|fix|hotfix head（同 LS-10／LS-50 的票號來源限制——promote／back-merge 沒有本票）。
+      # LS-127：這裡 checkout 的是 refs/pull/N/merge（PR head＋base tip 的雙親合併 commit），以 HEAD 為終點時
+      # merge-base(origin/$BASE, HEAD) 退化成 base tip——base 自分出後對 .pen 的變更與合併 commit 本身都被算成本 PR 的
+      # （PR #223 假紅：LS-114 的 PXPcH 被列為漏列板、合併 commit 被當最後一次 .pen commit）。改以 PR head sha 為終點：
+      # .pen 偵測與 gate 都用 merge-base(origin/$BASE, head.sha)..head.sha；fetch-depth: 0 已含 PR head（合併 commit 的第二親，
+      # ^1 是 base tip——所以從 HEAD --first-parent 走下去是 base 側，不是解法）。
       - name: .pen 掃描收據 gate（LS-68）
         if: github.event_name == 'pull_request' && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/'))
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          base_sha=$(git merge-base "origin/$BASE" HEAD)
-          pens=$(git -c core.quotePath=false diff --name-only --diff-filter=ACM "$base_sha"...HEAD -- '*.pen' || true)
+          base_sha=$(git merge-base "origin/$BASE" "$HEAD_SHA")
+          pens=$(git -c core.quotePath=false diff --name-only --diff-filter=ACM "$base_sha"..."$HEAD_SHA" -- '*.pen' || true)
           if [ -n "$pens" ]; then
             ticket=$(printf '%s' "$HEAD" | sed -nE 's#^(feature|fix|hotfix)/(LS-[1-9][0-9]*)-[a-z0-9][a-z0-9-]*$#\2#p')
             if [ -z "$ticket" ]; then
@@ -366,7 +373,7 @@ jobs:
               exit 1
             fi
             while IFS= read -r p; do
-              bash scripts/gates/design-evidence-check.sh "$p" --ticket "$ticket" --base "origin/$BASE"
+              bash scripts/gates/design-evidence-check.sh "$p" --ticket "$ticket" --base "origin/$BASE" --head-sha "$HEAD_SHA"
             done <<< "$pens"
           fi
 
