@@ -18,8 +18,11 @@ struct AttributionSheet: View {
             headSection
                 .padding(.top, AppSpacing.section)
             ScrollView {
+                // R5 對稿（`design/littlesprout.pen` `zgVn0`／`na6Qp`）：Head 到 Options 量到
+                // 的間距是 `$sp-block`（24），不是 `$sp-section`（44）——後者是 `headSection`
+                // 自己頂端到系統拖曳把手的間距，兩段不是同一個量。
                 optionsSection
-                    .padding(.top, AppSpacing.section)
+                    .padding(.top, AppSpacing.block)
             }
             confirmButton
                 .padding(.top, AppSpacing.block)
@@ -45,10 +48,15 @@ struct AttributionSheet: View {
     private var optionsSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             unspecifiedRow
+            // R5 對稿：分隔線上下量到的是 `$sp-block`（24），不是 `$sp-label`（8）。
             Rectangle().fill(Color.lsBorder).frame(height: 1)
-                .padding(.vertical, AppSpacing.label)
-            ForEach(childrenStore.activeChildren) { child in
-                childRow(child)
+                .padding(.vertical, AppSpacing.block)
+            // R5 對稿：同一組（寶貝清單）裡相鄰兩列之間量到 `$sp-tight`（6）的呼吸間距，先前
+            // 用扁平 `ForEach`＋外層 `spacing: 0`，列與列之間完全貼齊、沒有這段間距。
+            VStack(alignment: .leading, spacing: AppSpacing.tight) {
+                ForEach(childrenStore.activeChildren) { child in
+                    childRow(child)
+                }
             }
         }
     }
