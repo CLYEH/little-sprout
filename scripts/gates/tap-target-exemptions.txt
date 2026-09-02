@@ -17,3 +17,9 @@ InviteFamilyView：需要 FamilyStore preview 帶邀請碼產生狀態，追蹤�
 JoinCodeView：表單流程，追蹤於 LS-96
 JoinWaitingView：需要模擬待審核狀態，追蹤於 LS-96
 TimelineView：需要多筆假資料與捲動狀態才有代表性，追蹤於 LS-96
+DiaryDetailView：需要 TimelineStore 帶一篇日記與附照資料才有代表性，追蹤於 LS-96
+DayDividerView：純顯示元件，無互動元件，追蹤於 LS-96
+DiaryCardView：純顯示元件（導覽由外層 TimelineView 的 NavigationLink 負責，該處已走 tap-target-check 涵蓋的互動路徑），追蹤於 LS-96
+AlbumCardView：純顯示元件，無互動元件，追蹤於 LS-96
+PhotoCardView：純顯示元件，無互動元件，追蹤於 LS-96
+MasonryPhotoWallView：需要多張假照片資料才有代表性，且互動（影片格點按）需要真實簽名 URL，追蹤於 LS-96

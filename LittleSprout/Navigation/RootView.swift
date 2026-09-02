@@ -10,6 +10,7 @@ struct RootView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    let timelineStore: TimelineStore
     /// LS-108 deep link：見 `ForkView` 文件註解，這裡只是原樣轉手往下傳。
     @Binding var pendingInviteCode: String?
 
@@ -22,6 +23,7 @@ struct RootView: View {
                     authStore: authStore,
                     familyStore: familyStore,
                     childrenStore: childrenStore,
+                    timelineStore: timelineStore,
                     pendingInviteCode: $pendingInviteCode
                 )
             } else {
@@ -60,6 +62,7 @@ private struct AuthenticatedGate: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    let timelineStore: TimelineStore
     @Binding var pendingInviteCode: String?
 
     var body: some View {
@@ -73,7 +76,10 @@ private struct AuthenticatedGate: View {
                 }
             case .success:
                 if familyStore.myFamily != nil {
-                    AuthenticatedRootView(authStore: authStore, familyStore: familyStore, childrenStore: childrenStore)
+                    AuthenticatedRootView(
+                        authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
+                        timelineStore: timelineStore
+                    )
                 } else {
                     ForkView(authStore: authStore, familyStore: familyStore, pendingInviteCode: $pendingInviteCode)
                 }
@@ -112,6 +118,7 @@ struct AuthenticatedRootView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    let timelineStore: TimelineStore
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selection: AppSection = .timeline
@@ -120,11 +127,13 @@ struct AuthenticatedRootView: View {
         Group {
             if horizontalSizeClass == .regular {
                 SectionSplitView(
-                    authStore: authStore, familyStore: familyStore, childrenStore: childrenStore, selection: $selection
+                    authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
+                    timelineStore: timelineStore, selection: $selection
                 )
             } else {
                 SectionTabView(
-                    authStore: authStore, familyStore: familyStore, childrenStore: childrenStore, selection: $selection
+                    authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
+                    timelineStore: timelineStore, selection: $selection
                 )
             }
         }
@@ -150,6 +159,7 @@ private struct SectionTabView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    let timelineStore: TimelineStore
     @Binding var selection: AppSection
 
     var body: some View {
@@ -157,7 +167,8 @@ private struct SectionTabView: View {
             ForEach(AppSection.allCases) { section in
                 NavigationStack {
                     SectionContentView(
-                        section: section, authStore: authStore, familyStore: familyStore, childrenStore: childrenStore
+                        section: section, authStore: authStore, familyStore: familyStore,
+                        childrenStore: childrenStore, timelineStore: timelineStore
                     )
                 }
                 .tabItem { Label(section.title, systemImage: section.systemImage) }
@@ -172,6 +183,7 @@ private struct SectionSplitView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    let timelineStore: TimelineStore
     @Binding var selection: AppSection
 
     var body: some View {
@@ -185,7 +197,8 @@ private struct SectionSplitView: View {
             // 需處理「iPad 切換 section 重置 detail stack」（可用 .id(selection)）。
             NavigationStack {
                 SectionContentView(
-                    section: selection, authStore: authStore, familyStore: familyStore, childrenStore: childrenStore
+                    section: selection, authStore: authStore, familyStore: familyStore,
+                    childrenStore: childrenStore, timelineStore: timelineStore
                 )
             }
         }
@@ -208,6 +221,7 @@ struct SectionContentView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    let timelineStore: TimelineStore
 
     var body: some View {
         content
@@ -217,7 +231,10 @@ struct SectionContentView: View {
     @ViewBuilder
     private var content: some View {
         switch section {
-        case .timeline: TimelineView(familyStore: familyStore, childrenStore: childrenStore)
+        case .timeline:
+            // LS-125（日記編輯器）尚未併入——`onCreateMemory` 先留空閉包，見 `TimelineView`
+            // 文件註解；LS-125 併入後這裡換成真正導向編輯器的閉包。
+            TimelineView(familyStore: familyStore, childrenStore: childrenStore, timelineStore: timelineStore)
         case .albums: AlbumsView()
         case .children: ChildrenManagementView(familyStore: familyStore, childrenStore: childrenStore)
         case .settings: SettingsView(authStore: authStore, familyStore: familyStore, childrenStore: childrenStore)
@@ -226,11 +243,15 @@ struct SectionContentView: View {
 }
 
 #Preview("Compact") {
-    AuthenticatedRootView(authStore: .preview(), familyStore: .preview(), childrenStore: .preview())
-        .environment(\.horizontalSizeClass, .compact)
+    AuthenticatedRootView(
+        authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview()
+    )
+    .environment(\.horizontalSizeClass, .compact)
 }
 
 #Preview("Regular") {
-    AuthenticatedRootView(authStore: .preview(), familyStore: .preview(), childrenStore: .preview())
-        .environment(\.horizontalSizeClass, .regular)
+    AuthenticatedRootView(
+        authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview()
+    )
+    .environment(\.horizontalSizeClass, .regular)
 }
