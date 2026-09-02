@@ -41,7 +41,8 @@ enum TapTargetGateHarness {
                     familyStore: .preview(withFamily: Family(
                         id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
                     )),
-                    childrenStore: .preview()
+                    childrenStore: .preview(),
+                    timelineStore: .preview()
                 )
             }
         case .selfTestTooSmall:

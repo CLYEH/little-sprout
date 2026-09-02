@@ -97,21 +97,36 @@ enum TimelineContentAssembler {
 
     // MARK: - 逐 kind 批次查詢
 
+    /// merge-review R1 M3：只抓每篇日記前 3 張（sort_order 排序）的完整 media 列＋簽名 URL
+    /// ——時間軸卡片本來就只露前 3 張（`DiaryCardView`），不需要為了算「還有 N 張」的總數
+    /// 把整頁所有日記的**全部**附照都抓齊再簽名。一頁 20 篇日記、每篇上限 20 張附照時，
+    /// 舊寫法會產生上百個 media id 塞進 `.in()` 的 GET query string，超過 proxy 的請求長度
+    /// 上限會讓整頁組裝直接失敗。`diary_media` 連結表本身很輕量（僅 3 欄），全部抓來分組、
+    /// 只在其中挑前 3 名去查／簽真正的 `media` 列＋Storage URL；`totalPhotoCount` 直接用
+    /// 連結表的列數，不依賴抓到多少張 `media` 列。
     private static func fetchDiaryContents(
         ids: [UUID], apiClient: TimelineAPIClient
     ) async throws -> [UUID: DiaryContent] {
-        let diaries = try await apiClient.fetchDiaries(ids: ids)
-        let links = try await apiClient.fetchDiaryMediaLinks(diaryIds: ids)
-        let mediaIds = Array(Set(links.map(\.mediaId)))
-        let mediaRows = mediaIds.isEmpty ? [] : try await apiClient.fetchMedia(ids: mediaIds)
+        // m5：兩者互不依賴（都只吃 `ids`），平行發出省一個 RTT。
+        async let diariesTask = apiClient.fetchDiaries(ids: ids)
+        async let linksTask = apiClient.fetchDiaryMediaLinks(diaryIds: ids)
+        let (diaries, links) = try await (diariesTask, linksTask)
+
+        let linksByDiary = Dictionary(grouping: links, by: \.diaryId)
+        var previewLinksByDiary: [UUID: [DiaryMediaLinkRow]] = [:]
+        previewLinksByDiary.reserveCapacity(linksByDiary.count)
+        for (diaryId, diaryLinks) in linksByDiary {
+            previewLinksByDiary[diaryId] = Array(diaryLinks.sorted { $0.sortOrder < $1.sortOrder }.prefix(3))
+        }
+        let previewMediaIds = Array(Set(previewLinksByDiary.values.flatMap { $0.map(\.mediaId) }))
+        let mediaRows = previewMediaIds.isEmpty ? [] : try await apiClient.fetchMedia(ids: previewMediaIds)
         let signed = try await signedURLs(for: mediaRows, apiClient: apiClient)
         let mediaById = Dictionary(uniqueKeysWithValues: mediaRows.map { ($0.id, $0) })
-        let linksByDiary = Dictionary(grouping: links, by: \.diaryId)
 
         var result: [UUID: DiaryContent] = [:]
         for diary in diaries {
-            let sortedLinks = (linksByDiary[diary.id] ?? []).sorted { $0.sortOrder < $1.sortOrder }
-            let photos: [MediaContent] = sortedLinks.compactMap { link in
+            let previewLinks = previewLinksByDiary[diary.id] ?? []
+            let photos: [MediaContent] = previewLinks.compactMap { link in
                 guard let row = mediaById[link.mediaId] else { return nil }
                 return MediaContent(
                     id: row.id, type: row.type, width: row.width, height: row.height,
@@ -120,7 +135,7 @@ enum TimelineContentAssembler {
             }
             result[diary.id] = DiaryContent(
                 body: diary.body, entryDate: diary.entryDate,
-                previewPhotos: Array(photos.prefix(3)), totalPhotoCount: photos.count
+                previewPhotos: photos, totalPhotoCount: linksByDiary[diary.id]?.count ?? 0
             )
         }
         return result

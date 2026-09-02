@@ -39,7 +39,11 @@ final class TimelineContentAssemblerTests: XCTestCase {
             }.shuffled()
         }
         stub.setFetchMediaHandler { ids in
-            ids.map { mediaRow(id: $0, path: "f/\($0).jpg") }
+            // merge-review R1 M3：只該查前 3 張（sort_order 最小的 3 個），不是全部 5 張
+            // ——這是過取修法的核心斷言，見下方 `test_assemble_diaryKind_onlyFetchesTop3...`
+            // 的多篇日記版本。
+            XCTAssertEqual(ids.count, 3, "只該查前 3 張附照的 media 列，不是全部")
+            return ids.map { mediaRow(id: $0, path: "f/\($0).jpg") }
         }
         stub.setSignedURLsHandler { paths in
             Dictionary(uniqueKeysWithValues: paths.map { ($0, URL(string: "https://example.com/\($0)")!) })
@@ -54,9 +58,46 @@ final class TimelineContentAssemblerTests: XCTestCase {
             return XCTFail("預期組出 .diary content")
         }
         XCTAssertEqual(content.previewPhotos.count, 3, "日記卡附照只露 3 張")
-        XCTAssertEqual(content.totalPhotoCount, 5, "總數不受只取前 3 張影響")
+        XCTAssertEqual(content.totalPhotoCount, 5, "總數不受只取前 3 張影響——來自連結表列數，不是抓到的 media 列數")
         // sort_order 最小（1）的那個是 mediaIDs 最後一個 element（sortOrder = count - index）。
         XCTAssertEqual(content.previewPhotos[0].id, mediaIDs.last)
+    }
+
+    /// merge-review R1 M3 的核心量級斷言：一頁多篇日記、每篇附照遠超過 3 張時，實際查詢／
+    /// 簽名的 media id 數量必須被「每篇最多 3 張」夾住，不會隨附照總數線性成長——這是過取
+    /// 修法要防的「一頁 20 篇日記、每篇 20 張＝400 個 id 塞進 GET .in() 超過 proxy 長度上限」
+    /// 的縮小重現。
+    func test_assemble_diaryKind_onlyFetchesTop3PhotosPerDiary_evenWithManyDiariesAndPhotos() async throws {
+        let stub = StubTimelineAPIClient()
+        let diaryIDs = (0..<3).map { _ in UUID() }
+        stub.setFetchDiariesHandler { ids in
+            ids.map { DiaryRow(id: $0, body: "x", entryDate: Date(), createdAt: Date()) }
+        }
+        stub.setFetchDiaryMediaLinksHandler { diaryIds in
+            // 每篇日記附 5 張——若沒有夾住上限，media id 總數會是 3×5=15；夾住後應該只有 3×3=9。
+            diaryIds.flatMap { diaryId in
+                (0..<5).map { index in
+                    DiaryMediaLinkRow(diaryId: diaryId, mediaId: UUID(), sortOrder: index)
+                }
+            }
+        }
+        stub.setFetchMediaHandler { ids in
+            // 斷言寫在 handler 內、不捕捉可變區域變數（handler 是 @Sendable 閉包）。
+            XCTAssertEqual(ids.count, 9, "3 篇日記各只該查前 3 張，media id 總數上限 9，不是 15")
+            return ids.map { mediaRow(id: $0, path: "f/\($0).jpg") }
+        }
+        stub.setSignedURLsHandler { paths in
+            Dictionary(uniqueKeysWithValues: paths.map { ($0, URL(string: "https://example.com/\($0)")!) })
+        }
+
+        let pointers = diaryIDs.map { pointer(kind: .diary, refId: $0) }
+        let entries = try await TimelineContentAssembler.assemble(pointers: pointers, apiClient: stub)
+
+        for entry in entries {
+            guard case .diary(let content) = entry.content else { return XCTFail("預期組出 .diary content") }
+            XCTAssertEqual(content.previewPhotos.count, 3)
+            XCTAssertEqual(content.totalPhotoCount, 5)
+        }
     }
 
     func test_assemble_albumKind_includesCover() async throws {

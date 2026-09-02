@@ -237,7 +237,11 @@ struct SectionContentView: View {
             TimelineView(familyStore: familyStore, childrenStore: childrenStore, timelineStore: timelineStore)
         case .albums: AlbumsView()
         case .children: ChildrenManagementView(familyStore: familyStore, childrenStore: childrenStore)
-        case .settings: SettingsView(authStore: authStore, familyStore: familyStore, childrenStore: childrenStore)
+        case .settings:
+            SettingsView(
+                authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
+                timelineStore: timelineStore
+            )
         }
     }
 }
