@@ -33,6 +33,7 @@
 		13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */; };
 		1510716340F45287B110E3F9 /* InviteCodeField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B6EDB33CABFA69510857AF /* InviteCodeField.swift */; };
 		15E53C663EE9CEDBF1E4FCCE /* SupabaseFamilyAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B90F66016EC2C905347224 /* SupabaseFamilyAPIClientTests.swift */; };
+		1A9ABFC12252B521F923C3A3 /* VideoDurationBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C27A476B9FC174AD3BAB3E9 /* VideoDurationBadge.swift */; };
 		1B2910F0B8FB633A862EC79D /* DiaryEditorView+Fields.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C20EEF08C7F204261BE68D /* DiaryEditorView+Fields.swift */; };
 		1C5AF463F2A7DF887C811BCB /* FamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50E6303411CD369F8AFC507 /* FamilyAPIClient.swift */; };
 		1CF1D19C1EE4684CD48558BF /* StubMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865AA94C394265F3FEA5B37D /* StubMediaUploadService.swift */; };
@@ -104,6 +105,7 @@
 		76B16560EF93FFF134B8FDE7 /* AppleSignInNonceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A912608AE602C827E4786763 /* AppleSignInNonceTests.swift */; };
 		77532489191022DD03332421 /* ChildAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8BA8C1CFC00CF8A1D6C9E0C /* ChildAPIClient.swift */; };
 		79BA4B8CFEC8729A6BA34391 /* TapTargetGateSelfTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9F969B2673823F6B3CE0A7 /* TapTargetGateSelfTests.swift */; };
+		79E33F2B40465C6912BDC6D6 /* DiaryCardVideoBadgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC531A82AD0092B3665DA94F /* DiaryCardVideoBadgeTests.swift */; };
 		7C07BF69FAFB75E77DA11249 /* TimelineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F8DC307DA209CD5559A0E6 /* TimelineStore.swift */; };
 		7C64D41B5C041B3BFA66B7A8 /* EmailFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D71D805DBF9E7B36AF16BE8 /* EmailFormatTests.swift */; };
 		7DA98586E59FA617D07C323D /* SupabaseFamilyAPIClientInviteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64087AB29C1A51AC86834868 /* SupabaseFamilyAPIClientInviteTests.swift */; };
@@ -218,6 +220,7 @@
 		09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSectionTests.swift; sourceTree = "<group>"; };
 		0AB26A8533526BFBFD692560 /* AuthButtonsState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthButtonsState.swift; sourceTree = "<group>"; };
 		0C0777CD557C2FE037CDA135 /* PreviewFamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewFamilyAPIClient.swift; sourceTree = "<group>"; };
+		0C27A476B9FC174AD3BAB3E9 /* VideoDurationBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDurationBadge.swift; sourceTree = "<group>"; };
 		0DE21E4A220A9C7AF7F79450 /* JoinWaitingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinWaitingView.swift; sourceTree = "<group>"; };
 		0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFixture.swift; sourceTree = "<group>"; };
 		0E8702562330091E614920D1 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
@@ -382,6 +385,7 @@
 		E8938E753539C18541CF4360 /* DiaryDateFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDateFormat.swift; sourceTree = "<group>"; };
 		EA808B45C621641B99EC528B /* TimelineContentAssemblerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineContentAssemblerTests.swift; sourceTree = "<group>"; };
 		EAE9D55CC7EEBBBF1AC2408D /* PreviewChildAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewChildAPIClient.swift; sourceTree = "<group>"; };
+		EC531A82AD0092B3665DA94F /* DiaryCardVideoBadgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryCardVideoBadgeTests.swift; sourceTree = "<group>"; };
 		EEF4B6F33EBC80A3AA56E8FC /* FamilyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyModels.swift; sourceTree = "<group>"; };
 		EF3E5645BA736D2FB572634A /* InvitePhaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvitePhaseTests.swift; sourceTree = "<group>"; };
 		EF7806F951789DC6E905A8FA /* InviteFamilyView+PendingApprovals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "InviteFamilyView+PendingApprovals.swift"; sourceTree = "<group>"; };
@@ -535,6 +539,7 @@
 				63669E8DAD14B79A6DCAD9FD /* ChildAvatarInitialTests.swift */,
 				5E699460134CBD4E0FE83B9A /* ChildFilterLayoutTests.swift */,
 				6C7E229440047D04B81BCE30 /* ChildrenStoreTests.swift */,
+				EC531A82AD0092B3665DA94F /* DiaryCardVideoBadgeTests.swift */,
 				715344039FD455DD3BD4E744 /* DiaryComposerStorePublishRetryTests.swift */,
 				451694C23C0044D0DCDD0356 /* DiaryComposerStorePublishTests.swift */,
 				4731B4832AABBF59324EDBC8 /* DiaryComposerStoreTests.swift */,
@@ -762,6 +767,7 @@
 				216769BEF4D15D89E66AF64B /* ScrollableFillView.swift */,
 				B29793798CE839C104E800B1 /* Spacing.swift */,
 				8D28B773C8EDDC2BA7C7D993 /* Typography.swift */,
+				0C27A476B9FC174AD3BAB3E9 /* VideoDurationBadge.swift */,
 			);
 			path = DesignSystem;
 			sourceTree = "<group>";
@@ -1008,6 +1014,7 @@
 				7C07BF69FAFB75E77DA11249 /* TimelineStore.swift in Sources */,
 				9784D85D783D81C9D00970E2 /* TimelineView.swift in Sources */,
 				02E21F9DC4DC1A797657A859 /* Typography.swift in Sources */,
+				1A9ABFC12252B521F923C3A3 /* VideoDurationBadge.swift in Sources */,
 				6C8CA80EC5E94AE6E8210E1E /* VideoDurationFormat.swift in Sources */,
 				3DE6FD3FBE226113DC1CCC57 /* VideoPlayerScreen.swift in Sources */,
 				B0FA3B419745F9D231E75C58 /* VideoTrimmer.swift in Sources */,
@@ -1042,6 +1049,7 @@
 				575E3F2F213D7274D1D10C68 /* ChildAvatarInitialTests.swift in Sources */,
 				8D8794877BA169209A1BB4ED /* ChildFilterLayoutTests.swift in Sources */,
 				0373CF2DC8FA481EBC64CFF3 /* ChildrenStoreTests.swift in Sources */,
+				79E33F2B40465C6912BDC6D6 /* DiaryCardVideoBadgeTests.swift in Sources */,
 				AE349DC5C77A050FEB6B3158 /* DiaryComposerStorePublishRetryTests.swift in Sources */,
 				65C40F1D88260A5EE89C8AAF /* DiaryComposerStorePublishTests.swift in Sources */,
 				41F32D3B2C6BA0F84DAEEA49 /* DiaryComposerStoreTests.swift in Sources */,

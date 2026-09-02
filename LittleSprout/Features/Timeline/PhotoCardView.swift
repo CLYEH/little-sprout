@@ -46,12 +46,9 @@ struct PhotoCardView: View {
     }
 
     private var videoBadge: some View {
-        Text(VideoDurationFormat.badgeText(duration: duration))
-            .appFont(.note, weight: .bold)
-            .foregroundStyle(Color.lsOnPhoto)
-            .padding(.horizontal, AppSpacing.group)
-            .padding(.vertical, AppSpacing.tight)
-            .background(Color.black.opacity(0.55), in: Capsule())
+        // fix/LS-130-video-badge-fallback：樣式抽到 `VideoDurationBadge`（`DiaryCardView`
+        // 附照預覽縮圖現在也用同一套），這裡的視覺輸出不變。
+        VideoDurationBadge(duration: duration)
             .accessibilityHidden(true) // 已併入 PrintPhotoCard 的 accessibilityLabel。
     }
 }

@@ -9,6 +9,10 @@ struct DiaryCardView: View {
     /// 這篇日記標記的寶貝，依 `ChildrenStore.children` 原本的順序（依 birthday 排序）——
     /// 不用 `childIds` 陣列本身的順序（那是 RPC 回傳的、無排序意義的陣列）。
     let taggedChildren: [Child]
+    /// fix/LS-130-video-badge-fallback：附照預覽縮圖裡的影片要顯示「影片」／「影片 M:SS」
+    /// 徽章、且無縮圖的舊影片要能讀時長，需要 `TimelineStore`（同 `PhotoCardView` 已有的
+    /// 依賴）。
+    let timelineStore: TimelineStore
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.group) {
@@ -57,17 +61,42 @@ struct DiaryCardView: View {
             thumbnailImage(photo)
                 .overlay {
                     if showsRemainingBadge {
+                        // 「還有 N 張」已經是 75% 黑蓋滿整格，跟影片徽章同時出現會互相蓋住、
+                        // 在這麼小的格子裡也讀不清楚——兩者互斥，「還有 N 張」優先（資訊量
+                        // 較大：使用者更需要知道「這篇還有更多」，而不是「這張是不是影片」）。
                         ZStack {
                             Color.black.opacity(0.75)
                             Text("還有\(remainingPhotoCount)張")
                                 .appFont(.note, weight: .bold)
                                 .foregroundStyle(Color.lsOnPhoto)
                         }
+                    } else if photo.type == .video {
+                        // fix/LS-130-video-badge-fallback（QA R2 comment `a999c9af`）：修前
+                        // 這裡完全沒有影片專屬呈現——無縮圖的舊影片 `signedURL` 落回原始
+                        // `.mov`，`AsyncImage` 解不出圖片，退回空白 `Color.lsSurface2` 矩形，
+                        // 使用者完全看不出這格是影片。現在比照 `PhotoCardView` 貼一枚
+                        // `VideoDurationBadge`：初始「影片」，`loadVideoDuration`（下方
+                        // `.task`）讀到時長後換成「影片 M:SS」；縮圖列（`isThumbnail`）不
+                        // 觸發讀取，恆顯示「影片」。
+                        VStack {
+                            Spacer(minLength: 0)
+                            HStack {
+                                VideoDurationBadge(duration: timelineStore.videoDurations[photo.id])
+                                Spacer(minLength: 0)
+                            }
+                        }
+                        .padding(AppSpacing.tight)
                     }
                 }
         }
         .frame(maxWidth: .infinity)
         .aspectRatio(1, contentMode: .fit)
+        .task(id: photo.id) {
+            // 同 `PhotoCardView` 的理由：`needsVideoDurationLookup` 為 false（縮圖列）時
+            // 這裡連第一次嘗試都不該發生——`signedURL` 對它們是縮圖 JPEG，讀時長必定失敗。
+            guard photo.needsVideoDurationLookup, let url = photo.signedURL else { return }
+            await timelineStore.loadVideoDuration(mediaID: photo.id, url: url)
+        }
     }
 
     private func thumbnailImage(_ photo: MediaContent) -> some View {
@@ -104,15 +133,16 @@ struct DiaryCardView: View {
                     storagePath: "preview/2.jpg", isThumbnail: false, signedURL: nil
                 ),
                 MediaContent(
-                    id: UUID(), type: .photo, width: 1, height: 1, thumbWidth: nil, thumbHeight: nil,
-                    storagePath: "preview/3.jpg", isThumbnail: false, signedURL: nil
+                    id: UUID(), type: .video, width: 16, height: 9, thumbWidth: nil, thumbHeight: nil,
+                    storagePath: "preview/3.mov", isThumbnail: false, signedURL: nil
                 )
             ],
             totalPhotoCount: 6
         ),
         taggedChildren: [
             Child(id: UUID(), name: "陳小安", birthday: Date(), avatarURL: nil, deletedAt: nil, createdAt: Date())
-        ]
+        ],
+        timelineStore: .preview()
     )
     .padding()
 }

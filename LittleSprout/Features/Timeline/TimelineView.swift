@@ -227,7 +227,9 @@ struct TimelineView: View {
         switch entry.content {
         case .diary(let content):
             NavigationLink(value: TimelineRoute.diaryDetail(entry.refId)) {
-                DiaryCardView(content: content, taggedChildren: taggedChildren(for: entry))
+                DiaryCardView(
+                    content: content, taggedChildren: taggedChildren(for: entry), timelineStore: timelineStore
+                )
             }
             .buttonStyle(.plain)
         case .album(let content):
