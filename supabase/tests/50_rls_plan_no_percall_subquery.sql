@@ -467,6 +467,48 @@ select 'fc000000-0000-4000-8000-000000000001', t.id, c.child_id
 
 drop table tmp_perf_tagged_diaries;
 
+-- LS-121 R3（merge-reviewer PR #218 review m3）：分支 1／2（不篩 child 的「全部」
+-- 路徑，產品預設會先看到的視圖）回傳的頁面完全沒有標記列——標記資料集全部用
+-- `entry_date`（日精度）換算 `occurred_at`，20 萬列合成 bulk 卻是 `now() - 分鐘`
+-- 精度，同一天之內任何一列 bulk 都比當天的標記列新，兩條「不篩」分支的首頁／
+-- 深頁因此只看得到 bulk。不需要重新設計整批 600 篇的時間分佈（分支 3／4 篩
+-- child 已經在真實密度下驗過，見上方檔頭），只需要「至少 1 篇」標記內容能蓋過
+-- bulk 最新端與 `v_deep_cursor` 附近——直接覆寫兩篇既有標記日記的 `occurred_at`
+-- 成跟 bulk 同尺度的分鐘級時間戳：一篇蓋在 bulk 最新端（供分支 1 首頁吃到），
+-- 一篇蓋在 `v_deep_cursor`（150000 分鐘）之後 1 分鐘處（供分支 2 深頁吃到，
+-- `(occurred_at, ref_id) < 游標` 這個條件下一定落在該分支的第一列）。
+-- `feed_items`／`feed_item_children` 兩張表的 `occurred_at` 都要同步覆寫——
+-- 後者是前者的展開，兩者不同步會讓 88_deletion_attribution.sql 一類的既有測試
+-- 對「兩者全程相等」的假設不成立（雖然那些測試不跑在這個 fixture 上，但沒有
+-- 理由在這裡開一個先例）。
+do $$
+declare
+  v_family constant uuid := 'fc000000-0000-4000-8000-000000000001';
+  v_head_diary uuid;
+  v_deep_diary uuid;
+begin
+  select id into v_head_diary from public.diaries
+   where family_id = v_family and entry_date = current_date - 1
+   order by id limit 1;
+  update public.feed_items set occurred_at = now() - interval '1 minute'
+   where kind = 'diary' and ref_id = v_head_diary;
+  update public.feed_item_children set occurred_at = now() - interval '1 minute'
+   where kind = 'diary' and ref_id = v_head_diary;
+
+  select id into v_deep_diary from public.diaries
+   where family_id = v_family and entry_date = current_date - 104
+   order by id limit 1;
+  update public.feed_items set occurred_at = now() - interval '150001 minutes'
+   where kind = 'diary' and ref_id = v_deep_diary;
+  update public.feed_item_children set occurred_at = now() - interval '150001 minutes'
+   where kind = 'diary' and ref_id = v_deep_diary;
+
+  if v_head_diary is null or v_deep_diary is null then
+    raise exception 'FIXTURE FAIL：找不到用來覆寫 occurred_at 的標記日記（head=%，deep=%）', v_head_diary, v_deep_diary;
+  end if;
+end;
+$$;
+
 analyze public.diaries;
 analyze public.diary_children;
 analyze public.feed_items;
@@ -573,6 +615,22 @@ begin
         execute 'select count(*) from (' || q.stmt || ') t' into v_rowcount;
         if v_rowcount = 0 then
           raise exception 'FAIL 效能：get_family_timeline %（分支 %）回傳 0 列——游標或資料集範圍算錯了，這條分支量到的是空探查不是一頁真實資料', q.label, q.idx;
+        end if;
+      end;
+    end if;
+
+    -- LS-121 R3（review m3）：分支 1／2（不篩 child）的頁面必須至少有 1 列帶標記，
+    -- 不然 child_ids 聚合在這兩條分支量到的一樣是空探查——見上方 fixture 準備段落
+    -- 對兩篇標記日記 occurred_at 的覆寫。之後有人不小心把那段覆寫弄丟（或改壞
+    -- fixture 的時間座標）會直接紅，不必等人工複查 buffers 數字才發現。
+    if q.idx in (1, 2) then
+      declare
+        v_tagged_rowcount int;
+      begin
+        execute 'select count(*) from (' || q.stmt || ') t where array_length(t.child_ids, 1) > 0'
+          into v_tagged_rowcount;
+        if v_tagged_rowcount = 0 then
+          raise exception 'FAIL 效能：get_family_timeline %（分支 %）整頁都沒有帶標記的列——child_ids 聚合在「全部」路徑上量到的還是空探查，不是本票新增的熱路徑', q.label, q.idx;
         end if;
       end;
     end if;
