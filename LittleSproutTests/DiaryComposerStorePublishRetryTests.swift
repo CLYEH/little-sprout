@@ -124,6 +124,57 @@ final class DiaryComposerStorePublishRetryTests: XCTestCase {
         XCTAssertTrue(diaryClient.updateCalls.isEmpty, "內容沒變的重試不該多打 update_diary_entry")
     }
 
+    /// merge-review R3 q3：R2 N1 的測試只覆蓋 `body` 變更，`entryDate`／`selectedChildIDs`
+    /// 兩個欄位單獨改動是否也會觸發 update 沒有測試——目前靠 `DiaryContentSnapshot` 的
+    /// synthesized `Equatable`（三個欄位都參與比對）保證，但若日後有人手寫 `==` 或加欄位
+    /// 忘了帶，只有 `body` 那條測試會守住。這裡補 `entryDate` 這一格。
+    func test_publish_retryAfterAttachMediaFailure_withEditedEntryDate_callsUpdateDiaryEntry() async {
+        let diaryClient = StubDiaryAPIClient()
+        let mediaService = StubMediaUploadService()
+        diaryClient.setCreateHandler { _, _, _, _ in UUID() }
+        let attachMediaAttempts = OSAllocatedUnfairLock<Int>(initialState: 0)
+        diaryClient.setAttachMediaHandler { _, _, _ in
+            let attempt = attachMediaAttempts.withLock { state in
+                state += 1
+                return state
+            }
+            if attempt == 1 { throw AppError.network(message: "connection dropped") }
+        }
+        let store = makeStore(diaryAPIClient: diaryClient, mediaUploadService: mediaService)
+        store.body = "內容"
+        addPhoto(store)
+
+        _ = await store.publish()
+        store.entryDate = store.entryDate.addingTimeInterval(-86400)
+        _ = await store.publish()
+
+        XCTAssertEqual(diaryClient.updateCalls.count, 1, "只改記錄日期，重試也該觸發 update_diary_entry")
+    }
+
+    /// 同上，補 `selectedChildIDs` 這一格。
+    func test_publish_retryAfterAttachMediaFailure_withEditedChildIDs_callsUpdateDiaryEntry() async {
+        let diaryClient = StubDiaryAPIClient()
+        let mediaService = StubMediaUploadService()
+        diaryClient.setCreateHandler { _, _, _, _ in UUID() }
+        let attachMediaAttempts = OSAllocatedUnfairLock<Int>(initialState: 0)
+        diaryClient.setAttachMediaHandler { _, _, _ in
+            let attempt = attachMediaAttempts.withLock { state in
+                state += 1
+                return state
+            }
+            if attempt == 1 { throw AppError.network(message: "connection dropped") }
+        }
+        let store = makeStore(diaryAPIClient: diaryClient, mediaUploadService: mediaService)
+        store.body = "內容"
+        addPhoto(store)
+
+        _ = await store.publish()
+        store.selectedChildIDs = [UUID()]
+        _ = await store.publish()
+
+        XCTAssertEqual(diaryClient.updateCalls.count, 1, "只改寶貝歸屬，重試也該觸發 update_diary_entry")
+    }
+
     func test_publish_retryAfterUploadFailure_onlyReuploadsRemainingPhotos() async {
         let diaryClient = StubDiaryAPIClient()
         let mediaService = StubMediaUploadService()
@@ -162,6 +213,13 @@ final class DiaryComposerStorePublishRetryTests: XCTestCase {
 
     /// `resolveDiaryID` 的記憶本身沒有 invalidate 條件，`publish()` 自己補一道底線：成功
     /// 之後不該再送出一次（正常呼叫端會在成功後立刻 dismiss，這裡驗的是防禦層本身生效）。
+    ///
+    /// merge-review R3 q1：第二條斷言原本比對 `createCalls.count`，但拿掉
+    /// `publishState != .success` guard 這個 mutation 對它不具鑑別力——`createdDiaryID`
+    /// 已經記憶，就算 guard 被拿掉，`resolveDiaryID` 也不會再呼叫 `createDiaryEntry`，
+    /// `createCalls.count` 兩種情況下都是 1。改比對 `attachMediaCalls.count`：guard 生效時
+    /// 第二次 `publish()` 直接被擋在最前面，`attachMedia` 不會被呼叫、停在 1；guard 被拿掉
+    /// 時第二次會一路跑到底再呼叫一次 `attachMedia`，變成 2——這個量才會隨 mutation 改變。
     func test_publish_afterSuccess_isBlocked() async {
         let diaryClient = StubDiaryAPIClient()
         let store = makeStore(diaryAPIClient: diaryClient)
@@ -169,11 +227,66 @@ final class DiaryComposerStorePublishRetryTests: XCTestCase {
 
         let firstResult = await store.publish()
         XCTAssertTrue(firstResult)
-        XCTAssertEqual(diaryClient.createCalls.count, 1)
+        XCTAssertEqual(diaryClient.attachMediaCalls.count, 1)
 
         let secondResult = await store.publish()
 
         XCTAssertFalse(secondResult, "成功之後不該再送出一次")
-        XCTAssertEqual(diaryClient.createCalls.count, 1, "不該再呼叫 create_diary_entry")
+        XCTAssertEqual(diaryClient.attachMediaCalls.count, 1, "不該再呼叫 attachMedia")
+    }
+
+    // MARK: - 重試前重新排序 → 送出的 sort_order 跟隨新順序（merge-review R3 P1）
+
+    /// `attachMedia` 的 `sort_order` 是 `resolveDiaryID`／`uploadAllMedia` 之後、依當下
+    /// `photos` 陣列順序現算的（`SupabaseDiaryAPIClient.attachMedia` 用 `mediaIDs.enumerated()`）。
+    /// 這裡驗證的是 client 端一半的契約：重試前使用者重新排序過，第二次呼叫送出的
+    /// `mediaIDs` 順序要跟著新排序走，不是沿用第一次失敗時的舊順序。另一半（伺服器端
+    /// `ignoreDuplicates: false` 真的會更新衝突列的 `sort_order`，不會被 `DO NOTHING` 吃掉）
+    /// 由 `SupabaseDiaryAPIClientTests.test_attachMedia_usesUpsertWithMergeDuplicatesOnConflictKey`
+    /// 在 wire 層覆蓋——兩條合起來才是完整的「重試時排序已變 → 送出的 sort_order 跟隨新
+    /// 順序」保證。
+    func test_publish_retryAfterAttachMediaFailure_afterReorder_sendsMediaIDsInNewOrder() async {
+        let diaryClient = StubDiaryAPIClient()
+        let mediaService = StubMediaUploadService()
+        diaryClient.setCreateHandler { _, _, _, _ in UUID() }
+        let firstMediaID = UUID()
+        let secondMediaID = UUID()
+        let uploadedIDs = OSAllocatedUnfairLock<[UUID]>(initialState: [firstMediaID, secondMediaID])
+        mediaService.setUploadPhotoHandler { _, _, _, _ in
+            uploadedIDs.withLock { state in
+                state.isEmpty ? UUID() : state.removeFirst()
+            }
+        }
+        let attachMediaAttempts = OSAllocatedUnfairLock<Int>(initialState: 0)
+        diaryClient.setAttachMediaHandler { _, _, _ in
+            let attempt = attachMediaAttempts.withLock { state in
+                state += 1
+                return state
+            }
+            if attempt == 1 { throw AppError.network(message: "connection dropped") }
+        }
+        let store = makeStore(diaryAPIClient: diaryClient, mediaUploadService: mediaService)
+        store.body = "A 跟 B"
+        addPhoto(store, tag: "a")
+        addPhoto(store, tag: "b")
+        let originalOrder = store.photos.map(\.id)
+
+        let firstResult = await store.publish()
+        XCTAssertFalse(firstResult)
+        XCTAssertEqual(
+            diaryClient.attachMediaCalls.first?.mediaIDs, [firstMediaID, secondMediaID],
+            "第一次嘗試依原始佇列順序送出"
+        )
+
+        // 使用者在失敗態下把第二張拖到第一格（長按拖曳排序，票文 Scope 2／驗收條件）。
+        store.move(id: originalOrder[1], toIndex: 0)
+
+        let secondResult = await store.publish()
+
+        XCTAssertTrue(secondResult)
+        XCTAssertEqual(
+            diaryClient.attachMediaCalls.last?.mediaIDs, [secondMediaID, firstMediaID],
+            "重試前重新排序過，第二次送出的 mediaIDs 順序要跟著新排序走，不能沿用第一次失敗時的舊順序"
+        )
     }
 }

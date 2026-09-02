@@ -134,19 +134,28 @@ final class SupabaseDiaryAPIClientTests: XCTestCase {
         try await apiClient.attachMedia(diaryID: diaryID, familyID: familyID, mediaIDs: [mediaID1, mediaID2])
     }
 
-    /// merge-review R2 n1：`attachMedia` 改用 `upsert(..., ignoreDuplicates: true)`（不是
-    /// `insert`），驗證 SDK 真的把這兩個選項編碼進請求——`on_conflict` query param（PK 欄位）
-    /// 跟 `Prefer` header 帶 `resolution=ignore-duplicates`，撞主鍵時安靜跳過而不是 `23505`。
-    func test_attachMedia_usesUpsertWithIgnoreDuplicatesOnConflictKey() async throws {
+    /// merge-review R3 P1：`attachMedia` 用 `upsert(..., ignoreDuplicates: false)`（不是
+    /// `insert`，也不是 R2 n1 當時的 `true`）。`true`＝`ON CONFLICT DO NOTHING`，衝突列的
+    /// `sort_order` 完全不會更新——重試前若使用者拖曳重排過，DB 會靜默留著舊順序卻回報
+    /// 成功。`false`＝`ON CONFLICT DO UPDATE`（merge-duplicates）同時達成兩個目的：撞主鍵
+    /// 不再 `23505`，且衝突列的 `sort_order` 會被更新成這次送出的新值。驗證 SDK 真的把
+    /// `on_conflict` query param（PK 欄位）與 `Prefer: resolution=merge-duplicates` 編碼
+    /// 進請求——這條測試 R3 時把語意釘反了（斷言訊息寫「不是預設的 merge-duplicates」），
+    /// 這裡反轉回正確語意。
+    func test_attachMedia_usesUpsertWithMergeDuplicatesOnConflictKey() async throws {
         let client = TestSupabaseClient.make { [mediaID1] request in
             XCTAssertEqual(
                 request.url?.query?.contains("on_conflict=diary_id%2Cmedia_id") ?? false, true,
-                "PK 是 (diary_id, media_id)，撞號要靠這個 on_conflict 才能被安靜跳過"
+                "PK 是 (diary_id, media_id)，撞號要靠這個 on_conflict 才能被安靜合併"
             )
             let prefer = try XCTUnwrap(request.value(forHTTPHeaderField: "Prefer"))
             XCTAssertTrue(
+                prefer.contains("resolution=merge-duplicates"),
+                "Prefer header 應該帶 merge-duplicates，衝突列的 sort_order 才會被更新，Prefer 實際值：\(prefer)"
+            )
+            XCTAssertFalse(
                 prefer.contains("resolution=ignore-duplicates"),
-                "Prefer header 應該帶 ignore-duplicates，不是預設的 merge-duplicates，Prefer 實際值：\(prefer)"
+                "不該是 ignore-duplicates（DO NOTHING）——那會讓重試前的拖曳重排被靜默丟棄"
             )
             return MockURLProtocol.StubResponse(statusCode: 201, body: Data())
         }
