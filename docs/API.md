@@ -269,8 +269,8 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
 - **影片時長（`duration_seconds`，LS-134）**：nullable，`CHECK`（有值時必須 `> 0`，
   `media_duration_seconds_positive`）。`type = 'photo'` 時應留 `NULL`；
   `type = 'video'` 時由上傳端以 `AVAsset.load(.duration)` 量測寫入——**若影片經過
-  裁切，以裁切後的長度為準**，不是原始檔案的長度。整數秒，**無條件捨去、下限
-  1 秒**（不足 1 秒的零頭捨去到 1，不進位、不寫 0）——**與
+  裁切，以裁切後的長度為準**，不是原始檔案的長度。整數秒，**`max(1, floor(d))`**
+  （`d` 為量測到的秒數：不足 1 秒的影片記為 1，不進位、不寫 0）——**與
   `VideoDurationFormat`／`DiaryDurationFormat` 同源**：merge-review R1 i2 裁定
   「`M:SS` 是給人看的粗略時長，不是精確時間戳，捨去比進位更符合『這支影片還有多
   長』的直覺」，這裡沿用同一個取整方向，同一支影片在日記編輯器與時間軸卡片才會
