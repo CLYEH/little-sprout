@@ -4,13 +4,20 @@ import XCTest
 
 /// 自由函式（不是 `TimelineContentAssemblerTests` 的實例方法）：stub 的 `@Sendable` handler
 /// 閉包不能捕捉非 Sendable 的 `self`，見 `TimelineStoreTests.swift` 的 `timelinePointer` 同一個
-/// 理由。
-private func pointer(kind: FeedKind, refId: UUID, occurredAt: Date = Date()) -> TimelineFeedPointer {
+/// 理由。刻意不標 `private`：`TimelineContentAssemblerThumbPathTests.swift`（LS-130，拆檔
+/// 純粹為了 SwiftLint `type_body_length`，見該檔開頭註解）以 extension 共用這兩個工廠函式。
+func pointer(kind: FeedKind, refId: UUID, occurredAt: Date = Date()) -> TimelineFeedPointer {
     TimelineFeedPointer(kind: kind, refId: refId, occurredAt: occurredAt, childIds: [])
 }
 
-private func mediaRow(id: UUID, path: String) -> MediaRow {
-    MediaRow(id: id, storagePath: path, type: .photo, width: 800, height: 600)
+func mediaRow(
+    id: UUID, path: String, type: MediaType = .photo,
+    thumbPath: String? = nil, thumbWidth: Int? = nil, thumbHeight: Int? = nil
+) -> MediaRow {
+    MediaRow(
+        id: id, storagePath: path, type: type, width: 800, height: 600,
+        thumbPath: thumbPath, thumbWidth: thumbWidth, thumbHeight: thumbHeight
+    )
 }
 
 final class TimelineContentAssemblerTests: XCTestCase {
@@ -166,6 +173,10 @@ final class TimelineContentAssemblerTests: XCTestCase {
         XCTAssertEqual(content.id, mediaID)
     }
 
+    // LS-130 thumb_path 選路測試（assemble .media kind／fetchDiaryPhotos）已搬到
+    // `TimelineContentAssemblerThumbPathTests.swift`（extension，SwiftLint `type_body_length`
+    // 拆檔，見該檔開頭註解）。
+
     func test_assemble_mixedKinds_preservesPointerOrderAndKind() async throws {
         let stub = StubTimelineAPIClient()
         stub.setFetchDiariesHandler { [diaryID] _ in
@@ -234,4 +245,7 @@ final class TimelineContentAssemblerTests: XCTestCase {
 
         XCTAssertEqual(photos.map(\.id), [idA, idB, idC], "全部附照依 sort_order 排序，不只前 3 張")
     }
+
+    // LS-130 瀑布流縮圖選路測試已搬到 `TimelineContentAssemblerThumbPathTests.swift`
+    // （extension，SwiftLint `type_body_length` 拆檔，見該檔開頭註解）。
 }

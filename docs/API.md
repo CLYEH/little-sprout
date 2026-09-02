@@ -1255,6 +1255,14 @@ PR #95 review F1）訂正：這裡原本誤寫成跟 `LS041`–`LS043` 一起歸
   簽名 URL**——不要因為沒有縮圖就整列不顯示。這是 client 實作責任，DB 只保證
   `thumb_path` 有值時的路徑格式與尺寸合法（LS-128 的 `CHECK`），不保證、也無法保證
   誰在什麼時候簽了哪一個路徑。
+  **iOS 消費者現況（LS-130）**：時間軸卡片流（`TimelineContentAssembler.
+  fetchDiaryContents`／`fetchAlbumContents`／`fetchMediaContents`，經 `PrintPhotoCard.
+  remoteURL` 呼叫端 `AlbumCardView`／`PhotoCardView`／`DiaryCardView` 顯示）與日記詳情瀑布流
+  （`fetchDiaryPhotos`，`MasonryPhotoWallView` 顯示；比例改用 `thumb_width`／`thumb_height`，
+  同一條 NULL 退回規則）已落地，全尺寸原檔改由 `TimelineStore.signFullSizeURL(storagePath:)`
+  在播放影片當下現簽（`DiaryDetailView.playVideo`）。**相簿列表畫面尚未實作**（LS-126 票文
+  「不做：相簿畫面」）——本節這條規則在契約層面已對它生效，待該畫面實作時比照
+  `fetchAlbumContents` 的 `displayPath` 選路寫法即可，不需要另外裁決簽名策略。
 
 ---
 

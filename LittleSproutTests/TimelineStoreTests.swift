@@ -328,6 +328,34 @@ final class TimelineStoreTests: XCTestCase {
         XCTAssertEqual(store.refreshState, .idle)
         XCTAssertTrue(store.hasMorePages)
     }
+
+    // MARK: - LS-130：signFullSizeURL——全尺寸原檔只在放大檢視／播放影片當下現簽
+
+    func test_signFullSizeURL_signsGivenStoragePathAndReturnsSignedURL() async throws {
+        let stub = StubTimelineAPIClient()
+        stub.setSignedURLsHandler { paths in
+            Dictionary(uniqueKeysWithValues: paths.map { ($0, URL(string: "https://example.com/\($0)")!) })
+        }
+        let store = TimelineStore(apiClient: stub)
+
+        let url = try await store.signFullSizeURL(storagePath: "f/original.mp4")
+
+        XCTAssertEqual(url, URL(string: "https://example.com/f/original.mp4"))
+        XCTAssertEqual(
+            stub.signedURLsCalls, [["f/original.mp4"]],
+            "只該現簽這一個路徑一次——不是在列表載入時就順便簽好"
+        )
+    }
+
+    func test_signFullSizeURL_signingFails_returnsNil() async throws {
+        let stub = StubTimelineAPIClient()
+        stub.setSignedURLsHandler { _ in [:] } // 單一路徑簽名失敗時該路徑不會出現在字典裡（見協定文件）。
+        let store = TimelineStore(apiClient: stub)
+
+        let url = try await store.signFullSizeURL(storagePath: "f/deleted.mp4")
+
+        XCTAssertNil(url, "簽名失敗時回傳 nil，呼叫端不播放")
+    }
 }
 
 /// 單次開關的非同步閘門，讓 `test_refresh_whileAlreadySubmitting_secondCallIsIgnored` 的 stub

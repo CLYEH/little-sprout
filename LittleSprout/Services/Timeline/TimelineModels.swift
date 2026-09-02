@@ -93,11 +93,21 @@ struct MediaRow: Decodable, Sendable, Equatable, Identifiable {
     let type: MediaType
     let width: Int
     let height: Int
+    /// 縮圖三欄（LS-128，nullable，皆同為 `NULL` 或同為非 `NULL`，`media_thumb_dimensions_
+    /// consistency` CHECK 保證，見 migration `20260902101842_media_thumb_path.sql`）——
+    /// `thumbPath` 為 `NULL` 表示既有列或縮圖產生失敗，讀取端退回 `storagePath`（見
+    /// `TimelineContentAssembler.displayPath`，docs/API.md §6「簽名 URL 與 egress 防線」）。
+    let thumbPath: String?
+    let thumbWidth: Int?
+    let thumbHeight: Int?
 
     enum CodingKeys: String, CodingKey {
         case id
         case storagePath = "storage_path"
         case type, width, height
+        case thumbPath = "thumb_path"
+        case thumbWidth = "thumb_width"
+        case thumbHeight = "thumb_height"
     }
 }
 
@@ -122,15 +132,30 @@ struct MediaContent: Equatable, Sendable, Identifiable {
     let type: MediaType
     let width: Int
     let height: Int
-    /// 簽名失敗（見 `TimelineAPIClient.signedURLs`）時為 nil——呼叫端顯示占位圖，
-    /// 不讓整頁因為單一檔案簽名失敗而整批失敗。
+    /// 縮圖實際輸出的像素寬高（`media.thumb_width`／`thumb_height`，LS-128）——nullable，
+    /// 見 `aspectRatio`：瀑布流版面計算比例優先用這組，NULL 才退回 `width`／`height`。
+    let thumbWidth: Int?
+    let thumbHeight: Int?
+    /// 原始檔案的 Storage 路徑（`media.storage_path`）——僅供放大檢視／播放影片時現簽
+    /// 全尺寸 URL（`TimelineStore.signFullSizeURL`）用，列表／縮圖情境不使用這個路徑
+    /// 簽名（見 `signedURL`、docs/API.md §6「簽名 URL 與 egress 防線」）。
+    let storagePath: String
+    /// 列表／縮圖情境用的簽名 URL：`thumb_path` 有值時簽縮圖，NULL 時退回 `storagePath`
+    /// （見 `TimelineContentAssembler.displayPath`）。簽名失敗（見
+    /// `TimelineAPIClient.signedURLs`）時為 nil——呼叫端顯示占位圖，不讓整頁因為單一
+    /// 檔案簽名失敗而整批失敗。
     let signedURL: URL?
 
-    /// 寬高比（寬／高），用於瀑布流等比縮放；`width`／`height` 皆為正整數
-    /// （`media` 表 `CHECK (width > 0)`／`CHECK (height > 0)`，不會是 0）。
+    /// 寬高比（寬／高），用於瀑布流等比縮放；優先用縮圖實際尺寸（`thumbWidth`／
+    /// `thumbHeight`，LS-130：格內顯示的就是縮圖，比例該跟著縮圖走，不必等原圖尺寸），
+    /// 兩者任一為 `nil` 時退回原圖 `width`／`height`。皆為正整數時才計算，否則退回 1
+    /// （`media` 表 `CHECK (width > 0)`／`CHECK (height > 0)`／縮圖同款 CHECK，理論上
+    /// 不會是 0，這裡是防禦）。
     var aspectRatio: CGFloat {
-        guard width > 0, height > 0 else { return 1 }
-        return CGFloat(width) / CGFloat(height)
+        let effectiveWidth = thumbWidth ?? width
+        let effectiveHeight = thumbHeight ?? height
+        guard effectiveWidth > 0, effectiveHeight > 0 else { return 1 }
+        return CGFloat(effectiveWidth) / CGFloat(effectiveHeight)
     }
 }
 

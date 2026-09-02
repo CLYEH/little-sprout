@@ -55,11 +55,17 @@ struct PhotoCardView: View {
 #Preview {
     VStack(spacing: AppSpacing.item) {
         PhotoCardView(
-            content: MediaContent(id: UUID(), type: .photo, width: 4, height: 3, signedURL: nil),
+            content: MediaContent(
+                id: UUID(), type: .photo, width: 4, height: 3, thumbWidth: nil, thumbHeight: nil,
+                storagePath: "preview/photo.jpg", signedURL: nil
+            ),
             timelineStore: .preview()
         )
         PhotoCardView(
-            content: MediaContent(id: UUID(), type: .video, width: 16, height: 9, signedURL: nil),
+            content: MediaContent(
+                id: UUID(), type: .video, width: 16, height: 9, thumbWidth: nil, thumbHeight: nil,
+                storagePath: "preview/video.mp4", signedURL: nil
+            ),
             timelineStore: .preview()
         )
     }

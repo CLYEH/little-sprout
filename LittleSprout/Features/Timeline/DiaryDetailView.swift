@@ -127,9 +127,15 @@ struct DiaryDetailView: View {
 
     /// merge-review R1 m4：簽名失敗（`signedURL == nil`）的影片格不該還能點開一個播不出
     /// 東西的全螢幕播放器——原寫法 `?? URL(string: "about:blank")!` 會讓這種格仍然可點。
+    ///
+    /// LS-130：`media.signedURL` 現在是縮圖優先的顯示用 URL（見 `TimelineContentAssembler.
+    /// fetchDiaryPhotos`），不能直接拿來播放——縮圖是 JPEG（影片來源時取首幀），不是可播放
+    /// 的影片檔。播放當下改現簽 `media.storagePath`（全尺寸原檔）；簽名失敗時同樣不播放。
     private func playVideo(_ media: MediaContent) {
-        guard let url = media.signedURL else { return }
-        playingVideo = PlayingVideo(url: url)
+        Task {
+            guard let url = try? await timelineStore.signFullSizeURL(storagePath: media.storagePath) else { return }
+            playingVideo = PlayingVideo(url: url)
+        }
     }
 
     private func bodyText(_ content: DiaryContent) -> some View {

@@ -146,6 +146,17 @@ final class TimelineStore {
         try await TimelineContentAssembler.fetchDiaryPhotos(diaryID: diaryID, apiClient: apiClient)
     }
 
+    /// 放大檢視／播放影片當下才呼叫——現簽一次全尺寸原檔 URL，不在列表／照片牆載入時
+    /// 就簽（LS-130，docs/API.md §6「簽名 URL 與 egress 防線」：全尺寸只在放大檢視／
+    /// 影片播放時才簽）。`storagePath` 來自呼叫端手上的 `MediaContent.storagePath`
+    /// （`fetchDiaryPhotos` 已經帶著，不必重查 `media` 列）。簽名失敗（例如檔案剛好被
+    /// 硬刪）時回傳 nil，呼叫端不播放（同既有「簽名失敗擋 tap」慣例，見
+    /// `MasonryPhotoWallView.isPlayableVideo`）。
+    func signFullSizeURL(storagePath: String) async throws -> URL? {
+        let signed = try await apiClient.signedURLs(forStoragePaths: [storagePath])
+        return signed[storagePath]
+    }
+
     /// 登出時歸零——同 `ChildrenStore.reset()`／`FamilyStore.reset()` 的角色（merge-review
     /// R1 M5：接上 `SettingsView.signOut()`，見該檔）。世代號一併遞增：任何還在飛、屬於
     /// 上一個帳號的 `refresh`／`loadMore` 呼叫回來時，世代號檢查會讓它們視為過期而作廢，
