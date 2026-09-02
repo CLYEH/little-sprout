@@ -138,7 +138,7 @@ jobs:
       # LS-95 merge-review R1 B2：tap-target-check.test.sh 原本只有腳本本體、沒有接進這裡——
       # COLLABORATION §7 宣稱「自測掛 CI rules job」但實際沒掛，兩條刻意寫的 mutation-style
       # 負控（多違規要全點名、失敗無標記不能誤判成通過）從未在 CI 執行過。
-      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／tap-target-check／tap-target-registry-check／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check）
+      - name: Gate 腳本自測（destructive-approval-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／tap-target-check／tap-target-registry-check／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -163,6 +163,8 @@ jobs:
           bash scripts/gates/tap-target-registry-check.test.sh || rc=1
           bash scripts/gates/design-landing-check.test.sh || rc=1
           bash scripts/gates/design-evidence-check.test.sh || rc=1
+          # LS-122：四支溢出掃描的正典腳本純函數自測（node，合成節點樹；Pen 不在 CI 也能驗演算法）
+          node scripts/design/overflow-scan.test.js || rc=1
           bash scripts/gates/design-asset-size-check.test.sh || rc=1
           bash scripts/hooks/pretool.test.sh || rc=1
           bash scripts/gates/linear-issue-check.test.sh || rc=1
@@ -329,7 +331,9 @@ jobs:
       # 溢出掃描本身要 Pen app 的版面引擎才算得出絕對座標，CI 沒有 Pen、驗不了掃描過程本身——只驗收據的
       # 機械可查項：head_sha 是不是這個 PR 自己對這份 .pen 的其中一次 commit（不是等於 PR 最終 head sha——
       # 一個 commit 無法把自己最終的 sha 寫進自己的內容裡，見 design-evidence-check.sh 檔頭說明）、TOTAL_NODES
-      # 與這裡的落地檔節點數一致、FLAGGED 每筆有分類、兩支掃描皆有輸出。
+      # 與這裡的落地檔節點數一致、FLAGGED 每筆有分類、四支掃描皆有輸出且 corner_anchor.mismatch=0（LS-122：兄弟交集／
+      # 橫列溢出／跨 parent 碰撞／角托錨點，正典腳本 scripts/design/overflow-scan.js；round ≤ 5 且早於 gate 落地的既有
+      # 收據沿用兩支）。
       # 限 feature|fix|hotfix head（同 LS-10／LS-50 的票號來源限制——promote／back-merge 沒有本票）。
       - name: .pen 掃描收據 gate（LS-68）
         if: github.event_name == 'pull_request' && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/'))

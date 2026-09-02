@@ -7,6 +7,11 @@
 # head_sha 驗的是「這個 sha 是不是本 PR 自己對這份 .pen 的其中一次 commit」（不是等於 PR 最終 head sha——
 # 一個 commit 不可能把自己最終的 sha 寫進自己的內容裡，見 design-evidence-check.sh 檔頭說明）。正向樣本
 # 因此用兩支分開的 commit：先落地 .pen（commit A）、記下它的 sha，再另開一支 commit 加收據引用 sha A。
+#
+# LS-122：四支掃描 schema——①～⑩ 的兩支收據是「既有收據」（round ≤ 5 且 .pen commit 早於 LEGACY_CUTOFF
+# 2026-09-02T04:00Z），靠 GIT_COMMITTER_DATE 釘在 cutoff 之前才綠；⑪～⑯ 驗四支：缺任一支紅、corner_anchor.mismatch>0
+# 紅、計數缺失紅、跨 parent 碰撞缺分類紅、四支齊全且 mismatch=0 綠、以及**cutoff 之後的 round 1 兩支收據也紅**
+# （新票前五輪不得沿用舊 schema）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -20,6 +25,8 @@ R="$work/repo"
 
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 g() { git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
+# LS-122：①～⑩ 是兩支 schema 的既有收據樣本，commit 時間釘在 LEGACY_CUTOFF（2026-09-02T04:00Z）之前；⑪ 起改釘之後
+export GIT_COMMITTER_DATE='2026-09-01T00:00:00Z'
 
 # expect <期望 exit code> <樣本名稱> <輸出必含字串|''> <checker 參數…>
 expect() {
@@ -238,6 +245,95 @@ if [ "$commit_a" = "$commit_c" ]; then
 fi
 expect 1 '⑩ F2 重現：最新收據引用較早的 commit A，最後一次 .pen commit 是 C（節點數不變）→ 紅' \
   '規則 4 F2' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ───── LS-122：四支掃描 schema ─────
+# 之後的 commit 釘在 LEGACY_CUTOFF 之後（不用真實現在時間——測試不得依賴 wall clock）：只有 round ≤ 5 且 commit 早於
+# cutoff 才准兩支。
+export GIT_COMMITTER_DATE='2026-09-03T00:00:00Z'
+
+write_receipt4() {
+  # write_receipt4 <path> <head_sha> <total_nodes> <mismatch> <mode: full|nocounts|noclass>
+  local path=$1 sha=$2 n=$3 mismatch=$4 mode=$5 corner cross
+  case "$mode" in
+    nocounts) corner='"corner_anchor":{"containers":1,"mismatch":0,"flagged":[]}' ;;
+    *)
+      if [ "$mismatch" = 0 ]; then
+        corner='"corner_anchor":{"containers":1,"points":4,"mismatch":0,"flagged":[]}'
+      else
+        corner='"corner_anchor":{"containers":1,"points":4,"mismatch":'"$mismatch"',"flagged":[{"container":"a","corner":"b","axis":"y","expected":157,"actual":149}]}'
+      fi ;;
+  esac
+  if [ "$mode" = noclass ]; then
+    cross='"cross_parent_collision":{"flagged":[{"node_a":"a","node_b":"c"}]}'
+  else
+    cross='"cross_parent_collision":{"flagged":[{"node_a":"a","node_b":"c","classification":"corner-out whitelist"}]}'
+  fi
+  mkdir -p "$(dirname "$path")"
+  cat > "$path" <<EOF
+{"ticket":"LS-67","round":6,"head_sha":"${sha}","total_nodes":${n},
+ "scans":{"sibling_intersection":{"flagged":[]},"row_overflow":{"flagged":[]},${cross},${corner}}}
+EOF
+}
+
+land4() {
+  # land4 <branch>：切分支、落地 4 節點 .pen、回傳落地 commit sha
+  g checkout -q -b "$1" "$base_ref"
+  cat > "$R/design/littlesprout.pen" <<'EOF'
+{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "children": []}, {"id": "d", "children": []}]}
+EOF
+  g add design/littlesprout.pen
+  g commit -qm 'design(pen): LS-67 落地'
+  g rev-parse HEAD
+}
+
+# ⑪ round 6 只交兩支（舊 schema）→ 紅，訊息點名四支
+sha11="$(land4 pr-r6-twoscans)"
+write_receipt "$R/design/evidence/LS-67-r6-overflow.json" "$sha11" 4 1 1 1
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（只有兩支）'
+expect 1 '⑪ round 6 只交兩支掃描 → 紅' 'scans.cross_parent_collision 缺失' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ⑫ round 6 四支齊全但 corner_anchor.mismatch=2 → 紅（角托錯位不接受白名單）
+sha12="$(land4 pr-r6-mismatch)"
+write_receipt4 "$R/design/evidence/LS-67-r6-overflow.json" "$sha12" 4 2 full
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（mismatch=2）'
+expect 1 '⑫ round 6 四支齊全但 corner_anchor.mismatch=2 → 紅' 'mismatch 必須為 0' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ⑬ round 6 四支齊全、mismatch=0 → 綠
+sha13="$(land4 pr-r6-ok)"
+write_receipt4 "$R/design/evidence/LS-67-r6-overflow.json" "$sha13" 4 0 full
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（四支齊全）'
+expect 0 '⑬ round 6 四支齊全、mismatch=0 → 綠' '四支掃描皆有輸出' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ⑭ corner_anchor 缺 points 計數 → 紅
+sha14="$(land4 pr-r6-nocounts)"
+write_receipt4 "$R/design/evidence/LS-67-r6-overflow.json" "$sha14" 4 0 nocounts
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（corner_anchor 缺 points）'
+expect 1 '⑭ corner_anchor 缺 points 計數 → 紅' 'corner_anchor.points 必須是非負整數' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ⑮ cross_parent_collision 有一筆缺分類 → 紅
+sha15="$(land4 pr-r6-noclass)"
+write_receipt4 "$R/design/evidence/LS-67-r6-overflow.json" "$sha15" 4 0 noclass
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（跨 parent 缺分類）'
+expect 1 '⑮ cross_parent_collision 有一筆缺分類 → 紅' 'scans.cross_parent_collision.flagged[0] 缺分類' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ⑯ round 1 兩支收據、但 .pen commit 在 LEGACY_CUTOFF 之後（＝gate 落地後的新票第 1 輪）→ 紅
+#    （與 ① 同一份收據內容，差別只在 commit 時間——證明「round ≤ 5」不是新票前五輪的永久漏洞）
+sha16="$(land4 pr-r1-after-cutoff)"
+write_receipt "$R/design/evidence/LS-67-r1-overflow.json" "$sha16" 4 1 1 1
+g add design/evidence/LS-67-r1-overflow.json
+g commit -qm 'design(evidence): LS-67 r1 收據（cutoff 之後的兩支收據）'
+expect 1 '⑯ cutoff 之後的 round 1 兩支收據 → 紅（不得沿用舊 schema）' '四支掃描' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
 
 if [ "$fail" -eq 0 ]; then
