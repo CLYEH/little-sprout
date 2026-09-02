@@ -10,6 +10,9 @@ struct LittleSproutApp: App {
     // LS-113：跟 `familyStore` 同理，隨 app 存活——09／10 畫面依它的 `children`／`myRole`
     // 判斷要不要重查，若每次重繪都重建會遺失狀態。
     @State private var childrenStore: ChildrenStore
+    // LS-126：跟 `childrenStore` 同理，隨 app 存活——時間軸的 keyset 分頁狀態（`entries`／
+    // `hasMorePages`／游標）若每次重繪都重建會遺失，切分頁再切回來會整頁重新從第一頁載入。
+    @State private var timelineStore: TimelineStore
     /// LS-108：`littlesprout://invite/<code>` deep link（LS-39 已註冊 scheme）冷／熱啟動皆走
     /// `.onOpenURL`——寫進這裡，`ForkView` 是唯一消費者（見該檔文件）。這一層只負責接住 URL、
     /// 解析出碼，不判斷「現在該不該導頁」，那是 `ForkView` 才知道的事（是否已登入、是否已有
@@ -21,6 +24,7 @@ struct LittleSproutApp: App {
         _authStore = State(initialValue: AuthStore(authService: SupabaseAuthService(client: client)))
         _familyStore = State(initialValue: FamilyStore(apiClient: SupabaseFamilyAPIClient(client: client)))
         _childrenStore = State(initialValue: ChildrenStore(apiClient: SupabaseChildAPIClient(client: client)))
+        _timelineStore = State(initialValue: TimelineStore(apiClient: SupabaseTimelineAPIClient(client: client)))
     }
 
     var body: some Scene {
@@ -47,6 +51,7 @@ struct LittleSproutApp: App {
             authStore: authStore,
             familyStore: familyStore,
             childrenStore: childrenStore,
+            timelineStore: timelineStore,
             pendingInviteCode: $pendingInviteCode
         )
         .onOpenURL { url in
