@@ -69635,6 +69635,78 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "ZCVDq",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vZos1",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R8 · HLXo3 Load More 停用註記",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "JrgZQ",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R7 BL-10 修法把 `HLXo3` 的 `PqQEK`（Load More 載入列，Feed 直屬子節點、Day Group 2 的手足，非其內容）`enabled` 設為 `false`——這純粹是為了讓它不落進膠囊下緣到板底的 34pt home indicator 帶（縮短 Card Diary 2 的 Snippet 後，Load More 的自然位置會跨進該帶），是這一板為了淨空邊界做的個案取捨。**不代表 AX3 字級下時間軸沒有分頁／載入更多機制**——`lKoZG`（另一片 AX3 時間軸板）的 Load More 維持 `enabled:true`，ios-dev 實作分頁／無限捲動載入更多時，以 `lKoZG` 為準，不要因為看到 `HLXo3` 停用就誤以為 AX3 版型本身不支援或不需要這個機制。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ghWRE",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RO5jh",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 R8 · Tab-root 通用判準與標準範例",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "tw5pU",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "visual-review R7 APPROVE（comment 5b5c2fb9）核可後補記：Tab-root 板（含 cmp/Tab Bar 的任何板）與捲動內容的關係，經 R5-R7 反覆驗證收斂為以下**通用判準**（不限本票，後續任何新增或修改的 Tab-root 板都比照）——兩條，缺一不可：①板內任何文字／icon 葉節點不得被膠囊矩形的邊緣**部分**覆蓋（上緣穿出膠囊上緣、或下緣穿出膠囊下緣但還沒到板底，兩者皆算違規）；②膠囊下緣到板底的 34pt home indicator 帶內不得有任何文字／icon 葉節點的哪怕一部分。內容合法的終態只有三種：完全在膠囊頂之上、完全被膠囊整個吞掉在內（不穿出膠囊任一邊緣）、或完全在板底之外（被 clip 裁掉）。旋轉節點（如 cmp/Day Divider 的 Stamp／Ghost）用其自身 bounds 判定，不展開子節點（見 R5 · MJ-11 段）；判定時要 respect 節點的 `enabled` 鏈（停用節點與其子樹不參與判定，見 R8 · HLXo3 Load More 段）。**標準範例：`a67Na`**（LS-21/11c 時間軸·下拉更新中）——Day Group 1 只放一張卡（Card Photo 1），內容天然結束在膠囊之上有餘裕的位置，Day Group 2 只需極小 padding-top（24）就能讓其全部內容（含旋轉的 Day Divider 2）完全落在板底之外，不需要大 padding 硬推、不需要事後刪卡救火——是這條判準底下結構最乾淨、最少特例的構圖，後續新增的 Tab-root 板優先照抄這個「Day Group 1 收斂到剛好清空膠囊、Day Group 2 順勢自然落在板外或膠囊後」的構圖邏輯，而不是每次都逐板重新試錯 padding 數值。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         }
