@@ -75,6 +75,10 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     case childNotEditableByCaller = "LS042"
     case childRestoreWindowExpired = "LS043"
     case childDeletedCannotAttachContent = "LS044"
+    // LS045（LS-121）：set_album_children 專用——不是相簿建立者本人，或雖是建立者
+    // 但已不是該家庭 owner/member。同 diaryNotEditableByCaller／
+    // commentNotEditableByCaller／childNotEditableByCaller 同一組理由，見下方 tier。
+    case albumChildrenNotEditableByCaller = "LS045"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -94,7 +98,8 @@ enum LSErrorCode: String, CaseIterable, Sendable {
              .diaryNotFoundOrDeleted, .diaryNotEditableByCaller,
              .albumNotFound, .commentNotFound, .commentNotEditableByCaller,
              .targetFamilyMismatch, .timelineCursorIncomplete, .removedByOwnerNotRestorable,
-             .childNotFoundOrDeleted, .childNotEditableByCaller, .childRestoreWindowExpired:
+             .childNotFoundOrDeleted, .childNotEditableByCaller, .childRestoreWindowExpired,
+             .albumChildrenNotEditableByCaller:
             // 以下碼為 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
@@ -130,6 +135,9 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // 都不會變成功，UI 該做的是不再顯示「還原」這個動作，不是引導使用者重試。
             // （childFamilyImmutable／LS040 已撤碼，見上方 case 列的說明——family_id
             // 不可變現在跟 diaries／albums／comments 一致，走下面 switch 的裸 "42501" 分支。）
+            // albumChildrenNotEditableByCaller（LS045，LS-121）：不是相簿建立者本人、
+            // 或雖是建立者但已不是該家庭 owner/member，同 diaryNotEditableByCaller 的
+            // 理由——換輸入沒有用，UI 該做的是隱藏「編輯寶貝標記」入口。
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:
             // 碼本身是「輸入」——打錯字換一個、或請 owner 給一支新的碼，都是同一個 UI 動作
