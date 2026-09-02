@@ -61,7 +61,7 @@ R7 掃過全部 393 寬、非 A11y/Stress 的螢幕板：27 張有實心 accent�
 
 ### 時間軸建立入口：導覽列按鈕（LS-119 R3，取代 FAB）
 
-- 時間軸首頁的建立動作用 `cmp/Create Entry Button`（前身 `cmp/FAB`，同一元件 id 就地改造）：pill 形、`fill:$accent`、padding `[$ctl-pad-tap, $sp-item]`＝44pt 高（padding 推導，非硬寫）、icon-sm＋`fs-body` label（「＋ 新增回憶」），放進 Header Row（與畫面標題同列，`justifyContent:space_between`），**不用絕對定位**。
+- 時間軸首頁的建立動作用 `cmp/Create Entry Button`（新建 reusable `zy3Ps`；LS-47 四板內嵌 FAB frame 未動，同步另記 LS-96）：pill 形、`fill:$accent`、padding `[$ctl-pad-tap, $sp-item]`＝44pt 高（padding 推導，非硬寫）、icon-sm＋`fs-body` label（「＋ 新增回憶」），放進 Header Row（與畫面標題同列，`justifyContent:space_between`），**不用絕對定位**。
 - 這是本規則唯一目前已知需要放棄「釘底動作帶」慣例的畫面類型（見上「不適用：Tab-root 畫面」），理由是浮動／釘底元素都無法在不影響 Tab Bar 全域位置的前提下與 Tab Bar 共存；把入口收進固定版面的 Header Row，結構上保證它不會疊到任何捲動中的卡片內容。
 - 空狀態（無內容時）的引導文案應指向這顆按鈕實際所在的位置（「點上方的『新增回憶』…」），不要寫死方向詞而不對照實際座標——文案與版面必須同步更新。
 
