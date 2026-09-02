@@ -52901,7 +52901,52 @@
                 "enabled": true,
                 "url": "https://images.unsplash.com/photo-1638339972126-fbf92a92dd74?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjQ1Mzl8&ixlib=rb-4.1.0&q=80&w=1080",
                 "mode": "fill"
-              }
+              },
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "sIJPp",
+                  "layoutPosition": "absolute",
+                  "x": 237,
+                  "y": 150,
+                  "name": "Video Badge",
+                  "enabled": false,
+                  "opacity": 0.75,
+                  "width": 100,
+                  "height": 26,
+                  "fill": "$print-ink",
+                  "cornerRadius": "$radius-full",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    3,
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "QdjHX",
+                      "name": "Play Icon",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "play",
+                      "library": "lucide",
+                      "fill": "$on-photo"
+                    },
+                    {
+                      "type": "text",
+                      "id": "vTAQR",
+                      "name": "Duration Label",
+                      "fill": "$on-photo",
+                      "content": "影片 0:32",
+                      "fontFamily": "$font",
+                      "fontSize": 14,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
             },
             {
               "type": "frame",
@@ -53263,7 +53308,12 @@
                           "type": "ref",
                           "ref": "umJHD",
                           "name": "Card Photo 1",
-                          "width": "fill_container"
+                          "width": "fill_container",
+                          "descendants": {
+                            "sIJPp": {
+                              "enabled": true
+                            }
+                          }
                         },
                         {
                           "id": "WitwS",
@@ -56135,7 +56185,51 @@
                             "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTF8&ixlib=rb-4.1.0&q=80&w=1080",
                             "mode": "fill"
                           },
-                          "cornerRadius": "$radius-md"
+                          "cornerRadius": "$radius-md",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "GCSTr",
+                              "layoutPosition": "absolute",
+                              "x": 4,
+                              "y": 70,
+                              "name": "Video Badge",
+                              "opacity": 0.75,
+                              "width": 88,
+                              "height": 22,
+                              "fill": "$print-ink",
+                              "cornerRadius": "$radius-full",
+                              "gap": "$sp-tight",
+                              "padding": [
+                                2,
+                                "$sp-tight"
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "J2Rch",
+                                  "name": "Play Icon",
+                                  "width": 12,
+                                  "height": 12,
+                                  "icon": "play",
+                                  "library": "lucide",
+                                  "fill": "$on-photo"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "j77RO",
+                                  "name": "Duration Label",
+                                  "fill": "$on-photo",
+                                  "content": "影片 0:32",
+                                  "fontFamily": "$font",
+                                  "fontSize": 13,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
                         },
                         {
                           "type": "frame",
@@ -59961,7 +60055,51 @@
                             "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTF8&ixlib=rb-4.1.0&q=80&w=1080",
                             "mode": "fill"
                           },
-                          "cornerRadius": "$radius-md"
+                          "cornerRadius": "$radius-md",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ZOg73",
+                              "layoutPosition": "absolute",
+                              "x": 4,
+                              "y": 70,
+                              "name": "Video Badge",
+                              "opacity": 0.75,
+                              "width": 88,
+                              "height": 22,
+                              "fill": "$print-ink",
+                              "cornerRadius": "$radius-full",
+                              "gap": "$sp-tight",
+                              "padding": [
+                                2,
+                                "$sp-tight"
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "wjO60",
+                                  "name": "Play Icon",
+                                  "width": 12,
+                                  "height": 12,
+                                  "icon": "play",
+                                  "library": "lucide",
+                                  "fill": "$on-photo"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Zwoef",
+                                  "name": "Duration Label",
+                                  "fill": "$on-photo",
+                                  "content": "影片 0:32",
+                                  "fontFamily": "$font",
+                                  "fontSize": 13,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
                         },
                         {
                           "type": "frame",
@@ -61037,7 +61175,51 @@
                             "enabled": true,
                             "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTF8&ixlib=rb-4.1.0&q=80&w=1080",
                             "mode": "fill"
-                          }
+                          },
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "KLN2X",
+                              "layoutPosition": "absolute",
+                              "x": 70.5,
+                              "y": 106,
+                              "name": "Video Badge",
+                              "opacity": 0.75,
+                              "width": 78,
+                              "height": 20,
+                              "fill": "$print-ink",
+                              "cornerRadius": "$radius-full",
+                              "gap": "$sp-tight",
+                              "padding": [
+                                2,
+                                "$sp-tight"
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "t5UeS",
+                                  "name": "Play Icon",
+                                  "width": 11,
+                                  "height": 11,
+                                  "icon": "play",
+                                  "library": "lucide",
+                                  "fill": "$on-photo"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "koRPF",
+                                  "name": "Duration Label",
+                                  "fill": "$on-photo",
+                                  "content": "影片 0:32",
+                                  "fontFamily": "$font",
+                                  "fontSize": 11,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
                         },
                         {
                           "type": "frame",
@@ -66614,6 +66796,42 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "HoTpd",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "o9CoxB",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R5 · 影片格（時間軸卡）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ArkP3",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`cmp/Card Photo`（umJHD）的 Photo Wrap 新增「Video Badge」子節點，預設 enabled:false（絕大多數照片卡不受影響）。示範：時間軸 `yXSht` 的 `xrCoj`（Card Photo 1）覆寫 enabled:true，顯示「▶ 影片 0:32」。時間軸卡片上的影片項**不自動播放、不內嵌播放器**——徽章只是靜態標示，card 本身仍是一張沖印品照片（縮圖用影片首格畫面），這點是行為規格，稿面無法示範「沒有播放器」這件事的存在，寫在這裡供 ios-dev 對照：Feed 內任何 kind=photo 且 media_type=video 的卡片一律用靜態縮圖＋本徽章，絕不嵌入 AVPlayer 或自動播放。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -67238,6 +67456,42 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "l1E7O",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CSROf",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R5 · 影片格（編輯器）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "gntyX",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "編輯器佇列的影片項沿用照片縮圖同款沖印品格（96×96 plain thumb，非沖印品母題——維持既有『佇列縮圖不裱』慣例），右下角疊一顆膠囊徽章「▶ 影片 0:32」（$print-ink 75% 不透明底＋$on-photo 白字白圖示，radius-full）。示範：mkxzU／MOLyd（AX3）的 Photo 2 縮圖各自疊一顆徽章。**刻意不吃 Dynamic Type**：徽章疊在物理尺寸固定的 96×96 縮圖上（縮圖本身不隨 AX3 長大），若文字跟著 AX3 放大到 33pt 會直接塞爆縮圖——這是本輪唯一新增的『固定字級』例外，比照既有 `$fs-imprint`／Selected Badge 勾號 14pt 的先例（『疊在固定尺寸物件上的字不長大』），非疏漏。SwiftUI 對應：duration label 用系統固定字級（不綁 Dynamic Type），只有外層版面走 AX3。新增「LS-21 / 12g 日記編輯器 · 影片超過 1 分鐘」示範板：Photo 2 縮圖時長改「影片 1:24」，Photo Strip 下方新增回話列「影片最長 1 分鐘，會保留前 60 秒」（沿用既有 Boundary/Cap Reply 視覺：circle-alert 18＋$text-primary，非 danger，十條之八）。行為只提示、不阻擋：仍可選取這支影片繼續發佈，裁切前 60 秒的動作在後端／發佈時處理，不在編輯器內剪輯。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -67440,6 +67694,42 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "iPad 基準板 MjRcr 沿用既有左右分欄（左欄 360 固定寬放照片、右欄放文字＋留言），R4 稱讚過的雜誌跨頁構圖仍保留（照片數少時左欄仍是視覺重心）。但 20 張壓測板若塞進 360 窄欄會變成 10 列的細長欄，右側文字欄卻很短，留下一大片視覺不平衡的空白——判定為缺陷風險，改成整寬單欄：Date Anchor → Diary Note（沿用左右分欄版同款 $print-paper 卡片便箋語彙）→ Photo Grid（4 欄，754pt＝834−2×40 screen-pad-lg）→ Spacer 44 → Comments，日記文字與照片牆共用同一欄寬、不再分左右。這是壓測板專屬的版式，不代表一般 iPad 詳情頁改版——一般情況（照片少）仍用 MjRcr 既有分欄。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "N1CSbG",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KzU8g",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "R5 · 影片格（詳情頁觸發態）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "F7NWrf",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "詳情頁點一下影片項要開全螢幕系統播放器（QuickTime／AVPlayerViewController 等系統元件），本稿只畫「觸發前」的靜態態，不畫播放器本身。示範：`vzYXz` 格狀照片牆第 2 格（`wnBM1` Photo Wrap）疊同款影片徽章（縮小版：78×20，字級 11 固定，同上一條『不吃 Dynamic Type』的例外理由）。`$print-ink`／`$on-photo` 皆為不掛 theme 的固定值token，深色模式（QCJfh 對應格）會自動套用相同視覺、不需要另外做一份深色示範。SwiftUI 對應：整個 Print Cell 疊一個 `.onTapGesture`，media_type=video 時呼叫系統播放器 present，不在應用內自繪任何播放控制列。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -86401,6 +86691,883 @@
               "type": "rectangle",
               "cornerRadius": "$radius-full",
               "id": "FAu7W",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "P3DW1",
+      "x": 18842,
+      "y": 30619,
+      "name": "LS-21 / 12g 日記編輯器 · 影片超過 1 分鐘",
+      "clip": true,
+      "width": 393,
+      "height": 949,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "A7vlO",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "e4fYqM",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "取消"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "O38P6r",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "lCkGe",
+              "name": "Title",
+              "fill": "$text-primary",
+              "content": "寫日記",
+              "fontFamily": "$font",
+              "fontSize": "$fs-display",
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "FznBb",
+              "name": "Spacer 16 A",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "y1bRv",
+              "name": "Text Field",
+              "width": "fill_container",
+              "height": 116,
+              "fill": "$surface",
+              "cornerRadius": "$radius-md",
+              "stroke": "$control-line",
+              "strokeWidth": 1.5,
+              "padding": "$inset-card",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "wurbd",
+                  "name": "Body Text",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "今天在溜滑梯上玩得好開心，還交了一個新朋友，說好下次要一起帶挖沙工具來。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eoFge",
+              "name": "Spacer 16 B",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "p82WN3",
+              "name": "Photos",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "YY5Js",
+                  "name": "Photos Header",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "iobJH",
+                      "name": "Photos Label",
+                      "fill": "$text-primary",
+                      "content": "附加照片",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "p6Vabc",
+                      "name": "Photo Count",
+                      "fill": "$text-secondary",
+                      "content": "3／20 張",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OZt3M",
+                  "name": "Photo Strip",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "VZqAV",
+                      "name": "Add Photo",
+                      "width": 96,
+                      "height": 96,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "UOZUJ",
+                          "name": "Plus",
+                          "width": 26,
+                          "height": 26,
+                          "icon": "plus",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "dqHJo",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "新增照片",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "V9NWo4",
+                      "name": "Photo 1",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "dWs6d",
+                          "name": "Thumb",
+                          "metadata": {
+                            "type": "unsplash",
+                            "username": "lucy_10",
+                            "link": "https://unsplash.com/@lucy_10",
+                            "author": "Lucy Davis"
+                          },
+                          "clip": true,
+                          "width": 96,
+                          "height": 96,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTB8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "AvZzT",
+                          "layoutPosition": "absolute",
+                          "x": 78,
+                          "y": -8,
+                          "name": "Selected Badge",
+                          "enabled": false,
+                          "width": 24,
+                          "height": 24,
+                          "fill": "$text-primary",
+                          "cornerRadius": "$radius-full",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 3
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "P6PgpZ",
+                              "name": "Check",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "check",
+                              "library": "lucide",
+                              "fill": "$surface"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "H3cuf",
+                      "name": "Photo 2",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "OSH9L",
+                          "name": "Thumb",
+                          "metadata": {
+                            "type": "unsplash",
+                            "username": "photoken123",
+                            "link": "https://unsplash.com/@photoken123",
+                            "author": "Iain"
+                          },
+                          "clip": true,
+                          "width": 96,
+                          "height": 96,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTF8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "A2a9e",
+                              "layoutPosition": "absolute",
+                              "x": 4,
+                              "y": 70,
+                              "name": "Video Badge",
+                              "opacity": 0.75,
+                              "width": 88,
+                              "height": 22,
+                              "fill": "$print-ink",
+                              "cornerRadius": "$radius-full",
+                              "gap": "$sp-tight",
+                              "padding": [
+                                2,
+                                "$sp-tight"
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "bxYNa",
+                                  "name": "Play Icon",
+                                  "width": 12,
+                                  "height": 12,
+                                  "icon": "play",
+                                  "library": "lucide",
+                                  "fill": "$on-photo"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "oomYx",
+                                  "name": "Duration Label",
+                                  "fill": "$on-photo",
+                                  "content": "影片 0:32",
+                                  "fontFamily": "$font",
+                                  "fontSize": 13,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "HyS26",
+                              "layoutPosition": "absolute",
+                              "x": 4,
+                              "y": 70,
+                              "name": "Video Badge",
+                              "opacity": 0.75,
+                              "width": 88,
+                              "height": 22,
+                              "fill": "$print-ink",
+                              "cornerRadius": "$radius-full",
+                              "gap": "$sp-tight",
+                              "padding": [
+                                2,
+                                "$sp-tight"
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "oaTKH",
+                                  "name": "Play Icon",
+                                  "width": 12,
+                                  "height": 12,
+                                  "icon": "play",
+                                  "library": "lucide",
+                                  "fill": "$on-photo"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Cc42W",
+                                  "name": "Duration Label",
+                                  "fill": "$on-photo",
+                                  "content": "影片 1:24",
+                                  "fontFamily": "$font",
+                                  "fontSize": 13,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "e7oA4",
+                          "layoutPosition": "absolute",
+                          "x": 78,
+                          "y": -8,
+                          "name": "Selected Badge",
+                          "enabled": false,
+                          "width": 24,
+                          "height": 24,
+                          "fill": "$text-primary",
+                          "cornerRadius": "$radius-full",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 3
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "HAiMq",
+                              "name": "Check",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "check",
+                              "library": "lucide",
+                              "fill": "$surface"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XzXIu",
+                      "name": "Photo 3",
+                      "width": 96,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "KM8KQ",
+                          "name": "Thumb",
+                          "metadata": {
+                            "type": "unsplash",
+                            "username": "rewired41",
+                            "link": "https://unsplash.com/@rewired41",
+                            "author": "Rewired Digital"
+                          },
+                          "clip": true,
+                          "width": 96,
+                          "height": 96,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTJ8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ach3h",
+                          "layoutPosition": "absolute",
+                          "x": 78,
+                          "y": -8,
+                          "name": "Selected Badge",
+                          "enabled": false,
+                          "width": 24,
+                          "height": 24,
+                          "fill": "$text-primary",
+                          "cornerRadius": "$radius-full",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 3
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "mtW7t",
+                              "name": "Check",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "check",
+                              "library": "lucide",
+                              "fill": "$surface"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "iZQBE",
+                  "name": "Video Length Reply",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "HX5BJ",
+                      "name": "Reply Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "SB8q1",
+                      "name": "Reply Text",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "影片最長 1 分鐘，會保留前 60 秒",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "CkbyZ",
+                  "name": "Drag Hint",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "按住照片可拖動調整順序",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "KLGZS",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Remove Selected Button",
+                  "enabled": false,
+                  "width": "fill_container(0)",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$danger",
+                  "strokeWidth": 1.5,
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-group",
+                    "$inset-card"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "iZFH9",
+                      "name": "Trash Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "trash-2",
+                      "library": "lucide",
+                      "fill": "$danger"
+                    },
+                    {
+                      "type": "text",
+                      "id": "tduuU",
+                      "name": "Label",
+                      "fill": "$danger",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "移除所選 0 張",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "yPAG1",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "fhjPm",
+              "name": "Date Field",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "EwU4l",
+                  "name": "Field Label",
+                  "fill": "$text-primary",
+                  "content": "記錄日期",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "UWSkf",
+                  "name": "Field Box",
+                  "width": "fill_container",
+                  "height": 60,
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$control-line",
+                  "strokeWidth": 1.5,
+                  "padding": [
+                    0,
+                    "$inset-card"
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Kk1bi",
+                      "name": "Left",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "dWA4V",
+                          "name": "Calendar Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "calendar",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "a4ZAo",
+                          "name": "Field Value",
+                          "fill": "$text-primary",
+                          "content": "8月31日（昨天）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "lzUh5",
+                      "name": "Chevron",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ztLLr",
+                  "name": "Field Help",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "oPAAq",
+                      "name": "Field Help Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "info",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fhFHa",
+                      "name": "Field Help Text",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "預設是今天，也可以往前選，補寫之前忘記寫的日子。",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "jpWcC",
+              "name": "Spacer 16 C",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "mOTVs",
+              "name": "Child Field",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "yzO7J",
+                  "name": "Field Label",
+                  "fill": "$text-primary",
+                  "content": "這篇日記是哪個寶貝的？",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "oSj9r",
+                  "name": "Field Box",
+                  "width": "fill_container",
+                  "height": 60,
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$control-line",
+                  "strokeWidth": 1.5,
+                  "padding": [
+                    0,
+                    "$inset-card"
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "O1RQr",
+                      "name": "Left",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "nJvdg",
+                          "type": "ref",
+                          "ref": "RaaIf",
+                          "name": "Avatar",
+                          "width": 32,
+                          "height": 32,
+                          "descendants": {
+                            "A30rIX": {
+                              "content": "安",
+                              "fontSize": "$fs-note"
+                            }
+                          }
+                        },
+                        {
+                          "type": "text",
+                          "id": "CnTOt",
+                          "name": "Field Value",
+                          "fill": "$text-primary",
+                          "content": "小安",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "ktkcG",
+                      "name": "Chevron",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "CcueB",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "G0eAFK",
+              "name": "Bar Hairline",
+              "fill": "$border",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "JZiTv",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "hYHMf",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Publish Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "send",
+                      "width": 22,
+                      "height": 22
+                    },
+                    "w7CUP": {
+                      "content": "發佈日記"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "dCkiV",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "c41ntJ",
               "name": "Home Indicator",
               "fill": "$home-indicator",
               "width": 140,
