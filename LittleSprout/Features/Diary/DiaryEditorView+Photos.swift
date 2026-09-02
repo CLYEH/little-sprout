@@ -10,6 +10,7 @@ extension DiaryEditorView {
             photosHeader
             photoStrip
             if store.isAtCapacity { capReplyRow }
+            if store.unsupportedFormatSkippedCount > 0 { unsupportedFormatReplyRow }
             ForEach(store.overLongVideoDrafts) { draft in
                 videoLengthReplyRow(draft)
             }
@@ -38,7 +39,9 @@ extension DiaryEditorView {
 
     private var photoStrip: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: AppSpacing.label) {
+            // merge-review R1 M4：20 張上限下 `HStack` 會把全部縮圖一次建構進 render tree；
+            // `LazyHStack` 只建構捲動可見範圍內的格子。
+            LazyHStack(spacing: AppSpacing.label) {
                 addPhotoCell
                 ForEach(Array(store.photos.enumerated()), id: \.element.id) { index, photo in
                     photoCell(photo, index: index)
@@ -63,7 +66,10 @@ extension DiaryEditorView {
             }
             // R5（`design/littlesprout.pen` Handoff Notes `PoZUw`）：AX3 下「新增照片」換成兩行後
             // 固定 96 高度會裁字——本輪唯一一個「容器不寫死高度」的例外，其餘沿用既有硬寫 96。
-            .frame(width: 96, height: dynamicTypeSize.isAccessibilitySize ? nil : 96)
+            .frame(
+                width: DiaryPhotoQueueLayout.thumbnailSize,
+                height: dynamicTypeSize.isAccessibilitySize ? nil : DiaryPhotoQueueLayout.thumbnailSize
+            )
             .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? AppSpacing.label : 0)
             .background(Color.lsSurface2, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
             .overlay(
@@ -72,7 +78,10 @@ extension DiaryEditorView {
             )
         }
         .buttonStyle(.plain)
-        .disabled(store.publishState.isInFlight)
+        // merge-review R1 m6：載入中不停用「新增照片」的話，使用者能開第二批 picker，兩批
+        // `loadPicked` 交錯 append，佇列順序不可預期——跟 M3 共用同一顆 `isLoadingPickedItems`
+        // 旗標解掉。
+        .disabled(store.publishState.isInFlight || store.isLoadingPickedItems)
     }
 
     private func photoCell(_ photo: DiaryPhotoDraft, index: Int) -> some View {
@@ -97,6 +106,13 @@ extension DiaryEditorView {
         .simultaneousGesture(reorderGesture(for: photo))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel(for: photo, index: index, isSelected: isSelected))
+        // merge-review R1 m13（PLAUSIBLE）：`.onTapGesture`（不是 Button）疊
+        // `accessibilityAction(named:)` 自訂動作，VoiceOver 通常會把 `onTapGesture` 橋接成
+        // 預設 activate 動作，但沒有實機驗證過這個組合；明講 `.isButton` trait ＋一個「無名」
+        // `accessibilityAction`（雙擊觸發的預設動作，跟上面兩個具名自訂動作不衝突）保底，讓
+        // 選取這條路徑不用完全依賴橋接是否生效。
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { store.toggleSelection(photo.id) }
         .accessibilityAction(named: "往前移") { store.moveEarlier(photo.id) }
         .accessibilityAction(named: "往後移") { store.moveLater(photo.id) }
     }
@@ -110,7 +126,7 @@ extension DiaryEditorView {
                     Color.lsSurface2
                 }
             }
-            .frame(width: 96, height: 96)
+            .frame(width: DiaryPhotoQueueLayout.thumbnailSize, height: DiaryPhotoQueueLayout.thumbnailSize)
             .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
             .overlay(
                 RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
@@ -195,7 +211,16 @@ extension DiaryEditorView {
         replyRow(text: "這支影片 \(DiaryDurationFormat.string(from: draft.videoDuration ?? 0))，發佈時會保留前 60 秒")
     }
 
-    private func replyRow(text: String) -> some View {
+    /// merge-review R1 m4：不支援的格式（bucket 只收 jpg/jpeg/png/heic/heif/mp4/mov）在挑選
+    /// 階段就被 `PickedItemLoader` 擋掉，這裡告知使用者「挑了但沒加進來」，不要讓使用者以為
+    /// 自己漏點了。
+    private var unsupportedFormatReplyRow: some View {
+        replyRow(text: "有 \(store.unsupportedFormatSkippedCount) 個檔案格式不支援，沒有加入（僅支援 JPEG／PNG／HEIC／MP4／MOV）")
+    }
+
+    /// 不是 private：`DiaryEditorView.swift` 的 `bodyTextField` 空內文提示重用同一套視覺
+    /// （`$text-primary`＋circle-alert，十條之八「還沒做完」語彙）。
+    func replyRow(text: String) -> some View {
         HStack(alignment: .top, spacing: AppSpacing.label) {
             Image(systemName: "exclamationmark.circle")
                 .appIconFrame(.small)
@@ -227,12 +252,20 @@ extension DiaryEditorView {
         .disabled(store.publishState.isInFlight)
     }
 
+    /// merge-review R1 M3／m6：`isLoadingPickedItems` 包住整個迴圈——發佈鈕與「新增照片」cell
+    /// 都讀這顆旗標停用，擋下「照片還在解碼時按發佈會漏掉尚未 append 的照片」與「開第二批
+    /// picker 讓兩批迴圈交錯 append」兩個問題。
     @MainActor
     func loadPicked(_ items: [PhotosPickerItem]) async {
+        store.beginLoadingPickedItems()
+        defer { store.endLoadingPickedItems() }
+        var unsupportedCount = 0
         for item in items {
             guard !store.isAtCapacity else { break }
             guard let loaded = await PickedItemLoader.load(item) else { continue }
             switch loaded {
+            case .unsupportedFormat:
+                unsupportedCount += 1
             case .photo(let data, let fileExtension, let pixelSize, let previewImage):
                 store.addPhoto(
                     data: data, fileExtension: fileExtension, pixelSize: pixelSize, previewImage: previewImage
@@ -244,5 +277,6 @@ extension DiaryEditorView {
                 )
             }
         }
+        store.reportUnsupportedFormatSkipped(count: unsupportedCount)
     }
 }

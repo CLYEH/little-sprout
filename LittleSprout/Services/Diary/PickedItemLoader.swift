@@ -21,43 +21,65 @@ enum PickedItemLoader {
             fileURL: URL, fileExtension: String, duration: TimeInterval,
             pixelSize: PixelSize, previewImage: UIImage?
         )
+        /// Storage bucket 不接受的格式（`docs/API.md` §6：僅 jpg/jpeg/png/heic/heif/mp4/mov）
+        /// ——挑選階段就擋掉，不要拖到發佈時才被伺服器用無資訊量的錯誤拒絕
+        /// （merge-review R1 m4）。
+        case unsupportedFormat
     }
+
+    /// Storage bucket 的 `allowed_mime_types`／路徑 regex 對應的副檔名集合
+    /// （`supabase/migrations/20260823030000_storage_policies.sql`），跟後端契約保持一致。
+    private static let supportedPhotoExtensions: Set<String> = ["jpg", "jpeg", "png", "heic", "heif"]
+    private static let supportedVideoExtensions: Set<String> = ["mp4", "mov"]
 
     static func load(_ item: PhotosPickerItem) async -> LoadedItem? {
-        if item.supportedContentTypes.contains(where: { $0.conforms(to: .movie) }) {
-            return await loadVideo(item)
-        }
-        return await loadPhoto(item)
+        let isVideo = item.supportedContentTypes.contains(where: { $0.conforms(to: .movie) })
+        let ext = fileExtension(for: item, fallback: isVideo ? "mp4" : "jpg").lowercased()
+        let supported = isVideo ? supportedVideoExtensions : supportedPhotoExtensions
+        guard supported.contains(ext) else { return .unsupportedFormat }
+        return isVideo ? await loadVideo(item, fileExtension: ext) : await loadPhoto(item, fileExtension: ext)
     }
 
-    private static func loadPhoto(_ item: PhotosPickerItem) async -> LoadedItem? {
+    private static func loadPhoto(_ item: PhotosPickerItem, fileExtension: String) async -> LoadedItem? {
         guard let data = try? await item.loadTransferable(type: Data.self),
               let image = UIImage(data: data), let cgImage = image.cgImage else { return nil }
         return .photo(
-            data: data, fileExtension: fileExtension(for: item, fallback: "jpg"),
-            pixelSize: PixelSize(width: cgImage.width, height: cgImage.height), previewImage: image
+            data: data, fileExtension: fileExtension,
+            pixelSize: PixelSize(width: cgImage.width, height: cgImage.height),
+            previewImage: await downsizedThumbnail(for: image)
         )
     }
 
-    private static func loadVideo(_ item: PhotosPickerItem) async -> LoadedItem? {
+    private static func loadVideo(_ item: PhotosPickerItem, fileExtension: String) async -> LoadedItem? {
         guard let transferred = try? await item.loadTransferable(type: TransferableVideoFile.self) else { return nil }
         let asset = AVURLAsset(url: transferred.url)
-        guard let track = try? await asset.loadTracks(withMediaType: .video).first,
-              let durationValue = try? await asset.load(.duration) else { return nil }
-        let naturalSize = (try? await track.load(.naturalSize)) ?? .zero
-        let transform = (try? await track.load(.preferredTransform)) ?? .identity
-        let orientedRect = CGRect(origin: .zero, size: naturalSize).applying(transform)
+        guard let durationValue = try? await asset.load(.duration),
+              let pixelSize = await VideoTrimmer.pixelSize(ofFirstVideoTrackIn: asset) else { return nil }
         return .video(
-            fileURL: transferred.url, fileExtension: fileExtension(for: item, fallback: "mp4"),
-            duration: CMTimeGetSeconds(durationValue),
-            pixelSize: PixelSize(width: Int(abs(orientedRect.width)), height: Int(abs(orientedRect.height))),
-            previewImage: firstFrame(of: asset)
+            fileURL: transferred.url, fileExtension: fileExtension,
+            duration: CMTimeGetSeconds(durationValue), pixelSize: pixelSize,
+            previewImage: await firstFrame(of: asset)
         )
     }
 
+    /// R1 M4：`previewImage` 只是佇列裡的**縮圖**，不需要全解析度——`byPreparingThumbnail(ofSize:)`
+    /// 直接產生下採樣後的點陣，不會先把整張原圖解碼進記憶體再縮小（那正是 20 張 4K 原圖同時
+    /// 撐爆記憶體的成因）。失敗時退回原圖，至少縮圖還看得到內容。
+    private static func downsizedThumbnail(for image: UIImage) async -> UIImage? {
+        let target = CGSize(
+            width: DiaryPhotoQueueLayout.thumbnailPixelBudget, height: DiaryPhotoQueueLayout.thumbnailPixelBudget
+        )
+        return await image.byPreparingThumbnail(ofSize: target) ?? image
+    }
+
+    /// 同上，影片首幀縮圖直接請 `AVAssetImageGenerator` 用 `maximumSize` 下採樣產生，不要生
+    /// 全尺寸首幀再自己縮。
     private static func firstFrame(of asset: AVAsset) -> UIImage? {
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
+        generator.maximumSize = CGSize(
+            width: DiaryPhotoQueueLayout.thumbnailPixelBudget, height: DiaryPhotoQueueLayout.thumbnailPixelBudget
+        )
         guard let cgImage = try? generator.copyCGImage(at: .zero, actualTime: nil) else { return nil }
         return UIImage(cgImage: cgImage)
     }
