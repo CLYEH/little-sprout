@@ -17,3 +17,4 @@ InviteFamilyView：需要 FamilyStore preview 帶邀請碼產生狀態，追蹤�
 JoinCodeView：表單流程，追蹤於 LS-96
 JoinWaitingView：需要模擬待審核狀態，追蹤於 LS-96
 TimelineView：需要多筆假資料與捲動狀態才有代表性，追蹤於 LS-96
+DiaryEditorView：多步驟表單流程（照片佇列＋PhotosPicker＋上傳狀態機），追蹤於 LS-96

@@ -10,6 +10,12 @@ struct LittleSproutApp: App {
     // LS-113：跟 `familyStore` 同理，隨 app 存活——09／10 畫面依它的 `children`／`myRole`
     // 判斷要不要重查，若每次重繪都重建會遺失狀態。
     @State private var childrenStore: ChildrenStore
+    /// LS-125：日記編輯器（`DiaryEditorView`）用的 client——不是 `@State`：兩者都是不可變的
+    /// 純 service 物件（同 `familyStore` 內部包的 `SupabaseFamilyAPIClient`），本身不 Observable
+    /// 也不需要跨重繪保留可變狀態，草稿狀態的持久性由 `DiaryComposerStore`（畫面等級，見該檔）
+    /// 負責，不需要在這裡另外包一層 store。
+    let diaryAPIClient: DiaryAPIClient
+    let mediaUploadService: MediaUploadService
     /// LS-108：`littlesprout://invite/<code>` deep link（LS-39 已註冊 scheme）冷／熱啟動皆走
     /// `.onOpenURL`——寫進這裡，`ForkView` 是唯一消費者（見該檔文件）。這一層只負責接住 URL、
     /// 解析出碼，不判斷「現在該不該導頁」，那是 `ForkView` 才知道的事（是否已登入、是否已有
@@ -21,6 +27,8 @@ struct LittleSproutApp: App {
         _authStore = State(initialValue: AuthStore(authService: SupabaseAuthService(client: client)))
         _familyStore = State(initialValue: FamilyStore(apiClient: SupabaseFamilyAPIClient(client: client)))
         _childrenStore = State(initialValue: ChildrenStore(apiClient: SupabaseChildAPIClient(client: client)))
+        diaryAPIClient = SupabaseDiaryAPIClient(client: client)
+        mediaUploadService = SupabaseMediaUploadService(client: client)
     }
 
     var body: some Scene {
@@ -47,6 +55,8 @@ struct LittleSproutApp: App {
             authStore: authStore,
             familyStore: familyStore,
             childrenStore: childrenStore,
+            diaryAPIClient: diaryAPIClient,
+            mediaUploadService: mediaUploadService,
             pendingInviteCode: $pendingInviteCode
         )
         .onOpenURL { url in

@@ -10,6 +10,10 @@ struct RootView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    /// LS-125：`DiaryEditorView` 用的 client，原樣轉手往下傳到 `TimelineView`（見
+    /// `LittleSproutApp` 文件註解——不是 `@State`，這裡也只是單純轉手）。
+    let diaryAPIClient: DiaryAPIClient
+    let mediaUploadService: MediaUploadService
     /// LS-108 deep link：見 `ForkView` 文件註解，這裡只是原樣轉手往下傳。
     @Binding var pendingInviteCode: String?
 
@@ -22,6 +26,8 @@ struct RootView: View {
                     authStore: authStore,
                     familyStore: familyStore,
                     childrenStore: childrenStore,
+                    diaryAPIClient: diaryAPIClient,
+                    mediaUploadService: mediaUploadService,
                     pendingInviteCode: $pendingInviteCode
                 )
             } else {
@@ -60,6 +66,8 @@ private struct AuthenticatedGate: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    let diaryAPIClient: DiaryAPIClient
+    let mediaUploadService: MediaUploadService
     @Binding var pendingInviteCode: String?
 
     var body: some View {
@@ -73,7 +81,10 @@ private struct AuthenticatedGate: View {
                 }
             case .success:
                 if familyStore.myFamily != nil {
-                    AuthenticatedRootView(authStore: authStore, familyStore: familyStore, childrenStore: childrenStore)
+                    AuthenticatedRootView(
+                        authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
+                        diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
+                    )
                 } else {
                     ForkView(authStore: authStore, familyStore: familyStore, pendingInviteCode: $pendingInviteCode)
                 }
@@ -112,6 +123,8 @@ struct AuthenticatedRootView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    let diaryAPIClient: DiaryAPIClient
+    let mediaUploadService: MediaUploadService
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selection: AppSection = .timeline
@@ -120,11 +133,13 @@ struct AuthenticatedRootView: View {
         Group {
             if horizontalSizeClass == .regular {
                 SectionSplitView(
-                    authStore: authStore, familyStore: familyStore, childrenStore: childrenStore, selection: $selection
+                    authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
+                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService, selection: $selection
                 )
             } else {
                 SectionTabView(
-                    authStore: authStore, familyStore: familyStore, childrenStore: childrenStore, selection: $selection
+                    authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
+                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService, selection: $selection
                 )
             }
         }
@@ -150,6 +165,8 @@ private struct SectionTabView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    let diaryAPIClient: DiaryAPIClient
+    let mediaUploadService: MediaUploadService
     @Binding var selection: AppSection
 
     var body: some View {
@@ -157,7 +174,8 @@ private struct SectionTabView: View {
             ForEach(AppSection.allCases) { section in
                 NavigationStack {
                     SectionContentView(
-                        section: section, authStore: authStore, familyStore: familyStore, childrenStore: childrenStore
+                        section: section, authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
+                        diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
                     )
                 }
                 .tabItem { Label(section.title, systemImage: section.systemImage) }
@@ -172,6 +190,8 @@ private struct SectionSplitView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    let diaryAPIClient: DiaryAPIClient
+    let mediaUploadService: MediaUploadService
     @Binding var selection: AppSection
 
     var body: some View {
@@ -185,7 +205,8 @@ private struct SectionSplitView: View {
             // 需處理「iPad 切換 section 重置 detail stack」（可用 .id(selection)）。
             NavigationStack {
                 SectionContentView(
-                    section: selection, authStore: authStore, familyStore: familyStore, childrenStore: childrenStore
+                    section: selection, authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
+                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
                 )
             }
         }
@@ -208,6 +229,8 @@ struct SectionContentView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    let diaryAPIClient: DiaryAPIClient
+    let mediaUploadService: MediaUploadService
 
     var body: some View {
         content
@@ -217,7 +240,11 @@ struct SectionContentView: View {
     @ViewBuilder
     private var content: some View {
         switch section {
-        case .timeline: TimelineView(familyStore: familyStore, childrenStore: childrenStore)
+        case .timeline:
+            TimelineView(
+                familyStore: familyStore, childrenStore: childrenStore,
+                diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
+            )
         case .albums: AlbumsView()
         case .children: ChildrenManagementView(familyStore: familyStore, childrenStore: childrenStore)
         case .settings: SettingsView(authStore: authStore, familyStore: familyStore, childrenStore: childrenStore)
@@ -226,11 +253,17 @@ struct SectionContentView: View {
 }
 
 #Preview("Compact") {
-    AuthenticatedRootView(authStore: .preview(), familyStore: .preview(), childrenStore: .preview())
-        .environment(\.horizontalSizeClass, .compact)
+    AuthenticatedRootView(
+        authStore: .preview(), familyStore: .preview(), childrenStore: .preview(),
+        diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
+    )
+    .environment(\.horizontalSizeClass, .compact)
 }
 
 #Preview("Regular") {
-    AuthenticatedRootView(authStore: .preview(), familyStore: .preview(), childrenStore: .preview())
-        .environment(\.horizontalSizeClass, .regular)
+    AuthenticatedRootView(
+        authStore: .preview(), familyStore: .preview(), childrenStore: .preview(),
+        diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
+    )
+    .environment(\.horizontalSizeClass, .regular)
 }
