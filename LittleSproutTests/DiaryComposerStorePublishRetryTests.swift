@@ -102,6 +102,41 @@ final class DiaryComposerStorePublishRetryTests: XCTestCase {
 
     /// 內容沒變的重試不該多打一次 update——跟上一個測試互補，鎖住「只有內容真的變了才打」
     /// 這個判斷，不是每次重試都無條件呼叫。
+    /// 順手項（LS-125／126 收尾 dead-code-sweeper，comment 52289daf）：`StubDiaryAPIClient` 的
+    /// `setUpdateHandler` 先前沒有任何測試真的讓它丟錯——`resolveDiaryID` 在內容變更時呼叫
+    /// `updateDiaryEntry`，若那次呼叫本身失敗，`publish()` 要正確落到 `.failure`，不能因為
+    /// `createdDiaryID` 已經有值就誤判成功。
+    func test_publish_retryWithEditedBody_updateDiaryEntryItselfFails_publishStateIsFailureNotSuccess() async {
+        let diaryClient = StubDiaryAPIClient()
+        let mediaService = StubMediaUploadService()
+        diaryClient.setCreateHandler { _, _, _, _ in UUID() }
+        let attachMediaAttempts = OSAllocatedUnfairLock<Int>(initialState: 0)
+        diaryClient.setAttachMediaHandler { _, _, _ in
+            let attempt = attachMediaAttempts.withLock { state in
+                state += 1
+                return state
+            }
+            if attempt == 1 { throw AppError.network(message: "connection dropped") }
+        }
+        let store = makeStore(diaryAPIClient: diaryClient, mediaUploadService: mediaService)
+        store.body = "第一版內容"
+        addPhoto(store)
+
+        let firstResult = await store.publish()
+        XCTAssertFalse(firstResult)
+
+        diaryClient.setUpdateHandler { _, _, _, _ in throw AppError.network(message: "update failed") }
+        store.body = "改過的第二版內容"
+        let secondResult = await store.publish()
+
+        XCTAssertFalse(secondResult, "update_diary_entry 本身失敗，publish() 不該回傳成功")
+        XCTAssertEqual(
+            store.publishState, .failure(.network(message: "update failed")),
+            "不該因為 createdDiaryID 已經有值就誤判成功，update 失敗要正確反映在 publishState"
+        )
+        XCTAssertEqual(diaryClient.attachMediaCalls.count, 1, "update 失敗應該擋在 attachMedia 之前，不該又多打一次")
+    }
+
     func test_publish_retryAfterAttachMediaFailure_withUnchangedBody_doesNotCallUpdateDiaryEntry() async {
         let diaryClient = StubDiaryAPIClient()
         let mediaService = StubMediaUploadService()
