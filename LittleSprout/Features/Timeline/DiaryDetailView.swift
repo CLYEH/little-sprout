@@ -44,6 +44,10 @@ struct DiaryDetailView: View {
         }
         .appBackground()
         .navigationBarTitleDisplayMode(.inline)
+        // QA 視覺對稿 FAIL（LS-126 comment `461bdc15`）：同 LS-125 DiaryEditorView 的缺陷
+        // 模式——推入 tab 的畫面沒有隱藏 Tab Bar，稿面 `vzYXz` 完全沒有 Tab Bar 節點。iPad
+        // 走 NavigationSplitView 的 detail pane，本來就沒有 Tab Bar 概念，這裡加上不影響。
+        .toolbar(.hidden, for: .tabBar)
         .task(id: diaryID) {
             loadState = .submitting
             do {

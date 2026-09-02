@@ -25,11 +25,27 @@ final class DiaryPublishErrorMessageTests: XCTestCase {
         XCTAssertFalse(text.contains("50MB"), "不該把其他驗證錯誤誤判成超限文案")
     }
 
-    func test_networkError_fallsBackToGenericUserFacingMessage() {
+    /// QA 視覺對稿 FAIL（LS-125 comment `ed017e85`）：`.network`（`URLError` 連線失敗／逾時
+    /// 經 `AppError.map` 映射出來的結果）先前落到通用 fallback，顯示 `AppError.network` 自己
+    /// 的句子而不是 `peiRC` 稿面逐字文案——這裡改回稿面文案，不再是「網路連線有問題，請檢查
+    /// 網路連線後再試一次。」那句更通用的版本。
+    func test_networkError_showsScreenSpecificRetryMessage() {
         let error = AppError.network(message: "offline")
 
         let text = DiaryPublishErrorMessage.displayText(for: error)
 
+        XCTAssertEqual(text, "發佈失敗，請檢查網路連線後再試一次。")
+    }
+
+    /// 跟上一條互補：`.server`（後端 5xx／看不懂的回應）刻意不受這次修法影響，繼續走
+    /// `AppError.server` 的通用句——這是「兩條映射」的第二條，兩者文案不同、不能共用同一句，
+    /// mutation 若把 `.network` 分支誤刪或誤把這條也導去 `.network` 的文案，這條測試會紅。
+    func test_serverError_fallsBackToGenericUserFacingMessage() {
+        let error = AppError.server(message: "internal error", code: nil)
+
+        let text = DiaryPublishErrorMessage.displayText(for: error)
+
         XCTAssertEqual(text, error.userFacingMessage)
+        XCTAssertNotEqual(text, "發佈失敗，請檢查網路連線後再試一次。", "伺服器錯誤不該顯示網路文案")
     }
 }

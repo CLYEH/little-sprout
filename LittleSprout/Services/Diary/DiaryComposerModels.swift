@@ -34,10 +34,22 @@ enum DiaryMediaErrorCode {
 /// 才能被單元測試直接釘住「螢幕上出現的字」——`AppError.userFacingMessage` 忽略
 /// associated value，光測到 `AppError` 本身測不出這個問題（merge-review R1 M1／I4：先前
 /// 測試只驗到 `message.contains("50MB")`，但那是 log 用的 `message` 欄位，從未出現在畫面上）。
+///
+/// QA 視覺對稿 FAIL（LS-125 comment `ed017e85`）：`peiRC` 稿面文案是「發佈失敗，請檢查網路
+/// 連線後再試一次。」，但 `.network`（`AppError.map` 對 `URLError`——連線失敗／逾時等——的
+/// 映射結果）先前沒有專屬分支，落到這裡最後的通用 fallback，顯示的是 `AppError.network` 自己
+/// 那句更通用的「網路連線有問題，請檢查網路連線後再試一次。」，兩句不是逐字對稿。這裡補上
+/// `.network` 專屬分支，改回稿面逐字文案。`.server`（後端 5xx／格式看不懂的回應）刻意**不**
+/// 動：那是後端本身出錯，不是使用者這端的網路問題，繼續走 `AppError.server` 的通用句
+/// 「伺服器發生問題，請稍後再試一次。」——兩種失敗對使用者而言是不同的處置建議（檢查自己的
+/// 網路 vs 純粹等待重試），不該共用同一句文案。
 enum DiaryPublishErrorMessage {
     static func displayText(for error: AppError) -> String {
         if case .validationRetryable(_, let code) = error, code == DiaryMediaErrorCode.payloadTooLarge {
             return "檔案超過 50MB 上限，請選擇較小的照片或影片再試一次。"
+        }
+        if case .network = error {
+            return "發佈失敗，請檢查網路連線後再試一次。"
         }
         return error.userFacingMessage
     }
