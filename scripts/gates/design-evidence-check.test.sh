@@ -13,6 +13,11 @@
 # 跨 parent 碰撞缺分類紅、四支齊全且 mismatch=0 綠、**cutoff 之後的 round 1 兩支收據紅**（新票不得沿用舊 schema）、
 # **cutoff 之前的 round 6 兩支收據綠**（既有收據不看輪次，merge-review R1 MJ-1）、boards 漏列本 PR 觸碰的頂層節點紅、
 # boards 含不存在的 id 紅、unresolved 缺分類紅。
+#
+# LS-127：㉑～㉕ 驗 CI merge ref（refs/pull/N/merge）與 base 前進——合成 base 分出後改了 .pen 另一頂層節點，再以 commit-tree
+# 造雙親合併 commit 模擬 actions/checkout 的 HEAD：不給 --head-sha 仍紅（合併 commit 被當最後一次 .pen commit；形狀確認）、
+# 給 --head-sha <PR head> 綠、PR 自己漏列觸碰板仍紅（負控，只點名自己的板）、PR 把 base 併進來後歷史收據仍綠（每份收據以自己的
+# 共同祖先為 touched 基準）、--head-sha 解析不到／缺值 exit 2。修前（舊 gate）實跑：㉑ 負控／㉒／㉓／㉔／㉕ 六條紅，證明有鑑別力。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -375,6 +380,109 @@ g add design/evidence/LS-67-r6-overflow.json
 g commit -qm 'design(evidence): LS-67 r6 收據（unresolved 缺分類）'
 expect 1 '⑳ corner_anchor.unresolved 有一筆缺分類 → 紅' 'unresolved[0] 缺分類' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ───── LS-127：CI merge ref（refs/pull/N/merge）上 base 側 .pen 變更不算本 PR ─────
+# PR #223 的形狀：分支自 base_ref 切出後，base 自己又動了 .pen 的另一頂層節點 c（LS-114 動 PXPcH）；GitHub 的
+# actions/checkout 把 HEAD 放在「PR head＋base tip」的雙親合併 commit 上。舊接線（gate 以 HEAD 為終點）用
+# merge-base(base, HEAD)＝base tip 當起點：① base 側對 c 的變更被算成本 PR 觸碰的板（boards 漏列 c 假紅）、② 合併
+# commit 兩側 .pen 都不同、被 rev-list 當成「本 PR 對 .pen 最後一次的 commit」（最新收據 head_sha 假紅）。修法：CI 傳
+# --head-sha <PR head>，gate 以 merge-base(base, head-sha)..head-sha 計算；本機模式（不給 --head-sha）行為不變。
+g checkout -q -b base-moved "$base_ref"
+cat > "$R/design/littlesprout.pen" <<'EOF'
+{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "note": "moved-by-base", "children": []}]}
+EOF
+g add design/littlesprout.pen
+g commit -qm 'design(pen): LS-114 他票改 c（base 側，PR 分出之後）'
+base_moved="$(g rev-parse HEAD)"
+
+merge_ref() {
+  # merge_ref <branch> <receipt mode>：自 base_ref 切 PR 分支落地 d＋收據（引用落地 commit），再模擬 GitHub 的
+  # refs/pull/N/merge——以 base_moved 為第一親、PR head 為第二親的合併 commit（tree＝兩側變更都在；親序同 GitHub 實測
+  # refs/pull/223/merge cd73c6d：^1=base b516606、^2=PR head——所以從合併 commit --first-parent 走到的是 base 側，不是解法）
+  # ——並 checkout 到它；印出 PR head sha（CI 會以 github.event.pull_request.head.sha 傳給 gate 的那個）
+  local sha head
+  sha="$(land4 "$1")"
+  write_receipt4 "$R/design/evidence/LS-67-r6-overflow.json" "$sha" 4 0 "$2"
+  g add design/evidence/LS-67-r6-overflow.json
+  g commit -qm 'design(evidence): LS-67 r6 收據'
+  head="$(g rev-parse HEAD)"
+  cat > "$R/design/littlesprout.pen" <<'EOF'
+{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "note": "moved-by-base", "children": []}, {"id": "d", "children": []}]}
+EOF
+  g add design/littlesprout.pen
+  g update-ref "refs/heads/$1-merge" "$(g commit-tree "$(g write-tree)" -p "$base_moved" -p "$head" -m 'Merge PR head into base（模擬 refs/pull/N/merge）')"
+  g checkout -q -f "$1-merge"
+  printf '%s\n' "$head"
+}
+
+# ㉑ 形狀確認：merge ref 上不給 --head-sha（＝舊 CI 接線，HEAD＝合併 commit）→ 仍紅：合併 commit 兩側 .pen 都不同、被當成
+#    「本 PR 對 .pen 最後一次的 commit」（PR #223 假紅 ②，只有 --head-sha 能解）——證明合成的 merge ref 真的是 PR #223 的
+#    形狀（沒有這一格，㉒ 的綠可能只是合成失真的假綠）；但假紅 ①（boards 漏列 base 側的 c）已由 (a) 解掉：每份收據的
+#    touched 基準是 merge-base(base_sha, 該收據 head_sha)、不是 base_sha 本身，merge ref 上也不再點名 c
+pr21="$(merge_ref pr-mergeref full)"
+if [ "$(g rev-parse HEAD^1)" != "$base_moved" ] || [ "$(g rev-parse HEAD^2)" != "$pr21" ] || [ "$(g merge-base "$base_moved" HEAD)" != "$base_moved" ]; then
+  echo "✗ ㉑ 前置條件：HEAD 應是 ^1=base_moved、^2=PR head 的合併 commit，且 merge-base(base_moved, HEAD)＝base_moved（自測環境異常）" >&2
+  fail=1
+fi
+expect 1 '㉑ merge ref 上不給 --head-sha → 紅：合併 commit 被當成最後一次 .pen commit（PR #223 假紅 ②）' \
+  '不是本 PR 對這份 .pen 最後一次的 commit' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_moved"
+out21="$(cd "$R" && bash "$check" "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_moved" 2>&1)"
+if printf '%s' "$out21" | grep -qF '漏列本 PR 對 .pen 有變更的頂層節點'; then
+  echo "✗ ㉑ merge ref 上不給 --head-sha：base 側動的 c 不該被算成本 PR 觸碰的板（(a) 每份收據以自己的共同祖先為基準）" >&2
+  printf '%s\n' "$out21" | sed 's/^/    /' >&2
+  fail=1
+else
+  echo "✓ ㉑ merge ref 上不給 --head-sha：boards 不再點名 base 側的 c（PR #223 假紅 ① 由 (a) 解掉）"
+fi
+
+# ㉒ 同一個 merge ref 上給 --head-sha <PR head> → 綠（boards=["d"] 已覆蓋本 PR 真正觸碰的板；c 是 base 側的、不算）
+expect 0 '㉒ merge ref 上 --head-sha <PR head> → 綠（base 側 c 與合併 commit 都不算本 PR）' '四支掃描皆有輸出' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_moved" --head-sha "$pr21"
+
+# ㉓ 負控：同形狀但 PR 自己的收據真的漏列觸碰板 d（只列沒動的 a）→ --head-sha 下仍紅，且只點名 d、不點名 base 側的 c
+#    （若 c 也被算進去，訊息會是「頂層節點：c（）, d（）」、比對不到「頂層節點：d」→ 這一格同時釘住「c 不算」）
+pr23="$(merge_ref pr-mergeref-noboard noboard)"
+expect 1 '㉓ merge ref 上 --head-sha，但 PR 自己漏列觸碰板 d → 仍紅（負控，只點名 d）' \
+  '漏列本 PR 對 .pen 有變更的頂層節點：d' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_moved" --head-sha "$pr23"
+
+# ㉔ (a) base 前進後歷史收據仍綠（LS-119 merge-review comment 3d5851ac 實測）：PR r6 落地 A＋收據引用 A → base 前進（改 c）→
+#    PR 自己把 base 併進來（合併 commit M1，兩側 .pen 都不同）→ r7 再落地 B（改 d）＋收據引用 B。此時 merge-base(base, HEAD)＝
+#    base_moved、在 A 之後：舊算法對每份收據都拿 base_moved 快照當基準，r6 的 A 快照沒有 base 對 c 的變更 → c 被算成 r6
+#    漏列的板（歷史收據全紅）；新算法每份收據以 merge-base(base_sha, 該收據 head_sha) 為基準（r6→fork、r7→base_moved）→ 綠。
+#    最後一次 .pen commit＝B（r7 引用 B）、M1 在中間不是最後一次。本機模式（不給 --head-sha）就能重現，與 merge ref 無關。
+sha24="$(land4 pr-base-advanced)"
+write_receipt4 "$R/design/evidence/LS-67-r6-overflow.json" "$sha24" 4 0 full
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（引用 A）'
+cat > "$R/design/littlesprout.pen" <<'EOF'
+{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "note": "moved-by-base", "children": []}, {"id": "d", "children": []}]}
+EOF
+g add design/littlesprout.pen
+g update-ref refs/heads/pr-base-advanced "$(g commit-tree "$(g write-tree)" -p "$(g rev-parse HEAD)" -p "$base_moved" -m 'Merge base into PR branch（PR 自己把 base 併進來）')"
+g reset -q --hard
+cat > "$R/design/littlesprout.pen" <<'EOF'
+{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "note": "moved-by-base", "children": []}, {"id": "d", "note": "r7-moved", "children": []}]}
+EOF
+g add design/littlesprout.pen
+g commit -qm 'design(pen): LS-67 r7 落地（B，改 d）'
+sha24b="$(g rev-parse HEAD)"
+write_receipt4 "$R/design/evidence/LS-67-r7-overflow.json" "$sha24b" 4 0 full
+g add design/evidence/LS-67-r7-overflow.json
+g commit -qm 'design(evidence): LS-67 r7 收據（引用 B）'
+if [ "$(g merge-base "$base_moved" HEAD)" != "$base_moved" ]; then
+  echo "✗ ㉔ 前置條件：merge-base(base_moved, HEAD) 應為 base_moved（base 已併入 PR 分支；自測環境異常）" >&2
+  fail=1
+fi
+expect 0 '㉔ base 前進後 PR 併入 base：歷史收據 r6（快照停在 base 變更前）＋最新 r7 → 兩份皆綠' '四支掃描皆有輸出' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_moved"
+
+# ㉕ --head-sha 參數 fail closed：解析不到的 commit／缺值 → exit 2
+expect 2 '㉕ --head-sha 指向解析不到的 commit → exit 2' '不是可解析的 commit' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_moved" --head-sha 0000000000000000000000000000000000000000
+expect 2 '㉕ --head-sha 缺值 → exit 2' '--head-sha 缺值' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_moved" --head-sha
 
 if [ "$fail" -eq 0 ]; then
   echo "design-evidence-check.test.sh：全數通過"
