@@ -48347,151 +48347,159 @@
       "children": [
         {
           "type": "frame",
-          "id": "nQplp",
+          "id": "SXPya",
           "name": "時間軸",
           "width": "fill_container",
           "height": "fill_container",
-          "fill": "$surface",
-          "cornerRadius": "$radius-full",
-          "effect": {
-            "type": "shadow",
-            "shadowType": "outer",
-            "color": "$paper-shadow",
-            "offset": {
-              "x": 0,
-              "y": 1
-            },
-            "blur": 3
-          },
-          "layout": "vertical",
-          "gap": 2,
           "justifyContent": "center",
           "alignItems": "center",
           "children": [
             {
-              "type": "icon",
-              "id": "l9s60",
-              "name": "Icon",
-              "width": 22,
-              "height": 22,
-              "icon": "gallery-vertical",
-              "library": "lucide",
-              "fill": "$text-primary"
-            },
-            {
-              "type": "text",
-              "id": "W2LnpN",
-              "name": "Label",
-              "fill": "$text-primary",
-              "content": "時間軸",
-              "fontFamily": "$font",
-              "fontSize": "$fs-meta",
-              "fontWeight": "700"
+              "type": "frame",
+              "id": "BPtgR",
+              "name": "Selected Indicator",
+              "fill": "$surface",
+              "cornerRadius": "$radius-full",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 1
+                },
+                "blur": 3
+              },
+              "padding": "$sp-tight",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "QhkY2",
+                  "name": "Icon",
+                  "metadata": {
+                    "type": "a11y",
+                    "accessibilityLabel": "時間軸"
+                  },
+                  "width": 26,
+                  "height": 26,
+                  "icon": "gallery-vertical",
+                  "library": "lucide",
+                  "fill": "$text-primary"
+                }
+              ]
             }
           ]
         },
         {
           "type": "frame",
-          "id": "U6YOT0",
+          "id": "k0VdrE",
           "name": "相簿",
           "width": "fill_container",
           "height": "fill_container",
-          "fill": "#00000000",
-          "cornerRadius": "$radius-full",
-          "layout": "vertical",
-          "gap": 2,
           "justifyContent": "center",
           "alignItems": "center",
           "children": [
             {
-              "type": "icon",
-              "id": "ZPafj",
-              "name": "Icon",
-              "width": 22,
-              "height": 22,
-              "icon": "images",
-              "library": "lucide",
-              "fill": "$text-secondary"
-            },
-            {
-              "type": "text",
-              "id": "yqtdI",
-              "name": "Label",
-              "fill": "$text-secondary",
-              "content": "相簿",
-              "fontFamily": "$font",
-              "fontSize": "$fs-meta",
-              "fontWeight": "600"
+              "type": "frame",
+              "id": "k5llM",
+              "name": "Indicator",
+              "fill": "#00000000",
+              "cornerRadius": "$radius-full",
+              "padding": "$sp-tight",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "U6x04l",
+                  "name": "Icon",
+                  "metadata": {
+                    "type": "a11y",
+                    "accessibilityLabel": "相簿"
+                  },
+                  "width": 22,
+                  "height": 22,
+                  "icon": "layout-grid",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                }
+              ]
             }
           ]
         },
         {
           "type": "frame",
-          "id": "j2zYP",
+          "id": "w91rB",
           "name": "寶貝",
           "width": "fill_container",
           "height": "fill_container",
-          "fill": "#00000000",
-          "cornerRadius": "$radius-full",
-          "layout": "vertical",
-          "gap": 2,
           "justifyContent": "center",
           "alignItems": "center",
           "children": [
             {
-              "type": "icon",
-              "id": "c7xKgR",
-              "name": "Icon",
-              "width": 22,
-              "height": 22,
-              "icon": "baby",
-              "library": "lucide",
-              "fill": "$text-secondary"
-            },
-            {
-              "type": "text",
-              "id": "loDFI",
-              "name": "Label",
-              "fill": "$text-secondary",
-              "content": "寶貝",
-              "fontFamily": "$font",
-              "fontSize": "$fs-meta",
-              "fontWeight": "600"
+              "type": "frame",
+              "id": "cnPaE",
+              "name": "Indicator",
+              "fill": "#00000000",
+              "cornerRadius": "$radius-full",
+              "padding": "$sp-tight",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "dVWf2",
+                  "name": "Icon",
+                  "metadata": {
+                    "type": "a11y",
+                    "accessibilityLabel": "寶貝"
+                  },
+                  "width": 22,
+                  "height": 22,
+                  "icon": "baby",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                }
+              ]
             }
           ]
         },
         {
           "type": "frame",
-          "id": "T2xq4",
+          "id": "ziWqY",
           "name": "設定",
           "width": "fill_container",
           "height": "fill_container",
-          "fill": "#00000000",
-          "cornerRadius": "$radius-full",
-          "layout": "vertical",
-          "gap": 2,
           "justifyContent": "center",
           "alignItems": "center",
           "children": [
             {
-              "type": "icon",
-              "id": "d7oe1",
-              "name": "Icon",
-              "width": 22,
-              "height": 22,
-              "icon": "settings",
-              "library": "lucide",
-              "fill": "$text-secondary"
-            },
-            {
-              "type": "text",
-              "id": "vLtnm",
-              "name": "Label",
-              "fill": "$text-secondary",
-              "content": "設定",
-              "fontFamily": "$font",
-              "fontSize": "$fs-meta",
-              "fontWeight": "600"
+              "type": "frame",
+              "id": "P7Rw0p",
+              "name": "Indicator",
+              "fill": "#00000000",
+              "cornerRadius": "$radius-full",
+              "padding": "$sp-tight",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "uMRQ8",
+                  "name": "Icon",
+                  "metadata": {
+                    "type": "a11y",
+                    "accessibilityLabel": "設定"
+                  },
+                  "width": 22,
+                  "height": 22,
+                  "icon": "settings",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                }
+              ]
             }
           ]
         }
@@ -49318,35 +49326,24 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 1174,
+          "y": 1158,
+          "height": 80,
           "descendants": {
-            "l9s60": {
+            "QhkY2": {
               "width": 48,
               "height": 48
             },
-            "W2LnpN": {
-              "enabled": false
+            "U6x04l": {
+              "width": 40,
+              "height": 40
             },
-            "ZPafj": {
-              "width": 48,
-              "height": 48
+            "dVWf2": {
+              "width": 40,
+              "height": 40
             },
-            "yqtdI": {
-              "enabled": false
-            },
-            "c7xKgR": {
-              "width": 48,
-              "height": 48
-            },
-            "loDFI": {
-              "enabled": false
-            },
-            "d7oe1": {
-              "width": 48,
-              "height": 48
-            },
-            "vLtnm": {
-              "enabled": false
+            "uMRQ8": {
+              "width": 40,
+              "height": 40
             }
           }
         }
@@ -56031,9 +56028,27 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 1402,
+          "y": 1386,
           "width": 361,
-          "height": 64
+          "height": 80,
+          "descendants": {
+            "QhkY2": {
+              "width": 48,
+              "height": 48
+            },
+            "U6x04l": {
+              "width": 40,
+              "height": 40
+            },
+            "dVWf2": {
+              "width": 40,
+              "height": 40
+            },
+            "uMRQ8": {
+              "width": 40,
+              "height": 40
+            }
+          }
         }
       ]
     },
@@ -68703,6 +68718,286 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "lKoZG 的 cmp/Tab Bar 實例維持 R2 已還原的元件預設值（361×64, x16），AX3 下 label／icon 仍溢出/錯位，這是刻意保留給另一張同型票（建議 LS-120，與 LS-114 同型）處理的既有元件缺陷，不在本票 patch。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LuHbv",
+          "name": "N cmp/Tab Bar 全字級純 icon（LS-120）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "OvUua",
+              "name": "H",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "cmp/Tab Bar 全字級純 icon（LS-120）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "ojapo",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "MYwf7",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 · 規則",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "o3Ku7I",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "使用者 2026-09-02 16:00 裁決：cmp/Tab Bar 全字級純 icon，不再有「AX 字級才切換」門檻，預設字級也不放文字。四顆 icon（時間軸/相簿/寶貝/設定）取代原本 icon+文字兩層結構。選中態同時變化四件事，非只換色：①背景由透明變 $surface 實心圓角＋outer shadow（同紙的落影語彙）②icon 尺寸放大（unselected→selected：22→26／AX3 40→48）③色由 $text-secondary 變 $text-primary ④只有選中的 icon 外面才有圓角容器（Indicator/Selected Indicator 兩種節點名）。外層膠囊本身（$surface-2 fill／$control-line 1pt 描邊／outer shadow／radius-full）不變，仍是同一個 361 寬（AX3 同寬）浮動膠囊。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "KMVZl",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "p7tQy",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 · icon 選型理由",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "n3xJD",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "時間軸＝gallery-vertical（垂直堆疊的卡片，對應時間序 feed 的視覺隱喻，沿用 R 前既有選擇）；相簿＝layout-grid（改自舊版 images——2x2 網格明確表示「整理過的收藏」，與時間軸的堆疊長條在剪影上明顯不同，避免兩個都是「照片」相關圖示在純 icon 下混淆）；寶貝＝baby（直接圖像化，沿用）；設定＝settings（全平台通用齒輪，沿用）。四顆剪影彼此可辨：長條堆疊／田字網格／人臉／齒輪，零文字下仍可一眼分辨。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Mzj0v",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "byr2y",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 · 尺寸 token",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "f3pE5d",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "unselected icon＝$icon-md（22／AX3 40）；selected icon＝$icon-lg（26／AX3 48）；Indicator/Selected Indicator 的 padding 固定 $sp-tight（6，AX3 同值——間距節奏不隨字級放大，見 tokens.md ④）。Pencil 限制：icon 的 width/height 綁不了 $variable，本輪四顆 icon×2 態＝8 個尺寸字面值（22/26/40/48，每個用兩次）；AX3 三個 instance 各自 4 個 descendants override＝12 筆字面寫入。實作端請直接綁 $icon-md/$icon-lg 兩個 token，不受此限制。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "L5zV7k",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "H0J0GC",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 · AX3 override",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "OmrVj",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX3 主動放大不能只靠 theme 自動套用（icon 尺寸是字面值不是 $variable），改為在使用 AX3 主題的 3 個 instance 上個別 override：QVGNJ（board lKoZG）／V4oYH（board HLXo3）／qCMDY（board oP9Ey，同時清掉 R1 時代殘留、指向已刪節點的舊 descendants）。三者的 height 由預設 64 改 80（AX3 selected pill＝48+2×6=60，需要 content area ≥60；padding 6 不隨 AX3 放大，64-12=52<60 會溢出，80-12=68 才夠），並把 y 上移對應差值（+16→ 各自減 16）以維持與畫面底緣固定 34pt 安全邊界不變（3 板皆驗證 34pt margin 前後一致，見 evidence 截圖）。寬度 361 不需要變——cell 寬 85.8 遠大於 60pt 選中膠囊，AX3 唯一吃緊的是垂直方向。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "xvhBU",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "BVYuV",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 · a11y",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "f6yg6h",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "純 icon 拿掉可見文字後，長輩硬約束「icon 一律帶文字標籤」的文字路徑改由：①VoiceOver accessibilityLabel＝原中文（時間軸/相簿/寶貝/設定，.pen 內已用 metadata:{type:\"a11y\",accessibilityLabel:...} 標在四顆 icon 節點上，供 ios-dev 對照）②系統 Large Content Viewer（長按 tab 彈出大字標籤）：SwiftUI 端對每個 tab 加 .accessibilityShowsLargeContentViewer(){ Label(原文字, systemImage: ...) }。這是 elder-constraints.md 第二條明文例外的落地路徑，見該檔更新。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ze9rR",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "O5AA7A",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 · iPad",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ueSOL",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "全文件掃描 cmp/Tab Bar 的所有 11 個 instance，width 皆為 393（iPhone），無任何 iPad 寬度（834/1024 等）板使用本元件——這與 docs/PLAN.md「iPhone 用 TabView、iPad 用 NavigationSplitView」一致，iPad 本來就不該出現這顆浮動膠囊。本輪因此没有 iPad 變體要修；若未來出現 iPad 誤用本元件的畫面，屬於另一個問題（該畫面不該用 Tab Bar，不是 Tab Bar 要改成 iPad 尺寸）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "aeWQy",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Kkdjx",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-120 · lKoZG 收斂",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Y1nPp",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "背景 comment 描述的「lKoZG 覆寫成 393×120 x0 滿版列」在本票開工時已不存在——複驗 lKoZG 板內的 Tab Bar instance（現 id QVGNJ）為標準 361×64 x16 浮動膠囊、無 descendants override，判斷是 LS-119 R2–R13 某輪已將覆寫還原為標準 instance（同時保留 AX3 文字溢出的已知缺陷，交給本票收尾）。本票的動作＝把共用元件本身改成全字級純 icon＋補上 AX3 專屬的 icon 尺寸／bar 高度 override，讓 lKoZG（與 HLXo3、oP9Ey）三張 AX3 板一次到位，不需要再對 lKoZG 額外做「收斂」動作——它已經在用標準 instance，只是標準元件本身現在變了。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -86930,9 +87225,27 @@
           "name": "Tab Bar",
           "layoutPosition": "absolute",
           "x": 16,
-          "y": 1402,
+          "y": 1386,
           "width": 361,
-          "height": 64
+          "height": 80,
+          "descendants": {
+            "QhkY2": {
+              "width": 48,
+              "height": 48
+            },
+            "U6x04l": {
+              "width": 40,
+              "height": 40
+            },
+            "dVWf2": {
+              "width": 40,
+              "height": 40
+            },
+            "uMRQ8": {
+              "width": 40,
+              "height": 40
+            }
+          }
         }
       ]
     }
