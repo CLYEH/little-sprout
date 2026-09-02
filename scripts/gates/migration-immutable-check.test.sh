@@ -1,8 +1,9 @@
 #!/bin/bash
 # migration-immutable-check.sh 的自測（LS-80）。CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對 gate 本身也適用：若已併入 base 的 migration 被改／改名／刪除卻放行、純新增被誤擋、
-# 逃生口未經 commit body（給了 --pr-body 時還要 PR body）雙重宣告卻放行、逃生口標記被散文提及／格式不符
-# 也算數、或找不到 ref 時靜默跳過——這裡會紅。
+# 逃生口未經 commit body（給了 --pr-body／--pr-number 時還要 PR body 或使用者本人 PR comment）雙重宣告卻放行、
+# 逃生口標記被散文提及／格式不符也算數、非 owner 的 comment 也算數、gh 失敗靜默放行、或找不到 ref 時靜默跳過
+# ——這裡會紅。comment 半邊（LS-123）以 PATH 前置假 gh 回固定 JSON fixture，不打真 API。
 # 合成 repo：development 當一般 fix|feature 情境的 target；main 當 hotfix 情境的 target，用來重演 LS-57 R2
 # （hotfix 直接改已併入 main 的既有 migration）。
 set -uo pipefail
@@ -116,15 +117,47 @@ branch feature/LS-8-escape development
 mig 20260101000000_init.sql 'select 3;'
 commit_body 'chore(db): LS-8 note' 'MIGRATION-REWRITE-APPROVED: LS-8'$'\n''理由：尚未部署到正式站，修正 typo'
 expect 0 '⑧ commit body 宣告逃生口、未給 --pr-body → exit 0' 'MIGRATION-REWRITE-APPROVED: LS-8' --base development
-expect 0 '⑧ 印出提醒 PR body 須同步宣告' 'PR body 須同段落宣告' --base development
+expect 0 '⑧ 印出提醒 PR body／owner comment 須同步宣告' '須同樣獨佔一行宣告，CI 會擋' --base development
 
 # ⑨ 逃生口＋ --pr-body 沒有同步宣告 → 紅
 echo 'Ticket: LS-8 沒有宣告逃生口' > "$work/pr-body-no.txt"
-expect 1 '⑨ commit 宣告但 PR body 沒有同步 → exit 1' 'PR body 沒有同樣獨佔一行的宣告' --base development --pr-body "$work/pr-body-no.txt"
+expect 1 '⑨ commit 宣告但 PR body 沒有同步 → exit 1' '都沒有同樣獨佔一行的宣告' --base development --pr-body "$work/pr-body-no.txt"
 
 # ⑩ 逃生口＋ --pr-body 也同步宣告 → 綠
 printf 'Ticket: LS-8\nMIGRATION-REWRITE-APPROVED: LS-8\n' > "$work/pr-body-yes.txt"
 expect 0 '⑩ commit 與 PR body 都宣告 → exit 0' 'PR body 已宣告逃生口' --base development --pr-body "$work/pr-body-yes.txt"
+
+# ⑩b LS-123：PR body 沒宣告，但使用者本人（repo owner）的 PR comment 有獨佔一行宣告 → 綠。PATH 前置假 gh 回固定
+#     JSON fixture（形狀照 PR #218 真實 comment），owner 由 GITHUB_REPOSITORY_OWNER 給（同 CI），不打真 API。
+mkdir -p "$work/bin"
+cat > "$work/bin/gh" <<'EOF'
+#!/bin/bash
+printf '%s\n' "$*" >> "${GH_STUB_LOG:?}"
+[ "${GH_STUB_FAIL:-0}" = 1 ] && { echo "gh: HTTP 500 (stub)" >&2; exit 1; }
+cat "${GH_STUB_FIXTURE:?}"
+EOF
+chmod +x "$work/bin/gh"
+OLD_PATH=$PATH
+export PATH="$work/bin:$PATH" GH_STUB_LOG="$work/gh.log" GH_STUB_FIXTURE="$work/fixture.json"
+export GITHUB_REPOSITORY=CLYEH/little-sprout GITHUB_REPOSITORY_OWNER=CLYEH
+comment() {   # comment <login> <body（JSON 字串內容，\n 由 JSON 解碼成換行）>
+  printf '[{"id":7,"created_at":"2026-09-02T03:08:35Z","user":{"login":"%s","type":"User"},"body":"%s"}]' "$1" "$2" > "$GH_STUB_FIXTURE"
+}
+comment CLYEH 'MIGRATION-REWRITE-APPROVED: LS-8\n理由：尚未部署到正式站'
+expect 0 '⑩b PR body 未宣告、owner comment 獨佔一行宣告 → exit 0' 'PR comment 已宣告逃生口' --base development --pr-body "$work/pr-body-no.txt" --pr-number 218
+expect 0 '⑩b 只給 --pr-number（無 --pr-body）也是 PR 可見來源 → exit 0' 'PR comment 已宣告逃生口' --base development --pr-number 218
+comment CLYEH '這次不需要 MIGRATION-REWRITE-APPROVED: LS-8'
+expect 1 '⑩c owner comment 散文提及 → 仍紅' '都沒有同樣獨佔一行的宣告' --base development --pr-body "$work/pr-body-no.txt" --pr-number 218
+comment someone-else 'MIGRATION-REWRITE-APPROVED: LS-8'
+expect 1 '⑩c 非 owner comment 獨佔行 → 仍紅' '都沒有同樣獨佔一行的宣告' --base development --pr-body "$work/pr-body-no.txt" --pr-number 218
+comment CLYEH 'MIGRATION-REWRITE-APPROVED: LS-8'
+export GH_STUB_FAIL=1
+expect 1 '⑩d gh 失敗 → 紅（fail closed）' '都沒有同樣獨佔一行的宣告' --base development --pr-body "$work/pr-body-no.txt" --pr-number 218
+unset GH_STUB_FAIL
+: > "$GH_STUB_LOG"
+expect 0 '⑩e PR body 已宣告 → 綠，不查 comment' 'PR body 已宣告逃生口' --base development --pr-body "$work/pr-body-yes.txt" --pr-number 218
+if [ ! -s "$GH_STUB_LOG" ]; then echo "✓ ⑩e body 已宣告時不呼叫 gh"; else echo "✗ ⑩e body 已宣告時不應呼叫 gh" >&2; sed 's/^/    /' "$GH_STUB_LOG" >&2; fail=1; fi
+export PATH="$OLD_PATH"; unset GITHUB_REPOSITORY GITHUB_REPOSITORY_OWNER GH_STUB_LOG GH_STUB_FIXTURE
 
 # ⑪ 逃生口標記非獨佔一行（前後有其他文字）→ 不算數，仍紅（同 LS-45／LS-50 的行錨定）
 branch feature/LS-9-fakeescape development
@@ -151,6 +184,8 @@ expect 2 '⑬ --head 不存在 → exit 2' '找不到' --base development --head
 expect 2 '⑬ 未知參數 → exit 2' '未知參數' --base development --bogus
 expect 2 '⑬ --pr-body 缺值 → exit 2' '缺值' --base development --pr-body
 expect 2 '⑬ --pr-body 讀不到檔 → exit 2' '讀不到' --base development --pr-body "$work/nope.txt"
+expect 2 '⑬ --pr-number 缺值 → exit 2' '--pr-number 缺值或非正整數' --base development --pr-number
+expect 2 '⑬ --pr-number 非正整數 → exit 2' '--pr-number 缺值或非正整數' --base development --pr-number abc
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ migration-immutable-check 自測通過"
