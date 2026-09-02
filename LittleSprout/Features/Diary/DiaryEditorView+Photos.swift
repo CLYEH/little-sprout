@@ -59,8 +59,12 @@ extension DiaryEditorView {
                 Text("新增照片")
                     .appFont(.body, weight: .semibold)
                     .foregroundStyle(Color.lsPrintInkSecondary)
+                    .multilineTextAlignment(.center)
             }
-            .frame(width: 96, height: 96)
+            // R5（`design/littlesprout.pen` Handoff Notes `PoZUw`）：AX3 下「新增照片」換成兩行後
+            // 固定 96 高度會裁字——本輪唯一一個「容器不寫死高度」的例外，其餘沿用既有硬寫 96。
+            .frame(width: 96, height: dynamicTypeSize.isAccessibilitySize ? nil : 96)
+            .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? AppSpacing.label : 0)
             .background(Color.lsSurface2, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
             .overlay(
                 RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)

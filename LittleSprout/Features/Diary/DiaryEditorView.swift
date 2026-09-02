@@ -55,9 +55,7 @@ struct DiaryEditorView: View {
         .appBackground()
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) { cancelButton }
-        }
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showsDatePicker) {
             DiaryDatePickerSheet(selection: $store.entryDate)
         }
@@ -76,6 +74,7 @@ struct DiaryEditorView: View {
 
     private var compactLayout: some View {
         VStack(alignment: .leading, spacing: 0) {
+            cancelButton
             titleSection
                 .padding(.top, AppSpacing.item)
             bodyTextField
@@ -94,6 +93,16 @@ struct DiaryEditorView: View {
     // MARK: - Regular (iPad)
 
     private var regularLayout: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            cancelButton
+            regularColumns
+        }
+        .padding(.horizontal, AppSpacing.screenPadLarge)
+        .padding(.top, AppSpacing.item)
+        .padding(.bottom, AppSpacing.item)
+    }
+
+    private var regularColumns: some View {
         HStack(alignment: .top, spacing: AppSpacing.section) {
             VStack(alignment: .leading, spacing: 0) {
                 titleSection
@@ -113,9 +122,7 @@ struct DiaryEditorView: View {
             }
             .frame(width: 360)
         }
-        .padding(.horizontal, AppSpacing.screenPadLarge)
         .padding(.top, AppSpacing.item)
-        .padding(.bottom, AppSpacing.item)
     }
 
     // MARK: - 標題／內文
@@ -166,6 +173,14 @@ struct DiaryEditorView: View {
                 Text("取消").appFont(.body, weight: .bold)
             }
             .foregroundStyle(Color.lsTextPrimary)
+            // R1（模擬器實測抓到）：工具列自訂 Button 不會像系統預設返回鈕那樣自動撐出 44pt
+            // 熱區——`frame(minHeight:)` 在 ToolbarItem 內對量測結果沒有效果（nav bar 用自己的
+            // intrinsic content size 決定 bar button 高度，忽略內層 frame 的 minHeight）。改用
+            // padding 直接加高內容本身（同 CreateChildView「之後再說」鈕／`SettingsView` 登出鈕
+            // 的既有修法：`AppSpacing.controlPaddingMedium` 15.5pt 上下＋約 20pt 文字高＝
+            // 51pt，實測足夠）。
+            .padding(.vertical, AppSpacing.controlPaddingMedium)
+            .contentShape(Rectangle())
         }
     }
 
@@ -182,19 +197,36 @@ struct DiaryDatePickerSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: AppSpacing.block) {
+            Text("選擇日期").appFont(.lead, weight: .bold).foregroundStyle(Color.lsTextPrimary)
             DatePicker("記錄日期", selection: $selection, displayedComponents: .date)
                 .datePickerStyle(.wheel)
                 .labelsHidden()
-                .padding(AppSpacing.screenPad)
-                .navigationTitle("選擇日期")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("完成") { dismiss() }
-                    }
-                }
+            // R1（模擬器實測抓到，兩層教訓）：① `ToolbarItem(placement: .confirmationAction)`
+            // 同 `cancelButton` 的既有教訓——nav bar bar button item 熱區不受內層
+            // padding/frame 影響。② 改成一般 body content 後，`Button("完成") { }.frame(...)`
+            // 這種「字串初始化＋外掛 frame/padding」寫法熱區依然鎖死在文字天然大小（量到只有
+            // 33×20pt）——`.frame`／`.padding` 加在 Button 外層只改版面佔位，不會反向撐大
+            // 按鈕本身的 hit-test 形狀。改用 `Button { } label: { }` 把 padding/background
+            // 都做在 label 內部、label 收工後再 `.contentShape(Rectangle())` 明確鎖定熱區
+            // （同 `cancelButton`／`removeSelectedButton` 的修法），實測才真的撐到 44pt+。
+            Button {
+                dismiss()
+            } label: {
+                Text("完成")
+                    .appFont(.body, weight: .bold)
+                    .foregroundStyle(Color.lsTextPrimary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, AppSpacing.controlPaddingCTA)
+                    .background(Color.lsSurface, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
+                            .strokeBorder(Color.lsControlLine, lineWidth: 1.5)
+                    )
+                    .contentShape(Rectangle())
+            }
         }
+        .padding(AppSpacing.screenPad)
         .presentationDetents([.medium])
     }
 }
