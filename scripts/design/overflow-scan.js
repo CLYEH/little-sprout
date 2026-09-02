@@ -6,9 +6,10 @@
 // 攔截違規」在這一類是空的（LS-122 票文）。
 //
 // 用法（兩種執行環境，同一份檔案）：
-//   1. Pencil `execute`：先用一次 execute 設定本票觸碰的板 `SCAN_BOARDS = ["<root frame id 或 name>", ...]`（不加
-//      const／let，全域才跨 execute 保留；含本票動過的 cmp/* 元件定義），再把本檔全文當作 snippet 送進
-//      mcp__pencil__execute（LS-119 R6 實跑：含檔頭註解原樣送、一次成功，comment e58d5688）。檔尾偵測到 `Get`／`Print`
+//   1. Pencil `execute`：把本檔全文當作 snippet 送進 mcp__pencil__execute，**第一行先加** `SCAN_BOARDS = ["<root frame
+//      id 或 name>", ...];`（本票觸碰的板，含動過的 cmp/* 元件定義）——LS-122 實跑證實跨 execute 的全域**不保留**（另一次
+//      execute 設的 SCAN_BOARDS 到下一次是 undefined），旗標必須與腳本同一個 snippet；`SCAN_CROSS_ALL`／`SCAN_VERBOSE` 同理
+//      （LS-119 R6／LS-122 實跑：含檔頭註解原樣送、一次成功，comment e58d5688）。檔尾偵測到 `Get`／`Print`
 //      存在時，會用 `Get(visit, {resolveInstances:true})` 收集全樹快照（含 instance descendants，id 為 `instanceId/childId`
 //      路徑）、算絕對座標、跑四支掃描，`Print`：一行 SUMMARY ＋ 每支掃描一段**分類彙整**（同名對／同容器歸一類：
 //      `<n>× <name_a> × <name_b> @ <parent> e.g. <idA>×<idB>`，corner_anchor 的 in-scope 錯位與 unresolved 逐筆、
@@ -324,7 +325,7 @@ if (typeof Get === "function" && typeof Print === "function") {
   const out = scanAll(snap, { boards: scope, crossAll });
   out.total_nodes = total;
   const s = out.scans;
-  if (scope.length === 0) Print("WARNING SCAN_BOARDS 未設定：corner_anchor 以全稿計 mismatch，收據 gate 會因 boards 為空而紅——先用一次 execute 設 SCAN_BOARDS=[...] 再重跑");
+  if (scope.length === 0) Print("WARNING SCAN_BOARDS 未設定：corner_anchor 以全稿計 mismatch，收據 gate 會因 boards 為空而紅——在本 snippet 第一行加 SCAN_BOARDS=[...] 再重跑（跨 execute 的全域不保留）");
   Print(
     "SUMMARY total_nodes=" + total + " scanned_nodes=" + out.scanned_nodes +
       " sibling_intersection=" + s.sibling_intersection.flagged.length +
