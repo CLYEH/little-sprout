@@ -15,8 +15,10 @@ protocol DiaryAPIClient: Sendable {
     func createDiaryEntry(familyID: UUID, body: String, entryDate: Date, childIDs: [UUID]) async throws -> UUID
 
     /// PUT 語意整組替換 `body`／`entryDate`／`childIDs`；只有原作者本人、且仍是該家庭
-    /// owner/member 才能成功（見 `docs/API.md` §4）。本票資料層備妥，UI 尚未接上編輯既有
-    /// 日記的入口（時間軸／詳情畫面是 LS-126 範圍）。
+    /// owner/member 才能成功（見 `docs/API.md` §4）。目前唯一呼叫端是
+    /// `DiaryComposerStore.resolveDiaryID` 的重試路徑（送出失敗後使用者改過內容再試一次，
+    /// merge-review R2 N1）——「編輯一篇已發佈日記」這種獨立 UI 入口（時間軸／詳情畫面）
+    /// 還沒有。
     func updateDiaryEntry(diaryID: UUID, body: String, entryDate: Date, childIDs: [UUID]) async throws
 
     /// 把已上傳的 `media` 列依陣列順序掛到一篇日記底下（`sort_order` = 陣列 index）。
