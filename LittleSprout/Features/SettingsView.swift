@@ -9,6 +9,10 @@ struct SettingsView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    /// LS-126 merge-review R1 M5：登出時歸零，同 `familyStore`／`childrenStore` 的理由——
+    /// `TimelineStore` 隨 app 存活，不清掉的話，下一位在同一台裝置登入的使用者會先看到
+    /// 上一個家庭殘留的時間軸（簽名 URL 1 小時內仍可讀，見該 store `reset()` 文件註解）。
+    let timelineStore: TimelineStore
 
     @State private var isSigningOut = false
     @State private var errorMessage: String?
@@ -88,6 +92,8 @@ struct SettingsView: View {
                 // LS-113：`ChildrenStore` 隨 app 存活，同 `FamilyStore` 的理由——登出不清掉
                 // 的話，下一位在同一台裝置登入的使用者會沿用上一位的孩子清單。
                 childrenStore.reset()
+                // LS-126 merge-review R1 M5：見上方 `timelineStore` 屬性文件註解。
+                timelineStore.reset()
             } catch {
                 errorMessage = AppError.map(error).userFacingMessage
             }
@@ -96,5 +102,9 @@ struct SettingsView: View {
 }
 
 #Preview {
-    NavigationStack { SettingsView(authStore: .preview(), familyStore: .preview(), childrenStore: .preview()) }
+    NavigationStack {
+        SettingsView(
+            authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview()
+        )
+    }
 }

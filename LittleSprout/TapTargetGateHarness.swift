@@ -41,20 +41,14 @@ enum TapTargetGateHarness {
                     familyStore: .preview(withFamily: Family(
                         id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
                     )),
-                    childrenStore: .preview()
+                    childrenStore: .preview(),
+                    timelineStore: .preview()
                 )
             }
         case .diaryEditor:
-            // merge-review R1 M5：初始態不需要任何 seeding——`PreviewDiaryAPIClient`／
-            // `PreviewMediaUploadService`（`Support/PreviewDiaryAPIClient.swift`，同樣是
-            // `#Preview` 在用的假 client）＋既有 `ChildrenStore.preview()`，跟 `DiaryEditorView`
-            // 自己的 `#Preview("空白")` 是同一組建構。
-            NavigationStack {
-                DiaryEditorView(
-                    familyID: UUID(), diaryAPIClient: PreviewDiaryAPIClient(),
-                    mediaUploadService: PreviewMediaUploadService(), childrenStore: .preview()
-                )
-            }
+            diaryEditorHost
+        case .timelineDefaultState:
+            timelineDefaultStateHost
         case .selfTestTooSmall:
             // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
             // accessibility／hit-test frame 實測仍貼著文字本身的天然大小，不會被外層 `.frame`
@@ -85,6 +79,40 @@ enum TapTargetGateHarness {
                 }
             }
             .padding(20)
+        }
+    }
+
+    /// merge-review R1 M5：初始態不需要任何 seeding——`PreviewDiaryAPIClient`／
+    /// `PreviewMediaUploadService`（`Support/PreviewDiaryAPIClient.swift`，同樣是
+    /// `#Preview` 在用的假 client）＋既有 `ChildrenStore.preview()`，跟 `DiaryEditorView`
+    /// 自己的 `#Preview("空白")` 是同一組建構。拆成獨立 computed var（不是留在 `hostView`
+    /// 的 switch 本體裡）：merge LS-125／LS-126 後兩個新 case 加起來讓 `hostView` 超過
+    /// SwiftLint `function_body_length` 上限，各自的建構邏輯本來就跟其他 case 無關，抽出
+    /// 去不影響行為，只是把長度還給界限內。
+    @MainActor
+    @ViewBuilder
+    private static var diaryEditorHost: some View {
+        NavigationStack {
+            DiaryEditorView(
+                familyID: UUID(), diaryAPIClient: PreviewDiaryAPIClient(),
+                mediaUploadService: PreviewMediaUploadService(), childrenStore: .preview()
+            )
+        }
+    }
+
+    /// `.preview()` 三個 store 皆空狀態（無家庭／無寶貝／無 feed），`ChildFilterBar`
+    /// 因 `childrenStore.activeChildren.isEmpty` 不會渲染，畫面上唯一的可點元件就是
+    /// Header 的「新增回憶」建立鈕——不需要任何 seed 資料就有代表性。merge LS-125：
+    /// `TimelineView` 現在直接持有 `diaryAPIClient`／`mediaUploadService`（同
+    /// `diaryEditorHost` 用的假 client），才能建構。理由同上，拆成獨立 computed var。
+    @MainActor
+    @ViewBuilder
+    private static var timelineDefaultStateHost: some View {
+        NavigationStack {
+            TimelineView(
+                familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
+                diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
+            )
         }
     }
 

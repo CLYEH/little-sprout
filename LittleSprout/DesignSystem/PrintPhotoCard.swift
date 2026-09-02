@@ -14,6 +14,10 @@ struct PrintPhotoCard: View {
     var mountPoolOpacity: MountPoolOpacity = .welcome
     var showsImprint = true
     var imageName: String?
+    /// LS-126：時間軸／日記詳情第一次需要把**使用者上傳的真實照片**（Storage 簽名 URL）
+    /// 套進沖印品母題，不是稿面內建的本地資產——`imageName` 優先；兩者都缺時退回 SF Symbol
+    /// 占位圖（沿用既有行為，見下）。
+    var remoteURL: URL?
     var accessibilityLabel: String = "家庭照片"
 
     struct MountPoolOpacity {
@@ -71,6 +75,12 @@ struct PrintPhotoCard: View {
                 Image(imageName)
                     .resizable()
                     .scaledToFill()
+            } else if let remoteURL {
+                AsyncImage(url: remoteURL) { phase in
+                    if case .success(let image) = phase {
+                        image.resizable().scaledToFill()
+                    }
+                }
             } else {
                 Image(systemName: "person.2.fill")
                     .font(.system(size: photoHeight * 0.4))

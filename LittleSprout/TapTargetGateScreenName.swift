@@ -21,6 +21,11 @@ enum TapTargetGateScreenName: String {
     // 同理），初始態本身就有 5 顆可點元件會被量到（取消鈕／新增照片 cell／日期欄位／歸屬欄位／
     // 發佈鈕）——改註冊進 harness，讓這個畫面之後的回歸能被機械 gate 抓到。
     case diaryEditor = "DiaryEditorView"
+    // LS-126 delta 復審 m2：`TimelineView` 整體仍在 `tap-target-exemptions.txt`（日分組卡片／
+    // 捲底載入需要多筆假資料與捲動狀態才有代表性）——但 Header 停靠的「新增回憶」建立鈕不看
+    // 任何 feed 資料，`.preview()` 空狀態就會渲染，是這個畫面唯一「不需要 seed 就有代表性」
+    // 的可點元件，量測成本低，值得單獨拉一個 case 出來蓋。
+    case timelineDefaultState = "TimelineViewDefaultState"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -40,6 +45,7 @@ enum TapTargetGateScreenName: String {
         case .otpVerification: return .staticText("輸入驗證碼")
         case .settings: return .button("登出")
         case .diaryEditor: return .staticText("寫日記")
+        case .timelineDefaultState: return .button("新增回憶")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

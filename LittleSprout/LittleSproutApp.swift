@@ -10,6 +10,9 @@ struct LittleSproutApp: App {
     // LS-113：跟 `familyStore` 同理，隨 app 存活——09／10 畫面依它的 `children`／`myRole`
     // 判斷要不要重查，若每次重繪都重建會遺失狀態。
     @State private var childrenStore: ChildrenStore
+    // LS-126：跟 `childrenStore` 同理，隨 app 存活——時間軸的 keyset 分頁狀態（`entries`／
+    // `hasMorePages`／游標）若每次重繪都重建會遺失，切分頁再切回來會整頁重新從第一頁載入。
+    @State private var timelineStore: TimelineStore
     /// LS-125：日記編輯器（`DiaryEditorView`）用的 client——不是 `@State`：兩者都是不可變的
     /// 純 service 物件（同 `familyStore` 內部包的 `SupabaseFamilyAPIClient`），本身不 Observable
     /// 也不需要跨重繪保留可變狀態，草稿狀態的持久性由 `DiaryComposerStore`（畫面等級，見該檔）
@@ -27,6 +30,7 @@ struct LittleSproutApp: App {
         _authStore = State(initialValue: AuthStore(authService: SupabaseAuthService(client: client)))
         _familyStore = State(initialValue: FamilyStore(apiClient: SupabaseFamilyAPIClient(client: client)))
         _childrenStore = State(initialValue: ChildrenStore(apiClient: SupabaseChildAPIClient(client: client)))
+        _timelineStore = State(initialValue: TimelineStore(apiClient: SupabaseTimelineAPIClient(client: client)))
         diaryAPIClient = SupabaseDiaryAPIClient(client: client)
         mediaUploadService = SupabaseMediaUploadService(client: client)
     }
@@ -55,6 +59,7 @@ struct LittleSproutApp: App {
             authStore: authStore,
             familyStore: familyStore,
             childrenStore: childrenStore,
+            timelineStore: timelineStore,
             diaryAPIClient: diaryAPIClient,
             mediaUploadService: mediaUploadService,
             pendingInviteCode: $pendingInviteCode
