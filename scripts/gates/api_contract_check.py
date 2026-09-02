@@ -154,15 +154,41 @@ def extract_schema_from_text(migrations_dir: str):
     rpcs = {}
     tables = set()
 
-    def dispatch(pattern, keyword_label, is_function):
-        for m in re.finditer(pattern, clean, re.IGNORECASE):
-            target = m.group(1)
-            lname = target.lower()
+    # LS-121：CREATE／DROP 依「文字中出現的先後位置」排序成單一序列後依序重播，
+    # 不是「先蒐集全部 CREATE、再套用全部 DROP」兩個獨立批次——批次模式下，DROP
+    # 永遠贏過同一批次裡的任何 CREATE，不管 CREATE 實際上出現在 DROP 之前還是
+    # 之後。這對「同一支（或稍後一支）migration 內 DROP 舊簽名、CREATE 回完全
+    # 相同簽名」這種合法寫法會誤判成「這支 RPC 已經不存在」——Postgres 的
+    # `CREATE OR REPLACE FUNCTION` 不允許改變回傳型別（例如 `RETURNS TABLE(...)`
+    # 的欄位改名／改型別），只能先 DROP 再重建，但簽章（參數型別列表）常常維持
+    # 不變，此時批次模式看到的就是「同一個簽章又 CREATE 又 DROP」，取的是 DROP
+    # 贏。改成單一時間序重播後，DROP 之後若真的又出現一次同簽名 CREATE，會正確地
+    # 把它加回去；「CREATE 之後 DROP、之後沒有再 CREATE」則正確地移除——跟原本
+    # 批次模式在「沒有位置反轉」的一般情況下行為完全相同，見
+    # `scripts/gates/api-contract-check.test.sh` ①-⑫ 沿用原始 fixture 不動、
+    # ⑬ 是本次新增的專屬案例。
+    events = []
+    for m in re.finditer(r"create\s+table\s+(?:if\s+not\s+exists\s+)?([A-Za-z_][\w.]*)\s*\(", clean, re.IGNORECASE):
+        events.append((m.start(), "create_table", m))
+    for m in re.finditer(r"create\s+(?:or\s+replace\s+)?function\s+([A-Za-z_][\w.]*)\s*\(", clean, re.IGNORECASE):
+        events.append((m.start(), "create_function", m))
+    for m in re.finditer(r"drop\s+function\s+(?:if\s+exists\s+)?([A-Za-z_][\w.]*)", clean, re.IGNORECASE):
+        events.append((m.start(), "drop_function", m))
+    for m in re.finditer(r"drop\s+table\s+(?:if\s+exists\s+)?([A-Za-z_][\w.]*)", clean, re.IGNORECASE):
+        events.append((m.start(), "drop_table", m))
+    events.sort(key=lambda e: e[0])
+
+    for _, kind, m in events:
+        target = m.group(1)
+        lname = target.lower()
+
+        if kind in ("create_table", "create_function"):
             if lname.startswith("private."):
                 continue  # 刻意不對外的 schema，不算 API 表面，略過不追蹤
             if not lname.startswith("public."):
                 # F1：沒有 schema 限定前綴的宣告 fail loud，不能悄悄漏掉一支 RPC／表
                 ln = line_of(raw, m.start())
+                keyword_label = "函式" if kind == "create_function" else "資料表"
                 print(
                     f"✗ api-contract gate：第 {ln} 行附近有一個沒有 schema 限定前綴的"
                     f"{keyword_label}宣告「{target}」——必須明確寫成 public.xxx 或"
@@ -171,7 +197,7 @@ def extract_schema_from_text(migrations_dir: str):
                 )
                 sys.exit(1)
             name = lname.split(".", 1)[1]
-            if is_function:
+            if kind == "create_function":
                 start, end = extract_paren_block(clean, m.end())
                 if "--" in raw[start:end]:
                     # F5：簽章括號區間內混進行內註解——本文字解析器無法保證安全處理，
@@ -191,41 +217,37 @@ def extract_schema_from_text(migrations_dir: str):
             else:
                 tables.add(name)
 
-    dispatch(r"create\s+table\s+(?:if\s+not\s+exists\s+)?([A-Za-z_][\w.]*)\s*\(", "資料表", False)
-    dispatch(r"create\s+(?:or\s+replace\s+)?function\s+([A-Za-z_][\w.]*)\s*\(", "函式", True)
-
-    # DROP：F1 的 fail-loud 只要求對 CREATE 適用；DROP 維持既有寬鬆行為，只處理
-    # public.* 的 drop（private./未限定的 drop 不影響追蹤中的 API 表面）。
-    for m in re.finditer(r"drop\s+function\s+(?:if\s+exists\s+)?([A-Za-z_][\w.]*)", clean, re.IGNORECASE):
-        target = m.group(1)
-        if not target.lower().startswith("public."):
-            continue
-        name = target.lower().split(".", 1)[1]
-        rest = clean[m.end():]
-        stripped = rest.lstrip()
-        if stripped.startswith("("):
-            # 有明確參數列：本解析器把 DROP FUNCTION 的參數列一律當成「只有型別、
-            # 沒有參數名」（Postgres 的 DROP FUNCTION 語法技術上兩種寫法都合法，
-            # 但只有型別才是慣例寫法，也是本專案若真的寫 DROP FUNCTION 時預期的
-            # 風格——只列型別才符合「DROP 只需要型別就能識別 overload」的語意）。
-            # 已知限制：若手動在 DROP FUNCTION 裡也寫了參數名（例如
-            # `drop function public.foo(a text)`），第一個字會被誤判成型別的一部分
-            # 而配對失敗；本專案目前沒有任何 DROP FUNCTION，不影響現有 migrations。
-            paren_open = m.end() + (len(rest) - len(stripped))
-            start, end = extract_paren_block(clean, paren_open + 1)
-            sig = f"{name}({', '.join(bare_param_types(clean[start:end]))})"
-            rpcs.pop(sig, None)
-        else:
-            # F2：無參數列的 DROP FUNCTION 只在該名稱當下唯一（不 overload）時
-            # Postgres 才會放行——不去猜是哪一個，把目前追蹤到的同名 overload 全部
-            # 移除，這是不會漏刪、且與「無括號 drop 本來就要求唯一」語意一致的做法。
-            for sig in [s for s in rpcs if s.startswith(name + "(")]:
+        elif kind == "drop_function":
+            # F1 的 fail-loud 只要求對 CREATE 適用；DROP 維持既有寬鬆行為，只處理
+            # public.* 的 drop（private./未限定的 drop 不影響追蹤中的 API 表面）。
+            if not lname.startswith("public."):
+                continue
+            name = lname.split(".", 1)[1]
+            rest = clean[m.end():]
+            stripped = rest.lstrip()
+            if stripped.startswith("("):
+                # 有明確參數列：本解析器把 DROP FUNCTION 的參數列一律當成「只有型別、
+                # 沒有參數名」（Postgres 的 DROP FUNCTION 語法技術上兩種寫法都合法，
+                # 但只有型別才是慣例寫法，也是本專案若真的寫 DROP FUNCTION 時預期的
+                # 風格——只列型別才符合「DROP 只需要型別就能識別 overload」的語意）。
+                # 已知限制：若手動在 DROP FUNCTION 裡也寫了參數名（例如
+                # `drop function public.foo(a text)`），第一個字會被誤判成型別的一部分
+                # 而配對失敗。
+                paren_open = m.end() + (len(rest) - len(stripped))
+                start, end = extract_paren_block(clean, paren_open + 1)
+                sig = f"{name}({', '.join(bare_param_types(clean[start:end]))})"
                 rpcs.pop(sig, None)
+            else:
+                # F2：無參數列的 DROP FUNCTION 只在該名稱當下唯一（不 overload）時
+                # Postgres 才會放行——不去猜是哪一個，把重播到此刻為止追蹤到的同名
+                # overload 全部移除，這是不會漏刪、且與「無括號 drop 本來就要求唯一」
+                # 語意一致的做法。
+                for sig in [s for s in rpcs if s.startswith(name + "(")]:
+                    rpcs.pop(sig, None)
 
-    for m in re.finditer(r"drop\s+table\s+(?:if\s+exists\s+)?([A-Za-z_][\w.]*)", clean, re.IGNORECASE):
-        target = m.group(1)
-        if target.lower().startswith("public."):
-            tables.discard(target.lower().split(".", 1)[1])
+        elif kind == "drop_table":
+            if lname.startswith("public."):
+                tables.discard(lname.split(".", 1)[1])
 
     return set(rpcs.keys()), tables
 

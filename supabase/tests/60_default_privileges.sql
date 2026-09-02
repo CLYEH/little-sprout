@@ -429,10 +429,11 @@ declare
     'public.list_join_requests()',
     'public.get_my_join_request()',
     'public.register_device_token(text, text)',
-    'public.create_diary_entry(uuid, uuid, text, date)',
-    'public.update_diary_entry(uuid, text, date, uuid)',
+    'public.create_diary_entry(uuid, uuid[], text, date)',
+    'public.update_diary_entry(uuid, text, date, uuid[])',
     'public.set_diary_deleted(uuid, boolean)',
     'public.set_album_deleted(uuid, boolean)',
+    'public.set_album_children(uuid, uuid[])',
     'public.set_comment_deleted(uuid, boolean)',
     'public.create_comment(uuid, text, uuid, text)',
     'public.update_comment(uuid, text)',
@@ -639,16 +640,18 @@ begin
 end;
 $$;
 
--- 正向對照：albums 的內容欄位（title／child_id／cover_media_id）不受影響，
--- 建立者仍能直接編輯——欄位級收斂不能誤傷這三欄，否則 §3「albums」hybrid 模式
--- 的建立者直接 UPDATE 路徑整個失效。
+-- 正向對照：albums 的內容欄位（title／cover_media_id）不受影響，建立者仍能直接
+-- 編輯——欄位級收斂不能誤傷這兩欄，否則 §3「albums」hybrid 模式的建立者直接
+-- UPDATE 路徑整個失效。LS-121：child_id 已移出 albums（改用 album_children
+-- 連結表，寫入路徑是 set_album_children RPC，不是這裡驗的直接 UPDATE），不再
+-- 是這份正向對照要涵蓋的欄位。
 do $$
 declare
   v_missing text;
   v_probe record;
 begin
   for v_probe in
-    select * from (values ('title'), ('child_id'), ('cover_media_id')) as t(col)
+    select * from (values ('title'), ('cover_media_id')) as t(col)
   loop
     if not has_column_privilege('authenticated', 'public.albums', v_probe.col, 'update') then
       v_missing := coalesce(v_missing || '、', '') || v_probe.col;
@@ -660,7 +663,7 @@ begin
       'FAIL：albums 的這些內容欄位，authenticated 應該仍有 UPDATE 權限，卻被誤收回了 —— %',
       v_missing;
   end if;
-  raise notice 'ok：albums 的 title／child_id／cover_media_id 三個內容欄位，authenticated 仍有 UPDATE 權限（欄位級收斂沒有誤傷 hybrid 模式的建立者直接編輯路徑）';
+  raise notice 'ok：albums 的 title／cover_media_id 兩個內容欄位，authenticated 仍有 UPDATE 權限（欄位級收斂沒有誤傷 hybrid 模式的建立者直接編輯路徑）';
 end;
 $$;
 

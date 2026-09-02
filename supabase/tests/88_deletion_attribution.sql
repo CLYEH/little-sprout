@@ -89,7 +89,7 @@ begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  v_diary := public.create_diary_entry(v_family, v_child, 'deleted_by 推導測試', current_date);
+  v_diary := public.create_diary_entry(v_family, array[v_child]::uuid[], 'deleted_by 推導測試', current_date);
 
   -- 全新軟刪：deleted_by 寫成呼叫者本人
   perform public.set_diary_deleted(v_diary, true);
@@ -126,8 +126,8 @@ declare
 begin
   -- STEP1：作者自刪（模擬既有狀態，直接 INSERT，時間戳刻意早 1 小時）
   set local role postgres;
-  insert into public.diaries (family_id, child_id, author_id, body, entry_date, deleted_at, deleted_by)
-  values (v_family, v_child, v_author, 'STEP1：作者自刪的日記', current_date,
+  insert into public.diaries (family_id, author_id, body, entry_date, deleted_at, deleted_by)
+  values (v_family, v_author, 'STEP1：作者自刪的日記', current_date,
           now() - interval '1 hour', v_author)
   returning id into v_diary;
   reset role;
@@ -476,7 +476,7 @@ begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner1, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  v_diary := public.create_diary_entry(v_family, v_child, 'B1：owner1 軟刪的日記', current_date);
+  v_diary := public.create_diary_entry(v_family, array[v_child]::uuid[], 'B1：owner1 軟刪的日記', current_date);
   perform public.set_diary_deleted(v_diary, true);
   reset role;
 
@@ -527,8 +527,8 @@ begin
   -- BEFORE UPDATE trigger，這正是新欄位對既有資料的真實初始狀態（新增欄位不會
   -- 回填歷史列，見 migration 說明）。
   set local role postgres;
-  insert into public.diaries (family_id, child_id, author_id, body, entry_date, deleted_at)
-  values (v_family, v_child, v_member, '既有已刪除的日記', current_date, now() - interval '30 days')
+  insert into public.diaries (family_id, author_id, body, entry_date, deleted_at)
+  values (v_family, v_member, '既有已刪除的日記', current_date, now() - interval '30 days')
   returning id into v_diary;
   reset role;
 

@@ -101,7 +101,7 @@ begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  v_id := public.create_diary_entry(v_family, v_child, 'owner 寫的日記', null);
+  v_id := public.create_diary_entry(v_family, array[v_child]::uuid[], 'owner 寫的日記', null);
   select author_id, entry_date into v_author, v_entry_date from public.diaries where id = v_id;
   if v_author <> v_owner then
     raise exception 'FAIL：author_id 應為呼叫者本人 %，實際 %', v_owner, v_author;
@@ -115,7 +115,7 @@ begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  v_id := public.create_diary_entry(v_family, v_child, 'member 寫的日記', current_date - 3);
+  v_id := public.create_diary_entry(v_family, array[v_child]::uuid[], 'member 寫的日記', current_date - 3);
   select author_id into v_author from public.diaries where id = v_id;
   if v_author <> v_member then
     raise exception 'FAIL：member 建立的日記 author_id 不是自己';
@@ -128,7 +128,7 @@ begin
     json_build_object('sub', v_viewer, 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin
-    perform public.create_diary_entry(v_family, v_child, 'viewer 想寫日記', null);
+    perform public.create_diary_entry(v_family, array[v_child]::uuid[], 'viewer 想寫日記', null);
     raise exception 'FAIL：viewer 竟然可以建立日記';
   exception when sqlstate '42501' then
     null;  -- ok
@@ -140,7 +140,7 @@ begin
     json_build_object('sub', v_outsider, 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin
-    perform public.create_diary_entry(v_family, v_child, '外人想寫日記', null);
+    perform public.create_diary_entry(v_family, array[v_child]::uuid[], '外人想寫日記', null);
     raise exception 'FAIL：非本家庭成員竟然可以建立日記';
   exception when sqlstate '42501' then
     null;  -- ok
@@ -152,7 +152,7 @@ begin
   perform set_config('request.jwt.claims', '{}', true);
   set local role authenticated;
   begin
-    perform public.create_diary_entry(v_family, v_child, '沒登入', null);
+    perform public.create_diary_entry(v_family, array[v_child]::uuid[], '沒登入', null);
     raise exception 'FAIL：auth.uid() 為 NULL 時竟然建得起日記';
   exception when sqlstate '42501' then
     null;  -- ok
@@ -165,7 +165,7 @@ begin
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin
-    perform public.create_diary_entry(v_family, v_other_child, '想把日記掛到別家的孩子', null);
+    perform public.create_diary_entry(v_family, array[v_other_child]::uuid[], '想把日記掛到別家的孩子', null);
     raise exception 'FAIL：child_id 跨家庭竟然建得起日記';
   exception when foreign_key_violation then
     null;  -- ok
@@ -196,7 +196,7 @@ begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  v_diary := public.create_diary_entry(v_family, v_child, '原始內容', current_date);
+  v_diary := public.create_diary_entry(v_family, array[v_child]::uuid[], '原始內容', current_date);
 
   -- 作者本人能編
   perform public.update_diary_entry(v_diary, '作者改過的內容', current_date - 1, null);
@@ -339,7 +339,7 @@ begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  v_diary := public.create_diary_entry(v_family, v_child, '會被刪又被還原的日記', current_date);
+  v_diary := public.create_diary_entry(v_family, array[v_child]::uuid[], '會被刪又被還原的日記', current_date);
 
   -- 作者軟刪自己的
   perform public.set_diary_deleted(v_diary, true);
@@ -520,7 +520,7 @@ begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  v_diary := public.create_diary_entry(v_family, v_child, '硬刪測試', current_date);
+  v_diary := public.create_diary_entry(v_family, array[v_child]::uuid[], '硬刪測試', current_date);
   reset role;
 
   foreach v_user in array array[v_member::text, v_viewer::text, v_outsider::text] loop
@@ -593,21 +593,26 @@ begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  v_diary_x1 := public.create_diary_entry(v_family, v_child1, '今天的日記', current_date);
+  v_diary_x1 := public.create_diary_entry(v_family, array[v_child1]::uuid[], '今天的日記', current_date);
   reset role;
 
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  v_diary_x2 := public.create_diary_entry(v_family, v_child2, '第二個孩子的日記', current_date - 5);
+  v_diary_x2 := public.create_diary_entry(v_family, array[v_child2]::uuid[], '第二個孩子的日記', current_date - 5);
   reset role;
 
-  -- albums 沒有 RPC（不在本票範圍），直接以 postgres 身分建立，等同既有 fixtures 慣例
-  insert into public.albums (id, family_id, child_id, title, created_by, created_at)
-  values (gen_random_uuid(), v_family, v_child1, '本檔新增相簿-有孩子', v_owner, now() - interval '3 hours')
+  -- albums 沒有 RPC（不在本票範圍），直接以 postgres 身分建立，等同既有 fixtures 慣例。
+  -- LS-121：albums.child_id 欄位已移除，孩子標記改用 album_children 連結表，建立後
+  -- 再補一列（set_album_children 是給 authenticated 呼叫端用的 RPC，這裡用 postgres
+  -- 身分直接寫連結表，等同既有 fixtures 對 albums 本體的作法，不必經過 RPC）。
+  insert into public.albums (id, family_id, title, created_by, created_at)
+  values (gen_random_uuid(), v_family, '本檔新增相簿-有孩子', v_owner, now() - interval '3 hours')
   returning id into v_album_x1;
-  insert into public.albums (id, family_id, child_id, title, created_by, created_at)
-  values (gen_random_uuid(), v_family, null, '本檔新增相簿-全家共用', v_owner, now() - interval '10 hours')
+  insert into public.album_children (family_id, album_id, child_id)
+  values (v_family, v_album_x1, v_child1);
+  insert into public.albums (id, family_id, title, created_by, created_at)
+  values (gen_random_uuid(), v_family, '本檔新增相簿-全家共用', v_owner, now() - interval '10 hours')
   returning id into v_album_x2;
   insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by)
   values (gen_random_uuid(), v_family,
@@ -853,13 +858,13 @@ begin
       select * from public.get_family_timeline(v_family, v_child1, v_cursor_at, v_cursor_id, 1)
     loop
       v_got_any := true;
-      if v_page.child_id is distinct from v_child1 then
+      if not (v_child1 = any(v_page.child_ids)) then
         raise exception
-          'FAIL：child1 篩選＋分頁（分支 4）洩漏了其他 child／全家共用的項目（child_id=%，kind=%，ref_id=%）',
-          v_page.child_id, v_page.kind, v_page.ref_id;
+          'FAIL：child1 篩選＋分頁（分支 4）洩漏了其他 child／全家共用的項目（child_ids=%，kind=%，ref_id=%）',
+          v_page.child_ids, v_page.kind, v_page.ref_id;
       end if;
       if v_page.kind = 'media' then
-        raise exception 'FAIL：child1 篩選＋分頁（分支 4）竟然出現 media 項目（media 的 child_id 恆為 NULL，不該通過 child 篩選）';
+        raise exception 'FAIL：child1 篩選＋分頁（分支 4）竟然出現 media 項目（media 恆不落在任何連結表裡，不該通過 child 篩選）';
       end if;
       v_collected := v_collected || (v_page.kind::text || ':' || v_page.ref_id::text);
       v_cursor_at := v_page.occurred_at;
@@ -925,140 +930,91 @@ $$;
 rollback;
 
 -- ===========================================================================
--- 7. feed_items.child_id 的回填冪等性與孩子刪除的 FK 行為（merge-reviewer PR #60
---    review N4）
+-- 7. 刪除孩子的 FK 級聯行為（LS-121，取代舊版對 feed_items.child_id 的回填冪等性／
+--    ON DELETE SET NULL 驗證——該欄位已隨本票移除，見 migration 第 0/4 段）
+--
+-- diary_children／album_children 對 (family_id, child_id) 的複合外鍵改成
+-- on delete cascade（不是舊版 feed_items.child_id 用過的 on delete set null）。
+-- 本票仍然沒有任何應用層的孩子硬刪路徑（children_delete policy 依舊全擋，見
+-- 20260825030000_children_write_path_and_soft_delete.sql 第 2 段）——這裡直接以
+-- postgres 身分 DELETE 只是為了驗證 FK 級聯本身的正確性，不代表開放這條路徑，
+-- 等同舊版測試對同一類 FK 行為的驗證慣例。
+--
+-- 驗證鏈：children DELETE → diary_children／album_children 複合外鍵級聯刪除
+-- → 第 6 段新增的 AFTER DELETE trigger（private.feed_sync_diary_children／
+-- feed_sync_album_children）連帶清掉 feed_item_children。日記／相簿本體（§8：
+-- 「軟刪不連動」的精神延伸到「刪除孩子也不連動既有內容」）完全不受影響，只有
+-- 「這篇內容掛在這個孩子底下」這個標記本身消失。
 -- ===========================================================================
 begin;
 
 do $$
 declare
   v_family uuid := 'fa000000-0000-4000-8000-000000000001';
-  v_child uuid := '2a000000-0000-4000-8000-000000000001';
   v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
   v_new_child uuid;
   v_diary uuid;
   v_album uuid;
-  v_before_diary uuid;
-  v_before_album uuid;
-  v_after_family_diary uuid;
-  v_after_child_diary uuid;
-  v_after_family_album uuid;
-  v_after_child_album uuid;
   v_n int;
 begin
-  -- ---------------------------------------------------------------------------
-  -- (a) 回填冪等性：把 fixtures 既有 diary/album 對應的 feed_items.child_id 手動
-  -- 清成 NULL，重新執行一次跟 20260824010000_diaries_write_path_and_timeline.sql
-  -- 逐字一致的回填 UPDATE 語句，驗證正確地從 diaries/albums 補回 child_id，且再跑
-  -- 一次影響 0 列（真正的冪等定義，不只是「跑了不會錯」）。
-  --
-  -- 為什麼 fresh reset 測不出這件事：migration 套用當下 diaries/albums 都還沒有
-  -- 資料，回填當下等於是 no-op，從未真的補過任何一列——F3（第 1 輪 review）當時
-  -- 只交付了回填 SQL 本身，沒有測試證明「這段 UPDATE 對已存在、child_id 已是 NULL
-  -- 的列」是正確且冪等的。
-  -- ---------------------------------------------------------------------------
-  update public.feed_items
-     set child_id = null
-   where family_id = v_family and kind in ('diary', 'album');
-
-  select count(*) into v_n from public.feed_items
-   where family_id = v_family and kind in ('diary', 'album') and child_id is not null;
-  if v_n <> 0 then
-    raise exception 'FAIL：手動清空後應該 0 列還帶 child_id，實際 %', v_n;
-  end if;
-
-  update public.feed_items f
-     set child_id = d.child_id
-    from public.diaries d
-   where f.kind = 'diary' and f.ref_id = d.id
-     and f.child_id is distinct from d.child_id;
-
-  update public.feed_items f
-     set child_id = a.child_id
-    from public.albums a
-   where f.kind = 'album' and f.ref_id = a.id
-     and f.child_id is distinct from a.child_id;
-
-  select count(*) into v_n from public.feed_items
-   where family_id = v_family and kind in ('diary', 'album') and child_id is distinct from v_child;
-  if v_n <> 0 then
-    raise exception 'FAIL：回填後 A 家的 diary/album feed_items 應全部補回 child_id=%，實際有 % 列不是', v_child, v_n;
-  end if;
-
-  update public.feed_items f
-     set child_id = d.child_id
-    from public.diaries d
-   where f.kind = 'diary' and f.ref_id = d.id
-     and f.child_id is distinct from d.child_id;
-  get diagnostics v_n = row_count;
-  if v_n <> 0 then
-    raise exception 'FAIL：diary 回填 UPDATE 重跑一次應影響 0 列（冪等），實際影響 % 列', v_n;
-  end if;
-
-  update public.feed_items f
-     set child_id = a.child_id
-    from public.albums a
-   where f.kind = 'album' and f.ref_id = a.id
-     and f.child_id is distinct from a.child_id;
-  get diagnostics v_n = row_count;
-  if v_n <> 0 then
-    raise exception 'FAIL：album 回填 UPDATE 重跑一次應影響 0 列（冪等），實際影響 % 列', v_n;
-  end if;
-
-  raise notice 'ok：feed_items.child_id 的回填 UPDATE 正確補回既有資料，且重跑一次影響 0 列（冪等）——N4';
-
-  -- ---------------------------------------------------------------------------
-  -- (b) 刪除孩子：feed_items.family_id 保留、child_id 變 NULL，delete 本身不噴
-  -- 23502。驗證 feed_items_child_same_family_fkey 的 `on delete set null (child_id)`
-  -- column-specific 寫法——若漏寫 `(child_id)`，Postgres 對複合外鍵 ON DELETE SET
-  -- NULL 的預設行為是把「所有」參照欄位都設成 NULL，會連 family_id 一起 NULL 掉，
-  -- 而 feed_items.family_id 是 NOT NULL，會直接噴 23502。這條在 migration 裡原本
-  -- 只靠註解推理說明，這裡補機械驗證，不是只靠人看得懂那段註解就信任它。
-  -- ---------------------------------------------------------------------------
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
   -- LS-66：children 的直接 INSERT 已收斂成 RPC-only，這裡改用 create_child（原本
   -- 直接 INSERT 純粹是圖方便建測試資料，不是本段要驗的行為——本段驗的是「刪除孩子」
-  -- 之後 feed_items 的 FK 級聯，不是「建立孩子」的寫入路徑，用哪條路徑建都一樣）。
+  -- 之後連結表的 FK 級聯，不是「建立孩子」的寫入路徑，用哪條路徑建都一樣）。
   v_new_child := public.create_child(v_family, '即將被刪除的孩子', date '2024-01-01', null);
-  v_diary := public.create_diary_entry(v_family, v_new_child, '掛在即將被刪的孩子底下', current_date);
+  v_diary := public.create_diary_entry(v_family, array[v_new_child]::uuid[], '掛在即將被刪的孩子底下', current_date);
   reset role;
 
-  -- albums 沒有 RPC（不在本票範圍），直接以 postgres 身分建立，等同既有 fixtures 慣例
-  insert into public.albums (id, family_id, child_id, title, created_by)
-  values (gen_random_uuid(), v_family, v_new_child, '也掛在即將被刪的孩子底下', v_owner)
+  -- albums 沒有 RPC（不在本票範圍），直接以 postgres 身分建立＋標記，等同既有
+  -- fixtures 慣例。
+  insert into public.albums (id, family_id, title, created_by)
+  values (gen_random_uuid(), v_family, '也掛在即將被刪的孩子底下', v_owner)
   returning id into v_album;
+  insert into public.album_children (family_id, album_id, child_id) values (v_family, v_album, v_new_child);
 
-  select f.child_id into v_before_diary from public.feed_items f
-   where f.kind = 'diary' and f.ref_id = v_diary;
-  select f.child_id into v_before_album from public.feed_items f
-   where f.kind = 'album' and f.ref_id = v_album;
-  if v_before_diary <> v_new_child or v_before_album <> v_new_child then
-    raise exception 'FAIL：刪除孩子之前，日記／相簿的 feed_items.child_id 應該是新孩子 id（diary=%，album=%）',
-      v_before_diary, v_before_album;
+  select count(*) into v_n from public.diary_children where diary_id = v_diary and child_id = v_new_child;
+  if v_n <> 1 then
+    raise exception 'FAIL：前置條件不成立（diary_children 少了這一列，測試本身壞了）';
+  end if;
+  select count(*) into v_n from public.feed_item_children
+   where kind = 'diary' and ref_id = v_diary and child_id = v_new_child;
+  if v_n <> 1 then
+    raise exception 'FAIL：前置條件不成立（feed_item_children 少了 diary 這一列，第 6 段的 trigger 沒有正確展開）';
+  end if;
+  select count(*) into v_n from public.feed_item_children
+   where kind = 'album' and ref_id = v_album and child_id = v_new_child;
+  if v_n <> 1 then
+    raise exception 'FAIL：前置條件不成立（feed_item_children 少了 album 這一列，第 7 段的 trigger 沒有正確展開）';
   end if;
 
-  -- 真正的斷言就是這句 DELETE 本身：若 FK 的 ON DELETE SET NULL 沒有正確地只設
-  -- child_id 一欄，這句會直接噴 23502，讓整個測試檔案失敗——不需要額外包
-  -- exception 區塊，讓錯誤自然傳播就是測試本身。
+  -- 真正的斷言就是這句 DELETE 本身：若複合外鍵沒有正確 CASCADE，這句會直接因為
+  -- 子表還有列參照著（23503）而讓整個測試檔案失敗——不需要額外包 exception 區塊，
+  -- 讓錯誤自然傳播就是測試本身。
   delete from public.children where id = v_new_child;
 
-  select f.family_id, f.child_id into v_after_family_diary, v_after_child_diary
-    from public.feed_items f where f.kind = 'diary' and f.ref_id = v_diary;
-  select f.family_id, f.child_id into v_after_family_album, v_after_child_album
-    from public.feed_items f where f.kind = 'album' and f.ref_id = v_album;
-
-  if v_after_family_diary <> v_family or v_after_family_album <> v_family then
-    raise exception 'FAIL：刪除孩子後 feed_items.family_id 應該原封不動保留（diary=%，album=%，期望 %）',
-      v_after_family_diary, v_after_family_album, v_family;
+  select count(*) into v_n from public.diary_children where child_id = v_new_child;
+  if v_n <> 0 then
+    raise exception 'FAIL：刪除孩子後 diary_children 應該被級聯清空，實際還有 % 列', v_n;
   end if;
-  if v_after_child_diary is not null or v_after_child_album is not null then
-    raise exception 'FAIL：刪除孩子後 feed_items.child_id 應該被設成 NULL（diary=%，album=%）',
-      v_after_child_diary, v_after_child_album;
+  select count(*) into v_n from public.album_children where child_id = v_new_child;
+  if v_n <> 0 then
+    raise exception 'FAIL：刪除孩子後 album_children 應該被級聯清空，實際還有 % 列', v_n;
+  end if;
+  select count(*) into v_n from public.feed_item_children where child_id = v_new_child;
+  if v_n <> 0 then
+    raise exception 'FAIL：刪除孩子後 feed_item_children 應該被連帶清空（經 diary_children／album_children 的 AFTER DELETE trigger），實際還有 % 列', v_n;
   end if;
 
-  raise notice 'ok：刪除孩子後 feed_items.family_id 保留、child_id 變 NULL，且刪除本身沒有噴 23502——N4';
+  if not exists (select 1 from public.diaries where id = v_diary and deleted_at is null) then
+    raise exception 'FAIL：刪除孩子連帶把掛著他的日記本體也弄不見了（應該只消失標記，不連動內容）';
+  end if;
+  if not exists (select 1 from public.albums where id = v_album and deleted_at is null) then
+    raise exception 'FAIL：刪除孩子連帶把掛著他的相簿本體也弄不見了（應該只消失標記，不連動內容）';
+  end if;
+
+  raise notice 'ok：刪除孩子時 diary_children／album_children／feed_item_children 三張連結表被正確級聯清空，日記／相簿本體不受影響——LS-121';
 end;
 $$;
 

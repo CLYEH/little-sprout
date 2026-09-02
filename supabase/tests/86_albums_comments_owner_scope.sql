@@ -209,6 +209,7 @@ declare
   v_outsider uuid := 'b0000000-0000-4000-8000-000000000001';
   v_album uuid;
   v_snapshot jsonb;
+  v_children_snapshot uuid[];
   v_deleted_at timestamptz;
 begin
   set local role postgres;
@@ -225,9 +226,13 @@ begin
   -- F1（merge-reviewer PR #70 review）：child_id／cover_media_id 刻意塞非 NULL 值
   -- （收斂前的 fixture 沒帶這兩欄，「RPC 只寫 deleted_at」的斷言因此測不到這兩欄
   -- 被動過——這裡補上，讓下面的整列比對真的涵蓋 albums 全部可能被竄改的欄位）。
-  insert into public.albums (family_id, title, child_id, cover_media_id, created_by)
-  values (v_family, '會被軟刪又還原的相簿', v_child, v_cover, v_author)
+  -- LS-121：child_id 從 albums 的單一欄位改成 album_children 連結表，「刻意塞非
+  -- NULL 值」的精神延伸成「刻意標一個孩子」，比對對象也從整列 JSON 多加一份
+  -- album_children 的快照。
+  insert into public.albums (family_id, title, cover_media_id, created_by)
+  values (v_family, '會被軟刪又還原的相簿', v_cover, v_author)
   returning id into v_album;
+  insert into public.album_children (family_id, album_id, child_id) values (v_family, v_album, v_child);
 
   -- F1：baseline 必須在任何 RPC 呼叫之前擷取（INSERT 之後立刻拍照），不能在作者
   -- 自己的 set_album_deleted 呼叫「之後」才拍——reviewer 重放 mutation（RPC 多寫
@@ -237,6 +242,8 @@ begin
   -- 用 `to_jsonb(row) - 'deleted_at'` 整列比對（而不是隻列舉 title 一欄）：日後這
   -- 兩張表加新欄位會自動被涵蓋，不必回頭記得在這裡加一行新的欄位比對。
   select to_jsonb(a) - 'deleted_at' - 'deleted_by' into v_snapshot from public.albums a where a.id = v_album;
+  select array_agg(child_id order by child_id) into v_children_snapshot
+    from public.album_children where album_id = v_album;
   reset role;
 
   -- 作者本人（仍是家庭成員）：軟刪／還原自己的
@@ -253,6 +260,10 @@ begin
      is distinct from v_snapshot then
     raise exception 'FAIL：作者軟刪自己的相簿時，deleted_at 以外的欄位被動到了';
   end if;
+  if (select array_agg(child_id order by child_id) from public.album_children where album_id = v_album)
+     is distinct from v_children_snapshot then
+    raise exception 'FAIL：作者軟刪自己的相簿時，album_children 的孩子標記被動到了';
+  end if;
 
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_author, 'role', 'authenticated')::text, true);
@@ -267,7 +278,11 @@ begin
      is distinct from v_snapshot then
     raise exception 'FAIL：作者還原自己的相簿時，deleted_at 以外的欄位被動到了';
   end if;
-  raise notice 'ok：作者本人可以用 set_album_deleted 軟刪／還原自己的相簿，且 title/child_id/cover_media_id 全程逐字不變';
+  if (select array_agg(child_id order by child_id) from public.album_children where album_id = v_album)
+     is distinct from v_children_snapshot then
+    raise exception 'FAIL：作者還原自己的相簿時，album_children 的孩子標記被動到了';
+  end if;
+  raise notice 'ok：作者本人可以用 set_album_deleted 軟刪／還原自己的相簿，且 title/cover_media_id/album_children 全程逐字不變';
 
   -- owner（非作者）：軟刪別人的——這是 §10 授權的那件事，且只動 deleted_at。
   -- 比對對象是 INSERT 後拍的 v_snapshot（未受前面兩次作者呼叫影響），不是重新在
@@ -283,9 +298,13 @@ begin
   end if;
   if (select to_jsonb(a) - 'deleted_at' - 'deleted_by' from public.albums a where a.id = v_album)
      is distinct from v_snapshot then
-    raise exception 'FAIL：owner 軟刪別人的相簿時，deleted_at 以外的欄位被動到了（title/child_id/cover_media_id 有一項跟 INSERT 當下的值不一樣）——set_album_deleted 不該碰得到內容欄位';
+    raise exception 'FAIL：owner 軟刪別人的相簿時，deleted_at 以外的欄位被動到了（title/cover_media_id 有一項跟 INSERT 當下的值不一樣）——set_album_deleted 不該碰得到內容欄位';
   end if;
-  raise notice 'ok：owner 可以用 set_album_deleted 軟刪別人的相簿，且整列（除 deleted_at 外）逐欄逐字不變';
+  if (select array_agg(child_id order by child_id) from public.album_children where album_id = v_album)
+     is distinct from v_children_snapshot then
+    raise exception 'FAIL：owner 軟刪別人的相簿時，album_children 的孩子標記被動到了——set_album_deleted 不該碰得到 album_children';
+  end if;
+  raise notice 'ok：owner 可以用 set_album_deleted 軟刪別人的相簿，且整列（除 deleted_at 外）與 album_children 逐字不變';
 
   -- member（非作者、非 owner）：42501
   perform set_config('request.jwt.claims',
@@ -673,7 +692,8 @@ rollback;
 -- albums 在 LS-52 當時**沒有**動表級 grant（跟 LS-48 對 diaries 整個 revoke
 -- 不同——那時作者仍走直接 UPDATE，grant 留著整表）；**LS-57 R2 起這個現況已經
 -- 改變**：deleted_at／deleted_by／family_id 三欄的欄位級 grant 被收回，只保留
--- title／child_id／cover_media_id 三欄（N1/N2 根治，見
+-- title／cover_media_id 兩欄（LS-121 起 child_id 移出 albums，見
+-- 20260902011514_diary_album_multi_child_tags.sql；N1/N2 根治見
 -- 20260825040000_deletion_attribution.sql 檔頭），`has_table_privilege(...,
 -- 'update')`（檢查的是整表 relacl，不含欄位級 attacl）因此從 R1 之前的 `true`
 -- 變成 `false`——下面的斷言已同步改寫成驗這個新現況，不是複製 R1 之前的舊斷言；
@@ -695,7 +715,7 @@ begin
   -- LS-57 R2：albums 的表級 UPDATE grant 已被收回（只留欄位級子集合），
   -- has_table_privilege 對整表 UPDATE 應該回 false——這是正向回歸，不是漏洞。
   if has_table_privilege('authenticated', 'public.albums', 'update') then
-    raise exception 'FAIL 回歸：authenticated 竟然還有 albums 的表級 UPDATE grant——LS-57 R2 應該已收回整表 UPDATE、只留欄位級子集合（title/child_id/cover_media_id）';
+    raise exception 'FAIL 回歸：authenticated 竟然還有 albums 的表級 UPDATE grant——LS-57 R2 應該已收回整表 UPDATE、只留欄位級子集合（title/cover_media_id）';
   end if;
   if not has_column_privilege('authenticated', 'public.albums', 'title', 'update') then
     raise exception 'FAIL 回歸：authenticated 失去 albums.title 的欄位級 UPDATE——作者直接編輯內容的路徑會跟著壞掉';
