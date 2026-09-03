@@ -168,6 +168,28 @@ struct AuthenticatedRootView: View {
 }
 
 /// Compact（iPhone 直向）：四分頁 TabView。
+///
+/// LS-136：系統 `.tabItem` 列（文字＋圖示）已隱藏（`.toolbar(.hidden, for: .tabBar)`），
+/// 底部改疊 `SectionTabBar`（`cmp/Tab Bar` 全字級純 icon 浮動膠囊）；`.tabItem` 本身仍保留
+/// ——`TabView` 靠它辨識/註冊分頁與驅動 `selection` binding，只是視覺上不顯示。
+///
+/// merge-review R1 M1：`.safeAreaInset(edge: .bottom) { SectionTabBar… } ` 與
+/// `.toolbar(.hidden, for: .tabBar)` **必須掛在同一層**——每個分頁 `NavigationStack` 的
+/// **根內容**（`SectionContentView`）上，不是外層 `TabView`。R1 一度把 `safeAreaInset` 掛在
+/// `TabView`：`TabView` 是所有分頁（含各分頁內用 `.navigationDestination` push 出來的
+/// `DiaryEditorView`／`DiaryDetailView`）共同的、永遠不變的祖先，膠囊因此在 push 進編輯器／
+/// 詳情頁後依然留在畫面上，跟這兩個畫面自己的 `.toolbar(.hidden, for: .tabBar)`（LS-125／
+/// LS-126 QA 對稿 FAIL 修法）疊出「Action Bar＋膠囊」兩條底部帶，且與核可稿 12／13 板（編輯器
+/// ／詳情，稿面完全沒有 Tab Bar 節點）不符。改掛在 `SectionContentView` 這個根內容實例上之後，
+/// push 新目的地會把根內容從畫面上換掉，`safeAreaInset` 插入的膠囊隨之自然消失——不需要額外
+/// 邏輯，和 `.toolbar(.hidden, for: .tabBar)` 消失的原理一致（見下方回歸測試
+/// `SectionTabBarPushRegressionTests`）。
+///
+/// 捲動內容底部 inset 契約（motifs.md「Tab Bar 全字級純 icon」：預設 98／AX3 122＝34＋
+/// 膠囊高）不需要在四個 tab-root 畫面各自寫死——`.safeAreaInset(edge: .bottom)` 掛在這一層，
+/// 會把 `SectionTabBar` 的高度自動疊加進每個子畫面（含各自的 `ScrollView`／`List`）繼承到的
+/// safe area，效果等同系統原本 `.tabItem` 列本來就會做的事——底部 34pt home indicator 帶則是
+/// 裝置既有的系統 safe area，不需要另外加。
 private struct SectionTabView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
@@ -186,6 +208,25 @@ private struct SectionTabView: View {
                         childrenStore: childrenStore, timelineStore: timelineStore,
                         diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
                     )
+                    // LS-136 實測發現（R1）：掛在外層 `TabView` 的 `.toolbar(.hidden, for: .tabBar)`
+                    // 只隱藏視覺渲染，底下的原生 `UITabBarItem` 仍留在 accessibility tree 裡、
+                    // 且真的 hittable（XCUITest 量到兩顆同 label「相簿」的 button 疊在同一塊
+                    // 螢幕區域，兩顆 `isHittable` 都是 true）——`.accessibilityHidden` 掛在
+                    // tabItem 的 `Label` 上也不生效（tabItem closure 內容會被橋接成
+                    // `UITabBarItem`，不走一般 SwiftUI accessibility modifier 鏈）。改成掛在
+                    // **每個分頁自己的內容**上（而不是外層 TabView），才會真的把該分頁對應的
+                    // 原生列從畫面與 accessibility tree 一併移除；`SectionTabBar` 是全畫面唯一
+                    // 剩下的、可被 VoiceOver 找到的分頁路徑。
+                    .toolbar(.hidden, for: .tabBar)
+                    // merge-review R2 M1 修法：見上方型別文件註解——掛在根內容上，push 之後
+                    // 自然消失，不影響 `DiaryEditorView`／`DiaryDetailView` 自己的釘底 Action Bar。
+                    .safeAreaInset(edge: .bottom, spacing: 0) {
+                        SectionTabBar(selection: $selection)
+                            // .pen `cmp/Tab Bar` instance x:16（兩側同值，不隨 AX3／畫面寬度
+                            // 變動）——硬寫水平邊界，不是 `$screen-pad`（24）：這是浮動膠囊自己
+                            // 的邊界，不是畫面內容邊界，兩者剛好不同數字（見 Notes `LuHbv`）。
+                            .padding(.horizontal, 16)
+                    }
                 }
                 .tabItem { Label(section.title, systemImage: section.systemImage) }
                 .tag(section)

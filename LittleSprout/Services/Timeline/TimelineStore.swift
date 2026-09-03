@@ -193,6 +193,20 @@ final class TimelineStore {
         generation += 1
     }
 
+    #if DEBUG
+    /// merge-review R2 M1 回歸測試用：`entries` 是 `private(set)`，只能從本檔（`TimelineStore`
+    /// 的主宣告）寫入，同 `FamilyStore.seedMyFamilyForPreview` 的角色與理由（見該檔）——UI test
+    /// 需要時間軸上有一張可點的日記卡才能真的 push 進 `DiaryDetailView`，`PreviewTimelineAPIClient`
+    /// 的 `fetchTimelinePointers` 固定回傳 `[]`，無法靠正常 `refresh()` 流程餵資料。整支 `#if DEBUG`
+    /// 圍住，同 `seedMyFamilyForPreview` 的圍欄理由，Release build 不會編到。
+    @MainActor
+    func seedForPreview(entries: [TimelineEntry]) {
+        self.entries = entries
+        refreshState = .success
+        hasMorePages = false
+    }
+    #endif
+
     /// 讀一支影片的時長並快取；已經讀過、正在讀、或讀過且失敗的 id 直接跳過（避免同一支
     /// 影片的卡片多次觸發 `.task` 時重複打 Storage——R2-M1：失敗也要記，不是只記成功，見
     /// `failedDurations` 文件註解）。讀取失敗（例如檔案格式看不懂、網路失敗、縮圖 JPEG 本來

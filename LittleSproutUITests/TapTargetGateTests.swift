@@ -27,6 +27,11 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.timelineDefaultState)
     }
 
+    /// LS-136：`SectionTabBar`（`cmp/Tab Bar` 全字級純 icon）四顆 cell 的預設態點擊區。
+    func testSectionTabView() {
+        assertAllTappablesMeetMinimum(.sectionTabView)
+    }
+
     /// 任一元件 <44pt 就用 `XCTFail` 記一筆——逐一累計，不是遇到第一個違規就提前結束，讓
     /// `tap-target-check.sh` 能一次點名所有違規者（LS-17 QA1 就是同一畫面上不只一顆違規）。
     /// merge-review R1 B1：先斷言畫面真的渲染出來，harness 靜默失效不會被誤判成「這個畫面

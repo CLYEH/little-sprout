@@ -26,6 +26,18 @@ enum TapTargetGateScreenName: String {
     // 任何 feed 資料，`.preview()` 空狀態就會渲染，是這個畫面唯一「不需要 seed 就有代表性」
     // 的可點元件，量測成本低，值得單獨拉一個 case 出來蓋。
     case timelineDefaultState = "TimelineViewDefaultState"
+    // LS-136：`SectionTabBar`（`cmp/Tab Bar` 全字級純 icon）本身不是 `Features/**/*View.swift`
+    // （住在 `Navigation/`），`tap-target-registry-check.sh` 不會強制要求註冊，但票文 scope 4
+    // 明確要求「TapTargetGateHarness 註冊 Tab Bar 預設態（四顆 ≥44pt）」——直接掛完整的
+    // `AuthenticatedRootView`（compact），一次覆蓋 tab bar 四顆 cell 的點擊區，也是
+    // `TabRootHeadingTests`（entry-conditions.md ⑬）共用的同一個 host。
+    case sectionTabView = "SectionTabView"
+    // merge-review R1 M1 回歸測試用：`.sectionTabView` 的 `timelineStore` 是空狀態，時間軸
+    // 沒有任何日記卡可點，無法真的 push 進 `DiaryDetailView`——這個變體額外 seed 一筆日記
+    // （`TimelineStore.seedForPreview(entries:)`，`TimelineStore.swift` DEBUG-only），讓
+    // `SectionTabBarPushRegressionTests` 能真的點卡片 push 進去，驗證自訂 Tab Bar 在 push 後
+    // 消失（不只驗 `DiaryEditorView` 那條 push 路徑）。
+    case sectionTabViewWithDiary = "SectionTabViewWithDiary"
     /// merge-review `443ec21a` §3：不是點擊目標測試，是借用同一套「launch environment 指定
     /// 畫面」機制餵 `DiaryCardVideoBadgeGeometryTests` 量真實 frame（a11y tree 讀得出文字，
     /// 讀不出像素——這正是本輪 FAIL 的根因，見該測試檔文件註解）。沿用這裡而不是另開一套
@@ -51,6 +63,11 @@ enum TapTargetGateScreenName: String {
         case .settings: return .button("登出")
         case .diaryEditor: return .staticText("寫日記")
         case .timelineDefaultState: return .button("新增回憶")
+        // 預設選中分頁＝時間軸（`AuthenticatedRootView` 的 `selection` 初值），headerRow
+        // 「時間軸」一定會渲染，不依賴任何 seed 資料。
+        case .sectionTabView: return .staticText("時間軸")
+        // 同 `.sectionTabView`：headerRow「時間軸」不受 seed 資料影響，一定會渲染。
+        case .sectionTabViewWithDiary: return .staticText("時間軸")
         case .diaryCardVideoBadges: return .staticText("影片 12:34")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
