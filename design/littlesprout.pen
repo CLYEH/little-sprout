@@ -98350,6 +98350,2367 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "vgEGE",
+      "x": 14089,
+      "y": 785,
+      "name": "LS-142 / 16 上傳佇列",
+      "clip": true,
+      "width": 393,
+      "height": 1100,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "sw6m8",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "OqZM2",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 1100,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "WTM3B",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 1100,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "f5DNB",
+              "name": "Upload Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "rLYJj",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "dXoqz",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "zosjE",
+                      "name": "Head Title",
+                      "fill": "$text-primary",
+                      "content": "正在新增照片",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "FH2bY",
+                      "name": "Head Subtitle",
+                      "fill": "$text-secondary",
+                      "content": "7 張 · 2 張完成 · 1 張上傳中 · 3 張失敗",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "aMHE1",
+                  "name": "Resume Banner",
+                  "width": "fill_container",
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-group",
+                    "$inset-card"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "kBCIm",
+                      "name": "Resume Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "rotate-ccw",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "q1aFoT",
+                      "name": "Resume Text",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "已接續先前中斷的上傳。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "aDSW1",
+                  "name": "Rows",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "skSgI",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "xjALX",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "pImRi",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "v3mp8",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0231.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "f9cO0J",
+                              "name": "Status Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "D127y2",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "clock",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "EOkl4",
+                                  "name": "Status Text",
+                                  "fill": "$text-secondary",
+                                  "content": "等候上傳",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LWkzH",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "YwbHp",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "XyXCc",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "M072v1",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0232.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "d7l8Si",
+                              "name": "Progress Track",
+                              "width": "fill_container",
+                              "height": 6,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-full",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": "$radius-full",
+                                  "id": "XHbp9",
+                                  "name": "Progress Fill",
+                                  "fill": "$accent",
+                                  "width": 120,
+                                  "height": 6
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "Xfz57",
+                              "name": "Percent",
+                              "fill": "$text-secondary",
+                              "content": "上傳中 · 42%",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Fc7bo",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "pO1iI",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "NWeyE",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "wmK3X",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0229.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "KH2rK",
+                              "name": "Status Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "ajjti",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "check",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "cje9U",
+                                  "name": "Status Text",
+                                  "fill": "$text-secondary",
+                                  "content": "已完成",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "h9Fnzd",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "V6AAeP",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "FrKKG",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "rzOUV",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0230.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "w5UAEL",
+                              "name": "Status Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "byOil",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "check",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "fm8UR",
+                                  "name": "Status Text",
+                                  "fill": "$text-secondary",
+                                  "content": "已完成",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "v7Np4x",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ljVBN",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "LqxVU",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zz8gq",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0233.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "hyLRN",
+                              "name": "Error Row",
+                              "width": "fill_container",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "J4fBp",
+                                  "name": "Error Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "A8khm",
+                                  "name": "Error Text",
+                                  "fill": "$danger",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "連線中斷，請檢查網路連線。",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "UU1jk",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Retry Button",
+                              "padding": 0,
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "width": 16,
+                                  "height": 16
+                                },
+                                "hIhVd": {
+                                  "content": "重試",
+                                  "fontSize": "$fs-note"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "llsMB",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "PkujI",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "JqyQa",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "vzebj",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0234.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "F9o35G",
+                              "name": "Error Row",
+                              "width": "fill_container",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "E3JvV",
+                                  "name": "Error Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "U2zW2R",
+                                  "name": "Error Text",
+                                  "fill": "$danger",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "伺服器忙碌，請稍後再試。",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "E9fm7",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Retry Button",
+                              "padding": 0,
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "width": 16,
+                                  "height": 16
+                                },
+                                "hIhVd": {
+                                  "content": "重試",
+                                  "fontSize": "$fs-note"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FQ4rw",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "a8Bls",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "lw2Th",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "okfLC",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0235.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "rLQSC",
+                              "name": "Error Row",
+                              "width": "fill_container",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "iNQ9i",
+                                  "name": "Error Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Pxq3A",
+                                  "name": "Error Text",
+                                  "fill": "$danger",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "相簿容量已滿，這張沒有上傳。",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "MvKHz",
+                              "name": "Quota Hint",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "騰出儲存空間後才能繼續上傳這張。",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "sFOw3",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "LDlnR",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Dismiss Button",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "在背景繼續上傳，關閉視窗"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "wJxHN",
+      "x": 14562,
+      "y": 785,
+      "name": "LS-142 / 16 上傳佇列 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1100,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "wuvbI",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "vo5JH",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 1100,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "R0lac0",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 1100,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Puwos",
+              "name": "Upload Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "gOSew",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "EyblL",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QJxDI",
+                      "name": "Head Title",
+                      "fill": "$text-primary",
+                      "content": "正在新增照片",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "v8nJAX",
+                      "name": "Head Subtitle",
+                      "fill": "$text-secondary",
+                      "content": "7 張 · 2 張完成 · 1 張上傳中 · 3 張失敗",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "pJQA6",
+                  "name": "Resume Banner",
+                  "width": "fill_container",
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-group",
+                    "$inset-card"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "S1KvzG",
+                      "name": "Resume Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "rotate-ccw",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "s7XBU",
+                      "name": "Resume Text",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "已接續先前中斷的上傳。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "BYmaI",
+                  "name": "Rows",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "VKFPH",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "b00kM3",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "T7NfH",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "X9vaj",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0231.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "YLbGt",
+                              "name": "Status Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "i76BF4",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "clock",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ogxCg",
+                                  "name": "Status Text",
+                                  "fill": "$text-secondary",
+                                  "content": "等候上傳",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "X2Pp3",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "s6okYG",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "P9ymtO",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "E0Yd3I",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0232.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "RLpjP",
+                              "name": "Progress Track",
+                              "width": "fill_container",
+                              "height": 6,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-full",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": "$radius-full",
+                                  "id": "L4LPA1",
+                                  "name": "Progress Fill",
+                                  "fill": "$accent",
+                                  "width": 120,
+                                  "height": 6
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "lhkjm",
+                              "name": "Percent",
+                              "fill": "$text-secondary",
+                              "content": "上傳中 · 42%",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ztMaB",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "W3BwEb",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "DS3aI",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "EbIwx",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0229.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Dg3dB",
+                              "name": "Status Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "l4zgp",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "check",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Q9eJs",
+                                  "name": "Status Text",
+                                  "fill": "$text-secondary",
+                                  "content": "已完成",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mc43e",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "RUCUj",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "oeY0b",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "MmR4c",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0230.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "JGNSD",
+                              "name": "Status Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "n6r8s",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "check",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "J69Ik",
+                                  "name": "Status Text",
+                                  "fill": "$text-secondary",
+                                  "content": "已完成",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UIVxO",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "vWNHl",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "lkRQB",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "V7OTf3",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0233.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "mFxHH",
+                              "name": "Error Row",
+                              "width": "fill_container",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "wyleH",
+                                  "name": "Error Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Qd4hN",
+                                  "name": "Error Text",
+                                  "fill": "$danger",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "連線中斷，請檢查網路連線。",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "z8C6yc",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Retry Button",
+                              "padding": 0,
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "width": 16,
+                                  "height": 16
+                                },
+                                "hIhVd": {
+                                  "content": "重試",
+                                  "fontSize": "$fs-note"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "sE0Qq",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "u9Ufm",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "PlIsN",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "l8au9",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0234.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "UgUYn",
+                              "name": "Error Row",
+                              "width": "fill_container",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "x5bHj9",
+                                  "name": "Error Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "xRzh5",
+                                  "name": "Error Text",
+                                  "fill": "$danger",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "伺服器忙碌，請稍後再試。",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "VnZFI",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Retry Button",
+                              "padding": 0,
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "width": 16,
+                                  "height": 16
+                                },
+                                "hIhVd": {
+                                  "content": "重試",
+                                  "fontSize": "$fs-note"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BbMEK",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "B8Bv5d",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yTGsL",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "C09XyP",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0235.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "rlos3",
+                              "name": "Error Row",
+                              "width": "fill_container",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "O1r1t",
+                                  "name": "Error Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "kcLt1",
+                                  "name": "Error Text",
+                                  "fill": "$danger",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "相簿容量已滿，這張沒有上傳。",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "ELKNP",
+                              "name": "Quota Hint",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "騰出儲存空間後才能繼續上傳這張。",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "nPQ54",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "s6v2op",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Dismiss Button",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "在背景繼續上傳，關閉視窗"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "JIOJz",
+      "x": 15035,
+      "y": 785,
+      "name": "A11y / 16 上傳佇列 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 2232,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "e8iwjj",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "pT1Fz",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 2232,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "LsLSJ",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 2232,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "t4NY6",
+              "name": "Upload Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "CRQU4",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "s6VPi",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "T9Mmo",
+                      "name": "Head Title",
+                      "fill": "$text-primary",
+                      "content": "正在新增照片",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "UD5zL",
+                      "name": "Head Subtitle",
+                      "fill": "$text-secondary",
+                      "content": "7 張 · 2 張完成 · 1 張上傳中 · 3 張失敗",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "DKG9j",
+                  "name": "Resume Banner",
+                  "width": "fill_container",
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-group",
+                    "$inset-card"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "GSIgF",
+                      "name": "Resume Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "rotate-ccw",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "e5DscA",
+                      "name": "Resume Text",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "已接續先前中斷的上傳。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xacgl",
+                  "name": "Rows",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Hc91I",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "LbOGW",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "cBfEA",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "PbG9g",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0231.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "HMHI7",
+                              "name": "Status Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "IkJAH",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "clock",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "pdh3K",
+                                  "name": "Status Text",
+                                  "fill": "$text-secondary",
+                                  "content": "等候上傳",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "IG8FF",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "R5ZDn",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "novlo",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "BWjUY",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0232.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "c3bdUh",
+                              "name": "Progress Track",
+                              "width": "fill_container",
+                              "height": 6,
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-full",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": "$radius-full",
+                                  "id": "AiKpE",
+                                  "name": "Progress Fill",
+                                  "fill": "$accent",
+                                  "width": 120,
+                                  "height": 6
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "OSII3",
+                              "name": "Percent",
+                              "fill": "$text-secondary",
+                              "content": "上傳中 · 42%",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GGawF",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ISaaE",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "MTT4Q",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "lvP9K",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0229.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "R7sFp",
+                              "name": "Status Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "m7Fyg",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "check",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "M0PcJ",
+                                  "name": "Status Text",
+                                  "fill": "$text-secondary",
+                                  "content": "已完成",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZAYT7",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "kMqUx",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "vXf3v",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "dkS5J",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0230.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "FXMqs",
+                              "name": "Status Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "D16Yb",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "check",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "J8KsZy",
+                                  "name": "Status Text",
+                                  "fill": "$text-secondary",
+                                  "content": "已完成",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wMwvn",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "jJZ3z",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "nIgJK",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "NWRY5",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0233.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "i3WKE",
+                              "name": "Error Row",
+                              "width": "fill_container",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "nHJ12",
+                                  "name": "Error Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "QsFIu",
+                                  "name": "Error Text",
+                                  "fill": "$danger",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "連線中斷，請檢查網路連線。",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "OAxzv",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Retry Button",
+                              "padding": 0,
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "width": 16,
+                                  "height": 16
+                                },
+                                "hIhVd": {
+                                  "content": "重試",
+                                  "fontSize": "$fs-note"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "f60spI",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Bh3Jc",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "elXQD",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "bLOEp",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0234.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "c8qk7H",
+                              "name": "Error Row",
+                              "width": "fill_container",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "W8SuLX",
+                                  "name": "Error Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "I7s8MC",
+                                  "name": "Error Text",
+                                  "fill": "$danger",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "伺服器忙碌，請稍後再試。",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "ckzCG",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Retry Button",
+                              "padding": 0,
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "width": 16,
+                                  "height": 16
+                                },
+                                "hIhVd": {
+                                  "content": "重試",
+                                  "fontSize": "$fs-note"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "niUpE",
+                      "name": "Queue Row",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "GThaK",
+                          "name": "Thumb",
+                          "clip": true,
+                          "width": 64,
+                          "height": 64,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "QZ3MT",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "f2ANCO",
+                              "name": "Filename",
+                              "fill": "$text-primary",
+                              "content": "IMG_0235.HEIC",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "VJ41P",
+                              "name": "Error Row",
+                              "width": "fill_container",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "c4cRQ",
+                                  "name": "Error Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "TwKpm",
+                                  "name": "Error Text",
+                                  "fill": "$danger",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "相簿容量已滿，這張沒有上傳。",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "bMlHt",
+                              "name": "Quota Hint",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "騰出儲存空間後才能繼續上傳這張。",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Q0ndS2",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "SZlnD",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Dismiss Button",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "在背景繼續上傳，關閉視窗"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
