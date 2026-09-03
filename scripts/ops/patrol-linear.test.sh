@@ -12,6 +12,8 @@
 # 待Design 不進候補；設計票（open 或已 Done）已承接的 Story 不列；LS-96 池項 P1／P2 才列、被票引用或池內銷除
 # 不列；附加查詢失敗 fail-soft（JSON 仍合法、行內註明）。R1 負樣本：「不需 Design gate」／「另票，需 Design gate」
 # 票不得進待Design（F1）；銷除公告自身引述「P1 ·」不列、P3 池項文中引用「P1 ·」不升級（F2）；Canceled 設計票不算承接（F3）。
+# R2 負樣本：混級 comment（`- P3 ·` 後接 `- P2 ·`）以最小級 P2 列出（N1）；「**UI 票：需先過 Design gate**」變體歸待Design、
+# 「**UI 票：不需 Design gate**」不歸（N2）；公告不以「銷除」開頭（日期／票號起頭）仍被跳過（N3）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -708,17 +710,22 @@ cat > "$fx_ot/closed_issues.json" <<'EOF'
 ]}}}
 EOF
 # LS-96 comments：aaaa P1（有效）、bbbb P2（被 LS-980 引用 → 不列）、cccc P3（不列）、eeee P1 但 dddd「銷除…已升為」
-# 提到它（不列）、dddd 本身是銷除公告且引述「P1 ·」（R1 F2：公告不列）、ffff P2 較早建立（有效，排在 P1 之後）、
-# abababab P3 池項文中引用「P1 ·」（R1 F2 同類：以第一個 Pn · 為準，不升級、不列）。
+# 提到它（不列）、dddd 本身是銷除公告且引述「P1 ·」——且**不以「銷除」開頭**（日期／票號起頭，R2 N3：前 2 行含字樣即公告，不列）、
+# ffff P2 較早建立（有效，排在 P1 之後）、abababab P3 池項文中引用「P1 ·」（既非首個 match 也不在行首 → 不升級、不列）、
+# cdcdcdcd 混級：首項 `- P3 ·`、次項 `- P2 ·`（R2 N1：取行首各項最小級 → 以 P2 列出，摘要取 P2 那項）。
+# efefefef 非公告池項（P3）在第 3 行提到 `aaaaaaaa` 並帶「銷案」字樣——前 2 行無公告字樣所以不是公告（R3：只有公告能銷除
+# 別則 → aaaa 仍列；live bcb97555 第 3 行更正文提到 ca993eba／d8634a08 的誤藏實例）。
 cat > "$fx_ot/pool_comments.json" <<'EOF'
 {"data":{"issue":{"comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
   {"id":"aaaaaaaa-0000-4000-8000-000000000001","createdAt":"2026-09-02T00:00:00.000Z","body":"入池 2026-09-02（orchestrator）：P1 · **候補不驗 Design gate** · 觸發事故（有）· 估 size:S"},
   {"id":"bbbbbbbb-0000-4000-8000-000000000002","createdAt":"2026-09-02T01:00:00.000Z","body":"入池：P2 · 已升票的池項 · 估 size:S"},
   {"id":"cccccccc-0000-4000-8000-000000000003","createdAt":"2026-09-02T02:00:00.000Z","body":"入池：P3 · 純效率項 · 估 size:S"},
-  {"id":"dddddddd-0000-4000-8000-000000000004","createdAt":"2026-09-02T03:00:00.000Z","body":"**銷除**：待辦池 comment `eeeeeeee`（P1 · 已銷除的池項）——已升為 LS-999 本票 scope"},
+  {"id":"dddddddd-0000-4000-8000-000000000004","createdAt":"2026-09-02T03:00:00.000Z","body":"2026-09-03 LS-999 已落地——**銷除**待辦池 comment `eeeeeeee`（P1 · 已銷除的池項），本筆不再是池項"},
   {"id":"eeeeeeee-0000-4000-8000-000000000005","createdAt":"2026-09-02T04:00:00.000Z","body":"入池：P1 · 已銷除的池項"},
   {"id":"ffffffff-0000-4000-8000-000000000006","createdAt":"2026-09-01T00:00:00.000Z","body":"入池 2026-09-01：\n- P2 · 第二個有效池項 · 估 size:M"},
-  {"id":"abababab-0000-4000-8000-000000000007","createdAt":"2026-09-02T05:00:00.000Z","body":"入池：P3 · 純效率項——文中引用他則「P1 · 某某」只是舉例，不是升級"}
+  {"id":"abababab-0000-4000-8000-000000000007","createdAt":"2026-09-02T05:00:00.000Z","body":"入池：P3 · 純效率項——文中引用他則「P1 · 某某」只是舉例，不是升級"},
+  {"id":"cdcdcdcd-0000-4000-8000-000000000008","createdAt":"2026-09-02T06:00:00.000Z","body":"入池 2026-09-02（LS-121 收尾）：\n- P3 · docs 錯誤碼表範例過時 · 估 size:S\n- P2 · **mutation 自證機械化** · 再發生一次即升獨立票 · 估 size:M"},
+  {"id":"efefefef-0000-4000-8000-000000000009","createdAt":"2026-09-02T07:00:00.000Z","body":"入池：P3 · 純效率項\n- 細節：只是效率\n- 對照：同型 `aaaaaaaa` 尚未銷案，僅提及、不是公告"}
 ]}}}}
 EOF
 mkdir -p "$work/bin_ot"
@@ -784,10 +791,13 @@ check("⑩ backend 來源候選＝含後端關鍵字且無 backend 子票的 Sto
 check("⑩ harness lane 無候補（只有 LS-96）→ 開票行理由「無候補」",
       harness["open_ticket"] is not None and harness["open_ticket"]["blocked"] == []
       and any(a.startswith("→ 開票：lane:harness 空 1 輪（無候補）") for a in d["actions"]))
-check("⑩ 池項來源：P1 aaaa、P2 ffff（P1 先）；bbbb 被 LS-980 引用、cccc 是 P3、eeee 被池內銷除、dddd 是銷除公告自身（引述 P1 ·）、abababab 是 P3 只在文中引用 P1 · → 皆不列",
-      ids(harness["open_ticket"]["sources"]) == ["LS-96#aaaaaaaa", "LS-96#ffffffff"]
+check("⑩ 池項來源：P1 aaaa、P2 ffff、P2 cdcdcdcd（P1 先、同級依建立時間）；bbbb 被 LS-980 引用、cccc 是 P3、eeee 被池內公告銷除、dddd 是公告（非「銷除」開頭，前 2 行含字樣）、abababab 是 P3 只在文中引用 P1 ·、efefefef 非公告提到 aaaa＋「銷案」不能銷除 aaaa → 皆不列／aaaa 仍列",
+      ids(harness["open_ticket"]["sources"]) == ["LS-96#aaaaaaaa", "LS-96#ffffffff", "LS-96#cdcdcdcd"]
       and harness["open_ticket"]["sources"][0]["why"] == "P1 池項尚未升票"
       and harness["open_ticket"]["sources"][0]["title"].startswith("**候補不驗 Design gate**"))
+mixed = [s for s in harness["open_ticket"]["sources"] if s["id"] == "LS-96#cdcdcdcd"]
+check("⑩ R2 N1 混級 comment（首項 - P3 ·、次項 - P2 ·）以最小級 P2 列出，摘要取 P2 那項",
+      len(mixed) == 1 and mixed[0]["why"] == "P2 池項尚未升票" and mixed[0]["title"].startswith("**mutation 自證機械化**"))
 check("⑩ 第一輪不升 ⚠", not any("⚠ 開票" in a for a in d["actions"]))
 print("OK" if ok else "FAIL")
 PYEOF
@@ -875,6 +885,14 @@ cat > "$fx_neg/issues_page1.json" <<'EOF'
   {"identifier":"LS-979","title":"Task：LS-976 後端先行","description":"拆後端先行（不需 Design gate）；UI 端（另票，需 Design gate）。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-03T00:00:00.000Z",
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:backend"}]},
    "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":{"identifier":"LS-976"},
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-983","title":"Story：登入（LS-17 式措辭）","description":"PLAN。**UI 票：需先過 Design gate**（登入頁）。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-04T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-984","title":"設定頁小改","description":"**UI 票：不需 Design gate**（沿用既有元件）。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-05T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
    "inverseRelations":{"nodes":[]}}
 ]}}}
 EOF
@@ -894,14 +912,16 @@ def check(name, cond):
     if not cond:
         ok = False
 ui = d["lanes"]["lane:ui"]; backend = d["lanes"]["lane:backend"]; design = d["lanes"]["lane:design"]
-check("⑩d 「非畫面票（不需 Design gate）」（LS-978）不進待Design、照常列為 ui 候補並被選中",
-      ui["pending_design"] == ["LS-970"] and ui["candidates"] == ["LS-978"] and ui["chosen"] == "LS-978"
+check("⑩d 「非畫面票（不需 Design gate）」（LS-978）與粗體「**UI 票：不需 Design gate**」（LS-984）不進待Design、照常列為 ui 候補，LS-978 被選中",
+      ui["candidates"] == ["LS-978", "LS-984"] and ui["chosen"] == "LS-978"
       and any("save_issue LS-978 state=Ready cycle=5" in a for a in ui["actions"]))
+check("⑩d R2 N2 「**UI 票：需先過 Design gate**」（LS-983，LS-17 式變體）與正典 LS-970 一樣歸待Design",
+      ui["pending_design"] == ["LS-970", "LS-983"])
 check("⑩d ui lane 有候補 → 不印開票（open_ticket 為 null）", ui["open_ticket"] is None and not any("開票：lane:ui" in a for a in d["actions"]))
 check("⑩d 「拆後端先行（不需 Design gate）；UI 端（另票，需 Design gate）」（LS-979）不進待Design、列為 backend 候補並被選中",
       backend["pending_design"] == [] and backend["candidates"] == ["LS-979"] and backend["chosen"] == "LS-979")
-check("⑩d design lane 空 → 開票來源只列正典標記的 LS-970，不列 LS-978／979",
-      design["open_ticket"] is not None and [s["id"] for s in design["open_ticket"]["sources"]] == ["LS-970"])
+check("⑩d design lane 空 → 開票來源只列粗體標記的 LS-970／983，不列 LS-978／979／984",
+      design["open_ticket"] is not None and [s["id"] for s in design["open_ticket"]["sources"]] == ["LS-970", "LS-983"])
 print("OK" if ok else "FAIL")
 PYEOF
 )"
