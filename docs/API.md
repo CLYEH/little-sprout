@@ -1184,17 +1184,42 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   cascade`，屆時 `profiles` 列會跟著消失）。**這是本票刻意的取捨**：把「資料面
   處理」與「身份層真的刪除」拆成兩支獨立的部署單元（一支 SQL migration、一支
   Edge Function），不在同一張票裡同時扛兩種截然不同性質的風險。
+- **過渡狀態（merge-review R1 i1，實測確認）**：`delete_my_account()` 回傳成功
+  之後、Edge Function 真正刪掉 `auth.users` 之前，這個帳號**仍是完全可用的登入
+  身份**——`deletion_requested_at` 目前不被任何 RLS policy 或 grant 讀取，同一個
+  `authenticated` 身分可以立即建立新家庭並成為新家庭的 owner、上傳照片等，「刪除
+  帳號」對使用者不是一個立即生效的終態。**client 端硬性規定**：RPC 回傳後必須
+  **立即**呼叫 Edge Function `delete-account` 完成 `auth.users` 的實際刪除，中間
+  **不得允許使用者做任何操作**（不能停在「刪除中」畫面之外的任何互動）——這個窗口
+  存在的唯一理由是兩支流程分屬不同部署單元、無法在同一個交易內完成，不是設計上
+  允許使用者利用的正常狀態。若使用者在這個窗口內又成為某個家庭的唯一 owner，
+  Edge Function 呼叫 `service_role` 執行 `delete from auth.users` 時，cascade 到
+  `family_members` 的刪除會被既有的 `private.enforce_family_has_owner()` trigger
+  擋下（回 `LS001`），該次刪除會失敗——Edge Function 的驗收條件必須涵蓋這個情境
+  （見 LS-24 後端 Edge Function 票）。
 - **錯誤碼**：未登入 `42501`；唯一 owner 且家庭還有其他成員 `LS050`（見上方
   `DETAIL` 契約）。
-- **併發**：本 RPC 沒有引入新的鎖——情況 3 的「離開家庭」那句 `DELETE
-  family_members` 觸發的是既有的 `private.enforce_family_has_owner()`
-  statement-level trigger（`FOR NO KEY UPDATE`、`family_id` 遞增序，LS-6／LS-15
-  既有設計）。上方情況 1 的守門查詢刻意不額外加鎖，只是提早給一個附家庭清單、對
-  使用者友善的錯誤；真正防止「家庭剩 0 位 owner」的權威防線始終是那顆既有
-  trigger。兩者之間存在一個極短的競態窗口（例如兩位共同 owner 幾乎同時呼叫本
-  RPC）——最壞結果是其中一邊被 trigger 擋下、回 `LS001`（不是 `LS050`）而不是
-  成功，整個呼叫（含已執行的軟刪）隨事務一起回滾，使用者需要重試；不會死鎖、
-  不會資料損壞，見 `supabase/tests/concurrency/delete_account_race_*.sql`。
+- **併發**：情況 3（離開家庭）零新鎖——`DELETE family_members` 觸發的是既有的
+  `private.enforce_family_has_owner()` statement-level trigger（`FOR NO KEY
+  UPDATE`、`family_id` 遞增序，LS-6／LS-15 既有設計）。情況 1 的守門查詢刻意不
+  額外加鎖，只是提早給一個附家庭清單、對使用者友善的錯誤；真正防止「家庭剩 0 位
+  owner」的權威防線始終是那顆既有 trigger。兩者之間存在一個極短的競態窗口（例如
+  兩位共同 owner 幾乎同時呼叫本 RPC）——最壞結果是其中一邊被 trigger 擋下、回
+  `LS001`（不是 `LS050`）而不是成功，整個呼叫（含已執行的軟刪）隨事務一起回滾，
+  使用者需要重試；不會死鎖、不會資料損壞，見
+  `supabase/tests/concurrency/delete_account_race_*.sql`。**情況 2（唯一成員刪
+  整個家庭）不是零新鎖**（merge-review R1 m1／m2，2026-09-03 修正）：`DELETE FROM
+  families` 本身需要 `FOR UPDATE` 等級的列鎖，與同家庭併發的子表寫入（背景上傳
+  `INSERT INTO media`、`approve_join()` 的 `INSERT INTO family_members`）因 FK
+  參照完整性檢查取的 `FOR KEY SHARE` 互斥，存在既有的 `40P01`
+  （`deadlock_detected`）死鎖窗——只有同一個使用者自己的另一個 session 才碰得到
+  （單成員家庭沒有別人能寫），**client 端建議捕捉到 `40P01` 時直接重試同一個
+  `delete_my_account()` 呼叫一次即可，沒有資料損壞**。候選家庭在真正 `DELETE`
+  之前會先用 `SELECT … FOR UPDATE` 逐一鎖住（`family_id` 遞增序）並用全新查詢
+  重新評估「唯一成員」——這是為了關閉「候選判斷用的是取鎖前的舊快照、剛核准加入
+  的成員被連坐刪除」這個競態窗（`approve_join()` 的 `INSERT` 只需要 `FOR KEY
+  SHARE`，若改用 `FOR NO KEY UPDATE` 鎖候選家庭鎖不住它），見
+  `supabase/tests/concurrency/delete_account_vs_approve_join_*.sql`。
 
 ---
 
