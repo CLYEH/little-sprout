@@ -59,16 +59,51 @@
 --      結構化 payload，也沒有理由現在才加，這裡用 DETAIL 帶 JSON 是本 RPC 獨有的
 --      契約，記在 docs/API.md §4 對應段落，不影響 LS001 既有的呼叫端處理方式。
 --
--- 併發設計（比照 supabase/tests/concurrency/owner_guard_*.sql 的 LS-6／LS-15 場景，
--- 見下方 delete_account_race_*.sql）：本 RPC 唯一新增的鎖需求是 family_members 的
--- DELETE 觸發既有的 private.enforce_family_has_owner() statement-level trigger
--- （FOR NO KEY UPDATE、family_id 遞增序，LS-6／LS-15 既有設計，本 RPC 沒有引入任何
--- 新的鎖或新的取鎖順序）。上面第 1 步的守門查詢刻意不額外加鎖：它只是提早給一個
--- 對使用者友善、附家庭清單的錯誤；真正防止「家庭剩 0 位 owner」的權威防線始終是
--- 上述既有 trigger。兩者之間存在一個極短的競態窗口（例如兩位共同 owner 幾乎同時
--- 呼叫本 RPC）——最壞結果是其中一邊的 DELETE 被 trigger 擋下、回 LS001 而不是
--- LS050，整個呼叫（含已執行的軟刪與情況 2 的家庭刪除）隨事務一起回滾，使用者需要
--- 重試；不會有資料損壞或死鎖，重試時上面的守門查詢會用最新狀態正確分流。
+-- 併發設計（R2 修正 m1／m2，merge-review R1 d9cce6a4；比照
+-- supabase/tests/concurrency/owner_guard_*.sql 的 LS-6／LS-15 場景，見下方
+-- delete_account_race_*.sql／delete_account_vs_approve_join_*.sql）：
+--
+-- 情況 3（離開家庭）零新鎖：family_members 的 DELETE 觸發既有的
+-- private.enforce_family_has_owner() statement-level trigger（FOR NO KEY UPDATE、
+-- family_id 遞增序，LS-6／LS-15 既有設計，沿用不變）。上面第 1 步的守門查詢刻意
+-- 不額外加鎖：它只是提早給一個對使用者友善、附家庭清單的錯誤；真正防止「家庭剩
+-- 0 位 owner」的權威防線始終是上述既有 trigger。兩者之間存在一個極短的競態窗口
+-- （例如兩位共同 owner 幾乎同時呼叫本 RPC）——最壞結果是其中一邊的 DELETE 被
+-- trigger 擋下、回 LS001 而不是 LS050，整個呼叫隨事務一起回滾，使用者需要重試；
+-- 不會有資料損壞或死鎖，重試時上面的守門查詢會用最新狀態正確分流。
+--
+-- 情況 2（唯一成員刪整個家庭）**不是**零新鎖，R1 m1／m2 兩項發現都在這裡：
+--   m1（口徑修正，邏輯不變）：`DELETE FROM families` 本身就需要 FOR UPDATE 等級
+--     的列鎖，這與同家庭併發的子表寫入（例如背景上傳 `INSERT INTO media`、
+--     `approve_join` 的 `INSERT INTO family_members`）因 FK 參照完整性檢查而對
+--     這一列取的 FOR KEY SHARE 互斥——20260822120100_triggers.sql:64-66 已經記錄過
+--     同一個機制（「FOR UPDATE 與子表 FK 檢查取的 FOR KEY SHARE 互斥」，這正是
+--     enforce_family_has_owner() 刻意改用 FOR NO KEY UPDATE 的理由）。情況 2 沒有
+--     那個迴避空間（DELETE 終究需要 FOR UPDATE），所以與同家庭其他 session 的併發
+--     寫入之間存在既有的 40P01（deadlock_detected）死鎖窗——這只發生在「唯一成員」
+--     的家庭，能觸發它的只有同一個使用者自己的另一個 session（單成員家庭沒有別人
+--     能寫），影響僅止於其中一邊拿到 40P01 錯誤。**這不是新引入的風險**，是
+--     `DELETE FROM families` 這句話本來就有的既有性質，R1 之前的版本只是文件講得
+--     太滿（宣稱「沒有引入任何新的鎖」），這裡改成誠實描述，不改邏輯。
+--     **client 端建議**：捕捉到 SQLSTATE 40P01 時直接重試同一個 delete_my_account()
+--     呼叫一次即可——沒有資料損壞，重試通常會成功。
+--   m2（邏輯修正，見下方函式本體「情況 2」的兩段式寫法）：原始版本用一句沒有事先
+--     取鎖的 `DELETE … WHERE id IN (子查詢判斷唯一成員)`——子查詢的結果在 DELETE
+--     開始掃描的當下就已經算好、直接決定了待刪清單；若這一列此時剛好因為與
+--     `approve_join()` 的 `INSERT INTO family_members`（FK 檢查取 FOR KEY SHARE）
+--     衝突而被 DELETE 需要的 FOR UPDATE 卡住、等 `approve_join` commit 後才解鎖，
+--     Postgres 並不會重新評估那個子查詢（families 這一列本身沒有被任何人 UPDATE
+--     過，不會觸發 EvalPlanQual）——剛核准加入的成員會被連坐 cascade 刪除。修法：
+--     候選家庭先用 `SELECT … FOR UPDATE` 逐一鎖住（family_id 遞增序，見下方函式
+--     本體），這一步本身就會排隊等 `approve_join` 的 FOR KEY SHARE 釋放；解鎖後
+--     用一句全新的 SELECT（新 statement，READ COMMITTED 下看得到剛 commit 的最新
+--     資料）重新評估「唯一成員」，通過的才進最終真正執行 DELETE 的清單。**這裡
+--     刻意用 FOR UPDATE、不是 FOR NO KEY UPDATE**：FOR NO KEY UPDATE 與 FOR KEY
+--     SHARE 互不衝突（LS-6／LS-15 讓 enforce_family_has_owner() 不擋 FK insert
+--     正是利用這一點），用在這裡反而鎖不住 approve_join、關不了這個競態窗；只有
+--     FOR UPDATE 才會真的排隊等待。這不是新的死鎖風險類型，只是把「情況 2 的
+--     DELETE 本來就需要的 FOR UPDATE 鎖」提早到這裡取得，風險範圍與上面 m1 描述
+--     的完全一樣（同一個使用者自己的另一個 session 才碰得到）。
 -- ---------------------------------------------------------------------------
 
 alter table public.profiles add column deletion_requested_at timestamptz;
@@ -101,6 +136,8 @@ as $$
 declare
   v_uid uuid := auth.uid();
   v_blocking jsonb;
+  v_family_id uuid;
+  v_solo_ids uuid[] := '{}';
 begin
   if v_uid is null then
     raise exception '未登入，無法刪除帳號' using errcode = '42501';
@@ -132,17 +169,33 @@ begin
       using errcode = 'LS050', detail = v_blocking::text;
   end if;
 
-  -- 情況 2：呼叫者是唯一成員的家庭 → 整個家庭連同資料一併刪除（cascade）。通過
-  -- 上面的守門之後，這裡判斷到的「唯一成員」家庭不可能與情況 1 重疊。
-  delete from public.families f
-   where f.id in (
-     select fm.family_id from public.family_members fm
-      where fm.user_id = v_uid
-        and not exists (
-          select 1 from public.family_members other
-           where other.family_id = fm.family_id and other.user_id <> v_uid
-        )
-   );
+  -- 情況 2（R2 修正 m2，見上方檔頭「併發設計」）：呼叫者是唯一成員的家庭 →
+  -- 整個家庭連同資料一併刪除（cascade）。通過上面的守門之後，這裡判斷到的「唯一
+  -- 成員」家庭不可能與情況 1 重疊。**兩段式**：先逐一鎖住候選家庭（family_id
+  -- 遞增序，避免多個候選家庭之間的取鎖順序不一致）、鎖內用全新查詢重新評估「唯一
+  -- 成員」，通過的才會真正進到最後一句 DELETE 的清單——不能用「先算好清單、再一次
+  -- DELETE」的寫法（那正是 m2 的原始問題：清單是用取鎖之前的舊快照算的，之後被
+  -- FOR UPDATE 卡住、解鎖後也不會重新算過）。
+  for v_family_id in
+    select fm.family_id from public.family_members fm
+     where fm.user_id = v_uid
+       and not exists (
+         select 1 from public.family_members other
+          where other.family_id = fm.family_id and other.user_id <> v_uid
+       )
+     order by fm.family_id
+  loop
+    perform 1 from public.families f where f.id = v_family_id for update;
+
+    if not exists (
+      select 1 from public.family_members other
+       where other.family_id = v_family_id and other.user_id <> v_uid
+    ) then
+      v_solo_ids := array_append(v_solo_ids, v_family_id);
+    end if;
+  end loop;
+
+  delete from public.families f where f.id = any(v_solo_ids);
 
   -- 情況 3：其餘家庭——自己的內容依既有 soft delete 策略處理，家庭不受影響。上面
   -- 情況 2 的 DELETE 若已經處理過某個家庭，這裡三句 UPDATE 的 family_id 子查詢
