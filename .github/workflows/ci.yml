@@ -421,6 +421,52 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: 偵測 supabase/functions/ 目錄
+        id: detect-functions
+        run: |
+          if [ ! -d supabase/functions ]; then
+            echo "無 supabase/functions/ 目錄，略過"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # LS-151：repo 第一支 Edge Function 落地（與 LS-153 的 purge-storage 同批）。
+      # 只做靜態檢查（deno check／lint／test）＋單元測試（全部用注入的 fake
+      # deps，不連線任何真正的服務）——不是完整整合測試，本機／CI 都沒有建置
+      # `supabase functions serve` 那套治具（見 docs/API.md §10「本機測試」）。
+      # 對 `supabase/functions/*/index.ts` 用 glob（不寫死函式名），日後新增
+      # 函式（例如 LS-153 的 purge-storage）自動被涵蓋，不需要回頭改這個 workflow。
+      - name: 安裝 Deno
+        if: steps.detect-functions.outputs.skip == 'false'
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Edge Functions 靜態檢查（deno check／lint／fmt --check，LS-151）
+        if: steps.detect-functions.outputs.skip == 'false'
+        run: |
+          shopt -s nullglob
+          entrypoints=(supabase/functions/*/index.ts)
+          if [ "${#entrypoints[@]}" -eq 0 ]; then
+            echo "supabase/functions/ 下沒有任何 index.ts，略過"
+            exit 0
+          fi
+          deno check "${entrypoints[@]}"
+          deno lint supabase/functions/
+          deno fmt --check supabase/functions/
+
+      - name: Edge Functions 單元測試（deno test，全部依賴注入，不連線任何真正的服務，LS-151）
+        if: steps.detect-functions.outputs.skip == 'false'
+        run: |
+          shopt -s nullglob
+          test_files=(supabase/functions/*/*.test.ts)
+          if [ "${#test_files[@]}" -eq 0 ]; then
+            echo "supabase/functions/ 下沒有任何 *.test.ts，略過"
+            exit 0
+          fi
+          deno test "${test_files[@]}"
+
       - name: 安裝 supabase CLI（鎖版本）
         if: steps.detect.outputs.skip == 'false'
         uses: supabase/setup-cli@v1
