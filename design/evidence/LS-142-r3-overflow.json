@@ -1,0 +1,1961 @@
+{
+  "ticket": "LS-142",
+  "round": 3,
+  "head_sha": "5fbe64f6aaa37e97adcfa892ffa2d85b740833e8",
+  "total_nodes": 6903,
+  "scans": {
+    "sibling_intersection": {
+      "flagged": [
+        {
+          "node_a": "pYE38/sD5Ma",
+          "node_b": "pYE38/DhOiK",
+          "classification": "Corner Shape × Corner Edge @ Corner BL；同類 212 例：既有母題 cmp/Photo Corner 元件內部填色層(Corner Shape)與摺光邊層(Corner Edge)本就疊在同一顆角托上，是元件自身兩個視覺圖層堆疊，非本輪新增缺陷（跨全稿沿用既有元件，非 LS-142 本輪引入）"
+        },
+        {
+          "node_a": "rtNqP/sD5Ma",
+          "node_b": "rtNqP/DhOiK",
+          "classification": "Corner Shape × Corner Edge @ Corner BR；同類 212 例：既有母題 cmp/Photo Corner 元件內部填色層(Corner Shape)與摺光邊層(Corner Edge)本就疊在同一顆角托上，是元件自身兩個視覺圖層堆疊，非本輪新增缺陷（跨全稿沿用既有元件，非 LS-142 本輪引入）"
+        },
+        {
+          "node_a": "g7B7X/sD5Ma",
+          "node_b": "g7B7X/DhOiK",
+          "classification": "Corner Shape × Corner Edge @ Corner TL；同類 212 例：既有母題 cmp/Photo Corner 元件內部填色層(Corner Shape)與摺光邊層(Corner Edge)本就疊在同一顆角托上，是元件自身兩個視覺圖層堆疊，非本輪新增缺陷（跨全稿沿用既有元件，非 LS-142 本輪引入）"
+        },
+        {
+          "node_a": "Mlugc/sD5Ma",
+          "node_b": "Mlugc/DhOiK",
+          "classification": "Corner Shape × Corner Edge @ Corner TR；同類 212 例：既有母題 cmp/Photo Corner 元件內部填色層(Corner Shape)與摺光邊層(Corner Edge)本就疊在同一顆角托上，是元件自身兩個視覺圖層堆疊，非本輪新增缺陷（跨全稿沿用既有元件，非 LS-142 本輪引入）"
+        },
+        {
+          "node_a": "V9wQZl",
+          "node_b": "OJNI5",
+          "classification": "Photo Wrap × Corner TL @ Print Cell；同類 134 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "V9wQZl",
+          "node_b": "C57TMC",
+          "classification": "Photo Wrap × Corner TR @ Print Cell；同類 134 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "kfuha",
+          "node_b": "qfxbb",
+          "classification": "Photo Wrap × Corner TL @ Photo Print；同類 51 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "kfuha",
+          "node_b": "YG4hG",
+          "classification": "Photo Wrap × Corner TR @ Photo Print；同類 51 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "yxEFh",
+          "node_b": "Wo9Ox",
+          "classification": "Imprint Row × Corner BL @ Photo Print；同類 51 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "yxEFh",
+          "node_b": "efA3a",
+          "classification": "Imprint Row × Corner BR @ Photo Print；同類 51 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "Z4TsQ/tBi8u",
+          "node_b": "Z4TsQ/xlLIo",
+          "classification": "Ghost × Stamp @ Stamp Wrap；同類 23 例：既有 LS-46 郵戳母題 Ghost 底紋與 Stamp 圖層堆疊，元件既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "NUPWz",
+          "classification": "Hero Photo × Night Dim @ Photo Wrap；同類 13 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "WU8Te/sD5Ma",
+          "node_b": "WU8Te/DhOiK",
+          "classification": "Corner Shape × Corner Edge @ Mount TL；同類 13 例：既有母題 cmp/Photo Corner 元件內部填色層(Corner Shape)與摺光邊層(Corner Edge)本就疊在同一顆角托上，是元件自身兩個視覺圖層堆疊，非本輪新增缺陷（跨全稿沿用既有元件，非 LS-142 本輪引入）"
+        },
+        {
+          "node_a": "L7ke3/sD5Ma",
+          "node_b": "L7ke3/DhOiK",
+          "classification": "Corner Shape × Corner Edge @ Mount BR；同類 13 例：既有母題 cmp/Photo Corner 元件內部填色層(Corner Shape)與摺光邊層(Corner Edge)本就疊在同一顆角托上，是元件自身兩個視覺圖層堆疊，非本輪新增缺陷（跨全稿沿用既有元件，非 LS-142 本輪引入）"
+        },
+        {
+          "node_a": "abfZE",
+          "node_b": "wOzaO",
+          "classification": "Avatar 1 × Avatar 2 @ Avatar Stack；同類 11 例：既有寶貝頭像堆疊母題（Avatar Stack 疊影效果），元件既有設計，非本輪缺陷"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "pYE38",
+          "classification": "Print × Corner BL @ Print Stage；同類 9 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與底下的 Print/紙面在包圍盒層級交疊是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "rtNqP",
+          "classification": "Print × Corner BR @ Print Stage；同類 9 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與底下的 Print/紙面在包圍盒層級交疊是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "g7B7X",
+          "classification": "Print × Corner TL @ Print Stage；同類 9 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與底下的 Print/紙面在包圍盒層級交疊是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "Mlugc",
+          "classification": "Print × Corner TR @ Print Stage；同類 9 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與底下的 Print/紙面在包圍盒層級交疊是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node_a": "yqk1S/GuOM0",
+          "node_b": "yqk1S/j7iqM",
+          "classification": "G arc #4285F4 × G arc #34A853 @ Google G Mark；同類 7 例：Google 品牌 G 圖標四色扇形本就共用同一圓心堆疊繪製，圖標繪製既有結構，非缺陷"
+        },
+        {
+          "node_a": "yqk1S/aQq5T",
+          "node_b": "yqk1S/SieME",
+          "classification": "G arc #EA4335 × G arc #FBBC05 @ Google G Mark；同類 7 例：Google 品牌 G 圖標四色扇形本就共用同一圓心堆疊繪製，圖標繪製既有結構，非缺陷"
+        },
+        {
+          "node_a": "yqk1S/SieME",
+          "node_b": "yqk1S/j7iqM",
+          "classification": "G arc #FBBC05 × G arc #34A853 @ Google G Mark；同類 7 例：Google 品牌 G 圖標四色扇形本就共用同一圓心堆疊繪製，圖標繪製既有結構，非缺陷"
+        },
+        {
+          "node_a": "osCBD/X7DYDo/go3YL",
+          "node_b": "osCBD/X7DYDo/uHUe1",
+          "classification": "Role Text × Role Check @ Role Option · 一般成員；同類 5 例：既有邀請角色選項元件內部文字與勾選圖層包圍盒交疊，元件既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "osCBD/ZA8G7/go3YL",
+          "node_b": "osCBD/ZA8G7/uHUe1",
+          "classification": "Role Text × Role Check @ Role Option · 只能看；同類 5 例：既有邀請角色選項元件內部文字與勾選圖層包圍盒交疊，元件既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "WC9pB/UTLcl",
+          "node_b": "WC9pB/KGh0U",
+          "classification": "Fan Ghost × Fan Ghost 2 @ Card Album 1；同類 5 例：LS-142 R3 BL-A 修復——兩片扇疊 Fan Ghost 本就設計成彼此交疊（一左傾一右傾才讀出「一疊照片」），是母題本身要求的視覺堆疊，非缺陷"
+        },
+        {
+          "node_a": "WC9pB/UTLcl",
+          "node_b": "WC9pB/r6cYjT",
+          "classification": "Fan Ghost × Photo Print @ Card Album 1；同類 5 例：LS-142 R3 BL-A 修復後的預期行為——兩片 Fan Ghost 的包圍盒與 Photo Print 重疊，但 z-order 已改到 Photo Print 之下（先畫 Ghost 再畫 Photo Print），視覺上被相片與白邊蓋住只露出扇形邊緣；AABB 層級的交集是必然結果，不是渲染錯誤（已逐像素驗證 puHZ5/Xldkz (200,195) 取到照片色而非紙色）"
+        },
+        {
+          "node_a": "WC9pB/KGh0U",
+          "node_b": "WC9pB/r6cYjT",
+          "classification": "Fan Ghost 2 × Photo Print @ Card Album 1；同類 5 例：LS-142 R3 BL-A 修復後的預期行為——兩片 Fan Ghost 的包圍盒與 Photo Print 重疊，但 z-order 已改到 Photo Print 之下（先畫 Ghost 再畫 Photo Print），視覺上被相片與白邊蓋住只露出扇形邊緣；AABB 層級的交集是必然結果，不是渲染錯誤（已逐像素驗證 puHZ5/Xldkz (200,195) 取到照片色而非紙色）"
+        },
+        {
+          "node_a": "PjgtQ/UTLcl",
+          "node_b": "PjgtQ/KGh0U",
+          "classification": "Fan Ghost × Fan Ghost 2 @ Card Album 2；同類 5 例：LS-142 R3 BL-A 修復——兩片扇疊 Fan Ghost 本就設計成彼此交疊（一左傾一右傾才讀出「一疊照片」），是母題本身要求的視覺堆疊，非缺陷"
+        },
+        {
+          "node_a": "PjgtQ/UTLcl",
+          "node_b": "PjgtQ/r6cYjT",
+          "classification": "Fan Ghost × Photo Print @ Card Album 2；同類 5 例：LS-142 R3 BL-A 修復後的預期行為——兩片 Fan Ghost 的包圍盒與 Photo Print 重疊，但 z-order 已改到 Photo Print 之下（先畫 Ghost 再畫 Photo Print），視覺上被相片與白邊蓋住只露出扇形邊緣；AABB 層級的交集是必然結果，不是渲染錯誤（已逐像素驗證 puHZ5/Xldkz (200,195) 取到照片色而非紙色）"
+        },
+        {
+          "node_a": "PjgtQ/KGh0U",
+          "node_b": "PjgtQ/r6cYjT",
+          "classification": "Fan Ghost 2 × Photo Print @ Card Album 2；同類 5 例：LS-142 R3 BL-A 修復後的預期行為——兩片 Fan Ghost 的包圍盒與 Photo Print 重疊，但 z-order 已改到 Photo Print 之下（先畫 Ghost 再畫 Photo Print），視覺上被相片與白邊蓋住只露出扇形邊緣；AABB 層級的交集是必然結果，不是渲染錯誤（已逐像素驗證 puHZ5/Xldkz (200,195) 取到照片色而非紙色）"
+        },
+        {
+          "node_a": "R7edNW/UTLcl",
+          "node_b": "R7edNW/KGh0U",
+          "classification": "Fan Ghost × Fan Ghost 2 @ Card Album 3；同類 5 例：LS-142 R3 BL-A 修復——兩片扇疊 Fan Ghost 本就設計成彼此交疊（一左傾一右傾才讀出「一疊照片」），是母題本身要求的視覺堆疊，非缺陷"
+        },
+        {
+          "node_a": "R7edNW/UTLcl",
+          "node_b": "R7edNW/r6cYjT",
+          "classification": "Fan Ghost × Photo Print @ Card Album 3；同類 5 例：LS-142 R3 BL-A 修復後的預期行為——兩片 Fan Ghost 的包圍盒與 Photo Print 重疊，但 z-order 已改到 Photo Print 之下（先畫 Ghost 再畫 Photo Print），視覺上被相片與白邊蓋住只露出扇形邊緣；AABB 層級的交集是必然結果，不是渲染錯誤（已逐像素驗證 puHZ5/Xldkz (200,195) 取到照片色而非紙色）"
+        },
+        {
+          "node_a": "R7edNW/KGh0U",
+          "node_b": "R7edNW/r6cYjT",
+          "classification": "Fan Ghost 2 × Photo Print @ Card Album 3；同類 5 例：LS-142 R3 BL-A 修復後的預期行為——兩片 Fan Ghost 的包圍盒與 Photo Print 重疊，但 z-order 已改到 Photo Print 之下（先畫 Ghost 再畫 Photo Print），視覺上被相片與白邊蓋住只露出扇形邊緣；AABB 層級的交集是必然結果，不是渲染錯誤（已逐像素驗證 puHZ5/Xldkz (200,195) 取到照片色而非紙色）"
+        },
+        {
+          "node_a": "MOWjB",
+          "node_b": "Iqtt4",
+          "classification": "Photo Wrap × Corner TL @ Family Print；同類 4 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "MOWjB",
+          "node_b": "XjToq",
+          "classification": "Photo Wrap × Corner TR @ Family Print；同類 4 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "lSghl",
+          "node_b": "zymKZ",
+          "classification": "Imprint Row × Corner BL @ Family Print；同類 4 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "lSghl",
+          "node_b": "jin0Q",
+          "classification": "Imprint Row × Corner BR @ Family Print；同類 4 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "M98qs",
+          "classification": "Sample Print × Corner TL @ Print Stage；同類 4 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "j2z1C0",
+          "classification": "Sample Print × Corner TR @ Print Stage；同類 4 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "xfmAg",
+          "classification": "Sample Print × Corner BL @ Print Stage；同類 4 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "DIMqR",
+          "classification": "Sample Print × Corner BR @ Print Stage；同類 4 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "YRtyF",
+          "classification": "Sample Photo × Night Dim @ Photo Wrap；同類 4 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "e8hcYl",
+          "classification": "Sample Photo × Pill Sample @ Photo Wrap；同類 4 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "YRtyF",
+          "node_b": "e8hcYl",
+          "classification": "Night Dim × Pill Sample @ Photo Wrap；同類 4 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "H51J8u/UTLcl",
+          "node_b": "H51J8u/KGh0U",
+          "classification": "Fan Ghost × Fan Ghost 2 @ Card Album 4；同類 4 例：LS-142 R3 BL-A 修復——兩片扇疊 Fan Ghost 本就設計成彼此交疊（一左傾一右傾才讀出「一疊照片」），是母題本身要求的視覺堆疊，非缺陷"
+        },
+        {
+          "node_a": "H51J8u/UTLcl",
+          "node_b": "H51J8u/r6cYjT",
+          "classification": "Fan Ghost × Photo Print @ Card Album 4；同類 4 例：LS-142 R3 BL-A 修復後的預期行為——兩片 Fan Ghost 的包圍盒與 Photo Print 重疊，但 z-order 已改到 Photo Print 之下（先畫 Ghost 再畫 Photo Print），視覺上被相片與白邊蓋住只露出扇形邊緣；AABB 層級的交集是必然結果，不是渲染錯誤（已逐像素驗證 puHZ5/Xldkz (200,195) 取到照片色而非紙色）"
+        },
+        {
+          "node_a": "H51J8u/KGh0U",
+          "node_b": "H51J8u/r6cYjT",
+          "classification": "Fan Ghost 2 × Photo Print @ Card Album 4；同類 4 例：LS-142 R3 BL-A 修復後的預期行為——兩片 Fan Ghost 的包圍盒與 Photo Print 重疊，但 z-order 已改到 Photo Print 之下（先畫 Ghost 再畫 Photo Print），視覺上被相片與白邊蓋住只露出扇形邊緣；AABB 層級的交集是必然結果，不是渲染錯誤（已逐像素驗證 puHZ5/Xldkz (200,195) 取到照片色而非紙色）"
+        },
+        {
+          "node_a": "eDQhR/UTLcl",
+          "node_b": "eDQhR/KGh0U",
+          "classification": "Fan Ghost × Fan Ghost 2 @ Card Album 5；同類 4 例：LS-142 R3 BL-A 修復——兩片扇疊 Fan Ghost 本就設計成彼此交疊（一左傾一右傾才讀出「一疊照片」），是母題本身要求的視覺堆疊，非缺陷"
+        },
+        {
+          "node_a": "eDQhR/UTLcl",
+          "node_b": "eDQhR/r6cYjT",
+          "classification": "Fan Ghost × Photo Print @ Card Album 5；同類 4 例：LS-142 R3 BL-A 修復後的預期行為——兩片 Fan Ghost 的包圍盒與 Photo Print 重疊，但 z-order 已改到 Photo Print 之下（先畫 Ghost 再畫 Photo Print），視覺上被相片與白邊蓋住只露出扇形邊緣；AABB 層級的交集是必然結果，不是渲染錯誤（已逐像素驗證 puHZ5/Xldkz (200,195) 取到照片色而非紙色）"
+        },
+        {
+          "node_a": "eDQhR/KGh0U",
+          "node_b": "eDQhR/r6cYjT",
+          "classification": "Fan Ghost 2 × Photo Print @ Card Album 5；同類 4 例：LS-142 R3 BL-A 修復後的預期行為——兩片 Fan Ghost 的包圍盒與 Photo Print 重疊，但 z-order 已改到 Photo Print 之下（先畫 Ghost 再畫 Photo Print），視覺上被相片與白邊蓋住只露出扇形邊緣；AABB 層級的交集是必然結果，不是渲染錯誤（已逐像素驗證 puHZ5/Xldkz (200,195) 取到照片色而非紙色）"
+        },
+        {
+          "node_a": "z2l5f",
+          "node_b": "xKQDP",
+          "classification": "Print × Mount TL @ Icon 40；同類 3 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "z2l5f",
+          "node_b": "K8naK",
+          "classification": "Print × Mount BR @ Icon 40；同類 3 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "F9Gvz2",
+          "node_b": "EfgyZ",
+          "classification": "Struck Text × Strike Rule @ Struck Wrap；同類 3 例：既有刪除線文案母題，文字與刪除線 rule 本就疊在文字中線上，元件既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "Ur6DB",
+          "node_b": "W7Ycw",
+          "classification": "Photo Wrap × Corner TL @ Email Print；同類 2 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "Ur6DB",
+          "node_b": "tlJFt",
+          "classification": "Photo Wrap × Corner TR @ Email Print；同類 2 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "F9Iva",
+          "node_b": "jOrlo",
+          "classification": "Imprint Row × Corner BL @ Email Print；同類 2 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "F9Iva",
+          "node_b": "ny0ec",
+          "classification": "Imprint Row × Corner BR @ Email Print；同類 2 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "MxnWP",
+          "classification": "Print Paper × Join Photo @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "I5vhg",
+          "classification": "Print Paper × Night Dim @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "WceLk",
+          "classification": "Print Paper × Fade Pools @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "E6reS5",
+          "classification": "Print Paper × Corner TL @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "B5E1ig",
+          "classification": "Print Paper × Corner TR @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "br1l7",
+          "classification": "Print Paper × Corner BL @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "qnP3W",
+          "classification": "Print Paper × Corner BR @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "I5vhg",
+          "classification": "Join Photo × Night Dim @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "WceLk",
+          "classification": "Join Photo × Fade Pools @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "E6reS5",
+          "classification": "Join Photo × Corner TL @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "B5E1ig",
+          "classification": "Join Photo × Corner TR @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "WceLk",
+          "classification": "Night Dim × Fade Pools @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "E6reS5",
+          "classification": "Night Dim × Corner TL @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "B5E1ig",
+          "classification": "Night Dim × Corner TR @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "E6reS5",
+          "classification": "Fade Pools × Corner TL @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "B5E1ig",
+          "classification": "Fade Pools × Corner TR @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "br1l7",
+          "classification": "Fade Pools × Corner BL @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "qnP3W",
+          "classification": "Fade Pools × Corner BR @ Photo Wrap；同類 2 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "zBeVi",
+          "node_b": "L5YAG",
+          "classification": "Code 1 × Focus Ring 第1格 @ Group 1；同類 2 例：既有邀請碼輸入格母題，聚焦環與格子文字包圍盒交疊，元件既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "LaaxQ",
+          "node_b": "WU8Te",
+          "classification": "Print × Mount TL @ Icon 180；同類 2 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "LaaxQ",
+          "node_b": "L7ke3",
+          "classification": "Print × Mount BR @ Icon 180；同類 2 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "xlMQk",
+          "node_b": "M72IeN",
+          "classification": "Print × Mount TL @ Icon 60；同類 2 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "xlMQk",
+          "node_b": "sPdfs",
+          "classification": "Print × Mount BR @ Icon 60；同類 2 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "RPTGa",
+          "node_b": "repj6",
+          "classification": "Photo 1 × Dragging Photo @ Photo Strip；同類 2 例：既有照片拖曳排序母題，拖曳中狀態示範照片與其他元素的包圍盒交疊是拖曳動畫示意的既有設計，非本輪缺陷"
+        },
+        {
+          "node_a": "kdCWx",
+          "node_b": "repj6",
+          "classification": "Drop Target × Dragging Photo @ Photo Strip；同類 2 例：既有照片拖曳排序母題，拖曳中狀態示範照片與其他元素的包圍盒交疊是拖曳動畫示意的既有設計，非本輪缺陷"
+        },
+        {
+          "node_a": "kcGJa",
+          "node_b": "RHhJ1",
+          "classification": "LS-18 / 07 邀請家人 · 已產生邀請碼 × LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\") @ root；同類 1 例：畫布上兩塊已核可設計板（root 層級）在文件座標系中彼此相鄰/部分重疊，屬純 canvas 佈局位置，兩板各自獨立渲染，不影響任何實際畫面輸出，非本輪缺陷"
+        },
+        {
+          "node_a": "z6DOE",
+          "node_b": "bqbKN",
+          "classification": "LS-18 / 07a 邀請家人 · 尚未產生（空狀態） × 設計註記 · 多寶貝預留（LS-46 / LS-47） @ root；同類 1 例：畫布上兩塊已核可設計板（root 層級）在文件座標系中彼此相鄰/部分重疊，屬純 canvas 佈局位置，兩板各自獨立渲染，不影響任何實際畫面輸出，非本輪缺陷"
+        },
+        {
+          "node_a": "RHhJ1",
+          "node_b": "bqbKN",
+          "classification": "LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\") × 設計註記 · 多寶貝預留（LS-46 / LS-47） @ root；同類 1 例：畫布上兩塊已核可設計板（root 層級）在文件座標系中彼此相鄰/部分重疊，屬純 canvas 佈局位置，兩板各自獨立渲染，不影響任何實際畫面輸出，非本輪缺陷"
+        },
+        {
+          "node_a": "CHLio",
+          "node_b": "nhCrq",
+          "classification": "LS-18 / 07c 邀請家人 · 產生中（載入） × LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起 @ root；同類 1 例：畫布上兩塊已核可設計板（root 層級）在文件座標系中彼此相鄰/部分重疊，屬純 canvas 佈局位置，兩板各自獨立渲染，不影響任何實際畫面輸出，非本輪缺陷"
+        },
+        {
+          "node_a": "XhwG6",
+          "node_b": "qxVMy",
+          "classification": "設計語言 v3.3 · 褪色相片粉調 Design Tokens × 設計註記 · $print-paper token（LS-46 R4 N8） @ root；同類 1 例：畫布上兩塊已核可設計板（root 層級）在文件座標系中彼此相鄰/部分重疊，屬純 canvas 佈局位置，兩板各自獨立渲染，不影響任何實際畫面輸出，非本輪缺陷"
+        },
+        {
+          "node_a": "ZBIhu",
+          "node_b": "hKSu1",
+          "classification": "設計註記 · Legal 連結 AX3 溢出（LS-46 R3） × A11y / 06 輸入邀請碼 · Dynamic Type AX3（body 40pt） @ root；同類 1 例：畫布上兩塊已核可設計板（root 層級）在文件座標系中彼此相鄰/部分重疊，屬純 canvas 佈局位置，兩板各自獨立渲染，不影響任何實際畫面輸出，非本輪缺陷"
+        },
+        {
+          "node_a": "VRq1c",
+          "node_b": "tNqvY",
+          "classification": "A11y / 07 邀請家人 · Dynamic Type AX3（body 40pt） × Stress / 01 沖印品 · 不合調光源三態比較（LS-46 R4 F16） @ root；同類 1 例：畫布上兩塊已核可設計板（root 層級）在文件座標系中彼此相鄰/部分重疊，屬純 canvas 佈局位置，兩板各自獨立渲染，不影響任何實際畫面輸出，非本輪缺陷"
+        },
+        {
+          "node_a": "VRq1c",
+          "node_b": "Rtq1m",
+          "classification": "A11y / 07 邀請家人 · Dynamic Type AX3（body 40pt） × Stress / 04 角托＋Fade Pools · 不合調光源三態比較（LS-46 R4 F16） @ root；同類 1 例：畫布上兩塊已核可設計板（root 層級）在文件座標系中彼此相鄰/部分重疊，屬純 canvas 佈局位置，兩板各自獨立渲染，不影響任何實際畫面輸出，非本輪缺陷"
+        },
+        {
+          "node_a": "rx2TP",
+          "node_b": "LCpNO",
+          "classification": "LS-47 / 實作註記 · Handoff Notes (ios-dev) × Stress / 10 · 3 個寶貝＋超長名字 @ root；同類 1 例：畫布上兩塊已核可設計板（root 層級）在文件座標系中彼此相鄰/部分重疊，屬純 canvas 佈局位置，兩板各自獨立渲染，不影響任何實際畫面輸出，非本輪缺陷"
+        },
+        {
+          "node_a": "MOLyd",
+          "node_b": "vzYXz",
+          "classification": "A11y / 12 日記編輯器 · Dynamic Type AX3（body 40pt） × LS-21 / 13 日記詳情 (iPhone) @ root；同類 1 例：畫布上兩塊已核可設計板（root 層級）在文件座標系中彼此相鄰/部分重疊，屬純 canvas 佈局位置，兩板各自獨立渲染，不影響任何實際畫面輸出，非本輪缺陷"
+        },
+        {
+          "node_a": "b66CZc",
+          "node_b": "BXbTE",
+          "classification": "Print Stage Spacer × Print Stage @ Card Join Family；同類 1 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "I8sWT8",
+          "classification": "Print × Corner TL @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與底下的 Print/紙面在包圍盒層級交疊是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "OIwlW",
+          "classification": "Print × Corner TR @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與底下的 Print/紙面在包圍盒層級交疊是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "kSfzp",
+          "classification": "Print × Corner BL @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與底下的 Print/紙面在包圍盒層級交疊是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "mIStI",
+          "classification": "Print × Corner BR @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與底下的 Print/紙面在包圍盒層級交疊是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node_a": "sD5Ma",
+          "node_b": "DhOiK",
+          "classification": "Corner Shape × Corner Edge @ cmp/Photo Corner；同類 1 例：既有母題 cmp/Photo Corner 元件內部填色層(Corner Shape)與摺光邊層(Corner Edge)本就疊在同一顆角托上，是元件自身兩個視覺圖層堆疊，非本輪新增缺陷（跨全稿沿用既有元件，非 LS-142 本輪引入）"
+        },
+        {
+          "node_a": "PMV0W",
+          "node_b": "GWAHq",
+          "classification": "Join Photo × Corner BL @ Photo Wrap；同類 1 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "PMV0W",
+          "node_b": "SV5Ka",
+          "classification": "Join Photo × Corner BR @ Photo Wrap；同類 1 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "uXS8K",
+          "node_b": "GWAHq",
+          "classification": "Night Dim × Corner BL @ Photo Wrap；同類 1 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "uXS8K",
+          "node_b": "SV5Ka",
+          "classification": "Night Dim × Corner BR @ Photo Wrap；同類 1 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "aflVw",
+          "classification": "Demo Print × Fade Pools @ Demo Photo Wrap；同類 1 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "dCV1r",
+          "classification": "Demo Print × Corner TL @ Demo Photo Wrap；同類 1 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "Evspf",
+          "classification": "Demo Print × Corner TR @ Demo Photo Wrap；同類 1 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "B919I",
+          "classification": "Demo Print × Corner BL @ Demo Photo Wrap；同類 1 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "fyZfa",
+          "classification": "Demo Print × Corner BR @ Demo Photo Wrap；同類 1 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "dCV1r",
+          "classification": "Fade Pools × Corner TL @ Demo Photo Wrap；同類 1 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "Evspf",
+          "classification": "Fade Pools × Corner TR @ Demo Photo Wrap；同類 1 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "B919I",
+          "classification": "Fade Pools × Corner BL @ Demo Photo Wrap；同類 1 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "fyZfa",
+          "classification": "Fade Pools × Corner BR @ Demo Photo Wrap；同類 1 例：既有母題 Photo Wrap 內部的暗化/染料池裝飾圖層彼此堆疊，元件內部既有視覺層次，非本輪缺陷"
+        },
+        {
+          "node_a": "PSBOi",
+          "node_b": "OtK4n",
+          "classification": "Print × Mount TL @ Icon Light；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "PSBOi",
+          "node_b": "brcXK",
+          "classification": "Print × Mount BR @ Icon Light；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "Ac3zU",
+          "node_b": "ClTOX",
+          "classification": "Print × Mount TL @ Icon Dark；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "Ac3zU",
+          "node_b": "WjZtu",
+          "classification": "Print × Mount BR @ Icon Dark；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "cTC2J",
+          "classification": "Print × Mount TL @ Icon 幾何（不套遮罩）；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "k2V3ms",
+          "classification": "Print × Mount BR @ Icon 幾何（不套遮罩）；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "mzo0K",
+          "classification": "Print × Squircle r=115 (Pencil 圓弧近似) @ Icon 幾何（不套遮罩）；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "cTC2J",
+          "node_b": "mzo0K",
+          "classification": "Mount TL × Squircle r=115 (Pencil 圓弧近似) @ Icon 幾何（不套遮罩）；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "cTC2J",
+          "node_b": "OxuA8",
+          "classification": "Mount TL × Clearance TL @ Icon 幾何（不套遮罩）；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "k2V3ms",
+          "node_b": "mzo0K",
+          "classification": "Mount BR × Squircle r=115 (Pencil 圓弧近似) @ Icon 幾何（不套遮罩）；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "k2V3ms",
+          "node_b": "LMc6c",
+          "classification": "Mount BR × Clearance BR @ Icon 幾何（不套遮罩）；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "mzo0K",
+          "node_b": "OxuA8",
+          "classification": "Squircle r=115 (Pencil 圓弧近似) × Clearance TL @ Icon 幾何（不套遮罩）；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "mzo0K",
+          "node_b": "LMc6c",
+          "classification": "Squircle r=115 (Pencil 圓弧近似) × Clearance BR @ Icon 幾何（不套遮罩）；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "a1ycjz",
+          "node_b": "bWK8K",
+          "classification": "Print × Mount TL @ Icon 120；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "a1ycjz",
+          "node_b": "y5UWXf",
+          "classification": "Print × Mount BR @ Icon 120；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "h0ZQd",
+          "node_b": "E7kbRB",
+          "classification": "Print × Mount TL @ Icon 80；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "h0ZQd",
+          "node_b": "Pqqdp",
+          "classification": "Print × Mount BR @ Icon 80；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "m780n",
+          "node_b": "uARGy",
+          "classification": "Photo Stack Preview × Mount TL @ Mark；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "m780n",
+          "node_b": "mFP87",
+          "classification": "Photo Stack Preview × Mount BR @ Mark；同類 1 例：既有 App icon 參考板內部圖層堆疊（Mount/Squircle/Clearance 遮罩層次），設計參考稿既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "khLYx",
+          "node_b": "vRQFQ",
+          "classification": "Struck Text 2 × Strike Rule @ Struck Wrap 2；同類 1 例：既有刪除線文案母題，文字與刪除線 rule 本就疊在文字中線上，元件既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "lxZzb",
+          "node_b": "gJOJT",
+          "classification": "Body × Accessory Bar @ LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "lxZzb",
+          "node_b": "RZcIs",
+          "classification": "Body × Keyboard 系統鍵盤（示意，336pt） @ LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "TeX44",
+          "node_b": "RZcIs",
+          "classification": "Home Indicator Area × Keyboard 系統鍵盤（示意，336pt） @ LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "JE6tE",
+          "node_b": "Vmezj",
+          "classification": "Photo Area × Corner TL @ Photo Wrap；同類 1 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "JE6tE",
+          "node_b": "PaCtI",
+          "classification": "Photo Area × Corner TR @ Photo Wrap；同類 1 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "rrzzl",
+          "node_b": "p2dJpQ",
+          "classification": "Imprint Row × Corner BL @ Photo Wrap；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "rrzzl",
+          "node_b": "Wrztr",
+          "classification": "Imprint Row × Corner BR @ Photo Wrap；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "n5j2xu",
+          "node_b": "H3b7gk",
+          "classification": "Photo Wrap × Corner TL @ Children Card；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "n5j2xu",
+          "node_b": "oj6h0",
+          "classification": "Photo Wrap × Corner TR @ Children Card；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "XoVVx",
+          "node_b": "SUi6K",
+          "classification": "Imprint Row × Corner BL @ Children Card；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "XoVVx",
+          "node_b": "nSjs7",
+          "classification": "Imprint Row × Corner BR @ Children Card；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "cPbyp",
+          "node_b": "XMVoJ",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-47 / 09c 移除寶貝 · 確認（Owner）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "cPbyp",
+          "node_b": "MBQx8",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-47 / 09c 移除寶貝 · 確認（Owner）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "XMVoJ",
+          "node_b": "MBQx8",
+          "classification": "Scrim × Sheet Wrap @ LS-47 / 09c 移除寶貝 · 確認（Owner）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "A14LnU",
+          "node_b": "dJM15",
+          "classification": "Body × FAB @ LS-47 / 10 時間軸 · 寶貝切換；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "A14LnU",
+          "node_b": "EoToI",
+          "classification": "Body × Tab Bar @ LS-47 / 10 時間軸 · 寶貝切換；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "xgx94",
+          "classification": "Body × Dropdown Menu @ LS-47 / 10b 時間軸 · 寶貝切換（下拉，>3）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "gFJ8N",
+          "classification": "Body × FAB @ LS-47 / 10b 時間軸 · 寶貝切換（下拉，>3）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "qx4xE",
+          "classification": "Body × Tab Bar @ LS-47 / 10b 時間軸 · 寶貝切換（下拉，>3）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "xTL71",
+          "node_b": "DZjmG",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-47 / 10c 發佈 · 選擇歸屬寶貝；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "xTL71",
+          "node_b": "gbW37",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-47 / 10c 發佈 · 選擇歸屬寶貝；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "DZjmG",
+          "node_b": "gbW37",
+          "classification": "Scrim × Sheet Wrap @ LS-47 / 10c 發佈 · 選擇歸屬寶貝；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "zGEet",
+          "classification": "Body × Dropdown Menu @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "G5vY5",
+          "classification": "Body × FAB @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "qCMDY",
+          "classification": "Body × Tab Bar @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "bq8pa",
+          "node_b": "yqWq9",
+          "classification": "Body × FAB @ LS-47 / 10 時間軸 · 寶貝切換 · 深色；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "bq8pa",
+          "node_b": "C57OVI",
+          "classification": "Body × Tab Bar @ LS-47 / 10 時間軸 · 寶貝切換 · 深色；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "go3YL",
+          "node_b": "uHUe1",
+          "classification": "Role Text × Role Check @ cmp/Role Option；同類 1 例：既有邀請角色選項元件內部文字與勾選圖層包圍盒交疊，元件既有結構，非本輪缺陷"
+        },
+        {
+          "node_a": "n7gPAe",
+          "node_b": "Egn9A",
+          "classification": "Body × Tab Bar @ LS-21 / 11 時間軸 (iPhone)；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "WitwS/uZ5Lt",
+          "node_b": "WitwS/kVUWa",
+          "classification": "Stack Sheet 2 × Stack Sheet 1 @ Photo C；同類 1 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "WitwS/ekqx4",
+          "node_b": "WitwS/GCEdk",
+          "classification": "Thumb C × More Scrim @ Photo C；同類 1 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "PFhXP",
+          "node_b": "eRy14",
+          "classification": "Body × Tab Bar @ LS-21 / 11b 時間軸 · 空狀態；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "gKBS7",
+          "node_b": "aY7S5",
+          "classification": "Photo Wrap × Corner TL @ Empty Print；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "gKBS7",
+          "node_b": "BbDZH",
+          "classification": "Photo Wrap × Corner TR @ Empty Print；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "bG6cD",
+          "node_b": "fsveQ",
+          "classification": "Imprint Row × Corner BL @ Empty Print；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "bG6cD",
+          "node_b": "wSSFB",
+          "classification": "Imprint Row × Corner BR @ Empty Print；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "x5Vmg",
+          "node_b": "OR1hw",
+          "classification": "Body × Tab Bar @ LS-21 / 11c 時間軸 · 下拉更新中；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "Q600X",
+          "node_b": "bmk5H",
+          "classification": "Body × Tab Bar @ LS-21 / 11 時間軸 · 深色；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "YulfE",
+          "node_b": "QVGNJ",
+          "classification": "Body × Tab Bar @ A11y / 11 時間軸 · Dynamic Type AX3（body 40pt）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "CV0TW",
+          "node_b": "iCUJF",
+          "classification": "Thumb × Selected Badge @ Photo 1；同類 1 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "TSxZo",
+          "node_b": "v7MGOT",
+          "classification": "Thumb × Selected Badge @ Photo 2；同類 1 例：既有版式圖層堆疊模式，包圍盒層級交集但視覺上不構成實際碰撞（父子裝飾層或既有母題元件內部結構），非本輪新增缺陷"
+        },
+        {
+          "node_a": "o73UY",
+          "node_b": "M4PUm",
+          "classification": "Body × Tab Bar @ Stress / 11 時間軸 · 單一寶貝 filter；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "aedfE",
+          "node_b": "V4oYH",
+          "classification": "Body × Tab Bar @ A11y / 11 時間軸 · 兩位寶貝聯合標記 · Dynamic Type AX3（body 40pt）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "FqE7M",
+          "node_b": "wTMlo",
+          "classification": "Body × Tab Bar @ LS-142 / 14 相簿 (iPhone)；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "oyZbS",
+          "node_b": "v4dw1",
+          "classification": "Body × Tab Bar @ LS-142 / 14b 相簿 · 空狀態；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "DUOGt",
+          "node_b": "kJq3T",
+          "classification": "Photo Wrap × Corner TL @ Blank Print Cell；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "DUOGt",
+          "node_b": "olgX0",
+          "classification": "Photo Wrap × Corner TR @ Blank Print Cell；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，角托與 Photo Wrap/Imprint Row 邊緣在包圍盒層級交疊是設計規則（tokens.md corner-out、motifs.md 角托一律壓過紙緣），非缺陷"
+        },
+        {
+          "node_a": "bjuSv",
+          "node_b": "hkjhm",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-142 / 15c 刪除相簿 · 確認（Owner）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "bjuSv",
+          "node_b": "M6Bkt",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-142 / 15c 刪除相簿 · 確認（Owner）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "hkjhm",
+          "node_b": "M6Bkt",
+          "classification": "Scrim × Sheet Wrap @ LS-142 / 15c 刪除相簿 · 確認（Owner）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "YekOU",
+          "node_b": "Kl0eH",
+          "classification": "Body × Tab Bar @ LS-142 / 14 相簿 · 深色；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "v3pPdz",
+          "node_b": "K3xsp1",
+          "classification": "Body × Tab Bar @ LS-142 / 14b 相簿 · 空狀態 · 深色；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "jZVRr",
+          "node_b": "RxQis",
+          "classification": "Body × Tab Bar @ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "HIdMW/UTLcl",
+          "node_b": "HIdMW/KGh0U",
+          "classification": "Fan Ghost × Fan Ghost 2 @ Card Album 6；同類 1 例：LS-142 R3 BL-A 修復——兩片扇疊 Fan Ghost 本就設計成彼此交疊（一左傾一右傾才讀出「一疊照片」），是母題本身要求的視覺堆疊，非缺陷"
+        },
+        {
+          "node_a": "HIdMW/UTLcl",
+          "node_b": "HIdMW/r6cYjT",
+          "classification": "Fan Ghost × Photo Print @ Card Album 6；同類 1 例：LS-142 R3 BL-A 修復後的預期行為——兩片 Fan Ghost 的包圍盒與 Photo Print 重疊，但 z-order 已改到 Photo Print 之下（先畫 Ghost 再畫 Photo Print），視覺上被相片與白邊蓋住只露出扇形邊緣；AABB 層級的交集是必然結果，不是渲染錯誤（已逐像素驗證 puHZ5/Xldkz (200,195) 取到照片色而非紙色）"
+        },
+        {
+          "node_a": "HIdMW/KGh0U",
+          "node_b": "HIdMW/r6cYjT",
+          "classification": "Fan Ghost 2 × Photo Print @ Card Album 6；同類 1 例：LS-142 R3 BL-A 修復後的預期行為——兩片 Fan Ghost 的包圍盒與 Photo Print 重疊，但 z-order 已改到 Photo Print 之下（先畫 Ghost 再畫 Photo Print），視覺上被相片與白邊蓋住只露出扇形邊緣；AABB 層級的交集是必然結果，不是渲染錯誤（已逐像素驗證 puHZ5/Xldkz (200,195) 取到照片色而非紙色）"
+        },
+        {
+          "node_a": "T7DfpY",
+          "node_b": "j2svp",
+          "classification": "Body × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "FOd6u",
+          "node_b": "D6sAcX",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-142 / 16 上傳佇列；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "FOd6u",
+          "node_b": "B7AqL",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-142 / 16 上傳佇列；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "D6sAcX",
+          "node_b": "B7AqL",
+          "classification": "Scrim × Sheet Wrap @ LS-142 / 16 上傳佇列；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "yvhTU",
+          "node_b": "EigFv",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-142 / 16 上傳佇列 · 深色；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "yvhTU",
+          "node_b": "bNhc1",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-142 / 16 上傳佇列 · 深色；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "EigFv",
+          "node_b": "bNhc1",
+          "classification": "Scrim × Sheet Wrap @ LS-142 / 16 上傳佇列 · 深色；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "dV8Qj",
+          "node_b": "BEyFk",
+          "classification": "Status Bar (Backdrop) × Scrim @ A11y / 16 上傳佇列 · Dynamic Type AX3（body 40pt）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "dV8Qj",
+          "node_b": "fo7g1",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ A11y / 16 上傳佇列 · Dynamic Type AX3（body 40pt）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "BEyFk",
+          "node_b": "fo7g1",
+          "classification": "Scrim × Sheet Wrap @ A11y / 16 上傳佇列 · Dynamic Type AX3（body 40pt）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "yS0St",
+          "node_b": "IeLCs",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-142 / 16b 上傳佇列 · 全部狀態展開（不裁切）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "yS0St",
+          "node_b": "J647dw",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-142 / 16b 上傳佇列 · 全部狀態展開（不裁切）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "IeLCs",
+          "node_b": "J647dw",
+          "classification": "Scrim × Sheet Wrap @ LS-142 / 16b 上傳佇列 · 全部狀態展開（不裁切）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "fwpUR",
+          "node_b": "OBXFr",
+          "classification": "Status Bar (Backdrop) × Scrim @ A11y / 16b 上傳佇列 · 全部狀態展開 AX3（不裁切）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "fwpUR",
+          "node_b": "a9ZFzI",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ A11y / 16b 上傳佇列 · 全部狀態展開 AX3（不裁切）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        },
+        {
+          "node_a": "OBXFr",
+          "node_b": "a9ZFzI",
+          "classification": "Scrim × Sheet Wrap @ A11y / 16b 上傳佇列 · 全部狀態展開 AX3（不裁切）；同類 1 例：FAB／Tab Bar／Dropdown Menu／Accessory Bar／Sheet 彈出層皆為 layoutPosition absolute 的浮動 overlay，設計上本就疊在 Body 內容或 Status Bar 之上，既有版式（含 LS-142 本輪新板 14/14b/14 深色/AX3 沿用同一母題）"
+        }
+      ]
+    },
+    "row_overflow": {
+      "flagged": [
+        {
+          "node": "C57TMC",
+          "classification": "Print Cell :: Corner TR (+5pt)；同類 134 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "x4NnCv",
+          "classification": "Print Cell :: Corner BR (+5pt)；同類 134 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "YG4hG",
+          "classification": "Photo Print :: Corner TR (+5pt)；同類 51 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "efA3a",
+          "classification": "Photo Print :: Corner BR (+5pt)；同類 51 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "jCGWG",
+          "classification": "Photo Strip :: Photo 3 (+63pt)；同類 8 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "X9BSMc/A30rIX",
+          "classification": "Avatar :: Initial (+6pt)；同類 5 例：既有寶貝頭像文字首字母，字重/字距造成極小溢出，既有元件既有債，非本輪缺陷"
+        },
+        {
+          "node": "XjToq",
+          "classification": "Family Print :: Corner TR (+5pt)；同類 4 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "jin0Q",
+          "classification": "Family Print :: Corner BR (+5pt)；同類 4 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "j2z1C0",
+          "classification": "Print Stage :: Corner TR (+5pt)；同類 4 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "DIMqR",
+          "classification": "Print Stage :: Corner BR (+5pt)；同類 4 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "B5E1ig",
+          "classification": "Photo Wrap :: Corner TR (+5pt)；同類 3 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "qnP3W",
+          "classification": "Photo Wrap :: Corner BR (+5pt)；同類 3 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "tlJFt",
+          "classification": "Email Print :: Corner TR (+5pt)；同類 2 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "ny0ec",
+          "classification": "Email Print :: Corner BR (+5pt)；同類 2 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "flduf",
+          "classification": "Legal :: Legal Link (+117pt)；同類 2 例：既有 LS-46 R3 已記錄的 Legal 連結 AX3 溢出既有債，本輪未觸碰該板，非本輪缺陷"
+        },
+        {
+          "node": "aNTzo/OCYqN",
+          "classification": "Date Anchor :: Stamp Wrap (+20.14pt)；同類 2 例：既有時間軸日期錨點母題，郵戳文字與外框既有微小溢出，非本輪缺陷"
+        },
+        {
+          "node": "iO0Ko",
+          "classification": "Photo Strip :: Photo 2 (+63pt)；同類 2 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "BXbTE",
+          "classification": "Card Join Family :: Print Stage (+24pt)；同類 1 例：既有多寶貝邀請卡母題既有債，非本輪缺陷"
+        },
+        {
+          "node": "qX0b8",
+          "classification": "Photo Wrap :: Hero Photo (+5pt)；同類 1 例：既有歡迎頁母題，非本輪缺陷"
+        },
+        {
+          "node": "FBRlf/iu3Q8",
+          "classification": "Field Box :: Field Value (+30pt)；同類 1 例：既有表單欄位母題既有債，非本輪缺陷"
+        },
+        {
+          "node": "Evspf",
+          "classification": "Demo Photo Wrap :: Corner TR (+5pt)；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "fyZfa",
+          "classification": "Demo Photo Wrap :: Corner BR (+5pt)；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "XtNLC",
+          "classification": "Legal :: Legal Seg (+150pt)；同類 1 例：既有 LS-46 R3 已記錄的 Legal 連結 AX3 溢出既有債，本輪未觸碰該板，非本輪缺陷"
+        },
+        {
+          "node": "z0ATW/yxwnz",
+          "classification": "Paste Link Button :: Secondary Label (+2.5pt)；同類 1 例：既有邀請碼貼上按鈕母題極小溢出既有債，非本輪缺陷"
+        },
+        {
+          "node": "oj6h0",
+          "classification": "Children Card :: Corner TR (+5pt)；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "nSjs7",
+          "classification": "Children Card :: Corner BR (+5pt)；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "k8PVy",
+          "classification": "Segment :: Label (+24.13pt)；同類 1 例：既有分段控制項標籤既有債，非本輪缺陷"
+        },
+        {
+          "node": "WitwS/uZ5Lt",
+          "classification": "Photo C :: Stack Sheet 2 (+9.97pt)；同類 1 例：既有時間軸卡片疊紙母題既有債（非 LS-142 Card Album，是 Card Photo 疊紙），非本輪缺陷"
+        },
+        {
+          "node": "WitwS/kVUWa",
+          "classification": "Photo C :: Stack Sheet 1 (+6.97pt)；同類 1 例：既有時間軸卡片疊紙母題既有債（非 LS-142 Card Album，是 Card Photo 疊紙），非本輪缺陷"
+        },
+        {
+          "node": "BbDZH",
+          "classification": "Empty Print :: Corner TR (+5pt)；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "wSSFB",
+          "classification": "Empty Print :: Corner BR (+5pt)；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "iCUJF",
+          "classification": "Photo 1 :: Selected Badge (+6pt)；同類 1 例：既有多選徽章母題，徽章刻意突出照片邊角做為可視角，既有設計，非缺陷"
+        },
+        {
+          "node": "v7MGOT",
+          "classification": "Photo 2 :: Selected Badge (+6pt)；同類 1 例：既有多選徽章母題，徽章刻意突出照片邊角做為可視角，既有設計，非缺陷"
+        },
+        {
+          "node": "r0E2vG",
+          "classification": "Photo Strip :: Photo 4 (+167pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "dbyDu",
+          "classification": "Photo Strip :: Photo 5 (+271pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "B2PYlk",
+          "classification": "Photo Strip :: Photo 6 (+375pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "DgWAS",
+          "classification": "Photo Strip :: Photo 7 (+479pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "to36g",
+          "classification": "Photo Strip :: Photo 8 (+583pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "UwOm5",
+          "classification": "Photo Strip :: Photo 9 (+687pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "L1Gvi",
+          "classification": "Photo Strip :: Photo 10 (+791pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "a93IH",
+          "classification": "Photo Strip :: Photo 11 (+895pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "tJr7O",
+          "classification": "Photo Strip :: Photo 12 (+999pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "f4znT9",
+          "classification": "Photo Strip :: Photo 13 (+1103pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "QnhMi",
+          "classification": "Photo Strip :: Photo 14 (+1207pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "cvkFS",
+          "classification": "Photo Strip :: Photo 15 (+1311pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "G636T",
+          "classification": "Photo Strip :: Photo 16 (+1415pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "TdVUk",
+          "classification": "Photo Strip :: Photo 17 (+1519pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "P8eEXh",
+          "classification": "Photo Strip :: Photo 18 (+1623pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "HxDU4",
+          "classification": "Photo Strip :: Photo 19 (+1727pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "MBCZw",
+          "classification": "Photo Strip :: Photo 20 (+1831pt)；同類 1 例：既有照片排序橫向捲動列母題，Photo Strip 是可橫向捲動的容器，內容自然超出容器右緣是水平捲動列的既有設計，非缺陷"
+        },
+        {
+          "node": "olgX0",
+          "classification": "Blank Print Cell :: Corner TR (+5pt)；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        },
+        {
+          "node": "xyD7I",
+          "classification": "Blank Print Cell :: Corner BR (+5pt)；同類 1 例：角托規則本身要求壓過紙緣 corner-out 5pt，向右溢出容器右緣 5pt 是設計規則（tokens.md corner-out），非缺陷"
+        }
+      ]
+    },
+    "cross_parent_collision": {
+      "flagged": [
+        {
+          "node_a": "qteWo/KGh0U",
+          "node_b": "qteWo/JgUK8",
+          "classification": "Fan Ghost 2 × Corner TR @ LS-142 / 14-iPad 相簿 (iPad 11\")；同類 6 例：LS-142 R3 BL-A 修復——iPad 較窄卡片（258.5pt）的 Fan Ghost 2 等比例縮寬後，包圍盒仍與角托 corner-out 5pt 出血區域交集，兩者皆為裝飾用出血元素、視覺上互不遮擋主要內容（LS-142 本輪板）"
+        },
+        {
+          "node_a": "CJ2BA",
+          "node_b": "OJNI5",
+          "classification": "Spacer 16 × Corner TL @ LS-21 / 13 日記詳情 (iPhone)；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "CJ2BA",
+          "node_b": "C57TMC",
+          "classification": "Spacer 16 × Corner TR @ LS-21 / 13 日記詳情 (iPhone)；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "gnVLw",
+          "node_b": "OiUoO",
+          "classification": "Spacer 16 × Corner TL @ LS-21 / 13 日記詳情 · 深色；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "gnVLw",
+          "node_b": "IB5r1",
+          "classification": "Spacer 16 × Corner TR @ LS-21 / 13 日記詳情 · 深色；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "UEhNU",
+          "node_b": "kakSb",
+          "classification": "Spacer 16 × Corner TL @ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "UEhNU",
+          "node_b": "F0Tzj",
+          "classification": "Spacer 16 × Corner TR @ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "KBTFi",
+          "node_b": "OkHbz",
+          "classification": "Spacer 16 × Corner TL @ Stress / 13 日記詳情 · 20 張照片壓測；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "KBTFi",
+          "node_b": "RefMF",
+          "classification": "Spacer 16 × Corner TR @ Stress / 13 日記詳情 · 20 張照片壓測；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "WsQdq",
+          "node_b": "Fw3Lw",
+          "classification": "Spacer 16 × Corner TL @ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "WsQdq",
+          "node_b": "PWKoD",
+          "classification": "Spacer 16 × Corner TR @ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "WC9pB/Qjdzx",
+          "node_b": "PjgtQ/UTLcl",
+          "classification": "Stack Sheet 2 × Fan Ghost @ LS-142 / 14 相簿 (iPhone)；同類 2 例：相鄰卡片的疊紙尾端與扇形紙緣在包圍盒層級輕微交疊（同一張板內兩張不同卡片），皆為裝飾用出血元素，視覺上各自被自己卡片的紙張與相片遮蔽，不构成實際碰撞（LS-142 本輪板）"
+        },
+        {
+          "node_a": "WC9pB/Qjdzx",
+          "node_b": "PjgtQ/KGh0U",
+          "classification": "Stack Sheet 2 × Fan Ghost 2 @ LS-142 / 14 相簿 (iPhone)；同類 2 例：相鄰卡片的疊紙尾端與扇形紙緣在包圍盒層級輕微交疊（同一張板內兩張不同卡片），皆為裝飾用出血元素，視覺上各自被自己卡片的紙張與相片遮蔽，不构成實際碰撞（LS-142 本輪板）"
+        },
+        {
+          "node_a": "QOgzb",
+          "node_b": "DHfo9",
+          "classification": "Spacer Section × Corner TL @ LS-142 / 15 相簿詳情 (iPhone)；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "QOgzb",
+          "node_b": "GsLq1",
+          "classification": "Spacer Section × Corner TR @ LS-142 / 15 相簿詳情 (iPhone)；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "J4vk0/Qjdzx",
+          "node_b": "Vxyqs/UTLcl",
+          "classification": "Stack Sheet 2 × Fan Ghost @ LS-142 / 14 相簿 · 深色；同類 2 例：相鄰卡片的疊紙尾端與扇形紙緣在包圍盒層級輕微交疊（同一張板內兩張不同卡片），皆為裝飾用出血元素，視覺上各自被自己卡片的紙張與相片遮蔽，不构成實際碰撞（LS-142 本輪板）"
+        },
+        {
+          "node_a": "J4vk0/Qjdzx",
+          "node_b": "Vxyqs/KGh0U",
+          "classification": "Stack Sheet 2 × Fan Ghost 2 @ LS-142 / 14 相簿 · 深色；同類 2 例：相鄰卡片的疊紙尾端與扇形紙緣在包圍盒層級輕微交疊（同一張板內兩張不同卡片），皆為裝飾用出血元素，視覺上各自被自己卡片的紙張與相片遮蔽，不构成實際碰撞（LS-142 本輪板）"
+        },
+        {
+          "node_a": "ONEs5/Qjdzx",
+          "node_b": "pNPuF/UTLcl",
+          "classification": "Stack Sheet 2 × Fan Ghost @ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）；同類 2 例：相鄰卡片的疊紙尾端與扇形紙緣在包圍盒層級輕微交疊（同一張板內兩張不同卡片），皆為裝飾用出血元素，視覺上各自被自己卡片的紙張與相片遮蔽，不构成實際碰撞（LS-142 本輪板）"
+        },
+        {
+          "node_a": "ONEs5/Qjdzx",
+          "node_b": "pNPuF/KGh0U",
+          "classification": "Stack Sheet 2 × Fan Ghost 2 @ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）；同類 2 例：相鄰卡片的疊紙尾端與扇形紙緣在包圍盒層級輕微交疊（同一張板內兩張不同卡片），皆為裝飾用出血元素，視覺上各自被自己卡片的紙張與相片遮蔽，不构成實際碰撞（LS-142 本輪板）"
+        },
+        {
+          "node_a": "qteWo/Qjdzx",
+          "node_b": "VvT91/UTLcl",
+          "classification": "Stack Sheet 2 × Fan Ghost @ LS-142 / 14-iPad 相簿 (iPad 11\")；同類 2 例：相鄰卡片的疊紙尾端與扇形紙緣在包圍盒層級輕微交疊（同一張板內兩張不同卡片），皆為裝飾用出血元素，視覺上各自被自己卡片的紙張與相片遮蔽，不构成實際碰撞（LS-142 本輪板）"
+        },
+        {
+          "node_a": "qteWo/Qjdzx",
+          "node_b": "VvT91/KGh0U",
+          "classification": "Stack Sheet 2 × Fan Ghost 2 @ LS-142 / 14-iPad 相簿 (iPad 11\")；同類 2 例：相鄰卡片的疊紙尾端與扇形紙緣在包圍盒層級輕微交疊（同一張板內兩張不同卡片），皆為裝飾用出血元素，視覺上各自被自己卡片的紙張與相片遮蔽，不构成實際碰撞（LS-142 本輪板）"
+        },
+        {
+          "node_a": "F8c1z",
+          "node_b": "tcfj6",
+          "classification": "Spacer Section × Corner TL @ LS-142 / 15 相簿詳情 · 深色；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "F8c1z",
+          "node_b": "l3ULp",
+          "classification": "Spacer Section × Corner TR @ LS-142 / 15 相簿詳情 · 深色；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "hogY7",
+          "node_b": "RpgcZ",
+          "classification": "Spacer Section × Corner TL @ A11y / 15 相簿詳情 · Dynamic Type AX3（body 40pt）；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "hogY7",
+          "node_b": "BTTKx",
+          "classification": "Spacer Section × Corner TR @ A11y / 15 相簿詳情 · Dynamic Type AX3（body 40pt）；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "nyK3s",
+          "node_b": "QYEzP",
+          "classification": "Spacer Section × Corner TL @ Stress / 15 相簿詳情 · 34 張全滿；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "nyK3s",
+          "node_b": "V0ISZ",
+          "classification": "Spacer Section × Corner TR @ Stress / 15 相簿詳情 · 34 張全滿；同類 2 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "pYE38",
+          "classification": "Hero Photo × Corner BL @ LS-17 / 01 歡迎登入 (iPhone)；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "rtNqP",
+          "classification": "Hero Photo × Corner BR @ LS-17 / 01 歡迎登入 (iPhone)；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "g7B7X",
+          "classification": "Hero Photo × Corner TL @ LS-17 / 01 歡迎登入 (iPhone)；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "Mlugc",
+          "classification": "Hero Photo × Corner TR @ LS-17 / 01 歡迎登入 (iPhone)；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "M98qs",
+          "classification": "Sample Photo × Corner TL @ LS-18 / 07a 邀請家人 · 尚未產生（空狀態）；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "j2z1C0",
+          "classification": "Sample Photo × Corner TR @ LS-18 / 07a 邀請家人 · 尚未產生（空狀態）；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "xfmAg",
+          "classification": "Sample Photo × Corner BL @ LS-18 / 07a 邀請家人 · 尚未產生（空狀態）；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "DIMqR",
+          "classification": "Sample Photo × Corner BR @ LS-18 / 07a 邀請家人 · 尚未產生（空狀態）；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "I8sWT8",
+          "classification": "Hero Photo × Corner TL @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "OIwlW",
+          "classification": "Hero Photo × Corner TR @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "kSfzp",
+          "classification": "Hero Photo × Corner BL @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "mIStI",
+          "classification": "Hero Photo × Corner BR @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "E6reS5",
+          "classification": "Join Photo Image × Corner TL @ LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\")；同類 1 例：既有首次進入頁母題，角托 corner-out 5pt 出血觸及拼貼照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "B5E1ig",
+          "classification": "Join Photo Image × Corner TR @ LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\")；同類 1 例：既有首次進入頁母題，角托 corner-out 5pt 出血觸及拼貼照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "br1l7",
+          "classification": "Join Photo Image × Corner BL @ LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\")；同類 1 例：既有首次進入頁母題，角托 corner-out 5pt 出血觸及拼貼照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "qnP3W",
+          "classification": "Join Photo Image × Corner BR @ LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\")；同類 1 例：既有首次進入頁母題，角托 corner-out 5pt 出血觸及拼貼照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "F03KZ",
+          "classification": "Hero Photo × Corner BL @ LS-17 / 01b 歡迎登入 · 登入中；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "IdIpj",
+          "classification": "Hero Photo × Corner BR @ LS-17 / 01b 歡迎登入 · 登入中；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "CQ1DR",
+          "classification": "Hero Photo × Corner TL @ LS-17 / 01b 歡迎登入 · 登入中；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "R13bes",
+          "classification": "Hero Photo × Corner TR @ LS-17 / 01b 歡迎登入 · 登入中；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "VUrCa",
+          "classification": "Hero Photo × Corner BL @ LS-17 / 01c 歡迎登入 · 深色模式；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "s3NQB",
+          "classification": "Hero Photo × Corner BR @ LS-17 / 01c 歡迎登入 · 深色模式；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "MSHDo",
+          "classification": "Hero Photo × Corner TL @ LS-17 / 01c 歡迎登入 · 深色模式；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "Or86v",
+          "classification": "Hero Photo × Corner TR @ LS-17 / 01c 歡迎登入 · 深色模式；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "vh3wA",
+          "classification": "Join Photo Image × Corner TL @ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）；同類 1 例：既有首次進入頁母題，角托 corner-out 5pt 出血觸及拼貼照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "a9D8tu",
+          "classification": "Join Photo Image × Corner TR @ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）；同類 1 例：既有首次進入頁母題，角托 corner-out 5pt 出血觸及拼貼照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "GWAHq",
+          "classification": "Join Photo Image × Corner BL @ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）；同類 1 例：既有首次進入頁母題，角托 corner-out 5pt 出血觸及拼貼照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "SV5Ka",
+          "classification": "Join Photo Image × Corner BR @ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）；同類 1 例：既有首次進入頁母題，角托 corner-out 5pt 出血觸及拼貼照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "GWAHq",
+          "node_b": "CpjLh",
+          "classification": "Corner BL × Card Text @ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）；同類 1 例：既有首次進入頁母題，角托 corner-out 5pt 出血觸及卡片文字區域，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "SV5Ka",
+          "node_b": "CpjLh",
+          "classification": "Corner BR × Card Text @ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）；同類 1 例：既有首次進入頁母題，角托 corner-out 5pt 出血觸及卡片文字區域，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "HQIu3",
+          "classification": "Hero Photo × Corner BL @ A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "sqAra",
+          "classification": "Hero Photo × Corner BR @ A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "XNlL6",
+          "classification": "Hero Photo × Corner TL @ A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "YtTc7",
+          "classification": "Hero Photo × Corner TR @ A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "E0sov",
+          "classification": "Hero Photo × Corner BL @ LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone)；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "tzB8c",
+          "classification": "Hero Photo × Corner BR @ LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone)；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "jUZCY",
+          "classification": "Hero Photo × Corner TL @ LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone)；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "O1r9l",
+          "classification": "Hero Photo × Corner TR @ LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone)；同類 1 例：既有歡迎頁母題，角托 corner-out 5pt 出血觸及歡迎頁全屏照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "Wo9Ox",
+          "node_b": "K4qvK6",
+          "classification": "Corner BL × Spacer 16 @ LS-47 / 08 幫寶貝建檔；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "efA3a",
+          "node_b": "K4qvK6",
+          "classification": "Corner BR × Spacer 16 @ LS-47 / 08 幫寶貝建檔；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "E5X7Nk",
+          "node_b": "aGcLA",
+          "classification": "Corner BL × Spacer 16 @ LS-47 / 08c 幫寶貝建檔 · 深色；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "cM5Hi",
+          "node_b": "aGcLA",
+          "classification": "Corner BR × Spacer 16 @ LS-47 / 08c 幫寶貝建檔 · 深色；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "gEYpf",
+          "node_b": "zGEet",
+          "classification": "Corner TL × Dropdown Menu @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）；同類 1 例：既有下拉選單母題，AX3 強制下拉態下拉選單覆蓋角托出血區域，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "FkOcN",
+          "node_b": "zGEet",
+          "classification": "Corner TR × Dropdown Menu @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）；同類 1 例：既有下拉選單母題，AX3 強制下拉態下拉選單覆蓋角托出血區域，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "PRyQO",
+          "node_b": "zGEet",
+          "classification": "Corner BL × Dropdown Menu @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）；同類 1 例：既有下拉選單母題，AX3 強制下拉態下拉選單覆蓋角托出血區域，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "tVUkg",
+          "node_b": "zGEet",
+          "classification": "Corner BR × Dropdown Menu @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）；同類 1 例：既有下拉選單母題，AX3 強制下拉態下拉選單覆蓋角托出血區域，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "AXf4H",
+          "classification": "Sample Photo × Corner TL @ LS-18 / 07a 邀請家人 · 深色模式；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "Lns4o",
+          "classification": "Sample Photo × Corner TR @ LS-18 / 07a 邀請家人 · 深色模式；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "haMqk",
+          "classification": "Sample Photo × Corner BL @ LS-18 / 07a 邀請家人 · 深色模式；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "Izo3e",
+          "classification": "Sample Photo × Corner BR @ LS-18 / 07a 邀請家人 · 深色模式；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "XHfST",
+          "classification": "Sample Photo × Corner TL @ A11y / 07a 邀請家人 · Dynamic Type AX3（尚未產生 · body 40pt）；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "kbkHy",
+          "classification": "Sample Photo × Corner TR @ A11y / 07a 邀請家人 · Dynamic Type AX3（尚未產生 · body 40pt）；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "q2Dth",
+          "classification": "Sample Photo × Corner BL @ A11y / 07a 邀請家人 · Dynamic Type AX3（尚未產生 · body 40pt）；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "VGqGL",
+          "classification": "Sample Photo × Corner BR @ A11y / 07a 邀請家人 · Dynamic Type AX3（尚未產生 · body 40pt）；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "OJ1xr",
+          "classification": "Sample Photo × Corner TL @ LS-18 / 07a 邀請家人 · 只能看選中；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "KSTqZ",
+          "classification": "Sample Photo × Corner TR @ LS-18 / 07a 邀請家人 · 只能看選中；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "Rqmus",
+          "classification": "Sample Photo × Corner BL @ LS-18 / 07a 邀請家人 · 只能看選中；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "W7VlAp",
+          "classification": "Sample Photo × Corner BR @ LS-18 / 07a 邀請家人 · 只能看選中；同類 1 例：既有邀請頁示範照片母題，角托 corner-out 5pt 出血觸及示範照片邊緣，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "aY7S5",
+          "classification": "Spacer Section × Corner TL @ LS-21 / 11b 時間軸 · 空狀態；同類 1 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "BbDZH",
+          "classification": "Spacer Section × Corner TR @ LS-21 / 11b 時間軸 · 空狀態；同類 1 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "K3Q7ZT/DjW91",
+          "node_b": "OR1hw",
+          "classification": "Corner TL × Tab Bar @ LS-21 / 11c 時間軸 · 下拉更新中；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "K3Q7ZT/JgUK8",
+          "node_b": "OR1hw",
+          "classification": "Corner TR × Tab Bar @ LS-21 / 11c 時間軸 · 下拉更新中；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "MFpwo/DjW91",
+          "node_b": "sbsqF",
+          "classification": "Corner TL × Home Indicator Area @ LS-21 / 11 時間軸 · 深色；同類 1 例：Home Indicator Area 為板底固定裝飾條，角托 corner-out 5pt 出血觸及底部裝飾條，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "MFpwo/DjW91",
+          "node_b": "bmk5H",
+          "classification": "Corner TL × Tab Bar @ LS-21 / 11 時間軸 · 深色；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "MFpwo/JgUK8",
+          "node_b": "sbsqF",
+          "classification": "Corner TR × Home Indicator Area @ LS-21 / 11 時間軸 · 深色；同類 1 例：Home Indicator Area 為板底固定裝飾條，角托 corner-out 5pt 出血觸及底部裝飾條，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "MFpwo/JgUK8",
+          "node_b": "bmk5H",
+          "classification": "Corner TR × Tab Bar @ LS-21 / 11 時間軸 · 深色；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "FO005",
+          "node_b": "im7DS",
+          "classification": "Corner BL × Spacer Section @ LS-21 / 13 日記詳情 (iPhone)；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "a3oZ2",
+          "node_b": "im7DS",
+          "classification": "Corner BR × Spacer Section @ LS-21 / 13 日記詳情 (iPhone)；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "Kd1aN",
+          "node_b": "Yz0R7",
+          "classification": "Corner BL × Spacer Section @ LS-21 / 13 日記詳情 · 深色；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "Y21UsQ",
+          "node_b": "Yz0R7",
+          "classification": "Corner BR × Spacer Section @ LS-21 / 13 日記詳情 · 深色；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "E1nSH9",
+          "node_b": "EgTrf",
+          "classification": "Corner BL × Spacer Section @ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "UoKog",
+          "node_b": "EgTrf",
+          "classification": "Corner BR × Spacer Section @ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "u01Pc/DjW91",
+          "node_b": "u87Nb",
+          "classification": "Corner TL × Home Indicator Area @ Stress / 11 時間軸 · 單一寶貝 filter；同類 1 例：Home Indicator Area 為板底固定裝飾條，角托 corner-out 5pt 出血觸及底部裝飾條，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "u01Pc/DjW91",
+          "node_b": "M4PUm",
+          "classification": "Corner TL × Tab Bar @ Stress / 11 時間軸 · 單一寶貝 filter；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "u01Pc/JgUK8",
+          "node_b": "u87Nb",
+          "classification": "Corner TR × Home Indicator Area @ Stress / 11 時間軸 · 單一寶貝 filter；同類 1 例：Home Indicator Area 為板底固定裝飾條，角托 corner-out 5pt 出血觸及底部裝飾條，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "u01Pc/JgUK8",
+          "node_b": "M4PUm",
+          "classification": "Corner TR × Tab Bar @ Stress / 11 時間軸 · 單一寶貝 filter；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "s1LfAj",
+          "node_b": "repj6",
+          "classification": "Photos Header × Dragging Photo @ LS-21 / 12e 日記編輯器 · 照片排序（拖曳中）；同類 1 例：既有照片拖曳排序母題，拖曳中的照片示範跨越標題列，是拖曳動畫示意的既有設計（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "IDOjx",
+          "node_b": "h3zyP",
+          "classification": "Photos Header × Dragging Photo @ A11y / 12e 日記編輯器 · 照片排序（拖曳中）· Dynamic Type AX3（body 40pt）；同類 1 例：既有照片拖曳排序母題，拖曳中的照片示範跨越標題列，是拖曳動畫示意的既有設計（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "PU1lk",
+          "node_b": "UGZbZ",
+          "classification": "Corner BL × Spacer Section @ Stress / 13 日記詳情 · 20 張照片壓測；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "S7qlEV",
+          "node_b": "UGZbZ",
+          "classification": "Corner BR × Spacer Section @ Stress / 13 日記詳情 · 20 張照片壓測；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "IcuGv",
+          "node_b": "z12HU",
+          "classification": "Corner BL × Spacer Section @ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "kTGk5",
+          "node_b": "z12HU",
+          "classification": "Corner BR × Spacer Section @ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（既有債，非 LS-142 本輪觸碰的畫面內容）"
+        },
+        {
+          "node_a": "zYLzt",
+          "node_b": "WC9pB/DjW91",
+          "classification": "Spacer Section × Corner TL @ LS-142 / 14 相簿 (iPhone)；同類 1 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "zYLzt",
+          "node_b": "WC9pB/JgUK8",
+          "classification": "Spacer Section × Corner TR @ LS-142 / 14 相簿 (iPhone)；同類 1 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "R7edNW/DjW91",
+          "node_b": "wTMlo",
+          "classification": "Corner TL × Tab Bar @ LS-142 / 14 相簿 (iPhone)；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "R7edNW/JgUK8",
+          "node_b": "wTMlo",
+          "classification": "Corner TR × Tab Bar @ LS-142 / 14 相簿 (iPhone)；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "HauTE",
+          "node_b": "o5WSp",
+          "classification": "Corner BL × Spacer Bottom @ LS-142 / 15 相簿詳情 (iPhone)；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "v1R53",
+          "node_b": "o5WSp",
+          "classification": "Corner BR × Spacer Bottom @ LS-142 / 15 相簿詳情 (iPhone)；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "WESbz",
+          "node_b": "J4vk0/DjW91",
+          "classification": "Spacer Section × Corner TL @ LS-142 / 14 相簿 · 深色；同類 1 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "WESbz",
+          "node_b": "J4vk0/JgUK8",
+          "classification": "Spacer Section × Corner TR @ LS-142 / 14 相簿 · 深色；同類 1 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "T3SwvP/DjW91",
+          "node_b": "Kl0eH",
+          "classification": "Corner TL × Tab Bar @ LS-142 / 14 相簿 · 深色；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "T3SwvP/JgUK8",
+          "node_b": "Kl0eH",
+          "classification": "Corner TR × Tab Bar @ LS-142 / 14 相簿 · 深色；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "T4FpQ",
+          "node_b": "ONEs5/DjW91",
+          "classification": "Spacer Section × Corner TL @ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）；同類 1 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "T4FpQ",
+          "node_b": "ONEs5/JgUK8",
+          "classification": "Spacer Section × Corner TR @ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）；同類 1 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "oWCtg",
+          "node_b": "nxJbB/DjW91",
+          "classification": "Spacer Section × Corner TL @ Stress / 14 相簿 · 超長相簿名＋單張相片；同類 1 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "oWCtg",
+          "node_b": "nxJbB/JgUK8",
+          "classification": "Spacer Section × Corner TR @ Stress / 14 相簿 · 超長相簿名＋單張相片；同類 1 例：裝飾用留白 Spacer 與角托 corner-out 5pt 出血區域觸及，既有版式（多張板共通模式，含 LS-142 本輪新板沿用同一母題）（LS-142 本輪板）"
+        },
+        {
+          "node_a": "QSnUF/Qjdzx",
+          "node_b": "mdabp/UTLcl",
+          "classification": "Stack Sheet 2 × Fan Ghost @ Stress / 14 相簿 · 超長相簿名＋單張相片；同類 1 例：相鄰卡片的疊紙尾端與扇形紙緣在包圍盒層級輕微交疊（同一張板內兩張不同卡片），皆為裝飾用出血元素，視覺上各自被自己卡片的紙張與相片遮蔽，不构成實際碰撞（LS-142 本輪板）"
+        },
+        {
+          "node_a": "QSnUF/Qjdzx",
+          "node_b": "mdabp/KGh0U",
+          "classification": "Stack Sheet 2 × Fan Ghost 2 @ Stress / 14 相簿 · 超長相簿名＋單張相片；同類 1 例：相鄰卡片的疊紙尾端與扇形紙緣在包圍盒層級輕微交疊（同一張板內兩張不同卡片），皆為裝飾用出血元素，視覺上各自被自己卡片的紙張與相片遮蔽，不构成實際碰撞（LS-142 本輪板）"
+        },
+        {
+          "node_a": "QSnUF/Qjdzx",
+          "node_b": "j2svp",
+          "classification": "Stack Sheet 2 × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片；同類 1 例：Wl90J 壓測板第 2/3 張卡片內容刻意延伸到浮動 Tab Bar 膠囊之下（motifs.md a67Na 標準構圖：動內容、讓它自然落到板底之外被 clip；浮動 Tab Bar 本就疊在內容之上），是設計意圖非缺陷（LS-142 本輪板）"
+        },
+        {
+          "node_a": "QSnUF/o5O1GD",
+          "node_b": "j2svp",
+          "classification": "Stack Sheet 1 × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片；同類 1 例：Wl90J 壓測板第 2/3 張卡片內容刻意延伸到浮動 Tab Bar 膠囊之下（motifs.md a67Na 標準構圖：動內容、讓它自然落到板底之外被 clip；浮動 Tab Bar 本就疊在內容之上），是設計意圖非缺陷（LS-142 本輪板）"
+        },
+        {
+          "node_a": "QSnUF/mlORb",
+          "node_b": "j2svp",
+          "classification": "Corner BL × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "QSnUF/atAkU",
+          "node_b": "j2svp",
+          "classification": "Corner BR × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "mdabp/DjW91",
+          "node_b": "j2svp",
+          "classification": "Corner TL × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "mdabp/JgUK8",
+          "node_b": "j2svp",
+          "classification": "Corner TR × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片；同類 1 例：Tab Bar 為 layoutPosition absolute 浮動 overlay，本就疊在下方內容（含角托出血區域）之上，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "B87KY",
+          "node_b": "FpSWL",
+          "classification": "Corner BL × Spacer Bottom @ LS-142 / 15 相簿詳情 · 深色；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "t2rbzf",
+          "node_b": "FpSWL",
+          "classification": "Corner BR × Spacer Bottom @ LS-142 / 15 相簿詳情 · 深色；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "DXKtL",
+          "node_b": "OGFNo",
+          "classification": "Corner BL × Spacer Bottom @ A11y / 15 相簿詳情 · Dynamic Type AX3（body 40pt）；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "I7TMsE",
+          "node_b": "OGFNo",
+          "classification": "Corner BR × Spacer Bottom @ A11y / 15 相簿詳情 · Dynamic Type AX3（body 40pt）；同類 1 例：角托 corner-out 5pt 出血觸及下方留白 Spacer，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "C9wM3h",
+          "node_b": "DNCsy",
+          "classification": "Corner BL × Home Indicator Area @ LS-142 / 15-iPad 相簿詳情 (iPad 11\")；同類 1 例：Home Indicator Area 為板底固定裝飾條，角托 corner-out 5pt 出血觸及底部裝飾條，既有版式（LS-142 本輪板）"
+        },
+        {
+          "node_a": "piFNe",
+          "node_b": "DNCsy",
+          "classification": "Corner BR × Home Indicator Area @ LS-142 / 15-iPad 相簿詳情 (iPad 11\")；同類 1 例：Home Indicator Area 為板底固定裝飾條，角托 corner-out 5pt 出血觸及底部裝飾條，既有版式（LS-142 本輪板）"
+        }
+      ]
+    },
+    "corner_anchor": {
+      "boards": [
+        "bhroo",
+        "puHZ5",
+        "Xldkz",
+        "LTDYH",
+        "BTDgD",
+        "IjWOp",
+        "X9PfG",
+        "Wl90J",
+        "pVSXP",
+        "yfZyT",
+        "OysBA",
+        "ZXdu2",
+        "rFiLJ",
+        "FPaFl",
+        "rTEGf",
+        "JnQrT",
+        "FyV5I",
+        "Q8xZl9",
+        "s4VXMV",
+        "kHDk4"
+      ],
+      "containers": 89,
+      "points": 712,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 212,
+      "document_points": 1696,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "unresolved": []
+    }
+  }
+}
