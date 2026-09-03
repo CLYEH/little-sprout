@@ -259,6 +259,7 @@ struct ForkView: View {
     }
 }
 
+#if DEBUG
 #Preview("iPhone") {
     ForkView(authStore: .preview(), familyStore: .preview(), pendingInviteCode: .constant(nil))
 }
@@ -272,3 +273,4 @@ struct ForkView: View {
     ForkView(authStore: .preview(), familyStore: .preview(), pendingInviteCode: .constant(nil))
         .dynamicTypeSize(.accessibility3)
 }
+#endif

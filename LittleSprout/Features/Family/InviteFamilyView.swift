@@ -312,8 +312,10 @@ extension InviteFamilyView {
     }
 }
 
+#if DEBUG
 #Preview("空") {
     NavigationStack {
         InviteFamilyView(familyStore: .preview())
     }
 }
+#endif

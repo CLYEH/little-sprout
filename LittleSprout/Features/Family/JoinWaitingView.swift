@@ -185,6 +185,7 @@ struct JoinWaitingView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         JoinWaitingView(
@@ -197,3 +198,4 @@ struct JoinWaitingView: View {
         )
     }
 }
+#endif
