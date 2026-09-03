@@ -68,6 +68,116 @@ $$;
 reset role;
 rollback;
 
+-- ===========================================================================
+-- 1b. report_content 觸發檢舉通知（notification_events, kind='report'）
+--
+-- LS-149 R2（merge-reviewer PR #248 R1 major-1）：`content_reports_notify_insert`
+-- trigger（migration §8）原本零測試覆蓋——reviewer 實跑 `drop trigger
+-- content_reports_notify_insert on public.content_reports;` 後整套 supabase/tests/run.sh
+-- 仍然全綠，代表這個功能整個消失都沒有任何測試會發現。這裡補上。
+--
+-- notification_events 對 authenticated／anon 完全無 grant（見 87_
+-- comments_reactions_notifications.sql 既有測試），驗證一律 `reset role` 後以 postgres
+-- 身分讀。借用 00_fixtures.sql 直接 INSERT albums 已經觸發過的既有事件——相簿
+-- 4a...001（owner a1 建立）已有一筆 kind='album' actor=a1 event_count=1 的既有通知
+-- 事件——在同一個 target 上疊加 kind='report' 事件，順便驗證合併鍵含 kind（LS-58 R1
+-- 既有防線）沒有被新 kind 破壞：兩種 kind 各自獨立累計，不會被誤併成一筆。
+-- ===========================================================================
+begin;
+do $$
+declare
+  v_report_count int;
+  v_report_actor uuid;
+  v_album_count int;
+  v_album_actor uuid;
+begin
+  -- 前置條件：fixture 帶來的 kind='album' 事件確實存在（見 00_fixtures.sql 直接 INSERT
+  -- albums 觸發 albums_notify_insert）。
+  select event_count, actor_id into v_album_count, v_album_actor
+    from public.notification_events
+   where kind = 'album' and target_type = 'album'
+     and target_id = '4a000000-0000-4000-8000-000000000001';
+  if v_album_count is distinct from 1
+     or v_album_actor is distinct from 'a0000000-0000-4000-8000-000000000001'::uuid then
+    raise exception 'FAIL：前置條件不成立——fixture 的 kind=album 事件應為 count=1／actor=a1，實際 count=%／actor=%',
+      v_album_count, v_album_actor;
+  end if;
+
+  -- a3 檢舉相簿 4a...001：必須產生一筆新的 kind='report' 事件，actor＝檢舉人。
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+  set local role authenticated;
+  perform public.report_content(
+    'fa000000-0000-4000-8000-000000000001', 'album',
+    '4a000000-0000-4000-8000-000000000001', '第一次檢舉'
+  );
+  reset role;
+
+  select event_count, actor_id into v_report_count, v_report_actor
+    from public.notification_events
+   where kind = 'report' and target_type = 'album'
+     and target_id = '4a000000-0000-4000-8000-000000000001';
+  if v_report_count is distinct from 1
+     or v_report_actor is distinct from 'a0000000-0000-4000-8000-000000000003'::uuid then
+    raise exception 'FAIL：report_content 沒有正確產生 kind=report 通知事件（實際 count=%／actor=%，mutation test：drop trigger content_reports_notify_insert 這裡會紅）',
+      v_report_count, v_report_actor;
+  end if;
+
+  -- kind 不會誤併：既有 kind='album' 事件必須維持原封不動。
+  select event_count, actor_id into v_album_count, v_album_actor
+    from public.notification_events
+   where kind = 'album' and target_type = 'album'
+     and target_id = '4a000000-0000-4000-8000-000000000001';
+  if v_album_count <> 1 or v_album_actor <> 'a0000000-0000-4000-8000-000000000001'::uuid then
+    raise exception 'FAIL：kind=report 事件誤併進了既有的 kind=album 事件（實際 count=%／actor=%）',
+      v_album_count, v_album_actor;
+  end if;
+
+  -- 同一人重複檢舉（report_content 去重，content_reports 不會新增列）：AFTER INSERT
+  -- trigger 不會再次觸發，kind=report 事件的 event_count 必須維持 1，不能被重複計數。
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+  set local role authenticated;
+  perform public.report_content(
+    'fa000000-0000-4000-8000-000000000001', 'album',
+    '4a000000-0000-4000-8000-000000000001', '又檢舉一次'
+  );
+  reset role;
+
+  select event_count into v_report_count from public.notification_events
+   where kind = 'report' and target_type = 'album'
+     and target_id = '4a000000-0000-4000-8000-000000000001';
+  if v_report_count <> 1 then
+    raise exception 'FAIL：同人重複檢舉（已去重、未新增 content_reports 列）卻讓通知 event_count 變成 %（應維持 1）',
+      v_report_count;
+  end if;
+
+  -- 第二位檢舉人（a1，同一個目標，同一個 5 分鐘視窗內）：event_count 累加成 2，actor
+  -- 換成最新那位檢舉人——同既有四種 kind 的彙總語意（20260825020000_… §3）。
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+  set local role authenticated;
+  perform public.report_content(
+    'fa000000-0000-4000-8000-000000000001', 'album',
+    '4a000000-0000-4000-8000-000000000001', '我也覺得不妥'
+  );
+  reset role;
+
+  select event_count, actor_id into v_report_count, v_report_actor
+    from public.notification_events
+   where kind = 'report' and target_type = 'album'
+     and target_id = '4a000000-0000-4000-8000-000000000001';
+  if v_report_count <> 2 or v_report_actor <> 'a0000000-0000-4000-8000-000000000001'::uuid then
+    raise exception 'FAIL：第二位檢舉人沒有讓通知事件正確累加（實際 count=%／actor=%，應為 count=2／actor=a1）',
+      v_report_count, v_report_actor;
+  end if;
+
+  raise notice 'ok：report_content 正確產生 kind=report 通知事件（actor／event_count 正確、不與既有 kind=album 事件誤併、同人重複檢舉不重複計數、第二位檢舉人正確累加）';
+end;
+$$;
+reset role;
+rollback;
+
 -- 既有 fixture 的重複檢舉：a2 再次檢舉 6a...001（已經在 00_fixtures.sql 裡對它送過一筆
 -- pending 報告，id=8a000000...001），必須回傳那個既有 id，不新增列。
 begin;
