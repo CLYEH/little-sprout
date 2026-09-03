@@ -36,7 +36,7 @@
    - **B. 填自訂 EULA**（貼 `eula-addendum.md` 的 PASTE 區）：產品頁顯示授權合約連結，零容忍在下載前即可見；代價是必須符合 Apple 最低條款（草稿已含第三方受益人、Apple 無維護義務等必要語句，但**建議律師對照 Apple minterms 逐條核對**）。
 4. **GDPR**：草稿採「不以歐盟居民為對象」立場（隱私權政策 §12），未做 GDPR 專章。依 GDPR 第 3 條第 2 項，非歐盟業者僅在「向歐盟境內資料主體提供服務」或「監控其行為」時適用；本 App 僅繁中、無歐盟行銷、無追蹤，屬不適用的常見形狀，但**App Store 上架地區若勾選全球，歐盟使用者仍能下載**。若要更保守：送審時把可下載地區限制在臺灣（或亞太），或請律師確認。
 5. **照片 EXIF**：目前原檔以原樣上傳（`PickedItemLoader.swift` `loadTransferable(type: Data.self)` → 直接 PUT），EXIF 含拍攝地點會一併保存；草稿已如實揭露（隱私權政策 §2.4）並教使用者自行移除。若使用者希望 App 端上傳前剝除 GPS，屬另票（產品決策＋實作），揭露文字屆時再改。
-6. **刪除帳號後，您單獨上傳的照片／影片要留給家庭，還是一併刪除？**（merge-review R2 M3）現況（LS-143 `delete_my_account()`）：`media` 是獨立的時間軸項目，**不隨帳號軟刪**，留在家庭相簿直到清除排程（LS-153）才清；日記／相簿／留言則立即軟刪。文本依現況寫「將於清除排程一併永久清除，在此之前仍會顯示於家庭相簿」（隱私 §8）。若裁決改為一併軟刪，需擴大 LS-143／LS-151 範圍並改該句。
+6. **刪除帳號後，您單獨上傳的照片／影片要留給家庭，還是一併刪除？**（merge-review R2 M3／R3 M4）**現況＝永久留存、由 Owner 決定**：LS-143 `delete_my_account()` 不觸碰 `media`（`deleted_at` 仍 NULL）；LS-151 刪 `auth.users` 後 `media.uploaded_by` 只 `on delete set null`（`init_schema.sql`），列不消失；LS-153 的清除鍵是 `deleted_at`／`deletion_requested_at`，這批照片兩欄皆空、**不在任何清除集合內**。三票照現行票文上線後，這些照片仍無限期留在家庭相簿，只有該家庭 Owner 能硬刪（`docs/API.md` §2 `media`「硬刪僅 owner」）。文本依現況寫「保留在原家庭的相簿中，由該家庭的 Owner 決定保留或刪除；可在刪除帳號前自行刪除」（隱私 §8，與條款 §4.5 一致）。兩個選項：(a) **明文留給家庭**（現行文本）；(b) **一併刪除**——需 LS-143 補 `media` 軟刪路徑（或 LS-151 以 service_role 標記）＋LS-153 納入清除，並改隱私 §8 該句。**沒有「等 LS-153 自己清」這個選項。**
 
 ## 文本中承諾、但程式尚未落地的項目（送審前必須對齊）
 
@@ -44,13 +44,13 @@
 
 | 文本承諾 | 對應票 | 現況（2026-09-03） |
 |---|---|---|
-| App 內「設定 → 刪除帳號」兩步流程（隱私 §5 期間、§8「刪除帳號」；條款 §9.1；EULA §四.1）：① RPC 立即——退出家庭／唯一成員的家庭 cascade 刪除／自己的日記相簿留言軟刪／`profiles.deletion_requested_at` 標記；② 登入身分（email／顯示名稱／頭像＝`auth.users`＋`profiles`）與推播裝置代碼於帳號刪除完成時移除；單獨上傳的照片影片留到清除排程、在此之前仍顯示；30 天內系統自動永久清除 | LS-24（UI）／LS-143（RPC，PR #244）／**LS-151**（Edge Function 以 service_role 刪 `auth.users`）／**LS-153**（30 天自動清除） | LS-143 In Progress；LS-24／LS-151／LS-153 Backlog；Swift 端尚無畫面。依 `20260903084231_delete_account.sql` 檔頭：`media`／`reactions`／`device_tokens` **明文不在 RPC 範圍**（`device_tokens` 靠 `auth.users` 刪除時 cascade，即 LS-151 完成時才清）。**待使用者裁決（產品）**：刪帳號後「您單獨上傳的照片／影片」要留給家庭、還是一併軟刪？現況是留著、等 LS-153 清；文本依現況寫「將於清除排程一併永久清除，在此之前仍會顯示於家庭相簿」 |
+| App 內「設定 → 刪除帳號」兩步流程（隱私 §5 期間、§8「刪除帳號」；條款 §9.1；EULA §四.1）：① RPC 立即——退出家庭／唯一成員的家庭 cascade 刪除／自己的日記相簿留言軟刪／`profiles.deletion_requested_at` 標記；② 登入身分（email／顯示名稱／頭像＝`auth.users`＋`profiles`）與推播裝置代碼於帳號刪除完成時移除；單獨上傳的照片影片**留在原家庭、由 Owner 決定**（不在 LS-153 清除集合內）；標記資料 30 天內系統自動永久清除 | LS-24（UI）／LS-143（RPC，PR #244）／**LS-151**（Edge Function 以 service_role 刪 `auth.users`）／**LS-153**（30 天自動清除） | LS-143 In Progress；LS-24／LS-151／LS-153 Backlog；Swift 端尚無畫面。依 `20260903084231_delete_account.sql` 檔頭：`media`／`reactions`／`device_tokens` **明文不在 RPC 範圍**（`device_tokens` 靠 `auth.users` 刪除時 cascade，即 LS-151 完成時才清）。**待使用者裁決（產品）**：刪帳號後「您單獨上傳的照片／影片」明文留給家庭、還是一併刪除？現況＝永久留存（`media.deleted_at` 不被寫入、`uploaded_by` set null、不在 LS-153 清除鍵內），文本依現況寫「保留在原家庭、由 Owner 決定」；選一併刪除需擴 LS-143／LS-151＋LS-153（見裁決清單第 6 項） |
 | 「在 App 內」檢舉（條款 §6.2）、封鎖（§6.4）、Owner 移除內容與處理檢舉（§6.5）、檢舉同時送達平台方；EULA §二.3 | LS-23（UI，設計併入 LS-152）／LS-149（後端） | 表與 RLS 已在（`content_reports`／`blocked_users`）；App 端無呼叫端（`grep -rn -e create_content_report -e blocked_users LittleSprout/` 0 hits）；LS-149 In Progress、LS-23 Backlog |
 | 24 小時內處理檢舉（條款 §6.3） | 營運承諾，非程式 | 需有人（使用者本人）看 Supabase Dashboard 的 `content_reports`；建議設 email 或 webhook 提醒，否則 24 小時承諾靠自律 |
 | 清除排程：軟刪內容／逾期孩子檔案／刪除帳號後的標記資料 30 天後系統自動永久清除，含照片影片實體檔案與額度對帳（隱私 §5、§8 全段） | **LS-153**（使用者 2026-09-03 裁決：系統自動、不做人工清除；TestFlight 前落地） | Backlog。repo 目前無任何排程（`grep -rni -e pg_cron -e cron.schedule -e purge supabase/` 0 hits）；`docs/API.md:1263` 現行設計**刻意**不硬刪軟刪 `media` 的 Storage 物件；30 天還原邊界只有 `children`（`LS043`，且**無硬刪路徑**、軟刪列對全體成員可讀），`diaries`／`comments`／`albums` 軟刪無時間邊界。正文已依裁決寫「系統自動永久清除（LS-153，待落地）」——**LS-153 未上線前不得填生效日** |
 | 推播通知（隱私 §2.5） | LS-22 | 文本已寫「尚未啟用；啟用前不蒐集」——LS-22 上線時把該句刪掉並在 App Privacy 標籤加 Device ID |
 | 「重大變更於 App 內通知」（隱私 §13、條款 §15） | 無票 | 目前無 in-app 公告機制；第一版可用 App Store 更新說明＋歡迎頁版本號達成，或另票 |
-| 帳號刪除向 Apple 撤銷 token（隱私 §8） | **未明列於 LS-143／LS-151 票文** | Apple 帳號刪除指引要求以 Sign in with Apple REST API 撤銷；`20260903084231_delete_account.sql` 未做；建議歸 LS-151（同為 service_role 流程）並補進票文，否則正文該句要刪 |
+| 帳號刪除向 Apple 撤銷 token（隱私 §8） | **LS-151**（orchestrator 2026-09-03 已列入票文範圍） | Apple 帳號刪除指引要求以 Sign in with Apple REST API 撤銷；`20260903084231_delete_account.sql`（純 SQL）不做，由 LS-151 的 service_role Edge Function 執行；正文句保留 |
 | 刪除單筆內容（照片／日記／留言）UI（隱私 §4.4、§8「刪除單筆內容」；條款 §6.5） | **LS-152**（設定與成員管理畫面群設計票，使用者 2026-09-03 裁決併入） | 後端已在（`set_diary_deleted`／`set_comment_deleted`／`set_album_deleted`、`media.deleted_at`）；App 端無呼叫端（`grep -rn -e set_diary_deleted -e set_comment_deleted -e set_album_deleted LittleSprout/` 只命中 `Errors/AppError.swift` 註解）；唯一有刪除 UI 的是孩子檔案（`Features/Children/EditChildView.swift`）。正文已改為「透過 App 或來信」 |
 | 退出家庭 UI（條款 §4.5；隱私 §9） | **LS-152** | 後端已在（`family_members` DELETE policy「任何人可自行退出」，API.md §2）；`Features/SettingsView.swift` 只有「邀請家人」與「登出」。正文已改為「透過 App 或來信」 |
 | Owner 移除成員 UI（條款 §4.5、§6.5；隱私 §4.5） | **LS-152** | 後端已在（owner 移除任何人）；`Features/Family/` 無成員清單畫面。正文已改為「有權」 |
@@ -105,7 +105,7 @@ LS-133 票文已定：「SwiftUI 以 bundled markdown 渲染（`AttributedString
 
 | 方式 | 做法 | 優點 | 缺點 |
 |---|---|---|---|
-| **Bundle 內 markdown**（LS-133 現行方向） | build 時把 `docs/legal/*.md` 複製進 app bundle（xcodegen `project.yml` 加 resource），閱讀器讀本機檔 | 離線可讀、無網路請求、無載入延遲、送審時審核員一定看得到 | 文本更新要發版；App 內版本可能落後公開網址（隱私 §13 承諾「重大變更會在 App 內通知」——兩處版本號不一致時要以公開網址為準並提示更新） |
+| **Bundle 內 markdown**（LS-133 現行方向） | build 時把 `docs/legal/privacy-policy.md` 與 `terms-of-service.md`（不含 `eula-addendum.md` 與本 README）複製進 app bundle（xcodegen `project.yml` 加 resource），閱讀器讀本機檔 | 離線可讀、無網路請求、無載入延遲、送審時審核員一定看得到 | 文本更新要發版；App 內版本可能落後公開網址（隱私 §13 承諾「重大變更會在 App 內通知」——兩處版本號不一致時要以公開網址為準並提示更新） |
 | **遠端 URL** | 閱讀器用 `WKWebView` 或抓 markdown 後渲染 `[[SUPPORT_URL]]/privacy` | 永遠最新、單一來源 | 需網路；載入失敗要有 fallback；Guideline 5.1.1(i) 要求「App 內容易取得」——網頁失效等於違規；審核時網路環境不可控 |
 
 建議：**bundle 為主、遠端為輔**——閱讀器顯示 bundle 版並附「線上最新版」連結；`docs/legal/*.md` 的檔頭表格保留版本號讓兩邊可比對。`AttributedString(markdown:)` 預設不支援表格與多層清單（`inlineOnlyPreservingWhitespace` 之外的選項也有限），LS-133 實作時要嘛換渲染器，要嘛把檔頭表格改成純段落；本票不動文本格式，留給該票依渲染器決定。另：merge-review R2 實測 `AttributedString(markdown:)`（兩種 parsing option）會把 HTML 註解原樣輸出為可見文字，因此本 PR 起隱私權政策與使用條款**不含任何 HTML 註解**（`eula-addendum.md` 僅有 BEGIN／END PASTE 兩個標記，該檔不進 App bundle，貼進 ASC 時只取標記之間），LS-133 不需剝除；但 `[[…]]` placeholder 與「（LS-nnn，待落地）」草稿標記若殘留同樣會被使用者看到——生效前清空是 LS-133 上線的前提。
