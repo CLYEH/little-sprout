@@ -92,7 +92,17 @@ input.requestMediaDataWhenReady(on: queue) {
         }
         CVPixelBufferUnlockBaseAddress(buffer, [])
         let time = CMTimeMake(value: Int64(frame), timescale: fps)
-        adaptor.append(buffer, withPresentationTime: time)
+        // N4（merge-review R2，PLAUSIBLE）：append 的回傳值原本被丟棄。若 writer 在
+        // startWriting 成功之後才失敗（例如寫入途中磁碟滿），迴圈原本會照常跑完、
+        // finishWriting 以 .failed 狀態回呼（done.signal() 照樣觸發，不會卡住——這點跟
+        // F6 那三處不同），但呼叫端量到一個壞檔的 duration：量到 0 秒時靜默印 1、
+        // exit 0（假裝成功），量到 NaN 時整數轉換直接 trap。失敗就立刻帶著
+        // writer.error 退出，不要讓迴圈以為自己還在正常前進。
+        guard adaptor.append(buffer, withPresentationTime: time) else {
+            let msg = writer.error.map { "\($0)" } ?? "unknown"
+            FileHandle.standardError.write(Data("adaptor.append 失敗（frame \(frame)）：\(msg)\n".utf8))
+            exit(1)
+        }
         frame += 1
     }
 }
