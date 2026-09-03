@@ -441,7 +441,8 @@ declare
     'public.list_comments(uuid, text, uuid, timestamptz, uuid, integer)',
     'public.create_child(uuid, text, date, text)',
     'public.update_child(uuid, text, date, text)',
-    'public.set_child_deleted(uuid, boolean)'
+    'public.set_child_deleted(uuid, boolean)',
+    'public.delete_my_account()'
   ];
   v_invoker_rpcs text[] := array[
     'public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)',
