@@ -1282,15 +1282,21 @@ PR #95 review F1）訂正：這裡原本誤寫成跟 `LS041`–`LS043` 一起歸
   樣），不要為了補這個徽章去簽全尺寸原圖做客戶端解碼——那正是本欄位存在的目的：
   用一次 DB 查詢換掉一次全尺寸 egress。與下方 LS-130 的縮圖優先簽名策略互補：即使
   `duration_seconds` 缺失，也只會讓徽章退化成純文字，不會反過來觸發全尺寸簽名。
-  **iOS 消費者現況（LS-130）**：時間軸卡片流（`TimelineContentAssembler.
+  **iOS 消費者現況（LS-130／LS-135）**：時間軸卡片流（`TimelineContentAssembler.
   fetchDiaryContents`／`fetchAlbumContents`／`fetchMediaContents`，經 `PrintPhotoCard.
   remoteURL` 呼叫端 `AlbumCardView`／`PhotoCardView`／`DiaryCardView` 顯示）與日記詳情瀑布流
   （`fetchDiaryPhotos`，`MasonryPhotoWallView` 顯示；比例改用 `thumb_width`／`thumb_height`，
   同一條 NULL 退回規則）已落地，全尺寸原檔改由 `TimelineStore.signFullSizeURL(storagePath:)`
   在播放影片當下現簽（`DiaryDetailView.playVideo`）——影片時長徽章不依賴這裡簽出的 URL，
-  改查上方「影片時長徽章讀取策略」的 `media.duration_seconds`。**相簿列表畫面尚未實作**
-  （LS-126 票文「不做：相簿畫面」）——本節這條規則在契約層面已對它生效，待該畫面實作時
-  比照 `fetchAlbumContents` 的 `displayPath` 選路寫法即可，不需要另外裁決簽名策略。
+  改查上方「影片時長徽章讀取策略」的 `media.duration_seconds`。**LS-135 起**：`MediaRow`／
+  `MediaContent` 帶 `durationSeconds`（`.select()` 選 `*`，隨既有查詢一起回來，不需要另外的
+  RPC 或欄位級 grant），`TimelineStore.displayDuration(for:)` 優先讀這個值，`nil`（LS-135
+  之前上傳的舊列、或上傳端量測失敗的過渡列）才退回 `MediaContent.needsVideoDurationLookup`
+  （`type == .video && !isThumbnail && durationSeconds == nil`）判斷是否要對 `signedURL`
+  現讀 `AVURLAsset.load(.duration)`——`isThumbnail` 為 `true` 的縮圖列一律不查，即使
+  `durationSeconds` 也是 `NULL`。**相簿列表畫面尚未實作**（LS-126 票文「不做：相簿畫面」）
+  ——本節這條規則在契約層面已對它生效，待該畫面實作時比照 `fetchAlbumContents` 的
+  `displayPath` 選路寫法即可，不需要另外裁決簽名策略。
 
 ---
 
