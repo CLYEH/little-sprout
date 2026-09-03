@@ -108,7 +108,7 @@ LS-133 票文已定：「SwiftUI 以 bundled markdown 渲染（`AttributedString
 | **Bundle 內 markdown**（LS-133 現行方向） | build 時把 `docs/legal/*.md` 複製進 app bundle（xcodegen `project.yml` 加 resource），閱讀器讀本機檔 | 離線可讀、無網路請求、無載入延遲、送審時審核員一定看得到 | 文本更新要發版；App 內版本可能落後公開網址（隱私 §13 承諾「重大變更會在 App 內通知」——兩處版本號不一致時要以公開網址為準並提示更新） |
 | **遠端 URL** | 閱讀器用 `WKWebView` 或抓 markdown 後渲染 `[[SUPPORT_URL]]/privacy` | 永遠最新、單一來源 | 需網路；載入失敗要有 fallback；Guideline 5.1.1(i) 要求「App 內容易取得」——網頁失效等於違規；審核時網路環境不可控 |
 
-建議：**bundle 為主、遠端為輔**——閱讀器顯示 bundle 版並附「線上最新版」連結；`docs/legal/*.md` 的檔頭表格保留版本號讓兩邊可比對。`AttributedString(markdown:)` 預設不支援表格與多層清單（`inlineOnlyPreservingWhitespace` 之外的選項也有限），LS-133 實作時要嘛換渲染器，要嘛把檔頭表格改成純段落；本票不動文本格式，留給該票依渲染器決定。另：merge-review R2 實測 `AttributedString(markdown:)`（兩種 parsing option）會把 HTML 註解原樣輸出為可見文字，因此本 PR 起三份正文**不含任何 HTML 註解**，LS-133 不需剝除；但 `[[…]]` placeholder 與「（LS-nnn，待落地）」草稿標記若殘留同樣會被使用者看到——生效前清空是 LS-133 上線的前提。
+建議：**bundle 為主、遠端為輔**——閱讀器顯示 bundle 版並附「線上最新版」連結；`docs/legal/*.md` 的檔頭表格保留版本號讓兩邊可比對。`AttributedString(markdown:)` 預設不支援表格與多層清單（`inlineOnlyPreservingWhitespace` 之外的選項也有限），LS-133 實作時要嘛換渲染器，要嘛把檔頭表格改成純段落；本票不動文本格式，留給該票依渲染器決定。另：merge-review R2 實測 `AttributedString(markdown:)`（兩種 parsing option）會把 HTML 註解原樣輸出為可見文字，因此本 PR 起隱私權政策與使用條款**不含任何 HTML 註解**（`eula-addendum.md` 僅有 BEGIN／END PASTE 兩個標記，該檔不進 App bundle，貼進 ASC 時只取標記之間），LS-133 不需剝除；但 `[[…]]` placeholder 與「（LS-nnn，待落地）」草稿標記若殘留同樣會被使用者看到——生效前清空是 LS-133 上線的前提。
 
 ## 文本更新流程（LS-132 範圍第 3 點）
 
