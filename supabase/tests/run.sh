@@ -394,6 +394,13 @@ race_case "兩位共同 owner 幾乎同時刪除帳號：後動者必須被阻�
   delete_account_race_setup.sql delete_account_race_s1.sql \
   delete_account_race_s2.sql delete_account_race_verify.sql
 
+# LS-143 R2（merge-review R1 m2）：approve_join() 先動、delete_my_account() 後動——
+# 剛核准加入的成員不得被「唯一成員」候選判斷連坐 cascade 刪除。見 migration 檔頭
+# 「併發設計」m2 段落與 delete_account_vs_approve_join_s2.sql 的說明。
+race_case "approve_join 先動、delete_my_account 後動：剛核准的成員不得被連坐 cascade 刪除" \
+  delete_account_vs_approve_join_setup.sql delete_account_vs_approve_join_s1.sql \
+  delete_account_vs_approve_join_s2.sql delete_account_vs_approve_join_verify.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 delete from public.families where id in (
@@ -409,7 +416,8 @@ delete from public.families where id in (
   'f8000000-0000-4000-8000-000000000001',
   'f0000000-0000-4000-8000-000000000001',
   '9a000000-0000-4000-8000-000000000001',
-  'd3000000-0000-4000-8000-000000000001'
+  'd3000000-0000-4000-8000-000000000001',
+  'd5000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -418,6 +426,8 @@ delete from auth.users where id in (
   'd2000000-0000-4000-8000-000000000001',
   'd4000000-0000-4000-8000-000000000001',
   'd4000000-0000-4000-8000-000000000002',
+  'd6000000-0000-4000-8000-000000000001',
+  'd7000000-0000-4000-8000-000000000001',
   'ea000000-0000-4000-8000-000000000001',
   'ea000000-0000-4000-8000-000000000002',
   'ea000000-0000-4000-8000-000000000003',

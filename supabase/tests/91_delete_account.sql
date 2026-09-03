@@ -125,7 +125,7 @@ begin
     raise exception 'FAIL：LS050 沒有被觸發';
   end if;
 
-  v_families := v_detail::jsonb;  -- 不是合法 JSON 會直接在這裡噴錯，测的就是这个契約
+  v_families := v_detail::jsonb;  -- 不是合法 JSON 會直接在這裡噴錯，測的就是這個契約
   if jsonb_typeof(v_families) <> 'array' or jsonb_array_length(v_families) <> 1 then
     raise exception 'FAIL：LS050 的 DETAIL 應該是恰好一個家庭的 JSON 陣列，實際 %', v_detail;
   end if;
@@ -162,6 +162,7 @@ declare
   v_sole uuid := 'ab000000-0000-4000-8000-000000000001';
   v_family uuid := 'aa000000-0000-4000-8000-000000000001';
   v_diary uuid := 'ac000000-0000-4000-8000-000000000001';
+  v_media uuid := 'ac000000-0000-4000-8000-000000000002';
   v_n int;
   v_requested_at timestamptz;
 begin
@@ -175,6 +176,13 @@ begin
   insert into public.families (id, name, created_by) values (v_family, '獨居測試家', v_sole);
   insert into public.diaries (id, family_id, author_id, body, entry_date)
   values (v_diary, v_family, v_sole, '獨居測試日記', current_date);
+  -- R2 修正 m3：情況 2 是唯一的不可逆硬刪路徑，真實家庭一定有照片，原本的 fixture
+  -- 只放 diary，完全沒釘住「家庭 cascade ↔ media_storage_sync() 的 DELETE 分支對
+  -- 正在被刪的 families 列下 UPDATE」這個交互（merge-review R1 已手動驗過安全，
+  -- 但沒有測試會叫）。
+  insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by)
+  values (v_media, v_family, v_family::text || '/2026/09/' || v_media::text || '.jpg',
+          'photo', 1048576, now(), 100, 100, v_sole);
   reset role;
 
   perform set_config('request.jwt.claims',
@@ -195,6 +203,16 @@ begin
     raise exception 'FAIL：唯一成員刪帳號後，家庭底下的日記還在（應隨 family cascade 刪除）';
   end if;
 
+  select count(*) into v_n from public.media where id = v_media;
+  if v_n <> 0 then
+    raise exception 'FAIL：唯一成員刪帳號後，家庭底下的 media 還在（應隨 family cascade 刪除）';
+  end if;
+
+  select count(*) into v_n from public.feed_items where family_id = v_family;
+  if v_n <> 0 then
+    raise exception 'FAIL：唯一成員刪帳號後，feed_items 還留著這個家庭的列';
+  end if;
+
   select count(*) into v_n from public.family_members where user_id = v_sole;
   if v_n <> 0 then
     raise exception 'FAIL：唯一成員刪帳號後，family_members 還留著他的列';
@@ -206,7 +224,94 @@ begin
     raise exception 'FAIL：唯一成員的 profiles.deletion_requested_at 沒有被標記';
   end if;
 
-  raise notice 'ok：唯一成員（也是唯一 owner）——家庭與其資料一併刪除（cascade），profiles 標記 deletion_requested_at';
+  raise notice 'ok：唯一成員（也是唯一 owner）——家庭與其資料（含 media／feed_items）一併刪除（cascade），profiles 標記 deletion_requested_at';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 3b.（R2 新增，merge-review R1 m3）混合案：同一次呼叫同時吃到情況 2＋情況 3——
+--     使用者同時是「獨居家」的唯一成員，也是另一個既有多人家庭的普通 member。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_mixed uuid := 'b1000000-0000-4000-8000-000000000001';
+  v_solo_family uuid := 'b2000000-0000-4000-8000-000000000001';
+  v_solo_diary uuid := 'b3000000-0000-4000-8000-000000000001';
+  v_shared_diary uuid := 'b4000000-0000-4000-8000-000000000001';
+  v_family_b uuid := 'fb000000-0000-4000-8000-000000000001';  -- B 家（fixtures，owner+member 各一）
+  v_n int;
+  v_deleted_at timestamptz;
+  v_deleted_by uuid;
+  v_requested_at timestamptz;
+begin
+  set local role postgres;
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at,
+                          raw_app_meta_data, raw_user_meta_data)
+  values (v_mixed, '00000000-0000-0000-0000-000000000000',
+          'authenticated', 'authenticated', 'ls143-mixed@ls143.test', now(), now(), '{}', '{}');
+  insert into public.profiles (id, display_name) values (v_mixed, '混合案測試帳號')
+    on conflict (id) do update set display_name = excluded.display_name;
+  -- 情況 2 的那一半：自己的獨居家
+  insert into public.families (id, name, created_by) values (v_solo_family, '混合案獨居家', v_mixed);
+  insert into public.diaries (id, family_id, author_id, body, entry_date)
+  values (v_solo_diary, v_solo_family, v_mixed, '獨居家日記', current_date);
+  -- 情況 3 的那一半：額外加入既有的 B 家（fixtures 已有 owner b1／member b2），
+  -- 並留一篇自己的日記
+  insert into public.family_members (family_id, user_id, role) values (v_family_b, v_mixed, 'member');
+  insert into public.diaries (id, family_id, author_id, body, entry_date)
+  values (v_shared_diary, v_family_b, v_mixed, '混合案在 B 家的日記', current_date);
+  reset role;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_mixed, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.delete_my_account();
+  reset role;
+
+  set local role postgres;
+
+  -- 情況 2 那一半：獨居家整個消失
+  select count(*) into v_n from public.families where id = v_solo_family;
+  if v_n <> 0 then
+    raise exception 'FAIL：混合案的獨居家沒有被 cascade 刪除';
+  end if;
+  select count(*) into v_n from public.diaries where id = v_solo_diary;
+  if v_n <> 0 then
+    raise exception 'FAIL：混合案獨居家底下的日記還在';
+  end if;
+
+  -- 情況 3 那一半：B 家存活、原本兩位成員不受影響，自己的日記軟刪、自己離開
+  select count(*) into v_n from public.family_members where family_id = v_family_b;
+  if v_n <> 2 then
+    raise exception 'FAIL：混合案離開之後 B 家應剩原本 2 位成員，實際 %', v_n;
+  end if;
+  select count(*) into v_n from public.family_members
+   where family_id = v_family_b and user_id = v_mixed;
+  if v_n <> 0 then
+    raise exception 'FAIL：混合案應該已經離開 B 家';
+  end if;
+  select deleted_at, deleted_by into v_deleted_at, v_deleted_by
+    from public.diaries where id = v_shared_diary;
+  if v_deleted_at is null or v_deleted_by is distinct from v_mixed then
+    raise exception 'FAIL：混合案在 B 家的日記沒有被正確軟刪（deleted_at=% deleted_by=%）',
+      v_deleted_at, v_deleted_by;
+  end if;
+  select deleted_at into v_deleted_at from public.diaries
+   where id = '5b000000-0000-4000-8000-000000000001';  -- B 家 fixtures 既有日記，不屬於這個人
+  if v_deleted_at is not null then
+    raise exception 'FAIL：不屬於混合案帳號的 B 家既有日記竟然被連帶軟刪';
+  end if;
+
+  select deletion_requested_at into v_requested_at from public.profiles where id = v_mixed;
+  if v_requested_at is null then
+    raise exception 'FAIL：混合案的 profiles.deletion_requested_at 沒有被標記';
+  end if;
+
+  raise notice 'ok：混合案（同一次呼叫同時觸發情況 2＋情況 3）——獨居家 cascade 刪除，B 家存活且只有自己的內容被軟刪、自己離開';
 end;
 $$;
 
@@ -244,6 +349,8 @@ begin;
 do $$
 declare
   v_member uuid := 'a0000000-0000-4000-8000-000000000002';
+  v_display_name text;
+  v_avatar_url text;
 begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
@@ -255,11 +362,22 @@ begin
     null;  -- ok
   end;
 
-  -- 既有欄位（display_name／avatar_url）仍然可以直接編輯，不受這次收斂影響。
-  update public.profiles set display_name = '改個名字測試' where id = v_member;
+  -- 既有欄位（display_name／avatar_url）仍然可以直接編輯，不受這次收斂影響（R2
+  -- 修正 m4：先前只驗了 display_name，avatar_url 漏打，noticed 文字卻已宣稱兩欄
+  -- 都保住——merge-review R1 m4）。
+  update public.profiles
+     set display_name = '改個名字測試', avatar_url = 'https://example.test/avatar.jpg'
+   where id = v_member;
   reset role;
 
-  raise notice 'ok：deletion_requested_at 的欄位級 grant 已收回（42501），display_name／avatar_url 不受影響';
+  select display_name, avatar_url into v_display_name, v_avatar_url
+    from public.profiles where id = v_member;
+  if v_display_name <> '改個名字測試' or v_avatar_url <> 'https://example.test/avatar.jpg' then
+    raise exception 'FAIL：display_name／avatar_url 直接 UPDATE 沒有真的落地（%／%）',
+      v_display_name, v_avatar_url;
+  end if;
+
+  raise notice 'ok：deletion_requested_at 的欄位級 grant 已收回（42501），display_name／avatar_url 皆可直接編輯且已驗證落地';
 end;
 $$;
 
