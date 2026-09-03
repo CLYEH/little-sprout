@@ -11,11 +11,9 @@ on:
     branches: [development, test, main]
   push:
     branches: [development, test, main]
-  # LS-139：手動觸發（`gh workflow run ci.yml --ref <branch>`）跑出「push 形狀」的 run——base_ref／head_ref 皆空，
-  # 依 diff 判定的 step（Release 組態編譯 gate／點擊目標 gate）走無條件路徑。用途：harness PR 本身沒有 Swift diff、
-  # pull_request run 只能證明略過路徑時，併入前在分支上實跑一次「要跑」路徑（LS-139 PR 自證）。rules job 依賴 PR
-  # 上下文的 step 已各自標 if: pull_request／head_ref 前綴，此事件下與 push 同樣自然不跑。
-  workflow_dispatch:
+  # 這裡不加 workflow_dispatch（LS-139 R2 minor 1）：dispatch 打在 PR head SHA 會讓四個 job 在同一 SHA 各貼第二筆同名
+  # check-run，rules 的 PR 專屬 gate 被 if: 跳過卻仍 success／skipped（GitHub required checks 把 skipped 視為 Success），
+  # 頂掉真 PR run。要在併入前實跑 Release 編譯路徑，用獨立 workflow release-build-dispatch.yml（job 名不撞 required checks）。
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
