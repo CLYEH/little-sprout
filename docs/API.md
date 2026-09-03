@@ -76,8 +76,8 @@
 | `device_tokens` | 僅自己的裝置 | ⚠️ 見下方 | 僅自己 | 僅自己 | **換裝置／換帳號登入請務必呼叫 `register_device_token` RPC，不要直接 INSERT／UPSERT**（見 §4） |
 | `feed_items` | 我所屬家庭的時間軸 | 🔒 唯讀（trigger 維護） | 🔒 唯讀 | 🔒 唯讀 | 沒有任何 client 可寫入的路徑，連 grant 都沒有；混排查詢建議走 `get_family_timeline` RPC（見 §4），不要直接 `.from("feed_items")` 拼 keyset 條件。**LS-121**：`child_id` 欄位已移除（一個項目可以標多個孩子，單一欄位不再成立），單寶貝篩選改走 `feed_item_children`（見下） |
 | `feed_item_children`（LS-121） | 我所屬家庭的時間軸，依孩子展開 | 🔒 唯讀（trigger 維護） | 🔒 唯讀 | 🔒 唯讀 | `get_family_timeline` 的 `p_child_id` 篩選查詢引擎，不建議 client 直接查這張表；見 §8 |
-| `content_reports` | 自己送出的＋（若是 owner）自家的 | **任何家庭成員** | 僅 `status` 欄，owner-only，且只能改成 `resolved`（不能 `dismissed`） | ❌ 無 delete policy | 駁回（`dismissed`）保留給平台方用 `service_role`／Dashboard 處理 |
-| `blocked_users` | 僅自己封鎖的名單（`blocker_id = 我`） | 僅自己 | ❌ 無 update policy | 僅自己 | 被封鎖者看不到自己被封鎖 |
+| `content_reports` | 自己送出的＋（若是 owner）自家的 | **任何家庭成員**；建議走 `report_content` RPC（去重＋跨家庭檢查，見 §4） | 僅 `status` 欄，owner-only，且只能改成 `resolved`（不能 `dismissed`） | ❌ 無 delete policy | 駁回（`dismissed`）保留給平台方用 `service_role`／Dashboard 處理；owner 也可用 `remove_content_as_owner` RPC 移除內容並連帶標記相關檢舉 resolved |
+| `blocked_users` | 僅自己封鎖的名單（`blocker_id = 我`） | 僅自己；建議走 `block_user` RPC（冪等） | ❌ 無 update policy | 僅自己；建議走 `unblock_user` RPC（冪等） | 被封鎖者看不到自己被封鎖；封鎖後對方內容在時間軸／留言／相簿三處查詢一律過濾，見 §3 |
 | `join_requests` | 自己送出的申請＋（若是 owner）自家的待審申請 | 🔒 **RPC-only**（`request_join`） | 🔒 **RPC-only**（`approve_join`／`reject_join`／`withdraw_join`） | 🔒 無 delete policy | 沒有任何 client 直接寫入路徑，grant 只有 SELECT |
 | `notification_events` | 🔒 **完全不可讀**（成員無 grant 也無 policy） | 🔒 唯讀（trigger 維護） | 🔒 唯讀 | 🔒 唯讀 | LS-58：推播彙總佇列的資料面，只給 `service_role`（LS-22 的 Edge Function）讀寫；見 §3 |
 
@@ -557,9 +557,24 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 ### `content_reports` / `blocked_users`
 - `content_reports`：任何家庭成員都能送出檢舉（`reporter_id` 必須是自己）；owner 只能
   把 `status` 改成 `resolved`（無法 `dismissed`——那是平台方的權限，走 `service_role`／
-  Dashboard，不在這份 API 契約範圍內）。
+  Dashboard，不在這份 API 契約範圍內）。**LS-149 起建議走 `report_content` RPC**（見
+  §4）而不是直接 `.insert()`——直接 INSERT 仍然可用（grant／policy 都沒動），但
+  `report_content` 多做了同人同內容去重（同一人對同一內容已有一筆 `pending` 報告時，
+  直接回傳既有那筆的 id，不重複新增）與跨家庭目標檢查（`LS026`）。
 - `blocked_users`：被封鎖者**看不到**自己被封鎖（policy 只讓 `blocker_id = 我` 的人
-  讀寫），UI 不要試圖查「誰封鎖了我」。
+  讀寫），UI 不要試圖查「誰封鎖了我」。**LS-149 起建議走 `block_user`／`unblock_user`
+  RPC**（見 §4）——直接 `.insert()`／`.delete()` 仍然可用（LS-149 刻意沒有收回既有
+  grant／policy，理由見 migration 檔頭「設計裁量」第 3 點），RPC 版本的差異只在冪等
+  （`ON CONFLICT DO NOTHING`／對不存在的列 `DELETE` 皆是 no-op，不會撞
+  `23505`／噴錯）。
+- **封鎖過濾（LS-149）**：被封鎖者的內容在三處查詢一律看不到——`albums_select`／
+  `comments_select` 兩條 RLS policy、`get_family_timeline` RPC（時間軸）都疊加了
+  `NOT EXISTS`（blocker 對這個 family 的封鎖名單，見 `private.blocked_pairs()`）。
+  這是**封鎖者單向的視角過濾**，不是雙向互相看不到——被封鎖的人看得到封鎖者的內容，
+  只是反過來看不到（跟 §9-A1 的「封鎖使用者」語意一致：封鎖是「我不想再看到這個人」，
+  不是雙向拉黑）。**範圍刻意排除** `media_select`（單張照片／影片的直接讀取）與
+  `diaries_select`——時間軸已經把被封鎖者的相簿／日記／照片項目擋住，這兩張表的
+  直接讀取路徑不在 LS-149 票文列的三處測項內，是刻意縮小的範圍。
 
 ### `join_requests`
 - 完全沒有直接寫入路徑（`grant` 只給了 `SELECT`），一律透過 §4 的 RPC 操作。
@@ -1135,6 +1150,71 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **錯誤碼**：無自訂碼；未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 
+### `report_content(p_family_id uuid, p_target_type text, p_target_id uuid, p_reason text) -> uuid`
+- **LS-149**（PLAN §9-A1 UGC 三件套）。任何家庭成員都能檢舉同家庭的內容
+  （`album`／`media`／`diary`／`comment`，同 `content_target_type`）。
+- **參數簽章刻意跟 `create_comment`／`toggle_reaction` 同型**（`p_family_id` 由呼叫端
+  傳，不是伺服器端從 target 反查）——這是為了沿用既有的 `LS026`（target 存在但屬於
+  別的家庭）與 `private.target_family_id()` 既有判斷，不必為了「不接受呼叫端指定
+  family」這個更嚴謹但更少見的設計新開一個錯誤碼（本票不能碰 iOS 端的
+  `LSErrorCode`，新碼會讓 `scripts/gates/error-codes-check.sh` 三方對帳直接紅）。
+  孤兒 `target_id`（查不到）維持既有裁量放行，同 `create_comment`。
+- **去重**：同一人對同一內容若已有一筆 `status='pending'` 的報告
+  （partial unique index `content_reports_reporter_target_pending_key` on
+  `(target_type, target_id, reporter_id) where status = 'pending'`），直接回傳既有那筆
+  的 `id`，不重複新增、不報錯。先前的報告若已經 `resolved`，同一人可以再檢舉一次
+  （代表內容已被處理過一輪，之後又有新狀況）。
+- **錯誤碼**：未登入 `42501`；不是該家庭成員 `42501`；target 存在但屬於別的家庭
+  `LS026`。
+- **併發**：`INSERT ... ON CONFLICT ... DO NOTHING` 本身是原子操作，不需要額外的鎖。
+
+### `block_user(p_family_id uuid, p_blocked_id uuid) -> void` / `unblock_user(p_family_id uuid, p_blocked_id uuid) -> void`
+- **LS-149**。封鎖／解除封鎖僅限同一家庭內——`blocked_users` 主鍵含 `family_id`，
+  封鎖是「這個人在這個家庭底下的內容我不想看到」，不是跨家庭的全域拉黑。呼叫者必須
+  是 `p_family_id` 的成員；`p_blocked_id` 不驗證是否為該家庭成員（既有的
+  `blocked_users_not_self` `CHECK` 約束擋自我封鎖，`23514`）。
+- **這兩支是既有直接 `.insert()`／`.delete()` 路徑之外的額外入口，不是收斂**——
+  `blocked_users` 的 grant／policy 沒有被收回（見 §2／§3），差異只在冪等：
+  `block_user` 用 `ON CONFLICT DO NOTHING`（重複封鎖同一人不會撞 `23505`）；
+  `unblock_user` 對不存在的封鎖關係是單純的 0 列 `DELETE`（no-op，不報錯）。
+- **錯誤碼**：未登入 `42501`；`block_user` 額外要求呼叫者是該家庭成員 `42501`；
+  自我封鎖 `23514`（`blocked_users_not_self`）。
+- **併發**：兩支都是單一敘述的原子操作，不需要額外的鎖。
+- **封鎖生效範圍**：見 §3 `content_reports` / `blocked_users` 段——時間軸
+  （`get_family_timeline`）、留言（`list_comments`／`comments_select`）、相簿
+  （`albums_select`）三處查詢立即套用，不需要額外呼叫任何「重新整理」的 RPC。
+
+### `remove_content_as_owner(p_target_type text, p_target_id uuid) -> void`
+- **LS-149**（PLAN §10-B）。**純 owner 專用**——跟 `set_album_deleted`／
+  `set_diary_deleted`／`set_comment_deleted` 允許「owner 或內容作者本人」不同，這支
+  只認 owner（名字就叫 `_as_owner`），內容作者想移除自己的內容仍用那三支既有 RPC。
+- **內部直接呼叫既有三支軟刪 RPC**（`album`→`set_album_deleted`、
+  `diary`→`set_diary_deleted`、`comment`→`set_comment_deleted`），不重寫軟刪邏輯，
+  `deleted_by` 由那三支既有的 `private.enforce_deletion_attribution()` trigger 照舊
+  推導（呼叫者已被驗證是 owner，落在那三支既有函式的 owner 分支）。`media` 沒有對應
+  的軟刪 RPC（既有的 `media` 軟刪本來就是直接 `UPDATE deleted_at` 的欄位級 grant，見
+  §3 `media` 段），這裡直接對 `media` 做同一種 `UPDATE`——**已知不對稱**：`media` 沒有
+  `deleted_by` 欄位可以記錄移除者（既有 schema 的既有缺口，不在本票範圍內補）。
+- **移除成功後**，這則內容全部 `status='pending'` 的檢舉一併標記 `resolved`。
+- **錯誤碼**：未登入 `42501`；找不到內容或不是它所屬家庭的 owner，統一回 `42501`
+  （不區分「不存在」與「不是 owner」，同 `LS015`／`LS020` 既有的語意合併慣例，見上方
+  §5）；`album`／`diary`／`comment` 三種 dispatch 到既有 RPC 之後，理論上不會再拿到
+  那三支各自的「not found」碼（呼叫前已經驗證過 target 存在），除非發生極端的併發
+  刪除競態，此時沿用那三支既有的錯誤碼語意（`LS020`／`LS023`／`LS024`）。
+- **併發**：依賴內部呼叫的三支既有 RPC 各自的 `FOR UPDATE` 鎖；`media` 分支是單一
+  `UPDATE` 敘述，本身原子。
+
+### `get_family_quota(p_family_id uuid) -> table(storage_used_bytes bigint, storage_quota_bytes bigint)`
+- **LS-149**（PLAN §10-A）。供 UI 顯示儲存額度用量條。**誰能呼叫**：任何已登入使用者，
+  但只查得到自己所屬家庭的資料——`p_family_id` 傳一個自己不屬於的家庭不會報錯，只會
+  回傳 0 列（`security invoker`，完全依賴 `families` 既有的 `families_select` RLS
+  policy，同 `get_family_timeline`／`list_children` 的既有慣例）。這兩個欄位本來就能
+  透過 `.from("families").select("storage_used_bytes,storage_quota_bytes")` 直接讀到
+  （SELECT 沒有欄位級限制，只有 UPDATE 有，見 §2），這支 RPC 純粹是給 UI 一個更直接
+  的入口，不是新開一條授權路徑。
+- **錯誤碼**：無自訂碼；未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列。
+- **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
+
 ---
 
 ## 5. 錯誤碼全表
@@ -1162,7 +1242,7 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS023` | 相簿不存在 | `set_album_deleted` |
 | `LS024` | 留言不存在 | `update_comment`／`set_comment_deleted` |
 | `LS025` | 不是留言作者本人，或雖是作者但已離開該家庭 | `update_comment` |
-| `LS026` | 留言／按讚的 target 存在，但屬於別的家庭 | `create_comment`／`toggle_reaction` |
+| `LS026` | 留言／按讚／檢舉的 target 存在，但屬於別的家庭 | `create_comment`／`toggle_reaction`／`report_content`（LS-149，同一種目標歸屬檢查，見 §4） |
 | `LS027` | 這篇日記／這本相簿／這則留言已被家庭管理者移除，只有管理者能還原 | `set_diary_deleted`／`set_album_deleted`／`set_comment_deleted`（還原方向或重新軟刪方向皆可能；albums 的建立者直接 `.update()` 路徑也會撞到；由 `private.enforce_deletion_attribution()` trigger 統一 raise，LS-57，PR #98 review 擴大到重新軟刪方向並涵蓋 `deleted_by` 為 `NULL` 的情況） |
 | `LS041` | 孩子檔案不存在，或（`update_child` 情境）已被軟刪除須先還原 | `update_child`／`set_child_deleted` |
 | `LS042` | 不是仍是該家庭 owner/member 的成員，無法編輯孩子檔案 | `update_child` |
@@ -1448,10 +1528,12 @@ schema 或本文要修，不是 gate 要調。
 
 <!-- API-CONTRACT:RPC
 approve_join(uuid)
+block_user(uuid, uuid)
 create_child(uuid, text, date, text)
 create_comment(uuid, text, uuid, text)
 create_diary_entry(uuid, uuid[], text, date)
 create_invite(uuid, text, timestamptz, integer)
+get_family_quota(uuid)
 get_family_timeline(uuid, uuid, timestamptz, uuid, integer)
 get_my_join_request()
 get_reaction_counts(uuid, text, uuid[])
@@ -1460,6 +1542,8 @@ list_comments(uuid, text, uuid, timestamptz, uuid, integer)
 list_join_requests()
 register_device_token(text, text)
 reject_join(uuid)
+remove_content_as_owner(text, uuid)
+report_content(uuid, text, uuid, text)
 request_join(text)
 set_album_children(uuid, uuid[])
 set_album_deleted(uuid, boolean)
@@ -1467,6 +1551,7 @@ set_child_deleted(uuid, boolean)
 set_comment_deleted(uuid, boolean)
 set_diary_deleted(uuid, boolean)
 toggle_reaction(uuid, text, uuid)
+unblock_user(uuid, uuid)
 update_child(uuid, text, date, text)
 update_comment(uuid, text)
 update_diary_entry(uuid, text, date, uuid[])
