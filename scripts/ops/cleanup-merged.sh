@@ -1,21 +1,24 @@
 #!/bin/bash
 # 結案清理（LS-86）：掃描已完全併入 origin/main／origin/development 的 worktree／本機分支／遠端分支，
 # 列出後在 --apply 模式下才實際清除；預設 dry-run（只列不動）。安全底線：絕不刪未併入的東西；
-# dirty worktree（含未追蹤殘留與 gitignore 掉的內容，R2 起：見 M3）一律略過並列出，只有殘留全部
-# 命中白名單（__pycache__/、.DS_Store，R2 起精確路徑元件比對，見 m1）且帶 --force 才視為可清；
+# dirty worktree（tracked 修改或未追蹤且非 ignored 的檔——LS-141 起 dirty 判定只看 `git status --porcelain`
+# 不帶 --ignored，見下方 LS-141 段）一律略過並列出，只有殘留全部命中白名單（__pycache__/、.DS_Store，
+# R2 起精確路徑元件比對，見 m1）且帶 --force 才視為可清；gitignore 掉的產物一律視為可丟、移除前印出清單供審計；
 # 保護分支（main/test/development）、主 checkout、呼叫端目前所在目錄或其子目錄（R2 起，見 M1）
 # 一律不碰；每個實際刪除動作前都先印出清單（dry-run 本身就是清單）。
 #
-# 用法：cleanup-merged.sh [--dry-run|--apply] [--force] [--all] [--min-age <分鐘>] [LS-<n>] [--repo <path>]
+# 用法：cleanup-merged.sh [--dry-run|--apply] [--force] [--force-unstarted] [--all] [--min-age <分鐘>] [LS-<n>] [--repo <path>]
 #   --dry-run      （預設）只列出將執行的動作，不做任何變更
 #   --apply        實際執行：git worktree remove／git branch -D／git push origin --delete。
 #                  **必須**帶 LS-<n> 篩選或 --all 之一（R2 起強制，見 M4）——不帶票號的全域
 #                  --apply 是 merge-review R1 M4 實跑重現的危險模式：會把「已併入但 agent 仍在
 #                  同一個 worktree 續作下一輪」的在飛工作一併清掉。
-#   --force        worktree 的殘留（含未追蹤與 ignored 內容）若「全部」命中白名單（__pycache__/、
+#   --force        worktree 的殘留（tracked 修改／未追蹤非 ignored 檔）若「全部」命中白名單（__pycache__/、
 #                  .DS_Store，精確路徑元件／basename 比對，不是子字串）視為可清（改用
-#                  git worktree remove --force）；其餘殘留一律略過，不受本旗標影響——尤其是
-#                  gitignore 掉但有價值的內容（.claude/evidence/、.env）永遠不會因 --force 被清掉。
+#                  git worktree remove --force）；其餘殘留一律略過，不受本旗標影響。
+#   --force-unstarted  （LS-141，限搭配指名 LS-<n>）「尚未開工」的 worktree（tip 與 base 相同、從未有自己的
+#                  commit）也允許移除——票已 Canceled／Done 但本機無 LINEAR_API_KEY 可查時的替代旗標；有 key 時
+#                  不必帶，腳本自己查 Linear 狀態（state.type 為 completed／canceled 才放行）。
 #   --all          明確表示「這次真的要不帶票號全域清理」，解除上面 --apply 的票號要求
 #   --min-age      分鐘數，預設 10：分支最後一次 commit 距現在若小於此值一律略過，不論是否已
 #                  併入——剛併入的分支很可能是 agent 準備續作下一輪的同一個 worktree（R2 M4）
@@ -30,8 +33,9 @@
 #
 # 對象（票文 LS-86 G1）：
 #  (a) worktree：分支已完全併入 origin/main 或 origin/development、真的有過自己的 commit
-#      （has_real_history，見下）、乾淨（含 ignored 內容，見 M3）、非近期異動（--min-age，見 M4）
-#      → git worktree remove ＋ git branch -D
+#      （has_real_history，見下）、乾淨（LS-141 起不含 ignored 內容）、非近期異動（--min-age，見 M4）
+#      → git worktree remove ＋ git branch -D；指名 LS-<n> 且票已 completed／canceled（或 --force-unstarted）
+#      時「尚未開工」的 worktree 也一併移除（LS-141）
 #  (b) 本機分支：條件同 (a) 但無對應 worktree → git branch -D
 #  (c) 遠端分支：origin 上已併入、非保護、無 open PR、非近期異動 → git push origin --delete
 #      （GitHub delete_branch_on_merge=true 生效後應罕見；R2 起 fetch 已加 --prune，若這裡仍常態
@@ -63,7 +67,24 @@
 #  - --min-age 門檻：最後 commit 太新（可能還在飛）一律略過（R2 修正 M4-b）
 #  - 刪除前立即重驗一次 is_merged_ref／has_real_history／乾淨度，縮小 TOCTOU 窗（R2 修正
 #    M4-c；無法完全消除——bash 單執行緒下這是實務上能做到的最大縮窄，真正的鎖化留待後續票）
-#  - dirty／殘留判定含 ignored 內容（--ignored=matching），白名單精確路徑元件比對（R2 修正 M3／m1）
+#  - dirty／殘留判定只看 plain porcelain（LS-141 推翻 R2 M3），白名單精確路徑元件比對（R2 修正 m1）
+#  - 移除前查 Pen 目前 active 文件是否落在該 worktree 內，是則拒刪（LS-141）
+#
+# LS-141（來源 LS-96 池項 25a4ff4d／c7dae0e8／b410b190／aab3d640；推翻 R2 M3「ignored 內容視為 dirty」）：
+#  - dirty 判定改回 plain `git status --porcelain`（不帶 --ignored）：只有 tracked 修改或未追蹤且非 ignored 的
+#    檔才算 dirty。gitignore 掉的產物（Config/Secrets.xcconfig、supabase/.temp/、supabase/tests/evidence/、
+#    .claude/evidence/……）一律視為可丟——每張 iOS／backend 票的 worktree 都必然有這些，M3 的判定讓腳本對真實
+#    worktree 永遠沒用（2026-09-02～03 重踩 6 次，每次靠人手動 `git worktree remove --force`）。移除前另用
+#    `--ignored=matching` 列出將一併丟掉的 ignored 路徑（dry-run 與 apply 都印，供審計：`.claude/evidence/<票>/`
+#    若還沒引用到 Linear／PR，這是最後看見它的機會）。`git worktree remove` 對只含 ignored 檔的 worktree 不需
+#    --force（git 2.47 實測），仍照原樣不帶 --force；若日後 git 版本改為拒絕，act() 會 fail loud，方向安全。
+#  - 指名 `--apply LS-<n>` 時「尚未開工」的 worktree：Linear 狀態 completed／canceled（有 LINEAR_API_KEY 時以
+#    GraphQL 查 state.type；token 只走 curl `-K -` stdin config、不進 argv，同 patrol_linear.py R1 F3）或帶
+#    `--force-unstarted` → 允許移除（worktree remove＋branch -D）；否則照舊略過並印提示。不指名（--all）永不套用。
+#  - 移除前呼叫 `pen-open.sh --status`（整次執行只呼叫一次、快取）：Pen 目前 active 文件落在該 worktree 內 →
+#    拒刪並印處置（LS-119 事故：移掉 worktree 後 Pen 留下幽靈文件，最後只能 SIGKILL 重啟、全部 pencil MCP 斷線）。
+#    --status 讀不到（Pen 沒開／pen CLI 不在 PATH）→ 印警告後視為未開、繼續（否則沒裝 pen 的機器與 CI 永遠
+#    清不了）。盲區：--status 只回報 active 那一份，背景視窗開著同一路徑偵測不到。
 #
 # exit 0＝掃描／清理完成（無論有無找到項目）；1＝--apply 模式下至少一個動作實際失敗（fail loud）；
 #      2＝參數或環境錯誤（不在 git repo、找不到 origin/main 與 origin/development 兩個 base、
@@ -71,12 +92,14 @@
 # 自測：scripts/ops/cleanup-merged.test.sh（合成 repo，掛 CI rules job）。規約：docs/COLLABORATION.md §2、§7。
 set -uo pipefail
 
-MODE=dry-run; FORCE=0; FILTER=; REPO=; ALLOW_ALL=0; MIN_AGE=10
+MODE=dry-run; FORCE=0; FORCE_UNSTARTED=0; FILTER=; REPO=; ALLOW_ALL=0; MIN_AGE=10
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) MODE=dry-run ;;
     --apply) MODE=apply ;;
     --force) FORCE=1 ;;
+    --force-unstarted) FORCE_UNSTARTED=1 ;;
     --all) ALLOW_ALL=1 ;;
     --min-age)
       [ -n "${2:-}" ] || { echo "✗ cleanup-merged：--min-age 缺值" >&2; exit 2; }
@@ -86,7 +109,7 @@ while [ $# -gt 0 ]; do
       [ -n "${2:-}" ] || { echo "✗ cleanup-merged：--repo 缺值" >&2; exit 2; }
       REPO=$2; shift ;;
     -h|--help)
-      echo "用法：cleanup-merged.sh [--dry-run|--apply] [--force] [--all] [--min-age <分鐘>] [LS-<n>] [--repo <path>]（說明見檔頭註解）"; exit 0 ;;
+      echo "用法：cleanup-merged.sh [--dry-run|--apply] [--force] [--force-unstarted] [--all] [--min-age <分鐘>] [LS-<n>] [--repo <path>]（說明見檔頭註解）"; exit 0 ;;
     LS-[0-9]*) FILTER=$1 ;;
     -*) echo "✗ cleanup-merged：未知參數 $1" >&2; exit 2 ;;
     *) echo "✗ cleanup-merged：未知參數 $1" >&2; exit 2 ;;
@@ -99,6 +122,11 @@ done
 # 或 --all 表示真的要不篩選地全域清理。dry-run 永遠安全，不受此限制。
 if [ "$MODE" = apply ] && [ -z "$FILTER" ] && [ "$ALLOW_ALL" -ne 1 ]; then
   echo "✗ cleanup-merged：--apply 不帶 LS-<n> 篩選＝一次掃全部，這是已知危險模式（會誤清在飛 worktree，merge-review R1 M4）。請指定 LS-<n> 只清一票，或明確加 --all 表示真的要全域清理。" >&2
+  exit 2
+fi
+# LS-141：尚未開工的 worktree 只在「指名單票」時才可能被移除——不帶票號的 --force-unstarted 沒有意義，直接拒。
+if [ "$FORCE_UNSTARTED" -eq 1 ] && [ -z "$FILTER" ]; then
+  echo "✗ cleanup-merged：--force-unstarted 只能搭配指名 LS-<n>（尚未開工的 worktree 只在指名單票時才允許移除，LS-141）。" >&2
   exit 2
 fi
 
@@ -159,7 +187,7 @@ is_temp_path() {  # mktemp -d 產生、路徑未經整理的暫存 worktree：�
 # m1／M3（merge-review R1）：白名單須對「路徑」做精確元件比對，不是對整行 porcelain 輸出做
 # 子字串／字尾比對——原本 *__pycache__*／*.DS_Store 會誤放行 notes-on-__pycache__-cleanup.md
 # （含子字串）與 evidence.DS_Store（字尾命中但不是精確檔名）。residue_path_from_line 從
-# porcelain 行（含 --ignored=matching 的 "!!" 前綴）取出路徑（rename 取新路徑、去掉 C-quote
+# porcelain 行（LS-141 起為 plain porcelain，不再有 "!!" 行）取出路徑（rename 取新路徑、去掉 C-quote
 # 包裹的引號），is_whitelisted_path 才是唯一的白名單判斷：__pycache__ 必須是完整路徑元件
 # （自己或作為某層目錄），.DS_Store 必須是 basename 精確相等。
 residue_path_from_line() {
@@ -182,7 +210,7 @@ is_whitelisted_path() {
   esac
   return 1
 }
-has_only_whitelisted_residue() {  # $1 = git status --porcelain --ignored=matching 輸出（可能多行）
+has_only_whitelisted_residue() {  # $1 = git status --porcelain 輸出（可能多行）
   local line path
   while IFS= read -r line; do
     [ -n "$line" ] || continue
@@ -193,11 +221,66 @@ $1
 EOF
   return 0
 }
-# M3（merge-review R1）：worktree_status 統一用 --ignored=matching——plain porcelain 不含 ignore
-# 掉的內容，但 git worktree remove 會把整個工作目錄（含 .gitignore 掉的檔案）一起砍掉。真實
-# 危險案例：.claude/evidence/<票>/、.env 都被本 repo 的 .gitignore 涵蓋，QA／visual-review 的
-# 唯一證據與本機密鑰因此會被「判定乾淨」的 worktree remove 一併刪除、不可復原。
-worktree_status() { git -C "$1" status --porcelain --ignored=matching 2>/dev/null; }
+# LS-141（推翻 R2 M3）：worktree_status 只看 plain porcelain（tracked 修改＋未追蹤非 ignored）；ignored 內容
+# 由 worktree_ignored 另列、移除前印出供審計（print_ignored_audit），不再當 dirty 擋——M3 當時擔心的
+# .claude/evidence/<票>/、.env 是每張票 worktree 必有的 ignored 產物，把它們算 dirty 等於腳本永遠清不了任何
+# 真實 worktree（LS-96 25a4ff4d／c7dae0e8）。
+worktree_status() { git -C "$1" status --porcelain 2>/dev/null; }
+worktree_ignored() { git -C "$1" status --porcelain --ignored=matching 2>/dev/null | sed -n 's/^!! //p'; }
+print_ignored_audit() {  # $1=worktree 路徑 $2=顯示名；列出將隨 worktree remove 一起消失的 ignored 路徑（審計）
+  local ign
+  ign=$(worktree_ignored "$1")
+  [ -n "$ign" ] || return 0
+  printf '  ⓘ %s 將一併丟棄的 ignored 產物（審計，LS-141）：\n' "$2"
+  printf '%s\n' "$ign" | sed 's/^/      /'
+}
+# LS-141：Pen 目前 active 文件——整次執行只呼叫一次 pen-open.sh --status（pen CLI 每次最多等 8 秒），結果快取在
+# PEN_ACTIVE（空＝讀不到／未開）。路徑經 pwd -P 解成物理路徑，才能與 git worktree list 回報的物理路徑比對。
+PEN_CHECKED=0; PEN_ACTIVE=
+pen_probe() {
+  [ "$PEN_CHECKED" -eq 0 ] || return 0
+  PEN_CHECKED=1
+  local p d
+  p=$(bash "${SELF_DIR}/pen-open.sh" --status 2>/dev/null) || p=
+  if [ -z "$p" ]; then
+    echo "⚠ cleanup-merged：pen-open.sh --status 讀不到 Pen 目前文件（Pen 沒開／pen CLI 不在 PATH）——視為 Pen 未開著任何 worktree 的 .pen，繼續（LS-141；只看 active 那一份，背景視窗偵測不到）" >&2
+    return 0
+  fi
+  d=$(cd "$(dirname "$p")" 2>/dev/null && pwd -P) && p="${d}/$(basename "$p")"
+  PEN_ACTIVE=$p
+}
+pen_guard() {  # $1=worktree 路徑 $2=分支 $3=顯示名；Pen 目前 active 文件落在該 worktree 內 → 記略過、印處置、回 1
+  pen_probe
+  [ -n "$PEN_ACTIVE" ] || return 0
+  case "$PEN_ACTIVE" in "$1"/*) ;; *) return 0 ;; esac
+  wt_skipped_pen=$((wt_skipped_pen + 1))
+  OUT_WT="${OUT_WT}  ✗ ${3} ${2}：Pen 目前開著 ${PEN_ACTIVE}，拒刪（移掉會留下幽靈文件，LS-119 事故）——處置：先 bash scripts/ops/pen-open.sh ${ROOT} 把 Pen 切回主 checkout（該 worktree 有未落地變更則先 bash scripts/ops/pen-land.sh ${1}），再重跑本指令"$'\n'
+  return 1
+}
+# LS-141：查 Linear 票狀態（只讀 GraphQL）。印「<state.type> <state.name>」；無 LINEAR_API_KEY／缺 curl 或 python3／
+# 呼叫失敗／回應不是該票 → 印空、回 1（呼叫端視為「查不到」，不放行）。token 只走 curl -K - 的 stdin config。
+linear_state() {  # $1 = LS-<n>
+  [ -n "${LINEAR_API_KEY:-}" ] || return 1
+  command -v curl >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1 || return 1
+  local body out
+  body=$(printf '{"query":"query($id:String!){issue(id:$id){identifier state{name type}}}","variables":{"id":"%s"}}' "$1")
+  out=$(printf 'header = "Authorization: %s"\n' "$LINEAR_API_KEY" \
+    | curl -sS --max-time 25 -X POST https://api.linear.app/graphql -H 'Content-Type: application/json' --data "$body" -K - 2>/dev/null) || return 1
+  printf '%s' "$out" | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+except ValueError:
+    sys.exit(1)
+if not isinstance(d, dict) or d.get("errors"):
+    sys.exit(1)
+i = (d.get("data") or {}).get("issue") or {}
+if i.get("identifier") != sys.argv[1]:
+    sys.exit(1)
+s = i.get("state") or {}
+print("%s %s" % (s.get("type", ""), s.get("name", "")))
+' "$1"
+}
 last_commit_epoch() { git -C "$ROOT" log -1 --format=%ct "$1" 2>/dev/null || true; }  # $1=commit-ish
 too_recent() {  # $1=commit-ish；true＝最後 commit 距現在 < MIN_AGE 分鐘（M4-b）
   local ep age
@@ -229,7 +312,7 @@ act() {  # $1 = 人讀描述；其餘 = 實際指令（陣列，不經字串重�
 }
 
 fail=0
-wt_removed=0; wt_skipped_dirty=0; wt_skipped_unmerged=0; wt_skipped_recent=0; wt_skipped_race=0
+wt_removed=0; wt_skipped_dirty=0; wt_skipped_unmerged=0; wt_skipped_recent=0; wt_skipped_race=0; wt_skipped_pen=0
 br_removed=0; br_skipped_unmerged=0; br_skipped_recent=0
 rb_removed=0; rb_skipped_pr=0; rb_skipped_nogh=0; rb_skipped_recent=0
 OUT_WT=; OUT_BR=; OUT_RB=
@@ -284,7 +367,7 @@ process_wt() {
       force_needed=1
     else
       wt_skipped_dirty=$((wt_skipped_dirty + 1))
-      OUT_WT="${OUT_WT}  ⚠ ${name}${temp_tag} ${b}：dirty 或有 ignored 殘留，略過（$(printf '%s' "$dirty" | tr '\n' ';')）"$'\n'
+      OUT_WT="${OUT_WT}  ⚠ ${name}${temp_tag} ${b}：dirty（tracked 修改或未追蹤非 ignored 檔），略過（$(printf '%s' "$dirty" | tr '\n' ';')）"$'\n'
       return
     fi
   fi
@@ -306,6 +389,9 @@ process_wt() {
       OUT_WT="${OUT_WT}  ⚠ ${name}${temp_tag} ${b}：刪除前重驗發現狀態已變化，略過（可能有人正在動這個 worktree）"$'\n'
       return
     fi
+    # LS-141：Pen 開著這個 worktree 的 .pen → 拒刪；否則先列出將一併丟掉的 ignored 產物（審計）再動手。
+    pen_guard "$w" "$b" "${name}${temp_tag}" || return
+    print_ignored_audit "$w" "${name}${temp_tag}"
     local ok=1
     if [ "$force_needed" -eq 1 ]; then
       act "移除 worktree ${name}${temp_tag}（${b}，殘留為白名單 __pycache__/.DS_Store，--force）" \
@@ -317,9 +403,47 @@ process_wt() {
     [ "$ok" -eq 1 ] && wt_removed=$((wt_removed + 1))
   elif is_merged_ref "$b"; then
     # tip 與 base 相同、但 reflog 從未真的動過——這是「剛建好、還沒開工」，不是「已併入被遺忘」；
-    # 刪了就是把準備要用的 worktree 基礎設施砍掉，絕不能碰（has_real_history 檔頭註解）。
+    # 刪了就是把準備要用的 worktree 基礎設施砍掉，預設絕不碰（has_real_history 檔頭註解）。
+    # LS-141（LS-96 b410b190）：唯一例外＝指名單票且票已收案——Linear state.type 為 completed／canceled
+    # （有 LINEAR_API_KEY 時自動查）或帶 --force-unstarted——此時 worktree 是票 Done／Canceled 後的空殼，
+    # 一併 remove＋branch -D。不指名（--all）永不套用；--min-age 不看（tip 是 base 的 commit，時間與本票無關）。
+    local why= hint= st=
+    if [ -n "$FILTER" ]; then
+      if [ "$FORCE_UNSTARTED" -eq 1 ]; then
+        why="--force-unstarted"
+      elif st=$(linear_state "$FILTER"); then
+        case "${st%% *}" in
+          completed|canceled) why="Linear ${FILTER} 狀態 ${st#* }／${st%% *}" ;;
+          *) hint="（Linear ${FILTER} 狀態 ${st#* }／${st%% *}，非 completed／canceled；確定要清請加 --force-unstarted）" ;;
+        esac
+      elif [ -z "${LINEAR_API_KEY:-}" ]; then
+        hint="（無 LINEAR_API_KEY 查不到 Linear 狀態；票已 Canceled／Done 請加 --force-unstarted）"
+      else
+        hint="（Linear 查詢失敗；票已 Canceled／Done 請加 --force-unstarted）"
+      fi
+    fi
+    if [ -n "$why" ]; then
+      local dirty2
+      dirty2=$(worktree_status "$w")
+      if [ -n "$dirty2" ] && { [ "$FORCE" -ne 1 ] || ! has_only_whitelisted_residue "$dirty2"; }; then
+        wt_skipped_race=$((wt_skipped_race + 1))
+        OUT_WT="${OUT_WT}  ⚠ ${name}${temp_tag} ${b}：刪除前重驗發現狀態已變化，略過（可能有人正在動這個 worktree）"$'\n'
+        return
+      fi
+      pen_guard "$w" "$b" "${name}${temp_tag}" || return
+      print_ignored_audit "$w" "${name}${temp_tag}"
+      local ok=1
+      if [ "$force_needed" -eq 1 ]; then
+        act "移除 worktree ${name}${temp_tag}（${b}，尚未開工；${why}；殘留為白名單，--force）" git -C "$ROOT" worktree remove --force "$w" || ok=0
+      else
+        act "移除 worktree ${name}${temp_tag}（${b}，尚未開工；${why}）" git -C "$ROOT" worktree remove "$w" || ok=0
+      fi
+      act "刪除本機分支 ${b}（尚未開工；${why}）" git -C "$ROOT" branch -D "$b" || ok=0
+      [ "$ok" -eq 1 ] && wt_removed=$((wt_removed + 1))
+      return
+    fi
     wt_skipped_unmerged=$((wt_skipped_unmerged + 1))
-    OUT_WT="${OUT_WT}  ${name}${temp_tag} ${b}：尚未開工（與 base 相同、從未有過自己的 commit），略過"$'\n'
+    OUT_WT="${OUT_WT}  ${name}${temp_tag} ${b}：尚未開工（與 base 相同、從未有過自己的 commit），略過${hint}"$'\n'
   else
     wt_skipped_unmerged=$((wt_skipped_unmerged + 1))
     OUT_WT="${OUT_WT}  ${name}${temp_tag} ${b}：未併入（尚有獨有 commit），略過"$'\n'
@@ -423,7 +547,7 @@ echo "== (c) 遠端分支（origin 已併入、無 open PR → push --delete）"
 if [ "$rb_removed" -gt 0 ]; then
   echo "  ⚠ ${rb_removed} 條遠端分支經 (c) 清理——fetch 已 --prune，這不是本機 stale ref 造成的假陽性；若持續非 0，才需要核對 gh api repos/<owner>/<repo> --jq .delete_branch_on_merge 是否被改回 false，或是否有人繞過 PR 直接 push 分支"
 fi
-echo "== 摘要（${MODE}）：worktree ${wt_removed}／本機分支 ${br_removed}／遠端分支 ${rb_removed}（略過：worktree dirty/ignored ${wt_skipped_dirty}、worktree 未併入 ${wt_skipped_unmerged}、worktree 太新 ${wt_skipped_recent}、worktree 重驗生變 ${wt_skipped_race}、本機分支未併入 ${br_skipped_unmerged}、本機分支太新 ${br_skipped_recent:-0}、遠端無法確認或有 PR $((rb_skipped_pr + rb_skipped_nogh))、遠端太新 ${rb_skipped_recent:-0}）"
+echo "== 摘要（${MODE}）：worktree ${wt_removed}／本機分支 ${br_removed}／遠端分支 ${rb_removed}（略過：worktree dirty ${wt_skipped_dirty}、worktree 未併入 ${wt_skipped_unmerged}、worktree 太新 ${wt_skipped_recent}、worktree 重驗生變 ${wt_skipped_race}、worktree Pen 開著 ${wt_skipped_pen}、本機分支未併入 ${br_skipped_unmerged}、本機分支太新 ${br_skipped_recent:-0}、遠端無法確認或有 PR $((rb_skipped_pr + rb_skipped_nogh))、遠端太新 ${rb_skipped_recent:-0}）"
 if [ "$MODE" = dry-run ]; then
   echo "（dry-run：以上為將執行的動作，尚未做任何變更；加 --apply 實際執行）"
 fi
