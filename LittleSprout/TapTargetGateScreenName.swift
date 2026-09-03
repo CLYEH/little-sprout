@@ -32,6 +32,11 @@ enum TapTargetGateScreenName: String {
     // `AuthenticatedRootView`（compact），一次覆蓋 tab bar 四顆 cell 的點擊區，也是
     // `TabRootHeadingTests`（entry-conditions.md ⑬）共用的同一個 host。
     case sectionTabView = "SectionTabView"
+    /// merge-review `443ec21a` §3：不是點擊目標測試，是借用同一套「launch environment 指定
+    /// 畫面」機制餵 `DiaryCardVideoBadgeGeometryTests` 量真實 frame（a11y tree 讀得出文字，
+    /// 讀不出像素——這正是本輪 FAIL 的根因，見該測試檔文件註解）。沿用這裡而不是另開一套
+    /// 平行機制：兩個 target 之間本來就只有這一條「XCUITest 指定畫面」通道。
+    case diaryCardVideoBadges = "DiaryCardVideoBadges"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -55,6 +60,7 @@ enum TapTargetGateScreenName: String {
         // 預設選中分頁＝時間軸（`AuthenticatedRootView` 的 `selection` 初值），headerRow
         // 「時間軸」一定會渲染，不依賴任何 seed 資料。
         case .sectionTabView: return .staticText("時間軸")
+        case .diaryCardVideoBadges: return .staticText("影片 12:34")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

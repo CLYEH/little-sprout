@@ -1,4 +1,5 @@
 #if DEBUG
+import AVFoundation
 import SwiftUI
 
 /// LS-95：≥44pt 點擊目標機械 gate 的畫面掛載點。
@@ -51,6 +52,8 @@ enum TapTargetGateHarness {
             timelineDefaultStateHost
         case .sectionTabView:
             sectionTabViewHost
+        case .diaryCardVideoBadges:
+            diaryCardVideoBadgesHost
         case .selfTestTooSmall:
             // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
             // accessibility／hit-test frame 實測仍貼著文字本身的天然大小，不會被外層 `.frame`
@@ -135,6 +138,55 @@ enum TapTargetGateHarness {
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
         )
         .environment(\.horizontalSizeClass, .compact)
+    }
+
+    /// merge-review `443ec21a` §3：`DiaryCardVideoBadgeGeometryTests` 量真實 frame 用——
+    /// `timelineStore` 帶一個立即回傳固定時長（12:34，兩位數分鐘，取「分鐘數兩位會再寬」的
+    /// 最壞情況，見 reviewer 原文）的 `durationLoader`，讓無縮圖列的 `.task` 一啟動就能把
+    /// `videoDurations` 填成「影片 12:34」，不必等真的（會失敗的）`AVURLAsset` 探測。3 張
+    /// 附照＝`totalPhotoCount`，不觸發「還有 N 張」暗蓋，3 個徽章狀態（無徽章／縮圖影片
+    /// 恆「影片」／無縮圖舊影片「影片 12:34」）同時可見、可測。
+    @MainActor
+    @ViewBuilder
+    private static var diaryCardVideoBadgesHost: some View {
+        let legacyVideoID = UUID()
+        let thumbnailVideoID = UUID()
+        NavigationStack {
+            ScrollView {
+                DiaryCardView(
+                    content: DiaryContent(
+                        body: "點擊目標 gate 幾何量測樣本", entryDate: Date(),
+                        previewPhotos: [
+                            MediaContent(
+                                id: UUID(), type: .photo, width: 800, height: 600,
+                                thumbWidth: nil, thumbHeight: nil, storagePath: "f/photo.jpg",
+                                isThumbnail: false, signedURL: nil
+                            ),
+                            MediaContent(
+                                id: thumbnailVideoID, type: .video, width: 884, height: 1920,
+                                thumbWidth: 235, thumbHeight: 512, storagePath: "f/thumb-video.mov",
+                                isThumbnail: true, signedURL: URL(string: "https://example.com/f/thumb-video_thumb.jpg")
+                            ),
+                            MediaContent(
+                                id: legacyVideoID, type: .video, width: 884, height: 1920,
+                                thumbWidth: nil, thumbHeight: nil, storagePath: "f/legacy-video.mov",
+                                isThumbnail: false, signedURL: URL(string: "https://example.com/f/legacy-video.mov")
+                            )
+                        ],
+                        totalPhotoCount: 3
+                    ),
+                    taggedChildren: [],
+                    timelineStore: .preview(durationLoader: { _ in CMTime(seconds: 754, preferredTimescale: 600) }),
+                    // merge-review R3（`add3f2c1` m1）：`DiaryCardView` 不再自己量寬，改由
+                    // 呼叫端（正式路徑是 `TimelineView.feedContentWidth`）算好傳入——這裡比照
+                    // 單欄（`columns == 1`）情境算一次同款的值（螢幕寬扣 `screenPad`＋
+                    // `insetCard` 各兩份），跟 `TimelineView` 的算法一致。
+                    previewRowWidth: UIScreen.main.bounds.width
+                        - 2 * AppSpacing.screenPad - 2 * AppSpacing.insetCard
+                )
+                .padding(.horizontal, AppSpacing.screenPad)
+            }
+        }
     }
 
     private static func noop() {}
