@@ -369,6 +369,7 @@ extension WelcomeView {
     }
 }
 
+#if DEBUG
 #Preview("Light") {
     WelcomeView(authStore: .preview())
 }
@@ -382,3 +383,4 @@ extension WelcomeView {
     WelcomeView(authStore: .preview())
         .dynamicTypeSize(.accessibility3)
 }
+#endif

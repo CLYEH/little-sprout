@@ -73,8 +73,10 @@ struct EmailSignInView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         EmailSignInView(authStore: .preview()) { _ in }
     }
 }
+#endif
