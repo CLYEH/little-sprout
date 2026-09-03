@@ -33,6 +33,27 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- LS-145：相簿存取用途字串（PLAN §9-B——文案須具體，不得敷衍）。app 只用 SwiftUI
+	     `PhotosPicker`（PhotosUI）挑選照片／影片，不呼叫任何 `Photos` framework API
+	     （grep 全專案無 `PHPhotoLibrary`／`PHAsset`／`import Photos`）——嚴格來說
+	     `PhotosPicker` 本身不觸發系統相簿授權、不強制要求此鍵；仍加上是防禦性作法，
+	     且為未來若改走 `PHPickerViewController` 進階選項或整月照片打包下載（PLAN
+	     Phase 3）預留。未加 `NSPhotoLibraryAddUsageDescription`（存回相簿）：grep 全
+	     專案無任何寫回相簿的功能（`PHPhotoLibrary.performChanges`／
+	     `UIImageWriteToSavedPhotosAlbum` 等皆無，唯一的 `ShareLink` 用途是分享邀請碼
+	     文字，不含照片）——handoff 已附證據，日後真的加了存回功能再補。未加
+	     `NSCameraUsageDescription`：grep 全專案無 `AVCaptureDevice`／
+	     `AVCaptureSession`／camera source 的 `UIImagePickerController`，
+	     `CreateChildView.swift`／`EditChildView.swift` 裡的 `Image(systemName:
+	     "camera")` 只是頭像編輯鈕的 SF Symbol 圖示，非相機入口。未加推播用途字串：
+	     LS-22（留言／愛心彙總推播）尚未落地，全專案無
+	     `UNUserNotificationCenter`／`registerForRemoteNotifications`。 -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>萌芽日記需要讀取你的相簿，才能挑選寶貝照片上傳到私密家庭相簿。</string>
+	<!-- LS-145：出口合規——app 僅使用 HTTPS（Supabase REST／Storage／Realtime 皆走 TLS），
+	     屬 App Store Connect 匯出合規問卷的標準豁免情形，宣告 false 避免每次上傳都被詢問。 -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
