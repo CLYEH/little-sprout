@@ -32,15 +32,25 @@ final class SupabaseMediaUploadService: MediaUploadService {
     /// 「一次上傳只讀一次 `now()`」的呼叫方式；預設 `Date.init`，測試可注入固定／可控 clock
     /// 釘住「兩條路徑真的共用同一次讀值」（`SupabaseMediaUploadServiceThumbnailTests`）。
     private let now: @Sendable () -> Date
+    /// LS-135：影片時長量測的實際動作抽成可注入閉包，預設 `AVURLAsset(url:).load(.duration)`
+    /// ——同 `TimelineStore.durationLoader` 的理由（見該檔文件註解），讓測試能斷言「量測
+    /// 失敗時 `duration_seconds` 留 NULL、不阻斷上傳」而不必準備一支真的可解碼的影片檔。
+    private let durationLoader: @Sendable (URL) async throws -> CMTime
     private static let bucketID = "media"
     /// 縮圖規格（`docs/API.md` §6）：長邊 ≤512px、JPEG 品質 0.8。
     private static let thumbnailMaxPixelSize: CGFloat = 512
     private static let thumbnailJPEGQuality: CGFloat = 0.8
     private static let thumbnailContentType = "image/jpeg"
 
-    init(client: SupabaseClient, now: @escaping @Sendable () -> Date = Date.init) {
+    init(
+        client: SupabaseClient, now: @escaping @Sendable () -> Date = Date.init,
+        durationLoader: @escaping @Sendable (URL) async throws -> CMTime = { url in
+            try await AVURLAsset(url: url).load(.duration)
+        }
+    ) {
         self.client = client
         self.now = now
+        self.durationLoader = durationLoader
     }
 
     func uploadPhoto(familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
@@ -74,7 +84,8 @@ final class SupabaseMediaUploadService: MediaUploadService {
             try await insertMediaRow(
                 id: mediaID, familyID: familyID,
                 descriptor: MediaRowDescriptor(
-                    storagePath: path, type: "photo", byteSize: data.count, pixelSize: pixelSize, thumb: pendingThumb
+                    storagePath: path, type: "photo", byteSize: data.count, pixelSize: pixelSize, thumb: pendingThumb,
+                    durationSeconds: nil
                 )
             )
         } catch {
@@ -101,6 +112,15 @@ final class SupabaseMediaUploadService: MediaUploadService {
         let pendingThumb = Self.makeVideoPendingThumbnail(
             fileURL: fileURL, familyID: familyID, mediaID: mediaID, now: uploadTime
         )
+        // LS-135：本機讀 `fileURL`（若呼叫端先用 `VideoTrimmer` 裁切過，這裡收到的已經是
+        // 裁切後的暫存檔，天然滿足 docs/API.md §3「以裁切後長度為準」的契約，不需要另外傳
+        // 一個裁切前後的旗標）的 metadata，不依賴任何網路呼叫——PUT 開始前先做完，不用
+        // `async let` 跟 `uploadOriginalAndThumb` 並行：這裡的結果會寫進 INSERT payload，
+        // 若跟 PUT 並行、PUT 又失敗要提前 throw，會被迫等這個 child task 收尾才能真的丟出
+        // 錯誤（`async let` 沒有顯式 await 時仍會在 scope 結束前隱式等待），對「上傳失敗要
+        // 盡快回報」這個目標沒有幫助；量測本身是快速的本機檔案 metadata 讀取，序列化的
+        // 延遲成本可忽略。
+        let durationSeconds = await Self.measureDurationSeconds(fileURL: fileURL, loader: durationLoader)
         do {
             try await uploadOriginalAndThumb(pendingThumb: pendingThumb) { [client] in
                 try await client.storage.from(Self.bucketID).upload(
@@ -120,7 +140,8 @@ final class SupabaseMediaUploadService: MediaUploadService {
             try await insertMediaRow(
                 id: mediaID, familyID: familyID,
                 descriptor: MediaRowDescriptor(
-                    storagePath: path, type: "video", byteSize: byteSize, pixelSize: pixelSize, thumb: pendingThumb
+                    storagePath: path, type: "video", byteSize: byteSize, pixelSize: pixelSize, thumb: pendingThumb,
+                    durationSeconds: durationSeconds
                 )
             )
         } catch {
@@ -317,6 +338,10 @@ private struct MediaRowDescriptor {
     let byteSize: Int
     let pixelSize: PixelSize
     let thumb: PendingThumbnail?
+    /// LS-135：影片時長（整數秒，`max(1, floor(d))`）——`uploadPhoto` 恆傳 `nil`；
+    /// `uploadVideo` 傳 `measureDurationSeconds` 的量測結果（可能是 `nil`，量測失敗不阻斷
+    /// 上傳，見該函式文件註解）。
+    let durationSeconds: Int?
 }
 
 private struct MediaInsertPayload: Encodable {
@@ -331,6 +356,7 @@ private struct MediaInsertPayload: Encodable {
     let thumbPath: String?
     let thumbWidth: Int?
     let thumbHeight: Int?
+    let durationSeconds: Int?
 
     init(id: UUID, familyID: UUID, descriptor: MediaRowDescriptor, uploadedBy: UUID) {
         self.id = id
@@ -344,6 +370,7 @@ private struct MediaInsertPayload: Encodable {
         self.thumbPath = descriptor.thumb?.path
         self.thumbWidth = descriptor.thumb?.pixelSize.width
         self.thumbHeight = descriptor.thumb?.pixelSize.height
+        self.durationSeconds = descriptor.durationSeconds
     }
 
     enum CodingKeys: String, CodingKey {
@@ -358,5 +385,6 @@ private struct MediaInsertPayload: Encodable {
         case thumbPath = "thumb_path"
         case thumbWidth = "thumb_width"
         case thumbHeight = "thumb_height"
+        case durationSeconds = "duration_seconds"
     }
 }

@@ -17,4 +17,12 @@ final class VideoDurationFormatTests: XCTestCase {
     func test_badgeText_negativeDuration_clampsToZero() {
         XCTAssertEqual(VideoDurationFormat.badgeText(duration: -1), "影片 0:00")
     }
+
+    /// LS-135：`M:SS` 沒有小時進位，分鐘數本來就不封頂在 59——`media.duration_seconds` 的
+    /// 上游沒有對影片長度設任何上限（不像 `DiaryDurationFormat.maxPublishDuration` 的發佈
+    /// 60 秒上限，這裡格式化的是已經量測到的實際時長，不是發佈流程截斷後的值），確保
+    /// ≥60 分鐘也不會意外冒出第三段（"1:01:05"）或截斷成兩位數。
+    func test_badgeText_atLeast60Minutes_doesNotCarryIntoHours() {
+        XCTAssertEqual(VideoDurationFormat.badgeText(duration: 3665), "影片 61:05")
+    }
 }

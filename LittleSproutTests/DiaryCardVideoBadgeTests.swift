@@ -86,18 +86,50 @@ final class DiaryCardVideoBadgeTests: XCTestCase {
         )
     }
 
-    private func legacyVideo(id: UUID) -> MediaContent {
-        MediaContent(
-            id: id, type: .video, width: 884, height: 1920, thumbWidth: nil, thumbHeight: nil,
-            storagePath: "f/\(id).mov", isThumbnail: false, signedURL: URL(string: "https://example.com/f/\(id).mov")
+    /// LS-135：有縮圖＋`media.duration_seconds` 有值（LS-135 之後上傳的新影片，量測成功）
+    /// ——徽章該直接顯示查表值，`loadVideoDuration` 連呼叫都不該發生（縮圖 JPEG 解不出
+    /// 時長，且已經有權威值不需要再查）。跟 `test_thumbnailVideo_neverAttemptsLoad_
+    /// badgeStaysPlainLabel` 是同一個「不查」斷言，差別在這裡驗證徽章不是恆「影片」，而是
+    /// 直接顯示 `durationSeconds`——修前（只讀 `videoDurations` 快取）這個案例會錯誤顯示
+    /// 純文字「影片」，是 LS-135 要修的缺陷本身。
+    @MainActor
+    func test_thumbnailVideoWithDurationSeconds_neverAttemptsLoad_badgeShowsDbDurationImmediately() async {
+        let stub = StubTimelineAPIClient()
+        let mediaID = UUID()
+        let attemptCount = OSAllocatedUnfairLock(initialState: 0)
+        let store = TimelineStore(apiClient: stub, durationLoader: { _ in
+            attemptCount.withLock { $0 += 1 }
+            return CMTime(seconds: 999, preferredTimescale: 600)
+        })
+        let photo = thumbnailVideo(id: mediaID, durationSeconds: 45)
+
+        XCTAssertFalse(
+            photo.needsVideoDurationLookup, "duration_seconds 已有查表值，不該再讀縮圖 JPEG 猜時長"
+        )
+        if photo.needsVideoDurationLookup {
+            await store.loadVideoDuration(mediaID: photo.id, url: photo.signedURL!)
+        }
+
+        XCTAssertEqual(attemptCount.withLock { $0 }, 0, "有 duration_seconds 時連第一次嘗試都不該發生")
+        XCTAssertEqual(
+            VideoDurationFormat.badgeText(duration: store.displayDuration(for: photo)), "影片 0:45",
+            "徽章該直接顯示 media.duration_seconds 查表值，不是退化成純文字「影片」——這正是 LS-135 要修的缺陷"
         )
     }
 
-    private func thumbnailVideo(id: UUID) -> MediaContent {
+    private func legacyVideo(id: UUID) -> MediaContent {
+        MediaContent(
+            id: id, type: .video, width: 884, height: 1920, thumbWidth: nil, thumbHeight: nil,
+            storagePath: "f/\(id).mov", isThumbnail: false,
+            signedURL: URL(string: "https://example.com/f/\(id).mov"), durationSeconds: nil
+        )
+    }
+
+    private func thumbnailVideo(id: UUID, durationSeconds: Int? = nil) -> MediaContent {
         MediaContent(
             id: id, type: .video, width: 884, height: 1920, thumbWidth: 235, thumbHeight: 512,
             storagePath: "f/\(id).mov", isThumbnail: true,
-            signedURL: URL(string: "https://example.com/f/\(id)_thumb.jpg")
+            signedURL: URL(string: "https://example.com/f/\(id)_thumb.jpg"), durationSeconds: durationSeconds
         )
     }
 }

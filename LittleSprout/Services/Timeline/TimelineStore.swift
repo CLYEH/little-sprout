@@ -223,4 +223,14 @@ final class TimelineStore {
         }
         videoDurations[mediaID] = CMTimeGetSeconds(duration)
     }
+
+    /// LS-135：徽章顯示用的時長，`PhotoCardView`／`DiaryCardView`／`MasonryPhotoWallView`
+    /// 三個呼叫端共用同一份優先序判斷，不各自重寫——優先讀 `MediaContent.durationSeconds`
+    /// （`media.duration_seconds` 查表值，LS-134／135 起上傳端直接量測寫入，不需要客戶端
+    /// 解碼，`isThumbnail` 為 `true` 時也一樣有效）；`nil`（LS-135 之前上傳的舊列、或量測
+    /// 失敗）才退回 `videoDurations`（`loadVideoDuration` 讀出來的快取，只有
+    /// `needsVideoDurationLookup` 為 `true`、即 `signedURL` 是原檔時才有機會被填）。
+    func displayDuration(for content: MediaContent) -> TimeInterval? {
+        content.durationSeconds.map(TimeInterval.init) ?? videoDurations[content.id]
+    }
 }

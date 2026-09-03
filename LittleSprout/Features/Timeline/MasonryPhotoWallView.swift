@@ -65,7 +65,7 @@ struct MasonryPhotoWallView: View {
     private func accessibilityLabel(for photo: MediaContent) -> String {
         guard photo.type == .video else { return "照片" }
         guard photo.signedURL != nil else { return "影片（暫時無法播放）" }
-        return "\(VideoDurationFormat.badgeText(duration: timelineStore.videoDurations[photo.id]))，點兩下播放"
+        return "\(VideoDurationFormat.badgeText(duration: timelineStore.displayDuration(for: photo)))，點兩下播放"
     }
 
     private func thumbnailImage(_ photo: MediaContent) -> some View {

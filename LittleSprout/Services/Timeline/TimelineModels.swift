@@ -100,6 +100,14 @@ struct MediaRow: Decodable, Sendable, Equatable, Identifiable {
     let thumbPath: String?
     let thumbWidth: Int?
     let thumbHeight: Int?
+    /// 影片時長（整數秒，`media.duration_seconds`，LS-134）——nullable：`type == .photo`
+    /// 恆為 `NULL`；`type == .video` 時 LS-135 起由上傳端以 `AVAsset` 量測寫入，既有舊列
+    /// （LS-135 之前上傳）仍是 `NULL`，讀取端退回 `TimelineStore.loadVideoDuration` 的
+    /// client-side 查表（見 `MediaContent.needsVideoDurationLookup`）。`.select()` 不指定
+    /// 欄位＝select *，這一欄不需要額外的 grant 或 RPC 改動就會隨既有查詢一起回來（見
+    /// `20260902195055_media_duration_seconds.sql`：SELECT 是整表 grant，只有 UPDATE 才逐欄
+    /// 列舉）。
+    let durationSeconds: Int?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -108,6 +116,7 @@ struct MediaRow: Decodable, Sendable, Equatable, Identifiable {
         case thumbPath = "thumb_path"
         case thumbWidth = "thumb_width"
         case thumbHeight = "thumb_height"
+        case durationSeconds = "duration_seconds"
     }
 }
 
@@ -154,6 +163,11 @@ struct MediaContent: Equatable, Sendable, Identifiable {
     /// `TimelineAPIClient.signedURLs`）時為 nil——呼叫端顯示占位圖，不讓整頁因為單一
     /// 檔案簽名失敗而整批失敗。
     let signedURL: URL?
+    /// 影片時長（秒，`media.duration_seconds`，LS-134／135）——`MediaRow.durationSeconds`
+    /// 原樣帶過來。`nil` 表示照片，或影片為既有舊列（LS-135 之前上傳、量測失敗）；有值時
+    /// 徽章（`VideoDurationBadge`）直接顯示這個查表值，不需要客戶端對簽名 URL 做媒體解碼
+    /// （docs/API.md §6「影片時長徽章讀取策略」）。
+    let durationSeconds: Int?
 
     /// 寬高比（寬／高），用於瀑布流等比縮放；優先用縮圖實際尺寸（`thumbWidth`／
     /// `thumbHeight`，LS-130：格內顯示的就是縮圖，比例該跟著縮圖走，不必等原圖尺寸），
@@ -167,14 +181,16 @@ struct MediaContent: Equatable, Sendable, Identifiable {
         return CGFloat(effectiveWidth) / CGFloat(effectiveHeight)
     }
 
-    /// R2-M1（merge-review `b7ecfbf4`）：`PhotoCardView`／`MasonryPhotoWallView` 的
-    /// `.task(id:)` 該不該呼叫 `TimelineStore.loadVideoDuration` 的判斷——只有影片、且
-    /// `signedURL` 不是縮圖時才值得讀時長；縮圖 JPEG 解不出時長，讀了必定失敗。抽成獨立、
-    /// 可單元測試的屬性，而不是散落在兩個呼叫端各自的 `.task` guard 裡：SwiftUI View 的
-    /// `.task` 本身在這個 repo 沒有可執行的單元測試路徑（見 `PhotoCardView`／
-    /// `MasonryPhotoWallView` 皆無對應測試檔），但這條規則的邏輯本身不需要 View 就能釘住。
+    /// R2-M1（merge-review `b7ecfbf4`）／LS-135：`PhotoCardView`／`MasonryPhotoWallView`／
+    /// `DiaryCardView` 的 `.task(id:)` 該不該呼叫 `TimelineStore.loadVideoDuration` 的判斷——
+    /// 只有影片、`durationSeconds` 還沒有查表值（`nil`，LS-135 之前上傳的舊列或量測失敗）、
+    /// 且 `signedURL` 不是縮圖時才值得讀時長；`durationSeconds` 有值時已經是權威查表結果，
+    /// 縮圖 JPEG 也解不出時長，兩種情況讀了都必定是浪費或失敗。抽成獨立、可單元測試的屬性，
+    /// 而不是散落在三個呼叫端各自的 `.task` guard 裡：SwiftUI View 的 `.task` 本身在這個
+    /// repo 沒有可執行的單元測試路徑（見 `PhotoCardView`／`MasonryPhotoWallView` 皆無對應
+    /// 測試檔），但這條規則的邏輯本身不需要 View 就能釘住。
     var needsVideoDurationLookup: Bool {
-        type == .video && !isThumbnail
+        type == .video && !isThumbnail && durationSeconds == nil
     }
 }
 
