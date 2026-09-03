@@ -52942,7 +52942,7 @@
       "reusable": true,
       "width": 345,
       "layout": "vertical",
-      "gap": "$sp-label",
+      "gap": "$sp-item",
       "children": [
         {
           "type": "frame",
@@ -53250,6 +53250,7 @@
               "type": "frame",
               "id": "diPBd",
               "name": "Age Group",
+              "width": "fill_container",
               "gap": "$sp-tight",
               "alignItems": "center",
               "children": [
@@ -53268,6 +53269,8 @@
                   "id": "IqXTp",
                   "name": "Age",
                   "fill": "$print-ink-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
                   "content": "2 歲 3 個月",
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
@@ -90905,6 +90908,12 @@
                     "MIxHp": {
                       "content": "上禮拜的動物園一日遊 · 12 張相片"
                     },
+                    "mlORb": {
+                      "y": 302
+                    },
+                    "atAkU": {
+                      "y": 302
+                    },
                     "lcmj2": {
                       "enabled": true
                     },
@@ -90932,6 +90941,12 @@
                     },
                     "MIxHp": {
                       "content": "阿公阿嬤家過年 · 34 張相片"
+                    },
+                    "mlORb": {
+                      "y": 302
+                    },
+                    "atAkU": {
+                      "y": 302
                     },
                     "lcmj2": {
                       "enabled": true
@@ -90964,6 +90979,12 @@
                     },
                     "MIxHp": {
                       "content": "海邊戲水 · 8 張相片"
+                    },
+                    "mlORb": {
+                      "y": 302
+                    },
+                    "atAkU": {
+                      "y": 302
                     }
                   }
                 },
@@ -90983,6 +91004,12 @@
                     },
                     "MIxHp": {
                       "content": "第一次騎腳踏車 · 5 張相片"
+                    },
+                    "mlORb": {
+                      "y": 302
+                    },
+                    "atAkU": {
+                      "y": 302
                     },
                     "lcmj2": {
                       "enabled": true
@@ -98469,6 +98496,8 @@
                       "id": "zosjE",
                       "name": "Head Title",
                       "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "正在新增照片",
                       "fontFamily": "$font",
                       "fontSize": "$fs-lead",
@@ -98479,6 +98508,8 @@
                       "id": "FH2bY",
                       "name": "Head Subtitle",
                       "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "7 張 · 2 張完成 · 1 張上傳中 · 3 張失敗",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
@@ -98567,6 +98598,8 @@
                               "id": "v3mp8",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0231.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -98640,6 +98673,8 @@
                               "id": "M072v1",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0232.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -98714,6 +98749,8 @@
                               "id": "wmK3X",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0229.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -98787,6 +98824,8 @@
                               "id": "rzOUV",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0230.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -98860,6 +98899,8 @@
                               "id": "zz8gq",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0233.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -98953,6 +98994,8 @@
                               "id": "vzebj",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0234.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -99046,6 +99089,8 @@
                               "id": "okfLC",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0235.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -99119,12 +99164,16 @@
                       "type": "ref",
                       "ref": "qe9yS",
                       "name": "Dismiss Button",
+                      "width": "fill_container",
                       "descendants": {
                         "breqI": {
                           "enabled": false
                         },
                         "hIhVd": {
-                          "content": "在背景繼續上傳，關閉視窗"
+                          "content": "在背景繼續上傳，關閉視窗",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "textAlign": "center"
                         }
                       }
                     }
@@ -99257,6 +99306,8 @@
                       "id": "QJxDI",
                       "name": "Head Title",
                       "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "正在新增照片",
                       "fontFamily": "$font",
                       "fontSize": "$fs-lead",
@@ -99267,6 +99318,8 @@
                       "id": "v8nJAX",
                       "name": "Head Subtitle",
                       "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "7 張 · 2 張完成 · 1 張上傳中 · 3 張失敗",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
@@ -99355,6 +99408,8 @@
                               "id": "X9vaj",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0231.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -99428,6 +99483,8 @@
                               "id": "E0Yd3I",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0232.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -99502,6 +99559,8 @@
                               "id": "EbIwx",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0229.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -99575,6 +99634,8 @@
                               "id": "MmR4c",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0230.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -99648,6 +99709,8 @@
                               "id": "V7OTf3",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0233.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -99741,6 +99804,8 @@
                               "id": "l8au9",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0234.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -99834,6 +99899,8 @@
                               "id": "C09XyP",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0235.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -99907,12 +99974,16 @@
                       "type": "ref",
                       "ref": "qe9yS",
                       "name": "Dismiss Button",
+                      "width": "fill_container",
                       "descendants": {
                         "breqI": {
                           "enabled": false
                         },
                         "hIhVd": {
-                          "content": "在背景繼續上傳，關閉視窗"
+                          "content": "在背景繼續上傳，關閉視窗",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "textAlign": "center"
                         }
                       }
                     }
@@ -99935,7 +100006,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2232,
+      "height": 2812,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -99979,7 +100050,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 2232,
+          "height": 2812,
           "fill": "$paper-shadow"
         },
         {
@@ -99990,7 +100061,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 2232,
+          "height": 2812,
           "layout": "vertical",
           "justifyContent": "end",
           "children": [
@@ -100045,6 +100116,8 @@
                       "id": "T9Mmo",
                       "name": "Head Title",
                       "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "正在新增照片",
                       "fontFamily": "$font",
                       "fontSize": "$fs-lead",
@@ -100055,6 +100128,8 @@
                       "id": "UD5zL",
                       "name": "Head Subtitle",
                       "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "7 張 · 2 張完成 · 1 張上傳中 · 3 張失敗",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
@@ -100143,6 +100218,8 @@
                               "id": "PbG9g",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0231.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -100216,6 +100293,8 @@
                               "id": "BWjUY",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0232.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -100290,6 +100369,8 @@
                               "id": "lvP9K",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0229.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -100363,6 +100444,8 @@
                               "id": "dkS5J",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0230.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -100436,6 +100519,8 @@
                               "id": "NWRY5",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0233.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -100529,6 +100614,8 @@
                               "id": "bLOEp",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0234.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -100622,6 +100709,8 @@
                               "id": "f2ANCO",
                               "name": "Filename",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "IMG_0235.HEIC",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
@@ -100695,18 +100784,903 @@
                       "type": "ref",
                       "ref": "qe9yS",
                       "name": "Dismiss Button",
+                      "width": "fill_container",
                       "descendants": {
                         "breqI": {
                           "enabled": false
                         },
                         "hIhVd": {
-                          "content": "在背景繼續上傳，關閉視窗"
+                          "content": "在背景繼續上傳，關閉視窗",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "textAlign": "center"
                         }
                       }
                     }
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "kHDk4",
+      "x": -704,
+      "y": -1650,
+      "name": "LS-142 / 實作註記 · Handoff Notes (ios-dev)",
+      "width": 900,
+      "fill": "#FBEBEC",
+      "cornerRadius": 24,
+      "stroke": "#BC969D",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 44,
+      "children": [
+        {
+          "type": "text",
+          "id": "JOnm7",
+          "name": "NT",
+          "fill": "#2B141C",
+          "content": "LS-142 相簿 / 相簿詳情 / 上傳佇列 · Handoff Notes",
+          "lineHeight": 1.25,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 34,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "e2bZn",
+          "name": "NS",
+          "fill": "#553040",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "R1 首輪產出。沿用 LS-119／LS-120 母題（紙片、角托、Day Divider、Tab Bar 純 icon），未改動任一已核可板；本輪唯一擴充的既有元件是 cmp/Card Album（新增 Signature 列，預設 enabled:false，不影響既有 6 處 instance）。",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "hevg1",
+          "name": "N 畫面級屬性清單（隱藏 Tab Bar？系統標題？釘底動作帶？失敗文案鍵？）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "BRiyL",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "畫面級屬性清單（隱藏 Tab Bar？系統標題？釘底動作帶？失敗文案鍵？）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "VY3aW",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "eGKB8",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Jembn",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "14 相簿(iPhone/深色/AX3/iPad)、14b 空狀態：Tab-root，顯示 Tab Bar（相簿 icon 選中，視覺覆寫見下）；標題非系統 navigationTitle，是 Header Row 內的自畫 Title（比照時間軸／寶貝管理）；不用釘底 Action Bar（Tab-root 慣例，主動作在 Header Row「＋新增相簿」）；無失敗文案（純瀏覽）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "o8kpeL",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "Zbqjx",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "OHMPk",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "15 相簿詳情(iPhone/深色/AX3/iPad)、15b 空狀態（尚無照片）：push 進入，不顯示 Tab Bar；用 cmp/Nav Back（label＝\"相簿\"，即返回上一頁的 tab 名稱）＋ Body 內自畫 Title，非系統大標題；用釘底 Action Bar，承載唯一實心主鈕「加入照片」（PhotosPicker 多選觸發點）；Header Row 右側「更多」文字鈕僅 owner 可見，點擊開啟含「編輯相簿名稱」「刪除相簿」兩列的下拉選單（沿用既有 xgx94 Dropdown Menu 視覺語彙，本輪未另建 dropdown-open 態的板，實作請比照該既有選單樣式：$surface 底、$radius-lg、$border 1pt、$paper-shadow 落影）。non-owner／viewer 檢視同一畫面但不顯示「更多」鈕。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ycFhU",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "B79sRZ",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "qtvvT",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "15c 刪除相簿 · 確認（Owner）：Sheet 覆蓋 15，非獨立路由；無 Tab Bar／無系統標題；Grabber+Head+Body Text+Actions（外框 danger 刪除鈕 + Button Text 取消），沿用既有 LS-47/09c 移除寶貝確認的 Confirm Sheet 語彙。刪除呼叫 set_album_deleted RPC（相片本身不受影響，僅 album 列軟刪）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "jEusJ",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "EZmKj",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "cn84r",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "16 上傳佇列(+深色/AX3)：Sheet 覆蓋 15（PhotosPicker 選完照片後彈出）；無 Tab Bar／無系統標題；無釘底 Action Bar（用 Sheet 內建 Footer「在背景繼續上傳，關閉視窗」文字鈕，允許背景續傳）。失敗文案鍵見下一節。iPad 未另建：Sheet 為 iPhone/iPad 共通的 modal 呈現方式，內容矩陣本身與裝置寬度無關（皆為單欄列表），本輪判斷不需要重排版；若日後 iPad 要用側邊欄常駐佇列而非 sheet，需另開設計票。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "inAVb",
+          "name": "N SF Symbol 對照（lucide → SwiftUI systemName）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "pJqWF",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "SF Symbol 對照（lucide → SwiftUI systemName）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "B1wQ4",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "HuzOO",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "ll8M7",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "images→\"photo.stack\"（Tab Bar 相簿 icon，既有）｜baby→\"figure.child\"（Tab Bar 寶貝 icon 與本票多寶貝 Pill 沿用同一符號，既有）｜ellipsis→\"ellipsis\"（更多）｜image-plus→\"photo.badge.plus\"（加入照片）｜trash-2→\"trash\"（刪除）｜plus→\"plus\"（新增相簿／新增回憶）｜chevron-left→\"chevron.left\"（返回）｜clock→\"clock\"（等候上傳）｜check→\"checkmark\"（完成，中性色非 success）｜circle-alert→\"exclamationmark.circle.fill\"（錯誤，沿用全稿既有 k2Mw4 錯誤文法一致符號）｜refresh-cw／rotate-cw→\"arrow.clockwise\"（重試）｜rotate-ccw→\"arrow.counterclockwise\"（續傳橫幅）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Cw411",
+          "name": "N 失敗文案鍵（三分支，對應 LSErrorCode／URLError 分層）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "kfLYA",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "失敗文案鍵（三分支，對應 LSErrorCode／URLError 分層）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LX9Ug",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "hwVCK",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "uIulU",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "連線失敗（URLError，如 .notConnectedToInternet／.networkConnectionLost）→ 標題「連線中斷，請檢查網路連線。」＋提供「重試」鈕（單張重新上傳，非整批）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Spx9R",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "LdhLM",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "M5PYW",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "伺服器忙碌（5xx／未知伺服器錯誤）→ 標題「伺服器忙碌，請稍後再試。」＋提供「重試」鈕。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "AEPtN",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "BTeN5",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "SUl8G",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "超額 LS002（家庭 storage_quota_bytes 已滿，media INSERT 被 trigger 擋下）→ 標題「相簿容量已滿，這張沒有上傳。」＋次要說明「騰出儲存空間後才能繼續上傳這張。」＋不提供「重試」鈕（LSErrorCode 對 LS002 若歸 rejected／非 retryable 層，重試沒有意義；若後續要加「管理儲存空間」導引 CTA，屬 PLAN §10-A 額度 UI 的後續票範圍，本票不做）。三句文案與圖示（circle-alert danger）為固定字串鍵，建議 ios-dev 對應 enum UploadFailureReason{network, server, quota} 各自持有標題／說明／是否可重試三個屬性，不要用 if-else 判斷錯誤碼字串。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "O8TmQ",
+          "name": "N 版面規格（沿用 LS-119 公式，未新增規則）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "n88zQ",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "版面規格（沿用 LS-119 公式，未新增規則）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Ygm5x",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "o7NGCv",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "vfPjM",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "相簿詳情瀑布流：iPhone 2 欄（colW 164.5）、iPad 3 欄（colW 167，≥164.5 門檻合格，見 motifs.md「瀑布流」節）；欄內欄間 gap 16；空白 caption 型印品公式（LS-119 R6）：padding[8,8,32,8]、無 Imprint Row、角托 BL/BR y＝wrapH+19、x＝colW-26+5（TR/BR）。相簿卡片列表（cmp/Card Album）用的是另一種「caption 型印品」（有 Imprint Row 顯示相簿名稱），沿用既有固定角托 y=211／x=324（345 寬版），未改動。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "t8dYN",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "bmaEX",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "tFUQr",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "釘底 Action Bar 高度（本票 3 板實測）：15 相簿詳情 93pt（16+ctl-pad-cta按鈕+16，同 LS-119 慣例 50pt 定值不變式──CTA 底緣到裝置底緣仍是固定 50＝16+34）；15b 空狀態同款 93pt；AX3 版按鈕變高，Action Bar 隨之變高（125pt 實測），50pt 不變式在 AX3 同樣成立（Home Indicator Area 34 + Button Wrap padding-bottom 16 恆定，變的只是按鈕本身）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "s3UzNk",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "TIH9S",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "pewpi",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "板高逐板實測後貼合內容（十條不可協商第 6 條）：14 相簿＝852（沿用 Tab-root 定值）；15 相簿詳情＝1063（106 chrome+830 body+93 actionbar+34 home）；15b 空狀態＝713；A11y/15＝1305；16 上傳佇列的 Sheet 用 fit_content 自然貼合，screen 外框＝146（scrim 上緣留白）+ sheet 實測高。所有數字皆為 Get() bounds 實測後回填，無倒推餘數。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "JzoKT",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "arS5M",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "epDnW",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "cmp/Card Album 擴充：新增 Signature 列（enabled:false 預設），children＝Who Group(icon\"baby\"+Name)、Age Group(\" · \"+Age)、Multi Caption(enabled:false)。單一寶貝：Signature enabled:true，Name/Age 覆寫；多寶貝（≥2）：關閉 Who/Age Group，開啟 Multi Caption（\"小安 2 歲 3 個月、小明 8 個月\" 這種頓號串接），沿用 cmp/Card Diary 既有的同款切換邏輯（唯一差異：Card Diary 右靠齊代表「作者署名」，Card Album 左靠齊代表「這本相簿收錄了誰」，語意不同故對齊方向刻意不同，非不一致）。零寶貝標記：Signature 維持 enabled:false，不顯示任何列。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "zwpaz",
+          "name": "N Pencil 踩雷記錄（供下一輪或其他票參考，非 UI 規格）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "rNa4i",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "Pencil 踩雷記錄（供下一輪或其他票參考，非 UI 規格）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "MIdvq",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "J2W6pf",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "pHjkT",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Header Row 若 alignItems:\"center\"、Title 為使用者輸入的可變長文字（相簿名稱，非固定 2–4 字的畫面標題），AX3 換行後會與同列的「更多」鈕垂直置中對齊、視覺上疊在文字中段。改用 alignItems:\"start\" 解決；凡是 Header Row 的 Title 內容來自使用者輸入（非畫面固定標題）都應預設 start 對齊，不要延用 Tab-root 固定標題的 center 慣例。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "VwRPz",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "R3LoS",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Toc5c",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "cmp/Button Primary（OKSJI）元件定義本身 width:345（寫死）；在 Action Bar／Bar Button Wrap 這類「本來就要滿版」的用法下不必覆寫，但用於 Header Row 這種行內緊湊按鈕時必須顯式覆寫 width:\"fit_content\"，否則 345 會直接撐爆同列的其他內容（本輪 iPad 詳情頁曾踩雷：標題被擠成 4 行斷字，已修正）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "cqywy",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "llBmC",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Ftb7K",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Copy() 的 descendants 覆寫鍵改用『節點 id』而非『節點名稱字串』：本輪第一次嘗試用 name（如 \"Caption\"／\"Photo Wrap\"）當 key 時 4 張卡片全部套用失敗（靜默不生效、無錯誤訊息，讀回內容仍是預設值），改用實際 id（如 MIxHp／s8eO3j）後才正確套用。原因未明（文件字面說 name 應該可用），建議之後涉及 Copy+descendants 的操作一律先用 id，不要冒然信任 name 匹配。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "M644S",
+          "name": "N 未決 / 需人核可",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "qGI0K",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "未決 / 需人核可",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "zXNd6",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "n6ntO",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "xKN9q",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "封面判定規則：ticket 文字寫「封面＝最新縮圖」，但 albums 表實際有明確的 cover_media_id 欄位（可由使用者指定）。本輪畫面單純顯示第一張/指定封面照片，未區分「使用者手動指定」與「自動取最新」兩種狀態的視覺差異——建議 ios-dev／PM 在實作票確認 cover_media_id 為 null 時的 fallback 邏輯（取 album_media 最新一筆的 thumb_path），畫面本身兩種情況視覺相同不需要另外設計。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "u8Pyz0",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "Rz3XT",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "iUKDf",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "「更多」下拉選單（編輯／刪除）未另建獨立的『選單展開中』畫面板，本輪沿用既有 xgx94 Dropdown Menu 的視覺語彙作為實作依據；若 visual-reviewer 認為需要單獨畫出展開態，留待 R2 依 review 意見決定是否補板。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "qCT1i",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "DSsfR",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "ThcXO",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "影片格徽章（LS-119 R5「影片格：沖印品格＋播放徽章」母題）本輪未套用到相簿詳情的照片牆——範圍控制：ticket 未明確要求相簿內混合照片／影片的視覺，若後續票需要，直接沿用 LS-119 既有徽章語彙即可，非新規則。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "IN7Iq",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "P14QRP",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-142 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "umhGy",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "上傳佇列 Sheet 未做 iPad 專屬版面（見畫面清單段說明），與 non-owner 相簿詳情視圖亦未另外畫板（僅在此文件註明差異：不顯示「更多」鈕），皆為本輪刻意控制範圍的取捨，非遺漏。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
             }
           ]
         }
