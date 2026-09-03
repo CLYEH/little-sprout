@@ -26,6 +26,11 @@ enum TapTargetGateScreenName: String {
     // 任何 feed 資料，`.preview()` 空狀態就會渲染，是這個畫面唯一「不需要 seed 就有代表性」
     // 的可點元件，量測成本低，值得單獨拉一個 case 出來蓋。
     case timelineDefaultState = "TimelineViewDefaultState"
+    /// merge-review `443ec21a` §3：不是點擊目標測試，是借用同一套「launch environment 指定
+    /// 畫面」機制餵 `DiaryCardVideoBadgeGeometryTests` 量真實 frame（a11y tree 讀得出文字，
+    /// 讀不出像素——這正是本輪 FAIL 的根因，見該測試檔文件註解）。沿用這裡而不是另開一套
+    /// 平行機制：兩個 target 之間本來就只有這一條「XCUITest 指定畫面」通道。
+    case diaryCardVideoBadges = "DiaryCardVideoBadges"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -46,6 +51,7 @@ enum TapTargetGateScreenName: String {
         case .settings: return .button("登出")
         case .diaryEditor: return .staticText("寫日記")
         case .timelineDefaultState: return .button("新增回憶")
+        case .diaryCardVideoBadges: return .staticText("影片 12:34")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")
