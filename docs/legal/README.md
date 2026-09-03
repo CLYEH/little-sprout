@@ -36,7 +36,7 @@
    - **B. 填自訂 EULA**（貼 `eula-addendum.md` 的 PASTE 區）：產品頁顯示授權合約連結，零容忍在下載前即可見；代價是必須符合 Apple 最低條款（草稿已含第三方受益人、Apple 無維護義務等必要語句，但**建議律師對照 Apple minterms 逐條核對**）。
 4. **GDPR**：草稿採「不以歐盟居民為對象」立場（隱私權政策 §12），未做 GDPR 專章。依 GDPR 第 3 條第 2 項，非歐盟業者僅在「向歐盟境內資料主體提供服務」或「監控其行為」時適用；本 App 僅繁中、無歐盟行銷、無追蹤，屬不適用的常見形狀，但**App Store 上架地區若勾選全球，歐盟使用者仍能下載**。若要更保守：送審時把可下載地區限制在臺灣（或亞太），或請律師確認。
 5. **照片 EXIF**：目前原檔以原樣上傳（`PickedItemLoader.swift` `loadTransferable(type: Data.self)` → 直接 PUT），EXIF 含拍攝地點會一併保存；草稿已如實揭露（隱私權政策 §2.4）並教使用者自行移除。若使用者希望 App 端上傳前剝除 GPS，屬另票（產品決策＋實作），揭露文字屆時再改。
-6. **刪除帳號後，您單獨上傳的照片／影片要留給家庭，還是一併刪除？**（merge-review R2 M3／R3 M4）**現況＝永久留存、由 Owner 決定**：LS-143 `delete_my_account()` 不觸碰 `media`（`deleted_at` 仍 NULL）；LS-151 刪 `auth.users` 後 `media.uploaded_by` 只 `on delete set null`（`init_schema.sql`），列不消失；LS-153 的清除鍵是 `deleted_at`／`deletion_requested_at`，這批照片兩欄皆空、**不在任何清除集合內**。三票照現行票文上線後，這些照片仍無限期留在家庭相簿，只有該家庭 Owner 能硬刪（`docs/API.md` §2 `media`「硬刪僅 owner」）。文本依現況寫「保留在原家庭的相簿中，由該家庭的 Owner 決定保留或刪除；可在刪除帳號前自行刪除」（隱私 §8，與條款 §4.5 一致）。兩個選項：(a) **明文留給家庭**（現行文本）；(b) **一併刪除**——需 LS-143 補 `media` 軟刪路徑（或 LS-151 以 service_role 標記）＋LS-153 納入清除，並改隱私 §8 該句。**沒有「等 LS-153 自己清」這個選項。**
+6. **刪除帳號後，您上傳的照片／影片（包括附在日記或相簿中的）要留給家庭，還是一併刪除？**（merge-review R2 M3／R3 M4）**現況＝永久留存、由 Owner 決定**：LS-143 `delete_my_account()` 不觸碰 `media`（`deleted_at` 仍 NULL）；LS-151 刪 `auth.users` 後 `media.uploaded_by` 只 `on delete set null`（`init_schema.sql`），列不消失；LS-153 的清除鍵是 `deleted_at`／`deletion_requested_at`，這批照片 `deleted_at` 為空、`media` 表本身也沒有 `deletion_requested_at` 欄，**不在任何清除集合內**。日記軟刪只刪 `kind='diary'` 的 feed item，`feed_sync_media()` 對每列 `media` 各建一筆 `kind='media'`，所以附在日記裡的照片同樣留存並繼續顯示於時間軸。三票照現行票文上線後，這些照片仍無限期留在家庭相簿，只有該家庭 Owner 能硬刪（`docs/API.md` §2 `media`「硬刪僅 owner」）。文本依現況寫「保留在原家庭的相簿中，由該家庭的 Owner 決定保留或刪除；可在刪除帳號前自行刪除」（隱私 §8，與條款 §4.5 一致）。兩個選項：(a) **明文留給家庭**（現行文本）；(b) **一併刪除**——需 LS-143 補 `media` 軟刪路徑（或 LS-151 以 service_role 標記）＋LS-153 納入清除，並改隱私 §8 該句。**沒有「等 LS-153 自己清」這個選項。**
 
 ## 文本中承諾、但程式尚未落地的項目（送審前必須對齊）
 
@@ -44,7 +44,7 @@
 
 | 文本承諾 | 對應票 | 現況（2026-09-03） |
 |---|---|---|
-| App 內「設定 → 刪除帳號」兩步流程（隱私 §5 期間、§8「刪除帳號」；條款 §9.1；EULA §四.1）：① RPC 立即——退出家庭／唯一成員的家庭 cascade 刪除／自己的日記相簿留言軟刪／`profiles.deletion_requested_at` 標記；② 登入身分（email／顯示名稱／頭像＝`auth.users`＋`profiles`）與推播裝置代碼於帳號刪除完成時移除；單獨上傳的照片影片**留在原家庭、由 Owner 決定**（不在 LS-153 清除集合內）；標記資料 30 天內系統自動永久清除 | LS-24（UI）／LS-143（RPC，PR #244）／**LS-151**（Edge Function 以 service_role 刪 `auth.users`）／**LS-153**（30 天自動清除） | LS-143 In Progress；LS-24／LS-151／LS-153 Backlog；Swift 端尚無畫面。依 `20260903084231_delete_account.sql` 檔頭：`media`／`reactions`／`device_tokens` **明文不在 RPC 範圍**（`device_tokens` 靠 `auth.users` 刪除時 cascade，即 LS-151 完成時才清）。**待使用者裁決（產品）**：刪帳號後「您單獨上傳的照片／影片」明文留給家庭、還是一併刪除？現況＝永久留存（`media.deleted_at` 不被寫入、`uploaded_by` set null、不在 LS-153 清除鍵內），文本依現況寫「保留在原家庭、由 Owner 決定」；選一併刪除需擴 LS-143／LS-151＋LS-153（見裁決清單第 6 項） |
+| App 內「設定 → 刪除帳號」兩步流程（隱私 §5 期間、§8「刪除帳號」；條款 §9.1；EULA §四.1）：① RPC 立即——退出家庭／唯一成員的家庭 cascade 刪除／自己的日記相簿留言軟刪／`profiles.deletion_requested_at` 標記；② 登入身分（email／顯示名稱／頭像＝`auth.users`＋`profiles`）與推播裝置代碼於帳號刪除完成時移除；上傳的照片影片（含日記附帶）**留在原家庭、由 Owner 決定**（不在 LS-153 清除集合內；隱私 §5 期間／§8 表列末句／§8 刪除帳號句、條款 §4.5／§9.1 **五處同調**，翻案時一起改）；標記資料 30 天內系統自動永久清除 | LS-24（UI）／LS-143（RPC，PR #244）／**LS-151**（Edge Function 以 service_role 刪 `auth.users`）／**LS-153**（30 天自動清除） | LS-143 In Progress；LS-24／LS-151／LS-153 Backlog；Swift 端尚無畫面。依 `20260903084231_delete_account.sql` 檔頭：`media`／`reactions`／`device_tokens` **明文不在 RPC 範圍**（`device_tokens` 靠 `auth.users` 刪除時 cascade，即 LS-151 完成時才清）。**待使用者裁決（產品）**：刪帳號後「您上傳的照片／影片（含日記附帶）」明文留給家庭、還是一併刪除？現況＝永久留存（`media.deleted_at` 不被寫入、`uploaded_by` set null、不在 LS-153 清除鍵內），文本依現況寫「保留在原家庭、由 Owner 決定」；選一併刪除需擴 LS-143／LS-151＋LS-153（見裁決清單第 6 項） |
 | 「在 App 內」檢舉（條款 §6.2）、封鎖（§6.4）、Owner 移除內容與處理檢舉（§6.5）、檢舉同時送達平台方；EULA §二.3 | LS-23（UI，設計併入 LS-152）／LS-149（後端） | 表與 RLS 已在（`content_reports`／`blocked_users`）；App 端無呼叫端（`grep -rn -e create_content_report -e blocked_users LittleSprout/` 0 hits）；LS-149 In Progress、LS-23 Backlog |
 | 24 小時內處理檢舉（條款 §6.3） | 營運承諾，非程式 | 需有人（使用者本人）看 Supabase Dashboard 的 `content_reports`；建議設 email 或 webhook 提醒，否則 24 小時承諾靠自律 |
 | 清除排程：軟刪內容／逾期孩子檔案／刪除帳號後的標記資料 30 天後系統自動永久清除，含照片影片實體檔案與額度對帳（隱私 §5、§8 全段） | **LS-153**（使用者 2026-09-03 裁決：系統自動、不做人工清除；TestFlight 前落地） | Backlog。repo 目前無任何排程（`grep -rni -e pg_cron -e cron.schedule -e purge supabase/` 0 hits）；`docs/API.md:1263` 現行設計**刻意**不硬刪軟刪 `media` 的 Storage 物件；30 天還原邊界只有 `children`（`LS043`，且**無硬刪路徑**、軟刪列對全體成員可讀），`diaries`／`comments`／`albums` 軟刪無時間邊界。正文已依裁決寫「系統自動永久清除（LS-153，待落地）」——**LS-153 未上線前不得填生效日** |
@@ -80,7 +80,7 @@ App Store Connect 的「隱私權政策 URL」與「支援 URL」都必須是公
 
 ### 案 B：本 repo 的 GitHub Pages，用 Actions 只發佈 `docs/legal/`
 
-- 步驟：Settings → Pages → Source「GitHub Actions」；加一支 workflow：checkout → 把 `docs/legal/*.md` 轉成 HTML（或直接 `actions/upload-pages-artifact` 上傳 `docs/legal` 讓 Pages 內建 Jekyll 轉）→ `actions/deploy-pages`。只有 `docs/legal` 進站台。
+- 步驟：Settings → Pages → Source「GitHub Actions」；加一支 workflow：checkout → 把 `docs/legal/privacy-policy.md` 與 `terms-of-service.md` 轉成 HTML（或 `actions/upload-pages-artifact` 只上傳這兩檔讓 Pages 內建 Jekyll 轉）→ `actions/deploy-pages`。**排除本 README 與 `eula-addendum.md`**——README 含內部裁決與對齊表、EULA 是貼進 ASC 的文本，都不該上公開站台。
 - 網址：同案 A 的形狀。
 - 優點：同一份來源、只公開法務文件。
 - 缺點：多一支 workflow（本 repo 的 CI 慣例是每支 workflow 都要有 gate／自測，屬 harness 票）。
