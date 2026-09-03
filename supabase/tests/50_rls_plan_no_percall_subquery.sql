@@ -642,6 +642,108 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- get_family_timeline（v_has_blocks=true 路徑）效能守門：LS-149 R2（merge-reviewer
+-- PR #248 R1 minor-1）
+--
+-- 上面那個 DO 區塊全程用 c0000000...001（效能測試帳號）呼叫，這個帳號沒有封鎖過任何
+-- 人，所以四條分支量到的一律是 v_has_blocks=false 變體——LS-149 新增的、風險已知
+-- 較高的 v_has_blocks=true 變體（NOT EXISTS + private.feed_item_actor_id() 逐列查找，
+-- 見 20260903091317_report_block_rpc.sql 對 get_family_timeline 的說明）完全沒被量過、
+-- 也沒有任何 buffers 上限守著它。
+--
+-- reviewer（merge-review R1）實測：在本檔案這組資料集（600 列標記資料）上，篩 child、
+-- 無游標那條分支（分支 3）的 v_has_blocks=true 版本要 1881 buffers（比 v_has_blocks=
+-- false 版本的 136 高一個數量級），但把候選子集合拉到 6000 列之後規劃器改選
+-- `Nested Loop Anti Join` ＋ `Index Scan using feed_item_children_family_child_occurred_idx`
+-- ＋提早 LIMIT，buffers 反而降到 143——代表壞成本只發生在「候選集合小到規劃器認為
+-- 整段掃比較划算」的中間帶，不是隨資料量線性成長。門檻因此刻意訂得比
+-- v_has_blocks=false 那組（200）寬很多（下面的 2500）：這裡要擋的是「有人動
+-- `feed_item_actor_id()` 或那四段 `NOT EXISTS` 之後，這條路徑退化到數千至數萬 buffers」
+-- 這種數量級級的劣化，不是要求它跟常見路徑一樣緊——那條路徑本來就刻意接受較高成本
+-- （見 migration 檔頭「2. get_family_timeline」段落的設計裁量）。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_line text;
+  v_plan text;
+  v_buffers bigint;
+  v_hit bigint;
+  v_read bigint;
+  v_deep_cursor constant timestamptz := now() - interval '150000 minutes';
+  v_deep_cursor_tagged constant timestamptz := (current_date - 75)::timestamp at time zone 'utc';
+  v_max_uuid constant uuid := 'ffffffff-ffff-ffff-ffff-ffffffffffff';
+  v_child constant uuid := '2c000000-0000-4000-8000-000000000001';
+  v_family constant uuid := 'fc000000-0000-4000-8000-000000000001';
+  -- 見上方檔頭說明：故意比 v_has_blocks=false 那組（200）寬很多，只擋數量級退化。
+  c_buffer_budget constant bigint := 2500;
+  q record;
+  v_rowcount int;
+begin
+  -- 讓效能測試帳號真的封鎖一個人，觸發 get_family_timeline 內部的 v_has_blocks=true
+  -- 分支——blocked_id 不必是這個家庭的成員（block_user／blocked_users 本來就不驗證這件
+  -- 事，見 migration 設計裁量第 3 點），借用效能資料集本來就有的 2 千個合成 profile
+  -- （join_requests 準備段落建立，見上方 fixture 說明）任取一個即可。整份 50_ 檔案跑在
+  -- 一個交易裡（檔頭 `begin;`），這裡不需要另開交易，檔尾的 `rollback;` 會一併復原。
+  reset role;
+  insert into public.blocked_users (family_id, blocker_id, blocked_id)
+  values (v_family, 'c0000000-0000-4000-8000-000000000001', 'c1000000-0000-4000-8000-000000000001');
+
+  set local role authenticated;
+  perform set_config('request.jwt.claims',
+    '{"sub":"c0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+
+  -- 這是這個 session 第一次執行 v_has_blocks=true 分支（跟上面 false 分支是不同的
+  -- 靜態查詢、不同的 plan cache 項目），warm-up 一次丟棄結果，理由同上面 N2 說明。
+  perform * from public.get_family_timeline(v_family, v_child, null, null, 1);
+
+  for q in
+    select * from (values
+      (1, '分支 1（v_has_blocks=true）：不篩 child、無游標（首頁）',
+       format('select * from public.get_family_timeline(%L::uuid, null, null, null, 20)',
+         v_family)),
+      (2, '分支 2（v_has_blocks=true）：不篩 child、有游標（深頁分頁）',
+       format('select * from public.get_family_timeline(%L::uuid, null, %L::timestamptz, %L::uuid, 20)',
+         v_family, v_deep_cursor, v_max_uuid)),
+      (3, '分支 3（v_has_blocks=true）：篩 child、無游標（第一頁）',
+       format('select * from public.get_family_timeline(%L::uuid, %L::uuid, null, null, 20)',
+         v_family, v_child)),
+      (4, '分支 4（v_has_blocks=true）：篩 child、有游標（深頁）',
+       format('select * from public.get_family_timeline(%L::uuid, %L::uuid, %L::timestamptz, %L::uuid, 20)',
+         v_family, v_child, v_deep_cursor_tagged, v_max_uuid))
+    ) as t(idx, label, stmt)
+    order by idx
+  loop
+    v_plan := '';
+    for v_line in execute 'explain (analyze, verbose, buffers) ' || q.stmt loop
+      v_plan := v_plan || v_line || E'\n';
+    end loop;
+
+    select coalesce(sum((x[1])::bigint), 0) into v_hit
+      from regexp_matches(v_plan, 'shared hit=([0-9]+)', 'g') as x;
+    select coalesce(sum((x[1])::bigint), 0) into v_read
+      from regexp_matches(v_plan, E'read=([0-9]+)', 'g') as x;
+    v_buffers := v_hit + v_read;
+
+    if v_buffers > c_buffer_budget then
+      raise exception E'FAIL 效能：get_family_timeline %（分支 %）buffers=%（hit=% read=%，門檻 %）—— v_has_blocks=true 這條路徑退化到數量級以上的成本，疑似 private.feed_item_actor_id() 或封鎖過濾的 NOT EXISTS 被改壞\n%',
+        q.label, q.idx, v_buffers, v_hit, v_read, c_buffer_budget, v_plan;
+    end if;
+
+    -- 正向對照：確認量到的是一頁真實資料，不是因為封鎖過濾把整頁篩空的空探查
+    -- （c1000000...001 不是任何一列的作者，理論上不會濾掉任何東西，回傳列數應與
+    -- v_has_blocks=false 那組相同）。
+    execute 'select count(*) from (' || q.stmt || ') t' into v_rowcount;
+    if v_rowcount = 0 then
+      raise exception 'FAIL 效能：get_family_timeline %（分支 %）回傳 0 列——v_has_blocks=true 分支量到的是空探查，不是一頁真實資料', q.label, q.idx;
+    end if;
+
+    raise notice 'ok 效能：get_family_timeline %（分支 %） buffers=%（hit=% read=%，門檻 ≤%，v_has_blocks=true）',
+      q.label, q.idx, v_buffers, v_hit, v_read, c_buffer_budget;
+  end loop;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- list_comments（LS-58）效能回歸：同一個教訓（LS-48 F1）再套一次——比照
 -- get_family_timeline 拆成「無游標／有游標」兩條靜態查詢，避免 OR 條件擋掉
 -- comments_target_idx（family_id, target_type, target_id, created_at）的索引選用。

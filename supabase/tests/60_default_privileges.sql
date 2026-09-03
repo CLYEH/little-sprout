@@ -77,7 +77,14 @@ declare
     'private.contributor_family_ids()',
     'private.uploadable_family_ids()',
     'private.peer_profile_ids()',
-    'private.is_media_object_path(text)'
+    'private.is_media_object_path(text)',
+    -- LS-149：封鎖過濾共用的兩支輔助函式。private.blocked_pairs() 被
+    -- albums_select／comments_select 兩條 RLS policy 直接呼叫（policy 以 authenticated
+    -- 身分求值，同其餘集合函式的理由）；private.feed_item_actor_id(feed_kind,uuid) 被
+    -- get_family_timeline（security invoker）呼叫，同一個理由——沒有這支 EXECUTE，
+    -- 呼叫者封鎖過人時整條時間軸查詢會直接噴權限錯。
+    'private.blocked_pairs()',
+    'private.feed_item_actor_id(public.feed_kind,uuid)'
   ];
   v_exceptions text[] := array[]::text[];  -- 目前無例外；若新增，必須附理由註解
   v_allow_oids oid[];
@@ -442,12 +449,19 @@ declare
     'public.create_child(uuid, text, date, text)',
     'public.update_child(uuid, text, date, text)',
     'public.set_child_deleted(uuid, boolean)',
+    -- LS-149
+    'public.report_content(uuid, text, uuid, text)',
+    'public.block_user(uuid, uuid)',
+    'public.unblock_user(uuid, uuid)',
+    'public.remove_content_as_owner(text, uuid)',
+    -- LS-143
     'public.delete_my_account()'
   ];
   v_invoker_rpcs text[] := array[
     'public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)',
     'public.get_reaction_counts(uuid, text, uuid[])',
-    'public.list_children(uuid)'
+    'public.list_children(uuid)',
+    'public.get_family_quota(uuid)'  -- LS-149：純讀取，依賴既有 families_select RLS
   ];
   v_whitelist oid[];
   v_unknown text;
