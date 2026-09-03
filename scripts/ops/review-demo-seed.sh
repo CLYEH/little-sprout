@@ -85,7 +85,11 @@ MEMBER_ID=d1000000-0000-4000-8000-000000000002
 CHILD1_ID=d2000000-0000-4000-8000-000000000001
 CHILD2_ID=d2000000-0000-4000-8000-000000000002
 INVITE_ID=d4000000-0000-4000-8000-000000000001
-INVITE_CODE=LSDEMO
+# 這串碼是要印在 App Review Notes 給人照抄的（merge-review R1 i2）：原本 LSDEMO 含字母
+# 'O'，跟 create_invite RPC 產碼字母表 23456789ABCDEFGHJKLMNPQRSTUVWXYZ（排除
+# 0/O/1/I 以免長輩手抄誤認，20260825070627_invite_code_6.sql）刻意要避開的歧義字元同一類
+# ——這裡是直寫、不受該字母表機械約束，但沒理由自己選一個它要避開的字元，換成 7。
+INVITE_CODE=LSDEM7
 OWNER_EMAIL=review-demo@little-sprout.app
 MEMBER_EMAIL=review-demo-member@little-sprout.app
 # 上傳路徑的 {yyyy}/{mm} 固定（docs/API.md §6：這段取的是「上傳時間」，不是拍攝時間）——
