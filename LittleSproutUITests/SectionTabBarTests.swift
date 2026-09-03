@@ -11,6 +11,17 @@ import XCTest
 ///
 /// ②entry-conditions.md ⑬：四個 tab-root 目的地畫面首屏，display 標題逐字等於該 tab
 /// 的可見名稱（拿掉可見 tab 文字後的非手勢替代路徑，不是建議）。
+///
+/// merge-review R1 m1/m2 修法：相簿／寶貝／設定三個畫面都有可見的系統 nav bar，斷言改成
+/// `app.navigationBars[name]`——只有畫面上「真的存在一顆這個標題的系統導覽列」才會通過，
+/// 不會被畫面上任何其他同名 staticText（`ContentUnavailableView` 的 label、
+/// `ChildrenManagementView` 自己的 `.navigationTitle`）巧合撐過。時間軸隱藏系統 nav bar
+/// （`.toolbar(.hidden, for: .navigationBar)`），headerRow 自畫的 Text 是這個畫面**唯一**
+/// 的 heading 訊號來源——XCUITest 沒有能獨立查詢 `.isHeader` accessibility trait 的 API
+/// （實測：`.accessibilityAddTraits(.isHeader)` 不會把 `elementType` 從 `.staticText` 提升
+/// 成獨立型別，不像 `.isSelected` 有專屬的 `XCUIElement.isSelected` 屬性可查），因此改加一條
+/// 「這顆文字位在畫面最上緣 header 區」的位置斷言，跟 sentinel 的純文字存在斷言不是同一件事
+/// （sentinel 若因為畫面上其他地方多了一顆同名文字而误判存在，這裡的位置斷言會抓到）。
 @MainActor
 final class SectionTabBarTests: XCTestCase {
     private let tabNames = ["時間軸", "相簿", "寶貝", "設定"]
@@ -50,34 +61,45 @@ final class SectionTabBarTests: XCTestCase {
 
     // MARK: - entry-conditions.md ⑬：tab-root 首屏標題
 
-    /// 時間軸是預設分頁，不需要點擊即可驗證。
+    /// 時間軸是預設分頁，不需要點擊即可驗證。見上方型別文件註解「merge-review R1 m1/m2 修法」
+    /// ——位置斷言（畫面最上緣）是跟 sentinel 不同義反覆的額外訊號。
     func testTimelineRootShowsTimelineHeading() {
         let app = TapTargetMeasurement.launch(.sectionTabView)
         TapTargetMeasurement.assertScreenRendered(.sectionTabView, in: app)
-        XCTAssertTrue(app.staticTexts["時間軸"].firstMatch.exists)
+        let heading = app.staticTexts["時間軸"].firstMatch
+        XCTAssertTrue(heading.exists, "headerRow 的「時間軸」heading 應該存在")
+        XCTAssertLessThan(
+            heading.frame.minY, 100,
+            "「時間軸」heading 應該出現在畫面最上緣的 header 區（不是巧合出現在畫面其他位置的同名文字）"
+        )
     }
 
     func testAlbumsRootShowsAlbumsHeading() {
-        assertTabRootShowsHeading(tabLabel: "相簿", expectedHeading: "相簿")
+        assertTabRootShowsNavigationBarHeading(tabLabel: "相簿", expectedHeading: "相簿")
     }
 
     func testChildrenRootShowsChildrenHeading() {
-        assertTabRootShowsHeading(tabLabel: "寶貝", expectedHeading: "寶貝")
+        assertTabRootShowsNavigationBarHeading(tabLabel: "寶貝", expectedHeading: "寶貝")
     }
 
     func testSettingsRootShowsSettingsHeading() {
-        assertTabRootShowsHeading(tabLabel: "設定", expectedHeading: "設定")
+        assertTabRootShowsNavigationBarHeading(tabLabel: "設定", expectedHeading: "設定")
     }
 
-    private func assertTabRootShowsHeading(
+    /// 斷言系統 nav bar 本身（`app.navigationBars[expectedHeading]`）存在、且它底下真的有一顆
+    /// 等於 `expectedHeading` 的 staticText——只有「畫面上有一顆系統導覽列標題＝這個字串」才會
+    /// 通過，跟 `ContentUnavailableView` 的 label 或畫面自己另外畫的同名文字無關，兩者可以各自
+    /// 獨立變動而不影響這條斷言。
+    private func assertTabRootShowsNavigationBarHeading(
         tabLabel: String, expectedHeading: String, file: StaticString = #filePath, line: UInt = #line
     ) {
         let app = TapTargetMeasurement.launch(.sectionTabView)
         TapTargetMeasurement.assertScreenRendered(.sectionTabView, in: app)
         app.buttons[tabLabel].tap()
+        let navBarTitle = app.navigationBars[expectedHeading].staticTexts[expectedHeading]
         XCTAssertTrue(
-            app.staticTexts[expectedHeading].firstMatch.waitForExistence(timeout: 5),
-            "點擊「\(tabLabel)」後，目的地畫面首屏應該存在文字等於「\(expectedHeading)」的標題" +
+            navBarTitle.waitForExistence(timeout: 5),
+            "點擊「\(tabLabel)」後，系統導覽列標題應該逐字等於「\(expectedHeading)」" +
             "（entry-conditions.md ⑬：拿掉可見 tab 文字後的非手勢替代路徑）",
             file: file, line: line
         )
