@@ -583,8 +583,13 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS Simulator' \
             -quiet \
-            CODE_SIGNING_ALLOWED=NO
-          # -quiet 連 ** BUILD SUCCEEDED ** 都不印（負控實測），綠時補一行讓 log 有結論可讀；紅時 run: 預設 -e 到不了這裡。
+            CODE_SIGNING_ALLOWED=NO || {
+            # LS-139 R2 minor 2：比照 xcode-select／XcodeGen 漂移檢查慣例——紅時給 ::error:: 註解＋修法指引，
+            # 不讓人只看到上面 -quiet 印出的 swiftc error 行自己猜「Debug 明明綠」。
+            echo "::error::Release 組態編譯失敗（Debug 綠不代表 Release 綠；error 行見上方）。最常見錯型：#Preview／preview helper 引用 DEBUG-only 符號（AuthStore.preview()、Preview*APIClient、PreviewMediaUploadService、TapTargetGate* 等）卻沒包 #if DEBUG——請把整個 #Preview 區塊包進 #if DEBUG … #endif（LS-138 修法）。本機重現：xcodebuild build -scheme LittleSprout -configuration Release -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO"
+            exit 1
+          }
+          # -quiet 連 ** BUILD SUCCEEDED ** 都不印（負控實測），綠時補一行讓 log 有結論可讀；紅時上面已 exit 1 到不了這裡。
           echo "✓ Release 組態編譯通過（-configuration Release，generic/platform=iOS Simulator）"
 
       - name: 點擊目標 gate（LS-95：≥44pt，長輩硬約束）
