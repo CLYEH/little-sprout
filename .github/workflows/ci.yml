@@ -161,7 +161,7 @@ jobs:
       # LS-95 merge-review R1 B2：tap-target-check.test.sh 原本只有腳本本體、沒有接進這裡——
       # COLLABORATION §7 宣稱「自測掛 CI rules job」但實際沒掛，兩條刻意寫的 mutation-style
       # 負控（多違規要全點名、失敗無標記不能誤判成通過）從未在 CI 執行過。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -193,6 +193,7 @@ jobs:
           bash scripts/gates/design-asset-size-check.test.sh || rc=1
           bash scripts/hooks/pretool.test.sh || rc=1
           bash scripts/gates/linear-issue-check.test.sh || rc=1
+          bash scripts/gates/privacy-manifest-check.test.sh || rc=1
           exit "$rc"
 
       # LS-30：品牌 skill 接線——前饋是 ui-designer／visual-reviewer 定義「開工先載入 little-sprout-brand」，載入動作
@@ -207,6 +208,13 @@ jobs:
       # 靜默不可執行（CI 四項全綠、下一次派工才發現）。驗 frontmatter tools: 含必要工具（整字比對；無 tools: 行＝繼承全部、放行）。
       - name: Agent 定義工具白名單（agent-tools-check，LS-87）
         run: bash scripts/gates/agent-tools-check.sh
+
+      # LS-145：Privacy Manifest／用途字串／出口合規旗標——App Store Connect 上傳前置的機械 gate（PLAN
+      # §6 Phase 2-2、§9-B）。純檔案內容比對（PrivacyInfo.xcprivacy 合法性、Info.plist 用途字串是否具體、
+      # ITSAppUsesNonExemptEncryption 是否為 false），不依賴 PR body 或分支名，所有 PR／push 皆跑（同
+      # 品牌 skill 接線／agent 工具白名單）。
+      - name: Privacy Manifest／用途字串／出口合規旗標（privacy-manifest-check，LS-145）
+        run: bash scripts/gates/privacy-manifest-check.sh
 
       # LS-71：ops 腳本自測——patrol.sh（巡檢）用合成 repo（file:// 裸 origin＋七個 worktree）驗各停滯型態判定的
       # 正負樣本、--json 合法、gh 不可用不炸；session-start.sh（SessionStart hook）驗輸出合法 JSON 且 fail-soft、
