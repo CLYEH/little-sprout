@@ -32,6 +32,12 @@ enum TapTargetGateScreenName: String {
     // `AuthenticatedRootView`（compact），一次覆蓋 tab bar 四顆 cell 的點擊區，也是
     // `TabRootHeadingTests`（entry-conditions.md ⑬）共用的同一個 host。
     case sectionTabView = "SectionTabView"
+    // merge-review R1 M1 回歸測試用：`.sectionTabView` 的 `timelineStore` 是空狀態，時間軸
+    // 沒有任何日記卡可點，無法真的 push 進 `DiaryDetailView`——這個變體額外 seed 一筆日記
+    // （`TimelineStore.seedForPreview(entries:)`，`TimelineStore.swift` DEBUG-only），讓
+    // `SectionTabBarPushRegressionTests` 能真的點卡片 push 進去，驗證自訂 Tab Bar 在 push 後
+    // 消失（不只驗 `DiaryEditorView` 那條 push 路徑）。
+    case sectionTabViewWithDiary = "SectionTabViewWithDiary"
     /// merge-review `443ec21a` §3：不是點擊目標測試，是借用同一套「launch environment 指定
     /// 畫面」機制餵 `DiaryCardVideoBadgeGeometryTests` 量真實 frame（a11y tree 讀得出文字，
     /// 讀不出像素——這正是本輪 FAIL 的根因，見該測試檔文件註解）。沿用這裡而不是另開一套
@@ -60,6 +66,8 @@ enum TapTargetGateScreenName: String {
         // 預設選中分頁＝時間軸（`AuthenticatedRootView` 的 `selection` 初值），headerRow
         // 「時間軸」一定會渲染，不依賴任何 seed 資料。
         case .sectionTabView: return .staticText("時間軸")
+        // 同 `.sectionTabView`：headerRow「時間軸」不受 seed 資料影響，一定會渲染。
+        case .sectionTabViewWithDiary: return .staticText("時間軸")
         case .diaryCardVideoBadges: return .staticText("影片 12:34")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")

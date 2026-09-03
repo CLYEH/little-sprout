@@ -52,6 +52,8 @@ enum TapTargetGateHarness {
             timelineDefaultStateHost
         case .sectionTabView:
             sectionTabViewHost
+        case .sectionTabViewWithDiary:
+            sectionTabViewWithDiaryHost
         case .diaryCardVideoBadges:
             diaryCardVideoBadgesHost
         case .selfTestTooSmall:
@@ -135,6 +137,46 @@ enum TapTargetGateHarness {
                 id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
             childrenStore: .preview(), timelineStore: .preview(),
+            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
+        )
+        .environment(\.horizontalSizeClass, .compact)
+    }
+
+    /// merge-review R1 M1 回歸測試用：同 `sectionTabViewHost`，但 `timelineStore` 額外
+    /// `seedForPreview` 一筆日記——時間軸空狀態沒有任何可點的卡片，無法真的 push 進
+    /// `DiaryDetailView`（`SectionTabBarPushRegressionTests` 需要）。body 用可獨立辨識的
+    /// 字串（不會跟畫面上其他文字撞名），UI test 直接點它進入詳情頁。
+    /// `@ViewBuilder` body 不能塞裸的 void 陳述式（`timelineStore.seedForPreview(...)` 這種呼叫
+    /// 會被 `buildExpression` 硬吃成一個 View 表達式而編譯失敗）——seeding 副作用抽到這支普通
+    /// 函式裡，`@ViewBuilder` var 那邊只留一個單純的 `let` 賦值。
+    @MainActor
+    private static func seededTimelineStore() -> TimelineStore {
+        let store = TimelineStore.preview()
+        store.seedForPreview(entries: [
+            TimelineEntry(
+                kind: .diary, refId: UUID(), occurredAt: Date(), childIds: [],
+                content: .diary(DiaryContent(
+                    body: "LS-136 R2 回歸測試日記", entryDate: Date(), previewPhotos: [], totalPhotoCount: 0
+                ))
+            )
+        ])
+        return store
+    }
+
+    /// 刻意**不** seed 家庭（跟 `sectionTabViewHost` 不同）：`TimelineView` 掛在畫面上就會跑
+    /// `.task(id: familyStore.myFamily?.id)`／`.task(id: TimelineRefreshKey(...))`，兩支都會
+    /// 呼叫 `timelineStore.refresh(...)`——若 `myFamily` 非 nil，會真的打
+    /// `PreviewTimelineAPIClient.fetchTimelinePointers`（固定回傳 `[]`）蓋掉上面 seed 的那一筆，
+    /// 畫面打回「還沒有回憶」空狀態（實測撞到）。`myFamily == nil` 時兩支 `.task` 的
+    /// `guard let familyID = familyStore.myFamily?.id else { return }` 直接短路，seed 的資料
+    /// 才留得住。這個變體本來就只為了讓卡片可點、push 進 `DiaryDetailView`，不需要家庭狀態。
+    @MainActor
+    @ViewBuilder
+    private static var sectionTabViewWithDiaryHost: some View {
+        let timelineStore = seededTimelineStore()
+        AuthenticatedRootView(
+            authStore: .preview(), familyStore: .preview(),
+            childrenStore: .preview(), timelineStore: timelineStore,
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
         )
         .environment(\.horizontalSizeClass, .compact)
