@@ -168,6 +168,16 @@ struct AuthenticatedRootView: View {
 }
 
 /// Compact（iPhone 直向）：四分頁 TabView。
+///
+/// LS-136：系統 `.tabItem` 列（文字＋圖示）已隱藏（`.toolbar(.hidden, for: .tabBar)`），
+/// 底部改疊 `SectionTabBar`（`cmp/Tab Bar` 全字級純 icon 浮動膠囊）；`.tabItem` 本身仍保留
+/// ——`TabView` 靠它辨識/註冊分頁與驅動 `selection` binding，只是視覺上不顯示。
+///
+/// 捲動內容底部 inset 契約（motifs.md「Tab Bar 全字級純 icon」：預設 98／AX3 122＝34＋
+/// 膠囊高）不需要在四個 tab-root 畫面各自寫死——`.safeAreaInset(edge: .bottom)` 掛在這一層，
+/// 會把 `SectionTabBar` 的高度自動疊加進每個子畫面（含各自的 `NavigationStack`／
+/// `ScrollView`／`List`）繼承到的 safe area，效果等同系統原本 `.tabItem` 列本來就會做的
+/// 事——底部 34pt home indicator 帶則是裝置既有的系統 safe area，不需要另外加。
 private struct SectionTabView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
@@ -190,6 +200,14 @@ private struct SectionTabView: View {
                 .tabItem { Label(section.title, systemImage: section.systemImage) }
                 .tag(section)
             }
+        }
+        .toolbar(.hidden, for: .tabBar)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            SectionTabBar(selection: $selection)
+                // .pen `cmp/Tab Bar` instance x:16（兩側同值，不隨 AX3／畫面寬度變動）——
+                // 硬寫水平邊界，不是 `$screen-pad`（24）：這是浮動膠囊自己的邊界，不是
+                // 畫面內容邊界，兩者剛好不同數字（見 Notes `LuHbv`）。
+                .padding(.horizontal, 16)
         }
     }
 }

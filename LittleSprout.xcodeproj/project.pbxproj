@@ -146,6 +146,7 @@
 		BD4020CA11182D2B89955653 /* DiaryDurationFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B30A3E8C7388E178BD32E /* DiaryDurationFormat.swift */; };
 		BEF3B2012A0964248A8D983B /* AppleSignInButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A80BDD3D72B37E3451EAC03 /* AppleSignInButton.swift */; };
 		BF0DA22255D22BCE9AAEC439 /* DiaryDateFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B13A37E8CC8794D85456D566 /* DiaryDateFormatTests.swift */; };
+		BF464AAE722DF3886B500846 /* SectionTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5C1334809B861267881A3E /* SectionTabBar.swift */; };
 		C25CB47B6E864AD71513F432 /* FamilyStoreInviteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B134F4114955711989F4A4 /* FamilyStoreInviteTests.swift */; };
 		C2C151B3DF9E8CDB42DB6753 /* TapTargetGateScreenName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 962EAB3D4E7C6E203A5790AE /* TapTargetGateScreenName.swift */; };
 		C3792CB1B45DFB0A21CDD8F6 /* DiaryPublishErrorMessageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E035A6914D8ED45DF6CDD63 /* DiaryPublishErrorMessageTests.swift */; };
@@ -242,6 +243,7 @@
 		28F1472213F03BCFC33624F8 /* OTPVerificationModelVerifyRateLimitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationModelVerifyRateLimitTests.swift; sourceTree = "<group>"; };
 		2956BF7EEFC4095F0306AF4A /* PhotoCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCardView.swift; sourceTree = "<group>"; };
 		29C20EEF08C7F204261BE68D /* DiaryEditorView+Fields.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DiaryEditorView+Fields.swift"; sourceTree = "<group>"; };
+		2C5C1334809B861267881A3E /* SectionTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionTabBar.swift; sourceTree = "<group>"; };
 		2D45C2CD0AC1D735E5576ABB /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		2D71D805DBF9E7B36AF16BE8 /* EmailFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailFormatTests.swift; sourceTree = "<group>"; };
 		35722FF8F70D0F6329F4069C /* EmailSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInView.swift; sourceTree = "<group>"; };
@@ -606,6 +608,7 @@
 			children = (
 				A9530233ED3E9B6D3A43AD99 /* AppSection.swift */,
 				C608A0E7AB49C7BAF3669796 /* RootView.swift */,
+				2C5C1334809B861267881A3E /* SectionTabBar.swift */,
 			);
 			path = Navigation;
 			sourceTree = "<group>";
@@ -990,6 +993,7 @@
 				4915FC7996D1C5E5ED31B250 /* PrintPhotoCard.swift in Sources */,
 				1D03D9D4C76C029973315865 /* RootView.swift in Sources */,
 				01978C27E89C317B0515118F /* ScrollableFillView.swift in Sources */,
+				BF464AAE722DF3886B500846 /* SectionTabBar.swift in Sources */,
 				38FACDC15B0DA2AF7A373639 /* SettingsView.swift in Sources */,
 				4779DBBACB425B20189D11F6 /* Spacing.swift in Sources */,
 				6B5B2506E29C7F8F412E9CB3 /* SupabaseAuthService.swift in Sources */,
