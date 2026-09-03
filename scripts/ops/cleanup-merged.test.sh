@@ -1,7 +1,9 @@
 #!/bin/bash
 # cleanup-merged.sh 的自測（LS-86；R2 起涵蓋 merge-review R1 逐條重演）。CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對清理腳本也適用：若退化成——已併入卻不列／不刪、未併入卻被刪、dirty worktree
-# 被清掉（含白名單以外的殘留、gitignore 掉但有價值的內容）、保護分支或目前所在目錄（含子目錄）
+# 被清掉（tracked 修改或白名單以外的未追蹤非 ignored 檔）、只剩 ignored 產物的 worktree 又被當 dirty 略過
+# （LS-141：dirty 判定加回 --ignored 就紅）、Pen 開著該 worktree 的 .pen 仍被移除（LS-141）、尚未開工的
+# worktree 未指名／票未收案就被清（LS-141）、保護分支或目前所在目錄（含子目錄）
 # 被碰、遠端分支明明有 open PR 卻被 push --delete、gh 不可用時悍然刪除、dry-run 產生副作用、
 # LS-<n> 篩選誤中鄰近票號（LS-20 誤中 LS-200）、只同步過（pull --ff-only／reset --hard／rebase）
 # 卻被當成已併入、本機 remote-tracking ref 未 prune 造成假陽性、剛併入（可能仍在飛）就被清、
@@ -15,6 +17,11 @@
 # 查詢，依 GH_STUB_PR_OPEN 清單回報哪些分支有 open PR）。
 # ⑦-⑭ 各自用獨立的迷你合成 repo（同攻擊腳本 scratchpad LS-86-attack2.sh／LS-86-attack3.sh 的
 # 重現手法）逐條驗證 merge-review R1 的 B1／M1／M2／m1／M3／M4-a／M4-b／m3。
+# ⑪ 自 LS-141 起反轉 M3：只剩 ignored 產物 → 可清＋審計清單；⑰ Pen 開著 → 拒刪；⑱ 尚未開工＋指名＋
+# （--force-unstarted 或 stub Linear completed）→ 可清；⑲（R2）探 Pen 期間落下 commit → 重驗抓到、拒刪。
+# pen CLI 用 PEN_BIN 指到 stub（pen-open.sh 認得的覆寫點，同 pen-open.test.sh）、pgrep 用 PATH 前置 stub
+# （R2 m1 的「Pen 在不在跑」判別，不能讓本機真 Pen 決定結果）；Linear 用 PATH 前置的假 curl（同
+# patrol-linear.test.sh）；LINEAR_API_KEY 一開始 unset，只在 ⑱ 個別案例以 env 帶入 stub token。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -50,6 +57,50 @@ for b in ${GH_STUB_PR_OPEN:-}; do printf '%s\n' "$b"; done
 EOF
 chmod +x "$work/bin/gh"
 export PATH="$work/bin:$PATH" GH_STUB_PR_OPEN="LS-11-remote-haspr"
+
+# ---- stub pen（LS-141）：cleanup-merged.sh 移除前跑 pen-open.sh --status，後者只認 `pen interactive --app desktop`
+#      輸出的「Currently active canvas editor: `…`」那一行。PEN_STUB_PATH 有值就印那一行，否則模擬沒有 active 文件
+#      （pen-open --status 因此 exit 2 → cleanup-merged 印警告、視為未開）。全程用 PEN_BIN 指過來，不碰真的 Pen。
+cat > "$work/bin/pen-stub" <<'EOF'
+#!/bin/bash
+[ "${1:-}" = interactive ] || exit 1
+cat >/dev/null
+# R2 ⑲：PEN_STUB_COMMIT_IN 有值 → 模擬「pen CLI 那幾秒內 agent 在該 worktree 落下第一個 commit」（TOCTOU 注入點）
+if [ -n "${PEN_STUB_COMMIT_IN:-}" ]; then
+  git -C "$PEN_STUB_COMMIT_IN" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m 'feat: race' || echo "pen-stub: inject commit failed" >&2
+fi
+if [ -n "${PEN_STUB_PATH:-}" ]; then printf 'Currently active canvas editor: `%s`\n' "$PEN_STUB_PATH"; else echo "(no active document)"; fi
+EOF
+chmod +x "$work/bin/pen-stub"
+export PEN_BIN="$work/bin/pen-stub"
+unset PEN_STUB_PATH PEN_STUB_COMMIT_IN
+
+# ---- stub pgrep（R2 m1）：cleanup-merged.sh 讀不到 --status 時用 pgrep 判 Pen 主行程在不在——PEN_STUB_RUNNING 有值
+#      就印一個假 pid（Pen 在跑），否則不印、exit 1（沒在跑）。不能讓真 pgrep 決定結果（本機可能真的有 Pen 在跑）。
+cat > "$work/bin/pgrep" <<'EOF'
+#!/bin/bash
+if [ -n "${PEN_STUB_RUNNING:-}" ]; then echo 4242; exit 0; fi
+exit 1
+EOF
+chmod +x "$work/bin/pgrep"
+unset PEN_STUB_RUNNING
+
+# ---- stub curl（LS-141）：模擬 cleanup-merged.sh linear_state 打的 Linear GraphQL。argv 記到 CURL_STUB_LOG（驗
+#      token 只走 -K - 的 stdin config、不進 argv）；stdin 丟棄；依 LINEAR_STUB_TYPE 回固定 JSON，未設回 GraphQL error。
+cat > "$work/bin/curl" <<'EOF'
+#!/bin/bash
+printf '%s\n' "$*" >> "${CURL_STUB_LOG:-/dev/null}"
+cat >/dev/null
+id=$(printf '%s' "$*" | grep -oE 'LS-[0-9]+' | head -1)
+case "${LINEAR_STUB_TYPE:-}" in
+  completed) printf '{"data":{"issue":{"identifier":"%s","state":{"name":"Done","type":"completed"}}}}\n' "$id" ;;
+  canceled)  printf '{"data":{"issue":{"identifier":"%s","state":{"name":"Canceled","type":"canceled"}}}}\n' "$id" ;;
+  started)   printf '{"data":{"issue":{"identifier":"%s","state":{"name":"In Progress","type":"started"}}}}\n' "$id" ;;
+  *) echo '{"errors":[{"message":"stub curl：LINEAR_STUB_TYPE 未設"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin/curl"
+unset LINEAR_API_KEY LINEAR_STUB_TYPE
 
 # ---- 合成 repo ----
 remote="$work/remote.git"; g init -q --bare -b main "$remote"
@@ -146,8 +197,8 @@ rc_is '① dry-run exit 0' 0 "$rc" "$out"
 has   '① dry-run 標示模式' "$out" 'cleanup-merged（dry-run 模式'
 has   '① 列出 LS-1-merged-clean 已併入且乾淨（將移除）' "$out" '（LS-1-merged-clean，已併入且乾淨）'
 has   '① 列出 LS-2-unmerged 未併入、略過' "$out" 'LS-2-unmerged：未併入（尚有獨有 commit），略過'
-has   '① 列出 LS-3-dirty-merged dirty、略過' "$out" 'LS-3-dirty-merged：dirty 或有 ignored 殘留，略過'
-has   '① 列出 LS-4-whitelist dirty、略過（未加 --force）' "$out" 'LS-4-whitelist：dirty 或有 ignored 殘留，略過'
+has   '① 列出 LS-3-dirty-merged dirty、略過' "$out" 'LS-3-dirty-merged：dirty（tracked 修改或未追蹤非 ignored 檔），略過'
+has   '① 列出 LS-4-whitelist dirty、略過（未加 --force）' "$out" 'LS-4-whitelist：dirty（tracked 修改或未追蹤非 ignored 檔），略過'
 has   '① 列出 LS-5-temp-merged 標「暫存殘留」' "$out" '（暫存殘留）（LS-5-temp-merged，已併入且乾淨）'
 has_dev_absent=$(printf '%s' "$out" | grep -c 'dev-wt'); [ "$has_dev_absent" -eq 0 ] && echo "✓ ① 保護分支 worktree（development）不進表" || { echo "✗ ① 保護分支 worktree 不應進表" >&2; fail=1; }
 has_det_absent=$(printf '%s' "$out" | grep -c 'detached-wt'); [ "$has_det_absent" -eq 0 ] && echo "✓ ① detached worktree 不進表" || { echo "✗ ① detached worktree 不應進表" >&2; fail=1; }
@@ -187,6 +238,7 @@ has_branch "$repo" LS-200-bound '④ LS-200-bound 未受影響（LS-20 不誤中
 out5="$(bash "$cleanup" --apply --all --repo "$repo" 2>&1)"; rc5=$?
 rc_is '⑤ apply exit 0（無失敗）' 0 "$rc5" "$out5"
 has   '⑤ 摘要列出實際刪除數' "$out5" '摘要（apply）'
+has   '⑤ Pen 讀不到且 Pen 主行程沒在跑（pgrep stub 空）→ 印警告、視為未開、照常清理（LS-141 R2 m1）' "$out5" 'Pen 主行程沒在跑——視為 Pen 未開著任何 .pen'
 gone_wt "$wts/LS-1-merged-clean" '⑤ LS-1-merged-clean worktree 已移除'
 no_branch "$repo" LS-1-merged-clean '⑤ LS-1-merged-clean 本機分支已刪'
 exists_wt "$wts/LS-2-unmerged" '⑤ LS-2-unmerged worktree 仍在（未併入不動）'
@@ -310,38 +362,56 @@ has_branch "$m1x/repo" LS-904-wl '⑩ m1 本機分支仍在'
 [ -e "$m1x/repo/.claude/worktrees/LS-904-wl/notes-on-__pycache__-cleanup.md" ] && echo "✓ ⑩ m1 notes-on-__pycache__-cleanup.md 仍在" || { echo "✗ ⑩ m1 notes-on-__pycache__-cleanup.md 被誤刪" >&2; fail=1; }
 [ -e "$m1x/repo/.claude/worktrees/LS-904-wl/evidence.DS_Store" ] && echo "✓ ⑩ m1 evidence.DS_Store 仍在" || { echo "✗ ⑩ m1 evidence.DS_Store 被誤刪" >&2; fail=1; }
 
-# ---- ⑪ M3：worktree 依 plain porcelain 判定「乾淨」，但實際上有 gitignore 掉的 QA
-#        evidence／.env——這些內容不得因「乾淨」而隨 worktree remove 一起消失，且不得因
-#        --force 被當成白名單放行 ----
+# ---- ⑪ LS-141（推翻 R2 M3）：worktree 只剩 gitignore 掉的產物（Config/Secrets.xcconfig、supabase/.temp/、
+#        supabase/tests/evidence/——每張 iOS／backend 票的 worktree 必有）→ 視為乾淨可清，dry-run 與 apply 都先印出
+#        被丟掉的 ignored 路徑（審計）；同 repo 另一個 worktree 除了 ignored 產物還有未追蹤非 ignored 檔 → 仍是
+#        dirty、略過不動（--force 也不放行：不是白名單）。mutation：worktree_status 加回 --ignored=matching → 這裡紅 ----
 m3=$work/m3ignore; mkdir -p "$m3"
 g init -q --bare -b main "$m3/remote.git"
 g init -q -b main "$m3/seed"
-printf '.env\n.claude/evidence/\n' > "$m3/seed/.gitignore"
+printf 'Secrets.xcconfig\nsupabase/.temp/\nsupabase/tests/evidence/\n' > "$m3/seed/.gitignore"
 echo a > "$m3/seed/f.txt"; g -C "$m3/seed" add -A; g -C "$m3/seed" commit -qm seed
 g -C "$m3/seed" branch development
 g -C "$m3/seed" remote add origin "$m3/remote.git"; g -C "$m3/seed" push -q origin main development
 g clone -q "$m3/remote.git" "$m3/repo"; mkdir -p "$m3/repo/.claude/worktrees"
-g -C "$m3/repo" worktree add -q -b LS-905-live "$m3/repo/.claude/worktrees/LS-905-live" origin/development
-echo e > "$m3/repo/.claude/worktrees/LS-905-live/e.txt"; g -C "$m3/repo/.claude/worktrees/LS-905-live" add -A
-gold -C "$m3/repo/.claude/worktrees/LS-905-live" commit -qm e
-g -C "$m3/repo/.claude/worktrees/LS-905-live" push -q origin LS-905-live
+for b in LS-905-ignored LS-908-untracked; do
+  g -C "$m3/repo" worktree add -q -b "$b" "$m3/repo/.claude/worktrees/$b" origin/development
+  echo "$b" > "$m3/repo/.claude/worktrees/$b/${b}.txt"; g -C "$m3/repo/.claude/worktrees/$b" add -A
+  gold -C "$m3/repo/.claude/worktrees/$b" commit -qm "feat: $b"
+  g -C "$m3/repo/.claude/worktrees/$b" push -q origin "$b"
+done
 g -C "$m3/seed" fetch -q origin; g -C "$m3/seed" checkout -q development
-g -C "$m3/seed" merge -q --no-edit origin/LS-905-live; g -C "$m3/seed" push -q origin development
+g -C "$m3/seed" merge -q --no-edit origin/LS-905-ignored origin/LS-908-untracked; g -C "$m3/seed" push -q origin development
 g -C "$m3/repo" fetch -q origin
-mkdir -p "$m3/repo/.claude/worktrees/LS-905-live/.claude/evidence/LS-905/r1-review"
-printf 'PNG-evidence-唯一一份\n' > "$m3/repo/.claude/worktrees/LS-905-live/.claude/evidence/LS-905/r1-review/shot.png"
-printf 'SUPABASE_KEY=xxx\n' > "$m3/repo/.claude/worktrees/LS-905-live/.env"
-plain_status=$(git -C "$m3/repo/.claude/worktrees/LS-905-live" status --porcelain)
-[ -z "$plain_status" ] && echo "✓ ⑪ M3 前提成立：plain porcelain 認定乾淨（不含 ignored）" || { echo "✗ ⑪ M3 前提不成立" >&2; fail=1; }
+wt905="$m3/repo/.claude/worktrees/LS-905-ignored"; wt908="$m3/repo/.claude/worktrees/LS-908-untracked"
+mkdir -p "$wt905/Config" "$wt905/supabase/.temp" "$wt905/supabase/tests/evidence"
+printf 'SUPABASE_ANON_KEY = xxx\n' > "$wt905/Config/Secrets.xcconfig"
+echo 1.2.3 > "$wt905/supabase/.temp/cli-latest"; echo '{}' > "$wt905/supabase/tests/evidence/plan.json"
+mkdir -p "$wt908/supabase/.temp"; echo 1.2.3 > "$wt908/supabase/.temp/cli-latest"; echo scratch > "$wt908/scratch.txt"
+[ -z "$(git -C "$wt905" status --porcelain)" ] && [ -n "$(git -C "$wt905" status --porcelain --ignored=matching)" ] \
+  && echo "✓ ⑪ 前提成立：LS-905 plain porcelain 乾淨、--ignored=matching 有 ignored 產物" || { echo "✗ ⑪ 前提不成立" >&2; fail=1; }
+out11d="$(bash "$cleanup" --dry-run --repo "$m3/repo" LS-905 2>&1)"; rc11d=$?
+rc_is '⑪ dry-run exit 0' 0 "$rc11d" "$out11d"
+has   '⑪ dry-run 列 LS-905 為已併入且乾淨（ignored 不算 dirty）' "$out11d" '（LS-905-ignored，已併入且乾淨）'
+has   '⑪ dry-run 印出審計標題' "$out11d" '將一併丟棄的 ignored 產物'
+has   '⑪ dry-run 審計列出 Config/Secrets.xcconfig' "$out11d" 'Config/Secrets.xcconfig'
+has   '⑪ dry-run 審計列出 supabase/.temp/' "$out11d" 'supabase/.temp/'
+has   '⑪ dry-run 審計列出 supabase/tests/evidence/' "$out11d" 'supabase/tests/evidence/'
+exists_wt "$wt905" '⑪ dry-run 未動 LS-905 worktree'
 out11="$(bash "$cleanup" --apply --repo "$m3/repo" LS-905 2>&1)"; rc11=$?
-rc_is '⑪ M3（無 --force）exit 0' 0 "$rc11" "$out11"
-exists_wt "$m3/repo/.claude/worktrees/LS-905-live" '⑪ M3 worktree 仍在（ignored 內容視為 dirty）'
-[ -e "$m3/repo/.claude/worktrees/LS-905-live/.claude/evidence/LS-905/r1-review/shot.png" ] && echo "✓ ⑪ M3 QA evidence PNG 仍在" || { echo "✗ ⑪ M3 QA evidence PNG 被刪除（不可復原）" >&2; fail=1; }
-[ -e "$m3/repo/.claude/worktrees/LS-905-live/.env" ] && echo "✓ ⑪ M3 .env 仍在" || { echo "✗ ⑪ M3 .env 被刪除" >&2; fail=1; }
-out11f="$(bash "$cleanup" --apply --force --repo "$m3/repo" LS-905 2>&1)"; rc11f=$?
-rc_is '⑪ M3（--force）exit 0' 0 "$rc11f" "$out11f"
-exists_wt "$m3/repo/.claude/worktrees/LS-905-live" '⑪ M3 worktree 仍在（--force 不放行非白名單的 ignored 內容）'
-[ -e "$m3/repo/.claude/worktrees/LS-905-live/.claude/evidence/LS-905/r1-review/shot.png" ] && echo "✓ ⑪ M3 --force 後 QA evidence PNG 仍在" || { echo "✗ ⑪ M3 --force 誤刪 QA evidence PNG" >&2; fail=1; }
+rc_is '⑪ apply exit 0' 0 "$rc11" "$out11"
+has   '⑪ apply 移除前印出審計' "$out11" '將一併丟棄的 ignored 產物'
+gone_wt "$wt905" '⑪ LS-905-ignored worktree 已移除（只剩 ignored 產物 → 可清）'
+no_branch "$m3/repo" LS-905-ignored '⑪ LS-905-ignored 本機分支已刪'
+out11u="$(bash "$cleanup" --apply --repo "$m3/repo" LS-908 2>&1)"; rc11u=$?
+rc_is '⑪ 未追蹤非 ignored → apply exit 0' 0 "$rc11u" "$out11u"
+has   '⑪ LS-908 判 dirty、略過、點名 scratch.txt' "$out11u" '?? scratch.txt'
+exists_wt "$wt908" '⑪ LS-908-untracked worktree 仍在（未追蹤非 ignored 檔仍是 dirty）'
+[ -e "$wt908/scratch.txt" ] && echo "✓ ⑪ scratch.txt 仍在" || { echo "✗ ⑪ scratch.txt 被誤刪" >&2; fail=1; }
+out11uf="$(bash "$cleanup" --apply --force --repo "$m3/repo" LS-908 2>&1)"; rc11uf=$?
+rc_is '⑪ 未追蹤非 ignored＋--force → exit 0' 0 "$rc11uf" "$out11uf"
+exists_wt "$wt908" '⑪ LS-908-untracked worktree 仍在（--force 不放行非白名單殘留）'
+has_branch "$m3/repo" LS-908-untracked '⑪ LS-908-untracked 本機分支仍在'
 
 # ---- ⑫ M4-a：--apply 不帶 LS-<n> 也不帶 --all → 直接拒絕、不做任何事（用主測試 repo，
 #        驗證「拒絕」本身不會有任何副作用）----
@@ -411,6 +481,150 @@ out15="$(bash "$cleanup" --unknown-flag --repo "$repo" 2>&1)"; rc15=$?
 rc_is '⑮ 未知旗標 exit 2' 2 "$rc15" "$out15"
 out16="$(bash "$cleanup" --repo "$work" 2>&1)"; rc16=$?
 rc_is '⑯ --repo 指到非 git 目錄 exit 2' 2 "$rc16" "$out16"
+
+# ---- ⑰ LS-141（LS-96 aab3d640，LS-119 事故）：Pen 目前 active 文件落在該 worktree 內 → 拒刪、印處置；
+#        Pen 開的是別的路徑 → 照常清。stub 印的是 $work 的「邏輯」路徑（macOS 上 /var/folders/…），git 回報的
+#        worktree 路徑是物理路徑（/private/var/…）——順便驗 cleanup-merged 有把 Pen 路徑 pwd -P 正規化 ----
+p=$work/pen; mkdir -p "$p"
+g init -q --bare -b main "$p/remote.git"
+g init -q -b main "$p/seed"
+echo a > "$p/seed/f.txt"; g -C "$p/seed" add -A; g -C "$p/seed" commit -qm seed
+g -C "$p/seed" branch development
+g -C "$p/seed" remote add origin "$p/remote.git"; g -C "$p/seed" push -q origin main development
+g clone -q "$p/remote.git" "$p/repo"; mkdir -p "$p/repo/.claude/worktrees"
+for b in LS-914-pen LS-915-pen; do
+  g -C "$p/repo" worktree add -q -b "$b" "$p/repo/.claude/worktrees/$b" origin/development
+  mkdir -p "$p/repo/.claude/worktrees/$b/design"; echo '{}' > "$p/repo/.claude/worktrees/$b/design/littlesprout.pen"
+  g -C "$p/repo/.claude/worktrees/$b" add -A; gold -C "$p/repo/.claude/worktrees/$b" commit -qm "$b"
+  g -C "$p/repo/.claude/worktrees/$b" push -q origin "$b"
+done
+g -C "$p/seed" fetch -q origin; g -C "$p/seed" checkout -q development
+g -C "$p/seed" merge -q --no-edit origin/LS-914-pen origin/LS-915-pen; g -C "$p/seed" push -q origin development
+g -C "$p/repo" fetch -q origin
+wt914="$p/repo/.claude/worktrees/LS-914-pen"; wt915="$p/repo/.claude/worktrees/LS-915-pen"
+out17="$(PEN_STUB_PATH="$wt914/design/littlesprout.pen" bash "$cleanup" --apply --repo "$p/repo" LS-914 2>&1)"; rc17=$?
+rc_is '⑰ Pen 開著該 worktree → exit 0（拒刪算略過）' 0 "$rc17" "$out17"
+has   '⑰ 標示拒刪' "$out17" 'Pen 目前開著'
+has   '⑰ 印出處置（切回主 checkout）' "$out17" 'pen-open.sh'
+has   '⑰ 摘要計入 Pen 開著 1' "$out17" 'worktree Pen 開著 1'
+exists_wt "$wt914" '⑰ LS-914-pen worktree 仍在（Pen 開著，拒刪）'
+has_branch "$p/repo" LS-914-pen '⑰ LS-914-pen 本機分支仍在'
+# R2 m1（merge-review R1）：pen CLI 在（PEN_BIN stub 存在）、Pen 在跑（pgrep stub 回 pid）、但 --status 讀不到
+# （stub 不印 active 行，模擬看門狗 kill／未登入／連線抖動）→ 狀態未知，保守拒刪並印處置
+out17c="$(PEN_STUB_RUNNING=1 bash "$cleanup" --apply --repo "$p/repo" LS-914 2>&1)"; rc17c=$?
+rc_is '⑰ R2 m1 Pen 在跑但讀不到 → exit 0（保守略過）' 0 "$rc17c" "$out17c"
+has   '⑰ R2 m1 印「Pen 狀態未知」警告' "$out17c" 'Pen 狀態未知，本次一律不移除 worktree'
+has   '⑰ R2 m1 該 worktree 標保守略過＋處置' "$out17c" '保守略過（LS-141 R2 m1）——處置'
+has   '⑰ R2 m1 摘要計入 Pen 開著 1' "$out17c" 'worktree Pen 開著 1'
+exists_wt "$wt914" '⑰ R2 m1 LS-914-pen worktree 仍在（狀態未知不刪）'
+has_branch "$p/repo" LS-914-pen '⑰ R2 m1 LS-914-pen 本機分支仍在'
+# R2 m1：本機根本沒有 pen CLI（CI／別人的機器）→ 放行。pgrep 刻意設成「在跑」，證明判別式先看 pen CLI 有無
+out17d="$(PEN_BIN="$work/bin/does-not-exist-pen" PEN_STUB_RUNNING=1 bash "$cleanup" --apply --repo "$p/repo" LS-915 2>&1)"; rc17d=$?
+rc_is '⑰ R2 m1 沒有 pen CLI → exit 0' 0 "$rc17d" "$out17d"
+has   '⑰ R2 m1 印「本機沒有 pen CLI」後照清' "$out17d" '本機沒有 pen CLI'
+gone_wt "$wt915" '⑰ R2 m1 沒有 pen CLI → LS-915-pen 正常移除'
+no_branch "$p/repo" LS-915-pen '⑰ R2 m1 LS-915-pen 本機分支已刪'
+out17b="$(PEN_STUB_PATH="$p/repo/design/littlesprout.pen" bash "$cleanup" --apply --repo "$p/repo" LS-914 2>&1)"; rc17b=$?
+rc_is '⑰ Pen 開的是主 checkout → exit 0' 0 "$rc17b" "$out17b"
+gone_wt "$wt914" '⑰ Pen 開的是別的路徑 → LS-914-pen worktree 正常移除'
+no_branch "$p/repo" LS-914-pen '⑰ LS-914-pen 本機分支已刪'
+
+# ---- ⑱ LS-141（LS-96 b410b190）：尚未開工（tip＝base、從未有自己的 commit）的 worktree——預設仍略過（⑤ LS-13
+#        已驗 --all 不清）；指名單票時：無 key 無旗標 → 略過並提示；--force-unstarted → 清；stub Linear 回
+#        completed → 清（token 只走 stdin，不進 curl argv）；回 started → 略過並提示；--force-unstarted 不帶票號 →
+#        exit 2；dry-run 零副作用；有未追蹤檔仍是 dirty，旗標不繞過 ----
+u=$work/unstarted; mkdir -p "$u"
+g init -q --bare -b main "$u/remote.git"
+g init -q -b main "$u/seed"
+echo a > "$u/seed/f.txt"; g -C "$u/seed" add -A; g -C "$u/seed" commit -qm seed
+g -C "$u/seed" branch development
+g -C "$u/seed" remote add origin "$u/remote.git"; g -C "$u/seed" push -q origin main development
+g clone -q "$u/remote.git" "$u/repo"; uwts="$u/repo/.claude/worktrees"; mkdir -p "$uwts"
+for b in LS-910-flag LS-911-done LS-912-active LS-913-dry; do
+  g -C "$u/repo" worktree add -q -b "$b" "$uwts/$b" origin/development
+done
+out18a="$(bash "$cleanup" --apply --repo "$u/repo" LS-910 2>&1)"; rc18a=$?
+rc_is '⑱ 無 key 無旗標 exit 0' 0 "$rc18a" "$out18a"
+has   '⑱ 無 key 無旗標 → 略過並提示 --force-unstarted' "$out18a" '無 LINEAR_API_KEY 查不到 Linear 狀態；票已 Canceled／Done 請加 --force-unstarted'
+exists_wt "$uwts/LS-910-flag" '⑱ 無 key 無旗標 → worktree 仍在'
+out18b="$(bash "$cleanup" --apply --force-unstarted --repo "$u/repo" LS-910 2>&1)"; rc18b=$?
+rc_is '⑱ --force-unstarted exit 0' 0 "$rc18b" "$out18b"
+has   '⑱ --force-unstarted 標示理由' "$out18b" '尚未開工；--force-unstarted'
+gone_wt "$uwts/LS-910-flag" '⑱ --force-unstarted → LS-910-flag worktree 已移除'
+no_branch "$u/repo" LS-910-flag '⑱ --force-unstarted → LS-910-flag 本機分支已刪'
+out18c="$(LINEAR_API_KEY=lin_api_stubtoken LINEAR_STUB_TYPE=completed CURL_STUB_LOG="$u/curl.log" bash "$cleanup" --apply --repo "$u/repo" LS-911 2>&1)"; rc18c=$?
+rc_is '⑱ Linear completed exit 0' 0 "$rc18c" "$out18c"
+has   '⑱ Linear completed 標示理由' "$out18c" 'Linear LS-911 狀態 Done／completed'
+gone_wt "$uwts/LS-911-done" '⑱ Linear completed → LS-911-done worktree 已移除'
+no_branch "$u/repo" LS-911-done '⑱ Linear completed → LS-911-done 本機分支已刪'
+grep -q 'LS-911' "$u/curl.log" && echo "✓ ⑱ stub curl 收到 LS-911 查詢" || { echo "✗ ⑱ stub curl 未收到 LS-911 查詢" >&2; fail=1; }
+grep -q 'lin_api_stubtoken' "$u/curl.log" && { echo "✗ ⑱ token 出現在 curl argv（應只走 -K - stdin）" >&2; fail=1; } || echo "✓ ⑱ token 不進 curl argv"
+out18d="$(LINEAR_API_KEY=lin_api_stubtoken LINEAR_STUB_TYPE=started bash "$cleanup" --apply --repo "$u/repo" LS-912 2>&1)"; rc18d=$?
+rc_is '⑱ Linear started exit 0' 0 "$rc18d" "$out18d"
+has   '⑱ Linear started → 略過並提示' "$out18d" 'In Progress／started，非 completed／canceled'
+exists_wt "$uwts/LS-912-active" '⑱ Linear started → LS-912-active worktree 仍在'
+has_branch "$u/repo" LS-912-active '⑱ Linear started → LS-912-active 本機分支仍在'
+out18e="$(bash "$cleanup" --apply --all --force-unstarted --repo "$u/repo" 2>&1)"; rc18e=$?
+rc_is '⑱ --force-unstarted 不帶票號 → exit 2' 2 "$rc18e" "$out18e"
+exists_wt "$uwts/LS-912-active" '⑱ 被拒時未動任何 worktree'
+out18f="$(bash "$cleanup" --dry-run --force-unstarted --repo "$u/repo" LS-913 2>&1)"; rc18f=$?
+rc_is '⑱ dry-run＋--force-unstarted exit 0' 0 "$rc18f" "$out18f"
+has   '⑱ dry-run 列出將移除' "$out18f" '[dry-run] 移除 worktree LS-913-dry'
+exists_wt "$uwts/LS-913-dry" '⑱ dry-run 零副作用'
+echo note > "$uwts/LS-913-dry/note.txt"
+out18g="$(bash "$cleanup" --apply --force-unstarted --repo "$u/repo" LS-913 2>&1)"; rc18g=$?
+rc_is '⑱ 尚未開工但有未追蹤檔＋旗標 exit 0' 0 "$rc18g" "$out18g"
+has   '⑱ 旗標不繞過 dirty 判定' "$out18g" '?? note.txt'
+exists_wt "$uwts/LS-913-dry" '⑱ 有未追蹤檔 → 旗標也不清'
+# R2 i2（merge-review R1）：有 key 但 Linear 回 GraphQL error（stub 未設 LINEAR_STUB_TYPE）→ 「Linear 查詢失敗」提示、不清
+out18h="$(LINEAR_API_KEY=lin_api_stubtoken bash "$cleanup" --apply --repo "$u/repo" LS-912 2>&1)"; rc18h=$?
+rc_is '⑱ R2 i2 Linear 查詢失敗 exit 0' 0 "$rc18h" "$out18h"
+has   '⑱ R2 i2 Linear 查詢失敗 → 提示' "$out18h" '（Linear 查詢失敗；票已 Canceled／Done 請加 --force-unstarted）'
+exists_wt "$uwts/LS-912-active" '⑱ R2 i2 Linear 查詢失敗 → worktree 仍在'
+# R2 i2：同票命中兩個未開工 worktree → Linear 只查一次（stub curl 只被呼叫 1 次）、兩個都清
+for b in LS-921-a LS-921-b; do g -C "$u/repo" worktree add -q -b "$b" "$uwts/$b" origin/development; done
+out18i="$(LINEAR_API_KEY=lin_api_stubtoken LINEAR_STUB_TYPE=completed CURL_STUB_LOG="$u/curl2.log" bash "$cleanup" --apply --repo "$u/repo" LS-921 2>&1)"; rc18i=$?
+rc_is '⑱ R2 i2 同票兩個未開工 exit 0' 0 "$rc18i" "$out18i"
+gone_wt "$uwts/LS-921-a" '⑱ R2 i2 LS-921-a 已移除'
+gone_wt "$uwts/LS-921-b" '⑱ R2 i2 LS-921-b 已移除'
+n_curl=$(grep -c . "$u/curl2.log" 2>/dev/null || true); n_curl=${n_curl:-0}
+[ "$n_curl" -eq 1 ] && echo "✓ ⑱ R2 i2 Linear 只查一次（curl 呼叫 ${n_curl} 次）" || { echo "✗ ⑱ R2 i2 Linear 應只查一次（curl 呼叫 ${n_curl} 次）" >&2; fail=1; }
+
+# ---- ⑲ LS-141 R2 m2（merge-review R1 實跑重現的資料遺失路徑）：探 Pen 那幾秒（pen CLI 最多 8 秒）有人在該
+#        worktree 落下第一個 commit——用 pen stub 的 PEN_STUB_COMMIT_IN 在 pen-open.sh --status 呼叫期間注入
+#        `commit --allow-empty`。探 Pen 必須在重驗之前、且未開工路徑的重驗要看 has_real_history／is_merged_ref，
+#        否則 worktree＋分支被刪、未推送 commit 連 reflog 都沒了。兩條路徑（未開工＋旗標／已併入乾淨）各一。
+#        mutation：pen_guard 移回重驗之後、或未開工重驗退回只看 dirty → 這裡紅 ----
+r=$work/race; mkdir -p "$r"
+g init -q --bare -b main "$r/remote.git"
+g init -q -b main "$r/seed"
+echo a > "$r/seed/f.txt"; g -C "$r/seed" add -A; g -C "$r/seed" commit -qm seed
+g -C "$r/seed" branch development
+g -C "$r/seed" remote add origin "$r/remote.git"; g -C "$r/seed" push -q origin main development
+g clone -q "$r/remote.git" "$r/repo"; rwts="$r/repo/.claude/worktrees"; mkdir -p "$rwts"
+g -C "$r/repo" worktree add -q -b LS-920-race "$rwts/LS-920-race" origin/development
+g -C "$r/repo" worktree add -q -b LS-922-race-merged "$rwts/LS-922-race-merged" origin/development
+echo m > "$rwts/LS-922-race-merged/m.txt"; g -C "$rwts/LS-922-race-merged" add -A; gold -C "$rwts/LS-922-race-merged" commit -qm m
+g -C "$rwts/LS-922-race-merged" push -q origin LS-922-race-merged
+g -C "$r/seed" fetch -q origin; g -C "$r/seed" checkout -q development
+g -C "$r/seed" merge -q --no-edit origin/LS-922-race-merged; g -C "$r/seed" push -q origin development
+g -C "$r/repo" fetch -q origin
+tip920_before=$(git -C "$r/repo" rev-parse LS-920-race)
+out19a="$(PEN_STUB_COMMIT_IN="$rwts/LS-920-race" PEN_STUB_PATH="$r/repo/design/littlesprout.pen" bash "$cleanup" --apply --force-unstarted --repo "$r/repo" LS-920 2>&1)"; rc19a=$?
+rc_is '⑲ 未開工＋旗標，探 Pen 期間落下第一個 commit → exit 0' 0 "$rc19a" "$out19a"
+tip920_after=$(git -C "$r/repo" rev-parse LS-920-race 2>/dev/null || echo GONE)
+if [ "$tip920_after" != GONE ] && [ "$tip920_after" != "$tip920_before" ]; then echo "✓ ⑲ 前提成立：注入的 commit 真的落在 LS-920-race（tip 已前進）"; else echo "✗ ⑲ 前提不成立：注入 commit 未落地或分支已被刪（before ${tip920_before} after ${tip920_after}）" >&2; fail=1; fi
+has   '⑲ 未開工路徑重驗抓到、拒刪並印處置' "$out19a" '刪除前重驗發現狀態已變化，略過（可能有人正在動這個 worktree）'
+has   '⑲ 摘要計入重驗生變 1' "$out19a" 'worktree 重驗生變 1'
+exists_wt "$rwts/LS-920-race" '⑲ LS-920-race worktree 仍在'
+has_branch "$r/repo" LS-920-race '⑲ LS-920-race 本機分支仍在（未推送 commit 未被 branch -D 帶走）'
+[ "$(git -C "$rwts/LS-920-race" log -1 --format=%s 2>/dev/null)" = 'feat: race' ] && echo "✓ ⑲ 注入的 commit 仍在 LS-920-race" || { echo "✗ ⑲ 注入的 commit 遺失（LS-920-race）" >&2; fail=1; }
+out19b="$(PEN_STUB_COMMIT_IN="$rwts/LS-922-race-merged" PEN_STUB_PATH="$r/repo/design/littlesprout.pen" bash "$cleanup" --apply --repo "$r/repo" LS-922 2>&1)"; rc19b=$?
+rc_is '⑲ 已併入乾淨，探 Pen 期間落下新 commit → exit 0' 0 "$rc19b" "$out19b"
+has   '⑲ merged 路徑重驗抓到、拒刪' "$out19b" '刪除前重驗發現狀態已變化'
+exists_wt "$rwts/LS-922-race-merged" '⑲ LS-922-race-merged worktree 仍在'
+has_branch "$r/repo" LS-922-race-merged '⑲ LS-922-race-merged 本機分支仍在'
+[ "$(git -C "$rwts/LS-922-race-merged" log -1 --format=%s 2>/dev/null)" = 'feat: race' ] && echo "✓ ⑲ 注入的 commit 仍在 LS-922-race-merged" || { echo "✗ ⑲ 注入的 commit 遺失（LS-922-race-merged）" >&2; fail=1; }
 
 if [ "$fail" -eq 0 ]; then echo "✓ cleanup-merged.test.sh 全綠"; else echo "✗ cleanup-merged.test.sh 有失敗" >&2; fi
 exit "$fail"
