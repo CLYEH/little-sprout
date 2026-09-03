@@ -52946,6 +52946,31 @@
       "children": [
         {
           "type": "rectangle",
+          "id": "FjOA8",
+          "layoutPosition": "absolute",
+          "x": 72,
+          "y": -24,
+          "name": "Fan Ghost 3",
+          "enabled": false,
+          "rotation": -6.000000000000001,
+          "fill": "$print-paper",
+          "width": 150,
+          "height": 50,
+          "stroke": "$paper-edge",
+          "strokeWidth": 1,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 1,
+              "y": 2
+            },
+            "blur": 4
+          }
+        },
+        {
+          "type": "rectangle",
           "id": "UTLcl",
           "layoutPosition": "absolute",
           "x": 90,
@@ -53183,6 +53208,7 @@
               "x": 21,
               "y": 239,
               "name": "Stack Sheet 2",
+              "enabled": false,
               "fill": "$print-paper",
               "width": 303,
               "height": 4,
@@ -53196,6 +53222,7 @@
               "x": 21,
               "y": 232,
               "name": "Stack Sheet 1",
+              "enabled": false,
               "fill": "$print-paper",
               "width": 303,
               "height": 4,
@@ -89737,6 +89764,9 @@
                   "ref": "bhroo",
                   "name": "Card Album 1",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
@@ -89759,11 +89789,11 @@
                       "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 270
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 263
                     },
                     "mlORb": {
@@ -89784,6 +89814,9 @@
                   "ref": "bhroo",
                   "name": "Card Album 2",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
@@ -89806,11 +89839,11 @@
                       "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
                     },
                     "Qjdzx": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 270
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 263
                     },
                     "mlORb": {
@@ -89831,11 +89864,14 @@
                   "ref": "bhroo",
                   "name": "Card Album 3",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
                     "KGh0U": {
-                      "enabled": true
+                      "enabled": false
                     },
                     "s8eO3j": {
                       "fill": {
@@ -89852,7 +89888,7 @@
                       "enabled": false
                     },
                     "o5O1GD": {
-                      "enabled": true
+                      "enabled": false
                     },
                     "mTljh": {
                       "enabled": false
@@ -89865,11 +89901,14 @@
                   "ref": "bhroo",
                   "name": "Card Album 4",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
                     "KGh0U": {
-                      "enabled": true
+                      "enabled": false
                     },
                     "s8eO3j": {
                       "fill": {
@@ -89891,7 +89930,7 @@
                       "y": 270
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 263
                     },
                     "mlORb": {
@@ -89912,6 +89951,9 @@
                   "ref": "bhroo",
                   "name": "Card Album 5",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": true
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
@@ -89934,11 +89976,11 @@
                       "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 270
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 263
                     },
                     "mlORb": {
@@ -89948,7 +89990,7 @@
                       "y": 242
                     },
                     "mTljh": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 277
                     }
                   }
@@ -94457,6 +94499,9 @@
                   "ref": "bhroo",
                   "name": "Card Album 1",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
@@ -94479,11 +94524,11 @@
                       "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 270
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 263
                     },
                     "mlORb": {
@@ -94504,6 +94549,9 @@
                   "ref": "bhroo",
                   "name": "Card Album 2",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
@@ -94526,11 +94574,11 @@
                       "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
                     },
                     "Qjdzx": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 270
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 263
                     },
                     "mlORb": {
@@ -94551,11 +94599,14 @@
                   "ref": "bhroo",
                   "name": "Card Album 3",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
                     "KGh0U": {
-                      "enabled": true
+                      "enabled": false
                     },
                     "s8eO3j": {
                       "fill": {
@@ -94572,7 +94623,7 @@
                       "enabled": false
                     },
                     "o5O1GD": {
-                      "enabled": true
+                      "enabled": false
                     },
                     "mTljh": {
                       "enabled": false
@@ -94585,11 +94636,14 @@
                   "ref": "bhroo",
                   "name": "Card Album 4",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
                     "KGh0U": {
-                      "enabled": true
+                      "enabled": false
                     },
                     "s8eO3j": {
                       "fill": {
@@ -94611,7 +94665,7 @@
                       "y": 270
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 263
                     },
                     "mlORb": {
@@ -94632,6 +94686,9 @@
                   "ref": "bhroo",
                   "name": "Card Album 5",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": true
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
@@ -94654,11 +94711,11 @@
                       "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 270
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 263
                     },
                     "mlORb": {
@@ -94668,7 +94725,7 @@
                       "y": 242
                     },
                     "mTljh": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 277
                     }
                   }
@@ -95176,6 +95233,9 @@
                   "ref": "bhroo",
                   "name": "Card Album 1",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
@@ -95191,25 +95251,25 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "上禮拜的動物園一日遊 · 12 張相片"
+                      "content": "上禮拜的動物園一日遊\n12 張相片"
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月"
+                      "content": "小安\n2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 452
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 445
                     },
                     "mlORb": {
-                      "y": 424
+                      "y": 482
                     },
                     "atAkU": {
-                      "y": 424
+                      "y": 482
                     },
                     "mTljh": {
                       "enabled": false,
@@ -95223,6 +95283,9 @@
                   "ref": "bhroo",
                   "name": "Card Album 2",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
@@ -95238,25 +95301,25 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "阿公阿嬤家過年 · 34 張相片"
+                      "content": "阿公阿嬤家過年\n34 張相片"
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
+                      "content": "小安 2 歲 3 個⁠月\n小明 8 個⁠月"
                     },
                     "Qjdzx": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 510
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 503
                     },
                     "mlORb": {
-                      "y": 482
+                      "y": 424
                     },
                     "atAkU": {
-                      "y": 482
+                      "y": 424
                     },
                     "mTljh": {
                       "enabled": false,
@@ -95270,6 +95333,9 @@
                   "ref": "bhroo",
                   "name": "Card Album 3",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": true
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
@@ -95285,18 +95351,18 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "跨年連假出遊 · 62 張相片"
+                      "content": "跨年連假出遊\n62 張相片"
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月"
+                      "content": "小安\n2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 452
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 445
                     },
                     "mlORb": {
@@ -95306,7 +95372,7 @@
                       "y": 424
                     },
                     "mTljh": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 459
                     }
                   }
@@ -95707,13 +95773,20 @@
                           "name": "Card Album 1",
                           "width": 258.5,
                           "descendants": {
+                            "FjOA8": {
+                              "enabled": false,
+                              "width": 112.4,
+                              "x": 54
+                            },
                             "UTLcl": {
                               "enabled": true,
-                              "width": 124,
-                              "x": 67
+                              "width": 123.6,
+                              "x": 67.4
                             },
                             "KGh0U": {
-                              "enabled": true
+                              "enabled": true,
+                              "width": 104.9,
+                              "x": 80.9
                             },
                             "s8eO3j": {
                               "fill": {
@@ -95731,12 +95804,12 @@
                               "content": "小安 · 2 歲 3 個⁠月"
                             },
                             "Qjdzx": {
-                              "enabled": true,
+                              "enabled": false,
                               "width": 216.5,
                               "y": 295
                             },
                             "o5O1GD": {
-                              "enabled": true,
+                              "enabled": false,
                               "width": 216.5,
                               "y": 288
                             },
@@ -95764,13 +95837,20 @@
                           "name": "Card Album 3",
                           "width": 258.5,
                           "descendants": {
+                            "FjOA8": {
+                              "enabled": false,
+                              "width": 112.4,
+                              "x": 54
+                            },
                             "UTLcl": {
                               "enabled": true,
-                              "width": 124,
-                              "x": 67
+                              "width": 123.6,
+                              "x": 67.4
                             },
                             "KGh0U": {
-                              "enabled": true
+                              "enabled": false,
+                              "width": 104.9,
+                              "x": 80.9
                             },
                             "s8eO3j": {
                               "fill": {
@@ -95788,7 +95868,7 @@
                               "width": 216.5
                             },
                             "o5O1GD": {
-                              "enabled": true,
+                              "enabled": false,
                               "width": 216.5
                             },
                             "JgUK8": {
@@ -95810,13 +95890,20 @@
                           "name": "Card Album 5",
                           "width": 258.5,
                           "descendants": {
+                            "FjOA8": {
+                              "enabled": true,
+                              "width": 112.4,
+                              "x": 54
+                            },
                             "UTLcl": {
                               "enabled": true,
-                              "width": 124,
-                              "x": 67
+                              "width": 123.6,
+                              "x": 67.4
                             },
                             "KGh0U": {
-                              "enabled": true
+                              "enabled": true,
+                              "width": 104.9,
+                              "x": 80.9
                             },
                             "s8eO3j": {
                               "fill": {
@@ -95834,12 +95921,12 @@
                               "content": "小安 · 2 歲 3 個⁠月"
                             },
                             "Qjdzx": {
-                              "enabled": true,
+                              "enabled": false,
                               "width": 216.5,
                               "y": 270
                             },
                             "o5O1GD": {
-                              "enabled": true,
+                              "enabled": false,
                               "width": 216.5,
                               "y": 263
                             },
@@ -95854,7 +95941,7 @@
                               "y": 242
                             },
                             "mTljh": {
-                              "enabled": true,
+                              "enabled": false,
                               "width": 216.5,
                               "y": 277
                             }
@@ -95877,13 +95964,20 @@
                           "name": "Card Album 2",
                           "width": 258.5,
                           "descendants": {
+                            "FjOA8": {
+                              "enabled": false,
+                              "width": 112.4,
+                              "x": 54
+                            },
                             "UTLcl": {
                               "enabled": true,
-                              "width": 124,
-                              "x": 67
+                              "width": 123.6,
+                              "x": 67.4
                             },
                             "KGh0U": {
-                              "enabled": true
+                              "enabled": true,
+                              "width": 104.9,
+                              "x": 80.9
                             },
                             "s8eO3j": {
                               "fill": {
@@ -95901,12 +95995,12 @@
                               "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
                             },
                             "Qjdzx": {
-                              "enabled": true,
+                              "enabled": false,
                               "width": 216.5,
                               "y": 295
                             },
                             "o5O1GD": {
-                              "enabled": true,
+                              "enabled": false,
                               "width": 216.5,
                               "y": 288
                             },
@@ -95934,13 +96028,20 @@
                           "name": "Card Album 4",
                           "width": 258.5,
                           "descendants": {
+                            "FjOA8": {
+                              "enabled": false,
+                              "width": 112.4,
+                              "x": 54
+                            },
                             "UTLcl": {
                               "enabled": true,
-                              "width": 124,
-                              "x": 67
+                              "width": 123.6,
+                              "x": 67.4
                             },
                             "KGh0U": {
-                              "enabled": true
+                              "enabled": false,
+                              "width": 104.9,
+                              "x": 80.9
                             },
                             "s8eO3j": {
                               "fill": {
@@ -95963,7 +96064,7 @@
                               "y": 270
                             },
                             "o5O1GD": {
-                              "enabled": true,
+                              "enabled": false,
                               "width": 216.5,
                               "y": 263
                             },
@@ -95991,13 +96092,20 @@
                           "name": "Card Album 6",
                           "width": 258.5,
                           "descendants": {
+                            "FjOA8": {
+                              "enabled": false,
+                              "width": 112.4,
+                              "x": 54
+                            },
                             "UTLcl": {
                               "enabled": true,
-                              "width": 124,
-                              "x": 67
+                              "width": 123.6,
+                              "x": 67.4
                             },
                             "KGh0U": {
-                              "enabled": true
+                              "enabled": true,
+                              "width": 104.9,
+                              "x": 80.9
                             },
                             "s8eO3j": {
                               "fill": {
@@ -96015,12 +96123,12 @@
                               "enabled": true
                             },
                             "Qjdzx": {
-                              "enabled": true,
+                              "enabled": false,
                               "width": 216.5,
                               "y": 270
                             },
                             "o5O1GD": {
-                              "enabled": true,
+                              "enabled": false,
                               "width": 216.5,
                               "y": 263
                             },
@@ -96180,11 +96288,14 @@
                   "ref": "bhroo",
                   "name": "Card Album 1",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
                     "KGh0U": {
-                      "enabled": true
+                      "enabled": false
                     },
                     "s8eO3j": {
                       "fill": {
@@ -96195,7 +96306,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "阿公阿嬤全家福二〇二六跨年夜溫馨團聚倒數紀念相片珍藏加長版本紀念冊完整收藏版超長標題測試 · 1 張相片"
+                      "content": "阿公阿嬤全家福二〇二六跨年夜溫馨團聚倒數紀念相片珍藏加長版本紀念冊完整收藏版超長標題測試延伸\n再加一行內容 · 1 張相片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -96206,14 +96317,14 @@
                       "y": 320
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 313
                     },
                     "mlORb": {
-                      "y": 292
+                      "y": 317
                     },
                     "atAkU": {
-                      "y": 292
+                      "y": 317
                     },
                     "mTljh": {
                       "enabled": false,
@@ -96227,6 +96338,9 @@
                   "ref": "bhroo",
                   "name": "Card Album 2",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
@@ -96249,11 +96363,11 @@
                       "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
                     },
                     "Qjdzx": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 270
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 263
                     },
                     "mlORb": {
@@ -96274,11 +96388,14 @@
                   "ref": "bhroo",
                   "name": "Card Album 3",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
                     "KGh0U": {
-                      "enabled": true
+                      "enabled": false
                     },
                     "s8eO3j": {
                       "fill": {
@@ -96295,7 +96412,7 @@
                       "enabled": false
                     },
                     "o5O1GD": {
-                      "enabled": true
+                      "enabled": false
                     },
                     "mTljh": {
                       "enabled": false
@@ -96308,11 +96425,14 @@
                   "ref": "bhroo",
                   "name": "Card Album 4",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": false
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
                     "KGh0U": {
-                      "enabled": true
+                      "enabled": false
                     },
                     "s8eO3j": {
                       "fill": {
@@ -96334,7 +96454,7 @@
                       "y": 270
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 263
                     },
                     "mlORb": {
@@ -96355,6 +96475,9 @@
                   "ref": "bhroo",
                   "name": "Card Album 5",
                   "descendants": {
+                    "FjOA8": {
+                      "enabled": true
+                    },
                     "UTLcl": {
                       "enabled": true
                     },
@@ -96377,11 +96500,11 @@
                       "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 270
                     },
                     "o5O1GD": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 263
                     },
                     "mlORb": {
@@ -96391,7 +96514,7 @@
                       "y": 242
                     },
                     "mTljh": {
-                      "enabled": true,
+                      "enabled": false,
                       "y": 277
                     }
                   }
@@ -96840,7 +96963,7 @@
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
-                          "height": 123,
+                          "height": 111.5,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -96889,7 +97012,7 @@
                           "name": "Corner BL",
                           "layoutPosition": "absolute",
                           "x": -5,
-                          "y": 142,
+                          "y": 130.5,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M0 26 L0 0 L26 26 Z"
@@ -96906,7 +97029,7 @@
                           "name": "Corner BR",
                           "layoutPosition": "absolute",
                           "x": 143.5,
-                          "y": 142,
+                          "y": 130.5,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M26 26 L26 0 L0 26 Z"
@@ -97486,7 +97609,7 @@
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
-                          "height": 219,
+                          "height": 198,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -97535,7 +97658,7 @@
                           "name": "Corner BL",
                           "layoutPosition": "absolute",
                           "x": -5,
-                          "y": 238,
+                          "y": 217,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M0 26 L0 0 L26 26 Z"
@@ -97552,7 +97675,7 @@
                           "name": "Corner BR",
                           "layoutPosition": "absolute",
                           "x": 143.5,
-                          "y": 238,
+                          "y": 217,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M26 26 L26 0 L0 26 Z"
@@ -97698,7 +97821,7 @@
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
-                          "height": 150,
+                          "height": 148.5,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -97747,7 +97870,7 @@
                           "name": "Corner BL",
                           "layoutPosition": "absolute",
                           "x": -5,
-                          "y": 169,
+                          "y": 167.5,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M0 26 L0 0 L26 26 Z"
@@ -97764,7 +97887,7 @@
                           "name": "Corner BR",
                           "layoutPosition": "absolute",
                           "x": 143.5,
-                          "y": 169,
+                          "y": 167.5,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M26 26 L26 0 L0 26 Z"
@@ -98418,7 +98541,7 @@
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
-                          "height": 123,
+                          "height": 111.5,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -98467,7 +98590,7 @@
                           "name": "Corner BL",
                           "layoutPosition": "absolute",
                           "x": -5,
-                          "y": 142,
+                          "y": 130.5,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M0 26 L0 0 L26 26 Z"
@@ -98484,7 +98607,7 @@
                           "name": "Corner BR",
                           "layoutPosition": "absolute",
                           "x": 143.5,
-                          "y": 142,
+                          "y": 130.5,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M26 26 L26 0 L0 26 Z"
@@ -99064,7 +99187,7 @@
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
-                          "height": 219,
+                          "height": 198,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -99113,7 +99236,7 @@
                           "name": "Corner BL",
                           "layoutPosition": "absolute",
                           "x": -5,
-                          "y": 238,
+                          "y": 217,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M0 26 L0 0 L26 26 Z"
@@ -99130,7 +99253,7 @@
                           "name": "Corner BR",
                           "layoutPosition": "absolute",
                           "x": 143.5,
-                          "y": 238,
+                          "y": 217,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M26 26 L26 0 L0 26 Z"
@@ -99276,7 +99399,7 @@
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
-                          "height": 150,
+                          "height": 148.5,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -99325,7 +99448,7 @@
                           "name": "Corner BL",
                           "layoutPosition": "absolute",
                           "x": -5,
-                          "y": 169,
+                          "y": 167.5,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M0 26 L0 0 L26 26 Z"
@@ -99342,7 +99465,7 @@
                           "name": "Corner BR",
                           "layoutPosition": "absolute",
                           "x": 143.5,
-                          "y": 169,
+                          "y": 167.5,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M26 26 L26 0 L0 26 Z"
@@ -100149,7 +100272,7 @@
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 125,
+                              "height": 113.25,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -100198,7 +100321,7 @@
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 144,
+                              "y": 132.25,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -100215,7 +100338,7 @@
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 146,
-                              "y": 144,
+                              "y": 132.25,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -100361,7 +100484,7 @@
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 150,
+                              "height": 151,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -100410,7 +100533,7 @@
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 169,
+                              "y": 170,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -100427,7 +100550,7 @@
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 146,
-                              "y": 169,
+                              "y": 170,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -100573,7 +100696,7 @@
                               "name": "Photo Wrap",
                               "clip": true,
                               "width": "fill_container",
-                              "height": 200,
+                              "height": 201.33,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -100622,7 +100745,7 @@
                               "name": "Corner BL",
                               "layoutPosition": "absolute",
                               "x": -5,
-                              "y": 219,
+                              "y": 220.33,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -100639,7 +100762,7 @@
                               "name": "Corner BR",
                               "layoutPosition": "absolute",
                               "x": 146,
-                              "y": 219,
+                              "y": 220.33,
                               "descendants": {
                                 "sD5Ma": {
                                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -102262,7 +102385,7 @@
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
-                          "height": 123,
+                          "height": 111.5,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -102311,7 +102434,7 @@
                           "name": "Corner BL",
                           "layoutPosition": "absolute",
                           "x": -5,
-                          "y": 142,
+                          "y": 130.5,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M0 26 L0 0 L26 26 Z"
@@ -102328,7 +102451,7 @@
                           "name": "Corner BR",
                           "layoutPosition": "absolute",
                           "x": 143.5,
-                          "y": 142,
+                          "y": 130.5,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M26 26 L26 0 L0 26 Z"
