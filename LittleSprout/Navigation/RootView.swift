@@ -196,12 +196,21 @@ private struct SectionTabView: View {
                         childrenStore: childrenStore, timelineStore: timelineStore,
                         diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
                     )
+                    // LS-136 實測發現：掛在外層 `TabView` 的 `.toolbar(.hidden, for: .tabBar)`
+                    // 只隱藏視覺渲染，底下的原生 `UITabBarItem` 仍留在 accessibility tree 裡、
+                    // 且真的 hittable（XCUITest 量到兩顆同 label「相簿」的 button 疊在同一塊
+                    // 螢幕區域，兩顆 `isHittable` 都是 true）——`.accessibilityHidden` 掛在
+                    // tabItem 的 `Label` 上也不生效（tabItem closure 內容會被橋接成
+                    // `UITabBarItem`，不走一般 SwiftUI accessibility modifier 鏈）。改成掛在
+                    // **每個分頁自己的內容**上（而不是外層 TabView），才會真的把該分頁對應的
+                    // 原生列從畫面與 accessibility tree 一併移除；`SectionTabBar` 是全畫面唯一
+                    // 剩下的、可被 VoiceOver 找到的分頁路徑。
+                    .toolbar(.hidden, for: .tabBar)
                 }
                 .tabItem { Label(section.title, systemImage: section.systemImage) }
                 .tag(section)
             }
         }
-        .toolbar(.hidden, for: .tabBar)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             SectionTabBar(selection: $selection)
                 // .pen `cmp/Tab Bar` instance x:16（兩側同值，不隨 AX3／畫面寬度變動）——

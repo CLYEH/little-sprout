@@ -49,6 +49,8 @@ enum TapTargetGateHarness {
             diaryEditorHost
         case .timelineDefaultState:
             timelineDefaultStateHost
+        case .sectionTabView:
+            sectionTabViewHost
         case .selfTestTooSmall:
             // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
             // accessibility／hit-test frame 實測仍貼著文字本身的天然大小，不會被外層 `.frame`
@@ -114,6 +116,25 @@ enum TapTargetGateHarness {
                 diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
             )
         }
+    }
+
+    /// LS-136：`SectionTabView`（compact，四分頁）＋`SectionTabBar`。同 `.settings` 案例的家庭
+    /// seeding 理由——`AuthenticatedRootView` 走 `familyStore.myFamily != nil` 分支才會顯示
+    /// tab bar，不然會落在 `ForkView` 三岔路。`.environment(\.horizontalSizeClass, .compact)`
+    /// 同 `RootView.swift` `#Preview("Compact")` 既有寫法，強制走 `SectionTabView` 而非
+    /// `SectionSplitView`（不依賴模擬器實際 size class）。
+    @MainActor
+    @ViewBuilder
+    private static var sectionTabViewHost: some View {
+        AuthenticatedRootView(
+            authStore: .preview(),
+            familyStore: .preview(withFamily: Family(
+                id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
+            )),
+            childrenStore: .preview(), timelineStore: .preview(),
+            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
+        )
+        .environment(\.horizontalSizeClass, .compact)
     }
 
     private static func noop() {}

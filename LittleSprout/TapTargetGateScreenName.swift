@@ -26,6 +26,12 @@ enum TapTargetGateScreenName: String {
     // 任何 feed 資料，`.preview()` 空狀態就會渲染，是這個畫面唯一「不需要 seed 就有代表性」
     // 的可點元件，量測成本低，值得單獨拉一個 case 出來蓋。
     case timelineDefaultState = "TimelineViewDefaultState"
+    // LS-136：`SectionTabBar`（`cmp/Tab Bar` 全字級純 icon）本身不是 `Features/**/*View.swift`
+    // （住在 `Navigation/`），`tap-target-registry-check.sh` 不會強制要求註冊，但票文 scope 4
+    // 明確要求「TapTargetGateHarness 註冊 Tab Bar 預設態（四顆 ≥44pt）」——直接掛完整的
+    // `AuthenticatedRootView`（compact），一次覆蓋 tab bar 四顆 cell 的點擊區，也是
+    // `TabRootHeadingTests`（entry-conditions.md ⑬）共用的同一個 host。
+    case sectionTabView = "SectionTabView"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -46,6 +52,9 @@ enum TapTargetGateScreenName: String {
         case .settings: return .button("登出")
         case .diaryEditor: return .staticText("寫日記")
         case .timelineDefaultState: return .button("新增回憶")
+        // 預設選中分頁＝時間軸（`AuthenticatedRootView` 的 `selection` 初值），headerRow
+        // 「時間軸」一定會渲染，不依賴任何 seed 資料。
+        case .sectionTabView: return .staticText("時間軸")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")
