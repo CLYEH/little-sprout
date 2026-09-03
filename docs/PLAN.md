@@ -212,6 +212,7 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 ### B. 送審文書與設定（Phase 2）
 
 - **隱私政策 URL** 與**支援 URL**（皆必填 → 需要一個對外網頁，GitHub Pages 足夠）
+  - 隱私權政策／使用條款／EULA 附加條款正式文本草稿：`docs/legal/`（LS-132；placeholder 清單、公開網址三案與送審前對齊清單見 `docs/legal/README.md`）
 - **App Privacy 標籤**：申報收集了照片、聯絡資訊、使用者內容。本 app **明確涉及兒童資料**（生日、照片），政策須寫清楚：由家長自願上傳、僅在私密家庭內可見、如何刪除
 - **`PrivacyInfo.xcprivacy`**：申報 required-reason API 的使用理由
 - **Info.plist 用途字串**：`NSPhotoLibraryUsageDescription`、相機、推播 —— 寫具體，敷衍會被退
