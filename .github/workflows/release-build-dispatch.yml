@@ -1,0 +1,42 @@
+# LS-139（R2 minor 1）：手動觸發、只跑 Release 組態編譯——供沒有 Swift diff 的 harness PR 在併入前於分支上實跑一次
+# ci.yml「Release 組態編譯 gate」的「要跑」路徑（ci.yml 的 pull_request run 對這種 PR 只走略過路徑）。
+#   gh workflow run release-build-dispatch.yml --ref <branch>
+# 為什麼是獨立 workflow 檔、不是 ci.yml 加 on: workflow_dispatch：dispatch 打在 PR head SHA 時，ci.yml 四個 job 會在
+# 同一 SHA 各貼第二筆同名 check-run；rules job 的 PR 專屬 gate 在 dispatch 下全被 if: 跳過卻仍 success。就算把整個
+# rules job 用 if: 跳過也不安全——GitHub 文件明載「If a job in a workflow is skipped due to a conditional, it will report
+# its status as 'Success'. It will not block a pull request from merging, even if it is a required check.」
+# （docs.github.com/…/troubleshooting-required-status-checks#handling-skipped-but-required-checks）：skipped 仍會頂掉
+# 同名的真 PR run 結果（scripts/ops/promote.sh (d) 拒 skipped，GitHub required checks 不拒）。獨立檔＋job 名不撞
+# （release-build-dispatch）＝不可能替代任何 required check；**本 workflow 的成功不可拿來替代 PR run**。
+# workflow_dispatch 只認預設分支上存在的 workflow 檔：本檔併入 main 之前無法 dispatch。
+# 與 ci.yml 重複的段落（xcode-select 讀 .xcode-version、xcodebuild 命令）改任一邊請同步（COLLABORATION §7 盲區）。
+name: Release build (dispatch)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release-build-dispatch:
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: xcode-select（讀 .xcode-version 單一來源，同 ci.yml）
+        run: |
+          pin="$(tr -d '[:space:]' < .xcode-version)"
+          dev="/Applications/Xcode_${pin}.app/Contents/Developer"
+          [ -d "$dev" ] || { echo "::error::.xcode-version 指定的 Xcode_${pin} 不在此 runner image；可用：$(ls -d /Applications/Xcode*.app 2>/dev/null | tr '\n' ' ')"; exit 1; }
+          sudo xcode-select -s "$dev"
+          xcodebuild -version
+
+      - name: Release 組態編譯（同 ci.yml「Release 組態編譯 gate」命令，無條件跑）
+        run: |
+          xcodebuild build \
+            -project LittleSprout.xcodeproj \
+            -scheme LittleSprout \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO || { echo "::error::Release 組態編譯失敗（error 行見上方；修法指引同 ci.yml「Release 組態編譯 gate」：#Preview 引用 DEBUG-only 符號請包 #if DEBUG，LS-138）"; exit 1; }
+          echo "✓ Release 組態編譯通過（-configuration Release，generic/platform=iOS Simulator）"
