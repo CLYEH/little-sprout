@@ -192,6 +192,50 @@ extension TimelineContentAssemblerTests {
         XCTAssertEqual(content.signedURL, URL(string: "https://example.com/f/solo.jpg"))
     }
 
+    // MARK: - LS-135：duration_seconds 從 MediaRow 原樣帶到 MediaContent（PhotoCardView
+    // 徽章讀的就是這個 kind 的組裝結果，見 TimelineView.swift）
+
+    func test_assemble_mediaKind_carriesDurationSecondsFromRow() async throws {
+        let stub = StubTimelineAPIClient()
+        let mediaID = UUID()
+        stub.setFetchMediaHandler { _ in
+            [mediaRow(id: mediaID, path: "f/v.mov", type: .video, durationSeconds: 47)]
+        }
+        stub.setSignedURLsHandler { paths in
+            Dictionary(uniqueKeysWithValues: paths.map { ($0, URL(string: "https://example.com/\($0)")!) })
+        }
+
+        let entries = try await TimelineContentAssembler.assemble(
+            pointers: [pointer(kind: .media, refId: mediaID)], apiClient: stub
+        )
+
+        guard case .media(let content) = entries[0].content else {
+            return XCTFail("預期組出 .media content")
+        }
+        XCTAssertEqual(
+            content.durationSeconds, 47,
+            "PhotoCardView 徽章依賴這個欄位——組裝時要原樣帶過來，不能悄悄漏接或寫死 nil"
+        )
+    }
+
+    func test_assemble_mediaKind_durationSecondsNil_carriesNilForLegacyRow() async throws {
+        let stub = StubTimelineAPIClient()
+        let mediaID = UUID()
+        stub.setFetchMediaHandler { _ in [mediaRow(id: mediaID, path: "f/v.mov", type: .video)] }
+        stub.setSignedURLsHandler { paths in
+            Dictionary(uniqueKeysWithValues: paths.map { ($0, URL(string: "https://example.com/\($0)")!) })
+        }
+
+        let entries = try await TimelineContentAssembler.assemble(
+            pointers: [pointer(kind: .media, refId: mediaID)], apiClient: stub
+        )
+
+        guard case .media(let content) = entries[0].content else {
+            return XCTFail("預期組出 .media content")
+        }
+        XCTAssertNil(content.durationSeconds, "LS-135 之前上傳的舊列沒有這個欄位，該原樣帶 nil，不是硬湊一個值")
+    }
+
     // MARK: - fetchDiaryPhotos：格內用縮圖、比例用縮圖尺寸、全尺寸不在這裡簽
 
     func test_fetchDiaryPhotos_thumbPresent_signsThumbPath_andAspectRatioUsesThumbDimensions() async throws {
@@ -247,39 +291,90 @@ extension TimelineContentAssemblerTests {
         XCTAssertEqual(photos[0].aspectRatio, 800.0 / 600.0, accuracy: 0.0001)
     }
 
-    // MARK: - R2-M1：MediaContent.needsVideoDurationLookup——縮圖影片不該再讀時長
+    /// LS-135：`MasonryPhotoWallView` 的無障礙標籤（`accessibilityLabel(for:)`）依賴這個
+    /// 欄位——有縮圖的新影片（`isThumbnail: true`）也該直接讀到 `duration_seconds`，不是
+    /// 只有無縮圖舊影片才有時長。
+    func test_fetchDiaryPhotos_carriesDurationSecondsFromRow_evenWithThumbnail() async throws {
+        let stub = StubTimelineAPIClient()
+        let diaryID = UUID()
+        let mediaID = UUID()
+        stub.setFetchDiaryMediaLinksHandler { _ in
+            [DiaryMediaLinkRow(diaryId: diaryID, mediaId: mediaID, sortOrder: 0)]
+        }
+        stub.setFetchMediaHandler { ids in
+            ids.map { id in
+                mediaRow(
+                    id: id, path: "f/\(id).mov", type: .video, thumbPath: "f/\(id)_thumb.jpg",
+                    thumbWidth: 235, thumbHeight: 512, durationSeconds: 8
+                )
+            }
+        }
+        stub.setSignedURLsHandler { paths in
+            Dictionary(uniqueKeysWithValues: paths.map { ($0, URL(string: "https://example.com/\($0)")!) })
+        }
+
+        let photos = try await TimelineContentAssembler.fetchDiaryPhotos(diaryID: diaryID, apiClient: stub)
+
+        XCTAssertEqual(photos[0].durationSeconds, 8)
+        XCTAssertTrue(photos[0].isThumbnail)
+    }
+
+    // MARK: - R2-M1／LS-135：MediaContent.needsVideoDurationLookup——縮圖影片、或已有
+    // duration_seconds 查表值的影片，都不該再讀時長
     //
     // 直接建構 `MediaContent`，不透過 assembler／stub——這條規則本身是純函式，不需要批次
-    // 組裝的機器就能釘住（PhotoCardView／MasonryPhotoWallView 的 `.task` guard 只是照抄
-    // 這個屬性，見兩檔 `.task(id:)` 註解）。mutation：把 `&&` 換成 `||`，或拿掉
-    // `!isThumbnail`，這三條測試會有至少一條變紅。
+    // 組裝的機器就能釘住（PhotoCardView／MasonryPhotoWallView／DiaryCardView 的 `.task`
+    // guard 只是照抄這個屬性，見三檔 `.task(id:)` 註解）。mutation：把 `&&` 換成 `||`，或
+    // 拿掉 `!isThumbnail`／`durationSeconds == nil` 任一項，以下測試至少一條會變紅。
 
-    func test_needsVideoDurationLookup_videoWithoutThumbnail_isTrue() {
+    func test_needsVideoDurationLookup_videoWithoutThumbnailOrDuration_isTrue() {
         let content = MediaContent(
             id: UUID(), type: .video, width: 884, height: 1920, thumbWidth: nil, thumbHeight: nil,
-            storagePath: "f/v.mov", isThumbnail: false, signedURL: URL(string: "https://example.com/f/v.mov")
+            storagePath: "f/v.mov", isThumbnail: false, signedURL: URL(string: "https://example.com/f/v.mov"),
+            durationSeconds: nil
         )
-        XCTAssertTrue(content.needsVideoDurationLookup, "無縮圖的影片，signedURL 就是原始影片檔，該讀時長")
+        XCTAssertTrue(
+            content.needsVideoDurationLookup,
+            "無縮圖、也沒有 duration_seconds 的影片，signedURL 就是原始影片檔，該讀時長"
+        )
     }
 
     func test_needsVideoDurationLookup_videoWithThumbnail_isFalse() {
         let content = MediaContent(
             id: UUID(), type: .video, width: 884, height: 1920, thumbWidth: 200, thumbHeight: 434,
-            storagePath: "f/v.mov", isThumbnail: true, signedURL: URL(string: "https://example.com/f/v_thumb.jpg")
+            storagePath: "f/v.mov", isThumbnail: true, signedURL: URL(string: "https://example.com/f/v_thumb.jpg"),
+            durationSeconds: nil
         )
         XCTAssertFalse(
             content.needsVideoDurationLookup, "有縮圖的影片，signedURL 是縮圖 JPEG，讀時長必定失敗，不該嘗試"
         )
     }
 
+    /// LS-135：`duration_seconds` 已有查表值時，即使 `signedURL` 是原檔（`!isThumbnail`），
+    /// 也不該再浪費一次 `AVURLAsset` 讀取——已經有權威值了，跟「有縮圖」是兩個獨立、都能
+    /// 單獨關掉查詢的理由，不能只測其中一個就假設另一個沒問題。
+    func test_needsVideoDurationLookup_videoWithDurationSeconds_isFalseEvenWithoutThumbnail() {
+        let content = MediaContent(
+            id: UUID(), type: .video, width: 884, height: 1920, thumbWidth: nil, thumbHeight: nil,
+            storagePath: "f/v.mov", isThumbnail: false, signedURL: URL(string: "https://example.com/f/v.mov"),
+            durationSeconds: 12
+        )
+        XCTAssertFalse(
+            content.needsVideoDurationLookup,
+            "duration_seconds 已有查表值，即使 signedURL 是原檔也不該再讀一次時長"
+        )
+    }
+
     func test_needsVideoDurationLookup_photo_isFalseRegardlessOfThumbnail() {
         let withThumb = MediaContent(
             id: UUID(), type: .photo, width: 800, height: 600, thumbWidth: 200, thumbHeight: 150,
-            storagePath: "f/p.jpg", isThumbnail: true, signedURL: URL(string: "https://example.com/f/p_thumb.jpg")
+            storagePath: "f/p.jpg", isThumbnail: true, signedURL: URL(string: "https://example.com/f/p_thumb.jpg"),
+            durationSeconds: nil
         )
         let withoutThumb = MediaContent(
             id: UUID(), type: .photo, width: 800, height: 600, thumbWidth: nil, thumbHeight: nil,
-            storagePath: "f/p.jpg", isThumbnail: false, signedURL: URL(string: "https://example.com/f/p.jpg")
+            storagePath: "f/p.jpg", isThumbnail: false, signedURL: URL(string: "https://example.com/f/p.jpg"),
+            durationSeconds: nil
         )
         XCTAssertFalse(withThumb.needsVideoDurationLookup, "照片不該讀影片時長，不管有沒有縮圖")
         XCTAssertFalse(withoutThumb.needsVideoDurationLookup)

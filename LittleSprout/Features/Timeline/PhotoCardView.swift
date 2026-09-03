@@ -42,7 +42,7 @@ struct PhotoCardView: View {
     }
 
     private var duration: TimeInterval? {
-        timelineStore.videoDurations[content.id]
+        timelineStore.displayDuration(for: content)
     }
 
     private var videoBadge: some View {
@@ -59,14 +59,14 @@ struct PhotoCardView: View {
         PhotoCardView(
             content: MediaContent(
                 id: UUID(), type: .photo, width: 4, height: 3, thumbWidth: nil, thumbHeight: nil,
-                storagePath: "preview/photo.jpg", isThumbnail: false, signedURL: nil
+                storagePath: "preview/photo.jpg", isThumbnail: false, signedURL: nil, durationSeconds: nil
             ),
             timelineStore: .preview()
         )
         PhotoCardView(
             content: MediaContent(
                 id: UUID(), type: .video, width: 16, height: 9, thumbWidth: nil, thumbHeight: nil,
-                storagePath: "preview/video.mp4", isThumbnail: false, signedURL: nil
+                storagePath: "preview/video.mp4", isThumbnail: false, signedURL: nil, durationSeconds: 68
             ),
             timelineStore: .preview()
         )

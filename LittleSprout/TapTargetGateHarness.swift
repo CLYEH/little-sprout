@@ -217,17 +217,27 @@ enum TapTargetGateHarness {
                             MediaContent(
                                 id: UUID(), type: .photo, width: 800, height: 600,
                                 thumbWidth: nil, thumbHeight: nil, storagePath: "f/photo.jpg",
-                                isThumbnail: false, signedURL: photoTestImageURL
+                                isThumbnail: false, signedURL: photoTestImageURL, durationSeconds: nil
                             ),
+                            // LS-135：這裡刻意仍是 `durationSeconds: nil`（過渡期樣本，模擬
+                            // LS-135 之前上傳、量測失敗，或 `duration_seconds` 尚未回填的縮圖
+                            // 影片列）——`DiaryCardVideoBadgeGeometryTests.
+                            // testThumbnailVideoBadge_singleLine_withinCardBounds_
+                            // ocrMatchesPlainLabel` 斷言這一格恆顯示純文字「影片」，不觸發
+                            // `loadVideoDuration`。`duration_seconds` 有值時（LS-135 之後
+                            // 上傳的新影片）徽章改顯示「影片 M:SS」的行為改由
+                            // `DiaryCardVideoBadgeTests`（單元測試，見該檔
+                            // `thumbnailVideoWithDurationSeconds` case）與 QA 生產路徑真機
+                            // 上傳驗證，不佔用這個共用 harness 場景。
                             MediaContent(
                                 id: thumbnailVideoID, type: .video, width: 884, height: 1920,
                                 thumbWidth: 235, thumbHeight: 512, storagePath: "f/thumb-video.mov",
-                                isThumbnail: true, signedURL: thumbnailVideoTestImageURL
+                                isThumbnail: true, signedURL: thumbnailVideoTestImageURL, durationSeconds: nil
                             ),
                             MediaContent(
                                 id: legacyVideoID, type: .video, width: 884, height: 1920,
                                 thumbWidth: nil, thumbHeight: nil, storagePath: "f/legacy-video.mov",
-                                isThumbnail: false, signedURL: legacyVideoTestImageURL
+                                isThumbnail: false, signedURL: legacyVideoTestImageURL, durationSeconds: nil
                             )
                         ],
                         totalPhotoCount: 3

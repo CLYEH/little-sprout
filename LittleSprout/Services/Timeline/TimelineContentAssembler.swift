@@ -97,7 +97,7 @@ enum TimelineContentAssembler {
                 id: row.id, type: row.type, width: row.width, height: row.height,
                 thumbWidth: row.thumbWidth, thumbHeight: row.thumbHeight,
                 storagePath: row.storagePath, isThumbnail: row.thumbPath != nil,
-                signedURL: signed[displayPath(row)]
+                signedURL: signed[displayPath(row)], durationSeconds: row.durationSeconds
             )
         }
     }
@@ -139,7 +139,7 @@ enum TimelineContentAssembler {
                     id: row.id, type: row.type, width: row.width, height: row.height,
                     thumbWidth: row.thumbWidth, thumbHeight: row.thumbHeight,
                     storagePath: row.storagePath, isThumbnail: row.thumbPath != nil,
-                    signedURL: signed[displayPath(row)]
+                    signedURL: signed[displayPath(row)], durationSeconds: row.durationSeconds
                 )
             }
             result[diary.id] = DiaryContent(
@@ -166,7 +166,7 @@ enum TimelineContentAssembler {
                     id: row.id, type: row.type, width: row.width, height: row.height,
                     thumbWidth: row.thumbWidth, thumbHeight: row.thumbHeight,
                     storagePath: row.storagePath, isThumbnail: row.thumbPath != nil,
-                    signedURL: signed[displayPath(row)]
+                    signedURL: signed[displayPath(row)], durationSeconds: row.durationSeconds
                 )
             }
             result[album.id] = AlbumContent(title: album.title, cover: cover)
@@ -184,7 +184,7 @@ enum TimelineContentAssembler {
                 id: row.id, type: row.type, width: row.width, height: row.height,
                 thumbWidth: row.thumbWidth, thumbHeight: row.thumbHeight,
                 storagePath: row.storagePath, isThumbnail: row.thumbPath != nil,
-                signedURL: signed[displayPath(row)]
+                signedURL: signed[displayPath(row)], durationSeconds: row.durationSeconds
             ))
         })
     }

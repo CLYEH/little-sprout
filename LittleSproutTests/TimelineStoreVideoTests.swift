@@ -76,4 +76,53 @@ extension TimelineStoreTests {
             "第二次呼叫該被 failedDurations 擋下——不是又真的嘗試載入一次"
         )
     }
+
+    // MARK: - LS-135：displayDuration——優先讀 MediaContent.durationSeconds，NULL 才退回快取
+
+    func test_displayDuration_durationSecondsPresent_ignoresVideoDurationsCache() {
+        let stub = StubTimelineAPIClient()
+        let store = TimelineStore(apiClient: stub)
+        let mediaID = UUID()
+        let content = MediaContent(
+            id: mediaID, type: .video, width: 884, height: 1920, thumbWidth: 235, thumbHeight: 512,
+            storagePath: "f/v.mov", isThumbnail: true,
+            signedURL: URL(string: "https://example.com/f/v_thumb.jpg"), durationSeconds: 45
+        )
+
+        XCTAssertEqual(
+            store.displayDuration(for: content), 45,
+            "media.duration_seconds 是權威值，即使 videoDurations 快取沒有這個 id 也不該回傳 nil"
+        )
+    }
+
+    func test_displayDuration_durationSecondsNil_fallsBackToVideoDurationsCache() async {
+        let stub = StubTimelineAPIClient()
+        let store = TimelineStore(
+            apiClient: stub, durationLoader: { _ in CMTime(seconds: 8, preferredTimescale: 600) }
+        )
+        let mediaID = UUID()
+        let content = MediaContent(
+            id: mediaID, type: .video, width: 884, height: 1920, thumbWidth: nil, thumbHeight: nil,
+            storagePath: "f/v.mov", isThumbnail: false,
+            signedURL: URL(string: "https://example.com/f/v.mov"), durationSeconds: nil
+        )
+        await store.loadVideoDuration(mediaID: mediaID, url: content.signedURL!)
+
+        XCTAssertEqual(
+            store.displayDuration(for: content), 8,
+            "duration_seconds 是 nil（舊列）時該退回 loadVideoDuration 讀到的 client-side 快取"
+        )
+    }
+
+    func test_displayDuration_neitherSource_isNil() {
+        let stub = StubTimelineAPIClient()
+        let store = TimelineStore(apiClient: stub)
+        let content = MediaContent(
+            id: UUID(), type: .video, width: 884, height: 1920, thumbWidth: 235, thumbHeight: 512,
+            storagePath: "f/v.mov", isThumbnail: true,
+            signedURL: URL(string: "https://example.com/f/v_thumb.jpg"), durationSeconds: nil
+        )
+
+        XCTAssertNil(store.displayDuration(for: content), "兩個來源都沒有值時該回傳 nil，不掛假時長")
+    }
 }

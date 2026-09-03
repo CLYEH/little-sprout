@@ -162,7 +162,7 @@ struct DiaryCardView: View {
                         VStack {
                             Spacer(minLength: 0)
                             HStack {
-                                VideoDurationBadge(duration: timelineStore.videoDurations[photo.id])
+                                VideoDurationBadge(duration: timelineStore.displayDuration(for: photo))
                                 Spacer(minLength: 0)
                             }
                         }
@@ -210,15 +210,15 @@ struct DiaryCardView: View {
             previewPhotos: [
                 MediaContent(
                     id: UUID(), type: .photo, width: 4, height: 3, thumbWidth: nil, thumbHeight: nil,
-                    storagePath: "preview/1.jpg", isThumbnail: false, signedURL: nil
+                    storagePath: "preview/1.jpg", isThumbnail: false, signedURL: nil, durationSeconds: nil
                 ),
                 MediaContent(
                     id: UUID(), type: .photo, width: 3, height: 4, thumbWidth: nil, thumbHeight: nil,
-                    storagePath: "preview/2.jpg", isThumbnail: false, signedURL: nil
+                    storagePath: "preview/2.jpg", isThumbnail: false, signedURL: nil, durationSeconds: nil
                 ),
                 MediaContent(
                     id: UUID(), type: .video, width: 16, height: 9, thumbWidth: nil, thumbHeight: nil,
-                    storagePath: "preview/3.mov", isThumbnail: false, signedURL: nil
+                    storagePath: "preview/3.mov", isThumbnail: false, signedURL: nil, durationSeconds: nil
                 )
             ],
             totalPhotoCount: 6

@@ -12,11 +12,13 @@ func pointer(kind: FeedKind, refId: UUID, occurredAt: Date = Date()) -> Timeline
 
 func mediaRow(
     id: UUID, path: String, type: MediaType = .photo,
-    thumbPath: String? = nil, thumbWidth: Int? = nil, thumbHeight: Int? = nil
+    thumbPath: String? = nil, thumbWidth: Int? = nil, thumbHeight: Int? = nil,
+    durationSeconds: Int? = nil
 ) -> MediaRow {
     MediaRow(
         id: id, storagePath: path, type: type, width: 800, height: 600,
-        thumbPath: thumbPath, thumbWidth: thumbWidth, thumbHeight: thumbHeight
+        thumbPath: thumbPath, thumbWidth: thumbWidth, thumbHeight: thumbHeight,
+        durationSeconds: durationSeconds
     )
 }
 
