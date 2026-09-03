@@ -161,7 +161,7 @@ jobs:
       # LS-95 merge-review R1 B2：tap-target-check.test.sh 原本只有腳本本體、沒有接進這裡——
       # COLLABORATION §7 宣稱「自測掛 CI rules job」但實際沒掛，兩條刻意寫的 mutation-style
       # 負控（多違規要全點名、失敗無標記不能誤判成通過）從未在 CI 執行過。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／main-checkout-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -192,6 +192,8 @@ jobs:
           node scripts/design/overflow-scan.test.js || rc=1
           bash scripts/gates/design-asset-size-check.test.sh || rc=1
           bash scripts/hooks/pretool.test.sh || rc=1
+          # LS-154：主 checkout 禁寫 hook（W1–W5 正負樣本＋開關＋fail-closed＋mutation；臨時 repo fixture）
+          bash scripts/hooks/main-checkout-guard.test.sh || rc=1
           bash scripts/gates/linear-issue-check.test.sh || rc=1
           exit "$rc"
 
