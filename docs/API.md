@@ -145,6 +145,14 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
   之後任何流程改掉，需要使用者自己透過 `update` 改名。
 - 只看得到：自己 ＋ 與自己同家庭的人（`private.peer_profile_ids()`）。陌生使用者的
   `display_name`／`avatar_url` 不會外洩。
+- `deletion_requested_at`（LS-143）：`delete_my_account()` 成功後寫入，`NULL`＝
+  未請求刪除。**client 對這一欄沒有 `UPDATE` 權限**（欄位級 grant 收斂，直接
+  `.update()` 一律 `42501`）——`authenticated` 對 `profiles` 原本是整表 `UPDATE`
+  grant，本欄新增時已改成「先收回整表、只重開 `display_name`／`avatar_url`」，見
+  `20260903084231_delete_account.sql` 檔頭；只能透過 `delete_my_account()` 寫入。
+  這一欄只是**資料面的請求標記**，不是刪除本身——`auth.users` 的實際刪除（連帶
+  cascade 掉這一列）由另一支以 `service_role` 執行的流程完成（Edge Function，
+  另票，見 §4 `delete_my_account`）。
 
 ### `families`
 - `storage_quota_bytes`／`storage_used_bytes`：**唯讀**，client 完全看不到自己能改的欄位
@@ -1215,6 +1223,84 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **錯誤碼**：無自訂碼；未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 
+### `delete_my_account() -> void`（LS-143）
+- **誰能呼叫**：任何已登入使用者。無參數。
+- **用途**：app 內刪除帳號的**資料面**入口（PLAN §9-A2／App Store Guideline
+  5.1.1(v)）。逐一檢查呼叫者所屬的每個家庭，依角色分三種結果：
+  1. **是某家庭的唯一 owner、且該家庭還有其他成員** → 整個呼叫被拒絕，`LS050`，
+     **不執行任何寫入**（不會只處理一部分家庭）。錯誤的 `DETAIL` 欄位帶一個 JSON
+     陣列，列出**全部**需要先轉移 owner 身份的家庭：
+     `[{"family_id": "...", "family_name": "..."}, ...]`（依 `family_name` 排序）。
+     轉移本身走既有路徑——owner 對 `family_members.role` 的直接 `UPDATE`（見 §3
+     `family_members`），本 RPC 不提供另一支轉移用的 RPC。使用者轉移完所有列出的
+     家庭之後，重新呼叫本 RPC 即可繼續。
+  2. **是某家庭的唯一成員**（因此也必然是唯一 owner——不可能同時符合情況 1 的
+     條件）→ **整個家庭連同底下資料一併刪除**（`DELETE FROM families`
+     cascade：`albums`／`diaries`／`media`／`album_media`／`diary_media`／
+     `comments`／`reactions`／`invites`／`join_requests`／`content_reports`／
+     `blocked_users`／`feed_items`／`family_members` 全部隨之消失）。**Storage
+     清理契約**：本 RPC 只清 DB 端的 `media` 列，`media` bucket 裡對應的實體檔案
+     不會被同步刪除——依 §5「離線對帳」既有定義，這些檔案在 `media` 列消失之後
+     即成為孤兒物件；批次清除是另一張票（不在本 RPC 範圍），可用
+     `storage.objects` 的 `name` 前綴（家庭已刪除，前綴即該 `family_id`）批次
+     鎖定要清的物件，不需要重跑一般孤兒物件的全表比對。
+  3. **其餘家庭**（可能是有共同 owner 的 owner／member／viewer）→ 自己的
+     `diaries`／`albums`／`comments` 依既有 soft delete 策略處理
+     （`deleted_at = now()`、`deleted_by = 自己`，語意等同作者自己呼叫
+     `set_diary_deleted`／`set_album_deleted`／`set_comment_deleted` 自刪），然後
+     離開家庭（`DELETE family_members`）——**家庭本身與其他成員的內容完全不受
+     影響**。`media`／`reactions`／`device_tokens` **刻意不在這支 RPC 觸碰的範圍**
+     （`media` 沒有 `deleted_by` 欄位也沒有既有的自刪 RPC；`reactions` 沒有 soft
+     delete 概念；`device_tokens` 的 FK 是 `on delete cascade`，等真正刪除
+     `auth.users` 時自動清掉），見 migration 檔頭「規格分歧與取捨」。
+  無論走哪條路（情況 2／3），最後都會標記 `profiles.deletion_requested_at = now()`
+  （情況 1 被拒絕時不標記）。
+- **`auth.users` 的實際刪除不在本 RPC 範圍**：這支 RPC 是 `SECURITY DEFINER`，
+  以呼叫者（`auth.uid()`）的身份判斷授權與範圍，但**不會**、也不能代表呼叫者去刪
+  `auth.users`（那需要 `service_role`）。`profiles.deletion_requested_at` 是交給
+  另一支以 `service_role` 執行的流程（Edge Function，另票）的唯一契約欄位——那支
+  流程只需要找出 `deletion_requested_at is not null` 的帳號，呼叫 GoTrue admin API
+  刪除對應的 `auth.users` 列即可（`profiles` 對 `auth.users` 是 `on delete
+  cascade`，屆時 `profiles` 列會跟著消失）。**這是本票刻意的取捨**：把「資料面
+  處理」與「身份層真的刪除」拆成兩支獨立的部署單元（一支 SQL migration、一支
+  Edge Function），不在同一張票裡同時扛兩種截然不同性質的風險。
+- **過渡狀態（merge-review R1 i1，實測確認）**：`delete_my_account()` 回傳成功
+  之後、Edge Function 真正刪掉 `auth.users` 之前，這個帳號**仍是完全可用的登入
+  身份**——`deletion_requested_at` 目前不被任何 RLS policy 或 grant 讀取，同一個
+  `authenticated` 身分可以立即建立新家庭並成為新家庭的 owner、上傳照片等，「刪除
+  帳號」對使用者不是一個立即生效的終態。**client 端硬性規定**：RPC 回傳後必須
+  **立即**呼叫 Edge Function `delete-account` 完成 `auth.users` 的實際刪除，中間
+  **不得允許使用者做任何操作**（不能停在「刪除中」畫面之外的任何互動）——這個窗口
+  存在的唯一理由是兩支流程分屬不同部署單元、無法在同一個交易內完成，不是設計上
+  允許使用者利用的正常狀態。若使用者在這個窗口內又成為某個家庭的唯一 owner，
+  Edge Function 呼叫 `service_role` 執行 `delete from auth.users` 時，cascade 到
+  `family_members` 的刪除會被既有的 `private.enforce_family_has_owner()` trigger
+  擋下（回 `LS001`），該次刪除會失敗——Edge Function 的驗收條件必須涵蓋這個情境
+  （見 LS-24 後端 Edge Function 票）。
+- **錯誤碼**：未登入 `42501`；唯一 owner 且家庭還有其他成員 `LS050`（見上方
+  `DETAIL` 契約）。
+- **併發**：情況 3（離開家庭）零新鎖——`DELETE family_members` 觸發的是既有的
+  `private.enforce_family_has_owner()` statement-level trigger（`FOR NO KEY
+  UPDATE`、`family_id` 遞增序，LS-6／LS-15 既有設計）。情況 1 的守門查詢刻意不
+  額外加鎖，只是提早給一個附家庭清單、對使用者友善的錯誤；真正防止「家庭剩 0 位
+  owner」的權威防線始終是那顆既有 trigger。兩者之間存在一個極短的競態窗口（例如
+  兩位共同 owner 幾乎同時呼叫本 RPC）——最壞結果是其中一邊被 trigger 擋下、回
+  `LS001`（不是 `LS050`）而不是成功，整個呼叫（含已執行的軟刪）隨事務一起回滾，
+  使用者需要重試；不會死鎖、不會資料損壞，見
+  `supabase/tests/concurrency/delete_account_race_*.sql`。**情況 2（唯一成員刪
+  整個家庭）不是零新鎖**（merge-review R1 m1／m2，2026-09-03 修正）：`DELETE FROM
+  families` 本身需要 `FOR UPDATE` 等級的列鎖，與同家庭併發的子表寫入（背景上傳
+  `INSERT INTO media`、`approve_join()` 的 `INSERT INTO family_members`）因 FK
+  參照完整性檢查取的 `FOR KEY SHARE` 互斥，存在既有的 `40P01`
+  （`deadlock_detected`）死鎖窗——只有同一個使用者自己的另一個 session 才碰得到
+  （單成員家庭沒有別人能寫），**client 端建議捕捉到 `40P01` 時直接重試同一個
+  `delete_my_account()` 呼叫一次即可，沒有資料損壞**。候選家庭在真正 `DELETE`
+  之前會先用 `SELECT … FOR UPDATE` 逐一鎖住（`family_id` 遞增序）並用全新查詢
+  重新評估「唯一成員」——這是為了關閉「候選判斷用的是取鎖前的舊快照、剛核准加入
+  的成員被連坐刪除」這個競態窗（`approve_join()` 的 `INSERT` 只需要 `FOR KEY
+  SHARE`，若改用 `FOR NO KEY UPDATE` 鎖候選家庭鎖不住它），見
+  `supabase/tests/concurrency/delete_account_vs_approve_join_*.sql`。
+
 ---
 
 ## 5. 錯誤碼全表
@@ -1249,6 +1335,7 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS043` | 孩子檔案已被移除超過 30 天，無法還原 | `set_child_deleted`（`p_deleted = false`） |
 | `LS044` | 寶貝已移除，無法歸屬新內容 | `diary_children`／`album_children` 的 `BEFORE INSERT` trigger（LS-121 起搬到連結表；原本掛在 `diaries`／`albums` 本體，見 §8）——`create_diary_entry`／`update_diary_entry`／`set_album_children`（`p_child_ids` 任一元素指向已軟刪的孩子）皆可能撞到，這是這支 trigger 唯一會被觸發的路徑（`diary_children`／`album_children` 對 `authenticated` 沒有任何直接寫入 grant，見 §2／§3，不存在繞過三支 RPC 直接撞到這個碼的呼叫端路徑）；只在真的要新增一列標記時才會觸發，不影響既有標記繼續存在、既有內容繼續軟刪／還原／編輯自己（見 §8） |
 | `LS045` | 不是相簿建立者本人，或雖是建立者但已不是該家庭 owner/member，無法設定寶貝標記 | `set_album_children`（LS-121） |
+| `LS050` | 你是家庭的唯一 owner，且家庭還有其他成員，須先轉移 owner 身份才能刪除帳號——`DETAIL` 帶 JSON 陣列列出全部需要轉移的家庭（`[{"family_id","family_name"}, ...]`），見 §4 `delete_my_account` | `delete_my_account`（LS-143） |
 | `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下／`family_id` 不可變 trigger 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE、`children` INSERT/UPDATE/DELETE——`children` 的 `DELETE` 自 R1 I5 起也收斂，連 owner 都拿這個碼）會拿到的標準碼；也是 `diaries`／`albums`／`comments`（`private.enforce_deletion_attribution()`，LS-57）與 `children`（`private.enforce_children_family_immutable()`，LS-66，LS-57 R2／I1 對齊後改用裸 `42501`，不再是原本 LS-66 定案時的專屬碼）的 `family_id` 不可變 trigger 統一 raise 的碼；`albums` 直接 `.update()` 竄改 `deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起也在欄位級 grant 被收回，同樣回這個碼（見 §2/§3）——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字，trigger 主動 raise 的則帶自訂中文訊息，但 SQLSTATE 一樣是 `42501`。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
 
 **沒有被上面任何一支 RPC 包住、可能直接從 PostgREST 冒出來的標準 Postgres 錯誤碼**
@@ -1288,7 +1375,11 @@ PR #95 review F1）訂正：這裡原本誤寫成跟 `LS041`–`LS043` 一起歸
 `LS016` 另於 LS-55 從 `validationRetryable` 改歸新增的 `retryableSystem` 層（見上方 `LS016`
 列註記）。`LS045`（LS-121 補齊，歸層 `rejected`——不是相簿建立者本人、或雖是建立者
 但已不是該家庭 owner/member，同 `LS021`／`LS025`／`LS042` 同一類：換輸入沒有用，UI
-該做的是隱藏「編輯寶貝標記」入口）。三層（`validationRetryable`／`retryableSystem`／
+該做的是隱藏「編輯寶貝標記」入口）。`LS050`（LS-143 補齊，歸層 `rejected`——你是
+家庭唯一 owner 且家庭還有其他成員，沒有輸入可換，必須先做別的事（把 owner 身份
+轉移給其他成員），跟 `familyMustHaveOwner`（`LS001`）同一組理由，只是觸發路徑
+不同：一個是直接對 `family_members` 做會導致 0 owner 的操作，一個是呼叫
+`delete_my_account()`）。三層（`validationRetryable`／`retryableSystem`／
 `rejected`）歸類由 `LittleSproutTests/AppErrorTests.swift` 的列舉測試逐碼釘住。
 **尚缺碼：無**。之後每新增一個自訂碼，本表與 `LSErrorCode` 必須同 PR 更新，否則
 `error-codes-check` 會紅（任一邊多都算；gate 只認本節表格列的 `` `LSnnn` `` 首欄，散文提及不計）。
@@ -1533,6 +1624,7 @@ create_child(uuid, text, date, text)
 create_comment(uuid, text, uuid, text)
 create_diary_entry(uuid, uuid[], text, date)
 create_invite(uuid, text, timestamptz, integer)
+delete_my_account()
 get_family_quota(uuid)
 get_family_timeline(uuid, uuid, timestamptz, uuid, integer)
 get_my_join_request()

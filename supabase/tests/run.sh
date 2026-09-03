@@ -397,6 +397,22 @@ race_case "同一本相簿：兩連線同時覆蓋孩子標記，終態必須是
   album_children_race_setup.sql album_children_race_s1.sql \
   album_children_race_s2.sql album_children_race_verify.sql
 
+# LS-143 併發場景：兩位共同 owner（沒有其他成員）幾乎同時呼叫 delete_my_account()。
+# 跟 owner_guard_case 驗的是同一顆既有 trigger（LS-6／LS-15），換成帳號刪除這個新的
+# 觸發路徑——S1 先離開家庭並持鎖 3 秒，S2 1.2 秒後被同一把家庭列鎖擋住，解除阻塞後
+# 因為 S1 已經離開、自己也離開會讓家庭剩 0 位 owner，必須正確拿到 LS001（見
+# delete_account_race_s2.sql 的說明），不是死鎖、也不是誤放行。
+race_case "兩位共同 owner 幾乎同時刪除帳號：後動者必須被阻塞後正確拿到 LS001" \
+  delete_account_race_setup.sql delete_account_race_s1.sql \
+  delete_account_race_s2.sql delete_account_race_verify.sql
+
+# LS-143 R2（merge-review R1 m2）：approve_join() 先動、delete_my_account() 後動——
+# 剛核准加入的成員不得被「唯一成員」候選判斷連坐 cascade 刪除。見 migration 檔頭
+# 「併發設計」m2 段落與 delete_account_vs_approve_join_s2.sql 的說明。
+race_case "approve_join 先動、delete_my_account 後動：剛核准的成員不得被連坐 cascade 刪除" \
+  delete_account_vs_approve_join_setup.sql delete_account_vs_approve_join_s1.sql \
+  delete_account_vs_approve_join_s2.sql delete_account_vs_approve_join_verify.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 delete from public.families where id in (
@@ -411,13 +427,19 @@ delete from public.families where id in (
   'f5000000-0000-4000-8000-000000000001',
   'f8000000-0000-4000-8000-000000000001',
   'f0000000-0000-4000-8000-000000000001',
-  '9a000000-0000-4000-8000-000000000001'
+  '9a000000-0000-4000-8000-000000000001',
+  'd3000000-0000-4000-8000-000000000001',
+  'd5000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
   'd0000000-0000-4000-8000-000000000002',
   'd1000000-0000-4000-8000-000000000001',
   'd2000000-0000-4000-8000-000000000001',
+  'd4000000-0000-4000-8000-000000000001',
+  'd4000000-0000-4000-8000-000000000002',
+  'd6000000-0000-4000-8000-000000000001',
+  'd7000000-0000-4000-8000-000000000001',
   'ea000000-0000-4000-8000-000000000001',
   'ea000000-0000-4000-8000-000000000002',
   'ea000000-0000-4000-8000-000000000003',

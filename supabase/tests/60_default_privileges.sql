@@ -453,7 +453,9 @@ declare
     'public.report_content(uuid, text, uuid, text)',
     'public.block_user(uuid, uuid)',
     'public.unblock_user(uuid, uuid)',
-    'public.remove_content_as_owner(text, uuid)'
+    'public.remove_content_as_owner(text, uuid)',
+    -- LS-143
+    'public.delete_my_account()'
   ];
   v_invoker_rpcs text[] := array[
     'public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)',

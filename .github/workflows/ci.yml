@@ -114,11 +114,18 @@ jobs:
       # 呼叫同一支腳本，這裡是伺服器端兜底）。來源：LS-53／LS-56 兩個 agent 共用 scratchpad/pr-body.md 撞檔，
       # LS-53 的 gh pr edit 把 LS-56 的 body 貼上 PR #78——暫存檔命名規約在 repo 外無法機械驗，驗它要防的結果。
       # 同 LS-50 只在工作分支 head 執行：promote／back-merge 的 head 是保護分支，沒有「本票」可比。
-      - name: PR body 檔頭段含本票票號（pr-body-check，LS-63）
+      # LS-140：同一支腳本再對全 body 逐行驗「申報可驗證」——含 LS-96／入池／待辦池 的行必帶 ≥8 位 hex comment id、含
+      # 「已修」的行必帶 7–40 位 hex SHA；`--verify` 反查：SHA 須 `git cat-file -e` 且為 HEAD（PR merge ref）祖先（fetch-depth 0
+      # 已含 PR 全部 commit）；comment id 以 LINEAR_API_KEY 列 LS-96 全部 comment 做前綴比對（`comment(id:)` 不吃 8 位前綴）。
+      # 無 secrets.LINEAR_API_KEY 時腳本印「反查略過」（＋::warning::）只驗格式＋git——repo 尚未設此 secret（2026-09-03
+      # `gh secret list` 為空；LS-103 patrol-linear 自測也不需要），補上即自動生效，不必改 workflow。
+      - name: PR body 檔頭段含本票票號＋申報可驗證（pr-body-check，LS-63／LS-140）
         if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
         run: |
           printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-check.txt"
-          bash scripts/gates/pr-body-check.sh --branch "$HEAD" "$RUNNER_TEMP/pr-body-check.txt"
+          bash scripts/gates/pr-body-check.sh --branch "$HEAD" --verify "$RUNNER_TEMP/pr-body-check.txt"
 
       # LS-69：evidence-path-check 原本只在本機 pre-commit 跑（看 --cached／staged），`--no-verify` 繞過後
       # CI 沒有兜底——PR 上 commit-msg／secrets 都有伺服器端兜底、唯獨這條沒有（R1 I10）。這裡用新增的
@@ -231,6 +238,15 @@ jobs:
       # `--force`→可清、保護分支／detached／目前所在目錄（cwd）絕不碰、遠端分支有 open PR 或
       # gh 不可用→略過不刪、LS-<n> 篩選 word-boundary（LS-20 不誤中 LS-200）、dry-run 零副作用、
       # 參數與環境錯誤 fail closed。
+      # LS-141：cleanup-merged.test.sh 反轉 LS-86 R2 M3——只剩 gitignore 產物（Config/Secrets.xcconfig、
+      # supabase/.temp/、supabase/tests/evidence/）→可清＋印審計清單、未追蹤非 ignored→略過且 --force 不放行；
+      # Pen 開著該 worktree 的 .pen（PEN_BIN stub）→拒刪並印處置；尚未開工＋指名＋--force-unstarted 或
+      # stub Linear completed→可清、started／無 key→略過並提示、token 不進 curl argv、不帶票號的
+      # --force-unstarted exit 2。mutation：dirty 判定加回 --ignored=matching → 「只剩 ignored 可清」樣本紅。
+      # LS-141 R2（merge-review R1 m1／m2／i2）：Pen 在跑但 --status 讀不到（pgrep stub）→保守拒刪、沒 pen CLI→清；
+      # 探 Pen 期間注入 commit（pen stub PEN_STUB_COMMIT_IN，未開工＋旗標／已併入乾淨兩路徑）→重驗抓到拒刪、
+      # commit 仍在；同票多個未開工只查一次 Linear、查詢失敗提示。mutation：pen_guard 移回重驗之後／未開工重驗
+      # 退回只看 dirty／Pen 讀不到一律放行 → 對應樣本紅。
       - name: Ops 腳本自測（patrol／session-start／supabase-lock／promote／post-status／pen-open／pen-read／pen-land／patrol-linear／cleanup-merged，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-86）
         run: |
           rc=0
