@@ -69,6 +69,23 @@ struct DiaryCardView: View {
                 let isLast = index == content.previewPhotos.count - 1
                 previewThumbnail(photo, showsRemainingBadge: isLast && remainingPhotoCount > 0)
                     .frame(width: previewTileSize, height: previewTileSize)
+                    // QA R4（`a356f033`）：測同列 tile 是否為等寬等高正方形（見
+                    // `previewThumbnail` 的 `.clipped()` 修復註解）需要能個別量到每一格的
+                    // `XCUIElement.frame`。卡片外層的 `.accessibilityElement(children:
+                    // .combine)` 會把整棵子樹合併成一個 VoiceOver 元素，光掛
+                    // `.accessibilityIdentifier` 在 tile 本身會被吃掉、量不到（實測撞到）；
+                    // 若改把 tile 自己也標成 `.accessibilityElement()` 又會連帶吃掉裡面
+                    // `VideoDurationBadge` 的 `Text`（既有徽章 OCR／frame 測試依賴它獨立
+                    // 找得到）。改用一個不帶任何子節點、貼在 tile 正上方的透明 `.overlay`
+                    // 當純測試掛勾——它自己宣告 `.accessibilityElement()` 能穿透祖先的
+                    // `.combine` 單獨曝光，且不是 tile 內容的祖先，不會影響裡面 `Text` 的
+                    // 可查詢性；`.overlay` 內容與被疊加的 view 同尺寸，量到的 frame 就是
+                    // tile 實際渲染框。VoiceOver 朗讀內容不受影響（`Color.clear` 无文字）。
+                    .overlay(
+                        Color.clear
+                            .accessibilityElement()
+                            .accessibilityIdentifier("previewTile\(index)")
+                    )
             }
         }
     }
@@ -95,6 +112,25 @@ struct DiaryCardView: View {
                     .offset(x: 2, y: 2)
             }
             thumbnailImage(photo)
+                // QA R3（`a356f033`）FAIL：`image.resizable().scaledToFill()`（見
+                // `thumbnailImage(_:)`）會保留長寬比「蓋滿」整個提案尺寸，但**不會自動裁掉
+                // 溢出的部分**——`.scaledToFill()` 只負責縮放，裁切要另外做。真人上傳的
+                // 直式影片縮圖（235×512，長寬比 ~1:2.18）蓋滿一個正方提案時，理想尺寸會遠
+                // 大於那個正方形；本檔下面的 `.clipShape(...)` 掛在 `.overlay` 之後——裁的
+                // 是「這張已經被撐大的圖＋overlay」自己的（過大的）外形，不是外層
+                // `previewPhotosRow` 呼叫端那個 `.frame(width: previewTileSize, height:
+                // previewTileSize)` 給的正方形；外層那個固定 frame 只影響 layout box 回報，
+                // 不會反過來裁掉已經畫出界的內容（`.frame` 沒有 `.clipped()` 就不裁繪製結果）
+                // ⇒ 圖片視覺上撐出格子、把同列鄰居的間距也蓋住，正是 QA 這輪量到的「tile 寬
+                // 不等、零間距、溢出卡片」。之前的 harness 樣本 `signedURL` 全是假 URL／nil，
+                // `AsyncImage` 一律落回 `Color.lsSurface2`（無固有尺寸的純色，怎麼裁都不會
+                // 露餡），所以 R2／R3 的模擬器像素量測從未觸發這個路徑——這正是這次真人
+                // 上傳的真圖才踩到的根因。修法：`.frame(width:height:)` 先套在圖片本身、
+                // 立刻 `.clipped()` 裁掉蓋滿溢出的部分，讓圖片在 `.overlay`／外層
+                // `.clipShape` 接手之前就已經是正確的正方形——`.scaledToFill().frame().
+                // clipped()` 是 SwiftUI「蓋滿裁切」的標準寫法，本檔之前漏了最後一步。
+                .frame(width: previewTileSize, height: previewTileSize)
+                .clipped()
                 .overlay {
                     if showsRemainingBadge {
                         // 「還有 N 張」已經是 75% 黑蓋滿整格，跟影片徽章同時出現會互相蓋住、
