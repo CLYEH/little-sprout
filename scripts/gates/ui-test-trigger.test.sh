@@ -8,6 +8,8 @@
 # 「前饋必有反饋」對這支腳本也適用：mutation 負控用 UI-TEST-TRIGGER-RULE 標記把判定退回 LS-95 舊規則
 # （只認 Features/／DesignSystem/），樣本 ①／② 必須改判略過——證明 ①／② 確實釘住「LittleSprout/**/*.swift」與
 # 「LittleSproutUITests/**」這兩條判定，不是湊巧綠（同 linear-issue-check.test.sh 的 build_mutant 慣例）。
+# merge-review R1（R2 補）：㉑ rename 搬出 app target／㉒ 非 ASCII 檔名／㉓ --files 給目錄，＋ diff 行三支 mutant
+# （三點→兩點／拿掉 --no-renames／拿掉 quotePath=false）各自必須翻掉 ⑱／㉑／㉒；fixture 內容改互異（F1 根因）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -108,7 +110,9 @@ git -C "$R" -c user.name=t -c user.email=t@t config commit.gpgsign false
 commit() {   # commit <repo> <訊息> <檔案…>：建檔＋commit
   local repo=$1 msg=$2; shift 2
   local f
-  for f in "$@"; do mkdir -p "$repo/$(dirname "$f")"; echo x >> "$repo/$f"; done
+  # merge-review R1 F1：內容必須互異（寫入路徑名本身）——原本每檔固定 x，⑱ 的 base 側 Swift 與 feature 側 .sql
+  # 內容相同被 git 配成 R100 rename、--name-only 只印目的路徑，三點→兩點的 mutation 因此逃脫。
+  for f in "$@"; do mkdir -p "$repo/$(dirname "$f")"; echo "$f" >> "$repo/$f"; done
   git -C "$repo" add -A
   git -C "$repo" -c user.name=t -c user.email=t@t commit -q -m "$msg"
 }
@@ -143,6 +147,28 @@ expect 2 '⑲ --base 找不到 ref → exit 2' "$got" "$out" '找不到 base ref
 out=$(cd "$work" && bash "$checker" --base base 2>&1); got=$?
 expect 2 '⑳ --base 不在 git repo 內 → exit 2' "$got" "$out" '不在 git repo 內'
 
+# ㉑ merge-review R1 F2：Swift 檔搬出 app target（git mv LittleSprout/Features/Foo.swift → docs/）→ 要跑。
+#    不帶 --no-renames 時 git 配成 R100、--name-only 只印目的路徑 docs/Foo.swift → 誤判略過（漏跑方向）。
+git -C "$R" checkout -q base
+git -C "$R" checkout -q -b feat-mv
+mkdir -p "$R/docs"
+git -C "$R" mv LittleSprout/Features/Foo.swift docs/Foo.swift
+git -C "$R" -c user.name=t -c user.email=t@t commit -q -m mv
+out=$(cd "$R" && bash "$checker" --base base 2>&1); got=$?
+expect 0 '㉑ --base：Swift 檔 git mv 搬出 LittleSprout/ → 要跑（舊路徑要進清單）' "$got" "$out" '要跑' 'LittleSprout/Features/Foo.swift'
+
+# ㉒ merge-review R1 F3：非 ASCII 檔名的 Swift 新增（LittleSprout/Features/測試View.swift）→ 要跑。
+#    core.quotePath 預設會把路徑印成 "LittleSprout/Features/\346\270\254…"（含引號）→ ^LittleSprout/ 不匹配。
+git -C "$R" checkout -q base
+git -C "$R" checkout -q -b feat-zh
+commit "$R" zh 'LittleSprout/Features/測試View.swift'
+out=$(cd "$R" && bash "$checker" --base base 2>&1); got=$?
+expect 0 '㉒ --base：非 ASCII 檔名 Swift 新增 → 要跑（路徑不被 quotePath 跳脫）' "$got" "$out" '要跑' 'LittleSprout/Features/測試View.swift'
+
+# ㉓ merge-review R1 F4：--files 給目錄（[ -r ] 為真但 cat 失敗）→ exit 2，不得落成「空清單→略過」的 fail-open
+out=$(bash "$checker" --files "$work" 2>&1); got=$?
+expect 2 '㉓ --files 給目錄 → exit 2（不 fail-open 成略過）' "$got" "$out" '讀不到'
+
 # ---- mutation 負控：把判定退回 LS-95 舊規則（只認 Features/／DesignSystem/），①／② 必須改判略過 ----
 # 證明 ①／② 釘住的是「LittleSprout/**/*.swift」「LittleSproutUITests/**」兩條判定本身：若腳本退化回舊規則，
 # 本檔的 ①／② 會紅（這裡對 mutant 直接驗「改判略過」，並先驗 mutant 真的被改到，負控本身才有效）。
@@ -160,6 +186,33 @@ else
   # 對照：舊規則仍認得 Features/——mutant 不是「什麼都略過」的壞 mutant
   out=$(files_run "$mutant" LittleSprout/Features/Auth/SignInView.swift); got=$?
   expect 0 'mutant 對照：Features/ 在舊規則下仍要跑（mutant 不是全略過）' "$got" "$out" '要跑'
+fi
+
+# ---- merge-review R1 F1：diff 行的 mutation 負控（UI-TEST-TRIGGER-DIFF 標記）----
+# 三點→兩點／拿掉 --no-renames／拿掉 core.quotePath=false 三支 mutant 必須分別把 ⑱／㉑／㉒ 翻掉——原 fixture
+# 每檔內容固定 x 時，⑱ 抓不到三點→兩點（R100 rename 吞掉 Swift 路徑）；這裡直接驗 mutant 的翻轉，若有人把
+# commit() 改回固定內容、或案例失去鑑別力，這裡會紅。
+diff_mutant() {   # diff_mutant <輸出路徑> <替換整行>
+  awk -v repl="$2" '$0 ~ /^ *changed=\$\(git / && index($0, "UI-TEST-TRIGGER-DIFF") > 0 { print repl; next } { print }' "$checker" > "$1"
+  if cmp -s "$checker" "$1"; then
+    echo "✗ diff mutant：替換沒生效（UI-TEST-TRIGGER-DIFF 標記遺失？），負控本身無效" >&2
+    fail=1; return 1
+  fi
+}
+m="$work/mutant-twodot.sh"
+if diff_mutant "$m" '    changed=$(git -c core.quotePath=false diff --name-only --no-renames "${arg}..HEAD") || exit 2'; then
+  out=$(cd "$R" && git checkout -q feat-db && bash "$m" --base base 2>&1); got=$?
+  expect 0 'mutant（三點→兩點）：⑱ 情境改判要跑（base 側 Swift 被當成刪除列進清單）——證明 ⑱ 釘住三點語意' "$got" "$out" 'LittleSprout/Features/Foo.swift'
+fi
+m="$work/mutant-renames.sh"
+if diff_mutant "$m" '    changed=$(git -c core.quotePath=false diff --name-only "${arg}...HEAD") || exit 2'; then
+  out=$(cd "$R" && git checkout -q feat-mv && bash "$m" --base base 2>&1); got=$?
+  expect 3 'mutant（拿掉 --no-renames）：㉑ 改判略過（R100 只印目的路徑）——證明 ㉑ 釘住 --no-renames' "$got" "$out" '略過'
+fi
+m="$work/mutant-quotepath.sh"
+if diff_mutant "$m" '    changed=$(git diff --name-only --no-renames "${arg}...HEAD") || exit 2'; then
+  out=$(cd "$R" && git checkout -q feat-zh && bash "$m" --base base 2>&1); got=$?
+  expect 3 'mutant（拿掉 core.quotePath=false）：㉒ 改判略過（路徑被引號跳脫）——證明 ㉒ 釘住 quotePath' "$got" "$out" '略過'
 fi
 
 if [ "$fail" -eq 0 ]; then
