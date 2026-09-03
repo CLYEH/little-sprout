@@ -364,6 +364,7 @@ struct TimelineView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         TimelineView(
@@ -372,3 +373,4 @@ struct TimelineView: View {
         )
     }
 }
+#endif
