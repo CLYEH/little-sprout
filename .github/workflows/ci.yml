@@ -144,13 +144,14 @@ jobs:
       # 刪除／tag 早退、test／main 只准 promote.sh FF」（push-ref-check，LS-85）與「agent 定義 tools: 白名單含必要工具」
       # （agent-tools-check，LS-87）與「PreToolUse H1-H3 fail-closed 分派」（pretool，LS-88）與「已併入 base 的 migration
       # 檔不可變」（migration-immutable-check，LS-80）與「≥44pt 點擊目標 gate 腳本本身」（tap-target-check，LS-95）與
-      # 「Features 畫面覆蓋對帳」（tap-target-registry-check，LS-95 M1）的偵測不退化
+      # 「Features 畫面覆蓋對帳」（tap-target-registry-check，LS-95 M1）與「UI 測試觸發判定：LittleSprout/**/*.swift
+      # 或 LittleSproutUITests/** 即跑、純 supabase/／docs/／scripts/ 略過」（ui-test-trigger，LS-137）的偵測不退化
       # （前饋必有反饋，對 gate 本身也適用）。集中在同一個 step，維持「一個地方跑所有 gate 自測」。
       #
       # LS-95 merge-review R1 B2：tap-target-check.test.sh 原本只有腳本本體、沒有接進這裡——
       # COLLABORATION §7 宣稱「自測掛 CI rules job」但實際沒掛，兩條刻意寫的 mutation-style
       # 負控（多違規要全點名、失敗無標記不能誤判成通過）從未在 CI 執行過。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／tap-target-check／tap-target-registry-check／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -174,6 +175,7 @@ jobs:
           bash scripts/gates/push-gate.test.sh || rc=1
           bash scripts/gates/tap-target-check.test.sh || rc=1
           bash scripts/gates/tap-target-registry-check.test.sh || rc=1
+          bash scripts/gates/ui-test-trigger.test.sh || rc=1
           bash scripts/gates/design-landing-check.test.sh || rc=1
           bash scripts/gates/design-evidence-check.test.sh || rc=1
           # LS-122：四支溢出掃描的正典腳本純函數自測（node，合成節點樹；Pen 不在 CI 也能驗演算法）
@@ -487,8 +489,8 @@ jobs:
     timeout-minutes: 40
     steps:
       # LS-95 merge-review R1 m3：full history（同 rules job）——下面「點擊目標 gate」步驟要對
-      # PR 的 base ref 做 git diff 判斷是否真的碰了 Features/／DesignSystem/，預設的淺 clone
-      # （depth 1）沒有 base ref 的歷史，diff 會失敗或不可靠。
+      # PR 的 base ref 做 git diff 判斷是否真的碰了 UI（判定見 scripts/gates/ui-test-trigger.sh，LS-137），
+      # 預設的淺 clone（depth 1）沒有 base ref 的歷史，diff 會失敗或不可靠。
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -558,18 +560,20 @@ jobs:
           # （33468479846）實測 step 級時間——`點擊目標 gate` 本身 5m06s，把 `ci` job 關鍵路徑
           # 從約 6m 推到 11m29s，幾乎翻倍，且原本無條件套用在每個 PR（含純文件／純 DB／純
           # harness 票）。改成對 pull_request 的 base ref 做 diff（`$GITHUB_BASE_REF`，只有
-          # pull_request 事件才有值）判斷 Features/／DesignSystem/ 是否真的有變更，沒有就跳過；
+          # pull_request 事件才有值）判斷是否真的碰了 UI，沒有就跳過；
           # push 事件（promote.sh 晉升 development/test/main）沒有「相對 base」概念，維持無條件
           # 跑，當成晉升前的最後一道伺服器端兜底（成本可接受：晉升頻率遠低於 PR 數）。
+          # LS-137（LS-136 merge-review R2 n1）：判定抽成 scripts/gates/ui-test-trigger.sh（自測掛 rules job）。
+          # 先前這裡內嵌的 grep 只認 Features/／DesignSystem/——LS-136（PR #235）十個檔全在 Navigation/／
+          # Services/／根層 TapTargetGate*／LittleSproutUITests/，這裡印「略過」，該票的 UI 測試在 CI
+          # 跳過＝綠（這是 CI 唯一跑 LittleSproutUITests 的地方）。現在 diff 含 LittleSprout/**/*.swift 或
+          # LittleSproutUITests/** 即跑；純 supabase/／docs/／scripts/ PR 仍略過。exit 3＝略過（腳本印實際
+          # 判定用的路徑集合）；非 0／3（參數／ref 錯）視為「無法證明可略過」照跑——該跑卻跳才是 unsafe 方向。
           if [ -n "${GITHUB_BASE_REF:-}" ]; then
             git fetch --quiet origin "$GITHUB_BASE_REF" 2>/dev/null || true
-            if git rev-parse -q --verify "origin/$GITHUB_BASE_REF" >/dev/null; then
-              changed=$(git diff --name-only "origin/$GITHUB_BASE_REF"...HEAD)
-              if ! printf '%s\n' "$changed" | grep -qE '(^|/)(Features|DesignSystem)/'; then
-                echo "→ diff 對 origin/${GITHUB_BASE_REF} 不含 Features/ 或 DesignSystem/，略過（成本見上方註解）"
-                exit 0
-              fi
-            fi
+            rc=0; bash scripts/gates/ui-test-trigger.sh --base "origin/$GITHUB_BASE_REF" || rc=$?
+            if [ "$rc" -eq 3 ]; then exit 0; fi
+            if [ "$rc" -ne 0 ]; then echo "::warning::ui-test-trigger.sh exit ${rc}（非 0／3），無法證明可略過，保守照跑"; fi
           fi
           dest=$(bash scripts/gates/detect-simulator.sh)
           bash scripts/gates/tap-target-check.sh "$(printf '%s' "$dest" | sed -n 's/.*id=//p')" LittleSprout
