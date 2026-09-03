@@ -17,7 +17,8 @@
 # 「無法證明可略過」照跑（見 ci.yml）。
 #
 # 用法：ui-test-trigger.sh --base <ref>       對 `<ref>...HEAD`（三點：merge-base 到 HEAD，base 側自己的變更不算）
-#                                             做 git diff --name-only 取變更清單
+#                                             做 git diff --name-only --no-renames 取變更清單（搬移兩邊路徑都算；
+#                                             core.quotePath=false，非 ASCII 路徑不加引號）
 #       ui-test-trigger.sh --files <file>|-   變更清單一行一路徑（repo 相對路徑；`-` 讀 stdin），供自測與本機驗證
 # exit：0＝要跑（印命中的第一個路徑）；3＝略過（印實際判定用的路徑集合＋變更清單）；2＝參數／ref 錯誤。
 # 自測：ui-test-trigger.test.sh（CI rules job）。規約見 docs/COLLABORATION.md §7。
@@ -44,15 +45,19 @@ case "$mode" in
     git rev-parse --git-dir >/dev/null 2>&1 || { echo "✗ ui-test-trigger：不在 git repo 內" >&2; exit 2; }
     git rev-parse -q --verify "${arg}^{commit}" >/dev/null 2>&1 \
       || { echo "✗ ui-test-trigger：找不到 base ref「${arg}」" >&2; exit 2; }
-    changed=$(git diff --name-only "${arg}...HEAD") \
-      || { echo "✗ ui-test-trigger：git diff ${arg}...HEAD 失敗" >&2; exit 2; }
+    # merge-review R1 F1／F2／F3：`--no-renames` 讓搬移拆成「舊路徑刪除＋新路徑新增」兩邊都進清單——Swift 檔搬出
+    # app target（`git mv LittleSprout/Features/A.swift docs/A.swift`）也要跑，且判定不再依賴 rename 偵測（內容相同
+    # 的兩個檔會被配成 R100、`--name-only` 只印目的路徑）；`core.quotePath=false` 讓非 ASCII 路徑不被加引號跳脫
+    # （否則 `LittleSprout/Features/測試View.swift` 印成 "LittleSprout/Features/\346\270\254…"，`^LittleSprout/` 不匹配）。
+    # 行尾 UI-TEST-TRIGGER-DIFF 標記給自測建 mutant 用，改這行請保留。
+    changed=$(git -c core.quotePath=false diff --name-only --no-renames "${arg}...HEAD") || { echo "✗ ui-test-trigger：git diff ${arg}...HEAD 失敗" >&2; exit 2; }   # UI-TEST-TRIGGER-DIFF
     ;;
   files)
     if [ "$arg" = - ]; then
       changed=$(cat)
     else
-      [ -r "$arg" ] || { echo "✗ ui-test-trigger：讀不到 ${arg}" >&2; exit 2; }
-      changed=$(cat "$arg")
+      # merge-review R1 F4：讀不到（含給到目錄）一律 exit 2，不落成「空清單→略過」的 fail-open
+      changed=$(cat "$arg" 2>/dev/null) || { echo "✗ ui-test-trigger：讀不到 ${arg}" >&2; exit 2; }
     fi
     ;;
 esac
