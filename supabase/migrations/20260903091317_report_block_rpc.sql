@@ -56,8 +56,14 @@
 --      封鎖過濾（albums 已在本檔加、diaries 未加但道理相同），對一列「本來就該被封鎖過濾掉」
 --      的內容，invoker 身分查它的 created_by 會因為 RLS 直接查不到（回 NULL），NOT EXISTS
 --      判斷會把「查不到」誤判成「沒有封鎖關係」而放行——definer 繞過這層直接拿到真正的
---      作者 id，只回傳一個 uuid，不構成新的資訊外洩面（這個項目本身看不看得到仍完全由
---      feed_items_select RLS 決定，這支函式只決定「要不要因為封鎖而排除」）。四條靜態分支
+--      作者 id。**誠實揭露（merge-reviewer PR #248 R1 minor-2）**：這確實是本 PR 新增的
+--      一條 RLS 繞行面——`private.feed_item_actor_id()` 對 `authenticated` 開放且本體
+--      不驗呼叫者與該內容的家庭關係，任何登入者只要拿到某個 uuid，就能問出**任何家庭**
+--      任何 album／diary／media 的作者 id，不限於自己所屬的家庭。判定接受現狀（不加成員
+--      檢查）：可利用性趨近於零——v4 uuid 不可猜、別家內容的 uuid 本來就不會流到這個
+--      使用者手上，這條路徑需要呼叫端事先已經知道目標 uuid 才用得上，不是掃描式的外洩面。
+--      這支函式本身「看不看得到內容本體」仍完全由 feed_items_select／albums_select 等
+--      既有 RLS 決定，它只回傳一個 uuid，不外洩內容欄位。四條靜態分支
 --      （不篩 child／篩 child × 有無游標）都加同一個 NOT EXISTS 條件，維持 LS-48 F1 立下的
 --      「先篩選＋排序＋LIMIT，才做逐列的額外查詢」規則不變——封鎖過濾条件本身就在篩選
 --      階段完成，不是額外一層 LIMIT 後才做的事。

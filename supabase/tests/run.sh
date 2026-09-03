@@ -131,7 +131,13 @@ fi
 # "10_..." 之前，因為第三個字元 '0' < '_'）。改用 `sort -V`（version sort，逐段比較數字
 # 而不是逐字元比較字串）取代 glob 天生的字典序，兩位數與三位數才會照數值大小排列
 # （00 < 10 < ... < 99 < 100）。
-for f in $(printf '%s\n' "$here"/[0-9]*_*.sql | sort -V); do
+# LS-149 R2（merge-reviewer PR #248 R1 minor-3）：`for f in $(...)` 讓 `sort -V` 的輸出
+# 經過 word splitting 逐一斷開——原本兩位數的 glob 寫法天生抗路徑含空白，這次放寬 glob
+# 時無意中丟掉了這個性質（repo clone 到含空白的路徑，例如 `~/Library/Mobile Documents/…`，
+# 會找不存在的檔案而不是照常執行；外層 `set -Eeuo pipefail` 讓症狀是難以理解的中止，不是
+# 清楚的錯誤）。改用 `while read` 讀 process substitution，每行完整保留、不做 word
+# splitting，路徑含空白也能正確逐檔處理。
+while IFS= read -r f; do
   name="$(basename "$f")"
   out="$tmp/$name.out"
   echo "→ $name"
@@ -143,7 +149,7 @@ for f in $(printf '%s\n' "$here"/[0-9]*_*.sql | sort -V); do
     sed 's/^/    /' "$out" >&2
     exit 1
   fi
-done
+done < <(printf '%s\n' "$here"/[0-9]*_*.sql | sort -V)
 
 # ---------------------------------------------------------------------------
 # LS-110 R1 F2：96_profiles_auto_create.sql 的六段情境測試都是以 $db_user（本機／CI
