@@ -69,23 +69,32 @@ struct DiaryCardView: View {
                 let isLast = index == content.previewPhotos.count - 1
                 previewThumbnail(photo, showsRemainingBadge: isLast && remainingPhotoCount > 0)
                     .frame(width: previewTileSize, height: previewTileSize)
-                    // QA R4（`a356f033`）：測同列 tile 是否為等寬等高正方形（見
-                    // `previewThumbnail` 的 `.clipped()` 修復註解）需要能個別量到每一格的
-                    // `XCUIElement.frame`。卡片外層的 `.accessibilityElement(children:
-                    // .combine)` 會把整棵子樹合併成一個 VoiceOver 元素，光掛
-                    // `.accessibilityIdentifier` 在 tile 本身會被吃掉、量不到（實測撞到）；
-                    // 若改把 tile 自己也標成 `.accessibilityElement()` 又會連帶吃掉裡面
-                    // `VideoDurationBadge` 的 `Text`（既有徽章 OCR／frame 測試依賴它獨立
-                    // 找得到）。改用一個不帶任何子節點、貼在 tile 正上方的透明 `.overlay`
-                    // 當純測試掛勾——它自己宣告 `.accessibilityElement()` 能穿透祖先的
-                    // `.combine` 單獨曝光，且不是 tile 內容的祖先，不會影響裡面 `Text` 的
-                    // 可查詢性；`.overlay` 內容與被疊加的 view 同尺寸，量到的 frame 就是
-                    // tile 實際渲染框。VoiceOver 朗讀內容不受影響（`Color.clear` 无文字）。
+                    // merge-review R1（`3119a0cc` M1）：這個測試掛勾原本沒有 `#if DEBUG`，
+                    // 會編進 Release build 並改動正式版 a11y tree——`app.otherElements
+                    // ["previewTile0"]` 量得到，代表它是一個穿透了卡片 `.accessibilityElement
+                    // (children: .combine)`（見 `body`）的獨立 accessibility element，VoiceOver
+                    // 使用者會多滑到幾個無 label／無 value／無 trait 的空停留點。比照
+                    // `TapTargetGateScreenName.swift`／`LittleSproutApp.swift` 既有慣例，測試
+                    // 專用的掛勾整段圍 `#if DEBUG`——Release 完全不帶這個 `.overlay`，UI test
+                    // 一律吃 Debug build（`TapTargetGateHarness` 本身也是 `#if DEBUG`），測試
+                    // 照樣找得到。量的是同列 tile 是否為等寬等高正方形（見 `previewThumbnail`
+                    // 的 `.clipped()` 修復註解）需要能個別量到每一格的 `XCUIElement.frame`。
+                    // 卡片外層的 `.accessibilityElement(children: .combine)` 會把整棵子樹合併
+                    // 成一個 VoiceOver 元素，光掛 `.accessibilityIdentifier` 在 tile 本身會被
+                    // 吃掉、量不到（實測撞到）；若改把 tile 自己也標成 `.accessibilityElement()`
+                    // 又會連帶吃掉裡面 `VideoDurationBadge` 的 `Text`（既有徽章 OCR／frame 測試
+                    // 依賴它獨立找得到）。改用一個不帶任何子節點、貼在 tile 正上方的透明
+                    // `.overlay` 當純測試掛勾——它自己宣告 `.accessibilityElement()` 能穿透
+                    // 祖先的 `.combine` 單獨曝光，且不是 tile 內容的祖先，不會影響裡面 `Text`
+                    // 的可查詢性；`.overlay` 內容與被疊加的 view 同尺寸，量到的 frame 就是
+                    // tile 實際渲染框。VoiceOver 朗讀內容不受影響（`Color.clear` 無文字）。
+                    #if DEBUG
                     .overlay(
                         Color.clear
                             .accessibilityElement()
                             .accessibilityIdentifier("previewTile\(index)")
                     )
+                    #endif
             }
         }
     }
