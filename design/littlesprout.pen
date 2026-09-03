@@ -52945,6 +52945,56 @@
       "gap": "$sp-item",
       "children": [
         {
+          "type": "rectangle",
+          "id": "UTLcl",
+          "layoutPosition": "absolute",
+          "x": 90,
+          "y": -18,
+          "name": "Fan Ghost",
+          "enabled": false,
+          "rotation": -3.0000000000000004,
+          "fill": "$print-paper",
+          "width": 165,
+          "height": 50,
+          "stroke": "$paper-edge",
+          "strokeWidth": 1,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 1,
+              "y": 2
+            },
+            "blur": 4
+          }
+        },
+        {
+          "type": "rectangle",
+          "id": "KGh0U",
+          "layoutPosition": "absolute",
+          "x": 108,
+          "y": -11,
+          "name": "Fan Ghost 2",
+          "enabled": false,
+          "rotation": 2,
+          "fill": "$print-paper",
+          "width": 140,
+          "height": 50,
+          "stroke": "$paper-edge",
+          "strokeWidth": 1,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 1,
+              "y": 2
+            },
+            "blur": 4
+          }
+        },
+        {
           "type": "frame",
           "id": "r6cYjT",
           "name": "Photo Print",
@@ -53235,21 +53285,6 @@
               "strokeWidth": 1
             }
           ]
-        },
-        {
-          "type": "rectangle",
-          "id": "UTLcl",
-          "layoutPosition": "absolute",
-          "x": 90,
-          "y": -13,
-          "name": "Fan Ghost",
-          "enabled": false,
-          "rotation": -3.0000000000000004,
-          "fill": "$print-paper",
-          "width": 165,
-          "height": 50,
-          "stroke": "$paper-edge",
-          "strokeWidth": 1
         }
       ]
     },
@@ -89702,6 +89737,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 1",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -89718,7 +89759,8 @@
                       "content": "小安 · 2 歲 3 個月"
                     },
                     "Qjdzx": {
-                      "enabled": false
+                      "enabled": true,
+                      "y": 270
                     },
                     "o5O1GD": {
                       "enabled": true,
@@ -89732,9 +89774,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -89744,6 +89783,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 2",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -89775,9 +89820,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -89787,6 +89829,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 3",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -89806,9 +89854,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -89818,6 +89863,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 4",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -89848,9 +89899,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -89860,6 +89908,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 5",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -89892,9 +89946,6 @@
                     "mTljh": {
                       "enabled": true,
                       "y": 277
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 }
@@ -90119,6 +90170,9 @@
                       "ref": "bhroo",
                       "name": "Blank Print",
                       "descendants": {
+                        "UTLcl": {
+                          "enabled": false
+                        },
                         "s8eO3j": {
                           "fill": "$surface-2"
                         },
@@ -90135,9 +90189,6 @@
                           "enabled": false
                         },
                         "mTljh": {
-                          "enabled": false
-                        },
-                        "UTLcl": {
                           "enabled": false
                         }
                       }
@@ -92026,6 +92077,9 @@
                       "ref": "bhroo",
                       "name": "Blank Print",
                       "descendants": {
+                        "UTLcl": {
+                          "enabled": false
+                        },
                         "s8eO3j": {
                           "fill": "$surface-2"
                         },
@@ -92042,9 +92096,6 @@
                           "enabled": false
                         },
                         "mTljh": {
-                          "enabled": false
-                        },
-                        "UTLcl": {
                           "enabled": false
                         }
                       }
@@ -93831,6 +93882,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 1",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -93847,7 +93904,8 @@
                       "content": "小安 · 2 歲 3 個月"
                     },
                     "Qjdzx": {
-                      "enabled": false
+                      "enabled": true,
+                      "y": 270
                     },
                     "o5O1GD": {
                       "enabled": true,
@@ -93861,9 +93919,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -93873,6 +93928,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 2",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -93904,9 +93965,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -93916,6 +93974,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 3",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -93935,9 +93999,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -93947,6 +94008,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 4",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -93977,9 +94044,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -93989,6 +94053,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 5",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -94021,9 +94091,6 @@
                     "mTljh": {
                       "enabled": true,
                       "y": 277
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 }
@@ -94251,6 +94318,9 @@
                       "ref": "bhroo",
                       "name": "Blank Print",
                       "descendants": {
+                        "UTLcl": {
+                          "enabled": false
+                        },
                         "s8eO3j": {
                           "fill": "$surface-2"
                         },
@@ -94267,9 +94337,6 @@
                           "enabled": false
                         },
                         "mTljh": {
-                          "enabled": false
-                        },
-                        "UTLcl": {
                           "enabled": false
                         }
                       }
@@ -94530,6 +94597,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 1",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -94546,7 +94619,8 @@
                       "content": "小安 · 2 歲 3 個月"
                     },
                     "Qjdzx": {
-                      "enabled": false
+                      "enabled": true,
+                      "y": 452
                     },
                     "o5O1GD": {
                       "enabled": true,
@@ -94560,9 +94634,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -94572,6 +94643,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 2",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -94603,9 +94680,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 }
@@ -95005,6 +95079,14 @@
                           "name": "Card Album 1",
                           "width": 258.5,
                           "descendants": {
+                            "UTLcl": {
+                              "enabled": true,
+                              "width": 124,
+                              "x": 67
+                            },
+                            "KGh0U": {
+                              "enabled": true
+                            },
                             "s8eO3j": {
                               "fill": {
                                 "type": "image",
@@ -95021,8 +95103,9 @@
                               "content": "小安 · 2 歲 3 個月"
                             },
                             "Qjdzx": {
-                              "enabled": false,
-                              "width": 216.5
+                              "enabled": true,
+                              "width": 216.5,
+                              "y": 295
                             },
                             "o5O1GD": {
                               "enabled": true,
@@ -95042,11 +95125,6 @@
                             "mTljh": {
                               "enabled": false,
                               "width": 216.5
-                            },
-                            "UTLcl": {
-                              "enabled": true,
-                              "width": 124,
-                              "x": 67
                             }
                           }
                         },
@@ -95057,6 +95135,14 @@
                           "name": "Card Album 3",
                           "width": 258.5,
                           "descendants": {
+                            "UTLcl": {
+                              "enabled": true,
+                              "width": 124,
+                              "x": 67
+                            },
+                            "KGh0U": {
+                              "enabled": true
+                            },
                             "s8eO3j": {
                               "fill": {
                                 "type": "image",
@@ -95085,11 +95171,6 @@
                             "mTljh": {
                               "enabled": false,
                               "width": 216.5
-                            },
-                            "UTLcl": {
-                              "enabled": true,
-                              "width": 124,
-                              "x": 67
                             }
                           }
                         },
@@ -95100,6 +95181,14 @@
                           "name": "Card Album 5",
                           "width": 258.5,
                           "descendants": {
+                            "UTLcl": {
+                              "enabled": true,
+                              "width": 124,
+                              "x": 67
+                            },
+                            "KGh0U": {
+                              "enabled": true
+                            },
                             "s8eO3j": {
                               "fill": {
                                 "type": "image",
@@ -95139,11 +95228,6 @@
                               "enabled": true,
                               "width": 216.5,
                               "y": 277
-                            },
-                            "UTLcl": {
-                              "enabled": true,
-                              "width": 124,
-                              "x": 67
                             }
                           }
                         }
@@ -95164,6 +95248,14 @@
                           "name": "Card Album 2",
                           "width": 258.5,
                           "descendants": {
+                            "UTLcl": {
+                              "enabled": true,
+                              "width": 124,
+                              "x": 67
+                            },
+                            "KGh0U": {
+                              "enabled": true
+                            },
                             "s8eO3j": {
                               "fill": {
                                 "type": "image",
@@ -95202,11 +95294,6 @@
                             "mTljh": {
                               "enabled": false,
                               "width": 216.5
-                            },
-                            "UTLcl": {
-                              "enabled": true,
-                              "width": 124,
-                              "x": 67
                             }
                           }
                         },
@@ -95217,6 +95304,14 @@
                           "name": "Card Album 4",
                           "width": 258.5,
                           "descendants": {
+                            "UTLcl": {
+                              "enabled": true,
+                              "width": 124,
+                              "x": 67
+                            },
+                            "KGh0U": {
+                              "enabled": true
+                            },
                             "s8eO3j": {
                               "fill": {
                                 "type": "image",
@@ -95254,11 +95349,6 @@
                             "mTljh": {
                               "enabled": false,
                               "width": 216.5
-                            },
-                            "UTLcl": {
-                              "enabled": true,
-                              "width": 124,
-                              "x": 67
                             }
                           }
                         }
@@ -95401,6 +95491,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 1",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -95431,9 +95527,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -95443,6 +95536,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 2",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -95474,9 +95573,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -95486,6 +95582,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 3",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -95505,9 +95607,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -95517,6 +95616,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 4",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -95547,9 +95652,6 @@
                     },
                     "mTljh": {
                       "enabled": false
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 },
@@ -95559,6 +95661,12 @@
                   "ref": "bhroo",
                   "name": "Card Album 5",
                   "descendants": {
+                    "UTLcl": {
+                      "enabled": true
+                    },
+                    "KGh0U": {
+                      "enabled": true
+                    },
                     "s8eO3j": {
                       "fill": {
                         "type": "image",
@@ -95591,9 +95699,6 @@
                     "mTljh": {
                       "enabled": true,
                       "y": 277
-                    },
-                    "UTLcl": {
-                      "enabled": true
                     }
                   }
                 }
