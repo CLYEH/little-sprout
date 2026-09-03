@@ -83,8 +83,13 @@
 #    `--force-unstarted` → 允許移除（worktree remove＋branch -D）；否則照舊略過並印提示。不指名（--all）永不套用。
 #  - 移除前呼叫 `pen-open.sh --status`（整次執行只呼叫一次、快取）：Pen 目前 active 文件落在該 worktree 內 →
 #    拒刪並印處置（LS-119 事故：移掉 worktree 後 Pen 留下幽靈文件，最後只能 SIGKILL 重啟、全部 pencil MCP 斷線）。
-#    --status 讀不到（Pen 沒開／pen CLI 不在 PATH）→ 印警告後視為未開、繼續（否則沒裝 pen 的機器與 CI 永遠
-#    清不了）。盲區：--status 只回報 active 那一份，背景視窗開著同一路徑偵測不到。
+#    --status 讀不到時（R2 m1）：本機沒有 pen CLI（CI）或 Pen 主行程沒在跑 → 視為未開、繼續；有 pen CLI 且 Pen
+#    在跑卻讀不到 → 狀態未知，本次一律不移除（保守拒刪並印處置）。盲區：--status 只回報 active 那一份，背景
+#    視窗開著同一路徑偵測不到。
+#  - R2 m2：探 Pen（首次最多 8 秒）一律放在「刪除前重驗」之前，重驗到 act() 之間只剩審計那一次快速 git status；
+#    尚未開工路徑的重驗補上 has_real_history／is_merged_ref（與 merged 路徑對稱）——探 Pen 期間有人落下第一個
+#    commit，只看 dirty 看不見（commit 後反而乾淨），會被 branch -D 連 reflog 帶走。同票多個未開工 worktree
+#    只查一次 Linear（linear_probe 快取，R2 i2）。
 #
 # exit 0＝掃描／清理完成（無論有無找到項目）；1＝--apply 模式下至少一個動作實際失敗（fail loud）；
 #      2＝參數或環境錯誤（不在 git repo、找不到 origin/main 與 origin/development 兩個 base、
@@ -236,21 +241,38 @@ print_ignored_audit() {  # $1=worktree 路徑 $2=顯示名；列出將隨 worktr
 }
 # LS-141：Pen 目前 active 文件——整次執行只呼叫一次 pen-open.sh --status（pen CLI 每次最多等 8 秒），結果快取在
 # PEN_ACTIVE（空＝讀不到／未開）。路徑經 pwd -P 解成物理路徑，才能與 git worktree list 回報的物理路徑比對。
-PEN_CHECKED=0; PEN_ACTIVE=
+PEN_CHECKED=0; PEN_ACTIVE=; PEN_UNKNOWN=0
 pen_probe() {
   [ "$PEN_CHECKED" -eq 0 ] || return 0
   PEN_CHECKED=1
   local p d
   p=$(bash "${SELF_DIR}/pen-open.sh" --status 2>/dev/null) || p=
   if [ -z "$p" ]; then
-    echo "⚠ cleanup-merged：pen-open.sh --status 讀不到 Pen 目前文件（Pen 沒開／pen CLI 不在 PATH）——視為 Pen 未開著任何 worktree 的 .pen，繼續（LS-141；只看 active 那一份，背景視窗偵測不到）" >&2
+    # R2 m1（merge-review R1）：讀不到時不能一律放行——status 模式只有單次 poll＋8 秒看門狗，Pen 正開著該
+    # worktree 時一次連線抖動就會讓守門整個抵銷（LS-119 重演）。改看「這台機器能不能有 Pen 開著文件」：
+    #   沒有 pen CLI（CI／別人的機器）→ 放行；有 pen CLI 但 Pen 主行程沒在跑（pgrep 樣式同 pen-open.sh:355）
+    #   → 不可能開著任何文件、放行並記一行；有 pen CLI 且 Pen 在跑卻讀不到（未登入／看門狗 kill／連線抖動）
+    #   → 狀態未知，pen_guard 對每個要移除的 worktree 保守拒刪並印處置。
+    if ! command -v "${PEN_BIN:-pen}" >/dev/null 2>&1; then
+      echo "⚠ cleanup-merged：pen-open.sh --status 讀不到、本機沒有 pen CLI——視為 Pen 未開著任何 .pen，繼續（LS-141）" >&2
+    elif ! pgrep -f 'Pen\.app/Contents/MacOS/Pen$' >/dev/null 2>&1; then
+      echo "⚠ cleanup-merged：pen-open.sh --status 讀不到、Pen 主行程沒在跑——視為 Pen 未開著任何 .pen，繼續（LS-141 R2）" >&2
+    else
+      PEN_UNKNOWN=1
+      echo "⚠ cleanup-merged：pen CLI 在 PATH、Pen 在跑，但 pen-open.sh --status 讀不到目前文件（未登入／連線抖動／看門狗逾時）——Pen 狀態未知，本次一律不移除 worktree（LS-141 R2 m1）" >&2
+    fi
     return 0
   fi
   d=$(cd "$(dirname "$p")" 2>/dev/null && pwd -P) && p="${d}/$(basename "$p")"
   PEN_ACTIVE=$p
 }
-pen_guard() {  # $1=worktree 路徑 $2=分支 $3=顯示名；Pen 目前 active 文件落在該 worktree 內 → 記略過、印處置、回 1
+pen_guard() {  # $1=worktree 路徑 $2=分支 $3=顯示名；Pen 狀態未知或 active 文件落在該 worktree 內 → 記略過、印處置、回 1
   pen_probe
+  if [ "$PEN_UNKNOWN" -eq 1 ]; then
+    wt_skipped_pen=$((wt_skipped_pen + 1))
+    OUT_WT="${OUT_WT}  ✗ ${3} ${2}：pen CLI 在 PATH、Pen 在跑，但 --status 讀不到目前文件，保守略過（LS-141 R2 m1）——處置：確認 pen CLI 已登入（pen interactive --app desktop 跑 get_app_state()）、或先 bash scripts/ops/pen-open.sh ${ROOT} 把 Pen 切回主 checkout／關掉 Pen，再重跑本指令"$'\n'
+    return 1
+  fi
   [ -n "$PEN_ACTIVE" ] || return 0
   case "$PEN_ACTIVE" in "$1"/*) ;; *) return 0 ;; esac
   wt_skipped_pen=$((wt_skipped_pen + 1))
@@ -280,6 +302,17 @@ if i.get("identifier") != sys.argv[1]:
 s = i.get("state") or {}
 print("%s %s" % (s.get("type", ""), s.get("name", "")))
 ' "$1"
+}
+# R2 i2（merge-review R1）：同一次執行 FILTER 固定，同票命中多個尚未開工 worktree（LS-141 與 LS-141-r2 並存）
+# 時只查一次——結果存 LINEAR_STATE、回傳值同 linear_state。呼叫端直接呼叫（不包 $(...)，否則快取旗標會被
+# 子 shell 吃掉，同 pen_probe）。
+LINEAR_PROBED=0; LINEAR_STATE=; LINEAR_RC=1
+linear_probe() {  # $1 = LS-<n>
+  if [ "$LINEAR_PROBED" -eq 0 ]; then
+    LINEAR_PROBED=1
+    if LINEAR_STATE=$(linear_state "$1"); then LINEAR_RC=0; else LINEAR_RC=1; fi
+  fi
+  return "$LINEAR_RC"
 }
 last_commit_epoch() { git -C "$ROOT" log -1 --format=%ct "$1" 2>/dev/null || true; }  # $1=commit-ish
 too_recent() {  # $1=commit-ish；true＝最後 commit 距現在 < MIN_AGE 分鐘（M4-b）
@@ -379,6 +412,10 @@ process_wt() {
       OUT_WT="${OUT_WT}  ⏳ ${name}${temp_tag} ${b}：已併入但最後 commit 未滿 ${MIN_AGE} 分鐘，略過（避免誤清在飛續作，--min-age 可調整）"$'\n'
       return
     fi
+    # LS-141：Pen 開著這個 worktree 的 .pen（或狀態未知）→ 拒刪。R2 m2：探 Pen（首次最多等 8 秒）必須在下面
+    # 的重驗**之前**——Pen 狀態不是被競態的對象，先探完再重驗，重驗到 act() 之間只剩審計那一次 git status
+    # （與重驗同級的快速呼叫），M4-c 的「一瞬間」才成立。
+    pen_guard "$w" "$b" "${name}${temp_tag}" || return
     # M4-c：刪除前立即重驗一次（縮小 TOCTOU 窗——初次判定到這裡之間，理論上可能有別的行程
     # 對同一個 worktree 動了手腳；重驗不能完全消除窗口，但把窗口縮到「重驗到 act() 之間」這
     # 一瞬間，比原本「整個掃描過程」小得多）。
@@ -389,8 +426,6 @@ process_wt() {
       OUT_WT="${OUT_WT}  ⚠ ${name}${temp_tag} ${b}：刪除前重驗發現狀態已變化，略過（可能有人正在動這個 worktree）"$'\n'
       return
     fi
-    # LS-141：Pen 開著這個 worktree 的 .pen → 拒刪；否則先列出將一併丟掉的 ignored 產物（審計）再動手。
-    pen_guard "$w" "$b" "${name}${temp_tag}" || return
     print_ignored_audit "$w" "${name}${temp_tag}"
     local ok=1
     if [ "$force_needed" -eq 1 ]; then
@@ -411,7 +446,8 @@ process_wt() {
     if [ -n "$FILTER" ]; then
       if [ "$FORCE_UNSTARTED" -eq 1 ]; then
         why="--force-unstarted"
-      elif st=$(linear_state "$FILTER"); then
+      elif linear_probe "$FILTER"; then
+        st=$LINEAR_STATE
         case "${st%% *}" in
           completed|canceled) why="Linear ${FILTER} 狀態 ${st#* }／${st%% *}" ;;
           *) hint="（Linear ${FILTER} 狀態 ${st#* }／${st%% *}，非 completed／canceled；確定要清請加 --force-unstarted）" ;;
@@ -423,14 +459,17 @@ process_wt() {
       fi
     fi
     if [ -n "$why" ]; then
+      # R2 m2：探 Pen 在重驗之前（理由同 merged 路徑）；重驗與 merged 路徑對稱——探 Pen 那幾秒若有人在這個
+      # worktree 落下第一個 commit，has_real_history 翻成 true、tip 也離開 base；只看 dirty 看不見它（commit 後
+      # worktree 反而是乾淨的），branch -D 會把未推送的 commit 連 reflog 一起帶走（merge-review R1 實跑重現）。
+      pen_guard "$w" "$b" "${name}${temp_tag}" || return
       local dirty2
       dirty2=$(worktree_status "$w")
-      if [ -n "$dirty2" ] && { [ "$FORCE" -ne 1 ] || ! has_only_whitelisted_residue "$dirty2"; }; then
+      if has_real_history "$b" || ! is_merged_ref "$b" || { [ -n "$dirty2" ] && { [ "$FORCE" -ne 1 ] || ! has_only_whitelisted_residue "$dirty2"; }; }; then
         wt_skipped_race=$((wt_skipped_race + 1))
         OUT_WT="${OUT_WT}  ⚠ ${name}${temp_tag} ${b}：刪除前重驗發現狀態已變化，略過（可能有人正在動這個 worktree）"$'\n'
         return
       fi
-      pen_guard "$w" "$b" "${name}${temp_tag}" || return
       print_ignored_audit "$w" "${name}${temp_tag}"
       local ok=1
       if [ "$force_needed" -eq 1 ]; then
