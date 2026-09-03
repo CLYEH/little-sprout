@@ -252,6 +252,7 @@ struct DiaryDatePickerSheet: View {
     }
 }
 
+#if DEBUG
 #Preview("空白") {
     NavigationStack {
         DiaryEditorView(
@@ -260,3 +261,4 @@ struct DiaryDatePickerSheet: View {
         )
     }
 }
+#endif

@@ -271,8 +271,10 @@ struct JoinCodeView: View {
     }
 }
 
+#if DEBUG
 #Preview("空") {
     NavigationStack {
         JoinCodeView(familyStore: .preview(), path: .constant([]))
     }
 }
+#endif

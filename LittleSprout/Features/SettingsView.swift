@@ -101,6 +101,7 @@ struct SettingsView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         SettingsView(
@@ -108,3 +109,4 @@ struct SettingsView: View {
         )
     }
 }
+#endif

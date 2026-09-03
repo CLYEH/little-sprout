@@ -308,6 +308,7 @@ private struct DeleteChildSheet: View {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         EditChildView(
@@ -319,3 +320,4 @@ private struct DeleteChildSheet: View {
         )
     }
 }
+#endif

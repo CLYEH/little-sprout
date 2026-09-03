@@ -150,6 +150,7 @@ private struct FamilyPreviewCard: View {
     }
 }
 
+#if DEBUG
 #Preview("空欄位") {
     NavigationStack {
         CreateFamilyView(familyStore: .preview())
@@ -161,3 +162,4 @@ private struct FamilyPreviewCard: View {
         CreateFamilyView(familyStore: .preview(), initialName: "陳家")
     }
 }
+#endif

@@ -53,6 +53,7 @@ struct PhotoCardView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     VStack(spacing: AppSpacing.item) {
         PhotoCardView(
@@ -72,3 +73,4 @@ struct PhotoCardView: View {
     }
     .padding()
 }
+#endif

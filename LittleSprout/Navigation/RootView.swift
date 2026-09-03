@@ -309,6 +309,7 @@ struct SectionContentView: View {
     }
 }
 
+#if DEBUG
 #Preview("Compact") {
     AuthenticatedRootView(
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
@@ -324,3 +325,4 @@ struct SectionContentView: View {
     )
     .environment(\.horizontalSizeClass, .regular)
 }
+#endif

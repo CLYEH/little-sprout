@@ -173,8 +173,10 @@ struct OTPVerificationView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         OTPVerificationView(email: "grandma@example.com", authStore: .preview()) {}
     }
 }
+#endif

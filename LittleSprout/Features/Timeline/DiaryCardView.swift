@@ -201,6 +201,7 @@ struct DiaryCardView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     DiaryCardView(
         content: DiaryContent(
@@ -230,3 +231,4 @@ struct DiaryCardView: View {
     )
     .padding()
 }
+#endif

@@ -138,6 +138,7 @@ struct AttributionSheet: View {
     }
 }
 
+#if DEBUG
 #Preview {
     AttributionSheetPreviewHost()
 }
@@ -152,3 +153,4 @@ private struct AttributionSheetPreviewHost: View {
             }
     }
 }
+#endif
