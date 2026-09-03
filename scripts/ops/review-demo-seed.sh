@@ -49,6 +49,12 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 usage() { echo "用法：review-demo-seed.sh --target local|prod [--yes]"; }
 
+# F1（merge-review R1）：":133" 要在還沒在 lock 內時把原始參數原封不動 re-exec 進
+# supabase-lock.sh，但下面的解析迴圈會把 "$@" shift 光——先存一份不受影響的副本。
+# bash 3.2 + set -u 下展開可能為空的陣列要用 ${arr[@]+"${arr[@]}"} 這個寫法（PR #122
+# 系列既有慣例，同 supabase-lock.sh 的陣列處理）。
+orig_args=("$@")
+
 target=""
 yes=0
 while [ $# -gt 0 ]; do
@@ -130,7 +136,7 @@ else
   if [ -f "$lock_sh" ]; then
     if ! bash "$lock_sh" --held 2>/dev/null; then
       echo "→ 未在 Supabase lock 內，改經 scripts/ops/supabase-lock.sh 重新執行" >&2
-      exec bash "$lock_sh" -- bash "${BASH_SOURCE[0]}" "$@"
+      exec bash "$lock_sh" -- bash "${BASH_SOURCE[0]}" ${orig_args[@]+"${orig_args[@]}"}
     fi
   else
     echo "⚠ 找不到 ${lock_sh}：未經 lock 直接執行，與其他 worktree 的 supabase 操作可能互踩（LS-70）" >&2
