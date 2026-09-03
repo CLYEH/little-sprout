@@ -48,7 +48,15 @@ let adaptor = AVAssetWriterInputPixelBufferAdaptor(
     ]
 )
 writer.add(input)
-writer.startWriting()
+// F6（merge-review R1）：startWriting() 的回傳值原本被丟棄——它回 false 時（例如輸出路徑
+// 不可寫、codec 不支援），下面的 requestMediaDataWhenReady callback 可能一次都不會觸發，
+// done.wait() 會永遠等不到訊號，把呼叫端（review-demo-seed.sh 的 `dur=$(swift …)`，本身
+// 沒有 timeout）一起卡死。開工前先檢查，失敗就帶著 writer.error 立刻退出。
+guard writer.startWriting() else {
+    let msg = writer.error.map { "\($0)" } ?? "unknown"
+    FileHandle.standardError.write(Data("startWriting 失敗：\(msg)\n".utf8))
+    exit(1)
+}
 writer.startSession(atSourceTime: .zero)
 
 let frameCount = max(2, Int(seconds * Double(fps)))
@@ -64,9 +72,18 @@ input.requestMediaDataWhenReady(on: queue) {
             return
         }
         var pixelBuffer: CVPixelBuffer?
-        guard let pool = adaptor.pixelBufferPool else { continue }
+        // F6（merge-review R1，PLAUSIBLE）：原本兩處失敗都 `continue`——frame 不前進、
+        // while 條件不變，會是永不結束的忙迴圈，done.wait() 跟著永遠等不到訊號（同上）。
+        // pool／buffer 配置失敗在實務上少見，但一旦發生就該立刻 fail loud，不是空轉。
+        guard let pool = adaptor.pixelBufferPool else {
+            FileHandle.standardError.write(Data("pixelBufferPool 為 nil（frame \(frame)）\n".utf8))
+            exit(1)
+        }
         CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pixelBuffer)
-        guard let buffer = pixelBuffer else { continue }
+        guard let buffer = pixelBuffer else {
+            FileHandle.standardError.write(Data("CVPixelBufferPoolCreatePixelBuffer 失敗（frame \(frame)）\n".utf8))
+            exit(1)
+        }
         CVPixelBufferLockBaseAddress(buffer, [])
         if let ptr = CVPixelBufferGetBaseAddress(buffer) {
             let bytesPerRow = CVPixelBufferGetBytesPerRow(buffer)
@@ -79,7 +96,13 @@ input.requestMediaDataWhenReady(on: queue) {
         frame += 1
     }
 }
-done.wait()
+// F6（merge-review R1）：上面兩處已經把已知的忙迴圈成因收斂掉，這裡再加一道保險——
+// 任何沒預期到的卡住（例如 finishWriting 的 completion handler 沒被呼叫）都有個上限，
+// 不會把呼叫端（沒有自己 timeout 的 review-demo-seed.sh）一起無限期卡死。
+if done.wait(timeout: .now() + 30) == .timedOut {
+    FileHandle.standardError.write(Data("影片合成逾時（30 秒）：\(outputPath)\n".utf8))
+    exit(1)
+}
 
 // 量測寫出結果的實際秒數：這支腳本是種子工具、不是 App 端程式碼，不受 App 的
 // async-only lint 慣例約束，用同步 API 圖簡單。
