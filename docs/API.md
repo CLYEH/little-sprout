@@ -1431,7 +1431,7 @@ PR #95 review F1）訂正：這裡原本誤寫成跟 `LS041`–`LS043` 一起歸
 | SELECT | 同家庭任何角色（含 viewer） | 只看得到路徑第一段＝自己所屬家庭的物件；不檢查路徑規約，讀取端不因格式問題被擋 |
 | INSERT | 有上傳權者（owner 恆可；member 看 `can_upload`；viewer 不行） | 路徑必須符合規約且第一段＝自己**當下**所屬的家庭（防跨家庭寫入）；`owner`/`owner_id` 欄位（storage-api 自動填）必須是自己或留空 |
 | UPDATE | 家庭 owner（任意物件）；或上傳者本人（僅限**當下**仍有上傳權時） | 新路徑同樣要通過規約與家庭歸屬檢查（防止「改名搬家」繞過 INSERT 邊界） |
-| DELETE | 同 UPDATE 的判準 | 上傳者可以刪自己上傳的孤兒物件（見 §3 `media` 的「上傳流程順序」）；已軟刪除的 `media` 對應物件**不要**跟著硬刪 Storage 檔案（PLAN §5：軟刪除要留救援路徑） |
+| DELETE | 同 UPDATE 的判準 | 上傳者可以刪自己上傳的孤兒物件（見 §3 `media` 的「上傳流程順序」）；已軟刪除的 `media` 對應物件**不要**跟著硬刪 Storage 檔案（PLAN §5：軟刪除要留救援路徑；30 天後的自動永久清除見下方「自動清除（LS-153）」——那是 service_role／背景排程的路徑，不經這四條 policy） |
 
 - **`can_upload` 被收回後的行為是「當下判斷」不是「上傳當時判斷」**：owner 把某成員的
   `can_upload` 關掉之後，那個人連自己以前上傳的檔案都改／刪不了——這是刻意選的較嚴
@@ -1468,6 +1468,73 @@ PR #95 review F1）訂正：這裡原本誤寫成跟 `LS041`–`LS043` 一起歸
   `durationSeconds` 也是 `NULL`。**相簿列表畫面尚未實作**（LS-126 票文「不做：相簿畫面」）
   ——本節這條規則在契約層面已對它生效，待該畫面實作時比照 `fetchAlbumContents` 的
   `displayPath` 選路寫法即可，不需要另外裁決簽名策略。
+
+### 自動清除（LS-153）
+
+實作於 `supabase/migrations/20260903110908_purge_expired.sql`。承接上方「軟刪除要留
+救援路徑」與 §3 `children` 的「30 天可還原」——這裡是那個窗口關閉之後真正發生的事：
+**系統每日自動、永久清除超過 30 天的軟刪／刪除帳號請求資料**，不是人工作業（隱私
+政策 LS-132 §8 的承諾字面），也不是即時清除（軟刪的當下不會立刻清，永遠先給 30 天
+救援窗）。
+
+**清除規則**：`private.purge_expired(p_now timestamptz default now())`（`private`
+schema，`security definer`，只 `service_role`／`pg_cron` 可呼叫，`authenticated`
+沒有 `EXECUTE`——不是一支 API，不會出現在 §9 的 RPC 對帳清單）逐一硬刪以下六張表裡
+`deleted_at`／`deletion_requested_at` **早於 `p_now - 30 天`**（嚴格早於——剛好 30
+天前不算超過，語意對齊 `set_child_deleted` 的 30 天還原邊界判準）的列：
+
+| 表 | 判準欄位 | 備註 |
+|---|---|---|
+| `diaries`／`albums`／`comments` | `deleted_at` | 一般軟刪／owner 移除都算 |
+| `media` | `deleted_at` | 硬刪前把 `storage_path`／`thumb_path`（非 NULL 者）收進 `public.purge_storage_queue`，交給下方 Edge Function 實際刪除 Storage 物件；`families.storage_used_bytes` **不會**在這裡再扣一次額度——軟刪的當下（`deleted_at` 從 `NULL` 變成非 `NULL` 的那次 UPDATE）就已經被 `private.media_storage_sync()` 扣過，硬刪時這批列的 `deleted_at` 皆非 `NULL`，同一支 trigger 的 DELETE 分支明確只對 `deleted_at is null` 的列計入扣除金額，重複硬刪不會重複扣 |
+| `children` | `deleted_at` | 與 §3「30 天可還原」窗口共用同一個判準；硬刪會 cascade 掉 `diary_children`／`album_children`／`feed_item_children` 裡指向這個孩子的既有標記 |
+| `profiles` | `deletion_requested_at` | 見下方「`profiles` 為什麼要清、`auth.users` 為什麼不動」 |
+
+`families` 本身**沒有**進這張清單——它沒有 `deleted_at` 欄位（從第一天的 schema 就
+是如此），家庭整體刪除（`delete_my_account()`，LS-143，唯一成員情況）是呼叫當下
+**立即** cascade 硬刪，不是先軟刪等 30 天；這比本節的 30 天窗口更嚴格，不需要、也
+不應該被放寬成「等 30 天」。
+
+**`profiles` 為什麼要清、`auth.users` 為什麼不動**（規格分歧，採最保守解，見
+migration 檔頭完整說明）：`delete_my_account()`（LS-143）回傳後，client 依 §4 契約
+必須立即呼叫 Edge Function `delete-account`（LS-151，`service_role`）刪除
+`auth.users`（`profiles` 隨 cascade 一併消失）——正常路徑下 `profiles` 活不到 30
+天。這裡的 30 天硬刪是那條路徑失敗時（client crash、網路斷線、Edge Function 本身
+出錯）的最後防線：隱私政策承諾的是「使用者資料 30 天內清除」，`profiles` 裡的
+`display_name`／`avatar_url` 就是使用者資料，不該因為另一支流程失敗就無限期留著。
+`profiles.id` 對 `auth.users` 是單向 `on delete cascade`（`auth.users` 沒了
+`profiles` 才跟著沒，反過來不成立）——硬刪 `profiles` **不會**刪除 `auth.users`，
+技術後果是一個「`auth.users` 列還在、但沒有對應 `profiles`」的孤兒帳號；這個帳號
+理論上還能用 Apple／Google 登入，但 `20260826005443_profiles_auto_create_trigger.sql`
+的自動建立 trigger 只掛在 `auth.users` 的 **INSERT**（不是每次登入），既有帳號重新
+登入不會自動補回 `profiles`——app 端幾乎所有 RPC／RLS policy 都預期 `profiles`
+存在，這個孤兒帳號實務上會立刻撞到一連串失敗，等同被鎖住，不是「悄悄留著能用」。
+硬刪會 cascade 清掉這個人的 `family_members`／`reactions`／`device_tokens`／
+`join_requests`（`applicant_id`）／`blocked_users`（雙向）列，並把
+`diaries`／`albums`／`comments` 的 `author_id`／`created_by`／`uploaded_by`／
+`deleted_by`、`families.created_by`、`content_reports.reporter_id`、
+`notification_events.actor_id`、`children.deleted_by` 等欄位 set null——與現有
+「作者已離開家庭」的殘影是同一種既有模式，不是新引入的資料形狀。
+
+**執行機制**：`pg_cron` 每日一次（`0 19 * * *`，UTC，≈台北時間凌晨 3 點）呼叫
+`private.purge_expired()`；Storage 物件的實際刪除由 Edge Function
+`supabase/functions/purge-storage`（`service_role`）消化 `public.purge_storage_queue`
+——讀取待刪列、呼叫 Storage Admin API 刪除物件、成功後直接 `DELETE` 該列（純佇列，
+沒有處理狀態欄；刪除失敗的列留著，下次執行自然重試）。`public.purge_storage_queue`
+啟用 RLS、無 policy、只 `grant select, delete` 給 `service_role`（`authenticated`／
+`anon` 兩層皆擋，同 `notification_events` 既有模式）。**已知限制（如實揭露，未經
+測試）**：這支 Edge Function 目前沒有自動化測試覆蓋（本機開發環境沒有建置 Deno
+Edge Runtime 的整合測試，只有人工 code review）；`private.purge_expired()` 本身與
+`purge_storage_queue` 佇列內容則完全由 `supabase/tests/101_purge_expired.sql` 覆蓋
+（29／30／31 天邊界、跨家庭隔離、額度對帳、冪等重跑、與 `set_child_deleted` 還原的
+併發正確性）。`pg_cron` 排程本身是 **fail-soft**：本機開發映像若沒有
+`shared_preload_libraries` 載入 `pg_cron`，`CREATE EXTENSION` 會直接失敗，migration
+把這個情況吞掉只留 NOTICE，不擋 migration chain；正式站部署（`db push`＋Edge
+Function 部署＋排程確認）依 LS-78 授權狀態由 orchestrator 處理，不在本票範圍。
+
+**觀測**：每次執行在 `private.purge_runs`（`private` schema，不經 PostgREST）留一列
+（執行時間、六張表各自清除筆數、Storage 佇列筆數、失敗表數與原因）；每張表的清除各
+自獨立錯誤處理，一張表失敗不影響其他表照常清除。
 
 ---
 
@@ -1671,5 +1738,6 @@ join_requests
 media
 notification_events
 profiles
+purge_storage_queue
 reactions
 -->
