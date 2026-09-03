@@ -6,9 +6,10 @@
 # 帳號、2 個孩子檔案、20 筆 media（18 張照片＋2 支影片，含縮圖三欄與 duration_seconds）、
 # 5 則日記（含多寶貝標記）、留言與愛心反應、一組長期有效的邀請碼。
 #
-# 冪等：所有資料以固定 UUID（見下方常數）＋email 前綴 review-demo@ 標記；每次執行先刪除
-# 同一標記的既有資料（DB 用 family_id 級聯、Storage 用同一組固定路徑批次刪除）再重建，
-# 可重複執行、計數不變。
+# 冪等：所有資料以固定 UUID（見下方常數）＋兩個固定 email 標記；每次執行先刪除同一標記
+# 的既有資料（DB 用 family_id 級聯＋email 精確比對兩個固定帳號、Storage 用同一組固定
+# 路徑批次刪除）再重建，可重複執行、計數不變（merge-review R1 F4：auth.users 清理原本
+# 用 email 前綴比對，prod 執行時有誤刪撞名真實使用者的風險，已收斂成精確比對）。
 #
 # 寫入方式：直接以 postgres／service_role 身分寫 SQL（模式同
 # supabase/tests/00_fixtures.sql），不透過 create_diary_entry／create_comment 等
@@ -59,7 +60,12 @@ target=""
 yes=0
 while [ $# -gt 0 ]; do
   case "$1" in
-    --target) target=${2:-}; shift 2 ;;
+    --target)
+      # F5（merge-review R1）：漏帶值時 ${2:-} 是空字串、shift 2 在只剩 1 個參數時會失敗
+      # （set -uo pipefail 沒有 -e，失敗的 shift 不會中止腳本）——不擋住就是 while 條件
+      # 恆真的無聲無限迴圈。比照 supabase-lock.sh 的 --timeout 分支先驗證有下一個參數。
+      [ -n "${2:-}" ] || { echo "✗ review-demo-seed：--target 缺值" >&2; usage >&2; exit 2; }
+      target=$2; shift 2 ;;
     --yes) yes=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "✗ review-demo-seed：未知參數 $1" >&2; usage >&2; exit 2 ;;
@@ -106,8 +112,8 @@ print_plan() {
   日記：5（含多寶貝標記：其中 2 篇同時標 2 個孩子）
   留言／愛心：各 4
   邀請碼：${INVITE_CODE}（直寫 expires_at=now()+3年，繞過 create_invite RPC 的 30 天上限）
-  冪等：重跑先刪除 family_id=$FAMILY_ID 與 email like 'review-demo%' 的既有資料（DB 級聯＋
-        Storage 依固定路徑批次刪除），計數不因重跑改變
+  冪等：重跑先刪除 family_id=$FAMILY_ID 與 owner/member 兩個固定 email 的既有資料
+        （DB 級聯＋Storage 依固定路徑批次刪除），計數不因重跑改變
 PLAN
 }
 
@@ -157,10 +163,14 @@ command -v swift >/dev/null 2>&1 || { echo "✗ review-demo-seed：找不到 swi
 # host 有 psql（正式站不會借用本機 docker container）。
 db_container="${SUPABASE_DB_CONTAINER:-supabase_db_little-sprout}"
 if command -v psql >/dev/null 2>&1; then
-  run_sql() { psql "$DB_URL" -v ON_ERROR_STOP=1 --no-psqlrc -q -f "$1"; }
+  # F2（merge-review R1）：--single-transaction——沒有它，psql -f 逐句 autocommit，
+  # ON_ERROR_STOP=1 只保證「出錯就停」不保證「出錯就回捲」；seed.sql 檔尾的自我檢查
+  # DO 區塊 raise exception 時，前面的 auth.users／families／children… 早就各自
+  # commit 了，留下半套審核家庭。加這個旗標讓整份 SQL 檔全有或全無。
+  run_sql() { psql "$DB_URL" -v ON_ERROR_STOP=1 --no-psqlrc -q --single-transaction -f "$1"; }
 elif [ "$target" = local ] && docker exec "$db_container" true >/dev/null 2>&1; then
   echo "→ host 沒有 psql，改用 docker exec ${db_container}" >&2
-  run_sql() { docker exec -i "$db_container" psql -U postgres -d postgres -v ON_ERROR_STOP=1 --no-psqlrc -q < "$1"; }
+  run_sql() { docker exec -i "$db_container" psql -U postgres -d postgres -v ON_ERROR_STOP=1 --no-psqlrc -q --single-transaction < "$1"; }
 else
   echo "✗ review-demo-seed：找不到 psql，也連不到 DB container（${db_container}）" >&2
   exit 2
@@ -191,10 +201,17 @@ for id in "${media_ids[@]}"; do
   done
 done
 del_paths_json="${del_paths_json}]"
-curl -sS -X DELETE "$API_URL/storage/v1/object/media" \
+# F3（merge-review R1）：原本不檢查回應——刪除若因 service key 輪替／bucket 名變更／
+# 反向代理擋掉而靜默失敗，DB 端仍會重建完成，接著在第一次上傳撞見既有物件的 409，
+# 錯誤訊息卻指向「上傳失敗」而不是真正的病灶（刪除失敗）。加 -f 讓非 2xx 直接判定失敗，
+# 在正確的一步 fail loud。
+if ! curl -sS -f -X DELETE "$API_URL/storage/v1/object/media" \
   -H "Authorization: Bearer $SERVICE_KEY" -H "apikey: $SERVICE_KEY" \
   -H "Content-Type: application/json" \
-  -d "{\"prefixes\":${del_paths_json}}" -o /dev/null
+  -d "{\"prefixes\":${del_paths_json}}" -o /dev/null; then
+  echo "✗ review-demo-seed：Storage 批次刪除失敗（$API_URL/storage/v1/object/media）——中止，不繼續重建" >&2
+  exit 1
+fi
 echo "  ✓ 批次刪除請求已送出（不存在的路徑會被忽略）"
 
 # ---------------------------------------------------------------------------
@@ -273,9 +290,15 @@ cat > "$sql_file" <<SQL
 
 -- 冪等清理：固定 family_id 級聯掉 family_members／children／media／diaries／
 -- diary_children／comments／reactions／invites／feed_items／feed_item_children；
--- email 前綴 review-demo@ 額外收一次網，涵蓋萬一 family_id 對不上但帳號還在的情況。
+-- 第二句原本用 email like 'review-demo%' 額外收網（涵蓋 family_id 對不上但帳號還在的
+-- 情況），但 --target prod --yes 會真的打正式站——前綴比對沒有網域錨點，任何真實使用者
+-- 若 email 恰好以 review-demo 開頭（如 review-demo@gmail.com）會被一併硬刪，且
+-- profiles/family_members 隨 on delete cascade 連坐（merge-review R1 F4，PLAUSIBLE但
+-- 不可逆）。改成只比對本腳本自己會建立的兩個固定 email——「family_id 對不上但帳號還在」
+-- 的情境已經完整涵蓋（含 handoff 記錄過的 shouldCreateUser 幽靈帳號，它的 email 與這
+-- 兩個固定值完全相同），不需要前綴比對這麼寬。
 delete from public.families where id = '${FAMILY_ID}';
-delete from auth.users where email like 'review-demo%';
+delete from auth.users where email in ('${OWNER_EMAIL}', '${MEMBER_EMAIL}');
 
 -- confirmation_token／recovery_token／email_change_token_new／email_change 四欄在
 -- auth.users 沒有欄位預設值（\d auth.users 實測：其餘 token 類欄位皆有 ''::character
