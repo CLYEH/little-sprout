@@ -271,13 +271,22 @@ cat > "$sql_file" <<SQL
 delete from public.families where id = '${FAMILY_ID}';
 delete from auth.users where email like 'review-demo%';
 
+-- confirmation_token／recovery_token／email_change_token_new／email_change 四欄在
+-- auth.users 沒有欄位預設值（\d auth.users 實測：其餘 token 類欄位皆有 ''::character
+-- varying 預設，唯獨這四個沒有）——supabase/tests/00_fixtures.sql 省略這四欄插入時
+-- 落成 NULL 對 RLS 測試無妨（fixtures 只用 SET request.jwt.claims 偽造身分，從不
+-- 真的打 GoTrue API），但這裡要讓帳號真的能走 Email OTP 登入：GoTrue（Go）用非
+-- nullable 的 string 欄位掃這四欄，掃到 NULL 直接 500（"converting NULL to string is
+-- unsupported"，LS-146 實測在本機 Mailpit 打 /otp 時炸出來）。真正由 GoTrue signup
+-- 建立的使用者這四欄恆為空字串，這裡比照補上，不留 NULL。
 insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at,
-                         raw_app_meta_data, raw_user_meta_data)
+                         raw_app_meta_data, raw_user_meta_data,
+                         confirmation_token, recovery_token, email_change_token_new, email_change)
 values
   ('${OWNER_ID}', '00000000-0000-0000-0000-000000000000',
-   'authenticated', 'authenticated', '${OWNER_EMAIL}', now(), now(), '{}', '{}'),
+   'authenticated', 'authenticated', '${OWNER_EMAIL}', now(), now(), '{}', '{}', '', '', '', ''),
   ('${MEMBER_ID}', '00000000-0000-0000-0000-000000000000',
-   'authenticated', 'authenticated', '${MEMBER_EMAIL}', now(), now(), '{}', '{}');
+   'authenticated', 'authenticated', '${MEMBER_EMAIL}', now(), now(), '{}', '{}', '', '', '', '');
 
 -- auth.users 的 AFTER INSERT trigger 已自動建立 profiles 列（display_name 推導自
 -- email），這裡 on conflict 覆寫成好認的顯示名稱（同 00_fixtures.sql 慣例）。
