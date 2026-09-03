@@ -215,7 +215,10 @@ final class AppErrorTests: XCTestCase {
             .albumChildrenNotEditableByCaller,
             // LS050（LS-143，delete_my_account）：呼叫者是家庭唯一 owner 且家庭還有
             // 其他成員，沒有輸入可換，必須先轉移 owner 身份才能重試，同 LS001 的理由。
-            .ownerMustTransferBeforeAccountDeletion
+            .ownerMustTransferBeforeAccountDeletion,
+            // LS051（LS-151，過渡期擋寫）：帳號已請求刪除，沒有輸入可換、也沒有使用者
+            // 能自己做的「別的事」，只能等 Edge Function 完成刪除。
+            .accountDeletionInProgress
             // LS040（childFamilyImmutable）已於 LS-57 I1 撤碼，family_id 不可變改用裸
             // 42501（同 diaries／albums／comments），不再是 LSErrorCode 的一個 case。
         ]
