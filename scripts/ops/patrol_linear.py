@@ -59,10 +59,15 @@ HOLD_LABEL = "hold:user"
 # ——LS-142 驗收段的流程），只作為 design／ui lane 的開票來源。LS-96 池項 b2993155（P1）的機械修法即此條。
 # R1 F1：不能用裸子字串「需 Design gate」——「非畫面票（不需 Design gate）」（LS-145）、「UI 端（另票，需 Design
 # gate）」（LS-143／149 的 backend 拆票用語）都包含它，會把不需設計稿的票鎖進「待Design」踢出候補。
-DESIGN_GATE_MARK = "**UI 票：需 Design gate**"
-POOL_PRIORITY_RE = re.compile(r"\bP([1-4])\s*·")  # LS-96 池項格式：`Pn ·` 前綴（§5-b「入口收斂」）；只有 P1／P2 列為來源
-POOL_ANNOUNCE_RE = re.compile(r"^\W{0,4}(銷除|銷案)")  # 池內公告（撤銷／已升票）——R1 F2：公告會引述被銷除項的 `P1 ·`，不是池項
-POOL_LIFTED_WORDS = ("銷除", "銷案", "升為", "已升")  # 池內另一則 comment 提到該 id 且含這些字＝已升票／銷案
+# R2 N2：也不能精確比對整串——LS-17 曾寫 `**UI 票：需先過 Design gate**`，漂移即漏擋（fail-open，繞過 design gate）。
+# 折衷：必須在 `**UI 票：需…Design gate**` 粗體內、「需」與「Design gate」之間容忍 ≤6 字（先過／先通過）；「不需」「另票，需」
+# 都不在這個粗體形內，仍不命中。
+DESIGN_GATE_RE = re.compile(r"\*\*UI 票：需.{0,6}Design gate\*\*")
+POOL_PRIORITY_RE = re.compile(r"\bP([1-4])\s*·")  # LS-96 池項格式：`Pn ·`（§5-b「入口收斂」）；body 首個 match
+POOL_ITEM_LINE_RE = re.compile(r"(?m)^\s*(?:[-*]\s*)?P([1-4])\s*·")  # 行首列點項 `- Pn ·`（R2 N1：一則多項取最小級）
+# 池內公告（銷除／銷案／已升票）會引述被銷除項的 `P1 ·`，不是池項（R1 F2 live 62ecf8f1）。R2 N3：不錨 body 開頭（公告以日期／
+# 票號起頭就漏），改看 body 前 2 行有沒有這些字樣；只看前 2 行是避免正文提到「已升票」的真池項被當公告藏掉。
+POOL_ANNOUNCE_RE = re.compile(r"銷除|銷案|已升票")
 BACKEND_KEYWORDS = ("RPC", "RLS", "migration", "schema", "後端", "Supabase", "資料表", "trigger", "policy", "SQL", "Edge Function", "bucket")
 STATE_FILE_REL = os.path.join(".claude", "patrol-state.json")  # 連續空輪計數（gitignored）
 
@@ -358,9 +363,10 @@ def sort_key(issue):
 
 
 def needs_design_gate(issue):
-    """LS-144：票文含正典粗體標記（DESIGN_GATE_MARK）且本身不是設計票——沒有核可稿不得實作，Story 本身也不派。
-    R1 F1：只認粗體全形，裸「需 Design gate」子字串對「不需 Design gate」／「另票，需 Design gate」等否定句無感。"""
-    return DESIGN_GATE_MARK in (issue.get("description") or "") and lane_of(issue) != "lane:design"
+    """LS-144：票文含正典粗體標記（DESIGN_GATE_RE）且本身不是設計票——沒有核可稿不得實作，Story 本身也不派。
+    R1 F1：只認粗體形，裸「需 Design gate」子字串對「不需 Design gate」／「另票，需 Design gate」等否定句無感；
+    R2 N2：粗體內容忍「需先過 Design gate」（LS-17）等變體，精確比對整串會在措辭漂移時漏擋（繞過 design gate）。"""
+    return DESIGN_GATE_RE.search(issue.get("description") or "") is not None and lane_of(issue) != "lane:design"
 
 
 def classify_candidate(issue):
@@ -513,7 +519,8 @@ def design_tickets_for(story_ident, all_issues):
 
 
 def design_gate_sources(open_issues, all_issues):
-    """(a) design／ui：Backlog 中票文標「需 Design gate」、且尚無任何 lane:design 票承接者。"""
+    """(a) design／ui：Backlog 中票文含正典粗體標記 `**UI 票：需 Design gate**`（needs_design_gate()）、且尚無任何
+    lane:design 票承接者。"""
     out = []
     for i in open_issues:
         if i["state"]["name"] not in BACKLOG_STATES or not needs_design_gate(i):
@@ -547,33 +554,42 @@ def backend_sources(open_issues, all_issues):
     return out
 
 
+def is_pool_announcement(comment):
+    """池內公告（銷除／銷案／已升票）：只看 body 前 2 行（R2 N3 不錨開頭；只看前 2 行是避免正文提到字樣的真池項被當公告）。"""
+    return POOL_ANNOUNCE_RE.search("\n".join((comment.get("body") or "").splitlines()[:2])) is not None
+
+
 def pool_sources(comments, all_issues):
-    """(b) harness：LS-96 池項 comment 含 `P1 ·`／`P2 ·` 前綴、且尚未升票者。「已升票」＝任一票（open 或
-    已結案）的標題／票文含該 comment id 前 8 碼（agent 慣寫的引用形式），或池內另一則 comment 提到該前綴
-    且含「銷除／銷案／升為／已升」。P1 排前、同級依 comment 建立時間。"""
+    """(b) harness：LS-96 池項 comment 等級為 P1／P2、且尚未升票者。等級＝body 首個 `Pn ·` 與各行首列點
+    `- Pn ·` 的最小級（R2 N1：live 163 則中 8 則是一則多項混級，如 `- P3 ·` 後接 `- P2 ·`，取最小級才不會把真 P2
+    藏掉；P3 池項文中段引用「P1 ·」既非首個 match 也不在行首，不升級）。公告（is_pool_announcement()：前 2 行含
+    「銷除／銷案／已升票」）整則跳過。「已升票」＝任一票（open 或已結案）的標題／票文含該 comment id 前 8 碼（agent
+    慣寫的引用形式），或池內某則**公告**提到該前綴——R3：只有公告能銷除別則；非公告的池項在正文提到別則 id 加
+    「銷案」字樣（live `bcb97555` 的更正文提到 `ca993eba`／`d8634a08`）不算升票，否則真 P2 會被順帶藏掉。
+    P1 排前、同級依 comment 建立時間。"""
     texts = [(i.get("title") or "") + "\n" + (i.get("description") or "") for i in all_issues]
     out = []
     for c in comments:
         body = c.get("body") or ""
-        if POOL_ANNOUNCE_RE.match(body):
-            continue  # R1 F2：「銷除／銷案」公告自己引述了 `P1 ·`，不能被當成未升票的池項（live 62ecf8f1 實例）
+        if is_pool_announcement(c):
+            continue  # R1 F2／R2 N3：公告自己引述了 `P1 ·`，不能被當成未升票的池項（live 62ecf8f1 實例）
         m = POOL_PRIORITY_RE.search(body)
         prefix = (c.get("id") or "")[:8]
-        # 取 body 第一個 `Pn ·` 決定等級——P3 池項中段引用「P1 ·」不得被升級成 P1（R1 F2 同類）；代價是一則多項且
-        # 混級的 comment 以第一項為準（後段的 P2 會被藏起來；池內慣例一則一級，混級少見，記入 LS-96）。
-        if not m or m.group(1) not in ("1", "2") or len(prefix) < 8:
+        if not m or len(prefix) < 8:
+            continue
+        # R2 N1：等級＝首個 match（單項慣例「入池 …：P1 · …」不在行首）與各行首列點的最小級。
+        level = min([int(m.group(1))] + [int(x) for x in POOL_ITEM_LINE_RE.findall(body)])
+        if level not in (1, 2):
             continue
         if any(prefix in t for t in texts):
             continue
-        if any(
-            o is not c and prefix in (o.get("body") or "") and any(w in (o.get("body") or "") for w in POOL_LIFTED_WORDS)
-            for o in comments
-        ):
-            continue
-        snippet = " ".join(body[m.end():].split())[:60]
+        if any(o is not c and is_pool_announcement(o) and prefix in (o.get("body") or "") for o in comments):
+            continue  # R3：只有公告能銷除別則——非公告池項正文提到別則 id＋「銷案」字樣不算（live bcb97555 誤藏 2 條真 P2）
+        item = re.search(r"\bP%d\s*·" % level, body)  # 摘要取最小級那一項的文字
+        snippet = " ".join(body[item.end():].split())[:60]
         out.append({
             "id": "%s#%s" % (SKIP_ISSUE, prefix), "title": snippet,
-            "why": "P%s 池項尚未升票" % m.group(1), "_sort": (int(m.group(1)), parse_iso(c.get("createdAt"))),
+            "why": "P%d 池項尚未升票" % level, "_sort": (level, parse_iso(c.get("createdAt"))),
         })
     out.sort(key=lambda s: s["_sort"])
     for s in out:
