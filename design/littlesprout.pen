@@ -52942,6 +52942,7 @@
       "reusable": true,
       "width": 345,
       "layout": "vertical",
+      "gap": "$sp-label",
       "children": [
         {
           "type": "frame",
@@ -53202,6 +53203,92 @@
                   "geometry": "M26 0 L0 26"
                 }
               }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "lcmj2",
+          "x": 0,
+          "y": 0,
+          "name": "Signature",
+          "enabled": false,
+          "width": "fill_container(0)",
+          "gap": "$sp-tight",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "zWfkA",
+              "name": "Who Group",
+              "gap": "$sp-tight",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "L8f8Z6",
+                  "name": "Child Icon",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "baby",
+                  "library": "lucide",
+                  "fill": "$print-ink-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "B0Gasa",
+                  "name": "Name",
+                  "fill": "$print-ink",
+                  "content": "小安",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "diPBd",
+              "name": "Age Group",
+              "gap": "$sp-tight",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "H6S5G",
+                  "name": "Sep",
+                  "fill": "$print-ink-secondary",
+                  "content": " · ",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "IqXTp",
+                  "name": "Age",
+                  "fill": "$print-ink-secondary",
+                  "content": "2 歲 3 個月",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "enuHX",
+              "x": 0,
+              "y": 0,
+              "name": "Multi Caption",
+              "enabled": false,
+              "fill": "$print-ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container(0)",
+              "content": "小安 2 歲 3 個月、小明 8 個月",
+              "fontFamily": "$font",
+              "fontSize": "$fs-note",
+              "fontWeight": "600"
             }
           ]
         }
@@ -89542,6 +89629,1884 @@
                   "fontWeight": "normal"
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "puHZ5",
+      "x": 4709,
+      "y": 785,
+      "name": "LS-142 / 14 相簿 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "MXKbF",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "FqE7M",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "mmWI0",
+              "name": "Header Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ys0kj",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "相簿",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "id": "SFi6h",
+                  "type": "ref",
+                  "ref": "zy3Ps",
+                  "name": "Create Album Button",
+                  "descendants": {
+                    "lzBgm": {
+                      "content": "新增相簿"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zYLzt",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "D0V64",
+              "name": "Album List",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "id": "W04XN7",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 1",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    "MIxHp": {
+                      "content": "上禮拜的動物園一日遊 · 12 張相片"
+                    },
+                    "lcmj2": {
+                      "enabled": true
+                    },
+                    "B0Gasa": {
+                      "content": "小安"
+                    },
+                    "IqXTp": {
+                      "content": "2 歲 3 個月"
+                    }
+                  }
+                },
+                {
+                  "id": "RUOL4",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 2",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    "MIxHp": {
+                      "content": "阿公阿嬤家過年 · 34 張相片"
+                    },
+                    "lcmj2": {
+                      "enabled": true
+                    },
+                    "zWfkA": {
+                      "enabled": false
+                    },
+                    "diPBd": {
+                      "enabled": false
+                    },
+                    "enuHX": {
+                      "enabled": true,
+                      "content": "小安 2 歲 3 個月、小明 8 個月"
+                    }
+                  }
+                },
+                {
+                  "id": "yoxoz",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 3",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    "MIxHp": {
+                      "content": "海邊戲水 · 8 張相片"
+                    }
+                  }
+                },
+                {
+                  "id": "ShZ7W",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 4",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    "MIxHp": {
+                      "content": "第一次騎腳踏車 · 5 張相片"
+                    },
+                    "lcmj2": {
+                      "enabled": true
+                    },
+                    "B0Gasa": {
+                      "content": "小軒"
+                    },
+                    "IqXTp": {
+                      "content": "8 個月"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "g0Nub8",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "N7vniI",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "wTMlo",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 754,
+          "descendants": {
+            "ofQi3": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "OTQOw": {
+              "fill": "$text-secondary",
+              "width": 26,
+              "height": 26
+            },
+            "tex0O": {
+              "fill": "$surface",
+              "stroke": "$control-line",
+              "strokeWidth": 1.5,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 1
+                },
+                "blur": 3
+              }
+            },
+            "PcO8y": {
+              "fill": "$text-primary",
+              "width": 32,
+              "height": 32
+            },
+            "ASYTp": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "tld9r": {
+              "fill": "$text-secondary",
+              "width": 26,
+              "height": 26
+            },
+            "emlAT": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "aOco6": {
+              "fill": "$text-secondary",
+              "width": 26,
+              "height": 26
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "LTDYH",
+      "x": 8004,
+      "y": 785,
+      "name": "LS-142 / 14b 相簿 · 空狀態",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "uYyQL",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "oyZbS",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "l7X7H",
+              "name": "Header Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "lAKLR",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "相簿",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "id": "jhYyt",
+                  "type": "ref",
+                  "ref": "zy3Ps",
+                  "name": "Create Album Button",
+                  "descendants": {
+                    "lzBgm": {
+                      "content": "新增相簿"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TKV3C",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "eMi85",
+              "name": "Empty State",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "ZHzy5",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Blank Print",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": "$surface-2"
+                    },
+                    "IXmLN": {
+                      "justifyContent": "center"
+                    },
+                    "MIxHp": {
+                      "content": " "
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "AFH1F",
+                  "name": "Empty Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "EN5gx",
+                      "name": "Empty Heading",
+                      "fill": "$text-primary",
+                      "content": "還沒有相簿",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "pL21O",
+                      "name": "Empty Body",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "點右上角的「＋新增相簿」建立第一本相簿，開始整理照片。",
+                      "lineHeight": 1.5,
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Z0Zpm",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "V9CrW",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "v4dw1",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 754,
+          "descendants": {
+            "ofQi3": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "OTQOw": {
+              "fill": "$text-secondary",
+              "width": 26,
+              "height": 26
+            },
+            "tex0O": {
+              "fill": "$surface",
+              "stroke": "$control-line",
+              "strokeWidth": 1.5,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 1
+                },
+                "blur": 3
+              }
+            },
+            "PcO8y": {
+              "fill": "$text-primary",
+              "width": 32,
+              "height": 32
+            },
+            "ASYTp": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "tld9r": {
+              "fill": "$text-secondary",
+              "width": 26,
+              "height": 26
+            },
+            "emlAT": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "aOco6": {
+              "fill": "$text-secondary",
+              "width": 26,
+              "height": 26
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "nN63C",
+      "x": 8477,
+      "y": 785,
+      "name": "LS-142 / 14 相簿 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "G9tvR",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "ROObd",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "iMIpN",
+              "name": "Header Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Iqp28",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "相簿",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "id": "sBsPF",
+                  "type": "ref",
+                  "ref": "zy3Ps",
+                  "name": "Create Album Button",
+                  "descendants": {
+                    "lzBgm": {
+                      "content": "新增相簿"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lfF2U",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "RGIXg",
+              "name": "Album List",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "id": "ny2th",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 1",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    "MIxHp": {
+                      "content": "上禮拜的動物園一日遊 · 12 張相片"
+                    },
+                    "lcmj2": {
+                      "enabled": true
+                    },
+                    "B0Gasa": {
+                      "content": "小安"
+                    },
+                    "IqXTp": {
+                      "content": "2 歲 3 個月"
+                    }
+                  }
+                },
+                {
+                  "id": "YqoRt",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 2",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    "MIxHp": {
+                      "content": "阿公阿嬤家過年 · 34 張相片"
+                    },
+                    "lcmj2": {
+                      "enabled": true
+                    },
+                    "zWfkA": {
+                      "enabled": false
+                    },
+                    "diPBd": {
+                      "enabled": false
+                    },
+                    "enuHX": {
+                      "enabled": true,
+                      "content": "小安 2 歲 3 個月、小明 8 個月"
+                    }
+                  }
+                },
+                {
+                  "id": "U60UG",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 3",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    "MIxHp": {
+                      "content": "海邊戲水 · 8 張相片"
+                    }
+                  }
+                },
+                {
+                  "id": "FMndg",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 4",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    "MIxHp": {
+                      "content": "第一次騎腳踏車 · 5 張相片"
+                    },
+                    "lcmj2": {
+                      "enabled": true
+                    },
+                    "B0Gasa": {
+                      "content": "小軒"
+                    },
+                    "IqXTp": {
+                      "content": "8 個月"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "jqQxU",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "C958X",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "WclMd",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 754,
+          "descendants": {
+            "ofQi3": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "OTQOw": {
+              "fill": "$text-secondary",
+              "width": 26,
+              "height": 26
+            },
+            "tex0O": {
+              "fill": "$surface",
+              "stroke": "$control-line",
+              "strokeWidth": 1.5,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 1
+                },
+                "blur": 3
+              }
+            },
+            "PcO8y": {
+              "fill": "$text-primary",
+              "width": 32,
+              "height": 32
+            },
+            "ASYTp": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "tld9r": {
+              "fill": "$text-secondary",
+              "width": 26,
+              "height": 26
+            },
+            "emlAT": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "aOco6": {
+              "fill": "$text-secondary",
+              "width": 26,
+              "height": 26
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "pDk7B",
+      "x": 8950,
+      "y": 785,
+      "name": "LS-142 / 14b 相簿 · 空狀態 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "kYEge",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "MEoCu",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Z23D2R",
+              "name": "Header Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "eWqvL",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "相簿",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "id": "aexTn",
+                  "type": "ref",
+                  "ref": "zy3Ps",
+                  "name": "Create Album Button",
+                  "descendants": {
+                    "lzBgm": {
+                      "content": "新增相簿"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "KWCvg",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "o9w84",
+              "name": "Empty State",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "w7cZDI",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Blank Print",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": "$surface-2"
+                    },
+                    "IXmLN": {
+                      "justifyContent": "center"
+                    },
+                    "MIxHp": {
+                      "content": " "
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "U78fI",
+                  "name": "Empty Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "PXoMp",
+                      "name": "Empty Heading",
+                      "fill": "$text-primary",
+                      "content": "還沒有相簿",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "bqTRw",
+                      "name": "Empty Body",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "點右上角的「＋新增相簿」建立第一本相簿，開始整理照片。",
+                      "lineHeight": 1.5,
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "AUxaw",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "f0GwMm",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "FQb5v",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 754,
+          "descendants": {
+            "ofQi3": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "OTQOw": {
+              "fill": "$text-secondary",
+              "width": 26,
+              "height": 26
+            },
+            "tex0O": {
+              "fill": "$surface",
+              "stroke": "$control-line",
+              "strokeWidth": 1.5,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 1
+                },
+                "blur": 3
+              }
+            },
+            "PcO8y": {
+              "fill": "$text-primary",
+              "width": 32,
+              "height": 32
+            },
+            "ASYTp": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "tld9r": {
+              "fill": "$text-secondary",
+              "width": 26,
+              "height": 26
+            },
+            "emlAT": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "aOco6": {
+              "fill": "$text-secondary",
+              "width": 26,
+              "height": 26
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "f3tE3",
+      "x": 9423,
+      "y": 785,
+      "name": "A11y / 14 相簿 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1500,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "aHDLB",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "TNpE9",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Us8m0",
+              "name": "Header Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "rR6Gc",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "相簿",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "id": "NaDqi",
+                  "type": "ref",
+                  "ref": "zy3Ps",
+                  "name": "Create Album Button",
+                  "descendants": {
+                    "lzBgm": {
+                      "content": "新增相簿"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "z3y47U",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "pP4G4",
+              "name": "Album List",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "id": "vvrQ3",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 1",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    "MIxHp": {
+                      "content": "上禮拜的動物園一日遊 · 12 張相片"
+                    },
+                    "lcmj2": {
+                      "enabled": true
+                    },
+                    "B0Gasa": {
+                      "content": "小安"
+                    },
+                    "IqXTp": {
+                      "content": "2 歲 3 個月"
+                    }
+                  }
+                },
+                {
+                  "id": "f2Dm0i",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 2",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    "MIxHp": {
+                      "content": "阿公阿嬤家過年 · 34 張相片"
+                    },
+                    "lcmj2": {
+                      "enabled": true
+                    },
+                    "zWfkA": {
+                      "enabled": false
+                    },
+                    "diPBd": {
+                      "enabled": false
+                    },
+                    "enuHX": {
+                      "enabled": true,
+                      "content": "小安 2 歲 3 個月、小明 8 個月"
+                    }
+                  }
+                },
+                {
+                  "id": "X410VQ",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 3",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    "MIxHp": {
+                      "content": "海邊戲水 · 8 張相片"
+                    }
+                  }
+                },
+                {
+                  "id": "iAktz",
+                  "type": "ref",
+                  "ref": "bhroo",
+                  "name": "Card Album 4",
+                  "descendants": {
+                    "s8eO3j": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                        "mode": "fill"
+                      }
+                    },
+                    "MIxHp": {
+                      "content": "第一次騎腳踏車 · 5 張相片"
+                    },
+                    "lcmj2": {
+                      "enabled": true
+                    },
+                    "B0Gasa": {
+                      "content": "小軒"
+                    },
+                    "IqXTp": {
+                      "content": "8 個月"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "n7H9C",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "PhGhk",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "EZ0Rf",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 1378,
+          "width": 361,
+          "height": 88,
+          "descendants": {
+            "ofQi3": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "OTQOw": {
+              "fill": "$text-secondary",
+              "width": 40,
+              "height": 40
+            },
+            "tex0O": {
+              "fill": "$surface",
+              "stroke": "$control-line",
+              "strokeWidth": 1.5,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 1
+                },
+                "blur": 3
+              }
+            },
+            "PcO8y": {
+              "fill": "$text-primary",
+              "width": 48,
+              "height": 48
+            },
+            "ASYTp": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "tld9r": {
+              "fill": "$text-secondary",
+              "width": 40,
+              "height": 40
+            },
+            "emlAT": {
+              "fill": "$surface-2",
+              "stroke": "$surface-2",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow"
+              }
+            },
+            "aOco6": {
+              "fill": "$text-secondary",
+              "width": 40,
+              "height": 40
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "qIUzR",
+      "x": 9896,
+      "y": 785,
+      "name": "LS-142 / 14-iPad 相簿 (iPad 11\")",
+      "clip": true,
+      "width": 834,
+      "height": 1194,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 0.8009592326139089,
+          "height": 0.9631490787269682
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.06594724220623502,
+          "y": 0.01423785594639866
+        }
+      },
+      "cornerRadius": 28,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "iOSji",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "g25H6N",
+          "name": "Split",
+          "width": "fill_container",
+          "height": "fill_container",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Z4g0dx",
+              "name": "Nav Sidebar",
+              "width": 220,
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-tight",
+              "padding": [
+                "$screen-pad-lg",
+                "$sp-item"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "E4MJJB",
+                  "name": "Nav Item",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-tap",
+                    "$sp-group"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "XeYmg",
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "gallery-vertical",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "yUf23",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "時間軸",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "WunYG",
+                  "name": "Nav Item",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-tap",
+                    "$sp-group"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "XigOk",
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "images",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "q6j32N",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "相簿",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "W2c8in",
+                  "name": "Nav Item",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-tap",
+                    "$sp-group"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "SsYIt",
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "baby",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "YLBLB",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "寶貝",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "G7Zz76",
+                  "name": "Nav Item",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-tap",
+                    "$sp-group"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "YVipI",
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "settings",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "v7YzLY",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "設定",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "IGsgn",
+              "name": "Divider",
+              "fill": "$border",
+              "width": 1,
+              "height": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "vIBqQ",
+              "name": "Content Pane",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$screen-pad-lg",
+                "$screen-pad-lg",
+                0,
+                "$screen-pad-lg"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "rqExg",
+                  "name": "Header Row",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Qymyb",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "相簿",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "id": "qc1AE",
+                      "type": "ref",
+                      "ref": "zy3Ps",
+                      "name": "Create Album Button",
+                      "descendants": {
+                        "lzBgm": {
+                          "content": "新增相簿"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "w9A8wP",
+                  "name": "Spacer Section",
+                  "width": "fill_container",
+                  "height": 44
+                },
+                {
+                  "type": "frame",
+                  "id": "iZ79V",
+                  "name": "Album List",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "id": "oMcWz",
+                      "type": "ref",
+                      "ref": "bhroo",
+                      "name": "Card Album 1",
+                      "descendants": {
+                        "s8eO3j": {
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
+                        "MIxHp": {
+                          "content": "上禮拜的動物園一日遊 · 12 張相片"
+                        },
+                        "lcmj2": {
+                          "enabled": true
+                        },
+                        "B0Gasa": {
+                          "content": "小安"
+                        },
+                        "IqXTp": {
+                          "content": "2 歲 3 個月"
+                        }
+                      }
+                    },
+                    {
+                      "id": "W6Vito",
+                      "type": "ref",
+                      "ref": "bhroo",
+                      "name": "Card Album 2",
+                      "descendants": {
+                        "s8eO3j": {
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
+                        "MIxHp": {
+                          "content": "阿公阿嬤家過年 · 34 張相片"
+                        },
+                        "lcmj2": {
+                          "enabled": true
+                        },
+                        "zWfkA": {
+                          "enabled": false
+                        },
+                        "diPBd": {
+                          "enabled": false
+                        },
+                        "enuHX": {
+                          "enabled": true,
+                          "content": "小安 2 歲 3 個月、小明 8 個月"
+                        }
+                      }
+                    },
+                    {
+                      "id": "U0SpN",
+                      "type": "ref",
+                      "ref": "bhroo",
+                      "name": "Card Album 3",
+                      "descendants": {
+                        "s8eO3j": {
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
+                        "MIxHp": {
+                          "content": "海邊戲水 · 8 張相片"
+                        }
+                      }
+                    },
+                    {
+                      "id": "nDK2L",
+                      "type": "ref",
+                      "ref": "bhroo",
+                      "name": "Card Album 4",
+                      "descendants": {
+                        "s8eO3j": {
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
+                        "MIxHp": {
+                          "content": "第一次騎腳踏車 · 5 張相片"
+                        },
+                        "lcmj2": {
+                          "enabled": true
+                        },
+                        "B0Gasa": {
+                          "content": "小軒"
+                        },
+                        "IqXTp": {
+                          "content": "8 個月"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "oysxm",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "l4Klw",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 200,
+              "height": 5
             }
           ]
         }
