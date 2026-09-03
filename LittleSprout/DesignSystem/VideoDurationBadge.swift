@@ -18,6 +18,15 @@ import SwiftUI
 ///   （圖示與文字間距）、`cornerRadius: "$radius-full"`（＝ `Capsule()`）。
 /// - `Play Icon` 12×12、`Duration Label` `fontSize: 12`／`fontWeight: 700`。
 ///
+/// merge-review `add3f2c1` M1（深色模式，R2 新引入的回歸）：底色曾經寫成
+/// `Color.lsTextPrimary.opacity(0.75)`——`text-primary` 是**會隨深色模式翻轉**的語意
+/// token（Any `#2B141C` 深墨 → Dark `#F6E3E5` 近白），但前景 `Color.lsOnPhoto` 是
+/// universal `#FBEBEC`（`on-photo.colorset` 沒有 dark 變體，見 `ColorTokens.swift` 檔頭
+/// 註解「畫在照片上的東西不該跟著外觀翻轉」）——深色模式下變成「近白字疊近白底」，對比
+/// 約 1.05:1，實質不可讀。改用 `Color.lsPrintInk`：`print-ink.colorset` 同樣是 universal
+/// `#2B141C`（與稿面字面值 `#2B141CBF` 同色），且**沒有 dark 變體**，跟 `on-photo` 是同一條
+/// 「畫在照片上、不隨外觀翻轉」規則的一對——深色模式下背景仍是深墨、對比不變。
+///
 /// fix/LS-130-video-badge-fallback：從 `PhotoCardView` 抽成共用元件，讓 `DiaryCardView`
 /// 的附照預覽縮圖也能用同一套樣式——修 QA R2 FAIL（`a999c9af`）：無縮圖舊影片在時間軸日記卡
 /// 的附照預覽完全沒有任何徽章。R2（`443ec21a`）：原本沿用 `.appFont(.note)`（17pt，會隨
@@ -44,7 +53,7 @@ struct VideoDurationBadge: View {
         .foregroundStyle(Color.lsOnPhoto)
         .padding(.horizontal, AppSpacing.tight)
         .padding(.vertical, Self.verticalPadding)
-        .background(Color.lsTextPrimary.opacity(0.75), in: Capsule())
+        .background(Color.lsPrintInk.opacity(0.75), in: Capsule())
         // R2 二輪自測發現：貼在 ~99pt 的日記卡預覽格時，就算 12pt 也會被外層
         // `HStack { badge; Spacer(minLength: 0) }` 的寬度提案擠壓、`Text` 用 `.lineLimit(1)`
         // 的預設收縮行為把「影片 12:34」截斷成「影片 12:…」（accessibility value 仍是完整

@@ -15,16 +15,29 @@ struct DiaryCardView: View {
     let timelineStore: TimelineStore
 
     /// merge-review `443ec21a` i2（既有 LS-126 幾何缺陷，本輪順手修——同一 surface，QA 會
-    /// 撞到）：`previewPhotosRow` 實際渲染出的寬度。`HStack` 內每格疊 `.frame(maxWidth:
-    /// .infinity)` ＋ `.aspectRatio(1, contentMode: .fit)` 在無界高度提案下不會真的把格子
-    /// 壓成正方形（`.aspectRatio` 拿不到明確的寬度提案可以「fit」），量測證據：日記卡貼到
-    /// 螢幕右緣、格子 146.7×110pt 而非稿面規格的 ~99×99pt 正方。改成量實際寬度後
-    /// 顯式算出每格的邊長（同 `DiaryDetailView.photoWallWidth` 的既有量寬手法），不再靠
-    /// `.aspectRatio` 自己「猜」。初始值用螢幕寬扣掉時間軸版心（`screenPad`）與卡片自身
-    /// padding（`insetCard`）估一個合理值，避免第一幀量到 0 而整排塌縮——`GeometryReader`
-    /// 量到真實寬度後立刻覆蓋。
-    @State private var previewPhotosRowWidth: CGFloat = UIScreen.main.bounds.width
-        - 2 * AppSpacing.screenPad - 2 * AppSpacing.insetCard
+    /// 撞到）：`previewPhotosRow` 真正可用的內容寬（已扣掉 `insetCard` 左右 padding），由
+    /// **呼叫端（`TimelineView`）算好傳進來**，不是這裡自己用 `GeometryReader` 猜。
+    ///
+    /// merge-review R3（`add3f2c1` m1）：原本在這裡用 `GeometryReader` 自我量寬的三版寫法
+    /// （掛在 `previewPhotosRow` 自己身上／掛在外層 `.frame(maxWidth: .infinity)` 之後／
+    /// 探針當 `VStack` 直接子節點）**全部實測失敗**——用 debug 埋樁＋像素量測逐一驗證，三版
+    /// 量到的都是螢幕寬估計值（iPad 上約 944pt，即使外層已經用 `.frame(width:)` 固定成
+    /// 460pt 也一樣），不是外層真正提供的寬度。根因：`previewPhotosRow` 內每格已經有
+    /// `previewTileSize` 算出的固定 `.frame(width:)`，一旦 `previewTileSize` 用了錯誤的
+    /// （過大的）初始估計值，`previewPhotosRow` 的**理想寬度**（HStack 3 格固定寬相加）
+    /// 會遠超外層真正可用的空間——`.frame(maxWidth: .infinity)` 沒有實際上限（`.infinity`），
+    /// 子節點理想寬度一旦超過上層提案就會把整條鏈往上撐大，任何掛在同一棵子樹裡的
+    /// `GeometryReader`（不管是 `.background()`／`.overlay()`，或是 `VStack` 的另一個直接
+    /// 子節點）量到的都是這個被撐大後的值，不是外層真正的提案——這不是「自我參照」那麼窄
+    /// 的問題，是「同一個 `VStack` 裡有一個會失控膨脹的手足節點，量測會被它一起帶歪」。
+    ///
+    /// 唯一乾淨的解法：換到**外部量測、往下傳參數**——`TimelineView.feedContentWidth`
+    /// （量整個 feed 內容區，不受任何單一卡片內部狀態影響）算出每欄實際可用寬，直接當
+    /// `previewRowWidth` 傳進來；這裡完全不含 `GeometryReader`、不含任何會自我膨脹的
+    /// `@State`，`previewTileSize` 是這個外部參數的純函式，沒有循環依賴可言。已在 iPhone
+    /// （單欄）與 iPad（`LazyVGrid` 兩欄，用 harness 暫時套 `.frame(width:)` 模擬窄欄格）
+    /// 模擬器像素量測驗證：兩種情境量到的 tile 邊長都正確跟著外層容器縮放。
+    let previewRowWidth: CGFloat
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.group) {
@@ -58,24 +71,16 @@ struct DiaryCardView: View {
                     .frame(width: previewTileSize, height: previewTileSize)
             }
         }
-        // merge-review `443ec21a` i2：量實際渲染寬度，見 `previewPhotosRowWidth` 文件註解
-        // ——同 `DiaryDetailView.compactLayout` 量 `photoWallWidth` 的既有手法，`.background`
-        // 掛在 `.padding` 之前（這裡沒有額外 padding，`HStack` 本身就是要量的寬度）。
-        .background(
-            GeometryReader { proxy in
-                Color.clear.onAppear { previewPhotosRowWidth = proxy.size.width }
-                    .onChange(of: proxy.size.width) { _, newValue in previewPhotosRowWidth = newValue }
-            }
-        )
     }
 
-    /// 每格正方形邊長——用量到的實際列寬反推，不再靠 `.aspectRatio(1, contentMode: .fit)`
-    /// 在 `HStack` 無界高度提案下「猜」（見 `previewPhotosRowWidth` 文件註解）。
+    /// 每格正方形邊長——用呼叫端算好傳進來的 `previewRowWidth` 反推，不再靠
+    /// `.aspectRatio(1, contentMode: .fit)` 在 `HStack` 無界高度提案下「猜」，也不在這裡
+    /// 用 `GeometryReader` 自我量寬（見 `previewRowWidth` 文件註解）。
     private var previewTileSize: CGFloat {
         let count = content.previewPhotos.count
         guard count > 0 else { return 0 }
         let totalGap = AppSpacing.label * CGFloat(max(0, count - 1))
-        return max(0, (previewPhotosRowWidth - totalGap) / CGFloat(count))
+        return max(0, (previewRowWidth - totalGap) / CGFloat(count))
     }
 
     @ViewBuilder
@@ -175,7 +180,8 @@ struct DiaryCardView: View {
         taggedChildren: [
             Child(id: UUID(), name: "陳小安", birthday: Date(), avatarURL: nil, deletedAt: nil, createdAt: Date())
         ],
-        timelineStore: .preview()
+        timelineStore: .preview(),
+        previewRowWidth: 320 - 2 * AppSpacing.insetCard
     )
     .padding()
 }

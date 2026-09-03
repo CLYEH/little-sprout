@@ -20,6 +20,15 @@ struct TimelineView: View {
     @State private var showsDiaryEditor = false
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
+    /// merge-review R3（`add3f2c1` m1）：`feedScrollView` 內容區實際渲染寬度（已扣掉
+    /// `screenPad`）——同 `DiaryDetailView.photoWallWidth` 既有量寬手法（`.background`
+    /// 掛在 `.padding` 之前，量到的已經是扣掉 padding 後的內容寬）。`DiaryCardView` 曾經
+    /// 自己用 `GeometryReader` 猜這個值，實測在 iPad `LazyVGrid` 兩欄時會被卡片內部
+    /// `previewPhotosRow`（見該檔文件註解）的固定寬子節點污染，量到螢幕寬估計值而非真正
+    /// 可用寬——改成在這裡（一個不含任何會自我膨脹的固定寬子節點的量測點）量一次，往下
+    /// 傳給每張卡片，不再讓卡片自己量。初始值用螢幕寬估計，避免第一幀量到 0。
+    @State private var feedContentWidth: CGFloat = UIScreen.main.bounds.width - 2 * AppSpacing.screenPad
+
     /// 家庭與寶貝篩選任一改變都要重新整理時間軸——合成單一 Hashable key，避免家庭
     /// 未變、只是切換寶貝篩選時多打一次 `childrenStore.refresh`（那支另外用自己的
     /// `.task(id:)` 只綁 familyID，見下）。
@@ -174,6 +183,16 @@ struct TimelineView: View {
                     loadMoreTrigger
                 }
             }
+            // merge-review R3（`add3f2c1` m1）：量 `feedContentWidth`，見該 `@State` 文件
+            // 註解——`.background` 必須掛在 `.padding` 之前（同 `DiaryDetailView.
+            // photoWallWidth` 既有寫法），量到的才是扣掉 `screenPad` 後的內容寬。
+            .background(
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear { feedContentWidth = proxy.size.width }
+                        .onChange(of: proxy.size.width) { _, newValue in feedContentWidth = newValue }
+                }
+            )
             // Pen 對稿修正：稿面 ChildFilter 與 Feed 之間有獨立的 `Spacer Section`（44pt，
             // `yXSht` 節點 `H2Ga9h`）——原本這段落差全靠 `header` 的 16pt 底部 padding，
             // 稿面要求的 44pt「每畫面至少一次」地標間距沒有出現在這裡（只出現在 Day Group
@@ -186,6 +205,15 @@ struct TimelineView: View {
             guard let familyID = familyStore.myFamily?.id else { return }
             await timelineStore.refresh(familyID: familyID, childID: selectedChildID)
         }
+    }
+
+    /// 單張卡片實際可用的外部寬度——`columns == 1` 時就是整個 feed 內容寬；`columns > 1`
+    /// （iPad `LazyVGrid`）時依 `GridItem(.flexible())` 的既有演算法（欄距 `AppSpacing.label`
+    /// 均分扣除後平分欄數）反推，跟 `LazyVGrid` 自己算出的欄寬一致。
+    private func cardOuterWidth(columns: Int) -> CGFloat {
+        guard columns > 1 else { return feedContentWidth }
+        let totalGap = AppSpacing.label * CGFloat(columns - 1)
+        return max(0, (feedContentWidth - totalGap) / CGFloat(columns))
     }
 
     /// merge-review R1 m3：`content == nil`（指到的 diary／album／media 因硬刪或 RLS 讀不到、
@@ -212,23 +240,24 @@ struct TimelineView: View {
                     columns: Array(repeating: GridItem(.flexible(), spacing: AppSpacing.label), count: columns),
                     spacing: AppSpacing.label
                 ) {
-                    ForEach(group.entries) { entry in cardView(for: entry) }
+                    ForEach(group.entries) { entry in cardView(for: entry, columns: columns) }
                 }
             } else {
                 VStack(alignment: .leading, spacing: AppSpacing.item) {
-                    ForEach(group.entries) { entry in cardView(for: entry) }
+                    ForEach(group.entries) { entry in cardView(for: entry, columns: columns) }
                 }
             }
         }
     }
 
     @ViewBuilder
-    private func cardView(for entry: TimelineEntry) -> some View {
+    private func cardView(for entry: TimelineEntry, columns: Int) -> some View {
         switch entry.content {
         case .diary(let content):
             NavigationLink(value: TimelineRoute.diaryDetail(entry.refId)) {
                 DiaryCardView(
-                    content: content, taggedChildren: taggedChildren(for: entry), timelineStore: timelineStore
+                    content: content, taggedChildren: taggedChildren(for: entry), timelineStore: timelineStore,
+                    previewRowWidth: max(0, cardOuterWidth(columns: columns) - 2 * AppSpacing.insetCard)
                 )
             }
             .buttonStyle(.plain)

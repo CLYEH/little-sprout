@@ -155,7 +155,13 @@ enum TapTargetGateHarness {
                         totalPhotoCount: 3
                     ),
                     taggedChildren: [],
-                    timelineStore: .preview(durationLoader: { _ in CMTime(seconds: 754, preferredTimescale: 600) })
+                    timelineStore: .preview(durationLoader: { _ in CMTime(seconds: 754, preferredTimescale: 600) }),
+                    // merge-review R3（`add3f2c1` m1）：`DiaryCardView` 不再自己量寬，改由
+                    // 呼叫端（正式路徑是 `TimelineView.feedContentWidth`）算好傳入——這裡比照
+                    // 單欄（`columns == 1`）情境算一次同款的值（螢幕寬扣 `screenPad`＋
+                    // `insetCard` 各兩份），跟 `TimelineView` 的算法一致。
+                    previewRowWidth: UIScreen.main.bounds.width
+                        - 2 * AppSpacing.screenPad - 2 * AppSpacing.insetCard
                 )
                 .padding(.horizontal, AppSpacing.screenPad)
             }
