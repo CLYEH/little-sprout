@@ -79,6 +79,10 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     // 但已不是該家庭 owner/member。同 diaryNotEditableByCaller／
     // commentNotEditableByCaller／childNotEditableByCaller 同一組理由，見下方 tier。
     case albumChildrenNotEditableByCaller = "LS045"
+    // LS050（LS-143，delete_my_account）：呼叫者是家庭的唯一 owner、且家庭還有其他
+    // 成員，須先轉移 owner 身份才能刪除帳號。同 familyMustHaveOwner（LS001）同一組
+    // 不變量，只是觸發路徑不同，見下方 tier。
+    case ownerMustTransferBeforeAccountDeletion = "LS050"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -99,7 +103,7 @@ enum LSErrorCode: String, CaseIterable, Sendable {
              .albumNotFound, .commentNotFound, .commentNotEditableByCaller,
              .targetFamilyMismatch, .timelineCursorIncomplete, .removedByOwnerNotRestorable,
              .childNotFoundOrDeleted, .childNotEditableByCaller, .childRestoreWindowExpired,
-             .albumChildrenNotEditableByCaller:
+             .albumChildrenNotEditableByCaller, .ownerMustTransferBeforeAccountDeletion:
             // 以下碼為 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
@@ -138,6 +142,10 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // albumChildrenNotEditableByCaller（LS045，LS-121）：不是相簿建立者本人、
             // 或雖是建立者但已不是該家庭 owner/member，同 diaryNotEditableByCaller 的
             // 理由——換輸入沒有用，UI 該做的是隱藏「編輯寶貝標記」入口。
+            // ownerMustTransferBeforeAccountDeletion（LS050，LS-143）：呼叫者是家庭
+            // 唯一 owner 且家庭還有其他成員，delete_my_account() 沒有輸入可換，必須
+            // 先做別的事（把 owner 身份轉移給其他成員）才能重試，跟
+            // familyMustHaveOwner 同一組理由。
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:
             // 碼本身是「輸入」——打錯字換一個、或請 owner 給一支新的碼，都是同一個 UI 動作

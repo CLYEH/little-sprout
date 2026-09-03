@@ -212,7 +212,10 @@ final class AppErrorTests: XCTestCase {
             .childRestoreWindowExpired,
             // LS045（LS-121，set_album_children）：不是相簿建立者本人、或雖是建立者但
             // 已不是該家庭 owner/member，同 LS021／LS025／LS042 的理由。
-            .albumChildrenNotEditableByCaller
+            .albumChildrenNotEditableByCaller,
+            // LS050（LS-143，delete_my_account）：呼叫者是家庭唯一 owner 且家庭還有
+            // 其他成員，沒有輸入可換，必須先轉移 owner 身份才能重試，同 LS001 的理由。
+            .ownerMustTransferBeforeAccountDeletion
             // LS040（childFamilyImmutable）已於 LS-57 I1 撤碼，family_id 不可變改用裸
             // 42501（同 diaries／albums／comments），不再是 LSErrorCode 的一個 case。
         ]
