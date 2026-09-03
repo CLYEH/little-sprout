@@ -16,12 +16,15 @@ import XCTest
 /// 跟 Tab Bar 的「時間軸」cell 撞名——用字串比對會把返回鈕誤判成殘留的 Tab Bar，兩種情況
 /// 都回報「時間軸 button 存在」，測不出真正的差異。改用 `SectionTabBar` 每顆 cell 自己的
 /// SF Symbol accessibility identifier（`rectangle.grid.1x2`／`photo.on.rectangle.angled`／
-/// `figure.and.child.holdinghands`／`gearshape`，見 `AppSection.systemImage`）比對，不會跟
+/// `stroller.fill`／`gearshape`，見 `AppSection.systemImage`）比對，不會跟
 /// 任何系統 chrome 撞名。
+///
+/// LS-150：children tab 的 systemImage 由 `figure.and.child.holdinghands` 換成
+/// `stroller.fill`，這裡的比對字串同步更新（否則 sentinel 永遠找不到 children cell）。
 @MainActor
 final class SectionTabBarPushRegressionTests: XCTestCase {
     private let tabIconIdentifiers = [
-        "rectangle.grid.1x2", "photo.on.rectangle.angled", "figure.and.child.holdinghands", "gearshape"
+        "rectangle.grid.1x2", "photo.on.rectangle.angled", "stroller.fill", "gearshape"
     ]
 
     func testTabBarNotPresentAfterPushingIntoDiaryEditor() {

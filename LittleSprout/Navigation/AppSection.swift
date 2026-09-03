@@ -31,13 +31,18 @@ enum AppSection: CaseIterable, Identifiable {
     ///
     /// LS-136：`.timeline` 由 `clock`（時間語彙）改 `rectangle.grid.1x2`，對應設計稿
     /// `cmp/Tab Bar` 選用的 lucide `gallery-vertical`（單一直立矩形＋橫線＝一條持續往下
-    /// 捲動的 feed，見 `motifs.md`「Tab Bar 全字級純 icon」）；`.albums`／`.children`／
-    /// `.settings` 三顆與 lucide `images`／`baby`／`settings` 語意已一致，不動。
+    /// 捲動的 feed，見 `motifs.md`「Tab Bar 全字級純 icon」）；`.albums`／`.settings`
+    /// 兩顆與 lucide `images`／`settings` 語意已一致，不動。
+    ///
+    /// LS-150：`.children` 由 `figure.and.child.holdinghands`（LS-136 QA R1 暫定的大人牽小孩
+    /// 全身人形）改 `stroller.fill`——核可稿（LS-120）原定案是 lucide `baby`（一張臉／嬰兒），
+    /// 但 QA 認為嬰兒車圖像對長輩更易辨識，使用者 2026-09-03 裁決換符號；`.pen` 的 SF Symbol
+    /// 對照表尚未同步更新，留給下一張觸碰 `cmp/Tab Bar` 的設計票（LS-142 或後續）順手補上。
     var systemImage: String {
         switch self {
         case .timeline: "rectangle.grid.1x2"
         case .albums: "photo.on.rectangle.angled"
-        case .children: "figure.and.child.holdinghands"
+        case .children: "stroller.fill"
         case .settings: "gearshape"
         }
     }
