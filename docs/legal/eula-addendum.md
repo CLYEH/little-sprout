@@ -1,5 +1,7 @@
 # 萌芽日記 Little Sprout — EULA 附加條款
 
+> **草稿（DRAFT）——尚未生效。** 貼入 App Store Connect 前，須逐條核對 `docs/legal/README.md`「文本中承諾、但程式尚未落地的項目」對齊表（PASTE 區 §二 檢舉／封鎖／移除、§四 App 內刪除帳號皆在表列）。
+
 | 項目 | 內容 |
 |---|---|
 | 版本 | v0.1（草稿，尚未生效） |

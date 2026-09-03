@@ -1,6 +1,8 @@
 # docs/legal — 法務文件（LS-132）
 
 > **這些是草稿，供使用者審閱與（建議）律師審閱，不是法律意見。** 未經使用者核可不得生效、不得公開發佈、不得填入 App Store Connect。
+>
+> **填入生效日前須逐條核對下方「文本中承諾、但程式尚未落地的項目」對齊表**——表列項目送審時仍未上線者，對應正文必須先改寫。三份正文檔頭各有一行 DRAFT 標記，正文中以 `<!-- 待落地：… -->` HTML 註解錨定尚未上線的句子（渲染時不顯示，`grep -n '待落地' docs/legal/*.md` 可列全）。
 
 ## 三份文件的用途
 
@@ -14,7 +16,7 @@
 
 ## 需使用者填寫的欄位（placeholder 清單）
 
-所有需使用者決定的欄位以 `[[NAME]]` 標記。核可前請全部替換，`grep -rn '\[\[' docs/legal/` 應為空。
+所有需使用者決定的欄位以雙中括號 token 標記。核可前請全部替換：`grep -n '\[\[' docs/legal/privacy-policy.md docs/legal/terms-of-service.md docs/legal/eula-addendum.md` 應為空（本 README 自身的清單與說明含 token 字面，不納入掃描）。
 
 | Placeholder | 出現於 | 說明與建議 |
 |---|---|---|
@@ -41,13 +43,18 @@
 
 | 文本承諾 | 對應票 | 現況（2026-09-03） |
 |---|---|---|
-| App 內「設定 → 刪除帳號」、唯一 Owner 先轉移、30 天內清除、Apple 授權撤銷（隱私 §8、條款 §9.1） | LS-24（UI）／LS-143（後端 RPC） | LS-143 In Progress、LS-24 Backlog；Swift 端尚無刪除帳號畫面 |
+| App 內「設定 → 刪除帳號」、唯一 Owner 先轉移、Apple 授權撤銷、帳號資料立即移除＋內容標記刪除＋**人工作業 30 天內永久清除**（隱私 §8、條款 §9.1、EULA §四.1） | LS-24（UI）／LS-143（後端 RPC） | LS-143 In Progress（票文設計：成員內容**軟刪**，非硬刪）、LS-24 Backlog；Swift 端尚無刪除帳號畫面。「30 天內永久清除」是**營運承諾（人工以 service_role／Dashboard 清）**，不是程式——使用者須確認願意承擔，否則改為「可來信要求永久清除」 |
 | App 內檢舉、封鎖、Owner 移除、檢舉同時送達平台方（條款 §6.2–6.5） | LS-23（UI）／LS-149（後端） | 表與 RLS 已在（`content_reports`／`blocked_users`）；LS-149 In Progress、LS-23 Backlog |
 | 24 小時內處理檢舉（條款 §6.3） | 營運承諾，非程式 | 需有人（使用者本人）看 Supabase Dashboard 的 `content_reports`；建議設 email 或 webhook 提醒，否則 24 小時承諾靠自律 |
-| 軟刪 30 天後永久清除（隱私 §8） | 尚無排程票 | `children` 軟刪 30 天還原已落地（LS-66）；`media`／`diaries`／`comments` 軟刪已落地，但「30 天後實際清除」的排程尚未存在（API.md §3 `children` 段：「留給排程票」）。**要嘛開票落地，要嘛把文字改成「可還原期後由我們定期清除」** |
+| 清除排程（軟刪內容何時真正清除；隱私 §8） | **無票**；文本已改為不承諾（R2 M1） | repo 無任何排程（`grep -rni 'pg_cron\|cron.schedule\|purge' supabase/` 0 hits）；`docs/API.md:1263` 現行設計**刻意**不硬刪軟刪 `media` 的 Storage 物件；30 天還原邊界只有 `children`（`LS043`），`diaries`／`comments`／`albums` 軟刪無時間邊界。正文已改為「標記保留供誤刪救援、可來信要求永久清除」；日後若做清除排程再把文字改回具體期限 |
 | 推播通知（隱私 §2.5） | LS-22 | 文本已寫「尚未啟用；啟用前不蒐集」——LS-22 上線時把該句刪掉並在 App Privacy 標籤加 Device ID |
 | 「重大變更於 App 內通知」（隱私 §13、條款 §15） | 無票 | 目前無 in-app 公告機制；第一版可用 App Store 更新說明＋歡迎頁版本號達成，或另票 |
 | 帳號刪除向 Apple 撤銷 token（隱私 §8） | LS-143 範圍應含 | Apple 帳號刪除指引要求以 Sign in with Apple REST API 撤銷；請確認 LS-143 有做 |
+| 刪除單筆內容（照片／日記／留言）UI（隱私 §8「刪除單筆內容」、§4.4；條款 §6.5） | **無票** | 後端已在（`set_diary_deleted`／`set_comment_deleted`／`set_album_deleted`、`media.deleted_at`）；App 端無呼叫端（`grep -rn 'set_diary_deleted\|set_comment_deleted\|set_album_deleted' LittleSprout/` 只命中 `Errors/AppError.swift` 註解）；唯一有刪除 UI 的是孩子檔案（`Features/Children/EditChildView.swift`）。正文已改為「透過 App 或來信」＋錨點 |
+| 退出家庭 UI（條款 §4.5；隱私 §9） | **無票** | 後端已在（`family_members` DELETE policy「任何人可自行退出」，API.md §2）；`Features/SettingsView.swift` 只有「邀請家人」與「登出」。正文已改寫＋錨點 |
+| Owner 移除成員 UI（條款 §4.5、§6.5；隱私 §4.5） | **無票** | 後端已在（owner 移除任何人）；`Features/Family/` 無成員清單畫面。正文已改為「有權」＋錨點 |
+| 修改顯示名稱與頭像 UI（隱私 §2.1、§9） | **無票** | `profiles` 可 update；`Features/` 無 profile 編輯畫面。正文已改為「透過 App 或來信要求修改」＋錨點 |
+| 留言／愛心／相簿功能本身（條款 §2.1；隱私 §2.4） | LS-22（留言／愛心）；相簿 Phase 1-4（本票未查到專屬票號） | App 端未實作（`create_comment`／`toggle_reaction` 無呼叫端；`Features/AlbumsView.swift` 為 placeholder）；Phase 1 核心功能、送審前必然在——列入只為對齊表完整（R1 n2） |
 
 ## 事實核對清單（送審前逐項確認）
 
@@ -116,7 +123,7 @@ LS-133 票文已定：「SwiftUI 以 bundled markdown 渲染（`AttributedString
 | §9-A1 UGC 三件套＋零容忍使用條款 | 使用條款 §6（6.1 禁止內容、6.2 檢舉、6.3 24 小時處理與停權、6.4 封鎖、6.5 Owner 移除、6.6 平台保留權、6.7 申訴）；EULA 附加條款 §二 |
 | §9-A2 app 內帳號刪除、唯一 Owner 轉移 | 隱私 §8「刪除帳號」；使用條款 §9.1；EULA §四.1 |
 | §9-B 隱私政策 URL／支援 URL | 本 README「公開網址方案」；`[[SUPPORT_URL]]`／`[[SUPPORT_EMAIL]]` |
-| §9-B App Privacy 標籤：照片、聯絡資訊、使用者內容；兒童資料由家長自願上傳、僅私密家庭可見、如何刪除 | 隱私附錄 A（標籤對照）；隱私 §4（兒童資料四點承諾＋刪除）；§2.3 |
+| §9-B App Privacy 標籤：照片、聯絡資訊、使用者內容；兒童資料由家長自願上傳、僅私密家庭可見、如何刪除 | 隱私附錄 A（標籤對照）；隱私 §4（兒童資料五點承諾＋刪除）；§2.3 |
 | §9-B EULA：Apple 標準 EULA 加附零容忍段 | `eula-addendum.md`（自訂 EULA 形式，理由見該檔說明） |
 | §9-C1 不進 Kids Category（使用者是大人） | 使用條款 §3.1「不提供給兒童使用」；隱私 §4 前言 |
 | §9-C2 個人名義、專用支援信箱 | `[[OPERATOR_NAME]]`／`[[SUPPORT_EMAIL]]` |
