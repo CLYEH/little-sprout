@@ -114,11 +114,18 @@ jobs:
       # 呼叫同一支腳本，這裡是伺服器端兜底）。來源：LS-53／LS-56 兩個 agent 共用 scratchpad/pr-body.md 撞檔，
       # LS-53 的 gh pr edit 把 LS-56 的 body 貼上 PR #78——暫存檔命名規約在 repo 外無法機械驗，驗它要防的結果。
       # 同 LS-50 只在工作分支 head 執行：promote／back-merge 的 head 是保護分支，沒有「本票」可比。
-      - name: PR body 檔頭段含本票票號（pr-body-check，LS-63）
+      # LS-140：同一支腳本再對全 body 逐行驗「申報可驗證」——含 LS-96／入池／待辦池 的行必帶 ≥8 位 hex comment id、含
+      # 「已修」的行必帶 7–40 位 hex SHA；`--verify` 反查：SHA 須 `git cat-file -e` 且為 HEAD（PR merge ref）祖先（fetch-depth 0
+      # 已含 PR 全部 commit）；comment id 以 LINEAR_API_KEY 列 LS-96 全部 comment 做前綴比對（`comment(id:)` 不吃 8 位前綴）。
+      # 無 secrets.LINEAR_API_KEY 時腳本印「反查略過」（＋::warning::）只驗格式＋git——repo 尚未設此 secret（2026-09-03
+      # `gh secret list` 為空；LS-103 patrol-linear 自測也不需要），補上即自動生效，不必改 workflow。
+      - name: PR body 檔頭段含本票票號＋申報可驗證（pr-body-check，LS-63／LS-140）
         if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
         run: |
           printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-check.txt"
-          bash scripts/gates/pr-body-check.sh --branch "$HEAD" "$RUNNER_TEMP/pr-body-check.txt"
+          bash scripts/gates/pr-body-check.sh --branch "$HEAD" --verify "$RUNNER_TEMP/pr-body-check.txt"
 
       # LS-69：evidence-path-check 原本只在本機 pre-commit 跑（看 --cached／staged），`--no-verify` 繞過後
       # CI 沒有兜底——PR 上 commit-msg／secrets 都有伺服器端兜底、唯獨這條沒有（R1 I10）。這裡用新增的
