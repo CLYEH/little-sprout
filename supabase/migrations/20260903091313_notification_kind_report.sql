@@ -1,0 +1,16 @@
+-- LS-149（LS-23 後端切片）——notification_kind 新增 'report' 值。
+--
+-- 獨立成自己的檔案／自己的交易，不與下一支 migration（20260903091317_report_block_rpc.sql）
+-- 合併：PostgreSQL 對 ALTER TYPE ... ADD VALUE 有限制——新增的列舉值要嘛在同一個交易內完全
+-- 不被「需要排序位置」的操作使用（比較、當實際值儲存／轉型），要嘛等這個交易 commit 之後才能用；
+-- 在同一個交易裡新增又使用會直接噴 `unsafe use of new value` 錯誤。下一支 migration 會定義一支
+-- trigger 函式，函式本體裡會把常數 'report' 轉型成 public.notification_kind 傳給
+-- private.record_notification_event()——為了不必去賭「函式本體裡的字面值轉型算不算『使用』」
+-- 這個 PostgreSQL 版本可能微妙不同的邊界，直接拆成兩個各自獨立 commit 的 migration，安全邊際
+-- 最大、也是這個問題最常見的標準解法。
+--
+-- 用途：content_reports 新增一筆檢舉時，讓下一支 migration 的 trigger 能把它記進
+-- notification_events（kind='report'），供 LS-22 之後的 Edge Function 通知家庭 owner
+-- （PLAN §10-B「檢舉要進到你看得到的地方」）。這裡跟其餘三種 kind（comment/reaction/diary/
+-- album）一樣，只做資料層，不含發送——發送邏輯不在這張票的範圍內。
+alter type public.notification_kind add value 'report';
