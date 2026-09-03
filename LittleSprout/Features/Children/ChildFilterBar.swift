@@ -232,6 +232,7 @@ struct ChildFilterBar: View {
     }
 }
 
+#if DEBUG
 private struct ChildFilterBarPreview: View {
     @State private var selectedChildID: UUID?
 
@@ -244,3 +245,4 @@ private struct ChildFilterBarPreview: View {
 #Preview {
     ChildFilterBarPreview()
 }
+#endif

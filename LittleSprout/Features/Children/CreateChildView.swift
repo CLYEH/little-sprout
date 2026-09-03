@@ -378,6 +378,7 @@ struct BirthdayPickerSheet: View {
     }
 }
 
+#if DEBUG
 #Preview("空白") {
     NavigationStack {
         CreateChildView(childrenStore: .preview())
@@ -390,3 +391,4 @@ struct BirthdayPickerSheet: View {
     }
     .environment(\.horizontalSizeClass, .regular)
 }
+#endif

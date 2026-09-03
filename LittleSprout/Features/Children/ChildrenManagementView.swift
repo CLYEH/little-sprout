@@ -337,8 +337,10 @@ private struct EmptyChildrenCard: View {
     }
 }
 
+#if DEBUG
 #Preview("有寶貝") {
     NavigationStack {
         ChildrenManagementView(familyStore: .preview(), childrenStore: .preview())
     }
 }
+#endif
