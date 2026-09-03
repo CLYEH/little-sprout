@@ -125,7 +125,13 @@ if ! run_sql "$preflight" > "$tmp/preflight.out" 2>&1; then
   exit 1
 fi
 
-for f in "$here"/[0-9][0-9]_*.sql; do
+# LS-149：兩位數編號在 99_media_duration.sql 用完了（第一次真的撞到上限）。原本的
+# `[0-9][0-9]_*.sql` 只吃恰好兩位數，改成 `[0-9]*_*.sql`（一位數以上皆可）以容納三位數
+# 檔名；但 shell glob 預設的字典排序對「跨位數」的數字排序是錯的（例如 "100_..." 會排在
+# "10_..." 之前，因為第三個字元 '0' < '_'）。改用 `sort -V`（version sort，逐段比較數字
+# 而不是逐字元比較字串）取代 glob 天生的字典序，兩位數與三位數才會照數值大小排列
+# （00 < 10 < ... < 99 < 100）。
+for f in $(printf '%s\n' "$here"/[0-9]*_*.sql | sort -V); do
   name="$(basename "$f")"
   out="$tmp/$name.out"
   echo "→ $name"

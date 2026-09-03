@@ -99,9 +99,14 @@ begin
     raise exception 'FAIL 正向對照：A 家 owner 查不到自己的 families 列';
   end if;
 
+  -- LS-149：'comments' 刻意排除在這個以 A 家 owner 身分跑的通用迴圈之外——A 家 owner
+  -- （a1）封鎖了 A 家 viewer（a3，見 00_fixtures.sql 的 blocked_users 列），而 A 家
+  -- fixtures 裡唯一一則留言（6a000000...001）正是 a3 發的。albums_select／comments_select
+  -- 兩條 policy 自本票起疊加封鎖過濾，a1 查 comments 合法地變成 0 列，不是「policy 過度
+  -- 封鎖」——下面另外用不是封鎖者的 a2（member）驗證 comments 本身沒有被過度封鎖。
   foreach v_table in array array[
     'family_members', 'invites', 'children', 'media', 'albums', 'album_media',
-    'diaries', 'diary_media', 'comments', 'reactions', 'feed_items',
+    'diaries', 'diary_media', 'reactions', 'feed_items',
     'content_reports', 'blocked_users',
     'diary_children', 'album_children', 'feed_item_children'
   ] loop
@@ -112,7 +117,26 @@ begin
     end if;
   end loop;
 
-  raise notice 'ok 正向對照：A 家 owner 在自家 17 張表都查得到資料';
+  raise notice 'ok 正向對照：A 家 owner 在自家 16 張表都查得到資料（comments 另外用非封鎖者驗證，見下）';
+end;
+$$;
+
+-- comments 正向對照改用 a2（A 家 member，沒有封鎖任何人）：驗證 comments_select 加了封鎖
+-- 過濾之後，非封鎖者仍看得到自家全部留言，不是整條 policy 被改壞成什麼都查不到。
+do $$
+declare
+  v_n bigint;
+  v_mine uuid := 'fa000000-0000-4000-8000-000000000001';
+begin
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+
+  select count(*) into v_n from public.comments where family_id = v_mine;
+  if v_n = 0 then
+    raise exception 'FAIL 正向對照：A 家 member（非封鎖者）在 public.comments 查不到自家資料（policy 過度封鎖）';
+  end if;
+
+  raise notice 'ok 正向對照：A 家 member（非封鎖者）在 public.comments 查得到自家資料（% 列）', v_n;
 end;
 $$;
 
