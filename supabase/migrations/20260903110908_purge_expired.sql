@@ -364,8 +364,8 @@ comment on function private.purge_expired(timestamptz) is
   '軟刪／刪帳號請求超過 30 天的列硬刪（LS-153）。p_now 預設 now()，測試注入固定值'
   ' 驗證 29/31 天邊界。security definer，只 service_role／pg_cron（皆以 postgres'
   ' 身分執行，見上方 migration 註解）可呼叫，authenticated 沒有 EXECUTE（天生零'
-  ' 授權，見 harden_default_privileges.sql 全域 default privileges，不靠這裡另外'
-  ' REVOKE）。';
+  ' 授權，見 harden_default_privileges.sql 全域 default privileges，這支函式的'
+  ' 收回動作只補了 public／anon 兩個角色，見上一句）。';
 
 -- ---------------------------------------------------------------------------
 -- 4. pg_cron 排程（fail-soft）
