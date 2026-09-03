@@ -178,6 +178,7 @@
 		E5D68ECAE74FF9EBBC782E5D /* OTPVerificationModelLockoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C9C0FFAC9911BA268EBA27 /* OTPVerificationModelLockoutTests.swift */; };
 		E70D35B49C52CB73CBA0BCFA /* SupabaseMediaUploadServiceCleanupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 265ECDE8A6FEEB9D93E92AE4 /* SupabaseMediaUploadServiceCleanupTests.swift */; };
 		E714FA8B1BBAA5D64425BB5C /* DiaryDurationFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C7ACE26EA3E828F870C6BB9 /* DiaryDurationFormatTests.swift */; };
+		E780FC18B0D21CFFEF8888CA /* MediaUploadService+Duration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDCB1C873A0DB57A3165E54 /* MediaUploadService+Duration.swift */; };
 		E7E06A6041F5574C55CFD1DF /* JoinCodePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6A0CCB93FDADE5B2C126BC /* JoinCodePhase.swift */; };
 		E96D464C2FD698F14A9B2604 /* ColorTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8702562330091E614920D1 /* ColorTokens.swift */; };
 		E9D2117BDEB489D4DE815852 /* AuthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 722D8ED2CA2CA763DF21AAB7 /* AuthStore.swift */; };
@@ -229,6 +230,7 @@
 		0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFixture.swift; sourceTree = "<group>"; };
 		0E8702562330091E614920D1 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
 		0ED4F4FC901701044230BA42 /* PickedItemLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickedItemLoaderTests.swift; sourceTree = "<group>"; };
+		0EDCB1C873A0DB57A3165E54 /* MediaUploadService+Duration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MediaUploadService+Duration.swift"; sourceTree = "<group>"; };
 		10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAuthServiceTests.swift; sourceTree = "<group>"; };
 		1154E2337B7278510C8971B1 /* ApprovalStatusRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovalStatusRow.swift; sourceTree = "<group>"; };
 		1316439F5231DB2C470519A8 /* SupabaseMediaUploadServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseMediaUploadServiceTests.swift; sourceTree = "<group>"; };
@@ -685,6 +687,7 @@
 				72BAB19B1C35B0F183EE2699 /* DiaryComposerStore.swift */,
 				44CF5C61ADF3E932C1795C96 /* DiaryPhotoReorderMath.swift */,
 				AAE2BD7F1D83D2C316B63293 /* MediaUploadService.swift */,
+				0EDCB1C873A0DB57A3165E54 /* MediaUploadService+Duration.swift */,
 				673C41FF62F64795F7752D25 /* PickedItemLoader.swift */,
 				037FF26C7AE60735F31B632A /* SupabaseDiaryAPIClient.swift */,
 				40E13DE0D017682C31FBABE1 /* VideoTrimmer.swift */,
@@ -991,6 +994,7 @@
 				F90747ADA6446C8F7FA27137 /* LittleSproutApp.swift in Sources */,
 				ABFCA2E9F71A13308E8FF2EE /* MasonryLayout.swift in Sources */,
 				CB8CF24ABEB5FA5604FB027C /* MasonryPhotoWallView.swift in Sources */,
+				E780FC18B0D21CFFEF8888CA /* MediaUploadService+Duration.swift in Sources */,
 				69B5EF4869EB3BE9144F0B4C /* MediaUploadService.swift in Sources */,
 				98115AAF04CC10B3E194D066 /* MultiChildCaptionFormatter.swift in Sources */,
 				2D03B61ACA5DD6A649155EDC /* OTPCodeField.swift in Sources */,
