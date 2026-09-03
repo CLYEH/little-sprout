@@ -11,6 +11,11 @@ on:
     branches: [development, test, main]
   push:
     branches: [development, test, main]
+  # LS-139：手動觸發（`gh workflow run ci.yml --ref <branch>`）跑出「push 形狀」的 run——base_ref／head_ref 皆空，
+  # 依 diff 判定的 step（Release 組態編譯 gate／點擊目標 gate）走無條件路徑。用途：harness PR 本身沒有 Swift diff、
+  # pull_request run 只能證明略過路徑時，併入前在分支上實跑一次「要跑」路徑（LS-139 PR 自證）。rules job 依賴 PR
+  # 上下文的 step 已各自標 if: pull_request／head_ref 前綴，此事件下與 push 同樣自然不跑。
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -488,8 +493,8 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 40
     steps:
-      # LS-95 merge-review R1 m3：full history（同 rules job）——下面「點擊目標 gate」步驟要對
-      # PR 的 base ref 做 git diff 判斷是否真的碰了 UI（判定見 scripts/gates/ui-test-trigger.sh，LS-137），
+      # LS-95 merge-review R1 m3：full history（同 rules job）——下面「Release 組態編譯 gate」（LS-139）與「點擊目標 gate」
+      # 步驟要對 PR 的 base ref 做 git diff 判斷是否真的碰了 Swift（判定見 scripts/gates/ui-test-trigger.sh，LS-137），
       # 預設的淺 clone（depth 1）沒有 base ref 的歷史，diff 會失敗或不可靠。
       - uses: actions/checkout@v4
         with:
@@ -549,6 +554,38 @@ jobs:
             -only-testing:LittleSproutTests \
             -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO
+
+      # LS-139（LS-138 的反饋 gate）：Release 組態只 build 不測試。上面 Build & Test 與點擊目標 gate 都跑 scheme
+      # 的 Debug 組態（SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG），#Preview 引用 `#if DEBUG` 才有的 mock
+      # （AuthStore.preview() 等）在 Debug 綠、Release 紅——LS-138 累積到 41 個 error 無法 Archive／TestFlight，
+      # 直到 LS-130 merge-review R2 手動跑 Release build 才發現；CI 此前對 Release 沒有任何機械信號。
+      # 觸發：沿用 ui-test-trigger.sh（LS-137）——pull_request 的 diff 含 LittleSprout/**/*.swift 或
+      # LittleSproutUITests/** 才跑，否則 exit 3 略過（腳本印實際判定用的路徑集合）；非 0／3 視為「無法證明
+      # 可略過」照跑；push 事件（promote.sh 晉升）無條件跑，當晉升前的伺服器端兜底。取捨：不無條件跑——
+      # Release 編譯錯只能來自 Swift 原始碼（project.yml／xcconfig 改動不在判定集合，見 COLLABORATION §7 盲區），
+      # 純 supabase/／docs/／scripts/ PR 不付這幾分鐘 macOS runner；判定本身由 ui-test-trigger.test.sh 釘住。
+      # -destination generic/platform=iOS Simulator：不開模擬器、不簽章（CODE_SIGNING_ALLOWED=NO）；真機平台
+      # generic/platform=iOS 未跑（§7 盲區）。-quiet：只印 warning／error 與 BUILD FAILED／SUCCEEDED 摘要，
+      # gate 要看的 error 行不會淹在編譯指令裡（本機負控實測 error 行照印）。沿用 job 預設 DerivedData（與
+      # Build & Test 同一份，SPM 已解析；Release 產物另在 Release-iphonesimulator）。排在點擊目標 gate 之前：
+      # Release 編譯錯先紅，不必等 5 分鐘的 UI 測試。
+      - name: Release 組態編譯 gate（LS-139：#Preview 引 DEBUG-only mock 在 Release 紅＝PR 紅）
+        run: |
+          if [ -n "${GITHUB_BASE_REF:-}" ]; then
+            git fetch --quiet origin "$GITHUB_BASE_REF" 2>/dev/null || true
+            rc=0; bash scripts/gates/ui-test-trigger.sh --base "origin/$GITHUB_BASE_REF" || rc=$?
+            if [ "$rc" -eq 3 ]; then echo "→ Release 組態編譯 gate：略過（同上判定：本 PR 無 LittleSprout/**/*.swift 變更；push 事件會無條件跑）"; exit 0; fi
+            if [ "$rc" -ne 0 ]; then echo "::warning::ui-test-trigger.sh exit ${rc}（非 0／3），無法證明可略過，保守照跑"; fi
+          fi
+          xcodebuild build \
+            -project LittleSprout.xcodeproj \
+            -scheme LittleSprout \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO
+          # -quiet 連 ** BUILD SUCCEEDED ** 都不印（負控實測），綠時補一行讓 log 有結論可讀；紅時 run: 預設 -e 到不了這裡。
+          echo "✓ Release 組態編譯通過（-configuration Release，generic/platform=iOS Simulator）"
 
       - name: 點擊目標 gate（LS-95：≥44pt，長輩硬約束）
         run: |
