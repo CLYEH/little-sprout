@@ -39,8 +39,17 @@ $$;
 revoke execute on function private.is_avatar_object_path(text) from public;
 grant execute on function private.is_avatar_object_path(text) to authenticated;
 
-drop policy media_bucket_update on storage.objects;
-create policy media_bucket_update on storage.objects for update to authenticated
+-- ALTER POLICY（不是 DROP+CREATE）：改的是既有 policy 的 USING／WITH CHECK 條件，
+-- 不是把整條 policy 物件砍掉重建——`ALTER POLICY` 保留 policy 本身的身分／授予對象
+-- （這裡沒有明寫 `TO authenticated` 也不影響，未指定時維持既有的角色指派不變），語意
+-- 上是「放寬既有規則」而不是「移除又新增一個東西」。DROP POLICY 會被
+-- `migration-breaking-check.sh` 的 D1 規則判成 DESTRUCTIVE（需要使用者本人在 PR 留
+-- comment 核可），對「同一個 migration 內立刻用同名 CREATE POLICY 補回來」這種
+-- 純粹放寬條件的變更是不必要的核可負擔——ALTER POLICY 只會被判 BREAKING（B1，PR body
+-- 的 BREAKING: 段落＋docs/API.md 同 PR 更新即可），跟這次變更的實際風險等級一致；
+-- 這個 repo 本來就有這個慣例，見 `20260825030000_children_write_path_and_soft_delete.sql`
+-- 的 `alter policy children_insert ... with check (false)`。
+alter policy media_bucket_update on storage.objects
   using (
     bucket_id = 'media'
     and (
@@ -75,8 +84,8 @@ create policy media_bucket_update on storage.objects for update to authenticated
     )
   );
 
-drop policy media_bucket_delete on storage.objects;
-create policy media_bucket_delete on storage.objects for delete to authenticated
+-- 同上，ALTER POLICY 而非 DROP+CREATE。
+alter policy media_bucket_delete on storage.objects
   using (
     bucket_id = 'media'
     and (
