@@ -6,6 +6,8 @@
 # 兩個都以為自己取得的程序互相認領對方的 holder 暫存檔（R2 F1）、搬回活鎖時把 tomb 塞進第三者的目錄或不出聲（R2 F3）、
 # 殘留 tomb 在 --status 看不到（R2 F2）、收到 TERM 不釋放、run.sh 不再經 lock 重跑——這裡會紅。全程用合成 lock 目錄（SUPABASE_LOCK_DIR），不碰真的
 # /tmp/supabase-lock-*、不碰容器；M1／m1 用 PATH shim 放大既有空窗（只在自測程序的 PATH，不改 repo 檔）。
+# LS-159 hold（㉑–㉕）：--hold 後非持有者排隊且訊息含 label／持有者重入與 --held／非持有者 --release 被拒／持有者 --release 立即讓出／
+# 到期自動釋放／守門被 -9 走既有死鎖回收——退化這裡會紅；心跳與到期用 SUPABASE_LOCK_HOLD_TICK／SUPABASE_LOCK_HOLD_SECONDS 縮成秒級。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -305,6 +307,136 @@ st="$(L --status 2>&1)"
 hasnt '⑲ F2：清掉後 --status 不再列 tomb' "$st" 'tomb'
 has   '⑲ F2：清掉後 free' "$st" 'free'
 rm -f "$shim/mv"
+
+# ======== LS-159 QA 持有（hold）========
+# 「陌生人」＝從別的 cwd 呼叫（$work 不是 git repo → holder worktree＝pwd）、且 owner（呼叫 --hold 的父 shell）已退出：經
+# `bash -c '…; :'` 中介——最後一個命令是 builtin，前面那個 bash 不會被 exec 最佳化掉，owner＝中介 bash、隨即結束。
+# 「持有者」兩條腿：同 worktree（wtA→wtA）、或 owner 是祖先（本自測程序直接 --hold、從 wtB 呼叫）。
+wtA="$work/wtA"; wtB="$work/wtB"; mkdir -p "$wtA" "$wtB"
+hold_log="$SUPABASE_LOCK_DIR.hold.log"
+export SUPABASE_LOCK_HOLD_TICK=0.2
+palive() { ps -p "$1" -o pid= >/dev/null 2>&1; }
+hpid()   { sed -n 's/^pid=//p' "$SUPABASE_LOCK_DIR/holder" 2>/dev/null; }
+hold_as_stranger() { (cd "$wtA" && bash -c 'bash "$1" --hold "$2" "${@:3}"; :' _ "$lock_sh" "$@" 2>&1); }   # $1=label 其餘=額外參數
+
+# ---- ㉑ --hold：主程序立即返回（守門不繼承呼叫者的管線）、holder 欄位、--status／等待訊息含「QA 持有中（label，剩餘 n 分）」、
+#        非持有者排隊逾時 124 且命令沒跑、持有者（同 worktree）-- 命令重入直接執行、--held 兩邊、心跳前進、已持有再 --hold 被拒 ----
+t0=$SECONDS
+out="$(hold_as_stranger 'LS-0 QA 冒煙' --max-minutes 1)"; rc=$?
+el=$((SECONDS - t0))
+rc_is '㉑ --hold exit 0' 0 "$rc" "$out"
+if [ "$el" -le 5 ]; then echo "✓ ㉑ --hold 立即返回（${el}s；守門不繼承 stdout／stderr）"; else echo "✗ ㉑ --hold 花了 ${el}s 才返回（守門是否繼承了管線？）" >&2; fail=1; fi
+gpid=$(hpid)
+has   '㉑ 印 held pid=<守門 pid> label=… expires=hh:mm' "$out" "held pid=${gpid} label=LS-0 QA 冒煙 expires="
+has   '㉑ 印 log 路徑' "$out" "log=${hold_log}"
+if palive "$gpid"; then echo "✓ ㉑ 守門程序活著（pid ${gpid}）"; else echo "✗ ㉑ 守門程序不在（pid ${gpid}）" >&2; cat "$hold_log" >&2; fail=1; fi
+has   '㉑ holder 欄位 pid…cmd＋owner／expires_at／heartbeat' "$(cut -d= -f1 "$SUPABASE_LOCK_DIR/holder" 2>/dev/null | paste -s -d, -)" 'pid,started,host,worktree,branch,cmd,owner,expires_at,heartbeat'
+has   '㉑ holder cmd=hold:<label>' "$(cat "$SUPABASE_LOCK_DIR/holder" 2>/dev/null)" 'cmd=hold:LS-0 QA 冒煙'
+has   '㉑ holder worktree＝呼叫 --hold 的 cwd' "$(cat "$SUPABASE_LOCK_DIR/holder" 2>/dev/null)" "worktree=${wtA}"
+st="$(L --status 2>&1)"
+has   '㉑ --status 印 QA 持有中（label，剩餘 n 分）' "$st" 'QA 持有中（LS-0 QA 冒煙，剩餘 1 分）'
+has   '㉑ --status 仍以 held pid= 開頭（巡檢／既有解析不變）' "$st" "held pid=${gpid} "
+hasnt '㉑ --status 守門活著不標 stale' "$st" 'stale'
+hb1=$(sed -n 's/^heartbeat=//p' "$SUPABASE_LOCK_DIR/holder"); sleep 1.2; hb2=$(sed -n 's/^heartbeat=//p' "$SUPABASE_LOCK_DIR/holder")
+if [ -n "$hb1" ] && [ -n "$hb2" ] && [ "$hb2" -gt "$hb1" ]; then echo "✓ ㉑ 守門每 tick 更新 heartbeat（${hb1}→${hb2}）"; else echo "✗ ㉑ heartbeat 沒前進（${hb1}→${hb2}）" >&2; fail=1; fi
+berr="$(cd "$wtB" && bash "$lock_sh" --timeout 1 -- sh -c 'echo stranger-ran' 2>&1)"; rc=$?
+rc_is '㉑ 非持有者 -- 命令排隊、逾時 124' 124 "$rc" "$berr"
+has   '㉑ 等待訊息含 QA 持有中（label，剩餘' "$berr" '等待中'
+has   '㉑ 等待／逾時訊息含 label 與剩餘分鐘' "$berr" 'QA 持有中（LS-0 QA 冒煙，剩餘'
+hasnt '㉑ 非持有者命令沒跑' "$berr" 'stranger-ran'
+(cd "$wtB" && bash "$lock_sh" --held 2>/dev/null); rc_is '㉑ 非持有者 --held → 1' 1 "$?" ''
+out="$(cd "$wtA" && bash "$lock_sh" --timeout 1 -- sh -c 'echo owner-ran' 2>&1)"; rc=$?
+rc_is '㉑ 同 worktree 的 -- 命令走 hold 重入、exit 0' 0 "$rc" "$out"
+has   '㉑ 重入印「已在自己的 hold 內」＋label' "$out" '已在自己的 hold 內（LS-0 QA 冒煙'
+has   '㉑ 重入命令執行' "$out" 'owner-ran'
+hasnt '㉑ 重入沒有等待' "$out" '等待中'
+(cd "$wtA" && bash "$lock_sh" --held 2>/dev/null); rc_is '㉑ 同 worktree --held → 0' 0 "$?" ''
+if [ "$(hpid)" = "$gpid" ]; then echo "✓ ㉑ 重入命令結束後 hold 仍在（沒被誤釋放）"; else echo "✗ ㉑ 重入命令結束後 hold 不見或換人" >&2; fail=1; fi
+out="$(cd "$wtA" && bash "$lock_sh" --hold again 2>&1)"; rc_is '㉑ 已持有再 --hold → exit 2' 2 "$?" "$out"
+has   '㉑ 再 --hold 的訊息提示先 --release' "$out" '先 --release'
+
+# ---- ㉔ 非持有者 --release 被拒：exit 2、印持有者資訊、守門仍活、lock 仍在；命令型持有 --release 也拒；free 時 exit 1 ----
+out="$(cd "$wtB" && bash "$lock_sh" --release 2>&1)"; rc=$?
+rc_is '㉔ 非持有者 --release → exit 2' 2 "$rc" "$out"
+has   '㉔ 拒絕訊息含持有者 label' "$out" 'QA 持有中（LS-0 QA 冒煙'
+has   '㉔ 拒絕訊息含持有者 worktree' "$out" "worktree=${wtA}"
+if palive "$gpid"; then echo "✓ ㉔ 守門未被殺"; else echo "✗ ㉔ 守門被非持有者殺掉" >&2; fail=1; fi
+if [ "$(hpid)" = "$gpid" ]; then echo "✓ ㉔ lock 仍在、holder 未變"; else echo "✗ ㉔ lock 被非持有者動了" >&2; fail=1; fi
+
+# ---- ㉒ 持有者 --release：同 worktree（owner 已退出）→ exit 0、印持有時長、守門結束、lock 消失；之後另一 worktree 立即取得 ----
+out="$(cd "$wtA" && bash "$lock_sh" --release 2>&1)"; rc=$?
+rc_is '㉒ 同 worktree --release → exit 0' 0 "$rc" "$out"
+has   '㉒ 印持有時長' "$out" '已釋放 hold「LS-0 QA 冒煙」（持有 0 分'
+gone  '㉒ --release 後 lock 消失'
+sleep 0.3
+if palive "$gpid"; then echo "✗ ㉒ 守門仍活著（pid ${gpid}）" >&2; kill -9 "$gpid" 2>/dev/null; fail=1; else echo "✓ ㉒ 守門已結束"; fi
+out="$(cd "$wtB" && bash "$lock_sh" --timeout 2 -- sh -c 'echo after-release' 2>&1)"; rc=$?
+rc_is '㉒ 釋放後另一 worktree 立即取得、exit 0' 0 "$rc" "$out"
+has   '㉒ 命令執行' "$out" 'after-release'
+hasnt '㉒ 沒有等待' "$out" '等待中'
+gone  '㉒ 命令結束後釋放'
+out="$(L --release 2>&1)"; rc_is '㉒ free 時 --release → exit 1（提示可能已到期）' 1 "$?" "$out"
+has   '㉒ free 時訊息提示可能已到期' "$out" '可能已到期'
+# owner 是祖先、worktree 不同：本自測程序直接 --hold（owner＝本程序、worktree＝repo），從 wtB --release → 允許
+bash "$lock_sh" --hold 'LS-0 祖先' > "$work/anc.out" 2>&1; rc_is '㉒ 前提：本程序直接 --hold' 0 "$?" "$(cat "$work/anc.out")"
+gpid=$(hpid)
+has   '㉒ 前提：holder owner＝本自測程序' "$(cat "$SUPABASE_LOCK_DIR/holder" 2>/dev/null)" "owner=$$"
+out="$(cd "$wtB" && bash "$lock_sh" --release 2>&1)"; rc=$?
+rc_is '㉒ owner 是祖先、worktree 不同 → --release 允許 exit 0' 0 "$rc" "$out"
+gone  '㉒ 祖先釋放後 lock 消失'
+# 命令型持有不能被 --release
+bash "$lock_sh" -- sleep 2 2>/dev/null &
+a=$!
+sleep 0.3
+out="$(L --release 2>&1)"; rc_is '㉒ 命令型持有 --release → exit 2' 2 "$?" "$out"
+has   '㉒ 命令型持有拒絕訊息' "$out" '不是 hold'
+if [ "$(hpid)" = "$a" ]; then echo "✓ ㉒ 命令型持有未被動"; else echo "✗ ㉒ 命令型持有被 --release 動了" >&2; fail=1; fi
+wait "$a"
+
+# ---- ㉓ 到期自動釋放：SUPABASE_LOCK_HOLD_SECONDS=1 → 約 1–2s 後 lock 消失、守門結束、log 印到期一行；之後立即取得、不是「回收死鎖」 ----
+out="$(SUPABASE_LOCK_HOLD_SECONDS=1 hold_as_stranger 'LS-0 到期')"; rc_is '㉓ --hold exit 0' 0 "$?" "$out"
+gpid=$(hpid)
+i=0; while [ -e "$SUPABASE_LOCK_DIR" ] && [ "$i" -lt 25 ]; do sleep 0.2; i=$((i + 1)); done
+gone  '㉓ 到期後 lock 自動釋放（≤5s）'
+sleep 0.3
+if palive "$gpid"; then echo "✗ ㉓ 到期後守門仍活著" >&2; kill -9 "$gpid" 2>/dev/null; fail=1; else echo "✓ ㉓ 到期後守門結束"; fi
+has   '㉓ log 印到期一行' "$(cat "$hold_log" 2>/dev/null)" 'hold「LS-0 到期」到期'
+out="$(cd "$wtB" && bash "$lock_sh" --timeout 2 -- sh -c 'echo after-expiry' 2>&1)"; rc=$?
+rc_is '㉓ 到期後另一 worktree 立即取得' 0 "$rc" "$out"
+has   '㉓ 命令執行' "$out" 'after-expiry'
+hasnt '㉓ 沒有等待' "$out" '等待中'
+hasnt '㉓ 是正常釋放、不是死鎖回收' "$out" '回收死鎖'
+
+# ---- ㉕ 守門被 -9：--status 標 stale 仍印 label；持有者 --held 不再算在 lock 內；等待者走既有死鎖回收取得；持有者 --release 也能清掉 ----
+out="$(hold_as_stranger 'LS-0 被殺')"; rc_is '㉕ 前提：--hold' 0 "$?" "$out"
+gpid=$(hpid); kill -9 "$gpid" 2>/dev/null; sleep 0.3
+st="$(L --status 2>&1)"
+has   '㉕ 守門死後 --status 標 stale' "$st" 'stale'
+has   '㉕ 守門死後 --status 仍印 label' "$st" 'QA 持有中（LS-0 被殺'
+(cd "$wtA" && bash "$lock_sh" --held 2>/dev/null); rc_is '㉕ 守門死後同 worktree --held → 1（沒有保護了）' 1 "$?" ''
+out="$(cd "$wtB" && bash "$lock_sh" --timeout 5 -- sh -c 'echo after-kill' 2>&1)"; rc=$?
+rc_is '㉕ 等待者回收死鎖後取得、exit 0' 0 "$rc" "$out"
+has   '㉕ 印回收死鎖（含 hold label）' "$out" '回收死鎖'
+has   '㉕ 回收訊息含 cmd hold:<label>' "$out" 'hold:LS-0 被殺'
+has   '㉕ 命令執行' "$out" 'after-kill'
+gone  '㉕ 結束後釋放'
+out="$(hold_as_stranger 'LS-0 被殺二')"; rc_is '㉕ 前提：再 --hold' 0 "$?" "$out"
+gpid=$(hpid); kill -9 "$gpid" 2>/dev/null; sleep 0.3
+out="$(cd "$wtA" && bash "$lock_sh" --release 2>&1)"; rc=$?
+rc_is '㉕ 守門死後持有者 --release 仍可清掉、exit 0' 0 "$rc" "$out"
+gone  '㉕ --release 清掉死守門的 lock'
+
+# ---- ㉖ 參數 fail closed（exit 2）----
+out="$(L --hold 2>&1)"; rc_is '㉖ --hold 缺 label → exit 2' 2 "$?" "$out"
+out="$(L --hold x --max-minutes 0 2>&1)"; rc_is '㉖ --max-minutes 0 → exit 2' 2 "$?" "$out"
+out="$(L --hold x --max-minutes 61 2>&1)"; rc_is '㉖ --max-minutes 61 → exit 2' 2 "$?" "$out"
+out="$(L --hold x --max-minutes abc 2>&1)"; rc_is '㉖ --max-minutes 非整數 → exit 2' 2 "$?" "$out"
+out="$(L --hold x -- true 2>&1)"; rc_is '㉖ --hold 接命令 → exit 2' 2 "$?" "$out"
+out="$(SUPABASE_LOCK_HOLD_TICK=0.1 L --hold x 2>&1)"; rc_is '㉖ SUPABASE_LOCK_HOLD_TICK 低於 0.2 → exit 2' 2 "$?" "$out"
+out="$(SUPABASE_LOCK_HOLD_SECONDS=0 L --hold x 2>&1)"; rc_is '㉖ SUPABASE_LOCK_HOLD_SECONDS=0 → exit 2' 2 "$?" "$out"
+out="$(L --hold-guard only-one-arg 2>&1)"; rc_is '㉖ --hold-guard 參數數量錯 → exit 2' 2 "$?" "$out"
+gone  '㉖ 參數錯誤沒留下 lock'
+unset SUPABASE_LOCK_HOLD_TICK
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ supabase-lock 自測通過"
