@@ -192,34 +192,54 @@ final class QADriver {
         snap("queue-2-items")
     }
 
-    /// 挑「最新」的一格＝剛 `simctl addmedia` 進去的 fixture：優先 label 含今天日期（en「September 4, 2026」／
-    /// zh-Hant「2026年9月4日」），沒有就退回畫面最下、最右的一格（Recents 由舊到新、picker 開在最底）。
-    /// 本票實測：a11y tree 的元素順序不是時間順序（最後一個是 2009 年的內建樣本），不能拿 index 當「最新」；
-    /// 且遠端 view 的格子一律回報 `isHittable == false`（格子明明在畫面中央），`tap()` 會拒絕——改用座標 tap。
+    /// 挑「最新」的一格＝剛 `simctl addmedia` 進去的 fixture。本票實測（iOS 26 模擬器）的 label 形狀：
+    /// `Photo, September 04, 8:10 PM`／`Video, two seconds, September 04, 7:50 PM`——日期是**檔案 mtime**、
+    /// 當年不帶年份、日兩位補零；只查 `app.images`（格子型別是 Image；`descendants(.any)` 會連「Photos」
+    /// 分頁鈕與 label 串接全部格子的容器一起撈進來）。優先 label 含今天（`todayLabelFragments`），沒有就退回
+    /// 畫面最上、最左的一格——Photos 分頁**最新在最上**，剛匯入的 fixture 排第一列；a11y tree 的元素順序
+    /// 不是時間順序（最後一個是 2009 年的內建樣本），不能拿 index 當「最新」。遠端 view 的格子一律回報
+    /// `isHittable == false`（格子明明在畫面中央），`tap()` 會拒絕——改用座標 tap。每次把候選格的
+    /// label＋座標附進 xcresult（`<情境>-picker-cells-<kind>`），挑錯時看得出是哪個規則沒對上。
     private func tapNewestPickerCell(kinds: [String], what: String) throws {
         let clauses = kinds.map { _ in "label BEGINSWITH %@" }.joined(separator: " OR ")
-        let query = app.descendants(matching: .any).matching(NSPredicate(format: clauses, argumentArray: kinds))
+        let query = app.images.matching(NSPredicate(format: clauses, argumentArray: kinds))
         try require(query.firstMatch, what, timeout: 20)
         let cells = query.allElementsBoundByIndex
+        attachText(
+            cells.map { "\($0.label) @ x=\(Int($0.frame.minX)) y=\(Int($0.frame.minY))" }.joined(separator: "\n"),
+            name: "picker-cells-\(kinds[0])"
+        )
         let today = Self.todayLabelFragments()
         let recent = cells.filter { cell in today.contains { cell.label.contains($0) } }
         let pool = recent.isEmpty ? cells : recent
-        guard let target = pool.max(by: { ($0.frame.maxY, $0.frame.maxX) < ($1.frame.maxY, $1.frame.maxX) }) else {
+        guard let target = pool.min(by: { ($0.frame.minY, $0.frame.minX) < ($1.frame.minY, $1.frame.minX) }) else {
             XCTFail("\(what)：找到的格子清單是空的（query.firstMatch 存在但 allElementsBoundByIndex 為空）")
             throw QAFailure.screen(what)
         }
         target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
 
-    /// picker 格子 label 裡「今天」的兩種寫法（模擬器系統語言 en／zh-Hant）。
+    private func attachText(_ text: String, name: String) {
+        let attachment = XCTAttachment(string: text)
+        attachment.name = "\(env.scenario.rawValue)-\(name)"
+        attachment.lifetime = .keepAlways
+        testCase.add(attachment)
+    }
+
+    /// picker 格子 label 裡「今天」的寫法（模擬器系統語言 en／zh-Hant）：相對詞、以及不帶年份的月日
+    /// （實測 `September 04`——日兩位補零；`MMMM d` 一併列著，防 iOS 改回不補零）。
     static func todayLabelFragments(now: Date = Date()) -> [String] {
-        let english = DateFormatter()
-        english.locale = Locale(identifier: "en_US_POSIX")
-        english.dateFormat = "MMMM d, yyyy"
-        let chinese = DateFormatter()
-        chinese.locale = Locale(identifier: "zh_Hant_TW")
-        chinese.dateFormat = "yyyy年M月d日"
-        return [english.string(from: now), chinese.string(from: now)]
+        func format(_ pattern: String, _ locale: String) -> String {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: locale)
+            formatter.dateFormat = pattern
+            return formatter.string(from: now)
+        }
+        return [
+            "Today", "今天",
+            format("MMMM dd", "en_US_POSIX"), format("MMMM d", "en_US_POSIX"),
+            format("M月d日", "zh_Hant_TW")
+        ]
     }
 
     private var pickerConfirmButton: XCUIElement {
