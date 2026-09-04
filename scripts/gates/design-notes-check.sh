@@ -5,7 +5,7 @@
 # 若在改稿後已被刪除重建（LS-142 五度復發：Agczg 段 Q8xZl9／s4VXMV、oYEi0 段 C0GuD／CVOkb），讀者拿去稿內找不到。
 # 判定邏輯在 design_notes_check.py（sh＋py 分工同 privacy-manifest-check）：Notes text 內的 id 形裸 token，若「曾是本 PR
 # 範圍內某個 .pen 快照（merge-base 或範圍內任一觸碰 .pen 的 commit）的節點 id、但 head 快照已無」即缺失；同子句含沿革標記
-# （原／當時／已刪除／取代舊／→ 等，清單見 .py 檔頭 HISTORY_MARKERS）者視為沿革敘述放行並印 info 行。
+# （原／當時／已刪除／取代舊 等，清單見 .py 檔頭 HISTORY_MARKERS；`→` 只放行緊鄰箭頭左側的舊 id，R1 N3）者視為沿革敘述放行並印 info 行。
 # 這支只做 git 端的算術：head（本機 HEAD／CI --head-sha，LS-127 同 design-evidence-check）、merge-base(base, head)、
 # 範圍內觸碰 .pen 的 commit 清單，交給 .py 用 git show 讀快照。
 #
@@ -13,7 +13,8 @@
 #
 # 盲區（明寫）：(1) 從未存在過的 id（打字錯）與同一 commit 內建又刪的 id 不在候選集、抓不到；(2) 只驗 id 存在，不驗
 # Notes 裡的數字（板高／欄寬）是否與稿相符——dbdbbaba 第二級〔量:節點.屬性〕標記另評；(3) 沿革標記是子句級字面比對，
-# 子句內剛好含「舊」「曾」等字的活指標會被放行（誤放行方向，不誤擋）。
+# 子句內剛好含「舊」「曾」等字的活指標會被放行（誤放行方向，不誤擋）——merge-review R1 N3 實測 development 4 塊 Notes 板 768 次活 id
+# 引用有 195（25.4%）所在子句已含標記（`→` 60／`原` 76 最大宗）；`→` 已收窄為緊鄰箭頭左側，其餘字面標記維持。
 #
 # 用法：design-notes-check.sh <path.pen> --base <ref> [--head-sha <sha>]
 # exit：0＝無缺失；1＝有缺失；2＝參數／git 錯誤（fail closed）。自測：design-notes-check.test.sh（CI rules job）。

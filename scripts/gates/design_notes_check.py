@@ -19,6 +19,9 @@
      HISTORY_MARKERS 即視為沿革敘述、不算缺失（印成 info 行）。用子句而非整句，是因為 oYEi0 段「（原 Q8xZl9/s4VXMV）…
      新 id 為 C0GuD」整句含「原」、但「新 id 為 C0GuD」這個子句是現在式活指標——merge-review R1 MN-N5 就是這一筆，整句
      白名單會漏掉它（LS-142 R6 head 8cd2359 實測）。
+  5. `→` 不是子句級標記（merge-review R1 N3：development 4 塊 Notes 板 216 個箭頭幾乎全是數字轉場「1134→1031」，子句級 `→`
+     讓 60 個活 id 引用位置預先被放行、方向是誤放行）：只有死 id **緊鄰箭頭左側**（`<id>\\s*→`，「舊→新」的舊）才算沿革；
+     右側是現行 id，必須存在（死了就是缺失）。
 
 輸出：每筆缺失一行「✗ 板 <rootId>（名稱）／節點 <textId>／缺失 id <token>：<子句>」；沿革 info 行以「（沿革）」開頭；
 最後一行摘要。exit 0＝無缺失；1＝有缺失；2＝參數／git／JSON 錯誤（fail closed）。
@@ -36,12 +39,14 @@ ID_TOKEN_RE = re.compile(r"(?<![A-Za-z0-9])[A-Za-z0-9]{5,6}(?![A-Za-z0-9])")
 NOTES_NAME_RE = re.compile(r"實作註記|Handoff Notes")
 CLAUSE_SPLIT_RE = re.compile(r"[。；;\n，,]")
 # 沿革標記（子句級）。「原」排除「原因」；「刪」限「刪 X」「已刪除」「刪除重建」「刪除舊」這幾種寫法，避免 LS-152 Notes 大量
-# 「刪除帳號」流程敘述把同子句的活指標整個放行。
+# 「刪除帳號」流程敘述把同子句的活指標整個放行。`→` 不在此表（R1 N3）：改由 ARROW_AFTER_RE 只放行緊鄰箭頭左側的 id。
 HISTORY_MARKERS = (
-    r"已刪除", r"刪除重建", r"刪除舊", r"刪 ", r"原(?!因)", r"當時", r"已被", r"取代", r"舊", r"→", r"重建", r"曾",
+    r"已刪除", r"刪除重建", r"刪除舊", r"刪 ", r"原(?!因)", r"當時", r"已被", r"取代", r"舊", r"重建", r"曾",
     r"不存在", r"已改", r"已於",
 )
 HISTORY_RE = re.compile("|".join(HISTORY_MARKERS))
+# 「舊 id→新 id」：token 之後緊接（可有空白）箭頭 → 這個 token 是被取代的舊 id
+ARROW_AFTER_RE = re.compile(r"\s*→")
 
 
 def die(msg):
@@ -113,7 +118,7 @@ def check(head_doc, head_ids, dead_candidates):
                     continue
                 clause = clause_around(content, m.start(), m.end())
                 entry = (board["id"], board.get("name") or "", t["id"], tok, clause)
-                if HISTORY_RE.search(clause):
+                if HISTORY_RE.search(clause) or ARROW_AFTER_RE.match(content, m.end()):
                     history.append(entry)
                 else:
                     missing.append(entry)
@@ -165,7 +170,7 @@ def main(argv):
     summary = "Notes 板 %d 塊、head id %d、本 PR 範圍曾存在而 head 已無的 id %d、沿革引用 %d、缺失 %d" % (
         len(boards), len(head_ids), len(dead_candidates), len(history), len(missing))
     if missing:
-        print("✗ design-notes gate：%s——Notes 引用了本 PR 刪掉的節點 id，改成現行 id，或在同一子句用沿革標記（原／當時／已刪除／取代舊／→）說明它已不存在（LS-168）" % summary, file=sys.stderr)
+        print("✗ design-notes gate：%s——Notes 引用了本 PR 刪掉的節點 id，改成現行 id，或在同一子句用沿革標記（原／當時／已刪除／取代舊，或寫成「舊 id→新 id」把舊 id 放在箭頭左側）說明它已不存在（LS-168）" % summary, file=sys.stderr)
         return 1
     print("✓ design-notes gate 通過：%s" % summary)
     return 0

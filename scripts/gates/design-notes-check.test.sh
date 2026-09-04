@@ -8,6 +8,8 @@
 #   ⑤ 形狀像 id 的英文字（height／Layout／false）從未是節點 id → 不誤判（綠）
 #   ⑥ 別票早在 merge-base 之前刪掉的 id（不在本 PR 範圍候選集）→ 不擋（綠）
 #   ⑦ 本 PR 中間 commit 建了又在後一 commit 刪掉的 id、Notes 仍引用 → 紅（候選集含範圍內每個 .pen commit，不只 merge-base）
+#   ⑩ merge-review R1 N3：「→」不再是子句級標記——同子句有數字轉場「1134→1031」但死 id 不緊鄰箭頭 → 仍紅（修前放行）
+#   ⑪ 「舊→新」只放行箭頭左側：兩側都死時左側 Xk9f2 印沿革、右側 Zq7Lm 紅（右側是現行 id、必須存在）
 #   ⑧ --head-sha 指定 PR head（CI merge ref 情境，同 LS-127）→ 依該 head 判定；解析不到／缺值 → exit 2
 #   ⑨ 參數 fail closed：缺 --base／找不到 .pen／非 git 目錄 → exit 2
 set -uo pipefail
@@ -91,6 +93,20 @@ pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":
 commit_pen 'design(pen): LS-1 r2 又刪 Row 3，Notes 沒改'
 expect 1 '⑦ 範圍內中間 commit 建又刪的 id（不在 merge-base 也不在 head）→ 仍紅' '缺失 id Tmp9Z' '' design/littlesprout.pen --base "$base_ref"
 # 若候選集只看 merge-base（退化），Tmp9Z 抓不到——上面這格就是釘住它的 mutation 負控
+
+# ⑩ R1 N3：子句含「→」但死 id 不緊鄰箭頭（數字轉場）→ 紅。修前 HISTORY_MARKERS 含 → 時整個子句放行（development 60 個此形引用位置）
+g checkout -q -b pr-arrow-far "$base_ref"
+pen "$(board Ab12C '01 板' '{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" "$(notes T1 '板高 Xk9f2：1134→1031，Row 現為 Zq7Lm')"
+commit_pen 'design(pen): LS-1 r2 刪 Row，Notes 同子句只有數字轉場箭頭'
+expect 1 '⑩ 子句含「→」但死 id 不緊鄰箭頭（數字轉場 1134→1031）→ 紅（→ 不是子句級標記）' '缺失 id Xk9f2' '（沿革）' design/littlesprout.pen --base "$base_ref"
+
+# ⑪ 「舊→新」兩側都死：左側 Xk9f2 緊鄰箭頭 → 沿革放行；右側 Zq7Lm 是「現行 id」→ 紅
+g checkout -q -b pr-arrow-right "$base_ref"
+pen "$(board Ab12C '01 板' '{"type":"frame","id":"Nw3Pq","name":"Row 3"}')" "$(notes T1 'Row 改版：Xk9f2→Zq7Lm')"
+commit_pen 'design(pen): LS-1 r2 兩個 Row 都刪了、Notes 箭頭右側指向死 id'
+expect 1 '⑪ 「舊→新」右側的新 id 已死 → 紅，左側舊 id 印沿革（只放行箭頭左側）' '缺失 id Zq7Lm' '缺失 id Xk9f2' design/littlesprout.pen --base "$base_ref"
+out="$(cd "$R" && bash "$check" design/littlesprout.pen --base "$base_ref" 2>&1)"
+if printf '%s' "$out" | grep -qF '（沿革）板 NOTES（LS-1 / 實作註記 · Handoff Notes）／節點 T1／舊 id Xk9f2'; then echo "✓ ⑪ 左側 Xk9f2 印沿革行"; else echo "✗ ⑪ 左側 Xk9f2 應印沿革行" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 
 # ⑧ --head-sha：在 pr-dead 之後再開一個 commit 模擬 merge ref；指定 PR head＝pr-dead 的 commit 仍紅；指向修正後的 commit 綠
 dead_head="$(g rev-parse pr-dead)"

@@ -78,7 +78,7 @@ model: sonnet
 - 設計了哪些 frame／畫面（名稱列表，含 iPhone/iPad 版本）
 - frontend-design 與 little-sprout-brand 兩個 skill 各影響了哪些取捨（任一未載入則明說跳過與原因，不可靜默）
 - 關鍵設計決策與理由
-- 給 ios-dev 的實作註記（spacing、字級、色彩變數、各種狀態：空、載入、錯誤）。**Notes 板節點 id 規約（LS-168）**：Notes 板（頂層 frame 名稱含「實作註記」或「Handoff Notes」）裡提到的節點 id 都得是現行 id——CI `scripts/gates/design-notes-check.sh` 會把本 PR 範圍內刪掉的 id 逐一比對，現在式引用死 id 即紅（LS-142 五度「Notes 落後改稿」）。改稿刪除重建節點後，Notes 只能用**沿革寫法**提舊 id，且標記要在**同一子句**（以 。；，切）：「原 X」「當時的 id 為 X」「X 已於 R5 刪除重建」「取代舊 X」「X→Y」，並在同段給出現行 id；「（原 X）…新 id 為 Y」這種整句有標記、Y 所在子句沒有的寫法仍會紅（LS-142 R7 慣例，merge-review f26cdb44）。收工前自跑 `bash scripts/gates/design-notes-check.sh design/littlesprout.pen --base origin/development`。
+- 給 ios-dev 的實作註記（spacing、字級、色彩變數、各種狀態：空、載入、錯誤）。**Notes 板節點 id 規約（LS-168）**：Notes 板（頂層 frame 名稱含「實作註記」或「Handoff Notes」）裡提到的節點 id 都得是現行 id——CI `scripts/gates/design-notes-check.sh` 會把本 PR 範圍內刪掉的 id 逐一比對，現在式引用死 id 即紅（LS-142 五度「Notes 落後改稿」）。改稿刪除重建節點後，Notes 只能用**沿革寫法**提舊 id，且標記要在**同一子句**（以 。；，切）：「原 X」「當時的 id 為 X」「X 已於 R5 刪除重建」「取代舊 X」「X→Y」（`→` 只放行**緊鄰箭頭左側**的 X；右側 Y 是現行 id、必須存在），並在同段給出現行 id；「（原 X）…新 id 為 Y」這種整句有標記、Y 所在子句沒有的寫法仍會紅（LS-142 R7 慣例，merge-review f26cdb44）。收工前自跑 `bash scripts/gates/design-notes-check.sh design/littlesprout.pen --base origin/development`。
 - 未決事項與需要人核可的點
 - **Pen 路徑**（LS-91）：開工核對到的 active 文件路徑；每輪 pen-land.sh 落地時的結果（exit 0／被擋與原因，含是否用了 `--marker` 內容證明覆蓋 mtime，LS-44）
 - **尺寸類（`width`／`height`）token 的規格值族與硬寫次數**（LS-44：這兩個屬性綁不了 `$variable`，只能寫字面值——列出本輪新增／修改了哪些寬高字面值、各自對應哪個規格 token 家族，方便之後真能綁定時知道要同步改哪裡）
