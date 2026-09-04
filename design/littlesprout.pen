@@ -147206,6 +147206,1217 @@
           }
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "EclPC",
+      "x": -3367,
+      "y": 82919,
+      "name": "LS-177 / 實作註記 · Handoff Notes (ios-dev)",
+      "width": 900,
+      "fill": "$print-paper",
+      "cornerRadius": 24,
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 44,
+      "children": [
+        {
+          "type": "text",
+          "id": "SbRIq",
+          "name": "NT",
+          "fill": "$print-ink",
+          "content": "LS-177 留言／愛心互動列＋留言 sheet＋推播通知 · Handoff Notes",
+          "lineHeight": 1.25,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 34,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "FEpyF",
+          "name": "NS",
+          "fill": "$print-ink-secondary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "R1 首輪產出。16 板：卡片互動列規格 3 板、留言 sheet 家族 6 板、按讚名單（可選）1 板、推播通知 6 板。不修改任何已核可板（LS-152 t5wI4、時間軸卡片共用元件 cmp/Card Diary 本體）；所有互動列與 Toggle 皆透過 Copy()＋Replace(instanceId/childId) 疊加在既有元件的 instance 上，元件定義本身逐位元不變。",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "Qtl74",
+          "name": "N 畫面級屬性清單",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "jNI8B",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "畫面級屬性清單",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "oT2HR",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "d7AUr",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "u7tfL",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "卡片互動列規格（3 板，示範用，非實際時間軸畫面）：IgqGF（iPhone，未按讚/已按讚並列）、VZ0wV（深色）、Qzz3r（AX3）。展示對象＝cmp/Card Diary（qtCd7）的 instance；Card Album／Card Photo 兩個共用元件的底部同樣加 Interaction Row，做法完全相同（icon＋計數×2，$ctl-pad-tap 撐 44pt 熱區），本輪未逐一畫出，ios-dev 實作時三種卡片共用同一個 SwiftUI ViewModifier／子 View。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "rYXwx",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "XrTU9",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "VrO62",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "留言 sheet（6 板）：FiBvh（iPhone，3 則留言）、f10d1D（深色）、SHbqU（AX3）、dHSyh（錯誤態·網路中斷）、wY7f8（iPad 11\"，置中卡片）、DUyg3（留言操作表·Owner 移除留言）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sBb92",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RIQuK",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "mwZNf",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "按讚名單（1 板，可選）：GZ3pb——長按愛心計數彈出的小清單，票文明說「VR 判多餘可砍」，若 R2 判定砍掉，理由請記於此節沿革。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "fniEW",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "lb9yd",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "roAOu",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "推播通知（6 板）：j7WwV（權限前置說明頁 iPhone）、ckgMp（深色）、KyxGc（AX3）、FeqWk（iOS 系統對話框示意）、y7KAW（LS-152 設定頁變體·加推播通知列 iPhone）、y66AzT（同板深色）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "J5W7i",
+          "name": "N 卡片互動列：不改共用元件本體，Replace(instance) 疊加",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "FkrUN",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "卡片互動列：不改共用元件本體，Replace(instance) 疊加",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "UL7sb",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "GiJeu",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "h4wv16",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "cmp/Card Diary／Card Album／Card Photo 是全稿廣泛使用的共用元件（時間軸、日記編輯器等既有已核可板都在用），若直接改元件定義（Insert 新 child），會讓那些既有板的渲染內容全部連帶改變，可能引發大量非本票範圍的溢出／碰撞。做法：本輪只對「新複製出來的 instance」動刀——`Copy(\"qtCd7\", parent, {...})` 產生 instance 後，找到其 Signature 子節點路徑（instanceId/Jqwww），用 `Replace(path, {...})` 把整段換成「原簽名列＋新 Interaction Row」。元件本體 qtCd7 的 children 陣列本身完全沒被寫入——`他票 root 逐位元不變` 驗收項因此對 qtCd7 也成立。ios-dev 實作時則相反：SwiftUI 只有一份 `DiaryCardView`，直接在共用 View 加 Interaction Row 即可，會自然套用到所有呼叫端——設計稿的「不改元件」是 Pencil 檔案層級的風險管理，不代表實作也要用兩套邏輯。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sBo1Z",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "I5bYf",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "a1wjoE",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已按讚態：heart icon 與計數文字改 $accent 上色＋字重 700（`YX6Jm`／等 id，各板皆同一模式）；未按讚態維持 $text-secondary／$print-ink-secondary（依卡片自身色彩系統，Diary 卡是印刷紙色 `$print-ink-secondary`，非全域 `$text-secondary`——量法：`Get` 對照卡片內既有 Name/Age 文字用的 fill 值）。熱區：Heart Button／Comment Button 皆用 `padding:[\"$ctl-pad-tap\",0]` 撐到 44pt（AX3 因文字放大到 77pt，icon 同步覆寫 32×32 對應既有 AX3 icon-sm 慣例）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "U3XSND",
+          "name": "N 留言 sheet：iPad 沿用 LS-133 R3 核可的置中卡片幾何",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "ZIVMb",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "留言 sheet：iPad 沿用 LS-133 R3 核可的置中卡片幾何",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "zf6i5",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "B7mSB9",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "G8H8i5",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`wY7f8` 的 Comment Card 逐位元沿用 LS-133 R3 定案的 iPad 卡片配方（520 寬＋87.5 內距＝345 內容欄，見 LS-133 handoff）——同一套「iPadOS .sheet() 在 regular width 下是置中 form sheet」的系統行為，不是重新發明。實測置中對稱：x=157/157（(834-520)/2）、y=211/211（(1194-772)/2），完全對稱。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TLVfT",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "zzUgE",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "HMzhL",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "錯誤態（`dHSyh`）只畫了「網路中斷」（`wifi-off` icon＋『連線中斷，請檢查網路連線後再試一次。』）。票文另提到的 LS026（target 屬於別家庭／已刪）留待 ios-dev 對應：情境是使用者開著留言 sheet 時，內容被 Owner 刪除或使用者被移出家庭，此時 `list_comments`／`create_comment` 會回 LS026——文案建議「這則內容已經不存在了，無法查看或新增留言。」＋單一「關閉」鈕（不提供重試，因為目標真的不在了，不是網路問題）。未畫成獨立板是因為視覺結構與網路錯誤態完全相同（只換 icon 與文案），畫兩張重複資訊價值低；若 R2 VR 認為需要仍可補。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lOzQr",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "bYLEc",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "QFvDu",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Owner 移除留言操作表（`DUyg3`）逐位元沿用 LS-152 05 內容操作表（`WgbNc`）的結構：Grabber／Head Title（引言）／Action List（單一 danger 列）／Cancel Button，元件與 token 完全相同（`cmp/Button Text` 的 `qe9yS` instance）。與 LS-152 05 的差異只在 Action List 只有一列「移除這則留言」（danger），不含「檢舉」「封鎖」——這是刻意的範圍縮小：票文只要求「Owner 移除留言」，未要求對留言本身的檢舉／封鎖動作，避免功能蔓延。**重要發現（先讀再畫的產出）**：LS-152 已有 `Qs7iE`（LS-152 / 10b 刪除留言 · 確認）——一張「要刪除這則留言嗎？」的二次確認 Confirm Sheet，結構是 Head Title＋Body Text＋danger「刪除這則留言」鈕＋取消。兩板銜接成完整流程：`DUyg3`（長按或點選留言喚出的操作表，列出可執行動作）點「移除這則留言」→ 導向 `Qs7iE`（既有二次確認）→ 點「刪除這則留言」才真的呼叫 `set_comment_deleted`。`DUyg3` 是本票新增的「入口選單」，`Qs7iE` 是 LS-152 已核可的「二次確認」，兩者職責不重疊、不重畫，`Qs7iE` 完全未被本票觸碰（byte-identical）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "v4rjFO",
+          "name": "N 按讚名單（可選）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "sNwmK",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "按讚名單（可選）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "uGDSE",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vuj0v",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "uLBa2",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`GZ3pb` 長按愛心計數彈出的小清單，顯示按讚者姓名＋頭像縮寫，不含移除或封鎖等動作（純資訊性列表）。票文本身已預告「VR 判多餘可砍」——這是預先做好、供 R2 討論的候選功能，不是我方judgment 認為必要。若 R2 VR 判定砍掉，直接刪除本板即可，不影響其他 15 板的任何依賴關係（此板為孤立節點，未被其他板引用）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "mYY2z",
+          "name": "N 推播權限前置說明頁與系統對話框",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "czFhB",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "推播權限前置說明頁與系統對話框",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "OpQ63",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "LWver",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "tDdT2",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`j7WwV` 是進入時間軸後**首次**顯示的權限前置頁（非系統對話框本身），先解釋「為什麼要通知」再讓使用者主動按「開啟通知」觸發系統對話框（`FeqWk`）——這是 Apple 建議的 pre-permission prompt 模式：先解釋、後請求，避免使用者對系統對話框直接按「不允許」後永久失去再次詢問的機會（iOS 系統規則：使用者拒絕過一次後，App 只能引導去系統設定，無法再跳原生對話框）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qRDmP",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "jOoCC",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "j7RFGF",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`FeqWk`（iOS 系統對話框示意）刻意用字面色值 `#F2F2F7`／`#000000`／`#007AFF`／`#C6C6C8`，**不用設計 token**——這是 iOS 系統原生 UI（`UNUserNotificationCenter` 觸發的系統 alert），App 完全無法自訂樣式或顏色，畫出來純粹是示意「使用者會看到什麼」，不是可實作的規格。ios-dev 不需要、也不能還原這個畫面的視覺，只需呼叫 `UNUserNotificationCenter.requestAuthorization`，系統會自動用 iOS 當前版本的原生樣式顯示（可能與此稿的視覺細節不同，屬預期差異）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VchOU",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RskEK",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "UU5Rm",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "設定頁「推播通知」列（`y7KAW`／`y66AzT`）：不修改 LS-152 已核可板 `t5wI4`，Copy 出新板後在「內容與安全」卡片追加一列。Toggle Switch 為新繪元件（51×31 track＋27×27 knob＋2pt inset，對應 iOS 系統 `UISwitch`／SwiftUI `Toggle` 的標準幾何），沿用 `$accent` 當 on 態顏色。關閉時的行為（票文「關閉提示到系統設定」）：iOS 無法讓 App 直接關閉自己的通知權限，切換此列到「關」時應跳出確認對話框「要關閉推播通知嗎？這需要在「設定」App 裡調整」＋「前往設定」／「取消」兩個選項（未另畫板，屬系統層級確認對話框，視覺語彙同 `FeqWk` 的系統對話框樣式，非本稿新增元件）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "x50LV",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "oslvb",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "lF3aU",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Toggle Switch 未畫 AX3 專屬變體：這是純幾何控制項（無文字），iOS 原生 `UISwitch`／`Toggle` 本身不隨 Dynamic Type 縮放，51×31 在任何字級下都是同一組系統慣例尺寸；Row 本身的文字（icon＋label）沿用既有 `cmp/Settings Row`，AX3 相容性已由 LS-152 稿驗證過，本輪不重複驗證。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "q7V7qY",
+          "name": "N 文案鍵：通知彙總文案矩陣（對齊 docs/API.md §3 notification_events 與 LS-172）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "xQxLf",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "文案鍵：通知彙總文案矩陣（對齊 docs/API.md §3 notification_events 與 LS-172）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "jo8NA",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "zQPZu",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "o5CEE",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`notification_events.kind` ∈ comment／reaction／diary／album（現行）＋media（LS-175 待排）。單則觸發者（event_count=1）與多則彙總（event_count>1）文案不同，範例：\ncomment：「陳志明 在你的日記留言了」／「陳志明 等 3 人 留言了」\nreaction：「陳志明 按了愛心」／「陳志明 等 3 人 按了愛心」\ndiary：「陳志明 新增了一則日記」\nalbum：「陳志明 新增了一本相簿」\nmedia（LS-175 待排，票文指定範例）：「爸爸新增了 50 張照片」——單筆觸發者名稱＋動詞＋彙總數量，與上列四種 kind 同一套「觸發者＋動詞（＋數量）」句型，本輪僅提供文案範例供 LS-172／175 實作時比對，不畫額外畫面（LS-22 的 Edge Function 範圍，本票『不做』段已排除）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "WEYTe",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "j1B1S",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "yqtj8",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "此文案矩陣用於 `j7WwV`（權限前置頁）的 Notification Preview 卡片示範文字，以及未來 LS-172／175 實作推播發送時的文案來源——兩處引用同一份範例，確保使用者在「為什麼要開通知」看到的例子與實際收到的通知文案一致，不會有「說一套做一套」的落差。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "m6y6eU",
+          "name": "N 被封鎖者的互動：伺服器端過濾，UI 無需特殊狀態",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "tWfzj",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "被封鎖者的互動：伺服器端過濾，UI 無需特殊狀態",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "AUzNf",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "QClg7",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "P7FVf",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "依 LS-149（docs/API.md §3「封鎖過濾」）：時間軸／留言／相簿三處查詢已在伺服器端把被封鎖者的內容整筆濾掉（`albums_select`／`diaries_select`／連動時間軸），留言 sheet 的清單 RPC（`list_comments`，若有）與 `create_comment`／`toggle_reaction` 的讀取路徑同樣受這層過濾——換句話說，被封鎖者的留言／按讚**根本不會出現在回傳的資料裡**，不是「顯示但標記為已封鎖」。因此本稿刻意**不畫**任何「已封鎖使用者的留言」特殊視覺狀態——沒有這個狀態，UI 不需要處理它。若日後產品決定要顯示「已隱藏 N 則留言」之類的提示，屬另一個功能決策，不在本票範圍。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "NoXJF",
+          "name": "N 尺寸規格值與量法",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "IiP0O",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "尺寸規格值與量法",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "N5YvN",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PtIfk",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "MmGIb",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Interaction Row 熱區（規格值族「互動按鈕熱區」）：Heart/Comment Button 皆 `padding:[\"$ctl-pad-tap\",0]`，iPhone/深色實測 44×~52（`IgqGF`/`VZ0wV` 內 `Heart Button`/`Comment Button` 節點，量法：`Get` 走訪 bounds.height）；AX3 icon 覆寫 32×32（對應既有 AX3 icon-sm 慣例，同 LS-163 Toggle Icon 手法）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HVG5L",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "K7w7Nb",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "M3T3g",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "留言 sheet Comment List 固定高度（規格值族「留言清單捲動容器」，硬寫字面值，Pencil height 不吃 $variable）：`FiBvh`/`f10d1D` 的 `WBA3d` 為 400（3 則留言完整可見，未裁切，因為預設狀態展示完整內容比展示裁切更能說明留言 sheet 的核心功能）；`SHbqU`（AX3）改用 `fit_content` 內容驅動（884，3 則留言逐一放大後仍完整顯示，root height 復算 1265）；`wY7f8`（iPad）沿用 400（與 iPhone 同）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Jhq9L",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "znww9",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "d5RNKR",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX3 留言頭像／送出鈕覆寫：`Avatar`/`My Avatar` 36→72（容納放大後的 Initial 文字 40×58，量法：套用前實測文字溢出圓形，逐步放大到 72 時完全容納，內距 16/16 對稱）；`Send Button` 44→56、`Send Icon` 20→26（視覺比例對應放大文字，非熱區硬性要求——44 本已達標，56 是為了與周邊放大的頭像／文字視覺協調）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "E3Vi3",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "NuxCp",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "j5ngNi",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPad 卡片（`wY7f8` / `xkd1U`）：520 寬＋87.5 內距＝345 內容欄，逐位元沿用 LS-133 R3 定案配方（見該票 handoff 「MN-4」節），非本票重新推導。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "nzS8z",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "swvv5",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "DooqY",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "板高（規格值族「單畫面總高」）：`IgqGF`/`VZ0wV` 852（裝置高度）；`Qzz3r`（AX3）1434（內容驅動）；`FiBvh`/`f10d1D`/`dHSyh`/`DUyg3`/`GZ3pb` 皆 852；`SHbqU`（AX3）1265；`wY7f8`（iPad）1194；`j7WwV`/`ckgMp` 852；`KyxGc`（AX3）1454；`FeqWk` 852；`y7KAW`/`y66AzT` 852（沿用 LS-152 原板高，未改動 Body 結構）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "W2Faf",
+          "name": "N 未決 / 需人核可",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "I9nZX",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "未決 / 需人核可",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "G2v5v",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "il75f",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "X8bYU",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "按讚名單板（`GZ3pb`）是否保留：票文已預告「VR 判多餘可砍」，本輪先畫出供討論，R2 依 VR 意見決定去留。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "b3ceaM",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Z7Ofmb",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "U6YpXp",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS026（留言目標已刪／屬於別家庭）錯誤態未獨立畫板，只在 Notes 給文案建議（見「留言 sheet」節）——若 R2 VR 認為需要獨立視覺驗證可補。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Z8BET0",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "SfIhh",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "hHspJ",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "留言分頁載入（無限捲動／分頁按鈕）不在本票範圍（票文「不做」段明列「留言分頁載入的效能設計」），`Comment List` 目前只示範靜態 3 則，實際留言數量的捲動／分頁行為留給實作票決定。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "BdXJU",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "pfMCG",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Z7vNe",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "推播設定「關閉」時導向系統設定的確認對話框，本輪只在 Notes 文字描述、未畫成獨立板（視覺語彙與 `FeqWk` 系統對話框相同，屬系統層級 chrome）——若 R2 VR 認為需要畫出可補。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
