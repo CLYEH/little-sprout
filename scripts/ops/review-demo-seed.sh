@@ -33,7 +33,14 @@
 # 用法：
 #   bash scripts/ops/review-demo-seed.sh --target local              種本機（本機一律經 supabase-lock）
 #   bash scripts/ops/review-demo-seed.sh --target prod                只印計畫，不連線、不寫入（沒有 --yes）
-#   bash scripts/ops/review-demo-seed.sh --target prod --yes          種正式站（讀 .env 取連線，見下）
+#   bash scripts/ops/review-demo-seed.sh --target prod --yes --owner-email <addr>
+#                                                                      種正式站（讀 .env 取連線，見下；owner-email 必填見下）
+#
+# --owner-email／--member-email（LS-162）：覆寫 owner／member 帳號的 email，不帶時維持
+#   下方 OWNER_EMAIL／MEMBER_EMAIL 兩個固定預設值。**`--target prod --yes` 時 --owner-email
+#   必填，且不得以 `@little-sprout.app` 結尾**——那個網域非我們所有（LS-148 查重：
+#   `littlesprout.app` 為競品），寄到那裡的信審核員收不到；缺值或網域不符會在讀 `.env`
+#   之前就 `exit 2`，不連線、不觸碰任何 prod 憑證。
 #
 # 環境：
 #   --target local：用 `supabase status -o env` 取得本機 DB_URL／API_URL／SERVICE_ROLE_KEY。
@@ -48,7 +55,7 @@ set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-usage() { echo "用法：review-demo-seed.sh --target local|prod [--yes]"; }
+usage() { echo "用法：review-demo-seed.sh --target local|prod [--yes] [--owner-email <addr>] [--member-email <addr>]"; }
 
 # F1（merge-review R1）：":133" 要在還沒在 lock 內時把原始參數原封不動 re-exec 進
 # supabase-lock.sh，但下面的解析迴圈會把 "$@" shift 光——先存一份不受影響的副本。
@@ -58,6 +65,8 @@ orig_args=("$@")
 
 target=""
 yes=0
+owner_email_opt=""
+member_email_opt=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --target)
@@ -67,6 +76,12 @@ while [ $# -gt 0 ]; do
       [ -n "${2:-}" ] || { echo "✗ review-demo-seed：--target 缺值" >&2; usage >&2; exit 2; }
       target=$2; shift 2 ;;
     --yes) yes=1; shift ;;
+    --owner-email)
+      [ -n "${2:-}" ] || { echo "✗ review-demo-seed：--owner-email 缺值" >&2; usage >&2; exit 2; }
+      owner_email_opt=$2; shift 2 ;;
+    --member-email)
+      [ -n "${2:-}" ] || { echo "✗ review-demo-seed：--member-email 缺值" >&2; usage >&2; exit 2; }
+      member_email_opt=$2; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "✗ review-demo-seed：未知參數 $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -90,8 +105,10 @@ INVITE_ID=d4000000-0000-4000-8000-000000000001
 # 0/O/1/I 以免長輩手抄誤認，20260825070627_invite_code_6.sql）刻意要避開的歧義字元同一類
 # ——這裡是直寫、不受該字母表機械約束，但沒理由自己選一個它要避開的字元，換成 7。
 INVITE_CODE=LSDEM7
-OWNER_EMAIL=review-demo@little-sprout.app
-MEMBER_EMAIL=review-demo-member@little-sprout.app
+# LS-162：owner／member email 可用 --owner-email／--member-email 覆寫；不帶時維持這兩個
+# little-sprout.app 預設值（僅供本機使用——正式站執行的必填／網域檢查見下方 prod+yes 分支）。
+OWNER_EMAIL="${owner_email_opt:-review-demo@little-sprout.app}"
+MEMBER_EMAIL="${member_email_opt:-review-demo-member@little-sprout.app}"
 # 上傳路徑的 {yyyy}/{mm} 固定（docs/API.md §6：這段取的是「上傳時間」，不是拍攝時間）——
 # 種子腳本每次重跑都要落在同一個路徑，Storage 側的批次刪除才能用固定清單、不必先 list。
 SEED_YM=2026/09
@@ -127,7 +144,20 @@ if [ "$target" = prod ]; then
     echo "（未帶 --yes：只印計畫，不連線、不寫入任何資料——LS-146 本票就停在這裡，正式站落地待使用者核可）"
     exit 0
   fi
-  echo "⚠ review-demo-seed：--target prod --yes，即將對正式站寫入審核用 demo 資料" >&2
+  # LS-162：正式站真的執行前先驗 owner-email——退出點要早於下面的 `source .env`，兩個
+  # 負案都不能碰到任何 prod 連線資訊。必須是操作者明確傳入的地址（不接受沿用預設值），
+  # 且不得是 @little-sprout.app（該網域非我們所有，審核員收不到信，見腳本檔頭與
+  # docs/store/review-notes.md）。
+  if [ -z "$owner_email_opt" ]; then
+    echo "✗ review-demo-seed：--target prod --yes 需要 --owner-email（不得沿用預設 review-demo@little-sprout.app，該網域非我們所有、審核員收不到信，LS-162）" >&2
+    exit 2
+  fi
+  case "$OWNER_EMAIL" in
+    *@little-sprout.app)
+      echo "✗ review-demo-seed：--owner-email 不得使用 @little-sprout.app 網域（非我們所有，審核員收不到信，LS-162）" >&2
+      exit 2 ;;
+  esac
+  echo "⚠ review-demo-seed：--target prod --yes，即將對正式站寫入審核用 demo 資料（owner=${OWNER_EMAIL}）" >&2
   [ -f "$ROOT/.env" ] || { echo "✗ 找不到 $ROOT/.env" >&2; exit 2; }
   set -a
   # shellcheck disable=SC1091
