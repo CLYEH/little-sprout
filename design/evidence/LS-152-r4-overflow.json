@@ -1,8 +1,8 @@
 {
   "ticket": "LS-152",
   "round": 4,
-  "head_sha": "b0b42ad75ec0554d3e2ea7fd69d167876fb6915e",
-  "total_nodes": 8242,
+  "head_sha": "547d9eee98fabe1bdce263c66a65f38c7b2e9fca",
+  "total_nodes": 8243,
   "scans": {
     "sibling_intersection": {
       "flagged": [
