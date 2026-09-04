@@ -54,8 +54,14 @@
 # 環境衛生（merge-review R1 minor 1，比照 scripts/gates/push-gate.sh LS-73）：hook 行程若帶
 # GIT_DIR／GIT_WORK_TREE／GIT_INDEX_FILE／GIT_PREFIX／GIT_COMMON_DIR，`git rev-parse` 對任何 `-C` 目錄
 # 都回同一個 git-dir／common-dir → 每個 linked worktree 都被判成主 checkout（產線全停、訊息還叫人
-# 「去 worktree」）。呼叫 git 前一律剝除這五個變數。另設 sys.dont_write_bytecode：import pretool_engine
-# 不得在 scripts/hooks/ 留 __pycache__（hook 跑在主 checkout 那份，留了就把主 checkout 弄 dirty）。
+# 「去 worktree」）。LS-157（R2 N1 comment 47ab021a）：只剝五個具名不夠——GIT_OBJECT_DIRECTORY 指向不存在
+# 路徑時 rev-parse 對主 checkout 也回「not a git repository」，被歸成「不在 repo 內」→ 整支 gate 無聲
+# fail-open。改為呼叫 git 前剝除**所有** GIT_* 前綴變數（rev-parse 純本地、無網路，剝 GIT_CONFIG_*／
+# GIT_SSH_COMMAND 只會更乾淨），並加安全網：目標 realpath 落在 hook 自己解析出的 repo 根（$CLAUDE_PROJECT_DIR，
+# 缺則自 cwd 上溯找含 .git 的目錄；不靠 git）字首之下、但 rev-parse 仍說不在 repo 內 → W0 deny 並印
+# rev-parse 的 stderr 首行（fail-closed）；repo 外路徑（scratchpad／/tmp／$HOME）不受影響。另設
+# sys.dont_write_bytecode：import pretool_engine 不得在 scripts/hooks/ 留 __pycache__（hook 跑在主 checkout
+# 那份，留了就把主 checkout 弄 dirty）。
 #
 # 前處理（heredoc 剝除、引號感知斷詞、`$(...)` 擷取、透明前綴詞表）直接 import 同目錄的
 # pretool_engine.py（LS-104），不重寫第二套 tokenizer。
@@ -105,15 +111,42 @@ HEREDOC_START_RE = re.compile(r"<<[-~]?[ \t]*(?:'([^']*)'|\"([^\"]*)\"|([A-Za-z_
 INLINE_SWITCH_RE = re.compile(
     r"^\s*(?:(?:env|[A-Za-z_][A-Za-z0-9_]*=\S*)\s+)*" + re.escape(SWITCH) + r"=1(?:\s|$)"
 )
-# 呼叫 git 前剝除的環境變數（R1 minor 1；同 push-gate.sh LS-73 的 unset 清單＋GIT_COMMON_DIR）。
-GIT_ENV_POLLUTERS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_PREFIX", "GIT_COMMON_DIR")
 
 
 def _clean_env():
-    env = dict(os.environ)
-    for k in GIT_ENV_POLLUTERS:
-        env.pop(k, None)
-    return env
+    """呼叫 git 前剝除所有 GIT_* 變數（R1 minor 1 原建議；R2 N1：只剝五個具名時 GIT_OBJECT_DIRECTORY 等仍讓
+    rev-parse 回「not a git repository」→ 整支 gate 無聲 fail-open）。"""
+    # LS-157 mutation anchor：自測會把 startswith("GIT_") 換回五個具名變數——GIT_OBJECT_DIRECTORY 下 worktree
+    # 正樣本必須變紅、主 checkout 負樣本的 deny 必須從 W1 退成 W0（只剩安全網在擋）。
+    return {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+
+
+_ROOT_HINT = None  # main() 設定：hook 自己解析出的 repo 根 realpath（不靠 git），供 repo_dirs 的安全網用
+
+
+def root_hint(cwd):
+    """$CLAUDE_PROJECT_DIR 的 realpath；缺則自 cwd 上溯找第一個含 .git 的目錄；都沒有 → None。"""
+    p = os.environ.get("CLAUDE_PROJECT_DIR")
+    if p:
+        return os.path.realpath(p)
+    d = os.path.realpath(cwd)
+    while True:
+        if os.path.lexists(os.path.join(d, ".git")):
+            return d
+        parent = os.path.dirname(d)
+        if parent == d:
+            return None
+        d = parent
+
+
+def _under_root(d):
+    return bool(_ROOT_HINT) and (d == _ROOT_HINT or d.startswith(_ROOT_HINT + os.sep))
+
+
+def _under_root_msg(path, stderr):
+    first = (stderr.strip().splitlines() or ["(rev-parse 無 stderr)"])[0][:160]
+    return (f"{path} 落在 repo 根 {_ROOT_HINT} 之下，但 git rev-parse 判定不在 repo 內（{first}）"
+            "——環境／.git 異常時不放行")
 
 
 class GuardError(Exception):
@@ -162,6 +195,9 @@ def repo_dirs(path):
         raise GuardError(f"git rev-parse 無法執行（{type(e).__name__}）")
     if r.returncode != 0:
         if "not a git repository" in r.stderr:
+            if _under_root(d):
+                # LS-157 mutation anchor（安全網）：自測會把下一行換成 pass，壞 .git 根下的 Write 必須因此變綠
+                raise GuardError(_under_root_msg(path, r.stderr))
             res = None
         else:
             raise GuardError(f"git rev-parse 失敗（rc={r.returncode}）：{r.stderr.strip()[:120]}")
@@ -508,6 +544,8 @@ def main():
     ti = d.get("tool_input")
     ti = ti if isinstance(ti, dict) else {}
     cwd = str(d.get("cwd") or "") or os.getcwd()
+    global _ROOT_HINT
+    _ROOT_HINT = root_hint(cwd)
 
     if os.environ.get(SWITCH) == "1":
         sys.stderr.write(f"main-checkout-guard：{SWITCH}=1（環境變數），放行 {tool}（主 checkout 寫入未受檢）\n")

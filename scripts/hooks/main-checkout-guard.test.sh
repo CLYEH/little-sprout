@@ -9,6 +9,10 @@
 # mutation M3 拿掉 env 剝除必須變紅）；S5–S7——逃生門認 `env VAR=1` 前綴、非最前面不認且訊息寫明
 # 位置（minor 2）；N2b——LS-145 第三起事故形狀 Edit 主 checkout .github/workflows/ci.yml（informational 1）；
 # T1——hook 跑完不在 hooks 目錄留 __pycache__（自查：留了會把主 checkout 弄 dirty）。
+# LS-157（R2 comment 47ab021a N1／informational 1＋3、LS-154 收尾實測）：G4–G6——未列名 GIT_OBJECT_DIRECTORY 下
+# 主 checkout 仍 W1 擋、worktree／scratchpad 仍放行；X 段——安全網：目標落在 hook 解析出的 repo 根之下但 rev-parse 說
+# 不在 repo 內 → W0 deny 並印 stderr 首行（mutation M4 把全剝換回五個具名：worktree 變紅、主 checkout 退成 W0；
+# M5 拿掉安全網：壞 .git 根下 Write 變綠）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -35,6 +39,9 @@ printf 'x\n' > "$main/.github/workflows/ci.yml"
 printf 'x\n' > "$wt/docs/a.md"
 printf 'x\n' > "$fx/scratch/LS-1-new.sql"
 git init -q -b main "$fx/other"   # 另一個 repo 的主 checkout：不在本專案範圍，不擋
+# LS-157 1a：.git 檔指向不存在的 gitdir → rev-parse 對其下任何目錄都回「fatal: not a git repository: …」（安全網樣本）
+mkdir -p "$fx/broken/sub"
+printf 'gitdir: %s/nonexistent-gitdir\n' "$fx" > "$fx/broken/.git"
 
 # ---- JSON 組裝（python3 處理跳脫；命令可含引號／換行）----
 mkjson() {   # $1=tool_name $2=cwd $3=tool_input key $4=value
@@ -186,6 +193,37 @@ expect 'G2 GIT_DIR 設定下主 checkout Write 仍擋' 2 \
   "$(file_json Write "$main" "$main/LS-1-probe.txt")" GIT_DIR="$main/.git"
 expect 'G3 GIT_COMMON_DIR／GIT_INDEX_FILE／GIT_PREFIX 設定下 worktree Bash 重導仍放行' 0 \
   "$(bash_json "$wt" "echo hi > f.txt")" GIT_COMMON_DIR="$main/.git" GIT_INDEX_FILE="$main/.git/index" GIT_PREFIX=docs/
+# LS-157 1a（R2 N1）：未列名的 GIT_OBJECT_DIRECTORY 指向不存在路徑時，rev-parse 對主 checkout 也回「not a git repository」
+# → 只剝五個具名的舊版整支 gate 無聲 fail-open（實測 exit 0、stderr 空）
+expect 'G4 GIT_OBJECT_DIRECTORY=/nonexist 下主 checkout Write 仍擋' 2 \
+  "$(file_json Write "$main" "$main/LS-1-probe.txt")" GIT_OBJECT_DIRECTORY=/nonexist
+case "$(cat "$fx/stderr")" in
+  *'W1：'*) echo '✓ G4b 該 deny 是 W1 正常判定（不是靠安全網 W0）' ;;
+  *) echo "✗ G4b GIT_OBJECT_DIRECTORY 下主 checkout deny 應為 W1（實得：$(cat "$fx/stderr")）" >&2; fail=1 ;;
+esac
+expect 'G5 GIT_OBJECT_DIRECTORY=/nonexist 下 worktree Write 仍放行' 0 \
+  "$(file_json Write "$main" "$wt/docs/x.md")" GIT_OBJECT_DIRECTORY=/nonexist
+expect 'G6 GIT_OBJECT_DIRECTORY=/nonexist 下 scratchpad Write 仍放行（repo 外路徑不受影響）' 0 \
+  "$(file_json Write "$main" "$fx/scratch/x.md")" GIT_OBJECT_DIRECTORY=/nonexist
+
+# ============================================================
+# 安全網（LS-157 1a）：目標落在 hook 解析出的 repo 根（CLAUDE_PROJECT_DIR，缺則 cwd 上溯）之下、rev-parse 卻說
+# 不在 repo 內（壞 .git／環境異常）→ W0 deny 並印 rev-parse stderr 首行；repo 外路徑行為不變
+# ============================================================
+expect 'X1 CLAUDE_PROJECT_DIR 指向 .git 壞掉的根，其下 Write → deny（fail-closed）' 2 \
+  "$(file_json Write "$fx/broken" "$fx/broken/x.txt")" CLAUDE_PROJECT_DIR="$fx/broken"
+case "$(cat "$fx/stderr")" in
+  *'W0：'*'not a git repository'*) echo '✓ X1b deny 訊息是 W0 且含 rev-parse 的 stderr 首行' ;;
+  *) echo "✗ X1b deny 訊息應為 W0 且含 rev-parse stderr 首行（實得：$(cat "$fx/stderr")）" >&2; fail=1 ;;
+esac
+expect 'X2 同環境 scratchpad Write 仍放行（repo 外路徑行為不變）' 0 \
+  "$(file_json Write "$fx/broken" "$fx/scratch/x.txt")" CLAUDE_PROJECT_DIR="$fx/broken"
+out=$(printf '%s' "$(bash_json "$fx/broken/sub" "echo hi > x.txt")" | env -u CLAUDE_PROJECT_DIR "$bash_bin" "$guard" 2>"$fx/stderr"); got=$?
+if [ "$got" -eq 2 ] && case "$(cat "$fx/stderr")" in *'W0：'*'not a git repository'*) true ;; *) false ;; esac; then
+  echo '✓ X3 無 CLAUDE_PROJECT_DIR 時自 cwd 上溯找到壞 .git 根，其下相對路徑重導 → W0 deny'
+else
+  echo "✗ X3 cwd 上溯的安全網應 W0 deny（實得 exit ${got}：$(cat "$fx/stderr")）" >&2; fail=1
+fi
 
 # ============================================================
 # 盲區註記（放行但 stderr 要說）
@@ -262,6 +300,47 @@ else
     echo '✓ M3 拿掉 GIT_* 剝除後 GIT_DIR 下 worktree Write 變成 deny（G1 綠確由剝除造成）'
   else
     echo "✗ M3 mutant 應把 GIT_DIR 下 worktree Write 判成主 checkout（實得 exit ${got}：${out}）" >&2; fail=1
+  fi
+fi
+
+# LS-157 M4：把 startswith("GIT_") 換回五個具名（R2 前的實作）→ GIT_OBJECT_DIRECTORY 下 worktree Write 必須變紅
+# （G5 綠確由全剝造成）；同環境主 checkout Write 仍 deny、但理由退成 W0（只剩安全網在擋，不再是 W1 正常判定——
+# 兩個修法在這個樣本上重疊，所以「負樣本變綠」不成立，改驗理由退化）
+mut4=$(mktemp -d "$fx/mut4.XXXXXX")
+cp "$guard" "$engine_py" "$mut4/"
+anchor4='if not k.startswith("GIT_")'
+if ! grep -q "$anchor4" "$guard_py"; then
+  echo "✗ M4 mutation 錨點「${anchor4}」不在 main_checkout_guard.py，mutation 測試無法成立" >&2
+  fail=1
+else
+  sed "s|$anchor4|if k not in (\"GIT_DIR\", \"GIT_WORK_TREE\", \"GIT_INDEX_FILE\", \"GIT_PREFIX\", \"GIT_COMMON_DIR\")|" "$guard_py" > "$mut4/main_checkout_guard.py"
+  out=$(printf '%s' "$(file_json Write "$main" "$wt/docs/x.md")" | env CLAUDE_PROJECT_DIR="$main" GIT_OBJECT_DIRECTORY=/nonexist "$bash_bin" "$mut4/main-checkout-guard.sh" 2>/dev/null); got=$?
+  if [ "$got" -eq 2 ]; then
+    echo '✓ M4a 只剝五個具名後 GIT_OBJECT_DIRECTORY 下 worktree Write 變成 deny（G5 綠確由全剝造成）'
+  else
+    echo "✗ M4a mutant 應讓 GIT_OBJECT_DIRECTORY 下 worktree Write 變紅（實得 exit ${got}：${out}）" >&2; fail=1
+  fi
+  printf '%s' "$(file_json Write "$main" "$main/LS-1-probe.txt")" | env CLAUDE_PROJECT_DIR="$main" GIT_OBJECT_DIRECTORY=/nonexist "$bash_bin" "$mut4/main-checkout-guard.sh" >/dev/null 2>"$fx/stderr"; got=$?
+  case "${got}:$(cat "$fx/stderr")" in
+    2:*'W0：'*) echo '✓ M4b mutant 對主 checkout Write 的 deny 退成 W0（安全網接住 R2 N1 那條無聲 fail-open）' ;;
+    *) echo "✗ M4b mutant 對主 checkout Write 應 W0 deny（實得 exit ${got}：$(cat "$fx/stderr")）" >&2; fail=1 ;;
+  esac
+fi
+
+# LS-157 M5：拿掉安全網 raise → 壞 .git 根下的 Write 變成放行（X1 紅確由安全網造成，不是 rev-parse 其他失敗路徑）
+mut5=$(mktemp -d "$fx/mut5.XXXXXX")
+cp "$guard" "$engine_py" "$mut5/"
+anchor5='raise GuardError(_under_root_msg(path, r.stderr))'
+if ! grep -q "$anchor5" "$guard_py"; then
+  echo "✗ M5 mutation 錨點「${anchor5}」不在 main_checkout_guard.py，mutation 測試無法成立" >&2
+  fail=1
+else
+  sed "s|$anchor5|pass|" "$guard_py" > "$mut5/main_checkout_guard.py"
+  out=$(printf '%s' "$(file_json Write "$fx/broken" "$fx/broken/x.txt")" | env CLAUDE_PROJECT_DIR="$fx/broken" "$bash_bin" "$mut5/main-checkout-guard.sh" 2>/dev/null); got=$?
+  if [ "$got" -eq 0 ] && [ -z "$out" ]; then
+    echo '✓ M5 拿掉安全網後壞 .git 根下的 Write 變成放行（X1 deny 確由安全網造成）'
+  else
+    echo "✗ M5 mutant 應放行壞 .git 根下的 Write（實得 exit ${got}：${out}）" >&2; fail=1
   fi
 fi
 
