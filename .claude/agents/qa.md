@@ -14,7 +14,7 @@ model: sonnet
 2. Build 並跑全部測試：`xcodebuild test`（模擬器）。
 3. **逐條**驗證驗收條件：能自動驗的以 XCTest 結果為證；不能自動驗的在模擬器實際操作並截圖。
 4. 回歸冒煙（每次都跑）：登入、時間軸載入、照片上傳、留言——四條主流程不能壞。
-5. RLS 冒煙：跨 family 資料不可見（有 SQL 測試就跑——`bash scripts/ops/supabase-lock.sh -- supabase db reset` 後 `bash scripts/ops/supabase-lock.sh -- bash supabase/tests/run.sh`，本機容器與其他 agent 共用、不得裸跑（LS-70）；沒有就標註缺口）。
+5. RLS 冒煙：跨 family 資料不可見（有 SQL 測試就跑——`bash scripts/ops/supabase-lock.sh -- supabase db reset` 後 `bash scripts/ops/supabase-lock.sh -- bash supabase/tests/run.sh`，本機容器與其他 agent 共用、不得裸跑（LS-70）；沒有就標註缺口）。**互動式冒煙（第 4 條四主流程與視覺驗收）跨多條命令，開始前先持有 lock（LS-159）**：`bash scripts/ops/supabase-lock.sh --hold "LS-<n> QA 冒煙" --max-minutes 15` → hold 內照樣 `bash scripts/ops/supabase-lock.sh -- supabase db reset`＋種子（wrapper 認得你是持有者、直接過；PreToolUse H3 只認 wrapper 字面，裸跑仍被擋）→ mobile-mcp 操作／截圖 → 收工 `bash scripts/ops/supabase-lock.sh --release`。其他 worktree 的 reset 在 hold 期間排隊（它們的等待逾時 15 分鐘）——互動段要在 15 分鐘內做完，做不完就 `--release` 後分段再 `--hold`；到期自動釋放，`--release` 回 exit 1「可能已到期」＝期間別人的 reset 可能已洗掉你的 session，重灌重驗。`--hold`／`--release`／hold 內的命令都在同一個 QA worktree 呼叫（持有者判定＝同 worktree）；`bash scripts/ops/supabase-lock.sh --status` 隨時看「QA 持有中（label，剩餘 n 分）」。
 
 ## 本機 OTP 取碼（LS-93）
 驗證 Email OTP 登入流程時，不必再走 GoTrue Admin API（`/admin/generate_link`＋service_role key）：本機 `supabase/config.toml` 已把 `[auth.email.template.magic_link]` 指到 `supabase/templates/otp.html`，信件內文直接明文顯示 6 碼。取碼方式：
@@ -25,7 +25,7 @@ model: sonnet
 此設定只影響本機；正式站模板另由 Supabase dashboard 設定（LS-99）。
 
 ## 視覺驗收（UI 票必做）
-1. 在模擬器 build & run 實際渲染，**優先用 mobile-mcp 工具**（啟動 app、導航到目標畫面、截圖、互動）；mobile-mcp 未載入時退回 `xcrun simctl io booted screenshot <路徑>.png` 再用 Read 檢視。截圖一律存 `.claude/evidence/<票號>/<輪次>/`（如 `.claude/evidence/LS-46/qa1/home.png`；先 `mkdir -p` 該目錄——simctl 不會替你建父目錄，mobile-mcp 則用 `mobile_save_screenshot` 的 `saveTo` 指到同一路徑、同樣先建目錄；`saveTo` **必須用絕對路徑**——它由 mobile-mcp server 進程解析，不是你的 worktree cwd，給相對路徑會落到 server 進程所在目錄、悄悄存錯地方，LS-69 N2；worktree 內已 ignore，不得 git add）。
+1. 在模擬器 build & run 實際渲染，**優先用 mobile-mcp 工具**（啟動 app、導航到目標畫面、截圖、互動）；mobile-mcp 未載入時退回 `xcrun simctl io booted screenshot <路徑>.png` 再用 Read 檢視。截圖一律存 `.claude/evidence/<票號>/<輪次>/`（如 `.claude/evidence/LS-46/qa1/home.png`；先 `mkdir -p` 該目錄——simctl 不會替你建父目錄，mobile-mcp 則用 `mobile_save_screenshot` 的 `saveTo` 指到同一路徑、同樣先建目錄；`saveTo` **必須用絕對路徑**——它由 mobile-mcp server 進程解析，不是你的 worktree cwd，給相對路徑會落到 server 進程所在目錄、悄悄存錯地方，LS-69 N2；worktree 內已 ignore，不得 git add）。碰本機 DB 的畫面（登入／時間軸／上傳／留言）在 `--hold` 內操作（驗收流程 5，LS-159）：開始前 `bash scripts/ops/supabase-lock.sh --status` 應顯示你的 label，沒有就先 `--hold`——否則其他 worktree 的 reset 會在你操作到一半時洗掉 session。
 2. 截圖與該票設計稿比對：**優先比對 visual-reviewer 匯出到 `.claude/evidence/<票號>/r<n>-review/` 的 PNG**（orchestrator 派工時給輪次與路徑；evidence 是 worktree 相對、已 ignore，不在你的 checkout 時請 orchestrator 提供）；需要時再用 Pencil MCP **唯讀**截圖（已跑過上方 `pen-read.sh` 強制重新載入後，以 `execute` 的 TakeScreenshot／Get 取圖，存 `.claude/evidence/<票號>/qa<n>/`；.pen 絕不用 Read/Grep 開、不得寫入）。比對項：版面結構、字級層次、間距、色彩、各狀態（空／載入／錯誤）。
 3. 長輩優先硬約束抽查：Dynamic Type 放大到 accessibility 字級不破版、點擊目標 ≥44pt、icon 帶文字。
 4. **截圖是 PASS 的必要證據**——沒有截圖的 UI 驗收視同未驗。
@@ -48,4 +48,4 @@ model: sonnet
 任務結束、交 handoff 前，`xcrun simctl shutdown <UDID>`——自己這次驗收 boot 的每一台都要關（機器空跑浪費資源、也會讓下一個 agent／patrol 誤判「已有人在用」）。`demo-*` 名稱的模擬器（demo 環境的持久機）豁免，不要關。
 
 ## 回報
-用 CLAUDE.md 的 handoff 格式，驗收條件逐條列 ✓／✗／⊘（含證據位置），並附貼 status 的輸出行（`✓ status qa=… 已貼到 <sha>`）。UI 票另附 **Pen 路徑**（LS-91）：開工核對到的 active 文件路徑。產出位置另加一行「模擬器已關：<UDID 列表>」（沒 boot 過就寫「無」；`demo-*` 豁免，見上方「收工前關模擬器」）。
+用 CLAUDE.md 的 handoff 格式，驗收條件逐條列 ✓／✗／⊘（含證據位置），並附貼 status 的輸出行（`✓ status qa=… 已貼到 <sha>`）。UI 票另附 **Pen 路徑**（LS-91）：開工核對到的 active 文件路徑。產出位置另加一行「模擬器已關：<UDID 列表>」（沒 boot 過就寫「無」；`demo-*` 豁免，見上方「收工前關模擬器」）與一行「lock 已釋放：<label>（`--release` 輸出的持有時長）」——沒 `--hold` 過就寫「未持有」；`--release` 回 exit 1（已到期）要寫明並說明有沒有重驗（LS-159）。
