@@ -167,12 +167,12 @@ read_holder() {   # 設定 h_pid h_started h_host h_worktree h_branch h_cmd（ho
 age_of() { local t; t=$(date -r "$1" +%s 2>/dev/null) || t=$(date +%s); echo $(( $(date +%s) - t )); }   # 目錄 mtime 距今秒數
 mins_left() { case "$1" in ''|*[!0-9]*) printf '?'; return ;; esac; local r=$(( $1 - $(date +%s) )); [ "$r" -gt 0 ] || r=0; printf '%s' $(( (r + 59) / 60 )); }   # 到期前剩幾分（無條件進位、不低於 0）
 fmt_hm() { date -r "$1" +%H:%M 2>/dev/null || date -d "@$1" +%H:%M 2>/dev/null || printf '%s' "$1"; }   # epoch→hh:mm（macOS -r 吃 epoch、GNU 走 -d）
-holder_line() {   # 一行人類可讀的持有者描述（--status／等待訊息／巡檢共用）；hold 多印「QA 持有中（label，剩餘 n 分）」
+holder_line() {   # 一行人類可讀的持有者描述（--status／等待訊息／巡檢共用）；hold 多印「持有中（label，剩餘 n 分）」
   local s age=
   if read_holder; then
     case "$h_started" in ''|*[!0-9]*) ;; *) age="$(( ($(date +%s) - h_started) / 60 ))m" ;; esac
     s="held pid=${h_pid:-?}${age:+ since=${age}} worktree=${h_worktree:-?} branch=${h_branch:-?} cmd=${h_cmd:-?}"
-    case "$h_cmd" in hold:*) s="${s} — QA 持有中（${h_cmd#hold:}，剩餘 $(mins_left "$h_expires") 分）" ;; esac
+    case "$h_cmd" in hold:*) s="${s} — 持有中（${h_cmd#hold:}，剩餘 $(mins_left "$h_expires") 分）" ;; esac
     alive "$h_pid" || s="${s} ⚠ stale：持有者 pid 不存在（下次取鎖時自動回收）"
     printf '%s' "$s"
   elif [ -d "$lock" ]; then

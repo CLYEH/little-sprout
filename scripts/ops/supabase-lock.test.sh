@@ -321,7 +321,7 @@ palive() { ps -p "$1" -o pid= >/dev/null 2>&1; }
 hpid()   { sed -n 's/^pid=//p' "$SUPABASE_LOCK_DIR/holder" 2>/dev/null; }
 hold_as_stranger() { (cd "$wtA" && bash -c 'bash "$1" --hold "$2" "${@:3}"; :' _ "$lock_sh" "$@" 2>&1); }   # $1=label 其餘=額外參數
 
-# ---- ㉑ --hold：主程序立即返回（守門不繼承呼叫者的管線）、holder 欄位、--status／等待訊息含「QA 持有中（label，剩餘 n 分）」、
+# ---- ㉑ --hold：主程序立即返回（守門不繼承呼叫者的管線）、holder 欄位、--status／等待訊息含「持有中（label，剩餘 n 分）」、
 #        非持有者排隊逾時 124 且命令沒跑、持有者（同 worktree）-- 命令重入直接執行、--held 兩邊、心跳前進、已持有再 --hold 被拒 ----
 t0=$SECONDS
 out="$(hold_as_stranger 'LS-0 QA 冒煙' --max-minutes 1)"; rc=$?
@@ -336,15 +336,15 @@ has   '㉑ holder 欄位 pid…cmd＋owner／expires_at／heartbeat' "$(cut -d= 
 has   '㉑ holder cmd=hold:<label>' "$(cat "$SUPABASE_LOCK_DIR/holder" 2>/dev/null)" 'cmd=hold:LS-0 QA 冒煙'
 has   '㉑ holder worktree＝呼叫 --hold 的 cwd' "$(cat "$SUPABASE_LOCK_DIR/holder" 2>/dev/null)" "worktree=${wtA}"
 st="$(L --status 2>&1)"
-has   '㉑ --status 印 QA 持有中（label，剩餘 n 分）' "$st" 'QA 持有中（LS-0 QA 冒煙，剩餘 1 分）'
+has   '㉑ --status 印 持有中（label，剩餘 n 分）' "$st" '持有中（LS-0 QA 冒煙，剩餘 1 分）'
 has   '㉑ --status 仍以 held pid= 開頭（巡檢／既有解析不變）' "$st" "held pid=${gpid} "
 hasnt '㉑ --status 守門活著不標 stale' "$st" 'stale'
 hb1=$(sed -n 's/^heartbeat=//p' "$SUPABASE_LOCK_DIR/holder"); sleep 1.2; hb2=$(sed -n 's/^heartbeat=//p' "$SUPABASE_LOCK_DIR/holder")
 if [ -n "$hb1" ] && [ -n "$hb2" ] && [ "$hb2" -gt "$hb1" ]; then echo "✓ ㉑ 守門每 tick 更新 heartbeat（${hb1}→${hb2}）"; else echo "✗ ㉑ heartbeat 沒前進（${hb1}→${hb2}）" >&2; fail=1; fi
 berr="$(cd "$wtB" && bash "$lock_sh" --timeout 1 -- sh -c 'echo stranger-ran' 2>&1)"; rc=$?
 rc_is '㉑ 非持有者 -- 命令排隊、逾時 124' 124 "$rc" "$berr"
-has   '㉑ 等待訊息含 QA 持有中（label，剩餘' "$berr" '等待中'
-has   '㉑ 等待／逾時訊息含 label 與剩餘分鐘' "$berr" 'QA 持有中（LS-0 QA 冒煙，剩餘'
+has   '㉑ 等待訊息含 持有中（label，剩餘' "$berr" '等待中'
+has   '㉑ 等待／逾時訊息含 label 與剩餘分鐘' "$berr" '持有中（LS-0 QA 冒煙，剩餘'
 hasnt '㉑ 非持有者命令沒跑' "$berr" 'stranger-ran'
 (cd "$wtB" && bash "$lock_sh" --held 2>/dev/null); rc_is '㉑ 非持有者 --held → 1' 1 "$?" ''
 out="$(cd "$wtA" && bash "$lock_sh" --timeout 1 -- sh -c 'echo owner-ran' 2>&1)"; rc=$?
@@ -360,7 +360,7 @@ has   '㉑ 再 --hold 的訊息提示先 --release' "$out" '先 --release'
 # ---- ㉔ 非持有者 --release 被拒：exit 2、印持有者資訊、守門仍活、lock 仍在；命令型持有 --release 也拒；free 時 exit 1 ----
 out="$(cd "$wtB" && bash "$lock_sh" --release 2>&1)"; rc=$?
 rc_is '㉔ 非持有者 --release → exit 2' 2 "$rc" "$out"
-has   '㉔ 拒絕訊息含持有者 label' "$out" 'QA 持有中（LS-0 QA 冒煙'
+has   '㉔ 拒絕訊息含持有者 label' "$out" '持有中（LS-0 QA 冒煙'
 has   '㉔ 拒絕訊息含持有者 worktree' "$out" "worktree=${wtA}"
 if palive "$gpid"; then echo "✓ ㉔ 守門未被殺"; else echo "✗ ㉔ 守門被非持有者殺掉" >&2; fail=1; fi
 if [ "$(hpid)" = "$gpid" ]; then echo "✓ ㉔ lock 仍在、holder 未變"; else echo "✗ ㉔ lock 被非持有者動了" >&2; fail=1; fi
@@ -415,7 +415,7 @@ out="$(hold_as_stranger 'LS-0 被殺')"; rc_is '㉕ 前提：--hold' 0 "$?" "$ou
 gpid=$(hpid); kill -9 "$gpid" 2>/dev/null; sleep 0.3
 st="$(L --status 2>&1)"
 has   '㉕ 守門死後 --status 標 stale' "$st" 'stale'
-has   '㉕ 守門死後 --status 仍印 label' "$st" 'QA 持有中（LS-0 被殺'
+has   '㉕ 守門死後 --status 仍印 label' "$st" '持有中（LS-0 被殺'
 (cd "$wtA" && bash "$lock_sh" --held 2>/dev/null); rc_is '㉕ 守門死後同 worktree --held → 1（沒有保護了）' 1 "$?" ''
 out="$(cd "$wtB" && bash "$lock_sh" --timeout 5 -- sh -c 'echo after-kill' 2>&1)"; rc=$?
 rc_is '㉕ 等待者回收死鎖後取得、exit 0' 0 "$rc" "$out"
