@@ -67,7 +67,9 @@ struct EmailSignInView: View {
     private func send() {
         Task {
             if await model.sendCode() {
-                onCodeSent(model.email)
+                // LS-156：用 trimmed 值，讓下一頁 OTPVerificationView／verifyEmailOTP 收到的
+                // email 跟這裡實際寄碼用的值一致（見 EmailSignInModel.trimmedEmail）。
+                onCodeSent(model.trimmedEmail)
             }
         }
     }

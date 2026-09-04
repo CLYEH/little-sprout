@@ -17,6 +17,14 @@ final class EmailSignInModel {
         self.authStore = authStore
     }
 
+    /// LS-156：貼上帶前後空白／換行的 email 時，`EmailFormat.isValid` 可能放行未 trim 的
+    /// 原始字串，讓 GoTrue 收到帶空白的值回泛用 400。格式驗證與 `sendEmailOTP` 統一改用
+    /// 這個 trimmed 值；`EmailSignInView` 導到下一頁時也用它（不是 `email`），確保
+    /// `OTPVerificationView` 的 `verifyEmailOTP` 路徑收到的是同一個值，寄碼與驗證不會不一致。
+    var trimmedEmail: String {
+        email.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     func updateEmail(_ newValue: String) {
         email = newValue
         errorMessage = nil
@@ -25,14 +33,14 @@ final class EmailSignInModel {
     @discardableResult
     func sendCode() async -> Bool {
         guard !isSending else { return false }
-        guard EmailFormat.isValid(email) else {
+        guard EmailFormat.isValid(trimmedEmail) else {
             errorMessage = "這個 Email 好像沒打完，請再看一次，格式像 name@example.com"
             return false
         }
         isSending = true
         defer { isSending = false }
         do {
-            try await authStore.sendEmailOTP(email: email)
+            try await authStore.sendEmailOTP(email: trimmedEmail)
             return true
         } catch {
             errorMessage = AppError.map(error).userFacingMessage
