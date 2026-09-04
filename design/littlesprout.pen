@@ -55953,7 +55953,7 @@
                                   }
                                 },
                                 {
-                                  "id": "tvVkT",
+                                  "id": "PhZQS",
                                   "type": "ref",
                                   "ref": "bhroo",
                                   "name": "Card Album 1",
@@ -55981,9 +55981,6 @@
                                     "atAkU": {
                                       "x": 233.5,
                                       "y": 236
-                                    },
-                                    "mTljh": {
-                                      "y": 271
                                     }
                                   }
                                 }
@@ -56369,7 +56366,7 @@
                       "gap": "$sp-item",
                       "children": [
                         {
-                          "id": "ECLEc",
+                          "id": "TmqFZ",
                           "type": "ref",
                           "ref": "bhroo",
                           "name": "Card Album 1",
@@ -56388,9 +56385,6 @@
                             },
                             "atAkU": {
                               "y": 302
-                            },
-                            "mTljh": {
-                              "y": 337
                             }
                           }
                         },
@@ -92753,7 +92747,7 @@
           "fill": "#553040",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "R1 首輪產出。沿用 LS-119／LS-120 母題（紙片、角托、Day Divider、Tab Bar 純 icon），未改動任一已核可板；本輪唯一擴充的既有元件是 cmp/Card Album（新增 Signature 列，預設 enabled:false，不影響既有 6 處 instance）。",
+          "content": "R1 首輪產出。沿用 LS-119／LS-120 母題（紙片、角托、Day Divider、Tab Bar 純 icon），除 cmp/Card Album 元件預設翻轉所需的 6 處 legacy instance 覆寫外，未改動任一已核可板（詳見 EBlnw）；本輪唯一擴充的既有元件是 cmp/Card Album（新增 Signature 列，預設 enabled:false，6 處既有 legacy instance 已補 enabled:true 覆寫還原）。",
           "lineHeight": 1.5,
           "fontFamily": "Noto Sans TC",
           "fontSize": 13,
@@ -93287,7 +93281,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "【R3 訂正，取代 R1 段】cmp/Card Album：Imprint Row 改 layout:vertical，Caption 下方為單一 wQVzs Signature Line 文字節點（R2 起取代原本 Who Group/Age Group/Multi Caption 三節點設計）。單一寶貝：content=\"{暱稱} · {年齡}\"；多寶貝（≥2）：用「、」串接多組「暱稱 · 年齡」；零寶貝：Signature enabled:true、content:\" \"（單一半形空白），署名列保留空高度但不顯示任何文字（brand 十條 #10「空欄位卡不塌縮」；R5 BL-3 訂正——R4 曾讓 iPhone 三張零寶貝卡 enabled:false 塌縮成232高，與 iPad VvT91 的263高 enabled:true 空白列互相矛盾，兩套規格只有一套對；本輪統一為「保留高度」，iPhone puHZ5/Xldkz/Wl90J 三板的卡3（R7edNW／T3SwvP／mdabp，皆「海邊戲水」）改 263 高，corner y 同步 242，與 iPad VvT91 一致）。零寶貝卡讀者靠「這張卡的署名列是空白」本身辨識，不靠卡片整體高度變矮辨識——高度變矮曾經是本票唯一的零寶貝訊號，R5 起不再是。年齡片語（如「2 歲 3 個月」）內部空白一律用 NBSP（U+00A0）連接、「個」「月」之間再插入 WORD JOINER（U+2060），防止 Dynamic Type／AX3 折行把年齡單位拆成孤字（BL-B R3 修復）。姓名與年齡之間的「 · 」刻意維持一般可斷空白（U+0020）——若也用 NBSP 包住會把姓名最後一字一併鎖進同一個不可斷區塊，AX3 實測會產生「小」單字孤兒，已排除，勿在下一輪重新套用。 MJ-6（R5）：AX3 署名一律一行一人，不因單一寶貝就把姓名與年齡拆成兩行——IjWOp 卡2（pNPuF，多寶貝）已證明「小安 2 歲 3 個月」在 w=329 放得下一整行；ONEs5／i3jpIq（單一寶貝）原本用顯式 \\n 把姓名與年齡拆成兩行是 R3 遺留的保守處理，R5 拿掉 \\n 統一成一行，兩卡各變矮 58pt，corner y 同步重算（424／366）。",
+              "content": "【R3 訂正，取代 R1 段】cmp/Card Album：Imprint Row 改 layout:vertical，Caption 下方為單一 wQVzs Signature Line 文字節點（R2 起取代原本 Who Group/Age Group/Multi Caption 三節點設計）。單一寶貝：content=\"{暱稱} · {年齡}\"；多寶貝（≥2）：用「、」串接多組「暱稱 · 年齡」；零寶貝：Signature enabled:true、content:\" \"（單一半形空白），署名列保留空高度但不顯示任何文字（brand 十條 #10「空欄位卡不塌縮」；R5 BL-3 訂正——R4 曾讓 iPhone 三張零寶貝卡 enabled:false 塌縮成232高，與 iPad VvT91 的263高 enabled:true 空白列互相矛盾，兩套規格只有一套對；本輪統一為「保留高度」，iPhone puHZ5/Xldkz/Wl90J 三板的卡3（R7edNW／T3SwvP／mdabp，皆「海邊戲水」）改 263 高，corner y 同步 242，與 iPad VvT91 一致）。零寶貝卡讀者靠「這張卡的署名列是空白」本身辨識，不靠卡片整體高度變矮辨識——高度變矮曾經是本票唯一的零寶貝訊號，R5 起不再是。年齡片語（如「2 歲 3 個月」）內部空白一律用 NBSP（U+00A0）連接、「個」「月」之間再插入 WORD JOINER（U+2060），防止 Dynamic Type／AX3 折行把年齡單位拆成孤字（BL-B R3 修復）。姓名與年齡之間的「 · 」刻意維持一般可斷空白（U+0020）——若也用 NBSP 包住會把姓名最後一字一併鎖進同一個不可斷區塊，AX3 實測會產生「小」單字孤兒，已排除，勿在下一輪重新套用。 MJ-6（R5）：AX3 署名一律一行一人，不因單一寶貝就把姓名與年齡拆成兩行——IjWOp 卡2（pNPuF，多寶貝）已證明「小安 2 歲 3 個月」在 w=329 放得下一整行；ONEs5／i3jpIq（單一寶貝）原本用顯式 \\n 把姓名與年齡拆成兩行是 R3 遺留的保守處理，R5 拿掉 \\n 統一成一行，兩卡各變矮 58pt，corner y 同步重算（424／366）。 INFO-N2（R7）：AX3 署名文法與上述「{暱稱} · {年齡}」公式故意不同——AX3 省略「 · 」分隔號（ONEs5/i3jpIq＝「小安 2 歲 3 個⁠月」，姓名年齡之間僅一般空白）；多寶貝改用顯式換行（\\n）分隔每個人，不用「、」串接（pNPuF＝「小安 2 歲 3 個⁠月\\n小明 8 個⁠月」）——這是 R4 MJ-6 處方裡就這樣寫的既有規則，本輪把它從隱含慣例補成明文規則，避免下一輪被誤判成不一致而「修正」回帶「 ·」／「、」的版本。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -93725,7 +93719,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "MJ-9（靈魂修復，R4 全面訂正——R3 版本已被 R4 推翻，數字不再準確，見下）：cmp/Card Album 的「這本相簿有多厚」現在只有一套訊號——Fan Ghost 片數本身承載分級，卡底 Stack Sheet（疊紙）三片全部永久停用（元件層 o5O1GD／Qjdzx／mTljh 預設 enabled:false）。規則：1–9 張→1 片 Fan Ghost／10–49 張→2 片／50+ 張→3 片（新增第三片 Fan Ghost 3，y −18 rotation −6 x72 w150（R5 MJ-1 訂正：原 −24 使 50+ 張卡與上一張卡淨空 0，僅移動 Fan Ghost 3，Fan Ghost／Fan Ghost 2 維持原值 −18／−11 不動——三個 tier 的「上一張卡最低可見底↔下一張卡最高可見裝飾頂」現在全部是 6，見下），畫在最底層，三片 z-order＝[Ghost3,Ghost1,Ghost2,Photo Print]，全部在 Photo Print 之前）。LS-142 本票 24 張相簿卡依此規則設定；他票既有 6 處 legacy instance（qd5ej／K3Q7ZT／MFpwo／tvVkT／ECLEc／u01Pc）與 2 處 Blank Print（ZHzy5／E9XH3Y）維持 Fan Ghost 全部 enabled:false（沿用元件預設，不受本次規則影響）——但這 6 處 legacy instance 的 Stack Sheet 1/2（o5O1GD／Qjdzx）本來就在畫面上可見（未覆寫、吃元件舊預設 enabled:true），R4 把元件預設改 false 後已個別补上 enabled:true 覆寫，逐一核對零回歸。iPad 2 欄卡片較窄，三片 Ghost 皆按卡寬比例縮放（比例 258.5/345≈0.7493）：Ghost1 w123.6 x67.4／Ghost2 w104.9 x80.9／Ghost3 w112.4 x54，y／rotation 與 iPhone 相同；cross_parent_collision 的 Fan Ghost 2×Corner TR 6 筆歸零已實測驗證。 卡間可見淨空（具名值）＝6：五張 14 家族板（puHZ5／Xldkz／Wl90J／IjWOp／X9PfG）三個 tier（1 片／2 片／3 片）逐板逐界重測，gap＝下一張卡最高可見裝飾頂（enabled 中最小 y 的 Fan Ghost）－上一張卡底，全部 20 組界線讀值皆為 6，零離群（R5 MJ-1）。",
+              "content": "MJ-9（靈魂修復，R4 全面訂正——R3 版本已被 R4 推翻，數字不再準確，見下）：cmp/Card Album 的「這本相簿有多厚」現在只有一套訊號——Fan Ghost 片數本身承載分級，卡底 Stack Sheet（疊紙）三片全部永久停用（元件層 o5O1GD／Qjdzx／mTljh 預設 enabled:false）。規則：1–9 張→1 片 Fan Ghost／10–49 張→2 片／50+ 張→3 片（新增第三片 Fan Ghost 3，y −18 rotation −6 x72 w150（R5 MJ-1 訂正：原 −24 使 50+ 張卡與上一張卡淨空 0，僅移動 Fan Ghost 3，Fan Ghost／Fan Ghost 2 維持原值 −18／−11 不動——三個 tier 的「上一張卡最低可見底↔下一張卡最高可見裝飾頂」現在全部是 6，見下），畫在最底層，三片 z-order＝[Ghost3,Ghost1,Ghost2,Photo Print]，全部在 Photo Print 之前）。LS-142 本票 24 張相簿卡依此規則設定；他票既有 6 處 legacy instance（qd5ej／K3Q7ZT／MFpwo／PhZQS／TmqFZ／u01Pc——R7 訂正：原 tvVkT／ECLEc 因移除 N4 死覆寫 mTljh 走 Replace() 產生新 id，PhZQS／TmqFZ 即為同一組 go7f9／lKoZG 板上的 Card Album 1 instance，非新增節點）與 2 處 Blank Print（ZHzy5／E9XH3Y）維持 Fan Ghost 全部 enabled:false（沿用元件預設，不受本次規則影響）——但這 6 處 legacy instance 的 Stack Sheet 1/2（o5O1GD／Qjdzx）本來就在畫面上可見（未覆寫、吃元件舊預設 enabled:true），R4 把元件預設改 false 後已個別补上 enabled:true 覆寫，逐一核對零回歸。iPad 2 欄卡片較窄，三片 Ghost 皆按卡寬比例縮放（R7 訂正，取代 MJ-5 改稿後未跟上的舊值：比例 254.5/345≈0.7377）：Ghost1 w121.8 x66.4／Ghost2 w103.3 x79.7／Ghost3 w110.7 x53.1，y／rotation 與 iPhone 相同——R5 MJ-5（e2b0836 gap 16→24＋80b3ebd 欄寬 258.5→254.5、ghost 同步縮放）當時未回頭訂正本段，是 BL-2 同型缺陷（Notes 落後最後一次改稿）在 R7 的復發；cross_parent_collision 的 Fan Ghost 2×Corner TR 6 筆歸零已實測驗證。 卡間可見淨空（具名值）＝6：五張 14 家族板（puHZ5／Xldkz／Wl90J／IjWOp／X9PfG）三個 tier（1 片／2 片／3 片）逐板逐界重測，gap＝下一張卡最高可見裝飾頂（enabled 中最小 y 的 Fan Ghost）－上一張卡底，全部 20 組界線讀值皆為 6，零離群（R5 MJ-1）。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -93941,7 +93935,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "MJ-6：iPad 相簿列表改 2 欄卡片網格（258.5pt/欄，((533−16)/2)，取代單欄 345pt 卡片＋188pt 死空間）；iPad 相簿詳情改 3 欄瀑布流＋Content Pane clip:true，讓照片牆自然向下長、在板底被裁掉（比照 iPhone 板做法），取代固定 6 張留白收尾。",
+              "content": "MJ-6：iPad 相簿列表改 2 欄卡片網格（R7 訂正：254.5pt/欄，((533−24)/2)，欄間距 $sp-block 24；原 258.5pt/((533−16)/2) 是 MJ-5（R5 e2b0836 改 gap 16→24＋80b3ebd 同步縮欄寬 258.5→254.5）之前的舊值，Notes 沒跟上，取代單欄 345pt 卡片＋188pt 死空間）；iPad 相簿詳情改 3 欄瀑布流＋Content Pane clip:true，讓照片牆自然向下長、在板底被裁掉（比照 iPhone 板做法），取代固定 6 張留白收尾。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -94147,7 +94141,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "16b 家族（R3 新增，全部狀態展開參考板，非裝置值，供 ios-dev/QA 一次看到全部 7 種列狀態）：Q8xZl9 板高 1314（Upload Sheet fit_content 實測 1162）；s4VXMV(AX3) 板高 2634（Sheet 實測 2484）。Fan Ghost（R3 BL-A）：第一片 165×50 rotation -3 y -18；第二片（新增）140×50 rotation +2 y -11，兩片皆 @345pt 卡寬（iPhone）。",
+              "content": "16b 家族（R3 新增，全部狀態展開參考板，非裝置值，供 ios-dev/QA 一次看到全部 7 種列狀態；R7 訂正：Q8xZl9／s4VXMV 已於 R5 刪除重建，現行 id 與板高如下）：Q7HrnF 板高 1421（Sheet 實測 1271）；g8Q2W(AX3) 板高 2776（Sheet 實測 2626）。Fan Ghost（R3 BL-A）：第一片 165×50 rotation -3 y -18；第二片（新增）140×50 rotation +2 y -11，兩片皆 @345pt 卡寬（iPhone）。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -94575,7 +94569,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "MJ-4/5/6：上傳佇列三主板（rTEGf/JnQrT/FyV5I）Rows 重構為三個語意群組（Group Failed/In Progress/Completed，各自 layout:vertical gap:$sp-item 16，群間 gap 24），各群補一行群標題文字（沒有成功/正在進行/已完成）；In Progress 群內時間戳改新到舊排序（原 uploading 14:34→waiting 14:35 顛倒，現改 waiting 14:35 在前）。摘要區（Head+ResumeBanner+RetryBar）與列表區（Rows+Footer）之間插入具名 44pt 斷點（拆成 Summary Section／Action Section 兩個 gap:24 內部子群，外層 gap:$sp-section 44，不是硬插 spacer——spacer 前後仍會各吃一份既有 gap，數學上湊不出單獨 44，這是本輪踩過的坑）。Rows Scroll Area 高度重新校準到剛好卡在列與列之間的空隙（rTEGf/JnQrT 177pt，露出完整第1列＋第2列縮圖頂部但不露出按鈕；FyV5I 188pt，同原理，AX3列更高故只能露出第1列局部），不再有 44pt 重試鈕被裁成 13pt 碎片的問題。Sheet 高度全部改 height:fit_content 自然貼合，scrim 留白統一 150。",
+              "content": "MJ-4/5/6：上傳佇列三主板（rTEGf/JnQrT/FyV5I）Rows 重構為三個語意群組（Group Failed/In Progress/Completed，各自 layout:vertical gap:$sp-item 16，群間 gap 24），各群補一行群標題文字（沒有成功/正在進行/已完成）；In Progress 群內時間戳改新到舊排序（原 uploading 14:34→waiting 14:35 顛倒，現改 waiting 14:35 在前）。摘要區（Head+ResumeBanner+RetryBar）與列表區（Rows+Footer）之間插入具名 44pt 斷點（拆成 Summary Section／Action Section 兩個 gap:24 內部子群，外層 gap:$sp-section 44，不是硬插 spacer——spacer 前後仍會各吃一份既有 gap，數學上湊不出單獨 44，這是本輪踩過的坑）。Rows Scroll Area 高度重新校準到剛好卡在列與列之間的空隙（rTEGf/JnQrT 177pt，露出完整第1列＋第2列縮圖頂部但不露出按鈕；FyV5I 188pt，同原理，AX3列更高故只能露出第1列局部），不再有 44pt 重試鈕被裁成 13pt 碎片的問題。Sheet 高度全部改 height:fit_content 自然貼合，scrim 留白統一 150。【R5 已訂正，見 W4X3T——三主板留白實測 125/125/76，非150】",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -94611,7 +94605,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "MJ-7：16b 參考板（原 Q8xZl9/s4VXMV）在主板重構後直接刪除重建（Delete+Copy from rTEGf/FyV5I），不手動逐欄位比對修正——保證與主板規格同源，新 id 為 C0GuD（iPhone）／CVOkb（AX3）。這是比「新板建好後逐條 diff」更根本的解法：只要參考板是「從主板 Copy 出來的」而非「另外手刻的」，同步問題在架構上就不存在。下一票若要再新增這類展開參考板，建議延續這個模式。",
+              "content": "MJ-7：16b 參考板（原 Q8xZl9/s4VXMV）在主板重構後直接刪除重建（Delete+Copy from rTEGf/FyV5I），不手動逐欄位比對修正——保證與主板規格同源，當時的 id 為 C0GuD（iPhone）／CVOkb（AX3），R5 因主板再重構已第二次刪除重建，現行 id 為 Q7HrnF／g8Q2W（見 W4X3T）。這是比「新板建好後逐條 diff」更根本的解法：只要參考板是「從主板 Copy 出來的」而非「另外手刻的」，同步問題在架構上就不存在。下一票若要再新增這類展開參考板，建議延續這個模式。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -94733,7 +94727,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "BL-1/MJ-2 裁切安全視窗：rTEGf/JnQrT/FyV5I 三板 Rows Scroll Area 高度改落在「完整顯示N列、不切文字/tap-target」的安全視窗內，並把 Group Failed 的 LS002（容量已滿）列移到最前——這一列唯一需要「查看儲存空間」這個不同於「重試」的動作，才是該留在摺線上的那一列。",
+                  "content": "BL-1/MJ-2 裁切安全視窗：rTEGf/JnQrT/FyV5I 三板 Rows Scroll Area 高度改落在「完整顯示N列、不切文字/tap-target」的安全視窗內，並把 Group Failed 的 LS002（容量已滿）列移到最前——這一列唯一需要「查看儲存空間」這個不同於「重試」的動作，才是該留在摺線上的那一列。 INFO-N3（R7）：失敗群列序規則是「可處理性優先於時間序」——需要另一種動作（查看儲存空間，不能重試）的那一列固定排最前，其餘可重試的列按時間新到舊排在其後；這不是單純時間排序，下一輪如果只看時間戳「跳序」就把它「修正」回純時間序，會使 LS002 那類需要不同動作的列重新落回摺線下方，等於復發本項最初要解決的問題。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -112386,7 +112380,7 @@
                                   "fill": {
                                     "type": "image",
                                     "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                                    "url": "https://images.unsplash.com/photo-1647621122823-71750ec68e62?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODd8&ixlib=rb-4.1.0&q=80&w=1080",
                                     "mode": "fill"
                                   },
                                   "cornerRadius": "$radius-md"
@@ -112588,7 +112582,7 @@
                                   "fill": {
                                     "type": "image",
                                     "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                                    "url": "https://images.unsplash.com/photo-1780336707361-506ecf2c74f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODh8&ixlib=rb-4.1.0&q=80&w=1080",
                                     "mode": "fill"
                                   },
                                   "cornerRadius": "$radius-md"
@@ -112661,7 +112655,7 @@
                                   "fill": {
                                     "type": "image",
                                     "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                                    "url": "https://images.unsplash.com/photo-1779881259393-6949a9838196?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTB8&ixlib=rb-4.1.0&q=80&w=1080",
                                     "mode": "fill"
                                   },
                                   "cornerRadius": "$radius-md"
@@ -112755,7 +112749,7 @@
                                   "fill": {
                                     "type": "image",
                                     "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                                    "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
                                     "mode": "fill"
                                   },
                                   "cornerRadius": "$radius-md"
@@ -112828,7 +112822,7 @@
                                   "fill": {
                                     "type": "image",
                                     "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                                    "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
                                     "mode": "fill"
                                   },
                                   "cornerRadius": "$radius-md"
