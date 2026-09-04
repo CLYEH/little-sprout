@@ -12,10 +12,10 @@ import { createClient } from "npm:@supabase/supabase-js@2.114";
 import {
   type BatchRecipientRow,
   type ClaimedEvent,
-  type ContentTargetType,
   type Deps,
   handleRequest,
-  type NotificationKind,
+  isContentTargetType,
+  isNotificationKind,
   StubApnsProvider,
 } from "./handler.ts";
 import { buildRealApnsProvider } from "./apns.ts";
@@ -73,13 +73,14 @@ const CONCURRENCY = 8; // 有上限的併發送出數（LS-172 R2，merge-review
 // 完整跑完（結構性保證，不是估算），設計取捨與殘餘風險見 docs/API.md §10。
 const TIME_BUDGET_MS = 60_000;
 
-// 型別守門：資料庫的 enum 值只可能是這幾種，供 buildProdDeps 的行轉換使用。
-function isNotificationKind(v: unknown): v is NotificationKind {
-  return v === "comment" || v === "reaction" || v === "diary" || v === "album";
-}
-function isContentTargetType(v: unknown): v is ContentTargetType {
-  return v === "album" || v === "media" || v === "diary" || v === "comment";
-}
+// 型別守門 `isNotificationKind`／`isContentTargetType`（資料庫的 enum 值只可能
+// 是這幾種，供下面 `claimEvents` 的行轉換使用）搬進 `handler.ts` 了——這裡是
+// `index.ts` 在模組層級呼叫 `Deno.serve()`（見檔尾），`import` 這個檔案會嘗試
+// 綁定 HTTP listener，導致這兩支純函式從落地起就沒有任何測試覆蓋，正是
+// LS-149 新增 `'report'` 這件事能悄悄漏掉守門這麼久的結構原因（merge-review
+// R1-i2）。搬到 `handler.ts` 之後 `handler.test.ts` 才能直接測到正式碼；
+// `'report'` 的守門缺口本身見 `handler.ts` 對這兩支函式的檔頭說明與 LS-96
+// 池項 `841d97da`（LS-175 R2 已補上 `'report'`）。
 
 function buildProdDeps(): Deps {
   return {

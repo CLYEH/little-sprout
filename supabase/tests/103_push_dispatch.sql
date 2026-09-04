@@ -5,7 +5,9 @@
 --   家庭 A：owner 爸爸（觸發者／actor）、member 阿嬤（封鎖爸爸）、member 媽媽（兩支
 --     裝置）。事件 1：diary，5 分鐘前已穩定（該被 claim）。事件 2：reaction，剛發生
 --     （還在 5 分鐘視窗內，不該被 claim）。事件 3：comment，actor_id 為 NULL（模擬
---     觸發者帳號之後被硬刪，FK on delete set null）、已穩定。
+--     觸發者帳號之後被硬刪，FK on delete set null）、已穩定。事件 4（LS-175）：
+--     media／target_type=family，actor 換成媽媽、已穩定——驗 kind='media' 不需要
+--     notification_recipients() 任何額外分支即可正確判定對象。
 --   家庭 B：owner 隔壁家、自己的 device token——只用來驗跨家庭隔離（notification_
 --     recipients 絕不能把家庭 A 的 token 洩漏進來，反之亦然）。
 \set ON_ERROR_STOP on
@@ -23,6 +25,7 @@ declare
   v_event_stable  uuid := 'd3000000-0000-4000-8000-000000000001'; -- 該被 claim
   v_event_fresh   uuid := 'd3000000-0000-4000-8000-000000000002'; -- 5 分鐘內，不該被 claim
   v_event_noactor uuid := 'd3000000-0000-4000-8000-000000000003'; -- actor_id NULL，該被 claim
+  v_event_media   uuid := 'd3000000-0000-4000-8000-000000000004'; -- LS-175：kind=media，target_type=family
   v_n int;
 begin
   set local role postgres;
@@ -68,7 +71,15 @@ begin
     (v_event_fresh, v_family_a, 'reaction', 'media', 'd4000000-0000-4000-8000-000000000002',
      v_owner_a, 1, now()),
     (v_event_noactor, v_family_a, 'comment', 'diary', 'd4000000-0000-4000-8000-000000000001',
-     null, 1, now() - interval '10 minutes');
+     null, 1, now() - interval '10 minutes'),
+    -- LS-175：kind='media'／target_type='family'（target_id=家庭自己的 id，見
+    -- 20260904170933_media_notification_events.sql 檔頭）——actor 故意選媽媽
+    -- （不是上面幾個事件的 actor 爸爸），驗證這個新 kind/target_type 組合不需要
+    -- notification_recipients() 任何額外分支就能拿到正確、且與其他事件不同的
+    -- 收件人集合（該函式純粹依 family_id／actor_id／blocked_users 判斷，完全
+    -- 不看 kind／target_type，見該函式定義）。
+    (v_event_media, v_family_a, 'media', 'family', v_family_a,
+     v_mom, 50, now() - interval '10 minutes');
 
   -- -------------------------------------------------------------------------
   -- 1. claim_notification_events：只挑穩定（>5 分鐘）且 sent_at is null 的事件；
@@ -197,6 +208,51 @@ begin
   end if;
   reset role;
   raise notice 'ok 4b：批次同時查兩個事件，收件人正確依 event_id 分組（2+4=6 筆，互不混淆）';
+
+  -- -------------------------------------------------------------------------
+  -- 4c.（LS-175）kind='media'／target_type='family' 事件——actor 換成媽媽（不是
+  --     其他事件的爸爸），驗證這個新 kind／target_type 組合不需要
+  --     notification_recipients() 任何額外分支：只有爸爸與阿嬤該收到（阿嬤沒有
+  --     封鎖媽媽，只封鎖爸爸），媽媽自己（actor 本人）被排除。同時驗證這一列
+  --     撐過第 1 段的 claim_notification_events() 呼叫（sent_at 已標記）、
+  --     kind/target_type/target_id/event_count 四欄沒有因為是新加的列舉值而
+  --     寫壞或讀壞。
+  -- -------------------------------------------------------------------------
+  set local role service_role;
+
+  select count(*) into v_n from public.notification_recipients(array[v_event_media]);
+  if v_n <> 2 then
+    raise exception 'FAIL：media 事件（actor=媽媽）的收件人應為 2 筆（爸爸 1 支＋阿嬤 1 支，阿嬤只封鎖爸爸不封鎖媽媽），實際 %', v_n;
+  end if;
+  select count(*) into v_n from public.notification_recipients(array[v_event_media])
+   where user_id = v_owner_a;
+  if v_n <> 1 then
+    raise exception 'FAIL：爸爸應該收到媽媽觸發的 media 事件，實際 %', v_n;
+  end if;
+  select count(*) into v_n from public.notification_recipients(array[v_event_media])
+   where user_id = v_grandma;
+  if v_n <> 1 then
+    raise exception 'FAIL：阿嬤沒有封鎖媽媽，應該收到媽媽觸發的 media 事件，實際 %', v_n;
+  end if;
+  select count(*) into v_n from public.notification_recipients(array[v_event_media])
+   where user_id = v_mom;
+  if v_n <> 0 then
+    raise exception 'FAIL：actor 本人（媽媽）不該出現在自己觸發的 media 事件收件人清單';
+  end if;
+
+  -- v_event_media 在最上面第 1 段的第一次 claim_notification_events(50) 呼叫時
+  -- 就已經跟 v_event_stable／v_event_noactor 一起被 claim 走了（同一句 SQL，沒有
+  -- kind 篩選）——這裡改直接查表確認它撐過那次 claim（sent_at 已標記）且欄位
+  -- 沒有因為是新加的列舉值而寫壞／讀壞，不是重新呼叫 claim_notification_events
+  -- 拿 0 筆去誤判失敗。
+  reset role;
+  select count(*) into v_n from public.notification_events
+   where id = v_event_media and kind = 'media' and target_type = 'family'
+     and target_id = v_family_a and event_count = 50 and sent_at is not null;
+  if v_n <> 1 then
+    raise exception 'FAIL：v_event_media 應該已被第 1 段的 claim_notification_events 呼叫標記 sent_at，且 kind/target_type/target_id/event_count 四欄原樣保留，實際符合條件的筆數 %', v_n;
+  end if;
+  raise notice 'ok 4c：kind=media／target_type=family 事件不需要 notification_recipients() 任何額外分支，對象判定正確（爸爸/阿嬤收到、媽媽本人排除）；claim_notification_events 正確 round-trip 新列舉值';
 
   -- -------------------------------------------------------------------------
   -- 5. 無裝置 token 的成員自動略過（用一個全新、沒有任何 device_tokens 的成員驗證）。
