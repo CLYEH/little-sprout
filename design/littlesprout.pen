@@ -141589,7 +141589,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1434,
+      "height": 1648,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -141738,6 +141738,7 @@
                       "id": "DD9fZ",
                       "name": "Interaction Row",
                       "width": "fill_container",
+                      "layout": "vertical",
                       "gap": "$sp-block",
                       "children": [
                         {
@@ -141946,6 +141947,7 @@
                       "id": "cmURD",
                       "name": "Interaction Row",
                       "width": "fill_container",
+                      "layout": "vertical",
                       "gap": "$sp-block",
                       "children": [
                         {
@@ -146520,8 +146522,11 @@
             {
               "type": "frame",
               "id": "JMUMY",
+              "layoutPosition": "absolute",
+              "x": 24,
+              "y": -500,
               "name": "Header Row",
-              "width": "fill_container",
+              "width": "fill_container(345)",
               "layout": "vertical",
               "gap": "$sp-label",
               "children": [
@@ -147217,8 +147222,11 @@
             {
               "type": "frame",
               "id": "ZqB7P",
+              "layoutPosition": "absolute",
+              "x": 24,
+              "y": -500,
               "name": "Header Row",
-              "width": "fill_container",
+              "width": "fill_container(345)",
               "layout": "vertical",
               "gap": "$sp-label",
               "children": [
