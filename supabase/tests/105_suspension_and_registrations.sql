@@ -5,6 +5,9 @@
 -- B 家：owner b1／member b2；C 家＝效能測試家，owner c1）。
 --
 -- 每個場景各自 begin/rollback，互不污染 fixtures（比照本目錄既有慣例）。
+-- R2（merge-review R1 `23fa5e37`）新增場景 8–14，修正場景 1–7 不再寫
+-- `suspended_reason`（MAJOR-1：那一欄已搬到 private.suspension_notes，不再是
+-- profiles／families 的欄位）。
 
 \set ON_ERROR_STOP on
 
@@ -13,7 +16,7 @@
 -- ---------------------------------------------------------------------------
 begin;
 
-update public.profiles set suspended_at = now(), suspended_reason = '測試用停權'
+update public.profiles set suspended_at = now()
  where id = 'a0000000-0000-4000-8000-000000000002';
 
 do $$
@@ -68,7 +71,7 @@ rollback;
 -- ---------------------------------------------------------------------------
 begin;
 
-update public.profiles set suspended_at = now(), suspended_reason = '測試用停權'
+update public.profiles set suspended_at = now()
  where id = 'a0000000-0000-4000-8000-000000000002';
 
 do $$
@@ -117,9 +120,9 @@ rollback;
 -- ---------------------------------------------------------------------------
 begin;
 
-update public.profiles set suspended_at = now(), suspended_reason = '測試用停權'
+update public.profiles set suspended_at = now()
  where id = 'a0000000-0000-4000-8000-000000000002';
-update public.profiles set suspended_at = null, suspended_reason = null
+update public.profiles set suspended_at = null
  where id = 'a0000000-0000-4000-8000-000000000002';
 
 do $$
@@ -155,7 +158,7 @@ rollback;
 -- ---------------------------------------------------------------------------
 begin;
 
-update public.families set suspended_at = now(), suspended_reason = '測試用家庭停權'
+update public.families set suspended_at = now()
  where id = 'fb000000-0000-4000-8000-000000000001';
 
 do $$
@@ -214,7 +217,7 @@ rollback;
 -- ---------------------------------------------------------------------------
 begin;
 
-update public.profiles set suspended_at = now(), suspended_reason = '測試用停權'
+update public.profiles set suspended_at = now()
  where id = 'a0000000-0000-4000-8000-000000000002';
 
 do $$
@@ -240,7 +243,7 @@ rollback;
 
 begin;
 
-update public.families set suspended_at = now(), suspended_reason = '測試用家庭停權'
+update public.families set suspended_at = now()
  where id = 'fa000000-0000-4000-8000-000000000001';
 
 do $$
@@ -354,7 +357,7 @@ begin
     raise exception 'FAIL：停權前 a2 應該在 notification_recipients 清單裡，實際 % 列', n;
   end if;
 
-  update public.profiles set suspended_at = now(), suspended_reason = '測試用停權'
+  update public.profiles set suspended_at = now()
    where id = 'a0000000-0000-4000-8000-000000000002';
 
   select count(*) into n from public.notification_recipients(array[v_event])
@@ -364,6 +367,397 @@ begin
   end if;
 
   raise notice 'ok：notification_recipients() 停權前含 a2、停權後排除 a2';
+end;
+$$;
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- 場景 8（R2，MAJOR-1）：suspended_reason 搬到 private.suspension_notes 之後
+-- ——profiles／families 沒有這個欄位；suspension_notes 只有表擁有者讀得到；
+-- suspended_at 本身仍然可讀（刻意，見 migration 註解）。
+-- ---------------------------------------------------------------------------
+begin;
+
+insert into private.suspension_notes (subject_type, subject_id, reason)
+values ('user', 'a0000000-0000-4000-8000-000000000002', '測試用稽核原因');
+
+update public.profiles set suspended_at = now()
+ where id = 'a0000000-0000-4000-8000-000000000002';
+
+do $$
+declare
+  n int;
+  v_suspended_at timestamptz;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000002', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- suspended_at 讀得到（刻意，停權事實本來就會從 LS052 揭露）
+  select suspended_at into v_suspended_at from public.profiles
+   where id = 'a0000000-0000-4000-8000-000000000002';
+  if v_suspended_at is null then
+    raise exception 'FAIL：停權者自己應該讀得到 suspended_at';
+  end if;
+
+  -- private.suspension_notes 完全讀不到（沒有 table grant，不是 RLS 篩選）
+  begin
+    perform count(*) from private.suspension_notes;
+    raise exception 'FAIL：authenticated 竟然能查詢 private.suspension_notes';
+  exception when insufficient_privilege then
+    null; -- ok（42501，沒有 table grant，見 migration 第 0b 段）
+  end;
+
+  reset role;
+  raise notice 'ok：suspended_at 可讀、private.suspension_notes 完全讀不到（MAJOR-1）';
+end;
+$$;
+
+-- 結構層面釘住：profiles／families 不應該有 suspended_reason 欄位（防止之後
+-- 有人不小心把它加回去、繞過本次修法的意圖）。
+do $$
+declare
+  n int;
+begin
+  select count(*) into n from information_schema.columns
+   where table_schema = 'public'
+     and table_name in ('profiles', 'families')
+     and column_name = 'suspended_reason';
+  if n <> 0 then
+    raise exception 'FAIL：profiles／families 不該有 suspended_reason 欄位（MAJOR-1 已搬到 private.suspension_notes），實際命中 % 個', n;
+  end if;
+  raise notice 'ok：profiles／families 皆無 suspended_reason 欄位';
+end;
+$$;
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- 場景 9（R2，m1）：content_reports_select／join_requests_select 的「自己那
+-- 一支」分支也要拒絕（票面「全部 policy」，之前只有「owner 那一支」被收斂）
+-- ---------------------------------------------------------------------------
+begin;
+
+-- fixture 8a：reporter_id = a2，family A
+update public.profiles set suspended_at = now()
+ where id = 'a0000000-0000-4000-8000-000000000002';
+
+do $$
+declare
+  n int;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000002', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  select count(*) into n from public.content_reports
+   where id = '8a000000-0000-4000-8000-000000000001';
+  if n <> 0 then
+    raise exception 'FAIL：停權者仍讀得到自己送出的 content_reports 列（% 列）', n;
+  end if;
+
+  reset role;
+  raise notice 'ok：停權後看不到自己送出的 content_reports（reporter_id 分支已補判斷）';
+end;
+$$;
+
+rollback;
+
+begin;
+
+-- 家庭停權同樣要擋住這個分支（family_is_active）——用同一筆 8a 報告，改停
+-- 家庭本身，reporter（a2）本人不停權。
+update public.families set suspended_at = now()
+ where id = 'fa000000-0000-4000-8000-000000000001';
+
+do $$
+declare
+  n int;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000002', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  select count(*) into n from public.content_reports
+   where id = '8a000000-0000-4000-8000-000000000001';
+  if n <> 0 then
+    raise exception 'FAIL：家庭停權後，未被個別停權的 reporter 仍讀得到自己的 content_reports（% 列）', n;
+  end if;
+
+  reset role;
+  raise notice 'ok：家庭停權後 content_reports 的 reporter_id 分支也正確拒絕';
+end;
+$$;
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- 場景 10（R2，MAJOR-2）：delete_my_account() 對停權者／停權家庭成員仍可用
+-- ---------------------------------------------------------------------------
+begin;
+
+update public.profiles set suspended_at = now()
+ where id = 'a0000000-0000-4000-8000-000000000002';
+
+do $$
+declare
+  v_deletion_requested timestamptz;
+  n int;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000002', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  perform public.delete_my_account();
+
+  reset role;
+
+  select deletion_requested_at into v_deletion_requested from public.profiles
+   where id = 'a0000000-0000-4000-8000-000000000002';
+  if v_deletion_requested is null then
+    raise exception 'FAIL：被停權的使用者呼叫 delete_my_account() 之後 deletion_requested_at 仍是 NULL';
+  end if;
+
+  select count(*) into n from public.family_members
+   where family_id = 'fa000000-0000-4000-8000-000000000001'
+     and user_id = 'a0000000-0000-4000-8000-000000000002';
+  if n <> 0 then
+    raise exception 'FAIL：delete_my_account() 之後 a2 應該已離開 A 家';
+  end if;
+
+  raise notice 'ok：被停權的使用者仍能成功呼叫 delete_my_account()（App Store 5.1.1(v)）';
+end;
+$$;
+
+rollback;
+
+begin;
+
+-- 家庭停權、成員本人未被個別停權
+update public.families set suspended_at = now()
+ where id = 'fb000000-0000-4000-8000-000000000001';
+
+do $$
+declare
+  v_deletion_requested timestamptz;
+  n int;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'b0000000-0000-4000-8000-000000000002', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  perform public.delete_my_account();
+
+  reset role;
+
+  select deletion_requested_at into v_deletion_requested from public.profiles
+   where id = 'b0000000-0000-4000-8000-000000000002';
+  if v_deletion_requested is null then
+    raise exception 'FAIL：停權家庭裡的成員呼叫 delete_my_account() 之後 deletion_requested_at 仍是 NULL';
+  end if;
+
+  select count(*) into n from public.family_members
+   where family_id = 'fb000000-0000-4000-8000-000000000001'
+     and user_id = 'b0000000-0000-4000-8000-000000000002';
+  if n <> 0 then
+    raise exception 'FAIL：delete_my_account() 之後 b2 應該已離開 B 家';
+  end if;
+
+  raise notice 'ok：停權家庭裡未被個別停權的成員仍能成功呼叫 delete_my_account()';
+end;
+$$;
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- 場景 11（R2，MAJOR-2 防禦）：交易級 GUC 不會跨交易存活——即使假設性地放寬到
+-- 「client 自己找得到辦法呼叫 set_config」這個最寬鬆的假設，這個值也只在
+-- 設定當下的那個交易內有效，不會讓「下一個獨立 request」的操作被誤放行。
+-- 用兩個各自獨立的 begin/commit（不是 begin/rollback）模擬兩個獨立的
+-- PostgREST request——這是本檔唯一需要真的 COMMIT 的場景，收尾另外清乾淨。
+-- ---------------------------------------------------------------------------
+begin;
+update public.profiles set suspended_at = now()
+ where id = 'a0000000-0000-4000-8000-000000000002';
+select set_config('request.jwt.claims',
+  json_build_object('sub', 'a0000000-0000-4000-8000-000000000002', 'role', 'authenticated')::text, true);
+set local role authenticated;
+select set_config('ls179.account_deletion', 'on', true);
+reset role;
+commit;
+
+do $$
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000002', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  begin
+    insert into public.media (family_id, storage_path, type, byte_size, width, height, uploaded_by)
+    values ('fa000000-0000-4000-8000-000000000001',
+            'fa000000-0000-4000-8000-000000000001/2026/09/guc-bypass-attempt.jpg',
+            'photo', 1024, 100, 100, 'a0000000-0000-4000-8000-000000000002');
+    raise exception 'FAIL：上一個（已 COMMIT 的）交易設的 is_local GUC 竟然跨交易存活，繞過了停權檢查';
+  exception when sqlstate 'LS052' then
+    null; -- ok：完全沒有跨交易殘留
+  end;
+
+  reset role;
+  raise notice 'ok：is_local=true 的 GUC 不會跨交易存活——寫入仍正確拿到 LS052（MAJOR-2 防禦）';
+end;
+$$;
+
+-- 清理：上面是真的 COMMIT，這裡把 a2 的停權狀態復原，不留殘留給後續測試／
+-- 併發 regression（這幾支之後才跑）。
+update public.profiles set suspended_at = null
+ where id = 'a0000000-0000-4000-8000-000000000002';
+
+-- ---------------------------------------------------------------------------
+-- 場景 12（R2，m3，M4 mutation 存活的回歸保護）：停權者對 storage.objects 的
+-- select／insert——這條路徑只靠本檔第 2 段收斂的四支集合函式，沒有 trigger
+-- backstop；merge-review R1 的 M4 mutation（拿掉 uploadable_family_ids() 的
+-- 兩句停權排除）在補這個測試之前，105／run.sh 全綠、沒有任何測試會抓到它。
+-- ---------------------------------------------------------------------------
+begin;
+
+insert into storage.objects (bucket_id, name, owner, owner_id) values
+  ('media', 'fa000000-0000-4000-8000-000000000001/2026/09/9a000000-0000-4000-8000-000000000001.jpg',
+   'a0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000002');
+
+do $$
+declare
+  n int;
+begin
+  -- 停權前：a2 讀得到自己剛塞的物件
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000002', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  select count(*) into n from storage.objects
+   where bucket_id = 'media'
+     and name = 'fa000000-0000-4000-8000-000000000001/2026/09/9a000000-0000-4000-8000-000000000001.jpg';
+  if n <> 1 then
+    raise exception 'FAIL：停權前 a2 應該讀得到自己的 storage.objects 列，實際 % 列', n;
+  end if;
+
+  reset role;
+end;
+$$;
+
+update public.profiles set suspended_at = now()
+ where id = 'a0000000-0000-4000-8000-000000000002';
+
+do $$
+declare
+  n int;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000002', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  select count(*) into n from storage.objects
+   where bucket_id = 'media'
+     and name = 'fa000000-0000-4000-8000-000000000001/2026/09/9a000000-0000-4000-8000-000000000001.jpg';
+  if n <> 0 then
+    raise exception 'FAIL：停權後 a2 竟然還讀得到自己的 storage.objects 列（% 列）', n;
+  end if;
+
+  begin
+    insert into storage.objects (bucket_id, name, owner, owner_id) values
+      ('media', 'fa000000-0000-4000-8000-000000000001/2026/09/9a000000-0000-4000-8000-000000000002.jpg',
+       'a0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000002');
+    raise exception 'FAIL：停權後 a2 竟然還能上傳新物件到 storage.objects';
+  exception when insufficient_privilege then
+    null; -- ok（RLS 違反，標準 42501，storage policy 沒有自訂碼可用，見 §5）
+  end;
+
+  reset role;
+  raise notice 'ok：停權後 storage.objects 的 select／insert 皆被擋（M4 mutation 回歸保護）';
+end;
+$$;
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- 場景 13（R2，m3，M5 mutation 存活的回歸保護 ＋ m2）：families_select 的
+-- created_by 分支——建立者已離開家庭（family_ids() 因此看不到它），此時唯一
+-- 還看得到這個家庭的路徑就是 created_by 分支。merge-review R1 的 M5 mutation
+-- （拿掉這個分支的 caller_is_active()）在補這個測試之前全綠存活；同一個場景
+-- 順便釘住 m2（family_is_active(id)）。
+-- ---------------------------------------------------------------------------
+begin;
+
+-- a1 是 A 家建立者兼唯一 owner；先把 a2 也升成 owner，a1 才能離開而不撞
+-- enforce_family_has_owner（owner 不變量）。
+update public.family_members set role = 'owner'
+ where family_id = 'fa000000-0000-4000-8000-000000000001'
+   and user_id = 'a0000000-0000-4000-8000-000000000002';
+delete from public.family_members
+ where family_id = 'fa000000-0000-4000-8000-000000000001'
+   and user_id = 'a0000000-0000-4000-8000-000000000001';
+
+do $$
+declare
+  n int;
+begin
+  -- 正面對照：a1 已離開，但仍是 created_by，未停權時這個分支應該讓他看到 1 列
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000001', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  select count(*) into n from public.families where id = 'fa000000-0000-4000-8000-000000000001';
+  if n <> 1 then
+    raise exception 'FAIL：已離開家庭的建立者，未停權時應該仍能透過 created_by 分支看到 1 列，實際 %', n;
+  end if;
+
+  reset role;
+end;
+$$;
+
+update public.profiles set suspended_at = now()
+ where id = 'a0000000-0000-4000-8000-000000000001';
+
+do $$
+declare
+  n int;
+begin
+  -- m1／M5：建立者本人被停權 → created_by 分支必須拒絕
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000001', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  select count(*) into n from public.families where id = 'fa000000-0000-4000-8000-000000000001';
+  if n <> 0 then
+    raise exception 'FAIL：已離開家庭且被停權的建立者，仍透過 created_by 分支看到 % 列', n;
+  end if;
+
+  reset role;
+  raise notice 'ok：created_by 分支對停權的建立者正確拒絕（M5 mutation 回歸保護）';
+end;
+$$;
+
+update public.profiles set suspended_at = null
+ where id = 'a0000000-0000-4000-8000-000000000001';
+update public.families set suspended_at = now()
+ where id = 'fa000000-0000-4000-8000-000000000001';
+
+do $$
+declare
+  n int;
+begin
+  -- m2：建立者本人未停權，但家庭本身停權 → created_by 分支同樣必須拒絕
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000001', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  select count(*) into n from public.families where id = 'fa000000-0000-4000-8000-000000000001';
+  if n <> 0 then
+    raise exception 'FAIL：家庭停權後，未被個別停權的建立者仍透過 created_by 分支看到 % 列（m2）', n;
+  end if;
+
+  reset role;
+  raise notice 'ok：created_by 分支對停權的家庭正確拒絕（m2 回歸保護）';
 end;
 $$;
 

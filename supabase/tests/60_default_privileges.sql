@@ -88,12 +88,14 @@ declare
     -- 呼叫者封鎖過人時整條時間軸查詢會直接噴權限錯。
     'private.blocked_pairs()',
     'private.feed_item_actor_id(public.feed_kind,uuid)',
-    -- LS-179：families_select policy 的 created_by 分支直接呼叫
-    -- private.caller_is_active()（policy 以 authenticated 身分求值，同其餘集合
-    -- 函式的理由）。family_is_active(uuid)／registrations_open() 只從其他
-    -- SECURITY DEFINER 函式／trigger 內部呼叫（以 postgres 身分執行），不需要
-    -- 登記在這裡。
-    'private.caller_is_active()'
+    -- LS-179：families_select／content_reports_select／join_requests_select
+    -- 三條 policy（R2 merge-review m1／m2 補齊後三條都會用到）直接呼叫
+    -- private.caller_is_active()／private.family_is_active(uuid)（policy 以
+    -- authenticated 身分求值，同其餘集合函式的理由）。registrations_open()
+    -- 只從 enforce_registrations_open() trigger 內部呼叫（以 postgres 身分
+    -- 執行），不需要登記在這裡。
+    'private.caller_is_active()',
+    'private.family_is_active(uuid)'
   ];
   v_exceptions text[] := array[]::text[];  -- 目前無例外；若新增，必須附理由註解
   v_allow_oids oid[];
@@ -620,6 +622,13 @@ $$;
 --   （新增 private 函式若也要走這條例外，必須先來這裡登記並寫明理由。）
 --   private.is_avatar_object_path(text)：LS-169 R2，同上一條理由，逐字一樣的形狀
 --   （純 regex、掛在 media_bucket_update／media_bucket_delete 的 WITH CHECK／USING 上）。
+--   private.deletion_bypass_active()：LS-179 R2（MAJOR-2），只讀一個交易級 GUC
+--   （`current_setting`），不碰任何資料庫物件，沒有 search_path 挾持的面，同
+--   is_media_object_path 的理由。
+--   private.enforce_deletion_bypass()：LS-179 R2，只呼叫 `set_config` 設同一個
+--   GUC，一樣不碰任何資料庫物件；只被 SECURITY DEFINER 的 delete_my_account()
+--   呼叫（以 postgres 身分執行，物件擁有者恆有權限，不需要靠自己是 definer 才能
+--   運作），是否收 search_path 對它的正確性沒有影響。
 -- ---------------------------------------------------------------------------
 do $$
 declare
@@ -627,7 +636,9 @@ declare
   -- 這句 cast 會直接噴出含簽名的錯誤，不會無聲漂移。
   v_exceptions text[] := array[
     'private.is_media_object_path(text)',
-    'private.is_avatar_object_path(text)'
+    'private.is_avatar_object_path(text)',
+    'private.deletion_bypass_active()',
+    'private.enforce_deletion_bypass()'
   ];
   v_exc_oids oid[];
   v_leaky text;
