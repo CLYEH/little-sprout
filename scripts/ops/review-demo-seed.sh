@@ -51,15 +51,22 @@
 #   一律經格式健檢（含拒絕單引號，LS-162 R2 i1），local／prod 皆套用。
 #
 # --owner-password（LS-162 R2，方案 B 轉向：使用者 2026-09-04 13:22 改採帳號密碼登入，
-#   OTP 方案 C 停用）：owner 帳號改用密碼登入，不帶時自動產生 20 字元英數強密碼、只印
-#   終端一次（不寫進任何檔案／log／review-notes.md，僅短暫存在於本次執行的
-#   mktemp -d 暫存目錄，行程結束由 trap 清除）。密碼雜湊用 pgcrypto 的
-#   crypt(pw, gen_salt('bf'))（bcrypt，GoTrue 用同一種格式驗證密碼）直接寫在種子 SQL
-#   裡，取捨：改走 GoTrue admin API `POST /auth/v1/admin/users` 會是這支腳本唯一一個
-#   跳出「postgres 身分直寫 SQL」模式、多一次網路往返、且落在 --single-transaction
-#   保護之外的步驟；直接在 SQL 內雜湊維持單一交易，SQL 失敗照樣整份回捲，執行前會先
-#   查 pgcrypto extension 是否存在，缺了 fail loud（不會無聲跳過密碼或存明文）。member
-#   帳號維持 Email OTP，不受影響。
+#   OTP 方案 C 停用）：owner 帳號改用密碼登入。**不帶時**（＝正式站預設用法）自動產生
+#   20 字元英數強密碼、只印終端一次，不寫進任何檔案／log／review-notes.md，僅短暫
+#   存在於本次執行的 mktemp -d 暫存目錄，行程結束由 trap 清除。**顯式帶
+#   --owner-password 時**（例如本機測試自帶固定密碼）例外：i-d（merge-review R2）
+#   ——`--target local` 會把原始參數 re-exec 進 supabase-lock.sh，密碼會明碼出現在
+#   該次命令列（`ps` 看得到）與 supabase-lock.sh 的 holder 檔（實測 `-rw-r--r--`，
+#   執行期間存在）；prod 分支不經 lock、且預設就是自動產生，所以正式站實際送審用的
+#   那組密碼不受這個例外影響。密碼雜湊用 pgcrypto 的 crypt(pw, gen_salt('bf', 10))
+#   （bcrypt cost 10，跟 GoTrue 自己建帳號用的 cost 對齊）直接寫在種子 SQL 裡，取捨：
+#   改走 GoTrue admin API `POST /auth/v1/admin/users` 會是這支腳本唯一一個跳出
+#   「postgres 身分直寫 SQL」模式、多一次網路往返、且落在 --single-transaction 保護
+#   之外的步驟；直接在 SQL 內雜湊維持單一交易，SQL 失敗照樣整份回捲，執行前會先查
+#   pgcrypto 的 crypt(text,text) 是否 resolvable（不只查有沒有裝 extension，也查
+#   目前連線的 search_path 叫不叫得到——i-b merge-review R2），缺了 fail loud（不會
+#   無聲跳過密碼或存明文）。member 帳號維持 Email OTP，不受影響。email 一律正規化成
+#   小寫再使用（M1 merge-review R2，見下方常數區塊），跟 GoTrue 自己的儲存慣例對齊。
 #
 # 環境：
 #   --target local：用 `supabase status -o env` 取得本機 DB_URL／API_URL／SERVICE_ROLE_KEY。
@@ -154,6 +161,16 @@ OWNER_EMAIL="${owner_email_opt:-review-demo@little-sprout.app}"
 MEMBER_EMAIL="${member_email_opt:-review-demo-member@little-sprout.app}"
 validate_email "--owner-email" "$OWNER_EMAIL"
 validate_email "--member-email" "$MEMBER_EMAIL"
+# M1（merge-review R2）：驗證原始輸入之後才正規化——錯誤訊息（上面 validate_email）
+# 照操作者打的字顯示，但下游一律用小寫。GoTrue 對 email 寫入時正規化成小寫、查詢
+# 也不分大小寫；這裡先把輸入轉小寫，是**主要**修法：下游 print_plan／SQL insert／
+# 錯誤訊息全部改用同一份已正規化的值，讓這支腳本自己寫進 auth.users 的資料本來就
+# 跟 GoTrue 的儲存慣例一致，「同一個人類可見地址、大小寫不同、唯一索引擋不住、
+# 變成兩列」的情況從源頭就不會發生（唯一索引本身是大小寫敏感的，正規化輸入才是
+# 真正的防線）。下方 SQL 的 guard／insert 另外用 lower() 包一層是**次要**防線
+# （defense-in-depth：即使這裡的正規化被繞過或未來改掉，SQL 端仍然正確）。
+OWNER_EMAIL=$(printf '%s' "$OWNER_EMAIL" | tr '[:upper:]' '[:lower:]')
+MEMBER_EMAIL=$(printf '%s' "$MEMBER_EMAIL" | tr '[:upper:]' '[:lower:]')
 # 上傳路徑的 {yyyy}/{mm} 固定（docs/API.md §6：這段取的是「上傳時間」，不是拍攝時間）——
 # 種子腳本每次重跑都要落在同一個路徑，Storage 側的批次刪除才能用固定清單、不必先 list。
 SEED_YM=2026/09
@@ -362,6 +379,14 @@ cat > "$sql_file" <<SQL
 -- 不是上一輪種子自己建的）→ raise exception 印出該列 id／created_at／所屬家庭數，
 -- 整份回捲、shell 非 0 結束，絕不刪除；不做 shell 先查一次、再送第二個 psql 的
 -- check-then-act（那樣會留下窗口）。此檢查對 --target local／prod 一視同仁。
+--
+-- M1（merge-review R2 blocker）：這裡的比對額外包 lower()——${OWNER_EMAIL}／
+-- ${MEMBER_EMAIL} 在 shell 端已正規化成小寫（主要修法，見腳本檔頭 validate_email
+-- 呼叫之後那段），這裡的 lower() 是次要防線：GoTrue 對 email 寫入正規化成小寫、
+-- 查詢也不分大小寫，若這裡不比對 auth.users.email 欄位本身的小寫形式，遇到不是
+-- 這支腳本寫入、casing 不明的既有列時比對仍可能落空——擋不住的後果是 guard 完全
+-- 不響、seed 回報成功，但正式站 auth.users 的 email 唯一索引是大小寫敏感的，
+-- 同一個人類可見地址會被種出第二列，兩種大小寫寫法最後都登不進去（R2 實跑重現）。
 do \$\$
 declare
   r record;
@@ -369,7 +394,7 @@ declare
 begin
   for r in
     select id, email, created_at from auth.users
-    where email in ('${OWNER_EMAIL}', '${MEMBER_EMAIL}')
+    where lower(email) in (lower('${OWNER_EMAIL}'), lower('${MEMBER_EMAIL}'))
       and id not in ('${OWNER_ID}', '${MEMBER_ID}')
   loop
     select count(*) into n_families from public.family_members where user_id = r.id;
@@ -380,13 +405,21 @@ end;
 \$\$;
 
 -- LS-162 方案 B：owner 帳號改用密碼登入，encrypted_password 用 pgcrypto 的
--- crypt(pw, gen_salt('bf'))（bcrypt，GoTrue 用同一種格式驗證）直接在 SQL 內雜湊——
--- 取捨與改走 GoTrue admin API 的說明見腳本檔頭「--owner-password」段。先查 pgcrypto
--- 是否存在，缺了 fail loud（不會無聲跳過密碼或存明文）。
+-- crypt(pw, gen_salt('bf', 10))（bcrypt cost 10，跟 GoTrue 自己建帳號用的 cost
+-- 對齊——i-c merge-review R2：pgcrypto 預設 cost 6，這裡明寫 10，一個數字的事）
+-- 直接在 SQL 內雜湊——取捨與改走 GoTrue admin API 的說明見腳本檔頭
+-- 「--owner-password」段。
+--
+-- i-b（merge-review R2）：原本查 pg_extension 只驗證「extension 有沒有裝」，沒驗證
+-- 「crypt() 這個函式在目前連線的 search_path 下叫不叫得到」——pgcrypto 裝在
+-- extensions schema，若 prod 連線的 search_path 不含它，這個檢查會通過、然後在
+-- 下面真正呼叫 crypt() 時才炸（雖然一樣在交易內、一樣 fail loud，只是錯誤訊息
+-- 離現場遠一點）。改成直接查 crypt(text,text) 這個函式簽章是否 resolvable，
+-- 這是 reviewer 驗證過的寫法，同時驗到「裝了」與「叫得到」兩件事。
 do \$\$
 begin
-  if not exists (select 1 from pg_extension where extname = 'pgcrypto') then
-    raise exception 'review-demo-seed 拒絕執行：pgcrypto extension 未安裝，無法用 crypt()/gen_salt() 建立 owner 密碼（方案 B 需要它）';
+  if to_regprocedure('crypt(text,text)') is null then
+    raise exception 'review-demo-seed 拒絕執行：pgcrypto 的 crypt(text,text) 不可用（extension 未安裝，或裝在目前連線 search_path 找不到的 schema），無法建立 owner 密碼（方案 B 需要它）';
   end if;
 end;
 \$\$;
@@ -411,16 +444,20 @@ delete from auth.users where id in ('${OWNER_ID}', '${MEMBER_ID}');
 -- LS-162 方案 B：owner 另外補 encrypted_password（上面已雜湊）與 email_confirmed_at
 -- （grant_type=password 登入要求信箱已確認，不像 OTP 是 /verify 端點事後才補上）；
 -- member 維持原樣（OTP 流程會在 /verify 成功時自己補上 email_confirmed_at）。
+--
+-- M1（merge-review R2）：email 欄位額外包 lower()——次要防線，同上方 guard 的理由；
+-- 主要防線是 shell 端已正規化（腳本檔頭 validate_email 呼叫之後那段），這裡的
+-- lower() 讓「就算某天那段正規化被改掉」這條 SQL 語句本身仍然正確、不依賴上游。
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password,
                          email_confirmed_at, created_at, updated_at,
                          raw_app_meta_data, raw_user_meta_data,
                          confirmation_token, recovery_token, email_change_token_new, email_change)
 values
   ('${OWNER_ID}', '00000000-0000-0000-0000-000000000000',
-   'authenticated', 'authenticated', '${OWNER_EMAIL}',
-   crypt('${OWNER_PASSWORD}', gen_salt('bf')), now(), now(), now(), '{}', '{}', '', '', '', ''),
+   'authenticated', 'authenticated', lower('${OWNER_EMAIL}'),
+   crypt('${OWNER_PASSWORD}', gen_salt('bf', 10)), now(), now(), now(), '{}', '{}', '', '', '', ''),
   ('${MEMBER_ID}', '00000000-0000-0000-0000-000000000000',
-   'authenticated', 'authenticated', '${MEMBER_EMAIL}',
+   'authenticated', 'authenticated', lower('${MEMBER_EMAIL}'),
    NULL, NULL, now(), now(), '{}', '{}', '', '', '', '');
 
 -- auth.users 的 AFTER INSERT trigger 已自動建立 profiles 列（display_name 推導自
