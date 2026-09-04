@@ -133179,6 +133179,2043 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "BYbe5",
+      "x": 1380,
+      "y": 5888,
+      "name": "LS-163 / P1 帳號密碼登入 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "rVvtJ",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "qlJ6Y",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "fH6jA",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "KulTo",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "qsJBs",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "KuzKK",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "帳號密碼登入",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "eynn8",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "審核專用登入方式，請輸入分配給你的帳號與密碼。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "f3KISU",
+                  "name": "Field Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "QxnLq",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Email Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "Email 地址"
+                        },
+                        "iu3Q8": {
+                          "content": "yourname@example.com"
+                        },
+                        "i2SHf": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "RjBmr",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Password Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "密碼"
+                        },
+                        "v6YiYR": {
+                          "type": "frame",
+                          "id": "JlsYF",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "height": 60,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "gap": "$sp-label",
+                          "padding": [
+                            0,
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "N0eBwn",
+                              "name": "Field Value",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "請輸入密碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "OzB1F",
+                              "name": "Toggle Wrap",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "HMfPV",
+                                  "name": "Toggle Icon",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "eye",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "kxkmg",
+                                  "name": "Toggle Label",
+                                  "fill": "$text-primary",
+                                  "content": "顯示",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "ikuz2": {
+                          "content": "此為審核專用帳號，如需協助請洽開發者聯絡資訊。"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "c5O1H9",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Q4Sapc",
+                  "name": "Button Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "I61Mj",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Login Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "log-in"
+                        },
+                        "w7CUP": {
+                          "content": "登入"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "NcCq2",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "rm1Vd",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "pl5GE",
+      "x": 1380,
+      "y": 6820,
+      "name": "LS-163 / P1b 帳號密碼登入 · 登入中",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "fIfUm",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "c2pUf",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "bCGc7",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "u39HSs",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "D5EPHI",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "jHpad",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "帳號密碼登入",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "J5qWb0",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "審核專用登入方式，請輸入分配給你的帳號與密碼。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "o7WJTD",
+                  "name": "Field Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "VhyL3",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Email Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "Email 地址"
+                        },
+                        "iu3Q8": {
+                          "content": "yourname@example.com"
+                        },
+                        "i2SHf": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "o2adwt",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Password Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "密碼"
+                        },
+                        "v6YiYR": {
+                          "type": "frame",
+                          "id": "k9DHtR",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "height": 60,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "gap": "$sp-label",
+                          "padding": [
+                            0,
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "f9Qdy",
+                              "name": "Field Value",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "請輸入密碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "tvStU",
+                              "name": "Toggle Wrap",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "TbB9Z",
+                                  "name": "Toggle Icon",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "eye",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "pIcfi",
+                                  "name": "Toggle Label",
+                                  "fill": "$text-primary",
+                                  "content": "顯示",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "ikuz2": {
+                          "content": "此為審核專用帳號，如需協助請洽開發者聯絡資訊。"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "EEvGp",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "l1qqfd",
+                  "name": "Button Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "PsFr1",
+                      "type": "ref",
+                      "ref": "e6nnU",
+                      "name": "Login Button Working",
+                      "width": "fill_container",
+                      "descendants": {
+                        "R2lJ0U": {
+                          "content": "登入中…"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "RJa4A",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "PRfzT",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "O1XC2Z",
+      "x": 1380,
+      "y": 7752,
+      "name": "LS-163 / P1c 帳號密碼登入 · 帳號或密碼錯誤",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "UMcbU",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "AL2dH",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "ZJRQP",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "lTAtM",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Nko9T",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "n8DR3",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "帳號密碼登入",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "iMOoH",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "審核專用登入方式，請輸入分配給你的帳號與密碼。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Njh80",
+                  "name": "Field Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "KNOWp",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Email Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "Email 地址"
+                        },
+                        "v6YiYR": {
+                          "stroke": "$danger",
+                          "strokeWidth": 2
+                        },
+                        "iu3Q8": {
+                          "content": "yourname@example.com"
+                        },
+                        "i2SHf": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "fim6k",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Password Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "密碼"
+                        },
+                        "v6YiYR": {
+                          "type": "frame",
+                          "id": "jWjfp",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "height": 60,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$danger",
+                          "strokeWidth": 2,
+                          "gap": "$sp-label",
+                          "padding": [
+                            0,
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "W7j26",
+                              "name": "Field Value",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "請輸入密碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "i2wPv",
+                              "name": "Toggle Wrap",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "He7cE",
+                                  "name": "Toggle Icon",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "eye",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "HospG",
+                                  "name": "Toggle Label",
+                                  "fill": "$text-primary",
+                                  "content": "顯示",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "i2SHf": {
+                          "enabled": true
+                        },
+                        "a7OyZ7": {
+                          "icon": "circle-alert",
+                          "fill": "$danger"
+                        },
+                        "ikuz2": {
+                          "content": "帳號或密碼錯誤，請再試一次。",
+                          "fill": "$danger",
+                          "fontWeight": "600"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "D6UFuq",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "saLwO",
+                  "name": "Button Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "bmFBI",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Login Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "log-in"
+                        },
+                        "w7CUP": {
+                          "content": "登入"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "cMC6L",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "mxs9U",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ioA0u",
+      "x": 1380,
+      "y": 8684,
+      "name": "LS-163 / P1d 帳號密碼登入 · 網路錯誤",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "Ls3uE",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "eTtSl",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "Gf02w",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "kcvBw",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ofpFi",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "zbaVy",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "帳號密碼登入",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "c2RVL8",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "審核專用登入方式，請輸入分配給你的帳號與密碼。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "bRScu",
+                  "name": "Field Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "d6tRqF",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Email Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "Email 地址"
+                        },
+                        "iu3Q8": {
+                          "content": "yourname@example.com"
+                        },
+                        "i2SHf": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "MrPgX",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Password Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "密碼"
+                        },
+                        "v6YiYR": {
+                          "type": "frame",
+                          "id": "LWJzB",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "height": 60,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "gap": "$sp-label",
+                          "padding": [
+                            0,
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "vCM3v",
+                              "name": "Field Value",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "請輸入密碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "e6qUg",
+                              "name": "Toggle Wrap",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "zIzJy",
+                                  "name": "Toggle Icon",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "eye",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "zpuJ0",
+                                  "name": "Toggle Label",
+                                  "fill": "$text-primary",
+                                  "content": "顯示",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "ikuz2": {
+                          "content": "此為審核專用帳號，如需協助請洽開發者聯絡資訊。"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "hTkhE",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "oPp0p",
+                  "name": "Error Row",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "gPLi1",
+                      "name": "Error Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$danger"
+                    },
+                    {
+                      "type": "text",
+                      "id": "rZamf",
+                      "name": "Error Text",
+                      "fill": "$danger",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "連線中斷，請檢查網路連線。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "AIo5e",
+                  "name": "Button Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "u99TL",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Login Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "log-in"
+                        },
+                        "w7CUP": {
+                          "content": "登入"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "DSDHY",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "kxNyy",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "tpw7n",
+      "x": 1380,
+      "y": 9616,
+      "name": "LS-163 / P1e 帳號密碼登入 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "a0Ces",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "bETjC",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "NihXm",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "GNdMc",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "LrDUa",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "blpGW",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "帳號密碼登入",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fvtvk",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "審核專用登入方式，請輸入分配給你的帳號與密碼。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PBKoX",
+                  "name": "Field Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "OILLy",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Email Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "Email 地址"
+                        },
+                        "iu3Q8": {
+                          "content": "yourname@example.com"
+                        },
+                        "i2SHf": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "RF35z",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Password Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "密碼"
+                        },
+                        "v6YiYR": {
+                          "type": "frame",
+                          "id": "KABUk",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "height": 60,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "gap": "$sp-label",
+                          "padding": [
+                            0,
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "s9SEs",
+                              "name": "Field Value",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "請輸入密碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "S45ig",
+                              "name": "Toggle Wrap",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "sfVHL",
+                                  "name": "Toggle Icon",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "eye",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "R6284K",
+                                  "name": "Toggle Label",
+                                  "fill": "$text-primary",
+                                  "content": "顯示",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "ikuz2": {
+                          "content": "此為審核專用帳號，如需協助請洽開發者聯絡資訊。"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "B0NLWm",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "v0cMPn",
+                  "name": "Button Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "fCVUv",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Login Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "log-in"
+                        },
+                        "w7CUP": {
+                          "content": "登入"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "t3EhRR",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "Z3pmsx",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "vgvFY",
+      "x": 1380,
+      "y": 10548,
+      "name": "A11y / P1 帳號密碼登入 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1300,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "W8MpYR",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "okKgO",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "J0LSKN",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "M9QitQ",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "rro6b",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "K08RI",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "帳號密碼登入",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "KamI0",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "審核專用登入方式，請輸入分配給你的帳號與密碼。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ArIjm",
+                  "name": "Field Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "BNBbK",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Email Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "Email 地址"
+                        },
+                        "iu3Q8": {
+                          "content": "yourname@example.com"
+                        },
+                        "i2SHf": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "bObaY",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Password Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "密碼"
+                        },
+                        "v6YiYR": {
+                          "type": "frame",
+                          "id": "ahaWX",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "height": 140,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "gap": "$sp-label",
+                          "padding": [
+                            0,
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "i5ZEew",
+                              "name": "Field Value",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "請輸入密碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "DqJf1",
+                              "name": "Toggle Wrap",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "blEap",
+                                  "name": "Toggle Icon",
+                                  "width": 32,
+                                  "height": 32,
+                                  "icon": "eye",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "gFeuX",
+                                  "name": "Toggle Label",
+                                  "fill": "$text-primary",
+                                  "content": "顯示",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "ikuz2": {
+                          "content": "此為審核專用帳號，如需協助請洽開發者聯絡資訊。"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mPn9B",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "iFf42",
+                  "name": "Button Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "A5UBPu",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Login Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "log-in"
+                        },
+                        "w7CUP": {
+                          "content": "登入"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "hRIAX",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "xypGM",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "l4ShP",
+      "x": 1380,
+      "y": 11928,
+      "name": "LS-163 / P1-iPad 帳號密碼登入 (iPad 11\")",
+      "clip": true,
+      "width": 834,
+      "height": 1194,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 0.8009592326139089,
+          "height": 0.9631490787269682
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.06594724220623502,
+          "y": 0.01423785594639866
+        }
+      },
+      "cornerRadius": 28,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "KdE2p",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "aQxEF",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "hrkxh",
+          "name": "Main",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            "$screen-pad-lg",
+            "$screen-pad-lg",
+            0,
+            "$screen-pad-lg"
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "p95ZHV",
+              "name": "Auth Column",
+              "width": 460,
+              "layout": "vertical",
+              "gap": "$sp-section",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "BuUFl",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "P8PHO",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "帳號密碼登入",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Klthy",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "審核專用登入方式，請輸入分配給你的帳號與密碼。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "I2Tgpl",
+                  "name": "Field Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "id": "L2Prwm",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Email Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "Email 地址"
+                        },
+                        "iu3Q8": {
+                          "content": "yourname@example.com"
+                        },
+                        "i2SHf": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "Tllw5",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Password Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "密碼"
+                        },
+                        "v6YiYR": {
+                          "type": "frame",
+                          "id": "e1qaKH",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "height": 60,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "gap": "$sp-label",
+                          "padding": [
+                            0,
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "wRV3K",
+                              "name": "Field Value",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "請輸入密碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Rc18R",
+                              "name": "Toggle Wrap",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "M6xGf",
+                                  "name": "Toggle Icon",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "eye",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "IJojb",
+                                  "name": "Toggle Label",
+                                  "fill": "$text-primary",
+                                  "content": "顯示",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "ikuz2": {
+                          "content": "此為審核專用帳號，如需協助請洽開發者聯絡資訊。"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PJTLR",
+                  "name": "Button Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "id": "TlW1Q",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Login Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "log-in"
+                        },
+                        "w7CUP": {
+                          "content": "登入"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "heVFW",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "Ae51b",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 200,
+              "height": 5
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
