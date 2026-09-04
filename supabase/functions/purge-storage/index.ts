@@ -64,13 +64,17 @@ Deno.serve(async (req: Request) => {
   if (!serviceRoleKey || !supabaseUrl) {
     // fail loud：環境變數缺失是部署設定錯誤，不是「當作沒有佇列可處理」悄悄回 200。
     return new Response(
-      JSON.stringify({ error: "SUPABASE_URL／SUPABASE_SERVICE_ROLE_KEY 未設定" }),
+      JSON.stringify({
+        error: "SUPABASE_URL／SUPABASE_SERVICE_ROLE_KEY 未設定",
+      }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 
   const authHeader = req.headers.get("Authorization") ?? "";
-  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : "";
+  const bearer = authHeader.startsWith("Bearer ")
+    ? authHeader.slice("Bearer ".length)
+    : "";
   if (bearer !== serviceRoleKey) {
     return new Response(
       JSON.stringify({ error: "只接受 service_role 呼叫" }),
@@ -104,7 +108,12 @@ Deno.serve(async (req: Request) => {
 
     if (queueError) {
       return new Response(
-        JSON.stringify({ processed, failed: failures.length, failures, error: `讀取 purge_storage_queue 失敗：${queueError.message}` }),
+        JSON.stringify({
+          processed,
+          failed: failures.length,
+          failures,
+          error: `讀取 purge_storage_queue 失敗：${queueError.message}`,
+        }),
         { status: 500, headers: { "Content-Type": "application/json" } },
       );
     }
@@ -125,11 +134,18 @@ Deno.serve(async (req: Request) => {
 
     for (const [bucketId, rows] of byBucket) {
       const paths = rows.map((r) => r.object_path);
-      const { data: removed, error: removeError } = await supabase.storage.from(bucketId).remove(paths);
+      const { data: removed, error: removeError } = await supabase.storage.from(
+        bucketId,
+      ).remove(paths);
 
       if (removeError) {
         // 整批（這個 bucket 這一輪的所有路徑）失敗：全部留在佇列，下次排程重試。
-        for (const r of rows) failures.push({ object_path: r.object_path, error: removeError.message });
+        for (const r of rows) {
+          failures.push({
+            object_path: r.object_path,
+            error: removeError.message,
+          });
+        }
         continue;
       }
 
@@ -143,7 +159,10 @@ Deno.serve(async (req: Request) => {
           doneIds.push(r.id);
           processed++;
         } else {
-          failures.push({ object_path: r.object_path, error: "remove() 未在回傳的 data 中確認此路徑已處理" });
+          failures.push({
+            object_path: r.object_path,
+            error: "remove() 未在回傳的 data 中確認此路徑已處理",
+          });
         }
       }
     }
@@ -164,7 +183,8 @@ Deno.serve(async (req: Request) => {
             processed,
             failed: failures.length,
             failures,
-            warning: `Storage 物件已確認刪除，但清空 purge_storage_queue 失敗：${deleteError.message}`,
+            warning:
+              `Storage 物件已確認刪除，但清空 purge_storage_queue 失敗：${deleteError.message}`,
           }),
           { status: 207, headers: { "Content-Type": "application/json" } },
         );
@@ -182,6 +202,9 @@ Deno.serve(async (req: Request) => {
 
   return new Response(
     JSON.stringify({ processed, failed: failures.length, failures }),
-    { status: failures.length > 0 ? 207 : 200, headers: { "Content-Type": "application/json" } },
+    {
+      status: failures.length > 0 ? 207 : 200,
+      headers: { "Content-Type": "application/json" },
+    },
   );
 });
