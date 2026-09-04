@@ -119,6 +119,19 @@ open('$fx/scratch/x.json','w').write('{}')
 EOF")"
 expect 'P26 Read 工具不在範圍（放行）' 0 "$(file_json Read "$main" "$main/docs/a.md")"
 expect 'P27 mkdir／touch 在 scratchpad' 0 "$(bash_json "$main" "mkdir -p $fx/scratch/d && touch $fx/scratch/d/x")"
+# LS-157 1b：穿透後對 worktree 仍放行（同形負樣本 N31–N36 對主 checkout 擋）
+expect 'P28 FOO="a b" rm worktree 檔（帶引號值的賦值前綴）' 0 "$(bash_json "$fx/scratch" "FOO=\"a b\" rm $wt/docs/a.md")"
+expect 'P29 env -i／nice／nohup 前綴後寫 worktree' 0 \
+  "$(bash_json "$fx/scratch" "env -i rm $wt/docs/a.md; nice tee $wt/x; nohup touch $wt/y")"
+# LS-157 1c：即將建立的 worktree（<root>/.claude/worktrees/<name>/… 且 <name> 尚不存在）視為 worktree
+expect 'P30 git worktree add NEW && cd NEW && git merge（同一條命令，NEW 尚不存在；LS-154 收尾實測誤擋形狀）' 0 \
+  "$(bash_json "$main" "git worktree add $main/.claude/worktrees/NEW -b feature/LS-3-z origin/development && cd $main/.claude/worktrees/NEW && git merge origin/main")"
+case "$(cat "$fx/stderr")" in
+  *'尚未建立的 worktree NEW'*) echo '✓ P30b 放行時 stderr 註記「尚未建立的 worktree」' ;;
+  *) echo "✗ P30b 即將建立的 worktree 放行應 stderr 註記（實得：$(cat "$fx/stderr")）" >&2; fail=1 ;;
+esac
+expect 'P31 Write <root>/.claude/worktrees/NEW/docs/x.md（NEW 尚不存在、其下一層）' 0 "$(file_json Write "$main" "$main/.claude/worktrees/NEW/docs/x.md")"
+expect 'P32 cd <root>/.claude/worktrees/NEW && echo > f.txt（NEW 尚不存在）' 0 "$(bash_json "$main" "cd $main/.claude/worktrees/NEW && echo hi > f.txt")"
 
 # ============================================================
 # 負樣本（deny）
@@ -158,6 +171,17 @@ expect 'N27 cp -t 主 checkout' 2 "$(bash_json "$fx/scratch" "cp -t $main/docs a
 expect 'N28 引號不平衡＋字面含主 checkout 路徑與重導（W5 fail-closed）' 2 "$(bash_json "$fx/scratch" "echo 'oops > $main/x")"
 expect 'N29 env 透明前綴後的 tee' 2 "$(bash_json "$fx/scratch" "FOO=1 env BAR=2 tee $main/x")"
 expect 'N30 >| 主 checkout' 2 "$(bash_json "$fx/scratch" "echo hi >| $main/x")"
+# LS-157 1b（R2 informational 1）：帶引號值的賦值前綴／`env -i`／`nice` 先前被當成命令名 → 後面的 rm／tee 無聲放行
+expect 'N31 FOO="a b" rm 主 checkout 檔（雙引號值賦值前綴穿透）' 2 "$(bash_json "$fx/scratch" "FOO=\"a b\" rm $main/docs/a.md")"
+expect "N32 FOO='a b' tee 主 checkout（單引號值賦值前綴穿透）" 2 "$(bash_json "$fx/scratch" "FOO='a b' tee $main/x")"
+expect 'N33 env -i rm 主 checkout 檔（透明前綴帶旗標穿透）' 2 "$(bash_json "$fx/scratch" "env -i rm $main/docs/a.md")"
+expect 'N34 nice rm 主 checkout 檔（nice 補進透明前綴）' 2 "$(bash_json "$fx/scratch" "nice rm $main/docs/a.md")"
+expect 'N35 nohup rm 主 checkout 檔' 2 "$(bash_json "$fx/scratch" "nohup rm $main/docs/a.md")"
+expect 'N36 env -i FOO="a b" tee 主 checkout（旗標＋引號值賦值混合）' 2 "$(bash_json "$fx/scratch" "env -i FOO=\"a b\" tee $main/x")"
+# LS-157 1c 負樣本：.claude/worktrees/ 本身與 <name> 這一層仍擋
+expect 'N37 echo > <root>/.claude/worktrees/NEW（只一層、NEW 不存在＝主 checkout 雜散檔）' 2 "$(bash_json "$fx/scratch" "echo x > $main/.claude/worktrees/NEW")"
+expect 'N38 mkdir -p <root>/.claude/worktrees/NEW（只一層；建 worktree 請用 git worktree add）' 2 "$(bash_json "$fx/scratch" "mkdir -p $main/.claude/worktrees/NEW")"
+expect 'N39 cd <root>/.claude/worktrees && git merge（worktrees 目錄本身，W3）' 2 "$(bash_json "$fx/scratch" "cd $main/.claude/worktrees && git merge origin/main")"
 
 # ============================================================
 # 開關
@@ -182,6 +206,15 @@ case "$(cat "$fx/stderr")" in
   *'env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 <cmd>'*'整條命令最前面'*) echo '✓ S7b deny 訊息寫明兩種前綴形式與位置限制' ;;
   *) echo "✗ S7b deny 訊息應寫明 env 形式與位置限制（實得：$(cat "$fx/stderr")）" >&2; fail=1 ;;
 esac
+# LS-157（R2 informational 3）：帶引號值的前綴賦值之後的開關要真的被開關認到（不是掉進 W2 盲區才過）
+expect 'S8 FOO="a b" LS_ALLOW_MAIN_CHECKOUT_WRITE=1 <cmd> 放行' 0 \
+  "$(bash_json "$fx/scratch" "FOO=\"a b\" LS_ALLOW_MAIN_CHECKOUT_WRITE=1 rm $main/docs/a.md")"
+case "$(cat "$fx/stderr")" in
+  *'命令位置前綴帶 LS_ALLOW_MAIN_CHECKOUT_WRITE=1'*) echo '✓ S8b 是開關放行（stderr 註明），不是盲區' ;;
+  *) echo "✗ S8b 應由開關放行並 stderr 註明（實得：$(cat "$fx/stderr")）" >&2; fail=1 ;;
+esac
+expect 'S9 開關本身加引號 "LS_ALLOW_MAIN_CHECKOUT_WRITE=1" rm（bash 裡不是賦值）不放行' 2 \
+  "$(bash_json "$fx/scratch" "\"LS_ALLOW_MAIN_CHECKOUT_WRITE=1\" rm $main/docs/a.md")"
 
 # ============================================================
 # git 環境變數污染（R1 minor 1）：GIT_DIR 等在 hook 環境時，rev-parse 對任何 -C 目錄都回同一值，

@@ -47,9 +47,20 @@
 # 開關：環境變數 LS_ALLOW_MAIN_CHECKOUT_WRITE=1（hook 行程的環境＝啟動 claude 的 shell）整支放行；
 # Bash 命令文字在**整條命令最前面**的命令位置前綴（`VAR=val`／`env` 串）帶 `LS_ALLOW_MAIN_CHECKOUT_WRITE=1`
 # 亦放行該次呼叫——`LS_ALLOW_MAIN_CHECKOUT_WRITE=1 rm …`、`env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 rm …`、
-# `FOO=1 env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 rm …` 皆可；`cd x && LS_ALLOW…=1 rm …`（非最前面）不算，
-# deny 訊息會寫明位置限制（merge-review R1 minor 2，comment 94035c1a）。Write／Edit 沒有命令文字可帶，
+# `FOO=1 env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 rm …` 皆可（前綴賦值的值可帶引號：`FOO="a b" LS_ALLOW…=1 rm …`，
+# LS-157；開關本身加引號 `"LS_ALLOW…=1" rm …` 在 bash 裡不是賦值，不認）；`cd x && LS_ALLOW…=1 rm …`（非最前面）
+# 不算，deny 訊息會寫明位置限制（merge-review R1 minor 2，comment 94035c1a）。Write／Edit 沒有命令文字可帶，
 # 只認環境變數。兩者皆 stderr 註明。預設關。
+#
+# 前綴穿透（LS-157 1b，R2 informational 1／3）：命令位置前的 `VAR=val` 帶引號值（`FOO="a b" rm …`，tokenizer 收成
+# 單一帶引號 token）、透明前綴詞（env／sudo／nohup／nice／time…）緊接的 `-` 旗標（`env -i rm …`）都跳過、穿透到
+# 真正的命令再套規則——先前這些 token 被當成「命令名」，後續參數不再過寫入規則，無聲放行。`nice` 補進透明前綴
+# 詞表（pretool_engine.TRANSPARENT 沒有它）。旗標帶獨立參數的前綴（`sudo -u bob`／`nice -n 5`／`timeout 5`）該參數
+# 會被當成命令名而放行，仍是盲區（§7）。
+# 即將建立的 worktree（LS-157 1c，LS-154 收尾實測誤擋）：目標落在 `<root>/.claude/worktrees/<name>/…`（W1／W2 需
+# `<name>` 之下至少一層；W3 的 git 目錄可以就是 `<name>` 本身）且 `<name>` 尚不存在 → 視為 worktree 放行並 stderr
+# 註記（`git worktree add … && cd … && git merge …` 同一條命令的形狀）；`<root>/.claude/worktrees/` 本身與
+# `<root>/.claude/worktrees/<name>` 這一層的檔案寫入／mkdir 仍擋。
 #
 # 環境衛生（merge-review R1 minor 1，比照 scripts/gates/push-gate.sh LS-73）：hook 行程若帶
 # GIT_DIR／GIT_WORK_TREE／GIT_INDEX_FILE／GIT_PREFIX／GIT_COMMON_DIR，`git rev-parse` 對任何 `-C` 目錄
@@ -90,6 +101,8 @@ INPLACE_CMDS = {"sed", "perl"}
 INTERPRETERS = {"python", "python3", "node", "perl", "ruby", "php", "osascript", "swift"}
 PAYLOAD_FLAGS = {"-c", "-e", "-E", "-p", "-r", "--eval", "--print"}
 SHELLS = set(E.SHELLC_SHELLS)
+TRANSPARENT = set(E.TRANSPARENT) | {"nice"}  # LS-157 1b：engine 詞表沒有 nice（R2 informational 1 實測放行）
+WORKTREES_REL = (".claude", "worktrees")     # LS-157 1c：即將建立的 worktree 所在
 GIT_MUTATING = {
     "add", "am", "apply", "checkout", "cherry-pick", "clean", "commit", "merge", "mv",
     "rebase", "reset", "restore", "revert", "rm", "switch",
@@ -107,9 +120,12 @@ FB_WRITE_RE = re.compile(
 )
 HEREDOC_START_RE = re.compile(r"<<[-~]?[ \t]*(?:'([^']*)'|\"([^\"]*)\"|([A-Za-z_][A-Za-z0-9_]*))")
 # 命令位置前綴：任意 `VAR=val`／`env` 串之後緊接開關賦值（R1 minor 2：原本只認最前綴一種形狀，
-# POSIX 慣用的 `env VAR=1 cmd` 被擋且訊息沒說位置限制 → 重試迴圈）。
+# POSIX 慣用的 `env VAR=1 cmd` 被擋且訊息沒說位置限制 → 重試迴圈）。值可帶引號（`FOO="a b"`；LS-157，
+# R2 informational 3：`\S*` 吃不下含空白的引號值，先前該形只是掉進 W2 盲區才「能過」）——引號只能由引號
+# 分支吃、不平衡即不匹配，避免回溯爆炸。
+_PREFIX_VAL = r"(?:\"[^\"]*\"|'[^']*'|[^\s\"'])*"
 INLINE_SWITCH_RE = re.compile(
-    r"^\s*(?:(?:env|[A-Za-z_][A-Za-z0-9_]*=\S*)\s+)*" + re.escape(SWITCH) + r"=1(?:\s|$)"
+    r"^\s*(?:(?:env|[A-Za-z_][A-Za-z0-9_]*=" + _PREFIX_VAL + r")\s+)*" + re.escape(SWITCH) + r"=1(?:\s|$)"
 )
 
 
@@ -260,21 +276,27 @@ def heredoc_bodies(raw):
 
 
 def find_cmd(pairs):
-    """回傳 (basename, idx)；跳過 VAR=val 與透明前綴（env／sudo／command／nohup／time…）。"""
+    """回傳 (basename, idx)；跳過 VAR=val（含帶引號值——tokenizer 把 `FOO="a b"` 收成單一 hq token，LS-157 1b）、
+    透明前綴（env／sudo／command／nohup／nice／time…）及其緊接的 `-` 旗標（`env -i`；旗標的獨立參數判不出，盲區）。"""
     idx = 0
     n = len(pairs)
     guard = 0
+    after_prefix = False
     while idx < n and guard < 16:
         guard += 1
         text, hq = pairs[idx]
         if text == "":
             idx += 1
             continue
-        if not hq and E.ASSIGN_RE.match(text):
+        if E.ASSIGN_RE.match(text):
+            idx += 1
+            continue
+        if after_prefix and not hq and text.startswith("-"):
             idx += 1
             continue
         base = text.rsplit("/", 1)[-1]
-        if not hq and base in E.TRANSPARENT:
+        if not hq and base in TRANSPARENT:
+            after_prefix = True
             idx += 1
             continue
         return base, idx
@@ -381,8 +403,9 @@ class Guard:
                 note("CLAUDE_PROJECT_DIR／cwd 皆不在 git repo 內，改為任何主 checkout 都擋")
         return self._project
 
-    def hits(self, abspath):
-        """abspath 落在本專案 repo 的主 checkout（且不在白名單）→ True。"""
+    def hits(self, abspath, as_dir=False):
+        """abspath 落在本專案 repo 的主 checkout（且不在白名單）→ True。as_dir=True 表示 abspath 是要在其中
+        跑 git 的目錄（W3），即將建立的 worktree 可以就是 `<name>` 這一層。"""
         r = repo_dirs(abspath)
         if r is None:
             return False
@@ -392,7 +415,14 @@ class Guard:
         if not is_main_checkout(git_dir, common):
             return False
         # realpath 兩邊對齊（macOS /var → /private/var；不存在的尾段 realpath 會原樣保留）
-        rel = os.path.relpath(os.path.realpath(abspath), os.path.dirname(common))
+        top = os.path.dirname(common)
+        rel = os.path.relpath(os.path.realpath(abspath), top)
+        parts = rel.split(os.sep)
+        # LS-157 1c：<root>/.claude/worktrees/<name>/… 且 <name> 尚不存在 → 即將建立的 worktree，放行
+        if (tuple(parts[:2]) == WORKTREES_REL and len(parts) >= (3 if as_dir else 4)
+                and not os.path.lexists(os.path.join(top, *parts[:3]))):
+            note(f"目標「{abspath}」位於尚未建立的 worktree {parts[2]} 之下，視為 worktree 放行（LS-157）")
+            return False
         return rel not in ALLOWLIST_REL and not rel.startswith(ALLOWLIST_PREFIX)
 
     def check(self, tok, cur, rule, what):
@@ -473,7 +503,7 @@ class Guard:
             mutating = sub in GIT_MUTATING or (
                 sub == "stash" and (positionals(rest)[:1] or ["push"])[0] not in GIT_STASH_READONLY
             )
-            if mutating and d is not None and self.hits(d):
+            if mutating and d is not None and self.hits(d, as_dir=True):
                 raise Deny("W3", f"git {sub} 改動主 checkout working tree → {d}")
         if cmd in SHELLS:
             for i, (t, q) in enumerate(args):
