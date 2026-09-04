@@ -45,10 +45,11 @@ struct CreateChildView: View {
     @State var pickedAvatarPreview: UIImage?
     @State var isLoadingAvatar = false
     @State var avatarLoadErrorMessage: String?
-    // R3 n2：世代計數器——`.task(id:)` 取消舊 task 後，舊 task 的 defer／catch 仍會繼續
-    // 執行到底，若不比對世代會寫壞新 task 已經設定的 isLoadingAvatar／錯誤文案／預覽圖
-    // （見 `loadPickedAvatar()` 文件註解）。
-    @State var avatarLoadGeneration = 0
+    // R3 n2：世代守門——`.task(id:)` 取消舊 task 後，舊 task 仍會繼續執行到底，若不比對
+    // 世代會寫壞新 task 已經設定的 isLoadingAvatar／錯誤文案／預覽圖（見 `loadPickedAvatar()`
+    // 文件註解）。LS-173：世代計數器與判斷邏輯抽到 `AvatarLoadCoordinator`（供單元測試
+    // 覆蓋），這裡改存協調器本身；`@State` 讓同一個實例跨畫面重繪存活。
+    @State var avatarLoadCoordinator = AvatarLoadCoordinator()
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dismiss) private var dismiss
 

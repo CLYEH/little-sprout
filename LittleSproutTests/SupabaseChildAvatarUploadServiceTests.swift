@@ -99,6 +99,68 @@ final class SupabaseChildAvatarUploadServiceTests: XCTestCase {
         }
     }
 
+    // MARK: - uploadAvatar：Storage 錯誤分流（m3，LS-169 R1；LS-173 i9 補測）
+
+    /// `mapUploadError` 是 `private static`（同 `MediaUploadService.mapUploadError` 對 413
+    /// 的既有慣例），沒辦法直接呼叫、只能像這裡一樣經由真正的 `uploadAvatar` 走一次完整流程
+    /// ——`MockURLProtocol` 回一個非 2xx 狀態碼＋`{"statusCode":"403",...}` body（同 LS-169 R1
+    /// handoff 實測到的真實 Storage API 回應形狀），驗證 403 被特判成 `.rejected` 而不是落
+    /// 籠統的 `.server`「伺服器發生問題」。
+    func test_uploadAvatar_forbidden403_mapsToRejectedNotServer() async {
+        let client = TestSupabaseClient.make { _ in
+            MockURLProtocol.StubResponse(
+                statusCode: 400,
+                body: Data("""
+                {"statusCode":"403","message":"new row violates row-level security policy"}
+                """.utf8)
+            )
+        }
+        let service = SupabaseChildAvatarUploadService(client: client)
+        let photoData = Self.makeSolidColorJPEG(pixelWidth: 800, pixelHeight: 400)
+
+        do {
+            _ = try await service.uploadAvatar(familyID: familyID, childID: childID, imageData: photoData)
+            XCTFail("應該要 throw")
+        } catch let error as AppError {
+            guard case .rejected(let message, _) = error else {
+                return XCTFail(".rejected 才對應「權限不足」，實際是 \(error)")
+            }
+            // merge-review R1 n2（8b477108）：票文明寫「文案固定」——先前只驗到走 .rejected
+            // 分支，沒有釘住 ChildAvatarUploadService.swift:64 的實際文案字面。
+            XCTAssertEqual(message, "沒有權限更新這個孩子的頭像，請確認你仍是這個家庭的成員")
+        } catch {
+            XCTFail("應該 throw AppError，實際是 \(error)")
+        }
+    }
+
+    /// 非 403 的 `StorageError`（這裡用 404 示範）不該被 403 特判撈走，要沿用
+    /// `AppError.map` 的既有分流——`StorageError` 不在 `AppError.map` 認得的型別鏈裡
+    /// （`AppError.swift`），未特判的一律落 `.server`。這條測試把「拿掉 403 特判」跟「403
+    /// 特判誤判其他狀態碼」兩種 mutation 都釘住。
+    func test_uploadAvatar_nonForbiddenStorageError_fallsThroughToServerError() async {
+        let client = TestSupabaseClient.make { _ in
+            MockURLProtocol.StubResponse(
+                statusCode: 404,
+                body: Data("""
+                {"statusCode":"404","message":"not found"}
+                """.utf8)
+            )
+        }
+        let service = SupabaseChildAvatarUploadService(client: client)
+        let photoData = Self.makeSolidColorJPEG(pixelWidth: 800, pixelHeight: 400)
+
+        do {
+            _ = try await service.uploadAvatar(familyID: familyID, childID: childID, imageData: photoData)
+            XCTFail("應該要 throw")
+        } catch let error as AppError {
+            guard case .server = error else {
+                return XCTFail("非 403 的 Storage 錯誤應該落 .server（AppError.map 兜底），實際是 \(error)")
+            }
+        } catch {
+            XCTFail("應該 throw AppError，實際是 \(error)")
+        }
+    }
+
     // MARK: - Helpers
 
     /// 產生一張純色 JPEG——同 `AvatarImageProcessorTests`／`SupabaseMediaUploadServiceThumbnailTests`

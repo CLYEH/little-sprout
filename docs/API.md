@@ -1611,8 +1611,11 @@ Edge Function 完成刪除）。三層（`validationRetryable`／`retryableSyste
   看 `can_upload`），理由是「不能上傳照片的成員也不該能上傳頭像」語意要一致。結果是：
   `can_upload=false` 的 member 用真實 app 換頭像會在 INSERT policy 被擋
   （400 `new row violates row-level security policy`，`ChildAvatarUploadService`
-  的 `mapUploadError` 會把它映射成 `.rejected` 給出明確文案）；放寬後的 UPDATE／DELETE
-  判準目前只在**不經過 upsert 的直接 SQL UPDATE／DELETE**（例如維運操作）時才用得到。
+  的 `mapUploadError` 會把它映射成 `.rejected` 給出明確文案）；放寬的 UPDATE／DELETE
+  判準對 app 的 upsert 覆蓋路徑生效（member 可換 owner 上傳的頭像）；INSERT 仍需
+  `can_upload`（LS-169 R3 merge-review `038c3e12` n3 訂正：先前這裡講反了——實跑證明
+  `role=member, can_upload=true` 的 B 確實能用真實 upsert 覆蓋 owner A 上傳的頭像，
+  放寬前 400、放寬後 200）。
   客戶端固定路徑＋長效快取意味著換照片後簽名 URL 需要 cache-busting 才能讓列表立即
   顯示新圖，見 `ChildrenStore.avatarCacheBust` 文件註解。
 
