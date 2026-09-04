@@ -275,6 +275,48 @@ race_case() {  # $1=場景名 $2=setup $3=s1 $4=s2 $5=verify
   echo "  ✓ 併發：$label"
 }
 
+# ---------------------------------------------------------------------------
+# LS-155 R2（merge-review R1 M1）：三連線併發——比 race_case 多一個背景 session
+# （S0），用來撐開一個天然存在但單靠兩個 session 的 pg_sleep offset 難以穩定命中
+# 的時序視窗（見 delete_account_vs_finalize_media_setup.sql 檔頭）。S0／S1／S2 三個
+# session 皆背景平行啟動，全部等完才驗證——三者的 rc 都要是 0（reviewer 實測 R1
+# 版本這裡會有一邊收到 40P01，R2 修法後三個 session 都必須正常完成，不只是「不
+# crash」）。
+# ---------------------------------------------------------------------------
+race_case3() {  # $1=場景名 $2=setup $3=s0 $4=s1 $5=s2 $6=verify
+  local label="$1" setup="$cc_dir/$2" s0="$cc_dir/$3" s1="$cc_dir/$4" s2="$cc_dir/$5" verify="$cc_dir/$6"
+  local setup_out="$tmp/$2.out" s0_out="$tmp/$3.out" s1_out="$tmp/$4.out" s2_out="$tmp/$5.out" verify_out="$tmp/$6.out"
+  echo "→ 併發（三連線）：$label"
+
+  if ! run_sql "$setup" > "$setup_out" 2>&1; then
+    echo "  ✗ 併發場景資料建立失敗：" >&2; sed 's/^/    /' "$setup_out" >&2; exit 1
+  fi
+  sed 's/^/    setup /' "$setup_out"
+
+  run_sql_bg "$s0" "$s0_out"
+  run_sql_bg "$s1" "$s1_out"
+  run_sql_bg "$s2" "$s2_out"
+  wait
+
+  local rc0 rc1 rc2 failed=0
+  rc0="$(cat "$s0_out.rc")"; rc1="$(cat "$s1_out.rc")"; rc2="$(cat "$s2_out.rc")"
+  sed 's/^/    S0 /' "$s0_out"
+  sed 's/^/    S1 /' "$s1_out"
+  sed 's/^/    S2 /' "$s2_out"
+  [ "$rc0" = 0 ] || { echo "  ✗ S0 非 0 結束（rc=${rc0}）" >&2; failed=1; }
+  [ "$rc1" = 0 ] || { echo "  ✗ S1 非 0 結束（rc=${rc1}）——40P01 死鎖會落在這裡" >&2; failed=1; }
+  [ "$rc2" = 0 ] || { echo "  ✗ S2 非 0 結束（rc=${rc2}）——40P01 死鎖會落在這裡" >&2; failed=1; }
+
+  if ! run_sql "$verify" > "$verify_out" 2>&1; then
+    sed 's/^/    /' "$verify_out" >&2; failed=1
+  else
+    sed 's/^/    /' "$verify_out"
+  fi
+
+  [ "$failed" = 0 ] || { echo "  ✗ 併發（三連線）：$label 失敗" >&2; exit 1; }
+  echo "  ✓ 併發（三連線）：$label"
+}
+
 race_case "兩人同搶邀請碼最後一個名額" \
   join_race_setup.sql join_race_s1.sql join_race_s2.sql join_race_verify.sql
 
@@ -422,6 +464,16 @@ race_case "purge_expired 先動、owner 還原同一個孩子後動：後動者�
   purge_vs_restore_child_setup.sql purge_vs_restore_child_s1_purge.sql \
   purge_vs_restore_child_s2_restore.sql purge_vs_restore_child_verify.sql
 
+# LS-155 R2（merge-review R1 M1，實測重現 40P01）：呼叫者已退出但留有 media 的
+# 家庭（X）與呼叫者仍是成員的家庭（A），與同時在跑的另一位成員的
+# finalize_account_deletion() 三連線時序——R1 版本這裡會死鎖（reviewer 實測，見
+# delete_account_vs_finalize_media_setup.sql 檔頭引用的證據），R2 修法後三個
+# session 都必須正常完成、無 40P01。三連線（多一個 S0 撐開視窗）用 race_case3。
+race_case3 "已退出但留有 media 的家庭 vs 仍是成員的家庭：與 finalize_account_deletion 三連線不得死鎖" \
+  delete_account_vs_finalize_media_setup.sql delete_account_vs_finalize_media_s0.sql \
+  delete_account_vs_finalize_media_s1.sql delete_account_vs_finalize_media_s2.sql \
+  delete_account_vs_finalize_media_verify.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 delete from public.families where id in (
@@ -439,7 +491,9 @@ delete from public.families where id in (
   '9a000000-0000-4000-8000-000000000001',
   'd3000000-0000-4000-8000-000000000001',
   'd5000000-0000-4000-8000-000000000001',
-  'f9000000-0000-4000-8000-000000000001'
+  'f9000000-0000-4000-8000-000000000001',
+  'e8000000-0000-4000-8000-000000000001',
+  'e8000000-0000-4000-8000-000000000002'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -450,6 +504,9 @@ delete from auth.users where id in (
   'd4000000-0000-4000-8000-000000000002',
   'd6000000-0000-4000-8000-000000000001',
   'd7000000-0000-4000-8000-000000000001',
+  'e8000000-0000-4000-8000-000000000011',
+  'e8000000-0000-4000-8000-000000000012',
+  'e8000000-0000-4000-8000-000000000013',
   'ea000000-0000-4000-8000-000000000001',
   'ea000000-0000-4000-8000-000000000002',
   'ea000000-0000-4000-8000-000000000003',
