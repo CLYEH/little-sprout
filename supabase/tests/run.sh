@@ -508,6 +508,13 @@ race_case "claim_notification_events 跟 record_notification_event 併發：同�
 
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
+-- LS-96 池項 8519d8a4 第 3 條（LS-172 merge-review R2-i3）：兩支併發情境的
+-- setup 各自建立一張 ls172_*_capture 測試輔助表（setup 開頭有 drop table if
+-- exists，重跑安全），但這裡原本只刪家庭與使用者，沒有把表本身丟掉——suite
+-- 跑完後這兩張表會留在 public schema，殘留給其他 agent／後續測試（QA `23af6837`
+-- 已實測複驗過這個缺口）。
+drop table if exists public.ls172_claim_race_capture, public.ls172_claim_vs_record_capture;
+
 delete from public.families where id in (
   'fd000000-0000-4000-8000-000000000001',
   'fe000000-0000-4000-8000-000000000001',
