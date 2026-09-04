@@ -156,6 +156,28 @@ Deno.test("buildMessageBody：comment，target_type=comment（回覆留言）", 
   );
 });
 
+// LS-175：media（批次上傳），target_type 恆為 "family"（見 migration 檔頭）。
+Deno.test("buildMessageBody：media，event_count=50，target_type=family → 「爸爸新增了 50 張照片」（LS-175 票文逐字對照）", () => {
+  assertEquals(
+    buildMessageBody("media", 50, "family", "爸爸"),
+    "爸爸新增了 50 張照片",
+  );
+});
+
+Deno.test("buildMessageBody：media，event_count=1 → 「一張」而不是阿拉伯數字 1（同 diary／album 既有風格）", () => {
+  assertEquals(
+    buildMessageBody("media", 1, "family", "媽媽"),
+    "媽媽新增了一張照片",
+  );
+});
+
+Deno.test("buildMessageBody：media，event_count=2 → 帶阿拉伯數字（跟 event_count=1 的「一張」不同分支）", () => {
+  assertEquals(
+    buildMessageBody("media", 2, "family", "阿嬤"),
+    "阿嬤新增了 2 張照片",
+  );
+});
+
 // ---------------------------------------------------------------------------
 // 2. runDispatch：claim → recipients → 送出 → 統計，逐項行為
 // ---------------------------------------------------------------------------

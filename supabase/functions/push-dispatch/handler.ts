@@ -18,8 +18,26 @@
 // notification_recipients()`）→ 組文案 → 逐 token 呼叫 APNs → 410／
 // `BadDeviceToken` 清掉失效 token。
 
-export type NotificationKind = "comment" | "reaction" | "diary" | "album";
-export type ContentTargetType = "album" | "media" | "diary" | "comment";
+// LS-175：新增 "media"（批次上傳照片彙總）／"family"（media 事件的 target，見
+// migration `20260904170849_media_notification_target_family.sql`／
+// `20260904170933_media_notification_events.sql` 檔頭的完整推導：media 表
+// 沒有 album_id／diary_id，AFTER INSERT trigger 觸發當下這批照片會不會、會掛進
+// 哪個相簿／日記這個資訊還不存在，所以 target 只能是整個家庭）。"report" kind
+// （LS-149）刻意不在這裡——push-dispatch（LS-172）從落地當下就沒有涵蓋它，是
+// 已知、獨立於本票的缺口（見 index.ts `isNotificationKind` 附近的說明），不在
+// 本票 scope 內修。
+export type NotificationKind =
+  | "comment"
+  | "reaction"
+  | "diary"
+  | "album"
+  | "media";
+export type ContentTargetType =
+  | "album"
+  | "media"
+  | "diary"
+  | "comment"
+  | "family";
 
 export interface ClaimedEvent {
   id: string;
@@ -97,6 +115,10 @@ const TARGET_LABEL: Record<ContentTargetType, string> = {
   album: "相簿",
   media: "照片",
   comment: "留言",
+  // LS-175：kind="media" 的訊息不透過 TARGET_LABEL 組字（直接寫「新增了…張照片」，
+  // 不是「在你的{標籤}留言」這種句型），這個 key 只是讓 Record<ContentTargetType,
+  // string> 保持窮舉、編譯期不漏任何一個列舉值——沒有任何分支會實際讀到它。
+  family: "家庭",
 };
 
 // **已知、刻意的規格分歧（票文字面 vs. 實際可用資料，見 migration 檔頭第 2 段的
@@ -136,6 +158,15 @@ export function buildMessageBody(
       return eventCount <= 1
         ? `${actorDisplayName}新增了相簿`
         : `${actorDisplayName}新增了 ${eventCount} 本相簿`;
+    // LS-175：批次上傳彙總——票文明定範例 event_count=50 →「新增了 50 張照片」。
+    // event_count<=1 用「一張」而不是阿拉伯數字 1（同 diary／album 的既有風格：
+    // 單一動作用自然語句，不是「新增了 1 張照片」這種生硬的數字）。target_type
+    // 恆為 "family"（見 migration 檔頭），這裡不像 comment／reaction 需要
+    // TARGET_LABEL——訊息本身就是完整句子，不需要「在你的 xxx」這種目標子句。
+    case "media":
+      return eventCount <= 1
+        ? `${actorDisplayName}新增了一張照片`
+        : `${actorDisplayName}新增了 ${eventCount} 張照片`;
   }
 }
 
