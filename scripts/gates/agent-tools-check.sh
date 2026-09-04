@@ -38,10 +38,11 @@ fi
 # TakeScreenshot／Get 取圖），先前規則表只釘了 get_app_state，漏了實際取圖要用的工具。
 # ios-dev 沒有 tools: 行（繼承全部工具），這裡仍列一行（必要工具留空）：確保「無 tools: 行＝放行」這條路徑
 # 有樣本覆蓋，不只是隱含行為。
+# LS-157：dead-code-sweeper 補 save_comment——巡檢結果改由 sweeper 直貼票（此前缺該工具、orchestrator 一日代貼三次）。
 LINEAR3="mcp__linear__get_issue mcp__linear__list_comments mcp__linear__save_comment"
 RULES="merge-reviewer|Bash ${LINEAR3}
 qa|Bash ${LINEAR3} mcp__pencil__get_app_state mcp__pencil__execute
-dead-code-sweeper|Bash mcp__linear__get_issue mcp__linear__list_comments
+dead-code-sweeper|Bash ${LINEAR3}
 ui-designer|mcp__pencil__execute
 visual-reviewer|mcp__pencil__execute
 ios-dev|"

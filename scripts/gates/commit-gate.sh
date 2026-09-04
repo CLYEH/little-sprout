@@ -1,6 +1,6 @@
 #!/bin/bash
 # Commit gate（pre-commit）：保護分支、branch 命名、secrets 掃描、已追蹤檔不得命中 .gitignore、
-# 審查取證不進版控、staged .pen 落地檢查、staged Swift 檔 lint。
+# staged 新增行不得含衝突標記、審查取證不進版控、staged .pen 落地檢查、staged Swift 檔 lint。
 # 規約見 docs/COLLABORATION.md §4、§7。
 set -euo pipefail
 
@@ -32,6 +32,10 @@ printf '%s\n' "$added" | bash "$(git rev-parse --show-toplevel)/scripts/gates/sc
 
 # 已追蹤檔不得命中 .gitignore（LS-51：設計畫布執行產物——ignore 規則管不到已追蹤／git add -f 硬加的檔）
 bash "$(git rev-parse --show-toplevel)/scripts/gates/tracked-ignored-check.sh"
+
+# 衝突標記（LS-157）：staged 新增行以 <<<<<<< ／=======（整行）／>>>>>>> 開頭即擋——解衝突解一半就 commit
+# （LS-154 back-merge 實際踩到，靠 push 前自查才抓回）
+bash "$(git rev-parse --show-toplevel)/scripts/gates/conflict-marker-check.sh"
 
 # 審查取證不得進版控（LS-61：staged 路徑任一目錄層命中 review*／*-review*／ls[0-9]*、或 *.png 不在 design/／
 # LittleSprout/Assets.xcassets/／LittleSprout/Preview Content/／docs/img/ 白名單即擋（大小寫不敏感）——.gitignore 只認固定位置 .claude/evidence/，散落路徑沒規則可 ignore）
