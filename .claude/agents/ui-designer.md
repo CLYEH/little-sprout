@@ -82,4 +82,4 @@ model: sonnet
 - 未決事項與需要人核可的點
 - **Pen 路徑**（LS-91）：開工核對到的 active 文件路徑；每輪 pen-land.sh 落地時的結果（exit 0／被擋與原因，含是否用了 `--marker` 內容證明覆蓋 mtime，LS-44）
 - **尺寸類（`width`／`height`）token 的規格值族與硬寫次數**（LS-44：這兩個屬性綁不了 `$variable`，只能寫字面值——列出本輪新增／修改了哪些寬高字面值、各自對應哪個規格 token 家族，方便之後真能綁定時知道要同步改哪裡）
-- **溢出掃描收據**（LS-68／LS-122／LS-168）：本輪 `design/evidence/<票號>-r<n>-overflow.json` 的路徑與內容摘要（TOTAL_NODES、五支掃描各自的 FLAGGED 筆數與分類、`corner_anchor` 的 containers／points／mismatch、`text_occlusion` 的 flagged／document、HEAD sha、`tree_hash`；`overflow-scan.js` 印出的 SUMMARY 行原樣貼上——整份收據來自末次落地後的同一次 execute）；連同 .pen 一起 commit＋push
+- **溢出掃描收據**（LS-68／LS-122／LS-168）：本輪 `design/evidence/<票號>-r<n>-overflow.json` 的路徑與內容摘要（TOTAL_NODES、五支掃描各自的 FLAGGED 筆數與分類、`corner_anchor` 的 containers／points／mismatch、`text_occlusion` 的 flagged／document、HEAD sha、`tree_hash`；`overflow-scan.js` 印出的 SUMMARY 行原樣貼上（拆兩次時 `SUMMARY-HASH` 與 `SUMMARY` 兩行都貼）——整份收據來自末次落地後、同一稿態的單次掃描）；連同 .pen 一起 commit＋push
