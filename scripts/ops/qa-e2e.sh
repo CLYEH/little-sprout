@@ -1,0 +1,211 @@
+#!/bin/bash
+# QA 端到端情境驅動（LS-158）：不依賴 mobile-mcp，用 `LittleSproutUITests/QA/QASmokeTests`（XCUITest）
+# 對本機 Supabase 容器實跑「登入／發佈／瀏覽」三條多步驟路徑，截圖與 Storage log 落地成驗收證據。
+#
+# 來源：LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED——mobile-mcp 每次互動把模擬器前景重設回主畫面，
+# 多步驟操作做不了；同一 build 用 `xcodebuild test -only-testing:LittleSproutUITests` 可正常驅動。
+#
+# 用法：qa-e2e.sh <login|publish|browse> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]
+#   login    先 `simctl keychain reset`（從未登入狀態開始）→ 歡迎頁 → Email → Mailpit 取 6 碼 → 確認登入 → 落點
+#   publish  先 `simctl addmedia` LittleSproutUITests/QA/Fixtures 的照片＋影片 → 新增回憶 → 相簿選圖 → 發佈 → 卡片出現
+#   browse   日記卡 → 詳情 → 返回 → 相簿分頁 → 時間軸（時間軸空的話先發一篇純文字當對象）
+#   --sim     指定既有模擬器（名稱須精確）；預設 `<票號>-iPhone17Pro`，不存在就建（iPhone 17 Pro、最新 iOS runtime）
+#   --ticket  票號；預設從目前 worktree 目錄名推（`.claude/worktrees/LS-<n>`），推不出就要求明給
+#   --email   三個情境共用的測試帳號（預設 qa-e2e@ls.test；login 之後 session 留在模擬器 Keychain）
+# 環境變數：LS_QA_MAILPIT 覆寫 Mailpit URL（預設讀 `supabase status` 的 MAILPIT_URL，再退 http://127.0.0.1:54324）。
+#
+# 做的事（順序即防線）：
+#   1. 情境名／票號檢查（錯即 exit 2，不碰任何工具）。
+#   2. `supabase status -o env` 讀 API_URL／ANON_KEY／MAILPIT_URL——取不到＝容器沒跑，exit 2；再各打一次
+#      health（Mailpit `/api/v1/info`、GoTrue `/auth/v1/health`）確認可達。
+#   3. 模擬器：找／建專屬機、boot（自己 boot 的收工自己 shutdown，LS-100；本來就 Booted 的不動）。
+#   4. 情境前置：login → keychain reset；publish → addmedia fixtures。
+#   5. `supabase-lock.sh --hold "<票號> qa-e2e <情境>" --max-minutes 25`——整段 UI 操作期間其他 worktree 的
+#      db reset 排隊（LS-159／LS-170）；呼叫者已經持有（同 worktree）就沿用、不重複 hold、收工也不代釋放。
+#   6. `xcodebuild test -only-testing:LittleSproutUITests/QASmokeTests`，環境以 TEST_RUNNER_LS_QA_* 交給
+#      runner（xcodebuild 剝前綴），UI test 再經 launchEnvironment 注入 app（SupabaseClientFactory.qaOverride，DEBUG）。
+#   7. 證據：`.claude/evidence/<票號>/qa-e2e/<情境>-<時間>/`——xcodebuild.log、result.xcresult、
+#      screens/<情境>-<序號>-<步驟>.png（xcresulttool export attachments 後依 manifest 改名）、storage.log
+#      （`docker logs --since <開跑時間>` supabase_storage 容器；失敗只註記不擋）。
+# exit：0＝情境通過；1＝情境失敗（xcodebuild test 紅，log 尾段印出）；2＝參數／環境／模擬器錯誤（fail closed）。
+# 自測：qa-e2e.test.sh（PATH shim，不實跑 xcodebuild）。規約：.claude/agents/qa.md、docs/COLLABORATION.md §4-b／§7。
+set -uo pipefail
+
+usage() {
+  echo "用法：qa-e2e.sh <login|publish|browse> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]"
+}
+
+scenario=; sim_name=; sim_given=0; ticket=; email=
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --sim)
+      [ -n "${2:-}" ] || { echo "✗ qa-e2e：--sim 缺值" >&2; exit 2; }
+      sim_name=$2; sim_given=1; shift 2 ;;
+    --ticket)
+      [ -n "${2:-}" ] || { echo "✗ qa-e2e：--ticket 缺值" >&2; exit 2; }
+      ticket=$2; shift 2 ;;
+    --email)
+      [ -n "${2:-}" ] || { echo "✗ qa-e2e：--email 缺值" >&2; exit 2; }
+      email=$2; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    -*) echo "✗ qa-e2e：未知參數 $1" >&2; usage >&2; exit 2 ;;
+    *)
+      if [ -n "$scenario" ]; then echo "✗ qa-e2e：多餘參數「$1」（情境只能一個）" >&2; usage >&2; exit 2; fi
+      scenario=$1; shift ;;
+  esac
+done
+[ -n "$scenario" ] || { echo "✗ qa-e2e：缺情境名" >&2; usage >&2; exit 2; }
+case "$scenario" in
+  login|publish|browse) ;;
+  *) echo "✗ qa-e2e：情境「${scenario}」不存在，只接受 login|publish|browse" >&2; exit 2 ;;
+esac
+
+here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "✗ qa-e2e：不在 git repo 內（在票 worktree 執行）" >&2; exit 2; }
+if [ -z "$ticket" ]; then
+  ticket=$(basename "$root" | grep -oE 'LS-[0-9]+' | head -1)
+  [ -n "$ticket" ] || { echo "✗ qa-e2e：從 worktree 目錄名「$(basename "$root")」推不出票號——加 --ticket LS-<n>（證據路徑用它）" >&2; exit 2; }
+fi
+case "$ticket" in
+  LS-[0-9]*) ;;
+  *) echo "✗ qa-e2e：--ticket 須為 LS-<n>（得到「${ticket}」）" >&2; exit 2 ;;
+esac
+
+# ---- 2. 本機容器 ----
+# `supabase status` 偶爾在別的 worktree 同時跑 supabase CLI 時回空（2026-09-04 實測：容器健康、下一秒就正常），
+# 讀三次再判定容器沒跑——不然 QA 會被一次瞬間失敗誤導成「環境壞了」。
+status=; attempt=0
+while [ "$attempt" -lt 3 ]; do
+  status=$(supabase status -o env 2>/dev/null) && printf '%s' "$status" | grep -q '^API_URL=' && break
+  attempt=$((attempt + 1)); sleep 2
+done
+env_value() { printf '%s\n' "$status" | sed -n "s/^$1=//p" | head -1 | tr -d '"'; }
+api_url=$(env_value API_URL)
+anon_key=$(env_value ANON_KEY)
+mailpit=${LS_QA_MAILPIT:-$(env_value MAILPIT_URL)}
+[ -n "$mailpit" ] || mailpit=http://127.0.0.1:54324
+if [ -z "$api_url" ] || [ -z "$anon_key" ]; then
+  echo "✗ qa-e2e：supabase status 取不到 API_URL／ANON_KEY（本機容器有跑嗎？在 repo 根 supabase start）" >&2
+  exit 2
+fi
+http_code() { curl -s --max-time 5 -o /dev/null -w '%{http_code}' "$@" 2>/dev/null || printf '000'; }
+code=$(http_code "${mailpit}/api/v1/info")
+[ "$code" = 200 ] || { echo "✗ qa-e2e：Mailpit ${mailpit} 不可達（HTTP ${code}）——OTP 取碼靠它（supabase start 會一起起）" >&2; exit 2; }
+code=$(http_code -H "apikey: ${anon_key}" "${api_url}/auth/v1/health")
+[ "$code" = 200 ] || { echo "✗ qa-e2e：GoTrue ${api_url}/auth/v1/health 回 HTTP ${code}——容器不健康" >&2; exit 2; }
+
+# ---- 3. 模擬器（同 detect-simulator.sh 的專屬機命名：<票號>-<機型無空白>）----
+find_udid() {   # $1＝精確裝置名；印第一個相符「可用」裝置的 UDID
+  xcrun simctl list devices available 2>/dev/null | awk -v n="$1" '
+    { line = $0; nm = line; sub(/^[ \t]*/, "", nm); sub(/ *\(.*/, "", nm)
+      if (nm == n) { udid = line; sub(/^[^(]*\(/, "", udid); sub(/\).*/, "", udid); print udid; exit } }'
+}
+[ -n "$sim_name" ] || sim_name="${ticket}-iPhone17Pro"
+udid=$(find_udid "$sim_name")
+if [ -z "$udid" ]; then
+  if [ "$sim_given" -eq 1 ]; then echo "✗ qa-e2e：--sim「${sim_name}」不存在或不可用（xcrun simctl list devices available）" >&2; exit 2; fi
+  devicetype=$(xcrun simctl list devicetypes 2>/dev/null | grep -F 'iPhone 17 Pro (' | sed -E 's/.*\(([^()]+)\)[[:space:]]*$/\1/' | head -1)
+  runtime=$(xcrun simctl list runtimes 2>/dev/null | grep '^iOS ' | tail -1 | sed -E 's/.* - (com\.apple\.[^[:space:]]+)[[:space:]]*$/\1/')
+  if [ -z "$devicetype" ] || [ -z "$runtime" ]; then echo "✗ qa-e2e：找不到 iPhone 17 Pro devicetype／iOS runtime，無法建「${sim_name}」——改用 --sim 指定既有機" >&2; exit 2; fi
+  udid=$(xcrun simctl create "$sim_name" "$devicetype" "$runtime") || { echo "✗ qa-e2e：simctl create「${sim_name}」失敗" >&2; exit 2; }
+  echo "→ qa-e2e：已建立專屬模擬器 ${sim_name}（${udid}）"
+fi
+state=$(xcrun simctl list devices 2>/dev/null | grep -F "$udid" | sed -E 's/.*\((Booted|Shutdown|Booting|Shutting Down)\).*/\1/')
+booted_by_me=0
+if [ "$state" != Booted ]; then
+  xcrun simctl boot "$udid" >/dev/null 2>&1 || true
+  xcrun simctl bootstatus "$udid" -b >/dev/null 2>&1 || { echo "✗ qa-e2e：模擬器 ${sim_name} boot 失敗" >&2; exit 2; }
+  booted_by_me=1
+fi
+
+# ---- 4. 情境前置 ----
+fixtures="${root}/LittleSproutUITests/QA/Fixtures"
+case "$scenario" in
+  login)
+    xcrun simctl keychain "$udid" reset >/dev/null 2>&1 || { echo "✗ qa-e2e：simctl keychain reset 失敗——login 要從未登入狀態開始" >&2; exit 2; } ;;
+  publish)
+    [ -f "$fixtures/qa-photo.jpg" ] && [ -f "$fixtures/qa-video.mp4" ] || { echo "✗ qa-e2e：缺 fixture（${fixtures}/qa-photo.jpg／qa-video.mp4）" >&2; exit 2; }
+    xcrun simctl addmedia "$udid" "$fixtures/qa-photo.jpg" "$fixtures/qa-video.mp4" || { echo "✗ qa-e2e：simctl addmedia 失敗" >&2; exit 2; } ;;
+esac
+
+# ---- 5. 持有 lock（LS-159／LS-170）----
+held_by_me=0
+hold_out=$(bash "$here/supabase-lock.sh" --hold "${ticket} qa-e2e ${scenario}" --max-minutes 25 2>&1); hold_rc=$?
+if [ "$hold_rc" -eq 0 ]; then
+  held_by_me=1; echo "→ qa-e2e：${hold_out}"
+elif [ "$hold_rc" -eq 2 ] && printf '%s' "$hold_out" | grep -q '已持有 hold\|已在 lock 內'; then
+  echo "→ qa-e2e：沿用呼叫者既有的 hold（${hold_out}）"
+else
+  echo "✗ qa-e2e：取不到 Supabase lock：${hold_out}" >&2
+  [ "$booted_by_me" -eq 1 ] && xcrun simctl shutdown "$udid" >/dev/null 2>&1
+  exit 2
+fi
+cleanup() {
+  [ "$held_by_me" -eq 1 ] && bash "$here/supabase-lock.sh" --release
+  [ "$booted_by_me" -eq 1 ] && xcrun simctl shutdown "$udid" >/dev/null 2>&1 && echo "→ qa-e2e：模擬器 ${sim_name} 已關（本腳本 boot 的）"
+  return 0
+}
+trap cleanup EXIT
+
+# ---- 6. 跑 ----
+stamp=$(date +%Y%m%d-%H%M%S)
+out="${root}/.claude/evidence/${ticket}/qa-e2e/${scenario}-${stamp}"
+mkdir -p "$out/screens"
+log="$out/xcodebuild.log"; result="$out/result.xcresult"
+since=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+echo "→ qa-e2e：${scenario} @ ${sim_name}（${udid}）→ ${out}"
+TEST_RUNNER_LS_QA_SCENARIO=$scenario \
+TEST_RUNNER_LS_QA_API_URL=$api_url \
+TEST_RUNNER_LS_QA_ANON_KEY=$anon_key \
+TEST_RUNNER_LS_QA_MAILPIT=$mailpit \
+TEST_RUNNER_LS_QA_EMAIL=${email:-qa-e2e@ls.test} \
+xcodebuild test \
+  -project "${root}/LittleSprout.xcodeproj" \
+  -scheme LittleSprout \
+  -destination "platform=iOS Simulator,id=${udid}" \
+  -only-testing:LittleSproutUITests/QASmokeTests \
+  -parallel-testing-enabled NO \
+  -resultBundlePath "$result" \
+  > "$log" 2>&1
+rc=$?
+
+# ---- 7. 證據 ----
+if [ -d "$result" ]; then
+  tmp_export=$(mktemp -d -t qa-e2e-attachments)
+  if xcrun xcresulttool export attachments --path "$result" --output-path "$tmp_export" >/dev/null 2>&1 \
+     && [ -f "$tmp_export/manifest.json" ]; then
+    python3 - "$tmp_export" "$out/screens" <<'PY'
+import json, os, re, shutil, sys
+src, dst = sys.argv[1], sys.argv[2]
+# suggestedHumanReadableName 形如 `login-01-welcome_0_<UUID>.png`（Xcode 匯出時加的序號＋UUID）——剝掉尾綴，
+# 留 QADriver.snap 給的 `<情境>-<序號>-<步驟>`；同名（重跑同一步）才保留尾綴避免覆蓋。
+for test in json.load(open(os.path.join(src, "manifest.json"))):
+    for att in test.get("attachments", []):
+        exported = att.get("exportedFileName"); name = att.get("suggestedHumanReadableName") or exported
+        if not exported: continue
+        ext = os.path.splitext(exported)[1] or ".png"
+        base = re.sub(r"_\d+_[0-9A-Fa-f-]{36}$", "", os.path.splitext(name)[0] if name.endswith(ext) else name)
+        target = os.path.join(dst, base + ext)
+        if os.path.exists(target): target = os.path.join(dst, os.path.splitext(name)[0] + ext)
+        shutil.move(os.path.join(src, exported), target)
+PY
+  else
+    echo "⚠ qa-e2e：xcresulttool export attachments 失敗——截圖仍在 ${result}（Xcode 可開）" >&2
+  fi
+  rm -rf "$tmp_export"
+fi
+storage_container=$(docker ps --filter name=supabase_storage --format '{{.Names}}' 2>/dev/null | head -1)
+if [ -n "$storage_container" ]; then
+  docker logs --since "$since" "$storage_container" > "$out/storage.log" 2>&1 || echo "（docker logs ${storage_container} 失敗）" >> "$out/storage.log"
+else
+  echo "（找不到 supabase_storage 容器，未收 Storage log）" > "$out/storage.log"
+fi
+
+shots=$(ls "$out/screens" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$rc" -eq 0 ]; then
+  echo "✓ qa-e2e：${scenario} 通過——截圖 ${shots} 張：${out}/screens/；Storage log：${out}/storage.log；xcresult：${result}"
+  exit 0
+fi
+echo "✗ qa-e2e：${scenario} 失敗（xcodebuild exit ${rc}）——截圖 ${shots} 張：${out}/screens/；完整 log：${log}" >&2
+grep -E 'error:|失敗|Failing tests|BUILD FAILED|TEST FAILED' "$log" | head -n 20 | sed 's/^/    /' >&2
+exit 1

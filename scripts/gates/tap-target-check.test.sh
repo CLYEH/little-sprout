@@ -27,6 +27,8 @@ bin="$work/bin"
 mkdir -p "$bin"
 cat > "$bin/xcodebuild" <<'STUB'
 #!/bin/bash
+# LS-158 ⑨：把收到的旗標一行一個記下來，讓自測能斷言 -skip-testing／-only-testing 的組合
+printf '%s\n' "$@" > "${FAKE_XCODEBUILD_ARGS_FILE:-/dev/null}"
 case "${FAKE_XCODEBUILD_MODE:-pass}" in
   pass)
     echo "Test Suite 'All tests' passed at 2026-09-01 00:00:00."
@@ -119,6 +121,22 @@ expect 1 '⑦ 2 個違規都要點名（不是只印第一個）' "$got" "$out" 
 out=$(run fail_no_violation UDID SCHEME); got=$?
 expect 1 '⑧ 失敗但無 TAP-TARGET-FAIL 標記 → 仍 exit 1、印 log 尾段' "$got" "$out" \
   '不是點擊目標違規' 'Build input files cannot be found'
+
+# ⑨ LS-158：QA e2e（LittleSproutUITests/QA/QASmokeTests）需要本機容器，CI 的這支 gate 不得跑到它。
+#    `-only-testing` 對 `-skip-testing` 有優先權（man xcodebuild），所以必須是純 -skip-testing 組合：
+#    跳過 unit test target＋QASmokeTests，且不得再帶任何 -only-testing（帶了 skip 就失效、QA 會在 CI 假紅）。
+args_file="$work/xcodebuild.args"
+out=$(cd "$R" && PATH="$bin:$PATH" FAKE_XCODEBUILD_MODE=pass FAKE_XCODEBUILD_ARGS_FILE="$args_file" bash "$checker" UDID SCHEME 2>&1); got=$?
+if [ "$got" -eq 0 ] \
+   && grep -qxF -- '-skip-testing:LittleSproutUITests/QASmokeTests' "$args_file" \
+   && grep -qxF -- '-skip-testing:LittleSproutTests' "$args_file" \
+   && ! grep -q -- '^-only-testing' "$args_file"; then
+  echo "✓ ⑨ xcodebuild 旗標＝純 -skip-testing 組合（跳過 LittleSproutTests＋QASmokeTests、無 -only-testing）"
+else
+  echo "✗ ⑨ xcodebuild 旗標應為 -skip-testing:LittleSproutTests＋-skip-testing:LittleSproutUITests/QASmokeTests 且無 -only-testing（實得 exit ${got}）" >&2
+  sed 's/^/    /' "$args_file" >&2 2>/dev/null
+  fail=1
+fi
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ tap-target-check.test.sh 全部通過"
