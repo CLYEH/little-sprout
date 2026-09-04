@@ -20,24 +20,29 @@
 # 與目標路徑比對；不一致時嘗試自動清場後重試一次（R2，見下）。
 #
 # 用法：
-#   pen-open.sh <worktree-or-repo-root> [--no-quit|--force-reload]
+#   pen-open.sh <worktree-or-repo-root> [--no-quit|--force-reload|--kill]
 #                                                       把 Pen 切到 <root>/design/littlesprout.pen 並輪詢對帳；
 #                                                       不一致時預設嘗試自動清場重試，`--no-quit` 關掉這步
-#                                                       （只對帳、不清場，等同 R2 之前的行為）。**LS-118**：
-#                                                       `--force-reload` 略過「目前已經 active 就直接算成功」
-#                                                       的捷徑，一律走清場（安全判定＋kill＋重開）流程——
-#                                                       目標路徑即使已經是 active，既有 renderer 仍可能停在
-#                                                       上次讀到磁碟的時間點，只有清場重開生出的全新 renderer
-#                                                       才保證讀到目前磁碟內容（見上方 LS-118 段）；`pen-read.sh`
+#                                                       （只對帳、不清場，等同 R2 之前的行為）。**LS-118／LS-180**：
+#                                                       `--force-reload` 不信任「路徑已一致」——既有 renderer 仍可能
+#                                                       停在上次讀到磁碟的時間點；LS-180 起改為**先比 tree_hash**：
+#                                                       磁碟 design_tree_hash.py vs Pencil 端 execute 回讀，相符即
+#                                                       exit 0、不殺行程（Pencil MCP 連線保留）；不相符且安全判定
+#                                                       通過才清場重開並印「需重連」；讀不到 Pencil 端雜湊則印期望
+#                                                       值、exit 3 交 agent 複算（見下方 LS-180 段）。`pen-read.sh`
 #                                                       即為此模式的唯讀封裝，供 QA／視覺審查讀稿用。
+#                                                       `--kill`＝舊 `--force-reload` 語意：不比雜湊，一律安全判定＋
+#                                                       kill＋重開——只給 orchestrator 明示清場用（LS-180）。
 #   pen-open.sh --status                               不 open，只輪詢一次目前路徑並印到 stdout（供巡檢／派工前
 #                                                       對帳用；不比對，比對交給呼叫端——見 §4-b）
 #
 # Exit code：
-#   0＝（open 模式）路徑已一致（含自動清場重試後一致，`--force-reload` 一律經過清場才算數）；
-#      （--status）成功讀到路徑並印出
+#   0＝（open 模式）路徑已一致（含自動清場重試後一致；`--force-reload` 為「一致且 tree_hash 相符」或「清場重開後
+#      一致」；`--kill` 一律經過清場才算數）；（--status）成功讀到路徑並印出
 #   1＝（open 模式限定）輪詢逾時仍與目標路徑不一致（含清場後仍不一致，或判定不安全而未清場）
 #   2＝Pen 沒開／pen CLI 未登入／連線失敗／用法錯誤／清場失敗需人工介入（fail closed；--status 讀不到路徑也是這個）
+#   3＝（--force-reload 限定，LS-180）路徑已一致但 Pencil 端 tree_hash 讀不到——未清場、MCP 連線保留；stdout 印期望值
+#      `tree_hash=<磁碟值>`，呼叫的 agent 自己用 mcp__pencil__execute 跑 SCAN_HASH_ONLY 比對（見 LS-180 段第 3 點）
 #
 # R2／R3（自動清場，使用者核可 2026-08-25）：目標路徑已在背景視窗開著時，`open -a Pen` 不會奪回 active（見
 # 下方「已知坑」）。輪詢逾時仍不一致 → **`kill` 殺的是 Pen 主行程＝全部視窗一起結束**，所以安全判定必須涵蓋
@@ -84,11 +89,38 @@
 # 生出的全新 renderer 才保證這次是真的從磁碟讀出目前內容。若安全判定認為目前開著的任一份 .pen 可能有未落地
 # 的真實變更，仍然 fail closed（exit 1，印出該去哪個 root 先 `pen-land.sh`），不會為了保證新鮮度而默默丟掉
 # 別人真正的未落地設計工作。`pen-read.sh` 就是這個模式的唯讀封裝，供 reviewer／QA 安全讀取指定 worktree 的
-# 設計稿；自測見 pen-open.test.sh 的 `--force-reload` 案例與 `pen-read.test.sh`。
+# 設計稿；自測見 pen-open.test.sh 的 `--force-reload` 案例與 `pen-read.test.sh`。（**LS-180 修訂**：上文「無條件併入
+# 清場流程」已改為「先比 tree_hash、相符不清場」，保留為沿革；現行語意見下方 LS-180 段。）
 #
 # LS-176（LS-96 池項 56eeaee0）：候選路徑在磁碟上已不存在（Pen 仍記得已被 cleanup-merged.sh 移掉的 worktree）
 # 視為可安全捨棄——見 check_root_safe() 的訊號 d。舊版判「不存在→無法確認安全」拒絕清場，每張後續設計票的
 # pen-read.sh 都被擋（LS-152／LS-163 清理後各發生一次）。
+#
+# LS-180（來源 LS-177 VR R2 `b017cbd1`；LS-96 池項 bed3ca3e 同族）：`--force-reload` 一律清場＝Pen 主行程被結束，
+# **Pencil MCP 連線隨之中斷且 Claude Code session 內不會重連**（`mcp__pencil__*` 全部不可用，直到使用者手動 `/mcp`
+# 重連）——「照指示切檔」與「照指示重掃／截圖」互斥。本票把 `--force-reload` 改成**先驗新鮮度、相符不殺**：
+#   1. 切檔＋輪詢路徑一致後，磁碟 `scripts/gates/design_tree_hash.py <want>` 算 tree_hash，再用 `pen interactive --app
+#      desktop` 餵 `execute({ input: <scripts/design/overflow-scan.js 全文，前置一行 SCAN_HASH_ONLY = true> })` 讀回
+#      Pencil 端同一演算法印出的 `SUMMARY-HASH … tree_hash=…`（read_pen_hash()；每次看門狗 PEN_OPEN_HASH_TIMEOUT 秒、
+#      最多 PEN_OPEN_HASH_ATTEMPTS 次）。**兩邊相符＝renderer 記憶體內容等於磁碟**（LS-118 要防的是 renderer 停在舊
+#      磁碟快照；同一份 canon＋FNV-1a 64 全樹雜湊相符即等價證明），exit 0、不清場、MCP 連線保留。
+#   2. 讀回的值與磁碟不同（renderer 真的停在舊快照、或記憶體有未落地編輯）→ 才走既有清場流程（候選枚舉＋
+#      check_root_safe＋osascript→TERM→KILL＋重開）；未落地的真實編輯仍 fail closed exit 1，與 LS-118 相同。
+#   3. 讀不到 Pencil 端雜湊（CLI 逾時／Pencil `InternalError: interrupted`——9000 節點級的稿單次 execute 走訪全樹會
+#      機率性中斷，LS-177 R1／R2 實測；或 CLI 輸出格式改了）→ **不殺、不猜**：stdout 印期望值 `tree_hash=<磁碟值>` 與
+#      複算指引，exit 3——由呼叫的 agent 用 mcp__pencil__execute 自己跑 SCAN_HASH_ONLY（大稿可分段累加，VR 既有作法）
+#      比對；相符即可讀稿，不符回報 orchestrator 決定是否 `--kill`。這就是「印出待 agent 複算的期望值＋exit 碼」的
+#      替代設計：Pencil 端唯一的 shell 途徑是同一支 execute，它在大稿上不保證成功，所以只能當快路徑、不能當唯一路徑。
+#   4. 只要清場流程真的結束了 Pen 主行程，stdout 必印「⚠ Pencil MCP 需重連：請在 Claude Code 執行 /mcp 重連 pencil」
+#      ——不論之後重開成功與否（agent 定義要求把這行帶回 handoff）；預設模式路徑不一致時的自動清場（R2）同樣印。
+#   5. `--kill`：舊 `--force-reload` 語意（不比雜湊、一律安全判定＋kill＋重開），只給 orchestrator 明示清場用
+#      （例：確定 renderer 壞掉、或要一次關掉累積的背景視窗）；與 `--force-reload`／`--no-quit` 互斥。
+#   實機限制：本票開發期間 Pencil MCP 正斷線等使用者重連、Pen 開著 LS-177 的稿，硬限制不得對活的 Pen 跑本腳本——
+#   read_pen_hash() 的 CLI 路徑只以 stub 自測（pen-open.test.sh ⑮），實跑格式（REPL 是否接受 JSON 字串字面值的
+#   execute 參數、SUMMARY-HASH 行是否原樣印出）待 orchestrator 在重連後對 LS-177 worktree 跑一次 `--force-reload`
+#   核對；失敗方向是 exit 3（不殺），不會誤放行、也不會誤殺。
+#   已知盲區：`open -a Pen <want>` 對「已在背景視窗開著」的路徑不會奪回 active（下方已知坑），那條路徑仍只能清場——
+#   本票的不殺路徑只救「目標已是 active」的情況（設計輪 designer↔VR 同一份稿交替最常見）。
 #
 # macOS 沒有 coreutils timeout：每次 pen interactive 呼叫用背景程序＋背景 sleep 到期就 kill 的看門狗模式
 # （同 scripts/ops/patrol.sh 的 fetch_with_timeout；此處用 stdin/stdout 重導向而非管線，$! 才是 pen 程序本身的
@@ -121,7 +153,7 @@
 set -uo pipefail
 
 usage() {
-  echo "用法：pen-open.sh <worktree-or-repo-root> [--no-quit|--force-reload]｜pen-open.sh --status" >&2
+  echo "用法：pen-open.sh <worktree-or-repo-root> [--no-quit|--force-reload|--kill]｜pen-open.sh --status" >&2
 }
 
 PEN_BIN=${PEN_BIN:-pen}
@@ -130,11 +162,15 @@ ATTEMPT_TIMEOUT=${PEN_OPEN_ATTEMPT_TIMEOUT:-8}
 POLL_INTERVAL=${PEN_OPEN_POLL_INTERVAL:-2}
 QUIT_TIMEOUT=${PEN_OPEN_QUIT_TIMEOUT:-10}
 QUIT_GRACE=${PEN_OPEN_QUIT_GRACE:-4}
-for v in "$POLL_TIMEOUT" "$ATTEMPT_TIMEOUT" "$POLL_INTERVAL" "$QUIT_TIMEOUT" "$QUIT_GRACE"; do
+# LS-180：Pencil 端 tree_hash 回讀（execute 全樹走訪）——單次看門狗與重試次數；9000 節點級的稿一次走訪要數十秒。
+HASH_TIMEOUT=${PEN_OPEN_HASH_TIMEOUT:-60}
+HASH_ATTEMPTS=${PEN_OPEN_HASH_ATTEMPTS:-2}
+for v in "$POLL_TIMEOUT" "$ATTEMPT_TIMEOUT" "$POLL_INTERVAL" "$QUIT_TIMEOUT" "$QUIT_GRACE" "$HASH_TIMEOUT" "$HASH_ATTEMPTS"; do
   case "$v" in
-    ''|*[!0-9]*) echo "✗ pen-open：PEN_OPEN_TIMEOUT／PEN_OPEN_ATTEMPT_TIMEOUT／PEN_OPEN_POLL_INTERVAL／PEN_OPEN_QUIT_TIMEOUT／PEN_OPEN_QUIT_GRACE 須為整數秒（得到「${v}」）" >&2; exit 2 ;;
+    ''|*[!0-9]*) echo "✗ pen-open：PEN_OPEN_TIMEOUT／PEN_OPEN_ATTEMPT_TIMEOUT／PEN_OPEN_POLL_INTERVAL／PEN_OPEN_QUIT_TIMEOUT／PEN_OPEN_QUIT_GRACE／PEN_OPEN_HASH_TIMEOUT 須為整數秒、PEN_OPEN_HASH_ATTEMPTS 須為整數次數（得到「${v}」）" >&2; exit 2 ;;
   esac
 done
+script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 if [ $# -lt 1 ] || [ $# -gt 2 ]; then
   usage
@@ -145,6 +181,7 @@ mode=open
 target=$1
 no_quit=0
 force_reload=0
+kill_mode=0
 if [ "$1" = "--status" ]; then
   if [ $# -ne 1 ]; then
     usage
@@ -157,6 +194,8 @@ elif [ $# -eq 2 ]; then
     no_quit=1
   elif [ "$2" = "--force-reload" ]; then
     force_reload=1
+  elif [ "$2" = "--kill" ]; then
+    kill_mode=1
   else
     usage
     exit 2
@@ -185,6 +224,42 @@ poll_once() {
   grep -o 'Currently active canvas editor: `[^`]*`' "$tmp" 2>/dev/null \
     | sed -E 's/^Currently active canvas editor: `//; s/`$//' | head -1
   rm -f "$tmp"
+}
+
+# LS-180：向 Pencil 端回讀目前 active document 的 tree_hash——把正典腳本 scripts/design/overflow-scan.js 全文（前置
+# `SCAN_HASH_ONLY = true;`）JSON 編碼成 JS 字串字面值，經 `pen interactive --app desktop` 的 `execute({ input })` 送進
+# Pencil 跑同一份 canon＋FNV-1a 64 走訪，擷取它 Print 的 `SUMMARY-HASH total_nodes=… tree_hash=<16 hex>`。stdout 印
+# 16 碼 hex；逾時／中斷／輸出無 SUMMARY-HASH 就印空字串（重試 HASH_ATTEMPTS 次後放棄），呼叫端據此走 exit 3 路徑。
+# 看門狗／暫存檔／背景程序模式同 poll_once()。純唯讀（Get 走訪），不動文件。
+read_pen_hash() {
+  local snippet in tmp attempt h ppid wpid
+  snippet=$(python3 - "${script_root}/scripts/design/overflow-scan.js" <<'PY'
+import json, sys
+src = open(sys.argv[1], encoding="utf-8").read()
+print("execute({ input: " + json.dumps("SCAN_HASH_ONLY = true;\n" + src, ensure_ascii=True) + " })")
+PY
+  ) || { echo "  Pencil 端 tree_hash：無法組出 execute 片段（python3／overflow-scan.js 缺？）" >&2; return 0; }
+  attempt=0
+  while [ "$attempt" -lt "$HASH_ATTEMPTS" ]; do
+    attempt=$((attempt + 1))
+    tmp=$(mktemp "${TMPDIR:-/tmp}/pen-open-hash-out.XXXXXX") || return 0
+    in=$(mktemp "${TMPDIR:-/tmp}/pen-open-hash-in.XXXXXX") || { rm -f "$tmp"; return 0; }
+    printf '%s\nexit()\n' "$snippet" > "$in"
+    "$PEN_BIN" interactive --app desktop < "$in" > "$tmp" 2>&1 &
+    ppid=$!
+    ( sleep "$HASH_TIMEOUT"; kill "$ppid" 2>/dev/null ) >/dev/null 2>&1 &
+    wpid=$!
+    wait "$ppid" 2>/dev/null
+    kill "$wpid" 2>/dev/null
+    h=$(grep -oE 'SUMMARY-HASH total_nodes=[0-9]+ tree_hash=[0-9a-f]{16}' "$tmp" 2>/dev/null | sed -E 's/.*tree_hash=//' | head -1)
+    rm -f "$in" "$tmp"
+    if [ -n "$h" ]; then
+      printf '%s\n' "$h"
+      return 0
+    fi
+    echo "  Pencil 端 tree_hash 第 ${attempt}/${HASH_ATTEMPTS} 次回讀失敗（${HASH_TIMEOUT}s 內無 SUMMARY-HASH 輸出：逾時／InternalError: interrupted／CLI 格式變了）" >&2
+  done
+  return 0
 }
 
 if [ "$mode" = status ]; then
@@ -230,7 +305,7 @@ poll_until_match() {
 open -a Pen "$want" >/dev/null 2>&1
 poll_until_match
 poll_rc=$?
-if [ "$poll_rc" -eq 0 ] && [ "$force_reload" -ne 1 ]; then
+if [ "$poll_rc" -eq 0 ] && [ "$force_reload" -ne 1 ] && [ "$kill_mode" -ne 1 ]; then
   echo "✓ pen-open：Pen 目前文件＝${want}"
   exit 0
 fi
@@ -239,10 +314,31 @@ if [ "$poll_rc" -eq 2 ]; then
   exit 2
 fi
 
-if [ "$poll_rc" -eq 0 ]; then
-  # LS-118：--force-reload 且已經一致——不信任這個「一致」，既有 renderer 可能是停在舊磁碟內容的殘留行程，
-  # 無條件併入下面的清場流程，確保換成全新 renderer 才算數。
-  echo "  --force-reload：目前文件已是「${want}」，但既有 renderer 可能停在上次讀到磁碟時的舊快照（LS-118：filePath／重新 open -a Pen 都不保證重新讀取磁碟）——強制清場重開" >&2
+if [ "$poll_rc" -eq 0 ] && [ "$kill_mode" -eq 1 ]; then
+  echo "  --kill：目前文件已是「${want}」，依 orchestrator 明示不比對 tree_hash、強制清場重開（LS-180）" >&2
+elif [ "$poll_rc" -eq 0 ]; then
+  # LS-118：--force-reload 且已經一致——不信任這個「一致」，既有 renderer 可能是停在舊磁碟內容的殘留行程。
+  # LS-180：先比 tree_hash——磁碟 design_tree_hash.py vs Pencil 端 execute 回讀；相符即證明 renderer 內容＝磁碟，
+  # 不清場（Pencil MCP 連線保留）；讀不到就印期望值 exit 3 交 agent 複算；只有真的不相符才併入下面的清場流程。
+  disk_hash=$(python3 "${script_root}/scripts/gates/design_tree_hash.py" "$want" 2>/dev/null) || disk_hash=""
+  case "$disk_hash" in
+    [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;;
+    *)
+      echo "✗ pen-open：--force-reload 算不出磁碟 tree_hash（scripts/gates/design_tree_hash.py 對「${want}」失敗——.pen 壞掉或 python3 缺？fail closed）" >&2
+      exit 2
+      ;;
+  esac
+  echo "  --force-reload：目前文件已是「${want}」；磁碟 tree_hash=${disk_hash}，向 Pencil 端回讀比對新鮮度（LS-180：相符不清場）……" >&2
+  pen_hash=$(read_pen_hash)
+  if [ -n "$pen_hash" ] && [ "$pen_hash" = "$disk_hash" ]; then
+    echo "✓ pen-open：Pen 目前文件＝${want}；tree_hash=${disk_hash} 與磁碟一致（renderer 內容＝磁碟，未清場、Pencil MCP 連線保留，LS-180）"
+    exit 0
+  fi
+  if [ -z "$pen_hash" ]; then
+    echo "⚠ pen-open：路徑已一致（${want}）但 Pencil 端 tree_hash 讀不到——未清場、Pencil MCP 連線保留；新鮮度待 agent 複算：用 mcp__pencil__execute 跑 scripts/design/overflow-scan.js（第一行加 SCAN_HASH_ONLY = true；大稿可分段累加），期望值 tree_hash=${disk_hash}；相符即可讀稿，不符回報 orchestrator 以 pen-open.sh <root> --kill 清場（之後需在 Claude Code 執行 /mcp 重連 pencil）（LS-180，exit 3）"
+    exit 3
+  fi
+  echo "  --force-reload：tree_hash 不一致——磁碟 ${disk_hash}、Pencil 端 ${pen_hash}（renderer 停在舊快照或有未落地編輯，LS-118）——走清場重開" >&2
 else
   echo "✗ pen-open：路徑不一致——目標「${want}」，Pen 目前「${LAST_SEEN}」" >&2
 fi
@@ -262,8 +358,6 @@ suffix="/design/littlesprout.pen"
 list_open_pen_paths() {
   ps -Ao command 2>/dev/null | grep 'Pen Helper' | grep -oE 'file://[^"]*/design/littlesprout\.pen' | sed 's#^file://##'
 }
-
-script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 # check_root_safe <root>：用 pen-land.sh --dry-run 判斷這個 root 是否「沒有未落地的變更、或只有可安全捨棄的
 # UI 態漂移」。回傳 0＝安全，1＝不安全或無法判定（fail closed）；印診斷到 stderr。三種安全訊號（LS-117）：
@@ -362,13 +456,14 @@ fi
 echo "  已確認全部開著的 .pen 皆無未落地變更（或僅屬可安全捨棄的 UI 態漂移，見上方逐一判定），嘗試安全結束 Pen 並重開……" >&2
 
 pen_pid=$(pgrep -f 'Pen\.app/Contents/MacOS/Pen$' 2>/dev/null | head -1)
+pen_restarted=0
 if [ -z "$pen_pid" ]; then
-  if [ "$force_reload" -eq 1 ]; then
-    # LS-118 R1 F1（merge-review）：--force-reload 的唯一存在理由是「exit 0 ⇒ 換成全新 renderer 剛讀過磁碟」。
-    # pgrep 找不到主行程時無從確認接下來的 open -a Pen 是重開了全新行程還是只是重新聚焦既有行程（樣式不符／
-    # 改名／pgrep 缺失都可能讓 pgrep 撲空，但 Pen 其實還在跑）——不能假裝清場過，fail closed。預設模式
-    # （不帶 --force-reload）維持原行為：它的成功語意本來就只有「路徑一致」，不含「保證全新 renderer」。
-    echo "✗ pen-open：--force-reload 但找不到 Pen 主行程（pgrep 沒有結果）——無法確認接下來會是全新 renderer 還是既有行程被重新聚焦，不繼續（fail closed）" >&2
+  if [ "$force_reload" -eq 1 ] || [ "$kill_mode" -eq 1 ]; then
+    # LS-118 R1 F1（merge-review）：走到清場的 --force-reload（雜湊不符）與 --kill 的存在理由都是「exit 0 ⇒ 換成
+    # 全新 renderer 剛讀過磁碟」。pgrep 找不到主行程時無從確認接下來的 open -a Pen 是重開了全新行程還是只是
+    # 重新聚焦既有行程（樣式不符／改名／pgrep 缺失都可能讓 pgrep 撲空，但 Pen 其實還在跑）——不能假裝清場過，
+    # fail closed。預設模式維持原行為：它的成功語意本來就只有「路徑一致」，不含「保證全新 renderer」。
+    echo "✗ pen-open：--force-reload／--kill 但找不到 Pen 主行程（pgrep 沒有結果）——無法確認接下來會是全新 renderer 還是既有行程被重新聚焦，不繼續（fail closed）" >&2
     exit 2
   fi
   echo "  找不到 Pen 主行程（pgrep 沒有結果）——跳過清場步驟，直接嘗試重開" >&2
@@ -405,18 +500,29 @@ else
       exit 2
     fi
   fi
+  pen_restarted=1
 fi
+
+# LS-180：Pen 主行程一旦結束，Claude Code 這個 session 的 Pencil MCP 就斷了且不會自己重連——不論下面重開成功與否
+# 都要讓呼叫者看到這行（agent 定義要求把它帶回 handoff；orchestrator 據此請使用者 /mcp 重連再派下一輪）。
+reconnect_notice() {
+  [ "$pen_restarted" -eq 1 ] || return 0
+  echo "⚠ Pencil MCP 需重連：請在 Claude Code 執行 /mcp 重連 pencil（Pen 主行程 pid ${pen_pid} 已結束重開，本 session 的 mcp__pencil__* 不會自動重連——agent 收到這行必須在 handoff 回報「需重連」，LS-180）"
+}
 
 open -a Pen "$want" >/dev/null 2>&1
 poll_until_match
 poll_rc=$?
 if [ "$poll_rc" -eq 0 ]; then
   echo "✓ pen-open：清場後 Pen 目前文件＝${want}"
+  reconnect_notice
   exit 0
 elif [ "$poll_rc" -eq 1 ]; then
   echo "✗ pen-open：清場後仍路徑不一致——目標「${want}」，Pen 目前「${LAST_SEEN}」" >&2
+  reconnect_notice
   exit 1
 else
   echo "✗ pen-open：清場後 ${POLL_TIMEOUT}s 內讀不到 Pen 文件路徑" >&2
+  reconnect_notice
   exit 2
 fi
