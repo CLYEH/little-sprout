@@ -183,6 +183,43 @@ fi
 unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
 clear_fake_pen
 
+# ---- LS-176（LS-96 池項 56eeaee0）：Pen 目前是已被 cleanup-merged.sh 移除的 worktree 路徑（磁碟上沒有那個檔）
+#      → pen-read.sh 視為已捨棄、清場後成功切到目標（LS-176 之前回「不存在→無法確認安全」拒絕，QA／VR 讀稿
+#      的新鮮度保證失效）----
+gone="${work}/wt-gone/design/littlesprout.pen"
+reset_open_tracking; clear_fake_pen; wt_backup_safe
+set_state "PATH:${gone}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=1
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "舊路徑不存在，視為已捨棄：${gone}" \
+  && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" && ! fake_pen_alive; then
+  ok 'pen-read.sh <root>：Pen 記得的舊 worktree 路徑已不存在 → 視為已捨棄，清場切檔成功（LS-176）'
+else
+  bad "應 exit 0 且清場切檔成功（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+clear_fake_pen
+
+# ---- LS-176 對照：Pen 目前是「存在且有未落地變更」的別的 worktree（wt2 backup 多一個節點）→ 仍如實拒絕清場、
+#      不印「視為已捨棄」----
+wt2="${work}/wt2"; mkdir -p "${wt2}/design"
+printf '%s' '{"version":1,"fileToken":"tok2","variables":{},"themes":{},"children":[{"id":"m1","x":1,"children":[]}]}' > "${wt2}/design/littlesprout.pen"
+want2="$(cd "${wt2}/design" && pwd -P)/littlesprout.pen"
+printf '%s' '{"version":1,"fileToken":"tok2","variables":{},"themes":{},"children":[{"id":"m1","x":1,"children":[{"id":"m2","y":9,"children":[]}]}]}' > "${PEN_BACKUP_DIR}/$(printf '%s' "file://${want2}" | shasum | awk '{print $1}')"
+reset_open_tracking; clear_fake_pen; wt_backup_safe
+set_state "PATH:${want2}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '不自動 quit' && ! printf '%s' "$out" | grep -qF '視為已捨棄' && fake_pen_alive; then
+  ok 'pen-read.sh <root>：舊路徑存在且有未落地變更 → 仍如實拒絕清場（LS-176 對照）'
+else
+  bad "應 exit 1 且不清場（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT
+clear_fake_pen
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-read-check 自測失敗" >&2
   exit 1

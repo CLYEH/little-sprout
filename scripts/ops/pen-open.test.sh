@@ -236,18 +236,25 @@ else
   bad "一致案例應 exit 0（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 
-# ---- 不一致（殘留路徑推出的 worktree 根不存在——R3 起 $want 自己也在候選清單裡，先給它安全 backup，
-#      讓失敗原因單純歸給不存在的 other，不被 $want 缺 backup 混淆）----
+# ---- ⑭a LS-176（LS-96 池項 56eeaee0）：Pen 目前是「已被 cleanup-merged.sh 移除的 worktree」的路徑（推出的 root
+#      與 .pen 都不在磁碟上）→ 無檔即無未落地變更可失，視為已捨棄，照常清場切檔成功（LS-176 之前判「不存在→
+#      無法確認安全」而拒絕、exit 1，LS-152／LS-163 清理後每張後續設計票的 pen-read 都被擋）。$want 自己也在候選
+#      清單裡，先給它安全 backup，讓「安全」的判定單純來自不存在的 other；訊息仍須含兩邊路徑 ----
 other="${work}/wt-other/design/littlesprout.pen"
-wt_backup_safe
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe
 set_state "PATH:${other}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=1
 out="$(run "$wt" 2>&1)"; got=$?
-if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF "${want}" && printf '%s' "$out" | grep -qF "${other}" \
-  && printf '%s' "$out" | grep -qF "${work}/wt-other」不存在" && printf '%s' "$out" | grep -qF '不自動 quit'; then
-  ok '不一致：Pen 目前是別的檔（推出的 worktree 根不存在）→ exit 1，訊息含兩邊路徑，不清場'
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "${want}" && printf '%s' "$out" | grep -qF "${other}" \
+  && printf '%s' "$out" | grep -qF "舊路徑不存在，視為已捨棄：${other}" \
+  && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" && ! fake_pen_alive; then
+  ok '⑭a LS-176 舊路徑不存在：Pen 目前是已刪 worktree 的檔 → 視為已捨棄，清場切檔成功，訊息含兩邊路徑'
 else
-  bad "不一致案例應 exit 1 且印兩邊路徑（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+  bad "⑭a 應 exit 0 且清場切檔成功（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+clear_fake_pen
 rm -f "${PEN_BACKUP_DIR}/$(printf '%s' "file://${want}" | shasum | awk '{print $1}')"
 
 # ---- Pen 未開／讀不到（開檔模式） ----
@@ -564,6 +571,23 @@ else
 fi
 clear_fake_pen
 wtQ_reset_clean
+
+# ---- ⑭b LS-176 對照：舊路徑「存在」且有未落地變更（wt2 的 backup 與磁碟檔結構不同）→ 仍照舊擋：不 quit、
+#      不第二次 open、exit 1，且絕不印「視為已捨棄」（⑭a 的放行只能來自「磁碟上沒有這個檔」，不得擴大到
+#      「檔在但無法判定」；mutation：check_root_safe 的 -e 改成 -d root、或把不存在與無法判定又混在一起 → 紅）----
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt2_backup_unsafe; wt_backup_safe
+set_state "PATH:${want2}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '不自動 quit' && ! printf '%s' "$out" | grep -qF '視為已捨棄' \
+  && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑭b LS-176 對照：舊路徑存在且 dirty → 仍拒絕清場，exit 1，不印「視為已捨棄」'
+else
+  bad "⑭b 應 exit 1 且不清場（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT
+clear_fake_pen
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-open-check 自測失敗" >&2
