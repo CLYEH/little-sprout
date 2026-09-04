@@ -27,6 +27,7 @@ declare
   v_grandpa uuid := 'e1000000-0000-4000-8000-000000000003';
   v_family_m uuid := 'e2000000-0000-4000-8000-000000000001';
   v_family_n uuid := 'e2000000-0000-4000-8000-000000000002';
+  v_family_o uuid := 'e2000000-0000-4000-8000-000000000003'; -- R2 m1：單一敘述 generate_series 批次專用
   v_n int;
   v_event_id uuid;
   v_event_id2 uuid;
@@ -50,7 +51,8 @@ begin
 
   insert into public.families (id, name, created_by) values
     (v_family_m, 'LS175 測試家 M', v_dad),
-    (v_family_n, 'LS175 測試家 N（跨家庭隔離對照）', v_grandpa);
+    (v_family_n, 'LS175 測試家 N（跨家庭隔離對照）', v_grandpa),
+    (v_family_o, 'LS175 測試家 O（單一敘述 generate_series 批次對照）', v_dad);
 
   -- families 的 AFTER INSERT trigger（private.add_creator_as_owner）已經把
   -- v_dad／v_grandpa 各自塞進自己家的 family_members；這裡只補媽媽。
@@ -97,6 +99,35 @@ begin
   end if;
 
   raise notice 'ok 1：50 張一批（50 次各自獨立 INSERT）彙總成恰 1 筆事件，event_count=50，target_type=family，target_id=family_id，actor_id=爸爸';
+
+  -- -------------------------------------------------------------------------
+  -- 1b.（merge-review R1 m1）單一 INSERT 敘述（`select … from generate_series`）
+  --    一次寫入 50 列——跟案例 1「50 次各自獨立 INSERT」是不同的鑑別力：案例 1
+  --    每句的 transition table 恆為 1 列，`count(*)` 與「把 n 寫死成常數 1」
+  --    完全等價，測不出 event_count 是不是真的在算「這句裡有幾列」。這裡用
+  --    同一個家庭已經穩定過（見案例 1）的做法不夠，改用全新家庭 O，讓斷言
+  --    乾淨對應「單一敘述、50 列、event_count 必須等於 50」。
+  -- -------------------------------------------------------------------------
+  insert into public.media
+    (family_id, storage_path, type, byte_size, width, height, uploaded_by)
+  select
+    v_family_o,
+    v_family_o::text || '/2026/09/' || gen_random_uuid()::text || '.jpg',
+    'photo', 1024, 100, 100, v_dad
+  from generate_series(1, 50);
+
+  select count(*) into v_n from public.notification_events
+   where family_id = v_family_o and kind = 'media';
+  if v_n <> 1 then
+    raise exception 'FAIL：單一敘述一次寫入 50 列後應恰好 1 筆事件，實際 % 筆', v_n;
+  end if;
+  select event_count into v_event_count from public.notification_events
+   where family_id = v_family_o and kind = 'media';
+  if v_event_count <> 50 then
+    raise exception 'FAIL：單一敘述 50 列的 event_count 應為 50（這一句裡的實際列數，不是「這是第幾次 INSERT 敘述」），實際 %', v_event_count;
+  end if;
+
+  raise notice 'ok 1b：單一 INSERT 敘述一次寫入 50 列，event_count=50（釘住「累加張數，不是累加敘述次數」這個票文核心不變量）';
 
   -- -------------------------------------------------------------------------
   -- 2.（票文驗收 2）5 分鐘內第二批（媽媽再傳 10 張）→ 同一列累加，不是新開一筆
