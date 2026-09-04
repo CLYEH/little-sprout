@@ -52,12 +52,13 @@ ios-dev|"
 
 # 正文必含字樣規則表（LS-170）：<agent>|<字樣>——規約段落被刪即紅。先給空值、再由標記區塊填入：自測的 mutation 負控用 awk 整段
 # 拿掉標記區塊（留下空表）驗「拿掉規則後負樣本變綠」，證明紅是這條規則造成的（同 linear-issue-check.test.sh 慣例）。
-# ios-dev／merge-reviewer：互動式本機驗證（模擬器對本機 Supabase 容器的多步驟操作）前必 `supabase-lock.sh --hold`——qa 的同段
-# 自 LS-159 起就在，本票只釘當時漏掉的兩份。
+# ios-dev／merge-reviewer／qa：互動式本機驗證（模擬器對本機 Supabase 容器的多步驟操作）前必 `supabase-lock.sh --hold`——qa 的同段
+# 自 LS-159 起就在但當時沒有 gate，R2 (a) 一併釘住（三份同一條規則）。
 BODY_RULES=
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold
-merge-reviewer|supabase-lock.sh --hold"
+merge-reviewer|supabase-lock.sh --hold
+qa|supabase-lock.sh --hold"
 # LS170-BODY-RULES-END
 
 hits=""; n=0
@@ -118,6 +119,16 @@ RULES_EOF
 
 # 正文必含字樣（LS-170）：正文＝第二個 --- 之後（CR 一併剝除）；缺檔已由上表列出，這裡略過不重複；frontmatter 未閉合時正文為空、
 # 會多列一條「正文缺」（上表已列未閉合，兩條都是真的）。
+# R1 I-3：「缺檔略過不重複」依賴 BODY_RULES 的 agent ⊆ 工具表——不成立時缺檔會靜默跳過整條規則。先斷言，不成立＝兩表沒同步、exit 2。
+while IFS='|' read -r agent _; do
+  [ -n "$agent" ] || continue
+  case $'\n'"${RULES}"$'\n' in
+    *$'\n'"${agent}|"*) ;;
+    *) echo "✗ agent-tools gate：正文規則表的 ${agent} 不在工具規則表（缺檔會靜默跳過）——兩表要同步（fail closed）" >&2; exit 2 ;;
+  esac
+done <<BODY_EOF
+$BODY_RULES
+BODY_EOF
 m=0
 while IFS='|' read -r agent literal; do
   [ -n "$agent" ] || continue
