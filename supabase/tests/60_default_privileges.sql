@@ -407,11 +407,17 @@ $$;
 --     （authenticated 可執行、anon／PUBLIC 不可），但**不**驗「必須是 SECURITY
 --     DEFINER」——這支函式刻意是 invoker（依賴 feed_items 既有的 RLS 做隔離，不需要
 --     繞過 RLS），硬套 definer 檢查只會逼著它去符合一個不該套用在它身上的規則。
---   - v_service_role_rpcs（LS-151 R2／LS-153 R3，併入 development 時 union）：
+--   - v_service_role_rpcs（LS-151 R2／LS-153 R3，併入 development 時 union；
+--     LS-172 追加 claim_notification_events／notification_recipients）：
 --     SECURITY DEFINER 但**不對 authenticated 開放**、只給 service_role 執行的
 --     public RPC——finalize_account_deletion（LS-151，Edge Function delete-account
---     用 service_role 呼叫）與 purge_storage_queue_mark_failed（LS-153，
---     purge-storage Edge Function 用），皆非前端直接呼叫的 API 邊界。授權方向與
+--     用 service_role 呼叫）、purge_storage_queue_mark_failed（LS-153，
+--     purge-storage Edge Function 用）、claim_notification_events／
+--     notification_recipients（LS-172，push-dispatch Edge Function 用；票文字面
+--     寫 `private.` 前綴，落地時改放 public schema——理由見
+--     `20260904095205_push_dispatch.sql` 檔頭第 1 段：`private` schema 不在
+--     `supabase/config.toml` 的 `[api] schemas` 內，Edge Function 用
+--     `supabase-js` 的 `.rpc()` 完全叫不到），皆非前端直接呼叫的 API 邊界。授權方向與
 --     另外兩組相反：authenticated／anon／PUBLIC 都必須「不可執行」，service_role
 --     必須「可執行」；definer／search_path 收斂的檢查與 v_definer_rpcs 相同。
 --
@@ -482,7 +488,9 @@ declare
   -- 反過來：authenticated／anon 皆無 EXECUTE，只有 service_role 有。按函式名字母
   -- 順序排列。
   v_service_role_rpcs text[] := array[
+    'public.claim_notification_events(integer)',  -- LS-172：push-dispatch 用
     'public.finalize_account_deletion(uuid)',  -- LS-151：delete-account 用
+    'public.notification_recipients(uuid[])',  -- LS-172：push-dispatch 用（R2 改批次簽章，見 migration 檔頭第 2 段）
     'public.purge_storage_queue_mark_failed(uuid[], text)'  -- LS-153：purge-storage 用
   ];
   v_whitelist oid[];
