@@ -5,7 +5,7 @@
 // 跑法：`deno test supabase/functions/push-dispatch/`（不需要 --allow-net，這裡的
 // 每一個依賴都是 fake，不會真的發出網路請求）。
 
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals, assertThrows } from "jsr:@std/assert@1";
 import {
   type ApnsOutcome,
   type ApnsProvider,
@@ -17,6 +17,7 @@ import {
   handleRequest,
   isContentTargetType,
   isNotificationKind,
+  parseStubResponse,
   runDispatch,
   StubApnsProvider,
 } from "./handler.ts";
@@ -227,6 +228,38 @@ Deno.test("isContentTargetType：認得 content_target_type 目前全部 5 個 e
   }
   assertEquals(isContentTargetType("unknown-type"), false);
   assertEquals(isContentTargetType(undefined), false);
+});
+
+// ---------------------------------------------------------------------------
+// 1c. parseStubResponse（LS-96 池項 `531a0975`，LS-172 QA `23af6837`）：
+// PUSH_DISPATCH_STUB_RESPONSE 環境變數 → StubApnsResponder，供 index.ts 在
+// `functions serve` 下也能注入 410／BadDeviceToken 做 Stub E2E。
+// ---------------------------------------------------------------------------
+
+Deno.test("parseStubResponse：未設定（undefined）→ undefined，StubApnsProvider 維持預設一律 ok:true", () => {
+  assertEquals(parseStubResponse(undefined), undefined);
+});
+
+Deno.test("parseStubResponse：空字串（同未設定）→ undefined", () => {
+  assertEquals(parseStubResponse(""), undefined);
+});
+
+Deno.test('parseStubResponse："410" → responder 回傳 invalidToken:true（模擬 APNs 410 Unregistered）', () => {
+  const responder = parseStubResponse("410");
+  assertEquals(typeof responder, "function");
+  assertEquals(responder!("any-token"), {
+    ok: false,
+    invalidToken: true,
+    error: "APNs 410 Unregistered（PUSH_DISPATCH_STUB_RESPONSE 注入）",
+  });
+});
+
+Deno.test("parseStubResponse：不認得的值 → fail loud 丟例外，不悄悄退回預設 ok:true", () => {
+  assertThrows(
+    () => parseStubResponse("999"),
+    Error,
+    "PUSH_DISPATCH_STUB_RESPONSE 不支援的值",
+  );
 });
 
 // ---------------------------------------------------------------------------

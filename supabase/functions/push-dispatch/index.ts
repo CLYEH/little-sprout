@@ -16,6 +16,7 @@ import {
   handleRequest,
   isContentTargetType,
   isNotificationKind,
+  parseStubResponse,
   StubApnsProvider,
 } from "./handler.ts";
 import { buildRealApnsProvider } from "./apns.ts";
@@ -49,9 +50,18 @@ const adminClient = createClient(supabaseUrl, serviceRoleKey, {
 // 實例，這正是 apns.ts 的 `cachedJwt` 需要主動過期判斷＋403 重簽重試的原因
 // （LS-172 R2，merge-reviewer M1；見 apns.ts `buildRealApnsProvider` 內的完整
 // 說明）——不能假設「provider 實例的生命週期＝單一請求」。
+// PUSH_DISPATCH_STUB_RESPONSE（LS-96 池項 `531a0975`，非 secret，純測試開關，
+// 只在 PUSH_DISPATCH_PROVIDER=stub 時有意義）：讓 `supabase functions serve`
+// 起的真實 HTTP 端點也能注入 410／BadDeviceToken，Stub E2E 才驗得到
+// `runDispatch` 真正呼叫 `removeDeviceToken()` 這條路徑，不必再靠「打真正
+// PostgREST DELETE」的等價驗證繞過去。解析邏輯（含 fail loud）在 handler.ts
+// 的 `parseStubResponse`，理由同該函式檔頭說明。正式站部署不設定這個變數
+// （見 docs/API.md §10 部署清單）。
 const apnsProvider =
   (Deno.env.get("PUSH_DISPATCH_PROVIDER") ?? "apns") === "stub"
-    ? new StubApnsProvider()
+    ? new StubApnsProvider(
+      parseStubResponse(Deno.env.get("PUSH_DISPATCH_STUB_RESPONSE")),
+    )
     : buildRealApnsProvider(
       {
         teamId: Deno.env.get("APNS_TEAM_ID"),

@@ -220,6 +220,39 @@ export function buildMessageBody(
 
 export type StubApnsResponder = (token: string) => ApnsOutcome;
 
+// LS-96 池項 `531a0975`（LS-172 QA `23af6837`）：`StubApnsProvider()` 原本只能
+// 靠 deno 單元測試直接 construct `new StubApnsProvider(responder)` 才能注入
+// 410／BadDeviceToken——`supabase functions serve` 起的真實 HTTP 端點沒有任何
+// 環境變數／機制能觸發失效 token 分支，Stub E2E 因此只能改用「真正 PostgREST
+// DELETE」等價驗證，驗不到 `runDispatch` 真正呼叫 `removeDeviceToken` 這條路徑。
+// 這支函式讀取 `PUSH_DISPATCH_STUB_RESPONSE` 環境變數，把它轉成
+// `index.ts` 可以直接餵給 `new StubApnsProvider(...)` 的 responder；放在這裡
+// （純函式、無副作用）而不是 index.ts，理由同 `isNotificationKind` 等——
+// `index.ts` 在模組層級呼叫 `Deno.serve()`，這支函式若留在那裡就無法被
+// `handler.test.ts` 直接測到。
+//
+// 目前只支援 `"410"`（模擬 APNs 410 Unregistered，`ApnsOutcome.invalidToken`
+// 分支——`removeDeviceToken()` 會被呼叫、`tokens_removed` 會累加）。**fail
+// loud**：設了但值不認得就直接丟例外，不悄悄退回預設的 `ok:true`——那樣會讓
+// 打錯字的環境變數看起來像「一切正常」，卻其實根本沒有注入到任何東西。
+export function parseStubResponse(
+  value: string | undefined,
+): StubApnsResponder | undefined {
+  if (value === undefined || value === "") return undefined;
+  if (value === "410") {
+    return () => ({
+      ok: false,
+      invalidToken: true,
+      error: "APNs 410 Unregistered（PUSH_DISPATCH_STUB_RESPONSE 注入）",
+    });
+  }
+  throw new Error(
+    `PUSH_DISPATCH_STUB_RESPONSE 不支援的值：${
+      JSON.stringify(value)
+    }（目前只支援 "410"）`,
+  );
+}
+
 export class StubApnsProvider implements ApnsProvider {
   readonly calls: { token: string; title: string; body: string }[] = [];
   constructor(
