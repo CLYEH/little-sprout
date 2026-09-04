@@ -40,6 +40,12 @@ export interface RecipientToken {
   platform: string;
 }
 
+/** 批次 getRecipients（LS-172 R2，merge-reviewer m1）多帶一個 eventId，供呼叫端
+ * 把同一次批次查詢回來的收件人列分回各自所屬的事件。 */
+export interface BatchRecipientRow extends RecipientToken {
+  eventId: string;
+}
+
 export type ApnsOutcome =
   | { ok: true }
   | { ok: false; invalidToken: boolean; error: string };
@@ -55,14 +61,28 @@ export interface Deps {
   batchLimit: number;
   /** 安全上限：避免佇列量體異常大時單次 invocation 執行時間失控（比照 purge-storage 的 MAX_BATCHES）。 */
   maxBatches: number;
+  /** 有上限的併發送出數（LS-172 R2，merge-reviewer m1）——同時最多幾個 in-flight 的 APNs 呼叫。 */
+  concurrency: number;
+  /** 時間預算（毫秒，LS-172 R2，merge-reviewer m1）：只在「開始下一批之前」檢查，
+   * 已 claim 的批次一定完整跑完，見 runDispatch 檔頭與 docs/API.md §10 的取捨說明。 */
+  timeBudgetMs: number;
+  /** 注入的時鐘（epoch 毫秒）：production 用 Date.now，測試用假時鐘控制時間預算判斷，不需要真的 sleep。 */
+  now(): number;
   claimEvents(
     limit: number,
   ): Promise<{ events: ClaimedEvent[]; error?: string }>;
+  /** 批次查詢：一次 SQL 呼叫取整批 claimed 事件的對象（LS-172 R2，merge-reviewer
+   * m1），不逐事件 round trip。回傳列各自帶 eventId，供呼叫端分組。 */
   getRecipients(
-    eventId: string,
-  ): Promise<{ recipients: RecipientToken[]; error?: string }>;
+    eventIds: string[],
+  ): Promise<{ recipients: BatchRecipientRow[]; error?: string }>;
   apnsProvider: ApnsProvider;
-  removeDeviceToken(token: string): Promise<{ ok: boolean; error?: string }>;
+  /** `deleted`：DELETE 是否真的刪到列（true）還是該列本來就不存在（false）——
+   * 只有真的刪到才該計入 tokensRemoved（LS-172 R2，merge-reviewer m2／i2）。
+   * `ok=false` 時 `deleted` 無意義（一律當作 false）。 */
+  removeDeviceToken(
+    token: string,
+  ): Promise<{ ok: boolean; deleted: boolean; error?: string }>;
   log(message: string): void;
 }
 
@@ -140,14 +160,27 @@ export class StubApnsProvider implements ApnsProvider {
 }
 
 // ---------------------------------------------------------------------------
-// runDispatch：claim → 逐事件查對象 → 組文案 → 逐 token 送出 → 失效 token 清除。
+// runDispatch：claim → 批次查對象 → 組文案 → 有上限併發送出 → 失效 token 清除。
 //
 // **漏送不重送（票文明定的取捨，寫入 docs/API.md）**：claimEvents 內部（SQL 面）
 // 已經先標記 sent_at，這裡任何一步失敗（getRecipients 出錯、單一 token 送出
-// 失敗）都只記 log、繼續處理下一個事件／token，不會讓已 claim 的事件回頭重新
+// 失敗）都只記 log、繼續處理下一批／下一個 token，不會讓已 claim 的事件回頭重新
 // 標記成待送——寧可某一則通知漏送，也不要因為重送導致同一則通知被重複推播
 // 給已經收到的人。批次迴圈的安全上限（maxBatches）比照 purge-storage 既有
 // 慣例，避免佇列量體異常大時單次 invocation 執行時間失控。
+//
+// **時間預算（LS-172 R2，merge-reviewer m1）——「已 claim 但沒送」不能發生**：
+// 時間預算只在「開始下一批之前」檢查；一旦一批事件被 claim（sent_at 已標記），
+// 這批**一定會完整跑完**，不會半途中止——這是結構性保證，不需要精準預測「這批
+// 要跑多久」。這個設計選擇（固定保守批次大小＋批次間檢查，而不是依剩餘時間動態
+// 縮小批次）的完整取捨與殘餘風險見 docs/API.md §10。
+//
+// **有上限的併發（LS-172 R2，merge-reviewer m1）**：同一批內的所有送出工作
+// （event × recipient 展開後的 token 清單）用 deps.concurrency 個 worker 平行
+// 處理，不是原本的全序列——`summary`／`removedTokens` 的更新都是同步語句（JS
+// 單執行緒，await 之間才會被交錯），沒有真正的資料競爭；但 removedTokens 的
+// 「先佔位再 await」寫法仍是必要的（見下方），避免同一個 token 被兩個並發中的
+// job 都判定成「還沒刪過」而重複計數（m2）。
 // ---------------------------------------------------------------------------
 
 export interface DispatchSummary {
@@ -156,6 +189,24 @@ export interface DispatchSummary {
   sent: number;
   failed: number;
   tokensRemoved: number;
+  /** 因為時間預算將盡而提早停止 claim 新批次（不是佇列已空、也不是出錯中止）。 */
+  stoppedEarly: boolean;
+}
+
+async function mapWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<void>,
+): Promise<void> {
+  let nextIndex = 0;
+  async function worker(): Promise<void> {
+    while (nextIndex < items.length) {
+      const i = nextIndex++;
+      await fn(items[i]);
+    }
+  }
+  const workerCount = Math.max(1, Math.min(limit, items.length));
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
 }
 
 export async function runDispatch(deps: Deps): Promise<DispatchSummary> {
@@ -165,10 +216,20 @@ export async function runDispatch(deps: Deps): Promise<DispatchSummary> {
     sent: 0,
     failed: 0,
     tokensRemoved: 0,
+    stoppedEarly: false,
   };
+  // 本次 invocation 內已經確認「刪過」（或確認「該列本來就不存在」）的 token——
+  // 去重用；也是併發下防止同一 token 被重複 DELETE／重複計數的關鍵（見下方）。
+  const removedTokens = new Set<string>();
+  const deadline = deps.now() + deps.timeBudgetMs;
 
   let batches = 0;
   while (batches < deps.maxBatches) {
+    if (deps.now() >= deadline) {
+      summary.stoppedEarly = true;
+      break;
+    }
+
     const { events, error: claimError } = await deps.claimEvents(
       deps.batchLimit,
     );
@@ -182,54 +243,75 @@ export async function runDispatch(deps: Deps): Promise<DispatchSummary> {
     batches++;
     summary.claimed += events.length;
 
-    for (const event of events) {
-      const { recipients, error: recError } = await deps.getRecipients(
-        event.id,
+    const eventIds = events.map((e) => e.id);
+    const { recipients, error: recError } = await deps.getRecipients(
+      eventIds,
+    );
+    if (recError) {
+      // 這批事件的 sent_at 已經被 claim 標記——批次查對象失敗只能整批略過
+      // （漏送），不會、也不能回頭重新標記成待送（見上方檔頭「漏送不重送」）。
+      // 繼續嘗試下一批，不是整支 invocation 直接中止。
+      deps.log(
+        `push-dispatch: getRecipients(批次 ${eventIds.length} 筆事件）失敗：${recError}`,
       );
-      if (recError) {
-        // 這個事件的 sent_at 已經被 claim 標記——查對象失敗只能略過（漏送），
-        // 不會、也不能回頭重新標記成待送（見上方檔頭「漏送不重送」）。
-        deps.log(
-          `push-dispatch: getRecipients(${event.id}) 失敗：${recError}`,
-        );
-        continue;
-      }
-      if (recipients.length === 0) continue; // 沒有人符合條件（例如唯一收件人剛好封鎖了 actor），不算失敗
-      summary.recipients += recipients.length;
+      continue;
+    }
 
+    const recipientsByEvent = new Map<string, BatchRecipientRow[]>();
+    for (const r of recipients) {
+      const list = recipientsByEvent.get(r.eventId);
+      if (list) list.push(r);
+      else recipientsByEvent.set(r.eventId, [r]);
+    }
+
+    const jobs: { token: string; body: string }[] = [];
+    for (const event of events) {
+      const eventRecipients = recipientsByEvent.get(event.id) ?? [];
+      if (eventRecipients.length === 0) continue; // 沒有人符合條件（例如唯一收件人剛好封鎖了 actor），不算失敗
+      summary.recipients += eventRecipients.length;
       const body = buildMessageBody(
         event.kind,
         event.eventCount,
         event.targetType,
         event.actorDisplayName,
       );
-
-      for (const recipient of recipients) {
-        const outcome = await deps.apnsProvider.send(
-          recipient.token,
-          APP_TITLE,
-          body,
-        );
-        if (outcome.ok) {
-          summary.sent++;
-          continue;
-        }
-        if (outcome.invalidToken) {
-          summary.tokensRemoved++;
-          const removed = await deps.removeDeviceToken(recipient.token);
-          if (!removed.ok) {
-            deps.log(
-              `push-dispatch: removeDeviceToken(${recipient.token}) 失敗：${removed.error}`,
-            );
-          }
-          continue;
-        }
-        summary.failed++;
-        deps.log(
-          `push-dispatch: 送出失敗 token=${recipient.token} error=${outcome.error}`,
-        );
-      }
+      for (const r of eventRecipients) jobs.push({ token: r.token, body });
     }
+
+    await mapWithConcurrency(jobs, deps.concurrency, async (job) => {
+      const outcome = await deps.apnsProvider.send(
+        job.token,
+        APP_TITLE,
+        job.body,
+      );
+      if (outcome.ok) {
+        summary.sent++;
+        return;
+      }
+      if (outcome.invalidToken) {
+        if (removedTokens.has(job.token)) return; // 本次 invocation 已經處理過這個 token，不重複計數
+        // 先佔位再 await：check 與 add 之間沒有任何 await，對 JS 單執行緒而言是
+        // 原子的——併發中的另一個 job 就算幾乎同時打到同一個 token，也一定會在
+        // 這一行之後才看到 removedTokens 已經有這個 token（m2：避免同一 token
+        // 被重複 DELETE、重複計入 tokensRemoved）。
+        removedTokens.add(job.token);
+        const removed = await deps.removeDeviceToken(job.token);
+        if (removed.error) {
+          deps.log(
+            `push-dispatch: removeDeviceToken(${job.token}) 失敗：${removed.error}`,
+          );
+        } else if (removed.deleted) {
+          summary.tokensRemoved++;
+        }
+        // removed.ok && !removed.deleted：該列本來就不存在（例如已被更早一輪
+        // 刪過）——不算失敗，也不計數；removedTokens 的佔位已經避免了重複嘗試。
+        return;
+      }
+      summary.failed++;
+      deps.log(
+        `push-dispatch: 送出失敗 token=${job.token} error=${outcome.error}`,
+      );
+    });
   }
 
   return summary;
@@ -244,6 +326,26 @@ function jsonResponse(status: number, body: Record<string, unknown>): Response {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+// 常數時間字串比對（LS-172 R2，merge-reviewer i4）：bearer token 比對如果用
+// `!==`，逐字元短路比較的耗時會隨「前面對到幾個字元」而異，理論上可被拿來做
+// timing attack 猜出正確的 service_role key。這裡改成：不論長度是否相符，都把
+// 兩個字串（UTF-8 位元組）逐位元組 XOR 累加到 `diff`，全部比完才判斷
+// `diff === 0`——耗時只跟兩個字串的最大長度有關，跟「哪裡開始不一樣」無關。
+// 長度不同時额外把 diff 標記為非 0（避免「長度不同就一定不等」被更快地判斷掉），
+// 但仍然跑完整輪迴圈，不提早 return。
+function timingSafeEqual(a: string, b: string): boolean {
+  const bytesA = new TextEncoder().encode(a);
+  const bytesB = new TextEncoder().encode(b);
+  const len = Math.max(bytesA.length, bytesB.length, 1);
+  let diff = bytesA.length === bytesB.length ? 0 : 1;
+  for (let i = 0; i < len; i++) {
+    const byteA = i < bytesA.length ? bytesA[i] : 0;
+    const byteB = i < bytesB.length ? bytesB[i] : 0;
+    diff |= byteA ^ byteB;
+  }
+  return diff === 0;
 }
 
 export async function handleRequest(
@@ -266,7 +368,7 @@ export async function handleRequest(
   const bearer = authHeader.startsWith("Bearer ")
     ? authHeader.slice("Bearer ".length)
     : "";
-  if (bearer !== deps.expectedServiceRoleKey) {
+  if (!timingSafeEqual(bearer, deps.expectedServiceRoleKey)) {
     return jsonResponse(401, { error: "只接受 service_role 呼叫" });
   }
 
@@ -274,7 +376,8 @@ export async function handleRequest(
     const summary = await runDispatch(deps);
     deps.log(
       `push-dispatch: claimed=${summary.claimed} recipients=${summary.recipients} ` +
-        `sent=${summary.sent} failed=${summary.failed} tokens_removed=${summary.tokensRemoved}`,
+        `sent=${summary.sent} failed=${summary.failed} tokens_removed=${summary.tokensRemoved} ` +
+        `stopped_early=${summary.stoppedEarly}`,
     );
     return jsonResponse(200, {
       claimed: summary.claimed,
@@ -282,6 +385,7 @@ export async function handleRequest(
       sent: summary.sent,
       failed: summary.failed,
       tokens_removed: summary.tokensRemoved,
+      stopped_early: summary.stoppedEarly,
     });
   } catch (err) {
     // 500 body 一律固定文案，不外洩原始錯誤（同 delete-account 既有慣例）。

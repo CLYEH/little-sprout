@@ -151,7 +151,18 @@ comment on function public.claim_notification_events(integer) is
   段。FOR UPDATE SKIP LOCKED 保證多個並發呼叫互不重疊。p_limit 夾在 [1, 500]。';
 
 -- ---------------------------------------------------------------------------
--- 2. notification_recipients(p_event_id)：對象判定＋device_tokens 展開
+-- 2. notification_recipients(p_event_ids)：對象判定＋device_tokens 展開
+--
+-- **LS-172 R2（merge-reviewer m1）改成批次簽章**：原本是 `notification_recipients
+-- (p_event_id uuid)`，逐事件呼叫一次；push-dispatch 的 handler.ts 一次要處理一整批
+-- （最多 batchLimit 筆）claimed 事件，逐事件各打一次這支 RPC 是不必要的 round
+-- trip。這裡直接改簽章成 `p_event_ids uuid[]`、回傳多帶一欄 `event_id`（呼叫端用
+-- 這欄把收件人列分回各自所屬的事件），不是新增一支重載——這支函式在本票落地前從未
+-- 併入任何分支，唯一呼叫方是本票自己的 handler.ts／SQL 測試（同一個 PR 內一併改
+-- 掉），沒有其他外部呼叫方需要相容舊簽章，保留一支沒人用的舊簽章只是累贅（Rule 2
+-- 簡單優先）。因為是同一支 migration 檔的內部修改（尚未部署、尚未併入
+-- origin/development），直接改這一段，不是另開一張 migration 疊代（migration
+-- 不可變的保護只適用於已併入 base 的檔案，見 migration-immutable-check.sh）。
 --
 -- 對象＝該事件所屬家庭的成員，扣掉：
 --   a) actor_id 本人（自己觸發的事件不通知自己）——`actor_id` 可能是 NULL（見上方
@@ -169,6 +180,11 @@ comment on function public.claim_notification_events(integer) is
 --      Function）逐列發送——這是刻意的：`token` 才是 APNs 呼叫的實際單位，不是
 --      `user_id`。
 --
+-- `ne.id = any(p_event_ids)`：`p_event_ids` 為 NULL 或空陣列時這個條件對所有列都
+-- 不成立（`= any('{}')` 恆假、`= any(NULL)` 恆為 NULL），回傳 0 列，不報錯——呼叫端
+-- （handler.ts）永遠是拿一批非空的 claimed 事件 id 進來，這裡的空輸入行為只是
+-- 防禦性的自然結果，不是特別為它寫的分支。
+--
 -- SECURITY DEFINER（同上方第 1 段的理由）：內部 JOIN 的三張表
 -- （`family_members`／`device_tokens`／`blocked_users`）對 `service_role` 都沒有
 -- 直接的 table grant（同 `notification_events` 的既有教訓，見檔頭第 4 段），
@@ -179,8 +195,11 @@ comment on function public.claim_notification_events(integer) is
 -- 慣例）：單一靜態聚合查詢，沒有游標／OR 分支，不受 LS-48 F1 的 inline 限制影響。
 -- ---------------------------------------------------------------------------
 
-create or replace function public.notification_recipients(p_event_id uuid)
+drop function if exists public.notification_recipients(uuid);
+
+create or replace function public.notification_recipients(p_event_ids uuid[])
 returns table (
+  event_id uuid,
   user_id uuid,
   token text,
   platform public.device_platform
@@ -190,11 +209,11 @@ stable
 security definer
 set search_path = ''
 as $$
-  select fm.user_id, dt.token, dt.platform
+  select ne.id as event_id, fm.user_id, dt.token, dt.platform
     from public.notification_events ne
     join public.family_members fm on fm.family_id = ne.family_id
     join public.device_tokens dt on dt.user_id = fm.user_id
-   where ne.id = p_event_id
+   where ne.id = any(p_event_ids)
      and fm.user_id is distinct from ne.actor_id
      and not exists (
        select 1
@@ -205,15 +224,16 @@ as $$
      );
 $$;
 
-revoke execute on function public.notification_recipients(uuid) from public, anon;
+revoke execute on function public.notification_recipients(uuid[]) from public, anon;
 
-comment on function public.notification_recipients(uuid) is
-  'LS-172——push-dispatch Edge Function 專用的對象判定函式（service_role-only，
-  SECURITY DEFINER）。回傳該事件所屬家庭成員（扣 actor 本人、扣封鎖 actor 的成員、
-  扣沒有裝置 token 的成員）× 其全部 device_tokens 的展開列——一個成員多支裝置會有
-  多列，呼叫端逐列（逐 token）發送。event_id 不存在或事件的 family_id 沒有任何
-  符合條件的成員時回傳 0 列，不報錯（同 get_my_join_request() 既有的「0 列＝空
-  結果」慣例）。';
+comment on function public.notification_recipients(uuid[]) is
+  'LS-172（R2 改批次簽章）——push-dispatch Edge Function 專用的對象判定函式
+  （service_role-only，SECURITY DEFINER）。一次吃一批 event_id，回傳每個事件所屬
+  家庭成員（扣 actor 本人、扣封鎖 actor 的成員、扣沒有裝置 token 的成員）× 其全部
+  device_tokens 的展開列，每列帶 event_id 供呼叫端分組——一個成員多支裝置會有多列，
+  呼叫端逐列（逐 token）發送。event_id 不存在或事件的 family_id 沒有任何符合條件的
+  成員時，該 event_id 對應的列就是 0 列，不報錯（同 get_my_join_request() 既有的
+  「0 列＝空結果」慣例）。';
 
 -- ---------------------------------------------------------------------------
 -- 3. device_tokens：補 service_role 的 SELECT(token)／DELETE grant（失效 token

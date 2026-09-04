@@ -490,7 +490,7 @@ declare
   v_service_role_rpcs text[] := array[
     'public.claim_notification_events(integer)',  -- LS-172：push-dispatch 用
     'public.finalize_account_deletion(uuid)',  -- LS-151：delete-account 用
-    'public.notification_recipients(uuid)',  -- LS-172：push-dispatch 用
+    'public.notification_recipients(uuid[])',  -- LS-172：push-dispatch 用（R2 改批次簽章，見 migration 檔頭第 2 段）
     'public.purge_storage_queue_mark_failed(uuid[], text)'  -- LS-153：purge-storage 用
   ];
   v_whitelist oid[];
