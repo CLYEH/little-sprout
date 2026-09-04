@@ -691,6 +691,156 @@ $$;
 rollback;
 
 -- ===========================================================================
+-- 5b. 頭像路徑的 UPDATE／DELETE：與 update_child 同一角色判準（LS-169 R2 M1）
+--
+-- 承上一段：`{yyyy}/{mm}` media 物件的「上傳者本人」判準對頭像固定路徑不適用——
+-- 孩子頭像是家庭共有物，orchestrator 裁定改用 `private.contributor_family_ids()`
+-- （owner／member，不看 can_upload，逐字比照 `update_child` 本身的授權判準）。
+-- 這裡直接以超級使用者身分種一筆「owner 上傳的頭像物件」（owner 欄位＝A 家 owner），
+-- 驗證 member／viewer／跨家庭三種角色對它的 UPDATE／DELETE 行為，以及既有
+-- `{yyyy}/{mm}` 分支（上一段已驗）完全不受影響。
+-- ===========================================================================
+begin;
+set local storage.allow_delete_query = 'true';
+
+insert into storage.objects (bucket_id, name, owner, owner_id) values
+  ('media', 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg',
+   'a0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000001');
+
+set local role authenticated;
+
+do $$
+declare
+  v_n int;
+begin
+  -- member（can_upload=true，既有 fixture）覆蓋 owner 上傳的頭像——這是 merge-review R1
+  -- M1 實測會被拒的情境，也是 i4 點名要補的探針：owner 上傳→member 覆蓋同一路徑。
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  update storage.objects set metadata = '{"size": 999}'
+   where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then
+    raise exception 'FAIL M1：可編輯孩子資料的 member 覆蓋不了 owner 上傳的頭像（影響 % 列）——family 角色判準沒生效', v_n;
+  end if;
+  raise notice 'ok M1：member（owner／member 皆可編輯孩子資料）覆蓋 owner 上傳的頭像成功';
+end;
+$$;
+
+-- 關掉這個 member 的 can_upload，驗證頭像分支真的「不看 can_upload」——跟
+-- update_child 的授權判準逐字一致（role in ('owner','member')，沒有 can_upload 這個條件）。
+-- 若這裡意外要求 can_upload，這一段會紅（跟第 4 段驗證既有 media 路徑「看 can_upload」
+-- 剛好是對照組，兩段合起來把「頭像分支跟既有分支判準不同」這件事釘住）。
+update public.family_members set can_upload = false
+ where family_id = 'fa000000-0000-4000-8000-000000000001'
+   and user_id = 'a0000000-0000-4000-8000-000000000002';
+
+do $$
+declare
+  v_n int;
+begin
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  update storage.objects set metadata = '{"size": 1000}'
+   where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then
+    raise exception 'FAIL M1：member 的 can_upload=false 時仍應能覆蓋頭像（與 update_child 判準一致、不看 can_upload），實際影響 % 列', v_n;
+  end if;
+  raise notice 'ok M1：頭像分支不看 can_upload——member 即使 can_upload=false 仍能覆蓋頭像';
+end;
+$$;
+
+update public.family_members set can_upload = true
+ where family_id = 'fa000000-0000-4000-8000-000000000001'
+   and user_id = 'a0000000-0000-4000-8000-000000000002';
+
+do $$
+declare
+  v_n int;
+  v_blocked boolean;
+  v_state text;
+begin
+  -- viewer 不是 contributor，覆蓋不了頭像
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+  update storage.objects set metadata = '{"size": 1}'
+   where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 0 then
+    raise exception 'FAIL：A 家 viewer 覆蓋了頭像（影響 % 列）——viewer 不該是 contributor', v_n;
+  end if;
+
+  -- 跨家庭：B 家 owner 動不了 A 家的頭像
+  perform set_config('request.jwt.claims',
+    '{"sub":"b0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+  update storage.objects set metadata = '{"size": 1}'
+   where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 0 then
+    raise exception 'FAIL 隔離：B 家 owner 覆蓋了 A 家的頭像（影響 % 列）', v_n;
+  end if;
+
+  -- DELETE 同一組判準：member 刪得掉，viewer／跨家庭刪不掉
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+  delete from storage.objects
+   where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 0 then
+    raise exception 'FAIL：A 家 viewer 刪掉了頭像（影響 % 列）', v_n;
+  end if;
+
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  delete from storage.objects
+   where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then
+    raise exception 'FAIL M1：member 刪不掉頭像（影響 % 列）', v_n;
+  end if;
+
+  raise notice 'ok M1：頭像 UPDATE／DELETE 與 update_child 同一角色判準——member 可覆蓋／可刪、viewer 與跨家庭皆擋下';
+end;
+$$;
+
+-- 改名搬家側門對頭像分支同樣要擋：member 把自家頭像路徑改名搬進 B 家——WITH CHECK
+-- 的 family 分支只看「新路徑」的第一段，這裡驗證新路徑跨家庭時仍被擋。
+-- reset role：這一段前面幾個 do 區塊切過 JWT claims／authenticated 角色，種 fixture
+-- 前先切回 postgres（繞過 RLS）才能自由指定 owner 欄位，同本檔案其餘 fixture 種法一致。
+reset role;
+insert into storage.objects (bucket_id, name, owner, owner_id) values
+  ('media', 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-0000000000f1.jpg',
+   'a0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000001');
+set local role authenticated;
+
+do $$
+declare
+  v_blocked boolean := false;
+  v_state text;
+begin
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  begin
+    update storage.objects
+       set name = 'fb000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-0000000000f1.jpg'
+     where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-0000000000f1.jpg';
+  exception when others then
+    v_blocked := true; v_state := sqlstate;
+  end;
+  if not v_blocked then
+    raise exception 'FAIL：member 把自家頭像改名搬進 B 家路徑成功了——頭像分支的 WITH CHECK 沒有擋住跨家庭搬移';
+  end if;
+  if v_state <> '42501' then
+    raise exception 'FAIL：頭像改名搬家被拒，但錯誤碼是 % 而不是 42501', v_state;
+  end if;
+  raise notice 'ok M1：頭像路徑改名搬進別家一樣被 WITH CHECK 擋下 (42501)';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
 -- 6. 「上傳者本人」的 (owner, owner_id) 五種組合
 --
 -- policy 用的是 `owner = me OR owner_id = me`——兩欄都認，因為 storage-api 依版本
