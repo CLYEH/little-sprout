@@ -5,9 +5,10 @@
 -- B 家：owner b1／member b2；C 家＝效能測試家，owner c1）。
 --
 -- 每個場景各自 begin/rollback，互不污染 fixtures（比照本目錄既有慣例）。
--- R2（merge-review R1 `23fa5e37`）新增場景 8–14，修正場景 1–7 不再寫
--- `suspended_reason`（MAJOR-1：那一欄已搬到 private.suspension_notes，不再是
--- profiles／families 的欄位）。
+-- R2（merge-review R1 `23fa5e37`）新增場景 8–13（n2 訂正：檔頭原寫 8–14，實際
+-- R2 只到 13），修正場景 1–7 不再寫 `suspended_reason`（MAJOR-1：那一欄已搬到
+-- private.suspension_notes，不再是 profiles／families 的欄位）。LS-182
+-- （merge-review R2 `0ccb5ef9` n3b）補場景 14。
 
 \set ON_ERROR_STOP on
 
@@ -758,6 +759,59 @@ begin
 
   reset role;
   raise notice 'ok：created_by 分支對停權的家庭正確拒絕（m2 回歸保護）';
+end;
+$$;
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- 場景 14（LS-182，merge-review R2 `0ccb5ef9` n3b）：停權者為唯一成員 ——
+-- delete_my_account() 情況 2（cascade 硬刪）成功，不受停權豁免機制影響
+-- ---------------------------------------------------------------------------
+-- 場景 10 的兩案（a2 在 A 家、b2 在 B 家）都是情況 3（軟刪＋離開家庭）——他們
+-- 都不是各自家庭的唯一成員。cascade 分支（情況 2：呼叫者是唯一 owner 且家庭
+-- 沒有其他成員）觸碰的 trigger 面比情況 3 更廣（整個 families 列連同底下十幾
+-- 張表一併 DELETE，見 migration `20260904212530_suspension_and_registrations.sql`
+-- 第 961-967 行的 cascade 分支）——merge-review R2（`0ccb5ef9` n3b）指出這個
+-- 分支對「停權者」沒有回歸測試，reviewer 自己手動驗過（A6：實測 families 0
+-- 列、deletion_requested_at 已標記，cascade 觸發的 15 張表 trigger 都正確走
+-- 豁免）但沒有留下機械保護。
+--
+-- 沿用既有的效能測試家庭（`00_fixtures.sql` 的 fc000000-…-0001／「效能家」，
+-- 唯一成員兼 owner＝c0000000-…-0001，fixtures 從未給它加過第二個成員）——不必
+-- 另外造一組獨居 fixture，且全程包在 begin/rollback 內，不影響其他測試檔
+-- 對這個家庭的既有假設。
+begin;
+
+update public.profiles set suspended_at = now()
+ where id = 'c0000000-0000-4000-8000-000000000001';
+
+do $$
+declare
+  v_deletion_requested timestamptz;
+  n int;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'c0000000-0000-4000-8000-000000000001', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  perform public.delete_my_account();
+
+  reset role;
+
+  select count(*) into n from public.families
+   where id = 'fc000000-0000-4000-8000-000000000001';
+  if n <> 0 then
+    raise exception 'FAIL：被停權的唯一成員刪帳號後，家庭列還在（情況 2 cascade 應該把整個家庭刪掉）';
+  end if;
+
+  select deletion_requested_at into v_deletion_requested from public.profiles
+   where id = 'c0000000-0000-4000-8000-000000000001';
+  if v_deletion_requested is null then
+    raise exception 'FAIL：被停權的唯一成員呼叫 delete_my_account() 之後 deletion_requested_at 仍是 NULL';
+  end if;
+
+  raise notice 'ok：被停權的唯一成員（owner）呼叫 delete_my_account()——情況 2 cascade 硬刪成功（families 0 列），deletion_requested_at 已標記（merge-review R2 n3b 回歸保護）';
 end;
 $$;
 
