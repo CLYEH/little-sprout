@@ -115537,7 +115537,8 @@
                               "fill": "$danger"
                             },
                             "mW0Ox": {
-                              "fill": "$danger"
+                              "fill": "$text-secondary",
+                              "enabled": true
                             }
                           }
                         }
@@ -116177,7 +116178,8 @@
                               "fill": "$danger"
                             },
                             "mW0Ox": {
-                              "fill": "$danger"
+                              "fill": "$text-secondary",
+                              "enabled": true
                             }
                           }
                         }
@@ -116817,7 +116819,8 @@
                               "fill": "$danger"
                             },
                             "mW0Ox": {
-                              "fill": "$danger"
+                              "fill": "$text-secondary",
+                              "enabled": true
                             }
                           }
                         }
@@ -119868,16 +119871,13 @@
                   "id": "RGVAv",
                   "name": "Hint Row",
                   "width": "fill_container",
-                  "height": "fit_content(0)",
+                  "height": 50,
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "icon",
                       "id": "SnHtr",
-                      "x": 0,
-                      "y": 0,
                       "name": "Icon",
-                      "enabled": false,
                       "width": 18,
                       "height": 18,
                       "icon": "circle-alert",
@@ -119887,13 +119887,10 @@
                     {
                       "type": "text",
                       "id": "bHrby",
-                      "x": 0,
-                      "y": 0,
                       "name": "Text",
-                      "enabled": false,
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
-                      "width": "fill_container(0)",
+                      "width": "fill_container",
                       "content": "請先在上面輸入「刪除帳號」四個字，才能繼續。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
@@ -120425,43 +120422,19 @@
           ],
           "children": [
             {
-              "type": "frame",
-              "id": "NMEcR",
+              "id": "i1gXZy",
+              "type": "ref",
+              "ref": "OKSJI",
               "name": "Retry Button",
               "width": "fill_container",
-              "fill": "$surface",
-              "cornerRadius": "$radius-md",
-              "stroke": "$danger",
-              "strokeWidth": 1.5,
-              "gap": "$sp-label",
-              "padding": [
-                "$ctl-pad-cta",
-                20
-              ],
-              "justifyContent": "center",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "QrgPB",
-                  "name": "Icon",
-                  "width": 22,
-                  "height": 22,
-                  "icon": "rotate-ccw",
-                  "library": "lucide",
-                  "fill": "$danger"
+              "descendants": {
+                "s9bME2": {
+                  "icon": "rotate-ccw"
                 },
-                {
-                  "type": "text",
-                  "id": "U901S",
-                  "name": "Label",
-                  "fill": "$danger",
-                  "content": "重試",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-body",
-                  "fontWeight": "700"
+                "w7CUP": {
+                  "content": "重試"
                 }
-              ]
+              }
             },
             {
               "id": "E3oTm",
@@ -120943,6 +120916,8 @@
                       "id": "W1Iwnt",
                       "name": "Reason · 騷擾、霸凌或恐嚇",
                       "width": "fill_container",
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
                       "gap": "$sp-group",
                       "padding": [
                         "$sp-item",
@@ -120958,7 +120933,7 @@
                           "height": 22,
                           "icon": "circle-check",
                           "library": "lucide",
-                          "fill": "$accent"
+                          "fill": "$text-primary"
                         },
                         {
                           "type": "text",
@@ -121978,6 +121953,7 @@
                               "type": "frame",
                               "id": "h2npak",
                               "name": "Unblock Button",
+                              "height": 44,
                               "fill": "$surface",
                               "cornerRadius": "$radius-md",
                               "stroke": "$control-line",
@@ -121987,6 +121963,7 @@
                                 "$sp-label",
                                 "$sp-item"
                               ],
+                              "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
                                 {
@@ -123738,7 +123715,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 959,
+      "height": 1168,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -123886,16 +123863,13 @@
                   "id": "xG30l",
                   "name": "Hint Row",
                   "width": "fill_container",
-                  "height": "fit_content(0)",
+                  "height": 232,
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "icon",
                       "id": "N3g0A",
-                      "x": 0,
-                      "y": 0,
                       "name": "Icon",
-                      "enabled": false,
                       "width": 18,
                       "height": 18,
                       "icon": "circle-alert",
@@ -123905,13 +123879,10 @@
                     {
                       "type": "text",
                       "id": "NAfSJ",
-                      "x": 0,
-                      "y": 0,
                       "name": "Text",
-                      "enabled": false,
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
-                      "width": "fill_container(0)",
+                      "width": "fill_container",
                       "content": "請先在上面輸入「刪除帳號」四個字，才能繼續。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
