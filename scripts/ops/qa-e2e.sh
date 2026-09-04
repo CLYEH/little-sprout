@@ -6,12 +6,15 @@
 # 多步驟操作做不了；同一 build 用 `xcodebuild test -only-testing:LittleSproutUITests` 可正常驅動。
 #
 # 用法：qa-e2e.sh <login|publish|browse> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]
-#   login    先 `simctl keychain reset`（從未登入狀態開始）→ 歡迎頁 → Email → Mailpit 取 6 碼 → 確認登入 → 落點
-#   publish  先 `simctl addmedia` LittleSproutUITests/QA/Fixtures 的照片＋影片 → 新增回憶 → 相簿選圖 → 發佈 → 卡片出現
-#   browse   日記卡 → 詳情 → 返回 → 相簿分頁 → 時間軸（時間軸空的話先發一篇純文字當對象）
+#   login    歡迎頁 → Email → Mailpit 取 6 碼 → 確認登入 → 落點（三岔路或時間軸）
+#   publish  先 `simctl addmedia` LittleSproutUITests/QA/Fixtures 的照片＋影片 →（登入／建家庭）→ 新增回憶 → 相簿選圖 → 發佈 → 卡片出現
+#   browse   （登入／建家庭）→ 日記卡 → 詳情 → 返回 → 相簿分頁 → 時間軸（時間軸空的話先發一篇純文字當對象）
+#   每個情境都先 `simctl keychain reset`、從未登入狀態開始、各自 OTP 登入同一帳號——不沿用上一個情境留在 Keychain 的
+#   session：共用容器隨時可能被他票 reset（本票實測：browse 沿用 login 的 session，中間 QA 冒煙 reset 過，建家庭被後端拒），
+#   舊 session 對應的使用者已不存在會把環境問題誤報成 app 缺陷；OTP 一次 ~10 秒、`max_frequency = "1s"`，重登不貴。
 #   --sim     指定既有模擬器（名稱須精確）；預設 `<票號>-iPhone17Pro`，不存在就建（iPhone 17 Pro、最新 iOS runtime）
 #   --ticket  票號；預設從目前 worktree 目錄名推（`.claude/worktrees/LS-<n>`），推不出就要求明給
-#   --email   三個情境共用的測試帳號（預設 qa-e2e@ls.test；login 之後 session 留在模擬器 Keychain）
+#   --email   三個情境共用的測試帳號（預設 qa-e2e@ls.test；同一帳號才讓 browse 看得到 publish 剛發的那篇）
 # 環境變數：LS_QA_MAILPIT 覆寫 Mailpit URL（預設讀 `supabase status` 的 MAILPIT_URL，再退 http://127.0.0.1:54324）。
 #
 # 做的事（順序即防線）：
@@ -19,13 +22,14 @@
 #   2. `supabase status -o env` 讀 API_URL／ANON_KEY／MAILPIT_URL——取不到＝容器沒跑，exit 2；再各打一次
 #      health（Mailpit `/api/v1/info`、GoTrue `/auth/v1/health`）確認可達。
 #   3. 模擬器：找／建專屬機、boot（自己 boot 的收工自己 shutdown，LS-100；本來就 Booted 的不動）。
-#   4. 情境前置：login → keychain reset；publish → addmedia fixtures。
+#   4. 情境前置：一律 keychain reset（見上）；publish 另 addmedia fixtures。
 #   5. `supabase-lock.sh --hold "<票號> qa-e2e <情境>" --max-minutes 25`——整段 UI 操作期間其他 worktree 的
 #      db reset 排隊（LS-159／LS-170）；呼叫者已經持有（同 worktree）就沿用、不重複 hold、收工也不代釋放。
 #   6. `xcodebuild test -only-testing:LittleSproutUITests/QASmokeTests`，環境以 TEST_RUNNER_LS_QA_* 交給
 #      runner（xcodebuild 剝前綴），UI test 再經 launchEnvironment 注入 app（SupabaseClientFactory.qaOverride，DEBUG）。
 #   7. 證據：`.claude/evidence/<票號>/qa-e2e/<情境>-<時間>/`——xcodebuild.log、result.xcresult、
-#      screens/<情境>-<序號>-<步驟>.png（xcresulttool export attachments 後依 manifest 改名）、storage.log
+#      screens/<情境>-<序號>-<步驟>.png（xcresulttool export attachments 後依 manifest 改名；Xcode 失敗時自動收的
+#      螢幕錄影／UI snapshot／debug description 另放 diagnostics/）、storage.log
 #      （`docker logs --since <開跑時間>` supabase_storage 容器；失敗只註記不擋）。
 # exit：0＝情境通過；1＝情境失敗（xcodebuild test 紅，log 尾段印出）；2＝參數／環境／模擬器錯誤（fail closed）。
 # 自測：qa-e2e.test.sh（PATH shim，不實跑 xcodebuild）。規約：.claude/agents/qa.md、docs/COLLABORATION.md §4-b／§7。
@@ -118,15 +122,13 @@ if [ "$state" != Booted ]; then
   booted_by_me=1
 fi
 
-# ---- 4. 情境前置 ----
+# ---- 4. 情境前置（每個情境都從未登入狀態開始，理由見檔頭）----
 fixtures="${root}/LittleSproutUITests/QA/Fixtures"
-case "$scenario" in
-  login)
-    xcrun simctl keychain "$udid" reset >/dev/null 2>&1 || { echo "✗ qa-e2e：simctl keychain reset 失敗——login 要從未登入狀態開始" >&2; exit 2; } ;;
-  publish)
-    [ -f "$fixtures/qa-photo.jpg" ] && [ -f "$fixtures/qa-video.mp4" ] || { echo "✗ qa-e2e：缺 fixture（${fixtures}/qa-photo.jpg／qa-video.mp4）" >&2; exit 2; }
-    xcrun simctl addmedia "$udid" "$fixtures/qa-photo.jpg" "$fixtures/qa-video.mp4" || { echo "✗ qa-e2e：simctl addmedia 失敗" >&2; exit 2; } ;;
-esac
+xcrun simctl keychain "$udid" reset >/dev/null 2>&1 || { echo "✗ qa-e2e：simctl keychain reset 失敗——情境要從未登入狀態開始" >&2; exit 2; }
+if [ "$scenario" = publish ]; then
+  [ -f "$fixtures/qa-photo.jpg" ] && [ -f "$fixtures/qa-video.mp4" ] || { echo "✗ qa-e2e：缺 fixture（${fixtures}/qa-photo.jpg／qa-video.mp4）" >&2; exit 2; }
+  xcrun simctl addmedia "$udid" "$fixtures/qa-photo.jpg" "$fixtures/qa-video.mp4" || { echo "✗ qa-e2e：simctl addmedia 失敗" >&2; exit 2; }
+fi
 
 # ---- 5. 持有 lock（LS-159／LS-170）----
 held_by_me=0
@@ -174,19 +176,23 @@ if [ -d "$result" ]; then
   tmp_export=$(mktemp -d -t qa-e2e-attachments)
   if xcrun xcresulttool export attachments --path "$result" --output-path "$tmp_export" >/dev/null 2>&1 \
      && [ -f "$tmp_export/manifest.json" ]; then
-    python3 - "$tmp_export" "$out/screens" <<'PY'
+    python3 - "$tmp_export" "$out/screens" "$out/diagnostics" "$scenario" <<'PY'
 import json, os, re, shutil, sys
-src, dst = sys.argv[1], sys.argv[2]
+src, dst, diag, scenario = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 # suggestedHumanReadableName 形如 `login-01-welcome_0_<UUID>.png`（Xcode 匯出時加的序號＋UUID）——剝掉尾綴，
 # 留 QADriver.snap 給的 `<情境>-<序號>-<步驟>`；同名（重跑同一步）才保留尾綴避免覆蓋。
+# QADriver 以外的附件（Xcode 失敗時自動收的 Screen Recording／UI Snapshot／Synthesized Event／debug description／
+# App UI hierarchy）不混進 screens/——另放 diagnostics/，失敗時仍看得到、通過時通常不存在。
 for test in json.load(open(os.path.join(src, "manifest.json"))):
     for att in test.get("attachments", []):
         exported = att.get("exportedFileName"); name = att.get("suggestedHumanReadableName") or exported
         if not exported: continue
         ext = os.path.splitext(exported)[1] or ".png"
         base = re.sub(r"_\d+_[0-9A-Fa-f-]{36}$", "", os.path.splitext(name)[0] if name.endswith(ext) else name)
-        target = os.path.join(dst, base + ext)
-        if os.path.exists(target): target = os.path.join(dst, os.path.splitext(name)[0] + ext)
+        folder = dst if base.startswith(scenario + "-") else diag
+        os.makedirs(folder, exist_ok=True)
+        target = os.path.join(folder, base + ext)
+        if os.path.exists(target): target = os.path.join(folder, os.path.splitext(name)[0] + ext)
         shutil.move(os.path.join(src, exported), target)
 PY
   else

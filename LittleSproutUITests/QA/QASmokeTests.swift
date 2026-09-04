@@ -46,7 +46,7 @@ final class QASmokeTests: XCTestCase {
 // MARK: - 三個情境
 
 extension QADriver {
-    /// `login` 必須從未登入狀態開始——`qa-e2e.sh` 對這個情境先 `simctl keychain <udid> reset`
+    /// `login` 必須從未登入狀態開始——`qa-e2e.sh` 對每個情境都先 `simctl keychain <udid> reset`
     /// 清掉上一輪留下的 session；沒清乾淨就在這裡大聲失敗，不會偷偷改測「已登入」。
     func runLogin() async throws {
         launch()

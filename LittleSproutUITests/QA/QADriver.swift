@@ -122,7 +122,8 @@ final class QADriver {
         snap(landed == "時間軸" ? "landed-timeline" : "landed-fork")
     }
 
-    /// 模擬器 Keychain 還留著 session（上一個情境登入過）就直接沿用，否則走一次 OTP 登入。
+    /// `qa-e2e.sh` 跑前已 `keychain reset`，正常會從歡迎頁開始走一次 OTP 登入；仍容忍「已登入」（例如
+    /// 手動 `xcodebuild test` 沒清 Keychain）——不是為了沿用 session，只是不因此多一個失敗模式。
     func ensureLoggedIn() async throws {
         launch()
         if welcomeEmailButton.waitForExistence(timeout: 8) {
@@ -143,7 +144,9 @@ final class QADriver {
             nameField.typeText("QA e2e")
             snap("create-family")
             try require(app.buttons["建立家庭"], "建立家庭").tap()
-            try require(app.buttons["之後再說"], "寶貝建檔頁（可跳過）", timeout: 30).tap()
+            // 等不到＝建立家庭被後端拒（截圖上會有紅字錯誤列；本票實測過：他票 reset 容器後舊 session 的
+            // 使用者已不存在）或建檔頁沒彈出——訊息帶截圖，QA 直接看得出是環境還是 app。
+            try require(app.buttons["之後再說"], "寶貝建檔頁（可跳過）——建立家庭後應彈出", timeout: 30).tap()
         }
         try require(timelineHeading, "時間軸", timeout: 30)
         snap("timeline")

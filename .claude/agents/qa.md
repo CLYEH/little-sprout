@@ -26,9 +26,9 @@ model: sonnet
 
 ## 端到端驅動（LS-158）——多步驟驗收優先，mobile-mcp 降為輔助
 LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED 的根因是 mobile-mcp 每次互動把模擬器前景重設回主畫面（WebDriverAgent session 未沿用），多步驟導覽做不了；同一 build 用 XCUITest 驅動正常。自此**多步驟驗收一律先跑** `bash scripts/ops/qa-e2e.sh <login|publish|browse> [--sim <名>] [--ticket LS-<n>] [--email <信箱>]`——`LittleSproutUITests/QA/QASmokeTests` 對**本機 Supabase 容器**（不是 mock）實跑三條可重放路徑：
-- `login`：先 `simctl keychain reset`（從未登入狀態開始）→ 歡迎頁 → Email → 自 Mailpit API 取 6 碼 → 確認登入 → 落點（三岔路或時間軸）。
-- `publish`：先 `simctl addmedia` `LittleSproutUITests/QA/Fixtures/` 的照片＋影片進模擬器相簿 → 新增回憶 → 內文 → 相簿選那兩個 fixture → 發佈 → 時間軸出現那張卡（含真上傳，等 90 秒）。
-- `browse`：日記卡 → 詳情（內文＋照片牆）→ 返回 → 相簿分頁 → 時間軸；時間軸空的話先發一篇純文字當對象。三情境共用帳號 `qa-e2e@ls.test`（`--email` 可換），`login` 之後 session 留在模擬器 Keychain，`publish`／`browse` 直接沿用；**容器被 reset 過就先重跑 `login`**（舊 session 對應的使用者已不存在）。
+- `login`：歡迎頁 → Email → 自 Mailpit API 取 6 碼 → 確認登入 → 落點（三岔路或時間軸）。
+- `publish`：先 `simctl addmedia` `LittleSproutUITests/QA/Fixtures/` 的照片＋影片進模擬器相簿 →（登入／建家庭）→ 新增回憶 → 內文 → 相簿選那兩個 fixture → 發佈 → 時間軸出現那張卡（含真上傳，等 90 秒）。
+- `browse`：（登入／建家庭）→ 日記卡 → 詳情（內文＋照片牆）→ 返回 → 相簿分頁 → 時間軸；時間軸空的話先發一篇純文字當對象。三情境共用帳號 `qa-e2e@ls.test`（`--email` 可換）但**每個情境都先 `simctl keychain reset`、各自 OTP 登入**——不沿用 Keychain 裡上一情境的 session：共用容器隨時可能被他票 reset，舊 session 的使用者已不存在會把環境問題誤報成「建立家庭沒有成功」（LS-158 實測），重登只多 ~10 秒。
 腳本自己做的事：讀 `supabase status` 帶入 API URL／anon key／Mailpit（取不到＝容器沒跑，exit 2）；找／建專屬模擬器 `<票號>-iPhone17Pro`（自己 boot 的收工自己關，LS-100）；整段 **`supabase-lock.sh --hold "<票號> qa-e2e <情境>"`**（你已經 `--hold` 就沿用、不重複也不代釋放）；`xcodebuild test -only-testing:LittleSproutUITests/QASmokeTests`；證據落 **`.claude/evidence/<票號>/qa-e2e/<情境>-<時間>/`**——`screens/<情境>-<序號>-<步驟>.png`（每步一張，等不到元素那步另附 a11y 階層）、`storage.log`（Storage 容器 stdout，`docker logs --since 開跑時間`，驗「只命中 `_thumb.jpg`」這類請求路徑）、`xcodebuild.log`、`result.xcresult`。exit 0＝通過、1＝情境紅（log 尾段印出）、2＝環境／參數錯。裁決 comment 引用這個目錄；票號從 worktree 目錄名推，qa-test 這種固定 worktree 加 `--ticket LS-<n>`。情境沒涵蓋的驗收點（特定畫面狀態、Dynamic Type、單張對稿截圖）再用 mobile-mcp 或 `xcrun simctl io` 補；mobile-mcp 連續互動又出現「回到主畫面」時，不要跟它耗——改用 e2e 情境拿到多步驟證據後只用它截單張。
 
 ## 視覺驗收（UI 票必做）
