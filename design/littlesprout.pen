@@ -137743,6 +137743,2871 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "EzJCV",
+      "x": -3367,
+      "y": 53510,
+      "name": "LS legal / 文件檢視 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "Zg1x3",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "IeLM2",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 852,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "M5ktLZ",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 852,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "D2vvy",
+              "name": "Legal Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                0,
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "FdUgo",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "v6xWQb",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "b1eOeA",
+                      "name": "Doc Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "使用條款",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "MNw3B",
+                      "name": "Doc Meta",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "版本 0.1（草稿）· 生效日期：核可後公布",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "lfqFh",
+                  "name": "Header Hairline",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "BqbSV",
+                  "name": "Scroll Body",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 480,
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "H9eCSN",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請仔細閱讀本條款。登入或使用「萌芽日記 Little Sprout」（下稱「本服務」或「App」）即表示您同意受本條款與《隱私權政策》拘束。本服務是為家人打造的私密相簿與日記；本條款的核心是：您的內容屬於您，只有您的家庭看得到，而我們對冒犯性內容零容忍。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "A0suEO",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1. 條款的接受與適用",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "b7xDfh",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.1　本條款是您與本服務營運者之間具有法律效力的協議。當您登入、建立家庭、加入家庭或以任何方式使用本服務，即表示您已閱讀、理解並同意本條款及《隱私權政策》。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "eFnjQ",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.2　透過 Apple App Store 取得本 App 的使用者，另受 Apple 的《授權應用程式使用者授權合約》及我們的《EULA 附加條款》拘束。本條款與該等文件有牴觸時，就 Apple 與 App Store 相關事項以 Apple 標準 EULA 為準，其餘以本條款為準。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "zNJGE",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.3　若您不同意本條款的任何部分，請勿使用本服務，並可依相關條款刪除帳號。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "q6XhI8",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2. 服務內容",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "lS6Ax",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.1　本服務提供一個以「家庭」為單位的私密空間，讓家庭成員上傳與瀏覽孩子的照片、影片，撰寫日記，並以留言與愛心互動。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "lITi5",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.2　本服務不是備份服務。請務必自行保留照片與影片的原始檔案；我們不保證資料永久可用。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "HhYEr",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "l7rVvi",
+                      "name": "Footer Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XaeP8",
+                      "name": "Footer Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-item",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "JenIe",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Close Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "x"
+                            },
+                            "yxwnz": {
+                              "content": "關閉"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "O631mm",
+      "x": -3367,
+      "y": 54442,
+      "name": "LS legal / 文件檢視 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "dQWLV",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "oe8X2",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 852,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "PuJ2I",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 852,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "G8k9VA",
+              "name": "Legal Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                0,
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "Mlm1m",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "s91Cbw",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "PbxqT",
+                      "name": "Doc Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "使用條款",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "rrCKx",
+                      "name": "Doc Meta",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "版本 0.1（草稿）· 生效日期：核可後公布",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "p41LQ",
+                  "name": "Header Hairline",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "K36u8",
+                  "name": "Scroll Body",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 480,
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vr8v2",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請仔細閱讀本條款。登入或使用「萌芽日記 Little Sprout」（下稱「本服務」或「App」）即表示您同意受本條款與《隱私權政策》拘束。本服務是為家人打造的私密相簿與日記；本條款的核心是：您的內容屬於您，只有您的家庭看得到，而我們對冒犯性內容零容忍。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ZsrrB",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1. 條款的接受與適用",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "nPCrK",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.1　本條款是您與本服務營運者之間具有法律效力的協議。當您登入、建立家庭、加入家庭或以任何方式使用本服務，即表示您已閱讀、理解並同意本條款及《隱私權政策》。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "JAIeL",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.2　透過 Apple App Store 取得本 App 的使用者，另受 Apple 的《授權應用程式使用者授權合約》及我們的《EULA 附加條款》拘束。本條款與該等文件有牴觸時，就 Apple 與 App Store 相關事項以 Apple 標準 EULA 為準，其餘以本條款為準。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "vhMAW",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.3　若您不同意本條款的任何部分，請勿使用本服務，並可依相關條款刪除帳號。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "NBAEt",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2. 服務內容",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Db4sE",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.1　本服務提供一個以「家庭」為單位的私密空間，讓家庭成員上傳與瀏覽孩子的照片、影片，撰寫日記，並以留言與愛心互動。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "m9B5h8",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.2　本服務不是備份服務。請務必自行保留照片與影片的原始檔案；我們不保證資料永久可用。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "sobFX",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "RkfEf",
+                      "name": "Footer Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "u53w7",
+                      "name": "Footer Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-item",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "Gmzuz",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Close Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "x"
+                            },
+                            "yxwnz": {
+                              "content": "關閉"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "E27nKz",
+      "x": -3367,
+      "y": 55374,
+      "name": "A11y / 文件檢視 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 2800,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "M15ryH",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "cgd6P",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 2800,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "CozLy",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 2800,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "dZ4uS",
+              "name": "Legal Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                0,
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "Bb5Hi",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "ImZfZ",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "V68Wp",
+                      "name": "Doc Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "使用條款",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "b8JXO",
+                      "name": "Doc Meta",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "版本 0.1（草稿）· 生效日期：核可後公布",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "txLP6",
+                  "name": "Header Hairline",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "R8deeK",
+                  "name": "Scroll Body",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 2278,
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "yQZa8",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請仔細閱讀本條款。登入或使用「萌芽日記 Little Sprout」（下稱「本服務」或「App」）即表示您同意受本條款與《隱私權政策》拘束。本服務是為家人打造的私密相簿與日記；本條款的核心是：您的內容屬於您，只有您的家庭看得到，而我們對冒犯性內容零容忍。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "RPELE",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1. 條款的接受與適用",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "x5nrDb",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.1　本條款是您與本服務營運者之間具有法律效力的協議。當您登入、建立家庭、加入家庭或以任何方式使用本服務，即表示您已閱讀、理解並同意本條款及《隱私權政策》。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "AXKtM",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.2　透過 Apple App Store 取得本 App 的使用者，另受 Apple 的《授權應用程式使用者授權合約》及我們的《EULA 附加條款》拘束。本條款與該等文件有牴觸時，就 Apple 與 App Store 相關事項以 Apple 標準 EULA 為準，其餘以本條款為準。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "LHux8",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.3　若您不同意本條款的任何部分，請勿使用本服務，並可依相關條款刪除帳號。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "OPiuM",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2. 服務內容",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "kL2IM",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.1　本服務提供一個以「家庭」為單位的私密空間，讓家庭成員上傳與瀏覽孩子的照片、影片，撰寫日記，並以留言與愛心互動。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Py99f",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.2　本服務不是備份服務。請務必自行保留照片與影片的原始檔案；我們不保證資料永久可用。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "QKje0",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "LF32i",
+                      "name": "Footer Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Hey6y",
+                      "name": "Footer Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-item",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "jI1XQ",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Close Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "x"
+                            },
+                            "yxwnz": {
+                              "content": "關閉"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "uQeV8",
+      "x": -3367,
+      "y": 57923,
+      "name": "LS legal / 文件檢視 (iPad 11\")",
+      "clip": true,
+      "width": 834,
+      "height": 1194,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.06594724220623502,
+          "y": 0.01423785594639866
+        }
+      },
+      "cornerRadius": 28,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "oZp4P",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container",
+          "padding": [
+            0,
+            "$screen-pad-lg"
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Di8Mu",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 834,
+          "height": 1194,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "ANzjU",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Card Wrap",
+          "width": 834,
+          "height": 1194,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "veB5F",
+              "name": "Legal Card",
+              "width": 520,
+              "fill": "$surface",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 8
+                },
+                "blur": 32
+              },
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": 87.5,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ZF0q3",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "KKrO6",
+                      "name": "Doc Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "使用條款",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "SXeAe",
+                      "name": "Doc Meta",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "版本 0.1（草稿）· 生效日期：核可後公布",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "Oeb95",
+                  "name": "Header Hairline",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "UFzlX",
+                  "name": "Scroll Body",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 480,
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "e1Ani",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請仔細閱讀本條款。登入或使用「萌芽日記 Little Sprout」（下稱「本服務」或「App」）即表示您同意受本條款與《隱私權政策》拘束。本服務是為家人打造的私密相簿與日記；本條款的核心是：您的內容屬於您，只有您的家庭看得到，而我們對冒犯性內容零容忍。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ezt4p",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1. 條款的接受與適用",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "HmT6G",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.1　本條款是您與本服務營運者之間具有法律效力的協議。當您登入、建立家庭、加入家庭或以任何方式使用本服務，即表示您已閱讀、理解並同意本條款及《隱私權政策》。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "O7TuPe",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.2　透過 Apple App Store 取得本 App 的使用者，另受 Apple 的《授權應用程式使用者授權合約》及我們的《EULA 附加條款》拘束。本條款與該等文件有牴觸時，就 Apple 與 App Store 相關事項以 Apple 標準 EULA 為準，其餘以本條款為準。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "P85Kx",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.3　若您不同意本條款的任何部分，請勿使用本服務，並可依相關條款刪除帳號。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "pWLTr",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2. 服務內容",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "kZ8GU",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.1　本服務提供一個以「家庭」為單位的私密空間，讓家庭成員上傳與瀏覽孩子的照片、影片，撰寫日記，並以留言與愛心互動。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "EKs26",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.2　本服務不是備份服務。請務必自行保留照片與影片的原始檔案；我們不保證資料永久可用。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "d2XVS5",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "jdisg",
+                      "name": "Footer Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "id": "YYJ84",
+                      "type": "ref",
+                      "ref": "XggYA",
+                      "name": "Close Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "G4R75k": {
+                          "icon": "x"
+                        },
+                        "yxwnz": {
+                          "content": "關閉"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "pLLXi",
+      "x": -3367,
+      "y": 59237,
+      "name": "LS-133 / 實作註記 · Handoff Notes (ios-dev)",
+      "width": 900,
+      "fill": "$print-paper",
+      "cornerRadius": 24,
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 44,
+      "children": [
+        {
+          "type": "text",
+          "id": "b0x0n",
+          "name": "NT",
+          "fill": "$print-ink",
+          "content": "LS-133 法務文件 in-app 檢視 · Handoff Notes",
+          "lineHeight": 1.25,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 34,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "sQBpI",
+          "name": "NS",
+          "fill": "$print-ink-secondary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "R1 首輪產出。新畫面「LS legal / 文件檢視」：歡迎頁《使用條款》《隱私權政策》連結從跳出瀏覽器改為 in-app bottom sheet（iPad 為置中卡片）。內容來源與 App bundle 內 markdown 同一份（docs/legal/terms-of-service.md），本輪以其開頭 2 節真實文字為稿，非 lorem。歡迎頁連結本身樣式完全不動。",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "xb3kX",
+          "name": "N 畫面級屬性清單",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "vFwAf",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "畫面級屬性清單",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "UPf7w",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "BjfDm",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "w7eBc",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "5 板：EzJCV（LS legal / 文件檢視 (iPhone)）、O631mm（同板 · 深色，theme mode=dark）、E27nKz（A11y / 文件檢視 · Dynamic Type AX3，theme size=ax3）、uQeV8（LS legal / 文件檢視 (iPad 11\")）、k6Rlt（A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3，R2 新增，見「R2 修訂重點」節）。皆為「純閱讀」畫面：無同意／不同意動作，只有一顆「關閉」鈕，不吃 $accent 配額（十條 #1 一畫面一實心主鈕——本畫面連 0 顆都不需要，關閉鈕用 cmp/Button Secondary 中性樣式）。**Footer（含關閉鈕）釘底**：實作用 `.safeAreaInset(edge:.bottom)` 把 Footer 放在 sheet 的固定底部安全區，內容區（Scroll Body 對應的 ScrollView）獨立捲動、不帶著 Footer 一起移動——EzJCV／O631mm／E27nKz／uQeV8／k6Rlt 五板皆同一原則，AX3 下使用者捲多深都能立即看到「關閉」，不需捲回頂部或底部才找得到。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gDIxT",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "asby9",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "PpgKA",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "零角托零染料池：這是法務文件閱讀器，不是家庭相簿收藏品（母題規則④：會過期／非收藏品的東西不裱）。字級：標題 $fs-display(34)、正文段落 $fs-body(17)／lineHeight 1.7、節標題 $fs-lead(22)／700、版本列 $fs-note(17)——十條 #6「13pt 只給不讀也能完成任務的內容」，法務文字全數 ≥17。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "uJZgW",
+          "name": "N Sheet vs 推入式：選 Sheet 的理由",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "wtZsn",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "Sheet vs 推入式：選 Sheet 的理由",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "DGrKy",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dm6Ee",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "LKNBi",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "依票文「依既有慣例擇一並記理由」：選 bottom sheet（iPhone/深色/AX3）＋置中卡片（iPad），不用推入式（push）。理由一：連結所在的歡迎頁（svedU／Yc4EC 等）是**未登入狀態**，此時 app 尚無 NavigationStack 深度可推入——push 需要一個既有的導覽容器，而歡迎頁本身就是根畫面。理由二：LS-152 08 EULA 同意頁（z042Yg）與既有多張確認/操作表（LS-142 16 上傳佇列 rTEGf、LS-152 03b 移除成員 yMNOt 等）已建立「法務／確認類內容用 sheet，不用 push」的慣例，本畫面延續同一語彙，使用者不會在「這是不是要離開目前畫面」上感到意外。理由三：sheet 天生自帶「向下滑動關閉」手勢與明顯的模態邊界（Scrim），比 push 更清楚傳達「這是附加參考資訊，看完關掉即可回到原本畫面」，符合長輩心智模型。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "rUVcB",
+          "name": "N iPad：置中卡片，不是滿版 bottom sheet",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "S9BUo",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "iPad：置中卡片，不是滿版 bottom sheet",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "QwRXx",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "K3FEcE",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "NzCXK",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPad 上 SwiftUI `.sheet()` 的原生行為（regular width，未強制 `.presentationDetents`）是置中浮動的 form sheet，不是 iPhone 的滿版 bottom sheet——這是 iOS/iPadOS 系統行為，不是設計選擇。`uQeV8` 因此不沿用 iPhone 版的 Grabber＋滿版寫法，改為 Legal Card（`veB5F`，四角圓角 `$radius-lg`，`effect: outer shadow`），用 Card Wrap（`ANzjU`，`justifyContent:center`／`alignItems:center`）置中，無 Grabber（置中卡片沒有下滑手勢慣例，加了反而誤導）。**寬度定案（R1→R2→R3 沿革）**：R1 用 520 寬＋預設內距（MN-1 前，內容欄 480≈28 字／行，偏寬）；R2 依 VR MN-1 收窄到 385 寬（內容欄 345≈20 字，行長達標，但 VR R2 MN-4 指出 834pt 畫布上兩側 scrim 合計 449pt 比卡片本身還寬，卡片讀起來像一張 iPhone 畫面浮在 iPad 上，比 iPadOS form sheet 系統慣例（約 540）窄）；**R3 改回 520 寬＋內距 87.5**（`veB5F.padding`＝87.5），內容欄仍 345（520－2×87.5＝345），行長達標同時卡片維持 iPad 該有的體積。實測：`Legal Card` 520×889，置中後上緣距板頂 152.5、下緣距板底 152.5（1194 板高，(1194-889)/2=152.5 ✓ 完全對稱）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vXqL6",
+          "name": "N 內容來源與長輩可讀性",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "Cln8n",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "內容來源與長輩可讀性",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "cs1Vk",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RASNt",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "jaQmb",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "本輪畫的是《使用條款》（docs/legal/terms-of-service.md），可捲動區塊內容＝原文引言段＋「1. 條款的接受與適用」1.1–1.3＋「2. 服務內容」2.1–2.2，逐字取自原文，僅將尚未填值的 `[[OPERATOR_NAME]]` placeholder 替換為可讀的「本服務營運者」（原文其餘段落多用「我們」代稱，此為唯一需替換處）。《隱私權政策》未另畫板——結構逐一相同（同一組 Head／Scroll Body／Footer 節點型別），僅標題／版本列／內文替換，ios-dev 實作時兩份文件共用同一個 SwiftUI view。R2 依 VR MN-2 補兩份文件的字串對照，避免 ios-dev 用猜的：\n\n文件／Doc Title／Doc Meta／來源\n《使用條款》／「使用條款」／「版本 0.1（草稿）· 生效日期：核可後公布」／docs/legal/terms-of-service.md\n《隱私權政策》／「隱私權政策」／「版本 0.1（草稿）· 生效日期：核可後公布」／docs/legal/privacy-policy.md\n\n兩份文件的檔頭表格「版本」「生效日期」欄位值目前逐字相同（v0.1（草稿，尚未生效）／`[[EFFECTIVE_DATE]]`），故 Doc Meta 字串一致；若日後版本號分岔，ios-dev 各自讀對應 markdown 檔頭即可，不需改設計稿。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "JZysg",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "OzzZS",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "WnmNm",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "版本／生效日：原文檔頭表格生效日期仍是 `[[EFFECTIVE_DATE]]` 未填值佔位符（docs/legal/README.md 明載「填入生效日前須逐條核對對齊表」，尚未核准生效）。設計稿 Doc Meta 顯示「版本 0.1（草稿）· 生效日期：核可後公布」，不虛構日期；ios-dev 實作時應直接讀 bundled markdown 檔頭表格的「版本」「生效日期」兩欄動態渲染，待 LS-132 文本核可、`[[EFFECTIVE_DATE]]` 填值後自動生效。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "udTiQ",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "zhejq",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "nl8ar",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "可捲動長文用 `clip:true` 固定高度容器（Scroll Body）呈現「捲動中，未捲到底」的靜態切片——這是既有慣例（LS-142 `rTEGf` 的 `Rows Scroll Area` `BImYe`，`clip:true` height 252，同一手法）。**R3 判準訂正（VR R2 IN-1）**：露出比例是錯的尺（％ 會隨段落長短漂移），正確判準是**露出高度 ÷ 行高（行數）＝使用者實際看到幾行字**，驗收線＝**露出 ≥1.5 行**，取代 R2 版的「％ 落在 [0.25,0.50]」。四板實測（皆切 1.2 段）：`EzJCV`／`O631mm`＝58÷(17×1.7)＝58÷28.9≈**2.01 行**；`E27nKz`（AX3）＝314÷(40×1.7)＝314÷68≈**4.62 行**（AX3 段落本身更高，同比例換算成行數反而更多，是四板中最充足的）；`uQeV8`（iPad，內容欄與 iPhone 同寬 345 後版面逐位元相同）＝58÷28.9≈**2.01 行**——四板皆 ≥1.5 行，AX3 尤其寬裕。對照 R1 失敗值：AX3 當時只露 36÷68≈0.53 行、iPad 5÷28.9≈0.17 行，才是「看起來像髒點」的真正原因（不到 1 行）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Z3XYzz",
+          "name": "N 尺寸規格值與量法",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "dAUJn",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "尺寸規格值與量法",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "llCwq",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "t18eP",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ADHTK",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Scroll Body 固定高度（規格值族「文件檢視捲動容器」，硬寫字面值，Pencil height 不吃 $variable）推導式＝「裁切目標段落在 Scroll Body 內的起點 y ＋ 該段落高度 × 33%」（見「內容來源」節上方裁切比例段）：`EzJCV`/`O631mm` 的 `BqbSV`＝422＋174×0.33≈480；`E27nKz`（AX3）的 `R8deeK`＝1964＋952×0.33≈2278（R2 由 R1 的 2000 調整，R1 舊值只露 4% 不合格，見「R2 修訂重點」節）；`uQeV8`（iPad）的 `UFzlX`＝422＋174×0.33≈480，與 iPhone 同值——**訂正 R1 舊理由**：R1 曾寫「iPad 因卡片寬度較窄使每行字數少」，與 R1 實測相反（iPad 當時行寬 480 比 iPhone 345 更寬、字數更多，是錯誤陳述，VR MN-3 已指出）；R2 把 iPad 內容欄本身收窄到 345（見 MN-1／下段），版面與 iPhone 逐位元相同，480 這個值現在才是「因為版面相同」而非「因為較窄」。反向驗證：Legal Sheet／Legal Card 高度＝Scroll Body＋固定 chrome（padding／Grabber／Head／Header Hairline／Footer／間距總和）——iPhone/深色 chrome＝309（`Legal Sheet` 789－480）；AX3 chrome＝522（`Legal Sheet` 2800－2278）；iPad chrome＝274（`Legal Card` 754－480，無 Grabber）。三者皆可用 `Get` 直接複算：chrome＝`Legal Sheet/Card` 高度－`Scroll Body` 高度。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Uhzos",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "LyXRK",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "W0Umr",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "板高（規格值族「單畫面總高」）：`EzJCV`／`O631mm` 皆 852（裝置高度，Legal Sheet 63→852 貼齊板底，maxBottom==852，0 越界，量法：`Get` 走訪 `Legal Sheet` `y+height`）；`E27nKz`（AX3）**R2 復算為 2800**（**R1 落地值為 2522**——`git show e40bbc5` 可查 `E27nKz.height`＝2522；2469 是 R1 中途 Doc Meta 溢出修正**前**的暫存值，不是交付值，R2 曾誤引用 2469，已訂正，見 VR R2 MN-5），R2 因 Scroll Body 480→2278 增高後 root/`Scrim`(`cgd6P`)/`Sheet Wrap`(`CozLy`) 三節點同步覆寫，Legal Sheet 高 2800＝top gap 0＋2800，貼齊板底；`uQeV8`（iPad）1194 不變（Legal Card **R3 定案 520 寬**（R2 曾試 385，VR MN-4 認為卡片讀起來像 iPhone 畫面浮在 iPad 上，R3 改回 520＋內距 87.5＝內容欄仍 345），置中後上下各留 152.5 呼吸帶，對稱維持，遠低於板高，未觸頂）；`k6Rlt`（「已捲到底」）**R3 復算為 1972**（R2 曾為 1948，末段文字底貼齊 Scroll Body 底、餘裕 0，VR MJ-3 指出與「還有內容」態下緣幾何無法區分；R3 給 Scroll Body 加 `padding:[0,0,24,0]`，末段文字底→Scroll Body 底餘裕 24pt（≥16pt 驗收線），root/`Scrim`(`QnW6V`)/`Sheet Wrap`(`CP5Zi`) 同步覆寫 1948→1972）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VIeSP",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "VRA2Y",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "fIUtt",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "關閉鈕熱區實測（≥44pt 驗收項）：`EzJCV`/`O631mm` 的 `Close Button`＝56×fill_container；`E27nKz`（AX3）＝89×fill_container；`uQeV8`（iPad）＝56×fill_container。四板皆用 `cmp/Button Secondary`（`XggYA`）覆寫 icon=`x`／label=「關閉」，非自訂節點，繼承既有元件的 padding 節奏（`$ctl-pad-md`），無需額外撐熱區。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "evE1j",
+          "name": "N 歡迎頁連結行為變更（樣式不動）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "vEkqi",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "歡迎頁連結行為變更（樣式不動）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "R9EfU",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "J1VaC",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "GIe16",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`svedU`（LS-17 01）與 LS-163 `Yc4EC`/`M2qW9`/`aEb17`/`g1pZ15` 等歡迎頁變體板的《使用條款》《隱私權政策》連結節點（`e1Yuwz`／`e1qGB` 等 Legal Link）本輪**完全未修改**（byte-identical，見「已驗證」）。唯一變更是行為語意：原本點擊會開啟系統瀏覽器（`WelcomeView.swift:254,262` 現行指向 `https://littlesprout.app/legal/terms`／`/privacy` 佔位網址），改為開啟本票新增的 `LS legal / 文件檢視` sheet／卡片，帶入對應文件（使用條款→本畫面預設內容；隱私權政策→替換內容，見上「內容來源」節）。實作票（後續 lane:ui）需把 `WelcomeView.swift` 的 `openURL` 改為 `.sheet(isPresented:)` 呼叫。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "B6wpr",
+          "name": "N Pencil 踩雷記錄（供下一輪或其他票參考）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "JCigh",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "Pencil 踩雷記錄（供下一輪或其他票參考）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "rq4Fn",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "yf2bK",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "mIwYo",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX3 板（`E27nKz`）Copy 自 iPhone 板後，改 `theme:{size:\"ax3\"}` 並調大 Scroll Body／改 root height，但 `Scrim`（`cgd6P`）與 `Sheet Wrap`（`CozLy`）兩個節點在 Copy 時把 iPhone 板的**字面 width/height（393/852）**也一併複製過去——只改 root 的 height 不會連動這兩個子節點，若不同步覆寫，`Sheet Wrap` 的 `justifyContent:\"end\"` 會錨定在舊的 852 高度內、把 Legal Sheet 推到 y=-1554（畫面外，clip 掉大半內容）。修法：Copy 後任何『滿版 absolute 定位節點』（Scrim／Sheet Wrap／Card Wrap 之類）若板高會變（AX3／內容驅動），都要逐一同步 `Update` 其 width／height，不能只改 root。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "howoL",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KYXhH",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "XAO4d",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Frame 的 `alignItems` 未顯式設定時，實測渲染效果等同 `center`（非典型 flexbox 預設的 `stretch`／`start`）——`Grabber`（36pt 寬 rectangle）在寬度 345 的容器內未設 `alignItems:\"center\"` 卻仍置中，截圖複驗屬實。沿用既有 sheet（`y6DwCZ`／`g3fRwP`）同款寫法，不額外加 `alignItems`。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "hyGcq",
+          "name": "N 未決 / 需人核可",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "taBPe",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "未決 / 需人核可",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "ICKtW",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "OoLIO",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "xOEgh",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPad 版用置中卡片而非滿版 bottom sheet是本輪設計判斷（理由見「iPad」節），非票文明示規格——若核可者期望 iPad 也用滿版 sheet（例如與 P1-iPad 等既有滿版畫面視覺語彙更一致），可在下一輪改。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "e0pAN",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "QBhQV",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "wBk3V",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "隱私權政策版本未另畫板（見「內容來源」節理由）；若 visual-reviewer 認為需要獨立畫板逐字驗證，R2 可補。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Y6mOa",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "wkd5x",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Hj8oA",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX3 板 Scroll Body 只顯示到全文 4366pt 中的前 2000pt（約 46%）——這是為了避免板高失控的取捨，不代表 AX3 使用者實際只能讀到這裡（bundle markdown 是完整全文，App 內可正常捲動到底）；若核可者認為應完整示範捲到底的狀態，R2 可加一張「AX3 · 已捲到底」變體。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "wmxKs",
+          "name": "N 越界檢定方法（clip-aware，R2 起沿用）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "lMiqo",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "越界檢定方法（clip-aware，R2 起沿用）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "xkEJF",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "hwMwM",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "P7rKS",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "VR R1 IN-1 指出：天真 maxBottom（只比對節點自身絕對 y+height 與板高）會誤判——本票內容靠 `clip:true` 固定高度容器裁出「還沒捲完」的視覺切片，段落文字節點本身遠比容器高，天真演算法會把這些「設計上就該被裁掉」的延伸算成越界（R1 一度誤報 EzJCV 4／O631mm 4／E27nKz 5 個假越界）。改法：算每個 enabled 節點的「可見矩形」＝自身絕對矩形 ∩ 沿途所有 `clip:true` 祖先的絕對矩形（與 `overflow-scan.js` 第五支 text_occlusion 的 `visibleRect` 同一手法）；被祖先完全裁掉（可見矩形面積 0）的節點直接排除、不計入；再取所有可見矩形下緣的最大值與板高比較。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "jfGXC",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "GtSTh",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "VQhAK",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R2 複驗結果（五板，含新增 `k6Rlt`）：`EzJCV` 852/852、`O631mm` 852/852、`E27nKz` 2800/2800、`uQeV8` 1194/1194、`k6Rlt` 1948/1948（declared/clip-aware maxBottom），**五板越界皆 0**。方法與結果供 R3 visual-reviewer 沿用同一把尺，不需重新發明。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "NUfqx",
+          "name": "N VR 抬標準三問（R2 回答）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "js1jr",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "VR 抬標準三問（R2 回答）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "OSxp3",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "lONDy",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "L3lgwS",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "①「捲到底」AX3 狀態要不要畫：VR 判定「要」。R2 新增 `k6Rlt`（A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3）：Scroll Body 只保留原文尾段（1.3–2. 服務內容標題–2.1–2.2），最後一段（2.2）完整可見、緊接 Footer，沒有任何文字被裁掉——這就是「已經沒有更多了」的表達方式：不是加一句「全文完」之類的自創文案（本票堅持不虛構內容），而是用「文字自然結束」本身當作訊號。**R3 訂正（VR MJ-3）**：R2 版末段文字底恰好貼齊 Scroll Body 底緣、餘裕 0，與「還有內容」態（`E27nKz`，段落被切、露出 4.62 行）的下緣幾何**無法區分**——長輩看不出自己是讀完了還是又被切了。改法：`Scroll Body`（`KIhSi`）加 `padding:[0,0,24,0]`，末段文字底→Scroll Body 底緣餘裕**24pt**（≥16pt 驗收線），root/`Scrim`(`QnW6V`)/`Sheet Wrap`(`CP5Zi`) 同步覆寫 1948→**1972**。兩態下緣現在有明確幾何差異：`E27nKz` 是「文字被切、緊貼裁切線」，`k6Rlt` 是「文字完整、留白 24pt 才接 Footer」。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "y9H2S7",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "s7vXY",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "H8h08",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "②sheet 能不能下滑關閉：能。四張 sheet 板（`EzJCV`／`O631mm`／`E27nKz`／`k6Rlt`）皆有 Grabber，實作對應 `.presentationDragIndicator(.visible)`＋系統原生下滑關閉手勢；`uQeV8`（iPad form sheet）系統不提供下滑關閉，只有關閉鈕一條路徑（iPadOS 原生行為，非設計疏漏）。iPhone／深色／AX3 三板刻意保留「關閉」鈕與下滑手勢**兩條並存路徑**——長輩不一定會用手勢，鈕永遠在、永遠可見（Footer 釘底，見「畫面級屬性清單」節）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "dzJMd",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "flPPs",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "FlJCe",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "③關閉後回到哪裡：回到歡迎頁**原本的捲動位置**（sheet 是疊加在歡迎頁上方的模態層，關閉只是移除疊加層，底下的歡迎頁本身沒有被導覽掉，`NavigationStack` 深度不變，捲動位置天然保留，不需要額外程式碼記錄／還原捲動 offset）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "WSBz1",
+          "name": "N R2 修訂重點（依 VR R1 comment 6cb82bc8 逐項落地）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "u0za7",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R2 修訂重點（依 VR R1 comment 6cb82bc8 逐項落地）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "eQLOH",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "V9uXL",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "YXHni",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MJ-1：四板裁切露出比例統一到 33%（見「內容來源與長輩可讀性」節），取代 R1「四板皆切一半」的不成立斷言。MJ-2：Notes 明寫 Footer 釘底＋ `safeAreaInset` 實作建議（見「畫面級屬性清單」節 `w7eBc`）。MN-1：`uQeV8` 內容欄由 480 收窄到 345，與全稿既有長文板（`z042Yg`／`VqMl0`）行寬一致。MN-2：補《隱私權政策》Doc Title／Doc Meta 字串對照（見「內容來源與長輩可讀性」節）。MN-3：`Scroll Body` 三個高度補推導式，訂正與實測相反的舊理由（見「尺寸規格值與量法」節）。IN-1：越界檢定改用 clip-aware，方法與五板結果見「越界檢定方法」節。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ESH34",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "wa266",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "bCQZb",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R2 新增 `k6Rlt`（R3-1 抬標準①），iPad 因 MN-1 內容欄收窄，`Legal Card` 寬度當時由 520→385（內容欄 385－2×20 padding＝345）——**R3 依 VR MN-4 已改回 520＋內距 87.5**，此列為 R2 沿革記錄，現行寬度見「iPad：置中卡片」節與「尺寸規格值與量法」節 `W0Umr`。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "olRrA",
+          "name": "N R3 修訂重點（依 VR R2 comment 9f1fc090 逐項落地）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "CKFQP",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R3 修訂重點（依 VR R2 comment 9f1fc090 逐項落地）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "agJc7",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "iDIwX",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "rftod",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MJ-3：`k6Rlt`「已捲到底」給出可辨識的視覺證據——`Scroll Body`（`KIhSi`）加 `padding:[0,0,24,0]`，末段（2.2）文字底→Scroll Body 底緣餘裕由 0 改為 **24pt**（≥16pt 驗收線），root/`Scrim`/`Sheet Wrap` 同步覆寫 1948→**1972**。與 `E27nKz`（還有內容態，段落被切、露出 4.62 行、緊貼裁切線）的下緣幾何現在可明確區分。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "L7Ii0",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Zojwg",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "g545N",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MN-4：iPad `Legal Card` 由 R2 的 385 寬改回 **520 寬＋內距 87.5**（VR 認為窄卡片讀起來像 iPhone 畫面浮在 iPad 上，且比 iPadOS form sheet 系統慣例約 540 窄）。內容欄仍 345（520－2×87.5），行長判準不變；置中對稱由 220/220 變為 152.5/152.5（卡片變高，(1194－889)/2）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "DK5vW",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Q0Dn7",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "o1Sio",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MN-5：Notes `W0Umr` 沿革數字訂正——R1 落地值是 **2522**（`git show e40bbc5` 可查），R2 誤引用的 2469 其實是 R1 中途 Doc Meta 溢出修正前的暫存值，非交付值，已在 `W0Umr` 明確標註區分。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "z0k0z2",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "LNNUq",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "JAf9X",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "驗收判準訂正（VR IN-1）：裁切露出的驗收線由「％ 落在 [0.25,0.50]」改為「**露出 ≥1.5 行**」（％ 隨段落長短漂移，行數不會），四板實測 2.01／2.01／4.62／2.01 行，全數達標且無需再動幾何——`nl8ar` 已改寫。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "k6Rlt",
+      "x": -3367,
+      "y": 62734,
+      "name": "A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1972,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "kJyvC",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "QnW6V",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 1972,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "CP5Zi",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 1972,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "ad4NN",
+              "name": "Legal Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                0,
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "Wf3sr",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "e9U1w",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "r5aOK",
+                      "name": "Doc Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "使用條款",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "J4tiu7",
+                      "name": "Doc Meta",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "版本 0.1（草稿）· 生效日期：核可後公布",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "ukPH7",
+                  "name": "Header Hairline",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "KIhSi",
+                  "name": "Scroll Body",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "padding": [
+                    0,
+                    0,
+                    24,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Dn0AQ",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.3　若您不同意本條款的任何部分，請勿使用本服務，並可依相關條款刪除帳號。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fFAMM",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2. 服務內容",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "D5mnOy",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.1　本服務提供一個以「家庭」為單位的私密空間，讓家庭成員上傳與瀏覽孩子的照片、影片，撰寫日記，並以留言與愛心互動。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "AalR4",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.2　本服務不是備份服務。請務必自行保留照片與影片的原始檔案；我們不保證資料永久可用。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "u6XE1",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "BuN7l",
+                      "name": "Footer Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "k8PgXv",
+                      "name": "Footer Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-item",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "bqdJj",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Close Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "x"
+                            },
+                            "yxwnz": {
+                              "content": "關閉"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
