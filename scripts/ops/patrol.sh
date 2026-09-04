@@ -287,6 +287,15 @@ if [ -f "$here/supabase-lock.sh" ]; then
 else
   lock_line="（無 ${here}/supabase-lock.sh）"
 fi
+# LS-159：QA 持有（hold）時另讀 holder 檔的 label／到期 epoch 給 --json；human／--brief 那一行由 --status 自帶「QA 持有中（label，剩餘 n 分）」
+hold_label=; hold_expires=
+if [ -f "$here/supabase-lock.sh" ]; then
+  lock_path=$(bash "$here/supabase-lock.sh" --path 2>/dev/null)
+  if [ -n "$lock_path" ] && [ -f "$lock_path/holder" ]; then
+    hold_label=$(sed -n 's/^cmd=hold://p' "$lock_path/holder" 2>/dev/null | head -1)
+    [ -n "$hold_label" ] && hold_expires=$(sed -n 's/^expires_at=//p' "$lock_path/holder" 2>/dev/null | head -1)
+  fi
+fi
 
 # ---- 專屬模擬器（LS-83）：detect-simulator.sh 建的 <票號>-<機型無空白> 用完不刪，>7 天未用只列不刪＋印
 #      simctl delete 指令，交人判斷是否真的沒人在用；不在這裡自動砍（機型與 UDID 對不對得上人工判斷更保險）。
@@ -419,12 +428,12 @@ fi
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"stale_simulators":[%s],"booted_simulators":[%s],"booted_flagged":%s,"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"stale_simulators":[%s],"booted_simulators":[%s],"booted_flagged":%s,"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
-      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$J_SIM" "$J_BOOT" "$(json_num "$boot_flagged")" "$J_FLAGS"
+      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$J_SIM" "$J_BOOT" "$(json_num "$boot_flagged")" "$J_FLAGS"
     ;;
   brief)
     echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev} · 專屬模擬器逾期 ${sim_flagged} · Booted 異常 ${boot_flagged}"
