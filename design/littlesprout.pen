@@ -140774,10 +140774,7 @@
                           "id": "K3m2r",
                           "name": "Heart Button",
                           "gap": "$sp-tight",
-                          "padding": [
-                            "$ctl-pad-tap",
-                            0
-                          ],
+                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
@@ -140789,6 +140786,16 @@
                               "icon": "heart",
                               "library": "lucide",
                               "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "IR7k2",
+                              "name": "Heart Label",
+                              "fill": "$print-ink-secondary",
+                              "content": "愛心",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -140807,10 +140814,7 @@
                           "id": "uWDLk",
                           "name": "Comment Button",
                           "gap": "$sp-tight",
-                          "padding": [
-                            "$ctl-pad-tap",
-                            0
-                          ],
+                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
@@ -140822,6 +140826,16 @@
                               "icon": "message-circle",
                               "library": "lucide",
                               "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "W8kGF",
+                              "name": "Comment Label",
+                              "fill": "$print-ink-secondary",
+                              "content": "留言",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -140948,21 +140962,33 @@
                           "id": "RRxSE",
                           "name": "Heart Button",
                           "gap": "$sp-tight",
-                          "padding": [
-                            "$ctl-pad-tap",
-                            0
-                          ],
+                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "BQFGM",
-                              "name": "Heart Icon",
+                              "type": "path",
+                              "id": "yD53m",
+                              "name": "Heart Icon Solid",
+                              "geometry": "M12 21.35l-1.45-1.32c-5.15-4.67-8.55-7.75-8.55-11.53 0-3.08 2.42-5.5 5.5-5.5 1.74 0 3.41 0.81 4.5 2.09 1.09-1.28 2.76-2.09 4.5-2.09 3.08 0 5.5 2.42 5.5 5.5 0 3.78-3.4 6.86-8.55 11.54l-1.45 1.31z",
+                              "viewBox": [
+                                0,
+                                0,
+                                24,
+                                24
+                              ],
+                              "fill": "$accent",
                               "width": 22,
-                              "height": 22,
-                              "icon": "heart",
-                              "library": "lucide",
-                              "fill": "$accent"
+                              "height": 22
+                            },
+                            {
+                              "type": "text",
+                              "id": "rY7ZP",
+                              "name": "Heart Label",
+                              "fill": "$accent",
+                              "content": "已按愛心",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "700"
                             },
                             {
                               "type": "text",
@@ -140981,10 +141007,7 @@
                           "id": "pkkOh",
                           "name": "Comment Button",
                           "gap": "$sp-tight",
-                          "padding": [
-                            "$ctl-pad-tap",
-                            0
-                          ],
+                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
@@ -140996,6 +141019,16 @@
                               "icon": "message-circle",
                               "library": "lucide",
                               "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "IIdgK",
+                              "name": "Comment Label",
+                              "fill": "$print-ink-secondary",
+                              "content": "留言",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -141187,10 +141220,7 @@
                           "id": "HMzbe",
                           "name": "Heart Button",
                           "gap": "$sp-tight",
-                          "padding": [
-                            "$ctl-pad-tap",
-                            0
-                          ],
+                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
@@ -141202,6 +141232,16 @@
                               "icon": "heart",
                               "library": "lucide",
                               "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "SvfGz",
+                              "name": "Heart Label",
+                              "fill": "$print-ink-secondary",
+                              "content": "愛心",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -141220,10 +141260,7 @@
                           "id": "Jkqdy",
                           "name": "Comment Button",
                           "gap": "$sp-tight",
-                          "padding": [
-                            "$ctl-pad-tap",
-                            0
-                          ],
+                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
@@ -141235,6 +141272,16 @@
                               "icon": "message-circle",
                               "library": "lucide",
                               "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "i8MYrZ",
+                              "name": "Comment Label",
+                              "fill": "$print-ink-secondary",
+                              "content": "留言",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -141361,21 +141408,33 @@
                           "id": "rsryU",
                           "name": "Heart Button",
                           "gap": "$sp-tight",
-                          "padding": [
-                            "$ctl-pad-tap",
-                            0
-                          ],
+                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "HThca",
-                              "name": "Heart Icon",
+                              "type": "path",
+                              "id": "AF6VR",
+                              "name": "Heart Icon Solid",
+                              "geometry": "M12 21.35l-1.45-1.32c-5.15-4.67-8.55-7.75-8.55-11.53 0-3.08 2.42-5.5 5.5-5.5 1.74 0 3.41 0.81 4.5 2.09 1.09-1.28 2.76-2.09 4.5-2.09 3.08 0 5.5 2.42 5.5 5.5 0 3.78-3.4 6.86-8.55 11.54l-1.45 1.31z",
+                              "viewBox": [
+                                0,
+                                0,
+                                24,
+                                24
+                              ],
+                              "fill": "$accent",
                               "width": 22,
-                              "height": 22,
-                              "icon": "heart",
-                              "library": "lucide",
-                              "fill": "$accent"
+                              "height": 22
+                            },
+                            {
+                              "type": "text",
+                              "id": "PaLyJ",
+                              "name": "Heart Label",
+                              "fill": "$accent",
+                              "content": "已按愛心",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "700"
                             },
                             {
                               "type": "text",
@@ -141394,10 +141453,7 @@
                           "id": "V5tTI",
                           "name": "Comment Button",
                           "gap": "$sp-tight",
-                          "padding": [
-                            "$ctl-pad-tap",
-                            0
-                          ],
+                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
@@ -141409,6 +141465,16 @@
                               "icon": "message-circle",
                               "library": "lucide",
                               "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "R6HKKX",
+                              "name": "Comment Label",
+                              "fill": "$print-ink-secondary",
+                              "content": "留言",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -141599,10 +141665,7 @@
                           "id": "zwd7O",
                           "name": "Heart Button",
                           "gap": "$sp-tight",
-                          "padding": [
-                            "$ctl-pad-tap",
-                            0
-                          ],
+                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
@@ -141614,6 +141677,16 @@
                               "icon": "heart",
                               "library": "lucide",
                               "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "mw4PU",
+                              "name": "Heart Label",
+                              "fill": "$print-ink-secondary",
+                              "content": "愛心",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -141632,10 +141705,7 @@
                           "id": "N9vJpP",
                           "name": "Comment Button",
                           "gap": "$sp-tight",
-                          "padding": [
-                            "$ctl-pad-tap",
-                            0
-                          ],
+                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
@@ -141647,6 +141717,16 @@
                               "icon": "message-circle",
                               "library": "lucide",
                               "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "G3mIVO",
+                              "name": "Comment Label",
+                              "fill": "$print-ink-secondary",
+                              "content": "留言",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -141773,21 +141853,33 @@
                           "id": "Dwycz",
                           "name": "Heart Button",
                           "gap": "$sp-tight",
-                          "padding": [
-                            "$ctl-pad-tap",
-                            0
-                          ],
+                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "lypJ5",
-                              "name": "Heart Icon",
+                              "type": "path",
+                              "id": "b8ETIb",
+                              "name": "Heart Icon Solid",
+                              "geometry": "M12 21.35l-1.45-1.32c-5.15-4.67-8.55-7.75-8.55-11.53 0-3.08 2.42-5.5 5.5-5.5 1.74 0 3.41 0.81 4.5 2.09 1.09-1.28 2.76-2.09 4.5-2.09 3.08 0 5.5 2.42 5.5 5.5 0 3.78-3.4 6.86-8.55 11.54l-1.45 1.31z",
+                              "viewBox": [
+                                0,
+                                0,
+                                24,
+                                24
+                              ],
+                              "fill": "$accent",
                               "width": 32,
-                              "height": 32,
-                              "icon": "heart",
-                              "library": "lucide",
-                              "fill": "$accent"
+                              "height": 32
+                            },
+                            {
+                              "type": "text",
+                              "id": "Y9B3oZ",
+                              "name": "Heart Label",
+                              "fill": "$accent",
+                              "content": "已按愛心",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "700"
                             },
                             {
                               "type": "text",
@@ -141806,10 +141898,7 @@
                           "id": "g6RuO8",
                           "name": "Comment Button",
                           "gap": "$sp-tight",
-                          "padding": [
-                            "$ctl-pad-tap",
-                            0
-                          ],
+                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
@@ -141821,6 +141910,16 @@
                               "icon": "message-circle",
                               "library": "lucide",
                               "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "yVGKX",
+                              "name": "Comment Label",
+                              "fill": "$print-ink-secondary",
+                              "content": "留言",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
