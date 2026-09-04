@@ -41,8 +41,9 @@
 #     `<lock>.hold.log`——不繼承呼叫者的管線（否則 agent 的 Bash 工具會等到 hold 結束才返回）；nohup＋disown（macOS 沒有
 #     setsid），HUP 忽略。守門每 TICK 秒把 heartbeat 重寫進 holder（先確認 holder pid 仍是自己）、到 `expires_at` 自動
 #     `rm -rf`（仍只在 holder pid＝自己時）並印一行到 log。
-#   - hold 的持有者判定 `hold_owner_ok`（--release／--held／`-- <命令>` 重入三處共用）：holder 的 `owner` pid 是本程序祖先
-#     （同一個 shell session）**或** holder 的 `worktree` 與本程序 cwd 的 worktree 相同。守門 pid 本身不可能是任何呼叫者的
+#   - hold 的持有者判定 `hold_owner_ok`（--release／--held／`-- <命令>` 重入三處共用）：holder 的 `owner` pid **活著且**是本程序祖先
+#     （同一個還活著的 shell session；不驗 alive 就是對死 pid 做祖先比對，pid 重用時誤判——PR #265 R1 N2）**或** holder 的
+#     `worktree` 與本程序 cwd 的 worktree 相同。label 不得含換行、≤80 字（逐字寫進 holder 檔；R1 N3）。守門 pid 本身不可能是任何呼叫者的
 #     祖先（主程序退出後守門已被 reparent），所以不能只沿用 `--held` 的祖先判定；agent 的 Bash 工具每次呼叫都是新 shell、
 #     owner 早已退出，實務上靠 worktree 那一條——QA 只在自己的 worktree 操作。
 #   - hold 期間持有者自己的 `-- supabase db reset`／`run.sh` 走重入直接執行（PreToolUse H3 只認 wrapper 字面或 holder pid
@@ -50,7 +51,9 @@
 #     SUPABASE_LOCK_TIMEOUT（15 分鐘）——hold 上限 30 分鐘大於等待逾時是刻意的：等待者逾時 fail loud 印出持有者 label，
 #     QA 該在 15 分鐘內完成互動段，否則拆段。
 #   - `--release`：kill -TERM 守門並等它自己釋放（≤3s），沒退就 -KILL（被 SIGSTOP 的守門若日後恢復、會把 heartbeat 重寫進
-#     別人的新 lock——先殺掉再刪）、holder pid 仍是那個守門才 rm -rf。守門被 -9：pid 不存在→既有死鎖回收涵蓋。
+#     別人的新 lock——先殺掉再刪）；之後的刪除走 `remove_lock_of`：先原子 mv 到 tomb、核對 holder 的 pid＋started 仍是那個守門
+#     才 rm，不符（守門已死、等待者已回收並重新取得）就搬回不刪——直接 read→rm 是 check-then-delete，會刪到第三者的新鎖
+#     （PR #265 R1 N1）。守門被 -9：pid 不存在→既有死鎖回收涵蓋。
 # 已知限制：
 #   - hold 到期釋放不會中斷持有者正在跑的命令（例如 QA 的 reset 剛開始就到期）——之後別人的 reset 可能與之重疊；
 #     hold_owner_ok 的 worktree 那一條讓「任何在同一 worktree 內跑的程序」都算持有者（QA worktree 只有 QA 在用時成立）。
@@ -107,6 +110,9 @@ if [ "$mode" = hold ] || [ "$mode" = guard ]; then
 fi
 if [ "$mode" = hold ]; then
   [ $# -eq 0 ] || { echo "✗ supabase-lock：--hold 不接命令（多了「$*」）；hold 期間的命令另外用 -- <命令> 執行（會直接過）" >&2; exit 2; }
+  # label 逐字寫進 holder 檔的 cmd=hold:<label> 行：含換行等於多寫幾行 key（可偽造 pid=1、永不判死鎖）——在碰 lock 之前就拒絕（PR #265 R1 N3）
+  case "$hold_label" in *[$'\n\r']*) echo "✗ supabase-lock：--hold label 不得含換行（label 逐字寫進 holder 檔）" >&2; exit 2 ;; esac
+  [ "${#hold_label}" -le 80 ] || { echo "✗ supabase-lock：--hold label 上限 80 字（得到 ${#hold_label} 字）" >&2; exit 2; }
   case "$max_minutes" in ''|*[!0-9]*|0) echo "✗ supabase-lock：--max-minutes 須為 1–60 的整數（得到「${max_minutes}」）" >&2; exit 2 ;; esac
   [ "$max_minutes" -le 60 ] || { echo "✗ supabase-lock：--max-minutes 上限 60（得到 ${max_minutes}）；更久請拆段" >&2; exit 2; }
   hold_secs=$(( max_minutes * 60 ))
@@ -178,14 +184,62 @@ tomb_lines() {   # 殘留 tomb（搬回失敗留下的）每個一行，沒有�
   done
 }
 
-# holder 內容先算好（PR #122 R1 M1：git 兩次 fork 約 60–130ms，不能落在 mkdir 之後）；wt 也是 hold_owner_ok 的比對鍵
-host=$(hostname 2>/dev/null || echo unknown)
-wt=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-br=$(git symbolic-ref --short -q HEAD 2>/dev/null || echo '-')
+# holder 內容先算好（PR #122 R1 M1：git 兩次 fork 約 60–130ms，不能落在 mkdir 之後）；wt 也是 hold_owner_ok 的比對鍵。
+# --status／--path／守門用不到就不算（PR #265 R1 i4：巡檢每輪呼叫 --status＋--path，省 hostname＋2 次 git ≈ 200ms）。
+host=; wt=; br=
+case "$mode" in
+  status|path|guard) ;;
+  *) host=$(hostname 2>/dev/null || echo unknown)
+     wt=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+     br=$(git symbolic-ref --short -q HEAD 2>/dev/null || echo '-') ;;
+esac
 
-hold_owner_ok() {   # 0＝本程序可代表目前的 hold（--release／--held／重入三處共用；LS-159）：owner pid 是本程序祖先，或 worktree 相同
+is_stale() {   # 0＝這把鎖是死的（pid 不存在、或建好 30s 仍沒 holder）
+  if read_holder; then
+    alive "$h_pid" && return 1
+    return 0
+  fi
+  [ -d "$lock" ] || return 1
+  [ "$(age_of "$lock")" -gt 30 ]
+}
+restore() {   # 以 rename(2) 原子搬回誤搬的活鎖（R2 F3）：目標已是非空目錄就失敗——tomb 留在原地並大聲說；mv(1) 會塞進去、不能用
+  if command -v perl >/dev/null 2>&1 && perl -e 'rename $ARGV[0], $ARGV[1] or exit 1' "$1" "$lock" 2>/dev/null; then return 0; fi
+  echo "⚠ supabase-lock：搬回誤搬的活鎖失敗（${lock} 已被另一程序建立，或無 perl）——${1} 內的持有者與新持有者可能同時執行；tomb 保留供查證（--status／巡檢會列出），請檢查 docker 狀態" >&2
+  return 1
+}
+reclaim() {   # 0＝已回收／已讓出（呼叫端立刻重試 mkdir）；1＝回收不了（lock 仍在但搬不動）
+  local dead_pid=$h_pid dead_started=$h_started dead_wt=$h_worktree dead_cmd=$h_cmd
+  local tomb="${lock}.stale.$$.$RANDOM" p= s=
+  if ! mv "$lock" "$tomb" 2>/dev/null; then
+    [ -d "$lock" ] && return 1
+    return 0
+  fi
+  # 搬到的是不是剛才判定的那把死鎖？（PR #122 R1 M1：mv 之前別人可能已回收並重新 mkdir）
+  if [ -f "$tomb/holder" ]; then
+    p=$(sed -n 's/^pid=//p' "$tomb/holder"); s=$(sed -n 's/^started=//p' "$tomb/holder")
+    if [ "$p" != "$dead_pid" ] || [ "$s" != "$dead_started" ]; then restore "$tomb"; return 0; fi
+  elif [ "$(age_of "$tomb")" -le 30 ]; then
+    # 沒有 holder 但很新＝別人剛取得、holder 還沒落地的活鎖——不是死鎖，搬回去
+    restore "$tomb"; return 0
+  fi
+  rm -rf "$tomb"
+  echo "⚠ supabase-lock：回收死鎖（持有者 pid ${dead_pid:-?} 已不存在；worktree ${dead_wt:-?}，cmd ${dead_cmd:-?}）" >&2
+  return 0
+}
+remove_lock_of() {   # $1=pid $2=started：只刪「holder 仍是那個持有者」的 lock——先原子 mv 到 tomb 再核對（同 reclaim 的手續）。
+  # PR #265 R1 N1：直接 read→rm 是 check-then-delete，守門已死時等待者可能在中間完成回收＋mkdir＋寫 holder，rm 掉的是第三者的新鎖。
+  # 0＝已刪；1＝lock 不在（守門或別人已釋放）；2＝holder 不是那個持有者（別人已回收並重新取得）→ 搬回、不刪
+  local tomb="${lock}.stale.$$.$RANDOM" p= s=
+  mv "$lock" "$tomb" 2>/dev/null || return 1
+  p=$(sed -n 's/^pid=//p' "$tomb/holder" 2>/dev/null); s=$(sed -n 's/^started=//p' "$tomb/holder" 2>/dev/null)
+  if [ "$p" = "$1" ] && [ "$s" = "$2" ]; then rm -rf "$tomb"; return 0; fi
+  restore "$tomb"; return 2
+}
+
+hold_owner_ok() {   # 0＝本程序可代表目前的 hold（--release／--held／重入三處共用；LS-159）：owner pid 活著且是本程序祖先，或 worktree 相同
   case "$h_cmd" in hold:*) ;; *) return 1 ;; esac
-  if [ -n "$h_owner" ] && is_ancestor "$h_owner"; then return 0; fi
+  # owner 腿只服務「同一個還活著的 session」——owner 通常早已退出，不先驗 alive 就是對死 pid 做祖先比對，pid 被回收重用時誤判（PR #265 R1 N2）
+  if [ -n "$h_owner" ] && alive "$h_owner" && is_ancestor "$h_owner"; then return 0; fi
   [ -n "$h_worktree" ] && [ "$h_worktree" = "$wt" ]
 }
 
@@ -240,7 +294,9 @@ release_hold() {   # --release（LS-159）：只釋放 hold、只給持有者；
       echo "⚠ supabase-lock：守門 pid ${gpid} 3s 內未結束，已 -KILL" >&2
     fi
   fi
-  if read_holder && [ "$h_pid" = "$gpid" ]; then rm -rf "$lock"; fi   # 守門正常路徑自己刪；被 -9／剛 -KILL 才由這裡刪
+  # 守門正常路徑自己刪；被 -9／剛 -KILL 才由這裡刪——走原子 mv→核對 pid＋started→rm（R1 N1），別人已回收並取得的新鎖搬回不碰
+  remove_lock_of "$gpid" "$t0"
+  case $? in 2) echo "→ supabase-lock：守門已死、lock 已被其他等待者回收並取得——沒有東西可刪（hold 早已結束）" >&2 ;; esac
   case "$t0" in ''|*[!0-9]*) dur='?' ;; *) dur=$(( $(date +%s) - t0 )); dur="$(( dur / 60 )) 分 $(( dur % 60 )) 秒" ;; esac
   echo "→ supabase-lock：已釋放 hold「${label}」（持有 ${dur}；守門 pid ${gpid}）" >&2
   exit 0
@@ -275,40 +331,7 @@ elif read_holder; then   # hold：已在 lock／活著的 hold 內就不再 hold
   if hold_owner_ok && alive "$h_pid"; then echo "✗ supabase-lock：已持有 hold「${h_cmd#hold:}」（剩餘 $(mins_left "$h_expires") 分，守門 pid ${h_pid}）——先 --release 再 --hold" >&2; exit 2; fi
 fi
 
-is_stale() {   # 0＝這把鎖是死的（pid 不存在、或建好 30s 仍沒 holder）
-  if read_holder; then
-    alive "$h_pid" && return 1
-    return 0
-  fi
-  [ -d "$lock" ] || return 1
-  [ "$(age_of "$lock")" -gt 30 ]
-}
-restore() {   # 以 rename(2) 原子搬回誤搬的活鎖（R2 F3）：目標已是非空目錄就失敗——tomb 留在原地並大聲說；mv(1) 會塞進去、不能用
-  if command -v perl >/dev/null 2>&1 && perl -e 'rename $ARGV[0], $ARGV[1] or exit 1' "$1" "$lock" 2>/dev/null; then return 0; fi
-  echo "⚠ supabase-lock：搬回誤搬的活鎖失敗（${lock} 已被另一程序建立，或無 perl）——${1} 內的持有者與新持有者可能同時執行；tomb 保留供查證（--status／巡檢會列出），請檢查 docker 狀態" >&2
-  return 1
-}
-reclaim() {   # 0＝已回收／已讓出（呼叫端立刻重試 mkdir）；1＝回收不了（lock 仍在但搬不動）
-  local dead_pid=$h_pid dead_started=$h_started dead_wt=$h_worktree dead_cmd=$h_cmd
-  local tomb="${lock}.stale.$$.$RANDOM" p= s=
-  if ! mv "$lock" "$tomb" 2>/dev/null; then
-    [ -d "$lock" ] && return 1
-    return 0
-  fi
-  # 搬到的是不是剛才判定的那把死鎖？（PR #122 R1 M1：mv 之前別人可能已回收並重新 mkdir）
-  if [ -f "$tomb/holder" ]; then
-    p=$(sed -n 's/^pid=//p' "$tomb/holder"); s=$(sed -n 's/^started=//p' "$tomb/holder")
-    if [ "$p" != "$dead_pid" ] || [ "$s" != "$dead_started" ]; then restore "$tomb"; return 0; fi
-  elif [ "$(age_of "$tomb")" -le 30 ]; then
-    # 沒有 holder 但很新＝別人剛取得、holder 還沒落地的活鎖——不是死鎖，搬回去
-    restore "$tomb"; return 0
-  fi
-  rm -rf "$tomb"
-  echo "⚠ supabase-lock：回收死鎖（持有者 pid ${dead_pid:-?} 已不存在；worktree ${dead_wt:-?}，cmd ${dead_cmd:-?}）" >&2
-  return 0
-}
-
-cmd_str=$(printf '%s' "$*" | tr '\n' ' ')   # host／wt／br 已在上面算好（M1：不能落在 mkdir 之後）
+cmd_str=$(printf '%s' "$*" | tr '\n' ' ')   # host／wt／br 已在上面算好（M1：不能落在 mkdir 之後）；is_stale／restore／reclaim 也在上面
 
 started=$(date +%s); announced=0; last_msg=0
 while ! mkdir "$lock" 2>/dev/null; do

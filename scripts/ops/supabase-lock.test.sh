@@ -8,6 +8,8 @@
 # /tmp/supabase-lock-*、不碰容器；M1／m1 用 PATH shim 放大既有空窗（只在自測程序的 PATH，不改 repo 檔）。
 # LS-159 hold（㉑–㉕）：--hold 後非持有者排隊且訊息含 label／持有者重入與 --held／非持有者 --release 被拒／持有者 --release 立即讓出／
 # 到期自動釋放／守門被 -9 走既有死鎖回收——退化這裡會紅；心跳與到期用 SUPABASE_LOCK_HOLD_TICK／SUPABASE_LOCK_HOLD_SECONDS 縮成秒級。
+# PR #265 R1（㉗–㉙）：守門死後 --release 與等待者回收競爭不得刪第三者新鎖（N1，ps shim 放大窗口）／owner 已死（pid 重用形狀）別的
+# worktree 不得通過（N2，ps shim 把活著的 owner 報成不存在）／label 含換行或過長在碰 lock 前就 exit 2（N3）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -436,6 +438,84 @@ out="$(SUPABASE_LOCK_HOLD_TICK=0.1 L --hold x 2>&1)"; rc_is '㉖ SUPABASE_LOCK_H
 out="$(SUPABASE_LOCK_HOLD_SECONDS=0 L --hold x 2>&1)"; rc_is '㉖ SUPABASE_LOCK_HOLD_SECONDS=0 → exit 2' 2 "$?" "$out"
 out="$(L --hold-guard only-one-arg 2>&1)"; rc_is '㉖ --hold-guard 參數數量錯 → exit 2' 2 "$?" "$out"
 gone  '㉖ 參數錯誤沒留下 lock'
+
+# ---- ㉗ N1（PR #265 R1）：守門已死、--release 與等待者的回收競爭——刪除須走 mv→核對→rm，不得刪到第三者剛取得的新鎖 ----
+# (a) 釘住修法的案：rm shim 把「對 lock 路徑（含 tomb）的 rm」延遲 1s，放大「核對之後、真正刪除之前」的窗口；那 1 秒內自測扮演
+#     等待者：回收死鎖＋mkdir＋寫自己的 holder（pid=$$）。舊寫法（read→rm -rf $lock）：核對時 holder 還是死守門的 → 進 rm →
+#     shim 睡 1s 期間第三者取得同一路徑 → 真正 rm 掉的是第三者的鎖——這裡會紅（R1 i6 的缺口，mutation 已驗）。新寫法先原子 mv
+#     到 tomb 再核對、rm 的是 tomb，第三者在原路徑 mkdir 的新鎖不受影響。
+out="$(hold_as_stranger 'LS-0 N1')"; rc_is '㉗ 前提：--hold' 0 "$?" "$out"
+gpid=$(hpid); kill -9 "$gpid" 2>/dev/null; sleep 0.3
+cat > "$shim/rm" <<EOS
+#!/bin/bash
+case " \$* " in *" $SUPABASE_LOCK_DIR"*) sleep 1 ;; esac
+exec /bin/rm "\$@"
+EOS
+chmod +x "$shim/rm"
+(cd "$wtA" && PATH="$shim:$PATH" bash "$lock_sh" --release) > "$work/n1.out" 2> "$work/n1.err" &
+r=$!
+sleep 0.4                                   # --release 已核對完、正卡在 rm shim 的 sleep 裡
+mv "$SUPABASE_LOCK_DIR" "$work/n1-gone" 2>/dev/null; rm -rf "$work/n1-gone"; mkdir "$SUPABASE_LOCK_DIR"    # ＝等待者回收死鎖後 mkdir（新寫法下原路徑已被 mv 走，mv 失敗無妨）
+printf 'pid=%s\nstarted=%s\nhost=h\nworktree=/C\nbranch=b\ncmd=C\n' "$$" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder"   # 等待者的 holder 落地
+wait "$r"; rc=$?
+rc_is '㉗ N1(a)：--release exit 0' 0 "$rc" "$(cat "$work/n1.err")"
+if [ -d "$SUPABASE_LOCK_DIR" ] && grep -q "^pid=$$\$" "$SUPABASE_LOCK_DIR/holder" 2>/dev/null; then echo "✓ ㉗ N1(a)：第三者的新鎖仍在原位、holder 是它的（rm 掉的是 tomb）"; else echo "✗ ㉗ N1(a)：第三者的新鎖被 --release 刪掉（check-then-delete）" >&2; ls -la "$SUPABASE_LOCK_DIR" "$work" 2>&1 | sed 's/^/    /' >&2; fail=1; fi
+if ls -d "$SUPABASE_LOCK_DIR".stale.* >/dev/null 2>&1; then echo "✗ ㉗ N1(a)：殘留 tomb" >&2; ls -d "$SUPABASE_LOCK_DIR".stale.* >&2; fail=1; else echo "✓ ㉗ N1(a)：死守門的 tomb 已刪、無殘留"; fi
+rm -rf "$SUPABASE_LOCK_DIR"; rm -f "$shim/rm"
+# (b) 搬回路徑：ps shim 把 alive(死守門) 延遲 1s，讓第三者在 --release 的 mv **之前**就取得——mv 到的是第三者的活鎖，核對不符須搬回、
+#     不刪、印「已被其他等待者回收並取得」（舊寫法此案也不刪——它 read 到的已是新 holder——所以 (b) 只驗搬回路徑，釘修法靠 (a)）。
+out="$(hold_as_stranger 'LS-0 N1b')"; rc_is '㉗ 前提：--hold（b）' 0 "$?" "$out"
+gpid=$(hpid); kill -9 "$gpid" 2>/dev/null; sleep 0.3
+cat > "$shim/ps" <<EOS
+#!/bin/bash
+if [ "\${1:-}" = -p ] && [ "\${2:-}" = "$gpid" ]; then sleep 1; exit 1; fi
+exec /bin/ps "\$@"
+EOS
+chmod +x "$shim/ps"
+(cd "$wtA" && PATH="$shim:$PATH" bash "$lock_sh" --release) > "$work/n1b.out" 2> "$work/n1b.err" &
+r=$!
+sleep 0.4                                   # --release 已過 hold_owner_ok、正卡在 alive(gpid) 的 shim 裡
+mv "$SUPABASE_LOCK_DIR" "$work/n1-gone"; rm -rf "$work/n1-gone"; mkdir "$SUPABASE_LOCK_DIR"
+printf 'pid=%s\nstarted=%s\nhost=h\nworktree=/C\nbranch=b\ncmd=C\n' "$$" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder"
+wait "$r"; rc=$?
+rc_is '㉗ N1(b)：--release exit 0（hold 早已結束）' 0 "$rc" "$(cat "$work/n1b.err")"
+has   '㉗ N1(b)：印「已被其他等待者回收並取得」' "$(cat "$work/n1b.err")" '已被其他等待者回收並取得'
+if [ -d "$SUPABASE_LOCK_DIR" ] && grep -q "^pid=$$\$" "$SUPABASE_LOCK_DIR/holder" 2>/dev/null; then echo "✓ ㉗ N1(b)：第三者的活鎖被搬回原位"; else echo "✗ ㉗ N1(b)：第三者的活鎖被刪或沒搬回" >&2; ls -la "$SUPABASE_LOCK_DIR" "$work" 2>&1 | sed 's/^/    /' >&2; fail=1; fi
+if ls -d "$SUPABASE_LOCK_DIR".stale.* >/dev/null 2>&1; then echo "✗ ㉗ N1(b)：殘留 tomb" >&2; ls -d "$SUPABASE_LOCK_DIR".stale.* >&2; fail=1; else echo "✓ ㉗ N1(b)：無殘留 tomb（搬回成功）"; fi
+rm -rf "$SUPABASE_LOCK_DIR"; rm -f "$shim/ps"
+
+# ---- ㉘ N2（PR #265 R1）：owner 腿須先驗 owner 活著——holder owner=本自測 pid（是所有呼叫者的祖先），ps shim 把它報成不存在
+#        （＝pid 已被回收重用的形狀）→ 別的 worktree 不得通過（--held／重入／--release）；同 worktree 腿不受影響；不裝 shim（owner 真的活著）owner 腿仍通 ----
+sleep 6 & a=$!                              # 只是一個活著的 pid 當 holder pid（守門）
+mkdir "$SUPABASE_LOCK_DIR"
+printf 'pid=%s\nstarted=%s\nhost=h\nworktree=%s\nbranch=b\ncmd=hold:LS-0 owner-reuse\nowner=%s\nexpires_at=%s\nheartbeat=%s\n' "$a" "$(date +%s)" "$wtA" "$$" "$(( $(date +%s) + 600 ))" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder"
+(cd "$wtB" && bash "$lock_sh" --held 2>/dev/null); rc_is '㉘ 前提：owner（本自測）活著且是祖先 → 別的 worktree --held 0（owner 腿）' 0 "$?" ''
+cat > "$shim/ps" <<EOS
+#!/bin/bash
+if [ "\${1:-}" = -p ] && [ "\${2:-}" = "$$" ]; then exit 1; fi
+exec /bin/ps "\$@"
+EOS
+chmod +x "$shim/ps"
+(cd "$wtB" && PATH="$shim:$PATH" bash "$lock_sh" --held 2>/dev/null); rc_is '㉘ N2：owner pid 已死（重用形狀）→ 別的 worktree --held 1' 1 "$?" ''
+out="$(cd "$wtB" && PATH="$shim:$PATH" bash "$lock_sh" --timeout 1 -- sh -c 'echo reuse-ran' 2>&1)"; rc=$?
+rc_is '㉘ N2：owner 已死 → 別的 worktree 的 -- 命令不得重入、逾時 124' 124 "$rc" "$out"
+hasnt '㉘ N2：命令沒跑' "$out" 'reuse-ran'
+out="$(cd "$wtB" && PATH="$shim:$PATH" bash "$lock_sh" --release 2>&1)"; rc_is '㉘ N2：owner 已死 → 別的 worktree --release 拒 2' 2 "$?" "$out"
+(cd "$wtA" && PATH="$shim:$PATH" bash "$lock_sh" --held 2>/dev/null); rc_is '㉘ N2：同 worktree 腿不受影響 --held 0' 0 "$?" ''
+rm -f "$shim/ps"; kill "$a" 2>/dev/null; wait "$a" 2>/dev/null; rm -rf "$SUPABASE_LOCK_DIR"
+
+# ---- ㉙ N3（PR #265 R1）：label 含換行／CR → 碰 lock 之前就 exit 2、lock 目錄不存在（舊寫法：holder 被注入 pid=1、目錄殘留、
+#        pid 1 永遠活著→永不判死鎖，其他人等滿 15 分鐘）；>80 字亦拒；80 字可 ----
+out="$(L --hold "$(printf 'probe\npid=1')" 2>&1)"; rc_is '㉙ N3：label 含換行 → exit 2' 2 "$?" "$out"
+has   '㉙ N3：訊息點名換行' "$out" '換行'
+gone  '㉙ N3：換行 label 沒留下 lock 目錄'
+out="$(L --hold "$(printf 'x\rpid=1')" 2>&1)"; rc_is '㉙ N3：label 含 CR → exit 2' 2 "$?" "$out"
+gone  '㉙ N3：CR label 沒留下 lock 目錄'
+out="$(L --hold "$(printf '%081d' 0)" 2>&1)"; rc_is '㉙ N3：label 81 字 → exit 2' 2 "$?" "$out"
+gone  '㉙ N3：過長 label 沒留下 lock 目錄'
+out="$(hold_as_stranger "$(printf '%080d' 0)")"; rc_is '㉙ N3：label 80 字可 --hold' 0 "$?" "$out"
+out="$(cd "$wtA" && bash "$lock_sh" --release 2>&1)"; rc_is '㉙ N3：釋放 80 字 label 的 hold' 0 "$?" "$out"
+gone  '㉙ N3：釋放後 lock 消失'
 unset SUPABASE_LOCK_HOLD_TICK
 
 if [ "$fail" -eq 0 ]; then
