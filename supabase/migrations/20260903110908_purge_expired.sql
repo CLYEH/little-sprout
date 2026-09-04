@@ -261,10 +261,14 @@ comment on function public.purge_storage_queue_mark_failed(uuid[], text) is
   ' 小時）設定下次可重試時間。SECURITY DEFINER：service_role 只能透過這支函式'
   ' 表達「這幾筆這次沒能確認已刪」，不能直接 UPDATE 任意欄位。';
 
-revoke execute on function public.purge_storage_queue_mark_failed(uuid[], text) from public, anon, authenticated;
--- 全域 default privileges（harden_default_privileges.sql）已經讓新函式對這三個
--- 角色天生零 EXECUTE，這裡明確 REVOKE 純粹是慣例（同 private.purge_expired() 的
--- 既有寫法），讓「這支函式不開放」這件事在檔案裡看得到。
+revoke execute on function public.purge_storage_queue_mark_failed(uuid[], text) from public, anon;
+-- 只從 public／anon 收回，不寫 authenticated（比照 private.purge_expired() 收尾
+-- 那句 REVOKE 的既有寫法與理由，見該處註解）：scripts/gates/migration-breaking-
+-- check.sh 會把「REVOKE 名單含 authenticated」判成動到既有授權的 BREAKING 變更
+-- （需要 PR body BREAKING: 段落＋同 PR 動 docs/API.md）；但這支函式從建立的第一刻
+-- 就沒有對 authenticated 開放過 EXECUTE（全域 default privileges，見
+-- harden_default_privileges.sql），特意不 REVOKE authenticated 純粹是避免誤觸這道
+-- 分級——效果上 authenticated 本來就沒有 EXECUTE，不需要這句話幫忙。
 
 -- ---------------------------------------------------------------------------
 -- 3. media 的 AFTER DELETE 統計級 trigger：硬刪時把 storage_path／thumb_path 收進
@@ -426,9 +430,20 @@ declare
   v_local_reactions integer;
   v_queue_before integer;
   v_queue_after integer;
+  -- R3（merge-review R2 F2／F3）：孤兒留言自己的 id（供清它們的 reactions／
+  -- content_reports）；v_n2 是這一段「順帶再清一層」的列數暫存，不與 v_n（主表
+  -- 清除筆數，函式最後要寫進 v_counts）共用，避免互相覆寫。
+  v_orphan_comment_ids uuid[];
+  v_n2 integer;
 begin
-  -- diaries：硬刪之後順帶清掉指向這篇日記的孤兒 comments／reactions（多型關聯，
-  -- 沒有 FK，父列消失不會自動帶走它們，見 PLAN §5「無法下外鍵」的既有代價）。
+  -- diaries：硬刪之後順帶清掉指向這篇日記的孤兒 comments／reactions／
+  -- content_reports（多型關聯，沒有 FK，父列消失不會自動帶走它們，見 PLAN §5
+  -- 「無法下外鍵」的既有代價）。R3（merge-review R2 F2／F3）：孤兒留言被清掉之後，
+  -- 指向「那則留言」的按讚會變成第二層孤兒（留言消失了，但誰對它按過讚的紀錄還
+  -- 在）——用 `delete … returning id` 把孤兒留言自己的 id 收出來，再多清一次
+  -- target_type='comment' 的 reactions；檢舉（content_reports）指向已永久清除的
+  -- 日記本身、或指向已被連坐清除的孤兒留言，orchestrator 裁定一併清除——票的
+  -- 承諾是「永久清除」，檢舉紀錄不該是唯一例外（見 docs/API.md §6）。
   begin
     with deleted as (
       delete from public.diaries where deleted_at < v_cutoff returning id
@@ -439,11 +454,24 @@ begin
     v_local_comments := 0;
     v_local_reactions := 0;
     if v_n > 0 then
-      delete from public.comments where target_type = 'diary' and target_id = any(v_ids);
-      get diagnostics v_local_comments = row_count;
+      with orphan_comments as (
+        delete from public.comments where target_type = 'diary' and target_id = any(v_ids) returning id
+      )
+      select coalesce(array_agg(id), array[]::uuid[]) into v_orphan_comment_ids from orphan_comments;
+      v_local_comments := coalesce(array_length(v_orphan_comment_ids, 1), 0);
 
       delete from public.reactions where target_type = 'diary' and target_id = any(v_ids);
       get diagnostics v_local_reactions = row_count;
+
+      delete from public.content_reports where target_type = 'diary' and target_id = any(v_ids);
+
+      if v_local_comments > 0 then
+        delete from public.reactions where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
+        get diagnostics v_n2 = row_count;
+        v_local_reactions := v_local_reactions + v_n2;
+
+        delete from public.content_reports where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
+      end if;
     end if;
 
     v_counts := v_counts || jsonb_build_object('diaries', v_n);
@@ -466,11 +494,24 @@ begin
     v_local_comments := 0;
     v_local_reactions := 0;
     if v_n > 0 then
-      delete from public.comments where target_type = 'album' and target_id = any(v_ids);
-      get diagnostics v_local_comments = row_count;
+      with orphan_comments as (
+        delete from public.comments where target_type = 'album' and target_id = any(v_ids) returning id
+      )
+      select coalesce(array_agg(id), array[]::uuid[]) into v_orphan_comment_ids from orphan_comments;
+      v_local_comments := coalesce(array_length(v_orphan_comment_ids, 1), 0);
 
       delete from public.reactions where target_type = 'album' and target_id = any(v_ids);
       get diagnostics v_local_reactions = row_count;
+
+      delete from public.content_reports where target_type = 'album' and target_id = any(v_ids);
+
+      if v_local_comments > 0 then
+        delete from public.reactions where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
+        get diagnostics v_n2 = row_count;
+        v_local_reactions := v_local_reactions + v_n2;
+
+        delete from public.content_reports where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
+      end if;
     end if;
 
     v_counts := v_counts || jsonb_build_object('albums', v_n);
@@ -503,6 +544,10 @@ begin
     if v_n > 0 then
       delete from public.reactions where target_type = 'comment' and target_id = any(v_ids);
       get diagnostics v_local_reactions = row_count;
+
+      -- R3（merge-review R2 F3）：檢舉指向這則已永久清除的留言本身也一併清除，
+      -- 理由同上方 diaries／albums 區塊。
+      delete from public.content_reports where target_type = 'comment' and target_id = any(v_ids);
 
       declare
         v_nested_comments integer;
@@ -544,11 +589,25 @@ begin
     v_local_comments := 0;
     v_local_reactions := 0;
     if v_n > 0 then
-      delete from public.comments where target_type = 'media' and target_id = any(v_ids);
-      get diagnostics v_local_comments = row_count;
+      with orphan_comments as (
+        delete from public.comments where target_type = 'media' and target_id = any(v_ids) returning id
+      )
+      select coalesce(array_agg(id), array[]::uuid[]) into v_orphan_comment_ids from orphan_comments;
+      v_local_comments := coalesce(array_length(v_orphan_comment_ids, 1), 0);
 
       delete from public.reactions where target_type = 'media' and target_id = any(v_ids);
       get diagnostics v_local_reactions = row_count;
+
+      -- R3（merge-review R2 F3）：孤兒留言與檢舉，理由同 diaries／albums 區塊。
+      delete from public.content_reports where target_type = 'media' and target_id = any(v_ids);
+
+      if v_local_comments > 0 then
+        delete from public.reactions where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
+        get diagnostics v_n2 = row_count;
+        v_local_reactions := v_local_reactions + v_n2;
+
+        delete from public.content_reports where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
+      end if;
     end if;
 
     v_counts := v_counts || jsonb_build_object('media', v_n);

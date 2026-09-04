@@ -211,6 +211,91 @@ $$;
 rollback;
 
 -- ===========================================================================
+-- 1c（R3，merge-review R2 F2／F3）：
+--   F2：孤兒留言被清掉之後，指向「那則留言」的按讚（第二層孤兒）也要一併清——
+--   1b 只驗了「父列消失→孤兒留言消失」，沒有驗「孤兒留言消失→它自己的按讚也消失」。
+--   F3：content_reports 指向已永久清除的目標（orchestrator 裁定：diary／album／
+--   media／comment 四種 target_type，含直接過期與孤兒清除兩種消失方式）一併清除
+--   ——票的承諾是「永久清除」，檢舉紀錄不該是唯一留下的例外，見
+--   docs/API.md §6「孤兒 comments／reactions／content_reports」。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_now timestamptz := clock_timestamp();
+  v_owner uuid := 'fa100000-0000-4000-8000-000000000001';
+  v_family uuid := 'fa200000-0000-4000-8000-000000000001';
+  v_diary uuid := 'fa300000-0000-4000-8000-000000000001';   -- 31 天前軟刪，該清
+  v_album uuid := 'fa300000-0000-4000-8000-000000000002';   -- 31 天前軟刪，該清
+  v_media uuid := 'fa300000-0000-4000-8000-000000000003';   -- 31 天前軟刪，該清
+  v_self_comment uuid := 'fa300000-0000-4000-8000-000000000004';  -- 自己過期的留言
+  v_orphan_comment uuid := 'fa400000-0000-4000-8000-000000000001';  -- 掛在 v_diary 下，未過期，因父列消失被孤兒清除（第一層）
+  v_report_diary uuid := 'fa500000-0000-4000-8000-000000000001';
+  v_report_album uuid := 'fa500000-0000-4000-8000-000000000002';
+  v_report_media uuid := 'fa500000-0000-4000-8000-000000000003';
+  v_report_self_comment uuid := 'fa500000-0000-4000-8000-000000000004';
+  v_report_orphan_comment uuid := 'fa500000-0000-4000-8000-000000000005';  -- 指向孤兒留言（第二層）
+  v_reaction_orphan_comment uuid := 'fa600000-0000-4000-8000-000000000001';  -- 指向孤兒留言的按讚（第二層，F2）
+  v_n int;
+begin
+  set local role postgres;
+
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+  values (v_owner, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-1c@ls153.test', now(), now(), '{}', '{}');
+  insert into public.profiles (id, display_name) values (v_owner, 'LS153 1c 測試')
+    on conflict (id) do update set display_name = excluded.display_name;
+  insert into public.families (id, name, created_by) values (v_family, 'LS153 1c 測試家', v_owner);
+
+  insert into public.diaries (id, family_id, author_id, body, entry_date, deleted_at)
+  values (v_diary, v_family, v_owner, '即將過期的日記', current_date - 40, v_now - interval '31 days');
+  insert into public.albums (id, family_id, title, created_by, deleted_at)
+  values (v_album, v_family, '即將過期的相簿', v_owner, v_now - interval '31 days');
+  insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, deleted_at)
+  values (v_media, v_family, v_family::text || '/2026/07/' || v_media::text || '.jpg', 'photo', 100, v_now, 10, 10, v_owner, v_now - interval '31 days');
+  insert into public.comments (id, family_id, target_type, target_id, author_id, body, deleted_at)
+  values (v_self_comment, v_family, 'media', gen_random_uuid(), v_owner, '自己也會過期的留言', v_now - interval '31 days');
+  -- 掛在 v_diary 下的留言，本身沒有過期（deleted_at NULL）——純粹因為 v_diary
+  -- 消失而被孤兒清除（第一層），這是 F2／F3 要驗的「第二層」的前提。
+  insert into public.comments (id, family_id, target_type, target_id, author_id, body)
+  values (v_orphan_comment, v_family, 'diary', v_diary, v_owner, '掛在即將消失的日記下');
+
+  insert into public.content_reports (id, family_id, target_type, target_id, reporter_id, reason) values
+    (v_report_diary, v_family, 'diary', v_diary, v_owner, '檢舉即將消失的日記'),
+    (v_report_album, v_family, 'album', v_album, v_owner, '檢舉即將消失的相簿'),
+    (v_report_media, v_family, 'media', v_media, v_owner, '檢舉即將消失的照片'),
+    (v_report_self_comment, v_family, 'comment', v_self_comment, v_owner, '檢舉自己也會過期的留言'),
+    (v_report_orphan_comment, v_family, 'comment', v_orphan_comment, v_owner, '檢舉掛在日記下、將被孤兒清除的留言');
+  insert into public.reactions (id, family_id, target_type, target_id, user_id) values
+    (v_reaction_orphan_comment, v_family, 'comment', v_orphan_comment, v_owner);
+
+  perform private.purge_expired(v_now);
+
+  -- F3：五筆 content_reports（直接過期的 diary／album／media／comment 各一，加上
+  -- 指向孤兒留言的第二層一筆）全部清除，一筆不留。
+  select count(*) into v_n from public.content_reports where family_id = v_family;
+  if v_n <> 0 then
+    raise exception 'FAIL F3：這個家庭的 content_reports 應該一筆都不剩（含指向孤兒留言的第二層），實際還有 % 筆', v_n;
+  end if;
+
+  -- F2：指向孤兒留言的按讚（第二層孤兒）也清除。
+  select count(*) into v_n from public.reactions where id = v_reaction_orphan_comment;
+  if v_n <> 0 then
+    raise exception 'FAIL F2：指向孤兒留言的按讚（第二層孤兒）沒有被清除';
+  end if;
+
+  -- 前提對帳：孤兒留言本身確實被清了（第一層，1b 已經驗過機制，這裡只是確認
+  -- 這個 fixture 的前提成立，不是重複驗證同一件事）。
+  select count(*) into v_n from public.comments where id = v_orphan_comment;
+  if v_n <> 0 then raise exception 'FAIL：前提不對，v_orphan_comment 應該已被孤兒清除'; end if;
+
+  raise notice 'ok F2／F3：第二層孤兒（指向已被孤兒清除的留言的按讚／檢舉）與四種 target_type 的 content_reports（含直接過期與孤兒清除兩種消失方式）皆正確清除';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
 -- 2. media 硬刪：Storage 佇列內容＋額度對帳（storage_used_bytes 硬刪前後不變）
 --
 -- 走完整生命週期（上傳→軟刪→backdate deleted_at→硬刪），不是直接插入已軟刪的列
@@ -337,6 +422,10 @@ declare
   v_owner_family uuid := 'd1000000-0000-4000-8000-000000000001';  -- 家 A 的 owner（陪襯，不受影響）
   v_purged uuid := 'd1000000-0000-4000-8000-000000000002';        -- 31 天前請求刪除，該 tombstone
   v_fresh uuid := 'd1000000-0000-4000-8000-000000000003';         -- 29 天前請求刪除，不該動
+  -- R3（merge-review R2 F4）：剛好 30 天前請求刪除——邊界含（不清），此前沒有任何
+  -- fixture 釘住這個 profiles 專屬的邊界（mutation `<`→`<=` 全綠不紅，見 R2 review
+  -- comment 7420f7b9 F4）。
+  v_boundary uuid := 'd1000000-0000-4000-8000-000000000004';
   v_family_a uuid := 'd2000000-0000-4000-8000-000000000001';
   v_diary_active uuid := 'd3000000-0000-4000-8000-000000000001';  -- v_purged 在家 A 留下的日記（未軟刪）
   v_report_id uuid := 'd4000000-0000-4000-8000-000000000001';
@@ -356,11 +445,13 @@ begin
   values
     (v_owner_family, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-p-owner@ls153.test', now(), now(), '{}', '{}'),
     (v_purged, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-p-purged@ls153.test', now(), now(), '{}', '{}'),
-    (v_fresh, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-p-fresh@ls153.test', now(), now(), '{}', '{}');
+    (v_fresh, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-p-fresh@ls153.test', now(), now(), '{}', '{}'),
+    (v_boundary, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-p-boundary@ls153.test', now(), now(), '{}', '{}');
   insert into public.profiles (id, display_name, avatar_url) values
     (v_owner_family, 'LS153 家 A owner', null),
     (v_purged, 'LS153 真實姓名（該被清空）', 'https://example.test/real-avatar.jpg'),
-    (v_fresh, 'LS153 29 天前請求刪除', null)
+    (v_fresh, 'LS153 29 天前請求刪除', null),
+    (v_boundary, 'LS153 剛好 30 天前請求刪除', null)
   on conflict (id) do update set display_name = excluded.display_name, avatar_url = excluded.avatar_url;
 
   insert into public.families (id, name, created_by) values (v_family_a, 'LS153 profiles 測試家', v_owner_family);
@@ -384,6 +475,7 @@ begin
 
   update public.profiles set deletion_requested_at = v_now - interval '31 days' where id = v_purged;
   update public.profiles set deletion_requested_at = v_now - interval '29 days' where id = v_fresh;
+  update public.profiles set deletion_requested_at = v_now - interval '30 days' where id = v_boundary;
 
   perform private.purge_expired(v_now);
 
@@ -403,6 +495,14 @@ begin
   select display_name, purged_at into v_display, v_purged_at from public.profiles where id = v_fresh;
   if v_display <> 'LS153 29 天前請求刪除' or v_purged_at is not null then
     raise exception 'FAIL：29 天前請求刪除的 profiles 列不該被 tombstone（display_name=% purged_at=%）', v_display, v_purged_at;
+  end if;
+
+  -- R3（merge-review R2 F4）：剛好 30 天前請求刪除——邊界含，不清（語意對齊
+  -- set_child_deleted 的 30 天還原邊界）。這是本次唯一真正釘住 profiles 這個
+  -- 邊界的斷言：mutation `<`→`<=` 會讓這裡從「不該動」變成「被 tombstone」而打紅。
+  select display_name, purged_at into v_display, v_purged_at from public.profiles where id = v_boundary;
+  if v_display <> 'LS153 剛好 30 天前請求刪除' or v_purged_at is not null then
+    raise exception 'FAIL F4：剛好 30 天前請求刪除的 profiles 列不該被 tombstone（30 天邊界含，不清），實際 display_name=% purged_at=%', v_display, v_purged_at;
   end if;
 
   -- cascade：reactions／device_tokens／join_requests／blocked_users（雙向）屬於
@@ -452,7 +552,7 @@ begin
     raise exception 'FAIL F2 回歸：帳號復活了（deletion_requested_at=% purged_at=%）', v_requested_at, v_purged_at;
   end if;
 
-  raise notice 'ok：profiles tombstone——29／31 天邊界正確，PII 清空＋purged_at 標記，reactions／device_tokens／join_requests／blocked_users 皆清除，author_id／reporter_id 不再 set null（profiles 列還在），家 A 本身與 owner 不受影響，F2 帳號復活洞已回歸測試（ensureProfileExists 式 upsert 無效）';
+  raise notice 'ok：profiles tombstone——29／30／31 天邊界正確（R3 F4 補上剛好 30 天不清），PII 清空＋purged_at 標記，reactions／device_tokens／join_requests／blocked_users 皆清除，author_id／reporter_id 不再 set null（profiles 列還在），家 A 本身與 owner 不受影響，F2 帳號復活洞已回歸測試（ensureProfileExists 式 upsert 無效）';
 end;
 $$;
 

@@ -1508,15 +1508,29 @@ trigger 對「任何硬刪的 `media` 列」都入列，不像 `purge_expired()`
 成員刪帳號時，家庭底下所有照片不論軟刪與否都會被 cascade 掉），兩者判準本來就該
 不同。
 
-**孤兒 comments／reactions**（R2，merge-review R1 minor finding）：`comments`／
-`reactions` 是多型關聯（`target_type`／`target_id`），刻意沒有 FK（PLAN §5 已知
-代價）——`diaries`／`albums`／`media`／`comments` 被硬刪之後，指向它們的留言／
-按讚不會自動消失，`purge_expired()` 在硬刪這四張表各自的過期列之後，順帶清掉
-`target_type`／`target_id` 指向那些剛消失的 id 的 `comments`／`reactions`（含
-「留言掛在已消失的留言下」這個防禦性分支——今天沒有留言回覆留言的功能，預期永遠
-0 筆，保留是因為多型 target 沒有 FK，寧可多做一次涵蓋）。`deleted_counts` 裡的
+**孤兒 comments／reactions／content_reports**（R2 minor finding；R3，merge-review
+R2 F2／F3，comment 7420f7b9）：`comments`／`reactions`／`content_reports` 是多型
+關聯（`target_type`／`target_id`），刻意沒有 FK（PLAN §5 已知代價）——`diaries`／
+`albums`／`media`／`comments` 被硬刪之後，指向它們的留言／按讚／檢舉不會自動消失，
+`purge_expired()` 在硬刪這四張表各自的過期列之後，順帶清掉 `target_type`／
+`target_id` 指向那些剛消失的 id 的 `comments`／`reactions`／`content_reports`
+（含「留言掛在已消失的留言下」這個防禦性分支——今天沒有留言回覆留言的功能，預期
+永遠 0 筆，保留是因為多型 target 沒有 FK，寧可多做一次涵蓋）。`deleted_counts` 裡的
 `comments`／`reactions` 兩個鍵是**累加值**：自己過期的直接刪除數，加上依附在其他
-表清除時一併清掉的孤兒數。
+表清除時一併清掉的孤兒數（`content_reports` 沒有進 `deleted_counts`，純粹清除、
+不觀測筆數，同「不擴大範圍」的既有原則）。
+
+**第二層孤兒（R3，F2）**：`diaries`／`albums`／`media` 的孤兒留言被清掉之後，
+指向「那則留言」本身的按讚與檢舉會變成第二層孤兒（留言消失了，但誰對它按過讚／
+檢舉過的紀錄還在）——`purge_expired()` 用 `delete … returning id` 把孤兒留言自己
+的 id 收出來，再清一次 `target_type='comment'` 的 `reactions`／`content_reports`。
+
+**`content_reports` 的處置（R3，F3，orchestrator 裁定）**：R1 review 點名
+`content_reports` 是三張孤兒表之一，R2 只修了 `comments`／`reactions`，`content_reports`
+完全沒被提到。orchestrator 裁定：**指向已永久清除目標的 `content_reports` 一併
+清除**——票的承諾是「永久清除」，檢舉紀錄（`reason` 是使用者輸入的自由文字，屬
+使用者資料）不該是唯一留下的例外。涵蓋四種 `target_type`（`diary`／`album`／
+`media`／`comment`，含直接過期與孤兒清除兩種消失方式）。
 
 **`profiles` tombstone：為什麼不硬刪**（R2，merge-review R1 F2，取代原本「硬刪、
 留孤兒 auth.users」的版本；規格分歧仍是採最保守解，見 migration 檔頭完整說明）：
@@ -1540,6 +1554,17 @@ LS-151 尚未成功而暫時還在，也不構成資料外洩。**不能硬刪�
 `UPDATE`，client 這句話連想動都動不了這兩欄）。真正的實體清除交給 LS-151：
 `auth.users` 被 `delete-account` Edge Function 刪除時，`profiles.id references
 auth.users(id) on delete cascade` 會讓 tombstone 列一起消失。
+
+**依賴 LS-151 的安全性論證（R3，F5-informational i5）**：本票只確保
+`deletion_requested_at` 已設定的使用者「重新登入不會讓帳號復活」；但如果
+`delete_my_account()`（LS-143）之後、`purge_expired()` 30 天清除之前，這個人又
+成為某個家庭的活躍成員（例如又被邀請加入），本票的 tombstone 機制本身**不會**
+阻止這件事——真正從源頭排除「已請求刪除的使用者還能繼續正常使用 app」這個狀態
+的是 LS-151 的 `LS051` `before insert` guard（讀 `profiles.deletion_requested_at`
+擋七張表的寫入）。也就是說，本票 tombstone 的安全性論證有一部分**依賴 LS-151
+落地**，不是本票自己完整涵蓋——若 LS-151 尚未部署，這個邊界情境仍然存在（風險
+等級與 R1 review 原本點名的「purge 撞 LS001 永久靜默」同一類，已由 F2 的
+tombstone 修法結構性排除主要路徑，這裡記錄的是次要、依賴外部票的殘餘依賴）。
 
 Tombstone 時一併硬刪這個人的 `reactions`／`device_tokens`／
 `join_requests`（`applicant_id`）／`blocked_users`（雙向）——這四張表原本靠硬刪
