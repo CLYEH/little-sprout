@@ -86,6 +86,10 @@
 # 別人真正的未落地設計工作。`pen-read.sh` 就是這個模式的唯讀封裝，供 reviewer／QA 安全讀取指定 worktree 的
 # 設計稿；自測見 pen-open.test.sh 的 `--force-reload` 案例與 `pen-read.test.sh`。
 #
+# LS-176（LS-96 池項 56eeaee0）：候選路徑在磁碟上已不存在（Pen 仍記得已被 cleanup-merged.sh 移掉的 worktree）
+# 視為可安全捨棄——見 check_root_safe() 的訊號 d。舊版判「不存在→無法確認安全」拒絕清場，每張後續設計票的
+# pen-read.sh 都被擋（LS-152／LS-163 清理後各發生一次）。
+#
 # macOS 沒有 coreutils timeout：每次 pen interactive 呼叫用背景程序＋背景 sleep 到期就 kill 的看門狗模式
 # （同 scripts/ops/patrol.sh 的 fetch_with_timeout；此處用 stdin/stdout 重導向而非管線，$! 才是 pen 程序本身的
 # PID，kill 不會留下管線另一端的孤兒程序）。
@@ -269,11 +273,16 @@ script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 #   c. rc=0＋「僅偵測到白名單屬性」（見 pen-land.sh）——節點總數／id 集合不變，只有 placeholder 這類 UI 態
 #      屬性有差異；**額外要求**目標檔對 git 全程 clean（`git status --porcelain` 該路徑無輸出）才視為安全
 #      （defect 1：防止落地檔本身其實也被直接改過內容、只是恰好也帶了 placeholder 差異的邊界情況被誤放行）。
+#   d. （LS-176，LS-96 池項 56eeaee0）`<root>/design/littlesprout.pen` 在磁碟上已不存在——Pen 記得的是被
+#      cleanup-merged.sh 移掉的 worktree 路徑，落地目標都沒了，那份 renderer 記憶體裡的東西本來就無處可落地：
+#      「無檔即無未落地變更可失」，視為可安全捨棄並印「舊路徑不存在，視為已捨棄：<path>」。舊版把它與
+#      「無法確認」混在一起判不安全，LS-152／LS-163 worktree 清理後每張後續設計票的 pen-read.sh 都被擋、
+#      renderer 讀現稿的新鮮度保證失效。路徑存在的 root 仍照 a–c／mtime 方向判定，dirty 照舊擋。
 check_root_safe() {
   local root=$1 out rc
-  if [ ! -d "$root" ]; then
-    echo "  「${root}」不存在（可能已移除）——無法確認安全，視為不安全" >&2
-    return 1
+  if [ ! -e "${root}${suffix}" ]; then
+    echo "  舊路徑不存在，視為已捨棄：${root}${suffix}" >&2
+    return 0
   fi
   out=$(bash "${script_root}/scripts/ops/pen-land.sh" "$root" --dry-run 2>&1)
   rc=$?
