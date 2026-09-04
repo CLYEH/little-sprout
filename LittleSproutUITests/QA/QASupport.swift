@@ -96,9 +96,16 @@ enum QAMailpit {
         throw QAFailure.mailpit("\(Int(timeout)) 秒內沒等到 OTP 信（\(lastSeen)）")
     }
 
-    /// `(?<!\d)\d{6}(?!\d)`：整段剛好 6 碼的數字——排除時間戳之類更長的數字串。
+    /// `(?<!\d)\d{6}(?!\d)`：整段剛好 6 碼的數字——排除時間戳之類更長的數字串。merge-review R1 I-4：先錨在
+    /// 「驗證碼是」之後找（`otp.html` 的版型「你的驗證碼是：」緊接 `{{ .Token }}`），模板日後多了別的 6 碼數字
+    /// （訂單號、日期串）也不會抓錯；找不到錨點（模板換了措辭）才退回整段第一個獨立 6 碼。
     static func sixDigitCode(in text: String) -> String? {
-        guard let range = text.range(of: #"(?<!\d)\d{6}(?!\d)"#, options: .regularExpression) else { return nil }
+        let pattern = #"(?<!\d)\d{6}(?!\d)"#
+        if let anchor = text.range(of: "驗證碼是"),
+           let range = text[anchor.upperBound...].range(of: pattern, options: .regularExpression) {
+            return String(text[range])
+        }
+        guard let range = text.range(of: pattern, options: .regularExpression) else { return nil }
         return String(text[range])
     }
 
