@@ -287,7 +287,7 @@ if [ -f "$here/supabase-lock.sh" ]; then
 else
   lock_line="（無 ${here}/supabase-lock.sh）"
 fi
-# LS-159：QA 持有（hold）時另讀 holder 檔的 label／到期 epoch 給 --json；human／--brief 那一行由 --status 自帶「QA 持有中（label，剩餘 n 分）」
+# LS-159：QA 持有（hold）時另讀 holder 檔的 label／到期 epoch 給 --json；human／--brief 那一行由 --status 自帶「持有中（label，剩餘 n 分）」
 hold_label=; hold_expires=
 if [ -f "$here/supabase-lock.sh" ]; then
   lock_path=$(bash "$here/supabase-lock.sh" --path 2>/dev/null)
