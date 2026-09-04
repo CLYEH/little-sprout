@@ -6975,6 +6975,10 @@
                           "content": "grandma@example",
                           "fill": "$text-primary"
                         },
+                        "a7OyZ7": {
+                          "fill": "$danger",
+                          "icon": "circle-alert"
+                        },
                         "ikuz2": {
                           "content": "這個 Email 好像沒打完，請再看一次，格式像 name@example.com",
                           "fill": "$danger",
@@ -7848,6 +7852,9 @@
                         "iu3Q8": {
                           "content": "陳家",
                           "fill": "$text-secondary"
+                        },
+                        "a7OyZ7": {
+                          "icon": "lock"
                         },
                         "ikuz2": {
                           "content": "送出期間先不能修改。"
@@ -12246,6 +12253,10 @@
                         "iu3Q8": {
                           "content": "例如：陳家",
                           "fill": "$text-secondary"
+                        },
+                        "a7OyZ7": {
+                          "fill": "$text-primary",
+                          "icon": "circle-alert"
                         },
                         "ikuz2": {
                           "content": "還沒填家庭名稱。在上面打上名字，再按一次。",
@@ -114916,14 +114927,11 @@
                 {
                   "type": "text",
                   "id": "n1hzsr",
-                  "x": 0,
-                  "y": 0,
                   "name": "Value",
-                  "enabled": false,
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
-                  "width": "fill_container(0)",
-                  "content": "值",
+                  "width": "fill_container",
+                  "content": " ",
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
                   "fontWeight": "normal"
@@ -115060,8 +115068,11 @@
                 {
                   "type": "frame",
                   "id": "BOM1V",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": -591,
                   "name": "Section 個人",
-                  "width": "fill_container",
+                  "width": "fill_container(345)",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
@@ -115174,8 +115185,11 @@
                 {
                   "type": "frame",
                   "id": "O484s8",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": -437,
                   "name": "Section 家庭",
-                  "width": "fill_container",
+                  "width": "fill_container(345)",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
@@ -115380,12 +115394,6 @@
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
-                  "padding": [
-                    140,
-                    0,
-                    0,
-                    0
-                  ],
                   "children": [
                     {
                       "type": "text",
@@ -115458,6 +115466,12 @@
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
+                  "padding": [
+                    185,
+                    0,
+                    0,
+                    0
+                  ],
                   "children": [
                     {
                       "type": "text",
@@ -115530,6 +115544,13 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "GrCDM",
+                  "name": "Scroll Bottom Inset",
+                  "width": "fill_container",
+                  "height": 80
                 }
               ]
             }
@@ -115687,8 +115708,11 @@
                 {
                   "type": "frame",
                   "id": "cvEAU",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": -591,
                   "name": "Section 個人",
-                  "width": "fill_container",
+                  "width": "fill_container(345)",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
@@ -115801,8 +115825,11 @@
                 {
                   "type": "frame",
                   "id": "uhATU",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": -437,
                   "name": "Section 家庭",
-                  "width": "fill_container",
+                  "width": "fill_container(345)",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
@@ -116007,12 +116034,6 @@
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
-                  "padding": [
-                    140,
-                    0,
-                    0,
-                    0
-                  ],
                   "children": [
                     {
                       "type": "text",
@@ -116085,6 +116106,12 @@
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
+                  "padding": [
+                    185,
+                    0,
+                    0,
+                    0
+                  ],
                   "children": [
                     {
                       "type": "text",
@@ -116157,6 +116184,13 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "uRztA",
+                  "name": "Scroll Bottom Inset",
+                  "width": "fill_container",
+                  "height": 80
                 }
               ]
             }
@@ -116314,8 +116348,11 @@
                 {
                   "type": "frame",
                   "id": "LGjnA",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": -1155,
                   "name": "Section 個人",
-                  "width": "fill_container",
+                  "width": "fill_container(345)",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
@@ -116428,8 +116465,11 @@
                 {
                   "type": "frame",
                   "id": "r3s5e",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": -849,
                   "name": "Section 家庭",
-                  "width": "fill_container",
+                  "width": "fill_container(345)",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
@@ -116531,12 +116571,6 @@
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
-                  "padding": [
-                    533,
-                    0,
-                    0,
-                    0
-                  ],
                   "children": [
                     {
                       "type": "text",
@@ -116712,6 +116746,12 @@
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
+                  "padding": [
+                    262,
+                    0,
+                    0,
+                    0
+                  ],
                   "children": [
                     {
                       "type": "text",
@@ -116784,6 +116824,13 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "WymTY",
+                  "name": "Scroll Bottom Inset",
+                  "width": "fill_container",
+                  "height": 104
                 }
               ]
             }
@@ -118904,7 +118951,7 @@
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "你上傳的照片、影片、日記與留言會標記刪除，跟其他人刪除內容一樣，30 天內可以還原，30 天後會永久清除。",
+                          "content": "你建立的相簿、日記與留言，以及你上傳的照片、影片，都會標記刪除，跟其他人刪除內容一樣，30 天內可以還原，30 天後會永久清除。",
                           "lineHeight": 1.5,
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
@@ -122702,49 +122749,6 @@
             },
             {
               "type": "frame",
-              "id": "kxnZC",
-              "name": "Link Wrap",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-tight",
-              "padding": [
-                "$sp-block",
-                0,
-                0,
-                0
-              ],
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "ng8ZF",
-                  "name": "Legal Link",
-                  "layout": "vertical",
-                  "gap": 1,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "PbceX",
-                      "name": "Label",
-                      "fill": "$text-primary",
-                      "content": "查看完整《使用條款》與《隱私權政策》",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "AXXrA",
-                      "name": "Underline",
-                      "fill": "$text-primary",
-                      "width": 238,
-                      "height": 1
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
               "id": "e4INC8",
               "name": "Spacer",
               "width": "fill_container",
@@ -122757,9 +122761,9 @@
           "id": "BfVra",
           "name": "Action Bar",
           "width": "fill_container",
-          "stroke": "$border",
-          "strokeWidth": 1,
+          "stroke": "#00000000",
           "strokeAlignment": "inner",
+          "layout": "vertical",
           "children": [
             {
               "type": "rectangle",
@@ -122775,11 +122779,50 @@
               "name": "Button Wrap",
               "width": "fill_container",
               "fill": "$surface",
+              "layout": "vertical",
+              "gap": "$sp-label",
               "padding": [
                 "$sp-item",
                 "$screen-pad"
               ],
               "children": [
+                {
+                  "type": "frame",
+                  "id": "kxnZC",
+                  "name": "Link Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ng8ZF",
+                      "name": "Legal Link",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "PbceX",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "查看完整《使用條款》與《隱私權政策》",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "AXXrA",
+                          "name": "Underline",
+                          "fill": "$text-primary",
+                          "width": 238,
+                          "height": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
                 {
                   "id": "pOQS3",
                   "type": "ref",
@@ -123381,7 +123424,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "這篇日記會從時間軸移除，但裡面附的照片不會被刪除，之後還能在相簿看到。30 天內你可以把它還原回來；過了 30 天，就不能再還原了。",
+                  "content": "這篇日記會從時間軸移除，家人也看不到；裡面附的照片不會被刪除，之後還能在相簿看到。這個動作目前無法在 App 內復原。",
                   "lineHeight": 1.6,
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
@@ -123433,7 +123476,7 @@
                           "id": "xYjOn",
                           "name": "Confirm Label",
                           "fill": "$danger",
-                          "content": "刪除，30 天內可還原",
+                          "content": "刪除這篇日記",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "700"
@@ -123601,7 +123644,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "留言刪除後就不會再顯示給家人看。30 天內你可以把它還原回來；過了 30 天，就不能再還原了。",
+                  "content": "這則留言刪除後，家人就看不到了。這個動作目前無法在 App 內復原。",
                   "lineHeight": 1.6,
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
@@ -123653,7 +123696,7 @@
                           "id": "eh258",
                           "name": "Confirm Label",
                           "fill": "$danger",
-                          "content": "刪除，30 天內可還原",
+                          "content": "刪除這則留言",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "700"
