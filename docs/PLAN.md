@@ -251,6 +251,7 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 1. **每家庭儲存額度**（`families.storage_quota_bytes`，預設值取一個你能吸收的數字，例如 2–5GB）。超額擋下上傳並清楚提示。這是硬防線。
 2. **Supabase 用量告警**：設定接近方案上限時通知，別靠月結帳單才發現。
 3.（備案）**註冊開關**：留一個能快速把新註冊關掉或改為候補的旗標。真的爆量時這是唯一能立刻止血的手段。
+   **已落地（LS-179）**：`app_settings.registrations_open`（取「關掉」，不做候補名單），Dashboard 改欄位即生效，操作方式見 `docs/API.md` §11。
 
 額度設多少可以之後調，但**機制要在上架前就在**。上架後才加額度限制，等於要對既有使用者收回已經給出去的東西。
 
@@ -260,6 +261,7 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 
 - **檢舉要進到你看得到的地方**，不能只通知該家庭的 Owner —— 被檢舉的很可能就是 Owner 本人。需要一個你自己能看的檢舉列表（Supabase Dashboard 手動看就夠，不必做後台）。
 - **要有停權能力**：能停掉特定使用者或整個家庭，不需要改程式碼。
+  **已落地（LS-179）**：`profiles.suspended_at`／`families.suspended_at`，RLS＋RPC 全面拒絕＋client 錯誤碼（`LS052`／`LS053`），Dashboard 改欄位即生效，操作方式見 `docs/API.md` §11。
 - **ToS 要寫清楚**你保留移除內容與終止帳號的權利，以及內容歸屬與刪除方式。
 - 這是一個**託管陌生人上傳之兒童照片**的服務，風險性質與「只有自己家人」完全不同。相關的法遵與通報義務因地區而異，在真的開放公開註冊前值得確認一次；至少要具備移除內容、保留必要記錄、以及能配合處理的能力。
 

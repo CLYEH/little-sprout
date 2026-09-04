@@ -93,6 +93,15 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     // （error-codes-check.sh）要求 API.md／migrations／LSErrorCode 三邊一致，這裡先
     // 補上列舉與分類，UI 落地時直接可用。
     case accountDeletionInProgress = "LS051"
+    // LS052/LS053（LS-179，PLAN §10-B 停權旗標）：`profiles.suspended_at`／
+    // `families.suspended_at` 非 NULL 時，RLS＋既有 RPC 入口一律拒絕。沒有輸入
+    // 可換，只能等 Dashboard 解除，見下方 tier。
+    case accountSuspended = "LS052"
+    case familySuspended = "LS053"
+    // LS054（LS-179，PLAN §10-A(3) 註冊開關）：`app_settings.registrations_open
+    // = false` 時，自建新家庭一律拒絕（憑邀請碼加入既有家庭不受影響）。同
+    // LS052/LS053 一樣是純狀態拒絕，見下方 tier。
+    case registrationsClosed = "LS054"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -114,7 +123,8 @@ enum LSErrorCode: String, CaseIterable, Sendable {
              .targetFamilyMismatch, .timelineCursorIncomplete, .removedByOwnerNotRestorable,
              .childNotFoundOrDeleted, .childNotEditableByCaller, .childRestoreWindowExpired,
              .albumChildrenNotEditableByCaller, .ownerMustTransferBeforeAccountDeletion,
-             .accountDeletionInProgress:
+             .accountDeletionInProgress, .accountSuspended, .familySuspended,
+             .registrationsClosed:
             // 以下碼為 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
@@ -161,6 +171,11 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // 的寫入一律拒絕。沒有輸入可換，也沒有使用者能自己做的「別的事」（跟
             // ownerMustTransferBeforeAccountDeletion 不同，這裡唯一的出路是等
             // Edge Function 完成刪除），純狀態拒絕，歸 rejected。
+            // accountSuspended／familySuspended（LS052／LS053，LS-179，PLAN
+            // §10-B）：帳號或家庭被 Dashboard 停權，沒有輸入可換，只能等
+            // Dashboard 解除，同 accountDeletionInProgress 一樣是純狀態拒絕。
+            // registrationsClosed（LS054，LS-179，PLAN §10-A(3)）：目前暫停開放
+            // 新註冊，只擋自建新家庭這一步，沒有輸入可換，只能等旗標重新打開。
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:
             // 碼本身是「輸入」——打錯字換一個、或請 owner 給一支新的碼，都是同一個 UI 動作
