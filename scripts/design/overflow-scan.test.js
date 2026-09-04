@@ -423,12 +423,18 @@ ok("LS-171 geometry：path 的 geometry 被省略成 \"...\"（Pencil Get 不帶
   assert.ok(canonNode(doc.children[3], null, 3).includes('"geometry":""'), "空 geometry 以 \"\" 參與雜湊（真實稿 mzo0K 兩端皆為空字串）");
 });
 
-ok("LS-171 原始碼斷言：Pencil 端雜湊走訪的 Get 帶 {includePathGeometry: true}，且 SCAN_HASH_ONLY／SCAN_SKIP_HASH 拆兩次的旗標存在", () => {
+ok("LS-171 原始碼斷言：Pencil 端雜湊走訪（const hashAcc … const abs = {} 之間的視窗）的 Get 帶 {includePathGeometry: true}；拆兩次旗標存在且互斥", () => {
   const src = require("fs").readFileSync(path.join(__dirname, "overflow-scan.js"), "utf8");
-  const m = src.match(/Get\(\(n, c\) => \{[^]*?addLimbs\(hashAcc, fnv1a64\(line\)\);[^]*?\n  \}, (\{[^}]*\})\);/);
-  assert.ok(m, "找不到雜湊走訪的 Get(visit, options) 呼叫");
-  assert.ok(/includePathGeometry:\s*true/.test(m[1]), "雜湊走訪的 Get 必須帶 includePathGeometry: true，否則 Pencil 端 geometry 是 \"...\"、tree_hash 與 CI 必不同（LS-171）");
+  // R1 N1：regex 的 [^]*? 會跨過雜湊走訪吃到快照走訪的 options，「把選項搬到快照走訪」（＝還原 bug）的突變體存活；改看雜湊走訪自己的視窗
+  const a = src.indexOf("const hashAcc");
+  const b = src.indexOf("const abs = {}");
+  assert.ok(a > 0 && b > a, "找不到雜湊走訪的視窗（const hashAcc … const abs = {}）");
+  const win = src.slice(a, b);
+  assert.ok(win.includes("addLimbs(hashAcc, fnv1a64(line))"), "視窗內應是雜湊走訪");
+  assert.ok(/includePathGeometry:\s*true/.test(win), "雜湊走訪的 Get 必須帶 includePathGeometry: true，否則 Pencil 端 geometry 是 \"...\"、tree_hash 與 CI 必不同（LS-171）");
+  assert.ok(!/resolveInstances/.test(win), "雜湊走訪不得展開 instance（total_nodes 語意）");
   assert.ok(src.includes("SCAN_HASH_ONLY") && src.includes("SCAN_SKIP_HASH") && src.includes("SUMMARY-HASH"), "拆兩次 execute 的旗標／輸出必須存在");
+  assert.ok(/hashOnly && skipHash[^]*?throw new Error/.test(src), "SCAN_HASH_ONLY 與 SCAN_SKIP_HASH 同時為 true 必須 throw（R1 N4）");
 });
 
 ok("tree_hash js／py 交叉一致：同一份合成 .pen（含 emoji／轉義／浮點／instance descendants／path geometry）python design_tree_hash.py 算出同值；--dump 行與 canonNode 逐字相同", () => {

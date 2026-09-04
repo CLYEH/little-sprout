@@ -20,7 +20,7 @@
 //      `classification`（含「同類 N 例」），補 `ticket`／`round`／`head_sha`，`tree_hash` 抄 SUMMARY 的值（LS-168；見
 //      ui-designer.md）。`SCAN_OVERLAY_RE = "Action Bar|…"`（字串）覆寫第五支的覆蓋層名稱，`SCAN_HASH_DEBUG = "<id>"` 印
 //      該節點的雜湊行。`SCAN_HASH_ONLY = true` 只跑雜湊走訪、印 `SUMMARY-HASH total_nodes=… tree_hash=…`；`SCAN_SKIP_HASH = true`
-//      跑五支不算雜湊（SUMMARY 印 `tree_hash=skipped`）——8000 節點級的稿一次 execute 跑完雜湊＋五支會 `InternalError:
+//      跑五支不算雜湊（SUMMARY 印 `tree_hash=skipped`；兩旗標同時設會 throw）——8000 節點級的稿一次 execute 跑完雜湊＋五支會 `InternalError:
 //      interrupted`（LS-152 VR R3 實測），拆成同一稿態、中間無任何寫入的連續兩次唯讀 execute，收據 `tree_hash` 抄第一次（LS-171）。
 //   2. node：`require` 本檔取得純函數（`scanAll` 與五支 `scan*`、`treeHash`／`treeHashLines`／`canonNode`），
 //      `scripts/design/overflow-scan.test.js` 用合成節點樹驗演算法、並以 python 交叉驗 tree_hash 同值；CI rules job 的自測
@@ -488,6 +488,7 @@ if (typeof Get === "function" && typeof Print === "function") {
   const hashDebug = typeof SCAN_HASH_DEBUG !== "undefined" && SCAN_HASH_DEBUG ? String(SCAN_HASH_DEBUG) : "";
   const hashOnly = typeof SCAN_HASH_ONLY !== "undefined" && SCAN_HASH_ONLY === true;
   const skipHash = typeof SCAN_SKIP_HASH !== "undefined" && SCAN_SKIP_HASH === true;
+  if (hashOnly && skipHash) throw new Error("overflow-scan：SCAN_HASH_ONLY 與 SCAN_SKIP_HASH 互斥——第一次只設 SCAN_HASH_ONLY（雜湊），第二次只設 SCAN_SKIP_HASH（五支）；同時設會既不算雜湊也不跑五支（LS-171 R1 N4）");
   let total = 0;
   const hashAcc = [0, 0, 0, 0];
   // LS-171：includePathGeometry 必帶——Pencil Get 預設把 path 的 geometry 省略成 "..."，雜湊會與 js／py 不同（見檔頭）
