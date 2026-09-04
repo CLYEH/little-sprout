@@ -74,7 +74,7 @@ has   '④ 逾時訊息含持有者 cmd' "$berr" 'cmd=sleep 3'
 st="$(L --status 2>&1)"
 has   '⑧ --status 持有中：held pid=' "$st" "held pid=${a}"
 has   '⑧ --status 持有中：含 branch=' "$st" 'branch='
-hasnt '⑧ --status 持有中、pid 活著：不標 stale' "$st" 'stale'
+hasnt '⑧ --status 持有中、pid 活著：不標 stale' "$st" '⚠ stale'
 has   '⑪ holder 檔含 pid／started／host／worktree／branch／cmd' "$(cat "$SUPABASE_LOCK_DIR/holder" 2>/dev/null | cut -d= -f1 | paste -s -d, -)" 'pid,started,host,worktree,branch,cmd'
 # ---- 殘留的 SUPABASE_LOCK_HELD 不能繞過鎖（持有者不是祖先）----
 berr="$(SUPABASE_LOCK_HELD="$SUPABASE_LOCK_DIR" L --timeout 1 -- true 2>&1)"; rc=$?
@@ -92,7 +92,7 @@ mkdir "$SUPABASE_LOCK_DIR"
 # host 故意寫別的名字：/tmp 不跨主機、macOS hostname 會飄，回收不得比 host（PR #122 R1 m4）
 printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=/dead/wt\nbranch=feature/LS-0-dead\ncmd=sleep 999\n' "$dead" "$(date +%s)" "some-other-host.local" > "$SUPABASE_LOCK_DIR/holder"
 st="$(L --status 2>&1)"
-has   '⑤ --status 對死鎖標 stale（holder host 不同也一樣）' "$st" 'stale'
+has   '⑤ --status 對死鎖標 stale（holder host 不同也一樣）' "$st" '⚠ stale'
 out="$(L --timeout 5 -- sh -c 'echo after-reclaim' 2>&1)"; rc=$?
 rc_is '⑤ 死鎖自動回收後命令成功' 0 "$rc" "$out"
 has   '⑤ 印回收訊息' "$out" '回收死鎖'
@@ -338,7 +338,7 @@ has   '㉑ holder worktree＝呼叫 --hold 的 cwd' "$(cat "$SUPABASE_LOCK_DIR/h
 st="$(L --status 2>&1)"
 has   '㉑ --status 印 持有中（label，剩餘 n 分）' "$st" '持有中（LS-0 QA 冒煙，剩餘 1 分）'
 has   '㉑ --status 仍以 held pid= 開頭（巡檢／既有解析不變）' "$st" "held pid=${gpid} "
-hasnt '㉑ --status 守門活著不標 stale' "$st" 'stale'
+hasnt '㉑ --status 守門活著不標 stale' "$st" '⚠ stale'
 hb1=$(sed -n 's/^heartbeat=//p' "$SUPABASE_LOCK_DIR/holder"); sleep 1.2; hb2=$(sed -n 's/^heartbeat=//p' "$SUPABASE_LOCK_DIR/holder")
 if [ -n "$hb1" ] && [ -n "$hb2" ] && [ "$hb2" -gt "$hb1" ]; then echo "✓ ㉑ 守門每 tick 更新 heartbeat（${hb1}→${hb2}）"; else echo "✗ ㉑ heartbeat 沒前進（${hb1}→${hb2}）" >&2; fail=1; fi
 berr="$(cd "$wtB" && bash "$lock_sh" --timeout 1 -- sh -c 'echo stranger-ran' 2>&1)"; rc=$?
@@ -416,7 +416,7 @@ hasnt '㉓ 是正常釋放、不是死鎖回收' "$out" '回收死鎖'
 out="$(hold_as_stranger 'LS-0 被殺')"; rc_is '㉕ 前提：--hold' 0 "$?" "$out"
 gpid=$(hpid); kill -9 "$gpid" 2>/dev/null; sleep 0.3
 st="$(L --status 2>&1)"
-has   '㉕ 守門死後 --status 標 stale' "$st" 'stale'
+has   '㉕ 守門死後 --status 標 stale' "$st" '⚠ stale'
 has   '㉕ 守門死後 --status 仍印 label' "$st" '持有中（LS-0 被殺'
 (cd "$wtA" && bash "$lock_sh" --held 2>/dev/null); rc_is '㉕ 守門死後同 worktree --held → 1（沒有保護了）' 1 "$?" ''
 out="$(cd "$wtB" && bash "$lock_sh" --timeout 5 -- sh -c 'echo after-kill' 2>&1)"; rc=$?
