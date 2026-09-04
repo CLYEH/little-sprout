@@ -516,6 +516,26 @@ gone  '㉙ N3：過長 label 沒留下 lock 目錄'
 out="$(hold_as_stranger "$(printf '%080d' 0)")"; rc_is '㉙ N3：label 80 字可 --hold' 0 "$?" "$out"
 out="$(cd "$wtA" && bash "$lock_sh" --release 2>&1)"; rc_is '㉙ N3：釋放 80 字 label 的 hold' 0 "$?" "$out"
 gone  '㉙ N3：釋放後 lock 消失'
+
+# ---- ㉚ LS-170 回溯：hold.log 對命令型取得／--hold 取得／--release 各留一行（行首日期時間；回答「是誰在何時動了容器」——
+#        命令型持有的 holder 檔在命令結束就刪了，LS-169 那次「來源不明的 reset」事後無從查起）；重入不另記 ----
+: > "$hold_log"
+out="$(cd "$wtA" && bash "$lock_sh" -- sh -c 'echo trace-ran' 2>&1)"; rc_is '㉚ 命令型取得 exit 0' 0 "$?" "$out"
+log="$(cat "$hold_log" 2>/dev/null)"
+has   '㉚ log 記命令型取得（pid=）' "$log" '取得 pid='
+has   '㉚ log 含 worktree' "$log" "worktree=${wtA}"
+has   '㉚ log 含 cmd' "$log" 'cmd=sh -c echo trace-ran'
+if printf '%s\n' "$log" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} 取得 pid='; then echo "✓ ㉚ 取得行行首帶日期時間"; else echo "✗ ㉚ 取得行行首沒有 YYYY-MM-DD HH:MM:SS" >&2; printf '%s\n' "$log" | sed 's/^/    /' >&2; fail=1; fi
+out="$(hold_as_stranger 'LS-0 回溯')"; rc_is '㉚ --hold exit 0' 0 "$?" "$out"
+has   '㉚ log 記 hold 取得（label）' "$(cat "$hold_log" 2>/dev/null)" 'hold「LS-0 回溯」取得 守門 pid='
+n_before=$(grep -c '' "$hold_log" 2>/dev/null)
+out="$(cd "$wtA" && bash "$lock_sh" -- sh -c 'echo reentry-ran' 2>&1)"; rc_is '㉚ hold 內重入 exit 0' 0 "$?" "$out"
+has   '㉚ 重入命令執行' "$out" 'reentry-ran'
+n_after=$(grep -c '' "$hold_log" 2>/dev/null)
+if [ "${n_after:-0}" -eq "${n_before:-0}" ]; then echo "✓ ㉚ 重入不另記（${n_before} 行）"; else echo "✗ ㉚ 重入多記了（${n_before}→${n_after} 行）" >&2; cat "$hold_log" >&2; fail=1; fi
+out="$(cd "$wtA" && bash "$lock_sh" --release 2>&1)"; rc_is '㉚ --release exit 0' 0 "$?" "$out"
+has   '㉚ log 記 hold 釋放（label＋持有時長）' "$(cat "$hold_log" 2>/dev/null)" 'hold「LS-0 回溯」釋放（持有 0 分'
+gone  '㉚ 釋放後 lock 消失'
 unset SUPABASE_LOCK_HOLD_TICK
 
 if [ "$fail" -eq 0 ]; then

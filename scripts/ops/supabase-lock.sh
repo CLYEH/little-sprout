@@ -54,6 +54,10 @@
 #     別人的新 lock——先殺掉再刪）；之後的刪除走 `remove_lock_of`：先原子 mv 到 tomb、核對 holder 的 pid＋started 仍是那個守門
 #     才 rm，不符（守門已死、等待者已回收並重新取得）就搬回不刪——直接 read→rm 是 check-then-delete，會刪到第三者的新鎖
 #     （PR #265 R1 N1）。守門被 -9：pid 不存在→既有死鎖回收涵蓋。
+#   - 回溯（LS-170）：命令型持有的 holder 檔在命令結束就刪了，事後無從得知「剛才是誰 reset 的」（LS-169 的 E2E 被打斷四次、
+#     其中一次來源不明）。取得 lock 時（命令型：pid／worktree／branch／cmd；hold：label／守門 pid／worktree／branch／到期）與
+#     `--release` 各追加一行到 `<lock>.hold.log`（守門到期那行原本就寫在這裡），行首 `YYYY-MM-DD HH:MM:SS`；重入（持有者自己在
+#     lock／hold 內再包 wrapper）不另記——持有者已在上一行。只回溯不告警、不輪替（/tmp 重開機即清）；寫入失敗不影響取鎖。
 # 已知限制：
 #   - hold 到期釋放不會中斷持有者正在跑的命令（例如 QA 的 reset 剛開始就到期）——之後別人的 reset 可能與之重疊；
 #     hold_owner_ok 的 worktree 那一條讓「任何在同一 worktree 內跑的程序」都算持有者（QA worktree 只有 QA 在用時成立）。
@@ -132,6 +136,8 @@ else
   fi
   lock="/tmp/supabase-lock-${proj}"
 fi
+hold_log="${lock}.hold.log"   # 守門 stderr＋取得／釋放的回溯行（LS-170）
+trace() { printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$hold_log" 2>/dev/null || true; }   # 回溯行；寫不進去不影響取鎖
 
 alive() { case "$1" in ''|*[!0-9]*) return 1 ;; esac; ps -p "$1" -o pid= >/dev/null 2>&1; }
 is_ancestor() {   # $1 是否為本程序的祖先（含自己）；ps -o ppid= 在 macOS／Linux 都有
@@ -299,6 +305,7 @@ release_hold() {   # --release（LS-159）：只釋放 hold、只給持有者；
   case $? in 2) echo "→ supabase-lock：守門已死、lock 已被其他等待者回收並取得——沒有東西可刪（hold 早已結束）" >&2 ;; esac
   case "$t0" in ''|*[!0-9]*) dur='?' ;; *) dur=$(( $(date +%s) - t0 )); dur="$(( dur / 60 )) 分 $(( dur % 60 )) 秒" ;; esac
   echo "→ supabase-lock：已釋放 hold「${label}」（持有 ${dur}；守門 pid ${gpid}）" >&2
+  trace "hold「${label}」釋放（持有 ${dur}；守門 pid ${gpid}）worktree=${wt}"
   exit 0
 }
 
@@ -354,7 +361,6 @@ done
 if [ "$mode" = hold ]; then
   # 取得了：fork 守門子程序持有（獨立程序才有自己的 pid；stdio 不繼承呼叫者的管線，否則 agent 的 Bash 工具會等到 hold 結束；
   # nohup＋disown——macOS 沒有 setsid）。lock 路徑明傳給守門、不再由 config.toml 推；holder 由守門寫，主程序等它落地。
-  hold_log="${lock}.hold.log"
   now=$(date +%s); expires_at=$(( now + hold_secs ))
   if command -v nohup >/dev/null 2>&1; then
     SUPABASE_LOCK_DIR=$lock nohup bash "${BASH_SOURCE[0]}" --hold-guard "$hold_label" "$now" "$expires_at" "$PPID" "$host" "$wt" "$br" </dev/null >/dev/null 2>>"$hold_log" &
@@ -379,6 +385,7 @@ if [ "$mode" = hold ]; then
     sleep 0.1
   done
   [ "$announced" -eq 1 ] && echo "→ supabase-lock：取得 lock（等了 $(( $(date +%s) - started ))s）" >&2
+  trace "hold「${hold_label}」取得 守門 pid=${gpid} worktree=${wt} branch=${br} expires=$(fmt_hm "$expires_at")"
   echo "held pid=${gpid} label=${hold_label} expires=$(fmt_hm "$expires_at") log=${hold_log}"
   exit 0
 fi
@@ -393,6 +400,7 @@ if ! printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=%s\nbranch=%s\ncmd=%s\n' "$$"
   exit 2
 fi
 
+trace "取得 pid=$$ worktree=${wt} branch=${br} cmd=${cmd_str}"
 release() { if read_holder && [ "$h_pid" = "$$" ]; then rm -rf "$lock"; fi; }
 trap release EXIT
 trap 'exit 130' INT
