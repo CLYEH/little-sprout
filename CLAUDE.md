@@ -11,7 +11,7 @@
 - **Orchestrator（主 session）**：開票、派工、把關 gate；不寫功能程式碼（harness 除外）。
 - **所有 UI 畫面設計必須由 ui-designer subagent 用 Pencil MCP 產出 .pen 設計稿**（`design/littlesprout.pen`）；沒有設計稿不得實作新畫面。**設計稿送人核可前必先與 visual-reviewer 完成至少 3 輪對抗迭代**（獵殺 slop；前 2 輪一律退修抬標準，第 3 輪起才可 APPROVE；**≥5 輪不收斂且爭點屬可機械複驗項時，orchestrator 得裁定聚焦輪，不進使用者仲裁**，COLLABORATION §1／§7，LS-68）。**每輪收工必附全樹溢出掃描收據**（`design/evidence/<票號>-r<n>-overflow.json`：兄弟交集／橫列溢出／跨 parent 碰撞／角托錨點／文字遮蔽五支掃描（一律用正典腳本 `scripts/design/overflow-scan.js`，`corner_anchor.mismatch` 與 `text_occlusion.flagged` 限本票觸碰的板 `boards` 且必為 0）、TOTAL_NODES、FLAGGED 分類、HEAD sha、`tree_hash`（整份收據須來自對 head 快照的同一次掃描）；.pen 有變更的 PR 必附收據，CI `design-evidence-check.sh` 驗；Notes 板引用的節點 id 由 `design-notes-check.sh` 驗（死 id 只能用沿革寫法提），LS-68／LS-122／LS-168）。每完成一項即落地＋commit＋push，不准累積到最後一次交（.pen 不透明檔案無法事後拆 commit）。
 - ios-dev 實作；merge-reviewer 審 PR（race condition／運算效能／平行優化／scope）；qa 在 `test` branch 驗收（UI 票含模擬器視覺驗收）。model 政策見 COLLABORATION §1。
-- **Feature 收尾儀式**（QA 過後、Done 之前，缺一不可）：dead-code-sweeper 巡檢該 feature 引入的死碼＋orchestrator 做 lesson learning review（harness 改善、設定優化、工具缺口）＋清理（`bash scripts/ops/cleanup-merged.sh --apply LS-<n>` 移除已併入的 worktree／本機分支，LS-86），皆記於 ticket comment——是 Done 的前置條件。見 COLLABORATION §6。
+- **Feature 收尾儀式**（QA 過後、Done 之前，缺一不可）：dead-code-sweeper 巡檢該 feature 引入的死碼＋orchestrator 做 lesson learning review（harness 改善、設定優化、工具缺口）＋清理（`bash scripts/ops/cleanup-merged.sh --apply LS-<n>` 移除已併入的 worktree／本機分支，LS-86）＋**④ Pen 清場（設計票限定**：設計 PR 併入 development 後 orchestrator `bash scripts/ops/pen-open.sh <主 checkout> --kill` 並請使用者 `/mcp` 重連 pencil——設計票期間 Pen 一律停在票檔、agent 收工不切回，LS-180），皆記於 ticket comment——是 Done 的前置條件。見 COLLABORATION §6。
 
 ## 每個 agent 都要遵守
 
