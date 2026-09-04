@@ -96274,7 +96274,7 @@
                       "type": "frame",
                       "id": "yB96q",
                       "name": "Grid Column",
-                      "width": 258.5,
+                      "width": 254.5,
                       "layout": "vertical",
                       "gap": "$sp-block",
                       "children": [
@@ -96283,22 +96283,22 @@
                           "type": "ref",
                           "ref": "bhroo",
                           "name": "Card Album 1",
-                          "width": 258.5,
+                          "width": 254.5,
                           "descendants": {
                             "FjOA8": {
                               "enabled": false,
-                              "width": 112.4,
-                              "x": 54
+                              "width": 110.7,
+                              "x": 53.1
                             },
                             "UTLcl": {
                               "enabled": true,
-                              "width": 123.6,
-                              "x": 67.4
+                              "width": 121.8,
+                              "x": 66.4
                             },
                             "KGh0U": {
                               "enabled": true,
-                              "width": 104.9,
-                              "x": 80.9
+                              "width": 103.3,
+                              "x": 79.7
                             },
                             "s8eO3j": {
                               "fill": {
@@ -96326,13 +96326,13 @@
                               "y": 288
                             },
                             "JgUK8": {
-                              "x": 237.5
+                              "x": 233.5
                             },
                             "mlORb": {
                               "y": 267
                             },
                             "atAkU": {
-                              "x": 237.5,
+                              "x": 233.5,
                               "y": 267
                             },
                             "mTljh": {
@@ -96347,22 +96347,22 @@
                           "type": "ref",
                           "ref": "bhroo",
                           "name": "Card Album 3",
-                          "width": 258.5,
+                          "width": 254.5,
                           "descendants": {
                             "FjOA8": {
                               "enabled": false,
-                              "width": 112.4,
-                              "x": 54
+                              "width": 110.7,
+                              "x": 53.1
                             },
                             "UTLcl": {
                               "enabled": true,
-                              "width": 123.6,
-                              "x": 67.4
+                              "width": 121.8,
+                              "x": 66.4
                             },
                             "KGh0U": {
                               "enabled": false,
-                              "width": 104.9,
-                              "x": 80.9
+                              "width": 103.3,
+                              "x": 79.7
                             },
                             "s8eO3j": {
                               "fill": {
@@ -96388,13 +96388,13 @@
                               "width": 216.5
                             },
                             "JgUK8": {
-                              "x": 237.5
+                              "x": 233.5
                             },
                             "mlORb": {
                               "y": 242
                             },
                             "atAkU": {
-                              "x": 237.5,
+                              "x": 233.5,
                               "y": 242
                             },
                             "mTljh": {
@@ -96408,22 +96408,22 @@
                           "type": "ref",
                           "ref": "bhroo",
                           "name": "Card Album 5",
-                          "width": 258.5,
+                          "width": 254.5,
                           "descendants": {
                             "FjOA8": {
                               "enabled": true,
-                              "width": 112.4,
-                              "x": 54
+                              "width": 110.7,
+                              "x": 53.1
                             },
                             "UTLcl": {
                               "enabled": true,
-                              "width": 123.6,
-                              "x": 67.4
+                              "width": 121.8,
+                              "x": 66.4
                             },
                             "KGh0U": {
                               "enabled": true,
-                              "width": 104.9,
-                              "x": 80.9
+                              "width": 103.3,
+                              "x": 79.7
                             },
                             "s8eO3j": {
                               "fill": {
@@ -96451,13 +96451,13 @@
                               "y": 263
                             },
                             "JgUK8": {
-                              "x": 237.5
+                              "x": 233.5
                             },
                             "mlORb": {
                               "y": 242
                             },
                             "atAkU": {
-                              "x": 237.5,
+                              "x": 233.5,
                               "y": 242
                             },
                             "mTljh": {
@@ -96473,7 +96473,7 @@
                       "type": "frame",
                       "id": "O6i3Gr",
                       "name": "Grid Column",
-                      "width": 258.5,
+                      "width": 254.5,
                       "layout": "vertical",
                       "gap": "$sp-block",
                       "children": [
@@ -96482,22 +96482,22 @@
                           "type": "ref",
                           "ref": "bhroo",
                           "name": "Card Album 2",
-                          "width": 258.5,
+                          "width": 254.5,
                           "descendants": {
                             "FjOA8": {
                               "enabled": false,
-                              "width": 112.4,
-                              "x": 54
+                              "width": 110.7,
+                              "x": 53.1
                             },
                             "UTLcl": {
                               "enabled": true,
-                              "width": 123.6,
-                              "x": 67.4
+                              "width": 121.8,
+                              "x": 66.4
                             },
                             "KGh0U": {
                               "enabled": true,
-                              "width": 104.9,
-                              "x": 80.9
+                              "width": 103.3,
+                              "x": 79.7
                             },
                             "s8eO3j": {
                               "fill": {
@@ -96525,13 +96525,13 @@
                               "y": 288
                             },
                             "JgUK8": {
-                              "x": 237.5
+                              "x": 233.5
                             },
                             "mlORb": {
                               "y": 267
                             },
                             "atAkU": {
-                              "x": 237.5,
+                              "x": 233.5,
                               "y": 267
                             },
                             "mTljh": {
@@ -96546,22 +96546,22 @@
                           "type": "ref",
                           "ref": "bhroo",
                           "name": "Card Album 4",
-                          "width": 258.5,
+                          "width": 254.5,
                           "descendants": {
                             "FjOA8": {
                               "enabled": false,
-                              "width": 112.4,
-                              "x": 54
+                              "width": 110.7,
+                              "x": 53.1
                             },
                             "UTLcl": {
                               "enabled": true,
-                              "width": 123.6,
-                              "x": 67.4
+                              "width": 121.8,
+                              "x": 66.4
                             },
                             "KGh0U": {
                               "enabled": false,
-                              "width": 104.9,
-                              "x": 80.9
+                              "width": 103.3,
+                              "x": 79.7
                             },
                             "s8eO3j": {
                               "fill": {
@@ -96589,13 +96589,13 @@
                               "y": 263
                             },
                             "JgUK8": {
-                              "x": 237.5
+                              "x": 233.5
                             },
                             "mlORb": {
                               "y": 242
                             },
                             "atAkU": {
-                              "x": 237.5,
+                              "x": 233.5,
                               "y": 242
                             },
                             "mTljh": {
@@ -96610,22 +96610,22 @@
                           "type": "ref",
                           "ref": "bhroo",
                           "name": "Card Album 6",
-                          "width": 258.5,
+                          "width": 254.5,
                           "descendants": {
                             "FjOA8": {
                               "enabled": false,
-                              "width": 112.4,
-                              "x": 54
+                              "width": 110.7,
+                              "x": 53.1
                             },
                             "UTLcl": {
                               "enabled": true,
-                              "width": 123.6,
-                              "x": 67.4
+                              "width": 121.8,
+                              "x": 66.4
                             },
                             "KGh0U": {
                               "enabled": true,
-                              "width": 104.9,
-                              "x": 80.9
+                              "width": 103.3,
+                              "x": 79.7
                             },
                             "s8eO3j": {
                               "fill": {
@@ -96653,13 +96653,13 @@
                               "y": 263
                             },
                             "JgUK8": {
-                              "x": 237.5
+                              "x": 233.5
                             },
                             "mlORb": {
                               "y": 242
                             },
                             "atAkU": {
-                              "x": 237.5,
+                              "x": 233.5,
                               "y": 242
                             },
                             "mTljh": {
