@@ -5,6 +5,10 @@
 # 以 env CLAUDE_PROJECT_DIR=<fixture 主 checkout> 餵 hook JSON（tool_name／tool_input／cwd）。
 # 「前饋必有反饋」對 gate 本身也適用：W1–W5 若退化這裡會紅；mutation 段把 git-dir==common-dir
 # 判斷拿掉，斷言負樣本因此變綠（證明該判斷是關鍵、不是巧合過關）。
+# R2（merge-review R1 comment 94035c1a）：G 段——GIT_DIR 等變數污染下 worktree 仍放行（minor 1，
+# mutation M3 拿掉 env 剝除必須變紅）；S5–S7——逃生門認 `env VAR=1` 前綴、非最前面不認且訊息寫明
+# 位置（minor 2）；N2b——LS-145 第三起事故形狀 Edit 主 checkout .github/workflows/ci.yml（informational 1）；
+# T1——hook 跑完不在 hooks 目錄留 __pycache__（自查：留了會把主 checkout 弄 dirty）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -22,11 +26,12 @@ wt="$main/.claude/worktrees/LS-1"
 git init -q -b main "$main"
 git -C "$main" -c user.email=t@t -c user.name=t -c commit.gpgsign=false commit -q --allow-empty -m init
 git -C "$main" worktree add -q "$wt" -b feature/LS-1-x
-mkdir -p "$main/docs" "$main/supabase/migrations" "$main/scripts/ops" "$main/.claude/memory" \
+mkdir -p "$main/docs" "$main/supabase/migrations" "$main/scripts/ops" "$main/.claude/memory" "$main/.github/workflows" \
   "$wt/docs" "$wt/supabase/migrations" "$fx/scratch" "$fx/home/.claude/projects/p" "$fx/other"
 # 真實環境：~/.claude/projects/<proj>/memory 是指向主 checkout .claude/memory/ 的 symlink（realpath 落在主 checkout）
 ln -s "$main/.claude/memory" "$fx/home/.claude/projects/p/memory"
 printf 'x\n' > "$main/docs/a.md"
+printf 'x\n' > "$main/.github/workflows/ci.yml"
 printf 'x\n' > "$wt/docs/a.md"
 printf 'x\n' > "$fx/scratch/LS-1-new.sql"
 git init -q -b main "$fx/other"   # 另一個 repo 的主 checkout：不在本專案範圍，不擋
@@ -113,6 +118,7 @@ expect 'P27 mkdir／touch 在 scratchpad' 0 "$(bash_json "$main" "mkdir -p $fx/s
 # ============================================================
 expect 'N1 Write 主 checkout' 2 "$(file_json Write "$main" "$main/LS-1-probe.txt")"
 expect 'N2 Edit 主 checkout 既有檔案' 2 "$(file_json Edit "$main" "$main/docs/a.md")"
+expect 'N2b Edit 主 checkout .github/workflows/ci.yml（LS-145 第三起事故形狀）' 2 "$(file_json Edit "$main" "$main/.github/workflows/ci.yml")"
 expect 'N3 MultiEdit 主 checkout' 2 "$(file_json MultiEdit "$main" "$main/scripts/ops/x.sh")"
 expect 'N4 NotebookEdit 主 checkout（notebook_path）' 2 "$(mkjson NotebookEdit "$main" notebook_path "$main/n.ipynb")"
 expect 'N5 Write 相對路徑、cwd 是主 checkout' 2 "$(file_json Write "$main" "LS-1-probe.txt")"
@@ -159,6 +165,27 @@ expect 'S2 開關值不是 1 不放行' 2 "$(file_json Write "$main" "$main/LS-1
 expect 'S3 Bash 命令以 LS_ALLOW_MAIN_CHECKOUT_WRITE=1 開頭放行該次' 0 \
   "$(bash_json "$fx/scratch" "LS_ALLOW_MAIN_CHECKOUT_WRITE=1 mv $main/stray.sql $wt/supabase/migrations/")"
 expect 'S4 開關字面不在命令開頭不放行' 2 "$(bash_json "$fx/scratch" "echo LS_ALLOW_MAIN_CHECKOUT_WRITE=1; tee $main/x")"
+expect 'S5 env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 <cmd>（POSIX 形式）放行' 0 \
+  "$(bash_json "$fx/scratch" "env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 rm $main/stray.sql")"
+expect 'S6 FOO=1 env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 <cmd>（賦值與 env 混合前綴）放行' 0 \
+  "$(bash_json "$fx/scratch" "FOO=1 env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 tee $main/x")"
+expect 'S7 cd x && LS_ALLOW_MAIN_CHECKOUT_WRITE=1 <cmd>（非最前面）不放行' 2 \
+  "$(bash_json "$fx/scratch" "cd $fx/scratch && LS_ALLOW_MAIN_CHECKOUT_WRITE=1 rm $main/docs/a.md")"
+case "$(cat "$fx/stderr")" in
+  *'env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 <cmd>'*'整條命令最前面'*) echo '✓ S7b deny 訊息寫明兩種前綴形式與位置限制' ;;
+  *) echo "✗ S7b deny 訊息應寫明 env 形式與位置限制（實得：$(cat "$fx/stderr")）" >&2; fail=1 ;;
+esac
+
+# ============================================================
+# git 環境變數污染（R1 minor 1）：GIT_DIR 等在 hook 環境時，rev-parse 對任何 -C 目錄都回同一值，
+# 未剝除會把所有 worktree 判成主 checkout（產線全停）
+# ============================================================
+expect 'G1 GIT_DIR＋GIT_WORK_TREE 設定下 worktree Write 仍放行' 0 \
+  "$(file_json Write "$main" "$wt/docs/x.md")" GIT_DIR="$main/.git" GIT_WORK_TREE="$main"
+expect 'G2 GIT_DIR 設定下主 checkout Write 仍擋' 2 \
+  "$(file_json Write "$main" "$main/LS-1-probe.txt")" GIT_DIR="$main/.git"
+expect 'G3 GIT_COMMON_DIR／GIT_INDEX_FILE／GIT_PREFIX 設定下 worktree Bash 重導仍放行' 0 \
+  "$(bash_json "$wt" "echo hi > f.txt")" GIT_COMMON_DIR="$main/.git" GIT_INDEX_FILE="$main/.git/index" GIT_PREFIX=docs/
 
 # ============================================================
 # 盲區註記（放行但 stderr 要說）
@@ -218,6 +245,36 @@ else
   else
     echo "✗ M2 mutant 應放行 tee 主 checkout（實得 exit ${got}：${out}）" >&2; fail=1
   fi
+fi
+
+# R2 M3：拿掉呼叫 git 前的環境剝除（env=_clean_env() → env=None）→ GIT_DIR 下 worktree Write 必須變紅
+# （證明 G1 綠是靠剝除、不是巧合）
+mut3=$(mktemp -d "$fx/mut3.XXXXXX")
+cp "$guard" "$engine_py" "$mut3/"
+anchor3='env=_clean_env(),'
+if ! grep -q "$anchor3" "$guard_py"; then
+  echo "✗ M3 mutation 錨點「${anchor3}」不在 main_checkout_guard.py，mutation 測試無法成立" >&2
+  fail=1
+else
+  sed "s/$anchor3/env=None,/" "$guard_py" > "$mut3/main_checkout_guard.py"
+  out=$(printf '%s' "$(file_json Write "$main" "$wt/docs/x.md")" | env CLAUDE_PROJECT_DIR="$main" GIT_DIR="$main/.git" "$bash_bin" "$mut3/main-checkout-guard.sh" 2>/dev/null); got=$?
+  if [ "$got" -eq 2 ]; then
+    echo '✓ M3 拿掉 GIT_* 剝除後 GIT_DIR 下 worktree Write 變成 deny（G1 綠確由剝除造成）'
+  else
+    echo "✗ M3 mutant 應把 GIT_DIR 下 worktree Write 判成主 checkout（實得 exit ${got}：${out}）" >&2; fail=1
+  fi
+fi
+
+# ============================================================
+# T1：hook 跑完不得在 hooks 目錄留 __pycache__（hook 跑在主 checkout那份，留了就把主 checkout 弄 dirty）
+# ============================================================
+pc=$(mktemp -d "$fx/pc.XXXXXX")
+cp "$guard" "$guard_py" "$engine_py" "$pc/"
+printf '%s' "$(bash_json "$main" "git status")" | env CLAUDE_PROJECT_DIR="$main" "$bash_bin" "$pc/main-checkout-guard.sh" >/dev/null 2>&1
+if [ -d "$pc/__pycache__" ]; then
+  echo "✗ T1 hook 執行後在 hooks 目錄留下 __pycache__/（主 checkout 會因此 dirty）" >&2; fail=1
+else
+  echo '✓ T1 hook 執行後 hooks 目錄無 __pycache__（sys.dont_write_bytecode）'
 fi
 
 # ============================================================
