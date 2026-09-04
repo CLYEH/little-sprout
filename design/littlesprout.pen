@@ -135216,6 +135216,759 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "N1aeiU",
+      "x": 1380,
+      "y": 15852,
+      "name": "LS-163 / 實作註記 · Handoff Notes (ios-dev)",
+      "width": 900,
+      "fill": "$print-paper",
+      "cornerRadius": 24,
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 44,
+      "children": [
+        {
+          "type": "text",
+          "id": "ugSYX",
+          "name": "NT",
+          "fill": "$print-ink",
+          "content": "LS-163 帳號密碼登入 · Handoff Notes",
+          "lineHeight": 1.25,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 34,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "FWK4J",
+          "name": "NS",
+          "fill": "$print-ink-secondary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "R1 首輪產出。新增歡迎頁「以帳號密碼登入」小字連結變體板（LS-17 01 板未改動，byte-identical）與帳號密碼登入畫面家族 P1（7 板）。零角托零染料池（一次性表單）。不做註冊／忘記密碼，僅供 App Store 審核帳號登入使用。",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "IR8Rq",
+          "name": "N 畫面級屬性清單",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "KeyhL",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "畫面級屬性清單",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "K2ept",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "F2UCb",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "eM3G1",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "01b 家族三板（含深色／AX3）：沿用既有 01／01c／AX3-01 板的 chrome、印品幾何完全不變，唯一新增節點是 Actions 內的 Password Login Link Wrap（純文字連結，$fs-note／$text-secondary，非按鈕外觀，不吃 $accent 配額）。三板因新增內容 Welcome Block 高度增加，root height 隨之更新：iPhone 852→904、深色 852→904、AX3 1073→1158（多出的高度全數來自新增連結列本身，非倒推餘數，見「尺寸規格值與量法」節）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "dIZhF",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "U8Hq0",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Fx25S",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "P1 帳號密碼登入畫面家族：push 進入（cmp/Nav Back，label「返回」），無 Tab Bar／無系統標題（自畫 Title，$fs-display）。零角托零染料池（一次性表單，非收藏品，比照角托三段規則③）。不做註冊、不做忘記密碼連結（審核帳號由我們設定，Field Help 已附註說明）。iPad 版（P1-iPad）此畫面在登入前尚無側欄可用，未套用 NavigationSplitView，改用 Nav Back＋置中 Auth Column（460pt）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "GEhDN",
+          "name": "N 連結位置理由（三顆鈕下方，Legal／Status 插槽之間）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "bfeqA",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "連結位置理由（三顆鈕下方，Legal／Status 插槽之間）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "nG29s",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "unnyF",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Diqwq",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "連結置於 Email 按鈕（第三顆登入鈕）與 Legal／Status 插槽「之間」，不是插槽「之上」：Legal／Status 插槽（38pt 固定高度，qde59／zOBxh／r1rUgn）承載法務文字（01／01c）或登入狀態句（既有 01b「登入中」板），語意是「登入動作結束後的收尾資訊」；密碼登入連結是與 Apple／Google／Email 並列的第四種登入路徑，放進 Actions 群組（與三顆按鈕同一個 $sp-label 節奏）比擠進 Legal 插槽或插在其正上方更符合「這是一個可執行的動作，不是說明文字」的語意，也避免與既有 01b（登入中）狀態板的插槽用途混淆——那顆插槽已有法務／狀態雙重用途，不宜再承載第三種內容。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "CtqWa",
+          "name": "N 密碼欄顯示／隱藏切換",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "M3Ys1w",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "密碼欄顯示／隱藏切換",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "n34p0g",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PZWrD",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "OKCuM",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "cmp/Text Field 的 Field Box 在密碼欄透過 Replace() 對 instance 子節點整組換掉（元件 cmp/Text Field 本身未改動，Email 欄與全稿其餘既有用法零回歸）：新增 Toggle Wrap（icon「eye」＋文字「顯示」，$fs-body/600/$text-primary），與 Field Value 同列、右側對齊，gap $sp-tight。SwiftUI 實作：SecureField／TextField 依 isRevealed 狀態切換，icon 同步換 eye／eye-off，文字同步換「顯示」／「隱藏」；Toggle 視為欄位列本身的一部分，列高 60pt（AX3 覆寫見「尺寸規格值」節）已滿足 44pt 熱區，不需要額外包一層獨立的 44×44 tap wrapper。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "d9zJXY",
+          "name": "N 文案鍵（含 AppError 對 invalid_credentials 的映射建議）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "NNjiO",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "文案鍵（含 AppError 對 invalid_credentials 的映射建議）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "l07cHz",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "wErXI",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "PNdZb",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "畫面固定文案：標題「帳號密碼登入」；副標「審核專用登入方式，請輸入分配給你的帳號與密碼。」；Email 欄標籤「Email 地址」placeholder「yourname@example.com」；密碼欄標籤「密碼」，Field Help「此為審核專用帳號，如需協助請洽開發者聯絡資訊。」；主鈕「登入」，in-flight 態「登入中…」（cmp/Button Working 覆寫）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "G4VYk3",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "xD5NR",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "MVtSn",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "錯誤文案鍵（比照全稿既有 k2Mw4 四層錯誤文法）：invalid_credentials（帳號或密碼任一輸入錯誤都回同一個代碼，後端與前端皆刻意不區分是哪一項）→ 標題「帳號或密碼錯誤，請再試一次。」＋ Email／密碼兩欄框同時轉 $danger（P1c 板，見 O1XC2Z）；network_error（URLError，如 .notConnectedToInternet／.networkConnectionLost）→「連線中斷，請檢查網路連線。」，欄位維持中性、不轉 danger（P1d 板，見 ioA0u——區分「使用者輸入錯」與「連不上網路」是刻意的，兩者視覺語彙不能混用）。建議 ios-dev 對應 AppError 增列 case invalidCredentials（映射到 Supabase auth 的 invalid_grant／invalid_login_credentials 類回應，或既有 LSErrorCode 體系內對應碼，本輪未涉及後端定義，留待 LS-164 實作票確認），若既有 case networkError 已存在則直接複用；兩者各自持有 title 字串，不用 if-else 判斷錯誤碼字串。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "V2iHXq",
+          "name": "N 尺寸規格值與量法",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "Ymtb2",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "尺寸規格值與量法",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "s5i6yA",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "wl9Yi",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "MI5zl",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "01b 家族連結列（Password Login Link Wrap）：padding [$ctl-pad-tap, 0]（9.5 上下），量測後 iPhone 熱區高度剛好 44pt（Yc4EC 板實測 avXOP 節點 bounds.height）；AX3 因文字放大到 40pt，量測熱區高度 77pt（aEb17 板，Y6Yyz 節點，textGrowth fixed-width＋width fill_container＋textAlign center）。root height 硬寫字面值三筆（規格值族「單畫面總高」，皆為 Welcome Block 內容撐高後的實測結果，非任意數字）：Yc4EC 904、M2qW9 904、aEb17 1158。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lewYW",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "VxkpS",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "V6RJSH",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "密碼欄 Field Box 在 AX3（vgvFY 板，ahaWX 節點）覆寫 height:140（Pencil height 不吃 $variable，見已知限制），Toggle Icon（blEap 節點）覆寫 width／height 32×32（對應 $icon-sm 的 AX3 token 值）。皆為量測後手動覆寫：先用預設 height:60 觀察 Field Value bounds 溢出（y=-28,h=116，超出 60 高的框），逐步調大直到內容完全落在框內置中（140 時 116 內容置中留白 12／12）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IRSNa",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "v8EYY",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "VFWXQ",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "P1 iPad 版（l4ShP 板）Auth Column 寬度硬寫 460（規格值族「登入表單可讀寬度」，非 token）；比照既有 04-iPad xIr9C 的 294 較窄側欄配置，因本畫面無需與照片並排、且是純表單，選擇較寬的置中欄位以維持與 iPhone 版相近的欄寬比例觀感，非直接沿用 294。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "bFnMk",
+          "name": "N 板名沿革（撞號說明）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "n8eoZ",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "板名沿革（撞號說明）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "SDsrL",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PiKD1",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "gguAj",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "三板板名沿用票文字面「01b」（LS-163 / 01b 歡迎登入 · 含密碼登入連結），與既有 LS-17 01b 歡迎登入 · 登入中（pcSdz，登入中狀態板）同前綴不同板——這是 orchestrator 派工單明確指示的板名（板名依票文，不用 01d），非我方誤植。R1 開工時已發現此撞號並回報，orchestrator 裁定沿用票文命名；記錄於此供下一輪或 visual-reviewer 核對時參考，若造成混淆，可考慮後續改名或加註更清楚的狀態尾綴以徹底消歧。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "O5eWGs",
+          "name": "N Pencil 踩雷記錄（供下一輪或其他票參考，非 UI 規格）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "qIbsd",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "Pencil 踩雷記錄（供下一輪或其他票參考，非 UI 規格）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "nqbCT",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "kWmdL",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "SLFdB",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "underline:true（TextStyle 屬性）在本輪透過 Insert() 與 Replace() 建立文字節點時皆被靜默丟棄（讀回 Get() 內容不含這個鍵）——不只是既有已知限制文件記載的「Update() 會丟棄」，這是比既有記錄更廣的新發現：Insert／Update／Replace 三種寫入路徑目前皆不可靠地保存 underline。因此本輪「以帳號密碼登入」連結最終未使用底線，只用 $text-secondary 色差＋44pt 熱區區分可點擊性（與票文規格一致，票文本身並未要求底線）；若之後某個畫面確實需要底線文字連結，比照既有 Legal Link（e1Yuwz／e1qGB）的做法，改用 text + 1pt rectangle 手工組合，不要嘗試 underline:true 屬性。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "TAxyN",
+          "name": "N 未決 / 需人核可",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "rbfED",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "未決 / 需人核可",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "a0m7hT",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "FwQD6",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "IrC3k",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "「顯示／隱藏密碼」toggle 只設計了「顯示」（隱藏中）這一個預設態，未另外畫出「隱藏」（已顯示明碼）的視覺——除了 icon 換 eye-off、文字換「隱藏」、Field Value 內容從遮罩改明碼文字外，版面結構完全不變，判斷不需要獨立畫板；若 visual-reviewer 認為需要單獨畫出已顯示態，留待 R2 依 review 意見決定是否補板。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "bC80B",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vtWz3",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "fx2xi",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "invalid_credentials 與既有 AppError／LSErrorCode 體系的實際映射（沿用哪個既有代碼、或是否需要新增後端代碼）留待 ios-dev／後端在 LS-164 實作票內確認；本輪僅提供文案與視覺規格，不涉及後端錯誤碼定義。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "LJvdf",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "fa5ZZ",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "J8ZPCz",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "「以帳號密碼登入」連結本輪未抽成 reusable component，僅在三板各自 Insert 相同結構的節點（單一使用場景，比照「單一用途不強行抽元件」判斷）；若後續有第二個入口，建議屆時再抽成 cmp/Password Login Link。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
