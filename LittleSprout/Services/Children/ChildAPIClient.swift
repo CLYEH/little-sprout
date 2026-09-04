@@ -10,6 +10,9 @@ import Foundation
 ///   - `fetchMyRole`      → SELECT `public.family_members`（`role` 欄，篩 `user_id = auth.uid()`；
 ///                          09／10 畫面要依 owner／member／viewer 決定「新增」「編輯」「刪除」
 ///                          「還原」四個入口的可見度，見 LS-113 票文 Scope）
+///   - `signedAvatarURLs` → Storage `media` bucket `createSignedURLs`（LS-169：`children.
+///                          avatar_url` 存的是路徑，不是網址，同 `media.thumb_path` 的既有慣例，
+///                          見 docs/API.md §6「簽名 URL 與 egress 防線」）
 ///
 /// 錯誤一律映射為 `AppError`（見該檔），不直接往外拋 PostgREST 的 error 型別。
 protocol ChildAPIClient: Sendable {
@@ -28,4 +31,9 @@ protocol ChildAPIClient: Sendable {
 
     /// 呼叫者在這個家庭的角色；從未加入過（理論上不會發生在已進入本畫面的情境）回傳 nil。
     func fetchMyRole(familyID: UUID) async throws -> FamilyRole?
+
+    /// 把一批 `children.avatar_url` 路徑換成短效簽名 URL。單一路徑簽名失敗（例如檔案剛好被
+    /// 覆蓋到一半）略過、不讓整批失敗，同 `TimelineAPIClient.signedURLs` 既有慣例——回傳的
+    /// 字典可能比輸入的路徑數量少。
+    func signedAvatarURLs(forPaths paths: [String]) async throws -> [String: URL]
 }

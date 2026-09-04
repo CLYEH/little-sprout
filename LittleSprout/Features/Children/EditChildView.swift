@@ -1,7 +1,9 @@
+import PhotosUI
 import SwiftUI
+import UIKit
 
 /// LS-113 / 09b 編輯寶貝資料。版式依 `design/littlesprout.pen` frame `BqxHJ`：大頭貼預覽
-/// （縮寫圓＋相機 Edit Badge，非功能性——見 `CreateChildView` 文件註解的 E3 範圍說明）＋
+/// （縮寫圓／照片＋相機 Edit Badge，LS-169 起真的能點換照片——見 `CreateChildView` 文件註解）＋
 /// 姓名欄／生日欄（與 08 同一套元件，預填既有值）＋「儲存變更」主鈕＋「取消」文字鈕。
 ///
 /// 「移除這個寶貝」（僅 owner）：LS-67 R2 設計註記（`UhhwS` I1）原意是把移除動作收斂到本畫面
@@ -21,6 +23,8 @@ struct EditChildView: View {
     @State private var showsEmptyNameMessage = false
     @State private var showsDatePicker = false
     @State private var showsDeleteConfirmation = false
+    @State private var pickedAvatarItem: PhotosPickerItem?
+    @State private var pickedAvatarData: Data?
     @Environment(\.dismiss) private var dismiss
 
     init(childrenStore: ChildrenStore, child: Child) {
@@ -59,9 +63,18 @@ struct EditChildView: View {
                 dismiss()
             }
         }
+        .onChange(of: pickedAvatarItem) {
+            Task {
+                pickedAvatarData = try? await pickedAvatarItem?.loadTransferable(type: Data.self)
+            }
+        }
     }
 
     private var isSubmitting: Bool { childrenStore.updateState.isSubmitting }
+
+    private var pickedAvatarImage: UIImage? {
+        pickedAvatarData.flatMap(UIImage.init(data:))
+    }
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
@@ -75,26 +88,24 @@ struct EditChildView: View {
     }
 
     private var avatarField: some View {
-        VStack(spacing: AppSpacing.label) {
-            ZStack(alignment: .bottomTrailing) {
-                ChildAvatarView(name: name, size: 88)
-                Circle()
-                    .fill(Color.lsSurface)
-                    .frame(width: 28, height: 28)
-                    .overlay(Circle().strokeBorder(Color.lsControlLine, lineWidth: 1.5))
-                    .overlay(
-                        Image(systemName: "camera")
-                            .appIconFrame(.small)
-                            .foregroundStyle(Color.lsTextPrimary)
-                    )
-            }
-            Text("換張照片")
-                .appFont(.note, weight: .semibold)
-                .foregroundStyle(Color.lsTextSecondary)
+        PhotosPicker(selection: $pickedAvatarItem, matching: .images) {
+            // LS-169：內容抽成獨立的 `EditChildAvatarFieldContent`（`View`-conforming
+            // struct），不是像 `avatarField` 本身這樣直接把 `appFont`／`appIconFrame`
+            // 呼叫寫在 `PhotosPicker` 的 label 尾隨閉包裡——實測（Swift 6 嚴格並行檢查）
+            // `PhotosPicker` 的 `label` 閉包參數不繼承外層 `EditChildView`（`View`
+            // 協定推導出的）`@MainActor` 隔離，直接在閉包本體呼叫這兩個 `@MainActor`
+            // 隔離的自訂 View extension 方法會編譯失敗（"non-Sendable 'some View'-typed
+            // result can not be returned from main actor-isolated instance method ...
+            // to nonisolated context"）。獨立 View struct 的 `body` 本身就是
+            // `@MainActor`（`View`協定要求），閉包只需要呼叫它的 initializer（非隔離、
+            // 純建構值），交給 SwiftUI 之後才真正求值 `body`——同 `CreateChildView` 的
+            // `AvatarPrintCard` 抽出方式一致。
+            EditChildAvatarFieldContent(
+                name: name, avatarURL: childrenStore.avatarURL(for: child), pickedImage: pickedAvatarImage
+            )
         }
-        .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(name)的大頭貼")
+        .buttonStyle(.plain)
+        .disabled(isSubmitting)
     }
 
     private var nameField: some View {
@@ -220,7 +231,8 @@ struct EditChildView: View {
         }
         Task {
             let success = await childrenStore.updateChild(
-                childID: child.id, name: trimmed, birthday: birthday, avatarURL: child.avatarURL
+                childID: child.id, name: trimmed, birthday: birthday,
+                currentAvatarURL: child.avatarURL, newAvatarImageData: pickedAvatarData
             )
             if success { dismiss() }
         }
