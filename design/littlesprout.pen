@@ -126530,6 +126530,42 @@
               "fontWeight": "normal"
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "OlnuE",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "PUXOl",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "Pencil 踩雷",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "BHjXM",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "cmp/Profile Print（MJ-8）建立當下，Photo/Mount TL/Mount BR 三個子節點插入時父層還在預設 flex（未設 layout:none），插入的 x/y 被靜默忽略、改成橫向並排；事後才把父層設成 layout:none，但子節點的 x/y 已經定格在並排位置，不會回填成原本想要的座標。當下截圖恰好是「修正後」的巧合快照（可能是截圖時序剛好在另一次修正之後），造成單看那張截圖以為沒問題。R2 用全樹單次重掃（row_overflow）才抓到全部 4 個 instance 的角托跟著錯。教訓：新建節點若要用絕對定位，必須先把父層設 layout:none，再插入帶 x/y 的子節點——順序反過來會被靜默吃掉，且不能只靠單一截圖判斷正確性，要跑全樹掃描複驗。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
         }
       ]
     },
