@@ -138791,7 +138791,7 @@
               "type": "frame",
               "id": "veB5F",
               "name": "Legal Card",
-              "width": 385,
+              "width": 520,
               "fill": "$surface",
               "cornerRadius": "$radius-lg",
               "stroke": "$border",
@@ -138808,7 +138808,7 @@
               },
               "layout": "vertical",
               "gap": "$sp-block",
-              "padding": "$inset-card",
+              "padding": 87.5,
               "children": [
                 {
                   "type": "frame",
@@ -139258,7 +139258,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "iPad 上 SwiftUI `.sheet()` 的原生行為（regular width，未強制 `.presentationDetents`）是置中浮動的 form sheet，不是 iPhone 的滿版 bottom sheet——這是 iOS/iPadOS 系統行為，不是設計選擇。`uQeV8` 因此不沿用 iPhone 版的 Grabber＋滿版寫法，改為 Legal Card（`veB5F`，寬 520，四角圓角 `$radius-lg`，`effect: outer shadow`），用 Card Wrap（`ANzjU`，`justifyContent:center`／`alignItems:center`）置中——實測 Legal Card 上緣距板頂 220、下緣距板底 220（1194 板高，754 卡高，(1194-754)/2=220 ✓ 完全對稱），無 Grabber（置中卡片沒有下滑手勢慣例，加了反而誤導）。",
+                  "content": "iPad 上 SwiftUI `.sheet()` 的原生行為（regular width，未強制 `.presentationDetents`）是置中浮動的 form sheet，不是 iPhone 的滿版 bottom sheet——這是 iOS/iPadOS 系統行為，不是設計選擇。`uQeV8` 因此不沿用 iPhone 版的 Grabber＋滿版寫法，改為 Legal Card（`veB5F`，四角圓角 `$radius-lg`，`effect: outer shadow`），用 Card Wrap（`ANzjU`，`justifyContent:center`／`alignItems:center`）置中，無 Grabber（置中卡片沒有下滑手勢慣例，加了反而誤導）。**寬度定案（R1→R2→R3 沿革）**：R1 用 520 寬＋預設內距（MN-1 前，內容欄 480≈28 字／行，偏寬）；R2 依 VR MN-1 收窄到 385 寬（內容欄 345≈20 字，行長達標，但 VR R2 MN-4 指出 834pt 畫布上兩側 scrim 合計 449pt 比卡片本身還寬，卡片讀起來像一張 iPhone 畫面浮在 iPad 上，比 iPadOS form sheet 系統慣例（約 540）窄）；**R3 改回 520 寬＋內距 87.5**（`veB5F.padding`＝87.5），內容欄仍 345（520－2×87.5＝345），行長達標同時卡片維持 iPad 該有的體積。實測：`Legal Card` 520×889，置中後上緣距板頂 152.5、下緣距板底 152.5（1194 板高，(1194-889)/2=152.5 ✓ 完全對稱）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -139392,7 +139392,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "可捲動長文用 `clip:true` 固定高度容器（Scroll Body）呈現「捲動中，未捲到底」的靜態切片——這是既有慣例（LS-142 `rTEGf` 的 `Rows Scroll Area` `BImYe`，`clip:true` height 252，同一手法）。R2 依 VR R1 MJ-1 裁定，四板裁切露出比例統一實測 33%（皆落在 [0.25,0.50] 區間，公式＝(裁切線−被切段落節點上緣)÷該節點高度）：`EzJCV`／`O631mm` 皆切 1.2 段（`O7TuPe`／對應深色節點），58÷174＝**33.3%**；`E27nKz`（AX3）切 1.2 段（`AXKtM`），314÷952＝**33.0%**（`R8deeK` 高度由 R1 的 2000 調整為 2278）；`uQeV8`（iPad）因 MN-1 把內容欄收窄到與 iPhone 同寬 345（見下段），版面與 `EzJCV` 逐位元相同，切 1.2 段（`O7TuPe`），58÷174＝**33.3%**——四板同一比例，同一段落，非各自拍腦袋。",
+                  "content": "可捲動長文用 `clip:true` 固定高度容器（Scroll Body）呈現「捲動中，未捲到底」的靜態切片——這是既有慣例（LS-142 `rTEGf` 的 `Rows Scroll Area` `BImYe`，`clip:true` height 252，同一手法）。**R3 判準訂正（VR R2 IN-1）**：露出比例是錯的尺（％ 會隨段落長短漂移），正確判準是**露出高度 ÷ 行高（行數）＝使用者實際看到幾行字**，驗收線＝**露出 ≥1.5 行**，取代 R2 版的「％ 落在 [0.25,0.50]」。四板實測（皆切 1.2 段）：`EzJCV`／`O631mm`＝58÷(17×1.7)＝58÷28.9≈**2.01 行**；`E27nKz`（AX3）＝314÷(40×1.7)＝314÷68≈**4.62 行**（AX3 段落本身更高，同比例換算成行數反而更多，是四板中最充足的）；`uQeV8`（iPad，內容欄與 iPhone 同寬 345 後版面逐位元相同）＝58÷28.9≈**2.01 行**——四板皆 ≥1.5 行，AX3 尤其寬裕。對照 R1 失敗值：AX3 當時只露 36÷68≈0.53 行、iPad 5÷28.9≈0.17 行，才是「看起來像髒點」的真正原因（不到 1 行）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -139490,7 +139490,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "板高（規格值族「單畫面總高」）：`EzJCV`／`O631mm` 皆 852（裝置高度，Legal Sheet 63→852 貼齊板底，maxBottom==852，0 越界，量法：`Get` 走訪 `Legal Sheet` `y+height`）；`E27nKz`（AX3）**R2 復算為 2800**（R1 舊值 2469，因 Scroll Body 480→2278 增高後 root/`Scrim`(`cgd6P`)/`Sheet Wrap`(`CozLy`) 三節點同步覆寫，Legal Sheet 高 2800＝top gap 0＋2800，貼齊板底）；`uQeV8`（iPad）1194 不變（Legal Card **R2 改寬 385**（原 520，MN-1 見下），置中後上下各留 220 呼吸帶，遠低於板高，未觸頂）；`k6Rlt`（R2 新增「已捲到底」）1948＝內容驅動（Legal Sheet 貼齊板底，只保留原文 1.3–2.2 四段＋Footer，無 Scroll Body clip，展示捲到底時最後一段完整可見、Footer 緊接在後、無裁切殘影）。",
+                  "content": "板高（規格值族「單畫面總高」）：`EzJCV`／`O631mm` 皆 852（裝置高度，Legal Sheet 63→852 貼齊板底，maxBottom==852，0 越界，量法：`Get` 走訪 `Legal Sheet` `y+height`）；`E27nKz`（AX3）**R2 復算為 2800**（**R1 落地值為 2522**——`git show e40bbc5` 可查 `E27nKz.height`＝2522；2469 是 R1 中途 Doc Meta 溢出修正**前**的暫存值，不是交付值，R2 曾誤引用 2469，已訂正，見 VR R2 MN-5），R2 因 Scroll Body 480→2278 增高後 root/`Scrim`(`cgd6P`)/`Sheet Wrap`(`CozLy`) 三節點同步覆寫，Legal Sheet 高 2800＝top gap 0＋2800，貼齊板底；`uQeV8`（iPad）1194 不變（Legal Card **R3 定案 520 寬**（R2 曾試 385，VR MN-4 認為卡片讀起來像 iPhone 畫面浮在 iPad 上，R3 改回 520＋內距 87.5＝內容欄仍 345），置中後上下各留 152.5 呼吸帶，對稱維持，遠低於板高，未觸頂）；`k6Rlt`（「已捲到底」）**R3 復算為 1972**（R2 曾為 1948，末段文字底貼齊 Scroll Body 底、餘裕 0，VR MJ-3 指出與「還有內容」態下緣幾何無法區分；R3 給 Scroll Body 加 `padding:[0,0,24,0]`，末段文字底→Scroll Body 底餘裕 24pt（≥16pt 驗收線），root/`Scrim`(`QnW6V`)/`Sheet Wrap`(`CP5Zi`) 同步覆寫 1948→1972）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -139980,7 +139980,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "①「捲到底」AX3 狀態要不要畫：VR 判定「要」。R2 新增 `k6Rlt`（A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3）：Scroll Body 只保留原文尾段（1.3–2. 服務內容標題–2.1–2.2），不設 clip，最後一段（2.2）完整可見、緊接 Footer（gap 仍是同一組 `$sp-block`(24)），沒有任何文字被裁掉——這就是「已經沒有更多了」的表達方式：不是加一句「全文完」之類的自創文案（本票堅持不虛構內容），而是用「文字自然結束、沒有殘缺切邊」本身當作訊號，與捲動中狀態（有裁切殘影）形成對比。",
+                  "content": "①「捲到底」AX3 狀態要不要畫：VR 判定「要」。R2 新增 `k6Rlt`（A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3）：Scroll Body 只保留原文尾段（1.3–2. 服務內容標題–2.1–2.2），最後一段（2.2）完整可見、緊接 Footer，沒有任何文字被裁掉——這就是「已經沒有更多了」的表達方式：不是加一句「全文完」之類的自創文案（本票堅持不虛構內容），而是用「文字自然結束」本身當作訊號。**R3 訂正（VR MJ-3）**：R2 版末段文字底恰好貼齊 Scroll Body 底緣、餘裕 0，與「還有內容」態（`E27nKz`，段落被切、露出 4.62 行）的下緣幾何**無法區分**——長輩看不出自己是讀完了還是又被切了。改法：`Scroll Body`（`KIhSi`）加 `padding:[0,0,24,0]`，末段文字底→Scroll Body 底緣餘裕**24pt**（≥16pt 驗收線），root/`Scrim`(`QnW6V`)/`Sheet Wrap`(`CP5Zi`) 同步覆寫 1948→**1972**。兩態下緣現在有明確幾何差異：`E27nKz` 是「文字被切、緊貼裁切線」，`k6Rlt` 是「文字完整、留白 24pt 才接 Footer」。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -140150,7 +140150,177 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "本輪新增 `k6Rlt`（R3-1 抬標準①），iPad 因 MN-1 內容欄收窄，`Legal Card` 寬度由 520→385（內容欄 385－2×20 padding＝345）。",
+                  "content": "R2 新增 `k6Rlt`（R3-1 抬標準①），iPad 因 MN-1 內容欄收窄，`Legal Card` 寬度當時由 520→385（內容欄 385－2×20 padding＝345）——**R3 依 VR MN-4 已改回 520＋內距 87.5**，此列為 R2 沿革記錄，現行寬度見「iPad：置中卡片」節與「尺寸規格值與量法」節 `W0Umr`。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "olRrA",
+          "name": "N R3 修訂重點（依 VR R2 comment 9f1fc090 逐項落地）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "CKFQP",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R3 修訂重點（依 VR R2 comment 9f1fc090 逐項落地）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "agJc7",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "iDIwX",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "rftod",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MJ-3：`k6Rlt`「已捲到底」給出可辨識的視覺證據——`Scroll Body`（`KIhSi`）加 `padding:[0,0,24,0]`，末段（2.2）文字底→Scroll Body 底緣餘裕由 0 改為 **24pt**（≥16pt 驗收線），root/`Scrim`/`Sheet Wrap` 同步覆寫 1948→**1972**。與 `E27nKz`（還有內容態，段落被切、露出 4.62 行、緊貼裁切線）的下緣幾何現在可明確區分。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "L7Ii0",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Zojwg",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "g545N",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MN-4：iPad `Legal Card` 由 R2 的 385 寬改回 **520 寬＋內距 87.5**（VR 認為窄卡片讀起來像 iPhone 畫面浮在 iPad 上，且比 iPadOS form sheet 系統慣例約 540 窄）。內容欄仍 345（520－2×87.5），行長判準不變；置中對稱由 220/220 變為 152.5/152.5（卡片變高，(1194－889)/2）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "DK5vW",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Q0Dn7",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "o1Sio",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MN-5：Notes `W0Umr` 沿革數字訂正——R1 落地值是 **2522**（`git show e40bbc5` 可查），R2 誤引用的 2469 其實是 R1 中途 Doc Meta 溢出修正前的暫存值，非交付值，已在 `W0Umr` 明確標註區分。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "z0k0z2",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "LNNUq",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "JAf9X",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "驗收判準訂正（VR IN-1）：裁切露出的驗收線由「％ 落在 [0.25,0.50]」改為「**露出 ≥1.5 行**」（％ 隨段落長短漂移，行數不會），四板實測 2.01／2.01／4.62／2.01 行，全數達標且無需再動幾何——`nl8ar` 已改寫。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -140173,7 +140343,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1948,
+      "height": 1972,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -140217,7 +140387,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1948,
+          "height": 1972,
           "fill": "$paper-shadow"
         },
         {
@@ -140228,7 +140398,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 1948,
+          "height": 1972,
           "layout": "vertical",
           "justifyContent": "end",
           "children": [
@@ -140319,6 +140489,12 @@
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-block",
+                  "padding": [
+                    0,
+                    0,
+                    24,
+                    0
+                  ],
                   "children": [
                     {
                       "type": "text",
