@@ -230,7 +230,8 @@ struct ChildrenManagementView: View {
                 } else {
                     ContentUnavailableView(
                         "選擇一個寶貝",
-                        systemImage: "figure.and.child.holdinghands",
+                        // LS-160：與 LS-150 已核可的寶貝 tab icon 語彙一致（AppSection.children.systemImage）。
+                        systemImage: "stroller.fill",
                         description: Text("在左側選擇要編輯的寶貝檔案。")
                     )
                 }
