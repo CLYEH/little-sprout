@@ -45,8 +45,17 @@
 #   但字面沒有主 checkout 路徑＋寫入樣式。
 #
 # 開關：環境變數 LS_ALLOW_MAIN_CHECKOUT_WRITE=1（hook 行程的環境＝啟動 claude 的 shell）整支放行；
-# Bash 命令文字以 `LS_ALLOW_MAIN_CHECKOUT_WRITE=1` 賦值開頭亦放行該次呼叫（Write／Edit 沒有命令
-# 文字可帶，只認環境變數）。兩者皆 stderr 註明。預設關。
+# Bash 命令文字在**整條命令最前面**的命令位置前綴（`VAR=val`／`env` 串）帶 `LS_ALLOW_MAIN_CHECKOUT_WRITE=1`
+# 亦放行該次呼叫——`LS_ALLOW_MAIN_CHECKOUT_WRITE=1 rm …`、`env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 rm …`、
+# `FOO=1 env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 rm …` 皆可；`cd x && LS_ALLOW…=1 rm …`（非最前面）不算，
+# deny 訊息會寫明位置限制（merge-review R1 minor 2，comment 94035c1a）。Write／Edit 沒有命令文字可帶，
+# 只認環境變數。兩者皆 stderr 註明。預設關。
+#
+# 環境衛生（merge-review R1 minor 1，比照 scripts/gates/push-gate.sh LS-73）：hook 行程若帶
+# GIT_DIR／GIT_WORK_TREE／GIT_INDEX_FILE／GIT_PREFIX／GIT_COMMON_DIR，`git rev-parse` 對任何 `-C` 目錄
+# 都回同一個 git-dir／common-dir → 每個 linked worktree 都被判成主 checkout（產線全停、訊息還叫人
+# 「去 worktree」）。呼叫 git 前一律剝除這五個變數。另設 sys.dont_write_bytecode：import pretool_engine
+# 不得在 scripts/hooks/ 留 __pycache__（hook 跑在主 checkout 那份，留了就把主 checkout 弄 dirty）。
 #
 # 前處理（heredoc 剝除、引號感知斷詞、`$(...)` 擷取、透明前綴詞表）直接 import 同目錄的
 # pretool_engine.py（LS-104），不重寫第二套 tokenizer。
@@ -56,6 +65,7 @@ import re
 import subprocess
 import sys
 
+sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pretool_engine as E  # noqa: E402
 
@@ -90,7 +100,20 @@ FB_WRITE_RE = re.compile(
     r"|(?:^|[\s;&|(])(?:sed|perl)\s+(?:-[A-Za-z]*\s+)*-[A-Za-z]*i|--in-place"
 )
 HEREDOC_START_RE = re.compile(r"<<[-~]?[ \t]*(?:'([^']*)'|\"([^\"]*)\"|([A-Za-z_][A-Za-z0-9_]*))")
-INLINE_SWITCH_RE = re.compile(r"^\s*" + re.escape(SWITCH) + r"=1(?:\s|$)")
+# 命令位置前綴：任意 `VAR=val`／`env` 串之後緊接開關賦值（R1 minor 2：原本只認最前綴一種形狀，
+# POSIX 慣用的 `env VAR=1 cmd` 被擋且訊息沒說位置限制 → 重試迴圈）。
+INLINE_SWITCH_RE = re.compile(
+    r"^\s*(?:(?:env|[A-Za-z_][A-Za-z0-9_]*=\S*)\s+)*" + re.escape(SWITCH) + r"=1(?:\s|$)"
+)
+# 呼叫 git 前剝除的環境變數（R1 minor 1；同 push-gate.sh LS-73 的 unset 清單＋GIT_COMMON_DIR）。
+GIT_ENV_POLLUTERS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_PREFIX", "GIT_COMMON_DIR")
+
+
+def _clean_env():
+    env = dict(os.environ)
+    for k in GIT_ENV_POLLUTERS:
+        env.pop(k, None)
+    return env
 
 
 class GuardError(Exception):
@@ -133,6 +156,7 @@ def repo_dirs(path):
         r = subprocess.run(
             ["git", "-C", d, "rev-parse", "--path-format=absolute", "--git-dir", "--git-common-dir"],
             capture_output=True, text=True, timeout=5,
+            env=_clean_env(),  # LS-154 R2 mutation anchor：自測換成 env=None，GIT_DIR 下 worktree 樣本必須變紅
         )
     except (OSError, subprocess.TimeoutExpired) as e:
         raise GuardError(f"git rev-parse 無法執行（{type(e).__name__}）")
@@ -500,7 +524,7 @@ def main():
         elif tool == "Bash":
             command = str(ti.get("command") or "")
             if INLINE_SWITCH_RE.match(command):
-                sys.stderr.write(f"main-checkout-guard：命令以 {SWITCH}=1 開頭，放行本次 Bash（主 checkout 寫入未受檢）\n")
+                sys.stderr.write(f"main-checkout-guard：命令位置前綴帶 {SWITCH}=1，放行本次 Bash（主 checkout 寫入未受檢）\n")
                 return 0
             g.eval_bash(command, cwd, 0)
         else:
@@ -508,7 +532,8 @@ def main():
     except Deny as dn:
         emit_deny(
             f"{dn.rule}：主 checkout 禁寫（{dn.detail}）——請在自己的 worktree（.claude/worktrees/LS-<n>）作業；"
-            f"harness 改動走 hotfix worktree（COLLABORATION §2 Worktree 規約／§7）；明確需要時 {SWITCH}=1 放行"
+            f"harness 改動走 hotfix worktree（COLLABORATION §2 Worktree 規約／§7）；明確需要時以 "
+            f"`{SWITCH}=1 <cmd>` 或 `env {SWITCH}=1 <cmd>` 開頭（整條命令最前面；Write／Edit 只認環境變數）放行該次"
         )
     flush_notes()
     return 0
