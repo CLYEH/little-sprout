@@ -83,6 +83,16 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     // 成員，須先轉移 owner 身份才能刪除帳號。同 familyMustHaveOwner（LS001）同一組
     // 不變量，只是觸發路徑不同，見下方 tier。
     case ownerMustTransferBeforeAccountDeletion = "LS050"
+    // LS051（LS-151，過渡期擋寫）：deletion_requested_at 非 NULL 時，
+    // families／family_members／media／diaries／albums／children／comments 七張表
+    // 的 BEFORE INSERT trigger 一律拒絕——帳號已請求刪除，過渡期間不能再建立新資料。
+    // 沒有輸入可換、也不是「先做別的事再重試」（跟 LS050 不同，這裡沒有任何後續動作
+    // 能讓呼叫者自己解除這個狀態，只能等 Edge Function 完成刪除），純粹是狀態層級的
+    // 拒絕，見下方 tier。本專案目前沒有任何 UI 會呼叫到會撞這個碼的路徑（LS-151 是
+    // backend-only 票，帳號刪除的 UI 流程另票、需 Design gate）；三方對帳
+    // （error-codes-check.sh）要求 API.md／migrations／LSErrorCode 三邊一致，這裡先
+    // 補上列舉與分類，UI 落地時直接可用。
+    case accountDeletionInProgress = "LS051"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -103,7 +113,8 @@ enum LSErrorCode: String, CaseIterable, Sendable {
              .albumNotFound, .commentNotFound, .commentNotEditableByCaller,
              .targetFamilyMismatch, .timelineCursorIncomplete, .removedByOwnerNotRestorable,
              .childNotFoundOrDeleted, .childNotEditableByCaller, .childRestoreWindowExpired,
-             .albumChildrenNotEditableByCaller, .ownerMustTransferBeforeAccountDeletion:
+             .albumChildrenNotEditableByCaller, .ownerMustTransferBeforeAccountDeletion,
+             .accountDeletionInProgress:
             // 以下碼為 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
@@ -146,6 +157,10 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // 唯一 owner 且家庭還有其他成員，delete_my_account() 沒有輸入可換，必須
             // 先做別的事（把 owner 身份轉移給其他成員）才能重試，跟
             // familyMustHaveOwner 同一組理由。
+            // accountDeletionInProgress（LS051，LS-151）：帳號已請求刪除，過渡期間
+            // 的寫入一律拒絕。沒有輸入可換，也沒有使用者能自己做的「別的事」（跟
+            // ownerMustTransferBeforeAccountDeletion 不同，這裡唯一的出路是等
+            // Edge Function 完成刪除），純狀態拒絕，歸 rejected。
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:
             // 碼本身是「輸入」——打錯字換一個、或請 owner 給一支新的碼，都是同一個 UI 動作
