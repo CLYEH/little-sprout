@@ -8,18 +8,26 @@ Information → Notes」的文案草稿，**送審前需使用者核可**（尤�
 
 | 角色 | Email | 登入方式 |
 |---|---|---|
-| Owner（審核建議用這組） | `review-demo@little-sprout.app` | Email 驗證碼（見下） |
+| Owner（審核建議用這組） | `<REVIEW_OWNER_EMAIL>`（送審時由 orchestrator 執行種子時代入實際地址） | Email 驗證碼（見下） |
 | Member（次要，示範第二成員視角用） | `review-demo-member@little-sprout.app` | 同上 |
 
 家庭：「審核示範家庭」（固定 `family_id`，種子腳本
-`scripts/ops/review-demo-seed.sh` 建立，冪等可重跑）。
+`scripts/ops/review-demo-seed.sh` 建立，冪等可重跑；owner email 用
+`--owner-email <REVIEW_OWNER_EMAIL>` 代入，見腳本檔頭用法）。
+
+**`<REVIEW_OWNER_EMAIL>` 的密碼只寫在 App Store Connect 的 Review Notes，不進
+repo、不寫在本檔任何地方。**
 
 ## 登入方式：Email 驗證碼（不是 Sign in with Apple）
 
 App 的登入選項有 Apple／Google／Email 三種。PLAN §9-B 記錄的理由：Sign in with
 Apple 對審核員偶爾不順（審核環境的 Apple ID／Face ID 模擬設定不穩定是已知現象），
-Email 驗證碼登入不需要任何第三方帳號設定，請審核員選「使用 Email 登入」，輸入上表
-Email，10 分鐘內會收到 6 位數驗證碼。
+Email 驗證碼登入不需要任何第三方帳號設定。
+
+**登入步驟（方案 C，已裁決見下方「OTP 對審核員的問題」）**：審核員登入
+`<REVIEW_OWNER_EMAIL>` 這個信箱（密碼見 App Store Connect Review Notes）→ 回到
+app 選「使用 Email 登入」、輸入同一組 email → 10 分鐘內信箱會收到 6 位數驗證碼，
+回 app 輸入完成登入。
 
 **已知限制**：驗證碼有效期 10 分鐘，過期需要重新索取（畫面上會有「重新寄送」倒數
 計時）。
@@ -53,19 +61,20 @@ Email，10 分鐘內會收到 6 位數驗證碼。
 2. 登入後選「我有邀請碼」，輸入 `LSDEM7`。
 3. 「審核示範家庭」的 `require_approval` 走表預設值 `true`（`families` 表定義，
    `supabase/migrations/20260823010000_join_approval.sql`）——申請會卡在「等待
-   核准」，需要用 owner（`review-demo@little-sprout.app`）帳號登入後在設定裡核准，
-   審核員自己無法完成這條路徑的完整體驗。若要示範完整加入流程，建議直接用 owner
+   核准」，需要用 owner（`<REVIEW_OWNER_EMAIL>`）帳號登入後在設定裡核准，審核員
+   自己無法完成這條路徑的完整體驗。若要示範完整加入流程，建議直接用 owner
    帳號登入即可看到示範家庭全部內容，不需要真的走一次邀請碼加入。
 
-## OTP 對審核員的問題（待使用者裁決，只列選項不決定）
+## OTP 對審核員的問題（已裁決：方案 C，2026-09-04）
 
 核心矛盾：Email 驗證碼登入的前提是「審核員能收到那封信」，但審核員用的是自己的
-測試環境，**收不到寄到 `review-demo@little-sprout.app` 的信**（除非這個信箱本身是
-一個審核員能登入查看的真實信箱）。以下三個方向都能解，各有取捨，需要使用者裁決：
+測試環境，**收不到寄到示範帳號原本預設網域的信**（除非這個信箱本身是一個審核員
+能登入查看的真實信箱）。曾列三個方向、各有取捨，**使用者已裁決採方案 C**：給審核員
+一個他們真的能登入查看的信箱，密碼只放 App Store Connect 的 Review Notes、不進
+repo。以下保留 A／B／C 三案原始取捨紀錄：
 
-### 選項 A：固定測試 OTP／測試帳號覆寫
-讓 `review-demo@little-sprout.app` 這一個帳號的驗證碼永遠固定（例如 `000000`），
-繞過真的寄信。
+### 選項 A：固定測試 OTP／測試帳號覆寫（未採用）
+讓審核帳號的驗證碼永遠固定（例如 `000000`），繞過真的寄信。
 - **需要查證**：Supabase Auth（GoTrue）**沒有**官方公開的「test OTP／test user」
   正式站功能（不同於本機開發用的 Admin API `generate_link`，那是給開發者用
   service_role key 查詢用的，不能交給審核員）。要做到「這一個帳號永遠回固定碼」
@@ -75,7 +84,7 @@ Email，10 分鐘內會收到 6 位數驗證碼。
   正常驗證」的後門），上線後要確保這條路徑不會被找到／濫用（例如加時間窗、加
   IP 限制，或送審結束後立刻撤除）。
 
-### 選項 B：Email＋密碼備援
+### 選項 B：Email＋密碼備援（未採用）
 給審核帳號另外設一組密碼，用密碼登入取代 OTP。
 - **需要新開發**：目前 App 完全沒有密碼登入路徑——`AuthService`／
   `SupabaseAuthService`（`LittleSprout/Services/Auth/`）只有
@@ -84,17 +93,17 @@ Email，10 分鐘內會收到 6 位數驗證碼。
   或藏在設定裡的）密碼登入畫面與呼叫路徑——這是產品要不要為審核多開一條永久
   登入路徑的決定，不是小改動。
 
-### 選項 C：Magic Link／真實信箱
-不繞過 email，而是給審核員一個他們真的能登入查看的信箱（例如一個共用的 Gmail
-帳號），審核備註裡連同信箱密碼一起附上，審核員自己登入該信箱收驗證碼。
+### 選項 C：Magic Link／真實信箱（已採用）
+不繞過 email，而是給審核員一個他們真的能登入查看的信箱（`<REVIEW_OWNER_EMAIL>`，
+使用者提供的 Gmail／Workspace 信箱地址），審核備註裡連同信箱密碼一起附上，審核員
+自己登入該信箱收驗證碼。
 - **優點**：不用改任何後端／前端邏輯，最貼近真實使用情境（這就是一般使用者的登入
   流程本身）。
-- **代價**：`review-demo@little-sprout.app` 目前是否有對應的真實可登入信箱（例如
-  掛在某個網域的 Google Workspace／轉發到 Gmail）需要確認並設定；審核備註裡要
-  附這組信箱的登入密碼，等於多一個需要保護的憑證（審核結束後要考慮是否輪替密碼）。
+- **代價**：審核備註裡要附這組信箱的登入密碼，等於多一個需要保護的憑證——密碼
+  只寫在 App Store Connect 的 Review Notes，不進 repo、不寫在本檔任何地方。
 
-**本票不裁決**：上述三選項的取捨（開發成本、安全性、審核體驗）需要使用者決定，
-決定後回來更新本節與「登入方式」一節的文案。
+**送審後待辦**：審核結束後輪替 `<REVIEW_OWNER_EMAIL>` 信箱密碼（App Store Connect
+Review Notes 裡的密碼視同已對審核員曝光過的憑證，審核流程走完就該換掉）。
 
 ## 隱私權政策／支援 URL
 
