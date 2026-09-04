@@ -149073,6 +149073,390 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "TnxXE",
+      "x": -3367,
+      "y": 88031,
+      "name": "LS-177 / 留言 sheet · 空狀態 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "cghd4",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "W2ECnN",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 852,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "XbtVU",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 852,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "BoR3l",
+              "name": "Comment Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                0,
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "gELNP",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "yoUWu",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "KzdOc",
+                      "name": "Head Title",
+                      "fill": "$text-primary",
+                      "content": "留言",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "U8yAZ",
+                      "name": "Head Count",
+                      "fill": "$text-secondary",
+                      "content": "0 則留言",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "ZzCUQ",
+                  "name": "Header Hairline",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "AsHi0",
+                  "name": "Comment List",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 400,
+                  "layout": "vertical",
+                  "gap": "$sp-section",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "rNKzr",
+                      "name": "Empty State",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "padding": [
+                        70,
+                        0,
+                        0,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "K1yE6j",
+                          "name": "Empty Print",
+                          "width": 120,
+                          "height": 120,
+                          "fill": "$print-paper",
+                          "stroke": "$paper-edge",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "outer",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 3
+                            },
+                            "blur": 10
+                          },
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "id": "HwcGv",
+                              "x": 10,
+                              "y": 10,
+                              "name": "Empty Page",
+                              "fill": "#00000000",
+                              "width": 100,
+                              "height": 100,
+                              "stroke": "$border",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "id": "U650Io",
+                              "type": "ref",
+                              "ref": "GEBcf",
+                              "name": "Corner TL",
+                              "x": -5,
+                              "y": -5,
+                              "descendants": {
+                                "sD5Ma": {
+                                  "geometry": "M0 0 L26 0 L0 26 Z"
+                                },
+                                "DhOiK": {
+                                  "geometry": "M26 0 L0 26"
+                                }
+                              }
+                            },
+                            {
+                              "id": "p3K1xk",
+                              "type": "ref",
+                              "ref": "GEBcf",
+                              "name": "Corner BR",
+                              "x": 99,
+                              "y": 99,
+                              "descendants": {
+                                "sD5Ma": {
+                                  "geometry": "M26 26 L26 0 L0 26 Z"
+                                },
+                                "DhOiK": {
+                                  "geometry": "M26 0 L0 26"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "Ad2LU",
+                          "name": "Empty Title",
+                          "fill": "$text-primary",
+                          "content": "還沒有人留言",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "XZPl9",
+                          "name": "Empty Subtitle",
+                          "fill": "$text-secondary",
+                          "content": "第一個跟家人說說話吧",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "J7msUe",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "pNdS1",
+                      "name": "Footer Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "E8emWg",
+                      "name": "Input Wrap",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-item",
+                        0,
+                        "$sp-block",
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "N6CYtr",
+                          "type": "ref",
+                          "ref": "OePXK",
+                          "name": "My Avatar",
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "qwZUr",
+                          "name": "Text Field",
+                          "width": "fill_container",
+                          "fill": "$bg",
+                          "cornerRadius": "$radius-full",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CFIMz",
+                              "name": "Placeholder",
+                              "fill": "$text-secondary",
+                              "content": "留言...",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "sAQ7m",
+                          "name": "Send Button",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$accent",
+                          "cornerRadius": "$radius-full",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "AIbit",
+                              "name": "Send Icon",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "arrow-up",
+                              "library": "lucide",
+                              "fill": "$on-accent"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
