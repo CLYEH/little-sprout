@@ -21,14 +21,20 @@ delete from public.notification_events where sent_at is null;
 drop table if exists public.ls172_claim_race_capture;
 create table public.ls172_claim_race_capture (
   session text not null,
-  event_id uuid not null
+  event_id uuid not null,
+  -- LS-96 池項 8519d8a4 第 2 條（merge-review R2-i2）：「不重疊」這個斷言本身
+  -- 不會被拿掉 SKIP LOCKED（改成單純 FOR UPDATE）的 mutation 打中——reviewer
+  -- 實測過拿掉 SKIP LOCKED 之後 S2 會被 S1 卡住、S1 commit 後 EvalPlanQual 重
+  -- 檢把已標記的列濾掉、繼續掃到剩下的 5 筆，最終集合依然不重疊。真正該釘住
+  -- 的是「S2 沒有被卡住」這個耗時特徵，只有 S2 會寫這一欄（S1 維持 NULL）。
+  claim_duration_ms numeric
 );
 -- S1／S2 都是以 service_role 呼叫 claim_notification_events() 之後在同一句
 -- INSERT...SELECT 裡把結果寫進這張表——這張表是這個測試檔自己建立的、不是任何
 -- migration 管的正式 schema，`harden_default_privileges.sql` 的全域 default
 -- privileges 已經把新表對 service_role 的 PUBLIC baseline 收掉，不明確 grant
 -- 會撞 permission denied（本機實測踩出）。
-grant insert, select on public.ls172_claim_race_capture to service_role;
+grant insert, select, update on public.ls172_claim_race_capture to service_role;
 
 delete from public.families where id = 'c2000000-0000-4000-8000-000000000001';
 delete from auth.users where id in (
