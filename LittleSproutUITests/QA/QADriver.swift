@@ -176,25 +176,50 @@ final class QADriver {
 
     // MARK: - 相簿選圖（PhotosPicker）
 
-    /// `PhotosPicker` 是另一個行程的系統 UI，但它的元素仍掛在被測 app 的 a11y tree 下。cell label
-    /// 依**模擬器系統語言**（不是 app 語言）：英文 `Photo, …`／`Video, …`，中文 `照片`／`影片`；
-    /// 取**最後一個**符合的 cell＝最新加入的 fixture（`qa-e2e.sh` 跑前 `simctl addmedia`）。
+    /// `PhotosPicker` 是另一個行程的系統 UI，但它的元素仍掛在被測 app 的 a11y tree 下（實測：格子是
+    /// `Image`，label 依**模擬器系統語言**——英文 `Photo, October 10, 2009, 5:09 AM`／`Video, …`，中文
+    /// `照片`／`影片`；確認鈕 label `Done`，取消鈕 identifier `Cancel`）。
     func attachFixturesFromPhotoLibrary() throws {
         try require(app.buttons["新增照片"], "「新增照片」").tap()
-        try newestPickerCell(kinds: ["Photo", "照片", "相片"], what: "相簿選擇器裡的照片格").tap()
-        try newestPickerCell(kinds: ["Video", "影片", "視訊"], what: "相簿選擇器裡的影片格").tap()
+        // 先等 picker 真的呈現（Cancel 鈕 identifier 固定），再挑格——sheet 還在動畫時挑到的 frame 不準。
+        try require(app.buttons["Cancel"], "相簿選擇器（Cancel 鈕）", timeout: 20)
+        try tapNewestPickerCell(kinds: ["Photo", "照片", "相片"], what: "相簿選擇器裡的照片格")
+        try tapNewestPickerCell(kinds: ["Video", "影片", "視訊"], what: "相簿選擇器裡的影片格")
         snap("picker-selected")
-        try require(pickerConfirmButton, "相簿選擇器的加入鈕（Add／加入）").tap()
+        try require(pickerConfirmButton, "相簿選擇器的確認鈕（Done／Add／加入／完成）").tap()
         let queued = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "共 2 張")).firstMatch
         try require(queued, "照片佇列顯示 2 張（照片＋影片載入完成）", timeout: 60)
         snap("queue-2-items")
     }
 
-    private func newestPickerCell(kinds: [String], what: String) throws -> XCUIElement {
+    /// 挑「最新」的一格＝剛 `simctl addmedia` 進去的 fixture：優先 label 含今天日期（en「September 4, 2026」／
+    /// zh-Hant「2026年9月4日」），沒有就退回畫面最下、最右的一格（Recents 由舊到新、picker 開在最底）。
+    /// 本票實測：a11y tree 的元素順序不是時間順序（最後一個是 2009 年的內建樣本），不能拿 index 當「最新」；
+    /// 且遠端 view 的格子一律回報 `isHittable == false`（格子明明在畫面中央），`tap()` 會拒絕——改用座標 tap。
+    private func tapNewestPickerCell(kinds: [String], what: String) throws {
         let clauses = kinds.map { _ in "label BEGINSWITH %@" }.joined(separator: " OR ")
         let query = app.descendants(matching: .any).matching(NSPredicate(format: clauses, argumentArray: kinds))
         try require(query.firstMatch, what, timeout: 20)
-        return query.element(boundBy: max(0, query.count - 1))
+        let cells = query.allElementsBoundByIndex
+        let today = Self.todayLabelFragments()
+        let recent = cells.filter { cell in today.contains { cell.label.contains($0) } }
+        let pool = recent.isEmpty ? cells : recent
+        guard let target = pool.max(by: { ($0.frame.maxY, $0.frame.maxX) < ($1.frame.maxY, $1.frame.maxX) }) else {
+            XCTFail("\(what)：找到的格子清單是空的（query.firstMatch 存在但 allElementsBoundByIndex 為空）")
+            throw QAFailure.screen(what)
+        }
+        target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    }
+
+    /// picker 格子 label 裡「今天」的兩種寫法（模擬器系統語言 en／zh-Hant）。
+    static func todayLabelFragments(now: Date = Date()) -> [String] {
+        let english = DateFormatter()
+        english.locale = Locale(identifier: "en_US_POSIX")
+        english.dateFormat = "MMMM d, yyyy"
+        let chinese = DateFormatter()
+        chinese.locale = Locale(identifier: "zh_Hant_TW")
+        chinese.dateFormat = "yyyy年M月d日"
+        return [english.string(from: now), chinese.string(from: now)]
     }
 
     private var pickerConfirmButton: XCUIElement {
