@@ -1611,9 +1611,14 @@ handoff 附的 e2e 輸出）。R3 採 reviewer 建議的兩個修法並用：
 1. `purge_storage_queue` 新增 `attempts`／`last_error`／`next_attempt_at` 三欄；
    remove() 呼叫本身出錯，或呼叫 `getBucket()` 確認不到 bucket 存在時，透過
    `public.purge_storage_queue_mark_failed()`（`service_role`-only、`security
-   definer`）記一次失敗：`attempts` 遞增、依指數退避（`2^attempts` 分鐘，上限
-   24 小時）設定 `next_attempt_at`；達 5 次視為死信，`select` 端的
-   `where attempts < 5` 之後不會再選到它（停放，仍保留列供稽核，不再佔住隊頭）。
+   definer`）記一次失敗：`attempts` 遞增、依指數退避（`2^attempts` 分鐘）設定
+   `next_attempt_at`；達 5 次視為死信，`select` 端的 `where attempts < 5` 之後
+   不會再選到它（停放，仍保留列供稽核，不再佔住隊頭）。**退避上限（R4，
+   merge-review R3 minor 3，文字修正、不動行為）**：公式裡 `least(attempts + 1,
+   10)` 把指數壓在 10，理論上限是 `2^10 = 1024` 分鐘（約 17.07 小時），不是
+   之前文件誤寫的 24 小時；而且因為 `MAX_ATTEMPTS=5` 就會被死信條件排除，
+   **實際能觀察到的最大退避是 32 分鐘**（`2^5`），1024 分鐘那個理論上限永遠
+   用不到。
 2. remove() 呼叫沒有出錯、但某些路徑沒有出現在回傳的 `data[]` 裡時，額外呼叫
    一次 `getBucket()` 確認 bucket 本身存在——如果 bucket 存在，「路徑沒出現在
    `data[]` 裡」語意上就是「物件已經不存在」（不論是這次呼叫就發現、還是上一次
@@ -1630,6 +1635,21 @@ handoff 附的 e2e 輸出）。R3 採 reviewer 建議的兩個修法並用：
    只要還沒到達安全上限、且這一輪的 `select` 仍讀得到列，就繼續下一輪；`select`
    端的 `attempts`／`next_attempt_at` 篩選條件本身就會讓「這一輪已標記失敗、進入
    退避」的列在同一次 invocation 內不會被重複讀到。
+
+**死信的觀測出口（R4，merge-review R3 minor 2）**：死信停放本身是 F1 修法要的
+效果，但 R3 review 指出停放之後**沒有任何地方看得到**——EF 回應永遠是
+`{"processed":0,"failed":0}` HTTP 200，跟「佇列本來就空」看起來一樣。R4 最小
+改動：EF 回應 JSON 加一個 `parked` 欄位（這次 invocation 結束時，`attempts >=
+5` 的停放列總數），並 `console.log` 一行同樣的數字（Edge Function 的 log 由
+Supabase 平台保留，供之後真的接上排程與 log 監看時使用）。**巡檢 SQL**（orchestrator
+接 i4 的排程時一併接進巡檢，見下段「執行機制」）：
+```sql
+select count(*) from public.purge_storage_queue where attempts >= 5;
+```
+非零代表有 Storage 物件正卡在死信、需要人工介入（查 `last_error` 判斷是 bucket
+設定錯誤還是其他環境問題）。刻意不擴充 `private.purge_runs`（那張表記的是
+`purge_expired()` 的 DB 端結果，EF 是完全獨立的 invocation，混進同一張表的
+schema 會讓兩件事的觀測耦合在一起，不是這裡要解的問題）。
 
 `public.purge_storage_queue` 啟用 RLS、無 policy、只 `grant select, delete` 給
 `service_role`（`authenticated`／`anon` 兩層皆擋，同 `notification_events` 既有

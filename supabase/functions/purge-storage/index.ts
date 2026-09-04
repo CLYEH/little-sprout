@@ -46,6 +46,13 @@
 // 上限。改成固定大小（50）分段呼叫，降低單次請求的 URL 長度，不依賴 BATCH_SIZE
 // 未來會不會調大。
 //
+// R4（merge-review R3 comment 04987043，minor 2——死信無觀測出口）：死信停放
+// 之後 EF 回應永遠是 processed:0/failed:0 HTTP 200，跟「佇列本來就空」看起來
+// 一樣，Storage 清除可以永久停擺而沒有人知道。回應 JSON 加 `parked` 欄位（見
+// 檔尾），並 console.log 一行——不擴充 private.purge_runs（那張表是
+// purge_expired() 的 DB 端結果，混進 EF 自己的觀測會耦合兩件事）。巡檢 SQL 見
+// docs/API.md §6，由 orchestrator 接排程時一併接進巡檢。
+//
 // 已知限制（如實揭露，見 docs/API.md §6「自動清除」與本票 handoff）：本機已用
 // `supabase functions serve --no-verify-jwt`（經 scripts/ops/supabase-lock.sh）
 // 對這支函式做過端對端手動驗證，但**沒有**寫成 `supabase/tests/` 底下可重複執行的
@@ -273,8 +280,28 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // R4（merge-review R3 minor 2，comment 04987043）：死信停放本身沒有任何觀測
+  // 出口——停放之後 EF 回應永遠是 processed:0/failed:0 HTTP 200，跟「佇列本來
+  // 就空」看起來一樣，Storage 清除可以永久停擺而沒有人知道。最小改動：查一次
+  // 目前停放（attempts >= MAX_ATTEMPTS）的列數，放進回應 JSON 與一行 log；不
+  // 擴充 private.purge_runs（那張表是 purge_expired() 的 DB 端結果，EF 是獨立
+  // invocation，混進同一張表只會讓兩件事的觀測耦合）。巡檢 SQL 見
+  // docs/API.md §6：`select count(*) from public.purge_storage_queue where
+  // attempts >= 5`，由 orchestrator 接 i4 排程時一併接進巡檢。
+  const { count: parked } = await supabase
+    .from("purge_storage_queue")
+    .select("id", { count: "exact", head: true })
+    .gte("attempts", MAX_ATTEMPTS);
+  console.log(`purge-storage: parked=${parked ?? 0}`);
+
   return new Response(
-    JSON.stringify({ processed, failed: failures.length, failures, warnings }),
+    JSON.stringify({
+      processed,
+      failed: failures.length,
+      failures,
+      warnings,
+      parked: parked ?? 0,
+    }),
     {
       status: failures.length > 0 || warnings.length > 0 ? 207 : 200,
       headers: { "Content-Type": "application/json" },

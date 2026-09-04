@@ -234,7 +234,15 @@ grant select, delete on public.purge_storage_queue to service_role;
 -- 送新值（多一次往返＋競態窗口），要嘛就是這裡直接把「記錄一次失敗」整個動作包成
 -- 一支函式）。
 --
--- 退避公式：`2^(次數)` 分鐘（用位元左移避免浮點數），上限 24 小時；達
+-- 退避公式：`2^(次數)` 分鐘（用位元左移避免浮點數）。**R4（merge-review R3
+-- minor 3，comment `04987043`）文字修正，不動行為**：這裡的指數在
+-- `least(attempts + 1, 10)` 就被壓住，`1 << 10 = 1024`，外層
+-- `least(..., 1440)` 那個「1440 分鐘（24 小時）」的分支因此永遠走不到——真正的
+-- 理論上限是 1024 分鐘（約 17.07 小時），不是 24 小時（reviewer 實測：
+-- attempts 9／10／11／20 得到的 `next_attempt_at` 差值恆為 1024 分鐘）。而且
+-- 因為 SELECT 端 `attempts < MAX_ATTEMPTS` 在達到門檻後就不會再選到這一列，
+-- **實際能觀察到的最大退避是 32 分鐘**（`MAX_ATTEMPTS`＝5，第 4→5 次失敗那次
+-- `2^5`）——1024 分鐘那個上限本身也永遠用不到，純粹是公式本身的數學極限。達
 -- `MAX_ATTEMPTS`（Edge Function 端的常數，見 index.ts，目前 5）次之後這裡不特別
 -- 處理停放判定——「停放」完全靠 Edge Function 的 SELECT 端 `where attempts <
 -- MAX_ATTEMPTS`（見 index.ts），這支函式只負責老實記錄「又失敗了一次、原因是
@@ -257,9 +265,10 @@ $$;
 comment on function public.purge_storage_queue_mark_failed(uuid[], text) is
   'Edge Function（supabase/functions/purge-storage）對這一輪無法確認已刪的'
   ' purge_storage_queue 列記錄重試（R3，LS-153，merge-review R2 F1）：attempts'
-  ' 遞增、last_error 記原因、next_attempt_at 依指數退避（2^次數分鐘，上限 24'
-  ' 小時）設定下次可重試時間。SECURITY DEFINER：service_role 只能透過這支函式'
-  ' 表達「這幾筆這次沒能確認已刪」，不能直接 UPDATE 任意欄位。';
+  ' 遞增、last_error 記原因、next_attempt_at 依指數退避（2^attempts 分鐘，公式'
+  ' 本身的理論上限 1024 分鐘；MAX_ATTEMPTS=5 之下實際最大退避是 32 分鐘，R4'
+  ' 文字修正見上方函式註解）設定下次可重試時間。SECURITY DEFINER：service_role'
+  ' 只能透過這支函式表達「這幾筆這次沒能確認已刪」，不能直接 UPDATE 任意欄位。';
 
 revoke execute on function public.purge_storage_queue_mark_failed(uuid[], text) from public, anon;
 -- 只從 public／anon 收回，不寫 authenticated（比照 private.purge_expired() 收尾
