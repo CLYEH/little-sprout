@@ -1739,7 +1739,7 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   `auth.users` 的那一步；沒有呼叫本端點，帳號不會被刪除（也不會有排程自動補做——
   30 天後的 `private.purge_expired()`，LS-153，是資料面 30 天沒清乾淨時的最後防線，
   不是這支 Edge Function 的替代品，見該 migration §「自動清除」）。
-- **處理流程**：
+- **處理流程**（R3 訂正順序，merge-review R2 N5）：
   1. 非 `POST` → `405`。
   2. 驗證 `Authorization` header 存在且 `auth.getUser()` 能換回合法使用者，否則
      `401`。
@@ -1747,21 +1747,27 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
      `profiles`）：`NULL` 或找不到這個 `profiles` 列一律 `400`——**這是刻意的守門，
      不是遺漏**：沒有走過 `delete_my_account()` RPC 的人不能直接打這支端點刪掉
      自己的帳號（繞過 RPC 的唯一 owner 守門、`LS050` 轉移檢查等資料面安全檢查）。
-  4. 撤銷步驟（見下方「Apple／Google token 撤銷」）：best-effort、平行送出
+  4.（**第一道防線**，merge-review R1 B1／M1）以 `service_role` 呼叫
+     `public.finalize_account_deletion(p_user)`（只授權 `service_role` 執行的
+     SECURITY DEFINER RPC，見下方「`finalize_account_deletion`」段落）——刪除
+     `auth.users` 前重跑一次資料面清理。**排在撤銷之前**（R3 N5）：撤銷是不可逆
+     的第三方動作，finalize 卻可能因暫時性競態失敗（見下方「N1：40P01 重試
+     契約」），不該讓不可逆動作搶在可能失敗的步驟之前執行。失敗 → `500`（一般
+     失敗）或 `503`（已知的暫時性競態，見下方契約）；兩種情況都 fail loud，
+     **不**繼續往下走撤銷／刪除。原始錯誤只進 `console.error`（R3 N2），回應
+     body 一律固定文案 `{"error": "deletion_failed", "stage": "finalize"}`
+     （或 503 時 `{"error": "deletion_temporarily_unavailable", "stage":
+     "finalize"}`）——不外洩資料庫內部訊息（可能含其他家庭的 UUID）。
+  5. 撤銷步驟（見下方「Apple／Google token 撤銷」）：best-effort、平行送出
      （`Promise.all`，R2 minor-2），任何失敗或 env／token 缺失都只記錄，**不會**
      讓整個請求失敗——帳號刪除是強制性的產品／法遵要求，第三方撤銷是盡力而為的
      附加動作，優先序不對等。每次呼叫記一行 `console.log`（user id ＋結果碼，
      不含 token／key／email，R2 minor-4——LS-132 隱私政策 §8 的撤銷承諾要能舉證）。
-  5.（**R2 新增，第一道防線**，merge-review R1 B1／M1）以 `service_role` 呼叫
-     `public.finalize_account_deletion(p_user)`（只授權 `service_role` 執行的
-     SECURITY DEFINER RPC，見下方「`finalize_account_deletion`」段落）——刪除
-     `auth.users` 前重跑一次資料面清理。失敗 → `500`（fail loud，**不**繼續往下
-     刪 `auth.users`；正常情況下這一步近乎是 no-op，會失敗代表資料面本身有問題，
-     樂觀地繼續刪除只會讓問題更難排查）。
   6. 呼叫 GoTrue admin API `deleteUser(uid)`（同樣記一行 `console.log`，R2
      minor-4）。成功 → `200`（`profiles` 隨 `on delete cascade` 一併消失，見 §3
      `profiles`）。GoTrue 回報「使用者不存在」→ 視為已達成目的，`200`（見下方
-     「冪等語意」）。其他失敗 → `500`。
+     「冪等語意」）。其他失敗 → `500`（body 同上固定文案，`stage: "auth_delete"`，
+     原始錯誤只進 `console.error`，R3 N2）。
 - **`finalize_account_deletion(p_user uuid)`**（R2，`20260903115014_delete_account_edge_support.sql`）：
   只授權 `service_role` 執行的 SECURITY DEFINER RPC（`authenticated`／`anon`／
   `PUBLIC` 皆無 `EXECUTE`，見 `supabase/tests/60_default_privileges.sql` 白名單）。
@@ -1770,11 +1776,24 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   `join_requests`；逐一處理 `p_user` 所屬的每個家庭——非唯一 owner 直接刪其
   `family_members` 列；唯一 owner 且家庭還有其他成員，把最早加入（`created_at`
   升冪）的其他成員升為 owner 後再刪自己那一列；唯一 owner 且沒有其他成員，整個
-  家庭連同底下資料一併刪除（cascade）。全程對相關 `families`／`family_members`
+  家庭連同底下資料一併刪除（cascade）。全程對相關 `family_members`／`families`
   列 `FOR UPDATE` 鎖住（刻意不是 `FOR NO KEY UPDATE`——要與子表 INSERT 的 FK 檢查
   取的 `FOR KEY SHARE` 互斥，關閉 M1 指出的「標記與並行 INSERT」競態窗口）。這是
   「刪除一定成功」唯一不依賴「過渡期擋寫沒有漏洞」的防線——見下方「過渡期擋寫」
   與 migration 檔頭「R2」段落的完整訂正紀錄。
+  - **N1：40P01 重試契約**（merge-review R2，R3 訂正）：取鎖順序**先
+    `family_members` 後 `families`**，對齊既有 `private.enforce_family_has_owner()`
+    的鎖序（DML 先自然鎖住它正在改的 `family_members` 列，AFTER STATEMENT trigger
+    才對 `families` 取 `FOR NO KEY UPDATE`）——R2 版本鎖序相反，reviewer 雙連線
+    實測到 `40P01 deadlock detected`（同家庭有另一位成員的角色／`can_upload`
+    異動同時發生時）。R3 訂正後仍有一般性的鎖等待窗口（不是死鎖，Postgres 不需要
+    自動偵測介入），且極端情況下仍可能與其他路徑撞出新的死鎖形狀——**EF 對
+    `40P01` 自動重試一次**（`index.ts` 的 `finalizeAccountDeletion`）：Postgres
+    偵測死鎖後自動回滾其中一邊、無資料損毀，重試幾乎必定收斂（`finalize_account_deletion`
+    本身冪等、守門仍成立）。若重試後仍是 `40P01`，Edge Function 回 `503`
+    （`deletion_temporarily_unavailable`）而不是泛用的 `500`——呼叫端收到 `503`
+    可安全地整個重新呼叫本端點一次（不需要退避等待，Postgres 的死鎖偵測是
+    毫秒級的，衝突視窗極窄）。
 - **過渡期擋寫（第二道防線，縱深防禦）**：`deletion_requested_at` 非 `NULL` 時，
   `families`／`media`／`diaries`／`albums`／`children`／`comments`／
   `join_requests` 的 `INSERT` 與 `family_members` 的 `INSERT`／
@@ -1793,10 +1812,19 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
     呼叫是安全的——GoTrue 的刪除本身是冪等操作，回應 `200`。
   - 兩種情況都不會是「靜默什麼都沒發生的 2xx」或未分類的例外，呼叫端可以直接用
     狀態碼判斷是否需要提示使用者重試。
-- **錯誤回應格式**：`{"error": "<訊息>"}`，狀態碼見上；沒有使用 `LSnnn` 自訂碼
-  （這支端點不經 PostgREST，`LSnnn` 是 Postgres `SQLSTATE`，不適用於 Deno 端直接
-  回傳的 HTTP 錯誤——呼叫端依 HTTP 狀態碼分流即可：`400`＝前置條件不滿足、`401`＝
-  JWT 無效或使用者已不存在、`500`＝伺服器端失敗）。
+- **錯誤回應格式**（R3 訂正，merge-review R2 N2）：`400`／`401`／`405` 三種前置
+  條件失敗回 `{"error": "<簡短訊息>"}`（不含使用者資料，本來就安全）；`500`／
+  `503`（finalize 或 deleteAuthUser 的實際失敗）一律回固定文案
+  `{"error": "deletion_failed" | "deletion_temporarily_unavailable", "stage":
+  "finalize" | "auth_delete"}`——**不含原始錯誤訊息**：GoTrue／Postgres 的原始
+  錯誤可能夾帶其他家庭的 UUID 或內部 SQL 片段（merge-review R2 N1 死鎖情境下的
+  實測例子），這是隱私優先產品，HTTP 回應不該外洩資料庫內部細節；原始錯誤只進
+  `console.error`（伺服器端稽核用）。沒有使用 `LSnnn` 自訂碼（這支端點不經
+  PostgREST，`LSnnn` 是 Postgres `SQLSTATE`，不適用於 Deno 端直接回傳的 HTTP
+  錯誤）——呼叫端依 HTTP 狀態碼＋`stage` 分流：`400`＝前置條件不滿足、`401`＝
+  JWT 無效或使用者已不存在、`405`＝method 錯誤、`500`＝伺服器端失敗（一般不建議
+  自動重試）、`503`＝已知的暫時性競態（可安全立即重試整個請求一次，見上方
+  「N1：40P01 重試契約」）。
 - **Apple／Google token 撤銷**（LS-132 隱私政策 §8 承諾；LS-151 範圍）：
   - Apple：`POST https://appleid.apple.com/auth/revoke`，帶 `signal:
     AbortSignal.timeout(5000)`（R2 M2——Deno 的 `fetch` 預設沒有逾時上限，黑洞
