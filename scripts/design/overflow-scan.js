@@ -17,12 +17,16 @@
 //      陣列時設 `SCAN_VERBOSE = true`（每支掃描一個 Print，仍可能被轉存成檔案）。`total_nodes` 用**未展開 instance**
 //      的走訪計數（與 design-landing-check.sh --print-nodes／pen-land.sh 同一語意），`scanned_nodes` 才是展開後實際掃過
 //      的節點數。設計端依彙整段寫 `design/evidence/<票號>-r<n>-overflow.json`：每類一筆代表（e.g. 的 id）＋
-//      `classification`（含「同類 N 例」），補 `ticket`／`round`／`head_sha`（見 ui-designer.md）。
-//   2. node：`require` 本檔取得純函數（`scanAll` 與四支 `scan*`），`scripts/design/overflow-scan.test.js` 用合成節點樹
-//      驗演算法；CI rules job 的自測 step 跑它。掃描核心不碰 Pencil API，Pen 不在時也能驗。
+//      `classification`（含「同類 N 例」），補 `ticket`／`round`／`head_sha`，`tree_hash` 抄 SUMMARY 的值（LS-168；見
+//      ui-designer.md）。`SCAN_OVERLAY_RE = "Action Bar|…"`（字串）覆寫第五支的覆蓋層名稱，`SCAN_HASH_DEBUG = "<id>"` 印
+//      該節點的雜湊行。
+//   2. node：`require` 本檔取得純函數（`scanAll` 與五支 `scan*`、`treeHash`／`treeHashLines`／`canonNode`），
+//      `scripts/design/overflow-scan.test.js` 用合成節點樹驗演算法、並以 python 交叉驗 tree_hash 同值；CI rules job 的自測
+//      step 跑它。掃描核心不碰 Pencil API，Pen 不在時也能驗。注意：.pen JSON 只存 root／absolute 節點的 x／y，layout 子節點
+//      的絕對座標要 Pencil 版面引擎才算得出——離線 node 能驗的是演算法與 tree_hash，不是真實稿的五支數字。
 //
-// 節點快照格式（純函數的唯一輸入）：陣列，父先於子（top-down），每筆：
-//   {id, name, parent (父 id；頂層為 null), type, enabled (布林), x, y, w, h}  —— x/y/w/h 為**絕對座標** AABB。
+// 節點快照格式（純函數的唯一輸入）：陣列，父先於子（top-down，陣列順序＝繪製順序，第五支據此判 z-order），每筆：
+//   {id, name, parent (父 id；頂層為 null), type, enabled (布林), clip (布林，第五支用), x, y, w, h}  —— x/y/w/h 為**絕對座標** AABB。
 // 語意（皆先做 disabled 子樹傳遞：`enabled:false` 的節點與其全部後代不參與任何一支）：
 //   (a) sibling_intersection：同一父節點下兩兩 AABB 交集面積 > AREA_MIN（含畫布 root 層兩板相鄰，既有語意）。
 //   (b) row_overflow：子節點右緣超出父節點右緣 > TOL（既有語意；逐子節點檢查、不在容器第一筆命中就停，Corner TR／BR
@@ -45,14 +49,34 @@
 //       `points`＝斷言數，`mismatch`＝失敗數，允差 TOL。**範圍（orchestrator 裁定 a106f940）**：`mismatch`／`flagged`／
 //       `containers`／`points` 只算 `boards`（本票觸碰的板，SCAN_BOARDS）內的容器；全稿數字另列 `document_*` 供參考、
 //       不擋 gate（他票舊債另開 chore）。角托錯位不接受白名單，收據 gate 要求 mismatch == 0（design-evidence-check.sh）。
+//   (e) text_occlusion（LS-168，第五支）：同一板內任一 `type:"text"` 節點，與名稱命中 OVERLAY_RE（Action Bar／Tab Bar／
+//       Capsule／Footer／Toast／Banner；Pencil 端 `SCAN_OVERLAY_RE = "…"` 或 node `opts.overlayRe` 可覆寫）、**非其祖先**、且
+//       **繪製順序在它之後**（快照陣列順序＝pre-order＝繪製順序，後者蓋前者：同一容器內較後的兄弟、或較後兄弟的子樹）
+//       的容器，text 的**可見矩形**（自身 AABB ∩ 所有 `clip:true` 祖先——捲動容器裁掉的部分不算被蓋）與覆蓋層 AABB 交集面積
+//       > 0 即報（`node`／`overlay`／`overlap`）。同一個 text 對同一條祖先鏈上的多個覆蓋層只報最外層那個。LS-152 R1 BL-2（`Label` × `Action Bar`：釘底動作帶壓住 EULA 法務連結）、BL-3（`Value` × `Tab Bar`：
+//       膠囊蓋住「2.1／5 GB」）與 LS-67 R1「主鈕蓋住隱私揭露文字」同 class，四支的 BLEED_RE 名稱一個都不命中、結構上抓不到，
+//       visual-reviewer 每輪自建第五支才抓到（f1cf27d0）。**範圍同 corner_anchor**：`flagged` 只算 `boards`（SCAN_BOARDS）內
+//       的板、全稿另列 `document_flagged` 供參考不擋（LS-21 時間軸等既有板的 feed 文字捲到浮動膠囊底下是滾動態的常態，全稿
+//       計會讓每張後續 PR 都紅；本票的板要做到「整列在膠囊上方或下方」，VR R1 BL-3 的標準）；**不接受白名單**：收據
+//       `scans.text_occlusion.flagged` 必為空（design-evidence-check.sh）。Scrim／Sheet 不在預設 OVERLAY_RE：modal 層蓋住底稿
+//       是刻意的 z-order（VR R1 就是先扣掉這類才得到真實遮蔽 3 筆；含進去時每張 sheet 板的 Status Bar 時間都會被報），要看
+//       全貌自行覆寫 `SCAN_OVERLAY_RE`。
+//   tree_hash（LS-168，收據新鮮度）：未展開 instance 的全樹（與 total_nodes 同一次走訪）每節點一行
+//       `<父 id>\t<index>\t<canon(node 去掉 children)>`（canon＝鍵排序、無空白 JSON、數字用 JS Number#toString），每行 UTF-8
+//       做 FNV-1a 64 後逐行相加 mod 2^64（順序無關、不用排序），印在 SUMMARY 與收據 `tree_hash`（16 碼 hex）。
+//       design-evidence-check.sh 用 scripts/gates/design_tree_hash.py 對 `head_sha` 那份 .pen 算同一演算法比對——不符即
+//       「收據不是對這份 .pen 單一次掃描」（LS-152 r1 兩段拼接、LS-142 r4 拆段跑，gate 原本全盲）。Pencil execute 沒有
+//       crypto，所以用 FNV-1a 而非 SHA-256；`SCAN_HASH_DEBUG = "<節點 id>"` 會 Print 該節點那一行，與 .py `--dump <id>` 對照。
+//       盲區：只證明「收據對應這份 .pen」，不證明五支數字算對（那要 CI 跑 Pencil）。
 // 輸出每筆都帶 name／parent 等欄位方便分類；design-evidence-check.sh 只驗 node／node_a／node_b／classification、
-// corner_anchor 的整數計數與 boards，多出的欄位不影響 gate。
+// corner_anchor 的整數計數與 boards、text_occlusion.flagged 為空、tree_hash，多出的欄位不影響 gate。
 
 const AREA_MIN = 4;
 const TOL = 0.5;
 const CORNER_OUT = 5;
 const CORNER_RE = /\bCorner (TL|TR|BL|BR)\b/;
 const BLEED_RE = /Corner|Badge|Dragging Photo|Drop Target|Insert Line|Stack Sheet/i;
+const OVERLAY_RE = /Action Bar|Tab Bar|Capsule|Footer|Toast|Banner/;
 
 function r2(v) {
   return Math.round(v * 100) / 100;
@@ -260,6 +284,146 @@ function scanCornerAnchor(nodes, idx, opts) {
   return out;
 }
 
+function scanTextOcclusion(nodes, idx, opts) {
+  const { byId, liveNodes, chain, roots } = idx || buildIndex(nodes);
+  const re = opts && opts.overlayRe ? (opts.overlayRe instanceof RegExp ? opts.overlayRe : new RegExp(String(opts.overlayRe))) : OVERLAY_RE;
+  const boards = resolveBoards(opts && opts.boards, roots);
+  const scoped = boards.length > 0;
+  const order = new Map();
+  nodes.forEach((n, i) => order.set(n.id, i));
+  const texts = new Map();
+  const overlays = new Map();
+  for (const n of liveNodes) {
+    const c = chain.get(n.id);
+    const board = c[c.length - 1];
+    if (n.type === "text") {
+      if (!texts.has(board)) texts.set(board, []);
+      texts.get(board).push(n);
+    } else if (re.test(n.name || "")) {
+      if (!overlays.has(board)) overlays.set(board, []);
+      overlays.get(board).push(n);
+    }
+  }
+  // text 的可見矩形＝自身 AABB ∩ 所有 `clip:true` 祖先（捲動容器裁掉的部分不算被蓋——LS-142 16 上傳佇列的列捲到 Footer 底下
+  // 是被 list 裁掉、不是被 Footer 蓋；Pencil 的 bounds 本身不裁切，所以要自己算）
+  function visibleRect(t) {
+    let r = { x: t.x, y: t.y, w: t.w, h: t.h };
+    for (const aid of chain.get(t.id).slice(1)) {
+      const a = byId.get(aid);
+      if (!a || a.clip !== true) continue;
+      const x1 = Math.max(r.x, a.x), y1 = Math.max(r.y, a.y);
+      const x2 = Math.min(r.x + r.w, a.x + a.w), y2 = Math.min(r.y + r.h, a.y + a.h);
+      r = { x: x1, y: y1, w: Math.max(0, x2 - x1), h: Math.max(0, y2 - y1) };
+    }
+    return r;
+  }
+  const out = { boards, flagged: [], document_flagged: [] };
+  for (const [board, ts] of texts) {
+    const os = overlays.get(board) || [];
+    if (!os.length) continue;
+    const boardName = byId.get(board).name;
+    const inScope = !scoped || boards.includes(board);
+    for (const t of ts) {
+      const ct = chain.get(t.id);
+      const v = visibleRect(t);
+      if (!(v.w > 0 && v.h > 0)) continue;
+      const hits = os.filter((o) => !ct.includes(o.id) && order.get(o.id) > order.get(t.id) && overlapArea(v, o) > 0);
+      for (const o of hits) {
+        const co = chain.get(o.id);
+        if (hits.some((p) => p !== o && co.includes(p.id))) continue;
+        const entry = {
+          node: t.id, name: t.name, parent: t.parent, overlay: o.id, overlay_name: o.name, board, board_name: boardName,
+          overlap: [r2(Math.min(v.x + v.w, o.x + o.w) - Math.max(v.x, o.x)), r2(Math.min(v.y + v.h, o.y + o.h) - Math.max(v.y, o.y))],
+        };
+        out.document_flagged.push(entry);
+        if (inScope) out.flagged.push(entry);
+      }
+    }
+  }
+  return out;
+}
+
+// ---- tree_hash：canon／FNV-1a 64（無 BigInt，16 位元 limb）／逐行相加。與 scripts/gates/design_tree_hash.py 同規格 ----
+function canon(v) {
+  if (v === null || v === undefined) return "null";
+  if (typeof v === "boolean") return v ? "true" : "false";
+  if (typeof v === "number") return Number.isFinite(v) ? String(v) : (v !== v ? "NaN" : (v > 0 ? "Infinity" : "-Infinity"));
+  if (typeof v === "string") return JSON.stringify(v);
+  if (Array.isArray(v)) return "[" + v.map(canon).join(",") + "]";
+  if (typeof v === "object") {
+    const keys = Object.keys(v).filter((k) => v[k] !== undefined).sort();
+    return "{" + keys.map((k) => JSON.stringify(k) + ":" + canon(v[k])).join(",") + "}";
+  }
+  return JSON.stringify(v);
+}
+
+function canonNode(node, parentId, index) {
+  const body = {};
+  for (const k of Object.keys(node)) if (k !== "children") body[k] = node[k];
+  return (parentId == null ? "" : parentId) + "\t" + index + "\t" + canon(body);
+}
+
+function utf8Bytes(str) {
+  const out = [];
+  for (let i = 0; i < str.length; i++) {
+    let c = str.charCodeAt(i);
+    if (c >= 0xd800 && c <= 0xdbff && i + 1 < str.length) {
+      const d = str.charCodeAt(i + 1);
+      if (d >= 0xdc00 && d <= 0xdfff) { c = 0x10000 + ((c - 0xd800) << 10) + (d - 0xdc00); i++; }
+    }
+    if (c < 0x80) out.push(c);
+    else if (c < 0x800) out.push(0xc0 | (c >> 6), 0x80 | (c & 63));
+    else if (c < 0x10000) out.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+    else out.push(0xf0 | (c >> 18), 0x80 | ((c >> 12) & 63), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+  }
+  return out;
+}
+
+// 64 位元以四個 16 位元 limb 表示（低→高）；prime 0x100000001b3 = 2^40 + 0x1b3
+function fnv1a64(str) {
+  let h0 = 0x2325, h1 = 0x8422, h2 = 0x9ce4, h3 = 0xcbf2;
+  for (const b of utf8Bytes(str)) {
+    h0 ^= b;
+    const t0 = h0 * 0x1b3;
+    const t1 = h1 * 0x1b3 + (t0 >>> 16);
+    const t2 = h2 * 0x1b3 + (t1 >>> 16) + ((h0 << 8) & 0xffff);
+    const t3 = h3 * 0x1b3 + (t2 >>> 16) + (h0 >>> 8) + ((h1 & 0xff) << 8);
+    h0 = t0 & 0xffff; h1 = t1 & 0xffff; h2 = t2 & 0xffff; h3 = t3 & 0xffff;
+  }
+  return [h0, h1, h2, h3];
+}
+
+function hex64(limbs) {
+  return limbs.slice().reverse().map((l) => ("0000" + l.toString(16)).slice(-4)).join("");
+}
+
+function addLimbs(acc, limbs) {
+  let carry = 0;
+  for (let i = 0; i < 4; i++) {
+    const s = acc[i] + limbs[i] + carry;
+    acc[i] = s & 0xffff;
+    carry = s >>> 16;
+  }
+  return acc;
+}
+
+function treeHash(lines) {
+  const acc = [0, 0, 0, 0];
+  for (const line of lines) addLimbs(acc, fnv1a64(line));
+  return hex64(acc);
+}
+
+// 從 .pen JSON 文件（未展開 instance）產生 tree_hash 的行；Pencil 端由 Get 走訪產生同樣的行（見檔尾）
+function treeHashLines(doc) {
+  const lines = [];
+  const walk = (n, pid, i) => {
+    lines.push(canonNode(n, pid, i));
+    (n.children || []).forEach((c, j) => walk(c, n.id, j));
+  };
+  (doc.children || []).forEach((c, j) => walk(c, null, j));
+  return lines;
+}
+
 function scanAll(nodes, opts) {
   const idx = buildIndex(nodes);
   return {
@@ -269,6 +433,7 @@ function scanAll(nodes, opts) {
       row_overflow: scanRowOverflow(nodes, idx),
       cross_parent_collision: scanCrossParentCollision(nodes, idx, opts),
       corner_anchor: scanCornerAnchor(nodes, idx, opts),
+      text_occlusion: scanTextOcclusion(nodes, idx, opts),
     },
   };
 }
@@ -299,6 +464,12 @@ function compactLines(out) {
   for (const u of ca.unresolved) lines.push("  UNRESOLVED " + u.container_name + "(" + u.container + ") " + u.reason + (u.best_candidate_name ? " best=" + u.best_candidate_name + " " + u.best_score + "/" + u.total_axes : "") + " board=" + u.board_name);
   for (const [k, v] of agg(ca.document_flagged, (f) => f.board_name + "(" + f.board + ")", (f) => f.container)) lines.push("  DOCUMENT " + v.n + "× board " + k + " e.g. container " + v.ex);
   blocks.push(lines.join("\n"));
+  const tx = s.text_occlusion;
+  const to = agg(tx.flagged, (f) => f.name + " × " + f.overlay_name + " @ " + f.board_name + "(" + f.board + ")", (f) => f.node + "×" + f.overlay);
+  const tl = ["SCAN text_occlusion boards=" + JSON.stringify(tx.boards) + " flagged=" + tx.flagged.length + " classes=" + to.length + " document=" + tx.document_flagged.length]
+    .concat(to.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex));
+  for (const [k, v] of agg(tx.document_flagged.filter((f) => !tx.flagged.includes(f)), (f) => f.board_name + "(" + f.board + ")", (f) => f.node + "×" + f.overlay)) tl.push("  DOCUMENT " + v.n + "× board " + k + " e.g. " + v.ex);
+  blocks.push(tl.join("\n"));
   return blocks;
 }
 
@@ -306,10 +477,17 @@ if (typeof Get === "function" && typeof Print === "function") {
   const scope = typeof SCAN_BOARDS !== "undefined" && Array.isArray(SCAN_BOARDS) ? SCAN_BOARDS : [];
   const crossAll = typeof SCAN_CROSS_ALL !== "undefined" && SCAN_CROSS_ALL === true;
   const verbose = typeof SCAN_VERBOSE !== "undefined" && SCAN_VERBOSE === true;
+  const overlayRe = typeof SCAN_OVERLAY_RE !== "undefined" && SCAN_OVERLAY_RE ? SCAN_OVERLAY_RE : undefined;
+  const hashDebug = typeof SCAN_HASH_DEBUG !== "undefined" && SCAN_HASH_DEBUG ? String(SCAN_HASH_DEBUG) : "";
   let total = 0;
-  Get(() => {
+  const hashAcc = [0, 0, 0, 0];
+  Get((n, c) => {
     total++;
+    const line = canonNode(n, c.parentCtx ? c.parentCtx.node.id : null, c.index);
+    addLimbs(hashAcc, fnv1a64(line));
+    if (hashDebug && n.id === hashDebug) Print("HASHLINE " + line);
   });
+  const treeHashHex = hex64(hashAcc);
   const abs = {};
   const snap = [];
   Get((n, c) => {
@@ -320,10 +498,11 @@ if (typeof Get === "function" && typeof Print === "function") {
     const b = c.bounds;
     const a = { x: pa.x + b.x, y: pa.y + b.y };
     abs[n.id] = a;
-    snap.push({ id: n.id, name: n.name || "", parent: pid, type: n.type || "", enabled: n.enabled !== false, x: a.x, y: a.y, w: b.width, h: b.height });
+    snap.push({ id: n.id, name: n.name || "", parent: pid, type: n.type || "", enabled: n.enabled !== false, clip: n.clip === true, x: a.x, y: a.y, w: b.width, h: b.height });
   }, { resolveInstances: true });
-  const out = scanAll(snap, { boards: scope, crossAll });
+  const out = scanAll(snap, { boards: scope, crossAll, overlayRe });
   out.total_nodes = total;
+  out.tree_hash = treeHashHex;
   const s = out.scans;
   if (scope.length === 0) Print("WARNING SCAN_BOARDS 未設定：corner_anchor 以全稿計 mismatch，收據 gate 會因 boards 為空而紅——在本 snippet 第一行加 SCAN_BOARDS=[...] 再重跑（跨 execute 的全域不保留）");
   Print(
@@ -331,14 +510,16 @@ if (typeof Get === "function" && typeof Print === "function") {
       " sibling_intersection=" + s.sibling_intersection.flagged.length +
       " row_overflow=" + s.row_overflow.flagged.length +
       " cross_parent_collision=" + s.cross_parent_collision.flagged.length + (crossAll ? "(all)" : "(bleed-only)") +
+      " text_occlusion=" + s.text_occlusion.flagged.length + "/" + s.text_occlusion.document_flagged.length + (overlayRe ? "(custom-re)" : "") +
       " corner_anchor=" + s.corner_anchor.containers + "/" + s.corner_anchor.points + "/" + s.corner_anchor.mismatch +
       " document=" + s.corner_anchor.document_containers + "/" + s.corner_anchor.document_points + "/" + s.corner_anchor.document_mismatch +
-      " unresolved=" + s.corner_anchor.unresolved.length + " boards=" + JSON.stringify(s.corner_anchor.boards)
+      " unresolved=" + s.corner_anchor.unresolved.length + " boards=" + JSON.stringify(s.corner_anchor.boards) +
+      " tree_hash=" + treeHashHex
   );
   for (const block of compactLines(out)) Print(block);
   if (verbose) for (const key of Object.keys(s)) Print("JSON " + key + " " + JSON.stringify(s[key]));
 } else if (typeof module === "object" && module && module.exports) {
-  module.exports = { AREA_MIN, TOL, CORNER_OUT, CORNER_RE, BLEED_RE, buildIndex, overlapArea, contains, cornerExpected, compactLines, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanAll };
+  module.exports = { AREA_MIN, TOL, CORNER_OUT, CORNER_RE, BLEED_RE, OVERLAY_RE, buildIndex, overlapArea, contains, cornerExpected, compactLines, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanAll, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
 } else {
   throw new Error("overflow-scan：既不是 Pencil execute（無 Get／Print）也不是 node module 環境，無處輸出");
 }
