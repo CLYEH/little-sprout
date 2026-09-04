@@ -6,6 +6,8 @@
 逐位元同值；overflow-scan.test.js 與 design-evidence-check.test.sh 各有 js／py 交叉一致案釘住。演算法（兩邊同一份規格）：
   1. 走訪未展開 instance 的全樹（與 total_nodes 同語意：JSON children 樹＝Pencil `Get(visit)` 不帶 resolveInstances），
      每個節點一行：`<父 id 或空>\\t<在父 children 中的 index>\\t<canon(node 去掉 children)>`。
+     Pencil 端走訪必須 `Get(visit, {includePathGeometry: true})`——預設會把 path 節點的 `geometry` 省略成字面 `"..."`
+     （LS-171）；本檔讀磁碟 JSON 一律是完整值，兩端才會同值。
      canon＝鍵排序（code point 序）、無空白的 JSON；數字用 JavaScript Number#toString 規則（整數值不帶 .0、
      指數表示只在 ≥1e21 或 <1e-6 時出現）；字串照 JSON 轉義（雙引號／反斜線／控制字元）。
   2. 每行 UTF-8 bytes 做 FNV-1a 64；全部逐行相加 mod 2^64（可交換，不依賴走訪順序、不用排序——JS 的 UTF-16 排序與

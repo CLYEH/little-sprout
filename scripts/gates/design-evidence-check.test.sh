@@ -19,7 +19,7 @@
 # 給 --head-sha <PR head> 綠、PR 自己漏列觸碰板仍紅（負控，只點名自己的板）、PR 把 base 併進來後歷史收據仍綠（每份收據以自己的
 # 共同祖先為 touched 基準）、--head-sha 解析不到／缺值 exit 2。修前（舊 gate）實跑：㉑ 負控／㉒／㉓／㉔／㉕ 六條紅，證明有鑑別力。
 #
-# LS-168：㉖～㉛-b 驗 tree_hash／第五支／舊收據放行；㉜～㉝（merge-review R1 N1）驗「輪次最高的收據另看 PR head tree」——.pen 最後一次
+# LS-168：㉖～㉛-b 驗 tree_hash／第五支／舊收據放行（LS-171：㉖ 的合成 .pen 含帶 geometry 的 path，㉖-b 以 geometry 省略成 "..." 的雜湊紅）；㉜～㉝（merge-review R1 N1）驗「輪次最高的收據另看 PR head tree」——.pen 最後一次
 # 落地時 tree 尚無第五支、之後分支才併入新腳本（不碰 .pen）→ 最新收據缺兩欄位紅（㉜；修前印「舊收據放行」綠）、同 head_sha 用新腳本
 # 重跑補齊即綠（㉜-b）、舊輪次 r5 不受 PR head 影響仍放行（㉝）。
 set -uo pipefail
@@ -493,7 +493,26 @@ expect 2 '㉕ --head-sha 缺值 → exit 2' '--head-sha 缺值' \
 # 同時放入帶標記的腳本副本，㉛ 不放（＝in-flight 設計分支／既有收據）。tree_hash 由 scripts/gates/design_tree_hash.py 對該
 # commit 的 .pen 算（與正典腳本 SUMMARY 同規格，js／py 交叉一致由 overflow-scan.test.js 釘住）。
 hash_of() { g show "$1:design/littlesprout.pen" > "$work/hash-in.pen"; python3 "$root/scripts/gates/design_tree_hash.py" "$work/hash-in.pen"; }
-pen4='{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "children": []}, {"id": "d", "children": []}]}'
+# LS-171：把快照裡每個 geometry 改成字面 "..."（＝Pencil Get 不帶 includePathGeometry 的輸出形狀）再算 tree_hash
+dots_hash_of() {
+  g show "$1:design/littlesprout.pen" > "$work/hash-in.pen"
+  PYTHONDONTWRITEBYTECODE=1 python3 - "$work/hash-in.pen" "$root/scripts/gates" <<'PY'
+import io, json, sys
+sys.path.insert(0, sys.argv[2])
+import design_tree_hash
+d = json.load(io.open(sys.argv[1], encoding="utf-8"))
+def w(x):
+    if "geometry" in x:
+        x["geometry"] = "..."
+    for c in x.get("children") or []:
+        w(c)
+for c in d["children"]:
+    w(c)
+print(design_tree_hash.tree_hash(d))
+PY
+}
+# 本 PR 新增的頂層 d 是帶 geometry 的 path（LS-171：cmp/Photo Corner 的 Corner Shape）——節點數仍 4、touched 板仍只有 d
+pen4='{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "children": []}, {"id": "d", "type": "path", "geometry": "M0 14a14 14 0 0 1 14-14l12 0-26 26z", "children": []}]}'
 land5() {
   # land5 <branch> <with-script 1/0>：落地 4 節點 .pen＋（可選）帶第五支標記的正典腳本副本；回傳落地 sha
   g checkout -q -b "$1" "$base_ref"
@@ -530,12 +549,21 @@ g add design/evidence/LS-67-r6-overflow.json
 g commit -qm 'design(evidence): LS-67 r6 收據（五支＋tree_hash）'
 expect 0 '㉖ 五支齊全、tree_hash 對應 head_sha 快照、text_occlusion.flagged 空 → 綠' 'tree_hash 對應 head_sha 快照、text_occlusion.flagged 為空' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㉖-b LS-171：收據 tree_hash 是「geometry 被省略成 "..."」那份雜湊（Pencil 端雜湊走訪漏帶 includePathGeometry 的輸出）→ 紅「tree_hash 不符」
+#    （LS-152 VR R3 三方比對：py＝js 03e7804b035d8e4b、Pencil 不帶選項 84420d7b6419b40e，8 個 path 節點；gate 對含 path 的稿本來永遠紅）
+dots26="$(dots_hash_of "$sha26")"
+if [ "$dots26" = "$(hash_of "$sha26")" ]; then echo "✗ ㉖-b 前置條件：geometry 省略成 \"...\" 後 tree_hash 應改變（自測環境異常）" >&2; fail=1; fi
+write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha26" "$dots26" ok
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（tree_hash 來自 geometry 被省略的走訪）'
+expect 1 '㉖-b 收據 tree_hash 來自 geometry 省略成 "..." 的走訪（Pencil 漏帶 includePathGeometry）→ 紅' 'tree_hash 不符' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
 
 # ㉗ 拼接／掃完又改稿：commit A 落地 v1 → 掃描（hash 取自 v1）→ commit C 搬一個節點（節點數不變）→ 收據 head_sha=C 但 tree_hash 是 v1 的
 #    → 紅「tree_hash 不符」（F2 對「收據引用最後一次 commit、內容卻是舊掃描」這種形狀是綠的；修前舊 gate 實跑：綠）
 sha27a="$(land5 pr-stale-hash 1)"
 stale_hash="$(hash_of "$sha27a")"
-printf '%s\n' '{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "children": []}, {"id": "d", "x": 99, "children": []}]}' > "$R/design/littlesprout.pen"
+printf '%s\n' '{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "children": []}, {"id": "d", "type": "path", "geometry": "M0 14a14 14 0 0 1 14-14l12 0-26 26z", "x": 99, "children": []}]}' > "$R/design/littlesprout.pen"
 g add design/littlesprout.pen
 g commit -qm 'design(pen): LS-67 搬 d（節點數不變、boards 仍覆蓋）'
 sha27c="$(g rev-parse HEAD)"
@@ -614,7 +642,7 @@ write_receipt5 "$R/design/evidence/LS-67-r5-overflow.json" "$sha33a" "" missing
 g add design/evidence/LS-67-r5-overflow.json
 g commit -qm 'design(evidence): LS-67 r5 收據（舊 schema）'
 add_script
-printf '%s\n' '{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "children": []}, {"id": "d", "x": 5, "children": []}]}' > "$R/design/littlesprout.pen"
+printf '%s\n' '{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "children": []}, {"id": "d", "type": "path", "geometry": "M0 14a14 14 0 0 1 14-14l12 0-26 26z", "x": 5, "children": []}]}' > "$R/design/littlesprout.pen"
 g add design/littlesprout.pen
 g commit -qm 'design(pen): LS-67 r6 落地（搬 d）'
 sha33b="$(g rev-parse HEAD)"
