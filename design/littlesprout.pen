@@ -123665,6 +123665,1457 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "dHnPl",
+      "x": 15732,
+      "y": 23117,
+      "name": "A11y / 04e 刪除帳號 · 最終確認 · Dynamic Type AX3",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 959,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "E6OOmc",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "bGkmq",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "ZcTYX",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "bcoRv",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "H0ulT",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Z5gBM",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "最後確認",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "BW7ww",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "這是刪除帳號前的最後一步。請在下面輸入「刪除帳號」四個字，確認你真的要這麼做。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "n7JIc",
+                  "name": "Field Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "cNVus",
+                      "name": "Confirm Field",
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "AyHrP",
+                          "name": "Placeholder",
+                          "fill": "$text-secondary",
+                          "content": "輸入「刪除帳號」",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xG30l",
+                  "name": "Hint Row",
+                  "width": "fill_container",
+                  "height": "fit_content(0)",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "N3g0A",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Icon",
+                      "enabled": false,
+                      "width": 18,
+                      "height": 18,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "NAfSJ",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Text",
+                      "enabled": false,
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container(0)",
+                      "content": "請先在上面輸入「刪除帳號」四個字，才能繼續。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "w1wTw",
+              "name": "Spacer",
+              "width": "fill_container",
+              "height": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "slJCW",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "C48ItQ",
+                  "name": "Delete Button",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$danger",
+                  "strokeWidth": 1.5,
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-cta",
+                    20
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "ohJ8J",
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "trash-2",
+                      "library": "lucide",
+                      "fill": "$danger"
+                    },
+                    {
+                      "type": "text",
+                      "id": "xC1gO",
+                      "name": "Label",
+                      "fill": "$danger",
+                      "content": "永久刪除帳號",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "id": "V0GAVn",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Cancel Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "取消"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "OGK1E",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "b3nzDp",
+      "x": 15732,
+      "y": 24196,
+      "name": "LS-152 / 實作註記 · Handoff Notes (ios-dev)",
+      "width": 900,
+      "fill": "$surface",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 44,
+      "children": [
+        {
+          "type": "text",
+          "id": "bgpKH",
+          "name": "NT",
+          "fill": "#2B141C",
+          "content": "LS-152 設定與成員管理畫面群 · Handoff Notes",
+          "lineHeight": 1.25,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 34,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "WgdsU",
+          "name": "NS",
+          "fill": "#553040",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "R1 首輪產出。沿用 LS-46/119/120/142 母題（紙片、角托、Tab Bar 純 icon、釘底動作帶、Confirm Sheet）與 LS-47 09b/09 的清單卡片樣式，未改動任一已核可板。新增可重用元件 cmp/Settings Row（icon+直式 Label/Value 堆疊，AX3 下自動換行不橫向碰撞）。共 27 板：設定 root ×4（亮/深/AX3/iPad）、個人資料編輯、家庭成員清單＋3 個確認 sheet、刪除帳號流程 ×7（04c 不重畫，重用 03 家庭成員清單＋03c 轉移確認完成選人）、檢舉/封鎖/移除 ×5 sheet、封鎖名單、檢舉收件匣、EULA 同意頁、儲存空間、刪除日記/留言確認 ×2、04e AX3 變體。",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "SNHEJ",
+          "name": "N 畫面級屬性清單（隱藏 Tab Bar？系統標題？釘底動作帶？）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "J6wZFs",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "畫面級屬性清單（隱藏 Tab Bar？系統標題？釘底動作帶？）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "DzSKI",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "YMa63",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-152 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "N3kxsW",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "01 設定（t5wI4/Rx5mP/z9tytH/B2DckT）：Tab-root，顯示 cmp/Tab Bar（設定 icon 選中，覆寫 4 節點視覺，metadata.selected 不動，同 LS-120 慣例）；標題非系統 navigationTitle，Header Row 自畫「設定」；不用釘底 Action Bar（Tab-root 慣例）；法律／帳號兩段需捲動才可見——內容自然超出 852pt，用 Section 內容與安全／Section 法律的 padding-top 讓後續內容乾淨落在膠囊後方或板外，不橫跨膠囊邊緣（AX3 同理，見 corner_anchor 之外的膠囊驗收判準，LS-120）。iPad 用 NavigationSplitView：Sidebar 5 段導覽＋Detail Pane 顯示「個人」，無 Tab Bar（iPad 不適用，motifs.md）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "hT48O",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "n3IUt",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-152 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "K33gs",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "02 編輯顯示名稱與頭像（MohS1）：push 畫面，系統風 Nav Back「返回」，無系統標題（Header Row 自畫「個人資料」），無 Tab Bar；Footer 內兩顆按鈕（非釘底 Action Bar，內容本身不長，沿用 LS-47 09b flex-spacer 慣例）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "JIQrN",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "Ao15G",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-152 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "cnU9g",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "03 家庭成員（hVAq3）：push 畫面，Nav Back，無 Tab Bar；Owner 視角每列 chevron 進入 03b（移除）或 03c（轉移，需先在此挑選成員）；非 Owner 視角同一清單但無 chevron、底部改「退出家庭」按鈕接 03d（本輪未另畫非 Owner 變體，見未決事項）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "U8Y6Op",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "Xrnw0",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-152 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "xqHiz",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "03b/03c/03d、05d/05e、10/10b：全部是 bottom sheet 樣式（Scrim+Sheet Wrap+Confirm Sheet，沿用 LS-142 w0NxC 15c 結構），非系統 .alert；隱藏 Tab Bar／Nav Back（sheet 蓋在 Status Bar Backdrop 上）。危險動作用外框 danger 鈕（非實心，同 w0NxC）；03c 轉移 Owner 用實心 accent 鈕（非破壞性）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "QCN1X",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "uTgE9",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-152 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "jHQTk",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "04a/04b/04d/04e：push 畫面（Nav Back），無 Tab Bar；主 CTA 用 Footer flex-spacer 慣例（非釘底 Action Bar，內容量不隨狀態變化到需要 safeAreaInset 的程度）。04e AX3 板（dHnPl）高度改 959（非 tab-root 1500 慣例）——比照既有 push/sheet 型 AX3 板（VRq1c 2770 等）走內容驅動高度，不套用 Tab-root 專屬的裝置固定高度公式。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "C61mlm",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "oumMN",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-152 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "aLG5X",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "04f/04g/04h：無 Nav Back（進行中/完成/失敗態不可返回，對應 API.md「中間不得允許使用者做任何操作」的硬性規定）、無 Tab Bar；置中版式，非清單。04f 進行中態的 loader-circle icon 為靜態示意，實作需換成真正的 ProgressView 或 rotation 動畫。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "c4MEEn",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "Fwgyk",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-152 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "isMFT",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "05 內容操作表（WgbNc）：bottom sheet，取代長按/系統 UIMenu；三個動作列依身分條件顯示（檢舉一律顯示；封鎖非本人時顯示；Owner 移除僅 Owner 顯示），本板只畫「全部顯示」的示範態，ios-dev 依角色與是否本人動態增減列。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "VWowO",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "g7eCRx",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-152 R1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "e6d7cU",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "06/07/09：push 畫面，Nav Back，無 Tab Bar，無釘底 Action Bar（純瀏覽/清單，無持續存在的主 CTA）。08 EULA 同意頁（z042Yg）：無 Nav Back（強制流程、不可略過/返回，比照系統升級條款頁慣例）、用釘底 Action Bar（沿用 LS-111 R6 釘底動作帶慣例：內容量會隨條款版本變動、CTA 需固定在拇指可及處）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "kgI6t",
+          "name": "N SF Symbol 對照（lucide → SwiftUI systemName）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "ZW4Xm",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "SF Symbol 對照（lucide → SwiftUI systemName）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "TF33C",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "A6dSV0",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "對照表",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "sZteM",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "users→person.2.fill；user-round-plus→person.badge.plus；door-open→door.left.hand.open；user-x→person.fill.xmark；flag→flag.fill；hard-drive→internaldrive；file-text→doc.text；shield→shield.fill；log-out→rectangle.portrait.and.arrow.right；trash-2→trash；crown→crown.fill（自訂或找對應 SF Symbol，若無則用 star.fill 替代並記錄）；eye→eye；circle-check→checkmark.circle.fill；circle→circle；send→paperplane.fill；shield-alert→exclamationmark.shield.fill；triangle-alert→exclamationmark.triangle.fill；loader-circle→用 ProgressView() 取代，不用靜態 icon；circle-alert→exclamationmark.circle.fill；rotate-ccw→arrow.counterclockwise；message-circle→message.fill；image→photo；video→video.fill；book-open→book；archive→archive（現有既有元件沿用）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Pr2C2",
+          "name": "N 錯誤文案鍵表（對應 docs/API.md §5）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "Z6iI3",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "錯誤文案鍵表（對應 docs/API.md §5）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "uj9CW",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "Tkjf1",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS050",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "g4aOl",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "delete_my_account：唯一 Owner 且家庭還有其他成員。文案鍵＝04b 板全文，DETAIL 帶的家庭清單即 04b 的 Families Card 資料源；文案「需要先轉移 Owner 身分」。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "SklGx",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "B51Vj",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS026",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "IgbAe",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "report_content/block_user/toggle_reaction 等：target 屬於別家。UI 對應行為＝內容操作表（05）在這個 target 已不在同一家庭時應整列隱藏/不可觸發，本票未新增專屬錯誤畫面（沿用既有全域錯誤 toast/alert 慣例）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "HaXaM",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "I4Fz7e",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "42501",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "VAij1",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "未登入或權限不足：block_user 非該家成員、report_content 非成員。UI 對應＝操作入口本來就該依成員身分隱藏，不應該讓使用者走到這個錯誤；若仍發生視為系統性錯誤，用既有全域錯誤 toast，不另開畫面。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Gobfs",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "SGe3D",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "23514",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "lzod8",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "block_user 自我封鎖（blocked_users_not_self）：內容操作表（05）『封鎖』列本來就該排除自己，不應該讓使用者點到；防禦性文案同上用全域 toast。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "IUfIl",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "PSXj6",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "(未定義)",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "ckkwf",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "LS-151 Edge Function delete-account 過渡期失敗碼——L S151 票（2026-09-04 查詢仍為 In Review，未併入 development）在 docs/API.md 尚未新增 §10／LS051。04h（soWA9）目前用通用「刪除過程中發生問題」文案，未綁定特定錯誤碼；LS-151 併入後 ios-dev 須回頭核對 04h 文案鍵是否需要依錯誤碼分支（例如過渡期 40P01 死鎖重試 vs Apple token revoke 失敗）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "P3QgLU",
+          "name": "N 尺寸族清單（width／height 規格值，Pencil 不收 $variable，本輪硬寫紀錄）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "NBR3k",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "尺寸族清單（width／height 規格值，Pencil 不收 $variable，本輪硬寫紀錄）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "RhnkM",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "kTR0j",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "Tab Bar",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Y6uZz9",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "cmp/Tab Bar instance：預設 361×64（y=754，公式 852-34-64）；AX3 361×88（y=1378，公式 1500-34-88）。Icon 覆寫：未選中 26×26(AX3 40×40)、選中 32×32(AX3 48×48)——本輪只在 01 設定 AX3 板套用，若之後新增其他 AX3 Tab-root 板需比照同一組字面值。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "UYSPX",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "Oskz5",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "Avatar",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "BXOJs",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "cmp/Child Avatar 覆寫：預設 48×48（沿用元件預設，未覆寫）；01 設定/03 家庭成員個人列表用 56×56（Profile Card 較大頭像）；02 編輯頁沿用 LS-47 09b 的 88×88（Avatar Preview，未變動）；iPad Detail Pane 用 72×72。AX3 不改動頭像尺寸（沿用既有 lytlO 先例：頭像不隨 AX3 放大，只有文字放大）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "NhYXT",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "hbgOC",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "Status Badge",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "k5xKv0",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "04f/04g/04h 狀態徽章：88×88 外圈、40×40 icon；05c 已送出徽章：64×64 外圈、32×32 icon（sheet 內較小，避免撐爆 852 高度）。兩者是同一語意的兩種規格，未做成 token，之後如需統一請同步兩處。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "sNLP3",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "Ev5at",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "Bar Track",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "kVQIc",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "09 儲存空間進度條：Track 高 12、Bar Fill 寬 145（對應 42% of 345 可用寬，換算＝345×0.42≈145——這是內容驅動的示範值，實作應以 storage_used_bytes/storage_quota_bytes 動態算比例，不要硬寫 145）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ThNl0",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "fb4RW",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "04e AX3",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "N96Uq",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "A11y/04e 板高改 959（非 Tab-root 1500 慣例，見上「畫面級屬性清單」04e 條）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "MSVB5",
+          "name": "N 關鍵設計決策",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "J4mNi",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "關鍵設計決策",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "iX87A",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "QZNPo",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "十條-8",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "joXsJ",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "04e 最終確認刻意不採用票文建議的「長按」，也不用輸入驗證來 disable 按鈕——兩者分別違反 elder-constraints.md「不用長按等進階手勢」（04e 情境不在僅有的兩個明文例外內）與品牌十條不可協商第 8 條「驗證型 disable=0」。改用：文字輸入框（提示「輸入「刪除帳號」」，非強制 placeholder）＋按鈕永遠可點＋circle-alert 即時回話列（預設 enabled:false，ios-dev 於輸入不符時翻成 enabled:true，文案「請先在上面輸入「刪除帳號」四個字，才能繼續。」，$text-primary 非 danger，同十條第 8 條「還沒做完不是錯誤」的既有語彙）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "pOxrO",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "ugF2u",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "04c 省略",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "lxxQC",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "刪除帳號流程的「選擇繼任 Owner」步驟（票文 04c）刻意未另建新板——04b 每個待轉移家庭列「前往轉移」導向既有 03 家庭成員清單（Owner 視角，點選成員列即進入 03c 轉移確認 sheet），完成轉移後回到 04b 重新檢查清單。這樣「選成員→確認」用已核可過的既有元件組合完成，不重複造一套新的成員選擇 UI。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "lGYye",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "UMmDt",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "內容標記刪除",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Gv3c5",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "04a 一般成員內容處理說明：依使用者 2026-09-04 裁決，本人上傳的照片/影片與日記/留言比照同一套 30 天軟刪／永久清除節奏，文案已對齊（「跟其他人刪除內容一樣，30 天內可以還原，30 天後會永久清除」），對應 delete_my_account 情況 3 的軟刪語意；media 沒有 deleted_by 欄位的既有缺口（API.md 已知不對稱）本票不處理，是後端既有債務。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "AE7Oo",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "P8Aax",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "frontend-design",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "rA63e",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "frontend-design:frontend-design skill 開工時嘗試載入失敗（Skill 工具回報 Unknown skill，試過 frontend-design:frontend-design 與 frontend-design 兩種寫法皆失敗，環境目前可用 skills 清單中確實沒有這個條目）。本輪設計決策全數以 little-sprout-brand skill（已成功載入）與既有已核可板的視覺慣例為準；未使用 frontend-design 的方法論框架做任何取捨依據。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LHg4a",
+          "name": "N 未決 / 需人核可",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "xv3Gx",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "未決 / 需人核可",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Y8udLS",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "VtDpQ",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "待決1",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "HrYtr",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "03 家庭成員非 Owner 視角未另畫變體（本輪只畫 Owner 視角，含 chevron／轉移／移除入口）。ios-dev 實作時需依角色隱藏 chevron 並在列表下方加「退出家庭」按鈕；若 visual-reviewer 認為需要獨立畫面示範，R2 補。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "EKwkH",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "Yrmr5",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "待決2",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "kVE1s",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "05 內容操作表只畫「全部顯示」示範態，未逐一畫出「一般成員檢視自己內容」「一般成員檢視他人內容」「Owner 檢視」三種列組合的獨立板。若 R2 需要逐狀態示範，需另開 05f/05g。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "oiopz",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "Q4MBW",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "待決3",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "O76D7y",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "LS-151（Edge Function delete-account）仍 In Review、docs/API.md 尚無 §10／LS051，04h 失敗態文案為通用占位；待 LS-151 併入後需回頭核對是否要依錯誤碼分文案。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "KbO6t",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "upbZE",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "待決4",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "r6r3U",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "AX3／深色／iPad 變體本輪只覆蓋『設定 root』全部 4 種與『04e 最終確認』AX3；其餘 23 板僅有預設亮色 iPhone 版本。這是 R1 範圍決策（篇幅換深度）——若 visual-reviewer 判定需要更多變體覆蓋才能 APPROVE，R2 依 reviewer 標出的優先順序補（建議優先序：04a/04d 危險確認深色與 AX3、05b 檢舉原因 AX3、08 EULA AX3、03 家庭成員 iPad）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
