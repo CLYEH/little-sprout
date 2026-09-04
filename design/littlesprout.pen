@@ -136287,7 +136287,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "MJ-4：O1XC2Z 密碼欄 Field Help（fim6k/i2SHf）復原為「此為審核專用帳號，如需協助請洽開發者聯絡資訊。」（icon 改回 info／$text-secondary），錯誤訊息改用獨立 Error Row（K3MZzs，比照 ioA0u 既有 Error Row 語彙）插入 Footer 最前，兩行同時 enabled，與 ioA0u 網路錯誤態一致。",
+                  "content": "MJ-4（R2 記錄，R3 結構已變更）：O1XC2Z 密碼欄 Field Help（fim6k/i2SHf）復原為「此為審核專用帳號，如需協助請洽開發者聯絡資訊。」（icon 改回 info／$text-secondary）。R2 版錯誤訊息曾另用一個獨立的 Footer 頂端 Error Row 節點呈現，R3 依 VR MN-4 裁定已移除該寫法、改為密碼欄 Field Help 槽內的兩行堆疊（Error Line 在上、Help Line 在下，現行 id 見「R3 修訂重點」節 MN-4 條目：O1XC2Z 的 icpU3／LkrrS 的 vD8Jd），兩行同時 enabled，與 ioA0u 網路錯誤態一致。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
