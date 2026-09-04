@@ -16,13 +16,14 @@ final class ChildrenStoreAvatarTests: XCTestCase {
         id: UUID? = nil,
         name: String = "陳小安",
         birthday: Date = Date(timeIntervalSince1970: 0),
+        avatarURL: String? = nil,
         deletedAt: Date? = nil
     ) -> Child {
         Child(
             id: id ?? childID,
             name: name,
             birthday: birthday,
-            avatarURL: nil,
+            avatarURL: avatarURL,
             deletedAt: deletedAt,
             createdAt: Date()
         )
@@ -153,5 +154,56 @@ final class ChildrenStoreAvatarTests: XCTestCase {
         guard case .failure = store.updateState else {
             return XCTFail("應該落 failure")
         }
+    }
+
+    // MARK: - avatarURL(for:) / refreshAvatarSignedURLs（i1，merge-review R1）
+
+    /// `refresh` 之後，有 `avatarURL` 的孩子應該能透過 `avatarURL(for:)` 取得簽名 URL。
+    func test_refresh_childHasAvatarURL_avatarURLForChild_returnsSignedURL() async {
+        let stub = StubChildAPIClient()
+        let child = makeChild(avatarURL: "fake/avatars/path.jpg")
+        stub.setListChildrenHandler { _ in [child] }
+        stub.setSignedAvatarURLsHandler { paths in
+            XCTAssertEqual(paths, ["fake/avatars/path.jpg"])
+            return ["fake/avatars/path.jpg": URL(string: "https://example.test/signed?token=abc")!]
+        }
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
+
+        _ = await store.refresh(familyID: familyID)
+
+        XCTAssertEqual(store.avatarURL(for: child)?.absoluteString.hasPrefix("https://example.test/signed"), true)
+    }
+
+    /// 沒有孩子帶 `avatarURL` 時不該打簽名 URL 的網路——`signedAvatarURLs` 完全不該被呼叫。
+    func test_refresh_noChildHasAvatarURL_doesNotCallSignedAvatarURLs() async {
+        let stub = StubChildAPIClient()
+        let child = makeChild(avatarURL: nil)
+        stub.setListChildrenHandler { _ in [child] }
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
+
+        _ = await store.refresh(familyID: familyID)
+
+        XCTAssertTrue(stub.signedAvatarURLsCalls.isEmpty, "沒有任何 avatarURL 時不該打網路簽名")
+        XCTAssertNil(store.avatarURL(for: child))
+    }
+
+    /// 簽名失敗（例如網路問題）時保留舊值，不整批清空——同 `refreshAvatarSignedURLs`
+    /// 文件註解「簽名本身失敗不當成整體失敗」。
+    func test_refresh_signingFails_keepsPreviousSignedURLs() async {
+        let stub = StubChildAPIClient()
+        let child = makeChild(avatarURL: "fake/avatars/path.jpg")
+        stub.setListChildrenHandler { _ in [child] }
+        stub.setSignedAvatarURLsHandler { _ in
+            ["fake/avatars/path.jpg": URL(string: "https://example.test/signed?token=first")!]
+        }
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
+        _ = await store.refresh(familyID: familyID)
+        let firstURL = store.avatarURL(for: child)
+        XCTAssertNotNil(firstURL)
+
+        stub.setSignedAvatarURLsHandler { _ in throw AppError.network(message: "offline") }
+        _ = await store.refresh(familyID: familyID)
+
+        XCTAssertEqual(store.avatarURL(for: child), firstURL, "簽名失敗應該保留上一次成功的結果")
     }
 }

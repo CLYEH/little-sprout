@@ -46,6 +46,7 @@ final class StubChildAPIClient: ChildAPIClient, @unchecked Sendable {
         var fetchMyRoleHandler: FetchMyRoleHandler = { _ in .owner }
         var listChildrenCallCount = 0
         var signedAvatarURLsHandler: SignedAvatarURLsHandler = { _ in [:] }
+        var signedAvatarURLsCalls: [[String]] = []
     }
 
     private let box = OSAllocatedUnfairLock(initialState: Box())
@@ -64,6 +65,10 @@ final class StubChildAPIClient: ChildAPIClient, @unchecked Sendable {
 
     var listChildrenCallCount: Int {
         box.withLock { $0.listChildrenCallCount }
+    }
+
+    var signedAvatarURLsCalls: [[String]] {
+        box.withLock { $0.signedAvatarURLsCalls }
     }
 
     func setListChildrenHandler(_ handler: @escaping ListChildrenHandler) {
@@ -123,6 +128,7 @@ final class StubChildAPIClient: ChildAPIClient, @unchecked Sendable {
     }
 
     func signedAvatarURLs(forPaths paths: [String]) async throws -> [String: URL] {
+        box.withLock { $0.signedAvatarURLsCalls.append(paths) }
         let handler = box.withLock { $0.signedAvatarURLsHandler }
         return try await handler(paths)
     }

@@ -73,6 +73,7 @@
 		486C91604E18A60B2E5A0A87 /* AlbumsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5291088D9B29980248B2BCF /* AlbumsView.swift */; };
 		4915FC7996D1C5E5ED31B250 /* PrintPhotoCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1FE65622DA3D1DE00028F27 /* PrintPhotoCard.swift */; };
 		4B00D9F0878757751BECB467 /* StubChildAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1DAB46AC3F3092BECE9EE37 /* StubChildAPIClient.swift */; };
+		4C58BAB31FAF8241984C488F /* CreateChildView+Avatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 191A7E61B14173F039A11C97 /* CreateChildView+Avatar.swift */; };
 		4C96C7336D3E00C30D6E5075 /* EmailFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FA71F5E5B2E516BEC50662 /* EmailFormat.swift */; };
 		4CF7E19D52171C546E2EAAAB /* JoinWaitingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE21E4A220A9C7AF7F79450 /* JoinWaitingView.swift */; };
 		4DAC292C1F7A6F7721709114 /* AppBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A53A1F6D147A58F55F72D3F /* AppBackground.swift */; };
@@ -150,6 +151,7 @@
 		AFA4F86684A41CC8BA208560 /* TimelineContentAssemblerThumbPathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B2FD827FA0B9B18B244A1DC /* TimelineContentAssemblerThumbPathTests.swift */; };
 		B0D70EB20B4074F89886D5B5 /* ChildrenStoreAvatarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33A580FB25AD23E59B1A979C /* ChildrenStoreAvatarTests.swift */; };
 		B0FA3B419745F9D231E75C58 /* VideoTrimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E13DE0D017682C31FBABE1 /* VideoTrimmer.swift */; };
+		B1B5FCC8B7A31A61D4969EE3 /* AvatarPickerLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BECC7D79F1B9E53EABE6120 /* AvatarPickerLoader.swift */; };
 		B6F140BBE36A520831E94856 /* JoinCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B283C4309A804140F52F79A /* JoinCodeView.swift */; };
 		B8F8BE27E4E503916384E97E /* InviteFamilyView+ActionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FFB8F471134452A808BD4E /* InviteFamilyView+ActionBar.swift */; };
 		B9BDE1E1AD633D323BBC2B5D /* AuthStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EA929B8CFBB700BE9E073B4 /* AuthStoreTests.swift */; };
@@ -254,6 +256,7 @@
 		17ADF30BD9D82AA5300EFF5B /* DiaryCardVideoBadgeGeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryCardVideoBadgeGeometryTests.swift; sourceTree = "<group>"; };
 		17B6EDB33CABFA69510857AF /* InviteCodeField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeField.swift; sourceTree = "<group>"; };
 		18AB0FEB21BA55A39EB67982 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		191A7E61B14173F039A11C97 /* CreateChildView+Avatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CreateChildView+Avatar.swift"; sourceTree = "<group>"; };
 		1AAA98C9E8EC8946FC45F0FF /* InviteFamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteFamilyView.swift; sourceTree = "<group>"; };
 		1E1A187F8B4D813F1BCB0135 /* TimelineContentAssembler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineContentAssembler.swift; sourceTree = "<group>"; };
 		1F8B30A3E8C7388E178BD32E /* DiaryDurationFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDurationFormat.swift; sourceTree = "<group>"; };
@@ -348,6 +351,7 @@
 		87513375A08C97FF0C5EB35F /* TimelineDayGrouping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineDayGrouping.swift; sourceTree = "<group>"; };
 		87CB2AF4E34834F3279C2367 /* SupabaseMediaUploadServiceDurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseMediaUploadServiceDurationTests.swift; sourceTree = "<group>"; };
 		8AFA10890A15EC69C5CB0BF9 /* MasonryLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MasonryLayout.swift; sourceTree = "<group>"; };
+		8BECC7D79F1B9E53EABE6120 /* AvatarPickerLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarPickerLoader.swift; sourceTree = "<group>"; };
 		8C74E777AB0094919EC703B2 /* AppConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigTests.swift; sourceTree = "<group>"; };
 		8C7ACE26EA3E828F870C6BB9 /* DiaryDurationFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDurationFormatTests.swift; sourceTree = "<group>"; };
 		8D28B773C8EDDC2BA7C7D993 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
@@ -771,6 +775,7 @@
 				E370C40A50599B3900EAAF0F /* ChildrenManagementView.swift */,
 				A5718C2E6D09354F5950BEA5 /* ChildrenRoute.swift */,
 				278A962343297A6DC3C456F7 /* CreateChildView.swift */,
+				191A7E61B14173F039A11C97 /* CreateChildView+Avatar.swift */,
 				2E62ED61585669EC87D192B4 /* EditChildAvatarFieldContent.swift */,
 				4CE3353D44311219CE17B533 /* EditChildView.swift */,
 			);
@@ -827,6 +832,7 @@
 			isa = PBXGroup;
 			children = (
 				3E7946776E289C18F37C9B35 /* AvatarImageProcessor.swift */,
+				8BECC7D79F1B9E53EABE6120 /* AvatarPickerLoader.swift */,
 				FE72EFF54C56748BD2A9AAC3 /* BirthdayFormat.swift */,
 				3931F5F8CA4E18E55FBB1F6E /* ChildFilterLayout.swift */,
 				E8938E753539C18541CF4360 /* DiaryDateFormat.swift */,
@@ -980,6 +986,7 @@
 				0510B5801E753003A86A2B04 /* AuthSession.swift in Sources */,
 				E9D2117BDEB489D4DE815852 /* AuthStore.swift in Sources */,
 				252D10CE9F600B1DF2D9FEB4 /* AvatarImageProcessor.swift in Sources */,
+				B1B5FCC8B7A31A61D4969EE3 /* AvatarPickerLoader.swift in Sources */,
 				9FBD13DAC2A6AA64AF1B238C /* AvatarPrintCard.swift in Sources */,
 				5E234D0A701EAB0B4BA3FEAD /* BirthdayFormat.swift in Sources */,
 				77532489191022DD03332421 /* ChildAPIClient.swift in Sources */,
@@ -992,6 +999,7 @@
 				FEC0EF51D7A2C74FCD452DC9 /* ChildrenRoute.swift in Sources */,
 				CCBD3BF36B2ADF0FDDF37424 /* ChildrenStore.swift in Sources */,
 				E96D464C2FD698F14A9B2604 /* ColorTokens.swift in Sources */,
+				4C58BAB31FAF8241984C488F /* CreateChildView+Avatar.swift in Sources */,
 				029E01DF7D1CB1D359682C31 /* CreateChildView.swift in Sources */,
 				686C1396FD8571B864889C86 /* CreateFamilyView.swift in Sources */,
 				10E2D7F9A2832475BCC8728F /* DayDividerView.swift in Sources */,

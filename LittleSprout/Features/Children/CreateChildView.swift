@@ -14,20 +14,37 @@ import UIKit
 ///   新增流程（`dismiss()` 在推入的情境下改成 pop）——兩種情境下「建立成功」與「之後再說」
 ///   都只是呼叫同一個環境 `dismiss()`，呼叫端不需要額外傳完成回呼進來。
 ///
-/// LS-169：頭像欄改成真的可點——`PhotosPicker`（單選、只圖片）選出的原始位元組留在
-/// `pickedAvatarData`，本地立刻用 `UIImage(data:)` 預覽（裁方／縮圖是上傳前才做的事，見
-/// `AvatarImageProcessor`，預覽階段直接吃原圖比較快、不必等裁切）；`submit()` 成功後才把
-/// 這份 data 交給 `childrenStore.createChild` 處理裁方＋上傳＋`update_child`。
+/// LS-169：頭像欄改成真的可點——`PhotosPicker`（單選、只圖片）選出的項目交給
+/// `AvatarPickerLoader.load`（背景降採樣出預覽圖，見該檔文件註解）讀成
+/// `pickedAvatarData`（完整原始位元組，上傳前給 `AvatarImageProcessor` 裁方用）＋
+/// `pickedAvatarPreview`（降採樣後的預覽圖，`body` 直接讀這個 `@State`，不再自己解碼）；
+/// `submit()` 成功後把 `pickedAvatarData` 交給 `childrenStore.createChild` 處理裁方＋
+/// 上傳＋`update_child`。
+///
+/// R2 M3：`.task(id: pickedAvatarItem)` 取代原本 `.onChange` + 裸 `Task`——`id` 改變（連續
+/// 選兩張）時 SwiftUI 自動取消前一個 task、畫面消失時也自動取消，不需要自己保存／取消
+/// `Task` 參照；載入失敗（`AvatarPickerLoader.LoadError`）會落 `avatarLoadErrorMessage`
+/// 顯示出來，不是原本 `try?` 靜默吞掉、預覽悄悄退回佔位。
 struct CreateChildView: View {
     let childrenStore: ChildrenStore
 
-    @State private var name = ""
+    // 非 private：`CreateChildView+Avatar.swift` 的 `avatarField` 要讀（見下方那批
+    // @State 的同一則檔頭註解）。
+    @State var name = ""
     @State private var birthday: Date?
     @State private var showsEmptyNameMessage = false
     @State private var showsEmptyBirthdayMessage = false
     @State private var showsDatePicker = false
-    @State private var pickedAvatarItem: PhotosPickerItem?
-    @State private var pickedAvatarData: Data?
+    // R2：頭像欄的狀態與載入邏輯（`avatarField`／`avatarLoadingOverlay`／
+    // `loadPickedAvatar()`）拆去 `CreateChildView+Avatar.swift`（SwiftLint
+    // `type_body_length` 逼出來的搬移，理由同 `MediaUploadService+Duration.swift`
+    // 檔頭註解）——`private` 是以檔案為界，搬到別的檔案就存取不到，這裡改用預設
+    // （internal）存取層級，範圍仍只在本 module 內。
+    @State var pickedAvatarItem: PhotosPickerItem?
+    @State var pickedAvatarData: Data?
+    @State var pickedAvatarPreview: UIImage?
+    @State var isLoadingAvatar = false
+    @State var avatarLoadErrorMessage: String?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dismiss) private var dismiss
 
@@ -49,18 +66,12 @@ struct CreateChildView: View {
             BirthdayPickerSheet(selection: birthdayBinding)
         }
         .onAppear { childrenStore.resetCreateState() }
-        .onChange(of: pickedAvatarItem) {
-            Task {
-                pickedAvatarData = try? await pickedAvatarItem?.loadTransferable(type: Data.self)
-            }
+        .task(id: pickedAvatarItem) {
+            await loadPickedAvatar()
         }
     }
 
-    private var isSubmitting: Bool { childrenStore.createState.isSubmitting }
-
-    private var pickedAvatarImage: UIImage? {
-        pickedAvatarData.flatMap(UIImage.init(data:))
-    }
+    var isSubmitting: Bool { childrenStore.createState.isSubmitting }
 
     // MARK: - Compact (iPhone)
 
@@ -90,15 +101,6 @@ struct CreateChildView: View {
                 .appFont(.body)
                 .foregroundStyle(Color.lsTextSecondary)
         }
-    }
-
-    private var avatarField: some View {
-        PhotosPicker(selection: $pickedAvatarItem, matching: .images) {
-            AvatarPrintCard(name: name, pickedImage: pickedAvatarImage)
-                .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.plain)
-        .disabled(isSubmitting)
     }
 
     private var nameField: some View {
@@ -236,11 +238,19 @@ struct CreateChildView: View {
 
     private var regularLayout: some View {
         HStack(alignment: .center, spacing: AppSpacing.section) {
-            PhotosPicker(selection: $pickedAvatarItem, matching: .images) {
-                AvatarPrintCard(name: name, photoHeight: 504, cornerSize: 40, pickedImage: pickedAvatarImage)
+            VStack(spacing: AppSpacing.label) {
+                PhotosPicker(selection: $pickedAvatarItem, matching: .images) {
+                    AvatarPrintCard(name: name, photoHeight: 504, cornerSize: 40, pickedImage: pickedAvatarPreview)
+                        .overlay { avatarLoadingOverlay }
+                }
+                .buttonStyle(.plain)
+                .disabled(isSubmitting)
+                if let avatarLoadErrorMessage {
+                    Text(avatarLoadErrorMessage)
+                        .appFont(.note, weight: .semibold)
+                        .foregroundStyle(Color.lsDanger)
+                }
             }
-            .buttonStyle(.plain)
-            .disabled(isSubmitting)
             .frame(width: 420)
             VStack(alignment: .leading, spacing: 0) {
                 headerSection

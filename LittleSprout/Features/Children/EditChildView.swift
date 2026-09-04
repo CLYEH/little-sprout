@@ -25,6 +25,9 @@ struct EditChildView: View {
     @State private var showsDeleteConfirmation = false
     @State private var pickedAvatarItem: PhotosPickerItem?
     @State private var pickedAvatarData: Data?
+    @State private var pickedAvatarPreview: UIImage?
+    @State private var isLoadingAvatar = false
+    @State private var avatarLoadErrorMessage: String?
     @Environment(\.dismiss) private var dismiss
 
     init(childrenStore: ChildrenStore, child: Child) {
@@ -63,17 +66,31 @@ struct EditChildView: View {
                 dismiss()
             }
         }
-        .onChange(of: pickedAvatarItem) {
-            Task {
-                pickedAvatarData = try? await pickedAvatarItem?.loadTransferable(type: Data.self)
-            }
+        .task(id: pickedAvatarItem) {
+            await loadPickedAvatar()
         }
     }
 
     private var isSubmitting: Bool { childrenStore.updateState.isSubmitting }
 
-    private var pickedAvatarImage: UIImage? {
-        pickedAvatarData.flatMap(UIImage.init(data:))
+    /// R2 M2/M3：同 `CreateChildView.loadPickedAvatar` 文件註解——`.task(id:)` 自動取消
+    /// 前一次選取的載入，載入失敗會落 `avatarLoadErrorMessage` 顯示出來，不是靜默吞掉。
+    private func loadPickedAvatar() async {
+        guard let pickedAvatarItem else { return }
+        isLoadingAvatar = true
+        avatarLoadErrorMessage = nil
+        defer { isLoadingAvatar = false }
+        do {
+            let loaded = try await AvatarPickerLoader.load(pickedAvatarItem)
+            pickedAvatarData = loaded.data
+            pickedAvatarPreview = loaded.previewImage
+        } catch is CancellationError {
+            // 被下一次選取取消，狀態交給後面那個 task 寫。
+        } catch {
+            pickedAvatarData = nil
+            pickedAvatarPreview = nil
+            avatarLoadErrorMessage = "這張照片沒辦法使用，請換一張試試。"
+        }
     }
 
     private var headerSection: some View {
@@ -88,24 +105,41 @@ struct EditChildView: View {
     }
 
     private var avatarField: some View {
-        PhotosPicker(selection: $pickedAvatarItem, matching: .images) {
-            // LS-169：內容抽成獨立的 `EditChildAvatarFieldContent`（`View`-conforming
-            // struct），不是像 `avatarField` 本身這樣直接把 `appFont`／`appIconFrame`
-            // 呼叫寫在 `PhotosPicker` 的 label 尾隨閉包裡——實測（Swift 6 嚴格並行檢查）
-            // `PhotosPicker` 的 `label` 閉包參數不繼承外層 `EditChildView`（`View`
-            // 協定推導出的）`@MainActor` 隔離，直接在閉包本體呼叫這兩個 `@MainActor`
-            // 隔離的自訂 View extension 方法會編譯失敗（"non-Sendable 'some View'-typed
-            // result can not be returned from main actor-isolated instance method ...
-            // to nonisolated context"）。獨立 View struct 的 `body` 本身就是
-            // `@MainActor`（`View`協定要求），閉包只需要呼叫它的 initializer（非隔離、
-            // 純建構值），交給 SwiftUI 之後才真正求值 `body`——同 `CreateChildView` 的
-            // `AvatarPrintCard` 抽出方式一致。
-            EditChildAvatarFieldContent(
-                name: name, avatarURL: childrenStore.avatarURL(for: child), pickedImage: pickedAvatarImage
-            )
+        VStack(spacing: AppSpacing.label) {
+            PhotosPicker(selection: $pickedAvatarItem, matching: .images) {
+                // LS-169：內容抽成獨立的 `EditChildAvatarFieldContent`（`View`-conforming
+                // struct），不是像 `avatarField` 本身這樣直接把 `appFont`／`appIconFrame`
+                // 呼叫寫在 `PhotosPicker` 的 label 尾隨閉包裡——實測（Swift 6 嚴格並行檢查）
+                // `PhotosPicker` 的 `label` 閉包參數不繼承外層 `EditChildView`（`View`
+                // 協定推導出的）`@MainActor` 隔離，直接在閉包本體呼叫這兩個 `@MainActor`
+                // 隔離的自訂 View extension 方法會編譯失敗（"non-Sendable 'some View'-typed
+                // result can not be returned from main actor-isolated instance method ...
+                // to nonisolated context"）。獨立 View struct 的 `body` 本身就是
+                // `@MainActor`（`View`協定要求），閉包只需要呼叫它的 initializer（非隔離、
+                // 純建構值），交給 SwiftUI 之後才真正求值 `body`——同 `CreateChildView` 的
+                // `AvatarPrintCard` 抽出方式一致。
+                EditChildAvatarFieldContent(
+                    name: name, avatarURL: childrenStore.avatarURL(for: child), pickedImage: pickedAvatarPreview
+                )
+                .overlay { avatarLoadingOverlay }
+            }
+            .buttonStyle(.plain)
+            .disabled(isSubmitting)
+            if let avatarLoadErrorMessage {
+                Text(avatarLoadErrorMessage)
+                    .appFont(.note, weight: .semibold)
+                    .foregroundStyle(Color.lsDanger)
+            }
         }
-        .buttonStyle(.plain)
-        .disabled(isSubmitting)
+    }
+
+    /// 同 `CreateChildView.avatarLoadingOverlay` 文件註解。
+    @ViewBuilder
+    private var avatarLoadingOverlay: some View {
+        if isLoadingAvatar {
+            Circle().fill(Color.black.opacity(0.25))
+            ProgressView().tint(.white)
+        }
     }
 
     private var nameField: some View {

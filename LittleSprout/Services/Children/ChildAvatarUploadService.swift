@@ -48,9 +48,22 @@ final class SupabaseChildAvatarUploadService: ChildAvatarUploadService {
                 options: FileOptions(contentType: "image/jpeg", upsert: true)
             )
         } catch {
-            throw AppError.map(error)
+            throw Self.mapUploadError(error)
         }
         return path
+    }
+
+    /// m3（merge-review R1）：同 `MediaUploadService.mapUploadError` 對 413 的既有慣例——
+    /// `AppError.map` 認得的錯誤型別只有 URLError／AuthError／PostgrestError／HTTPError
+    /// （`AppError.swift`），`StorageError` 不在那條映射鏈裡，未特判一律落 `.server`
+    /// 「伺服器發生問題，請稍後再試一次」。RLS 拒絕（403）是永久性的權限問題，不是暫時的
+    /// 伺服器問題，重試不會變好——用 `.rejected` 給出可讀文案，同時把 `AppError.map` 沒認得
+    /// 的其餘 `StorageError` 情況也交給它兜底，不讓任何 Storage 錯誤穿透成裸 `.server`。
+    private static func mapUploadError(_ error: Error) -> AppError {
+        if let storageError = error as? StorageError, storageError.statusCode == "403" {
+            return .rejected(message: "沒有權限更新這個孩子的頭像，請確認你仍是這個家庭的成員", code: nil)
+        }
+        return AppError.map(error)
     }
 
     /// `{family_id}/avatars/{child_id}.jpg`——`family_id`／`child_id` 一律小寫正規形 UUID
