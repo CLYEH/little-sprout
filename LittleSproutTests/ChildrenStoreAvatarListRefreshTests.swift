@@ -96,18 +96,13 @@ final class ChildrenStoreAvatarListRefreshTests: XCTestCase {
     ///   `("Optional(…token=first&lsv=…)") is not equal to ("Optional(…token=first)")`，與
     ///   reviewer comment 貼的指紋逐字相符。
     /// - mutation C（保留 plumbing，只在 `avatarSignedURLs = signed` 與
-    ///   `avatarCacheBust[freshAvatarPath] = …` 之間插入一行 `await Task.yield()`）：**誠實
-    ///   訂正 reviewer comment 的預期**——實測這條測試在 mutation C 下仍是**綠**的。原因：
-    ///   這個探針掛在 `apiClient.updateChild` RPC callback，時序上發生在那兩個寫入「之前」
-    ///   （`reloadChildrenList` 要等 `update_child` RPC 回來才會走到簽名那一段），插在兩者
-    ///   「之間」的 `await` 因此不會被這個探針看到。另外實作並實測了第二種寫法（開一個併發
-    ///   Task 用 `Task.yield()` 反覆搶 `@MainActor` 執行權、密集輪詢 `avatarURL(for:)`，理論
-    ///   上有機會夾進那個 yield 窗口）——**同樣測不出 mutation C**：Swift 的協作式排程器不
-    ///   保證在裸 `Task.yield()` 處真的把執行權讓給另一個就緒中的 task，這個特定回歸形狀
-    ///   （刻意在兩個相鄰陳述式之間插入一個沒有理由的 `await`）在單元測試層級沒有找到可靠、
-    ///   不會偶發 flaky 的機械化守門法；已移除該第二條測試（無法證明的額外複雜度不留在
-    ///   commit 裡，見 handoff）。mutation A 代表的「修法被整段還原」才是會自然發生的回歸
-    ///   形狀，且已被這條測試可靠攔住。
+    ///   `avatarCacheBust[freshAvatarPath] = …` 之間插入一行 `await Task.yield()`）：這個探針
+    ///   在 mutation C 下仍是綠的——它掛在 `apiClient.updateChild` RPC callback，時序上發生在
+    ///   那兩個寫入「之前」（`reloadChildrenList` 要等 `update_child` RPC 回來才會走到簽名
+    ///   那一段），插在兩者「之間」的 `await` 因此不會被這個探針看到。**R2 訂正（merge-review
+    ///   `dd323682`）**：mutation C **在單元測試層級是可以可靠守住的**——見下面
+    ///   `test_updateChild_neverExposesIntermediateAvatarURL`（watcher 版），這條測試留著只是
+    ///   因為它守的是 mutation A 這個更常見的回歸形狀，兩條測試互補，不是互相替代。
     func test_updateChild_avatarURLStaysStableUntilSignedURLsArrive() async {
         let stub = StubChildAPIClient()
         let path = "fake/avatars/first.jpg"
@@ -139,5 +134,68 @@ final class ChildrenStoreAvatarListRefreshTests: XCTestCase {
             "上傳成功後、簽名回來前，avatarURL(for:) 不該先變成過渡值（新 cache-bust ＋ 舊簽名 URL）"
         )
         XCTAssertNotEqual(store.avatarURL(for: child), before, "最終應該換成新的簽名 URL")
+    }
+
+    /// R2（merge-review `dd323682`，配方由 reviewer 貼在 comment，本輪照樣實跑驗證）：
+    /// mutation C（`avatarSignedURLs = signed` 與 `avatarCacheBust[freshAvatarPath] = …`
+    /// 之間插入一個 `await`）的可靠守門法——`watcher` 本身是 `@MainActor`，在 `updateChild`
+    /// 執行期間每次讓出主 actor 時就取樣一次 `avatarURL(for:)`，斷言整段期間看到的值只可能
+    /// 落在 {上傳前, 最終} 這個集合裡。**為什麼不會 flaky-red**：正確的程式碼裡兩個寫入之間
+    /// 沒有 `await`（不可觀測），`children = fetched` 也不改變這個路徑的值，所以
+    /// `avatarURL(for:)` 在任何 suspension point 上都只可能是這兩個值之一，排程怎麼交錯都不
+    /// 會誤紅；它的弱點只在「可能漏抓」的方向，漏抓不會造成假警報。**踩過的坑**：取樣讀值要放
+    /// 在 `withLock` 之外——`withLock` 的閉包是 nonisolated，裡面直接呼叫 `store.avatarURL(for:)`
+    /// 這個 `@MainActor` 方法編不過（"call to main actor-isolated instance method … in a
+    /// synchronous nonisolated context"）；`watcher` 也刻意保持 `@MainActor`（不要改寫成非
+    /// `@MainActor` 再用 `await MainActor.run { … }` 跳轉取樣——那會讓每次取樣變成一個新排入
+    /// 的 job，未必落在那個 yield 窗口裡，是 R2 猜測 R1 那版失敗的原因）。i4：
+    /// `XCTAssertGreaterThan(samples.count, 0)` 防哪天流程變成沒有 suspension point、watcher
+    /// 一次都沒取到樣、測試靜默退化成 no-op 卻永遠綠。
+    ///
+    /// 自證（本機實跑，未留在 commit 裡）：HEAD 上連跑 5 次全綠；在 scratchpad 複本上套
+    /// mutation C 連跑 3 次全紅，紅訊息＋取樣細節見 handoff。
+    func test_updateChild_neverExposesIntermediateAvatarURL() async {
+        let stub = StubChildAPIClient()
+        let path = "fake/avatars/first.jpg"
+        let child = makeChild(avatarURL: path)
+        let uploadService = StubChildAvatarUploadService()
+        stub.setListChildrenHandler { _ in [child] }
+        stub.setSignedAvatarURLsHandler { _ in [path: URL(string: "https://example.test/signed?token=first")!] }
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: uploadService)
+        _ = await store.refresh(familyID: familyID)
+        let before = store.avatarURL(for: child)?.absoluteString ?? "nil"
+
+        uploadService.setUploadAvatarHandler { _, _, _ in path }
+        stub.setUpdateChildHandler { _, _, _, _ in }
+        stub.setSignedAvatarURLsHandler { _ in [path: URL(string: "https://example.test/signed?token=second")!] }
+
+        let seen = OSAllocatedUnfairLock<[String]>(initialState: [])
+        let done = OSAllocatedUnfairLock<Bool>(initialState: false)
+        // watcher 自己就是 @MainActor：`updateChild` 每次讓出主 actor 時它就取樣一次。
+        // 取樣要在 withLock 之外讀（withLock 的閉包是 nonisolated，裡面呼叫 @MainActor 方法編不過）。
+        let watcher = Task { @MainActor in
+            while !done.withLock({ $0 }) {
+                let sample = store.avatarURL(for: child)?.absoluteString ?? "nil"
+                seen.withLock { $0.append(sample) }
+                await Task.yield()
+            }
+        }
+
+        let success = await store.updateChild(
+            childID: childID, name: "陳小安", birthday: Date(),
+            currentAvatarURL: path, newAvatarImageData: Data([0x09])
+        )
+        done.withLock { $0 = true }
+        _ = await watcher.value
+
+        let after = store.avatarURL(for: child)?.absoluteString ?? "nil"
+        let samples = seen.withLock { $0 }
+        XCTAssertTrue(success)
+        XCTAssertGreaterThan(samples.count, 0, "watcher 一次都沒取到樣＝這條測試已退化成 no-op")
+        XCTAssertTrue(
+            Set(samples).subtracting([before, after]).isEmpty,
+            "一次上傳期間出現了過渡值：\(Set(samples).subtracting([before, after]))——" +
+                "`avatarCacheBust` 與 `avatarSignedURLs` 之間出現了 suspension point"
+        )
     }
 }
