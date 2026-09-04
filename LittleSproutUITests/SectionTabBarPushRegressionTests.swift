@@ -15,7 +15,7 @@ import XCTest
 /// 上一頁 `.navigationTitle` 當標籤（實測 `identifier: "BackButton", label: "時間軸"`），
 /// 跟 Tab Bar 的「時間軸」cell 撞名——用字串比對會把返回鈕誤判成殘留的 Tab Bar，兩種情況
 /// 都回報「時間軸 button 存在」，測不出真正的差異。改用 `SectionTabBar` 每顆 cell 自己的
-/// SF Symbol accessibility identifier比對，不會跟任何系統 chrome 撞名。
+/// SF Symbol accessibility identifier 比對，不會跟任何系統 chrome 撞名。
 ///
 /// LS-160：比對字串原本是硬編碼的四個字面值，跟 `AppSection.systemImage` 各自維護會漂移
 /// （LS-150 review R1 I1——當時 `.children` 換成 `stroller.fill`，這裡得手動同步，否則
