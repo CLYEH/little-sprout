@@ -138990,6 +138990,831 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "pLLXi",
+      "x": -3367,
+      "y": 59237,
+      "name": "LS-133 / 實作註記 · Handoff Notes (ios-dev)",
+      "width": 900,
+      "fill": "$print-paper",
+      "cornerRadius": 24,
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 44,
+      "children": [
+        {
+          "type": "text",
+          "id": "b0x0n",
+          "name": "NT",
+          "fill": "$print-ink",
+          "content": "LS-133 法務文件 in-app 檢視 · Handoff Notes",
+          "lineHeight": 1.25,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 34,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "sQBpI",
+          "name": "NS",
+          "fill": "$print-ink-secondary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "R1 首輪產出。新畫面「LS legal / 文件檢視」：歡迎頁《使用條款》《隱私權政策》連結從跳出瀏覽器改為 in-app bottom sheet（iPad 為置中卡片）。內容來源與 App bundle 內 markdown 同一份（docs/legal/terms-of-service.md），本輪以其開頭 2 節真實文字為稿，非 lorem。歡迎頁連結本身樣式完全不動。",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "xb3kX",
+          "name": "N 畫面級屬性清單",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "vFwAf",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "畫面級屬性清單",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "UPf7w",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "BjfDm",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "w7eBc",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "4 板：EzJCV（LS legal / 文件檢視 (iPhone)）、O631mm（同板 · 深色，theme mode=dark）、E27nKz（A11y / 文件檢視 · Dynamic Type AX3，theme size=ax3）、uQeV8（LS legal / 文件檢視 (iPad 11\")）。皆為「純閱讀」畫面：無同意／不同意動作，只有一顆「關閉」鈕，不吃 $accent 配額（十條 #1 一畫面一實心主鈕——本畫面連 0 顆都不需要，關閉鈕用 cmp/Button Secondary 中性樣式）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gDIxT",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "asby9",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "PpgKA",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "零角托零染料池：這是法務文件閱讀器，不是家庭相簿收藏品（母題規則④：會過期／非收藏品的東西不裱）。字級：標題 $fs-display(34)、正文段落 $fs-body(17)／lineHeight 1.7、節標題 $fs-lead(22)／700、版本列 $fs-note(17)——十條 #6「13pt 只給不讀也能完成任務的內容」，法務文字全數 ≥17。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "uJZgW",
+          "name": "N Sheet vs 推入式：選 Sheet 的理由",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "wtZsn",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "Sheet vs 推入式：選 Sheet 的理由",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "DGrKy",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dm6Ee",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "LKNBi",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "依票文「依既有慣例擇一並記理由」：選 bottom sheet（iPhone/深色/AX3）＋置中卡片（iPad），不用推入式（push）。理由一：連結所在的歡迎頁（svedU／Yc4EC 等）是**未登入狀態**，此時 app 尚無 NavigationStack 深度可推入——push 需要一個既有的導覽容器，而歡迎頁本身就是根畫面。理由二：LS-152 08 EULA 同意頁（z042Yg）與既有多張確認/操作表（LS-142 16 上傳佇列 rTEGf、LS-152 03b 移除成員 yMNOt 等）已建立「法務／確認類內容用 sheet，不用 push」的慣例，本畫面延續同一語彙，使用者不會在「這是不是要離開目前畫面」上感到意外。理由三：sheet 天生自帶「向下滑動關閉」手勢與明顯的模態邊界（Scrim），比 push 更清楚傳達「這是附加參考資訊，看完關掉即可回到原本畫面」，符合長輩心智模型。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "rUVcB",
+          "name": "N iPad：置中卡片，不是滿版 bottom sheet",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "S9BUo",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "iPad：置中卡片，不是滿版 bottom sheet",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "QwRXx",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "K3FEcE",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "NzCXK",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPad 上 SwiftUI `.sheet()` 的原生行為（regular width，未強制 `.presentationDetents`）是置中浮動的 form sheet，不是 iPhone 的滿版 bottom sheet——這是 iOS/iPadOS 系統行為，不是設計選擇。`uQeV8` 因此不沿用 iPhone 版的 Grabber＋滿版寫法，改為 Legal Card（`veB5F`，寬 520，四角圓角 `$radius-lg`，`effect: outer shadow`），用 Card Wrap（`ANzjU`，`justifyContent:center`／`alignItems:center`）置中——實測 Legal Card 上緣距板頂 220、下緣距板底 220（1194 板高，754 卡高，(1194-754)/2=220 ✓ 完全對稱），無 Grabber（置中卡片沒有下滑手勢慣例，加了反而誤導）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vXqL6",
+          "name": "N 內容來源與長輩可讀性",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "Cln8n",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "內容來源與長輩可讀性",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "cs1Vk",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RASNt",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "jaQmb",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "本輪畫的是《使用條款》（docs/legal/terms-of-service.md），可捲動區塊內容＝原文引言段＋「1. 條款的接受與適用」1.1–1.3＋「2. 服務內容」2.1–2.2，逐字取自原文，僅將尚未填值的 `[[OPERATOR_NAME]]` placeholder 替換為可讀的「本服務營運者」（原文其餘段落多用「我們」代稱，此為唯一需替換處）。《隱私權政策》未另畫板——結構逐一相同（同一組 Head／Scroll Body／Footer 節點型別），僅標題／版本列／內文替換為 docs/legal/privacy-policy.md 對應內容，ios-dev 實作時兩份文件共用同一個 SwiftUI view，此為 Notes 層級說明，非遺漏。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "JZysg",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "OzzZS",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "WnmNm",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "版本／生效日：原文檔頭表格生效日期仍是 `[[EFFECTIVE_DATE]]` 未填值佔位符（docs/legal/README.md 明載「填入生效日前須逐條核對對齊表」，尚未核准生效）。設計稿 Doc Meta 顯示「版本 0.1（草稿）· 生效日期：核可後公布」，不虛構日期；ios-dev 實作時應直接讀 bundled markdown 檔頭表格的「版本」「生效日期」兩欄動態渲染，待 LS-132 文本核可、`[[EFFECTIVE_DATE]]` 填值後自動生效。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "udTiQ",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "zhejq",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "nl8ar",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "可捲動長文用 `clip:true` 固定高度容器（Scroll Body）呈現「捲動中，未捲到底」的靜態切片——這是既有慣例（LS-142 `rTEGf` 的 `Rows Scroll Area` `BImYe`，`clip:true` height 252，同一手法）。四板皆刻意讓最後一段文字在容器下緣被切一半（而非切齊在段落邊界），比乾淨切齊更清楚傳達「還有更多，往下滑」。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Z3XYzz",
+          "name": "N 尺寸規格值與量法",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "dAUJn",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "尺寸規格值與量法",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "llCwq",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "t18eP",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ADHTK",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Scroll Body 固定高度（規格值族「文件檢視捲動容器」，硬寫字面值，Pencil height 不吃 $variable）：iPhone/深色 `BqbSV`＝480；AX3 `R8deeK`＝2000（顯示到 1.2 段落中段，AX3 全文實測 4366，只取前段避免板高失控）；iPad `UFzlX`＝480（與 iPhone 同值，因卡片寬度較窄使每行字數少、視覺密度接近）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Uhzos",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "LyXRK",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "W0Umr",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "板高（規格值族「單畫面總高」）：`EzJCV`／`O631mm` 皆 852（裝置高度，Legal Sheet 63→852 貼齊板底，maxBottom==852，0 越界，量法：`Get` 走訪 `Legal Sheet` `y+height`）；`E27nKz`（AX3）2469＝內容驅動（`Legal Sheet` 高 2406＋top gap 63，`Scrim`／`Sheet Wrap` 已同步覆寫至 2469 避免只蓋住上半層——這是新踩的坑，見「Pencil 踩雷記錄」節）；`uQeV8`（iPad）1194 不變（Legal Card 754 高，置中後上下各留 220 呼吸帶，遠低於板高，未觸頂）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VIeSP",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "VRA2Y",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "fIUtt",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "關閉鈕熱區實測（≥44pt 驗收項）：`EzJCV`/`O631mm` 的 `Close Button`＝56×fill_container；`E27nKz`（AX3）＝89×fill_container；`uQeV8`（iPad）＝56×fill_container。四板皆用 `cmp/Button Secondary`（`XggYA`）覆寫 icon=`x`／label=「關閉」，非自訂節點，繼承既有元件的 padding 節奏（`$ctl-pad-md`），無需額外撐熱區。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "evE1j",
+          "name": "N 歡迎頁連結行為變更（樣式不動）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "vEkqi",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "歡迎頁連結行為變更（樣式不動）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "R9EfU",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "J1VaC",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "GIe16",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`svedU`（LS-17 01）與 LS-163 `Yc4EC`/`M2qW9`/`aEb17`/`g1pZ15` 等歡迎頁變體板的《使用條款》《隱私權政策》連結節點（`e1Yuwz`／`e1qGB` 等 Legal Link）本輪**完全未修改**（byte-identical，見「已驗證」）。唯一變更是行為語意：原本點擊會開啟系統瀏覽器（`WelcomeView.swift:254,262` 現行指向 `https://littlesprout.app/legal/terms`／`/privacy` 佔位網址），改為開啟本票新增的 `LS legal / 文件檢視` sheet／卡片，帶入對應文件（使用條款→本畫面預設內容；隱私權政策→替換內容，見上「內容來源」節）。實作票（後續 lane:ui）需把 `WelcomeView.swift` 的 `openURL` 改為 `.sheet(isPresented:)` 呼叫。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "B6wpr",
+          "name": "N Pencil 踩雷記錄（供下一輪或其他票參考）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "JCigh",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "Pencil 踩雷記錄（供下一輪或其他票參考）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "rq4Fn",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "yf2bK",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "mIwYo",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX3 板（`E27nKz`）Copy 自 iPhone 板後，改 `theme:{size:\"ax3\"}` 並調大 Scroll Body／改 root height，但 `Scrim`（`cgd6P`）與 `Sheet Wrap`（`CozLy`）兩個節點在 Copy 時把 iPhone 板的**字面 width/height（393/852）**也一併複製過去——只改 root 的 height 不會連動這兩個子節點，若不同步覆寫，`Sheet Wrap` 的 `justifyContent:\"end\"` 會錨定在舊的 852 高度內、把 Legal Sheet 推到 y=-1554（畫面外，clip 掉大半內容）。修法：Copy 後任何『滿版 absolute 定位節點』（Scrim／Sheet Wrap／Card Wrap 之類）若板高會變（AX3／內容驅動），都要逐一同步 `Update` 其 width／height，不能只改 root。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "howoL",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KYXhH",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "XAO4d",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Frame 的 `alignItems` 未顯式設定時，實測渲染效果等同 `center`（非典型 flexbox 預設的 `stretch`／`start`）——`Grabber`（36pt 寬 rectangle）在寬度 345 的容器內未設 `alignItems:\"center\"` 卻仍置中，截圖複驗屬實。沿用既有 sheet（`y6DwCZ`／`g3fRwP`）同款寫法，不額外加 `alignItems`。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "hyGcq",
+          "name": "N 未決 / 需人核可",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "taBPe",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "未決 / 需人核可",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "ICKtW",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "OoLIO",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "xOEgh",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPad 版用置中卡片而非滿版 bottom sheet是本輪設計判斷（理由見「iPad」節），非票文明示規格——若核可者期望 iPad 也用滿版 sheet（例如與 P1-iPad 等既有滿版畫面視覺語彙更一致），可在下一輪改。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "e0pAN",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "QBhQV",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "wBk3V",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "隱私權政策版本未另畫板（見「內容來源」節理由）；若 visual-reviewer 認為需要獨立畫板逐字驗證，R2 可補。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Y6mOa",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "wkd5x",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Hj8oA",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX3 板 Scroll Body 只顯示到全文 4366pt 中的前 2000pt（約 46%）——這是為了避免板高失控的取捨，不代表 AX3 使用者實際只能讀到這裡（bundle markdown 是完整全文，App 內可正常捲動到底）；若核可者認為應完整示範捲到底的狀態，R2 可加一張「AX3 · 已捲到底」變體。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
