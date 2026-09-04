@@ -38,12 +38,28 @@
 --   讀），本檔逐支加明確檢查，見第 6 段。
 --
 -- 停權判斷本身只讀 `profiles.suspended_at`／`families.suspended_at`（SECURITY
--- DEFINER helper，票面規定），不查 `suspended_reason`（那一欄只給 Dashboard 人工
--- 看，不進任何判斷式）。
+-- DEFINER helper，票面規定）。
 --
 -- 範圍刻意排除的兩塊（都寫在對應段落，這裡先列清單，避免看起來像遺漏）：
 --   - `profiles` 表本身（自己的 SELECT／UPDATE）不掛任何停權判斷——見第 3 段。
 --   - `device_tokens` 不掛 trigger——見第 5 段結尾。
+--
+-- merge-review R1（`23fa5e37`）R2 訂正（本檔直接修改——這個 migration 從未併入
+-- origin/development，append-only的限制只保護「已併入」的檔案，見
+-- docs/COLLABORATION.md／migration-immutable-check.sh 的判定範圍）：
+--   MAJOR-1：`suspended_reason` 原本設計成 `profiles`／`families` 的一般欄位，
+--   但這兩張表對 `authenticated` 是**表級** SELECT grant（不是逐欄），任何後來
+--   `add column` 的欄位都會自動被表級 SELECT 涵蓋——本檔原本「新增欄位天生不可讀」
+--   的判斷是錯的（已實測：停權者一句 `select suspended_reason from profiles`
+--   就讀得到稽核原因）。改法：`suspended_reason` 完全不放在這兩張表上，搬進
+--   全新的 `private.suspension_notes`（見第 0b 段）——`private` schema 對
+--   `authenticated`／`anon` 只有 `usage`（見 20260822120000_init_schema.sql:16-17），
+--   沒有任何表格級 grant，新建的表預設不對它們開放任何權限，不需要動
+--   `profiles`／`families` 既有的表級 SELECT（不動既有讀取面）。`suspended_at`
+--   維持在原表上、可讀無妨（client 本來就會從 LS052／LS053 得知停權事實，
+--   `suspended_at` 只是同一件事的時間戳，不是額外的資訊揭露）。
+--   MAJOR-2：`delete_my_account()`（App Store Guideline 5.1.1(v)／PLAN §9-A2）
+--   不得被停權連帶封死——見第 8 段。
 -- ---------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------
@@ -58,38 +74,65 @@
 -- ---------------------------------------------------------------------------
 
 alter table public.profiles
-  add column suspended_at timestamptz,
-  add column suspended_reason text;
+  add column suspended_at timestamptz;
 
 comment on column public.profiles.suspended_at is
   'LS-179（PLAN §10-B）：Dashboard 手動 UPDATE 這一欄即生效，不改程式碼。非 NULL
   時，這個使用者對「所有」家庭資料（不限於他目前所屬的家庭）的 RLS 讀寫與既有
   RPC 入口一律拒絕，見 private.caller_is_active()／private.enforce_not_suspended()。
-  不影響其他使用者。解除＝設回 NULL。';
-
-comment on column public.profiles.suspended_reason is
-  '只給 Dashboard 人工看的停權原因，不進任何權限判斷式，client 也讀不到（沒有
-  SELECT grant，見下方）。';
+  不影響其他使用者。解除＝設回 NULL。停權原因不放在這裡（R2：見
+  private.suspension_notes 與下方第 0b 段——`authenticated` 對本表是表級 SELECT
+  grant，任何欄位都會被自動涵蓋，稽核原因不能放在這張表上）。';
 
 alter table public.families
-  add column suspended_at timestamptz,
-  add column suspended_reason text;
+  add column suspended_at timestamptz;
 
 comment on column public.families.suspended_at is
   'LS-179（PLAN §10-B）：Dashboard 手動 UPDATE 這一欄即生效。非 NULL 時，這個家庭
   的全部成員（不分角色）對這個家庭的資料一律拒絕讀寫；成員對「其他」家庭不受
   影響（Phase 3 多家庭前置）。見 private.family_is_active()／
-  private.enforce_not_suspended()。';
+  private.enforce_not_suspended()。停權原因不放在這裡（R2，理由同
+  public.profiles.suspended_at 的欄位註解）。';
 
-comment on column public.families.suspended_reason is
-  '只給 Dashboard 人工看的停權原因，不進任何權限判斷式。';
+-- client 讀得到這兩欄（authenticated 對 profiles／families 本來就是表級 SELECT
+-- grant，見 20260822120000_init_schema.sql／20260903084231_delete_account.sql，
+-- 新增的 `suspended_at` 自然被涵蓋）——這是刻意的，不是疏漏：停權事實本來就會
+-- 從每一次操作失敗的 LS052／LS053 揭露，`suspended_at` 只是同一件事的時間戳，
+-- 不構成額外資訊洩漏。`suspended_at` 沒有 UPDATE grant（client 改不動，只能靠
+-- service_role／表擁有者），見下方 app_settings 之後的 R2 補充段落。
 
--- client 讀不到這四欄（不在下面重新開放的欄位級 grant 清單裡）：停權原因是稽核
--- 用途，停權旗標本身也不該讓被停權者自己用 API 探知「我被停了」（他只會從每一次
--- 操作失敗的 LS052／LS053 間接得知）。原本 `authenticated` 對 profiles／families
--- 就已經是逐欄 grant（見 20260822120000_init_schema.sql／20260903084231_
--- delete_account.sql），新增欄位不主動出現在任何既有 grant 清單裡，天生就是
--- 不可讀不可寫，不需要額外一句 REVOKE。
+-- ---------------------------------------------------------------------------
+-- 0b.（R2，MAJOR-1）稽核用的停權原因——只有表擁有者／service_role 讀得到
+--
+-- 不放在 profiles／families 上（見上方欄位註解的理由），改放這張純內部表。
+-- `private` schema 對 authenticated／anon 只有 `usage`（20260822120000_
+-- init_schema.sql:16-17：`revoke all on schema private from public` ＋
+-- `grant usage on schema private to authenticated`），沒有任何表格級
+-- SELECT／INSERT／UPDATE／DELETE grant；USAGE 只讓你能在 SQL 裡「引用」
+-- schema 內的物件名稱，不等於能讀寫裡面的表——這張表完全沒有下任何
+-- `grant ... to authenticated` 語句，所以是預設拒絕（`42501 permission
+-- denied for table suspension_notes`），不需要 RLS（沒有任何非 owner 角色有
+-- 任何 table privilege 可言，RLS 只在「已經有 grant 但要進一步依列篩選」時
+-- 才有意義，這裡連 grant 都沒有）。
+--
+-- 一個停權主體（使用者或家庭）同時最多一筆備註（`primary key (subject_type,
+-- subject_id)`）——這是稽核備註不是歷史留言板，重新停權／換一個原因就是
+-- upsert 覆蓋，解除停權時一併刪除（見 §11 手冊），語意對齊原本
+-- `suspended_reason = NULL` 代表「沒有進行中的停權原因」的既有設計。
+-- ---------------------------------------------------------------------------
+create table private.suspension_notes (
+  subject_type text not null check (subject_type in ('user', 'family')),
+  subject_id uuid not null,
+  reason text,
+  created_at timestamptz not null default now(),
+  primary key (subject_type, subject_id)
+);
+
+comment on table private.suspension_notes is
+  'LS-179 R2（MAJOR-1）：停權原因的稽核備註，只有表擁有者（postgres，Dashboard／
+  `supabase db query --linked`）與 service_role（若日後另外 grant）讀寫得到。
+  故意不放在 public.profiles／public.families——那兩張表對 authenticated 是
+  表級 SELECT，任何欄位都會被自動涵蓋，稽核原因不能放在那裡。';
 
 create table public.app_settings (
   -- 單列表：id 恆為 true，CHECK 保證永遠只有一列，不需要另外的唯一性判斷。
@@ -101,10 +144,14 @@ create table public.app_settings (
 comment on table public.app_settings is
   'LS-179（PLAN §10-A(3)）：全域營運開關，目前只有 registrations_open 一欄。單列表
   ——Dashboard 手動 UPDATE 這一欄（`where id = true`）即生效，不改程式碼。只有
-  service_role 能寫（RLS 沒有任何 INSERT/UPDATE/DELETE policy，且 authenticated
-  沒有對應的 table grant，見下方）；authenticated 只能透過
-  private.registrations_open() 讀單一布林值，不開放整表 SELECT 給 client（沒有
-  理由讓 client 看到 updated_at 之類的欄位）。';
+  表擁有者（postgres，透過 Dashboard／`supabase db query --linked`）能寫（RLS
+  沒有任何 INSERT/UPDATE/DELETE policy，且 authenticated 沒有對應的 table
+  grant，見下方）；`service_role` 目前也沒有這幾個表的寫入 grant（`BYPASSRLS`
+  只繞過 RLS、不等於有 table privilege，R2 merge-review m4 實測 catalog 確認），
+  若之後有 Edge Function 需要直接寫入，須另外明確
+  `grant insert, update, select on public.app_settings to service_role`。
+  authenticated 只能透過 private.registrations_open() 讀單一布林值，不開放
+  整表 SELECT 給 client（沒有理由讓 client 看到 updated_at 之類的欄位）。';
 
 insert into public.app_settings (id, registrations_open) values (true, true);
 
@@ -113,7 +160,7 @@ alter table public.app_settings enable row level security;
 -- 沒有 grant 給 authenticated：這張表完全不對 client 開放直接讀寫，唯一的讀取
 -- 路徑是下面的 private.registrations_open()（SECURITY DEFINER，繞過 RLS）。
 -- 因此這裡也不需要任何 policy——RLS 啟用但沒有 policy＝對 authenticated/anon
--- 全部拒絕，符合「只有 service_role 可寫，client 只能透過 helper 讀」的票面要求。
+-- 全部拒絕，符合「只有表擁有者可寫，client 只能透過 helper 讀」的票面要求。
 
 -- ---------------------------------------------------------------------------
 -- 1. 兩支核心 helper：只讀旗標，PK 查詢，STABLE SECURITY DEFINER（比照本 schema
@@ -175,14 +222,16 @@ comment on function private.registrations_open() is
   一定有那一列（本檔的 INSERT 種好），fail-open 只是避免萬一那一列不見時整個
   app 連家庭都建不了，不是預期路徑。';
 
--- caller_is_active() 直接被 families_select policy 引用（第 4 段），在 authenticated
--- 角色底下求值，需要明確 grant——family_is_active()／registrations_open() 只從
--- 其他 SECURITY DEFINER 函式／trigger 內部呼叫（以 postgres 身分執行，物件擁有者
--- 對自己的物件恆有權限，REVOKE ... FROM PUBLIC 影響不到擁有者），不需要對
--- authenticated 另外開放。
+-- caller_is_active()／family_is_active(uuid)：直接被 families_select／
+-- content_reports_select／join_requests_select 三條 policy 引用（第 3 段，
+-- R2 merge-review m1／m2），在 authenticated 角色底下求值，兩支都需要明確
+-- grant——registrations_open() 只從 enforce_registrations_open() trigger
+-- 內部呼叫（以 postgres 身分執行，物件擁有者對自己的物件恆有權限，
+-- REVOKE ... FROM PUBLIC 影響不到擁有者），不需要對 authenticated 另外開放。
 revoke execute on function private.caller_is_active() from public, anon;
 grant execute on function private.caller_is_active() to authenticated;
 revoke execute on function private.family_is_active(uuid) from public, anon;
+grant execute on function private.family_is_active(uuid) to authenticated;
 revoke execute on function private.registrations_open() from public, anon;
 
 -- ---------------------------------------------------------------------------
@@ -299,16 +348,52 @@ $$;
 -- 請另開票，不在本票默默擴大範圍。
 -- ---------------------------------------------------------------------------
 
--- families_select 的 created_by 分支需要單獨補 caller_is_active()：這個分支是
--- 20260822120200_rls_policies.sql 為了 `insert ... returning` 那個時序洞開的
--- 後門（成員列由 AFTER INSERT trigger 產生，RETURNING 投影發生在 trigger 之前，
--- 那個瞬間 family_ids() 還看不到這筆家庭），不經過 family_ids()，本檔的排除
--- 對它沒有作用——一個曾經建立過家庭、後來離開的使用者，即使被停權，仍然能透過
--- 這個分支永久看到那個家庭的名稱。加這一句排除掉。
+-- families_select 的 created_by 分支需要單獨補 caller_is_active()／
+-- family_is_active(id)：這個分支是 20260822120200_rls_policies.sql 為了
+-- `insert ... returning` 那個時序洞開的後門（成員列由 AFTER INSERT trigger
+-- 產生，RETURNING 投影發生在 trigger 之前，那個瞬間 family_ids() 還看不到這筆
+-- 家庭），不經過 family_ids()，本檔的排除對它沒有作用——一個曾經建立過家庭、
+-- 後來離開的使用者，即使被停權，仍然能透過這個分支永久看到那個家庭的名稱。
+-- R2（merge-review R1 m2）：原本只加了 caller_is_active()，漏了
+-- family_is_active(id)——家庭本身被停權時，建立者（即使本人未被個別停權）仍
+-- 透過這個分支看得到 1 列，含 suspended_at／storage_quota_bytes 等欄位，違反
+-- 「家庭停權→該家庭全部成員（建立者也是成員）一律拒絕」。兩個條件都要。
 alter policy families_select on public.families
   using (
     id in (select private.family_ids())
-    or (created_by = (select auth.uid()) and private.caller_is_active())
+    or (
+      created_by = (select auth.uid())
+      and private.caller_is_active()
+      and private.family_is_active(id)
+    )
+  );
+
+-- ---------------------------------------------------------------------------
+-- R2（merge-review R1 m1）：content_reports_select／join_requests_select 的
+-- 「自己那一支」分支同樣不經過任何一支集合函式（`reporter_id = auth.uid()`／
+-- `applicant_id = auth.uid()`，跟上面 families_select 的 created_by 分支是
+-- 同一種形狀），票面原文是「全部 policy」都要有停權判斷，這兩條之前漏了。
+-- 「owner 那一支」（`family_id in (select private.owned_family_ids())`）已經
+-- 走 owned_family_ids()，本檔第 2 段已收斂，不必再動。
+-- ---------------------------------------------------------------------------
+alter policy content_reports_select on public.content_reports
+  using (
+    (
+      reporter_id = (select auth.uid())
+      and private.caller_is_active()
+      and private.family_is_active(family_id)
+    )
+    or family_id in (select private.owned_family_ids())
+  );
+
+alter policy join_requests_select on public.join_requests
+  using (
+    (
+      applicant_id = (select auth.uid())
+      and private.caller_is_active()
+      and private.family_is_active(family_id)
+    )
+    or family_id in (select private.owned_family_ids())
   );
 
 -- ---------------------------------------------------------------------------
@@ -326,7 +411,44 @@ alter policy families_select on public.families
 --
 -- DELETE 沒有 NEW，用 tg_op 分流取 OLD 或 NEW 的 family_id；不修改列本身，
 -- 通過檢查就原樣 return（INSERT/UPDATE 用 new，DELETE 用 old）。
+--
+-- R2（merge-review R1 MAJOR-2）：`delete_my_account()` 內部對
+-- `family_members`／`diaries`／`albums`／`comments`／`media` 的寫入（見
+-- 20260904070941_delete_account_media.sql）全部會落在這支 trigger 上，停權
+-- （使用者或家庭）因此連帶把 app 內帳號刪除的唯一入口鎖死——App Store
+-- Guideline 5.1.1(v)／PLAN §9-A2 的硬規定是「app 內刪除帳號」必須恆可用，不能
+-- 因為帳號被停權就失效（甚至更需要能刪，那正是被停權的人最可能想做的事）。
+-- 修法：`private.deletion_bypass_active()` 讀一個交易級（`is_local = true`）
+-- GUC，見下方函式與 `delete_my_account()` 第 8 段的呼叫處。
 -- ---------------------------------------------------------------------------
+
+-- private.deletion_bypass_active()：純讀 GUC，不碰任何資料庫物件，不需要
+-- SECURITY DEFINER／search_path 收斂（比照 20260823030000_storage_policies.sql
+-- 的 private.is_media_object_path() 同型理由——沒有任何需要提權或防
+-- search_path 挾持的動作）。
+--
+-- **為什麼 client 造不出這個逃生口（三層，任一層都足夠，寫在這裡集中說明，
+-- 呼叫端 delete_my_account() 與 105_ 測試都引用這段）**：
+--   1. 這個 GUC 名稱與值只由 `delete_my_account()` 這一支函式內部設定
+--      （見該函式），沒有任何 public 函式把它參數化開放給呼叫端指定。
+--   2. `pg_catalog.set_config` 本身不在 PostgREST 曝露的 schema 清單裡
+--      （`supabase/config.toml`：`[api] schemas = ["public", "graphql_public"]`），
+--      client 沒有任何 REST／RPC 路徑能自己呼叫它——`public` schema 裡也沒有
+--      任何函式包裝、轉發這個呼叫。
+--   3. 即使假設性地能呼叫，`is_local = true` 讓這個值只在**設定當下的那個
+--      交易**內可見，隨交易結束（COMMIT／ROLLBACK）自動消失——PostgREST 一個
+--      HTTP request 對應一個交易（這是整個 Supabase RLS／JWT-per-request 模型
+--      本來就依賴的基礎假設，不是本票新引入的信任），這個值不會跨到「呼叫端
+--      自己另外發出的下一個 request」。`delete_my_account()` 內部從設定這個
+--      GUC 到函式結束之間的所有寫入，都在**同一個**交易裡，這正是唯一需要它
+--      生效的範圍。
+create or replace function private.deletion_bypass_active()
+returns boolean
+language sql
+stable
+as $$
+  select coalesce(current_setting('ls179.account_deletion', true), '') = 'on';
+$$;
 
 create or replace function private.enforce_not_suspended()
 returns trigger
@@ -338,6 +460,13 @@ declare
   v_uid uuid := auth.uid();
   v_family_id uuid;
 begin
+  if private.deletion_bypass_active() then
+    if tg_op = 'DELETE' then
+      return old;
+    end if;
+    return new;
+  end if;
+
   if v_uid is not null then
     if not private.caller_is_active() then
       raise exception '這個帳號已被暫停使用，請聯絡我們' using errcode = 'LS052';
@@ -709,3 +838,182 @@ as $$
 $$;
 
 revoke execute on function public.notification_recipients(uuid[]) from public, anon;
+
+-- ---------------------------------------------------------------------------
+-- 8.（R2，MAJOR-2）delete_my_account()：停權（使用者或家庭）不得連帶封死
+--
+-- 整支函式本體逐字複製自 `20260904070941_delete_account_media.sql`（該檔已併入
+-- origin/development，append-only、不可回頭改，見 migration-immutable-check.sh）
+-- 目前的定義——**只加一行**：`perform private.enforce_deletion_bypass();`，
+-- 緊接在「未登入」檢查之後、任何實際寫入之前。這支函式的鎖序（family_members
+-- 先、families 後、跨家庭 family_id 遞增序）是三輪 review 才訂出來的極細緻
+-- 不變量（見該檔檔頭「修訂歷史」），本次**不改動任何一行既有邏輯、不改動任何
+-- 語句順序**，只在最前面插入這一行——它不取任何鎖、不查任何表，純粹是設一個
+-- 交易級 GUC，對後面的鎖序分析沒有影響。
+-- ---------------------------------------------------------------------------
+
+create or replace function private.enforce_deletion_bypass()
+returns void
+language sql
+as $$
+  select set_config('ls179.account_deletion', 'on', true);
+$$;
+
+comment on function private.enforce_deletion_bypass() is
+  'LS-179 R2（MAJOR-2）：只被 public.delete_my_account() 呼叫。設一個交易級
+  （is_local=true）GUC，讓 private.enforce_not_suspended() 對這次呼叫觸發的
+  全部寫入放行，理由與「client 造不出這個逃生口」的三層論證見
+  private.deletion_bypass_active() 的函式註解。包成函式（而不是讓
+  delete_my_account() 直接 `perform set_config(...)`）只是為了讓呼叫處那一行
+  自解釋，沒有其他理由。';
+
+create or replace function public.delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_blocking jsonb;
+  v_family_id uuid;
+  v_solo_candidates uuid[];
+begin
+  if v_uid is null then
+    raise exception '未登入，無法刪除帳號' using errcode = '42501';
+  end if;
+
+  -- R2（MAJOR-2）：見本檔第 8 段檔頭與 private.deletion_bypass_active() 的
+  -- 函式註解。放在這裡（登入檢查之後、情況 1 唯讀查詢之前）：情況 1 是唯讀、
+  -- 不取鎖、不觸發任何 trigger，這一行放在它前後對正確性沒有差別，選擇放在
+  -- 最前面只是讓「這支函式從頭到尾都在豁免範圍內」一目了然。
+  perform private.enforce_deletion_bypass();
+
+  -- 情況 1：呼叫者是某家庭的唯一 owner、且家庭還有其他成員 → 一次列出全部這樣的
+  -- 家庭並拒絕（不是找到第一個就報，使用者一次看到所有要處理的家庭）。唯讀查詢，
+  -- 不取任何鎖，見上方「逐入口列表」前言。
+  select jsonb_agg(
+           jsonb_build_object('family_id', fm.family_id, 'family_name', f.name)
+           order by f.name, fm.family_id
+         )
+    into v_blocking
+    from public.family_members fm
+    join public.families f on f.id = fm.family_id
+   where fm.user_id = v_uid
+     and fm.role = 'owner'
+     and exists (
+       select 1 from public.family_members other
+        where other.family_id = fm.family_id and other.user_id <> v_uid
+     )
+     and not exists (
+       select 1 from public.family_members co
+        where co.family_id = fm.family_id and co.role = 'owner' and co.user_id <> v_uid
+     );
+
+  if v_blocking is not null then
+    raise exception
+      '你是家庭的唯一 owner，且家庭還有其他成員，請先把 owner 身份轉移給其他成員才能刪除帳號'
+      using errcode = 'LS050', detail = v_blocking::text;
+  end if;
+
+  -- 情況 2 候選家庭（LS-143 R2 m2 既有的「兩段式」第一段：初始快照，鎖之前）：
+  -- 呼叫者「現在」看起來是唯一成員的家庭。**這個集合本身刻意用取鎖前的快照**——
+  -- 不是本函式的新設計，是 LS-143 從一開始就有的既有語意，R3 合併進單一迴圈時
+  -- 原樣保留（見下方迴圈內「鎖內重新評估」如何使用這個集合，以及為什麼「只有
+  -- 快照時就已經是候選的家庭」才有資格走 cascade 分支——反例見
+  -- `delete_account_race_*.sql`：owner 2 呼叫當下 owner 1 還在，owner 2 的快照
+  -- 不含這個家庭，即使 owner 2 鎖到的時候 owner 1 已經離開、家庭「看起來」唯一
+  -- 成員了，owner 2 仍然只能走情況 3 的一般離開路徑、觸發既有 owner 不變量
+  -- trigger 拿 LS001 重試——這是既有、刻意的行為，不是本次合併要修的東西）。
+  select coalesce(array_agg(fm.family_id), '{}') into v_solo_candidates
+    from public.family_members fm
+   where fm.user_id = v_uid
+     and not exists (
+       select 1 from public.family_members other
+        where other.family_id = fm.family_id and other.user_id <> v_uid
+     );
+
+  -- 情況 2＋3（R3 合併，見上方 migration 檔頭「修訂歷史」）：家庭來源＝「呼叫者
+  -- 目前所屬的家庭」∪「呼叫者還有未軟刪 media 的家庭」，單一遞增序迴圈。
+  for v_family_id in
+    select fm.family_id from public.family_members fm where fm.user_id = v_uid
+    union
+    select distinct m.family_id from public.media m
+     where m.uploaded_by = v_uid and m.deleted_at is null
+    order by 1
+  loop
+    -- 先鎖住整個家庭的 family_members（不只是呼叫者自己那一列——這個家庭可能
+    -- 呼叫者根本不是成員，鎖的是「這個家庭現有的全部成員」，比照
+    -- finalize_account_deletion() 的既有寫法），再鎖 families（FOR UPDATE，理由
+    -- 見上方檔頭）——同一個家庭內任何後續動作都排在這兩把鎖之後。
+    perform 1 from public.family_members where family_id = v_family_id for update;
+    perform 1 from public.families f where f.id = v_family_id for update;
+
+    -- 鎖內用全新查詢重新判斷呼叫者現在是不是這個家庭的成員。
+    if exists (
+      select 1 from public.family_members fm2
+       where fm2.family_id = v_family_id and fm2.user_id = v_uid
+    ) then
+      if v_family_id = any(v_solo_candidates) and not exists (
+        select 1 from public.family_members other
+         where other.family_id = v_family_id and other.user_id <> v_uid
+      ) then
+        -- 情況 2：取鎖前的快照就已經是候選（見上方），鎖內用全新查詢重新評估
+        -- 仍然是唯一成員——LS-143 R2 m2「兩段式」的第二段。整個家庭連同底下
+        -- 資料一併刪除（cascade：albums／diaries／media／album_media／
+        -- diary_media／comments／reactions／invites／join_requests／
+        -- content_reports／blocked_users／feed_items／family_members 全部隨之
+        -- 消失）。
+        delete from public.families f where f.id = v_family_id;
+      else
+        -- 情況 3：不是候選（一般成員，快照當下就不是唯一成員），或曾是候選但
+        -- 鎖內重新評估已經不再是唯一成員（例如快照之後有人被 approve_join 加入
+        -- ——LS-143 R2 m2 的既有保護，見
+        -- `delete_account_vs_approve_join_*.sql`）——皆走一般路徑：自己的內容
+        -- 依既有 soft delete 策略處理，然後離開家庭。家庭本身與其他成員的內容
+        -- 完全不受影響。這句 DELETE 觸發的既有 trigger
+        -- （private.enforce_family_has_owner()）是「家庭必須恆有 ≥1 owner」的
+        -- 權威防線，會再對這個家庭的 families 列取鎖（FOR NO KEY UPDATE）——
+        -- 此刻已經持有上面的 families FOR UPDATE 鎖，不會產生新的跨交易等待；
+        -- 若這句 DELETE 讓家庭剩 0 位 owner（見 `delete_account_race_*.sql` 的
+        -- 既有情境），trigger 會擋下並回 LS001、整個呼叫隨事務回滾，使用者
+        -- 需要重試——這是既有、刻意的自我修復路徑，本次合併不改變它。
+        update public.diaries d
+           set deleted_at = now(), deleted_by = v_uid
+         where d.author_id = v_uid and d.deleted_at is null and d.family_id = v_family_id;
+
+        update public.albums a
+           set deleted_at = now(), deleted_by = v_uid
+         where a.created_by = v_uid and a.deleted_at is null and a.family_id = v_family_id;
+
+        update public.comments c
+           set deleted_at = now(), deleted_by = v_uid
+         where c.author_id = v_uid and c.deleted_at is null and c.family_id = v_family_id;
+
+        delete from public.family_members where family_id = v_family_id and user_id = v_uid;
+      end if;
+    end if;
+    -- 呼叫者不是這個家庭的成員（已退出／被移除、只留有 media）：上面整個 if 是
+    -- no-op，直接進下面的 media 軟刪。
+
+    -- media 軟刪（不論上面走哪個分支）：這個家庭裡呼叫者上傳、尚未軟刪的 media
+    -- 一併處理。若上面剛好把整個家庭 cascade 刪掉，這裡的 WHERE 對已經不存在的
+    -- family_id 自然是 0 筆，不會出錯。觸發的 private.media_storage_sync()
+    -- trigger 對這個家庭的 families 列取鎖，此刻已經持有上面的鎖，不會產生新的
+    -- 跨交易等待。
+    update public.media m
+       set deleted_at = now()
+     where m.uploaded_by = v_uid
+       and m.deleted_at is null
+       and m.family_id = v_family_id;
+  end loop;
+
+  -- 情況 4：標記已請求刪除。auth.users 的實際刪除由另一支以 service_role 執行的
+  -- 流程完成（另票，不在本 migration 範圍——見 20260903084231_delete_account.sql
+  -- 檔頭「規格分歧與取捨 a)」）。
+  update public.profiles set deletion_requested_at = now() where id = v_uid;
+end;
+$$;
+
+revoke execute on function public.delete_my_account() from public, anon;
+grant execute on function public.delete_my_account() to authenticated;
