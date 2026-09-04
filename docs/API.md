@@ -27,6 +27,7 @@
 8. [多寶貝約束（children 一對多）](#8-多寶貝約束children-一對多)
 9. [機械對帳清單（gate 讀取，勿手動改格式）](#9-機械對帳清單gate-讀取勿手動改格式)
 10. [Edge Functions](#10-edge-functions)
+11. [營運操作手冊](#11-營運操作手冊)
 
 ---
 
@@ -61,7 +62,8 @@
 | 表 | 讀 | 新增 | 修改 | 刪除 | 備註 |
 |---|---|---|---|---|---|
 | `profiles` | 同家庭成員互看 | 由 `auth.users` insert trigger 自動建立；INSERT grant／`profiles_insert` policy 仍在（未被 revoke，LS-107 `ensureProfileExists` 的冪等 upsert 靠它），client 慣例上不直接 insert，若呼叫則是 upsert 冪等（`ON CONFLICT DO NOTHING`） | 僅自己 | ❌ 無 delete policy | 帳號刪除走 Auth 側 cascade |
-| `families` | 我所屬的家庭 | 任何登入者（自建家庭） | `name`／`require_approval` 兩欄，owner-only | ❌ 無 delete policy | `storage_quota_bytes`／`storage_used_bytes` 兩個額度欄位永遠唯讀——不論身分，client 都改不動（只有 `media` 表的 trigger 與 `service_role` 能寫） |
+| `families` | 我所屬的家庭 | 任何登入者（自建家庭），但 (a) 呼叫者已被停權，或 (b) `app_settings.registrations_open = false` 時一律拒絕（`LS052`／`LS054`，LS-179，見 §11） | `name`／`require_approval` 兩欄，owner-only | ❌ 無 delete policy | `storage_quota_bytes`／`storage_used_bytes` 兩個額度欄位永遠唯讀——不論身分，client 都改不動（只有 `media` 表的 trigger 與 `service_role` 能寫）。`suspended_at`／`suspended_reason`（LS-179）：client 完全讀不到、改不動，只有 `service_role`／Dashboard 能寫，見 §11 |
+| `app_settings`（LS-179） | 🔒 完全不可讀（`authenticated` 無 grant、無 policy） | 🔒 唯讀（`service_role` 直寫） | 🔒 唯讀 | 🔒 唯讀 | 全域營運開關（目前只有 `registrations_open`），只透過 `private.registrations_open()`（`SECURITY DEFINER`）供其他函式讀，client 不會直接碰到這張表，見 §11 |
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子；**不分角色、不分軟刪與否**——owner／member／viewer 都讀得到全部列，含已軟刪的（`deleted_at`／`deleted_by` 對所有人都是可見的唯讀旗標，R1 I3/I4） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | 🔒 **無 DELETE 路徑**（R1 I5：直接硬刪會繞過 30 天保護，policy 與 grant 兩層都關，連 owner 也沒有） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原（重複軟刪 no-op，不刷新時鐘，見 §4），超過拿 `LS043`；已軟刪的孩子不能再被指定為新內容的標記（`LS044`，LS-121 起守門搬到 `diary_children`／`album_children` 連結表的 `BEFORE INSERT` trigger）；既有標記不隨軟刪連動，見 §8 |
@@ -173,6 +175,13 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
   （LS-151 R2 收斂範圍，merge-review R1 i1，`20260903115014_delete_account_edge_support.sql`）
   ——Edge Function 與 `finalize_account_deletion()` 只需要讀這兩欄判斷是否放行，
   沒有寫入需求，也不需要整表 SELECT。
+- `suspended_at`／`suspended_reason`（LS-179，PLAN §10-B）：**client 完全讀不到、
+  改不動**——這兩欄不在 `authenticated` 的任何 grant 清單裡，只有 `service_role`／
+  Dashboard 能寫。非 `NULL` 時，這個使用者對「所有」家庭資料的讀寫與既有 RPC
+  入口一律拒絕（`LS052`），但**自己的 `profiles` 列不受影響**——他仍然看得到、
+  改得動自己的 `display_name`／`avatar_url`（範圍決策，理由見 migration
+  `20260904212530_suspension_and_registrations.sql` 第 3 段）。停權操作方式見
+  §11。
 
 ### `families`
 - `storage_quota_bytes`／`storage_used_bytes`：**唯讀**，client 完全看不到自己能改的欄位
@@ -184,7 +193,13 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
 - **建立家庭**：`insert into families (name, created_by)`，`created_by` 必須是自己
   （`auth.uid()`）。DB trigger 會自動把建立者寫成第一位 owner——不需要，也不能，額外自己
   `insert` 一列 `family_members`。這條路徑對任何登入者開放（PLAN §9-C5：陌生人下載
-  app 後必須能自建家庭）。
+  app 後必須能自建家庭），但會被下面兩個旗標擋下（LS-179）：呼叫者已被停權
+  （`LS052`）或 `app_settings.registrations_open = false`（`LS054`，PLAN §10-A(3)）。
+  **只擋這條自建路徑**——憑邀請碼加入既有家庭（`request_join`／`approve_join`）
+  完全不碰 `families` 表，不受 `registrations_open` 影響。
+- `suspended_at`／`suspended_reason`（LS-179，PLAN §10-B）：client 完全讀不到、
+  改不動。非 `NULL` 時，這個家庭的全部成員（不分角色）對這個家庭的資料一律
+  拒絕讀寫（`LS053`）；成員對「其他」家庭不受影響。停權操作方式見 §11。
 
 ### `family_members`
 - 加入家庭的唯一路徑是 `request_join` RPC（見 §4／§7），owner 審核走 `approve_join`；
@@ -1541,6 +1556,9 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS045` | 不是相簿建立者本人，或雖是建立者但已不是該家庭 owner/member，無法設定寶貝標記 | `set_album_children`（LS-121） |
 | `LS050` | 你是家庭的唯一 owner，且家庭還有其他成員，須先轉移 owner 身份才能刪除帳號——`DETAIL` 帶 JSON 陣列列出全部需要轉移的家庭（`[{"family_id","family_name"}, ...]`），見 §4 `delete_my_account` | `delete_my_account`（LS-143） |
 | `LS051` | 帳號已請求刪除（`deletion_requested_at` 非 `NULL`），過渡期間不能再建立新資料——沒有輸入可換，只能等 Edge Function `delete-account` 完成刪除 | `families`／`family_members`／`media`／`diaries`／`albums`／`children`／`comments` 的 `BEFORE INSERT` trigger（`private.enforce_account_not_deletion_requested()`，LS-151），涵蓋直接 `.insert()` 與 `create_child`／`create_diary_entry`／`create_comment`／`approve_join`／建立新家庭自動寫入 owner 等 RPC 路徑，見 §2「過渡期擋寫」 |
+| `LS052` | 這個帳號已被暫停使用，請聯絡我們 | `profiles.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時：(a) `private.enforce_not_suspended()`——掛在 `family_members`／`invites`／`children`／`media`／`albums`／`album_media`／`diaries`／`diary_media`／`diary_children`／`album_children`／`comments`／`reactions`／`content_reports`／`blocked_users`／`join_requests` 十五張表的 `BEFORE INSERT/UPDATE/DELETE`，涵蓋直接 `.insert()`/`.update()`/`.delete()` 與全部 `SECURITY DEFINER` RPC（trigger 不受 `SECURITY DEFINER` 影響）；(b) `private.enforce_caller_not_suspended_for_families()`——`families` 的 `BEFORE INSERT`（自建新家庭）；(c) `list_join_requests`／`get_my_join_request`／`list_comments` 三支唯讀 `SECURITY DEFINER` RPC 各自的明確檢查（這三支沒有寫入、又繞過 RLS 讀，前兩種機制都碰不到）。**讀取（SELECT）與 Storage 簽名上傳**：透過 `private.family_ids()`／`owned_family_ids()`／`contributor_family_ids()`／`uploadable_family_ids()` 四支集合函式收斂，停權者這四個集合皆為空，對應的 `_select` policy 與 `storage.objects` 四條 policy 靜默回 0 列／`42501`，不會有 `LS052`（RLS 違反沒有自訂碼這條路） |
+| `LS053` | 這個家庭已被暫停使用，請聯絡我們 | `families.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時，觸發路徑同 `LS052` 的 (a)／(c)（家庭停權只影響該家庭本身的資料，成員對其他家庭不受影響）；讀取與 Storage 同樣經四支集合函式收斂成 0 列／`42501` |
+| `LS054` | 目前暫停開放新註冊，請稍後再試 | `private.enforce_registrations_open()`——`families` 的 `BEFORE INSERT`（自建新家庭），`app_settings.registrations_open = false` 時觸發（PLAN §10-A(3)，LS-179）。**只擋自建新家庭**：憑邀請碼加入既有家庭（`request_join`／`approve_join`）不碰 `families` 表，不受影響 |
 | `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下／`family_id` 不可變 trigger 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE、`children` INSERT/UPDATE/DELETE——`children` 的 `DELETE` 自 R1 I5 起也收斂，連 owner 都拿這個碼）會拿到的標準碼；也是 `diaries`／`albums`／`comments`（`private.enforce_deletion_attribution()`，LS-57）與 `children`（`private.enforce_children_family_immutable()`，LS-66，LS-57 R2／I1 對齊後改用裸 `42501`，不再是原本 LS-66 定案時的專屬碼）的 `family_id` 不可變 trigger 統一 raise 的碼；`albums` 直接 `.update()` 竄改 `deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起也在欄位級 grant 被收回，同樣回這個碼（見 §2/§3）——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字，trigger 主動 raise 的則帶自訂中文訊息，但 SQLSTATE 一樣是 `42501`。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
 
 **沒有被上面任何一支 RPC 包住、可能直接從 PostgREST 冒出來的標準 Postgres 錯誤碼**
@@ -1586,7 +1604,11 @@ PR #95 review F1）訂正：這裡原本誤寫成跟 `LS041`–`LS043` 一起歸
 不同：一個是直接對 `family_members` 做會導致 0 owner 的操作，一個是呼叫
 `delete_my_account()`）。`LS051`（LS-151 補齊，歸層 `rejected`——帳號已請求刪除，
 過渡期間的寫入一律拒絕，沒有輸入可換、也沒有使用者能自己做的「別的事」，只能等
-Edge Function 完成刪除）。三層（`validationRetryable`／`retryableSystem`／
+Edge Function 完成刪除）。`LS052`／`LS053`／`LS054`（LS-179 補齊，歸層皆
+`rejected`——三者都是狀態層級的拒絕，沒有輸入可換：`LS052`／`LS053`（帳號／家庭
+被停權）只能等 Dashboard 解除；`LS054`（暫停開放新註冊）只能等關閉的旗標重新
+打開，跟 `LS051`（過渡期擋寫）同一組「純狀態拒絕、沒有使用者能自己做的別的事」
+的理由）。三層（`validationRetryable`／`retryableSystem`／
 `rejected`）歸類由 `LittleSproutTests/AppErrorTests.swift` 的列舉測試逐碼釘住。
 **尚缺碼：無**。之後每新增一個自訂碼，本表與 `LSErrorCode` 必須同 PR 更新，否則
 `error-codes-check` 會紅（任一邊多都算；gate 只認本節表格列的 `` `LSnnn` `` 首欄，散文提及不計）。
@@ -2119,6 +2141,7 @@ withdraw_join(uuid)
 album_children
 album_media
 albums
+app_settings
 blocked_users
 children
 comments
@@ -2593,3 +2616,69 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   `SUPABASE_URL`／`SUPABASE_SERVICE_ROLE_KEY` 由 Supabase 平台自動注入，不需要
   另外設定；`PUSH_DISPATCH_PROVIDER` 正式站不設定（預設值 `"apns"` 即為正確
   行為）。
+
+---
+
+## 11. 營運操作手冊
+
+LS-179（PLAN §10-A(3)／§10-B）：以下全部是 Dashboard（或 `supabase db query
+--linked` / SQL Editor）手動下的 SQL，**改欄位當下立即生效，不需要改任何程式碼
+或重新部署**。實作見 `supabase/migrations/20260904212530_
+suspension_and_registrations.sql`；三者共用的判斷 helper（`private.
+caller_is_active()`／`private.family_is_active(uuid)`／`private.
+registrations_open()`）只讀對應旗標，不做任何額外邏輯。
+
+### 停權一位使用者
+
+```sql
+update public.profiles
+   set suspended_at = now(), suspended_reason = '寫下原因（稽核用，client 讀不到）'
+ where id = '<user_id>';
+```
+
+生效範圍：這個使用者對「所有」家庭資料（不限於他目前所屬的家庭）的 RLS 讀寫、
+Storage 讀寫上傳、既有 RPC 入口一律拒絕（`LS052`）；不影響其他使用者。他自己的
+`profiles` 列（顯示名稱／頭像）與已核發、尚未過期的簽名 URL 不受影響（簽名 URL
+本就短效，見 §6，本票不做撤銷）。
+
+**解除停權**：
+
+```sql
+update public.profiles
+   set suspended_at = null, suspended_reason = null
+ where id = '<user_id>';
+```
+
+### 停權整個家庭
+
+```sql
+update public.families
+   set suspended_at = now(), suspended_reason = '寫下原因'
+ where id = '<family_id>';
+```
+
+生效範圍：這個家庭的全部成員（不分 owner／member／viewer）對這個家庭的資料一律
+拒絕讀寫（`LS053`）；成員若還屬於其他（未停權的）家庭，對那些家庭不受影響
+（Phase 3 多家庭前置）。
+
+**解除**：`update public.families set suspended_at = null, suspended_reason = null where id = '<family_id>';`
+
+### 關閉／重新開放新註冊
+
+```sql
+update public.app_settings set registrations_open = false, updated_at = now() where id = true;
+```
+
+生效範圍：**只擋自建新家庭**這一步（`LS054`）——既有使用者登入、既有家庭憑邀請
+碼加入完全不受影響（PLAN §10-A(3) 的取捨：本票只做「關掉」，不做「候補名單」）。
+Auth 端（Apple／Google／Email 註冊）也不受影響，避免與登入流程打架。
+
+**重新開放**：`update public.app_settings set registrations_open = true, updated_at = now() where id = true;`
+
+### 查目前狀態
+
+```sql
+select id, suspended_at, suspended_reason from public.profiles where suspended_at is not null;
+select id, name, suspended_at, suspended_reason from public.families where suspended_at is not null;
+select registrations_open from public.app_settings where id = true;
+```
