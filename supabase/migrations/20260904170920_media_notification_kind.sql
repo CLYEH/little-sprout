@@ -1,0 +1,19 @@
+-- LS-175（LS-22 後端切片）——notification_kind 新增 'media' 值。
+--
+-- 獨立成自己的檔案／自己的交易，理由同上一支 migration（20260904170849）與既有
+-- 先例 `20260903091313_notification_kind_report.sql` 檔頭：ALTER TYPE ... ADD
+-- VALUE 新增的列舉值要等交易 commit 之後才能被「需要排序位置」的操作使用，下一支
+-- migration 的 trigger 函式本體會把常數 'media' 轉型並傳給
+-- private.record_notification_event()，必須拆開兩個各自獨立 commit 的 migration。
+--
+-- 為什麼新增一個 kind，不沿用既有的 'album'（merge-reviewer LS-172 R1 i1 →
+-- LS-175）：`private.notify_album_created()` 的 'album' kind 只在**建立相簿本身**
+-- 時觸發，`target_id` 是相簿自己的 id；本票的 'media' 事件 `target_id` 是
+-- family_id（見上一支 migration 的完整說明），兩者語意完全不同——沿用 'album'
+-- 會讓同一個 kind 值同時代表兩種不相容的 target 形狀，`push-dispatch` 的文案
+-- 矩陣與任何未來讀這張表的程式碼都得額外判斷「這筆 album 事件的 target_id 到底
+-- 是相簿 id 還是 family id」，比多一個列舉值的成本高得多。新增獨立的 'media' kind
+-- 讓 (kind, target_type) 的組合本身就唯一決定 target_id 的語意，這與既有四種
+-- kind（comment/reaction 指向被留言／按讚的目標；diary/album 指向內容自己）
+-- 一貫的設計原則一致：kind 決定 target 的形狀，不是事後靠 target_type 猜。
+alter type public.notification_kind add value 'media';
