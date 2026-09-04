@@ -19,7 +19,9 @@
 //      的節點數。設計端依彙整段寫 `design/evidence/<票號>-r<n>-overflow.json`：每類一筆代表（e.g. 的 id）＋
 //      `classification`（含「同類 N 例」），補 `ticket`／`round`／`head_sha`，`tree_hash` 抄 SUMMARY 的值（LS-168；見
 //      ui-designer.md）。`SCAN_OVERLAY_RE = "Action Bar|…"`（字串）覆寫第五支的覆蓋層名稱，`SCAN_HASH_DEBUG = "<id>"` 印
-//      該節點的雜湊行。
+//      該節點的雜湊行。`SCAN_HASH_ONLY = true` 只跑雜湊走訪、印 `SUMMARY-HASH total_nodes=… tree_hash=…`；`SCAN_SKIP_HASH = true`
+//      跑五支不算雜湊（SUMMARY 印 `tree_hash=skipped`）——8000 節點級的稿一次 execute 跑完雜湊＋五支會 `InternalError:
+//      interrupted`（LS-152 VR R3 實測），拆成同一稿態、中間無任何寫入的連續兩次唯讀 execute，收據 `tree_hash` 抄第一次（LS-171）。
 //   2. node：`require` 本檔取得純函數（`scanAll` 與五支 `scan*`、`treeHash`／`treeHashLines`／`canonNode`），
 //      `scripts/design/overflow-scan.test.js` 用合成節點樹驗演算法、並以 python 交叉驗 tree_hash 同值；CI rules job 的自測
 //      step 跑它。掃描核心不碰 Pencil API，Pen 不在時也能驗。注意：.pen JSON 只存 root／absolute 節點的 x／y，layout 子節點
@@ -67,6 +69,10 @@
 //       design-evidence-check.sh 用 scripts/gates/design_tree_hash.py 對 `head_sha` 那份 .pen 算同一演算法比對——不符即
 //       「收據不是對這份 .pen 單一次掃描」（LS-152 r1 兩段拼接、LS-142 r4 拆段跑，gate 原本全盲）。Pencil execute 沒有
 //       crypto，所以用 FNV-1a 而非 SHA-256；`SCAN_HASH_DEBUG = "<節點 id>"` 會 Print 該節點那一行，與 .py `--dump <id>` 對照。
+//       **LS-171**：雜湊走訪必須 `Get(visit, {includePathGeometry: true})`——Pencil `Get` 預設把 path 節點的 `geometry` 省略成
+//       字面字串 `"..."`（LS-152 VR R3 三方比對 6383b2fa：py＝js `03e7804b035d8e4b`、Pencil 不帶選項 `84420d7b6419b40e`，把磁碟
+//       JSON 的 8 個 geometry 改成 `"..."` 即重現；帶選項後三方同值），且 `cmp/Photo Corner` 全專案共用，漏帶就對所有含 path
+//       的稿 fail-closed。空字串 geometry（`mzo0K`）兩端都是 `""`，原樣參與雜湊。overflow-scan.test.js 以原始碼斷言釘住這個選項。
 //       盲區：只證明「收據對應這份 .pen 的節點樹」（`children` 全樹；頂層 `variables`／`themes`／`fileToken` 不在雜湊內——
 //       Pencil `Get` 只走節點樹，掃描後只改 design token 再落地看不到，merge-review R1 N4），不證明五支數字算對（那要 CI 跑 Pencil）。
 // 輸出每筆都帶 name／parent 等欄位方便分類；design-evidence-check.sh 只驗 node／node_a／node_b／classification、
@@ -480,15 +486,22 @@ if (typeof Get === "function" && typeof Print === "function") {
   const verbose = typeof SCAN_VERBOSE !== "undefined" && SCAN_VERBOSE === true;
   const overlayRe = typeof SCAN_OVERLAY_RE !== "undefined" && SCAN_OVERLAY_RE ? SCAN_OVERLAY_RE : undefined;
   const hashDebug = typeof SCAN_HASH_DEBUG !== "undefined" && SCAN_HASH_DEBUG ? String(SCAN_HASH_DEBUG) : "";
+  const hashOnly = typeof SCAN_HASH_ONLY !== "undefined" && SCAN_HASH_ONLY === true;
+  const skipHash = typeof SCAN_SKIP_HASH !== "undefined" && SCAN_SKIP_HASH === true;
   let total = 0;
   const hashAcc = [0, 0, 0, 0];
+  // LS-171：includePathGeometry 必帶——Pencil Get 預設把 path 的 geometry 省略成 "..."，雜湊會與 js／py 不同（見檔頭）
   Get((n, c) => {
     total++;
+    if (skipHash) return;
     const line = canonNode(n, c.parentCtx ? c.parentCtx.node.id : null, c.index);
     addLimbs(hashAcc, fnv1a64(line));
     if (hashDebug && n.id === hashDebug) Print("HASHLINE " + line);
-  });
-  const treeHashHex = hex64(hashAcc);
+  }, { includePathGeometry: true });
+  const treeHashHex = skipHash ? "skipped" : hex64(hashAcc);
+  if (hashOnly) {
+    Print("SUMMARY-HASH total_nodes=" + total + " tree_hash=" + treeHashHex);
+  } else {
   const abs = {};
   const snap = [];
   Get((n, c) => {
@@ -519,6 +532,7 @@ if (typeof Get === "function" && typeof Print === "function") {
   );
   for (const block of compactLines(out)) Print(block);
   if (verbose) for (const key of Object.keys(s)) Print("JSON " + key + " " + JSON.stringify(s[key]));
+  }
 } else if (typeof module === "object" && module && module.exports) {
   module.exports = { AREA_MIN, TOL, CORNER_OUT, CORNER_RE, BLEED_RE, OVERLAY_RE, buildIndex, overlapArea, contains, cornerExpected, compactLines, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanAll, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
 } else {
