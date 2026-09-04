@@ -2442,9 +2442,21 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   | `diary` | 「{actor}寫了一篇日記」 | 「{actor}新增了 {N} 篇日記」（防禦性分支，見下） |
   | `album` | 「{actor}新增了相簿」 | 「{actor}新增了 {N} 本相簿」（防禦性分支，見下） |
   | `media`（LS-175） | 「{actor}新增了一張照片」 | 「{actor}新增了 {N} 張照片」（例：「爸爸新增了 50 張照片」，票文原始範例） |
+  | `report`（LS-175 R2，merge-review R1 m2） | 「你的{標籤}收到一則檢舉」 | 「你的{標籤}收到了 {N} 則檢舉」 |
 
   `actor` 取 `claim_notification_events()` 已 `COALESCE` 過的
-  `actor_display_name`（`NULL` fallback「家人」）。
+  `actor_display_name`（`NULL` fallback「家人」）——**`report` 是唯一沒有用到
+  `actor` 的分支**：`report_content()`（LS-149）寫入的 `actor_id` 是檢舉人，不是
+  被檢舉內容的作者，沿用 `comment`／`reaction` 那種「{actor} 對你的 xxx 做了
+  什麼」句型會讓收件人誤以為檢舉人在跟自己互動；`target_type` 用被檢舉內容原本
+  的類型（`album`／`media`／`diary`／`comment`），`TARGET_LABEL` 可以直接沿用。
+  這是**中性 fallback**，不是產品定案文案——`report` 事件從 LS-149 落地起就會
+  寫進 `notification_events`，但 `push-dispatch`（LS-172）當時的型別守門
+  （`isNotificationKind`／`isContentTargetType`）沒有涵蓋它，若被 claim 到會讓
+  **整批**（不只 report 那幾筆）被判定失敗、SQL 面卻已標記 `sent_at`＝永久漏送
+  （LS-96 池項 `841d97da`，merge-review R1 於 PR #284 覆核成立並裁定本票直接
+  補）；本票只補到「不再整批漏送」，是否要推播、推播給誰（例如只給 owner）
+  是後續的產品決定。
 
   **已知、刻意的規格分歧（票文字面 vs. 實際可用資料，`album`／`diary` 兩個既有
   kind，LS-172 落地時的記錄）**：票文給的範例把 `album` kind 對應到「爸爸新增了

@@ -15,6 +15,8 @@ import {
   type ClaimedEvent,
   type Deps,
   handleRequest,
+  isContentTargetType,
+  isNotificationKind,
   runDispatch,
   StubApnsProvider,
 } from "./handler.ts";
@@ -176,6 +178,55 @@ Deno.test("buildMessageBody：media，event_count=2 → 帶阿拉伯數字（跟
     buildMessageBody("media", 2, "family", "阿嬤"),
     "阿嬤新增了 2 張照片",
   );
+});
+
+// LS-175 R2（merge-review R1 m2）：report（中性 fallback，不用 actor 名字——
+// 檢舉人不是「對你的 xxx 做了什麼」的那個 actor 語意）。
+Deno.test("buildMessageBody：report，event_count=1，target_type=album → 「你的相簿收到一則檢舉」", () => {
+  assertEquals(
+    buildMessageBody("report", 1, "album", "任何人"),
+    "你的相簿收到一則檢舉",
+  );
+});
+
+Deno.test("buildMessageBody：report，event_count=3，target_type=media → 「你的照片收到了 3 則檢舉」", () => {
+  assertEquals(
+    buildMessageBody("report", 3, "media", "任何人"),
+    "你的照片收到了 3 則檢舉",
+  );
+});
+
+// ---------------------------------------------------------------------------
+// 1b. 型別守門（LS-175 R2，merge-review R1 m2／i2）：isNotificationKind／
+// isContentTargetType 從 index.ts 搬進 handler.ts 的理由見該檔對這兩支函式的
+// 檔頭說明——這裡直接測到正式碼（不是複製一份可能漂移的影子版本）。逐一列舉
+// 資料庫兩個 enum 目前的全部值，不是只挑幾個代表——mutation（例如漏加
+// 'report'）會讓對應那一行斷言紅，不會被其他案例掩蓋。
+// ---------------------------------------------------------------------------
+
+Deno.test("isNotificationKind：認得 notification_kind 目前全部 6 個 enum 值（含 LS-149 的 report、LS-175 的 media）", () => {
+  const allKnownValues = [
+    "comment",
+    "reaction",
+    "diary",
+    "album",
+    "media",
+    "report",
+  ];
+  for (const v of allKnownValues) {
+    assertEquals(isNotificationKind(v), true, `應該認得 ${v}`);
+  }
+  assertEquals(isNotificationKind("unknown-kind"), false);
+  assertEquals(isNotificationKind(null), false);
+});
+
+Deno.test("isContentTargetType：認得 content_target_type 目前全部 5 個 enum 值（含 LS-175 的 family）", () => {
+  const allKnownValues = ["album", "media", "diary", "comment", "family"];
+  for (const v of allKnownValues) {
+    assertEquals(isContentTargetType(v), true, `應該認得 ${v}`);
+  }
+  assertEquals(isContentTargetType("unknown-type"), false);
+  assertEquals(isContentTargetType(undefined), false);
 });
 
 // ---------------------------------------------------------------------------

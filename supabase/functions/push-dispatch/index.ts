@@ -12,10 +12,10 @@ import { createClient } from "npm:@supabase/supabase-js@2.114";
 import {
   type BatchRecipientRow,
   type ClaimedEvent,
-  type ContentTargetType,
   type Deps,
   handleRequest,
-  type NotificationKind,
+  isContentTargetType,
+  isNotificationKind,
   StubApnsProvider,
 } from "./handler.ts";
 import { buildRealApnsProvider } from "./apns.ts";
@@ -73,32 +73,14 @@ const CONCURRENCY = 8; // 有上限的併發送出數（LS-172 R2，merge-review
 // 完整跑完（結構性保證，不是估算），設計取捨與殘餘風險見 docs/API.md §10。
 const TIME_BUDGET_MS = 60_000;
 
-// 型別守門：資料庫的 enum 值只可能是這幾種，供 buildProdDeps 的行轉換使用。
-//
-// **已知、獨立於本票的缺口（LS-175 實作時發現，不在本票範圍內修）**：
-// `notification_kind` 資料庫列舉還有一個 'report' 值（LS-149，
-// `20260903091313_notification_kind_report.sql`，`report_content()` 觸發），
-// 這裡從 LS-172 落地當下就沒有涵蓋——若 `claim_notification_events()` claim 到
-// 一批混著 kind='report' 的事件，這支守門函式會判它不是已知的 NotificationKind，
-// `claimEvents` 因此把**整批**（不只 report 那幾筆）當成失敗回傳
-// `{events: [], error: …}`，`runDispatch` 記 log 後直接 break——但 SQL 面的
-// `claim_notification_events()` 早已標記那一批全部的 `sent_at`（先 claim 再送
-// 是既有取捨，見 docs/API.md §3），代表這一批（含任何剛好同批的 comment／
-// reaction／diary／album／media 事件）會被永久漏送，不會重試。這是 push-dispatch
-// （LS-172）與檢舉通知（LS-149）兩支票各自獨立落地、彼此沒有互相涵蓋對方造成的
-// 既有缺口，不是本票新增的——本票新增 "media" 時特意把它也加進下面兩個守門，
-// 避免重蹈同一個坑；'report' 本身的修法（多半是 push-dispatch 也要能組出檢舉
-// 通知的文案並加進 buildMessageBody 的 NotificationKind union）留給後續票，
-// 已在 LS-175 handoff 記錄回報 orchestrator。
-function isNotificationKind(v: unknown): v is NotificationKind {
-  return v === "comment" || v === "reaction" || v === "diary" ||
-    v === "album" ||
-    v === "media";
-}
-function isContentTargetType(v: unknown): v is ContentTargetType {
-  return v === "album" || v === "media" || v === "diary" || v === "comment" ||
-    v === "family";
-}
+// 型別守門 `isNotificationKind`／`isContentTargetType`（資料庫的 enum 值只可能
+// 是這幾種，供下面 `claimEvents` 的行轉換使用）搬進 `handler.ts` 了——這裡是
+// `index.ts` 在模組層級呼叫 `Deno.serve()`（見檔尾），`import` 這個檔案會嘗試
+// 綁定 HTTP listener，導致這兩支純函式從落地起就沒有任何測試覆蓋，正是
+// LS-149 新增 `'report'` 這件事能悄悄漏掉守門這麼久的結構原因（merge-review
+// R1-i2）。搬到 `handler.ts` 之後 `handler.test.ts` 才能直接測到正式碼；
+// `'report'` 的守門缺口本身見 `handler.ts` 對這兩支函式的檔頭說明與 LS-96
+// 池項 `841d97da`（LS-175 R2 已補上 `'report'`）。
 
 function buildProdDeps(): Deps {
   return {
