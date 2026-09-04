@@ -38,18 +38,34 @@ extension CreateChildView {
     /// 預覽圖，見 `AvatarPickerLoader`）直接寫進 `@State`，不再靠計算屬性每次 `body` 重新
     /// 解碼一次全尺寸原圖（merge-review R1 M2）。載入失敗落 `avatarLoadErrorMessage` 顯示
     /// 出來，不是原本 `try?` 靜默吞掉、預覽悄悄退回佔位。
+    ///
+    /// R3 n2：`.task(id:)` 取消舊 task 時，舊 task 不會立刻停在原地——它會繼續往下跑到
+    /// `defer`／`catch` 才真正結束，跟新 task（新選的那張圖）幾乎同時在跑。若不比對世代，
+    /// 舊 task 的 `defer { isLoadingAvatar = false }` 會蓋掉新 task 剛設成 `true` 的進度圈
+    /// （連選兩張時第二張還在載入，圈圈卻先消失），非 `CancellationError` 的例外也可能把
+    /// 新 task 已經寫好的預覽圖清掉、留下舊的錯誤文案。做法：一進函式就領一個世代號，寫任何
+    /// 會被畫面讀到的狀態前都先確認自己仍是最新世代；`CancellationError` 本來就什麼都不寫，
+    /// 不需要世代判斷。
     func loadPickedAvatar() async {
         guard let pickedAvatarItem else { return }
+        avatarLoadGeneration += 1
+        let generation = avatarLoadGeneration
         isLoadingAvatar = true
         avatarLoadErrorMessage = nil
-        defer { isLoadingAvatar = false }
+        defer {
+            if generation == avatarLoadGeneration {
+                isLoadingAvatar = false
+            }
+        }
         do {
             let loaded = try await AvatarPickerLoader.load(pickedAvatarItem)
+            guard generation == avatarLoadGeneration else { return }
             pickedAvatarData = loaded.data
             pickedAvatarPreview = loaded.previewImage
         } catch is CancellationError {
-            // 被下一次選取取消——狀態交給後面那個 task 寫，這裡什麼都不做。
+            // 被下一次選取取消——狀態交給後面那個 task 寫，這裡什麼都不做（一律靜默）。
         } catch {
+            guard generation == avatarLoadGeneration else { return }
             pickedAvatarData = nil
             pickedAvatarPreview = nil
             avatarLoadErrorMessage = "這張照片沒辦法使用，請換一張試試。"

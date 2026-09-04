@@ -28,6 +28,9 @@ struct EditChildView: View {
     @State private var pickedAvatarPreview: UIImage?
     @State private var isLoadingAvatar = false
     @State private var avatarLoadErrorMessage: String?
+    // R3 n2：世代計數器，理由同 `CreateChildView.avatarLoadGeneration` 文件註解——擋掉被
+    // 取消的舊 task 在 `defer`／`catch` 裡蓋掉新 task 已寫入的載入狀態。
+    @State private var avatarLoadGeneration = 0
     @Environment(\.dismiss) private var dismiss
 
     init(childrenStore: ChildrenStore, child: Child) {
@@ -75,18 +78,30 @@ struct EditChildView: View {
 
     /// R2 M2/M3：同 `CreateChildView.loadPickedAvatar` 文件註解——`.task(id:)` 自動取消
     /// 前一次選取的載入，載入失敗會落 `avatarLoadErrorMessage` 顯示出來，不是靜默吞掉。
+    ///
+    /// R3 n2：世代守門，理由同 `CreateChildView+Avatar.swift` 的 `loadPickedAvatar()` 文件
+    /// 註解——被取消的舊 task 仍會跑到 `defer`／`catch` 才結束，寫任何狀態前先確認自己仍是
+    /// 最新世代；`CancellationError` 一律靜默，不需要世代判斷。
     private func loadPickedAvatar() async {
         guard let pickedAvatarItem else { return }
+        avatarLoadGeneration += 1
+        let generation = avatarLoadGeneration
         isLoadingAvatar = true
         avatarLoadErrorMessage = nil
-        defer { isLoadingAvatar = false }
+        defer {
+            if generation == avatarLoadGeneration {
+                isLoadingAvatar = false
+            }
+        }
         do {
             let loaded = try await AvatarPickerLoader.load(pickedAvatarItem)
+            guard generation == avatarLoadGeneration else { return }
             pickedAvatarData = loaded.data
             pickedAvatarPreview = loaded.previewImage
         } catch is CancellationError {
-            // 被下一次選取取消，狀態交給後面那個 task 寫。
+            // 被下一次選取取消，狀態交給後面那個 task 寫（一律靜默）。
         } catch {
+            guard generation == avatarLoadGeneration else { return }
             pickedAvatarData = nil
             pickedAvatarPreview = nil
             avatarLoadErrorMessage = "這張照片沒辦法使用，請換一張試試。"
