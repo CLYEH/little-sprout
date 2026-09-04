@@ -367,6 +367,9 @@ const doc = {
         { type: "ref", id: "Rr7q", ref: "Cmp1", name: "Row", width: "fill_container", descendants: { n1hzsr: { enabled: false, y: 0 }, Zz: { content: "值" } } },
       ] },
     { type: "frame", id: "Cmp1", name: "cmp/Row", x: 100, y: 254.5, width: 100, reusable: true, children: [{ type: "text", id: "Zz", name: "V", enabled: true }] },
+    // LS-171：path 節點（cmp/Photo Corner 的 Corner Shape 形狀）＋空 geometry 的 path（真實稿 mzo0K）——Pencil Get 預設把 geometry 省略成 "..."
+    { type: "path", id: "Pp5kQ", name: "Corner Shape", x: 0, y: 0, width: 26, height: 26, viewBox: [0, 0, 26, 26], fill: "#8E2447", geometry: "M0 14a14 14 0 0 1 14-14l12 0-26 26z" },
+    { type: "path", id: "Sq9uR", name: "Squircle", width: 512, height: 512, viewBox: [0, 0, 512, 512], stroke: "#8E2447", strokeWidth: 3, geometry: "" },
   ],
 };
 const clone = () => JSON.parse(JSON.stringify(doc));
@@ -407,7 +410,34 @@ ok("tree_hash 敏感度：改一個節點的 x／enabled、兄弟換序、搬到
   assert.strictEqual(treeHash(shuffled), H0, "逐行相加：走訪順序無關（但 index 已在行內，兄弟換序仍會變）");
 });
 
-ok("tree_hash js／py 交叉一致：同一份合成 .pen（含 emoji／轉義／浮點／instance descendants）python design_tree_hash.py 算出同值；--dump 行與 canonNode 逐字相同", () => {
+ok("LS-171 geometry：path 的 geometry 被省略成 \"...\"（Pencil Get 不帶 includePathGeometry 的輸出）→ tree_hash 不同；改一個字元也不同；空字串 geometry 原樣參與", () => {
+  const d = clone();
+  let n = 0;
+  const walk = (x) => { if (x.geometry !== undefined) { x.geometry = "..."; n++; } (x.children || []).forEach(walk); };
+  d.children.forEach(walk);
+  assert.strictEqual(n, 2, "fixture 應有兩個帶 geometry 的 path（含一個空字串）");
+  assert.notStrictEqual(treeHash(treeHashLines(d)), H0, "geometry 省略成 \"...\" 必須改變 tree_hash（gate 才抓得到 Pencil 端漏帶選項）");
+  const e = clone();
+  e.children[2].geometry += "z";
+  assert.notStrictEqual(treeHash(treeHashLines(e)), H0);
+  assert.ok(canonNode(doc.children[3], null, 3).includes('"geometry":""'), "空 geometry 以 \"\" 參與雜湊（真實稿 mzo0K 兩端皆為空字串）");
+});
+
+ok("LS-171 原始碼斷言：Pencil 端雜湊走訪（const hashAcc … const abs = {} 之間的視窗）的 Get 帶 {includePathGeometry: true}；拆兩次旗標存在且互斥", () => {
+  const src = require("fs").readFileSync(path.join(__dirname, "overflow-scan.js"), "utf8");
+  // R1 N1：regex 的 [^]*? 會跨過雜湊走訪吃到快照走訪的 options，「把選項搬到快照走訪」（＝還原 bug）的突變體存活；改看雜湊走訪自己的視窗
+  const a = src.indexOf("const hashAcc");
+  const b = src.indexOf("const abs = {}");
+  assert.ok(a > 0 && b > a, "找不到雜湊走訪的視窗（const hashAcc … const abs = {}）");
+  const win = src.slice(a, b);
+  assert.ok(win.includes("addLimbs(hashAcc, fnv1a64(line))"), "視窗內應是雜湊走訪");
+  assert.ok(/includePathGeometry:\s*true/.test(win), "雜湊走訪的 Get 必須帶 includePathGeometry: true，否則 Pencil 端 geometry 是 \"...\"、tree_hash 與 CI 必不同（LS-171）");
+  assert.ok(!/resolveInstances/.test(win), "雜湊走訪不得展開 instance（total_nodes 語意）");
+  assert.ok(src.includes("SCAN_HASH_ONLY") && src.includes("SCAN_SKIP_HASH") && src.includes("SUMMARY-HASH"), "拆兩次 execute 的旗標／輸出必須存在");
+  assert.ok(/hashOnly && skipHash[^]*?throw new Error/.test(src), "SCAN_HASH_ONLY 與 SCAN_SKIP_HASH 同時為 true 必須 throw（R1 N4）");
+});
+
+ok("tree_hash js／py 交叉一致：同一份合成 .pen（含 emoji／轉義／浮點／instance descendants／path geometry）python design_tree_hash.py 算出同值；--dump 行與 canonNode 逐字相同", () => {
   const fs = require("fs");
   const os = require("os");
   const { execFileSync } = require("child_process");
@@ -418,6 +448,8 @@ ok("tree_hash js／py 交叉一致：同一份合成 .pen（含 emoji／轉義�
   assert.strictEqual(got, H0);
   const dump = execFileSync("python3", [py, tmp, "--dump", "Rr7q"], { encoding: "utf8" }).replace(/\n$/, "");
   assert.strictEqual(dump, canonNode(doc.children[0].children[1], "Ab12C", 1));
+  const dumpPath = execFileSync("python3", [py, tmp, "--dump", "Pp5kQ"], { encoding: "utf8" }).replace(/\n$/, "");
+  assert.strictEqual(dumpPath, canonNode(doc.children[2], null, 2), "path 節點（含 geometry）的行 js／py 逐字相同");
   fs.rmSync(path.dirname(tmp), { recursive: true, force: true });
 });
 

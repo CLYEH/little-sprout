@@ -53,7 +53,7 @@ model: opus
 - little-sprout-brand skill 載入狀態（未載入則明說原因，不可靜默）
 - **Pen 路徑**（LS-91）：開工核對到的 active 文件路徑
 - 整體判定：APPROVE／ITERATE＋一段「這份設計的靈魂是什麼／缺什麼」（第 5 輪起若判定爭點可機械複驗，明示「性質：可機械複驗」，LS-68）
-- **重掃比對**（LS-68／LS-122／LS-168）：你用正典腳本 `scripts/design/overflow-scan.js` 重跑五支（兄弟交集／橫列溢出／跨 parent 碰撞／角托錨點／文字遮蔽）的 SUMMARY 行，與 ui-designer 該輪 `design/evidence/<票號>-r<n>-overflow.json` 收據（各支 FLAGGED 加總、`corner_anchor` 三個計數與 `document_mismatch`、`text_occlusion` 的 flagged／document、`tree_hash` 逐字相同、`boards` 是否涵蓋本輪動過的板）是否一致；不一致要點名差異；另附你獨立抽驗的那一項數字與截圖
+- **重掃比對**（LS-68／LS-122／LS-168）：你用正典腳本 `scripts/design/overflow-scan.js` 重跑五支（兄弟交集／橫列溢出／跨 parent 碰撞／角托錨點／文字遮蔽）的 SUMMARY 行，與 ui-designer 該輪 `design/evidence/<票號>-r<n>-overflow.json` 收據（各支 FLAGGED 加總、`corner_anchor` 三個計數與 `document_mismatch`、`text_occlusion` 的 flagged／document、`tree_hash` 逐字相同、`boards` 是否涵蓋本輪動過的板）是否一致；不一致要點名差異；**LS-171**：重掃的雜湊走訪必須帶 `{includePathGeometry:true}`（正典腳本內建；Pencil `Get` 預設把 path `geometry` 省略成 `"..."`，手寫走訪漏帶就會得到與 CI 不同的值——三方比對時先確認這一點再指控拼接），一次 execute `InternalError: interrupted` 就以 `SCAN_HASH_ONLY = true`／`SCAN_SKIP_HASH = true` 拆成同稿態的連續兩次唯讀 execute（見 ui-designer.md）；另附你獨立抽驗的那一項數字與截圖
 - **Notes 板死 id**（LS-168）：跑 `bash scripts/gates/design-notes-check.sh design/littlesprout.pen --base origin/development` 的輸出（缺失 N／沿革 N）；缺失 > 0 列 finding（板／節點／id／子句照抄），沿革行逐筆核對現行 id 是否真的在同段給出
 - 逐 frame findings：frame 名、中槍的 slop 條目、維度評分、**具體改法指令**
 - 值得保留的元素清單（防止重做時倒洗澡水）
