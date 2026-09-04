@@ -202,7 +202,7 @@ done
 [ -n "$hooks_flag" ] && add_flag "[hooks] ${hooks_flag}"
 
 # ---- worktree ----
-wt_total=0; wt_flagged=0; WT_LINES=; J_WTS=
+wt_total=0; wt_flagged=0; WT_LINES=; J_WTS=; design_wt=0
 process_wt() {
   local w=$1 b=$2 det=$3
   local name l r= ahead=0 behind=0 base mb since=0 had=0 lc lm= dirty=0 dmax=0 dm= wt_ts wm= pr= flag= info= f t commit_txt dirty_txt merged=false wt_ticket=
@@ -220,6 +220,8 @@ process_wt() {
     J_WTS="${J_WTS:+${J_WTS},}{\"path\":$(json_str "$w"),\"name\":$(json_str "$name"),\"branch\":$(json_str "$b"),\"missing\":true,\"local\":null,\"remote\":null,\"ahead\":null,\"behind_remote\":null,\"commits_since_base\":null,\"merged_into_base\":null,\"last_commit_minutes\":null,\"dirty\":null,\"dirty_minutes\":null,\"worktree_minutes\":null,\"pr\":null,\"flag\":$(json_str "$flag")}"
     return
   fi
+  # LS-180：分支名含 design（設計票慣例 feature/LS-<n>-…-design）＝設計票在飛 → 下方 Pencil 連線探針段才跑
+  case "$b" in *design*|*Design*) design_wt=1 ;; esac
   l=$(git -C "$ROOT" rev-parse --short "$b" 2>/dev/null || echo '?')
   r=$(git -C "$ROOT" rev-parse --short -q --verify "refs/remotes/origin/${b}" 2>/dev/null || true)
   if [ -n "$r" ]; then ahead=$(count "origin/${b}..${b}"); behind=$(count "${b}..origin/${b}"); fi
@@ -303,6 +305,24 @@ if [ -f "$here/supabase-lock.sh" ]; then
   if [ -n "$lock_path" ] && [ -f "$lock_path/holder" ]; then
     hold_label=$(sed -n 's/^cmd=hold://p' "$lock_path/holder" 2>/dev/null | head -1)
     [ -n "$hold_label" ] && hold_expires=$(sed -n 's/^expires_at=//p' "$lock_path/holder" 2>/dev/null | head -1)
+  fi
+fi
+
+# ---- Pencil 連線（LS-180）：有 design 分支 worktree（設計票在飛）時跑 scripts/ops/pen-status.sh——Pen 行程／目前路徑／
+#      MCP socket 探針一行；探針非 0（Pen 沒開／路徑讀不到／mcp-server 與 Pen 之間沒有 socket 連線）就 add_flag，指示
+#      orchestrator 派設計票前先請使用者在 Claude Code 執行 /mcp 重連 pencil。沒有 design worktree 不呼叫（探針會打
+#      pen CLI，不必每輪付）。PATROL_PEN_STATUS_SH 可換假身（自測用，避免碰真的 Pen）。
+PENCIL_LINE=; pencil_rc=0; pencil_ran=0
+if [ "$design_wt" -eq 1 ]; then
+  pencil_ran=1
+  pssh="${PATROL_PEN_STATUS_SH:-${here}/pen-status.sh}"
+  if [ -f "$pssh" ]; then
+    PENCIL_LINE=$(bash "$pssh" 2>&1); pencil_rc=$?
+  else
+    PENCIL_LINE="Pencil：探針腳本不存在（${pssh}）"; pencil_rc=2
+  fi
+  if [ "$pencil_rc" -ne 0 ]; then
+    add_flag "[Pencil] ${PENCIL_LINE} → 設計票派工前先請使用者在 Claude Code 執行 /mcp 重連 pencil，重連後再派（LS-180）"
   fi
 fi
 
@@ -479,18 +499,20 @@ fi
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"stale_simulators":[%s],"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"stale_simulators":[%s],"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
       "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$J_SIM" "$J_BOOT" "$(json_num "$boot_flagged")" \
-      "$(json_num "$disk_avail_gb")" "$DISK_MIN_GB" "$(json_num "$disk_devices_gb")" "$(json_num "$disk_derived_gb")" "$disk_dedicated" "$(json_str "$disk_flag")" "$J_FLAGS"
+      "$(json_num "$disk_avail_gb")" "$DISK_MIN_GB" "$(json_num "$disk_devices_gb")" "$(json_num "$disk_derived_gb")" "$disk_dedicated" "$(json_str "$disk_flag")" \
+      "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" "$J_FLAGS"
     ;;
   brief)
     echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev} · 專屬模擬器逾期 ${sim_flagged} · Booted 異常 ${boot_flagged} · 磁碟可用 ${disk_avail_gb:-?} GB"
     [ -n "$fetch_warn" ] && echo "${fetch_warn}"
     case "$lock_line" in free) ;; *) echo "Supabase lock：${lock_line}" ;; esac
+    [ "$pencil_ran" -eq 1 ] && printf '%s\n' "$PENCIL_LINE"
     if [ -n "$FLAGS" ]; then printf '%s' "$FLAGS"; else echo "巡檢：無異常（git／PR 面；Linear 對照仍需 list_issues）"; fi
     ;;
   *)
@@ -511,6 +533,11 @@ case "$MODE" in
     if [ -n "$WT_LINES" ]; then printf '%s' "$WT_LINES"; else echo "  （無）"; fi
     echo "== Supabase lock（本機容器序列化，scripts/ops/supabase-lock.sh；LS-70；⚠ tomb＝上次回收異常的殘留）"
     printf '%s\n' "$lock_line" | sed 's/^/  /'
+    echo "== Pencil 連線（LS-180；有 design 分支 worktree 時探：行程／目前路徑／MCP socket；✗ 先請使用者 /mcp 重連 pencil 再派設計票）"
+    if [ "$pencil_ran" -eq 1 ]; then
+      printf '%s\n' "$PENCIL_LINE" | sed 's/^/  /'
+      [ "$pencil_rc" -ne 0 ] && echo "  → 設計票派工前先請使用者在 Claude Code 執行 /mcp 重連 pencil，重連後再派（LS-180）"
+    else echo "  （無 design 分支 worktree，略過探針）"; fi
     echo "== 專屬模擬器（scripts/gates/detect-simulator.sh 建的 <票號>-<機型>；LS-83；>7 天未用只列不刪）"
     if [ -n "$SIM_LINES" ]; then printf '%s' "$SIM_LINES"; else echo "  （無 xcrun 或無 >7 天未用的專屬模擬器）"; fi
     echo "== Booted 模擬器（LS-100；demo-* 豁免；>1 台非豁免同時 Booted＝用完沒關）"
