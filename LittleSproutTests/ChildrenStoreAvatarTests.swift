@@ -1,5 +1,6 @@
 import Foundation
 @testable import LittleSprout
+import os
 import XCTest
 
 /// `ChildrenStore` 頭像上傳編排（LS-169）：`createChild`／`updateChild` 何時呼叫
@@ -35,14 +36,16 @@ final class ChildrenStoreAvatarTests: XCTestCase {
     /// 且第二階段的 `update_child` 要帶上傳回來的路徑，不是原封不動的 nil。
     func test_createChild_withAvatarImageData_createsThenUploadsThenUpdatesWithPath() async {
         let stub = StubChildAPIClient()
-        let created = makeChild()
+        let path = "fake/avatars/path.jpg"
+        let created = makeChild(avatarURL: path)
         let uploadService = StubChildAvatarUploadService()
         stub.setListChildrenHandler { _ in [created] }
+        stub.setSignedAvatarURLsHandler { _ in [path: URL(string: "https://example.test/signed?token=new")!] }
         stub.setCreateChildHandler { _, _, _, avatarURL in
             XCTAssertNil(avatarURL, "create_child 那一步不該帶頭像路徑——頭像要等 id 存在才能上傳")
             return created.id
         }
-        uploadService.setUploadAvatarHandler { _, _, _ in "fake/avatars/path.jpg" }
+        uploadService.setUploadAvatarHandler { _, _, _ in path }
         stub.setUpdateChildHandler { _, _, _, _ in }
         let store = ChildrenStore(apiClient: stub, avatarUploadService: uploadService)
         _ = await store.refresh(familyID: familyID)
@@ -55,7 +58,13 @@ final class ChildrenStoreAvatarTests: XCTestCase {
         XCTAssertEqual(uploadService.calls.first?.familyID, familyID)
         XCTAssertEqual(uploadService.calls.first?.childID, created.id)
         XCTAssertEqual(uploadService.calls.first?.imageData, imageData)
-        XCTAssertEqual(stub.updateChildCalls.last?.avatarURL, "fake/avatars/path.jpg")
+        XCTAssertEqual(stub.updateChildCalls.last?.avatarURL, path)
+        // merge-review R1 n1（8b477108）：建檔路徑的 avatarCacheBust 寫入（ChildrenStore.swift:151）
+        // 先前沒有任何測試釘住——只驗到 update_child 帶對路徑，沒驗到 avatarURL(for:) 真的帶 lsv。
+        XCTAssertTrue(
+            store.avatarURL(for: created)?.query?.contains("lsv=") ?? false,
+            "建檔時上傳頭像也應該帶 lsv cache-busting 參數，跟換照片（updateChild）同一個機制"
+        )
     }
 
     /// 失敗回滾語意（票文 Scope 1）：`create_child` 已成功時，頭像上傳失敗不會讓孩子檔案
@@ -205,5 +214,131 @@ final class ChildrenStoreAvatarTests: XCTestCase {
         _ = await store.refresh(familyID: familyID)
 
         XCTAssertEqual(store.avatarURL(for: child), firstURL, "簽名失敗應該保留上一次成功的結果")
+    }
+
+    // MARK: - avatarCacheBust（LS-169 R2 i8，LS-173 補測）
+
+    /// 換照片後，`avatarURL(for:)` 應該多帶一個 `lsv` cache-busting 查詢參數、且跟上傳前的
+    /// URL 不同——這正是「換圖後列表立即更新」的機制（見 `ChildrenStore.avatarCacheBust`
+    /// 文件註解）。還沒有這個 client 自己上傳過的路徑（`avatarCacheBust` 沒有這個 key）不該
+    /// 帶 `lsv`，直接沿用原始簽名 URL。
+    func test_updateChild_withNewAvatarImageData_avatarURLGainsCacheBustAfterUpload_differsFromBeforeUpload() async {
+        let stub = StubChildAPIClient()
+        let path = "fake/avatars/path.jpg"
+        let child = makeChild(avatarURL: path)
+        let uploadService = StubChildAvatarUploadService()
+        stub.setListChildrenHandler { _ in [child] }
+        stub.setSignedAvatarURLsHandler { _ in [path: URL(string: "https://example.test/signed?token=abc")!] }
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: uploadService)
+        _ = await store.refresh(familyID: familyID)
+
+        let beforeUploadURL = store.avatarURL(for: child)
+        XCTAssertEqual(
+            beforeUploadURL?.query, "token=abc", "還沒有這個 client 自己上傳過，不該帶 lsv cache-busting 參數"
+        )
+
+        uploadService.setUploadAvatarHandler { _, _, _ in path }
+        stub.setUpdateChildHandler { _, _, _, _ in }
+        let success = await store.updateChild(
+            childID: childID, name: "陳小安", birthday: Date(),
+            currentAvatarURL: path, newAvatarImageData: Data([0x09])
+        )
+        XCTAssertTrue(success)
+
+        let afterUploadURL = store.avatarURL(for: child)
+        XCTAssertNotEqual(afterUploadURL, beforeUploadURL, "換圖後 URL 應該變，讓 AsyncImage 重抓")
+        XCTAssertTrue(afterUploadURL?.query?.contains("lsv=") ?? false, "上傳成功後應該帶 lsv cache-busting 參數")
+    }
+
+    /// 「render 不現算」：`avatarCacheBust` 是上傳成功當下寫一次的固定時間戳，不是
+    /// `avatarURL(for:)` 每次呼叫都用 `Date()` 現算——同一次 session 內連續呼叫兩次應該回傳
+    /// 完全相同的值。
+    func test_avatarURL_calledTwiceAfterUpload_returnsIdenticalCacheBustValue() async {
+        let stub = StubChildAPIClient()
+        let path = "fake/avatars/path.jpg"
+        let child = makeChild(avatarURL: path)
+        let uploadService = StubChildAvatarUploadService()
+        stub.setListChildrenHandler { _ in [child] }
+        stub.setSignedAvatarURLsHandler { _ in [path: URL(string: "https://example.test/signed?token=abc")!] }
+        uploadService.setUploadAvatarHandler { _, _, _ in path }
+        stub.setUpdateChildHandler { _, _, _, _ in }
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: uploadService)
+        _ = await store.refresh(familyID: familyID)
+        _ = await store.updateChild(
+            childID: childID, name: "陳小安", birthday: Date(),
+            currentAvatarURL: path, newAvatarImageData: Data([0x09])
+        )
+
+        let first = store.avatarURL(for: child)
+        let second = store.avatarURL(for: child)
+
+        XCTAssertEqual(first, second, "同一次 session 呼叫兩次應該回傳同一個值，不是即時運算的新時間戳")
+    }
+
+    /// 「未上傳者無 key」：從沒有經過這個 client 上傳流程的孩子（`avatarURL` 是伺服器既有值，
+    /// `avatarCacheBust` 從沒寫過這個路徑），`avatarURL(for:)` 不該帶 `lsv`。
+    func test_avatarURL_pathNeverUploadedThisSession_hasNoCacheBustQueryParam() async {
+        let stub = StubChildAPIClient()
+        let path = "fake/avatars/never-uploaded.jpg"
+        let child = makeChild(avatarURL: path)
+        stub.setListChildrenHandler { _ in [child] }
+        stub.setSignedAvatarURLsHandler { _ in [path: URL(string: "https://example.test/signed?token=xyz")!] }
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
+
+        _ = await store.refresh(familyID: familyID)
+
+        let url = store.avatarURL(for: child)
+        XCTAssertEqual(url?.absoluteString, "https://example.test/signed?token=xyz")
+        XCTAssertFalse(url?.query?.contains("lsv") ?? true)
+    }
+
+    // MARK: - refreshAvatarSignedURLs 世代守門（m2，LS-169 R1；LS-173 i10 補測）
+
+    /// 票文情境「兩個簽名 handler、後發先至」：第一次 `refresh` 的簽名請求卡住還沒回來，
+    /// 使用者已經觸發第二次 `refresh`（例如還原一個孩子）並先拿到回應——較舊的那次遲到回來
+    /// 時，不能覆蓋較新一次已經寫入 `avatarSignedURLs` 的結果（見 `refreshAvatarSignedURLs`
+    /// 文件註解「m2」）。
+    func test_refresh_staleSignedURLResponseArrivesAfterNewerRefresh_doesNotOverwriteNewerResult() async {
+        let stub = StubChildAPIClient()
+        let path = "fake/avatars/path.jpg"
+        let child = makeChild(avatarURL: path)
+        stub.setListChildrenHandler { _ in [child] }
+        let (gate, gateContinuation) = AsyncStream<Void>.makeStream()
+        let callCount = OSAllocatedUnfairLock(initialState: 0)
+        stub.setSignedAvatarURLsHandler { _ in
+            let index = callCount.withLock { $0 += 1; return $0 }
+            if index == 1 {
+                var iterator = gate.makeAsyncIterator()
+                _ = await iterator.next()
+                return [path: URL(string: "https://example.test/signed?token=STALE")!]
+            }
+            return [path: URL(string: "https://example.test/signed?token=FRESH")!]
+        }
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
+
+        let firstRefresh = Task { await store.refresh(familyID: familyID) }
+        var guardIterations = 0
+        while callCount.withLock({ $0 }) < 1 {
+            guardIterations += 1
+            guard guardIterations < 200 else {
+                gateContinuation.finish()
+                return XCTFail("等待第一次簽名請求進入處理中逾時")
+            }
+            try? await Task.sleep(nanoseconds: 5_000_000)
+        }
+
+        // 第二次 refresh：立即拿到簽名回應，此時第一次仍卡在 gate 上。
+        _ = await store.refresh(familyID: familyID)
+
+        XCTAssertEqual(
+            store.avatarURL(for: child)?.query, "token=FRESH", "新一輪的簽名結果應該先寫入"
+        )
+
+        gateContinuation.finish()
+        _ = await firstRefresh.value
+
+        XCTAssertEqual(
+            store.avatarURL(for: child)?.query, "token=FRESH", "較舊的呼叫遲到不能覆蓋新結果"
+        )
     }
 }
