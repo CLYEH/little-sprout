@@ -22,6 +22,16 @@
 #               `run.sh`，且整條命令（heredoc／comment 已剝除）沒有 `scripts/ops/supabase-lock.sh
 #               -- ` 包裹形式、且非重入（讀 `supabase-lock.sh` 同一套 lock 目錄的 holder pid、走
 #               本行程祖先鏈判定，不信環境變數；容器跨 worktree 共用，LS-70），即 deny。
+#   H3b（Bash，LS-183）：繞過 lock 直接打本機容器的其他路徑——命令位置為 `docker` 且該段有 `exec`
+#               token、其後任一 token 以 `supabase_`／`supabase-` 開頭（`exec` 後有 exact token
+#               `pg_isready` 視為唯讀放行；`docker ps`／`logs`／`inspect` 無 `exec` 不命中）；命令位置為
+#               `psql` 且任一 token 含 54322；任一段（命令位置非 echo／printf／讀取動詞）有 token 以
+#               `postgres(ql)://` 起頭（允許 `VAR=`／`--db-url=` 前綴）且含 `:54322`；命令位置為
+#               `supabase` 且有相鄰 `functions serve`／`db query`／`db dump`／`migration up` 且同段無
+#               `--linked`。命中後：整條命令有 `supabase-lock.sh -- ` 包裹字面 → 放行；H3 重入判定
+#               為真 → 放行；holder 是 `--hold`（`cmd=hold:*`）、守門 pid 活著、holder `worktree=` 與
+#               呼叫端目前目錄（hook JSON `cwd` 起算、沿命令追蹤 `cd`／`pushd`）所在 worktree 頂層
+#               相同 → 放行；否則 deny，訊息指向 `supabase-lock.sh -- <cmd>` 或 `--hold`。
 #
 # 前處理與命令位置判定（R2 全部移到 scripts/hooks/pretool_engine.py，本檔案只呼叫，見
 # `run_bash_engine`；下面是設計摘要，完整細節與每一條的理由見該檔案檔頭大段註解）：
@@ -141,7 +151,8 @@ run_bash_engine() {
     return
   }
   local out rc
-  out=$(printf '%s' "$cmd" | python3 "$ENGINE_PY" 2>/dev/null)
+  # PRETOOL_CWD：hook JSON 的 `cwd`（呼叫端目前目錄），只供 H3b 的持有者 worktree 判定（LS-183）；空值時引擎退回自己的 cwd
+  out=$(printf '%s' "$cmd" | PRETOOL_CWD="${hook_cwd:-}" python3 "$ENGINE_PY" 2>/dev/null)
   rc=$?
   case "$rc" in
     0) : ;;
@@ -163,24 +174,25 @@ IFS= read -r -d '' input || true
 [ -n "$input" ] || final_deny "H0：stdin 是空的，無法判斷 tool_input（fail-closed），見 ${COLL_REF}"
 
 # ---- 解析 JSON：jq 優先，缺才退 python3；兩者都解不出（缺工具或 JSON 壞）→ deny ----
-# 五個欄位：tool_name／command／file_path（Bash／Read 用）／grep_path／grep_glob（Grep 工具用，
-# R1 F7）。欄位分隔字元用 \x1f（unit separator），不用 tab：bash `read` 對 IFS 內的空白類字元
+# 六個欄位：tool_name／command／file_path（Bash／Read 用）／grep_path／grep_glob（Grep 工具用，
+# R1 F7）／hook_cwd（hook JSON 頂層 `cwd`，H3b 持有者 worktree 判定用，LS-183；放最後一欄接尾端換行）。
+# 欄位分隔字元用 \x1f（unit separator），不用 tab：bash `read` 對 IFS 內的空白類字元
 # （space／tab／newline）一律視為可連續合併的分隔符，即使 IFS 只設成單一個 tab 也一樣會把空欄位
 # 吃掉、後面的欄位往前擠一位。`read -r -d ''`（delimiter 設成空字元＝NUL）取代預設的「遇換行就
 # 停」，讓 command 裡的**換行也留在同一個欄位裡**（R1 F1 的根因：多行 command 原本在第一個 `\n`
 # 就被截斷，H1/H2/H3 全部只看得到第一行）——herestring `<<<` 會在結尾多補一個換行，NUL 分隔不會
-# 被那個換行擋下來，於是那個換行會跑進「最後一個變數」（本檔案設計成把 grep_glob 放在最後，讀完
-# 用 `${grep_glob%$'\n'}` 去掉那一個尾端換行）。
+# 被那個換行擋下來，於是那個換行會跑進「最後一個變數」（本檔案設計成把 hook_cwd 放在最後，讀完
+# 用 `${hook_cwd%$'\n'}` 去掉那一個尾端換行）。
 SEP=$'\x1f'
 if command -v jq >/dev/null 2>&1; then
   # \x1f 以 --arg 傳入（不寫死在 jq 程式原始碼裡，避免編輯器／git diff 把控制字元搞丟或看不見）；
   # gsub 只清掉欄位值裡「剛好也是」\x1f 的字元（避免污染切欄位），完全不動換行——換行是 R1 F1
   # 要保留的東西，不能像 python3 備援那樣整個換成空白。
   if out=$(printf '%s' "$input" | jq -r --arg sep "$SEP" \
-    '[(.tool_name // "" | tostring), (.tool_input.command // "" | tostring), (.tool_input.file_path // "" | tostring), (.tool_input.path // "" | tostring), (.tool_input.glob // "" | tostring)]
+    '[(.tool_name // "" | tostring), (.tool_input.command // "" | tostring), (.tool_input.file_path // "" | tostring), (.tool_input.path // "" | tostring), (.tool_input.glob // "" | tostring), (.cwd // "" | tostring)]
      | map(gsub($sep; " ")) | join($sep)' 2>/dev/null); then
-    IFS="$SEP" read -r -d '' tool_name command file_path grep_path grep_glob <<<"$out" || true
-    grep_glob=${grep_glob%$'\n'}
+    IFS="$SEP" read -r -d '' tool_name command file_path grep_path grep_glob hook_cwd <<<"$out" || true
+    hook_cwd=${hook_cwd%$'\n'}
     parsed=1
   fi
 fi
@@ -200,11 +212,11 @@ def esc(s):
 ti = d.get("tool_input")
 if not isinstance(ti, dict):
     ti = {}
-fields = [d.get("tool_name") or "", ti.get("command") or "", ti.get("file_path") or "", ti.get("path") or "", ti.get("glob") or ""]
+fields = [d.get("tool_name") or "", ti.get("command") or "", ti.get("file_path") or "", ti.get("path") or "", ti.get("glob") or "", d.get("cwd") or ""]
 sys.stdout.write("\x1f".join(esc(f) for f in fields))
 ' 2>/dev/null); then
-    IFS="$SEP" read -r -d '' tool_name command file_path grep_path grep_glob <<<"$out" || true
-    grep_glob=${grep_glob%$'\n'}
+    IFS="$SEP" read -r -d '' tool_name command file_path grep_path grep_glob hook_cwd <<<"$out" || true
+    hook_cwd=${hook_cwd%$'\n'}
     parsed=1
   fi
 fi
