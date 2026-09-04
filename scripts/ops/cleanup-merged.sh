@@ -282,13 +282,13 @@ pen_guard() {  # $1=worktree 路徑 $2=分支 $3=顯示名；Pen 狀態未知或
   pen_probe
   if [ "$PEN_UNKNOWN" -eq 1 ]; then
     wt_skipped_pen=$((wt_skipped_pen + 1))
-    OUT_WT="${OUT_WT}  ✗ ${3} ${2}：pen CLI 在 PATH、Pen 在跑，但 --status 讀不到目前文件，保守略過（LS-141 R2 m1）——處置：確認 pen CLI 已登入（pen interactive --app desktop 跑 get_app_state()）、或先 bash scripts/ops/pen-open.sh ${ROOT} 把 Pen 切回主 checkout／關掉 Pen，再重跑本指令"$'\n'
+    OUT_WT="${OUT_WT}  ✗ ${3} ${2}：pen CLI 在 PATH、Pen 在跑，但 --status 讀不到目前文件，保守略過（LS-141 R2 m1）——處置：確認 pen CLI 已登入（pen interactive --app desktop 跑 get_app_state()）、或先 bash scripts/ops/pen-open.sh ${ROOT} --kill 清場切回主 checkout（LS-180 §6 ④；之後請使用者在 Claude Code 執行 /mcp 重連 pencil）／關掉 Pen，再重跑本指令"$'\n'
     return 1
   fi
   [ -n "$PEN_ACTIVE" ] || return 0
   case "$PEN_ACTIVE" in "$1"/*) ;; *) return 0 ;; esac
   wt_skipped_pen=$((wt_skipped_pen + 1))
-  OUT_WT="${OUT_WT}  ✗ ${3} ${2}：Pen 目前開著 ${PEN_ACTIVE}，拒刪（移掉會留下幽靈文件，LS-119 事故）——處置：先 bash scripts/ops/pen-open.sh ${ROOT} 把 Pen 切回主 checkout（該 worktree 有未落地變更則先 bash scripts/ops/pen-land.sh ${1}），再重跑本指令"$'\n'
+  OUT_WT="${OUT_WT}  ✗ ${3} ${2}：Pen 目前開著 ${PEN_ACTIVE}，拒刪（移掉會留下幽靈文件，LS-119 事故）——處置：先 bash scripts/ops/pen-open.sh ${ROOT} --kill 清場切回主 checkout（LS-180 §6 ④——不帶 --kill 只會把票檔留在背景視窗、幽靈 renderer 照舊；清場後請使用者在 Claude Code 執行 /mcp 重連 pencil；該 worktree 有未落地變更則先 bash scripts/ops/pen-land.sh ${1}），再重跑本指令"$'\n'
   return 1
 }
 # LS-141：查 Linear 票狀態（只讀 GraphQL）。印「<state.type> <state.name>」；無 LINEAR_API_KEY／缺 curl 或 python3／
