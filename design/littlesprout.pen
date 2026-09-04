@@ -115117,18 +115117,10 @@
                               "alignItems": "center",
                               "children": [
                                 {
-                                  "id": "vaNME",
+                                  "id": "LbVXI",
                                   "type": "ref",
-                                  "ref": "RaaIf",
-                                  "name": "Avatar",
-                                  "width": 56,
-                                  "height": 56,
-                                  "descendants": {
-                                    "A30rIX": {
-                                      "content": "美",
-                                      "fontSize": "$fs-lead"
-                                    }
-                                  }
+                                  "ref": "OePXK",
+                                  "name": "Profile Print"
                                 },
                                 {
                                   "type": "frame",
@@ -115758,18 +115750,10 @@
                               "alignItems": "center",
                               "children": [
                                 {
-                                  "id": "KL2nZ",
+                                  "id": "L2FHug",
                                   "type": "ref",
-                                  "ref": "RaaIf",
-                                  "name": "Avatar",
-                                  "width": 56,
-                                  "height": 56,
-                                  "descendants": {
-                                    "A30rIX": {
-                                      "content": "美",
-                                      "fontSize": "$fs-lead"
-                                    }
-                                  }
+                                  "ref": "OePXK",
+                                  "name": "Profile Print"
                                 },
                                 {
                                   "type": "frame",
@@ -116399,18 +116383,10 @@
                               "alignItems": "center",
                               "children": [
                                 {
-                                  "id": "l0V8s",
+                                  "id": "D9wDKs",
                                   "type": "ref",
-                                  "ref": "RaaIf",
-                                  "name": "Avatar",
-                                  "width": 56,
-                                  "height": 56,
-                                  "descendants": {
-                                    "A30rIX": {
-                                      "content": "美",
-                                      "fontSize": "$fs-lead"
-                                    }
-                                  }
+                                  "ref": "OePXK",
+                                  "name": "Profile Print"
                                 },
                                 {
                                   "type": "frame",
@@ -125146,6 +125122,128 @@
               "fontWeight": "normal"
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Sxakg",
+      "x": 13840,
+      "y": 24069,
+      "name": "Profile Photo Asset",
+      "metadata": {
+        "type": "unsplash",
+        "username": "mruqi",
+        "link": "https://unsplash.com/@mruqi",
+        "author": "Muhammad Ruqi Yaddin"
+      },
+      "width": 200,
+      "height": 200,
+      "fill": {
+        "type": "image",
+        "enabled": true,
+        "url": "https://images.unsplash.com/photo-1552611324-6a146aea5f04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg1MDEwNTF8&ixlib=rb-4.1.0&q=80&w=1080",
+        "mode": "fill"
+      }
+    },
+    {
+      "type": "frame",
+      "id": "OePXK",
+      "x": 13840,
+      "y": 24369,
+      "name": "cmp/Profile Print",
+      "reusable": true,
+      "layout": "vertical",
+      "gap": "$sp-tight",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "lOPO7",
+          "name": "Print",
+          "clip": true,
+          "width": 60,
+          "height": 60,
+          "fill": "$print-paper",
+          "cornerRadius": 6,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "MN0WF",
+              "x": 0,
+              "y": 0,
+              "name": "Photo",
+              "width": 45,
+              "height": 45,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "https://images.unsplash.com/photo-1552611324-6a146aea5f04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg1MDEwNTF8&ixlib=rb-4.1.0&q=80&w=1080",
+                "mode": "fill"
+              },
+              "cornerRadius": 2
+            },
+            {
+              "id": "R1lbwf",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Mount TL",
+              "x": 45,
+              "y": 0,
+              "width": 12.3,
+              "height": 12.3,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 0 L26 0 L0 26 Z",
+                  "width": 12.3,
+                  "height": 12.3,
+                  "fill": "$photo-corner"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26",
+                  "width": 12.3,
+                  "height": 12.3,
+                  "strokeWidth": 1
+                }
+              }
+            },
+            {
+              "id": "S4O4r8",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Mount BR",
+              "x": 57.3,
+              "y": 0,
+              "width": 12.3,
+              "height": 12.3,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 26 L26 0 L0 26 Z",
+                  "width": 12.3,
+                  "height": 12.3,
+                  "fill": "$photo-corner"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26",
+                  "width": 12.3,
+                  "height": 12.3,
+                  "strokeWidth": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "RiLZG",
+          "name": "Imprint Caption",
+          "fill": "$print-ink-secondary",
+          "content": "加入於 2024/3",
+          "fontFamily": "$font",
+          "fontSize": "$fs-imprint",
+          "fontWeight": "normal",
+          "letterSpacing": 0.5
         }
       ]
     }
