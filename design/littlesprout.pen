@@ -142104,27 +142104,39 @@
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "Y7LGC",
+                          "id": "R0UbU",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "REScu",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "志",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -142198,27 +142210,39 @@
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "J8jopw",
+                          "id": "J9qWt",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "v1Sv9",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "美",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -142292,27 +142316,39 @@
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "uHB8I",
+                          "id": "PEdSZ",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "qFyqY",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "志",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -142410,27 +142446,39 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "VXELd",
+                          "id": "J2VEkA",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "My Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "H7nGI",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "安",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -142654,27 +142702,39 @@
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "b4Ipku",
+                          "id": "V2uFs",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "qYKqD",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "志",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -142748,27 +142808,39 @@
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "jdPz4",
+                          "id": "DmAlI",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "Wqnif",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "美",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -142842,27 +142914,39 @@
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "F684Ox",
+                          "id": "q5ndkJ",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "qy1Pv",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "志",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -142960,27 +143044,39 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "pSruq",
-                          "name": "My Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "ruBmp",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "安",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "id": "O2U5BN",
+                          "type": "ref",
+                          "ref": "OePXK",
+                          "name": "Avatar",
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -143202,27 +143298,39 @@
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "WFUQG",
+                          "id": "NZCev",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 72,
-                          "height": 72,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "yYkVp",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "志",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 72,
+                              "height": 72,
+                              "cornerRadius": 7.199999999999999
+                            },
+                            "MN0WF": {
+                              "x": 9,
+                              "y": 9,
+                              "width": 54,
+                              "height": 54,
+                              "cornerRadius": 2.4
+                            },
+                            "R1lbwf": {
+                              "x": -4.56,
+                              "y": -4.56,
+                              "width": 19.679999999999996,
+                              "height": 19.679999999999996
+                            },
+                            "S4O4r8": {
+                              "x": 56.879999999999995,
+                              "y": 56.879999999999995,
+                              "width": 19.679999999999996,
+                              "height": 19.679999999999996
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -143299,27 +143407,39 @@
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "VtOe4",
+                          "id": "r9GgFS",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 72,
-                          "height": 72,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "ZQHZL",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "美",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 72,
+                              "height": 72,
+                              "cornerRadius": 7.199999999999999
+                            },
+                            "MN0WF": {
+                              "x": 9,
+                              "y": 9,
+                              "width": 54,
+                              "height": 54,
+                              "cornerRadius": 2.4
+                            },
+                            "R1lbwf": {
+                              "x": -4.56,
+                              "y": -4.56,
+                              "width": 19.679999999999996,
+                              "height": 19.679999999999996
+                            },
+                            "S4O4r8": {
+                              "x": 56.879999999999995,
+                              "y": 56.879999999999995,
+                              "width": 19.679999999999996,
+                              "height": 19.679999999999996
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -143396,27 +143516,39 @@
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "d1WrlV",
+                          "id": "arKGn",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 72,
-                          "height": 72,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "FIkyf",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "志",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 72,
+                              "height": 72,
+                              "cornerRadius": 7.199999999999999
+                            },
+                            "MN0WF": {
+                              "x": 9,
+                              "y": 9,
+                              "width": 54,
+                              "height": 54,
+                              "cornerRadius": 2.4
+                            },
+                            "R1lbwf": {
+                              "x": -4.56,
+                              "y": -4.56,
+                              "width": 19.679999999999996,
+                              "height": 19.679999999999996
+                            },
+                            "S4O4r8": {
+                              "x": 56.879999999999995,
+                              "y": 56.879999999999995,
+                              "width": 19.679999999999996,
+                              "height": 19.679999999999996
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -143517,27 +143649,39 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "RhBoo",
-                          "name": "My Avatar",
-                          "width": 72,
-                          "height": 72,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "HRG2y",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "安",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "id": "TRHtx",
+                          "type": "ref",
+                          "ref": "OePXK",
+                          "name": "Avatar",
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 72,
+                              "height": 72,
+                              "cornerRadius": 7.199999999999999
+                            },
+                            "MN0WF": {
+                              "x": 9,
+                              "y": 9,
+                              "width": 54,
+                              "height": 54,
+                              "cornerRadius": 2.4
+                            },
+                            "R1lbwf": {
+                              "x": -4.56,
+                              "y": -4.56,
+                              "width": 19.679999999999996,
+                              "height": 19.679999999999996
+                            },
+                            "S4O4r8": {
+                              "x": 56.879999999999995,
+                              "y": 56.879999999999995,
+                              "width": 19.679999999999996,
+                              "height": 19.679999999999996
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -143820,27 +143964,39 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "HT9iB",
+                          "id": "l3ekZq",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "My Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "Qgjyu",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "安",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -144050,27 +144206,39 @@
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "gGR4M",
+                          "id": "vlX7W",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "L328Y",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "志",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -144144,27 +144312,39 @@
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "HStRi",
+                          "id": "BJPDT",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "A8dapX",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "美",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -144238,27 +144418,39 @@
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "jc8Os",
+                          "id": "Tv1Hv",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "a1cnkT",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "志",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -144356,27 +144548,39 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "fgnEG",
-                          "name": "My Avatar",
-                          "width": 36,
-                          "height": 36,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "MxEyz",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "安",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "id": "c6fBj1",
+                          "type": "ref",
+                          "ref": "OePXK",
+                          "name": "Avatar",
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 36,
+                              "height": 36,
+                              "cornerRadius": 3.5999999999999996
+                            },
+                            "MN0WF": {
+                              "x": 4.5,
+                              "y": 4.5,
+                              "width": 27,
+                              "height": 27,
+                              "cornerRadius": 1.2
+                            },
+                            "R1lbwf": {
+                              "x": -2.28,
+                              "y": -2.28,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "S4O4r8": {
+                              "x": 28.439999999999998,
+                              "y": 28.439999999999998,
+                              "width": 9.839999999999998,
+                              "height": 9.839999999999998
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "frame",
@@ -144741,27 +144945,39 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "yNn9P",
+                          "id": "bsbDd",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 40,
-                          "height": 40,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "i6oBPH",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "志",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 40,
+                              "height": 40,
+                              "cornerRadius": 4
+                            },
+                            "MN0WF": {
+                              "x": 5,
+                              "y": 5,
+                              "width": 30,
+                              "height": 30,
+                              "cornerRadius": 1.3333333333333333
+                            },
+                            "R1lbwf": {
+                              "x": -2.533333333333333,
+                              "y": -2.533333333333333,
+                              "width": 10.933333333333332,
+                              "height": 10.933333333333332
+                            },
+                            "S4O4r8": {
+                              "x": 31.599999999999998,
+                              "y": 31.599999999999998,
+                              "width": 10.933333333333332,
+                              "height": 10.933333333333332
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "text",
@@ -144784,27 +145000,39 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "ltUvP",
+                          "id": "A6eWx",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 40,
-                          "height": 40,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "fGxQk",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "美",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 40,
+                              "height": 40,
+                              "cornerRadius": 4
+                            },
+                            "MN0WF": {
+                              "x": 5,
+                              "y": 5,
+                              "width": 30,
+                              "height": 30,
+                              "cornerRadius": 1.3333333333333333
+                            },
+                            "R1lbwf": {
+                              "x": -2.533333333333333,
+                              "y": -2.533333333333333,
+                              "width": 10.933333333333332,
+                              "height": 10.933333333333332
+                            },
+                            "S4O4r8": {
+                              "x": 31.599999999999998,
+                              "y": 31.599999999999998,
+                              "width": 10.933333333333332,
+                              "height": 10.933333333333332
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "text",
@@ -144827,27 +145055,39 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "Xypc3",
+                          "id": "E1O3h",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 40,
-                          "height": 40,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "ZIM3U",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "大",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 40,
+                              "height": 40,
+                              "cornerRadius": 4
+                            },
+                            "MN0WF": {
+                              "x": 5,
+                              "y": 5,
+                              "width": 30,
+                              "height": 30,
+                              "cornerRadius": 1.3333333333333333
+                            },
+                            "R1lbwf": {
+                              "x": -2.533333333333333,
+                              "y": -2.533333333333333,
+                              "width": 10.933333333333332,
+                              "height": 10.933333333333332
+                            },
+                            "S4O4r8": {
+                              "x": 31.599999999999998,
+                              "y": 31.599999999999998,
+                              "width": 10.933333333333332,
+                              "height": 10.933333333333332
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "text",
@@ -144870,27 +145110,39 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "RMwLS",
+                          "id": "b5aNE",
+                          "type": "ref",
+                          "ref": "OePXK",
                           "name": "Avatar",
-                          "width": 40,
-                          "height": 40,
-                          "fill": "$accent-soft",
-                          "cornerRadius": "$radius-full",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "p1knIj",
-                              "name": "Initial",
-                              "fill": "$text-primary",
-                              "content": "安",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                          "descendants": {
+                            "lOPO7": {
+                              "width": 40,
+                              "height": 40,
+                              "cornerRadius": 4
+                            },
+                            "MN0WF": {
+                              "x": 5,
+                              "y": 5,
+                              "width": 30,
+                              "height": 30,
+                              "cornerRadius": 1.3333333333333333
+                            },
+                            "R1lbwf": {
+                              "x": -2.533333333333333,
+                              "y": -2.533333333333333,
+                              "width": 10.933333333333332,
+                              "height": 10.933333333333332
+                            },
+                            "S4O4r8": {
+                              "x": 31.599999999999998,
+                              "y": 31.599999999999998,
+                              "width": 10.933333333333332,
+                              "height": 10.933333333333332
+                            },
+                            "RiLZG": {
+                              "enabled": false
                             }
-                          ]
+                          }
                         },
                         {
                           "type": "text",
