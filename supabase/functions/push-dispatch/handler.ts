@@ -18,8 +18,55 @@
 // notification_recipients()`）→ 組文案 → 逐 token 呼叫 APNs → 410／
 // `BadDeviceToken` 清掉失效 token。
 
-export type NotificationKind = "comment" | "reaction" | "diary" | "album";
-export type ContentTargetType = "album" | "media" | "diary" | "comment";
+// LS-175：新增 "media"（批次上傳照片彙總）／"family"（media 事件的 target，見
+// migration `20260904170849_media_notification_target_family.sql`／
+// `20260904170933_media_notification_events.sql` 檔頭的完整推導：media 表
+// 沒有 album_id／diary_id，AFTER INSERT trigger 觸發當下這批照片會不會、會掛進
+// 哪個相簿／日記這個資訊還不存在，所以 target 只能是整個家庭）。
+//
+// **"report" kind（LS-149，merge-review R1 m2）**：`notification_kind` 資料庫
+// 列舉在 LS-149（`20260903091313_notification_kind_report.sql`）就已經有這個
+// 值，`report_content()`（`20260903091317_report_block_rpc.sql:757`）也確實會
+// 寫入 kind='report' 的事件——但 push-dispatch（LS-172）落地時的
+// `NotificationKind` union 與 `index.ts` 的型別守門從一開始就沒有涵蓋它：若
+// `claim_notification_events()` claim 到一批混著 report 事件，未涵蓋的守門會
+// 判整批（不只 report 那幾筆）失敗，SQL 面卻已經標記 `sent_at`——這一批會被
+// 永久漏送（LS-96 池項 `841d97da`，merge-reviewer R1 於 PR #284 覆核成立）。
+// 這裡補上 "report"，讓守門認得它、不再拖垮整批；`buildMessageBody` 的
+// `report` 分支文案是中性 fallback（是否要推播、推播給誰是產品決定，不是本次
+// 修的範圍——這裡只保證「不再整批漏送」，見該分支的說明）。
+export type NotificationKind =
+  | "comment"
+  | "reaction"
+  | "diary"
+  | "album"
+  | "media"
+  | "report";
+export type ContentTargetType =
+  | "album"
+  | "media"
+  | "diary"
+  | "comment"
+  | "family";
+
+// 型別守門（LS-175，merge-review R1 m2）：資料庫的 enum 值只可能是這幾種，
+// 原本定義在 `index.ts`——但 `index.ts` 在模組層級呼叫 `Deno.serve()`
+// （merge-review R1-i2），任何 `import` 都會嘗試綁定 HTTP listener，導致這兩支
+// 純函式從落地起就沒有任何測試覆蓋，正是 LS-149 新增 `'report'` 這件事能悄悄
+// 漏掉守門這麼久的結構原因。搬到這裡（純函式、無副作用，跟本檔其餘 helper 同一
+// 類）之後 `index.ts` 改成 `import` 這裡的版本，`handler.test.ts` 才能直接測到
+// 正式碼、不是另外複製一份會漂移的影子版本。**這只完成 merge-review R1-i2 建議
+// 的一半**（守衛本身搬過來了，`claimEvents` 內把 row 轉成 `ClaimedEvent` 的
+// 行轉換邏輯仍留在 `index.ts`）——i2 完整範圍是否記入 LS-96、記成什麼形狀，由
+// orchestrator 裁定，本檔不擅自宣稱 i2 已完整處理。
+export function isNotificationKind(v: unknown): v is NotificationKind {
+  return v === "comment" || v === "reaction" || v === "diary" ||
+    v === "album" || v === "media" || v === "report";
+}
+export function isContentTargetType(v: unknown): v is ContentTargetType {
+  return v === "album" || v === "media" || v === "diary" || v === "comment" ||
+    v === "family";
+}
 
 export interface ClaimedEvent {
   id: string;
@@ -97,6 +144,10 @@ const TARGET_LABEL: Record<ContentTargetType, string> = {
   album: "相簿",
   media: "照片",
   comment: "留言",
+  // LS-175：kind="media" 的訊息不透過 TARGET_LABEL 組字（直接寫「新增了…張照片」，
+  // 不是「在你的{標籤}留言」這種句型），這個 key 只是讓 Record<ContentTargetType,
+  // string> 保持窮舉、編譯期不漏任何一個列舉值——沒有任何分支會實際讀到它。
+  family: "家庭",
 };
 
 // **已知、刻意的規格分歧（票文字面 vs. 實際可用資料，見 migration 檔頭第 2 段的
@@ -136,6 +187,28 @@ export function buildMessageBody(
       return eventCount <= 1
         ? `${actorDisplayName}新增了相簿`
         : `${actorDisplayName}新增了 ${eventCount} 本相簿`;
+    // LS-175：批次上傳彙總——票文明定範例 event_count=50 →「新增了 50 張照片」。
+    // event_count<=1 用「一張」而不是阿拉伯數字 1（同 diary／album 的既有風格：
+    // 單一動作用自然語句，不是「新增了 1 張照片」這種生硬的數字）。target_type
+    // 恆為 "family"（見 migration 檔頭），這裡不像 comment／reaction 需要
+    // TARGET_LABEL——訊息本身就是完整句子，不需要「在你的 xxx」這種目標子句。
+    case "media":
+      return eventCount <= 1
+        ? `${actorDisplayName}新增了一張照片`
+        : `${actorDisplayName}新增了 ${eventCount} 張照片`;
+    // LS-175（merge-review R1 m2）：中性 fallback，不是產品定案文案——目的只是
+    // 「report 事件不再讓整批 claim 靜默漏送」（見上方 union 的說明），不是把
+    // 檢舉通知的完整產品體驗做完。不用 actor 名字（`report_content()` 的
+    // actor 是檢舉人，不是被檢舉內容的作者，直接套用 comment/reaction 那種
+    // 「{actor} 對你的 xxx 做了什麼」句型會誤導收件人以為檢舉人在跟自己互動）；
+    // target_type 是被檢舉內容原本的類型（album/media/diary/comment，見
+    // `report_content()` 傳入 `record_notification_event` 的 `r.target_type`），
+    // `TARGET_LABEL` 在這裡可以直接沿用。是否要推播、要推播給誰（例如只給
+    // owner，不是全家庭）是產品決定，留給後續票，這裡不擴大範圍。
+    case "report":
+      return eventCount <= 1
+        ? `你的${label}收到一則檢舉`
+        : `你的${label}收到了 ${eventCount} 則檢舉`;
   }
 }
 

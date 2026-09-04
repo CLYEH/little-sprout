@@ -56,7 +56,7 @@
 | 帳號 | Supabase Auth（Sign in with Apple 為主 — App Store 規定有第三方登入就必須提供；Email OTP 給長輩備用） |
 | 資料庫 | Postgres + **Row Level Security**：權限規則直接寫在資料庫層，「不是這個 family 的成員就查不到資料」由 DB 保證，不靠 app 端判斷 |
 | 檔案儲存 | Supabase Storage（**S3 相容介面**），私有 bucket + 簽名 URL，照片影片不會有公開網址 |
-| 推播 | Edge Function 觸發 APNs；裝置 token 存 `device_tokens` 表。**必須彙總**：批次上傳 50 張照片要合併成一則「爸爸新增了 50 張照片」，逐張發通知會讓家人第一天就關掉通知權限（發送側 Edge Function `push-dispatch` 已於 LS-172 落地，留言／愛心／日記／相簿四種事件皆已彙總；「批次上傳照片合併成一則」需要 `media`/`album_media` 補通知 trigger，本票尚未涵蓋，見 `docs/API.md` §10 push-dispatch 段的規格分歧記錄） |
+| 推播 | Edge Function 觸發 APNs；裝置 token 存 `device_tokens` 表。**必須彙總**：批次上傳 50 張照片要合併成一則「爸爸新增了 50 張照片」，逐張發通知會讓家人第一天就關掉通知權限（發送側 Edge Function `push-dispatch` 已於 LS-172 落地，留言／愛心／日記／相簿四種事件皆已彙總；`media` 表的 `AFTER INSERT` trigger 已於 LS-175 落地，批次上傳照片彙總成一則「{actor}新增了 {N} 張照片」——target 是整個家庭而不是所屬相簿，因為 `media` 沒有 album_id/diary_id、掛進相簿是另一次之後才發生的寫入，見 `docs/API.md` §3「`media` 來源（LS-175）」與 §10 push-dispatch 段） |
 
 ### 為什麼這樣選（對應你的三個條件）
 
