@@ -345,10 +345,13 @@ jobs:
               exit 1
             fi
             # BREAKING：既有呼叫端行為改變——PR body 須有行首的 BREAKING: 段落（scripts/gates/breaking-section-check.sh），
-            # 且 docs/API.md 同 PR 有變更（§6 API 變更紀律：契約文件跟著改）
+            # 且 docs/API.md 同 PR 有變更（§6 API 變更紀律：契約文件跟著改）。
+            # LS-181：分級輸出落檔傳給 section-check——B7（ALTER TYPE … ADD VALUE）印出的 CONSUMER 行（EF 型別守衛／iOS enum／
+            # API.md 值表）每個路徑都要在 BREAKING: 段內同一行寫「已更新 <sha>」或「不需更新：<理由>」，缺一即紅並列出缺哪些。
             if printf '%s\n' "$findings" | grep -q '^BREAKING'; then
-              if ! printf '%s' "$PR_BODY" | bash scripts/gates/breaking-section-check.sh; then
-                echo "::error::migration 改變既有呼叫端行為（見上方 BREAKING 列：ALTER POLICY／REVOKE／既有函式重定義等）。PR body 必須有行首的 BREAKING: 段落，同一行寫受影響的呼叫端與遷移路徑（docs/COLLABORATION.md §6）"
+              printf '%s\n' "$findings" > "$RUNNER_TEMP/migration-findings.txt"
+              if ! printf '%s' "$PR_BODY" | bash scripts/gates/breaking-section-check.sh --findings "$RUNNER_TEMP/migration-findings.txt"; then
+                echo "::error::migration 改變既有呼叫端行為（見上方 BREAKING 列：ALTER POLICY／REVOKE／既有函式重定義／enum ADD VALUE 等）。PR body 必須有行首的 BREAKING: 段落，同一行寫受影響的呼叫端與遷移路徑；enum 加值另須在該段逐一交代上方 CONSUMER 列的每個路徑（已更新 <sha>／不需更新：<理由>）（docs/COLLABORATION.md §6，LS-181）"
                 exit 1
               fi
               if [ -z "$(git diff --name-only "$base_sha"...HEAD -- docs/API.md)" ]; then

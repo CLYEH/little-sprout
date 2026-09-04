@@ -202,8 +202,8 @@ if [ -d supabase/migrations ]; then
         printf '%s\n' "$findings" | grep '^DESTRUCTIVE' | sed 's/^/    /' >&2
       fi
       if printf '%s\n' "$findings" | grep -q '^BREAKING'; then
-        echo "⚠ push gate：migration 含 BREAKING 敘述——PR body 需行首 BREAKING: 段落，CI 會擋（COLLABORATION §6）：" >&2
-        printf '%s\n' "$findings" | grep '^BREAKING' | sed 's/^/    /' >&2
+        echo "⚠ push gate：migration 含 BREAKING 敘述——PR body 需行首 BREAKING: 段落，CI 會擋（COLLABORATION §6）；enum 加值（B7）另列 ENUM／CONSUMER 行，每個 CONSUMER 路徑都要在該段交代處置（LS-181）：" >&2
+        printf '%s\n' "$findings" | grep -E '^(BREAKING|ENUM|CONSUMER)' | sed 's/^/    /' >&2
         if [ -z "$(git diff --name-only "$base_sha"...HEAD -- docs/API.md)" ]; then
           echo "✗ push gate：migration 被判 BREAKING 但本分支沒動 docs/API.md——契約文件須同 PR 更新（COLLABORATION §6）。" >&2
           exit 1
