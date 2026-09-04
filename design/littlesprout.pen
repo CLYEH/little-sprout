@@ -140608,6 +140608,1241 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "IgqGF",
+      "x": -3367,
+      "y": 66028,
+      "name": "LS-177 / 互動列規格 · Diary 卡片 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "EvKFz",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "q5adq",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-section",
+          "padding": [
+            24,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "w6OtA0",
+              "name": "Section Label 1",
+              "fill": "$text-secondary",
+              "content": "未按讚",
+              "fontFamily": "$font",
+              "fontSize": "$fs-meta",
+              "fontWeight": "600",
+              "letterSpacing": 0.3
+            },
+            {
+              "id": "A0dNY",
+              "type": "ref",
+              "ref": "qtCd7",
+              "name": "Card Diary · 未按讚",
+              "width": "fill_container",
+              "descendants": {
+                "Jqwww": {
+                  "type": "frame",
+                  "id": "xcQBs",
+                  "name": "Signature",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "vhdRY",
+                      "name": "Signature Row",
+                      "width": "fill_container",
+                      "gap": "$sp-tight",
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "huGzg",
+                          "name": "Who Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "E6cq7I",
+                              "name": "Diary Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "notebook-pen",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "H7rdN8",
+                              "name": "Name",
+                              "fill": "$print-ink",
+                              "content": "小安",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "x9NKag",
+                          "name": "Age Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "gQsl1",
+                              "name": "Sep",
+                              "fill": "$print-ink-secondary",
+                              "content": " · ",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "G6ZCUK",
+                              "name": "Age",
+                              "fill": "$print-ink-secondary",
+                              "content": "2 歲 3 個月",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "un8pC",
+                      "name": "Interaction Row",
+                      "width": "fill_container",
+                      "gap": "$sp-block",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "K3m2r",
+                          "name": "Heart Button",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "guVrb",
+                              "name": "Heart Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "heart",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "mp41c",
+                              "name": "Heart Count",
+                              "fill": "$print-ink-secondary",
+                              "content": "3",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "uWDLk",
+                          "name": "Comment Button",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "YOz10",
+                              "name": "Comment Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "message-circle",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "sRY6r",
+                              "name": "Comment Count",
+                              "fill": "$print-ink-secondary",
+                              "content": "2",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "text",
+              "id": "j2f7b8",
+              "name": "Section Label 2",
+              "fill": "$text-secondary",
+              "content": "已按讚",
+              "fontFamily": "$font",
+              "fontSize": "$fs-meta",
+              "fontWeight": "600",
+              "letterSpacing": 0.3
+            },
+            {
+              "id": "TEX4L",
+              "type": "ref",
+              "ref": "qtCd7",
+              "name": "Card Diary · 已按讚",
+              "width": "fill_container",
+              "descendants": {
+                "Jqwww": {
+                  "type": "frame",
+                  "id": "HPxRL",
+                  "name": "Signature",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "UM4xo",
+                      "name": "Signature Row",
+                      "width": "fill_container",
+                      "gap": "$sp-tight",
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Jgngn",
+                          "name": "Who Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "lcAvY",
+                              "name": "Diary Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "notebook-pen",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "yqVEF",
+                              "name": "Name",
+                              "fill": "$print-ink",
+                              "content": "小安",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "oIoZE",
+                          "name": "Age Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CC69f",
+                              "name": "Sep",
+                              "fill": "$print-ink-secondary",
+                              "content": " · ",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "tK4sL",
+                              "name": "Age",
+                              "fill": "$print-ink-secondary",
+                              "content": "2 歲 3 個月",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vvcIX",
+                      "name": "Interaction Row",
+                      "width": "fill_container",
+                      "gap": "$sp-block",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "RRxSE",
+                          "name": "Heart Button",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "BQFGM",
+                              "name": "Heart Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "heart",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            },
+                            {
+                              "type": "text",
+                              "id": "du9Ab",
+                              "name": "Heart Count",
+                              "fill": "$accent",
+                              "content": "4",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "pkkOh",
+                          "name": "Comment Button",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "e28PCs",
+                              "name": "Comment Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "message-circle",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "MoKee",
+                              "name": "Comment Count",
+                              "fill": "$print-ink-secondary",
+                              "content": "2",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "VZ0wV",
+      "x": -3367,
+      "y": 66960,
+      "name": "LS-177 / 互動列規格 · Diary 卡片 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "xUfOf",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "TfOhu",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-section",
+          "padding": [
+            24,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "CgXgk",
+              "name": "Section Label 1",
+              "fill": "$text-secondary",
+              "content": "未按讚",
+              "fontFamily": "$font",
+              "fontSize": "$fs-meta",
+              "fontWeight": "600",
+              "letterSpacing": 0.3
+            },
+            {
+              "id": "C0Iq53",
+              "type": "ref",
+              "ref": "qtCd7",
+              "name": "Card Diary · 未按讚",
+              "width": "fill_container",
+              "descendants": {
+                "Jqwww": {
+                  "type": "frame",
+                  "id": "q00gPS",
+                  "name": "Signature",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "AWrJ5",
+                      "name": "Signature Row",
+                      "width": "fill_container",
+                      "gap": "$sp-tight",
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "y9Dve",
+                          "name": "Who Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "vNqms",
+                              "name": "Diary Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "notebook-pen",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "JABZF",
+                              "name": "Name",
+                              "fill": "$print-ink",
+                              "content": "小安",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "WbZqq",
+                          "name": "Age Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "IFYEL",
+                              "name": "Sep",
+                              "fill": "$print-ink-secondary",
+                              "content": " · ",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "RL2Go",
+                              "name": "Age",
+                              "fill": "$print-ink-secondary",
+                              "content": "2 歲 3 個月",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ccJT1",
+                      "name": "Interaction Row",
+                      "width": "fill_container",
+                      "gap": "$sp-block",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "HMzbe",
+                          "name": "Heart Button",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "pcsRz",
+                              "name": "Heart Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "heart",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "r4c45f",
+                              "name": "Heart Count",
+                              "fill": "$print-ink-secondary",
+                              "content": "3",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Jkqdy",
+                          "name": "Comment Button",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "VxZ6q",
+                              "name": "Comment Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "message-circle",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "smygI",
+                              "name": "Comment Count",
+                              "fill": "$print-ink-secondary",
+                              "content": "2",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "text",
+              "id": "DoxkQ",
+              "name": "Section Label 2",
+              "fill": "$text-secondary",
+              "content": "已按讚",
+              "fontFamily": "$font",
+              "fontSize": "$fs-meta",
+              "fontWeight": "600",
+              "letterSpacing": 0.3
+            },
+            {
+              "id": "To3Z8",
+              "type": "ref",
+              "ref": "qtCd7",
+              "name": "Card Diary · 已按讚",
+              "width": "fill_container",
+              "descendants": {
+                "Jqwww": {
+                  "type": "frame",
+                  "id": "RLhXJ",
+                  "name": "Signature",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ZXnnk",
+                      "name": "Signature Row",
+                      "width": "fill_container",
+                      "gap": "$sp-tight",
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "DVXqT",
+                          "name": "Who Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "NbxP4",
+                              "name": "Diary Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "notebook-pen",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "c4ErXy",
+                              "name": "Name",
+                              "fill": "$print-ink",
+                              "content": "小安",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "exEaD",
+                          "name": "Age Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "faWLh",
+                              "name": "Sep",
+                              "fill": "$print-ink-secondary",
+                              "content": " · ",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "TYelf",
+                              "name": "Age",
+                              "fill": "$print-ink-secondary",
+                              "content": "2 歲 3 個月",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "n4EY3",
+                      "name": "Interaction Row",
+                      "width": "fill_container",
+                      "gap": "$sp-block",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "rsryU",
+                          "name": "Heart Button",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "HThca",
+                              "name": "Heart Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "heart",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            },
+                            {
+                              "type": "text",
+                              "id": "CZCtO",
+                              "name": "Heart Count",
+                              "fill": "$accent",
+                              "content": "4",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "V5tTI",
+                          "name": "Comment Button",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "GjK1x",
+                              "name": "Comment Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "message-circle",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Ro8dm",
+                              "name": "Comment Count",
+                              "fill": "$print-ink-secondary",
+                              "content": "2",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Qzz3r",
+      "x": -3367,
+      "y": 67892,
+      "name": "A11y / 互動列規格 · Diary 卡片 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1434,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "r6q7C",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "F6ADEw",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-section",
+          "padding": [
+            24,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "s73GMC",
+              "name": "Section Label 1",
+              "fill": "$text-secondary",
+              "content": "未按讚",
+              "fontFamily": "$font",
+              "fontSize": "$fs-meta",
+              "fontWeight": "600",
+              "letterSpacing": 0.3
+            },
+            {
+              "id": "u85mDn",
+              "type": "ref",
+              "ref": "qtCd7",
+              "name": "Card Diary · 未按讚",
+              "width": "fill_container",
+              "descendants": {
+                "Jqwww": {
+                  "type": "frame",
+                  "id": "RIFBK",
+                  "name": "Signature",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "cVZWo",
+                      "name": "Signature Row",
+                      "width": "fill_container",
+                      "gap": "$sp-tight",
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "d6rRox",
+                          "name": "Who Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "gFHHF",
+                              "name": "Diary Icon",
+                              "width": 32,
+                              "height": 32,
+                              "icon": "notebook-pen",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Ji5Ye",
+                              "name": "Name",
+                              "fill": "$print-ink",
+                              "content": "小安",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "NNFB1",
+                          "name": "Age Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ELhQK",
+                              "name": "Sep",
+                              "fill": "$print-ink-secondary",
+                              "content": " · ",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "BdJLq",
+                              "name": "Age",
+                              "fill": "$print-ink-secondary",
+                              "content": "2 歲 3 個月",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DD9fZ",
+                      "name": "Interaction Row",
+                      "width": "fill_container",
+                      "gap": "$sp-block",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "zwd7O",
+                          "name": "Heart Button",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "YX6Jm",
+                              "name": "Heart Icon",
+                              "width": 32,
+                              "height": 32,
+                              "icon": "heart",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "m0g43l",
+                              "name": "Heart Count",
+                              "fill": "$print-ink-secondary",
+                              "content": "3",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "N9vJpP",
+                          "name": "Comment Button",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "z1Gmq",
+                              "name": "Comment Icon",
+                              "width": 32,
+                              "height": 32,
+                              "icon": "message-circle",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "a035rH",
+                              "name": "Comment Count",
+                              "fill": "$print-ink-secondary",
+                              "content": "2",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "text",
+              "id": "brjYO",
+              "name": "Section Label 2",
+              "fill": "$text-secondary",
+              "content": "已按讚",
+              "fontFamily": "$font",
+              "fontSize": "$fs-meta",
+              "fontWeight": "600",
+              "letterSpacing": 0.3
+            },
+            {
+              "id": "mecrt",
+              "type": "ref",
+              "ref": "qtCd7",
+              "name": "Card Diary · 已按讚",
+              "width": "fill_container",
+              "descendants": {
+                "Jqwww": {
+                  "type": "frame",
+                  "id": "FUM3S",
+                  "name": "Signature",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "yACOo",
+                      "name": "Signature Row",
+                      "width": "fill_container",
+                      "gap": "$sp-tight",
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "BkAab",
+                          "name": "Who Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "ruXBF",
+                              "name": "Diary Icon",
+                              "width": 32,
+                              "height": 32,
+                              "icon": "notebook-pen",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "yU7GM",
+                              "name": "Name",
+                              "fill": "$print-ink",
+                              "content": "小安",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "dkq0H",
+                          "name": "Age Group",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "gT6aG",
+                              "name": "Sep",
+                              "fill": "$print-ink-secondary",
+                              "content": " · ",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ThZ3w",
+                              "name": "Age",
+                              "fill": "$print-ink-secondary",
+                              "content": "2 歲 3 個月",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "cmURD",
+                      "name": "Interaction Row",
+                      "width": "fill_container",
+                      "gap": "$sp-block",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Dwycz",
+                          "name": "Heart Button",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "lypJ5",
+                              "name": "Heart Icon",
+                              "width": 32,
+                              "height": 32,
+                              "icon": "heart",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            },
+                            {
+                              "type": "text",
+                              "id": "idAFE",
+                              "name": "Heart Count",
+                              "fill": "$accent",
+                              "content": "4",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "g6RuO8",
+                          "name": "Comment Button",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$ctl-pad-tap",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "vreFe",
+                              "name": "Comment Icon",
+                              "width": 32,
+                              "height": 32,
+                              "icon": "message-circle",
+                              "library": "lucide",
+                              "fill": "$print-ink-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "lntFN",
+                              "name": "Comment Count",
+                              "fill": "$print-ink-secondary",
+                              "content": "2",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
