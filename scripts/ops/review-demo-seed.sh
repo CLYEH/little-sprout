@@ -184,42 +184,7 @@ work=$(mktemp -d "${TMPDIR:-/tmp}/ls146-review-demo-seed.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 
 # ---------------------------------------------------------------------------
-# 1. Storage 清理（先刪，冪等）：路徑完全由固定 media_ids＋固定 SEED_YM 決定，不必先 list。
-# ---------------------------------------------------------------------------
-echo "→ 清理既有 Storage 物件（$FAMILY_ID/$SEED_YM/…）"
-del_paths_json="["
-first=1
-add_path() {
-  [ "$first" -eq 1 ] || del_paths_json="${del_paths_json},"
-  del_paths_json="${del_paths_json}\"${1}\""
-  first=0
-}
-for id in "${media_ids[@]}"; do
-  # 縮圖副檔名恆為 .jpg（docs/API.md §6），只有一種可能，不必列舉
-  add_path "${FAMILY_ID}/${SEED_YM}/${id}_thumb.jpg"
-  # 原檔副檔名依素材種類而定（4 種可能），這裡是「清舊資料」的寬鬆一步——列出全部
-  # 可能副檔名，不存在的路徑由 Storage API 靜默忽略，比對照 DB 現況窄縮更省事、也更
-  # 保守（換了素材來源時舊副檔名的孤兒物件也會一併清掉）。
-  for ext in jpg jpeg png mp4; do
-    add_path "${FAMILY_ID}/${SEED_YM}/${id}.${ext}"
-  done
-done
-del_paths_json="${del_paths_json}]"
-# F3（merge-review R1）：原本不檢查回應——刪除若因 service key 輪替／bucket 名變更／
-# 反向代理擋掉而靜默失敗，DB 端仍會重建完成，接著在第一次上傳撞見既有物件的 409，
-# 錯誤訊息卻指向「上傳失敗」而不是真正的病灶（刪除失敗）。加 -f 讓非 2xx 直接判定失敗，
-# 在正確的一步 fail loud。
-if ! curl -sS -f -X DELETE "$API_URL/storage/v1/object/media" \
-  -H "Authorization: Bearer $SERVICE_KEY" -H "apikey: $SERVICE_KEY" \
-  -H "Content-Type: application/json" \
-  -d "{\"prefixes\":${del_paths_json}}" -o /dev/null; then
-  echo "✗ review-demo-seed：Storage 批次刪除失敗（$API_URL/storage/v1/object/media）——中止，不繼續重建" >&2
-  exit 1
-fi
-echo "  ✓ 批次刪除請求已送出（不存在的路徑會被忽略）"
-
-# ---------------------------------------------------------------------------
-# 2. 準備照片素材：沿用既有 design/ 圖檔（不新增二進位檔進 repo），各自產生一份縮圖
+# 1. 準備照片素材：沿用既有 design/ 圖檔（不新增二進位檔進 repo），各自產生一份縮圖
 #    （長邊 512、JPEG 品質 0.8，docs/API.md §6 縮圖規格），快取重用於多個 media 列。
 # ---------------------------------------------------------------------------
 photo_sources=(
@@ -255,7 +220,7 @@ done
 echo "→ 照片素材備妥（${#photo_sources[@]} 個來源，各含縮圖）"
 
 # ---------------------------------------------------------------------------
-# 3. 準備影片素材：AVFoundation 合成（見檔頭「影片素材」說明），各自量測實際秒數與縮圖。
+# 2. 準備影片素材：AVFoundation 合成（見檔頭「影片素材」說明），各自量測實際秒數與縮圖。
 # ---------------------------------------------------------------------------
 mkdir -p "$work/videos" "$work/video_thumbs"
 video_files=(); video_durations=(); video_thumb=(); video_tw=(); video_th=()
@@ -286,7 +251,7 @@ done
 echo "→ 影片素材備妥（2 支，實測秒數：${video_durations[*]}）"
 
 # ---------------------------------------------------------------------------
-# 4. DB：清理＋重建（單一 psql session，postgres 身分繞過 RLS／RPC-only 收斂）
+# 3. DB：清理＋重建（單一 psql session，postgres 身分繞過 RLS／RPC-only 收斂）
 # ---------------------------------------------------------------------------
 sql_file="$work/seed.sql"
 cat > "$sql_file" <<SQL
@@ -460,11 +425,52 @@ end;
 SQL
 
 echo "→ 套用 SQL（${sql_file}）"
-run_sql "$sql_file" || { echo "✗ review-demo-seed：SQL 套用失敗（見上方錯誤），中止——不繼續上傳 Storage" >&2; exit 1; }
+# N1（merge-review R2）：這句失敗時 --single-transaction（F2）已經把 DB 完整回捲，Storage
+# 這裡還沒被碰過（清理搬到下面、SQL 成功之後才做，見下）——「中止」現在才真的是全有或
+# 全無，訊息不再誤導操作者以為「回捲了＝什麼都沒動」卻其實 Storage 已經被清空。
+run_sql "$sql_file" || { echo "✗ review-demo-seed：SQL 套用失敗（見上方錯誤），中止——DB 已回捲，Storage 未動（清理與上傳都排在 SQL 成功之後）" >&2; exit 1; }
 
 # ---------------------------------------------------------------------------
-# 5. Storage：上傳照片＋影片＋縮圖（DB 已確認寫入成功才上傳，讓失敗時容易重跑收斂）
+# 4. Storage：清理舊物件＋上傳新物件（DB 已確認寫入成功才動 Storage，這是本步驟排在 SQL
+#    之後的唯一理由——見下方 N1 說明）
 # ---------------------------------------------------------------------------
+# N1（merge-review R2）：清理原本是最先做的「step 1」，SQL 若在中段失敗，
+# --single-transaction（F2）能讓 DB 完整回捲，但已經刪掉的 40 個 Storage 物件無從回捲——
+# DB 看起來完好、Storage 卻是空的，20 筆 media 的 storage_path／thumb_path 全指向不存在
+# 的物件（reviewer 實跑重現：storage_objects 40→0、orphan 20/20；重跑會自癒，但當下就是
+# 20 張破圖，App Review 沒有第二次機會）。搬到這裡（SQL 成功之後、上傳之前）之後，SQL
+# 失敗時 Storage 原封不動，真正做到全有或全無；這裡只依賴 media_ids／FAMILY_ID／
+# SEED_YM／API_URL／SERVICE_KEY，在 SQL 之前就已備妥，搬動不影響清理本身的正確性。
+echo "→ 清理既有 Storage 物件（$FAMILY_ID/$SEED_YM/…）"
+del_paths_json="["
+first=1
+add_path() {
+  [ "$first" -eq 1 ] || del_paths_json="${del_paths_json},"
+  del_paths_json="${del_paths_json}\"${1}\""
+  first=0
+}
+for id in "${media_ids[@]}"; do
+  # 縮圖副檔名恆為 .jpg（docs/API.md §6），只有一種可能，不必列舉
+  add_path "${FAMILY_ID}/${SEED_YM}/${id}_thumb.jpg"
+  # 原檔副檔名依素材種類而定（4 種可能），這裡是「清舊資料」的寬鬆一步——列出全部
+  # 可能副檔名，不存在的路徑由 Storage API 靜默忽略，比對照 DB 現況窄縮更省事、也更
+  # 保守（換了素材來源時舊副檔名的孤兒物件也會一併清掉）。
+  for ext in jpg jpeg png mp4; do
+    add_path "${FAMILY_ID}/${SEED_YM}/${id}.${ext}"
+  done
+done
+del_paths_json="${del_paths_json}]"
+# F3（merge-review R1）：加 -f 讓非 2xx 直接判定失敗——這裡失敗時 DB 已經是最新狀態，
+# Storage 物件則新舊混雜（有些清了、有些沒清），不是「什麼都沒動」，訊息據實反映。
+if ! curl -sS -f -X DELETE "$API_URL/storage/v1/object/media" \
+  -H "Authorization: Bearer $SERVICE_KEY" -H "apikey: $SERVICE_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"prefixes\":${del_paths_json}}" -o /dev/null; then
+  echo "✗ review-demo-seed：Storage 批次刪除失敗（$API_URL/storage/v1/object/media）——DB 已重建完成，Storage 物件可能新舊混雜；重跑一次會自動收斂（清理具冪等性）" >&2
+  exit 1
+fi
+echo "  ✓ 批次刪除請求已送出（不存在的路徑會被忽略）"
+
 storage_put() {  # $1=本機檔案 $2=storage path（不含 bucket 前綴） $3=content-type
   curl -sS -f -X POST "$API_URL/storage/v1/object/media/$2" \
     -H "Authorization: Bearer $SERVICE_KEY" -H "apikey: $SERVICE_KEY" \

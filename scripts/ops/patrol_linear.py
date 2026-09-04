@@ -9,7 +9,17 @@ patrol-linear.sh 的實際邏輯：用 curl 打 Linear GraphQL（team LS）取 o
 
 只讀（GraphQL query，不呼叫任何 mutation）；HTTP 一律透過 `curl` 子行程送出——不用
 urllib，是為了讓自測用 PATH 上的假 curl 攔截、餵固定 fixture（同 post-status.test.sh 的
-stub gh 慣例），不必真的打 Linear。
+stub gh 慣例），不必真的打 Linear。唯一的本機寫入是 `<root>/.claude/patrol-state.json`
+（LS-144：每 lane「連續空輪」計數，gitignored；讀不到／寫不進都 fail-soft）。
+
+LS-144「開票責任」：lane 在飛 0 且無可派候補（無候補，或候補全被擋——`hold:user` 使用者裁決、
+待 Spec／待結構／blockedBy 未解／`需 Design gate` 無核可稿）時，動作清單多印一行
+`→ 開票：lane:<x> 空 n 輪（…）——來源候選：…`（連續空 ≥2 輪升 ⚠），並機械列出來源候選：
+design／ui＝Backlog 中票文含正典標記 `**UI 票：需 Design gate**` 且尚無 lane:design 票承接者；harness＝LS-96 池項
+`P1 ·`／`P2 ·` 且尚未被任何票引用 comment id 前綴者；backend＝Backlog Story 含後端關鍵字且尚無
+lane:backend 子票者（關鍵字啟發式，只列、不判）。來源候選需要的額外查詢（已結案票、LS-96
+comments）只在有 lane 需要時才打、且 best-effort（查詢失敗只在該行註明，不打掉整份報表，
+同 cycle_progress() 的例外）。不自動建票——建票仍由 orchestrator 判斷 scope（§4-b 模板第 4 步）。
 
 用法：patrol_linear.py --root <repo 根> --team-key LS --team-id <uuid> --mode human|brief|json
       [--sim-lines-file <path>]（每行一條「[Booted 模擬器 …] …」，來自 patrol.sh --brief 的輸出）
@@ -23,6 +33,7 @@ Supabase lock／simulator 常數的既有模式）。
 import argparse
 import datetime
 import hashlib
+import io
 import json
 import os
 import re
@@ -41,6 +52,24 @@ BACKLOG_STATES = ("Backlog", "Spec")
 ACTIVE_STATE_NAMES = ("Ready", "In Progress", "In Review", "QA", "Design", "Spec")
 SIZE_RANK = {"size:S": 0, "size:M": 1, "size:L": 2}
 SKIP_ISSUE = "LS-96"  # 常駐待辦池：永不列為候補、永不派（§5-b「harness 優先序」）
+# LS-144：使用者裁決暫不動的票——補位與開票候選皆跳過並註明「使用者裁決」（§5-b）。
+HOLD_LABEL = "hold:user"
+# LS-144：Story 票文的正典粗體標記 `**UI 票：需 Design gate**`（LS-19／20／22／24 皆此形）＝沒有核可設計稿不得
+# 實作（CLAUDE.md design gate）。帶此標記的 Backlog 票永不列為候補（實作票是核可後另開的子票，Story 本身不派
+# ——LS-142 驗收段的流程），只作為 design／ui lane 的開票來源。LS-96 池項 b2993155（P1）的機械修法即此條。
+# R1 F1：不能用裸子字串「需 Design gate」——「非畫面票（不需 Design gate）」（LS-145）、「UI 端（另票，需 Design
+# gate）」（LS-143／149 的 backend 拆票用語）都包含它，會把不需設計稿的票鎖進「待Design」踢出候補。
+# R2 N2：也不能精確比對整串——LS-17 曾寫 `**UI 票：需先過 Design gate**`，漂移即漏擋（fail-open，繞過 design gate）。
+# 折衷：必須在 `**UI 票：需…Design gate**` 粗體內、「需」與「Design gate」之間容忍 ≤6 字（先過／先通過）；「不需」「另票，需」
+# 都不在這個粗體形內，仍不命中。
+DESIGN_GATE_RE = re.compile(r"\*\*UI 票：需.{0,6}Design gate\*\*")
+POOL_PRIORITY_RE = re.compile(r"\bP([1-4])\s*·")  # LS-96 池項格式：`Pn ·`（§5-b「入口收斂」）；body 首個 match
+POOL_ITEM_LINE_RE = re.compile(r"(?m)^\s*(?:[-*]\s*)?P([1-4])\s*·")  # 行首列點項 `- Pn ·`（R2 N1：一則多項取最小級）
+# 池內公告（銷除／銷案／已升票）會引述被銷除項的 `P1 ·`，不是池項（R1 F2 live 62ecf8f1）。R2 N3：不錨 body 開頭（公告以日期／
+# 票號起頭就漏），改看 body 前 2 行有沒有這些字樣；只看前 2 行是避免正文提到「已升票」的真池項被當公告藏掉。
+POOL_ANNOUNCE_RE = re.compile(r"銷除|銷案|已升票")
+BACKEND_KEYWORDS = ("RPC", "RLS", "migration", "schema", "後端", "Supabase", "資料表", "trigger", "policy", "SQL", "Edge Function", "bucket")
+STATE_FILE_REL = os.path.join(".claude", "patrol-state.json")  # 連續空輪計數（gitignored）
 
 ISSUES_QUERY = """
 query($after: String, $teamKey: String!) {
@@ -60,6 +89,27 @@ query($after: String, $teamKey: String!) {
       parent { identifier }
       inverseRelations { nodes { type issue { identifier state { type } } } }
     }
+  }
+}
+"""
+
+# LS-144：開票來源候選要看「已結案」的票——設計票已 Done 的 Story 不再列為 design 來源、已升票的池項
+# 不再列。ISSUES_QUERY 為了狀態對照只抓 open 票，所以另開一支只抓 completed/canceled 的輕量查詢
+# （不帶 relations／cycle／priority）。只在有 lane 需要來源候選時才打（lazy），且 best-effort。
+CLOSED_ISSUES_QUERY = """
+query($after: String, $teamKey: String!) {
+  issues(first: 50, after: $after, filter: { team: { key: { eq: $teamKey } }, state: { type: { in: ["completed", "canceled"] } } }) {
+    pageInfo { hasNextPage endCursor }
+    nodes { identifier title description state { name type } labels { nodes { name } } parent { identifier } }
+  }
+}
+"""
+
+# LS-144：LS-96 待辦池 comments（分頁 100）——harness lane 開票來源。同 pr-body-check.sh --verify 的查法。
+POOL_COMMENTS_QUERY = """
+query($id: String!, $after: String) {
+  issue(id: $id) {
+    comments(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes { id body createdAt } }
   }
 }
 """
@@ -147,11 +197,11 @@ def gql(token, query, variables, timeout=25):
     return data["data"]
 
 
-def fetch_issues(token, team_key):
+def fetch_issue_pages(token, query, team_key):
     issues = []
     cursor = None
     while True:
-        data = gql(token, ISSUES_QUERY, {"after": cursor, "teamKey": team_key})
+        data = gql(token, query, {"after": cursor, "teamKey": team_key})
         conn = data["issues"]
         issues.extend(conn["nodes"])
         page = conn["pageInfo"]
@@ -160,6 +210,46 @@ def fetch_issues(token, team_key):
         else:
             break
     return issues
+
+
+def fetch_issues(token, team_key):
+    return fetch_issue_pages(token, ISSUES_QUERY, team_key)
+
+
+def fetch_closed_issues(token, team_key):
+    return fetch_issue_pages(token, CLOSED_ISSUES_QUERY, team_key)
+
+
+def fetch_pool_comments(token, pool_id):
+    comments = []
+    cursor = None
+    while True:
+        data = gql(token, POOL_COMMENTS_QUERY, {"id": pool_id, "after": cursor})
+        conn = (data.get("issue") or {}).get("comments") or {}
+        comments.extend(conn.get("nodes") or [])
+        page = conn.get("pageInfo") or {}
+        nxt = page.get("endCursor")
+        if page.get("hasNextPage") and nxt and nxt != cursor:
+            cursor = nxt
+        else:
+            break
+    return comments
+
+
+def best_effort(fn, *args):
+    """回傳 (結果, None) 或 (None, 錯誤字串)。LS-144 開票來源候選的附加查詢專用：底層 gql() 失敗會先把
+    訊息印到 stderr 再 sys.exit(1)，這裡把 stderr 暫時接到緩衝區、吸收 SystemExit，把訊息塞進回傳的錯誤
+    字串（進報表該 lane 的開票行），不打掉整份報表、也不弄髒 --json 的輸出流（呼叫端常 2>&1 一起收）
+    ——與 cycle_progress() 的 R2 m4 例外同一個理由；主查詢（issues／cycles）仍照舊 fail loud。"""
+    real_stderr = sys.stderr
+    sys.stderr = io.StringIO()
+    try:
+        return fn(*args), None
+    except SystemExit as exc:
+        msg = " ".join(sys.stderr.getvalue().split())[:200]
+        return None, "查詢失敗（exit %s：%s）" % (exc.code, msg or "無訊息")
+    finally:
+        sys.stderr = real_stderr
 
 
 def fetch_cycles(token, team_id):
@@ -272,12 +362,21 @@ def sort_key(issue):
     return (priority_rank(issue), size_rank(issue), parse_iso(issue.get("createdAt")))
 
 
+def needs_design_gate(issue):
+    """LS-144：票文含正典粗體標記（DESIGN_GATE_RE）且本身不是設計票——沒有核可稿不得實作，Story 本身也不派。
+    R1 F1：只認粗體形，裸「需 Design gate」子字串對「不需 Design gate」／「另票，需 Design gate」等否定句無感；
+    R2 N2：粗體內容忍「需先過 Design gate」（LS-17）等變體，精確比對整串會在措辭漂移時漏擋（繞過 design gate）。"""
+    return DESIGN_GATE_RE.search(issue.get("description") or "") is not None and lane_of(issue) != "lane:design"
+
+
 def classify_candidate(issue):
-    """回傳 'ok'／'skip'／'not_backlog'／'blocked'／'spec'／'structure'。"""
+    """回傳 'ok'／'skip'／'not_backlog'／'hold'／'blocked'／'spec'／'structure'／'design_gate'。"""
     if issue["identifier"] == SKIP_ISSUE:
         return "skip"
     if issue["state"]["name"] not in BACKLOG_STATES:
         return "not_backlog"
+    if HOLD_LABEL in label_names(issue):
+        return "hold"  # LS-144：使用者裁決暫不動，先於其他判定——清單要註明「使用者裁決」而不是別的理由
     if not blocked_by_resolved(issue):
         return "blocked"
     if "## 驗收" not in (issue.get("description") or ""):
@@ -288,6 +387,8 @@ def classify_candidate(issue):
         return "structure"
     if str((project or {}).get("name") or "").startswith("Phase") and not milestone:
         return "structure"
+    if needs_design_gate(issue):
+        return "design_gate"
     return "ok"
 
 
@@ -379,13 +480,159 @@ def lane_candidates(issues, lane, current_cycle_number):
 def lane_pending(issues, lane):
     """R1 F1：classify_candidate() 算出的 'spec'／'structure' 排除原因之前只用來丟棄候補，沒有輸出
     出口——票文缺「## 驗收」或缺 project／Phase 票缺 milestone 的票會靜默停滯，沒人知道要去補。
-    回傳 (待 Spec identifier 清單, 待結構 identifier 清單)，依票號排序。"""
+    回傳 {"spec": [...], "structure": [...], "design_gate": [...], "hold": [...], "blocked": [...]}
+    （各為 identifier 清單，依票號排序）。LS-144 加 design_gate（需 Design gate 無核可稿）、hold
+    （使用者裁決）、blocked（blockedBy 未解）——三者都是「候補被擋」的理由，開票行要列出來。"""
     lane_issues = [i for i in issues if lane_of(i) == lane]
-    pending_spec = [i["identifier"] for i in lane_issues if classify_candidate(i) == "spec"]
-    pending_structure = [i["identifier"] for i in lane_issues if classify_candidate(i) == "structure"]
-    pending_spec.sort(key=lambda ident: ticket_number(ident) or 0)
-    pending_structure.sort(key=lambda ident: ticket_number(ident) or 0)
-    return pending_spec, pending_structure
+    out = {"spec": [], "structure": [], "design_gate": [], "hold": [], "blocked": []}
+    for i in lane_issues:
+        kind = classify_candidate(i)
+        if kind in out:
+            out[kind].append(i["identifier"])
+    for lst in out.values():
+        lst.sort(key=lambda ident: ticket_number(ident) or 0)
+    return out
+
+
+# ---------------- 開票來源候選（LS-144；section 3 的「→ 開票」行）----------------
+
+def references(text, ident):
+    """整字比對票號（`LS-19` 不被 `LS-190` 滿足），同 pr-body-check.sh 的比對法。"""
+    return re.search(r"(^|[^A-Za-z0-9])%s([^0-9]|$)" % re.escape(ident), text or "") is not None
+
+
+def is_story(issue):
+    title = issue.get("title") or ""
+    return title.startswith("Story：") or title.startswith("Story:")
+
+
+def design_tickets_for(story_ident, all_issues):
+    """承接該 Story 畫面群的 lane:design 票（open 或已 Done；R1 F3：Canceled 不算承接，Story 要重新列為來源）：
+    parent 是該 Story，或標題整字提到它（LS-142「設計：…（LS-20 畫面群）」兩者皆是）。只比對標題、不比對票文——
+    設計票票文慣例會引用多張無關票（LS-142 提到 LS-17／46／119／120／136），比對票文會把那些 Story 誤判為已承接而漏列。"""
+    return [
+        i for i in all_issues
+        if lane_of(i) == "lane:design"
+        and (i.get("state") or {}).get("type") != "canceled"
+        and ((i.get("parent") or {}).get("identifier") == story_ident or references(i.get("title"), story_ident))
+    ]
+
+
+def design_gate_sources(open_issues, all_issues):
+    """(a) design／ui：Backlog 中票文含正典粗體標記 `**UI 票：需 Design gate**`（needs_design_gate()）、且尚無任何
+    lane:design 票承接者。"""
+    out = []
+    for i in open_issues:
+        if i["state"]["name"] not in BACKLOG_STATES or not needs_design_gate(i):
+            continue
+        if design_tickets_for(i["identifier"], all_issues):
+            continue
+        out.append({"id": i["identifier"], "title": i.get("title") or "", "why": "需 Design gate、尚無設計票（先開 lane:design）"})
+    out.sort(key=lambda s: ticket_number(s["id"]) or 0)
+    return out
+
+
+def backend_sources(open_issues, all_issues):
+    """(c) backend：Backlog Story 票文含後端關鍵字、且尚無任何 lane:backend 子票（open 或已結案）者。
+    關鍵字啟發式——只列出、由 orchestrator 判斷可否拆「後端先行（不需 Design gate）」。"""
+    out = []
+    for i in open_issues:
+        if i["state"]["name"] not in BACKLOG_STATES or not is_story(i):
+            continue
+        text = ((i.get("title") or "") + "\n" + (i.get("description") or "")).lower()
+        hits = [k for k in BACKEND_KEYWORDS if k.lower() in text]
+        if not hits:
+            continue
+        ident = i["identifier"]
+        if any(lane_of(c) == "lane:backend" and (c.get("parent") or {}).get("identifier") == ident for c in all_issues):
+            continue
+        out.append({
+            "id": ident, "title": i.get("title") or "",
+            "why": "Story 含後端關鍵字 %s、尚無 lane:backend 子票——可拆後端先行？" % "／".join(hits[:3]),
+        })
+    out.sort(key=lambda s: ticket_number(s["id"]) or 0)
+    return out
+
+
+def is_pool_announcement(comment):
+    """池內公告（銷除／銷案／已升票）：只看 body 前 2 行（R2 N3 不錨開頭；只看前 2 行是避免正文提到字樣的真池項被當公告）。"""
+    return POOL_ANNOUNCE_RE.search("\n".join((comment.get("body") or "").splitlines()[:2])) is not None
+
+
+def pool_sources(comments, all_issues):
+    """(b) harness：LS-96 池項 comment 等級為 P1／P2、且尚未升票者。等級＝body 首個 `Pn ·` 與各行首列點
+    `- Pn ·` 的最小級（R2 N1：live 163 則中 8 則是一則多項混級，如 `- P3 ·` 後接 `- P2 ·`，取最小級才不會把真 P2
+    藏掉；P3 池項文中段引用「P1 ·」既非首個 match 也不在行首，不升級）。公告（is_pool_announcement()：前 2 行含
+    「銷除／銷案／已升票」）整則跳過。「已升票」＝任一票（open 或已結案）的標題／票文含該 comment id 前 8 碼（agent
+    慣寫的引用形式），或池內某則**公告**提到該前綴——R3：只有公告能銷除別則；非公告的池項在正文提到別則 id 加
+    「銷案」字樣（live `bcb97555` 的更正文提到 `ca993eba`／`d8634a08`）不算升票，否則真 P2 會被順帶藏掉。
+    P1 排前、同級依 comment 建立時間。"""
+    texts = [(i.get("title") or "") + "\n" + (i.get("description") or "") for i in all_issues]
+    out = []
+    for c in comments:
+        body = c.get("body") or ""
+        if is_pool_announcement(c):
+            continue  # R1 F2／R2 N3：公告自己引述了 `P1 ·`，不能被當成未升票的池項（live 62ecf8f1 實例）
+        m = POOL_PRIORITY_RE.search(body)
+        prefix = (c.get("id") or "")[:8]
+        if not m or len(prefix) < 8:
+            continue
+        # R2 N1：等級＝首個 match（單項慣例「入池 …：P1 · …」不在行首）與各行首列點的最小級。
+        level = min([int(m.group(1))] + [int(x) for x in POOL_ITEM_LINE_RE.findall(body)])
+        if level not in (1, 2):
+            continue
+        if any(prefix in t for t in texts):
+            continue
+        if any(o is not c and is_pool_announcement(o) and prefix in (o.get("body") or "") for o in comments):
+            continue  # R3：只有公告能銷除別則——非公告池項正文提到別則 id＋「銷案」字樣不算（live bcb97555 誤藏 2 條真 P2）
+        item = re.search(r"\bP%d\s*·" % level, body)  # 摘要取最小級那一項的文字
+        snippet = " ".join(body[item.end():].split())[:60]
+        out.append({
+            "id": "%s#%s" % (SKIP_ISSUE, prefix), "title": snippet,
+            "why": "P%d 池項尚未升票" % level, "_sort": (level, parse_iso(c.get("createdAt"))),
+        })
+    out.sort(key=lambda s: s["_sort"])
+    for s in out:
+        del s["_sort"]
+    return out
+
+
+def format_open_ticket_action(lane, ot):
+    rounds = ot["empty_rounds"]
+    if rounds >= 2:
+        head = "→ ⚠ 開票：%s 連續空 %d 輪" % (lane, rounds)
+    else:
+        head = "→ 開票：%s 空 %d 輪" % (lane, rounds)
+    reason = ("候補全被擋：" + "、".join(ot["blocked"])) if ot["blocked"] else "無候補"
+    if ot["sources"]:
+        src = "、".join("%s「%s」（%s）" % (s["id"], s["title"], s["why"]) for s in ot["sources"])
+    else:
+        src = "（無機械候選——請人工依 docs/PLAN.md 路線圖拆票，或在 notes 寫明本輪不開的理由）"
+    line = "%s（%s）——來源候選：%s" % (head, reason, src)
+    if ot["notes"]:
+        line += "［" + "；".join(ot["notes"]) + "］"
+    return line
+
+
+def load_state(root):
+    try:
+        with open(os.path.join(root, STATE_FILE_REL), encoding="utf-8") as fh:
+            data = json.load(fh)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}  # 沒有／壞掉都當作從零算起（fail-soft：計數只是提醒的強度，不是 gate）
+
+
+def save_state(root, state):
+    path = os.path.join(root, STATE_FILE_REL)
+    tmp = "%s.%d.tmp" % (path, os.getpid())
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(state, fh, ensure_ascii=False, indent=1)
+        os.replace(tmp, path)  # 原子換檔：兩個巡檢同時跑也不會留半截 JSON
+    except OSError as exc:
+        sys.stderr.write("⚠ patrol-linear：寫不進 %s（%s），連續空輪計數本輪不保存\n" % (path, exc))
 
 
 # ---------------- git 對照（狀態對照段；section 1）----------------
@@ -545,6 +792,43 @@ def build_report(token, root, team_key, team_id, sim_lines):
     cycle_check, cycle_actions = cycle_reconciliation(token, issues, current, now_epoch)
     structure = ticket_structure(issues)
 
+    # LS-144：開票來源候選的附加查詢——lazy（只在有 lane 空且無可派候補時才打）、各打一次、best-effort。
+    extra = {}
+
+    def all_issues():
+        if "closed" not in extra:
+            extra["closed"] = best_effort(fetch_closed_issues, token, team_key)
+        closed, err = extra["closed"]
+        return issues + (closed or []), ("已結案票%s，承接／升票判定只看 open 票" % err if err else None)
+
+    def pool_comments():
+        if "pool" not in extra:
+            extra["pool"] = best_effort(fetch_pool_comments, token, SKIP_ISSUE)
+        comments, err = extra["pool"]
+        return comments or [], ("%s 池%s" % (SKIP_ISSUE, err) if err else None)
+
+    def open_ticket_sources(lane):
+        notes = []
+        if lane == "lane:harness":
+            comments, err = pool_comments()
+            if err:
+                return [], [err]
+            alls, err = all_issues()
+            if err:
+                notes.append(err)
+            return pool_sources(comments, alls), notes
+        alls, err = all_issues()
+        if err:
+            notes.append(err)
+        if lane == "lane:backend":
+            return backend_sources(issues, alls), notes
+        return design_gate_sources(issues, alls), notes  # lane:design／lane:ui 共用同一份來源
+
+    state = load_state(root)
+    streaks = state.get("open_ticket_empty_rounds")
+    if not isinstance(streaks, dict):
+        streaks = {}
+
     lanes = {}
     lane_actions = []
     for lane, limit in LANE_LIMITS.items():
@@ -552,7 +836,7 @@ def build_report(token, root, team_key, team_id, sim_lines):
         in_cycle_ok, all_ok, needs_scope = lane_candidates(
             issues, lane, current["number"] if current else None
         )
-        pending_spec, pending_structure = lane_pending(issues, lane)
+        pending = lane_pending(issues, lane)
         candidates_shown = in_cycle_ok if in_cycle_ok else all_ok
         entry = {
             "limit": limit,
@@ -560,8 +844,12 @@ def build_report(token, root, team_key, team_id, sim_lines):
             "candidates": [i["identifier"] for i in candidates_shown],
             "chosen": None,
             "needs_scope_plus": needs_scope,
-            "pending_spec": pending_spec,
-            "pending_structure": pending_structure,
+            "pending_spec": pending["spec"],
+            "pending_structure": pending["structure"],
+            "pending_design": pending["design_gate"],
+            "hold": pending["hold"],
+            "blocked_by_unresolved": pending["blocked"],
+            "open_ticket": None,
             "actions": [],
         }
         # R2 m1：current 為 None 時（無法判定當前 cycle）不產生動作——與 cycle_reconciliation()
@@ -579,8 +867,33 @@ def build_report(token, root, team_key, team_id, sim_lines):
                 "→ save_issue %s state=Ready cycle=%s"
                 % (chosen["identifier"], current["number"])
             )
-            lane_actions.extend(entry["actions"])
+        # LS-144 開票責任：在飛 0 且無可派候補（無候補或候補全被擋）→ 印「→ 開票」並列來源候選；
+        # 連續空輪數存 .claude/patrol-state.json（每 lane 一個計數；有在飛或有候補即歸零），≥2 輪升 ⚠。
+        # 不看 current 是否可判定——lane 空著就是停擺，與能不能派工（需 cycle）是兩件事。
+        if wip == 0 and not candidates_shown:
+            rounds = int(streaks.get(lane) or 0) + 1
+            blocked = []
+            if pending["hold"]:
+                blocked.append("%s %s（使用者裁決）" % (HOLD_LABEL, ", ".join(pending["hold"])))
+            if pending["design_gate"]:
+                blocked.append("待Design %s（需 Design gate 無核可稿）" % ", ".join(pending["design_gate"]))
+            if pending["spec"]:
+                blocked.append("待Spec %s" % ", ".join(pending["spec"]))
+            if pending["structure"]:
+                blocked.append("待結構 %s" % ", ".join(pending["structure"]))
+            if pending["blocked"]:
+                blocked.append("blockedBy 未解 %s" % ", ".join(pending["blocked"]))
+            sources, notes = open_ticket_sources(lane)
+            entry["open_ticket"] = {"empty_rounds": rounds, "blocked": blocked, "sources": sources, "notes": notes}
+            entry["actions"].append(format_open_ticket_action(lane, entry["open_ticket"]))
+        else:
+            rounds = 0
+        streaks[lane] = rounds
+        lane_actions.extend(entry["actions"])
         lanes[lane] = entry
+
+    state["open_ticket_empty_rounds"] = streaks
+    save_state(root, state)
 
     actions = list(cycle_actions) + list(lane_actions)
 
@@ -636,8 +949,11 @@ def format_lane_line(lane, entry):
         cand = "（無候補）"
     pend_spec = ", ".join(entry["pending_spec"]) if entry["pending_spec"] else "無"
     pend_structure = ", ".join(entry["pending_structure"]) if entry["pending_structure"] else "無"
-    return "  %-14s 上限%d 在飛%d  候補：%s  待Spec：%s  待結構：%s" % (
-        lane, entry["limit"], entry["wip"], cand, pend_spec, pend_structure
+    # LS-144：多兩欄——待Design（需 Design gate 無核可稿）、hold:user（使用者裁決，補位與開票候選皆跳過）
+    pend_design = ", ".join(entry["pending_design"]) if entry["pending_design"] else "無"
+    hold = ("%s（使用者裁決）" % ", ".join(entry["hold"])) if entry["hold"] else "無"
+    return "  %-14s 上限%d 在飛%d  候補：%s  待Spec：%s  待結構：%s  待Design：%s  %s：%s" % (
+        lane, entry["limit"], entry["wip"], cand, pend_spec, pend_structure, pend_design, HOLD_LABEL, hold
     )
 
 

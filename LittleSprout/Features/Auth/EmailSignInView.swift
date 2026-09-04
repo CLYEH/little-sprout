@@ -66,8 +66,11 @@ struct EmailSignInView: View {
 
     private func send() {
         Task {
-            if await model.sendCode() {
-                onCodeSent(model.email)
+            // LS-156 R2（merge-review R1 F1）：用 model 回報的 `lastSentEmail`，不是事後重讀
+            // `trimmedEmail`——`await` 之後 `email` 可能已被使用者改寫，`lastSentEmail` 才是
+            // 真正寄碼用的那個值，讓下一頁 OTPVerificationView／verifyEmailOTP 收到同一個值。
+            if await model.sendCode(), let sentEmail = model.lastSentEmail {
+                onCodeSent(sentEmail)
             }
         }
     }

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LS-145：app target 的 Privacy Manifest。
+
+  NSPrivacyAccessedAPITypes：只列「app 自己的原始碼或未自帶 manifest 的 SPM 依賴」實際用到的
+  required-reason API（LS-145 handoff 附 grep 證據）。目前只有一類：
+    File Timestamp APIs（`FileManager.attributesOfItem(atPath:)`）——
+      app 側：LittleSprout/Services/Diary/MediaUploadService.swift `fileByteSize(at:)`
+        （上傳前讀本機暫存媒體檔大小，`.size` 鍵）。
+      依賴側：supabase-swift `Sources/Storage/MultipartFormData.swift`（同一支 API，
+        `Storage` module 沒有自帶 PrivacyInfo.xcprivacy——grep
+        DerivedData/…/SourcePackages/checkouts/supabase-swift 全 Sources 確認）。
+    理由碼選 C617.1（app 容器內檔案的時間戳／大小等 metadata；本專案讀的是 app 沙盒暫存目錄
+    內、使用者透過 PhotosPicker 挑選後複製進來的媒體檔，不是顯示給使用者看的時間戳，排除 DDA9.1）。
+  已查證未用到、故不列：UserDefaults（CA92.1，app 與 Auth 皆用 Keychain，非 UserDefaults——見
+  SupabaseClientFactory.swift 與 supabase-swift KeychainLocalStorage）、system boot time
+  （35F9.1，全專案與全部 SPM checkout 皆無 systemUptime／mach_absolute_time）、disk space
+  （E174.1，全專案與全部 SPM checkout 皆無 volumeAvailableCapacity／statfs 等）。
+  grep 範圍：LittleSprout/ 全部 *.swift ＋ DerivedData 內 supabase-swift／swift-http-types／
+  swift-crypto／swift-asn1／swift-clocks／swift-concurrency-extras／xctest-dynamic-overlay
+  的 Sources（LS-49 project.yml 鎖版 supabase-swift 2.49.0 的 transitive deps）。
+  swift-crypto 各 target（Crypto／CCryptoBoringSSL 等）自帶各自的 PrivacyInfo.xcprivacy，
+  不重複列。
+
+  NSPrivacyCollectedDataTypes：家長自願上傳的照片／影片、Email（帳號識別）、使用者生成內容
+  （日記文字、留言），三者皆 Linked=true（綁定使用者身分）、Tracking=false（不用於廣告或
+  跨 app／網站追蹤）、purpose 僅 AppFunctionality（app 核心功能：私密家庭相簿與日記）。全部
+  資料僅在使用者自建的私密家庭內可見（PLAN §10-B）。
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePhotosorVideos</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeEmailAddress</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeOtherUserContent</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

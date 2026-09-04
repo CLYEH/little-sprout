@@ -7,6 +7,13 @@
 # 覆蓋：候補排序（priority 同分取 size S→M→L 再 createdAt）、blockedBy 未 Done → 跳過、Canceled 視為
 # 已解、缺 size 的 lane:harness 票列結構 (e)、cycle 外（非本 cycle）的 active 票列 cycle 對帳 (a)、
 # LS-96 永遠不列為候補、分頁（兩頁 issues 合併）、無 LINEAR_API_KEY → 略過且不呼叫 curl。
+# ⑩（LS-144 開票責任）：lane 空＋無候補 → 印「→ 開票」並列來源；lane 空＋候補全 hold:user → 印開票行且註明
+# 「使用者裁決」；lane 有在飛 → 不印；第二輪升 ⚠（.claude/patrol-state.json 計數）；「需 Design gate」票歸
+# 待Design 不進候補；設計票（open 或已 Done）已承接的 Story 不列；LS-96 池項 P1／P2 才列、被票引用或池內銷除
+# 不列；附加查詢失敗 fail-soft（JSON 仍合法、行內註明）。R1 負樣本：「不需 Design gate」／「另票，需 Design gate」
+# 票不得進待Design（F1）；銷除公告自身引述「P1 ·」不列、P3 池項文中引用「P1 ·」不升級（F2）；Canceled 設計票不算承接（F3）。
+# R2 負樣本：混級 comment（`- P3 ·` 後接 `- P2 ·`）以最小級 P2 列出（N1）；「**UI 票：需先過 Design gate**」變體歸待Design、
+# 「**UI 票：不需 Design gate**」不歸（N2）；公告不以「銷除」開頭（日期／票號起頭）仍被跳過（N3）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -134,9 +141,11 @@ while [ \$# -gt 0 ]; do
   shift
 done
 case "\$data" in
+  *'comments('*) echo '{"data":{"issue":{"comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}}' ;;
   *'documents('*) cat "\$fx/documents.json" ;;
   *'cycle(id:'*) cat "\$fx/cycle_issues.json" ;;
   *'cycles('*) cat "\$fx/cycles.json" ;;
+  *'type: { in: ['*) echo '{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}' ;;
   *'issues('*)
     case "\$data" in
       *'CURSOR1'*) cat "\$fx/issues_page2.json" ;;
@@ -594,7 +603,10 @@ check("⑨ current_cycle 為 null", d.get("current_cycle") is None)
 harness = d["lanes"]["lane:harness"]
 check("⑨ current 為 None 時不選中候補（chosen 仍是 None）", harness["chosen"] is None)
 check("⑨ current 為 None 時不產生動作（actions 為空）", harness["actions"] == [])
-check("⑨ 全部動作清單也不含任何動作（current 未知，跨 lane 皆不派）", d["actions"] == [])
+# LS-144：design／ui／backend 三 lane 在這個 fixture 裡都是空的，會印「→ 開票」提醒行——那是提醒、不是派工，
+# 本項守的是「current 未知時不派」，所以只驗沒有任何 save_issue 動作。
+check("⑨ 全部動作清單不含任何派工動作（current 未知，跨 lane 皆不派；「→ 開票」提醒不算派工）",
+      not any("save_issue" in a for a in d["actions"]))
 print("OK" if ok else "FAIL")
 PYEOF
 )"
@@ -619,6 +631,302 @@ if printf '%s' "$out_none_human" | grep -qF 'cycle=?'; then
 else
   echo "✓ ⑨ human 輸出不含 cycle=?"
 fi
+
+# ---- ⑩ LS-144 開票責任：lane 空＋無候補／候補全 hold:user → 印「→ 開票」並列來源；lane 有在飛 → 不印；
+#        連續空第二輪升 ⚠；「需 Design gate」歸待Design；設計票已承接的 Story 不列；池項 P1／P2 才列、
+#        被票引用或池內銷除不列；附加查詢（已結案票／LS-96 comments）失敗 fail-soft ----
+repo_ot="$work/repo_ot"
+git init -q -b main "$repo_ot"
+git -C "$repo_ot" config user.email test@example.com
+git -C "$repo_ot" config user.name Test
+: > "$repo_ot/.gitkeep"; git -C "$repo_ot" add .gitkeep; git -C "$repo_ot" -c commit.gpgsign=false commit -q -m 'chore: init'
+printf 'LINEAR_API_KEY=test-token-not-real\n' > "$repo_ot/.env"
+
+fx_ot="$work/fixtures_ot"
+mkdir -p "$fx_ot"
+cat > "$fx_ot/cycles.json" <<'EOF'
+{"data":{"team":{"cycles":{"nodes":[
+  {"id":"cyc-5","number":5,"startsAt":"2020-01-01T00:00:00.000Z","endsAt":"2099-01-01T00:00:00.000Z","isActive":true}
+]}}}}
+EOF
+cat > "$fx_ot/documents.json" <<'EOF'
+{"data":{"documents":{"nodes":[{"id":"doc-1","title":"Cycle 5 規劃"}]}}}
+EOF
+cat > "$fx_ot/cycle_issues.json" <<'EOF'
+{"data":{"cycle":{"issues":{"nodes":[]}}}}
+EOF
+# open 票：
+#   LS-970 lane:ui Backlog Story「需 Design gate」、票文完整、無設計票 → 待Design、design／ui 開票來源
+#   LS-971 同上，但 LS-972（lane:design、In Progress、parent=LS-971）已承接 → 不列來源；design lane 在飛 1 → 不印開票
+#   LS-973 lane:backend Backlog、票文完整、hold:user → 不進候補；backend lane 候補全被擋 → 印開票並註明使用者裁決
+#   LS-974 lane:ui Backlog Story「需 Design gate」＋票文含「RPC」、無 backend 子票 → design／ui 來源＋backend 來源
+#   LS-975 lane:ui Backlog Story「需 Design gate」，已結案設計票 LS-981 標題整字提到它 → 不列來源
+#   LS-976 lane:product Story 含「RLS」關鍵字，已結案 backend 子票 LS-977（parent=LS-976）→ 不列 backend 來源
+#   LS-96  常駐待辦池（skip）→ harness lane 無候補 → 印開票並列池項來源
+cat > "$fx_ot/issues_page1.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+  {"identifier":"LS-970","title":"Story：孩子檔案 CRUD","description":"PLAN。**UI 票：需 Design gate**（孩子卡片）。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-971","title":"Story：相簿與上傳","description":"**UI 票：需 Design gate**\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-02T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-972","title":"設計：相簿頁（LS-971 畫面群）","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-03T00:00:00.000Z",
+   "state":{"name":"In Progress","type":"started"},"labels":{"nodes":[{"name":"lane:design"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":{"identifier":"LS-971"},
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-973","title":"backend 使用者裁決中","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-04T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:backend"},{"name":"hold:user"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-974","title":"Story：帳號刪除","description":"**UI 票：需 Design gate**。刪除帳號 RPC（service_role）。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-05T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-975","title":"Story：登入","description":"**UI 票：需 Design gate**\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-06T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-976","title":"Story：家庭","description":"家庭 RLS policy。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-07T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:product"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-96","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
+   "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}}
+]}}}
+EOF
+# 已結案票（輕量查詢）：LS-980 票文引用池項 bbbbbbbb → 該池項已升票；LS-981 lane:design Done 標題提到 LS-975；
+# LS-977 lane:backend Done、parent=LS-976；LS-982 lane:design **Canceled** 標題提到 LS-970 → 不算承接（R1 F3），
+# LS-970 仍列來源。
+cat > "$fx_ot/closed_issues.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+  {"identifier":"LS-980","title":"Harness：已升票的池項","description":"來源 LS-96 池項 `bbbbbbbb`。","state":{"name":"Done","type":"completed"},"labels":{"nodes":[{"name":"lane:harness"}]},"parent":null},
+  {"identifier":"LS-981","title":"設計：登入頁（LS-975 畫面群）","description":"已核可","state":{"name":"Done","type":"completed"},"labels":{"nodes":[{"name":"lane:design"}]},"parent":null},
+  {"identifier":"LS-977","title":"Task：LS-976 後端 RLS","description":"done","state":{"name":"Done","type":"completed"},"labels":{"nodes":[{"name":"lane:backend"}]},"parent":{"identifier":"LS-976"}},
+  {"identifier":"LS-982","title":"設計：孩子卡片（LS-970 畫面群）","description":"取消","state":{"name":"Canceled","type":"canceled"},"labels":{"nodes":[{"name":"lane:design"}]},"parent":null}
+]}}}
+EOF
+# LS-96 comments：aaaa P1（有效）、bbbb P2（被 LS-980 引用 → 不列）、cccc P3（不列）、eeee P1 但 dddd「銷除…已升為」
+# 提到它（不列）、dddd 本身是銷除公告且引述「P1 ·」——且**不以「銷除」開頭**（日期／票號起頭，R2 N3：前 2 行含字樣即公告，不列）、
+# ffff P2 較早建立（有效，排在 P1 之後）、abababab P3 池項文中引用「P1 ·」（既非首個 match 也不在行首 → 不升級、不列）、
+# cdcdcdcd 混級：首項 `- P3 ·`、次項 `- P2 ·`（R2 N1：取行首各項最小級 → 以 P2 列出，摘要取 P2 那項）。
+# efefefef 非公告池項（P3）在第 3 行提到 `aaaaaaaa` 並帶「銷案」字樣——前 2 行無公告字樣所以不是公告（R3：只有公告能銷除
+# 別則 → aaaa 仍列；live bcb97555 第 3 行更正文提到 ca993eba／d8634a08 的誤藏實例）。
+cat > "$fx_ot/pool_comments.json" <<'EOF'
+{"data":{"issue":{"comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+  {"id":"aaaaaaaa-0000-4000-8000-000000000001","createdAt":"2026-09-02T00:00:00.000Z","body":"入池 2026-09-02（orchestrator）：P1 · **候補不驗 Design gate** · 觸發事故（有）· 估 size:S"},
+  {"id":"bbbbbbbb-0000-4000-8000-000000000002","createdAt":"2026-09-02T01:00:00.000Z","body":"入池：P2 · 已升票的池項 · 估 size:S"},
+  {"id":"cccccccc-0000-4000-8000-000000000003","createdAt":"2026-09-02T02:00:00.000Z","body":"入池：P3 · 純效率項 · 估 size:S"},
+  {"id":"dddddddd-0000-4000-8000-000000000004","createdAt":"2026-09-02T03:00:00.000Z","body":"2026-09-03 LS-999 已落地——**銷除**待辦池 comment `eeeeeeee`（P1 · 已銷除的池項），本筆不再是池項"},
+  {"id":"eeeeeeee-0000-4000-8000-000000000005","createdAt":"2026-09-02T04:00:00.000Z","body":"入池：P1 · 已銷除的池項"},
+  {"id":"ffffffff-0000-4000-8000-000000000006","createdAt":"2026-09-01T00:00:00.000Z","body":"入池 2026-09-01：\n- P2 · 第二個有效池項 · 估 size:M"},
+  {"id":"abababab-0000-4000-8000-000000000007","createdAt":"2026-09-02T05:00:00.000Z","body":"入池：P3 · 純效率項——文中引用他則「P1 · 某某」只是舉例，不是升級"},
+  {"id":"cdcdcdcd-0000-4000-8000-000000000008","createdAt":"2026-09-02T06:00:00.000Z","body":"入池 2026-09-02（LS-121 收尾）：\n- P3 · docs 錯誤碼表範例過時 · 估 size:S\n- P2 · **mutation 自證機械化** · 再發生一次即升獨立票 · 估 size:M"},
+  {"id":"efefefef-0000-4000-8000-000000000009","createdAt":"2026-09-02T07:00:00.000Z","body":"入池：P3 · 純效率項\n- 細節：只是效率\n- 對照：同型 `aaaaaaaa` 尚未銷案，僅提及、不是公告"}
+]}}}}
+EOF
+mkdir -p "$work/bin_ot"
+cat > "$work/bin_ot/curl" <<EOF
+#!/bin/bash
+fx="${fx_ot}"
+data=""
+while [ \$# -gt 0 ]; do
+  case "\$1" in
+    --data) data=\$2; shift ;;
+  esac
+  shift
+done
+case "\$data" in
+  *'comments('*) cat "\$fx/pool_comments.json" ;;
+  *'documents('*) cat "\$fx/documents.json" ;;
+  *'cycle(id:'*) cat "\$fx/cycle_issues.json" ;;
+  *'cycles('*) cat "\$fx/cycles.json" ;;
+  *'type: { in: ['*) cat "\$fx/closed_issues.json" ;;
+  *'issues('*) cat "\$fx/issues_page1.json" ;;
+  *) echo '{"errors":[{"message":"stub curl：認不出的 query"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_ot/curl"
+
+out_ot1="$(PATH="$work/bin_ot:$PATH" bash "$plsh" --repo "$repo_ot" --json 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ]; then echo "✓ ⑩ 開票 fixture 第一輪 exit 0"; else echo "✗ ⑩ 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out_ot1" | sed 's/^/    /' >&2; fail=1; fi
+export OUT_OT1="$out_ot1"
+py_ot1="$(python3 - <<'PYEOF'
+import json, os
+d = json.loads(os.environ["OUT_OT1"])
+ok = True
+def check(name, cond):
+    global ok
+    print(("✓ " if cond else "✗ ") + name)
+    if not cond:
+        ok = False
+
+ui = d["lanes"]["lane:ui"]; design = d["lanes"]["lane:design"]; backend = d["lanes"]["lane:backend"]; harness = d["lanes"]["lane:harness"]
+ids = lambda srcs: [s["id"] for s in srcs]
+
+check("⑩ 「需 Design gate」票不進候補、歸待Design（LS-970／971／974／975）",
+      ui["candidates"] == [] and ui["chosen"] is None and ui["pending_design"] == ["LS-970", "LS-971", "LS-974", "LS-975"])
+check("⑩ ui lane 空＋候補全被擋（待Design）→ open_ticket 第 1 輪",
+      ui["open_ticket"] is not None and ui["open_ticket"]["empty_rounds"] == 1)
+check("⑩ ui 開票行理由列「待Design …（需 Design gate 無核可稿）」",
+      any("待Design LS-970, LS-971, LS-974, LS-975（需 Design gate 無核可稿）" in b for b in ui["open_ticket"]["blocked"]))
+check("⑩ ui 來源候選＝尚無設計票的 Story（LS-970／974）；open 設計票 LS-972 承接的 LS-971 與 Done 設計票 LS-981 承接的 LS-975 不列；Canceled 設計票 LS-982 不算承接、LS-970 仍列（R1 F3）",
+      ids(ui["open_ticket"]["sources"]) == ["LS-970", "LS-974"])
+check("⑩ 動作清單含「→ 開票：lane:ui 空 1 輪」且列 LS-970 標題與理由",
+      any(a.startswith("→ 開票：lane:ui 空 1 輪（候補全被擋：") and "LS-970「Story：孩子檔案 CRUD」（需 Design gate、尚無設計票（先開 lane:design））" in a for a in d["actions"]))
+
+check("⑩ design lane 有在飛（LS-972）→ 不印開票、open_ticket 為 null",
+      design["wip"] == 1 and design["open_ticket"] is None and not any("開票：lane:design" in a for a in d["actions"]))
+
+check("⑩ hold:user 票（LS-973）不進候補、不被選中、列在 hold 欄",
+      backend["candidates"] == [] and backend["chosen"] is None and backend["hold"] == ["LS-973"])
+check("⑩ backend lane 候補全 hold:user → 開票行註明「使用者裁決」",
+      any(a.startswith("→ 開票：lane:backend 空 1 輪（候補全被擋：hold:user LS-973（使用者裁決））") for a in d["actions"]))
+check("⑩ backend 來源候選＝含後端關鍵字且無 backend 子票的 Story（LS-974）；LS-976 已有已結案 backend 子票 LS-977 → 不列",
+      ids(backend["open_ticket"]["sources"]) == ["LS-974"] and "RPC" in backend["open_ticket"]["sources"][0]["why"])
+
+check("⑩ harness lane 無候補（只有 LS-96）→ 開票行理由「無候補」",
+      harness["open_ticket"] is not None and harness["open_ticket"]["blocked"] == []
+      and any(a.startswith("→ 開票：lane:harness 空 1 輪（無候補）") for a in d["actions"]))
+check("⑩ 池項來源：P1 aaaa、P2 ffff、P2 cdcdcdcd（P1 先、同級依建立時間）；bbbb 被 LS-980 引用、cccc 是 P3、eeee 被池內公告銷除、dddd 是公告（非「銷除」開頭，前 2 行含字樣）、abababab 是 P3 只在文中引用 P1 ·、efefefef 非公告提到 aaaa＋「銷案」不能銷除 aaaa → 皆不列／aaaa 仍列",
+      ids(harness["open_ticket"]["sources"]) == ["LS-96#aaaaaaaa", "LS-96#ffffffff", "LS-96#cdcdcdcd"]
+      and harness["open_ticket"]["sources"][0]["why"] == "P1 池項尚未升票"
+      and harness["open_ticket"]["sources"][0]["title"].startswith("**候補不驗 Design gate**"))
+mixed = [s for s in harness["open_ticket"]["sources"] if s["id"] == "LS-96#cdcdcdcd"]
+check("⑩ R2 N1 混級 comment（首項 - P3 ·、次項 - P2 ·）以最小級 P2 列出，摘要取 P2 那項",
+      len(mixed) == 1 and mixed[0]["why"] == "P2 池項尚未升票" and mixed[0]["title"].startswith("**mutation 自證機械化**"))
+check("⑩ 第一輪不升 ⚠", not any("⚠ 開票" in a for a in d["actions"]))
+print("OK" if ok else "FAIL")
+PYEOF
+)"
+printf '%s\n' "$py_ot1"
+if printf '%s' "$py_ot1" | tail -1 | grep -qx OK; then :; else fail=1; fi
+
+state_file="$repo_ot/.claude/patrol-state.json"
+if [ -f "$state_file" ] && python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); s=d["open_ticket_empty_rounds"]; sys.exit(0 if s["lane:ui"]==1 and s["lane:design"]==0 else 1)' "$state_file"; then
+  echo "✓ ⑩ 連續空輪計數寫進 .claude/patrol-state.json（ui=1、design=0）"
+else
+  echo "✗ ⑩ .claude/patrol-state.json 缺或計數不對" >&2; [ -f "$state_file" ] && sed 's/^/    /' "$state_file" >&2; fail=1
+fi
+
+# 第二輪：同 repo 再跑 → ui 連續空 2 輪升 ⚠；design 仍 0
+out_ot2="$(PATH="$work/bin_ot:$PATH" bash "$plsh" --repo "$repo_ot" --json 2>&1)"; rc=$?
+export OUT_OT2="$out_ot2"
+if [ "$rc" -eq 0 ] && python3 -c 'import json,os; d=json.loads(os.environ["OUT_OT2"]); ui=d["lanes"]["lane:ui"]["open_ticket"]; assert ui["empty_rounds"]==2; assert any(a.startswith("→ ⚠ 開票：lane:ui 連續空 2 輪（") for a in d["actions"]); assert d["lanes"]["lane:design"]["open_ticket"] is None'; then
+  echo "✓ ⑩ 第二輪：ui 連續空 2 輪 → 動作行升「→ ⚠ 開票：lane:ui 連續空 2 輪」"
+else
+  echo "✗ ⑩ 第二輪應升 ⚠（exit ${rc}）" >&2; printf '%s\n' "$out_ot2" | sed 's/^/    /' >&2; fail=1
+fi
+
+# human 模式：lane 表多兩欄（待Design／hold:user 註明使用者裁決）、第 3 段與動作清單都印開票行
+out_ot_h="$(PATH="$work/bin_ot:$PATH" bash "$plsh" --repo "$repo_ot" 2>&1)"; rc=$?
+if [ "$rc" -ne 0 ]; then echo "✗ ⑩ human 模式應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out_ot_h" | sed 's/^/    /' >&2; fail=1; fi
+has_in '⑩ human：lane 表 hold:user 欄註明使用者裁決' "$out_ot_h" 'hold:user：LS-973（使用者裁決）'
+has_in '⑩ human：lane 表待Design 欄' "$out_ot_h" '待Design：LS-970, LS-971, LS-974, LS-975'
+has_in '⑩ human：動作清單含 ui 開票行' "$out_ot_h" '開票：lane:ui'
+if printf '%s' "$out_ot_h" | grep -qF '開票：lane:design'; then echo "✗ ⑩ human：design lane 有在飛不應印開票" >&2; fail=1; else echo "✓ ⑩ human：design lane 有在飛不印開票"; fi
+
+# 附加查詢失敗 fail-soft：comments 查詢回 GraphQL errors → 報表仍 exit 0、--json 仍是合法 JSON（stderr 不外漏）、
+# harness 開票行註明查詢失敗、其他 lane 不受影響
+mkdir -p "$work/bin_ot_fail"
+cat > "$work/bin_ot_fail/curl" <<EOF
+#!/bin/bash
+fx="${fx_ot}"
+data=""
+while [ \$# -gt 0 ]; do
+  case "\$1" in
+    --data) data=\$2; shift ;;
+  esac
+  shift
+done
+case "\$data" in
+  *'comments('*) echo '{"errors":[{"message":"stub：模擬 comments 查詢失敗"}]}' ;;
+  *'documents('*) cat "\$fx/documents.json" ;;
+  *'cycle(id:'*) cat "\$fx/cycle_issues.json" ;;
+  *'cycles('*) cat "\$fx/cycles.json" ;;
+  *'type: { in: ['*) cat "\$fx/closed_issues.json" ;;
+  *'issues('*) cat "\$fx/issues_page1.json" ;;
+  *) echo '{"errors":[{"message":"stub curl：認不出的 query"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_ot_fail/curl"
+out_ot_f="$(PATH="$work/bin_ot_fail:$PATH" bash "$plsh" --repo "$repo_ot" --json 2>&1)"; rc=$?
+export OUT_OTF="$out_ot_f"
+if [ "$rc" -eq 0 ] && python3 -c 'import json,os; d=json.loads(os.environ["OUT_OTF"]); h=d["lanes"]["lane:harness"]["open_ticket"]; assert h["sources"]==[]; assert any("查詢失敗" in n and "模擬 comments 查詢失敗" in n for n in h["notes"]); assert [s["id"] for s in d["lanes"]["lane:ui"]["open_ticket"]["sources"]]==["LS-970","LS-974"]'; then
+  echo "✓ ⑩ 附加查詢失敗 fail-soft：exit 0、JSON 合法、harness 開票行註明查詢失敗、ui 來源不受影響"
+else
+  echo "✗ ⑩ 附加查詢失敗應 fail-soft（exit ${rc}）" >&2; printf '%s\n' "$out_ot_f" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ⑩d R1 F1 負樣本：裸子字串「需 Design gate」對否定句無感——「非畫面票（不需 Design gate）」（LS-145 實例）與
+#        「拆後端先行（不需 Design gate）；UI 端（另票，需 Design gate）」（LS-143／149 用語）都不得進待Design，
+#        必須照常列為候補並被選中；只有正典粗體 **UI 票：需 Design gate** 才歸待Design。獨立 repo（不動 ⑩ 的計數）。----
+repo_neg="$work/repo_neg"
+git init -q -b main "$repo_neg"
+git -C "$repo_neg" config user.email test@example.com
+git -C "$repo_neg" config user.name Test
+: > "$repo_neg/.gitkeep"; git -C "$repo_neg" add .gitkeep; git -C "$repo_neg" -c commit.gpgsign=false commit -q -m 'chore: init'
+printf 'LINEAR_API_KEY=test-token-not-real\n' > "$repo_neg/.env"
+fx_neg="$work/fixtures_neg"
+cp -R "$fx_ot" "$fx_neg"
+cat > "$fx_neg/issues_page1.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+  {"identifier":"LS-970","title":"Story：孩子檔案 CRUD","description":"PLAN。**UI 票：需 Design gate**（孩子卡片）。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-978","title":"Phase 2-2：PrivacyInfo.xcprivacy","description":"TestFlight／送審前置，非畫面票（不需 Design gate）。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-02T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-979","title":"Task：LS-976 後端先行","description":"拆後端先行（不需 Design gate）；UI 端（另票，需 Design gate）。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-03T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:backend"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":{"identifier":"LS-976"},
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-983","title":"Story：登入（LS-17 式措辭）","description":"PLAN。**UI 票：需先過 Design gate**（登入頁）。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-04T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-984","title":"設定頁小改","description":"**UI 票：不需 Design gate**（沿用既有元件）。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-05T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}}
+]}}}
+EOF
+mkdir -p "$work/bin_neg"
+sed "s#^fx=.*#fx=\"${fx_neg}\"#" "$work/bin_ot/curl" > "$work/bin_neg/curl"
+chmod +x "$work/bin_neg/curl"
+out_neg="$(PATH="$work/bin_neg:$PATH" bash "$plsh" --repo "$repo_neg" --json 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ]; then echo "✓ ⑩d 負樣本 fixture exit 0"; else echo "✗ ⑩d 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out_neg" | sed 's/^/    /' >&2; fail=1; fi
+export OUT_NEG="$out_neg"
+py_neg="$(python3 - <<'PYEOF'
+import json, os
+d = json.loads(os.environ["OUT_NEG"])
+ok = True
+def check(name, cond):
+    global ok
+    print(("✓ " if cond else "✗ ") + name)
+    if not cond:
+        ok = False
+ui = d["lanes"]["lane:ui"]; backend = d["lanes"]["lane:backend"]; design = d["lanes"]["lane:design"]
+check("⑩d 「非畫面票（不需 Design gate）」（LS-978）與粗體「**UI 票：不需 Design gate**」（LS-984）不進待Design、照常列為 ui 候補，LS-978 被選中",
+      ui["candidates"] == ["LS-978", "LS-984"] and ui["chosen"] == "LS-978"
+      and any("save_issue LS-978 state=Ready cycle=5" in a for a in ui["actions"]))
+check("⑩d R2 N2 「**UI 票：需先過 Design gate**」（LS-983，LS-17 式變體）與正典 LS-970 一樣歸待Design",
+      ui["pending_design"] == ["LS-970", "LS-983"])
+check("⑩d ui lane 有候補 → 不印開票（open_ticket 為 null）", ui["open_ticket"] is None and not any("開票：lane:ui" in a for a in d["actions"]))
+check("⑩d 「拆後端先行（不需 Design gate）；UI 端（另票，需 Design gate）」（LS-979）不進待Design、列為 backend 候補並被選中",
+      backend["pending_design"] == [] and backend["candidates"] == ["LS-979"] and backend["chosen"] == "LS-979")
+check("⑩d design lane 空 → 開票來源只列粗體標記的 LS-970／983，不列 LS-978／979／984",
+      design["open_ticket"] is not None and [s["id"] for s in design["open_ticket"]["sources"]] == ["LS-970", "LS-983"])
+print("OK" if ok else "FAIL")
+PYEOF
+)"
+printf '%s\n' "$py_neg"
+if printf '%s' "$py_neg" | tail -1 | grep -qx OK; then :; else fail=1; fi
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ patrol-linear 自測失敗" >&2

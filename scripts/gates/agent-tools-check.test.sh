@@ -44,7 +44,7 @@ reset() {
   rm -rf "$agents"; mkdir -p "$agents"
   mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}"
   mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill"
-  mk dead-code-sweeper "Bash, Read, Grep, Glob, mcp__linear__get_issue, mcp__linear__list_comments"
+  mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"
   mk ui-designer NONE
   mk visual-reviewer NONE
   mk ios-dev NONE
@@ -67,7 +67,8 @@ reset; mk qa "Bash, ${LINEAR3}, mcp__pencil__get_app_state"; expect 1 '② qa �
 reset; mk ios-dev "Read, Edit"; expect 0 '② ios-dev 有 tools: 行但必要工具留空 → 仍 exit 0（規則表無要求）' '通過'
 reset; mk ui-designer "Read, mcp__pencil__get_app_state"; expect 1 '② ui-designer 有 tools: 但缺 execute → exit 1' 'ui-designer.md：tools: 缺 mcp__pencil__execute'
 reset; mk visual-reviewer "Read"; expect 1 '② visual-reviewer 有 tools: 但缺 execute → exit 1' 'visual-reviewer.md：tools: 缺 mcp__pencil__execute'
-reset; mk dead-code-sweeper "Read, mcp__linear__get_issue"; expect 1 '② dead-code-sweeper 少 Bash 與 list_comments → 一行列兩支' 'dead-code-sweeper.md：tools: 缺 Bash mcp__linear__list_comments'
+reset; mk dead-code-sweeper "Read, mcp__linear__get_issue"; expect 1 '② dead-code-sweeper 少 Bash／list_comments／save_comment → 一行列三支' 'dead-code-sweeper.md：tools: 缺 Bash mcp__linear__list_comments mcp__linear__save_comment'
+reset; mk dead-code-sweeper "Bash, mcp__linear__get_issue, mcp__linear__list_comments"; expect 1 '② dead-code-sweeper 少 save_comment（LS-157 補釘）→ exit 1' 'dead-code-sweeper.md：tools: 缺 mcp__linear__save_comment'
 reset; mk qa "Read"; mk merge-reviewer "Read"; expect 1 '② 兩份同時違規 → 一次列完' 'qa.md：tools: 缺' 'merge-reviewer.md：tools: 缺'
 
 # ---- ③ 檔案／frontmatter 形狀 ----
