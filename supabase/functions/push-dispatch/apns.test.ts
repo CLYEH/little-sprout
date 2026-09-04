@@ -326,3 +326,185 @@ Deno.test("buildRealApnsProvider：回應不是合法 JSON（例如空 body）�
   assertEquals(outcome.ok, false);
   if (!outcome.ok) assertEquals(outcome.invalidToken, true); // 410 本身就夠，不需要 reason
 });
+
+// ---------------------------------------------------------------------------
+// 5.（LS-172 R2，merge-reviewer M1）JWT 過期處理：45 分鐘齡期重簽＋403
+// ExpiredProviderToken 重簽重試一次。index.ts 把 provider 建在模組層級，同一個
+// isolate 可能存活遠超過 1 小時，這裡驗證「provider 實例不重建、時間推移」與
+// 「APNs 回報 403」兩種情境都會正確重簽，且重試最多一次（不是無限重試）。
+// ---------------------------------------------------------------------------
+
+function makeSequencedFetch(
+  responses: { status: number; body?: unknown }[],
+  seenAuths: string[],
+): typeof fetch {
+  let i = 0;
+  return ((_url: string | URL, init?: RequestInit) => {
+    seenAuths.push((init?.headers as Record<string, string>).authorization);
+    const r = responses[Math.min(i, responses.length - 1)];
+    i++;
+    return Promise.resolve(
+      new Response(r.body === undefined ? null : JSON.stringify(r.body), {
+        status: r.status,
+      }),
+    );
+  }) as unknown as typeof fetch;
+}
+
+Deno.test("buildRealApnsProvider：同一個 provider 實例內，時間推移超過 45 分鐘 → 下一次 send() 重簽新 JWT（不是永遠沿用舊的）", async () => {
+  const time = new FakeTime();
+  try {
+    const { p8 } = await makeTestP8();
+    const seenAuths: string[] = [];
+    const fetchImpl = makeSequencedFetch(
+      [{ status: 200 }, { status: 200 }],
+      seenAuths,
+    );
+    const provider = buildRealApnsProvider(
+      { ...VALID_SECRETS_BASE, p8 },
+      fetchImpl,
+    );
+
+    await provider.send("tok-1", "t", "b");
+    time.tick(46 * 60 * 1000); // 46 分鐘，超過 45 分鐘的重簽門檻
+    await provider.send("tok-2", "t", "b");
+
+    assertEquals(seenAuths.length, 2);
+    assert(
+      seenAuths[0] !== seenAuths[1],
+      "超過 45 分鐘後應該重簽新 JWT，不該沿用舊的（否則 isolate 溫熱夠久就會永遠用同一把過期的 JWT）",
+    );
+  } finally {
+    time.restore();
+  }
+});
+
+Deno.test("buildRealApnsProvider：45 分鐘內的兩次 send() 仍沿用同一把 JWT（沒有過度重簽）", async () => {
+  const time = new FakeTime();
+  try {
+    const { p8 } = await makeTestP8();
+    const seenAuths: string[] = [];
+    const fetchImpl = makeSequencedFetch(
+      [{ status: 200 }, { status: 200 }],
+      seenAuths,
+    );
+    const provider = buildRealApnsProvider(
+      { ...VALID_SECRETS_BASE, p8 },
+      fetchImpl,
+    );
+
+    await provider.send("tok-1", "t", "b");
+    time.tick(10 * 60 * 1000); // 10 分鐘，遠低於 45 分鐘門檻
+    await provider.send("tok-2", "t", "b");
+
+    assertEquals(seenAuths.length, 2);
+    assertEquals(seenAuths[0], seenAuths[1], "45 分鐘內不該重簽");
+  } finally {
+    time.restore();
+  }
+});
+
+Deno.test("buildRealApnsProvider：收到 403 ExpiredProviderToken → 重簽並重試一次，重試成功則整體回報 ok:true", async () => {
+  // 用 FakeTime 分兩階段：先送一次成功的（快取住一把 JWT），tick 1 秒後再送一次——
+  // 這次第一次嘗試沿用快取的舊 JWT 但被 Apple 拒絕（模擬「45 分鐘估計不準，Apple
+  // 端提前判定過期」），觸發重簽重試。tick 1 秒是必要的（同「不同 provider 實例」
+  // 既有測試的理由）：iat 是整秒時間戳，同一秒內重簽會簽出位元組相同的 JWT（本機
+  // 實測 Deno 的 ECDSA 簽章對相同輸入是確定性的），不 tick 就無法用「JWT 字串不同」
+  // 證明重簽真的發生過。
+  const time = new FakeTime();
+  try {
+    const { p8 } = await makeTestP8();
+    const seenAuths: string[] = [];
+    const fetchImpl = makeSequencedFetch(
+      [
+        { status: 200 }, // 第一次 send()：建立並快取一把 JWT
+        { status: 403, body: { reason: "ExpiredProviderToken" } }, // 第二次 send() 的第一次嘗試：沿用快取，被拒絕
+        { status: 200 }, // 重簽後的重試：成功
+      ],
+      seenAuths,
+    );
+    const provider = buildRealApnsProvider(
+      { ...VALID_SECRETS_BASE, p8 },
+      fetchImpl,
+    );
+
+    await provider.send("tok-1", "t", "b");
+    time.tick(1000);
+    const outcome = await provider.send("tok-2", "t", "b");
+
+    assertEquals(outcome, { ok: true });
+    assertEquals(
+      seenAuths.length,
+      3,
+      "第一次 send() 打 1 次；第二次 send() 打 2 次（初次+重試）",
+    );
+    assertEquals(
+      seenAuths[0],
+      seenAuths[1],
+      "第二次 send() 的第一次嘗試應該沿用快取的舊 JWT（還沒超過 45 分鐘）",
+    );
+    assert(
+      seenAuths[1] !== seenAuths[2],
+      "重簽後重試的那次應該用新 JWT，不是原本被拒絕的那把",
+    );
+  } finally {
+    time.restore();
+  }
+});
+
+Deno.test("buildRealApnsProvider：收到 403 ExpiredProviderToken → 重試一次後仍然失敗，不會再重試第二次（最多一次）", async () => {
+  const { p8 } = await makeTestP8();
+  const seenAuths: string[] = [];
+  const fetchImpl = makeSequencedFetch(
+    [
+      { status: 403, body: { reason: "ExpiredProviderToken" } },
+      { status: 403, body: { reason: "ExpiredProviderToken" } },
+      { status: 200 }, // 如果真的重試了第三次，這裡會回 200 讓測試「意外」通過——用來反證沒有第三次呼叫
+    ],
+    seenAuths,
+  );
+  const provider = buildRealApnsProvider(
+    { ...VALID_SECRETS_BASE, p8 },
+    fetchImpl,
+  );
+
+  const outcome = await provider.send("tok", "t", "b");
+  assertEquals(outcome.ok, false);
+  if (!outcome.ok) {
+    assertEquals(
+      outcome.invalidToken,
+      false,
+      "ExpiredProviderToken 是憑證問題，不是失效 token，不該被判定成 invalidToken",
+    );
+    assert(outcome.error.includes("403"));
+  }
+  assertEquals(
+    seenAuths.length,
+    2,
+    "只能重試一次——第三次呼叫代表重試邏輯變成無限重試（或誤觸發了不該有的第二次重試）",
+  );
+});
+
+Deno.test("buildRealApnsProvider：403 但 reason 不是 ExpiredProviderToken → 不觸發重簽重試，只打一次", async () => {
+  const { p8 } = await makeTestP8();
+  const seenAuths: string[] = [];
+  const fetchImpl = makeSequencedFetch(
+    [{ status: 403, body: { reason: "InvalidProviderToken" } }, {
+      status: 200,
+    }],
+    seenAuths,
+  );
+  const provider = buildRealApnsProvider(
+    { ...VALID_SECRETS_BASE, p8 },
+    fetchImpl,
+  );
+
+  const outcome = await provider.send("tok", "t", "b");
+  assertEquals(outcome.ok, false);
+  if (!outcome.ok) assertEquals(outcome.invalidToken, false);
+  assertEquals(
+    seenAuths.length,
+    1,
+    "只有 ExpiredProviderToken 這個特定 reason 才觸發重簽重試",
+  );
+});

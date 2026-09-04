@@ -100,15 +100,66 @@ export function buildRealApnsProvider(
     keyId,
     p8,
   };
+  // 同上一段的窄化理由：bundleId 也要在 attempt() 這個巢狀 function 裡用，同樣
+  // 需要一個型別已經確定是 string 的新綁定。
+  const apnsBundleId: string = bundleId;
 
   // Apple 建議同一把 JWT 在效期內（最長 1 小時）重複使用，不必每次呼叫都重簽——
   // 這裡 lazy 簽一次、快取在 provider 實例上，同一次 invocation 內的多個 send()
-  // 呼叫共用同一把 token；下一次 invocation 是全新的 provider 實例，天然過期，
-  // 不需要額外的過期判斷邏輯。
+  // 呼叫共用同一把 token。**LS-172 R2（merge-reviewer M1）修正一個原本的錯誤假設**：
+  // 這裡曾經以為「下一次 invocation 是全新的 provider 實例，天然過期」——這與
+  // index.ts 建構 `apnsProvider` 的方式互相矛盾：index.ts 把它建在**模組層級**，
+  // 同一個 isolate 存活期間的所有請求共用同一個 provider 實例（index.ts 的既有
+  // 註解本來就是這樣寫的），isolate 保持溫熱可以遠遠超過 1 小時，同一把 JWT 因此
+  // 真的可能過期——過期後每次 send() 都會收到 APNs 403 `ExpiredProviderToken`，
+  // 而 push-dispatch 的 claim 語意是「先 claim 再送、送失敗不回滾」（見
+  // handler.ts 檔頭），這代表過期後會是**永久漏送、無告警**，不是單次失敗。
+  // 修法有兩層：(a) 依 issuedAt 判斷是否超過 45 分鐘（保守值，留在 Apple 官方
+  // 1 小時上限之前重簽，不是踩線）就重簽；(b) 保底：即使 45 分鐘的估計因為某種
+  // 原因不準（例如 Apple 端提前使該把 JWT 失效），收到 403 `ExpiredProviderToken`
+  // 時當場重簽一次並重試一次（不是無限重試——見下方 send() 內的重試邏輯，只有
+  // 這一種錯誤才觸發重試，其他錯誤維持原本「只記 log」的行為）。
+  const JWT_MAX_AGE_MS = 45 * 60 * 1000;
   let cachedJwt: Promise<string> | null = null;
-  function getJwt(): Promise<string> {
-    if (!cachedJwt) cachedJwt = signApnsJwt(signingSecrets);
+  let jwtIssuedAtMs = 0;
+  function getJwt(forceResign = false): Promise<string> {
+    const now = Date.now();
+    if (
+      forceResign || !cachedJwt || now - jwtIssuedAtMs > JWT_MAX_AGE_MS
+    ) {
+      jwtIssuedAtMs = now;
+      cachedJwt = signApnsJwt(signingSecrets);
+    }
     return cachedJwt;
+  }
+
+  async function attempt(
+    jwt: string,
+    token: string,
+    title: string,
+    body: string,
+  ): Promise<{ ok: boolean; status: number; reason: string }> {
+    const res = await fetchImpl(`${host}/3/device/${token}`, {
+      method: "POST",
+      headers: {
+        "authorization": `bearer ${jwt}`,
+        "apns-topic": apnsBundleId,
+        "apns-push-type": "alert",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        aps: { alert: { title, body }, sound: "default" },
+      }),
+    });
+    if (res.ok) return { ok: true, status: res.status, reason: "" };
+    let reason = "";
+    try {
+      const parsed = await res.json();
+      reason = typeof parsed?.reason === "string" ? parsed.reason : "";
+    } catch {
+      // 回應不是合法 JSON：reason 留空，不影響下面的失效判斷（410 本身就夠）。
+    }
+    return { ok: false, status: res.status, reason };
   }
 
   return {
@@ -117,37 +168,33 @@ export function buildRealApnsProvider(
       title: string,
       body: string,
     ): Promise<ApnsOutcome> {
-      const jwt = await getJwt();
-      const res = await fetchImpl(`${host}/3/device/${token}`, {
-        method: "POST",
-        headers: {
-          "authorization": `bearer ${jwt}`,
-          "apns-topic": bundleId,
-          "apns-push-type": "alert",
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          aps: { alert: { title, body }, sound: "default" },
-        }),
-      });
-      if (res.ok) return { ok: true };
+      let jwt = await getJwt();
+      let result = await attempt(jwt, token, title, body);
 
-      let reason = "";
-      try {
-        const parsed = await res.json();
-        reason = typeof parsed?.reason === "string" ? parsed.reason : "";
-      } catch {
-        // 回應不是合法 JSON：reason 留空，不影響下面的失效判斷（410 本身就夠）。
+      // 403 ExpiredProviderToken：重簽一次並重試一次（不是無限重試——只有這一種
+      // 錯誤才觸發，且最多一次；重試後仍然失敗就走下面一般的失敗處理，不再重簽）。
+      if (
+        !result.ok && result.status === 403 &&
+        result.reason === "ExpiredProviderToken"
+      ) {
+        jwt = await getJwt(true);
+        result = await attempt(jwt, token, title, body);
       }
+
+      if (result.ok) return { ok: true };
+
       // 票文明定：410 Unregistered／400 BadDeviceToken 才視為失效 token。其他
-      // 錯誤（例如 BadTopic、TopicDisallowed、ExpiredProviderToken）只記 log、
-      // 不刪 token、不重試——那些是設定或憑證問題，不是「這支裝置不會再收到通知」。
-      const invalidToken = res.status === 410 ||
-        (res.status === 400 && reason === "BadDeviceToken");
+      // 錯誤（例如 BadTopic、TopicDisallowed，以及重試過一次仍然 403
+      // ExpiredProviderToken）只記 log、不刪 token、不重試——那些是設定或憑證
+      // 問題，不是「這支裝置不會再收到通知」。
+      const invalidToken = result.status === 410 ||
+        (result.status === 400 && result.reason === "BadDeviceToken");
       return {
         ok: false,
         invalidToken,
-        error: `APNs ${res.status}${reason ? " " + reason : ""}`,
+        error: `APNs ${result.status}${
+          result.reason ? " " + result.reason : ""
+        }`,
       };
     },
   };
