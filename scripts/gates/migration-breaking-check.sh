@@ -332,6 +332,7 @@ classify() {
           ename=$(printf '%s' "$stmt" | grep -oE "alter type [^ ]+ add value" | head -1 | awk '{print $3}')
           ename=$(enum_name "$ename")
           evalue=${stmt#*add value }; evalue=${evalue#if not exists }; evalue=${evalue#*\'}; evalue=${evalue%%\'*}
+          [ -n "$evalue" ] || evalue='?'   # 動態 SQL 的 ''x'' 抽不出來：ENUM 行印 ?，消費端照掃
           [ "$breaking" -eq 1 ] || printf 'BREAKING\t%s\n' "${stmt:0:160}"
           enum_consumers "$ename" "$evalue" || exit 1
           printf '%s\n' "$stmt" | enum_defs >> "$known_enums"

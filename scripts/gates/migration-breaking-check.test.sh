@@ -174,7 +174,94 @@ else
   echo "✓ --base 壞 rev → exit 1（不靜默放行）"
 fi
 
+# ── B7：enum 加值＋消費端清單（LS-181；來源 LS-175 merge-review R1 i1） ──────────────────────
+# 夾具：假 EF／Swift／API.md 消費端樹（--consumer-root），既有值集合以 --known-enums 給。
+cons="$work/consumer"
+mkdir -p "$cons/supabase/functions/push" "$cons/supabase/functions/other" "$cons/supabase/functions/dev" "$cons/LittleSprout/Services" "$cons/docs"
+# 多行 union（一行一值）＋型別守衛＋型別名——per-line 規則抓不到 union，靠檔級聚合
+printf 'export type NotificationKind =\n  | "comment"\n  | "reaction"\n  | "diary";\nexport function isNotificationKind(v: unknown): v is NotificationKind {\n  return v === "comment" || v === "reaction" || v === "diary";\n}\n' > "$cons/supabase/functions/push/handler.ts"
+# 只出現 1 個既有值、沒寫 enum 名 → 不算消費端
+printf 'const x = "comment";\nexport default x;\n' > "$cons/supabase/functions/other/index.ts"
+# 既有值只有 1 個的 enum（solo：ios）→ 門檻降為 1
+printf 'const platform = "ios";\nexport default platform;\n' > "$cons/supabase/functions/dev/index.ts"
+# Swift：同名 enum 宣告＋case 宣告行
+printf 'enum NotificationKind: String, Decodable {\n    case comment, reaction, diary\n}\n' > "$cons/LittleSprout/Services/Models.swift"
+# Swift：只有 switch 的 `case .x` pattern（編譯器窮舉會擋）→ 不算
+printf 'func f(_ k: Int) {\n    switch k {\n    case .comment: break\n    case .reaction: break\n    case .diary: break\n    }\n}\n' > "$cons/LittleSprout/Other.swift"
+printf 'struct Unrelated {}\n' > "$cons/LittleSprout/Unrelated.swift"
+# API.md：一行 ≥2 個既有值反引號（值列表）＋表格首欄涵蓋 ≥2 值（文案矩陣形狀）；不寫 enum 名（測名稱規則的反面）
+printf '# 通知\n\n- 欄位：`kind`（`comment`/`reaction`/`diary`）\n- 其他：`media` 只出現一次\n\n| kind | 文案 |\n|---|---|\n| `comment` | a |\n| `reaction` | b |\n\n尾段。\n' > "$cons/docs/API.md"
+printf 'public.notification_kind\tcomment\npublic.notification_kind\treaction\npublic.notification_kind\tdiary\npublic.solo\tios\n' > "$work/enums"
+E=(--known-enums "$work/enums" --consumer-root "$cons")
+
+# expect_b7 <樣本名稱> <期望 CONSUMER 路徑集合（排序、逗號連接；NONE＝無且 ENUM 行印「消費端：無」）> <SQL> [額外參數…]
+#   斷言：exit 0、有 BREAKING 行、有 ENUM 行、CONSUMER 路徑集合（去重）恰等於期望
+expect_b7() {
+  local name=$1 want=$2 sql=$3 out rc got levels
+  shift 3
+  out="$(printf '%s' "$sql" | bash "$check" "$@")"
+  rc=$?
+  levels="$(printf '%s\n' "$out" | cut -f1 | grep -v '^$' | LC_ALL=C sort -u | paste -s -d '+' -)"
+  got="$(printf '%s\n' "$out" | awk -F'\t' '$1 == "CONSUMER" {print $3}' | LC_ALL=C sort -u | paste -s -d ',' -)"
+  [ -z "$got" ] && got=NONE
+  if [ "$rc" -eq 0 ] && printf '%s\n' "$out" | grep -q '^BREAKING' && printf '%s\n' "$out" | grep -q '^ENUM' \
+     && [ "$got" = "$want" ] && { [ "$want" != NONE ] || printf '%s\n' "$out" | grep -q '消費端：無（請人工確認'; }; then
+    echo "✓ $name"
+  else
+    echo "✗ ${name}（期望消費端 ${want}，實得 ${got}，級別 ${levels}，exit ${rc}）" >&2
+    printf '%s\n' "$out" | sed 's/^/    /' >&2
+    fail=1
+  fi
+}
+ALL3='LittleSprout/Services/Models.swift,docs/API.md,supabase/functions/push/handler.ts'
+expect_b7 'B7 ADD VALUE（假 EF／Swift／API.md 夾具：union 多行、守衛、Swift enum、值列表、矩陣）' "$ALL3" "alter type public.notification_kind add value 'x';" "${K[@]}" "${E[@]}"
+expect_b7 'B7 跨行寫法' "$ALL3" $'alter type public.notification_kind\n  add value\n  \'x\';' "${K[@]}" "${E[@]}"
+expect_b7 'B7 IF NOT EXISTS' "$ALL3" "alter type public.notification_kind add value if not exists 'x';" "${K[@]}" "${E[@]}"
+expect_b7 'B7 大寫＋BEFORE 子句' "$ALL3" "ALTER TYPE public.notification_kind ADD VALUE 'X' BEFORE 'diary';" "${K[@]}" "${E[@]}"
+expect_b7 'B7 省略 schema 視為 public' "$ALL3" "alter type notification_kind add value 'x';" "${K[@]}" "${E[@]}"
+expect_b7 'B7 換寫法：DO 區塊動態 SQL（雙重引號的新值抽不出來、ENUM 行印 ?；既有值集合仍在、消費端照列）' "$ALL3" $'do $$ begin execute \'alter type public.notification_kind add value \'\'x\'\'\'; end $$;' "${K[@]}" "${E[@]}"
+expect_b7 'B7 無消費端 → ENUM 行印「消費端：無（請人工確認）」' NONE "alter type public.nobody_uses add value 'x';" "${K[@]}" "${E[@]}"
+expect_b7 'B7 未給 --known-enums → 只靠名稱命中（API.md 夾具沒寫名 → 不列）' 'LittleSprout/Services/Models.swift,supabase/functions/push/handler.ts' "alter type public.notification_kind add value 'x';" "${K[@]}" --consumer-root "$cons"
+expect_b7 'B7 既有值只有 1 個 → 門檻降為 1' 'supabase/functions/dev/index.ts' "alter type public.solo add value 'android';" "${K[@]}" "${E[@]}"
+# 非 enum 加值的 ALTER TYPE 不誤判 B7（RENAME VALUE 走 B5，只有 BREAKING、無 ENUM／CONSUMER 行）
+expect NONE 'B7 反例：ALTER TYPE … ADD ATTRIBUTE（composite）' 'alter type public.addr add attribute zip text;' "${K[@]}" "${E[@]}"
+expect NONE 'B7 反例：ALTER TYPE … OWNER TO' 'alter type public.notification_kind owner to postgres;' "${K[@]}" "${E[@]}"
+expect BREAKING 'B7 反例：ALTER TYPE … RENAME VALUE 是 B5、不印 ENUM 行' "alter type public.notification_kind rename value 'x' to 'y';" "${K[@]}" "${E[@]}"
+# 同一輸入內：create type 與第一次加值累加進集合，第二次加值的消費端掃描看得到（k/index.ts 有 "a"、"c"：第一次只算 1 種、第二次 2 種）。
+# enum 名不能取單字母（`k` 會整字命中 Other.swift 的參數 `k`——名稱規則本來就這麼寬）
+mkdir -p "$cons/supabase/functions/k"
+printf 'const s = ["a", "c"];\nexport default s;\n' > "$cons/supabase/functions/k/index.ts"
+expect_b7 'B7 同一輸入累加：create type＋兩次 add value，第二次才命中 k/index.ts' 'supabase/functions/k/index.ts' "create type public.batch_kind as enum ('a', 'b'); alter type public.batch_kind add value 'c'; alter type public.batch_kind add value 'd';" "${K[@]}" --consumer-root "$cons"
+n_enum=$(printf "create type public.batch_kind as enum ('a', 'b'); alter type public.batch_kind add value 'c'; alter type public.batch_kind add value 'd';" | bash "$check" "${K[@]}" --consumer-root "$cons" | grep -c '^ENUM')
+if [ "$n_enum" -eq 2 ]; then echo "✓ B7 同一輸入兩次加值 → 2 行 ENUM"; else echo "✗ B7 同一輸入兩次加值應印 2 行 ENUM，實得 ${n_enum}" >&2; fail=1; fi
+# --base 模式：既有值集合自 base 的 migrations 取、掃描根＝repo 根
+printf "create type public.k2 as enum ('p', 'q');\n" > "$repo/supabase/migrations/010.sql"
+gitc add -A && gitc commit -qm head8
+printf "alter type public.k2 add value 'r';\n" > "$repo/supabase/migrations/011.sql"
+mkdir -p "$repo/supabase/functions/k2"
+printf 'const ok = v === "p" || v === "q";\n' > "$repo/supabase/functions/k2/index.ts"
+gitc add -A && gitc commit -qm head9
+cd "$repo"
+expect_b7 '--base(B7)：既有值自 base 取、消費端在 repo 根找到' 'supabase/functions/k2/index.ts' '' --base HEAD~1
+cd "$root"
+# 參數／環境錯誤 fail closed
+if printf "alter type public.k add value 'x';" | bash "$check" "${K[@]}" --known-enums "$work/nope.enums" --consumer-root "$cons" >/dev/null 2>&1; then
+  echo "✗ B7 --known-enums 讀不到應 exit 1" >&2; fail=1
+else
+  echo "✓ B7 --known-enums 讀不到 → exit 1（fail closed）"
+fi
+if printf "alter type public.k add value 'x';" | bash "$check" "${K[@]}" --consumer-root "$work/nope.dir" >/dev/null 2>&1; then
+  echo "✗ B7 --consumer-root 不是目錄應 exit 1" >&2; fail=1
+else
+  echo "✓ B7 --consumer-root 不是目錄 → exit 1（fail closed）"
+fi
+if (cd "$work" && printf "alter type public.k add value 'x';" | bash "$check" "${K[@]}" >/dev/null 2>&1); then
+  echo "✗ B7 不在 git repo 內且未給 --consumer-root 應 exit 1" >&2; fail=1
+else
+  echo "✓ B7 不在 git repo 內且未給 --consumer-root → exit 1（不靜默印「無消費端」）"
+fi
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ migration-breaking-check 自測通過（69 組樣本）"
+  echo "✓ migration-breaking-check 自測通過（87 組樣本）"
 fi
 exit "$fail"
