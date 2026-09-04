@@ -15,7 +15,10 @@
 #   --sim     指定既有模擬器（名稱須精確）；預設 `<票號>-iPhone17Pro`，不存在就建（iPhone 17 Pro、最新 iOS runtime）
 #   --ticket  票號；預設從目前 worktree 目錄名推（`.claude/worktrees/LS-<n>`），推不出就要求明給
 #   --email   三個情境共用的測試帳號（預設 qa-e2e@ls.test；同一帳號才讓 browse 看得到 publish 剛發的那篇）
-# 環境變數：LS_QA_MAILPIT 覆寫 Mailpit URL（預設讀 `supabase status` 的 MAILPIT_URL，再退 http://127.0.0.1:54324）。
+#   **只准在票 worktree 內跑**（merge-review R1 N1）：hold 的持有者判定看 worktree（LS-170 §6），從主 checkout 取得的 hold
+#   會讓主 checkout 上的 orchestrator／reviewer 全部直通、鎖形同虛設——主 checkout（git-dir＝git-common-dir）一律 exit 2。
+# 環境變數：LS_QA_MAILPIT 覆寫 Mailpit URL（預設讀 `supabase status` 的 MAILPIT_URL，再退 http://127.0.0.1:54324）；
+#   LS_LOCK_SH 覆寫 supabase-lock.sh 路徑（只給自測塞 stub 用，R1 N2）。
 #
 # 做的事（順序即防線）：
 #   1. 情境名／票號檢查（錯即 exit 2，不碰任何工具）。
@@ -24,7 +27,8 @@
 #   3. 模擬器：找／建專屬機、boot（自己 boot 的收工自己 shutdown，LS-100；本來就 Booted 的不動）。
 #   4. 情境前置：一律 keychain reset（見上）；publish 另 addmedia fixtures。
 #   5. `supabase-lock.sh --hold "<票號> qa-e2e <情境>" --max-minutes 25`——整段 UI 操作期間其他 worktree 的
-#      db reset 排隊（LS-159／LS-170）；呼叫者已經持有（同 worktree）就沿用、不重複 hold、收工也不代釋放。
+#      db reset 排隊（LS-159／LS-170）；呼叫者已經持有（同 worktree，`--hold` 回專屬 exit 3）就沿用、不重複 hold、
+#      收工也不代釋放——判 exit code，不比對人類訊息（R1 N2）。
 #   6. `xcodebuild test -only-testing:LittleSproutUITests/QASmokeTests`，環境以 TEST_RUNNER_LS_QA_* 交給
 #      runner（xcodebuild 剝前綴），UI test 再經 launchEnvironment 注入 app（SupabaseClientFactory.qaOverride，DEBUG）。
 #   7. 證據：`.claude/evidence/<票號>/qa-e2e/<情境>-<時間>/`——xcodebuild.log、result.xcresult、
@@ -66,9 +70,16 @@ esac
 
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "✗ qa-e2e：不在 git repo 內（在票 worktree 執行）" >&2; exit 2; }
+# R1 N1：主 checkout 一律擋——git-dir 與 git-common-dir 同一個目錄就是主 checkout（worktree 的 git-dir 在 .git/worktrees/<名>）。
+git_dir=$(git rev-parse --path-format=absolute --git-dir 2>/dev/null)
+common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+if [ -z "$git_dir" ] || [ "$git_dir" = "$common_dir" ]; then
+  echo "✗ qa-e2e：這是主 checkout（${root}）——請在票 worktree（.claude/worktrees/LS-<n>）內跑：hold 的持有者判定看 worktree，主 checkout 的 hold 會讓所有主 checkout 程序直通（LS-170 §6）" >&2
+  exit 2
+fi
 if [ -z "$ticket" ]; then
   ticket=$(basename "$root" | grep -oE 'LS-[0-9]+' | head -1)
-  [ -n "$ticket" ] || { echo "✗ qa-e2e：從 worktree 目錄名「$(basename "$root")」推不出票號——加 --ticket LS-<n>（證據路徑用它）" >&2; exit 2; }
+  [ -n "$ticket" ] || { echo "✗ qa-e2e：從 worktree 目錄名「$(basename "$root")」推不出票號——請在 .claude/worktrees/LS-<n> 內跑；固定 QA worktree（qa-test）才用 --ticket LS-<n>" >&2; exit 2; }
 fi
 case "$ticket" in
   LS-[0-9]*) ;;
@@ -92,7 +103,8 @@ if [ -z "$api_url" ] || [ -z "$anon_key" ]; then
   echo "✗ qa-e2e：supabase status 取不到 API_URL／ANON_KEY（本機容器有跑嗎？在 repo 根 supabase start）" >&2
   exit 2
 fi
-http_code() { curl -s --max-time 5 -o /dev/null -w '%{http_code}' "$@" 2>/dev/null || printf '000'; }
+# R1 I-2：curl 連不上時自己就印 000，失敗分支不再補印（曾印成 000000）；只有 curl 完全沒輸出才補 000。
+http_code() { local code; code=$(curl -s --max-time 5 -o /dev/null -w '%{http_code}' "$@" 2>/dev/null); printf '%s' "${code:-000}"; }
 code=$(http_code "${mailpit}/api/v1/info")
 [ "$code" = 200 ] || { echo "✗ qa-e2e：Mailpit ${mailpit} 不可達（HTTP ${code}）——OTP 取碼靠它（supabase start 會一起起）" >&2; exit 2; }
 code=$(http_code -H "apikey: ${anon_key}" "${api_url}/auth/v1/health")
@@ -131,23 +143,25 @@ if [ "$scenario" = publish ]; then
 fi
 
 # ---- 5. 持有 lock（LS-159／LS-170）----
+lock_sh=${LS_LOCK_SH:-$here/supabase-lock.sh}   # R1 N2：自測以 stub 覆寫，涵蓋取得／沿用／失敗與 cleanup 三條路徑
 held_by_me=0
-hold_out=$(bash "$here/supabase-lock.sh" --hold "${ticket} qa-e2e ${scenario}" --max-minutes 25 2>&1); hold_rc=$?
-if [ "$hold_rc" -eq 0 ]; then
-  held_by_me=1; echo "→ qa-e2e：${hold_out}"
-elif [ "$hold_rc" -eq 2 ] && printf '%s' "$hold_out" | grep -q '已持有 hold\|已在 lock 內'; then
-  echo "→ qa-e2e：沿用呼叫者既有的 hold（${hold_out}）"
-else
-  echo "✗ qa-e2e：取不到 Supabase lock：${hold_out}" >&2
-  [ "$booted_by_me" -eq 1 ] && xcrun simctl shutdown "$udid" >/dev/null 2>&1
-  exit 2
-fi
+hold_out=$(bash "$lock_sh" --hold "${ticket} qa-e2e ${scenario}" --max-minutes 25 2>&1); hold_rc=$?
+case "$hold_rc" in
+  0) held_by_me=1; echo "→ qa-e2e：${hold_out}" ;;
+  3) echo "→ qa-e2e：沿用呼叫者既有的 hold，收工不代釋放（${hold_out}）" ;;   # supabase-lock.sh --hold 的專屬碼：已持有／已在 lock 內
+  *)
+    echo "✗ qa-e2e：取不到 Supabase lock（supabase-lock.sh exit ${hold_rc}）：${hold_out}" >&2
+    [ "$booted_by_me" -eq 1 ] && xcrun simctl shutdown "$udid" >/dev/null 2>&1
+    exit 2 ;;
+esac
 cleanup() {
-  [ "$held_by_me" -eq 1 ] && bash "$here/supabase-lock.sh" --release
+  [ "$held_by_me" -eq 1 ] && bash "$lock_sh" --release
   [ "$booted_by_me" -eq 1 ] && xcrun simctl shutdown "$udid" >/dev/null 2>&1 && echo "→ qa-e2e：模擬器 ${sim_name} 已關（本腳本 boot 的）"
   return 0
 }
 trap cleanup EXIT
+trap 'exit 130' INT   # 同 supabase-lock.sh：訊號轉成帶碼的 exit，EXIT trap 一定跑到（釋放 hold、關自己 boot 的模擬器）
+trap 'exit 143' TERM
 
 # ---- 6. 跑 ----
 stamp=$(date +%Y%m%d-%H%M%S)
