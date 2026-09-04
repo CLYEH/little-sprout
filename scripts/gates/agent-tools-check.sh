@@ -9,8 +9,11 @@
 # 這裡驗每份被點名的 agent 定義：檔案存在、frontmatter 閉合、`tools:` 行含全部必要工具（整字比對：`BashOutput` 不算 `Bash`）。
 # 沒有 `tools:` 行＝繼承全部工具 → 放行並註明（白名單不存在就漏不了）。工具名是否真的存在於 MCP server 只有連上 server
 # 才驗得到（CI 驗不了）——那是盲區；擋得住的是「白名單漏掉必要工具」。
+# LS-170 第二張規則表「正文必含字樣」：規約寫在 agent 定義正文、只有正文到得了 agent；日後改寫／精簡定義把那段刪掉，規約就
+# 靜默消失（LS-159 只把 `supabase-lock.sh --hold` 寫進 qa.md、ios-dev／merge-reviewer 沒有對應段落，LS-169 的 E2E 被他票合法
+# 取得 lock 的 reset 打斷四次）。驗 frontmatter 之後的正文（fixed-string，不看位置；frontmatter 內出現不算）含指定字樣。
 # 任一違規即紅並列出全部（不在第一條就停），exit 1；參數／路徑錯誤 exit 2（fail closed）。
-# 掛 CI rules job（所有 PR，純檔案比對）；自測 agent-tools-check.test.sh。規約見 docs/COLLABORATION.md §1、§7。
+# 掛 CI rules job（所有 PR，純檔案比對）；自測 agent-tools-check.test.sh。規約見 docs/COLLABORATION.md §1、§6、§7。
 #
 # 用法：agent-tools-check.sh [<agents 目錄>]（參數只給自測餵臨時目錄用；CI 不帶參數＝<repo>/.claude/agents）
 set -uo pipefail
@@ -46,6 +49,17 @@ dead-code-sweeper|Bash ${LINEAR3}
 ui-designer|mcp__pencil__execute
 visual-reviewer|mcp__pencil__execute
 ios-dev|"
+
+# 正文必含字樣規則表（LS-170）：<agent>|<字樣>——規約段落被刪即紅。先給空值、再由標記區塊填入：自測的 mutation 負控用 awk 整段
+# 拿掉標記區塊（留下空表）驗「拿掉規則後負樣本變綠」，證明紅是這條規則造成的（同 linear-issue-check.test.sh 慣例）。
+# ios-dev／merge-reviewer／qa：互動式本機驗證（模擬器對本機 Supabase 容器的多步驟操作）前必 `supabase-lock.sh --hold`——qa 的同段
+# 自 LS-159 起就在但當時沒有 gate，R2 (a) 一併釘住（三份同一條規則）。
+BODY_RULES=
+# LS170-BODY-RULES-START
+BODY_RULES="ios-dev|supabase-lock.sh --hold
+merge-reviewer|supabase-lock.sh --hold
+qa|supabase-lock.sh --hold"
+# LS170-BODY-RULES-END
 
 hits=""; n=0
 while IFS='|' read -r agent required; do
@@ -103,10 +117,38 @@ done <<RULES_EOF
 $RULES
 RULES_EOF
 
+# 正文必含字樣（LS-170）：正文＝第二個 --- 之後（CR 一併剝除）；缺檔已由上表列出，這裡略過不重複；frontmatter 未閉合時正文為空、
+# 會多列一條「正文缺」（上表已列未閉合，兩條都是真的）。
+# R1 I-3：「缺檔略過不重複」依賴 BODY_RULES 的 agent ⊆ 工具表——不成立時缺檔會靜默跳過整條規則。先斷言，不成立＝兩表沒同步、exit 2。
+while IFS='|' read -r agent _; do
+  [ -n "$agent" ] || continue
+  case $'\n'"${RULES}"$'\n' in
+    *$'\n'"${agent}|"*) ;;
+    *) echo "✗ agent-tools gate：正文規則表的 ${agent} 不在工具規則表（缺檔會靜默跳過）——兩表要同步（fail closed）" >&2; exit 2 ;;
+  esac
+done <<BODY_EOF
+$BODY_RULES
+BODY_EOF
+m=0
+while IFS='|' read -r agent literal; do
+  [ -n "$agent" ] || continue
+  m=$((m + 1))
+  f="${dir}/${agent}.md"
+  [ -r "$f" ] || continue
+  body=$(awk '{ sub(/\r$/, "") } NR == 1 && $0 == "---" { fm = 1; next } fm && $0 == "---" { fm = 0; b = 1; next } b { print }' "$f")
+  if printf '%s' "$body" | grep -qF -- "$literal"; then
+    echo "  ${agent}.md：正文含「${literal}」"
+  else
+    hits+="    ${agent}.md：正文缺「${literal}」（LS-170：互動式本機驗證先 hold 的規約段被刪或未寫；frontmatter 內出現不算）"$'\n'
+  fi
+done <<BODY_EOF
+$BODY_RULES
+BODY_EOF
+
 if [ -n "$hits" ]; then
-  echo "✗ agent-tools gate：agent 定義的 tools: 白名單缺必要工具（或檔案／frontmatter 有問題）：" >&2
+  echo "✗ agent-tools gate：agent 定義的 tools: 白名單缺必要工具、正文缺必含字樣（或檔案／frontmatter 有問題）：" >&2
   printf '%s' "$hits" >&2
-  echo "  少了工具的規約會靜默不可執行（qa／merge-reviewer 少 Bash → 貼不了 status；qa 少 pencil → 開不了設計稿）。修 .claude/agents/<agent>.md 的 tools: 行（整字、逗號分隔）；沒有 tools: 行＝繼承全部工具。" >&2
+  echo "  少了工具的規約會靜默不可執行（qa／merge-reviewer 少 Bash → 貼不了 status；qa 少 pencil → 開不了設計稿）。修 .claude/agents/<agent>.md 的 tools: 行（整字、逗號分隔）；沒有 tools: 行＝繼承全部工具。正文缺字樣＝該規約段被刪（LS-170：互動式本機驗證先 supabase-lock.sh --hold），補回正文。" >&2
   exit 1
 fi
-echo "✓ agent-tools gate 通過（${n} 份 agent 定義）"
+echo "✓ agent-tools gate 通過（${n} 份 agent 定義；正文必含字樣 ${m} 條）"

@@ -122,7 +122,7 @@ struct ChildrenManagementView: View {
 
     private func childRowContent(_ child: Child, showsChevron: Bool) -> some View {
         HStack(spacing: AppSpacing.group) {
-            ChildAvatarView(name: child.name)
+            ChildAvatarView(name: child.name, avatarURL: childrenStore.avatarURL(for: child))
             VStack(alignment: .leading, spacing: AppSpacing.tight) {
                 Text(child.name)
                     .appFont(.body, weight: .bold)
@@ -183,7 +183,9 @@ struct ChildrenManagementView: View {
             Task { await childrenStore.setChildDeleted(childID: child.id, deleted: false) }
         } label: {
             HStack(spacing: AppSpacing.label) {
-                ChildAvatarView(name: child.name, size: 28, isDimmed: true)
+                ChildAvatarView(
+                    name: child.name, size: 28, isDimmed: true, avatarURL: childrenStore.avatarURL(for: child)
+                )
                 Text(child.name)
                     .appFont(.body, weight: .semibold)
                     .foregroundStyle(Color.lsTextSecondary)
@@ -250,7 +252,7 @@ struct ChildrenManagementView: View {
                 .padding(.top, AppSpacing.screenPadLarge)
             List(childrenStore.activeChildren, selection: $selectedChildID) { child in
                 HStack(spacing: AppSpacing.group) {
-                    ChildAvatarView(name: child.name)
+                    ChildAvatarView(name: child.name, avatarURL: childrenStore.avatarURL(for: child))
                     VStack(alignment: .leading, spacing: AppSpacing.tight) {
                         Text(child.name).appFont(.body, weight: .bold).foregroundStyle(Color.lsTextPrimary)
                         Text(BirthdayFormat.ageDescription(birthday: child.birthday))

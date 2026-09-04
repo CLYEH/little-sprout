@@ -78,6 +78,9 @@ declare
     'private.uploadable_family_ids()',
     'private.peer_profile_ids()',
     'private.is_media_object_path(text)',
+    -- LS-169 R2（M1）：同 is_media_object_path，掛在 media_bucket_update／
+    -- media_bucket_delete 的頭像分支上，policy 求值時要被 authenticated 呼叫。
+    'private.is_avatar_object_path(text)',
     -- LS-149：封鎖過濾共用的兩支輔助函式。private.blocked_pairs() 被
     -- albums_select／comments_select 兩條 RLS policy 直接呼叫（policy 以 authenticated
     -- 身分求值，同其餘集合函式的理由）；private.feed_item_actor_id(feed_kind,uuid) 被
@@ -601,13 +604,16 @@ $$;
 --   會變成每列一次真正的函式呼叫。它掛在 storage.objects 的 INSERT／UPDATE
 --   WITH CHECK 上，逐列跑，所以刻意留成 invoker 且不加 SET 以換取 inline。
 --   （新增 private 函式若也要走這條例外，必須先來這裡登記並寫明理由。）
+--   private.is_avatar_object_path(text)：LS-169 R2，同上一條理由，逐字一樣的形狀
+--   （純 regex、掛在 media_bucket_update／media_bucket_delete 的 WITH CHECK／USING 上）。
 -- ---------------------------------------------------------------------------
 do $$
 declare
   -- 單一清單來源（比照第 8 段）：oid 版本由文字版 cast 導出，清單裡的函式不存在時
   -- 這句 cast 會直接噴出含簽名的錯誤，不會無聲漂移。
   v_exceptions text[] := array[
-    'private.is_media_object_path(text)'
+    'private.is_media_object_path(text)',
+    'private.is_avatar_object_path(text)'
   ];
   v_exc_oids oid[];
   v_leaky text;

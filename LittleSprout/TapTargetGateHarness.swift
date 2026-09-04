@@ -23,8 +23,14 @@ enum TapTargetGateHarness {
             .flatMap(TapTargetGateScreenName.init(rawValue:))
     }
 
+    // LS-169：這支函式是純粹的「畫面名稱 → View」1:1 dispatch（每個 case 只轉呼叫一個
+    // computed var，本身沒有分支邏輯），複雜度隨已註冊的畫面數量線性成長是這個形狀必然的
+    // 副作用，不是真正難懂／難測的巢狀邏輯——`ChildFilterLayout`（該檔文件註解）用查表
+    // 換掉 switch 是因為那裡回傳單一 enum 值；這裡回傳 `some View`，每個 case 是不同的
+    // 具體型別，查表在 Swift 型別系統下不成立，只能用 switch。
     @MainActor
     @ViewBuilder
+    // swiftlint:disable:next cyclomatic_complexity
     static func hostView(for screen: TapTargetGateScreenName) -> some View {
         switch screen {
         case .otpVerification:
@@ -49,6 +55,8 @@ enum TapTargetGateHarness {
             }
         case .diaryEditor:
             diaryEditorHost
+        case .createChild:
+            createChildHost
         case .timelineDefaultState:
             timelineDefaultStateHost
         case .sectionTabView:
@@ -105,6 +113,17 @@ enum TapTargetGateHarness {
                 familyID: UUID(), diaryAPIClient: PreviewDiaryAPIClient(),
                 mediaUploadService: PreviewMediaUploadService(), childrenStore: .preview()
             )
+        }
+    }
+
+    /// LS-169：初始態（未選圖）就有代表性，`.preview()` 免登入即可建構——同 `diaryEditorHost`
+    /// 的理由，拆成獨立 computed var 只是為了不讓 `hostView` 的 switch 本體超過
+    /// SwiftLint `function_body_length`／`cyclomatic_complexity` 上限。
+    @MainActor
+    @ViewBuilder
+    private static var createChildHost: some View {
+        NavigationStack {
+            CreateChildView(childrenStore: .preview())
         }
     }
 

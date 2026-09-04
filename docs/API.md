@@ -65,7 +65,7 @@
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子；**不分角色、不分軟刪與否**——owner／member／viewer 都讀得到全部列，含已軟刪的（`deleted_at`／`deleted_by` 對所有人都是可見的唯讀旗標，R1 I3/I4） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | 🔒 **無 DELETE 路徑**（R1 I5：直接硬刪會繞過 30 天保護，policy 與 grant 兩層都關，連 owner 也沒有） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原（重複軟刪 no-op，不刷新時鐘，見 §4），超過拿 `LS043`；已軟刪的孩子不能再被指定為新內容的標記（`LS044`，LS-121 起守門搬到 `diary_children`／`album_children` 連結表的 `BEFORE INSERT` trigger）；既有標記不隨軟刪連動，見 §8 |
-| `media` | 我所屬家庭的檔案中繼資料 | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | 硬刪僅 owner（一般刪除走 `deleted_at`） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）／`duration_seconds`（LS-134）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3 |
+| `media` | 我所屬家庭**尚未軟刪**的檔案中繼資料，**上傳者自己的例外**——不論是否已軟刪都看得到自己上傳的列（`deleted_at is null or uploaded_by = auth.uid()`，LS-155 R2 起；與 `children` 全員可見已軟刪列的例外不同，這裡只有上傳者本人是例外，見 §3「`media_select` 過濾」段落的已知殘留缺口） | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | **文件承諾「owner 任意列」，實際只對 owner 自己上傳的列與尚未軟刪的別人的列成立**（一般刪除走 `deleted_at`）——owner 對「別人上傳、已軟刪」的列直接 `DELETE` 會因為 R2 的 `media_select` 把該列藏起來而**靜默影響 0 列**（LS-155 R2 review m1 實測，見 §3 殘留缺口段落）；真正的 owner moderation 請走 `remove_content_as_owner('media', id)`（`SECURITY DEFINER`，不受這個限制） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）／`duration_seconds`（LS-134）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3 |
 | `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己） | 🔀 **混合模式（LS-52；LS-57 R2 起範圍限縮；LS-121 起 `child_id` 移出本表）**：內容（title／cover_media_id）僅建立者本人直接 `.update()`；`deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起對 `authenticated` 已無 UPDATE 欄位級 grant，唯一路徑是 `set_album_deleted` RPC；寶貝標記唯一路徑是 `set_album_children` RPC（見 §4） | owner-only | Viewer 不可建立相簿；owner 對別人相簿的內容**沒有**直接 `.update()` 路徑——見 §3「為什麼 albums／comments／diaries 曾經、現在用了不同的寫入模型」；`album_children`（見下）任何一列的 `child_id` 指向一個已軟刪的孩子時 INSERT 皆拿 `LS044`，見 §8 |
 | `album_media` | 同上 | owner／member | owner／member | owner／member | 連結表自帶 `family_id`，policy 不必 join 回 `albums` |
 | `album_children`（LS-121） | 我所屬家庭，任一角色（含 viewer） | 🔒 **RPC-only**（`set_album_children`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 語意**——覆蓋是同一交易內先刪後插，不是對既有列 UPDATE | 🔒 **RPC-only**（`set_album_children`，直接 DELETE 已被 revoke） | 相簿 ↔ 孩子多對多標記，取代舊版 `albums.child_id` 單一欄位；見 §8 |
@@ -318,6 +318,39 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   這代表：如果 client 上傳到 Storage 的檔案大小與 `media.byte_size` 填的值不一致，
   額度計算會跟著算錯——`byte_size` 必須填實際上傳的位元組數。
 - soft delete（`deleted_at`）立刻釋放額度；硬刪只有 owner 能做。
+- **`media_select` 過濾 `deleted_at`，上傳者例外（LS-155 R2，merge-review R1 M2
+  實測補上）**：
+  `using (family_id in (select private.family_ids()) and (deleted_at is null or
+  uploaded_by = auth.uid()))`——軟刪的 media 對其他家庭成員直接在 RLS 層消失，
+  不論是獨立照片卡（本來就靠 `feed_items` 消失）、日記附帶、還是相簿封面（這兩
+  條路徑不經過 `feed_items`，R1 版本沒有這條 policy 時仍會繼續顯示，見
+  `20260904080921_media_select_hide_deleted.sql` 檔頭的實測情境）。**上傳者例外
+  不是可省的細節，是這支 policy 能存在的前提**：`media_update` 對
+  `authenticated` 是欄位級 grant（只開 `taken_at`／`deleted_at`／`width`／
+  `height`），PostgreSQL 對欄位級 UPDATE 授權的表，要求 UPDATE 之後的新列也必須
+  通過該表的 SELECT policy（`ExecWithCheckOptions`，本機小型 repro 表驗證過：
+  整表 UPDATE grant 不會觸發、欄位級 grant 會）——若 `media_select` 單純加
+  `deleted_at is null`（不含例外），上傳者對自己照片呼叫
+  `UPDATE media SET deleted_at = now()`（既有「收回自己的照片」路徑）這句話本身
+  就會直接被 RLS 拒絕，本機 `supabase/tests/20_role_permissions.sql` 的正向對照
+  段落當場炸掉，逼出這個例外（見 migration 檔頭完整記錄）。**已知殘留缺口
+  （LS-155 R2 review i1／m1 訂正過一次措辭）**：`media_update`／`media_delete`
+  也允許 owner 分支（處理「任何一張」，見下一點），但 `media_select` 的例外只
+  覆蓋 `uploaded_by = auth.uid()`——owner 若直接對**別人**上傳、已軟刪的照片以
+  **欄位級 grant 的直接 UPDATE／DELETE**操作（不經過任何 RPC），UPDATE 會撞
+  `ExecWithCheckOptions` 而失敗、DELETE 會因為找不到列而**靜默影響 0 列**（R2
+  review m1 實測，`P7`）。**訂正（R2 review i1）**：這不需要「另開一支 RPC」
+  ——`public.remove_content_as_owner('media', id)`（LS-23，見 §4）早就是 owner
+  moderation 的正確路徑，`SECURITY DEFINER`、繞過 RLS，R2 review 實測（`P8`）
+  新 policy 生效後仍正常運作；壞掉的只是**次要、legacy** 的欄位級直接
+  UPDATE／DELETE 路徑，目前沒有任何測試或 client 程式碼行使（`grep -rn
+  deleted_at LittleSprout/` 只命中 `children`）。記入 LS-96 待辦池（`5cd11293`）：
+  不急，兩個選項皆可——維持現狀（legacy 路徑靜默失效，無 client UI 不影響任何
+  人）或未來把 `media_update`／`media_delete` 的 owner-對-別人分支拿掉、統一走
+  `remove_content_as_owner()`。`purge_expired()`／`media_storage_sync()`／
+  `delete_my_account()`／`finalize_account_deletion()`／
+  `remove_content_as_owner()` 對 `media` 的讀寫皆為 `SECURITY DEFINER`（以表
+  擁有者身分執行），RLS 對它們天生不生效，不受這支 policy 影響。
 - **`media_update` policy 的上傳者分支判斷「當下」而不是「上傳當時」是否有上傳權**
   （`family_id in uploadable_family_ids()`，跟 §6 storage.objects 的規則同一個判準）：
   owner 把某個 member 的 `can_upload` 關掉之後，那個人（若不是 owner）連軟刪除
@@ -1243,7 +1276,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **錯誤碼**：無自訂碼；未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 
-### `delete_my_account() -> void`（LS-143）
+### `delete_my_account() -> void`（LS-143；media 軟刪見 LS-155）
 - **誰能呼叫**：任何已登入使用者。無參數。
 - **用途**：app 內刪除帳號的**資料面**入口（PLAN §9-A2／App Store Guideline
   5.1.1(v)）。逐一檢查呼叫者所屬的每個家庭，依角色分三種結果：
@@ -1269,10 +1302,32 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
      （`deleted_at = now()`、`deleted_by = 自己`，語意等同作者自己呼叫
      `set_diary_deleted`／`set_album_deleted`／`set_comment_deleted` 自刪），然後
      離開家庭（`DELETE family_members`）——**家庭本身與其他成員的內容完全不受
-     影響**。`media`／`reactions`／`device_tokens` **刻意不在這支 RPC 觸碰的範圍**
-     （`media` 沒有 `deleted_by` 欄位也沒有既有的自刪 RPC；`reactions` 沒有 soft
-     delete 概念；`device_tokens` 的 FK 是 `on delete cascade`，等真正刪除
-     `auth.users` 時自動清掉），見 migration 檔頭「規格分歧與取捨」。
+     影響**。**`media`（LS-155，R2 訂正範圍）**：呼叫者上傳的每一張仍存在的
+     照片／影片一併 `deleted_at = now()`——**不限定「呼叫者目前是不是這個家庭的
+     成員」**，含相簿內與日記附帶的，也含呼叫者已經退出／被移除、但那個家庭裡
+     還留著他上傳的 media 這種情況（`family_members_delete` policy 允許自行
+     退出／被 owner 移除，退出時 media 不會被清掉，是既有的正常狀態，見 §3
+     `family_members`）——使用者裁決是「該使用者上傳的照片全部刪」，不是「仍在
+     的家庭才刪」。做法是逐家庭處理（直接從 `media` 表反查涉及的家庭集合，
+     `family_id` 遞增序，見下方「併發」段落與 migration 檔頭「R2」的完整推演）；
+     `diary_media`／`album_media` 連結列不動，靠 `media.deleted_at` 軟刪隱藏——
+     **R2 起這在伺服器端真的生效**：`media_select` RLS policy 加了
+     `deleted_at is null`（上傳者自己例外，`20260904080921_media_select_hide_deleted.sql`），
+     被軟刪的 media 對**其他**家庭成員立即消失，不只是「連結列還在但沒人會
+     看」（R1 版本這句話原本不成立，`media_select` 當時完全沒有過濾
+     `deleted_at`，merge-review R1 M2 實測日記附帶／相簿封面仍會顯示，見下方
+     §「Storage」／§6，該處也記錄了上傳者例外為什麼是必要的，不是可省的細節）。
+     情況 2 的家庭這時已經因為 cascade 被硬刪，這裡對那些
+     列自然找不到，不會重複處理。**額度立即釋放**：既有的
+     `private.media_storage_sync()` trigger（§3 `media`／§10-A，`LS002` 額度
+     硬防線的同一支 trigger）偵測到 `deleted_at` 從 `NULL` 變成非 `NULL` 就會
+     自動扣減對應家庭的 `storage_used_bytes`，不需要為此另外寫任何程式碼。滿
+     30 天後由§6「自動清除（LS-153）」既有的排程硬刪並入列 Storage 清除，沿用
+     既有路徑，不在 `delete_my_account()` 這一層重做。
+     `reactions`／`device_tokens` 仍然**刻意不在這支 RPC 觸碰的範圍**
+     （`reactions` 沒有 soft delete 概念；`device_tokens` 的 FK 是
+     `on delete cascade`，等真正刪除 `auth.users` 時自動清掉），見 migration
+     檔頭「規格分歧與取捨」。
   無論走哪條路（情況 2／3），最後都會標記 `profiles.deletion_requested_at = now()`
   （情況 1 被拒絕時不標記）。
 - **`auth.users` 的實際刪除不在本 RPC 範圍**：這支 RPC 是 `SECURITY DEFINER`，
@@ -1315,27 +1370,98 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   指出的原始風險）。
 - **錯誤碼**：未登入 `42501`；唯一 owner 且家庭還有其他成員 `LS050`（見上方
   `DETAIL` 契約）。
-- **併發**：情況 3（離開家庭）零新鎖——`DELETE family_members` 觸發的是既有的
-  `private.enforce_family_has_owner()` statement-level trigger（`FOR NO KEY
-  UPDATE`、`family_id` 遞增序，LS-6／LS-15 既有設計）。情況 1 的守門查詢刻意不
-  額外加鎖，只是提早給一個附家庭清單、對使用者友善的錯誤；真正防止「家庭剩 0 位
-  owner」的權威防線始終是那顆既有 trigger。兩者之間存在一個極短的競態窗口（例如
-  兩位共同 owner 幾乎同時呼叫本 RPC）——最壞結果是其中一邊被 trigger 擋下、回
-  `LS001`（不是 `LS050`）而不是成功，整個呼叫（含已執行的軟刪）隨事務一起回滾，
-  使用者需要重試；不會死鎖、不會資料損壞，見
-  `supabase/tests/concurrency/delete_account_race_*.sql`。**情況 2（唯一成員刪
-  整個家庭）不是零新鎖**（merge-review R1 m1／m2，2026-09-03 修正）：`DELETE FROM
-  families` 本身需要 `FOR UPDATE` 等級的列鎖，與同家庭併發的子表寫入（背景上傳
-  `INSERT INTO media`、`approve_join()` 的 `INSERT INTO family_members`）因 FK
-  參照完整性檢查取的 `FOR KEY SHARE` 互斥，存在既有的 `40P01`
-  （`deadlock_detected`）死鎖窗——只有同一個使用者自己的另一個 session 才碰得到
-  （單成員家庭沒有別人能寫），**client 端建議捕捉到 `40P01` 時直接重試同一個
-  `delete_my_account()` 呼叫一次即可，沒有資料損壞**。候選家庭在真正 `DELETE`
-  之前會先用 `SELECT … FOR UPDATE` 逐一鎖住（`family_id` 遞增序）並用全新查詢
-  重新評估「唯一成員」——這是為了關閉「候選判斷用的是取鎖前的舊快照、剛核准加入
-  的成員被連坐刪除」這個競態窗（`approve_join()` 的 `INSERT` 只需要 `FOR KEY
-  SHARE`，若改用 `FOR NO KEY UPDATE` 鎖候選家庭鎖不住它），見
-  `supabase/tests/concurrency/delete_account_vs_approve_join_*.sql`。
+- **併發（LS-155 R3 全面重寫；R1→R2→R3 三輪，每輪都是「證明少算一個入口」被
+  merge-review 抓到，這次逐入口列出，不再籠統斷言）**：情況 1 的守門查詢刻意不
+  額外加鎖，唯讀，不算入口。**情況 2／3 自 R3 起合併成單一 `family_id` 遞增序
+  迴圈**（見下方「情況 2＋3」與 migration 檔頭「修訂歷史」的完整三輪記錄），
+  每個家庭先鎖整個 `family_members`（`FOR UPDATE`，該家庭全部成員，不只是
+  呼叫者自己）、再鎖 `families`（`FOR UPDATE`，理由見下）——不再有任何獨立於
+  這個迴圈之外、會取得 `families`／`family_members` 鎖的邏輯。
+
+  **逐入口列表**（本 repo 唯一會在同一支函式／trigger 內同時取得 `families` 與
+  `family_members` 鎖的地方，`grep -n "for update\|for no key update\|for key
+  share" supabase/migrations/*.sql` 核對過沒有遺漏；純粹只碰其中一張表、從不在
+  同一交易內碰到另一張的呼叫端——例如 `families_update` policy 的 owner 改名
+  ——不構成跨表交叉，不列入）：
+  1. **本函式**——上述合併迴圈，每個家庭 `family_members` 先、`families` 後、
+     `family_id` 全域遞增序。
+  2. **`public.finalize_account_deletion()`**（`20260903115014_
+     delete_account_edge_support.sql`＋`20260904080802_
+     finalize_account_deletion_media.sql`）——自己的逐家庭迴圈，同樣
+     `family_members FOR UPDATE` 先、`families FOR UPDATE` 後、`family_id`
+     遞增序，家庭來源＝「p_user 現有家庭」∪「p_user 還有未軟刪 media 的家庭」。
+  3. **`private.enforce_family_has_owner()`**（owner 不變量 trigger，
+     `20260822120100_triggers.sql`，LS-6／LS-15，先於 LS-143／151／155 存在）
+     ——掛在 `family_members` 的 AFTER STATEMENT（DELETE／UPDATE），觸發它的
+     DML（本函式與 `finalize_account_deletion()` 的 `delete from
+     family_members`、或使用者直接離開家庭／owner 轉移角色的 client 端
+     UPDATE／DELETE）天生先鎖住自己正在改的 `family_members` 列，trigger 本身
+     才對受影響的**每個**家庭（`distinct family_id from removed_members order
+     by 1`）鎖 `families FOR NO KEY UPDATE`——這顆 trigger 正是「family_members
+     先、families 後、遞增序」這套紀律最早的來源。
+  4. **`public.approve_join()`**（`20260823010000_join_approval.sql`）——
+     `INSERT INTO family_members` 只在新插入的那一列取鎖（新列，不與任何既有列
+     的 `FOR UPDATE` 衝突），FK 參照完整性檢查對 `families` 取的是 `FOR KEY
+     SHARE`（弱鎖，只與 `FOR UPDATE`／`FOR NO KEY UPDATE` 衝突，`FOR KEY
+     SHARE` 之間互不衝突）——這支函式不會先鎖住任何既有 `family_members` 列、
+     也不會反過來被上述「family_members 先」的順序卡住形成循環：它對
+     `families` 的（弱）鎖與對 `family_members` 的（新列）鎖之間沒有跨交易的
+     相依關係，只會被上述迴圈的 `families FOR UPDATE` 正常阻塞、不構成循環
+     等待，見 `supabase/tests/concurrency/delete_account_vs_approve_join_*.sql`
+     （LS-143 R2 m2）。
+
+  **為什麼是 `FOR UPDATE`、不是 `FOR NO KEY UPDATE`**：合併迴圈內任何一個家庭
+  都可能落入「唯一成員」分支而需要 `DELETE FROM families`——DELETE 終究需要
+  `FOR UPDATE` 等級的列鎖，且這把鎖需要跟子表 INSERT（背景上傳、
+  `approve_join()`）的 FK 檢查取的 `FOR KEY SHARE` 互斥，才能正確擋住「候選
+  判斷用的是取鎖前的舊快照」這個競態窗——`FOR NO KEY UPDATE` 鎖不住 `FOR KEY
+  SHARE`。
+
+  **可證明不會死鎖**：兩個交易若都需要碰到同一組家庭集合 S，兩者對 S 的第一個
+  動作永遠是 `family_members(min(S))`（單一互斥資源），先搶到的一方會暢通無阻
+  跑完 S 的其餘部分（輸家此時手上一無所有，擋不住贏家），不會出現循環等待——
+  前提是每一個入口對 S 的處理都遵守同一個遞增序、且不會在跨到下一個家庭之前就
+  去摸更後面家庭的 `families`，這正是上面四個入口都遵守的紀律。
+
+  **三輪修訂記錄**（migration 檔頭有完整版，這裡只列結論；每一輪都是被
+  merge-review 實測重現 40P01 抓到的真問題，不是理論推演）：
+  - R1（merge-review R1 M1）：新增的 media `UPDATE` 對「呼叫者已退出但留有
+    media」的家庭是本交易唯一一次觸碰、且是「`families` 先、`family_members`
+    後」——與 `finalize_account_deletion()` 鎖序相反，三連線實測 40P01。
+  - R2 中間版本（自己的常駐迴歸測試抓到）：把 media 迴圈加在「離開剩餘家庭」
+    DELETE **之後**仍不夠——DELETE 只碰「呼叫者仍是成員」的家庭，跟 media 迴圈
+    涵蓋的「已退出但留有 media」家庭是兩個各自遞增序、但涵蓋不同子集的迴圈，
+    合起來不是全域遞增序（A-X vs X-A 交叉），同一組三連線**仍然**死鎖。
+  - R2 送審版本（merge-review R2 R2-M1）：情況 3 已經合併成單一迴圈，但**情況
+    2（唯一成員家庭）當時仍在迴圈之外**（先鎖 `families`、迴圈結束後才批次
+    `delete from families` cascade 才碰 `family_members`）——跟情況 3 合併
+    迴圈、`finalize_account_deletion()` 的「`family_members` 先」相反，且情況
+    2／3 又是兩個涵蓋不同子集的遞增序迴圈，合起來不是全域遞增序。reviewer 用
+    N1（人工撐窗）／N2（U1 自己的背景上傳佔另一家庭的 `families` 列鎖，真實
+    行為不需要人工鎖）兩種方式各重現一次 40P01。
+  - **R3（本版）**：情況 2 併進同一個遞增序迴圈——不再有任何獨立於這個迴圈之外
+    的入口。**LS-143 R2 m2「候選家庭鎖內用全新查詢重新評估唯一成員」的兩段式
+    語意原樣保留**：候選集合仍是取鎖前的快照，只有「快照當時就已經是候選」的
+    家庭，鎖到之後才會重新驗證是否仍是唯一成員、通過才 cascade；不是候選的
+    家庭（或候選但重新驗證失敗）一律走情況 3 的一般離開路徑——這條界線是
+    `supabase/tests/concurrency/delete_account_race_*.sql`（兩位共同 owner
+    同時刪帳號、後動者須拿到 `LS001` 重試）成立的前提，若對每個家庭都無條件
+    重新判斷唯一成員，這個既有測試的行為會改變（R3 開發過程中先寫過這個更
+    簡單的版本，這個既有測試直接炸掉，逼出候選快照保留設計，見 migration
+    檔頭）。
+
+  常駐迴歸測試（皆重現對應輪次 reviewer 的實測時序，最終版修後不死鎖）：
+  `supabase/tests/concurrency/delete_account_vs_finalize_media_*.sql`（R2-M1，
+  三連線）、`delete_account_case2_vs_media_*.sql`（R2-M1 續／R3，N2 真實在飛
+  上傳撐窗，三連線，沿用同一支 `race_case3` runner）。R1／中間版本／R2 送審
+  版本跑同一組時序皆會 40P01，已於各輪 handoff 一次性驗證，不留在常駐測試裡。
+
+  `finalize_account_deletion()` 本身在 R2 同一輪訂正：`20260904080802_
+  finalize_account_deletion_media.sql` 讓它在既有的逐家庭迴圈裡多做一步同樣的
+  media 軟刪（家庭列表擴充為「呼叫者現有家庭」∪「呼叫者還有未軟刪 media 的
+  家庭」，仍是單一遞增序迴圈，不是另開迴圈），接住 `delete_my_account()` 交易
+  提交窗口內在飛上傳留下的孤兒列（merge-review R1 m2，見下方「過渡狀態」段落
+  與 §「Edge Functions」）。
 
 ---
 
@@ -1462,6 +1588,33 @@ Edge Function 完成刪除）。三層（`validationRetryable`／`retryableSyste
   同步 PUT 進 Storage，寫入路徑對應 `public.media.thumb_path`（見上方 `media` 表，
   §3）；`thumb_width`／`thumb_height` 填縮圖實際輸出的像素寬高，不是原圖的等比縮放
   理論值。
+- **寶貝大頭照（LS-169）：`{family_id}/avatars/{child_id}.jpg`**——與上面「原始檔案／
+  縮圖」是同一個路徑規約判斷式 `private.is_media_object_path()` 並列的第二種合法
+  形狀（`supabase/migrations/20260904060700_avatar_object_path.sql`），但**不寫**
+  `public.media` 表（不是任何一筆 `media` 列的 `storage_path`／`thumb_path`，不計入
+  額度、不會出現在時間軸／相簿），路徑直接寫進 `public.children.avatar_url`（PUT
+  語意，見 `update_child`）。`{family_id}`／`{child_id}` 一律小寫正規形 UUID（同上
+  ——`children.id` 由 Postgres 產生，`uuid::text` 輸出恆為小寫；Swift 端一樣要
+  `.lowercased()`）；副檔名固定 `.jpg`（客戶端裁方成正方形、縮到 512×512、JPEG
+  品質 0.8 後上傳，不像原圖／縮圖那樣接受多種格式）。換照片＝對同一個路徑
+  `upsert: true` 覆蓋上傳，不是每次都開新路徑；讀取同樣走短效簽名 URL（同
+  `thumb_path` 的既有慣例，見下方「簽名 URL 與 egress 防線」）。**第一次上傳（INSERT）**
+  沿用既有 policy 的 `uploadable_family_ids()`（owner 恆可；member 看 `can_upload`）；
+  **RLS 的 UPDATE／DELETE policy 角色判準改用跟 `update_child` 相同的判準**
+  （`private.contributor_family_ids()`：owner／member 皆可、不看 `can_upload`，見下方
+  RLS 表——孩子頭像是家庭共有物，不是上傳者個人物件，`storage.objects.owner`
+  對這個路徑形狀不再有意義；`supabase/migrations/20260904081435_avatar_family_write_policy.sql`，
+  LS-169 R2 M1）。**但這條放寬不等於「can_upload=false 的成員也能換頭像」**（LS-169
+  R3 n1）：client 換頭像唯一會走的路徑是 Storage API 的 `upsert: true`，storage-api
+  內部等同 `INSERT ... ON CONFLICT DO UPDATE`，一定會先過 INSERT policy 的
+  `WITH CHECK`——INSERT 分支本輪刻意沒有放寬（仍是 `uploadable_family_ids()`，member
+  看 `can_upload`），理由是「不能上傳照片的成員也不該能上傳頭像」語意要一致。結果是：
+  `can_upload=false` 的 member 用真實 app 換頭像會在 INSERT policy 被擋
+  （400 `new row violates row-level security policy`，`ChildAvatarUploadService`
+  的 `mapUploadError` 會把它映射成 `.rejected` 給出明確文案）；放寬後的 UPDATE／DELETE
+  判準目前只在**不經過 upsert 的直接 SQL UPDATE／DELETE**（例如維運操作）時才用得到。
+  客戶端固定路徑＋長效快取意味著換照片後簽名 URL 需要 cache-busting 才能讓列表立即
+  顯示新圖，見 `ChildrenStore.avatarCacheBust` 文件註解。
 
 ### storage.objects 的 RLS（四條 policy，皆 `to authenticated`）
 
@@ -1469,8 +1622,8 @@ Edge Function 完成刪除）。三層（`validationRetryable`／`retryableSyste
 |---|---|---|
 | SELECT | 同家庭任何角色（含 viewer） | 只看得到路徑第一段＝自己所屬家庭的物件；不檢查路徑規約，讀取端不因格式問題被擋 |
 | INSERT | 有上傳權者（owner 恆可；member 看 `can_upload`；viewer 不行） | 路徑必須符合規約且第一段＝自己**當下**所屬的家庭（防跨家庭寫入）；`owner`/`owner_id` 欄位（storage-api 自動填）必須是自己或留空 |
-| UPDATE | 家庭 owner（任意物件）；或上傳者本人（僅限**當下**仍有上傳權時） | 新路徑同樣要通過規約與家庭歸屬檢查（防止「改名搬家」繞過 INSERT 邊界） |
-| DELETE | 同 UPDATE 的判準 | 上傳者可以刪自己上傳的孤兒物件（見 §3 `media` 的「上傳流程順序」）；已軟刪除的 `media` 對應物件**不要**跟著硬刪 Storage 檔案（PLAN §5：軟刪除要留救援路徑；30 天後的自動永久清除見下方「自動清除（LS-153）」——那是 service_role／背景排程的路徑，不經這四條 policy） |
+| UPDATE | 家庭 owner（任意物件）；或上傳者本人（僅限**當下**仍有上傳權時）；**頭像路徑（`avatars/{child_id}.jpg`）另加一個分支：仍是該家庭 owner／member 者，不看 owner／owner_id／can_upload**（LS-169 R2 M1，與 `update_child` 同一判準；**但 client 只會經由 upsert 觸發，upsert 同時要過 INSERT policy——`can_upload=false` 的 member 在真實上傳路徑仍會被擋，見上方「寶貝大頭照」小節，LS-169 R3 n1**） | 新路徑同樣要通過規約與家庭歸屬檢查（防止「改名搬家」繞過 INSERT 邊界） |
+| DELETE | 同 UPDATE 的判準（含頭像路徑的家庭角色分支） | 上傳者可以刪自己上傳的孤兒物件（見 §3 `media` 的「上傳流程順序」）；已軟刪除的 `media` 對應物件**不要**跟著硬刪 Storage 檔案（PLAN §5：軟刪除要留救援路徑；30 天後的自動永久清除見下方「自動清除（LS-153）」——那是 service_role／背景排程的路徑，不經這四條 policy） |
 
 - **`can_upload` 被收回後的行為是「當下判斷」不是「上傳當時判斷」**：owner 把某成員的
   `can_upload` 關掉之後，那個人連自己以前上傳的檔案都改／刪不了——這是刻意選的較嚴
@@ -1525,7 +1678,7 @@ schema，`security definer`，只 `service_role`／`pg_cron` 可呼叫，`authen
 | 表 | 判準欄位 | 備註 |
 |---|---|---|
 | `diaries`／`albums`／`comments` | `deleted_at` | 一般軟刪／owner 移除都算；硬刪後順帶清掉指向它們的孤兒 `comments`／`reactions`（多型關聯沒有 FK，父列消失不會自動帶走，見下方「孤兒 comments／reactions」） |
-| `media` | `deleted_at` | 硬刪由 `private.media_storage_queue_sync()`（media 的 AFTER DELETE 統計級 trigger，R2）收 `storage_path`／`thumb_path`（非 NULL 者）進 `public.purge_storage_queue`，交給下方 Edge Function 實際刪除 Storage 物件——**不論這句硬刪是 `purge_expired()` 自己執行、還是被 `delete_my_account()` 情況 2 的 `families` cascade 觸發，都會入列**（R2 修正：R1 版本只在 `purge_expired()` 自己的 DELETE 裡入列，cascade 硬刪的 media 完全漏收，見下方「情況 2 cascade 與 Storage 佇列」）；`families.storage_used_bytes` **不會**在這裡再扣一次額度——軟刪的當下（`deleted_at` 從 `NULL` 變成非 `NULL` 的那次 UPDATE）就已經被 `private.media_storage_sync()` 扣過，硬刪時這批列的 `deleted_at` 皆非 `NULL`，同一支 trigger 的 DELETE 分支明確只對 `deleted_at is null` 的列計入扣除金額，重複硬刪不會重複扣 |
+| `media` | `deleted_at` | 軟刪來源含使用者自己刪照片／影片，以及（LS-155 起）`delete_my_account()` 對呼叫者上傳、仍存在的每張 media 一併軟刪（不限定呼叫者是否仍是該家庭成員，見 §4「併發」）；`finalize_account_deletion()`（LS-155 R2）在同一個逐家庭迴圈重跑一次同樣的軟刪，接住交易提交窗口內在飛上傳的孤兒列；硬刪由 `private.media_storage_queue_sync()`（media 的 AFTER DELETE 統計級 trigger，R2）收 `storage_path`／`thumb_path`（非 NULL 者）進 `public.purge_storage_queue`，交給下方 Edge Function 實際刪除 Storage 物件——**不論這句硬刪是 `purge_expired()` 自己執行、還是被 `delete_my_account()` 情況 2 的 `families` cascade 觸發，都會入列**（R2 修正：R1 版本只在 `purge_expired()` 自己的 DELETE 裡入列，cascade 硬刪的 media 完全漏收，見下方「情況 2 cascade 與 Storage 佇列」）；`families.storage_used_bytes` **不會**在這裡再扣一次額度——軟刪的當下（`deleted_at` 從 `NULL` 變成非 `NULL` 的那次 UPDATE，含 LS-155 這句）就已經被 `private.media_storage_sync()` 扣過，硬刪時這批列的 `deleted_at` 皆非 `NULL`，同一支 trigger 的 DELETE 分支明確只對 `deleted_at is null` 的列計入扣除金額，重複硬刪不會重複扣 |
 | `children` | `deleted_at` | 與 §3「30 天可還原」窗口共用同一個判準；硬刪會 cascade 掉 `diary_children`／`album_children`／`feed_item_children` 裡指向這個孩子的既有標記；`children` 不是 `content_target_type` 合法值，沒有孤兒 `comments`／`reactions` 要清 |
 | `profiles` | `deletion_requested_at` | **R2 起是 tombstone，不是硬刪**，見下方「`profiles` tombstone：為什麼不硬刪」 |
 

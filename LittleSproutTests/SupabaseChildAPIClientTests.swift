@@ -227,6 +227,40 @@ final class SupabaseChildAPIClientTests: XCTestCase {
         XCTAssertNil(role)
     }
 
+    // MARK: - signedAvatarURLs（LS-169）
+
+    func test_signedAvatarURLs_emptyPaths_returnsEmptyWithoutRequest() async throws {
+        let client = TestSupabaseClient.make { _ in
+            XCTFail("空陣列不應該發請求")
+            return MockURLProtocol.StubResponse(statusCode: 200, body: Data())
+        }
+        let apiClient = SupabaseChildAPIClient(client: client)
+
+        let urls = try await apiClient.signedAvatarURLs(forPaths: [])
+
+        XCTAssertTrue(urls.isEmpty)
+    }
+
+    /// 同 `SupabaseTimelineAPIClient.signedURLs` 既有測試的斷言方式：單一路徑簽名失敗
+    /// 不讓整批失敗，失敗的路徑不出現在結果字典裡。
+    func test_signedAvatarURLs_partialFailure_omitsFailedPathButKeepsSucceeded() async throws {
+        let client = TestSupabaseClient.make { request in
+            XCTAssertTrue(request.url?.path.contains("/object/sign/media") == true)
+            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+            [
+              {"path": "f/avatars/ok.jpg", "signedURL": "/object/sign/media/f/avatars/ok.jpg?token=abc"},
+              {"path": "f/avatars/bad.jpg", "error": "not found"}
+            ]
+            """.utf8))
+        }
+        let apiClient = SupabaseChildAPIClient(client: client)
+
+        let urls = try await apiClient.signedAvatarURLs(forPaths: ["f/avatars/ok.jpg", "f/avatars/bad.jpg"])
+
+        XCTAssertNotNil(urls["f/avatars/ok.jpg"])
+        XCTAssertNil(urls["f/avatars/bad.jpg"], "簽名失敗的路徑不應該出現在結果字典裡")
+    }
+
     // MARK: - Helpers
 
     private func signIn(client: SupabaseClient) async throws {

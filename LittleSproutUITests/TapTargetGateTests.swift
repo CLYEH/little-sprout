@@ -21,6 +21,12 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.diaryEditor)
     }
 
+    /// LS-169：頭像欄從視覺佔位改成真的可點的 `PhotosPicker` 觸發鈕——改註冊進 harness，
+    /// 取代原本 `tap-target-exemptions.txt` 的具名排除（同 `testDiaryEditorView` 的理由）。
+    func testCreateChildView() {
+        assertAllTappablesMeetMinimum(.createChild)
+    }
+
     /// LS-126 delta 復審 m2：`TimelineView` 整體仍在 `tap-target-exemptions.txt`（其餘元件
     /// 需要 seed 資料），這裡只蓋 Header 建立鈕（`.preview()` 空狀態即可渲染）。
     func testTimelineViewDefaultState() {
