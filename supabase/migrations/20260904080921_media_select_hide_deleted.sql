@@ -1,0 +1,90 @@
+-- LS-155 R2（merge-review R1 `b68e89d3` M2，實測：`LS-155-e4-visibility.sql`）—
+-- media_select RLS policy 加上 `deleted_at is null`（uploader 例外）：server 端
+-- 阻斷軟刪 media 繼續對其他家庭成員顯示。
+--
+-- ---------------------------------------------------------------------------
+-- 問題（reviewer E4，實測）：本票 R1 版本的 migration 檔頭與 docs/API.md 都寫著
+-- 「讀取端既有的 deleted_at is null 過濾自然讓連結失效」——這句話不成立。
+-- `20260822120200_rls_policies.sql:201` 的 `media_select` 只判 `family_id`，
+-- 完全不看 `deleted_at`；iOS 端 `SupabaseTimelineAPIClient.fetchMedia(ids:)`
+-- 也是單純 `select *` + `.in("id", …)`，同樣沒有 `deleted_at` 條件。E4 實測：
+-- U 刪帳號、其照片被 delete_my_account() 軟刪之後，以家庭另一位成員 V 的身分
+-- 讀取——`media` 仍回傳該列、`albums.cover_media_id` 仍指向它、`diary_media`
+-- 連結仍在——U 的照片會繼續對家庭成員顯示（日記卡前三張、相簿封面）長達 30 天
+-- 直到 purge_expired() 硬刪，與本票寫進隱私政策 §8／使用條款 §9.1 的「立即…
+-- 停止對家庭成員顯示」直接矛盾（`kind='media'` 的獨立照片卡本身沒問題——
+-- `feed_sync_media` 既有 trigger 會在軟刪時把它從 feed_items 移除，問題只在
+-- 「附掛」在日記／相簿裡、不經過 feed_items 的那兩條路徑）。
+--
+-- ---------------------------------------------------------------------------
+-- 為什麼不是單純加 `and deleted_at is null`（本票開發過程中先寫過這個版本，本機
+-- `supabase/tests/20_role_permissions.sql` 的「正向對照」段落直接炸掉，逼出這裡
+-- 的訂正，記錄下來給之後改這支 policy 的人參考，避免重踩）：
+--
+-- `media_update` 對 `authenticated` 的 grant 是**欄位級**（只開
+-- `taken_at`／`deleted_at`／`width`／`height` 四欄，`20260822120000_init_schema.sql`
+-- 的既有設計，理由是擋掉 `byte_size`／`storage_path`／`family_id`／`uploaded_by`
+-- 被竄改）。PostgreSQL 的 row security 對「欄位級 UPDATE 授權」的表，會在
+-- `ExecWithCheckOptions` 這一步額外要求：**UPDATE 之後的新列，也必須通過該表的
+-- SELECT policy**（不只是 UPDATE policy 自己的 WITH CHECK）——這件事只在授權是
+-- 欄位級時才會發生，本機用一支最小 repro 表（欄位級 UPDATE grant＋分離的
+-- SELECT／UPDATE policy）驗證過：整表 UPDATE grant 不會觸發、欄位級 grant 會
+-- 觸發，`media` 剛好是後者。單純加 `deleted_at is null`（不含任何例外）的版本，
+-- 因此讓「上傳者對自己的照片呼叫 `UPDATE media SET deleted_at = now()`」這個
+-- 既有、現行、有測試覆蓋的軟刪路徑（`media_update` policy 的上傳者分支——見
+-- `20260822120200_rls_policies.sql:208-217` 註解「上傳者可以收回自己的照片」）
+-- 直接噴 `new row violates row-level security policy for table "media"`——這不是
+-- 「多擋了一點」，是「正向對照的既有功能整個壞掉」。
+--
+-- 修法：`media_select` 的 `deleted_at` 篩選加一個例外——`uploaded_by = auth.uid()`
+-- （上傳者永遠看得到自己上傳的列，不論是否已軟刪）。這同時滿足兩件事：①
+-- reviewer E4 的情境（V 不是 U 的照片的上傳者，`uploaded_by = auth.uid()`
+-- 對 V 不成立，V 看不到，修法目標仍然達成）；②「上傳者自刪自己照片」這句 UPDATE
+-- 執行完之後，上傳者仍然通過 SELECT policy（`uploaded_by = auth.uid()` 成立），
+-- 不再撞 `ExecWithCheckOptions`。
+--
+-- **已知殘留缺口（新引入，誠實記錄，不在本票修）**：`media_update` policy 同時
+-- 允許 owner 分支——「owner 可以處理任何一張（§9-A1 移除內容）」，若 owner 直接對
+-- **別人**上傳、且自己不是上傳者的一張照片呼叫
+-- `UPDATE media SET deleted_at = now()`，新列的 `uploaded_by` 是別人、
+-- `auth.uid()` 是 owner 自己，這句 UPDATE 之後會撞上同一個
+-- `ExecWithCheckOptions` 限制而失敗——這條路徑目前**沒有任何測試覆蓋、也沒有任何
+-- client 端程式碼行使**（`grep -rn deleted_at LittleSprout/` 只命中 `children`
+-- 相關檔案，repo 沒有 media 的檢舉／移除內容 UI），純粹是 `docs/API.md` 表格裡
+-- 「owner 任意列」這句話對應的一個**尚未有任何呼叫端**的 API 承諾。記入 LS-96
+-- 待辦池：真的要做 owner 移除他人 media 的功能時，正確做法是比照
+-- `diaries`／`albums`／`comments`／`children` 既有模式，另開一支 SECURITY
+-- DEFINER RPC（例如 `set_media_deleted`）取代目前欄位級 grant 的直接 UPDATE
+-- 路徑——RPC 執行時以表擁有者身分繞過 RLS，天生不會撞上這個 Postgres 限制，也是
+-- 這四張表當初選擇 RPC-only 而不是欄位級 grant 的既有理由之一（本票才第一次讓
+-- `media_select` 開始過濾 `deleted_at`，之前這個限制沒有機會浮現）。
+--
+-- 為什麼可以直接加、不會誤傷既有功能（逐一列出「需要讀到軟刪 media 的既有流程」，
+-- 確認皆不受影響）：
+--   - `private.purge_expired()`／`private.media_storage_sync()`／
+--     `private.media_storage_queue_sync()` 皆為 SECURITY DEFINER、以表擁有者
+--     （postgres）身分執行，RLS 對表擁有者天生不生效（這幾張表都沒有
+--     `FORCE ROW LEVEL SECURITY`），這支 policy 改動對它們無感。
+--   - `public.get_family_quota()` 讀的是 `families.storage_used_bytes`（一個獨立
+--     欄位，由上面幾支 trigger 維護），不直接查 `media` 表，不受影響。
+--   - `public.delete_my_account()`／`public.finalize_account_deletion()` 對
+--     `media` 的 UPDATE 皆為 SECURITY DEFINER，同上不受影響。
+--   - 上傳者對自己已軟刪的 media 仍可讀到（見上方修法段落），`media_update` 的
+--     上傳者分支「收回自己的照片」不受影響。
+--
+-- client 端不需要改（M2 建議 (a)／(b)／(c) 之外的第四個選項，讀完程式碼後採用）：
+-- `LittleSprout/Services/Timeline/TimelineContentAssembler.swift` 的
+-- `fetchDiaryContents`（:129）／`fetchAlbumContents`（:158）／
+-- `fetchDiaryPhotos`（:91）三處都是先 `fetchMedia(ids:)` 拿到的列組成
+-- `Dictionary(uniqueKeysWithValues:)`，再用 `compactMap`／`flatMap` 依原始
+-- id 清單查表——某個 id 查不到（RLS 排除掉了）就直接跳過那一項（相簿封面變
+-- `nil`、日記預覽照片少一張），不會因為回傳筆數變少而崩潰或報錯。這支 RLS
+-- 改動生效後，被軟刪的 media（自己上傳的除外）從 `fetchMedia` 回傳的那一刻就
+-- 自然消失，不需要額外解碼 `deleted_at` 或加 client 端過濾條件。
+-- ---------------------------------------------------------------------------
+
+alter policy media_select on public.media
+  using (
+    family_id in (select private.family_ids())
+    and (deleted_at is null or uploaded_by = (select auth.uid()))
+  );
