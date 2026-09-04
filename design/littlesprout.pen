@@ -93275,7 +93275,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "【R3 訂正，取代 R1 段】cmp/Card Album：Imprint Row 改 layout:vertical，Caption 下方為單一 wQVzs Signature Line 文字節點（R2 起取代原本 Who Group/Age Group/Multi Caption 三節點設計）。單一寶貝：content=\"{暱稱} · {年齡}\"；多寶貝（≥2）：用「、」串接多組「暱稱 · 年齡」；零寶貝：Signature enabled:true、content:\" \"（單一半形空白），署名列保留空高度但不顯示任何文字（brand 十條 #10「空欄位卡不塌縮」；R5 BL-3 訂正——R4 曾讓 iPhone 三張零寶貝卡 enabled:false 塌縮成232高，與 iPad VvT91 的263高 enabled:true 空白列互相矛盾，兩套規格只有一套對；本輪統一為「保留高度」，iPhone puHZ5/Xldkz/Wl90J 三板的卡3（R7edNW／T3SwvP／mdabp，皆「海邊戲水」）改 263 高，corner y 同步 242，與 iPad VvT91 一致）。零寶貝卡讀者靠「這張卡的署名列是空白」本身辨識，不靠卡片整體高度變矮辨識——高度變矮曾經是本票唯一的零寶貝訊號，R5 起不再是。年齡片語（如「2 歲 3 個月」）內部空白一律用 NBSP（U+00A0）連接、「個」「月」之間再插入 WORD JOINER（U+2060），防止 Dynamic Type／AX3 折行把年齡單位拆成孤字（BL-B R3 修復）。姓名與年齡之間的「 · 」刻意維持一般可斷空白（U+0020）——若也用 NBSP 包住會把姓名最後一字一併鎖進同一個不可斷區塊，AX3 實測會產生「小」單字孤兒，已排除，勿在下一輪重新套用。",
+              "content": "【R3 訂正，取代 R1 段】cmp/Card Album：Imprint Row 改 layout:vertical，Caption 下方為單一 wQVzs Signature Line 文字節點（R2 起取代原本 Who Group/Age Group/Multi Caption 三節點設計）。單一寶貝：content=\"{暱稱} · {年齡}\"；多寶貝（≥2）：用「、」串接多組「暱稱 · 年齡」；零寶貝：Signature enabled:true、content:\" \"（單一半形空白），署名列保留空高度但不顯示任何文字（brand 十條 #10「空欄位卡不塌縮」；R5 BL-3 訂正——R4 曾讓 iPhone 三張零寶貝卡 enabled:false 塌縮成232高，與 iPad VvT91 的263高 enabled:true 空白列互相矛盾，兩套規格只有一套對；本輪統一為「保留高度」，iPhone puHZ5/Xldkz/Wl90J 三板的卡3（R7edNW／T3SwvP／mdabp，皆「海邊戲水」）改 263 高，corner y 同步 242，與 iPad VvT91 一致）。零寶貝卡讀者靠「這張卡的署名列是空白」本身辨識，不靠卡片整體高度變矮辨識——高度變矮曾經是本票唯一的零寶貝訊號，R5 起不再是。年齡片語（如「2 歲 3 個月」）內部空白一律用 NBSP（U+00A0）連接、「個」「月」之間再插入 WORD JOINER（U+2060），防止 Dynamic Type／AX3 折行把年齡單位拆成孤字（BL-B R3 修復）。姓名與年齡之間的「 · 」刻意維持一般可斷空白（U+0020）——若也用 NBSP 包住會把姓名最後一字一併鎖進同一個不可斷區塊，AX3 實測會產生「小」單字孤兒，已排除，勿在下一輪重新套用。 MJ-6（R5）：AX3 署名一律一行一人，不因單一寶貝就把姓名與年齡拆成兩行——IjWOp 卡2（pNPuF，多寶貝）已證明「小安 2 歲 3 個月」在 w=329 放得下一整行；ONEs5／i3jpIq（單一寶貝）原本用顯式 \\n 把姓名與年齡拆成兩行是 R3 遺留的保守處理，R5 拿掉 \\n 統一成一行，兩卡各變矮 58pt，corner y 同步重算（424／366）。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -94269,7 +94269,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "R5 六板重測（straddle 公式訂正：node top<膠囊(Tab Bar)頂 且 bottom>膠囊頂——即文字跨過 Tab Bar 上緣、一半可見一半被蓋住才算 straddle；R4 的公式（top<膠囊底 且 bottom>膠囊頂）等同「與 Tab Bar 有任何重疊」，任何完全躲在 Tab Bar 後方的文字都會被誤判成 true，已訂正）。margin 定義：Tab Bar 頂（board-local y=754，IjWOp 因板高不同為 y=1378）減去「最後一個完整在 Tab Bar 之上的文字節點」底邊。六板逐一：puHZ5 49／Xldkz 49（均為 wQVzs Signature Line，straddle=false）／LTDYH 89.5／BTDgD 89.5（均為 Empty Body，straddle=false）／Wl90J margin=**+5**（QSnUF/MIxHp Caption bot 749，Tab Bar 頂754，straddle=false——R4 版「−26」用的是「被膠囊蓋住的 Signature 底」去減，換了方法，已訂正；QSnUF/wQVzs Signature 完全落在 Tab Bar 後方 [755,780]⊂[754,818]，非 straddle）／IjWOp margin=**+127**（pNPuF/wQVzs Signature bot 1251，Tab Bar 頂1378，straddle=false——R4 版「−220」本輪用新公式與新『最後完整節點』定義皆算不出來，非本輪其餘任何一板的既有方法可重現，判定為 R3/R4 遺留的過期數字，已訂正為實測值；card3 i3jpIq 內容雖然視覺上延伸到板底被 clip 裁掉，但其 Signature/Caption 等文字節點本身仍完整落在 Tab Bar 之前或之後、不橫跨 Tab Bar 邊緣，straddle 檢查對其仍是 false，設計意圖說明見下）。全六板 straddle 皆 false，零橫跨 Tab Bar 邊緣的文字節點。",
+              "content": "R5 六板重測（straddle 公式訂正：node top<膠囊(Tab Bar)頂 且 bottom>膠囊頂——即文字跨過 Tab Bar 上緣、一半可見一半被蓋住才算 straddle；R4 的公式（top<膠囊底 且 bottom>膠囊頂）等同「與 Tab Bar 有任何重疊」，任何完全躲在 Tab Bar 後方的文字都會被誤判成 true，已訂正）。margin 定義：Tab Bar 頂（board-local y=754，IjWOp 因板高不同為 y=1378）減去「最後一個完整在 Tab Bar 之上的文字節點」底邊。六板逐一：puHZ5 49／Xldkz 49（均為 wQVzs Signature Line，straddle=false）／LTDYH 89.5／BTDgD 89.5（均為 Empty Body，straddle=false）／Wl90J margin=**+5**（QSnUF/MIxHp Caption bot 749，Tab Bar 頂754，straddle=false——R4 版「−26」用的是「被膠囊蓋住的 Signature 底」去減，換了方法，已訂正；QSnUF/wQVzs Signature 完全落在 Tab Bar 後方 [755,780]⊂[754,818]，非 straddle）／IjWOp margin=**+185**（pNPuF/wQVzs Signature bot 1193，Tab Bar 頂1378，straddle=false——本輪先算出127，隨後 MJ-6 把 ONEs5(card1) 的署名從兩行併成一行，card1 變矮 58pt，其後的 card2/card3 一併上移 58pt，margin 隨之從127漲到185，已依最終幾何重新實測；card3 i3jpIq 內容雖然視覺上延伸到板底被 clip 裁掉，但其 Signature/Caption 等文字節點本身仍完整落在 Tab Bar 之前或之後、不橫跨 Tab Bar 邊緣，straddle 檢查對其仍是 false，設計意圖說明見下）。全六板 straddle 皆 false，零橫跨 Tab Bar 邊緣的文字節點。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -94640,6 +94640,238 @@
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
               "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "W1MGF",
+          "name": "N R5 修訂重點（取代前輪已過期描述）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "gBCj1",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "rnd0Z",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-142 R5",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "uNvqd",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "等寬數字欄位（MJ-7）：以下欄位一律套用 .monospacedDigit()——上傳佇列 Queue Row 的 Timestamp（「今天 14:3X」）與 Percent（「上傳中 · 42%」）；相簿列表卡片的張數（「12 張相片」內的數字）；相簿詳情頁標題的張數（「34 張相片」）。理由：這些數字直向堆疊或反覆更新（進度百分比），比例數字的字寬不一會讓分位數上下跳動或欄位錯位；本輪 kHDk4 全板 grep 前一直找不到任何 .monospacedDigit() 字樣（LS-18 的 OMaqB 清單在別的 Notes 板上，ios-dev 實作本票時不會讀到），R5 起本段是這四類欄位的唯一權威來源。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ogby4",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "J8e4vH",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-142 R5",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "pUvzU",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "BL-1/MJ-2 裁切安全視窗：rTEGf/JnQrT/FyV5I 三板 Rows Scroll Area 高度改落在「完整顯示N列、不切文字/tap-target」的安全視窗內，並把 Group Failed 的 LS002（容量已滿）列移到最前——這一列唯一需要「查看儲存空間」這個不同於「重試」的動作，才是該留在摺線上的那一列。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Mg8nD",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "T0oSJM",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-142 R5",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Jxcmk",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "BL-2 留白目標 150 不可達：MJ-2 的安全視窗與 MJ-4 刪除 Sub Danger 摘要行後，三塊主板已無法同時滿足「不切字」與「留白=150」兩個約束，改為誠實回報實測值（rTEGf/JnQrT=125、FyV5I=76）；16b 不裁切參考板無此限制，精確取150。detent 改 .presentationDetents([.height(727)])（AX3 .height(1224)）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TsNfP",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "k3S9Go",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-142 R5",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "HArMV",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "BL-3 零寶貝卡：iPhone 三張（R7edNW/T3SwvP/mdabp）Signature 改 enabled:true content:\" \"（保留空高度），263 高，與 iPad VvT91 一致，corner y 同步 242。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "J0CRWM",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "y7Zi4",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-142 R5",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "kT9Ef",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MJ-1 卡間淨空：只移動 bhroo/FjOA8（Fan Ghost 3）y −24→−18，UTLcl／KGh0U 維持不動——三個 tier 的「上一張卡最低可見底↔下一張卡最高可見裝飾頂」現在全部是 6pt，見 EBlnw。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Mvx6K",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "D77Idy",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-142 R5",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "IaOHK",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MJ-6 AX3 署名一行一人：ONEs5／i3jpIq 拿掉顯式換行，姓名年齡一行放得下（pNPuF 多寶貝卡已證明 w=329 足夠），兩卡各變矮 58pt，corner y 同步重算（424／366）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         }
@@ -95523,7 +95755,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安\n2 歲 3 個⁠月"
+                      "content": "小安 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -95534,10 +95766,10 @@
                       "y": 445
                     },
                     "mlORb": {
-                      "y": 482
+                      "y": 424
                     },
                     "atAkU": {
-                      "y": 482
+                      "y": 424
                     },
                     "mTljh": {
                       "enabled": false,
@@ -95623,7 +95855,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安\n2 歲 3 個⁠月"
+                      "content": "小安 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -95634,10 +95866,10 @@
                       "y": 445
                     },
                     "mlORb": {
-                      "y": 424
+                      "y": 366
                     },
                     "atAkU": {
-                      "y": 424
+                      "y": 366
                     },
                     "mTljh": {
                       "enabled": false,
