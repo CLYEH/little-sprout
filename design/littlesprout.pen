@@ -125938,6 +125938,18 @@
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
               "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "cJLcJ",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "R4（BL-6，VR comment 3c17cb84）：上一條所述「已修正…重跑確認 0 筆」R3 覆核時仍有 1 筆穿插——Body（OwhFv）高度硬編 2220，實際內容（Header 421＋Card Wrap 1846）需 2267，短少 47pt 讓最後一則零容忍條款文字（W6lr9R）溢出 27pt 進入依舊高度排入 flow 的 Action Bar（LLD8z），板高 2510 也連帶短少、Action Bar 下緣超板底 82pt。R4 修正比照同板非 AX3 版本（z042Yg）「Body 高度＝內容實際高度」的既有模式：Spacer（nrqqV）0→8（補回段落收尾留白）、Body（OwhFv）2220→2275（421＋1846＋8）、板高（rh2Q1）2510→2681（Status 62＋Body 2275＋Action Bar 310＋Home Indicator 34），三者皆可重算。第五支對本板側檢查（主 checkout LS-168 版腳本唯讀引用，未落地進本分支）flagged=0。",
+              "fontFamily": "Inter",
+              "fontSize": 17,
+              "fontWeight": "normal"
             }
           ]
         },
