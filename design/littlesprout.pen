@@ -147982,7 +147982,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "留言 sheet（6 板）：FiBvh（iPhone，3 則留言）、f10d1D（深色）、SHbqU（AX3）、dHSyh（錯誤態·網路中斷）、wY7f8（iPad 11\"，置中卡片）、DUyg3（留言操作表·Owner 移除留言）。",
+                  "content": "留言 sheet（7 板，R2 +1）：FiBvh（iPhone，3 則留言）、f10d1D（深色）、SHbqU（AX3）、dHSyh（錯誤態·網路中斷）、wY7f8（iPad 11\"，置中卡片）、DUyg3（留言操作表·Owner 移除留言）、TnxXE（空狀態，R2 新增，MJ-5）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -148018,7 +148018,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "按讚名單（1 板，可選）：GZ3pb——點擊愛心計數數字（Count Zone，獨立 ≥44pt 熱區，與愛心 Like Toggle 分離）開啟的小清單，票文明說「VR 判多餘可砍」，若 R2 判定砍掉，理由請記於此節沿革。VR R1 裁定：保留（理由見下）。",
+                  "content": "按讚名單（1 板，可選）：GZ3pb，板名已改「LS-177 / 按讚名單（點計數開啟）」——點擊愛心計數數字（Count Zone，獨立 ≥44pt 熱區，與愛心 Like Toggle 分離，見「卡片互動列」節）開啟的小清單。VR R1 裁定：保留（理由見「留言 sheet」節 uLBa2）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -148154,7 +148154,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "已按讚態：heart icon 與計數文字改 $accent 上色＋字重 700（`YX6Jm`／等 id，各板皆同一模式）；未按讚態維持 $text-secondary／$print-ink-secondary（依卡片自身色彩系統，Diary 卡是印刷紙色 `$print-ink-secondary`，非全域 `$text-secondary`——量法：`Get` 對照卡片內既有 Name/Age 文字用的 fill 值）。熱區：Heart Button／Comment Button 皆用 `padding:[\"$ctl-pad-tap\",0]` 撐到 44pt（AX3 因文字放大到 77pt，icon 同步覆寫 32×32 對應既有 AX3 icon-sm 慣例）。",
+                  "content": "**R2 改版（VR R1 BL-1／BL-2／BL-3／BL-4 裁定後）**：原 R1 版本熱區只靠 `padding:[\"$ctl-pad-tap\",0]`（9.5/0）撐 icon，兩軸皆不足 44pt，已按讚態也只靠顏色換色（同一個空心 heart）——VR R1 判定違反十條 #7 與長輩硬約束的形狀／文字辨識，R2 全面重構：\n\n- 每顆 Heart Button 拆成 `Heart Group`（外層容器，無 padding）─ `Like Toggle`（icon＋文字標籤「愛心」／「已按愛心」，`padding:11` 全向，22pt icon + 11×2 = 44，兩軸皆達標）＋`Count Zone`（純計數文字，固定 44×44，獨立熱區，對應 BL-4「按讚名單入口＝點擊計數」）。\n- 已按讚態：icon 由 lucide 空心 `heart` 換成 `type:\"path\"` 手繪實心愛心（viewBox 24×24 標準實心心形路徑），`$accent` 上色＋字重 700；未按讚態維持空心 lucide `heart`／`$print-ink-secondary`——形狀＋文字＋顏色三維度可辨，不再只靠顏色。\n- Comment Button 只加文字標籤「留言」，維持原本 icon＋標籤＋計數三段式（無「已讀」等狀態切換，不需要 Count Zone 拆分）。\n- 熱區改字面值 `padding:11`（未用新 token，避免觸發 `pen-land.sh` 的 `variables` meta 變更硬擋；11 的選擇：22pt icon + 11×2 = 44，落在硬約束門檻上）。\n- AX3（`Qzz3r`）icon 沿用既有 32×32 覆寫慣例，其餘結構同標準態等比放大。\n\n三板（`IgqGF`／`VZ0wV`／`Qzz3r`）共 12 顆 Like Toggle ＋ 6 顆 Count Zone（Comment Button 無 Count Zone）全部驗證 `Get` bounds 兩軸 ≥44。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -148291,6 +148291,78 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "Owner 移除留言操作表（`DUyg3`）逐位元沿用 LS-152 05 內容操作表（`WgbNc`）的結構：Grabber／Head Title（引言）／Action List（單一 danger 列）／Cancel Button，元件與 token 完全相同（`cmp/Button Text` 的 `qe9yS` instance）。與 LS-152 05 的差異只在 Action List 只有一列「移除這則留言」（danger），不含「檢舉」「封鎖」——這是刻意的範圍縮小：票文只要求「Owner 移除留言」，未要求對留言本身的檢舉／封鎖動作，避免功能蔓延。點選留言即可喚出此操作表（VR R1 BL-4 裁定：`DUyg3` 本來就有點選路徑，故觸發手勢無需修改，只是移除文案中誤植的進階手勢字樣）。**重要發現（先讀再畫的產出）**：LS-152 已有 `Qs7iE`（LS-152 / 10b 刪除留言 · 確認）——一張「要刪除這則留言嗎？」的二次確認 Confirm Sheet，結構是 Head Title＋Body Text＋danger「刪除這則留言」鈕＋取消。兩板銜接成完整流程：`DUyg3`（點選留言喚出的操作表，列出可執行動作）點「移除這則留言」→ 導向 `Qs7iE`（既有二次確認）→ 點「刪除這則留言」才真的呼叫 `set_comment_deleted`。`DUyg3` 是本票新增的「入口選單」，`Qs7iE` 是 LS-152 已核可的「二次確認」，兩者職責不重疊、不重畫，`Qs7iE` 完全未被本票觸碰（byte-identical）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "T27xl",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "xv3oq",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "cPTBT",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "**MJ-1 頭像換沖印品**：留言 sheet 家族（`FiBvh`／`f10d1D`／`SHbqU`／`dHSyh`／`wY7f8`）與按讚名單（`GZ3pb`）共 21 個頭像，由「$accent-soft 字母圓圈」換成 `cmp/Profile Print`（`OePXK`）instance——量法與縮放公式見「尺寸規格值與量法」節 `d5RNKR`。`$accent-soft` 只留給 Send Button，不再被 8+ 個頭像圓盤稀釋（VR R1 MJ-1 附帶發現）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "WucbN",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "L8S469",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "U5ZFkV",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "**MJ-5 空狀態板**：新增 `TnxXE`（LS-177 / 留言 sheet · 空狀態 (iPhone)），Copy 自 `FiBvh` 後把 `Comment List` 換成空白沖印品（白邊＋左上/右下角托＋`$print-paper` 空內頁，無照片）＋「還沒有人留言」（`$text-primary`）＋「第一個跟家人說說話吧」（`$text-secondary`），`Head Count` 改「0 則留言」，`Footer`／輸入列結構不變、維持可用。深色／AX3 變體依票文可免（見「未決」節載入態討論）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -148533,6 +148605,78 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "qFYcv",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "t6pB5",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "f6x5i",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "**MJ-4／MJ-2／MJ-3 門面重畫**：`j7WwV`／`ckgMp`／`KyxGc` 三板由「圓形 icon → 置中大標 → 置中內文 → 卡片 → 全寬鈕」的教科書模板版式，換成「沖印品照片（`hero-grandma.png`，白邊 8pt＋左上/右下角托，`rotation:-3` 微幅旋轉）＋壓在其上出血重疊的通知預覽卡＋左對齊標題／內文」。移除 Icon Wrap（`$accent-soft`）與 Bell Icon（`$accent`）兩個多餘 accent 來源，CTA（Enable Button）成為畫面上唯一的 `$accent`（MJ-2）。預覽卡 App Icon 由「`$accent` 方塊＋lucide `image` icon」（假 app icon）換成稿內既有的 photo-stack 定案資產 `app-icon-photo-stack.png`（MJ-3）。AX3（`KyxGc`）通知卡加寬至 340（AX3 body 放大後兩行內文避免不必要換行）。三板皆驗證走訪整板 `fill===\"$accent\"` 僅剩 CTA 一處。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SHsNq",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "WnAJe",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "mZew6",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "**MJ-6 設定頁取景修正**：`y7KAW`／`y66AzT` 沿用 `t5wI4` 的頂部捲動切片手法，但新增的 `DVEow`「推播通知」列原本落在裁切線下方（0% 可見）——`t5wI4` 的頂部切片對「展示整個設定頁」是對的，對「展示一列」是錯的取景。改法：`Content` 改 `layoutPosition:absolute`，垂直位移 −422px（模擬向下捲動），讓「家庭」段落尾端露出約 50px（表示這是捲動後的畫面）、`Tab Bar Clearance` 完整帶過、「內容與安全」整段（含推播通知列與 Toggle）完整落在可視範圍內。板名補「（已捲至內容與安全）」。`t5wI4` 本身未被觸碰（byte-identical，另見收據）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -148754,7 +148898,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Interaction Row 熱區（規格值族「互動按鈕熱區」）：Heart/Comment Button 皆 `padding:[\"$ctl-pad-tap\",0]`，iPhone/深色實測 44×~52（`IgqGF`/`VZ0wV` 內 `Heart Button`/`Comment Button` 節點，量法：`Get` 走訪 bounds.height）；AX3 icon 覆寫 32×32（對應既有 AX3 icon-sm 慣例，同 LS-163 Toggle Icon 手法）。",
+                  "content": "**R2 改版**：Interaction Row 熱區規格改為可復算的字面值——每顆按鈕拆成 `Like Toggle`（icon 22pt＋文字標籤，`padding:11` 全向，44＝22+11×2，兩軸皆達標，量法：`Get` bounds 兩軸；`IgqGF`/`VZ0wV` 實測 w=84~118 h=47）與 `Count Zone`（純計數，固定 `width:44,height:44`，不靠 padding 疊出來，量法同上，實測 44×44）。AX3（`Qzz3r`）icon 覆寫 32×32，`Like Toggle` 實測 140×80，`Count Zone` 仍固定 44×44。R1 舊版「44×~52」的數字曾與 `padding[1]=0` 矛盾、不可復算，R2 已用上述可復算公式取代。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -148826,7 +148970,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "AX3 留言頭像／送出鈕覆寫：`Avatar`/`My Avatar` 36→72（容納放大後的 Initial 文字 40×58，量法：套用前實測文字溢出圓形，逐步放大到 72 時完全容納，內距 16/16 對稱）；`Send Button` 44→56、`Send Icon` 20→26（視覺比例對應放大文字，非熱區硬性要求——44 本已達標，56 是為了與周邊放大的頭像／文字視覺協調）。",
+                  "content": "AX3 頭像／送出鈕覆寫：`Avatar`/`My Avatar` 由 R1 的「字母圓圈 36→72」改為 R2 的 `cmp/Profile Print`（`OePXK`）instance 等比縮放——scale = size/60（元件原生 60px 基準），標準態 size=36（scale 0.6）、AX3 態 size=72（scale 1.2）、按讚名單 size=40（scale 0.667），縮放對象含 Print 外框、Photo 內距（7.5×scale）、Mount TL/BR 角托（16.4×scale，corner-out −3.8×scale），Imprint Caption 隱藏（`enabled:false`，頭像場景不需要「加入於」文案）。`Send Button` 44→56、`Send Icon` 20→26 維持 R1 原值不變（與頭像縮放無關，純視覺比例協調）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -148898,7 +149042,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "板高（規格值族「單畫面總高」）：`IgqGF`/`VZ0wV` 852（裝置高度）；`Qzz3r`（AX3）1434（內容驅動）；`FiBvh`/`f10d1D`/`dHSyh`/`DUyg3`/`GZ3pb` 皆 852；`SHbqU`（AX3）1265；`wY7f8`（iPad）1194；`j7WwV`/`ckgMp` 852；`KyxGc`（AX3）1454；`FeqWk` 852；`y7KAW`/`y66AzT` 852（沿用 LS-152 原板高，未改動 Body 結構）。",
+                  "content": "板高（規格值族「單畫面總高」）：`IgqGF`/`VZ0wV` 852（裝置高度）；`Qzz3r`（AX3）1434（內容驅動）；`FiBvh`/`f10d1D`/`dHSyh`/`DUyg3`/`GZ3pb` 皆 852；`TnxXE`（留言 sheet 空狀態，R2 新增）852（Copy 自 `FiBvh`，同板高）；`SHbqU`（AX3）1265；`wY7f8`（iPad）1194；`j7WwV`/`ckgMp` 852；`KyxGc`（AX3）1454；`FeqWk` 852；`y7KAW`/`y66AzT` 852（沿用 LS-152 原板高；R2 MJ-6 改 `Content` 為 `layoutPosition:absolute` 模擬向下捲動 −422px，板高本身不變，只是視窗內顯示的捲動位置不同）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -148962,7 +149106,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "按讚名單板（`GZ3pb`）是否保留：票文已預告「VR 判多餘可砍」，本輪先畫出供討論，R2 依 VR 意見決定去留。",
+                  "content": "**已解決（VR R1 裁定，票文裁定 (7)）**：按讚名單板（`GZ3pb`）保留，入口由長按改為點擊計數（BL-4）；理由與三個保留條件見「留言 sheet」節 `uLBa2`。原始討論（R1）：票文已預告「VR 判多餘可砍」，本輪先畫出供討論——R2 VR 判定保留，不砍。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -149071,6 +149215,42 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "推播設定「關閉」時導向系統設定的確認對話框，本輪只在 Notes 文字描述、未畫成獨立板——與 `FeqWk` 同屬系統層級 chrome，App 無法自訂樣式，畫出來不是可實作的規格（見 `j7RFGF` 的宣告）。**定案文案**：標題「要關閉推播通知嗎？」／內文「這需要在「設定」App 裡調整通知權限。」／按鈕「前往設定」（導向系統設定 App 的本 App 通知頁）與「取消」（維持原狀，Toggle 彈回開啟）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "LD2O7",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "T1PUd",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-177 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "k9WANR",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "**MJ-5 附帶事項：載入態選擇**——留言 sheet 的留言列表載入中狀態，本輪選擇**骨架屏（skeleton screen）**而非 spinner：理由是骨架屏能預告即將出現的內容形狀（頭像圓形＋兩行文字色塊），讓長輩使用者對「馬上會出現什麼」有預期，比一個轉圈圈的 spinner 更能降低等待焦慮（呼應十條長輩優先原則）；且與空狀態（`TnxXE`）的視覺語言更接近（都是「內容尚未到位」的骨架式呈現，而非彈出式的忙碌指示）。本輪未畫出骨架屏視覺稿（票文範圍未強制要求），留給 ios-dev 依此文字規格與現有留言列的版面比例（頭像＋姓名列＋內文兩行）自行產出灰色色塊骨架。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
