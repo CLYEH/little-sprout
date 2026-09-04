@@ -146465,7 +146465,7 @@
       "id": "y7KAW",
       "x": -3367,
       "y": 81015,
-      "name": "LS-177 / 設定 · 內容與安全加「推播通知」列 (iPhone)",
+      "name": "LS-177 / 設定 · 內容與安全加「推播通知」列 (iPhone，已捲至內容與安全)",
       "clip": true,
       "width": 393,
       "height": 852,
@@ -146553,8 +146553,11 @@
             {
               "type": "frame",
               "id": "Dbc4l",
+              "layoutPosition": "absolute",
+              "x": 24,
+              "y": -422,
               "name": "Content",
-              "width": "fill_container",
+              "width": "fill_container(345)",
               "layout": "vertical",
               "gap": "$sp-block",
               "padding": [
@@ -147155,7 +147158,7 @@
       "id": "y66AzT",
       "x": -3367,
       "y": 81947,
-      "name": "LS-177 / 設定 · 內容與安全加「推播通知」列 · 深色",
+      "name": "LS-177 / 設定 · 內容與安全加「推播通知」列 · 深色（已捲至內容與安全）",
       "theme": {
         "mode": "dark"
       },
@@ -147246,8 +147249,11 @@
             {
               "type": "frame",
               "id": "b1znIV",
+              "layoutPosition": "absolute",
+              "x": 24,
+              "y": -422,
               "name": "Content",
-              "width": "fill_container",
+              "width": "fill_container(345)",
               "layout": "vertical",
               "gap": "$sp-block",
               "padding": [
