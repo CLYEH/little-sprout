@@ -43,21 +43,34 @@
 -- 執行完之後，上傳者仍然通過 SELECT policy（`uploaded_by = auth.uid()` 成立），
 -- 不再撞 `ExecWithCheckOptions`。
 --
--- **已知殘留缺口（新引入，誠實記錄，不在本票修）**：`media_update` policy 同時
--- 允許 owner 分支——「owner 可以處理任何一張（§9-A1 移除內容）」，若 owner 直接對
--- **別人**上傳、且自己不是上傳者的一張照片呼叫
+-- **已知殘留缺口（新引入，誠實記錄，不在本票修——R2 review i1／m1 訂正過一次
+-- 措辭，見下方修正說明）**：`media_update` policy 同時允許 owner 分支——「owner
+-- 可以處理任何一張（§9-A1 移除內容）」。這支 policy 生效後，owner 若直接對
+-- **別人**上傳、且自己不是上傳者的一張照片以**欄位級 grant 的直接 UPDATE**呼叫
 -- `UPDATE media SET deleted_at = now()`，新列的 `uploaded_by` 是別人、
 -- `auth.uid()` 是 owner 自己，這句 UPDATE 之後會撞上同一個
--- `ExecWithCheckOptions` 限制而失敗——這條路徑目前**沒有任何測試覆蓋、也沒有任何
--- client 端程式碼行使**（`grep -rn deleted_at LittleSprout/` 只命中 `children`
--- 相關檔案，repo 沒有 media 的檢舉／移除內容 UI），純粹是 `docs/API.md` 表格裡
--- 「owner 任意列」這句話對應的一個**尚未有任何呼叫端**的 API 承諾。記入 LS-96
--- 待辦池：真的要做 owner 移除他人 media 的功能時，正確做法是比照
--- `diaries`／`albums`／`comments`／`children` 既有模式，另開一支 SECURITY
--- DEFINER RPC（例如 `set_media_deleted`）取代目前欄位級 grant 的直接 UPDATE
--- 路徑——RPC 執行時以表擁有者身分繞過 RLS，天生不會撞上這個 Postgres 限制，也是
--- 這四張表當初選擇 RPC-only 而不是欄位級 grant 的既有理由之一（本票才第一次讓
--- `media_select` 開始過濾 `deleted_at`，之前這個限制沒有機會浮現）。
+-- `ExecWithCheckOptions` 限制而失敗；owner 對已軟刪的別人的照片直接下
+-- `DELETE FROM media WHERE id = …`（硬刪）也會受影響——**但不是撞
+-- `ExecWithCheckOptions`**（DELETE 沒有「新列」可檢查），而是 DELETE 找不到要
+-- 刪的列（`media_select` 已經把它藏起來，DELETE 需要先「看得到」才刪得到）：
+-- 實測影響 0 列，不是錯誤，是靜默 no-op（R2 review m1 實測，`P7`）。
+--
+-- **R2 review i1 訂正（原本這裡寫「正確做法是另開一支 RPC」，措辭不準確）**：
+-- `public.remove_content_as_owner('media', <id>)`（LS-23，
+-- `20260903091317_report_block_rpc.sql:696`）**早就是**那支 RPC——`SECURITY
+-- DEFINER`，內部直接 `update public.media set deleted_at = now() where id =
+-- p_target_id`（表擁有者身分執行，完全繞過 RLS，不受這支 policy 影響），reviewer
+-- 已實測（P8）owner 呼叫它在新 policy 生效後仍然成功、`deleted_at` 正確落地。也
+-- 就是說 owner moderation 這件事**今天就有正確路徑可用**，壞掉的只是「欄位級
+-- grant 的直接 UPDATE／DELETE」這條**次要、legacy 的**路徑——這條路徑目前**沒有
+-- 任何測試或 client 端程式碼行使**（`grep -rn deleted_at LittleSprout/` 只命中
+-- `children` 相關檔案），`docs/API.md` §2 media 表格列「owner 任意列」「硬刪僅
+-- owner」兩句描述的正是這條 legacy 路徑，本票在該處補一句指向這裡的殘留缺口
+-- 說明，不需要再造一支功能重疊的 RPC。記入 LS-96 待辦池（措辭已依 R2 review i1
+-- 訂正）：真的要清掉這條 legacy 路徑時，兩個選項都可行——(a) 從 `media_update`／
+-- `media_delete` policy 拿掉 owner-對-別人 那個分支，統一改走
+-- `remove_content_as_owner()`；(b) 或維持現狀不動（owner 直接 UPDATE／DELETE
+-- 別人的 media 這件事本來就沒有 client UI，legacy 路徑靜默失效不影響任何人）。
 --
 -- 為什麼可以直接加、不會誤傷既有功能（逐一列出「需要讀到軟刪 media 的既有流程」，
 -- 確認皆不受影響）：
