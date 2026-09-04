@@ -6,10 +6,17 @@
 # 帳號、2 個孩子檔案、20 筆 media（18 張照片＋2 支影片，含縮圖三欄與 duration_seconds）、
 # 5 則日記（含多寶貝標記）、留言與愛心反應、一組長期有效的邀請碼。
 #
-# 冪等：所有資料以固定 UUID（見下方常數）＋兩個固定 email 標記；每次執行先刪除同一標記
-# 的既有資料（DB 用 family_id 級聯＋email 精確比對兩個固定帳號、Storage 用同一組固定
-# 路徑批次刪除）再重建，可重複執行、計數不變（merge-review R1 F4：auth.users 清理原本
-# 用 email 前綴比對，prod 執行時有誤刪撞名真實使用者的風險，已收斂成精確比對）。
+# 冪等：所有資料以固定 UUID（見下方常數）標記；每次執行先刪除同一標記的既有資料（DB
+# 用 family_id 級聯＋auth.users 以固定 id 比對（不是 email，見下）、Storage 用同一組
+# 固定路徑批次刪除）再重建，可重複執行、計數不變。auth.users 清理鍵演進：LS-146 R1
+# F4 從 email 前綴收斂成精確比對（避免正式站誤刪撞名真實使用者）；LS-162 R2（B1
+# blocker／N1）再收斂一次——email 現在是操作者傳入的參數（見下方 --owner-email／
+# --member-email），精確比對 email 已不足以防呆（傳入的可能剛好是別人真的在用的信箱，
+# reviewer 本機實跑重現：真實帳號被換成種子固定 uuid、家庭成員關係隨 cascade 消失）。
+# 現在改成：寫入前在同一份 SQL、同一個 --single-transaction 交易內先查 email 是否已
+# 存在且 id 不是本腳本固定 uuid（別人的帳號）→ raise exception、整份回捲、fail loud，
+# 絕不刪除；只有 id＝固定 uuid 才視為「自己的列」，清理鍵也從 email 改成 id（換 email
+# 重跑不再撞 users_pkey）。
 #
 # 寫入方式：直接以 postgres／service_role 身分寫 SQL（模式同
 # supabase/tests/00_fixtures.sql），不透過 create_diary_entry／create_comment 等
@@ -33,7 +40,33 @@
 # 用法：
 #   bash scripts/ops/review-demo-seed.sh --target local              種本機（本機一律經 supabase-lock）
 #   bash scripts/ops/review-demo-seed.sh --target prod                只印計畫，不連線、不寫入（沒有 --yes）
-#   bash scripts/ops/review-demo-seed.sh --target prod --yes          種正式站（讀 .env 取連線，見下）
+#   bash scripts/ops/review-demo-seed.sh --target prod --yes --owner-email <addr>
+#                                                                      種正式站（讀 .env 取連線，見下；owner-email 必填見下）
+#
+# --owner-email／--member-email（LS-162）：覆寫 owner／member 帳號的 email，不帶時維持
+#   下方 OWNER_EMAIL／MEMBER_EMAIL 兩個固定預設值。**`--target prod --yes` 時 --owner-email
+#   必填，且不得以 `@little-sprout.app` 結尾**（比對大小寫不敏感，LS-162 R2 i2）——那個
+#   網域非我們所有（LS-148 查重：`littlesprout.app` 為競品），寄到那裡的信審核員收不到；
+#   缺值或網域不符會在讀 `.env` 之前就 `exit 2`，不連線、不觸碰任何 prod 憑證。email 值
+#   一律經格式健檢（含拒絕單引號，LS-162 R2 i1），local／prod 皆套用。
+#
+# --owner-password（LS-162 R2，方案 B 轉向：使用者 2026-09-04 13:22 改採帳號密碼登入，
+#   OTP 方案 C 停用）：owner 帳號改用密碼登入。**不帶時**（＝正式站預設用法）自動產生
+#   20 字元英數強密碼、只印終端一次，不寫進任何檔案／log／review-notes.md，僅短暫
+#   存在於本次執行的 mktemp -d 暫存目錄，行程結束由 trap 清除。**顯式帶
+#   --owner-password 時**（例如本機測試自帶固定密碼）例外：i-d（merge-review R2）
+#   ——`--target local` 會把原始參數 re-exec 進 supabase-lock.sh，密碼會明碼出現在
+#   該次命令列（`ps` 看得到）與 supabase-lock.sh 的 holder 檔（實測 `-rw-r--r--`，
+#   執行期間存在）；prod 分支不經 lock、且預設就是自動產生，所以正式站實際送審用的
+#   那組密碼不受這個例外影響。密碼雜湊用 pgcrypto 的 crypt(pw, gen_salt('bf', 10))
+#   （bcrypt cost 10，跟 GoTrue 自己建帳號用的 cost 對齊）直接寫在種子 SQL 裡，取捨：
+#   改走 GoTrue admin API `POST /auth/v1/admin/users` 會是這支腳本唯一一個跳出
+#   「postgres 身分直寫 SQL」模式、多一次網路往返、且落在 --single-transaction 保護
+#   之外的步驟；直接在 SQL 內雜湊維持單一交易，SQL 失敗照樣整份回捲，執行前會先查
+#   pgcrypto 的 crypt(text,text) 是否 resolvable（不只查有沒有裝 extension，也查
+#   目前連線的 search_path 叫不叫得到——i-b merge-review R2），缺了 fail loud（不會
+#   無聲跳過密碼或存明文）。member 帳號維持 Email OTP，不受影響。email 一律正規化成
+#   小寫再使用（M1 merge-review R2，見下方常數區塊），跟 GoTrue 自己的儲存慣例對齊。
 #
 # 環境：
 #   --target local：用 `supabase status -o env` 取得本機 DB_URL／API_URL／SERVICE_ROLE_KEY。
@@ -48,7 +81,27 @@ set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-usage() { echo "用法：review-demo-seed.sh --target local|prod [--yes]"; }
+usage() { echo "用法：review-demo-seed.sh --target local|prod [--yes] [--owner-email <addr>] [--member-email <addr>] [--owner-password <pw>]"; }
+
+# i1（merge-review R1）：email 值原封不動插進種子 SQL 字面（下方 auth.users insert／
+# 清理 SQL），local／prod 皆套用——單引號會破壞 SQL 字面（fail loud，非資料風險，因為
+# --single-transaction 會整份回捲，但早一步擋掉比等 SQL 語法錯誤訊息友善）；基本格式
+# 健檢（要有 @ 與網域裡的 .）擋掉明顯打錯的字串，代價是幾乎零成本的 case 比對。
+validate_email() {  # $1=參數名（供錯誤訊息用） $2=email 值
+  label=$1; val=$2
+  case "$val" in
+    *\'*) echo "✗ review-demo-seed：$label 不可含單引號（會破壞直寫 SQL 字面）：$val" >&2; exit 2 ;;
+  esac
+  case "$val" in
+    *@*) ;;
+    *) echo "✗ review-demo-seed：$label 看起來不像 email（缺 @）：$val" >&2; exit 2 ;;
+  esac
+  case "${val#*@}" in
+    *.*) ;;
+    *) echo "✗ review-demo-seed：$label 看起來不像 email（網域缺 .）：$val" >&2; exit 2 ;;
+  esac
+  [ -n "${val%%@*}" ] || { echo "✗ review-demo-seed：$label 看起來不像 email（@ 前面是空的）：$val" >&2; exit 2; }
+}
 
 # F1（merge-review R1）：":133" 要在還沒在 lock 內時把原始參數原封不動 re-exec 進
 # supabase-lock.sh，但下面的解析迴圈會把 "$@" shift 光——先存一份不受影響的副本。
@@ -58,6 +111,9 @@ orig_args=("$@")
 
 target=""
 yes=0
+owner_email_opt=""
+member_email_opt=""
+owner_password_opt=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --target)
@@ -67,6 +123,15 @@ while [ $# -gt 0 ]; do
       [ -n "${2:-}" ] || { echo "✗ review-demo-seed：--target 缺值" >&2; usage >&2; exit 2; }
       target=$2; shift 2 ;;
     --yes) yes=1; shift ;;
+    --owner-email)
+      [ -n "${2:-}" ] || { echo "✗ review-demo-seed：--owner-email 缺值" >&2; usage >&2; exit 2; }
+      owner_email_opt=$2; shift 2 ;;
+    --member-email)
+      [ -n "${2:-}" ] || { echo "✗ review-demo-seed：--member-email 缺值" >&2; usage >&2; exit 2; }
+      member_email_opt=$2; shift 2 ;;
+    --owner-password)
+      [ -n "${2:-}" ] || { echo "✗ review-demo-seed：--owner-password 缺值" >&2; usage >&2; exit 2; }
+      owner_password_opt=$2; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "✗ review-demo-seed：未知參數 $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -90,8 +155,22 @@ INVITE_ID=d4000000-0000-4000-8000-000000000001
 # 0/O/1/I 以免長輩手抄誤認，20260825070627_invite_code_6.sql）刻意要避開的歧義字元同一類
 # ——這裡是直寫、不受該字母表機械約束，但沒理由自己選一個它要避開的字元，換成 7。
 INVITE_CODE=LSDEM7
-OWNER_EMAIL=review-demo@little-sprout.app
-MEMBER_EMAIL=review-demo-member@little-sprout.app
+# LS-162：owner／member email 可用 --owner-email／--member-email 覆寫；不帶時維持這兩個
+# little-sprout.app 預設值（僅供本機使用——正式站執行的必填／網域檢查見下方 prod+yes 分支）。
+OWNER_EMAIL="${owner_email_opt:-review-demo@little-sprout.app}"
+MEMBER_EMAIL="${member_email_opt:-review-demo-member@little-sprout.app}"
+validate_email "--owner-email" "$OWNER_EMAIL"
+validate_email "--member-email" "$MEMBER_EMAIL"
+# M1（merge-review R2）：驗證原始輸入之後才正規化——錯誤訊息（上面 validate_email）
+# 照操作者打的字顯示，但下游一律用小寫。GoTrue 對 email 寫入時正規化成小寫、查詢
+# 也不分大小寫；這裡先把輸入轉小寫，是**主要**修法：下游 print_plan／SQL insert／
+# 錯誤訊息全部改用同一份已正規化的值，讓這支腳本自己寫進 auth.users 的資料本來就
+# 跟 GoTrue 的儲存慣例一致，「同一個人類可見地址、大小寫不同、唯一索引擋不住、
+# 變成兩列」的情況從源頭就不會發生（唯一索引本身是大小寫敏感的，正規化輸入才是
+# 真正的防線）。下方 SQL 的 guard／insert 另外用 lower() 包一層是**次要**防線
+# （defense-in-depth：即使這裡的正規化被繞過或未來改掉，SQL 端仍然正確）。
+OWNER_EMAIL=$(printf '%s' "$OWNER_EMAIL" | tr '[:upper:]' '[:lower:]')
+MEMBER_EMAIL=$(printf '%s' "$MEMBER_EMAIL" | tr '[:upper:]' '[:lower:]')
 # 上傳路徑的 {yyyy}/{mm} 固定（docs/API.md §6：這段取的是「上傳時間」，不是拍攝時間）——
 # 種子腳本每次重跑都要落在同一個路徑，Storage 側的批次刪除才能用固定清單、不必先 list。
 SEED_YM=2026/09
@@ -110,14 +189,15 @@ print_plan() {
   cat <<PLAN
 → 審核用 demo 資料種子計畫（LS-146，target=${target}）
   family_id：${FAMILY_ID}（審核家庭）
-  帳號：owner ${OWNER_EMAIL}／member ${MEMBER_EMAIL}（Email OTP 登入）
+  帳號：owner ${OWNER_EMAIL}（密碼登入，方案 B）／member ${MEMBER_EMAIL}（Email OTP 登入）
   孩子檔案：2（${CHILD1_ID}／${CHILD2_ID}）
   media：20（18 張照片＋2 支影片，縮圖三欄＋duration_seconds 皆補齊）
   日記：5（含多寶貝標記：其中 2 篇同時標 2 個孩子）
   留言／愛心：各 4
   邀請碼：${INVITE_CODE}（直寫 expires_at=now()+3年，繞過 create_invite RPC 的 30 天上限）
-  冪等：重跑先刪除 family_id=$FAMILY_ID 與 owner/member 兩個固定 email 的既有資料
-        （DB 級聯＋Storage 依固定路徑批次刪除），計數不因重跑改變
+  冪等：重跑先刪除 family_id=$FAMILY_ID 與 owner/member 兩個固定 uuid 帳號的既有資料
+        （DB 級聯＋Storage 依固定路徑批次刪除），計數不因重跑改變；寫入前會先確認
+        owner/member email 不是別人正在用的帳號（不是固定 uuid 就拒絕執行，見下）
 PLAN
 }
 
@@ -127,7 +207,23 @@ if [ "$target" = prod ]; then
     echo "（未帶 --yes：只印計畫，不連線、不寫入任何資料——LS-146 本票就停在這裡，正式站落地待使用者核可）"
     exit 0
   fi
-  echo "⚠ review-demo-seed：--target prod --yes，即將對正式站寫入審核用 demo 資料" >&2
+  # LS-162：正式站真的執行前先驗 owner-email——退出點要早於下面的 `source .env`，兩個
+  # 負案都不能碰到任何 prod 連線資訊。必須是操作者明確傳入的地址（不接受沿用預設值），
+  # 且不得是 @little-sprout.app（該網域非我們所有，審核員收不到信，見腳本檔頭與
+  # docs/store/review-notes.md）。
+  if [ -z "$owner_email_opt" ]; then
+    echo "✗ review-demo-seed：--target prod --yes 需要 --owner-email（不得沿用預設 review-demo@little-sprout.app，該網域非我們所有、審核員收不到信，LS-162）" >&2
+    exit 2
+  fi
+  # i2（merge-review R1）：DNS 網域不分大小寫——比對前先轉小寫，否則
+  # someone@LITTLE-SPROUT.APP 會通過檢查但仍是同一個收不到信的網域。
+  owner_email_lower=$(printf '%s' "$OWNER_EMAIL" | tr '[:upper:]' '[:lower:]')
+  case "$owner_email_lower" in
+    *@little-sprout.app)
+      echo "✗ review-demo-seed：--owner-email 不得使用 @little-sprout.app 網域（非我們所有，審核員收不到信，LS-162）" >&2
+      exit 2 ;;
+  esac
+  echo "⚠ review-demo-seed：--target prod --yes，即將對正式站寫入審核用 demo 資料（owner=${OWNER_EMAIL}）" >&2
   [ -f "$ROOT/.env" ] || { echo "✗ 找不到 $ROOT/.env" >&2; exit 2; }
   set -a
   # shellcheck disable=SC1091
@@ -158,6 +254,23 @@ else
   [ -n "$DB_URL" ] && [ -n "$API_URL" ] && [ -n "$SERVICE_KEY" ] || { echo "✗ 讀不到本機 DB_URL／API_URL／SERVICE_ROLE_KEY" >&2; exit 2; }
   print_plan
 fi
+
+# 方案 B（LS-162 R2）：解出 owner 密碼——只在真的要寫入時才做（prod 無 --yes 早就
+# exit 0 了，走不到這裡）。操作者自帶 --owner-password 就用那組；否則自動產生 20 字元
+# 英數強密碼，只印終端這一次（不寫進 review-notes.md／log／任何持久檔案）。
+if [ -n "$owner_password_opt" ]; then
+  OWNER_PASSWORD=$owner_password_opt
+else
+  # 純英數：密碼會被原封不動插進種子 SQL 字面（crypt('${OWNER_PASSWORD}', …)），避開
+  # 符號可以不用另外處理跳脫；用 48 bytes 的 base64 隨機源，過濾後仍有遠多於 20 個
+  # 英數字元可截取。
+  OWNER_PASSWORD=$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | cut -c1-20)
+  [ ${#OWNER_PASSWORD} -ge 20 ] || { echo "✗ review-demo-seed：自動產生的 owner 密碼長度不足（openssl／tr 異常）" >&2; exit 1; }
+  echo "⚠ review-demo-seed：已自動產生 owner 密碼（只顯示這一次，請立即記下並填入 App Store Connect Review Notes，不會再印出）：${OWNER_PASSWORD}" >&2
+fi
+case "$OWNER_PASSWORD" in
+  *\'*) echo "✗ review-demo-seed：--owner-password 不可含單引號（會破壞直寫 SQL 字面）" >&2; exit 2 ;;
+esac
 
 command -v sips >/dev/null 2>&1 || { echo "✗ review-demo-seed：找不到 sips（macOS 內建工具）" >&2; exit 2; }
 command -v swift >/dev/null 2>&1 || { echo "✗ review-demo-seed：找不到 swift CLI" >&2; exit 2; }
@@ -257,34 +370,95 @@ sql_file="$work/seed.sql"
 cat > "$sql_file" <<SQL
 \set ON_ERROR_STOP on
 
+-- LS-162 R2（B1 blocker）：email 現在是操作者傳入的參數（見腳本檔頭 --owner-email／
+-- --member-email），有可能剛好是「一個真人正在用的信箱」——LS-146 R1 F4 把 auth.users
+-- 清理從前綴收斂成精確比對，理由是「prod 執行會誤刪撞名的真實使用者」；LS-162 R1 被
+-- reviewer 實跑重現：這個風險從參數化 email 這個正門走回來了（seed exit 0、真實帳號
+-- 連同家庭成員關係被靜默換掉）。這裡在**同一份 SQL、同一個 --single-transaction 交易**
+-- 內先查：owner／member email 若已存在、且該列 id 不是本腳本固定 uuid（別人的帳號，
+-- 不是上一輪種子自己建的）→ raise exception 印出該列 id／created_at／所屬家庭數，
+-- 整份回捲、shell 非 0 結束，絕不刪除；不做 shell 先查一次、再送第二個 psql 的
+-- check-then-act（那樣會留下窗口）。此檢查對 --target local／prod 一視同仁。
+--
+-- M1（merge-review R2 blocker）：這裡的比對額外包 lower()——${OWNER_EMAIL}／
+-- ${MEMBER_EMAIL} 在 shell 端已正規化成小寫（主要修法，見腳本檔頭 validate_email
+-- 呼叫之後那段），這裡的 lower() 是次要防線：GoTrue 對 email 寫入正規化成小寫、
+-- 查詢也不分大小寫，若這裡不比對 auth.users.email 欄位本身的小寫形式，遇到不是
+-- 這支腳本寫入、casing 不明的既有列時比對仍可能落空——擋不住的後果是 guard 完全
+-- 不響、seed 回報成功，但正式站 auth.users 的 email 唯一索引是大小寫敏感的，
+-- 同一個人類可見地址會被種出第二列，兩種大小寫寫法最後都登不進去（R2 實跑重現）。
+do \$\$
+declare
+  r record;
+  n_families int;
+begin
+  for r in
+    select id, email, created_at from auth.users
+    where lower(email) in (lower('${OWNER_EMAIL}'), lower('${MEMBER_EMAIL}'))
+      and id not in ('${OWNER_ID}', '${MEMBER_ID}')
+  loop
+    select count(*) into n_families from public.family_members where user_id = r.id;
+    raise exception 'review-demo-seed 拒絕執行：email % 已存在於 auth.users，id=%（created_at=%，所屬家庭數=%）不是本腳本固定 uuid——這是別人的帳號，不會被刪除。請換一個 email，或確認這組地址真的沒人在用。',
+      r.email, r.id, r.created_at, n_families;
+  end loop;
+end;
+\$\$;
+
+-- LS-162 方案 B：owner 帳號改用密碼登入，encrypted_password 用 pgcrypto 的
+-- crypt(pw, gen_salt('bf', 10))（bcrypt cost 10，跟 GoTrue 自己建帳號用的 cost
+-- 對齊——i-c merge-review R2：pgcrypto 預設 cost 6，這裡明寫 10，一個數字的事）
+-- 直接在 SQL 內雜湊——取捨與改走 GoTrue admin API 的說明見腳本檔頭
+-- 「--owner-password」段。
+--
+-- i-b（merge-review R2）：原本查 pg_extension 只驗證「extension 有沒有裝」，沒驗證
+-- 「crypt() 這個函式在目前連線的 search_path 下叫不叫得到」——pgcrypto 裝在
+-- extensions schema，若 prod 連線的 search_path 不含它，這個檢查會通過、然後在
+-- 下面真正呼叫 crypt() 時才炸（雖然一樣在交易內、一樣 fail loud，只是錯誤訊息
+-- 離現場遠一點）。改成直接查 crypt(text,text) 這個函式簽章是否 resolvable，
+-- 這是 reviewer 驗證過的寫法，同時驗到「裝了」與「叫得到」兩件事。
+do \$\$
+begin
+  if to_regprocedure('crypt(text,text)') is null then
+    raise exception 'review-demo-seed 拒絕執行：pgcrypto 的 crypt(text,text) 不可用（extension 未安裝，或裝在目前連線 search_path 找不到的 schema），無法建立 owner 密碼（方案 B 需要它）';
+  end if;
+end;
+\$\$;
+
 -- 冪等清理：固定 family_id 級聯掉 family_members／children／media／diaries／
 -- diary_children／comments／reactions／invites／feed_items／feed_item_children；
--- 第二句原本用 email like 'review-demo%' 額外收網（涵蓋 family_id 對不上但帳號還在的
--- 情況），但 --target prod --yes 會真的打正式站——前綴比對沒有網域錨點，任何真實使用者
--- 若 email 恰好以 review-demo 開頭（如 review-demo@gmail.com）會被一併硬刪，且
--- profiles/family_members 隨 on delete cascade 連坐（merge-review R1 F4，PLAUSIBLE但
--- 不可逆）。改成只比對本腳本自己會建立的兩個固定 email——「family_id 對不上但帳號還在」
--- 的情境已經完整涵蓋（含 handoff 記錄過的 shouldCreateUser 幽靈帳號，它的 email 與這
--- 兩個固定值完全相同），不需要前綴比對這麼寬。
+-- auth.users 這句改用 id（本腳本固定 uuid）而不是 email 當清理鍵（N1）——上面的存在性
+-- 檢查已經確保「email 存在但 id 不是我們的」會在到這裡之前就整份回捲，這裡只需要處理
+-- 「id 是我們的、email 可能換了」這一種情況：按 id 刪除重建，換 email 重跑才不會撞
+-- users_pkey。
 delete from public.families where id = '${FAMILY_ID}';
-delete from auth.users where email in ('${OWNER_EMAIL}', '${MEMBER_EMAIL}');
+delete from auth.users where id in ('${OWNER_ID}', '${MEMBER_ID}');
 
 -- confirmation_token／recovery_token／email_change_token_new／email_change 四欄在
 -- auth.users 沒有欄位預設值（\d auth.users 實測：其餘 token 類欄位皆有 ''::character
 -- varying 預設，唯獨這四個沒有）——supabase/tests/00_fixtures.sql 省略這四欄插入時
 -- 落成 NULL 對 RLS 測試無妨（fixtures 只用 SET request.jwt.claims 偽造身分，從不
--- 真的打 GoTrue API），但這裡要讓帳號真的能走 Email OTP 登入：GoTrue（Go）用非
--- nullable 的 string 欄位掃這四欄，掃到 NULL 直接 500（"converting NULL to string is
--- unsupported"，LS-146 實測在本機 Mailpit 打 /otp 時炸出來）。真正由 GoTrue signup
--- 建立的使用者這四欄恆為空字串，這裡比照補上，不留 NULL。
-insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at,
+-- 真的打 GoTrue API），但這裡要讓帳號真的能走 GoTrue 登入（owner 密碼／member Email
+-- OTP）：GoTrue（Go）用非 nullable 的 string 欄位掃這四欄，掃到 NULL 直接 500
+-- （"converting NULL to string is unsupported"，LS-146 實測在本機 Mailpit 打 /otp 時
+-- 炸出來）。真正由 GoTrue 建立的使用者這四欄恆為空字串，這裡比照補上，不留 NULL。
+-- LS-162 方案 B：owner 另外補 encrypted_password（上面已雜湊）與 email_confirmed_at
+-- （grant_type=password 登入要求信箱已確認，不像 OTP 是 /verify 端點事後才補上）；
+-- member 維持原樣（OTP 流程會在 /verify 成功時自己補上 email_confirmed_at）。
+--
+-- M1（merge-review R2）：email 欄位額外包 lower()——次要防線，同上方 guard 的理由；
+-- 主要防線是 shell 端已正規化（腳本檔頭 validate_email 呼叫之後那段），這裡的
+-- lower() 讓「就算某天那段正規化被改掉」這條 SQL 語句本身仍然正確、不依賴上游。
+insert into auth.users (id, instance_id, aud, role, email, encrypted_password,
+                         email_confirmed_at, created_at, updated_at,
                          raw_app_meta_data, raw_user_meta_data,
                          confirmation_token, recovery_token, email_change_token_new, email_change)
 values
   ('${OWNER_ID}', '00000000-0000-0000-0000-000000000000',
-   'authenticated', 'authenticated', '${OWNER_EMAIL}', now(), now(), '{}', '{}', '', '', '', ''),
+   'authenticated', 'authenticated', lower('${OWNER_EMAIL}'),
+   crypt('${OWNER_PASSWORD}', gen_salt('bf', 10)), now(), now(), now(), '{}', '{}', '', '', '', ''),
   ('${MEMBER_ID}', '00000000-0000-0000-0000-000000000000',
-   'authenticated', 'authenticated', '${MEMBER_EMAIL}', now(), now(), '{}', '{}', '', '', '', '');
+   'authenticated', 'authenticated', lower('${MEMBER_EMAIL}'),
+   NULL, NULL, now(), now(), '{}', '{}', '', '', '', '');
 
 -- auth.users 的 AFTER INSERT trigger 已自動建立 profiles 列（display_name 推導自
 -- email），這裡 on conflict 覆寫成好認的顯示名稱（同 00_fixtures.sql 慣例）。
@@ -495,4 +669,4 @@ for i in 19 20; do
     || { echo "✗ 上傳影片縮圖失敗：media_id=$id" >&2; exit 1; }
 done
 echo "✓ review-demo-seed 完成：20 個原檔 + 20 個縮圖已上傳，DB 計數見上方 NOTICE"
-echo "  邀請碼：${INVITE_CODE}　owner：${OWNER_EMAIL}　member：$MEMBER_EMAIL"
+echo "  邀請碼：${INVITE_CODE}　owner：${OWNER_EMAIL}（密碼登入，密碼見上方僅印一次的提示或操作者自帶的 --owner-password）　member：${MEMBER_EMAIL}（Email OTP）"
