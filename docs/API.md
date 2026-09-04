@@ -185,8 +185,10 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
   `20260904212530_suspension_and_registrations.sql` 第 3 段）。**停權原因**
   （稽核用）**不放在這張表上**——`authenticated` 是表級 SELECT，任何欄位都會
   被自動涵蓋，稽核原因（可能含第三方個資）不能讓被停權者自己讀得到；原因存在
-  `private.suspension_notes`（只有表擁有者／`service_role` 讀寫得到，R2，
-  merge-review R1 MAJOR-1）。停權操作方式見
+  `private.suspension_notes`（只有表擁有者，postgres；`service_role` 若日後
+  需要須另外 grant——目前零 grant，同 `service_role` 對 `app_settings`／
+  `profiles`／`families` 的既有慣例，R2，merge-review R1 MAJOR-1，n3 訂正）。
+  停權操作方式見
   §11。
 
 ### `families`
@@ -1353,7 +1355,9 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `[api] schemas = ["public", "graphql_public"]`）裡，client 沒有任何路徑能自己
   設這個值，且它的作用範圍就是這一次呼叫的交易本身，見
   `private.deletion_bypass_active()` 的函式註解與
-  `supabase/tests/105_suspension_and_registrations.sql` 場景 8／9。
+  `supabase/tests/105_suspension_and_registrations.sql` 場景 10／11（n1 訂正：
+  場景 8 是 `suspension_notes`、場景 9 是 `content_reports`，跟 `delete_my_
+  account()` 無關）。
 - **用途**：app 內刪除帳號的**資料面**入口（PLAN §9-A2／App Store Guideline
   5.1.1(v)）。逐一檢查呼叫者所屬的每個家庭，依角色分三種結果：
   1. **是某家庭的唯一 owner、且該家庭還有其他成員** → 整個呼叫被拒絕，`LS050`，
