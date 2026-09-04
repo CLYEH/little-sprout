@@ -36,14 +36,16 @@ final class ChildrenStoreAvatarTests: XCTestCase {
     /// 且第二階段的 `update_child` 要帶上傳回來的路徑，不是原封不動的 nil。
     func test_createChild_withAvatarImageData_createsThenUploadsThenUpdatesWithPath() async {
         let stub = StubChildAPIClient()
-        let created = makeChild()
+        let path = "fake/avatars/path.jpg"
+        let created = makeChild(avatarURL: path)
         let uploadService = StubChildAvatarUploadService()
         stub.setListChildrenHandler { _ in [created] }
+        stub.setSignedAvatarURLsHandler { _ in [path: URL(string: "https://example.test/signed?token=new")!] }
         stub.setCreateChildHandler { _, _, _, avatarURL in
             XCTAssertNil(avatarURL, "create_child 那一步不該帶頭像路徑——頭像要等 id 存在才能上傳")
             return created.id
         }
-        uploadService.setUploadAvatarHandler { _, _, _ in "fake/avatars/path.jpg" }
+        uploadService.setUploadAvatarHandler { _, _, _ in path }
         stub.setUpdateChildHandler { _, _, _, _ in }
         let store = ChildrenStore(apiClient: stub, avatarUploadService: uploadService)
         _ = await store.refresh(familyID: familyID)
@@ -56,7 +58,13 @@ final class ChildrenStoreAvatarTests: XCTestCase {
         XCTAssertEqual(uploadService.calls.first?.familyID, familyID)
         XCTAssertEqual(uploadService.calls.first?.childID, created.id)
         XCTAssertEqual(uploadService.calls.first?.imageData, imageData)
-        XCTAssertEqual(stub.updateChildCalls.last?.avatarURL, "fake/avatars/path.jpg")
+        XCTAssertEqual(stub.updateChildCalls.last?.avatarURL, path)
+        // merge-review R1 n1（8b477108）：建檔路徑的 avatarCacheBust 寫入（ChildrenStore.swift:151）
+        // 先前沒有任何測試釘住——只驗到 update_child 帶對路徑，沒驗到 avatarURL(for:) 真的帶 lsv。
+        XCTAssertTrue(
+            store.avatarURL(for: created)?.query?.contains("lsv=") ?? false,
+            "建檔時上傳頭像也應該帶 lsv cache-busting 參數，跟換照片（updateChild）同一個機制"
+        )
     }
 
     /// 失敗回滾語意（票文 Scope 1）：`create_child` 已成功時，頭像上傳失敗不會讓孩子檔案

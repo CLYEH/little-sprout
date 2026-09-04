@@ -122,9 +122,12 @@ final class SupabaseChildAvatarUploadServiceTests: XCTestCase {
             _ = try await service.uploadAvatar(familyID: familyID, childID: childID, imageData: photoData)
             XCTFail("應該要 throw")
         } catch let error as AppError {
-            guard case .rejected = error else {
+            guard case .rejected(let message, _) = error else {
                 return XCTFail(".rejected 才對應「權限不足」，實際是 \(error)")
             }
+            // merge-review R1 n2（8b477108）：票文明寫「文案固定」——先前只驗到走 .rejected
+            // 分支，沒有釘住 ChildAvatarUploadService.swift:64 的實際文案字面。
+            XCTAssertEqual(message, "沒有權限更新這個孩子的頭像，請確認你仍是這個家庭的成員")
         } catch {
             XCTFail("應該 throw AppError，實際是 \(error)")
         }

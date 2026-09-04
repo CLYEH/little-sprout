@@ -63,9 +63,18 @@ enum AvatarPickerLoader {
 ///
 /// `@MainActor`：呼叫端（View 的 `loadPickedAvatar()`）本身已經是 MainActor 隔離（`View`
 /// 協定的 `body` 要求推導整個型別），`generation` 只被 MainActor 讀寫，不需要額外同步。
+///
+/// merge-review R1 i2（`8b477108`）：`load(operation:)` 把「記世代」與「呼叫 `operation`」
+/// 包在同一個同步方法呼叫裡，呼叫端在 `await` 這個方法之前寫的 `@State`（`isLoadingAvatar`／
+/// `avatarLoadErrorMessage`）才不會被舊 task 插隊——這個安全性**前提是本型別維持
+/// `@MainActor final class`**：呼叫端與這裡同一個 actor，`await coordinator.load` 不會真的
+/// suspend／換 executor，`generation += 1` 因此保證在呼叫端那兩行 `@State` 寫入「之後」但
+/// 中間沒有其他 MainActor 工作插得進來。**若改成 `actor`**，`await` 會變成真的跨 actor 呼叫、
+/// 出現一個舊 task 可插入的窗口——屆時要把「世代 +1」改回同步、由呼叫端在自己的 `await` 之前
+/// 先呼叫（結構上等同原本 R3 的順序），不能只是加鎖。
 @MainActor
 final class AvatarLoadCoordinator {
-    private(set) var generation = 0
+    private var generation = 0
 
     /// 載入失敗時顯示的文案——與原本兩個 View 各自寫死的字串逐字相同。
     static let loadFailureMessage = "這張照片沒辦法使用，請換一張試試。"
@@ -80,7 +89,9 @@ final class AvatarLoadCoordinator {
         case failed(message: String)
     }
 
-    struct Result {
+    /// merge-review R1 i4（`8b477108`）：原本叫 `Result`，會在本型別內遮蔽 stdlib
+    /// `Swift.Result`——雖然目前無害（本型別內沒用到 `Swift.Result`），改名避免日後混淆。
+    struct LoadResult {
         let outcome: Outcome
         /// 同原本 `defer { if generation == avatarLoadGeneration { isLoadingAvatar = false } }`
         /// 的判斷——不管走哪個分支都要看世代，這裡跟結果一起回傳，呼叫端不用再自己比一次。
@@ -89,21 +100,21 @@ final class AvatarLoadCoordinator {
 
     /// 世代守門本體：先把自己的呼叫記成最新世代，`operation` 完成（或被取消／失敗）後只有
     /// 「仍是最新世代」的結果才分類成會被寫進 `@State` 的 `.applied`／`.failed`。
-    func load(operation: () async throws -> Loaded) async -> Result {
+    func load(operation: () async throws -> Loaded) async -> LoadResult {
         generation += 1
         let myGeneration = generation
         do {
             let loaded = try await operation()
             let isCurrent = myGeneration == generation
-            return Result(
+            return LoadResult(
                 outcome: isCurrent ? .applied(data: loaded.data, previewImage: loaded.previewImage) : .discarded,
                 isCurrent: isCurrent
             )
         } catch is CancellationError {
-            return Result(outcome: .discarded, isCurrent: myGeneration == generation)
+            return LoadResult(outcome: .discarded, isCurrent: myGeneration == generation)
         } catch {
             let isCurrent = myGeneration == generation
-            return Result(
+            return LoadResult(
                 outcome: isCurrent ? .failed(message: Self.loadFailureMessage) : .discarded,
                 isCurrent: isCurrent
             )

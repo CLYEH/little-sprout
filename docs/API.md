@@ -1615,7 +1615,7 @@ Edge Function 完成刪除）。三層（`validationRetryable`／`retryableSyste
   判準對 app 的 upsert 覆蓋路徑生效（member 可換 owner 上傳的頭像）；INSERT 仍需
   `can_upload`（LS-169 R3 merge-review `038c3e12` n3 訂正：先前這裡講反了——實跑證明
   `role=member, can_upload=true` 的 B 確實能用真實 upsert 覆蓋 owner A 上傳的頭像，
-  放寬前 400、放寬後 200，同上方 BREAKING 段落）。
+  放寬前 400、放寬後 200）。
   客戶端固定路徑＋長效快取意味著換照片後簽名 URL 需要 cache-busting 才能讓列表立即
   顯示新圖，見 `ChildrenStore.avatarCacheBust` 文件註解。
 
