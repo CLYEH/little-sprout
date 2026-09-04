@@ -1,0 +1,2161 @@
+{
+  "ticket": "LS-152",
+  "round": 3,
+  "head_sha": "92e0669",
+  "total_nodes": 8242,
+  "scans": {
+    "sibling_intersection": {
+      "flagged": [
+        {
+          "node_a": "pYE38/sD5Ma",
+          "node_b": "pYE38/DhOiK",
+          "classification": "Corner Shape × Corner Edge @ Corner BL（同類 212 例）"
+        },
+        {
+          "node_a": "rtNqP/sD5Ma",
+          "node_b": "rtNqP/DhOiK",
+          "classification": "Corner Shape × Corner Edge @ Corner BR（同類 212 例）"
+        },
+        {
+          "node_a": "g7B7X/sD5Ma",
+          "node_b": "g7B7X/DhOiK",
+          "classification": "Corner Shape × Corner Edge @ Corner TL（同類 212 例）"
+        },
+        {
+          "node_a": "Mlugc/sD5Ma",
+          "node_b": "Mlugc/DhOiK",
+          "classification": "Corner Shape × Corner Edge @ Corner TR（同類 212 例）"
+        },
+        {
+          "node_a": "V9wQZl",
+          "node_b": "OJNI5",
+          "classification": "Photo Wrap × Corner TL @ Print Cell（同類 134 例）"
+        },
+        {
+          "node_a": "V9wQZl",
+          "node_b": "C57TMC",
+          "classification": "Photo Wrap × Corner TR @ Print Cell（同類 134 例）"
+        },
+        {
+          "node_a": "kfuha",
+          "node_b": "qfxbb",
+          "classification": "Photo Wrap × Corner TL @ Photo Print（同類 51 例）"
+        },
+        {
+          "node_a": "kfuha",
+          "node_b": "YG4hG",
+          "classification": "Photo Wrap × Corner TR @ Photo Print（同類 51 例）"
+        },
+        {
+          "node_a": "yxEFh",
+          "node_b": "Wo9Ox",
+          "classification": "Imprint Row × Corner BL @ Photo Print（同類 51 例）"
+        },
+        {
+          "node_a": "yxEFh",
+          "node_b": "efA3a",
+          "classification": "Imprint Row × Corner BR @ Photo Print（同類 51 例）"
+        },
+        {
+          "node_a": "Z4TsQ/tBi8u",
+          "node_b": "Z4TsQ/xlLIo",
+          "classification": "Ghost × Stamp @ Stamp Wrap（同類 23 例）"
+        },
+        {
+          "node_a": "WU8Te/sD5Ma",
+          "node_b": "WU8Te/DhOiK",
+          "classification": "Corner Shape × Corner Edge @ Mount TL（同類 17 例）"
+        },
+        {
+          "node_a": "L7ke3/sD5Ma",
+          "node_b": "L7ke3/DhOiK",
+          "classification": "Corner Shape × Corner Edge @ Mount BR（同類 17 例）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "NUPWz",
+          "classification": "Hero Photo × Night Dim @ Photo Wrap（同類 13 例）"
+        },
+        {
+          "node_a": "abfZE",
+          "node_b": "wOzaO",
+          "classification": "Avatar 1 × Avatar 2 @ Avatar Stack（同類 11 例）"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "pYE38",
+          "classification": "Print × Corner BL @ Print Stage（同類 9 例）"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "rtNqP",
+          "classification": "Print × Corner BR @ Print Stage（同類 9 例）"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "g7B7X",
+          "classification": "Print × Corner TL @ Print Stage（同類 9 例）"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "Mlugc",
+          "classification": "Print × Corner TR @ Print Stage（同類 9 例）"
+        },
+        {
+          "node_a": "yqk1S/GuOM0",
+          "node_b": "yqk1S/j7iqM",
+          "classification": "G arc #4285F4 × G arc #34A853 @ Google G Mark（同類 7 例）"
+        },
+        {
+          "node_a": "yqk1S/aQq5T",
+          "node_b": "yqk1S/SieME",
+          "classification": "G arc #EA4335 × G arc #FBBC05 @ Google G Mark（同類 7 例）"
+        },
+        {
+          "node_a": "yqk1S/SieME",
+          "node_b": "yqk1S/j7iqM",
+          "classification": "G arc #FBBC05 × G arc #34A853 @ Google G Mark（同類 7 例）"
+        },
+        {
+          "node_a": "osCBD/X7DYDo/go3YL",
+          "node_b": "osCBD/X7DYDo/uHUe1",
+          "classification": "Role Text × Role Check @ Role Option · 一般成員（同類 5 例）"
+        },
+        {
+          "node_a": "osCBD/ZA8G7/go3YL",
+          "node_b": "osCBD/ZA8G7/uHUe1",
+          "classification": "Role Text × Role Check @ Role Option · 只能看（同類 5 例）"
+        },
+        {
+          "node_a": "WC9pB/UTLcl",
+          "node_b": "WC9pB/r6cYjT",
+          "classification": "Fan Ghost × Photo Print @ Card Album 1（同類 5 例）"
+        },
+        {
+          "node_a": "PjgtQ/UTLcl",
+          "node_b": "PjgtQ/KGh0U",
+          "classification": "Fan Ghost × Fan Ghost 2 @ Card Album 2（同類 5 例）"
+        },
+        {
+          "node_a": "PjgtQ/UTLcl",
+          "node_b": "PjgtQ/r6cYjT",
+          "classification": "Fan Ghost × Photo Print @ Card Album 2（同類 5 例）"
+        },
+        {
+          "node_a": "PjgtQ/KGh0U",
+          "node_b": "PjgtQ/r6cYjT",
+          "classification": "Fan Ghost 2 × Photo Print @ Card Album 2（同類 5 例）"
+        },
+        {
+          "node_a": "R7edNW/UTLcl",
+          "node_b": "R7edNW/r6cYjT",
+          "classification": "Fan Ghost × Photo Print @ Card Album 3（同類 5 例）"
+        },
+        {
+          "node_a": "MOWjB",
+          "node_b": "Iqtt4",
+          "classification": "Photo Wrap × Corner TL @ Family Print（同類 4 例）"
+        },
+        {
+          "node_a": "MOWjB",
+          "node_b": "XjToq",
+          "classification": "Photo Wrap × Corner TR @ Family Print（同類 4 例）"
+        },
+        {
+          "node_a": "lSghl",
+          "node_b": "zymKZ",
+          "classification": "Imprint Row × Corner BL @ Family Print（同類 4 例）"
+        },
+        {
+          "node_a": "lSghl",
+          "node_b": "jin0Q",
+          "classification": "Imprint Row × Corner BR @ Family Print（同類 4 例）"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "M98qs",
+          "classification": "Sample Print × Corner TL @ Print Stage（同類 4 例）"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "j2z1C0",
+          "classification": "Sample Print × Corner TR @ Print Stage（同類 4 例）"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "xfmAg",
+          "classification": "Sample Print × Corner BL @ Print Stage（同類 4 例）"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "DIMqR",
+          "classification": "Sample Print × Corner BR @ Print Stage（同類 4 例）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "YRtyF",
+          "classification": "Sample Photo × Night Dim @ Photo Wrap（同類 4 例）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "e8hcYl",
+          "classification": "Sample Photo × Pill Sample @ Photo Wrap（同類 4 例）"
+        },
+        {
+          "node_a": "YRtyF",
+          "node_b": "e8hcYl",
+          "classification": "Night Dim × Pill Sample @ Photo Wrap（同類 4 例）"
+        },
+        {
+          "node_a": "WC9pB/UTLcl",
+          "node_b": "WC9pB/KGh0U",
+          "classification": "Fan Ghost × Fan Ghost 2 @ Card Album 1（同類 4 例）"
+        },
+        {
+          "node_a": "WC9pB/KGh0U",
+          "node_b": "WC9pB/r6cYjT",
+          "classification": "Fan Ghost 2 × Photo Print @ Card Album 1（同類 4 例）"
+        },
+        {
+          "node_a": "H51J8u/UTLcl",
+          "node_b": "H51J8u/r6cYjT",
+          "classification": "Fan Ghost × Photo Print @ Card Album 4（同類 4 例）"
+        },
+        {
+          "node_a": "eDQhR/FjOA8",
+          "node_b": "eDQhR/UTLcl",
+          "classification": "Fan Ghost 3 × Fan Ghost @ Card Album 5（同類 4 例）"
+        },
+        {
+          "node_a": "eDQhR/FjOA8",
+          "node_b": "eDQhR/KGh0U",
+          "classification": "Fan Ghost 3 × Fan Ghost 2 @ Card Album 5（同類 4 例）"
+        },
+        {
+          "node_a": "eDQhR/FjOA8",
+          "node_b": "eDQhR/r6cYjT",
+          "classification": "Fan Ghost 3 × Photo Print @ Card Album 5（同類 4 例）"
+        },
+        {
+          "node_a": "eDQhR/UTLcl",
+          "node_b": "eDQhR/KGh0U",
+          "classification": "Fan Ghost × Fan Ghost 2 @ Card Album 5（同類 4 例）"
+        },
+        {
+          "node_a": "eDQhR/UTLcl",
+          "node_b": "eDQhR/r6cYjT",
+          "classification": "Fan Ghost × Photo Print @ Card Album 5（同類 4 例）"
+        },
+        {
+          "node_a": "eDQhR/KGh0U",
+          "node_b": "eDQhR/r6cYjT",
+          "classification": "Fan Ghost 2 × Photo Print @ Card Album 5（同類 4 例）"
+        },
+        {
+          "node_a": "lE7FJ/MN0WF",
+          "node_b": "lE7FJ/R1lbwf",
+          "classification": "Photo × Mount TL @ Print（同類 4 例）"
+        },
+        {
+          "node_a": "lE7FJ/MN0WF",
+          "node_b": "lE7FJ/S4O4r8",
+          "classification": "Photo × Mount BR @ Print（同類 4 例）"
+        },
+        {
+          "node_a": "z2l5f",
+          "node_b": "xKQDP",
+          "classification": "Print × Mount TL @ Icon 40（同類 3 例）"
+        },
+        {
+          "node_a": "z2l5f",
+          "node_b": "K8naK",
+          "classification": "Print × Mount BR @ Icon 40（同類 3 例）"
+        },
+        {
+          "node_a": "F9Gvz2",
+          "node_b": "EfgyZ",
+          "classification": "Struck Text × Strike Rule @ Struck Wrap（同類 3 例）"
+        },
+        {
+          "node_a": "Ur6DB",
+          "node_b": "W7Ycw",
+          "classification": "Photo Wrap × Corner TL @ Email Print（同類 2 例）"
+        },
+        {
+          "node_a": "Ur6DB",
+          "node_b": "tlJFt",
+          "classification": "Photo Wrap × Corner TR @ Email Print（同類 2 例）"
+        },
+        {
+          "node_a": "F9Iva",
+          "node_b": "jOrlo",
+          "classification": "Imprint Row × Corner BL @ Email Print（同類 2 例）"
+        },
+        {
+          "node_a": "F9Iva",
+          "node_b": "ny0ec",
+          "classification": "Imprint Row × Corner BR @ Email Print（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "MxnWP",
+          "classification": "Print Paper × Join Photo @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "I5vhg",
+          "classification": "Print Paper × Night Dim @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "WceLk",
+          "classification": "Print Paper × Fade Pools @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "E6reS5",
+          "classification": "Print Paper × Corner TL @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "B5E1ig",
+          "classification": "Print Paper × Corner TR @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "br1l7",
+          "classification": "Print Paper × Corner BL @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "qnP3W",
+          "classification": "Print Paper × Corner BR @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "I5vhg",
+          "classification": "Join Photo × Night Dim @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "WceLk",
+          "classification": "Join Photo × Fade Pools @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "E6reS5",
+          "classification": "Join Photo × Corner TL @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "B5E1ig",
+          "classification": "Join Photo × Corner TR @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "WceLk",
+          "classification": "Night Dim × Fade Pools @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "E6reS5",
+          "classification": "Night Dim × Corner TL @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "B5E1ig",
+          "classification": "Night Dim × Corner TR @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "E6reS5",
+          "classification": "Fade Pools × Corner TL @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "B5E1ig",
+          "classification": "Fade Pools × Corner TR @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "br1l7",
+          "classification": "Fade Pools × Corner BL @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "qnP3W",
+          "classification": "Fade Pools × Corner BR @ Photo Wrap（同類 2 例）"
+        },
+        {
+          "node_a": "zBeVi",
+          "node_b": "L5YAG",
+          "classification": "Code 1 × Focus Ring 第1格 @ Group 1（同類 2 例）"
+        },
+        {
+          "node_a": "LaaxQ",
+          "node_b": "WU8Te",
+          "classification": "Print × Mount TL @ Icon 180（同類 2 例）"
+        },
+        {
+          "node_a": "LaaxQ",
+          "node_b": "L7ke3",
+          "classification": "Print × Mount BR @ Icon 180（同類 2 例）"
+        },
+        {
+          "node_a": "xlMQk",
+          "node_b": "M72IeN",
+          "classification": "Print × Mount TL @ Icon 60（同類 2 例）"
+        },
+        {
+          "node_a": "xlMQk",
+          "node_b": "sPdfs",
+          "classification": "Print × Mount BR @ Icon 60（同類 2 例）"
+        },
+        {
+          "node_a": "RPTGa",
+          "node_b": "repj6",
+          "classification": "Photo 1 × Dragging Photo @ Photo Strip（同類 2 例）"
+        },
+        {
+          "node_a": "kdCWx",
+          "node_b": "repj6",
+          "classification": "Drop Target × Dragging Photo @ Photo Strip（同類 2 例）"
+        },
+        {
+          "node_a": "kcGJa",
+          "node_b": "RHhJ1",
+          "classification": "LS-18 / 07 邀請家人 · 已產生邀請碼 × LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\") @ root（同類 1 例）"
+        },
+        {
+          "node_a": "z6DOE",
+          "node_b": "bqbKN",
+          "classification": "LS-18 / 07a 邀請家人 · 尚未產生（空狀態） × 設計註記 · 多寶貝預留（LS-46 / LS-47） @ root（同類 1 例）"
+        },
+        {
+          "node_a": "RHhJ1",
+          "node_b": "bqbKN",
+          "classification": "LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\") × 設計註記 · 多寶貝預留（LS-46 / LS-47） @ root（同類 1 例）"
+        },
+        {
+          "node_a": "CHLio",
+          "node_b": "nhCrq",
+          "classification": "LS-18 / 07c 邀請家人 · 產生中（載入） × LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起 @ root（同類 1 例）"
+        },
+        {
+          "node_a": "XhwG6",
+          "node_b": "qxVMy",
+          "classification": "設計語言 v3.3 · 褪色相片粉調 Design Tokens × 設計註記 · $print-paper token（LS-46 R4 N8） @ root（同類 1 例）"
+        },
+        {
+          "node_a": "ZBIhu",
+          "node_b": "hKSu1",
+          "classification": "設計註記 · Legal 連結 AX3 溢出（LS-46 R3） × A11y / 06 輸入邀請碼 · Dynamic Type AX3（body 40pt） @ root（同類 1 例）"
+        },
+        {
+          "node_a": "VRq1c",
+          "node_b": "tNqvY",
+          "classification": "A11y / 07 邀請家人 · Dynamic Type AX3（body 40pt） × Stress / 01 沖印品 · 不合調光源三態比較（LS-46 R4 F16） @ root（同類 1 例）"
+        },
+        {
+          "node_a": "VRq1c",
+          "node_b": "Rtq1m",
+          "classification": "A11y / 07 邀請家人 · Dynamic Type AX3（body 40pt） × Stress / 04 角托＋Fade Pools · 不合調光源三態比較（LS-46 R4 F16） @ root（同類 1 例）"
+        },
+        {
+          "node_a": "rx2TP",
+          "node_b": "LCpNO",
+          "classification": "LS-47 / 實作註記 · Handoff Notes (ios-dev) × Stress / 10 · 3 個寶貝＋超長名字 @ root（同類 1 例）"
+        },
+        {
+          "node_a": "MOLyd",
+          "node_b": "vzYXz",
+          "classification": "A11y / 12 日記編輯器 · Dynamic Type AX3（body 40pt） × LS-21 / 13 日記詳情 (iPhone) @ root（同類 1 例）"
+        },
+        {
+          "node_a": "cqgkc",
+          "node_b": "b3nzDp",
+          "classification": "A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt） × LS-152 / 實作註記 · Handoff Notes (ios-dev) @ root（同類 1 例）"
+        },
+        {
+          "node_a": "f1wVw",
+          "node_b": "b3nzDp",
+          "classification": "LS-21 / 12e 日記編輯器 · 照片排序（拖曳中） × LS-152 / 實作註記 · Handoff Notes (ios-dev) @ root（同類 1 例）"
+        },
+        {
+          "node_a": "bs8aE",
+          "node_b": "b3nzDp",
+          "classification": "A11y / 12e 日記編輯器 · 照片排序（拖曳中）· Dynamic Type AX3（body 40pt） × LS-152 / 實作註記 · Handoff Notes (ios-dev) @ root（同類 1 例）"
+        },
+        {
+          "node_a": "IH80C",
+          "node_b": "b3nzDp",
+          "classification": "Stress / 13 日記詳情 · 20 張照片壓測 × LS-152 / 實作註記 · Handoff Notes (ios-dev) @ root（同類 1 例）"
+        },
+        {
+          "node_a": "dHnPl",
+          "node_b": "b3nzDp",
+          "classification": "A11y / 04e 刪除帳號 · 最終確認 · Dynamic Type AX3 × LS-152 / 實作註記 · Handoff Notes (ios-dev) @ root（同類 1 例）"
+        },
+        {
+          "node_a": "b66CZc",
+          "node_b": "BXbTE",
+          "classification": "Print Stage Spacer × Print Stage @ Card Join Family（同類 1 例）"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "I8sWT8",
+          "classification": "Print × Corner TL @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")（同類 1 例）"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "OIwlW",
+          "classification": "Print × Corner TR @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")（同類 1 例）"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "kSfzp",
+          "classification": "Print × Corner BL @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")（同類 1 例）"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "mIStI",
+          "classification": "Print × Corner BR @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")（同類 1 例）"
+        },
+        {
+          "node_a": "sD5Ma",
+          "node_b": "DhOiK",
+          "classification": "Corner Shape × Corner Edge @ cmp/Photo Corner（同類 1 例）"
+        },
+        {
+          "node_a": "PMV0W",
+          "node_b": "GWAHq",
+          "classification": "Join Photo × Corner BL @ Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "PMV0W",
+          "node_b": "SV5Ka",
+          "classification": "Join Photo × Corner BR @ Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "uXS8K",
+          "node_b": "GWAHq",
+          "classification": "Night Dim × Corner BL @ Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "uXS8K",
+          "node_b": "SV5Ka",
+          "classification": "Night Dim × Corner BR @ Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "aflVw",
+          "classification": "Demo Print × Fade Pools @ Demo Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "dCV1r",
+          "classification": "Demo Print × Corner TL @ Demo Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "Evspf",
+          "classification": "Demo Print × Corner TR @ Demo Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "B919I",
+          "classification": "Demo Print × Corner BL @ Demo Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "fyZfa",
+          "classification": "Demo Print × Corner BR @ Demo Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "dCV1r",
+          "classification": "Fade Pools × Corner TL @ Demo Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "Evspf",
+          "classification": "Fade Pools × Corner TR @ Demo Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "B919I",
+          "classification": "Fade Pools × Corner BL @ Demo Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "fyZfa",
+          "classification": "Fade Pools × Corner BR @ Demo Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "PSBOi",
+          "node_b": "OtK4n",
+          "classification": "Print × Mount TL @ Icon Light（同類 1 例）"
+        },
+        {
+          "node_a": "PSBOi",
+          "node_b": "brcXK",
+          "classification": "Print × Mount BR @ Icon Light（同類 1 例）"
+        },
+        {
+          "node_a": "Ac3zU",
+          "node_b": "ClTOX",
+          "classification": "Print × Mount TL @ Icon Dark（同類 1 例）"
+        },
+        {
+          "node_a": "Ac3zU",
+          "node_b": "WjZtu",
+          "classification": "Print × Mount BR @ Icon Dark（同類 1 例）"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "cTC2J",
+          "classification": "Print × Mount TL @ Icon 幾何（不套遮罩）（同類 1 例）"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "k2V3ms",
+          "classification": "Print × Mount BR @ Icon 幾何（不套遮罩）（同類 1 例）"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "mzo0K",
+          "classification": "Print × Squircle r=115 (Pencil 圓弧近似) @ Icon 幾何（不套遮罩）（同類 1 例）"
+        },
+        {
+          "node_a": "cTC2J",
+          "node_b": "mzo0K",
+          "classification": "Mount TL × Squircle r=115 (Pencil 圓弧近似) @ Icon 幾何（不套遮罩）（同類 1 例）"
+        },
+        {
+          "node_a": "cTC2J",
+          "node_b": "OxuA8",
+          "classification": "Mount TL × Clearance TL @ Icon 幾何（不套遮罩）（同類 1 例）"
+        },
+        {
+          "node_a": "k2V3ms",
+          "node_b": "mzo0K",
+          "classification": "Mount BR × Squircle r=115 (Pencil 圓弧近似) @ Icon 幾何（不套遮罩）（同類 1 例）"
+        },
+        {
+          "node_a": "k2V3ms",
+          "node_b": "LMc6c",
+          "classification": "Mount BR × Clearance BR @ Icon 幾何（不套遮罩）（同類 1 例）"
+        },
+        {
+          "node_a": "mzo0K",
+          "node_b": "OxuA8",
+          "classification": "Squircle r=115 (Pencil 圓弧近似) × Clearance TL @ Icon 幾何（不套遮罩）（同類 1 例）"
+        },
+        {
+          "node_a": "mzo0K",
+          "node_b": "LMc6c",
+          "classification": "Squircle r=115 (Pencil 圓弧近似) × Clearance BR @ Icon 幾何（不套遮罩）（同類 1 例）"
+        },
+        {
+          "node_a": "a1ycjz",
+          "node_b": "bWK8K",
+          "classification": "Print × Mount TL @ Icon 120（同類 1 例）"
+        },
+        {
+          "node_a": "a1ycjz",
+          "node_b": "y5UWXf",
+          "classification": "Print × Mount BR @ Icon 120（同類 1 例）"
+        },
+        {
+          "node_a": "h0ZQd",
+          "node_b": "E7kbRB",
+          "classification": "Print × Mount TL @ Icon 80（同類 1 例）"
+        },
+        {
+          "node_a": "h0ZQd",
+          "node_b": "Pqqdp",
+          "classification": "Print × Mount BR @ Icon 80（同類 1 例）"
+        },
+        {
+          "node_a": "m780n",
+          "node_b": "uARGy",
+          "classification": "Photo Stack Preview × Mount TL @ Mark（同類 1 例）"
+        },
+        {
+          "node_a": "m780n",
+          "node_b": "mFP87",
+          "classification": "Photo Stack Preview × Mount BR @ Mark（同類 1 例）"
+        },
+        {
+          "node_a": "khLYx",
+          "node_b": "vRQFQ",
+          "classification": "Struck Text 2 × Strike Rule @ Struck Wrap 2（同類 1 例）"
+        },
+        {
+          "node_a": "lxZzb",
+          "node_b": "gJOJT",
+          "classification": "Body × Accessory Bar @ LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起（同類 1 例）"
+        },
+        {
+          "node_a": "lxZzb",
+          "node_b": "RZcIs",
+          "classification": "Body × Keyboard 系統鍵盤（示意，336pt） @ LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起（同類 1 例）"
+        },
+        {
+          "node_a": "TeX44",
+          "node_b": "RZcIs",
+          "classification": "Home Indicator Area × Keyboard 系統鍵盤（示意，336pt） @ LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起（同類 1 例）"
+        },
+        {
+          "node_a": "JE6tE",
+          "node_b": "Vmezj",
+          "classification": "Photo Area × Corner TL @ Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "JE6tE",
+          "node_b": "PaCtI",
+          "classification": "Photo Area × Corner TR @ Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "rrzzl",
+          "node_b": "p2dJpQ",
+          "classification": "Imprint Row × Corner BL @ Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "rrzzl",
+          "node_b": "Wrztr",
+          "classification": "Imprint Row × Corner BR @ Photo Wrap（同類 1 例）"
+        },
+        {
+          "node_a": "n5j2xu",
+          "node_b": "H3b7gk",
+          "classification": "Photo Wrap × Corner TL @ Children Card（同類 1 例）"
+        },
+        {
+          "node_a": "n5j2xu",
+          "node_b": "oj6h0",
+          "classification": "Photo Wrap × Corner TR @ Children Card（同類 1 例）"
+        },
+        {
+          "node_a": "XoVVx",
+          "node_b": "SUi6K",
+          "classification": "Imprint Row × Corner BL @ Children Card（同類 1 例）"
+        },
+        {
+          "node_a": "XoVVx",
+          "node_b": "nSjs7",
+          "classification": "Imprint Row × Corner BR @ Children Card（同類 1 例）"
+        },
+        {
+          "node_a": "cPbyp",
+          "node_b": "XMVoJ",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-47 / 09c 移除寶貝 · 確認（Owner）（同類 1 例）"
+        },
+        {
+          "node_a": "cPbyp",
+          "node_b": "MBQx8",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-47 / 09c 移除寶貝 · 確認（Owner）（同類 1 例）"
+        },
+        {
+          "node_a": "XMVoJ",
+          "node_b": "MBQx8",
+          "classification": "Scrim × Sheet Wrap @ LS-47 / 09c 移除寶貝 · 確認（Owner）（同類 1 例）"
+        },
+        {
+          "node_a": "A14LnU",
+          "node_b": "dJM15",
+          "classification": "Body × FAB @ LS-47 / 10 時間軸 · 寶貝切換（同類 1 例）"
+        },
+        {
+          "node_a": "A14LnU",
+          "node_b": "EoToI",
+          "classification": "Body × Tab Bar @ LS-47 / 10 時間軸 · 寶貝切換（同類 1 例）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "xgx94",
+          "classification": "Body × Dropdown Menu @ LS-47 / 10b 時間軸 · 寶貝切換（下拉，>3）（同類 1 例）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "gFJ8N",
+          "classification": "Body × FAB @ LS-47 / 10b 時間軸 · 寶貝切換（下拉，>3）（同類 1 例）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "qx4xE",
+          "classification": "Body × Tab Bar @ LS-47 / 10b 時間軸 · 寶貝切換（下拉，>3）（同類 1 例）"
+        },
+        {
+          "node_a": "xTL71",
+          "node_b": "DZjmG",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-47 / 10c 發佈 · 選擇歸屬寶貝（同類 1 例）"
+        },
+        {
+          "node_a": "xTL71",
+          "node_b": "gbW37",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-47 / 10c 發佈 · 選擇歸屬寶貝（同類 1 例）"
+        },
+        {
+          "node_a": "DZjmG",
+          "node_b": "gbW37",
+          "classification": "Scrim × Sheet Wrap @ LS-47 / 10c 發佈 · 選擇歸屬寶貝（同類 1 例）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "zGEet",
+          "classification": "Body × Dropdown Menu @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）（同類 1 例）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "G5vY5",
+          "classification": "Body × FAB @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）（同類 1 例）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "qCMDY",
+          "classification": "Body × Tab Bar @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）（同類 1 例）"
+        },
+        {
+          "node_a": "bq8pa",
+          "node_b": "yqWq9",
+          "classification": "Body × FAB @ LS-47 / 10 時間軸 · 寶貝切換 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "bq8pa",
+          "node_b": "C57OVI",
+          "classification": "Body × Tab Bar @ LS-47 / 10 時間軸 · 寶貝切換 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "go3YL",
+          "node_b": "uHUe1",
+          "classification": "Role Text × Role Check @ cmp/Role Option（同類 1 例）"
+        },
+        {
+          "node_a": "n7gPAe",
+          "node_b": "Egn9A",
+          "classification": "Body × Tab Bar @ LS-21 / 11 時間軸 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "WitwS/uZ5Lt",
+          "node_b": "WitwS/kVUWa",
+          "classification": "Stack Sheet 2 × Stack Sheet 1 @ Photo C（同類 1 例）"
+        },
+        {
+          "node_a": "WitwS/ekqx4",
+          "node_b": "WitwS/GCEdk",
+          "classification": "Thumb C × More Scrim @ Photo C（同類 1 例）"
+        },
+        {
+          "node_a": "PFhXP",
+          "node_b": "eRy14",
+          "classification": "Body × Tab Bar @ LS-21 / 11b 時間軸 · 空狀態（同類 1 例）"
+        },
+        {
+          "node_a": "gKBS7",
+          "node_b": "aY7S5",
+          "classification": "Photo Wrap × Corner TL @ Empty Print（同類 1 例）"
+        },
+        {
+          "node_a": "gKBS7",
+          "node_b": "BbDZH",
+          "classification": "Photo Wrap × Corner TR @ Empty Print（同類 1 例）"
+        },
+        {
+          "node_a": "bG6cD",
+          "node_b": "fsveQ",
+          "classification": "Imprint Row × Corner BL @ Empty Print（同類 1 例）"
+        },
+        {
+          "node_a": "bG6cD",
+          "node_b": "wSSFB",
+          "classification": "Imprint Row × Corner BR @ Empty Print（同類 1 例）"
+        },
+        {
+          "node_a": "x5Vmg",
+          "node_b": "OR1hw",
+          "classification": "Body × Tab Bar @ LS-21 / 11c 時間軸 · 下拉更新中（同類 1 例）"
+        },
+        {
+          "node_a": "Q600X",
+          "node_b": "bmk5H",
+          "classification": "Body × Tab Bar @ LS-21 / 11 時間軸 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "YulfE",
+          "node_b": "QVGNJ",
+          "classification": "Body × Tab Bar @ A11y / 11 時間軸 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "CV0TW",
+          "node_b": "iCUJF",
+          "classification": "Thumb × Selected Badge @ Photo 1（同類 1 例）"
+        },
+        {
+          "node_a": "TSxZo",
+          "node_b": "v7MGOT",
+          "classification": "Thumb × Selected Badge @ Photo 2（同類 1 例）"
+        },
+        {
+          "node_a": "o73UY",
+          "node_b": "M4PUm",
+          "classification": "Body × Tab Bar @ Stress / 11 時間軸 · 單一寶貝 filter（同類 1 例）"
+        },
+        {
+          "node_a": "aedfE",
+          "node_b": "V4oYH",
+          "classification": "Body × Tab Bar @ A11y / 11 時間軸 · 兩位寶貝聯合標記 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "FqE7M",
+          "node_b": "wTMlo",
+          "classification": "Body × Tab Bar @ LS-142 / 14 相簿 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "oyZbS",
+          "node_b": "v4dw1",
+          "classification": "Body × Tab Bar @ LS-142 / 14b 相簿 · 空狀態（同類 1 例）"
+        },
+        {
+          "node_a": "DUOGt",
+          "node_b": "kJq3T",
+          "classification": "Photo Wrap × Corner TL @ Blank Print Cell（同類 1 例）"
+        },
+        {
+          "node_a": "DUOGt",
+          "node_b": "olgX0",
+          "classification": "Photo Wrap × Corner TR @ Blank Print Cell（同類 1 例）"
+        },
+        {
+          "node_a": "bjuSv",
+          "node_b": "hkjhm",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-142 / 15c 刪除相簿 · 確認（Owner）（同類 1 例）"
+        },
+        {
+          "node_a": "bjuSv",
+          "node_b": "M6Bkt",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-142 / 15c 刪除相簿 · 確認（Owner）（同類 1 例）"
+        },
+        {
+          "node_a": "hkjhm",
+          "node_b": "M6Bkt",
+          "classification": "Scrim × Sheet Wrap @ LS-142 / 15c 刪除相簿 · 確認（Owner）（同類 1 例）"
+        },
+        {
+          "node_a": "YekOU",
+          "node_b": "Kl0eH",
+          "classification": "Body × Tab Bar @ LS-142 / 14 相簿 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "v3pPdz",
+          "node_b": "K3xsp1",
+          "classification": "Body × Tab Bar @ LS-142 / 14b 相簿 · 空狀態 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "jZVRr",
+          "node_b": "RxQis",
+          "classification": "Body × Tab Bar @ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "i3jpIq/FjOA8",
+          "node_b": "i3jpIq/UTLcl",
+          "classification": "Fan Ghost 3 × Fan Ghost @ Card Album 3（同類 1 例）"
+        },
+        {
+          "node_a": "i3jpIq/FjOA8",
+          "node_b": "i3jpIq/KGh0U",
+          "classification": "Fan Ghost 3 × Fan Ghost 2 @ Card Album 3（同類 1 例）"
+        },
+        {
+          "node_a": "i3jpIq/FjOA8",
+          "node_b": "i3jpIq/r6cYjT",
+          "classification": "Fan Ghost 3 × Photo Print @ Card Album 3（同類 1 例）"
+        },
+        {
+          "node_a": "i3jpIq/UTLcl",
+          "node_b": "i3jpIq/KGh0U",
+          "classification": "Fan Ghost × Fan Ghost 2 @ Card Album 3（同類 1 例）"
+        },
+        {
+          "node_a": "i3jpIq/KGh0U",
+          "node_b": "i3jpIq/r6cYjT",
+          "classification": "Fan Ghost 2 × Photo Print @ Card Album 3（同類 1 例）"
+        },
+        {
+          "node_a": "HIdMW/UTLcl",
+          "node_b": "HIdMW/KGh0U",
+          "classification": "Fan Ghost × Fan Ghost 2 @ Card Album 6（同類 1 例）"
+        },
+        {
+          "node_a": "HIdMW/UTLcl",
+          "node_b": "HIdMW/r6cYjT",
+          "classification": "Fan Ghost × Photo Print @ Card Album 6（同類 1 例）"
+        },
+        {
+          "node_a": "HIdMW/KGh0U",
+          "node_b": "HIdMW/r6cYjT",
+          "classification": "Fan Ghost 2 × Photo Print @ Card Album 6（同類 1 例）"
+        },
+        {
+          "node_a": "T7DfpY",
+          "node_b": "j2svp",
+          "classification": "Body × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片（同類 1 例）"
+        },
+        {
+          "node_a": "FOd6u",
+          "node_b": "D6sAcX",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-142 / 16 上傳佇列（同類 1 例）"
+        },
+        {
+          "node_a": "FOd6u",
+          "node_b": "B7AqL",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-142 / 16 上傳佇列（同類 1 例）"
+        },
+        {
+          "node_a": "D6sAcX",
+          "node_b": "B7AqL",
+          "classification": "Scrim × Sheet Wrap @ LS-142 / 16 上傳佇列（同類 1 例）"
+        },
+        {
+          "node_a": "yvhTU",
+          "node_b": "EigFv",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-142 / 16 上傳佇列 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "yvhTU",
+          "node_b": "bNhc1",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-142 / 16 上傳佇列 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "EigFv",
+          "node_b": "bNhc1",
+          "classification": "Scrim × Sheet Wrap @ LS-142 / 16 上傳佇列 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "dV8Qj",
+          "node_b": "BEyFk",
+          "classification": "Status Bar (Backdrop) × Scrim @ A11y / 16 上傳佇列 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "dV8Qj",
+          "node_b": "fo7g1",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ A11y / 16 上傳佇列 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "BEyFk",
+          "node_b": "fo7g1",
+          "classification": "Scrim × Sheet Wrap @ A11y / 16 上傳佇列 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "E51wH",
+          "node_b": "WOhYG",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-142 / 16b 上傳佇列 · 全部狀態展開（不裁切）（同類 1 例）"
+        },
+        {
+          "node_a": "E51wH",
+          "node_b": "umPbi",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-142 / 16b 上傳佇列 · 全部狀態展開（不裁切）（同類 1 例）"
+        },
+        {
+          "node_a": "WOhYG",
+          "node_b": "umPbi",
+          "classification": "Scrim × Sheet Wrap @ LS-142 / 16b 上傳佇列 · 全部狀態展開（不裁切）（同類 1 例）"
+        },
+        {
+          "node_a": "QioS2",
+          "node_b": "bMTQi",
+          "classification": "Status Bar (Backdrop) × Scrim @ A11y / 16b 上傳佇列 · 全部狀態展開 AX3（不裁切）（同類 1 例）"
+        },
+        {
+          "node_a": "QioS2",
+          "node_b": "r84waq",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ A11y / 16b 上傳佇列 · 全部狀態展開 AX3（不裁切）（同類 1 例）"
+        },
+        {
+          "node_a": "bMTQi",
+          "node_b": "r84waq",
+          "classification": "Scrim × Sheet Wrap @ A11y / 16b 上傳佇列 · 全部狀態展開 AX3（不裁切）（同類 1 例）"
+        },
+        {
+          "node_a": "FD9qU",
+          "node_b": "ykj25",
+          "classification": "Body × Tab Bar @ LS-152 / 01 設定（同類 1 例）"
+        },
+        {
+          "node_a": "azJjI",
+          "node_b": "dXvs2",
+          "classification": "Body × Tab Bar @ LS-152 / 01 設定 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "z3Lone",
+          "node_b": "RDXui",
+          "classification": "Body × Tab Bar @ A11y / 01 設定 · Dynamic Type AX3（同類 1 例）"
+        },
+        {
+          "node_a": "zh1oK",
+          "node_b": "FLa3s",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-152 / 03b 移除成員 · 確認（Owner）（同類 1 例）"
+        },
+        {
+          "node_a": "zh1oK",
+          "node_b": "dGzCL",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-152 / 03b 移除成員 · 確認（Owner）（同類 1 例）"
+        },
+        {
+          "node_a": "FLa3s",
+          "node_b": "dGzCL",
+          "classification": "Scrim × Sheet Wrap @ LS-152 / 03b 移除成員 · 確認（Owner）（同類 1 例）"
+        },
+        {
+          "node_a": "v1mVWP",
+          "node_b": "cOmRO",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-152 / 03c 轉移 Owner · 確認（同類 1 例）"
+        },
+        {
+          "node_a": "v1mVWP",
+          "node_b": "PMtMR",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-152 / 03c 轉移 Owner · 確認（同類 1 例）"
+        },
+        {
+          "node_a": "cOmRO",
+          "node_b": "PMtMR",
+          "classification": "Scrim × Sheet Wrap @ LS-152 / 03c 轉移 Owner · 確認（同類 1 例）"
+        },
+        {
+          "node_a": "c30576",
+          "node_b": "hxxHK",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-152 / 03d 退出家庭 · 確認（僅限非唯一 Owner）（同類 1 例）"
+        },
+        {
+          "node_a": "c30576",
+          "node_b": "mEhU5",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-152 / 03d 退出家庭 · 確認（僅限非唯一 Owner）（同類 1 例）"
+        },
+        {
+          "node_a": "hxxHK",
+          "node_b": "mEhU5",
+          "classification": "Scrim × Sheet Wrap @ LS-152 / 03d 退出家庭 · 確認（僅限非唯一 Owner）（同類 1 例）"
+        },
+        {
+          "node_a": "ZUD6e",
+          "node_b": "i6DIZ",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-152 / 05 內容操作表（同類 1 例）"
+        },
+        {
+          "node_a": "ZUD6e",
+          "node_b": "K3SRwk",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-152 / 05 內容操作表（同類 1 例）"
+        },
+        {
+          "node_a": "i6DIZ",
+          "node_b": "K3SRwk",
+          "classification": "Scrim × Sheet Wrap @ LS-152 / 05 內容操作表（同類 1 例）"
+        },
+        {
+          "node_a": "r8R5F",
+          "node_b": "TTki5",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-152 / 05b 檢舉原因（同類 1 例）"
+        },
+        {
+          "node_a": "r8R5F",
+          "node_b": "rUYvm",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-152 / 05b 檢舉原因（同類 1 例）"
+        },
+        {
+          "node_a": "TTki5",
+          "node_b": "rUYvm",
+          "classification": "Scrim × Sheet Wrap @ LS-152 / 05b 檢舉原因（同類 1 例）"
+        },
+        {
+          "node_a": "H5iprd",
+          "node_b": "UVTX8",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-152 / 05c 檢舉已送出（同類 1 例）"
+        },
+        {
+          "node_a": "H5iprd",
+          "node_b": "QPh4b",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-152 / 05c 檢舉已送出（同類 1 例）"
+        },
+        {
+          "node_a": "UVTX8",
+          "node_b": "QPh4b",
+          "classification": "Scrim × Sheet Wrap @ LS-152 / 05c 檢舉已送出（同類 1 例）"
+        },
+        {
+          "node_a": "yVqvZ",
+          "node_b": "F7cSv",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-152 / 05d 封鎖確認（同類 1 例）"
+        },
+        {
+          "node_a": "yVqvZ",
+          "node_b": "VgDOl",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-152 / 05d 封鎖確認（同類 1 例）"
+        },
+        {
+          "node_a": "F7cSv",
+          "node_b": "VgDOl",
+          "classification": "Scrim × Sheet Wrap @ LS-152 / 05d 封鎖確認（同類 1 例）"
+        },
+        {
+          "node_a": "VcQS1",
+          "node_b": "E07WN1",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-152 / 05e Owner 移除內容 · 確認（同類 1 例）"
+        },
+        {
+          "node_a": "VcQS1",
+          "node_b": "L0VhA",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-152 / 05e Owner 移除內容 · 確認（同類 1 例）"
+        },
+        {
+          "node_a": "E07WN1",
+          "node_b": "L0VhA",
+          "classification": "Scrim × Sheet Wrap @ LS-152 / 05e Owner 移除內容 · 確認（同類 1 例）"
+        },
+        {
+          "node_a": "xDKDL",
+          "node_b": "FgEza",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-152 / 10 刪除日記 · 確認（同類 1 例）"
+        },
+        {
+          "node_a": "xDKDL",
+          "node_b": "q4obb",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-152 / 10 刪除日記 · 確認（同類 1 例）"
+        },
+        {
+          "node_a": "FgEza",
+          "node_b": "q4obb",
+          "classification": "Scrim × Sheet Wrap @ LS-152 / 10 刪除日記 · 確認（同類 1 例）"
+        },
+        {
+          "node_a": "IldBr",
+          "node_b": "a6u13",
+          "classification": "Status Bar (Backdrop) × Scrim @ LS-152 / 10b 刪除留言 · 確認（同類 1 例）"
+        },
+        {
+          "node_a": "IldBr",
+          "node_b": "ZDOMk",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ LS-152 / 10b 刪除留言 · 確認（同類 1 例）"
+        },
+        {
+          "node_a": "a6u13",
+          "node_b": "ZDOMk",
+          "classification": "Scrim × Sheet Wrap @ LS-152 / 10b 刪除留言 · 確認（同類 1 例）"
+        },
+        {
+          "node_a": "gX04c",
+          "node_b": "svdWR",
+          "classification": "Status Bar (Backdrop) × Scrim @ A11y / 05b 檢舉原因 · Dynamic Type AX3（同類 1 例）"
+        },
+        {
+          "node_a": "gX04c",
+          "node_b": "S49vq",
+          "classification": "Status Bar (Backdrop) × Sheet Wrap @ A11y / 05b 檢舉原因 · Dynamic Type AX3（同類 1 例）"
+        },
+        {
+          "node_a": "svdWR",
+          "node_b": "S49vq",
+          "classification": "Scrim × Sheet Wrap @ A11y / 05b 檢舉原因 · Dynamic Type AX3（同類 1 例）"
+        }
+      ]
+    },
+    "row_overflow": {
+      "flagged": [
+        {
+          "node": "C57TMC",
+          "classification": "Print Cell :: Corner TR +5（同類 134 例）"
+        },
+        {
+          "node": "x4NnCv",
+          "classification": "Print Cell :: Corner BR +5（同類 134 例）"
+        },
+        {
+          "node": "YG4hG",
+          "classification": "Photo Print :: Corner TR +5（同類 51 例）"
+        },
+        {
+          "node": "efA3a",
+          "classification": "Photo Print :: Corner BR +5（同類 51 例）"
+        },
+        {
+          "node": "jCGWG",
+          "classification": "Photo Strip :: Photo 3 +63（同類 8 例）"
+        },
+        {
+          "node": "X9BSMc/A30rIX",
+          "classification": "Avatar :: Initial +6（同類 5 例）"
+        },
+        {
+          "node": "XjToq",
+          "classification": "Family Print :: Corner TR +5（同類 4 例）"
+        },
+        {
+          "node": "jin0Q",
+          "classification": "Family Print :: Corner BR +5（同類 4 例）"
+        },
+        {
+          "node": "j2z1C0",
+          "classification": "Print Stage :: Corner TR +5（同類 4 例）"
+        },
+        {
+          "node": "DIMqR",
+          "classification": "Print Stage :: Corner BR +5（同類 4 例）"
+        },
+        {
+          "node": "lE7FJ/S4O4r8",
+          "classification": "Print :: Mount BR +3.8（同類 4 例）"
+        },
+        {
+          "node": "B5E1ig",
+          "classification": "Photo Wrap :: Corner TR +5（同類 3 例）"
+        },
+        {
+          "node": "qnP3W",
+          "classification": "Photo Wrap :: Corner BR +5（同類 3 例）"
+        },
+        {
+          "node": "tlJFt",
+          "classification": "Email Print :: Corner TR +5（同類 2 例）"
+        },
+        {
+          "node": "ny0ec",
+          "classification": "Email Print :: Corner BR +5（同類 2 例）"
+        },
+        {
+          "node": "flduf",
+          "classification": "Legal :: Legal Link +117（同類 2 例）"
+        },
+        {
+          "node": "aNTzo/OCYqN",
+          "classification": "Date Anchor :: Stamp Wrap +20.14（同類 2 例）"
+        },
+        {
+          "node": "iO0Ko",
+          "classification": "Photo Strip :: Photo 2 +63（同類 2 例）"
+        },
+        {
+          "node": "BXbTE",
+          "classification": "Card Join Family :: Print Stage +24（同類 1 例）"
+        },
+        {
+          "node": "qX0b8",
+          "classification": "Photo Wrap :: Hero Photo +5（同類 1 例）"
+        },
+        {
+          "node": "FBRlf/iu3Q8",
+          "classification": "Field Box :: Field Value +30（同類 1 例）"
+        },
+        {
+          "node": "Evspf",
+          "classification": "Demo Photo Wrap :: Corner TR +5（同類 1 例）"
+        },
+        {
+          "node": "fyZfa",
+          "classification": "Demo Photo Wrap :: Corner BR +5（同類 1 例）"
+        },
+        {
+          "node": "XtNLC",
+          "classification": "Legal :: Legal Seg +150（同類 1 例）"
+        },
+        {
+          "node": "z0ATW/yxwnz",
+          "classification": "Paste Link Button :: Secondary Label +2.5（同類 1 例）"
+        },
+        {
+          "node": "oj6h0",
+          "classification": "Children Card :: Corner TR +5（同類 1 例）"
+        },
+        {
+          "node": "nSjs7",
+          "classification": "Children Card :: Corner BR +5（同類 1 例）"
+        },
+        {
+          "node": "k8PVy",
+          "classification": "Segment :: Label +24.13（同類 1 例）"
+        },
+        {
+          "node": "WitwS/uZ5Lt",
+          "classification": "Photo C :: Stack Sheet 2 +9.97（同類 1 例）"
+        },
+        {
+          "node": "WitwS/kVUWa",
+          "classification": "Photo C :: Stack Sheet 1 +6.97（同類 1 例）"
+        },
+        {
+          "node": "BbDZH",
+          "classification": "Empty Print :: Corner TR +5（同類 1 例）"
+        },
+        {
+          "node": "wSSFB",
+          "classification": "Empty Print :: Corner BR +5（同類 1 例）"
+        },
+        {
+          "node": "iCUJF",
+          "classification": "Photo 1 :: Selected Badge +6（同類 1 例）"
+        },
+        {
+          "node": "v7MGOT",
+          "classification": "Photo 2 :: Selected Badge +6（同類 1 例）"
+        },
+        {
+          "node": "r0E2vG",
+          "classification": "Photo Strip :: Photo 4 +167（同類 1 例）"
+        },
+        {
+          "node": "dbyDu",
+          "classification": "Photo Strip :: Photo 5 +271（同類 1 例）"
+        },
+        {
+          "node": "B2PYlk",
+          "classification": "Photo Strip :: Photo 6 +375（同類 1 例）"
+        },
+        {
+          "node": "DgWAS",
+          "classification": "Photo Strip :: Photo 7 +479（同類 1 例）"
+        },
+        {
+          "node": "to36g",
+          "classification": "Photo Strip :: Photo 8 +583（同類 1 例）"
+        },
+        {
+          "node": "UwOm5",
+          "classification": "Photo Strip :: Photo 9 +687（同類 1 例）"
+        },
+        {
+          "node": "L1Gvi",
+          "classification": "Photo Strip :: Photo 10 +791（同類 1 例）"
+        },
+        {
+          "node": "a93IH",
+          "classification": "Photo Strip :: Photo 11 +895（同類 1 例）"
+        },
+        {
+          "node": "tJr7O",
+          "classification": "Photo Strip :: Photo 12 +999（同類 1 例）"
+        },
+        {
+          "node": "f4znT9",
+          "classification": "Photo Strip :: Photo 13 +1103（同類 1 例）"
+        },
+        {
+          "node": "QnhMi",
+          "classification": "Photo Strip :: Photo 14 +1207（同類 1 例）"
+        },
+        {
+          "node": "cvkFS",
+          "classification": "Photo Strip :: Photo 15 +1311（同類 1 例）"
+        },
+        {
+          "node": "G636T",
+          "classification": "Photo Strip :: Photo 16 +1415（同類 1 例）"
+        },
+        {
+          "node": "TdVUk",
+          "classification": "Photo Strip :: Photo 17 +1519（同類 1 例）"
+        },
+        {
+          "node": "P8eEXh",
+          "classification": "Photo Strip :: Photo 18 +1623（同類 1 例）"
+        },
+        {
+          "node": "HxDU4",
+          "classification": "Photo Strip :: Photo 19 +1727（同類 1 例）"
+        },
+        {
+          "node": "MBCZw",
+          "classification": "Photo Strip :: Photo 20 +1831（同類 1 例）"
+        },
+        {
+          "node": "olgX0",
+          "classification": "Blank Print Cell :: Corner TR +5（同類 1 例）"
+        },
+        {
+          "node": "xyD7I",
+          "classification": "Blank Print Cell :: Corner BR +5（同類 1 例）"
+        }
+      ]
+    },
+    "cross_parent_collision": {
+      "flagged": [
+        {
+          "node_a": "CJ2BA",
+          "node_b": "OJNI5",
+          "classification": "Spacer 16 × Corner TL @ LS-21 / 13 日記詳情 (iPhone)（同類 2 例）"
+        },
+        {
+          "node_a": "CJ2BA",
+          "node_b": "C57TMC",
+          "classification": "Spacer 16 × Corner TR @ LS-21 / 13 日記詳情 (iPhone)（同類 2 例）"
+        },
+        {
+          "node_a": "gnVLw",
+          "node_b": "OiUoO",
+          "classification": "Spacer 16 × Corner TL @ LS-21 / 13 日記詳情 · 深色（同類 2 例）"
+        },
+        {
+          "node_a": "gnVLw",
+          "node_b": "IB5r1",
+          "classification": "Spacer 16 × Corner TR @ LS-21 / 13 日記詳情 · 深色（同類 2 例）"
+        },
+        {
+          "node_a": "UEhNU",
+          "node_b": "kakSb",
+          "classification": "Spacer 16 × Corner TL @ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）（同類 2 例）"
+        },
+        {
+          "node_a": "UEhNU",
+          "node_b": "F0Tzj",
+          "classification": "Spacer 16 × Corner TR @ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）（同類 2 例）"
+        },
+        {
+          "node_a": "KBTFi",
+          "node_b": "OkHbz",
+          "classification": "Spacer 16 × Corner TL @ Stress / 13 日記詳情 · 20 張照片壓測（同類 2 例）"
+        },
+        {
+          "node_a": "KBTFi",
+          "node_b": "RefMF",
+          "classification": "Spacer 16 × Corner TR @ Stress / 13 日記詳情 · 20 張照片壓測（同類 2 例）"
+        },
+        {
+          "node_a": "WsQdq",
+          "node_b": "Fw3Lw",
+          "classification": "Spacer 16 × Corner TL @ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）（同類 2 例）"
+        },
+        {
+          "node_a": "WsQdq",
+          "node_b": "PWKoD",
+          "classification": "Spacer 16 × Corner TR @ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）（同類 2 例）"
+        },
+        {
+          "node_a": "QOgzb",
+          "node_b": "DHfo9",
+          "classification": "Spacer Section × Corner TL @ LS-142 / 15 相簿詳情 (iPhone)（同類 2 例）"
+        },
+        {
+          "node_a": "QOgzb",
+          "node_b": "GsLq1",
+          "classification": "Spacer Section × Corner TR @ LS-142 / 15 相簿詳情 (iPhone)（同類 2 例）"
+        },
+        {
+          "node_a": "F8c1z",
+          "node_b": "tcfj6",
+          "classification": "Spacer Section × Corner TL @ LS-142 / 15 相簿詳情 · 深色（同類 2 例）"
+        },
+        {
+          "node_a": "F8c1z",
+          "node_b": "l3ULp",
+          "classification": "Spacer Section × Corner TR @ LS-142 / 15 相簿詳情 · 深色（同類 2 例）"
+        },
+        {
+          "node_a": "hogY7",
+          "node_b": "RpgcZ",
+          "classification": "Spacer Section × Corner TL @ A11y / 15 相簿詳情 · Dynamic Type AX3（body 40pt）（同類 2 例）"
+        },
+        {
+          "node_a": "hogY7",
+          "node_b": "BTTKx",
+          "classification": "Spacer Section × Corner TR @ A11y / 15 相簿詳情 · Dynamic Type AX3（body 40pt）（同類 2 例）"
+        },
+        {
+          "node_a": "nyK3s",
+          "node_b": "QYEzP",
+          "classification": "Spacer Section × Corner TL @ Stress / 15 相簿詳情 · 34 張全滿（同類 2 例）"
+        },
+        {
+          "node_a": "nyK3s",
+          "node_b": "V0ISZ",
+          "classification": "Spacer Section × Corner TR @ Stress / 15 相簿詳情 · 34 張全滿（同類 2 例）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "pYE38",
+          "classification": "Hero Photo × Corner BL @ LS-17 / 01 歡迎登入 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "rtNqP",
+          "classification": "Hero Photo × Corner BR @ LS-17 / 01 歡迎登入 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "g7B7X",
+          "classification": "Hero Photo × Corner TL @ LS-17 / 01 歡迎登入 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "Mlugc",
+          "classification": "Hero Photo × Corner TR @ LS-17 / 01 歡迎登入 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "M98qs",
+          "classification": "Sample Photo × Corner TL @ LS-18 / 07a 邀請家人 · 尚未產生（空狀態）（同類 1 例）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "j2z1C0",
+          "classification": "Sample Photo × Corner TR @ LS-18 / 07a 邀請家人 · 尚未產生（空狀態）（同類 1 例）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "xfmAg",
+          "classification": "Sample Photo × Corner BL @ LS-18 / 07a 邀請家人 · 尚未產生（空狀態）（同類 1 例）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "DIMqR",
+          "classification": "Sample Photo × Corner BR @ LS-18 / 07a 邀請家人 · 尚未產生（空狀態）（同類 1 例）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "I8sWT8",
+          "classification": "Hero Photo × Corner TL @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")（同類 1 例）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "OIwlW",
+          "classification": "Hero Photo × Corner TR @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")（同類 1 例）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "kSfzp",
+          "classification": "Hero Photo × Corner BL @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")（同類 1 例）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "mIStI",
+          "classification": "Hero Photo × Corner BR @ LS-17 / 01-iPad 歡迎登入 (iPad 11\")（同類 1 例）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "E6reS5",
+          "classification": "Join Photo Image × Corner TL @ LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\")（同類 1 例）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "B5E1ig",
+          "classification": "Join Photo Image × Corner TR @ LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\")（同類 1 例）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "br1l7",
+          "classification": "Join Photo Image × Corner BL @ LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\")（同類 1 例）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "qnP3W",
+          "classification": "Join Photo Image × Corner BR @ LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\")（同類 1 例）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "F03KZ",
+          "classification": "Hero Photo × Corner BL @ LS-17 / 01b 歡迎登入 · 登入中（同類 1 例）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "IdIpj",
+          "classification": "Hero Photo × Corner BR @ LS-17 / 01b 歡迎登入 · 登入中（同類 1 例）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "CQ1DR",
+          "classification": "Hero Photo × Corner TL @ LS-17 / 01b 歡迎登入 · 登入中（同類 1 例）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "R13bes",
+          "classification": "Hero Photo × Corner TR @ LS-17 / 01b 歡迎登入 · 登入中（同類 1 例）"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "VUrCa",
+          "classification": "Hero Photo × Corner BL @ LS-17 / 01c 歡迎登入 · 深色模式（同類 1 例）"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "s3NQB",
+          "classification": "Hero Photo × Corner BR @ LS-17 / 01c 歡迎登入 · 深色模式（同類 1 例）"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "MSHDo",
+          "classification": "Hero Photo × Corner TL @ LS-17 / 01c 歡迎登入 · 深色模式（同類 1 例）"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "Or86v",
+          "classification": "Hero Photo × Corner TR @ LS-17 / 01c 歡迎登入 · 深色模式（同類 1 例）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "vh3wA",
+          "classification": "Join Photo Image × Corner TL @ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "a9D8tu",
+          "classification": "Join Photo Image × Corner TR @ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "GWAHq",
+          "classification": "Join Photo Image × Corner BL @ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "SV5Ka",
+          "classification": "Join Photo Image × Corner BR @ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "GWAHq",
+          "node_b": "CpjLh",
+          "classification": "Corner BL × Card Text @ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "SV5Ka",
+          "node_b": "CpjLh",
+          "classification": "Corner BR × Card Text @ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "HQIu3",
+          "classification": "Hero Photo × Corner BL @ A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "sqAra",
+          "classification": "Hero Photo × Corner BR @ A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "XNlL6",
+          "classification": "Hero Photo × Corner TL @ A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "YtTc7",
+          "classification": "Hero Photo × Corner TR @ A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "E0sov",
+          "classification": "Hero Photo × Corner BL @ LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "tzB8c",
+          "classification": "Hero Photo × Corner BR @ LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "jUZCY",
+          "classification": "Hero Photo × Corner TL @ LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "O1r9l",
+          "classification": "Hero Photo × Corner TR @ LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "Wo9Ox",
+          "node_b": "K4qvK6",
+          "classification": "Corner BL × Spacer 16 @ LS-47 / 08 幫寶貝建檔（同類 1 例）"
+        },
+        {
+          "node_a": "efA3a",
+          "node_b": "K4qvK6",
+          "classification": "Corner BR × Spacer 16 @ LS-47 / 08 幫寶貝建檔（同類 1 例）"
+        },
+        {
+          "node_a": "E5X7Nk",
+          "node_b": "aGcLA",
+          "classification": "Corner BL × Spacer 16 @ LS-47 / 08c 幫寶貝建檔 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "cM5Hi",
+          "node_b": "aGcLA",
+          "classification": "Corner BR × Spacer 16 @ LS-47 / 08c 幫寶貝建檔 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "gEYpf",
+          "node_b": "zGEet",
+          "classification": "Corner TL × Dropdown Menu @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）（同類 1 例）"
+        },
+        {
+          "node_a": "FkOcN",
+          "node_b": "zGEet",
+          "classification": "Corner TR × Dropdown Menu @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）（同類 1 例）"
+        },
+        {
+          "node_a": "PRyQO",
+          "node_b": "zGEet",
+          "classification": "Corner BL × Dropdown Menu @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）（同類 1 例）"
+        },
+        {
+          "node_a": "tVUkg",
+          "node_b": "zGEet",
+          "classification": "Corner BR × Dropdown Menu @ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）（同類 1 例）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "AXf4H",
+          "classification": "Sample Photo × Corner TL @ LS-18 / 07a 邀請家人 · 深色模式（同類 1 例）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "Lns4o",
+          "classification": "Sample Photo × Corner TR @ LS-18 / 07a 邀請家人 · 深色模式（同類 1 例）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "haMqk",
+          "classification": "Sample Photo × Corner BL @ LS-18 / 07a 邀請家人 · 深色模式（同類 1 例）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "Izo3e",
+          "classification": "Sample Photo × Corner BR @ LS-18 / 07a 邀請家人 · 深色模式（同類 1 例）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "XHfST",
+          "classification": "Sample Photo × Corner TL @ A11y / 07a 邀請家人 · Dynamic Type AX3（尚未產生 · body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "kbkHy",
+          "classification": "Sample Photo × Corner TR @ A11y / 07a 邀請家人 · Dynamic Type AX3（尚未產生 · body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "q2Dth",
+          "classification": "Sample Photo × Corner BL @ A11y / 07a 邀請家人 · Dynamic Type AX3（尚未產生 · body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "VGqGL",
+          "classification": "Sample Photo × Corner BR @ A11y / 07a 邀請家人 · Dynamic Type AX3（尚未產生 · body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "OJ1xr",
+          "classification": "Sample Photo × Corner TL @ LS-18 / 07a 邀請家人 · 只能看選中（同類 1 例）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "KSTqZ",
+          "classification": "Sample Photo × Corner TR @ LS-18 / 07a 邀請家人 · 只能看選中（同類 1 例）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "Rqmus",
+          "classification": "Sample Photo × Corner BL @ LS-18 / 07a 邀請家人 · 只能看選中（同類 1 例）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "W7VlAp",
+          "classification": "Sample Photo × Corner BR @ LS-18 / 07a 邀請家人 · 只能看選中（同類 1 例）"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "aY7S5",
+          "classification": "Spacer Section × Corner TL @ LS-21 / 11b 時間軸 · 空狀態（同類 1 例）"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "BbDZH",
+          "classification": "Spacer Section × Corner TR @ LS-21 / 11b 時間軸 · 空狀態（同類 1 例）"
+        },
+        {
+          "node_a": "K3Q7ZT/DjW91",
+          "node_b": "OR1hw",
+          "classification": "Corner TL × Tab Bar @ LS-21 / 11c 時間軸 · 下拉更新中（同類 1 例）"
+        },
+        {
+          "node_a": "K3Q7ZT/JgUK8",
+          "node_b": "OR1hw",
+          "classification": "Corner TR × Tab Bar @ LS-21 / 11c 時間軸 · 下拉更新中（同類 1 例）"
+        },
+        {
+          "node_a": "MFpwo/DjW91",
+          "node_b": "sbsqF",
+          "classification": "Corner TL × Home Indicator Area @ LS-21 / 11 時間軸 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "MFpwo/DjW91",
+          "node_b": "bmk5H",
+          "classification": "Corner TL × Tab Bar @ LS-21 / 11 時間軸 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "MFpwo/JgUK8",
+          "node_b": "sbsqF",
+          "classification": "Corner TR × Home Indicator Area @ LS-21 / 11 時間軸 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "MFpwo/JgUK8",
+          "node_b": "bmk5H",
+          "classification": "Corner TR × Tab Bar @ LS-21 / 11 時間軸 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "FO005",
+          "node_b": "im7DS",
+          "classification": "Corner BL × Spacer Section @ LS-21 / 13 日記詳情 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "a3oZ2",
+          "node_b": "im7DS",
+          "classification": "Corner BR × Spacer Section @ LS-21 / 13 日記詳情 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "Kd1aN",
+          "node_b": "Yz0R7",
+          "classification": "Corner BL × Spacer Section @ LS-21 / 13 日記詳情 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "Y21UsQ",
+          "node_b": "Yz0R7",
+          "classification": "Corner BR × Spacer Section @ LS-21 / 13 日記詳情 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "E1nSH9",
+          "node_b": "EgTrf",
+          "classification": "Corner BL × Spacer Section @ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "UoKog",
+          "node_b": "EgTrf",
+          "classification": "Corner BR × Spacer Section @ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "u01Pc/DjW91",
+          "node_b": "u87Nb",
+          "classification": "Corner TL × Home Indicator Area @ Stress / 11 時間軸 · 單一寶貝 filter（同類 1 例）"
+        },
+        {
+          "node_a": "u01Pc/DjW91",
+          "node_b": "M4PUm",
+          "classification": "Corner TL × Tab Bar @ Stress / 11 時間軸 · 單一寶貝 filter（同類 1 例）"
+        },
+        {
+          "node_a": "u01Pc/JgUK8",
+          "node_b": "u87Nb",
+          "classification": "Corner TR × Home Indicator Area @ Stress / 11 時間軸 · 單一寶貝 filter（同類 1 例）"
+        },
+        {
+          "node_a": "u01Pc/JgUK8",
+          "node_b": "M4PUm",
+          "classification": "Corner TR × Tab Bar @ Stress / 11 時間軸 · 單一寶貝 filter（同類 1 例）"
+        },
+        {
+          "node_a": "s1LfAj",
+          "node_b": "repj6",
+          "classification": "Photos Header × Dragging Photo @ LS-21 / 12e 日記編輯器 · 照片排序（拖曳中）（同類 1 例）"
+        },
+        {
+          "node_a": "IDOjx",
+          "node_b": "h3zyP",
+          "classification": "Photos Header × Dragging Photo @ A11y / 12e 日記編輯器 · 照片排序（拖曳中）· Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "PU1lk",
+          "node_b": "UGZbZ",
+          "classification": "Corner BL × Spacer Section @ Stress / 13 日記詳情 · 20 張照片壓測（同類 1 例）"
+        },
+        {
+          "node_a": "S7qlEV",
+          "node_b": "UGZbZ",
+          "classification": "Corner BR × Spacer Section @ Stress / 13 日記詳情 · 20 張照片壓測（同類 1 例）"
+        },
+        {
+          "node_a": "IcuGv",
+          "node_b": "z12HU",
+          "classification": "Corner BL × Spacer Section @ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "kTGk5",
+          "node_b": "z12HU",
+          "classification": "Corner BR × Spacer Section @ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "zYLzt",
+          "node_b": "WC9pB/DjW91",
+          "classification": "Spacer Section × Corner TL @ LS-142 / 14 相簿 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "zYLzt",
+          "node_b": "WC9pB/JgUK8",
+          "classification": "Spacer Section × Corner TR @ LS-142 / 14 相簿 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "R7edNW/DjW91",
+          "node_b": "wTMlo",
+          "classification": "Corner TL × Tab Bar @ LS-142 / 14 相簿 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "R7edNW/JgUK8",
+          "node_b": "wTMlo",
+          "classification": "Corner TR × Tab Bar @ LS-142 / 14 相簿 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "HauTE",
+          "node_b": "o5WSp",
+          "classification": "Corner BL × Spacer Bottom @ LS-142 / 15 相簿詳情 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "v1R53",
+          "node_b": "o5WSp",
+          "classification": "Corner BR × Spacer Bottom @ LS-142 / 15 相簿詳情 (iPhone)（同類 1 例）"
+        },
+        {
+          "node_a": "WESbz",
+          "node_b": "J4vk0/DjW91",
+          "classification": "Spacer Section × Corner TL @ LS-142 / 14 相簿 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "WESbz",
+          "node_b": "J4vk0/JgUK8",
+          "classification": "Spacer Section × Corner TR @ LS-142 / 14 相簿 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "T3SwvP/DjW91",
+          "node_b": "Kl0eH",
+          "classification": "Corner TL × Tab Bar @ LS-142 / 14 相簿 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "T3SwvP/JgUK8",
+          "node_b": "Kl0eH",
+          "classification": "Corner TR × Tab Bar @ LS-142 / 14 相簿 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "T4FpQ",
+          "node_b": "ONEs5/DjW91",
+          "classification": "Spacer Section × Corner TL @ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "T4FpQ",
+          "node_b": "ONEs5/JgUK8",
+          "classification": "Spacer Section × Corner TR @ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "oWCtg",
+          "node_b": "nxJbB/DjW91",
+          "classification": "Spacer Section × Corner TL @ Stress / 14 相簿 · 超長相簿名＋單張相片（同類 1 例）"
+        },
+        {
+          "node_a": "oWCtg",
+          "node_b": "nxJbB/JgUK8",
+          "classification": "Spacer Section × Corner TR @ Stress / 14 相簿 · 超長相簿名＋單張相片（同類 1 例）"
+        },
+        {
+          "node_a": "QSnUF/mlORb",
+          "node_b": "j2svp",
+          "classification": "Corner BL × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片（同類 1 例）"
+        },
+        {
+          "node_a": "QSnUF/atAkU",
+          "node_b": "j2svp",
+          "classification": "Corner BR × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片（同類 1 例）"
+        },
+        {
+          "node_a": "mdabp/DjW91",
+          "node_b": "NLs8N",
+          "classification": "Corner TL × Home Indicator Area @ Stress / 14 相簿 · 超長相簿名＋單張相片（同類 1 例）"
+        },
+        {
+          "node_a": "mdabp/DjW91",
+          "node_b": "j2svp",
+          "classification": "Corner TL × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片（同類 1 例）"
+        },
+        {
+          "node_a": "mdabp/JgUK8",
+          "node_b": "NLs8N",
+          "classification": "Corner TR × Home Indicator Area @ Stress / 14 相簿 · 超長相簿名＋單張相片（同類 1 例）"
+        },
+        {
+          "node_a": "mdabp/JgUK8",
+          "node_b": "j2svp",
+          "classification": "Corner TR × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片（同類 1 例）"
+        },
+        {
+          "node_a": "B87KY",
+          "node_b": "FpSWL",
+          "classification": "Corner BL × Spacer Bottom @ LS-142 / 15 相簿詳情 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "t2rbzf",
+          "node_b": "FpSWL",
+          "classification": "Corner BR × Spacer Bottom @ LS-142 / 15 相簿詳情 · 深色（同類 1 例）"
+        },
+        {
+          "node_a": "DXKtL",
+          "node_b": "OGFNo",
+          "classification": "Corner BL × Spacer Bottom @ A11y / 15 相簿詳情 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        },
+        {
+          "node_a": "I7TMsE",
+          "node_b": "OGFNo",
+          "classification": "Corner BR × Spacer Bottom @ A11y / 15 相簿詳情 · Dynamic Type AX3（body 40pt）（同類 1 例）"
+        }
+      ]
+    },
+    "corner_anchor": {
+      "boards": [
+        "t5wI4",
+        "Rx5mP",
+        "z9tytH",
+        "B2DckT",
+        "MohS1",
+        "hVAq3",
+        "gjCoe",
+        "yJvj7",
+        "yMNOt",
+        "p8GUvZ",
+        "ANIpL",
+        "sF5oA",
+        "VqMl0",
+        "dNED0",
+        "A4cVtH",
+        "Z6n16i",
+        "tWbae",
+        "X6rf9c",
+        "dHnPl",
+        "v4w2pV",
+        "vrqoe",
+        "ZilRp",
+        "soWA9",
+        "WgbNc",
+        "SSfdn",
+        "q4mb2",
+        "rtpQr",
+        "EXgzz",
+        "WIyj9",
+        "CmZsg",
+        "J5sQHy",
+        "yResD",
+        "IpLKZ",
+        "z042Yg",
+        "rh2Q1",
+        "H5K5xm",
+        "ZG2Un",
+        "oFRMc",
+        "Qs7iE",
+        "b3nzDp",
+        "bZhuV",
+        "OePXK",
+        "UcO8T",
+        "Bdnlp",
+        "cy89z",
+        "hElk0"
+      ],
+      "containers": 3,
+      "points": 24,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 212,
+      "document_points": 1696,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "unresolved": []
+    }
+  }
+}
