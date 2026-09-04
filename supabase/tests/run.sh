@@ -474,6 +474,20 @@ race_case3 "已退出但留有 media 的家庭 vs 仍是成員的家庭：與 fi
   delete_account_vs_finalize_media_s1.sql delete_account_vs_finalize_media_s2.sql \
   delete_account_vs_finalize_media_verify.sql
 
+# LS-155 R3（merge-review R2 9779da79 R2-M1，N1／N2 兩種撐窗方式各實測重現
+# 40P01）：情況 2（唯一成員家庭）當時仍在合併迴圈之外（先鎖 families、cascade
+# 才碰 family_members），與情況 3／finalize_account_deletion() 的鎖序相反，且
+# 情況 2／3 是兩個各自遞增序但涵蓋不同家庭子集的迴圈，合起來不是全域遞增序。這裡
+# 搬 N2（真實在飛上傳撐窗，不是人工鎖）：U1 是兩個唯一成員家庭的唯一成員，S 裡
+# 留著早已退出的 U2 的 media，U1 自己的背景上傳佔住 S2 的 families 列鎖；U1／U2
+# 同時呼叫 delete_my_account()。R3 修法（情況 2 併進同一個遞增序迴圈）後三個
+# session 皆須正常完成、無 40P01。沿用 race_case3 同一支三連線 runner（沒有另開
+# 一支同形狀的 helper，見 handoff）。
+race_case3 "情況2（唯一成員家庭）vs 情況3 media：U1 自己在飛上傳撐窗，兩個 delete_my_account() 不得死鎖" \
+  delete_account_case2_vs_media_setup.sql delete_account_case2_vs_media_s0.sql \
+  delete_account_case2_vs_media_s1.sql delete_account_case2_vs_media_s2.sql \
+  delete_account_case2_vs_media_verify.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 delete from public.families where id in (
@@ -493,7 +507,9 @@ delete from public.families where id in (
   'd5000000-0000-4000-8000-000000000001',
   'f9000000-0000-4000-8000-000000000001',
   'e8000000-0000-4000-8000-000000000001',
-  'e8000000-0000-4000-8000-000000000002'
+  'e8000000-0000-4000-8000-000000000002',
+  'ed000000-0000-4000-8000-000000000001',
+  'ed000000-0000-4000-8000-000000000002'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -507,6 +523,8 @@ delete from auth.users where id in (
   'e8000000-0000-4000-8000-000000000011',
   'e8000000-0000-4000-8000-000000000012',
   'e8000000-0000-4000-8000-000000000013',
+  'ed000000-0000-4000-8000-000000000011',
+  'ed000000-0000-4000-8000-000000000012',
   'ea000000-0000-4000-8000-000000000001',
   'ea000000-0000-4000-8000-000000000002',
   'ea000000-0000-4000-8000-000000000003',
