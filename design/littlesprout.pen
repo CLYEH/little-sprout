@@ -134046,16 +134046,80 @@
                           ]
                         },
                         "i2SHf": {
-                          "enabled": true
-                        },
-                        "a7OyZ7": {
-                          "icon": "info",
-                          "fill": "$text-secondary"
-                        },
-                        "ikuz2": {
-                          "content": "此為審核專用帳號，如需協助請洽開發者聯絡資訊。",
-                          "fill": "$text-secondary",
-                          "fontWeight": "normal"
+                          "type": "frame",
+                          "id": "icpU3",
+                          "name": "Field Help",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Ygsq8",
+                              "name": "Error Line",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "G0VKyE",
+                                  "name": "Error Icon",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "GIW5A",
+                                  "name": "Error Text",
+                                  "fill": "$danger",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "帳號或密碼錯誤，請再試一次。",
+                                  "lineHeight": 1.45,
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "jwzm2",
+                              "name": "Help Line",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "bFoX8",
+                                  "name": "Field Help Icon",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "info",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "d26jcf",
+                                  "name": "Field Help Text",
+                                  "fill": "$text-secondary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "此為審核專用帳號，如需協助請洽開發者聯絡資訊。",
+                                  "lineHeight": 1.45,
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
                         }
                       }
                     }
@@ -134077,38 +134141,6 @@
                 0
               ],
               "children": [
-                {
-                  "type": "frame",
-                  "id": "K3MZzs",
-                  "name": "Error Row",
-                  "width": "fill_container",
-                  "gap": "$sp-label",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon",
-                      "id": "IiOOi",
-                      "name": "Error Icon",
-                      "width": 18,
-                      "height": 18,
-                      "icon": "circle-alert",
-                      "library": "lucide",
-                      "fill": "$danger"
-                    },
-                    {
-                      "type": "text",
-                      "id": "NoF9F",
-                      "name": "Error Text",
-                      "fill": "$danger",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "帳號或密碼錯誤，請再試一次。",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "600"
-                    }
-                  ]
-                },
                 {
                   "type": "frame",
                   "id": "saLwO",
@@ -135834,6 +135866,42 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "xW6ZJ",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Ipo6O",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "pDZxb",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "新增 AX3 錯誤態板 LkrrS root height 硬寫 1474（規格值族「單畫面總高·內容驅動」，推導見「R3 修訂重點」節）；Error Icon／Field Help Icon 於 LkrrS 覆寫 32×32（沿用 LS-163 R1 已建立的 AX3 icon-sm 對應值，與 Toggle Icon blEap 同規格）。新增 iPad 板 g1pZ15 root height 沿用 BDrtd 原值 1194（未變——加入連結後 Auth Column 底距 Home Indicator 頂仍餘 229pt，無需擴高）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -136389,7 +136457,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "②連結導覽目標：01e（Yc4EC／M2qW9／aEb17）的「以帳號密碼登入」連結 → push P1（BYbe5／tpw7n／vgvFY，依當前 theme／size 對應變體）；P1 的 cmp/Nav Back「返回」→ pop 回 01e（不是 01／svedU）。iPad 版 l4ShP 同理，返回目標為 01-iPad（既有 BDrtd，本票未新增 01e-iPad 變體——若日後 iPad 也要開放密碼登入連結入口，需另開設計範圍，本票僅在 iPhone/AX3 三板加入口）。",
+                  "content": "②連結導覽目標：01e（Yc4EC／M2qW9／aEb17）的「以帳號密碼登入」連結 → push P1（BYbe5／tpw7n／vgvFY，依當前 theme／size 對應變體）；P1 的 cmp/Nav Back「返回」→ pop 回 01e（不是 01／svedU）。iPad 版：R2 曾記錄「本票未新增 01e-iPad 變體」，R3 依 orchestrator IN-1 裁定已補（見「R3 修訂重點」節）——g1pZ15（01e-iPad）的連結 → push l4ShP；l4ShP 的返回 → pop 回 g1pZ15（不再是舊 BDrtd）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -136432,6 +136500,1245 @@
                   "fontWeight": "normal"
                 }
               ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "TJycw",
+          "name": "N R3 修訂重點（依 VR R2 verdict comment 91055871 逐項落地）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "wpcJ1",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R3 修訂重點（依 VR R2 verdict comment 91055871 逐項落地）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "m1zOyU",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "uxPeF",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "fcJ01",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MJ-5：新增 AX3 錯誤態板 `A11y / P1c 帳號密碼登入 · 帳號或密碼錯誤 · Dynamic Type AX3（body 40pt）`（id LkrrS）。Copy 自 `vgvFY`（既有 AX3 P1 基準板），非同型沿用未實算——實測後兩欄框改 $danger／2pt；密碼欄 Field Help 槽整組 Replace 成 Error Line（32×32 danger icon＋$fs-note 錯誤文字）+ Help Line（32×32 info icon＋$fs-note 求助文字）兩行堆疊，比照同輪 MN-4 對 O1XC2Z 的改法。板高內容驅動重算：原 vgvFY 1300（Body 1128，Top 931，Footer 133，Top/Footer 間 space_between 餘 48）；新增 Error Line 後 Top 實測 1105（+174，含新增一行＋$sp-tight 內距），若沿用舊板高會被 Body 空間擠壓——實測確認裁切（截圖驗證，底部按鈕與求助行被吃掉）。改法：root height 1300→1474＝62(Status)+76(NavBack)+16(Body padding)+1105(Top)+48(維持與 vgvFY 同款 Top/Footer 間距)+133(Footer)+34(HomeIndicator)。maxBottom 複驗＝1474＝declared height，越界 0；text_occlusion in-scope 0（見本輪收據）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "t7qOOe",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "q7gdI",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "R8W8S",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MN-4：`O1XC2Z`（iPhone）與 `LkrrS`（AX3）的密碼欄 Field Help 槽改為 Error Line（`帳號或密碼錯誤，請再試一次。`，$danger）在上、Help Line（`此為審核專用帳號…`，$text-secondary）在下的兩行堆疊，取代 R2 版「Footer 頂端獨立 Error Row」寫法。實測 rel y：O1XC2Z Error Line=0／Help Line=31（Error < Help ✓）；LkrrS Error Line=0／Help Line=180（Error < Help ✓）；兩板兩行皆 enabled=true。`ioA0u`（網路錯誤態）未改動，維持 Footer 獨立 Error Row 的既有語彙（欄位無錯，不適用同一改法）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "l41oVb",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "eZNQw",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Y34V7T",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MN-5：方案 B 上線後，歡迎頁以 `01e` 家族（`Yc4EC`／`M2qW9`／`aEb17`）為準——`01`（`svedU`）／`01c`（`IUJ5Q`）／`A11y-01`（`e7G3Lk`）三板保留為「無密碼登入連結」時的歷史參考，不再是實作依據；`01e` 的 Print Stage 246／Top 308 取代 `01` 的 292／354（`M2qW9` 同理，378.6／440.6 取代 `01c` 對應值）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Wzzyz",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "WBJ47",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "g4hw7",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MN-6：R2 的 46pt（Print Stage 292→246）實際削掉的是「相紙底→字標頂」的呼吸帶——實測 `svedU` 呼吸帶（App Name (Wordmark) 絕對 y 上緣 − Print 絕對 y 下緣）＝1098−997.1＝**100.9**；`Yc4EC` 同法＝7348−7293.1＝**54.9**。54.9 > `$sp-section`(44)，十條 #5 的章節斷點仍成立。印品幾何三數複驗未動：`Print` 高 230.1、`Photo Wrap` 高 190.1、`Hero Photo` 高 515，`svedU`／`Yc4EC` 兩板逐一相同。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lUDX1",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ktpqR",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "s0FXgv",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "IN-1（orchestrator 裁定：LS-17 01 有 iPad 板 `BDrtd` → 補 `01e-iPad`）：新增 `LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPad 11\")`（id g1pZ15），Copy 自 `BDrtd`，在 Auth Column 的 Actions 內、Email Wrap 與 Legal Wrap 之間插入與 iPhone 同款 Password Login Link Wrap（無需 Link Legal Group 合併技巧——iPad 版 Auth Column 非裝置頂滿高度，加入連結後 Auth Column 底與 Home Indicator 頂仍有 229pt 餘裕，遠低於任何越界風險，maxBottom 1194＝declared height 0 越界）。`l4ShP`（P1-iPad）的返回目標同步改為 `g1pZ15`（不再是 `BDrtd`）——`01e-iPad` 連結 → push `l4ShP`；`l4ShP` 的 Nav Back → pop 回 `01e-iPad`（`g1pZ15`），與 iPhone 版 01e→P1→pop 回 01e 同一慣例。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "g1pZ15",
+      "x": 0,
+      "y": 10204,
+      "name": "LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPad 11\")",
+      "clip": true,
+      "width": 834,
+      "height": 1194,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 0.8009592326139089,
+          "height": 0.9631490787269682
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.06594724220623502,
+          "y": 0.01423785594639866
+        }
+      },
+      "cornerRadius": 28,
+      "layout": "none",
+      "children": [
+        {
+          "id": "vzWY4",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "x": 0,
+          "y": 0,
+          "width": 834,
+          "height": 42,
+          "padding": [
+            0,
+            "$screen-pad-lg"
+          ],
+          "descendants": {
+            "ZPZek": {
+              "fill": "$text-primary"
+            },
+            "O8BQeT": {
+              "fill": "$text-primary"
+            },
+            "eLmLf": {
+              "fill": "$text-primary"
+            },
+            "pFP2y": {
+              "fill": "$text-primary"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "VNmrB",
+          "x": 0,
+          "y": 1164,
+          "name": "Home Indicator Area",
+          "width": 834,
+          "height": 30,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "L5o013",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 200,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "REgcj",
+          "x": 500,
+          "y": 410,
+          "name": "Auth Column",
+          "width": 294,
+          "layout": "vertical",
+          "gap": "$sp-section",
+          "children": [
+            {
+              "type": "frame",
+              "id": "gUDvr",
+              "name": "Head",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "OXm9G",
+                  "name": "App Name (Wordmark)",
+                  "metadata": {
+                    "type": "a11y",
+                    "accessibilityLabel": "萌芽日記",
+                    "exemptDynamicType": true,
+                    "role": "image"
+                  },
+                  "width": 247,
+                  "height": 118,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "mengya-diary-crayon-v3.png",
+                    "mode": "fit"
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "odKhE",
+                  "name": "Tagline",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "給家人的私密相簿",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "eiXGx",
+                  "name": "Trust Row",
+                  "gap": "$sp-label",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "VZAJN",
+                      "name": "Trust Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "lock",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "J9GRF",
+                      "name": "Trust Text",
+                      "fill": "$text-primary",
+                      "content": "只有你邀請的家人看得到",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "T4zTgV",
+              "name": "Actions",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "id": "ipBJI",
+                  "type": "ref",
+                  "ref": "y6MxMV",
+                  "name": "Sign in with Apple",
+                  "width": "fill_container"
+                },
+                {
+                  "type": "frame",
+                  "id": "pndOl",
+                  "name": "Google Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    4,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "E7UWw",
+                      "type": "ref",
+                      "ref": "mjiPp",
+                      "name": "Sign in with Google",
+                      "width": "fill_container"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "F1PXl",
+                  "name": "Email Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-group",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "Rvt8Q",
+                      "type": "ref",
+                      "ref": "XggYA",
+                      "name": "Email Login",
+                      "width": "fill_container",
+                      "descendants": {
+                        "G4R75k": {
+                          "icon": "mail"
+                        },
+                        "yxwnz": {
+                          "content": "改用 Email 登入"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "r867bv",
+                  "name": "Password Login Link Wrap",
+                  "width": "fill_container",
+                  "padding": [
+                    "$ctl-pad-tap",
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "liT2b",
+                      "name": "Password Login Link",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "q4l6yE",
+                          "name": "Password Login Link Label",
+                          "fill": "$text-primary",
+                          "content": "以帳號密碼登入",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "SX3aQ",
+                          "name": "Link Underline",
+                          "fill": "$text-primary",
+                          "width": "fill_container",
+                          "height": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "q1Fuhc",
+                  "name": "Legal Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    12,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "G6DYp",
+                      "name": "Legal",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "BFWxa",
+                          "name": "Legal Seg",
+                          "fill": "$text-secondary",
+                          "content": "登入即表示你同意",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "YL0kI",
+                          "name": "Legal Link",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "BBGQx",
+                              "name": "Link Label",
+                              "fill": "$text-primary",
+                              "content": "《使用條款》",
+                              "lineHeight": 1.5,
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "twVO4",
+                              "name": "Link Underline",
+                              "fill": "$text-primary",
+                              "width": "fill_container",
+                              "height": 1
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "Yo2gh",
+                          "name": "Legal Seg",
+                          "fill": "$text-secondary",
+                          "content": "與",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bXRLG",
+                          "name": "Legal Link",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "XVZUd",
+                              "name": "Link Label",
+                              "fill": "$text-primary",
+                              "content": "《隱私權政策》",
+                              "lineHeight": 1.5,
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "TdJMu",
+                              "name": "Link Underline",
+                              "fill": "$text-primary",
+                              "width": "fill_container",
+                              "height": 1
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "fzjIO",
+          "x": 40,
+          "y": 273,
+          "name": "Print",
+          "width": 420,
+          "fill": [
+            "$print-paper",
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "opacity": 0.418,
+              "rotation": 0,
+              "size": {
+                "width": 0.5714285714285714,
+                "height": 0.36363636363636365
+              },
+              "colors": [
+                {
+                  "color": "$mount-pool",
+                  "position": 0
+                },
+                {
+                  "color": "$mount-pool-0",
+                  "position": 1
+                }
+              ],
+              "center": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "opacity": 0.207,
+              "rotation": 0,
+              "size": {
+                "width": 0.5714285714285714,
+                "height": 0.36363636363636365
+              },
+              "colors": [
+                {
+                  "color": "$mount-pool",
+                  "position": 0
+                },
+                {
+                  "color": "$mount-pool-0",
+                  "position": 1
+                }
+              ],
+              "center": {
+                "x": 1,
+                "y": 0
+              }
+            },
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "opacity": 0.132,
+              "rotation": 0,
+              "size": {
+                "width": 0.5714285714285714,
+                "height": 0.36363636363636365
+              },
+              "colors": [
+                {
+                  "color": "$mount-pool",
+                  "position": 0
+                },
+                {
+                  "color": "$mount-pool-0",
+                  "position": 1
+                }
+              ],
+              "center": {
+                "x": 0,
+                "y": 1
+              }
+            },
+            {
+              "type": "gradient",
+              "gradientType": "radial",
+              "enabled": true,
+              "opacity": 0.03,
+              "rotation": 0,
+              "size": {
+                "width": 0.5714285714285714,
+                "height": 0.36363636363636365
+              },
+              "colors": [
+                {
+                  "color": "$mount-pool",
+                  "position": 0
+                },
+                {
+                  "color": "$mount-pool-0",
+                  "position": 1
+                }
+              ],
+              "center": {
+                "x": 1,
+                "y": 1
+              }
+            }
+          ],
+          "stroke": "$paper-edge",
+          "strokeWidth": 1,
+          "strokeAlignment": "outer",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 0,
+              "y": 5
+            },
+            "blur": 18
+          },
+          "layout": "vertical",
+          "gap": 7,
+          "padding": [
+            "$print-edge",
+            "$print-edge",
+            "$print-edge-bottom",
+            "$print-edge"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "gtxc3",
+              "name": "Photo Wrap",
+              "clip": true,
+              "width": 404,
+              "height": 542,
+              "layout": "none",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "CJeYy",
+                  "x": -5,
+                  "y": 0,
+                  "name": "Hero Photo",
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "hero-grandma.png",
+                    "mode": "fill"
+                  },
+                  "width": 414,
+                  "height": 542
+                },
+                {
+                  "type": "rectangle",
+                  "id": "faXck",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Night Dim",
+                  "fill": "$photo-dim",
+                  "width": 404,
+                  "height": 542
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "cekTw",
+              "name": "Imprint Row",
+              "width": "fill_container",
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "a28lj",
+                  "name": "Lab Imprint",
+                  "fill": "$print-ink-secondary",
+                  "content": "LITTLE SPROUT",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-imprint",
+                  "fontWeight": "600",
+                  "letterSpacing": 3.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "LyWDH",
+          "type": "ref",
+          "ref": "GEBcf",
+          "name": "Corner TL",
+          "x": 35,
+          "y": 268,
+          "width": 40,
+          "height": 40,
+          "descendants": {
+            "sD5Ma": {
+              "geometry": "M0 0 L26 0 L0 26 Z",
+              "width": 40,
+              "height": 40
+            },
+            "DhOiK": {
+              "geometry": "M26 0 L0 26",
+              "width": 40,
+              "height": 40
+            }
+          }
+        },
+        {
+          "id": "iGx4e",
+          "type": "ref",
+          "ref": "GEBcf",
+          "name": "Corner TR",
+          "x": 425,
+          "y": 268,
+          "width": 40,
+          "height": 40,
+          "descendants": {
+            "sD5Ma": {
+              "geometry": "M26 0 L0 0 L26 26 Z",
+              "width": 40,
+              "height": 40
+            },
+            "DhOiK": {
+              "geometry": "M0 0 L26 26",
+              "width": 40,
+              "height": 40
+            }
+          }
+        },
+        {
+          "id": "g211l6",
+          "type": "ref",
+          "ref": "GEBcf",
+          "name": "Corner BL",
+          "x": 35,
+          "y": 820,
+          "width": 40,
+          "height": 40,
+          "descendants": {
+            "sD5Ma": {
+              "geometry": "M0 26 L0 0 L26 26 Z",
+              "width": 40,
+              "height": 40
+            },
+            "DhOiK": {
+              "geometry": "M0 0 L26 26",
+              "width": 40,
+              "height": 40
+            }
+          }
+        },
+        {
+          "id": "zOe6U",
+          "type": "ref",
+          "ref": "GEBcf",
+          "name": "Corner BR",
+          "x": 425,
+          "y": 820,
+          "width": 40,
+          "height": 40,
+          "descendants": {
+            "sD5Ma": {
+              "geometry": "M26 26 L26 0 L0 26 Z",
+              "width": 40,
+              "height": 40
+            },
+            "DhOiK": {
+              "geometry": "M26 0 L0 26",
+              "width": 40,
+              "height": 40
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "LkrrS",
+      "x": 0,
+      "y": 11478,
+      "name": "A11y / P1c 帳號密碼登入 · 帳號或密碼錯誤 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1474,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "p2xak",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "tkMwm",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "A08Qk8",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "a2K1df",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "jbaLF",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "SrpLW",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "帳號密碼登入",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "c0Uuci",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "審核專用登入方式，請輸入分配給你的帳號與密碼。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "XpoH6",
+                  "name": "Field Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "CYnAQ",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Email Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "Email 地址"
+                        },
+                        "v6YiYR": {
+                          "stroke": "$danger",
+                          "strokeWidth": 2
+                        },
+                        "iu3Q8": {
+                          "content": "yourname@example.com"
+                        },
+                        "i2SHf": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "S2XAby",
+                      "type": "ref",
+                      "ref": "UcO8T",
+                      "name": "Password Field",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tOvM3": {
+                          "content": "密碼"
+                        },
+                        "v6YiYR": {
+                          "type": "frame",
+                          "id": "N3olGA",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "height": 140,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$danger",
+                          "strokeWidth": 2,
+                          "gap": "$sp-label",
+                          "padding": [
+                            0,
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "iacQK",
+                              "name": "Field Value",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "請輸入密碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "LdvX8",
+                              "name": "Toggle Wrap",
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-tap",
+                                0
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "J9dCe",
+                                  "name": "Toggle Icon",
+                                  "width": 32,
+                                  "height": 32,
+                                  "icon": "eye",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "WV44Z",
+                                  "name": "Toggle Label",
+                                  "fill": "$text-primary",
+                                  "content": "顯示",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "i2SHf": {
+                          "type": "frame",
+                          "id": "vD8Jd",
+                          "name": "Field Help",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Abke9",
+                              "name": "Error Line",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "aZF7R",
+                                  "name": "Error Icon",
+                                  "width": 32,
+                                  "height": 32,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "K61LhQ",
+                                  "name": "Error Text",
+                                  "fill": "$danger",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "帳號或密碼錯誤，請再試一次。",
+                                  "lineHeight": 1.45,
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "IojbW",
+                              "name": "Help Line",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "SxMNN",
+                                  "name": "Field Help Icon",
+                                  "width": 32,
+                                  "height": 32,
+                                  "icon": "info",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "JGfeg",
+                                  "name": "Field Help Text",
+                                  "fill": "$text-secondary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "此為審核專用帳號，如需協助請洽開發者聯絡資訊。",
+                                  "lineHeight": 1.45,
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "K49B23",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "IC49g",
+                  "name": "Button Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "nOPlm",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Login Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "log-in"
+                        },
+                        "w7CUP": {
+                          "content": "登入"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "jbA1U",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "NNddU",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
             }
           ]
         }
