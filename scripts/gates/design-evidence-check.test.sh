@@ -484,6 +484,102 @@ expect 2 '㉕ --head-sha 指向解析不到的 commit → exit 2' '不是可解�
 expect 2 '㉕ --head-sha 缺值 → exit 2' '--head-sha 缺值' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_moved" --head-sha
 
+# ───── LS-168：第五支 text_occlusion＋收據新鮮度 tree_hash ─────
+# 新欄位只對「head_sha 快照的 tree 裡 scripts/design/overflow-scan.js 含 scanTextOcclusion」的收據要求；㉖～㉚ 的落地 commit
+# 同時放入帶標記的腳本副本，㉛ 不放（＝in-flight 設計分支／既有收據）。tree_hash 由 scripts/gates/design_tree_hash.py 對該
+# commit 的 .pen 算（與正典腳本 SUMMARY 同規格，js／py 交叉一致由 overflow-scan.test.js 釘住）。
+hash_of() { g show "$1:design/littlesprout.pen" > "$work/hash-in.pen"; python3 "$root/scripts/gates/design_tree_hash.py" "$work/hash-in.pen"; }
+pen4='{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "children": []}, {"id": "d", "children": []}]}'
+land5() {
+  # land5 <branch> <with-script 1/0>：落地 4 節點 .pen＋（可選）帶第五支標記的正典腳本副本；回傳落地 sha
+  g checkout -q -b "$1" "$base_ref"
+  printf '%s\n' "$pen4" > "$R/design/littlesprout.pen"
+  g add design/littlesprout.pen
+  if [ "$2" = 1 ]; then
+    mkdir -p "$R/scripts/design"
+    printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\n' > "$R/scripts/design/overflow-scan.js"
+    g add scripts/design/overflow-scan.js
+  fi
+  g commit -qm 'design(pen): LS-67 落地（LS-168 樣本）'
+  g rev-parse HEAD
+}
+write_receipt5() {
+  # write_receipt5 <path> <head_sha> <tree_hash|''> <occl: ok|missing|flagged>
+  local path=$1 sha=$2 hash=$3 occl=$4 hash_field='' occl_field=''
+  [ -n "$hash" ] && hash_field=',"tree_hash":"'"$hash"'"'
+  case "$occl" in
+    ok)      occl_field=',"text_occlusion":{"flagged":[],"document_flagged":[]}' ;;
+    flagged) occl_field=',"text_occlusion":{"flagged":[{"node":"b","overlay":"c","classification":"Value × Tab Bar"}],"document_flagged":[]}' ;;
+    missing) occl_field='' ;;
+  esac
+  mkdir -p "$(dirname "$path")"
+  printf '%s\n' '{"ticket":"LS-67","round":6,"head_sha":"'"$sha"'","total_nodes":4'"$hash_field"',' \
+    ' "scans":{"sibling_intersection":{"flagged":[]},"row_overflow":{"flagged":[]},' \
+    '  "cross_parent_collision":{"flagged":[]},' \
+    '  "corner_anchor":{"boards":["d"],"containers":1,"points":8,"mismatch":0,"document_mismatch":0,"flagged":[],"unresolved":[]}'"$occl_field"'}}' > "$path"
+}
+
+# ㉖ 五支齊全＋tree_hash＝對 head_sha 快照算出的值 → 綠，訊息含 tree_hash
+sha26="$(land5 pr-fifth-ok 1)"
+write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha26" "$(hash_of "$sha26")" ok
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（五支＋tree_hash）'
+expect 0 '㉖ 五支齊全、tree_hash 對應 head_sha 快照、text_occlusion.flagged 空 → 綠' 'tree_hash 對應 head_sha 快照、text_occlusion.flagged 為空' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㉗ 拼接／掃完又改稿：commit A 落地 v1 → 掃描（hash 取自 v1）→ commit C 搬一個節點（節點數不變）→ 收據 head_sha=C 但 tree_hash 是 v1 的
+#    → 紅「tree_hash 不符」（F2 對「收據引用最後一次 commit、內容卻是舊掃描」這種形狀是綠的；修前舊 gate 實跑：綠）
+sha27a="$(land5 pr-stale-hash 1)"
+stale_hash="$(hash_of "$sha27a")"
+printf '%s\n' '{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "children": []}, {"id": "d", "x": 99, "children": []}]}' > "$R/design/littlesprout.pen"
+g add design/littlesprout.pen
+g commit -qm 'design(pen): LS-67 搬 d（節點數不變、boards 仍覆蓋）'
+sha27c="$(g rev-parse HEAD)"
+write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha27c" "$stale_hash" ok
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（head_sha=C、tree_hash 卻是 A 的掃描）'
+if [ "$stale_hash" = "$(hash_of "$sha27c")" ]; then echo "✗ ㉗ 前置條件：搬節點後 tree_hash 應改變（自測環境異常）" >&2; fail=1; fi
+expect 1 '㉗ 掃完又改稿再落地／拼接：head_sha 是最後一次 commit、tree_hash 卻是舊掃描 → 紅' 'tree_hash 不符' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㉘ 新 schema 缺 text_occlusion → 紅
+sha28="$(land5 pr-no-occl 1)"
+write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha28" "$(hash_of "$sha28")" missing
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（缺 text_occlusion）'
+expect 1 '㉘ 新 schema 缺 scans.text_occlusion → 紅' 'scans.text_occlusion 缺失' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㉙ text_occlusion.flagged 非空 → 紅（不接受白名單，即使有 classification）
+sha29="$(land5 pr-occl-flagged 1)"
+write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha29" "$(hash_of "$sha29")" flagged
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（text_occlusion 有 1 筆）'
+expect 1 '㉙ text_occlusion.flagged 非空（帶分類也一樣）→ 紅' 'text_occlusion.flagged 必須為空（收據 1 筆：b×c）' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㉚ 新 schema 缺 tree_hash → 紅
+sha30="$(land5 pr-no-hash 1)"
+write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha30" "" ok
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（缺 tree_hash）'
+expect 1 '㉚ 新 schema 缺 tree_hash → 紅' 'tree_hash 必須是 16 碼小寫 hex' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㉛ 舊收據：head_sha 快照沒有帶第五支的正典腳本（in-flight 設計分支／既有收據），缺兩個新欄位 → 綠＋印一行放行
+sha31="$(land5 pr-legacy-fifth 0)"
+write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha31" "" missing
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（舊 schema：無 tree_hash／text_occlusion）'
+expect 0 '㉛ head_sha 快照無第五支腳本、缺 tree_hash／text_occlusion → 綠並印放行行' 'LS-168 新欄位 tree_hash／text_occlusion 不要求' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㉛-b 同一舊收據形狀但 tree_hash 填了錯值 → 仍紅（欄位若在就驗，不因舊收據放行）
+write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha31" "0000000000000000" missing
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（舊 schema 但 tree_hash 錯）'
+expect 1 '㉛-b 舊收據但 tree_hash 欄位在且錯 → 仍紅（欄位在就驗）' 'tree_hash 不符' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
 if [ "$fail" -eq 0 ]; then
   echo "design-evidence-check.test.sh：全數通過"
 else
