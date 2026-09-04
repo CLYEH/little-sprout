@@ -79,11 +79,29 @@ function buildProdDeps(): Deps {
     // R2（merge-review R1 B1／M1，第一道防線）：service_role 呼叫
     // public.finalize_account_deletion(p_user uuid)——只授權 service_role 執行
     // 的 SECURITY DEFINER 函式，見 20260903115014_delete_account_edge_support.sql。
+    //
+    // R3（merge-review R2 N1）：取鎖順序已對齊既有 trigger，但同家庭併發的成員
+    // 異動仍有極窄的 40P01（deadlock detected）窗口——Postgres 自動偵測、單邊
+    // 回滾、無資料損毀，重試必定收斂（finalize 本身冪等、守門仍成立）。這裡直接
+    // 重試一次，把這個暫時性競態藏在 EF 內部，不需要讓 client 也處理重試；若重試
+    // 後仍是 40P01（極端窗口疊窗口），標 retryable，讓 handleRequest 回 503 告訴
+    // client 這是可安全重試的暫時狀態。PostgREST 把 RPC 內部 raise 的 SQLSTATE
+    // 原樣放進 error.code，40P01 是 Postgres 內建碼（deadlock_detected），不是
+    // 本專案的 LSnnn 自訂碼。
     async finalizeAccountDeletion(uid) {
-      const { error } = await adminClient.rpc("finalize_account_deletion", {
-        p_user: uid,
-      });
-      if (error) return { ok: false, error: error.message };
+      const call = () =>
+        adminClient.rpc("finalize_account_deletion", { p_user: uid });
+      let { error } = await call();
+      if (error?.code === "40P01") {
+        ({ error } = await call());
+      }
+      if (error) {
+        return {
+          ok: false,
+          error: error.message,
+          retryable: error.code === "40P01",
+        };
+      }
       return { ok: true };
     },
 

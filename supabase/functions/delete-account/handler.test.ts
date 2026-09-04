@@ -159,6 +159,23 @@ Deno.test("deleteAuthUser 回報非 notFound 的失敗 → 500", async () => {
   assertEquals(res.status, 500);
 });
 
+// N2（merge-review R2）：500 body 一律固定文案，原始錯誤（可能含其他家庭的
+// UUID、GoTrue／內部 SQL 片段）絕不能出現在回應裡——只進 console.error。
+Deno.test("deleteAuthUser 失敗時 body 不含原始錯誤字串（只有固定文案＋stage）", async () => {
+  const secretDetail = "家庭 fb000000-secret-uuid 必須至少保留一位 owner";
+  const deps = makeDeps({
+    deleteAuthUser: () =>
+      Promise.resolve({ ok: false, notFound: false, error: secretDetail }),
+  });
+  const res = await handleRequest(req("Bearer valid-token"), deps);
+  const bodyText = await res.text();
+  assertEquals(bodyText.includes(secretDetail), false);
+  assertEquals(bodyText.includes("secret-uuid"), false);
+  const body = JSON.parse(bodyText);
+  assertEquals(body.error, "deletion_failed");
+  assertEquals(body.stage, "auth_delete");
+});
+
 // ---------------------------------------------------------------------------
 // 6. findProviderToken：常見欄位名稱都試得到；沒有欄位或沒有該 provider 的
 //    identity 都回 undefined（不丟例外）。
@@ -449,6 +466,72 @@ Deno.test("finalizeAccountDeletion 失敗 → 500，不呼叫 deleteAuthUser（f
     deleteCalled,
     false,
     "finalizeAccountDeletion 失敗時絕不能繼續呼叫 deleteAuthUser",
+  );
+});
+
+// N2（merge-review R2）：finalize 失敗的 500 body 同樣不能外洩原始錯誤——
+// finalize 的錯誤最容易夾帶其他家庭的 UUID（例如死鎖訊息裡的 relation/tuple
+// 資訊），這裡刻意塞一個看起來像內部細節的字串來驗證它不會外流。
+Deno.test("finalizeAccountDeletion 失敗時 body 不含原始錯誤字串（只有固定文案＋stage）", async () => {
+  const secretDetail =
+    'ERROR: deadlock detected while locking tuple (0,7) in relation "families"';
+  const deps = makeDeps({
+    finalizeAccountDeletion: () =>
+      Promise.resolve({ ok: false, error: secretDetail }),
+  });
+  const res = await handleRequest(req("Bearer valid-token"), deps);
+  const bodyText = await res.text();
+  assertEquals(bodyText.includes("deadlock"), false);
+  assertEquals(bodyText.includes("families"), false);
+  const body = JSON.parse(bodyText);
+  assertEquals(body.error, "deletion_failed");
+  assertEquals(body.stage, "finalize");
+});
+
+// N1（merge-review R2）：finalize 回報 retryable（重試一次後仍是 40P01）時，
+// handleRequest 必須回 503（可安全重試的暫時狀態），不是泛用的 500。
+Deno.test("finalizeAccountDeletion 回報 retryable:true → 503（不是 500）", async () => {
+  const deps = makeDeps({
+    finalizeAccountDeletion: () =>
+      Promise.resolve({
+        ok: false,
+        error: "deadlock detected",
+        retryable: true,
+      }),
+  });
+  const res = await handleRequest(req("Bearer valid-token"), deps);
+  assertEquals(res.status, 503);
+  const body = await res.json();
+  assertEquals(body.error, "deletion_temporarily_unavailable");
+  assertEquals(body.stage, "finalize");
+});
+
+// N5（merge-review R2）：finalize 排在撤銷之前——finalize 失敗時，Apple／Google
+// 撤銷（不可逆動作）絕不能已經被呼叫。用會真的打 fetchImpl 的設定（帶
+// appleClientId/secret＋identities）來證明順序，不是靠「沒設 token 所以本來就
+// 不會呼叫」這種弱驗證。
+Deno.test("finalize 排在撤銷之前：finalize 失敗時 revoke 的 fetchImpl 絕不能被呼叫", async () => {
+  let fetchCalled = false;
+  const deps = makeDeps({
+    appleClientId: "cid",
+    appleClientSecret: "csecret",
+    getIdentities: (): Promise<Identity[]> =>
+      Promise.resolve([
+        { provider: "apple", identity_data: { provider_token: "t" } },
+      ]),
+    fetchImpl: (() => {
+      fetchCalled = true;
+      return Promise.resolve(new Response(null, { status: 200 }));
+    }) as unknown as typeof fetch,
+    finalizeAccountDeletion: () =>
+      Promise.resolve({ ok: false, error: "資料面清理失敗" }),
+  });
+  const res = await handleRequest(req("Bearer valid-token"), deps);
+  assertEquals(res.status, 500);
+  assertEquals(
+    fetchCalled,
+    false,
+    "finalize 尚未成功時就呼叫了 revoke 的 fetchImpl——撤銷（不可逆）不該搶在 finalize（可能失敗）之前",
   );
 });
 

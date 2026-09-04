@@ -8,15 +8,19 @@
 //
 // 呼叫順序契約（docs/API.md §10 Edge Functions／§4 delete_my_account 已明文）：
 // client 呼叫 delete_my_account() RPC 成功後立即呼叫本端點，中間不得有其他操作。
-// 本端點的職責：
+// 本端點的職責（R3 訂正順序，merge-review R2 N5）：
 //   1. 驗證呼叫者 JWT（authenticated），換回 uid。
 //   2. 以 service_role 檢查 profiles.deletion_requested_at is not null——這是
 //      刻意的守門：不是每個登入使用者都能直接打這支端點刪掉自己的帳號，必須先
 //      走過 delete_my_account() RPC 的資料面安全檢查（唯一 owner 須先轉移等）。
-//   3. Apple／Google token 撤銷（best-effort，見 revokeAppleToken／
+//   3. 以 service_role 呼叫 finalize_account_deletion(uid) 重跑一次資料面清理
+//      （第一道防線，見 docs/API.md §10）。失敗就 fail loud（不繼續往下走）——
+//      排在撤銷**之前**：撤銷是不可逆動作，finalize 卻可能因暫時性競態失敗
+//      （N1，40P01），不該讓不可逆的撤銷搶在可能失敗的步驟之前執行。
+//   4. Apple／Google token 撤銷（best-effort，見 revokeAppleToken／
 //      revokeGoogleToken）——絕不能因為撤銷失敗或缺 env 而擋下刪除，帳號刪除是
 //      強制性動作，第三方撤銷是附加的盡力而為。
-//   4. 呼叫 GoTrue admin API 刪除 auth.users（profiles 隨 on delete cascade 消失）。
+//   5. 呼叫 GoTrue admin API 刪除 auth.users（profiles 隨 on delete cascade 消失）。
 //
 // 冪等語意：見 handleRequest 內對 deleteAuthUser 回傳值的處理與
 // docs/API.md §10「冪等語意」段落。
@@ -58,6 +62,12 @@ export interface RevokeAttempt {
 export interface FinalizeAccountDeletionResult {
   ok: boolean;
   error?: string;
+  /**
+   * R3（merge-review R2 N1）：true＝這是已知的暫時性競態（例如同家庭併發成員
+   * 異動撞見的 40P01 死鎖，Postgres 自動偵測、單邊回滾、無資料損毀，重試必定
+   * 收斂）——handleRequest 據此回 503（可安全重試），不是泛用的 500。
+   */
+  retryable?: boolean;
 }
 
 export interface Deps {
@@ -232,6 +242,41 @@ export async function handleRequest(
     });
   }
 
+  // R2（merge-review R1 B1／M1，第一道防線）：刪除 auth.users 前先以 service_role
+  // 重跑一次資料面清理——不論過渡期擋寫（LS051）有沒有漏洞，這一步都保證呼叫者
+  // 被真正刪除前一定沒有任何一列 family_members，讓下面的 deleteAuthUser 不會撞見
+  // LS001。失敗就 fail loud（不繼續往下走撤銷／刪除）：finalize_account_deletion
+  // 在正常情況下近乎是 no-op（迴圈跑過 0 個家庭），會失敗代表資料面本身有問題，
+  // 樂觀地繼續刪 auth.users 只會讓問題更難排查。
+  //
+  // N5（merge-review R2）：排在 Apple／Google 撤銷**之前**——撤銷是不可逆的第三方
+  // 動作，finalize 卻可能失敗（N1 的 40P01 窗口），若撤銷排在 finalize 之前，
+  // finalize 失敗時授權已經撤銷但帳號還在，使用者要重新登入卻拿不回撤銷掉的
+  // 授權。目前零實際影響（本專案未保存 provider token，撤銷分支必定 skip），但
+  // 一旦「保存 provider token」的後續票落地就會是真的問題，這裡先把順序訂對。
+  const cleanupResult = await deps.finalizeAccountDeletion(user.id);
+  if (!cleanupResult.ok) {
+    console.log(
+      `delete-account: finalizeAccountDeletion user=${user.id} result=failed`,
+    );
+    // N2（merge-review R2）：原始錯誤（可能含其他家庭的 UUID、內部 SQL 片段）只
+    // 進 console.error，不進回應 body——這是隱私優先產品，HTTP 回應不該外洩資料庫
+    // 內部訊息。body 一律固定文案，呼叫端只需要 stage 分流。
+    console.error(
+      `delete-account: finalizeAccountDeletion error user=${user.id}: ${cleanupResult.error}`,
+    );
+    if (cleanupResult.retryable) {
+      // N1（merge-review R2）：已知的暫時性競態（40P01，見 index.ts
+      // finalizeAccountDeletion 的重試邏輯與已重試一次仍失敗的情況）——503 告訴
+      // 呼叫端這是可安全重試的暫時狀態，不是 500 的泛用失敗。
+      return jsonResponse(503, {
+        error: "deletion_temporarily_unavailable",
+        stage: "finalize",
+      });
+    }
+    return jsonResponse(500, { error: "deletion_failed", stage: "finalize" });
+  }
+
   const identities = await deps.getIdentities(user.id);
   // minor-2（merge-review R1）：Apple／Google 兩支撤銷互相獨立，串行 await 白白
   // 多等一趟 RTT——改 Promise.all 平行送出。
@@ -250,22 +295,6 @@ export async function handleRequest(
     }`,
   );
 
-  // R2（merge-review R1 B1／M1，第一道防線）：刪除 auth.users 前先以 service_role
-  // 重跑一次資料面清理——不論過渡期擋寫（LS051）有沒有漏洞，這一步都保證呼叫者
-  // 被真正刪除前一定沒有任何一列 family_members，讓下面的 deleteAuthUser 不會撞見
-  // LS001。失敗就 fail loud（500，不繼續往下刪 auth.users）：finalize_account_deletion
-  // 在正常情況下近乎是 no-op（迴圈跑過 0 個家庭），會失敗代表資料面本身有問題，
-  // 樂觀地繼續刪 auth.users 只會讓問題更難排查。
-  const cleanupResult = await deps.finalizeAccountDeletion(user.id);
-  if (!cleanupResult.ok) {
-    console.log(
-      `delete-account: finalizeAccountDeletion user=${user.id} result=failed`,
-    );
-    return jsonResponse(500, {
-      error: cleanupResult.error ?? "刪除前的資料面清理失敗",
-    });
-  }
-
   const deleteResult = await deps.deleteAuthUser(user.id);
   console.log(
     `delete-account: deleteAuthUser user=${user.id} result=${
@@ -277,8 +306,13 @@ export async function handleRequest(
     }`,
   );
   if (!deleteResult.ok && !deleteResult.notFound) {
+    // N2：同上，原始錯誤只進 console.error，body 固定文案。
+    console.error(
+      `delete-account: deleteAuthUser error user=${user.id}: ${deleteResult.error}`,
+    );
     return jsonResponse(500, {
-      error: deleteResult.error ?? "刪除 auth.users 失敗",
+      error: "deletion_failed",
+      stage: "auth_delete",
     });
   }
 
