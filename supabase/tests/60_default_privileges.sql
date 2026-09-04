@@ -87,7 +87,13 @@ declare
     -- get_family_timeline（security invoker）呼叫，同一個理由——沒有這支 EXECUTE，
     -- 呼叫者封鎖過人時整條時間軸查詢會直接噴權限錯。
     'private.blocked_pairs()',
-    'private.feed_item_actor_id(public.feed_kind,uuid)'
+    'private.feed_item_actor_id(public.feed_kind,uuid)',
+    -- LS-179：families_select policy 的 created_by 分支直接呼叫
+    -- private.caller_is_active()（policy 以 authenticated 身分求值，同其餘集合
+    -- 函式的理由）。family_is_active(uuid)／registrations_open() 只從其他
+    -- SECURITY DEFINER 函式／trigger 內部呼叫（以 postgres 身分執行），不需要
+    -- 登記在這裡。
+    'private.caller_is_active()'
   ];
   v_exceptions text[] := array[]::text[];  -- 目前無例外；若新增，必須附理由註解
   v_allow_oids oid[];
