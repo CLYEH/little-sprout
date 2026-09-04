@@ -140771,41 +140771,61 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "K3m2r",
-                          "name": "Heart Button",
+                          "id": "v3Q0L",
+                          "name": "Heart Group",
                           "gap": "$sp-tight",
-                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "guVrb",
-                              "name": "Heart Icon",
-                              "width": 22,
-                              "height": 22,
-                              "icon": "heart",
-                              "library": "lucide",
-                              "fill": "$print-ink-secondary"
+                              "type": "frame",
+                              "id": "R782aG",
+                              "name": "Like Toggle",
+                              "gap": "$sp-tight",
+                              "padding": 11,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "K8F0ET",
+                                  "name": "Heart Icon",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "heart",
+                                  "library": "lucide",
+                                  "fill": "$print-ink-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "GKDQf",
+                                  "name": "Heart Label",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "愛心",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "IR7k2",
-                              "name": "Heart Label",
-                              "fill": "$print-ink-secondary",
-                              "content": "愛心",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "mp41c",
-                              "name": "Heart Count",
-                              "fill": "$print-ink-secondary",
-                              "content": "3",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "600"
+                              "type": "frame",
+                              "id": "VGZ8L",
+                              "name": "Count Zone",
+                              "width": 44,
+                              "height": 44,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "nGAUp",
+                                  "name": "Heart Count",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "3",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
                             }
                           ]
                         },
@@ -140959,46 +140979,66 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "RRxSE",
-                          "name": "Heart Button",
+                          "id": "hdxEH",
+                          "name": "Heart Group",
                           "gap": "$sp-tight",
-                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "path",
-                              "id": "yD53m",
-                              "name": "Heart Icon Solid",
-                              "geometry": "M12 21.35l-1.45-1.32c-5.15-4.67-8.55-7.75-8.55-11.53 0-3.08 2.42-5.5 5.5-5.5 1.74 0 3.41 0.81 4.5 2.09 1.09-1.28 2.76-2.09 4.5-2.09 3.08 0 5.5 2.42 5.5 5.5 0 3.78-3.4 6.86-8.55 11.54l-1.45 1.31z",
-                              "viewBox": [
-                                0,
-                                0,
-                                24,
-                                24
-                              ],
-                              "fill": "$accent",
-                              "width": 22,
-                              "height": 22
+                              "type": "frame",
+                              "id": "vnbON",
+                              "name": "Like Toggle",
+                              "gap": "$sp-tight",
+                              "padding": 11,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "path",
+                                  "id": "G3kp6E",
+                                  "name": "Heart Icon Solid",
+                                  "geometry": "M12 21.35l-1.45-1.32c-5.15-4.67-8.55-7.75-8.55-11.53 0-3.08 2.42-5.5 5.5-5.5 1.74 0 3.41 0.81 4.5 2.09 1.09-1.28 2.76-2.09 4.5-2.09 3.08 0 5.5 2.42 5.5 5.5 0 3.78-3.4 6.86-8.55 11.54l-1.45 1.31z",
+                                  "viewBox": [
+                                    0,
+                                    0,
+                                    24,
+                                    24
+                                  ],
+                                  "fill": "$accent",
+                                  "width": 22,
+                                  "height": 22
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "bdwmG",
+                                  "name": "Heart Label",
+                                  "fill": "$accent",
+                                  "content": "已按愛心",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "700"
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "rY7ZP",
-                              "name": "Heart Label",
-                              "fill": "$accent",
-                              "content": "已按愛心",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "du9Ab",
-                              "name": "Heart Count",
-                              "fill": "$accent",
-                              "content": "4",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                              "type": "frame",
+                              "id": "DlLxv",
+                              "name": "Count Zone",
+                              "width": 44,
+                              "height": 44,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "TP6t4",
+                                  "name": "Heart Count",
+                                  "fill": "$accent",
+                                  "content": "4",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "700"
+                                }
+                              ]
                             }
                           ]
                         },
@@ -141217,41 +141257,61 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "HMzbe",
-                          "name": "Heart Button",
+                          "id": "NEMxz",
+                          "name": "Heart Group",
                           "gap": "$sp-tight",
-                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "pcsRz",
-                              "name": "Heart Icon",
-                              "width": 22,
-                              "height": 22,
-                              "icon": "heart",
-                              "library": "lucide",
-                              "fill": "$print-ink-secondary"
+                              "type": "frame",
+                              "id": "ghlvN",
+                              "name": "Like Toggle",
+                              "gap": "$sp-tight",
+                              "padding": 11,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "HMunF",
+                                  "name": "Heart Icon",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "heart",
+                                  "library": "lucide",
+                                  "fill": "$print-ink-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ZjNrF",
+                                  "name": "Heart Label",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "愛心",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "SvfGz",
-                              "name": "Heart Label",
-                              "fill": "$print-ink-secondary",
-                              "content": "愛心",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "r4c45f",
-                              "name": "Heart Count",
-                              "fill": "$print-ink-secondary",
-                              "content": "3",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "600"
+                              "type": "frame",
+                              "id": "kZpGl",
+                              "name": "Count Zone",
+                              "width": 44,
+                              "height": 44,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "FMXxk",
+                                  "name": "Heart Count",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "3",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
                             }
                           ]
                         },
@@ -141405,46 +141465,66 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "rsryU",
-                          "name": "Heart Button",
+                          "id": "buglu",
+                          "name": "Heart Group",
                           "gap": "$sp-tight",
-                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "path",
-                              "id": "AF6VR",
-                              "name": "Heart Icon Solid",
-                              "geometry": "M12 21.35l-1.45-1.32c-5.15-4.67-8.55-7.75-8.55-11.53 0-3.08 2.42-5.5 5.5-5.5 1.74 0 3.41 0.81 4.5 2.09 1.09-1.28 2.76-2.09 4.5-2.09 3.08 0 5.5 2.42 5.5 5.5 0 3.78-3.4 6.86-8.55 11.54l-1.45 1.31z",
-                              "viewBox": [
-                                0,
-                                0,
-                                24,
-                                24
-                              ],
-                              "fill": "$accent",
-                              "width": 22,
-                              "height": 22
+                              "type": "frame",
+                              "id": "ScAzD",
+                              "name": "Like Toggle",
+                              "gap": "$sp-tight",
+                              "padding": 11,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "path",
+                                  "id": "qyNzi",
+                                  "name": "Heart Icon Solid",
+                                  "geometry": "M12 21.35l-1.45-1.32c-5.15-4.67-8.55-7.75-8.55-11.53 0-3.08 2.42-5.5 5.5-5.5 1.74 0 3.41 0.81 4.5 2.09 1.09-1.28 2.76-2.09 4.5-2.09 3.08 0 5.5 2.42 5.5 5.5 0 3.78-3.4 6.86-8.55 11.54l-1.45 1.31z",
+                                  "viewBox": [
+                                    0,
+                                    0,
+                                    24,
+                                    24
+                                  ],
+                                  "fill": "$accent",
+                                  "width": 22,
+                                  "height": 22
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "OdsdV",
+                                  "name": "Heart Label",
+                                  "fill": "$accent",
+                                  "content": "已按愛心",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "700"
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "PaLyJ",
-                              "name": "Heart Label",
-                              "fill": "$accent",
-                              "content": "已按愛心",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "CZCtO",
-                              "name": "Heart Count",
-                              "fill": "$accent",
-                              "content": "4",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                              "type": "frame",
+                              "id": "MTpQa",
+                              "name": "Count Zone",
+                              "width": 44,
+                              "height": 44,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "jDcTN",
+                                  "name": "Heart Count",
+                                  "fill": "$accent",
+                                  "content": "4",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "700"
+                                }
+                              ]
                             }
                           ]
                         },
@@ -141662,41 +141742,61 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "zwd7O",
-                          "name": "Heart Button",
+                          "id": "DXxdc",
+                          "name": "Heart Group",
                           "gap": "$sp-tight",
-                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "YX6Jm",
-                              "name": "Heart Icon",
-                              "width": 32,
-                              "height": 32,
-                              "icon": "heart",
-                              "library": "lucide",
-                              "fill": "$print-ink-secondary"
+                              "type": "frame",
+                              "id": "V6rrC6",
+                              "name": "Like Toggle",
+                              "gap": "$sp-tight",
+                              "padding": 11,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "A1XMO",
+                                  "name": "Heart Icon",
+                                  "width": 32,
+                                  "height": 32,
+                                  "icon": "heart",
+                                  "library": "lucide",
+                                  "fill": "$print-ink-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "v9V8x",
+                                  "name": "Heart Label",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "愛心",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "mw4PU",
-                              "name": "Heart Label",
-                              "fill": "$print-ink-secondary",
-                              "content": "愛心",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "m0g43l",
-                              "name": "Heart Count",
-                              "fill": "$print-ink-secondary",
-                              "content": "3",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "600"
+                              "type": "frame",
+                              "id": "h3bdOM",
+                              "name": "Count Zone",
+                              "width": 44,
+                              "height": 44,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Yb4wD",
+                                  "name": "Heart Count",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "3",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
                             }
                           ]
                         },
@@ -141850,46 +141950,66 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "Dwycz",
-                          "name": "Heart Button",
+                          "id": "p4r0C",
+                          "name": "Heart Group",
                           "gap": "$sp-tight",
-                          "padding": 11,
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "path",
-                              "id": "b8ETIb",
-                              "name": "Heart Icon Solid",
-                              "geometry": "M12 21.35l-1.45-1.32c-5.15-4.67-8.55-7.75-8.55-11.53 0-3.08 2.42-5.5 5.5-5.5 1.74 0 3.41 0.81 4.5 2.09 1.09-1.28 2.76-2.09 4.5-2.09 3.08 0 5.5 2.42 5.5 5.5 0 3.78-3.4 6.86-8.55 11.54l-1.45 1.31z",
-                              "viewBox": [
-                                0,
-                                0,
-                                24,
-                                24
-                              ],
-                              "fill": "$accent",
-                              "width": 32,
-                              "height": 32
+                              "type": "frame",
+                              "id": "zly38",
+                              "name": "Like Toggle",
+                              "gap": "$sp-tight",
+                              "padding": 11,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "path",
+                                  "id": "TQWtk",
+                                  "name": "Heart Icon Solid",
+                                  "geometry": "M12 21.35l-1.45-1.32c-5.15-4.67-8.55-7.75-8.55-11.53 0-3.08 2.42-5.5 5.5-5.5 1.74 0 3.41 0.81 4.5 2.09 1.09-1.28 2.76-2.09 4.5-2.09 3.08 0 5.5 2.42 5.5 5.5 0 3.78-3.4 6.86-8.55 11.54l-1.45 1.31z",
+                                  "viewBox": [
+                                    0,
+                                    0,
+                                    24,
+                                    24
+                                  ],
+                                  "fill": "$accent",
+                                  "width": 32,
+                                  "height": 32
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "OEa5L",
+                                  "name": "Heart Label",
+                                  "fill": "$accent",
+                                  "content": "已按愛心",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "700"
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "Y9B3oZ",
-                              "name": "Heart Label",
-                              "fill": "$accent",
-                              "content": "已按愛心",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "idAFE",
-                              "name": "Heart Count",
-                              "fill": "$accent",
-                              "content": "4",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
+                              "type": "frame",
+                              "id": "U8pwO",
+                              "name": "Count Zone",
+                              "width": 44,
+                              "height": 44,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "zNAER",
+                                  "name": "Heart Count",
+                                  "fill": "$accent",
+                                  "content": "4",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "700"
+                                }
+                              ]
                             }
                           ]
                         },
@@ -144824,7 +144944,7 @@
       "id": "GZ3pb",
       "x": -3367,
       "y": 75753,
-      "name": "LS-177 / 按讚名單（長按愛心，可選）",
+      "name": "LS-177 / 按讚名單（點計數開啟）",
       "clip": true,
       "width": 393,
       "height": 852,
@@ -147890,7 +148010,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "按讚名單（1 板，可選）：GZ3pb——長按愛心計數彈出的小清單，票文明說「VR 判多餘可砍」，若 R2 判定砍掉，理由請記於此節沿革。",
+                  "content": "按讚名單（1 板，可選）：GZ3pb——點擊愛心計數數字（Count Zone，獨立 ≥44pt 熱區，與愛心 Like Toggle 分離）開啟的小清單，票文明說「VR 判多餘可砍」，若 R2 判定砍掉，理由請記於此節沿革。VR R1 裁定：保留（理由見下）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -148162,7 +148282,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Owner 移除留言操作表（`DUyg3`）逐位元沿用 LS-152 05 內容操作表（`WgbNc`）的結構：Grabber／Head Title（引言）／Action List（單一 danger 列）／Cancel Button，元件與 token 完全相同（`cmp/Button Text` 的 `qe9yS` instance）。與 LS-152 05 的差異只在 Action List 只有一列「移除這則留言」（danger），不含「檢舉」「封鎖」——這是刻意的範圍縮小：票文只要求「Owner 移除留言」，未要求對留言本身的檢舉／封鎖動作，避免功能蔓延。**重要發現（先讀再畫的產出）**：LS-152 已有 `Qs7iE`（LS-152 / 10b 刪除留言 · 確認）——一張「要刪除這則留言嗎？」的二次確認 Confirm Sheet，結構是 Head Title＋Body Text＋danger「刪除這則留言」鈕＋取消。兩板銜接成完整流程：`DUyg3`（長按或點選留言喚出的操作表，列出可執行動作）點「移除這則留言」→ 導向 `Qs7iE`（既有二次確認）→ 點「刪除這則留言」才真的呼叫 `set_comment_deleted`。`DUyg3` 是本票新增的「入口選單」，`Qs7iE` 是 LS-152 已核可的「二次確認」，兩者職責不重疊、不重畫，`Qs7iE` 完全未被本票觸碰（byte-identical）。",
+                  "content": "Owner 移除留言操作表（`DUyg3`）逐位元沿用 LS-152 05 內容操作表（`WgbNc`）的結構：Grabber／Head Title（引言）／Action List（單一 danger 列）／Cancel Button，元件與 token 完全相同（`cmp/Button Text` 的 `qe9yS` instance）。與 LS-152 05 的差異只在 Action List 只有一列「移除這則留言」（danger），不含「檢舉」「封鎖」——這是刻意的範圍縮小：票文只要求「Owner 移除留言」，未要求對留言本身的檢舉／封鎖動作，避免功能蔓延。點選留言即可喚出此操作表（VR R1 BL-4 裁定：`DUyg3` 本來就有點選路徑，故觸發手勢無需修改，只是移除文案中誤植的進階手勢字樣）。**重要發現（先讀再畫的產出）**：LS-152 已有 `Qs7iE`（LS-152 / 10b 刪除留言 · 確認）——一張「要刪除這則留言嗎？」的二次確認 Confirm Sheet，結構是 Head Title＋Body Text＋danger「刪除這則留言」鈕＋取消。兩板銜接成完整流程：`DUyg3`（點選留言喚出的操作表，列出可執行動作）點「移除這則留言」→ 導向 `Qs7iE`（既有二次確認）→ 點「刪除這則留言」才真的呼叫 `set_comment_deleted`。`DUyg3` 是本票新增的「入口選單」，`Qs7iE` 是 LS-152 已核可的「二次確認」，兩者職責不重疊、不重畫，`Qs7iE` 完全未被本票觸碰（byte-identical）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -148226,7 +148346,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "`GZ3pb` 長按愛心計數彈出的小清單，顯示按讚者姓名＋頭像縮寫，不含移除或封鎖等動作（純資訊性列表）。票文本身已預告「VR 判多餘可砍」——這是預先做好、供 R2 討論的候選功能，不是我方judgment 認為必要。若 R2 VR 判定砍掉，直接刪除本板即可，不影響其他 15 板的任何依賴關係（此板為孤立節點，未被其他板引用）。",
+                  "content": "`GZ3pb` 點擊愛心計數數字（`Count Zone`，與 `Like Toggle` 分離的獨立 ≥44pt 熱區——見「卡片互動列」節 `Heart Group` 結構）開啟的小清單，顯示按讚者姓名＋頭像沖印品，不含移除或封鎖等動作（純資訊性列表）。VR R1 裁定保留（BL-4／票文裁定 (7)）：這不是社群 app 的虛榮指標，是「家人有沒有看到」的回答——長輩傳了照片之後最想知道的就是這件事，這個 app 少有正向回饋的出口。保留的三個條件：①入口為單純點擊，不依賴進階手勢（已改）；②列表純資訊性，不出現移除／封鎖等動作（已符合）；③頭像改沖印品（MJ-1 已改）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
