@@ -115067,18 +115067,15 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "BOM1V",
-                  "layoutPosition": "absolute",
-                  "x": 0,
-                  "y": -591,
+                  "id": "Gb4uw",
                   "name": "Section 個人",
-                  "width": "fill_container(345)",
+                  "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "text",
-                      "id": "WQUGj",
+                      "id": "QH9KB",
                       "name": "Section Header",
                       "fill": "$text-secondary",
                       "content": "個人",
@@ -115089,7 +115086,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "B1zeH",
+                      "id": "HeiYL",
                       "name": "Profile Card",
                       "width": "fill_container",
                       "fill": "$surface",
@@ -115100,7 +115097,7 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "LIljq",
+                          "id": "s0JmMP",
                           "name": "Profile Row",
                           "width": "fill_container",
                           "gap": "$sp-group",
@@ -115110,21 +115107,21 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "oSnDE",
+                              "id": "q7GCaW",
                               "name": "Left",
                               "width": "fill_container",
                               "gap": "$sp-group",
                               "alignItems": "center",
                               "children": [
                                 {
-                                  "id": "LbVXI",
+                                  "id": "lE7FJ",
                                   "type": "ref",
                                   "ref": "OePXK",
                                   "name": "Profile Print"
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "kYYF6",
+                                  "id": "C0VEJ8",
                                   "name": "Person Text",
                                   "width": "fill_container",
                                   "layout": "vertical",
@@ -115132,7 +115129,7 @@
                                   "children": [
                                     {
                                       "type": "text",
-                                      "id": "s8xoQW",
+                                      "id": "HKSMJ",
                                       "name": "Name",
                                       "fill": "$text-primary",
                                       "textGrowth": "fixed-width",
@@ -115144,7 +115141,7 @@
                                     },
                                     {
                                       "type": "text",
-                                      "id": "w4Tvif",
+                                      "id": "S5PkJ",
                                       "name": "Sub",
                                       "fill": "$text-secondary",
                                       "textGrowth": "fixed-width",
@@ -115160,7 +115157,7 @@
                             },
                             {
                               "type": "icon",
-                              "id": "IOdBK",
+                              "id": "Ax9lb",
                               "name": "Chevron",
                               "width": 18,
                               "height": 18,
@@ -115176,18 +115173,15 @@
                 },
                 {
                   "type": "frame",
-                  "id": "O484s8",
-                  "layoutPosition": "absolute",
-                  "x": 0,
-                  "y": -437,
+                  "id": "sTqWF",
                   "name": "Section 家庭",
-                  "width": "fill_container(345)",
+                  "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "text",
-                      "id": "oTqNP",
+                      "id": "c0G5eK",
                       "name": "Section Header",
                       "fill": "$text-secondary",
                       "content": "家庭",
@@ -115198,7 +115192,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "A7hae",
+                      "id": "r24NPI",
                       "name": "Card",
                       "width": "fill_container",
                       "fill": "$surface",
@@ -115208,7 +115202,7 @@
                       "layout": "vertical",
                       "children": [
                         {
-                          "id": "rPxKH",
+                          "id": "HqB92",
                           "type": "ref",
                           "ref": "bZhuV",
                           "name": "Row · 家庭成員",
@@ -115228,14 +115222,14 @@
                         },
                         {
                           "type": "rectangle",
-                          "id": "mDvgl",
+                          "id": "wfpXV",
                           "name": "Divider",
                           "fill": "$border",
                           "width": "fill_container",
                           "height": 1
                         },
                         {
-                          "id": "u2FAAC",
+                          "id": "lG9xX",
                           "type": "ref",
                           "ref": "bZhuV",
                           "name": "Row · 邀請家人",
@@ -115251,14 +115245,14 @@
                         },
                         {
                           "type": "rectangle",
-                          "id": "bPiNL",
+                          "id": "gvKMr",
                           "name": "Divider",
                           "fill": "$border",
                           "width": "fill_container",
                           "height": 1
                         },
                         {
-                          "id": "XF22K",
+                          "id": "yQukP",
                           "type": "ref",
                           "ref": "bZhuV",
                           "name": "Row · 退出家庭",
@@ -115275,6 +115269,13 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "p3G2XB",
+                  "name": "Tab Bar Clearance",
+                  "width": "fill_container",
+                  "height": 151
                 },
                 {
                   "type": "frame",
@@ -115459,7 +115460,7 @@
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "padding": [
-                    185,
+                    44,
                     0,
                     0,
                     0
@@ -115700,18 +115701,15 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "cvEAU",
-                  "layoutPosition": "absolute",
-                  "x": 0,
-                  "y": -591,
+                  "id": "y9i8bl",
                   "name": "Section 個人",
-                  "width": "fill_container(345)",
+                  "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "text",
-                      "id": "FGOhx",
+                      "id": "JFD0e",
                       "name": "Section Header",
                       "fill": "$text-secondary",
                       "content": "個人",
@@ -115722,7 +115720,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "q5jTUg",
+                      "id": "ynKKa",
                       "name": "Profile Card",
                       "width": "fill_container",
                       "fill": "$surface",
@@ -115733,7 +115731,7 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "gCK8X",
+                          "id": "gY8dt",
                           "name": "Profile Row",
                           "width": "fill_container",
                           "gap": "$sp-group",
@@ -115743,21 +115741,21 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "YIx1D",
+                              "id": "qrU0F",
                               "name": "Left",
                               "width": "fill_container",
                               "gap": "$sp-group",
                               "alignItems": "center",
                               "children": [
                                 {
-                                  "id": "L2FHug",
+                                  "id": "vgbkF",
                                   "type": "ref",
                                   "ref": "OePXK",
                                   "name": "Profile Print"
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "IfZ1d",
+                                  "id": "NkpOr",
                                   "name": "Person Text",
                                   "width": "fill_container",
                                   "layout": "vertical",
@@ -115765,7 +115763,7 @@
                                   "children": [
                                     {
                                       "type": "text",
-                                      "id": "fugz4",
+                                      "id": "r98Lc3",
                                       "name": "Name",
                                       "fill": "$text-primary",
                                       "textGrowth": "fixed-width",
@@ -115777,7 +115775,7 @@
                                     },
                                     {
                                       "type": "text",
-                                      "id": "ksWnb",
+                                      "id": "NmKgh",
                                       "name": "Sub",
                                       "fill": "$text-secondary",
                                       "textGrowth": "fixed-width",
@@ -115793,7 +115791,7 @@
                             },
                             {
                               "type": "icon",
-                              "id": "IyyTD",
+                              "id": "h5xpL5",
                               "name": "Chevron",
                               "width": 18,
                               "height": 18,
@@ -115809,18 +115807,15 @@
                 },
                 {
                   "type": "frame",
-                  "id": "uhATU",
-                  "layoutPosition": "absolute",
-                  "x": 0,
-                  "y": -437,
+                  "id": "ATZVw",
                   "name": "Section 家庭",
-                  "width": "fill_container(345)",
+                  "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "text",
-                      "id": "rwVvb",
+                      "id": "k8BND",
                       "name": "Section Header",
                       "fill": "$text-secondary",
                       "content": "家庭",
@@ -115831,7 +115826,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "EOHYB",
+                      "id": "SM7o0",
                       "name": "Card",
                       "width": "fill_container",
                       "fill": "$surface",
@@ -115841,7 +115836,7 @@
                       "layout": "vertical",
                       "children": [
                         {
-                          "id": "woJzZ",
+                          "id": "ZGAt2",
                           "type": "ref",
                           "ref": "bZhuV",
                           "name": "Row · 家庭成員",
@@ -115861,14 +115856,14 @@
                         },
                         {
                           "type": "rectangle",
-                          "id": "T1As8",
+                          "id": "Mw25b",
                           "name": "Divider",
                           "fill": "$border",
                           "width": "fill_container",
                           "height": 1
                         },
                         {
-                          "id": "k7kKv",
+                          "id": "IbfgO",
                           "type": "ref",
                           "ref": "bZhuV",
                           "name": "Row · 邀請家人",
@@ -115884,14 +115879,14 @@
                         },
                         {
                           "type": "rectangle",
-                          "id": "rROcZ",
+                          "id": "M2X4x",
                           "name": "Divider",
                           "fill": "$border",
                           "width": "fill_container",
                           "height": 1
                         },
                         {
-                          "id": "eQVaD",
+                          "id": "auJtQ",
                           "type": "ref",
                           "ref": "bZhuV",
                           "name": "Row · 退出家庭",
@@ -115908,6 +115903,13 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "lHaSd",
+                  "name": "Tab Bar Clearance",
+                  "width": "fill_container",
+                  "height": 151
                 },
                 {
                   "type": "frame",
@@ -116092,7 +116094,7 @@
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "padding": [
-                    185,
+                    44,
                     0,
                     0,
                     0
@@ -116333,18 +116335,15 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "LGjnA",
-                  "layoutPosition": "absolute",
-                  "x": 0,
-                  "y": -1155,
+                  "id": "EtHIo",
                   "name": "Section 個人",
-                  "width": "fill_container(345)",
+                  "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "text",
-                      "id": "z2neiw",
+                      "id": "XtDbL",
                       "name": "Section Header",
                       "fill": "$text-secondary",
                       "content": "個人",
@@ -116355,7 +116354,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "NQ1on",
+                      "id": "Oh3NE",
                       "name": "Profile Card",
                       "width": "fill_container",
                       "fill": "$surface",
@@ -116366,7 +116365,7 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "ggWML",
+                          "id": "nlkQ4",
                           "name": "Profile Row",
                           "width": "fill_container",
                           "gap": "$sp-group",
@@ -116376,21 +116375,21 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "Wlb5X",
+                              "id": "oTZqC",
                               "name": "Left",
                               "width": "fill_container",
                               "gap": "$sp-group",
                               "alignItems": "center",
                               "children": [
                                 {
-                                  "id": "D9wDKs",
+                                  "id": "nGPjb",
                                   "type": "ref",
                                   "ref": "OePXK",
                                   "name": "Profile Print"
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "NKFQ4",
+                                  "id": "Ctxbs",
                                   "name": "Person Text",
                                   "width": "fill_container",
                                   "layout": "vertical",
@@ -116398,7 +116397,7 @@
                                   "children": [
                                     {
                                       "type": "text",
-                                      "id": "TBhLq",
+                                      "id": "l6P7wh",
                                       "name": "Name",
                                       "fill": "$text-primary",
                                       "textGrowth": "fixed-width",
@@ -116410,7 +116409,7 @@
                                     },
                                     {
                                       "type": "text",
-                                      "id": "W4CH9T",
+                                      "id": "CmuNv",
                                       "name": "Sub",
                                       "fill": "$text-secondary",
                                       "textGrowth": "fixed-width",
@@ -116426,7 +116425,7 @@
                             },
                             {
                               "type": "icon",
-                              "id": "CAL9q",
+                              "id": "r2Vz9l",
                               "name": "Chevron",
                               "width": 18,
                               "height": 18,
@@ -116442,18 +116441,15 @@
                 },
                 {
                   "type": "frame",
-                  "id": "r3s5e",
-                  "layoutPosition": "absolute",
-                  "x": 0,
-                  "y": -849,
+                  "id": "O6jWDg",
                   "name": "Section 家庭",
-                  "width": "fill_container(345)",
+                  "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "text",
-                      "id": "u0BnoB",
+                      "id": "WanYx",
                       "name": "Section Header",
                       "fill": "$text-secondary",
                       "content": "家庭",
@@ -116464,7 +116460,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "K3Uwj",
+                      "id": "OAJGA",
                       "name": "Card",
                       "width": "fill_container",
                       "fill": "$surface",
@@ -116474,7 +116470,7 @@
                       "layout": "vertical",
                       "children": [
                         {
-                          "id": "WzxPA",
+                          "id": "vR1jA",
                           "type": "ref",
                           "ref": "bZhuV",
                           "name": "Row · 家庭成員",
@@ -116494,14 +116490,14 @@
                         },
                         {
                           "type": "rectangle",
-                          "id": "OHR7o",
+                          "id": "p4Dtn",
                           "name": "Divider",
                           "fill": "$border",
                           "width": "fill_container",
                           "height": 1
                         },
                         {
-                          "id": "j7oiv",
+                          "id": "vzjI8",
                           "type": "ref",
                           "ref": "bZhuV",
                           "name": "Row · 邀請家人",
@@ -116517,14 +116513,14 @@
                         },
                         {
                           "type": "rectangle",
-                          "id": "TAIVq",
+                          "id": "O4S4o",
                           "name": "Divider",
                           "fill": "$border",
                           "width": "fill_container",
                           "height": 1
                         },
                         {
-                          "id": "bmmRe",
+                          "id": "uTlMh",
                           "type": "ref",
                           "ref": "bZhuV",
                           "name": "Row · 退出家庭",
@@ -116541,6 +116537,13 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ACJDK",
+                  "name": "Tab Bar Clearance",
+                  "width": "fill_container",
+                  "height": 197
                 },
                 {
                   "type": "frame",
@@ -116725,7 +116728,7 @@
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "padding": [
-                    262,
+                    44,
                     0,
                     0,
                     0
@@ -118930,7 +118933,7 @@
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "你建立的相簿、日記與留言，以及你上傳的照片、影片，都會標記刪除，跟其他人刪除內容一樣，30 天內可以還原，30 天後會永久清除。",
+                          "content": "你建立的相簿、日記與留言，以及你上傳的照片、影片，都會標記刪除；這個動作無法復原，這些內容會在 30 天內從我們的伺服器永久清除。",
                           "lineHeight": 1.5,
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
@@ -123068,21 +123071,144 @@
                         },
                         {
                           "type": "frame",
-                          "id": "jFC9G",
-                          "name": "Bar Track",
+                          "id": "f4lrbD",
+                          "name": "Print Roll",
                           "width": "fill_container",
-                          "height": 12,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-full",
+                          "height": 16,
+                          "gap": 3,
+                          "alignItems": "center",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "KbMT3",
-                              "name": "Bar Fill",
-                              "width": 145,
-                              "height": 12,
-                              "fill": "$accent",
-                              "cornerRadius": "$radius-full"
+                              "id": "pJSry",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "OKJ2n",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "k3O7n",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "mOWrR",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "b3S4x",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "T3LOR",
+                              "name": "Roll Chip · Blank",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$print-paper",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "TFP2N",
+                              "name": "Roll Chip · Blank",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$print-paper",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "T4X1D",
+                              "name": "Roll Chip · Blank",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$print-paper",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "U1UF8I",
+                              "name": "Roll Chip · Blank",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$print-paper",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "v5pTA",
+                              "name": "Roll Chip · Blank",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$print-paper",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "G5HXd",
+                              "name": "Roll Chip · Blank",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$print-paper",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "GMJFL",
+                              "name": "Roll Chip · Blank",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$print-paper",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
                             }
                           ]
                         },
@@ -123899,7 +124025,7 @@
           "fill": "#553040",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "R2 修訂（取代 R1 已過期描述）。共 39 板（R1 27 板 + R2 新增 03e/07b/09b 三個狀態板 + 8 個變體板 + 1 個 04e 深色）＋ Notes 板本身。共用元件本輪動了 2 個：cmp/Text Field（UcO8T，圖示 id 變動，見下方「共用元件連帶變更清單」段）、新增 cmp/Settings Row（bZhuV，MN-8 修列高塌縮）、新增 cmp/Profile Print（OePXK，MJ-8）。R1 handoff 曾宣稱「未改動任一已核可板」與「零回歸」，VR R1 抓到這是假驗證斷言（BL-1）——UcO8T 的變動連帶影響了 3 個他票既有 instance（Bdnlp／cy89z／hElk0），R2 已逐格複驗補回，詳見「共用元件連帶變更清單」段。",
+          "content": "R2 修訂（取代 R1 已過期描述）；R3 未新增板／元件（僅修改既有節點內容與幾何）。共 39 設計板 ＝ 28（R1 設計板數，非 27）＋ 3（R2 新增 03e/07b/09b 狀態板）＋ 8（R2 新增變體板，含 04e 深色）。42 個新增 root ＝ 39 設計板 ＋ 1 Notes 板本身 ＋ 2 元件（cmp/Settings Row／bZhuV、cmp/Profile Print／OePXK）。共用元件本輪（R2）動了 2 個：cmp/Text Field（UcO8T，圖示 id 變動，見下方「共用元件連帶變更清單」段）、新增 cmp/Settings Row（bZhuV，MN-8 修列高塌縮）、新增 cmp/Profile Print（OePXK，MJ-8）。R1 handoff 曾宣稱「未改動任一已核可板」與「零回歸」，VR R1 抓到這是假驗證斷言（BL-1）——UcO8T 的變動連帶影響了 3 個他票既有 instance（Bdnlp／cy89z／hElk0），R2 已逐格複驗補回，詳見「共用元件連帶變更清單」段。",
           "lineHeight": 1.5,
           "fontFamily": "Noto Sans TC",
           "fontSize": 13,
@@ -123959,7 +124085,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "01 設定（t5wI4/Rx5mP/z9tytH/B2DckT）：Tab-root，顯示 cmp/Tab Bar（設定 icon 選中，覆寫 4 節點視覺，metadata.selected 不動，同 LS-120 慣例）；標題非系統 navigationTitle，Header Row 自畫「設定」；不用釘底 Action Bar（Tab-root 慣例）；法律／帳號兩段需捲動才可見——內容自然超出 852pt，用 Section 內容與安全／Section 法律的 padding-top 讓後續內容乾淨落在膠囊後方或板外，不橫跨膠囊邊緣（AX3 同理，見 corner_anchor 之外的膠囊驗收判準，LS-120）。iPad 用 NavigationSplitView：Sidebar 5 段導覽＋Detail Pane 顯示「個人」，無 Tab Bar（iPad 不適用，motifs.md）。",
+              "content": "01 設定（t5wI4/Rx5mP/z9tytH/B2DckT）：Tab-root，顯示 cmp/Tab Bar（設定 icon 選中，覆寫 4 節點視覺，metadata.selected 不動，同 LS-120 慣例）；標題非系統 navigationTitle，Header Row 自畫「設定」；不用釘底 Action Bar（Tab-root 慣例）。R3 起 Content（layout:vertical，gap=$sp-block 24，padding-top=$sp-section 44）六段（個人／家庭／內容與安全／法律／帳號／Scroll Bottom Inset）改為單純一般 flow 依序堆疊，不再用 layoutPosition:absolute 或負 y 模擬「已捲動」——個人卡（Profile Print）因此固定出現在頁面最上方、三板 rel y 上緣 ≥0。家庭／內容與安全兩段之間新增具名 Tab Bar Clearance 節點（light 151、AX3 197；公式＝capsule 底緣＋6pt 緩衝− 家庭段底緣 − 2×$sp-block，逐板算出），確保十列 Row 沒有一列跨越 Tab Bar 膠囊上下緣（754–818／AX3 1378–1466）——這個間距不是倒推餘數，是「floating 膠囊固定佔用一段 y 範圍、內容必須完整避開它」這個規則算出來的，實作端用 ScrollView 正常捲動即可，這個節點只在本靜態稿示範單一捲動位置時用來避免半截文字。儲存空間列與其後內容自然落在畫面高度（852／AX3 1500）之下，需捲動才可見，這是普通 ScrollView 的正常行為，不是版面缺陷。Section 帳號 padding-top 統一改 44（AX3 同 44），不再用 185／262 這種無主人的倒推數字，剩餘距離交給 Scroll Bottom Inset。iPad 用 NavigationSplitView：Sidebar 5 段導覽＋Detail Pane 顯示「個人」，無 Tab Bar（iPad 不適用，motifs.md）。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -124103,7 +124229,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "04a/04b/04d/04e：push 畫面（Nav Back），無 Tab Bar；主 CTA 用 Footer flex-spacer 慣例（非釘底 Action Bar，內容量不隨狀態變化到需要 safeAreaInset 的程度）。04e AX3 板（dHnPl）高度改 959（非 tab-root 1500 慣例）——比照既有 push/sheet 型 AX3 板（VRq1c 2770 等）走內容驅動高度，不套用 Tab-root 專屬的裝置固定高度公式。",
+              "content": "04a/04b/04d/04e：push 畫面（Nav Back），無 Tab Bar；主 CTA 用 Footer flex-spacer 慣例（非釘底 Action Bar，內容量不隨狀態變化到需要 safeAreaInset 的程度）。04e AX3 板（dHnPl）高度改 1168（非 tab-root 1500 慣例）——比照既有 push/sheet 型 AX3 板（VRq1c 2770 等）走內容驅動高度，不套用 Tab-root 專屬的裝置固定高度公式。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -124577,7 +124703,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "cmp/Child Avatar 覆寫：預設 48×48（沿用元件預設，未覆寫）；01 設定/03 家庭成員個人列表用 56×56（Profile Card 較大頭像）；02 編輯頁沿用 LS-47 09b 的 88×88（Avatar Preview，未變動）；iPad Detail Pane 用 72×72。AX3 不改動頭像尺寸（沿用既有 lytlO 先例：頭像不隨 AX3 放大，只有文字放大）。",
+              "content": "cmp/Child Avatar 覆寫：預設 48×48（沿用元件預設，未覆寫）；01 設定/03 家庭成員個人列表用 56×56（Profile Card 較大頭像）；02 編輯頁沿用 LS-47 09b 的 88×88（Avatar Preview，未變動）；iPad Detail Pane 用 72×72。AX3 不改動頭像尺寸（沿用既有 lytlO 先例：頭像不隨 AX3 放大，只有文字放大）。縮寫推導規則（R3 補）：有 avatar_url 時一律用照片，縮寫只是 fallback；縮寫預設取「名」的最後一個字（扣掉判定為姓氏的第一個字，附加稱謂如「（你）」不列入判定）。本稿列 1/3/4（美／嬤／華）為既有已核可示範值，R3 僅修正列 2 的錯字（原「明」不在姓名「李王美麗美惠子」字串內，改「惠」）；ios-dev 動態產生縮寫時請依上述規則計算，不要求逐字對應本稿既有示範。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -124649,7 +124775,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "09 儲存空間進度條：Track 高 12、Bar Fill 寬 145（對應 42% of 345 可用寬，換算＝345×0.42≈145——這是內容驅動的示範值，實作應以 storage_used_bytes/storage_quota_bytes 動態算比例，不要硬寫 145）。",
+              "content": "09 儲存空間用量視覺：R3 起改用「Print Roll」母題延伸（R1 MJ-8/R3-8 靈魂測試選項3）——12 顆小方塊（$print-paper 空白／$photo-corner 已用，$paper-edge 邊框，gap 3，cornerRadius 3），取代原本的 iOS 進度條。09（H5K5xm／e9XuN）填 5/12（約42%，對應 2.1/5 GB，示範值）；09b（ZG2Un／o6U6w）填 12/12（100%，對應「已滿」文案）。實作應以 storage_used_bytes/storage_quota_bytes 動態算 filledCount=Math.round(used/quota*12)，不要硬寫 5 或 12。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -124685,7 +124811,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "A11y/04e 板高改 959（非 Tab-root 1500 慣例，見上「畫面級屬性清單」04e 條）。",
+              "content": "A11y/04e 板高改 1168（非 Tab-root 1500 慣例，見上「畫面級屬性清單」04e 條）。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -124819,7 +124945,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "04a 一般成員內容處理說明：依使用者 2026-09-04 裁決，本人上傳的照片/影片與日記/留言比照同一套 30 天軟刪／永久清除節奏，文案已對齊（「跟其他人刪除內容一樣，30 天內可以還原，30 天後會永久清除」），對應 delete_my_account 情況 3 的軟刪語意；media 沒有 deleted_by 欄位的既有缺口（API.md 已知不對稱）本票不處理，是後端既有債務。",
+              "content": "04a 一般成員內容處理說明：R3 依 orchestrator 2026-09-04 15:02 裁決修正——刪除帳號是伺服器對「你」不可逆的動作（client 呼叫 delete_my_account() 後立即呼叫 delete-account Edge Function 刪除 auth.users，LS-151），你本人無法再登入或還原；「30 天」只是伺服器保留期（LS-153 排程永久清除，隱私政策 §8），不是你可還原的窗口——04a／dNED0 已從「30 天內可以還原」改為「這個動作無法復原，這些內容會在 30 天內從我們的伺服器永久清除」。與孩子檔案 30 天還原窗口（不同機制，家庭管理者可還原）不得混寫。media 沒有 deleted_by 欄位的既有缺口（API.md 已知不對稱）本票不處理，是後端既有債務。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -125411,7 +125537,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "01 設定 Profile Row 頭像換成 cmp/Profile Print（真頭像 stock 照片＋白邊＋兩對角托＋壓印小字「加入於」日期），把身分還給帳號與安全區的第一屏。成員清單/儲存量條的母題延伸（VR 選項 2/3）本輪未做，留待後續輪次視審查意見決定。",
+              "content": "01 設定 Profile Row 頭像換成 cmp/Profile Print（真頭像 stock 照片＋白邊＋兩對角托＋壓印小字「加入於」日期），把身分還給帳號與安全區的第一屏。R3 起追加母題延伸（R1 MJ-8/R3-8 靈魂測試選項 3）：09 儲存空間（H5K5xm）與 09b 已滿（ZG2Un）的用量條改成「Print Roll」——12 顆 $print-paper／$photo-corner 小方塊取代 iOS 進度條，取代原「用量分佈」與舊版單一色塊進度條。成員清單（選項 2）本輪未做，留待後續輪次視審查意見決定。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -125735,7 +125861,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "10/10b 刪除確認拿掉「30 天內可還原」承諾（app 目前沒有還原入口），改「這個動作目前無法在 App 內復原」；04a（帳號刪除情境）語意與 10/10b（單筆內容刪除情境）不同，維持各自裁決，不強行統一。",
+              "content": "10/10b 刪除確認拿掉「30 天內可還原」承諾（app 目前沒有還原入口），改「這個動作目前無法在 App 內復原」；04a（帳號刪除情境）R3 起同樣拿掉「30 天內可以還原」，改「這個動作無法復原，這些內容會在 30 天內永久清除」——兩處現在文案語意一致（都不承諾使用者本人可還原），但原因不同：10/10b 是「App 還沒做還原 UI」，04a 是「帳號已刪除、你已經無法登入，物理上不可能由你操作還原」。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -126111,7 +126237,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "light：兩態 Delete Button y 皆為 23803（相對板頂），逐位元相同。dHnPl（AX3）Hint Row 固定高 232，同一方法驗證（該板固定展示「顯示」態，未在稿面另外畫「隱藏」態板——兩態高度相同已由固定 height 屬性保證，數學上不會因 enabled 切換而變動，light 已用實測動作驗證同一機制成立）。",
+              "content": "light：兩態 Delete Button 相對板頂 y 皆為 686（絕對畫布座標 23803，board 原點 y=23117，23803−23117＝686），逐位元相同。dHnPl（AX3）Hint Row 固定高 232，同一方法驗證（該板固定展示「顯示」態，未在稿面另外畫「隱藏」態板——兩態高度相同已由固定 height 屬性保證，數學上不會因 enabled 切換而變動，light 已用實測動作驗證同一機制成立）。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -126584,7 +126710,6 @@
           "type": "frame",
           "id": "lOPO7",
           "name": "Print",
-          "clip": true,
           "width": 60,
           "height": 60,
           "fill": "$print-paper",
@@ -126612,21 +126737,21 @@
               "type": "ref",
               "ref": "GEBcf",
               "name": "Mount TL",
-              "x": 4.68,
-              "y": 4.68,
-              "width": 12.3,
-              "height": 12.3,
+              "x": -3.8,
+              "y": -3.8,
+              "width": 16.4,
+              "height": 16.4,
               "descendants": {
                 "sD5Ma": {
                   "geometry": "M0 0 L26 0 L0 26 Z",
-                  "width": 12.3,
-                  "height": 12.3,
+                  "width": 16.4,
+                  "height": 16.4,
                   "fill": "$photo-corner"
                 },
                 "DhOiK": {
                   "geometry": "M26 0 L0 26",
-                  "width": 12.3,
-                  "height": 12.3,
+                  "width": 16.4,
+                  "height": 16.4,
                   "strokeWidth": 1
                 }
               }
@@ -126636,21 +126761,21 @@
               "type": "ref",
               "ref": "GEBcf",
               "name": "Mount BR",
-              "x": 43.02,
-              "y": 43.02,
-              "width": 12.3,
-              "height": 12.3,
+              "x": 47.4,
+              "y": 47.4,
+              "width": 16.4,
+              "height": 16.4,
               "descendants": {
                 "sD5Ma": {
                   "geometry": "M26 26 L26 0 L0 26 Z",
-                  "width": 12.3,
-                  "height": 12.3,
+                  "width": 16.4,
+                  "height": 16.4,
                   "fill": "$photo-corner"
                 },
                 "DhOiK": {
                   "geometry": "M26 0 L0 26",
-                  "width": 12.3,
-                  "height": 12.3,
+                  "width": 16.4,
+                  "height": 16.4,
                   "strokeWidth": 1
                 }
               }
@@ -127195,7 +127320,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "「陳家」的相簿容量已滿，新的照片與影片沒辦法再上傳。",
+                      "content": "先刪掉一些照片或影片，就能繼續上傳。",
                       "lineHeight": 1.6,
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -127246,7 +127371,7 @@
                           "fill": "$danger",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "相簿容量已滿，新的照片與影片沒辦法再上傳。",
+                          "content": "儲存空間已滿，新的照片與影片沒辦法再上傳。",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "600"
@@ -127298,21 +127423,144 @@
                         },
                         {
                           "type": "frame",
-                          "id": "K3Zvv",
-                          "name": "Bar Track",
+                          "id": "u3US4",
+                          "name": "Print Roll",
                           "width": "fill_container",
-                          "height": 12,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-full",
+                          "height": 16,
+                          "gap": 3,
+                          "alignItems": "center",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "jqHv6",
-                              "name": "Bar Fill",
+                              "id": "UvcHU",
+                              "name": "Roll Chip · Used",
                               "width": "fill_container",
-                              "height": 12,
-                              "fill": "$danger",
-                              "cornerRadius": "$radius-full"
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "hgRi5",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "w3Art",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Ehorx",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "kjqDv",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "x8pF9",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ixRU2",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "p7ETLO",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "qIP13",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "MEcl3",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "VxmMP",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "o3syjK",
+                              "name": "Roll Chip · Used",
+                              "width": "fill_container",
+                              "height": 16,
+                              "fill": "$photo-corner",
+                              "cornerRadius": 3,
+                              "stroke": "$paper-edge",
+                              "strokeWidth": 1
                             }
                           ]
                         },
@@ -128564,6 +128812,8 @@
                       "id": "gp7sP",
                       "name": "Label",
                       "fill": "$danger",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "我了解，繼續刪除",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -128783,7 +129033,7 @@
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "你建立的相簿、日記與留言，以及你上傳的照片、影片，都會標記刪除，跟其他人刪除內容一樣，30 天內可以還原，30 天後會永久清除。",
+                          "content": "你建立的相簿、日記與留言，以及你上傳的照片、影片，都會標記刪除；這個動作無法復原，這些內容會在 30 天內從我們的伺服器永久清除。",
                           "lineHeight": 1.5,
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
@@ -129547,6 +129797,10 @@
                                       "type": "ref",
                                       "ref": "AqN3F",
                                       "name": "Role Pill",
+                                      "padding": [
+                                        "$sp-label",
+                                        10
+                                      ],
                                       "descendants": {
                                         "KR7zN": {
                                           "icon": "crown"
@@ -129600,7 +129854,7 @@
                               "name": "Avatar",
                               "descendants": {
                                 "A30rIX": {
-                                  "content": "明"
+                                  "content": "惠"
                                 }
                               }
                             },
