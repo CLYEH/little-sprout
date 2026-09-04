@@ -38,6 +38,8 @@ HOLD='互動式驗證前 `bash scripts/ops/supabase-lock.sh --hold "LS-<n> dev E
 # LS-158：qa 正文另須含 `qa-e2e.sh`（多步驟驗收優先端到端驅動）；合法的 qa 樣本兩句都要有
 E2E='多步驟驗收優先 `bash scripts/ops/qa-e2e.sh <login|publish|browse>`。'
 QA_BODY="${HOLD} ${E2E}"
+# LS-180：ui-designer／visual-reviewer 正文須含「--kill 只在 orchestrator 明示時」（切檔不殺行程的規約句）
+KILL='切檔一律不殺行程；`pen-open.sh` 的 --force-reload／--kill 只在 orchestrator 明示時使用，用後必回報「需重連」。'
 # mk <agent> <tools 行的值|NONE> [<正文附加行>]：寫一份最小 agent 定義
 mk() {
   local agent=$1 tools=$2 body=${3:-}
@@ -52,8 +54,8 @@ reset() {
   mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$HOLD"
   mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_BODY"
   mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"
-  mk ui-designer NONE
-  mk visual-reviewer NONE
+  mk ui-designer NONE "$KILL"
+  mk visual-reviewer NONE "$KILL"
   mk ios-dev NONE "$HOLD"
 }
 
@@ -61,7 +63,7 @@ reset() {
 reset; expect 0 '① 六份齊、白名單含必要工具 → exit 0' '✓ agent-tools gate 通過（6 份' 'ios-dev.md：無 tools: 行（繼承全部工具）→ 放行'
 out="$(bash "$checker" 2>&1)"; got=$?   # 不帶參數＝真 repo 的 .claude/agents
 if [ "$got" -eq 0 ]; then ok '① 真 repo 的 .claude/agents 通過'; else echo "✗ ① 真 repo 應通過（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
-reset; mk ui-designer "Read, mcp__pencil__get_app_state, mcp__pencil__execute"; expect 0 '① ui-designer 有 tools: 且含 execute → exit 0' '通過'
+reset; mk ui-designer "Read, mcp__pencil__get_app_state, mcp__pencil__execute" "$KILL"; expect 0 '① ui-designer 有 tools: 且含 execute → exit 0' '通過'
 reset; mk qa "  Bash ,  ${LINEAR3},mcp__pencil__get_app_state,mcp__pencil__execute  " "$QA_BODY"; expect 0 '① 空白／逗號變體 → exit 0' '通過'
 reset; printf -- '---\r\nname: qa\r\ndescription: x\r\ntools: Bash, %s, mcp__pencil__get_app_state, mcp__pencil__execute\r\nmodel: sonnet\r\n---\r\n\r\n%s\r\n' "$LINEAR3" "$QA_BODY" > "$agents/qa.md"; expect 0 '① CRLF 行尾 → exit 0' '通過'
 
@@ -72,8 +74,8 @@ reset; mk merge-reviewer "Bash, mcp__linear__get_issue, mcp__linear__list_commen
 reset; mk qa "Bash, ${LINEAR3}" "$HOLD"; expect 1 '② qa 少 mcp__pencil__get_app_state → exit 1' 'qa.md：tools: 缺 mcp__pencil__get_app_state'
 reset; mk qa "Bash, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '② qa 少 mcp__pencil__execute（LS-91 補釘）→ exit 1' 'qa.md：tools: 缺 mcp__pencil__execute'
 reset; mk ios-dev "Read, Edit" "$HOLD"; expect 0 '② ios-dev 有 tools: 行但必要工具留空 → 仍 exit 0（規則表無要求）' '通過'
-reset; mk ui-designer "Read, mcp__pencil__get_app_state"; expect 1 '② ui-designer 有 tools: 但缺 execute → exit 1' 'ui-designer.md：tools: 缺 mcp__pencil__execute'
-reset; mk visual-reviewer "Read"; expect 1 '② visual-reviewer 有 tools: 但缺 execute → exit 1' 'visual-reviewer.md：tools: 缺 mcp__pencil__execute'
+reset; mk ui-designer "Read, mcp__pencil__get_app_state" "$KILL"; expect 1 '② ui-designer 有 tools: 但缺 execute → exit 1' 'ui-designer.md：tools: 缺 mcp__pencil__execute'
+reset; mk visual-reviewer "Read" "$KILL"; expect 1 '② visual-reviewer 有 tools: 但缺 execute → exit 1' 'visual-reviewer.md：tools: 缺 mcp__pencil__execute'
 reset; mk dead-code-sweeper "Read, mcp__linear__get_issue"; expect 1 '② dead-code-sweeper 少 Bash／list_comments／save_comment → 一行列三支' 'dead-code-sweeper.md：tools: 缺 Bash mcp__linear__list_comments mcp__linear__save_comment'
 reset; mk dead-code-sweeper "Bash, mcp__linear__get_issue, mcp__linear__list_comments"; expect 1 '② dead-code-sweeper 少 save_comment（LS-157 補釘）→ exit 1' 'dead-code-sweeper.md：tools: 缺 mcp__linear__save_comment'
 reset; mk qa "Read" "$HOLD"; mk merge-reviewer "Read" "$HOLD"; expect 1 '② 兩份同時違規 → 一次列完' 'qa.md：tools: 缺' 'merge-reviewer.md：tools: 缺'
@@ -87,10 +89,15 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（4 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 4 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（6 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 6 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；兩句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$HOLD"; expect 1 '⑥ LS-158：qa 正文只有 hold、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
+# LS-180：ui-designer／visual-reviewer 正文須含「--kill 只在 orchestrator 明示時」——切檔不殺行程的規約句被刪即紅；工具齊全不救
+reset; expect 0 '⑦ LS-180：ui-designer／visual-reviewer 正文含字樣 → 印「正文含」' 'ui-designer.md：正文含「--kill 只在 orchestrator 明示時」' 'visual-reviewer.md：正文含「--kill 只在 orchestrator 明示時」'
+reset; mk ui-designer NONE; expect 1 '⑦ LS-180：ui-designer 正文缺字樣 → exit 1' 'ui-designer.md：正文缺「--kill 只在 orchestrator 明示時」'
+reset; mk visual-reviewer "Read, mcp__pencil__get_app_state, mcp__pencil__execute"; expect 1 '⑦ LS-180：visual-reviewer 正文缺字樣 → exit 1，工具齊全不救' 'visual-reviewer.md：正文缺「--kill 只在 orchestrator 明示時」' '' 'visual-reviewer.md：tools: 缺'
+reset; mk ui-designer NONE "只寫 --kill 而沒有那句規約不算"; expect 1 '⑦ LS-180：只有 --kill 字面、無「只在 orchestrator 明示時」→ 紅' 'ui-designer.md：正文缺「--kill 只在 orchestrator 明示時」'
 reset; expect 0 '⑤ merge-reviewer／qa 也印「正文含」' 'merge-reviewer.md：正文含「supabase-lock.sh --hold」' 'qa.md：正文含「supabase-lock.sh --hold」'
 reset; mk ios-dev NONE; expect 1 '⑤ ios-dev 正文缺字樣 → exit 1' 'ios-dev.md：正文缺「supabase-lock.sh --hold」' '' '✓ agent-tools gate 通過'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}"; expect 1 '⑤ merge-reviewer 正文缺字樣 → exit 1' 'merge-reviewer.md：正文缺「supabase-lock.sh --hold」'

@@ -55,12 +55,16 @@ ios-dev|"
 # ios-dev／merge-reviewer／qa：互動式本機驗證（模擬器對本機 Supabase 容器的多步驟操作）前必 `supabase-lock.sh --hold`——qa 的同段
 # 自 LS-159 起就在但當時沒有 gate，R2 (a) 一併釘住（三份同一條規則）。
 # LS-158：qa 多步驟驗收優先 `scripts/ops/qa-e2e.sh`（mobile-mcp 降為截圖／單步輔助）——qa.md 那段被刪即紅。
+# LS-180：ui-designer／visual-reviewer 切檔一律不殺行程——`pen-open.sh` 的 `--kill`（與 `--force-reload` 的清場路徑）會結束
+# Pen 主行程、讓 session 的 Pencil MCP 斷線不重連，只在 orchestrator 明示時使用、用後必回報「需重連」；那句被刪即紅。
 BODY_RULES=
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold
 merge-reviewer|supabase-lock.sh --hold
 qa|supabase-lock.sh --hold
-qa|qa-e2e.sh"
+qa|qa-e2e.sh
+ui-designer|--kill 只在 orchestrator 明示時
+visual-reviewer|--kill 只在 orchestrator 明示時"
 # LS170-BODY-RULES-END
 
 hits=""; n=0
