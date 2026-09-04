@@ -126558,8 +126558,8 @@
             {
               "type": "frame",
               "id": "MN0WF",
-              "x": 0,
-              "y": 0,
+              "x": 7.5,
+              "y": 7.5,
               "name": "Photo",
               "width": 45,
               "height": 45,
@@ -126576,8 +126576,8 @@
               "type": "ref",
               "ref": "GEBcf",
               "name": "Mount TL",
-              "x": 45,
-              "y": 0,
+              "x": 4.68,
+              "y": 4.68,
               "width": 12.3,
               "height": 12.3,
               "descendants": {
@@ -126600,8 +126600,8 @@
               "type": "ref",
               "ref": "GEBcf",
               "name": "Mount BR",
-              "x": 57.3,
-              "y": 0,
+              "x": 43.02,
+              "y": 43.02,
               "width": 12.3,
               "height": 12.3,
               "descendants": {
@@ -127273,7 +127273,7 @@
                               "type": "frame",
                               "id": "jqHv6",
                               "name": "Bar Fill",
-                              "width": 345,
+                              "width": "fill_container",
                               "height": 12,
                               "fill": "$danger",
                               "cornerRadius": "$radius-full"
@@ -127470,6 +127470,7 @@
                       "type": "frame",
                       "id": "P7zIS",
                       "name": "Card Head",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
@@ -127488,6 +127489,8 @@
                           "id": "e4Uqrv",
                           "name": "Label",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "對冒犯性內容零容忍",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
@@ -127678,6 +127681,7 @@
                       "type": "frame",
                       "id": "s3HCMd",
                       "name": "Legal Link",
+                      "width": "fill_container",
                       "layout": "vertical",
                       "gap": 1,
                       "children": [
@@ -127686,6 +127690,8 @@
                           "id": "SwMap",
                           "name": "Label",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "查看完整《使用條款》與《隱私權政策》",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
@@ -127696,7 +127702,7 @@
                           "id": "LcINJ",
                           "name": "Underline",
                           "fill": "$text-primary",
-                          "width": 238,
+                          "width": "fill_container",
                           "height": 1
                         }
                       ]
@@ -127917,12 +127923,15 @@
                           "type": "ref",
                           "ref": "AqN3F",
                           "name": "Reason Pill",
+                          "width": "fill_container",
                           "descendants": {
                             "KR7zN": {
                               "icon": "flag"
                             },
                             "g7Fnj": {
-                              "content": "騷擾、霸凌或恐嚇"
+                              "content": "騷擾、霸凌或恐嚇",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container"
                             }
                           }
                         },
@@ -127931,6 +127940,8 @@
                           "id": "xYvb7",
                           "name": "Meta",
                           "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "由 李阿嬤 檢舉・2 小時前",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
@@ -128126,6 +128137,8 @@
                           "id": "g0YJ46",
                           "name": "Meta",
                           "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "由 陳小華 檢舉・昨天",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
@@ -128393,6 +128406,7 @@
                           "type": "frame",
                           "id": "UMbDS",
                           "name": "Warn Head",
+                          "width": "fill_container",
                           "gap": "$sp-label",
                           "alignItems": "center",
                           "children": [
@@ -128411,6 +128425,8 @@
                               "id": "cDpFx",
                               "name": "Label",
                               "fill": "$danger",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
                               "content": "你是這個家庭唯一的成員",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -129037,6 +129053,8 @@
                           "id": "q4EbGM",
                           "name": "Label",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "色情或猥褻內容",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
@@ -129081,6 +129099,8 @@
                           "id": "JUGea",
                           "name": "Label",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "騷擾、霸凌或恐嚇",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
@@ -129123,6 +129143,8 @@
                           "id": "bzc0B",
                           "name": "Label",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "歧視或仇恨言論",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
@@ -129165,6 +129187,8 @@
                           "id": "jvGxf",
                           "name": "Label",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "侵害隱私或未經同意的內容",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
@@ -129207,6 +129231,8 @@
                           "id": "NWUxv",
                           "name": "Label",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "詐騙或垃圾訊息",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
@@ -129249,6 +129275,8 @@
                           "id": "Ng6jL",
                           "name": "Label",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "其他",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
