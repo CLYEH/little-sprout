@@ -62,8 +62,8 @@
 | 表 | 讀 | 新增 | 修改 | 刪除 | 備註 |
 |---|---|---|---|---|---|
 | `profiles` | 同家庭成員互看 | 由 `auth.users` insert trigger 自動建立；INSERT grant／`profiles_insert` policy 仍在（未被 revoke，LS-107 `ensureProfileExists` 的冪等 upsert 靠它），client 慣例上不直接 insert，若呼叫則是 upsert 冪等（`ON CONFLICT DO NOTHING`） | 僅自己 | ❌ 無 delete policy | 帳號刪除走 Auth 側 cascade |
-| `families` | 我所屬的家庭 | 任何登入者（自建家庭），但 (a) 呼叫者已被停權，或 (b) `app_settings.registrations_open = false` 時一律拒絕（`LS052`／`LS054`，LS-179，見 §11） | `name`／`require_approval` 兩欄，owner-only | ❌ 無 delete policy | `storage_quota_bytes`／`storage_used_bytes` 兩個額度欄位永遠唯讀——不論身分，client 都改不動（只有 `media` 表的 trigger 與 `service_role` 能寫）。`suspended_at`／`suspended_reason`（LS-179）：client 完全讀不到、改不動，只有 `service_role`／Dashboard 能寫，見 §11 |
-| `app_settings`（LS-179） | 🔒 完全不可讀（`authenticated` 無 grant、無 policy） | 🔒 唯讀（`service_role` 直寫） | 🔒 唯讀 | 🔒 唯讀 | 全域營運開關（目前只有 `registrations_open`），只透過 `private.registrations_open()`（`SECURITY DEFINER`）供其他函式讀，client 不會直接碰到這張表，見 §11 |
+| `families` | 我所屬的家庭 | 任何登入者（自建家庭），但 (a) 呼叫者已被停權，或 (b) `app_settings.registrations_open = false` 時一律拒絕（`LS052`／`LS054`，LS-179，見 §11） | `name`／`require_approval` 兩欄，owner-only | ❌ 無 delete policy | `storage_quota_bytes`／`storage_used_bytes` 兩個額度欄位永遠唯讀——不論身分，client 都改不動（只有 `media` 表的 trigger 與表擁有者能寫）。`suspended_at`（LS-179）：**client 讀得到**（停權事實本來就會從 `LS052`／`LS053` 揭露），但改不動，只有表擁有者（postgres，Dashboard／`db query --linked`）能寫；停權原因不在這張表上，見 §11 與 `private.suspension_notes` |
+| `app_settings`（LS-179） | 🔒 完全不可讀（`authenticated` 無 grant、無 policy） | 🔒 唯讀（只有表擁有者能寫，見 §11） | 🔒 唯讀 | 🔒 唯讀 | 全域營運開關（目前只有 `registrations_open`），只透過 `private.registrations_open()`（`SECURITY DEFINER`）供其他函式讀，client 不會直接碰到這張表，見 §11 |
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子；**不分角色、不分軟刪與否**——owner／member／viewer 都讀得到全部列，含已軟刪的（`deleted_at`／`deleted_by` 對所有人都是可見的唯讀旗標，R1 I3/I4） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | 🔒 **無 DELETE 路徑**（R1 I5：直接硬刪會繞過 30 天保護，policy 與 grant 兩層都關，連 owner 也沒有） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原（重複軟刪 no-op，不刷新時鐘，見 §4），超過拿 `LS043`；已軟刪的孩子不能再被指定為新內容的標記（`LS044`，LS-121 起守門搬到 `diary_children`／`album_children` 連結表的 `BEFORE INSERT` trigger）；既有標記不隨軟刪連動，見 §8 |
@@ -175,12 +175,18 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
   （LS-151 R2 收斂範圍，merge-review R1 i1，`20260903115014_delete_account_edge_support.sql`）
   ——Edge Function 與 `finalize_account_deletion()` 只需要讀這兩欄判斷是否放行，
   沒有寫入需求，也不需要整表 SELECT。
-- `suspended_at`／`suspended_reason`（LS-179，PLAN §10-B）：**client 完全讀不到、
-  改不動**——這兩欄不在 `authenticated` 的任何 grant 清單裡，只有 `service_role`／
-  Dashboard 能寫。非 `NULL` 時，這個使用者對「所有」家庭資料的讀寫與既有 RPC
-  入口一律拒絕（`LS052`），但**自己的 `profiles` 列不受影響**——他仍然看得到、
-  改得動自己的 `display_name`／`avatar_url`（範圍決策，理由見 migration
-  `20260904212530_suspension_and_registrations.sql` 第 3 段）。停權操作方式見
+- `suspended_at`（LS-179，PLAN §10-B）：**client 讀得到、改不動**——`authenticated`
+  對 `profiles` 是表級 SELECT grant（見上方），新欄位自動被涵蓋，停權事實本來就
+  會從每一次操作失敗的 `LS052` 揭露，這裡讀得到不算額外資訊洩漏；UPDATE 沒有
+  這一欄的 grant，只有表擁有者（postgres，Dashboard／`db query --linked`）能寫。
+  非 `NULL` 時，這個使用者對「所有」家庭資料的讀寫與既有 RPC 入口一律拒絕
+  （`LS052`），但**自己的 `profiles` 列不受影響**——他仍然看得到、改得動自己的
+  `display_name`／`avatar_url`（範圍決策，理由見 migration
+  `20260904212530_suspension_and_registrations.sql` 第 3 段）。**停權原因**
+  （稽核用）**不放在這張表上**——`authenticated` 是表級 SELECT，任何欄位都會
+  被自動涵蓋，稽核原因（可能含第三方個資）不能讓被停權者自己讀得到；原因存在
+  `private.suspension_notes`（只有表擁有者／`service_role` 讀寫得到，R2，
+  merge-review R1 MAJOR-1）。停權操作方式見
   §11。
 
 ### `families`
@@ -197,9 +203,13 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
   （`LS052`）或 `app_settings.registrations_open = false`（`LS054`，PLAN §10-A(3)）。
   **只擋這條自建路徑**——憑邀請碼加入既有家庭（`request_join`／`approve_join`）
   完全不碰 `families` 表，不受 `registrations_open` 影響。
-- `suspended_at`／`suspended_reason`（LS-179，PLAN §10-B）：client 完全讀不到、
-  改不動。非 `NULL` 時，這個家庭的全部成員（不分角色）對這個家庭的資料一律
-  拒絕讀寫（`LS053`）；成員對「其他」家庭不受影響。停權操作方式見 §11。
+- `suspended_at`（LS-179，PLAN §10-B）：client 讀得到、改不動，理由同
+  `profiles.suspended_at`。非 `NULL` 時，這個家庭的全部成員（不分角色，**含
+  建立者本人**——R2 merge-review m2 訂正：`families_select` 的 `created_by`
+  分支原本漏了這個判斷，建立者即使本人未被個別停權，家庭停權後仍能透過那個
+  分支看到 1 列）對這個家庭的資料一律拒絕讀寫（`LS053`）；成員對「其他」家庭
+  不受影響。停權原因不放在這張表上，同樣存在 `private.suspension_notes`。
+  停權操作方式見 §11。
 
 ### `family_members`
 - 加入家庭的唯一路徑是 `request_join` RPC（見 §4／§7），owner 審核走 `approve_join`；
@@ -1333,8 +1343,17 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **錯誤碼**：無自訂碼；未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 
-### `delete_my_account() -> void`（LS-143；media 軟刪見 LS-155）
-- **誰能呼叫**：任何已登入使用者。無參數。
+### `delete_my_account() -> void`（LS-143；media 軟刪見 LS-155；停權豁免見 LS-179）
+- **誰能呼叫**：**任何已登入使用者，包含被停權的使用者、以及被停權家庭裡的成員**
+  （LS-179 R2，App Store Guideline 5.1.1(v)／PLAN §9-A2：app 內帳號刪除是硬規定，
+  不能因為帳號或所屬家庭被停權就失效——這正是被停權的人最可能需要的出路）。
+  無參數。函式內部第一步呼叫 `private.enforce_deletion_bypass()`，設一個交易級
+  （`is_local=true`）GUC 讓下面所有寫入略過停權檢查；`pg_catalog.set_config`
+  不在 PostgREST 曝露的 schema（`supabase/config.toml` 的
+  `[api] schemas = ["public", "graphql_public"]`）裡，client 沒有任何路徑能自己
+  設這個值，且它的作用範圍就是這一次呼叫的交易本身，見
+  `private.deletion_bypass_active()` 的函式註解與
+  `supabase/tests/105_suspension_and_registrations.sql` 場景 8／9。
 - **用途**：app 內刪除帳號的**資料面**入口（PLAN §9-A2／App Store Guideline
   5.1.1(v)）。逐一檢查呼叫者所屬的每個家庭，依角色分三種結果：
   1. **是某家庭的唯一 owner、且該家庭還有其他成員** → 整個呼叫被拒絕，`LS050`，
@@ -1556,8 +1575,8 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS045` | 不是相簿建立者本人，或雖是建立者但已不是該家庭 owner/member，無法設定寶貝標記 | `set_album_children`（LS-121） |
 | `LS050` | 你是家庭的唯一 owner，且家庭還有其他成員，須先轉移 owner 身份才能刪除帳號——`DETAIL` 帶 JSON 陣列列出全部需要轉移的家庭（`[{"family_id","family_name"}, ...]`），見 §4 `delete_my_account` | `delete_my_account`（LS-143） |
 | `LS051` | 帳號已請求刪除（`deletion_requested_at` 非 `NULL`），過渡期間不能再建立新資料——沒有輸入可換，只能等 Edge Function `delete-account` 完成刪除 | `families`／`family_members`／`media`／`diaries`／`albums`／`children`／`comments` 的 `BEFORE INSERT` trigger（`private.enforce_account_not_deletion_requested()`，LS-151），涵蓋直接 `.insert()` 與 `create_child`／`create_diary_entry`／`create_comment`／`approve_join`／建立新家庭自動寫入 owner 等 RPC 路徑，見 §2「過渡期擋寫」 |
-| `LS052` | 這個帳號已被暫停使用，請聯絡我們 | `profiles.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時：(a) `private.enforce_not_suspended()`——掛在 `family_members`／`invites`／`children`／`media`／`albums`／`album_media`／`diaries`／`diary_media`／`diary_children`／`album_children`／`comments`／`reactions`／`content_reports`／`blocked_users`／`join_requests` 十五張表的 `BEFORE INSERT/UPDATE/DELETE`，涵蓋直接 `.insert()`/`.update()`/`.delete()` 與全部 `SECURITY DEFINER` RPC（trigger 不受 `SECURITY DEFINER` 影響）；(b) `private.enforce_caller_not_suspended_for_families()`——`families` 的 `BEFORE INSERT`（自建新家庭）；(c) `list_join_requests`／`get_my_join_request`／`list_comments` 三支唯讀 `SECURITY DEFINER` RPC 各自的明確檢查（這三支沒有寫入、又繞過 RLS 讀，前兩種機制都碰不到）。**讀取（SELECT）與 Storage 簽名上傳**：透過 `private.family_ids()`／`owned_family_ids()`／`contributor_family_ids()`／`uploadable_family_ids()` 四支集合函式收斂，停權者這四個集合皆為空，對應的 `_select` policy 與 `storage.objects` 四條 policy 靜默回 0 列／`42501`，不會有 `LS052`（RLS 違反沒有自訂碼這條路） |
-| `LS053` | 這個家庭已被暫停使用，請聯絡我們 | `families.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時，觸發路徑同 `LS052` 的 (a)／(c)（家庭停權只影響該家庭本身的資料，成員對其他家庭不受影響）；讀取與 Storage 同樣經四支集合函式收斂成 0 列／`42501` |
+| `LS052` | 這個帳號已被暫停使用，請聯絡我們 | `profiles.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時：(a) `private.enforce_not_suspended()`——掛在 `family_members`／`invites`／`children`／`media`／`albums`／`album_media`／`diaries`／`diary_media`／`diary_children`／`album_children`／`comments`／`reactions`／`content_reports`／`blocked_users`／`join_requests` 十五張表的 `BEFORE INSERT/UPDATE/DELETE`，涵蓋直接 `.insert()`/`.update()`/`.delete()` 與全部 `SECURITY DEFINER` RPC（trigger 不受 `SECURITY DEFINER` 影響——**`delete_my_account()` 是唯一的例外**，R2 見 §4，永遠豁免這個檢查）；(b) `private.enforce_caller_not_suspended_for_families()`——`families` 的 `BEFORE INSERT`（自建新家庭）；(c) `list_join_requests`／`get_my_join_request`／`list_comments` 三支唯讀 `SECURITY DEFINER` RPC 各自的明確檢查（這三支沒有寫入、又繞過 RLS 讀，前兩種機制都碰不到）。**讀取（SELECT）與 Storage 簽名上傳**：透過 `private.family_ids()`／`owned_family_ids()`／`contributor_family_ids()`／`uploadable_family_ids()` 四支集合函式收斂，停權者這四個集合皆為空，對應的 `_select` policy 與 `storage.objects` 四條 policy 靜默回 0 列／`42501`，不會有 `LS052`（RLS 違反沒有自訂碼這條路）；`content_reports_select`／`join_requests_select`／`families_select` 的「自己那一支」分支（R2 訂正，見 §3）也已補上同一組排除 |
+| `LS053` | 這個家庭已被暫停使用，請聯絡我們 | `families.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時，觸發路徑同 `LS052` 的 (a)／(c)（家庭停權只影響該家庭本身的資料，成員對其他家庭不受影響，`delete_my_account()` 同樣豁免，見 §4）；讀取與 Storage 同樣經四支集合函式收斂成 0 列／`42501` |
 | `LS054` | 目前暫停開放新註冊，請稍後再試 | `private.enforce_registrations_open()`——`families` 的 `BEFORE INSERT`（自建新家庭），`app_settings.registrations_open = false` 時觸發（PLAN §10-A(3)，LS-179）。**只擋自建新家庭**：憑邀請碼加入既有家庭（`request_join`／`approve_join`）不碰 `families` 表，不受影響 |
 | `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下／`family_id` 不可變 trigger 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE、`children` INSERT/UPDATE/DELETE——`children` 的 `DELETE` 自 R1 I5 起也收斂，連 owner 都拿這個碼）會拿到的標準碼；也是 `diaries`／`albums`／`comments`（`private.enforce_deletion_attribution()`，LS-57）與 `children`（`private.enforce_children_family_immutable()`，LS-66，LS-57 R2／I1 對齊後改用裸 `42501`，不再是原本 LS-66 定案時的專屬碼）的 `family_id` 不可變 trigger 統一 raise 的碼；`albums` 直接 `.update()` 竄改 `deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起也在欄位級 grant 被收回，同樣回這個碼（見 §2/§3）——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字，trigger 主動 raise 的則帶自訂中文訊息，但 SQLSTATE 一樣是 `42501`。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
 
@@ -2621,47 +2640,64 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
 
 ## 11. 營運操作手冊
 
-LS-179（PLAN §10-A(3)／§10-B）：以下全部是 Dashboard（或 `supabase db query
---linked` / SQL Editor）手動下的 SQL，**改欄位當下立即生效，不需要改任何程式碼
-或重新部署**。實作見 `supabase/migrations/20260904212530_
-suspension_and_registrations.sql`；三者共用的判斷 helper（`private.
-caller_is_active()`／`private.family_is_active(uuid)`／`private.
-registrations_open()`）只讀對應旗標，不做任何額外邏輯。
+LS-179（PLAN §10-A(3)／§10-B）：以下全部是**表擁有者**（Dashboard SQL Editor／
+`supabase db query --linked`，兩者皆以 `postgres` 身分執行——`service_role` 目前
+對這幾張表沒有 INSERT/UPDATE/SELECT 的 table grant，`BYPASSRLS` 只繞過 RLS、
+不等於有 table privilege，R2 merge-review m4 實測 catalog 確認；若之後有
+Edge Function 需要直接寫入，須另外明確 `grant ... to service_role`）手動下的
+SQL，**改欄位當下立即生效，不需要改任何程式碼或重新部署**。實作見
+`supabase/migrations/20260904212530_suspension_and_registrations.sql`；三者
+共用的判斷 helper（`private.caller_is_active()`／`private.family_is_active(uuid)`／
+`private.registrations_open()`）只讀對應旗標，不做任何額外邏輯。
+
+**停權原因存在 `private.suspension_notes`（R2，MAJOR-1），不在 `profiles`／
+`families` 上**——那兩張表對 `authenticated` 是表級 SELECT，任何欄位都會被
+自動涵蓋，稽核原因不能放在那裡；`private` schema 對 `authenticated`／`anon`
+只有 `usage`，沒有任何表格級 grant，這張表因此只有表擁有者讀寫得到。
 
 ### 停權一位使用者
 
 ```sql
-update public.profiles
-   set suspended_at = now(), suspended_reason = '寫下原因（稽核用，client 讀不到）'
- where id = '<user_id>';
+update public.profiles set suspended_at = now() where id = '<user_id>';
+insert into private.suspension_notes (subject_type, subject_id, reason)
+values ('user', '<user_id>', '寫下原因（稽核用，client 讀不到）')
+on conflict (subject_type, subject_id) do update set reason = excluded.reason, created_at = now();
 ```
 
 生效範圍：這個使用者對「所有」家庭資料（不限於他目前所屬的家庭）的 RLS 讀寫、
 Storage 讀寫上傳、既有 RPC 入口一律拒絕（`LS052`）；不影響其他使用者。他自己的
 `profiles` 列（顯示名稱／頭像）與已核發、尚未過期的簽名 URL 不受影響（簽名 URL
-本就短效，見 §6，本票不做撤銷）。
+本就短效，見 §6，本票不做撤銷）。**`delete_my_account()` 不受影響**（R2，
+MAJOR-2）——被停權的使用者仍然能在 app 內刪除自己的帳號，這是 App Store
+Guideline 5.1.1(v) 的硬規定，見 §4。
 
 **解除停權**：
 
 ```sql
-update public.profiles
-   set suspended_at = null, suspended_reason = null
- where id = '<user_id>';
+update public.profiles set suspended_at = null where id = '<user_id>';
+delete from private.suspension_notes where subject_type = 'user' and subject_id = '<user_id>';
 ```
 
 ### 停權整個家庭
 
 ```sql
-update public.families
-   set suspended_at = now(), suspended_reason = '寫下原因'
- where id = '<family_id>';
+update public.families set suspended_at = now() where id = '<family_id>';
+insert into private.suspension_notes (subject_type, subject_id, reason)
+values ('family', '<family_id>', '寫下原因')
+on conflict (subject_type, subject_id) do update set reason = excluded.reason, created_at = now();
 ```
 
-生效範圍：這個家庭的全部成員（不分 owner／member／viewer）對這個家庭的資料一律
-拒絕讀寫（`LS053`）；成員若還屬於其他（未停權的）家庭，對那些家庭不受影響
-（Phase 3 多家庭前置）。
+生效範圍：這個家庭的全部成員（不分 owner／member／viewer，**含建立者本人**——
+R2 訂正，見 §3 `families` 的 `suspended_at` 說明）對這個家庭的資料一律拒絕
+讀寫（`LS053`）；成員若還屬於其他（未停權的）家庭，對那些家庭不受影響
+（Phase 3 多家庭前置）。**該家庭裡任何成員的 `delete_my_account()` 依然可用**
+（R2，MAJOR-2）。
 
-**解除**：`update public.families set suspended_at = null, suspended_reason = null where id = '<family_id>';`
+**解除**：
+```sql
+update public.families set suspended_at = null where id = '<family_id>';
+delete from private.suspension_notes where subject_type = 'family' and subject_id = '<family_id>';
+```
 
 ### 關閉／重新開放新註冊
 
@@ -2672,13 +2708,15 @@ update public.app_settings set registrations_open = false, updated_at = now() wh
 生效範圍：**只擋自建新家庭**這一步（`LS054`）——既有使用者登入、既有家庭憑邀請
 碼加入完全不受影響（PLAN §10-A(3) 的取捨：本票只做「關掉」，不做「候補名單」）。
 Auth 端（Apple／Google／Email 註冊）也不受影響，避免與登入流程打架。
+`delete_my_account()` 不受影響（自建家庭與刪帳號是兩條互不相干的路徑）。
 
 **重新開放**：`update public.app_settings set registrations_open = true, updated_at = now() where id = true;`
 
 ### 查目前狀態
 
 ```sql
-select id, suspended_at, suspended_reason from public.profiles where suspended_at is not null;
-select id, name, suspended_at, suspended_reason from public.families where suspended_at is not null;
+select id, suspended_at from public.profiles where suspended_at is not null;
+select id, name, suspended_at from public.families where suspended_at is not null;
+select * from private.suspension_notes;
 select registrations_open from public.app_settings where id = true;
 ```
