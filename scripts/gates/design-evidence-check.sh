@@ -37,7 +37,11 @@
 #     head_sha、完全盲。**舊收據放行條件**：`head_sha` 那個 commit 的 tree 裡 `scripts/design/overflow-scan.js` 不含第五支
 #     （FIFTH_MARKER `scanTextOcclusion`）——那個時點的正典腳本印不出 tree_hash，設計端不可能填；缺兩個新欄位時印一行放行
 #     （欄位若在仍驗）。用「腳本在不在該 commit 的 tree」而非 cutoff 時間，是因為 in-flight 設計分支要等併回 development
-#     才拿得到新腳本，用時間切會把它們誤紅。盲區：tree_hash 只證明「收據對應這份 .pen」，不證明五支數字算對。
+#     才拿得到新腳本，用時間切會把它們誤紅。**輪次最高的收據另看 PR head 的 tree**（本機 HEAD／CI --head-sha；merge-review
+#     R1 N1）：PR head 已含第五支就必填——最新輪次的 head_sha＝last_pen_commit（F2），.pen 內容與工作區相同，拿新腳本重跑一次
+#     就填得出對得上的 tree_hash；只看 head_sha tree 會留下「分支先併入新腳本、之後不再動 .pen」的窗口，新欄位可以永遠不填。
+#     舊輪次的收據產於新腳本存在之前、回填不可能，維持只看 head_sha tree。git 本身失敗（ls-tree／show 非 0，淺 clone／物件
+#     缺失）不算「檔案不存在」、不放行（fail closed）。盲區：tree_hash 只證明「收據對應這份 .pen」，不證明五支數字算對。
 # 掃描「有沒有真的跑對」（演算法本身正確性）不是這支腳本能驗的——那需要 Pen 的版面引擎，只能靠
 # visual-reviewer 用同方法重掃比對（見 .claude/agents/visual-reviewer.md）。
 #
@@ -200,20 +204,34 @@ for ev in "${candidates[@]}"; do
   is_latest=0
   [ "$round" = "$max_round" ] && is_latest=1
 
-  if ! PYTHONIOENCODING=utf-8 python3 - "$ev" "$pen_commits" "$last_pen_commit" "$is_latest" "$pen_relpath" "$landing_script" "$base_sha" <<'PY'
+  if ! PYTHONIOENCODING=utf-8 python3 - "$ev" "$pen_commits" "$last_pen_commit" "$is_latest" "$pen_relpath" "$landing_script" "$base_sha" "$head" <<'PY'
 import json, os, re, subprocess, sys, tempfile
 
-p, pen_commits_s, last_pen_commit, is_latest_s, pen_relpath, landing_script, base_sha = sys.argv[1:8]
+p, pen_commits_s, last_pen_commit, is_latest_s, pen_relpath, landing_script, base_sha, head = sys.argv[1:9]
 pen_commits = set(pen_commits_s.split())
 is_latest = is_latest_s == "1"
 # LS-122：舊 schema（兩支）只給本 gate 落地前就存在的收據——head_sha 的 committer 時間早於此時點（不看輪次，MJ-1）。
 LEGACY_CUTOFF = 1788321600  # 2026-09-02T04:00:00Z
 FOUR = ("sibling_intersection", "row_overflow", "cross_parent_collision", "corner_anchor")
-# LS-168：head_sha 那個 commit 的 tree 裡正典腳本含第五支 → 收據必須有 tree_hash 與 scans.text_occlusion（見檔頭）
+# LS-168：head_sha 那個 commit 的 tree 裡正典腳本含第五支 → 收據必須有 tree_hash 與 scans.text_occlusion；輪次最高的收據
+# 另看 PR head 的 tree（R1 N1，見檔頭）
 FIFTH_SCRIPT = "scripts/design/overflow-scan.js"
 FIFTH_MARKER = "scanTextOcclusion"
 sys.path.insert(0, os.path.dirname(os.path.abspath(landing_script)))
 import design_tree_hash  # noqa: E402
+
+
+def has_fifth(rev):
+    """rev 的 tree 裡正典腳本是否含第五支：True／False（檔案不存在或無標記）；git 本身失敗回 None（呼叫端 fail closed）。"""
+    ls = subprocess.run(["git", "ls-tree", rev, "--", FIFTH_SCRIPT], capture_output=True)
+    if ls.returncode != 0:
+        return None
+    if not ls.stdout.strip():
+        return False
+    show = subprocess.run(["git", "show", f"{rev}:{FIFTH_SCRIPT}"], capture_output=True)
+    if show.returncode != 0:
+        return None
+    return FIFTH_MARKER.encode("utf-8") in show.stdout
 
 def top_level(blob):
     """.pen 快照的頂層節點 {id: 正規化 JSON}（board／元件定義都在這一層）；解析失敗回 None。"""
@@ -246,6 +264,7 @@ want_nodes = None
 head_roots = None
 want_hash = None
 fifth = False
+fifth_at_sha = False
 
 if not isinstance(sha, str) or sha not in pen_commits:
     errs.append(
@@ -267,8 +286,14 @@ else:
             want_hash = design_tree_hash.tree_hash(json.loads(show.stdout.decode("utf-8")))
         except (UnicodeDecodeError, json.JSONDecodeError, TypeError) as e:
             errs.append(f"無法對 {sha[:7]}:{pen_relpath} 快照算 tree_hash（{type(e).__name__}: {e}）")
-        script = subprocess.run(["git", "show", f"{sha}:{FIFTH_SCRIPT}"], capture_output=True)
-        fifth = script.returncode == 0 and FIFTH_MARKER.encode("utf-8") in script.stdout
+        fifth_at_sha = has_fifth(sha)
+        fifth_at_head = has_fifth(head) if is_latest else False
+        if fifth_at_sha is None or fifth_at_head is None:
+            errs.append(
+                f"無法判定 {FIFTH_SCRIPT} 在 {sha[:7]}／PR head 的 tree 裡是否含第五支（git ls-tree／show 失敗，淺 clone 或物件缺失）"
+                "——不能靠猜放行舊收據（fail closed）"
+            )
+        fifth = bool(fifth_at_sha) or (is_latest and bool(fifth_at_head))
         tmp_path = None
         try:
             with tempfile.NamedTemporaryFile(suffix=".pen", delete=False) as tf:
@@ -380,6 +405,12 @@ else:
 # LS-168：tree_hash（收據對應 head_sha 那份 .pen）與第五支 text_occlusion（flagged 必為空）。
 # 新欄位只對「head_sha 快照的正典腳本已含第五支」的收據要求；舊收據缺欄位放行並印一行，欄位若在仍驗。
 receipt_hash = d.get("tree_hash")
+tx = scans.get("text_occlusion") if isinstance(scans, dict) else None
+if fifth and not fifth_at_sha and (receipt_hash is None or tx is None):
+    errs.append(
+        f"本 PR 輪次最高的收據：head_sha={sha[:7]} 落地時正典腳本尚無第五支，但 PR head 的 tree 已含（新腳本已併入本分支）"
+        "——最新輪次的 .pen 內容＝工作區，用現行 scripts/design/overflow-scan.js 對它重跑一次，把 tree_hash 與 scans.text_occlusion 補進這份收據（LS-168 R1 N1）"
+    )
 if receipt_hash is None and not fifth:
     pass
 elif not isinstance(receipt_hash, str) or not re.fullmatch(r"[0-9a-f]{16}", receipt_hash):
@@ -389,7 +420,6 @@ elif want_hash is not None and receipt_hash != want_hash:
         f"tree_hash 不符：收據={receipt_hash}，對 head_sha={sha[:7]} 那份 .pen 算出={want_hash}"
         "——收據不是對這份 .pen 單一次掃描（修前後拼接、或掃完又改稿再落地）；末次落地後重跑正典腳本、整份收據只能來自同一次 execute（LS-168，LS-152 r1／LS-142 r4 事故）"
     )
-tx = scans.get("text_occlusion") if isinstance(scans, dict) else None
 if tx is None and not fifth:
     pass
 elif not isinstance(tx, dict) or not isinstance(tx.get("flagged"), list):
@@ -413,7 +443,8 @@ schema = "兩支掃描皆有輸出（gate 落地前的既有收據，舊 schema�
 if fifth:
     schema += "、tree_hash 對應 head_sha 快照、text_occlusion.flagged 為空"
 elif receipt_hash is None or tx is None:
-    print(f"（{p}：head_sha={sha_disp} 快照的 {FIFTH_SCRIPT} 尚無第五支，LS-168 新欄位 tree_hash／text_occlusion 不要求——舊收據放行）")
+    also = "、PR head 的亦無" if is_latest else ""
+    print(f"（{p}：head_sha={sha_disp} 快照的 {FIFTH_SCRIPT} 尚無第五支{also}，LS-168 新欄位 tree_hash／text_occlusion 不要求——舊收據放行）")
 print(f"✓ design-evidence gate 通過：{p}（head_sha={sha_disp}{tag}，total_nodes={want_nodes}，{schema}）")
 PY
   then

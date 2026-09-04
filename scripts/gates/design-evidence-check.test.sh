@@ -18,6 +18,10 @@
 # 造雙親合併 commit 模擬 actions/checkout 的 HEAD：不給 --head-sha 仍紅（合併 commit 被當最後一次 .pen commit；形狀確認）、
 # 給 --head-sha <PR head> 綠、PR 自己漏列觸碰板仍紅（負控，只點名自己的板）、PR 把 base 併進來後歷史收據仍綠（每份收據以自己的
 # 共同祖先為 touched 基準）、--head-sha 解析不到／缺值 exit 2。修前（舊 gate）實跑：㉑ 負控／㉒／㉓／㉔／㉕ 六條紅，證明有鑑別力。
+#
+# LS-168：㉖～㉛-b 驗 tree_hash／第五支／舊收據放行；㉜～㉝（merge-review R1 N1）驗「輪次最高的收據另看 PR head tree」——.pen 最後一次
+# 落地時 tree 尚無第五支、之後分支才併入新腳本（不碰 .pen）→ 最新收據缺兩欄位紅（㉜；修前印「舊收據放行」綠）、同 head_sha 用新腳本
+# 重跑補齊即綠（㉜-b）、舊輪次 r5 不受 PR head 影響仍放行（㉝）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -578,6 +582,46 @@ write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha31" "00000000000
 g add design/evidence/LS-67-r6-overflow.json
 g commit -qm 'design(evidence): LS-67 r6 收據（舊 schema 但 tree_hash 錯）'
 expect 1 '㉛-b 舊收據但 tree_hash 欄位在且錯 → 仍紅（欄位在就驗）' 'tree_hash 不符' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㉜ merge-review R1 N1 重現：.pen 最後一次落地（sha32）時 tree 尚無第五支；之後分支才拿到新腳本（併入 commit 不碰 .pen，＝LS-152 R3+
+#    把 development 併進來的形狀）→ 最新收據缺 tree_hash／text_occlusion。修前 fifth 只看 head_sha tree → 印「舊收據放行」綠；修後
+#    is_latest 且 PR head tree 含第五支 → 紅，訊息指出「PR head 的 tree 已含」與補法
+add_script() {
+  mkdir -p "$R/scripts/design"
+  printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\n' > "$R/scripts/design/overflow-scan.js"
+  g add scripts/design/overflow-scan.js
+  g commit -qm 'chore: 併入含第五支的正典腳本（不碰 .pen）'
+}
+sha32="$(land5 pr-late-script 0)"
+write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha32" "" missing
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（舊 schema）'
+add_script
+expect 1 '㉜ 最新收據 head_sha tree 無第五支、但 PR head tree 已有 → 紅（N1：不得靠「之後不再動 .pen」永遠不填）' 'PR head 的 tree 已含' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㉜-b 同一 head_sha（＝last_pen_commit，.pen 內容未變）用新腳本重跑、補齊兩欄位 → 綠
+write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha32" "$(hash_of "$sha32")" ok
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（新腳本重跑補 tree_hash／text_occlusion）'
+expect 0 '㉜-b 同一 head_sha 用新腳本重跑補齊 tree_hash／text_occlusion → 綠' 'tree_hash 對應 head_sha 快照' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㉝ 只對最新輪次加嚴：r5（舊輪次，head_sha tree 無第五支、缺兩欄位）→ 分支併入新腳本 → r6 落地＋五支齊全收據。r5 產於新腳本
+#    存在之前、回填不可能 → 仍放行；r6 最新且齊全 → 綠。兩份皆綠，且 r5 印放行行（釘住「非最新不受 PR head tree 影響」）
+sha33a="$(land5 pr-late-script-r5 0)"
+write_receipt5 "$R/design/evidence/LS-67-r5-overflow.json" "$sha33a" "" missing
+g add design/evidence/LS-67-r5-overflow.json
+g commit -qm 'design(evidence): LS-67 r5 收據（舊 schema）'
+add_script
+printf '%s\n' '{"version": 1, "children": [{"id": "a", "children": [{"id": "b", "children": []}]}, {"id": "c", "children": []}, {"id": "d", "x": 5, "children": []}]}' > "$R/design/littlesprout.pen"
+g add design/littlesprout.pen
+g commit -qm 'design(pen): LS-67 r6 落地（搬 d）'
+sha33b="$(g rev-parse HEAD)"
+write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha33b" "$(hash_of "$sha33b")" ok
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（五支＋tree_hash）'
+expect 0 '㉝ 舊輪次 r5（head_sha tree 無第五支、缺欄位）＋最新 r6 五支齊全 → 兩份皆綠、r5 印放行行' 'LS-67-r5-overflow.json：head_sha=' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
 
 if [ "$fail" -eq 0 ]; then
