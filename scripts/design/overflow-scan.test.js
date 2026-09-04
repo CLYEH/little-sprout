@@ -6,7 +6,7 @@
 "use strict";
 const assert = require("assert");
 const path = require("path");
-const { scanAll, scanCornerAnchor, buildIndex, compactLines } = require(path.join(__dirname, "overflow-scan.js"));
+const { scanAll, scanCornerAnchor, scanTextOcclusion, buildIndex, compactLines, canon, canonNode, fnv1a64, hex64, treeHash, treeHashLines } = require(path.join(__dirname, "overflow-scan.js"));
 
 function N(id, parent, x, y, w, h, extra) {
   return Object.assign({ id, name: id, parent, type: "frame", enabled: true, x, y, w, h }, extra || {});
@@ -120,8 +120,8 @@ function ok(name, fn) {
   console.log("✓ " + name);
 }
 
-ok("輸出形狀：四支鍵齊全、corner_anchor 計數為整數、scanned_nodes 為輸入節點數", () => {
-  assert.deepStrictEqual(Object.keys(s).sort(), ["corner_anchor", "cross_parent_collision", "row_overflow", "sibling_intersection"]);
+ok("輸出形狀：五支鍵齊全、corner_anchor 計數為整數、scanned_nodes 為輸入節點數", () => {
+  assert.deepStrictEqual(Object.keys(s).sort(), ["corner_anchor", "cross_parent_collision", "row_overflow", "sibling_intersection", "text_occlusion"]);
   for (const k of ["containers", "points", "mismatch", "document_containers", "document_points", "document_mismatch"]) assert.ok(Number.isInteger(s.corner_anchor[k]), k);
   assert.ok(Array.isArray(s.corner_anchor.boards) && Array.isArray(s.corner_anchor.unresolved));
   assert.strictEqual(out.scanned_nodes, nodes.length);
@@ -251,5 +251,174 @@ ok("(d) 允差：0.5 內不算錯位、0.5 外算；兩對角容器（App icon �
 function r2(v) {
   return Math.round(v * 100) / 100;
 }
+
+// ───── LS-168 第五支 text_occlusion（絕對座標取自 LS-152 VR R1 f1cf27d0 實測；板原點平移到 0） ─────
+// 板 OE（BL-3 t5wI4）：Body 內 Row · 儲存空間 y 715→790（Label 725→750、Value 765→790），Tab Bar absolute (16,754,361,64)
+// 排在 Body 之後 → Value × Tab Bar 交集 241×25；Label 不交集；Tab Bar 自己的「設定」text 是其後代、不報
+const OE = N("OE", null, 0, 0, 393, 852, { name: "LS-152 / 01 設定" });
+const EBODY = N("EBODY", "OE", 0, 62, 393, 692, { name: "Body" });
+const EROW = N("EROW", "EBODY", 24, 715, 345, 75, { name: "Row · 儲存空間" });
+const ELABEL = N("ELABEL", "EROW", 70, 725, 241, 25, { name: "Label", type: "text" });
+const EVALUE = N("EVALUE", "EROW", 70, 765, 241, 25, { name: "Value", type: "text" });
+const ETAB = N("ETAB", "OE", 16, 754, 361, 64, { name: "Tab Bar", type: "ref" });
+const ETABTXT = N("ETABTXT", "ETAB", 300, 780, 40, 20, { name: "設定", type: "text" });
+// 板 OF（BL-2 z042Yg）：Link Wrap 的 Label 底 731、Underline 底 733（rectangle，非 text）；Action Bar 726→802 排在 Body 之後；
+// Action Bar 內 Button Wrap 也命中不了 OVERLAY_RE、Primary Label 是 Action Bar 後代 → 只報 Label × Action Bar
+const OF = N("OF", null, 1000, 0, 393, 852, { name: "LS-152 / 08 EULA 同意頁" });
+const FBODY = N("FBODY", "OF", 1000, 62, 393, 664, { name: "Body" });
+const FLINK = N("FLINK", "FBODY", 1024, 700, 345, 33, { name: "Link Wrap" });
+const FLABEL = N("FLABEL", "FLINK", 1024, 706, 306, 25, { name: "Label", type: "text" });
+const FUNDER = N("FUNDER", "FLINK", 1024, 732, 238, 1, { name: "Underline", type: "rectangle" });
+const FBAR = N("FBAR", "OF", 1000, 726, 393, 76, { name: "Action Bar" });
+const FWRAP = N("FWRAP", "FBAR", 1000, 727, 393, 75, { name: "Button Wrap" });
+const FBTN = N("FBTN", "FWRAP", 1024, 743, 345, 44, { name: "Agree Button", type: "ref" });
+const FBTNTXT = N("FBTNTXT", "FBTN", 1150, 752, 90, 25, { name: "Primary Label", type: "text" });
+// 板 OG（sheet）：Status Bar 的時間 text 在 Scrim 之下（Scrim 為後繪的 absolute 兄弟）——預設不報（Scrim 不在 OVERLAY_RE），
+// 覆寫 overlayRe 含 Scrim 才報；Confirm Sheet 內的 text 在 Sheet Wrap 之下但 Sheet Wrap 是祖先 → 不報
+const OG = N("OG", null, 2000, 0, 393, 852, { name: "LS-152 / 10 刪除日記 · 確認" });
+const GSB = N("GSB", "OG", 2000, 0, 393, 62, { name: "Status Bar (Backdrop)", type: "ref" });
+const GTIME = N("GTIME", "GSB", 2028, 20, 40, 20, { name: "Time", type: "text" });
+const GSCRIM = N("GSCRIM", "OG", 2000, 0, 393, 852, { name: "Scrim" });
+const GWRAP = N("GWRAP", "OG", 2000, 0, 393, 852, { name: "Sheet Wrap" });
+const GSHEET = N("GSHEET", "GWRAP", 2000, 500, 393, 352, { name: "Confirm Sheet" });
+const GTXT = N("GTXT", "GSHEET", 2024, 530, 345, 25, { name: "Title", type: "text" });
+// 板 OH：z-order——Banner 先繪（排在內容之前）、內容 text 蓋在 Banner 上 → 不報；disabled 的 Toast 蓋住 text → 不報；
+// 交集面積恰為 0（邊緣相接）→ 不報；Footer 內含 Toast 兩層都蓋住同一 text → 只報最外層 Footer
+const OH = N("OH", null, 3000, 0, 393, 852, { name: "OH 板" });
+const HBANNER = N("HBANNER", "OH", 3000, 0, 393, 60, { name: "Banner" });
+const HTXT1 = N("HTXT1", "OH", 3024, 20, 200, 25, { name: "Over Banner", type: "text" });
+const HTOAST = N("HTOAST", "OH", 3000, 100, 393, 40, { name: "Toast", enabled: false });
+const HTXT2 = N("HTXT2", "OH", 3024, 110, 200, 25, { name: "Under Disabled Toast", type: "text" });
+const HTXT3 = N("HTXT3", "OH", 3024, 300, 200, 25, { name: "Touching", type: "text" });
+const HTOAST2 = N("HTOAST2", "OH", 3000, 325, 393, 40, { name: "Toast" });
+const HTXT4 = N("HTXT4", "OH", 3024, 700, 200, 25, { name: "Under Footer", type: "text" });
+const HFOOT = N("HFOOT", "OH", 3000, 690, 393, 100, { name: "Footer" });
+const HFOOTTOAST = N("HFOOTTOAST", "HFOOT", 3000, 695, 393, 40, { name: "Toast" });
+// 板 OI：與板 OH 的 Footer 在畫布座標上重疊的 text（不同板）→ 不跨板報
+const OI = N("OI", null, 3000, 700, 393, 852, { name: "OI 板" });
+const ITXT = N("ITXT", "OI", 3024, 705, 200, 25, { name: "Other Board Text", type: "text" });
+
+const occNodes = [
+  OE, EBODY, EROW, ELABEL, EVALUE, ETAB, ETABTXT,
+  OF, FBODY, FLINK, FLABEL, FUNDER, FBAR, FWRAP, FBTN, FBTNTXT,
+  OG, GSB, GTIME, GSCRIM, GWRAP, GSHEET, GTXT,
+  OH, HBANNER, HTXT1, HTOAST, HTXT2, HTXT3, HTOAST2, HTXT4, HFOOT, HFOOTTOAST,
+  OI, ITXT,
+];
+const occ = scanAll(occNodes).scans.text_occlusion.flagged;
+const occPairs = (f) => f.map((x) => x.node + "×" + x.overlay).sort();
+
+ok("(e) 文字遮蔽：BL-3 Value × Tab Bar（241×25）、BL-2 Label × Action Bar 各報一筆；Label 不交集、Underline 非 text、Tab Bar／Action Bar 自己的後代 text 都不報；四支對這兩筆確實無感", () => {
+  assert.deepStrictEqual(occPairs(occ.filter((x) => x.board === "OE" || x.board === "OF")), ["EVALUE×ETAB", "FLABEL×FBAR"]);
+  const v = occ.find((x) => x.node === "EVALUE");
+  assert.deepStrictEqual([v.overlay_name, v.board_name, v.overlap], ["Tab Bar", "LS-152 / 01 設定", [241, 25]]);
+  const l = occ.find((x) => x.node === "FLABEL");
+  assert.deepStrictEqual([l.overlay_name, l.overlap], ["Action Bar", [306, 5]]);
+  const four = scanAll([OE, EBODY, EROW, ELABEL, EVALUE, ETAB, ETABTXT, OF, FBODY, FLINK, FLABEL, FUNDER, FBAR, FWRAP, FBTN, FBTNTXT], { crossAll: true }).scans;
+  const named = (arr) => arr.filter((f) => /EVALUE|FLABEL/.test(f.node_a + f.node_b + (f.node || "")));
+  assert.deepStrictEqual(named(four.cross_parent_collision.flagged).map((f) => f.node_a + "×" + f.node_b), [], "跨 parent 碰撞去重後只剩最外層 Body×Tab Bar／Body×Action Bar，指不到 text 節點");
+});
+
+ok("(e) z-order：Scrim 預設不算覆蓋層（modal 蓋底稿是刻意的）、overlayRe 覆寫含 Scrim 才報且 Sheet Wrap 對自己的後代不報；先繪的 Banner 不報；disabled Toast 不報；邊緣相接（面積 0）不報；Footer⊃Toast 只報最外層 Footer；不跨板", () => {
+  assert.deepStrictEqual(occPairs(occ.filter((x) => x.board === "OG")), []);
+  const withScrim = scanTextOcclusion(occNodes, undefined, { overlayRe: /Scrim|Sheet|Tab Bar|Action Bar/ }).flagged;
+  assert.deepStrictEqual(occPairs(withScrim.filter((x) => x.board === "OG")), ["GTIME×GSCRIM", "GTIME×GWRAP"], "Scrim 與 Sheet Wrap 是兄弟（非祖先鏈）、各報一筆；Confirm Sheet 是 Sheet Wrap 的後代、只報最外層 Sheet Wrap");
+  const strRe = scanTextOcclusion(occNodes, undefined, { overlayRe: "Scrim" }).flagged;
+  assert.deepStrictEqual(occPairs(strRe), ["GTIME×GSCRIM"], "字串形式的覆寫（Pencil 端 SCAN_OVERLAY_RE）也可用");
+  assert.deepStrictEqual(occPairs(occ.filter((x) => x.board === "OH")), ["HTXT4×HFOOT"]);
+  assert.deepStrictEqual(occPairs(occ.filter((x) => x.board === "OI")), []);
+});
+
+ok("(e) 範圍（同 corner_anchor）：boards=['OE'] → flagged 只算 OE（1）、document_flagged 仍 3；空 boards＝全稿；compactLines 段列 in-scope 分類＋DOCUMENT 按板計數", () => {
+  const r = scanAll(occNodes, { boards: ["OE"] }).scans.text_occlusion;
+  assert.deepStrictEqual([r.boards, occPairs(r.flagged), occPairs(r.document_flagged)], [["OE"], ["EVALUE×ETAB"], ["EVALUE×ETAB", "FLABEL×FBAR", "HTXT4×HFOOT"]]);
+  const all = scanAll(occNodes).scans.text_occlusion;
+  assert.deepStrictEqual([all.boards, occPairs(all.flagged)], [[], occPairs(all.document_flagged)]);
+  const text = compactLines(scanAll(occNodes, { boards: ["OE"] })).join("\n");
+  assert.ok(text.includes('SCAN text_occlusion boards=["OE"] flagged=1 classes=1 document=3'));
+  assert.ok(text.includes("  1× Value × Tab Bar @ LS-152 / 01 設定(OE) e.g. EVALUE×ETAB"));
+  assert.ok(text.includes("  DOCUMENT 1× board LS-152 / 08 EULA 同意頁(OF) e.g. FLABEL×FBAR"));
+});
+
+// 板 OJ（LS-142 16 上傳佇列 rTEGf 的形狀）：clip:true 的 List 在 Footer 上方結束（List 0→700、Footer 700→790），列的 text 捲到
+// List 底緣外（690→715）——可見部分只到 700，與 Footer 不交集 → 不報；同一幾何把 List 的 clip 拿掉就是真的被蓋 → 報
+const OJ = N("OJ", null, 4000, 0, 393, 852, { name: "OJ 板", clip: true });
+const OJLIST = N("OJLIST", "OJ", 4000, 0, 393, 700, { name: "List", clip: true });
+const OJROW = N("OJROW", "OJLIST", 4000, 690, 393, 25, { name: "Row" });
+const OJTXT = N("OJTXT", "OJROW", 4024, 690, 200, 25, { name: "Timestamp", type: "text" });
+const OJFOOT = N("OJFOOT", "OJ", 4000, 700, 393, 90, { name: "Footer" });
+ok("(e) 裁切：text 被 clip:true 的祖先（捲動 List）裁掉的部分不算被蓋——List 在 Footer 上方結束時不報；同一幾何 List 不裁切就報（可見矩形 ∩ Footer）", () => {
+  assert.deepStrictEqual(occPairs(scanAll([OJ, OJLIST, OJROW, OJTXT, OJFOOT]).scans.text_occlusion.flagged), []);
+  const noClip = Object.assign({}, OJLIST, { clip: false });
+  const r = scanAll([OJ, noClip, OJROW, OJTXT, OJFOOT]).scans.text_occlusion.flagged;
+  assert.deepStrictEqual(occPairs(r), ["OJTXT×OJFOOT"]);
+  assert.deepStrictEqual(r[0].overlap, [200, 15]);
+  const half = Object.assign({}, OJLIST, { h: 705 });
+  assert.deepStrictEqual(scanAll([OJ, half, OJROW, OJTXT, OJFOOT]).scans.text_occlusion.flagged[0].overlap, [200, 5], "List 伸進 Footer 5pt：只有那 5pt 可見部分算被蓋");
+});
+
+// ───── LS-168 tree_hash：canon／FNV-1a 64／逐行相加，與 scripts/gates/design_tree_hash.py 同值 ─────
+const doc = {
+  version: "2.17",
+  children: [
+    { type: "frame", id: "Ab12C", name: "板 一", x: 0, y: 0, width: 393, height: 852, layout: "vertical", padding: [8, "$screen-pad"], fill: { type: "gradient", size: { width: 1.6997455470737914 } },
+      children: [
+        { type: "text", id: "Tt9x", name: "Label 🎉", content: "多行\n\"引號\"\t\\ 反斜線", fontSize: "$fs-note" },
+        { type: "ref", id: "Rr7q", ref: "Cmp1", name: "Row", width: "fill_container", descendants: { n1hzsr: { enabled: false, y: 0 }, Zz: { content: "值" } } },
+      ] },
+    { type: "frame", id: "Cmp1", name: "cmp/Row", x: 100, y: 254.5, width: 100, reusable: true, children: [{ type: "text", id: "Zz", name: "V", enabled: true }] },
+  ],
+};
+const clone = () => JSON.parse(JSON.stringify(doc));
+const H0 = treeHash(treeHashLines(doc));
+
+ok("tree_hash：canon 鍵序無關、去掉 children、行含父 id 與 index；FNV-1a 64 對照向量（''／'a'／'foobar'）；輸出 16 碼 hex", () => {
+  assert.strictEqual(canon({ b: 1, a: [true, null, "x"] }), canon({ a: [true, null, "x"], b: 1 }));
+  assert.strictEqual(canon({ b: 1, a: [true, null, "x"] }), '{"a":[true,null,"x"],"b":1}');
+  assert.strictEqual(canonNode(doc.children[0], null, 0).split("\t").slice(0, 2).join("\t"), "\t0");
+  assert.strictEqual(canonNode(doc.children[0].children[1], "Ab12C", 1).split("\t").slice(0, 2).join("\t"), "Ab12C\t1");
+  assert.ok(!canonNode(doc.children[0], null, 0).includes("children"));
+  assert.strictEqual(hex64(fnv1a64("")), "cbf29ce484222325");
+  assert.strictEqual(hex64(fnv1a64("a")), "af63dc4c8601ec8c");
+  assert.strictEqual(hex64(fnv1a64("foobar")), "85944171f73967e8");
+  assert.ok(/^[0-9a-f]{16}$/.test(H0));
+});
+
+ok("tree_hash 敏感度：改一個節點的 x／enabled、兄弟換序、搬到別的父、改 descendants 覆寫、改 content 各自得到不同值；純 children 順序不變則相同", () => {
+  const seen = new Set([H0]);
+  const variants = [
+    (d) => { d.children[1].x = 101; },
+    (d) => { d.children[1].children[0].enabled = false; },
+    (d) => { d.children[0].children.reverse(); },
+    (d) => { const t = d.children[0].children.shift(); d.children[1].children.push(t); },
+    (d) => { d.children[0].children[1].descendants.n1hzsr.y = 1; },
+    (d) => { d.children[0].children[0].content += "。"; },
+    (d) => { d.children[0].padding = [8, 24]; },
+  ];
+  for (const mut of variants) {
+    const d = clone();
+    mut(d);
+    const h = treeHash(treeHashLines(d));
+    assert.ok(!seen.has(h), "變體應得到新的 hash");
+    seen.add(h);
+  }
+  assert.strictEqual(treeHash(treeHashLines(clone())), H0);
+  const shuffled = treeHashLines(doc).reverse();
+  assert.strictEqual(treeHash(shuffled), H0, "逐行相加：走訪順序無關（但 index 已在行內，兄弟換序仍會變）");
+});
+
+ok("tree_hash js／py 交叉一致：同一份合成 .pen（含 emoji／轉義／浮點／instance descendants）python design_tree_hash.py 算出同值；--dump 行與 canonNode 逐字相同", () => {
+  const fs = require("fs");
+  const os = require("os");
+  const { execFileSync } = require("child_process");
+  const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "LS-168-hash-")), "synthetic.pen");
+  fs.writeFileSync(tmp, JSON.stringify(doc));
+  const py = path.join(__dirname, "..", "gates", "design_tree_hash.py");
+  const got = execFileSync("python3", [py, tmp], { encoding: "utf8" }).trim();
+  assert.strictEqual(got, H0);
+  const dump = execFileSync("python3", [py, tmp, "--dump", "Rr7q"], { encoding: "utf8" }).replace(/\n$/, "");
+  assert.strictEqual(dump, canonNode(doc.children[0].children[1], "Ab12C", 1));
+  fs.rmSync(path.dirname(tmp), { recursive: true, force: true });
+});
 
 console.log("overflow-scan.test.js：全數通過（" + n + " 組）");
