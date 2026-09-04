@@ -587,12 +587,16 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `sent_at` 由誰、何時、以什麼語意寫入）合記在這裡，**iOS client 完全不會呼叫這張表**
   （沒有任何 grant，見下）。發送邏輯本體（決定通知對象、組文案、呼叫 APNs）是 Edge
   Function `push-dispatch`（見 §10），這裡只記它與這張表的資料面契約。
-- 來源：`comments`／`reactions`／`diaries`／`albums` 四張表各自的 `AFTER INSERT`
-  trigger，只在**新增**時觸發（留言/按讚的收回、日記/相簿的編輯或軟刪都不通知）。
-- 欄位：`kind`（`comment`/`reaction`/`diary`/`album`）＋`target_type`／`target_id`
-  （`comment`／`reaction` 指向被留言／被按讚的目標；`diary`／`album` 指向內容自己）＋
-  `actor_id`（最近一次觸發者）＋`event_count`（彙總筆數）＋`occurred_at`（最近一次
-  事件時間）＋`sent_at`（`NULL`＝待送，由 Edge Function／`service_role` 標記已送出）。
+- 來源：`comments`／`reactions`／`diaries`／`albums`／`media`（LS-175）五張表各自的
+  `AFTER INSERT` trigger，只在**新增**時觸發（留言/按讚的收回、日記/相簿/照片的
+  編輯或軟刪都不通知）。
+- 欄位：`kind`（`comment`/`reaction`/`diary`/`album`/`report`/`media`）＋
+  `target_type`／`target_id`（`comment`／`reaction` 指向被留言／被按讚的目標；
+  `diary`／`album` 指向內容自己；`media`（LS-175）指向**整個家庭**——
+  `target_type='family'`／`target_id=family_id`，理由見下方「`media` 來源
+  （LS-175）」）＋`actor_id`（最近一次觸發者）＋`event_count`（彙總筆數）＋
+  `occurred_at`（最近一次事件時間）＋`sent_at`（`NULL`＝待送，由 Edge Function／
+  `service_role` 標記已送出）。
 - **彙總策略**：同一 `family_id`＋`kind`＋`target_type`＋`target_id` 在 **5 分鐘滾動
   視窗**內的多次事件合併成同一筆（`event_count` 累加、`occurred_at` 更新成最新一次、
   `actor_id` 換成最新觸發者）——只要事件間隔小於 5 分鐘就持續延伸同一筆，不是從第一次
@@ -603,6 +607,26 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   （例如被踢出的前成員手上還記得的舊 id）的事件合併成一列，通知因此被算進錯的家庭。
   `create_comment`／`toggle_reaction`（§4）已經在寫入前擋掉「target 存在但屬於別家」
   （`LS026`），合併鍵含 `family_id` 是第二道防線。
+- **`media` 來源（LS-175，`private.notify_media_created()`，
+  `20260904170933_media_notification_events.sql`）——`kind='media'`，
+  `target_type='family'`／`target_id=family_id`，不是所屬相簿／日記**：這不是
+  簡化，是結構性事實——`media` 表沒有 `album_id`／`diary_id` 欄位（一張照片是否
+  掛進相簿／日記，是透過 `album_media`／`diary_media` 這兩張連結表**另一次、
+  之後才發生**的寫入，見 `LittleSprout/Services/Diary/MediaUploadService.swift`
+  的 `insertMediaRow` 與 `SupabaseDiaryAPIClient.attachMedia`——先 insert
+  `media` 列的請求跟後續 attach 進 `diary_media` 的請求是兩個分開的 HTTP round
+  trip，不是同一個交易）。`album_media`／`diary_media` 的複合外鍵要求 `media`
+  列必須先存在，所以 `media` 表自己的 `AFTER INSERT` trigger 在觸發當下，這批
+  照片究竟會不會、會掛進哪個相簿／日記，這個資訊在資料庫裡根本還不存在——對
+  這兩張連結表做 JOIN 只會查到 0 列，是恆假的死邏輯，這裡不寫。副作用（刻意
+  接受）：`kind='album'`（相簿**建立**本身）與 `kind='media'`（**上傳**照片，
+  不論最終有沒有掛進相簿）是兩個獨立、不會互相合併的事件——同一個使用者動作
+  若是「建立相簿並同時塞照片進去」，會收到兩則通知，不是一則。`event_count`
+  累加**張數**（`private.notify_media_created()` 是 statement-level trigger，
+  先用 transition table 按 `family_id` 分組再呼叫
+  `private.record_notification_event()`，同其餘四張來源表的既有慣例）；只在
+  `deleted_at is null` 時計入（軟刪／還原不通知；INSERT 當下 `deleted_at` 就已
+  非 NULL 的防禦性邊界也排除在外，見 migration 檔頭）。
 - **權限：成員完全讀不到**——沒有 RLS policy（`enable row level security` 但零 policy），
   也沒有任何 table grant 給 `authenticated`／`anon`；PostgREST 會在到達 RLS 之前就先被
   grant 層擋下（`42501`）。`service_role`（LS-22 的 Edge Function 用）明確 grant 了
@@ -2407,7 +2431,9 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
 
 - **文案彙總矩陣**（繁中、長輩可讀；`supabase/functions/push-dispatch/handler.ts`
   的 `buildMessageBody()`，依 `kind × event_count × target_type` 生成，目標標籤
-  `diary→日記／album→相簿／media→照片／comment→留言`）：
+  `diary→日記／album→相簿／media→照片／comment→留言`；`family` 標籤存在只是讓
+  `Record<ContentTargetType, string>` 保持窮舉，`kind='media'` 的訊息不透過
+  標籤組字，見下）：
 
   | kind | event_count = 1 | event_count > 1 |
   |---|---|---|
@@ -2415,21 +2441,29 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   | `reaction` | 「{actor}喜歡了你的{標籤}」 | 「{N} 個人喜歡了你的{標籤}」（例：「3 個人喜歡了你的照片」） |
   | `diary` | 「{actor}寫了一篇日記」 | 「{actor}新增了 {N} 篇日記」（防禦性分支，見下） |
   | `album` | 「{actor}新增了相簿」 | 「{actor}新增了 {N} 本相簿」（防禦性分支，見下） |
+  | `media`（LS-175） | 「{actor}新增了一張照片」 | 「{actor}新增了 {N} 張照片」（例：「爸爸新增了 50 張照片」，票文原始範例） |
 
   `actor` 取 `claim_notification_events()` 已 `COALESCE` 過的
   `actor_display_name`（`NULL` fallback「家人」）。
 
-  **已知、刻意的規格分歧（票文字面 vs. 實際可用資料）**：票文給的範例把 `album`
-  kind 對應到「爸爸新增了 50 張照片」，但 `album` kind 只在**建立相簿本身**時
-  觸發（`private.notify_album_created()`，見
+  **已知、刻意的規格分歧（票文字面 vs. 實際可用資料，`album`／`diary` 兩個既有
+  kind，LS-172 落地時的記錄）**：票文給的範例把 `album` kind 對應到「爸爸新增了
+  50 張照片」，但 `album` kind 只在**建立相簿本身**時觸發
+  （`private.notify_album_created()`，見
   `20260825020000_comments_reactions_notifications.sql` §3），`target_id` 是每本
   相簿自己的 id——不同相簿天生無法合併（合併鍵含 `target_id`），`event_count`
-  對這個 kind 在目前的 trigger 設計下**恆為 1**，且完全沒有「這本相簿裡有幾張
-  照片」這個訊號（上傳照片進相簿走 `media`／`album_media`，LS-58 沒有為這兩張表
-  建立任何 trigger）。`diary` kind 同理（`target_id` 也是日記自己的 id，
-  `event_count` 同樣恆為 1）。這裡不虛構一個資料庫給不出來的數字，`album` 訊息
-  改成不帶張數；`event_count > 1` 是防禦性分支（今天的 trigger 設計下不會發生，
-  日後若 schema 演進出「批次建立多本相簿合併通知」的需求，這個分支已經存在）。
+  對這個 kind 在目前的 trigger 設計下**恆為 1**。這裡不虛構一個資料庫給不出來的
+  數字，`album` 訊息改成不帶張數；`event_count > 1` 是防禦性分支（今天的 trigger
+  設計下不會發生，日後若 schema 演進出「批次建立多本相簿合併通知」的需求，這個
+  分支已經存在）。`diary` kind 同理。
+
+  **LS-175 起，「批次上傳 50 張照片合併成一則」這個票文原始範例已經有真正的
+  `kind='media'` 事件可用**（`media` 表自己的 `AFTER INSERT` trigger，見 §3
+  「`media` 來源（LS-175）」）——`target_type` 恆為 `'family'`，不是所屬相簿／
+  日記（結構性理由同上：`media` 表沒有 album_id／diary_id，trigger 觸發當下
+  這批照片會不會、會掛進哪個相簿／日記這個資訊還不存在），所以
+  `buildMessageBody()` 的 `media` 分支不使用 `TARGET_LABEL` 組出「在你的 xxx」
+  這種子句，訊息本身就是完整句子。
 
 - **失效 token 處理**（APNs 回 `410 Unregistered` 或 `400 BadDeviceToken`）：
   `push-dispatch` 直接 `DELETE FROM device_tokens WHERE token = $1`（`service_role`
