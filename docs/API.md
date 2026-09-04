@@ -1462,6 +1462,19 @@ Edge Function 完成刪除）。三層（`validationRetryable`／`retryableSyste
   同步 PUT 進 Storage，寫入路徑對應 `public.media.thumb_path`（見上方 `media` 表，
   §3）；`thumb_width`／`thumb_height` 填縮圖實際輸出的像素寬高，不是原圖的等比縮放
   理論值。
+- **寶貝大頭照（LS-169）：`{family_id}/avatars/{child_id}.jpg`**——與上面「原始檔案／
+  縮圖」是同一個路徑規約判斷式 `private.is_media_object_path()` 並列的第二種合法
+  形狀（`supabase/migrations/20260904060700_avatar_object_path.sql`），但**不寫**
+  `public.media` 表（不是任何一筆 `media` 列的 `storage_path`／`thumb_path`，不計入
+  額度、不會出現在時間軸／相簿），路徑直接寫進 `public.children.avatar_url`（PUT
+  語意，見 `update_child`）。`{family_id}`／`{child_id}` 一律小寫正規形 UUID（同上
+  ——`children.id` 由 Postgres 產生，`uuid::text` 輸出恆為小寫；Swift 端一樣要
+  `.lowercased()`）；副檔名固定 `.jpg`（客戶端裁方成正方形、縮到 512×512、JPEG
+  品質 0.8 後上傳，不像原圖／縮圖那樣接受多種格式）。換照片＝對同一個路徑
+  `upsert: true` 覆蓋上傳，不是每次都開新路徑；讀取同樣走短效簽名 URL（同
+  `thumb_path` 的既有慣例，見下方「簽名 URL 與 egress 防線」）。家庭歸屬與上傳權
+  判斷完全沿用既有 policy 的 `uploadable_family_ids()`／`owned_family_ids()` 分支，
+  沒有另開規則。
 
 ### storage.objects 的 RLS（四條 policy，皆 `to authenticated`）
 
