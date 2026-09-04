@@ -28,6 +28,9 @@ export SUPABASE_LOCK_DIR="$work/lock"
 # ⑮～⑰（本票：驗 Booted 判定）各自在呼叫時明講 SIMCTL_LIST_JSON（⑭ 特意設成空字串讓它照舊落回
 # PATH 裡的 xcrun stub——patrol.sh 用 `${SIMCTL_LIST_JSON:-…}`，空字串與未設值同樣觸發預設值）。
 export SIMCTL_LIST_JSON='{"devices":{}}'
+# LS-176：磁碟水位段預設門檻 20 GB——CI runner／開發機當下可用空間可能真的低於 20 GB，不隔離的話 ⑧「全正常無 ⚠」
+# 這類既有斷言會隨機器狀態偶發紅。統一設成 0（永不觸發），㉑ 自己在呼叫時覆寫門檻與兩個目錄。
+export PATROL_DISK_MIN_GB=0
 
 # 臨時 repo 與本機全域／系統 git 設定隔離：自測結果不能因人而異
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
@@ -575,6 +578,62 @@ if printf '%s' "$json20_out" | python3 -c 'import json,sys; json.load(sys.stdin)
 else
   echo "✗ ⑳ --json 不是合法 JSON" >&2; printf '%s\n' "$json20_out" | sed 's/^/    /' >&2; fail=1
 fi
+
+# ---- ㉑ 磁碟水位（LS-176）：門檻設成必觸發（999999 GB）→ human／--brief／--json 都標 ⚠、列 Devices／DerivedData 體積
+#        （PATROL_SIM_DEVICES_DIR／PATROL_DERIVED_DATA_DIR 指到小假目錄，不對真的 ~/Library 跑 du）與 LS-* 專屬模擬器
+#        台數（從 SIMCTL_LIST_JSON 算；main-*／原廠機不算）；門檻 0（永不觸發）→ 不標、不 du（json devices_gb null）、
+#        但仍印一行可用量＋台數；門檻非整數 → exit 2。mutation：閾值比較方向反了、台數把 main-* 算進去、
+#        ⚠ 沒掛 add_flag（brief／json 看不到）→ 這裡紅 ----
+mkdir -p "$work/fake-devices/A" "$work/fake-dd/LittleSprout-x"
+echo data > "$work/fake-devices/A/f"; echo data > "$work/fake-dd/LittleSprout-x/f"
+disk_json='{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-0" : [
+      {
+        "udid" : "D1",
+        "name" : "LS-90-iPhoneAir",
+        "state" : "Shutdown"
+      },
+      {
+        "udid" : "D2",
+        "name" : "LS-176-iPhone17Pro",
+        "state" : "Shutdown"
+      },
+      {
+        "udid" : "D3",
+        "name" : "main-iPhone17Pro",
+        "state" : "Shutdown"
+      },
+      {
+        "udid" : "D4",
+        "name" : "iPhone 17 Pro",
+        "state" : "Shutdown"
+      }
+    ]
+  }
+}'
+out21="$(SIMCTL_LIST_JSON="$disk_json" PATROL_DISK_MIN_GB=999999 PATROL_SIM_DEVICES_DIR="$work/fake-devices" PATROL_DERIVED_DATA_DIR="$work/fake-dd" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
+rc_is '㉑ 低於門檻仍 exit 0' 0 "$rc" "$out21"
+has   '㉑ human 模式有磁碟水位段' "$out21" '== 磁碟水位'
+has   '㉑ 低於門檻 → ⚠ 磁碟可用 … < 999999 GB' "$out21" 'GB < 999999 GB'
+has   '㉑ 列 CoreSimulator/Devices 體積（假目錄 0 GB）' "$out21" 'CoreSimulator/Devices 0 GB'
+has   '㉑ 列 DerivedData 體積' "$out21" 'DerivedData 0 GB'
+has   '㉑ 列 LS-* 專屬模擬器台數＝2（main-*／原廠機不算）' "$out21" 'LS-* 專屬模擬器 2 台'
+has   '㉑ 處置指到 cleanup-merged.sh --apply' "$out21" 'cleanup-merged.sh --apply LS-<n>'
+brief21="$(SIMCTL_LIST_JSON="$disk_json" PATROL_DISK_MIN_GB=999999 PATROL_SIM_DEVICES_DIR="$work/fake-devices" PATROL_DERIVED_DATA_DIR="$work/fake-dd" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㉑ --brief 也印 [磁碟]（掛 add_flag）' "$brief21" '[磁碟] ⚠ 磁碟可用'
+has   '㉑ --brief 表頭含磁碟可用' "$brief21" '· 磁碟可用 '
+json21="$(SIMCTL_LIST_JSON="$disk_json" PATROL_DISK_MIN_GB=999999 PATROL_SIM_DEVICES_DIR="$work/fake-devices" PATROL_DERIVED_DATA_DIR="$work/fake-dd" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '㉑ --json：disk 欄位（avail_gb 數字、min_gb 999999、devices_gb／derived_data_gb 數字、dedicated_simulators 2、flag 有句、flags 含一筆 [磁碟]）' "$json21" \
+  '(.disk.avail_gb | type == "number") and .disk.min_gb == 999999 and (.disk.devices_gb | type == "number") and (.disk.derived_data_gb | type == "number") and .disk.dedicated_simulators == 2 and (.disk.flag | test("磁碟可用")) and ([.flags[] | select(startswith("[磁碟]"))] | length == 1)'
+out21b="$(SIMCTL_LIST_JSON="$disk_json" PATROL_DISK_MIN_GB=0 PATROL_SIM_DEVICES_DIR="$work/fake-devices" PATROL_DERIVED_DATA_DIR="$work/fake-dd" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㉑ 高於門檻（門檻 0）→ 不標 ⚠ 磁碟' "$out21b" '⚠ 磁碟可用'
+has   '㉑ 高於門檻仍印一行可用量與台數  ok' "$out21b" 'LS-* 專屬模擬器 2 台  ok'
+brief21b="$(SIMCTL_LIST_JSON="$disk_json" PATROL_DISK_MIN_GB=0 bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㉑ 高於門檻 --brief 無 [磁碟]' "$brief21b" '[磁碟]'
+json21b="$(SIMCTL_LIST_JSON="$disk_json" PATROL_DISK_MIN_GB=0 bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '㉑ 高於門檻 --json：disk.flag 空、devices_gb null（沒跑 du）、flags 無 [磁碟]' "$json21b" '.disk.flag == "" and .disk.devices_gb == null and ([.flags[] | select(startswith("[磁碟]"))] | length == 0)'
+out21c="$(PATROL_DISK_MIN_GB=abc bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc_is '㉑ PATROL_DISK_MIN_GB 非整數 → exit 2' 2 "$?" "$out21c"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
