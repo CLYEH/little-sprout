@@ -96256,7 +96256,7 @@
                   "id": "lO4Cw",
                   "name": "Album Grid",
                   "width": "fill_container",
-                  "gap": 16,
+                  "gap": "$sp-block",
                   "children": [
                     {
                       "type": "frame",
