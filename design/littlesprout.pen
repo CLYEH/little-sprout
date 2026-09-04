@@ -131217,10 +131217,10 @@
       "id": "Yc4EC",
       "x": 0,
       "y": 6996,
-      "name": "LS-163 / 01b 歡迎登入 · 含密碼登入連結 (iPhone)",
+      "name": "LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPhone)",
       "clip": true,
       "width": 393,
-      "height": 904,
+      "height": 852,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -131253,7 +131253,7 @@
           "id": "J0nnbt",
           "name": "Top",
           "width": "fill_container",
-          "height": 354,
+          "height": 308,
           "layout": "vertical",
           "children": [
             {
@@ -131280,7 +131280,7 @@
               "id": "NXaPr",
               "name": "Print Stage",
               "width": "fill_container",
-              "height": 292,
+              "height": 246,
               "layout": "none",
               "children": [
                 {
@@ -131696,124 +131696,150 @@
                 },
                 {
                   "type": "frame",
-                  "id": "avXOP",
-                  "name": "Password Login Link Wrap",
+                  "id": "Qc7pt",
+                  "name": "Link Legal Group",
                   "width": "fill_container",
-                  "padding": [
-                    "$ctl-pad-tap",
-                    0
-                  ],
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "KGSmX",
-                      "name": "Password Login Link Label",
-                      "fill": "$text-secondary",
-                      "content": "以帳號密碼登入",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "e0eSg",
-                  "name": "Legal Wrap",
-                  "width": "fill_container",
-                  "height": 38,
                   "layout": "vertical",
-                  "padding": [
-                    12,
-                    0,
-                    0,
-                    0
-                  ],
                   "children": [
                     {
                       "type": "frame",
-                      "id": "eYIt7",
-                      "name": "Legal",
+                      "id": "avXOP",
+                      "name": "Password Login Link Wrap",
                       "width": "fill_container",
+                      "padding": [
+                        "$ctl-pad-tap",
+                        0
+                      ],
                       "justifyContent": "center",
+                      "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "joGaG",
-                          "name": "Legal Seg",
-                          "fill": "$text-secondary",
-                          "content": "登入即表示你同意",
-                          "lineHeight": 1.5,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        },
-                        {
                           "type": "frame",
-                          "id": "cfFCt",
-                          "name": "Legal Link",
+                          "id": "LZDnN",
+                          "name": "Password Login Link",
                           "layout": "vertical",
                           "gap": 1,
                           "children": [
                             {
                               "type": "text",
-                              "id": "Js21h",
-                              "name": "Link Label",
+                              "id": "KGSmX",
+                              "name": "Password Login Link Label",
                               "fill": "$text-primary",
-                              "content": "《使用條款》",
-                              "lineHeight": 1.5,
+                              "content": "以帳號密碼登入",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-meta",
+                              "fontSize": "$fs-note",
                               "fontWeight": "normal"
                             },
                             {
                               "type": "rectangle",
-                              "id": "a9A0ki",
+                              "id": "ZYNKU",
                               "name": "Link Underline",
                               "fill": "$text-primary",
                               "width": "fill_container",
                               "height": 1
                             }
                           ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "rV478",
-                          "name": "Legal Seg",
-                          "fill": "$text-secondary",
-                          "content": "與",
-                          "lineHeight": 1.5,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        },
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "e0eSg",
+                      "name": "Legal Wrap",
+                      "width": "fill_container",
+                      "height": 38,
+                      "layout": "vertical",
+                      "padding": [
+                        12,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
                         {
                           "type": "frame",
-                          "id": "M0ODt",
-                          "name": "Legal Link",
-                          "layout": "vertical",
-                          "gap": 1,
+                          "id": "eYIt7",
+                          "name": "Legal",
+                          "width": "fill_container",
+                          "justifyContent": "center",
                           "children": [
                             {
                               "type": "text",
-                              "id": "I5zfy",
-                              "name": "Link Label",
-                              "fill": "$text-primary",
-                              "content": "《隱私權政策》",
+                              "id": "joGaG",
+                              "name": "Legal Seg",
+                              "fill": "$text-secondary",
+                              "content": "登入即表示你同意",
                               "lineHeight": 1.5,
                               "fontFamily": "$font",
                               "fontSize": "$fs-meta",
                               "fontWeight": "normal"
                             },
                             {
-                              "type": "rectangle",
-                              "id": "qI8OR",
-                              "name": "Link Underline",
-                              "fill": "$text-primary",
-                              "width": "fill_container",
-                              "height": 1
+                              "type": "frame",
+                              "id": "cfFCt",
+                              "name": "Legal Link",
+                              "layout": "vertical",
+                              "gap": 1,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Js21h",
+                                  "name": "Link Label",
+                                  "fill": "$text-primary",
+                                  "content": "《使用條款》",
+                                  "lineHeight": 1.5,
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-meta",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "a9A0ki",
+                                  "name": "Link Underline",
+                                  "fill": "$text-primary",
+                                  "width": "fill_container",
+                                  "height": 1
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "rV478",
+                              "name": "Legal Seg",
+                              "fill": "$text-secondary",
+                              "content": "與",
+                              "lineHeight": 1.5,
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "M0ODt",
+                              "name": "Legal Link",
+                              "layout": "vertical",
+                              "gap": 1,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "I5zfy",
+                                  "name": "Link Label",
+                                  "fill": "$text-primary",
+                                  "content": "《隱私權政策》",
+                                  "lineHeight": 1.5,
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-meta",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "qI8OR",
+                                  "name": "Link Underline",
+                                  "fill": "$text-primary",
+                                  "width": "fill_container",
+                                  "height": 1
+                                }
+                              ]
                             }
                           ]
                         }
@@ -131852,13 +131878,13 @@
       "id": "M2qW9",
       "x": 0,
       "y": 7980,
-      "name": "LS-163 / 01b 歡迎登入 · 含密碼登入連結 · 深色",
+      "name": "LS-163 / 01e 歡迎登入 · 含密碼登入連結 · 深色",
       "theme": {
         "mode": "dark"
       },
       "clip": true,
       "width": 393,
-      "height": 904,
+      "height": 852,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -131891,7 +131917,7 @@
           "id": "leXDR",
           "name": "Top",
           "width": "fill_container",
-          "height": 486.6,
+          "height": 440.6,
           "layout": "vertical",
           "children": [
             {
@@ -131918,7 +131944,7 @@
               "id": "BTPEr",
               "name": "Print Stage",
               "width": "fill_container",
-              "height": 424.6,
+              "height": 378.6,
               "layout": "none",
               "children": [
                 {
@@ -132375,124 +132401,150 @@
                 },
                 {
                   "type": "frame",
-                  "id": "J5kTR8",
-                  "name": "Password Login Link Wrap",
+                  "id": "qbCkG",
+                  "name": "Link Legal Group",
                   "width": "fill_container",
-                  "padding": [
-                    "$ctl-pad-tap",
-                    0
-                  ],
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "QCFya",
-                      "name": "Password Login Link Label",
-                      "fill": "$text-secondary",
-                      "content": "以帳號密碼登入",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "kDWkE",
-                  "name": "Legal Wrap",
-                  "width": "fill_container",
-                  "height": 38,
                   "layout": "vertical",
-                  "padding": [
-                    12,
-                    0,
-                    0,
-                    0
-                  ],
                   "children": [
                     {
                       "type": "frame",
-                      "id": "Wyov4",
-                      "name": "Legal",
+                      "id": "J5kTR8",
+                      "name": "Password Login Link Wrap",
                       "width": "fill_container",
+                      "padding": [
+                        "$ctl-pad-tap",
+                        0
+                      ],
                       "justifyContent": "center",
+                      "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "vQusd",
-                          "name": "Legal Seg",
-                          "fill": "$text-secondary",
-                          "content": "登入即表示你同意",
-                          "lineHeight": 1.5,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        },
-                        {
                           "type": "frame",
-                          "id": "vXoV7",
-                          "name": "Legal Link",
+                          "id": "Byrhn",
+                          "name": "Password Login Link",
                           "layout": "vertical",
                           "gap": 1,
                           "children": [
                             {
                               "type": "text",
-                              "id": "vsFRi",
-                              "name": "Link Label",
+                              "id": "QCFya",
+                              "name": "Password Login Link Label",
                               "fill": "$text-primary",
-                              "content": "《使用條款》",
-                              "lineHeight": 1.5,
+                              "content": "以帳號密碼登入",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-meta",
+                              "fontSize": "$fs-note",
                               "fontWeight": "normal"
                             },
                             {
                               "type": "rectangle",
-                              "id": "IEcXp",
+                              "id": "vzgCg",
                               "name": "Link Underline",
                               "fill": "$text-primary",
                               "width": "fill_container",
                               "height": 1
                             }
                           ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "aBKGx",
-                          "name": "Legal Seg",
-                          "fill": "$text-secondary",
-                          "content": "與",
-                          "lineHeight": 1.5,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        },
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kDWkE",
+                      "name": "Legal Wrap",
+                      "width": "fill_container",
+                      "height": 38,
+                      "layout": "vertical",
+                      "padding": [
+                        12,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
                         {
                           "type": "frame",
-                          "id": "t2ewW",
-                          "name": "Legal Link",
-                          "layout": "vertical",
-                          "gap": 1,
+                          "id": "Wyov4",
+                          "name": "Legal",
+                          "width": "fill_container",
+                          "justifyContent": "center",
                           "children": [
                             {
                               "type": "text",
-                              "id": "TNo4N",
-                              "name": "Link Label",
-                              "fill": "$text-primary",
-                              "content": "《隱私權政策》",
+                              "id": "vQusd",
+                              "name": "Legal Seg",
+                              "fill": "$text-secondary",
+                              "content": "登入即表示你同意",
                               "lineHeight": 1.5,
                               "fontFamily": "$font",
                               "fontSize": "$fs-meta",
                               "fontWeight": "normal"
                             },
                             {
-                              "type": "rectangle",
-                              "id": "M2HMtN",
-                              "name": "Link Underline",
-                              "fill": "$text-primary",
-                              "width": "fill_container",
-                              "height": 1
+                              "type": "frame",
+                              "id": "vXoV7",
+                              "name": "Legal Link",
+                              "layout": "vertical",
+                              "gap": 1,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "vsFRi",
+                                  "name": "Link Label",
+                                  "fill": "$text-primary",
+                                  "content": "《使用條款》",
+                                  "lineHeight": 1.5,
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-meta",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "IEcXp",
+                                  "name": "Link Underline",
+                                  "fill": "$text-primary",
+                                  "width": "fill_container",
+                                  "height": 1
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "aBKGx",
+                              "name": "Legal Seg",
+                              "fill": "$text-secondary",
+                              "content": "與",
+                              "lineHeight": 1.5,
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "t2ewW",
+                              "name": "Legal Link",
+                              "layout": "vertical",
+                              "gap": 1,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "TNo4N",
+                                  "name": "Link Label",
+                                  "fill": "$text-primary",
+                                  "content": "《隱私權政策》",
+                                  "lineHeight": 1.5,
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-meta",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "M2HMtN",
+                                  "name": "Link Underline",
+                                  "fill": "$text-primary",
+                                  "width": "fill_container",
+                                  "height": 1
+                                }
+                              ]
                             }
                           ]
                         }
@@ -132531,13 +132583,13 @@
       "id": "aEb17",
       "x": 0,
       "y": 8964,
-      "name": "A11y / 01b 歡迎登入 · 含密碼登入連結 · Dynamic Type AX3（body 40pt）",
+      "name": "A11y / 01e 歡迎登入 · 含密碼登入連結 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
       },
       "clip": true,
       "width": 393,
-      "height": 1158,
+      "height": 1160,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -133039,17 +133091,32 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "f5uDA",
-                      "name": "Password Login Link Label",
-                      "fill": "$text-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "以帳號密碼登入",
-                      "textAlign": "center",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
+                      "type": "frame",
+                      "id": "t9VOk9",
+                      "name": "Password Login Link",
+                      "width": 280,
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "f5uDA",
+                          "name": "Password Login Link Label",
+                          "fill": "$text-primary",
+                          "content": "以帳號密碼登入",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "WNK83",
+                          "name": "Link Underline",
+                          "fill": "$text-primary",
+                          "width": "fill_container",
+                          "height": 1
+                        }
+                      ]
                     }
                   ]
                 },
@@ -133363,6 +133430,10 @@
                               "id": "OzB1F",
                               "name": "Toggle Wrap",
                               "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-tap",
+                                0
+                              ],
                               "alignItems": "center",
                               "children": [
                                 {
@@ -133651,6 +133722,10 @@
                               "id": "tvStU",
                               "name": "Toggle Wrap",
                               "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-tap",
+                                0
+                              ],
                               "alignItems": "center",
                               "children": [
                                 {
@@ -133940,6 +134015,10 @@
                               "id": "i2wPv",
                               "name": "Toggle Wrap",
                               "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-tap",
+                                0
+                              ],
                               "alignItems": "center",
                               "children": [
                                 {
@@ -133970,13 +134049,13 @@
                           "enabled": true
                         },
                         "a7OyZ7": {
-                          "icon": "circle-alert",
-                          "fill": "$danger"
+                          "icon": "info",
+                          "fill": "$text-secondary"
                         },
                         "ikuz2": {
-                          "content": "帳號或密碼錯誤，請再試一次。",
-                          "fill": "$danger",
-                          "fontWeight": "600"
+                          "content": "此為審核專用帳號，如需協助請洽開發者聯絡資訊。",
+                          "fill": "$text-secondary",
+                          "fontWeight": "normal"
                         }
                       }
                     }
@@ -133998,6 +134077,38 @@
                 0
               ],
               "children": [
+                {
+                  "type": "frame",
+                  "id": "K3MZzs",
+                  "name": "Error Row",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "IiOOi",
+                      "name": "Error Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$danger"
+                    },
+                    {
+                      "type": "text",
+                      "id": "NoF9F",
+                      "name": "Error Text",
+                      "fill": "$danger",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "帳號或密碼錯誤，請再試一次。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
                 {
                   "type": "frame",
                   "id": "saLwO",
@@ -134237,6 +134348,10 @@
                               "id": "e6qUg",
                               "name": "Toggle Wrap",
                               "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-tap",
+                                0
+                              ],
                               "alignItems": "center",
                               "children": [
                                 {
@@ -134560,6 +134675,10 @@
                               "id": "S45ig",
                               "name": "Toggle Wrap",
                               "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-tap",
+                                0
+                              ],
                               "alignItems": "center",
                               "children": [
                                 {
@@ -134851,6 +134970,10 @@
                               "id": "DqJf1",
                               "name": "Toggle Wrap",
                               "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-tap",
+                                0
+                              ],
                               "alignItems": "center",
                               "children": [
                                 {
@@ -135134,6 +135257,10 @@
                               "id": "Rc18R",
                               "name": "Toggle Wrap",
                               "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-tap",
+                                0
+                              ],
                               "alignItems": "center",
                               "children": [
                                 {
@@ -135308,7 +135435,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "01b 家族三板（含深色／AX3）：沿用既有 01／01c／AX3-01 板的 chrome、印品幾何完全不變，唯一新增節點是 Actions 內的 Password Login Link Wrap（純文字連結，$fs-note／$text-secondary，非按鈕外觀，不吃 $accent 配額）。三板因新增內容 Welcome Block 高度增加，root height 隨之更新：iPhone 852→904、深色 852→904、AX3 1073→1158（多出的高度全數來自新增連結列本身，非倒推餘數，見「尺寸規格值與量法」節）。",
+                  "content": "01e 家族三板（原 R1 暫名「01b」，R2 依 VR MJ-3 改名，見「板名沿革」節；含深色／AX3）：沿用既有 01／01c／AX3-01 板的 chrome、印品幾何完全不變，Actions 內新增 Link Legal Group（Password Login Link Wrap＋Legal Wrap 合併，$fs-note／$text-primary＋1pt 底線，非按鈕外觀，不吃 $accent 配額——R2 MJ-1 由 $text-secondary 改色並補底線）。iPhone／深色兩板 root height＝852（R1 曾誤放大到 904，R2 BL-1 修正回裝置高度，見「尺寸規格值與量法」節）；AX3 內容驅動＝1160（R1 1158，R2 因底線加高連結列 +2 同步復算）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -135628,7 +135755,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "01b 家族連結列（Password Login Link Wrap）：padding [$ctl-pad-tap, 0]（9.5 上下），量測後 iPhone 熱區高度剛好 44pt（Yc4EC 板實測 avXOP 節點 bounds.height）；AX3 因文字放大到 40pt，量測熱區高度 77pt（aEb17 板，Y6Yyz 節點，textGrowth fixed-width＋width fill_container＋textAlign center）。root height 硬寫字面值三筆（規格值族「單畫面總高」，皆為 Welcome Block 內容撐高後的實測結果，非任意數字）：Yc4EC 904、M2qW9 904、aEb17 1158。",
+                  "content": "01e 家族連結列（Password Login Link Wrap）：padding [$ctl-pad-tap, 0]（9.5 上下），含 MJ-1 底線後 iPhone 熱區 46pt（Yc4EC 板 avXOP 節點，≥44pt 達標）；AX3 熱區 79pt（aEb17 板 Y6Yyz 節點）。R2 BL-1（VR comment e0022dbe）要求 Yc4EC／M2qW9 board height 回到裝置高度 852（R1 曾誤放大到 904）：改法＝(1) Print Stage／Top 兩層高度雙雙下修（Yc4EC：Print Stage 292→246、Top 354→308；M2qW9：Print Stage 424.6→378.6、Top 486.6→440.6，兩者皆從 Print Stage 的既有呼吸帶挪用，Print 卡片本身座標不動、角托錨點不受影響）(2) 新增 Link Legal Group（Qc7pt／qbCkG）把 Password Login Link Wrap 與 Legal Wrap 合併成同一個 Actions 子節點（內部 gap:0，改靠 Legal Wrap 自身既有 12pt 頂內距分隔），省下 Actions 原本在兩者之間的一道 $sp-label(8) 自動 gap。兩板最終 root height 皆鎖定 852，enabled 節點最大 rel bottom 851.6（0.4pt slack，與 svedU 原板同一慣例）。aEb17（AX3）依 VR 裁定維持內容驅動高度：R1 1073+77+8=1158 之後，MJ-1 底線把連結列從 77 拉高到 79，R2 復算 1073+79+8=1160，已同步更新。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -135762,7 +135889,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "三板板名沿用票文字面「01b」（LS-163 / 01b 歡迎登入 · 含密碼登入連結），與既有 LS-17 01b 歡迎登入 · 登入中（pcSdz，登入中狀態板）同前綴不同板——這是 orchestrator 派工單明確指示的板名（板名依票文，不用 01d），非我方誤植。R1 開工時已發現此撞號並回報，orchestrator 裁定沿用票文命名；記錄於此供下一輪或 visual-reviewer 核對時參考，若造成混淆，可考慮後續改名或加註更清楚的狀態尾綴以徹底消歧。",
+                  "content": "R1 暫用票文字面「01b」（LS-163 / 01b 歡迎登入 · 含密碼登入連結），與既有 LS-17 01b 歡迎登入 · 登入中（pcSdz，登入中狀態板）同前綴不同板撞號。R2 依 visual-reviewer verdict（comment e0022dbe MJ-3）逐字指定改名為「01e」：Yc4EC → LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPhone)；M2qW9 → LS-163 / 01e 歡迎登入 · 含密碼登入連結 · 深色；aEb17 → A11y / 01e 歡迎登入 · 含密碼登入連結 · Dynamic Type AX3（body 40pt）。全稿搜尋「01b」現只命中 pcSdz 一張板（本段說明文字除外）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -135959,6 +136086,346 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "「以帳號密碼登入」連結本輪未抽成 reusable component，僅在三板各自 Insert 相同結構的節點（單一使用場景，比照「單一用途不強行抽元件」判斷）；若後續有第二個入口，建議屆時再抽成 cmp/Password Login Link。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "FY3K6",
+          "name": "N R2 修訂重點（依 visual-reviewer R1 comment e0022dbe 逐項落地）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "D03Zn",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R2 修訂重點（依 visual-reviewer R1 comment e0022dbe 逐項落地）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "kUNSm",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "o7Gviy",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ZtZLB",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MJ-1（顏色裁定）：連結標籤色由 $text-secondary 改 $text-primary，並比照同板既有法務連結（a9A0ki／qI8OR）的 text+1pt rectangle 手工組合新增底線（Pencil underline:true 三種寫入路徑皆丟棄，不可用）。三板皆已套用：Yc4EC（LZDnN/ZYNKU）、M2qW9（Byrhn/vzgCg）、aEb17（t9VOk9/WNK83，AX3 因原本 fill_container+textAlign:center 觸發同款循環尺寸問題，改回 auto textGrowth＋frame 顯式 width:280 字面值解決，屬尺寸類硬寫，見上節）。字級維持 $fs-note，不吃 accent，熱區仍 ≥44pt（46／46／79）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "U5xaTl",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "LqtZ0",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "m4SYc1",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MJ-2：7 張 P1 板 Toggle Wrap 統一補 padding:[$ctl-pad-tap,0]，熱區由 58×25 提升到 58×44（AX3 板 vgvFY 為 118×77，本來就達標，一併套用維持一致）。逐板 id：BYbe5/OzB1F、pl5GE/tvStU、O1XC2Z/i2wPv、ioA0u/e6qUg、tpw7n/S45ig、vgvFY/DqJf1、l4ShP/Rc18R。Field Box 高度（60／AX3 140）皆有餘裕容納，未產生新溢出。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "D0mn4M",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "I7PEva",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "wn6M5",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MJ-4：O1XC2Z 密碼欄 Field Help（fim6k/i2SHf）復原為「此為審核專用帳號，如需協助請洽開發者聯絡資訊。」（icon 改回 info／$text-secondary），錯誤訊息改用獨立 Error Row（K3MZzs，比照 ioA0u 既有 Error Row 語彙）插入 Footer 最前，兩行同時 enabled，與 ioA0u 網路錯誤態一致。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "jNrf0",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Z2Ykj",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "jTKCa",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MN-1：aEb17 row_overflow 3 筆（Legal :: Legal Link/Legal Seg，節點 MaiN2／mxtQS／VNn0Z）為 Copy 自 e7G3Lk（LS-46 R3 既有 AX3 法務行溢出債，entry-conditions.md ⑧ 已記載「AX3 法務行改 ViewThatFits，勿照抄 .pen 四段排列」）逐位元相同的既有缺陷，非本票新增類別；本票判斷不在本輪範圍內重寫法務行排版邏輯（會牽動源頭 e7G3Lk board，超出本票 scope），維持記入 LS-96 待辦池、由 orchestrator 評估是否併同源頭一起修。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sXP3I",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Wqzqr",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "QmsRL",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MN-2／MN-3：R2 收據 design/evidence/LS-163-r2-overflow.json 的 sibling_intersection／row_overflow／cross_parent_collision／text_occlusion.document_flagged 每筆 classification 皆已補「（同類 N 例）」，N 加總＝SUMMARY 對應筆數，可逐支複算對帳。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yONH3",
+          "name": "N VR 抬標準三問（R2 回答）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "jUvY6",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "VR 抬標準三問（R2 回答）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "Bq6l0",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Z7QgM",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "nXZz4",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "①「顯示→隱藏」切換態要不要畫：VR 判定「要」，理由是驗證 icon／文字同步切換的指令能被 ios-dev 照做。R2 選擇「二選一」中的 Notes 對照表（非新增畫板，避免 7 板再乘 2 態的規模膨脹）：預設態＝icon eye＋文字「顯示」＋Field Value 顯示遮罩字元；切換後＝icon eye-off＋文字「隱藏」＋Field Value 顯示明碼文字（實際密碼內容，非遮罩）。SwiftUI 用單一 @State isRevealed 布林同時驅動 icon／文字／SecureField-TextField 切換，三者不得只改其中一兩個。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "dNQsm",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "d7s5k",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "awStV",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "②連結導覽目標：01e（Yc4EC／M2qW9／aEb17）的「以帳號密碼登入」連結 → push P1（BYbe5／tpw7n／vgvFY，依當前 theme／size 對應變體）；P1 的 cmp/Nav Back「返回」→ pop 回 01e（不是 01／svedU）。iPad 版 l4ShP 同理，返回目標為 01-iPad（既有 BDrtd，本票未新增 01e-iPad 變體——若日後 iPad 也要開放密碼登入連結入口，需另開設計範圍，本票僅在 iPhone/AX3 三板加入口）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "U5SKrk",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ZmkgR",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-163 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "rYVss",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "③AX3 連結未擠壓三顆鈕之證明（R2 複驗，取代 R1 數字）：aEb17 Actions 342.6→767.6（h=425，MJ-1 底線後 +2）；四個子項 gap 皆為 8（$sp-label）—— Apple 0-89、Google 97-157、Email 165-266、Link 274-353、Legal 361-425，逐一相減皆 8，零擠壓。root height 已同步復算 1160＝1073+79+8。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
