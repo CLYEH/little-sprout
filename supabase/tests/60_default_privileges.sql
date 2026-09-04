@@ -404,6 +404,12 @@ $$;
 --     （authenticated 可執行、anon／PUBLIC 不可），但**不**驗「必須是 SECURITY
 --     DEFINER」——這支函式刻意是 invoker（依賴 feed_items 既有的 RLS 做隔離，不需要
 --     繞過 RLS），硬套 definer 檢查只會逼著它去符合一個不該套用在它身上的規則。
+--   - v_service_role_rpcs（LS-151 R2）：SECURITY DEFINER 但**不對 authenticated
+--     開放**、只給 service_role 執行的 public RPC，目前只有
+--     finalize_account_deletion 一支（Edge Function 用 service_role 呼叫，不是
+--     前端直接呼叫的 API 邊界）。授權方向與另外兩組相反：authenticated／anon／
+--     PUBLIC 都必須「不可執行」，service_role 必須「可執行」；definer／
+--     search_path 收斂的檢查與 v_definer_rpcs 相同。
 --
 -- N3 的問題背景：第 1 輪把 get_family_timeline 從白名單裡整支排除（因為它不是
 -- definer），順帶把它排除到了下面「清單外函式」那段掃描的**輸入條件**之外——那段
@@ -463,12 +469,17 @@ declare
     'public.list_children(uuid)',
     'public.get_family_quota(uuid)'  -- LS-149：純讀取，依賴既有 families_select RLS
   ];
+  -- LS-151 R2：Edge Function delete-account 在刪 auth.users 前呼叫，只有
+  -- service_role 能執行。
+  v_service_role_rpcs text[] := array[
+    'public.finalize_account_deletion(uuid)'
+  ];
   v_whitelist oid[];
   v_unknown text;
 begin
   select array_agg(f::regprocedure::oid)
     into v_whitelist
-    from unnest(v_definer_rpcs || v_invoker_rpcs) as f;
+    from unnest(v_definer_rpcs || v_invoker_rpcs || v_service_role_rpcs) as f;
 
   foreach v_fn in array v_definer_rpcs loop
     if not has_function_privilege('authenticated', v_fn, 'execute') then
@@ -512,6 +523,34 @@ begin
   raise notice
     'ok：白名單內的 % 支 public SECURITY INVOKER RPC 授權正確（authenticated 可執行、anon／PUBLIC 不可）——N3',
     array_length(v_invoker_rpcs, 1);
+
+  -- LS-151 R2：service_role-only RPC——授權方向與上面兩組相反，authenticated／
+  -- anon／PUBLIC 都不可執行，只有 service_role 可執行；definer／search_path 收斂
+  -- 檢查與 v_definer_rpcs 相同（都是 SECURITY DEFINER）。
+  foreach v_fn in array v_service_role_rpcs loop
+    if has_function_privilege('authenticated', v_fn, 'execute') then
+      raise exception 'FAIL：authenticated 竟然能執行 service_role 專用 RPC %（只該開放 service_role）', v_fn;
+    end if;
+    if has_function_privilege('anon', v_fn, 'execute') then
+      raise exception 'FAIL：anon 竟然能執行 service_role 專用 RPC %', v_fn;
+    end if;
+    if not has_function_privilege('service_role', v_fn, 'execute') then
+      raise exception 'FAIL：service_role 不能執行 % ——Edge Function 會呼叫失敗', v_fn;
+    end if;
+    if exists (select 1 from pg_proc p, aclexplode(p.proacl) a
+                where p.oid = v_fn::regprocedure and a.grantee = 0
+                  and a.privilege_type = 'EXECUTE') then
+      raise exception 'FAIL：service_role 專用 RPC % 仍對 PUBLIC 開放 EXECUTE', v_fn;
+    end if;
+    if not exists (select 1 from pg_proc p
+                    where p.oid = v_fn::regprocedure and p.prosecdef
+                      and p.proconfig @> array['search_path=""']) then
+      raise exception 'FAIL：service_role 專用 RPC % 不是 SECURITY DEFINER 或沒有 set search_path = ''''', v_fn;
+    end if;
+  end loop;
+  raise notice
+    'ok：白名單內的 % 支 service_role 專用 RPC 授權正確（只有 service_role 可執行，authenticated／anon／PUBLIC 皆不可）——LS-151 R2',
+    array_length(v_service_role_rpcs, 1);
 
   -- 清單外的 public 函式：直接 FAIL（新 RPC 必須先來這裡登記）。N3：掃描條件從
   -- 「p.prosecdef 為真」放寬到「public schema 的所有函式」，不再只顧得到 definer——
