@@ -244,6 +244,12 @@ gitc add -A && gitc commit -qm head9
 cd "$repo"
 expect_b7 '--base(B7)：既有值自 base 取、消費端在 repo 根找到' 'supabase/functions/k2/index.ts' '' --base HEAD~1
 cd "$root"
+# N1（merge-review R1 `ad5c40eb`）：Swift 裸 `case v` 宣告行（無 raw value）是 AWK_CODE 的獨立分支——沒有這案，把該分支刪掉 87 組仍全綠。
+# 夾具：enum 名 Feed（≠ FeedKind，名稱規則不命中）、不寫 `: String`（沒有引號字面）、一行一個 case；既有值 {album, diary}
+# 只能靠 `case` 行分支抓到。其餘夾具對 feed_kind 都只命中 ≤1 種既有值，不會被列。
+printf 'enum Feed {\n    case album\n    case diary\n}\n' > "$cons/LittleSprout/BareCases.swift"
+printf 'public.feed_kind\talbum\npublic.feed_kind\tdiary\n' >> "$work/enums"
+expect_b7 'B7 Swift 裸 case 宣告行（無 raw value、無名稱命中）靠 case 行分支列出（R1 N1）' 'LittleSprout/BareCases.swift' "alter type public.feed_kind add value 'media';" "${K[@]}" "${E[@]}"
 # 參數／環境錯誤 fail closed
 if printf "alter type public.k add value 'x';" | bash "$check" "${K[@]}" --known-enums "$work/nope.enums" --consumer-root "$cons" >/dev/null 2>&1; then
   echo "✗ B7 --known-enums 讀不到應 exit 1" >&2; fail=1
@@ -262,6 +268,6 @@ else
 fi
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ migration-breaking-check 自測通過（87 組樣本）"
+  echo "✓ migration-breaking-check 自測通過（88 組樣本）"
 fi
 exit "$fail"
