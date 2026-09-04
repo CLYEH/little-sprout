@@ -41,7 +41,9 @@
 #     R1 N1）：PR head 已含第五支就必填——最新輪次的 head_sha＝last_pen_commit（F2），.pen 內容與工作區相同，拿新腳本重跑一次
 #     就填得出對得上的 tree_hash；只看 head_sha tree 會留下「分支先併入新腳本、之後不再動 .pen」的窗口，新欄位可以永遠不填。
 #     舊輪次的收據產於新腳本存在之前、回填不可能，維持只看 head_sha tree。git 本身失敗（ls-tree／show 非 0，淺 clone／物件
-#     缺失）不算「檔案不存在」、不放行（fail closed）。盲區：tree_hash 只證明「收據對應這份 .pen」，不證明五支數字算對。
+#     缺失）不算「檔案不存在」、不放行（fail closed）。盲區：tree_hash 只證明「收據對應這份 .pen 的**節點樹**」（`children`
+#     全樹；頂層 `variables`／`themes`／`fileToken` 不在雜湊內——Pencil `Get` 只走節點樹，掃描後只改 design token 再落地
+#     gate 看不到，R1 N4），不證明五支數字算對。
 # 掃描「有沒有真的跑對」（演算法本身正確性）不是這支腳本能驗的——那需要 Pen 的版面引擎，只能靠
 # visual-reviewer 用同方法重掃比對（見 .claude/agents/visual-reviewer.md）。
 #
@@ -204,7 +206,8 @@ for ev in "${candidates[@]}"; do
   is_latest=0
   [ "$round" = "$max_round" ] && is_latest=1
 
-  if ! PYTHONIOENCODING=utf-8 python3 - "$ev" "$pen_commits" "$last_pen_commit" "$is_latest" "$pen_relpath" "$landing_script" "$base_sha" "$head" <<'PY'
+  # PYTHONDONTWRITEBYTECODE：import design_tree_hash 不得在 scripts/gates/ 留下 __pycache__（R1 N7）
+  if ! PYTHONDONTWRITEBYTECODE=1 PYTHONIOENCODING=utf-8 python3 - "$ev" "$pen_commits" "$last_pen_commit" "$is_latest" "$pen_relpath" "$landing_script" "$base_sha" "$head" <<'PY'
 import json, os, re, subprocess, sys, tempfile
 
 p, pen_commits_s, last_pen_commit, is_latest_s, pen_relpath, landing_script, base_sha, head = sys.argv[1:9]

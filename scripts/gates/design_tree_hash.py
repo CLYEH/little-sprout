@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""LS-168 .pen 全樹雜湊（tree_hash）——design-evidence-check.sh 用來驗「收據對應 head_sha 那份 .pen」。
+"""LS-168 .pen 全樹雜湊（tree_hash）——design-evidence-check.sh 用來驗「收據對應 head_sha 那份 .pen 的節點樹」
+（只走 `children` 全樹；頂層 `variables`／`themes`／`fileToken` 不在雜湊內——Pencil `Get` 只走節點樹，merge-review R1 N4）。
 
 必須與 scripts/design/overflow-scan.js 的 `canonNode`／`treeHash`（Pencil execute 內印在 SUMMARY 的 tree_hash）
 逐位元同值；overflow-scan.test.js 與 design-evidence-check.test.sh 各有 js／py 交叉一致案釘住。演算法（兩邊同一份規格）：

@@ -67,7 +67,8 @@
 //       design-evidence-check.sh 用 scripts/gates/design_tree_hash.py 對 `head_sha` 那份 .pen 算同一演算法比對——不符即
 //       「收據不是對這份 .pen 單一次掃描」（LS-152 r1 兩段拼接、LS-142 r4 拆段跑，gate 原本全盲）。Pencil execute 沒有
 //       crypto，所以用 FNV-1a 而非 SHA-256；`SCAN_HASH_DEBUG = "<節點 id>"` 會 Print 該節點那一行，與 .py `--dump <id>` 對照。
-//       盲區：只證明「收據對應這份 .pen」，不證明五支數字算對（那要 CI 跑 Pencil）。
+//       盲區：只證明「收據對應這份 .pen 的節點樹」（`children` 全樹；頂層 `variables`／`themes`／`fileToken` 不在雜湊內——
+//       Pencil `Get` 只走節點樹，掃描後只改 design token 再落地看不到，merge-review R1 N4），不證明五支數字算對（那要 CI 跑 Pencil）。
 // 輸出每筆都帶 name／parent 等欄位方便分類；design-evidence-check.sh 只驗 node／node_a／node_b／classification、
 // corner_anchor 的整數計數與 boards、text_occlusion.flagged 為空、tree_hash，多出的欄位不影響 gate。
 
