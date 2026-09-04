@@ -34,8 +34,9 @@
 #      不符回報 orchestrator（由其決定 --kill），不得自行清場
 #
 # 讀完之後：呼叫端（qa／visual-reviewer 等）不需要主動切回別的文件——它們本來就是唯讀查詢，下一位
-# 使用者開工前也會自己對自己要用的路徑跑一次 force-reload；ui-designer 這類會實際編輯的 agent 仍照
-# 既有規約收工前把 Pen 切回主 checkout（見 pen-open.sh／ui-designer 定義）。
+# 使用者開工前也會自己對自己要用的路徑跑一次 force-reload；ui-designer 收工也**不**切回主 checkout
+# （LS-180 裁決：設計票期間 Pen 停在票檔，切回會把票檔留在背景視窗、下一輪只能清場；票結案由 orchestrator
+# `pen-open.sh <主 checkout> --kill` 清場一次，見 ui-designer.md 步驟 5／COLLABORATION §2、§6）。
 #
 # 自測：scripts/ops/pen-read.test.sh（驗證正確轉呼叫 pen-open.sh --force-reload 並如實回傳結果：雜湊相符不殺／
 # 不符才清場＋印需重連／讀不到 exit 3；完整的清場矩陣測試在 pen-open.test.sh，這裡不重複）。

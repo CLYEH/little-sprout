@@ -120,7 +120,9 @@
 #   execute 參數、SUMMARY-HASH 行是否原樣印出）待 orchestrator 在重連後對 LS-177 worktree 跑一次 `--force-reload`
 #   核對；失敗方向是 exit 3（不殺），不會誤放行、也不會誤殺。
 #   已知盲區：`open -a Pen <want>` 對「已在背景視窗開著」的路徑不會奪回 active（下方已知坑），那條路徑仍只能清場——
-#   本票的不殺路徑只救「目標已是 active」的情況（設計輪 designer↔VR 同一份稿交替最常見）。
+#   本票的不殺路徑只救「目標已是 active」的情況（設計輪 designer↔VR 同一份稿交替最常見）。LS-180 裁決因此把規約
+#   改成「設計票期間 Pen 停在票檔、ui-designer／VR 收工都不切回主 checkout」（ui-designer.md 步驟 5、COLLABORATION
+#   §2／§6 ④），讓不殺路徑成為常態；票結案由 orchestrator 用 `--kill` 清場一次並請使用者重連。
 #
 # macOS 沒有 coreutils timeout：每次 pen interactive 呼叫用背景程序＋背景 sleep 到期就 kill 的看門狗模式
 # （同 scripts/ops/patrol.sh 的 fetch_with_timeout；此處用 stdin/stdout 重導向而非管線，$! 才是 pen 程序本身的
