@@ -1,0 +1,892 @@
+-- LS-153 驗收：private.purge_expired() —— 軟刪／刪帳號請求超過 30 天硬刪
+--
+-- 每段用 begin…rollback 包住（除了明確要驗證「跨兩次呼叫」的冪等段，那段本身
+-- 只讀不寫，不需要 rollback 邊界），不需要額外 cleanup。所有時間邊界一律以
+-- `v_now := clock_timestamp()` 這種區塊內自建的基準點推算 `deleted_at`，不寫死日曆
+-- 日期——測試在任何時候跑結果都一樣，且直接對應 `purge_expired(p_now)` 的注入式
+-- 設計本身就是為了讓呼叫端能控制「現在」是什麼時候。
+--
+-- 邊界判準（migration 檔頭已說明、這裡釘成可重複驗證的事實）：`deleted_at < p_now -
+-- interval '30 days'` 才清——29 天前不清、剛好 30 天前也不清（邊界含，語意對齊
+-- set_child_deleted 的還原判準）、31 天前清。
+
+\set ON_ERROR_STOP on
+
+-- ===========================================================================
+-- 1. 邊界矩陣＋跨家庭隔離：五張表（diaries／albums／comments／media／children）各自
+--    的 deleted_at，A 家放「31 天前」（該清），B 家放「29 天前」與「剛好 30 天前」
+--    （皆不該清）——同一次 purge_expired() 呼叫，A 家被清、B 家完全不受影響，一次
+--    驗完邊界與跨家庭隔離兩件事。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_now timestamptz := clock_timestamp();
+  v_owner_a uuid := 'c1000000-0000-4000-8000-000000000001';
+  v_owner_b uuid := 'c1000000-0000-4000-8000-000000000002';
+  v_family_a uuid := 'c2000000-0000-4000-8000-000000000001';
+  v_family_b uuid := 'c2000000-0000-4000-8000-000000000002';
+  v_diary_a uuid := 'c3000000-0000-4000-8000-000000000001';
+  v_diary_b29 uuid := 'c3000000-0000-4000-8000-000000000002';
+  v_diary_b30 uuid := 'c3000000-0000-4000-8000-000000000003';
+  v_album_a uuid := 'c4000000-0000-4000-8000-000000000001';
+  v_album_b29 uuid := 'c4000000-0000-4000-8000-000000000002';
+  v_album_b30 uuid := 'c4000000-0000-4000-8000-000000000003';
+  v_comment_a uuid := 'c5000000-0000-4000-8000-000000000001';
+  v_comment_b29 uuid := 'c5000000-0000-4000-8000-000000000002';
+  v_comment_b30 uuid := 'c5000000-0000-4000-8000-000000000003';
+  v_media_a uuid := 'c6000000-0000-4000-8000-000000000001';
+  v_media_b29 uuid := 'c6000000-0000-4000-8000-000000000002';
+  v_media_b30 uuid := 'c6000000-0000-4000-8000-000000000003';
+  v_child_a uuid := 'c7000000-0000-4000-8000-000000000001';
+  v_child_b29 uuid := 'c7000000-0000-4000-8000-000000000002';
+  v_child_b30 uuid := 'c7000000-0000-4000-8000-000000000003';
+  v_result jsonb;
+  v_n int;
+begin
+  set local role postgres;
+
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+  values
+    (v_owner_a, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-a@ls153.test', now(), now(), '{}', '{}'),
+    (v_owner_b, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-b@ls153.test', now(), now(), '{}', '{}');
+  insert into public.profiles (id, display_name) values
+    (v_owner_a, 'LS153 A 家'), (v_owner_b, 'LS153 B 家')
+  on conflict (id) do update set display_name = excluded.display_name;
+  insert into public.families (id, name, created_by) values
+    (v_family_a, 'LS153 邊界測試 A 家（31 天前，該清）', v_owner_a),
+    (v_family_b, 'LS153 邊界測試 B 家（29／30 天前，不該清）', v_owner_b);
+
+  insert into public.diaries (id, family_id, author_id, body, entry_date, deleted_at) values
+    (v_diary_a, v_family_a, v_owner_a, 'A 家 31 天前軟刪的日記', current_date - 40, v_now - interval '31 days'),
+    (v_diary_b29, v_family_b, v_owner_b, 'B 家 29 天前軟刪的日記', current_date - 40, v_now - interval '29 days'),
+    (v_diary_b30, v_family_b, v_owner_b, 'B 家剛好 30 天前軟刪的日記', current_date - 40, v_now - interval '30 days');
+
+  insert into public.albums (id, family_id, title, created_by, deleted_at) values
+    (v_album_a, v_family_a, 'A 家 31 天前軟刪的相簿', v_owner_a, v_now - interval '31 days'),
+    (v_album_b29, v_family_b, 'B 家 29 天前軟刪的相簿', v_owner_b, v_now - interval '29 days'),
+    (v_album_b30, v_family_b, 'B 家剛好 30 天前軟刪的相簿', v_owner_b, v_now - interval '30 days');
+
+  insert into public.comments (id, family_id, target_type, target_id, author_id, body, deleted_at) values
+    (v_comment_a, v_family_a, 'diary', v_diary_a, v_owner_a, 'A 家 31 天前軟刪的留言', v_now - interval '31 days'),
+    (v_comment_b29, v_family_b, 'diary', v_diary_b29, v_owner_b, 'B 家 29 天前軟刪的留言', v_now - interval '29 days'),
+    (v_comment_b30, v_family_b, 'diary', v_diary_b30, v_owner_b, 'B 家剛好 30 天前軟刪的留言', v_now - interval '30 days');
+
+  insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, deleted_at) values
+    (v_media_a, v_family_a, v_family_a::text || '/2026/07/' || v_media_a::text || '.jpg', 'photo', 100, v_now, 10, 10, v_owner_a, v_now - interval '31 days'),
+    (v_media_b29, v_family_b, v_family_b::text || '/2026/07/' || v_media_b29::text || '.jpg', 'photo', 100, v_now, 10, 10, v_owner_b, v_now - interval '29 days'),
+    (v_media_b30, v_family_b, v_family_b::text || '/2026/07/' || v_media_b30::text || '.jpg', 'photo', 100, v_now, 10, 10, v_owner_b, v_now - interval '30 days');
+
+  insert into public.children (id, family_id, name, birthday, deleted_at) values
+    (v_child_a, v_family_a, 'A 家 31 天前軟刪的孩子', date '2023-01-01', v_now - interval '31 days'),
+    (v_child_b29, v_family_b, 'B 家 29 天前軟刪的孩子', date '2023-01-01', v_now - interval '29 days'),
+    (v_child_b30, v_family_b, 'B 家剛好 30 天前軟刪的孩子', date '2023-01-01', v_now - interval '30 days');
+
+  select private.purge_expired(v_now) into v_result;
+  raise notice 'purge_expired 回傳：%', v_result;
+
+  if (v_result->'deleted_counts'->>'diaries')::int <> 1
+     or (v_result->'deleted_counts'->>'albums')::int <> 1
+     or (v_result->'deleted_counts'->>'comments')::int <> 1
+     or (v_result->'deleted_counts'->>'media')::int <> 1
+     or (v_result->'deleted_counts'->>'children')::int <> 1 then
+    raise exception 'FAIL：deleted_counts 應該五張表各清 1 筆（A 家的 31 天前列），實際 %', v_result->'deleted_counts';
+  end if;
+  if (v_result->>'failed_count')::int <> 0 then
+    raise exception 'FAIL：這次呼叫不該有任何失敗，實際 failed_count=%', v_result->>'failed_count';
+  end if;
+
+  -- A 家：五張表的列全部清空
+  select count(*) into v_n from public.diaries where id = v_diary_a;
+  if v_n <> 0 then raise exception 'FAIL：A 家 31 天前的日記沒被清掉'; end if;
+  select count(*) into v_n from public.albums where id = v_album_a;
+  if v_n <> 0 then raise exception 'FAIL：A 家 31 天前的相簿沒被清掉'; end if;
+  select count(*) into v_n from public.comments where id = v_comment_a;
+  if v_n <> 0 then raise exception 'FAIL：A 家 31 天前的留言沒被清掉'; end if;
+  select count(*) into v_n from public.media where id = v_media_a;
+  if v_n <> 0 then raise exception 'FAIL：A 家 31 天前的 media 沒被清掉'; end if;
+  select count(*) into v_n from public.children where id = v_child_a;
+  if v_n <> 0 then raise exception 'FAIL：A 家 31 天前的孩子沒被清掉'; end if;
+
+  -- B 家：29 天前／剛好 30 天前的列全部原封不動（跨家庭隔離＋邊界含 30 天不清）
+  select count(*) into v_n from public.diaries where id in (v_diary_b29, v_diary_b30);
+  if v_n <> 2 then raise exception 'FAIL：B 家 29／30 天前的日記應該都還在，實際剩 % 筆', v_n; end if;
+  select count(*) into v_n from public.albums where id in (v_album_b29, v_album_b30);
+  if v_n <> 2 then raise exception 'FAIL：B 家 29／30 天前的相簿應該都還在，實際剩 % 筆', v_n; end if;
+  select count(*) into v_n from public.comments where id in (v_comment_b29, v_comment_b30);
+  if v_n <> 2 then raise exception 'FAIL：B 家 29／30 天前的留言應該都還在，實際剩 % 筆', v_n; end if;
+  select count(*) into v_n from public.media where id in (v_media_b29, v_media_b30);
+  if v_n <> 2 then raise exception 'FAIL：B 家 29／30 天前的 media 應該都還在，實際剩 % 筆', v_n; end if;
+  select count(*) into v_n from public.children where id in (v_child_b29, v_child_b30);
+  if v_n <> 2 then raise exception 'FAIL：B 家 29／30 天前的孩子應該都還在，實際剩 % 筆', v_n; end if;
+
+  -- purge_runs 留了一列觀測紀錄
+  select count(*) into v_n from private.purge_runs where p_now = v_now;
+  if v_n <> 1 then raise exception 'FAIL：purge_runs 沒有留下這次呼叫的紀錄（p_now=%），實際 % 列', v_now, v_n; end if;
+
+  raise notice 'ok：邊界矩陣＋跨家庭隔離——A 家 31 天前的五張表列全清，B 家 29／30 天前的列一筆不少（30 天邊界含，不清）';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 1b（R2，merge-review R1 minor-4a）：diaries／albums／media／comments 硬刪之後，
+--    指向它們的孤兒 comments／reactions（多型關聯，沒有 FK）必須一併清除，不能
+--    永遠留著找不到目標。四種 target_type 各測一個，外加「留言底下的留言」防禦性
+--    分支（今天預期永遠 0 筆，見 migration 對這段的說明）不需要另外測——沒有任何
+--    產品路徑能建出 comments 以 comment 為 target，測了也是恆真案例，不加。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_now timestamptz := clock_timestamp();
+  v_owner uuid := 'db100000-0000-4000-8000-000000000001';
+  v_family uuid := 'db200000-0000-4000-8000-000000000001';
+  v_diary uuid := 'db300000-0000-4000-8000-000000000001';
+  v_album uuid := 'db300000-0000-4000-8000-000000000002';
+  v_media uuid := 'db300000-0000-4000-8000-000000000003';
+  v_comment_target uuid := 'db300000-0000-4000-8000-000000000004';  -- 自己會過期
+  v_n int;
+  v_result jsonb;
+begin
+  set local role postgres;
+
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+  values (v_owner, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-orphan@ls153.test', now(), now(), '{}', '{}');
+  insert into public.profiles (id, display_name) values (v_owner, 'LS153 孤兒清除測試')
+    on conflict (id) do update set display_name = excluded.display_name;
+  insert into public.families (id, name, created_by) values (v_family, 'LS153 孤兒清除測試家', v_owner);
+
+  -- 四個「即將過期」的父列，各自帶一則留言與一個按讚——這些留言／按讚本身完全
+  -- 沒有過期（deleted_at NULL／reactions 本來就沒有 deleted_at），純粹因為父列
+  -- 消失而變成孤兒，這正是本段要驗的：父列消失時它們一起被清，不是各自看自己
+  -- 的過期時鐘。
+  insert into public.diaries (id, family_id, author_id, body, entry_date, deleted_at)
+  values (v_diary, v_family, v_owner, '即將過期的日記', current_date - 40, v_now - interval '31 days');
+  insert into public.albums (id, family_id, title, created_by, deleted_at)
+  values (v_album, v_family, '即將過期的相簿', v_owner, v_now - interval '31 days');
+  insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, deleted_at)
+  values (v_media, v_family, v_family::text || '/2026/07/' || v_media::text || '.jpg', 'photo', 100, v_now, 10, 10, v_owner, v_now - interval '31 days');
+  -- target_id 刻意用一個不對應任何真實列的隨機 uuid（沒有 FK，合法）：這則留言
+  -- 純粹靠自己的 deleted_at 過期，不能跟 v_diary 撞同一個 target，撞了的話會被
+  -- diaries 區塊的孤兒清除連坐吃掉，"comments" 區塊自己的主要 DELETE 就撿不到它，
+  -- 下面 target_type='comment' 的巢狀清除也就測不到（曾經撞過這個坑，見 R2 修正）。
+  insert into public.comments (id, family_id, target_type, target_id, author_id, body, deleted_at)
+  values (v_comment_target, v_family, 'media', gen_random_uuid(), v_owner, '這則留言自己也會過期', v_now - interval '31 days');
+
+  insert into public.comments (id, family_id, target_type, target_id, author_id, body) values
+    ('db400000-0000-4000-8000-000000000001', v_family, 'diary', v_diary, v_owner, '掛在即將消失的日記下'),
+    ('db400000-0000-4000-8000-000000000002', v_family, 'album', v_album, v_owner, '掛在即將消失的相簿下'),
+    ('db400000-0000-4000-8000-000000000003', v_family, 'media', v_media, v_owner, '掛在即將消失的照片下'),
+    ('db400000-0000-4000-8000-000000000004', v_family, 'comment', v_comment_target, v_owner, '掛在即將消失的留言下（防禦性分支）');
+  insert into public.reactions (id, family_id, target_type, target_id, user_id) values
+    ('db500000-0000-4000-8000-000000000001', v_family, 'diary', v_diary, v_owner),
+    ('db500000-0000-4000-8000-000000000002', v_family, 'album', v_album, v_owner),
+    ('db500000-0000-4000-8000-000000000003', v_family, 'media', v_media, v_owner),
+    ('db500000-0000-4000-8000-000000000004', v_family, 'comment', v_comment_target, v_owner);
+
+  select private.purge_expired(v_now) into v_result;
+
+  -- comments 累加值：1（自己過期的 v_comment_target）＋4（四則孤兒留言，含防禦性
+  -- 的「留言掛在留言下」那一則）＝5；reactions：4 則孤兒按讚全清。
+  if (v_result->'deleted_counts'->>'comments')::int <> 5 then
+    raise exception 'FAIL：deleted_counts.comments 應為 5（1 自己過期＋4 孤兒），實際 %', v_result->'deleted_counts'->>'comments';
+  end if;
+  if (v_result->'deleted_counts'->>'reactions')::int <> 4 then
+    raise exception 'FAIL：deleted_counts.reactions 應為 4（四則孤兒按讚），實際 %', v_result->'deleted_counts'->>'reactions';
+  end if;
+
+  select count(*) into v_n from public.comments where family_id = v_family;
+  if v_n <> 0 then raise exception 'FAIL：這個家庭應該一則留言都不剩，實際還有 % 則', v_n; end if;
+  select count(*) into v_n from public.reactions where family_id = v_family;
+  if v_n <> 0 then raise exception 'FAIL：這個家庭應該一個按讚都不剩，實際還有 % 個', v_n; end if;
+
+  raise notice 'ok：孤兒 comments／reactions 清除——diaries／albums／media／comments 四種 target_type 皆正確清除，累加計數（comments=5／reactions=4）正確';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 1c（R3，merge-review R2 F2／F3；R4，merge-review R3 minor 1）：
+--   F2：孤兒留言被清掉之後，指向「那則留言」的按讚（第二層孤兒）也要一併清——
+--   1b 只驗了「父列消失→孤兒留言消失」，沒有驗「孤兒留言消失→它自己的按讚也消失」。
+--   F3：content_reports 指向已永久清除的目標（orchestrator 裁定：diary／album／
+--   media／comment 四種 target_type，含直接過期與孤兒清除兩種消失方式）一併清除
+--   ——票的承諾是「永久清除」，見 docs/API.md §6「孤兒 comments／reactions／
+--   content_reports／notification_events」。
+--   R4 minor 1：notification_events 是第五張同形狀的多型孤兒表（reviewer 實測
+--   自然殘留，comment 04987043）——比照 content_reports 一併清除，同一支
+--   fixture 內加測，不重複整段結構。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_now timestamptz := clock_timestamp();
+  v_owner uuid := 'fa100000-0000-4000-8000-000000000001';
+  v_family uuid := 'fa200000-0000-4000-8000-000000000001';
+  v_diary uuid := 'fa300000-0000-4000-8000-000000000001';   -- 31 天前軟刪，該清
+  v_album uuid := 'fa300000-0000-4000-8000-000000000002';   -- 31 天前軟刪，該清
+  v_media uuid := 'fa300000-0000-4000-8000-000000000003';   -- 31 天前軟刪，該清
+  v_self_comment uuid := 'fa300000-0000-4000-8000-000000000004';  -- 自己過期的留言
+  v_orphan_comment uuid := 'fa400000-0000-4000-8000-000000000001';  -- 掛在 v_diary 下，未過期，因父列消失被孤兒清除（第一層）
+  v_report_diary uuid := 'fa500000-0000-4000-8000-000000000001';
+  v_report_album uuid := 'fa500000-0000-4000-8000-000000000002';
+  v_report_media uuid := 'fa500000-0000-4000-8000-000000000003';
+  v_report_self_comment uuid := 'fa500000-0000-4000-8000-000000000004';
+  v_report_orphan_comment uuid := 'fa500000-0000-4000-8000-000000000005';  -- 指向孤兒留言（第二層）
+  v_reaction_orphan_comment uuid := 'fa600000-0000-4000-8000-000000000001';  -- 指向孤兒留言的按讚（第二層，F2）
+  v_notif_diary uuid := 'fa700000-0000-4000-8000-000000000001';
+  v_notif_album uuid := 'fa700000-0000-4000-8000-000000000002';
+  v_notif_media uuid := 'fa700000-0000-4000-8000-000000000003';
+  v_notif_self_comment uuid := 'fa700000-0000-4000-8000-000000000004';
+  v_notif_orphan_comment uuid := 'fa700000-0000-4000-8000-000000000005';  -- 指向孤兒留言（第二層，R4 minor 1）
+  v_n int;
+begin
+  set local role postgres;
+
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+  values (v_owner, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-1c@ls153.test', now(), now(), '{}', '{}');
+  insert into public.profiles (id, display_name) values (v_owner, 'LS153 1c 測試')
+    on conflict (id) do update set display_name = excluded.display_name;
+  insert into public.families (id, name, created_by) values (v_family, 'LS153 1c 測試家', v_owner);
+
+  insert into public.diaries (id, family_id, author_id, body, entry_date, deleted_at)
+  values (v_diary, v_family, v_owner, '即將過期的日記', current_date - 40, v_now - interval '31 days');
+  insert into public.albums (id, family_id, title, created_by, deleted_at)
+  values (v_album, v_family, '即將過期的相簿', v_owner, v_now - interval '31 days');
+  insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, deleted_at)
+  values (v_media, v_family, v_family::text || '/2026/07/' || v_media::text || '.jpg', 'photo', 100, v_now, 10, 10, v_owner, v_now - interval '31 days');
+  insert into public.comments (id, family_id, target_type, target_id, author_id, body, deleted_at)
+  values (v_self_comment, v_family, 'media', gen_random_uuid(), v_owner, '自己也會過期的留言', v_now - interval '31 days');
+  -- 掛在 v_diary 下的留言，本身沒有過期（deleted_at NULL）——純粹因為 v_diary
+  -- 消失而被孤兒清除（第一層），這是 F2／F3／R4 minor 1 要驗的「第二層」的前提。
+  insert into public.comments (id, family_id, target_type, target_id, author_id, body)
+  values (v_orphan_comment, v_family, 'diary', v_diary, v_owner, '掛在即將消失的日記下');
+
+  insert into public.content_reports (id, family_id, target_type, target_id, reporter_id, reason) values
+    (v_report_diary, v_family, 'diary', v_diary, v_owner, '檢舉即將消失的日記'),
+    (v_report_album, v_family, 'album', v_album, v_owner, '檢舉即將消失的相簿'),
+    (v_report_media, v_family, 'media', v_media, v_owner, '檢舉即將消失的照片'),
+    (v_report_self_comment, v_family, 'comment', v_self_comment, v_owner, '檢舉自己也會過期的留言'),
+    (v_report_orphan_comment, v_family, 'comment', v_orphan_comment, v_owner, '檢舉掛在日記下、將被孤兒清除的留言');
+  insert into public.reactions (id, family_id, target_type, target_id, user_id) values
+    (v_reaction_orphan_comment, v_family, 'comment', v_orphan_comment, v_owner);
+  -- R4 minor 1：notification_events 同樣的孤兒 fixture——kind 值本身不影響
+  -- purge_expired() 的清除判準（只看 target_type／target_id），這裡各取一個
+  -- 合法值即可（diary/album 用建立通知，media/comment 用互動通知，貼近既有
+  -- trigger 實際會寫出的形狀，見 20260825020000_comments_reactions_notifications.sql）。
+  insert into public.notification_events (id, family_id, kind, target_type, target_id, actor_id) values
+    (v_notif_diary, v_family, 'diary', 'diary', v_diary, v_owner),
+    (v_notif_album, v_family, 'album', 'album', v_album, v_owner),
+    (v_notif_media, v_family, 'reaction', 'media', v_media, v_owner),
+    (v_notif_self_comment, v_family, 'comment', 'comment', v_self_comment, v_owner),
+    (v_notif_orphan_comment, v_family, 'reaction', 'comment', v_orphan_comment, v_owner);
+
+  perform private.purge_expired(v_now);
+
+  -- F3：五筆 content_reports（直接過期的 diary／album／media／comment 各一，加上
+  -- 指向孤兒留言的第二層一筆）全部清除，一筆不留。
+  select count(*) into v_n from public.content_reports where family_id = v_family;
+  if v_n <> 0 then
+    raise exception 'FAIL F3：這個家庭的 content_reports 應該一筆都不剩（含指向孤兒留言的第二層），實際還有 % 筆', v_n;
+  end if;
+
+  -- F2：指向孤兒留言的按讚（第二層孤兒）也清除。
+  select count(*) into v_n from public.reactions where id = v_reaction_orphan_comment;
+  if v_n <> 0 then
+    raise exception 'FAIL F2：指向孤兒留言的按讚（第二層孤兒）沒有被清除';
+  end if;
+
+  -- R4 minor 1：五筆手動插入的 notification_events（同 content_reports 的形狀，
+  -- 含指向孤兒留言的第二層）全部清除，一筆不留（reviewer 的殘留案）。**逐 id
+  -- 檢查、不用 `where family_id = v_family` 的全家庭 count**：diaries／
+  -- albums／comments 各自掛了既有的 notify_*_created AFTER INSERT trigger
+  -- （20260825020000_comments_reactions_notifications.sql），插入這個 fixture
+  -- 本身就會自動多產生幾筆 notification_events（例如 v_self_comment 的
+  -- target_type/target_id 刻意指向一個不存在的隨機 uuid，觸發的自動通知因此
+  -- 永遠不會有真正的目標可以被任何清除邏輯認領到）——這些是 trigger 的正常
+  -- 副作用，不是本票清除邏輯要處理的孤兒，混進全家庭 count 會讓斷言誤判成失敗
+  -- （已本機實測撞到過：9 筆插入含 4 筆 trigger 自動產生，purge 後正確剩 1 筆
+  -- 一定殘留的 trigger 副作用，其餘 8 筆——含全部 5 筆手動插入——皆被清除）。
+  select count(*) into v_n from public.notification_events
+   where id in (v_notif_diary, v_notif_album, v_notif_media, v_notif_self_comment, v_notif_orphan_comment);
+  if v_n <> 0 then
+    raise exception 'FAIL R4 minor 1：手動插入的 notification_events（含指向孤兒留言的第二層）應該一筆都不剩，實際還有 % 筆', v_n;
+  end if;
+
+  -- 前提對帳：孤兒留言本身確實被清了（第一層，1b 已經驗過機制，這裡只是確認
+  -- 這個 fixture 的前提成立，不是重複驗證同一件事）。
+  select count(*) into v_n from public.comments where id = v_orphan_comment;
+  if v_n <> 0 then raise exception 'FAIL：前提不對，v_orphan_comment 應該已被孤兒清除'; end if;
+
+  raise notice 'ok F2／F3／R4 minor 1：第二層孤兒（指向已被孤兒清除的留言的按讚／檢舉／通知事件）與四種 target_type 的 content_reports／notification_events（含直接過期與孤兒清除兩種消失方式）皆正確清除';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 2. media 硬刪：Storage 佇列內容＋額度對帳（storage_used_bytes 硬刪前後不變）
+--
+-- 走完整生命週期（上傳→軟刪→backdate deleted_at→硬刪），不是直接插入已軟刪的列
+-- ——這樣「軟刪當下已經扣過額度」這件事本身也被這段測試真正走過一次，不是假設。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_now timestamptz := clock_timestamp();
+  v_owner uuid := 'c1000000-0000-4000-8000-000000000003';
+  v_family uuid := 'c2000000-0000-4000-8000-000000000003';
+  v_media_with_thumb uuid := 'c6000000-0000-4000-8000-000000000004';
+  v_media_no_thumb uuid := 'c6000000-0000-4000-8000-000000000005';
+  v_media_active uuid := 'c6000000-0000-4000-8000-000000000006';
+  v_path_with_thumb text;
+  v_thumb_path text;
+  v_path_no_thumb text;
+  v_used bigint;
+  v_result jsonb;
+  v_n int;
+begin
+  set local role postgres;
+
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+  values (v_owner, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-storage@ls153.test', now(), now(), '{}', '{}');
+  insert into public.profiles (id, display_name) values (v_owner, 'LS153 Storage 測試')
+    on conflict (id) do update set display_name = excluded.display_name;
+  insert into public.families (id, name, created_by) values (v_family, 'LS153 Storage 測試家', v_owner);
+
+  v_path_with_thumb := v_family::text || '/2026/07/' || v_media_with_thumb::text || '.jpg';
+  v_thumb_path := v_family::text || '/2026/07/' || v_media_with_thumb::text || '_thumb.jpg';
+  v_path_no_thumb := v_family::text || '/2026/07/' || v_media_no_thumb::text || '.jpg';
+
+  -- 三張照片：一張有縮圖、一張沒有、一張仍是 active（永不軟刪，作對照組）
+  insert into public.media (id, family_id, storage_path, thumb_path, thumb_width, thumb_height, type, byte_size, taken_at, width, height, uploaded_by)
+  values (v_media_with_thumb, v_family, v_path_with_thumb, v_thumb_path, 50, 50, 'photo', 300000, v_now, 100, 100, v_owner);
+  insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by)
+  values (v_media_no_thumb, v_family, v_path_no_thumb, 'photo', 200000, v_now, 100, 100, v_owner);
+  insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by)
+  values (v_media_active, v_family, v_family::text || '/2026/07/' || v_media_active::text || '.jpg', 'photo', 111111, v_now, 100, 100, v_owner);
+
+  select storage_used_bytes into v_used from public.families where id = v_family;
+  if v_used <> 300000 + 200000 + 111111 then
+    raise exception 'FAIL：三張照片上傳後 storage_used_bytes 應為 %，實際 %', 300000 + 200000 + 111111, v_used;
+  end if;
+
+  -- 軟刪前兩張（走真正的欄位級 UPDATE 路徑，authenticated 對 media.deleted_at 有
+  -- 欄位級 grant，20260822120000_init_schema.sql:364）
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  update public.media set deleted_at = v_now where id in (v_media_with_thumb, v_media_no_thumb);
+  reset role;
+  set local role postgres;
+
+  select storage_used_bytes into v_used from public.families where id = v_family;
+  if v_used <> 111111 then
+    raise exception 'FAIL：軟刪兩張之後 storage_used_bytes 應只剩 active 那張的 111111，實際 %', v_used;
+  end if;
+
+  -- backdate：模擬「31 天前就已經軟刪」，繞過 UI 沒有的時間旅行能力，直接用 postgres
+  -- 身分改（測試前置條件，不是驗證對象本身）
+  update public.media set deleted_at = v_now - interval '31 days'
+   where id in (v_media_with_thumb, v_media_no_thumb);
+
+  select private.purge_expired(v_now) into v_result;
+
+  if (v_result->'deleted_counts'->>'media')::int <> 2 then
+    raise exception 'FAIL：應該清掉兩張過期照片，deleted_counts.media=%', v_result->'deleted_counts'->>'media';
+  end if;
+  if (v_result->>'storage_enqueued')::int <> 3 then
+    raise exception 'FAIL：storage_enqueued 應為 3（有縮圖那張 2 條路徑＋沒縮圖那張 1 條），實際 %', v_result->>'storage_enqueued';
+  end if;
+
+  -- 額度對帳：硬刪前後 storage_used_bytes 不變（軟刪當下就已經扣過，見上方註解）
+  select storage_used_bytes into v_used from public.families where id = v_family;
+  if v_used <> 111111 then
+    raise exception 'FAIL：硬刪兩張已軟刪照片之後，storage_used_bytes 不該再變動，應仍是 111111，實際 %', v_used;
+  end if;
+
+  -- Storage 佇列內容：兩張各自該有的路徑，一字不差
+  select count(*) into v_n from public.purge_storage_queue
+   where media_id = v_media_with_thumb and object_path in (v_path_with_thumb, v_thumb_path)
+     and bucket_id = 'media' and family_id = v_family;
+  if v_n <> 2 then
+    raise exception 'FAIL：有縮圖的照片應該收進佇列 2 條路徑（原圖＋縮圖），實際 %', v_n;
+  end if;
+  select count(*) into v_n from public.purge_storage_queue
+   where media_id = v_media_no_thumb and object_path = v_path_no_thumb
+     and bucket_id = 'media' and family_id = v_family;
+  if v_n <> 1 then
+    raise exception 'FAIL：沒有縮圖的照片應該只收進佇列 1 條路徑（原圖），實際 %', v_n;
+  end if;
+  select count(*) into v_n from public.purge_storage_queue where family_id = v_family;
+  if v_n <> 3 then
+    raise exception 'FAIL：這個家庭的佇列總筆數應為 3，實際 %', v_n;
+  end if;
+
+  -- active 那張完全不受影響
+  select count(*) into v_n from public.media where id = v_media_active;
+  if v_n <> 1 then raise exception 'FAIL：active 的照片不該被清掉'; end if;
+
+  raise notice 'ok：media 硬刪——Storage 佇列路徑（含／不含縮圖）正確、storage_used_bytes 硬刪前後不變（軟刪當下已扣過，不重扣）';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 3. profiles tombstone（R2，merge-review R1 F2）：deletion_requested_at 29／31
+--    天邊界＋PII 清空＋purged_at 標記＋reactions／device_tokens／join_requests／
+--    blocked_users cascade 清除（改用手動 DELETE，不再靠 FK cascade，見 migration
+--    第 6 段對這四張表的說明）＋刻意不動 family_members（見 migration 同段落）＋
+--    diaries.author_id／content_reports.reporter_id **不再** set null（profiles
+--    列還在，FK 完整）＋F2 帳號復活洞的直接回歸測試（模擬
+--    SupabaseFamilyAPIClient.ensureProfileExists 的 ignoreDuplicates upsert）。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_now timestamptz := clock_timestamp();
+  v_owner_family uuid := 'd1000000-0000-4000-8000-000000000001';  -- 家 A 的 owner（陪襯，不受影響）
+  v_purged uuid := 'd1000000-0000-4000-8000-000000000002';        -- 31 天前請求刪除，該 tombstone
+  v_fresh uuid := 'd1000000-0000-4000-8000-000000000003';         -- 29 天前請求刪除，不該動
+  -- R3（merge-review R2 F4）：剛好 30 天前請求刪除——邊界含（不清），此前沒有任何
+  -- fixture 釘住這個 profiles 專屬的邊界（mutation `<`→`<=` 全綠不紅，見 R2 review
+  -- comment 7420f7b9 F4）。
+  v_boundary uuid := 'd1000000-0000-4000-8000-000000000004';
+  v_family_a uuid := 'd2000000-0000-4000-8000-000000000001';
+  v_diary_active uuid := 'd3000000-0000-4000-8000-000000000001';  -- v_purged 在家 A 留下的日記（未軟刪）
+  v_report_id uuid := 'd4000000-0000-4000-8000-000000000001';
+  v_join_request uuid := 'd6000000-0000-4000-8000-000000000001';
+  v_invite uuid := 'd7000000-0000-4000-8000-000000000001';
+  v_n int;
+  v_author uuid;
+  v_reporter uuid;
+  v_display text;
+  v_avatar text;
+  v_purged_at timestamptz;
+  v_requested_at timestamptz;
+begin
+  set local role postgres;
+
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+  values
+    (v_owner_family, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-p-owner@ls153.test', now(), now(), '{}', '{}'),
+    (v_purged, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-p-purged@ls153.test', now(), now(), '{}', '{}'),
+    (v_fresh, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-p-fresh@ls153.test', now(), now(), '{}', '{}'),
+    (v_boundary, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-p-boundary@ls153.test', now(), now(), '{}', '{}');
+  insert into public.profiles (id, display_name, avatar_url) values
+    (v_owner_family, 'LS153 家 A owner', null),
+    (v_purged, 'LS153 真實姓名（該被清空）', 'https://example.test/real-avatar.jpg'),
+    (v_fresh, 'LS153 29 天前請求刪除', null),
+    (v_boundary, 'LS153 剛好 30 天前請求刪除', null)
+  on conflict (id) do update set display_name = excluded.display_name, avatar_url = excluded.avatar_url;
+
+  insert into public.families (id, name, created_by) values (v_family_a, 'LS153 profiles 測試家', v_owner_family);
+  -- 注意：這裡**不**幫 v_purged 造 family_members 列——真實的 delete_my_account()
+  -- 情況 3 在標記 deletion_requested_at 之前就已經同步 DELETE FROM family_members，
+  -- 這裡刻意對齊那個真實前提（migration 第 6 段的「刻意不動 family_members」正是
+  -- 建立在這個前提上，測試資料也不該無中生有一個不可能出現的狀態）。
+  insert into public.diaries (id, family_id, author_id, body, entry_date) values
+    (v_diary_active, v_family_a, v_purged, 'v_purged 離開前留下的日記', current_date - 5);
+  insert into public.content_reports (id, family_id, target_type, target_id, reporter_id, reason) values
+    (v_report_id, v_family_a, 'diary', v_diary_active, v_purged, 'v_purged 送出的檢舉');
+  insert into public.reactions (id, family_id, target_type, target_id, user_id) values
+    ('d5000000-0000-4000-8000-000000000001', v_family_a, 'diary', v_diary_active, v_purged);
+  insert into public.device_tokens (token, user_id) values ('ls153-purge-token', v_purged);
+  insert into public.invites (id, family_id, code, role, created_by, max_uses, expires_at)
+  values (v_invite, v_family_a, 'LS153PURGE', 'member', v_owner_family, 5, v_now + interval '7 days');
+  insert into public.join_requests (id, family_id, applicant_id, invite_id, status) values
+    (v_join_request, v_family_a, v_purged, v_invite, 'pending');
+  insert into public.blocked_users (family_id, blocker_id, blocked_id) values
+    (v_family_a, v_purged, v_owner_family);
+
+  update public.profiles set deletion_requested_at = v_now - interval '31 days' where id = v_purged;
+  update public.profiles set deletion_requested_at = v_now - interval '29 days' where id = v_fresh;
+  update public.profiles set deletion_requested_at = v_now - interval '30 days' where id = v_boundary;
+
+  perform private.purge_expired(v_now);
+
+  -- profiles 列還在（tombstone，不是硬刪）
+  select display_name, avatar_url, purged_at, deletion_requested_at
+    into v_display, v_avatar, v_purged_at, v_requested_at
+    from public.profiles where id = v_purged;
+  if v_display is null then
+    raise exception 'FAIL：31 天前請求刪除的 profiles 列不見了——應該是 tombstone，不是硬刪';
+  end if;
+  if v_display <> '已刪除的帳號' or v_avatar is not null then
+    raise exception 'FAIL：tombstone 沒有正確清空 PII（display_name=% avatar_url=%）', v_display, v_avatar;
+  end if;
+  if v_purged_at is null then raise exception 'FAIL：purged_at 沒有被設定'; end if;
+  if v_requested_at is null then raise exception 'FAIL：deletion_requested_at 不該被清掉'; end if;
+
+  select display_name, purged_at into v_display, v_purged_at from public.profiles where id = v_fresh;
+  if v_display <> 'LS153 29 天前請求刪除' or v_purged_at is not null then
+    raise exception 'FAIL：29 天前請求刪除的 profiles 列不該被 tombstone（display_name=% purged_at=%）', v_display, v_purged_at;
+  end if;
+
+  -- R3（merge-review R2 F4）：剛好 30 天前請求刪除——邊界含，不清（語意對齊
+  -- set_child_deleted 的 30 天還原邊界）。這是本次唯一真正釘住 profiles 這個
+  -- 邊界的斷言：mutation `<`→`<=` 會讓這裡從「不該動」變成「被 tombstone」而打紅。
+  select display_name, purged_at into v_display, v_purged_at from public.profiles where id = v_boundary;
+  if v_display <> 'LS153 剛好 30 天前請求刪除' or v_purged_at is not null then
+    raise exception 'FAIL F4：剛好 30 天前請求刪除的 profiles 列不該被 tombstone（30 天邊界含，不清），實際 display_name=% purged_at=%', v_display, v_purged_at;
+  end if;
+
+  -- cascade：reactions／device_tokens／join_requests／blocked_users（雙向）屬於
+  -- v_purged 的列全部消失（R2：手動 DELETE，不再靠硬刪 profiles 的 FK cascade）
+  select count(*) into v_n from public.reactions where user_id = v_purged;
+  if v_n <> 0 then raise exception 'FAIL：v_purged 的 reactions 列沒有清掉'; end if;
+  select count(*) into v_n from public.device_tokens where user_id = v_purged;
+  if v_n <> 0 then raise exception 'FAIL：v_purged 的 device_tokens 列沒有清掉'; end if;
+  select count(*) into v_n from public.join_requests where applicant_id = v_purged;
+  if v_n <> 0 then raise exception 'FAIL：v_purged 的 join_requests 列沒有清掉'; end if;
+  select count(*) into v_n from public.blocked_users where blocker_id = v_purged or blocked_id = v_purged;
+  if v_n <> 0 then raise exception 'FAIL：v_purged 的 blocked_users 列（雙向）沒有清掉'; end if;
+
+  -- R2：diaries.author_id／content_reports.reporter_id **不再** set null——profiles
+  -- 列本身還在（tombstone），FK 完整指向那個已清空 PII 的 tombstone。
+  select author_id into v_author from public.diaries where id = v_diary_active;
+  if v_author is distinct from v_purged then
+    raise exception 'FAIL：diaries.author_id 不該被 set null（profiles 是 tombstone 不是硬刪），實際 %', v_author;
+  end if;
+  select count(*) into v_n from public.diaries where id = v_diary_active and deleted_at is null;
+  if v_n <> 1 then raise exception 'FAIL：v_purged 的舊日記本身不該被連坐刪除'; end if;
+
+  select reporter_id into v_reporter from public.content_reports where id = v_report_id;
+  if v_reporter is distinct from v_purged then
+    raise exception 'FAIL：content_reports.reporter_id 不該被 set null，實際 %', v_reporter;
+  end if;
+
+  -- 家 A owner 完全不受影響
+  select count(*) into v_n from public.profiles where id = v_owner_family and purged_at is null;
+  if v_n <> 1 then raise exception 'FAIL：家 A owner 不該被 tombstone'; end if;
+  select count(*) into v_n from public.families where id = v_family_a;
+  if v_n <> 1 then raise exception 'FAIL：家 A 本身不該被清掉（families 沒有 deleted_at，見 migration 檔頭）'; end if;
+
+  -- F2 回歸測試：模擬 SupabaseFamilyAPIClient.ensureProfileExists 的
+  -- `upsert(..., onConflict: "id", ignoreDuplicates: true)`——PostgREST 端等同
+  -- `insert ... on conflict (id) do nothing`。tombstone 列已存在，這句話必須
+  -- 完全不執行任何寫入，不能讓帳號看起來復活。
+  insert into public.profiles (id, display_name) values (v_purged, '假裝是本人重新登入觸發的 upsert')
+    on conflict (id) do nothing;
+  select display_name, deletion_requested_at, purged_at
+    into v_display, v_requested_at, v_purged_at
+    from public.profiles where id = v_purged;
+  if v_display <> '已刪除的帳號' then
+    raise exception 'FAIL F2 回歸：ensureProfileExists 式 upsert 覆寫了 tombstone 內容（display_name=%）', v_display;
+  end if;
+  if v_requested_at is null or v_purged_at is null then
+    raise exception 'FAIL F2 回歸：帳號復活了（deletion_requested_at=% purged_at=%）', v_requested_at, v_purged_at;
+  end if;
+
+  raise notice 'ok：profiles tombstone——29／30／31 天邊界正確（R3 F4 補上剛好 30 天不清），PII 清空＋purged_at 標記，reactions／device_tokens／join_requests／blocked_users 皆清除，author_id／reporter_id 不再 set null（profiles 列還在），家 A 本身與 owner 不受影響，F2 帳號復活洞已回歸測試（ensureProfileExists 式 upsert 無效）';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 3b（R2，merge-review R1 F1）：delete_my_account() 情況 2（唯一成員）cascade 硬刪
+--    media，不經過 purge_expired()，Storage 佇列仍必須正確入列——這是 F1 修的洞
+--    本身的直接回歸測試（media_storage_queue_sync trigger，見 migration 第 3 段）。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_uid uuid := 'd8000000-0000-4000-8000-000000000001';
+  v_family uuid := 'd9000000-0000-4000-8000-000000000001';
+  v_media_deleted uuid := 'da000000-0000-4000-8000-000000000001';  -- 已軟刪
+  v_media_active uuid := 'da000000-0000-4000-8000-000000000002';   -- 仍 active
+  v_path_deleted text;
+  v_path_active text;
+  v_n int;
+begin
+  set local role postgres;
+
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+  values (v_uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-f1@ls153.test', now(), now(), '{}', '{}');
+  insert into public.profiles (id, display_name) values (v_uid, 'F1 回歸測試')
+    on conflict (id) do update set display_name = excluded.display_name;
+  insert into public.families (id, name, created_by) values (v_family, 'F1 回歸測試家', v_uid);
+
+  v_path_deleted := v_family::text || '/2026/07/' || v_media_deleted::text || '.jpg';
+  v_path_active := v_family::text || '/2026/07/' || v_media_active::text || '.jpg';
+  -- 一張已軟刪、一張仍 active——情況 2 的 cascade 硬刪不看 deleted_at，兩張都該清、
+  -- 都該入列（見 migration 第 3 段「為什麼是硬刪就入列，不看 deleted_at」）。
+  insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, deleted_at)
+  values (v_media_deleted, v_family, v_path_deleted, 'photo', 100, now(), 10, 10, v_uid, now());
+  insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by)
+  values (v_media_active, v_family, v_path_active, 'photo', 100, now(), 10, 10, v_uid);
+
+  perform set_config('request.jwt.claims', json_build_object('sub', v_uid, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.delete_my_account();
+  reset role;
+
+  set local role postgres;
+  select count(*) into v_n from public.families where id = v_family;
+  if v_n <> 0 then raise exception 'FAIL：F1 前置條件不對，家庭應該已被 cascade 刪除'; end if;
+
+  select count(*) into v_n from public.purge_storage_queue
+   where family_id = v_family and object_path in (v_path_deleted, v_path_active);
+  if v_n <> 2 then
+    raise exception 'FAIL F1：delete_my_account() 情況 2 cascade 硬刪 media 後，purge_storage_queue 應該有 2 筆（不論原本軟刪與否），實際 %', v_n;
+  end if;
+
+  raise notice 'ok F1 回歸：delete_my_account() 情況 2（唯一成員）cascade 硬刪 media，media_storage_queue_sync trigger 正確入列 2 筆（不經過 purge_expired()）';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 3c（R3，merge-review R2 F1 major，修法 (i)）：
+-- public.purge_storage_queue_mark_failed() —— 死信欄位與退避公式的 SQL 面斷言。
+-- Edge Function（supabase/functions/purge-storage/index.ts）的 SELECT 條件
+-- （`attempts < MAX_ATTEMPTS` 且 `next_attempt_at is null or <= now()`）在 Deno
+-- 端無法被這個測試檔涵蓋，這裡驗的是它依賴的 SQL 端資料正確性：attempts 遞增、
+-- next_attempt_at 依指數退避（2^attempts 分鐘）計算、達 5 次後同樣的 SELECT
+-- 條件會排除它（死信停放）；以及只有 service_role 能呼叫這支函式。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_txn_now timestamptz := now();  -- 同一交易內 now() 是常數（交易開始時間），可以拿來算精確期望值
+  v_queue_id uuid := 'fb100000-0000-4000-8000-000000000001';
+  v_attempts int;
+  v_last_error text;
+  v_next_attempt_at timestamptz;
+  v_expected timestamptz;
+  v_n int;
+begin
+  set local role postgres;
+  insert into public.purge_storage_queue (id, bucket_id, object_path)
+  values (v_queue_id, 'media', 'probe/mark-failed-deadletter-probe.jpg');
+
+  -- 連續呼叫 5 次，模擬 Edge Function 連續 5 天都無法確認這筆已刪——每次 attempts
+  -- 遞增 1，next_attempt_at 依「2^attempts 分鐘」退避（見 migration 對
+  -- purge_storage_queue_mark_failed() 的函式註解）。
+  set local role service_role;
+  for i in 1..5 loop
+    perform public.purge_storage_queue_mark_failed(array[v_queue_id], 'probe error ' || i);
+
+    select attempts, last_error, next_attempt_at
+      into v_attempts, v_last_error, v_next_attempt_at
+      from public.purge_storage_queue where id = v_queue_id;
+
+    if v_attempts <> i then
+      raise exception 'FAIL：第 % 次呼叫後 attempts 應為 %，實際 %', i, i, v_attempts;
+    end if;
+    if v_last_error <> 'probe error ' || i then
+      raise exception 'FAIL：第 % 次呼叫後 last_error 應為 %，實際 %', i, 'probe error ' || i, v_last_error;
+    end if;
+
+    v_expected := v_txn_now + (least(1 << least(i, 10), 1440) || ' minutes')::interval;
+    if v_next_attempt_at <> v_expected then
+      raise exception 'FAIL：第 % 次呼叫後 next_attempt_at 應為 %（2^% 分鐘退避），實際 %', i, v_expected, i, v_next_attempt_at;
+    end if;
+  end loop;
+  reset role;
+
+  -- 達 5 次（MAX_ATTEMPTS）之後，Edge Function 的 SELECT 條件（attempts <
+  -- MAX_ATTEMPTS）不會再選到它——死信停放，但列本身還在（供稽核）。
+  select count(*) into v_n from public.purge_storage_queue
+   where id = v_queue_id and attempts < 5;
+  if v_n <> 0 then
+    raise exception 'FAIL：達 5 次重試後這筆應該被死信條件（attempts < 5）排除，實際還會被選到';
+  end if;
+  select count(*) into v_n from public.purge_storage_queue where id = v_queue_id;
+  if v_n <> 1 then
+    raise exception 'FAIL：死信停放不等於刪除，列本身應該還在供稽核';
+  end if;
+
+  -- 授權邊界：只有 service_role 能呼叫（不是位元檢查，是真的打一次，同本檔第 5
+  -- 段對 private.purge_expired() 的驗法）。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000002', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.purge_storage_queue_mark_failed(array[v_queue_id], 'authenticated 不該打得到');
+    raise exception 'FAIL：authenticated 竟然能呼叫 purge_storage_queue_mark_failed()';
+  exception when sqlstate '42501' then
+    null; -- ok
+  end;
+  reset role;
+
+  raise notice 'ok F1 修法 (i)：purge_storage_queue_mark_failed() 的 attempts／last_error／next_attempt_at（指數退避）皆正確，達 5 次後死信條件排除但列仍在，authenticated 無法呼叫';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 4. 冪等重跑：同一個 p_now 連續呼叫兩次，第二次必須全部歸零、不炸
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_now timestamptz := clock_timestamp();
+  v_owner uuid := 'e5000000-0000-4000-8000-000000000001';
+  v_family uuid := 'e5000000-0000-4000-8000-000000000002';
+  v_diary uuid := 'e5000000-0000-4000-8000-000000000003';
+  v_result1 jsonb;
+  v_result2 jsonb;
+begin
+  set local role postgres;
+
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+  values (v_owner, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls153-idem@ls153.test', now(), now(), '{}', '{}');
+  insert into public.profiles (id, display_name) values (v_owner, 'LS153 冪等測試')
+    on conflict (id) do update set display_name = excluded.display_name;
+  insert into public.families (id, name, created_by) values (v_family, 'LS153 冪等測試家', v_owner);
+  insert into public.diaries (id, family_id, author_id, body, entry_date, deleted_at)
+  values (v_diary, v_family, v_owner, '該被清掉的日記', current_date - 40, v_now - interval '31 days');
+
+  select private.purge_expired(v_now) into v_result1;
+  if (v_result1->'deleted_counts'->>'diaries')::int <> 1 then
+    raise exception 'FAIL：第一次呼叫應該清掉 1 筆日記，實際 %', v_result1->'deleted_counts'->>'diaries';
+  end if;
+
+  select private.purge_expired(v_now) into v_result2;
+  if (v_result2->'deleted_counts'->>'diaries')::int <> 0
+     or (v_result2->>'storage_enqueued')::int <> 0
+     or (v_result2->>'failed_count')::int <> 0 then
+    raise exception 'FAIL：同一個 p_now 重跑第二次應該全部歸零，實際 %', v_result2;
+  end if;
+
+  raise notice 'ok：冪等重跑——同一個 p_now 連續呼叫兩次，第二次全部歸零、沒有報錯';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 5. 授權邊界：authenticated 不能呼叫 private.purge_expired()；service_role 能讀／刪
+--    purge_storage_queue，但不能寫入（唯一寫入路徑是 purge_expired() 本身，見
+--    migration 註解）；authenticated／anon 對 purge_storage_queue 兩層防線（grant＋
+--    RLS）皆擋。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_member uuid := 'a0000000-0000-4000-8000-000000000002';  -- fixtures 既有的 A 家 member
+begin
+  if has_function_privilege('authenticated', 'private.purge_expired(timestamptz)', 'execute') then
+    raise exception 'FAIL：authenticated 竟然對 private.purge_expired() 有 EXECUTE';
+  end if;
+  if has_function_privilege('anon', 'private.purge_expired(timestamptz)', 'execute') then
+    raise exception 'FAIL：anon 竟然對 private.purge_expired() 有 EXECUTE';
+  end if;
+  if not has_function_privilege('service_role', 'private.purge_expired(timestamptz)', 'execute') then
+    raise exception 'FAIL：service_role 應該對 private.purge_expired() 有 EXECUTE（harden_default_privileges.sql 的全域預設）';
+  end if;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform private.purge_expired();
+    raise exception 'FAIL：authenticated 竟然能實際呼叫 private.purge_expired()（不只是 grant 位元檢查，這裡真的打一次）';
+  exception when sqlstate '42501' then
+    null; -- ok
+  end;
+  reset role;
+
+  raise notice 'ok：授權邊界——authenticated／anon 對 private.purge_expired() 皆無 EXECUTE（位元檢查＋實際呼叫皆驗過），service_role 有';
+end;
+$$;
+
+do $$
+declare
+  v_member uuid := 'a0000000-0000-4000-8000-000000000002';
+  v_probe_id uuid := 'f9000000-0000-4000-8000-000000000001';
+  v_n int;
+begin
+  set local role postgres;
+  insert into public.purge_storage_queue (id, bucket_id, object_path) values
+    (v_probe_id, 'media', 'probe/only-for-60_default_privileges-style-grant-check.jpg');
+  reset role;
+
+  -- authenticated／anon：grant 層直接擋（42501），連 RLS 都用不到
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform 1 from public.purge_storage_queue where id = v_probe_id;
+    raise exception 'FAIL：authenticated 竟然能 SELECT public.purge_storage_queue';
+  exception when sqlstate '42501' then
+    null; -- ok
+  end;
+  reset role;
+
+  -- service_role：SELECT／DELETE 可用，INSERT 不行（沒有 grant，唯一寫入路徑是
+  -- purge_expired() 本身，見 migration 註解）
+  set local role service_role;
+  select count(*) into v_n from public.purge_storage_queue where id = v_probe_id;
+  if v_n <> 1 then
+    raise exception 'FAIL：service_role 應該 SELECT 得到剛才用 postgres 身分塞進去的探針列';
+  end if;
+
+  begin
+    insert into public.purge_storage_queue (bucket_id, object_path) values ('media', 'probe/service-role-should-not-be-able-to-insert.jpg');
+    raise exception 'FAIL：service_role 竟然能直接 INSERT public.purge_storage_queue（唯一寫入路徑該是 purge_expired()）';
+  exception when sqlstate '42501' then
+    null; -- ok
+  end;
+
+  delete from public.purge_storage_queue where id = v_probe_id;
+  reset role;
+
+  set local role postgres;
+  select count(*) into v_n from public.purge_storage_queue where id = v_probe_id;
+  if v_n <> 0 then
+    raise exception 'FAIL：service_role 的 DELETE 沒有真的生效';
+  end if;
+  reset role;
+
+  raise notice 'ok：purge_storage_queue 授權邊界——authenticated 無 SELECT（grant 層擋），service_role 可 SELECT／DELETE、不可 INSERT，且 DELETE 確實生效';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 6. pg_cron 排程（若本環境有啟用）：job 名稱／指令正確；本機開發映像若沒有
+--    shared_preload_libraries 載入 pg_cron，只留 NOTICE，不算測試失敗（migration
+--    本身即為 fail-soft 設計，見 20260903110908_purge_expired.sql 檔頭）。
+-- ===========================================================================
+do $$
+declare
+  v_schedule text;
+  v_command text;
+begin
+  if not exists (select 1 from pg_extension where extname = 'pg_cron') then
+    raise notice '略過：本環境沒有啟用 pg_cron（fail-soft 設計預期內，見 migration 檔頭）';
+    return;
+  end if;
+
+  select schedule, command into v_schedule, v_command
+    from cron.job where jobname = 'ls153-purge-expired-daily';
+
+  if v_schedule is null then
+    raise exception 'FAIL：pg_cron 已啟用，但找不到 ls153-purge-expired-daily 這個 job';
+  end if;
+  if v_command <> 'select private.purge_expired();' then
+    raise exception 'FAIL：ls153-purge-expired-daily 的 command 不對，實際 %', v_command;
+  end if;
+
+  raise notice 'ok：pg_cron 排程存在，schedule=%，command=%', v_schedule, v_command;
+end;
+$$;

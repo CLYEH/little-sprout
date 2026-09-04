@@ -218,7 +218,7 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 - **Info.plist 用途字串**：`NSPhotoLibraryUsageDescription`、相機、推播 —— 寫具體，敷衍會被退
 - **EULA**：搭配 A1 的零容忍條款，可用 Apple 標準 EULA 加附一段
 - **出口合規**：僅用 HTTPS 屬豁免，設 `ITSAppUsesNonExemptEncryption = false` 免得每次上傳都被問
-- **審核用 demo 帳號** —— 邀請制 app 的死穴：審核員登入後沒有家庭、沒有邀請碼，看不到任何功能會被判「無法審核」而退件。須提供可用帳號 + **已有孩子檔案、照片、日記、留言的示範家庭** + 長期有效邀請碼。另外 Sign in with Apple 對審核員偶爾不順，保留 Email OTP 給他們（原本就規劃了，正好）
+- **審核用 demo 帳號** —— 邀請制 app 的死穴：審核員登入後沒有家庭、沒有邀請碼，看不到任何功能會被判「無法審核」而退件。須提供可用帳號 + **已有孩子檔案、照片、日記、留言的示範家庭** + 長期有效邀請碼。另外 Sign in with Apple 對審核員偶爾不順，原規劃保留 Email OTP 給他們備用；**登入方式已裁決改採方案 B（2026-09-04）**：審核帳號改用帳號密碼登入（歡迎頁小字連結，LS-163／LS-164 落地），不依賴收信環節，密碼只放 App Store Connect Review Notes、不進 repo（取捨紀錄見 `docs/store/review-notes.md`）
 - **App Store Connect 資料**：截圖、年齡分級問卷、App 名稱／描述。年齡分級問卷會問到「使用者生成內容」與「app 內通訊」，兩項都要誠實勾選，分級可能因此高於 4+
 
 ### C. 關鍵決策（皆已定案）

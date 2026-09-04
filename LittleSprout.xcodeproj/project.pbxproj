@@ -173,6 +173,7 @@
 		DB2A761CDF5BC8B9BD02ECBB /* SupabaseDiaryAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037FF26C7AE60735F31B632A /* SupabaseDiaryAPIClient.swift */; };
 		DDBF77E8E686704D89F1ABA1 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F28DE483C3DA54A9672BFDFF /* Supabase */; };
 		DE90F17665F93D3121EF7293 /* ChildAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9A9FE13E73169C65E5A03F /* ChildAvatarView.swift */; };
+		DFB91365F67833D989932DB0 /* AppSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9530233ED3E9B6D3A43AD99 /* AppSection.swift */; };
 		E0C5C84DB8D301115260A23A /* FamilyOnboardingRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97A194D1ACDE962DD7F63736 /* FamilyOnboardingRoute.swift */; };
 		E18D07FCED03683A17ED47CE /* KeyboardHeightObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 743A14E1E7666B9B37F94689 /* KeyboardHeightObserver.swift */; };
 		E2E9E24C6F7E93396FD38F4B /* AuthRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95B92F29867CB3855772E654 /* AuthRoute.swift */; };
@@ -1050,6 +1051,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DFB91365F67833D989932DB0 /* AppSection.swift in Sources */,
 				10CB97ED4D75A21D2579F3CF /* DiaryCardVideoBadgeGeometryTests.swift in Sources */,
 				FB506E26EAA3D3B5536A7858 /* SectionTabBarPushRegressionTests.swift in Sources */,
 				A4F0D305173592763A24EF5D /* SectionTabBarTests.swift in Sources */,

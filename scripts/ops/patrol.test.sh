@@ -324,6 +324,19 @@ has   '⑪ 殘留 tomb → --brief 也印' "$(bash "$patrol" --repo "$repo" --no
 jq_ok '⑪ --json supabase_lock 含 tomb 行' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)" '.supabase_lock | test("tomb")'
 rm -rf "$SUPABASE_LOCK_DIR" "$SUPABASE_LOCK_DIR.stale.1.2"
 
+# ---- ⑪-b QA 持有 hold（LS-159）：holder `cmd=hold:<label>` → human／--brief 印「QA 持有中（label，剩餘 n 分）」、
+#        --json 多 hold_label／hold_expires_at；命令型持有（上面 ⑪ 的 json11）兩欄為 null ----
+jq_ok '⑪-b 命令型持有 → --json hold_label／hold_expires_at 為 null' "$json11" '.hold_label == null and .hold_expires_at == null'
+mkdir -p "$SUPABASE_LOCK_DIR"
+exp11=$(( $(date +%s) + 600 ))
+printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=%s\nbranch=test\ncmd=hold:LS-9 QA 冒煙\nowner=%s\nexpires_at=%s\nheartbeat=%s\n' "$$" "$(date +%s)" "$(hostname)" "$wts/LS-9" "$$" "$exp11" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder"
+out11="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑪-b hold → human 段印 QA 持有中（label，剩餘 n 分）' "$out11" 'QA 持有中（LS-9 QA 冒煙，剩餘 10 分）'
+has   '⑪-b hold → --brief 也印 label' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)" 'Supabase lock：held pid='
+has   '⑪-b hold → --brief 含 QA 持有中' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)" 'QA 持有中（LS-9 QA 冒煙'
+jq_ok '⑪-b --json hold_label／hold_expires_at 來自 holder 檔' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)" ".hold_label == \"LS-9 QA 冒煙\" and .hold_expires_at == ${exp11}"
+rm -rf "$SUPABASE_LOCK_DIR"
+
 # ---- ⑭ 專屬模擬器 >7 天未用（LS-83）：xcrun 假身回固定 JSON，驗 lastBootedAt／目錄 mtime 兩種判定、
 #        名稱不符 <票號>-<機型> 樣式（非 detect-simulator.sh 所建）不管、只列不刪＋印 simctl delete 指令、
 #        --brief／--json 都看得到；xcrun 本身失敗（非 macOS／查詢出錯）fail-soft 不當異常炸掉 ----

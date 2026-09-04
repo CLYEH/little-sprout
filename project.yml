@@ -90,6 +90,10 @@ targets:
       # app target 的型別——這個檔案只有 rawValue 字串常數，兩邊靠它溝通（見該檔文件註解），
       # 因此同一份檔案同時屬於 LittleSprout 與這個 target（下面 `path` 直接指向單一檔案）。
       - path: LittleSprout/TapTargetGateScreenName.swift
+      # LS-160：同一招——`SectionTabBarPushRegressionTests` 的 sentinel 原本硬編碼四個 SF
+      # Symbol 字串，跟 `AppSection.systemImage` 各自維護會漂移（LS-150 review R1 I1）。
+      # `AppSection.swift` 只 `import Foundation`、無 app 內部相依，同樣掛進兩個 target。
+      - path: LittleSprout/Navigation/AppSection.swift
     dependencies:
       - target: LittleSprout
     settings:

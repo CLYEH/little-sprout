@@ -190,7 +190,10 @@ jobs:
           bash scripts/gates/ui-test-trigger.test.sh || rc=1
           bash scripts/gates/design-landing-check.test.sh || rc=1
           bash scripts/gates/design-evidence-check.test.sh || rc=1
-          # LS-122：四支溢出掃描的正典腳本純函數自測（node，合成節點樹；Pen 不在 CI 也能驗演算法）
+          # LS-168：Notes 板節點 id 存在性 gate 自測（合成 repo：活 id／死 id／沿革標記三案＋mutation）
+          bash scripts/gates/design-notes-check.test.sh || rc=1
+          # LS-122：四支溢出掃描的正典腳本純函數自測（node，合成節點樹；Pen 不在 CI 也能驗演算法）；LS-168 加第五支
+          # text_occlusion 與 tree_hash（含 python design_tree_hash.py 交叉一致案，runner 需 python3——ubuntu-latest 內建）
           node scripts/design/overflow-scan.test.js || rc=1
           bash scripts/gates/design-asset-size-check.test.sh || rc=1
           bash scripts/hooks/pretool.test.sh || rc=1
@@ -410,6 +413,22 @@ jobs:
             done <<< "$pens"
           fi
 
+      # LS-168：設計稿 Notes 板引用的節點 id 必須存在於 head 快照——本 PR 範圍內刪掉（merge-base ∪ 範圍內 .pen commit 曾有、
+      # head 已無）的 id 若仍被 Notes 現在式引用即紅，同子句帶沿革標記者放行（design-notes-check.sh 檔頭）。觸發條件同上一
+      # step（.pen 有變更的 feature|fix|hotfix PR；同樣以 PR head sha 為終點，LS-127）；不需票號。
+      - name: .pen Notes 節點 id gate（LS-168）
+        if: github.event_name == 'pull_request' && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/'))
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          base_sha=$(git merge-base "origin/$BASE" "$HEAD_SHA")
+          pens=$(git -c core.quotePath=false diff --name-only --diff-filter=ACM "$base_sha"..."$HEAD_SHA" -- '*.pen' || true)
+          if [ -n "$pens" ]; then
+            while IFS= read -r p; do
+              bash scripts/gates/design-notes-check.sh "$p" --base "origin/$BASE" --head-sha "$HEAD_SHA"
+            done <<< "$pens"
+          fi
+
   # DB migration gate 的執行面（LS-11）：CI 實際跑 supabase/tests/run.sh（RLS 隔離／owner
   # 不變量／trigger／併發／RLS plan 效能），把 §7 對照表「migration 必附 RLS 測試」從
   # 「有沒有動測試檔」的弱驗證，補強成「測試真的綠」。
@@ -432,6 +451,56 @@ jobs:
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: 偵測 supabase/functions/ 目錄
+        id: detect-functions
+        run: |
+          if [ ! -d supabase/functions ]; then
+            echo "無 supabase/functions/ 目錄，略過"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # LS-151：repo 第一支 Edge Function 落地（與 LS-153 的 purge-storage 同批）。
+      # 只做靜態檢查（deno check／lint／test）＋單元測試（全部用注入的 fake
+      # deps，不連線任何真正的服務）——不是完整整合測試，本機／CI 都沒有建置
+      # `supabase functions serve` 那套治具（見 docs/API.md §10「本機測試」）。
+      # 對 `supabase/functions/*/index.ts` 用 glob（不寫死函式名），日後新增
+      # 函式（例如 LS-153 的 purge-storage）自動被涵蓋，不需要回頭改這個 workflow。
+      - name: 安裝 Deno
+        if: steps.detect-functions.outputs.skip == 'false'
+        uses: denoland/setup-deno@v2
+        with:
+          # minor-8（LS-151 R2，merge-review R1）：鎖到明確版本，不是 v2.x 浮動
+          # major——與同一個 job 下面「安裝 supabase CLI（鎖版本）」的既有慣例一致，
+          # CI 不會因為上游 deno 改版而在與本 PR 無關的時間點變紅／變綠。與
+          # LS-153 reviewer 用的容器版本一致。
+          deno-version: v2.1.4
+
+      - name: Edge Functions 靜態檢查（deno check／lint／fmt --check，LS-151）
+        if: steps.detect-functions.outputs.skip == 'false'
+        run: |
+          shopt -s nullglob
+          entrypoints=(supabase/functions/*/index.ts)
+          if [ "${#entrypoints[@]}" -eq 0 ]; then
+            echo "supabase/functions/ 下沒有任何 index.ts，略過"
+            exit 0
+          fi
+          deno check "${entrypoints[@]}"
+          deno lint supabase/functions/
+          deno fmt --check supabase/functions/
+
+      - name: Edge Functions 單元測試（deno test，全部依賴注入，不連線任何真正的服務，LS-151）
+        if: steps.detect-functions.outputs.skip == 'false'
+        run: |
+          shopt -s nullglob
+          test_files=(supabase/functions/*/*.test.ts)
+          if [ "${#test_files[@]}" -eq 0 ]; then
+            echo "supabase/functions/ 下沒有任何 *.test.ts，略過"
+            exit 0
+          fi
+          deno test "${test_files[@]}"
 
       - name: 安裝 supabase CLI（鎖版本）
         if: steps.detect.outputs.skip == 'false'

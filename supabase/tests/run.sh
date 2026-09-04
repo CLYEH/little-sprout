@@ -413,6 +413,15 @@ race_case "approve_join 先動、delete_my_account 後動：剛核准的成員�
   delete_account_vs_approve_join_setup.sql delete_account_vs_approve_join_s1.sql \
   delete_account_vs_approve_join_s2.sql delete_account_vs_approve_join_verify.sql
 
+# LS-153 併發場景：purge_expired() 硬刪一個孩子檔案（deleted_at 已超過 30 天保護窗）
+# 與 owner 同時嘗試 set_child_deleted(false) 還原同一個孩子。S1 先動並持鎖 3 秒，S2
+# 1.2 秒後被同一列的排他鎖擋住，解除阻塞後必須讀到「這一列已經不存在」（LS041），
+# 不是 LS043（那個碼假設列還在只是還原窗口過期）也不是誤放行成功還原。見
+# purge_vs_restore_child_s2_restore.sql 的說明。
+race_case "purge_expired 先動、owner 還原同一個孩子後動：後動者必須被阻塞後正確拿到 LS041" \
+  purge_vs_restore_child_setup.sql purge_vs_restore_child_s1_purge.sql \
+  purge_vs_restore_child_s2_restore.sql purge_vs_restore_child_verify.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 delete from public.families where id in (
@@ -429,7 +438,8 @@ delete from public.families where id in (
   'f0000000-0000-4000-8000-000000000001',
   '9a000000-0000-4000-8000-000000000001',
   'd3000000-0000-4000-8000-000000000001',
-  'd5000000-0000-4000-8000-000000000001'
+  'd5000000-0000-4000-8000-000000000001',
+  'f9000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -457,7 +467,8 @@ delete from auth.users where id in (
   'a4000000-0000-4000-8000-000000000001',
   'a3000000-0000-4000-8000-000000000001',
   'a2000000-0000-4000-8000-000000000001',
-  'a1000000-0000-4000-8000-000000000001'
+  'a1000000-0000-4000-8000-000000000001',
+  'b9000000-0000-4000-8000-000000000001'
 );
 SQL
 run_sql "$cleanup" > /dev/null
