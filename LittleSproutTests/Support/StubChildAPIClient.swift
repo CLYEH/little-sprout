@@ -10,9 +10,17 @@ final class StubChildAPIClient: ChildAPIClient, @unchecked Sendable {
     typealias UpdateChildHandler = @Sendable (UUID, String, Date, String?) async throws -> Void
     typealias SetChildDeletedHandler = @Sendable (UUID, Bool) async throws -> Void
     typealias FetchMyRoleHandler = @Sendable (UUID) async throws -> FamilyRole?
+    typealias SignedAvatarURLsHandler = @Sendable ([String]) async throws -> [String: URL]
 
     enum StubError: Error {
         case unconfigured
+    }
+
+    struct CreateChildCall: Equatable {
+        let familyID: UUID
+        let name: String
+        let birthday: Date
+        let avatarURL: String?
     }
 
     struct UpdateChildCall: Equatable {
@@ -30,15 +38,21 @@ final class StubChildAPIClient: ChildAPIClient, @unchecked Sendable {
     private struct Box {
         var listChildrenHandler: ListChildrenHandler = { _ in [] }
         var createChildHandler: CreateChildHandler = { _, _, _, _ in throw StubError.unconfigured }
+        var createChildCalls: [CreateChildCall] = []
         var updateChildHandler: UpdateChildHandler = { _, _, _, _ in throw StubError.unconfigured }
         var updateChildCalls: [UpdateChildCall] = []
         var setChildDeletedHandler: SetChildDeletedHandler = { _, _ in throw StubError.unconfigured }
         var setChildDeletedCalls: [SetChildDeletedCall] = []
         var fetchMyRoleHandler: FetchMyRoleHandler = { _ in .owner }
         var listChildrenCallCount = 0
+        var signedAvatarURLsHandler: SignedAvatarURLsHandler = { _ in [:] }
     }
 
     private let box = OSAllocatedUnfairLock(initialState: Box())
+
+    var createChildCalls: [CreateChildCall] {
+        box.withLock { $0.createChildCalls }
+    }
 
     var updateChildCalls: [UpdateChildCall] {
         box.withLock { $0.updateChildCalls }
@@ -72,6 +86,10 @@ final class StubChildAPIClient: ChildAPIClient, @unchecked Sendable {
         box.withLock { $0.fetchMyRoleHandler = handler }
     }
 
+    func setSignedAvatarURLsHandler(_ handler: @escaping SignedAvatarURLsHandler) {
+        box.withLock { $0.signedAvatarURLsHandler = handler }
+    }
+
     func listChildren(familyID: UUID) async throws -> [Child] {
         box.withLock { $0.listChildrenCallCount += 1 }
         let handler = box.withLock { $0.listChildrenHandler }
@@ -79,6 +97,8 @@ final class StubChildAPIClient: ChildAPIClient, @unchecked Sendable {
     }
 
     func createChild(familyID: UUID, name: String, birthday: Date, avatarURL: String?) async throws -> UUID {
+        let call = CreateChildCall(familyID: familyID, name: name, birthday: birthday, avatarURL: avatarURL)
+        box.withLock { $0.createChildCalls.append(call) }
         let handler = box.withLock { $0.createChildHandler }
         return try await handler(familyID, name, birthday, avatarURL)
     }
@@ -100,5 +120,10 @@ final class StubChildAPIClient: ChildAPIClient, @unchecked Sendable {
     func fetchMyRole(familyID: UUID) async throws -> FamilyRole? {
         let handler = box.withLock { $0.fetchMyRoleHandler }
         return try await handler(familyID)
+    }
+
+    func signedAvatarURLs(forPaths paths: [String]) async throws -> [String: URL] {
+        let handler = box.withLock { $0.signedAvatarURLsHandler }
+        return try await handler(paths)
     }
 }
