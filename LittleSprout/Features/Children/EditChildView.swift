@@ -1,7 +1,9 @@
+import PhotosUI
 import SwiftUI
+import UIKit
 
 /// LS-113 / 09b 編輯寶貝資料。版式依 `design/littlesprout.pen` frame `BqxHJ`：大頭貼預覽
-/// （縮寫圓＋相機 Edit Badge，非功能性——見 `CreateChildView` 文件註解的 E3 範圍說明）＋
+/// （縮寫圓／照片＋相機 Edit Badge，LS-169 起真的能點換照片——見 `CreateChildView` 文件註解）＋
 /// 姓名欄／生日欄（與 08 同一套元件，預填既有值）＋「儲存變更」主鈕＋「取消」文字鈕。
 ///
 /// 「移除這個寶貝」（僅 owner）：LS-67 R2 設計註記（`UhhwS` I1）原意是把移除動作收斂到本畫面
@@ -21,6 +23,14 @@ struct EditChildView: View {
     @State private var showsEmptyNameMessage = false
     @State private var showsDatePicker = false
     @State private var showsDeleteConfirmation = false
+    @State private var pickedAvatarItem: PhotosPickerItem?
+    @State private var pickedAvatarData: Data?
+    @State private var pickedAvatarPreview: UIImage?
+    @State private var isLoadingAvatar = false
+    @State private var avatarLoadErrorMessage: String?
+    // R3 n2：世代計數器，理由同 `CreateChildView.avatarLoadGeneration` 文件註解——擋掉被
+    // 取消的舊 task 在 `defer`／`catch` 裡蓋掉新 task 已寫入的載入狀態。
+    @State private var avatarLoadGeneration = 0
     @Environment(\.dismiss) private var dismiss
 
     init(childrenStore: ChildrenStore, child: Child) {
@@ -59,9 +69,44 @@ struct EditChildView: View {
                 dismiss()
             }
         }
+        .task(id: pickedAvatarItem) {
+            await loadPickedAvatar()
+        }
     }
 
     private var isSubmitting: Bool { childrenStore.updateState.isSubmitting }
+
+    /// R2 M2/M3：同 `CreateChildView.loadPickedAvatar` 文件註解——`.task(id:)` 自動取消
+    /// 前一次選取的載入，載入失敗會落 `avatarLoadErrorMessage` 顯示出來，不是靜默吞掉。
+    ///
+    /// R3 n2：世代守門，理由同 `CreateChildView+Avatar.swift` 的 `loadPickedAvatar()` 文件
+    /// 註解——被取消的舊 task 仍會跑到 `defer`／`catch` 才結束，寫任何狀態前先確認自己仍是
+    /// 最新世代；`CancellationError` 一律靜默，不需要世代判斷。
+    private func loadPickedAvatar() async {
+        guard let pickedAvatarItem else { return }
+        avatarLoadGeneration += 1
+        let generation = avatarLoadGeneration
+        isLoadingAvatar = true
+        avatarLoadErrorMessage = nil
+        defer {
+            if generation == avatarLoadGeneration {
+                isLoadingAvatar = false
+            }
+        }
+        do {
+            let loaded = try await AvatarPickerLoader.load(pickedAvatarItem)
+            guard generation == avatarLoadGeneration else { return }
+            pickedAvatarData = loaded.data
+            pickedAvatarPreview = loaded.previewImage
+        } catch is CancellationError {
+            // 被下一次選取取消，狀態交給後面那個 task 寫（一律靜默）。
+        } catch {
+            guard generation == avatarLoadGeneration else { return }
+            pickedAvatarData = nil
+            pickedAvatarPreview = nil
+            avatarLoadErrorMessage = "這張照片沒辦法使用，請換一張試試。"
+        }
+    }
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
@@ -76,25 +121,40 @@ struct EditChildView: View {
 
     private var avatarField: some View {
         VStack(spacing: AppSpacing.label) {
-            ZStack(alignment: .bottomTrailing) {
-                ChildAvatarView(name: name, size: 88)
-                Circle()
-                    .fill(Color.lsSurface)
-                    .frame(width: 28, height: 28)
-                    .overlay(Circle().strokeBorder(Color.lsControlLine, lineWidth: 1.5))
-                    .overlay(
-                        Image(systemName: "camera")
-                            .appIconFrame(.small)
-                            .foregroundStyle(Color.lsTextPrimary)
-                    )
+            PhotosPicker(selection: $pickedAvatarItem, matching: .images) {
+                // LS-169：內容抽成獨立的 `EditChildAvatarFieldContent`（`View`-conforming
+                // struct），不是像 `avatarField` 本身這樣直接把 `appFont`／`appIconFrame`
+                // 呼叫寫在 `PhotosPicker` 的 label 尾隨閉包裡——實測（Swift 6 嚴格並行檢查）
+                // `PhotosPicker` 的 `label` 閉包參數不繼承外層 `EditChildView`（`View`
+                // 協定推導出的）`@MainActor` 隔離，直接在閉包本體呼叫這兩個 `@MainActor`
+                // 隔離的自訂 View extension 方法會編譯失敗（"non-Sendable 'some View'-typed
+                // result can not be returned from main actor-isolated instance method ...
+                // to nonisolated context"）。獨立 View struct 的 `body` 本身就是
+                // `@MainActor`（`View`協定要求），閉包只需要呼叫它的 initializer（非隔離、
+                // 純建構值），交給 SwiftUI 之後才真正求值 `body`——同 `CreateChildView` 的
+                // `AvatarPrintCard` 抽出方式一致。
+                EditChildAvatarFieldContent(
+                    name: name, avatarURL: childrenStore.avatarURL(for: child), pickedImage: pickedAvatarPreview
+                )
+                .overlay { avatarLoadingOverlay }
             }
-            Text("換張照片")
-                .appFont(.note, weight: .semibold)
-                .foregroundStyle(Color.lsTextSecondary)
+            .buttonStyle(.plain)
+            .disabled(isSubmitting)
+            if let avatarLoadErrorMessage {
+                Text(avatarLoadErrorMessage)
+                    .appFont(.note, weight: .semibold)
+                    .foregroundStyle(Color.lsDanger)
+            }
         }
-        .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(name)的大頭貼")
+    }
+
+    /// 同 `CreateChildView.avatarLoadingOverlay` 文件註解。
+    @ViewBuilder
+    private var avatarLoadingOverlay: some View {
+        if isLoadingAvatar {
+            Circle().fill(Color.black.opacity(0.25))
+            ProgressView().tint(.white)
+        }
     }
 
     private var nameField: some View {
@@ -220,7 +280,8 @@ struct EditChildView: View {
         }
         Task {
             let success = await childrenStore.updateChild(
-                childID: child.id, name: trimmed, birthday: birthday, avatarURL: child.avatarURL
+                childID: child.id, name: trimmed, birthday: birthday,
+                currentAvatarURL: child.avatarURL, newAvatarImageData: pickedAvatarData
             )
             if success { dismiss() }
         }

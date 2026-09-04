@@ -4,6 +4,10 @@ import Supabase
 /// `ChildAPIClient` 的 Supabase 實作。方法 ↔ RPC／資料表對照見協定檔的文件註解。
 final class SupabaseChildAPIClient: ChildAPIClient {
     private let client: SupabaseClient
+    /// PLAN §8：全私有 bucket，一律簽名 URL；同 `SupabaseTimelineAPIClient` 的既有值——大頭照
+    /// 沒有理由用不同的過期時間，統一比較容易記。
+    private static let signedURLExpirySeconds = 3600
+    private static let bucket = "media"
 
     init(client: SupabaseClient) {
         self.client = client
@@ -73,6 +77,30 @@ final class SupabaseChildAPIClient: ChildAPIClient {
                 .eq("user_id", value: session.user.id)
                 .execute()
             return response.value.first?.role
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    /// 同 `SupabaseTimelineAPIClient.signedURLs` 的既有實作（單一路徑簽名失敗略過、不讓整批
+    /// 失敗）——這裡不重用那個型別：`TimelineAPIClient` 是時間軸專屬的協定，讓 `ChildAPIClient`
+    /// 去依賴它會是錯誤方向的耦合，兩邊剛好都簽同一個 bucket 只是巧合，不是共用邊界。
+    func signedAvatarURLs(forPaths paths: [String]) async throws -> [String: URL] {
+        guard !paths.isEmpty else { return [:] }
+        do {
+            let results = try await client.storage.from(Self.bucket).createSignedURLs(
+                paths: paths, expiresIn: Self.signedURLExpirySeconds
+            )
+            var urlsByPath: [String: URL] = [:]
+            for result in results {
+                switch result {
+                case .success(let path, let signedURL):
+                    urlsByPath[path] = signedURL
+                case .failure:
+                    continue
+                }
+            }
+            return urlsByPath
         } catch {
             throw AppError.map(error)
         }

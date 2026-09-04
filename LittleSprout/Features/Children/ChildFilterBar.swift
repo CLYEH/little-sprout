@@ -90,7 +90,7 @@ struct ChildFilterBar: View {
     private func segment(child: Child, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: AppSpacing.tight) {
-                ChildAvatarView(name: child.name, size: 28)
+                ChildAvatarView(name: child.name, size: 28, avatarURL: childrenStore.avatarURL(for: child))
                 Text(child.name)
                     .appFont(.body, weight: .semibold)
                     .foregroundStyle(isSelected ? Color.lsTextPrimary : Color.lsTextSecondary)
@@ -187,7 +187,7 @@ struct ChildFilterBar: View {
     private func menuRow(child: Child, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: AppSpacing.label) {
-                ChildAvatarView(name: child.name, size: 28)
+                ChildAvatarView(name: child.name, size: 28, avatarURL: childrenStore.avatarURL(for: child))
                 Text(child.name)
                     .appFont(.body, weight: isSelected ? .bold : .semibold)
                     .foregroundStyle(Color.lsTextPrimary)
@@ -217,7 +217,9 @@ struct ChildFilterBar: View {
             Task { await childrenStore.setChildDeleted(childID: child.id, deleted: false) }
         } label: {
             HStack(spacing: AppSpacing.label) {
-                ChildAvatarView(name: child.name, size: 28, isDimmed: true)
+                ChildAvatarView(
+                    name: child.name, size: 28, isDimmed: true, avatarURL: childrenStore.avatarURL(for: child)
+                )
                 Text(child.name).appFont(.body, weight: .semibold).foregroundStyle(Color.lsTextSecondary)
                 Text("（已移除，點一下還原）").appFont(.note).foregroundStyle(Color.lsTextSecondary)
                 Spacer(minLength: 0)

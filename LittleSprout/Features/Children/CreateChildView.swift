@@ -1,4 +1,6 @@
+import PhotosUI
 import SwiftUI
+import UIKit
 
 /// LS-113 / 08（＋08-iPad）幫寶貝建立檔案。版式依 `design/littlesprout.pen` frame `P27HS`
 /// （iPhone）／`J8TvbH`（iPad）：頭像欄（沖印品母題，印相罩＋角托＋壓印行即時姓名預覽）＋
@@ -12,17 +14,41 @@ import SwiftUI
 ///   新增流程（`dismiss()` 在推入的情境下改成 pop）——兩種情境下「建立成功」與「之後再說」
 ///   都只是呼叫同一個環境 `dismiss()`，呼叫端不需要額外傳完成回呼進來。
 ///
-/// 大頭貼上傳／裁切不在本票範圍（LS-67 設計註記 E3：本稿頭像一律用姓名縮寫圓圈，若需要
-/// 真的能選照片，需另開任務）——這裡的相機圖示是視覺佔位，刻意不掛任何互動，避免看起來
-/// 能點卻毫無反應的「假按鈕」。
+/// LS-169：頭像欄改成真的可點——`PhotosPicker`（單選、只圖片）選出的項目交給
+/// `AvatarPickerLoader.load`（背景降採樣出預覽圖，見該檔文件註解）讀成
+/// `pickedAvatarData`（完整原始位元組，上傳前給 `AvatarImageProcessor` 裁方用）＋
+/// `pickedAvatarPreview`（降採樣後的預覽圖，`body` 直接讀這個 `@State`，不再自己解碼）；
+/// `submit()` 成功後把 `pickedAvatarData` 交給 `childrenStore.createChild` 處理裁方＋
+/// 上傳＋`update_child`。
+///
+/// R2 M3：`.task(id: pickedAvatarItem)` 取代原本 `.onChange` + 裸 `Task`——`id` 改變（連續
+/// 選兩張）時 SwiftUI 自動取消前一個 task、畫面消失時也自動取消，不需要自己保存／取消
+/// `Task` 參照；載入失敗（`AvatarPickerLoader.LoadError`）會落 `avatarLoadErrorMessage`
+/// 顯示出來，不是原本 `try?` 靜默吞掉、預覽悄悄退回佔位。
 struct CreateChildView: View {
     let childrenStore: ChildrenStore
 
-    @State private var name = ""
+    // 非 private：`CreateChildView+Avatar.swift` 的 `avatarField` 要讀（見下方那批
+    // @State 的同一則檔頭註解）。
+    @State var name = ""
     @State private var birthday: Date?
     @State private var showsEmptyNameMessage = false
     @State private var showsEmptyBirthdayMessage = false
     @State private var showsDatePicker = false
+    // R2：頭像欄的狀態與載入邏輯（`avatarField`／`avatarLoadingOverlay`／
+    // `loadPickedAvatar()`）拆去 `CreateChildView+Avatar.swift`（SwiftLint
+    // `type_body_length` 逼出來的搬移，理由同 `MediaUploadService+Duration.swift`
+    // 檔頭註解）——`private` 是以檔案為界，搬到別的檔案就存取不到，這裡改用預設
+    // （internal）存取層級，範圍仍只在本 module 內。
+    @State var pickedAvatarItem: PhotosPickerItem?
+    @State var pickedAvatarData: Data?
+    @State var pickedAvatarPreview: UIImage?
+    @State var isLoadingAvatar = false
+    @State var avatarLoadErrorMessage: String?
+    // R3 n2：世代計數器——`.task(id:)` 取消舊 task 後，舊 task 的 defer／catch 仍會繼續
+    // 執行到底，若不比對世代會寫壞新 task 已經設定的 isLoadingAvatar／錯誤文案／預覽圖
+    // （見 `loadPickedAvatar()` 文件註解）。
+    @State var avatarLoadGeneration = 0
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dismiss) private var dismiss
 
@@ -44,9 +70,12 @@ struct CreateChildView: View {
             BirthdayPickerSheet(selection: birthdayBinding)
         }
         .onAppear { childrenStore.resetCreateState() }
+        .task(id: pickedAvatarItem) {
+            await loadPickedAvatar()
+        }
     }
 
-    private var isSubmitting: Bool { childrenStore.createState.isSubmitting }
+    var isSubmitting: Bool { childrenStore.createState.isSubmitting }
 
     // MARK: - Compact (iPhone)
 
@@ -76,11 +105,6 @@ struct CreateChildView: View {
                 .appFont(.body)
                 .foregroundStyle(Color.lsTextSecondary)
         }
-    }
-
-    private var avatarField: some View {
-        AvatarPrintCard(name: name)
-            .frame(maxWidth: .infinity)
     }
 
     private var nameField: some View {
@@ -218,8 +242,20 @@ struct CreateChildView: View {
 
     private var regularLayout: some View {
         HStack(alignment: .center, spacing: AppSpacing.section) {
-            AvatarPrintCard(name: name, photoHeight: 504, cornerSize: 40)
-                .frame(width: 420)
+            VStack(spacing: AppSpacing.label) {
+                PhotosPicker(selection: $pickedAvatarItem, matching: .images) {
+                    AvatarPrintCard(name: name, photoHeight: 504, cornerSize: 40, pickedImage: pickedAvatarPreview)
+                        .overlay { avatarLoadingOverlay }
+                }
+                .buttonStyle(.plain)
+                .disabled(isSubmitting)
+                if let avatarLoadErrorMessage {
+                    Text(avatarLoadErrorMessage)
+                        .appFont(.note, weight: .semibold)
+                        .foregroundStyle(Color.lsDanger)
+                }
+            }
+            .frame(width: 420)
             VStack(alignment: .leading, spacing: 0) {
                 headerSection
                 VStack(alignment: .leading, spacing: AppSpacing.block) {
@@ -252,7 +288,9 @@ struct CreateChildView: View {
         }
         guard !hasError, let birthday else { return }
         Task {
-            if await childrenStore.createChild(name: trimmedName, birthday: birthday) {
+            if await childrenStore.createChild(
+                name: trimmedName, birthday: birthday, avatarImageData: pickedAvatarData
+            ) {
                 dismiss()
             }
         }
@@ -261,95 +299,6 @@ struct CreateChildView: View {
     private func skip() {
         guard !isSubmitting else { return }
         dismiss()
-    }
-}
-
-/// 頭像欄的沖印品母題（`design/littlesprout.pen` `z4C4f`/`wrX2m`）：印相罩＋角托＋壓印行，
-/// 但相片區塊放的是「新增照片」佔位（相機圖示＋文字，見本檔文件註解的 E3 範圍說明），壓印行
-/// 顯示即時姓名預覽（空欄位時退回單一空白，撐住行高，同 `CreateFamilyView.FamilyPreviewCard`
-/// 的 `content:" "` 慣例）。與 `PrintPhotoCard` 結構相同但相片內容／壓印文字皆不同，未重用
-/// 該元件（`PrintPhotoCard` 壓印行固定印 "LITTLE SPROUT"，唯一出現地是歡迎頁家族，見
-/// `little-sprout-brand` skill 進場條件④）——這裡另建一份小型、僅本畫面使用的版本。
-private struct AvatarPrintCard: View {
-    let name: String
-    var photoHeight: CGFloat = 88
-    var cornerSize: CGFloat = 26
-
-    /// LS-67 R3 F24：08/08c 染料池四角 opacity（TL.429 TR.275 BL.367 BR.245）。
-    private static let mountPoolOpacity = PrintPhotoCard.MountPoolOpacity(
-        topLeading: 0.429, topTrailing: 0.275, bottomLeading: 0.367, bottomTrailing: 0.245
-    )
-
-    var body: some View {
-        VStack(spacing: 7) {
-            photoWrap
-            imprintRow
-        }
-        .padding(.top, AppSpacing.printEdge)
-        .padding(.horizontal, AppSpacing.printEdge)
-        .padding(.bottom, AppSpacing.printEdgeBottom)
-        .background(mountPoolGlow.clipped())
-        .background(Color.lsPrintPaper)
-        .overlay(PhotoCornerOverlay(size: cornerSize))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("新增寶貝照片，目前尚未選擇")
-    }
-
-    private var photoWrap: some View {
-        VStack(spacing: AppSpacing.label) {
-            Image(systemName: "camera")
-                .appIconFrame(.large)
-                .foregroundStyle(Color.lsTextSecondary)
-            Text("點這裡新增照片")
-                .appFont(.note, weight: .semibold)
-                .foregroundStyle(Color.lsTextSecondary)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(minHeight: photoHeight)
-        .background(Color.lsSurface2)
-    }
-
-    private var imprintRow: some View {
-        Text(displayName)
-            .appFont(.lead, weight: .semibold)
-            .foregroundStyle(Color.lsPrintInk)
-            .frame(maxWidth: .infinity)
-            .multilineTextAlignment(.center)
-    }
-
-    private var displayName: String {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? " " : trimmed
-    }
-
-    private var mountPoolGlow: some View {
-        GeometryReader { proxy in
-            let diameter = cornerSize * 6
-            ZStack {
-                glow(diameter: diameter, opacity: Self.mountPoolOpacity.topLeading)
-                    .position(x: 0, y: 0)
-                glow(diameter: diameter, opacity: Self.mountPoolOpacity.topTrailing)
-                    .position(x: proxy.size.width, y: 0)
-                glow(diameter: diameter, opacity: Self.mountPoolOpacity.bottomLeading)
-                    .position(x: 0, y: proxy.size.height)
-                glow(diameter: diameter, opacity: Self.mountPoolOpacity.bottomTrailing)
-                    .position(x: proxy.size.width, y: proxy.size.height)
-            }
-        }
-    }
-
-    private func glow(diameter: CGFloat, opacity: Double) -> some View {
-        Circle()
-            .fill(
-                RadialGradient(
-                    colors: [Color.lsMountPool.opacity(opacity), Color.lsMountPoolFade],
-                    center: .center,
-                    startRadius: 0,
-                    endRadius: diameter / 2
-                )
-            )
-            .frame(width: diameter, height: diameter)
-            .allowsHitTesting(false)
     }
 }
 

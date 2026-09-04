@@ -21,6 +21,12 @@ enum TapTargetGateScreenName: String {
     // 同理），初始態本身就有 5 顆可點元件會被量到（取消鈕／新增照片 cell／日期欄位／歸屬欄位／
     // 發佈鈕）——改註冊進 harness，讓這個畫面之後的回歸能被機械 gate 抓到。
     case diaryEditor = "DiaryEditorView"
+    // LS-169：頭像欄從「視覺佔位、刻意不掛互動」改成真的可點的 `PhotosPicker` 觸發鈕——
+    // 取代 `tap-target-exemptions.txt` 原本「多步驟表單流程」的排除理由（那個理由當初就
+    // 站不住腳：`.preview()` 系列本來就能免登入建構出這個畫面，同 `diaryEditor` 這一支的
+    // 先例），初始態（未選圖）就有代表性：頭像欄／姓名欄／生日欄／建立鈕／之後再說鈕
+    // 五顆可點元件都不需要任何 seed 資料。
+    case createChild = "CreateChildView"
     // LS-126 delta 復審 m2：`TimelineView` 整體仍在 `tap-target-exemptions.txt`（日分組卡片／
     // 捲底載入需要多筆假資料與捲動狀態才有代表性）——但 Header 停靠的「新增回憶」建立鈕不看
     // 任何 feed 資料，`.preview()` 空狀態就會渲染，是這個畫面唯一「不需要 seed 就有代表性」
@@ -62,6 +68,7 @@ enum TapTargetGateScreenName: String {
         case .otpVerification: return .staticText("輸入驗證碼")
         case .settings: return .button("登出")
         case .diaryEditor: return .staticText("寫日記")
+        case .createChild: return .staticText("幫寶貝建立檔案")
         case .timelineDefaultState: return .button("新增回憶")
         // 預設選中分頁＝時間軸（`AuthenticatedRootView` 的 `selection` 初值），headerRow
         // 「時間軸」一定會渲染，不依賴任何 seed 資料。

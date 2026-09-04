@@ -29,7 +29,10 @@ struct LittleSproutApp: App {
         let client = SupabaseClientFactory.makeClient()
         _authStore = State(initialValue: AuthStore(authService: SupabaseAuthService(client: client)))
         _familyStore = State(initialValue: FamilyStore(apiClient: SupabaseFamilyAPIClient(client: client)))
-        _childrenStore = State(initialValue: ChildrenStore(apiClient: SupabaseChildAPIClient(client: client)))
+        _childrenStore = State(initialValue: ChildrenStore(
+            apiClient: SupabaseChildAPIClient(client: client),
+            avatarUploadService: SupabaseChildAvatarUploadService(client: client)
+        ))
         _timelineStore = State(initialValue: TimelineStore(apiClient: SupabaseTimelineAPIClient(client: client)))
         diaryAPIClient = SupabaseDiaryAPIClient(client: client)
         mediaUploadService = SupabaseMediaUploadService(client: client)

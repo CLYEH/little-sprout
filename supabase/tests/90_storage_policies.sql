@@ -257,7 +257,12 @@ begin
       ('HEIC 原檔', 'a0000000-0000-4000-8000-000000000001',
        'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000a5.heic'),
       ('B 家 owner 上傳到自己家', 'b0000000-0000-4000-8000-000000000001',
-       'fb000000-0000-4000-8000-000000000001/2026/08/3b000000-0000-4000-8000-0000000000a1.jpg')
+       'fb000000-0000-4000-8000-000000000001/2026/08/3b000000-0000-4000-8000-0000000000a1.jpg'),
+      -- LS-169：頭像路徑（不寫 media 表，這裡只驗 storage.objects 這一層寫得進去）
+      ('A 家 owner 上傳頭像（avatars/{child_id}.jpg）', 'a0000000-0000-4000-8000-000000000001',
+       'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-0000000000a6.jpg'),
+      ('A 家 member（can_upload=true）上傳頭像', 'a0000000-0000-4000-8000-000000000002',
+       'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-0000000000a7.jpg')
     ) as t(label, uid, name)
   loop
     perform set_config('request.jwt.claims',
@@ -327,7 +332,14 @@ begin
        'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-0000000000db_thumb.png'),
       ('多墊一層目錄想繞過第一段檢查',
        'a0000000-0000-4000-8000-000000000001',
-       'fa000000-0000-4000-8000-000000000001/x/2026/08/3a000000-0000-4000-8000-0000000000dc.jpg')
+       'fa000000-0000-4000-8000-000000000001/x/2026/08/3a000000-0000-4000-8000-0000000000dc.jpg'),
+      -- LS-169：頭像路徑的同型攻擊面——跨家庭偽造與副檔名偽造
+      ('頭像跨家庭路徑偽造：A 家 owner 把 B 家 family_id 放在第一段',
+       'a0000000-0000-4000-8000-000000000001',
+       'fb000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-0000000000dd.jpg'),
+      ('頭像副檔名不是 .jpg（.png）',
+       'a0000000-0000-4000-8000-000000000001',
+       'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-0000000000de.png')
     ) as t(label, uid, name)
   loop
     perform set_config('request.jwt.claims',
@@ -679,6 +691,169 @@ $$;
 rollback;
 
 -- ===========================================================================
+-- 5b. 頭像路徑的 UPDATE／DELETE：與 update_child 同一角色判準（LS-169 R2 M1）
+--
+-- 承上一段：`{yyyy}/{mm}` media 物件的「上傳者本人」判準對頭像固定路徑不適用——
+-- 孩子頭像是家庭共有物，orchestrator 裁定改用 `private.contributor_family_ids()`
+-- （owner／member，不看 can_upload，逐字比照 `update_child` 本身的授權判準）。
+-- 這裡直接以超級使用者身分種一筆「owner 上傳的頭像物件」（owner 欄位＝A 家 owner），
+-- 驗證 member／viewer／跨家庭三種角色對它的 UPDATE／DELETE 行為，以及既有
+-- `{yyyy}/{mm}` 分支（上一段已驗）完全不受影響。**注意**：以下探針直接對已存在
+-- 物件下 SQL UPDATE／DELETE，驗證的是這兩條 policy 本身的角色判準；app 實際換頭像
+-- 走 Storage API 的 upsert，另受 INSERT policy 的 can_upload 節制——兩者的差異見
+-- can_upload=false 那個區塊前的完整說明（LS-169 R3 n1）。
+-- ===========================================================================
+begin;
+set local storage.allow_delete_query = 'true';
+
+insert into storage.objects (bucket_id, name, owner, owner_id) values
+  ('media', 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg',
+   'a0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000001');
+
+set local role authenticated;
+
+do $$
+declare
+  v_n int;
+begin
+  -- member（can_upload=true，既有 fixture）覆蓋 owner 上傳的頭像——這是 merge-review R1
+  -- M1 實測會被拒的情境，也是 i4 點名要補的探針：owner 上傳→member 覆蓋同一路徑。
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  update storage.objects set metadata = '{"size": 999}'
+   where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then
+    raise exception 'FAIL M1：可編輯孩子資料的 member 覆蓋不了 owner 上傳的頭像（影響 % 列）——family 角色判準沒生效', v_n;
+  end if;
+  raise notice 'ok M1：member（owner／member 皆可編輯孩子資料）覆蓋 owner 上傳的頭像成功';
+end;
+$$;
+
+-- 關掉這個 member 的 can_upload，驗證「頭像的 UPDATE policy 角色判準」真的不看
+-- can_upload——跟 update_child 的授權判準逐字一致（role in ('owner','member')，沒有
+-- can_upload 這個條件）。若這裡意外要求 can_upload，這一段會紅（跟第 4 段驗證既有
+-- media 路徑「看 can_upload」剛好是對照組，兩段合起來把「頭像分支跟既有分支判準
+-- 不同」這件事釘住）。
+--
+-- 重要（LS-169 R3 n1）：下面這條探針直接對已存在的 row 下 SQL UPDATE，只驗證
+-- `media_bucket_update` 這條 policy 本身的角色判準——不代表 app 真實換頭像的行為。
+-- client 唯一會走的路徑是 Storage API 的 `upsert: true`（storage-api 內部走
+-- INSERT ... ON CONFLICT DO UPDATE），這條路徑同時要過 INSERT policy 的 WITH CHECK
+-- （`uploadable_family_ids()`，member 仍看 can_upload——本輪刻意沒有放寬，見
+-- docs/API.md §6「寶貝大頭照」小節）。也就是說：can_upload=false 的 member 在這條
+-- 探針測到「SQL UPDATE 成功」，但同一個人在真實 app 裡換頭像會在 INSERT policy 那關
+-- 被擋（400 `new row violates row-level security policy`）——這條探針只釘住 UPDATE
+-- policy 這一層的角色判準沒有意外收緊，不是在斷言「can_upload=false 的 member 換得
+-- 了頭像」。
+update public.family_members set can_upload = false
+ where family_id = 'fa000000-0000-4000-8000-000000000001'
+   and user_id = 'a0000000-0000-4000-8000-000000000002';
+
+do $$
+declare
+  v_n int;
+begin
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  update storage.objects set metadata = '{"size": 1000}'
+   where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then
+    raise exception 'FAIL：media_bucket_update 的角色判準意外收緊了——can_upload=false 的 member 對已存在頭像物件的 SQL UPDATE 應該仍通過這條 policy（判準只看 role in owner/member，不看 can_upload），實際影響 % 列', v_n;
+  end if;
+  raise notice 'ok：media_bucket_update policy 角色判準不看 can_upload（can_upload=false 的 member 對 SQL UPDATE 仍通過這條 policy）——但這不代表這個角色能透過 app 換頭像：app 的 upsert 路徑另受 INSERT policy 的 can_upload 節制，見上方註解（LS-169 R3 n1）';
+end;
+$$;
+
+update public.family_members set can_upload = true
+ where family_id = 'fa000000-0000-4000-8000-000000000001'
+   and user_id = 'a0000000-0000-4000-8000-000000000002';
+
+do $$
+declare
+  v_n int;
+begin
+  -- viewer 不是 contributor，覆蓋不了頭像
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+  update storage.objects set metadata = '{"size": 1}'
+   where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 0 then
+    raise exception 'FAIL：A 家 viewer 覆蓋了頭像（影響 % 列）——viewer 不該是 contributor', v_n;
+  end if;
+
+  -- 跨家庭：B 家 owner 動不了 A 家的頭像
+  perform set_config('request.jwt.claims',
+    '{"sub":"b0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+  update storage.objects set metadata = '{"size": 1}'
+   where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 0 then
+    raise exception 'FAIL 隔離：B 家 owner 覆蓋了 A 家的頭像（影響 % 列）', v_n;
+  end if;
+
+  -- DELETE 同一組判準：member 刪得掉，viewer／跨家庭刪不掉
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+  delete from storage.objects
+   where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 0 then
+    raise exception 'FAIL：A 家 viewer 刪掉了頭像（影響 % 列）', v_n;
+  end if;
+
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  delete from storage.objects
+   where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then
+    raise exception 'FAIL M1：member 刪不掉頭像（影響 % 列）', v_n;
+  end if;
+
+  raise notice 'ok M1：頭像 UPDATE／DELETE 與 update_child 同一角色判準——member 可覆蓋／可刪、viewer 與跨家庭皆擋下';
+end;
+$$;
+
+-- 改名搬家側門對頭像分支同樣要擋：member 把自家頭像路徑改名搬進 B 家——WITH CHECK
+-- 的 family 分支只看「新路徑」的第一段，這裡驗證新路徑跨家庭時仍被擋。
+-- reset role：這一段前面幾個 do 區塊切過 JWT claims／authenticated 角色，種 fixture
+-- 前先切回 postgres（繞過 RLS）才能自由指定 owner 欄位，同本檔案其餘 fixture 種法一致。
+reset role;
+insert into storage.objects (bucket_id, name, owner, owner_id) values
+  ('media', 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-0000000000f1.jpg',
+   'a0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000001');
+set local role authenticated;
+
+do $$
+declare
+  v_blocked boolean := false;
+  v_state text;
+begin
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  begin
+    update storage.objects
+       set name = 'fb000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-0000000000f1.jpg'
+     where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-0000000000f1.jpg';
+  exception when others then
+    v_blocked := true; v_state := sqlstate;
+  end;
+  if not v_blocked then
+    raise exception 'FAIL：member 把自家頭像改名搬進 B 家路徑成功了——頭像分支的 WITH CHECK 沒有擋住跨家庭搬移';
+  end if;
+  if v_state <> '42501' then
+    raise exception 'FAIL：頭像改名搬家被拒，但錯誤碼是 % 而不是 42501', v_state;
+  end if;
+  raise notice 'ok M1：頭像路徑改名搬進別家一樣被 WITH CHECK 擋下 (42501)';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
 -- 6. 「上傳者本人」的 (owner, owner_id) 五種組合
 --
 -- policy 用的是 `owner = me OR owner_id = me`——兩欄都認，因為 storage-api 依版本
@@ -872,7 +1047,9 @@ declare
     'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000001.heif',
     'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000001.mp4',
     'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000001.mov',
-    'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000001_thumb.jpg'
+    'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000001_thumb.jpg',
+    -- LS-169：頭像路徑新形狀 {family_id}/avatars/{child_id}.jpg
+    'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg'
   ];
   v_bad text[] := array[
     'fa000000-0000-4000-8000-000000000001/2026/00/3a000000-0000-4000-8000-000000000001.jpg',
@@ -889,7 +1066,13 @@ declare
     '3a000000-0000-4000-8000-000000000001.jpg',
     -- 前後多餘的東西：^ 與 $ 沒鎖好的話這兩條會漏
     'x/fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000001.jpg',
-    'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000001.jpg/x'
+    'fa000000-0000-4000-8000-000000000001/2026/08/3a000000-0000-4000-8000-000000000001.jpg/x',
+    -- LS-169：頭像路徑新形狀的邊界——大寫、非 .jpg、檔名不是 UUID、多墊一層都要擋
+    'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.png',
+    'fa000000-0000-4000-8000-000000000001/avatars/3A000000-0000-4000-8000-000000000001.jpg',
+    'fa000000-0000-4000-8000-000000000001/avatars/child.jpg',
+    'fa000000-0000-4000-8000-000000000001/avatars/x/3a000000-0000-4000-8000-000000000001.jpg',
+    'fa000000-0000-4000-8000-000000000001/Avatars/3a000000-0000-4000-8000-000000000001.jpg'
   ];
 begin
   foreach v_name in array v_good loop

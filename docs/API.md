@@ -1462,6 +1462,33 @@ Edge Function 完成刪除）。三層（`validationRetryable`／`retryableSyste
   同步 PUT 進 Storage，寫入路徑對應 `public.media.thumb_path`（見上方 `media` 表，
   §3）；`thumb_width`／`thumb_height` 填縮圖實際輸出的像素寬高，不是原圖的等比縮放
   理論值。
+- **寶貝大頭照（LS-169）：`{family_id}/avatars/{child_id}.jpg`**——與上面「原始檔案／
+  縮圖」是同一個路徑規約判斷式 `private.is_media_object_path()` 並列的第二種合法
+  形狀（`supabase/migrations/20260904060700_avatar_object_path.sql`），但**不寫**
+  `public.media` 表（不是任何一筆 `media` 列的 `storage_path`／`thumb_path`，不計入
+  額度、不會出現在時間軸／相簿），路徑直接寫進 `public.children.avatar_url`（PUT
+  語意，見 `update_child`）。`{family_id}`／`{child_id}` 一律小寫正規形 UUID（同上
+  ——`children.id` 由 Postgres 產生，`uuid::text` 輸出恆為小寫；Swift 端一樣要
+  `.lowercased()`）；副檔名固定 `.jpg`（客戶端裁方成正方形、縮到 512×512、JPEG
+  品質 0.8 後上傳，不像原圖／縮圖那樣接受多種格式）。換照片＝對同一個路徑
+  `upsert: true` 覆蓋上傳，不是每次都開新路徑；讀取同樣走短效簽名 URL（同
+  `thumb_path` 的既有慣例，見下方「簽名 URL 與 egress 防線」）。**第一次上傳（INSERT）**
+  沿用既有 policy 的 `uploadable_family_ids()`（owner 恆可；member 看 `can_upload`）；
+  **RLS 的 UPDATE／DELETE policy 角色判準改用跟 `update_child` 相同的判準**
+  （`private.contributor_family_ids()`：owner／member 皆可、不看 `can_upload`，見下方
+  RLS 表——孩子頭像是家庭共有物，不是上傳者個人物件，`storage.objects.owner`
+  對這個路徑形狀不再有意義；`supabase/migrations/20260904081435_avatar_family_write_policy.sql`，
+  LS-169 R2 M1）。**但這條放寬不等於「can_upload=false 的成員也能換頭像」**（LS-169
+  R3 n1）：client 換頭像唯一會走的路徑是 Storage API 的 `upsert: true`，storage-api
+  內部等同 `INSERT ... ON CONFLICT DO UPDATE`，一定會先過 INSERT policy 的
+  `WITH CHECK`——INSERT 分支本輪刻意沒有放寬（仍是 `uploadable_family_ids()`，member
+  看 `can_upload`），理由是「不能上傳照片的成員也不該能上傳頭像」語意要一致。結果是：
+  `can_upload=false` 的 member 用真實 app 換頭像會在 INSERT policy 被擋
+  （400 `new row violates row-level security policy`，`ChildAvatarUploadService`
+  的 `mapUploadError` 會把它映射成 `.rejected` 給出明確文案）；放寬後的 UPDATE／DELETE
+  判準目前只在**不經過 upsert 的直接 SQL UPDATE／DELETE**（例如維運操作）時才用得到。
+  客戶端固定路徑＋長效快取意味著換照片後簽名 URL 需要 cache-busting 才能讓列表立即
+  顯示新圖，見 `ChildrenStore.avatarCacheBust` 文件註解。
 
 ### storage.objects 的 RLS（四條 policy，皆 `to authenticated`）
 
@@ -1469,8 +1496,8 @@ Edge Function 完成刪除）。三層（`validationRetryable`／`retryableSyste
 |---|---|---|
 | SELECT | 同家庭任何角色（含 viewer） | 只看得到路徑第一段＝自己所屬家庭的物件；不檢查路徑規約，讀取端不因格式問題被擋 |
 | INSERT | 有上傳權者（owner 恆可；member 看 `can_upload`；viewer 不行） | 路徑必須符合規約且第一段＝自己**當下**所屬的家庭（防跨家庭寫入）；`owner`/`owner_id` 欄位（storage-api 自動填）必須是自己或留空 |
-| UPDATE | 家庭 owner（任意物件）；或上傳者本人（僅限**當下**仍有上傳權時） | 新路徑同樣要通過規約與家庭歸屬檢查（防止「改名搬家」繞過 INSERT 邊界） |
-| DELETE | 同 UPDATE 的判準 | 上傳者可以刪自己上傳的孤兒物件（見 §3 `media` 的「上傳流程順序」）；已軟刪除的 `media` 對應物件**不要**跟著硬刪 Storage 檔案（PLAN §5：軟刪除要留救援路徑；30 天後的自動永久清除見下方「自動清除（LS-153）」——那是 service_role／背景排程的路徑，不經這四條 policy） |
+| UPDATE | 家庭 owner（任意物件）；或上傳者本人（僅限**當下**仍有上傳權時）；**頭像路徑（`avatars/{child_id}.jpg`）另加一個分支：仍是該家庭 owner／member 者，不看 owner／owner_id／can_upload**（LS-169 R2 M1，與 `update_child` 同一判準；**但 client 只會經由 upsert 觸發，upsert 同時要過 INSERT policy——`can_upload=false` 的 member 在真實上傳路徑仍會被擋，見上方「寶貝大頭照」小節，LS-169 R3 n1**） | 新路徑同樣要通過規約與家庭歸屬檢查（防止「改名搬家」繞過 INSERT 邊界） |
+| DELETE | 同 UPDATE 的判準（含頭像路徑的家庭角色分支） | 上傳者可以刪自己上傳的孤兒物件（見 §3 `media` 的「上傳流程順序」）；已軟刪除的 `media` 對應物件**不要**跟著硬刪 Storage 檔案（PLAN §5：軟刪除要留救援路徑；30 天後的自動永久清除見下方「自動清除（LS-153）」——那是 service_role／背景排程的路徑，不經這四條 policy） |
 
 - **`can_upload` 被收回後的行為是「當下判斷」不是「上傳當時判斷」**：owner 把某成員的
   `can_upload` 關掉之後，那個人連自己以前上傳的檔案都改／刪不了——這是刻意選的較嚴

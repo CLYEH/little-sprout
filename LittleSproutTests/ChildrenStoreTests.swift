@@ -5,7 +5,7 @@ import XCTest
 
 /// `ChildrenStore` 狀態機（idle／submitting／success／failure(AppError)）＋衍生角色旗標
 /// （`isOwner`／`canManageChildren`）：09 管理／09b 編輯／09c 刪除確認／10 切換器都依這裡的
-/// 狀態直接重繪，見該檔文件註解。
+/// 狀態直接重繪，見該檔文件註解。頭像上傳編排（LS-169）另見 `ChildrenStoreAvatarTests`。
 @MainActor
 final class ChildrenStoreTests: XCTestCase {
     private let familyID = UUID(uuidString: "44444444-4444-4444-4444-444444444444")!
@@ -34,7 +34,7 @@ final class ChildrenStoreTests: XCTestCase {
         let child = makeChild()
         stub.setListChildrenHandler { _ in [child] }
         stub.setFetchMyRoleHandler { _ in .member }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let result = await store.refresh(familyID: familyID)
 
@@ -47,7 +47,7 @@ final class ChildrenStoreTests: XCTestCase {
     func test_refresh_failure_setsFailureState() async {
         let stub = StubChildAPIClient()
         stub.setListChildrenHandler { _ in throw AppError.network(message: "offline") }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         _ = await store.refresh(familyID: familyID)
 
@@ -64,7 +64,7 @@ final class ChildrenStoreTests: XCTestCase {
             _ = await iterator.next()
             return []
         }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let firstCallTask = Task { await store.refresh(familyID: familyID) }
         var guardIterations = 0
@@ -92,7 +92,7 @@ final class ChildrenStoreTests: XCTestCase {
         let active = makeChild(id: UUID(), name: "陳小安")
         let removed = makeChild(id: UUID(), name: "陳小軒", deletedAt: Date())
         stub.setListChildrenHandler { _ in [active, removed] }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         _ = await store.refresh(familyID: familyID)
 
@@ -102,7 +102,7 @@ final class ChildrenStoreTests: XCTestCase {
 
     func test_roleFlags_reflectMyRole() async {
         let stub = StubChildAPIClient()
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         stub.setFetchMyRoleHandler { _ in .owner }
         _ = await store.refresh(familyID: familyID)
@@ -127,7 +127,7 @@ final class ChildrenStoreTests: XCTestCase {
         let created = makeChild()
         stub.setListChildrenHandler { _ in [created] }
         stub.setCreateChildHandler { _, _, _, _ in created.id }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.refresh(familyID: familyID)
 
         let success = await store.createChild(name: "陳小安", birthday: Date())
@@ -144,7 +144,7 @@ final class ChildrenStoreTests: XCTestCase {
             wasCalled.withLock { $0 = true }
             return UUID()
         }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let success = await store.createChild(name: "陳小安", birthday: Date())
 
@@ -159,7 +159,7 @@ final class ChildrenStoreTests: XCTestCase {
         let stub = StubChildAPIClient()
         stub.setListChildrenHandler { _ in [] }
         stub.setCreateChildHandler { _, _, _, _ in throw AppError.validationRetryable(message: "壞的生日", code: "23502") }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.refresh(familyID: familyID)
 
         let success = await store.createChild(name: "陳小安", birthday: Date())
@@ -171,7 +171,7 @@ final class ChildrenStoreTests: XCTestCase {
     func test_resetCreateState_onlyClearsFailure() async {
         let stub = StubChildAPIClient()
         stub.setCreateChildHandler { _, _, _, _ in throw AppError.server(message: "boom", code: nil) }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.refresh(familyID: familyID)
         _ = await store.createChild(name: "陳小安", birthday: Date())
         guard case .failure = store.createState else {
@@ -190,11 +190,13 @@ final class ChildrenStoreTests: XCTestCase {
         let updated = makeChild(name: "陳小安改名")
         stub.setListChildrenHandler { _ in [updated] }
         stub.setUpdateChildHandler { _, _, _, _ in }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.refresh(familyID: familyID)
         let birthday = Date(timeIntervalSince1970: 1_000_000)
 
-        let success = await store.updateChild(childID: childID, name: "陳小安改名", birthday: birthday, avatarURL: nil)
+        let success = await store.updateChild(
+            childID: childID, name: "陳小安改名", birthday: birthday, currentAvatarURL: nil
+        )
 
         XCTAssertTrue(success)
         XCTAssertEqual(store.updateState, .success)
@@ -207,9 +209,9 @@ final class ChildrenStoreTests: XCTestCase {
     func test_updateChild_failure_setsFailureState() async {
         let stub = StubChildAPIClient()
         stub.setUpdateChildHandler { _, _, _, _ in throw AppError.rejected(message: "不是成員", code: "LS042") }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
-        let success = await store.updateChild(childID: childID, name: "x", birthday: Date(), avatarURL: nil)
+        let success = await store.updateChild(childID: childID, name: "x", birthday: Date(), currentAvatarURL: nil)
 
         XCTAssertFalse(success)
         XCTAssertEqual(store.updateState, .failure(.rejected(message: "不是成員", code: "LS042")))
@@ -222,7 +224,7 @@ final class ChildrenStoreTests: XCTestCase {
         let deletedChild = makeChild(deletedAt: Date())
         stub.setListChildrenHandler { _ in [deletedChild] }
         stub.setSetChildDeletedHandler { _, _ in }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.refresh(familyID: familyID)
 
         let success = await store.setChildDeleted(childID: childID, deleted: true)
@@ -236,7 +238,7 @@ final class ChildrenStoreTests: XCTestCase {
     func test_setChildDeleted_restoreWindowExpired_setsFailureState() async {
         let stub = StubChildAPIClient()
         stub.setSetChildDeletedHandler { _, _ in throw AppError.rejected(message: "超過 30 天", code: "LS043") }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let success = await store.setChildDeleted(childID: childID, deleted: false)
 
@@ -253,7 +255,7 @@ final class ChildrenStoreTests: XCTestCase {
             var iterator = gate.makeAsyncIterator()
             _ = await iterator.next()
         }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let firstCallTask = Task { await store.setChildDeleted(childID: childID, deleted: true) }
         var guardIterations = 0
@@ -282,7 +284,7 @@ final class ChildrenStoreTests: XCTestCase {
         let child = makeChild()
         stub.setListChildrenHandler { _ in [child] }
         stub.setFetchMyRoleHandler { _ in .owner }
-        let store = ChildrenStore(apiClient: stub)
+        let store = ChildrenStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.refresh(familyID: familyID)
         XCTAssertFalse(store.children.isEmpty)
 

@@ -13,8 +13,9 @@ enum ChildOperationState: Equatable {
     var isSubmitting: Bool { self == .submitting }
 }
 
-/// 孩子檔案（多寶貝，LS-47／LS-66／LS-113）的 `@Observable` 狀態管理，把 `ChildAPIClient`
-/// 包成畫面能直接讀狀態驅動重繪的 store（同 `FamilyStore` 之於 `FamilyAPIClient` 的角色）。
+/// 孩子檔案（多寶貝，LS-47／LS-66／LS-113／LS-169）的 `@Observable` 狀態管理，把
+/// `ChildAPIClient` 包成畫面能直接讀狀態驅動重繪的 store（同 `FamilyStore` 之於
+/// `FamilyAPIClient` 的角色）。
 ///
 /// 刻意不像 `FamilyStore` 的 `createInvite`／`refreshLatestInvite` 那樣互相檢查對方的
 /// `isSubmitting`：那條互斥規則解的是「同一個畫面兩個不同動作可能併發觸發」的既定 race
@@ -25,6 +26,7 @@ enum ChildOperationState: Equatable {
 @Observable
 final class ChildrenStore {
     private let apiClient: ChildAPIClient
+    private let avatarUploadService: ChildAvatarUploadService
 
     private(set) var children: [Child] = []
     private(set) var listState: ChildOperationState = .idle
@@ -34,11 +36,36 @@ final class ChildrenStore {
     /// 呼叫者在目前家庭的角色——決定「新增」「編輯」「刪除」「還原」四個入口的可見度
     /// （LS-113 票文 Scope：owner＋member 可編輯，刪除／還原僅 owner）。
     private(set) var myRole: FamilyRole?
+    /// `Child.avatarURL`（Storage 路徑）→ 短效簽名 URL，`refresh`／`reloadChildrenList` 後
+    /// 批次重簽（LS-169）。沒有 `avatarURL` 的孩子、或簽名剛好失敗的路徑不會出現在這裡——
+    /// 呼叫端用 `avatarURL(for:)` 取，缺鍵時自然退回縮寫（同 `docs/API.md` §6「`thumb_path`
+    /// 為 NULL 時退回原圖」的既有慣例：這裡沒有退回層，缺鍵就是顯示縮寫）。
+    private(set) var avatarSignedURLs: [String: URL] = [:]
+    /// LS-169 R2（orchestrator M1→cache-busting 裁定）：頭像固定路徑＋upsert 換照片，
+    /// 同一路徑內容變了但字面路徑不變——這個 client 自己剛成功上傳時記一個時間戳，
+    /// `avatarURL(for:)` 讀取時疊加成查詢參數，防任何中介層（CDN／URLCache）以路徑本身
+    /// 當快取鍵，讓「換圖後列表立即更新」不必依賴「重新簽名的 token 字串恰好不同」這個
+    /// 較弱的隱含假設。只覆蓋「這個 client 這次 session 自己剛上傳」的情境——其他家庭
+    /// 成員／裝置本來就會在各自下一次 `refresh` 拿到新簽的 URL，不需要這個標記。
+    private var avatarCacheBust: [String: TimeInterval] = [:]
+    /// m2（merge-review R1）：`refreshAvatarSignedURLs` 的請求世代——`refresh`／
+    /// `reloadChildrenList` 重疊呼叫時（例如清單畫面還在等第一次簽名回應、使用者已經觸發
+    /// 第二次），只有「發起時仍是最新一次」的回應才寫入 `avatarSignedURLs`，較舊的回應晚到
+    /// 會被丟棄，不會覆蓋新結果。
+    private var avatarSignedURLsGeneration = 0
 
     private var familyID: UUID?
+    /// 建檔流程「先 `create_child` 取 id 再上傳＋`update_child`」（票文 Scope 1）留下的中繼
+    /// 狀態：`create_child` 已成功、但上傳頭像／`update_child` 那一步失敗時記下這個 id，
+    /// 讓使用者在同一個畫面重試「建立寶貝檔案」時不會又呼叫一次 `create_child`（否則會建出
+    /// 兩筆同名孩子——`create_child` 沒有冪等鍵，重試安全性要靠呼叫端自己不重送）。只有
+    /// `resetCreateState()`（畫面 `onAppear` 呼叫，代表「重新進入這個畫面」）會清掉它，
+    /// 同一個畫面實例內的重試會沿用同一個 id。
+    private var pendingCreateChildID: UUID?
 
-    init(apiClient: ChildAPIClient) {
+    init(apiClient: ChildAPIClient, avatarUploadService: ChildAvatarUploadService) {
         self.apiClient = apiClient
+        self.avatarUploadService = avatarUploadService
     }
 
     /// 在案（未軟刪）的孩子——09 列表／10 切換器只列這些。
@@ -51,6 +78,20 @@ final class ChildrenStore {
 
     /// owner／member 皆可新增／編輯孩子檔案（LS-66）；viewer 不行。
     var canManageChildren: Bool { myRole == .owner || myRole == .member }
+
+    /// 這個孩子的頭像簽名 URL；沒有 `avatarURL`、或簽名還沒回來／失敗時回傳 nil——呼叫端
+    /// （`ChildAvatarView`）用 nil 顯示縮寫。有 `avatarCacheBust` 記錄時疊加成查詢參數
+    /// （見該屬性文件註解）；`URLComponents` 組不出來時（理論上不會，signed URL 恆是合法
+    /// `http(s)` URL）就直接退回原始簽名 URL，不讓 cache-busting 本身變成一個新的失敗點。
+    func avatarURL(for child: Child) -> URL? {
+        guard let path = child.avatarURL, let signed = avatarSignedURLs[path] else { return nil }
+        guard let bust = avatarCacheBust[path],
+              var components = URLComponents(url: signed, resolvingAgainstBaseURL: false) else {
+            return signed
+        }
+        components.queryItems = (components.queryItems ?? []) + [URLQueryItem(name: "lsv", value: String(bust))]
+        return components.url ?? signed
+    }
 
     /// 查詢一個家庭的孩子清單＋呼叫者角色；09／10 畫面 `onAppear` 呼叫。
     @discardableResult
@@ -68,12 +109,23 @@ final class ChildrenStore {
         } catch {
             listState = .failure(AppError.map(error))
         }
+        await refreshAvatarSignedURLs()
         return children
     }
 
-    /// 建立孩子檔案；成功後重新整理清單，讓 09 立刻看到新的一筆。
+    /// 建立孩子檔案；`avatarImageData` 非 nil 時，`create_child` 成功後接著上傳頭像＋
+    /// `update_child`（票文 Scope 1：建檔流程先 `create_child` 取 id 再上傳＋`update_child`）。
+    /// **失敗回滾語意**：頭像上傳／`update_child` 這一步失敗時，`create_child` 已成功的孩子
+    /// **不會**被撤銷（沒有硬刪路徑可用，見 `docs/API.md` §3 `children`）——保留無圖，回傳
+    /// `false` 讓呼叫端顯示既有錯誤文案，`pendingCreateChildID` 記住這個 id 供重試沿用。
+    ///
+    /// m1（merge-review R1）：`pendingCreateChildID` 非 nil（代表這是重試）時，無論這次有
+    /// 沒有新照片都要呼叫一次 `update_child`，把這次表單當下的 `name`／`birthday` 寫進去
+    /// ——原本的寫法只在 `avatarImageData` 非 nil 時才呼叫，若重試時（例如上一輪選圖失敗、
+    /// `pickedAvatarData` 悄悄變回 nil）沒有帶新照片，會整段跳過 `update_child` 卻仍回傳
+    /// 成功，讓使用者這次修改的名字／生日靜默遺失。
     @discardableResult
-    func createChild(name: String, birthday: Date, avatarURL: String? = nil) async -> Bool {
+    func createChild(name: String, birthday: Date, avatarImageData: Data? = nil) async -> Bool {
         guard !createState.isSubmitting else { return false }
         guard let familyID else {
             createState = .failure(.rejected(message: "沒有家庭可以新增寶貝", code: nil))
@@ -81,29 +133,63 @@ final class ChildrenStore {
         }
         createState = .submitting
         do {
-            _ = try await apiClient.createChild(
-                familyID: familyID, name: name, birthday: birthday, avatarURL: avatarURL
-            )
+            let childID: UUID
+            let isRetry = pendingCreateChildID != nil
+            if let pendingCreateChildID {
+                childID = pendingCreateChildID
+            } else {
+                childID = try await apiClient.createChild(
+                    familyID: familyID, name: name, birthday: birthday, avatarURL: nil
+                )
+                pendingCreateChildID = childID
+            }
+            if let avatarImageData {
+                let path = try await avatarUploadService.uploadAvatar(
+                    familyID: familyID, childID: childID, imageData: avatarImageData
+                )
+                try await apiClient.updateChild(childID: childID, name: name, birthday: birthday, avatarURL: path)
+                avatarCacheBust[path] = Date().timeIntervalSince1970
+            } else if isRetry {
+                try await apiClient.updateChild(childID: childID, name: name, birthday: birthday, avatarURL: nil)
+            }
+            pendingCreateChildID = nil
             createState = .success
             await reloadChildrenList()
             return true
         } catch {
             createState = .failure(AppError.map(error))
+            await reloadChildrenList()
             return false
         }
     }
 
     func resetCreateState() {
+        pendingCreateChildID = nil
         guard case .failure = createState else { return }
         createState = .idle
     }
 
-    /// 編輯既有孩子檔案（PUT 語意整組替換）；成功後重新整理清單。
+    /// 編輯既有孩子檔案（PUT 語意整組替換）；`newAvatarImageData` 非 nil 時先上傳新頭像，
+    /// 成功才帶新路徑呼叫 `update_child`——上傳失敗就整段不呼叫 `update_child`，保留原有的
+    /// `currentAvatarURL` 不變（同「上傳失敗保留無圖」的精神：編輯情境下是保留原圖）。
     @discardableResult
-    func updateChild(childID: UUID, name: String, birthday: Date, avatarURL: String?) async -> Bool {
+    func updateChild(
+        childID: UUID, name: String, birthday: Date, currentAvatarURL: String?, newAvatarImageData: Data? = nil
+    ) async -> Bool {
         guard !updateState.isSubmitting else { return false }
         updateState = .submitting
         do {
+            var avatarURL = currentAvatarURL
+            if let newAvatarImageData {
+                guard let familyID else {
+                    throw AppError.rejected(message: "沒有家庭可以更新寶貝", code: nil)
+                }
+                let path = try await avatarUploadService.uploadAvatar(
+                    familyID: familyID, childID: childID, imageData: newAvatarImageData
+                )
+                avatarURL = path
+                avatarCacheBust[path] = Date().timeIntervalSince1970
+            }
             try await apiClient.updateChild(childID: childID, name: name, birthday: birthday, avatarURL: avatarURL)
             updateState = .success
             await reloadChildrenList()
@@ -146,6 +232,10 @@ final class ChildrenStore {
         familyID = nil
         children = []
         myRole = nil
+        avatarSignedURLs = [:]
+        avatarCacheBust = [:]
+        avatarSignedURLsGeneration = 0
+        pendingCreateChildID = nil
         listState = .idle
         createState = .idle
         updateState = .idle
@@ -156,6 +246,29 @@ final class ChildrenStore {
         guard let familyID else { return }
         if let fetched = try? await apiClient.listChildren(familyID: familyID) {
             children = fetched
+        }
+        await refreshAvatarSignedURLs()
+    }
+
+    /// 批次重簽目前 `children` 裡所有非 nil 的 `avatarURL`——整批用同一份字典取代舊值（不是
+    /// 逐一合併）：孩子清單本身也可能變動（軟刪／還原／換照片後路徑不變但內容變了，簽名 URL
+    /// 需要跟著換），整批換掉比合併更不容易留下對不上清單的殘影。簽名本身失敗（例如網路
+    /// 問題）不當成整體失敗，`avatarSignedURLs` 保持舊值——同一輪 `refresh` 重試會再簽一次。
+    ///
+    /// m2（merge-review R1）：世代守門——`generation` 在發起呼叫前先自增並記下自己的號碼，
+    /// await 回來後只有「自己的號碼仍等於最新號碼」才寫入結果；較舊的呼叫較晚回來時號碼已
+    /// 落後，安靜丟棄，不會覆蓋較新一次呼叫已經寫入的結果。
+    private func refreshAvatarSignedURLs() async {
+        let paths = children.compactMap(\.avatarURL)
+        avatarSignedURLsGeneration += 1
+        let generation = avatarSignedURLsGeneration
+        guard !paths.isEmpty else {
+            if generation == avatarSignedURLsGeneration { avatarSignedURLs = [:] }
+            return
+        }
+        let signed = try? await apiClient.signedAvatarURLs(forPaths: paths)
+        if let signed, generation == avatarSignedURLsGeneration {
+            avatarSignedURLs = signed
         }
     }
 }
