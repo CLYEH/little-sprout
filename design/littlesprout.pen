@@ -119379,6 +119379,21 @@
               ],
               "children": [
                 {
+                  "id": "wadwN",
+                  "type": "ref",
+                  "ref": "XggYA",
+                  "name": "Recheck Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "G4R75k": {
+                      "icon": "refresh-cw"
+                    },
+                    "yxwnz": {
+                      "content": "我已完成轉移，重新檢查"
+                    }
+                  }
+                },
+                {
                   "id": "dhVxy",
                   "type": "ref",
                   "ref": "qe9yS",
@@ -122219,6 +122234,7 @@
                               "id": "AiMVw",
                               "name": "Secondary Row",
                               "width": "fill_container",
+                              "layout": "vertical",
                               "gap": "$sp-group",
                               "alignItems": "center",
                               "children": [
@@ -122413,6 +122429,7 @@
                               "id": "V08U3",
                               "name": "Secondary Row",
                               "width": "fill_container",
+                              "layout": "vertical",
                               "gap": "$sp-group",
                               "alignItems": "center",
                               "children": [
@@ -125842,6 +125859,3544 @@
         {
           "type": "frame",
           "id": "Q5cmj",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "rh2Q1",
+      "x": 17624,
+      "y": 23117,
+      "name": "A11y / 08 EULA 同意頁 · Dynamic Type AX3",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1500,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "wwTvP",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "OwhFv",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            24,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "zEvYr",
+              "name": "Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "reoU2",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "使用條款更新",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "rCqJa",
+                  "name": "Subtitle",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "我們更新了《使用條款》。在繼續使用萌芽日記之前，請看一下最重要的一段。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PGAo5",
+              "name": "Card Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "vQAOx",
+                  "name": "Zero Tolerance Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "P7zIS",
+                      "name": "Card Head",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "A8fwj",
+                          "name": "Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "shield-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "e4Uqrv",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "對冒犯性內容零容忍",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "E12jLC",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "yY7ns",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "yxuV8",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "色情、暴力、騷擾、歧視、侵害他人隱私的內容一律禁止；情節重大者會永久停權，涉及未成年人安全的內容會依法通報。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FOaJh",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "TQBP6",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "gqXIv",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "任何家庭成員都能在 App 內檢舉，我們與家庭管理者都會處理，並在收到後 24 小時內採取行動。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "X0l8OV",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "FtpR6",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wxWTS",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "你可以封鎖任何成員；對方不會收到通知，也不會受到任何影響。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YHm8F",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "Cmkwc",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "W6lr9R",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "家庭管理者可以移除違規內容、移除成員，並處理家庭內的檢舉。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "nrqqV",
+              "name": "Spacer",
+              "width": "fill_container",
+              "height": "fill_container"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LLD8z",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "stroke": "#00000000",
+          "strokeAlignment": "inner",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "ruAPF",
+              "name": "Hairline",
+              "fill": "$border",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "V0w17",
+              "name": "Button Wrap",
+              "width": "fill_container",
+              "fill": "$surface",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "e6VbF",
+                  "name": "Link Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "s3HCMd",
+                      "name": "Legal Link",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "SwMap",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "查看完整《使用條款》與《隱私權政策》",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "LcINJ",
+                          "name": "Underline",
+                          "fill": "$text-primary",
+                          "width": 238,
+                          "height": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "i9XLc",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Agree Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "check"
+                    },
+                    "w7CUP": {
+                      "content": "我已閱讀並同意"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "wXPnP",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "yResD",
+      "x": 18097,
+      "y": 23117,
+      "name": "A11y / 07 檢舉收件匣 · Dynamic Type AX3",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1540,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "O1xwc",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "nlvRp",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "AWO50",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "bupXy",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "bCQLV",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "IKnXT",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "檢舉",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Y71b3x",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "「陳家」目前有 2 則待處理的檢舉。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "uuEJB",
+                  "name": "Report List",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "nDONb",
+                      "name": "Report Card · 留言",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-lg",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "XYKMZ",
+                          "name": "Head",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "M2jP9",
+                              "name": "Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "message-circle",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "vvWaV",
+                              "name": "Type",
+                              "fill": "$text-secondary",
+                              "content": "留言",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "SOhYj",
+                          "name": "Snippet",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "「這張照片真的很醜」",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "id": "VE7UU",
+                          "type": "ref",
+                          "ref": "AqN3F",
+                          "name": "Reason Pill",
+                          "descendants": {
+                            "KR7zN": {
+                              "icon": "flag"
+                            },
+                            "g7Fnj": {
+                              "content": "騷擾、霸凌或恐嚇"
+                            }
+                          }
+                        },
+                        {
+                          "type": "text",
+                          "id": "xYvb7",
+                          "name": "Meta",
+                          "fill": "$text-secondary",
+                          "content": "由 李阿嬤 檢舉・2 小時前",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "eS8pg",
+                          "name": "Actions",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-label",
+                          "padding": [
+                            "$sp-tight",
+                            0,
+                            0,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "OfoLM",
+                              "name": "View Button",
+                              "width": "fill_container",
+                              "height": 44,
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "nnQbB",
+                                  "name": "Label",
+                                  "fill": "$text-primary",
+                                  "content": "查看內容",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "y9ruV",
+                              "name": "Secondary Row",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": "$sp-group",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "Fx6fv",
+                                  "name": "No Issue Button",
+                                  "width": "fill_container",
+                                  "height": 44,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "TiL53",
+                                      "name": "Text Wrap",
+                                      "layout": "vertical",
+                                      "gap": 1,
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "XjWQN",
+                                          "name": "Label",
+                                          "fill": "$text-primary",
+                                          "content": "這則沒問題",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        },
+                                        {
+                                          "type": "rectangle",
+                                          "id": "k0Rc7N",
+                                          "name": "Underline",
+                                          "fill": "$text-primary",
+                                          "width": 70,
+                                          "height": 1
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "F0ZHq",
+                                  "name": "Remove Button",
+                                  "width": "fill_container",
+                                  "height": 44,
+                                  "fill": "$surface",
+                                  "cornerRadius": "$radius-md",
+                                  "stroke": "$danger",
+                                  "strokeWidth": 1.5,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "C2st6",
+                                      "name": "Label",
+                                      "fill": "$danger",
+                                      "content": "移除內容",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "doskg",
+                      "name": "Report Card · 照片",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-lg",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Ofp3m",
+                          "name": "Head",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "M0U4r",
+                              "name": "Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "image",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Wn3rB",
+                              "name": "Type",
+                              "fill": "$text-secondary",
+                              "content": "照片",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "ocrAN",
+                          "name": "Snippet",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "生日派對相簿裡的一張照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "id": "WISf5",
+                          "type": "ref",
+                          "ref": "AqN3F",
+                          "name": "Reason Pill",
+                          "descendants": {
+                            "KR7zN": {
+                              "icon": "flag"
+                            },
+                            "g7Fnj": {
+                              "content": "其他"
+                            }
+                          }
+                        },
+                        {
+                          "type": "text",
+                          "id": "g0YJ46",
+                          "name": "Meta",
+                          "fill": "$text-secondary",
+                          "content": "由 陳小華 檢舉・昨天",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ZiMSG",
+                          "name": "Actions",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-label",
+                          "padding": [
+                            "$sp-tight",
+                            0,
+                            0,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "FVrxq",
+                              "name": "View Button",
+                              "width": "fill_container",
+                              "height": 44,
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "W5PdI",
+                                  "name": "Label",
+                                  "fill": "$text-primary",
+                                  "content": "查看內容",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "r12j6Z",
+                              "name": "Secondary Row",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": "$sp-group",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "wROsp",
+                                  "name": "No Issue Button",
+                                  "width": "fill_container",
+                                  "height": 44,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "aqoOE",
+                                      "name": "Text Wrap",
+                                      "layout": "vertical",
+                                      "gap": 1,
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "KifWM",
+                                          "name": "Label",
+                                          "fill": "$text-primary",
+                                          "content": "這則沒問題",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        },
+                                        {
+                                          "type": "rectangle",
+                                          "id": "r5SvR",
+                                          "name": "Underline",
+                                          "fill": "$text-primary",
+                                          "width": 70,
+                                          "height": 1
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "auyrY",
+                                  "name": "Remove Button",
+                                  "width": "fill_container",
+                                  "height": 44,
+                                  "fill": "$surface",
+                                  "cornerRadius": "$radius-md",
+                                  "stroke": "$danger",
+                                  "strokeWidth": 1.5,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "o1TpCt",
+                                      "name": "Label",
+                                      "fill": "$danger",
+                                      "content": "移除內容",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "N1Ibp",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "tWbae",
+      "x": 18570,
+      "y": 23117,
+      "name": "A11y / 04d 刪除帳號 · 唯一成員警告 · Dynamic Type AX3",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1690,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "F9Xzoj",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "kn6BV",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "ZwLw3",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "BEE43",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Z1tVCd",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "xsXxa",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "這會一併刪除「陳家」",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "RGT1o",
+                  "name": "Card Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Esfiq",
+                      "name": "Warning Card",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-lg",
+                      "stroke": "$danger",
+                      "strokeWidth": 1.5,
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "UMbDS",
+                          "name": "Warn Head",
+                          "gap": "$sp-label",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "coktT",
+                              "name": "Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "triangle-alert",
+                              "library": "lucide",
+                              "fill": "$danger"
+                            },
+                            {
+                              "type": "text",
+                              "id": "cDpFx",
+                              "name": "Label",
+                              "fill": "$danger",
+                              "content": "你是這個家庭唯一的成員",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "jQTZ0",
+                          "name": "Body",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "「陳家」裡沒有其他人了。刪除你的帳號，會把整個家庭——所有照片、影片與日記——一起永久刪除，這個動作無法復原，之後也沒有人能再打開這個家庭。",
+                          "lineHeight": 1.6,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yJTJw",
+                  "name": "Alt Hint Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "HHoa8",
+                      "name": "Alt Hint",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "如果你只是想休息一下，也可以先邀請家人加入，或直接把家庭留著、暫時不使用。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ZcPPi",
+              "name": "Spacer",
+              "width": "fill_container",
+              "height": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "Q54lj",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Nn6fY",
+                  "name": "Continue Button",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$danger",
+                  "strokeWidth": 1.5,
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-cta",
+                    20
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Fl7Mu",
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "arrow-right",
+                      "library": "lucide",
+                      "fill": "$danger"
+                    },
+                    {
+                      "type": "text",
+                      "id": "gp7sP",
+                      "name": "Label",
+                      "fill": "$danger",
+                      "content": "我了解，繼續刪除",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "id": "nudvx",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Cancel Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "先不要，返回設定"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "K1DKU",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "dNED0",
+      "x": 19043,
+      "y": 23117,
+      "name": "A11y / 04a 刪除帳號 · 一般成員 · Dynamic Type AX3",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1860,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "F8D5tg",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "asBZh",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "IWQCR",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "t00jKt",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "rQmGX",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "mhwwZ",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "刪除帳號",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "k2Ze5",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "在你刪除帳號之前，請先看看接下來會發生什麼事。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "g3cSDg",
+                  "name": "Info List",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "mcCOu",
+                      "name": "Item",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "v8SQty",
+                          "name": "Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "log-out",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "tseUf",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "你會離開「陳家」，其他家人跟他們的照片、日記完全不受影響。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "dzq1A",
+                      "name": "Item",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "wJknu",
+                          "name": "Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "image-off",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "E8W49q",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "你建立的相簿、日記與留言，以及你上傳的照片、影片，都會標記刪除，跟其他人刪除內容一樣，30 天內可以還原，30 天後會永久清除。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nHJNN",
+                      "name": "Item",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "HBUV4",
+                          "name": "Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "triangle-alert",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "kE7fm",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "帳號刪除完成後就無法復原，也無法用同一個帳號重新登入。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "BvJ4g",
+              "name": "Spacer",
+              "width": "fill_container",
+              "height": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "OsVBl",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "TUAeO",
+                  "name": "Continue Button",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$danger",
+                  "strokeWidth": 1.5,
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-cta",
+                    20
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "YWpNH",
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "arrow-right",
+                      "library": "lucide",
+                      "fill": "$danger"
+                    },
+                    {
+                      "type": "text",
+                      "id": "NO4gr",
+                      "name": "Label",
+                      "fill": "$danger",
+                      "content": "繼續刪除帳號",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "id": "DKEiW",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Cancel Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "先不要，返回設定"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "G3CXM",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "q4mb2",
+      "x": 19516,
+      "y": 23117,
+      "name": "A11y / 05b 檢舉原因 · Dynamic Type AX3",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1500,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "gX04c",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "svdWR",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 1500,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "S49vq",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 1500,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "zt10K",
+              "name": "Reason Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "kYCxh",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "T94o6j",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "TeicP",
+                      "name": "Head Title",
+                      "fill": "$text-primary",
+                      "content": "檢舉這則內容",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "WJn7r",
+                      "name": "Head Sub",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請選一個最符合的原因，我們與「陳家」的家庭管理者都會看到。",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ibL9M",
+                  "name": "Reason List",
+                  "width": "fill_container",
+                  "fill": "$bg",
+                  "cornerRadius": "$radius-lg",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "auHB2",
+                      "name": "Reason · 色情或猥褻內容",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-item",
+                        "$inset-card"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "flG4B",
+                          "name": "Radio",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "q4EbGM",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "色情或猥褻內容",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "A8TJw8",
+                      "name": "Divider",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FMCyI",
+                      "name": "Reason · 騷擾、霸凌或恐嚇",
+                      "width": "fill_container",
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-item",
+                        "$inset-card"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "gE3If",
+                          "name": "Radio",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "circle-check",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "JUGea",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "騷擾、霸凌或恐嚇",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "fhS7b",
+                      "name": "Divider",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZpM1o",
+                      "name": "Reason · 歧視或仇恨言論",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-item",
+                        "$inset-card"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "hRXfB",
+                          "name": "Radio",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "bzc0B",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "歧視或仇恨言論",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "Wm0Tf",
+                      "name": "Divider",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "hH1Y3",
+                      "name": "Reason · 侵害隱私或未經同意的內容",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-item",
+                        "$inset-card"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "HvncC",
+                          "name": "Radio",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "jvGxf",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "侵害隱私或未經同意的內容",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "s0mQy",
+                      "name": "Divider",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wLwZd",
+                      "name": "Reason · 詐騙或垃圾訊息",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-item",
+                        "$inset-card"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "r38th",
+                          "name": "Radio",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "NWUxv",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "詐騙或垃圾訊息",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "pchWI",
+                      "name": "Divider",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "lQAuA",
+                      "name": "Reason · 其他",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-item",
+                        "$inset-card"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "L2bbm",
+                          "name": "Radio",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Ng6jL",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "其他",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "H4qjsy",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Submit Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "send"
+                    },
+                    "w7CUP": {
+                      "content": "送出檢舉"
+                    }
+                  }
+                },
+                {
+                  "id": "zBazt",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Cancel Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "取消"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "gjCoe",
+      "x": 19989,
+      "y": 23117,
+      "name": "A11y / 03 家庭成員 · Dynamic Type AX3（長名字壓測）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1500,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "uIh4I",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "s4u7IR",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "mfiX1",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "O9uQh",
+              "name": "Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CBTvM",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "家庭成員",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "wxZkn",
+                  "name": "Subtitle",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "「陳家」目前有 4 位家人。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "H1SghI",
+              "name": "Card Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "H8fDT",
+                  "name": "Members Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "f5MPCd",
+                      "name": "Row · 陳美玲",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-item",
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "QxkIo",
+                          "name": "Identity",
+                          "width": "fill_container",
+                          "gap": "$sp-group",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "id": "eehWu",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar",
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "美"
+                                }
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "rK9jF",
+                              "name": "Person Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "MEQPa",
+                                  "name": "Name",
+                                  "fill": "$text-primary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "陳美玲（你）",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "Dehav",
+                                  "name": "Meta",
+                                  "gap": "$sp-group",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "id": "Y2aqFk",
+                                      "type": "ref",
+                                      "ref": "AqN3F",
+                                      "name": "Role Pill",
+                                      "descendants": {
+                                        "KR7zN": {
+                                          "icon": "crown"
+                                        },
+                                        "g7Fnj": {
+                                          "content": "家庭管理者"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "gFNtx",
+                      "name": "Divider",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "i51sd3",
+                      "name": "Row · 陳志明",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-item",
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ohSJI",
+                          "name": "Identity",
+                          "width": "fill_container",
+                          "gap": "$sp-group",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "id": "bx9tp",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar",
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "明"
+                                }
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "vAXZ1",
+                              "name": "Person Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "ahy2g",
+                                  "name": "Name",
+                                  "fill": "$text-primary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "李王美麗美惠子",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "ZHQ7H",
+                                  "name": "Meta",
+                                  "gap": "$sp-group",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "id": "O09p6L",
+                                      "type": "ref",
+                                      "ref": "AqN3F",
+                                      "name": "Role Pill",
+                                      "descendants": {
+                                        "KR7zN": {
+                                          "icon": "user"
+                                        },
+                                        "g7Fnj": {
+                                          "content": "一般成員"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "Z3W7T",
+                          "name": "Chevron",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "vR6IW",
+                      "name": "Divider",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "QcdCe",
+                      "name": "Row · 李阿嬤",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-item",
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Zmg75",
+                          "name": "Identity",
+                          "width": "fill_container",
+                          "gap": "$sp-group",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "id": "nQYfR",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar",
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "嬤"
+                                }
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ALxd1",
+                              "name": "Person Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Q2bcxW",
+                                  "name": "Name",
+                                  "fill": "$text-primary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "李阿嬤",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "iB3V8",
+                                  "name": "Meta",
+                                  "gap": "$sp-group",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "id": "XWwMH",
+                                      "type": "ref",
+                                      "ref": "AqN3F",
+                                      "name": "Role Pill",
+                                      "descendants": {
+                                        "KR7zN": {
+                                          "icon": "eye"
+                                        },
+                                        "g7Fnj": {
+                                          "content": "只能看"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "vJldM",
+                          "name": "Chevron",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "DcwmD",
+                      "name": "Divider",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "CNrqS",
+                      "name": "Row · 陳小華",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-item",
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "gsz6E",
+                          "name": "Identity",
+                          "width": "fill_container",
+                          "gap": "$sp-group",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "id": "H41ec",
+                              "type": "ref",
+                              "ref": "RaaIf",
+                              "name": "Avatar",
+                              "descendants": {
+                                "A30rIX": {
+                                  "content": "華"
+                                }
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "s9K07",
+                              "name": "Person Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "NBGrY",
+                                  "name": "Name",
+                                  "fill": "$text-primary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "陳小華",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "dGwJu",
+                                  "name": "Meta",
+                                  "gap": "$sp-group",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "id": "fOZ3O",
+                                      "type": "ref",
+                                      "ref": "AqN3F",
+                                      "name": "Role Pill",
+                                      "descendants": {
+                                        "KR7zN": {
+                                          "icon": "user"
+                                        },
+                                        "g7Fnj": {
+                                          "content": "一般成員"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "gi6o0",
+                          "name": "Chevron",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "hcZMu",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "yJvj7",
+      "x": 20462,
+      "y": 23117,
+      "name": "LS-152 / 03-iPad 家庭成員 (iPad 11\")",
+      "width": 834,
+      "height": 1194,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "M6SK1Z",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "uePHU",
+          "name": "Split",
+          "width": "fill_container",
+          "height": "fill_container",
+          "children": [
+            {
+              "type": "frame",
+              "id": "u6F5Op",
+              "name": "Sidebar",
+              "width": 320,
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$screen-pad-lg",
+                "$sp-block",
+                "$sp-block",
+                "$screen-pad-lg"
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "NAHof",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "設定",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "XSLPh",
+                  "name": "Nav List",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "NhfPr",
+                      "name": "Nav Item · 個人",
+                      "width": "fill_container",
+                      "fill": "#00000000",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "#00000000",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 2
+                        },
+                        "blur": 8
+                      },
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$ctl-pad-tap",
+                        "$sp-item"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "p00RTC",
+                          "name": "Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Vhuyi",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "個人",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "o5CI6w",
+                      "name": "Nav Item · 家庭",
+                      "width": "fill_container",
+                      "fill": "$print-paper",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 2
+                        },
+                        "blur": 8
+                      },
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$ctl-pad-tap",
+                        "$sp-item"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "G2OtL8",
+                          "name": "Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "users",
+                          "library": "lucide",
+                          "fill": "$print-ink"
+                        },
+                        {
+                          "type": "text",
+                          "id": "bBraF",
+                          "name": "Label",
+                          "fill": "$print-ink",
+                          "content": "家庭",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "jxmrW",
+                      "name": "Nav Item · 內容與安全",
+                      "width": "fill_container",
+                      "fill": "#00000000",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "#00000000",
+                      "strokeWidth": 1,
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$ctl-pad-tap",
+                        "$sp-item"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "w35GGb",
+                          "name": "Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "shield",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "k4AQEL",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "內容與安全",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vodyf",
+                      "name": "Nav Item · 法律",
+                      "width": "fill_container",
+                      "fill": "#00000000",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "#00000000",
+                      "strokeWidth": 1,
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$ctl-pad-tap",
+                        "$sp-item"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "thr1I",
+                          "name": "Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "file-text",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Y8Fgb3",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "法律",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "N78nt",
+                      "name": "Nav Item · 帳號",
+                      "width": "fill_container",
+                      "fill": "#00000000",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "#00000000",
+                      "strokeWidth": 1,
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$ctl-pad-tap",
+                        "$sp-item"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "Y9NTl",
+                          "name": "Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "trash-2",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "C1EITb",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "帳號",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "JiS1h",
+              "name": "Divider",
+              "fill": "$border",
+              "width": 1,
+              "height": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "IKvQ6",
+              "name": "Detail Pane",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$screen-pad-lg",
+                "$screen-pad-lg",
+                0,
+                "$screen-pad-lg"
+              ],
+              "justifyContent": "space_between",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "AfaGv",
+                  "name": "Detail Top",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "p3vDA",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "y3nI6",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "content": "家庭成員",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "kWdso",
+                          "name": "Subtitle",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "「陳家」目前有 4 位家人。",
+                          "lineHeight": 1.6,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "d9VxR",
+                      "name": "Members Card",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-lg",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "pzryv",
+                          "name": "Row · 陳美玲（你）",
+                          "width": "fill_container",
+                          "gap": "$sp-group",
+                          "padding": [
+                            "$sp-item",
+                            "$inset-card"
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "BMRLl",
+                              "name": "Identity",
+                              "width": "fill_container",
+                              "gap": "$sp-group",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "a35u5",
+                                  "type": "ref",
+                                  "ref": "RaaIf",
+                                  "name": "Avatar",
+                                  "descendants": {
+                                    "A30rIX": {
+                                      "content": "美"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "J3UK9",
+                                  "name": "Person Text",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "wHUM1",
+                                      "name": "Name",
+                                      "fill": "$text-primary",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "陳美玲（你）",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-body",
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "m6JVOv",
+                                      "name": "Meta",
+                                      "gap": "$sp-group",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "ijAY8",
+                                          "type": "ref",
+                                          "ref": "AqN3F",
+                                          "name": "Role Pill",
+                                          "descendants": {
+                                            "KR7zN": {
+                                              "icon": "crown"
+                                            },
+                                            "g7Fnj": {
+                                              "content": "家庭管理者"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "wh8rA",
+                          "name": "Divider",
+                          "fill": "$border",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "QyW4C",
+                          "name": "Row · 陳志明",
+                          "width": "fill_container",
+                          "gap": "$sp-group",
+                          "padding": [
+                            "$sp-item",
+                            "$inset-card"
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "D50lyy",
+                              "name": "Identity",
+                              "width": "fill_container",
+                              "gap": "$sp-group",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "OSaIE",
+                                  "type": "ref",
+                                  "ref": "RaaIf",
+                                  "name": "Avatar",
+                                  "descendants": {
+                                    "A30rIX": {
+                                      "content": "明"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "BmXV6",
+                                  "name": "Person Text",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "DC7sY",
+                                      "name": "Name",
+                                      "fill": "$text-primary",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "陳志明",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-body",
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Tz0fw",
+                                      "name": "Meta",
+                                      "gap": "$sp-group",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "K8Rr0F",
+                                          "type": "ref",
+                                          "ref": "AqN3F",
+                                          "name": "Role Pill",
+                                          "descendants": {
+                                            "KR7zN": {
+                                              "icon": "user"
+                                            },
+                                            "g7Fnj": {
+                                              "content": "一般成員"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon",
+                              "id": "P4rO4",
+                              "name": "Chevron",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "chevron-right",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "p6zoim",
+                          "name": "Divider",
+                          "fill": "$border",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "mMgT6",
+                          "name": "Row · 李阿嬤",
+                          "width": "fill_container",
+                          "gap": "$sp-group",
+                          "padding": [
+                            "$sp-item",
+                            "$inset-card"
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "fo4nd",
+                              "name": "Identity",
+                              "width": "fill_container",
+                              "gap": "$sp-group",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "P7Wxch",
+                                  "type": "ref",
+                                  "ref": "RaaIf",
+                                  "name": "Avatar",
+                                  "descendants": {
+                                    "A30rIX": {
+                                      "content": "嬤"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "OFl4k",
+                                  "name": "Person Text",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "U70eeJ",
+                                      "name": "Name",
+                                      "fill": "$text-primary",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "李阿嬤",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-body",
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "VFGSN",
+                                      "name": "Meta",
+                                      "gap": "$sp-group",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "IKQpC",
+                                          "type": "ref",
+                                          "ref": "AqN3F",
+                                          "name": "Role Pill",
+                                          "descendants": {
+                                            "KR7zN": {
+                                              "icon": "eye"
+                                            },
+                                            "g7Fnj": {
+                                              "content": "只能看"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon",
+                              "id": "xiGpY",
+                              "name": "Chevron",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "chevron-right",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "AWa62",
+                          "name": "Divider",
+                          "fill": "$border",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "OOPN8",
+                          "name": "Row · 陳小華",
+                          "width": "fill_container",
+                          "gap": "$sp-group",
+                          "padding": [
+                            "$sp-item",
+                            "$inset-card"
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "LtDK2",
+                              "name": "Identity",
+                              "width": "fill_container",
+                              "gap": "$sp-group",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "SRaui",
+                                  "type": "ref",
+                                  "ref": "RaaIf",
+                                  "name": "Avatar",
+                                  "descendants": {
+                                    "A30rIX": {
+                                      "content": "華"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "BCptf",
+                                  "name": "Person Text",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "xYK3y",
+                                      "name": "Name",
+                                      "fill": "$text-primary",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "陳小華",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-body",
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "J0S1am",
+                                      "name": "Meta",
+                                      "gap": "$sp-group",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "Ky5UA",
+                                          "type": "ref",
+                                          "ref": "AqN3F",
+                                          "name": "Role Pill",
+                                          "descendants": {
+                                            "KR7zN": {
+                                              "icon": "user"
+                                            },
+                                            "g7Fnj": {
+                                              "content": "一般成員"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon",
+                              "id": "f0MXpj",
+                              "name": "Chevron",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "chevron-right",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "o9QWLT",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "AuIyU",
+                      "type": "ref",
+                      "ref": "XggYA",
+                      "name": "Invite Button",
+                      "width": 280,
+                      "descendants": {
+                        "G4R75k": {
+                          "icon": "user-round-plus"
+                        },
+                        "yxwnz": {
+                          "content": "邀請家人"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "v4w2pV",
+      "x": 21376,
+      "y": 23117,
+      "name": "LS-152 / 04e 刪除帳號 · 最終確認 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "lp9xl",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "j1HWC9",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "i6B5pl",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "ivYIL",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "quQCZ",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "e9cWX",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "最後確認",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fYFue",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "這是刪除帳號前的最後一步。請在下面輸入「刪除帳號」四個字，確認你真的要這麼做。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "WRgVb",
+                  "name": "Field Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-section",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "z2nam",
+                      "name": "Confirm Field",
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "C4XSDI",
+                          "name": "Placeholder",
+                          "fill": "$text-secondary",
+                          "content": "輸入「刪除帳號」",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hNmEZ",
+                  "name": "Hint Row",
+                  "width": "fill_container",
+                  "height": 50,
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "NJdPa",
+                      "name": "Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "GbJjE",
+                      "name": "Text",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請先在上面輸入「刪除帳號」四個字，才能繼續。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Xvhtr",
+              "name": "Spacer",
+              "width": "fill_container",
+              "height": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "SjRdj",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "vYnBc",
+                  "name": "Delete Button",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$danger",
+                  "strokeWidth": 1.5,
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-cta",
+                    20
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "CQWNt",
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "trash-2",
+                      "library": "lucide",
+                      "fill": "$danger"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ZHdNV",
+                      "name": "Label",
+                      "fill": "$danger",
+                      "content": "永久刪除帳號",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "id": "x0OQdx",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Cancel Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "取消"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "kvLVL",
           "name": "Home Indicator Area",
           "width": "fill_container",
           "height": 34,
