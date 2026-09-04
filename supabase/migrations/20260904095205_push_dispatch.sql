@@ -153,16 +153,15 @@ comment on function public.claim_notification_events(integer) is
 -- ---------------------------------------------------------------------------
 -- 2. notification_recipients(p_event_ids)：對象判定＋device_tokens 展開
 --
--- **LS-172 R2（merge-reviewer m1）改成批次簽章**：原本是 `notification_recipients
--- (p_event_id uuid)`，逐事件呼叫一次；push-dispatch 的 handler.ts 一次要處理一整批
--- （最多 batchLimit 筆）claimed 事件，逐事件各打一次這支 RPC 是不必要的 round
--- trip。這裡直接改簽章成 `p_event_ids uuid[]`、回傳多帶一欄 `event_id`（呼叫端用
--- 這欄把收件人列分回各自所屬的事件），不是新增一支重載——這支函式在本票落地前從未
--- 併入任何分支，唯一呼叫方是本票自己的 handler.ts／SQL 測試（同一個 PR 內一併改
--- 掉），沒有其他外部呼叫方需要相容舊簽章，保留一支沒人用的舊簽章只是累贅（Rule 2
--- 簡單優先）。因為是同一支 migration 檔的內部修改（尚未部署、尚未併入
--- origin/development），直接改這一段，不是另開一張 migration 疊代（migration
--- 不可變的保護只適用於已併入 base 的檔案，見 migration-immutable-check.sh）。
+-- **批次簽章（merge-reviewer LS-172 R2 m1）**：push-dispatch 的 handler.ts 一次要
+-- 處理一整批（最多 batchLimit 筆）claimed 事件，這支函式直接吃 `p_event_ids
+-- uuid[]`、回傳多帶一欄 `event_id`（呼叫端用這欄把收件人列分回各自所屬的事件）——
+-- 不是逐事件各打一次（那是不必要的 round trip）。**這支 migration 檔在本 PR 落地
+-- 前從未併入任何分支、也從未部署到任何環境**，函式因此從一開始就直接定義成最終
+-- 的批次形狀，不透過「先建單一事件版本、後續再 `DROP FUNCTION` 改簽章」這種兩階段
+-- 寫法——migration 是 append-only 帳本，`DROP FUNCTION` 會被 `migration-breaking-
+-- check.sh` 判成 DESTRUCTIVE（需要人工核可），但這支函式的簽章根本沒有任何外部
+-- 依賴需要相容，兩階段寫法只是徒增一次不必要的核可步驟，見 R2 handoff 的討論。
 --
 -- 對象＝該事件所屬家庭的成員，扣掉：
 --   a) actor_id 本人（自己觸發的事件不通知自己）——`actor_id` 可能是 NULL（見上方
@@ -194,8 +193,6 @@ comment on function public.claim_notification_events(integer) is
 -- `LANGUAGE SQL`（比照 `get_reaction_counts`／`private.blocked_pairs()` 的既有
 -- 慣例）：單一靜態聚合查詢，沒有游標／OR 分支，不受 LS-48 F1 的 inline 限制影響。
 -- ---------------------------------------------------------------------------
-
-drop function if exists public.notification_recipients(uuid);
 
 create or replace function public.notification_recipients(p_event_ids uuid[])
 returns table (

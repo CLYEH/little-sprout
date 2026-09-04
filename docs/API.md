@@ -2352,13 +2352,14 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
 
 - **`public.notification_recipients(p_event_ids uuid[]) -> table(event_id uuid,
   user_id uuid, token text, platform device_platform)`**（同一支 migration；
-  **R2 依 merge-reviewer m1 改成批次簽章**——原本是 `p_event_id uuid` 單一事件，
-  逐事件呼叫一次；`push-dispatch` 一次要處理一整批 claimed 事件，逐事件各打一次
-  這支 RPC 是不必要的 round trip，改成一次吃一批 `p_event_ids`、回傳列多帶
-  `event_id` 供呼叫端把收件人分回各自所屬的事件。這是直接改簽章（`DROP FUNCTION`
-  舊的、`CREATE` 新的），不是新增一支重載——落地時這支函式從未併入任何分支，
-  唯一呼叫方是 `push-dispatch` 自己（同一個 PR 內一併改掉呼叫端），沒有外部呼叫方
-  需要相容舊簽章）：
+  **批次簽章（merge-reviewer LS-172 R2 m1）**——`push-dispatch` 一次要處理一整批
+  claimed 事件，這支函式直接吃一批 `p_event_ids`、回傳列多帶 `event_id` 供呼叫端
+  把收件人分回各自所屬的事件，不是逐事件各打一次（不必要的 round trip）。這支
+  migration 檔在本 PR 落地前從未併入任何分支、也從未部署到任何環境，函式因此從
+  一開始就直接定義成這個最終的批次形狀，不透過「先建單一事件版本、後續再
+  `DROP FUNCTION` 改簽章」的兩階段寫法——那樣會被 `migration-breaking-check.sh`
+  判成 DESTRUCTIVE（需要人工核可），但這支函式的簽章根本沒有任何外部依賴需要
+  相容，兩階段寫法只是徒增一次不必要的核可步驟）：
   service_role-only、`SECURITY DEFINER`，同上理由放 `public` schema。回傳每個
   event_id 所屬家庭成員 × 其 `device_tokens` 的展開列（一人多裝置會有多列，
   `push-dispatch` 逐列即逐 token 發送），扣除：
