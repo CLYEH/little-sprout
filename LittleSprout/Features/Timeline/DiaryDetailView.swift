@@ -170,6 +170,7 @@ struct DiaryDetailView: View {
         Text(content.body)
             .appFont(.body)
             .foregroundStyle(Color.lsTextPrimary)
+            .accessibilityIdentifier(QAAccessibilityID.diaryDetailBody)
     }
 
     @ViewBuilder

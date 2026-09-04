@@ -38,7 +38,8 @@ struct EmailSignInView: View {
                     keyboardType: .emailAddress,
                     textContentType: .emailAddress,
                     submitLabel: .send,
-                    onSubmit: send
+                    onSubmit: send,
+                    accessibilityIdentifier: QAAccessibilityID.emailField
                 )
 
                 Text("沒有 Apple 帳號，或不方便用 Apple 登入時，用 Email 一樣可以登入。")

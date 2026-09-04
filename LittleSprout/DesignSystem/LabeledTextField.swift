@@ -12,6 +12,9 @@ struct LabeledTextField: View {
     var textContentType: UITextContentType?
     var submitLabel: SubmitLabel = .done
     var onSubmit: (() -> Void)?
+    /// LS-158：QA e2e（`LittleSproutUITests/QA`）找輸入框用的 identifier（值見 `QAAccessibilityID`）；
+    /// 掛在裡面的 `TextField` 本體，不掛外層 `VStack`（容器不是 accessibility element）。nil＝不掛。
+    var accessibilityIdentifier: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
@@ -28,6 +31,7 @@ struct LabeledTextField: View {
                 .autocorrectionDisabled()
                 .submitLabel(submitLabel)
                 .onSubmit { onSubmit?() }
+                .accessibilityIdentifier(accessibilityIdentifier ?? "")
                 .padding(.horizontal, AppSpacing.insetCard)
                 .padding(.vertical, AppSpacing.controlPaddingMedium)
                 .frame(minHeight: 60)

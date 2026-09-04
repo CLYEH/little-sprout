@@ -63,7 +63,8 @@ struct CreateFamilyView: View {
                 helpText: fieldHelpText,
                 isError: isFieldError,
                 submitLabel: .done,
-                onSubmit: submit
+                onSubmit: submit,
+                accessibilityIdentifier: QAAccessibilityID.familyNameField
             )
             .disabled(isSubmitting)
             Text(footerNoteText)

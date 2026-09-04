@@ -157,6 +157,7 @@ struct DiaryEditorView: View {
                         .strokeBorder(Color.lsControlLine, lineWidth: 1.5)
                 )
                 .disabled(store.publishState.isInFlight)
+                .accessibilityIdentifier(QAAccessibilityID.diaryBodyEditor)
             // merge-review R1 M1／m10：空內文不是「發佈失敗」，不借用 Action Bar 的失敗態
             // （那裡的文案「你寫的內容還在，可以直接重試」對「根本還沒送出過」語意矛盾）——
             // 就地顯示在內文欄位旁，跟其他表單的「還沒做完」提示同一套視覺。
