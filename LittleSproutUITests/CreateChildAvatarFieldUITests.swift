@@ -28,7 +28,7 @@ final class CreateChildAvatarFieldUITests: XCTestCase {
 
         let isHittablePredicate = NSPredicate(format: "isHittable == true")
         let hittableExpectation = expectation(for: isHittablePredicate, evaluatedWith: avatarField)
-        wait(for: [hittableExpectation], timeout: 10)
+        wait(for: [hittableExpectation], timeout: 5)
 
         let frame = avatarField.frame
         XCTAssertGreaterThanOrEqual(
