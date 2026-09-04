@@ -55,6 +55,11 @@ export interface RevokeAttempt {
   reason: string;
 }
 
+export interface FinalizeAccountDeletionResult {
+  ok: boolean;
+  error?: string;
+}
+
 export interface Deps {
   /** 驗證 Authorization header 帶的 JWT，換回呼叫者。null＝JWT 缺失／無效／使用者已不存在。 */
   getCallerUser(authHeader: string | null): Promise<CallerUser | null>;
@@ -62,6 +67,13 @@ export interface Deps {
   getDeletionRequestedAt(uid: string): Promise<DeletionRequestedStatus>;
   /** 呼叫者名下的 OAuth identities（admin.getUserById 回傳的 identities 陣列）。 */
   getIdentities(uid: string): Promise<Identity[]>;
+  /**
+   * R2（merge-review R1 B1／M1，第一道防線）：刪除 auth.users 前以 service_role
+   * 呼叫 public.finalize_account_deletion(uid)，重跑一次資料面清理——不依賴過渡期
+   * 擋寫（LS051）完全沒有漏洞，保證呼叫者被真正刪除前一定沒有任何一列
+   * family_members，見 docs/API.md §10。
+   */
+  finalizeAccountDeletion(uid: string): Promise<FinalizeAccountDeletionResult>;
   /** GoTrue admin deleteUser。 */
   deleteAuthUser(uid: string): Promise<DeleteAuthUserResult>;
   /** 注入點：Apple／Google revoke 呼叫用的 fetch（單元測試用 stub 取代）。 */
@@ -112,6 +124,12 @@ export async function revokeAppleToken(
     };
   }
   try {
+    // M2（merge-review R1）：Deno 的 fetch 預設沒有逾時上限，appleid.apple.com
+    // 若被黑洞（TCP 建立後不回應）會讓 await 永遠不返回，deleteAuthUser() 因此
+    // 永遠不會被呼叫——直接違反上面檔頭「絕不能因為撤銷失敗或缺 env 而擋下刪除」
+    // 的承諾。AbortSignal.timeout() 逾時會讓 fetch reject（TimeoutError），落進
+    // 下面既有的 catch，跟其他 fetch 失敗一視同仁地當成 best-effort 失敗，不需要
+    // 額外的錯誤處理分支。
     const res = await deps.fetchImpl("https://appleid.apple.com/auth/revoke", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -120,6 +138,7 @@ export async function revokeAppleToken(
         client_secret: deps.appleClientSecret,
         token,
       }),
+      signal: AbortSignal.timeout(5000),
     });
     return {
       attempted: true,
@@ -149,11 +168,13 @@ export async function revokeGoogleToken(
     };
   }
   try {
+    // M2：同 revokeAppleToken——逾時落進下面既有的 catch，不擋刪除。
     const res = await deps.fetchImpl(
       `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(token)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        signal: AbortSignal.timeout(5000),
       },
     );
     return {
@@ -183,6 +204,12 @@ export async function handleRequest(
   req: Request,
   deps: Deps,
 ): Promise<Response> {
+  // minor-1（merge-review R1）：docs/API.md §10 寫的路徑是「POST …/delete-account」，
+  // 但這支端點本來對任何 method 一視同仁地執行刪除——GET 具破壞性、且與文件不符。
+  if (req.method !== "POST") {
+    return jsonResponse(405, { error: "只接受 POST" });
+  }
+
   const authHeader = req.headers.get("Authorization");
   const user = await deps.getCallerUser(authHeader);
   if (!user) {
@@ -206,10 +233,49 @@ export async function handleRequest(
   }
 
   const identities = await deps.getIdentities(user.id);
-  const appleRevoke = await revokeAppleToken(deps, identities);
-  const googleRevoke = await revokeGoogleToken(deps, identities);
+  // minor-2（merge-review R1）：Apple／Google 兩支撤銷互相獨立，串行 await 白白
+  // 多等一趟 RTT——改 Promise.all 平行送出。
+  const [appleRevoke, googleRevoke] = await Promise.all([
+    revokeAppleToken(deps, identities),
+    revokeGoogleToken(deps, identities),
+  ]);
+  // minor-4（merge-review R1）：撤銷結果之前完全沒有任何伺服器端稽核痕跡（EF 全檔
+  // 零 console.*）——LS-132 隱私政策 §8 的撤銷承諾之後要舉證會沒有東西可舉。只記
+  // user id 與結果碼，不含 token／key／email。
+  console.log(
+    `delete-account: revocations user=${user.id} apple=${
+      appleRevoke.attempted ? (appleRevoke.ok ? "ok" : "failed") : "skipped"
+    } google=${
+      googleRevoke.attempted ? (googleRevoke.ok ? "ok" : "failed") : "skipped"
+    }`,
+  );
+
+  // R2（merge-review R1 B1／M1，第一道防線）：刪除 auth.users 前先以 service_role
+  // 重跑一次資料面清理——不論過渡期擋寫（LS051）有沒有漏洞，這一步都保證呼叫者
+  // 被真正刪除前一定沒有任何一列 family_members，讓下面的 deleteAuthUser 不會撞見
+  // LS001。失敗就 fail loud（500，不繼續往下刪 auth.users）：finalize_account_deletion
+  // 在正常情況下近乎是 no-op（迴圈跑過 0 個家庭），會失敗代表資料面本身有問題，
+  // 樂觀地繼續刪 auth.users 只會讓問題更難排查。
+  const cleanupResult = await deps.finalizeAccountDeletion(user.id);
+  if (!cleanupResult.ok) {
+    console.log(
+      `delete-account: finalizeAccountDeletion user=${user.id} result=failed`,
+    );
+    return jsonResponse(500, {
+      error: cleanupResult.error ?? "刪除前的資料面清理失敗",
+    });
+  }
 
   const deleteResult = await deps.deleteAuthUser(user.id);
+  console.log(
+    `delete-account: deleteAuthUser user=${user.id} result=${
+      deleteResult.ok
+        ? "ok"
+        : deleteResult.notFound
+        ? "already_deleted"
+        : "failed"
+    }`,
+  );
   if (!deleteResult.ok && !deleteResult.notFound) {
     return jsonResponse(500, {
       error: deleteResult.error ?? "刪除 auth.users 失敗",

@@ -6,10 +6,12 @@
 // 這裡的每一個 fetchImpl 都是 fake，不會真的發出網路請求）。
 
 import { assertEquals } from "jsr:@std/assert@1";
+import { FakeTime } from "jsr:@std/testing@1/time";
 import {
   type DeleteAuthUserResult,
   type DeletionRequestedStatus,
   type Deps,
+  type FinalizeAccountDeletionResult,
   findProviderToken,
   handleRequest,
   type Identity,
@@ -30,6 +32,8 @@ function makeDeps(overrides: Partial<Deps> = {}): Deps {
     getDeletionRequestedAt: (): Promise<DeletionRequestedStatus> =>
       Promise.resolve({ found: true, requested: true }),
     getIdentities: (): Promise<Identity[]> => Promise.resolve([]),
+    finalizeAccountDeletion: (): Promise<FinalizeAccountDeletionResult> =>
+      Promise.resolve({ ok: true }),
     deleteAuthUser: (): Promise<DeleteAuthUserResult> =>
       Promise.resolve({ ok: true, notFound: false }),
     fetchImpl: (() => {
@@ -39,6 +43,28 @@ function makeDeps(overrides: Partial<Deps> = {}): Deps {
     appleClientSecret: undefined,
     ...overrides,
   };
+}
+
+// M2（merge-review R1）：模擬「fetch 被黑洞」——連線建立後永遠不回應，也不主動
+// 拒絕。真正的 fetch 收到 AbortSignal 之後，signal 觸發 abort 時會 reject；這裡
+// 複刻同一個行為（監聽 init.signal 的 abort 事件才 reject），這樣才能驗證
+// handler.ts 傳入的 AbortSignal.timeout(5000) 真的會讓「不回來的 fetch」在 5 秒
+// 後被中止，而不是隨便一個永遠不 resolve 的 Promise（那樣就算 handler.ts 忘記
+// 傳 signal，測試也測不出差異）。
+function blackholeFetch(): typeof fetch {
+  return ((_url: string | URL, init?: RequestInit) => {
+    return new Promise<Response>((_resolve, reject) => {
+      const signal = init?.signal;
+      if (!signal) return; // 沒有帶 signal：故意永遠不 settle，逼測試自己發現
+      if (signal.aborted) {
+        reject(new DOMException("The signal has been aborted", "TimeoutError"));
+        return;
+      }
+      signal.addEventListener("abort", () => {
+        reject(new DOMException("The signal has been aborted", "TimeoutError"));
+      });
+    });
+  }) as unknown as typeof fetch;
 }
 
 function req(authHeader: string | null): Request {
@@ -306,4 +332,159 @@ Deno.test("Apple／Google 撤銷皆失敗，不影響帳號刪除本身成功 �
   assertEquals(body.deleted, true);
   assertEquals(body.revocations.apple.ok, false);
   assertEquals(body.revocations.google.ok, false);
+});
+
+// ---------------------------------------------------------------------------
+// 10.（M2，merge-review R1 major）revoke fetch 沒有逾時上限的話，黑洞連線會讓
+//    deleteAuthUser() 永遠不被呼叫——這裡驗證 AbortSignal.timeout(5000) 真的
+//    生效：用「監聽 signal 才 reject」的 fetchImpl（見上面 blackholeFetch）＋
+//    FakeTime 把 5 秒的等待壓縮成毫秒級，不需要真的等 5 秒。
+// ---------------------------------------------------------------------------
+
+Deno.test("revokeAppleToken：fetch 被黑洞（永不 resolve／reject）→ 5 秒後逾時，attempted:true ok:false，不會無限期卡住", async () => {
+  const time = new FakeTime();
+  try {
+    const deps = makeDeps({
+      appleClientId: "cid",
+      appleClientSecret: "csecret",
+      fetchImpl: blackholeFetch(),
+    });
+    const identities: Identity[] = [
+      { provider: "apple", identity_data: { provider_token: "t" } },
+    ];
+    const resultPromise = revokeAppleToken(deps, identities);
+    await time.tickAsync(5000);
+    const result = await resultPromise;
+    assertEquals(result.attempted, true);
+    assertEquals(result.ok, false);
+  } finally {
+    time.restore();
+  }
+});
+
+Deno.test("revokeGoogleToken：fetch 被黑洞 → 5 秒後逾時，attempted:true ok:false，不會無限期卡住", async () => {
+  const time = new FakeTime();
+  try {
+    const deps = makeDeps({ fetchImpl: blackholeFetch() });
+    const identities: Identity[] = [
+      { provider: "google", identity_data: { refresh_token: "g" } },
+    ];
+    const resultPromise = revokeGoogleToken(deps, identities);
+    await time.tickAsync(5000);
+    const result = await resultPromise;
+    assertEquals(result.attempted, true);
+    assertEquals(result.ok, false);
+  } finally {
+    time.restore();
+  }
+});
+
+Deno.test("handleRequest：Apple／Google 兩邊 fetch 都被黑洞，仍在逾時後完成刪除（不永久卡住整個請求）→ 200", async () => {
+  const time = new FakeTime();
+  try {
+    const deps = makeDeps({
+      appleClientId: "cid",
+      appleClientSecret: "csecret",
+      fetchImpl: blackholeFetch(),
+      getIdentities: (): Promise<Identity[]> =>
+        Promise.resolve([
+          { provider: "apple", identity_data: { provider_token: "t" } },
+          { provider: "google", identity_data: { refresh_token: "g" } },
+        ]),
+    });
+    const resPromise = handleRequest(req("Bearer valid-token"), deps);
+    await time.tickAsync(5000);
+    const res = await resPromise;
+    assertEquals(res.status, 200);
+    const body = await res.json();
+    assertEquals(body.deleted, true);
+    assertEquals(body.revocations.apple.ok, false);
+    assertEquals(body.revocations.google.ok, false);
+  } finally {
+    time.restore();
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 11.（R2，merge-review R1 B1／M1 第一道防線）finalize_account_deletion 的接線：
+//    刪除前一定會呼叫，失敗就 fail loud（500，不繼續刪 auth.users）。
+// ---------------------------------------------------------------------------
+
+Deno.test("finalizeAccountDeletion 成功 → 繼續呼叫 deleteAuthUser，200", async () => {
+  let finalizeCalled = false;
+  let deleteCalled = false;
+  const deps = makeDeps({
+    finalizeAccountDeletion: () => {
+      finalizeCalled = true;
+      return Promise.resolve({ ok: true });
+    },
+    deleteAuthUser: () => {
+      deleteCalled = true;
+      return Promise.resolve({ ok: true, notFound: false });
+    },
+  });
+  const res = await handleRequest(req("Bearer valid-token"), deps);
+  assertEquals(res.status, 200);
+  assertEquals(finalizeCalled, true);
+  assertEquals(
+    deleteCalled,
+    true,
+    "finalizeAccountDeletion 成功之後必須繼續呼叫 deleteAuthUser",
+  );
+});
+
+Deno.test("finalizeAccountDeletion 失敗 → 500，不呼叫 deleteAuthUser（fail loud，不樂觀繼續刪除）", async () => {
+  let deleteCalled = false;
+  const deps = makeDeps({
+    finalizeAccountDeletion: () =>
+      Promise.resolve({ ok: false, error: "資料面清理失敗" }),
+    deleteAuthUser: () => {
+      deleteCalled = true;
+      return Promise.resolve({ ok: true, notFound: false });
+    },
+  });
+  const res = await handleRequest(req("Bearer valid-token"), deps);
+  assertEquals(res.status, 500);
+  assertEquals(
+    deleteCalled,
+    false,
+    "finalizeAccountDeletion 失敗時絕不能繼續呼叫 deleteAuthUser",
+  );
+});
+
+// ---------------------------------------------------------------------------
+// 12.（minor-1，merge-review R1）只接受 POST——docs/API.md §10 寫的路徑是
+//    「POST …/delete-account」，GET／DELETE／PUT 等其他 method 一律 405，不執行
+//    任何刪除動作。
+// ---------------------------------------------------------------------------
+
+Deno.test("非 POST method（GET）→ 405，不呼叫 getCallerUser（一律先擋在 method 檢查）", async () => {
+  let getCallerUserCalled = false;
+  const deps = makeDeps({
+    getCallerUser: () => {
+      getCallerUserCalled = true;
+      return Promise.resolve({ id: "user-1" });
+    },
+  });
+  const request = new Request(
+    "https://example.test/functions/v1/delete-account",
+    {
+      method: "GET",
+    },
+  );
+  const res = await handleRequest(request, deps);
+  assertEquals(res.status, 405);
+  assertEquals(getCallerUserCalled, false);
+});
+
+Deno.test("非 POST method（DELETE）→ 405", async () => {
+  const deps = makeDeps();
+  const request = new Request(
+    "https://example.test/functions/v1/delete-account",
+    {
+      method: "DELETE",
+    },
+  );
+  const res = await handleRequest(request, deps);
+  assertEquals(res.status, 405);
 });
