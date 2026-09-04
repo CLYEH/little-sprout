@@ -122,15 +122,20 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
 §4）——這支呼叫失敗一樣有明確錯誤碼（`42501`／`LS023`／`LS027`），不會有「靜默
 0 列」或「猜不到到底改到了沒」的情況。
 
-**過渡期擋寫（LS-151）**：`profiles.deletion_requested_at` 非 `NULL`（呼叫過
-`delete_my_account()`、還沒被 Edge Function `delete-account` 真正刪除 `auth.users`
-的窗口期）時，`families`／`family_members`／`media`／`diaries`／`albums`／
-`children`／`comments` 七張表的 `INSERT` 一律拒絕（`LS051`），不論走的是直接
-`.insert()` 還是任何 `SECURITY DEFINER` RPC（`create_child`／`create_diary_entry`／
-`create_comment`／`approve_join`／建立新家庭時自動寫入 owner 的內建 trigger 皆同）
-——見 §「Edge Functions」。這**不是**額外的權限收斂，是暫時性的帳號狀態拒絕：
-`deletion_requested_at` 清除（帳號真的被刪、`profiles` 隨 `auth.users` cascade
-消失）之後這個限制自然不存在，不會有任何一個仍在使用中的帳號撞到這個碼。
+**過渡期擋寫（LS-151，R2 訂正範圍）**：`profiles.deletion_requested_at` 非
+`NULL`（呼叫過 `delete_my_account()`、還沒被 Edge Function `delete-account` 真正
+刪除 `auth.users` 的窗口期）時，`families`／`media`／`diaries`／`albums`／
+`children`／`comments`／`join_requests` 七張表的 `INSERT` 一律拒絕（`LS051`），
+`family_members` 額外擋 `UPDATE OF role, user_id`——不論走的是直接 `.insert()`
+還是任何 `SECURITY DEFINER` RPC（`create_child`／`create_diary_entry`／
+`create_comment`／`approve_join`／`request_join`／建立新家庭時自動寫入 owner 的
+內建 trigger 皆同）——見 §「Edge Functions」。這是**第二道防線**（縱深防禦），
+`family_members`／`join_requests` 的 guard 查的是「被寫入的人」而不是操作者的
+`auth.uid()`（R2 訂正 merge-review R1 B1）。第一道、真正保證「刪除一定成功」的
+是 §「Edge Functions」`finalize_account_deletion()`。這**不是**額外的權限收斂，
+是暫時性的帳號狀態拒絕：`deletion_requested_at` 清除（帳號真的被刪、`profiles`
+隨 `auth.users` cascade 消失）之後這個限制自然不存在，不會有任何一個仍在使用中
+的帳號撞到這個碼。
 
 ---
 
@@ -164,8 +169,10 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
   這一欄只是**資料面的請求標記**，不是刪除本身——`auth.users` 的實際刪除（連帶
   cascade 掉這一列）由另一支以 `service_role` 執行的流程完成（Edge Function
   `delete-account`，LS-151，見 §4 `delete_my_account`與§「Edge Functions」）。
-  `service_role` 對這張表只 `grant select`（LS-151，`20260903115014_delete_account_edge_support.sql`）
-  ——Edge Function 只需要讀這一欄判斷是否放行，沒有寫入需求。
+  `service_role` 對這張表只有欄位級 `grant select (id, deletion_requested_at)`
+  （LS-151 R2 收斂範圍，merge-review R1 i1，`20260903115014_delete_account_edge_support.sql`）
+  ——Edge Function 與 `finalize_account_deletion()` 只需要讀這兩欄判斷是否放行，
+  沒有寫入需求，也不需要整表 SELECT。
 
 ### `families`
 - `storage_quota_bytes`／`storage_used_bytes`：**唯讀**，client 完全看不到自己能改的欄位
@@ -1286,14 +1293,26 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   **立即**呼叫 Edge Function `delete-account` 完成 `auth.users` 的實際刪除，中間
   **不得允許使用者做任何操作**（不能停在「刪除中」畫面之外的任何互動）——這個窗口
   存在的唯一理由是兩支流程分屬不同部署單元、無法在同一個交易內完成，不是設計上
-  允許使用者利用的正常狀態。**這個窗口內「又成為某個家庭的唯一 owner」的風險已由
-  LS-151 從源頭排除**（見§2「過渡期擋寫」）：`deletion_requested_at` 非 `NULL`
-  時，`family_members` 的 `INSERT` 一律拒絕（`LS051`）——不論是建立新家庭時自動
-  寫入 owner 的路徑，還是 `approve_join`——呼叫者在這個窗口內不可能再取得任何一列
-  `family_members`，Edge Function 呼叫 `service_role` 執行 `delete from auth.users`
-  cascade 到 `family_members` 時不會再撞見 `private.enforce_family_has_owner()`
-  的 `LS001`（LS-143 merge-review R1 i1 指出的風險，取捨見
-  `20260903115014_delete_account_edge_support.sql` 檔頭）。
+  允許使用者利用的正常狀態。**這個窗口內「又成為某個家庭的唯一 owner」的風險由
+  LS-151 R2 用兩道防線處理**（merge-review R1 B1／M1，`20260903115014_delete_account_edge_support.sql`
+  檔頭「R2」段落有完整訂正紀錄）——**R1 版本曾經在這裡宣稱「擋住 `family_members`
+  的 INSERT，呼叫者在這個窗口內不可能再取得任何一列 `family_members`」，這句話
+  被 reviewer 實測推翻**：`family_members` 的 UPDATE 路徑（既有的 owner 交接路徑）
+  完全沒擋，且擋寫本身是快照讀、不取鎖，存在 READ COMMITTED 競態窗口。R2 訂正為：
+  1. **第一道、真正的防線**：Edge Function 在呼叫 `service_role` 執行
+     `delete from auth.users` 之前，先呼叫 `public.finalize_account_deletion(uid)`
+     （同樣只授權 `service_role`）重跑一次資料面清理——不論下面第 2 點的擋寫有沒有
+     漏洞，這一步都保證呼叫者在被真正刪除之前一定沒有任何一列 `family_members`
+     （見下方「`finalize_account_deletion`」段落）。
+  2. **第二道、縱深防禦**：`deletion_requested_at` 非 `NULL` 時，`family_members`
+     的 `INSERT` 與 `UPDATE OF role, user_id` 一律拒絕（`LS051`，guard 查的是
+     **被寫入的人**而不是操作者），`join_requests` 的 `INSERT` 也一併擋
+     （`request_join`）——讓大多數情況下過渡期使用者連 UI 上的「建立新家庭」
+     「等待審核」畫面都進不去，但**不是**「刪除一定成功」唯一依靠的機制。
+  這兩道防線合起來讓 Edge Function 呼叫 `service_role` 執行
+  `delete from auth.users` cascade 到 `family_members` 時不會撞見
+  `private.enforce_family_has_owner()` 的 `LS001`（LS-143 merge-review R1 i1
+  指出的原始風險）。
 - **錯誤碼**：未登入 `42501`；唯一 owner 且家庭還有其他成員 `LS050`（見上方
   `DETAIL` 契約）。
 - **併發**：情況 3（離開家庭）零新鎖——`DELETE family_members` 觸發的是既有的
@@ -1645,6 +1664,7 @@ create_comment(uuid, text, uuid, text)
 create_diary_entry(uuid, uuid[], text, date)
 create_invite(uuid, text, timestamptz, integer)
 delete_my_account()
+finalize_account_deletion(uuid)
 get_family_quota(uuid)
 get_family_timeline(uuid, uuid, timestamptz, uuid, integer)
 get_my_join_request()
@@ -1705,7 +1725,9 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
 
 ### `delete-account`（LS-151）
 
-- **路徑**：`POST {SUPABASE_URL}/functions/v1/delete-account`。
+- **路徑**：`POST {SUPABASE_URL}/functions/v1/delete-account`。其他 HTTP method
+  一律 `405`（R2 minor-1；GET 具破壞性，且與這裡寫的「路徑」不符，不該一視同仁地
+  執行刪除）。
 - **鑑權**：Supabase 平台層 `verify_jwt`（`supabase/config.toml` 沒有針對本函式覆寫，
   預設開啟）先擋掉沒有合法簽章 JWT 的請求；函式內部再用該 JWT（`Authorization: Bearer
   <使用者的 access token>`——**不是** anon key、**不是** service_role key）呼叫
@@ -1718,18 +1740,49 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   30 天後的 `private.purge_expired()`，LS-153，是資料面 30 天沒清乾淨時的最後防線，
   不是這支 Edge Function 的替代品，見該 migration §「自動清除」）。
 - **處理流程**：
-  1. 驗證 `Authorization` header 存在且 `auth.getUser()` 能換回合法使用者，否則
+  1. 非 `POST` → `405`。
+  2. 驗證 `Authorization` header 存在且 `auth.getUser()` 能換回合法使用者，否則
      `401`。
-  2. 以 `service_role` 讀 `public.profiles.deletion_requested_at`（見 §3
+  3. 以 `service_role` 讀 `public.profiles.deletion_requested_at`（見 §3
      `profiles`）：`NULL` 或找不到這個 `profiles` 列一律 `400`——**這是刻意的守門，
      不是遺漏**：沒有走過 `delete_my_account()` RPC 的人不能直接打這支端點刪掉
      自己的帳號（繞過 RPC 的唯一 owner 守門、`LS050` 轉移檢查等資料面安全檢查）。
-  3. 撤銷步驟（見下方「Apple／Google token 撤銷」）：best-effort，任何失敗或
-     env／token 缺失都只記錄，**不會**讓整個請求失敗——帳號刪除是強制性的產品／
-     法遵要求，第三方撤銷是盡力而為的附加動作，優先序不對等。
-  4. 呼叫 GoTrue admin API `deleteUser(uid)`。成功 → `200`（`profiles` 隨
-     `on delete cascade` 一併消失，見 §3 `profiles`）。GoTrue 回報「使用者不存在」
-     → 視為已達成目的，`200`（見下方「冪等語意」）。其他失敗 → `500`。
+  4. 撤銷步驟（見下方「Apple／Google token 撤銷」）：best-effort、平行送出
+     （`Promise.all`，R2 minor-2），任何失敗或 env／token 缺失都只記錄，**不會**
+     讓整個請求失敗——帳號刪除是強制性的產品／法遵要求，第三方撤銷是盡力而為的
+     附加動作，優先序不對等。每次呼叫記一行 `console.log`（user id ＋結果碼，
+     不含 token／key／email，R2 minor-4——LS-132 隱私政策 §8 的撤銷承諾要能舉證）。
+  5.（**R2 新增，第一道防線**，merge-review R1 B1／M1）以 `service_role` 呼叫
+     `public.finalize_account_deletion(p_user)`（只授權 `service_role` 執行的
+     SECURITY DEFINER RPC，見下方「`finalize_account_deletion`」段落）——刪除
+     `auth.users` 前重跑一次資料面清理。失敗 → `500`（fail loud，**不**繼續往下
+     刪 `auth.users`；正常情況下這一步近乎是 no-op，會失敗代表資料面本身有問題，
+     樂觀地繼續刪除只會讓問題更難排查）。
+  6. 呼叫 GoTrue admin API `deleteUser(uid)`（同樣記一行 `console.log`，R2
+     minor-4）。成功 → `200`（`profiles` 隨 `on delete cascade` 一併消失，見 §3
+     `profiles`）。GoTrue 回報「使用者不存在」→ 視為已達成目的，`200`（見下方
+     「冪等語意」）。其他失敗 → `500`。
+- **`finalize_account_deletion(p_user uuid)`**（R2，`20260903115014_delete_account_edge_support.sql`）：
+  只授權 `service_role` 執行的 SECURITY DEFINER RPC（`authenticated`／`anon`／
+  `PUBLIC` 皆無 `EXECUTE`，見 `supabase/tests/60_default_privileges.sql` 白名單）。
+  只在 `p_user` 的 `deletion_requested_at` 非 `NULL` 時才會執行，否則 `raise`
+  （防誤呼叫刪除健康帳號的家庭關係）。語意：刪除 `p_user` 尚未處理的 pending
+  `join_requests`；逐一處理 `p_user` 所屬的每個家庭——非唯一 owner 直接刪其
+  `family_members` 列；唯一 owner 且家庭還有其他成員，把最早加入（`created_at`
+  升冪）的其他成員升為 owner 後再刪自己那一列；唯一 owner 且沒有其他成員，整個
+  家庭連同底下資料一併刪除（cascade）。全程對相關 `families`／`family_members`
+  列 `FOR UPDATE` 鎖住（刻意不是 `FOR NO KEY UPDATE`——要與子表 INSERT 的 FK 檢查
+  取的 `FOR KEY SHARE` 互斥，關閉 M1 指出的「標記與並行 INSERT」競態窗口）。這是
+  「刪除一定成功」唯一不依賴「過渡期擋寫沒有漏洞」的防線——見下方「過渡期擋寫」
+  與 migration 檔頭「R2」段落的完整訂正紀錄。
+- **過渡期擋寫（第二道防線，縱深防禦）**：`deletion_requested_at` 非 `NULL` 時，
+  `families`／`media`／`diaries`／`albums`／`children`／`comments`／
+  `join_requests` 的 `INSERT` 與 `family_members` 的 `INSERT`／
+  `UPDATE OF role, user_id` 一律拒絕（`LS051`）。`family_members`／
+  `join_requests` 的 guard 查的是**被寫入的人**（`NEW.user_id`／
+  `NEW.applicant_id`），不是操作者的 `auth.uid()`——這是 R2 對 merge-review R1
+  B1 的訂正：R1 版本查 `auth.uid()`，擋不住「健康的 owner 核准一個過渡期申請人」
+  或「健康的 owner 把過渡期成員升成 owner」這兩條路（見 migration 檔頭）。
 - **冪等語意**：正常情況下呼叫端只會呼叫一次；若因網路重試等原因重複呼叫：
   - 第一次呼叫已成功刪除 `auth.users` 之後的重複呼叫，帶的是同一把 JWT——這把 JWT
     在簽章／效期上可能仍然合法，但第 1 步的 `auth.getUser()` 會因為對應的使用者
@@ -1745,29 +1798,43 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   回傳的 HTTP 錯誤——呼叫端依 HTTP 狀態碼分流即可：`400`＝前置條件不滿足、`401`＝
   JWT 無效或使用者已不存在、`500`＝伺服器端失敗）。
 - **Apple／Google token 撤銷**（LS-132 隱私政策 §8 承諾；LS-151 範圍）：
-  - Apple：`POST https://appleid.apple.com/auth/revoke`，需要 env
-    `APPLE_CLIENT_ID`／`APPLE_CLIENT_SECRET`（兩者皆缺其一即跳過，只記錄一行
-    log，**不會**因此擋下帳號刪除）與該使用者 Apple identity 已存的 provider
-    token（`auth.getUser`／`admin.getUserById` 回傳的 `identities` 陣列裡找
-    `provider === 'apple'`）——**已知限制（如實揭露）**：本專案目前沒有在登入時
-    保存 Apple 的 provider refresh token（Supabase 預設不落地存這個值，需要
-    另外設計登入流程才能取得可撤銷的 token），因此這個分支在**目前**的資料下
-    幾乎必定落在「找不到 token，跳過並記錄」——程式碼路徑與 env 判斷都已到位、
-    可單元測試（見 `supabase/functions/delete-account/index.test.ts`），但要讓
-    這支撤銷真正發生效果，需要另開票在登入流程保存 Apple provider token，且
-    真正打這支端點需要 LS-8（Apple Developer Program 付費帳號）到位後才能在
-    真機驗證——本票未做真機驗證，見 handoff。
-  - Google：`POST https://oauth2.googleapis.com/revoke`，不需要 client
-    secret（Google 的 token revoke 端點只吃 `token` 參數），一樣要求該使用者
+  - Apple：`POST https://appleid.apple.com/auth/revoke`，帶 `signal:
+    AbortSignal.timeout(5000)`（R2 M2——Deno 的 `fetch` 預設沒有逾時上限，黑洞
+    連線會讓 `deleteAuthUser()` 永遠不被呼叫，違反下面「不會因此擋下帳號刪除」
+    的承諾；逾時後落進既有的 catch，跟其他 fetch 失敗一視同仁地當成
+    best-effort 失敗）。需要 env `APPLE_CLIENT_ID`／`APPLE_CLIENT_SECRET`
+    （兩者皆缺其一即跳過，**不會**因此擋下帳號刪除）與該使用者 Apple identity
+    已存的 provider token（`auth.getUser`／`admin.getUserById` 回傳的
+    `identities` 陣列裡找 `provider === 'apple'`）——**已知限制（如實揭露）**：
+    本專案目前沒有在登入時保存 Apple 的 provider refresh token（Supabase 預設
+    不落地存這個值，需要另外設計登入流程才能取得可撤銷的 token），因此這個
+    分支在**目前**的資料下幾乎必定落在「找不到 token，跳過」——程式碼路徑與
+    env 判斷都已到位、可單元測試（見
+    `supabase/functions/delete-account/handler.test.ts`），但要讓這支撤銷真正
+    發生效果，需要另開票在登入流程保存 Apple provider token，且真正打這支端點
+    需要 LS-8（Apple Developer Program 付費帳號）到位後才能在真機驗證——本票
+    未做真機驗證，見 handoff。撤銷結果（成功／失敗／略過）記一行
+    `console.log`（R2 minor-4，user id ＋結果碼，不含 token／key／email）。
+  - Google：`POST https://oauth2.googleapis.com/revoke`，同樣帶
+    `signal: AbortSignal.timeout(5000)`（R2 M2），不需要 client secret
+    （Google 的 token revoke 端點只吃 `token` 參數），一樣要求該使用者
     `auth.identities` 有 `provider === 'google'` 且找得到 provider token 才會
     真的呼叫；同樣**已知限制**：目前沒有保存 Google provider token，多半落在
-    「找不到 token，跳過並記錄」，程式碼路徑可單元測試但未經真實 Google 帳號驗證。
-- **本機測試**：`supabase/functions/delete-account/index.test.ts`（Deno 內建
+    「找不到 token，跳過」，程式碼路徑可單元測試但未經真實 Google 帳號驗證。
+  - Apple／Google 兩支撤銷平行送出（`Promise.all`，R2 minor-2），不互相等待。
+- **本機測試**：`supabase/functions/delete-account/handler.test.ts`（Deno 內建
   `Deno.test`，注入 fake `fetch`／fake deps，不需要跑 `supabase functions serve`）
   ——`deno test`。若要跑完整整合測試（真的打本機 Supabase Auth／Storage），需要
   `bash scripts/ops/supabase-lock.sh -- supabase functions serve`（經 lock，容器
   共用），本票未建置這套治具（同 LS-153 `purge-storage` 的既有先例：本機開發環境
   沒有 Deno Edge Runtime 的整合測試環境），只有 Deno 單元測試＋人工 code review。
+- **已知限制**：`index.ts` 的 `buildProdDeps()`——`auth.getUser()`／
+  `admin.getUserById()`／`admin.deleteUser()`／`rpc("finalize_account_deletion")`
+  的實際接線，以及 `deleteAuthUser` 冪等判斷式（`error.status === 404 ||
+  /not.?found/i.test(...)`）——沒有單元測試覆蓋（R2 minor-9）。`handler.test.ts`
+  的測試測的是「收到已算好的 `notFound`／`ok` 之後 `handleRequest` 怎麼做」，
+  不是「怎麼算出這些值」；這段接線只能靠人工 code review 與（將來若建置）
+  `supabase functions serve` 整合測試補上。
 - **部署**（正式站，orchestrator 依 LS-78 授權狀態執行，不在本票落地範圍）：
   ```
   supabase functions deploy delete-account --project-ref mzkkkzbiejgvhwjyiokf

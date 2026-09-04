@@ -441,7 +441,11 @@ jobs:
         if: steps.detect-functions.outputs.skip == 'false'
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.x
+          # minor-8（LS-151 R2，merge-review R1）：鎖到明確版本，不是 v2.x 浮動
+          # major——與同一個 job 下面「安裝 supabase CLI（鎖版本）」的既有慣例一致，
+          # CI 不會因為上游 deno 改版而在與本 PR 無關的時間點變紅／變綠。與
+          # LS-153 reviewer 用的容器版本一致。
+          deno-version: v2.1.4
 
       - name: Edge Functions 靜態檢查（deno check／lint／fmt --check，LS-151）
         if: steps.detect-functions.outputs.skip == 'false'
