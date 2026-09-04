@@ -71,7 +71,10 @@
 #     `--status`／巡檢列出殘留 tomb（R2 F2），被搬走的持有者接著 holder 寫入失敗、走 m1 的 exit 2；目標是第三者剛
 #     mkdir、holder 尚未落地的**空**目錄→POSIX 允許 rename 取代空目錄，第三者的 holder 會寫進搬回的目錄——需要三個
 #     程序在同一毫秒內交錯，機率極低；屆時後 mv 的 holder 生效、另一個 release 時 pid 不符不會誤刪，但兩者可能同時執行。
-# exit：命令的 exit code；124＝等待逾時；2＝參數／環境／holder 寫入錯誤／--release 非持有者；--release 時 1＝沒有 hold 可釋放（可能已到期）。
+# exit：命令的 exit code；124＝等待逾時；2＝參數／環境／holder 寫入錯誤／--release 非持有者；--release 時 1＝沒有 hold 可釋放（可能已到期）；
+#   --hold 時 3＝已持有（本程序已在 lock 內、或自己 worktree 的 hold 仍活著）——呼叫端（qa-e2e.sh，LS-158 R1 N2）判這個碼沿用、
+#   收工不代釋放，不比對人類訊息。
+
 set -uo pipefail
 
 usage() {
@@ -334,9 +337,9 @@ if [ "$mode" = run ]; then
       exec "$@"
     fi
   fi
-elif read_holder; then   # hold：已在 lock／活著的 hold 內就不再 hold（守門死了就往下走既有回收路徑重新取得）
-  if is_ancestor "$h_pid"; then echo "✗ supabase-lock：已在 lock 內（持有者 pid ${h_pid} 是本程序祖先），不需 --hold" >&2; exit 2; fi
-  if hold_owner_ok && alive "$h_pid"; then echo "✗ supabase-lock：已持有 hold「${h_cmd#hold:}」（剩餘 $(mins_left "$h_expires") 分，守門 pid ${h_pid}）——先 --release 再 --hold" >&2; exit 2; fi
+elif read_holder; then   # hold：已在 lock／活著的 hold 內就不再 hold（守門死了就往下走既有回收路徑重新取得）——專屬 exit 3（LS-158 R1 N2）
+  if is_ancestor "$h_pid"; then echo "✗ supabase-lock：已在 lock 內（持有者 pid ${h_pid} 是本程序祖先），不需 --hold" >&2; exit 3; fi
+  if hold_owner_ok && alive "$h_pid"; then echo "✗ supabase-lock：已持有 hold「${h_cmd#hold:}」（剩餘 $(mins_left "$h_expires") 分，守門 pid ${h_pid}）——先 --release 再 --hold" >&2; exit 3; fi
 fi
 
 cmd_str=$(printf '%s' "$*" | tr '\n' ' ')   # host／wt／br 已在上面算好（M1：不能落在 mkdir 之後）；is_stale／restore／reclaim 也在上面

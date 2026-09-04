@@ -94,6 +94,11 @@ targets:
       # Symbol 字串，跟 `AppSection.systemImage` 各自維護會漂移（LS-150 review R1 I1）。
       # `AppSection.swift` 只 `import Foundation`、無 app 內部相依，同樣掛進兩個 target。
       - path: LittleSprout/Navigation/AppSection.swift
+      # LS-158：QA e2e 情境測試（LittleSproutUITests/QA/）與 app 共用的 accessibility identifier
+      # 常數，同一招掛進兩個 target；QA/Fixtures/ 的 jpg／mp4（jpg 不用 png：pre-commit 的
+      # evidence-path-check 擋白名單外的 *.png）由 XcodeGen 當 resource 收進
+      # .xctest（qa-e2e.sh 用的是 repo 內的原檔路徑 simctl addmedia，bundle 內那份只是隨測試同行）。
+      - path: LittleSprout/QAAccessibilityID.swift
     dependencies:
       - target: LittleSprout
     settings:

@@ -54,11 +54,13 @@ ios-dev|"
 # 拿掉標記區塊（留下空表）驗「拿掉規則後負樣本變綠」，證明紅是這條規則造成的（同 linear-issue-check.test.sh 慣例）。
 # ios-dev／merge-reviewer／qa：互動式本機驗證（模擬器對本機 Supabase 容器的多步驟操作）前必 `supabase-lock.sh --hold`——qa 的同段
 # 自 LS-159 起就在但當時沒有 gate，R2 (a) 一併釘住（三份同一條規則）。
+# LS-158：qa 多步驟驗收優先 `scripts/ops/qa-e2e.sh`（mobile-mcp 降為截圖／單步輔助）——qa.md 那段被刪即紅。
 BODY_RULES=
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold
 merge-reviewer|supabase-lock.sh --hold
-qa|supabase-lock.sh --hold"
+qa|supabase-lock.sh --hold
+qa|qa-e2e.sh"
 # LS170-BODY-RULES-END
 
 hits=""; n=0

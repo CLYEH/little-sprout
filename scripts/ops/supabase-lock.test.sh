@@ -354,8 +354,10 @@ has   '㉑ 重入命令執行' "$out" 'owner-ran'
 hasnt '㉑ 重入沒有等待' "$out" '等待中'
 (cd "$wtA" && bash "$lock_sh" --held 2>/dev/null); rc_is '㉑ 同 worktree --held → 0' 0 "$?" ''
 if [ "$(hpid)" = "$gpid" ]; then echo "✓ ㉑ 重入命令結束後 hold 仍在（沒被誤釋放）"; else echo "✗ ㉑ 重入命令結束後 hold 不見或換人" >&2; fail=1; fi
-out="$(cd "$wtA" && bash "$lock_sh" --hold again 2>&1)"; rc_is '㉑ 已持有再 --hold → exit 2' 2 "$?" "$out"
+out="$(cd "$wtA" && bash "$lock_sh" --hold again 2>&1)"; rc_is '㉑ 已持有再 --hold → 專屬 exit 3（LS-158 R1 N2：呼叫端判碼沿用，不比對訊息）' 3 "$?" "$out"
 has   '㉑ 再 --hold 的訊息提示先 --release' "$out" '先 --release'
+# 經 wrapper 重入後再 --hold 也回 3（這裡 holder 是守門、非祖先，落在「已持有 hold」分支；「已在 lock 內」分支同碼）
+out="$(cd "$wtA" && bash "$lock_sh" -- bash "$lock_sh" --hold nested 2>&1)"; rc_is '㉑ hold 內經 wrapper 重入再 --hold → 也是 exit 3' 3 "$?" "$out"
 
 # ---- ㉔ 非持有者 --release 被拒：exit 2、印持有者資訊、守門仍活、lock 仍在；命令型持有 --release 也拒；free 時 exit 1 ----
 out="$(cd "$wtB" && bash "$lock_sh" --release 2>&1)"; rc=$?
