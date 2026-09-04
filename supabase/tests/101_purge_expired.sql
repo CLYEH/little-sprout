@@ -211,13 +211,16 @@ $$;
 rollback;
 
 -- ===========================================================================
--- 1c（R3，merge-review R2 F2／F3）：
+-- 1c（R3，merge-review R2 F2／F3；R4，merge-review R3 minor 1）：
 --   F2：孤兒留言被清掉之後，指向「那則留言」的按讚（第二層孤兒）也要一併清——
 --   1b 只驗了「父列消失→孤兒留言消失」，沒有驗「孤兒留言消失→它自己的按讚也消失」。
 --   F3：content_reports 指向已永久清除的目標（orchestrator 裁定：diary／album／
 --   media／comment 四種 target_type，含直接過期與孤兒清除兩種消失方式）一併清除
---   ——票的承諾是「永久清除」，檢舉紀錄不該是唯一留下的例外，見
---   docs/API.md §6「孤兒 comments／reactions／content_reports」。
+--   ——票的承諾是「永久清除」，見 docs/API.md §6「孤兒 comments／reactions／
+--   content_reports／notification_events」。
+--   R4 minor 1：notification_events 是第五張同形狀的多型孤兒表（reviewer 實測
+--   自然殘留，comment 04987043）——比照 content_reports 一併清除，同一支
+--   fixture 內加測，不重複整段結構。
 -- ===========================================================================
 begin;
 
@@ -237,6 +240,11 @@ declare
   v_report_self_comment uuid := 'fa500000-0000-4000-8000-000000000004';
   v_report_orphan_comment uuid := 'fa500000-0000-4000-8000-000000000005';  -- 指向孤兒留言（第二層）
   v_reaction_orphan_comment uuid := 'fa600000-0000-4000-8000-000000000001';  -- 指向孤兒留言的按讚（第二層，F2）
+  v_notif_diary uuid := 'fa700000-0000-4000-8000-000000000001';
+  v_notif_album uuid := 'fa700000-0000-4000-8000-000000000002';
+  v_notif_media uuid := 'fa700000-0000-4000-8000-000000000003';
+  v_notif_self_comment uuid := 'fa700000-0000-4000-8000-000000000004';
+  v_notif_orphan_comment uuid := 'fa700000-0000-4000-8000-000000000005';  -- 指向孤兒留言（第二層，R4 minor 1）
   v_n int;
 begin
   set local role postgres;
@@ -256,7 +264,7 @@ begin
   insert into public.comments (id, family_id, target_type, target_id, author_id, body, deleted_at)
   values (v_self_comment, v_family, 'media', gen_random_uuid(), v_owner, '自己也會過期的留言', v_now - interval '31 days');
   -- 掛在 v_diary 下的留言，本身沒有過期（deleted_at NULL）——純粹因為 v_diary
-  -- 消失而被孤兒清除（第一層），這是 F2／F3 要驗的「第二層」的前提。
+  -- 消失而被孤兒清除（第一層），這是 F2／F3／R4 minor 1 要驗的「第二層」的前提。
   insert into public.comments (id, family_id, target_type, target_id, author_id, body)
   values (v_orphan_comment, v_family, 'diary', v_diary, v_owner, '掛在即將消失的日記下');
 
@@ -268,6 +276,16 @@ begin
     (v_report_orphan_comment, v_family, 'comment', v_orphan_comment, v_owner, '檢舉掛在日記下、將被孤兒清除的留言');
   insert into public.reactions (id, family_id, target_type, target_id, user_id) values
     (v_reaction_orphan_comment, v_family, 'comment', v_orphan_comment, v_owner);
+  -- R4 minor 1：notification_events 同樣的孤兒 fixture——kind 值本身不影響
+  -- purge_expired() 的清除判準（只看 target_type／target_id），這裡各取一個
+  -- 合法值即可（diary/album 用建立通知，media/comment 用互動通知，貼近既有
+  -- trigger 實際會寫出的形狀，見 20260825020000_comments_reactions_notifications.sql）。
+  insert into public.notification_events (id, family_id, kind, target_type, target_id, actor_id) values
+    (v_notif_diary, v_family, 'diary', 'diary', v_diary, v_owner),
+    (v_notif_album, v_family, 'album', 'album', v_album, v_owner),
+    (v_notif_media, v_family, 'reaction', 'media', v_media, v_owner),
+    (v_notif_self_comment, v_family, 'comment', 'comment', v_self_comment, v_owner),
+    (v_notif_orphan_comment, v_family, 'reaction', 'comment', v_orphan_comment, v_owner);
 
   perform private.purge_expired(v_now);
 
@@ -284,12 +302,29 @@ begin
     raise exception 'FAIL F2：指向孤兒留言的按讚（第二層孤兒）沒有被清除';
   end if;
 
+  -- R4 minor 1：五筆手動插入的 notification_events（同 content_reports 的形狀，
+  -- 含指向孤兒留言的第二層）全部清除，一筆不留（reviewer 的殘留案）。**逐 id
+  -- 檢查、不用 `where family_id = v_family` 的全家庭 count**：diaries／
+  -- albums／comments 各自掛了既有的 notify_*_created AFTER INSERT trigger
+  -- （20260825020000_comments_reactions_notifications.sql），插入這個 fixture
+  -- 本身就會自動多產生幾筆 notification_events（例如 v_self_comment 的
+  -- target_type/target_id 刻意指向一個不存在的隨機 uuid，觸發的自動通知因此
+  -- 永遠不會有真正的目標可以被任何清除邏輯認領到）——這些是 trigger 的正常
+  -- 副作用，不是本票清除邏輯要處理的孤兒，混進全家庭 count 會讓斷言誤判成失敗
+  -- （已本機實測撞到過：9 筆插入含 4 筆 trigger 自動產生，purge 後正確剩 1 筆
+  -- 一定殘留的 trigger 副作用，其餘 8 筆——含全部 5 筆手動插入——皆被清除）。
+  select count(*) into v_n from public.notification_events
+   where id in (v_notif_diary, v_notif_album, v_notif_media, v_notif_self_comment, v_notif_orphan_comment);
+  if v_n <> 0 then
+    raise exception 'FAIL R4 minor 1：手動插入的 notification_events（含指向孤兒留言的第二層）應該一筆都不剩，實際還有 % 筆', v_n;
+  end if;
+
   -- 前提對帳：孤兒留言本身確實被清了（第一層，1b 已經驗過機制，這裡只是確認
   -- 這個 fixture 的前提成立，不是重複驗證同一件事）。
   select count(*) into v_n from public.comments where id = v_orphan_comment;
   if v_n <> 0 then raise exception 'FAIL：前提不對，v_orphan_comment 應該已被孤兒清除'; end if;
 
-  raise notice 'ok F2／F3：第二層孤兒（指向已被孤兒清除的留言的按讚／檢舉）與四種 target_type 的 content_reports（含直接過期與孤兒清除兩種消失方式）皆正確清除';
+  raise notice 'ok F2／F3／R4 minor 1：第二層孤兒（指向已被孤兒清除的留言的按讚／檢舉／通知事件）與四種 target_type 的 content_reports／notification_events（含直接過期與孤兒清除兩種消失方式）皆正確清除';
 end;
 $$;
 

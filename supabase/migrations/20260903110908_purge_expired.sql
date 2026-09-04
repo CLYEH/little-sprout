@@ -437,13 +437,19 @@ declare
   v_n2 integer;
 begin
   -- diaries：硬刪之後順帶清掉指向這篇日記的孤兒 comments／reactions／
-  -- content_reports（多型關聯，沒有 FK，父列消失不會自動帶走它們，見 PLAN §5
-  -- 「無法下外鍵」的既有代價）。R3（merge-review R2 F2／F3）：孤兒留言被清掉之後，
-  -- 指向「那則留言」的按讚會變成第二層孤兒（留言消失了，但誰對它按過讚的紀錄還
-  -- 在）——用 `delete … returning id` 把孤兒留言自己的 id 收出來，再多清一次
-  -- target_type='comment' 的 reactions；檢舉（content_reports）指向已永久清除的
-  -- 日記本身、或指向已被連坐清除的孤兒留言，orchestrator 裁定一併清除——票的
-  -- 承諾是「永久清除」，檢舉紀錄不該是唯一例外（見 docs/API.md §6）。
+  -- content_reports／notification_events（多型關聯，沒有 FK，父列消失不會自動
+  -- 帶走它們，見 PLAN §5「無法下外鍵」的既有代價）。R3（merge-review R2
+  -- F2／F3）：孤兒留言被清掉之後，指向「那則留言」的按讚會變成第二層孤兒（留言
+  -- 消失了，但誰對它按過讚的紀錄還在）——用 `delete … returning id` 把孤兒留言
+  -- 自己的 id 收出來，再多清一次 target_type='comment' 的 reactions；檢舉
+  -- （content_reports）指向已永久清除的日記本身、或指向已被連坐清除的孤兒留言，
+  -- orchestrator 裁定一併清除——票的承諾是「永久清除」，檢舉紀錄不該是唯一
+  -- 例外（見 docs/API.md §6）。**R4（merge-review R3 minor 1，comment
+  -- `04987043`）**：`notification_events` 是第五張同樣的多型孤兒表
+  -- （`target_type`／`target_id` 欄位形狀與 `content_reports` 完全相同，見
+  -- `20260825020000_comments_reactions_notifications.sql`），R3 只處理了
+  -- `content_reports`——reviewer 實測指出這句「不該是唯一例外」的話對
+  -- `notification_events` 同樣不成立，一併清除，與 `content_reports` 同形。
   begin
     with deleted as (
       delete from public.diaries where deleted_at < v_cutoff returning id
@@ -464,6 +470,7 @@ begin
       get diagnostics v_local_reactions = row_count;
 
       delete from public.content_reports where target_type = 'diary' and target_id = any(v_ids);
+      delete from public.notification_events where target_type = 'diary' and target_id = any(v_ids);
 
       if v_local_comments > 0 then
         delete from public.reactions where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
@@ -471,6 +478,7 @@ begin
         v_local_reactions := v_local_reactions + v_n2;
 
         delete from public.content_reports where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
+        delete from public.notification_events where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
       end if;
     end if;
 
@@ -504,6 +512,7 @@ begin
       get diagnostics v_local_reactions = row_count;
 
       delete from public.content_reports where target_type = 'album' and target_id = any(v_ids);
+      delete from public.notification_events where target_type = 'album' and target_id = any(v_ids);
 
       if v_local_comments > 0 then
         delete from public.reactions where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
@@ -511,6 +520,7 @@ begin
         v_local_reactions := v_local_reactions + v_n2;
 
         delete from public.content_reports where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
+        delete from public.notification_events where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
       end if;
     end if;
 
@@ -546,8 +556,10 @@ begin
       get diagnostics v_local_reactions = row_count;
 
       -- R3（merge-review R2 F3）：檢舉指向這則已永久清除的留言本身也一併清除，
-      -- 理由同上方 diaries／albums 區塊。
+      -- 理由同上方 diaries／albums 區塊。R4（merge-review R3 minor 1）：
+      -- notification_events 同理。
       delete from public.content_reports where target_type = 'comment' and target_id = any(v_ids);
+      delete from public.notification_events where target_type = 'comment' and target_id = any(v_ids);
 
       declare
         v_nested_comments integer;
@@ -599,7 +611,9 @@ begin
       get diagnostics v_local_reactions = row_count;
 
       -- R3（merge-review R2 F3）：孤兒留言與檢舉，理由同 diaries／albums 區塊。
+      -- R4（merge-review R3 minor 1）：notification_events 同理。
       delete from public.content_reports where target_type = 'media' and target_id = any(v_ids);
+      delete from public.notification_events where target_type = 'media' and target_id = any(v_ids);
 
       if v_local_comments > 0 then
         delete from public.reactions where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
@@ -607,6 +621,7 @@ begin
         v_local_reactions := v_local_reactions + v_n2;
 
         delete from public.content_reports where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
+        delete from public.notification_events where target_type = 'comment' and target_id = any(v_orphan_comment_ids);
       end if;
     end if;
 

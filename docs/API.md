@@ -1508,29 +1508,37 @@ trigger 對「任何硬刪的 `media` 列」都入列，不像 `purge_expired()`
 成員刪帳號時，家庭底下所有照片不論軟刪與否都會被 cascade 掉），兩者判準本來就該
 不同。
 
-**孤兒 comments／reactions／content_reports**（R2 minor finding；R3，merge-review
-R2 F2／F3，comment 7420f7b9）：`comments`／`reactions`／`content_reports` 是多型
-關聯（`target_type`／`target_id`），刻意沒有 FK（PLAN §5 已知代價）——`diaries`／
-`albums`／`media`／`comments` 被硬刪之後，指向它們的留言／按讚／檢舉不會自動消失，
-`purge_expired()` 在硬刪這四張表各自的過期列之後，順帶清掉 `target_type`／
-`target_id` 指向那些剛消失的 id 的 `comments`／`reactions`／`content_reports`
-（含「留言掛在已消失的留言下」這個防禦性分支——今天沒有留言回覆留言的功能，預期
-永遠 0 筆，保留是因為多型 target 沒有 FK，寧可多做一次涵蓋）。`deleted_counts` 裡的
-`comments`／`reactions` 兩個鍵是**累加值**：自己過期的直接刪除數，加上依附在其他
-表清除時一併清掉的孤兒數（`content_reports` 沒有進 `deleted_counts`，純粹清除、
-不觀測筆數，同「不擴大範圍」的既有原則）。
+**孤兒 comments／reactions／content_reports／notification_events**（R2 minor
+finding；R3，merge-review R2 F2／F3，comment 7420f7b9；R4，merge-review R3
+minor 1，comment `04987043`）：`comments`／`reactions`／`content_reports`／
+`notification_events` 四張表都是多型關聯（`target_type`／`target_id`），刻意
+沒有 FK（PLAN §5 已知代價）——`diaries`／`albums`／`media`／`comments` 被硬刪
+之後，指向它們的留言／按讚／檢舉／通知事件不會自動消失，`purge_expired()` 在
+硬刪這四張表各自的過期列之後，順帶清掉 `target_type`／`target_id` 指向那些剛
+消失的 id 的這四張表（含「留言掛在已消失的留言下」這個防禦性分支——今天沒有
+留言回覆留言的功能，預期永遠 0 筆，保留是因為多型 target 沒有 FK，寧可多做
+一次涵蓋）。`deleted_counts` 裡的 `comments`／`reactions` 兩個鍵是**累加值**：
+自己過期的直接刪除數，加上依附在其他表清除時一併清掉的孤兒數（`content_reports`
+與 `notification_events` 都沒有進 `deleted_counts`，純粹清除、不觀測筆數，同
+「不擴大範圍」的既有原則）。
 
-**第二層孤兒（R3，F2）**：`diaries`／`albums`／`media` 的孤兒留言被清掉之後，
-指向「那則留言」本身的按讚與檢舉會變成第二層孤兒（留言消失了，但誰對它按過讚／
-檢舉過的紀錄還在）——`purge_expired()` 用 `delete … returning id` 把孤兒留言自己
-的 id 收出來，再清一次 `target_type='comment'` 的 `reactions`／`content_reports`。
+**第二層孤兒（R3，F2；R4，minor 1）**：`diaries`／`albums`／`media` 的孤兒留言
+被清掉之後，指向「那則留言」本身的按讚／檢舉／通知事件會變成第二層孤兒（留言
+消失了，但誰對它按過讚／檢舉過／收到過通知的紀錄還在）——`purge_expired()` 用
+`delete … returning id` 把孤兒留言自己的 id 收出來，再清一次 `target_type=
+'comment'` 的 `reactions`／`content_reports`／`notification_events`。
 
-**`content_reports` 的處置（R3，F3，orchestrator 裁定）**：R1 review 點名
-`content_reports` 是三張孤兒表之一，R2 只修了 `comments`／`reactions`，`content_reports`
-完全沒被提到。orchestrator 裁定：**指向已永久清除目標的 `content_reports` 一併
-清除**——票的承諾是「永久清除」，檢舉紀錄（`reason` 是使用者輸入的自由文字，屬
-使用者資料）不該是唯一留下的例外。涵蓋四種 `target_type`（`diary`／`album`／
-`media`／`comment`，含直接過期與孤兒清除兩種消失方式）。
+**`content_reports`／`notification_events` 的處置（R3 F3／R4 minor 1，
+orchestrator 裁定）**：R1 review 點名 `content_reports` 是三張孤兒表之一，R2
+只修了 `comments`／`reactions`；R3 補上 `content_reports`（票的承諾是「永久
+清除」，`reason` 是使用者輸入的自由文字，屬使用者資料，不該是留下的例外）之後，
+R3 review 又實測出 `notification_events` 是**第五張**同形狀的多型孤兒表（
+`target_type`／`target_id` 欄位與 `content_reports` 完全一樣），R2／R3 都沒
+處理到——orchestrator 裁定比照 `content_reports` 一併清除，而不是留成例外。
+現況：`comments`／`reactions`／`content_reports`／`notification_events` 四張
+表指向已永久清除目標的列，涵蓋四種 `target_type`（`diary`／`album`／`media`／
+`comment`，含直接過期與孤兒清除兩種消失方式），**都會**被 `purge_expired()`
+一併清除——不再有「唯一例外」這種措辭需要維護，因為現在沒有例外。
 
 **`profiles` tombstone：為什麼不硬刪**（R2，merge-review R1 F2，取代原本「硬刪、
 留孤兒 auth.users」的版本；規格分歧仍是採最保守解，見 migration 檔頭完整說明）：
