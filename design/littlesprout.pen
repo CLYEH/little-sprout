@@ -146900,7 +146900,8 @@
                               "content": "推播通知"
                             },
                             "n1hzsr": {
-                              "enabled": false
+                              "enabled": true,
+                              "content": "開啟"
                             },
                             "qsxOM": {
                               "type": "frame",
@@ -147596,7 +147597,8 @@
                               "content": "推播通知"
                             },
                             "n1hzsr": {
-                              "enabled": false
+                              "enabled": true,
+                              "content": "開啟"
                             },
                             "qsxOM": {
                               "type": "frame",
@@ -148452,7 +148454,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "`FeqWk`（iOS 系統對話框示意）刻意用字面色值 `#F2F2F7`／`#000000`／`#007AFF`／`#C6C6C8`，**不用設計 token**——這是 iOS 系統原生 UI（`UNUserNotificationCenter` 觸發的系統 alert），App 完全無法自訂樣式或顏色，畫出來純粹是示意「使用者會看到什麼」，不是可實作的規格。ios-dev 不需要、也不能還原這個畫面的視覺，只需呼叫 `UNUserNotificationCenter.requestAuthorization`，系統會自動用 iOS 當前版本的原生樣式顯示（可能與此稿的視覺細節不同，屬預期差異）。",
+                  "content": "`FeqWk`（iOS 系統對話框示意）刻意用字面色值 `#F2F2F7`／`#000000`／`#007AFF`／`#C6C6C8`，**不用設計 token**——這是 iOS 系統原生 UI（`UNUserNotificationCenter` 觸發的系統 alert），App 完全無法自訂樣式或顏色，畫出來純粹是示意「使用者會看到什麼」，不是可實作的規格。ios-dev 不需要、也不能還原這個畫面的視覺，只需呼叫 `UNUserNotificationCenter.requestAuthorization`，系統會自動用 iOS 當前版本的原生樣式顯示（可能與此稿的視覺細節不同，屬預期差異）。**此板不實作。**",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -148488,7 +148490,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "設定頁「推播通知」列（`y7KAW`／`y66AzT`）：不修改 LS-152 已核可板 `t5wI4`，Copy 出新板後在「內容與安全」卡片追加一列。Toggle Switch 為新繪元件（51×31 track＋27×27 knob＋2pt inset，對應 iOS 系統 `UISwitch`／SwiftUI `Toggle` 的標準幾何），沿用 `$accent` 當 on 態顏色。關閉時的行為（票文「關閉提示到系統設定」）：iOS 無法讓 App 直接關閉自己的通知權限，切換此列到「關」時應跳出確認對話框「要關閉推播通知嗎？這需要在「設定」App 裡調整」＋「前往設定」／「取消」兩個選項（未另畫板，屬系統層級確認對話框，視覺語彙同 `FeqWk` 的系統對話框樣式，非本稿新增元件）。",
+                  "content": "設定頁「推播通知」列（`y7KAW`／`y66AzT`）：不修改 LS-152 已核可板 `t5wI4`，Copy 出新板後在「內容與安全」卡片追加一列。Toggle Switch 為新繪元件（51×31 track＋27×27 knob＋2pt inset，對應 iOS 系統 `UISwitch`／SwiftUI `Toggle` 的標準幾何），沿用 `$accent` 當 on 態顏色；Value 文字（「開啟」／「關閉」）與 Toggle 視覺狀態同步，兩者一致（MN-1）。**點擊區＝整列 `DVEow`（≥44pt），Toggle 只是視覺**——`cmp/Settings Row` 整列本身即為既有的可點擊行元件（同卡片其他列皆整列可點導覽），Toggle 51×31 不需要、也不會單獨承擔熱區。關閉時的行為（票文「關閉提示到系統設定」）：iOS 無法讓 App 直接關閉自己的通知權限，切換此列到「關」時應跳出確認對話框，定案文案見 `Z7vNe`。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -149068,7 +149070,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "推播設定「關閉」時導向系統設定的確認對話框，本輪只在 Notes 文字描述、未畫成獨立板（視覺語彙與 `FeqWk` 系統對話框相同，屬系統層級 chrome）——若 R2 VR 認為需要畫出可補。",
+                  "content": "推播設定「關閉」時導向系統設定的確認對話框，本輪只在 Notes 文字描述、未畫成獨立板——與 `FeqWk` 同屬系統層級 chrome，App 無法自訂樣式，畫出來不是可實作的規格（見 `j7RFGF` 的宣告）。**定案文案**：標題「要關閉推播通知嗎？」／內文「這需要在「設定」App 裡調整通知權限。」／按鈕「前往設定」（導向系統設定 App 的本 App 通知頁）與「取消」（維持原狀，Toggle 彈回開啟）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
