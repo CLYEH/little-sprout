@@ -138402,7 +138402,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2522,
+      "height": 2800,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -138446,7 +138446,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 2522,
+          "height": 2800,
           "fill": "$paper-shadow"
         },
         {
@@ -138457,7 +138457,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 2522,
+          "height": 2800,
           "layout": "vertical",
           "justifyContent": "end",
           "children": [
@@ -138547,7 +138547,7 @@
                   "name": "Scroll Body",
                   "clip": true,
                   "width": "fill_container",
-                  "height": 2000,
+                  "height": 2278,
                   "layout": "vertical",
                   "gap": "$sp-block",
                   "children": [
@@ -138791,7 +138791,7 @@
               "type": "frame",
               "id": "veB5F",
               "name": "Legal Card",
-              "width": 520,
+              "width": 385,
               "fill": "$surface",
               "cornerRadius": "$radius-lg",
               "stroke": "$border",
@@ -139098,7 +139098,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "4 板：EzJCV（LS legal / 文件檢視 (iPhone)）、O631mm（同板 · 深色，theme mode=dark）、E27nKz（A11y / 文件檢視 · Dynamic Type AX3，theme size=ax3）、uQeV8（LS legal / 文件檢視 (iPad 11\")）。皆為「純閱讀」畫面：無同意／不同意動作，只有一顆「關閉」鈕，不吃 $accent 配額（十條 #1 一畫面一實心主鈕——本畫面連 0 顆都不需要，關閉鈕用 cmp/Button Secondary 中性樣式）。",
+                  "content": "5 板：EzJCV（LS legal / 文件檢視 (iPhone)）、O631mm（同板 · 深色，theme mode=dark）、E27nKz（A11y / 文件檢視 · Dynamic Type AX3，theme size=ax3）、uQeV8（LS legal / 文件檢視 (iPad 11\")）、k6Rlt（A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3，R2 新增，見「R2 修訂重點」節）。皆為「純閱讀」畫面：無同意／不同意動作，只有一顆「關閉」鈕，不吃 $accent 配額（十條 #1 一畫面一實心主鈕——本畫面連 0 顆都不需要，關閉鈕用 cmp/Button Secondary 中性樣式）。**Footer（含關閉鈕）釘底**：實作用 `.safeAreaInset(edge:.bottom)` 把 Footer 放在 sheet 的固定底部安全區，內容區（Scroll Body 對應的 ScrollView）獨立捲動、不帶著 Footer 一起移動——EzJCV／O631mm／E27nKz／uQeV8／k6Rlt 五板皆同一原則，AX3 下使用者捲多深都能立即看到「關閉」，不需捲回頂部或底部才找得到。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -139320,7 +139320,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "本輪畫的是《使用條款》（docs/legal/terms-of-service.md），可捲動區塊內容＝原文引言段＋「1. 條款的接受與適用」1.1–1.3＋「2. 服務內容」2.1–2.2，逐字取自原文，僅將尚未填值的 `[[OPERATOR_NAME]]` placeholder 替換為可讀的「本服務營運者」（原文其餘段落多用「我們」代稱，此為唯一需替換處）。《隱私權政策》未另畫板——結構逐一相同（同一組 Head／Scroll Body／Footer 節點型別），僅標題／版本列／內文替換為 docs/legal/privacy-policy.md 對應內容，ios-dev 實作時兩份文件共用同一個 SwiftUI view，此為 Notes 層級說明，非遺漏。",
+                  "content": "本輪畫的是《使用條款》（docs/legal/terms-of-service.md），可捲動區塊內容＝原文引言段＋「1. 條款的接受與適用」1.1–1.3＋「2. 服務內容」2.1–2.2，逐字取自原文，僅將尚未填值的 `[[OPERATOR_NAME]]` placeholder 替換為可讀的「本服務營運者」（原文其餘段落多用「我們」代稱，此為唯一需替換處）。《隱私權政策》未另畫板——結構逐一相同（同一組 Head／Scroll Body／Footer 節點型別），僅標題／版本列／內文替換，ios-dev 實作時兩份文件共用同一個 SwiftUI view。R2 依 VR MN-2 補兩份文件的字串對照，避免 ios-dev 用猜的：\n\n文件／Doc Title／Doc Meta／來源\n《使用條款》／「使用條款」／「版本 0.1（草稿）· 生效日期：核可後公布」／docs/legal/terms-of-service.md\n《隱私權政策》／「隱私權政策」／「版本 0.1（草稿）· 生效日期：核可後公布」／docs/legal/privacy-policy.md\n\n兩份文件的檔頭表格「版本」「生效日期」欄位值目前逐字相同（v0.1（草稿，尚未生效）／`[[EFFECTIVE_DATE]]`），故 Doc Meta 字串一致；若日後版本號分岔，ios-dev 各自讀對應 markdown 檔頭即可，不需改設計稿。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -139392,7 +139392,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "可捲動長文用 `clip:true` 固定高度容器（Scroll Body）呈現「捲動中，未捲到底」的靜態切片——這是既有慣例（LS-142 `rTEGf` 的 `Rows Scroll Area` `BImYe`，`clip:true` height 252，同一手法）。四板皆刻意讓最後一段文字在容器下緣被切一半（而非切齊在段落邊界），比乾淨切齊更清楚傳達「還有更多，往下滑」。",
+                  "content": "可捲動長文用 `clip:true` 固定高度容器（Scroll Body）呈現「捲動中，未捲到底」的靜態切片——這是既有慣例（LS-142 `rTEGf` 的 `Rows Scroll Area` `BImYe`，`clip:true` height 252，同一手法）。R2 依 VR R1 MJ-1 裁定，四板裁切露出比例統一實測 33%（皆落在 [0.25,0.50] 區間，公式＝(裁切線−被切段落節點上緣)÷該節點高度）：`EzJCV`／`O631mm` 皆切 1.2 段（`O7TuPe`／對應深色節點），58÷174＝**33.3%**；`E27nKz`（AX3）切 1.2 段（`AXKtM`），314÷952＝**33.0%**（`R8deeK` 高度由 R1 的 2000 調整為 2278）；`uQeV8`（iPad）因 MN-1 把內容欄收窄到與 iPhone 同寬 345（見下段），版面與 `EzJCV` 逐位元相同，切 1.2 段（`O7TuPe`），58÷174＝**33.3%**——四板同一比例，同一段落，非各自拍腦袋。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -139454,7 +139454,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Scroll Body 固定高度（規格值族「文件檢視捲動容器」，硬寫字面值，Pencil height 不吃 $variable）：iPhone/深色 `BqbSV`＝480；AX3 `R8deeK`＝2000（顯示到 1.2 段落中段，AX3 全文實測 4366，只取前段避免板高失控）；iPad `UFzlX`＝480（與 iPhone 同值，因卡片寬度較窄使每行字數少、視覺密度接近）。",
+                  "content": "Scroll Body 固定高度（規格值族「文件檢視捲動容器」，硬寫字面值，Pencil height 不吃 $variable）推導式＝「裁切目標段落在 Scroll Body 內的起點 y ＋ 該段落高度 × 33%」（見「內容來源」節上方裁切比例段）：`EzJCV`/`O631mm` 的 `BqbSV`＝422＋174×0.33≈480；`E27nKz`（AX3）的 `R8deeK`＝1964＋952×0.33≈2278（R2 由 R1 的 2000 調整，R1 舊值只露 4% 不合格，見「R2 修訂重點」節）；`uQeV8`（iPad）的 `UFzlX`＝422＋174×0.33≈480，與 iPhone 同值——**訂正 R1 舊理由**：R1 曾寫「iPad 因卡片寬度較窄使每行字數少」，與 R1 實測相反（iPad 當時行寬 480 比 iPhone 345 更寬、字數更多，是錯誤陳述，VR MN-3 已指出）；R2 把 iPad 內容欄本身收窄到 345（見 MN-1／下段），版面與 iPhone 逐位元相同，480 這個值現在才是「因為版面相同」而非「因為較窄」。反向驗證：Legal Sheet／Legal Card 高度＝Scroll Body＋固定 chrome（padding／Grabber／Head／Header Hairline／Footer／間距總和）——iPhone/深色 chrome＝309（`Legal Sheet` 789－480）；AX3 chrome＝522（`Legal Sheet` 2800－2278）；iPad chrome＝274（`Legal Card` 754－480，無 Grabber）。三者皆可用 `Get` 直接複算：chrome＝`Legal Sheet/Card` 高度－`Scroll Body` 高度。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -139490,7 +139490,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "板高（規格值族「單畫面總高」）：`EzJCV`／`O631mm` 皆 852（裝置高度，Legal Sheet 63→852 貼齊板底，maxBottom==852，0 越界，量法：`Get` 走訪 `Legal Sheet` `y+height`）；`E27nKz`（AX3）2469＝內容驅動（`Legal Sheet` 高 2406＋top gap 63，`Scrim`／`Sheet Wrap` 已同步覆寫至 2469 避免只蓋住上半層——這是新踩的坑，見「Pencil 踩雷記錄」節）；`uQeV8`（iPad）1194 不變（Legal Card 754 高，置中後上下各留 220 呼吸帶，遠低於板高，未觸頂）。",
+                  "content": "板高（規格值族「單畫面總高」）：`EzJCV`／`O631mm` 皆 852（裝置高度，Legal Sheet 63→852 貼齊板底，maxBottom==852，0 越界，量法：`Get` 走訪 `Legal Sheet` `y+height`）；`E27nKz`（AX3）**R2 復算為 2800**（R1 舊值 2469，因 Scroll Body 480→2278 增高後 root/`Scrim`(`cgd6P`)/`Sheet Wrap`(`CozLy`) 三節點同步覆寫，Legal Sheet 高 2800＝top gap 0＋2800，貼齊板底）；`uQeV8`（iPad）1194 不變（Legal Card **R2 改寬 385**（原 520，MN-1 見下），置中後上下各留 220 呼吸帶，遠低於板高，未觸頂）；`k6Rlt`（R2 新增「已捲到底」）1948＝內容驅動（Legal Sheet 貼齊板底，只保留原文 1.3–2.2 四段＋Footer，無 Scroll Body clip，展示捲到底時最後一段完整可見、Footer 緊接在後、無裁切殘影）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -139825,6 +139825,607 @@
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
                   "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "wmxKs",
+          "name": "N 越界檢定方法（clip-aware，R2 起沿用）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "lMiqo",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "越界檢定方法（clip-aware，R2 起沿用）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "xkEJF",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "hwMwM",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "P7rKS",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "VR R1 IN-1 指出：天真 maxBottom（只比對節點自身絕對 y+height 與板高）會誤判——本票內容靠 `clip:true` 固定高度容器裁出「還沒捲完」的視覺切片，段落文字節點本身遠比容器高，天真演算法會把這些「設計上就該被裁掉」的延伸算成越界（R1 一度誤報 EzJCV 4／O631mm 4／E27nKz 5 個假越界）。改法：算每個 enabled 節點的「可見矩形」＝自身絕對矩形 ∩ 沿途所有 `clip:true` 祖先的絕對矩形（與 `overflow-scan.js` 第五支 text_occlusion 的 `visibleRect` 同一手法）；被祖先完全裁掉（可見矩形面積 0）的節點直接排除、不計入；再取所有可見矩形下緣的最大值與板高比較。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "jfGXC",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "GtSTh",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "VQhAK",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R2 複驗結果（五板，含新增 `k6Rlt`）：`EzJCV` 852/852、`O631mm` 852/852、`E27nKz` 2800/2800、`uQeV8` 1194/1194、`k6Rlt` 1948/1948（declared/clip-aware maxBottom），**五板越界皆 0**。方法與結果供 R3 visual-reviewer 沿用同一把尺，不需重新發明。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "NUfqx",
+          "name": "N VR 抬標準三問（R2 回答）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "js1jr",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "VR 抬標準三問（R2 回答）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "OSxp3",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "lONDy",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "L3lgwS",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "①「捲到底」AX3 狀態要不要畫：VR 判定「要」。R2 新增 `k6Rlt`（A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3）：Scroll Body 只保留原文尾段（1.3–2. 服務內容標題–2.1–2.2），不設 clip，最後一段（2.2）完整可見、緊接 Footer（gap 仍是同一組 `$sp-block`(24)），沒有任何文字被裁掉——這就是「已經沒有更多了」的表達方式：不是加一句「全文完」之類的自創文案（本票堅持不虛構內容），而是用「文字自然結束、沒有殘缺切邊」本身當作訊號，與捲動中狀態（有裁切殘影）形成對比。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "y9H2S7",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "s7vXY",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "H8h08",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "②sheet 能不能下滑關閉：能。四張 sheet 板（`EzJCV`／`O631mm`／`E27nKz`／`k6Rlt`）皆有 Grabber，實作對應 `.presentationDragIndicator(.visible)`＋系統原生下滑關閉手勢；`uQeV8`（iPad form sheet）系統不提供下滑關閉，只有關閉鈕一條路徑（iPadOS 原生行為，非設計疏漏）。iPhone／深色／AX3 三板刻意保留「關閉」鈕與下滑手勢**兩條並存路徑**——長輩不一定會用手勢，鈕永遠在、永遠可見（Footer 釘底，見「畫面級屬性清單」節）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "dzJMd",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "flPPs",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "FlJCe",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "③關閉後回到哪裡：回到歡迎頁**原本的捲動位置**（sheet 是疊加在歡迎頁上方的模態層，關閉只是移除疊加層，底下的歡迎頁本身沒有被導覽掉，`NavigationStack` 深度不變，捲動位置天然保留，不需要額外程式碼記錄／還原捲動 offset）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "WSBz1",
+          "name": "N R2 修訂重點（依 VR R1 comment 6cb82bc8 逐項落地）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "u0za7",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R2 修訂重點（依 VR R1 comment 6cb82bc8 逐項落地）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "eQLOH",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "V9uXL",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "YXHni",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MJ-1：四板裁切露出比例統一到 33%（見「內容來源與長輩可讀性」節），取代 R1「四板皆切一半」的不成立斷言。MJ-2：Notes 明寫 Footer 釘底＋ `safeAreaInset` 實作建議（見「畫面級屬性清單」節 `w7eBc`）。MN-1：`uQeV8` 內容欄由 480 收窄到 345，與全稿既有長文板（`z042Yg`／`VqMl0`）行寬一致。MN-2：補《隱私權政策》Doc Title／Doc Meta 字串對照（見「內容來源與長輩可讀性」節）。MN-3：`Scroll Body` 三個高度補推導式，訂正與實測相反的舊理由（見「尺寸規格值與量法」節）。IN-1：越界檢定改用 clip-aware，方法與五板結果見「越界檢定方法」節。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ESH34",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "wa266",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-133 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "bCQZb",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "本輪新增 `k6Rlt`（R3-1 抬標準①），iPad 因 MN-1 內容欄收窄，`Legal Card` 寬度由 520→385（內容欄 385－2×20 padding＝345）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "k6Rlt",
+      "x": -3367,
+      "y": 62734,
+      "name": "A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1948,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "kJyvC",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "QnW6V",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 1948,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "CP5Zi",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 1948,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "ad4NN",
+              "name": "Legal Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                0,
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "Wf3sr",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "e9U1w",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "r5aOK",
+                      "name": "Doc Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "使用條款",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "J4tiu7",
+                      "name": "Doc Meta",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "版本 0.1（草稿）· 生效日期：核可後公布",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "ukPH7",
+                  "name": "Header Hairline",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "KIhSi",
+                  "name": "Scroll Body",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Dn0AQ",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.3　若您不同意本條款的任何部分，請勿使用本服務，並可依相關條款刪除帳號。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fFAMM",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2. 服務內容",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "D5mnOy",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.1　本服務提供一個以「家庭」為單位的私密空間，讓家庭成員上傳與瀏覽孩子的照片、影片，撰寫日記，並以留言與愛心互動。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "AalR4",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.2　本服務不是備份服務。請務必自行保留照片與影片的原始檔案；我們不保證資料永久可用。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "u6XE1",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "BuN7l",
+                      "name": "Footer Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "k8PgXv",
+                      "name": "Footer Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-item",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "bqdJj",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Close Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "x"
+                            },
+                            "yxwnz": {
+                              "content": "關閉"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
