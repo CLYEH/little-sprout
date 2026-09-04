@@ -1243,7 +1243,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **錯誤碼**：無自訂碼；未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 
-### `delete_my_account() -> void`（LS-143）
+### `delete_my_account() -> void`（LS-143；media 軟刪見 LS-155）
 - **誰能呼叫**：任何已登入使用者。無參數。
 - **用途**：app 內刪除帳號的**資料面**入口（PLAN §9-A2／App Store Guideline
   5.1.1(v)）。逐一檢查呼叫者所屬的每個家庭，依角色分三種結果：
@@ -1269,10 +1269,21 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
      （`deleted_at = now()`、`deleted_by = 自己`，語意等同作者自己呼叫
      `set_diary_deleted`／`set_album_deleted`／`set_comment_deleted` 自刪），然後
      離開家庭（`DELETE family_members`）——**家庭本身與其他成員的內容完全不受
-     影響**。`media`／`reactions`／`device_tokens` **刻意不在這支 RPC 觸碰的範圍**
-     （`media` 沒有 `deleted_by` 欄位也沒有既有的自刪 RPC；`reactions` 沒有 soft
-     delete 概念；`device_tokens` 的 FK 是 `on delete cascade`，等真正刪除
-     `auth.users` 時自動清掉），見 migration 檔頭「規格分歧與取捨」。
+     影響**。**`media`（LS-155 起）**：呼叫者上傳的每一張仍存在的照片／影片一併
+     `deleted_at = now()`（含相簿內與日記附帶的；`diary_media`／`album_media`
+     連結列不動，靠 `media.deleted_at` 軟刪隱藏，讀取端既有的 `deleted_at is
+     null` 過濾自然讓連結失效）——這句 `UPDATE` 不限定家庭，一次涵蓋情況 3 的
+     每個家庭；情況 2 的家庭這時已經因為 cascade 被硬刪，這句話對那些列自然找
+     不到，不會重複處理。**額度立即釋放**：既有的 `private.media_storage_sync()`
+     trigger（§3 `media`／§10-A，`LS002` 額度硬防線的同一支 trigger）偵測到
+     `deleted_at` 從 `NULL` 變成非 `NULL` 就會自動扣減對應家庭的
+     `storage_used_bytes`，不需要為此另外寫任何程式碼。滿 30 天後由§6「自動
+     清除（LS-153）」既有的排程硬刪並入列 Storage 清除，沿用既有路徑，不在
+     `delete_my_account()` 這一層重做。
+     `reactions`／`device_tokens` 仍然**刻意不在這支 RPC 觸碰的範圍**
+     （`reactions` 沒有 soft delete 概念；`device_tokens` 的 FK 是
+     `on delete cascade`，等真正刪除 `auth.users` 時自動清掉），見 migration
+     檔頭「規格分歧與取捨」。
   無論走哪條路（情況 2／3），最後都會標記 `profiles.deletion_requested_at = now()`
   （情況 1 被拒絕時不標記）。
 - **`auth.users` 的實際刪除不在本 RPC 範圍**：這支 RPC 是 `SECURITY DEFINER`，
@@ -1335,7 +1346,21 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   重新評估「唯一成員」——這是為了關閉「候選判斷用的是取鎖前的舊快照、剛核准加入
   的成員被連坐刪除」這個競態窗（`approve_join()` 的 `INSERT` 只需要 `FOR KEY
   SHARE`，若改用 `FOR NO KEY UPDATE` 鎖候選家庭鎖不住它），見
-  `supabase/tests/concurrency/delete_account_vs_approve_join_*.sql`。
+  `supabase/tests/concurrency/delete_account_vs_approve_join_*.sql`。**情況 3
+  的 media 軟刪（LS-155）鎖序對齊 `finalize_account_deletion()`**：`media` 的
+  `UPDATE` 觸發 `private.media_storage_sync()` 對受影響家庭的 `families` 列下
+  隱含列鎖（效果同 `FOR NO KEY UPDATE`）——migration 刻意把這句 `UPDATE` 放在
+  「離開剩餘家庭」的 `DELETE family_members` **之後**，讓這個交易對 `families`
+  的第一次取鎖，永遠是透過 `DELETE family_members` 觸發的既有
+  `enforce_family_has_owner()` trigger（`family_members` 先、`families` 後），
+  media 的 trigger 只是重新確認同一批已持有的鎖，不產生新的等待。這與
+  `public.finalize_account_deletion()`（LS-151 R3）「`family_members` 先、
+  `families` 後」的鎖序一致——R2 時 `finalize_account_deletion()` 曾經因為順序
+  相反（`families` 先、`family_members` 後）被 merge-review 雙連線實測出跨
+  交易 40P01（見 `20260903115014_delete_account_edge_support.sql` 檔頭
+  「R3」段落），若把 media 的軟刪放在 `DELETE family_members` **之前**會重新
+  打開同一類死鎖窗（例如同一家庭另一位成員的 `finalize_account_deletion()`
+  幾乎同時執行）。
 
 ---
 
@@ -1525,7 +1550,7 @@ schema，`security definer`，只 `service_role`／`pg_cron` 可呼叫，`authen
 | 表 | 判準欄位 | 備註 |
 |---|---|---|
 | `diaries`／`albums`／`comments` | `deleted_at` | 一般軟刪／owner 移除都算；硬刪後順帶清掉指向它們的孤兒 `comments`／`reactions`（多型關聯沒有 FK，父列消失不會自動帶走，見下方「孤兒 comments／reactions」） |
-| `media` | `deleted_at` | 硬刪由 `private.media_storage_queue_sync()`（media 的 AFTER DELETE 統計級 trigger，R2）收 `storage_path`／`thumb_path`（非 NULL 者）進 `public.purge_storage_queue`，交給下方 Edge Function 實際刪除 Storage 物件——**不論這句硬刪是 `purge_expired()` 自己執行、還是被 `delete_my_account()` 情況 2 的 `families` cascade 觸發，都會入列**（R2 修正：R1 版本只在 `purge_expired()` 自己的 DELETE 裡入列，cascade 硬刪的 media 完全漏收，見下方「情況 2 cascade 與 Storage 佇列」）；`families.storage_used_bytes` **不會**在這裡再扣一次額度——軟刪的當下（`deleted_at` 從 `NULL` 變成非 `NULL` 的那次 UPDATE）就已經被 `private.media_storage_sync()` 扣過，硬刪時這批列的 `deleted_at` 皆非 `NULL`，同一支 trigger 的 DELETE 分支明確只對 `deleted_at is null` 的列計入扣除金額，重複硬刪不會重複扣 |
+| `media` | `deleted_at` | 軟刪來源含使用者自己刪照片／影片，以及（LS-155 起）`delete_my_account()` 情況 3 對呼叫者仍存在的每張 media 一併軟刪；硬刪由 `private.media_storage_queue_sync()`（media 的 AFTER DELETE 統計級 trigger，R2）收 `storage_path`／`thumb_path`（非 NULL 者）進 `public.purge_storage_queue`，交給下方 Edge Function 實際刪除 Storage 物件——**不論這句硬刪是 `purge_expired()` 自己執行、還是被 `delete_my_account()` 情況 2 的 `families` cascade 觸發，都會入列**（R2 修正：R1 版本只在 `purge_expired()` 自己的 DELETE 裡入列，cascade 硬刪的 media 完全漏收，見下方「情況 2 cascade 與 Storage 佇列」）；`families.storage_used_bytes` **不會**在這裡再扣一次額度——軟刪的當下（`deleted_at` 從 `NULL` 變成非 `NULL` 的那次 UPDATE，含 LS-155 這句）就已經被 `private.media_storage_sync()` 扣過，硬刪時這批列的 `deleted_at` 皆非 `NULL`，同一支 trigger 的 DELETE 分支明確只對 `deleted_at is null` 的列計入扣除金額，重複硬刪不會重複扣 |
 | `children` | `deleted_at` | 與 §3「30 天可還原」窗口共用同一個判準；硬刪會 cascade 掉 `diary_children`／`album_children`／`feed_item_children` 裡指向這個孩子的既有標記；`children` 不是 `content_target_type` 合法值，沒有孤兒 `comments`／`reactions` 要清 |
 | `profiles` | `deletion_requested_at` | **R2 起是 tombstone，不是硬刪**，見下方「`profiles` tombstone：為什麼不硬刪」 |
 
