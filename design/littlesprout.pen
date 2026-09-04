@@ -137743,6 +137743,1253 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "EzJCV",
+      "x": -3367,
+      "y": 53510,
+      "name": "LS legal / 文件檢視 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "Zg1x3",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "IeLM2",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 852,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "M5ktLZ",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 852,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "D2vvy",
+              "name": "Legal Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                0,
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "FdUgo",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "v6xWQb",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "b1eOeA",
+                      "name": "Doc Title",
+                      "fill": "$text-primary",
+                      "content": "使用條款",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "MNw3B",
+                      "name": "Doc Meta",
+                      "fill": "$text-secondary",
+                      "content": "版本 0.1（草稿）· 生效日期：核可後公布",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "lfqFh",
+                  "name": "Header Hairline",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "BqbSV",
+                  "name": "Scroll Body",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 480,
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "H9eCSN",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請仔細閱讀本條款。登入或使用「萌芽日記 Little Sprout」（下稱「本服務」或「App」）即表示您同意受本條款與《隱私權政策》拘束。本服務是為家人打造的私密相簿與日記；本條款的核心是：您的內容屬於您，只有您的家庭看得到，而我們對冒犯性內容零容忍。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "A0suEO",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1. 條款的接受與適用",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "b7xDfh",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.1　本條款是您與本服務營運者之間具有法律效力的協議。當您登入、建立家庭、加入家庭或以任何方式使用本服務，即表示您已閱讀、理解並同意本條款及《隱私權政策》。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "eFnjQ",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.2　透過 Apple App Store 取得本 App 的使用者，另受 Apple 的《授權應用程式使用者授權合約》及我們的《EULA 附加條款》拘束。本條款與該等文件有牴觸時，就 Apple 與 App Store 相關事項以 Apple 標準 EULA 為準，其餘以本條款為準。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "zNJGE",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.3　若您不同意本條款的任何部分，請勿使用本服務，並可依相關條款刪除帳號。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "q6XhI8",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2. 服務內容",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "lS6Ax",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.1　本服務提供一個以「家庭」為單位的私密空間，讓家庭成員上傳與瀏覽孩子的照片、影片，撰寫日記，並以留言與愛心互動。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "lITi5",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.2　本服務不是備份服務。請務必自行保留照片與影片的原始檔案；我們不保證資料永久可用。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "HhYEr",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "l7rVvi",
+                      "name": "Footer Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XaeP8",
+                      "name": "Footer Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-item",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "JenIe",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Close Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "x"
+                            },
+                            "yxwnz": {
+                              "content": "關閉"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "O631mm",
+      "x": -3367,
+      "y": 54442,
+      "name": "LS legal / 文件檢視 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "dQWLV",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "oe8X2",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 852,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "PuJ2I",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 852,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "G8k9VA",
+              "name": "Legal Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                0,
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "Mlm1m",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "s91Cbw",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "PbxqT",
+                      "name": "Doc Title",
+                      "fill": "$text-primary",
+                      "content": "使用條款",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "rrCKx",
+                      "name": "Doc Meta",
+                      "fill": "$text-secondary",
+                      "content": "版本 0.1（草稿）· 生效日期：核可後公布",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "p41LQ",
+                  "name": "Header Hairline",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "K36u8",
+                  "name": "Scroll Body",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 480,
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vr8v2",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請仔細閱讀本條款。登入或使用「萌芽日記 Little Sprout」（下稱「本服務」或「App」）即表示您同意受本條款與《隱私權政策》拘束。本服務是為家人打造的私密相簿與日記；本條款的核心是：您的內容屬於您，只有您的家庭看得到，而我們對冒犯性內容零容忍。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ZsrrB",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1. 條款的接受與適用",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "nPCrK",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.1　本條款是您與本服務營運者之間具有法律效力的協議。當您登入、建立家庭、加入家庭或以任何方式使用本服務，即表示您已閱讀、理解並同意本條款及《隱私權政策》。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "JAIeL",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.2　透過 Apple App Store 取得本 App 的使用者，另受 Apple 的《授權應用程式使用者授權合約》及我們的《EULA 附加條款》拘束。本條款與該等文件有牴觸時，就 Apple 與 App Store 相關事項以 Apple 標準 EULA 為準，其餘以本條款為準。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "vhMAW",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.3　若您不同意本條款的任何部分，請勿使用本服務，並可依相關條款刪除帳號。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "NBAEt",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2. 服務內容",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Db4sE",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.1　本服務提供一個以「家庭」為單位的私密空間，讓家庭成員上傳與瀏覽孩子的照片、影片，撰寫日記，並以留言與愛心互動。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "m9B5h8",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.2　本服務不是備份服務。請務必自行保留照片與影片的原始檔案；我們不保證資料永久可用。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "sobFX",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "RkfEf",
+                      "name": "Footer Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "u53w7",
+                      "name": "Footer Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-item",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "Gmzuz",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Close Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "x"
+                            },
+                            "yxwnz": {
+                              "content": "關閉"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "E27nKz",
+      "x": -3367,
+      "y": 55374,
+      "name": "A11y / 文件檢視 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 2469,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "M15ryH",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "cgd6P",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 2469,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "CozLy",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 2469,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "dZ4uS",
+              "name": "Legal Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                0,
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "Bb5Hi",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "ImZfZ",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "V68Wp",
+                      "name": "Doc Title",
+                      "fill": "$text-primary",
+                      "content": "使用條款",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "b8JXO",
+                      "name": "Doc Meta",
+                      "fill": "$text-secondary",
+                      "content": "版本 0.1（草稿）· 生效日期：核可後公布",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "txLP6",
+                  "name": "Header Hairline",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "R8deeK",
+                  "name": "Scroll Body",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 2000,
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "yQZa8",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請仔細閱讀本條款。登入或使用「萌芽日記 Little Sprout」（下稱「本服務」或「App」）即表示您同意受本條款與《隱私權政策》拘束。本服務是為家人打造的私密相簿與日記；本條款的核心是：您的內容屬於您，只有您的家庭看得到，而我們對冒犯性內容零容忍。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "RPELE",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1. 條款的接受與適用",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "x5nrDb",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.1　本條款是您與本服務營運者之間具有法律效力的協議。當您登入、建立家庭、加入家庭或以任何方式使用本服務，即表示您已閱讀、理解並同意本條款及《隱私權政策》。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "AXKtM",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.2　透過 Apple App Store 取得本 App 的使用者，另受 Apple 的《授權應用程式使用者授權合約》及我們的《EULA 附加條款》拘束。本條款與該等文件有牴觸時，就 Apple 與 App Store 相關事項以 Apple 標準 EULA 為準，其餘以本條款為準。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "LHux8",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.3　若您不同意本條款的任何部分，請勿使用本服務，並可依相關條款刪除帳號。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "OPiuM",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2. 服務內容",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "kL2IM",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.1　本服務提供一個以「家庭」為單位的私密空間，讓家庭成員上傳與瀏覽孩子的照片、影片，撰寫日記，並以留言與愛心互動。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Py99f",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.2　本服務不是備份服務。請務必自行保留照片與影片的原始檔案；我們不保證資料永久可用。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "QKje0",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    "$sp-block",
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "LF32i",
+                      "name": "Footer Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Hey6y",
+                      "name": "Footer Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-item",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "jI1XQ",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Close Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "x"
+                            },
+                            "yxwnz": {
+                              "content": "關閉"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "uQeV8",
+      "x": -3367,
+      "y": 57923,
+      "name": "LS legal / 文件檢視 (iPad 11\")",
+      "clip": true,
+      "width": 834,
+      "height": 1194,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.06594724220623502,
+          "y": 0.01423785594639866
+        }
+      },
+      "cornerRadius": 28,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "oZp4P",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container",
+          "padding": [
+            0,
+            "$screen-pad-lg"
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Di8Mu",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 834,
+          "height": 1194,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "ANzjU",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Card Wrap",
+          "width": 834,
+          "height": 1194,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "veB5F",
+              "name": "Legal Card",
+              "width": 520,
+              "fill": "$surface",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 8
+                },
+                "blur": 32
+              },
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": "$inset-card",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ZF0q3",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "KKrO6",
+                      "name": "Doc Title",
+                      "fill": "$text-primary",
+                      "content": "使用條款",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "SXeAe",
+                      "name": "Doc Meta",
+                      "fill": "$text-secondary",
+                      "content": "版本 0.1（草稿）· 生效日期：核可後公布",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "Oeb95",
+                  "name": "Header Hairline",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "UFzlX",
+                  "name": "Scroll Body",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 480,
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "e1Ani",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請仔細閱讀本條款。登入或使用「萌芽日記 Little Sprout」（下稱「本服務」或「App」）即表示您同意受本條款與《隱私權政策》拘束。本服務是為家人打造的私密相簿與日記；本條款的核心是：您的內容屬於您，只有您的家庭看得到，而我們對冒犯性內容零容忍。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ezt4p",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1. 條款的接受與適用",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "HmT6G",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.1　本條款是您與本服務營運者之間具有法律效力的協議。當您登入、建立家庭、加入家庭或以任何方式使用本服務，即表示您已閱讀、理解並同意本條款及《隱私權政策》。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "O7TuPe",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.2　透過 Apple App Store 取得本 App 的使用者，另受 Apple 的《授權應用程式使用者授權合約》及我們的《EULA 附加條款》拘束。本條款與該等文件有牴觸時，就 Apple 與 App Store 相關事項以 Apple 標準 EULA 為準，其餘以本條款為準。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "P85Kx",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1.3　若您不同意本條款的任何部分，請勿使用本服務，並可依相關條款刪除帳號。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "pWLTr",
+                      "name": "Section Heading",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2. 服務內容",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "kZ8GU",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.1　本服務提供一個以「家庭」為單位的私密空間，讓家庭成員上傳與瀏覽孩子的照片、影片，撰寫日記，並以留言與愛心互動。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "EKs26",
+                      "name": "Paragraph",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2.2　本服務不是備份服務。請務必自行保留照片與影片的原始檔案；我們不保證資料永久可用。",
+                      "lineHeight": 1.7,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "d2XVS5",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "jdisg",
+                      "name": "Footer Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "id": "YYJ84",
+                      "type": "ref",
+                      "ref": "XggYA",
+                      "name": "Close Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "G4R75k": {
+                          "icon": "x"
+                        },
+                        "yxwnz": {
+                          "content": "關閉"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
