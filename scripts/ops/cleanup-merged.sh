@@ -43,6 +43,18 @@
 #  (d) mktemp -d 建的暫存殘留 worktree（路徑／目錄名落在系統暫存目錄樣式）：與 (a) 同一套判定，
 #      只是額外標記方便辨識，不放寬安全門檻。R2 起 --apply 預設要求票號或 --all，這類無票號
 #      命名的暫存 worktree 只能靠 --all 清（不再是「唯一路徑剛好是最危險的無差別 apply」）。
+#  (e) 附屬資源（LS-176；LS-96 池項 7c9fe5bd／0e75271d：Devices 146 GB／77 台、DerivedData 每 worktree 一份把磁碟
+#      填滿）：**指名 LS-<n> 時**一併清該票的專屬模擬器（名稱以 `LS-<n>-` 開頭——detect-simulator.sh 建的
+#      `<票號>-<機型無空白>`；Booted 先 `simctl shutdown` 該 UDID 再 `simctl delete`；握著 push-gate 的
+#      simulator-lock（/tmp/simulator-lock-<UDID>）的跳過不刪）與 DerivedData（`$LS_DERIVED_DATA_ROOT`，預設
+#      ~/Library/Developer/Xcode/DerivedData，下的 `LittleSprout-*/info.plist` 之 WorkspacePath 落在該票任一
+#      worktree 路徑下、或路徑元件為 `LS-<n>`／`LS-<n>-*`——後者涵蓋 worktree 記錄已 prune 的殘留與
+#      `LS-<n>-*` 命名的 scratchpad 副本；word-boundary：LS-17 不中 LS-174）。前提：本次執行後該票已無 worktree
+#      留在磁碟（全部已移除／本就不存在／dry-run 下判定將移除）——worktree 被略過（dirty／太新／未併入／
+#      Pen 開著／cwd 保護）代表可能還有人在用，附屬資源一律不動並印原因。--all 不套用（沒有票號就沒有前綴
+#      可比）。無 xcrun（CI／非 macOS）只跳過模擬器段。模擬器與 DerivedData 都是可再生的快取（detect-simulator.sh
+#      下次會重建、xcodebuild 會重編），刪錯的代價是一次重建，不是資料遺失；自測用 PATH 前置的 stub xcrun＋
+#      LS_DERIVED_DATA_ROOT 假目錄，不碰真機。
 #
 # 已併入的判定：merge-base --is-ancestor <ref> 對 origin/main 或 origin/development 任一為真即算
 #（兩個 base 只要 fetch 得到就都檢查；一個都找不到 fail closed）。squash／rebase 併入的分支
@@ -348,7 +360,10 @@ fail=0
 wt_removed=0; wt_skipped_dirty=0; wt_skipped_unmerged=0; wt_skipped_recent=0; wt_skipped_race=0; wt_skipped_pen=0
 br_removed=0; br_skipped_unmerged=0; br_skipped_recent=0
 rb_removed=0; rb_skipped_pr=0; rb_skipped_nogh=0; rb_skipped_recent=0
-OUT_WT=; OUT_BR=; OUT_RB=
+sim_removed=0; sim_skipped_lock=0; dd_removed=0
+OUT_WT=; OUT_BR=; OUT_RB=; OUT_E=
+FILTER_WT_PATHS=      # (e)：指名票命中的 worktree 路徑（含被 cwd 保護／略過的），一行一個
+FILTER_WT_HANDLED=    # (e)：其中本次已移除／dry-run 判定將移除／目錄本就不存在的
 WT_BRANCHES=$'\n'   # (a) 段處理過的分支列表，(b) 段要排除（避免對同一分支動兩次）
 
 main_branch=$(git -C "$ROOT" symbolic-ref --short -q HEAD 2>/dev/null || echo '')
@@ -366,6 +381,9 @@ process_wt() {
   WT_BRANCHES="${WT_BRANCHES}${b}"$'\n'
   is_protected "$b" && return
   [ "$w" = "$ROOT" ] && return
+  # LS-176 (e)：指名票命中的 worktree 先記下來（含下面被 cwd 保護／各種略過的），(e) 段據此判斷「該票是否還有
+  # worktree 留在磁碟」——留著就不動附屬資源。
+  if [ -n "$FILTER" ] && matches_filter "${b} ${name}"; then FILTER_WT_PATHS="${FILTER_WT_PATHS}${w}"$'\n'; fi
   # M1（merge-review R1）：原本是精確等值比對，呼叫端 cd 進 worktree 的「子目錄」（例如
   # <worktree>/scripts）就對不上、保護完全失效，worktree 在自己腳下被 remove。改成前綴比對：
   # cwd 等於 worktree 根目錄本身、或在其任何子目錄底下，都算「目前所在目錄，絕不碰」。
@@ -380,6 +398,7 @@ process_wt() {
   is_temp_path "$w" && temp_tag="（暫存殘留）"
 
   if [ ! -d "$w" ]; then
+    FILTER_WT_HANDLED="${FILTER_WT_HANDLED}${w}"$'\n'   # (e)：目錄本就不存在，不擋附屬資源清理
     if is_merged_ref "$b" && has_real_history "$b"; then
       act "prune 已消失的 worktree 記錄 ${name}${temp_tag}（${b}，已併入）" git -C "$ROOT" worktree prune
       if act "刪除本機分支 ${b}（已併入）" git -C "$ROOT" branch -D "$b"; then
@@ -436,6 +455,7 @@ process_wt() {
     fi
     act "刪除本機分支 ${b}（已併入）" git -C "$ROOT" branch -D "$b" || ok=0
     [ "$ok" -eq 1 ] && wt_removed=$((wt_removed + 1))
+    [ "$ok" -eq 1 ] && FILTER_WT_HANDLED="${FILTER_WT_HANDLED}${w}"$'\n'   # (e)：dry-run 的 act 也回 0＝判定將移除
   elif is_merged_ref "$b"; then
     # tip 與 base 相同、但 reflog 從未真的動過——這是「剛建好、還沒開工」，不是「已併入被遺忘」；
     # 刪了就是把準備要用的 worktree 基礎設施砍掉，預設絕不碰（has_real_history 檔頭註解）。
@@ -479,6 +499,7 @@ process_wt() {
       fi
       act "刪除本機分支 ${b}（尚未開工；${why}）" git -C "$ROOT" branch -D "$b" || ok=0
       [ "$ok" -eq 1 ] && wt_removed=$((wt_removed + 1))
+      [ "$ok" -eq 1 ] && FILTER_WT_HANDLED="${FILTER_WT_HANDLED}${w}"$'\n'   # (e)
       return
     fi
     wt_skipped_unmerged=$((wt_skipped_unmerged + 1))
@@ -575,6 +596,87 @@ while IFS= read -r fullref; do
   fi
 done < <(git -C "$ROOT" for-each-ref --format='%(refname)' refs/remotes/origin/ 2>/dev/null)
 
+# ---- (e) 附屬資源（LS-176）：專屬模擬器 LS-<n>-*＋DerivedData WorkspacePath 指向該票（判定見檔頭 (e)）----
+dd_root="${LS_DERIVED_DATA_ROOT:-$HOME/Library/Developer/Xcode/DerivedData}"
+e_left=0
+if [ -n "$FILTER" ]; then
+  while IFS= read -r p; do
+    [ -n "$p" ] || continue
+    [ -d "$p" ] || continue
+    if ! printf '%s' "$FILTER_WT_HANDLED" | grep -qxF -- "$p"; then
+      e_left=$((e_left + 1))
+      OUT_E="${OUT_E}  ⚠ worktree 仍留在磁碟（本次略過）：${p}"$'\n'
+    fi
+  done <<EOF
+$FILTER_WT_PATHS
+EOF
+fi
+# dd_matches <WorkspacePath>：落在該票任一 worktree 路徑下，或路徑元件為 LS-<n>／LS-<n>-*（word-boundary：
+# `*/LS-17/*`／`*/LS-17-*/*` 都不中 LS-174）
+dd_matches() {
+  local p=$1 w
+  while IFS= read -r w; do
+    [ -n "$w" ] || continue
+    case "$p" in "$w"/*) return 0 ;; esac
+  done <<EOF
+$FILTER_WT_PATHS
+EOF
+  case "/${p}/" in */"${FILTER}"/*|*/"${FILTER}"-*/*) return 0 ;; esac
+  return 1
+}
+if [ -z "$FILTER" ]; then
+  OUT_E="  （未指名 LS-<n>，附屬資源不套用）"$'\n'
+elif [ "$e_left" -gt 0 ]; then
+  OUT_E="${OUT_E}  → 該票仍有 ${e_left} 個 worktree 留在磁碟（見上），專屬模擬器與 DerivedData 一律不動（可能還有人在用）"$'\n'
+else
+  # 專屬模擬器：`simctl list devices` 純文字（含 unavailable 的），每行「    <name> (<UDID>) (<state>) [(unavailable…)]」——
+  # state 取第二個括號、不取最後一個，unavailable 尾綴才不會被當成 state。
+  if command -v xcrun >/dev/null 2>&1; then
+    sim_rows=$(xcrun simctl list devices 2>/dev/null | awk -v pfx="${FILTER}-" '
+      /^[ \t]+[^ \t].*\(/ {
+        line = $0; nm = line; sub(/^[ \t]*/, "", nm); sub(/ *\(.*/, "", nm)
+        if (index(nm, pfx) != 1) next
+        udid = line; sub(/^[^(]*\(/, "", udid); sub(/\).*/, "", udid)
+        st = line; sub(/^[^(]*\([^)]*\) *\(/, "", st); sub(/\).*/, "", st)
+        printf "%s\t%s\t%s\n", nm, udid, st
+      }')
+    while IFS=$'\t' read -r sim_name sim_udid sim_state; do
+      [ -n "$sim_name" ] || continue
+      if [ -d "/tmp/simulator-lock-${sim_udid}" ]; then
+        sim_skipped_lock=$((sim_skipped_lock + 1))
+        OUT_E="${OUT_E}  ⚠ 專屬模擬器 ${sim_name}（${sim_udid}）鎖中（push gate 進行中），不刪"$'\n'
+        continue
+      fi
+      sim_ok=1
+      if [ "$sim_state" = Booted ]; then
+        act "shutdown 專屬模擬器 ${sim_name}（${sim_udid}，Booted）" xcrun simctl shutdown "$sim_udid" || sim_ok=0
+      fi
+      if [ "$sim_ok" -eq 1 ]; then
+        act "delete 專屬模擬器 ${sim_name}（${sim_udid}）" xcrun simctl delete "$sim_udid" && sim_removed=$((sim_removed + 1))
+      fi
+    done <<EOF
+$sim_rows
+EOF
+  else
+    OUT_E="${OUT_E}  （無 xcrun，略過專屬模擬器段）"$'\n'
+  fi
+  # DerivedData：info.plist 是 Xcode 寫的 XML plist（本機實測），WorkspacePath 的 <string> 緊接在 <key> 下一行。
+  if [ -d "$dd_root" ]; then
+    for d in "$dd_root"/LittleSprout-*; do
+      [ -d "$d" ] || continue
+      wsp=$(sed -n '/<key>WorkspacePath<\/key>/{n;s/^[[:space:]]*<string>\(.*\)<\/string>[[:space:]]*$/\1/p;}' "$d/info.plist" 2>/dev/null | head -1)
+      if [ -z "$wsp" ]; then
+        OUT_E="${OUT_E}  ${d##*/}：讀不到 info.plist 的 WorkspacePath，略過"$'\n'
+        continue
+      fi
+      dd_matches "$wsp" || continue
+      act "刪除 DerivedData ${d##*/}（WorkspacePath=${wsp}）" rm -rf "$d" && dd_removed=$((dd_removed + 1))
+    done
+  else
+    OUT_E="${OUT_E}  （DerivedData 目錄不存在：${dd_root}）"$'\n'
+  fi
+fi
+
 # ---- 輸出 ----
 echo "== cleanup-merged（${MODE} 模式；root ${ROOT}；min-age ${MIN_AGE}m）"
 echo "== (a)(d) worktree（已併入且乾淨 → remove＋刪本機分支；暫存路徑額外標「暫存殘留」）"
@@ -586,7 +688,9 @@ echo "== (c) 遠端分支（origin 已併入、無 open PR → push --delete）"
 if [ "$rb_removed" -gt 0 ]; then
   echo "  ⚠ ${rb_removed} 條遠端分支經 (c) 清理——fetch 已 --prune，這不是本機 stale ref 造成的假陽性；若持續非 0，才需要核對 gh api repos/<owner>/<repo> --jq .delete_branch_on_merge 是否被改回 false，或是否有人繞過 PR 直接 push 分支"
 fi
-echo "== 摘要（${MODE}）：worktree ${wt_removed}／本機分支 ${br_removed}／遠端分支 ${rb_removed}（略過：worktree dirty ${wt_skipped_dirty}、worktree 未併入 ${wt_skipped_unmerged}、worktree 太新 ${wt_skipped_recent}、worktree 重驗生變 ${wt_skipped_race}、worktree Pen 開著 ${wt_skipped_pen}、本機分支未併入 ${br_skipped_unmerged}、本機分支太新 ${br_skipped_recent:-0}、遠端無法確認或有 PR $((rb_skipped_pr + rb_skipped_nogh))、遠端太新 ${rb_skipped_recent:-0}）"
+echo "== (e) 附屬資源（指名 LS-<n>：專屬模擬器 LS-<n>-*＋DerivedData WorkspacePath 指向該票；worktree 仍留在磁碟則不動；LS-176）"
+[ -n "$OUT_E" ] && printf '%s' "$OUT_E" || echo "  （無略過項；動作見上方 act 輸出）"
+echo "== 摘要（${MODE}）：worktree ${wt_removed}／本機分支 ${br_removed}／遠端分支 ${rb_removed}／專屬模擬器 ${sim_removed}／DerivedData ${dd_removed}（略過：worktree dirty ${wt_skipped_dirty}、worktree 未併入 ${wt_skipped_unmerged}、worktree 太新 ${wt_skipped_recent}、worktree 重驗生變 ${wt_skipped_race}、worktree Pen 開著 ${wt_skipped_pen}、本機分支未併入 ${br_skipped_unmerged}、本機分支太新 ${br_skipped_recent:-0}、遠端無法確認或有 PR $((rb_skipped_pr + rb_skipped_nogh))、遠端太新 ${rb_skipped_recent:-0}、專屬模擬器鎖中 ${sim_skipped_lock}）"
 if [ "$MODE" = dry-run ]; then
   echo "（dry-run：以上為將執行的動作，尚未做任何變更；加 --apply 實際執行）"
 fi

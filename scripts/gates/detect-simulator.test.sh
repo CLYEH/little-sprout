@@ -40,11 +40,16 @@ case "$cmd" in
     case "$what" in
       devices)
         echo "== Devices =="
-        echo "-- iOS ${STUB_OS:-26.0} --"
-        while IFS=$'\t' read -r n u _os || [ -n "$n" ]; do
-          [ -n "$n" ] || continue
-          echo "    ${n} (${u}) (Shutdown)"
-        done < "$db"
+        # LS-176：依 db 第三欄（os）分節印，模擬多 runtime 並存——同 os 的裝置印在同一節、分節順序＝首次出現順序；
+        # 既有 db 全是同一個 os，輸出與舊版（單一 `-- iOS <STUB_OS> --` 節）相同。
+        awk -F'\t' -v defos="${STUB_OS:-26.0}" '
+          NF >= 2 {
+            os = ($3 == "" ? defos : $3)
+            if (!(os in seen)) { seen[os] = 1; order[++n] = os }
+            rows[os] = rows[os] "    " $1 " (" $2 ") (Shutdown)\n"
+          }
+          END { for (i = 1; i <= n; i++) { print "-- iOS " order[i] " --"; printf "%s", rows[order[i]] } }
+        ' "$db"
         ;;
       runtimes)
         echo "== Runtimes =="
@@ -226,6 +231,28 @@ mkdir -p "$work/wt/LS-105"
 out10=$(STUB_DB="$db10" CI=true run_in "$work/wt/LS-105")
 u10=$(id_of "$out10")
 if [ "$u10" = REAL-STOCK-UDID2 ]; then echo "✓ ⑩ demo-* 常駐機排第一台時仍正確選到原廠機"; else echo "✗ ⑩ 應為 REAL-STOCK-UDID2，實得 ${u10}（挑到 demo 機了？）" >&2; fail=1; fi
+
+# ---- ⑪ LS-176（LS-96 池項 7c9fe5bd (c)）：同票已有專屬機但機型名不同（LS-106-iPhoneAir 在，目前原廠第一台是
+#        iPhone 17 Pro）、同 runtime → 重用既有那台，不再建 LS-106-iPhone17Pro（LS-107 曾因此堆到 4 台）----
+db11="$work/db11"
+printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\nLS-106-iPhoneAir\tEXISTING-106\t26.0\n' > "$db11"
+mkdir -p "$work/wt/LS-106"
+out11=$(STUB_DB="$db11" run_in "$work/wt/LS-106" 2>"$work/err11")
+u11=$(id_of "$out11")
+if [ "$u11" = EXISTING-106 ]; then echo "✓ ⑪ 同票不同機型、同 runtime → 重用既有專屬機 EXISTING-106"; else echo "✗ ⑪ 應為 EXISTING-106，實得 ${u11}" >&2; cat "$work/err11" >&2; fail=1; fi
+if grep -qF 'LS-106-iPhone17Pro' "$db11"; then echo "✗ ⑪ 不該再建 LS-106-iPhone17Pro" >&2; fail=1; else echo "✓ ⑪ 未另建 LS-106-iPhone17Pro"; fi
+has '⑪ stderr 說明重用了哪一台' "$(cat "$work/err11")" '重用同票既有專屬機「LS-106-iPhoneAir」'
+
+# ---- ⑫ LS-176 對照：同票專屬機只存在於別的 runtime（iOS 18.6 節）→ 不重用（舊 runtime 可能跑不了目前的 deployment
+#        target），照舊在目前 runtime（原廠第一台所在的 26.0 節）建新的；db 分節輸出的順序＝首次出現（18.6 節在前），
+#        順便驗「清單第一台原廠機」的偵測跨節仍跳過 LS- 前綴 ----
+db12="$work/db12"
+printf 'LS-108-iPhoneAir\tOLD-RT-UDID\t18.6\niPhone 17 Pro\tSHARED-UDID\t26.0\n' > "$db12"
+mkdir -p "$work/wt/LS-108"
+out12=$(STUB_DB="$db12" run_in "$work/wt/LS-108" 2>/dev/null)
+u12=$(id_of "$out12")
+if [ -n "$u12" ] && [ "$u12" != OLD-RT-UDID ] && [ "$u12" != SHARED-UDID ]; then echo "✓ ⑫ 同票但不同 runtime → 不重用，建新專屬機（${u12}）"; else echo "✗ ⑫ 應建新機（非 OLD-RT-UDID／SHARED-UDID），實得 ${u12}" >&2; fail=1; fi
+has '⑫ db 記到新建的 LS-108-iPhone17Pro' "$(cat "$db12")" 'LS-108-iPhone17Pro'
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ detect-simulator／simulator-lock 自測通過"

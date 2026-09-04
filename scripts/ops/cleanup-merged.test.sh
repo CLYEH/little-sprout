@@ -39,6 +39,7 @@ OLD=2020-01-01T00:00:00Z
 gold() { env GIT_AUTHOR_DATE="$OLD" GIT_COMMITTER_DATE="$OLD" git -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
 
 has()   { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✓ $1"; else echo "✗ ${1}（輸出應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; fi; }
+hasnt() { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✗ ${1}（輸出不應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; else echo "✓ $1"; fi; }
 rc_is() { if [ "$3" -eq "$2" ]; then echo "✓ $1"; else echo "✗ ${1}（期望 exit ${2}，實得 ${3}）" >&2; printf '%s\n' "$4" | sed 's/^/    /' >&2; fail=1; fi; }
 exists_wt() { [ -d "$1" ] && echo "✓ $2" || { echo "✗ ${2}（worktree 目錄消失，本不該被動）" >&2; fail=1; }; }
 gone_wt()   { if [ -d "$1" ]; then echo "✗ ${2}（worktree 目錄仍在，本該被移除）" >&2; fail=1; else echo "✓ $2"; fi; }
@@ -57,6 +58,42 @@ for b in ${GH_STUB_PR_OPEN:-}; do printf '%s\n' "$b"; done
 EOF
 chmod +x "$work/bin/gh"
 export PATH="$work/bin:$PATH" GH_STUB_PR_OPEN="LS-11-remote-haspr"
+
+# ---- stub xcrun＋假 DerivedData 根（LS-176 (e)）：**一開始就裝上**，不只給 ⑳ 用——(e) 段在任何指名 LS-<n> 的呼叫
+#      都會跑，上面 ③④⑥… 若落到真的 xcrun／真的 ~/Library/.../DerivedData，測試會依開發機當下狀態刪真模擬器
+#      （同 patrol.test.sh 的 SIMCTL_LIST_JSON 隔離慣例）。純文字 db（$SIM_STUB_DB：name\tudid\tstate[\tunavailable]
+#      一行一台）；list devices 印 simctl 的真實格式（第 4 欄有值就補 unavailable 尾綴）；shutdown 改 state、
+#      delete 移除該行；每次呼叫 argv 記到 $SIM_STUB_LOG。
+cat > "$work/bin/xcrun" <<'EOF'
+#!/bin/bash
+db="${SIM_STUB_DB:-/dev/null}"
+printf '%s\n' "$*" >> "${SIM_STUB_LOG:-/dev/null}"
+[ "${1:-}" = simctl ] || exit 1
+case "${2:-}" in
+  list)
+    echo "== Devices =="
+    echo "-- iOS 26.0 --"
+    while IFS=$'\t' read -r n u s x || [ -n "$n" ]; do
+      [ -n "$n" ] || continue
+      if [ -n "${x:-}" ]; then printf '    %s (%s) (%s) (unavailable, runtime profile not found)\n' "$n" "$u" "$s"
+      else printf '    %s (%s) (%s) \n' "$n" "$u" "$s"; fi
+    done < "$db"
+    ;;
+  shutdown)
+    [ -f "$db" ] || exit 1
+    awk -F'\t' -v u="${3:-}" 'BEGIN{OFS="\t"} $2==u {$3="Shutdown"} {print}' "$db" > "$db.tmp" && mv "$db.tmp" "$db"
+    ;;
+  delete)
+    [ -f "$db" ] || exit 1
+    grep -qF "$(printf '\t%s\t' "${3:-}")" "$db" || { echo "Invalid device: ${3:-}" >&2; exit 1; }
+    awk -F'\t' -v u="${3:-}" '$2!=u' "$db" > "$db.tmp" && mv "$db.tmp" "$db"
+    ;;
+  *) exit 1 ;;
+esac
+EOF
+chmod +x "$work/bin/xcrun"
+export SIM_STUB_DB="$work/simdb-empty" SIM_STUB_LOG="$work/simlog-early" LS_DERIVED_DATA_ROOT="$work/dd-empty"
+: > "$SIM_STUB_DB"; : > "$SIM_STUB_LOG"; mkdir -p "$LS_DERIVED_DATA_ROOT"
 
 # ---- stub pen（LS-141）：cleanup-merged.sh 移除前跑 pen-open.sh --status，後者只認 `pen interactive --app desktop`
 #      輸出的「Currently active canvas editor: `…`」那一行。PEN_STUB_PATH 有值就印那一行，否則模擬沒有 active 文件
@@ -625,6 +662,86 @@ has   '⑲ merged 路徑重驗抓到、拒刪' "$out19b" '刪除前重驗發現�
 exists_wt "$rwts/LS-922-race-merged" '⑲ LS-922-race-merged worktree 仍在'
 has_branch "$r/repo" LS-922-race-merged '⑲ LS-922-race-merged 本機分支仍在'
 [ "$(git -C "$rwts/LS-922-race-merged" log -1 --format=%s 2>/dev/null)" = 'feat: race' ] && echo "✓ ⑲ 注入的 commit 仍在 LS-922-race-merged" || { echo "✗ ⑲ 注入的 commit 遺失（LS-922-race-merged）" >&2; fail=1; }
+
+# ---- ⑳ LS-176（LS-96 池項 7c9fe5bd／0e75271d）：指名 --apply LS-<n> 一併清該票專屬模擬器（`LS-<n>-` 前綴，含
+#        `LS-<n>-QA-*`；Booted 先 shutdown 再 delete；unavailable 尾綴不影響 state 解析；鎖中不刪）與 DerivedData
+#        （WorkspacePath 落在該票 worktree 下、或路徑元件 LS-<n>-*）；非本票／鄰近票號（LS-930 不中 LS-9300）／
+#        main-* 不動；無 info.plist 的略過並列出；dry-run 只列不動；worktree 仍留在磁碟（dirty 略過）→ 附屬資源
+#        一律不動；--all 不套用。mutation：前綴比對退化成子字串（LS-9300 被刪）、Booted 不先 shutdown、
+#        e_left 判定拿掉（LS-932 的機器被刪）、dry-run 的 act 直接執行 → 這裡紅 ----
+e=$work/attached; mkdir -p "$e"
+g init -q --bare -b main "$e/remote.git"
+g init -q -b main "$e/seed"
+echo a > "$e/seed/f.txt"; g -C "$e/seed" add -A; g -C "$e/seed" commit -qm seed
+g -C "$e/seed" branch development
+g -C "$e/seed" remote add origin "$e/remote.git"; g -C "$e/seed" push -q origin main development
+g clone -q "$e/remote.git" "$e/repo"; ewts="$e/repo/.claude/worktrees"; mkdir -p "$ewts"
+for b in LS-930-attached LS-932-dirty; do
+  g -C "$e/repo" worktree add -q -b "$b" "$ewts/$b" origin/development
+  echo "$b" > "$ewts/$b/${b}.txt"; g -C "$ewts/$b" add -A; gold -C "$ewts/$b" commit -qm "feat: $b"
+  g -C "$ewts/$b" push -q origin "$b"
+done
+g -C "$e/seed" fetch -q origin; g -C "$e/seed" checkout -q development
+g -C "$e/seed" merge -q --no-edit origin/LS-930-attached origin/LS-932-dirty; g -C "$e/seed" push -q origin development
+g -C "$e/repo" fetch -q origin
+echo scratch > "$ewts/LS-932-dirty/scratch.txt"   # LS-932 保持 dirty → worktree 會被略過、留在磁碟
+wt930=$(cd "$ewts/LS-930-attached" && pwd -P)
+# 假 DerivedData：aaa（WorkspacePath 在 LS-930 worktree 下）、ccc（路徑元件 LS-930-r2-copy：scratchpad 副本形狀）→ 刪；
+# bbb（別票 LS-931）、ddd（鄰近票號 LS-9300）、fff（LS-932：worktree 仍在）→ 留；eee 無 info.plist → 略過並列出
+export LS_DERIVED_DATA_ROOT="$work/dd"
+mk_dd() { mkdir -p "$LS_DERIVED_DATA_ROOT/LittleSprout-$1/Build"; printf '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n\t<key>LastAccessedDate</key>\n\t<date>2026-09-04T03:27:29Z</date>\n\t<key>WorkspacePath</key>\n\t<string>%s</string>\n</dict>\n</plist>\n' "$2" > "$LS_DERIVED_DATA_ROOT/LittleSprout-$1/info.plist"; }
+mk_dd aaa "$wt930/LittleSprout.xcodeproj"
+mk_dd bbb "/x/.claude/worktrees/LS-931/LittleSprout.xcodeproj"
+mk_dd ccc "/tmp/scratch/LS-930-r2-copy/LittleSprout.xcodeproj"
+mk_dd ddd "/x/.claude/worktrees/LS-9300/LittleSprout.xcodeproj"
+mkdir -p "$LS_DERIVED_DATA_ROOT/LittleSprout-eee/Build"
+mk_dd fff "$ewts/LS-932-dirty/LittleSprout.xcodeproj"
+export SIM_STUB_DB="$work/simdb" SIM_STUB_LOG="$work/simlog"
+sim_db_reset() { printf 'LS-930-iPhone17Pro\tSIM-930-A\tBooted\nLS-930-QA-iPhoneAir\tSIM-930-B\tShutdown\nLS-930-iPhone16\tSIM-930-C\tShutdown\tunavailable\nLS-9300-iPhone17Pro\tSIM-9300\tShutdown\nLS-931-iPhone17Pro\tSIM-931\tShutdown\nmain-iPhone17Pro\tSIM-MAIN\tShutdown\nLS-932-iPhone17Pro\tSIM-932\tShutdown\nLS-930-iPhoneLocked\tSIM-930-LOCK-%s\tShutdown\n' "$$" > "$SIM_STUB_DB"; : > "$SIM_STUB_LOG"; }
+lock930="/tmp/simulator-lock-SIM-930-LOCK-$$"; rm -rf "$lock930"; mkdir -p "$lock930"
+sim_db_reset
+out20d="$(bash "$cleanup" --dry-run --repo "$e/repo" LS-930 2>&1)"; rc20d=$?
+rc_is '⑳ dry-run exit 0' 0 "$rc20d" "$out20d"
+has   '⑳ dry-run 列 Booted 專屬機先 shutdown' "$out20d" '[dry-run] shutdown 專屬模擬器 LS-930-iPhone17Pro（SIM-930-A，Booted）'
+has   '⑳ dry-run 列 delete SIM-930-A' "$out20d" '[dry-run] delete 專屬模擬器 LS-930-iPhone17Pro（SIM-930-A）'
+has   '⑳ dry-run 列 delete SIM-930-B（LS-930-QA-* 也是 LS-930- 前綴）' "$out20d" 'delete 專屬模擬器 LS-930-QA-iPhoneAir（SIM-930-B）'
+has   '⑳ dry-run 列 delete SIM-930-C（unavailable 尾綴不影響 state 解析）' "$out20d" 'delete 專屬模擬器 LS-930-iPhone16（SIM-930-C）'
+hasnt '⑳ 鄰近票號 LS-9300 不動' "$out20d" 'SIM-9300'
+hasnt '⑳ 別票 LS-931 不動' "$out20d" 'SIM-931'
+hasnt '⑳ main-* 不動' "$out20d" 'SIM-MAIN'
+has   '⑳ 鎖中的專屬機標鎖中、不刪' "$out20d" "LS-930-iPhoneLocked（SIM-930-LOCK-$$）鎖中"
+hasnt '⑳ 鎖中的專屬機不列 delete' "$out20d" 'delete 專屬模擬器 LS-930-iPhoneLocked'
+has   '⑳ dry-run 列刪 DerivedData aaa（WorkspacePath 在該票 worktree 下）' "$out20d" '[dry-run] 刪除 DerivedData LittleSprout-aaa'
+has   '⑳ dry-run 列刪 DerivedData ccc（路徑元件 LS-930-r2-copy）' "$out20d" '[dry-run] 刪除 DerivedData LittleSprout-ccc'
+hasnt '⑳ DerivedData bbb（別票）不動' "$out20d" 'LittleSprout-bbb'
+hasnt '⑳ DerivedData ddd（LS-9300）不動' "$out20d" 'LittleSprout-ddd'
+has   '⑳ DerivedData eee 無 info.plist → 略過並列出' "$out20d" 'LittleSprout-eee：讀不到 info.plist'
+if grep -qE 'shutdown|delete' "$SIM_STUB_LOG"; then echo "✗ ⑳ dry-run 不該呼叫 simctl shutdown／delete" >&2; cat "$SIM_STUB_LOG" >&2; fail=1; else echo "✓ ⑳ dry-run 未呼叫 simctl shutdown／delete"; fi
+[ -d "$LS_DERIVED_DATA_ROOT/LittleSprout-aaa" ] && echo "✓ ⑳ dry-run 未刪 DerivedData" || { echo "✗ ⑳ dry-run 刪了 DerivedData" >&2; fail=1; }
+out20="$(bash "$cleanup" --apply --repo "$e/repo" LS-930 2>&1)"; rc20=$?
+rc_is '⑳ apply exit 0' 0 "$rc20" "$out20"
+gone_wt "$ewts/LS-930-attached" '⑳ LS-930-attached worktree 已移除'
+ln_sd=$(grep -n 'simctl shutdown SIM-930-A' "$SIM_STUB_LOG" | head -1 | cut -d: -f1); ln_del=$(grep -n 'simctl delete SIM-930-A' "$SIM_STUB_LOG" | head -1 | cut -d: -f1)
+if [ -n "$ln_sd" ] && [ -n "$ln_del" ] && [ "$ln_sd" -lt "$ln_del" ]; then echo "✓ ⑳ Booted 專屬機先 shutdown 再 delete（stub log 順序）"; else echo "✗ ⑳ 應先 shutdown 再 delete SIM-930-A（shutdown 行 ${ln_sd:-無}、delete 行 ${ln_del:-無}）" >&2; cat "$SIM_STUB_LOG" >&2; fail=1; fi
+grep -q 'simctl delete SIM-930-B' "$SIM_STUB_LOG" && echo "✓ ⑳ SIM-930-B 已 delete" || { echo "✗ ⑳ SIM-930-B 未 delete" >&2; fail=1; }
+grep -q 'simctl delete SIM-930-C' "$SIM_STUB_LOG" && echo "✓ ⑳ SIM-930-C（unavailable）已 delete" || { echo "✗ ⑳ SIM-930-C 未 delete" >&2; fail=1; }
+if grep -qE 'simctl (shutdown|delete) (SIM-9300|SIM-931|SIM-MAIN|SIM-932|SIM-930-LOCK)' "$SIM_STUB_LOG"; then echo "✗ ⑳ 動到非本票／鎖中的模擬器" >&2; cat "$SIM_STUB_LOG" >&2; fail=1; else echo "✓ ⑳ 非本票／鄰近票號／main-*／鎖中的模擬器全未動"; fi
+if grep -qF 'SIM-9300' "$SIM_STUB_DB" && grep -qF 'SIM-931' "$SIM_STUB_DB" && grep -qF 'SIM-MAIN' "$SIM_STUB_DB" && ! grep -qF 'SIM-930-A' "$SIM_STUB_DB"; then echo "✓ ⑳ db 只少了本票的三台"; else echo "✗ ⑳ db 內容不符" >&2; cat "$SIM_STUB_DB" >&2; fail=1; fi
+if [ ! -d "$LS_DERIVED_DATA_ROOT/LittleSprout-aaa" ] && [ ! -d "$LS_DERIVED_DATA_ROOT/LittleSprout-ccc" ]; then echo "✓ ⑳ DerivedData aaa／ccc 已刪"; else echo "✗ ⑳ DerivedData aaa／ccc 應被刪" >&2; fail=1; fi
+if [ -d "$LS_DERIVED_DATA_ROOT/LittleSprout-bbb" ] && [ -d "$LS_DERIVED_DATA_ROOT/LittleSprout-ddd" ] && [ -d "$LS_DERIVED_DATA_ROOT/LittleSprout-eee" ] && [ -d "$LS_DERIVED_DATA_ROOT/LittleSprout-fff" ]; then echo "✓ ⑳ DerivedData bbb／ddd／eee／fff 仍在"; else echo "✗ ⑳ 非本票 DerivedData 被誤刪" >&2; fail=1; fi
+has   '⑳ 摘要含專屬模擬器 3／DerivedData 2' "$out20" '專屬模擬器 3／DerivedData 2'
+# worktree 仍留在磁碟（LS-932 dirty 被略過）→ 附屬資源一律不動
+sim_db_reset
+out20w="$(bash "$cleanup" --apply --repo "$e/repo" LS-932 2>&1)"; rc20w=$?
+rc_is '⑳ worktree 仍在 exit 0' 0 "$rc20w" "$out20w"
+has   '⑳ worktree 仍在 → 印原因、附屬資源不動' "$out20w" '仍有 1 個 worktree 留在磁碟'
+if grep -qE 'shutdown|delete' "$SIM_STUB_LOG"; then echo "✗ ⑳ worktree 仍在不該動模擬器" >&2; cat "$SIM_STUB_LOG" >&2; fail=1; else echo "✓ ⑳ worktree 仍在 → 未呼叫 simctl shutdown／delete"; fi
+[ -d "$LS_DERIVED_DATA_ROOT/LittleSprout-fff" ] && echo "✓ ⑳ worktree 仍在 → DerivedData fff 未刪" || { echo "✗ ⑳ worktree 仍在不該刪 DerivedData" >&2; fail=1; }
+# --all 不套用
+out20a="$(bash "$cleanup" --dry-run --all --repo "$e/repo" 2>&1)"
+has   '⑳ --all → 附屬資源不套用' "$out20a" '未指名 LS-<n>，附屬資源不套用'
+hasnt '⑳ --all → 不列任何 delete 專屬模擬器' "$out20a" 'delete 專屬模擬器'
+rm -rf "$lock930"
 
 if [ "$fail" -eq 0 ]; then echo "✓ cleanup-merged.test.sh 全綠"; else echo "✗ cleanup-merged.test.sh 有失敗" >&2; fi
 exit "$fail"
