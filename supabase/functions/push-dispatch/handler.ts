@@ -68,6 +68,49 @@ export function isContentTargetType(v: unknown): v is ContentTargetType {
     v === "family";
 }
 
+/**
+ * `claim_notification_events()` 的原始回傳列（`Record<string, unknown>`，
+ * supabase-js RPC 回傳不帶型別）轉成 `ClaimedEvent[]` 的行轉換——LS-96 池項
+ * `a6f28382` 第 2 條（LS-175 merge-review R1-i2，R2 只搬了型別守門一半）：
+ * 原本連同 `isNotificationKind`／`isContentTargetType` 一起留在 `index.ts`，
+ * 因為 `index.ts` 在模組層級呼叫 `Deno.serve()`，這段行轉換邏輯（含「未知 kind
+ * 整批視為失敗」這個 fail-loud 分支）從落地起就沒有任何測試覆蓋。搬到這裡之後
+ * `index.ts` 的 `claimEvents` 只剩「呼叫 RPC → 把結果餵給這支純函式」的接線，
+ * 行為與搬遷前逐字等價（純粹把同一段程式碼移動位置，沒有改寫任何一行判斷式）。
+ */
+export function mapClaimedEventRows(
+  rows: Array<Record<string, unknown>>,
+): { events: ClaimedEvent[]; error?: string } {
+  const events: ClaimedEvent[] = [];
+  for (const row of rows) {
+    if (
+      !isNotificationKind(row.kind) || !isContentTargetType(row.target_type)
+    ) {
+      // fail loud：schema 回傳了非預期的 enum 值，代表資料庫與這支函式的假設
+      // 已經不同步——略過這一列並不安全（會用錯的文案發錯的訊息），直接算成
+      // 這次 claimEvents 呼叫失敗，交給上層 log／中止這一輪迴圈。
+      return {
+        events: [],
+        error: `claim_notification_events 回傳未知的 kind／target_type：${
+          JSON.stringify(row)
+        }`,
+      };
+    }
+    events.push({
+      id: String(row.id),
+      familyId: String(row.family_id),
+      kind: row.kind,
+      targetType: row.target_type,
+      targetId: String(row.target_id),
+      actorId: row.actor_id === null ? null : String(row.actor_id),
+      actorDisplayName: String(row.actor_display_name),
+      eventCount: Number(row.event_count),
+      occurredAt: String(row.occurred_at),
+    });
+  }
+  return { events };
+}
+
 export interface ClaimedEvent {
   id: string;
   familyId: string;

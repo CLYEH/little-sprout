@@ -11,11 +11,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2.114";
 import {
   type BatchRecipientRow,
-  type ClaimedEvent,
   type Deps,
   handleRequest,
-  isContentTargetType,
-  isNotificationKind,
+  mapClaimedEventRows,
   parseStubResponse,
   StubApnsProvider,
 } from "./handler.ts";
@@ -83,14 +81,14 @@ const CONCURRENCY = 8; // 有上限的併發送出數（LS-172 R2，merge-review
 // 完整跑完（結構性保證，不是估算），設計取捨與殘餘風險見 docs/API.md §10。
 const TIME_BUDGET_MS = 60_000;
 
-// 型別守門 `isNotificationKind`／`isContentTargetType`（資料庫的 enum 值只可能
-// 是這幾種，供下面 `claimEvents` 的行轉換使用）搬進 `handler.ts` 了——這裡是
-// `index.ts` 在模組層級呼叫 `Deno.serve()`（見檔尾），`import` 這個檔案會嘗試
-// 綁定 HTTP listener，導致這兩支純函式從落地起就沒有任何測試覆蓋，正是
-// LS-149 新增 `'report'` 這件事能悄悄漏掉守門這麼久的結構原因（merge-review
-// R1-i2）。搬到 `handler.ts` 之後 `handler.test.ts` 才能直接測到正式碼；
-// `'report'` 的守門缺口本身見 `handler.ts` 對這兩支函式的檔頭說明與 LS-96
-// 池項 `841d97da`（LS-175 R2 已補上 `'report'`）。
+// 型別守門 `isNotificationKind`／`isContentTargetType` 與下面 `claimEvents` 的
+// 行轉換（`mapClaimedEventRows`）都搬進 `handler.ts` 了（LS-96 池項
+// `841d97da`／`a6f28382` 第 2 條）——這裡是 `index.ts` 在模組層級呼叫
+// `Deno.serve()`（見檔尾），`import` 這個檔案會嘗試綁定 HTTP listener，導致這些
+// 純函式從落地起就沒有任何測試覆蓋，正是 LS-149 新增 `'report'` 這件事能悄悄
+// 漏掉守門這麼久的結構原因（merge-review R1-i2）。搬到 `handler.ts` 之後
+// `handler.test.ts` 才能直接測到正式碼；細節見 `handler.ts` 對
+// `mapClaimedEventRows` 的檔頭說明。
 
 function buildProdDeps(): Deps {
   return {
@@ -109,35 +107,9 @@ function buildProdDeps(): Deps {
         },
       );
       if (error) return { events: [], error: error.message };
-      const rows = (data ?? []) as Array<Record<string, unknown>>;
-      const events: ClaimedEvent[] = [];
-      for (const row of rows) {
-        if (
-          !isNotificationKind(row.kind) || !isContentTargetType(row.target_type)
-        ) {
-          // fail loud：schema 回傳了非預期的 enum 值，代表資料庫與這支函式的假設
-          // 已經不同步——略過這一列並不安全（會用錯的文案發錯的訊息），直接算成
-          // 這次 claimEvents 呼叫失敗，交給上層 log／中止這一輪迴圈。
-          return {
-            events: [],
-            error: `claim_notification_events 回傳未知的 kind／target_type：${
-              JSON.stringify(row)
-            }`,
-          };
-        }
-        events.push({
-          id: String(row.id),
-          familyId: String(row.family_id),
-          kind: row.kind,
-          targetType: row.target_type,
-          targetId: String(row.target_id),
-          actorId: row.actor_id === null ? null : String(row.actor_id),
-          actorDisplayName: String(row.actor_display_name),
-          eventCount: Number(row.event_count),
-          occurredAt: String(row.occurred_at),
-        });
-      }
-      return { events };
+      return mapClaimedEventRows(
+        (data ?? []) as Array<Record<string, unknown>>,
+      );
     },
 
     // 批次查詢（LS-172 R2，merge-reviewer m1）：一次 RPC 呼叫涵蓋整批 claimed
