@@ -1,0 +1,2337 @@
+{
+  "ticket": "LS-133",
+  "round": 2,
+  "head_sha": "35af3a53a4743de4b998e291d6160a6946c1a00c",
+  "total_nodes": 8862,
+  "tree_hash": "b088030fed5d4604",
+  "scans": {
+    "sibling_intersection": {
+      "flagged": [
+        {
+          "node_a": "pYE38/sD5Ma",
+          "node_b": "pYE38/DhOiK",
+          "classification": "（同類 216 例）@ Corner BL: Corner Shape × Corner Edge. 既有 cmp/Photo Corner 元件內部 Shape/Edge 兩條 path 疊圖繪同一顆角托，全稿角托母題結構性重疊，屬已知溢出白名單（角托），本票未觸碰該元件定義"
+        },
+        {
+          "node_a": "rtNqP/sD5Ma",
+          "node_b": "rtNqP/DhOiK",
+          "classification": "（同類 216 例）@ Corner BR: Corner Shape × Corner Edge. 既有 cmp/Photo Corner 元件內部 Shape/Edge 兩條 path 疊圖繪同一顆角托，全稿角托母題結構性重疊，屬已知溢出白名單（角托），本票未觸碰該元件定義"
+        },
+        {
+          "node_a": "g7B7X/sD5Ma",
+          "node_b": "g7B7X/DhOiK",
+          "classification": "（同類 216 例）@ Corner TL: Corner Shape × Corner Edge. 既有 cmp/Photo Corner 元件內部 Shape/Edge 兩條 path 疊圖繪同一顆角托，全稿角托母題結構性重疊，屬已知溢出白名單（角托），本票未觸碰該元件定義"
+        },
+        {
+          "node_a": "Mlugc/sD5Ma",
+          "node_b": "Mlugc/DhOiK",
+          "classification": "（同類 216 例）@ Corner TR: Corner Shape × Corner Edge. 既有 cmp/Photo Corner 元件內部 Shape/Edge 兩條 path 疊圖繪同一顆角托，全稿角托母題結構性重疊，屬已知溢出白名單（角托），本票未觸碰該元件定義"
+        },
+        {
+          "node_a": "V9wQZl",
+          "node_b": "OJNI5",
+          "classification": "（同類 134 例）@ Print Cell: Photo Wrap × Corner TL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "V9wQZl",
+          "node_b": "C57TMC",
+          "classification": "（同類 134 例）@ Print Cell: Photo Wrap × Corner TR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "kfuha",
+          "node_b": "qfxbb",
+          "classification": "（同類 51 例）@ Photo Print: Photo Wrap × Corner TL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "kfuha",
+          "node_b": "YG4hG",
+          "classification": "（同類 51 例）@ Photo Print: Photo Wrap × Corner TR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "yxEFh",
+          "node_b": "Wo9Ox",
+          "classification": "（同類 51 例）@ Photo Print: Imprint Row × Corner BL. 既有沖印品母題：Imprint Row 與下緣角托重疊是壓印行與角托共用下緣空間的既定版式，屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "yxEFh",
+          "node_b": "efA3a",
+          "classification": "（同類 51 例）@ Photo Print: Imprint Row × Corner BR. 既有沖印品母題：Imprint Row 與下緣角托重疊是壓印行與角托共用下緣空間的既定版式，屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "Z4TsQ/tBi8u",
+          "node_b": "Z4TsQ/xlLIo",
+          "classification": "（同類 23 例）@ Stamp Wrap: Ghost × Stamp. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "NUPWz",
+          "classification": "（同類 17 例）@ Photo Wrap: Hero Photo × Night Dim. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "WU8Te/sD5Ma",
+          "node_b": "WU8Te/DhOiK",
+          "classification": "（同類 17 例）@ Mount TL: Corner Shape × Corner Edge. 既有 cmp/Photo Corner 元件內部 Shape/Edge 兩條 path 疊圖繪同一顆角托，全稿角托母題結構性重疊，屬已知溢出白名單（角托），本票未觸碰該元件定義"
+        },
+        {
+          "node_a": "L7ke3/sD5Ma",
+          "node_b": "L7ke3/DhOiK",
+          "classification": "（同類 17 例）@ Mount BR: Corner Shape × Corner Edge. 既有 cmp/Photo Corner 元件內部 Shape/Edge 兩條 path 疊圖繪同一顆角托，全稿角托母題結構性重疊，屬已知溢出白名單（角托），本票未觸碰該元件定義"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "pYE38",
+          "classification": "（同類 12 例）@ Print Stage: Print × Corner BL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "rtNqP",
+          "classification": "（同類 12 例）@ Print Stage: Print × Corner BR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "g7B7X",
+          "classification": "（同類 12 例）@ Print Stage: Print × Corner TL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "Mlugc",
+          "classification": "（同類 12 例）@ Print Stage: Print × Corner TR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "yqk1S/GuOM0",
+          "node_b": "yqk1S/j7iqM",
+          "classification": "（同類 11 例）@ Google G Mark: G arc #4285F4 × G arc #34A853. Google 官方品牌標誌四色弧形 path 幾何本身重疊繪製同一個 G 標誌，品牌規範資產、不得改色值或幾何，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "yqk1S/aQq5T",
+          "node_b": "yqk1S/SieME",
+          "classification": "（同類 11 例）@ Google G Mark: G arc #EA4335 × G arc #FBBC05. Google 官方品牌標誌四色弧形 path 幾何本身重疊繪製同一個 G 標誌，品牌規範資產、不得改色值或幾何，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "yqk1S/SieME",
+          "node_b": "yqk1S/j7iqM",
+          "classification": "（同類 11 例）@ Google G Mark: G arc #FBBC05 × G arc #34A853. Google 官方品牌標誌四色弧形 path 幾何本身重疊繪製同一個 G 標誌，品牌規範資產、不得改色值或幾何，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "abfZE",
+          "node_b": "wOzaO",
+          "classification": "（同類 11 例）@ Avatar Stack: Avatar 1 × Avatar 2. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "osCBD/X7DYDo/go3YL",
+          "node_b": "osCBD/X7DYDo/uHUe1",
+          "classification": "（同類 5 例）@ Role Option · 一般成員: Role Text × Role Check. 既有角色選項核取記號與文字重疊為既定版式（LS-18 R3 語意 icon 覆蓋），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "osCBD/ZA8G7/go3YL",
+          "node_b": "osCBD/ZA8G7/uHUe1",
+          "classification": "（同類 5 例）@ Role Option · 只能看: Role Text × Role Check. 既有角色選項核取記號與文字重疊為既定版式（LS-18 R3 語意 icon 覆蓋），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "WC9pB/UTLcl",
+          "node_b": "WC9pB/r6cYjT",
+          "classification": "（同類 5 例）@ Card Album 1: Fan Ghost × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "PjgtQ/UTLcl",
+          "node_b": "PjgtQ/KGh0U",
+          "classification": "（同類 5 例）@ Card Album 2: Fan Ghost × Fan Ghost 2. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "PjgtQ/UTLcl",
+          "node_b": "PjgtQ/r6cYjT",
+          "classification": "（同類 5 例）@ Card Album 2: Fan Ghost × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "PjgtQ/KGh0U",
+          "node_b": "PjgtQ/r6cYjT",
+          "classification": "（同類 5 例）@ Card Album 2: Fan Ghost 2 × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "R7edNW/UTLcl",
+          "node_b": "R7edNW/r6cYjT",
+          "classification": "（同類 5 例）@ Card Album 3: Fan Ghost × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "MOWjB",
+          "node_b": "Iqtt4",
+          "classification": "（同類 4 例）@ Family Print: Photo Wrap × Corner TL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "MOWjB",
+          "node_b": "XjToq",
+          "classification": "（同類 4 例）@ Family Print: Photo Wrap × Corner TR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "lSghl",
+          "node_b": "zymKZ",
+          "classification": "（同類 4 例）@ Family Print: Imprint Row × Corner BL. 既有沖印品母題：Imprint Row 與下緣角托重疊是壓印行與角托共用下緣空間的既定版式，屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "lSghl",
+          "node_b": "jin0Q",
+          "classification": "（同類 4 例）@ Family Print: Imprint Row × Corner BR. 既有沖印品母題：Imprint Row 與下緣角托重疊是壓印行與角托共用下緣空間的既定版式，屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "M98qs",
+          "classification": "（同類 4 例）@ Print Stage: Sample Print × Corner TL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "j2z1C0",
+          "classification": "（同類 4 例）@ Print Stage: Sample Print × Corner TR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "xfmAg",
+          "classification": "（同類 4 例）@ Print Stage: Sample Print × Corner BL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "DIMqR",
+          "classification": "（同類 4 例）@ Print Stage: Sample Print × Corner BR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "YRtyF",
+          "classification": "（同類 4 例）@ Photo Wrap: Sample Photo × Night Dim. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "e8hcYl",
+          "classification": "（同類 4 例）@ Photo Wrap: Sample Photo × Pill Sample. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "YRtyF",
+          "node_b": "e8hcYl",
+          "classification": "（同類 4 例）@ Photo Wrap: Night Dim × Pill Sample. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WC9pB/UTLcl",
+          "node_b": "WC9pB/KGh0U",
+          "classification": "（同類 4 例）@ Card Album 1: Fan Ghost × Fan Ghost 2. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "WC9pB/KGh0U",
+          "node_b": "WC9pB/r6cYjT",
+          "classification": "（同類 4 例）@ Card Album 1: Fan Ghost 2 × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "H51J8u/UTLcl",
+          "node_b": "H51J8u/r6cYjT",
+          "classification": "（同類 4 例）@ Card Album 4: Fan Ghost × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "eDQhR/FjOA8",
+          "node_b": "eDQhR/UTLcl",
+          "classification": "（同類 4 例）@ Card Album 5: Fan Ghost 3 × Fan Ghost. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "eDQhR/FjOA8",
+          "node_b": "eDQhR/KGh0U",
+          "classification": "（同類 4 例）@ Card Album 5: Fan Ghost 3 × Fan Ghost 2. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "eDQhR/FjOA8",
+          "node_b": "eDQhR/r6cYjT",
+          "classification": "（同類 4 例）@ Card Album 5: Fan Ghost 3 × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "eDQhR/UTLcl",
+          "node_b": "eDQhR/KGh0U",
+          "classification": "（同類 4 例）@ Card Album 5: Fan Ghost × Fan Ghost 2. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "eDQhR/UTLcl",
+          "node_b": "eDQhR/r6cYjT",
+          "classification": "（同類 4 例）@ Card Album 5: Fan Ghost × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "eDQhR/KGh0U",
+          "node_b": "eDQhR/r6cYjT",
+          "classification": "（同類 4 例）@ Card Album 5: Fan Ghost 2 × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "lE7FJ/MN0WF",
+          "node_b": "lE7FJ/R1lbwf",
+          "classification": "（同類 4 例）@ Print: Photo × Mount TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "lE7FJ/MN0WF",
+          "node_b": "lE7FJ/S4O4r8",
+          "classification": "（同類 4 例）@ Print: Photo × Mount BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "z2l5f",
+          "node_b": "xKQDP",
+          "classification": "（同類 3 例）@ Icon 40: Print × Mount TL. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "z2l5f",
+          "node_b": "K8naK",
+          "classification": "（同類 3 例）@ Icon 40: Print × Mount BR. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "F9Gvz2",
+          "node_b": "EfgyZ",
+          "classification": "（同類 3 例）@ Struck Wrap: Struck Text × Strike Rule. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "Ur6DB",
+          "node_b": "W7Ycw",
+          "classification": "（同類 2 例）@ Email Print: Photo Wrap × Corner TL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "Ur6DB",
+          "node_b": "tlJFt",
+          "classification": "（同類 2 例）@ Email Print: Photo Wrap × Corner TR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "F9Iva",
+          "node_b": "jOrlo",
+          "classification": "（同類 2 例）@ Email Print: Imprint Row × Corner BL. 既有沖印品母題：Imprint Row 與下緣角托重疊是壓印行與角托共用下緣空間的既定版式，屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "F9Iva",
+          "node_b": "ny0ec",
+          "classification": "（同類 2 例）@ Email Print: Imprint Row × Corner BR. 既有沖印品母題：Imprint Row 與下緣角托重疊是壓印行與角托共用下緣空間的既定版式，屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "MxnWP",
+          "classification": "（同類 2 例）@ Photo Wrap: Print Paper × Join Photo. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "I5vhg",
+          "classification": "（同類 2 例）@ Photo Wrap: Print Paper × Night Dim. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "WceLk",
+          "classification": "（同類 2 例）@ Photo Wrap: Print Paper × Fade Pools. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "E6reS5",
+          "classification": "（同類 2 例）@ Photo Wrap: Print Paper × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "B5E1ig",
+          "classification": "（同類 2 例）@ Photo Wrap: Print Paper × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "br1l7",
+          "classification": "（同類 2 例）@ Photo Wrap: Print Paper × Corner BL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "qnP3W",
+          "classification": "（同類 2 例）@ Photo Wrap: Print Paper × Corner BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "I5vhg",
+          "classification": "（同類 2 例）@ Photo Wrap: Join Photo × Night Dim. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "WceLk",
+          "classification": "（同類 2 例）@ Photo Wrap: Join Photo × Fade Pools. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "E6reS5",
+          "classification": "（同類 2 例）@ Photo Wrap: Join Photo × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "B5E1ig",
+          "classification": "（同類 2 例）@ Photo Wrap: Join Photo × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "WceLk",
+          "classification": "（同類 2 例）@ Photo Wrap: Night Dim × Fade Pools. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "E6reS5",
+          "classification": "（同類 2 例）@ Photo Wrap: Night Dim × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "B5E1ig",
+          "classification": "（同類 2 例）@ Photo Wrap: Night Dim × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "E6reS5",
+          "classification": "（同類 2 例）@ Photo Wrap: Fade Pools × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "B5E1ig",
+          "classification": "（同類 2 例）@ Photo Wrap: Fade Pools × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "br1l7",
+          "classification": "（同類 2 例）@ Photo Wrap: Fade Pools × Corner BL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "qnP3W",
+          "classification": "（同類 2 例）@ Photo Wrap: Fade Pools × Corner BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "zBeVi",
+          "node_b": "L5YAG",
+          "classification": "（同類 2 例）@ Group 1: Code 1 × Focus Ring 第1格. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "LaaxQ",
+          "node_b": "WU8Te",
+          "classification": "（同類 2 例）@ Icon 180: Print × Mount TL. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "LaaxQ",
+          "node_b": "L7ke3",
+          "classification": "（同類 2 例）@ Icon 180: Print × Mount BR. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "xlMQk",
+          "node_b": "M72IeN",
+          "classification": "（同類 2 例）@ Icon 60: Print × Mount TL. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "xlMQk",
+          "node_b": "sPdfs",
+          "classification": "（同類 2 例）@ Icon 60: Print × Mount BR. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "RPTGa",
+          "node_b": "repj6",
+          "classification": "（同類 2 例）@ Photo Strip: Photo 1 × Dragging Photo. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "kdCWx",
+          "node_b": "repj6",
+          "classification": "（同類 2 例）@ Photo Strip: Drop Target × Dragging Photo. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "kcGJa",
+          "node_b": "RHhJ1",
+          "classification": "（同類 1 例）@ root: LS-18 / 07 邀請家人 · 已產生邀請碼 × LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\"). 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "z6DOE",
+          "node_b": "bqbKN",
+          "classification": "（同類 1 例）@ root: LS-18 / 07a 邀請家人 · 尚未產生（空狀態） × 設計註記 · 多寶貝預留（LS-46 / LS-47）. 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "RHhJ1",
+          "node_b": "bqbKN",
+          "classification": "（同類 1 例）@ root: LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\") × 設計註記 · 多寶貝預留（LS-46 / LS-47）. 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "CHLio",
+          "node_b": "nhCrq",
+          "classification": "（同類 1 例）@ root: LS-18 / 07c 邀請家人 · 產生中（載入） × LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起. 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "XhwG6",
+          "node_b": "qxVMy",
+          "classification": "（同類 1 例）@ root: 設計語言 v3.3 · 褪色相片粉調 Design Tokens × 設計註記 · $print-paper token（LS-46 R4 N8）. 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "ZBIhu",
+          "node_b": "hKSu1",
+          "classification": "（同類 1 例）@ root: 設計註記 · Legal 連結 AX3 溢出（LS-46 R3） × A11y / 06 輸入邀請碼 · Dynamic Type AX3（body 40pt）. 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "VRq1c",
+          "node_b": "tNqvY",
+          "classification": "（同類 1 例）@ root: A11y / 07 邀請家人 · Dynamic Type AX3（body 40pt） × Stress / 01 沖印品 · 不合調光源三態比較（LS-46 R4 F16）. 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "VRq1c",
+          "node_b": "Rtq1m",
+          "classification": "（同類 1 例）@ root: A11y / 07 邀請家人 · Dynamic Type AX3（body 40pt） × Stress / 04 角托＋Fade Pools · 不合調光源三態比較（LS-46 R4 F16）. 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "rx2TP",
+          "node_b": "LCpNO",
+          "classification": "（同類 1 例）@ root: LS-47 / 實作註記 · Handoff Notes (ios-dev) × Stress / 10 · 3 個寶貝＋超長名字. 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "MOLyd",
+          "node_b": "vzYXz",
+          "classification": "（同類 1 例）@ root: A11y / 12 日記編輯器 · Dynamic Type AX3（body 40pt） × LS-21 / 13 日記詳情 (iPhone). 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "cqgkc",
+          "node_b": "b3nzDp",
+          "classification": "（同類 1 例）@ root: A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt） × LS-152 / 實作註記 · Handoff Notes (ios-dev). 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "f1wVw",
+          "node_b": "b3nzDp",
+          "classification": "（同類 1 例）@ root: LS-21 / 12e 日記編輯器 · 照片排序（拖曳中） × LS-152 / 實作註記 · Handoff Notes (ios-dev). 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "bs8aE",
+          "node_b": "b3nzDp",
+          "classification": "（同類 1 例）@ root: A11y / 12e 日記編輯器 · 照片排序（拖曳中）· Dynamic Type AX3（body 40pt） × LS-152 / 實作註記 · Handoff Notes (ios-dev). 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "IH80C",
+          "node_b": "b3nzDp",
+          "classification": "（同類 1 例）@ root: Stress / 13 日記詳情 · 20 張照片壓測 × LS-152 / 實作註記 · Handoff Notes (ios-dev). 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "dHnPl",
+          "node_b": "b3nzDp",
+          "classification": "（同類 1 例）@ root: A11y / 04e 刪除帳號 · 最終確認 · Dynamic Type AX3 × LS-152 / 實作註記 · Handoff Notes (ios-dev). 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "b66CZc",
+          "node_b": "BXbTE",
+          "classification": "（同類 1 例）@ Card Join Family: Print Stage Spacer × Print Stage. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "I8sWT8",
+          "classification": "（同類 1 例）@ LS-17 / 01-iPad 歡迎登入 (iPad 11\"): Print × Corner TL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "OIwlW",
+          "classification": "（同類 1 例）@ LS-17 / 01-iPad 歡迎登入 (iPad 11\"): Print × Corner TR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "kSfzp",
+          "classification": "（同類 1 例）@ LS-17 / 01-iPad 歡迎登入 (iPad 11\"): Print × Corner BL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "mIStI",
+          "classification": "（同類 1 例）@ LS-17 / 01-iPad 歡迎登入 (iPad 11\"): Print × Corner BR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "sD5Ma",
+          "node_b": "DhOiK",
+          "classification": "（同類 1 例）@ cmp/Photo Corner: Corner Shape × Corner Edge. 既有 cmp/Photo Corner 元件內部 Shape/Edge 兩條 path 疊圖繪同一顆角托，全稿角托母題結構性重疊，屬已知溢出白名單（角托），本票未觸碰該元件定義"
+        },
+        {
+          "node_a": "PMV0W",
+          "node_b": "GWAHq",
+          "classification": "（同類 1 例）@ Photo Wrap: Join Photo × Corner BL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "PMV0W",
+          "node_b": "SV5Ka",
+          "classification": "（同類 1 例）@ Photo Wrap: Join Photo × Corner BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "uXS8K",
+          "node_b": "GWAHq",
+          "classification": "（同類 1 例）@ Photo Wrap: Night Dim × Corner BL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "uXS8K",
+          "node_b": "SV5Ka",
+          "classification": "（同類 1 例）@ Photo Wrap: Night Dim × Corner BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "aflVw",
+          "classification": "（同類 1 例）@ Demo Photo Wrap: Demo Print × Fade Pools. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "dCV1r",
+          "classification": "（同類 1 例）@ Demo Photo Wrap: Demo Print × Corner TL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "Evspf",
+          "classification": "（同類 1 例）@ Demo Photo Wrap: Demo Print × Corner TR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "B919I",
+          "classification": "（同類 1 例）@ Demo Photo Wrap: Demo Print × Corner BL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "fyZfa",
+          "classification": "（同類 1 例）@ Demo Photo Wrap: Demo Print × Corner BR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "dCV1r",
+          "classification": "（同類 1 例）@ Demo Photo Wrap: Fade Pools × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "Evspf",
+          "classification": "（同類 1 例）@ Demo Photo Wrap: Fade Pools × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "B919I",
+          "classification": "（同類 1 例）@ Demo Photo Wrap: Fade Pools × Corner BL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "fyZfa",
+          "classification": "（同類 1 例）@ Demo Photo Wrap: Fade Pools × Corner BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "PSBOi",
+          "node_b": "OtK4n",
+          "classification": "（同類 1 例）@ Icon Light: Print × Mount TL. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "PSBOi",
+          "node_b": "brcXK",
+          "classification": "（同類 1 例）@ Icon Light: Print × Mount BR. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "Ac3zU",
+          "node_b": "ClTOX",
+          "classification": "（同類 1 例）@ Icon Dark: Print × Mount TL. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "Ac3zU",
+          "node_b": "WjZtu",
+          "classification": "（同類 1 例）@ Icon Dark: Print × Mount BR. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "cTC2J",
+          "classification": "（同類 1 例）@ Icon 幾何（不套遮罩）: Print × Mount TL. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "k2V3ms",
+          "classification": "（同類 1 例）@ Icon 幾何（不套遮罩）: Print × Mount BR. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "mzo0K",
+          "classification": "（同類 1 例）@ Icon 幾何（不套遮罩）: Print × Squircle r=115 (Pencil 圓弧近似). 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "cTC2J",
+          "node_b": "mzo0K",
+          "classification": "（同類 1 例）@ Icon 幾何（不套遮罩）: Mount TL × Squircle r=115 (Pencil 圓弧近似). 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "cTC2J",
+          "node_b": "OxuA8",
+          "classification": "（同類 1 例）@ Icon 幾何（不套遮罩）: Mount TL × Clearance TL. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "k2V3ms",
+          "node_b": "mzo0K",
+          "classification": "（同類 1 例）@ Icon 幾何（不套遮罩）: Mount BR × Squircle r=115 (Pencil 圓弧近似). 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "k2V3ms",
+          "node_b": "LMc6c",
+          "classification": "（同類 1 例）@ Icon 幾何（不套遮罩）: Mount BR × Clearance BR. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "mzo0K",
+          "node_b": "OxuA8",
+          "classification": "（同類 1 例）@ Icon 幾何（不套遮罩）: Squircle r=115 (Pencil 圓弧近似) × Clearance TL. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "mzo0K",
+          "node_b": "LMc6c",
+          "classification": "（同類 1 例）@ Icon 幾何（不套遮罩）: Squircle r=115 (Pencil 圓弧近似) × Clearance BR. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "a1ycjz",
+          "node_b": "bWK8K",
+          "classification": "（同類 1 例）@ Icon 120: Print × Mount TL. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "a1ycjz",
+          "node_b": "y5UWXf",
+          "classification": "（同類 1 例）@ Icon 120: Print × Mount BR. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "h0ZQd",
+          "node_b": "E7kbRB",
+          "classification": "（同類 1 例）@ Icon 80: Print × Mount TL. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "h0ZQd",
+          "node_b": "Pqqdp",
+          "classification": "（同類 1 例）@ Icon 80: Print × Mount BR. 既有 App icon／小尺寸驗收排版中 Print 與 Mount 角托重疊是同一組角托母題在 icon 尺度的縮版，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "m780n",
+          "node_b": "uARGy",
+          "classification": "（同類 1 例）@ Mark: Photo Stack Preview × Mount TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "m780n",
+          "node_b": "mFP87",
+          "classification": "（同類 1 例）@ Mark: Photo Stack Preview × Mount BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "khLYx",
+          "node_b": "vRQFQ",
+          "classification": "（同類 1 例）@ Struck Wrap 2: Struck Text 2 × Strike Rule. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "lxZzb",
+          "node_b": "gJOJT",
+          "classification": "（同類 1 例）@ LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起: Body × Accessory Bar. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "lxZzb",
+          "node_b": "RZcIs",
+          "classification": "（同類 1 例）@ LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起: Body × Keyboard 系統鍵盤（示意，336pt）. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "TeX44",
+          "node_b": "RZcIs",
+          "classification": "（同類 1 例）@ LS-18 / 06-kbd 輸入邀請碼 · 鍵盤升起: Home Indicator Area × Keyboard 系統鍵盤（示意，336pt）. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "JE6tE",
+          "node_b": "Vmezj",
+          "classification": "（同類 1 例）@ Photo Wrap: Photo Area × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "JE6tE",
+          "node_b": "PaCtI",
+          "classification": "（同類 1 例）@ Photo Wrap: Photo Area × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "rrzzl",
+          "node_b": "p2dJpQ",
+          "classification": "（同類 1 例）@ Photo Wrap: Imprint Row × Corner BL. 既有沖印品母題：Imprint Row 與下緣角托重疊是壓印行與角托共用下緣空間的既定版式，屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "rrzzl",
+          "node_b": "Wrztr",
+          "classification": "（同類 1 例）@ Photo Wrap: Imprint Row × Corner BR. 既有沖印品母題：Imprint Row 與下緣角托重疊是壓印行與角托共用下緣空間的既定版式，屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "n5j2xu",
+          "node_b": "H3b7gk",
+          "classification": "（同類 1 例）@ Children Card: Photo Wrap × Corner TL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "n5j2xu",
+          "node_b": "oj6h0",
+          "classification": "（同類 1 例）@ Children Card: Photo Wrap × Corner TR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "XoVVx",
+          "node_b": "SUi6K",
+          "classification": "（同類 1 例）@ Children Card: Imprint Row × Corner BL. 既有沖印品母題：Imprint Row 與下緣角托重疊是壓印行與角托共用下緣空間的既定版式，屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "XoVVx",
+          "node_b": "nSjs7",
+          "classification": "（同類 1 例）@ Children Card: Imprint Row × Corner BR. 既有沖印品母題：Imprint Row 與下緣角托重疊是壓印行與角托共用下緣空間的既定版式，屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "cPbyp",
+          "node_b": "XMVoJ",
+          "classification": "（同類 1 例）@ LS-47 / 09c 移除寶貝 · 確認（Owner）: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "cPbyp",
+          "node_b": "MBQx8",
+          "classification": "（同類 1 例）@ LS-47 / 09c 移除寶貝 · 確認（Owner）: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "XMVoJ",
+          "node_b": "MBQx8",
+          "classification": "（同類 1 例）@ LS-47 / 09c 移除寶貝 · 確認（Owner）: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "A14LnU",
+          "node_b": "dJM15",
+          "classification": "（同類 1 例）@ LS-47 / 10 時間軸 · 寶貝切換: Body × FAB. 既有 FAB 浮動絕對定位按鈕與 Body 捲動內容重疊是既定版式（FAB 已被 LS-119 建立入口取代但既有畫面保留），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "A14LnU",
+          "node_b": "EoToI",
+          "classification": "（同類 1 例）@ LS-47 / 10 時間軸 · 寶貝切換: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "xgx94",
+          "classification": "（同類 1 例）@ LS-47 / 10b 時間軸 · 寶貝切換（下拉，>3）: Body × Dropdown Menu. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "gFJ8N",
+          "classification": "（同類 1 例）@ LS-47 / 10b 時間軸 · 寶貝切換（下拉，>3）: Body × FAB. 既有 FAB 浮動絕對定位按鈕與 Body 捲動內容重疊是既定版式（FAB 已被 LS-119 建立入口取代但既有畫面保留），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "qx4xE",
+          "classification": "（同類 1 例）@ LS-47 / 10b 時間軸 · 寶貝切換（下拉，>3）: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "xTL71",
+          "node_b": "DZjmG",
+          "classification": "（同類 1 例）@ LS-47 / 10c 發佈 · 選擇歸屬寶貝: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "xTL71",
+          "node_b": "gbW37",
+          "classification": "（同類 1 例）@ LS-47 / 10c 發佈 · 選擇歸屬寶貝: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "DZjmG",
+          "node_b": "gbW37",
+          "classification": "（同類 1 例）@ LS-47 / 10c 發佈 · 選擇歸屬寶貝: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "zGEet",
+          "classification": "（同類 1 例）@ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）: Body × Dropdown Menu. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "G5vY5",
+          "classification": "（同類 1 例）@ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）: Body × FAB. 既有 FAB 浮動絕對定位按鈕與 Body 捲動內容重疊是既定版式（FAB 已被 LS-119 建立入口取代但既有畫面保留），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "qCMDY",
+          "classification": "（同類 1 例）@ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "bq8pa",
+          "node_b": "yqWq9",
+          "classification": "（同類 1 例）@ LS-47 / 10 時間軸 · 寶貝切換 · 深色: Body × FAB. 既有 FAB 浮動絕對定位按鈕與 Body 捲動內容重疊是既定版式（FAB 已被 LS-119 建立入口取代但既有畫面保留），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "bq8pa",
+          "node_b": "C57OVI",
+          "classification": "（同類 1 例）@ LS-47 / 10 時間軸 · 寶貝切換 · 深色: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "go3YL",
+          "node_b": "uHUe1",
+          "classification": "（同類 1 例）@ cmp/Role Option: Role Text × Role Check. 既有角色選項核取記號與文字重疊為既定版式（LS-18 R3 語意 icon 覆蓋），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "n7gPAe",
+          "node_b": "Egn9A",
+          "classification": "（同類 1 例）@ LS-21 / 11 時間軸 (iPhone): Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "WitwS/uZ5Lt",
+          "node_b": "WitwS/kVUWa",
+          "classification": "（同類 1 例）@ Photo C: Stack Sheet 2 × Stack Sheet 1. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WitwS/ekqx4",
+          "node_b": "WitwS/GCEdk",
+          "classification": "（同類 1 例）@ Photo C: Thumb C × More Scrim. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "PFhXP",
+          "node_b": "eRy14",
+          "classification": "（同類 1 例）@ LS-21 / 11b 時間軸 · 空狀態: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "gKBS7",
+          "node_b": "aY7S5",
+          "classification": "（同類 1 例）@ Empty Print: Photo Wrap × Corner TL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "gKBS7",
+          "node_b": "BbDZH",
+          "classification": "（同類 1 例）@ Empty Print: Photo Wrap × Corner TR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "bG6cD",
+          "node_b": "fsveQ",
+          "classification": "（同類 1 例）@ Empty Print: Imprint Row × Corner BL. 既有沖印品母題：Imprint Row 與下緣角托重疊是壓印行與角托共用下緣空間的既定版式，屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "bG6cD",
+          "node_b": "wSSFB",
+          "classification": "（同類 1 例）@ Empty Print: Imprint Row × Corner BR. 既有沖印品母題：Imprint Row 與下緣角托重疊是壓印行與角托共用下緣空間的既定版式，屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "x5Vmg",
+          "node_b": "OR1hw",
+          "classification": "（同類 1 例）@ LS-21 / 11c 時間軸 · 下拉更新中: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "Q600X",
+          "node_b": "bmk5H",
+          "classification": "（同類 1 例）@ LS-21 / 11 時間軸 · 深色: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "YulfE",
+          "node_b": "QVGNJ",
+          "classification": "（同類 1 例）@ A11y / 11 時間軸 · Dynamic Type AX3（body 40pt）: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "CV0TW",
+          "node_b": "iCUJF",
+          "classification": "（同類 1 例）@ Photo 1: Thumb × Selected Badge. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "TSxZo",
+          "node_b": "v7MGOT",
+          "classification": "（同類 1 例）@ Photo 2: Thumb × Selected Badge. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "o73UY",
+          "node_b": "M4PUm",
+          "classification": "（同類 1 例）@ Stress / 11 時間軸 · 單一寶貝 filter: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "aedfE",
+          "node_b": "V4oYH",
+          "classification": "（同類 1 例）@ A11y / 11 時間軸 · 兩位寶貝聯合標記 · Dynamic Type AX3（body 40pt）: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "FqE7M",
+          "node_b": "wTMlo",
+          "classification": "（同類 1 例）@ LS-142 / 14 相簿 (iPhone): Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "oyZbS",
+          "node_b": "v4dw1",
+          "classification": "（同類 1 例）@ LS-142 / 14b 相簿 · 空狀態: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "DUOGt",
+          "node_b": "kJq3T",
+          "classification": "（同類 1 例）@ Blank Print Cell: Photo Wrap × Corner TL. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "DUOGt",
+          "node_b": "olgX0",
+          "classification": "（同類 1 例）@ Blank Print Cell: Photo Wrap × Corner TR. 既有沖印品母題：角托壓過紙緣 corner-out 5pt 與紙面／照片重疊是設計意圖（motifs.md 角托三段規則），屬已知溢出白名單（角托／出血），本票未觸碰"
+        },
+        {
+          "node_a": "bjuSv",
+          "node_b": "hkjhm",
+          "classification": "（同類 1 例）@ LS-142 / 15c 刪除相簿 · 確認（Owner）: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "bjuSv",
+          "node_b": "M6Bkt",
+          "classification": "（同類 1 例）@ LS-142 / 15c 刪除相簿 · 確認（Owner）: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "hkjhm",
+          "node_b": "M6Bkt",
+          "classification": "（同類 1 例）@ LS-142 / 15c 刪除相簿 · 確認（Owner）: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "YekOU",
+          "node_b": "Kl0eH",
+          "classification": "（同類 1 例）@ LS-142 / 14 相簿 · 深色: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "v3pPdz",
+          "node_b": "K3xsp1",
+          "classification": "（同類 1 例）@ LS-142 / 14b 相簿 · 空狀態 · 深色: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "jZVRr",
+          "node_b": "RxQis",
+          "classification": "（同類 1 例）@ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "i3jpIq/FjOA8",
+          "node_b": "i3jpIq/UTLcl",
+          "classification": "（同類 1 例）@ Card Album 3: Fan Ghost 3 × Fan Ghost. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "i3jpIq/FjOA8",
+          "node_b": "i3jpIq/KGh0U",
+          "classification": "（同類 1 例）@ Card Album 3: Fan Ghost 3 × Fan Ghost 2. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "i3jpIq/FjOA8",
+          "node_b": "i3jpIq/r6cYjT",
+          "classification": "（同類 1 例）@ Card Album 3: Fan Ghost 3 × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "i3jpIq/UTLcl",
+          "node_b": "i3jpIq/KGh0U",
+          "classification": "（同類 1 例）@ Card Album 3: Fan Ghost × Fan Ghost 2. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "i3jpIq/KGh0U",
+          "node_b": "i3jpIq/r6cYjT",
+          "classification": "（同類 1 例）@ Card Album 3: Fan Ghost 2 × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "HIdMW/UTLcl",
+          "node_b": "HIdMW/KGh0U",
+          "classification": "（同類 1 例）@ Card Album 6: Fan Ghost × Fan Ghost 2. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "HIdMW/UTLcl",
+          "node_b": "HIdMW/r6cYjT",
+          "classification": "（同類 1 例）@ Card Album 6: Fan Ghost × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "HIdMW/KGh0U",
+          "node_b": "HIdMW/r6cYjT",
+          "classification": "（同類 1 例）@ Card Album 6: Fan Ghost 2 × Photo Print. 既有相簿卡疊紙／Fan Ghost 母題（LS-142 MJ-9），多片 Ghost 與 Photo Print 刻意交疊表示「這本相簿有多厚」，屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "T7DfpY",
+          "node_b": "j2svp",
+          "classification": "（同類 1 例）@ Stress / 14 相簿 · 超長相簿名＋單張相片: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "FOd6u",
+          "node_b": "D6sAcX",
+          "classification": "（同類 1 例）@ LS-142 / 16 上傳佇列: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "FOd6u",
+          "node_b": "B7AqL",
+          "classification": "（同類 1 例）@ LS-142 / 16 上傳佇列: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "D6sAcX",
+          "node_b": "B7AqL",
+          "classification": "（同類 1 例）@ LS-142 / 16 上傳佇列: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "yvhTU",
+          "node_b": "EigFv",
+          "classification": "（同類 1 例）@ LS-142 / 16 上傳佇列 · 深色: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "yvhTU",
+          "node_b": "bNhc1",
+          "classification": "（同類 1 例）@ LS-142 / 16 上傳佇列 · 深色: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "EigFv",
+          "node_b": "bNhc1",
+          "classification": "（同類 1 例）@ LS-142 / 16 上傳佇列 · 深色: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "dV8Qj",
+          "node_b": "BEyFk",
+          "classification": "（同類 1 例）@ A11y / 16 上傳佇列 · Dynamic Type AX3（body 40pt）: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "dV8Qj",
+          "node_b": "fo7g1",
+          "classification": "（同類 1 例）@ A11y / 16 上傳佇列 · Dynamic Type AX3（body 40pt）: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "BEyFk",
+          "node_b": "fo7g1",
+          "classification": "（同類 1 例）@ A11y / 16 上傳佇列 · Dynamic Type AX3（body 40pt）: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "E51wH",
+          "node_b": "WOhYG",
+          "classification": "（同類 1 例）@ LS-142 / 16b 上傳佇列 · 全部狀態展開（不裁切）: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "E51wH",
+          "node_b": "umPbi",
+          "classification": "（同類 1 例）@ LS-142 / 16b 上傳佇列 · 全部狀態展開（不裁切）: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "WOhYG",
+          "node_b": "umPbi",
+          "classification": "（同類 1 例）@ LS-142 / 16b 上傳佇列 · 全部狀態展開（不裁切）: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "QioS2",
+          "node_b": "bMTQi",
+          "classification": "（同類 1 例）@ A11y / 16b 上傳佇列 · 全部狀態展開 AX3（不裁切）: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "QioS2",
+          "node_b": "r84waq",
+          "classification": "（同類 1 例）@ A11y / 16b 上傳佇列 · 全部狀態展開 AX3（不裁切）: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "bMTQi",
+          "node_b": "r84waq",
+          "classification": "（同類 1 例）@ A11y / 16b 上傳佇列 · 全部狀態展開 AX3（不裁切）: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "FD9qU",
+          "node_b": "ykj25",
+          "classification": "（同類 1 例）@ LS-152 / 01 設定: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "azJjI",
+          "node_b": "dXvs2",
+          "classification": "（同類 1 例）@ LS-152 / 01 設定 · 深色: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "z3Lone",
+          "node_b": "RDXui",
+          "classification": "（同類 1 例）@ A11y / 01 設定 · Dynamic Type AX3: Body × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "zh1oK",
+          "node_b": "FLa3s",
+          "classification": "（同類 1 例）@ LS-152 / 03b 移除成員 · 確認（Owner）: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "zh1oK",
+          "node_b": "dGzCL",
+          "classification": "（同類 1 例）@ LS-152 / 03b 移除成員 · 確認（Owner）: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "FLa3s",
+          "node_b": "dGzCL",
+          "classification": "（同類 1 例）@ LS-152 / 03b 移除成員 · 確認（Owner）: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "v1mVWP",
+          "node_b": "cOmRO",
+          "classification": "（同類 1 例）@ LS-152 / 03c 轉移 Owner · 確認: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "v1mVWP",
+          "node_b": "PMtMR",
+          "classification": "（同類 1 例）@ LS-152 / 03c 轉移 Owner · 確認: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "cOmRO",
+          "node_b": "PMtMR",
+          "classification": "（同類 1 例）@ LS-152 / 03c 轉移 Owner · 確認: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "c30576",
+          "node_b": "hxxHK",
+          "classification": "（同類 1 例）@ LS-152 / 03d 退出家庭 · 確認（僅限非唯一 Owner）: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "c30576",
+          "node_b": "mEhU5",
+          "classification": "（同類 1 例）@ LS-152 / 03d 退出家庭 · 確認（僅限非唯一 Owner）: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "hxxHK",
+          "node_b": "mEhU5",
+          "classification": "（同類 1 例）@ LS-152 / 03d 退出家庭 · 確認（僅限非唯一 Owner）: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "ZUD6e",
+          "node_b": "i6DIZ",
+          "classification": "（同類 1 例）@ LS-152 / 05 內容操作表: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "ZUD6e",
+          "node_b": "K3SRwk",
+          "classification": "（同類 1 例）@ LS-152 / 05 內容操作表: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "i6DIZ",
+          "node_b": "K3SRwk",
+          "classification": "（同類 1 例）@ LS-152 / 05 內容操作表: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "r8R5F",
+          "node_b": "TTki5",
+          "classification": "（同類 1 例）@ LS-152 / 05b 檢舉原因: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "r8R5F",
+          "node_b": "rUYvm",
+          "classification": "（同類 1 例）@ LS-152 / 05b 檢舉原因: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "TTki5",
+          "node_b": "rUYvm",
+          "classification": "（同類 1 例）@ LS-152 / 05b 檢舉原因: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "H5iprd",
+          "node_b": "UVTX8",
+          "classification": "（同類 1 例）@ LS-152 / 05c 檢舉已送出: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "H5iprd",
+          "node_b": "QPh4b",
+          "classification": "（同類 1 例）@ LS-152 / 05c 檢舉已送出: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "UVTX8",
+          "node_b": "QPh4b",
+          "classification": "（同類 1 例）@ LS-152 / 05c 檢舉已送出: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "yVqvZ",
+          "node_b": "F7cSv",
+          "classification": "（同類 1 例）@ LS-152 / 05d 封鎖確認: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "yVqvZ",
+          "node_b": "VgDOl",
+          "classification": "（同類 1 例）@ LS-152 / 05d 封鎖確認: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "F7cSv",
+          "node_b": "VgDOl",
+          "classification": "（同類 1 例）@ LS-152 / 05d 封鎖確認: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "VcQS1",
+          "node_b": "E07WN1",
+          "classification": "（同類 1 例）@ LS-152 / 05e Owner 移除內容 · 確認: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "VcQS1",
+          "node_b": "L0VhA",
+          "classification": "（同類 1 例）@ LS-152 / 05e Owner 移除內容 · 確認: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "E07WN1",
+          "node_b": "L0VhA",
+          "classification": "（同類 1 例）@ LS-152 / 05e Owner 移除內容 · 確認: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "xDKDL",
+          "node_b": "FgEza",
+          "classification": "（同類 1 例）@ LS-152 / 10 刪除日記 · 確認: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "xDKDL",
+          "node_b": "q4obb",
+          "classification": "（同類 1 例）@ LS-152 / 10 刪除日記 · 確認: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "FgEza",
+          "node_b": "q4obb",
+          "classification": "（同類 1 例）@ LS-152 / 10 刪除日記 · 確認: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "IldBr",
+          "node_b": "a6u13",
+          "classification": "（同類 1 例）@ LS-152 / 10b 刪除留言 · 確認: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "IldBr",
+          "node_b": "ZDOMk",
+          "classification": "（同類 1 例）@ LS-152 / 10b 刪除留言 · 確認: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "a6u13",
+          "node_b": "ZDOMk",
+          "classification": "（同類 1 例）@ LS-152 / 10b 刪除留言 · 確認: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "gX04c",
+          "node_b": "svdWR",
+          "classification": "（同類 1 例）@ A11y / 05b 檢舉原因 · Dynamic Type AX3: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "gX04c",
+          "node_b": "S49vq",
+          "classification": "（同類 1 例）@ A11y / 05b 檢舉原因 · Dynamic Type AX3: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "svdWR",
+          "node_b": "S49vq",
+          "classification": "（同類 1 例）@ A11y / 05b 檢舉原因 · Dynamic Type AX3: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "fzjIO",
+          "node_b": "LyWDH",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPad 11\"): Print × Corner TL. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "fzjIO",
+          "node_b": "iGx4e",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPad 11\"): Print × Corner TR. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "fzjIO",
+          "node_b": "g211l6",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPad 11\"): Print × Corner BL. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "fzjIO",
+          "node_b": "zOe6U",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPad 11\"): Print × Corner BR. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "Zg1x3",
+          "node_b": "IeLM2",
+          "classification": "（同類 1 例）@ LS legal / 文件檢視 (iPhone): Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "Zg1x3",
+          "node_b": "M5ktLZ",
+          "classification": "（同類 1 例）@ LS legal / 文件檢視 (iPhone): Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "IeLM2",
+          "node_b": "M5ktLZ",
+          "classification": "（同類 1 例）@ LS legal / 文件檢視 (iPhone): Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "dQWLV",
+          "node_b": "oe8X2",
+          "classification": "（同類 1 例）@ LS legal / 文件檢視 · 深色: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "dQWLV",
+          "node_b": "PuJ2I",
+          "classification": "（同類 1 例）@ LS legal / 文件檢視 · 深色: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "oe8X2",
+          "node_b": "PuJ2I",
+          "classification": "（同類 1 例）@ LS legal / 文件檢視 · 深色: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "M15ryH",
+          "node_b": "cgd6P",
+          "classification": "（同類 1 例）@ A11y / 文件檢視 · Dynamic Type AX3（body 40pt）: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "M15ryH",
+          "node_b": "CozLy",
+          "classification": "（同類 1 例）@ A11y / 文件檢視 · Dynamic Type AX3（body 40pt）: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "cgd6P",
+          "node_b": "CozLy",
+          "classification": "（同類 1 例）@ A11y / 文件檢視 · Dynamic Type AX3（body 40pt）: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "oZp4P",
+          "node_b": "Di8Mu",
+          "classification": "（同類 1 例）@ LS legal / 文件檢視 (iPad 11\"): Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "oZp4P",
+          "node_b": "ANzjU",
+          "classification": "（同類 1 例）@ LS legal / 文件檢視 (iPad 11\"): Status Bar (Backdrop) × Card Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "Di8Mu",
+          "node_b": "ANzjU",
+          "classification": "（同類 1 例）@ LS legal / 文件檢視 (iPad 11\"): Scrim × Card Wrap. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "E27nKz",
+          "node_b": "uQeV8",
+          "classification": "（同類 1 例）@ root: A11y / 文件檢視 · Dynamic Type AX3（body 40pt） × LS legal / 文件檢視 (iPad 11\"). 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "pLLXi",
+          "node_b": "k6Rlt",
+          "classification": "（同類 1 例）@ root: LS-133 / 實作註記 · Handoff Notes (ios-dev) × A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3（body 40pt）. 既有頂層畫布板與板之間、或板與設計註記卡片之間的畫布擺放位置相鄰重疊，純屬 Pencil 畫布版面編排、非畫面內容渲染重疊，不影響任何實際 UI 呈現，屬既有已知情況，本票未觸碰"
+        },
+        {
+          "node_a": "kJyvC",
+          "node_b": "QnW6V",
+          "classification": "（同類 1 例）@ A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3（body 40pt）: Status Bar (Backdrop) × Scrim. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "kJyvC",
+          "node_b": "CP5Zi",
+          "classification": "（同類 1 例）@ A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3（body 40pt）: Status Bar (Backdrop) × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "QnW6V",
+          "node_b": "CP5Zi",
+          "classification": "（同類 1 例）@ A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3（body 40pt）: Scrim × Sheet Wrap. 既有 Sheet／Modal 覆蓋層 z-order 疊圖，Scrim 蓋住底稿是刻意設計（modal 呈現慣例），屬既有設計意圖，本票未觸碰"
+        }
+      ]
+    },
+    "row_overflow": {
+      "flagged": [
+        {
+          "node": "C57TMC",
+          "classification": "（同類 134 例）@ Print Cell :: Corner TR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "x4NnCv",
+          "classification": "（同類 134 例）@ Print Cell :: Corner BR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "YG4hG",
+          "classification": "（同類 51 例）@ Photo Print :: Corner TR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "efA3a",
+          "classification": "（同類 51 例）@ Photo Print :: Corner BR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "jCGWG",
+          "classification": "（同類 8 例）@ Photo Strip :: Photo 3 (+63). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "X9BSMc/A30rIX",
+          "classification": "（同類 5 例）@ Avatar :: Initial (+6). 既有他票已知溢出白名單／設計意圖（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node": "XjToq",
+          "classification": "（同類 4 例）@ Family Print :: Corner TR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "jin0Q",
+          "classification": "（同類 4 例）@ Family Print :: Corner BR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "j2z1C0",
+          "classification": "（同類 4 例）@ Print Stage :: Corner TR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "DIMqR",
+          "classification": "（同類 4 例）@ Print Stage :: Corner BR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "flduf",
+          "classification": "（同類 4 例）@ Legal :: Legal Link (+117). 既有法務行連結／分段文字在 AX3 或長文案下的既知溢出（entry-conditions.md ⑧，AX3 法務行以 ViewThatFits 實作但 .pen 靜態稿無法表達），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node": "lE7FJ/S4O4r8",
+          "classification": "（同類 4 例）@ Print :: Mount BR (+3.8). 既有他票已知溢出白名單／設計意圖（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node": "B5E1ig",
+          "classification": "（同類 3 例）@ Photo Wrap :: Corner TR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "qnP3W",
+          "classification": "（同類 3 例）@ Photo Wrap :: Corner BR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "tlJFt",
+          "classification": "（同類 2 例）@ Email Print :: Corner TR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "ny0ec",
+          "classification": "（同類 2 例）@ Email Print :: Corner BR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "qX0b8",
+          "classification": "（同類 2 例）@ Photo Wrap :: Hero Photo (+5). 既有他票已知溢出白名單／設計意圖（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node": "XtNLC",
+          "classification": "（同類 2 例）@ Legal :: Legal Seg (+150). 既有法務行連結／分段文字在 AX3 或長文案下的既知溢出（entry-conditions.md ⑧，AX3 法務行以 ViewThatFits 實作但 .pen 靜態稿無法表達），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node": "aNTzo/OCYqN",
+          "classification": "（同類 2 例）@ Date Anchor :: Stamp Wrap (+20.14). 既有他票已知溢出白名單／設計意圖（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node": "iO0Ko",
+          "classification": "（同類 2 例）@ Photo Strip :: Photo 2 (+63). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "BXbTE",
+          "classification": "（同類 1 例）@ Card Join Family :: Print Stage (+24). 既有他票已知溢出白名單／設計意圖（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node": "FBRlf/iu3Q8",
+          "classification": "（同類 1 例）@ Field Box :: Field Value (+30). 既有他票 Text Field 元件既有溢出（本票未觸碰之既有 instance，非 LS-163 新建密碼欄），原樣留存於收據"
+        },
+        {
+          "node": "Evspf",
+          "classification": "（同類 1 例）@ Demo Photo Wrap :: Corner TR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "fyZfa",
+          "classification": "（同類 1 例）@ Demo Photo Wrap :: Corner BR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "z0ATW/yxwnz",
+          "classification": "（同類 1 例）@ Paste Link Button :: Secondary Label (+2.5). 既有他票已知溢出白名單／設計意圖（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node": "oj6h0",
+          "classification": "（同類 1 例）@ Children Card :: Corner TR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "nSjs7",
+          "classification": "（同類 1 例）@ Children Card :: Corner BR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "k8PVy",
+          "classification": "（同類 1 例）@ Segment :: Label (+24.13). 既有他票已知溢出白名單／設計意圖（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node": "WitwS/uZ5Lt",
+          "classification": "（同類 1 例）@ Photo C :: Stack Sheet 2 (+9.97). 既有他票已知溢出白名單／設計意圖（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node": "WitwS/kVUWa",
+          "classification": "（同類 1 例）@ Photo C :: Stack Sheet 1 (+6.97). 既有他票已知溢出白名單／設計意圖（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node": "BbDZH",
+          "classification": "（同類 1 例）@ Empty Print :: Corner TR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "wSSFB",
+          "classification": "（同類 1 例）@ Empty Print :: Corner BR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "iCUJF",
+          "classification": "（同類 1 例）@ Photo 1 :: Selected Badge (+6). 既有他票已知溢出白名單／設計意圖（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node": "v7MGOT",
+          "classification": "（同類 1 例）@ Photo 2 :: Selected Badge (+6). 既有他票已知溢出白名單／設計意圖（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node": "r0E2vG",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 4 (+167). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "dbyDu",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 5 (+271). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "B2PYlk",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 6 (+375). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "DgWAS",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 7 (+479). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "to36g",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 8 (+583). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "UwOm5",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 9 (+687). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "L1Gvi",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 10 (+791). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "a93IH",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 11 (+895). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "tJr7O",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 12 (+999). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "f4znT9",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 13 (+1103). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "QnhMi",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 14 (+1207). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "cvkFS",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 15 (+1311). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "G636T",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 16 (+1415). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "TdVUk",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 17 (+1519). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "P8eEXh",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 18 (+1623). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "HxDU4",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 19 (+1727). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "MBCZw",
+          "classification": "（同類 1 例）@ Photo Strip :: Photo 20 (+1831). 既有日記編輯器照片佇列 Photo Strip 橫向捲動列表，縮圖預期超出容器可視寬度以供左右滑動瀏覽，屬設計意圖（橫向 ScrollView），本票未觸碰"
+        },
+        {
+          "node": "olgX0",
+          "classification": "（同類 1 例）@ Blank Print Cell :: Corner TR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        },
+        {
+          "node": "xyD7I",
+          "classification": "（同類 1 例）@ Blank Print Cell :: Corner BR (+5). 既有角托 corner-out 5pt 出血規則：角托外緣刻意壓過紙緣，橫列溢出掃描以父容器右緣為界必然命中，屬已知溢出白名單（角托），本票未觸碰"
+        }
+      ]
+    },
+    "cross_parent_collision": {
+      "flagged": [
+        {
+          "node_a": "CJ2BA",
+          "node_b": "OJNI5",
+          "classification": "（同類 2 例）@ LS-21 / 13 日記詳情 (iPhone): Spacer 16 × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "CJ2BA",
+          "node_b": "C57TMC",
+          "classification": "（同類 2 例）@ LS-21 / 13 日記詳情 (iPhone): Spacer 16 × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "gnVLw",
+          "node_b": "OiUoO",
+          "classification": "（同類 2 例）@ LS-21 / 13 日記詳情 · 深色: Spacer 16 × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "gnVLw",
+          "node_b": "IB5r1",
+          "classification": "（同類 2 例）@ LS-21 / 13 日記詳情 · 深色: Spacer 16 × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "UEhNU",
+          "node_b": "kakSb",
+          "classification": "（同類 2 例）@ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）: Spacer 16 × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "UEhNU",
+          "node_b": "F0Tzj",
+          "classification": "（同類 2 例）@ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）: Spacer 16 × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "KBTFi",
+          "node_b": "OkHbz",
+          "classification": "（同類 2 例）@ Stress / 13 日記詳情 · 20 張照片壓測: Spacer 16 × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "KBTFi",
+          "node_b": "RefMF",
+          "classification": "（同類 2 例）@ Stress / 13 日記詳情 · 20 張照片壓測: Spacer 16 × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WsQdq",
+          "node_b": "Fw3Lw",
+          "classification": "（同類 2 例）@ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）: Spacer 16 × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WsQdq",
+          "node_b": "PWKoD",
+          "classification": "（同類 2 例）@ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）: Spacer 16 × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "QOgzb",
+          "node_b": "DHfo9",
+          "classification": "（同類 2 例）@ LS-142 / 15 相簿詳情 (iPhone): Spacer Section × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "QOgzb",
+          "node_b": "GsLq1",
+          "classification": "（同類 2 例）@ LS-142 / 15 相簿詳情 (iPhone): Spacer Section × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "F8c1z",
+          "node_b": "tcfj6",
+          "classification": "（同類 2 例）@ LS-142 / 15 相簿詳情 · 深色: Spacer Section × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "F8c1z",
+          "node_b": "l3ULp",
+          "classification": "（同類 2 例）@ LS-142 / 15 相簿詳情 · 深色: Spacer Section × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "hogY7",
+          "node_b": "RpgcZ",
+          "classification": "（同類 2 例）@ A11y / 15 相簿詳情 · Dynamic Type AX3（body 40pt）: Spacer Section × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "hogY7",
+          "node_b": "BTTKx",
+          "classification": "（同類 2 例）@ A11y / 15 相簿詳情 · Dynamic Type AX3（body 40pt）: Spacer Section × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "nyK3s",
+          "node_b": "QYEzP",
+          "classification": "（同類 2 例）@ Stress / 15 相簿詳情 · 34 張全滿: Spacer Section × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "nyK3s",
+          "node_b": "V0ISZ",
+          "classification": "（同類 2 例）@ Stress / 15 相簿詳情 · 34 張全滿: Spacer Section × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "pYE38",
+          "classification": "（同類 1 例）@ LS-17 / 01 歡迎登入 (iPhone): Hero Photo × Corner BL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "rtNqP",
+          "classification": "（同類 1 例）@ LS-17 / 01 歡迎登入 (iPhone): Hero Photo × Corner BR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "g7B7X",
+          "classification": "（同類 1 例）@ LS-17 / 01 歡迎登入 (iPhone): Hero Photo × Corner TL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "Mlugc",
+          "classification": "（同類 1 例）@ LS-17 / 01 歡迎登入 (iPhone): Hero Photo × Corner TR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "M98qs",
+          "classification": "（同類 1 例）@ LS-18 / 07a 邀請家人 · 尚未產生（空狀態）: Sample Photo × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "j2z1C0",
+          "classification": "（同類 1 例）@ LS-18 / 07a 邀請家人 · 尚未產生（空狀態）: Sample Photo × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "xfmAg",
+          "classification": "（同類 1 例）@ LS-18 / 07a 邀請家人 · 尚未產生（空狀態）: Sample Photo × Corner BL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "DIMqR",
+          "classification": "（同類 1 例）@ LS-18 / 07a 邀請家人 · 尚未產生（空狀態）: Sample Photo × Corner BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "I8sWT8",
+          "classification": "（同類 1 例）@ LS-17 / 01-iPad 歡迎登入 (iPad 11\"): Hero Photo × Corner TL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "OIwlW",
+          "classification": "（同類 1 例）@ LS-17 / 01-iPad 歡迎登入 (iPad 11\"): Hero Photo × Corner TR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "kSfzp",
+          "classification": "（同類 1 例）@ LS-17 / 01-iPad 歡迎登入 (iPad 11\"): Hero Photo × Corner BL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "mIStI",
+          "classification": "（同類 1 例）@ LS-17 / 01-iPad 歡迎登入 (iPad 11\"): Hero Photo × Corner BR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "E6reS5",
+          "classification": "（同類 1 例）@ LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\"): Join Photo Image × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "B5E1ig",
+          "classification": "（同類 1 例）@ LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\"): Join Photo Image × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "br1l7",
+          "classification": "（同類 1 例）@ LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\"): Join Photo Image × Corner BL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "qnP3W",
+          "classification": "（同類 1 例）@ LS-18 / 04-iPad 首次進入 · 加入或建立 (iPad 11\"): Join Photo Image × Corner BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "F03KZ",
+          "classification": "（同類 1 例）@ LS-17 / 01b 歡迎登入 · 登入中: Hero Photo × Corner BL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "IdIpj",
+          "classification": "（同類 1 例）@ LS-17 / 01b 歡迎登入 · 登入中: Hero Photo × Corner BR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "CQ1DR",
+          "classification": "（同類 1 例）@ LS-17 / 01b 歡迎登入 · 登入中: Hero Photo × Corner TL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "R13bes",
+          "classification": "（同類 1 例）@ LS-17 / 01b 歡迎登入 · 登入中: Hero Photo × Corner TR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "VUrCa",
+          "classification": "（同類 1 例）@ LS-17 / 01c 歡迎登入 · 深色模式: Hero Photo × Corner BL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "s3NQB",
+          "classification": "（同類 1 例）@ LS-17 / 01c 歡迎登入 · 深色模式: Hero Photo × Corner BR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "MSHDo",
+          "classification": "（同類 1 例）@ LS-17 / 01c 歡迎登入 · 深色模式: Hero Photo × Corner TL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "Or86v",
+          "classification": "（同類 1 例）@ LS-17 / 01c 歡迎登入 · 深色模式: Hero Photo × Corner TR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "vh3wA",
+          "classification": "（同類 1 例）@ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）: Join Photo Image × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "a9D8tu",
+          "classification": "（同類 1 例）@ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）: Join Photo Image × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "GWAHq",
+          "classification": "（同類 1 例）@ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）: Join Photo Image × Corner BL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "SV5Ka",
+          "classification": "（同類 1 例）@ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）: Join Photo Image × Corner BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "GWAHq",
+          "node_b": "CpjLh",
+          "classification": "（同類 1 例）@ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）: Corner BL × Card Text. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "SV5Ka",
+          "node_b": "CpjLh",
+          "classification": "（同類 1 例）@ A11y / 04 加入或建立 · Dynamic Type AX3（body 40pt）: Corner BR × Card Text. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "HQIu3",
+          "classification": "（同類 1 例）@ A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）: Hero Photo × Corner BL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "sqAra",
+          "classification": "（同類 1 例）@ A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）: Hero Photo × Corner BR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "XNlL6",
+          "classification": "（同類 1 例）@ A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）: Hero Photo × Corner TL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "YtTc7",
+          "classification": "（同類 1 例）@ A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）: Hero Photo × Corner TR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "E0sov",
+          "classification": "（同類 1 例）@ LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone): Hero Photo × Corner BL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "tzB8c",
+          "classification": "（同類 1 例）@ LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone): Hero Photo × Corner BR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "jUZCY",
+          "classification": "（同類 1 例）@ LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone): Hero Photo × Corner TL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "O1r9l",
+          "classification": "（同類 1 例）@ LS-17 / 01-alt · 未採用 · A′ 對照存檔 (iPhone): Hero Photo × Corner TR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "Wo9Ox",
+          "node_b": "K4qvK6",
+          "classification": "（同類 1 例）@ LS-47 / 08 幫寶貝建檔: Corner BL × Spacer 16. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "efA3a",
+          "node_b": "K4qvK6",
+          "classification": "（同類 1 例）@ LS-47 / 08 幫寶貝建檔: Corner BR × Spacer 16. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "E5X7Nk",
+          "node_b": "aGcLA",
+          "classification": "（同類 1 例）@ LS-47 / 08c 幫寶貝建檔 · 深色: Corner BL × Spacer 16. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "cM5Hi",
+          "node_b": "aGcLA",
+          "classification": "（同類 1 例）@ LS-47 / 08c 幫寶貝建檔 · 深色: Corner BR × Spacer 16. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "gEYpf",
+          "node_b": "zGEet",
+          "classification": "（同類 1 例）@ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）: Corner TL × Dropdown Menu. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "FkOcN",
+          "node_b": "zGEet",
+          "classification": "（同類 1 例）@ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）: Corner TR × Dropdown Menu. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "PRyQO",
+          "node_b": "zGEet",
+          "classification": "（同類 1 例）@ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）: Corner BL × Dropdown Menu. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "tVUkg",
+          "node_b": "zGEet",
+          "classification": "（同類 1 例）@ A11y / 10 時間軸切換 · Dynamic Type AX3（body 40pt，強制下拉）: Corner BR × Dropdown Menu. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "AXf4H",
+          "classification": "（同類 1 例）@ LS-18 / 07a 邀請家人 · 深色模式: Sample Photo × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "Lns4o",
+          "classification": "（同類 1 例）@ LS-18 / 07a 邀請家人 · 深色模式: Sample Photo × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "haMqk",
+          "classification": "（同類 1 例）@ LS-18 / 07a 邀請家人 · 深色模式: Sample Photo × Corner BL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "Izo3e",
+          "classification": "（同類 1 例）@ LS-18 / 07a 邀請家人 · 深色模式: Sample Photo × Corner BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "XHfST",
+          "classification": "（同類 1 例）@ A11y / 07a 邀請家人 · Dynamic Type AX3（尚未產生 · body 40pt）: Sample Photo × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "kbkHy",
+          "classification": "（同類 1 例）@ A11y / 07a 邀請家人 · Dynamic Type AX3（尚未產生 · body 40pt）: Sample Photo × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "q2Dth",
+          "classification": "（同類 1 例）@ A11y / 07a 邀請家人 · Dynamic Type AX3（尚未產生 · body 40pt）: Sample Photo × Corner BL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "VGqGL",
+          "classification": "（同類 1 例）@ A11y / 07a 邀請家人 · Dynamic Type AX3（尚未產生 · body 40pt）: Sample Photo × Corner BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "OJ1xr",
+          "classification": "（同類 1 例）@ LS-18 / 07a 邀請家人 · 只能看選中: Sample Photo × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "KSTqZ",
+          "classification": "（同類 1 例）@ LS-18 / 07a 邀請家人 · 只能看選中: Sample Photo × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "Rqmus",
+          "classification": "（同類 1 例）@ LS-18 / 07a 邀請家人 · 只能看選中: Sample Photo × Corner BL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "W7VlAp",
+          "classification": "（同類 1 例）@ LS-18 / 07a 邀請家人 · 只能看選中: Sample Photo × Corner BR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "aY7S5",
+          "classification": "（同類 1 例）@ LS-21 / 11b 時間軸 · 空狀態: Spacer Section × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "BbDZH",
+          "classification": "（同類 1 例）@ LS-21 / 11b 時間軸 · 空狀態: Spacer Section × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "K3Q7ZT/DjW91",
+          "node_b": "OR1hw",
+          "classification": "（同類 1 例）@ LS-21 / 11c 時間軸 · 下拉更新中: Corner TL × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "K3Q7ZT/JgUK8",
+          "node_b": "OR1hw",
+          "classification": "（同類 1 例）@ LS-21 / 11c 時間軸 · 下拉更新中: Corner TR × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "MFpwo/DjW91",
+          "node_b": "sbsqF",
+          "classification": "（同類 1 例）@ LS-21 / 11 時間軸 · 深色: Corner TL × Home Indicator Area. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "MFpwo/DjW91",
+          "node_b": "bmk5H",
+          "classification": "（同類 1 例）@ LS-21 / 11 時間軸 · 深色: Corner TL × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "MFpwo/JgUK8",
+          "node_b": "sbsqF",
+          "classification": "（同類 1 例）@ LS-21 / 11 時間軸 · 深色: Corner TR × Home Indicator Area. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "MFpwo/JgUK8",
+          "node_b": "bmk5H",
+          "classification": "（同類 1 例）@ LS-21 / 11 時間軸 · 深色: Corner TR × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "FO005",
+          "node_b": "im7DS",
+          "classification": "（同類 1 例）@ LS-21 / 13 日記詳情 (iPhone): Corner BL × Spacer Section. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "a3oZ2",
+          "node_b": "im7DS",
+          "classification": "（同類 1 例）@ LS-21 / 13 日記詳情 (iPhone): Corner BR × Spacer Section. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "Kd1aN",
+          "node_b": "Yz0R7",
+          "classification": "（同類 1 例）@ LS-21 / 13 日記詳情 · 深色: Corner BL × Spacer Section. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "Y21UsQ",
+          "node_b": "Yz0R7",
+          "classification": "（同類 1 例）@ LS-21 / 13 日記詳情 · 深色: Corner BR × Spacer Section. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "E1nSH9",
+          "node_b": "EgTrf",
+          "classification": "（同類 1 例）@ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）: Corner BL × Spacer Section. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "UoKog",
+          "node_b": "EgTrf",
+          "classification": "（同類 1 例）@ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）: Corner BR × Spacer Section. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "u01Pc/DjW91",
+          "node_b": "u87Nb",
+          "classification": "（同類 1 例）@ Stress / 11 時間軸 · 單一寶貝 filter: Corner TL × Home Indicator Area. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "u01Pc/DjW91",
+          "node_b": "M4PUm",
+          "classification": "（同類 1 例）@ Stress / 11 時間軸 · 單一寶貝 filter: Corner TL × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "u01Pc/JgUK8",
+          "node_b": "u87Nb",
+          "classification": "（同類 1 例）@ Stress / 11 時間軸 · 單一寶貝 filter: Corner TR × Home Indicator Area. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "u01Pc/JgUK8",
+          "node_b": "M4PUm",
+          "classification": "（同類 1 例）@ Stress / 11 時間軸 · 單一寶貝 filter: Corner TR × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "s1LfAj",
+          "node_b": "repj6",
+          "classification": "（同類 1 例）@ LS-21 / 12e 日記編輯器 · 照片排序（拖曳中）: Photos Header × Dragging Photo. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "IDOjx",
+          "node_b": "h3zyP",
+          "classification": "（同類 1 例）@ A11y / 12e 日記編輯器 · 照片排序（拖曳中）· Dynamic Type AX3（body 40pt）: Photos Header × Dragging Photo. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "PU1lk",
+          "node_b": "UGZbZ",
+          "classification": "（同類 1 例）@ Stress / 13 日記詳情 · 20 張照片壓測: Corner BL × Spacer Section. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "S7qlEV",
+          "node_b": "UGZbZ",
+          "classification": "（同類 1 例）@ Stress / 13 日記詳情 · 20 張照片壓測: Corner BR × Spacer Section. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "IcuGv",
+          "node_b": "z12HU",
+          "classification": "（同類 1 例）@ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）: Corner BL × Spacer Section. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "kTGk5",
+          "node_b": "z12HU",
+          "classification": "（同類 1 例）@ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）: Corner BR × Spacer Section. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "zYLzt",
+          "node_b": "WC9pB/DjW91",
+          "classification": "（同類 1 例）@ LS-142 / 14 相簿 (iPhone): Spacer Section × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "zYLzt",
+          "node_b": "WC9pB/JgUK8",
+          "classification": "（同類 1 例）@ LS-142 / 14 相簿 (iPhone): Spacer Section × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "R7edNW/DjW91",
+          "node_b": "wTMlo",
+          "classification": "（同類 1 例）@ LS-142 / 14 相簿 (iPhone): Corner TL × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "R7edNW/JgUK8",
+          "node_b": "wTMlo",
+          "classification": "（同類 1 例）@ LS-142 / 14 相簿 (iPhone): Corner TR × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "HauTE",
+          "node_b": "o5WSp",
+          "classification": "（同類 1 例）@ LS-142 / 15 相簿詳情 (iPhone): Corner BL × Spacer Bottom. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "v1R53",
+          "node_b": "o5WSp",
+          "classification": "（同類 1 例）@ LS-142 / 15 相簿詳情 (iPhone): Corner BR × Spacer Bottom. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WESbz",
+          "node_b": "J4vk0/DjW91",
+          "classification": "（同類 1 例）@ LS-142 / 14 相簿 · 深色: Spacer Section × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "WESbz",
+          "node_b": "J4vk0/JgUK8",
+          "classification": "（同類 1 例）@ LS-142 / 14 相簿 · 深色: Spacer Section × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "T3SwvP/DjW91",
+          "node_b": "Kl0eH",
+          "classification": "（同類 1 例）@ LS-142 / 14 相簿 · 深色: Corner TL × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "T3SwvP/JgUK8",
+          "node_b": "Kl0eH",
+          "classification": "（同類 1 例）@ LS-142 / 14 相簿 · 深色: Corner TR × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "T4FpQ",
+          "node_b": "ONEs5/DjW91",
+          "classification": "（同類 1 例）@ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）: Spacer Section × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "T4FpQ",
+          "node_b": "ONEs5/JgUK8",
+          "classification": "（同類 1 例）@ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）: Spacer Section × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "oWCtg",
+          "node_b": "nxJbB/DjW91",
+          "classification": "（同類 1 例）@ Stress / 14 相簿 · 超長相簿名＋單張相片: Spacer Section × Corner TL. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "oWCtg",
+          "node_b": "nxJbB/JgUK8",
+          "classification": "（同類 1 例）@ Stress / 14 相簿 · 超長相簿名＋單張相片: Spacer Section × Corner TR. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "QSnUF/mlORb",
+          "node_b": "j2svp",
+          "classification": "（同類 1 例）@ Stress / 14 相簿 · 超長相簿名＋單張相片: Corner BL × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "QSnUF/atAkU",
+          "node_b": "j2svp",
+          "classification": "（同類 1 例）@ Stress / 14 相簿 · 超長相簿名＋單張相片: Corner BR × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "mdabp/DjW91",
+          "node_b": "NLs8N",
+          "classification": "（同類 1 例）@ Stress / 14 相簿 · 超長相簿名＋單張相片: Corner TL × Home Indicator Area. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "mdabp/DjW91",
+          "node_b": "j2svp",
+          "classification": "（同類 1 例）@ Stress / 14 相簿 · 超長相簿名＋單張相片: Corner TL × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "mdabp/JgUK8",
+          "node_b": "NLs8N",
+          "classification": "（同類 1 例）@ Stress / 14 相簿 · 超長相簿名＋單張相片: Corner TR × Home Indicator Area. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "mdabp/JgUK8",
+          "node_b": "j2svp",
+          "classification": "（同類 1 例）@ Stress / 14 相簿 · 超長相簿名＋單張相片: Corner TR × Tab Bar. 既有 Tab Bar 浮動絕對定位膠囊與捲動內容／版面框重疊是 Tab-root 慣例（LS-120，內容捲動至膠囊後方是合法終態），屬既有設計意圖，本票未觸碰"
+        },
+        {
+          "node_a": "B87KY",
+          "node_b": "FpSWL",
+          "classification": "（同類 1 例）@ LS-142 / 15 相簿詳情 · 深色: Corner BL × Spacer Bottom. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "t2rbzf",
+          "node_b": "FpSWL",
+          "classification": "（同類 1 例）@ LS-142 / 15 相簿詳情 · 深色: Corner BR × Spacer Bottom. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "DXKtL",
+          "node_b": "OGFNo",
+          "classification": "（同類 1 例）@ A11y / 15 相簿詳情 · Dynamic Type AX3（body 40pt）: Corner BL × Spacer Bottom. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "I7TMsE",
+          "node_b": "OGFNo",
+          "classification": "（同類 1 例）@ A11y / 15 相簿詳情 · Dynamic Type AX3（body 40pt）: Corner BR × Spacer Bottom. 既有他票已知溢出白名單／設計意圖重疊（本票未觸碰、未改動該區域，原樣留存於收據以符合全樹掃描規約）"
+        },
+        {
+          "node_a": "qBZgC",
+          "node_b": "JnqZC",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPhone): Hero Photo × Corner BL. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "qBZgC",
+          "node_b": "xJFDt",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPhone): Hero Photo × Corner BR. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "qBZgC",
+          "node_b": "kuGrj",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPhone): Hero Photo × Corner TL. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "qBZgC",
+          "node_b": "hXerh",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPhone): Hero Photo × Corner TR. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "vOTsH",
+          "node_b": "d5KiR",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 · 深色: Hero Photo × Corner BL. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "vOTsH",
+          "node_b": "RTI5Y",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 · 深色: Hero Photo × Corner BR. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "vOTsH",
+          "node_b": "MrWrL",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 · 深色: Hero Photo × Corner TL. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "vOTsH",
+          "node_b": "FFiOL",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 · 深色: Hero Photo × Corner TR. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "YCX9H",
+          "node_b": "duQY0",
+          "classification": "（同類 1 例）@ A11y / 01e 歡迎登入 · 含密碼登入連結 · Dynamic Type AX3（body 40pt）: Hero Photo × Corner BL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "YCX9H",
+          "node_b": "cxlFu",
+          "classification": "（同類 1 例）@ A11y / 01e 歡迎登入 · 含密碼登入連結 · Dynamic Type AX3（body 40pt）: Hero Photo × Corner BR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "YCX9H",
+          "node_b": "fu2Ex",
+          "classification": "（同類 1 例）@ A11y / 01e 歡迎登入 · 含密碼登入連結 · Dynamic Type AX3（body 40pt）: Hero Photo × Corner TL. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "YCX9H",
+          "node_b": "pgSnC",
+          "classification": "（同類 1 例）@ A11y / 01e 歡迎登入 · 含密碼登入連結 · Dynamic Type AX3（body 40pt）: Hero Photo × Corner TR. 既有歡迎頁母題：Hero Photo 刻意大於 clip 容器造成出血，與 Night Dim／角托重疊是設計意圖（motifs.md 照片出血），屬已知溢出白名單，本票未觸碰"
+        },
+        {
+          "node_a": "CJeYy",
+          "node_b": "LyWDH",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPad 11\"): Hero Photo × Corner TL. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "CJeYy",
+          "node_b": "iGx4e",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPad 11\"): Hero Photo × Corner TR. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "CJeYy",
+          "node_b": "g211l6",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPad 11\"): Hero Photo × Corner BL. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        },
+        {
+          "node_a": "CJeYy",
+          "node_b": "zOe6U",
+          "classification": "（同類 1 例）@ LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPad 11\"): Hero Photo × Corner BR. LS-163 R1 新增：01b 三板（含深色／AX3）忠實複製既有 LS-17 01／01c／AX3-01 的 Print Stage 母題角托出血結構（Hero Photo 刻意大於 clip 容器、角托壓過紙緣 corner-out 5pt），屬既有已知溢出白名單同型（motifs.md 出血／角托規則），非新增缺陷類別"
+        }
+      ]
+    },
+    "corner_anchor": {
+      "boards": [
+        "EzJCV",
+        "O631mm",
+        "E27nKz",
+        "uQeV8",
+        "k6Rlt",
+        "pLLXi"
+      ],
+      "containers": 0,
+      "points": 0,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 216,
+      "document_points": 1728,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "unresolved": []
+    },
+    "text_occlusion": {
+      "flagged": [],
+      "document_flagged": [
+        {
+          "node": "WitwS/d41MUZ",
+          "overlay": "Egn9A",
+          "classification": "（同類 3 例）@ board LS-21 / 11 時間軸 (iPhone)(yXSht). 既有 Feed／內容捲動到浮動 Tab Bar 膠囊底下的滾動態常態（motifs.md Tab Bar 全字級純 icon 慣例，內容捲動至膠囊後方是合法終態），本票未觸碰"
+        },
+        {
+          "node": "Z3r6xn/VDOco",
+          "overlay": "bmk5H",
+          "classification": "（同類 2 例）@ board LS-21 / 11 時間軸 · 深色(V4Ktak). 既有 Feed／內容捲動到浮動 Tab Bar 膠囊底下的滾動態常態（motifs.md Tab Bar 全字級純 icon 慣例，內容捲動至膠囊後方是合法終態），本票未觸碰"
+        },
+        {
+          "node": "vKTvw/VDOco",
+          "overlay": "M4PUm",
+          "classification": "（同類 2 例）@ board Stress / 11 時間軸 · 單一寶貝 filter(A33la). 既有 Feed／內容捲動到浮動 Tab Bar 膠囊底下的滾動態常態（motifs.md Tab Bar 全字級純 icon 慣例，內容捲動至膠囊後方是合法終態），本票未觸碰"
+        },
+        {
+          "node": "i3jpIq/MIxHp",
+          "overlay": "RxQis",
+          "classification": "（同類 1 例）@ board A11y / 14 相簿 · Dynamic Type AX3（body 40pt）(IjWOp). 既有 Feed／內容捲動到浮動 Tab Bar 膠囊底下的滾動態常態（motifs.md Tab Bar 全字級純 icon 慣例，內容捲動至膠囊後方是合法終態），本票未觸碰"
+        },
+        {
+          "node": "QSnUF/wQVzs",
+          "overlay": "j2svp",
+          "classification": "（同類 1 例）@ board Stress / 14 相簿 · 超長相簿名＋單張相片(Wl90J). 既有 Feed／內容捲動到浮動 Tab Bar 膠囊底下的滾動態常態（motifs.md Tab Bar 全字級純 icon 慣例，內容捲動至膠囊後方是合法終態），本票未觸碰"
+        }
+      ]
+    }
+  }
+}

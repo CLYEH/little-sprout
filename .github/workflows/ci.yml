@@ -643,6 +643,11 @@ jobs:
           # 不把正確性押在 scheme 預設值上。
           # LS-95：明確帶 -only-testing:LittleSproutTests，不連 LittleSproutUITests（≥44pt
           # 點擊目標 gate）一起跑——那個 target 由下一步 tap-target-check.sh 單獨執行。
+          # LS-158：`LittleSproutUITests/QA/`（QASmokeTests，QA 端到端情境）需要本機 Supabase 容器＋Mailpit，
+          # CI 只編譯不跑——`xcodebuild test` 會把 scheme Test action 裡兩個 test target 都建起來（-only-testing
+          # 只限制執行、不限制建置），QA/ 在這一步就會被編譯到（編譯錯＝這步紅）；tap-target-check.sh 以純
+          # -skip-testing 組合排除它（-only-testing 對 -skip-testing 有優先權）。情境本身由 qa 在本機經
+          # scripts/ops/qa-e2e.sh 跑。
           xcodebuild test \
             -scheme LittleSprout \
             -destination "$dest" \

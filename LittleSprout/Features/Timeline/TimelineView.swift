@@ -261,6 +261,8 @@ struct TimelineView: View {
                 )
             }
             .buttonStyle(.plain)
+            // LS-158：QA e2e 用 identifier 找卡片（整張卡合併成一顆 button，label＝日記本文，會隨內容變）。
+            .accessibilityIdentifier(QAAccessibilityID.timelineDiaryCard)
         case .album(let content):
             AlbumCardView(content: content)
         case .media(let content):
