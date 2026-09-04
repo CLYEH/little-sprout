@@ -145371,7 +145371,6 @@
                       "x": 0,
                       "y": 0,
                       "name": "Hero Print",
-                      "rotation": -3.0000000000000004,
                       "width": 200,
                       "height": 155,
                       "fill": "$print-paper",
@@ -145701,7 +145700,6 @@
                       "x": 0,
                       "y": 0,
                       "name": "Hero Print",
-                      "rotation": -3.0000000000000004,
                       "width": 200,
                       "height": 155,
                       "fill": "$print-paper",
@@ -146030,7 +146028,6 @@
                       "x": 0,
                       "y": 0,
                       "name": "Hero Print",
-                      "rotation": -3.0000000000000004,
                       "width": 200,
                       "height": 155,
                       "fill": "$print-paper",
@@ -146560,9 +146557,11 @@
               "id": "Dbc4l",
               "layoutPosition": "absolute",
               "x": 24,
-              "y": -422,
+              "y": -671,
               "name": "Content",
+              "clip": true,
               "width": "fill_container(345)",
+              "height": 1213,
               "layout": "vertical",
               "gap": "$sp-block",
               "padding": [
@@ -146780,7 +146779,7 @@
                 {
                   "type": "frame",
                   "id": "ZfAQX",
-                  "name": "Tab Bar Clearance",
+                  "name": "Nav Bar Spacer",
                   "width": "fill_container",
                   "height": 151
                 },
@@ -147260,9 +147259,11 @@
               "id": "b1znIV",
               "layoutPosition": "absolute",
               "x": 24,
-              "y": -422,
+              "y": -671,
               "name": "Content",
+              "clip": true,
               "width": "fill_container(345)",
+              "height": 1213,
               "layout": "vertical",
               "gap": "$sp-block",
               "padding": [
@@ -147480,7 +147481,7 @@
                 {
                   "type": "frame",
                   "id": "q70vAB",
-                  "name": "Tab Bar Clearance",
+                  "name": "Nav Bar Spacer",
                   "width": "fill_container",
                   "height": 151
                 },
