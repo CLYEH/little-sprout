@@ -698,7 +698,10 @@ rollback;
 -- （owner／member，不看 can_upload，逐字比照 `update_child` 本身的授權判準）。
 -- 這裡直接以超級使用者身分種一筆「owner 上傳的頭像物件」（owner 欄位＝A 家 owner），
 -- 驗證 member／viewer／跨家庭三種角色對它的 UPDATE／DELETE 行為，以及既有
--- `{yyyy}/{mm}` 分支（上一段已驗）完全不受影響。
+-- `{yyyy}/{mm}` 分支（上一段已驗）完全不受影響。**注意**：以下探針直接對已存在
+-- 物件下 SQL UPDATE／DELETE，驗證的是這兩條 policy 本身的角色判準；app 實際換頭像
+-- 走 Storage API 的 upsert，另受 INSERT policy 的 can_upload 節制——兩者的差異見
+-- can_upload=false 那個區塊前的完整說明（LS-169 R3 n1）。
 -- ===========================================================================
 begin;
 set local storage.allow_delete_query = 'true';
@@ -727,10 +730,22 @@ begin
 end;
 $$;
 
--- 關掉這個 member 的 can_upload，驗證頭像分支真的「不看 can_upload」——跟
--- update_child 的授權判準逐字一致（role in ('owner','member')，沒有 can_upload 這個條件）。
--- 若這裡意外要求 can_upload，這一段會紅（跟第 4 段驗證既有 media 路徑「看 can_upload」
--- 剛好是對照組，兩段合起來把「頭像分支跟既有分支判準不同」這件事釘住）。
+-- 關掉這個 member 的 can_upload，驗證「頭像的 UPDATE policy 角色判準」真的不看
+-- can_upload——跟 update_child 的授權判準逐字一致（role in ('owner','member')，沒有
+-- can_upload 這個條件）。若這裡意外要求 can_upload，這一段會紅（跟第 4 段驗證既有
+-- media 路徑「看 can_upload」剛好是對照組，兩段合起來把「頭像分支跟既有分支判準
+-- 不同」這件事釘住）。
+--
+-- 重要（LS-169 R3 n1）：下面這條探針直接對已存在的 row 下 SQL UPDATE，只驗證
+-- `media_bucket_update` 這條 policy 本身的角色判準——不代表 app 真實換頭像的行為。
+-- client 唯一會走的路徑是 Storage API 的 `upsert: true`（storage-api 內部走
+-- INSERT ... ON CONFLICT DO UPDATE），這條路徑同時要過 INSERT policy 的 WITH CHECK
+-- （`uploadable_family_ids()`，member 仍看 can_upload——本輪刻意沒有放寬，見
+-- docs/API.md §6「寶貝大頭照」小節）。也就是說：can_upload=false 的 member 在這條
+-- 探針測到「SQL UPDATE 成功」，但同一個人在真實 app 裡換頭像會在 INSERT policy 那關
+-- 被擋（400 `new row violates row-level security policy`）——這條探針只釘住 UPDATE
+-- policy 這一層的角色判準沒有意外收緊，不是在斷言「can_upload=false 的 member 換得
+-- 了頭像」。
 update public.family_members set can_upload = false
  where family_id = 'fa000000-0000-4000-8000-000000000001'
    and user_id = 'a0000000-0000-4000-8000-000000000002';
@@ -745,9 +760,9 @@ begin
    where name = 'fa000000-0000-4000-8000-000000000001/avatars/3a000000-0000-4000-8000-000000000001.jpg';
   get diagnostics v_n = row_count;
   if v_n <> 1 then
-    raise exception 'FAIL M1：member 的 can_upload=false 時仍應能覆蓋頭像（與 update_child 判準一致、不看 can_upload），實際影響 % 列', v_n;
+    raise exception 'FAIL：media_bucket_update 的角色判準意外收緊了——can_upload=false 的 member 對已存在頭像物件的 SQL UPDATE 應該仍通過這條 policy（判準只看 role in owner/member，不看 can_upload），實際影響 % 列', v_n;
   end if;
-  raise notice 'ok M1：頭像分支不看 can_upload——member 即使 can_upload=false 仍能覆蓋頭像';
+  raise notice 'ok：media_bucket_update policy 角色判準不看 can_upload（can_upload=false 的 member 對 SQL UPDATE 仍通過這條 policy）——但這不代表這個角色能透過 app 換頭像：app 的 upsert 路徑另受 INSERT policy 的 can_upload 節制，見上方註解（LS-169 R3 n1）';
 end;
 $$;
 
@@ -758,8 +773,6 @@ update public.family_members set can_upload = true
 do $$
 declare
   v_n int;
-  v_blocked boolean;
-  v_state text;
 begin
   -- viewer 不是 contributor，覆蓋不了頭像
   perform set_config('request.jwt.claims',
