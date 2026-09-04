@@ -144985,24 +144985,158 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "hqhup",
-                  "name": "Icon Wrap",
-                  "width": 96,
-                  "height": 96,
-                  "fill": "$accent-soft",
-                  "cornerRadius": "$radius-full",
-                  "justifyContent": "center",
-                  "alignItems": "center",
+                  "id": "V8wyl3",
+                  "name": "Hero Stack",
+                  "width": "fill_container",
+                  "height": 225,
+                  "layout": "none",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "HmVtT",
-                      "name": "Bell Icon",
-                      "width": 44,
-                      "height": 44,
-                      "icon": "bell",
-                      "library": "lucide",
-                      "fill": "$accent"
+                      "type": "frame",
+                      "id": "zzXNT",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Hero Print",
+                      "rotation": -3.0000000000000004,
+                      "width": 200,
+                      "height": 155,
+                      "fill": "$print-paper",
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "mMDR7",
+                          "x": 8,
+                          "y": 8,
+                          "name": "Hero Photo",
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "hero-grandma.png",
+                            "mode": "fill"
+                          },
+                          "width": 184,
+                          "height": 139
+                        },
+                        {
+                          "id": "c5ffbm",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "C1f3W",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "x": 179,
+                          "y": 134,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "EnaX4",
+                      "x": 70,
+                      "y": 100,
+                      "name": "Notification Preview",
+                      "width": 275,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-lg",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 16
+                      },
+                      "gap": "$sp-group",
+                      "padding": "$inset-card",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "BcgBx",
+                          "name": "App Icon",
+                          "width": 40,
+                          "height": 40,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "app-icon-photo-stack.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "PEgrz",
+                          "name": "Preview Column",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "a9H5Kn",
+                              "name": "App Name",
+                              "fill": "$text-primary",
+                              "content": "萌芽日記",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "WEU53",
+                              "name": "Notif Body",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "爸爸新增了 50 張照片",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
                     }
                   ]
                 },
@@ -145024,7 +145158,6 @@
                       "width": "fill_container",
                       "content": "開啟通知，不錯過家人的每一刻",
                       "lineHeight": 1.3,
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-display",
                       "fontWeight": "700"
@@ -145038,90 +145171,9 @@
                       "width": "fill_container",
                       "content": "當家人新增照片、寫日記，或在你的動態下留言、按愛心時，我們會通知你——不會太吵，同一段時間的更新會合併成一則。",
                       "lineHeight": 1.6,
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
                       "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "EnaX4",
-                  "name": "Notification Preview",
-                  "width": "fill_container",
-                  "fill": "$surface",
-                  "cornerRadius": "$radius-lg",
-                  "stroke": "$border",
-                  "strokeWidth": 1,
-                  "effect": {
-                    "type": "shadow",
-                    "shadowType": "outer",
-                    "color": "$paper-shadow",
-                    "offset": {
-                      "x": 0,
-                      "y": 4
-                    },
-                    "blur": 16
-                  },
-                  "gap": "$sp-group",
-                  "padding": "$inset-card",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "U7G7ED",
-                      "name": "App Icon",
-                      "width": 40,
-                      "height": 40,
-                      "fill": "$accent",
-                      "cornerRadius": "$radius-md",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "StXB3",
-                          "name": "Icon",
-                          "width": 22,
-                          "height": 22,
-                          "icon": "image",
-                          "library": "lucide",
-                          "fill": "$on-accent"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "PEgrz",
-                      "name": "Preview Column",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "a9H5Kn",
-                          "name": "App Name",
-                          "fill": "$text-primary",
-                          "content": "萌芽日記",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "WEU53",
-                          "name": "Notif Body",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "爸爸新增了 50 張照片",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
-                        }
-                      ]
                     }
                   ]
                 }
@@ -145263,24 +145315,158 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "fN19d",
-                  "name": "Icon Wrap",
-                  "width": 96,
-                  "height": 96,
-                  "fill": "$accent-soft",
-                  "cornerRadius": "$radius-full",
-                  "justifyContent": "center",
-                  "alignItems": "center",
+                  "id": "d0USEE",
+                  "name": "Hero Stack",
+                  "width": "fill_container",
+                  "height": 225,
+                  "layout": "none",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "MIHV7",
-                      "name": "Bell Icon",
-                      "width": 44,
-                      "height": 44,
-                      "icon": "bell",
-                      "library": "lucide",
-                      "fill": "$accent"
+                      "type": "frame",
+                      "id": "i71Sl",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Hero Print",
+                      "rotation": -3.0000000000000004,
+                      "width": 200,
+                      "height": 155,
+                      "fill": "$print-paper",
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "chP3c",
+                          "x": 8,
+                          "y": 8,
+                          "name": "Hero Photo",
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "hero-grandma.png",
+                            "mode": "fill"
+                          },
+                          "width": 184,
+                          "height": 139
+                        },
+                        {
+                          "id": "a9IQlY",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "DGM50",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "x": 179,
+                          "y": 134,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "h52HQ",
+                      "x": 70,
+                      "y": 100,
+                      "name": "Notification Preview",
+                      "width": 275,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-lg",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 16
+                      },
+                      "gap": "$sp-group",
+                      "padding": "$inset-card",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "fUKKG",
+                          "name": "App Icon",
+                          "width": 40,
+                          "height": 40,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "app-icon-photo-stack.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "xSkmN",
+                          "name": "Preview Column",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ZP4n0",
+                              "name": "App Name",
+                              "fill": "$text-primary",
+                              "content": "萌芽日記",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "uROkI",
+                              "name": "Notif Body",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "爸爸新增了 50 張照片",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
                     }
                   ]
                 },
@@ -145302,7 +145488,6 @@
                       "width": "fill_container",
                       "content": "開啟通知，不錯過家人的每一刻",
                       "lineHeight": 1.3,
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-display",
                       "fontWeight": "700"
@@ -145316,90 +145501,9 @@
                       "width": "fill_container",
                       "content": "當家人新增照片、寫日記，或在你的動態下留言、按愛心時，我們會通知你——不會太吵，同一段時間的更新會合併成一則。",
                       "lineHeight": 1.6,
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
                       "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "h52HQ",
-                  "name": "Notification Preview",
-                  "width": "fill_container",
-                  "fill": "$surface",
-                  "cornerRadius": "$radius-lg",
-                  "stroke": "$border",
-                  "strokeWidth": 1,
-                  "effect": {
-                    "type": "shadow",
-                    "shadowType": "outer",
-                    "color": "$paper-shadow",
-                    "offset": {
-                      "x": 0,
-                      "y": 4
-                    },
-                    "blur": 16
-                  },
-                  "gap": "$sp-group",
-                  "padding": "$inset-card",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "M9WKa",
-                      "name": "App Icon",
-                      "width": 40,
-                      "height": 40,
-                      "fill": "$accent",
-                      "cornerRadius": "$radius-md",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "zMUO8",
-                          "name": "Icon",
-                          "width": 22,
-                          "height": 22,
-                          "icon": "image",
-                          "library": "lucide",
-                          "fill": "$on-accent"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "xSkmN",
-                      "name": "Preview Column",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "ZP4n0",
-                          "name": "App Name",
-                          "fill": "$text-primary",
-                          "content": "萌芽日記",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "uROkI",
-                          "name": "Notif Body",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "爸爸新增了 50 張照片",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
-                        }
-                      ]
                     }
                   ]
                 }
@@ -145540,24 +145644,158 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "bzv7g",
-                  "name": "Icon Wrap",
-                  "width": 96,
-                  "height": 96,
-                  "fill": "$accent-soft",
-                  "cornerRadius": "$radius-full",
-                  "justifyContent": "center",
-                  "alignItems": "center",
+                  "id": "HjGsU",
+                  "name": "Hero Stack",
+                  "width": "fill_container",
+                  "height": 325,
+                  "layout": "none",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "CLrj1",
-                      "name": "Bell Icon",
-                      "width": 44,
-                      "height": 44,
-                      "icon": "bell",
-                      "library": "lucide",
-                      "fill": "$accent"
+                      "type": "frame",
+                      "id": "FhEZw",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Hero Print",
+                      "rotation": -3.0000000000000004,
+                      "width": 200,
+                      "height": 155,
+                      "fill": "$print-paper",
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "n5CcFd",
+                          "x": 8,
+                          "y": 8,
+                          "name": "Hero Photo",
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "hero-grandma.png",
+                            "mode": "fill"
+                          },
+                          "width": 184,
+                          "height": 139
+                        },
+                        {
+                          "id": "NvXgV",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "Ig97z",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "x": 179,
+                          "y": 134,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "jh4p4",
+                      "x": 5,
+                      "y": 100,
+                      "name": "Notification Preview",
+                      "width": 340,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-lg",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 16
+                      },
+                      "gap": "$sp-group",
+                      "padding": "$inset-card",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "f14b8d",
+                          "name": "App Icon",
+                          "width": 40,
+                          "height": 40,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "app-icon-photo-stack.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": "$radius-md"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "LPmgL",
+                          "name": "Preview Column",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "o5ktmo",
+                              "name": "App Name",
+                              "fill": "$text-primary",
+                              "content": "萌芽日記",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "N6rwA",
+                              "name": "Notif Body",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "爸爸新增了 50 張照片",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
                     }
                   ]
                 },
@@ -145579,7 +145817,6 @@
                       "width": "fill_container",
                       "content": "開啟通知，不錯過家人的每一刻",
                       "lineHeight": 1.3,
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-display",
                       "fontWeight": "700"
@@ -145593,90 +145830,9 @@
                       "width": "fill_container",
                       "content": "當家人新增照片、寫日記，或在你的動態下留言、按愛心時，我們會通知你——不會太吵，同一段時間的更新會合併成一則。",
                       "lineHeight": 1.6,
-                      "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
                       "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "jh4p4",
-                  "name": "Notification Preview",
-                  "width": "fill_container",
-                  "fill": "$surface",
-                  "cornerRadius": "$radius-lg",
-                  "stroke": "$border",
-                  "strokeWidth": 1,
-                  "effect": {
-                    "type": "shadow",
-                    "shadowType": "outer",
-                    "color": "$paper-shadow",
-                    "offset": {
-                      "x": 0,
-                      "y": 4
-                    },
-                    "blur": 16
-                  },
-                  "gap": "$sp-group",
-                  "padding": "$inset-card",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "t6u6W",
-                      "name": "App Icon",
-                      "width": 40,
-                      "height": 40,
-                      "fill": "$accent",
-                      "cornerRadius": "$radius-md",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "I0PyId",
-                          "name": "Icon",
-                          "width": 22,
-                          "height": 22,
-                          "icon": "image",
-                          "library": "lucide",
-                          "fill": "$on-accent"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "LPmgL",
-                      "name": "Preview Column",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "o5ktmo",
-                          "name": "App Name",
-                          "fill": "$text-primary",
-                          "content": "萌芽日記",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "N6rwA",
-                          "name": "Notif Body",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "爸爸新增了 50 張照片",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
-                        }
-                      ]
                     }
                   ]
                 }
