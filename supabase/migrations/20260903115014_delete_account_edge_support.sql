@@ -292,17 +292,32 @@ create trigger join_requests_deletion_guard
 -- （沒有其他成員就整個家庭一併刪除，語意同 delete_my_account() 的「唯一成員」
 -- 情況）。
 --
--- 鎖策略（關 M1 的快照讀穿過窗口，票文 R2 裁定第 3 點）：對每個候選家庭，先鎖住
--- families 列，**用 FOR UPDATE、不是 FOR NO KEY UPDATE**——這是刻意的，要跟子表
--- INSERT 的 FK 檢查取的 FOR KEY SHARE 互斥（20260903084231_delete_account.sql
--- 檔頭「m1」段落已經記錄過同一個機制：FOR UPDATE 與 FOR KEY SHARE 互斥，
--- FOR NO KEY UPDATE 不會）。任何在這個時間點想對這個家庭 approve_join／建立成員
--- 的交易會被卡在這裡，等我們的交易 commit 之後才能繼續，此時我們已經處理完這個
--- 家庭、清乾淨了。這與 delete_my_account() 情況 2（唯一成員刪整個家庭）已經記錄
--- 過的既有性質相同，不是本函式引入的新風險類型：只發生在同一個家庭有併發寫入，
--- 影響僅止於其中一邊要重試。再鎖住這個家庭目前所有的 family_members 列（同樣
--- FOR UPDATE），確保下面判斷「是否唯一 owner／還有沒有其他成員」讀到的是鎖定後
--- 的最新狀態，不是交易開始時的快照。
+-- 鎖策略（關 M1 的快照讀穿過窗口，票文 R2 裁定第 3 點；取鎖順序 R3 訂正，
+-- merge-review R2 N1）：對每個候選家庭，**先**鎖住這個家庭目前所有的
+-- family_members 列（FOR UPDATE），**再**鎖住 families 列（同樣 FOR UPDATE、不是
+-- FOR NO KEY UPDATE——這是刻意的，要跟子表 INSERT 的 FK 檢查取的 FOR KEY SHARE
+-- 互斥，20260903084231_delete_account.sql 檔頭「m1」段落已經記錄過同一個機制：
+-- FOR UPDATE 與 FOR KEY SHARE 互斥，FOR NO KEY UPDATE 不會）。
+--
+-- 取鎖順序對齊既有的 private.enforce_family_has_owner()（20260822120100_triggers.sql
+-- 的 family_members_owner_guard_delete／_update）：那顆既有 trigger 的鎖序永遠是
+-- 「DML 先自然鎖住它正在改的 family_members 列 → AFTER STATEMENT trigger 才對
+-- families 取 FOR NO KEY UPDATE」，任何直接 UPDATE／DELETE family_members 的
+-- 路徑（owner 交接、離開家庭等）都遵循這個順序。R2 版本先鎖 families、再鎖
+-- family_members，順序相反——merge-review R2 N1 雙連線實測到 40P01
+-- deadlock detected：finalize 持有 families 的 FOR UPDATE、等待某個
+-- family_members 列被另一個併發的 UPDATE 釋放；那個併發 UPDATE 已經持有那一列、
+-- 其 AFTER trigger 正在等 finalize 持有的 families 鎖——循環等待。R3 把順序倒過來
+-- 之後，任何走「trigger 順序」的併發操作與 finalize 之間**不會**形成鎖等待環：
+-- 兩邊現在的鎖序都是 family_members 先、families 後，只會有其中一邊先取得、
+-- 另一邊排隊等待，不會互等。
+--
+-- 這是本函式引入的新風險類型（不是 delete_my_account() 情況 2 那種既有性質）：
+-- 情況 2 只鎖 families、從不先鎖 family_members，不存在順序倒置的可能；本函式
+-- 因為要同時判斷「是否唯一 owner」而必須讀整個家庭的 family_members，才第一次
+-- 讓兩張表的鎖序有機會跟既有 trigger 顛倒。修正後，剩下的只是「同一個家庭有
+-- 併發成員異動」這種一般性的鎖等待（不是死鎖）——Postgres 自動偵測、單邊回滾、
+-- 無資料損毀，重試必定收斂，client 端契約見 docs/API.md §10。
 --
 -- 升格再刪除的順序：唯一 owner 的情況下，**先** UPDATE 把候選成員升成 owner，
 -- **再** DELETE p_user 自己那一列——兩個statement 邊界都至少有一位 owner，不會
@@ -335,19 +350,24 @@ begin
       using errcode = '42501';
   end if;
 
-  -- 1. 刪除 p_user 尚未處理的加入申請：即使 2c 的擋寫已經擋住新的 request_join，
-  --    deletion_requested_at 標記之前已存在的 pending 申請仍可能殘留，不清掉的話
-  --    會變成一筆永遠等不到人處理的申請（申請人已被刪除）。
+  -- 1. 刪除 p_user 尚未處理的加入申請。join_requests.applicant_id 對 profiles 是
+  --    on delete cascade（20260823010000_join_approval.sql:83），所以 auth.users
+  --    真正被刪除時這些列本來就會消失——這裡提早清是為了讓 EF 在後面步驟意外中途
+  --    失敗時（例如下面的鎖等待），這筆申請也已經不在，不會留下一筆申請人已標記
+  --    刪除、卻還沒被 GoTrue 真正移除的過渡態殘留（R3 訂正：舊註解說「不清掉會
+  --    變成永遠等不到人處理的申請」不成立，cascade 本來就會清，merge-review R2
+  --    N4）。
   delete from public.join_requests where applicant_id = p_user and status = 'pending';
 
-  -- 2. 逐一處理 p_user 目前所屬的每個家庭。
+  -- 2. 逐一處理 p_user 目前所屬的每個家庭（鎖序見上方「鎖策略」段落：
+  --    family_members 先、families 後，對齊既有 trigger）。
   for v_family_id in
     select fm.family_id from public.family_members fm
      where fm.user_id = p_user
      order by fm.family_id
   loop
-    perform 1 from public.families f where f.id = v_family_id for update;
     perform 1 from public.family_members fm2 where fm2.family_id = v_family_id for update;
+    perform 1 from public.families f where f.id = v_family_id for update;
 
     -- 取鎖過程中 p_user 理論上不會被別的路徑移除（這是目前對 family_members 唯一
     -- 會這樣做的清理路徑，且此刻已持有鎖），但仍保守處理，避免下面誤判出多餘的
@@ -403,4 +423,6 @@ comment on function public.finalize_account_deletion(uuid) is
   service_role 執行 `delete from auth.users` 之前，先以 service_role 重跑一次
   資料面清理——不依賴過渡期擋寫（LS051）完全沒有漏洞，是讓「刪除一定成功」的
   第一道、真正的防線。只能用於 deletion_requested_at 已標記的使用者，只有
-  service_role 能執行。';
+  service_role 能執行。R3（merge-review R2 N1）：取鎖順序（family_members 先、
+  families 後）對齊既有 private.enforce_family_has_owner()，避免與同家庭併發的
+  成員異動互為死鎖。';
