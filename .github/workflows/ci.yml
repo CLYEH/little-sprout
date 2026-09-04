@@ -190,7 +190,10 @@ jobs:
           bash scripts/gates/ui-test-trigger.test.sh || rc=1
           bash scripts/gates/design-landing-check.test.sh || rc=1
           bash scripts/gates/design-evidence-check.test.sh || rc=1
-          # LS-122：四支溢出掃描的正典腳本純函數自測（node，合成節點樹；Pen 不在 CI 也能驗演算法）
+          # LS-168：Notes 板節點 id 存在性 gate 自測（合成 repo：活 id／死 id／沿革標記三案＋mutation）
+          bash scripts/gates/design-notes-check.test.sh || rc=1
+          # LS-122：四支溢出掃描的正典腳本純函數自測（node，合成節點樹；Pen 不在 CI 也能驗演算法）；LS-168 加第五支
+          # text_occlusion 與 tree_hash（含 python design_tree_hash.py 交叉一致案，runner 需 python3——ubuntu-latest 內建）
           node scripts/design/overflow-scan.test.js || rc=1
           bash scripts/gates/design-asset-size-check.test.sh || rc=1
           bash scripts/hooks/pretool.test.sh || rc=1
@@ -407,6 +410,22 @@ jobs:
             fi
             while IFS= read -r p; do
               bash scripts/gates/design-evidence-check.sh "$p" --ticket "$ticket" --base "origin/$BASE" --head-sha "$HEAD_SHA"
+            done <<< "$pens"
+          fi
+
+      # LS-168：設計稿 Notes 板引用的節點 id 必須存在於 head 快照——本 PR 範圍內刪掉（merge-base ∪ 範圍內 .pen commit 曾有、
+      # head 已無）的 id 若仍被 Notes 現在式引用即紅，同子句帶沿革標記者放行（design-notes-check.sh 檔頭）。觸發條件同上一
+      # step（.pen 有變更的 feature|fix|hotfix PR；同樣以 PR head sha 為終點，LS-127）；不需票號。
+      - name: .pen Notes 節點 id gate（LS-168）
+        if: github.event_name == 'pull_request' && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/'))
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          base_sha=$(git merge-base "origin/$BASE" "$HEAD_SHA")
+          pens=$(git -c core.quotePath=false diff --name-only --diff-filter=ACM "$base_sha"..."$HEAD_SHA" -- '*.pen' || true)
+          if [ -n "$pens" ]; then
+            while IFS= read -r p; do
+              bash scripts/gates/design-notes-check.sh "$p" --base "origin/$BASE" --head-sha "$HEAD_SHA"
             done <<< "$pens"
           fi
 
