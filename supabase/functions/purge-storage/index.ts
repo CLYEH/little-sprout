@@ -1,42 +1,57 @@
 // LS-153 — 消化 public.purge_storage_queue：呼叫 Storage Admin API 實際刪除
 // private.purge_expired() 硬刪 media 列之後留下的物件路徑，成功即刪除該筆佇列列
 // （純佇列語意，見 supabase/migrations/20260903110908_purge_expired.sql 對
-// purge_storage_queue 的說明——沒有處理狀態欄，處理完直接 DELETE，失敗的列留著
-// 下次重試，天生冪等）。
+// purge_storage_queue 的說明）。
 //
-// R2（merge-review R1 comment e71a797f，minor findings，已用本機
-// `supabase functions serve`（經 scripts/ops/supabase-lock.sh）實測修正）：
-//   - **逐路徑核對回傳**（R1 的洞：storage.remove() 對「整個 bucket 都打不到」
-//     這種情況也回傳 `error: null`——本機實測對一個不存在的 bucket 呼叫
-//     `.remove(["whatever/path.jpg"])` 得到 `{ data: [], error: null }`，R1
-//     版本把「沒有 error」直接當「整批都處理完成」，會把這種完全沒真的刪除任何
-//     東西的批次全部 dequeue，佇列紀錄永久遺失、物件保證再也清不到）。
-//     真實回傳格式（同樣本機實測，對一個存在的 bucket 傳兩個路徑，一個真的存在、
-//     一個不存在）：`data` 陣列**只包含真的被移除的物件**（`name` 欄位＝輸入時的
-//     完整路徑字串，不含 bucket 前綴），不存在的路徑**不會**出現在 `data` 裡、
-//     也不會讓整體回傳 error。改法：只有出現在 `data[].name` 裡的路徑才視為
-//     「這次呼叫確認處理完成」，才 dequeue；不在 `data` 裡的路徑一律留在佇列，
-//     下次排程重試。**已知取捨**：一個物件若在「上次呼叫已經被 Storage 真的刪除、
-//     但那次呼叫在刪除佇列列之前就當掉」的極端時序下，之後每次呼叫的
-//     `remove()` 都會對一個早已不存在的路徑得到「不在 data 裡、沒有 error」的
-//     結果，永遠不會被判定為「確認處理完成」，佇列列會停留、每天被重試一次——
-//     這是可接受的殘留成本（純粹浪費一次 API 呼叫、不造成任何資料錯誤，實際
-//     發生機率也極低：必須精準卡在「remove 成功後、DELETE 佇列列之前」這個窗口
-//     當掉），換來的是「絕不會把沒有真的驗證過的路徑靜默判定成已處理」這個更
-//     重要的正確性保證。
-//   - **批次與排序**：R1 版本一次只讀 200 筆、沒有 `order by`，佇列超過一批就會
-//     永遠卡在後段（每次呼叫都重新讀同一批、因為沒有排序不保證讀到同一批，
-//     也可能造成部分列永遠讀不到）。改法：`order by enqueued_at` 保證讀取順序
-//     穩定，並迴圈重複讀取／處理直到佇列清空或達到安全上限（避免真的佇列量體
-//     過大時單次 invocation 執行時間失控——Edge Function 有執行時間上限）。
+// R2（merge-review R1 comment e71a797f，minor findings）：
+//   - **逐路徑核對回傳**：storage.remove() 對「整個 bucket 都打不到」這種情況也
+//     回傳 `error: null`（本機實測對一個不存在的 bucket 呼叫
+//     `.remove(["whatever/path.jpg"])` 得到 `{ data: [], error: null }`）——只有
+//     出現在 `data[].name` 裡的路徑才視為「這次呼叫確認處理完成」。
+//   - **批次與排序**：`order by enqueued_at` 保證讀取順序穩定，並迴圈重複讀取／
+//     處理直到佇列清空或達到安全上限。
+//
+// R3（merge-review R2 comment 7420f7b9，F1 major——毒丸隊頭阻塞）：R2 版本「無法
+// 確認已刪的列永遠留在佇列、下次重試」本身沒有錯，但沒有出口——這些列的
+// `enqueued_at` 不會變，`order by enqueued_at limit BATCH_SIZE` 每次都只讀得到
+// 它們，佇列滿 BATCH_SIZE 筆無法確認的列之後，後面任何列都再也讀不到（e2e 實測
+// 重現：200 筆「物件已不存在」的舊列擋住 2 筆真實物件，`processed` 永遠是 0）。
+// 這裡採 reviewer 建議的兩個修法並用：
+//   (i) `purge_storage_queue` 新增 attempts／last_error／next_attempt_at 三欄
+//       （見該 migration）。remove() 呼叫本身出錯，或呼叫 getBucket() 確認不到
+//       bucket 存在時，透過 public.purge_storage_queue_mark_failed()（SECURITY
+//       DEFINER）記一次失敗：attempts 遞增、退避設定 next_attempt_at；達
+//       MAX_ATTEMPTS（見下方常數）次視為死信，SELECT 端的
+//       `where attempts < MAX_ATTEMPTS` 之後不會再選到它（停放，仍保留列供稽核，
+//       不再佔住隊頭）。
+//   (ii) reviewer F1 修法 (ii) 的精神：remove() 呼叫沒有出錯、但某些路徑沒有出現
+//        在回傳的 `data[]` 裡時，先對這批路徑所在的 bucket 呼叫一次
+//        `getBucket()` 確認 bucket 本身存在——如果 bucket 存在，「路徑沒出現在
+//        `data[]` 裡」語意上就是「物件已經不存在」（不論是這次呼叫就發現它不在，
+//        還是上一次呼叫已經真的刪除、但那次 `.delete().in("id", doneIds)`
+//        失敗留下的殘影——兩者的目的都已達成），可以安全 dequeue，不需要等到
+//        `attempts` 用盡；如果 bucket 不存在（R1 F5 的洞），才落入 (i) 的
+//        attempts／退避／死信路徑。這樣「物件真的已經不存在」與「環境本身有問題
+//        （bucket 打不到／remove() 呼叫出錯）」被分開處理：前者立刻自我修復，
+//        後者才會累積 attempts、最終死信停放供人工介入。
+// 迴圈不再因為單一批次有任何一筆未確認就中止（R2 版本的 `doneIds.length <
+// queue.length` 中止條件正是 F1 的成因之一——見上方 R3 說明）：只要還沒到達
+// MAX_BATCHES、且這一輪的 SELECT 仍讀得到列（表示還有未達死信門檻、且不在退避中
+// 的列），就繼續下一輪；SELECT 端的 attempts／next_attempt_at 篩選條件本身就會讓
+// 「這一輪已經標記失敗、進入退避」的列在同一次 invocation 內不會被重複讀到，佇列
+// 自然收斂到空或全部退避中，不需要額外的「整批確認完成才繼續」條件。
+//
+// i3（merge-review R2 informational，PLAUSIBLE）：`.delete().in("id", doneIds)`
+// 帶 BATCH_SIZE（200）個 UUID 會組出數千字元的 URL，接近部分 proxy 的 URI 長度
+// 上限。改成固定大小（50）分段呼叫，降低單次請求的 URL 長度，不依賴 BATCH_SIZE
+// 未來會不會調大。
 //
 // 已知限制（如實揭露，見 docs/API.md §6「自動清除」與本票 handoff）：本機已用
 // `supabase functions serve --no-verify-jwt`（經 scripts/ops/supabase-lock.sh）
-// 對這支函式做過端對端手動驗證（見 handoff 附的實測記錄：真實上傳物件被正確
-// 移除、不存在的路徑與不存在的 bucket 都不會被誤判成功、佇列列的增減行為符合
-// 預期），但**沒有**寫成 `supabase/tests/` 底下可重複執行的自動化測試——這個
-// repo 目前沒有任何 Deno/Edge Function 的測試治具（連最基本的語法檢查都沒有，
-// 見 handoff「風險」欄的 harness 缺口記錄），本票沒有時間從零建置。
+// 對這支函式做過端對端手動驗證，但**沒有**寫成 `supabase/tests/` 底下可重複執行的
+// 自動化測試——這個 repo 目前沒有任何 Deno/Edge Function 的測試治具（見票 R1／R2
+// handoff 的 harness 缺口記錄）。R3 e2e 驗證腳本留在票的 handoff／scratchpad，
+// 供之後建置治具時參考。
 //
 // 呼叫方式：這支函式**只接受 service_role**——不是給 app client 呼叫的公開端點。
 // Supabase 的 verify_jwt（預設開啟，supabase/config.toml 沒有針對本函式覆寫）先擋掉
@@ -44,17 +59,29 @@
 // SUPABASE_SERVICE_ROLE_KEY 本身——只驗證「JWT 合法」不夠，anon key 也是合法 JWT，
 // 這裡要的是「呼叫者持有 service_role 金鑰」這件更窄的事。正式站的呼叫時機（pg_cron
 // 排程／外部排程呼叫這支函式）由 orchestrator 依 LS-78 授權狀態決定，不在本票落地
-// 範圍——見 migration 檔頭「規格分歧與取捨 c)」。
+// 範圍——見 migration 檔頭「規格分歧與取捨 c)」。目前**沒有任何東西會觸發**這支
+// 函式（無 pg_cron／無 Scheduled Function 註冊），這是本票明知、交給 orchestrator
+// 後續處理的缺口，不是本票的 bug（見 docs/API.md §6）。
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const BATCH_SIZE = 200; // 每批讀取／刪除的筆數，對齊 Storage remove() API 一次呼叫的合理批次大小。
 const MAX_BATCHES = 20; // 安全上限（20 × 200 = 4000 筆／次 invocation）：避免佇列量體異常大時單次執行時間失控。
+const MAX_ATTEMPTS = 5; // 超過這個重試次數視為死信，SELECT 不再選到（停放，見上方 R3 說明）。
+const DELETE_CHUNK_SIZE = 50; // dequeue 時 .in() 帶的 id 數上限（i3），避免 URL 過長。
 
 interface QueueRow {
   id: string;
   bucket_id: string;
   object_path: string;
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    out.push(items.slice(i, i + size));
+  }
+  return out;
 }
 
 Deno.serve(async (req: Request) => {
@@ -86,22 +113,42 @@ Deno.serve(async (req: Request) => {
 
   let processed = 0;
   const failures: { object_path: string; error: string }[] = [];
+  const warnings: string[] = [];
   let batches = 0;
 
-  // 迴圈直到佇列清空、或連續 MAX_BATCHES 批都沒有清空（安全上限，見上方常數說明）。
-  // 每一輪都重新查詢（不是把第一輪撈到的資料快取起來重複用）：這一輪已經 dequeue
-  // 掉的列不會再出現在下一輪的查詢結果，天然避免重複處理同一筆。
-  //
-  // 迴圈只在「這一批剛好滿 BATCH_SIZE 筆、且整批全部確認處理完成」時才繼續下一輪
-  // ——未確認處理的列不會被 dequeue，會繼續留在佇列最前面，下一輪的
-  // `order by enqueued_at limit BATCH_SIZE` 只會重新讀到同一批（本機實測過：
-  // 一批 3 筆、1 筆成功 2 筆失敗時，若不加這個條件，下一輪會對同樣那 2 筆失敗的
-  // 路徑再打一次 remove()，得到重複的失敗紀錄，卻沒有任何新進展）——這樣才是
-  // 「這批已經完全清空，佇列後面可能還有更多」的唯一可靠訊號。
+  // 記錄「這次 invocation 已經確認過存在／不存在」的 bucket，避免同一個 bucket
+  // 在同一次 invocation 裡被 getBucket() 反覆確認（多個批次、同一個 bucket 常見，
+  // 目前唯一的值就是 'media'）。
+  const bucketExists = new Map<string, boolean>();
+
+  async function markFailed(rows: QueueRow[], message: string) {
+    if (rows.length === 0) return;
+    const { error } = await supabase.rpc("purge_storage_queue_mark_failed", {
+      p_ids: rows.map((r) => r.id),
+      p_error: message,
+    });
+    if (error) {
+      // 記失敗這個動作本身失敗：不影響這一輪已經算好的 processed／failures，
+      // 只多記一條 warning——下次排程對這幾筆的 next_attempt_at 仍是舊值，
+      // 最壞情況是比預期早一點被重試，不是資料錯誤。
+      warnings.push(
+        `purge_storage_queue_mark_failed 呼叫失敗：${error.message}`,
+      );
+    }
+  }
+
+  // 迴圈直到佇列清空（含：剩下的列全部在退避中或已死信停放，SELECT 篩不到）、或
+  // 達到 MAX_BATCHES 安全上限。每一輪都重新查詢：這一輪已經 dequeue 掉的列、或
+  // 剛被標記失敗（next_attempt_at 設進未來）的列，都不會再出現在下一輪的查詢
+  // 結果——不需要「整批確認完成才繼續」這種額外條件（R2 版本的該條件正是 F1 的
+  // 成因之一，R3 移除，見檔頭）。
   while (batches < MAX_BATCHES) {
+    const nowIso = new Date().toISOString();
     const { data: queue, error: queueError } = await supabase
       .from("purge_storage_queue")
       .select("id, bucket_id, object_path")
+      .lt("attempts", MAX_ATTEMPTS)
+      .or(`next_attempt_at.is.null,next_attempt_at.lte.${nowIso}`)
       .order("enqueued_at", { ascending: true })
       .limit(BATCH_SIZE)
       .returns<QueueRow[]>();
@@ -112,6 +159,7 @@ Deno.serve(async (req: Request) => {
           processed,
           failed: failures.length,
           failures,
+          warnings,
           error: `讀取 purge_storage_queue 失敗：${queueError.message}`,
         }),
         { status: 500, headers: { "Content-Type": "application/json" } },
@@ -119,10 +167,10 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!queue || queue.length === 0) break;
+    batches++;
 
     // 依 bucket_id 分組：目前唯一的值是 'media'（media_storage_queue_sync trigger
-    // 的既有慣例），但不假設——storage.remove() 的呼叫本身就是逐 bucket 進行的，
-    // 佇列若日後被用來裝別的 bucket，這裡不需要改。
+    // 的既有慣例），但不假設——storage.remove() 的呼叫本身就是逐 bucket 進行的。
     const byBucket = new Map<string, QueueRow[]>();
     for (const row of queue) {
       const list = byBucket.get(row.bucket_id) ?? [];
@@ -139,7 +187,9 @@ Deno.serve(async (req: Request) => {
       ).remove(paths);
 
       if (removeError) {
-        // 整批（這個 bucket 這一輪的所有路徑）失敗：全部留在佇列，下次排程重試。
+        // remove() 呼叫本身出錯（非「物件不存在」，那種情況呼叫本身不會出錯，見
+        // 檔頭）：真正的環境／服務問題，記一次失敗，交給 attempts／退避處理。
+        await markFailed(rows, removeError.message);
         for (const r of rows) {
           failures.push({
             object_path: r.object_path,
@@ -149,61 +199,84 @@ Deno.serve(async (req: Request) => {
         continue;
       }
 
-      // 逐路徑核對回傳（R2 修正，見檔頭）：只有真的出現在 `removed[].name` 裡的
-      // 路徑才算「這次呼叫確認處理完成」。`removed` 對「本來就不存在的 bucket」
-      // 也會是空陣列且沒有 error（本機實測），逐路徑核對因此同時擋住了 R1 的洞
-      // （不存在的 bucket 整批被誤判成功）——不需要另外偵測 bucket 是否存在。
       const removedPaths = new Set((removed ?? []).map((f) => f.name));
+      const confirmedDone: QueueRow[] = [];
+      const unconfirmed: QueueRow[] = [];
       for (const r of rows) {
         if (removedPaths.has(r.object_path)) {
-          doneIds.push(r.id);
-          processed++;
+          confirmedDone.push(r);
         } else {
-          failures.push({
-            object_path: r.object_path,
-            error: "remove() 未在回傳的 data 中確認此路徑已處理",
-          });
+          unconfirmed.push(r);
         }
+      }
+
+      if (unconfirmed.length > 0) {
+        // remove() 對「bucket 本身打不到」與「bucket 存在但物件不存在」回傳完全
+        // 相同（data: []、無 error，見檔頭）——額外呼叫 getBucket() 才能區分兩者
+        // （F1 修法 (ii)，與 (i) 並用）。同一個 bucket 在這次 invocation 只確認
+        // 一次。
+        let exists = bucketExists.get(bucketId);
+        if (exists === undefined) {
+          const { error: bucketError } = await supabase.storage.getBucket(
+            bucketId,
+          );
+          exists = !bucketError;
+          bucketExists.set(bucketId, exists);
+          if (bucketError) {
+            warnings.push(
+              `getBucket('${bucketId}') 失敗：${bucketError.message}`,
+            );
+          }
+        }
+
+        if (exists) {
+          // bucket 確認存在，這些路徑沒出現在 data[] 裡＝物件已經不存在（這次
+          // 呼叫就發現，或上一次已經刪除但 dequeue 失敗留下殘影）——目的已達成，
+          // 安全 dequeue，不需要等 attempts 用盡（F1 修法 (ii)）。
+          confirmedDone.push(...unconfirmed);
+        } else {
+          // bucket 本身打不到（R1 F5 的洞）：不能斷定物件狀態，全部記一次失敗，
+          // 交給 attempts／退避／死信處理，不 dequeue。
+          const message =
+            `bucket 無法確認存在，路徑未在 remove() 回傳中確認已刪`;
+          await markFailed(unconfirmed, message);
+          for (const r of unconfirmed) {
+            failures.push({ object_path: r.object_path, error: message });
+          }
+        }
+      }
+
+      for (const r of confirmedDone) {
+        doneIds.push(r.id);
+        processed++;
       }
     }
 
     if (doneIds.length > 0) {
-      const { error: deleteError } = await supabase
-        .from("purge_storage_queue")
-        .delete()
-        .in("id", doneIds);
+      // i3：分段 DELETE（每段 ≤ DELETE_CHUNK_SIZE 個 id），避免單次 .in() 的 URL
+      // 過長。任一段失敗不中止迴圈——那一段的 Storage 物件已經確認刪除，下一次
+      // 呼叫的 remove() 會因為物件不存在、bucket 確認存在，透過上方 (ii) 的機制
+      // 自動再次 dequeue，不會變成毒丸（只是多做一次無意義的 API 呼叫）。
+      for (const idsChunk of chunk(doneIds, DELETE_CHUNK_SIZE)) {
+        const { error: deleteError } = await supabase
+          .from("purge_storage_queue")
+          .delete()
+          .in("id", idsChunk);
 
-      if (deleteError) {
-        // Storage 物件確實刪了，但佇列列沒清掉——下次執行會對已經不存在的物件再
-        // 呼叫一次 remove()（冪等、安全，見上方 R2 已知取捨段落），只是多做一次
-        // 無意義的 API 呼叫，不是資料錯誤。中止迴圈，不繼續下一批（避免同一種
-        // DELETE 失敗連續發生、徒增 API 呼叫）。
-        return new Response(
-          JSON.stringify({
-            processed,
-            failed: failures.length,
-            failures,
-            warning:
-              `Storage 物件已確認刪除，但清空 purge_storage_queue 失敗：${deleteError.message}`,
-          }),
-          { status: 207, headers: { "Content-Type": "application/json" } },
-        );
+        if (deleteError) {
+          warnings.push(
+            `清空 purge_storage_queue 失敗（Storage 物件已確認刪除，下次呼叫會` +
+              `自動重新 dequeue，見檔頭 F1 修法 (ii)）：${deleteError.message}`,
+          );
+        }
       }
     }
-
-    // 只有「這一批剛好滿 BATCH_SIZE、且整批都確認處理完成」才代表佇列前面已經
-    // 清空、後面可能還有更多——其餘情況（沒滿一批＝這就是全部；有任何一筆沒被
-    // 確認處理＝它會繼續卡在佇列最前面）繼續下一輪只會重複讀到同一批、重複得到
-    // 同樣的結果，沒有任何新進展，直接結束。
-    if (queue.length < BATCH_SIZE || doneIds.length < queue.length) break;
-
-    batches++;
   }
 
   return new Response(
-    JSON.stringify({ processed, failed: failures.length, failures }),
+    JSON.stringify({ processed, failed: failures.length, failures, warnings }),
     {
-      status: failures.length > 0 ? 207 : 200,
+      status: failures.length > 0 || warnings.length > 0 ? 207 : 200,
       headers: { "Content-Type": "application/json" },
     },
   );

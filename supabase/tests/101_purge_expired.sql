@@ -514,6 +514,87 @@ $$;
 rollback;
 
 -- ===========================================================================
+-- 3c（R3，merge-review R2 F1 major，修法 (i)）：
+-- public.purge_storage_queue_mark_failed() —— 死信欄位與退避公式的 SQL 面斷言。
+-- Edge Function（supabase/functions/purge-storage/index.ts）的 SELECT 條件
+-- （`attempts < MAX_ATTEMPTS` 且 `next_attempt_at is null or <= now()`）在 Deno
+-- 端無法被這個測試檔涵蓋，這裡驗的是它依賴的 SQL 端資料正確性：attempts 遞增、
+-- next_attempt_at 依指數退避（2^attempts 分鐘）計算、達 5 次後同樣的 SELECT
+-- 條件會排除它（死信停放）；以及只有 service_role 能呼叫這支函式。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_txn_now timestamptz := now();  -- 同一交易內 now() 是常數（交易開始時間），可以拿來算精確期望值
+  v_queue_id uuid := 'fb100000-0000-4000-8000-000000000001';
+  v_attempts int;
+  v_last_error text;
+  v_next_attempt_at timestamptz;
+  v_expected timestamptz;
+  v_n int;
+begin
+  set local role postgres;
+  insert into public.purge_storage_queue (id, bucket_id, object_path)
+  values (v_queue_id, 'media', 'probe/mark-failed-deadletter-probe.jpg');
+
+  -- 連續呼叫 5 次，模擬 Edge Function 連續 5 天都無法確認這筆已刪——每次 attempts
+  -- 遞增 1，next_attempt_at 依「2^attempts 分鐘」退避（見 migration 對
+  -- purge_storage_queue_mark_failed() 的函式註解）。
+  set local role service_role;
+  for i in 1..5 loop
+    perform public.purge_storage_queue_mark_failed(array[v_queue_id], 'probe error ' || i);
+
+    select attempts, last_error, next_attempt_at
+      into v_attempts, v_last_error, v_next_attempt_at
+      from public.purge_storage_queue where id = v_queue_id;
+
+    if v_attempts <> i then
+      raise exception 'FAIL：第 % 次呼叫後 attempts 應為 %，實際 %', i, i, v_attempts;
+    end if;
+    if v_last_error <> 'probe error ' || i then
+      raise exception 'FAIL：第 % 次呼叫後 last_error 應為 %，實際 %', i, 'probe error ' || i, v_last_error;
+    end if;
+
+    v_expected := v_txn_now + (least(1 << least(i, 10), 1440) || ' minutes')::interval;
+    if v_next_attempt_at <> v_expected then
+      raise exception 'FAIL：第 % 次呼叫後 next_attempt_at 應為 %（2^% 分鐘退避），實際 %', i, v_expected, i, v_next_attempt_at;
+    end if;
+  end loop;
+  reset role;
+
+  -- 達 5 次（MAX_ATTEMPTS）之後，Edge Function 的 SELECT 條件（attempts <
+  -- MAX_ATTEMPTS）不會再選到它——死信停放，但列本身還在（供稽核）。
+  select count(*) into v_n from public.purge_storage_queue
+   where id = v_queue_id and attempts < 5;
+  if v_n <> 0 then
+    raise exception 'FAIL：達 5 次重試後這筆應該被死信條件（attempts < 5）排除，實際還會被選到';
+  end if;
+  select count(*) into v_n from public.purge_storage_queue where id = v_queue_id;
+  if v_n <> 1 then
+    raise exception 'FAIL：死信停放不等於刪除，列本身應該還在供稽核';
+  end if;
+
+  -- 授權邊界：只有 service_role 能呼叫（不是位元檢查，是真的打一次，同本檔第 5
+  -- 段對 private.purge_expired() 的驗法）。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000002', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.purge_storage_queue_mark_failed(array[v_queue_id], 'authenticated 不該打得到');
+    raise exception 'FAIL：authenticated 竟然能呼叫 purge_storage_queue_mark_failed()';
+  exception when sqlstate '42501' then
+    null; -- ok
+  end;
+  reset role;
+
+  raise notice 'ok F1 修法 (i)：purge_storage_queue_mark_failed() 的 attempts／last_error／next_attempt_at（指數退避）皆正確，達 5 次後死信條件排除但列仍在，authenticated 無法呼叫';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
 -- 4. 冪等重跑：同一個 p_now 連續呼叫兩次，第二次必須全部歸零、不炸
 -- ===========================================================================
 begin;

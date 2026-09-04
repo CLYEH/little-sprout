@@ -166,6 +166,14 @@ alter table private.purge_runs enable row level security;
 -- notification_events 用 sent_at 標記是因為那張表的送出紀錄本身有查核價值，這裡的
 -- 佇列列一旦處理完就沒有後續用途，維持愈簡單愈好（Rule 2）。物件刪除失敗（例如
 -- Storage 服務短暫不可用）的列不刪，下次執行自然重試，天生冪等。
+--
+-- attempts／last_error／next_attempt_at（R3，merge-review R2 F1 major，comment
+-- 7420f7b9 修法 (i)）：R2 版本「無法確認已刪的列永遠留在佇列、下次重試」在真的
+-- 遇到無法確認的列時會變成隊頭阻塞——這些列的 enqueued_at 不會變，`order by
+-- enqueued_at limit BATCH_SIZE` 每次都只讀得到它們，後面任何列都讀不到。這三欄
+-- 讓 Edge Function 對「這一輪無法確認已刪」的列記錄重試次數＋退避時間，SELECT
+-- 時跳過還在退避中或已達重試上限（死信／停放，不再被 SELECT 取到但保留列供
+-- 稽核）的列——毒丸不再佔住隊頭，見 supabase/functions/purge-storage/index.ts。
 -- ---------------------------------------------------------------------------
 create table public.purge_storage_queue (
   id uuid primary key default gen_random_uuid(),
@@ -174,6 +182,9 @@ create table public.purge_storage_queue (
   family_id uuid,
   media_id uuid,
   enqueued_at timestamptz not null default now(),
+  attempts integer not null default 0 check (attempts >= 0),
+  last_error text,
+  next_attempt_at timestamptz,
   constraint purge_storage_queue_bucket_object_key unique (bucket_id, object_path)
 );
 
@@ -184,20 +195,76 @@ comment on table public.purge_storage_queue is
   ' purge_expired()）。supabase/functions/purge-storage（service_role）讀取、'
   ' 呼叫 Storage Admin API 刪除物件，成功後直接刪掉這一列（純佇列，沒有處理'
   ' 狀態欄，見上方 migration 註解）。service_role-only：RLS enabled＋無 policy＋'
-  ' grant 只給 service_role，authenticated／anon 兩層皆無法碰。';
+  ' grant 只給 service_role，authenticated／anon 兩層皆無法碰。attempts／'
+  ' last_error／next_attempt_at（R3）：無法確認已刪的列的重試計數／原因／下次'
+  ' 可重試時間，達 5 次視為死信（停放，SELECT 略過但保留列供稽核），見'
+  ' public.purge_storage_queue_mark_failed() 與 index.ts。';
 
-create index purge_storage_queue_family_idx on public.purge_storage_queue (family_id);
+-- 沒有 family_id 索引（R3，merge-review R2 F5-informational (a)）：Edge Function 是
+-- 整表 `select … order by enqueued_at limit BATCH_SIZE`（見 index.ts），沒有任何
+-- `family_id` 篩選，這支索引不會被任何查詢用到，只增加寫入成本——R1 建立時預留、
+-- R2 review 指出沒有實際用途，migration 尚未進 development，直接移除。
 
 alter table public.purge_storage_queue enable row level security;
 -- 刻意不建立任何 policy：這張表不是給任何登入使用者看的（沒有人需要知道「哪些檔案
 -- 排隊等刪」），純粹是 media_storage_queue_sync() trigger 與 purge-storage Edge
 -- Function 兩支 service_role 身分之間的交接介面。
 grant select, delete on public.purge_storage_queue to service_role;
--- 只給消化佇列實際需要的兩個動作：讀取待刪清單、確認刪除後把列拿掉；INSERT 不必
--- grant 給 service_role——寫入這張表的唯一路徑是下面第 3 段的
+-- 只給消化佇列實際需要的兩個動作：讀取待刪清單、確認刪除後把列拿掉；INSERT／UPDATE
+-- 不必 grant 給 service_role——寫入這張表的唯一路徑是下面第 3 段的
 -- private.media_storage_queue_sync() trigger（SECURITY DEFINER，以表擁有者
--- postgres 身分執行，不受這裡的 grant 影響），service_role 自己不需要、也不應該
--- 能直接塞列進去。
+-- postgres 身分執行，不受這裡的 grant 影響）；attempts／last_error／
+-- next_attempt_at 的更新一樣不直接開 UPDATE 給 service_role，改用下面
+-- purge_storage_queue_mark_failed()（同樣 SECURITY DEFINER）——service_role 自己
+-- 不需要、也不應該能直接塞列或改任意欄位進去，只透過這支函式表達「這幾筆這次沒能
+-- 確認已刪」這個單一意圖。
+
+-- ---------------------------------------------------------------------------
+-- 2b. public.purge_storage_queue_mark_failed(p_ids, p_error) —— Edge Function 對
+--    「這一輪無法確認已刪」的列記錄重試（R3，merge-review R2 F1 major，修法 (i)）。
+--
+-- 放 public 不放 private：與 purge_storage_queue 本身同理，Edge Function 用
+-- supabase-js＋service_role key 走 PostgREST 的 `.rpc()`，只能呼叫 [api] 曝露的
+-- schema（public）裡的函式。
+--
+-- 用一支 SECURITY DEFINER 函式而不是直接開 UPDATE 給 service_role：attempts 的
+-- 遞增與 next_attempt_at 的退避計算要在同一句 UPDATE 內用舊值算新值
+-- （`attempts = attempts + 1` 這類寫法只有在資料庫端才能保證原子性，PostgREST 的
+-- partial update 不支援「用目前值計算新值」的表達式，呼叫端要嘛得先讀一次舊值再
+-- 送新值（多一次往返＋競態窗口），要嘛就是這裡直接把「記錄一次失敗」整個動作包成
+-- 一支函式）。
+--
+-- 退避公式：`2^(次數)` 分鐘（用位元左移避免浮點數），上限 24 小時；達
+-- `MAX_ATTEMPTS`（Edge Function 端的常數，見 index.ts，目前 5）次之後這裡不特別
+-- 處理停放判定——「停放」完全靠 Edge Function 的 SELECT 端 `where attempts <
+-- MAX_ATTEMPTS`（見 index.ts），這支函式只負責老實記錄「又失敗了一次、原因是
+-- 什麼」，不需要知道死信門檻設在哪裡（門檻是 Edge Function 的執行策略，不是這張
+-- 佇列表的資料完整性規則，兩者刻意不耦合）。
+-- ---------------------------------------------------------------------------
+create or replace function public.purge_storage_queue_mark_failed(p_ids uuid[], p_error text)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.purge_storage_queue
+     set attempts = attempts + 1,
+         last_error = p_error,
+         next_attempt_at = now() + (least(1 << least(attempts + 1, 10), 1440) || ' minutes')::interval
+   where id = any(p_ids);
+$$;
+
+comment on function public.purge_storage_queue_mark_failed(uuid[], text) is
+  'Edge Function（supabase/functions/purge-storage）對這一輪無法確認已刪的'
+  ' purge_storage_queue 列記錄重試（R3，LS-153，merge-review R2 F1）：attempts'
+  ' 遞增、last_error 記原因、next_attempt_at 依指數退避（2^次數分鐘，上限 24'
+  ' 小時）設定下次可重試時間。SECURITY DEFINER：service_role 只能透過這支函式'
+  ' 表達「這幾筆這次沒能確認已刪」，不能直接 UPDATE 任意欄位。';
+
+revoke execute on function public.purge_storage_queue_mark_failed(uuid[], text) from public, anon, authenticated;
+-- 全域 default privileges（harden_default_privileges.sql）已經讓新函式對這三個
+-- 角色天生零 EXECUTE，這裡明確 REVOKE 純粹是慣例（同 private.purge_expired() 的
+-- 既有寫法），讓「這支函式不開放」這件事在檔案裡看得到。
 
 -- ---------------------------------------------------------------------------
 -- 3. media 的 AFTER DELETE 統計級 trigger：硬刪時把 storage_path／thumb_path 收進

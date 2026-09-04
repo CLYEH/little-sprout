@@ -1567,24 +1567,73 @@ PII 已清空），FK 完整指向那個 tombstone 列，讀取端會看到作�
 本機實測對一個不存在的 bucket 呼叫 `remove()` 一樣回傳 `error: null`、`data: []`，
 會把完全沒真的刪除任何東西的批次誤判成功而永久遺失佇列紀錄；改法逐路徑比對
 `data[].name`，未確認的路徑留在佇列下次重試，純佇列語意不變，沒有處理狀態欄）。
+
+**毒丸隊頭阻塞與死信／退避（R3，merge-review R2 F1 major，comment 7420f7b9）**：
+R2 版本「無法確認已刪的列永遠留在佇列、下次重試」沒有出口——這些列的
+`enqueued_at` 不會變，`order by enqueued_at limit BATCH_SIZE` 每次都只讀得到
+它們，佇列滿一批（200 筆）無法確認的列之後，後面任何列都再也讀不到，且原本的
+迴圈中止條件（「整批確認完成才繼續」）在有這種列時會讓迴圈退化回單批（e2e 實測
+重現：200 筆「物件已不存在」的舊列擋住 2 筆真實物件，`processed` 永遠是 0，見票
+handoff 附的 e2e 輸出）。R3 採 reviewer 建議的兩個修法並用：
+1. `purge_storage_queue` 新增 `attempts`／`last_error`／`next_attempt_at` 三欄；
+   remove() 呼叫本身出錯，或呼叫 `getBucket()` 確認不到 bucket 存在時，透過
+   `public.purge_storage_queue_mark_failed()`（`service_role`-only、`security
+   definer`）記一次失敗：`attempts` 遞增、依指數退避（`2^attempts` 分鐘，上限
+   24 小時）設定 `next_attempt_at`；達 5 次視為死信，`select` 端的
+   `where attempts < 5` 之後不會再選到它（停放，仍保留列供稽核，不再佔住隊頭）。
+2. remove() 呼叫沒有出錯、但某些路徑沒有出現在回傳的 `data[]` 裡時，額外呼叫
+   一次 `getBucket()` 確認 bucket 本身存在——如果 bucket 存在，「路徑沒出現在
+   `data[]` 裡」語意上就是「物件已經不存在」（不論是這次呼叫就發現、還是上一次
+   已經真的刪除但 `.delete().in("id", doneIds)` 失敗留下的殘影，兩者的目的都已
+   達成），可以立刻安全 dequeue，不需要等到 `attempts` 用盡；如果 bucket 不存在
+   （R1 F5 的洞），才落入 1. 的 `attempts`／退避／死信路徑。**這代表「物件真的
+   已經不存在」會立刻自我修復（同一次 invocation 內就 dequeue，e2e 實測：200 筆
+   毒丸＋2 筆真實物件混合，修後單次呼叫 `processed=202`），只有「環境本身有問題」
+   （bucket 打不到／remove() 呼叫出錯）才會真的累積 `attempts`、最終死信停放**
+   （e2e 實測：對一個不存在的 bucket 連續呼叫 5 次，`attempts` 依序遞增為
+   1／2／3／4／5，`next_attempt_at` 退避間隔依序是 2／4／8／16 分鐘（`2^attempts`
+   分鐘），第 6 次呼叫起被死信條件（`attempts < 5`）排除、`processed=0`
+   `failed=0`——見票 handoff）。迴圈不再因為單一批次有任何一筆未確認就中止：
+   只要還沒到達安全上限、且這一輪的 `select` 仍讀得到列，就繼續下一輪；`select`
+   端的 `attempts`／`next_attempt_at` 篩選條件本身就會讓「這一輪已標記失敗、進入
+   退避」的列在同一次 invocation 內不會被重複讀到。
+
 `public.purge_storage_queue` 啟用 RLS、無 policy、只 `grant select, delete` 給
 `service_role`（`authenticated`／`anon` 兩層皆擋，同 `notification_events` 既有
-模式）。**已驗證（R2）**：這支 Edge Function 已用本機
+模式）；`attempts`／`last_error`／`next_attempt_at` 的寫入不直接開 `UPDATE` 給
+`service_role`，只能透過 `purge_storage_queue_mark_failed()` 這支 definer 函式
+（見 migration 第 2b 段）。**已驗證（R2＋R3）**：這支 Edge Function 已用本機
 `supabase functions serve --no-verify-jwt`（經 `scripts/ops/supabase-lock.sh`）
-做過端對端手動驗證——真實上傳物件被正確移除並 dequeue、不存在的路徑與不存在的
-bucket 皆不會被誤判成功（正確留在佇列、回報為失敗）、`service_role` 以外的呼叫
-一律 401、空佇列呼叫回 `{processed:0,failed:0}`；但**沒有**寫成
+做過端對端手動驗證，含 R3 的毒丸隊頭阻塞回歸（修前／修後對照）與死信／退避 6 次
+連續呼叫的完整驗證（見上段、票 handoff 附完整輸出）；但**沒有**寫成
 `supabase/tests/` 底下可重複執行的自動化測試（這個 repo 目前沒有任何
-Deno/Edge Function 的測試治具）。`private.purge_expired()` 本身、
-`purge_storage_queue` 佇列內容、`profiles` tombstone、孤兒 `comments`／
-`reactions` 清除則完全由 `supabase/tests/101_purge_expired.sql` 覆蓋（29／30／31
-天邊界、跨家庭隔離、額度對帳、冪等重跑、與 `set_child_deleted` 還原的併發正確
-性），另有 `supabase/tests/concurrency/purge_vs_restore_child_*` 覆蓋 purge 硬刪
-孩子檔案與 owner 還原同一個孩子的併發正確性。`pg_cron` 排程本身是 **fail-soft**：
-本機開發映像若沒有 `shared_preload_libraries` 載入 `pg_cron`，`CREATE EXTENSION`
-會直接失敗，migration 把這個情況吞掉只留 NOTICE，不擋 migration chain（本機開發
-映像實測 pg_cron 1.6.4 可用）；正式站部署（`db push`＋Edge Function 部署＋排程
-確認）依 LS-78 授權狀態由 orchestrator 處理，不在本票範圍。
+Deno/Edge Function 的測試治具，e2e 驗證腳本留在票的 handoff／scratchpad 供之後
+建置治具參考）。`private.purge_expired()` 本身、`purge_storage_queue` 佇列內容
+（含 `purge_storage_queue_mark_failed()` 的 SQL 面：`attempts`／`last_error`／
+`next_attempt_at`、死信條件）、`profiles` tombstone、孤兒／第二層孤兒
+`comments`／`reactions`／`content_reports` 清除則完全由
+`supabase/tests/101_purge_expired.sql` 覆蓋（29／30／31 天邊界——含 `profiles`
+自己的邊界，R3 F4 補上——跨家庭隔離、額度對帳、冪等重跑、與 `set_child_deleted`
+還原的併發正確性），另有 `supabase/tests/concurrency/purge_vs_restore_child_*`
+覆蓋 purge 硬刪孩子檔案與 owner 還原同一個孩子的併發正確性。`pg_cron` 排程本身是
+**fail-soft**：本機開發映像若沒有 `shared_preload_libraries` 載入 `pg_cron`，
+`CREATE EXTENSION` 會直接失敗，migration 把這個情況吞掉只留 NOTICE，不擋
+migration chain（本機開發映像實測 pg_cron 1.6.4 可用）；正式站部署（`db push`＋
+Edge Function 部署＋排程確認）依 LS-78 授權狀態由 orchestrator 處理，不在本票
+範圍。**目前沒有任何東西會觸發這支 Edge Function**（無 `pg_cron`、無 Scheduled
+Function 註冊——`pg_cron` 只排了 `purge_expired()`，見上方 migration 第 6 段）：
+正式站需要另外接排程（`pg_cron`＋`pg_net`，或 Supabase 原生的 Scheduled Edge
+Function），由 orchestrator 依 LS-78 部署狀態決定時機與方式，不在本票落地範圍
+——EF 觸發機制沒接上之前，Storage 物件端對端實際上一個都不會被刪，這是
+LS-132 對外文字上線前的硬前置（R2 review informational i4）。
+
+**索引建立方式（R3，F5-informational (b)）**：本 migration 六張 partial index
+（見「0. 效能索引」）用 `create index`（非 `concurrently`）——migration 在單一
+交易內執行，Postgres 的 `create index concurrently` 不能在交易區塊裡跑，兩者
+互斥，這支 migration 沒有拆成多支交易的必要（**不修＋理由**：這些表目前資料量
+極小或全新建立，短暫的寫入鎖對 TestFlight 前的正式站沒有實質影響；若未來要在
+已有大量資料的正式站補類似索引，屆時應該另開一支不在交易內執行的 migration，
+不是回頭改本票）。
 
 **觀測**：每次執行在 `private.purge_runs`（`private` schema，不經 PostgREST）留一列
 （執行時間、六張表各自清除筆數——`comments`／`reactions` 是累加值——Storage 佇列
@@ -1754,6 +1803,7 @@ get_reaction_counts(uuid, text, uuid[])
 list_children(uuid)
 list_comments(uuid, text, uuid, timestamptz, uuid, integer)
 list_join_requests()
+purge_storage_queue_mark_failed(uuid[], text)
 register_device_token(text, text)
 reject_join(uuid)
 remove_content_as_owner(text, uuid)

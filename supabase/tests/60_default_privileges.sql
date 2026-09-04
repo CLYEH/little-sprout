@@ -463,12 +463,21 @@ declare
     'public.list_children(uuid)',
     'public.get_family_quota(uuid)'  -- LS-149：純讀取，依賴既有 families_select RLS
   ];
+  -- v_service_role_rpcs（R3，LS-153）：public schema 裡不是給 authenticated 呼叫、
+  -- 只給 service_role 呼叫的 RPC——Edge Function（supabase/functions/*）用
+  -- service_role key 走 PostgREST 的 `.rpc()`，只碰得到 public schema（見
+  -- purge_storage_queue 表註解的同一個理由），這類函式因此不能放 private，但也
+  -- 不該像 v_definer_rpcs 那樣要求 authenticated 可執行——授權面反過來：
+  -- authenticated／anon 皆無 EXECUTE，只有 service_role 有。
+  v_service_role_rpcs text[] := array[
+    'public.purge_storage_queue_mark_failed(uuid[], text)'
+  ];
   v_whitelist oid[];
   v_unknown text;
 begin
   select array_agg(f::regprocedure::oid)
     into v_whitelist
-    from unnest(v_definer_rpcs || v_invoker_rpcs) as f;
+    from unnest(v_definer_rpcs || v_invoker_rpcs || v_service_role_rpcs) as f;
 
   foreach v_fn in array v_definer_rpcs loop
     if not has_function_privilege('authenticated', v_fn, 'execute') then
@@ -512,6 +521,35 @@ begin
   raise notice
     'ok：白名單內的 % 支 public SECURITY INVOKER RPC 授權正確（authenticated 可執行、anon／PUBLIC 不可）——N3',
     array_length(v_invoker_rpcs, 1);
+
+  -- R3（LS-153）：service_role-only RPC——authenticated／anon 皆無 EXECUTE，
+  -- service_role 有；同樣要求 SECURITY DEFINER＋search_path 收斂（reason 同
+  -- v_definer_rpcs：呼叫者身分之外沒有 RLS 保護，definer 才能跨家庭寫
+  -- purge_storage_queue）。
+  foreach v_fn in array v_service_role_rpcs loop
+    if has_function_privilege('authenticated', v_fn, 'execute') then
+      raise exception 'FAIL：authenticated 竟然可以執行 service_role-only RPC %', v_fn;
+    end if;
+    if has_function_privilege('anon', v_fn, 'execute') then
+      raise exception 'FAIL：anon 竟然可以執行 service_role-only RPC %', v_fn;
+    end if;
+    if not has_function_privilege('service_role', v_fn, 'execute') then
+      raise exception 'FAIL：service_role 不能執行 service_role-only RPC %，呼叫端會炸卻沒有測試指出原因', v_fn;
+    end if;
+    if exists (select 1 from pg_proc p, aclexplode(p.proacl) a
+                where p.oid = v_fn::regprocedure and a.grantee = 0
+                  and a.privilege_type = 'EXECUTE') then
+      raise exception 'FAIL：service_role-only RPC % 仍對 PUBLIC 開放 EXECUTE', v_fn;
+    end if;
+    if not exists (select 1 from pg_proc p
+                    where p.oid = v_fn::regprocedure and p.prosecdef
+                      and p.proconfig @> array['search_path=""']) then
+      raise exception 'FAIL：service_role-only RPC % 不是 SECURITY DEFINER 或沒有 set search_path = ''''', v_fn;
+    end if;
+  end loop;
+  raise notice
+    'ok：白名單內的 % 支 public service_role-only RPC 授權正確（authenticated／anon 皆不可執行、service_role 可執行、非 PUBLIC）——R3',
+    array_length(v_service_role_rpcs, 1);
 
   -- 清單外的 public 函式：直接 FAIL（新 RPC 必須先來這裡登記）。N3：掃描條件從
   -- 「p.prosecdef 為真」放寬到「public schema 的所有函式」，不再只顧得到 definer——
