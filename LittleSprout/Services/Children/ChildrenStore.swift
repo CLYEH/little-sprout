@@ -143,18 +143,19 @@ final class ChildrenStore {
                 )
                 pendingCreateChildID = childID
             }
+            var freshAvatarPath: String?
             if let avatarImageData {
                 let path = try await avatarUploadService.uploadAvatar(
                     familyID: familyID, childID: childID, imageData: avatarImageData
                 )
                 try await apiClient.updateChild(childID: childID, name: name, birthday: birthday, avatarURL: path)
-                avatarCacheBust[path] = Date().timeIntervalSince1970
+                freshAvatarPath = path
             } else if isRetry {
                 try await apiClient.updateChild(childID: childID, name: name, birthday: birthday, avatarURL: nil)
             }
             pendingCreateChildID = nil
             createState = .success
-            await reloadChildrenList()
+            await reloadChildrenList(freshAvatarPath: freshAvatarPath)
             return true
         } catch {
             createState = .failure(AppError.map(error))
@@ -180,6 +181,7 @@ final class ChildrenStore {
         updateState = .submitting
         do {
             var avatarURL = currentAvatarURL
+            var freshAvatarPath: String?
             if let newAvatarImageData {
                 guard let familyID else {
                     throw AppError.rejected(message: "沒有家庭可以更新寶貝", code: nil)
@@ -188,11 +190,11 @@ final class ChildrenStore {
                     familyID: familyID, childID: childID, imageData: newAvatarImageData
                 )
                 avatarURL = path
-                avatarCacheBust[path] = Date().timeIntervalSince1970
+                freshAvatarPath = path
             }
             try await apiClient.updateChild(childID: childID, name: name, birthday: birthday, avatarURL: avatarURL)
             updateState = .success
-            await reloadChildrenList()
+            await reloadChildrenList(freshAvatarPath: freshAvatarPath)
             return true
         } catch {
             updateState = .failure(AppError.map(error))
@@ -242,12 +244,15 @@ final class ChildrenStore {
         deleteState = .idle
     }
 
-    private func reloadChildrenList() async {
+    /// LS-174：`freshAvatarPath` 非 nil 時，這次呼叫是「`createChild`／`updateChild` 剛成功
+    /// 上傳了這個路徑的頭像」——見 `refreshAvatarSignedURLs(freshAvatarPath:)` 文件註解，這裡
+    /// 只是原樣轉手。
+    private func reloadChildrenList(freshAvatarPath: String? = nil) async {
         guard let familyID else { return }
         if let fetched = try? await apiClient.listChildren(familyID: familyID) {
             children = fetched
         }
-        await refreshAvatarSignedURLs()
+        await refreshAvatarSignedURLs(freshAvatarPath: freshAvatarPath)
     }
 
     /// 批次重簽目前 `children` 裡所有非 nil 的 `avatarURL`——整批用同一份字典取代舊值（不是
@@ -258,7 +263,18 @@ final class ChildrenStore {
     /// m2（merge-review R1）：世代守門——`generation` 在發起呼叫前先自增並記下自己的號碼，
     /// await 回來後只有「自己的號碼仍等於最新號碼」才寫入結果；較舊的呼叫較晚回來時號碼已
     /// 落後，安靜丟棄，不會覆蓋較新一次呼叫已經寫入的結果。
-    private func refreshAvatarSignedURLs() async {
+    ///
+    /// LS-174 找根因：`avatarCacheBust[path]` 原本在 `createChild`／`updateChild` 裡、
+    /// 上傳成功「當下」就寫入（在 `apiClient.updateChild` RPC 與這裡的簽名 RPC 之前，兩者
+    /// 中間都有 `await` 讓 SwiftUI 有機會用「新 cache-bust／舊簽名 URL」這個過渡態重繪一次，
+    /// 下一輪「新簽名 URL」再重繪一次——`avatarURL(for:)` 因此在一次成功的換頭像裡連續變了
+    /// 兩次，而不是一次到位。實機重現：連續換照片幾次後，`ChildAvatarView` 卡在縮寫、要切一次
+    /// 分頁（觸發 `ChildrenManagementView`／`TimelineView` 的 `.task(id:)` 重新整批 refresh）
+    /// 才顯示新圖——與 LS-169 QA `5e37c5a2` 回報的症狀逐位相同。改成 `avatarCacheBust` 與
+    /// `avatarSignedURLs` 在同一個 `await` 之後、同一段沒有中間 `await` 的程式碼裡一起寫入
+    /// （`freshAvatarPath` 由呼叫端帶進來，只在真的剛上傳這個路徑時才蓋），`avatarURL(for:)`
+    /// 對這次上傳就只會改變一次——沒有過渡態可讓 view 卡住。
+    private func refreshAvatarSignedURLs(freshAvatarPath: String? = nil) async {
         let paths = children.compactMap(\.avatarURL)
         avatarSignedURLsGeneration += 1
         let generation = avatarSignedURLsGeneration
@@ -269,6 +285,9 @@ final class ChildrenStore {
         let signed = try? await apiClient.signedAvatarURLs(forPaths: paths)
         if let signed, generation == avatarSignedURLsGeneration {
             avatarSignedURLs = signed
+            if let freshAvatarPath {
+                avatarCacheBust[freshAvatarPath] = Date().timeIntervalSince1970
+            }
         }
     }
 }
