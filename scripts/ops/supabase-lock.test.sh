@@ -403,6 +403,7 @@ gone  '㉓ 到期後 lock 自動釋放（≤5s）'
 sleep 0.3
 if palive "$gpid"; then echo "✗ ㉓ 到期後守門仍活著" >&2; kill -9 "$gpid" 2>/dev/null; fail=1; else echo "✓ ㉓ 到期後守門結束"; fi
 has   '㉓ log 印到期一行' "$(cat "$hold_log" 2>/dev/null)" 'hold「LS-0 到期」到期'
+if grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} hold「LS-0 到期」到期' "$hold_log" 2>/dev/null; then echo "✓ ㉓ 到期行與其他回溯行同格式（行首時間，PR #276 R1 I-2）"; else echo "✗ ㉓ 到期行行首沒有 YYYY-MM-DD HH:MM:SS" >&2; cat "$hold_log" >&2; fail=1; fi
 out="$(cd "$wtB" && bash "$lock_sh" --timeout 2 -- sh -c 'echo after-expiry' 2>&1)"; rc=$?
 rc_is '㉓ 到期後另一 worktree 立即取得' 0 "$rc" "$out"
 has   '㉓ 命令執行' "$out" 'after-expiry'
@@ -520,11 +521,15 @@ gone  '㉙ N3：釋放後 lock 消失'
 # ---- ㉚ LS-170 回溯：hold.log 對命令型取得／--hold 取得／--release 各留一行（行首日期時間；回答「是誰在何時動了容器」——
 #        命令型持有的 holder 檔在命令結束就刪了，LS-169 那次「來源不明的 reset」事後無從查起）；重入不另記 ----
 : > "$hold_log"
-out="$(cd "$wtA" && bash "$lock_sh" -- sh -c 'echo trace-ran' 2>&1)"; rc_is '㉚ 命令型取得 exit 0' 0 "$?" "$out"
+# argv 故意夾一個假密鑰（PR #276 R1 (b) reviewer 實測形狀）：持久檔只准留首 token，其餘 argv 不得落地；holder 檔那份不在此驗（命令結束即刪）
+out="$(cd "$wtA" && bash "$lock_sh" -- sh -c 'echo trace-ran' --fake-secret=hunter2 2>&1)"; rc_is '㉚ 命令型取得 exit 0' 0 "$?" "$out"
+has   '㉚ 命令執行' "$out" 'trace-ran'
 log="$(cat "$hold_log" 2>/dev/null)"
 has   '㉚ log 記命令型取得（pid=）' "$log" '取得 pid='
 has   '㉚ log 含 worktree' "$log" "worktree=${wtA}"
-has   '㉚ log 含 cmd' "$log" 'cmd=sh -c echo trace-ran'
+if printf '%s\n' "$log" | grep -qE ' cmd=sh$'; then echo "✓ ㉚ (b) cmd 只記首 token（cmd=sh 收尾）"; else echo "✗ ㉚ (b) 取得行的 cmd= 不是只有首 token" >&2; printf '%s\n' "$log" | sed 's/^/    /' >&2; fail=1; fi
+hasnt '㉚ (b) 其餘 argv 不落地（fake-secret）' "$log" 'fake-secret'
+hasnt '㉚ (b) 其餘 argv 不落地（echo trace-ran）' "$log" 'echo trace-ran'
 if printf '%s\n' "$log" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} 取得 pid='; then echo "✓ ㉚ 取得行行首帶日期時間"; else echo "✗ ㉚ 取得行行首沒有 YYYY-MM-DD HH:MM:SS" >&2; printf '%s\n' "$log" | sed 's/^/    /' >&2; fail=1; fi
 out="$(hold_as_stranger 'LS-0 回溯')"; rc_is '㉚ --hold exit 0' 0 "$?" "$out"
 has   '㉚ log 記 hold 取得（label）' "$(cat "$hold_log" 2>/dev/null)" 'hold「LS-0 回溯」取得 守門 pid='

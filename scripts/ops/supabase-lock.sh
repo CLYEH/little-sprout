@@ -55,9 +55,10 @@
 #     才 rm，不符（守門已死、等待者已回收並重新取得）就搬回不刪——直接 read→rm 是 check-then-delete，會刪到第三者的新鎖
 #     （PR #265 R1 N1）。守門被 -9：pid 不存在→既有死鎖回收涵蓋。
 #   - 回溯（LS-170）：命令型持有的 holder 檔在命令結束就刪了，事後無從得知「剛才是誰 reset 的」（LS-169 的 E2E 被打斷四次、
-#     其中一次來源不明）。取得 lock 時（命令型：pid／worktree／branch／cmd；hold：label／守門 pid／worktree／branch／到期）與
-#     `--release` 各追加一行到 `<lock>.hold.log`（守門到期那行原本就寫在這裡），行首 `YYYY-MM-DD HH:MM:SS`；重入（持有者自己在
-#     lock／hold 內再包 wrapper）不另記——持有者已在上一行。只回溯不告警、不輪替（/tmp 重開機即清）；寫入失敗不影響取鎖。
+#     其中一次來源不明）。取得 lock 時（命令型：pid／worktree／branch／cmd **首 token**——整串 argv 可能夾帶帳密、持久檔不留，
+#     holder 檔仍記整串給等待者看，PR #276 R1 (b)；hold：label／守門 pid／worktree／branch／到期）、`--release` 與守門到期各追加
+#     一行到 `<lock>.hold.log`，一律 `trace()`、行首 `YYYY-MM-DD HH:MM:SS`（R1 I-2）；重入（持有者自己在 lock／hold 內再包
+#     wrapper）不另記——持有者已在上一行。只回溯不告警、不輪替（/tmp 重開機即清）；寫入失敗不影響取鎖。
 # 已知限制：
 #   - hold 到期釋放不會中斷持有者正在跑的命令（例如 QA 的 reset 剛開始就到期）——之後別人的 reset 可能與之重疊；
 #     hold_owner_ok 的 worktree 那一條讓「任何在同一 worktree 內跑的程序」都算持有者（QA worktree 只有 QA 在用時成立）。
@@ -274,7 +275,7 @@ guard_main() {   # 內部模式 --hold-guard <label> <started> <expires_at> <own
     now=$(date +%s)
     if [ "$now" -ge "$g_expires" ]; then
       release_mine
-      echo "⚠ supabase-lock：hold「${g_label}」到期（持有 $(( (now - g_started) / 60 )) 分）自動釋放（守門 pid $$，$(date '+%H:%M:%S')）" >&2
+      trace "hold「${g_label}」到期（持有 $(( (now - g_started) / 60 )) 分）自動釋放 守門 pid=$$"   # R1 I-2：與其他回溯行同格式（行首時間）
       exit 0
     fi
     write_hold_holder "$now" || exit 0   # 目錄已不在＝已被釋放
@@ -400,7 +401,7 @@ if ! printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=%s\nbranch=%s\ncmd=%s\n' "$$"
   exit 2
 fi
 
-trace "取得 pid=$$ worktree=${wt} branch=${br} cmd=${cmd_str}"
+trace "取得 pid=$$ worktree=${wt} branch=${br} cmd=${1}"   # R1 (b)：持久檔只記首 token——整串 argv 可能夾帶帳密；holder 檔仍記整串（cmd_str）給等待者看
 release() { if read_holder && [ "$h_pid" = "$$" ]; then rm -rf "$lock"; fi; }
 trap release EXIT
 trap 'exit 130' INT
