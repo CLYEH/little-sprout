@@ -393,6 +393,33 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   恢復 `can_upload`，要嘛請 owner 出手處理（owner 分支不受這個限制）。
 
 ### `albums` / `diaries`
+- **相簿列表依賴 PostgREST `db-aggregates-enabled`（LS-165 R2）**：iOS 相簿 tab 首頁
+  （`SupabaseAlbumsAPIClient.fetchAlbums`）用內嵌查詢 `album_media(count)`／
+  `latest:album_media(media!inner(...))` 一次取得張數與封面 fallback（不再整頁抓
+  `album_media` 在 client 端數），本機 Supabase CLI 容器已實測這個設定預設可用。
+  若未來調整 PostgREST 設定（本機 `supabase/config.toml`、正式站 Dashboard／
+  `postgrest.conf`）**關掉這個選項，這支查詢會直接失敗**（`AlbumListingRow.
+  init(from:)` 對 `album_media` 欄位是必要解碼，不是靜默退化），變更前請先確認
+  這個依賴。
+- **相簿張數口徑：計的是連結列，不是「看得見的照片數」（LS-165 R2 merge-review m3）**：
+  `album_media(count)` 數的是 `album_media` 連結列本身，包含使用者透過 RLS 看不到的
+  media（該列已軟刪、且不是自己上傳；或 LS-155 刪帳號後 `media.uploaded_by` 被 FK
+  `on delete set null` 清成 `NULL`，兩者都落在 `media_select` policy「上傳者自己
+  例外」以外）——「12 張相片」可能包含 1–2 張使用者實際上看不到的照片。本機測過幾種
+  「inner join 後計數」的 select 寫法（`album_media(media!inner(id),count)` 拿到
+  `42803` GROUP BY 錯誤；`album_media!inner(media!inner(count))` 拿到的是「每個
+  album_media 各自一個 count」而不是單一總數），PostgREST 目前的 embed+aggregate
+  語法組合做不到「只數 inner join 命中的列」這種依賴巢狀可見性的計數。若要精確排除
+  不可見照片，需要後端另開一個 view（例如 `album_visible_photo_counts`）或 RPC 做
+  真正的 `INNER JOIN`＋`GROUP BY`，不是 PostgREST 內嵌查詢語法能表達的形狀——目前
+  維持連結列計數，這是已知、刻意接受的口徑差異，不是遺漏。
+- **封面 fallback 的 `latest` 內嵌用 `media!inner`，不是 `media`（LS-165 R2
+  merge-review B1）**：唯一的 `album_media` 連結指到使用者看不到的 media 時，
+  `media(...)`（LEFT JOIN 語意）會讓那個位置回傳 `{"media": null}`，若這個看不見的
+  候選被 `media(created_at) desc` 排序＋`limit 1` 選中（本機實測：候選數只有一個時
+  必定選中它），解碼會直接失敗。改用 `media!inner(...)`（INNER JOIN 語意）讓看不見的
+  候選在 SQL 層就被排除，`latest` 正確變成空陣列，封面 fallback 落到「兩者皆無→占位
+  圖」分支，不會讓整頁請求失敗。
 - **寶貝標記自 LS-121 起是多對多**（見 §8 完整說明）：一篇日記／一本相簿可以標
   0～N 個孩子，透過 `diary_children`／`album_children` 連結表表達，不再是
   `albums.child_id`／`diaries.child_id` 這種單一欄位（兩欄已隨 LS-121 移除）。
