@@ -52988,7 +52988,7 @@
                   "id": "zk1yE",
                   "name": "Age",
                   "fill": "$print-ink-secondary",
-                  "content": "2 歲 3 個月",
+                  "content": "2 歲 3 個⁠月",
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
                   "fontWeight": "normal"
@@ -53005,7 +53005,7 @@
               "fill": "$print-ink",
               "textGrowth": "fixed-width",
               "width": "fill_container(0)",
-              "content": "小安 2 歲 3 個月、小明 8 個月",
+              "content": "小安 2 歲 3 個⁠月、小明 8 個⁠月",
               "textAlign": "right",
               "fontFamily": "$font",
               "fontSize": "$fs-note",
@@ -53276,7 +53276,7 @@
                   "fill": "$print-ink-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container(0)",
-                  "content": "小安 · 2 歲 3 個⁠月",
+                  "content": "小安 · 2 歲 3 個⁠月",
                   "fontFamily": "$font",
                   "fontSize": "$fs-note",
                   "fontWeight": "normal"
@@ -53742,7 +53742,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": 692,
+          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -54040,7 +54040,7 @@
                           "width": "fill_container",
                           "descendants": {
                             "wQVzs": {
-                              "content": "小安 · 2 歲 3 個⁠月"
+                              "content": "小安 · 2 歲 3 個⁠月"
                             },
                             "Qjdzx": {
                               "enabled": true
@@ -54743,7 +54743,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": 678,
+          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -55055,7 +55055,7 @@
                           "width": "fill_container",
                           "descendants": {
                             "wQVzs": {
-                              "content": "小安 · 2 歲 3 個⁠月"
+                              "content": "小安 · 2 歲 3 個⁠月"
                             },
                             "Qjdzx": {
                               "enabled": true
@@ -55219,7 +55219,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": 692,
+          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -55501,7 +55501,7 @@
                           "width": "fill_container",
                           "descendants": {
                             "wQVzs": {
-                              "content": "小安 · 2 歲 3 個⁠月"
+                              "content": "小安 · 2 歲 3 個⁠月"
                             },
                             "Qjdzx": {
                               "enabled": true
@@ -56078,7 +56078,7 @@
                                       "content": "上禮拜的動物園一日遊 · 12 張相片"
                                     },
                                     "wQVzs": {
-                                      "content": "小安 · 2 歲 3 個⁠月"
+                                      "content": "小安 · 2 歲 3 個⁠月"
                                     },
                                     "Qjdzx": {
                                       "width": 212.5,
@@ -56283,7 +56283,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": 1316,
+          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -56492,7 +56492,7 @@
                           "width": "fill_container",
                           "descendants": {
                             "wQVzs": {
-                              "content": "小安 · 2 歲 3 個⁠月"
+                              "content": "小安 · 2 歲 3 個⁠月"
                             },
                             "Qjdzx": {
                               "y": 330,
@@ -66568,7 +66568,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": 692,
+          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -66808,7 +66808,7 @@
                           "width": "fill_container",
                           "descendants": {
                             "wQVzs": {
-                              "content": "小安 · 2 歲 3 個⁠月"
+                              "content": "小安 · 2 歲 3 個⁠月"
                             },
                             "Qjdzx": {
                               "enabled": true
@@ -89952,7 +89952,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": 790,
+          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -90035,7 +90035,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -90085,7 +90085,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -90182,7 +90182,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小軒 · 8 個⁠月"
+                      "content": "小軒 · 8 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -90232,7 +90232,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -90491,7 +90491,7 @@
                           "content": " "
                         },
                         "wQVzs": {
-                          "content": "小安 · 2 歲 3 個⁠月"
+                          "content": "小安 · 2 歲 3 個⁠月"
                         },
                         "Qjdzx": {
                           "enabled": false
@@ -93500,7 +93500,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "【R3 訂正，取代 R1 段】cmp/Card Album：Imprint Row 改 layout:vertical，Caption 下方為單一 wQVzs Signature Line 文字節點（R2 起取代原本 Who Group/Age Group/Multi Caption 三節點設計）。單一寶貝：content=\"{暱稱} · {年齡}\"；多寶貝（≥2）：用「、」串接多組「暱稱 · 年齡」；零寶貝：Signature enabled:true、content:\" \"（單一半形空白），署名列保留空高度但不顯示任何文字（brand 十條 #10「空欄位卡不塌縮」；R5 BL-3 訂正——R4 曾讓 iPhone 三張零寶貝卡 enabled:false 塌縮成232高，與 iPad VvT91 的263高 enabled:true 空白列互相矛盾，兩套規格只有一套對；本輪統一為「保留高度」，iPhone puHZ5/Xldkz/Wl90J 三板的卡3（R7edNW／T3SwvP／mdabp，皆「海邊戲水」）改 263 高，corner y 同步 242，與 iPad VvT91 一致）。零寶貝卡讀者靠「這張卡的署名列是空白」本身辨識，不靠卡片整體高度變矮辨識——高度變矮曾經是本票唯一的零寶貝訊號，R5 起不再是。年齡片語（如「2 歲 3 個月」）內部空白一律用 NBSP（U+00A0）連接、「個」「月」之間再插入 WORD JOINER（U+2060），防止 Dynamic Type／AX3 折行把年齡單位拆成孤字（BL-B R3 修復）。姓名與年齡之間的「 · 」刻意維持一般可斷空白（U+0020）——若也用 NBSP 包住會把姓名最後一字一併鎖進同一個不可斷區塊，AX3 實測會產生「小」單字孤兒，已排除，勿在下一輪重新套用。 MJ-6（R5）：AX3 署名一律一行一人，不因單一寶貝就把姓名與年齡拆成兩行——IjWOp 卡2（pNPuF，多寶貝）已證明「小安 2 歲 3 個月」在 w=329 放得下一整行；ONEs5／i3jpIq（單一寶貝）原本用顯式 \\n 把姓名與年齡拆成兩行是 R3 遺留的保守處理，R5 拿掉 \\n 統一成一行，兩卡各變矮 58pt，corner y 同步重算（424／366）。 INFO-N2（R7）：AX3 署名文法與上述「{暱稱} · {年齡}」公式故意不同——AX3 省略「 · 」分隔號（ONEs5/i3jpIq＝「小安 2 歲 3 個⁠月」，姓名年齡之間僅一般空白）；多寶貝改用顯式換行（\\n）分隔每個人，不用「、」串接（pNPuF＝「小安 2 歲 3 個⁠月\\n小明 8 個⁠月」）——這是 R4 MJ-6 處方裡就這樣寫的既有規則，本輪把它從隱含慣例補成明文規則，避免下一輪被誤判成不一致而「修正」回帶「 ·」／「、」的版本。 【LS-194 R2 訂正】上述 INFO-N2「AX3 省略『 · 』分隔號」一句已被推翻——LS-165 merge-review R1 comment 931f074e N2 裁定「實作對、稿面錯」，AX3 三處（ONEs5／i3jpIq／pNPuF 的 wQVzs）已於 LS-194 R1 補回「 · 」分隔號、R2 再把年齡片語內部空白由誤用的一般空白改回本段規定的 NBSP（加「 · 」後文字變長，AX3 40pt 下用一般空白會折在數字後產生「3／個月」孤字，改 NBSP 後折在「 · ／2 歲 3 個月」）。INFO-N2 這句「省略『 · 』」現在只是歷史記錄，下一輪勿再依其字面套用；最新修法細節見本板（kHDk4）第 59–60 塊（R5 修訂重點段＋stamp: LS-194 的沿革項）。 【LS-201 R2 訂正，取代 R1 段】R1 曾記錄「姓名與『·』之間插入 WORD JOINER（U+2060），174→116pt 無孤字」——VR R1 e27f109f MJ-1／BL-3 指出兩個問題：(1) WORD JOINER 是零寬字元，R1 的做法其實是把姓名與『·』之間的可斷空白**直接刪除**、不是「變成不可斷」，渲染結果『小安· 2 歲 3 個月』分隔號左邊沒有空隙、右邊有空隙，左右不對稱；(2) 舉證用的 pNPuF 樣本同時被誤改成年齡片語內部空白從 NBSP 退化成一般空白，174→116 這個數字有一部分來自「年齡片語可以任意斷」，不是 WORD JOINER 本身的功勞，(a)/(b) 的裁定證據不乾淨。R2 重新量測：年齡片語內部空白全部恢復 NBSP（與 8 個⁠月／2 歲 3 個⁠月等既有 30 例一致）之後，(a) 案（姓名與『·』之間改用 NBSP，保留視覺空隙、只讓斷行點不落在這裡）與 (b) 案（『·』與年齡片語之間用 NBSP 銜接、姓名與『·』之間維持可斷）在 pNPuF（2 人合卡）皆量得 h=174pt（3 行），與最初的一般空白版本完全相同——因為 NBSP 與一般空白寬度相同，換掉的只是「能不能斷」不是「佔多少寬度」，把某個斷點鎖住並不會讓文字變短，只會把斷行點推到別的位置。兩案的差異只在斷行點落在哪裡：(a) 案『小安 ·』單獨成行（『·』孤立於行尾，但視覺間距正確，不再左右不對稱）／『2 歲 3 個月』另起一行；(b) 案渲染引擎在『·』與年齡片語綁成一體、姓名可斷的情況下，實測仍會在原本受 NBSP／WORD JOINER 保護的『個』『月』之間強制斷行（『2 歲 3』／『個月』），直接違反本段稍早「個月不可拆」的規則，比 (a) 案的孤立『·』更糟。裁定：全稿 29 個 Signature Line 實例一律採用『姓名 + NBSP（U+00A0） + ·+一般空白+年齡片語』，姓名與『·』之間全面改用 NBSP（不是 WORD JOINER）取代原本的一般空白，讓分隔號左右間距一致；年齡片語自身的 NBSP／WORD JOINER 規則不變。這個決定**不是**因為它縮短了行數（兩案行數相同，都與未修正前一致），純粹是因為 (a) 案不會產生比原本更嚴重的排版違規，(b) 案會。若未來字級或版寬改變讓孤立『·』的視覺觀感無法接受，需要的是重新設計署名格式（例如姓名與年齡分兩行呈現），不是在『·』的左右鄰接空白上做文章——NBSP／WORD JOINER 只能決定斷點位置、無法讓內容變窄。",
+              "content": "【R3 訂正，取代 R1 段】cmp/Card Album：Imprint Row 改 layout:vertical，Caption 下方為單一 wQVzs Signature Line 文字節點（R2 起取代原本 Who Group/Age Group/Multi Caption 三節點設計）。單一寶貝：content=\"{暱稱} · {年齡}\"；多寶貝（≥2）：用「、」串接多組「暱稱 · 年齡」；零寶貝：Signature enabled:true、content:\" \"（單一半形空白），署名列保留空高度但不顯示任何文字（brand 十條 #10「空欄位卡不塌縮」；R5 BL-3 訂正——R4 曾讓 iPhone 三張零寶貝卡 enabled:false 塌縮成232高，與 iPad VvT91 的263高 enabled:true 空白列互相矛盾，兩套規格只有一套對；本輪統一為「保留高度」，iPhone puHZ5/Xldkz/Wl90J 三板的卡3（R7edNW／T3SwvP／mdabp，皆「海邊戲水」）改 263 高，corner y 同步 242，與 iPad VvT91 一致）。零寶貝卡讀者靠「這張卡的署名列是空白」本身辨識，不靠卡片整體高度變矮辨識——高度變矮曾經是本票唯一的零寶貝訊號，R5 起不再是。年齡片語（如「2 歲 3 個月」）內部空白一律用 NBSP（U+00A0）連接、「個」「月」之間再插入 WORD JOINER（U+2060），防止 Dynamic Type／AX3 折行把年齡單位拆成孤字（BL-B R3 修復）。姓名與年齡之間的「 · 」刻意維持一般可斷空白（U+0020）——若也用 NBSP 包住會把姓名最後一字一併鎖進同一個不可斷區塊，AX3 實測會產生「小」單字孤兒，已排除，勿在下一輪重新套用。 MJ-6（R5）：AX3 署名一律一行一人，不因單一寶貝就把姓名與年齡拆成兩行——IjWOp 卡2（pNPuF，多寶貝）已證明「小安 2 歲 3 個月」在 w=329 放得下一整行；ONEs5／i3jpIq（單一寶貝）原本用顯式 \\n 把姓名與年齡拆成兩行是 R3 遺留的保守處理，R5 拿掉 \\n 統一成一行，兩卡各變矮 58pt，corner y 同步重算（424／366）。 INFO-N2（R7）：AX3 署名文法與上述「{暱稱} · {年齡}」公式故意不同——AX3 省略「 · 」分隔號（ONEs5/i3jpIq＝「小安 2 歲 3 個⁠月」，姓名年齡之間僅一般空白）；多寶貝改用顯式換行（\\n）分隔每個人，不用「、」串接（pNPuF＝「小安 2 歲 3 個⁠月\\n小明 8 個⁠月」）——這是 R4 MJ-6 處方裡就這樣寫的既有規則，本輪把它從隱含慣例補成明文規則，避免下一輪被誤判成不一致而「修正」回帶「 ·」／「、」的版本。 【LS-194 R2 訂正】上述 INFO-N2「AX3 省略『 · 』分隔號」一句已被推翻——LS-165 merge-review R1 comment 931f074e N2 裁定「實作對、稿面錯」，AX3 三處（ONEs5／i3jpIq／pNPuF 的 wQVzs）已於 LS-194 R1 補回「 · 」分隔號、R2 再把年齡片語內部空白由誤用的一般空白改回本段規定的 NBSP（加「 · 」後文字變長，AX3 40pt 下用一般空白會折在數字後產生「3／個月」孤字，改 NBSP 後折在「 · ／2 歲 3 個月」）。INFO-N2 這句「省略『 · 』」現在只是歷史記錄，下一輪勿再依其字面套用；最新修法細節見本板（kHDk4）第 59–60 塊（R5 修訂重點段＋stamp: LS-194 的沿革項）。 【LS-201 R2 訂正，取代 R1 段】R1 曾記錄「姓名與『·』之間插入 WORD JOINER（U+2060），174→116pt 無孤字」——VR R1 e27f109f MJ-1／BL-3 指出兩個問題：(1) WORD JOINER 是零寬字元，R1 的做法其實是把姓名與『·』之間的可斷空白**直接刪除**、不是「變成不可斷」，渲染結果『小安· 2 歲 3 個月』分隔號左邊沒有空隙、右邊有空隙，左右不對稱；(2) 舉證用的 pNPuF 樣本同時被誤改成年齡片語內部空白從 NBSP 退化成一般空白，174→116 這個數字有一部分來自「年齡片語可以任意斷」，不是 WORD JOINER 本身的功勞，(a)/(b) 的裁定證據不乾淨。R2 重新量測：年齡片語內部空白全部恢復 NBSP（與 8 個⁠月／2 歲 3 個⁠月等既有 30 例一致）之後，(a) 案（姓名與『·』之間改用 NBSP，保留視覺空隙、只讓斷行點不落在這裡）與 (b) 案（『·』與年齡片語之間用 NBSP 銜接、姓名與『·』之間維持可斷）在 pNPuF（2 人合卡）皆量得 h=174pt（3 行），與最初的一般空白版本完全相同——因為 NBSP 與一般空白寬度相同，換掉的只是「能不能斷」不是「佔多少寬度」，把某個斷點鎖住並不會讓文字變短，只會把斷行點推到別的位置。兩案的差異只在斷行點落在哪裡：(a) 案『小安 ·』單獨成行（『·』孤立於行尾，但視覺間距正確，不再左右不對稱）／『2 歲 3 個月』另起一行；(b) 案渲染引擎在『·』與年齡片語綁成一體、姓名可斷的情況下，實測仍會在原本受 NBSP／WORD JOINER 保護的『個』『月』之間強制斷行（『2 歲 3』／『個月』），直接違反本段稍早「個月不可拆」的規則，比 (a) 案的孤立『·』更糟。裁定：全稿 29 個 Signature Line 實例一律採用『姓名 + NBSP（U+00A0） + ·+一般空白+年齡片語』，姓名與『·』之間全面改用 NBSP（不是 WORD JOINER）取代原本的一般空白，讓分隔號左右間距一致；年齡片語自身的 NBSP／WORD JOINER 規則不變。這個決定**不是**因為它縮短了行數（兩案行數相同，都與未修正前一致），純粹是因為 (a) 案不會產生比原本更嚴重的排版違規，(b) 案會。若未來字級或版寬改變讓孤立『·』的視覺觀感無法接受，需要的是重新設計署名格式（例如姓名與年齡分兩行呈現），不是在『·』的左右鄰接空白上做文章——NBSP／WORD JOINER 只能決定斷點位置、無法讓內容變窄。 【LS-201 R3 訂正，取代上一段 R2 裁定】VR R2 d29e1586 BL-A 指出：R2 選的 (a) 案（姓名 NBSP · 一般空白 年齡）雖然解決了『·』左右間距不對稱，卻沒有解決本票第 3 項驗收要消滅的『·』行尾孤符——NBSP 鎖住的是『姓名』與『·』之間不能斷，斷行點於是穩定落在『·』之後，三張 AX3 卡（ONEs5／i3jpIq／pNPuF）仍然渲染成『小安 ·』單獨成行、『·』孤立於行尾，只是間距對了、孤符沒消。R2 的段落其實已經誠實記下這個孤符（『(a) 案「小安 ·」單獨成行』），但票的驗收條件寫的是要消滅它，不是把它記錄下來。R3 用乾淨樣本（年齡片語 NBSP 已全數復原、非 R1 那次被剝掉保護的髒樣本）重新實測 VR 提出的候選案 2——姓名與『·』之間改回一般可斷空白（U+0020），『·』與年齡片語之間改用 NBSP（U+00A0）銜接成一體，讓斷行點只能落在姓名之後、『·』永遠跟著下一行走：三張 AX3 卡實測 ONEs5 h=116pt（2 行：『小安』／『· 2 歲 3 個月』）、i3jpIq h=116pt（同上）、pNPuF h=174pt（3 行：『小安』／『· 2 歲 3 個月』／『小明 · 8 個月』）——與案 (a) 完全相同的行數與高度，年齡片語『個月』內部一次都沒有被逼斷行，『·』三張卡都改成領銜下一行，不再孤立於行尾。另外用兩張標準尺寸多寶貝卡覆核換行邊界情況：PjgtQ（w=329）『小安 · 2 歲 3 個月、小明 · 8 個月』單行放得下、無需換行；WiBHO（w=238.5，較窄）換行為『小安 · 2 歲 3 個月、小明』／『· 8 個月』，第二個『·』同樣領銜換行、未孤立、未逼內部斷行。裁定：改採候選案 2，全稿套用到 cmp/Card Album（bhroo）『Signature Line』（wQVzs）元件定義本身＋全部 25 個既有非空 override 實例（連同已於量測階段先行套用的 3 張 AX3 卡，共 28 個實例＋1 個元件預設＝全稿 34 個『·』、逐一驗證 codepoint 前一個字元皆為 U+0020、後一個字元皆為 U+00A0，0 個例外）。新公式：『{暱稱}』＋一般空白（U+0020，可斷）＋『·』＋NBSP（U+00A0）＋『{年齡片語}』（年齡片語內部的 NBSP／WORD JOINER 規則完全不變，仍是本段稍早訂的『2⎵歲⎵3⎵個⁠月』）；上一段（R2 訂正）記錄的『(a) 案：姓名+NBSP+·+一般空白+年齡片語』公式作廢，不要再依它套用。cmp/Card Diary（qtCd7）的對應內容結構不同——Name／Sep／Age 是三個獨立的 flex 兄弟節點（非單一字串），Pencil flexbox 是單軸、沒有跨節點文字自動換行，『·』（Sep 節點）永遠不會被推到獨立一行，這個孤符缺陷在 Diary 的節點結構下本來就不會發生，所以候選案 2 的 SP/NBSP 互換對 Diary 沒有適用對象、Sep 節點『 · 』維持原樣不動；但 Diary 的『Age』（zk1yE）與『Multi Caption』（x7k2o6）兩個節點先前完全沒有年齡片語 NBSP 保護（全為一般空白），本輪一併補上與 Card Album 一致的『2⎵歲⎵3⎵個⁠月』NBSP／WORD JOINER 保護（LS-202 design-notes-check.sh 新增的署名 NBSP gate 會掃這兩個元件，觸碰到的節點必須符合）。「Multi Caption」節點內容本身缺少『·』分隔號（『小安 2 歲 3 個月、小明 8 個月』，與 Card Album 的『小安 · 2 歲 3 個月、小明 · 8 個月』句法不同）——這是另一個獨立缺陷、不在本票 BL-A 範圍內，本輪只補 NBSP 不補『·』，留待另票處理，未在此文過飾非。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -95190,7 +95190,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": 790,
+          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -95273,7 +95273,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -95323,7 +95323,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -95420,7 +95420,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小軒 · 8 個⁠月"
+                      "content": "小軒 · 8 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -95470,7 +95470,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -95732,7 +95732,7 @@
                           "content": " "
                         },
                         "wQVzs": {
-                          "content": "小安 · 2 歲 3 個⁠月"
+                          "content": "小安 · 2 歲 3 個⁠月"
                         },
                         "Qjdzx": {
                           "enabled": false
@@ -95937,7 +95937,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": 1438,
+          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -96024,7 +96024,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -96074,7 +96074,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月\n小明 · 8 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月\n小明 · 8 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -96124,7 +96124,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -96573,7 +96573,7 @@
                             },
                             "wQVzs": {
                               "enabled": true,
-                              "content": "小安 · 2 歲 3 個⁠月"
+                              "content": "小安 · 2 歲 3 個⁠月"
                             },
                             "Qjdzx": {
                               "enabled": false,
@@ -96698,7 +96698,7 @@
                             },
                             "wQVzs": {
                               "enabled": true,
-                              "content": "小安 · 2 歲 3 個⁠月"
+                              "content": "小安 · 2 歲 3 個⁠月"
                             },
                             "Qjdzx": {
                               "enabled": false,
@@ -96772,7 +96772,7 @@
                             },
                             "wQVzs": {
                               "enabled": true,
-                              "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
+                              "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
                             },
                             "Qjdzx": {
                               "enabled": false,
@@ -96836,7 +96836,7 @@
                             },
                             "wQVzs": {
                               "enabled": true,
-                              "content": "小軒 · 8 個⁠月"
+                              "content": "小軒 · 8 個⁠月"
                             },
                             "Qjdzx": {
                               "enabled": false,
@@ -96899,7 +96899,7 @@
                               "content": "生日派對 · 15 張相片"
                             },
                             "wQVzs": {
-                              "content": "小明 · 8 個⁠月",
+                              "content": "小明 · 8 個⁠月",
                               "enabled": true
                             },
                             "Qjdzx": {
@@ -97008,7 +97008,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": 692,
+          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             8,
@@ -97091,7 +97091,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "陳小安 · 出生第一天"
+                      "content": "陳小安 · 出生第一天"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -97141,7 +97141,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -97238,7 +97238,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小軒 · 8 個⁠月"
+                      "content": "小軒 · 8 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -97288,7 +97288,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -122473,7 +122473,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": 746,
+          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             16,
@@ -128572,7 +128572,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1540,
+      "height": 1556,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -128620,7 +128620,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": 1402,
+          "height": "fill_container",
           "layout": "vertical",
           "padding": [
             16,
@@ -129095,7 +129095,7 @@
           "id": "N1Ibp",
           "layoutPosition": "absolute",
           "x": 0,
-          "y": 1506,
+          "y": 1522,
           "name": "Home Indicator Area",
           "width": "fill_container(393)",
           "height": 34,
