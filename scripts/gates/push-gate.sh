@@ -2,6 +2,14 @@
 # Push gate（pre-push）：目標 ref 分類（刪除／tag 早退；test／main 只准 promote.sh 的 FF 晉升）+ 全 repo lint +
 # API 契約／錯誤碼對帳 + migration 版本號撞號／分級 + unit tests（LS-65：秒級便宜檢查前移到 xcodebuild 之前執行）。
 # 規約見 docs/COLLABORATION.md §4。
+#
+# LS-209（push 韌性）：本 gate（尤其 unit tests 那步）常跑 8–10 分鐘，期間 SSH 連線閒置會被 GitHub 斷線——
+# `git push` 中途印兩次 `Connection closed by remote host`（exit 141）才成功（LS-191 R4 實測三次 push）。
+# `scripts/ops/session-start.sh` 已在每次 SessionStart 冪等設定 repo 層 `git config core.sshCommand
+# "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20"`（全 repo 共用單一 config，不需要對每個
+# worktree 分別設；不改使用者全域 `~/.gitconfig`）——正常情況下這裡不必再做什麼；忘記跑過 SessionStart
+# 的環境（如手動起的 shell）可手動補設同一行，或直接 `GIT_SSH_COMMAND="ssh -o ServerAliveInterval=30
+# -o ServerAliveCountMax=20" git push` 單次覆寫。
 set -euo pipefail
 
 # LS-73：pre-push hook 由 git 啟動時會 export GIT_DIR／GIT_WORK_TREE／GIT_INDEX_FILE（linked worktree 指向

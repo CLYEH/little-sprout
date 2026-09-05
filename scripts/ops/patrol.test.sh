@@ -209,6 +209,39 @@ hj2="$(printf '{}' | CLAUDE_PROJECT_DIR="$work/nope" bash "$hook" 2>/dev/null)";
 rc_is '⑥ repo 不存在：fail-soft 仍 exit 0' 0 "$rc" "$hj2"
 jq_ok '⑥ repo 不存在：仍合法 JSON、context 說明失敗＋仍提醒建 cron' "$hj2" '.hookSpecificOutput.hookEventName == "SessionStart" and (.hookSpecificOutput.additionalContext | test("失敗") and test("CronCreate"))'
 
+# ---- ⑥b LS-209（push 韌性）：SessionStart hook 冪等設定 core.sshCommand（SSH keepalive），不改使用者全域
+#        ~/.gitconfig；已是目標值就不重複寫、context 不重複提醒；設定寫進的是 $repo 自己的（合成）git config，
+#        不碰真的 ~/.gitconfig ----
+g -C "$repo" config --unset core.sshCommand 2>/dev/null || true
+hjssh1="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" bash "$hook" 2>/dev/null)"
+jq_ok '⑥b 首次跑：context 印已設定 core.sshCommand（keepalive）' "$hjssh1" '.hookSpecificOutput.additionalContext | test("已設定 git core.sshCommand") and test("ServerAliveInterval=30") and test("ServerAliveCountMax=20")'
+cur_ssh=$(g -C "$repo" config --get core.sshCommand)
+if [ "$cur_ssh" = "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20" ]; then echo "✓ ⑥b repo 層 core.sshCommand 確實被設定成目標值"; else echo "✗ ⑥b core.sshCommand 值不符（實得「${cur_ssh}」）" >&2; fail=1; fi
+if git config --global --get core.sshCommand >/dev/null 2>&1 && [ "$(git config --global --get core.sshCommand 2>/dev/null)" = "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20" ]; then echo "✗ ⑥b 不該動到使用者全域 ~/.gitconfig" >&2; fail=1; else echo "✓ ⑥b 未動到使用者全域 ~/.gitconfig"; fi
+hjssh2="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" bash "$hook" 2>/dev/null)"
+jq_ok '⑥b 已是目標值時第二次跑不再重複提醒（冪等）' "$hjssh2" '.hookSpecificOutput.additionalContext | test("已設定 git core.sshCommand") | not'
+cur_ssh2=$(g -C "$repo" config --get core.sshCommand)
+[ "$cur_ssh2" = "$cur_ssh" ] && echo "✓ ⑥b 冪等：第二次跑後值不變" || { echo "✗ ⑥b 冪等後值變了（實得「${cur_ssh2}」）" >&2; fail=1; }
+g -C "$repo" config core.sshCommand 'old-custom-value'
+hjssh3="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" bash "$hook" 2>/dev/null)"
+jq_ok '⑥b 既有非目標值（如舊自訂值）→ 仍會被覆寫成目標值並提醒' "$hjssh3" '.hookSpecificOutput.additionalContext | test("已設定 git core.sshCommand")'
+cur_ssh3=$(g -C "$repo" config --get core.sshCommand)
+[ "$cur_ssh3" = "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20" ] && echo "✓ ⑥b 舊自訂值被覆寫成目標值" || { echo "✗ ⑥b 舊自訂值未被覆寫（實得「${cur_ssh3}」）" >&2; fail=1; }
+hjssh_norepo="$(printf '{}' | CLAUDE_PROJECT_DIR="$work/nope" bash "$hook" 2>/dev/null)"
+jq_ok '⑥b repo 不存在時不因 core.sshCommand 這段而炸——仍合法 JSON、fail-soft' "$hjssh_norepo" '.hookSpecificOutput.hookEventName == "SessionStart"'
+# mutation：拿掉 LS209-SSH-KEEPALIVE 整段（標記區塊，同 patrol.sh 的 LS209-PEN-WRONG 慣例）→ 上面「首次跑印已設定」
+# 的負樣本必須不再出現該訊息。ssh_note= 宣告刻意放在區塊外（同 PEN_WRONG_LINE 的教訓），拿掉整段不會讓 `set -u`
+# 下游讀取 $ssh_note 炸「unbound variable」。
+mut_hook="$work/session-start.no-ssh-keepalive.sh"
+awk 'index($0, "LS209-SSH-KEEPALIVE-START") > 0 { skip = 1 } skip != 1 { print } index($0, "LS209-SSH-KEEPALIVE-END") > 0 { skip = 0 }' "$hook" > "$mut_hook"
+if grep -q 'LS209-SSH-KEEPALIVE-START' "$mut_hook" || grep -q 'SSH_KEEPALIVE_CMD=' "$mut_hook"; then echo "✗ ⑥b mutant 仍含 core.sshCommand 設定段（awk 拿掉失敗，負控本身無效）" >&2; fail=1; else echo "✓ ⑥b mutant 確實已拿掉 core.sshCommand 設定段"; fi
+g -C "$repo" config --unset core.sshCommand 2>/dev/null || true
+hjssh_mut="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" bash "$mut_hook" 2>/dev/null)"
+jq_ok '⑥b mutant：拿掉設定段後不再印已設定訊息（證明這段確實是原因）' "$hjssh_mut" '.hookSpecificOutput.additionalContext | test("已設定 git core.sshCommand") | not'
+if [ -z "$(g -C "$repo" config --get core.sshCommand 2>/dev/null)" ]; then echo "✓ ⑥b mutant：拿掉設定段後 core.sshCommand 確實未被設定"; else echo "✗ ⑥b mutant 應該沒有設定 core.sshCommand" >&2; fail=1; fi
+# 還原：讓後續 ⑦ 之後的測試不受本段影響（本來就不該有值，但保險起見還原成本段前的狀態）
+g -C "$repo" config --unset core.sshCommand 2>/dev/null || true
+
 # ---- ⑦ 主 checkout pull 之後：落後標記與 pull 指示消失（負向）----
 g -C "$repo" pull -q --ff-only origin main
 brief2="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
