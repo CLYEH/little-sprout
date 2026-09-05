@@ -1003,13 +1003,23 @@ wd_home="$work/wd-home"
 wd_home_empty="$work/wd-home-empty"
 wd_dd="$wd_home/Library/Developer/Xcode/DerivedData"
 wd_R_phys="$(cd "$R" && pwd -P)"   # push-gate.sh 用 pwd -P 比對 WorkspacePath；macOS 的 mktemp 路徑經過 /var → /private/var 符號連結
-mkdir -p "$wd_dd/LittleSprout-thisworktree" "$wd_dd/LittleSprout-otherworktree" "$wd_home/Library/Logs/DiagnosticReports" "$wd_home_empty"
+mkdir -p "$wd_dd/LittleSprout-thisworktree" "$wd_dd/LittleSprout-otherworktree" "$wd_dd/LittleSprout-nestedworktree" "$wd_home/Library/Logs/DiagnosticReports" "$wd_home_empty"
 printf '<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0"><dict><key>WorkspacePath</key><string>%s/Fake.xcodeproj</string></dict></plist>\n' "$wd_R_phys" > "$wd_dd/LittleSprout-thisworktree/info.plist"
 printf '<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0"><dict><key>WorkspacePath</key><string>%s/LittleSprout.xcodeproj</string></dict></plist>\n' "$work/some-other-worktree" > "$wd_dd/LittleSprout-otherworktree/info.plist"
+# LS-205 R2（merge-review R1 i1）：「巢狀」的別票 worktree——真實佈局裡 worktree 慣例放在
+# `<主 checkout>/.claude/worktrees/LS-<n>/` 底下，這台的 WorkspacePath 字面上正是
+# `${wd_repo_root}/` 開頭（字首相同），但中間隔了 `.claude/worktrees/LS-999/` 這一段、不是
+# 直接緊接 `<repo根>/<單一檔名>.xcodeproj`。舊版 `grep -qF "<string>${wd_repo_root}/"`（純字首）
+# 會誤判這裡也算「自己的」；新版 `grep -qE` 要求 `${wd_repo_root}/` 後面只能有一段不含 `/` 的
+# 名稱就接 `.xcodeproj`／`.xcworkspace`，正確排除。既有 `LittleSprout-otherworktree` 用完全
+# 不同的頂層路徑，兩種舊版寫法都排除得掉，測不出這個 bug（i1 指出的「零回歸覆蓋」）。
+mkdir -p "$wd_dd/LittleSprout-nestedworktree"
+printf '<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0"><dict><key>WorkspacePath</key><string>%s/.claude/worktrees/LS-999/LittleSprout.xcodeproj</string></dict></plist>\n' "$wd_R_phys" > "$wd_dd/LittleSprout-nestedworktree/info.plist"
 # Staging 底下真實路徑含空白（「Test Scheme Action」），照抄以驗路徑處理
 wd_staging_rel="Logs/Test/Test-LittleSprout-2026.09.05_14-38-00-+0800.xcresult/Staging/1_Test/Diagnostics/LittleSproutTests-AAAA-Configuration-Test Scheme Action-Iteration-1/LittleSproutTests-BBBB/Session-LittleSproutTests-2026-09-05_143800-abc123.log"
 wd_session_this="$wd_dd/LittleSprout-thisworktree/$wd_staging_rel"
 wd_session_other="$wd_dd/LittleSprout-otherworktree/$wd_staging_rel"
+wd_session_nested="$wd_dd/LittleSprout-nestedworktree/$wd_staging_rel"
 wd_ips="$wd_home/Library/Logs/DiagnosticReports/LittleSprout-2026-09-05-143904.ips"
 cat > "$wd_ips" <<'IPS'
 {"app_name":"LittleSprout","timestamp":"2026-09-05 14:39:04.00 +0800","app_version":"0.1.0","bug_type":"309","name":"LittleSprout"}
@@ -1150,6 +1160,18 @@ if [ "$rc33" -eq 0 ] && ! printf '%s' "$out33" | grep -qF '出現宿主 crash �
   echo "✓ ㉝ 別的 worktree 的 crash session log 不觸發本 worktree 的看門狗（只認 WorkspacePath 落在本 repo 的 DerivedData）"
 else echo "✗ ㉝ 別票的 crash 被當成自己的（exit ${rc33}）——scoping 失效會殺掉健康的 run" >&2; printf '%s\n' "$out33" | sed 's/^/    /' >&2; fail=1; fi
 
+# ㉝b（LS-205 R2；merge-review R1 i1）：同 ㉝，但別票 worktree「巢狀」在 `${wd_repo_root}/` 底下
+#    （真實佈局：worktree 放在 `<主 checkout>/.claude/worktrees/LS-999/`）——舊版
+#    `grep -qF "<string>${wd_repo_root}/"`（純字首）會把這個巢狀路徑也誤判成「自己的」；㉝ 的
+#    fixture 用完全不同頂層路徑，測不出這個 bug（i1：零回歸覆蓋）。mutation 手動驗證：改回舊版
+#    `-qF` 字首比對 → 本案紅（見 R2 handoff）。
+: > "$SHUTDOWN_LOG"
+out33b=$(run_gate HOME="$wd_home" STUB_TEST_SCRIPT="$work/wd-test-script.sh" PUSH_GATE_XCODEBUILD_TIMEOUT_SEC=30 PUSH_GATE_CRASH_GRACE_SEC=1 \
+  WD_SESSION_FILE="$wd_session_nested" WD_SESSION_CONTENT="$wd_crash_session" WD_THEN_SLEEP=3 WD_THEN_STDOUT='done'); rc33b=$?
+if [ "$rc33b" -eq 0 ] && ! printf '%s' "$out33b" | grep -qF '出現宿主 crash 樣式' && ! printf '%s' "$out33b" | grep -qF '已中止'; then
+  echo "✓ ㉝b 巢狀在本 repo 根之下的別票 worktree 的 crash 不觸發本 worktree 的看門狗（精確比對，不是純字首；LS-205 i1）"
+else echo "✗ ㉝b 巢狀別票的 crash 被當成自己的（exit ${rc33b}）——字首比對誤判（i1 指出的回歸）" >&2; printf '%s\n' "$out33b" | sed 's/^/    /' >&2; fail=1; fi
+
 # ㉞ CI（GITHUB_ACTIONS=true）不啟用看門狗；本機（清空）啟用並印一行說明
 out34a=$(run_gate STUB_TEST_RC=0 GITHUB_ACTIONS=true)
 out34b=$(run_gate STUB_TEST_RC=0)
@@ -1219,6 +1241,45 @@ else
   fail=1
 fi
 kill "$foreign_pid37" 2>/dev/null; wait "$foreign_pid37" 2>/dev/null
+rm -rf "$SIMULATOR_LOCK_DIR"
+
+# ㊳（LS-205 R2；merge-review R1 i2）：㊲ 的外來 holder 是活著的（`sleep 10`），單靠「holder 是否
+#    存活」這道防線就已經擋住誤收，測不出「holder 必須是被殺子孫」這個條件本身有沒有被鎖住
+#    （reviewer 的 mutation M5：拿掉 `case " $wd_killed_pids "` 那段判斷、只留 `kill -0` 存活檢查，
+#    ㊲ 仍全綠）。這裡讓 run_unit_tests 的 simulator-lock.sh 正常拿到鎖（holder＝真正的子孫 pid），
+#    等它寫好 holder 檔之後，直接竄改檔案內容成一個**已死、且不是這次看門狗任何子孫**的 pid——
+#    不透過 simulator-lock.sh 自己的 `mkdir`／`is_stale` 迴圈操作（那條路徑一旦偵測到死鎖會自己
+#    搶先回收，測不到 push-gate.sh 自己的收尾邏輯），模擬「檢查那一刻 holder 檔內容已經不是本次
+#    子孫寫的」這個 TOCTOU 情境。正確行為：這把鎖不屬於 wd_killed_pids 任何一員，即使已死也不該
+#    被回收（不只看死活，還要看是不是自己殺的）。
+: > "$SHUTDOWN_LOG"
+( : ) & foreign_dead_pid38=$!
+wait "$foreign_dead_pid38" 2>/dev/null   # 確保真的死透、已被 reap
+wd_pidfile38="$work/wd38.pid"; rm -f "$wd_pidfile38"
+rm -rf "$SIMULATOR_LOCK_DIR"
+run_gate HOME="$wd_home" STUB_TEST_SCRIPT="$work/wd-test-script.sh" PUSH_GATE_XCODEBUILD_TIMEOUT_SEC=5 \
+  WD_HANG=1 WD_PID_FILE="$wd_pidfile38" > "$work/out38.txt" 2>&1 &
+gate_pid38=$!
+holder_seen38=0
+for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+  if [ -f "$SIMULATOR_LOCK_DIR/holder" ]; then holder_seen38=1; break; fi
+  sleep 0.2
+done
+if [ "$holder_seen38" -eq 1 ]; then
+  printf 'pid=%s\nstarted=%s\n' "$foreign_dead_pid38" "$(date +%s)" > "$SIMULATOR_LOCK_DIR/holder"
+else
+  echo "✗ ㊳ 沒等到 simulator-lock.sh 寫好 holder 檔，自測本身沒運作" >&2
+  fail=1
+fi
+wait "$gate_pid38"; rc38=$?
+out38=$(cat "$work/out38.txt" 2>/dev/null)
+if [ "$rc38" -eq 124 ] && [ -d "$SIMULATOR_LOCK_DIR" ] && grep -qF "pid=${foreign_dead_pid38}" "$SIMULATOR_LOCK_DIR/holder" 2>/dev/null; then
+  echo "✓ ㊳ holder 檔被竄改成已死、非本次子孫的 pid 後仍不回收（LS-205 i2：holder 必須是被殺子孫，不是只看死活）"
+else
+  echo "✗ ㊳ 已死但非本次子孫的 holder 被誤收（exit ${rc38}；i2 的 mutation 未被鎖住）" >&2
+  printf '%s\n' "$out38" | sed 's/^/    /' >&2
+  fail=1
+fi
 rm -rf "$SIMULATOR_LOCK_DIR"
 
 if [ "$fail" -eq 0 ]; then
