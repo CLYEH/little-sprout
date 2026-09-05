@@ -26,6 +26,31 @@ struct Family: Equatable, Sendable, Decodable {
     }
 }
 
+/// `get_family_quota` RPC 的結果（見
+/// `supabase/migrations/20260903091317_report_block_rpc.sql` §7）——LS-188 09／09b 儲存空間頁
+/// 用量條與已滿判定。刻意不放進 `Family`（見該型別文件註解「不投影額度欄位」）：這是另一支
+/// RPC 的回傳列，不是 `families` 表本身的投影。
+struct FamilyQuota: Equatable, Sendable, Decodable {
+    let usedBytes: Int64
+    let quotaBytes: Int64
+
+    enum CodingKeys: String, CodingKey {
+        case usedBytes = "storage_used_bytes"
+        case quotaBytes = "storage_quota_bytes"
+    }
+
+    /// 0...1，`quotaBytes <= 0`（理論上不會，DB check 約束 `>= 0`，但 0 額度不該除零）時回傳
+    /// 1（視同已滿，比顯示 NaN／崩潰安全）。
+    var usedFraction: Double {
+        guard quotaBytes > 0 else { return 1 }
+        return min(1, max(0, Double(usedBytes) / Double(quotaBytes)))
+    }
+
+    /// 09b「已滿」態判定——`usedBytes >= quotaBytes`（LS002 觸發的同一條件，見
+    /// `supabase/migrations/20260822120100_triggers.sql` §3 硬防線）。
+    var isFull: Bool { usedBytes >= quotaBytes }
+}
+
 /// `request_join` RPC 的結果（見 supabase/migrations/20260823010000_join_approval.sql）：
 /// 家庭開審核則得到待審申請，關審核則直接入家。
 enum JoinRequestOutcome: Equatable, Sendable {

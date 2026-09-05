@@ -17,6 +17,10 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
     typealias WithdrawJoinHandler = @Sendable (UUID) async throws -> Void
     typealias ListJoinRequestsHandler = @Sendable () async throws -> [PendingJoinRequest]
     typealias MyJoinRequestHandler = @Sendable () async throws -> MyJoinRequest?
+    /// LS-188 merge-review R1 M1：可控延遲用——測試需要在 `fetchQuota` 的 await 期間插入一段
+    /// 「還沒回來」的窗口，才能造出 `FamilyStore.refreshQuota()` await 前後核對要測的時序
+    /// （`Task.sleep` 或 `AsyncStream` 皆可，由呼叫端的 handler 自行決定）。
+    typealias FetchQuotaHandler = @Sendable (UUID) async throws -> FamilyQuota
 
     enum StubError: Error {
         case unconfigured
@@ -48,6 +52,7 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
         var withdrawJoinCalls: [UUID] = []
         var listJoinRequestsHandler: ListJoinRequestsHandler = { [] }
         var myJoinRequestHandler: MyJoinRequestHandler = { nil }
+        var fetchQuotaHandler: FetchQuotaHandler = { _ in throw StubError.unconfigured }
     }
 
     private let box = OSAllocatedUnfairLock(initialState: Box())
@@ -120,6 +125,10 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
         box.withLock { $0.myJoinRequestHandler = handler }
     }
 
+    func setFetchQuotaHandler(_ handler: @escaping FetchQuotaHandler) {
+        box.withLock { $0.fetchQuotaHandler = handler }
+    }
+
     func createFamily(name: String) async throws -> Family {
         let handler = box.withLock { $0.createFamilyHandler }
         return try await handler(name)
@@ -151,6 +160,14 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
     func updateFamilyName(familyID: UUID, name: String) async throws { throw StubError.unconfigured }
 
     func setRequireApproval(familyID: UUID, requireApproval: Bool) async throws { throw StubError.unconfigured }
+
+    /// LS-188 merge-review R1 M1：現在有測試需要自訂這支的行為（`FamilyStoreRefreshQuotaRaceTests`
+    /// 用可控延遲的 handler 造出「await 期間 `reset()`」的時序）——不再是 `updateFamilyName`／
+    /// `setRequireApproval` 那種永遠拋錯的最小實作。
+    func fetchQuota(familyID: UUID) async throws -> FamilyQuota {
+        let handler = box.withLock { $0.fetchQuotaHandler }
+        return try await handler(familyID)
+    }
 
     func requestJoin(code: String) async throws -> JoinRequestOutcome {
         box.withLock { $0.requestJoinCalls.append(code) }

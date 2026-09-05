@@ -87,6 +87,11 @@ final class FamilyStore {
     private(set) var lookupInviteState: FamilyOperationState = .idle
     private(set) var latestInvite: GeneratedInvite?
 
+    /// LS-188：09／09b 儲存空間頁的用量／上限；`refreshQuota()` 查詢狀態。跟
+    /// `lookupInviteState` 一樣獨立一份狀態，不借用其他動作的欄位（R2 N1 的既有教訓）。
+    private(set) var quotaState: FamilyOperationState = .idle
+    private(set) var quota: FamilyQuota?
+
     /// LS-113：剛建立完家庭，還沒決定要不要建立第一個寶貝檔案——`RootView` 依這個旗標用
     /// `.fullScreenCover` 蓋一層 `CreateChildView`（08）在主畫面之上，讓「建立家庭後可接、
     /// 可跳過」的寶貝建檔步驟接上（見 `CreateChildView` 文件註解）。`CreateChildView` 呼叫
@@ -135,6 +140,13 @@ final class FamilyStore {
     func seedMyFamilyForPreview(_ family: Family) {
         myFamily = family
     }
+
+    /// LS-188：同 `seedMyFamilyForPreview` 的角色——讓 `#Preview`／`TapTargetGateHarness`／
+    /// UITest harness 不必真的走一次 async `refreshQuota()` 就能同步佈置「已滿」（09b）等
+    /// 特定樣本，沒有時序窗口。
+    func seedQuotaForPreview(_ quota: FamilyQuota) {
+        self.quota = quota
+    }
     #endif
 
     /// R1 F1：`AuthenticatedGate` 用 `.task(id: authStore.session?.userID)` 驅動這支——
@@ -169,6 +181,8 @@ final class FamilyStore {
         createFamilyState = .idle
         createInviteState = .idle
         lookupInviteState = .idle
+        quota = nil
+        quotaState = .idle
         showsChildOnboarding = false
         resetJoinRequestsState()
     }
@@ -318,6 +332,38 @@ final class FamilyStore {
             lookupInviteState = .failure(AppError.map(error))
         }
         return latestInvite
+    }
+
+    /// LS-188：09／09b 儲存空間頁的用量查詢——同其餘動作的 in-flight guard 慣例，沒有家庭
+    /// （理論上不會在 `SettingsView` 這條路徑發生，見 `SettingsView` 文件註解）就直接回傳
+    /// 目前值，不呼叫後端。
+    @discardableResult
+    func refreshQuota() async -> FamilyQuota? {
+        guard !quotaState.isSubmitting else { return quota }
+        guard let familyID = myFamily?.id else { return nil }
+        quotaState = .submitting
+        do {
+            let result = try await apiClient.fetchQuota(familyID: familyID)
+            // merge-review R1 M1：await 前後核對，同 `refreshLatestInvite` 文件註解第 2 點
+            // ——這段 RTT 期間若 `syncOwner`／登出把 store 換成別的使用者／家庭（`reset()`
+            // 已把 `quota` 清空），這裡查到的結果已經過期，直接丟棄、不覆寫。沒有這道防線，
+            // 一位使用者在 09 頁停留時登出，飛行中的舊請求回來會把前一位使用者的用量寫進
+            // 下一位使用者的 store（下一位若還沒有家庭，`myFamily?.id == familyID` 這裡就是
+            // false，不會被覆寫；若下一位剛好也查得到 `myFamily`，familyID 不同樣會被擋下）。
+            guard myFamily?.id == familyID else {
+                quotaState = .idle
+                return quota
+            }
+            quota = result
+            quotaState = .success
+        } catch {
+            guard myFamily?.id == familyID else {
+                quotaState = .idle
+                return quota
+            }
+            quotaState = .failure(AppError.map(error))
+        }
+        return quota
     }
 
     /// `refreshLatestInvite` 的 await 前後核對——見該方法文件註解第 2 點。`familyID` 不同代表

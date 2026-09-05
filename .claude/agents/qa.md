@@ -54,5 +54,7 @@ LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED 的根因是 mobile-mcp 每�
 ## 收工前關模擬器（LS-100）
 任務結束、交 handoff 前，`xcrun simctl shutdown <UDID>`——自己這次驗收 boot 的每一台都要關（機器空跑浪費資源、也會讓下一個 agent／patrol 誤判「已有人在用」）。`demo-*` 名稱的模擬器（demo 環境的持久機）豁免，不要關。
 
+**量測前確認模擬器 runtime＝`.ios-runtime`**（LS-205）：`xcodebuild test` 前留意 push-gate／CI 印出的 `simulator: <name> <udid> iOS <ver>（pinned <ver>）`；不同要在 handoff 註明——runtime 差異會影響 tap-target／版面量測，本機找不到釘住版時 `detect-simulator.sh` 會 fail-open（印 ⚠ 改用本機現有版本，不擋驗收，但視覺驗收結果可能與 CI 不完全一致）。
+
 ## 回報
 用 CLAUDE.md 的 handoff 格式，驗收條件逐條列 ✓／✗／⊘（含證據位置），並附貼 status 的輸出行（`✓ status qa=… 已貼到 <sha>`）。UI 票另附 **Pen 路徑**（LS-91）：開工核對到的 active 文件路徑。產出位置另加一行「模擬器已關：<UDID 列表>」（沒 boot 過就寫「無」；`demo-*` 豁免，見上方「收工前關模擬器」）與一行「lock 已釋放：<label>（`--release` 輸出的持有時長）」——沒 `--hold` 過就寫「未持有」；`--release` 回 exit 1（已到期）要寫明並說明有沒有重驗（LS-159）；再一行「qa-e2e 證據：<情境>=<`.claude/evidence/<票號>/qa-e2e/…` 目錄>（exit 0／1）」——沒跑任何情境就寫「未跑＋理由」（LS-158）。

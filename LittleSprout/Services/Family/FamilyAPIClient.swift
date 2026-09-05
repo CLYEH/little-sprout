@@ -18,6 +18,8 @@ import Foundation
 ///   - `revokeInvite`         → DELETE `public.invites`（owner 撤銷邀請碼的唯一路徑；
 ///                              沒有 `revoke_invite` RPC，見 `20260823040000_invites_write_path.sql`
 ///                              §3／LS-37 收斂註記，R1 F2）
+///   - `fetchQuota`           → RPC `get_family_quota(p_family_id)`（LS-188 09／09b 儲存空間頁；
+///                              `20260903091317_report_block_rpc.sql` §7）
 ///   - `requestJoin`          → RPC `request_join(p_code)`
 ///   - `approveJoin`          → RPC `approve_join(p_request_id)`
 ///   - `rejectJoin`           → RPC `reject_join(p_request_id)`
@@ -53,6 +55,10 @@ protocol FamilyAPIClient: Sendable {
     /// 撤銷（刪除）一支邀請碼；只有該家庭 owner 能成功。R1 F2：後端沒有 `revoke_invite`
     /// RPC，這是唯一的撤銷路徑——`createInvite` 在「重新產生」情境下會先呼叫這支。
     func revokeInvite(id: UUID) async throws
+
+    /// LS-188：09／09b 儲存空間頁的用量／上限——owner／member／viewer 皆可查詢（RLS 只收斂到
+    /// 自己所屬的家庭，不像 `updateFamilyName`／`setRequireApproval` 限 owner）。
+    func fetchQuota(familyID: UUID) async throws -> FamilyQuota
 
     /// 用邀請碼申請加入。
     func requestJoin(code: String) async throws -> JoinRequestOutcome
