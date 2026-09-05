@@ -8,13 +8,18 @@ import SwiftUI
 /// 真正會觸發動作的按鈕。視覺行高會比稿面截圖實測值高，這是刻意的取捨（規則衝突時遵守
 /// #7，見 PR body「與稿差異」段），不是遺漏。
 ///
-/// **merge-review R4**：R2/R3 用 `.frame(minHeight: 45)` 在本機量得 45pt，但 CI runner
-/// （不同 Xcode／iOS SDK 組合）量到 43.2pt——`.frame(minHeight:)` 的實際生效高度會被文字
-/// 內容的行高／基準線度量參與計算，同一份程式碼在不同系統字體 metrics 下可能有 <2pt 落差。
-/// 改用 `minimumTapTargetHeight(_:alignment:)`：疊一個完全不含文字／圖示、單純
-/// `Color.clear.frame(height:)` 的高度錨點進同一個 `ZStack`，靠 `ZStack` 的聯集尺寸規則
-/// （最終尺寸＝各子項尺寸的聯集）保證整體至少這麼高——這個下限的計算是純幾何常數，不涉及
-/// 任何字體度量，理論上跨 Xcode／iOS 版本一致。
+/// **merge-review R5（真正的根因）**：R4 猜測是字體行高參與 `.frame(minHeight:)` 的計算，
+/// 改用 `Color.clear` 高度錨點疊 `ZStack`（純幾何、不含文字）——本機量到 45pt，push 後 CI
+/// 仍量到跟 R2/R3 一模一樣的 43.2pt（三個數字到小數點後一位完全相同，跨兩份結構完全不同的
+/// 實作），證明問題根本不在「用什麼幾何湊出 45pt 的 layout frame」。真正原因：
+/// `.contentShape(Rectangle())` 預設只設定 `.interaction`（觸控命中）這個 content shape
+/// kind，`XCUITest` 的 `element.frame` 讀的是 **accessibility** frame——本機這台 Xcode／
+/// iOS 版本剛好讓 accessibility frame 也一併採用 layout frame（意外地「連帶生效」），CI 的
+/// 版本組合則沒有這個連帶效應，accessibility frame 仍然貼著文字內容本身的天然大小算，跟
+/// 外層疊了多少層透明 `Color.clear` 完全無關。改用
+/// `.contentShape([.interaction, .accessibility], Rectangle())`——SwiftUI 讓你為不同用途
+/// 分別指定 content shape，這裡明確兩個 kind 都設，不依賴任何隱含的連帶關係，不涉及字體
+/// 度量，也不需要額外疊 `ZStack`。
 struct UploadQueueRowView: View {
     let row: UploadQueueRow
     let thumbnail: UIImage?
@@ -117,15 +122,17 @@ struct UploadQueueRowView: View {
             }
             .foregroundStyle(Color.lsDanger)
             if reason.showsQuotaLink {
-                // `hD3dH`：LS002 用「查看儲存空間」連結取代「重試」出路。`.contentShape(Rectangle())`
-                // 缺這行時 hit-test／accessibility frame 只會貼著文字天然大小算（實測
-                // 101.3×20.3pt，TAP-TARGET-FAIL）——同 `TapTargetGateHarness.swift`
-                // `selfTestPaddingOutsideButton` 案例點名的同一個坑，`.frame` 必須配上這行
-                // 才會真的決定 hit-test 形狀。
+                // `hD3dH`：LS002 用「查看儲存空間」連結取代「重試」出路。merge-review R5：
+                // `.frame(minHeight:)` 建立 layout frame，`.contentShape([.interaction,
+                // .accessibility], Rectangle())` 明確把「觸控命中」與「accessibility／
+                // XCUITest 讀到的 frame」兩個 content shape kind 都釘成這個矩形——只設
+                // `.interaction`（`.contentShape(Rectangle())` 的預設行為）在某些 Xcode／
+                // iOS 版本組合下不會連帶影響 accessibility frame，見檔頭「merge-review R5」
+                // 段的完整診斷。
                 Button(action: onViewStorage) {
                     Text("查看儲存空間").appFont(.note).underline()
-                        .minimumTapTargetHeight(alignment: .leading)
-                        .contentShape(Rectangle())
+                        .frame(minHeight: 45, alignment: .leading)
+                        .contentShape([.interaction, .accessibility], Rectangle())
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Color.lsTextPrimary)
@@ -135,31 +142,12 @@ struct UploadQueueRowView: View {
                         Image(systemName: "arrow.clockwise").appIconFrame(.small)
                         Text("重試").appFont(.note)
                     }
-                    .minimumTapTargetHeight(alignment: .leading)
-                    .contentShape(Rectangle())
+                    .frame(minHeight: 45, alignment: .leading)
+                    .contentShape([.interaction, .accessibility], Rectangle())
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Color.lsTextSecondary)
             }
-        }
-    }
-}
-
-/// merge-review R4：見 `UploadQueueRowView` 檔頭「merge-review R4」段——用純幾何的
-/// `Color.clear` 高度錨點取代 `.frame(minHeight:)`，不依賴任何字體度量。`UploadQueueSheetView`
-/// 的 footer／批次重試鈕也共用這個 helper（同一個 module，`internal` 存取層級即可，不必
-/// 複製貼上兩份）。
-extension View {
-    func minimumTapTargetHeight(_ height: CGFloat = 45, alignment: Alignment = .center) -> some View {
-        ZStack(alignment: alignment) {
-            // `width: 0`：R4 第一版漏寫寬度，`Color` 沒有自然的「理想寬度」，`.frame(height:)`
-            // 單獨出現時會貪心吃下父層願意提出的任何寬度——本機重跑撞見「查看儲存空間」／
-            // 「重試」寬度從 101/58pt 暴衝到 282pt（撐滿整列可用寬度）。這裡只要一個「高度
-            // 錨點」，寬度釘死 0，讓 ZStack 的寬度聯集完全交給 `self`（真正的內容）決定。
-            // 高度用 45（不是 44）：拿掉字體度量依賴後理論上不會再有 CI/本機落差，但 ZStack
-            // 聯集運算仍可能有極小的子像素捨入，多留 1pt 安全邊界。
-            Color.clear.frame(width: 0, height: height)
-            self
         }
     }
 }

@@ -153,14 +153,15 @@ struct UploadQueueSheetView: View {
                 Image(systemName: "arrow.clockwise").appIconFrame(.medium)
                 Text("重試這 \(store.retryableFailedCount) 張").appNumericFont(.body, weight: .bold)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, minHeight: 45)
             .padding(.vertical, AppSpacing.controlPaddingMedium)
-            // merge-review R4：目前的 padding＋內容高度在本機／CI 都還沒撞到 44pt 邊界（實測
-            // 遠高於門檻），但既然同檔另外三顆鈕已經證明「純靠 padding＋字體度量湊高度」在
-            // 不同 Xcode／iOS 版本上不可靠，這裡一併補上同一個不依賴字體度量的下限保證，
-            // 不要等下次 CI 又在另一個版本組合上炸。
-            .minimumTapTargetHeight()
-            .contentShape(Rectangle())
+            // merge-review R5：見 `UploadQueueRowView.swift` 檔頭「merge-review R5」段——
+            // `.contentShape([.interaction, .accessibility], Rectangle())` 才會讓
+            // `XCUITest` 讀到的 accessibility frame 真的等於這個矩形，不是只設
+            // `.interaction`（`.contentShape(Rectangle())` 的預設行為）。這顆鈕目前的
+            // padding＋內容高度從未被 CI 抓到過，這裡一併補上是防禦性一致處理，不是修既有
+            // 違規。
+            .contentShape([.interaction, .accessibility], Rectangle())
         }
         .foregroundStyle(Color.lsTextPrimary)
         .background(Color.lsAccentSoft, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
@@ -202,15 +203,15 @@ struct UploadQueueSheetView: View {
         Button {
             dismiss()
         } label: {
-            // merge-review R4：`.frame(minHeight:)` 在 CI runner（不同 Xcode／iOS SDK）量到
-            // 43.2pt，本機量到 45pt——同一份程式碼在不同系統字體 metrics 下有落差。改用
-            // `minimumTapTargetHeight`（純幾何 `Color.clear` 高度錨點，見
-            // `UploadQueueRowView.swift` 檔頭「merge-review R4」段），不依賴字體行高。
+            // merge-review R5：見 `UploadQueueRowView.swift` 檔頭「merge-review R5」段——
+            // 真正根因是 `.contentShape(Rectangle())` 預設只設 `.interaction` 這個 content
+            // shape kind，CI 的 Xcode／iOS 版本組合下 accessibility frame（`XCUITest`
+            // `element.frame` 讀的正是這個）不會連帶採用 layout frame，仍貼著文字天然大小
+            // 算。明確指定 `[.interaction, .accessibility]` 兩個 kind 都用這個矩形。
             Text("在背景繼續，關閉視窗")
                 .appFont(.body, weight: .medium)
-                .frame(maxWidth: .infinity)
-                .minimumTapTargetHeight()
-                .contentShape(Rectangle())
+                .frame(maxWidth: .infinity, minHeight: 45)
+                .contentShape([.interaction, .accessibility], Rectangle())
         }
         .foregroundStyle(Color.lsTextPrimary)
     }
