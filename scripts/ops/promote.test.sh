@@ -53,7 +53,9 @@ runs() {
   done
   printf '{"total_count":%s,"check_runs":[%s]}' "$#" "$items" > "$GH_STUB_JSON"
 }
-ALL_GREEN="ci:completed:success db:completed:success lint:completed:success rules:completed:success"
+# LS-209 merge-review R1 M3：promote.sh 的 REQUIRED_CHECKS 加了 ci-ipad，這裡的「全綠」罐頭同步補上，
+# 否則既有「全綠 → exit 0」樣本會因為多一個「check ci-ipad: 缺」而假紅。
+ALL_GREEN="ci:completed:success ci-ipad:completed:success db:completed:success lint:completed:success rules:completed:success"
 # statuses <context:state[:description]>…：產生 combined status 罐頭 JSON（GitHub 每個 context 只回最新一筆；不給參數＝沒人貼過）
 statuses() {
   local items= spec c st d
@@ -167,7 +169,7 @@ no_push '⑦ 舊綠新紅不推'
 is    '⑦ remote test 未動' "$(rsha test)" "$base"
 
 # ---- ⑧ 正常：全綠（ci 舊紅新綠）→ 推、remote test＝origin/development、hook 收到 PROMOTE_VIA_SCRIPT=1 與 refspec ----
-runs "ci:completed:failure" "db:completed:success" "lint:completed:success" "rules:completed:success" "ci:completed:success"
+runs "ci:completed:failure" "db:completed:success" "lint:completed:success" "rules:completed:success" "ci-ipad:completed:success" "ci:completed:success"
 reset_logs
 expect 0 '⑧ 全綠（ci 舊紅新綠）→ exit 0' '已晉升 test' development test
 is    '⑧ remote test 前進到 origin/development' "$(rsha test)" "$dev1"

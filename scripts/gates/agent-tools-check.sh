@@ -39,16 +39,17 @@ fi
 # 規則表：<agent>|<必要工具（空白分隔）>——加規約時在這裡加一行（前饋必有反饋）
 # LS-91：qa 補釘 mcp__pencil__execute——qa.md 視覺驗收唯讀截圖靠它（get_app_state 對路徑後以 execute 的
 # TakeScreenshot／Get 取圖），先前規則表只釘了 get_app_state，漏了實際取圖要用的工具。
-# ios-dev 沒有 tools: 行（繼承全部工具），這裡仍列一行（必要工具留空）：確保「無 tools: 行＝放行」這條路徑
-# 有樣本覆蓋，不只是隱含行為。
 # LS-157：dead-code-sweeper 補 save_comment——巡檢結果改由 sweeper 直貼票（此前缺該工具、orchestrator 一日代貼三次）。
+# LS-209 merge-review R1 M2：ios-dev 自本票起有顯式 tools: 白名單（見上方 FORBIDDEN_RULES 段），這裡不能再留空——
+# 空必要工具清單會讓「tools: 含必要工具（）」這種空括號訊息看起來像沒在驗；「無 tools: 行＝放行」這條路徑改由
+# agent-tools-check.test.sh 的合成 fixture（ui-designer／visual-reviewer 仍無 tools: 行）覆蓋，不需要 ios-dev 陪測。
 LINEAR3="mcp__linear__get_issue mcp__linear__list_comments mcp__linear__save_comment"
 RULES="merge-reviewer|Bash ${LINEAR3}
 qa|Bash ${LINEAR3} mcp__pencil__get_app_state mcp__pencil__execute
 dead-code-sweeper|Bash ${LINEAR3}
 ui-designer|mcp__pencil__execute
 visual-reviewer|mcp__pencil__execute
-ios-dev|"
+ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
 
 # 正文必含字樣規則表（LS-170）：<agent>|<字樣>——規約段落被刪即紅。先給空值、再由標記區塊填入：自測的 mutation 負控用 awk 整段
 # 拿掉標記區塊（留下空表）驗「拿掉規則後負樣本變綠」，證明紅是這條規則造成的（同 linear-issue-check.test.sh 慣例）。

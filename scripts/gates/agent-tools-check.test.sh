@@ -75,8 +75,9 @@ REPLAYRULE='handoff 申報的 mutation 一律自己重放，對不上列 major�
 IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY}"
 MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE}"
 # LS-209：ios-dev 新增 tools: 白名單（移除 mcp__pencil__*）——取代舊的 `NONE`（無 tools: 行＝繼承全部工具，其中
-# 必然含 pencil，會被新的「禁止工具」規則擋下）。RULES 表對 ios-dev 無必要工具要求，這裡隨便給一組乾淨清單即可。
-IOS_TOOLS="Bash, Read, Edit, Write, Grep, Glob, Agent"
+# 必然含 pencil，會被新的「禁止工具」規則擋下）。merge-review R1 M2：RULES 表現在對 ios-dev 有必要工具要求
+# （Bash／Read／Edit／Write／Grep／Glob／Agent／三支 Linear 工具），這裡的乾淨清單須包含全部才能當合法基準。
+IOS_TOOLS="Bash, Read, Edit, Write, Grep, Glob, Agent, ${LINEAR3}"
 # mk <agent> <tools 行的值|NONE> [<正文附加行>]：寫一份最小 agent 定義
 mk() {
   local agent=$1 tools=$2 body=${3:-}
@@ -111,7 +112,11 @@ reset; mk qa "BashOutput, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expec
 reset; mk merge-reviewer "Bash, mcp__linear__get_issue, mcp__linear__list_comments" "$HOLD"; expect 1 '② merge-reviewer 少 save_comment → exit 1' 'merge-reviewer.md：tools: 缺 mcp__linear__save_comment'
 reset; mk qa "Bash, ${LINEAR3}" "$HOLD"; expect 1 '② qa 少 mcp__pencil__get_app_state → exit 1' 'qa.md：tools: 缺 mcp__pencil__get_app_state'
 reset; mk qa "Bash, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '② qa 少 mcp__pencil__execute（LS-91 補釘）→ exit 1' 'qa.md：tools: 缺 mcp__pencil__execute'
-reset; mk ios-dev "Read, Edit" "$IOS_BODY"; expect 0 '② ios-dev 有 tools: 行但必要工具留空 → 仍 exit 0（規則表無要求）' '通過'
+# LS-209 merge-review R1 M2：ios-dev 現在有必要工具表（曾經留空、「規則表無要求」故意讓任何子集通過）——
+# 缺 Bash／Read 等基本工具，或漏了三支 Linear 工具的任一支，都要紅，不能再靜默放行。
+reset; mk ios-dev "Read, Edit" "$IOS_BODY"; expect 1 '② M2：ios-dev 有 tools: 行但缺必要工具 → exit 1（regression：曾經規則表無要求，本票起要求）' 'ios-dev.md：tools: 缺'
+reset; mk ios-dev "Bash, Read, Edit, Write, Grep, Glob, Agent, mcp__linear__get_issue, mcp__linear__list_comments" "$IOS_BODY"; expect 1 '② M2：ios-dev 缺 mcp__linear__save_comment（i1：白名單加回）→ exit 1' 'ios-dev.md：tools: 缺 mcp__linear__save_comment'
+reset; expect 0 '② M2：ios-dev 具備完整必要工具（含三支 Linear）→ 通過' 'ios-dev.md：tools: 含必要工具'
 reset; mk ui-designer "Read, mcp__pencil__get_app_state" "$UI_BODY"; expect 1 '② ui-designer 有 tools: 但缺 execute → exit 1' 'ui-designer.md：tools: 缺 mcp__pencil__execute'
 reset; mk visual-reviewer "Read" "$KILL"; expect 1 '② visual-reviewer 有 tools: 但缺 execute → exit 1' 'visual-reviewer.md：tools: 缺 mcp__pencil__execute'
 reset; mk dead-code-sweeper "Read, mcp__linear__get_issue"; expect 1 '② dead-code-sweeper 少 Bash／list_comments／save_comment → 一行列三支' 'dead-code-sweeper.md：tools: 缺 Bash mcp__linear__list_comments mcp__linear__save_comment'
