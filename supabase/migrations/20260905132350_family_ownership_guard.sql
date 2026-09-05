@@ -38,7 +38,8 @@
 --     UPDATE 把「家庭裡最早加入的其他成員」升為 owner、**再**對 p_user 執行
 --     DELETE。本 trigger 對 p_user 這一列觸發時，那句 UPDATE 已經是同一交易內
 --     先執行、已生效的既有事實，「排除自己後是否還有其他 owner」的查詢會看到
---     那位新 owner，直接落入條件 2 放行——不需要特殊處理。
+--     那位新 owner，直接落入條件 3 放行——不需要特殊處理（merge-review R1 i1：
+--     這裡原本誤寫成「條件 2」，條件 2 是上面 families 存在性檢查，不是這一條）。
 --   - delete_my_account() 情況 2（唯一成員，20260904070941_
 --     delete_account_media.sql）與情況 3 一般離開路徑裡「整個家庭被砍」的
 --     cascade（`delete from public.families`）：families 的父列在 FK cascade
@@ -157,8 +158,32 @@ comment on function private.enforce_ownership_transfer_before_leave() is
 -- target) 排出全域一致的 user_id 遞增序**——不是單一句「... where user_id in
 -- (a, b) order by user_id for update」：ORDER BY 只保證這句查詢*輸出*的順序，
 -- 不保證底層掃描／取鎖的實際順序，兩個併發呼叫若參數順序相反，仍可能以不同
--- 順序取鎖而死鎖。兩句各自的 statement 沒有這個歧義，任何兩筆併發呼叫（不論
--- 呼叫者／對象怎麼交錯）都會依 user_id 遞增序排隊，不會互為死鎖。
+-- 順序取鎖而死鎖。兩句各自的 statement 沒有這個歧義，**任兩筆 transfer_
+-- ownership 呼叫彼此之間**（不論呼叫者／對象怎麼交錯）都會依 user_id 遞增序
+-- 排隊，不會互為死鎖（`supabase/tests/concurrency/transfer_race_*.sql` 兩
+-- session 實測驗證）。
+--
+-- **範圍收斂聲明（merge-review R1 m2，PLAUSIBLE、未實測重現）**：上面「不會
+-- 互為死鎖」只涵蓋 transfer_ownership 彼此之間，**不涵蓋** family_members 上
+-- 另外兩條也取列鎖的既有路徑——delete_my_account()
+-- （`20260904212530_suspension_and_registrations.sql`）與
+-- finalize_account_deletion()（`20260904080802_
+-- finalize_account_deletion_media.sql`）：兩者都是單一句
+-- `perform 1 from public.family_members where family_id = X for update`，
+-- 一次鎖住這個家庭的**全部**成員列、沒有 `order by`，實際取鎖順序由查詢計畫
+-- 決定（小表常見 seq scan → heap 實體順序，不保證等於 user_id 遞增序）。若
+-- owner A 對某家庭呼叫 transfer_ownership（依 user_id 遞增鎖兩列）、同一家庭
+-- 的成員 B 同時呼叫 delete_my_account()（一句鎖全部列、順序不保證），兩者
+-- 取鎖順序若剛好相反並交錯，會被 Postgres 偵測到 `40P01` deadlock、砍掉其中
+-- 一筆交易——**這不是本 PR 新引入的鎖、也不會資料損壞**（既有兩條路徑本來就
+-- 是這樣鎖），`40P01` 是 Postgres 自己偵測後主動中止其中一方，另一方能正常
+-- 完成；被中止那一方對呼叫端而言是一般性交易失敗，比照既有慣例重試同一個
+-- 呼叫即可（不需要客製化的錯誤處理，PostgREST／supabase-swift 對交易失敗本來
+-- 就是整個呼叫回傳失敗、由呼叫端決定要不要重試）。這個跨路徑風險本票**不**
+-- 動 delete_my_account()／finalize_account_deletion() 既有的鎖法去消除它
+-- （既有函式的鎖序是三輪 merge-review 才收斂的既有安全網，不在本票範圍內
+-- 重新調整），僅在此如實記錄範圍邊界，避免之後的人誤以為「不會互為死鎖」
+-- 涵蓋所有跟 family_members 有關的路徑。
 --
 -- 為什麼要在讀 role 之前先鎖：避免 TOCTOU——若先不鎖直接 SELECT role 做判斷、
 -- 通過後才執行 UPDATE，SELECT 到 UPDATE 之間，對方可能剛好被移除／自行退出，
