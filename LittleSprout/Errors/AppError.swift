@@ -112,6 +112,17 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     // 理論上不該發生（LS-110 保證每個帳號都有一列 profiles），出現代表資料
     // 不一致，不是使用者能自己解決的狀態，見下方 tier。
     case accountProfileMissing = "LS056"
+    // LS057（LS-206，family_members 的 BEFORE DELETE trigger）：唯一 owner
+    // 且家庭還有其他成員，退出或被移除前須先轉移 owner 身份。同
+    // familyMustHaveOwner（LS001）／ownerMustTransferBeforeAccountDeletion
+    // （LS050）同一組不變量，只是觸發路徑是直接對 family_members 的 DELETE。
+    case ownerMustTransferBeforeLeaving = "LS057"
+    // LS058/LS059/LS060（LS-206，transfer_ownership）：呼叫者不是該家庭目前
+    // 的 owner／對方不是該家庭目前的成員／對方是呼叫者自己。三者皆是
+    // transfer_ownership 的授權檢查，見下方 tier。
+    case notFamilyOwner = "LS058"
+    case transferTargetNotMember = "LS059"
+    case cannotTransferToSelf = "LS060"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -134,7 +145,9 @@ enum LSErrorCode: String, CaseIterable, Sendable {
              .childNotFoundOrDeleted, .childNotEditableByCaller, .childRestoreWindowExpired,
              .albumChildrenNotEditableByCaller, .ownerMustTransferBeforeAccountDeletion,
              .accountDeletionInProgress, .accountSuspended, .familySuspended,
-             .registrationsClosed, .eulaVersionMismatch, .accountProfileMissing:
+             .registrationsClosed, .eulaVersionMismatch, .accountProfileMissing,
+             .ownerMustTransferBeforeLeaving, .notFamilyOwner, .transferTargetNotMember,
+             .cannotTransferToSelf:
             // 以下碼為 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
@@ -192,6 +205,14 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // 呼叫。accountProfileMissing（LS056，LS-197 R2）：auth.uid() 沒有
             // 對應的 profiles 列，理論上不該發生，沒有輸入可換、也不是使用者
             // 能自己解決的狀態，只能聯絡支援排查。
+            // ownerMustTransferBeforeLeaving（LS057，LS-206）：唯一 owner 且
+            // 家庭還有其他成員，沒有輸入可換，必須先做別的事（轉移 owner 身份）
+            // 才能退出或被移除，跟 familyMustHaveOwner／
+            // ownerMustTransferBeforeAccountDeletion 同一組理由。
+            // notFamilyOwner／transferTargetNotMember／cannotTransferToSelf
+            // （LS058／LS059／LS060，LS-206，transfer_ownership）：三者都是
+            // 授權／參數層級的拒絕，換個輸入重試同一組參數不會成功——呼叫端該做
+            // 的是重新讀取自己的角色或該家庭的成員清單，不是原地重試。
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:
             // 碼本身是「輸入」——打錯字換一個、或請 owner 給一支新的碼，都是同一個 UI 動作

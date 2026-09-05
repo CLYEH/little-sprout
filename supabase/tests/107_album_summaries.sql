@@ -547,15 +547,14 @@ begin;
 -- 直接選它，測不出「表大了會怎樣」；灌到 5 萬+ 列後 EXPLAIN 才有鑑別力
 -- （本機實測：只有 1200 列時規劃器選 Hash Join＋Seq Scan on media；加了 5 萬列
 -- 背景雜訊之後规劃器改選 Nested Loop＋Index Scan using media_pkey）。
-insert into public.media
-  (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, created_at)
-select
-  ('3d000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid,
-  'fc000000-0000-4000-8000-000000000001',
-  'fc000000-0000-4000-8000-000000000001/2026/' || lpad((1 + (i % 12))::text, 2, '0') || '/noise-' || i || '.jpg',
-  'photo', 1024, now() - (i * interval '1 minute'), 800, 600,
-  'c0000000-0000-4000-8000-000000000001', now() - (i * interval '1 minute')
-  from generate_series(1, 50000) i;
+-- LS-204（LS-200 R1 i3 `ca99c6ae`；R2 merge-review B1 修正）：這份 insert 與
+-- 50_rls_plan_no_percall_subquery.sql 原本各自維護一份幾乎一樣的 50000 列
+-- fixture，抽成 00_fixtures.sql 建立的共用函式
+-- `private.ls204_seed_media_perf_noise()`（見該函式定義旁的檔頭說明——R1 原本
+-- 抽成獨立檔案用 psql `\ir` include，在 run.sh 的 docker-exec 連線管道下找不到
+-- 檔案，已改用純 SQL 函式呼叫，三種連線管道天生一致）。函式呼叫仍在本檔第 6
+-- 段自己的交易內執行，執行次數與交易邊界都不變。
+select private.ls204_seed_media_perf_noise();
 
 -- 50 本相簿、1200 張已連結 media（每本 24 張，1200 / 50）
 insert into public.media
@@ -621,12 +620,23 @@ set local role authenticated;
 -- 而是相簿列表混合模式既有的 `deleted_at is null`（見 §2「albums」列，軟刪相簿
 -- 不該出現在列表）＋keyset 游標條件（`(created_at, id) < 游標`，第一頁用
 -- `(now(), 最大 uuid)` 當「從最上面開始」的哨兵值，比照
--- 50_rls_plan_no_percall_subquery.sql 主查詢 3 的既有寫法）。這個形狀能讓
--- 規劃器真的用上 `albums_family_created_idx`（`(family_id, created_at desc)
--- where deleted_at is null`，20260822120000_init_schema.sql 既有的 partial
--- index，只有查詢帶了同一個 `deleted_at is null` 述詞才會被考慮）——R2 之前
--- 沒帶這個述詞，實測規劃器改走別的 index（仍非 Seq Scan，但不是真正上線後
--- iOS 會走的那條路徑，測的東西跟正式行為對不齊）。
+-- 50_rls_plan_no_percall_subquery.sql 主查詢 3 的既有寫法）。R2 之前沒帶
+-- `deleted_at is null` 這個述詞，實測規劃器選了另一個索引（仍非 Seq Scan，
+-- 但不是真正上線後 iOS 會走的那條路徑，測的東西跟正式行為對不齊）；補上之後
+-- 述詞才跟 `albums_family_created_idx`（`(family_id, created_at desc) where
+-- deleted_at is null`，20260822120000_init_schema.sql 既有的 partial index）
+-- 語意對得上。
+--
+-- LS-204（LS-200 R2 i-A `37d45fd1`；R2 merge-review `a2e9cd1b` I1 修正）：
+-- 「述詞對得上」不等於「規劃器一定選用它」——albums 這一段最終走
+-- `albums_cover_idx` 還是 `albums_family_created_idx`＋`Incremental Sort`，
+-- 是規劃器依當下 ANALYZE 收集到的統計資訊（media 51200 列走的是抽樣統計）
+-- 做的成本估計，屬於查詢規劃器的內部決策，不是這份 fixture 或這條查詢寫法
+-- 保證釘死的行為。下面兩條機械斷言的鑑別力範圍僅止於「media／album_media
+-- 不出現 Seq Scan」與「不出現非 hashed 的逐列 correlated SubPlan」，這兩件事
+-- 在 albums 選哪一條候選 plan 下都成立（見 mutation：把 view 的 LATERAL 改成
+-- 兩個獨立的逐列 correlated 子查詢，下面判準 2 會抓到——LS-204 已實際套用此
+-- 突變重跑驗證）；albums 表本身這一段選哪個 index，不在本段驗證範圍內。
 do $$
 declare
   v_line text;

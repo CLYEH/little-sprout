@@ -44,7 +44,10 @@ fi
 #     工具鏈對齊步。LS-95 merge-review R1 m2：`(^|/)LittleSprout/` 只匹配「LittleSprout/」這個精確路徑
 #     片段，不會匹配 `LittleSproutUITests/`（同名前綴、不同資料夾）——只改該目錄下既有 Swift 檔會被誤判
 #     「無變更」而跳過本機 SwiftLint／unit tests／tap-target 三步，是同一種「該跑卻跳」的 unsafe 方向，
-#     單獨補上。
+#     單獨補上。LS-205 R2 merge-review R1 m1：`.ios-runtime` 是同款單一來源（CI runtime 釘住版），
+#     沒補上時本 PR 自己在 worktree 實跑就重現——只改這個檔會被判定「無 Swift 變更」而整段跳過，
+#     偏偏「CI runner 升版、只改 `.ios-runtime` 一行」正是最需要在新 runtime 上跑一次 unit tests 的
+#     情境（CI 仍無條件全跑，這裡只是本機前置失守）。
 skip_swift_steps=0
 diff_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
 case "$diff_branch" in
@@ -53,7 +56,7 @@ case "$diff_branch" in
     case "$diff_branch" in hotfix/*) diff_target_ref=origin/main ;; *) diff_target_ref=origin/development ;; esac
     if git rev-parse -q --verify "$diff_target_ref" >/dev/null; then
       diff_changed=$(git diff --name-only "$diff_target_ref"...HEAD)
-      if ! printf '%s\n' "$diff_changed" | grep -qE '(^|/)LittleSprout/|(^|/)LittleSproutTests/|(^|/)LittleSproutUITests/|(^|/)project\.yml$|\.xcodeproj(/|$)|(^|/)Package\.resolved$|(^|/)\.swiftlint\.yml$|(^|/)Config/.*\.xcconfig$|(^|/)\.xcode-version$'; then
+      if ! printf '%s\n' "$diff_changed" | grep -qE '(^|/)LittleSprout/|(^|/)LittleSproutTests/|(^|/)LittleSproutUITests/|(^|/)project\.yml$|\.xcodeproj(/|$)|(^|/)Package\.resolved$|(^|/)\.swiftlint\.yml$|(^|/)Config/.*\.xcconfig$|(^|/)\.xcode-version$|(^|/)\.ios-runtime$'; then
         skip_swift_steps=1
       fi
     fi
@@ -274,6 +277,16 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
     fi
   fi
 
+  # LS-205：`.ios-runtime` 是本機與 CI 共用的模擬器 runtime 單一來源（比照 `.xcode-version`
+  # 同款 fail-closed——缺檔代表下面「印出 pinned 版本」這件事本身就做不到，CI 的對應步驟
+  # 也讀不到，寧可本機先擋）。detect-simulator.sh 自己另外讀這個檔決定建機／既有機比對的
+  # fail-open 邏輯（見該腳本），這裡只用來組出下面的可見化那一行。
+  if [ ! -f .ios-runtime ]; then
+    echo "✗ push gate：缺 .ios-runtime，CI 會紅（ci job 對應步驟讀不到單一來源；LS-205）。" >&2
+    exit 1
+  fi
+  ios_runtime_pin="$(tr -d '[:space:]' < .ios-runtime)"
+
   dest=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/detect-simulator.sh") || {
     echo "✗ push gate：模擬器偵測失敗。" >&2
     exit 1
@@ -305,20 +318,26 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
   # I2：鎖目錄路徑可用 SIMULATOR_LOCK_DIR 覆寫（自測用；預設仍是 /tmp/simulator-lock-<udid>），讓多份
   # push-gate.test.sh 併行時各自用 mktemp -d 出來的路徑，不會互刪對方的鎖目錄。
   sim_lock_dir="${SIMULATOR_LOCK_DIR:-/tmp/simulator-lock-${sim_udid}}"
+  # LS-205：名稱與所在 OS 分節一次查出來——下面「可見化」那行與 KEEP_SIMULATOR 判斷（原本各自
+  # 查一次 sim_name）共用同一次 xcrun 呼叫，移到 KEEP_SIMULATOR 判斷之前變成無條件執行。
+  sim_info=$(xcrun simctl list devices available 2>/dev/null | awk -v u="$sim_udid" '
+    /^-- iOS / { os = $0; sub(/^-- iOS /, "", os); sub(/ --$/, "", os); next }
+    { line = $0
+      udid = line
+      sub(/^[^(]*\(/, "", udid)
+      sub(/\).*/, "", udid)
+      if (udid != u) next
+      nm = line
+      sub(/^[ \t]*/, "", nm)
+      sub(/ *\(.*/, "", nm)
+      printf "%s\t%s", nm, os
+      exit
+    }
+  ')
+  sim_name=$(printf '%s' "$sim_info" | cut -f1)
+  sim_ios_ver=$(printf '%s' "$sim_info" | cut -f2)
+  echo "→ push gate：simulator: ${sim_name:-?} ${sim_udid} iOS ${sim_ios_ver:-?}（pinned ${ios_runtime_pin}）"
   if [ "${KEEP_SIMULATOR:-0}" != 1 ]; then
-    sim_name=$(xcrun simctl list devices available 2>/dev/null | awk -v u="$sim_udid" '
-      { line = $0
-        udid = line
-        sub(/^[^(]*\(/, "", udid)
-        sub(/\).*/, "", udid)
-        if (udid != u) next
-        nm = line
-        sub(/^[ \t]*/, "", nm)
-        sub(/ *\(.*/, "", nm)
-        print nm
-        exit
-      }
-    ')
     if [[ "$sim_name" =~ ^(LS-[0-9]+|main)- ]]; then
       shutdown_dedicated_simulator() {
         if [ -d "$sim_lock_dir" ]; then
@@ -384,7 +403,7 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
   wd_pid=
   wd_descendants() { local c; for c in $(pgrep -P "$1" 2>/dev/null); do printf '%s ' "$c"; wd_descendants "$c"; done; }
   wd_kill_tree() {   # $1＝根 pid；設 wd_killed_pids（含根）；回傳時整棵樹已 TERM、殘留已 KILL
-    local p alive i
+    local p alive i more
     wd_killed_pids="$1 $(wd_descendants "$1")"
     kill -TERM $wd_killed_pids 2>/dev/null || true
     for i in 1 2 3 4 5 6; do
@@ -393,13 +412,35 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
       [ "$alive" -eq 0 ] && break
       sleep 0.5
     done
+    # LS-205（LS-96 池項 37a390d0 (3)）：TERM 之後、KILL 之前重新收集一次子孫——上面等待的 0～3 秒內，
+    # 還沒死透的行程仍可能繼續 fork 新的子孫（例如收到 TERM 後才開始跑清理流程、清理過程中又起了一個
+    # helper 行程），只用「送出 TERM 前那一刻」收集到的舊清單去 KILL 會漏殺這些晚生的子孫。
+    # 只從根（$1）重走一次不夠：中間層沒接 trap 的行程（例如這裡的 xcodebuild 假身）一收到 TERM 就
+    # 立刻死透，讓底下還活著、真的接了 trap 的行程（例如測試腳本本身）失去父行程、被 launchd 收養——
+    # `pgrep -P "$1"` 的鏈路在半路就斷了，從根重新遞迴永遠到不了斷鏈之後才出生的新孫行程。改成對
+    # **目前已知的每一個 pid**（不只根）各自再問一次 `pgrep -P`——這些 pid 在第一輪就已經藉由明確點名
+    # `kill -TERM` 收過訊號，即使斷鏈也不影響「直接查它自己的子行程」這件事。
+    # merge-review R1 m2（PLAUSIBLE）：這裡查的是「TERM 之後最多 3 秒」的舊 pid，理論上其中已經死透
+    # 的那些若被 OS 回收給無關行程，`wd_descendants` 會查到那個無關行程的子孫、混進 KILL 名單。先
+    # `kill -0` 確認還活著才查它的子孫——死透的 pid 本來就不會再有「我們自己的」子孫，跳過它不影響
+    # 正確性，還順便避開這個 TOCTOU。沒有進一步比對 `ps -o lstart`（行程起始時間）核對身分：macOS pid
+    # 空間近 10 萬、這裡的視窗只有 `kill -0` 那一行到 `wd_descendants` 實際查詢完成之間（同一次迴圈
+    # 迭代內，微秒等級），比 reviewer 指出的原本 3 秒視窗又窄了幾個數量級，額外複雜度（存活時間需要
+    # 在第一輪 TERM 前就先記錄、KILL 前再比對）換來的邊際效益不成比例。
+    more=
+    for p in $wd_killed_pids; do kill -0 "$p" 2>/dev/null && more="$more $(wd_descendants "$p")"; done
+    wd_killed_pids="$wd_killed_pids $more"
     kill -KILL $wd_killed_pids 2>/dev/null || true
   }
   wd_session_logs() {   # 本 worktree 專案的 DerivedData 內、晚於看門狗啟動的 Staging Session-*.log，每行一個
     local d
     for d in "$HOME"/Library/Developer/Xcode/DerivedData/*/; do
       [ -f "${d}info.plist" ] || continue
-      grep -qF "<string>${wd_repo_root}/" "${d}info.plist" 2>/dev/null || continue
+      # LS-205（LS-96 池項 37a390d0 (1)）：改用 -qE 精確比對「WorkspacePath 落在本 repo 根之下的
+      # .xcodeproj／.xcworkspace」，不是純字首 -qF——原本的字首比對從**主 checkout**跑 push gate
+      # 時，會把「主 checkout 路徑」當成所有 worktree 路徑的字首命中（worktree 慣例上放在主 checkout
+      # 底下的 .claude/worktrees/ 內），所有 worktree 的 DerivedData session log 都會被誤判成自己的。
+      grep -qE "<string>${wd_repo_root}/[^/<]*\.xc(odeproj|workspace)<" "${d}info.plist" 2>/dev/null || continue
       # `|| true`：Logs/Test 在第一個測試 session 開始前還不存在，find 非 0 會讓 set -e 把這個掃描子殼整個結束
       find "${d}Logs/Test" -path '*.xcresult/Staging/*' -name 'Session-*.log' -newer "$wd_stamp" 2>/dev/null || true
     done

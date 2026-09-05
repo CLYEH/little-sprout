@@ -34,11 +34,7 @@ enum TapTargetGateHarness {
     static func hostView(for screen: TapTargetGateScreenName) -> some View {
         switch screen {
         case .otpVerification:
-            NavigationStack {
-                // cooldownSeconds: 0：一開畫面 `canResend` 就是 true，重寄 Button 立刻顯示
-                // （見 `OTPVerificationView.init` 文件註解），不必真的等 60 秒冷卻。
-                OTPVerificationView(email: "grandma@example.com", authStore: .preview(), cooldownSeconds: 0) {}
-            }
+            otpVerificationHost
         case .settings: settingsHost
         case .settingsMemberRole: settingsMemberRoleHost
         case .settingsRegular: settingsRegularHost
@@ -60,70 +56,71 @@ enum TapTargetGateHarness {
             sectionTabViewWithDiaryHost
         case .diaryCardVideoBadges:
             diaryCardVideoBadgesHost
+        case .uploadQueueSheet:
+            uploadQueueSheetHost
+        case .uploadQueueSheetNormal:
+            uploadQueueSheetNormalHost
         case .passwordSignIn: passwordSignInHost
         case .welcome: welcomeHost
         case .selfTestTooSmall:
-            // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
-            // accessibility／hit-test frame 實測仍貼著文字本身的天然大小，不會被外層 `.frame`
-            // 撐大或縮小（LS-95 開發期間實測撞到——這正是本票要抓的那種「視覺／版面大小」跟
-            // 「真正 hit-test 大小」對不上的落差）。改用 `.contentShape(Rectangle())` 明確把
-            // hit-test 形狀鎖定成 `.frame` 給的矩形，樣本大小才會是可控、決定性的數字。
-            Button(action: noop) {
-                Text("小按鈕")
-                    .frame(width: 22, height: 22)
-                    .contentShape(Rectangle())
-            }
+            selfTestTooSmallHost
         case .selfTestGood:
-            Button(action: noop) {
-                Text("好按鈕")
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
+            selfTestGoodHost
         case .selfTestPaddingOutsideButton:
-            // 刻意重現 LS-17 QA1 的原始寫法（PR #148 R1 F1 修正前）：padding 掛在 Button 外層
-            // 的 VStack，不是掛在 Button 的 label closure 裡再接 `.contentShape(Rectangle())`
-            // ——視覺上按鈕四周看起來有一大圈空白，但那圈空白不參與 hit test，實際可點區域仍
-            // 只有內容本身的大小（20×20，用同一招 `.contentShape` 鎖定成決定性數字）。
-            VStack {
-                Button(action: noop) {
-                    Text("小按鈕")
-                        .frame(width: 20, height: 20)
-                        .contentShape(Rectangle())
-                }
-            }
-            .padding(20)
+            selfTestPaddingOutsideButtonHost
         }
     }
 
-    /// merge-review R1 M1(b)：「邀請家人」列只在 `familyStore.myFamily != nil` 才渲染
-    /// （LS-107）——`.preview(withFamily:)` 同步餵一個家庭狀態，那顆列才會被量到（見
-    /// `FamilyStore.seedMyFamilyForPreview`／`PreviewFamilyAPIClient.swift`）。拆成獨立
-    /// computed var（LS-165 新增兩個 case 後，`hostView` switch 本體超過 SwiftLint
-    /// `function_body_length` 上限，理由同其餘 `*Host` computed var 的既有作法）。
-    ///
-    /// merge-review R2 informational 5：`.environment(\.horizontalSizeClass, .compact)`——
-    /// 這個 host 原本沒有強制 size class，在 iPad 機型的模擬器上跑 `TapTargetGateTests
-    /// .testSettingsView` 會因為預設 `horizontalSizeClass == .regular` 而渲染
-    /// `SettingsView.regularBody`（sentinel「登出」只在 compact 版面或切到「帳號」後的
-    /// regular 版面才看得到，預設選取是「個人」）導致測試紅。CI 固定跑 iPhone 不受影響，但
-    /// 本機在 iPad 模擬器上重跑這條 gate 會誤判。同 `sectionTabViewHost`／
-    /// `settingsRegularHost` 既有的既有作法，明確釘死 size class，不依賴執行裝置的實際
-    /// idiom——這個 host 本來就是測 compact 版面，理應固定。
+    // merge LS-164：`hostView(for:)` 的 switch 本體疊上帳密登入兩個新 case 後再度超過
+    // SwiftLint `function_body_length` 上限，把三個既有的自測樣本 case 抽出來還給界限內，
+    // 行為完全不變（同其餘 `*Host` computed var 的既有作法）。
+    private static var selfTestTooSmallHost: some View {
+        // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
+        // accessibility／hit-test frame 實測仍貼著文字本身的天然大小，不會被外層 `.frame`
+        // 撐大或縮小（LS-95 開發期間實測撞到——這正是本票要抓的那種「視覺／版面大小」跟
+        // 「真正 hit-test 大小」對不上的落差）。改用 `.contentShape(Rectangle())` 明確把
+        // hit-test 形狀鎖定成 `.frame` 給的矩形，樣本大小才會是可控、決定性的數字。
+        Button(action: noop) {
+            Text("小按鈕")
+                .frame(width: 22, height: 22)
+                .contentShape(Rectangle())
+        }
+    }
+
+    private static var selfTestGoodHost: some View {
+        Button(action: noop) {
+            Text("好按鈕")
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+    }
+
+    private static var selfTestPaddingOutsideButtonHost: some View {
+        // 刻意重現 LS-17 QA1 的原始寫法（PR #148 R1 F1 修正前）：padding 掛在 Button 外層
+        // 的 VStack，不是掛在 Button 的 label closure 裡再接 `.contentShape(Rectangle())`
+        // ——視覺上按鈕四周看起來有一大圈空白，但那圈空白不參與 hit test，實際可點區域仍
+        // 只有內容本身的大小（20×20，用同一招 `.contentShape` 鎖定成決定性數字）。
+        VStack {
+            Button(action: noop) {
+                Text("小按鈕")
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
+            }
+        }
+        .padding(20)
+    }
+
+    /// merge LS-167：`hostView(for:)` 的 switch 本體因為疊了多張票的新 case（`.uploadQueueSheet`
+    /// 系列、LS-165 相簿系列）超過 SwiftLint `function_body_length` 上限，把這個既有 case
+    /// 的內容抽出來還給界限內，行為完全不變。
     @MainActor
     @ViewBuilder
-    private static var settingsHost: some View {
+    private static var otpVerificationHost: some View {
         NavigationStack {
-            SettingsView(
-                authStore: .preview(),
-                familyStore: .preview(withFamily: Family(
-                    id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
-                )),
-                childrenStore: .preview(),
-                timelineStore: .preview(),
-                albumsStore: .preview()
-            )
+            // cooldownSeconds: 0：一開畫面 `canResend` 就是 true，重寄 Button 立刻顯示
+            // （見 `OTPVerificationView.init` 文件註解），不必真的等 60 秒冷卻。
+            OTPVerificationView(email: "grandma@example.com", authStore: .preview(), cooldownSeconds: 0) {}
         }
-        .environment(\.horizontalSizeClass, .compact)
     }
 
     /// merge-review R1 M5：初始態不需要任何 seeding——`PreviewDiaryAPIClient`／

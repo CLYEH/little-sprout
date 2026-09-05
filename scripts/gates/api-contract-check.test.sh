@@ -210,7 +210,61 @@ printf '%s\n' 'widgets' > "$d/tables.txt"
 contract_doc "$d/API.md" "foo(text)" "widgets"
 expect_catalog 1 '⑯ catalog 大寫 RPC 名 fail loud（LS-54 N3）' "$d/API.md" "$d/rpcs.txt" "$d/tables.txt"
 
+
+# ⑰-⑳（LS-205，LS-96 池項 ca99c6ae i1）：--text 模式納入 view（第一支是 album_summaries，
+# `scripts/gates/api_contract_check.py` 的 create_view／drop_view 事件）。
+
+# ⑰ create view（名稱後接 `with (...)` 子句、無括號參數列，album_summaries 的實際形狀）也抓得到、
+#    進 TABLES 對帳；doc 有列 → 綠
+d=$(new_case case17_view)
+cat > "$d/migrations/001.sql" <<'SQL'
+create view public.album_summaries
+  with (security_invoker = true)
+as
+select 1 as id;
+SQL
+contract_doc "$d/API.md" "" "album_summaries"
+expect 0 '⑰ create view（帶 with (...) 子句、無括號參數列）抓得到並進 TABLES 對帳（LS-205）' "$d/migrations" "$d/API.md"
+
+# ⑱ view 若漏寫進 docs TABLES 區塊，跟表一樣要紅（證明真的有追蹤，不是被忽略而巧合放行）
+d=$(new_case case18_view_missing_in_doc)
+cat > "$d/migrations/001.sql" <<'SQL'
+create view public.foo_view as select 1;
+SQL
+contract_doc "$d/API.md" "" ""
+expect 1 '⑱ view 漏寫進 doc TABLES 區塊要紅（LS-205）' "$d/migrations" "$d/API.md"
+
+# ⑲ drop view 移除追蹤，doc 不需要（也不該）列出已刪除的 view
+d=$(new_case case19_view_dropped)
+cat > "$d/migrations/001.sql" <<'SQL'
+create view public.temp_view as select 1;
+drop view public.temp_view;
+SQL
+contract_doc "$d/API.md" "" ""
+expect 0 '⑲ drop view 移除追蹤（LS-205）' "$d/migrations" "$d/API.md"
+
+# ⑳ create or replace view 也抓得到
+d=$(new_case case20_or_replace_view)
+cat > "$d/migrations/001.sql" <<'SQL'
+create or replace view public.bar_view as select 1;
+SQL
+contract_doc "$d/API.md" "" "bar_view"
+expect 0 '⑳ create or replace view 也抓得到（LS-205）' "$d/migrations" "$d/API.md"
+
+# ㉑（LS-205）：catalog 模式（CI db job 用、權威）的 SQL 查詢必須把 relkind 'v'（view）納入對帳範圍，
+#    不能只留 'r'／'p'——這段 SQL 文字本身要連上活資料庫才能真的驗證行為，本檔案（rules job，不起 DB）
+#    無法直接跑一次 psql；改用靜態文字斷言釘住查詢字面（同 detect-simulator.test.sh ⑨／
+#    push-gate.test.sh ④ 的既有模式：跳過注釋、只認真正的程式碼字面）。mutation（把 'v' 從 relkind
+#    清單拿掉，只留 'r', 'p'）會讓這裡紅——CI 的 db job 本身會用真正的 supabase db reset＋psql 對
+#    album_summaries 這支真實 view 再驗一次功能是否正確（權威來源見 docs/API.md §9）。
+if grep -qE "relkind in \('r', 'p', 'v'\)" "$checker"; then
+  echo "✓ ㉑ catalog 模式 SQL 查詢的 relkind 清單含 'v'（view 納入對帳範圍，LS-205）"
+else
+  echo "✗ ㉑ catalog 模式 SQL 查詢未把 relkind 'v' 納入——view 會落在對帳網外（LS-205 池項 ca99c6ae i1 退化）" >&2
+  fail=1
+fi
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ api-contract-check 自測通過（16 組樣本：①-⑬ --text、⑭-⑯ --catalog 合成輸入；psql 查活 DB 靠 CI db job 本身回歸）"
+  echo "✓ api-contract-check 自測通過（21 組樣本：①-⑬／⑰-⑳ --text、⑭-⑯ --catalog 合成輸入、㉑ catalog SQL 靜態斷言；psql 查活 DB 靠 CI db job 本身回歸）"
 fi
 exit "$fail"

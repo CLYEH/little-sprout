@@ -16,19 +16,15 @@
 
 begin;
 
--- 5 萬列假照片（postgres 身分，繞過 RLS）。整個檔案跑在一個交易裡，結束 rollback，不留殘料。
-insert into public.media
-  (family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, created_at)
-select
-  'fc000000-0000-4000-8000-000000000001',
-  'fc000000-0000-4000-8000-000000000001/2026/'
-    || lpad((1 + (i % 12))::text, 2, '0') || '/perf-' || i || '.jpg',
-  'photo', 1024,
-  now() - (i * interval '1 minute'),
-  3024, 4032,
-  'c0000000-0000-4000-8000-000000000001',
-  now() - (i * interval '1 minute')
-from generate_series(1, 50000) i;
+-- 5 萬列假照片（postgres 身分，繞過 RLS）。整個檔案跑在一個交易裡，結束 rollback，
+-- 不留殘料。LS-204（LS-200 R1 i3 `ca99c6ae`；R2 merge-review B1 修正）：這個
+-- insert 與 107_album_summaries.sql §6 原本各自維護一份幾乎一樣的 50000 列
+-- fixture，抽成 00_fixtures.sql 建立的共用函式
+-- `private.ls204_seed_media_perf_noise()`（見該函式定義旁的檔頭說明——R1 原本
+-- 抽成獨立檔案用 psql `\ir` include，在 run.sh 的 docker-exec 連線管道下找不到
+-- 檔案，已改用純 SQL 函式呼叫，三種連線管道天生一致）。函式呼叫仍在本檔自己
+-- 的交易內執行、自己 rollback，執行次數與交易邊界都不變。
+select private.ls204_seed_media_perf_noise();
 
 -- LS-33：join_requests 也要有夠多的列，第 4 條查詢的 loops 判準才有意義
 -- （空表上「所有節點 loops=1」是恆真句，證明不了 policy 沒有被逐列重算）。

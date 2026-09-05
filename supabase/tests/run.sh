@@ -506,6 +506,17 @@ race_case "claim_notification_events 跟 record_notification_event 併發：同�
   push_dispatch_claim_vs_record_setup.sql push_dispatch_claim_vs_record_s1_claim.sql \
   push_dispatch_claim_vs_record_s2_comment.sql push_dispatch_claim_vs_record_verify.sql
 
+# LS-206 merge-review R1 m1：108_family_ownership_guard.sql 情境 10 是完全序列化
+# 的腳本（第一筆 commit 之後第二筆才開始），有鎖無鎖都會過，repo 裡沒有留下
+# 迴歸網守住兩句 FOR UPDATE。這裡補真正並行的兩個 session（同一位 owner 幾乎
+# 同時對兩個不同對象各發一次 transfer_ownership）：S1 持交易 3 秒，S2 延遲
+# 1.2 秒進場，必須被 S1 持有的鎖擋住，解鎖後正確拿到 LS058（O 已非 owner）；
+# 拿掉兩句 FOR UPDATE 會讓 S2 用過期的 role 判斷通過檢查，終態變成兩位 owner
+# （見 transfer_race_verify.sql 的斷言與 migration 檔頭第 2 節）。
+race_case "同一位 owner 幾乎同時對兩個不同對象各發一次 transfer_ownership：後動者必須被阻塞後正確拿到 LS058" \
+  transfer_race_setup.sql transfer_race_s1.sql \
+  transfer_race_s2.sql transfer_race_verify.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 -- LS-96 池項 8519d8a4 第 3 條（LS-172 merge-review R2-i3）：兩支併發情境的
@@ -536,7 +547,8 @@ delete from public.families where id in (
   'ed000000-0000-4000-8000-000000000001',
   'ed000000-0000-4000-8000-000000000002',
   'c2000000-0000-4000-8000-000000000001',
-  'c2000000-0000-4000-8000-000000000002'
+  'c2000000-0000-4000-8000-000000000002',
+  'de000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -559,6 +571,9 @@ delete from auth.users where id in (
   'eb000000-0000-4000-8000-000000000002',
   'eb000000-0000-4000-8000-000000000003',
   'ec000000-0000-4000-8000-000000000001',
+  'de100000-0000-4000-8000-000000000001',
+  'de100000-0000-4000-8000-000000000002',
+  'de100000-0000-4000-8000-000000000003',
   'e1000000-0000-4000-8000-000000000001',
   'e2000000-0000-4000-8000-000000000001',
   'a9000000-0000-4000-8000-000000000001',
@@ -611,7 +626,11 @@ if [ -f "$album_summaries_perf_out" ]; then
     echo "# 連線：$channel"
     echo "# Server：$(printf 'select version();' > "$tmp/ver2.sql"; run_sql "$tmp/ver2.sql" 2>/dev/null | sed -n '3p' | sed 's/^ *//')"
     echo "# 資料量：public.media 51200 列（1200 張已連結＋5 萬列背景雜訊）、50 本相簿、1200 筆 album_media 連結（家庭 fc000000-0000-4000-8000-000000000001）"
-    echo "# 判準：plan 不得出現 Seq Scan on media／album_media"
+    echo "# 判準（LS-204，補上 R2 新增的另兩條，與 107_album_summaries.sql §6 實際斷言對齊）："
+    echo "#   1. plan 不得出現 Seq Scan on media／album_media"
+    echo "#   2. plan 不得出現非 hashed 的逐列 correlated (SubPlan N) 引用（hashed SubPlan 不命中，不算違規）"
+    echo "#   3. 偵測器自我驗證：關掉 enable_indexscan／enable_bitmapscan／enable_indexonlyscan 逼出真正的"
+    echo "#      Seq Scan on media 後，判準 1 的 regex 必須抓得到，證明判準 1 具備鑑別力（不是恆綠空案）"
     echo
     cat "$album_summaries_perf_out"
   } > "$evidence_dir/album_summaries_explain.txt"

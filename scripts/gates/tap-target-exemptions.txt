@@ -21,6 +21,7 @@ DiaryCardView：純顯示元件（導覽由外層 TimelineView 的 NavigationLin
 AlbumCardView：純顯示元件，無互動元件，追蹤於 LS-96
 PhotoCardView：純顯示元件，無互動元件，追蹤於 LS-96
 MasonryPhotoWallView：需要多張假照片資料才有代表性，且互動（影片格點按）需要真實簽名 URL，追蹤於 LS-96
+UploadQueueRowView：非獨立入口，由外層 UploadQueueSheetView（已註冊 TapTargetGateScreenName.uploadQueueSheet）渲染時一併涵蓋其「重試」「查看儲存空間」按鈕的量測，不另掛 harness case（LS-167）
 AlbumDetailView：LS-166 尚未實作的最小佔位（ContentUnavailableView，無互動元件），追蹤於 LS-96，待該票補正式內容後再評估
 AlbumSummaryCardView：純顯示元件（導覽由外層 AlbumsView 的 NavigationLink 負責，該處已走 tap-target-check 涵蓋的互動路徑），追蹤於 LS-96
 SettingsRowView：純顯示元件（導覽由外層 SettingsView 的 NavigationLink／Button／Link 負責，該處已走 tap-target-check 涵蓋的互動路徑——SettingsView 已在 TapTargetGateScreenName 註冊，見該檔 .settings case），追蹤於 LS-96

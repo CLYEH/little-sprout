@@ -200,3 +200,56 @@ begin
   raise notice 'ok fixtures：A 家 3 位成員 / feed 4 列 / 用量 3145728 bytes，B 家 2 位成員';
 end;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- LS-204 R2（merge-review R1 `a2e9cd1b` B1）：107_album_summaries.sql §6 與
+-- 50_rls_plan_no_percall_subquery.sql 共用的 5 萬列同家庭「背景雜訊」media
+-- fixture，改用這支函式而不是 psql `\i`/`\ir` 相對 include。
+--
+-- 原本的做法（R1，已撤銷）：把 insert 抽成 supabase/tests/fixtures/ 底下的
+-- 檔案，兩支測試用 `\ir` 各自 include。這在 run.sh 的 docker-exec 連線管道下
+-- 會整支中止——那條管道是 `docker exec -i <container> psql ... < "$1"`（見
+-- run.sh 檔頭），檔案內容經 stdin 餵給容器內的 psql，psql 執行時沒有「呼叫端
+-- 腳本所在目錄」這個概念（`\ir` 的相對路徑解析基準），容器本身也沒有掛載
+-- host 上的這份 repo，`\ir fixtures/...` 一律 `No such file or directory`。
+-- R1 handoff 誤判為全綠，是因為驗證時手動把 libpq 的 psql 加進了 PATH（改走
+-- host psql 那條管道）——這不是本機預設環境：預設 shell 找不到 psql，run.sh
+-- 本來就會自動退到 docker-exec 管道（見 run.sh 檔頭「psql 不一定裝在 host 上」
+-- 那段），而這正是會踩雷的那條路。R1 那份 fixture 檔頭寫「要驗證這個管道本機
+-- 需另外安裝 psql」，前提本身就是錯的——不該要求開發者為了測試通過而改動本機
+-- 環境，本機三種連線管道原本就該天生一致。
+--
+-- 改法：把 insert 包成一支普通（非 temporary）SQL 函式，由本檔（00_fixtures.sql，
+-- 每次都會真的 COMMIT，不像其他測試檔跑完就 rollback）建立一次，107／50_ 各自
+-- 在自己的交易內呼叫 `select private.ls204_seed_media_perf_noise();`——純 SQL
+-- 呼叫，不涉及任何檔案路徑解析，三種連線管道（host psql／SUPABASE_DB_URL／
+-- docker exec）天生一致，不會有「哪條路徑能不能被 psql 用戶端看到某個檔案」
+-- 這種環境相依的差異。函式建在 private schema：`20260822120300_harden_default_
+-- privileges.sql` 已對「現在起新建的函式」下了不分 schema 的全域
+-- `alter default privileges revoke execute on functions from public`，本函式
+-- 建立時自動不對 anon／authenticated／PUBLIC 開放 EXECUTE（60_default_
+-- privileges.sql §2／§3 通掃會驗證這件事仍然成立），不需要另外補一句 revoke；
+-- 放 private 而不是 public，是因為 public schema 的每一支函式都要在
+-- 60_default_privileges.sql §8 的白名單登記（那是給前端 RPC 用的 API 邊界清單），
+-- 這支純粹是測試 fixture 內部工具，不是 API，登記進那份清單會誤導成「這是一支
+-- RPC」。`security definer set search_path = ''`：60_default_privileges.sql §9
+-- 通掃 schema private「每一支」函式都必須是這個形狀（除非登記在該段的 invoker
+-- 例外清單並附理由）——這支函式會寫入 public.media，不是「純 regex／只讀
+-- GUC」那種夠格例外的形狀，比照其餘 private 函式一律收斂，不另外登記例外。
+-- search_path=''下 `public.media` 已完整 schema-qualify；`generate_series` 是
+-- pg_catalog 內建函式，search_path 恆隱含 pg_catalog，不受影響。
+create or replace function private.ls204_seed_media_perf_noise()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  insert into public.media
+    (family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, created_at)
+  select
+    'fc000000-0000-4000-8000-000000000001',
+    'fc000000-0000-4000-8000-000000000001/2026/' || lpad((1 + (i % 12))::text, 2, '0') || '/noise-' || i || '.jpg',
+    'photo', 1024, now() - (i * interval '1 minute'), 3024, 4032,
+    'c0000000-0000-4000-8000-000000000001', now() - (i * interval '1 minute')
+    from generate_series(1, 50000) i;
+$$;

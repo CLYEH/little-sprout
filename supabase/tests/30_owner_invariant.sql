@@ -9,7 +9,13 @@
 begin;
 
 -- ---------------------------------------------------------------------------
--- 1. 刪掉最後一位 owner → 必須噴錯
+-- 1. 刪掉最後一位 owner（家庭還有其他成員）→ 必須噴錯
+--    LS-206：新增的 BEFORE DELETE ROW-level trigger（family_members_ownership_
+--    transfer_guard）比既有的 AFTER STATEMENT trigger（enforce_family_has_owner）
+--    先觸發，這個情境（role=owner、無其他 owner、但仍有其他成員）現在改回更明確
+--    的 LS057，不再落到本來籠統的 LS001（LS001 仍在，但這個情境已經先被 LS057
+--    攔下，不會被 LS001 看到——見 108_family_ownership_guard.sql 對兩者分工的
+--    完整測試）。
 -- ---------------------------------------------------------------------------
 do $$
 begin
@@ -18,8 +24,8 @@ begin
      where family_id = 'fa000000-0000-4000-8000-000000000001'
        and user_id = 'a0000000-0000-4000-8000-000000000001';
     raise exception 'FAIL：刪掉最後一位 owner 竟然成功了';
-  exception when sqlstate 'LS001' then
-    raise notice 'ok：刪除最後一位 owner 被擋下 → %', sqlerrm;
+  exception when sqlstate 'LS057' then
+    raise notice 'ok：刪除最後一位 owner 被擋下（LS-206 新碼）→ %', sqlerrm;
   end;
 end;
 $$;
@@ -122,7 +128,7 @@ rollback;
 
 -- ---------------------------------------------------------------------------
 -- 6. 走 app 的實際路徑（authenticated + RLS）也一樣擋得住：
---    最後一位 owner 想自己退出家庭
+--    最後一位 owner 想自己退出家庭（家庭還有其他成員，LS-206：LS057）
 -- ---------------------------------------------------------------------------
 begin;
 select set_config('request.jwt.claims',
@@ -136,8 +142,8 @@ begin
      where family_id = 'fa000000-0000-4000-8000-000000000001'
        and user_id = 'a0000000-0000-4000-8000-000000000001';
     raise exception 'FAIL：最後一位 owner 透過 app 路徑退出家庭竟然成功了';
-  exception when sqlstate 'LS001' then
-    raise notice 'ok：authenticated 路徑下，最後一位 owner 也退不掉 → %', sqlerrm;
+  exception when sqlstate 'LS057' then
+    raise notice 'ok：authenticated 路徑下，最後一位 owner 也退不掉（LS-206 新碼）→ %', sqlerrm;
   end;
 end;
 $$;

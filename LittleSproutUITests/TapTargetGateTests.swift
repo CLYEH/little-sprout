@@ -44,6 +44,18 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.sectionTabView)
     }
 
+    /// LS-167：上傳佇列 sheet——重試（單列／整批）、查看儲存空間、在背景繼續關閉視窗，四類
+    /// 按鈕都要 ≥44pt（`UploadQueueRowView` 的兩顆行內小字按鈕是本票刻意加高的對象，見該檔
+    /// 文件註解）。
+    func testUploadQueueSheetView() {
+        assertAllTappablesMeetMinimum(.uploadQueueSheet)
+    }
+
+    /// merge-review R3 M1：常態樣本（無失敗、無續傳橫幅）——footer 鈕仍要 ≥44pt。
+    func testUploadQueueSheetViewNormal() {
+        assertAllTappablesMeetMinimum(.uploadQueueSheetNormal)
+    }
+
     /// LS-165：`AlbumsView` 從 `ContentUnavailableView` 佔位換成正式內容——這裡只蓋 Header
     /// 「新增相簿」建立鈕（`.preview()` 空狀態即可渲染，同 `testTimelineViewDefaultState`
     /// 的既有理由）。
