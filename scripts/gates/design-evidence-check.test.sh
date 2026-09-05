@@ -713,6 +713,9 @@ g add design/evidence/LS-67-r6-overflow.json
 g commit -qm 'design(evidence): LS-67 r6 收據（scan_scope=boards）'
 expect 0 '㉞-b scan_scope=boards → 綠（限縮模式合法，只要如實標示）' 'scan_scope=boards' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㉞-c LS-198：綠訊息的支數依收據實際要求的層數算、不寫死（六支收據印「六支」；⑬／㉒／㉔ 的 LS-122 收據仍印「四支」）
+expect 0 '㉞-c 六支收據的綠訊息印「六支掃描皆有輸出」（支數指回 overflow-scan.js 檔頭）' '六支掃描皆有輸出（支數以 scripts/design/overflow-scan.js 檔頭為準）' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
 
 # ㉟ 新 schema 缺 board_clip → 紅
 sha35="$(land6 pr-no-bc sixth)"

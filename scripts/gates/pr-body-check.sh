@@ -38,6 +38,9 @@
 #   皆為祖先；已在 base 上的 commit 也是祖先——盲區，COLLABORATION §7）；「已修」之後的第一個 hex 不是 commit object（comment id
 #   形狀、打錯的 SHA）→ 紅「已修行需附 commit SHA 於『已修』之後」，是 commit 但非祖先 → 紅「不在 PR commits 內」（LS-186）。
 #   無 LINEAR_API_KEY → 印「反查略過」只驗格式＋git
+#   LS-198（LS-186 R2 info-1／2）：格式模式分不出短 SHA 與純數字 token（CI run id、migration 檔名前綴 20260904212530 都是 7–40 位
+#   [0-9a-f]）——不帶 --verify 時對純數字候選印一行 ⚠ 警告、exit 不變（裁判仍是 --verify 的 git cat-file）；--verify 紅「不是本 repo
+#   的 commit」時補「檔名／行號裡的數字也算 hex token，把 SHA 放『已修』後第一個」（殘餘誤紅多是 migration 檔名排在 SHA 之前）。
 #   （CI 需 secrets.LINEAR_API_KEY）；curl／GraphQL 失敗 exit 2（fail closed）。token 只走 curl `-K -`（stdin config）不進
 #   argv（同 patrol_linear.py R1 F3）。
 # exit 0＝全過；1＝違規（空 body、模板未填、票號不在檔頭段、檔頭段是他票、LS-96 行缺 comment id、「已修」行缺 SHA、
@@ -153,6 +156,13 @@ while IFS= read -r line || [ -n "$line" ]; do
         bad_b=1
       else
         fix_claims="${fix_claims}${n} ${shas}"$'\n'
+        # LS-198：格式模式對純數字候選只警告不紅——它可能是 CI run id／migration 檔名前綴，--verify 才裁得出來
+        if [ "$verify" -eq 0 ]; then
+          case "$shas" in
+            *[!0-9]*) ;;
+            *) echo "⚠ pr-body-check：第 ${n} 行「已修」之後的第一個 hex token ${shas} 是純數字——若它是 CI run id／migration 檔名前綴而不是 commit SHA，--verify 會紅；檔名／行號裡的數字也算 hex token，把 SHA 放『已修』後第一個（LS-198）" ;;
+          esac
+        fi
       fi ;;
   esac
 done < "$file"
@@ -160,7 +170,7 @@ if [ "$bad_a" -eq 1 ]; then
   echo "  記入 ${pool} 必附 comment id：先 mcp__linear__save_comment 寫進 ${pool} 取得 id，再把 id（前 8 位以上）寫在同一行，如「記入 ${pool} \`9f348e36\`」；沒有 id 的「記入」視為沒寫。" >&2
 fi
 if [ "$bad_b" -eq 1 ]; then
-  echo "  已修行需附 commit SHA 於『已修』之後：每條「已修」必附 commit SHA（＋檔案:行號）寫在同一行、SHA 是「已修」之後的第一個 hex token，如「已修 \`7c2ff80\` \`Foo.swift:12\`」「**已修**（commit \`7c2ff80\`）」；comment id 寫在 SHA 之後（「已修 \`7c2ff80\`（comment \`d87d4334\`）」）；沒有 SHA 的「已修」視為未修（LS-140／LS-186）。" >&2
+  echo "  已修行需附 commit SHA 於『已修』之後：每條「已修」必附 commit SHA（＋檔案:行號）寫在同一行、SHA 是「已修」之後的第一個 hex token，如「已修 \`7c2ff80\` \`Foo.swift:12\`」「**已修**（commit \`7c2ff80\`）」；comment id 寫在 SHA 之後（「已修 \`7c2ff80\`（comment \`d87d4334\`）」）；檔名／行號裡的數字也算 hex token（migration 前綴 \`20260904212530_…\`），把 SHA 放『已修』後第一個、檔名寫在 SHA 之後；沒有 SHA 的「已修」視為未修（LS-140／LS-186／LS-198）。" >&2
 fi
 if [ "$bad_a" -eq 1 ] || [ "$bad_b" -eq 1 ]; then
   echo "  全 body 逐行掃、不辨語境：此行若只是引用而非本 PR 的申報（如「LS-138 已修」「不另立 ${pool} 池項」），請改寫措辭避開字樣（LS-140，COLLABORATION §3／§7）。" >&2
@@ -188,7 +198,7 @@ while read -r ln toks; do
   if [ -n "$ok" ]; then
     echo "✓ 第 ${ln} 行「已修」SHA ${ok} 在 PR commits 內"
   elif [ -z "$is_commit" ]; then
-    echo "✗ pr-body-check：第 ${ln} 行「已修」之後的第一個 hex token 不是本 repo 的 commit（候選：${toks}）——已修行需附 commit SHA 於『已修』之後，且 SHA 要寫在 comment id 之前；Linear comment id／issue uuid 片段、未 push 或他 repo 的 SHA 都不算（LS-186）。" >&2
+    echo "✗ pr-body-check：第 ${ln} 行「已修」之後的第一個 hex token 不是本 repo 的 commit（候選：${toks}）——已修行需附 commit SHA 於『已修』之後，且 SHA 要寫在 comment id 之前；Linear comment id／issue uuid 片段、未 push 或他 repo 的 SHA 都不算（LS-186）；檔名／行號裡的數字也算 hex token（migration 前綴 \`20260904212530_…\`、CI run id），把 SHA 放『已修』後第一個、檔名寫在 SHA 之後（LS-198）。" >&2
     fail=1
   else
     echo "✗ pr-body-check：第 ${ln} 行「已修」的 SHA 不在 PR commits 內（候選：${toks}）——須 git cat-file -e <sha> 且 git merge-base --is-ancestor <sha> HEAD 皆成立（需在 repo 內執行）；請確認 SHA 抄自本分支的 commit、且已 push。" >&2

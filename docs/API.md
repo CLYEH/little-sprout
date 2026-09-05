@@ -1963,9 +1963,14 @@ select net.http_post(
       select decrypted_secret from vault.decrypted_secrets
       where name = 'ls153_purge_storage_secret_key'
     )
-  )
+  ),
+  body := '{}'::jsonb,
+  timeout_milliseconds := 60000
 );
 ```
+`timeout_milliseconds := 60000` 不能省：pg_net 預設 5000 ms，一趟最多 4000 物件的
+purge 會逾時、cron 拿不到回應 JSON（正式站 cron job LS-153 comment `cac7d8c4`
+實際值；LS-196 R2 N1 補文件，切換標頭時要一併保留）。
 
 **毒丸隊頭阻塞與死信／退避（R3，merge-review R2 F1 major，comment 7420f7b9）**：
 R2 版本「無法確認已刪的列永遠留在佇列、下次重試」沒有出口——這些列的
@@ -2539,9 +2544,14 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
     `blocked_users`」）：`blocker_id = 該成員, blocked_id = actor_id, family_id =
     該事件的家庭` 存在即排除。
   - **沒有任何 `device_tokens` 的成員**——用 `JOIN`（非 `LEFT JOIN`）天生排除。
+  - **已被停權的成員**（LS-179，`20260904212530_suspension_and_registrations.sql`
+    重建本函式時加的 `pr.suspended_at is null`）——只排除成員本人被停權，不另判
+    所屬家庭停權：家庭停權後該家庭的寫入已被 `enforce_not_suspended` trigger 擋下
+    （§5 `LS053`），不會再產生新的 `notification_events`，這裡沒有需要重複判斷的
+    路徑。
   - **`kind='report'` 時，只留 `family_members.role = 'owner'`**（LS-195，使用者
     2026-09-05 裁決「檢舉事件的推播通知只有 Owner」，銷 LS-96 池項
-    `12e20e0c`）：其餘四種 kind（`comment`／`reaction`／`diary`／`album`／
+    `12e20e0c`）：其餘五種 kind（`comment`／`reaction`／`diary`／`album`／
     `media`）不受影響，仍廣播給全家庭成員（扣上述幾條既有排除條件）。這條規則
     跟 §10-B「檢舉內容本身只有 owner 讀得到」（`content_reports_select`
     policy）對齊——`notification_events` 這張表本身對 `authenticated` 沒有任何
@@ -2715,9 +2725,13 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
         select decrypted_secret from vault.decrypted_secrets
         where name = 'ls172_push_dispatch_secret_key'
       )
-    )
+    ),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 60000
   );
   ```
+  `body`／`timeout_milliseconds` 兩個參數同 §6 `purge-storage` 範本（pg_net 預設
+  5000 ms 逾時；LS-196 R2 N1）。
   **本票不執行這段部署**，接排程由 orchestrator 依 LS-78 授權狀態決定時機。
 - **本機測試**：
   - `supabase/functions/push-dispatch/{handler,apns}.test.ts`（Deno 內建

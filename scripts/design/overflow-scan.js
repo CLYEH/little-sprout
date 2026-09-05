@@ -12,7 +12,7 @@
 //      execute 設的 SCAN_BOARDS 到下一次是 undefined），旗標必須與腳本同一個 snippet；`SCAN_CROSS_ALL`／`SCAN_VERBOSE` 同理
 //      （LS-119 R6／LS-122 實跑：含檔頭註解原樣送、一次成功，comment e58d5688）。檔尾偵測到 `Get`／`Print`
 //      存在時，會用 `Get(visit, {resolveInstances:true})` 收集全樹快照（含 instance descendants，id 為 `instanceId/childId`
-//      路徑）、算絕對座標、跑四支掃描，`Print`：一行 SUMMARY ＋ 每支掃描一段**分類彙整**（同名對／同容器歸一類：
+//      路徑）、算絕對座標、跑六支掃描，`Print`：一行 SUMMARY ＋ 每支掃描一段**分類彙整**（同名對／同容器歸一類：
 //      `<n>× <name_a> × <name_b> @ <parent> e.g. <idA>×<idB>`，corner_anchor 的 in-scope 錯位與 unresolved 逐筆、
 //      document 錯位按板計數）——真實稿的完整 JSON 有 26 萬字元、超過 MCP 回應上限（R6 實跑），所以預設不印；要完整
 //      陣列時設 `SCAN_VERBOSE = true`（每支掃描一個 Print，仍可能被轉存成檔案）。`total_nodes` 用**未展開 instance**
@@ -111,7 +111,7 @@
 //       JSON 的 8 個 geometry 改成 `"..."` 即重現；帶選項後三方同值），且 `cmp/Photo Corner` 全專案共用，漏帶就對所有含 path
 //       的稿 fail-closed。空字串 geometry（`mzo0K`）兩端都是 `""`，原樣參與雜湊。overflow-scan.test.js 以原始碼斷言釘住這個選項。
 //       盲區：只證明「收據對應這份 .pen 的節點樹」（`children` 全樹；頂層 `variables`／`themes`／`fileToken` 不在雜湊內——
-//       Pencil `Get` 只走節點樹，掃描後只改 design token 再落地看不到，merge-review R1 N4），不證明五支數字算對（那要 CI 跑 Pencil）。
+//       Pencil `Get` 只走節點樹，掃描後只改 design token 再落地看不到，merge-review R1 N4），不證明各支掃描的數字算對（那要 CI 跑 Pencil）。
 // 輸出每筆都帶 name／parent 等欄位方便分類；design-evidence-check.sh 只驗 node／node_a／node_b／classification、
 // corner_anchor 的整數計數與 boards、text_occlusion.flagged 與 board_clip.flagged 為空、scan_scope 合法、tree_hash，多出的欄位
 // 不影響 gate。
@@ -621,7 +621,7 @@ if (typeof Get === "function" && typeof Print === "function") {
   const hashOnly = typeof SCAN_HASH_ONLY !== "undefined" && SCAN_HASH_ONLY === true;
   const skipHash = typeof SCAN_SKIP_HASH !== "undefined" && SCAN_SKIP_HASH === true;
   const scanScope = typeof SCAN_SCOPE !== "undefined" && SCAN_SCOPE ? String(SCAN_SCOPE) : "document";
-  if (hashOnly && skipHash) throw new Error("overflow-scan：SCAN_HASH_ONLY 與 SCAN_SKIP_HASH 互斥——第一次只設 SCAN_HASH_ONLY（雜湊），第二次只設 SCAN_SKIP_HASH（五支）；同時設會既不算雜湊也不跑五支（LS-171 R1 N4）");
+  if (hashOnly && skipHash) throw new Error("overflow-scan：SCAN_HASH_ONLY 與 SCAN_SKIP_HASH 互斥——第一次只設 SCAN_HASH_ONLY（雜湊），第二次只設 SCAN_SKIP_HASH（六支掃描）；同時設會既不算雜湊也不跑掃描（LS-171 R1 N4）");
   let total = 0;
   const hashAcc = [0, 0, 0, 0];
   // LS-171：includePathGeometry 必帶——Pencil Get 預設把 path 的 geometry 省略成 "..."，雜湊會與 js／py 不同（見檔頭）
