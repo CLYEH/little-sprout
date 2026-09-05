@@ -559,7 +559,9 @@ expect 'H3b-h⑦ 對照：持有者 worktree 不豁免 H3 的 supabase db reset 
 printf 'pid=1\nworktree=%s\ncmd=bash\n' "$h3b_wt" > "$h3b_lock/holder"
 expect 'H3b-h⑧ 對照：holder 是命令型（cmd 非 hold:*）→ worktree 腿不適用（deny，同 hold_owner_ok）' 2 \
   "$(bash_json_cwd "$h3b_work/wt" 'docker exec supabase_db_x psql -U postgres')" SUPABASE_LOCK_DIR="$h3b_lock"
-sleep 300 & h3b_dead=$!; kill "$h3b_dead" 2>/dev/null; wait "$h3b_dead" 2>/dev/null
+# 死 pid：開一個子 shell 印自己的 pid 後退出——命令替換回來時它已結束（不用 `sleep & kill`：kill 與 exec 競速時
+# sleep 可能沒被殺到，wait 會卡住整份自測——本票自測首版實測卡在 sleep 300）
+h3b_dead=$(sh -c 'echo $$')
 printf 'pid=%s\nworktree=%s\ncmd=hold:LS-183 test\n' "$h3b_dead" "$h3b_wt" > "$h3b_lock/holder"
 expect 'H3b-h⑨ 對照：守門 pid 已死（deny，stale hold 不豁免）' 2 \
   "$(bash_json_cwd "$h3b_work/wt" 'docker exec supabase_db_x psql -U postgres')" SUPABASE_LOCK_DIR="$h3b_lock"
