@@ -589,6 +589,48 @@ gone  '㉛ -- 包裝結束後釋放'
 rm -rf "$fx"
 unset SUPABASE_LOCK_HOLD_TICK
 
+# ======== LS-207（ca35c579）：--hold 排隊可見化＋長時間排隊 stderr 提示 ========
+export SUPABASE_LOCK_HOLD_TICK=0.2
+waiters_dir="${SUPABASE_LOCK_DIR}.waiters"
+
+# ---- ㉜ 排隊時在 waiters/ 寫 <票號>-<pid>-<起始>（票號取自 label 的 LS-<n>），取得或放棄（逾時）都移除 ----
+out="$(hold_as_stranger 'LS-201 排隊測試' --max-minutes 1)"; rc_is '㉜ 前提：A（wtA）--hold' 0 "$?" "$out"
+( cd "$wtB" && SUPABASE_LOCK_TIMEOUT=3 bash "$lock_sh" --hold 'LS-201 等待者' --max-minutes 1 > "$work/b32.out" 2> "$work/b32.err" ) &
+b=$!
+sleep 0.6   # B 應已第一次 mkdir 失敗、寫下 waiter 檔
+if [ -d "$waiters_dir" ] && ls "$waiters_dir" 2>/dev/null | grep -qE '^LS-201-[0-9]+-[0-9]+$'; then
+  echo "✓ ㉜ 排隊中 waiters/ 有 LS-201-<pid>-<起始> 檔"
+else
+  echo "✗ ㉜ 排隊中 waiters/ 沒有預期的檔" >&2; ls -la "$waiters_dir" 2>&1 | sed 's/^/    /' >&2; fail=1
+fi
+wait "$b"; rc=$?
+rc_is '㉜ B 逾時放棄 → exit 124' 124 "$rc" "$(cat "$work/b32.err")"
+if [ ! -d "$waiters_dir" ] || [ -z "$(ls -A "$waiters_dir" 2>/dev/null)" ]; then echo "✓ ㉜ B 放棄後 waiter 檔已移除"; else echo "✗ ㉜ B 放棄後 waiter 檔殘留" >&2; ls -la "$waiters_dir" 2>&1 | sed 's/^/    /' >&2; fail=1; fi
+
+# ---- ㉝ label 抓不到 LS-<n> → 票號用 unknown ----
+( cd "$wtB" && SUPABASE_LOCK_TIMEOUT=2 bash "$lock_sh" --hold '沒有票號的 label' --max-minutes 1 > /dev/null 2>"$work/b33.err" ) &
+b=$!
+sleep 0.5
+if [ -d "$waiters_dir" ] && ls "$waiters_dir" 2>/dev/null | grep -qE '^unknown-[0-9]+-[0-9]+$'; then echo "✓ ㉝ label 無票號 → waiter 檔用 unknown"; else echo "✗ ㉝ 沒看到 unknown-<pid>-<起始> 檔" >&2; ls -la "$waiters_dir" 2>&1 | sed 's/^/    /' >&2; fail=1; fi
+wait "$b"; rc=$?
+rc_is '㉝ B 逾時放棄 → exit 124' 124 "$rc" "$(cat "$work/b33.err")"
+
+# ---- ㉞ 命令型排隊（-- <cmd>）不寫 waiters/：沒有票號可標，且 15 分鐘就先逾時，可視化只服務 --hold ----
+rm -rf "$waiters_dir"
+( cd "$wtB" && bash "$lock_sh" --timeout 1 -- true ) >/dev/null 2>&1
+if [ ! -d "$waiters_dir" ] || [ -z "$(ls -A "$waiters_dir" 2>/dev/null)" ]; then echo "✓ ㉞ 命令型排隊不寫 waiters/"; else echo "✗ ㉞ 命令型排隊意外寫了 waiters/" >&2; ls -la "$waiters_dir" >&2; fail=1; fi
+
+# ---- ㉟ 排隊逾 SUPABASE_LOCK_HOLD_LONG_WAIT 秒印一行續等到 stderr（一次性提示；不影響最終逾時判定）----
+berr="$(cd "$wtB" && SUPABASE_LOCK_TIMEOUT=3 SUPABASE_LOCK_HOLD_LONG_WAIT=1 bash "$lock_sh" --hold 'LS-202 等待者' --max-minutes 1 2>&1)"; rc=$?
+rc_is '㉟ B 逾時放棄（用逾時輸出驗證續等提示）' 124 "$rc" "$berr"
+has   '㉟ 印排隊超過 N 分鐘仍未取得的續等提示' "$berr" '已排隊超過'
+has   '㉟ 續等提示仍含最終逾時上限' "$berr" '逾時上限 3s'
+if [ ! -d "$waiters_dir" ] || [ -z "$(ls -A "$waiters_dir" 2>/dev/null)" ]; then echo "✓ ㉟ 逾時放棄後 waiter 檔已移除"; else echo "✗ ㉟ 逾時放棄後 waiter 檔殘留" >&2; ls -la "$waiters_dir" >&2; fail=1; fi
+
+out="$(cd "$wtA" && bash "$lock_sh" --release 2>&1)"; rc_is '㉜–㉟ 收尾：釋放 A（wtA）' 0 "$?" "$out"
+gone '㉜–㉟ 收尾：釋放後 lock 消失'
+unset SUPABASE_LOCK_HOLD_TICK
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ supabase-lock 自測通過"
 fi

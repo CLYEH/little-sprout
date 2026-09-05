@@ -349,6 +349,37 @@ has   '⑪-b hold → --brief 含 持有中' "$(bash "$patrol" --repo "$repo" --
 jq_ok '⑪-b --json hold_label／hold_expires_at 來自 holder 檔' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)" ".hold_label == \"LS-9 QA 冒煙\" and .hold_expires_at == ${exp11}"
 rm -rf "$SUPABASE_LOCK_DIR"
 
+# ---- ⑪-c LS-207（ca35c579）：排隊可見化——<lock 路徑>.waiters/ 有檔且持有者剩餘 >10 分才印 ⚠ 排隊 ----
+mkdir -p "$SUPABASE_LOCK_DIR"
+exp11c=$(( $(date +%s) + 900 ))   # 剩餘 15 分（>10 門檻）
+printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=%s\nbranch=test\ncmd=hold:LS-9 排隊測試\nowner=%s\nexpires_at=%s\nheartbeat=%s\n' "$$" "$(date +%s)" "$(hostname)" "$wts/LS-9" "$$" "$exp11c" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder"
+out11c="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '⑪-c 無等待者 → 不印 ⚠ 排隊' "$out11c" '⚠ 排隊'
+jq_ok '⑪-c 無等待者 → --json lock_waiters=0' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)" '.lock_waiters == 0 and .lock_waiters_max_minutes == 0'
+mkdir -p "${SUPABASE_LOCK_DIR}.waiters"
+now_e=$(date +%s)
+# 起始秒數故意避開整分邊界（ceil((now-started)/60) 在邊界上差 1 秒就跳一分鐘，710／170 各留 10s 緩衝）
+: > "${SUPABASE_LOCK_DIR}.waiters/LS-20-11111-$(( now_e - 710 ))"   # 等了 12 分（660< 710 ≤720）
+: > "${SUPABASE_LOCK_DIR}.waiters/LS-21-22222-$(( now_e - 170 ))"   # 等了 3 分（120< 170 ≤180）
+out11c="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑪-c 有 2 個等待者、持有者剩餘 >10 分 → 印 ⚠ 排隊 2（最久 12 分）' "$out11c" '⚠ 排隊 2（最久 12 分）'
+has   '⑪-c ⚠ 排隊行含持有者 label 與剩餘分鐘' "$out11c" '持有者「LS-9 排隊測試」剩餘'
+has   '⑪-c --brief 也印 ⚠ 排隊' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)" '⚠ 排隊 2（最久 12 分）'
+json11c="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '⑪-c --json lock_waiters／lock_waiters_max_minutes 正確' "$json11c" '.lock_waiters == 2 and .lock_waiters_max_minutes == 12'
+jq_ok '⑪-c --json flags 含 ⚠ 排隊' "$json11c" '.flags | any(test("⚠ 排隊"))'
+# 持有者剩餘 ≤10 分（門檻不含等於）→ 即使有等待者也不印，避免快到期時洗版
+exp11c2=$(( $(date +%s) + 600 ))
+printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=%s\nbranch=test\ncmd=hold:LS-9 排隊測試\nowner=%s\nexpires_at=%s\nheartbeat=%s\n' "$$" "$(date +%s)" "$(hostname)" "$wts/LS-9" "$$" "$exp11c2" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder"
+hasnt '⑪-c 持有者剩餘 10 分（未超過門檻）→ 不印 ⚠ 排隊' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)" '⚠ 排隊'
+rm -rf "${SUPABASE_LOCK_DIR}.waiters"
+# 命令型持有（無 expires_at）即使殘留 waiters/ 也不印——沒有「剩餘分鐘」可比
+mkdir -p "${SUPABASE_LOCK_DIR}.waiters"
+: > "${SUPABASE_LOCK_DIR}.waiters/LS-22-33333-$(( $(date +%s) - 60 ))"
+printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=%s\nbranch=feature/LS-9-holder\ncmd=supabase db reset\n' "$$" "$(date +%s)" "$(hostname)" "$wts/LS-9" > "$SUPABASE_LOCK_DIR/holder"
+hasnt '⑪-c 命令型持有（無到期時間）→ 不印 ⚠ 排隊' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)" '⚠ 排隊'
+rm -rf "$SUPABASE_LOCK_DIR" "${SUPABASE_LOCK_DIR}.waiters"
+
 # ---- ⑭ 專屬模擬器 >7 天未用（LS-83；LS-187 起為第二層）：xcrun 假身回固定 JSON，驗 lastBootedAt／目錄 mtime 兩種判定、
 #        名稱不符 <票號>-<機型> 樣式（非 detect-simulator.sh 所建）不管、只列不刪＋印 simctl delete 指令、
 #        --brief／--json 都看得到；xcrun 本身失敗（非 macOS／查詢出錯）fail-soft 不當異常炸掉 ----
