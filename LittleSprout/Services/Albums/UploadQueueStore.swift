@@ -8,7 +8,8 @@ import UIKit
 /// 檔案慣例（`OTPVerificationModel.beginVerifyRateLimit` 的 `verifyRateLimitTask`）：closure
 /// 沒有另外標記 `@Sendable`／`nonisolated`，繼承建立時的 actor context，呼叫
 /// `self.finish(...)` 這類同樣 MainActor-isolated 的方法不需要顯式 `await` 跳轉。唯一真正
-/// 讓出 MainActor 的地方是 `await self.performUpload(upload)`（真正的網路 I/O）——併發上限
+/// 讓出 MainActor 的地方是 `await self.performUpload(payload:pixelSize:)`（真正的網路
+/// I/O）——併發上限
 /// （`maxConcurrentUploads`）與 `entries` 的所有讀寫都發生在 MainActor 序列化的執行緒上，
 /// 不會有兩個 `start`／`finish` 同時修改同一個 `entries` 陣列的競態。
 ///
@@ -30,7 +31,14 @@ import UIKit
 @Observable
 final class UploadQueueStore {
     private struct Entry {
-        let upload: PendingUpload
+        let thumbnail: UIImage?
+        let pixelSize: PixelSize
+        /// 上傳用的原始位元組／檔案參照——完成或不可重試失敗後釋放為 `nil`（merge-review
+        /// R2 F3：`.photo` 分支的 `Data` 是真正佔記憶體的部分，佇列一次幾十張時全部留著不會
+        /// 有人再讀它們）；`thumbnail`／`pixelSize` 這些顯示與型別判斷需要的輕量 metadata
+        /// 不受影響，永遠留著。可重試的失敗**不釋放**：`retry(_:)`／`retryAllRetryable()`
+        /// 要重新送出同一份位元組，沒有 payload 就沒東西可送。
+        var payload: PendingUpload.Kind?
         let enqueuedAt: Date
         var state: UploadItemState
     }
@@ -69,7 +77,7 @@ final class UploadQueueStore {
 
     var sections: [UploadQueueSection] { UploadQueueGrouping.sections(for: rows) }
 
-    func thumbnail(for id: UUID) -> UIImage? { entries[id]?.upload.thumbnail }
+    func thumbnail(for id: UUID) -> UIImage? { entries[id]?.thumbnail }
 
     /// 「還有 N 張還沒完成」＝等候＋上傳中＋失敗（`design/littlesprout.pen` Handoff Notes
     /// `EUNxh`：完成的不算「還沒完成」）。
@@ -107,7 +115,10 @@ final class UploadQueueStore {
     func enqueue(_ uploads: [PendingUpload]) {
         for upload in uploads {
             guard entries[upload.id] == nil else { continue }
-            entries[upload.id] = Entry(upload: upload, enqueuedAt: now(), state: .waiting)
+            entries[upload.id] = Entry(
+                thumbnail: upload.thumbnail, pixelSize: upload.pixelSize, payload: upload.kind,
+                enqueuedAt: now(), state: .waiting
+            )
             order.append(upload.id)
         }
         advance()
@@ -147,14 +158,17 @@ final class UploadQueueStore {
     }
 
     private func start(_ id: UUID) {
-        guard var entry = entries[id] else { return }
+        // `payload` 為 `nil` 只會發生在完成或不可重試失敗之後（見 `Entry.payload` 文件
+        // 註解）——這兩種狀態都不會再被 `advance()` 選中（不是 `.waiting`），這裡的
+        // `guard let payload` 是防禦性的最後一道線，不是預期會走到的分支。
+        guard var entry = entries[id], let payload = entry.payload else { return }
         entry.state = .uploading(progress: nil)
+        let pixelSize = entry.pixelSize
         entries[id] = entry
-        let upload = entry.upload
         Task { [weak self] in
             guard let self else { return }
             do {
-                _ = try await self.performUpload(upload)
+                _ = try await self.performUpload(payload, pixelSize: pixelSize)
                 self.finish(id, state: .completed)
             } catch let error as AppError {
                 self.finish(id, state: .failed(.from(error)))
@@ -167,18 +181,31 @@ final class UploadQueueStore {
     private func finish(_ id: UUID, state: UploadItemState) {
         guard entries[id] != nil else { return }
         entries[id]?.state = state
+        if Self.releasesPayload(for: state) {
+            entries[id]?.payload = nil
+        }
         advance()
     }
 
-    private func performUpload(_ upload: PendingUpload) async throws -> UUID {
-        switch upload.kind {
+    /// merge-review R2 F3：完成或不可重試失敗的這筆不會再被拿去打網路，`payload` 沒有繼續
+    /// 留著的理由；可重試的失敗必須留著給 `retry(_:)`／`retryAllRetryable()` 用。
+    private static func releasesPayload(for state: UploadItemState) -> Bool {
+        switch state {
+        case .completed: true
+        case .failed(let reason): !reason.isRetryable
+        case .waiting, .uploading: false
+        }
+    }
+
+    private func performUpload(_ payload: PendingUpload.Kind, pixelSize: PixelSize) async throws -> UUID {
+        switch payload {
         case .photo(let data, let fileExtension):
             return try await mediaUploadService.uploadPhoto(
-                familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: upload.pixelSize
+                familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: pixelSize
             )
         case .video(let fileURL, let fileExtension):
             return try await mediaUploadService.uploadVideo(
-                familyID: familyID, fileURL: fileURL, fileExtension: fileExtension, pixelSize: upload.pixelSize
+                familyID: familyID, fileURL: fileURL, fileExtension: fileExtension, pixelSize: pixelSize
             )
         }
     }
@@ -200,9 +227,18 @@ final class UploadQueueStore {
 
     func seedForPreview(_ seeds: [PreviewSeed]) {
         for seed in seeds {
-            entries[seed.upload.id] = Entry(upload: seed.upload, enqueuedAt: seed.enqueuedAt, state: seed.state)
+            entries[seed.upload.id] = Entry(
+                thumbnail: seed.upload.thumbnail, pixelSize: seed.upload.pixelSize, payload: seed.upload.kind,
+                enqueuedAt: seed.enqueuedAt, state: seed.state
+            )
             order.append(seed.upload.id)
         }
+    }
+
+    /// 測試用途：這筆是否還留著上傳用的原始 payload——完成或不可重試失敗後應該是 `nil`
+    /// （merge-review R2 F3）。
+    func debugPayload(_ id: UUID) -> PendingUpload.Kind? {
+        entries[id]?.payload
     }
     #endif
 }

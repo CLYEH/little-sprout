@@ -225,4 +225,43 @@ final class UploadQueueStoreTests: XCTestCase {
             "不是只湊巧 id 一樣）"
         )
     }
+
+    // MARK: - merge-review R2 F3：完成／不可重試失敗後釋放 payload
+
+    func test_completedItem_releasesPayload() async {
+        let mediaService = StubMediaUploadService()
+        let store = UploadQueueStore(familyID: familyID, mediaUploadService: mediaService, maxConcurrentUploads: 1)
+        let upload = makeUpload(tag: "release-me")
+
+        store.enqueue([upload])
+        await waitUntil { store.remainingCount == 0 }
+
+        XCTAssertNil(store.debugPayload(upload.id), "完成後應該釋放 payload，只留縮圖與 metadata")
+    }
+
+    func test_nonRetryableFailure_releasesPayload() async {
+        let mediaService = StubMediaUploadService()
+        mediaService.setUploadPhotoHandler { _, _, _, _ in
+            throw AppError.rejected(message: "額度已滿", code: LSErrorCode.storageQuotaExceeded.rawValue)
+        }
+        let store = UploadQueueStore(familyID: familyID, mediaUploadService: mediaService)
+        let upload = makeUpload(tag: "quota")
+
+        store.enqueue([upload])
+        await waitUntil { store.sections.contains { $0.kind == .failed } }
+
+        XCTAssertNil(store.debugPayload(upload.id), "LS002 不可重試——失敗定案後也該釋放 payload")
+    }
+
+    func test_retryableFailure_keepsPayload() async {
+        let mediaService = StubMediaUploadService()
+        mediaService.setUploadPhotoHandler { _, _, _, _ in throw AppError.network(message: "offline") }
+        let store = UploadQueueStore(familyID: familyID, mediaUploadService: mediaService)
+        let upload = makeUpload(tag: "network")
+
+        store.enqueue([upload])
+        await waitUntil { store.sections.contains { $0.kind == .failed } }
+
+        XCTAssertNotNil(store.debugPayload(upload.id), "可重試的失敗必須留著 payload，retry 才有東西可送")
+    }
 }
