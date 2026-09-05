@@ -601,4 +601,25 @@ if [ -f "$perf_out" ]; then
   echo "→ EXPLAIN 證據：$evidence_dir/explain_rls_plan.txt"
 fi
 
+# LS-200：album_summaries 的 EXPLAIN 證據存檔，比照上面 LS-6 RLS plan 證據的既有慣例
+# （同樣的漂移理由——gitignore，不進 repo，本機產出只給自己看，CI 另外上傳 artifact）。
+album_summaries_perf_out="$tmp/107_album_summaries.sql.out"
+if [ -f "$album_summaries_perf_out" ]; then
+  {
+    echo "# LS-200 album_summaries EXPLAIN 證據 —— 由 supabase/tests/run.sh 產生"
+    echo "# 產生時間：$(date -u '+%Y-%m-%dT%H:%M:%SZ')（UTC）"
+    echo "# 連線：$channel"
+    echo "# Server：$(printf 'select version();' > "$tmp/ver2.sql"; run_sql "$tmp/ver2.sql" 2>/dev/null | sed -n '3p' | sed 's/^ *//')"
+    echo "# 資料量：public.media 51200 列（1200 張已連結＋5 萬列背景雜訊）、50 本相簿、1200 筆 album_media 連結（家庭 fc000000-0000-4000-8000-000000000001）"
+    echo "# 判準（LS-204，補上 R2 新增的另兩條，與 107_album_summaries.sql §6 實際斷言對齊）："
+    echo "#   1. plan 不得出現 Seq Scan on media／album_media"
+    echo "#   2. plan 不得出現非 hashed 的逐列 correlated (SubPlan N) 引用（hashed SubPlan 不命中，不算違規）"
+    echo "#   3. 偵測器自我驗證：關掉 enable_indexscan／enable_bitmapscan／enable_indexonlyscan 逼出真正的"
+    echo "#      Seq Scan on media 後，判準 1 的 regex 必須抓得到，證明判準 1 具備鑑別力（不是恆綠空案）"
+    echo
+    cat "$album_summaries_perf_out"
+  } > "$evidence_dir/album_summaries_explain.txt"
+  echo "→ EXPLAIN 證據：$evidence_dir/album_summaries_explain.txt"
+fi
+
 echo "✓ 全部 DB 測試通過"

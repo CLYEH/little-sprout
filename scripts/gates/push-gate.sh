@@ -344,6 +344,181 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
     sleep 10
     xcodebuild -resolvePackageDependencies -scheme "$XCODE_SCHEME"
   fi
+  # LS-199：unit tests 看門狗。來源 LS-197 R2 push：測試宿主 app 啟動即 crash（`SupabaseClientFactory.makeClient()`
+  # 的 XCTest 偵測 assert——XCTest 未注入、runner 沒連上），之後 xcodebuild 0% CPU 掛 28 分鐘，agent 只能乾等
+  # 「背景 push 完成通知」，orchestrator 人工 kill 重跑即過（環境性 flake）。任何 lane 的 push 都走這條 gate，
+  # 一卡就是整條 lane 停擺。兩條中止路徑：
+  #   (1) 逾時：PUSH_GATE_XCODEBUILD_TIMEOUT_MIN（預設 25 分）；PUSH_GATE_XCODEBUILD_TIMEOUT_SEC 秒級覆寫（自測用）。
+  #   (2) 早期偵測：xcodebuild 自己的輸出（-quiet 下掛住時什麼都不印）或本 worktree 的 xcresult session log
+  #       （Xcode 在測試進行中把 Session-*.log 寫在 DerivedData/<專案>/Logs/Test/<xcresult>/Staging/ 底下、跑完才
+  #       打包收掉；掛住的 run 就一直留在那裡——LS-197 的「Handling Crash: … Dropping test runner session call …
+  #       because the test runner hasn't connected yet」就在這份 log；健康的 run 同一份 log 會有每個
+  #       `Test Case '-[…]' started.`，實測 xcresult 匯出確認）出現 `test runner hasn't connected yet`／
+  #       `Handling Crash:`／`Early unexpected exit` 任一樣式，之後 PUSH_GATE_CRASH_GRACE_SEC（預設 60）秒內兩處都
+  #       沒有任何 `Test Case '-[` 開始 → 視為宿主 crash，不等到逾時。
+  # session log 只認 info.plist 的 WorkspacePath 落在本 repo 根之下的 DerivedData 目錄（Xcode 為每個專案路徑各建
+  # 一個 `LittleSprout-<hash>/`，info.plist 記 `<repo>/LittleSprout.xcodeproj`），且檔案須晚於看門狗啟動——多 worktree
+  # 併發 push 是常態，拿整個 DerivedData 最新一份會把別票的 crash 誤判成自己的：對方 crash 時本 worktree 可能還在
+  # 編譯，60 秒內看不到 test case 開始，殺掉的是一個健康的 run。對應不到目錄就只看 xcodebuild 輸出，診斷印「找不到」。
+  # 中止流程：先抓 session log 尾（kill 之後 Staging 可能被收掉）→ 殺整棵行程樹（先收集子孫再 TERM、3 秒後 KILL
+  # 殘留——先殺父會讓子孫被 launchd 收養、pgrep -P 再也找不到）→ 回收自己那把 simulator-lock（holder pid 是剛被殺
+  # 的子孫才收；別人的鎖不動，讓上方 shutdown_dedicated_simulator 的「鎖仍在就跳過」照常保護共用機）→ 印診斷
+  # （session log 尾 20 行、~/Library/Logs/DiagnosticReports 最新 LittleSprout*.ips 路徑與 exception／termination／
+  # faultingThread 前三幀）＋「環境性 flake、建議 erase 後重跑」→ exit 124（timeout(1) 慣例，與 xcodebuild 測試
+  # 失敗的 65 區分）；EXIT trap 照常關專屬機。CI（GITHUB_ACTIONS=true）有 workflow 級 timeout，不包看門狗。
+  # 命令得放背景跑前景才能輪詢，而 bash 對背景命令預設忽略 SIGINT——使用者 Ctrl-C 只會打到本腳本、xcodebuild
+  # 會活下來；看門狗期間把 INT／TERM 接成「先殺行程樹再 exit」，不留沒人管的 xcodebuild。完成與否看 rc 標記檔、
+  # 不用 kill -0（未 wait 的子行程死了也是 zombie、kill -0 照樣成功）。
+  wd_timeout_sec="${PUSH_GATE_XCODEBUILD_TIMEOUT_SEC:-}"
+  wd_timeout_min="${PUSH_GATE_XCODEBUILD_TIMEOUT_MIN:-25}"
+  wd_grace_sec="${PUSH_GATE_CRASH_GRACE_SEC:-60}"
+  for wd_v in "$wd_timeout_min" "$wd_grace_sec" "${wd_timeout_sec:-1}"; do
+    case "$wd_v" in ''|0|*[!0-9]*)
+      echo "✗ push gate：PUSH_GATE_XCODEBUILD_TIMEOUT_MIN／PUSH_GATE_XCODEBUILD_TIMEOUT_SEC／PUSH_GATE_CRASH_GRACE_SEC 須為正整數（得到「${wd_v}」）" >&2
+      exit 1 ;;
+    esac
+  done
+  [ -n "$wd_timeout_sec" ] || wd_timeout_sec=$((wd_timeout_min * 60))
+  wd_crash_re="test runner hasn't connected yet|Handling Crash:|Early unexpected exit"
+  wd_repo_root=$(pwd -P)
+  wd_pid=
+  wd_descendants() { local c; for c in $(pgrep -P "$1" 2>/dev/null); do printf '%s ' "$c"; wd_descendants "$c"; done; }
+  wd_kill_tree() {   # $1＝根 pid；設 wd_killed_pids（含根）；回傳時整棵樹已 TERM、殘留已 KILL
+    local p alive i
+    wd_killed_pids="$1 $(wd_descendants "$1")"
+    kill -TERM $wd_killed_pids 2>/dev/null || true
+    for i in 1 2 3 4 5 6; do
+      alive=0
+      for p in $wd_killed_pids; do [ "$p" = "$1" ] && continue; kill -0 "$p" 2>/dev/null && alive=1; done
+      [ "$alive" -eq 0 ] && break
+      sleep 0.5
+    done
+    kill -KILL $wd_killed_pids 2>/dev/null || true
+  }
+  wd_session_logs() {   # 本 worktree 專案的 DerivedData 內、晚於看門狗啟動的 Staging Session-*.log，每行一個
+    local d
+    for d in "$HOME"/Library/Developer/Xcode/DerivedData/*/; do
+      [ -f "${d}info.plist" ] || continue
+      grep -qF "<string>${wd_repo_root}/" "${d}info.plist" 2>/dev/null || continue
+      # `|| true`：Logs/Test 在第一個測試 session 開始前還不存在，find 非 0 會讓 set -e 把這個掃描子殼整個結束
+      find "${d}Logs/Test" -path '*.xcresult/Staging/*' -name 'Session-*.log' -newer "$wd_stamp" 2>/dev/null || true
+    done
+  }
+  wd_latest_session_log() {
+    local list; list=$(wd_session_logs)
+    [ -n "$list" ] || return 0
+    printf '%s\n' "$list" | tr '\n' '\0' | xargs -0 ls -t 2>/dev/null | head -n 1
+  }
+  wd_hit() {   # $@＝grep 旗標＋樣式；掃 xcodebuild 輸出與每份 session log，任一命中即 0
+    local f
+    grep -q "$@" "$wd_log" 2>/dev/null && return 0
+    while IFS= read -r f; do
+      [ -n "$f" ] && grep -q "$@" "$f" 2>/dev/null && return 0
+    done < <(wd_session_logs)
+    return 1
+  }
+  wd_run() {   # $@＝要包的命令；正常結束回傳其 exit code；逾時／宿主 crash → 殺樹、收鎖、印診斷、exit 124
+    if [ "${GITHUB_ACTIONS:-}" = true ]; then "$@"; return; fi
+    local started now crash_at= wd_reason= wd_rc session_log= session_tail= holder= ips=
+    wd_tmp=$(mktemp -d); wd_log="$wd_tmp/xcodebuild.log"; wd_stamp="$wd_tmp/stamp"
+    : > "$wd_log"; touch "$wd_stamp"
+    echo "→ push gate：unit tests 看門狗啟用（逾時 ${wd_timeout_sec} 秒；宿主 crash 樣式後 ${wd_grace_sec} 秒無 test case 開始即中止；LS-199）"
+    ( wd_rc=0; "$@" || wd_rc=$?; echo "$wd_rc" > "$wd_tmp/rc" ) > >(tee -a "$wd_log") 2>&1 &
+    wd_pid=$!
+    trap '[ -n "$wd_pid" ] && wd_kill_tree "$wd_pid"; exit 130' INT
+    trap '[ -n "$wd_pid" ] && wd_kill_tree "$wd_pid"; exit 143' TERM
+    started=$(date +%s); now=$started
+    while [ ! -f "$wd_tmp/rc" ]; do
+      sleep 1
+      now=$(date +%s)
+      if [ $((now - started)) -ge "$wd_timeout_sec" ]; then wd_reason=逾時; break; fi
+      if [ -z "$crash_at" ] && wd_hit -E "$wd_crash_re"; then
+        crash_at=$now
+        echo "⚠ push gate：xcodebuild 輸出／session log 出現宿主 crash 樣式，${wd_grace_sec} 秒內沒有 test case 開始就中止…" >&2
+      fi
+      if [ -n "$crash_at" ]; then
+        if wd_hit -F "Test Case '-["; then
+          echo "→ push gate：已看到 test case 開始，取消宿主 crash 判定" >&2
+          crash_at=
+        elif [ $((now - crash_at)) -ge "$wd_grace_sec" ]; then
+          wd_reason="宿主 crash"; break
+        fi
+      fi
+    done
+    if [ -z "$wd_reason" ]; then
+      wait "$wd_pid" 2>/dev/null || true
+      wd_rc=$(cat "$wd_tmp/rc"); wd_pid=
+      rm -rf "$wd_tmp"
+      return "$wd_rc"
+    fi
+    session_log=$(wd_latest_session_log)
+    [ -n "$session_log" ] && session_tail=$(tail -n 20 "$session_log" 2>/dev/null)
+    wd_kill_tree "$wd_pid"
+    wait "$wd_pid" 2>/dev/null || true
+    wd_pid=
+    if [ -f "$sim_lock_dir/holder" ]; then
+      holder=$(sed -n 's/^pid=//p' "$sim_lock_dir/holder" 2>/dev/null)
+      case " $wd_killed_pids " in
+        *" ${holder:-NONE} "*)
+          if ! kill -0 "$holder" 2>/dev/null; then
+            rm -rf "$sim_lock_dir"
+            echo "→ push gate：回收看門狗中止後殘留的 simulator-lock（持有者 pid ${holder} 已被殺；${sim_lock_dir}）" >&2
+          fi ;;
+      esac
+    fi
+    echo "✗ push gate：unit tests ${wd_reason}（xcodebuild 已跑 $((now - started)) 秒、看門狗上限 ${wd_timeout_sec} 秒），已中止並殺掉整棵行程樹（LS-199）" >&2
+    if [ -n "$session_log" ]; then
+      echo "  最近的 xcresult session log 尾 20 行：${session_log}" >&2
+      printf '%s\n' "$session_tail" | sed 's/^/    /' >&2
+    else
+      echo "  找不到本次的 xcresult session log（~/Library/Developer/Xcode/DerivedData/<本 worktree 專案>/Logs/Test/*.xcresult/Staging/**/Session-*.log，且須晚於看門狗啟動）" >&2
+    fi
+    # `|| true`：沒有任何 .ips 時 ls 非 0，pipefail 會讓這個賦值在 set -e 下直接結束腳本、診斷全沒印（自測 ㉙）。
+    # 新舊判斷用 find -newer 而不是 [ -nt ]：bash 3.2（/bin/bash，pre-push hook 用的殼）的 -nt 只比到秒。
+    ips=$(ls -t "$HOME"/Library/Logs/DiagnosticReports/LittleSprout*.ips 2>/dev/null | head -n 1 || true)
+    if [ -n "$ips" ]; then
+      if [ -n "$(find "$ips" -newer "$wd_stamp" 2>/dev/null)" ]; then
+        echo "  最新 crash report：${ips}" >&2
+      else
+        echo "  最新 crash report：${ips}（早於本次看門狗啟動，可能不是這次的）" >&2
+      fi
+      python3 - "$ips" <<'PY' 2>&1 | sed 's/^/    /' >&2 || true
+import json, sys
+path = sys.argv[1]
+try:
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        head, _, body = fh.read().partition("\n")
+    hdr = json.loads(head)
+    rep = json.loads(body)
+except Exception as e:  # 檔案格式不如預期就只報原因，不讓診斷本身炸掉
+    print("（無法解析 .ips：%s）" % e)
+    sys.exit(0)
+print("時間 %s  app %s %s" % (hdr.get("timestamp", "?"), hdr.get("app_name", "?"), hdr.get("app_version", "?")))
+exc = rep.get("exception") or {}
+print("exception：%s (%s) codes=%s" % (exc.get("type", "?"), exc.get("signal", "?"), exc.get("codes", "?")))
+term = rep.get("termination") or {}
+print("termination：%s %s %s" % (term.get("namespace", "?"), term.get("code", "?"), term.get("indicator", "")))
+ft = rep.get("faultingThread")
+threads = rep.get("threads") or []
+images = rep.get("usedImages") or []
+if isinstance(ft, int) and 0 <= ft < len(threads):
+    print("faultingThread：%d（前三幀）" % ft)
+    for i, fr in enumerate((threads[ft].get("frames") or [])[:3]):
+        idx = fr.get("imageIndex")
+        img = images[idx].get("name", "?") if isinstance(idx, int) and 0 <= idx < len(images) else "?"
+        loc = " %s:%s" % (fr.get("sourceFile"), fr.get("sourceLine")) if fr.get("sourceFile") else ""
+        print("  #%d %s %s%s" % (i, img, fr.get("symbol", "?"), loc))
+else:
+    print("faultingThread：無")
+PY
+    else
+      echo "  找不到 crash report（~/Library/Logs/DiagnosticReports/LittleSprout*.ips）" >&2
+    fi
+    echo "  可能是環境性 flake（LS-197 同型：宿主 app 啟動即 crash、runner 沒連上），建議先 xcrun simctl erase ${sim_udid} 再重跑 git push；重跑仍紅再依上面的摘要修 code" >&2
+    rm -rf "$wd_tmp"
+    exit 124
+  }
+
   echo "→ push gate：執行 unit tests（scheme: ${XCODE_SCHEME}, destination: ${dest}）…"
   # LS-54 N8：與 CI 一致，明確序列執行（MockURLProtocol 全域 handler 不可平行）
   # LS-83 R2 F1：整段包進 simulator-lock.sh，鍵＝目的地 UDID（scripts/ops/simulator-lock.sh 檔頭注解）
@@ -351,13 +526,17 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
   # target（≥44pt 點擊目標 gate）之後，不帶篩選的話這裡會連 UI test 一起跑，讓每次 push
   # 都多付一次開 app 的成本；UI test 是否要跑另外由下面的 tap-target-check.sh 依 Features/
   # diff 決定，此處維持原本只跑 unit tests 的範圍與耗時不變。
-  bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
-    xcodebuild test \
-    -scheme "$XCODE_SCHEME" \
-    -destination "$dest" \
-    -only-testing:LittleSproutTests \
-    -parallel-testing-enabled NO \
-    -quiet
+  # LS-199：整段交給上方 wd_run 看門狗（背景執行＋輪詢；命令本身不變）。
+  run_unit_tests() {
+    bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
+      xcodebuild test \
+      -scheme "$XCODE_SCHEME" \
+      -destination "$dest" \
+      -only-testing:LittleSproutTests \
+      -parallel-testing-enabled NO \
+      -quiet
+  }
+  wd_run run_unit_tests
 
   # LS-95：≥44pt 點擊目標機械 gate。Swift diff 含 Features/ 或 DesignSystem/ 才跑（COLLABORATION
   # §4／§7）——非 UI 票的 Swift 變更（例如只動 Services/／Models/）不需要多付一次 XCUITest 開 app

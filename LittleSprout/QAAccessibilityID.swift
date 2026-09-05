@@ -13,6 +13,10 @@
 enum QAAccessibilityID {
     /// 02 Email 登入的信箱欄（`EmailSignInView` 的 `LabeledTextField`）。
     static let emailField = "qa.emailSignIn.emailField"
+    /// LS-164 P1 帳號密碼登入的信箱欄（`PasswordSignInView` 的 `LabeledTextField`）。
+    static let passwordSignInEmailField = "qa.passwordSignIn.emailField"
+    /// LS-164 P1 帳號密碼登入的密碼欄（`PasswordSignInView` 的 `LabeledTextField`）。
+    static let passwordSignInPasswordField = "qa.passwordSignIn.passwordField"
     /// 03 六格驗證碼欄（`OTPCodeField` 整列是單一 accessibility element，見該檔）。
     static let otpCodeField = "qa.otp.codeField"
     /// 05 建立家庭的家庭名稱欄。

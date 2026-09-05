@@ -27,6 +27,12 @@
 # （㉟）／scan_scope 非法紅（㊱）／board_clip.flagged 非空紅、帶 classification intentional_bleed 也紅（㊲）／缺 scan_scope 紅（㊳）／舊收據
 # （head_sha tree 只有第五支）缺兩欄位綠＋放行行（㊴）、同形但 scan_scope 非法仍紅（㊴-b）／最新收據 head_sha tree 無第六支但 PR head 已有
 # 紅（㊵）、同 head_sha 補齊綠（㊵-b）／每支 scope 非法紅（㊶）。cutoff 同 LS-168 用腳本標記（scanBoardClip）不用時間，見 gate 檔頭。
+#
+# LS-202：㊷～㊹-b 驗六支各帶 scope／document_count——齊全綠（㊷）／某支缺 document_count 紅（㊷-b）／某支缺 scope 紅（㊷-c，LS-185 時可省）／
+# document_count 負數／布林紅（㊷-d／e）／head_sha tree 無標記、缺欄位綠＋放行行（㊸）／PR head 已含標記而最新收據缺紅、補齊綠（㊹／㊹-b）。
+# cutoff＝腳本含 `document_count` 字面（同 LS-168／LS-185 用腳本標記不用時間）。R2 minor-1：㊺ scan_scope=document 且
+# corner_anchor.document_containers=0 紅（第四支停擺）／㊺-b boards 限縮全零綠／㊺-c in-scope containers=0 而 document 216 綠（LS-133 形狀）／
+# ㊺-d R3 省略 document_containers 鍵紅（cutoff 下必填；㉞～㊶ 的 write_receipt6 收據在 cutoff 前、沒有此鍵仍綠）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -784,6 +790,135 @@ write_receipt6 "$R/design/evidence/LS-67-r6-overflow.json" "$sha41" "$(hash_of "
 g add design/evidence/LS-67-r6-overflow.json
 g commit -qm 'design(evidence): LS-67 r6 收據（text_occlusion.scope 非法）'
 expect 1 '㊶ scans.text_occlusion.scope 非法 → 紅' "scans.text_occlusion.scope 只接受 boards|document（收據='全稿'" \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ───── LS-202：六支各帶 scope／document_count ─────
+# 新欄位只對「head_sha 快照（或最新輪次的 PR head）tree 裡正典腳本含 document_count」的收據要求；land7 依 <script> 放入五＋六支或
+# 五＋六支＋per-scan 標記的腳本副本。write_receipt7 以 write_receipt6 的六支＋scan_scope 為底，六支各帶 scope／document_count 再依 mode 挖掉一格。
+land7() {
+  # land7 <branch> <script: sixth|perscan>
+  g checkout -q -b "$1" "$base_ref"
+  printf '%s\n' "$pen4" > "$R/design/littlesprout.pen"
+  g add design/littlesprout.pen
+  mkdir -p "$R/scripts/design"
+  if [ "$2" = perscan ]; then
+    printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\nfunction scanBoardClip() {}\n// tag: scope + document_count\n' > "$R/scripts/design/overflow-scan.js"
+  else
+    printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\nfunction scanBoardClip() {}\n' > "$R/scripts/design/overflow-scan.js"
+  fi
+  g add scripts/design/overflow-scan.js
+  g commit -qm 'design(pen): LS-67 落地（LS-202 樣本）'
+  g rev-parse HEAD
+}
+add_script7() {
+  printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\nfunction scanBoardClip() {}\n// tag: scope + document_count\n' > "$R/scripts/design/overflow-scan.js"
+  g add scripts/design/overflow-scan.js
+  g commit -qm 'chore: 併入含 per-scan scope／document_count 的正典腳本（不碰 .pen）'
+}
+write_receipt7() {
+  # write_receipt7 <path> <head_sha> <tree_hash> <mode: ok|nocount|noscope|badcount|boolcount|legacy6|zerodoc|zerodoc_boards|zeroin>
+  local path=$1 sha=$2 hash=$3 mode=$4
+  local ps='"scope":"document","document_count":0,' ss='"scan_scope":"document"'
+  local counts='"containers":1,"points":8,"mismatch":0,"document_containers":1,"document_mismatch":0'
+  case "$mode" in
+    nodoccont)      counts='"containers":1,"points":8,"mismatch":0,"document_mismatch":0' ;;
+    zerodoc)        counts='"containers":0,"points":0,"mismatch":0,"document_containers":0,"document_mismatch":0' ;;
+    zerodoc_boards) counts='"containers":0,"points":0,"mismatch":0,"document_containers":0,"document_mismatch":0'; ss='"scan_scope":"boards"'; ps='"scope":"boards","document_count":0,' ;;
+    zeroin)         counts='"containers":0,"points":0,"mismatch":0,"document_containers":216,"document_mismatch":0' ;;
+  esac
+  local si="$ps" ro="$ps" cp="$ps" ca="$ps" tx="$ps" bc="$ps"
+  case "$mode" in
+    nocount)   ro='"scope":"document",' ;;
+    noscope)   cp='"document_count":0,' ;;
+    badcount)  tx='"scope":"document","document_count":-1,' ;;
+    boolcount) bc='"scope":"document","document_count":true,' ;;
+    legacy6)   si=''; ro=''; cp=''; ca=''; tx=''; bc='' ;;
+  esac
+  mkdir -p "$(dirname "$path")"
+  printf '%s\n' '{"ticket":"LS-67","round":6,"head_sha":"'"$sha"'","total_nodes":4,"tree_hash":"'"$hash"'",'"$ss"',' \
+    ' "scans":{"sibling_intersection":{'"$si"'"flagged":[]},"row_overflow":{'"$ro"'"flagged":[]},' \
+    '  "cross_parent_collision":{'"$cp"'"flagged":[]},' \
+    '  "corner_anchor":{'"$ca"'"boards":["d"],'"$counts"',"flagged":[],"unresolved":[]},' \
+    '  "text_occlusion":{'"$tx"'"flagged":[],"document_flagged":[]},"board_clip":{'"$bc"'"flagged":[],"document_flagged":[]}}}' > "$path"
+}
+
+# ㊷ 六支各帶 scope／document_count → 綠，訊息含新欄位
+sha42="$(land7 pr-perscan-ok perscan)"
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha42" "$(hash_of "$sha42")" ok
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（六支各帶 scope／document_count）'
+expect 0 '㊷ 六支各帶 scope／document_count → 綠' '六支各帶 scope／document_count' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊷-b row_overflow 缺 document_count → 紅
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha42" "$(hash_of "$sha42")" nocount
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（row_overflow 缺 document_count）'
+expect 1 '㊷-b 某支缺 document_count → 紅' 'scans.row_overflow.document_count 必須是非負整數（收據=None）' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊷-c cross_parent_collision 缺 scope → 紅（LS-185 時 scope 可省略，LS-202 起必填）
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha42" "$(hash_of "$sha42")" noscope
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（cross_parent_collision 缺 scope）'
+expect 1 '㊷-c 某支缺 scope → 紅' 'scans.cross_parent_collision 缺 scope' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊷-d document_count 負數／布林 → 紅
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha42" "$(hash_of "$sha42")" badcount
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（document_count=-1）'
+expect 1 '㊷-d document_count 負數 → 紅' 'scans.text_occlusion.document_count 必須是非負整數（收據=-1）' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha42" "$(hash_of "$sha42")" boolcount
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（document_count=true）'
+expect 1 '㊷-e document_count 布林 → 紅' 'scans.board_clip.document_count 必須是非負整數（收據=True）' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㊸ 舊收據：head_sha tree 的腳本只有五＋六支（＝LS-194 r2 等既有收據形狀）、六支都沒帶 scope／document_count → 綠＋放行行
+sha43="$(land7 pr-legacy-perscan sixth)"
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha43" "$(hash_of "$sha43")" legacy6
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（六支 schema，無 per-scan 欄位）'
+expect 0 '㊸ head_sha tree 無 per-scan 標記、六支缺 scope／document_count → 綠並印放行行（cutoff 前）' 'LS-202 新欄位不要求——舊收據放行' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㊹ N1 同形：.pen 最後一次落地時 tree 無 per-scan 標記；之後分支併入新腳本（不碰 .pen）→ 最新收據缺欄位 → 紅；同 head_sha 補齊 → 綠
+sha44="$(land7 pr-late-perscan sixth)"
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha44" "$(hash_of "$sha44")" legacy6
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（六支 schema）'
+add_script7
+expect 1 '㊹ 最新收據 head_sha tree 無 per-scan 標記、但 PR head tree 已有 → 紅' 'PR head 的 tree 已含（新腳本已併入本分支）——最新輪次的 .pen 內容＝工作區，用現行 scripts/design/overflow-scan.js 對它重跑一次，把每支的 scope 與 document_count 補進' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha44" "$(hash_of "$sha44")" ok
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（新腳本重跑補 scope／document_count）'
+expect 0 '㊹-b 同一 head_sha 補齊六支 scope／document_count → 綠' '六支各帶 scope／document_count' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㊺ R2 minor-1：scan_scope=document 且 corner_anchor.document_containers=0（第四支靜默停擺的收據長相）→ 紅
+sha45="$(land7 pr-zero-doc perscan)"
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha45" "$(hash_of "$sha45")" zerodoc
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（document_containers=0）'
+expect 1 '㊺ scan_scope=document、corner_anchor.document_containers=0 → 紅（第四支停擺不是「沒有錯位」）' 'scans.corner_anchor.document_containers 為 0 而 scan_scope=document' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊺-b 同樣全零但 scan_scope=boards（限縮快照可能真的沒有印品）→ 綠
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha45" "$(hash_of "$sha45")" zerodoc_boards
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（boards 限縮、document_containers=0）'
+expect 0 '㊺-b scan_scope=boards 且 document_containers=0 → 綠（限縮快照可無印品）' 'scan_scope=boards' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊺-c in-scope containers=0 但 document_containers=216（LS-133 r1–r3／LS-177 r1：boards 本來沒有印品）→ 綠
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha45" "$(hash_of "$sha45")" zeroin
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（containers=0、document_containers=216）'
+expect 0 '㊺-c in-scope containers=0 而 document_containers=216 → 綠（boards 沒有印品是正常收據，LS-133 形狀）' '六支各帶 scope／document_count' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊺-d R3 minor-1：省略 document_containers 鍵（merge-review R2 探針 LS-202-probe-missingfield 的形狀）→ 紅，不得繞過歸零判定
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha45" "$(hash_of "$sha45")" nodoccont
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（省略 document_containers）'
+expect 1 '㊺-d 省略 corner_anchor.document_containers → 紅（cutoff 下必填，省略鍵不得繞過）' 'scans.corner_anchor.document_containers 必填且須為非負整數（收據=None）' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
 
 if [ "$fail" -eq 0 ]; then

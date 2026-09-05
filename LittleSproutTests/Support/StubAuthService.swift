@@ -21,9 +21,11 @@ final class StubAuthService: AuthService, @unchecked Sendable {
         var verifyEmailOTPHandler: SessionHandler = { _, _ in throw StubError.unconfigured }
         var signInWithAppleHandler: SessionHandler = { _, _ in throw StubError.unconfigured }
         var signInWithGoogleHandler: GoogleSessionHandler = { throw StubError.unconfigured }
+        var signInWithPasswordHandler: SessionHandler = { _, _ in throw StubError.unconfigured }
         var signOutHandler: @Sendable () async throws -> Void = {}
         var sentEmails: [String] = []
         var verifyAttempts: [(email: String, token: String)] = []
+        var passwordSignInAttempts: [(email: String, password: String)] = []
     }
 
     private let box: OSAllocatedUnfairLock<Box>
@@ -61,6 +63,10 @@ final class StubAuthService: AuthService, @unchecked Sendable {
         box.withLock { $0.verifyAttempts }
     }
 
+    var passwordSignInAttempts: [(email: String, password: String)] {
+        box.withLock { $0.passwordSignInAttempts }
+    }
+
     func setCurrentSession(_ session: AuthSession?) {
         box.withLock { $0.currentSession = session }
     }
@@ -81,6 +87,10 @@ final class StubAuthService: AuthService, @unchecked Sendable {
         box.withLock { $0.signInWithGoogleHandler = handler }
     }
 
+    func setSignInWithPasswordHandler(_ handler: @escaping SessionHandler) {
+        box.withLock { $0.signInWithPasswordHandler = handler }
+    }
+
     func setSignOutHandler(_ handler: @escaping @Sendable () async throws -> Void) {
         box.withLock { $0.signOutHandler = handler }
     }
@@ -99,6 +109,14 @@ final class StubAuthService: AuthService, @unchecked Sendable {
     ) async throws -> AuthSession {
         let handler = box.withLock { $0.signInWithGoogleHandler }
         let session = try await handler()
+        box.withLock { $0.currentSession = session }
+        return session
+    }
+
+    func signInWithPassword(email: String, password: String) async throws -> AuthSession {
+        box.withLock { $0.passwordSignInAttempts.append((email, password)) }
+        let handler = box.withLock { $0.signInWithPasswordHandler }
+        let session = try await handler(email, password)
         box.withLock { $0.currentSession = session }
         return session
     }

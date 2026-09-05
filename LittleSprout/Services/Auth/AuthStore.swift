@@ -87,6 +87,14 @@ final class AuthStore {
         return session
     }
 
+    /// 見 `AuthService.signInWithPassword` 協定文件（LS-164）。
+    @discardableResult
+    func signInWithPassword(email: String, password: String) async throws -> AuthSession {
+        let session = try await authService.signInWithPassword(email: email, password: password)
+        self.session = session
+        return session
+    }
+
     func sendEmailOTP(email: String) async throws {
         try await authService.sendEmailOTP(email: email)
     }

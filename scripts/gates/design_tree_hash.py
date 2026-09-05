@@ -23,6 +23,10 @@ import json
 import math
 import sys
 
+# LS-202：本模組若再 import 同目錄模組，不得在 scripts/gates/ 留 __pycache__（worktree dirty、cleanup 需 --force，LS-96 c4c10429）；
+# 自己被 import 時的 .pyc 由呼叫端（design-evidence-check.sh PYTHONDONTWRITEBYTECODE=1）與 .gitignore `__pycache__/` 兜底
+sys.dont_write_bytecode = True
+
 FNV_OFFSET = 0xCBF29CE484222325
 FNV_PRIME = 0x100000001B3
 MASK64 = (1 << 64) - 1
