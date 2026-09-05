@@ -69,6 +69,35 @@ fi
 extract_ticket() { printf '%s' "$1" | grep -oE 'LS-[0-9]+' | head -1; }
 toplevel=$(git rev-parse --show-toplevel 2>/dev/null) || toplevel=$(pwd)
 branch=$(git -C "$toplevel" symbolic-ref --short -q HEAD 2>/dev/null || true)
+
+# ---- LS-205：釘住的 CI runtime（`.ios-runtime`，比照 `.xcode-version` 的單一來源讀法）。
+#      沒有這個檔（例如尚未落地的過渡狀態、或下面自測用的非 repo 合成目錄）就當「無釘住」，
+#      整段新邏輯自然不生效、退回 LS-83 原本只認 header_os 的行為——不 fail-closed，因為
+#      這裡管的是「本機建機挑哪個 runtime」這個體驗細節，不是正確性紅線（正確性紅線交給
+#      push-gate.sh 對 .xcode-version 那種 fail-closed）。
+pinned_os=
+[ -f "${toplevel}/.ios-runtime" ] && pinned_os=$(tr -d '[:space:]' < "${toplevel}/.ios-runtime")
+
+os_of_udid() {   # $1＝UDID；印出該裝置所在的 OS 分節標題（找不到印空字串）
+  xcrun simctl list devices available 2>/dev/null | awk -v u="$1" '
+    /^-- iOS / { os = $0; sub(/^-- iOS /, "", os); sub(/ --$/, "", os); next }
+    {
+      line = $0
+      udid = line
+      sub(/^[^(]*\(/, "", udid)
+      sub(/\).*/, "", udid)
+      if (udid == u) { print os; exit }
+    }
+  '
+}
+
+warn_runtime_mismatch() {   # $1＝UDID $2＝顯示名稱；pinned_os 有值且與該 UDID 實際 runtime 不同才印（不重建）
+  [ -n "$pinned_os" ] || return 0
+  local actual
+  actual=$(os_of_udid "$1")
+  [ -n "$actual" ] && [ "$actual" != "$pinned_os" ] || return 0
+  echo "⚠ detect-simulator：既有專屬機「$2」目前是 iOS ${actual}，與釘住版 iOS ${pinned_os} 不同（CI 為 iOS ${pinned_os}）；不自動重建，tap-target／版面量測可能不一致，如需對齊請 xcrun simctl delete 該機後重跑" >&2
+}
 ticket=$(extract_ticket "$(basename "$toplevel")")
 [ -n "$ticket" ] || ticket=$(extract_ticket "${branch:-}")
 [ -n "$ticket" ] || ticket=main
@@ -120,13 +149,29 @@ find_udid_same_ticket() {   # LS-176：同票（名稱 `<票號>-` 開頭）、�
 }
 
 create_dedicated() {   # 成功印新 UDID、exit 0；失敗印訊息到 stderr、回 1（呼叫端退回共用）
-  local devicetype_id runtime_id created
+  local devicetype_id runtime_id created target_os avail
   devicetype_id=$(xcrun simctl list devicetypes 2>/dev/null | grep -F "${name} (" \
     | sed -E 's/.*\(([^()]+)\)[[:space:]]*$/\1/' | head -1)
-  runtime_id=$(xcrun simctl list runtimes 2>/dev/null | grep -m1 "^iOS ${header_os} " \
-    | sed -E 's/.* - (com\.apple\.[^[:space:]]+)[[:space:]]*$/\1/')
+  # LS-205：優先建在釘住版（`.ios-runtime`）——找不到本機該版 runtime 就 fail-open，
+  # 印 ⚠ 並退回 header_os（原 LS-83 行為），不擋這次建機。
+  target_os="$header_os"
+  runtime_id=
+  if [ -n "$pinned_os" ]; then
+    runtime_id=$(xcrun simctl list runtimes 2>/dev/null | grep -m1 "^iOS ${pinned_os} " \
+      | sed -E 's/.* - (com\.apple\.[^[:space:]]+)[[:space:]]*$/\1/')
+    if [ -n "$runtime_id" ]; then
+      target_os="$pinned_os"
+    else
+      avail=$(xcrun simctl list runtimes 2>/dev/null | awk '/^iOS /{print $2}' | paste -sd '、' -)
+      echo "⚠ detect-simulator：本機無 iOS ${pinned_os} runtime（有：${avail:-無}），改用 iOS ${header_os}；CI 為 iOS ${pinned_os}，tap-target／版面量測可能不一致" >&2
+    fi
+  fi
+  if [ -z "$runtime_id" ]; then
+    runtime_id=$(xcrun simctl list runtimes 2>/dev/null | grep -m1 "^iOS ${target_os} " \
+      | sed -E 's/.* - (com\.apple\.[^[:space:]]+)[[:space:]]*$/\1/')
+  fi
   if [ -z "$devicetype_id" ] || [ -z "$runtime_id" ]; then
-    echo "⚠ detect-simulator：找不到「${name}」的 devicetype／「iOS ${header_os}」的 runtime identifier，無法建立專屬模擬器" >&2
+    echo "⚠ detect-simulator：找不到「${name}」的 devicetype／「iOS ${target_os}」的 runtime identifier，無法建立專屬模擬器" >&2
     return 1
   fi
   if ! created=$(xcrun simctl create "$dedicated_name" "$devicetype_id" "$runtime_id" 2>&1); then
@@ -144,12 +189,15 @@ else
   # （這支旗標本身就是「不要用專屬模擬器」的手動逃生口／自測用）。
   if [ "${DETECT_SIMULATOR_SHARED:-0}" != 1 ]; then
     udid=$(find_udid_by_name "$dedicated_name")
-    if [ -z "$udid" ]; then
+    if [ -n "$udid" ]; then
+      warn_runtime_mismatch "$udid" "$dedicated_name"   # LS-205：既有專屬機 runtime ≠ 釘住版只印警告，不重建
+    else
       # LS-176：精確名稱找不到 → 先重用同票、同 runtime 的既有專屬機（不論機型），都沒有才建新的
       reuse=$(find_udid_same_ticket)
       if [ -n "$reuse" ]; then
         udid=$(printf '%s' "$reuse" | cut -f2)
         echo "→ detect-simulator：重用同票既有專屬機「$(printf '%s' "$reuse" | cut -f1)」（同 runtime iOS ${header_os}，不另建 ${dedicated_name}；LS-176）" >&2
+        warn_runtime_mismatch "$udid" "$(printf '%s' "$reuse" | cut -f1)"   # LS-205
       else
         udid=$(create_dedicated) || udid=
       fi

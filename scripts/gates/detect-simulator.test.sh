@@ -53,8 +53,18 @@ case "$cmd" in
         ;;
       runtimes)
         echo "== Runtimes =="
-        rid=$(printf 'iOS-%s' "${STUB_OS:-26.0}" | tr '.' '-')
-        echo "iOS ${STUB_OS:-26.0} (${STUB_OS:-26.0}.1 - 23A1) - com.apple.CoreSimulator.SimRuntime.${rid}"
+        # LS-205：STUB_RUNTIMES（逗號分隔版本，如 "26.0,26.5"）模擬「本機裝了哪些 runtime」，
+        # 用來驗證 .ios-runtime 釘住版找得到／找不到本機 runtime 的兩條路徑；未設就沿用舊行為
+        # （只印 STUB_OS 那一版）。
+        if [ -n "${STUB_RUNTIMES:-}" ]; then
+          for v in $(printf '%s' "$STUB_RUNTIMES" | tr ',' ' '); do
+            rid=$(printf 'iOS-%s' "$v" | tr '.' '-')
+            echo "iOS ${v} (${v}.1 - 23A1) - com.apple.CoreSimulator.SimRuntime.${rid}"
+          done
+        else
+          rid=$(printf 'iOS-%s' "${STUB_OS:-26.0}" | tr '.' '-')
+          echo "iOS ${STUB_OS:-26.0} (${STUB_OS:-26.0}.1 - 23A1) - com.apple.CoreSimulator.SimRuntime.${rid}"
+        fi
         ;;
       devicetypes)
         echo "== Device Types =="
@@ -67,13 +77,19 @@ case "$cmd" in
     ;;
   create)
     name=${1:-}
+    runtime_arg=${3:-}
+    # LS-205：db 的第三欄改由「實際傳給 simctl create 的 runtime identifier」反推版本號
+    # （com.apple.CoreSimulator.SimRuntime.iOS-26-5 → 26.5），不再盲用 STUB_OS——否則測不出
+    # create_dedicated() 到底選中了釘住版還是 header_os。反推不出來（不合預期的呼叫）才退回 STUB_OS。
+    ver=$(printf '%s' "$runtime_arg" | sed -nE 's/.*SimRuntime\.iOS-([0-9]+)-([0-9]+)$/\1.\2/p')
+    [ -n "$ver" ] || ver="${STUB_OS:-26.0}"
     n=0
     while :; do
       udid=$(printf 'UUID-%05d' "$n")
       grep -qF "$(printf '\t%s\t' "$udid")" "$db" 2>/dev/null || break
       n=$((n + 1))
     done
-    printf '%s\t%s\t%s\n' "$name" "$udid" "${STUB_OS:-26.0}" >> "$db"
+    printf '%s\t%s\t%s\n' "$name" "$udid" "$ver" >> "$db"
     echo "$udid"
     ;;
   *) exit 1 ;;
@@ -253,6 +269,51 @@ out12=$(STUB_DB="$db12" run_in "$work/wt/LS-108" 2>/dev/null)
 u12=$(id_of "$out12")
 if [ -n "$u12" ] && [ "$u12" != OLD-RT-UDID ] && [ "$u12" != SHARED-UDID ]; then echo "✓ ⑫ 同票但不同 runtime → 不重用，建新專屬機（${u12}）"; else echo "✗ ⑫ 應建新機（非 OLD-RT-UDID／SHARED-UDID），實得 ${u12}" >&2; fail=1; fi
 has '⑫ db 記到新建的 LS-108-iPhone17Pro' "$(cat "$db12")" 'LS-108-iPhone17Pro'
+
+# ---- ⑬～⑯（LS-205）：`.ios-runtime` 釘住版驅動建機／既有機比對。`.ios-runtime` 放在
+#      worktree 目錄本身（這幾個合成目錄不是 git repo，detect-simulator.sh 的 toplevel 退回 pwd）。
+
+# ⑬ 釘住版本機有裝、且與 header_os 不同 → 新建的專屬機選釘住版（不是 header_os）
+db13="$work/db13"
+printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\n' > "$db13"
+mkdir -p "$work/wt/LS-111"
+printf '26.5\n' > "$work/wt/LS-111/.ios-runtime"
+out13=$(STUB_DB="$db13" STUB_RUNTIMES=26.0,26.5 run_in "$work/wt/LS-111" 2>"$work/err13")
+u13=$(id_of "$out13")
+if [ -n "$u13" ] && [ "$u13" != SHARED-UDID ]; then echo "✓ ⑬ 釘住版可用 → 建新專屬機（${u13}）"; else echo "✗ ⑬ 應建新機，實得 ${u13}" >&2; cat "$work/err13" >&2; fail=1; fi
+has '⑬ db 記到新建的 LS-111-iPhone17Pro 且 runtime＝釘住版 26.5（非 header_os 26.0）' "$(cat "$db13")" "$(printf 'LS-111-iPhone17Pro\t%s\t26.5' "$u13")"
+
+# ⑭ 釘住版本機沒裝（只有 26.0）→ fail-open：印 ⚠（含釘住版與現有版本）、退回 header_os 建機
+db14="$work/db14"
+printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\n' > "$db14"
+mkdir -p "$work/wt/LS-112"
+printf '26.2\n' > "$work/wt/LS-112/.ios-runtime"
+out14=$(STUB_DB="$db14" run_in "$work/wt/LS-112" 2>"$work/err14")
+u14=$(id_of "$out14")
+if [ -n "$u14" ] && [ "$u14" != SHARED-UDID ]; then echo "✓ ⑭ 釘住版不可用仍建新機（fail-open，${u14}）"; else echo "✗ ⑭ 應建新機，實得 ${u14}" >&2; cat "$work/err14" >&2; fail=1; fi
+has '⑭ db 記到新建的 LS-112-iPhone17Pro 且 runtime 退回 header_os 26.0（非釘住版 26.2）' "$(cat "$db14")" "$(printf 'LS-112-iPhone17Pro\t%s\t26.0' "$u14")"
+has '⑭ stderr 印出 fail-open 警告（本機無釘住版、退回、CI 版本）' "$(cat "$work/err14")" '本機無 iOS 26.2 runtime（有：26.0），改用 iOS 26.0；CI 為 iOS 26.2'
+
+# ⑮ 既有專屬機（精確名稱命中）runtime ≠ 釘住版 → 印警告、不重建、UDID 不變
+db15="$work/db15"
+printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\nLS-113-iPhone17Pro\tEXISTING-113\t26.0\n' > "$db15"
+mkdir -p "$work/wt/LS-113"
+printf '26.5\n' > "$work/wt/LS-113/.ios-runtime"
+out15=$(STUB_DB="$db15" run_in "$work/wt/LS-113" 2>"$work/err15")
+u15=$(id_of "$out15")
+if [ "$u15" = EXISTING-113 ]; then echo "✓ ⑮ 既有專屬機 runtime 不符釘住版仍沿用（不重建）"; else echo "✗ ⑮ 應沿用 EXISTING-113，實得 ${u15}" >&2; cat "$work/err15" >&2; fail=1; fi
+if [ "$(printf '%s\n' "$(cat "$db15")" | wc -l | tr -d ' ')" = 2 ]; then echo "✓ ⑮ 沒有新增裝置（db 仍兩筆）"; else echo "✗ ⑮ db 筆數變了，可能誤重建" >&2; cat "$db15" >&2; fail=1; fi
+has '⑮ stderr 印出既有專屬機 runtime 不符釘住版的警告（不自動重建）' "$(cat "$work/err15")" '既有專屬機「LS-113-iPhone17Pro」目前是 iOS 26.0，與釘住版 iOS 26.5 不同'
+
+# ⑯ 既有專屬機 runtime＝釘住版 → 沿用、不印任何警告（迴歸防呆：避免誤判成不符）
+db16="$work/db16"
+printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\nLS-114-iPhone17Pro\tEXISTING-114\t26.0\n' > "$db16"
+mkdir -p "$work/wt/LS-114"
+printf '26.0\n' > "$work/wt/LS-114/.ios-runtime"
+out16=$(STUB_DB="$db16" run_in "$work/wt/LS-114" 2>"$work/err16")
+u16=$(id_of "$out16")
+if [ "$u16" = EXISTING-114 ]; then echo "✓ ⑯ 既有專屬機 runtime＝釘住版 → 沿用"; else echo "✗ ⑯ 應沿用 EXISTING-114，實得 ${u16}" >&2; cat "$work/err16" >&2; fail=1; fi
+if [ ! -s "$work/err16" ]; then echo "✓ ⑯ runtime 相符時不印警告"; else echo "✗ ⑯ runtime 相符卻印了警告" >&2; cat "$work/err16" >&2; fail=1; fi
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ detect-simulator／simulator-lock 自測通過"
