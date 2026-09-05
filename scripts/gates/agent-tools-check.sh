@@ -62,6 +62,10 @@ ios-dev|"
 # 步驟 5 需要用它說明為什麼不切）。
 # LS-183：ios-dev／merge-reviewer／qa 正文須含「本機容器操作同樣要在 lock 內」（docker exec 進 supabase_*／psql 54322／
 # supabase functions serve 等同樣要包 wrapper 或在自己 --hold 的 worktree 內——PreToolUse H3b 是機械層，這句是前饋；被刪即紅）。
+# LS-184：ios-dev／merge-reviewer／qa 正文的 `--hold` 寫法固定為 `cd <worktree> && bash scripts/ops/supabase-lock.sh --hold` 同一命令鏈——
+# agent 的 Bash 工具在 run_in_background／timeout 背景化後 cwd 會重設回主 checkout，`cd` 與 `--hold` 分兩條命令就把持有者記成主 checkout
+# （LS-175／LS-179 QA 三次，LS-96 `8fcc81c5`）；`supabase-lock.sh --hold` 自 LS-184 起在主 checkout 直接 exit 2 是機械層，這句是前饋；
+# 被改回裸 `--hold` 即紅（舊字樣 `supabase-lock.sh --hold` 仍在不救）。
 BODY_RULES=
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold
@@ -70,6 +74,9 @@ qa|supabase-lock.sh --hold
 ios-dev|本機容器操作同樣要在 lock 內
 merge-reviewer|本機容器操作同樣要在 lock 內
 qa|本機容器操作同樣要在 lock 內
+ios-dev|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold
+merge-reviewer|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold
+qa|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold
 qa|qa-e2e.sh
 ui-designer|--kill 只在 orchestrator 明示時
 ui-designer|收工 Pen 停在票檔
