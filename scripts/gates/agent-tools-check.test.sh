@@ -56,7 +56,11 @@ UI_BODY="${KILL} ${STAY}"
 # LS-186：ios-dev 正文另須含 CI 完整旗標的 PR body 驗證句；OLD_PRBODY 是 LS-186 之前的裸寫法（⑪ 的負樣本）
 PRBODY='`gh pr create/edit --body-file <f>` 之前先 `bash scripts/gates/pr-body-check.sh <f> --branch <分支> --verify`，直接看 exit code。'
 OLD_PRBODY='`gh pr create/edit --body-file <f>` 之前先 `bash scripts/gates/pr-body-check.sh <f>` 斷言檔頭段含本票票號。'
-IOS_BODY="${LOCK_BODY} ${PRBODY}"
+# LS-207：ios-dev／merge-reviewer 正文另須含這兩句（qa 不要求，不併進 LOCK_BODY／QA_BODY）
+DBCHAN='DB 測試 handoff 必附通道：抄 run.sh 印出的連線方式那一行。'
+SHEETUI='iOS 26.2+ sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48。'
+IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI}"
+MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI}"
 # mk <agent> <tools 行的值|NONE> [<正文附加行>]：寫一份最小 agent 定義
 mk() {
   local agent=$1 tools=$2 body=${3:-}
@@ -68,7 +72,7 @@ mk() {
 }
 reset() {
   rm -rf "$agents"; mkdir -p "$agents"
-  mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$LOCK_BODY"
+  mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_BODY"
   mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_BODY"
   mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"
   mk ui-designer NONE "$UI_BODY"
@@ -106,7 +110,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（14 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 14 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（18 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 18 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -137,7 +141,7 @@ reset; mk ios-dev NONE "先 cd <worktree>，另一條命令再 bash scripts/ops/
 reset; expect 0 '⑪ LS-186：ios-dev 正文含 pr-body-check.sh <f> --branch <分支> --verify → 印「正文含」' 'ios-dev.md：正文含「pr-body-check.sh <f> --branch <分支> --verify」'
 reset; mk ios-dev NONE "${LOCK_BODY} ${OLD_PRBODY}"; expect 1 '⑪ LS-186：ios-dev 只有裸 pr-body-check.sh <f>（無 --branch --verify）→ exit 1，lock 三句齊全不救' 'ios-dev.md：正文缺「pr-body-check.sh <f> --branch <分支> --verify」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
 reset; mk ios-dev NONE "${LOCK_BODY} 先 bash scripts/gates/pr-body-check.sh <f> --verify 再看，沒有 --branch 不算。"; expect 1 '⑪ LS-186：只有 --verify、沒有 --branch <分支> → 紅' 'ios-dev.md：正文缺「pr-body-check.sh <f> --branch <分支> --verify」'
-reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$LOCK_BODY"; expect 0 '⑪ LS-186：merge-reviewer 不要求 pr-body-check 句 → 仍通過' '通過'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_BODY"; expect 0 '⑪ LS-186：merge-reviewer 不要求 pr-body-check 句 → 仍通過' '通過'
 reset; expect 0 '⑤ merge-reviewer／qa 也印「正文含」' 'merge-reviewer.md：正文含「supabase-lock.sh --hold」' 'qa.md：正文含「supabase-lock.sh --hold」'
 reset; mk ios-dev NONE; expect 1 '⑤ ios-dev 正文缺字樣 → exit 1' 'ios-dev.md：正文缺「supabase-lock.sh --hold」' '' '✓ agent-tools gate 通過'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}"; expect 1 '⑤ merge-reviewer 正文缺字樣 → exit 1' 'merge-reviewer.md：正文缺「supabase-lock.sh --hold」'
@@ -187,6 +191,31 @@ if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'pr-body-check.sh <f> --b
 else
   echo "✗ ⑪ mutant 應 exit 0 且不印 pr-body-check.sh <f> --branch 字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
+# ---- ⑫ LS-207：ios-dev／merge-reviewer 正文須含「DB 測試 handoff 必附通道」與「sheet 內 UITest 座標斷言用相對參照、
+#        可點元件 minHeight ≥48」；qa 不要求 ----
+reset; expect 0 '⑫ ios-dev／merge-reviewer 正文含 DB 測試通道句 → 印「正文含」' 'ios-dev.md：正文含「DB 測試 handoff 必附通道」' 'merge-reviewer.md：正文含「DB 測試 handoff 必附通道」'
+reset; expect 0 '⑫ ios-dev／merge-reviewer 正文含 sheet UITest 句 → 印「正文含」' 'ios-dev.md：正文含「sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48」' 'merge-reviewer.md：正文含「sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48」'
+reset; mk ios-dev NONE "$LOCK_BODY ${PRBODY} ${SHEETUI}"; expect 1 '⑫ ios-dev 缺 DB 測試通道句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「DB 測試 handoff 必附通道」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$LOCK_BODY ${SHEETUI}"; expect 1 '⑫ merge-reviewer 缺 DB 測試通道句 → exit 1' 'merge-reviewer.md：正文缺「DB 測試 handoff 必附通道」'
+reset; mk ios-dev NONE "$LOCK_BODY ${PRBODY} ${DBCHAN}"; expect 1 '⑫ ios-dev 缺 sheet UITest 句 → exit 1' 'ios-dev.md：正文缺「sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$LOCK_BODY ${DBCHAN}"; expect 1 '⑫ merge-reviewer 缺 sheet UITest 句 → exit 1' 'merge-reviewer.md：正文缺「sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48」'
+reset; expect 0 '⑫ qa 不要求這兩句 → 仍通過' '通過'
+# mutation 負控：同一個「拿掉 LS170-BODY-RULES 區塊」mutant 下，⑫ 的兩份負樣本也必須變綠
+reset; mk ios-dev NONE "$LOCK_BODY ${PRBODY} ${SHEETUI}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'DB 測試 handoff 必附通道'; then
+  ok '⑫ mutant：拿掉規則後「缺 DB 通道句」的負樣本變綠'
+else
+  echo "✗ ⑫ mutant（DB 通道）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+reset; mk ios-dev NONE "$LOCK_BODY ${PRBODY} ${DBCHAN}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'minHeight ≥48'; then
+  ok '⑫ mutant：拿掉規則後「缺 sheet UITest 句」的負樣本變綠'
+else
+  echo "✗ ⑫ mutant（sheet UITest）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過
 mut3="$work/agent-tools-check.body-not-subset.sh"
 awk '{ print } /^BODY_RULES="ios-dev\|/ { print "nobody|x" }' "$checker" > "$mut3"

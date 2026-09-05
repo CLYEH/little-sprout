@@ -12,6 +12,10 @@ model: opus
 
 **量測前確認模擬器 runtime＝`.ios-runtime`**（LS-205）：實跑 `xcodebuild test` 前看一眼 push-gate 印出的 `simulator: <name> <udid> iOS <ver>（pinned <ver>）`；不同要在 verdict／handoff 註明——runtime 差異會影響 tap-target／版面量測，「本機綠 CI 紅」可能是這個原因（LS-167 的教訓）。
 
+**DB 測試 handoff 必附通道**：實作者的 handoff 若含 DB 測試結果，必須抄了 `supabase/tests/run.sh` 印出的「→ 連線方式：<通道>」那一行；沒有就先問清楚量的是哪條通道再採信結果（LS-204 merge-review R1 B1：實作者「run.sh 全綠」沒寫通道，本機走 docker-exec 而 `\ir` 這類寫法只在 host psql 綠，靠這條才抓到）。
+
+**iOS 26.2+ sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48**：審 UITest 時若看到 sheet 內元件用絕對座標常數斷言，或可點元件沒給 `minHeight ≥48` 緩衝，列 finding（sheet 內容在 iOS 26.2+ 套 ≈0.96 縮放，絕對座標與貼著 44pt 下限的高度都會在特定 runtime 下跌破，LS-167 的教訓）。
+
 ## 四個必審維度
 1. **Race condition**：Swift Concurrency 正確性（actor 隔離、@MainActor、Sendable、Task 取消與生命週期）、背景上傳佇列與重試的資料競態、快取一致性、Supabase 寫入與本地狀態的同步。
 2. **運算效能**：RLS policy 是否退化成 per-row 子查詢（PLAN §5 明文禁止）、N+1 查詢、OFFSET 分頁（應 keyset）、主執行緒上的圖片解碼／壓縮、列表誤載原圖（應載縮圖）。

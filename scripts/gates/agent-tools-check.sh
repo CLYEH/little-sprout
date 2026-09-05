@@ -69,6 +69,9 @@ ios-dev|"
 # LS-186：ios-dev 正文的 PR body 驗證句固定為 CI 的完整旗標 `pr-body-check.sh <f> --branch <分支> --verify`——LS-185 實作者本機不帶
 # `--verify` 只驗了格式、另一次 `| tail -1` 吃掉 exit code，兩次把紅 body 推上 PR、CI rules 紅兩次；被改回裸 `pr-body-check.sh <f>` 即紅。
 # 只釘 ios-dev（唯一會開 PR 的 agent 定義）；general-purpose 派工只有 prompt 到得了（COLLABORATION §3 五條之 2／§4-b）。
+# LS-207：ios-dev／merge-reviewer 正文須含「DB 測試 handoff 必附通道」（LS-204 merge-review R1 B1 的教訓：run.sh 已印連線
+# 通道，handoff／verdict 沒抄那一行就看不出量的是哪條，那句被刪即紅）與「iOS 26.2+ sheet 內 UITest 座標斷言用相對參照、
+# 可點元件 minHeight ≥48」（LS-167／16e6b7f9：sheet 內容 ≈0.96 縮放，絕對座標與貼著 44pt 下限的高度會跌破，那句被刪即紅）。
 BODY_RULES=
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold
@@ -84,7 +87,11 @@ qa|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold
 qa|qa-e2e.sh
 ui-designer|--kill 只在 orchestrator 明示時
 ui-designer|收工 Pen 停在票檔
-visual-reviewer|--kill 只在 orchestrator 明示時"
+visual-reviewer|--kill 只在 orchestrator 明示時
+ios-dev|DB 測試 handoff 必附通道
+merge-reviewer|DB 測試 handoff 必附通道
+ios-dev|sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48
+merge-reviewer|sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48"
 # LS170-BODY-RULES-END
 
 hits=""; n=0
