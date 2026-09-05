@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 
 /// LS-191 票文驗收：「UITests（歡迎頁點《使用條款》→ sheet 出現 → 關閉；Footer 可見）」。
@@ -40,5 +41,34 @@ final class LegalDocumentSheetUITests: XCTestCase {
             app.staticTexts["隱私權政策"].waitForExistence(timeout: 5),
             "點擊《隱私權政策》連結應開啟對應文件，不是誤開使用條款"
         )
+    }
+
+    /// merge-review R1 F1（`807855dc`）迴歸測試：iPad 上 `LegalDocumentSheet` 必須真的走
+    /// 置中卡片版面（520 卡－87.5×2 內距＝345 內容欄），不是 R1 那個「`horizontalSizeClass`
+    /// 在 sheet 內恆為 `.compact`，regular 分支從未執行」的死碼狀態（系統預設 form sheet
+    /// ≈580 寬套 iPhone 版 24pt 內距＝內容欄 ≈532）。用 Footer「關閉」鈕的 frame width 當
+    /// 代理指標——`SecondaryButton` 內部 `.frame(maxWidth: .infinity)` 撐滿外層扣掉
+    /// `horizontalPadding` 後的可用寬度，量到的就是內容欄本身，不需要額外插測量碼；
+    /// iPad 分支使用 87.5 內距、iPhone／fallback 分支使用 24（`AppSpacing.screenPad`），兩者
+    /// 換算出的欄寬差距（345 vs ≈532）遠大於量測誤差，足以區分兩種狀態。
+    ///
+    /// 只在 iPad idiom 執行（`XCTSkipUnless`）——`UIDevice.current.userInterfaceIdiom` 量的
+    /// 是執行這支測試的模擬器本身（跟 app 內部同一顆裝置），跟 sheet presentation 容器的
+    /// size class 無關，這正是 R2 修法選它的理由。push-gate／CI 常態用的 iPhone 專屬機會
+    /// 略過這支測試（不佔用一般跑測時間）；要驗證這支測試本身，需在 iPad 模擬器上跑
+    /// `-only-testing:LittleSproutUITests/LegalDocumentSheetUITests/` 加這個方法名。
+    func testLegalDocumentSheet_onIPad_contentColumnWidthMatchesDesign() throws {
+        try XCTSkipUnless(
+            UIDevice.current.userInterfaceIdiom == .pad,
+            "iPad 專屬版面測試，非 iPad 裝置（例如 push-gate 常態用的 iPhone 專屬機）略過"
+        )
+        let app = TapTargetMeasurement.launch(.legalDocumentSheet)
+        TapTargetMeasurement.assertScreenRendered(.legalDocumentSheet, in: app)
+
+        let closeButton = app.buttons["關閉"]
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 5))
+        // 520（Notes `W0Umr` R3 定案卡寬）－ 87.5×2 內距 ＝ 345；±4pt 容許量測誤差
+        // （merge-review R1 `807855dc` 建議值）。
+        XCTAssertEqual(closeButton.frame.width, 345, accuracy: 4)
     }
 }

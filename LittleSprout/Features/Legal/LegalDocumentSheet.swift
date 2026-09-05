@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// LS-191（依 LS-133 稿 `EzJCV`／`O631mm`／`E27nKz`／`uQeV8`；Notes `pLLXi`）：法務文件
 /// in-app 檢視 sheet。bundled markdown 全文捲動閱讀，Footer 關閉鈕釘底。歡迎頁《使用條款》
@@ -22,14 +23,22 @@ import SwiftUI
 ///
 /// **iPad**：稿面 `uQeV8` 用置中卡片而非滿版 sheet，理由是 SwiftUI `.sheet()` 在 regular
 /// width、未強制 `presentationDetents` 時的原生行為就是置中浮動 form sheet（系統行為，不是
-/// 設計選擇——Notes `NzCXK`）。這裡用 `horizontalSizeClass == .regular` 分支＋
-/// `.frame(width: 520)` 固定內容寬度（Notes `W0Umr`：R3 定案 520＋內距 87.5，內容欄 345），
-/// 讓 sheet 依內容尺寸置中呈現，不設 Grabber（置中卡片沒有下滑手勢慣例）。
+/// 設計選擇——Notes `NzCXK`）。用 `.frame(width: 520)` 固定內容寬度（Notes `W0Umr`：R3 定案
+/// 520＋內距 87.5，內容欄 345），讓 sheet 依內容尺寸置中呈現，不設 Grabber（置中卡片沒有下滑
+/// 手勢慣例）。
+///
+/// **判斷用裝置 idiom，不用 `horizontalSizeClass`**（merge-review R1 `807855dc` F1）：R1 曾用
+/// `@Environment(\.horizontalSizeClass) == .regular` 判斷，但**實測** `.sheet()` 的 form
+/// sheet 呈現容器本身較窄（≈580pt），環境回報的 `horizontalSizeClass` 在 iPad 上恆為
+/// `.compact`——量的是 presentation 容器，不是裝置。導致 regular 分支從未執行，iPad 上一路
+/// 落回 iPhone 版面（見 R1 PR #326 review，reviewer 重新截圖量到 580×650pt、24.5pt 內距、
+/// 仍有 Grabber）。改用 `UIDevice.current.userInterfaceIdiom == .pad`：量裝置本身，跟
+/// presentation context 無關，且不需要更動 `LegalDocumentSheet(kind:)` 這個票文指定的 API
+/// 形狀（呼叫端不用多傳一個 size class 參數）。
 struct LegalDocumentSheet: View {
     let kind: LegalDocumentKind
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var document: LegalMarkdownDocument?
     @State private var failedToLoad = false
@@ -42,12 +51,20 @@ struct LegalDocumentSheet: View {
     private let iPadCardWidth: CGFloat = 520
     private let iPadCardPadding: CGFloat = 87.5
 
+    private var isPadIdiom: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
+
     var body: some View {
         Group {
             if let document {
-                if horizontalSizeClass == .regular {
+                if isPadIdiom {
                     layout(for: document, horizontalPadding: iPadCardPadding, showsGrabber: false)
                         .frame(width: iPadCardWidth)
+                        // R1 F1：iPad 分支不畫自畫 Grabber（`showsGrabber: false` 已涵蓋），
+                        // 這裡額外明確隱藏系統拖曳把手——置中卡片沒有下滑手勢慣例，防止任何
+                        // 系統預設行為意外冒出把手（reviewer 明確要求，雙重保險不嫌多）。
+                        .presentationDragIndicator(.hidden)
                 } else {
                     layout(for: document, horizontalPadding: AppSpacing.screenPad, showsGrabber: true)
                 }
@@ -184,11 +201,7 @@ struct LegalDocumentSheet: View {
         }
 }
 
-#Preview("隱私權政策 · iPad") {
-    Color.lsBackground
-        .sheet(isPresented: .constant(true)) {
-            LegalDocumentSheet(kind: .privacyPolicy)
-        }
-        .environment(\.horizontalSizeClass, .regular)
-}
+// 「隱私權政策 · iPad」預覽已移除：iPad 版面判斷改用 `UIDevice.current.userInterfaceIdiom`
+// （R1 F1），Xcode Preview canvas 沒有能覆寫裝置 idiom 的 environment key——要預覽 iPad
+// 版面請直接把 Preview 的目標裝置切到 iPad（Canvas 右側裝置選單），不是靠程式碼覆寫。
 #endif
