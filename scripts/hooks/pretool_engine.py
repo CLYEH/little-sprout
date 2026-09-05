@@ -66,6 +66,23 @@ r"""LS-104 R3：pretool.sh 的 Bash 命令評估引擎（取代 R1 版本的 bas
     的 glob 繞路（`.env*` 這類）。
   H3 重入判定／wrapper 字面比對：整條命令（pass1 剝除後）字面比對，語意同 R1（wrapper
     判斷不看段落邊界，因為 wrapper 慣例是整條命令只有一段）。
+  H3b（LS-183；來源 LS-96 池項 e381f653 第 1 項＝LS-143 QA 直接 `docker exec` 撞上 LS-149
+    mid-reset）：H3 只擋 `supabase db reset`／`run.sh`，其餘直接打本機容器的路徑全開著。
+    H3b 在命令位置認得時比對：(a) `docker` 段有 `exec` token 且其後任一 token 以
+    `supabase_`／`supabase-` 開頭（容器名）——`exec` 之後有 exact token `pg_isready` 視為
+    唯讀放行；`docker ps`／`logs`／`inspect` 沒有 `exec` 自然不命中；(b) `psql` 段任一 token
+    含 54322（`-p 54322`／`--port=54322`／`port=54322`／連線字串）；(c) 任一段（命令位置不是
+    echo／printf／READ_VERBS——那些只印字、不碰 DB）有 token 以 `postgres://`／`postgresql://`
+    起頭（允許 `VAR=`／`--db-url=` 前綴）且含 `:54322`；(d) `supabase` 段有相鄰的
+    `functions serve`／`db query`／`db dump`／`migration up` 且同段沒有 `--linked` token
+    （`--linked` 打正式站、不是本機容器）。命令位置認不得的段落走同型的整段字面比對。
+    命中後的放行順序：整條命令有 `supabase-lock.sh … --` 包裝字面 → H3 既有重入判定（holder
+    pid 是祖先）→ **H3b 專屬的持有者 worktree 判定**（沿用 supabase-lock.sh `hold_owner_ok`
+    的 worktree 腿：holder 是 `--hold`（`cmd=hold:*`）、守門 pid 活著、holder 的 `worktree=`
+    與呼叫端目前目錄所在的 worktree 頂層（自 hook JSON `cwd` 起算、沿命令追蹤 `cd`／`pushd`；
+    目的地含 `$`／反引號或相對路徑而目前目錄判不出 → 視為不在持有者 worktree，fail-safe）
+    相同）。三者皆否才 deny。H3 本身不加 worktree 腿（`supabase db reset` 裸跑照舊擋，包了
+    wrapper 才過——qa.md／ios-dev.md 明文如此）。
 
 failure 路徑：任何未被下面邏輯明確攔到的例外，一律在 __main__ 的 try/except 轉成
   exit 2＋固定文字（fail-closed，不當作 allow）。
@@ -143,6 +160,24 @@ FB_CUT_F_RE = re.compile(r"-f[ \t]*1\b")
 FB_SUBARESET_RE = re.compile(r"supabase[ \t]+db[ \t]+reset")
 FB_RUNSH_RE = re.compile(r"(?:^|[^A-Za-z0-9_])run\.sh(?:$|[^A-Za-z0-9_.-])")
 WRAPPER_RE = re.compile(r"supabase-lock\.sh\b.*[ \t]--(?:[ \t]|$)")
+
+# ---- H3b（LS-183）：繞過 lock 直接打本機 Supabase 容器的其他路徑 ----
+# 精確模式（命令位置認得）用 token 比對；下方 FB_* 是命令位置認不得時對該段原始文字的整段字面比對。
+H3B_CONTAINER_RE = re.compile(r"^supabase[_-]")                       # docker exec 的目標容器名
+H3B_PORT_RE = re.compile(r"(?:^|[^0-9])54322(?:[^0-9]|$)")           # psql 的任一 token 含本機容器 port
+H3B_CONNSTR_RE = re.compile(r"(?:^|=)postgres(?:ql)?://\S*:54322(?:[^0-9]|$)")  # 連線字串（允許 VAR=／--db-url= 前綴）
+H3B_SUPABASE_LOCAL_PAIRS = {("functions", "serve"), ("db", "query"), ("db", "dump"), ("migration", "up")}
+# 只印字、不碰 DB 的命令位置：連線字串出現在它們的引數（`echo '…'`／`grep -rn '…' supabase/`）不算打 DB。
+H3B_TEXT_VERBS = READ_VERBS | {"echo", "printf"}
+FB_DOCKER_EXEC_RE = re.compile(r"(?:^|[^A-Za-z0-9_])docker[ \t]+(?:\S+[ \t]+)*?exec(?:[ \t]|$)[^\n;&|]*[ \t'\"=]supabase[_-]")
+FB_PG_ISREADY_RE = re.compile(r"(?:^|[^A-Za-z0-9_])pg_isready(?:[^A-Za-z0-9_]|$)")
+FB_PSQL_54322_RE = re.compile(r"(?:^|[^A-Za-z0-9_./-])psql(?:[^A-Za-z0-9_]|$)[^\n;&|]*(?:^|[^0-9])54322(?:[^0-9]|$)")
+FB_CONNSTR_RE = re.compile(r"postgres(?:ql)?://[^\s'\"]*:54322(?:[^0-9]|$)")
+FB_SUPABASE_LOCAL_RE = re.compile(
+    r"(?:^|[^A-Za-z0-9_./-])supabase[ \t]+(?:functions[ \t]+serve|db[ \t]+query|db[ \t]+dump|migration[ \t]+up)(?:[^A-Za-z0-9_-]|$)"
+)
+FB_LINKED_RE = re.compile(r"(?:^|[ \t])--linked(?:[ \t=]|$)")
+H3B_WHAT_FALLBACK = "本機 Supabase 容器操作（docker exec／psql 54322／supabase 本機子命令，命令位置認不得、退回整段字面比對）"
 # R2（probe a18）：`alias` 字面以命令位置出現在任何一段，代表這條命令有定義別名的意圖——見
 # evaluate() 對 ALIAS_DEFINED_RE 的用法。要求 alias 前面是分段邊界（行首／`;`／`&&`／`||`／
 # `&`／`|`／換行）或字串開頭，避免「alias」出現在無關字串裡誤觸發（雖然誤觸發只是多跑一次
@@ -586,6 +621,9 @@ def check_precise(cmd, tokens):
     has_no_verify = has_dash_n = has_commit = has_push = has_force = has_protected = False
     h2_hit = h2_redir = grep_o = grep_eq = cut_d = cut_f = False
     h3_run_sh = h3_supabase_reset = False
+    # H3b（LS-183）：docker exec 目標容器／psql 54322／連線字串／supabase 本機子命令（見檔頭）
+    docker_exec = docker_target = docker_readonly = False
+    psql_local = connstr_local = supa_local = supa_linked = False
     expect_redir = False
     prevtok = ""
     awaiting_c_payload = False
@@ -655,6 +693,27 @@ def check_precise(cmd, tokens):
         if cmd in SHELLC_SHELLS and RUNSH_RE.match(text) and text != cmd:
             h3_run_sh = True
 
+        # H3b（LS-183）。引號不排除（同 R2 的理由：`docker exec "supabase_db_x"` 傳給 docker 的 argv
+        # 跟不加引號一樣）；`pg_isready` 只認 exact token——`bash -c "pg_isready; psql …"` 整段是一個
+        # 引號 token、不等於 pg_isready，仍擋。
+        if cmd == "docker":
+            if text == "exec":
+                docker_exec = True
+            elif docker_exec:
+                if H3B_CONTAINER_RE.match(text):
+                    docker_target = True
+                if text == "pg_isready":
+                    docker_readonly = True
+        if cmd == "psql" and H3B_PORT_RE.search(text):
+            psql_local = True
+        if cmd not in H3B_TEXT_VERBS and H3B_CONNSTR_RE.search(text):
+            connstr_local = True
+        if cmd == "supabase":
+            if text == "--linked":
+                supa_linked = True
+            if (prevtok, text) in H3B_SUPABASE_LOCAL_PAIRS:
+                supa_local = True
+
         # R3 F1／R4（見 SHELLC_SHELLS 定義處說明）：cmd（命令位置）已經是 bash/sh/zsh/dash/ksh
         # 才會進到這個函式；不再要求 `-c` 緊接在 shell 名稱後面——`-e -c`／`-o pipefail -c`／
         # `--norc -c` 這類前面插旗標、或 `-lc`／`-cx` 這類併入短旗標團的寫法，都在這裡被同一條
@@ -682,6 +741,14 @@ def check_precise(cmd, tokens):
     if h3_supabase_reset or h3_run_sh:
         return ("H3_TRIGGER", None)
 
+    # H3b（LS-183）：payload 是 deny 訊息用的「做了什麼」——放行與否由 evaluate() 的 _h3b_check 決定
+    if docker_target and not docker_readonly:
+        return ("H3B_TRIGGER", "docker exec 進 supabase_* 容器")
+    if psql_local or connstr_local:
+        return ("H3B_TRIGGER", "psql／連線字串打本機 54322")
+    if supa_local and not supa_linked:
+        return ("H3B_TRIGGER", "supabase functions serve／db query／db dump／migration up 未帶 --linked（本機容器）")
+
     return ("OK", None)
 
 
@@ -707,13 +774,23 @@ def check_fallback(raw):
     if FB_SUBARESET_RE.search(raw) or FB_RUNSH_RE.search(raw):
         return "H3_TRIGGER"
 
+    # H3b（LS-183）：同精確模式的四條，字面版（引號不剝、不辨 echo——認不得就寧嚴勿鬆）
+    if FB_DOCKER_EXEC_RE.search(raw) and not FB_PG_ISREADY_RE.search(raw):
+        return "H3B_TRIGGER"
+    if FB_PSQL_54322_RE.search(raw) or FB_CONNSTR_RE.search(raw):
+        return "H3B_TRIGGER"
+    if FB_SUPABASE_LOCAL_RE.search(raw) and not FB_LINKED_RE.search(raw):
+        return "H3B_TRIGGER"
+
     return None
 
 
 # ============================================================================
 # evaluate：整套引擎入口，支援 $(...)／bash -c 遞迴
 # ============================================================================
-def evaluate(cmd, depth, wrapper_haystack):
+def evaluate(cmd, depth, wrapper_haystack, cwd=None):
+    """cwd：呼叫端目前目錄（hook JSON `cwd`，pretool.sh 以 PRETOOL_CWD 傳入；LS-183）——只供 H3b 的
+    持有者 worktree 判定用，沿命令逐段追蹤 `cd`／`pushd`，遞迴進 payload／$(...) 時帶當下的值。"""
     if depth > MAX_DEPTH:
         return f"H0：巢狀深度超過安全上限，fail-closed，見 {COLL_REF}"
 
@@ -729,6 +806,7 @@ def evaluate(cmd, depth, wrapper_haystack):
     if wrapper_haystack is None:
         wrapper_haystack = stripped
 
+    cur_dir = cwd
     for seg in segments:
         tokens = seg["tokens"]
         raw = seg["raw"]
@@ -737,6 +815,8 @@ def evaluate(cmd, depth, wrapper_haystack):
         pos_tok, recognized = resolve_position(tokens)
 
         if recognized:
+            if pos_tok in ("cd", "pushd"):
+                cur_dir = _cd_target(tokens, cur_dir)
             kind, payload = check_precise(pos_tok, tokens)
             if kind == "DENY":
                 return payload
@@ -744,10 +824,14 @@ def evaluate(cmd, depth, wrapper_haystack):
                 reason = _h3_check(wrapper_haystack)
                 if reason:
                     return reason
+            if kind == "H3B_TRIGGER":
+                reason = _h3b_check(wrapper_haystack, cur_dir, payload)
+                if reason:
+                    return reason
             if kind == "RECURSE":
                 if depth >= MAX_DEPTH:
                     return f"H0：巢狀 bash/sh -c 超過安全深度上限，fail-closed，見 {COLL_REF}"
-                r = evaluate(payload, depth + 1, wrapper_haystack)
+                r = evaluate(payload, depth + 1, wrapper_haystack, cur_dir)
                 if r:
                     return r
             if kind == "OK" and pos_tok in SHELLC_SHELLS:
@@ -757,15 +841,11 @@ def evaluate(cmd, depth, wrapper_haystack):
                 # `bash foo.sh args`，或未來 -c 偵測仍有漏的旗標形狀）——不得因為「認得這個 shell」
                 # 就直接放行，對這一段的原始文字再補跑一次舊版整段字面比對。「認得但沒解析出
                 # payload」一律當「認不得」處理，方向與 F1 其他情形一致。
-                reason = check_fallback(raw)
-                if reason == "H3_TRIGGER":
-                    reason = _h3_check(wrapper_haystack)
+                reason = _resolve_trigger(check_fallback(raw), wrapper_haystack, cur_dir)
                 if reason:
                     return reason
         else:
-            reason = check_fallback(raw)
-            if reason == "H3_TRIGGER":
-                reason = _h3_check(wrapper_haystack)
+            reason = _resolve_trigger(check_fallback(raw), wrapper_haystack, cur_dir)
             if reason:
                 return reason
 
@@ -776,20 +856,51 @@ def evaluate(cmd, depth, wrapper_haystack):
     # 抓不到「g 是 git 的別名」這種語意，但抓得到違規字面就在同一條命令的某處（最常見的形狀：
     # 定義完緊接著呼叫）。沒有 alias 就不觸發，不影響其餘不含 alias 的命令的誤擋面。
     if ALIAS_DEFINED_RE.search(stripped):
-        reason = check_fallback(stripped)
-        if reason == "H3_TRIGGER":
-            reason = _h3_check(wrapper_haystack)
+        reason = _resolve_trigger(check_fallback(stripped), wrapper_haystack, cur_dir)
         if reason:
             return reason
 
     for sub in cmdsubs:
         if depth >= MAX_DEPTH:
             return f"H0：巢狀 $(...)／反引號超過安全深度上限，fail-closed，見 {COLL_REF}"
-        r = evaluate(sub, depth + 1, wrapper_haystack)
+        r = evaluate(sub, depth + 1, wrapper_haystack, cur_dir)
         if r:
             return r
 
     return None
+
+
+def _resolve_trigger(reason, wrapper_haystack, cur_dir):
+    """check_fallback 的回傳：H3／H3b 的觸發記號換成實際 deny 理由（或 None＝包裝／持有者放行），其餘原樣。"""
+    if reason == "H3_TRIGGER":
+        return _h3_check(wrapper_haystack)
+    if reason == "H3B_TRIGGER":
+        return _h3b_check(wrapper_haystack, cur_dir, H3B_WHAT_FALLBACK)
+    return reason
+
+
+def _cd_target(tokens, cur_dir):
+    """`cd`／`pushd` 段的目的地（絕對 normpath）；沒有引數 → 家目錄；`cd -`、含 `$`／反引號、相對路徑但
+    cur_dir 未知 → None（之後的 H3b 持有者判定視為不在持有者 worktree，fail-safe）。"""
+    seen = False
+    for text, had_quotes in tokens:
+        t = clean_tok(text, had_quotes)
+        if not seen:
+            base = t.rsplit("/", 1)[-1]
+            if not had_quotes and (base in ("cd", "pushd")):
+                seen = True
+            continue
+        if t == "" or (not had_quotes and t.startswith("-") and t != "-"):
+            continue
+        if t == "-" or "$" in t or "`" in t:
+            return None
+        p = os.path.expanduser(t) if t.startswith("~") else t
+        if not os.path.isabs(p):
+            if cur_dir is None:
+                return None
+            p = os.path.join(cur_dir, p)
+        return os.path.normpath(p)
+    return os.path.expanduser("~")
 
 
 def _h3_check(wrapper_haystack):
@@ -801,7 +912,23 @@ def _h3_check(wrapper_haystack):
             f"（本機容器跨 worktree 共用，LS-70），見 {COLL_REF}")
 
 
-def _h3_reentrant():
+def _h3b_check(wrapper_haystack, cur_dir, what):
+    """H3b（LS-183）：包裝字面 → H3 既有重入（holder pid 是祖先）→ 持有者 worktree（--hold 的 worktree
+    腿），三者皆否才 deny。"""
+    if WRAPPER_RE.search(wrapper_haystack):
+        return None
+    if _h3_reentrant():
+        return None
+    if _h3b_holder_worktree(cur_dir):
+        return None
+    return (f"H3b：{what} 未經 scripts/ops/supabase-lock.sh -- 包裝、也不在 lock 持有者（--hold）的 worktree 內"
+            f"（本機容器跨 worktree 共用，LS-183）——改用 bash scripts/ops/supabase-lock.sh -- <cmd>，"
+            f"或先在自己的票 worktree 執行 bash scripts/ops/supabase-lock.sh --hold，見 {COLL_REF}")
+
+
+def _holder_fields():
+    """讀 supabase-lock.sh 同一套 lock 目錄的 holder 檔（key=value 一行一項，同 key 後者為準——同該腳本
+    read_holder）→ dict；lock 目錄判不出／沒有 holder 檔 → None。H3 重入與 H3b 持有者判定共用，不各讀一份。"""
     lock_dir = os.environ.get("SUPABASE_LOCK_DIR")
     if not lock_dir:
         try:
@@ -811,20 +938,31 @@ def _h3_reentrant():
                 content = f.read()
             m = re.search(r'^project_id\s*=\s*"([^"]+)"', content, re.MULTILINE)
             if not m:
-                return False
+                return None
             lock_dir = f"/tmp/supabase-lock-{m.group(1)}"
         except OSError:
-            return False
+            return None
     holder_path = os.path.join(lock_dir, "holder")
     try:
         with open(holder_path) as f:
             content = f.read()
     except OSError:
+        return None
+    fields = {}
+    for line in content.splitlines():
+        k, sep, v = line.partition("=")
+        if sep:
+            fields[k] = v
+    return fields
+
+
+def _h3_reentrant():
+    fields = _holder_fields()
+    if not fields:
         return False
-    m = re.search(r"^pid=(\d+)$", content, re.MULTILINE)
-    if not m:
+    holder_pid = fields.get("pid", "")
+    if not holder_pid.isdigit():
         return False
-    holder_pid = m.group(1)
     p = str(os.getpid())
     for _ in range(64):
         if p == holder_pid:
@@ -839,9 +977,57 @@ def _h3_reentrant():
     return False
 
 
+def _alive(pid):
+    if not pid.isdigit() or int(pid) <= 0:
+        return False
+    try:
+        os.kill(int(pid), 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+    return True
+
+
+def _toplevel_of(d):
+    """d 所在 worktree 的頂層（realpath；自 d 上溯找第一個含 .git 的目錄——linked worktree 的根有 `.git` 檔，
+    主 checkout 的根有 `.git` 目錄，兩者都算，且不會把 `.claude/worktrees/<n>` 誤判成主 checkout）；不在 repo 內 → None。
+    不呼叫 git（同 main_checkout_guard.root_hint 的上溯法；環境的 GIT_* 變數不影響）。"""
+    d = os.path.realpath(d)
+    while True:
+        if os.path.lexists(os.path.join(d, ".git")):
+            return d
+        parent = os.path.dirname(d)
+        if parent == d:
+            return None
+        d = parent
+
+
+def _h3b_holder_worktree(cur_dir):
+    """沿用 supabase-lock.sh hold_owner_ok 的 worktree 腿：holder 是 --hold（cmd=hold:*）、守門 pid 活著、
+    holder 的 worktree 與呼叫端目前目錄所在的 worktree 頂層相同（realpath 比對——holder 的 worktree 來自
+    `git rev-parse --show-toplevel`，本身就是 realpath）。owner-pid 祖先腿由 _h3_reentrant 的 holder pid 祖先
+    判定涵蓋（hook 是獨立行程、owner 早已退出，實務上靠 worktree）。"""
+    if not cur_dir:
+        return False
+    fields = _holder_fields()
+    if not fields or not fields.get("cmd", "").startswith("hold:"):
+        return False
+    if not _alive(fields.get("pid", "")):
+        return False
+    wt = fields.get("worktree", "")
+    if not wt:
+        return False
+    top = _toplevel_of(cur_dir)
+    return top is not None and top == os.path.realpath(wt)
+
+
 def main():
     command = sys.stdin.read()
-    reason = evaluate(command, 0, None)
+    cwd = os.environ.get("PRETOOL_CWD") or os.getcwd()
+    reason = evaluate(command, 0, None, cwd)
     if reason:
         sys.stdout.write(reason)
         sys.exit(2)
