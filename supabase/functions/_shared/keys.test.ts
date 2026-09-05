@@ -107,6 +107,17 @@ Deno.test("isAuthorizedServiceCall：apikey 錯誤值 → false", () => {
   assertEquals(ok, false);
 });
 
+Deno.test("isAuthorizedServiceCall：apikey 為正確 key 的前綴（不是完整值）→ false（釘住常數時間比對是精確相等，不是 startsWith——merge-review R1 F1／M4：只用『跟正解無關的字串』當負樣本殺不掉把比對誤改成 candidate.startsWith(apikey) 的退化）", () => {
+  const env = {
+    SUPABASE_SECRET_KEYS: secretKeysJson({ default: NEW_DEFAULT }),
+  };
+  const ok = isAuthorizedServiceCall(
+    headers({ apikey: NEW_DEFAULT.slice(0, 8) }),
+    env,
+  );
+  assertEquals(ok, false);
+});
+
 Deno.test("isAuthorizedServiceCall：apikey 缺失、無 legacy bearer → false", () => {
   const env = {
     SUPABASE_SECRET_KEYS: secretKeysJson({ default: NEW_DEFAULT }),
@@ -130,6 +141,26 @@ Deno.test("isAuthorizedServiceCall：legacy bearer 錯 → false", () => {
     headers({ Authorization: "Bearer wrong-token" }),
     env,
   );
+  assertEquals(ok, false);
+});
+
+Deno.test("isAuthorizedServiceCall：legacy bearer 為正確 token 的前綴（不是完整值）→ false（同上，merge-review R1 F1／M3：殺掉把比對誤改成 expected.startsWith(bearer) 的退化）", () => {
+  const env = { SUPABASE_SERVICE_ROLE_KEY: LEGACY };
+  const ok = isAuthorizedServiceCall(
+    headers({ Authorization: `Bearer ${LEGACY.slice(0, 6)}` }),
+    env,
+  );
+  assertEquals(ok, false);
+});
+
+Deno.test("isAuthorizedServiceCall：SUPABASE_SECRET_KEYS 含空字串候選值（輪替期常見，例如 previous 剛清空）、未帶 apikey header → false（merge-review R1 F1／M1：v.length>0 過濾與 if(apikey) 短路兩道防線缺一都不能讓『完全不帶 apikey』被空字串候選比對放行）", () => {
+  const env = {
+    SUPABASE_SECRET_KEYS: secretKeysJson({
+      default: "sb_secret_x",
+      previous: "",
+    }),
+  };
+  const ok = isAuthorizedServiceCall(headers(), env);
   assertEquals(ok, false);
 });
 
