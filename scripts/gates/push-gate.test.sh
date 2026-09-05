@@ -627,6 +627,15 @@ mkdir -p "$R/LittleSprout"
 echo 'struct Baseline {}' > "$R/LittleSprout/Baseline.swift"
 g add LittleSprout/Baseline.swift
 g commit -qm 'chore: LS-0 baseline swift for ls-files probe'
+# LS-205 R2：`.ios-runtime` 併進這個基準 commit（只加這一個檔，不是 `-A`——`.xcode-version` 仍要
+# 維持「origin/development 從未追蹤過」的既有假設，好幾個既有案例故意靠這點測方向矩陣／未 fetch
+# 分支）。跟 `.xcode-version` 不同：`.ios-runtime` 沒有任何案例測「它相對 origin/development 的
+# diff」，只是單純需要「存在、有個值」讓 push-gate.sh 的 fail-closed 不擋——併進基準後所有從
+# origin/development 切出的分支都天生帶著它，不必像 `.xcode-version` 那樣每個案例各自
+# `printf > $R/.xcode-version` 重建一次（那個重建模式是為了保留「從未追蹤」這個測試前提，這裡
+# 沒有這個前提要保留，直接併進基準最省事）。
+g add .ios-runtime
+g commit -qm 'chore: LS-205 baseline ios-runtime for fail-closed check'
 g update-ref refs/remotes/origin/development HEAD
 
 # LS-95（merge-review R1 m4）：tap-target-check.sh 假身——記一行到 $TAP_TARGET_LOG 證明「真的被
@@ -819,6 +828,28 @@ fi
 # 失敗、指令中止」這麼乾脆——後面的 mkdir/commit 會誤植到還沒切走的舊分支上，讓案例之間互相
 # 汙染而給出偽陽性）。
 g add .xcode-version; g commit -qm 'chore: LS-95 test checkpoint restore xcode-version to 99.9'
+
+# ㉑b（LS-205 R2；merge-review R1 m1）：只改 .ios-runtime（CI runtime 釘住版 bump）→ 同理仍判定為
+#    有變更，不跳過——本 PR 自己在 worktree 實跑就重現過這個 bug（改了 .ios-runtime，push-gate.sh
+#    印「無 Swift 變更，跳過」）；CI runner 升版時最需要在新 runtime 上跑一次 unit tests，偏偏最容易
+#    被本機這條捷徑跳過。$R 在上一行已經 commit 乾淨（同 ㉑ 尾端的既有作法），這裡才能安全
+#    `checkout -q -b`，不必 `-f`。
+g checkout -q -b feature/LS-205-iosruntime origin/development
+printf '99.9\n' > "$R/.xcode-version"   # origin/development 從未含這個檔（同 ⑯～㉑ 的既有作法：未 commit、只在工作目錄）
+printf '26.3\n' > "$R/.ios-runtime"
+g add .ios-runtime; g commit -qm 'chore: LS-205 demo ios-runtime bump'
+out21b=$(run_gate STUB_TEST_RC=0)
+if printf '%s' "$out21b" | grep -qF '無 Swift 變更'; then
+  echo "✗ ㉑b 只改 .ios-runtime 卻仍被判定跳過（m1 的回歸：CI runtime 升版時本機不會跑一次 unit tests）" >&2
+  printf '%s\n' "$out21b" | sed 's/^/    /' >&2
+  fail=1
+else
+  echo "✓ ㉑b 只改 .ios-runtime（非 .swift／.xcodeproj／project.yml）→ 仍判定為有變更，不跳過（merge-review R1 m1）"
+fi
+# 還原並直接 commit（同 ㉑ 結尾那句的既有模式，不留 dirty）——下一案（㉓）要在 $R 上再切一次
+# 分支，得先讓工作目錄乾淨，`checkout -q -b` 才不會被 `.ios-runtime` 的未 commit 異動拒絕。
+printf '26.0\n' > "$R/.ios-runtime"
+g add .ios-runtime; g commit -qm 'chore: LS-205 revert ios-runtime for test isolation'
 
 # ㉓ feature 分支 diff 含 Features/ → tap-target-check.sh 被呼叫
 g checkout -q -b feature/LS-95-features-diff origin/development

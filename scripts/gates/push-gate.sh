@@ -44,7 +44,10 @@ fi
 #     工具鏈對齊步。LS-95 merge-review R1 m2：`(^|/)LittleSprout/` 只匹配「LittleSprout/」這個精確路徑
 #     片段，不會匹配 `LittleSproutUITests/`（同名前綴、不同資料夾）——只改該目錄下既有 Swift 檔會被誤判
 #     「無變更」而跳過本機 SwiftLint／unit tests／tap-target 三步，是同一種「該跑卻跳」的 unsafe 方向，
-#     單獨補上。
+#     單獨補上。LS-205 R2 merge-review R1 m1：`.ios-runtime` 是同款單一來源（CI runtime 釘住版），
+#     沒補上時本 PR 自己在 worktree 實跑就重現——只改這個檔會被判定「無 Swift 變更」而整段跳過，
+#     偏偏「CI runner 升版、只改 `.ios-runtime` 一行」正是最需要在新 runtime 上跑一次 unit tests 的
+#     情境（CI 仍無條件全跑，這裡只是本機前置失守）。
 skip_swift_steps=0
 diff_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
 case "$diff_branch" in
@@ -53,7 +56,7 @@ case "$diff_branch" in
     case "$diff_branch" in hotfix/*) diff_target_ref=origin/main ;; *) diff_target_ref=origin/development ;; esac
     if git rev-parse -q --verify "$diff_target_ref" >/dev/null; then
       diff_changed=$(git diff --name-only "$diff_target_ref"...HEAD)
-      if ! printf '%s\n' "$diff_changed" | grep -qE '(^|/)LittleSprout/|(^|/)LittleSproutTests/|(^|/)LittleSproutUITests/|(^|/)project\.yml$|\.xcodeproj(/|$)|(^|/)Package\.resolved$|(^|/)\.swiftlint\.yml$|(^|/)Config/.*\.xcconfig$|(^|/)\.xcode-version$'; then
+      if ! printf '%s\n' "$diff_changed" | grep -qE '(^|/)LittleSprout/|(^|/)LittleSproutTests/|(^|/)LittleSproutUITests/|(^|/)project\.yml$|\.xcodeproj(/|$)|(^|/)Package\.resolved$|(^|/)\.swiftlint\.yml$|(^|/)Config/.*\.xcconfig$|(^|/)\.xcode-version$|(^|/)\.ios-runtime$'; then
         skip_swift_steps=1
       fi
     fi
