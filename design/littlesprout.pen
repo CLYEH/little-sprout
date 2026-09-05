@@ -34837,7 +34837,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1073,
+      "height": 1173,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -35344,6 +35344,8 @@
                       "id": "Rdxri",
                       "name": "Legal",
                       "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "text",
@@ -35358,68 +35360,86 @@
                         },
                         {
                           "type": "frame",
-                          "id": "flduf",
-                          "name": "Legal Link",
-                          "layout": "vertical",
-                          "gap": 1,
+                          "id": "DjNSB",
+                          "name": "Legal Row 2",
+                          "gap": 4,
+                          "alignItems": "center",
                           "children": [
                             {
+                              "type": "frame",
+                              "id": "flduf",
+                              "name": "Legal Link",
+                              "layout": "vertical",
+                              "gap": 1,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "xkvz1",
+                                  "name": "Link Label",
+                                  "fill": "$text-primary",
+                                  "content": "《使用條款》",
+                                  "lineHeight": 1.5,
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-meta",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "eGmFu",
+                                  "name": "Link Underline",
+                                  "fill": "$text-primary",
+                                  "width": "fill_container",
+                                  "height": 1
+                                }
+                              ]
+                            },
+                            {
                               "type": "text",
-                              "id": "xkvz1",
-                              "name": "Link Label",
-                              "fill": "$text-primary",
-                              "content": "《使用條款》",
+                              "id": "XtNLC",
+                              "name": "Legal Seg",
+                              "fill": "$text-secondary",
+                              "content": "與",
                               "lineHeight": 1.5,
                               "fontFamily": "$font",
                               "fontSize": "$fs-meta",
                               "fontWeight": "normal"
-                            },
-                            {
-                              "type": "rectangle",
-                              "id": "eGmFu",
-                              "name": "Link Underline",
-                              "fill": "$text-primary",
-                              "width": "fill_container",
-                              "height": 1
                             }
                           ]
                         },
                         {
-                          "type": "text",
-                          "id": "XtNLC",
-                          "name": "Legal Seg",
-                          "fill": "$text-secondary",
-                          "content": "與",
-                          "lineHeight": 1.5,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        },
-                        {
                           "type": "frame",
-                          "id": "XTCyT",
-                          "name": "Legal Link",
-                          "layout": "vertical",
-                          "gap": 1,
+                          "id": "H4jXr",
+                          "name": "Legal Row 3",
+                          "gap": 4,
+                          "alignItems": "center",
                           "children": [
                             {
-                              "type": "text",
-                              "id": "dS3Ty",
-                              "name": "Link Label",
-                              "fill": "$text-primary",
-                              "content": "《隱私權政策》",
-                              "lineHeight": 1.5,
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-meta",
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "rectangle",
-                              "id": "XQtew",
-                              "name": "Link Underline",
-                              "fill": "$text-primary",
-                              "width": "fill_container",
-                              "height": 1
+                              "type": "frame",
+                              "id": "XTCyT",
+                              "name": "Legal Link",
+                              "layout": "vertical",
+                              "gap": 1,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "dS3Ty",
+                                  "name": "Link Label",
+                                  "fill": "$text-primary",
+                                  "content": "《隱私權政策》",
+                                  "lineHeight": 1.5,
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-meta",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "XQtew",
+                                  "name": "Link Underline",
+                                  "fill": "$text-primary",
+                                  "width": "fill_container",
+                                  "height": 1
+                                }
+                              ]
                             }
                           ]
                         }
@@ -35467,7 +35487,7 @@
       "type": "note",
       "id": "ZBIhu",
       "x": 2300,
-      "y": 16318,
+      "y": 16410,
       "name": "設計註記 · Legal 連結 AX3 溢出（LS-46 R3）",
       "width": 360,
       "height": 0,
@@ -38210,7 +38230,7 @@
       "type": "frame",
       "id": "hKSu1",
       "x": 2300,
-      "y": 16795,
+      "y": 16887,
       "name": "A11y / 06 輸入邀請碼 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -38663,7 +38683,7 @@
       "type": "frame",
       "id": "P27HS",
       "x": 2300,
-      "y": 18172,
+      "y": 18264,
       "name": "LS-47 / 08 幫寶貝建檔",
       "clip": true,
       "width": 393,
@@ -53658,6 +53678,7 @@
           "type": "frame",
           "id": "n7gPAe",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -53845,7 +53866,9 @@
               "type": "frame",
               "id": "dTdm3",
               "name": "Feed",
+              "clip": true,
               "width": "fill_container",
+              "height": 494,
               "layout": "vertical",
               "gap": "$sp-section",
               "children": [
@@ -54648,6 +54671,7 @@
           "type": "frame",
           "id": "x5Vmg",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -54835,7 +54859,9 @@
               "type": "frame",
               "id": "aNcaB",
               "name": "Feed",
+              "clip": true,
               "width": "fill_container",
+              "height": 494,
               "layout": "vertical",
               "gap": "$sp-section",
               "children": [
@@ -55113,6 +55139,7 @@
           "type": "frame",
           "id": "Q600X",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -55300,7 +55327,9 @@
               "type": "frame",
               "id": "riVZU",
               "name": "Feed",
+              "clip": true,
               "width": "fill_container",
+              "height": 494,
               "layout": "vertical",
               "gap": "$sp-section",
               "children": [
@@ -56163,6 +56192,7 @@
           "type": "frame",
           "id": "YulfE",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -56260,7 +56290,9 @@
               "type": "frame",
               "id": "LJJLP",
               "name": "Feed",
+              "clip": true,
               "width": "fill_container",
+              "height": 978,
               "layout": "vertical",
               "gap": "$sp-section",
               "children": [
@@ -56668,6 +56700,7 @@
                   "type": "frame",
                   "id": "u8xlzb",
                   "name": "Photo Strip",
+                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -57487,6 +57520,7 @@
                   "type": "frame",
                   "id": "LgcCh",
                   "name": "Photo Strip",
+                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -58265,6 +58299,7 @@
                   "type": "frame",
                   "id": "FntiB",
                   "name": "Photo Strip",
+                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -59093,6 +59128,7 @@
                   "type": "frame",
                   "id": "DbPZ7",
                   "name": "Photo Strip",
+                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -60669,6 +60705,7 @@
                   "type": "frame",
                   "id": "bJSYN",
                   "name": "Photo Strip",
+                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -65766,6 +65803,7 @@
                   "type": "frame",
                   "id": "h42x2",
                   "name": "Photo Strip",
+                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -66431,6 +66469,7 @@
           "type": "frame",
           "id": "o73UY",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -66576,7 +66615,9 @@
               "type": "frame",
               "id": "Z83pG",
               "name": "Feed",
+              "clip": true,
               "width": "fill_container",
+              "height": 494,
               "layout": "vertical",
               "gap": "$sp-section",
               "children": [
@@ -70395,6 +70436,7 @@
                   "type": "frame",
                   "id": "XLTYb",
                   "name": "Photo Strip",
+                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -71098,6 +71140,7 @@
                   "type": "frame",
                   "id": "j001g",
                   "name": "Photo Strip",
+                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -85520,6 +85563,7 @@
                   "type": "frame",
                   "id": "HbHJj",
                   "name": "Photo Strip",
+                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -87374,6 +87418,7 @@
                   "type": "frame",
                   "id": "OZt3M",
                   "name": "Photo Strip",
+                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -89738,6 +89783,7 @@
           "type": "frame",
           "id": "FqE7M",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -94969,6 +95015,7 @@
           "type": "frame",
           "id": "YekOU",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -96777,6 +96824,7 @@
           "type": "frame",
           "id": "T7DfpY",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -96829,7 +96877,9 @@
               "type": "frame",
               "id": "w6y7I",
               "name": "Album List",
+              "clip": true,
               "width": "fill_container",
+              "height": 575,
               "layout": "vertical",
               "gap": "$sp-block",
               "children": [
@@ -122234,6 +122284,7 @@
           "type": "frame",
           "id": "bxhMP",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -128315,6 +128366,7 @@
           "type": "frame",
           "id": "AWO50",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -132812,7 +132864,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1160,
+      "height": 1260,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -133361,6 +133413,8 @@
                       "id": "rPoT4",
                       "name": "Legal",
                       "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "children": [
                         {
                           "type": "text",
@@ -133375,68 +133429,86 @@
                         },
                         {
                           "type": "frame",
-                          "id": "MaiN2",
-                          "name": "Legal Link",
-                          "layout": "vertical",
-                          "gap": 1,
+                          "id": "XYsdY",
+                          "name": "Legal Row 2",
+                          "gap": 4,
+                          "alignItems": "center",
                           "children": [
                             {
+                              "type": "frame",
+                              "id": "MaiN2",
+                              "name": "Legal Link",
+                              "layout": "vertical",
+                              "gap": 1,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "tJe82",
+                                  "name": "Link Label",
+                                  "fill": "$text-primary",
+                                  "content": "《使用條款》",
+                                  "lineHeight": 1.5,
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-meta",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "Sat3C",
+                                  "name": "Link Underline",
+                                  "fill": "$text-primary",
+                                  "width": "fill_container",
+                                  "height": 1
+                                }
+                              ]
+                            },
+                            {
                               "type": "text",
-                              "id": "tJe82",
-                              "name": "Link Label",
-                              "fill": "$text-primary",
-                              "content": "《使用條款》",
+                              "id": "mxtQS",
+                              "name": "Legal Seg",
+                              "fill": "$text-secondary",
+                              "content": "與",
                               "lineHeight": 1.5,
                               "fontFamily": "$font",
                               "fontSize": "$fs-meta",
                               "fontWeight": "normal"
-                            },
-                            {
-                              "type": "rectangle",
-                              "id": "Sat3C",
-                              "name": "Link Underline",
-                              "fill": "$text-primary",
-                              "width": "fill_container",
-                              "height": 1
                             }
                           ]
                         },
                         {
-                          "type": "text",
-                          "id": "mxtQS",
-                          "name": "Legal Seg",
-                          "fill": "$text-secondary",
-                          "content": "與",
-                          "lineHeight": 1.5,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        },
-                        {
                           "type": "frame",
-                          "id": "VNn0Z",
-                          "name": "Legal Link",
-                          "layout": "vertical",
-                          "gap": 1,
+                          "id": "MFyui",
+                          "name": "Legal Row 3",
+                          "gap": 4,
+                          "alignItems": "center",
                           "children": [
                             {
-                              "type": "text",
-                              "id": "sO1J8",
-                              "name": "Link Label",
-                              "fill": "$text-primary",
-                              "content": "《隱私權政策》",
-                              "lineHeight": 1.5,
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-meta",
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "rectangle",
-                              "id": "YO8Qf",
-                              "name": "Link Underline",
-                              "fill": "$text-primary",
-                              "width": "fill_container",
-                              "height": 1
+                              "type": "frame",
+                              "id": "VNn0Z",
+                              "name": "Legal Link",
+                              "layout": "vertical",
+                              "gap": 1,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "sO1J8",
+                                  "name": "Link Label",
+                                  "fill": "$text-primary",
+                                  "content": "《隱私權政策》",
+                                  "lineHeight": 1.5,
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-meta",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "YO8Qf",
+                                  "name": "Link Underline",
+                                  "fill": "$text-primary",
+                                  "width": "fill_container",
+                                  "height": 1
+                                }
+                              ]
                             }
                           ]
                         }
@@ -137003,7 +137075,7 @@
       "type": "frame",
       "id": "g1pZ15",
       "x": 0,
-      "y": 10344,
+      "y": 10444,
       "name": "LS-163 / 01e 歡迎登入 · 含密碼登入連結 (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -137664,7 +137736,7 @@
       "type": "frame",
       "id": "LkrrS",
       "x": 0,
-      "y": 11618,
+      "y": 11718,
       "name": "A11y / P1c 帳號密碼登入 · 帳號或密碼錯誤 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
