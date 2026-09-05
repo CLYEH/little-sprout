@@ -60,17 +60,30 @@
 // handoff 的 harness 缺口記錄）。R3 e2e 驗證腳本留在票的 handoff／scratchpad，
 // 供之後建置治具時參考。
 //
-// 呼叫方式：這支函式**只接受 service_role**——不是給 app client 呼叫的公開端點。
-// Supabase 的 verify_jwt（預設開啟，supabase/config.toml 沒有針對本函式覆寫）先擋掉
-// 沒有帶合法 JWT 的請求；下面再明確比對 Authorization Bearer token 必須等於
-// SUPABASE_SERVICE_ROLE_KEY 本身——只驗證「JWT 合法」不夠，anon key 也是合法 JWT，
-// 這裡要的是「呼叫者持有 service_role 金鑰」這件更窄的事。正式站的呼叫時機（pg_cron
-// 排程／外部排程呼叫這支函式）由 orchestrator 依 LS-78 授權狀態決定，不在本票落地
-// 範圍——見 migration 檔頭「規格分歧與取捨 c)」。目前**沒有任何東西會觸發**這支
-// 函式（無 pg_cron／無 Scheduled Function 註冊），這是本票明知、交給 orchestrator
-// 後續處理的缺口，不是本票的 bug（見 docs/API.md §6）。
+// 呼叫方式（LS-196 訂正）：這支函式**只接受 service 憑證**——不是給 app client
+// 呼叫的公開端點。`supabase/config.toml` 的 `[functions.purge-storage]
+// verify_jwt = false`（本票新增）關掉平台層 JWT 驗證——下面改用
+// `_shared/keys.ts` 的 `isAuthorizedServiceCall()` 在程式內驗：`apikey` header
+// 等於任一 `SUPABASE_SECRET_KEYS` 值（正式站的新式 `sb_secret_…` default
+// key），或（過渡）`Authorization: Bearer` 等於 `SUPABASE_SERVICE_ROLE_KEY`。
+//
+// **為什麼原本的守門在正式站從未通過過（LS-153 i4 煙測，comment
+// 0535eab8）**：這支函式原本用 `verify_jwt` 預設開啟＋`bearer ===
+// SUPABASE_SERVICE_ROLE_KEY` 的比對——但正式站 `supabase secrets list` 回報的
+// `SUPABASE_SERVICE_ROLE_KEY` sha256 digest 不等於 CLI／Management API 回報的
+// legacy service_role JWT（專案已建新式 `sb_secret_` default key，EF 執行期
+// 注入的值從一開始就不是那把 legacy JWT）——`bearer !== serviceRoleKey`
+// 因此對任何外部呼叫者都是 401，這條「只接受 service_role」守門實質上從沒真的
+// 通過過。改用 `isAuthorizedServiceCall()`（見 `_shared/keys.ts` 檔頭）之後，
+// 正式站呼叫改送 `apikey: sb_secret_…`（同官方「Migrating to publishable and
+// secret API keys」§Step 4 遷移指引），過渡期仍接受 legacy bearer，兩條路徑
+// 並存直到所有呼叫端都已改用新式 key。pg_cron／pg_net 呼叫範本見
+// `docs/API.md` §6「purge-storage 呼叫方式」。正式站的排程接線（pg_cron／pg_net
+// 呼叫這支函式）由 orchestrator 依 LS-78 授權狀態決定，不在本票落地範圍——見
+// migration 檔頭「規格分歧與取捨 c)」。
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isAuthorizedServiceCall, resolveSecretKey } from "../_shared/keys.ts";
 
 const BATCH_SIZE = 200; // 每批讀取／刪除的筆數，對齊 Storage remove() API 一次呼叫的合理批次大小。
 const MAX_BATCHES = 20; // 安全上限（20 × 200 = 4000 筆／次 invocation）：避免佇列量體異常大時單次執行時間失控。
@@ -92,31 +105,31 @@ function chunk<T>(items: T[], size: number): T[][] {
 }
 
 Deno.serve(async (req: Request) => {
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const authEnv = {
+    SUPABASE_SECRET_KEYS: Deno.env.get("SUPABASE_SECRET_KEYS"),
+    SUPABASE_SERVICE_ROLE_KEY: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+  };
+  const secretKey = resolveSecretKey(authEnv);
 
-  if (!serviceRoleKey || !supabaseUrl) {
+  if (!secretKey || !supabaseUrl) {
     // fail loud：環境變數缺失是部署設定錯誤，不是「當作沒有佇列可處理」悄悄回 200。
     return new Response(
       JSON.stringify({
-        error: "SUPABASE_URL／SUPABASE_SERVICE_ROLE_KEY 未設定",
+        error: "SUPABASE_URL／secret key 未設定（SUPABASE_SECRET_KEYS 或 SUPABASE_SERVICE_ROLE_KEY 皆缺）",
       }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const bearer = authHeader.startsWith("Bearer ")
-    ? authHeader.slice("Bearer ".length)
-    : "";
-  if (bearer !== serviceRoleKey) {
+  if (!isAuthorizedServiceCall(req.headers, authEnv)) {
     return new Response(
       JSON.stringify({ error: "只接受 service_role 呼叫" }),
       { status: 401, headers: { "Content-Type": "application/json" } },
     );
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = createClient(supabaseUrl, secretKey);
 
   let processed = 0;
   const failures: { object_path: string; error: string }[] = [];
