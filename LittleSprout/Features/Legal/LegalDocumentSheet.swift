@@ -50,15 +50,47 @@ import UIKit
 /// `iPadHorizontalPadding`，靠 `.background(GeometryReader)` 量測卡片實際渲染寬度後動態夾在
 /// `[24, 87.5]` 之間（純函式見 `Self.iPadCardAdaptivePadding`，回歸測試見
 /// `LegalDocumentSheetLayoutTests`）——容器越窄，內距越小，內容永遠不超出容器邊界。
+///
+/// **R4 修正 `LegalDocumentSheetWidthKey` 的 wiring 缺陷**（merge-review R3 `889164c6`
+/// F1）：R3 版的 `PreferenceKey` 用 `defaultValue = 520`＋`reduce { value = nextValue() }`
+/// ——SwiftUI 對「沒有明確設 preference」的兄弟子樹一樣會用 `defaultValue` 參與 reduce，
+/// `reduce` 只是單純覆寫成最後一筆看到的值，導致量到的真實寬度常被某個貢獻
+/// `defaultValue`（520）的兄弟節點蓋掉。**實測**：320pt 窄容器 proxy 下畫面印出
+/// `W=520.0 PAD=87.5`（內容欄只剩 145pt），不是設計要的 `W=320.0 PAD=24.0`（內容欄
+/// 272pt）——iPad 全螢幕情境「看起來正確」純粹是因為預設值 520 剛好等於真值，量測機制
+/// 本身從未真正生效（同 R1 F1 一樣的「寫了但不執行」失效型態）。改為
+/// `defaultValue = 0`＋`reduce { value = max(value, nextValue()) }`：沒有明確設 preference
+/// 的兄弟子樹貢獻 0（reduce 用 `max` 時必輸），真正量到的 `GeometryReader` 永遠是唯一非零
+/// 貢獻者，`max` reduce 後一定是它勝出，不受樹狀走訪順序影響。`onPreferenceChange` 對應
+/// 加 `guard $0 > 0` 忽略「還沒真的量到」的 0 讀數，不覆寫掉 `iPadMeasuredWidth` 的初始
+/// 合理預設值（見下方 `iPadMeasuredWidth` 宣告）。
 struct LegalDocumentSheet: View {
     let kind: LegalDocumentKind
+
+    #if DEBUG
+    /// R4（merge-review R3 `889164c6` F1）：測試專用覆寫，讓 harness／UITest 能在**任何裝置**
+    /// （含 iPhone）強制走 iPad 自適應內距分支並指定一個窄容器寬度，藉此重現／釘住
+    /// 「`GeometryReader` 量到的寬度被 `PreferenceKey` 預設值蓋掉」這類 wiring 缺陷——
+    /// reviewer 指出既有 iPad 專屬 UITest 在全螢幕下量到的真寬剛好等於預設值 520，
+    /// 對這個缺陷不敏感（`TapTargetGateHarness+Legal.swift`
+    /// `legalDocumentNarrowContainerHost`／`LegalDocumentSheetUITests`
+    /// `testNarrowContainerHost...` 使用）。只在 DEBUG 存在，`nil`（預設）時行為與正式
+    /// 呼叫端（`WelcomeView`）完全相同，不影響 Release 組建。
+    var debugForcedPadCardWidth: CGFloat?
+    #endif
 
     @Environment(\.dismiss) private var dismiss
 
     @State private var document: LegalMarkdownDocument?
     @State private var failedToLoad = false
-    /// R2 M2：`iPadCardWidth`（一般全螢幕情境下的卡寬）當測到真正寬度之前的預設值，避免
-    /// 第一次 layout pass 因為還沒量到寬度而算出錯誤內距。
+    /// R2 M2：`iPadCardWidth`（一般全螢幕情境下的卡寬）當測到真正寬度之前的預設值——這是
+    /// **狀態初值**，跟下面 `LegalDocumentSheetWidthKey.defaultValue`（reduce 用的 0 哨兵值，
+    /// 兩者用途不同）無關。R3 review 問過「首幀會不會閃」：一般全螢幕 iPad 情境下初值就是
+    /// 真值，完全不閃；只有真的在窄容器（Slide Over）開啟這個畫面時，第一幀會先用 520 算出
+    /// 87.5 內距，同一個 layout pass 內 `GeometryReader` 回報真實寬度後立刻更新——SwiftUI
+    /// 通常在同一次 update cycle 內解完 preference 才真正呈現到螢幕，實務上量不到肉眼可見的
+    /// 閃爍（沒有做逐幀擷取影片去量측，這裡誠實記錄成「理論上存在、目測未觀察到」，不誇稱
+    /// 「保證不閃」）。
     @State private var iPadMeasuredWidth: CGFloat = 520
 
     /// `$fs-body`(17) × lineHeight 1.7（Notes `PpgKA`）換算成 SwiftUI `.lineSpacing`
@@ -66,20 +98,29 @@ struct LegalDocumentSheet: View {
     private let bodyLineSpacing: CGFloat = 12
     /// R3 定案（Notes `W0Umr`）：520 寬卡片 − 內距 87.5×2 ＝ 345 內容欄，與 iPhone
     /// （`AppSpacing.screenPad` 24×2 於 393pt 裝置寬）算出的內容欄一致。
-    private let iPadCardWidth: CGFloat = 520
+    private var iPadCardWidth: CGFloat {
+        #if DEBUG
+        if let forced = debugForcedPadCardWidth { return forced }
+        #endif
+        return 520
+    }
     private let iPadCardMaxPadding: CGFloat = 87.5
     private let iPadCardMinContentWidth: CGFloat = 345
 
     private var isPadIdiom: Bool {
-        UIDevice.current.userInterfaceIdiom == .pad
+        #if DEBUG
+        if debugForcedPadCardWidth != nil { return true }
+        #endif
+        return UIDevice.current.userInterfaceIdiom == .pad
     }
 
     /// R2 M2：容器寬度→內距的純函式，方便脫離 View 直接單元測試（見
     /// `LegalDocumentSheetLayoutTests`）。容器 ≥ 520 時內距封頂在 `maxPadding`（87.5）；
     /// 容器 < `minContentWidth + minPadding×2`（393）時內距降到 `minPadding`（24）下限，
-    /// 內容欄跟著收縮但保證至少留有這道最小呼吸間距，兩種情況下內容寬度都不會超出容器本身
-    /// （數學上不可能裁字：`content = containerWidth - 2×padding`，`padding` 一律 ≥ 0 且由
-    /// `max(minPadding, ...)` 保底，因此 `content ≤ containerWidth` 恆成立）。
+    /// 內容欄跟著收縮但保證至少留有這道最小呼吸間距。**下界前提**（merge-review R3 N1
+    /// `889164c6`，誠實記錄不誇稱）：容器 < `minPadding×2`（48pt）時，`minPadding` 保底本身
+    /// 會讓內距之和超過容器寬、內容欄變成負數——實務上不會有 48pt 的 sheet／裝置寬（iPad
+    /// Slide Over 最小約 320pt），這個下界從未在真實情境出現，不需要額外處理。
     static func iPadCardAdaptivePadding(
         containerWidth: CGFloat, maxPadding: CGFloat, minContentWidth: CGFloat, minPadding: CGFloat
     ) -> CGFloat {
@@ -108,7 +149,13 @@ struct LegalDocumentSheet: View {
                                     .preference(key: LegalDocumentSheetWidthKey.self, value: proxy.size.width)
                             }
                         )
-                        .onPreferenceChange(LegalDocumentSheetWidthKey.self) { iPadMeasuredWidth = $0 }
+                        .onPreferenceChange(LegalDocumentSheetWidthKey.self) { newWidth in
+                            // R4：0 是「沒有任何子樹真的量到」的哨兵值（見
+                            // `LegalDocumentSheetWidthKey` 文件註解），忽略它，不要用它覆寫
+                            // 掉已經算好的合理初值。
+                            guard newWidth > 0 else { return }
+                            iPadMeasuredWidth = newWidth
+                        }
                         // R1 F1：iPad 分支不畫自畫 Grabber（`showsGrabber: false` 已涵蓋），
                         // 這裡額外明確隱藏系統拖曳把手——置中卡片沒有下滑手勢慣例，防止任何
                         // 系統預設行為意外冒出把手（reviewer 明確要求，雙重保險不嫌多）。
@@ -257,10 +304,19 @@ struct LegalDocumentSheet: View {
 /// 依前景（`layout(...).frame(maxWidth:)`）已解出的大小塞入背景，GeometryReader 本身不會
 /// 要求父層改給更大的空間，因此不影響 form sheet 依內容高度自動置中／調整大小的既有行為
 /// （F1 靠的就是這個自動行為，見上方 struct 文件註解）。
+///
+/// **`defaultValue = 0`＋`reduce` 用 `max`**（R4，merge-review R3 `889164c6` F1）：SwiftUI
+/// 對整棵視圖樹裡「沒有明確設這個 preference」的節點一樣會用 `defaultValue` 參與 reduce
+/// （不是只有真的呼叫 `.preference(key:value:)` 的節點才算數）。R3 版用
+/// `defaultValue = 520`＋`reduce { value = nextValue() }`（單純覆寫），若某個沒設 preference
+/// 的兄弟節點在走訪順序中排在真正量測的 `GeometryReader`之後，它貢獻的 `defaultValue`
+/// 就會把量到的真值蓋掉——這正是 R3 實測到「320pt 窄容器下仍量到 520」的根因。改成
+/// `defaultValue = 0`＋`max` reduce：沒設 preference 的節點貢獻 0，在 `max` 語義下必輸給
+/// 任何真正量到的正值，因此哪個節點先後走訪都不影響最終結果只會是「真正量到的最大值」。
 private struct LegalDocumentSheetWidthKey: PreferenceKey {
-    static let defaultValue: CGFloat = 520
+    static let defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
+        value = max(value, nextValue())
     }
 }
 
