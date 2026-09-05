@@ -1900,9 +1900,15 @@ app client 呼叫的公開端點。原本（LS-153 落地時）用 Supabase 平�
 `resolveSecretKey()`（優先新式 default、缺則退回 legacy）建立。
 
 `pg_cron`＋`pg_net` 呼叫範本（正式站排程接線時使用，`apikey` 從 `vault` 讀取、
-不寫死在 SQL 裡；`ls153_purge_storage_secret_key` 存的是新式 `sb_secret_…`
-default key，不是 legacy service_role JWT——沿用 LS-153 原本建的 vault secret
-名稱，但內容需要重新設定成新式 key）：
+不寫死在 SQL 裡）：`ls153_purge_storage_secret_key` 是**本票新建**的 vault
+secret（存新式 `sb_secret_…` default key），與 LS-153 既有的
+`ls153_purge_storage_service_role`（存 legacy service_role JWT，LS-153 comment
+`0535eab8` 建立）**並存，不是沿用同一個 secret 改內容**——切換 cron job 標頭
+前務必先確認 `ls153_purge_storage_secret_key` 已建立（`select 1 from
+vault.decrypted_secrets where name = 'ls153_purge_storage_secret_key'`），
+否則子查詢回 `NULL`、`jsonb_build_object('apikey', NULL)` 產出
+`{"apikey": null}`，症狀與本票要修的 401 一模一樣。舊的
+`ls153_purge_storage_service_role` 待 cron job 切換完成、煙測通過後再刪除：
 ```sql
 select net.http_post(
   url := '<SUPABASE_URL>/functions/v1/purge-storage',
