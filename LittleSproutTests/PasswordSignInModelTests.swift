@@ -92,7 +92,10 @@ final class PasswordSignInModelTests: XCTestCase {
         let result = await model.signIn()
 
         XCTAssertFalse(result)
-        XCTAssertNil(model.errorMessage, "空欄位沒有對應設計態，靜默不動作即可")
+        // merge-review R1 N3：稿面沒有這個態，但主 CTA 按下去不能毫無反應（跟姊妹畫面
+        // EmailSignInModel.sendCode() 對齊）；欄位仍維持一般樣式，不是帳密錯誤。
+        XCTAssertEqual(model.errorMessage, "請輸入帳號與密碼。")
+        XCTAssertFalse(model.isCredentialsError)
     }
 
     func test_signIn_emptyPassword_doesNotCallAuthService() async {
@@ -108,7 +111,7 @@ final class PasswordSignInModelTests: XCTestCase {
         let result = await model.signIn()
 
         XCTAssertFalse(result)
-        XCTAssertNil(model.errorMessage)
+        XCTAssertEqual(model.errorMessage, "請輸入帳號與密碼。")
     }
 
     func test_signIn_whitespaceOnlyEmail_treatedAsEmpty() async {
@@ -126,6 +129,7 @@ final class PasswordSignInModelTests: XCTestCase {
         let result = await model.signIn()
 
         XCTAssertFalse(result)
+        XCTAssertEqual(model.errorMessage, "請輸入帳號與密碼。")
     }
 
     func test_updateEmail_clearsPreviousError() async {
@@ -168,6 +172,13 @@ final class PasswordSignInModelTests: XCTestCase {
         // `stub.passwordSignInAttempts`（測試替身自己記錄）斷言，不靠捕捉一個可變區域變數——
         // `SessionHandler` 是 `@Sendable` closure，不能捕捉可變 var（同 `EmailSignInModelTests`
         // 用 `stub.sentEmails` 斷言次數的既有理由）。
+        //
+        // merge-review R1 N4（mutation 3 實測）：拿掉 `signIn()` 的 `guard !isSigningIn` 之後，
+        // handler 裡原本無條件的 `_ = await model.signIn()` 會遞迴呼叫回同一個 handler、
+        // 無限遞迴——迴歸時整個 test suite 卡住直到 CI job timeout（600s 都不結束），而不是
+        // 一條看得懂原因的紅。改成只在 `passwordSignInAttempts.count < 2` 時才重入一次
+        // （reviewer 建議的修法）：guard 還在時只呼叫得到 1 次、後面斷言綠；guard 被拿掉時
+        // 最多遞迴到 2 次就停（不會無限），斷言 `count == 1` 直接紅，秒級失敗、原因清楚。
         let stub = StubAuthService()
         let expected = AuthSession(userID: userID, email: "reviewer@example.com", expiresAt: .distantFuture)
         let store = AuthStore(authService: stub)
@@ -175,7 +186,9 @@ final class PasswordSignInModelTests: XCTestCase {
         model.updateEmail("reviewer@example.com")
         model.updatePassword("correct-horse-battery-staple")
         stub.setSignInWithPasswordHandler { _, _ in
-            _ = await model.signIn()
+            if stub.passwordSignInAttempts.count < 2 {
+                _ = await model.signIn()
+            }
             return expected
         }
 
@@ -186,5 +199,48 @@ final class PasswordSignInModelTests: XCTestCase {
             stub.passwordSignInAttempts.count, 1,
             "isSigningIn 時的重入呼叫不該再打一次後端"
         )
+    }
+
+    // MARK: - merge-review R1 N1：限流／泛用非帳密狀態碼不能被誤判成「帳號或密碼錯誤」
+
+    // `AppError.mapAPIStatus` 把 429 歸進 `.validationRetryable` 並帶 `code: "bare_http_429"`
+    // sentinel（見 AppError.swift）——429 是限流，換帳密重試沒有用，且會誤導審核人員一直重試、
+    // 越拉越長冷卻窗口。這裡直接注入這個 code，不依賴真的網路往返。
+    func test_signIn_bareHTTP429_doesNotShowCredentialsErrorMessage() async {
+        let stub = StubAuthService()
+        let underlying = AppError.validationRetryable(message: "Too Many Requests", code: "bare_http_429")
+        stub.setSignInWithPasswordHandler { _, _ in throw underlying }
+        let store = AuthStore(authService: stub)
+        let model = PasswordSignInModel(authStore: store)
+        model.updateEmail("reviewer@example.com")
+        model.updatePassword("correct-horse-battery-staple")
+
+        let result = await model.signIn()
+
+        XCTAssertFalse(result)
+        XCTAssertFalse(
+            model.isCredentialsError,
+            "429 是限流，不是帳密打錯——標成帳密錯誤會誤導審核人員一直重試密碼"
+        )
+        XCTAssertEqual(model.errorMessage, underlying.userFacingMessage)
+        XCTAssertNotEqual(model.errorMessage, "帳號或密碼錯誤，請再試一次。")
+    }
+
+    // GoTrue 結構化的限流碼（有 JSON body 時），同 `bare_http_429`（反向代理裸 429）的理由，
+    // 見 `OTPVerificationModel.nonAttemptConsumingCodes` 既有前例。
+    func test_signIn_overRequestRateLimit_doesNotShowCredentialsErrorMessage() async {
+        let stub = StubAuthService()
+        let underlying = AppError.validationRetryable(message: "rate limited", code: "over_request_rate_limit")
+        stub.setSignInWithPasswordHandler { _, _ in throw underlying }
+        let store = AuthStore(authService: stub)
+        let model = PasswordSignInModel(authStore: store)
+        model.updateEmail("reviewer@example.com")
+        model.updatePassword("correct-horse-battery-staple")
+
+        let result = await model.signIn()
+
+        XCTAssertFalse(result)
+        XCTAssertFalse(model.isCredentialsError)
+        XCTAssertEqual(model.errorMessage, underlying.userFacingMessage)
     }
 }

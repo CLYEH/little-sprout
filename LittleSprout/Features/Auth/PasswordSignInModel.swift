@@ -45,13 +45,18 @@ final class PasswordSignInModel {
         isCredentialsError = false
     }
 
-    /// 空欄位不送出（票文驗收）：沒有對應的設計態，靜默不動作即可，同 `EmailSignInModel.
-    /// sendCode()` 對再入呼叫的處理方式（提早 return，不顯示任何錯誤）。
+    /// 空欄位不送出（票文驗收）；merge-review R1 N3：純粹提早 return 讓主 CTA 按下去毫無反應，
+    /// 跟姊妹畫面 `EmailSignInModel.sendCode()`（格式錯會給「這個 Email 好像沒打完…」）行為不
+    /// 一致——稿面沒有這個態，這裡不動欄位紅框（`isCredentialsError` 維持 false），只補一句
+    /// 提示，走跟網路錯誤同一個「登入鈕上方」版面位置。
     @discardableResult
     func signIn() async -> Bool {
         guard !isSigningIn else { return false }
         let signingEmail = trimmedEmail
-        guard !signingEmail.isEmpty, !password.isEmpty else { return false }
+        guard !signingEmail.isEmpty, !password.isEmpty else {
+            errorMessage = "請輸入帳號與密碼。"
+            return false
+        }
         isSigningIn = true
         defer { isSigningIn = false }
         do {
@@ -63,13 +68,26 @@ final class PasswordSignInModel {
         }
     }
 
+    /// merge-review R1 N1：`AppError.mapAPIStatus` 把 400／404／422／429 全部歸進
+    /// `.validationRetryable`（見該檔），429 還帶 `code: "bare_http_429"` sentinel——這裡原本
+    /// 拿整個 tier 當「帳密錯誤」的判準太寬，審核人員撞限流（或裸 429／404）時會被導向「一直
+    /// 重試密碼」，跟 `OTPVerificationModel.nonAttemptConsumingCodes` 要防的是同一類事故。
+    /// 限流碼排除在外，落到跟其他非帳密錯誤共用的分支——沿用同一句 `appError.userFacingMessage`，
+    /// 不新造文案。
+    private static let rateLimitCodes: Set<String> = ["over_request_rate_limit", "bare_http_429"]
+
     private func apply(_ appError: AppError) {
-        if case .validationRetryable = appError {
+        if case .validationRetryable(_, let code) = appError, !Self.isRateLimited(code) {
             isCredentialsError = true
             errorMessage = "帳號或密碼錯誤，請再試一次。"
         } else {
             isCredentialsError = false
             errorMessage = appError.userFacingMessage
         }
+    }
+
+    private static func isRateLimited(_ code: String?) -> Bool {
+        guard let code else { return false }
+        return rateLimitCodes.contains(code)
     }
 }
