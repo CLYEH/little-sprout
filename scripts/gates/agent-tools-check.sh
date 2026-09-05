@@ -72,6 +72,8 @@ ios-dev|"
 # LS-207：ios-dev／merge-reviewer 正文須含「DB 測試 handoff 必附通道」（LS-204 merge-review R1 B1 的教訓：run.sh 已印連線
 # 通道，handoff／verdict 沒抄那一行就看不出量的是哪條，那句被刪即紅）與「iOS 26.2+ sheet 內 UITest 座標斷言用相對參照、
 # 可點元件 minHeight ≥48」（LS-167／16e6b7f9：sheet 內容 ≈0.96 縮放，絕對座標與貼著 44pt 下限的高度會跌破，那句被刪即紅）。
+# LS-207（a7b0f49e）：ios-dev／qa／merge-reviewer 正文須含「等長命令一律前景 Bash 帶 timeout」——git push／xcodebuild／run.sh
+# 這類長命令背景化後結果只在通知裡、沒人 Read 就等於沒驗過（LS-191 當晚背景 push 沒人回頭看輸出），那句被刪即紅。
 BODY_RULES=
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold
@@ -91,7 +93,10 @@ visual-reviewer|--kill 只在 orchestrator 明示時
 ios-dev|DB 測試 handoff 必附通道
 merge-reviewer|DB 測試 handoff 必附通道
 ios-dev|sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48
-merge-reviewer|sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48"
+merge-reviewer|sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48
+ios-dev|等長命令一律前景 Bash 帶 timeout
+qa|等長命令一律前景 Bash 帶 timeout
+merge-reviewer|等長命令一律前景 Bash 帶 timeout"
 # LS170-BODY-RULES-END
 
 hits=""; n=0

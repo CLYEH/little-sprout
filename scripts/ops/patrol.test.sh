@@ -31,6 +31,10 @@ export SIMCTL_LIST_JSON='{"devices":{}}'
 # LS-176：磁碟水位段預設門檻 20 GB——CI runner／開發機當下可用空間可能真的低於 20 GB，不隔離的話 ⑧「全正常無 ⚠」
 # 這類既有斷言會隨機器狀態偶發紅。統一設成 0（永不觸發），㉑ 自己在呼叫時覆寫門檻與兩個目錄。
 export PATROL_DISK_MIN_GB=0
+# LS-207：「本地有 commit、無 remote 分支」旗標的 20 分鐘寬限——既有 fixture 的 commit 都是「剛剛」建立
+# （lm=0），不隔離的話會被寬限期擋住、既有斷言（① LS-4 未 push 即刻標 ⚠）偶發紅。統一設成 0（永不寬限，
+# 沿用改動前的即刻標記行為）；㉔ 自己在呼叫時覆寫門檻驗證寬限期本身。
+export PATROL_PUSH_GRACE_MIN=0
 # LS-180：Pencil 連線探針段只在有 design 分支 worktree 時跑 pen-status.sh——它會 pgrep／lsof／pen CLI 探真的 Pen；自測
 # 一律指到假身（㉒ 自己再換成受控的假身），不碰本機真正的 Pen。
 export PATROL_PEN_STATUS_SH="$work/fake-pen-status.sh"
@@ -922,6 +926,59 @@ out23g="$(SIMCTL_LIST_JSON="$gone_json" bash "$patrol" --repo "$repo" --no-pr --
 rc_is '㉓-b exit 0' 0 "$rc" "$out23g"
 has   '㉓-b 記錄在、目錄已刪 → LS-77 判殘機 ⚠＋動作行' "$out23g" '⚠ LS-77-iPhone17Pro（GONE-77）票 LS-77 的 worktree 已不在（殘機） → bash scripts/ops/cleanup-merged.sh --apply LS-77'
 hasnt '㉓-b 對照：LS-3（目錄在）不 ⚠' "$out23g" '⚠ LS-3-iPhone17Pro'
+
+# ---- ㉔ LS-207（a7b0f49e）：本地有 commit、無 remote 分支——20 分鐘寬限（PATROL_PUSH_GRACE_MIN）：
+#        未超過只印 info（可能還在跑 push gate），超過才標 ⚠；「領先 remote」旗標（既有）不受影響 ----
+wt -b feature/LS-901-nopush "$wts/LS-901" origin/development
+echo x > "$wts/LS-901/x.txt"; g -C "$wts/LS-901" add -A
+old_t=$(date -u -v-25M +%Y%m%d%H%M.%S 2>/dev/null || date -u -d '25 minutes ago' +%Y%m%d%H%M.%S)
+GIT_COMMITTER_DATE="$(date -u -v-25M '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date -u -d '25 minutes ago' '+%Y-%m-%d %H:%M:%S')" \
+  g -C "$wts/LS-901" commit -qm 'feat: LS-901 x' --date="$(date -u -v-25M '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date -u -d '25 minutes ago' '+%Y-%m-%d %H:%M:%S')"
+out24="$(PATROL_PUSH_GRACE_MIN=20 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+l201=$(row "$out24" 'feature/LS-901-nopush')
+has   '㉔ 最後 commit 25 分前、寬限 20 分 → 標 ⚠ 分支未 push（含寬限分鐘與 LS-207）' "$l201" '>20分無 push 行程，LS-207'
+jq_ok '㉔ --json 同案 flag 含「未 push」' "$(PATROL_PUSH_GRACE_MIN=20 bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)" '.worktrees[] | select(.branch=="feature/LS-901-nopush") | (.flag | test("未 push"))'
+git -C "$repo" worktree remove --force "$wts/LS-901" >/dev/null 2>&1
+g -C "$repo" branch -D feature/LS-901-nopush >/dev/null 2>&1
+
+wt -b feature/LS-902-recent "$wts/LS-902" origin/development
+echo y > "$wts/LS-902/y.txt"; g -C "$wts/LS-902" add -A; g -C "$wts/LS-902" commit -qm 'feat: LS-902 y'
+out25="$(PATROL_PUSH_GRACE_MIN=20 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+l202=$(row "$out25" 'feature/LS-902-recent')
+hasnt '㉕ 最後 commit 剛剛、寬限 20 分未到 → 不標 ⚠（只是還沒到寬限期）' "$l202" '⚠ 分支未 push'
+has   '㉕ 寬限期內印 info：可能還在跑 push gate' "$l202" '可能還在跑 push gate'
+git -C "$repo" worktree remove --force "$wts/LS-902" >/dev/null 2>&1
+g -C "$repo" branch -D feature/LS-902-recent >/dev/null 2>&1
+
+# mutation：拿掉寬限判定（改回無條件立即標 ⚠）→ ㉕ 的「未到寬限期不標」負樣本必須變紅，證明寬限期是這條規則造成的
+mut_pg="$work/patrol.no-push-grace.sh"
+python3 - "$patrol" "$mut_pg" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = '''  if [ -z "$r" ] && [ "$since" != "?" ] && [ "$since" -gt 0 ]; then
+    if [ "${lm:-0}" -ge "$PUSH_GRACE_MIN" ]; then
+      flag="⚠ 分支未 push（${since} commit 只在本機，最後 commit ${lm}m 前，>${PUSH_GRACE_MIN}分無 push 行程，LS-207）"
+    else
+      info="${since} commit 尚未 push（${lm:-0}m 前，可能還在跑 push gate）"
+    fi
+  elif'''
+new = '''  if [ -z "$r" ] && [ "$since" != "?" ] && [ "$since" -gt 0 ]; then
+    flag="⚠ 分支未 push（${since} commit 只在本機）"
+  elif'''
+assert old in src, "找不到寬限判定區塊，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
+PY
+wt -b feature/LS-903-recent2 "$wts/LS-903" origin/development
+echo z > "$wts/LS-903/z.txt"; g -C "$wts/LS-903" add -A; g -C "$wts/LS-903" commit -qm 'feat: LS-903 z'
+out26="$(PATROL_PUSH_GRACE_MIN=20 bash "$mut_pg" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+l203=$(row "$out26" 'feature/LS-903-recent2')
+if printf '%s' "$l203" | grep -qF '⚠ 分支未 push'; then
+  echo '✓ ㉕ mutant：拿掉寬限判定後「剛 commit 就標 ⚠」的負樣本變紅（證明寬限期是這條規則造成的）'
+else
+  echo "✗ ㉕ mutant 應標 ⚠（未套寬限期），實際仍未標——mutation 本身可能沒生效" >&2; printf '%s\n' "$l203" | sed 's/^/    /' >&2; fail=1
+fi
+git -C "$repo" worktree remove --force "$wts/LS-903" >/dev/null 2>&1
+g -C "$repo" branch -D feature/LS-903-recent2 >/dev/null 2>&1
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"

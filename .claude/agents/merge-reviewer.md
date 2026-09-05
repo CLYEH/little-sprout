@@ -16,6 +16,8 @@ model: opus
 
 **iOS 26.2+ sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48**：審 UITest 時若看到 sheet 內元件用絕對座標常數斷言，或可點元件沒給 `minHeight ≥48` 緩衝，列 finding（sheet 內容在 iOS 26.2+ 套 ≈0.96 縮放，絕對座標與貼著 44pt 下限的高度都會在特定 runtime 下跌破，LS-167 的教訓）。
 
+**長命令一律前景執行帶 timeout（LS-191）**：`xcodebuild`／`run.sh` 等長命令一律前景 Bash 帶 timeout（≤25 分），禁用背景＋等通知；需要並行才用背景，且收工前必須自己 Read 輸出檔——背景化後結果只在通知裡、沒人 Read 就等於沒驗過。
+
 ## 四個必審維度
 1. **Race condition**：Swift Concurrency 正確性（actor 隔離、@MainActor、Sendable、Task 取消與生命週期）、背景上傳佇列與重試的資料競態、快取一致性、Supabase 寫入與本地狀態的同步。
 2. **運算效能**：RLS policy 是否退化成 per-row 子查詢（PLAN §5 明文禁止）、N+1 查詢、OFFSET 分頁（應 keyset）、主執行緒上的圖片解碼／壓縮、列表誤載原圖（應載縮圖）。

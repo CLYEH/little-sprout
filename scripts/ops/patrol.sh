@@ -22,7 +22,7 @@
 # 停滯判定（§4-b 三型態；stale＝上面的分鐘數）：
 #   PR       CONFLICTING／UNSTABLE／BEHIND／CHANGES_REQUESTED 立即標；CLEAN 且 APPROVED 立即標「可併」；
 #            其餘 CLEAN／BLOCKED 超過 stale 沒更新標 ⏳（草稿不標）
-#   分支     有 commit 但分支從未 push；領先 remote 且最後 commit 超過 stale（push gate 卡？）；
+#   分支     有 commit 但分支從未 push、最後 commit 超過 PATROL_PUSH_GRACE_MIN（預設 20 分，LS-207）；領先 remote 且最後 commit 超過 stale（push gate 卡？）；
 #            落後 remote（別處 push 過）；已 push、無 open PR、最後 commit 超過 stale
 #   工作區   有未提交變更（不含 untracked）且最後改動超過 stale；worktree 建好超過 stale 仍 0 commit 無變更（尚未開工）；
 #            分支已併入 base（自 merge-base 0 commit、但分支 reflog 有過 commit）而 worktree 未移除（§2：合併完成後移除）
@@ -92,6 +92,12 @@ case "$FETCH_TIMEOUT" in ''|*[!0-9]*) echo "✗ patrol：PATROL_FETCH_TIMEOUT �
 # 沒有 hook 預算）25 秒——低水位時 Devices 通常正是最肥的那個，cron 這一路要印得出真數字才有處置依據。
 DISK_MIN_GB=${PATROL_DISK_MIN_GB:-20}
 case "$DISK_MIN_GB" in ''|*[!0-9]*) echo "✗ patrol：PATROL_DISK_MIN_GB 須為整數 GB（得到「${DISK_MIN_GB}」）" >&2; exit 2 ;; esac
+# LS-207（a7b0f49e）：本地有 commit、遠端無同名分支——「領先 remote」旗標要求 remote 分支存在（`-n "$r"`），
+# 漏抓「從未 push 過」這種連 remote 分支都不存在的情況（LS-191 當晚：長命令背景化沒人回頭看，`git push` 究竟
+# 跑了沒、卡了沒都不知道）。給 20 分鐘寬限（比 STALE 短——push 該很快發生，不必等到 45 分鐘的一般停滯門檻）：
+# 未超過只印 info（可能還在跑 push gate），超過才標 ⚠。
+PUSH_GRACE_MIN=${PATROL_PUSH_GRACE_MIN:-20}
+case "$PUSH_GRACE_MIN" in ''|*[!0-9]*) echo "✗ patrol：PATROL_PUSH_GRACE_MIN 須為整數分鐘（得到「${PUSH_GRACE_MIN}」）" >&2; exit 2 ;; esac
 DU_TIMEOUT=${PATROL_DU_TIMEOUT:-}
 if [ -z "$DU_TIMEOUT" ]; then if [ "$MODE" = brief ]; then DU_TIMEOUT=8; else DU_TIMEOUT=25; fi; fi
 case "$DU_TIMEOUT" in ''|*[!0-9]*) echo "✗ patrol：PATROL_DU_TIMEOUT 須為整數秒（得到「${DU_TIMEOUT}」）" >&2; exit 2 ;; esac
@@ -253,7 +259,11 @@ process_wt() {
 
   # 判定（§4-b 分支／工作區停滯）
   if [ -z "$r" ] && [ "$since" != "?" ] && [ "$since" -gt 0 ]; then
-    flag="⚠ 分支未 push（${since} commit 只在本機）"
+    if [ "${lm:-0}" -ge "$PUSH_GRACE_MIN" ]; then
+      flag="⚠ 分支未 push（${since} commit 只在本機，最後 commit ${lm}m 前，>${PUSH_GRACE_MIN}分無 push 行程，LS-207）"
+    else
+      info="${since} commit 尚未 push（${lm:-0}m 前，可能還在跑 push gate）"
+    fi
   elif [ -n "$r" ] && [ "$ahead" != "?" ] && [ "$ahead" -gt 0 ]; then
     if [ "${lm:-0}" -ge "$STALE" ]; then flag="⚠ 領先 remote ${ahead} commit 已 ${lm}m 未 push（push gate 卡？）"
     else info="領先 remote ${ahead}（${lm:-0}m 前，可能還在跑 push gate）"; fi
