@@ -44,7 +44,7 @@ function makeEvent(overrides: Partial<ClaimedEvent> = {}): ClaimedEvent {
 
 function makeDeps(overrides: Partial<Deps> = {}): Deps {
   return {
-    expectedServiceRoleKey: "service-role-secret",
+    authEnv: { SUPABASE_SERVICE_ROLE_KEY: "service-role-secret" },
     batchLimit: 50,
     maxBatches: 20,
     concurrency: 8,
@@ -87,9 +87,14 @@ function onceThenEmpty(
   };
 }
 
-function req(method: string, authHeader: string | null): Request {
+function req(
+  method: string,
+  authHeader: string | null,
+  apikey?: string,
+): Request {
   const headers = new Headers();
   if (authHeader !== null) headers.set("Authorization", authHeader);
+  if (apikey !== undefined) headers.set("apikey", apikey);
   return new Request("https://example.test/functions/v1/push-dispatch", {
     method,
     headers,
@@ -746,15 +751,15 @@ Deno.test("handleRequest：非 POST（GET）→ 405，不呼叫 claimEvents", as
   assertEquals(claimCalled, false);
 });
 
-Deno.test("handleRequest：expectedServiceRoleKey 未設定（部署設定缺失）→ 500，fail loud", async () => {
-  const deps = makeDeps({ expectedServiceRoleKey: undefined });
+Deno.test("handleRequest：authEnv 兩把金鑰皆未設定（部署設定缺失）→ 500，fail loud", async () => {
+  const deps = makeDeps({ authEnv: {} });
   const res = await handleRequest(req("POST", "Bearer anything"), deps);
   assertEquals(res.status, 500);
   const body = await res.json();
   assertEquals(body.error, "SUPABASE_SERVICE_ROLE_KEY 未設定");
 });
 
-Deno.test("handleRequest：Authorization 缺失 → 401", async () => {
+Deno.test("handleRequest：Authorization／apikey 皆缺失 → 401", async () => {
   const res = await handleRequest(req("POST", null), makeDeps());
   assertEquals(res.status, 401);
 });
@@ -770,6 +775,40 @@ Deno.test("handleRequest：bearer 不等於 service_role key（例如帶 anon ke
 Deno.test("handleRequest：bearer 長度與 service_role key 不同 → 401（LS-172 R2 i4：常數時間比對的長度分支也要正確判否）", async () => {
   const res = await handleRequest(req("POST", "Bearer short"), makeDeps());
   assertEquals(res.status, 401);
+});
+
+Deno.test("handleRequest：apikey 等於 SUPABASE_SECRET_KEYS.default → 200（LS-196 新式鑑權路徑）", async () => {
+  const deps = makeDeps({
+    authEnv: {
+      SUPABASE_SECRET_KEYS: JSON.stringify({ default: "new-style-key" }),
+    },
+  });
+  const res = await handleRequest(req("POST", null, "new-style-key"), deps);
+  assertEquals(res.status, 200);
+});
+
+Deno.test("handleRequest：apikey 錯誤、且無合法 legacy bearer → 401（LS-196）", async () => {
+  const deps = makeDeps({
+    authEnv: {
+      SUPABASE_SECRET_KEYS: JSON.stringify({ default: "new-style-key" }),
+    },
+  });
+  const res = await handleRequest(req("POST", null, "wrong-key"), deps);
+  assertEquals(res.status, 401);
+});
+
+Deno.test("handleRequest：兩把金鑰皆設定，只帶合法 legacy bearer（不帶 apikey）→ 200（過渡期並存，LS-196）", async () => {
+  const deps = makeDeps({
+    authEnv: {
+      SUPABASE_SECRET_KEYS: JSON.stringify({ default: "new-style-key" }),
+      SUPABASE_SERVICE_ROLE_KEY: "service-role-secret",
+    },
+  });
+  const res = await handleRequest(
+    req("POST", "Bearer service-role-secret"),
+    deps,
+  );
+  assertEquals(res.status, 200);
 });
 
 Deno.test("handleRequest：合法 service_role bearer → 200，body 含 claimed/recipients/sent/failed/tokens_removed/stopped_early 六個欄位（票文明定＋LS-172 R2 m1 新增）", async () => {

@@ -5,12 +5,18 @@
 // `delete-account`（見該檔頭）：index.ts 若直接呼叫 Deno.serve()，測試只是
 // import 它就會嘗試綁定 HTTP listener。
 //
-// 呼叫方式（`docs/API.md` §10「Edge Functions」push-dispatch 段已明文）：
-// `POST {SUPABASE_URL}/functions/v1/push-dispatch`，只接受 `service_role` bearer
-// （比對 `SUPABASE_SERVICE_ROLE_KEY` 本身，同 `purge-storage` 既有慣例，不是「JWT
-// 合法即可」——anon key 也是合法 JWT）。設計給排程呼叫（pg_cron／pg_net 或外部排程，
-// 見 docs/API.md §10「排程」——本票只記載清單，不建立），不是給 app client 用的
-// 公開端點。
+// 呼叫方式（`docs/API.md` §10「Edge Functions」push-dispatch 段已明文；LS-196
+// 訂正鑑權機制）：`POST {SUPABASE_URL}/functions/v1/push-dispatch`，只接受
+// service 憑證——`_shared/keys.ts` 的 `isAuthorizedServiceCall()`：`apikey`
+// header 等於任一 `SUPABASE_SECRET_KEYS` 值（正式站的新式 `sb_secret_…` default
+// key），或（過渡）`Authorization: Bearer` 等於 `SUPABASE_SERVICE_ROLE_KEY`——
+// 不是「JWT 合法即可」，anon key 也是合法 JWT。同 `purge-storage`（LS-196）的
+// 既有理由：正式站執行期注入的 `SUPABASE_SERVICE_ROLE_KEY` 已非 legacy
+// service_role JWT（LS-153 i4 煙測），原本純 bearer 比對這條守門在正式站無法
+// 通過；`supabase/config.toml` 的 `[functions.push-dispatch] verify_jwt =
+// false` 關掉平台層 JWT 驗證，改在程式內驗證。設計給排程呼叫（pg_cron／pg_net
+// 或外部排程，見 docs/API.md §10「排程」——本票只記載清單，不建立），不是給
+// app client 用的公開端點。
 //
 // 核心流程：claim（SQL 面 `public.claim_notification_events()`，先標記
 // `sent_at` 再處理——即使這裡送出失敗也不回滾，寧可漏送不重送，見下方
@@ -35,6 +41,12 @@
 // 這裡補上 "report"，讓守門認得它、不再拖垮整批；`buildMessageBody` 的
 // `report` 分支文案是中性 fallback（是否要推播、推播給誰是產品決定，不是本次
 // 修的範圍——這裡只保證「不再整批漏送」，見該分支的說明）。
+import {
+  isAuthorizedServiceCall,
+  resolveSecretKey,
+  type SecretKeyEnv,
+} from "../_shared/keys.ts";
+
 export type NotificationKind =
   | "comment"
   | "reaction"
@@ -145,8 +157,11 @@ export interface ApnsProvider {
 }
 
 export interface Deps {
-  /** 用於比對 Authorization Bearer 的期望值；undefined＝部署設定缺失（fail loud）。 */
-  expectedServiceRoleKey: string | undefined;
+  /** service 呼叫鑑權用的原始環境變數（LS-196，見 `_shared/keys.ts`）：
+   * `isAuthorizedServiceCall()` 據此判斷 `apikey`／legacy bearer 是否合法，
+   * `resolveSecretKey()` 據此判斷「有沒有任何一把可用的金鑰」（都缺＝部署設定
+   * 缺失，fail loud）。 */
+  authEnv: SecretKeyEnv;
   /** 單次 claim 呼叫的上限（比照 purge-storage 的 BATCH_SIZE 概念）。 */
   batchLimit: number;
   /** 安全上限：避免佇列量體異常大時單次 invocation 執行時間失控（比照 purge-storage 的 MAX_BATCHES）。 */
@@ -477,26 +492,6 @@ function jsonResponse(status: number, body: Record<string, unknown>): Response {
   });
 }
 
-// 常數時間字串比對（LS-172 R2，merge-reviewer i4）：bearer token 比對如果用
-// `!==`，逐字元短路比較的耗時會隨「前面對到幾個字元」而異，理論上可被拿來做
-// timing attack 猜出正確的 service_role key。這裡改成：不論長度是否相符，都把
-// 兩個字串（UTF-8 位元組）逐位元組 XOR 累加到 `diff`，全部比完才判斷
-// `diff === 0`——耗時只跟兩個字串的最大長度有關，跟「哪裡開始不一樣」無關。
-// 長度不同時额外把 diff 標記為非 0（避免「長度不同就一定不等」被更快地判斷掉），
-// 但仍然跑完整輪迴圈，不提早 return。
-function timingSafeEqual(a: string, b: string): boolean {
-  const bytesA = new TextEncoder().encode(a);
-  const bytesB = new TextEncoder().encode(b);
-  const len = Math.max(bytesA.length, bytesB.length, 1);
-  let diff = bytesA.length === bytesB.length ? 0 : 1;
-  for (let i = 0; i < len; i++) {
-    const byteA = i < bytesA.length ? bytesA[i] : 0;
-    const byteB = i < bytesB.length ? bytesB[i] : 0;
-    diff |= byteA ^ byteB;
-  }
-  return diff === 0;
-}
-
 export async function handleRequest(
   req: Request,
   deps: Deps,
@@ -505,19 +500,18 @@ export async function handleRequest(
     return jsonResponse(405, { error: "只接受 POST" });
   }
 
-  if (!deps.expectedServiceRoleKey) {
-    // fail loud：部署設定本身有問題（SUPABASE_SERVICE_ROLE_KEY 未注入），不是
-    // 「當作沒有事件可處理」悄悄回 200（同 purge-storage／delete-account 既有先例）。
+  // LS-196：鑑權判定改用 `_shared/keys.ts`（常數時間比對已下沉到那支共用
+  // helper，`purge-storage` 同型）。
+  if (!resolveSecretKey(deps.authEnv)) {
+    // fail loud：部署設定本身有問題（SUPABASE_SECRET_KEYS／SUPABASE_SERVICE_ROLE_KEY
+    // 皆未注入），不是「當作沒有事件可處理」悄悄回 200（同 purge-storage／
+    // delete-account 既有先例）。
     return jsonResponse(500, {
       error: "SUPABASE_SERVICE_ROLE_KEY 未設定",
     });
   }
 
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const bearer = authHeader.startsWith("Bearer ")
-    ? authHeader.slice("Bearer ".length)
-    : "";
-  if (!timingSafeEqual(bearer, deps.expectedServiceRoleKey)) {
+  if (!isAuthorizedServiceCall(req.headers, deps.authEnv)) {
     return jsonResponse(401, { error: "只接受 service_role 呼叫" });
   }
 

@@ -116,7 +116,8 @@ Deno.serve(async (req: Request) => {
     // fail loud：環境變數缺失是部署設定錯誤，不是「當作沒有佇列可處理」悄悄回 200。
     return new Response(
       JSON.stringify({
-        error: "SUPABASE_URL／secret key 未設定（SUPABASE_SECRET_KEYS 或 SUPABASE_SERVICE_ROLE_KEY 皆缺）",
+        error:
+          "SUPABASE_URL／secret key 未設定（SUPABASE_SECRET_KEYS 或 SUPABASE_SERVICE_ROLE_KEY 皆缺）",
       }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );

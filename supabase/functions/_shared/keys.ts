@@ -51,11 +51,15 @@ function timingSafeEqual(a: string, b: string): boolean {
  * 一律回傳 `undefined`——fail closed：呼叫端把這當成「新式 key 不可用」，不會
  * 讓一個解析錯誤意外被當成「有值就放行」。
  */
-function parseSecretKeys(raw: string | undefined): Record<string, unknown> | undefined {
+function parseSecretKeys(
+  raw: string | undefined,
+): Record<string, unknown> | undefined {
   if (!raw) return undefined;
   try {
     const parsed = JSON.parse(raw);
-    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    if (
+      parsed === null || typeof parsed !== "object" || Array.isArray(parsed)
+    ) {
       return undefined;
     }
     return parsed as Record<string, unknown>;

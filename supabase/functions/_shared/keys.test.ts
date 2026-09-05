@@ -81,7 +81,9 @@ Deno.test("resolveSecretKey：SUPABASE_SECRET_KEYS 是陣列（不是物件）�
 // ---------------------------------------------------------------------------
 
 Deno.test("isAuthorizedServiceCall：apikey 等於 default → true", () => {
-  const env = { SUPABASE_SECRET_KEYS: secretKeysJson({ default: NEW_DEFAULT }) };
+  const env = {
+    SUPABASE_SECRET_KEYS: secretKeysJson({ default: NEW_DEFAULT }),
+  };
   const ok = isAuthorizedServiceCall(headers({ apikey: NEW_DEFAULT }), env);
   assertEquals(ok, true);
 });
@@ -98,13 +100,17 @@ Deno.test("isAuthorizedServiceCall：apikey 等於輪替中的 previous（不是
 });
 
 Deno.test("isAuthorizedServiceCall：apikey 錯誤值 → false", () => {
-  const env = { SUPABASE_SECRET_KEYS: secretKeysJson({ default: NEW_DEFAULT }) };
+  const env = {
+    SUPABASE_SECRET_KEYS: secretKeysJson({ default: NEW_DEFAULT }),
+  };
   const ok = isAuthorizedServiceCall(headers({ apikey: "wrong-key" }), env);
   assertEquals(ok, false);
 });
 
 Deno.test("isAuthorizedServiceCall：apikey 缺失、無 legacy bearer → false", () => {
-  const env = { SUPABASE_SECRET_KEYS: secretKeysJson({ default: NEW_DEFAULT }) };
+  const env = {
+    SUPABASE_SECRET_KEYS: secretKeysJson({ default: NEW_DEFAULT }),
+  };
   const ok = isAuthorizedServiceCall(headers(), env);
   assertEquals(ok, false);
 });
@@ -128,7 +134,9 @@ Deno.test("isAuthorizedServiceCall：legacy bearer 錯 → false", () => {
 });
 
 Deno.test("isAuthorizedServiceCall：新式 key 放進 Authorization: Bearer（不是 apikey）→ false（新式 key 不接受這個位置）", () => {
-  const env = { SUPABASE_SECRET_KEYS: secretKeysJson({ default: NEW_DEFAULT }) };
+  const env = {
+    SUPABASE_SECRET_KEYS: secretKeysJson({ default: NEW_DEFAULT }),
+  };
   const ok = isAuthorizedServiceCall(
     headers({ Authorization: `Bearer ${NEW_DEFAULT}` }),
     env,
