@@ -115,7 +115,7 @@ R7 掃過全部 393 寬、非 A11y/Stress 的螢幕板：27 張有實心 accent�
 ## Legal／Status 槽 38pt
 
 - 01／01b／01c 共用固定高度插槽 38（`Legal / Status Slot`）：01 放法務行（`fs-meta` 13，連結墨色＋底線），01b 放狀態句「正在與 Apple 確認你的身分，請稍候。」（`fs-note` 17／600，節點名 `Signing Status`）——**取代非併存**。
-- AX3 法務行會折行成 64pt，**不套 38 槽**；SwiftUI 用 `AttributedString`／`Link`＋`ViewThatFits`，勿照抄 .pen 的四段排列。
+- AX3 法務行**不套 38 槽**；實測 166pt（LS-201 R2 訂正——原「折行 64pt」是 R11 舊值，LS-201 全稿舊債清倉時發現 Legal 手動拆成三列後 `Rdxri`／`rPoT4` 各自量得 166pt，較舊值高出 2.6 倍，並因此各自加板高 100pt、級聯 5 板 y）。SwiftUI 用 `AttributedString`／`Link`＋`ViewThatFits`，勿照抄 .pen 的三段式 frame 結構（`design/littlesprout.pen` `ZBIhu` 筆記已註明「稿面用三列近似、實作必須用 AttributedString 讓它自然換行」）——64pt 這個數字已不成立，往後若又改稿面版面，本行連同 `ZBIhu` 一併更新。
 - 狀態句不得降到 13pt（13pt 成員資格規則）。
 
 ## 狀態切換不搬動版面
