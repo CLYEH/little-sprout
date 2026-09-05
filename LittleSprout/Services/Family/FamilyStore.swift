@@ -87,6 +87,11 @@ final class FamilyStore {
     private(set) var lookupInviteState: FamilyOperationState = .idle
     private(set) var latestInvite: GeneratedInvite?
 
+    /// LS-188：09／09b 儲存空間頁的用量／上限；`refreshQuota()` 查詢狀態。跟
+    /// `lookupInviteState` 一樣獨立一份狀態，不借用其他動作的欄位（R2 N1 的既有教訓）。
+    private(set) var quotaState: FamilyOperationState = .idle
+    private(set) var quota: FamilyQuota?
+
     /// LS-113：剛建立完家庭，還沒決定要不要建立第一個寶貝檔案——`RootView` 依這個旗標用
     /// `.fullScreenCover` 蓋一層 `CreateChildView`（08）在主畫面之上，讓「建立家庭後可接、
     /// 可跳過」的寶貝建檔步驟接上（見 `CreateChildView` 文件註解）。`CreateChildView` 呼叫
@@ -134,6 +139,13 @@ final class FamilyStore {
     /// 時序窗口。
     func seedMyFamilyForPreview(_ family: Family) {
         myFamily = family
+    }
+
+    /// LS-188：同 `seedMyFamilyForPreview` 的角色——讓 `#Preview`／`TapTargetGateHarness`／
+    /// UITest harness 不必真的走一次 async `refreshQuota()` 就能同步佈置「已滿」（09b）等
+    /// 特定樣本，沒有時序窗口。
+    func seedQuotaForPreview(_ quota: FamilyQuota) {
+        self.quota = quota
     }
     #endif
 

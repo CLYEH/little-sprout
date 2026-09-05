@@ -186,6 +186,22 @@ final class SupabaseFamilyAPIClient: FamilyAPIClient {
         }
     }
 
+    /// LS-188：`get_family_quota` 是 `stable` SQL 函式（見該 RPC 定義），對呼叫者所屬家庭的
+    /// owner／member／viewer 一視同仁放行（`grant execute ... to authenticated`，RLS 收斂
+    /// 交給 `families` 表本身的 select policy 間接把 `p_family_id` 限制在自己所屬的家庭——
+    /// 傳別人家的 id 會拿到 0 列，`.single()` 因此 throw，不會洩漏別家用量）。
+    func fetchQuota(familyID: UUID) async throws -> FamilyQuota {
+        do {
+            let response: PostgrestResponse<FamilyQuota> = try await client
+                .rpc("get_family_quota", params: ["p_family_id": familyID])
+                .single()
+                .execute()
+            return response.value
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
     /// 明確帶 'Z' 的 ISO8601 字串——見 createInvite 內的說明。每次呼叫都新建一個
     /// `ISO8601DateFormatter`（它不是 Sendable，不能用 static let 在多執行緒間共用），
     /// 這裡呼叫頻率是「使用者按一次建立邀請碼」等級，新建的成本可以忽略。
