@@ -53,9 +53,9 @@
 //       `containers=0/mismatch=0` 全綠——備援保證最壞退回本票之前的行為；development 上「只在名稱判準」＝0，補回零代價）。ref 判準補的是
 //       `cmp/Profile Print`／App icon 的 `Mount TL/BR`（以 ref 存在、名稱不是 Corner …，LS-194 VR：實測 corner-out 3.8pt 屬盲區，LS-96
 //       `0617b9ae`）。方位取自名稱 `/\b(TL|TR|BL|BR)\b/`（`Corner TL`／`Mount BR` 都認得；無方位進 `unresolved`）；名稱不像角托、又不是 ref
-//       的節點不算。`document_containers === 0` 時 SUMMARY 後與 compactLines 各印 `⚠` 行（第四支停擺；design-evidence-check.sh 對
-//       `scan_scope=document` 的這種收據紅）；`containers === 0` 而 document 非零只印提示（LS-133 r1–r3／LS-177 r1 的 boards 本來就沒有
-//       印品，屬正常）。每個直接子節點含角托候選的節點是一個「容器」（角托的父）。角托咬住的**紙面**不一定是
+//       的節點不算。`document_containers === 0` 時 SUMMARY 後與 compactLines 各印 `⚠` 行：`scope=document`＝第四支停擺（design-evidence-check.sh
+//       對這種收據紅、且該 cutoff 下 `document_containers` 必填）；`scope=boards` 只印提示（限縮快照可能真的沒有印品、判不出停擺，R3
+//       minor-2）；`containers === 0` 而 document 非零只印提示（LS-133 r1–r3／LS-177 r1 的 boards 本來就沒有印品，屬正常）。每個直接子節點含角托候選的節點是一個「容器」（角托的父）。角托咬住的**紙面**不一定是
 //       父：現行稿有三種結構——角托是紙面的子（`Photo Wrap`）、角托與紙面 `Print` 是兄弟（`Print Stage`）、角托直接掛在
 //       板上而紙面是兄弟 `Print`（iPad 板）。因此紙面由候選（父＋同 parent 的兄弟）中挑「與四顆角托期望位置吻合軸數最多」
 //       者（吻合軸數 ≥ 一半才算找到；找不到列 `unresolved`，不計 mismatch、收據需給分類）。期望位置＝角托外緣壓過紙緣
@@ -619,10 +619,14 @@ function scanAll(nodes, opts) {
   };
 }
 
-// LS-202 R2 minor-1：corner_anchor 歸零警示——document_containers=0 是第四支停擺（快照沒讀到 ref 且名稱備援也沒命中），收據不得交；
+// LS-202 R2 minor-1：corner_anchor 歸零警示——scope=document 時 document_containers=0 是第四支停擺（快照沒讀到 ref 且名稱備援也沒命中），
+// 收據不得交；R3 minor-2：scope=boards 限縮快照可能真的沒有印品、判不出停擺，只印提示（第一張全稿收據才看得出量級）；
 // containers=0 而 document 非零只是 boards 內沒有印品（LS-133 r1–r3／LS-177 r1 屬正常），提示核對 SCAN_BOARDS 即可
 function cornerWarnings(ca) {
   if (ca.document_containers === 0) {
+    if (ca.scope === "boards") {
+      return ["⚠ corner_anchor document_containers=0（scope=boards）：限縮快照內沒有角托容器——boards 含印品類板時先核對 SCAN_BOARDS／快照 ref；本來沒有印品屬正常。限縮模式判不出第四支有沒有停擺，第一張 scope=document 收據要看 document_containers 量級（development 現稿 220–261，LS-202 R3）"];
+    }
     return ["⚠ corner_anchor document_containers=0：整份快照沒有任何角托容器——第四支停擺（Pencil 快照沒讀到 ref、名稱備援 Corner TL/… 也沒命中），這份收據不得交，先查快照欄位（LS-202 R2）"];
   }
   if (ca.containers === 0) {

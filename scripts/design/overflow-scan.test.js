@@ -356,6 +356,21 @@ ok("(d) LS-202 R2 歸零警示：document_containers=0 → compactLines corner �
   assert.deepStrictEqual(cornerWarnings(scanAll(nodes).scans.corner_anchor), []);
 });
 
+ok("(d) LS-202 R3 歸零警示依 scope 分流：scanScope=boards 限縮到沒有印品的板 → document_containers=0 只印「限縮快照內沒有角托容器」提示、不印「第四支停擺」；scope=document 全稿為 0 仍印停擺", () => {
+  const { cornerWarnings } = require(path.join(__dirname, "overflow-scan.js"));
+  const b = scanAll(nodes, { scanScope: "boards", boards: ["B2"] });
+  assert.deepStrictEqual([b.scans.corner_anchor.scope, b.scans.corner_anchor.document_containers, b.scans.corner_anchor.containers], ["boards", 0, 0]);
+  const w = cornerWarnings(b.scans.corner_anchor);
+  assert.strictEqual(w.length, 1, "限縮模式仍要提示一行（不是靜默）");
+  assert.ok(w[0].startsWith("⚠ corner_anchor document_containers=0（scope=boards）：限縮快照內沒有角托容器") && !w[0].includes("第四支停擺") && !w[0].includes("不得交"), w[0]);
+  const text = compactLines(b).join("\n");
+  assert.ok(text.includes("  ⚠ corner_anchor document_containers=0（scope=boards）") && !text.includes("第四支停擺"), text);
+  const d = scanAll([B, G, C1, C2]).scans.corner_anchor;
+  assert.strictEqual(d.scope, "document");
+  assert.ok(cornerWarnings(d)[0].includes("第四支停擺"), "document 全稿歸零仍是停擺");
+  assert.ok(cornerWarnings(Object.assign({}, d, { scope: undefined }))[0].includes("第四支停擺"), "直接呼叫 scanCornerAnchor（無 scope 標籤）視同 document");
+});
+
 function r2(v) {
   return Math.round(v * 100) / 100;
 }
