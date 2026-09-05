@@ -176,19 +176,28 @@ def extract_schema_from_text(migrations_dir: str):
         events.append((m.start(), "drop_function", m))
     for m in re.finditer(r"drop\s+table\s+(?:if\s+exists\s+)?([A-Za-z_][\w.]*)", clean, re.IGNORECASE):
         events.append((m.start(), "drop_table", m))
+    # LS-205（LS-96 池項 ca99c6ae i1）：view 跟表一樣是 PostgREST 讀得到的 API 表面（第一支是
+    # album_summaries），一併納入同一份 tables 集合對帳。CREATE VIEW 名稱後不一定緊接 `(`——
+    # album_summaries 是 `create view public.album_summaries with (security_invoker = true) as
+    # select ...`，欄位列表也可能整個省略——所以這裡跟 create_table／create_function 不同，只抓到
+    # 名稱就收工，不要求後面接括號。
+    for m in re.finditer(r"create\s+(?:or\s+replace\s+)?view\s+([A-Za-z_][\w.]*)", clean, re.IGNORECASE):
+        events.append((m.start(), "create_view", m))
+    for m in re.finditer(r"drop\s+view\s+(?:if\s+exists\s+)?([A-Za-z_][\w.]*)", clean, re.IGNORECASE):
+        events.append((m.start(), "drop_view", m))
     events.sort(key=lambda e: e[0])
 
     for _, kind, m in events:
         target = m.group(1)
         lname = target.lower()
 
-        if kind in ("create_table", "create_function"):
+        if kind in ("create_table", "create_function", "create_view"):
             if lname.startswith("private."):
                 continue  # 刻意不對外的 schema，不算 API 表面，略過不追蹤
             if not lname.startswith("public."):
-                # F1：沒有 schema 限定前綴的宣告 fail loud，不能悄悄漏掉一支 RPC／表
+                # F1：沒有 schema 限定前綴的宣告 fail loud，不能悄悄漏掉一支 RPC／表／view
                 ln = line_of(raw, m.start())
-                keyword_label = "函式" if kind == "create_function" else "資料表"
+                keyword_label = {"create_function": "函式", "create_table": "資料表", "create_view": "view"}[kind]
                 print(
                     f"✗ api-contract gate：第 {ln} 行附近有一個沒有 schema 限定前綴的"
                     f"{keyword_label}宣告「{target}」——必須明確寫成 public.xxx 或"
@@ -245,7 +254,7 @@ def extract_schema_from_text(migrations_dir: str):
                 for sig in [s for s in rpcs if s.startswith(name + "(")]:
                     rpcs.pop(sig, None)
 
-        elif kind == "drop_table":
+        elif kind in ("drop_table", "drop_view"):
             if lname.startswith("public."):
                 tables.discard(lname.split(".", 1)[1])
 
