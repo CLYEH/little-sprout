@@ -500,6 +500,14 @@ const KEBIG = N("KEBIG", "KE", 4380, -10, 100, 50, { name: "Two Sides", type: "r
 // 板 KF（clip，板名含 Banner）：root 自己的名字不參與 OVERLAY_RE 比對——內容伸出照報
 const KF = N("KF", null, 5000, 0, 393, 852, { name: "LS-99 / Banner 示意板", clip: true });
 const KFTXT = N("KFTXT", "KF", 5024, 840, 200, 25, { name: "Body Text", type: "text" });
+// 板 KG（merge-review R1 minor-2）：帶 image fill 且有子節點的照片框（真實稿 Photo Wrap／Thumb＋Video Badge 的形狀）——框底伸出板 160、
+// 子標籤與徽章都在板內 → 只報框本身一筆（子節點在板內不另報）；同板另一個完全在板內的照片框帶子節點 → 不報
+const KG = N("KG", null, 6000, 0, 393, 852, { name: "KG 板", clip: true });
+const KGWRAP = N("KGWRAP", "KG", 6024, 600, 345, 412, { name: "Photo Wrap", image: true });
+const KGLBL = N("KGLBL", "KGWRAP", 6032, 610, 100, 25, { name: "Caption", type: "text" });
+const KGBADGE = N("KGBADGE", "KGWRAP", 6300, 610, 40, 20, { name: "Video Badge", type: "icon" });
+const KGWRAP2 = N("KGWRAP2", "KG", 6024, 100, 345, 200, { name: "Thumb", image: true });
+const KGLBL2 = N("KGLBL2", "KGWRAP2", 6032, 110, 100, 25, { name: "Caption", type: "text" });
 
 const clipNodes = [
   KA, KACOL, KACARD, KAPHOTO, KACAP, KASPACER, KAINNER, KAEDGE, KAICON,
@@ -508,6 +516,7 @@ const clipNodes = [
   KD, KDBODY, KDCONTENT, KDHEAD, KDACC, KDSTRAD,
   KE, KEINST, KELABEL, KEOFF, KEPATH, KERECT, KEELL, KEBIG,
   KF, KFTXT,
+  KG, KGWRAP, KGLBL, KGBADGE, KGWRAP2, KGLBL2,
 ];
 const clipAll = scanAll(clipNodes).scans.board_clip;
 const clipHits = (arr) => arr.map((f) => f.node + ":" + f.side + ":" + f.overflow_px).sort();
@@ -551,12 +560,20 @@ ok("(f) instance 路徑葉節點報 inst/label right 20；disabled 不報；path
   assert.ok(!clipAll.flagged.some((f) => f.node === "KEOFF"));
 });
 
+ok("(f) minor-2：帶 image fill 且有子節點的照片框以自身 AABB 參與——框底伸出板 160 而子標籤／徽章在板內 → 只報框一筆（子節點不另報）；完全在板內的照片框帶子節點不報；同幾何把 image 拿掉（純 frame 容器）就不報", () => {
+  assert.deepStrictEqual(clipHits(clipAll.flagged.filter((f) => f.board === "KG")), ["KGWRAP:bottom:160"]);
+  const wrap = clipAll.flagged.find((f) => f.node === "KGWRAP");
+  assert.deepStrictEqual([wrap.name, wrap.type, wrap.parent], ["Photo Wrap", "frame", "KG"]);
+  const plain = Object.assign({}, KGWRAP, { image: false });
+  assert.deepStrictEqual(scanAll([KG, plain, KGLBL, KGBADGE, KGWRAP2, KGLBL2]).scans.board_clip.flagged, [], "無 image fill 的純容器 frame 仍不算可見節點");
+});
+
 ok("(f) 範圍（同 corner_anchor／text_occlusion）：boards=['KA'] → flagged 只算 KA（3）、document_flagged 全稿 10；空 boards＝全稿；compactLines 段含 in-scope 分類＋DOCUMENT 按板計數", () => {
   const r = scanAll(clipNodes, { boards: ["KA"] }).scans.board_clip;
-  assert.deepStrictEqual([r.boards, r.flagged.length, r.document_flagged.length, clipAll.flagged.length], [["KA"], 3, 11, 11]);
+  assert.deepStrictEqual([r.boards, r.flagged.length, r.document_flagged.length, clipAll.flagged.length], [["KA"], 3, 12, 12]);
   assert.deepStrictEqual(clipHits(r.flagged), clipHits(clipAll.flagged.filter((f) => f.board === "KA")));
   const text = compactLines(scanAll(clipNodes, { boards: ["KA"] })).join("\n");
-  assert.ok(text.includes('SCAN board_clip boards=["KA"] flagged=3 classes=3 document=11'), text);
+  assert.ok(text.includes('SCAN board_clip boards=["KA"] flagged=3 classes=3 document=12'), text);
   assert.ok(text.includes("  1× Caption bottom @ LS-120 / feed(KA) e.g. KACAP (+123)"));
   assert.ok(text.includes("  DOCUMENT 1× board LS-177 / 設定（已捲）(KD) e.g. KDHEAD top (+600)"), text);
 });

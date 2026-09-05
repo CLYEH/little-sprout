@@ -68,12 +68,16 @@
 //       是刻意的 z-order（VR R1 就是先扣掉這類才得到真實遮蔽 3 筆；含進去時每張 sheet 板的 Status Bar 時間都會被報），要看
 //       全貌自行覆寫 `SCAN_OVERLAY_RE`。
 //   (f) board_clip（LS-185，第六支）：root frame 有 `clip:true` 的板（真實稿 153 張畫面板都是；`cmp/*` 元件定義根不 clip、不掃），
-//       其後代**可見葉節點**（沒有 live 子節點，且 type 為 text／icon／path／rectangle／ellipse，或快照 `image:true`——照片是帶
-//       image fill 的 frame／rectangle）的矩形超出 root 邊界 > TOL（0.5，沿 row_overflow 的邊緣允差；不用 text_occlusion 的面積
+//       其後代**可見節點**（快照 `image:true` 的節點不論有無子節點都以自身 AABB 參與——照片是帶 image fill 的 frame／rectangle，
+//       Photo Wrap／Thumb 這種帶子標籤的照片框伸出板外時子標籤可能仍在板內，merge-review R1 minor-2；其餘只算沒有 live 子節點且
+//       type 為 text／icon／path／rectangle／ellipse 的葉節點）的矩形超出 root 邊界 > TOL（0.5，沿 row_overflow 的邊緣允差；不用 text_occlusion 的面積
 //       > 0，那對邊緣裁切會把版面捨入的 0.01pt 也報）即報 `{board, node, overflow_px, side}`——side 取四邊中溢出最大者
-//       （top／left／bottom／right），overflow_px 為該邊的量。葉節點矩形先 ∩ root **以下**的 `clip:true` 祖先（同第五支的可見
-//       矩形慣例）：被中間 clip 容器整個裁掉的內容是捲動模擬（LS-177 R2 `y7KAW` Content `clip:true`＋`height:1213`、LS-142 上傳
-//       佇列 List），不是被板裁掉、不報；只報真的會伸到板緣外的可見內容。名稱命中 OVERLAY_RE 的節點及其子樹不算（固定覆蓋層
+//       （top／left／bottom／right），overflow_px 為該邊的量。節點矩形先 ∩ root **以下**的 `clip:true` 祖先（同第五支的可見
+//       矩形慣例）——精確條件：中間 clip 祖先只把可見區域縮成「節點 AABB ∩ 該祖先 AABB」，可見區域為空（被整個裁掉，LS-142 上傳
+//       佇列 List 在 Footer 上方結束的形狀）才不報；**若該祖先本身伸出 root，其內、板外的節點仍以 root 裁切判定＝照報**。LS-177 R2
+//       `y7KAW` Content（`y=−671, h=1213, clip:true`，掛在無 clip 的 Body 下）就**不是**不報的例子：Content 自身伸出板頂約 600pt，
+//       裡面位於板外的 Header／列文字全會報——捲動模擬的正確做法是「板尺寸的 clip 視窗＋內層長欄」，不是把長欄本身設 clip
+//       （merge-review R1 minor-1）。名稱命中 OVERLAY_RE 的節點及其子樹不算（固定覆蓋層
 //       本身伸出板外是常態；root 自己的名字不參與比對）。LS-120 R2 六個 spacer 把 `Card Diary 1`／`Load More` 推出板外被 clip、
 //       LS-177 R2 「Header Row 移到 y=−770 捲離畫面」都是四支＋第五支結構上抓不到、reviewer 用板矩形對葉節點才抓到的類別
 //       （LS-96 池項 83392d32）。**範圍同 corner_anchor**：`flagged` 只算 `boards` 內、全稿另列 `document_flagged`；收據
@@ -418,8 +422,10 @@ function scanBoardClip(nodes, idx, opts) {
   const out = { boards, flagged: [], document_flagged: [] };
   for (const n of liveNodes) {
     if (n.parent == null) continue;
-    if ((kids.get(n.id) || []).length) continue;
-    if (!(LEAF_TYPE_RE.test(n.type || "") || n.image === true)) continue;
+    // 可見節點：帶 image fill 的節點不論有無子節點都以自身 AABB 參與（merge-review R1 minor-2：Photo Wrap／Thumb＋Video Badge 這種
+    // 「照片框帶子標籤」伸出板外時，子標籤在板內、框本身卻沒人報）；其餘只算沒有 live 子節點的 text／icon／path／rectangle／ellipse
+    const isLeaf = !(kids.get(n.id) || []).length;
+    if (!(n.image === true || (isLeaf && LEAF_TYPE_RE.test(n.type || "")))) continue;
     const c = chain.get(n.id);
     const root = byId.get(c[c.length - 1]);
     if (root.clip !== true) continue;
