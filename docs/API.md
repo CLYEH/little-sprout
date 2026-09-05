@@ -61,9 +61,9 @@
 
 | 表 | 讀 | 新增 | 修改 | 刪除 | 備註 |
 |---|---|---|---|---|---|
-| `profiles` | 同家庭成員互看 | 由 `auth.users` insert trigger 自動建立；INSERT grant／`profiles_insert` policy 仍在（未被 revoke，LS-107 `ensureProfileExists` 的冪等 upsert 靠它），client 慣例上不直接 insert，若呼叫則是 upsert 冪等（`ON CONFLICT DO NOTHING`） | 僅自己 | ❌ 無 delete policy | 帳號刪除走 Auth 側 cascade |
+| `profiles` | 同家庭成員互看 | 由 `auth.users` insert trigger 自動建立；INSERT grant／`profiles_insert` policy 仍在（未被 revoke，LS-107 `ensureProfileExists` 的冪等 upsert 靠它），client 慣例上不直接 insert，若呼叫則是 upsert 冪等（`ON CONFLICT DO NOTHING`） | 僅自己 | ❌ 無 delete policy | 帳號刪除走 Auth 側 cascade。`eula_accepted_version`／`eula_accepted_at`（LS-197）：**client 讀得到、改不動**——只能透過 `accept_eula()` 寫入，見 §4／§11 |
 | `families` | 我所屬的家庭 | 任何登入者（自建家庭），但 (a) 呼叫者已被停權，或 (b) `app_settings.registrations_open = false` 時一律拒絕（`LS052`／`LS054`，LS-179，見 §11） | `name`／`require_approval` 兩欄，owner-only | ❌ 無 delete policy | `storage_quota_bytes`／`storage_used_bytes` 兩個額度欄位永遠唯讀——不論身分，client 都改不動（只有 `media` 表的 trigger 與表擁有者能寫）。`suspended_at`（LS-179）：**client 讀得到**（停權事實本來就會從 `LS052`／`LS053` 揭露），但改不動，只有表擁有者（postgres，Dashboard／`db query --linked`）能寫；停權原因不在這張表上，見 §11 與 `private.suspension_notes` |
-| `app_settings`（LS-179） | 🔒 完全不可讀（`authenticated` 無 grant、無 policy） | 🔒 唯讀（只有表擁有者能寫，見 §11） | 🔒 唯讀 | 🔒 唯讀 | 全域營運開關（目前只有 `registrations_open`），只透過 `private.registrations_open()`（`SECURITY DEFINER`）供其他函式讀，client 不會直接碰到這張表，見 §11 |
+| `app_settings`（LS-179／LS-197） | `registrations_open`／`updated_at`／`id` 🔒 完全不可讀（`authenticated` 無 grant、無 policy）；`eula_version`（LS-197）**client 讀得到**（欄位級 `SELECT`＋`app_settings_select` policy，見 §11） | 🔒 唯讀（只有表擁有者能寫，見 §11） | 🔒 唯讀 | 🔒 唯讀 | 全域營運開關（`registrations_open`／`eula_version`）。`registrations_open` 只透過 `private.registrations_open()`（`SECURITY DEFINER`）供其他函式內部讀，client 不會直接碰到；`eula_version` 則刻意開放 client 直接讀（呼叫 `accept_eula()` 前需要知道目前版本），見 §11 |
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子；**不分角色、不分軟刪與否**——owner／member／viewer 都讀得到全部列，含已軟刪的（`deleted_at`／`deleted_by` 對所有人都是可見的唯讀旗標，R1 I3/I4） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | 🔒 **無 DELETE 路徑**（R1 I5：直接硬刪會繞過 30 天保護，policy 與 grant 兩層都關，連 owner 也沒有） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原（重複軟刪 no-op，不刷新時鐘，見 §4），超過拿 `LS043`；已軟刪的孩子不能再被指定為新內容的標記（`LS044`，LS-121 起守門搬到 `diary_children`／`album_children` 連結表的 `BEFORE INSERT` trigger）；既有標記不隨軟刪連動，見 §8 |
@@ -190,6 +190,13 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
   `profiles`／`families` 的既有慣例，R2，merge-review R1 MAJOR-1，n3 訂正）。
   停權操作方式見
   §11。
+- `eula_accepted_version`／`eula_accepted_at`（LS-197，PLAN §6 第 7 項／
+  §10-B）：使用者最近一次同意 EULA 的版本與時間，`NULL`＝從未同意過。**client
+  讀得到、改不動**——理由同 `suspended_at`／`deletion_requested_at`：
+  `authenticated` 對 `profiles` 的 `UPDATE` grant 早就收斂成只開
+  `display_name`／`avatar_url` 兩欄（LS-143），這兩個新欄位天生不在允許清單
+  內，只能透過 `accept_eula()`（見 §4）寫入。同意紀錄可稽核：兩欄一經寫入即
+  保留最近一次同意的版本與時間戳，不會被 client 竄改。
 
 ### `families`
 - `storage_quota_bytes`／`storage_used_bytes`：**唯讀**，client 完全看不到自己能改的欄位
@@ -1543,6 +1550,37 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   提交窗口內在飛上傳留下的孤兒列（merge-review R1 m2，見下方「過渡狀態」段落
   與 §「Edge Functions」）。
 
+### `accept_eula(p_version text) -> void`（LS-197，PLAN §6 第 7 項／§10-B）
+- **誰能呼叫**：任何已登入使用者，**包含被停權的使用者、以及被停權家庭裡的
+  成員**——同意條款不是內容寫入，函式寫入的 `profiles` 沒有掛
+  `private.enforce_not_suspended()`（見 §3 `profiles` 的 `suspended_at`
+  範圍說明），不需要比照 `delete_my_account()` 另外開交易級 GUC 逃生口。
+- **用途**：紀錄呼叫者同意 `p_version` 版本的 EULA。`p_version` 必須等於呼叫
+  當下的 `app_settings.eula_version`（`authenticated` 對這一欄有欄位級
+  `SELECT`，呼叫端應先讀這個值再顯示條款內容、決定要送哪個 `p_version`），
+  相符才寫入 `profiles.eula_accepted_version`／`eula_accepted_at`（`now()`）。
+  **client 讀 `eula_version` 時不得帶 `where id = true`**（或任何引用到 `id`
+  的條件）——Postgres 的欄位級權限檢查涵蓋查詢裡任何位置引用到的欄位，不只是
+  投影出來的欄位，`id` 沒有 `SELECT` 權限，WHERE 子句用到它一律 `42501`
+  （`permission denied for table app_settings`）；本表只有一列，直接
+  `select eula_version from app_settings limit 1`（supabase-swift：
+  `.from("app_settings").select("eula_version").limit(1)`）即可，不需要、也
+  不能篩 `id`。§11「查目前狀態」那些帶 `where id = true` 的查詢是表擁有者
+  （postgres）身分執行，不受這道欄位級 grant 限制，兩者是不同的執行身分，
+  不能照抄。
+- **冪等**：同版本重複呼叫不報錯，`eula_accepted_at` 覆寫成最新一次呼叫的
+  時間——沒有「已同意過就整支跳過」的分支，需求是留下「最近一次確認過條款」
+  的時間戳。
+- **錯誤碼**：未登入 `42501`；`p_version` 與目前 `eula_version` 不相符
+  `LS055`（呼叫端多半是讀到的版本已經過期，該重新抓一次目前版本、重新顯示
+  條款）；`auth.uid()` 沒有對應的 `profiles` 列 `LS056`（R2，理論上不該發生
+  ——LS-110 保證每個帳號都有一列 `profiles`，出現代表資料不一致，不是使用者
+  能自己解決的狀態）。
+- **併發**：單一 `SELECT` 讀目前版本＋單一 `UPDATE` 寫自己的 `profiles` 列，
+  不取任何額外鎖；`app_settings.eula_version` 在讀取後、寫入前被改動不構成
+  資料不一致——這次呼叫本來就是「使用者同意了他讀到的那個版本」，不是
+  「使用者同意了資料庫目前這一刻的版本」，跟其他使用者或後續請求互不影響。
+
 ---
 
 ## 5. 錯誤碼全表
@@ -1582,6 +1620,8 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS052` | 這個帳號已被暫停使用，請聯絡我們 | `profiles.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時：(a) `private.enforce_not_suspended()`——掛在 `family_members`／`invites`／`children`／`media`／`albums`／`album_media`／`diaries`／`diary_media`／`diary_children`／`album_children`／`comments`／`reactions`／`content_reports`／`blocked_users`／`join_requests` 十五張表的 `BEFORE INSERT/UPDATE/DELETE`，涵蓋直接 `.insert()`/`.update()`/`.delete()` 與全部 `SECURITY DEFINER` RPC（trigger 不受 `SECURITY DEFINER` 影響——**`delete_my_account()` 是唯一的例外**，R2 見 §4，永遠豁免這個檢查）；(b) `private.enforce_caller_not_suspended_for_families()`——`families` 的 `BEFORE INSERT`（自建新家庭）；(c) `list_join_requests`／`get_my_join_request`／`list_comments` 三支唯讀 `SECURITY DEFINER` RPC 各自的明確檢查（這三支沒有寫入、又繞過 RLS 讀，前兩種機制都碰不到）。**讀取（SELECT）與 Storage 簽名上傳**：透過 `private.family_ids()`／`owned_family_ids()`／`contributor_family_ids()`／`uploadable_family_ids()` 四支集合函式收斂，停權者這四個集合皆為空，對應的 `_select` policy 與 `storage.objects` 四條 policy 靜默回 0 列／`42501`，不會有 `LS052`（RLS 違反沒有自訂碼這條路）；`content_reports_select`／`join_requests_select`／`families_select` 的「自己那一支」分支（R2 訂正，見 §3）也已補上同一組排除 |
 | `LS053` | 這個家庭已被暫停使用，請聯絡我們 | `families.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時，觸發路徑同 `LS052` 的 (a)／(c)（家庭停權只影響該家庭本身的資料，成員對其他家庭不受影響，`delete_my_account()` 同樣豁免，見 §4）；讀取與 Storage 同樣經四支集合函式收斂成 0 列／`42501` |
 | `LS054` | 目前暫停開放新註冊，請稍後再試 | `private.enforce_registrations_open()`——`families` 的 `BEFORE INSERT`（自建新家庭），`app_settings.registrations_open = false` 時觸發（PLAN §10-A(3)，LS-179）。**只擋自建新家庭**：憑邀請碼加入既有家庭（`request_join`／`approve_join`）不碰 `families` 表，不受影響 |
+| `LS055` | 條款版本已更新，請重新閱讀 | `accept_eula(p_version)`——`p_version` 與呼叫當下的 `app_settings.eula_version` 不相符時觸發（LS-197，PLAN §6 第 7 項／§10-B）。呼叫端多半是讀到的版本已經過期，該重新抓一次目前版本、重新顯示條款內容 |
+| `LS056` | 帳號資料異常，請聯絡我們 | `accept_eula(p_version)`（LS-197 R2，merge-review R1 m2）——寫入 `profiles.eula_accepted_version`／`eula_accepted_at` 的 `UPDATE` 命中 0 列時觸發，代表 `auth.uid()` 沒有對應的 `profiles` 列。理論上不該發生（LS-110 的 `auth.users` insert trigger 保證每個帳號都有一列 `profiles`），出現代表資料不一致，fail loud 而不是靜默 no-op |
 | `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下／`family_id` 不可變 trigger 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE、`children` INSERT/UPDATE/DELETE——`children` 的 `DELETE` 自 R1 I5 起也收斂，連 owner 都拿這個碼）會拿到的標準碼；也是 `diaries`／`albums`／`comments`（`private.enforce_deletion_attribution()`，LS-57）與 `children`（`private.enforce_children_family_immutable()`，LS-66，LS-57 R2／I1 對齊後改用裸 `42501`，不再是原本 LS-66 定案時的專屬碼）的 `family_id` 不可變 trigger 統一 raise 的碼；`albums` 直接 `.update()` 竄改 `deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起也在欄位級 grant 被收回，同樣回這個碼（見 §2/§3）——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字，trigger 主動 raise 的則帶自訂中文訊息，但 SQLSTATE 一樣是 `42501`。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
 
 **沒有被上面任何一支 RPC 包住、可能直接從 PostgREST 冒出來的標準 Postgres 錯誤碼**
@@ -1631,7 +1671,12 @@ Edge Function 完成刪除）。`LS052`／`LS053`／`LS054`（LS-179 補齊，�
 `rejected`——三者都是狀態層級的拒絕，沒有輸入可換：`LS052`／`LS053`（帳號／家庭
 被停權）只能等 Dashboard 解除；`LS054`（暫停開放新註冊）只能等關閉的旗標重新
 打開，跟 `LS051`（過渡期擋寫）同一組「純狀態拒絕、沒有使用者能自己做的別的事」
-的理由）。三層（`validationRetryable`／`retryableSystem`／
+的理由）。`LS055`（LS-197 補齊，歸層 `rejected`——`p_version` 與目前
+`eula_version` 不相符，沒有「打錯字重打」這種輸入可換，正確動作是重新抓一次
+目前版本、重新顯示條款，不是原地拿同一個 `p_version` 重試，跟 `LS052`–`LS054`
+同一組「純狀態拒絕」理由）。`LS056`（LS-197 R2 補齊，歸層 `rejected`——
+`auth.uid()` 沒有對應的 `profiles` 列，理論上不該發生，沒有輸入可換、也不是
+使用者能自己解決的狀態，只能聯絡我們排查）。三層（`validationRetryable`／`retryableSystem`／
 `rejected`）歸類由 `LittleSproutTests/AppErrorTests.swift` 的列舉測試逐碼釘住。
 **尚缺碼：無**。之後每新增一個自訂碼，本表與 `LSErrorCode` 必須同 PR 更新，否則
 `error-codes-check` 會紅（任一邊多都算；gate 只認本節表格列的 `` `LSnnn` `` 首欄，散文提及不計）。
@@ -2163,6 +2208,7 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
 schema 或本文要修，不是 gate 要調。
 
 <!-- API-CONTRACT:RPC
+accept_eula(text)
 approve_join(uuid)
 block_user(uuid, uuid)
 claim_notification_events(integer)
@@ -2745,7 +2791,10 @@ Edge Function 需要直接寫入，須另外明確 `grant ... to service_role`�
 SQL，**改欄位當下立即生效，不需要改任何程式碼或重新部署**。實作見
 `supabase/migrations/20260904212530_suspension_and_registrations.sql`；三者
 共用的判斷 helper（`private.caller_is_active()`／`private.family_is_active(uuid)`／
-`private.registrations_open()`）只讀對應旗標，不做任何額外邏輯。
+`private.registrations_open()`）只讀對應旗標，不做任何額外邏輯。下方「更新
+EULA 版本」是同一種手法的延伸（LS-197，實作見
+`supabase/migrations/20260905051320_eula_consent.sql`），差別只在 `eula_version`
+這一欄額外開了 client 端的欄位級 `SELECT`（見 §2／§3）。
 
 **停權原因存在 `private.suspension_notes`（R2，MAJOR-1），不在 `profiles`／
 `families` 上**——那兩張表對 `authenticated` 是表級 SELECT，任何欄位都會被
@@ -2809,6 +2858,26 @@ Auth 端（Apple／Google／Email 註冊）也不受影響，避免與登入流�
 
 **重新開放**：`update public.app_settings set registrations_open = true, updated_at = now() where id = true;`
 
+### 更新 EULA 版本（LS-197，PLAN §6 第 7 項／§10-B）
+
+```sql
+update public.app_settings set eula_version = '<新版號>', updated_at = now() where id = true;
+```
+
+生效範圍：立即生效，不需要改程式碼或重新部署。既有已同意舊版本的使用者
+`profiles.eula_accepted_version` 不會被連動改動，只有他們下一次呼叫
+`accept_eula()` 時的比對基準會變成新版號——`p_version` 若還是舊版號一律回
+`LS055`，逼呼叫端重新抓一次目前版本、重新顯示條款（見 §4）。**同意紀錄可
+稽核**：`profiles.eula_accepted_version`／`eula_accepted_at` 兩欄只能透過
+`accept_eula()` 寫入（client 直接 `.update()` 一律 `42501`，見 §3），任何一次
+同意都會留下當時的版本與時間戳，不會被使用者自己竄改。
+
+**本節（§11）下方所有 SQL 皆以表擁有者（postgres）身分執行，`where id = true`
+在這個身分下沒有問題。client 端（`authenticated`）讀 `eula_version` 絕對不能
+照抄這個寫法**——見 §4 `accept_eula` 的說明：`id` 沒有欄位級 `SELECT` 權限，
+WHERE 子句引用到它一律 `42501`，client 端要用不帶任何 WHERE 的
+`select eula_version from app_settings limit 1`。
+
 ### 查目前狀態
 
 ```sql
@@ -2816,4 +2885,7 @@ select id, suspended_at from public.profiles where suspended_at is not null;
 select id, name, suspended_at from public.families where suspended_at is not null;
 select * from private.suspension_notes;
 select registrations_open from public.app_settings where id = true;
+select eula_version from public.app_settings where id = true;  -- 表擁有者身分查詢，client 端見 §4 的替代寫法
+select id, eula_accepted_version, eula_accepted_at from public.profiles
+ where eula_accepted_version is not null;
 ```
