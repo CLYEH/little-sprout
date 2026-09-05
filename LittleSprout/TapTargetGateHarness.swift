@@ -62,6 +62,8 @@ enum TapTargetGateHarness {
             uploadQueueSheetNormalHost
         case .passwordSignIn: passwordSignInHost
         case .welcome: welcomeHost
+        case .profileEdit: profileEditHost
+        case .familyMembers: familyMembersHost
         case .selfTestTooSmall:
             selfTestTooSmallHost
         case .selfTestGood:

@@ -97,6 +97,15 @@ enum TapTargetGateScreenName: String {
     // environment 指定畫面」這條既有通道，讓 `PasswordSignInUITests` 能直接啟動到歡迎頁，
     // 測「小字連結存在且 tap 能導覽到帳密登入畫面」這條票文驗收，不需要真的登入或建立家庭。
     case welcome = "WelcomeView"
+    // LS-192：02 顯示名稱與頭像編輯——從 `ContentUnavailableView` 佔位換成正式內容，取代
+    // `tap-target-exemptions.txt` 原本的具名排除（同 `albumsDefaultState` 的既有理由）。初始態
+    // （`.preview(withFamily:)` 免登入即可建構）就有代表性：頭像欄（PhotosPicker 觸發鈕）／
+    // 姓名欄／「儲存變更」主鈕三顆可點元件都不需要額外 seed 資料。
+    case profileEdit = "ProfileEditView"
+    // LS-192：03 家庭成員——同上，換掉原本的具名排除。用 `FamilyStore.seedMembersForPreview`
+    // 佈置一位 owner（自己）＋一位 member，量測 Owner 視角「…」選單與「退出家庭」鈕；member
+    // 視角（看不到「…」選單）留給 QA 模擬器實測（票文驗收要求的截圖對稿已覆蓋）。
+    case familyMembers = "FamilyMembersView"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -145,6 +154,8 @@ enum TapTargetGateScreenName: String {
         // `.preview()`／harness 固定淺色（未強制 `.preferredColorScheme`）的既有假設一致；
         // 不用字標圖片（`Image`，不是 staticText）當 sentinel。
         case .welcome: return .staticText("給家人的私密相簿")
+        case .profileEdit: return .staticText("顯示名稱與頭像")
+        case .familyMembers: return .staticText("家庭成員")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")
