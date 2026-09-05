@@ -1883,6 +1883,45 @@ PII 已清空），FK 完整指向那個 tombstone 列，讀取端會看到作�
 會把完全沒真的刪除任何東西的批次誤判成功而永久遺失佇列紀錄；改法逐路徑比對
 `data[].name`，未確認的路徑留在佇列下次重試，純佇列語意不變，沒有處理狀態欄）。
 
+**呼叫方式（LS-196 訂正鑑權機制）**：這支函式只接受 service 憑證，不是給
+app client 呼叫的公開端點。原本（LS-153 落地時）用 Supabase 平台層
+`verify_jwt`（預設開啟）＋程式內比對 `Authorization: Bearer` 等於
+`SUPABASE_SERVICE_ROLE_KEY` 本身——但正式站接排程煙測（LS-153 i4，comment
+`0535eab8`）發現這條守門對任何呼叫者都是 `401`：正式站
+`supabase secrets list` 回報的 `SUPABASE_SERVICE_ROLE_KEY` sha256 digest
+不等於 CLI／Management API 回報的 legacy service_role JWT——專案已建新式
+`sb_secret_` default key，Edge Function 執行期注入的 `SUPABASE_SERVICE_ROLE_KEY`
+從一開始就不是那把 legacy JWT。LS-196 訂正：`supabase/config.toml` 加
+`[functions.purge-storage] verify_jwt = false`（關掉平台層 JWT 驗證），改用
+`supabase/functions/_shared/keys.ts` 的 `isAuthorizedServiceCall()` 在程式內
+驗——`apikey` header 等於任一 `SUPABASE_SECRET_KEYS` 值（新式 key），或（過渡，
+直到所有呼叫端都已改用新式 key 為止）`Authorization: Bearer` 等於
+`SUPABASE_SERVICE_ROLE_KEY`（legacy）。admin client 用
+`resolveSecretKey()`（優先新式 default、缺則退回 legacy）建立。
+
+`pg_cron`＋`pg_net` 呼叫範本（正式站排程接線時使用，`apikey` 從 `vault` 讀取、
+不寫死在 SQL 裡）：`ls153_purge_storage_secret_key` 是**本票新建**的 vault
+secret（存新式 `sb_secret_…` default key），與 LS-153 既有的
+`ls153_purge_storage_service_role`（存 legacy service_role JWT，LS-153 comment
+`0535eab8` 建立）**並存，不是沿用同一個 secret 改內容**——切換 cron job 標頭
+前務必先確認 `ls153_purge_storage_secret_key` 已建立（`select 1 from
+vault.decrypted_secrets where name = 'ls153_purge_storage_secret_key'`），
+否則子查詢回 `NULL`、`jsonb_build_object('apikey', NULL)` 產出
+`{"apikey": null}`，症狀與本票要修的 401 一模一樣。舊的
+`ls153_purge_storage_service_role` 待 cron job 切換完成、煙測通過後再刪除：
+```sql
+select net.http_post(
+  url := '<SUPABASE_URL>/functions/v1/purge-storage',
+  headers := jsonb_build_object(
+    'Content-Type', 'application/json',
+    'apikey', (
+      select decrypted_secret from vault.decrypted_secrets
+      where name = 'ls153_purge_storage_secret_key'
+    )
+  )
+);
+```
+
 **毒丸隊頭阻塞與死信／退避（R3，merge-review R2 F1 major，comment 7420f7b9）**：
 R2 版本「無法確認已刪的列永遠留在佇列、下次重試」沒有出口——這些列的
 `enqueued_at` 不會變，`order by enqueued_at limit BATCH_SIZE` 每次都只讀得到
@@ -2341,8 +2380,10 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   ```
   另需在 Dashboard／CLI 設定 `APPLE_CLIENT_ID`／`APPLE_CLIENT_SECRET`（若要讓
   Apple 撤銷真的生效，且需搭配上述「保存 provider token」的後續票）；
-  `SUPABASE_URL`／`SUPABASE_ANON_KEY`／`SUPABASE_SERVICE_ROLE_KEY` 由 Supabase
-  平台在每個 Edge Function 執行環境自動注入，不需要另外設定。
+  `SUPABASE_URL`／`SUPABASE_ANON_KEY`／`SUPABASE_SECRET_KEYS`／
+  `SUPABASE_SERVICE_ROLE_KEY` 由 Supabase 平台在每個 Edge Function 執行環境
+  自動注入，不需要另外設定（LS-196：admin client 改用 `resolveSecretKey()`
+  解析出的金鑰；這支端點的使用者 JWT 驗證路徑與 `verify_jwt` 現狀不動）。
 
 ### `push-dispatch`（LS-172，LS-22 後端子票）
 
@@ -2353,13 +2394,21 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
 
 - **路徑**：`POST {SUPABASE_URL}/functions/v1/push-dispatch`。其他 HTTP method 一律
   `405`（同 `delete-account`／`purge-storage` 既有慣例）。
-- **鑑權**：比照 `purge-storage`（不是 `delete-account` 的使用者 JWT 模式）——直接
-  比對 `Authorization: Bearer <token>` 是否**等於** `SUPABASE_SERVICE_ROLE_KEY` 本身，
-  不是「JWT 合法即可」（anon key 也是合法 JWT）。這支端點設計給排程呼叫，不是給
-  app client 用的公開端點。**常數時間比對（LS-172 R2，merge-reviewer i4）**：
-  `handler.ts` 的 `timingSafeEqual()` 不論兩個字串是否等長、哪個位置先出現差異，
-  都逐位元組跑完整輪比較才判斷，耗時只跟兩個字串的最大長度有關——原本的 `!==`
-  是逐字元短路比較，理論上可被拿來做 timing attack 猜出正確的 service_role key。
+- **鑑權**：比照 `purge-storage`（不是 `delete-account` 的使用者 JWT 模式），
+  這支端點設計給排程呼叫，不是給 app client 用的公開端點。**LS-196 訂正**：
+  原本直接比對 `Authorization: Bearer <token>` 是否等於 `SUPABASE_SERVICE_ROLE_KEY`
+  本身這條守門，與 `purge-storage` 同型地在正式站無法通過（`SUPABASE_SERVICE_ROLE_KEY`
+  執行期注入值已非 legacy service_role JWT，見上方「呼叫方式」段與 §6
+  `purge-storage` 的完整背景）——改用 `supabase/functions/_shared/keys.ts` 的
+  `isAuthorizedServiceCall()`：`apikey` header 等於任一 `SUPABASE_SECRET_KEYS`
+  值（新式 key），或（過渡）`Authorization: Bearer` 等於
+  `SUPABASE_SERVICE_ROLE_KEY`（legacy）；`supabase/config.toml` 加
+  `[functions.push-dispatch] verify_jwt = false`。**常數時間比對**：
+  `_shared/keys.ts` 的 `timingSafeEqual()`（原本在 `handler.ts` 本機定義，
+  LS-196 搬到共用 helper，purge-storage 同型）不論兩個字串是否等長、哪個位置
+  先出現差異，都逐位元組跑完整輪比較才判斷，耗時只跟兩個字串的最大長度有關
+  ——原本的 `!==` 是逐字元短路比較，理論上可被拿來做 timing attack 猜出正確的
+  金鑰。
 - **呼叫時機**：設計給排程（`pg_cron`＋`pg_net`，或 Supabase 原生 Scheduled Edge
   Function）定期呼叫。**本票只記載下方「排程（未建立）」的部署清單，不實際建立**
   ——同 `purge-storage`（LS-153）的既有先例，目前**沒有任何東西會觸發**這支函式，
@@ -2367,10 +2416,12 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
 - **處理流程**（R2 依 merge-reviewer m1 改成批次＋有上限併發＋時間預算，見下方
   「批次取件、併發送出與時間預算」段的完整取捨）：
   1. 非 `POST` → `405`。
-  2. bearer 不等於 `SUPABASE_SERVICE_ROLE_KEY` → `401`。
-  3. `SUPABASE_URL`／`SUPABASE_SERVICE_ROLE_KEY` 未設定（部署設定缺失）→ `500`
-     （fail loud，同既有 EF 慣例；這兩個變數由 Supabase 平台自動注入，缺失代表
-     部署本身有問題）。
+  2. `SUPABASE_SECRET_KEYS`／`SUPABASE_SERVICE_ROLE_KEY` 皆未設定（部署設定
+     缺失，`resolveSecretKey()` 解不出任何金鑰）→ `500`（fail loud，同既有 EF
+     慣例；這兩個變數由 Supabase 平台自動注入，缺失代表部署本身有問題）。
+  3. `apikey` 不等於任一 `SUPABASE_SECRET_KEYS` 值、且 `Authorization: Bearer`
+     也不等於 `SUPABASE_SERVICE_ROLE_KEY`（`isAuthorizedServiceCall()` 判否）
+     → `401`。
   4. 迴圈：**開始每一批之前**先檢查時間預算（見下方段落），預算將盡就停止（不再
      claim 新批次，`stopped_early: true`）；否則呼叫 `claim_notification_events()`
      （每輪 `p_limit=50`）取待送事件，直到回傳空批次或達安全上限
@@ -2604,11 +2655,24 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
     行為。正式站部署不設定這個變數（只在 `PUSH_DISPATCH_PROVIDER=stub` 才有
     意義，正式站本來就不會設 `PUSH_DISPATCH_PROVIDER`）。
 - **排程（未建立，僅記載部署清單）**：`pg_cron` 每分鐘一次呼叫 `pg_net.http_post`
-  打本函式，`Authorization` header 的 `service_role` key 由 `vault` 讀取（不寫死
-  在 migration 裡）——同 `purge-storage`（§6「自動清除」執行機制段）的既有排程
-  形狀，差別只在頻率（`purge-storage` 每日一次，`push-dispatch` 需要更即時，故
-  每分鐘一次）。**本票不執行這段部署**，接排程由 orchestrator 依 LS-78 授權狀態
-  決定時機。
+  打本函式，`apikey` header 從 `vault` 讀取（不寫死在 migration 裡，LS-196 訂正
+  ——不再是 `Authorization` header 帶 `service_role` key，見上方「鑑權」段與
+  §6 `purge-storage` 的完整背景）——同 `purge-storage`（§6「自動清除」執行機制
+  段）的既有排程形狀，差別只在頻率（`purge-storage` 每日一次，`push-dispatch`
+  需要更即時，故每分鐘一次）與 vault secret 名稱：
+  ```sql
+  select net.http_post(
+    url := '<SUPABASE_URL>/functions/v1/push-dispatch',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'apikey', (
+        select decrypted_secret from vault.decrypted_secrets
+        where name = 'ls172_push_dispatch_secret_key'
+      )
+    )
+  );
+  ```
+  **本票不執行這段部署**，接排程由 orchestrator 依 LS-78 授權狀態決定時機。
 - **本機測試**：
   - `supabase/functions/push-dispatch/{handler,apns}.test.ts`（Deno 內建
     `Deno.test`，注入 fake deps／fake `fetch`／`StubApnsProvider`，不需要跑
@@ -2664,9 +2728,10 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   supabase secrets set APNS_TEAM_ID=... APNS_KEY_ID=... APNS_BUNDLE_ID=... APNS_ENV=production
   supabase secrets set APNS_P8="$(cat AuthKey_XXXXXXXXXX.p8)"
   ```
-  `SUPABASE_URL`／`SUPABASE_SERVICE_ROLE_KEY` 由 Supabase 平台自動注入，不需要
-  另外設定；`PUSH_DISPATCH_PROVIDER` 正式站不設定（預設值 `"apns"` 即為正確
-  行為）。
+  `SUPABASE_URL`／`SUPABASE_SECRET_KEYS`／`SUPABASE_SERVICE_ROLE_KEY` 由
+  Supabase 平台自動注入，不需要另外設定（LS-196：admin client 與鑑權判定改用
+  `resolveSecretKey()`／`isAuthorizedServiceCall()`，見上方「鑑權」段）；
+  `PUSH_DISPATCH_PROVIDER` 正式站不設定（預設值 `"apns"` 即為正確行為）。
 
 ---
 

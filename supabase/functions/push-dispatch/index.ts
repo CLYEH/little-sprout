@@ -18,23 +18,34 @@ import {
   StubApnsProvider,
 } from "./handler.ts";
 import { buildRealApnsProvider } from "./apns.ts";
+import { resolveSecretKey, type SecretKeyEnv } from "../_shared/keys.ts";
 
-// SUPABASE_URL／SUPABASE_SERVICE_ROLE_KEY 由 Supabase 平台在每個 Edge Function
-// 執行環境自動注入（部署後）；本機 `supabase functions serve` 也會從 .env 或平台
-// 預設值提供同名變數。fail loud（同 delete-account／purge-storage 既有先例）：
-// 這是平台自動注入的變數，缺任一個代表部署設定本身有問題，不是「當作沒有事件可
-// 處理」悄悄放行。放在模組層級——isolate 冷啟動就會直接失敗，比藏在
-// buildProdDeps() 裡、每個請求都重新算一次還快看到問題。
+// SUPABASE_URL／SUPABASE_SECRET_KEYS（或過渡期的 legacy
+// SUPABASE_SERVICE_ROLE_KEY）由 Supabase 平台在每個 Edge Function 執行環境自動
+// 注入（部署後）；本機 `supabase functions serve` 也會從 .env 或平台預設值提供
+// 同名變數。fail loud（同 delete-account／purge-storage 既有先例）：這是平台
+// 自動注入的變數，缺任一個代表部署設定本身有問題，不是「當作沒有事件可處理」
+// 悄悄放行。放在模組層級——isolate 冷啟動就會直接失敗，比藏在 buildProdDeps()
+// 裡、每個請求都重新算一次還快看到問題。
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
-const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+// LS-196：authEnv 同時餵給 resolveSecretKey()（建 admin client 用的金鑰）與
+// handleRequest 內的 isAuthorizedServiceCall()（鑑權判定）——見 `_shared/keys.ts`
+// 檔頭「正式站 SUPABASE_SERVICE_ROLE_KEY 已非 legacy service_role JWT」的背景。
+const authEnv: SecretKeyEnv = {
+  SUPABASE_SECRET_KEYS: Deno.env.get("SUPABASE_SECRET_KEYS"),
+  SUPABASE_SERVICE_ROLE_KEY: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+};
+const secretKey = resolveSecretKey(authEnv);
 
-if (!supabaseUrl || !serviceRoleKey) {
-  throw new Error("SUPABASE_URL／SUPABASE_SERVICE_ROLE_KEY 未設定");
+if (!supabaseUrl || !secretKey) {
+  throw new Error(
+    "SUPABASE_URL／secret key 未設定（SUPABASE_SECRET_KEYS 或 SUPABASE_SERVICE_ROLE_KEY 皆缺）",
+  );
 }
 
 // 伺服器端一次性使用的 service client，不是瀏覽器 session client，不需要（也不該）
 // 啟動自動刷新 token 的計時器（同 delete-account minor-3 既有慣例）。
-const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+const adminClient = createClient(supabaseUrl, secretKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
@@ -42,7 +53,7 @@ const adminClient = createClient(supabaseUrl, serviceRoleKey, {
 // StubApnsProvider（只記錄 payload，不打真正的 APNs）；未設定或設成 "apns" 一律走
 // 真正的 APNs——buildRealApnsProvider 缺任一 secret 就 fail loud，不會因為忘記設定
 // secrets 而悄悄變成 stub 行為，「本機／CI 用 stub」必須是明確選擇，不是缺 secrets
-// 時的自動降級。放在模組層級（同上方 supabaseUrl／serviceRoleKey 的理由）：isolate
+// 時的自動降級。放在模組層級（同上方 supabaseUrl／secretKey 的理由）：isolate
 // 冷啟動就會直接失敗，不必等第一個請求進來。**這裡是模組層級單例**——同一個
 // isolate 存活期間的所有請求（可能橫跨遠超過 1 小時）共用同一個 apnsProvider
 // 實例，這正是 apns.ts 的 `cachedJwt` 需要主動過期判斷＋403 重簽重試的原因
@@ -92,7 +103,7 @@ const TIME_BUDGET_MS = 60_000;
 
 function buildProdDeps(): Deps {
   return {
-    expectedServiceRoleKey: serviceRoleKey,
+    authEnv,
     batchLimit: BATCH_LIMIT,
     maxBatches: MAX_BATCHES,
     concurrency: CONCURRENCY,
