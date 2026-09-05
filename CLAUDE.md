@@ -23,7 +23,7 @@
 - **開票必標 lane**（`lane:harness|backend|design|ui|product`，一票一個）；票間依賴只用 Linear `blockedBy` 關係、不寫成文字。每 lane WIP 上限與巡檢補位規則見 COLLABORATION §5-b。
 - **改狀態進 Ready 必帶 `cycle`（建票與更新票皆驗）；建票直接進 In Progress 也必帶 `cycle`，但更新既有票改 In Progress 不驗**（`Backlog`／`Done` 不要求；PreToolUse hook 擋，R1 依實測資料裁定的混合案，LS-79）；每週 Cycle 規劃提案／核可／結束回顧的節奏見 COLLABORATION §5-c。
 - Secrets 永不進 repo（pre-commit 會掃）。
-- 暫存檔一律 `LS-<n>-<用途>.<ext>`（或 `mktemp -d`）；`gh pr create/edit` 前先 `bash scripts/gates/pr-body-check.sh <body>`（CI 亦驗 PR body 檔頭段含分支票號）。
+- 暫存檔一律 `LS-<n>-<用途>.<ext>`（或 `mktemp -d`）；`gh pr create/edit` 前先 `bash scripts/gates/pr-body-check.sh <body> --branch <branch> --verify` 並檢查 exit code（勿接 `| tail`；CI 以同旗標再驗檔頭段票號與申報，LS-186）。
 
 ## Index
 

@@ -6,6 +6,8 @@
 # `--release` 不算；CRLF 可；加 mutation 負控（awk 拿掉 LS170-BODY-RULES 區塊後同一份負樣本須變綠，且先驗 mutant 確實不含區塊）。
 # LS-184（⑩）：三份的 `--hold` 寫法須為 `cd <worktree> && bash scripts/ops/supabase-lock.sh --hold` 同一命令鏈——裸 `--hold` 句（舊字樣仍在）即紅；
 # 同一 mutant 下負樣本變綠。
+# LS-186（⑪）：ios-dev 正文的 PR body 驗證句須為 `pr-body-check.sh <f> --branch <分支> --verify`——改回裸 `pr-body-check.sh <f>` 即紅；
+# merge-reviewer／qa 不要求；同一 mutant 下負樣本變綠。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -51,6 +53,10 @@ KILL='切檔一律不殺行程；`pen-open.sh` 的 --force-reload／--kill 只�
 # LS-180 裁決：ui-designer 正文另須含「收工 Pen 停在票檔」（不切回主 checkout）；合法的 ui-designer 樣本兩句都要有
 STAY='handoff 前不切回主 checkout：收工 Pen 停在票檔，handoff 註明路徑。'
 UI_BODY="${KILL} ${STAY}"
+# LS-186：ios-dev 正文另須含 CI 完整旗標的 PR body 驗證句；OLD_PRBODY 是 LS-186 之前的裸寫法（⑪ 的負樣本）
+PRBODY='`gh pr create/edit --body-file <f>` 之前先 `bash scripts/gates/pr-body-check.sh <f> --branch <分支> --verify`，直接看 exit code。'
+OLD_PRBODY='`gh pr create/edit --body-file <f>` 之前先 `bash scripts/gates/pr-body-check.sh <f>` 斷言檔頭段含本票票號。'
+IOS_BODY="${LOCK_BODY} ${PRBODY}"
 # mk <agent> <tools 行的值|NONE> [<正文附加行>]：寫一份最小 agent 定義
 mk() {
   local agent=$1 tools=$2 body=${3:-}
@@ -67,7 +73,7 @@ reset() {
   mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"
   mk ui-designer NONE "$UI_BODY"
   mk visual-reviewer NONE "$KILL"
-  mk ios-dev NONE "$LOCK_BODY"
+  mk ios-dev NONE "$IOS_BODY"
 }
 
 # ---- ① 合法 ----
@@ -84,7 +90,7 @@ reset; mk qa "BashOutput, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expec
 reset; mk merge-reviewer "Bash, mcp__linear__get_issue, mcp__linear__list_comments" "$HOLD"; expect 1 '② merge-reviewer 少 save_comment → exit 1' 'merge-reviewer.md：tools: 缺 mcp__linear__save_comment'
 reset; mk qa "Bash, ${LINEAR3}" "$HOLD"; expect 1 '② qa 少 mcp__pencil__get_app_state → exit 1' 'qa.md：tools: 缺 mcp__pencil__get_app_state'
 reset; mk qa "Bash, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '② qa 少 mcp__pencil__execute（LS-91 補釘）→ exit 1' 'qa.md：tools: 缺 mcp__pencil__execute'
-reset; mk ios-dev "Read, Edit" "$LOCK_BODY"; expect 0 '② ios-dev 有 tools: 行但必要工具留空 → 仍 exit 0（規則表無要求）' '通過'
+reset; mk ios-dev "Read, Edit" "$IOS_BODY"; expect 0 '② ios-dev 有 tools: 行但必要工具留空 → 仍 exit 0（規則表無要求）' '通過'
 reset; mk ui-designer "Read, mcp__pencil__get_app_state" "$UI_BODY"; expect 1 '② ui-designer 有 tools: 但缺 execute → exit 1' 'ui-designer.md：tools: 缺 mcp__pencil__execute'
 reset; mk visual-reviewer "Read" "$KILL"; expect 1 '② visual-reviewer 有 tools: 但缺 execute → exit 1' 'visual-reviewer.md：tools: 缺 mcp__pencil__execute'
 reset; mk dead-code-sweeper "Read, mcp__linear__get_issue"; expect 1 '② dead-code-sweeper 少 Bash／list_comments／save_comment → 一行列三支' 'dead-code-sweeper.md：tools: 缺 Bash mcp__linear__list_comments mcp__linear__save_comment'
@@ -100,7 +106,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（13 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 13 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（14 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 14 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -126,6 +132,12 @@ reset; mk ios-dev NONE "${BARE_HOLD} ${H3B}"; expect 1 '⑩ LS-184：ios-dev 只
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${BARE_HOLD} ${H3B}"; expect 1 '⑩ LS-184：merge-reviewer 裸 --hold → exit 1' 'merge-reviewer.md：正文缺「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${BARE_HOLD} ${H3B} ${E2E}"; expect 1 '⑩ LS-184：qa 裸 --hold → exit 1，工具齊全不救' 'qa.md：正文缺「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」' '' 'qa.md：tools: 缺'
 reset; mk ios-dev NONE "先 cd <worktree>，另一條命令再 bash scripts/ops/supabase-lock.sh --hold 不算同鏈。${H3B}"; expect 1 '⑩ LS-184：cd 與 --hold 不在同一命令鏈（沒有 &&）→ 紅' 'ios-dev.md：正文缺「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」'
+# LS-186：ios-dev 正文的 PR body 驗證句須帶 CI 完整旗標 `pr-body-check.sh <f> --branch <分支> --verify`——裸 `pr-body-check.sh <f>`（LS-185 前寫法）即紅；
+# lock 三句齊全不救；merge-reviewer／qa 不要求
+reset; expect 0 '⑪ LS-186：ios-dev 正文含 pr-body-check.sh <f> --branch <分支> --verify → 印「正文含」' 'ios-dev.md：正文含「pr-body-check.sh <f> --branch <分支> --verify」'
+reset; mk ios-dev NONE "${LOCK_BODY} ${OLD_PRBODY}"; expect 1 '⑪ LS-186：ios-dev 只有裸 pr-body-check.sh <f>（無 --branch --verify）→ exit 1，lock 三句齊全不救' 'ios-dev.md：正文缺「pr-body-check.sh <f> --branch <分支> --verify」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
+reset; mk ios-dev NONE "${LOCK_BODY} 先 bash scripts/gates/pr-body-check.sh <f> --verify 再看，沒有 --branch 不算。"; expect 1 '⑪ LS-186：只有 --verify、沒有 --branch <分支> → 紅' 'ios-dev.md：正文缺「pr-body-check.sh <f> --branch <分支> --verify」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$LOCK_BODY"; expect 0 '⑪ LS-186：merge-reviewer 不要求 pr-body-check 句 → 仍通過' '通過'
 reset; expect 0 '⑤ merge-reviewer／qa 也印「正文含」' 'merge-reviewer.md：正文含「supabase-lock.sh --hold」' 'qa.md：正文含「supabase-lock.sh --hold」'
 reset; mk ios-dev NONE; expect 1 '⑤ ios-dev 正文缺字樣 → exit 1' 'ios-dev.md：正文缺「supabase-lock.sh --hold」' '' '✓ agent-tools gate 通過'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}"; expect 1 '⑤ merge-reviewer 正文缺字樣 → exit 1' 'merge-reviewer.md：正文缺「supabase-lock.sh --hold」'
@@ -133,7 +145,7 @@ reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mc
 reset; mk ios-dev NONE; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}"; expect 1 '⑤ 兩份同時缺 → 一次列完' 'ios-dev.md：正文缺' 'merge-reviewer.md：正文缺'
 reset; mk ios-dev NONE "只寫 supabase-lock.sh --release 不算"; expect 1 '⑤ 只有 --release 沒有 --hold → 紅' 'ios-dev.md：正文缺'
 reset; printf -- '---\nname: ios-dev\ndescription: frontmatter 提到 supabase-lock.sh --hold 不算\nmodel: sonnet\n---\n\n正文。\n' > "$agents/ios-dev.md"; expect 1 '⑤ 字樣只在 frontmatter → 仍紅（只看正文）' 'ios-dev.md：正文缺'
-reset; printf -- '---\r\nname: ios-dev\r\nmodel: sonnet\r\n---\r\n\r\n%s\r\n' "$LOCK_BODY" > "$agents/ios-dev.md"; expect 0 '⑤ CRLF 正文含字樣 → exit 0' 'ios-dev.md：正文含'
+reset; printf -- '---\r\nname: ios-dev\r\nmodel: sonnet\r\n---\r\n\r\n%s\r\n' "$IOS_BODY" > "$agents/ios-dev.md"; expect 0 '⑤ CRLF 正文含字樣 → exit 0' 'ios-dev.md：正文含'
 reset; mk ios-dev "Read" ; mk merge-reviewer "Read"; expect 1 '⑤ 工具缺與正文缺同時 → 兩類一起列' 'merge-reviewer.md：tools: 缺' 'merge-reviewer.md：正文缺'
 # mutation 負控（同 linear-issue-check.test.sh 慣例）：拿掉 LS170-BODY-RULES 區塊（留下空表）後，上面「ios-dev 正文缺」的
 # 同一份負樣本必須變綠——證明紅是這條規則造成的，不是別條規則湊巧命中；先驗 mutant 確實不含區塊，否則負控本身無效。
@@ -166,6 +178,14 @@ if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'cd <worktree> &&'; then
   ok '⑩ mutant：拿掉規則後「裸 --hold」的負樣本變綠（LS-184 行確實是原因）'
 else
   echo "✗ ⑩ mutant 應 exit 0 且不印 cd <worktree> && 字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+# LS-186 負控：同一個 mutant 下，上面 ⑪「裸 pr-body-check.sh <f>」的負樣本也必須變綠——證明 ⑪ 的紅來自規則表的 LS-186 行
+reset; mk ios-dev NONE "${LOCK_BODY} ${OLD_PRBODY}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'pr-body-check.sh <f> --branch'; then
+  ok '⑪ mutant：拿掉規則後「裸 pr-body-check.sh <f>」的負樣本變綠（LS-186 行確實是原因）'
+else
+  echo "✗ ⑪ mutant 應 exit 0 且不印 pr-body-check.sh <f> --branch 字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過
 mut3="$work/agent-tools-check.body-not-subset.sh"
