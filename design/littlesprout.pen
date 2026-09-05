@@ -54033,15 +54033,12 @@
                       "gap": "$sp-item",
                       "children": [
                         {
-                          "id": "qd5ej",
+                          "id": "MYxf1",
                           "type": "ref",
                           "ref": "bhroo",
                           "name": "Card Album 1",
                           "width": "fill_container",
                           "descendants": {
-                            "wQVzs": {
-                              "content": "小安 · 2 歲 3 個⁠月"
-                            },
                             "Qjdzx": {
                               "enabled": true
                             },
@@ -55048,15 +55045,12 @@
                       "gap": "$sp-item",
                       "children": [
                         {
-                          "id": "K3Q7ZT",
+                          "id": "zfSO1",
                           "type": "ref",
                           "ref": "bhroo",
                           "name": "Card Album 1",
                           "width": "fill_container",
                           "descendants": {
-                            "wQVzs": {
-                              "content": "小安 · 2 歲 3 個⁠月"
-                            },
                             "Qjdzx": {
                               "enabled": true
                             },
@@ -55494,15 +55488,12 @@
                       "gap": "$sp-item",
                       "children": [
                         {
-                          "id": "MFpwo",
+                          "id": "bOKfx",
                           "type": "ref",
                           "ref": "bhroo",
                           "name": "Card Album 1",
                           "width": "fill_container",
                           "descendants": {
-                            "wQVzs": {
-                              "content": "小安 · 2 歲 3 個⁠月"
-                            },
                             "Qjdzx": {
                               "enabled": true
                             },
@@ -56068,7 +56059,7 @@
                                   }
                                 },
                                 {
-                                  "id": "PhZQS",
+                                  "id": "eBgN8",
                                   "type": "ref",
                                   "ref": "bhroo",
                                   "name": "Card Album 1",
@@ -56076,9 +56067,6 @@
                                   "descendants": {
                                     "MIxHp": {
                                       "content": "上禮拜的動物園一日遊 · 12 張相片"
-                                    },
-                                    "wQVzs": {
-                                      "content": "小安 · 2 歲 3 個⁠月"
                                     },
                                     "Qjdzx": {
                                       "width": 212.5,
@@ -56485,15 +56473,12 @@
                       "gap": "$sp-item",
                       "children": [
                         {
-                          "id": "TmqFZ",
+                          "id": "uvL4p",
                           "type": "ref",
                           "ref": "bhroo",
                           "name": "Card Album 1",
                           "width": "fill_container",
                           "descendants": {
-                            "wQVzs": {
-                              "content": "小安 · 2 歲 3 個⁠月"
-                            },
                             "Qjdzx": {
                               "y": 330,
                               "enabled": true
@@ -66801,15 +66786,12 @@
                       "gap": "$sp-item",
                       "children": [
                         {
-                          "id": "u01Pc",
+                          "id": "Z9Xuy",
                           "type": "ref",
                           "ref": "bhroo",
                           "name": "Card Album 1",
                           "width": "fill_container",
                           "descendants": {
-                            "wQVzs": {
-                              "content": "小安 · 2 歲 3 個⁠月"
-                            },
                             "Qjdzx": {
                               "enabled": true
                             },
@@ -90473,7 +90455,7 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "id": "ZHzy5",
+                      "id": "C93xq",
                       "type": "ref",
                       "ref": "bhroo",
                       "name": "Blank Print",
@@ -90489,9 +90471,6 @@
                         },
                         "MIxHp": {
                           "content": " "
-                        },
-                        "wQVzs": {
-                          "content": "小安 · 2 歲 3 個⁠月"
                         },
                         "Qjdzx": {
                           "enabled": false
@@ -93938,7 +93917,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "MJ-9（靈魂修復，R4 全面訂正——R3 版本已被 R4 推翻，數字不再準確，見下）：cmp/Card Album 的「這本相簿有多厚」現在只有一套訊號——Fan Ghost 片數本身承載分級，卡底 Stack Sheet（疊紙）三片全部永久停用（元件層 o5O1GD／Qjdzx／mTljh 預設 enabled:false）。規則：1–9 張→1 片 Fan Ghost／10–49 張→2 片／50+ 張→3 片（新增第三片 Fan Ghost 3，y −18 rotation −6 x72 w150（R5 MJ-1 訂正：原 −24 使 50+ 張卡與上一張卡淨空 0，僅移動 Fan Ghost 3，Fan Ghost／Fan Ghost 2 維持原值 −18／−11 不動——三個 tier 的「上一張卡最低可見底↔下一張卡最高可見裝飾頂」現在全部是 6，見下），畫在最底層，三片 z-order＝[Ghost3,Ghost1,Ghost2,Photo Print]，全部在 Photo Print 之前）。LS-142 本票 24 張相簿卡依此規則設定；他票既有 6 處 legacy instance（qd5ej／K3Q7ZT／MFpwo／PhZQS／TmqFZ／u01Pc——R7 訂正：原 tvVkT／ECLEc 因移除 N4 死覆寫 mTljh 走 Replace() 產生新 id，PhZQS／TmqFZ 即為同一組 go7f9／lKoZG 板上的 Card Album 1 instance，非新增節點）與 2 處 Blank Print（ZHzy5／E9XH3Y）維持 Fan Ghost 全部 enabled:false（沿用元件預設，不受本次規則影響）——但這 6 處 legacy instance 的 Stack Sheet 1/2（o5O1GD／Qjdzx）本來就在畫面上可見（未覆寫、吃元件舊預設 enabled:true），R4 把元件預設改 false 後已個別补上 enabled:true 覆寫，逐一核對零回歸。iPad 2 欄卡片較窄，三片 Ghost 皆按卡寬比例縮放（R7 訂正，取代 MJ-5 改稿後未跟上的舊值：比例 254.5/345≈0.7377）：Ghost1 w121.8 x66.4／Ghost2 w103.3 x79.7／Ghost3 w110.7 x53.1，y／rotation 與 iPhone 相同——R5 MJ-5（2e0b836 gap 16→24＋80b3ebd 欄寬 258.5→254.5、ghost 同步縮放）當時未回頭訂正本段，是 BL-2 同型缺陷（Notes 落後最後一次改稿）在 R7 的復發；cross_parent_collision 的 Fan Ghost 2×Corner TR 6 筆歸零已實測驗證。 卡間可見淨空（具名值）＝6：五張 14 家族板（puHZ5／Xldkz／Wl90J／IjWOp／X9PfG）三個 tier（1 片／2 片／3 片）逐板逐界重測，gap＝下一張卡最高可見裝飾頂（enabled 中最小 y 的 Fan Ghost）－上一張卡底，全部 20 組界線讀值皆為 6，零離群（R5 MJ-1）。",
+              "content": "MJ-9（靈魂修復，R4 全面訂正——R3 版本已被 R4 推翻，數字不再準確，見下）：cmp/Card Album 的「這本相簿有多厚」現在只有一套訊號——Fan Ghost 片數本身承載分級，卡底 Stack Sheet（疊紙）三片全部永久停用（元件層 o5O1GD／Qjdzx／mTljh 預設 enabled:false）。規則：1–9 張→1 片 Fan Ghost／10–49 張→2 片／50+ 張→3 片（新增第三片 Fan Ghost 3，y −18 rotation −6 x72 w150（R5 MJ-1 訂正：原 −24 使 50+ 張卡與上一張卡淨空 0，僅移動 Fan Ghost 3，Fan Ghost／Fan Ghost 2 維持原值 −18／−11 不動——三個 tier 的「上一張卡最低可見底↔下一張卡最高可見裝飾頂」現在全部是 6，見下），畫在最底層，三片 z-order＝[Ghost3,Ghost1,Ghost2,Photo Print]，全部在 Photo Print 之前）。LS-142 本票 24 張相簿卡依此規則設定；他票既有 6 處 legacy instance（原 qd5ej／K3Q7ZT／MFpwo／PhZQS／TmqFZ／u01Pc——R7 訂正：原 tvVkT／ECLEc 因移除 N4 死覆寫 mTljh 走 Replace() 產生新 id，PhZQS／TmqFZ 即為同一組 go7f9／lKoZG 板上的 Card Album 1 instance，非新增節點；LS-201 R4 因移除與元件預設逐字相同的冗餘 wQVzs content override 又各自走 Replace() 再產生一輪新 id：qd5ej→MYxf1、K3Q7ZT→zfSO1、MFpwo→bOKfx、PhZQS→eBgN8、TmqFZ→uvL4p、u01Pc→Z9Xuy，現行 id 以此為準）與 2 處 Blank Print（原 ZHzy5／E9XH3Y，同一輪 LS-201 R4 移除冗餘 wQVzs override 後 Replace() 產生新 id：ZHzy5→C93xq、E9XH3Y→CG1hw）維持 Fan Ghost 全部 enabled:false（沿用元件預設，不受本次規則影響）——但這 6 處 legacy instance 的 Stack Sheet 1/2（o5O1GD／Qjdzx）本來就在畫面上可見（未覆寫、吃元件舊預設 enabled:true），R4 把元件預設改 false 後已個別补上 enabled:true 覆寫，逐一核對零回歸。iPad 2 欄卡片較窄，三片 Ghost 皆按卡寬比例縮放（R7 訂正，取代 MJ-5 改稿後未跟上的舊值：比例 254.5/345≈0.7377）：Ghost1 w121.8 x66.4／Ghost2 w103.3 x79.7／Ghost3 w110.7 x53.1，y／rotation 與 iPhone 相同——R5 MJ-5（2e0b836 gap 16→24＋80b3ebd 欄寬 258.5→254.5、ghost 同步縮放）當時未回頭訂正本段，是 BL-2 同型缺陷（Notes 落後最後一次改稿）在 R7 的復發；cross_parent_collision 的 Fan Ghost 2×Corner TR 6 筆歸零已實測驗證。 卡間可見淨空（具名值）＝6：五張 14 家族板（puHZ5／Xldkz／Wl90J／IjWOp／X9PfG）三個 tier（1 片／2 片／3 片）逐板逐界重測，gap＝下一張卡最高可見裝飾頂（enabled 中最小 y 的 Fan Ghost）－上一張卡底，全部 20 組界線讀值皆為 6，零離群（R5 MJ-1）。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -95714,7 +95693,7 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "id": "E9XH3Y",
+                      "id": "CG1hw",
                       "type": "ref",
                       "ref": "bhroo",
                       "name": "Blank Print",
@@ -95730,9 +95709,6 @@
                         },
                         "MIxHp": {
                           "content": " "
-                        },
-                        "wQVzs": {
-                          "content": "小安 · 2 歲 3 個⁠月"
                         },
                         "Qjdzx": {
                           "enabled": false
