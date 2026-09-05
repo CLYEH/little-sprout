@@ -8,7 +8,7 @@
 # 用法：patrol.sh [stale_minutes] [--brief|--json] [--no-fetch] [--no-pr] [--repo <path>] [--linear]
 #   stale_minutes  幾分鐘沒動算停滯（預設 45）
 #   --brief        只印表頭＋異常行（hook 注入 context 用）；全正常時末行「巡檢：無異常」
-#   --json         單一 JSON 物件（欄位見檔尾 json 分支），不依賴 jq
+#   --json         單一 JSON 物件（欄位見檔尾 json 分支；LS-198 加 sim_linear_note＝專屬模擬器段這輪有沒有問 Linear），不依賴 jq
 #   --no-fetch     不先 git fetch origin（預設會 fetch，看門狗 PATROL_FETCH_TIMEOUT 秒、預設 10；逾時或失敗只警告，
 #                  退回本機 origin/* 續跑——hook timeout 30s 不能被黑洞位址的 TCP 逾時（實測 75s）撐爆）
 #   --no-pr        略過 gh pr list（自測用；gh 未裝或失敗時本來就會自動略過並標示原因，不會炸）
@@ -352,15 +352,21 @@ fi
 SIM_LINES=; J_SIM=; J_ORPHAN=; sim_flagged=0; sim_orphans=0; sim_default=0; sim_linear_note=
 BOOT_LINES=; J_BOOT=; boot_total=0; boot_flagged=0; boot_nonexempt=
 plsh="${PATROL_LINEAR_SH:-${here}/patrol-linear.sh}"   # 可覆寫供自測餵假身（R1 F6；LS-187 --closed 也走這支）
+WT_HAS_MEMO=   # LS-198（LS-187 R1 info-2）：ticket_has_worktree 一輪內每票只掃一次 WT_INDEX——每筆「\n<票號>\t<0|1>」，前置收票號與逐台判定各叫一次，30 台 LS-* 省約 1.2s
 ticket_has_worktree() {  # $1＝LS-<n>；git worktree list 任一筆目錄存在、且 basename 或分支整字含該票號 → 0
-  local p b
+  local p b hit=1
+  case "$WT_HAS_MEMO" in   # 換行在前、tab 在後夾住票號：LS-3 不會命中 LS-30 的記錄、LS-40 不會命中 LS-4 的
+    *$'\n'"${1}"$'\t'0*) return 0 ;;
+    *$'\n'"${1}"$'\t'1*) return 1 ;;
+  esac
   while IFS=$'\t' read -r p b; do
-    [ -n "$p" ] && [ -d "$p" ] || continue
-    printf '%s %s' "$(basename "$p")" "$b" | grep -qE "(^|[^0-9])${1}([^0-9]|\$)" && return 0
+    [ -n "$p" ] && [ -d "$p" ] || continue   # 記錄在、目錄已刪（prunable）＝不在
+    if printf '%s %s' "$(basename "$p")" "$b" | grep -qE "(^|[^0-9])${1}([^0-9]|\$)"; then hit=0; break; fi
   done <<EOF
 $WT_INDEX
 EOF
-  return 1
+  WT_HAS_MEMO="${WT_HAS_MEMO}"$'\n'"${1}"$'\t'"${hit}"
+  return "$hit"
 }
 closed_state_of() { printf '%s\n' "${SIM_CLOSED:-}" | awk -F'\t' -v t="$1" '$1 == t { print $2; exit }'; }  # $1＝LS-<n>；印 Done／Canceled 名稱或空
 # LS-100：可注入 SIMCTL_LIST_JSON 直接餵合成 JSON（patrol.test.sh 用）；未設就照常呼叫真的 xcrun。
@@ -566,7 +572,10 @@ if [ -z "$devices_kb" ]; then
     devices_kb=$(printf '%s\n' "${du_out:-}" | awk -F'\t' -v p="$sim_devices_dir" '$2 == p { print $1; exit }')
     case "$devices_kb" in
       ''|*[!0-9]*) devices_kb=; if [ "$du_rc" -eq 124 ]; then devices_du_src="du >${DU_TIMEOUT}s 逾時"; else devices_du_src="du 失敗"; fi ;;
-      *) devices_du_src="du 剛量"; printf '%s\t%s\t%s\n' "$now" "$sim_devices_dir" "$devices_kb" > "$du_cache" 2>/dev/null || true ;;
+      *) devices_du_src="du 剛量"
+         # LS-198（LS-187 R1 info-3）：先寫同目錄暫存檔再 mv 覆蓋（rename 原子）——cron human 與 SessionStart --brief 併發時讀者不會讀到半行；失敗一律靜默（快取只是省時間）
+         du_tmp="${du_cache}.tmp.$$"
+         if printf '%s\t%s\t%s\n' "$now" "$sim_devices_dir" "$devices_kb" > "$du_tmp" 2>/dev/null; then mv -f "$du_tmp" "$du_cache" 2>/dev/null || rm -f "$du_tmp"; else rm -f "$du_tmp"; fi ;;
     esac
   fi
 fi
@@ -608,12 +617,12 @@ fi
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"default_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
-      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$J_SIM" "$J_ORPHAN" "$sim_default" "$J_BOOT" "$(json_num "$boot_flagged")" \
+      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$J_BOOT" "$(json_num "$boot_flagged")" \
       "$(json_num "$disk_avail_gb")" "$DISK_MIN_GB" "$(json_num "$disk_devices_gb")" "$(json_num "$disk_derived_gb")" "$disk_dedicated" "$(json_str "$disk_flag")" \
       "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" "$J_FLAGS"
     ;;

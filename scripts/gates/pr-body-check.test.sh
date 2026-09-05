@@ -8,6 +8,8 @@
 #   之前）會被當成有 SHA 而綠、--verify 又把 comment id 報成「不在 PR commits 內」；改成「之後全部 hex 任一」時「第一個是 comment id、
 #   真 SHA 在其後」會綠——這裡都會紅；紅時 stdout 最後一行不是 ✗ 也會紅。R2（merge-review R1 minor-1）自「緊鄰」放寬：冒號／
 #   `（commit `sha`）`／逗號句／表格別欄四種 repo 常見形狀為正樣本。
+# LS-198（⑧）：格式模式對「已修」後第一個 hex 為純數字（migration 檔名前綴／CI run id）印 ⚠ 警告、exit 仍 0——拿掉警告即紅；非純數字不得印警告；
+#   --verify 紅「不是本 repo 的 commit」時 deny 訊息須含「檔名／行號裡的數字也算 hex token」——刪掉那半句即紅。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -269,7 +271,13 @@ else
   echo "✓ ⑦ --verify comment id 形狀不再報成「不在 PR commits 內」（與「非祖先」分開講）"
 fi
 
+# ⑧ LS-198（LS-186 R2 info-1／2）：格式模式對純數字候選印警告不紅；deny 訊息補「檔名／行號裡的數字也算 hex token」。
+#   20260904212530 是 migration 檔名前綴：14 位 [0-9] 落在 7–40 hex 內，格式模式無法與短 SHA 區分（只有 --verify 的 git cat-file 裁得出來）。
+expect 0 '⑧-a 已修 `20260904212530_x.sql` `<sha>`：格式模式仍綠、但對純數字候選印 ⚠ 警告（mutation：拿掉警告即紅）' '是純數字' "${H}- m1：已修 \`20260904212530_suspension.sql\` \`7c2ff80\`"$'\n' --branch "$B"
+absent '⑧-a 已修 `<sha>` `20260904212530_x.sql`（SHA 在前）→ 不印純數字警告' '是純數字' "${H}- m1：已修 \`7c2ff80\` \`20260904212530_suspension.sql\`"$'\n' --branch "$B"
+vexpect 1 '⑧-b --verify：migration 檔名前綴排在 SHA 之前 → 紅，deny 訊息指出檔名／行號裡的數字也算 hex token、把 SHA 放『已修』後第一個' '檔名／行號裡的數字也算 hex token' '' "${H}- m1：已修 \`20260904212530_suspension.sql\` \`${sha_in}\`"$'\n'
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ pr-body-check 自測通過（88 組樣本）"
+  echo "✓ pr-body-check 自測通過（91 組樣本）"
 fi
 exit "$fail"
