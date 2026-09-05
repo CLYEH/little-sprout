@@ -1,0 +1,2714 @@
+{
+  "ticket": "LS-201",
+  "round": 2,
+  "head_sha": "87f58ec639cdda0c91e3c22626785f36e2147136",
+  "total_nodes": 9500,
+  "tree_hash": "c9f125021690c849",
+  "scan_scope": "document",
+  "scans": {
+    "sibling_intersection": {
+      "flagged": [
+        {
+          "node_a": "XekQz",
+          "node_b": "pYE38",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 12 例"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "rtNqP",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 12 例"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "g7B7X",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 12 例"
+        },
+        {
+          "node_a": "XekQz",
+          "node_b": "Mlugc",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 12 例"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "NUPWz",
+          "classification": "沖印相片母題內部既有裝飾疊層（相紙／接合照片／夜間漸暗／褪色暈染等 z-order 堆疊），非 LS-201 觸碰範圍，同類 17 例"
+        },
+        {
+          "node_a": "pYE38/sD5Ma",
+          "node_b": "pYE38/DhOiK",
+          "classification": "角托內部裝飾子層（形狀×邊緣，同一角托內恆重疊，設計即如此），非 LS-201 觸碰範圍，同類 216 例"
+        },
+        {
+          "node_a": "rtNqP/sD5Ma",
+          "node_b": "rtNqP/DhOiK",
+          "classification": "角托內部裝飾子層（形狀×邊緣，同一角托內恆重疊，設計即如此），非 LS-201 觸碰範圍，同類 220 例"
+        },
+        {
+          "node_a": "g7B7X/sD5Ma",
+          "node_b": "g7B7X/DhOiK",
+          "classification": "角托內部裝飾子層（形狀×邊緣，同一角托內恆重疊，設計即如此），非 LS-201 觸碰範圍，同類 220 例"
+        },
+        {
+          "node_a": "Mlugc/sD5Ma",
+          "node_b": "Mlugc/DhOiK",
+          "classification": "角托內部裝飾子層（形狀×邊緣，同一角托內恆重疊，設計即如此），非 LS-201 觸碰範圍，同類 216 例"
+        },
+        {
+          "node_a": "yqk1S/GuOM0",
+          "node_b": "yqk1S/j7iqM",
+          "classification": "Google 標誌向量弧形裝飾元素（logo 圖徽本身重疊繪製），非 LS-201 觸碰範圍，同類 11 例"
+        },
+        {
+          "node_a": "yqk1S/aQq5T",
+          "node_b": "yqk1S/SieME",
+          "classification": "Google 標誌向量弧形裝飾元素（logo 圖徽本身重疊繪製），非 LS-201 觸碰範圍，同類 11 例"
+        },
+        {
+          "node_a": "yqk1S/SieME",
+          "node_b": "yqk1S/j7iqM",
+          "classification": "Google 標誌向量弧形裝飾元素（logo 圖徽本身重疊繪製），非 LS-201 觸碰範圍，同類 11 例"
+        },
+        {
+          "node_a": "Ur6DB",
+          "node_b": "W7Ycw",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "Ur6DB",
+          "node_b": "tlJFt",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "F9Iva",
+          "node_b": "jOrlo",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "F9Iva",
+          "node_b": "ny0ec",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "b66CZc",
+          "node_b": "BXbTE",
+          "classification": "沖印品母題內部既有間距／舞台裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "MOWjB",
+          "node_b": "Iqtt4",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "MOWjB",
+          "node_b": "XjToq",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "lSghl",
+          "node_b": "zymKZ",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "lSghl",
+          "node_b": "jin0Q",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "M98qs",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "j2z1C0",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "xfmAg",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "kOZbf",
+          "node_b": "DIMqR",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "YRtyF",
+          "classification": "沖印相片母題內部既有裝飾疊層（相紙／接合照片／夜間漸暗／褪色暈染等 z-order 堆疊），非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "e8hcYl",
+          "classification": "既有沖印相片母題內部裝飾疊層，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "YRtyF",
+          "node_b": "e8hcYl",
+          "classification": "沖印相片母題內部既有裝飾疊層（相紙／接合照片／夜間漸暗／褪色暈染等 z-order 堆疊），非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "osCBD/X7DYDo/go3YL",
+          "node_b": "osCBD/X7DYDo/uHUe1",
+          "classification": "角色選項列文字與勾選圖示的既有版面重疊（圖示疊在文字列尾端為設計慣例），非 LS-201 觸碰範圍，同類 5 例"
+        },
+        {
+          "node_a": "osCBD/ZA8G7/go3YL",
+          "node_b": "osCBD/ZA8G7/uHUe1",
+          "classification": "角色選項列文字與勾選圖示的既有版面重疊（圖示疊在文字列尾端為設計慣例），非 LS-201 觸碰範圍，同類 5 例"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "I8sWT8",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "OIwlW",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "kSfzp",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "eS0jX",
+          "node_b": "mIStI",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "MxnWP",
+          "classification": "沖印相片母題內部既有裝飾疊層（相紙／接合照片／夜間漸暗／褪色暈染等 z-order 堆疊），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "I5vhg",
+          "classification": "沖印相片母題內部既有裝飾疊層（相紙／接合照片／夜間漸暗／褪色暈染等 z-order 堆疊），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "WceLk",
+          "classification": "沖印相片母題內部既有裝飾疊層（相紙／接合照片／夜間漸暗／褪色暈染等 z-order 堆疊），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "E6reS5",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "B5E1ig",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "br1l7",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "WlYmP",
+          "node_b": "qnP3W",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "I5vhg",
+          "classification": "沖印相片母題內部既有裝飾疊層（相紙／接合照片／夜間漸暗／褪色暈染等 z-order 堆疊），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "WceLk",
+          "classification": "沖印相片母題內部既有裝飾疊層（相紙／接合照片／夜間漸暗／褪色暈染等 z-order 堆疊），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "E6reS5",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "MxnWP",
+          "node_b": "B5E1ig",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "WceLk",
+          "classification": "沖印相片母題內部既有裝飾疊層（相紙／接合照片／夜間漸暗／褪色暈染等 z-order 堆疊），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "E6reS5",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "I5vhg",
+          "node_b": "B5E1ig",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "E6reS5",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "B5E1ig",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "br1l7",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "WceLk",
+          "node_b": "qnP3W",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "sD5Ma",
+          "node_b": "DhOiK",
+          "classification": "角托內部裝飾子層（形狀×邊緣，同一角托內恆重疊，設計即如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "zBeVi",
+          "node_b": "L5YAG",
+          "classification": "OTP 輸入格 focus ring 裝飾疊在文字上的既有設計，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "PMV0W",
+          "node_b": "GWAHq",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "PMV0W",
+          "node_b": "SV5Ka",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "uXS8K",
+          "node_b": "GWAHq",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "uXS8K",
+          "node_b": "SV5Ka",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "aflVw",
+          "classification": "沖印相片母題內部既有裝飾疊層（相紙／接合照片／夜間漸暗／褪色暈染等 z-order 堆疊），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "dCV1r",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "Evspf",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "B919I",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "RfKvh",
+          "node_b": "fyZfa",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "dCV1r",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "Evspf",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "B919I",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "aflVw",
+          "node_b": "fyZfa",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "LaaxQ",
+          "node_b": "WU8Te",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "LaaxQ",
+          "node_b": "L7ke3",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "WU8Te/sD5Ma",
+          "node_b": "WU8Te/DhOiK",
+          "classification": "角托內部裝飾子層（形狀×邊緣，同一角托內恆重疊，設計即如此），非 LS-201 觸碰範圍，同類 41 例"
+        },
+        {
+          "node_a": "L7ke3/sD5Ma",
+          "node_b": "L7ke3/DhOiK",
+          "classification": "角托內部裝飾子層（形狀×邊緣，同一角托內恆重疊，設計即如此），非 LS-201 觸碰範圍，同類 41 例"
+        },
+        {
+          "node_a": "xlMQk",
+          "node_b": "M72IeN",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "xlMQk",
+          "node_b": "sPdfs",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "z2l5f",
+          "node_b": "xKQDP",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 3 例"
+        },
+        {
+          "node_a": "z2l5f",
+          "node_b": "K8naK",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 3 例"
+        },
+        {
+          "node_a": "F9Gvz2",
+          "node_b": "EfgyZ",
+          "classification": "刪除線裝飾（Strike Rule）疊在文字上為既有設計效果，非 LS-201 觸碰範圍，同類 3 例"
+        },
+        {
+          "node_a": "PSBOi",
+          "node_b": "OtK4n",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "PSBOi",
+          "node_b": "brcXK",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Ac3zU",
+          "node_b": "ClTOX",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Ac3zU",
+          "node_b": "WjZtu",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "cTC2J",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "k2V3ms",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "ldyto",
+          "node_b": "mzo0K",
+          "classification": "既有沖印品母題／裝飾性 z-order 設計元素重疊（Print × Squircle r=115 (Pencil 圓弧近似) @ Icon 幾何（不套遮罩）），非 LS-201 觸碰範圍，同類 1 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "cTC2J",
+          "node_b": "mzo0K",
+          "classification": "App icon 幾何母題內部裝飾參考線（Squircle／Mount／Clearance 既有疊層），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "cTC2J",
+          "node_b": "OxuA8",
+          "classification": "既有沖印品母題／裝飾性 z-order 設計元素重疊（Mount TL × Clearance TL @ Icon 幾何（不套遮罩）），非 LS-201 觸碰範圍，同類 1 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "k2V3ms",
+          "node_b": "mzo0K",
+          "classification": "App icon 幾何母題內部裝飾參考線（Squircle／Mount／Clearance 既有疊層），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "k2V3ms",
+          "node_b": "LMc6c",
+          "classification": "既有沖印品母題／裝飾性 z-order 設計元素重疊（Mount BR × Clearance BR @ Icon 幾何（不套遮罩）），非 LS-201 觸碰範圍，同類 1 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "mzo0K",
+          "node_b": "OxuA8",
+          "classification": "App icon 幾何母題內部裝飾參考線（Squircle／Mount／Clearance 既有疊層），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "mzo0K",
+          "node_b": "LMc6c",
+          "classification": "App icon 幾何母題內部裝飾參考線（Squircle／Mount／Clearance 既有疊層），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "a1ycjz",
+          "node_b": "bWK8K",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "a1ycjz",
+          "node_b": "y5UWXf",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "h0ZQd",
+          "node_b": "E7kbRB",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "h0ZQd",
+          "node_b": "Pqqdp",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "m780n",
+          "node_b": "uARGy",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "m780n",
+          "node_b": "mFP87",
+          "classification": "App icon／Mark 母題內既有 Print×Mount 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "khLYx",
+          "node_b": "vRQFQ",
+          "classification": "刪除線裝飾（Strike Rule）疊在文字上為既有設計效果，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "lxZzb",
+          "node_b": "gJOJT",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "lxZzb",
+          "node_b": "RZcIs",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "TeX44",
+          "node_b": "RZcIs",
+          "classification": "Home Indicator 區域與鍵盤示意圖層的既有浮層設計（鍵盤升起時遮蓋），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "kfuha",
+          "node_b": "qfxbb",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 51 例"
+        },
+        {
+          "node_a": "kfuha",
+          "node_b": "YG4hG",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 51 例"
+        },
+        {
+          "node_a": "yxEFh",
+          "node_b": "Wo9Ox",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 51 例"
+        },
+        {
+          "node_a": "yxEFh",
+          "node_b": "efA3a",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 51 例"
+        },
+        {
+          "node_a": "JE6tE",
+          "node_b": "Vmezj",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "JE6tE",
+          "node_b": "PaCtI",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "rrzzl",
+          "node_b": "p2dJpQ",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "rrzzl",
+          "node_b": "Wrztr",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "n5j2xu",
+          "node_b": "H3b7gk",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "n5j2xu",
+          "node_b": "oj6h0",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "XoVVx",
+          "node_b": "SUi6K",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "XoVVx",
+          "node_b": "nSjs7",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "cPbyp",
+          "node_b": "XMVoJ",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "cPbyp",
+          "node_b": "MBQx8",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "XMVoJ",
+          "node_b": "MBQx8",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "A14LnU",
+          "node_b": "dJM15",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "A14LnU",
+          "node_b": "EoToI",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "xgx94",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "gFJ8N",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "I1Rtb",
+          "node_b": "qx4xE",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "xTL71",
+          "node_b": "DZjmG",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "xTL71",
+          "node_b": "gbW37",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "DZjmG",
+          "node_b": "gbW37",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "zGEet",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "G5vY5",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "o4llU",
+          "node_b": "qCMDY",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "bq8pa",
+          "node_b": "yqWq9",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "bq8pa",
+          "node_b": "C57OVI",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "go3YL",
+          "node_b": "uHUe1",
+          "classification": "角色選項列文字與勾選圖示的既有版面重疊（圖示疊在文字列尾端為設計慣例），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "n2VSQy",
+          "node_b": "Egn9A",
+          "classification": "LS-201 新增的 Body 收窄補償 Spacer 與 Tab Bar 相鄰／輕微重疊為預期設計（Spacer 目的即銜接淨空區與 Tab Bar），同類 1 例"
+        },
+        {
+          "node_a": "Z4TsQ/tBi8u",
+          "node_b": "Z4TsQ/xlLIo",
+          "classification": "日期錨點郵戳裝飾母題（Ghost×Stamp 既有疊層），非 LS-201 觸碰範圍，同類 23 例"
+        },
+        {
+          "node_a": "WitwS/uZ5Lt",
+          "node_b": "WitwS/kVUWa",
+          "classification": "照片堆疊裝飾母題（Stack Sheet 既有疊層卡片效果），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "WitwS/ekqx4",
+          "node_b": "WitwS/GCEdk",
+          "classification": "照片堆疊「更多」遮罩既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "PFhXP",
+          "node_b": "eRy14",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "gKBS7",
+          "node_b": "aY7S5",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "gKBS7",
+          "node_b": "BbDZH",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "bG6cD",
+          "node_b": "fsveQ",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "bG6cD",
+          "node_b": "wSSFB",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "zbJlv",
+          "node_b": "OR1hw",
+          "classification": "LS-201 新增的 Body 收窄補償 Spacer 與 Tab Bar 相鄰／輕微重疊為預期設計（Spacer 目的即銜接淨空區與 Tab Bar），同類 1 例"
+        },
+        {
+          "node_a": "a3l8GT",
+          "node_b": "bmk5H",
+          "classification": "LS-201 新增的 Body 收窄補償 Spacer 與 Tab Bar 相鄰／輕微重疊為預期設計（Spacer 目的即銜接淨空區與 Tab Bar），同類 1 例"
+        },
+        {
+          "node_a": "CXGIM",
+          "node_b": "QVGNJ",
+          "classification": "LS-201 新增的 Body 收窄補償 Spacer 與 Tab Bar 相鄰／輕微重疊為預期設計（Spacer 目的即銜接淨空區與 Tab Bar），同類 1 例"
+        },
+        {
+          "node_a": "abfZE",
+          "node_b": "wOzaO",
+          "classification": "頭像堆疊（Avatar Stack）既有裝飾性重疊母題，非 LS-201 觸碰範圍，同類 11 例"
+        },
+        {
+          "node_a": "V9wQZl",
+          "node_b": "OJNI5",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 134 例"
+        },
+        {
+          "node_a": "V9wQZl",
+          "node_b": "C57TMC",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 134 例"
+        },
+        {
+          "node_a": "CV0TW",
+          "node_b": "iCUJF",
+          "classification": "縮圖選取徽章疊在縮圖角落的既有 UI 設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "TSxZo",
+          "node_b": "v7MGOT",
+          "classification": "縮圖選取徽章疊在縮圖角落的既有 UI 設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "kQ23G",
+          "node_b": "M4PUm",
+          "classification": "LS-201 新增的 Body 收窄補償 Spacer 與 Tab Bar 相鄰／輕微重疊為預期設計（Spacer 目的即銜接淨空區與 Tab Bar），同類 1 例"
+        },
+        {
+          "node_a": "RPTGa",
+          "node_b": "repj6",
+          "classification": "照片拖曳排序互動狀態（拖曳中縮圖與目標／相鄰縮圖重疊為預期呈現），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "kdCWx",
+          "node_b": "repj6",
+          "classification": "照片拖曳排序互動狀態（拖曳中縮圖與目標／相鄰縮圖重疊為預期呈現），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "aedfE",
+          "node_b": "V4oYH",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "FqE7M",
+          "node_b": "g0Nub8",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "FqE7M",
+          "node_b": "wTMlo",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "WC9pB/UTLcl",
+          "node_b": "WC9pB/KGh0U",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "WC9pB/UTLcl",
+          "node_b": "WC9pB/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 5 例"
+        },
+        {
+          "node_a": "WC9pB/KGh0U",
+          "node_b": "WC9pB/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "PjgtQ/UTLcl",
+          "node_b": "PjgtQ/KGh0U",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 5 例"
+        },
+        {
+          "node_a": "PjgtQ/UTLcl",
+          "node_b": "PjgtQ/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 5 例"
+        },
+        {
+          "node_a": "PjgtQ/KGh0U",
+          "node_b": "PjgtQ/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 5 例"
+        },
+        {
+          "node_a": "R7edNW/UTLcl",
+          "node_b": "R7edNW/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 5 例"
+        },
+        {
+          "node_a": "H51J8u/UTLcl",
+          "node_b": "H51J8u/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "eDQhR/FjOA8",
+          "node_b": "eDQhR/UTLcl",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "eDQhR/FjOA8",
+          "node_b": "eDQhR/KGh0U",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "eDQhR/FjOA8",
+          "node_b": "eDQhR/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "eDQhR/UTLcl",
+          "node_b": "eDQhR/KGh0U",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "eDQhR/UTLcl",
+          "node_b": "eDQhR/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "eDQhR/KGh0U",
+          "node_b": "eDQhR/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node_a": "oyZbS",
+          "node_b": "v4dw1",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "DUOGt",
+          "node_b": "kJq3T",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "DUOGt",
+          "node_b": "olgX0",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "bjuSv",
+          "node_b": "hkjhm",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "bjuSv",
+          "node_b": "M6Bkt",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "hkjhm",
+          "node_b": "M6Bkt",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "YekOU",
+          "node_b": "U7ATK",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "YekOU",
+          "node_b": "Kl0eH",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "v3pPdz",
+          "node_b": "K3xsp1",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "jZVRr",
+          "node_b": "CRf3y",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "jZVRr",
+          "node_b": "RxQis",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "i3jpIq/FjOA8",
+          "node_b": "i3jpIq/UTLcl",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "i3jpIq/FjOA8",
+          "node_b": "i3jpIq/KGh0U",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "i3jpIq/FjOA8",
+          "node_b": "i3jpIq/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "i3jpIq/UTLcl",
+          "node_b": "i3jpIq/KGh0U",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "i3jpIq/KGh0U",
+          "node_b": "i3jpIq/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "HIdMW/UTLcl",
+          "node_b": "HIdMW/KGh0U",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "HIdMW/UTLcl",
+          "node_b": "HIdMW/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "HIdMW/KGh0U",
+          "node_b": "HIdMW/r6cYjT",
+          "classification": "相簿卡片「扇形照片堆」裝飾母題（Fan Ghost 疊層），既有設計即重疊排列，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "YlNJe",
+          "node_b": "j2svp",
+          "classification": "LS-201 新增的 Body 收窄補償 Spacer 與 Tab Bar 相鄰／輕微重疊為預期設計（Spacer 目的即銜接淨空區與 Tab Bar），同類 1 例"
+        },
+        {
+          "node_a": "FOd6u",
+          "node_b": "D6sAcX",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "FOd6u",
+          "node_b": "B7AqL",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "D6sAcX",
+          "node_b": "B7AqL",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "yvhTU",
+          "node_b": "EigFv",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "yvhTU",
+          "node_b": "bNhc1",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "EigFv",
+          "node_b": "bNhc1",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "dV8Qj",
+          "node_b": "BEyFk",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "dV8Qj",
+          "node_b": "fo7g1",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "BEyFk",
+          "node_b": "fo7g1",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "E51wH",
+          "node_b": "WOhYG",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "E51wH",
+          "node_b": "umPbi",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "WOhYG",
+          "node_b": "umPbi",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "QioS2",
+          "node_b": "bMTQi",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "QioS2",
+          "node_b": "r84waq",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "bMTQi",
+          "node_b": "r84waq",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "FD9qU",
+          "node_b": "ykj25",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "lE7FJ/MN0WF",
+          "node_b": "lE7FJ/R1lbwf",
+          "classification": "既有沖印品母題／裝飾性 z-order 設計元素重疊（Photo × Mount TL @ Print），非 LS-201 觸碰範圍，同類 28 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "lE7FJ/MN0WF",
+          "node_b": "lE7FJ/S4O4r8",
+          "classification": "既有沖印品母題／裝飾性 z-order 設計元素重疊（Photo × Mount BR @ Print），非 LS-201 觸碰範圍，同類 28 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "azJjI",
+          "node_b": "dXvs2",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "z3Lone",
+          "node_b": "RDXui",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "zh1oK",
+          "node_b": "FLa3s",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "zh1oK",
+          "node_b": "dGzCL",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "FLa3s",
+          "node_b": "dGzCL",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "v1mVWP",
+          "node_b": "cOmRO",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "v1mVWP",
+          "node_b": "PMtMR",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "cOmRO",
+          "node_b": "PMtMR",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "c30576",
+          "node_b": "hxxHK",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "c30576",
+          "node_b": "mEhU5",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "hxxHK",
+          "node_b": "mEhU5",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "ZUD6e",
+          "node_b": "i6DIZ",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "ZUD6e",
+          "node_b": "K3SRwk",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "i6DIZ",
+          "node_b": "K3SRwk",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "r8R5F",
+          "node_b": "TTki5",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "r8R5F",
+          "node_b": "rUYvm",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "TTki5",
+          "node_b": "rUYvm",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "H5iprd",
+          "node_b": "UVTX8",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "H5iprd",
+          "node_b": "QPh4b",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "UVTX8",
+          "node_b": "QPh4b",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "yVqvZ",
+          "node_b": "F7cSv",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "yVqvZ",
+          "node_b": "VgDOl",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "F7cSv",
+          "node_b": "VgDOl",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "VcQS1",
+          "node_b": "E07WN1",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "VcQS1",
+          "node_b": "L0VhA",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "E07WN1",
+          "node_b": "L0VhA",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "bxhMP",
+          "node_b": "Vzf57",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "xDKDL",
+          "node_b": "FgEza",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "xDKDL",
+          "node_b": "q4obb",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "FgEza",
+          "node_b": "q4obb",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "IldBr",
+          "node_b": "a6u13",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "IldBr",
+          "node_b": "ZDOMk",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "a6u13",
+          "node_b": "ZDOMk",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "AWO50",
+          "node_b": "N1Ibp",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "gX04c",
+          "node_b": "svdWR",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "gX04c",
+          "node_b": "S49vq",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "svdWR",
+          "node_b": "S49vq",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "fzjIO",
+          "node_b": "LyWDH",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "fzjIO",
+          "node_b": "iGx4e",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "fzjIO",
+          "node_b": "g211l6",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "fzjIO",
+          "node_b": "zOe6U",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Zg1x3",
+          "node_b": "IeLM2",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Zg1x3",
+          "node_b": "M5ktLZ",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "IeLM2",
+          "node_b": "M5ktLZ",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "dQWLV",
+          "node_b": "oe8X2",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "dQWLV",
+          "node_b": "PuJ2I",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "oe8X2",
+          "node_b": "PuJ2I",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "M15ryH",
+          "node_b": "cgd6P",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "M15ryH",
+          "node_b": "CozLy",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "cgd6P",
+          "node_b": "CozLy",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "oZp4P",
+          "node_b": "Di8Mu",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "oZp4P",
+          "node_b": "ANzjU",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Di8Mu",
+          "node_b": "ANzjU",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "kJyvC",
+          "node_b": "QnW6V",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "kJyvC",
+          "node_b": "CP5Zi",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "QnW6V",
+          "node_b": "CP5Zi",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "ZPLDq",
+          "node_b": "aSlCA",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "ZPLDq",
+          "node_b": "s2v2Y",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "aSlCA",
+          "node_b": "s2v2Y",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "TAvXR",
+          "node_b": "c0m5hz",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "TAvXR",
+          "node_b": "r94Z35",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "c0m5hz",
+          "node_b": "r94Z35",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "zScKI",
+          "node_b": "HMOrg",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "zScKI",
+          "node_b": "m3dgLc",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "HMOrg",
+          "node_b": "m3dgLc",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "X3e1eI",
+          "node_b": "avrsF",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "X3e1eI",
+          "node_b": "fnoPn",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "avrsF",
+          "node_b": "fnoPn",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "k05pL",
+          "node_b": "ZXg82",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "k05pL",
+          "node_b": "j0Webv",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "ZXg82",
+          "node_b": "j0Webv",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "DSF97",
+          "node_b": "NykqR",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "DSF97",
+          "node_b": "H893mx",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "NykqR",
+          "node_b": "H893mx",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "k91mu",
+          "node_b": "TsRer",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "k91mu",
+          "node_b": "n3EDjI",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "TsRer",
+          "node_b": "n3EDjI",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "zzXNT",
+          "node_b": "EnaX4",
+          "classification": "通知權限說明頁 Hero 堆疊裝飾（列印品×通知預覽既有重疊呈現），非 LS-201 觸碰範圍，同類 3 例"
+        },
+        {
+          "node_a": "mMDR7",
+          "node_b": "c5ffbm",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 3 例"
+        },
+        {
+          "node_a": "mMDR7",
+          "node_b": "C1f3W",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 3 例"
+        },
+        {
+          "node_a": "viHYu",
+          "node_b": "f5A9lo",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "viHYu",
+          "node_b": "N8Iho",
+          "classification": "既有沖印品母題／裝飾性 z-order 設計元素重疊（Status Bar (Backdrop) × Dialog Wrap @ LS-177 / iOS 系統通知權限對話框（示意）），非 LS-201 觸碰範圍，同類 1 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "f5A9lo",
+          "node_b": "N8Iho",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "qXm4l",
+          "node_b": "m42e0Q",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Odr8G",
+          "node_b": "Y72IR",
+          "classification": "可捲動 Body 與底部固定 UI 元素（Tab Bar／FAB／下拉選單／Home Indicator／鍵盤）的既有浮層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "cghd4",
+          "node_b": "W2ECnN",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "cghd4",
+          "node_b": "XbtVU",
+          "classification": "狀態列背板與 Modal 遮罩／sheet 容器的既有疊層設計，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "W2ECnN",
+          "node_b": "XbtVU",
+          "classification": "Modal 疊層設計（Scrim 全螢幕背板與 Sheet/Card/Dialog 容器本即部分重疊，遮罩模式如此），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "HwcGv",
+          "node_b": "U650Io",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "HwcGv",
+          "node_b": "p3K1xk",
+          "classification": "既有沖印品母題角托與其宿主容器（Photo Wrap／Imprint Row／Print／Sample Print 等）的既有 5pt corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        }
+      ]
+    },
+    "row_overflow": {
+      "flagged": [
+        {
+          "node": "tlJFt",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node": "ny0ec",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node": "BXbTE",
+          "classification": "既有裝飾／版面元素溢出其容器右緣（Print Stage @ Card Join Family），非 LS-201 觸碰範圍，同類 1 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node": "XjToq",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node": "jin0Q",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node": "j2z1C0",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node": "DIMqR",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 4 例"
+        },
+        {
+          "node": "qX0b8",
+          "classification": "既有裝飾／版面元素溢出其容器右緣（Hero Photo @ Photo Wrap），非 LS-201 觸碰範圍，同類 2 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node": "B5E1ig",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 3 例"
+        },
+        {
+          "node": "qnP3W",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 3 例"
+        },
+        {
+          "node": "FBRlf/iu3Q8",
+          "classification": "表單欄位既有的內容溢出（值過長時的既有版面行為），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "Evspf",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "fyZfa",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "z0ATW/yxwnz",
+          "classification": "貼上連結按鈕次要標籤既有的版面溢出，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "YG4hG",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 51 例"
+        },
+        {
+          "node": "efA3a",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 51 例"
+        },
+        {
+          "node": "oj6h0",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "nSjs7",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "X9BSMc/A30rIX",
+          "classification": "頭像字首縮寫文字既有的版面溢出（字級/縮放造成），非 LS-201 觸碰範圍，同類 5 例"
+        },
+        {
+          "node": "k8PVy",
+          "classification": "分段控制項標籤既有的版面溢出，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "WitwS/uZ5Lt",
+          "classification": "照片堆疊裝飾母題既有的版面溢出（Stack Sheet 卡片效果），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "WitwS/kVUWa",
+          "classification": "照片堆疊裝飾母題既有的版面溢出（Stack Sheet 卡片效果），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "BbDZH",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "wSSFB",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node": "jCGWG",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node": "C57TMC",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 134 例"
+        },
+        {
+          "node": "x4NnCv",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 134 例"
+        },
+        {
+          "node": "aNTzo/OCYqN",
+          "classification": "日期錨點郵戳裝飾既有的版面溢出，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node": "iCUJF",
+          "classification": "縮圖選取徽章既有的版面溢出（徽章刻意疊在縮圖角落），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "v7MGOT",
+          "classification": "縮圖選取徽章既有的版面溢出（徽章刻意疊在縮圖角落），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "iO0Ko",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node": "r0E2vG",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "dbyDu",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "B2PYlk",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "DgWAS",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "to36g",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "UwOm5",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "L1Gvi",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "a93IH",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "tJr7O",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "f4znT9",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "QnhMi",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "cvkFS",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "G636T",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "TdVUk",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "P8eEXh",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "HxDU4",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "MBCZw",
+          "classification": "日記編輯器照片橫向捲動列（Photo Strip）既有設計——內容寬度本大於可視窗、依賴水平捲動顯示，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "olgX0",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "xyD7I",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node": "lE7FJ/S4O4r8",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 28 例"
+        },
+        {
+          "node": "R0UbU/R1lbwf/sD5Ma",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 18 例"
+        },
+        {
+          "node": "R0UbU/R1lbwf/DhOiK",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 18 例"
+        },
+        {
+          "node": "R0UbU/S4O4r8/sD5Ma",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 18 例"
+        },
+        {
+          "node": "R0UbU/S4O4r8/DhOiK",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 18 例"
+        },
+        {
+          "node": "C1f3W",
+          "classification": "角托／相框裝飾元素既有的 5pt corner-out 出血設計（角托刻意伸出母容器邊緣，非缺陷），非 LS-201 觸碰範圍，同類 3 例"
+        }
+      ]
+    },
+    "cross_parent_collision": {
+      "flagged": [
+        {
+          "node_a": "ilY9O",
+          "node_b": "pYE38",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "rtNqP",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "g7B7X",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "ilY9O",
+          "node_b": "Mlugc",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "M98qs",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "j2z1C0",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "xfmAg",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Z5w2S",
+          "node_b": "DIMqR",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "I8sWT8",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "OIwlW",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "kSfzp",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "qX0b8",
+          "node_b": "mIStI",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "E6reS5",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "B5E1ig",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "br1l7",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "tLP6F",
+          "node_b": "qnP3W",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "F03KZ",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "IdIpj",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "CQ1DR",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "BBwPe",
+          "node_b": "R13bes",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "VUrCa",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "s3NQB",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "MSHDo",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "NCn3t",
+          "node_b": "Or86v",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "vh3wA",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "a9D8tu",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "GWAHq",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "E9deU",
+          "node_b": "SV5Ka",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "GWAHq",
+          "node_b": "CpjLh",
+          "classification": "角托 5pt 出血跨父層觸及卡片文字容器邊緣的既有裝飾疊層（無實際遮蔽內容），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "SV5Ka",
+          "node_b": "CpjLh",
+          "classification": "角托 5pt 出血跨父層觸及卡片文字容器邊緣的既有裝飾疊層（無實際遮蔽內容），非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "HQIu3",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "sqAra",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "XNlL6",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "lbwCd",
+          "node_b": "YtTc7",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "E0sov",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "tzB8c",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "jUZCY",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "v0lw6",
+          "node_b": "O1r9l",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Wo9Ox",
+          "node_b": "K4qvK6",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "efA3a",
+          "node_b": "K4qvK6",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "E5X7Nk",
+          "node_b": "aGcLA",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "cM5Hi",
+          "node_b": "aGcLA",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "gEYpf",
+          "node_b": "zGEet",
+          "classification": "下拉選單開啟時跨父層覆蓋相鄰卡片角托出血區域的既有互動狀態，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "FkOcN",
+          "node_b": "zGEet",
+          "classification": "下拉選單開啟時跨父層覆蓋相鄰卡片角托出血區域的既有互動狀態，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "PRyQO",
+          "node_b": "zGEet",
+          "classification": "下拉選單開啟時跨父層覆蓋相鄰卡片角托出血區域的既有互動狀態，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "tVUkg",
+          "node_b": "zGEet",
+          "classification": "下拉選單開啟時跨父層覆蓋相鄰卡片角托出血區域的既有互動狀態，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "AXf4H",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "Lns4o",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "haMqk",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Dhgd4",
+          "node_b": "Izo3e",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "XHfST",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "kbkHy",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "q2Dth",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "SY3sp",
+          "node_b": "VGqGL",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "OJ1xr",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "KSTqZ",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "Rqmus",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "jjRtv",
+          "node_b": "W7VlAp",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "aY7S5",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "BbDZH",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "K3Q7ZT/DjW91",
+          "node_b": "zbJlv",
+          "classification": "角托出血跨父層觸及 LS-201 新增的 Body 收窄補償 Spacer，Spacer 純為淨空占位、無可視內容，非缺陷，同類 1 例"
+        },
+        {
+          "node_a": "K3Q7ZT/DjW91",
+          "node_b": "OR1hw",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "K3Q7ZT/JgUK8",
+          "node_b": "zbJlv",
+          "classification": "角托出血跨父層觸及 LS-201 新增的 Body 收窄補償 Spacer，Spacer 純為淨空占位、無可視內容，非缺陷，同類 1 例"
+        },
+        {
+          "node_a": "K3Q7ZT/JgUK8",
+          "node_b": "OR1hw",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "MFpwo/DjW91",
+          "node_b": "a3l8GT",
+          "classification": "角托出血跨父層觸及 LS-201 新增的 Body 收窄補償 Spacer，Spacer 純為淨空占位、無可視內容，非缺陷，同類 1 例"
+        },
+        {
+          "node_a": "MFpwo/DjW91",
+          "node_b": "sbsqF",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "MFpwo/DjW91",
+          "node_b": "bmk5H",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "MFpwo/JgUK8",
+          "node_b": "a3l8GT",
+          "classification": "角托出血跨父層觸及 LS-201 新增的 Body 收窄補償 Spacer，Spacer 純為淨空占位、無可視內容，非缺陷，同類 1 例"
+        },
+        {
+          "node_a": "MFpwo/JgUK8",
+          "node_b": "sbsqF",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "MFpwo/JgUK8",
+          "node_b": "bmk5H",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "CJ2BA",
+          "node_b": "OJNI5",
+          "classification": "既有跨父層裝飾元素重疊（Spacer 16 × Corner TL @ LS-21 / 13 日記詳情 (iPhone)），非 LS-201 觸碰範圍，同類 2 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "CJ2BA",
+          "node_b": "C57TMC",
+          "classification": "既有跨父層裝飾元素重疊（Spacer 16 × Corner TR @ LS-21 / 13 日記詳情 (iPhone)），非 LS-201 觸碰範圍，同類 2 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "FO005",
+          "node_b": "im7DS",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "a3oZ2",
+          "node_b": "im7DS",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "gnVLw",
+          "node_b": "OiUoO",
+          "classification": "既有跨父層裝飾元素重疊（Spacer 16 × Corner TL @ LS-21 / 13 日記詳情 · 深色），非 LS-201 觸碰範圍，同類 2 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "gnVLw",
+          "node_b": "IB5r1",
+          "classification": "既有跨父層裝飾元素重疊（Spacer 16 × Corner TR @ LS-21 / 13 日記詳情 · 深色），非 LS-201 觸碰範圍，同類 2 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "Kd1aN",
+          "node_b": "Yz0R7",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Y21UsQ",
+          "node_b": "Yz0R7",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "UEhNU",
+          "node_b": "kakSb",
+          "classification": "既有跨父層裝飾元素重疊（Spacer 16 × Corner TL @ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）），非 LS-201 觸碰範圍，同類 2 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "UEhNU",
+          "node_b": "F0Tzj",
+          "classification": "既有跨父層裝飾元素重疊（Spacer 16 × Corner TR @ A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）），非 LS-201 觸碰範圍，同類 2 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "E1nSH9",
+          "node_b": "EgTrf",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "UoKog",
+          "node_b": "EgTrf",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "u01Pc/DjW91",
+          "node_b": "kQ23G",
+          "classification": "角托出血跨父層觸及 LS-201 新增的 Body 收窄補償 Spacer，Spacer 純為淨空占位、無可視內容，非缺陷，同類 1 例"
+        },
+        {
+          "node_a": "u01Pc/DjW91",
+          "node_b": "u87Nb",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "u01Pc/DjW91",
+          "node_b": "M4PUm",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "u01Pc/JgUK8",
+          "node_b": "kQ23G",
+          "classification": "角托出血跨父層觸及 LS-201 新增的 Body 收窄補償 Spacer，Spacer 純為淨空占位、無可視內容，非缺陷，同類 1 例"
+        },
+        {
+          "node_a": "u01Pc/JgUK8",
+          "node_b": "u87Nb",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "u01Pc/JgUK8",
+          "node_b": "M4PUm",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "s1LfAj",
+          "node_b": "repj6",
+          "classification": "照片排序拖曳中，拖曳縮圖跨父層飄浮於標題列上方的既有互動狀態呈現，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "IDOjx",
+          "node_b": "h3zyP",
+          "classification": "照片排序拖曳中，拖曳縮圖跨父層飄浮於標題列上方的既有互動狀態呈現，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "KBTFi",
+          "node_b": "OkHbz",
+          "classification": "既有跨父層裝飾元素重疊（Spacer 16 × Corner TL @ Stress / 13 日記詳情 · 20 張照片壓測），非 LS-201 觸碰範圍，同類 2 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "KBTFi",
+          "node_b": "RefMF",
+          "classification": "既有跨父層裝飾元素重疊（Spacer 16 × Corner TR @ Stress / 13 日記詳情 · 20 張照片壓測），非 LS-201 觸碰範圍，同類 2 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "PU1lk",
+          "node_b": "UGZbZ",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "S7qlEV",
+          "node_b": "UGZbZ",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "WsQdq",
+          "node_b": "Fw3Lw",
+          "classification": "既有跨父層裝飾元素重疊（Spacer 16 × Corner TL @ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）），非 LS-201 觸碰範圍，同類 2 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "WsQdq",
+          "node_b": "PWKoD",
+          "classification": "既有跨父層裝飾元素重疊（Spacer 16 × Corner TR @ A11y / 13 日記詳情 · 20 張照片壓測 · Dynamic Type AX3（body 40pt）），非 LS-201 觸碰範圍，同類 2 例，先前既有掃描基線已含此類"
+        },
+        {
+          "node_a": "IcuGv",
+          "node_b": "z12HU",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "kTGk5",
+          "node_b": "z12HU",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "zYLzt",
+          "node_b": "WC9pB/DjW91",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "zYLzt",
+          "node_b": "WC9pB/JgUK8",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "R7edNW/DjW91",
+          "node_b": "wTMlo",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "R7edNW/JgUK8",
+          "node_b": "wTMlo",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "QOgzb",
+          "node_b": "DHfo9",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "QOgzb",
+          "node_b": "GsLq1",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "HauTE",
+          "node_b": "o5WSp",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "v1R53",
+          "node_b": "o5WSp",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "WESbz",
+          "node_b": "J4vk0/DjW91",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "WESbz",
+          "node_b": "J4vk0/JgUK8",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "T3SwvP/DjW91",
+          "node_b": "Kl0eH",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "T3SwvP/JgUK8",
+          "node_b": "Kl0eH",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "T4FpQ",
+          "node_b": "ONEs5/DjW91",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "T4FpQ",
+          "node_b": "ONEs5/JgUK8",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "oWCtg",
+          "node_b": "nxJbB/DjW91",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "oWCtg",
+          "node_b": "nxJbB/JgUK8",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "QSnUF/mlORb",
+          "node_b": "YlNJe",
+          "classification": "角托出血跨父層觸及 LS-201 新增的 Body 收窄補償 Spacer，Spacer 純為淨空占位、無可視內容，非缺陷，同類 1 例"
+        },
+        {
+          "node_a": "QSnUF/mlORb",
+          "node_b": "j2svp",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "QSnUF/atAkU",
+          "node_b": "YlNJe",
+          "classification": "角托出血跨父層觸及 LS-201 新增的 Body 收窄補償 Spacer，Spacer 純為淨空占位、無可視內容，非缺陷，同類 1 例"
+        },
+        {
+          "node_a": "QSnUF/atAkU",
+          "node_b": "j2svp",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "mdabp/DjW91",
+          "node_b": "YlNJe",
+          "classification": "角托出血跨父層觸及 LS-201 新增的 Body 收窄補償 Spacer，Spacer 純為淨空占位、無可視內容，非缺陷，同類 1 例"
+        },
+        {
+          "node_a": "mdabp/DjW91",
+          "node_b": "NLs8N",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "mdabp/DjW91",
+          "node_b": "j2svp",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "mdabp/JgUK8",
+          "node_b": "YlNJe",
+          "classification": "角托出血跨父層觸及 LS-201 新增的 Body 收窄補償 Spacer，Spacer 純為淨空占位、無可視內容，非缺陷，同類 1 例"
+        },
+        {
+          "node_a": "mdabp/JgUK8",
+          "node_b": "NLs8N",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "mdabp/JgUK8",
+          "node_b": "j2svp",
+          "classification": "角托 5pt 出血跨父層觸及底部固定 UI 元素（Tab Bar／Home Indicator），角托位於卡片背後 z-order 較低、不影響 Tab Bar 可視內容，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "F8c1z",
+          "node_b": "tcfj6",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "F8c1z",
+          "node_b": "l3ULp",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "B87KY",
+          "node_b": "FpSWL",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "t2rbzf",
+          "node_b": "FpSWL",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "hogY7",
+          "node_b": "RpgcZ",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "hogY7",
+          "node_b": "BTTKx",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "DXKtL",
+          "node_b": "OGFNo",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "I7TMsE",
+          "node_b": "OGFNo",
+          "classification": "角托 5pt 出血跨父層觸及相鄰版面間距 Spacer 的既有裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "nyK3s",
+          "node_b": "QYEzP",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "nyK3s",
+          "node_b": "V0ISZ",
+          "classification": "版面間距 Spacer 跨父層觸及相鄰卡片角托 5pt 出血的既有裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "qBZgC",
+          "node_b": "JnqZC",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "qBZgC",
+          "node_b": "xJFDt",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "qBZgC",
+          "node_b": "kuGrj",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "qBZgC",
+          "node_b": "hXerh",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "vOTsH",
+          "node_b": "d5KiR",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "vOTsH",
+          "node_b": "RTI5Y",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "vOTsH",
+          "node_b": "MrWrL",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "vOTsH",
+          "node_b": "FFiOL",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "YCX9H",
+          "node_b": "duQY0",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "YCX9H",
+          "node_b": "cxlFu",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "YCX9H",
+          "node_b": "fu2Ex",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "YCX9H",
+          "node_b": "pgSnC",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "CJeYy",
+          "node_b": "LyWDH",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "CJeYy",
+          "node_b": "iGx4e",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "CJeYy",
+          "node_b": "g211l6",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "CJeYy",
+          "node_b": "zOe6U",
+          "classification": "既有沖印品母題主照片與跨父層角托的既有 corner-out 裝飾疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "aSlCA",
+          "node_b": "R0UbU/R1lbwf/sD5Ma",
+          "classification": "Sheet 內縮圖角托跨父層被上層 Scrim 短暫覆蓋的既有 z-order 疊層（sheet 開啟瞬間過場），非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "aSlCA",
+          "node_b": "R0UbU/R1lbwf/DhOiK",
+          "classification": "Sheet 內縮圖角托跨父層被上層 Scrim 短暫覆蓋的既有 z-order 疊層（sheet 開啟瞬間過場），非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "R0UbU/MN0WF",
+          "node_b": "R0UbU/R1lbwf/sD5Ma",
+          "classification": "留言 sheet 縮圖與其自身角托跨父層節點的既有裝飾疊層，非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "R0UbU/MN0WF",
+          "node_b": "R0UbU/R1lbwf/DhOiK",
+          "classification": "留言 sheet 縮圖與其自身角托跨父層節點的既有裝飾疊層，非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "c0m5hz",
+          "node_b": "V2uFs/R1lbwf/sD5Ma",
+          "classification": "Sheet 內縮圖角托跨父層被上層 Scrim 短暫覆蓋的既有 z-order 疊層（sheet 開啟瞬間過場），非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "c0m5hz",
+          "node_b": "V2uFs/R1lbwf/DhOiK",
+          "classification": "Sheet 內縮圖角托跨父層被上層 Scrim 短暫覆蓋的既有 z-order 疊層（sheet 開啟瞬間過場），非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "V2uFs/MN0WF",
+          "node_b": "V2uFs/R1lbwf/sD5Ma",
+          "classification": "留言 sheet 縮圖與其自身角托跨父層節點的既有裝飾疊層，非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "V2uFs/MN0WF",
+          "node_b": "V2uFs/R1lbwf/DhOiK",
+          "classification": "留言 sheet 縮圖與其自身角托跨父層節點的既有裝飾疊層，非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "avrsF",
+          "node_b": "l3ekZq/R1lbwf/sD5Ma",
+          "classification": "Sheet 內縮圖角托跨父層被上層 Scrim 短暫覆蓋的既有 z-order 疊層（sheet 開啟瞬間過場），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "avrsF",
+          "node_b": "l3ekZq/R1lbwf/DhOiK",
+          "classification": "Sheet 內縮圖角托跨父層被上層 Scrim 短暫覆蓋的既有 z-order 疊層（sheet 開啟瞬間過場），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "l3ekZq/MN0WF",
+          "node_b": "l3ekZq/R1lbwf/sD5Ma",
+          "classification": "留言 sheet 縮圖與其自身角托跨父層節點的既有裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "l3ekZq/MN0WF",
+          "node_b": "l3ekZq/R1lbwf/DhOiK",
+          "classification": "留言 sheet 縮圖與其自身角托跨父層節點的既有裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "ZXg82",
+          "node_b": "vlX7W/R1lbwf/sD5Ma",
+          "classification": "Sheet 內縮圖角托跨父層被上層 Scrim 短暫覆蓋的既有 z-order 疊層（sheet 開啟瞬間過場），非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "ZXg82",
+          "node_b": "vlX7W/R1lbwf/DhOiK",
+          "classification": "Sheet 內縮圖角托跨父層被上層 Scrim 短暫覆蓋的既有 z-order 疊層（sheet 開啟瞬間過場），非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "vlX7W/MN0WF",
+          "node_b": "vlX7W/R1lbwf/sD5Ma",
+          "classification": "留言 sheet 縮圖與其自身角托跨父層節點的既有裝飾疊層，非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "vlX7W/MN0WF",
+          "node_b": "vlX7W/R1lbwf/DhOiK",
+          "classification": "留言 sheet 縮圖與其自身角托跨父層節點的既有裝飾疊層，非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "TsRer",
+          "node_b": "bsbDd/R1lbwf/sD5Ma",
+          "classification": "Sheet 內縮圖角托跨父層被上層 Scrim 短暫覆蓋的既有 z-order 疊層（sheet 開啟瞬間過場），非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "TsRer",
+          "node_b": "bsbDd/R1lbwf/DhOiK",
+          "classification": "Sheet 內縮圖角托跨父層被上層 Scrim 短暫覆蓋的既有 z-order 疊層（sheet 開啟瞬間過場），非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "bsbDd/MN0WF",
+          "node_b": "bsbDd/R1lbwf/sD5Ma",
+          "classification": "留言 sheet 縮圖與其自身角托跨父層節點的既有裝飾疊層，非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "bsbDd/MN0WF",
+          "node_b": "bsbDd/R1lbwf/DhOiK",
+          "classification": "留言 sheet 縮圖與其自身角托跨父層節點的既有裝飾疊層，非 LS-201 觸碰範圍，同類 8 例"
+        },
+        {
+          "node_a": "C1f3W",
+          "node_b": "EnaX4",
+          "classification": "推播權限說明頁角托跨父層疊在通知預覽卡片上的既有裝飾呈現，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "DGM50",
+          "node_b": "h52HQ",
+          "classification": "推播權限說明頁角托跨父層疊在通知預覽卡片上的既有裝飾呈現，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "Ig97z",
+          "node_b": "jh4p4",
+          "classification": "推播權限說明頁角托跨父層疊在通知預覽卡片上的既有裝飾呈現，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "W2ECnN",
+          "node_b": "U650Io",
+          "classification": "留言 sheet 空狀態下 Scrim 跨父層覆蓋角落裝飾角托的既有 z-order 疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "W2ECnN",
+          "node_b": "p3K1xk",
+          "classification": "留言 sheet 空狀態下 Scrim 跨父層覆蓋角落裝飾角托的既有 z-order 疊層，非 LS-201 觸碰範圍，同類 1 例"
+        },
+        {
+          "node_a": "W2ECnN",
+          "node_b": "N6CYtr/R1lbwf/sD5Ma",
+          "classification": "Sheet 內縮圖角托跨父層被上層 Scrim 短暫覆蓋的既有 z-order 疊層（sheet 開啟瞬間過場），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "W2ECnN",
+          "node_b": "N6CYtr/R1lbwf/DhOiK",
+          "classification": "Sheet 內縮圖角托跨父層被上層 Scrim 短暫覆蓋的既有 z-order 疊層（sheet 開啟瞬間過場），非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "N6CYtr/MN0WF",
+          "node_b": "N6CYtr/R1lbwf/sD5Ma",
+          "classification": "留言 sheet 縮圖與其自身角托跨父層節點的既有裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        },
+        {
+          "node_a": "N6CYtr/MN0WF",
+          "node_b": "N6CYtr/R1lbwf/DhOiK",
+          "classification": "留言 sheet 縮圖與其自身角托跨父層節點的既有裝飾疊層，非 LS-201 觸碰範圍，同類 2 例"
+        }
+      ]
+    },
+    "corner_anchor": {
+      "boards": [
+        "A33la",
+        "BTDgD",
+        "BYbe5",
+        "DUyg3",
+        "E27nKz",
+        "EclPC",
+        "EzJCV",
+        "FeqWk",
+        "FiBvh",
+        "GZ3pb",
+        "IH80C",
+        "IgqGF",
+        "IjWOp",
+        "Ir63D",
+        "J5sQHy",
+        "K0hWL",
+        "KyxGc",
+        "LCpNO",
+        "LTDYH",
+        "LkrrS",
+        "M2qW9",
+        "MOLyd",
+        "MjRcr",
+        "N1aeiU",
+        "O1XC2Z",
+        "O631mm",
+        "OE9Ki",
+        "OnUvi",
+        "P27HS",
+        "P3DW1",
+        "Qzz3r",
+        "RHhJ1",
+        "Rtq1m",
+        "SHbqU",
+        "TnxXE",
+        "V4Ktak",
+        "VRq1c",
+        "VZ0wV",
+        "Wl90J",
+        "X9PfG",
+        "XUAAQ",
+        "Xldkz",
+        "Yc4EC",
+        "ZBIhu",
+        "a67Na",
+        "aEb17",
+        "aODMQ",
+        "b3nzDp",
+        "bhroo",
+        "bimlL",
+        "bqbKN",
+        "bs8aE",
+        "c1Uk7",
+        "ckgMp",
+        "cqgkc",
+        "dHSyh",
+        "e7G3Lk",
+        "f10d1D",
+        "f1wVw",
+        "g1pZ15",
+        "go7f9",
+        "hKSu1",
+        "ioA0u",
+        "j7WwV",
+        "k6Rlt",
+        "kHDk4",
+        "l4ShP",
+        "lKoZG",
+        "mkxzU",
+        "nhCrq",
+        "pLLXi",
+        "peiRC",
+        "pl5GE",
+        "puHZ5",
+        "qxVMy",
+        "rx2TP",
+        "tNqvY",
+        "tpw7n",
+        "uQeV8",
+        "vgvFY",
+        "vzYXz",
+        "wY7f8",
+        "y66AzT",
+        "y7KAW",
+        "yResD",
+        "yXSht",
+        "yec61"
+      ],
+      "containers": 85,
+      "points": 664,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 220,
+      "document_points": 1744,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "unresolved": []
+    },
+    "text_occlusion": {
+      "flagged": [],
+      "document_flagged": []
+    },
+    "board_clip": {
+      "flagged": [],
+      "document_flagged": []
+    }
+  }
+}
