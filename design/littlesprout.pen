@@ -93281,7 +93281,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "【R3 訂正，取代 R1 段】cmp/Card Album：Imprint Row 改 layout:vertical，Caption 下方為單一 wQVzs Signature Line 文字節點（R2 起取代原本 Who Group/Age Group/Multi Caption 三節點設計）。單一寶貝：content=\"{暱稱} · {年齡}\"；多寶貝（≥2）：用「、」串接多組「暱稱 · 年齡」；零寶貝：Signature enabled:true、content:\" \"（單一半形空白），署名列保留空高度但不顯示任何文字（brand 十條 #10「空欄位卡不塌縮」；R5 BL-3 訂正——R4 曾讓 iPhone 三張零寶貝卡 enabled:false 塌縮成232高，與 iPad VvT91 的263高 enabled:true 空白列互相矛盾，兩套規格只有一套對；本輪統一為「保留高度」，iPhone puHZ5/Xldkz/Wl90J 三板的卡3（R7edNW／T3SwvP／mdabp，皆「海邊戲水」）改 263 高，corner y 同步 242，與 iPad VvT91 一致）。零寶貝卡讀者靠「這張卡的署名列是空白」本身辨識，不靠卡片整體高度變矮辨識——高度變矮曾經是本票唯一的零寶貝訊號，R5 起不再是。年齡片語（如「2 歲 3 個月」）內部空白一律用 NBSP（U+00A0）連接、「個」「月」之間再插入 WORD JOINER（U+2060），防止 Dynamic Type／AX3 折行把年齡單位拆成孤字（BL-B R3 修復）。姓名與年齡之間的「 · 」刻意維持一般可斷空白（U+0020）——若也用 NBSP 包住會把姓名最後一字一併鎖進同一個不可斷區塊，AX3 實測會產生「小」單字孤兒，已排除，勿在下一輪重新套用。 MJ-6（R5）：AX3 署名一律一行一人，不因單一寶貝就把姓名與年齡拆成兩行——IjWOp 卡2（pNPuF，多寶貝）已證明「小安 2 歲 3 個月」在 w=329 放得下一整行；ONEs5／i3jpIq（單一寶貝）原本用顯式 \\n 把姓名與年齡拆成兩行是 R3 遺留的保守處理，R5 拿掉 \\n 統一成一行，兩卡各變矮 58pt，corner y 同步重算（424／366）。 INFO-N2（R7）：AX3 署名文法與上述「{暱稱} · {年齡}」公式故意不同——AX3 省略「 · 」分隔號（ONEs5/i3jpIq＝「小安 2 歲 3 個⁠月」，姓名年齡之間僅一般空白）；多寶貝改用顯式換行（\\n）分隔每個人，不用「、」串接（pNPuF＝「小安 2 歲 3 個⁠月\\n小明 8 個⁠月」）——這是 R4 MJ-6 處方裡就這樣寫的既有規則，本輪把它從隱含慣例補成明文規則，避免下一輪被誤判成不一致而「修正」回帶「 ·」／「、」的版本。",
+              "content": "【R3 訂正，取代 R1 段】cmp/Card Album：Imprint Row 改 layout:vertical，Caption 下方為單一 wQVzs Signature Line 文字節點（R2 起取代原本 Who Group/Age Group/Multi Caption 三節點設計）。單一寶貝：content=\"{暱稱} · {年齡}\"；多寶貝（≥2）：用「、」串接多組「暱稱 · 年齡」；零寶貝：Signature enabled:true、content:\" \"（單一半形空白），署名列保留空高度但不顯示任何文字（brand 十條 #10「空欄位卡不塌縮」；R5 BL-3 訂正——R4 曾讓 iPhone 三張零寶貝卡 enabled:false 塌縮成232高，與 iPad VvT91 的263高 enabled:true 空白列互相矛盾，兩套規格只有一套對；本輪統一為「保留高度」，iPhone puHZ5/Xldkz/Wl90J 三板的卡3（R7edNW／T3SwvP／mdabp，皆「海邊戲水」）改 263 高，corner y 同步 242，與 iPad VvT91 一致）。零寶貝卡讀者靠「這張卡的署名列是空白」本身辨識，不靠卡片整體高度變矮辨識——高度變矮曾經是本票唯一的零寶貝訊號，R5 起不再是。年齡片語（如「2 歲 3 個月」）內部空白一律用 NBSP（U+00A0）連接、「個」「月」之間再插入 WORD JOINER（U+2060），防止 Dynamic Type／AX3 折行把年齡單位拆成孤字（BL-B R3 修復）。姓名與年齡之間的「 · 」刻意維持一般可斷空白（U+0020）——若也用 NBSP 包住會把姓名最後一字一併鎖進同一個不可斷區塊，AX3 實測會產生「小」單字孤兒，已排除，勿在下一輪重新套用。 MJ-6（R5）：AX3 署名一律一行一人，不因單一寶貝就把姓名與年齡拆成兩行——IjWOp 卡2（pNPuF，多寶貝）已證明「小安 2 歲 3 個月」在 w=329 放得下一整行；ONEs5／i3jpIq（單一寶貝）原本用顯式 \\n 把姓名與年齡拆成兩行是 R3 遺留的保守處理，R5 拿掉 \\n 統一成一行，兩卡各變矮 58pt，corner y 同步重算（424／366）。 INFO-N2（R7）：AX3 署名文法與上述「{暱稱} · {年齡}」公式故意不同——AX3 省略「 · 」分隔號（ONEs5/i3jpIq＝「小安 2 歲 3 個⁠月」，姓名年齡之間僅一般空白）；多寶貝改用顯式換行（\\n）分隔每個人，不用「、」串接（pNPuF＝「小安 2 歲 3 個⁠月\\n小明 8 個⁠月」）——這是 R4 MJ-6 處方裡就這樣寫的既有規則，本輪把它從隱含慣例補成明文規則，避免下一輪被誤判成不一致而「修正」回帶「 ·」／「、」的版本。 【LS-194 R2 訂正】上述 INFO-N2「AX3 省略『 · 』分隔號」一句已被推翻——LS-165 merge-review R1 comment 931f074e N2 裁定「實作對、稿面錯」，AX3 三處（ONEs5／i3jpIq／pNPuF 的 wQVzs）已於 LS-194 R1 補回「 · 」分隔號、R2 再把年齡片語內部空白由誤用的一般空白改回本段規定的 NBSP（加「 · 」後文字變長，AX3 40pt 下用一般空白會折在數字後產生「3／個月」孤字，改 NBSP 後折在「 · ／2 歲 3 個月」）。INFO-N2 這句「省略『 · 』」現在只是歷史記錄，下一輪勿再依其字面套用；最新修法細節見本板（kHDk4）第 59–60 塊（R5 修訂重點段＋stamp: LS-194 的沿革項）。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -95798,7 +95798,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -95848,7 +95848,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月\n小明 · 8 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月\n小明 · 8 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -95898,7 +95898,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 · 2 歲 3 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
