@@ -343,9 +343,24 @@ final class FamilyStore {
         guard let familyID = myFamily?.id else { return nil }
         quotaState = .submitting
         do {
-            quota = try await apiClient.fetchQuota(familyID: familyID)
+            let result = try await apiClient.fetchQuota(familyID: familyID)
+            // merge-review R1 M1：await 前後核對，同 `refreshLatestInvite` 文件註解第 2 點
+            // ——這段 RTT 期間若 `syncOwner`／登出把 store 換成別的使用者／家庭（`reset()`
+            // 已把 `quota` 清空），這裡查到的結果已經過期，直接丟棄、不覆寫。沒有這道防線，
+            // 一位使用者在 09 頁停留時登出，飛行中的舊請求回來會把前一位使用者的用量寫進
+            // 下一位使用者的 store（下一位若還沒有家庭，`myFamily?.id == familyID` 這裡就是
+            // false，不會被覆寫；若下一位剛好也查得到 `myFamily`，familyID 不同樣會被擋下）。
+            guard myFamily?.id == familyID else {
+                quotaState = .idle
+                return quota
+            }
+            quota = result
             quotaState = .success
         } catch {
+            guard myFamily?.id == familyID else {
+                quotaState = .idle
+                return quota
+            }
             quotaState = .failure(AppError.map(error))
         }
         return quota

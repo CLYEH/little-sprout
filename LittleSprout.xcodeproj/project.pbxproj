@@ -229,6 +229,7 @@
 		DFB91365F67833D989932DB0 /* AppSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9530233ED3E9B6D3A43AD99 /* AppSection.swift */; };
 		E0C5C84DB8D301115260A23A /* FamilyOnboardingRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97A194D1ACDE962DD7F63736 /* FamilyOnboardingRoute.swift */; };
 		E18D07FCED03683A17ED47CE /* KeyboardHeightObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 743A14E1E7666B9B37F94689 /* KeyboardHeightObserver.swift */; };
+		E1C45AD1CE7D8E93C0F9F5D7 /* FamilyStoreRefreshQuotaRaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC4A90607F9BB3E712524500 /* FamilyStoreRefreshQuotaRaceTests.swift */; };
 		E2E9E24C6F7E93396FD38F4B /* AuthRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95B92F29867CB3855772E654 /* AuthRoute.swift */; };
 		E3B23423224768394FC4636F /* FamilyQuotaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50FC0A6C2D6C288C9B7B181D /* FamilyQuotaTests.swift */; };
 		E456D17F5DDC1BFDB7AC3272 /* ChildAvatarUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A45B09C1480A2CA51FEEB7A /* ChildAvatarUploadService.swift */; };
@@ -533,6 +534,7 @@
 		F8062CC76198B9E7F3BFCD3C /* TapTargetGateHarness+Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Settings.swift"; sourceTree = "<group>"; };
 		FA51041D6190DA7BB8F683D0 /* StubChildAvatarUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubChildAvatarUploadService.swift; sourceTree = "<group>"; };
 		FBF2B62443AA0559B13A0839 /* FamilyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStore.swift; sourceTree = "<group>"; };
+		FC4A90607F9BB3E712524500 /* FamilyStoreRefreshQuotaRaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreRefreshQuotaRaceTests.swift; sourceTree = "<group>"; };
 		FE72EFF54C56748BD2A9AAC3 /* BirthdayFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayFormat.swift; sourceTree = "<group>"; };
 		FF3F18D213D33204A82A0BEE /* InviteFamilyView+Role.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "InviteFamilyView+Role.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -715,6 +717,7 @@
 				BC7448E56867EED60566A8F0 /* FamilyStoreInviteRaceTests.swift */,
 				65B134F4114955711989F4A4 /* FamilyStoreInviteTests.swift */,
 				086B33CB190B330C4C1D8455 /* FamilyStoreJoinRequestsTests.swift */,
+				FC4A90607F9BB3E712524500 /* FamilyStoreRefreshQuotaRaceTests.swift */,
 				BA9BCE3B67830009105F917D /* FamilyStoreTests.swift */,
 				71B810AF479E06C95BAFE863 /* InviteCodeFieldTests.swift */,
 				AD69D0A2456BC4F954E29446 /* InviteCodeParserTests.swift */,
@@ -1378,6 +1381,7 @@
 				5F81D4892F2F49562267FBFF /* FamilyStoreInviteRaceTests.swift in Sources */,
 				C25CB47B6E864AD71513F432 /* FamilyStoreInviteTests.swift in Sources */,
 				CCBD8777C2CA27A78CAFA495 /* FamilyStoreJoinRequestsTests.swift in Sources */,
+				E1C45AD1CE7D8E93C0F9F5D7 /* FamilyStoreRefreshQuotaRaceTests.swift in Sources */,
 				2923B118178851D5C29651A5 /* FamilyStoreTests.swift in Sources */,
 				336A7171428B83A957574DFF /* InMemoryAuthLocalStorage.swift in Sources */,
 				CE4341264EF8292AA7138953 /* InviteCodeFieldTests.swift in Sources */,
