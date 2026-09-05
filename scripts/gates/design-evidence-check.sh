@@ -58,7 +58,12 @@
 #     LS-177 R1／R2 `cross_parent_collision` 限縮 17 板時收據沒有任何欄位說明全稿數（LS-96 `ba1ec045`）。**舊收據放行條件同 LS-168／
 #     LS-185**：cutoff＝`head_sha` tree 的正典腳本含 PERSCAN_MARKER `document_count`（LS-194 r2 等既有收據不含 → 缺欄位放行並印一行；
 #     `scope` 若在仍只接受兩字面）；輪次最高的收據另看 PR head tree（同 R1 N1）。不驗 `document_count` 與 flagged 長度的關係——
-#     收據 flagged 是「每類一筆代表」的彙整，本來就不等長。
+#     收據 flagged 是「每類一筆代表」的彙整，本來就不等長。**注意 `document_count` 是「掃描快照內」的命中數**：`scope=boards` 時快照
+#     已限縮，它就是限縮值、不是全稿（任何一支都看不到全稿），讀收據必與 `scope` 併讀（merge-review R1 info-1）。
+#     **R2 minor-1（第四支歸零）**：同一 cutoff 下，`scan_scope=document` 而 `scans.corner_anchor.document_containers == 0` 即紅——整份快照
+#     沒有任何角托容器只可能是 Pencil 快照沒讀到 `ref` 且名稱備援也沒命中（development 現稿 220–261 個），不是「這輪沒有錯位」；
+#     不以 in-scope `containers` 判——LS-133 r1–r3／LS-177 r1 的 boards 本來就沒有印品（`containers=0`、`document_containers` 216），
+#     那是正常收據。`scan_scope=boards` 限縮快照可能真的沒有印品，不判。
 # 掃描「有沒有真的跑對」（演算法本身正確性）不是這支腳本能驗的——那需要 Pen 的版面引擎，只能靠
 # visual-reviewer 用同方法重掃比對（見 .claude/agents/visual-reviewer.md）。
 #
@@ -522,7 +527,17 @@ if perscan and isinstance(scans, dict):
             errs.append(f"scans.{key} 缺 scope——六支各自標明快照範圍 {'|'.join(SCAN_SCOPES)}（抄正典腳本 SCAN 段標頭的 scope=，LS-202）")
         dc = scan.get("document_count")
         if isinstance(dc, bool) or not isinstance(dc, int) or dc < 0:
-            errs.append(f"scans.{key}.document_count 必須是非負整數（收據={dc!r}）——該支在整份快照裡的命中數，抄 SCAN 段標頭的 document_count=（LS-202；scope=boards 時為限縮值）")
+            errs.append(f"scans.{key}.document_count 必須是非負整數（收據={dc!r}）——該支在掃描快照裡的命中數，抄 SCAN 段標頭的 document_count=（LS-202；scope=boards 時為限縮值，須與 scope 併讀）")
+    # R2 minor-1：全稿快照一個角托容器都沒有＝第四支停擺（快照沒讀到 ref、名稱備援也沒命中），不是「沒有錯位」；boards 限縮快照不判
+    ca_scan = scans.get("corner_anchor")
+    if isinstance(ca_scan, dict) and scan_scope != "boards":
+        dcont = ca_scan.get("document_containers")
+        if not isinstance(dcont, bool) and dcont == 0:
+            errs.append(
+                "scans.corner_anchor.document_containers 為 0 而 scan_scope=document——整份快照沒有任何角托容器＝第四支靜默停擺"
+                "（Pencil 快照沒讀到 ref、名稱備援 Corner TL/… 也沒命中；development 現稿應在 220–261 級），不是「這輪沒有錯位」，查快照欄位後重跑"
+                "（LS-202 R2 minor-1；boards 內沒有印品只會讓 containers=0、document_containers 仍 >0，那是正常的）"
+            )
 
 if errs:
     print(f"✗ design-evidence gate：{p} 未通過：", file=sys.stderr)

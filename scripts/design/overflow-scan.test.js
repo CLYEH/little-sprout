@@ -295,19 +295,22 @@ ok("(d) LS-202 Mount TL/BR：ref → GEBcf 但名稱不是 Corner … 的兩顆�
   assert.deepStrictEqual([o.containers, o.points, o.mismatch, o.flagged.map((x) => x.paper + ":" + x.axis)], [1, 4, 2, ["MAPRINT:y", "MAPRINT:y"]]);
 });
 
-ok("(d) LS-202 名稱像角托但不是 ref → cmp/Photo Corner 的節點不算：四個名為 Corner TL/TR/BL/BR 的 frame、或 ref 指向別的元件，容器數 0、unresolved 0；ref 指向 id 不同但名為 cmp/Photo Corner 的元件定義（名稱備援）照算；快照沒有元件定義根時退回字面 GEBcf", () => {
+ok("(d) LS-202 R2 名稱備援（merge-review R1 minor-1）：只有名稱 Corner TL/TR/BL/BR、沒有 ref 的 frame 角托仍被算到（快照讀不到 ref 時最壞退回 LS-122 名稱判準，不得 containers=0 全綠）；ref 指向別的元件但名為 Corner … 也算；名為 Mount 而非 ref 不算；ref 指向 id 不同但名為 cmp/Photo Corner 的元件定義（元件名稱備援）照算；快照沒有元件定義根時退回字面 GEBcf", () => {
   const paper = N("PN", "MA", 20100, 300, 100, 178);
   const framey = corners("PN", "PN", paper).map((c) => Object.assign({}, c, { type: "frame", ref: undefined }));
-  assert.deepStrictEqual(scanCornerAnchor([MA, paper, ...framey]).container_corners, []);
+  const fr = scanCornerAnchor([MA, paper, ...framey]);
+  assert.deepStrictEqual([fr.containers, fr.points, fr.mismatch, fr.unresolved.length, fr.container_corners.map((c) => c.container + ":" + c.n)], [1, 8, 0, 0, ["PN:4"]], "名稱備援：無 ref 的 Corner TL/… frame 仍成容器");
   const otherRef = corners("PN", "PN", paper).map((c) => Object.assign({}, c, { ref: "bhroo" }));
   const ro = scanCornerAnchor([MA, paper, ...otherRef]);
-  assert.deepStrictEqual([ro.containers, ro.unresolved.length, ro.container_corners.length], [0, 0, 0]);
+  assert.deepStrictEqual([ro.containers, ro.points, ro.mismatch], [1, 8, 0], "ref 指向他元件但名稱是 Corner …：名稱備援仍算");
+  const mountFrames = [MA, MAPRINT, MAPHOTO, Object.assign({}, MATL, { type: "frame", ref: undefined }), Object.assign({}, MABR, { type: "frame", ref: undefined })];
+  assert.deepStrictEqual(scanCornerAnchor(mountFrames).container_corners, [], "Mount TL/BR 只靠 ref：名為 Mount 的非 ref frame 不算");
   const CMP = N("NEWID", null, 30000, 0, 26, 26, { name: "cmp/Photo Corner" });
   const byNameRef = corners("PN", "PN", paper).map((c) => Object.assign({}, c, { ref: "NEWID" }));
   const rn = scanCornerAnchor([CMP, MA, paper, ...byNameRef]);
   assert.deepStrictEqual([rn.containers, rn.points, rn.mismatch], [1, 8, 0], "元件重建換 id、名稱仍是 cmp/Photo Corner → 照算");
-  const rn2 = scanCornerAnchor([MA, paper, ...byNameRef]);
-  assert.deepStrictEqual(rn2.containers, 0, "快照沒有那個元件定義根、ref 又不是 GEBcf → 不算");
+  const rn2 = scanCornerAnchor([MA, paper, ...byNameRef.map((c) => Object.assign({}, c, { name: c.name.replace("Corner", "Mount") }))]);
+  assert.deepStrictEqual(rn2.containers, 0, "快照沒有那個元件定義根、ref 又不是 GEBcf、名稱也不是 Corner … → 不算");
   const rn3 = scanCornerAnchor([CMP, MA, paper, ...corners("PN", "PN", paper)]);
   assert.deepStrictEqual(rn3.containers, 1, "有名稱備援根時字面 GEBcf 仍算（id 為主）");
   const noVar = [MA, paper, ...corners("PN", "PN", paper).map((c, i) => (i === 0 ? Object.assign({}, c, { name: "Mount" }) : c))];
@@ -331,9 +334,26 @@ ok("(d) LS-202 document_count：只設 boards（不限縮）時六支 document_c
   assert.deepStrictEqual([shrunk.corner_anchor.document_count, shrunk.sibling_intersection.document_count], [2, 0]);
 });
 
-ok("LS-202 原始碼斷言：Pencil 端快照帶 ref: n.ref（角托判準靠它，漏帶則 corner_anchor 一顆都看不到）", () => {
+ok("LS-202 原始碼斷言：Pencil 端快照帶 ref: n.ref（角托 ref 判準靠它；漏帶時靠名稱備援、Mount 看不到）；SUMMARY 後印 cornerWarnings 的 WARNING 行", () => {
   const src = require("fs").readFileSync(path.join(__dirname, "overflow-scan.js"), "utf8");
   assert.ok(/snap\.push\(\{[^}]*\bref:\s*n\.ref\b/.test(src), "Pencil 端快照必須帶 ref: n.ref");
+  const a = src.indexOf('"SUMMARY total_nodes="');
+  const b = src.indexOf("for (const block of compactLines(out)) Print(block)");
+  assert.ok(a > 0 && b > a, "找不到 SUMMARY 到 compactLines 的視窗");
+  assert.ok(/for \(const w of cornerWarnings\(s\.corner_anchor\)\) Print\("WARNING " \+ w\)/.test(src.slice(a, b)), "SUMMARY 之後必須 Print cornerWarnings（R2 minor-1：歸零要看得見）");
+});
+
+ok("(d) LS-202 R2 歸零警示：document_containers=0 → compactLines corner 段印「第四支停擺」⚠；boards 內 0 而 document 非零 → 只印 containers=0 提示（LS-133 形狀）；正常 → 無 ⚠", () => {
+  const { cornerWarnings } = require(path.join(__dirname, "overflow-scan.js"));
+  const dead = compactLines(scanAll([B, G, C1, C2])).join("\n");
+  assert.ok(dead.includes("  ⚠ corner_anchor document_containers=0：整份快照沒有任何角托容器——第四支停擺"), dead);
+  assert.strictEqual(cornerWarnings(scanAll([B, G, C1, C2]).scans.corner_anchor).length, 1);
+  const noPrints = compactLines(scanAll(nodes, { boards: ["B2"] })).join("\n");
+  assert.ok(noPrints.includes("  ⚠ corner_anchor containers=0：boards 內沒有角托容器（document=7）"), noPrints);
+  assert.ok(!noPrints.includes("第四支停擺"));
+  const fine = compactLines(scanAll(nodes, { boards: ["B5"] })).join("\n");
+  assert.ok(!fine.includes("⚠ corner_anchor"), fine);
+  assert.deepStrictEqual(cornerWarnings(scanAll(nodes).scans.corner_anchor), []);
 });
 
 function r2(v) {

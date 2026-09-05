@@ -46,12 +46,16 @@
 //       命中 BLEED_RE：Corner／Badge／Dragging Photo／Drop Target／Insert Line／Stack Sheet——LS-119 R6 實跑 386 筆多是
 //       Spacer × Corner Shape、Feed × Home Indicator Area 這類不可見排版框），`SCAN_CROSS_ALL = true`（node：opts.crossAll）
 //       才全報。白名單以 classification 記錄。
-//   (d) corner_anchor：角托候選＝`type:"ref"` 且 `ref` 解析到 `cmp/Photo Corner` 的實例（LS-202；元件 id 集合＝字面
-//       PHOTO_CORNER_ID `GEBcf` ∪ 快照 roots 裡名稱為 `cmp/Photo Corner` 的元件定義——元件重建換 id 時名稱是備援；`SCAN_SCOPE=boards`
-//       限縮快照沒有元件定義根時就只剩字面 id）。名稱只供方位（`/\b(TL|TR|BL|BR)\b/`，`Corner TL`／`Mount BR` 都認得；無方位進 `unresolved`），
-//       **不再是候選判準**——LS-122～LS-198 靠 `Corner TL/…` 名稱辨識，`cmp/Profile Print`／App icon 的 `Mount TL/BR` 以 ref 存在卻
-//       永遠看不到（LS-194 VR：實測 corner-out 3.8pt 屬盲區，LS-96 `0617b9ae`）；名稱像角托但不是 ref 的節點不算。每個直接子節點
-//       含角托候選的節點是一個「容器」（角托的父）。角托咬住的**紙面**不一定是
+//   (d) corner_anchor：角托候選＝**ref 判準 ∪ 名稱備援**（LS-202）：`type:"ref"` 且 `ref` 解析到 `cmp/Photo Corner` 的實例（元件 id
+//       集合＝字面 PHOTO_CORNER_ID `GEBcf` ∪ 快照 roots 裡名稱為 `cmp/Photo Corner` 的元件定義——元件重建換 id 時名稱是備援；
+//       `SCAN_SCOPE=boards` 限縮快照沒有元件定義根時就只剩字面 id），**或**名稱命中 CORNER_NAME_RE `Corner TL/TR/BL/BR`（LS-122 起的
+//       舊判準，票文「名稱只作備援」；merge-review R1 minor-1：Pencil `Get` 若讀不到 `n.ref`，只靠 ref 會讓第四支靜默歸零、收據
+//       `containers=0/mismatch=0` 全綠——備援保證最壞退回本票之前的行為；development 上「只在名稱判準」＝0，補回零代價）。ref 判準補的是
+//       `cmp/Profile Print`／App icon 的 `Mount TL/BR`（以 ref 存在、名稱不是 Corner …，LS-194 VR：實測 corner-out 3.8pt 屬盲區，LS-96
+//       `0617b9ae`）。方位取自名稱 `/\b(TL|TR|BL|BR)\b/`（`Corner TL`／`Mount BR` 都認得；無方位進 `unresolved`）；名稱不像角托、又不是 ref
+//       的節點不算。`document_containers === 0` 時 SUMMARY 後與 compactLines 各印 `⚠` 行（第四支停擺；design-evidence-check.sh 對
+//       `scan_scope=document` 的這種收據紅）；`containers === 0` 而 document 非零只印提示（LS-133 r1–r3／LS-177 r1 的 boards 本來就沒有
+//       印品，屬正常）。每個直接子節點含角托候選的節點是一個「容器」（角托的父）。角托咬住的**紙面**不一定是
 //       父：現行稿有三種結構——角托是紙面的子（`Photo Wrap`）、角托與紙面 `Print` 是兄弟（`Print Stage`）、角托直接掛在
 //       板上而紙面是兄弟 `Print`（iPad 板）。因此紙面由候選（父＋同 parent 的兄弟）中挑「與四顆角托期望位置吻合軸數最多」
 //       者（吻合軸數 ≥ 一半才算找到；找不到列 `unresolved`，不計 mismatch、收據需給分類）。期望位置＝角托外緣壓過紙緣
@@ -95,10 +99,12 @@
 //       撤回旋轉盲點），任何一支都不得再套旋轉公式。
 //   scan_scope（LS-185）：SUMMARY 與 `scanAll` 輸出頂層 `scan_scope`＝`document`（預設，全稿快照）或 `boards`（Pencil 端
 //       `SCAN_SCOPE = "boards"`／node `opts.scanScope`：快照先限縮到 SCAN_BOARDS 的子樹再跑六支，沒有 SCAN_BOARDS 會 throw），
-//       每支輸出各帶同值 `scope` 與 `document_count`（LS-202：該支在**整份快照**裡的命中數——有 `document_flagged` 的三支取其長度、
-//       其餘三支取 `flagged` 長度；只設 SCAN_BOARDS 不限縮時就是全稿數，`scope=boards` 時是限縮值，收據照抄、由 `scope` 說明——
-//       LS-177 R1／R2 `cross_parent_collision` 限縮 17 板時收據沒有任何欄位說明全稿數，LS-96 `ba1ec045`；design-evidence-check.sh
-//       驗六支皆有這兩個欄位）。目的是讓收據分得清 `document_*`／各支 flagged 是全稿數字還是限縮板的數字——LS-120 R3／R4 逐板
+//       每支輸出各帶同值 `scope` 與 `document_count`（LS-202：該支在**掃描快照**裡的命中數——有 `document_flagged` 的三支取其長度、
+//       其餘三支取 `flagged` 長度。**`document_count` 不是永遠等於全稿數**：只設 SCAN_BOARDS 不限縮時快照＝全稿、它就是全稿數；
+//       `scope=boards` 時快照已限縮、它就是限縮值（任何一支都看不到全稿——要全稿得掃兩次，違背限縮的目的），讀收據必須與該支
+//       `scope` 併讀，`scope=boards` 的 `document_count` 不得拿去當全稿舊債基準（merge-review R1 info-1）。收據照抄——LS-177 R1／R2
+//       `cross_parent_collision` 限縮 17 板時收據沒有任何欄位說明限縮外的數，LS-96 `ba1ec045`；design-evidence-check.sh 驗六支皆有
+//       這兩個欄位）。目的是讓收據分得清 `document_*`／各支 flagged 是全稿數字還是限縮板的數字——LS-120 R3／R4 逐板
 //       `Get(boardId)` 繞過逾時後 `corner_anchor.document_*` 塌縮成 boards 值、LS-177 R1／R2 `cross_parent_collision` 限縮 17 板，
 //       收據語意都靠 scan_note 文字自述（VR MJ-9／MN-5；LS-96 `83694378`）。設計端在 `boards` 模式下 `document_*` 就是限縮值，
 //       收據照印、不得改標成 `document`。
@@ -130,9 +136,11 @@
 const AREA_MIN = 4;
 const TOL = 0.5;
 const CORNER_OUT = 5;
-// LS-202：角托＝ref 指向 cmp/Photo Corner 的實例（id 為主、名稱備援）；名稱只供方位
+// LS-202：角托＝ref 指向 cmp/Photo Corner 的實例（元件 id 為主、元件名稱備援）∪ 名稱命中 CORNER_NAME_RE（LS-122 舊判準，R2 minor-1 補回
+// 作備援——Pencil 端 ref 讀不到時第四支不得靜默歸零）；方位取自名稱
 const PHOTO_CORNER_ID = "GEBcf";
 const PHOTO_CORNER_NAME = "cmp/Photo Corner";
+const CORNER_NAME_RE = /\bCorner (TL|TR|BL|BR)\b/;
 const CORNER_VARIANT_RE = /\b(TL|TR|BL|BR)\b/;
 const BLEED_RE = /Corner|Badge|Dragging Photo|Drop Target|Insert Line|Stack Sheet/i;
 const OVERLAY_RE = /Action Bar|Tab Bar|Capsule|Footer|Toast|Banner/;
@@ -312,7 +320,8 @@ function scanCornerAnchor(nodes, idx, opts) {
   const boards = resolveBoards(opts && opts.boards, roots);
   const scoped = boards.length > 0;
   const cornerIds = cornerComponentIds(roots);
-  const isCorner = (n) => n.type === "ref" && cornerIds.includes(n.ref);
+  // ref 判準 ∪ 名稱備援（R2 minor-1）：名稱備援保證 ref 讀不到時最壞退回 LS-122 的名稱判準，而不是 containers=0 全綠
+  const isCorner = (n) => (n.type === "ref" && cornerIds.includes(n.ref)) || CORNER_NAME_RE.test(n.name || "");
   const groups = new Map();
   for (const n of liveNodes) {
     if (!isCorner(n) || n.parent == null || !byId.get(n.parent)) continue;
@@ -610,6 +619,18 @@ function scanAll(nodes, opts) {
   };
 }
 
+// LS-202 R2 minor-1：corner_anchor 歸零警示——document_containers=0 是第四支停擺（快照沒讀到 ref 且名稱備援也沒命中），收據不得交；
+// containers=0 而 document 非零只是 boards 內沒有印品（LS-133 r1–r3／LS-177 r1 屬正常），提示核對 SCAN_BOARDS 即可
+function cornerWarnings(ca) {
+  if (ca.document_containers === 0) {
+    return ["⚠ corner_anchor document_containers=0：整份快照沒有任何角托容器——第四支停擺（Pencil 快照沒讀到 ref、名稱備援 Corner TL/… 也沒命中），這份收據不得交，先查快照欄位（LS-202 R2）"];
+  }
+  if (ca.containers === 0) {
+    return ["⚠ corner_anchor containers=0：boards 內沒有角托容器（document=" + ca.document_containers + "）——boards 含印品類板時先核對 SCAN_BOARDS 有沒有漏列；boards 本來就沒有印品則屬正常（LS-133／LS-177 r1）"];
+  }
+  return [];
+}
+
 function compactLines(out) {
   const s = out.scans;
   const agg = (items, keyFn, exFn) => {
@@ -638,6 +659,7 @@ function compactLines(out) {
   for (const u of ca.unresolved) lines.push("  UNRESOLVED " + u.container_name + "(" + u.container + ") " + u.reason + (u.best_candidate_name ? " best=" + u.best_candidate_name + " " + u.best_score + "/" + u.total_axes : "") + " board=" + u.board_name);
   for (const [k, v] of agg(ca.document_flagged, (f) => f.board_name + "(" + f.board + ")", (f) => f.container)) lines.push("  DOCUMENT " + v.n + "× board " + k + " e.g. container " + v.ex);
   for (const [k, v] of agg(ca.document_unresolved.filter((u) => !ca.unresolved.includes(u)), (u) => u.board_name + "(" + u.board + ")", (u) => u.container)) lines.push("  DOCUMENT-UNRESOLVED " + v.n + "× board " + k + " e.g. container " + v.ex);
+  for (const w of cornerWarnings(ca)) lines.push("  " + w);
   blocks.push(lines.join("\n"));
   const tx = s.text_occlusion;
   const to = agg(tx.flagged, (f) => f.name + " × " + f.overlay_name + " @ " + f.board_name + "(" + f.board + ")", (f) => f.node + "×" + f.overlay);
@@ -708,12 +730,13 @@ if (typeof Get === "function" && typeof Print === "function") {
       " unresolved=" + s.corner_anchor.unresolved.length + "/" + s.corner_anchor.document_unresolved.length + " boards=" + JSON.stringify(s.corner_anchor.boards) +
       " tree_hash=" + treeHashHex
   );
+  for (const w of cornerWarnings(s.corner_anchor)) Print("WARNING " + w);
   for (const block of compactLines(out)) Print(block);
   if (verbose) for (const cc of s.corner_anchor.container_corners) Print("CORNERS " + cc.container_name + "(" + cc.container + ") n=" + cc.n + (cc.in_scope ? "" : " (document)") + " board=" + cc.board_name + "(" + cc.board + ")");
   if (verbose) for (const key of Object.keys(s)) Print("JSON " + key + " " + JSON.stringify(s[key]));
   }
 } else if (typeof module === "object" && module && module.exports) {
-  module.exports = { AREA_MIN, TOL, CORNER_OUT, PHOTO_CORNER_ID, PHOTO_CORNER_NAME, CORNER_VARIANT_RE, BLEED_RE, OVERLAY_RE, LEAF_TYPE_RE, SCAN_SCOPES, hasImageFill, buildIndex, overlapArea, contains, cornerExpected, cornerComponentIds, compactLines, pairEntry, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanBoardClip, restrictToBoards, scanAll, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
+  module.exports = { AREA_MIN, TOL, CORNER_OUT, PHOTO_CORNER_ID, PHOTO_CORNER_NAME, CORNER_NAME_RE, CORNER_VARIANT_RE, BLEED_RE, OVERLAY_RE, LEAF_TYPE_RE, SCAN_SCOPES, hasImageFill, buildIndex, overlapArea, contains, cornerExpected, cornerComponentIds, cornerWarnings, compactLines, pairEntry, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanBoardClip, restrictToBoards, scanAll, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
 } else {
   throw new Error("overflow-scan：既不是 Pencil execute（無 Get／Print）也不是 node module 環境，無處輸出");
 }

@@ -30,7 +30,8 @@
 #
 # LS-202：㊷～㊹-b 驗六支各帶 scope／document_count——齊全綠（㊷）／某支缺 document_count 紅（㊷-b）／某支缺 scope 紅（㊷-c，LS-185 時可省）／
 # document_count 負數／布林紅（㊷-d／e）／head_sha tree 無標記、缺欄位綠＋放行行（㊸）／PR head 已含標記而最新收據缺紅、補齊綠（㊹／㊹-b）。
-# cutoff＝腳本含 `document_count` 字面（同 LS-168／LS-185 用腳本標記不用時間）。
+# cutoff＝腳本含 `document_count` 字面（同 LS-168／LS-185 用腳本標記不用時間）。R2 minor-1：㊺ scan_scope=document 且
+# corner_anchor.document_containers=0 紅（第四支停擺）／㊺-b boards 限縮全零綠／㊺-c in-scope containers=0 而 document 216 綠（LS-133 形狀）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -814,9 +815,15 @@ add_script7() {
   g commit -qm 'chore: 併入含 per-scan scope／document_count 的正典腳本（不碰 .pen）'
 }
 write_receipt7() {
-  # write_receipt7 <path> <head_sha> <tree_hash> <mode: ok|nocount|noscope|badcount|boolcount|legacy6>
+  # write_receipt7 <path> <head_sha> <tree_hash> <mode: ok|nocount|noscope|badcount|boolcount|legacy6|zerodoc|zerodoc_boards|zeroin>
   local path=$1 sha=$2 hash=$3 mode=$4
-  local ps='"scope":"document","document_count":0,'
+  local ps='"scope":"document","document_count":0,' ss='"scan_scope":"document"'
+  local counts='"containers":1,"points":8,"mismatch":0,"document_containers":1,"document_mismatch":0'
+  case "$mode" in
+    zerodoc)        counts='"containers":0,"points":0,"mismatch":0,"document_containers":0,"document_mismatch":0' ;;
+    zerodoc_boards) counts='"containers":0,"points":0,"mismatch":0,"document_containers":0,"document_mismatch":0'; ss='"scan_scope":"boards"'; ps='"scope":"boards","document_count":0,' ;;
+    zeroin)         counts='"containers":0,"points":0,"mismatch":0,"document_containers":216,"document_mismatch":0' ;;
+  esac
   local si="$ps" ro="$ps" cp="$ps" ca="$ps" tx="$ps" bc="$ps"
   case "$mode" in
     nocount)   ro='"scope":"document",' ;;
@@ -826,10 +833,10 @@ write_receipt7() {
     legacy6)   si=''; ro=''; cp=''; ca=''; tx=''; bc='' ;;
   esac
   mkdir -p "$(dirname "$path")"
-  printf '%s\n' '{"ticket":"LS-67","round":6,"head_sha":"'"$sha"'","total_nodes":4,"tree_hash":"'"$hash"'","scan_scope":"document",' \
+  printf '%s\n' '{"ticket":"LS-67","round":6,"head_sha":"'"$sha"'","total_nodes":4,"tree_hash":"'"$hash"'",'"$ss"',' \
     ' "scans":{"sibling_intersection":{'"$si"'"flagged":[]},"row_overflow":{'"$ro"'"flagged":[]},' \
     '  "cross_parent_collision":{'"$cp"'"flagged":[]},' \
-    '  "corner_anchor":{'"$ca"'"boards":["d"],"containers":1,"points":8,"mismatch":0,"document_mismatch":0,"flagged":[],"unresolved":[]},' \
+    '  "corner_anchor":{'"$ca"'"boards":["d"],'"$counts"',"flagged":[],"unresolved":[]},' \
     '  "text_occlusion":{'"$tx"'"flagged":[],"document_flagged":[]},"board_clip":{'"$bc"'"flagged":[],"document_flagged":[]}}}' > "$path"
 }
 
@@ -884,6 +891,26 @@ write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha44" "$(hash_of "
 g add design/evidence/LS-67-r6-overflow.json
 g commit -qm 'design(evidence): LS-67 r6 收據（新腳本重跑補 scope／document_count）'
 expect 0 '㊹-b 同一 head_sha 補齊六支 scope／document_count → 綠' '六支各帶 scope／document_count' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㊺ R2 minor-1：scan_scope=document 且 corner_anchor.document_containers=0（第四支靜默停擺的收據長相）→ 紅
+sha45="$(land7 pr-zero-doc perscan)"
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha45" "$(hash_of "$sha45")" zerodoc
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（document_containers=0）'
+expect 1 '㊺ scan_scope=document、corner_anchor.document_containers=0 → 紅（第四支停擺不是「沒有錯位」）' 'scans.corner_anchor.document_containers 為 0 而 scan_scope=document' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊺-b 同樣全零但 scan_scope=boards（限縮快照可能真的沒有印品）→ 綠
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha45" "$(hash_of "$sha45")" zerodoc_boards
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（boards 限縮、document_containers=0）'
+expect 0 '㊺-b scan_scope=boards 且 document_containers=0 → 綠（限縮快照可無印品）' 'scan_scope=boards' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊺-c in-scope containers=0 但 document_containers=216（LS-133 r1–r3／LS-177 r1：boards 本來沒有印品）→ 綠
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha45" "$(hash_of "$sha45")" zeroin
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（containers=0、document_containers=216）'
+expect 0 '㊺-c in-scope containers=0 而 document_containers=216 → 綠（boards 沒有印品是正常收據，LS-133 形狀）' '六支各帶 scope／document_count' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
 
 if [ "$fail" -eq 0 ]; then
