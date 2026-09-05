@@ -2380,6 +2380,7 @@ withdraw_join(uuid)
 <!-- API-CONTRACT:TABLES
 album_children
 album_media
+album_summaries
 albums
 app_settings
 blocked_users
