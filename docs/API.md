@@ -70,7 +70,7 @@
 | `media` | 我所屬家庭**尚未軟刪**的檔案中繼資料，**上傳者自己的例外**——不論是否已軟刪都看得到自己上傳的列（`deleted_at is null or uploaded_by = auth.uid()`，LS-155 R2 起；與 `children` 全員可見已軟刪列的例外不同，這裡只有上傳者本人是例外，見 §3「`media_select` 過濾」段落的已知殘留缺口） | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | **文件承諾「owner 任意列」，實際只對 owner 自己上傳的列與尚未軟刪的別人的列成立**（一般刪除走 `deleted_at`）——owner 對「別人上傳、已軟刪」的列直接 `DELETE` 會因為 R2 的 `media_select` 把該列藏起來而**靜默影響 0 列**（LS-155 R2 review m1 實測，見 §3 殘留缺口段落）；真正的 owner moderation 請走 `remove_content_as_owner('media', id)`（`SECURITY DEFINER`，不受這個限制） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）／`duration_seconds`（LS-134）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3 |
 | `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己） | 🔀 **混合模式（LS-52；LS-57 R2 起範圍限縮；LS-121 起 `child_id` 移出本表）**：內容（title／cover_media_id）僅建立者本人直接 `.update()`；`deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起對 `authenticated` 已無 UPDATE 欄位級 grant，唯一路徑是 `set_album_deleted` RPC；寶貝標記唯一路徑是 `set_album_children` RPC（見 §4） | owner-only | Viewer 不可建立相簿；owner 對別人相簿的內容**沒有**直接 `.update()` 路徑——見 §3「為什麼 albums／comments／diaries 曾經、現在用了不同的寫入模型」；`album_children`（見下）任何一列的 `child_id` 指向一個已軟刪的孩子時 INSERT 皆拿 `LS044`，見 §8 |
 | `album_media` | 同上 | owner／member | owner／member | owner／member | 連結表自帶 `family_id`，policy 不必 join 回 `albums` |
-| `album_summaries`（LS-200，view） | 我所屬家庭的相簿，逐列多帶 `visible_media_count`／`latest_thumb_path`／`cover_thumb_path` 三個彙總欄——只算呼叫者依 RLS 看得到的 media | ❌ 沒有寫入語意（view，無 INSERT grant） | ❌ 同上 | ❌ 同上 | `security_invoker=true`，`albums_select`／`album_media_select`／`media_select` 三條既有 policy 逐使用者生效，取代 client 端 `album_media(count)` 內嵌 aggregate 的連結列計數口徑（LS-165 R2），見 §3「albums / diaries」 |
+| `album_summaries`（LS-200，view） | 我所屬家庭的相簿，逐列多帶 `visible_media_count`／`latest_media_id`／`latest_thumb_path`／`latest_storage_path`／`cover_thumb_path`／`cover_storage_path` 六個彙總欄——只算呼叫者依 RLS 看得到的 media | ❌ 沒有寫入語意（view，無 INSERT grant） | ❌ 同上 | ❌ 同上 | `security_invoker=true`，`albums_select`／`album_media_select`／`media_select` 三條既有 policy 逐使用者生效，取代 client 端 `album_media(count)` 內嵌 aggregate 的連結列計數口徑（LS-165 R2）；**欄位於 `CREATE VIEW` 當下凍結**，`albums` 加欄需重建 view 才會補上，見 §3「albums / diaries」 |
 | `album_children`（LS-121） | 我所屬家庭，任一角色（含 viewer） | 🔒 **RPC-only**（`set_album_children`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 語意**——覆蓋是同一交易內先刪後插，不是對既有列 UPDATE | 🔒 **RPC-only**（`set_album_children`，直接 DELETE 已被 revoke） | 相簿 ↔ 孩子多對多標記，取代舊版 `albums.child_id` 單一欄位；見 §8 |
 | `diaries` | 我所屬家庭的日記 | 🔒 **RPC-only**（`create_diary_entry`，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（body／entry_date／寶貝標記）僅作者本人用 `update_diary_entry`；軟刪／還原（`deleted_at`）作者自己的或 owner 任何一篇，皆用 `set_diary_deleted`（直接 UPDATE 已被 revoke） | owner-only（硬刪，policy 未變） | LS-48 收斂：owner 不能像 `albums` 那樣直接改寫別人日記的內容，只能移除。**LS-57**：owner 軟刪的日記，作者無法自行還原（`LS027`），見 §4。**LS-121**：`child_id` 移出本表，寶貝標記併入 `update_diary_entry` 的 `p_child_ids` 陣列參數，見 §4／§8 |
 | `diary_media` | 同上 | owner／member | owner／member | owner／member | 同 `album_media` |
@@ -395,11 +395,16 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
 
 ### `albums` / `diaries`
 - **相簿列表請讀 `album_summaries`（LS-200），不要用 client 端內嵌 aggregate 算張數**：
-  `album_summaries` 是一支 `security_invoker=true` 的 view，逐本相簿多帶三個彙總欄——
-  `visible_media_count`（呼叫者依 RLS 看得到的照片數）、`latest_thumb_path`（依
-  `created_at` 排序、可見範圍內最新一張的縮圖路徑）、`cover_thumb_path`（`cover_media_id`
-  指到的那張縮圖路徑，若該張已軟刪／跨家庭則為 `NULL`）。`security_invoker=true`
-  讓 view 內部對 `albums`／`album_media`／`media` 的存取套用呼叫者本人的 RLS
+  `album_summaries` 是一支 `security_invoker=true` 的 view，逐本相簿多帶六個彙總欄——
+  `visible_media_count`（呼叫者依 RLS 看得到的照片數）、`latest_media_id`／
+  `latest_thumb_path`／`latest_storage_path`（依 `created_at` 排序、可見範圍內最新
+  一張的 media id／縮圖路徑／原圖路徑）、`cover_thumb_path`／`cover_storage_path`
+  （`cover_media_id` 指到的那張縮圖／原圖路徑，若該張已軟刪／跨家庭則皆為
+  `NULL`）。`*_storage_path` 兩欄是 `*_thumb_path` 為 `NULL` 時（既有資料、縮圖
+  產生失敗的過渡列）的退回來源——沿用上方「簽名 URL 與 egress 防線」段落既有的
+  `thumb_path` 為 `NULL` 時退回 `storage_path` 規則，只是把退回會用到的兩個路徑
+  一次給齊，不必呼叫端另外反查 `media` 表。`security_invoker=true` 讓 view 內部對
+  `albums`／`album_media`／`media` 的存取套用呼叫者本人的 RLS
   （`albums_select`／`album_media_select`／`media_select`），跨家庭隔離、軟刪過濾
   （含 `media_select` 的上傳者例外，見上方 `media` 表）皆沿用既有 policy，不在 view
   裡重複判準。欄位與 `albums` 表其餘部分完全一致（含 `id`／`created_at`，keyset
@@ -409,6 +414,16 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   物件，`SupabaseAlbumsAPIClient` 改讀本 view、拿掉內嵌 aggregate 屬於另一張 iOS
   票（不在 LS-200 範圍，見 LS-200 票文「不做」段）——**在那張票落地前，下面兩則
   筆記描述的仍是 iOS 端目前實際在跑的行為，尚未過時，先保留**。
+  **view 欄位於建立時凍結（R2 N3）**：`select a.*, ...` 這種寫法的 `a.*` 是在
+  `CREATE VIEW` 當下就展開成固定的欄位清單，寫進 view 的定義裡，不是查詢時動態
+  解析——之後對 `albums` 下 `ADD COLUMN`，新欄位**不會**自動出現在
+  `album_summaries` 裡，也不會有任何錯誤或警告提醒這件事，只會在呼叫端納悶
+  「明明 `albums` 有這欄，為什麼 view 讀不到」時才會發現。幫 `albums` 加欄的
+  migration 若也想讓 `album_summaries` 一起看到新欄位，必須額外下一次
+  `CREATE OR REPLACE VIEW public.album_summaries AS ...`（同一份 SQL 文字，只是
+  重新展開 `a.*`），不能假設它自動生效。`supabase/tests/107_album_summaries.sql`
+  的 0b 段落把「`albums` 欄位集合 ⊆ `album_summaries`」釘成機械斷言，忘記重建
+  view 會直接測出來。
 - **相簿列表依賴 PostgREST `db-aggregates-enabled`（LS-165 R2）**：iOS 相簿 tab 首頁
   （`SupabaseAlbumsAPIClient.fetchAlbums`）用內嵌查詢 `album_media(count)`／
   `latest:album_media(media!inner(...))` 一次取得張數與封面 fallback（不再整頁抓
