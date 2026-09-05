@@ -77,6 +77,16 @@ enum TapTargetGateScreenName: String {
     // 在生產常態下量到群標題 x=119.3，應為 24）。這個 case 掛 `previewNormalSample()`（無
     // 失敗、無續傳橫幅、`uploading` 不帶百分比），專門讓機械 gate／UITest 覆蓋這個常態。
     case uploadQueueSheetNormal = "UploadQueueSheetViewNormal"
+    // LS-164：帳號密碼登入畫面（審核帳號用）——初始態不需要任何 seed 資料（`.preview()`
+    // 免登入即可建構，同 `createChild`／`createAlbum` 的既有理由），Email／密碼欄與登入鈕
+    // 一開畫面就有代表性。
+    case passwordSignIn = "PasswordSignInView"
+    // LS-164：`WelcomeView` 本身仍留在 `tap-target-exemptions.txt`（Apple 官方
+    // `SignInWithAppleButton` 量測意義有限，理由未變）——這個 case **不**用來做逐元件 tap
+    // target 量測（`TapTargetGateTests.swift` 沒有對應 test method），純粹借用「launch
+    // environment 指定畫面」這條既有通道，讓 `PasswordSignInUITests` 能直接啟動到歡迎頁，
+    // 測「小字連結存在且 tap 能導覽到帳密登入畫面」這條票文驗收，不需要真的登入或建立家庭。
+    case welcome = "WelcomeView"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -115,6 +125,11 @@ enum TapTargetGateScreenName: String {
         case .uploadQueueSheet: return .staticText("沒有成功")
         // 常態樣本沒有失敗群，用永遠會渲染的標題文字當 sentinel。
         case .uploadQueueSheetNormal: return .staticText("正在新增照片")
+        case .passwordSignIn: return .staticText("帳號密碼登入")
+        // 「給家人的私密相簿」只在淺色模式渲染（見 `WelcomeView.headSection`），跟
+        // `.preview()`／harness 固定淺色（未強制 `.preferredColorScheme`）的既有假設一致；
+        // 不用字標圖片（`Image`，不是 staticText）當 sentinel。
+        case .welcome: return .staticText("給家人的私密相簿")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

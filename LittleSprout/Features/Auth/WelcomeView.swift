@@ -9,7 +9,9 @@ import SwiftUI
 struct WelcomeView: View {
     let authStore: AuthStore
 
-    @State private var path: [AuthRoute] = []
+    // 非 private：`WelcomeView+PasswordSignIn.swift`（LS-164）需要存取，同 `CreateChildView`
+    // 的 `name`／`pickedAvatarPreview` 既有作法。
+    @State var path: [AuthRoute] = []
     @State private var isSigningInWithApple = false
     @State private var appleErrorMessage: String?
     @State private var isSigningInWithGoogle = false
@@ -45,6 +47,10 @@ struct WelcomeView: View {
                     OTPVerificationView(email: email, authStore: authStore) {
                         path.removeAll()
                     }
+                case .passwordSignIn:
+                    PasswordSignInView(authStore: authStore) {
+                        path.removeAll()
+                    }
                 }
             }
         }
@@ -78,6 +84,8 @@ struct WelcomeView: View {
                 Spacer(minLength: 0)
                 actionsSection
                     .padding(.top, AppSpacing.item)
+                passwordSignInLink
+                    .padding(.top, AppSpacing.label)
                 legalOrStatusSlot
                     .padding(.top, AppSpacing.group)
             }
@@ -98,6 +106,8 @@ struct WelcomeView: View {
                 headSection
                 VStack(alignment: .leading, spacing: 0) {
                     actionsSection
+                    passwordSignInLink
+                        .padding(.top, AppSpacing.label)
                     legalOrStatusSlot
                         .padding(.top, AppSpacing.group)
                 }
@@ -215,6 +225,9 @@ struct WelcomeView: View {
         }
     }
 
+    // `passwordSignInLink`：見 `WelcomeView+PasswordSignIn.swift`（LS-164，拆到另一個檔案
+    // 避免這個檔案超過 SwiftLint file_length 上限）。
+
     /// 法務／狀態行是一個 38pt 固定高度插槽（進場條件⑥）：`.meta`(13pt) 的法務行與
     /// `.note`(17pt) 的狀態句行高不同，沒有這個插槽 01→01b 切換會把上方按鈕整體推移。用
     /// `minHeight` 而不是 `height`——AX3 下兩者都會換行超過 38pt，此時插槽要能跟著長高，
@@ -308,9 +321,10 @@ struct WelcomeView: View {
 // OTPVerificationModel 系列測試檔拆檔的理由——只是這裡拆的是 extension 不是檔案）。
 extension WelcomeView {
     /// 三顆鈕互斥狀態的集中計算，見 `AuthButtonsState.swift`（純值型別，可單元測試，
-    /// `actionsSection`／`legalOrStatusSlot` 共用同一份，避免各自用 `isSigningInWithApple`
-    /// 兜邏輯而漏掉其中一處）。
-    private var authButtonsState: AuthButtonsState {
+    /// `actionsSection`／`legalOrStatusSlot`／`passwordSignInLink`（LS-164，
+    /// `WelcomeView+PasswordSignIn.swift`）共用同一份，避免各自用 `isSigningInWithApple`
+    /// 兜邏輯而漏掉其中一處；非 private 的理由同 `path`）。
+    var authButtonsState: AuthButtonsState {
         AuthButtonsState(isSigningInWithApple: isSigningInWithApple, isSigningInWithGoogle: isSigningInWithGoogle)
     }
 

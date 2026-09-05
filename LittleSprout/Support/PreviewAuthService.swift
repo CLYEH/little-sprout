@@ -23,6 +23,10 @@ private final class PreviewAuthService: AuthService, @unchecked Sendable {
         AuthSession(userID: UUID(), email: "preview-google@example.com", expiresAt: .distantFuture)
     }
 
+    func signInWithPassword(email: String, password: String) async throws -> AuthSession {
+        AuthSession(userID: UUID(), email: email, expiresAt: .distantFuture)
+    }
+
     func sendEmailOTP(email: String) async throws {}
 
     func verifyEmailOTP(email: String, token: String) async throws -> AuthSession {

@@ -69,6 +69,13 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.createAlbum)
     }
 
+    /// LS-164：帳號密碼登入畫面，初始態（Email／密碼欄＋顯示密碼切換鈕＋登入鈕）不需要任何
+    /// seed 資料。`.welcome` 不在這裡——WelcomeView 仍留在 tap-target-exemptions.txt（Apple
+    /// 官方按鈕量測意義有限，理由未變），見該畫面 case 文件註解。
+    func testPasswordSignInView() {
+        assertAllTappablesMeetMinimum(.passwordSignIn)
+    }
+
     /// 任一元件 <44pt 就用 `XCTFail` 記一筆——逐一累計，不是遇到第一個違規就提前結束，讓
     /// `tap-target-check.sh` 能一次點名所有違規者（LS-17 QA1 就是同一畫面上不只一顆違規）。
     /// merge-review R1 B1：先斷言畫面真的渲染出來，harness 靜默失效不會被誤判成「這個畫面

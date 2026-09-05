@@ -23,8 +23,17 @@
      讓 60 個活 id 引用位置預先被放行、方向是誤放行）：只有死 id **緊鄰箭頭左側**（`<id>\\s*→`，「舊→新」的舊）才算沿革；
      右側是現行 id，必須存在（死了就是缺失）。
 
-輸出：每筆缺失一行「✗ 板 <rootId>（名稱）／節點 <textId>／缺失 id <token>：<子句>」；沿革 info 行以「（沿革）」開頭；
-最後一行摘要。exit 0＝無缺失；1＝有缺失；2＝參數／git／JSON 錯誤（fail closed）。
+署名年齡片語 NBSP（LS-202；LS-96 池項 ed90c6ab）：Notes 規則「署名年齡片語必 NBSP」原本沒有 gate，LS-194 BL-1 是 VR 逐字比 codepoint
+才抓到。這支順便驗：`cmp/Card Album`／`cmp/Card Diary` 兩個元件定義內的 text 節點，與全稿每個 ref 指向它們的實例的 `descendants`
+`content` 覆寫，凡 `歲`／`個月`（`個` `月` 之間允許 WJ）**前面的空白序列**只准 U+00A0／U+2060／換行——序列含 U+0020 即命中，印節點
+（或 實例 id／override 鍵）與 codepoint 序列。範圍只到這兩個元件：全稿 text 一律掃會把 Notes 板的散文（yec61 16 筆、kHDk4 11 筆）與
+LS-21／LS-47 legacy 板的舊 Age Text 全數帶進來（development 實測 88 筆）。**--base 增量**：命中所在的頂層節點（板或元件定義）在
+merge-base→head 之間 JSON 有變更（含新增）才算違規（紅）；未觸碰的板上的既有命中列「（舊債）」警告、不擋——他票舊債另開 chore
+（a106f940 同一原則）。代價：觸碰某板就得順手修掉它上面所有署名 U+0020（方向是紅、不是漏放）。
+
+輸出：每筆缺失一行「✗ 板 <rootId>（名稱）／節點 <textId>／缺失 id <token>：<子句>」；沿革 info 行以「（沿革）」開頭；署名 NBSP
+違規一行「✗ 署名 NBSP：板 …／節點|實例 …：「<內容>」<單位> 前 <codepoints>」、舊債以「（舊債）署名 NBSP：」開頭；
+最後一行摘要。exit 0＝無缺失且無 NBSP 違規；1＝有缺失或 NBSP 違規；2＝參數／git／JSON 錯誤（fail closed）。
 
 用法：design_notes_check.py --pen <repo 相對路徑> --head <sha> --base <merge-base sha> [--history <sha> ...]
   --head／--base／--history 皆以 `git show <sha>:<pen>` 讀快照（在 repo 內執行）；--history 為本 PR 範圍內觸碰 .pen 的
@@ -34,6 +43,10 @@ import json
 import re
 import subprocess
 import sys
+
+# LS-202：本模組若再 import 同目錄模組，不得在 scripts/gates/ 留 __pycache__（worktree dirty、cleanup 需 --force，LS-96 c4c10429）；
+# 自己被 import 時的 .pyc 由 .gitignore `__pycache__/` 兜底（模組內的旗標擋不住「被別人 import」那一次）
+sys.dont_write_bytecode = True
 
 ID_TOKEN_RE = re.compile(r"(?<![A-Za-z0-9])[A-Za-z0-9]{5,6}(?![A-Za-z0-9])")
 NOTES_NAME_RE = re.compile(r"實作註記|Handoff Notes")
@@ -47,6 +60,10 @@ HISTORY_MARKERS = (
 HISTORY_RE = re.compile("|".join(HISTORY_MARKERS))
 # 「舊 id→新 id」：token 之後緊接（可有空白）箭頭 → 這個 token 是被取代的舊 id
 ARROW_AFTER_RE = re.compile(r"\s*→")
+# LS-202 署名年齡片語：單位（歲／個月，個月中間允許 WJ）前的空白序列只准 NBSP／WJ／換行；序列含 U+0020 即違規
+CARD_COMPONENT_NAMES = ("cmp/Card Album", "cmp/Card Diary")
+AGE_UNIT_RE = re.compile("([  ⁠\n]+)(歲|個⁠?月)")
+SPACE = " "
 
 
 def die(msg):
@@ -106,6 +123,53 @@ def clause_around(content, start, end):
     return content[left:right].strip()
 
 
+def card_components(doc):
+    """cmp/Card Album／cmp/Card Diary 的元件定義（頂層 reusable frame，以名稱認——元件重建會換 id）。"""
+    return [r for r in doc.get("children") or []
+            if isinstance(r, dict) and r.get("reusable") and r.get("name") in CARD_COMPONENT_NAMES]
+
+
+def age_hits(doc):
+    """LS-202：回 [(root_id, root_name, owner, content, unit, codepoints)]——卡片元件定義內的 text，與全稿每個 ref → 卡片元件
+    的實例 descendants content 覆寫，凡 歲／個月 前的空白序列含 U+0020 各一筆。owner＝「節點 <id>」或「實例 <refId> override <descId>」。"""
+    comps = card_components(doc)
+    comp_ids = {c["id"] for c in comps}
+    hits = []
+
+    def scan(content, root, owner):
+        for m in AGE_UNIT_RE.finditer(content):
+            run = m.group(1)
+            if SPACE not in run:
+                continue
+            cps = "+".join("U+%04X" % ord(ch) for ch in run)
+            hits.append((root["id"], root.get("name") or "", owner, content.replace("\n", "⏎"), m.group(2), cps))
+
+    for c in comps:
+        for t in text_nodes(c):
+            scan(t["content"], c, "節點 %s" % t["id"])
+    for root in doc.get("children") or []:
+        stack = [root]
+        while stack:
+            n = stack.pop()
+            if not isinstance(n, dict):
+                continue
+            if n.get("type") == "ref" and n.get("ref") in comp_ids:
+                for key, ov in (n.get("descendants") or {}).items():
+                    if isinstance(ov, dict) and isinstance(ov.get("content"), str):
+                        scan(ov["content"], root, "實例 %s override %s" % (n.get("id"), key))
+            stack.extend(reversed(n.get("children") or []))
+    return hits
+
+
+def touched_roots(base_doc, head_doc):
+    """本 PR 觸碰的頂層節點 id：merge-base→head 之間 JSON 有變更或新增者（同 design-evidence-check.sh 的 boards 覆蓋判定）。"""
+    def tops(doc):
+        return {c["id"]: json.dumps(c, sort_keys=True, ensure_ascii=False)
+                for c in doc.get("children") or [] if isinstance(c, dict) and isinstance(c.get("id"), str)}
+    base_tops, head_tops = tops(base_doc), tops(head_doc)
+    return {rid for rid, blob in head_tops.items() if base_tops.get(rid) != blob}
+
+
 def check(head_doc, head_ids, dead_candidates):
     missing = []
     history = []
@@ -152,7 +216,8 @@ def main(argv):
 
     head_doc = load_snapshot(head, pen)
     head_ids = all_ids(head_doc)
-    candidates = set(all_ids(load_snapshot(base, pen)))
+    base_doc = load_snapshot(base, pen)
+    candidates = set(all_ids(base_doc))
     seen = {head, base}
     for sha in history_shas:
         if sha in seen:
@@ -167,10 +232,26 @@ def main(argv):
         print("（沿革）板 %s（%s）／節點 %s／舊 id %s：%s" % (bid, bname, tid, tok, clause[:120]))
     for bid, bname, tid, tok, clause in missing:
         print("✗ 板 %s（%s）／節點 %s／缺失 id %s：%s" % (bid, bname, tid, tok, clause[:120]), file=sys.stderr)
-    summary = "Notes 板 %d 塊、head id %d、本 PR 範圍曾存在而 head 已無的 id %d、沿革引用 %d、缺失 %d" % (
-        len(boards), len(head_ids), len(dead_candidates), len(history), len(missing))
+
+    # LS-202 署名年齡片語 NBSP：本 PR 觸碰的頂層節點（板／元件定義）上的命中＝違規，其餘＝舊債警告
+    touched = touched_roots(base_doc, head_doc)
+    nbsp_bad, nbsp_old = [], []
+    for hit in age_hits(head_doc):
+        (nbsp_bad if hit[0] in touched else nbsp_old).append(hit)
+    for rid, rname, owner, content, unit, cps in nbsp_old:
+        print("（舊債）署名 NBSP：板 %s（%s）／%s：「%s」%s 前 %s——本 PR 未觸碰此板，不擋（LS-202）" % (rid, rname, owner, content[:60], unit, cps))
+    for rid, rname, owner, content, unit, cps in nbsp_bad:
+        print("✗ 署名 NBSP：板 %s（%s）／%s：「%s」%s 前 %s（須 U+00A0；允許 U+2060／換行，LS-202）" % (rid, rname, owner, content[:60], unit, cps), file=sys.stderr)
+
+    summary = "Notes 板 %d 塊、head id %d、本 PR 範圍曾存在而 head 已無的 id %d、沿革引用 %d、缺失 %d、署名 NBSP 違規 %d（舊債 %d）" % (
+        len(boards), len(head_ids), len(dead_candidates), len(history), len(missing), len(nbsp_bad), len(nbsp_old))
+    problems = []
     if missing:
-        print("✗ design-notes gate：%s——Notes 引用了本 PR 刪掉的節點 id，改成現行 id，或在同一子句用沿革標記（原／當時／已刪除／取代舊，或寫成「舊 id→新 id」把舊 id 放在箭頭左側）說明它已不存在（LS-168）" % summary, file=sys.stderr)
+        problems.append("Notes 引用了本 PR 刪掉的節點 id，改成現行 id，或在同一子句用沿革標記（原／當時／已刪除／取代舊，或寫成「舊 id→新 id」把舊 id 放在箭頭左側）說明它已不存在（LS-168）")
+    if nbsp_bad:
+        problems.append("本 PR 觸碰的板／元件上，cmp/Card Album／cmp/Card Diary 署名的 歲／個月 前空白含 U+0020——改成 U+00A0（允許 U+2060／換行）後重落地（LS-202）")
+    if problems:
+        print("✗ design-notes gate：%s——%s" % (summary, "；".join(problems)), file=sys.stderr)
         return 1
     print("✓ design-notes gate 通過：%s" % summary)
     return 0

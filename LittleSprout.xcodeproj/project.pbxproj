@@ -95,6 +95,7 @@
 		533B01F1B4098A3628E1B7B5 /* EmailSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35722FF8F70D0F6329F4069C /* EmailSignInView.swift */; };
 		5526B3A33052BAFCF2286C04 /* SessionFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */; };
 		55F84F4A586F8EC2BE10BF00 /* ChildFilterLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3931F5F8CA4E18E55FBB1F6E /* ChildFilterLayout.swift */; };
+		566E0E8625A62CE39062EA13 /* PasswordSignInModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AACC2AC996982C86D79D3E7 /* PasswordSignInModelTests.swift */; };
 		575E3F2F213D7274D1D10C68 /* ChildAvatarInitialTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63669E8DAD14B79A6DCAD9FD /* ChildAvatarInitialTests.swift */; };
 		59F01B53DE6CBC0D7335A4D6 /* AvatarImageProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7DE28F37645984E622E64F5 /* AvatarImageProcessorTests.swift */; };
 		5BBAB29B23BB37B83B46D487 /* EmailSignInModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226B824755111DECCA1F2AEE /* EmailSignInModelTests.swift */; };
@@ -153,6 +154,7 @@
 		9784D85D783D81C9D00970E2 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 390715FC09697B47477605E4 /* TimelineView.swift */; };
 		98115AAF04CC10B3E194D066 /* MultiChildCaptionFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3E2CD07A3D49AF4B16C0D9A /* MultiChildCaptionFormatter.swift */; };
 		992B474F641BD90228CA9C62 /* SupabaseMediaUploadServiceDurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87CB2AF4E34834F3279C2367 /* SupabaseMediaUploadServiceDurationTests.swift */; };
+		9A5A75B38AA0EF48464780C6 /* PasswordSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1372077B4B9352E17F4770 /* PasswordSignInView.swift */; };
 		9A7D2E907F863BA4912D5745 /* OTPVerificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C8A6A59E9D7E1205CC9E65 /* OTPVerificationView.swift */; };
 		9BB090E59FEDC90C7BD801AE /* MasonryLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406CB9884861695DA9690318 /* MasonryLayoutTests.swift */; };
 		9BF2965CF886A8C6DD81755A /* AuthButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14AB4F80381DABD0E6FE12B0 /* AuthButtons.swift */; };
@@ -168,6 +170,7 @@
 		A9DD648DEC1C15C2232BA6D8 /* MultiChildCaptionFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0507B2F97DF5468321E35CF3 /* MultiChildCaptionFormatterTests.swift */; };
 		AB80326EE03DC9EC0DC5DD8F /* JoinWaitingPhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AEBD63E7E59131E2B285E4 /* JoinWaitingPhaseTests.swift */; };
 		ABFCA2E9F71A13308E8FF2EE /* MasonryLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AFA10890A15EC69C5CB0BF9 /* MasonryLayout.swift */; };
+		AC8A8F9C1879FC34779A78E6 /* PasswordSignInUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC5F8D449697BFDB9DE0B329 /* PasswordSignInUITests.swift */; };
 		AD156F65EB6EB5D595F89F71 /* SupabaseTimelineAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1607F0D7FCD5EB97C60556C4 /* SupabaseTimelineAPIClient.swift */; };
 		AD97CCF615FB05DEBB63BF09 /* LabeledTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F56FB37A90BCA2F75055D3D7 /* LabeledTextField.swift */; };
 		AE349DC5C77A050FEB6B3158 /* DiaryComposerStorePublishRetryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 715344039FD455DD3BD4E744 /* DiaryComposerStorePublishRetryTests.swift */; };
@@ -175,12 +178,14 @@
 		B0D70EB20B4074F89886D5B5 /* ChildrenStoreAvatarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33A580FB25AD23E59B1A979C /* ChildrenStoreAvatarTests.swift */; };
 		B0FA3B419745F9D231E75C58 /* VideoTrimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E13DE0D017682C31FBABE1 /* VideoTrimmer.swift */; };
 		B1B5FCC8B7A31A61D4969EE3 /* AvatarPickerLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BECC7D79F1B9E53EABE6120 /* AvatarPickerLoader.swift */; };
+		B1C19A2319494642B99A46EB /* WelcomeView+PasswordSignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FB942E7809A7A51E7E182B9 /* WelcomeView+PasswordSignIn.swift */; };
 		B6F140BBE36A520831E94856 /* JoinCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B283C4309A804140F52F79A /* JoinCodeView.swift */; };
 		B8F8BE27E4E503916384E97E /* InviteFamilyView+ActionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FFB8F471134452A808BD4E /* InviteFamilyView+ActionBar.swift */; };
 		B9BDE1E1AD633D323BBC2B5D /* AuthStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EA929B8CFBB700BE9E073B4 /* AuthStoreTests.swift */; };
 		B9E34C05BFD746FB7B9C7F06 /* EditChildAvatarFieldContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E62ED61585669EC87D192B4 /* EditChildAvatarFieldContent.swift */; };
 		BA9894A590C79F2FDA2FB85D /* ApprovalStatusRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1154E2337B7278510C8971B1 /* ApprovalStatusRow.swift */; };
 		BB12C06995D331D1D4B2453C /* AvatarLoadCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC634C1AC693267EBF2A0A6 /* AvatarLoadCoordinatorTests.swift */; };
+		BB2352EE2A36E552094AE5A5 /* PasswordSignInModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55ABA1362A5D5A948083DC7B /* PasswordSignInModel.swift */; };
 		BBF2A4728043485B0CA020BE /* SupabaseChildAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BBCF08BF3732C55DD08ABD /* SupabaseChildAPIClient.swift */; };
 		BC3FB92A8F2F032CC1F8797B /* StubFamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CC227F2B168D39029462E5 /* StubFamilyAPIClient.swift */; };
 		BD4020CA11182D2B89955653 /* DiaryDurationFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B30A3E8C7388E178BD32E /* DiaryDurationFormat.swift */; };
@@ -245,6 +250,7 @@
 		FBB9F48BA840757FD27584F8 /* InviteCodeParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD69D0A2456BC4F954E29446 /* InviteCodeParserTests.swift */; };
 		FC29BEFB2E6B8EFF9F451EE8 /* UploadQueueSheetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02633BBE20BEAB5636EA3944 /* UploadQueueSheetUITests.swift */; };
 		FD1569202C44723F87AD94C3 /* OTPVerificationModelRateLimitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E466449A44696816AA484F94 /* OTPVerificationModelRateLimitTests.swift */; };
+		FD8133F7B9A44B099DECFEEF /* TapTargetGateHarness+UploadQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD57976BACB0CB191D6B1ADB /* TapTargetGateHarness+UploadQueue.swift */; };
 		FDE17BE504613C437ADC4F9C /* TestSupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468EF1C61FA7C2B35E756487 /* TestSupabaseClient.swift */; };
 		FEC0EF51D7A2C74FCD452DC9 /* ChildrenRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5718C2E6D09354F5950BEA5 /* ChildrenRoute.swift */; };
 /* End PBXBuildFile section */
@@ -297,6 +303,7 @@
 		18AB0FEB21BA55A39EB67982 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		191A7E61B14173F039A11C97 /* CreateChildView+Avatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CreateChildView+Avatar.swift"; sourceTree = "<group>"; };
 		1AAA98C9E8EC8946FC45F0FF /* InviteFamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteFamilyView.swift; sourceTree = "<group>"; };
+		1AACC2AC996982C86D79D3E7 /* PasswordSignInModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordSignInModelTests.swift; sourceTree = "<group>"; };
 		1E1A187F8B4D813F1BCB0135 /* TimelineContentAssembler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineContentAssembler.swift; sourceTree = "<group>"; };
 		1F8B30A3E8C7388E178BD32E /* DiaryDurationFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDurationFormat.swift; sourceTree = "<group>"; };
 		216769BEF4D15D89E66AF64B /* ScrollableFillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableFillView.swift; sourceTree = "<group>"; };
@@ -354,6 +361,7 @@
 		514F93B80A8AD4C99FE4654C /* SupabaseAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAuthService.swift; sourceTree = "<group>"; };
 		524D9602B81A34EF7565AC3C /* AlbumCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumCardView.swift; sourceTree = "<group>"; };
 		548C97E596BB9FBC3C8CA3FD /* TapTargetGateHarness+Albums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Albums.swift"; sourceTree = "<group>"; };
+		55ABA1362A5D5A948083DC7B /* PasswordSignInModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordSignInModel.swift; sourceTree = "<group>"; };
 		55EFEBD89186C116A6062C6D /* AlbumsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsViewTests.swift; sourceTree = "<group>"; };
 		566A3C5AD3646A4BD28A4F37 /* AlbumSummaryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumSummaryCardView.swift; sourceTree = "<group>"; };
 		56D5F16A89805E3F5F5C23F3 /* ChildFilterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildFilterBar.swift; sourceTree = "<group>"; };
@@ -400,6 +408,7 @@
 		7C0B16FFDE47C62F7106EC11 /* TapTargetGateHarness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapTargetGateHarness.swift; sourceTree = "<group>"; };
 		7C508BEDC841E4E6D1F86FC5 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		7C56719C166519CF22A55AFD /* CreateAlbumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateAlbumView.swift; sourceTree = "<group>"; };
+		7FB942E7809A7A51E7E182B9 /* WelcomeView+PasswordSignIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WelcomeView+PasswordSignIn.swift"; sourceTree = "<group>"; };
 		7FD928203A33BAF4F43BDB5D /* BirthdayFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayFormatTests.swift; sourceTree = "<group>"; };
 		8351A5DED54BE71EBD0A9161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		860B26A62EB9FA9842759C25 /* StubDiaryAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubDiaryAPIClient.swift; sourceTree = "<group>"; };
@@ -454,6 +463,8 @@
 		BA9BCE3B67830009105F917D /* FamilyStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreTests.swift; sourceTree = "<group>"; };
 		BC7448E56867EED60566A8F0 /* FamilyStoreInviteRaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreInviteRaceTests.swift; sourceTree = "<group>"; };
 		BCF885D756104B3EBAAD6DB2 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		BD57976BACB0CB191D6B1ADB /* TapTargetGateHarness+UploadQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+UploadQueue.swift"; sourceTree = "<group>"; };
+		BE1372077B4B9352E17F4770 /* PasswordSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordSignInView.swift; sourceTree = "<group>"; };
 		BE813E351514384C73E8F63C /* PreviewAlbumsAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewAlbumsAPIClient.swift; sourceTree = "<group>"; };
 		C06A12F799073325C52822A0 /* JoinRequestTimeFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinRequestTimeFormatterTests.swift; sourceTree = "<group>"; };
 		C2196009D552953032393977 /* UploadQueueModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueModels.swift; sourceTree = "<group>"; };
@@ -465,6 +476,7 @@
 		C9C8D00E975B4DE5DC111D3D /* ChildrenStoreAvatarListRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenStoreAvatarListRefreshTests.swift; sourceTree = "<group>"; };
 		CA263D0058EB232AD178E89C /* SupabaseDiaryAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseDiaryAPIClientTests.swift; sourceTree = "<group>"; };
 		CAB7169FDB024249D8521D64 /* SupabaseTimelineAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseTimelineAPIClientTests.swift; sourceTree = "<group>"; };
+		CC5F8D449697BFDB9DE0B329 /* PasswordSignInUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordSignInUITests.swift; sourceTree = "<group>"; };
 		D01E7A6C8C5EDA93302553AB /* PreviewTimelineAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewTimelineAPIClient.swift; sourceTree = "<group>"; };
 		D0FA71F5E5B2E516BEC50662 /* EmailFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailFormat.swift; sourceTree = "<group>"; };
 		D1CD6635FE0F483577B007AB /* SupabaseChildAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseChildAPIClientTests.swift; sourceTree = "<group>"; };
@@ -558,6 +570,7 @@
 				55EFEBD89186C116A6062C6D /* AlbumsViewTests.swift */,
 				46DA9003B46883C47C678BA1 /* CreateChildAvatarFieldUITests.swift */,
 				17ADF30BD9D82AA5300EFF5B /* DiaryCardVideoBadgeGeometryTests.swift */,
+				CC5F8D449697BFDB9DE0B329 /* PasswordSignInUITests.swift */,
 				3D953E0A9EB753A52A71CFC7 /* SectionTabBarPushRegressionTests.swift */,
 				632CFE2E7B2079181B3E636E /* SectionTabBarTests.swift */,
 				DC9F969B2673823F6B3CE0A7 /* TapTargetGateSelfTests.swift */,
@@ -579,7 +592,10 @@
 				35722FF8F70D0F6329F4069C /* EmailSignInView.swift */,
 				E25074609E9AF1D1EC50AD1E /* OTPVerificationModel.swift */,
 				D5C8A6A59E9D7E1205CC9E65 /* OTPVerificationView.swift */,
+				55ABA1362A5D5A948083DC7B /* PasswordSignInModel.swift */,
+				BE1372077B4B9352E17F4770 /* PasswordSignInView.swift */,
 				BCF885D756104B3EBAAD6DB2 /* WelcomeView.swift */,
+				7FB942E7809A7A51E7E182B9 /* WelcomeView+PasswordSignIn.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -695,6 +711,7 @@
 				E466449A44696816AA484F94 /* OTPVerificationModelRateLimitTests.swift */,
 				D5C295C45BFA6330DF97EDAD /* OTPVerificationModelTests.swift */,
 				28F1472213F03BCFC33624F8 /* OTPVerificationModelVerifyRateLimitTests.swift */,
+				1AACC2AC996982C86D79D3E7 /* PasswordSignInModelTests.swift */,
 				0ED4F4FC901701044230BA42 /* PickedItemLoaderTests.swift */,
 				349D50973057FF7C3329F069 /* SupabaseAlbumsAPIClientTests.swift */,
 				10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */,
@@ -802,6 +819,7 @@
 				D4B8B83A763BF11381A8A48B /* QAAccessibilityID.swift */,
 				7C0B16FFDE47C62F7106EC11 /* TapTargetGateHarness.swift */,
 				548C97E596BB9FBC3C8CA3FD /* TapTargetGateHarness+Albums.swift */,
+				BD57976BACB0CB191D6B1ADB /* TapTargetGateHarness+UploadQueue.swift */,
 				962EAB3D4E7C6E203A5790AE /* TapTargetGateScreenName.swift */,
 				41D6EB65C7B8ABC169D5E9CD /* Config */,
 				F37C4D2CC8D26BE260ED5702 /* DesignSystem */,
@@ -1207,6 +1225,8 @@
 				2D03B61ACA5DD6A649155EDC /* OTPCodeField.swift in Sources */,
 				4095733E802A0A772A5F047D /* OTPVerificationModel.swift in Sources */,
 				9A7D2E907F863BA4912D5745 /* OTPVerificationView.swift in Sources */,
+				BB2352EE2A36E552094AE5A5 /* PasswordSignInModel.swift in Sources */,
+				9A5A75B38AA0EF48464780C6 /* PasswordSignInView.swift in Sources */,
 				0B082F905D18BB1C48FCD6B6 /* PhotoCardView.swift in Sources */,
 				3E851BE2E0FD96463C07D775 /* PhotoCornerShape.swift in Sources */,
 				A60D73B16AE34E1F3385992D /* PickedItemLoader.swift in Sources */,
@@ -1232,6 +1252,7 @@
 				47F024E1268E315400D0BC8A /* SupabaseFamilyAPIClient.swift in Sources */,
 				AD156F65EB6EB5D595F89F71 /* SupabaseTimelineAPIClient.swift in Sources */,
 				3C4525B513B5947A8F801211 /* TapTargetGateHarness+Albums.swift in Sources */,
+				FD8133F7B9A44B099DECFEEF /* TapTargetGateHarness+UploadQueue.swift in Sources */,
 				C443AE82AC28EAF5138EC9A2 /* TapTargetGateHarness.swift in Sources */,
 				1330DE1A2C8A701F1C64DE82 /* TapTargetGateScreenName.swift in Sources */,
 				09F84913FCD1F25566F45E6A /* TimelineAPIClient.swift in Sources */,
@@ -1250,6 +1271,7 @@
 				6C8CA80EC5E94AE6E8210E1E /* VideoDurationFormat.swift in Sources */,
 				3DE6FD3FBE226113DC1CCC57 /* VideoPlayerScreen.swift in Sources */,
 				B0FA3B419745F9D231E75C58 /* VideoTrimmer.swift in Sources */,
+				B1C19A2319494642B99A46EB /* WelcomeView+PasswordSignIn.swift in Sources */,
 				0F72FB6A09D4EA5C229698CF /* WelcomeView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1262,6 +1284,7 @@
 				DFB91365F67833D989932DB0 /* AppSection.swift in Sources */,
 				074F93D024EB0F752E0EC89F /* CreateChildAvatarFieldUITests.swift in Sources */,
 				10CB97ED4D75A21D2579F3CF /* DiaryCardVideoBadgeGeometryTests.swift in Sources */,
+				AC8A8F9C1879FC34779A78E6 /* PasswordSignInUITests.swift in Sources */,
 				92FEF23707CA351E42C25C02 /* QAAccessibilityID.swift in Sources */,
 				31A49F9904E6C7D2143C5CA4 /* QADriver.swift in Sources */,
 				0B8A0DB73C4423B756633874 /* QASmokeTests.swift in Sources */,
@@ -1331,6 +1354,7 @@
 				FD1569202C44723F87AD94C3 /* OTPVerificationModelRateLimitTests.swift in Sources */,
 				1F25A631ACCC133CEE190ABF /* OTPVerificationModelTests.swift in Sources */,
 				C49D2DD7EC2EF00A346703EB /* OTPVerificationModelVerifyRateLimitTests.swift in Sources */,
+				566E0E8625A62CE39062EA13 /* PasswordSignInModelTests.swift in Sources */,
 				F3549AB9A9912E8CFBAF3B2D /* PickedItemLoaderTests.swift in Sources */,
 				5526B3A33052BAFCF2286C04 /* SessionFixture.swift in Sources */,
 				384B1ADE35047F3FCE169968 /* StubAlbumsAPIClient.swift in Sources */,

@@ -59,37 +59,54 @@ enum TapTargetGateHarness {
             uploadQueueSheetHost
         case .uploadQueueSheetNormal:
             uploadQueueSheetNormalHost
+        case .passwordSignIn: passwordSignInHost
+        case .welcome: welcomeHost
         case .selfTestTooSmall:
-            // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
-            // accessibility／hit-test frame 實測仍貼著文字本身的天然大小，不會被外層 `.frame`
-            // 撐大或縮小（LS-95 開發期間實測撞到——這正是本票要抓的那種「視覺／版面大小」跟
-            // 「真正 hit-test 大小」對不上的落差）。改用 `.contentShape(Rectangle())` 明確把
-            // hit-test 形狀鎖定成 `.frame` 給的矩形，樣本大小才會是可控、決定性的數字。
+            selfTestTooSmallHost
+        case .selfTestGood:
+            selfTestGoodHost
+        case .selfTestPaddingOutsideButton:
+            selfTestPaddingOutsideButtonHost
+        }
+    }
+
+    // merge LS-164：`hostView(for:)` 的 switch 本體疊上帳密登入兩個新 case 後再度超過
+    // SwiftLint `function_body_length` 上限，把三個既有的自測樣本 case 抽出來還給界限內，
+    // 行為完全不變（同其餘 `*Host` computed var 的既有作法）。
+    private static var selfTestTooSmallHost: some View {
+        // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
+        // accessibility／hit-test frame 實測仍貼著文字本身的天然大小，不會被外層 `.frame`
+        // 撐大或縮小（LS-95 開發期間實測撞到——這正是本票要抓的那種「視覺／版面大小」跟
+        // 「真正 hit-test 大小」對不上的落差）。改用 `.contentShape(Rectangle())` 明確把
+        // hit-test 形狀鎖定成 `.frame` 給的矩形，樣本大小才會是可控、決定性的數字。
+        Button(action: noop) {
+            Text("小按鈕")
+                .frame(width: 22, height: 22)
+                .contentShape(Rectangle())
+        }
+    }
+
+    private static var selfTestGoodHost: some View {
+        Button(action: noop) {
+            Text("好按鈕")
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+    }
+
+    private static var selfTestPaddingOutsideButtonHost: some View {
+        // 刻意重現 LS-17 QA1 的原始寫法（PR #148 R1 F1 修正前）：padding 掛在 Button 外層
+        // 的 VStack，不是掛在 Button 的 label closure 裡再接 `.contentShape(Rectangle())`
+        // ——視覺上按鈕四周看起來有一大圈空白，但那圈空白不參與 hit test，實際可點區域仍
+        // 只有內容本身的大小（20×20，用同一招 `.contentShape` 鎖定成決定性數字）。
+        VStack {
             Button(action: noop) {
                 Text("小按鈕")
-                    .frame(width: 22, height: 22)
+                    .frame(width: 20, height: 20)
                     .contentShape(Rectangle())
             }
-        case .selfTestGood:
-            Button(action: noop) {
-                Text("好按鈕")
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-        case .selfTestPaddingOutsideButton:
-            // 刻意重現 LS-17 QA1 的原始寫法（PR #148 R1 F1 修正前）：padding 掛在 Button 外層
-            // 的 VStack，不是掛在 Button 的 label closure 裡再接 `.contentShape(Rectangle())`
-            // ——視覺上按鈕四周看起來有一大圈空白，但那圈空白不參與 hit test，實際可點區域仍
-            // 只有內容本身的大小（20×20，用同一招 `.contentShape` 鎖定成決定性數字）。
-            VStack {
-                Button(action: noop) {
-                    Text("小按鈕")
-                        .frame(width: 20, height: 20)
-                        .contentShape(Rectangle())
-                }
-            }
-            .padding(20)
         }
+        .padding(20)
     }
 
     /// merge LS-167：`hostView(for:)` 的 switch 本體因為疊了多張票的新 case（`.uploadQueueSheet`
@@ -161,6 +178,22 @@ enum TapTargetGateHarness {
         NavigationStack {
             CreateChildView(childrenStore: .preview())
         }
+    }
+
+    /// LS-164：初始態（空欄位）不需要任何 seed 資料，同 `createChildHost` 的既有理由。
+    @MainActor
+    @ViewBuilder
+    private static var passwordSignInHost: some View {
+        NavigationStack {
+            PasswordSignInView(authStore: .preview()) {}
+        }
+    }
+
+    /// LS-164：見 `TapTargetGateScreenName.welcome` 文件註解——這個 host 純粹借用「launch
+    /// environment 指定畫面」通道給 `PasswordSignInUITests` 用，不掛進 `TapTargetGateTests`。
+    @MainActor
+    private static var welcomeHost: WelcomeView {
+        WelcomeView(authStore: .preview())
     }
 
     /// `.preview()` 三個 store 皆空狀態（無家庭／無寶貝／無 feed），`ChildFilterBar`
@@ -358,29 +391,6 @@ enum TapTargetGateHarness {
             assertionFailure("LS-130 test harness：測試圖寫檔失敗 \(url)：\(error)")
         }
         return url
-    }
-
-    /// LS-167：`UploadQueueSheetView` 沒有真正的入口畫面（相簿詳情「加入照片」留給 LS-166），
-    /// 用一個常駐 `.sheet(isPresented: .constant(true))` 直接把 sheet 頂出來，同
-    /// `UploadQueueStore.previewSample()` 的代表性樣本（`#Preview` 也用同一份）。
-    @MainActor
-    @ViewBuilder
-    private static var uploadQueueSheetHost: some View {
-        Color.lsBackground
-            .sheet(isPresented: .constant(true)) {
-                UploadQueueSheetView(store: .previewSample())
-            }
-    }
-
-    /// merge-review R3 M1：生產「常態」樣本（無失敗、無續傳橫幅）——見
-    /// `UploadQueueStore.previewNormalSample()` 文件註解。
-    @MainActor
-    @ViewBuilder
-    private static var uploadQueueSheetNormalHost: some View {
-        Color.lsBackground
-            .sheet(isPresented: .constant(true)) {
-                UploadQueueSheetView(store: .previewNormalSample())
-            }
     }
 
     private static func noop() {}

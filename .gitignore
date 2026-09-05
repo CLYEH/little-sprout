@@ -23,6 +23,9 @@ Secrets.xcconfig
 .claude/memory/
 # LS-144：巡檢的 lane 連續空輪計數（scripts/ops/patrol_linear.py 寫、原子換檔），不入版控
 .claude/patrol-state.json
+# LS-202：python gate／hook 模組被 import 時的位元組碼快取（design_tree_hash／pretool_engine 等；模組自己設 dont_write_bytecode
+# 擋不住「被別人 import」那一次的 .pyc），不入版控、也不該讓 worktree dirty（LS-96 c4c10429：cleanup-merged.sh 因此需 --force）
+__pycache__/
 
 # LS-54 D2：RLS plan 證據每次執行都不同（計時／規劃器估計／buffers／stderr 交錯順序），
 # 由 CI db job 上傳 artifact 留存，不進 repo
