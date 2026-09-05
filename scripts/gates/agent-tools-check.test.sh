@@ -50,7 +50,10 @@ LOCK_BODY="${HOLD} ${H3B} ${TIMEOUT_RULE}"
 # LS-158：qa 正文另須含 `qa-e2e.sh`（多步驟驗收優先端到端驅動）；合法的 qa 樣本三句都要有
 E2E='多步驟驗收優先 `bash scripts/ops/qa-e2e.sh <login|publish|browse>`。'
 # LS-207（c18ef27f）：qa／merge-reviewer 正文另須含這句（ios-dev 不要求，不併進 LOCK_BODY／IOS_BODY）
-SIMCTLUI='用 `simctl ui` 改過字級／外觀的 handoff 必列已復原。'
+# LS-207 R3（merge-review R2 b907173c N1）：句子本身之外，數值本身也要對得上——SIMCTLUI 帶 large，SIMCTLUI_MEDIUM 是
+# R2 之前的舊數值（regression 樣本），句子仍在但值錯，用來證明新規則只釘數值、不是重複釘句子。
+SIMCTLUI='用 `simctl ui` 改過字級／外觀的 handoff 必列已復原（會自動把 content_size／appearance 改成 large／light）。'
+SIMCTLUI_MEDIUM='用 `simctl ui` 改過字級／外觀的 handoff 必列已復原（會自動把 content_size／appearance 改成 medium／light）。'
 QA_BODY="${LOCK_BODY} ${E2E} ${SIMCTLUI}"
 # LS-180：ui-designer／visual-reviewer 正文須含「--kill 只在 orchestrator 明示時」（切檔不殺行程的規約句）
 KILL='切檔一律不殺行程；`pen-open.sh` 的 --force-reload／--kill 只在 orchestrator 明示時使用，用後必回報「需重連」。'
@@ -114,7 +117,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（23 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 23 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（25 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 25 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -244,6 +247,17 @@ if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'simctl ui'; then
   echo '✓ mutant：拿掉規則後「缺 simctl ui 復原句」的負樣本變綠'
 else
   echo "✗ mutant（simctl ui）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ⑭-b LS-207 R3（merge-review R2 b907173c N1）：句子在但數值寫 medium（R2 之前的舊值）→ 仍紅，只釘句子不夠 ----
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI_MEDIUM}"; expect 1 '⑭-b qa 復原句寫 medium（非 large）→ exit 1，句子本身在也不救' 'qa.md：正文缺「content_size／appearance 改成 large」' '' 'qa.md：正文缺「用 `simctl ui` 改過字級／外觀的 handoff 必列已復原」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI_MEDIUM}"; expect 1 '⑭-b merge-reviewer 復原句寫 medium → exit 1' 'merge-reviewer.md：正文缺「content_size／appearance 改成 large」' '' 'merge-reviewer.md：正文缺「用 `simctl ui` 改過字級／外觀的 handoff 必列已復原」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI_MEDIUM}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'content_size／appearance 改成 large'; then
+  echo '✓ ⑭-b mutant：拿掉規則後「復原句寫 medium」的負樣本變綠（新數值規則確實是原因）'
+else
+  echo "✗ ⑭-b mutant 應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過

@@ -76,6 +76,9 @@ ios-dev|"
 # 這類長命令背景化後結果只在通知裡、沒人 Read 就等於沒驗過（LS-191 當晚背景 push 沒人回頭看輸出），那句被刪即紅。
 # LS-207（c18ef27f）：qa／merge-reviewer 正文須含「用 simctl ui 改過字級／外觀的 handoff 必列已復原」——simulator-lock.sh
 # --udid 會自動調整並復原，但手動跑過或復原失敗時 handoff／verdict 要講清楚，那句被刪即紅。
+# LS-207 R3（merge-review R2 b907173c N1）：上一條只釘句子本身、不釘實際數值——R2 把 simulator-lock.sh 的目標值從 medium
+# 改成 large（F5），但 qa.md／merge-reviewer.md 定義文字沒有同步改，兩處仍寫 medium，與程式碼矛盾卻沒有任何 gate 抓到。
+# 另立一條只驗數值的規則（`content_size／appearance 改成 large`）：定義文字被改回 medium（即使句子本身還在）即紅。
 BODY_RULES=
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold
@@ -100,7 +103,9 @@ ios-dev|等長命令一律前景 Bash 帶 timeout
 qa|等長命令一律前景 Bash 帶 timeout
 merge-reviewer|等長命令一律前景 Bash 帶 timeout
 qa|用 \`simctl ui\` 改過字級／外觀的 handoff 必列已復原
-merge-reviewer|用 \`simctl ui\` 改過字級／外觀的 handoff 必列已復原"
+merge-reviewer|用 \`simctl ui\` 改過字級／外觀的 handoff 必列已復原
+qa|content_size／appearance 改成 large
+merge-reviewer|content_size／appearance 改成 large"
 # LS170-BODY-RULES-END
 
 hits=""; n=0
