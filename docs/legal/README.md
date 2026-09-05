@@ -22,7 +22,7 @@
 |---|---|---|
 | `[[OPERATOR_NAME]]` | 三份皆有 | 服務提供者名稱。開發者帳號為個人名義（PLAN §9-C2），依個資法第 8 條第 1 項第 1 款須具名；建議與 App Store 開發者名稱一致（法定本名） |
 | `[[SUPPORT_EMAIL]]` | 三份皆有 | 專用支援信箱（PLAN §10-C：別用私人主信箱）。同時填入 App Store Connect 支援 URL／隱私政策聯絡方式 |
-| `[[SUPPORT_URL]]` | 三份皆有 | 法務文件的公開網址根（例如 `https://<user>.github.io/<repo>/legal` 或自有網域 `https://littlesprout.app/legal`）。文內以 `[[SUPPORT_URL]]/privacy`、`/terms` 引用；決定方案後見下節。**現行 `WelcomeView.swift:254,262` 指向 `https://littlesprout.app/legal/terms`／`/privacy`，是佔位網址**——網域決定後 in-app 連結由 LS-133 後續實作票一併改 |
+| `[[SUPPORT_URL]]` | 三份皆有 | 法務文件的公開網址根（例如 `https://<user>.github.io/<repo>/legal` 或自有網域 `https://littlesprout.app/legal`）。文內以 `[[SUPPORT_URL]]/privacy`、`/terms` 引用；決定方案後見下節。**LS-191 起 `WelcomeView` 的《使用條款》《隱私權政策》連結已改開 in-app `LegalDocumentSheet`（直接讀 bundled markdown，不打網路），不再指向這裡的佔位網址**——`[[SUPPORT_URL]]` 仍用於文件正文內互相引用與 App Store 產品頁欄位，網域決定後填入即可 |
 | `[[EFFECTIVE_DATE]]` | 三份皆有 | 生效日期（YYYY-MM-DD）。建議＝使用者核可日或送審日 |
 | `[[VENUE_COURT]]` | 使用條款 §14 | 第一審管轄法院，例如「臺灣臺北地方法院」 |
 | `[[REPORT_RETENTION]]` | 隱私權政策 §8 | 檢舉紀錄處理完畢後的保存期限，建議「1 年」（稽核與配合調查；PLAN §10-B「保留必要記錄」） |
