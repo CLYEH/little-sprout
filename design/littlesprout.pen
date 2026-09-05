@@ -53742,7 +53742,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 692,
           "layout": "vertical",
           "padding": [
             8,
@@ -53928,7 +53928,6 @@
               "type": "frame",
               "id": "dTdm3",
               "name": "Feed",
-              "clip": true,
               "width": "fill_container",
               "height": 494,
               "layout": "vertical",
@@ -54115,6 +54114,13 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "n2VSQy",
+          "name": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+          "width": "fill_container",
+          "height": 64
         },
         {
           "type": "frame",
@@ -54738,7 +54744,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 678,
           "layout": "vertical",
           "padding": [
             8,
@@ -54924,7 +54930,6 @@
               "type": "frame",
               "id": "aNcaB",
               "name": "Feed",
-              "clip": true,
               "width": "fill_container",
               "height": 494,
               "layout": "vertical",
@@ -55128,6 +55133,13 @@
         },
         {
           "type": "frame",
+          "id": "zbJlv",
+          "name": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+          "width": "fill_container",
+          "height": 78
+        },
+        {
+          "type": "frame",
           "id": "xbs62",
           "name": "Home Indicator Area",
           "width": "fill_container",
@@ -55209,7 +55221,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 692,
           "layout": "vertical",
           "padding": [
             8,
@@ -55395,7 +55407,6 @@
               "type": "frame",
               "id": "riVZU",
               "name": "Feed",
-              "clip": true,
               "width": "fill_container",
               "height": 494,
               "layout": "vertical",
@@ -55566,6 +55577,13 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "a3l8GT",
+          "name": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+          "width": "fill_container",
+          "height": 64
         },
         {
           "type": "frame",
@@ -56268,7 +56286,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 1316,
           "layout": "vertical",
           "padding": [
             8,
@@ -56364,7 +56382,6 @@
               "type": "frame",
               "id": "LJJLP",
               "name": "Feed",
-              "clip": true,
               "width": "fill_container",
               "height": 978,
               "layout": "vertical",
@@ -56567,6 +56584,13 @@
         },
         {
           "type": "frame",
+          "id": "CXGIM",
+          "name": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+          "width": "fill_container",
+          "height": 88
+        },
+        {
+          "type": "frame",
           "id": "yCAHb",
           "name": "Home Indicator Area",
           "width": "fill_container",
@@ -56675,6 +56699,7 @@
           "type": "frame",
           "id": "r7wAI",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "layout": "vertical",
           "padding": [
@@ -56777,7 +56802,6 @@
                   "type": "frame",
                   "id": "u8xlzb",
                   "name": "Photo Strip",
-                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -57495,6 +57519,7 @@
           "type": "frame",
           "id": "hJIRx",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "layout": "vertical",
           "padding": [
@@ -57597,7 +57622,6 @@
                   "type": "frame",
                   "id": "LgcCh",
                   "name": "Photo Strip",
-                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -58274,6 +58298,7 @@
           "type": "frame",
           "id": "PNKjc",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "layout": "vertical",
           "padding": [
@@ -58376,7 +58401,6 @@
                   "type": "frame",
                   "id": "FntiB",
                   "name": "Photo Strip",
-                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -59103,6 +59127,7 @@
           "type": "frame",
           "id": "tBO4J",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "layout": "vertical",
           "padding": [
@@ -59205,7 +59230,6 @@
                   "type": "frame",
                   "id": "DbPZ7",
                   "name": "Photo Strip",
-                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -60681,6 +60705,7 @@
           "type": "frame",
           "id": "RebTE",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "layout": "vertical",
           "padding": [
@@ -60782,7 +60807,6 @@
                   "type": "frame",
                   "id": "bJSYN",
                   "name": "Photo Strip",
-                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -65778,6 +65802,7 @@
           "type": "frame",
           "id": "FvUCU",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "layout": "vertical",
           "padding": [
@@ -65880,7 +65905,6 @@
                   "type": "frame",
                   "id": "h42x2",
                   "name": "Photo Strip",
-                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -66548,7 +66572,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 692,
           "layout": "vertical",
           "padding": [
             8,
@@ -66692,7 +66716,6 @@
               "type": "frame",
               "id": "Z83pG",
               "name": "Feed",
-              "clip": true,
               "width": "fill_container",
               "height": 494,
               "layout": "vertical",
@@ -66863,6 +66886,13 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "kQ23G",
+          "name": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+          "width": "fill_container",
+          "height": 64
         },
         {
           "type": "frame",
@@ -70476,6 +70506,7 @@
           "type": "frame",
           "id": "NKG4z",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "layout": "vertical",
           "padding": [
@@ -70578,7 +70609,6 @@
                   "type": "frame",
                   "id": "XLTYb",
                   "name": "Photo Strip",
-                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -71181,6 +71211,7 @@
           "type": "frame",
           "id": "D8mPW",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "layout": "vertical",
           "padding": [
@@ -71282,7 +71313,6 @@
                   "type": "frame",
                   "id": "j001g",
                   "name": "Photo Strip",
-                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -85603,6 +85633,7 @@
           "type": "frame",
           "id": "Bmwcw",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "layout": "vertical",
           "padding": [
@@ -85705,7 +85736,6 @@
                   "type": "frame",
                   "id": "HbHJj",
                   "name": "Photo Strip",
-                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -87458,6 +87488,7 @@
           "type": "frame",
           "id": "O38P6r",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "layout": "vertical",
           "padding": [
@@ -87560,7 +87591,6 @@
                   "type": "frame",
                   "id": "OZt3M",
                   "name": "Photo Strip",
-                  "clip": true,
                   "width": "fill_container",
                   "gap": "$sp-label",
                   "children": [
@@ -89927,7 +89957,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 790,
           "layout": "vertical",
           "padding": [
             8,
@@ -90236,8 +90266,11 @@
         {
           "type": "frame",
           "id": "g0Nub8",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 818,
           "name": "Home Indicator Area",
-          "width": "fill_container",
+          "width": "fill_container(393)",
           "height": 34,
           "justifyContent": "center",
           "alignItems": "center",
@@ -95162,7 +95195,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 790,
           "layout": "vertical",
           "padding": [
             8,
@@ -95471,8 +95504,11 @@
         {
           "type": "frame",
           "id": "U7ATK",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 818,
           "name": "Home Indicator Area",
-          "width": "fill_container",
+          "width": "fill_container(393)",
           "height": 34,
           "justifyContent": "center",
           "alignItems": "center",
@@ -95906,7 +95942,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 1355,
           "layout": "vertical",
           "padding": [
             8,
@@ -95961,7 +95997,6 @@
               "type": "frame",
               "id": "GF3Nx",
               "name": "Album List",
-              "clip": true,
               "width": "fill_container",
               "height": 1075,
               "layout": "vertical",
@@ -96120,6 +96155,13 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "HRKWP",
+          "name": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+          "width": "fill_container",
+          "height": 49
         },
         {
           "type": "frame",
@@ -96976,7 +97018,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 692,
           "layout": "vertical",
           "padding": [
             8,
@@ -97027,7 +97069,6 @@
               "type": "frame",
               "id": "w6y7I",
               "name": "Album List",
-              "clip": true,
               "width": "fill_container",
               "height": 575,
               "layout": "vertical",
@@ -97283,6 +97324,13 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "YlNJe",
+          "name": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+          "width": "fill_container",
+          "height": 64
         },
         {
           "type": "frame",
@@ -122436,7 +122484,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 746,
           "layout": "vertical",
           "padding": [
             16,
@@ -122902,8 +122950,11 @@
         {
           "type": "frame",
           "id": "Vzf57",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 818,
           "name": "Home Indicator Area",
-          "width": "fill_container",
+          "width": "fill_container(393)",
           "height": 34,
           "justifyContent": "center",
           "alignItems": "center"
@@ -128580,7 +128631,7 @@
           "name": "Body",
           "clip": true,
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 1402,
           "layout": "vertical",
           "padding": [
             16,
@@ -129053,8 +129104,11 @@
         {
           "type": "frame",
           "id": "N1Ibp",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 1506,
           "name": "Home Indicator Area",
-          "width": "fill_container",
+          "width": "fill_container(393)",
           "height": 34,
           "justifyContent": "center",
           "alignItems": "center"
