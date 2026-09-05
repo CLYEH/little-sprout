@@ -227,7 +227,9 @@ final class AppErrorTests: XCTestCase {
             // 自建新家庭這一步，沒有輸入可換，只能等旗標重新打開。
             // LS055（LS-197，accept_eula）：呼叫端送的版本已經過期，同上面幾碼
             // 一樣沒有輸入可換，正確動作是重新抓目前版本、重新顯示條款。
-            .registrationsClosed, .eulaVersionMismatch
+            // LS056（LS-197 R2，accept_eula）：auth.uid() 沒有對應的 profiles
+            // 列，理論上不該發生，沒有輸入可換、也不是使用者能自己解決的狀態。
+            .registrationsClosed, .eulaVersionMismatch, .accountProfileMissing
             // LS040（childFamilyImmutable）已於 LS-57 I1 撤碼，family_id 不可變改用裸
             // 42501（同 diaries／albums／comments），不再是 LSErrorCode 的一個 case。
         ]

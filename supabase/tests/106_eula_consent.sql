@@ -4,7 +4,10 @@
 -- 家庭／使用者（A 家：owner a1／member a2／viewer a3）。每個場景各自
 -- begin/rollback，互不污染 fixtures（比照本目錄既有慣例）；場景內先把
 -- app_settings.eula_version 改成一個測試專用的固定字串，不依賴 migration
--- 預設值的實際內容，跟版本字串本身的變動解耦。
+-- 預設值的實際內容，跟版本字串本身的變動解耦。**場景 6 是唯一的例外**：
+-- 為了跨真實 COMMIT 交易觀察 eula_accepted_at 的時間戳前進（now() 是
+-- transaction timestamp，同一交易內測不出來），刻意不用 begin/rollback，
+-- 收工自己手動把寫入的資料復原（R2 merge-review R1 m1）。
 
 \set ON_ERROR_STOP on
 
@@ -277,12 +280,20 @@ $$;
 
 drop table ls197_idempotent_probe;
 
--- 清理：上面全部是真的 COMMIT，這裡把寫入的資料復原，不留殘留給後續測試檔
--- （比照 105_suspension_and_registrations.sql 場景 11 收尾的既有慣例）。
+-- 清理：上面全部是真的 COMMIT（不是 begin/rollback——沒有交易可 rollback，
+-- R2 merge-review R1 m1 修正：先前這裡誤留了一句無對應 begin 的 rollback，
+-- psql 會印 `WARNING:  there is no transaction in progress` 且完全沒有復原
+-- 效果），這裡把寫入的資料手動復原，不留殘留給後續測試檔（比照
+-- 105_suspension_and_registrations.sql 場景 11 收尾的既有慣例）。
 update public.profiles set eula_accepted_version = null, eula_accepted_at = null
  where id = 'a0000000-0000-4000-8000-000000000001';
-
-rollback;
+-- 還原成 migration 的 DEFAULT 字面值本身，不是「讀回某個變數」——這支測試檔
+-- 只在 `supabase db reset` 之後的本機開發庫跑，每次都是從 migrations 重新
+-- 套用出來的全新狀態，這裡的字面值與
+-- `20260905051320_eula_consent.sql` 的 `add column eula_version text not
+-- null default '2026-09-05-draft'` 綁在一起，兩邊同步改動即可，不需要額外
+-- 用暫存表在場景 6 開頭讀回目前值。
+update public.app_settings set eula_version = '2026-09-05-draft', updated_at = now() where id = true;
 
 -- ---------------------------------------------------------------------------
 -- 場景 7（額外，非票面六案，回歸保護）：停權者仍可呼叫 accept_eula()——同意
@@ -314,6 +325,36 @@ begin
 
   reset role;
   raise notice 'ok：被停權的使用者仍能成功呼叫 accept_eula()（同意條款不是內容寫入，PLAN §10-B 豁免同一組理由）';
+end;
+$$;
+
+rollback;
+
+-- ---------------------------------------------------------------------------
+-- 場景 8（R2，merge-review R1 m2）：UPDATE 命中 0 列回 LS056——auth.uid() 對應
+-- 的 profiles 列不存在（理論上不該發生，這裡用一個沒有對應 auth.users／
+-- profiles 列的假 UUID 直接偽造 JWT sub 來模擬；本檔其餘場景都用真實 fixture
+-- 使用者，只有這一案刻意用不存在的身分）。
+-- ---------------------------------------------------------------------------
+begin;
+
+update public.app_settings set eula_version = 'v-test-1', updated_at = now() where id = true;
+
+do $$
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', '00000000-0000-4000-8000-000000000099', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  begin
+    perform public.accept_eula('v-test-1');
+    raise exception 'FAIL：auth.uid() 沒有對應的 profiles 列時，accept_eula() 竟然成功';
+  exception when sqlstate 'LS056' then
+    null; -- ok
+  end;
+
+  reset role;
+  raise notice 'ok：auth.uid() 沒有對應的 profiles 列時，accept_eula() 回 LS056（UPDATE 命中 0 列的防呆）';
 end;
 $$;
 
