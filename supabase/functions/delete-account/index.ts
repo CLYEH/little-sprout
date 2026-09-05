@@ -12,24 +12,36 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2.114";
 import { type Deps, handleRequest, type Identity } from "./handler.ts";
+import { resolveSecretKey, type SecretKeyEnv } from "../_shared/keys.ts";
 
-// SUPABASE_URL／SUPABASE_ANON_KEY／SUPABASE_SERVICE_ROLE_KEY 由 Supabase 平台在
-// 每個 Edge Function 執行環境自動注入（部署後）；本機 `supabase functions serve`
-// 也會從 .env 或平台預設值提供同名變數。APPLE_CLIENT_ID／APPLE_CLIENT_SECRET
-// 需要另外用 `supabase secrets set` 設定，缺 env 時 revokeAppleToken() 會跳過
-// （不擋刪除，見票文）。
+// SUPABASE_URL／SUPABASE_ANON_KEY／SUPABASE_SECRET_KEYS（或過渡期的 legacy
+// SUPABASE_SERVICE_ROLE_KEY）由 Supabase 平台在每個 Edge Function 執行環境自動
+// 注入（部署後）；本機 `supabase functions serve` 也會從 .env 或平台預設值提供
+// 同名變數。APPLE_CLIENT_ID／APPLE_CLIENT_SECRET 需要另外用 `supabase secrets
+// set` 設定，缺 env 時 revokeAppleToken() 會跳過（不擋刪除，見票文）。
 //
-// fail loud：這三個是平台自動注入的變數，缺任何一個代表部署設定本身有問題，
-// 不是「當作沒有請求可處理」悄悄放行（同 purge-storage 既有先例）。放在模組層級
+// fail loud：這些是平台自動注入的變數，缺任何一個代表部署設定本身有問題，不是
+// 「當作沒有請求可處理」悄悄放行（同 purge-storage 既有先例）。放在模組層級
 // （不是等第一個請求進來才檢查）：isolate 冷啟動就會直接失敗，比藏在
 // buildProdDeps() 裡、每個請求都重新算一次還快看到問題。
+//
+// LS-196：admin client 改吃 `resolveSecretKey()`（優先新式 `SUPABASE_SECRET_KEYS`
+// default，缺則退回 legacy `SUPABASE_SERVICE_ROLE_KEY`，見 `_shared/keys.ts`
+// 檔頭——正式站執行期注入的 `SUPABASE_SERVICE_ROLE_KEY` 已非 legacy
+// service_role JWT，LS-153 i4 煙測）。這支端點的使用者 JWT 驗證路徑（下方
+// `anonClient`／`getCallerUser`）與 `verify_jwt` 現狀不動——那條路徑驗的是
+// 使用者自己的 access token，跟 service 憑證無關，不是本票要修的對象。
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const authEnv: SecretKeyEnv = {
+  SUPABASE_SECRET_KEYS: Deno.env.get("SUPABASE_SECRET_KEYS"),
+  SUPABASE_SERVICE_ROLE_KEY: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+};
+const secretKey = resolveSecretKey(authEnv);
 
-if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+if (!supabaseUrl || !anonKey || !secretKey) {
   throw new Error(
-    "SUPABASE_URL／SUPABASE_ANON_KEY／SUPABASE_SERVICE_ROLE_KEY 未設定",
+    "SUPABASE_URL／SUPABASE_ANON_KEY／secret key 未設定（SUPABASE_SECRET_KEYS 或 SUPABASE_SERVICE_ROLE_KEY 皆缺）",
   );
 }
 
@@ -43,7 +55,7 @@ const clientOptions = {
   auth: { persistSession: false, autoRefreshToken: false },
 };
 const anonClient = createClient(supabaseUrl, anonKey, clientOptions);
-const adminClient = createClient(supabaseUrl, serviceRoleKey, clientOptions);
+const adminClient = createClient(supabaseUrl, secretKey, clientOptions);
 
 function buildProdDeps(): Deps {
   return {
