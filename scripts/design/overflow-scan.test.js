@@ -6,7 +6,7 @@
 "use strict";
 const assert = require("assert");
 const path = require("path");
-const { scanAll, scanCornerAnchor, scanTextOcclusion, buildIndex, compactLines, canon, canonNode, fnv1a64, hex64, treeHash, treeHashLines } = require(path.join(__dirname, "overflow-scan.js"));
+const { scanAll, scanCornerAnchor, scanTextOcclusion, scanBoardClip, buildIndex, compactLines, canon, canonNode, fnv1a64, hex64, treeHash, treeHashLines } = require(path.join(__dirname, "overflow-scan.js"));
 
 function N(id, parent, x, y, w, h, extra) {
   return Object.assign({ id, name: id, parent, type: "frame", enabled: true, x, y, w, h }, extra || {});
@@ -451,6 +451,232 @@ ok("tree_hash js／py 交叉一致：同一份合成 .pen（含 emoji／轉義�
   const dumpPath = execFileSync("python3", [py, tmp, "--dump", "Pp5kQ"], { encoding: "utf8" }).replace(/\n$/, "");
   assert.strictEqual(dumpPath, canonNode(doc.children[2], null, 2), "path 節點（含 geometry）的行 js／py 逐字相同");
   fs.rmSync(path.dirname(tmp), { recursive: true, force: true });
+});
+
+// ───── LS-185 第六支 board_clip（LS-120 R2 spacer 推出板外／LS-177 R2 Header Row 捲離畫面的形狀；板 393×852，各板 x 平移） ─────
+// 板 KA（LS-120 R2 形狀，root clip:true）：Column 比板高、Card Diary 被推到 y=700 起——Caption text 底 975、Photo（frame 帶 image fill）
+// 底 910 都伸出板底；Spacer（無子、無 image 的 frame）伸出但不可見、不報；Inner text 在板內不報；Edge text 只多 0.4（≤ TOL）不報；
+// Icon x=−3 伸出左緣 → 報 left 3
+const KA = N("KA", null, 0, 0, 393, 852, { name: "LS-120 / feed", clip: true });
+const KACOL = N("KACOL", "KA", 0, 0, 393, 1000, { name: "Column" });
+const KACARD = N("KACARD", "KACOL", 24, 700, 345, 300, { name: "Card Diary 1" });
+const KAPHOTO = N("KAPHOTO", "KACARD", 24, 710, 345, 200, { name: "Photo", image: true });
+const KACAP = N("KACAP", "KACARD", 24, 950, 200, 25, { name: "Caption", type: "text" });
+const KASPACER = N("KASPACER", "KACOL", 0, 860, 393, 40, { name: "Spacer" });
+const KAINNER = N("KAINNER", "KACOL", 24, 100, 200, 25, { name: "Inner", type: "text" });
+const KAEDGE = N("KAEDGE", "KACOL", 24, 827.4, 200, 25, { name: "Edge", type: "text" });
+const KAICON = N("KAICON", "KACOL", -3, 300, 22, 22, { name: "Icon", type: "icon" });
+// 板 KB：與 KA 同幾何但 root 不 clip（cmp/* 元件定義的形狀）→ 一筆都不報
+const KB = N("KB", null, 1000, 0, 393, 852, { name: "cmp/Feed" });
+const KBCOL = N("KBCOL", "KB", 1000, 0, 393, 1000, { name: "Column" });
+const KBCAP = N("KBCAP", "KBCOL", 1024, 950, 200, 25, { name: "Caption", type: "text" });
+// 板 KC（clip）：Tab Bar（OVERLAY_RE）本身伸出板底、其 icon 也伸出 → 子樹不算；名字含 Capsule 的 text 自己伸出 → 不算；
+// 非覆蓋層的兄弟 text 伸出 → 報（對照組）
+const KC = N("KC", null, 2000, 0, 393, 852, { name: "KC 板", clip: true });
+const KCTAB = N("KCTAB", "KC", 2016, 754, 361, 110, { name: "Tab Bar", type: "ref" });
+const KCTABICON = N("KCTABICON", "KCTAB", 2040, 840, 24, 24, { name: "Home", type: "icon" });
+const KCCAPS = N("KCCAPS", "KC", 2300, 840, 60, 25, { name: "Capsule Label", type: "text" });
+const KCCTRL = N("KCCTRL", "KC", 2024, 840, 100, 25, { name: "Plain", type: "text" });
+// 板 KD（LS-177 R2 y7KAW 形狀，clip）：Content clip:true 置於 y=−671、高 1213（底 542，在板內）——Content 內 y=−600 的 Header text
+// 沒被 Content 裁掉、卻在板頂之上 → 報 top 600；Content 內 y=560 的 Account text 已被 Content 裁光 → 捲動模擬、不報；跨 Content
+// 底緣的 Straddle text 可見部分 530→542 在板內 → 不報
+const KD = N("KD", null, 3000, 0, 393, 852, { name: "LS-177 / 設定（已捲）", clip: true });
+const KDBODY = N("KDBODY", "KD", 3000, 62, 393, 692, { name: "Body" });
+const KDCONTENT = N("KDCONTENT", "KDBODY", 3000, -671, 393, 1213, { name: "Content", clip: true });
+const KDHEAD = N("KDHEAD", "KDCONTENT", 3024, -600, 200, 25, { name: "Header Row Title", type: "text" });
+const KDACC = N("KDACC", "KDCONTENT", 3024, 560, 200, 25, { name: "Account Row", type: "text" });
+const KDSTRAD = N("KDSTRAD", "KDCONTENT", 3024, 530, 200, 25, { name: "Straddle", type: "text" });
+// 板 KE（clip）：instance descendant（inst/label）伸出右緣 → 報路徑 id、right 20；disabled 的 text 伸出 → 不報；path／rectangle／ellipse
+// 葉節點各伸出 → 都報（可見向量形狀）
+const KE = N("KE", null, 4000, 0, 393, 852, { name: "KE 板", clip: true });
+const KEINST = N("KEinst", "KE", 4000, 100, 393, 60, { name: "Row", type: "ref" });
+const KELABEL = N("KEinst/label", "KEinst", 4300, 110, 113, 25, { name: "Label", type: "text" });
+const KEOFF = N("KEOFF", "KE", 4024, 900, 100, 25, { name: "Hidden", type: "text", enabled: false });
+const KEPATH = N("KEPATH", "KE", 4380, 200, 26, 26, { name: "Corner Shape", type: "path" });
+const KERECT = N("KERECT", "KE", 4000, -84, 345, 515, { name: "Hero Photo", type: "rectangle" });
+const KEELL = N("KEELL", "KE", 4200, 845, 27, 27, { name: "Knob", type: "ellipse" });
+// 兩邊同時伸出（top 10、right 87）→ side 取溢出最大的 right，不是走訪順序第一個的 top
+const KEBIG = N("KEBIG", "KE", 4380, -10, 100, 50, { name: "Two Sides", type: "rectangle" });
+// 板 KF（clip，板名含 Banner）：root 自己的名字不參與 OVERLAY_RE 比對——內容伸出照報
+const KF = N("KF", null, 5000, 0, 393, 852, { name: "LS-99 / Banner 示意板", clip: true });
+const KFTXT = N("KFTXT", "KF", 5024, 840, 200, 25, { name: "Body Text", type: "text" });
+
+const clipNodes = [
+  KA, KACOL, KACARD, KAPHOTO, KACAP, KASPACER, KAINNER, KAEDGE, KAICON,
+  KB, KBCOL, KBCAP,
+  KC, KCTAB, KCTABICON, KCCAPS, KCCTRL,
+  KD, KDBODY, KDCONTENT, KDHEAD, KDACC, KDSTRAD,
+  KE, KEINST, KELABEL, KEOFF, KEPATH, KERECT, KEELL, KEBIG,
+  KF, KFTXT,
+];
+const clipAll = scanAll(clipNodes).scans.board_clip;
+const clipHits = (arr) => arr.map((f) => f.node + ":" + f.side + ":" + f.overflow_px).sort();
+
+ok("(f) board_clip：clip 板內 Caption text／image fill 的 Photo／左伸的 icon 都報（bottom 123／bottom 58／left 3）；不可見 Spacer、板內 text、只多 0.4 的 Edge 不報；四支＋第五支對這些確實無感", () => {
+  assert.deepStrictEqual(clipHits(clipAll.flagged.filter((f) => f.board === "KA")), ["KACAP:bottom:123", "KAICON:left:3", "KAPHOTO:bottom:58"]);
+  const cap = clipAll.flagged.find((f) => f.node === "KACAP");
+  assert.deepStrictEqual([cap.board_name, cap.name, cap.parent, cap.type], ["LS-120 / feed", "Caption", "KACARD", "text"]);
+  const five = scanAll([KA, KACOL, KACARD, KAPHOTO, KACAP, KASPACER, KAINNER, KAEDGE, KAICON], { crossAll: true }).scans;
+  const mentions = (arr) => arr.filter((f) => /KACAP|KAPHOTO|KAICON/.test((f.node || "") + (f.node_a || "") + (f.node_b || "")));
+  assert.deepStrictEqual(mentions(five.sibling_intersection.flagged).length + mentions(five.cross_parent_collision.flagged).length + mentions(five.text_occlusion.flagged).length, 0, "其餘各支指不到被裁的葉節點（row_overflow 只看右緣、看不到底／左）");
+  assert.deepStrictEqual(mentions(five.row_overflow.flagged).map((f) => f.node), [], "row_overflow 對右緣沒溢出的三筆無感");
+});
+
+ok("(f) 無 clip 不報：同幾何的 KB（cmp/* 元件定義根不 clip）0 筆；把 KA 的 clip 拿掉也 0 筆", () => {
+  assert.deepStrictEqual(clipHits(clipAll.flagged.filter((f) => f.board === "KB")), []);
+  const noClip = Object.assign({}, KA, { clip: false });
+  assert.deepStrictEqual(scanAll([noClip, KACOL, KACARD, KAPHOTO, KACAP, KASPACER, KAINNER, KAEDGE, KAICON]).scans.board_clip.flagged, []);
+});
+
+ok("(f) 覆蓋層不算：Tab Bar 的 icon 伸出板底、名字含 Capsule 的 text 自己伸出都不報；同板非覆蓋層的 Plain text 伸出照報；overlayRe 可覆寫（不含 Tab Bar 時 icon 就報）", () => {
+  assert.deepStrictEqual(clipHits(clipAll.flagged.filter((f) => f.board === "KC")), ["KCCTRL:bottom:13"]);
+  const custom = scanBoardClip([KC, KCTAB, KCTABICON, KCCAPS, KCCTRL], undefined, { overlayRe: "Capsule" }).flagged;
+  assert.deepStrictEqual(clipHits(custom), ["KCCTRL:bottom:13", "KCTABICON:bottom:12"]);
+});
+
+ok("(f) 中間 clip 祖先（捲動模擬）：Content clip 內在板頂之上的 Header text 報 top 600；被 Content 裁光的 Account text 不報；跨 Content 底緣、可見部分在板內的 Straddle 不報；同幾何把 Content 的 clip 拿掉 → Account／Straddle 都變成被板裁", () => {
+  assert.deepStrictEqual(clipHits(clipAll.flagged.filter((f) => f.board === "KD")), ["KDHEAD:top:600"]);
+  const open = Object.assign({}, KDCONTENT, { clip: false });
+  assert.deepStrictEqual(clipHits(scanAll([KD, KDBODY, open, KDHEAD, KDACC, KDSTRAD]).scans.board_clip.flagged), ["KDHEAD:top:600"], "Content 不 clip：Account 560→585、Straddle 530→555 都仍在板 852 內，不因 clip 移除而多報");
+  const tall = Object.assign({}, KDCONTENT, { clip: false, y: 200 });
+  const acc = Object.assign({}, KDACC, { y: 840 });
+  assert.deepStrictEqual(clipHits(scanAll([KD, KDBODY, tall, acc]).scans.board_clip.flagged), ["KDACC:bottom:13"], "沒有中間 clip 時伸出板底的 text 直接報");
+  const clipped = Object.assign({}, KDCONTENT, { y: 200, h: 600 });
+  assert.deepStrictEqual(scanAll([KD, KDBODY, clipped, acc]).scans.board_clip.flagged, [], "同一 text 被 200→800 的 Content clip 裁光 → 捲動模擬、不報");
+});
+
+ok("(f) instance 路徑葉節點報 inst/label right 20；disabled 不報；path／rectangle／ellipse 可見形狀各報一筆（Hero Photo 上緣 −84 → top 84）；兩邊同時伸出取最大的 right 87；板名含 Banner 的 root 不豁免（KF 報一筆）", () => {
+  assert.deepStrictEqual(clipHits(clipAll.flagged.filter((f) => f.board === "KE")), ["KEBIG:right:87", "KEELL:bottom:20", "KEPATH:right:13", "KERECT:top:84", "KEinst/label:right:20"]);
+  assert.deepStrictEqual(clipHits(clipAll.flagged.filter((f) => f.board === "KF")), ["KFTXT:bottom:13"]);
+  assert.ok(!clipAll.flagged.some((f) => f.node === "KEOFF"));
+});
+
+ok("(f) 範圍（同 corner_anchor／text_occlusion）：boards=['KA'] → flagged 只算 KA（3）、document_flagged 全稿 10；空 boards＝全稿；compactLines 段含 in-scope 分類＋DOCUMENT 按板計數", () => {
+  const r = scanAll(clipNodes, { boards: ["KA"] }).scans.board_clip;
+  assert.deepStrictEqual([r.boards, r.flagged.length, r.document_flagged.length, clipAll.flagged.length], [["KA"], 3, 11, 11]);
+  assert.deepStrictEqual(clipHits(r.flagged), clipHits(clipAll.flagged.filter((f) => f.board === "KA")));
+  const text = compactLines(scanAll(clipNodes, { boards: ["KA"] })).join("\n");
+  assert.ok(text.includes('SCAN board_clip boards=["KA"] flagged=3 classes=3 document=11'), text);
+  assert.ok(text.includes("  1× Caption bottom @ LS-120 / feed(KA) e.g. KACAP (+123)"));
+  assert.ok(text.includes("  DOCUMENT 1× board LS-177 / 設定（已捲）(KD) e.g. KDHEAD top (+600)"), text);
+});
+
+ok("(f) hasImageFill：物件／陣列 fill 含 type image 才算，enabled:false 的 image 不算，token 字串不算；原始碼斷言 Pencil 端快照帶 image 欄位", () => {
+  const { hasImageFill } = require(path.join(__dirname, "overflow-scan.js"));
+  assert.strictEqual(hasImageFill({ type: "image", url: "a.png" }), true);
+  assert.strictEqual(hasImageFill([{ type: "solid", color: "$bg" }, { type: "image", url: "a.png" }]), true);
+  assert.strictEqual(hasImageFill({ type: "image", enabled: false, url: "a.png" }), false);
+  assert.strictEqual(hasImageFill("$accent"), false);
+  assert.strictEqual(hasImageFill(undefined), false);
+  const src = require("fs").readFileSync(path.join(__dirname, "overflow-scan.js"), "utf8");
+  assert.ok(/image:\s*hasImageFill\(n\.fill\)/.test(src), "Pencil 端快照必須帶 image: hasImageFill(n.fill)，否則照片葉節點對第六支不可見");
+});
+
+// ───── LS-185 scan_scope ─────
+ok("scan_scope：預設 document、每支帶 scope=document；boards 模式把快照限縮到 boards 子樹（scanned_nodes＝子樹大小、document_* 即限縮值）、每支 scope=boards、boards 可用板名；非法值／boards 模式無 boards 一律 throw", () => {
+  const doc = scanAll(nodes);
+  assert.strictEqual(doc.scan_scope, "document");
+  for (const k of Object.keys(doc.scans)) assert.strictEqual(doc.scans[k].scope, "document", k);
+  const b = scanAll(nodes, { scanScope: "boards", boards: ["B5"] });
+  assert.deepStrictEqual([b.scan_scope, b.scanned_nodes], ["boards", 6]);
+  for (const k of Object.keys(b.scans)) assert.strictEqual(b.scans[k].scope, "boards", k);
+  assert.deepStrictEqual([b.scans.corner_anchor.containers, b.scans.corner_anchor.points, b.scans.corner_anchor.mismatch], [1, 8, 2]);
+  assert.deepStrictEqual([b.scans.corner_anchor.document_containers, b.scans.corner_anchor.document_points, b.scans.corner_anchor.document_mismatch], [1, 8, 2], "限縮後 document_* 就是 boards 值——收據 scan_scope=boards 讓 gate／VR 分得清");
+  assert.deepStrictEqual(pairs(b.scans.sibling_intersection.flagged), [], "B5 內沒有兄弟交集；其他板不進快照");
+  const byName = scanAll(nodes, { scanScope: "boards", boards: ["LS-17 / 01 舊板"] });
+  assert.deepStrictEqual([byName.scanned_nodes, byName.scans.corner_anchor.document_mismatch], [6, 2]);
+  assert.throws(() => scanAll(nodes, { scanScope: "board" }), /scanScope 只接受 document\|boards/);
+  assert.throws(() => scanAll(nodes, { scanScope: "boards" }), /需要非空 boards/);
+  assert.throws(() => scanAll(nodes, { scanScope: "boards", boards: ["nope"] }), /限縮後快照為空/, "解析不到任何 root 的 boards 也 throw（不得默默掃空集合印全零收據）");
+});
+
+// ───── LS-185 cross_parent_collision 候選過濾＝全配對（逐位元）；舊實作照抄自 main b9470bc 的 scanCrossParentCollision ─────
+const M = require(path.join(__dirname, "overflow-scan.js"));
+function legacyCrossParent(nodes, idx, opts) {
+  const { byId, liveNodes, chain } = idx || M.buildIndex(nodes);
+  const all = !!(opts && opts.crossAll);
+  const boards = new Map();
+  for (const n of liveNodes) {
+    const c = chain.get(n.id);
+    const board = c[c.length - 1];
+    if (!boards.has(board)) boards.set(board, []);
+    boards.get(board).push(n);
+  }
+  function coveredByParent(a, b, chainB) {
+    const pa = a.parent == null ? null : byId.get(a.parent);
+    if (!pa || chainB.includes(pa.id)) return false;
+    return M.contains(pa, a) && M.overlapArea(pa, b) > M.AREA_MIN;
+  }
+  const flagged = [];
+  for (const [board, arr] of boards) {
+    const boardName = byId.get(board).name;
+    for (let i = 0; i < arr.length; i++) {
+      const a = arr[i];
+      const ca = chain.get(a.id);
+      for (let j = i + 1; j < arr.length; j++) {
+        const b = arr[j];
+        if (a.parent === b.parent) continue;
+        if (M.overlapArea(a, b) <= M.AREA_MIN) continue;
+        if (!all && !M.BLEED_RE.test(a.name || "") && !M.BLEED_RE.test(b.name || "")) continue;
+        const cb = chain.get(b.id);
+        if (ca.includes(b.id) || cb.includes(a.id)) continue;
+        if (coveredByParent(a, b, cb) || coveredByParent(b, a, ca)) continue;
+        flagged.push(M.pairEntry(a, b, { parent_a: a.parent, parent_b: b.parent, board, board_name: boardName }));
+      }
+    }
+  }
+  return { flagged };
+}
+// 合成大板：seeded LCG，多個 parent、bleed 與非 bleed 名稱混雜、座標密集到處交集；部分節點刻意溢出自己的父（去重路徑兩側都走到）
+function synthBoard(seed, count, bleedEvery) {
+  let s = seed >>> 0;
+  const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+  const out = [N("SB" + seed, null, 0, 0, 2000, 2000, { name: "Synth " + seed, clip: true })];
+  const parents = [];
+  for (let p = 0; p < 12; p++) {
+    const px = Math.floor(rnd() * 1500), py = Math.floor(rnd() * 1500);
+    const par = N("SB" + seed + "/P" + p, "SB" + seed, px, py, 400, 400, { name: p % 3 === 0 ? "Photo Wrap" : "Column" });
+    out.push(par);
+    parents.push(par);
+  }
+  const names = ["Spacer", "Caption", "Corner TR", "Badge", "Feed", "Home Indicator Area", "Drop Target", "Label"];
+  for (let i = 0; i < count; i++) {
+    const par = parents[Math.floor(rnd() * parents.length)];
+    const w = 20 + Math.floor(rnd() * 120), h = 20 + Math.floor(rnd() * 120);
+    const x = par.x - 30 + Math.floor(rnd() * 440), y = par.y - 30 + Math.floor(rnd() * 440);
+    const name = i % bleedEvery === 0 ? names[2 + (i % 3)] : names[[0, 1, 4, 5, 7][i % 5]];
+    out.push(N("SB" + seed + "/n" + i, par.id, x, y, w, h, { name, type: i % 7 === 0 ? "text" : "frame" }));
+  }
+  return out;
+}
+ok("(c) 候選過濾等價：主 fixture（bleed-only／crossAll）、遮蔽 fixture、裁切 fixture、三顆 seed 的合成板（各 400 節點、bleed 每 9／5／2 個一個）新舊輸出 JSON 逐位元相同且非空", () => {
+  const same = (arr, opts) => {
+    const a = JSON.stringify(legacyCrossParent(arr, undefined, opts));
+    const b = JSON.stringify(M.scanCrossParentCollision(arr, undefined, opts));
+    assert.strictEqual(b, a);
+    return JSON.parse(b).flagged.length;
+  };
+  assert.strictEqual(same(nodes), 4);
+  assert.strictEqual(same(nodes, { crossAll: true }), 5);
+  same(occNodes); same(occNodes, { crossAll: true });
+  same(clipNodes); same(clipNodes, { crossAll: true });
+  let total = 0;
+  for (const [seed, every] of [[1, 9], [2, 5], [3, 2]]) {
+    const arr = synthBoard(seed, 400, every);
+    const k = same(arr);
+    assert.ok(k > 0, "合成板 seed " + seed + " 應有 bleed 類命中（" + k + "）");
+    assert.ok(same(arr, { crossAll: true }) > k, "crossAll 應報得更多");
+    total += k;
+  }
+  assert.ok(total > 50, "三顆 seed 合計命中應夠多（" + total + "）才算有鑑別力");
+});
+
+ok("(c) 候選過濾效能：3000 節點單板（bleed 每 20 個一個）新實作比全配對快（只印比值，不斷言倍率——CI 機器抖動），結果仍相同", () => {
+  const arr = synthBoard(7, 3000, 20);
+  const t0 = Date.now(); const a = JSON.stringify(legacyCrossParent(arr)); const t1 = Date.now();
+  const b = JSON.stringify(M.scanCrossParentCollision(arr)); const t2 = Date.now();
+  assert.strictEqual(b, a);
+  console.log("    cross_parent 3000 節點：全配對 " + (t1 - t0) + "ms → 候選過濾 " + (t2 - t1) + "ms（flagged " + JSON.parse(b).flagged.length + "）");
 });
 
 console.log("overflow-scan.test.js：全數通過（" + n + " 組）");
