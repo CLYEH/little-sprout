@@ -51,12 +51,41 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
         _ = try await apiClient.fetchAlbums(familyID: familyID, cursor: cursor, limit: 20)
     }
 
-    func test_fetchAlbums_decodesRows() async throws {
+    /// merge-review R1 M1：張數與封面 fallback 改內嵌 PostgREST aggregate 查詢，不再整頁抓
+    /// `album_media` 在 client 端數——本機已用真實 Supabase CLI 容器實測確認
+    /// `db-aggregates-enabled` 可用且這組 select／order／limit 字串回得出正確資料（見
+    /// `SupabaseAlbumsAPIClient.listSelect`／`fetchAlbums` 文件註解）。這裡鎖住 query 組出的
+    /// 實際字元，SDK 或後端行為改變時能直接測出來，不會悄悄跟著漂移。
+    func test_fetchAlbums_selectsAggregateCountAndLatestFallback_withCorrectOrderAndLimit() async throws {
+        let client = TestSupabaseClient.make { request in
+            // `URLRequest` 送出前已經把 `(`／`)`／`,` 等字元 percent-encode 過（`request.url?.
+            // query` 在這裡回的是編碼後的原始形式，不是解碼過的——同 UUID／純英數的既有斷言
+            // 不會露餡，這裡第一次踩到，解碼後比對才可讀）。
+            let query = (request.url?.query ?? "").removingPercentEncoding ?? ""
+            XCTAssertTrue(query.contains("album_media(count)"), "應該內嵌 count aggregate，實際 query：\(query)")
+            XCTAssertTrue(
+                query.contains("latest:album_media(media(thumb_path,storage_path,created_at))"),
+                "應該用別名 latest 內嵌最新一筆 album_media，實際 query：\(query)"
+            )
+            XCTAssertTrue(
+                query.contains("latest.order=media(created_at).desc"),
+                "應該依巢狀 media(created_at) 排序、用別名 latest 當修飾詞前綴（不是 album_media，避免" +
+                    "同一張表嵌兩次時 PGRST108 別名歧義），實際 query：\(query)"
+            )
+            XCTAssertTrue(query.contains("latest.limit=1"), "應該只取最新一筆，實際 query：\(query)")
+            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("[]".utf8))
+        }
+        let apiClient = SupabaseAlbumsAPIClient(client: client)
+
+        _ = try await apiClient.fetchAlbums(familyID: familyID, cursor: nil, limit: 20)
+    }
+
+    func test_fetchAlbums_decodesRows_includingAggregateCountAndEmptyLatest() async throws {
         let client = TestSupabaseClient.make { [albumID] _ in
             MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
             [{
               "id": "\(albumID.uuidString)", "title": "生日派對", "cover_media_id": null,
-              "created_at": "2026-09-04T10:00:00Z"
+              "created_at": "2026-09-04T10:00:00Z", "album_media": [{"count": 0}], "latest": []
             }]
             """.utf8))
         }
@@ -68,35 +97,38 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
         XCTAssertEqual(rows[0].id, albumID)
         XCTAssertEqual(rows[0].title, "生日派對")
         XCTAssertNil(rows[0].coverMediaId)
+        XCTAssertEqual(rows[0].photoCount, 0)
+        XCTAssertNil(rows[0].latestMediaThumbPath)
+        XCTAssertNil(rows[0].latestMediaStoragePath)
     }
 
-    // MARK: - fetchAlbumMediaLinks / fetchAlbumChildren / fetchMedia
-
-    func test_fetchAlbumMediaLinks_emptyIDs_returnsEmptyWithoutRequest() async throws {
-        let client = TestSupabaseClient.make { _ in
-            XCTFail("空陣列不應該發請求")
-            return MockURLProtocol.StubResponse(statusCode: 200, body: Data())
-        }
-        let apiClient = SupabaseAlbumsAPIClient(client: client)
-        let links = try await apiClient.fetchAlbumMediaLinks(albumIds: [])
-        XCTAssertTrue(links.isEmpty)
-    }
-
-    func test_fetchAlbumMediaLinks_decodesRows() async throws {
-        let mediaID = UUID()
-        let client = TestSupabaseClient.make { [albumID] request in
-            XCTAssertEqual(request.url?.path, "/rest/v1/album_media")
-            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
-            [{"album_id": "\(albumID.uuidString)", "media_id": "\(mediaID.uuidString)"}]
+    /// 本機真人測試撞過的實際回應形狀（見 `AlbumListingRow` 文件註解）：`album_media` 恆為
+    /// 一個元素的陣列（不是裸物件、也不是空陣列），`latest` 有照片時是一個元素的陣列，元素
+    /// 包一層 `media`。
+    func test_fetchAlbums_decodesRows_withPhotosAndLatestFallback() async throws {
+        let client = TestSupabaseClient.make { [albumID] _ in
+            MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+            [{
+              "id": "\(albumID.uuidString)", "title": "跨年連假出遊", "cover_media_id": null,
+              "created_at": "2026-09-04T10:00:00Z",
+              "album_media": [{"count": 62}],
+              "latest": [{"media": {
+                "thumb_path": "f/latest_thumb.jpg", "storage_path": "f/latest.jpg",
+                "created_at": "2026-09-04T09:00:00Z"
+              }}]
+            }]
             """.utf8))
         }
         let apiClient = SupabaseAlbumsAPIClient(client: client)
 
-        let links = try await apiClient.fetchAlbumMediaLinks(albumIds: [albumID])
+        let rows = try await apiClient.fetchAlbums(familyID: familyID, cursor: nil, limit: 20)
 
-        XCTAssertEqual(links.count, 1)
-        XCTAssertEqual(links[0].mediaId, mediaID)
+        XCTAssertEqual(rows[0].photoCount, 62)
+        XCTAssertEqual(rows[0].latestMediaThumbPath, "f/latest_thumb.jpg")
+        XCTAssertEqual(rows[0].latestMediaStoragePath, "f/latest.jpg")
     }
+
+    // MARK: - fetchAlbumChildren / fetchMedia
 
     func test_fetchAlbumChildren_decodesRows() async throws {
         let childID = UUID()
@@ -143,7 +175,7 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
             return MockURLProtocol.StubResponse(statusCode: 201, body: Data("""
             {
               "id": "\(albumID.uuidString)", "title": "新相簿", "cover_media_id": null,
-              "created_at": "2026-09-05T00:00:00Z"
+              "created_at": "2026-09-05T00:00:00Z", "album_media": [{"count": 0}], "latest": []
             }
             """.utf8))
         }
@@ -154,6 +186,7 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
 
         XCTAssertEqual(row.id, albumID)
         XCTAssertEqual(row.title, "新相簿")
+        XCTAssertEqual(row.photoCount, 0, "剛建立的相簿必定 0 張照片")
     }
 
     func test_createAlbum_notSignedIn_throwsRejectedWithoutSendingRequest() async {
@@ -214,6 +247,22 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
         } catch {
             XCTFail("應該 throw AppError，實際是 \(error)")
         }
+    }
+
+    // MARK: - setAlbumDeleted
+
+    func test_setAlbumDeleted_sendsAlbumIDAndDeletedFlag() async throws {
+        let client = TestSupabaseClient.make { [albumID] request in
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/set_album_deleted")
+            let body = try XCTUnwrap(request.bodyData)
+            let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+            XCTAssertEqual(payload["p_album_id"] as? String, albumID.uuidString)
+            XCTAssertEqual(payload["p_deleted"] as? Bool, true)
+            return MockURLProtocol.StubResponse(statusCode: 200, body: Data())
+        }
+        let apiClient = SupabaseAlbumsAPIClient(client: client)
+
+        try await apiClient.setAlbumDeleted(albumID: albumID, deleted: true)
     }
 
     // MARK: - signedURLs

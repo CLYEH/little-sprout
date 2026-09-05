@@ -58,7 +58,7 @@ struct AlbumSummaryCardView: View {
     private var photo: some View {
         ZStack {
             Color.lsSurface2
-            if let url = album.cover?.signedURL {
+            if let url = album.cover {
                 AsyncImage(url: url) { phase in
                     if case .success(let image) = phase {
                         image.resizable().scaledToFill()

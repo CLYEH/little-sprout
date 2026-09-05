@@ -8,6 +8,22 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
     private static let signedURLExpirySeconds = 3600
     private static let bucket = "media"
 
+    /// 張數（PostgREST aggregate，本機已實測 `db-aggregates-enabled` 可用）＋封面 fallback
+    /// 一次內嵌查出（merge-review R1 M1）：
+    ///   - `album_media(count)` → `AlbumListingRow.photoCount`（見該型別文件註解）。
+    ///   - `latest:album_media(media(...))`，靠下方 `.order(referencedTable: "latest")`／
+    ///     `.limit(referencedTable: "latest")` 依 `media(created_at)` 取最新一筆
+    ///     → `AlbumListingRow.latestMediaThumbPath`／`latestMediaStoragePath`。
+    /// 兩個內嵌都叫 `album_media` 但用不同別名（`latest:`）——PostgREST 對同一張表嵌兩次時，
+    /// 排序／筆數限制修飾詞（`?xxx.order=`／`?xxx.limit=`）要用別名而非表名當前綴，否則會拿到
+    /// `PGRST108`（本機實測撞過）。`media(created_at)` 必須同時出現在這個內嵌的 select 欄位
+    /// 清單裡（即使組裝端用不到這個值）——只用來排序、不選進 select 會拿到 `42703`
+    /// column does not exist（本機實測撞過，PostgREST 排序時似乎是對 select 出來的欄位做
+    /// 二次查找，不是任意可存取欄位都能直接拿來排序）。
+    private static let listSelect =
+        "id,title,cover_media_id,created_at,album_media(count)," +
+        "latest:album_media(media(thumb_path,storage_path,created_at))"
+
     private let client: SupabaseClient
 
     init(client: SupabaseClient) {
@@ -18,7 +34,7 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
         do {
             var query = client
                 .from("albums")
-                .select("id,title,cover_media_id,created_at")
+                .select(Self.listSelect)
                 .eq("family_id", value: familyID)
                 .is("deleted_at", value: nil)
             if let cursor {
@@ -30,23 +46,11 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
                 )
             }
             let response: PostgrestResponse<[AlbumListingRow]> = try await query
+                .order("media(created_at)", ascending: false, referencedTable: "latest")
+                .limit(1, referencedTable: "latest")
                 .order("created_at", ascending: false)
                 .order("id", ascending: false)
                 .limit(limit)
-                .execute()
-            return response.value
-        } catch {
-            throw AppError.map(error)
-        }
-    }
-
-    func fetchAlbumMediaLinks(albumIds: [UUID]) async throws -> [AlbumMediaLinkRow] {
-        guard !albumIds.isEmpty else { return [] }
-        do {
-            let response: PostgrestResponse<[AlbumMediaLinkRow]> = try await client
-                .from("album_media")
-                .select("album_id,media_id")
-                .in("album_id", values: albumIds)
                 .execute()
             return response.value
         } catch {
@@ -115,10 +119,14 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
             // 就已經補過 `profiles` 列。
             let session = try await client.auth.session
             let payload = CreateAlbumPayload(familyID: familyID, title: title, createdBy: session.user.id)
+            // 剛建立的相簿必定 0 張照片（`album_media` 還沒有任何連結列）——用跟 `fetchAlbums`
+            // 同一份 `Self.listSelect`，讓 `AlbumListingRow.init(from:)` 吃到的巢狀陣列形狀
+            // 一致（`album_media: [{"count": 0}]`／`latest: []`），不需要另外維護一份簡化版
+            // select 字串。
             let response: PostgrestResponse<AlbumListingRow> = try await client
                 .from("albums")
                 .insert(payload)
-                .select("id,title,cover_media_id,created_at")
+                .select(Self.listSelect)
                 .single()
                 .execute()
             return response.value
@@ -131,6 +139,15 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
         do {
             let params = SetAlbumChildrenParams(albumID: albumID, childIDs: childIDs)
             try await client.rpc("set_album_children", params: params).execute()
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    func setAlbumDeleted(albumID: UUID, deleted: Bool) async throws {
+        do {
+            let params = SetAlbumDeletedParams(albumID: albumID, deleted: deleted)
+            try await client.rpc("set_album_deleted", params: params).execute()
         } catch {
             throw AppError.map(error)
         }
@@ -168,5 +185,15 @@ private struct SetAlbumChildrenParams: Encodable {
     enum CodingKeys: String, CodingKey {
         case albumID = "p_album_id"
         case childIDs = "p_child_ids"
+    }
+}
+
+private struct SetAlbumDeletedParams: Encodable {
+    let albumID: UUID
+    let deleted: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case albumID = "p_album_id"
+        case deleted = "p_deleted"
     }
 }

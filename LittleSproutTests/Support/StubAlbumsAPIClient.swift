@@ -6,12 +6,12 @@ import os
 /// 的 handler 決定各方法的表現（同 `StubTimelineAPIClient` 的模式，見該檔）。
 final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
     typealias FetchAlbumsHandler = @Sendable (UUID, AlbumsCursor?, Int) async throws -> [AlbumListingRow]
-    typealias FetchAlbumMediaLinksHandler = @Sendable ([UUID]) async throws -> [AlbumMediaLinkRow]
     typealias FetchAlbumChildrenHandler = @Sendable ([UUID]) async throws -> [AlbumChildLinkRow]
     typealias FetchMediaHandler = @Sendable ([UUID]) async throws -> [MediaRow]
     typealias SignedURLsHandler = @Sendable ([String]) async throws -> [String: URL]
     typealias CreateAlbumHandler = @Sendable (UUID, String) async throws -> AlbumListingRow
     typealias SetAlbumChildrenHandler = @Sendable (UUID, [UUID]) async throws -> Void
+    typealias SetAlbumDeletedHandler = @Sendable (UUID, Bool) async throws -> Void
 
     struct FetchAlbumsCall: Equatable {
         let familyID: UUID
@@ -24,10 +24,14 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         let childIDs: [UUID]
     }
 
+    struct SetAlbumDeletedCall: Equatable {
+        let albumID: UUID
+        let deleted: Bool
+    }
+
     private struct Box {
         var fetchAlbumsHandler: FetchAlbumsHandler = { _, _, _ in [] }
         var fetchAlbumsCalls: [FetchAlbumsCall] = []
-        var fetchAlbumMediaLinksHandler: FetchAlbumMediaLinksHandler = { _ in [] }
         var fetchAlbumChildrenHandler: FetchAlbumChildrenHandler = { _ in [] }
         var fetchMediaHandler: FetchMediaHandler = { _ in [] }
         var signedURLsHandler: SignedURLsHandler = { _ in [:] }
@@ -36,6 +40,8 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         }
         var setAlbumChildrenHandler: SetAlbumChildrenHandler = { _, _ in }
         var setAlbumChildrenCalls: [SetAlbumChildrenCall] = []
+        var setAlbumDeletedHandler: SetAlbumDeletedHandler = { _, _ in }
+        var setAlbumDeletedCalls: [SetAlbumDeletedCall] = []
     }
 
     private let box = OSAllocatedUnfairLock(initialState: Box())
@@ -48,12 +54,12 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         box.withLock { $0.setAlbumChildrenCalls }
     }
 
-    func setFetchAlbumsHandler(_ handler: @escaping FetchAlbumsHandler) {
-        box.withLock { $0.fetchAlbumsHandler = handler }
+    var setAlbumDeletedCalls: [SetAlbumDeletedCall] {
+        box.withLock { $0.setAlbumDeletedCalls }
     }
 
-    func setFetchAlbumMediaLinksHandler(_ handler: @escaping FetchAlbumMediaLinksHandler) {
-        box.withLock { $0.fetchAlbumMediaLinksHandler = handler }
+    func setFetchAlbumsHandler(_ handler: @escaping FetchAlbumsHandler) {
+        box.withLock { $0.fetchAlbumsHandler = handler }
     }
 
     func setFetchAlbumChildrenHandler(_ handler: @escaping FetchAlbumChildrenHandler) {
@@ -76,16 +82,15 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         box.withLock { $0.setAlbumChildrenHandler = handler }
     }
 
+    func setSetAlbumDeletedHandler(_ handler: @escaping SetAlbumDeletedHandler) {
+        box.withLock { $0.setAlbumDeletedHandler = handler }
+    }
+
     func fetchAlbums(familyID: UUID, cursor: AlbumsCursor?, limit: Int) async throws -> [AlbumListingRow] {
         let call = FetchAlbumsCall(familyID: familyID, cursor: cursor, limit: limit)
         box.withLock { $0.fetchAlbumsCalls.append(call) }
         let handler = box.withLock { $0.fetchAlbumsHandler }
         return try await handler(familyID, cursor, limit)
-    }
-
-    func fetchAlbumMediaLinks(albumIds: [UUID]) async throws -> [AlbumMediaLinkRow] {
-        let handler = box.withLock { $0.fetchAlbumMediaLinksHandler }
-        return try await handler(albumIds)
     }
 
     func fetchAlbumChildren(albumIds: [UUID]) async throws -> [AlbumChildLinkRow] {
@@ -112,5 +117,11 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         box.withLock { $0.setAlbumChildrenCalls.append(SetAlbumChildrenCall(albumID: albumID, childIDs: childIDs)) }
         let handler = box.withLock { $0.setAlbumChildrenHandler }
         try await handler(albumID, childIDs)
+    }
+
+    func setAlbumDeleted(albumID: UUID, deleted: Bool) async throws {
+        box.withLock { $0.setAlbumDeletedCalls.append(SetAlbumDeletedCall(albumID: albumID, deleted: deleted)) }
+        let handler = box.withLock { $0.setAlbumDeletedHandler }
+        try await handler(albumID, deleted)
     }
 }

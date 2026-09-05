@@ -386,6 +386,14 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   恢復 `can_upload`，要嘛請 owner 出手處理（owner 分支不受這個限制）。
 
 ### `albums` / `diaries`
+- **相簿列表依賴 PostgREST `db-aggregates-enabled`（LS-165 R2）**：iOS 相簿 tab 首頁
+  （`SupabaseAlbumsAPIClient.fetchAlbums`）用內嵌查詢 `album_media(count)`／
+  `latest:album_media(media(...))` 一次取得張數與封面 fallback（不再整頁抓
+  `album_media` 在 client 端數），本機 Supabase CLI 容器已實測這個設定預設可用。
+  若未來調整 PostgREST 設定（本機 `supabase/config.toml`、正式站 Dashboard／
+  `postgrest.conf`）**關掉這個選項，這支查詢會直接失敗**（`AlbumListingRow.
+  init(from:)` 對 `album_media` 欄位是必要解碼，不是靜默退化），變更前請先確認
+  這個依賴。
 - **寶貝標記自 LS-121 起是多對多**（見 §8 完整說明）：一篇日記／一本相簿可以標
   0～N 個孩子，透過 `diary_children`／`album_children` 連結表表達，不再是
   `albums.child_id`／`diaries.child_id` 這種單一欄位（兩欄已隨 LS-121 移除）。
