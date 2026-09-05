@@ -114,9 +114,11 @@ final class LegalMarkdownDocumentTests: XCTestCase {
             return nil
         }
         XCTAssertEqual(tableBlocks.count, 2, "分隔列（|---|---|）不應出現在區塊清單裡")
-        XCTAssertEqual(tableBlocks[0].0, "資料 · 內容")
+        // merge-review R1 N2：cell 改用換行分隔（每個 cell 各自一行），取代原本 " · " 接成
+        // 一行的寫法——AX3 下長列可讀性改善，見 `LegalMarkdownDocument.appendTableRow`。
+        XCTAssertEqual(tableBlocks[0].0, "資料\n內容")
         XCTAssertTrue(tableBlocks[0].1, "第一列（表頭）應標記 isHeader")
-        XCTAssertEqual(tableBlocks[1].0, "電子郵件地址 · 登入身分識別")
+        XCTAssertEqual(tableBlocks[1].0, "電子郵件地址\n登入身分識別")
         XCTAssertFalse(tableBlocks[1].1, "資料列不應標記 isHeader")
     }
 

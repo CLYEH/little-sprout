@@ -151,13 +151,18 @@ struct LegalMarkdownDocument: Equatable {
         return blocks
     }
 
+    /// merge-review R1 N2：多欄表格（例如隱私權政策「2.1 帳號資料」四欄表）原本把整列 cell
+    /// 用 `" · "` 接成一行，AX3 下會變成很長一串、欄位語意只能靠順序推。改成每個 cell 各自
+    /// 一行（`"\n"` 分隔，`Text` 原生支援換行）——不需要表頭標籤對照就能大幅改善長列可讀性；
+    /// 「哪個 cell 對應哪個表頭欄位」這種完整標籤化留待後續（記入 LS-96），本輪只做這個
+    /// 零風險的分行改善。
     private static func appendTableRow(_ line: String, to blocks: inout [LegalMarkdownBlock]) {
         guard !isTableSeparatorRow(line) else { return }
         let cells = tableCells(line)
         guard !cells.isEmpty else { return }
         let isHeaderRow: Bool
         if case .tableRow = blocks.last { isHeaderRow = false } else { isHeaderRow = true }
-        blocks.append(.tableRow(inlineAttributed(cells.joined(separator: " · ")), isHeader: isHeaderRow))
+        blocks.append(.tableRow(inlineAttributed(cells.joined(separator: "\n")), isHeader: isHeaderRow))
     }
 
     /// `## 標題文字` → "標題文字"（任意層級 `#`~`######`，本專案只出現到 `###`，見 Notes
