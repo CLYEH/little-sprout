@@ -138402,7 +138402,7 @@
       "type": "frame",
       "id": "EzJCV",
       "x": -3367,
-      "y": 53705,
+      "y": 53813,
       "name": "LS legal / 文件檢視 (iPhone)",
       "clip": true,
       "width": 393,
@@ -138724,7 +138724,7 @@
       "type": "frame",
       "id": "O631mm",
       "x": -3367,
-      "y": 54637,
+      "y": 54745,
       "name": "LS legal / 文件檢視 · 深色",
       "theme": {
         "mode": "dark"
@@ -139049,7 +139049,7 @@
       "type": "frame",
       "id": "E27nKz",
       "x": -3367,
-      "y": 55569,
+      "y": 55677,
       "name": "A11y / 文件檢視 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -139374,7 +139374,7 @@
       "type": "frame",
       "id": "uQeV8",
       "x": -3367,
-      "y": 58449,
+      "y": 58557,
       "name": "LS legal / 文件檢視 (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -139665,7 +139665,7 @@
       "type": "frame",
       "id": "pLLXi",
       "x": -3367,
-      "y": 59723,
+      "y": 59831,
       "name": "LS-133 / 實作註記 · Handoff Notes (ios-dev)",
       "width": 900,
       "fill": "$print-paper",
@@ -141036,7 +141036,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "LS-201：全稿舊債清倉。本 Notes 板（auto-height）與上方 `uQeV8`（LS legal 文件檢視 iPad）root 重疊，本板下移至 y=59723，下游 `k6Rlt`（A11y 已捲到底 AX3）連動下移，僅涉及看板座標，未改文件檢視內容。",
+                  "content": "LS-201：全稿舊債清倉。本 Notes 板（auto-height）與上方 `uQeV8`（LS legal 文件檢視 iPad）root 重疊，本板下移至 y=59831，下游 `k6Rlt`（A11y 已捲到底 AX3）連動下移，僅涉及看板座標，未改文件檢視內容。（R4 訂正：因同 PR F1 修正 yec61/lyu44 文字長度變化使該 Notes 板 auto-height 增高，與下方 EzJCV 產生新重疊，全鏈 24 板 y 再 +108，此為最新值）",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -141052,7 +141052,7 @@
       "type": "frame",
       "id": "k6Rlt",
       "x": -3367,
-      "y": 66598,
+      "y": 66706,
       "name": "A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -141329,7 +141329,7 @@
       "type": "frame",
       "id": "IgqGF",
       "x": -3367,
-      "y": 68650,
+      "y": 68758,
       "name": "LS-177 / 互動列規格 · Diary 卡片 (iPhone)",
       "clip": true,
       "width": 393,
@@ -141814,7 +141814,7 @@
       "type": "frame",
       "id": "VZ0wV",
       "x": -3367,
-      "y": 69582,
+      "y": 69690,
       "name": "LS-177 / 互動列規格 · Diary 卡片 · 深色",
       "theme": {
         "mode": "dark"
@@ -142302,7 +142302,7 @@
       "type": "frame",
       "id": "Qzz3r",
       "x": -3367,
-      "y": 70514,
+      "y": 70622,
       "name": "A11y / 互動列規格 · Diary 卡片 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -142789,7 +142789,7 @@
       "type": "frame",
       "id": "FiBvh",
       "x": -3367,
-      "y": 72370,
+      "y": 72478,
       "name": "LS-177 / 留言 sheet (iPhone)",
       "clip": true,
       "width": 393,
@@ -143384,7 +143384,7 @@
       "type": "frame",
       "id": "f10d1D",
       "x": -3367,
-      "y": 73302,
+      "y": 73410,
       "name": "LS-177 / 留言 sheet · 深色",
       "theme": {
         "mode": "dark"
@@ -143982,7 +143982,7 @@
       "type": "frame",
       "id": "SHbqU",
       "x": -3367,
-      "y": 74234,
+      "y": 74342,
       "name": "A11y / 留言 sheet · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -144587,7 +144587,7 @@
       "type": "frame",
       "id": "dHSyh",
       "x": -3367,
-      "y": 75768,
+      "y": 75876,
       "name": "LS-177 / 留言 sheet · 錯誤態（網路）",
       "clip": true,
       "width": 393,
@@ -144902,7 +144902,7 @@
       "type": "frame",
       "id": "wY7f8",
       "x": -3367,
-      "y": 77632,
+      "y": 77740,
       "name": "LS-177 / 留言 sheet (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -145486,7 +145486,7 @@
       "type": "frame",
       "id": "DUyg3",
       "x": -3367,
-      "y": 78906,
+      "y": 79014,
       "name": "LS-177 / 留言操作表 · Owner 移除留言",
       "clip": true,
       "width": 393,
@@ -145665,7 +145665,7 @@
       "type": "frame",
       "id": "GZ3pb",
       "x": -3367,
-      "y": 79838,
+      "y": 79946,
       "name": "LS-177 / 按讚名單（點計數開啟）",
       "clip": true,
       "width": 393,
@@ -146010,7 +146010,7 @@
       "type": "frame",
       "id": "j7WwV",
       "x": -3367,
-      "y": 80770,
+      "y": 80878,
       "name": "LS-177 / 推播權限前置說明頁 (iPhone)",
       "clip": true,
       "width": 393,
@@ -146336,7 +146336,7 @@
       "type": "frame",
       "id": "ckgMp",
       "x": -3367,
-      "y": 81702,
+      "y": 81810,
       "name": "LS-177 / 推播權限前置說明頁 · 深色",
       "theme": {
         "mode": "dark"
@@ -146665,7 +146665,7 @@
       "type": "frame",
       "id": "KyxGc",
       "x": -3367,
-      "y": 82634,
+      "y": 82742,
       "name": "A11y / 推播權限前置說明頁 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -146993,7 +146993,7 @@
       "type": "frame",
       "id": "FeqWk",
       "x": -3367,
-      "y": 84168,
+      "y": 84276,
       "name": "LS-177 / iOS 系統通知權限對話框（示意）",
       "clip": true,
       "width": 393,
@@ -147183,7 +147183,7 @@
       "type": "frame",
       "id": "y7KAW",
       "x": -3367,
-      "y": 85100,
+      "y": 85208,
       "name": "LS-177 / 設定 · 內容與安全加「推播通知」列 (iPhone，已捲至內容與安全)",
       "clip": true,
       "width": 393,
@@ -147954,7 +147954,7 @@
       "type": "frame",
       "id": "y66AzT",
       "x": -3367,
-      "y": 86032,
+      "y": 86140,
       "name": "LS-177 / 設定 · 內容與安全加「推播通知」列 · 深色（已捲至內容與安全）",
       "theme": {
         "mode": "dark"
@@ -148728,7 +148728,7 @@
       "type": "frame",
       "id": "EclPC",
       "x": -3367,
-      "y": 86964,
+      "y": 87072,
       "name": "LS-177 / 實作註記 · Handoff Notes (ios-dev)",
       "width": 900,
       "fill": "$print-paper",
@@ -150237,7 +150237,7 @@
       "type": "frame",
       "id": "TnxXE",
       "x": -3367,
-      "y": 76700,
+      "y": 76808,
       "name": "LS-177 / 留言 sheet · 空狀態 (iPhone)",
       "clip": true,
       "width": 393,
