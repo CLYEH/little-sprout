@@ -49,6 +49,11 @@ enum TapTargetGateScreenName: String {
     /// 讀不出像素——這正是本輪 FAIL 的根因，見該測試檔文件註解）。沿用這裡而不是另開一套
     /// 平行機制：兩個 target 之間本來就只有這一條「XCUITest 指定畫面」通道。
     case diaryCardVideoBadges = "DiaryCardVideoBadges"
+    // LS-167：上傳佇列 sheet（`design/littlesprout.pen` `LS-142 / 16 上傳佇列`）——相簿詳情
+    // 的「加入照片」入口留給 LS-166（尚未實作），這裡借同一招掛一個代表性樣本（三群、LS002
+    // 置頂、有／無進度百分比的上傳中列都在），讓這個新元件在有真正入口之前就能被機械 gate
+    // 與 UITest 覆蓋，不必等 LS-166。
+    case uploadQueueSheet = "UploadQueueSheetView"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -76,6 +81,8 @@ enum TapTargetGateScreenName: String {
         // 同 `.sectionTabView`：headerRow「時間軸」不受 seed 資料影響，一定會渲染。
         case .sectionTabViewWithDiary: return .staticText("時間軸")
         case .diaryCardVideoBadges: return .staticText("影片 12:34")
+        // 樣本固定含至少一列失敗（見 `UploadQueueStore.previewSample`），群標題必定渲染。
+        case .uploadQueueSheet: return .staticText("沒有成功")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

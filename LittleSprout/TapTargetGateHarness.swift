@@ -40,19 +40,7 @@ enum TapTargetGateHarness {
                 OTPVerificationView(email: "grandma@example.com", authStore: .preview(), cooldownSeconds: 0) {}
             }
         case .settings:
-            NavigationStack {
-                // merge-review R1 M1(b)：「邀請家人」列只在 `familyStore.myFamily != nil` 才
-                // 渲染（LS-107）——`.preview(withFamily:)` 同步餵一個家庭狀態，那顆列才會被量到
-                // （見 `FamilyStore.seedMyFamilyForPreview`／`PreviewFamilyAPIClient.swift`）。
-                SettingsView(
-                    authStore: .preview(),
-                    familyStore: .preview(withFamily: Family(
-                        id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
-                    )),
-                    childrenStore: .preview(),
-                    timelineStore: .preview()
-                )
-            }
+            settingsHost
         case .diaryEditor:
             diaryEditorHost
         case .createChild:
@@ -65,6 +53,8 @@ enum TapTargetGateHarness {
             sectionTabViewWithDiaryHost
         case .diaryCardVideoBadges:
             diaryCardVideoBadgesHost
+        case .uploadQueueSheet:
+            uploadQueueSheetHost
         case .selfTestTooSmall:
             // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
             // accessibility／hit-test frame 實測仍貼著文字本身的天然大小，不會被外層 `.frame`
@@ -95,6 +85,28 @@ enum TapTargetGateHarness {
                 }
             }
             .padding(20)
+        }
+    }
+
+    /// LS-167：從 `hostView(for:)` 的 switch 本體抽出（同其他 case 的理由——本票新增
+    /// `.uploadQueueSheet` case 把 switch 本體推過 SwiftLint `function_body_length` 上限，
+    /// 抽掉這個既有 case 的內容還給界限內，行為完全不變）。
+    ///
+    /// merge-review R1 M1(b)：「邀請家人」列只在 `familyStore.myFamily != nil` 才渲染
+    /// （LS-107）——`.preview(withFamily:)` 同步餵一個家庭狀態，那顆列才會被量到（見
+    /// `FamilyStore.seedMyFamilyForPreview`／`PreviewFamilyAPIClient.swift`）。
+    @MainActor
+    @ViewBuilder
+    private static var settingsHost: some View {
+        NavigationStack {
+            SettingsView(
+                authStore: .preview(),
+                familyStore: .preview(withFamily: Family(
+                    id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
+                )),
+                childrenStore: .preview(),
+                timelineStore: .preview()
+            )
         }
     }
 
@@ -322,6 +334,18 @@ enum TapTargetGateHarness {
             assertionFailure("LS-130 test harness：測試圖寫檔失敗 \(url)：\(error)")
         }
         return url
+    }
+
+    /// LS-167：`UploadQueueSheetView` 沒有真正的入口畫面（相簿詳情「加入照片」留給 LS-166），
+    /// 用一個常駐 `.sheet(isPresented: .constant(true))` 直接把 sheet 頂出來，同
+    /// `UploadQueueStore.previewSample()` 的代表性樣本（`#Preview` 也用同一份）。
+    @MainActor
+    @ViewBuilder
+    private static var uploadQueueSheetHost: some View {
+        Color.lsBackground
+            .sheet(isPresented: .constant(true)) {
+                UploadQueueSheetView(store: .previewSample())
+            }
     }
 
     private static func noop() {}
