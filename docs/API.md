@@ -404,12 +404,37 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   （含 `media_select` 的上傳者例外，見上方 `media` 表）皆沿用既有 policy，不在 view
   裡重複判準。欄位與 `albums` 表其餘部分完全一致（含 `id`／`created_at`，keyset
   分頁條件照舊可用），grant 只開 `authenticated` 的 `SELECT`，`anon` 沒有。
-  **取代的舊口徑**：iOS 相簿 tab 列表原本讀 PostgREST 內嵌 aggregate
-  `album_media(count)` 算張數——那數的是 `album_media` 連結列本身，不是「使用者
-  看得到的照片數」，已被軟刪或（LS-155 刪帳號後）`uploaded_by` 被清空的 media
-  仍會被算進「N 張」（LS-165 R2 merge-review m3）；`album_summaries` 是那個口徑
-  差異的正式修法，`SupabaseAlbumsAPIClient` 改讀本 view 屬於另一張 iOS 票（不在
-  LS-200 範圍，見 LS-200 票文「不做」段）。
+  **取代下面兩則舊口徑筆記描述的計數方式**：`album_summaries` 就是下方「相簿張數
+  口徑」筆記（LS-165 R2 merge-review m3）當時說「需要後端另開一個 view」的那個
+  物件，`SupabaseAlbumsAPIClient` 改讀本 view、拿掉內嵌 aggregate 屬於另一張 iOS
+  票（不在 LS-200 範圍，見 LS-200 票文「不做」段）——**在那張票落地前，下面兩則
+  筆記描述的仍是 iOS 端目前實際在跑的行為，尚未過時，先保留**。
+- **相簿列表依賴 PostgREST `db-aggregates-enabled`（LS-165 R2）**：iOS 相簿 tab 首頁
+  （`SupabaseAlbumsAPIClient.fetchAlbums`）用內嵌查詢 `album_media(count)`／
+  `latest:album_media(media!inner(...))` 一次取得張數與封面 fallback（不再整頁抓
+  `album_media` 在 client 端數），本機 Supabase CLI 容器已實測這個設定預設可用。
+  若未來調整 PostgREST 設定（本機 `supabase/config.toml`、正式站 Dashboard／
+  `postgrest.conf`）**關掉這個選項，這支查詢會直接失敗**（`AlbumListingRow.
+  init(from:)` 對 `album_media` 欄位是必要解碼，不是靜默退化），變更前請先確認
+  這個依賴。
+- **相簿張數口徑：計的是連結列，不是「看得見的照片數」（LS-165 R2 merge-review m3）**：
+  `album_media(count)` 數的是 `album_media` 連結列本身，包含使用者透過 RLS 看不到的
+  media（該列已軟刪、且不是自己上傳；或 LS-155 刪帳號後 `media.uploaded_by` 被 FK
+  `on delete set null` 清成 `NULL`，兩者都落在 `media_select` policy「上傳者自己
+  例外」以外）——「12 張相片」可能包含 1–2 張使用者實際上看不到的照片。本機測過幾種
+  「inner join 後計數」的 select 寫法（`album_media(media!inner(id),count)` 拿到
+  `42803` GROUP BY 錯誤；`album_media!inner(media!inner(count))` 拿到的是「每個
+  album_media 各自一個 count」而不是單一總數），PostgREST 目前的 embed+aggregate
+  語法組合做不到「只數 inner join 命中的列」這種依賴巢狀可見性的計數——**這正是
+  `album_summaries`（LS-200，見上）存在的理由**，iOS 端改讀該 view 之前，這裡描述
+  的口徑差異仍然存在。
+- **封面 fallback 的 `latest` 內嵌用 `media!inner`，不是 `media`（LS-165 R2
+  merge-review B1）**：唯一的 `album_media` 連結指到使用者看不到的 media 時，
+  `media(...)`（LEFT JOIN 語意）會讓那個位置回傳 `{"media": null}`，若這個看不見的
+  候選被 `media(created_at) desc` 排序＋`limit 1` 選中（本機實測：候選數只有一個時
+  必定選中它），解碼會直接失敗。改用 `media!inner(...)`（INNER JOIN 語意）讓看不見的
+  候選在 SQL 層就被排除，`latest` 正確變成空陣列，封面 fallback 落到「兩者皆無→占位
+  圖」分支，不會讓整頁請求失敗。
 - **寶貝標記自 LS-121 起是多對多**（見 §8 完整說明）：一篇日記／一本相簿可以標
   0～N 個孩子，透過 `diary_children`／`album_children` 連結表表達，不再是
   `albums.child_id`／`diaries.child_id` 這種單一欄位（兩欄已隨 LS-121 移除）。
@@ -1980,9 +2005,14 @@ select net.http_post(
       select decrypted_secret from vault.decrypted_secrets
       where name = 'ls153_purge_storage_secret_key'
     )
-  )
+  ),
+  body := '{}'::jsonb,
+  timeout_milliseconds := 60000
 );
 ```
+`timeout_milliseconds := 60000` 不能省：pg_net 預設 5000 ms，一趟最多 4000 物件的
+purge 會逾時、cron 拿不到回應 JSON（正式站 cron job LS-153 comment `cac7d8c4`
+實際值；LS-196 R2 N1 補文件，切換標頭時要一併保留）。
 
 **毒丸隊頭阻塞與死信／退避（R3，merge-review R2 F1 major，comment 7420f7b9）**：
 R2 版本「無法確認已刪的列永遠留在佇列、下次重試」沒有出口——這些列的
@@ -2556,9 +2586,14 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
     `blocked_users`」）：`blocker_id = 該成員, blocked_id = actor_id, family_id =
     該事件的家庭` 存在即排除。
   - **沒有任何 `device_tokens` 的成員**——用 `JOIN`（非 `LEFT JOIN`）天生排除。
+  - **已被停權的成員**（LS-179，`20260904212530_suspension_and_registrations.sql`
+    重建本函式時加的 `pr.suspended_at is null`）——只排除成員本人被停權，不另判
+    所屬家庭停權：家庭停權後該家庭的寫入已被 `enforce_not_suspended` trigger 擋下
+    （§5 `LS053`），不會再產生新的 `notification_events`，這裡沒有需要重複判斷的
+    路徑。
   - **`kind='report'` 時，只留 `family_members.role = 'owner'`**（LS-195，使用者
     2026-09-05 裁決「檢舉事件的推播通知只有 Owner」，銷 LS-96 池項
-    `12e20e0c`）：其餘四種 kind（`comment`／`reaction`／`diary`／`album`／
+    `12e20e0c`）：其餘五種 kind（`comment`／`reaction`／`diary`／`album`／
     `media`）不受影響，仍廣播給全家庭成員（扣上述幾條既有排除條件）。這條規則
     跟 §10-B「檢舉內容本身只有 owner 讀得到」（`content_reports_select`
     policy）對齊——`notification_events` 這張表本身對 `authenticated` 沒有任何
@@ -2732,9 +2767,13 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
         select decrypted_secret from vault.decrypted_secrets
         where name = 'ls172_push_dispatch_secret_key'
       )
-    )
+    ),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 60000
   );
   ```
+  `body`／`timeout_milliseconds` 兩個參數同 §6 `purge-storage` 範本（pg_net 預設
+  5000 ms 逾時；LS-196 R2 N1）。
   **本票不執行這段部署**，接排程由 orchestrator 依 LS-78 授權狀態決定時機。
 - **本機測試**：
   - `supabase/functions/push-dispatch/{handler,apns}.test.ts`（Deno 內建

@@ -43,7 +43,7 @@
 #     舊輪次的收據產於新腳本存在之前、回填不可能，維持只看 head_sha tree。git 本身失敗（ls-tree／show 非 0，淺 clone／物件
 #     缺失）不算「檔案不存在」、不放行（fail closed）。盲區：tree_hash 只證明「收據對應這份 .pen 的**節點樹**」（`children`
 #     全樹；頂層 `variables`／`themes`／`fileToken` 不在雜湊內——Pencil `Get` 只走節點樹，掃描後只改 design token 再落地
-#     gate 看不到，R1 N4），不證明五支數字算對。
+#     gate 看不到，R1 N4），不證明各支掃描的數字算對（支數以 scripts/design/overflow-scan.js 檔頭為準）。
 #   - **LS-185：第六支＋scan_scope**——收據另須含 `scans.board_clip`（可見葉節點伸出有 `clip:true` 的 root frame 被裁：LS-120 R2
 #     六個 spacer 把 Card Diary／Load More 推出板外、LS-177 R2 Header Row 移到 y=−770 捲離畫面；**flagged 必為空**、不接受白名單
 #     ——即使帶 classification 也紅；刻意出血請包進與板同尺寸的 clip 容器，`document_flagged` 的他票板用固定字面
@@ -495,7 +495,10 @@ if errs:
 
 sha_disp = sha[:7] if isinstance(sha, str) else sha
 tag = "（本輪最新）" if is_latest else ""
-schema = "兩支掃描皆有輸出（gate 落地前的既有收據，舊 schema）" if legacy else "四支掃描皆有輸出、corner_anchor.mismatch=0、boards 覆蓋本 PR 觸碰的板"
+# LS-198：支數不寫死——依本收據實際要求的層數算（LS-122 四＋LS-168 第五＋LS-185 第六），全部支數以 scripts/design/overflow-scan.js 檔頭為準
+n_scans = len(required) + (1 if fifth else 0) + (1 if sixth else 0)
+n_zh = {4: "四", 5: "五", 6: "六"}.get(n_scans, str(n_scans))   # legacy（兩支）走下面的舊 schema 字串，這裡不得 KeyError
+schema = "兩支掃描皆有輸出（gate 落地前的既有收據，舊 schema）" if legacy else f"{n_zh}支掃描皆有輸出（支數以 {FIFTH_SCRIPT} 檔頭為準）、corner_anchor.mismatch=0、boards 覆蓋本 PR 觸碰的板"
 if fifth:
     schema += "、tree_hash 對應 head_sha 快照、text_occlusion.flagged 為空"
 elif receipt_hash is None or tx is None:

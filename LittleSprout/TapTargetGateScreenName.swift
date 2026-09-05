@@ -32,6 +32,24 @@ enum TapTargetGateScreenName: String {
     // 任何 feed 資料，`.preview()` 空狀態就會渲染，是這個畫面唯一「不需要 seed 就有代表性」
     // 的可點元件，量測成本低，值得單獨拉一個 case 出來蓋。
     case timelineDefaultState = "TimelineViewDefaultState"
+    // LS-165：`AlbumsView` 從 `ContentUnavailableView` 佔位換成正式內容——原本
+    // `tap-target-exemptions.txt` 的排除理由（「placeholder 畫面，無互動元件」）不再成立，
+    // 改直接註冊。rawValue 逐字等於檔名（`AlbumsView`），`tap-target-registry-check.sh` 認得
+    // 這個形狀，不需要額外在排除清單具名。空狀態（`.preview()` 預設無相簿）就有代表性：
+    // Header 停靠的「新增相簿」建立鈕不看任何相簿資料，同 `.timelineDefaultState` 的既有
+    // 判準；卡片列表本身（沖印品縮圖／NavigationLink）需要多筆假相簿與捲動狀態才有代表性，
+    // 留給 QA 模擬器實測（票文驗收要求的模擬器截圖對稿已覆蓋）。
+    case albumsDefaultState = "AlbumsView"
+    // LS-165：`AlbumSummaryCardView` 排除清單的理由寫「導覽由外層 AlbumsView 的
+    // NavigationLink 負責，該處已走 tap-target-check 涵蓋的互動路徑」——這句話要成立，
+    // 需要至少一個註冊畫面真的渲染出有相簿的列表，不能只靠空狀態（`.albumsDefaultState`）。
+    // 這個 case 補上這個缺口：`AlbumsStore.seedForPreview` 三張涵蓋 1–9／10–49／50+ 三個
+    // 厚度分級的假相簿，量測每張卡片（`NavigationLink` 整卡是唯一 tap target）的點擊區。
+    case albumsPopulatedState = "AlbumsViewPopulatedState"
+    // LS-165：`CreateAlbumView`（新增相簿 sheet）同 `createChild` 的既有理由——初始態
+    // 不需要任何 seed 資料（`AlbumsStore.preview()`／`ChildrenStore.preview()` 已是
+    // `#Preview` 在用的假 client），姓名欄／寶貝標記欄／建立鈕三顆可點元件一開畫面就有代表性。
+    case createAlbum = "CreateAlbumView"
     // LS-136：`SectionTabBar`（`cmp/Tab Bar` 全字級純 icon）本身不是 `Features/**/*View.swift`
     // （住在 `Navigation/`），`tap-target-registry-check.sh` 不會強制要求註冊，但票文 scope 4
     // 明確要求「TapTargetGateHarness 註冊 Tab Bar 預設態（四顆 ≥44pt）」——直接掛完整的
@@ -70,6 +88,13 @@ enum TapTargetGateScreenName: String {
         case .diaryEditor: return .staticText("寫日記")
         case .createChild: return .staticText("幫寶貝建立檔案")
         case .timelineDefaultState: return .button("新增回憶")
+        case .albumsDefaultState: return .button("新增相簿")
+        // 不用相簿標題（`.staticText("上禮拜的動物園一日遊")`）：`AlbumSummaryCardView`
+        // 整卡是 `.accessibilityElement(children: .combine)`，Caption／Signature 兩行文字
+        // 被合併成一個元素，個別標題字串量不到獨立的 staticText。Header「相簿」是唯一保證
+        // 獨立存在、不受相簿資料影響的文字節點（同 `.albumsDefaultState` 的既有理由）。
+        case .albumsPopulatedState: return .staticText("相簿")
+        case .createAlbum: return .staticText("新增相簿")
         // 預設選中分頁＝時間軸（`AuthenticatedRootView` 的 `selection` 初值），headerRow
         // 「時間軸」一定會渲染，不依賴任何 seed 資料。
         case .sectionTabView: return .staticText("時間軸")

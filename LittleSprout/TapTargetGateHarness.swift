@@ -40,25 +40,19 @@ enum TapTargetGateHarness {
                 OTPVerificationView(email: "grandma@example.com", authStore: .preview(), cooldownSeconds: 0) {}
             }
         case .settings:
-            NavigationStack {
-                // merge-review R1 M1(b)：「邀請家人」列只在 `familyStore.myFamily != nil` 才
-                // 渲染（LS-107）——`.preview(withFamily:)` 同步餵一個家庭狀態，那顆列才會被量到
-                // （見 `FamilyStore.seedMyFamilyForPreview`／`PreviewFamilyAPIClient.swift`）。
-                SettingsView(
-                    authStore: .preview(),
-                    familyStore: .preview(withFamily: Family(
-                        id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
-                    )),
-                    childrenStore: .preview(),
-                    timelineStore: .preview()
-                )
-            }
+            settingsHost
         case .diaryEditor:
             diaryEditorHost
         case .createChild:
             createChildHost
         case .timelineDefaultState:
             timelineDefaultStateHost
+        case .albumsDefaultState:
+            albumsDefaultStateHost
+        case .albumsPopulatedState:
+            albumsPopulatedStateHost
+        case .createAlbum:
+            createAlbumHost
         case .sectionTabView:
             sectionTabViewHost
         case .sectionTabViewWithDiary:
@@ -95,6 +89,27 @@ enum TapTargetGateHarness {
                 }
             }
             .padding(20)
+        }
+    }
+
+    /// merge-review R1 M1(b)：「邀請家人」列只在 `familyStore.myFamily != nil` 才渲染
+    /// （LS-107）——`.preview(withFamily:)` 同步餵一個家庭狀態，那顆列才會被量到（見
+    /// `FamilyStore.seedMyFamilyForPreview`／`PreviewFamilyAPIClient.swift`）。拆成獨立
+    /// computed var（LS-165 新增兩個 case 後，`hostView` switch 本體超過 SwiftLint
+    /// `function_body_length` 上限，理由同其餘 `*Host` computed var 的既有作法）。
+    @MainActor
+    @ViewBuilder
+    private static var settingsHost: some View {
+        NavigationStack {
+            SettingsView(
+                authStore: .preview(),
+                familyStore: .preview(withFamily: Family(
+                    id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
+                )),
+                childrenStore: .preview(),
+                timelineStore: .preview(),
+                albumsStore: .preview()
+            )
         }
     }
 
@@ -156,7 +171,7 @@ enum TapTargetGateHarness {
             familyStore: .preview(withFamily: Family(
                 id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
-            childrenStore: .preview(), timelineStore: .preview(),
+            childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
         )
         .environment(\.horizontalSizeClass, .compact)
@@ -196,7 +211,7 @@ enum TapTargetGateHarness {
         let timelineStore = seededTimelineStore()
         AuthenticatedRootView(
             authStore: .preview(), familyStore: .preview(),
-            childrenStore: .preview(), timelineStore: timelineStore,
+            childrenStore: .preview(), timelineStore: timelineStore, albumsStore: .preview(),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
         )
         .environment(\.horizontalSizeClass, .compact)
