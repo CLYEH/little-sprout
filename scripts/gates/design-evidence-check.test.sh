@@ -31,7 +31,8 @@
 # LS-202：㊷～㊹-b 驗六支各帶 scope／document_count——齊全綠（㊷）／某支缺 document_count 紅（㊷-b）／某支缺 scope 紅（㊷-c，LS-185 時可省）／
 # document_count 負數／布林紅（㊷-d／e）／head_sha tree 無標記、缺欄位綠＋放行行（㊸）／PR head 已含標記而最新收據缺紅、補齊綠（㊹／㊹-b）。
 # cutoff＝腳本含 `document_count` 字面（同 LS-168／LS-185 用腳本標記不用時間）。R2 minor-1：㊺ scan_scope=document 且
-# corner_anchor.document_containers=0 紅（第四支停擺）／㊺-b boards 限縮全零綠／㊺-c in-scope containers=0 而 document 216 綠（LS-133 形狀）。
+# corner_anchor.document_containers=0 紅（第四支停擺）／㊺-b boards 限縮全零綠／㊺-c in-scope containers=0 而 document 216 綠（LS-133 形狀）／
+# ㊺-d R3 省略 document_containers 鍵紅（cutoff 下必填；㉞～㊶ 的 write_receipt6 收據在 cutoff 前、沒有此鍵仍綠）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -820,6 +821,7 @@ write_receipt7() {
   local ps='"scope":"document","document_count":0,' ss='"scan_scope":"document"'
   local counts='"containers":1,"points":8,"mismatch":0,"document_containers":1,"document_mismatch":0'
   case "$mode" in
+    nodoccont)      counts='"containers":1,"points":8,"mismatch":0,"document_mismatch":0' ;;
     zerodoc)        counts='"containers":0,"points":0,"mismatch":0,"document_containers":0,"document_mismatch":0' ;;
     zerodoc_boards) counts='"containers":0,"points":0,"mismatch":0,"document_containers":0,"document_mismatch":0'; ss='"scan_scope":"boards"'; ps='"scope":"boards","document_count":0,' ;;
     zeroin)         counts='"containers":0,"points":0,"mismatch":0,"document_containers":216,"document_mismatch":0' ;;
@@ -911,6 +913,12 @@ write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha45" "$(hash_of "
 g add design/evidence/LS-67-r6-overflow.json
 g commit -qm 'design(evidence): LS-67 r6 收據（containers=0、document_containers=216）'
 expect 0 '㊺-c in-scope containers=0 而 document_containers=216 → 綠（boards 沒有印品是正常收據，LS-133 形狀）' '六支各帶 scope／document_count' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊺-d R3 minor-1：省略 document_containers 鍵（merge-review R2 探針 LS-202-probe-missingfield 的形狀）→ 紅，不得繞過歸零判定
+write_receipt7 "$R/design/evidence/LS-67-r6-overflow.json" "$sha45" "$(hash_of "$sha45")" nodoccont
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（省略 document_containers）'
+expect 1 '㊺-d 省略 corner_anchor.document_containers → 紅（cutoff 下必填，省略鍵不得繞過）' 'scans.corner_anchor.document_containers 必填且須為非負整數（收據=None）' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
 
 if [ "$fail" -eq 0 ]; then

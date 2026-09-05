@@ -60,10 +60,12 @@
 #     `scope` 若在仍只接受兩字面）；輪次最高的收據另看 PR head tree（同 R1 N1）。不驗 `document_count` 與 flagged 長度的關係——
 #     收據 flagged 是「每類一筆代表」的彙整，本來就不等長。**注意 `document_count` 是「掃描快照內」的命中數**：`scope=boards` 時快照
 #     已限縮，它就是限縮值、不是全稿（任何一支都看不到全稿），讀收據必與 `scope` 併讀（merge-review R1 info-1）。
-#     **R2 minor-1（第四支歸零）**：同一 cutoff 下，`scan_scope=document` 而 `scans.corner_anchor.document_containers == 0` 即紅——整份快照
+#     **R2 minor-1（第四支歸零）**：同一 cutoff 下，`scan_scope=document` 而 `scans.corner_anchor.document_containers == 0` 即紅——全稿快照
 #     沒有任何角托容器只可能是 Pencil 快照沒讀到 `ref` 且名稱備援也沒命中（development 現稿 220–261 個），不是「這輪沒有錯位」；
 #     不以 in-scope `containers` 判——LS-133 r1–r3／LS-177 r1 的 boards 本來就沒有印品（`containers=0`、`document_containers` 216），
-#     那是正常收據。`scan_scope=boards` 限縮快照可能真的沒有印品，不判。
+#     那是正常收據。`scan_scope=boards` 限縮快照可能真的沒有印品，不判。**R3 minor-1**：同一 cutoff 下 `document_containers` **必填**
+#     （非負整數；R2 只在鍵存在時判，省略此鍵就繞過了）——corner_anchor 必填鍵＝`boards`／`containers`／`points`／`mismatch`／
+#     `document_containers`／`document_mismatch`／`unresolved`，與 ui-designer.md 收據模板同步；cutoff 之前的收據（development 43 份）不受影響。
 # 掃描「有沒有真的跑對」（演算法本身正確性）不是這支腳本能驗的——那需要 Pen 的版面引擎，只能靠
 # visual-reviewer 用同方法重掃比對（見 .claude/agents/visual-reviewer.md）。
 #
@@ -528,11 +530,18 @@ if perscan and isinstance(scans, dict):
         dc = scan.get("document_count")
         if isinstance(dc, bool) or not isinstance(dc, int) or dc < 0:
             errs.append(f"scans.{key}.document_count 必須是非負整數（收據={dc!r}）——該支在掃描快照裡的命中數，抄 SCAN 段標頭的 document_count=（LS-202；scope=boards 時為限縮值，須與 scope 併讀）")
-    # R2 minor-1：全稿快照一個角托容器都沒有＝第四支停擺（快照沒讀到 ref、名稱備援也沒命中），不是「沒有錯位」；boards 限縮快照不判
+    # R2 minor-1／R3 minor-1：document_containers 在本 cutoff 下必填（R2 只在鍵存在時判 ==0，省略此鍵就繞過了——merge-review R2
+    # 探針 LS-202-probe-missingfield）；全稿快照一個角托容器都沒有＝第四支停擺（快照沒讀到 ref、名稱備援也沒命中），不是「沒有錯位」；
+    # boards 限縮快照不判歸零。必填清單與 ui-designer.md 收據模板同步（模板列有 document_containers）。
     ca_scan = scans.get("corner_anchor")
-    if isinstance(ca_scan, dict) and scan_scope != "boards":
+    if isinstance(ca_scan, dict):
         dcont = ca_scan.get("document_containers")
-        if not isinstance(dcont, bool) and dcont == 0:
+        if isinstance(dcont, bool) or not isinstance(dcont, int) or dcont < 0:
+            errs.append(
+                f"scans.corner_anchor.document_containers 必填且須為非負整數（收據={dcont!r}）——LS-202 起用它判第四支有沒有停擺，省略此鍵不得繞過；"
+                "抄 SUMMARY 的 document=<containers>/<points>/<mismatch> 第一個數（ui-designer.md 收據模板列有此鍵，R3 minor-1）"
+            )
+        elif scan_scope != "boards" and dcont == 0:
             errs.append(
                 "scans.corner_anchor.document_containers 為 0 而 scan_scope=document——整份快照沒有任何角托容器＝第四支靜默停擺"
                 "（Pencil 快照沒讀到 ref、名稱備援 Corner TL/… 也沒命中；development 現稿應在 220–261 級），不是「這輪沒有錯位」，查快照欄位後重跑"
