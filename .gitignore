@@ -48,7 +48,6 @@ design-canvas*/shots.json
 design-canvas*/measured.json
 design-canvas*/verified.json
 design-canvas*/selftest.json
-design-canvas*/__pycache__/
 # build 打包檔：含 minified runtime，會誤觸 secrets 掃描——正解是不入版控
 design-canvas*/little-sprout-*.html
 design-canvas*/mengya-*.html

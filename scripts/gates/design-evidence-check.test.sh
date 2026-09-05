@@ -921,6 +921,98 @@ g commit -qm 'design(evidence): LS-67 r6 收據（省略 document_containers）'
 expect 1 '㊺-d 省略 corner_anchor.document_containers → 紅（cutoff 下必填，省略鍵不得繞過）' 'scans.corner_anchor.document_containers 必填且須為非負整數（收據=None）' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
 
+# ───── LS-207：corner_anchor.ref_hits（ref 判準本身的哨兵，跟 document_containers 分開判）─────
+# cutoff＝head_sha tree 的正典腳本含 REF_HITS_MARKER（"ref_hits" 字面）才要求；舊收據（腳本尚無此標記）缺欄位放行，
+# 手法同 LS-202 perscan（land8／write_receipt8 仿 land7／write_receipt7）。
+land8() {
+  # land8 <branch> <script: refhits|perscan>（perscan＝有 document_count 標記但還沒有 ref_hits，模擬 cutoff 前）
+  g checkout -q -b "$1" "$base_ref"
+  printf '%s\n' "$pen4" > "$R/design/littlesprout.pen"
+  g add design/littlesprout.pen
+  mkdir -p "$R/scripts/design"
+  if [ "$2" = refhits ]; then
+    printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\nfunction scanBoardClip() {}\n// tag: scope + document_count\nref_hits\n' > "$R/scripts/design/overflow-scan.js"
+  else
+    printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\nfunction scanBoardClip() {}\n// tag: scope + document_count\n' > "$R/scripts/design/overflow-scan.js"
+  fi
+  g add scripts/design/overflow-scan.js
+  g commit -qm 'design(pen): LS-67 落地（LS-207 樣本）'
+  g rev-parse HEAD
+}
+write_receipt8() {
+  # write_receipt8 <path> <head_sha> <tree_hash> <mode: ok|missing|zero|zero_boards|zero_nameonly|neg|bool>
+  local path=$1 sha=$2 hash=$3 mode=$4
+  local ss='"scan_scope":"document"' rh=',"ref_hits":32'
+  local counts='"containers":1,"points":8,"mismatch":0,"document_containers":1,"document_mismatch":0'
+  case "$mode" in
+    missing)      rh='' ;;
+    zero)         rh=',"ref_hits":0' ;;
+    zero_boards)  rh=',"ref_hits":0'; ss='"scan_scope":"boards"' ;;
+    zero_nameonly) rh=',"ref_hits":0' ;;  # document_containers 仍是 1（預設 counts）：名稱備援撐住，但 ref 判準本身沒接上
+    neg)          rh=',"ref_hits":-1' ;;
+    bool)         rh=',"ref_hits":true' ;;
+  esac
+  local ps='"scope":"document","document_count":0,'
+  [ "$ss" = '"scan_scope":"boards"' ] && ps='"scope":"boards","document_count":0,'
+  mkdir -p "$(dirname "$path")"
+  printf '%s\n' '{"ticket":"LS-67","round":8,"head_sha":"'"$sha"'","total_nodes":4,"tree_hash":"'"$hash"'",'"$ss"',' \
+    ' "scans":{"sibling_intersection":{'"$ps"'"flagged":[]},"row_overflow":{'"$ps"'"flagged":[]},' \
+    '  "cross_parent_collision":{'"$ps"'"flagged":[]},' \
+    '  "corner_anchor":{'"$ps"'"boards":["d"],'"$counts""$rh"',"flagged":[],"unresolved":[]},' \
+    '  "text_occlusion":{'"$ps"'"flagged":[],"document_flagged":[]},"board_clip":{'"$ps"'"flagged":[],"document_flagged":[]}}}' > "$path"
+}
+
+# ㊻ ref_hits 非零、scan_scope=document → 綠
+sha50="$(land8 pr-refhits-ok refhits)"
+write_receipt8 "$R/design/evidence/LS-67-r8-overflow.json" "$sha50" "$(hash_of "$sha50")" ok
+g add design/evidence/LS-67-r8-overflow.json
+g commit -qm 'design(evidence): LS-67 r8 收據（ref_hits 非零）'
+expect 0 '㊻ ref_hits 非零、scan_scope=document → 綠' '六支各帶 scope／document_count' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊻-b 省略 ref_hits 鍵（cutoff 已到）→ 紅
+write_receipt8 "$R/design/evidence/LS-67-r8-overflow.json" "$sha50" "$(hash_of "$sha50")" missing
+g add design/evidence/LS-67-r8-overflow.json
+g commit -qm 'design(evidence): LS-67 r8 收據（省略 ref_hits）'
+expect 1 '㊻-b 省略 corner_anchor.ref_hits → 紅（cutoff 下必填）' 'scans.corner_anchor.ref_hits 必填且須為非負整數（收據=None）' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊻-c ref_hits 負數 → 紅
+write_receipt8 "$R/design/evidence/LS-67-r8-overflow.json" "$sha50" "$(hash_of "$sha50")" neg
+g add design/evidence/LS-67-r8-overflow.json
+g commit -qm 'design(evidence): LS-67 r8 收據（ref_hits=-1）'
+expect 1 '㊻-c ref_hits 負數 → 紅' 'scans.corner_anchor.ref_hits 必填且須為非負整數（收據=-1）' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊻-d ref_hits 布林 → 紅
+write_receipt8 "$R/design/evidence/LS-67-r8-overflow.json" "$sha50" "$(hash_of "$sha50")" bool
+g add design/evidence/LS-67-r8-overflow.json
+g commit -qm 'design(evidence): LS-67 r8 收據（ref_hits=true）'
+expect 1 '㊻-d ref_hits 布林 → 紅' 'scans.corner_anchor.ref_hits 必填且須為非負整數（收據=True）' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊻-e ref_hits=0 且 scan_scope=document → 紅（ref 判準本身沒接上）
+write_receipt8 "$R/design/evidence/LS-67-r8-overflow.json" "$sha50" "$(hash_of "$sha50")" zero
+g add design/evidence/LS-67-r8-overflow.json
+g commit -qm 'design(evidence): LS-67 r8 收據（ref_hits=0）'
+expect 1 '㊻-e ref_hits=0、scan_scope=document → 紅（ref 判準沒接上）' 'scans.corner_anchor.ref_hits 為 0 而 scan_scope=document' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊻-f ref_hits=0 但 scan_scope=boards（限縮快照可能真的沒有 ref 命中）→ 綠
+write_receipt8 "$R/design/evidence/LS-67-r8-overflow.json" "$sha50" "$(hash_of "$sha50")" zero_boards
+g add design/evidence/LS-67-r8-overflow.json
+g commit -qm 'design(evidence): LS-67 r8 收據（ref_hits=0，boards 限縮）'
+expect 0 '㊻-f ref_hits=0、scan_scope=boards → 綠（限縮快照不判）' 'scan_scope=boards' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊻-g ref_hits=0 但 document_containers=1（名稱備援撐住）→ 仍紅：ref 判準本身是壞的，不因 document_containers 非零而放行
+write_receipt8 "$R/design/evidence/LS-67-r8-overflow.json" "$sha50" "$(hash_of "$sha50")" zero_nameonly
+g add design/evidence/LS-67-r8-overflow.json
+g commit -qm 'design(evidence): LS-67 r8 收據（ref_hits=0，document_containers 仍非零）'
+expect 1 '㊻-g ref_hits=0 即使 document_containers 非零仍紅（兩個哨兵分開判）' 'scans.corner_anchor.ref_hits 為 0 而 scan_scope=document' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊻-h cutoff 前（head_sha tree 的腳本尚無 ref_hits 標記）：省略 ref_hits 鍵仍綠、放行
+sha51="$(land8 pr-legacy-refhits perscan)"
+write_receipt7 "$R/design/evidence/LS-67-r8-overflow.json" "$sha51" "$(hash_of "$sha51")" ok
+g add design/evidence/LS-67-r8-overflow.json
+g commit -qm 'design(evidence): LS-67 r8 收據（cutoff 前，無 ref_hits 標記）'
+expect 0 '㊻-h cutoff 前：省略 ref_hits → 綠（舊收據放行）' '六支各帶 scope／document_count' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
 if [ "$fail" -eq 0 ]; then
   echo "design-evidence-check.test.sh：全數通過"
 else

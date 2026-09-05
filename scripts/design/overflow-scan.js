@@ -46,16 +46,27 @@
 //       命中 BLEED_RE：Corner／Badge／Dragging Photo／Drop Target／Insert Line／Stack Sheet——LS-119 R6 實跑 386 筆多是
 //       Spacer × Corner Shape、Feed × Home Indicator Area 這類不可見排版框），`SCAN_CROSS_ALL = true`（node：opts.crossAll）
 //       才全報。白名單以 classification 記錄。
-//   (d) corner_anchor：角托候選＝**ref 判準 ∪ 名稱備援**（LS-202）：`type:"ref"` 且 `ref` 解析到 `cmp/Photo Corner` 的實例（元件 id
-//       集合＝字面 PHOTO_CORNER_ID `GEBcf` ∪ 快照 roots 裡名稱為 `cmp/Photo Corner` 的元件定義——元件重建換 id 時名稱是備援；
-//       `SCAN_SCOPE=boards` 限縮快照沒有元件定義根時就只剩字面 id），**或**名稱命中 CORNER_NAME_RE `Corner TL/TR/BL/BR`（LS-122 起的
-//       舊判準，票文「名稱只作備援」；merge-review R1 minor-1：Pencil `Get` 若讀不到 `n.ref`，只靠 ref 會讓第四支靜默歸零、收據
-//       `containers=0/mismatch=0` 全綠——備援保證最壞退回本票之前的行為；development 上「只在名稱判準」＝0，補回零代價）。ref 判準補的是
-//       `cmp/Profile Print`／App icon 的 `Mount TL/BR`（以 ref 存在、名稱不是 Corner …，LS-194 VR：實測 corner-out 3.8pt 屬盲區，LS-96
-//       `0617b9ae`）。方位取自名稱 `/\b(TL|TR|BL|BR)\b/`（`Corner TL`／`Mount BR` 都認得；無方位進 `unresolved`）；名稱不像角托、又不是 ref
-//       的節點不算。`document_containers === 0` 時 SUMMARY 後與 compactLines 各印 `⚠` 行：`scope=document`＝第四支停擺（design-evidence-check.sh
-//       對這種收據紅、且該 cutoff 下 `document_containers` 必填）；`scope=boards` 只印提示（限縮快照可能真的沒有印品、判不出停擺，R3
-//       minor-2）；`containers === 0` 而 document 非零只印提示（LS-133 r1–r3／LS-177 r1 的 boards 本來就沒有印品，屬正常）。每個直接子節點含角托候選的節點是一個「容器」（角托的父）。角托咬住的**紙面**不一定是
+//   (d) corner_anchor：角托候選＝**ref 判準 ∪ 名稱備援**（LS-202；ref 判準真正生效見 LS-207）：`ref` 解析到 `cmp/Photo Corner`
+//       的實例（元件 id 集合＝字面 PHOTO_CORNER_ID `GEBcf` ∪ 快照 roots 裡名稱為 `cmp/Photo Corner` 的元件定義——元件重建換 id
+//       時名稱是備援；`SCAN_SCOPE=boards` 限縮快照沒有元件定義根時就只剩字面 id），**或**名稱命中 CORNER_NAME_RE `Corner TL/TR/BL/BR`
+//       （LS-122 起的舊判準，票文「名稱只作備援」；merge-review R1 minor-1：Pencil `Get` 若讀不到 `n.ref`，只靠 ref 會讓第四支靜默歸零、
+//       收據 `containers=0/mismatch=0` 全綠——備援保證最壞退回本票之前的行為；development 上「只在名稱判準」＝0，補回零代價）。
+//       **LS-207 實測缺口**：`Get(visit, {resolveInstances:true})` 展開後的樹裡，實例根節點本身**沒有** `type:"ref"`／`n.ref`
+//       （已被展開成子樹，LS-201 VR R2／R3 實測），LS-202 當時假設的 ref 判準因此在真實稿貢獻 0；改成另跑一次
+//       `{resolveInstances:false}` 的快照，把每個 `type:"ref"` 節點的 `id → ref`（元件 id）收進對照表，再套到展開後那棵樹裡
+//       同 id 的節點上（同一個實例根節點在兩次走訪 id 相同，只有它的子孫在展開版多出 `instanceId/childId` 複合 id；見檔尾
+//       Pencil execute 區塊）——ref 判準補的是 `cmp/Profile Print`／App icon 的 `Mount TL/BR`（以 ref 存在、名稱不是 Corner …，
+//       LS-194 VR：實測 corner-out 3.8pt 屬盲區，LS-96 `0617b9ae`）；`Mount TL/BR` 若恰為兩顆對角（`cmp/Profile Print` 樣式）
+//       且找不到吻合紙面，`unresolved` 該筆會附 `classification: "mount_pair"` 分類（LS-207）。方位取自名稱 `/\b(TL|TR|BL|BR)\b/`
+//       （`Corner TL`／`Mount BR` 都認得；無方位進 `unresolved`）；名稱不像角托、ref 也對不到已知元件 id 的節點不算。
+//       **`ref_hits`**（LS-207）：獨立輸出「ref 判準命中節點數」（不論最終是否成一個合法容器），`ref_hits === 0` 是判準本身
+//       沒接上的哨兵——與 `document_containers === 0`（判準接上了但一顆角托都沒有／全部落在 `unresolved`）分開看，因為後者
+//       在 ref 判準失效、只剩名稱備援時仍可能非零（development 現稿名稱判準就有 220 個）。`document_containers === 0` 時
+//       SUMMARY 後與 compactLines 各印 `⚠` 行：`scope=document`＝第四支停擺（design-evidence-check.sh 對這種收據紅、且該
+//       cutoff 下 `document_containers` 必填）；`scope=boards` 只印提示（限縮快照可能真的沒有印品、判不出停擺，R3
+//       minor-2）；`containers === 0` 而 document 非零只印提示（LS-133 r1–r3／LS-177 r1 的 boards 本來就沒有印品，屬正常）；
+//       `ref_hits === 0` 時 `scope=document` 同樣是 design-evidence-check.sh 判紅的 cutoff（腳本含 `ref_hits` 欄位才驗，
+//       舊收據沒有這個鍵就放行）。每個直接子節點含角托候選的節點是一個「容器」（角托的父）。角托咬住的**紙面**不一定是
 //       父：現行稿有三種結構——角托是紙面的子（`Photo Wrap`）、角托與紙面 `Print` 是兄弟（`Print Stage`）、角托直接掛在
 //       板上而紙面是兄弟 `Print`（iPad 板）。因此紙面由候選（父＋同 parent 的兄弟）中挑「與四顆角托期望位置吻合軸數最多」
 //       者（吻合軸數 ≥ 一半才算找到；找不到列 `unresolved`，不計 mismatch、收據需給分類）。期望位置＝角托外緣壓過紙緣
@@ -142,6 +153,10 @@ const PHOTO_CORNER_ID = "GEBcf";
 const PHOTO_CORNER_NAME = "cmp/Photo Corner";
 const CORNER_NAME_RE = /\bCorner (TL|TR|BL|BR)\b/;
 const CORNER_VARIANT_RE = /\b(TL|TR|BL|BR)\b/;
+// LS-207：cmp/Profile Print／App icon 用 `Mount TL`／`Mount BR` 命名同一顆 cmp/Photo Corner 元件（對角兩顆，非四角托全套）；
+// ref 判準接上後這些節點會被 isCorner 命中，但常找不到吻合紙面（版面結構與印品母題不同）——unresolved 該筆改附
+// classification: "mount_pair" 分類，不當成未知失敗。
+const MOUNT_NAME_RE = /\bMount (TL|TR|BL|BR)\b/;
 const BLEED_RE = /Corner|Badge|Dragging Photo|Drop Target|Insert Line|Stack Sheet/i;
 const OVERLAY_RE = /Action Bar|Tab Bar|Capsule|Footer|Toast|Banner/;
 // 第六支的可見葉節點型別（.pen 實測型別集：frame／text／ref／icon／rectangle／note／path／ellipse；frame 只有帶 image fill 才算）
@@ -320,8 +335,30 @@ function scanCornerAnchor(nodes, idx, opts) {
   const boards = resolveBoards(opts && opts.boards, roots);
   const scoped = boards.length > 0;
   const cornerIds = cornerComponentIds(roots);
-  // ref 判準 ∪ 名稱備援（R2 minor-1）：名稱備援保證 ref 讀不到時最壞退回 LS-122 的名稱判準，而不是 containers=0 全綠
-  const isCorner = (n) => (n.type === "ref" && cornerIds.includes(n.ref)) || CORNER_NAME_RE.test(n.name || "");
+  // LS-207：ref 判準不再要求 n.type === "ref"——resolveInstances:true 展開後的樹裡實例根節點本身已不是 type:"ref"（LS-201
+  // VR R2／R3 實測），判準只看 n.ref 有沒有解析到已知角托元件 id；ref 由呼叫端（node module 的合成快照，或 Pencil execute
+  // 區塊用 resolveInstances:false 對照表回填，見檔尾）提供，這裡不管來源。名稱備援（R2 minor-1）保證 ref 讀不到時最壞退回
+  // LS-122 的名稱判準，而不是 containers=0 全綠。
+  const isCorner = (n) => (n.ref != null && cornerIds.includes(n.ref)) || CORNER_NAME_RE.test(n.name || "");
+  // ref_hits（LS-207；R2 修 merge-review R1 fd783f6c F7）：ref 判準本身的哨兵——獨立於後面的容器／紙面比對，只數
+  // 「有多少活節點的 ref 解析到角托元件 id」。===0 代表 ref 判準完全沒接上（快照沒有 ref 欄位，或對照表沒建成）；
+  // 即使如此，名稱備援仍可能讓 document_containers 非零（development 現稿名稱判準本身就有 220 個），所以兩個
+  // 哨兵要分開看。**只計實例層（排除 cmp/ 定義子樹）**：component 定義子樹（頂層 root 名稱以 `cmp/` 開頭）在
+  // resolveInstances:false／true 兩次走訪的節點 id 都是原生 id，定義內部若剛好也有 ref 節點一定 join 得上、
+  // 會把 ref_hits 撐成非零——但真正要接住的盲區是**板上的實例**（如 41 個 Mount 容器）的展開版複合 id
+  // （instanceId/childId）對不上 refMap 的原生 id 鍵，這種情況下 ref_hits_instances 才會誠實地維持 0；純用
+  // 「有沒有任何 ref 命中」當哨兵會被定義子樹的命中蓋掉、看不出實例層真的接上了沒。ref_hits_defs 另外輸出、
+  // 純供人工核對用，不影響 gate 判定。
+  let refHitsInstances = 0, refHitsDefs = 0;
+  for (const n of liveNodes) {
+    if (n.ref == null || !cornerIds.includes(n.ref)) continue;
+    const c = chain.get(n.id);
+    const rootId = c && c.length ? c[c.length - 1] : null;
+    const root = rootId != null ? byId.get(rootId) : null;
+    if (root && typeof root.name === "string" && root.name.indexOf("cmp/") === 0) refHitsDefs++;
+    else refHitsInstances++;
+  }
+  const refHits = refHitsInstances;
   const groups = new Map();
   for (const n of liveNodes) {
     if (!isCorner(n) || n.parent == null || !byId.get(n.parent)) continue;
@@ -330,7 +367,7 @@ function scanCornerAnchor(nodes, idx, opts) {
     groups.get(n.parent).push({ node: n, variant: m ? m[1] : null });
   }
   const out = {
-    boards, containers: 0, points: 0, mismatch: 0, flagged: [], unresolved: [],
+    boards, containers: 0, points: 0, mismatch: 0, flagged: [], unresolved: [], ref_hits: refHits, ref_hits_defs: refHitsDefs,
     document_containers: 0, document_points: 0, document_mismatch: 0, document_flagged: [], document_unresolved: [], container_corners: [],
   };
   for (const [pid, corners] of groups) {
@@ -341,8 +378,14 @@ function scanCornerAnchor(nodes, idx, opts) {
     const inScope = !scoped || boards.includes(board);
     const base = { container: pid, container_name: p.name, board, board_name: boardName, corners: corners.map((k) => k.node.id) };
     out.container_corners.push({ container: pid, container_name: p.name, board, board_name: boardName, n: corners.length, in_scope: inScope });
+    // LS-207：Mount TL/BR 群（cmp/Profile Print／App icon 對角兩顆）先分類，不論最後在哪個判定點落到 unresolved
+    const isMountPair = corners.length > 0 && corners.every((k) => MOUNT_NAME_RE.test(k.node.name || ""));
     const unresolved = (extra) => {
       const entry = Object.assign({}, base, extra);
+      if (isMountPair) {
+        entry.classification = "mount_pair";
+        entry.reason = (entry.reason || "") + "——Mount 群（cmp/Profile Print／App icon 對角兩顆錨點，非印品母題角托，LS-207）";
+      }
       out.document_unresolved.push(entry);
       if (inScope) out.unresolved.push(entry);
     };
@@ -621,18 +664,24 @@ function scanAll(nodes, opts) {
 
 // LS-202 R2 minor-1：corner_anchor 歸零警示——scope=document 時 document_containers=0 是第四支停擺（快照沒讀到 ref 且名稱備援也沒命中），
 // 收據不得交；R3 minor-2：scope=boards 限縮快照可能真的沒有印品、判不出停擺，只印提示（第一張全稿收據才看得出量級）；
-// containers=0 而 document 非零只是 boards 內沒有印品（LS-133 r1–r3／LS-177 r1 屬正常），提示核對 SCAN_BOARDS 即可
+// containers=0 而 document 非零只是 boards 內沒有印品（LS-133 r1–r3／LS-177 r1 屬正常），提示核對 SCAN_BOARDS 即可。
+// LS-207：ref_hits===0 是 ref 判準本身的哨兵，跟 document_containers 分開印（可同時成立、也可能只有一個成立——名稱備援讓
+// document_containers 非零時，ref_hits 仍可能是 0，代表 ref 判準完全沒接上，只是被名稱備援蓋住看不出來）。
 function cornerWarnings(ca) {
+  const warnings = [];
+  if (ca.ref_hits === 0) {
+    warnings.push("⚠ corner_anchor ref_hits=0：ref 判準沒有命中任何節點——快照沒有 ref 欄位、或 resolveInstances:false 對照表沒建成／沒套上（LS-207）；document_containers 若仍非零只是名稱備援撐住，ref 判準本身仍是壞的，Mount TL/BR 這類非 Corner 命名的角托看不到。");
+  }
   if (ca.document_containers === 0) {
     if (ca.scope === "boards") {
-      return ["⚠ corner_anchor document_containers=0（scope=boards）：限縮快照內沒有角托容器——boards 含印品類板時先核對 SCAN_BOARDS／快照 ref；本來沒有印品屬正常。限縮模式判不出第四支有沒有停擺，第一張 scope=document 收據要看 document_containers 量級（development 現稿 220–261，LS-202 R3）"];
+      warnings.push("⚠ corner_anchor document_containers=0（scope=boards）：限縮快照內沒有角托容器——boards 含印品類板時先核對 SCAN_BOARDS／快照 ref；本來沒有印品屬正常。限縮模式判不出第四支有沒有停擺，第一張 scope=document 收據要看 document_containers 量級（development 現稿應 ≥261，LS-207）");
+    } else {
+      warnings.push("⚠ corner_anchor document_containers=0：整份快照沒有任何角托容器——第四支停擺（Pencil 快照沒讀到 ref、名稱備援 Corner TL/… 也沒命中），這份收據不得交，先查快照欄位（LS-202 R2）");
     }
-    return ["⚠ corner_anchor document_containers=0：整份快照沒有任何角托容器——第四支停擺（Pencil 快照沒讀到 ref、名稱備援 Corner TL/… 也沒命中），這份收據不得交，先查快照欄位（LS-202 R2）"];
+  } else if (ca.containers === 0) {
+    warnings.push("⚠ corner_anchor containers=0：boards 內沒有角托容器（document=" + ca.document_containers + "）——boards 含印品類板時先核對 SCAN_BOARDS 有沒有漏列；boards 本來就沒有印品則屬正常（LS-133／LS-177 r1）");
   }
-  if (ca.containers === 0) {
-    return ["⚠ corner_anchor containers=0：boards 內沒有角托容器（document=" + ca.document_containers + "）——boards 含印品類板時先核對 SCAN_BOARDS 有沒有漏列；boards 本來就沒有印品則屬正常（LS-133／LS-177 r1）"];
-  }
-  return [];
+  return warnings;
 }
 
 function compactLines(out) {
@@ -658,7 +707,7 @@ function compactLines(out) {
   blocks.push(["SCAN row_overflow flagged=" + s.row_overflow.flagged.length + " classes=" + ro.length + tail(s.row_overflow)].concat(ro.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex)).join("\n"));
   const ca = s.corner_anchor;
   const lines = ["SCAN corner_anchor boards=" + JSON.stringify(ca.boards) + " containers/points/mismatch=" + ca.containers + "/" + ca.points + "/" + ca.mismatch +
-    " document=" + ca.document_containers + "/" + ca.document_points + "/" + ca.document_mismatch + " unresolved=" + ca.unresolved.length + "/" + ca.document_unresolved.length + tail(ca)];
+    " document=" + ca.document_containers + "/" + ca.document_points + "/" + ca.document_mismatch + " ref_hits=" + ca.ref_hits + "(defs=" + ca.ref_hits_defs + ")" + " unresolved=" + ca.unresolved.length + "/" + ca.document_unresolved.length + tail(ca)];
   for (const f of ca.flagged) lines.push("  MISMATCH " + f.container_name + "(" + f.container + ") " + f.corner_name + " " + f.axis + " exp=" + f.expected + " act=" + f.actual + " paper=" + f.paper_name + " board=" + f.board_name);
   for (const u of ca.unresolved) lines.push("  UNRESOLVED " + u.container_name + "(" + u.container + ") " + u.reason + (u.best_candidate_name ? " best=" + u.best_candidate_name + " " + u.best_score + "/" + u.total_axes : "") + " board=" + u.board_name);
   for (const [k, v] of agg(ca.document_flagged, (f) => f.board_name + "(" + f.board + ")", (f) => f.container)) lines.push("  DOCUMENT " + v.n + "× board " + k + " e.g. container " + v.ex);
@@ -705,6 +754,15 @@ if (typeof Get === "function" && typeof Print === "function") {
     Print("SUMMARY-HASH total_nodes=" + total + " tree_hash=" + treeHashHex);
   } else {
   const abs = {};
+  // LS-207：resolveInstances:true 展開後的樹裡，實例根節點本身已不是 type:"ref"、沒有 n.ref（LS-201 VR R2／R3 實測，
+  // LS-202 當時的假設不成立）——另跑一次 resolveInstances:false 的走訪，把每個 type:"ref" 節點的 id → ref（元件 id）收進
+  // 對照表；同一個實例根節點在兩次走訪的 id 相同（只有它的子孫在展開版多出 instanceId/childId 複合 id，根節點自己的 id
+  // 不變），所以下面展開版走訪時可以用 id 查表把 ref 榫接回去。查不到就是 undefined，isCorner 退回名稱備援，行為不變。
+  // 這次走訪不算 total_nodes（雜湊走訪才是 total 的唯一來源），也不必管訪問序／絕對座標，只收 id→ref。
+  const refMap = {};
+  Get((n) => {
+    if (n.type === "ref" && n.ref != null) refMap[n.id] = n.ref;
+  }, { resolveInstances: false });
   const snap = [];
   Get((n, c) => {
     const pid = c.parentCtx ? c.parentCtx.node.id : null;
@@ -714,8 +772,10 @@ if (typeof Get === "function" && typeof Print === "function") {
     const b = c.bounds;
     const a = { x: pa.x + b.x, y: pa.y + b.y };
     abs[n.id] = a;
-    // LS-202：快照帶 ref（corner_anchor 以 ref → cmp/Photo Corner 判角托；漏帶就一顆角托都看不到、containers 全零）
-    snap.push({ id: n.id, name: n.name || "", parent: pid, type: n.type || "", ref: n.ref, enabled: n.enabled !== false, clip: n.clip === true, image: hasImageFill(n.fill), x: a.x, y: a.y, w: b.width, h: b.height });
+    // LS-207：ref 優先用展開版節點自己的 n.ref（若 Pencil 哪天真的保留）、查不到才退回 resolveInstances:false 對照表——
+    // 兩者擇一有值即可，corner_anchor 的 ref_hits／isCorner 只看這個欄位最終有沒有值，不管來源（LS-202 舊註解）
+    const ref = n.ref != null ? n.ref : refMap[n.id];
+    snap.push({ id: n.id, name: n.name || "", parent: pid, type: n.type || "", ref, enabled: n.enabled !== false, clip: n.clip === true, image: hasImageFill(n.fill), x: a.x, y: a.y, w: b.width, h: b.height });
   }, { resolveInstances: true });
   const out = scanAll(snap, { boards: scope, crossAll, overlayRe, scanScope });
   out.total_nodes = total;
@@ -731,6 +791,7 @@ if (typeof Get === "function" && typeof Print === "function") {
       " board_clip=" + s.board_clip.flagged.length + "/" + s.board_clip.document_flagged.length +
       " corner_anchor=" + s.corner_anchor.containers + "/" + s.corner_anchor.points + "/" + s.corner_anchor.mismatch +
       " document=" + s.corner_anchor.document_containers + "/" + s.corner_anchor.document_points + "/" + s.corner_anchor.document_mismatch +
+      " ref_hits=" + s.corner_anchor.ref_hits + "(defs=" + s.corner_anchor.ref_hits_defs + ")" +
       " unresolved=" + s.corner_anchor.unresolved.length + "/" + s.corner_anchor.document_unresolved.length + " boards=" + JSON.stringify(s.corner_anchor.boards) +
       " tree_hash=" + treeHashHex
   );

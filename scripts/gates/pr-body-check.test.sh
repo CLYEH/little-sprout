@@ -140,6 +140,22 @@ case "\${CURL_FAIL_MODE:-}" in
   exit) echo 'stub curl: connection refused' >&2; exit 7 ;;
   badjson) echo 'not json'; exit 0 ;;
   gqlerror) echo '{"errors":[{"message":"Authentication required"}],"data":null}'; exit 0 ;;
+  timeout) echo 'stub curl: (28) Operation timed out after 25000 milliseconds' >&2; exit 28 ;;
+  timeout_once)
+    cf="\${CURL_STUB_COUNT_FILE:?}"
+    n=\$(( \$(cat "\$cf" 2>/dev/null || echo 0) + 1 ))
+    printf '%s' "\$n" > "\$cf"
+    if [ "\$n" -eq 1 ]; then echo 'stub curl: (28) Operation timed out after 25000 milliseconds' >&2; exit 28; fi
+    ;;
+  budget_cross_page)
+    # LS-207 R2 F1：page1 用掉全部 3 次重試名額才成功（call 1-3 逾時、call 4 成功回 page1.json）；page2 的第一次
+    # 呼叫（call 5）就撞上「共用預算已用完」直接 die——若退回舊版「每頁各自 3 次重試」，page2 會有自己全新的
+    # 3 次額度，這裡不會失敗。呼叫次數上限剛好卡在 5（不會有 call 6），證明跨頁共用、總等待不隨頁數疊加。
+    cf="\${CURL_STUB_COUNT_FILE:?}"
+    n=\$(( \$(cat "\$cf" 2>/dev/null || echo 0) + 1 ))
+    printf '%s' "\$n" > "\$cf"
+    if [ "\$n" -le 3 ] || [ "\$n" -ge 5 ]; then echo 'stub curl: (28) Operation timed out after 25000 milliseconds' >&2; exit 28; fi
+    ;;
 esac
 data=""
 while [ \$# -gt 0 ]; do
@@ -219,6 +235,40 @@ vexpect 1 '⑥e 同行多 token 但沒有一個是 PR 內的 commit → 紅' '�
 CURL_FAIL_MODE=exit vexpect 2 '⑥f curl 非 0 → exit 2（fail closed）' 'curl 失敗（exit 7）' 'test-token-not-real' "$both"
 CURL_FAIL_MODE=badjson vexpect 2 '⑥f 回應非 JSON → exit 2' '不是合法 JSON' 'test-token-not-real' "$both"
 CURL_FAIL_MODE=gqlerror vexpect 2 '⑥f GraphQL errors（如 401）→ exit 2' 'Authentication required' 'test-token-not-real' "$both"
+
+# ⑥g LS-207（7902dc20）：Linear curl 逾時／連不上先重試（退避可覆寫成極短秒數跑自測，不真的等 5/15/30s）才 fail-closed。
+export PR_BODY_CHECK_LINEAR_BACKOFF='0.01,0.01,0.01'
+export CURL_STUB_COUNT_FILE="$work/curl_count"
+: > "$CURL_STUB_COUNT_FILE"
+CURL_FAIL_MODE=timeout_once vexpect 0 '⑥g 首次逾時、第二次成功 → 綠' '9f348e36 存在' 'test-token-not-real' "${H}- i1：記入 LS-96 \`9f348e36\`"$'\n'
+if [ "$(cat "$CURL_STUB_COUNT_FILE" 2>/dev/null)" -ge 2 ] 2>/dev/null; then echo "✓ ⑥g curl 確實被重試（呼叫 $(cat "$CURL_STUB_COUNT_FILE") 次）"; else echo "✗ ⑥g curl 呼叫次數異常（$(cat "$CURL_STUB_COUNT_FILE" 2>/dev/null)）——應至少重試一次" >&2; fail=1; fi
+: > "$CURL_STUB_COUNT_FILE"
+: > "$CURL_STUB_LOG"
+CURL_FAIL_MODE=timeout vexpect 2 '⑥g 三次皆逾時 → 紅（fail closed），訊息含「非 body 問題」' '非 body 問題' 'test-token-not-real' "${H}- i1：記入 LS-96 \`9f348e36\`"$'\n'
+log6g="$(cat "$CURL_STUB_LOG")"
+if [ "$(printf '%s\n' "$log6g" | grep -c .)" -eq 4 ]; then echo "✓ ⑥g 三次皆逾時：總共只呼叫 4 次（1 次初次＋3 次重試），不因為之後可能還有分頁而多試"; else echo "✗ ⑥g 呼叫次數應為 4（實得 $(printf '%s\n' "$log6g" | grep -c .)）" >&2; printf '%s\n' "$log6g" | sed 's/^/    /' >&2; fail=1; fi
+
+# ⑥h LS-207 R2（merge-review R1 fd783f6c F1）：重試預算跨分頁共用，不是每頁各一份——LS-96 目前 >250 則 comment
+# 需要 ≥3 頁，R1 版每頁各自 3 次重試在間歇性逾時下最壞可疊加到數百秒、撞上 CI rules job 的 timeout-minutes。
+: > "$CURL_STUB_COUNT_FILE"
+: > "$CURL_STUB_LOG"
+CURL_FAIL_MODE=budget_cross_page vexpect 2 '⑥h page1 用光全部 3 次共用重試名額才成功、page2 第一次呼叫就撞上預算已用完 → 紅（若退回「每頁各自 3 次」會綠，不會來到這裡）' '跨分頁共用重試預算已用完' 'test-token-not-real' "${H}- i1：記入 LS-96 \`9f348e36\`"$'\n'
+log6h="$(cat "$CURL_STUB_LOG")"
+n6h=$(printf '%s\n' "$log6h" | grep -c .)
+if [ "$n6h" -eq 5 ]; then
+  echo "✓ ⑥h 總共只呼叫 5 次（page1 用掉 4 次含 3 次重試才成功、page2 第 1 次呼叫後預算歸零直接 die，不會有第 6 次）"
+else
+  echo "✗ ⑥h 呼叫次數應為 5（page1 4 次＋page2 1 次），實得 ${n6h}" >&2; printf '%s\n' "$log6h" | sed 's/^/    /' >&2; fail=1
+fi
+if printf '%s\n' "$log6h" | grep -qF 'CURSOR1'; then echo "✓ ⑥h page2 確實有被嘗試過（cursor=CURSOR1 出現在呼叫紀錄裡），不是卡在 page1 就結束"; else echo "✗ ⑥h 沒看到 page2 的呼叫（cursor=CURSOR1），這個案例不能證明跨頁共用" >&2; printf '%s\n' "$log6h" | sed 's/^/    /' >&2; fail=1; fi
+
+# ⑥i LS-207 R2（merge-review R1 fd783f6c I6）：PR_BODY_CHECK_LINEAR_BACKOFF="" 只有空白／被濾光時退回預設
+# 5/15/30（不是變成空陣列、讓重試名額悄悄變成 0 次，die 訊息印出無意義的「重試 0 次」）。用預設值跑會真的等
+# 5 秒——只驗「不是 0 次重試就死」，不驗確切秒數，故用 timeout_once（一次逾時後成功）快速驗證仍會重試。
+: > "$CURL_STUB_COUNT_FILE"
+PR_BODY_CHECK_LINEAR_BACKOFF='   ' CURL_FAIL_MODE=timeout_once vexpect 0 '⑥i LINEAR_BACKOFF 只有空白 → 退回預設仍重試成功（不是 0 次重試直接死）' '9f348e36 存在' 'test-token-not-real' "${H}- i1：記入 LS-96 \`9f348e36\`"$'\n'
+if [ "$(cat "$CURL_STUB_COUNT_FILE" 2>/dev/null)" -ge 2 ] 2>/dev/null; then echo "✓ ⑥i 確實重試過（呼叫 $(cat "$CURL_STUB_COUNT_FILE") 次），證明沒有退化成 0 次重試預算"; else echo "✗ ⑥i 呼叫次數異常，可能退化成 0 次重試" >&2; fail=1; fi
+unset PR_BODY_CHECK_LINEAR_BACKOFF CURL_STUB_COUNT_FILE
 
 # ⑦ LS-186：「已修」SHA 候選只認同一行「已修」之後的第一個 7–40 hex token（R2；R1 曾要求緊鄰），--verify 另須為 commit object；
 #   紅時最後一行在 stdout 印 ✗。來源：LS-185 PR body 標題行「## R2（merge-review R1 `d87d4334` … 皆已修）」的 review comment id
