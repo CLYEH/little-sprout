@@ -221,15 +221,21 @@ final class AppErrorTests: XCTestCase {
             .accountDeletionInProgress,
             // LS052／LS053（LS-179，PLAN §10-B 停權旗標）：帳號或家庭被 Dashboard
             // 停權，沒有輸入可換，只能等 Dashboard 解除。
-            .accountSuspended,
-            .familySuspended,
+            .accountSuspended, .familySuspended,
             // LS054（LS-179，PLAN §10-A(3) 註冊開關）：目前暫停開放新註冊，只擋
             // 自建新家庭這一步，沒有輸入可換，只能等旗標重新打開。
             // LS055（LS-197，accept_eula）：呼叫端送的版本已經過期，同上面幾碼
             // 一樣沒有輸入可換，正確動作是重新抓目前版本、重新顯示條款。
             // LS056（LS-197 R2，accept_eula）：auth.uid() 沒有對應的 profiles
             // 列，理論上不該發生，沒有輸入可換、也不是使用者能自己解決的狀態。
-            .registrationsClosed, .eulaVersionMismatch, .accountProfileMissing
+            .registrationsClosed, .eulaVersionMismatch, .accountProfileMissing,
+            // LS057（LS-206，family_members 的 BEFORE DELETE trigger）：唯一
+            // owner 且家庭還有其他成員，沒有輸入可換，必須先轉移 owner 身份才能
+            // 退出或被移除，同 LS001／LS050 的理由。LS058／LS059／LS060
+            // （LS-206，transfer_ownership）：呼叫者不是該家庭目前的 owner／
+            // 對方不是該家庭目前的成員／對方是呼叫者自己，三者都是授權／參數
+            // 層級的拒絕，換輸入重試同一組參數不會成功。
+            .ownerMustTransferBeforeLeaving, .notFamilyOwner, .transferTargetNotMember, .cannotTransferToSelf
             // LS040（childFamilyImmutable）已於 LS-57 I1 撤碼，family_id 不可變改用裸
             // 42501（同 diaries／albums／comments），不再是 LSErrorCode 的一個 case。
         ]
