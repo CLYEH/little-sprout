@@ -14,10 +14,18 @@
 #
 # LS-207（c18ef27f）：`--udid <udid>`（選填，呼叫端明確傳入，不從 --dir 路徑猜——自測與非標準 --dir 覆寫
 # 不會被誤觸）：取得鎖、跑命令前用 `xcrun simctl ui <udid> content_size` / `appearance`（無參數＝查詢）先讀出
-# 目前值存起來，再設成 `content_size medium`／`appearance light`（QA／merge-reviewer 多步驟操作要看得清楚且
-# 一致的畫面，不受呼叫端當下字級／外觀影響）；命令結束、釋放鎖之前用存起來的原值復原（查詢失敗就不設也不
-# 復原，印警告，不擋鎖本身——這是體驗改善，不是硬 gate）。`SIMLOCK_KEEP_UI=1` 整段跳過（含查詢），給不希望
-# 動到模擬器 UI 狀態的呼叫端。
+# 目前值存起來，再設成 `content_size large`／`appearance light`（QA／merge-reviewer 多步驟操作要看得清楚且
+# 一致的畫面，不受呼叫端當下字級／外觀影響——`large` 是 iOS 系統預設字級，同時對齊 scripts/gates/tap-target-check.sh
+# 訊息宣稱的「一般字級 content_size large 量測」，R1 誤設成 medium：該 gate 目前用 launch environment
+# `UIPreferredContentSizeCategoryName` 覆寫、不吃系統設定，今天零影響，但字面上「large」與這裡的「medium」
+# 互相矛盾，日後若量測改吃系統設定會靜默偏移，LS-167／LS-205 那類事故的同型風險，故統一成同一個值——動這兩支
+# 檔任一邊的字級常數前，先看對方註解，見 merge-review R1 fd783f6c F5）；命令結束、釋放鎖之前用存起來的原值
+# 復原。**LS-207 R2（fd783f6c F4）**：content_size／appearance 兩個 key 各自獨立記「有沒有改成功、原值是什麼」，
+# 只要有一個設定成功就要負責復原那一個（不是全有全無——原本用 `&&` 短路，appearance 設定失敗會讓已經成功的
+# content_size 永遠復原不到）；查詢結果若是 `unknown`／`unsupported`（`simctl ui` 合法回應，非查詢失敗）視同查
+# 不到，不當「原值」存起來（否則復原時對模擬器下 `content_size unsupported` 這種不存在的值，安靜失敗）；復原
+# 呼叫的 exit code 一定檢查，失敗大聲印 ⚠ 並點名 UDID，不再吞掉。查詢或設定失敗只印警告、不擋命令執行（體驗
+# 改善不是硬 gate）。`SIMLOCK_KEEP_UI=1` 整段跳過（含查詢），給不希望動到模擬器 UI 狀態的呼叫端。
 set -uo pipefail
 
 usage() { echo "用法：simulator-lock.sh --dir <路徑> [--timeout <秒>] [--udid <udid>] -- <命令…>" >&2; }
@@ -129,30 +137,57 @@ if ! printf 'pid=%s\nstarted=%s\n' "$$" "$(date +%s)" > "$lock/holder.$$.tmp" 2>
   exit 2
 fi
 
-# LS-207（c18ef27f）：--udid 給了才動；SIMLOCK_KEEP_UI=1 整段跳過。查不到目前值就不設也不復原（寧可不動，
-# 不留下復原不了的殘留）；設定失敗只印警告、不擋命令執行——這是體驗改善，不是硬 gate。
-ui_changed=0; ui_orig_content_size=; ui_orig_appearance=
+# LS-207（c18ef27f；R2 修 fd783f6c F4）：--udid 給了才動；SIMLOCK_KEEP_UI=1 整段跳過。content_size／appearance
+# 兩個 key 各自獨立記「有沒有改成功、原值是什麼」——只要有一個設定成功就負責復原那一個，不是全有全無（R1 用
+# `&&` 短路：appearance 設定失敗會讓已經成功套用的 content_size 永遠復原不到，模擬器卡在改過的狀態且沒有任何
+# 輸出）。查詢結果是 `unknown`／`unsupported`（`simctl ui` 合法回應，不是查詢失敗）視同查不到、不當原值存起來
+# （否則復原時對模擬器下 `content_size unsupported` 這種不存在的值，安靜失敗）。復原呼叫的 exit code 一定檢查，
+# 失敗大聲印 ⚠ 並點名 UDID——原本用 `>/dev/null 2>&1` 吞掉，復原失敗跟復原成功長得一模一樣。
+ui_content_changed=0; ui_appearance_changed=0; ui_orig_content_size=; ui_orig_appearance=
+# 查詢＋設定＋記錄一個 key：$1=key（content_size｜appearance） $2=要設的值（large｜light）；
+# 成功就把原值存進對應的全域變數、把對應的 *_changed 設成 1；查不到／unknown／unsupported／設定失敗都各自
+# 印警告、那個 key 保持未變動——兩個 key 完全獨立，不因為另一個失敗就放棄這一個（F4：R1 用 && 短路兩者綁死）。
+apply_one_ui_key() {
+  local key=$1 want=$2 orig
+  orig=$(xcrun simctl ui "$udid" "$key" 2>/dev/null) || orig=
+  case "$orig" in
+    ''|unknown|unsupported)
+      echo "⚠ simulator-lock：讀不到 ${udid} 目前 ${key}（查詢失敗或回應 unknown／unsupported）——不調整、不復原" >&2
+      return 0 ;;
+  esac
+  if xcrun simctl ui "$udid" "$key" "$want" >/dev/null 2>&1; then
+    case "$key" in
+      content_size) ui_orig_content_size=$orig; ui_content_changed=1 ;;
+      appearance) ui_orig_appearance=$orig; ui_appearance_changed=1 ;;
+    esac
+  else
+    echo "⚠ simulator-lock：設定 ${udid} ${key}=${want} 失敗（xcrun simctl ui …）——不擋鎖，照跑命令" >&2
+  fi
+}
 apply_sim_ui() {
   [ -n "$udid" ] || return 0
   [ "${SIMLOCK_KEEP_UI:-}" = 1 ] && return 0
-  ui_orig_content_size=$(xcrun simctl ui "$udid" content_size 2>/dev/null) || ui_orig_content_size=
-  ui_orig_appearance=$(xcrun simctl ui "$udid" appearance 2>/dev/null) || ui_orig_appearance=
-  if [ -z "$ui_orig_content_size" ] || [ -z "$ui_orig_appearance" ]; then
-    echo "⚠ simulator-lock：讀不到目前字級／外觀（xcrun simctl ui ${udid} content_size／appearance 查詢失敗）——不調整、不復原" >&2
-    return 0
-  fi
-  if xcrun simctl ui "$udid" content_size medium >/dev/null 2>&1 && xcrun simctl ui "$udid" appearance light >/dev/null 2>&1; then
-    ui_changed=1
-    echo "→ simulator-lock：已將 ${udid} 字級／外觀改為 content_size=medium appearance=light（原值 content_size=${ui_orig_content_size} appearance=${ui_orig_appearance}，釋放時復原）" >&2
-  else
-    echo "⚠ simulator-lock：設定字級／外觀失敗（xcrun simctl ui ${udid} …）——不擋鎖，照跑命令" >&2
+  apply_one_ui_key content_size large
+  apply_one_ui_key appearance light
+  if [ "$ui_content_changed" -eq 1 ] || [ "$ui_appearance_changed" -eq 1 ]; then
+    echo "→ simulator-lock：已將 ${udid} 字級／外觀改為$([ "$ui_content_changed" -eq 1 ] && printf ' content_size=large')$([ "$ui_appearance_changed" -eq 1 ] && printf ' appearance=light')（釋放時復原）" >&2
   fi
 }
 restore_sim_ui() {
-  [ "$ui_changed" -eq 1 ] || return 0
-  xcrun simctl ui "$udid" content_size "$ui_orig_content_size" >/dev/null 2>&1
-  xcrun simctl ui "$udid" appearance "$ui_orig_appearance" >/dev/null 2>&1
-  echo "→ simulator-lock：已復原 ${udid} 字級／外觀（content_size=${ui_orig_content_size} appearance=${ui_orig_appearance}）" >&2
+  if [ "$ui_content_changed" -eq 1 ]; then
+    if xcrun simctl ui "$udid" content_size "$ui_orig_content_size" >/dev/null 2>&1; then
+      echo "→ simulator-lock：已復原 ${udid} content_size=${ui_orig_content_size}" >&2
+    else
+      echo "⚠ simulator-lock：復原 ${udid} content_size=${ui_orig_content_size} 失敗——模擬器可能停留在 large，請手動檢查（xcrun simctl ui ${udid} content_size ${ui_orig_content_size}）" >&2
+    fi
+  fi
+  if [ "$ui_appearance_changed" -eq 1 ]; then
+    if xcrun simctl ui "$udid" appearance "$ui_orig_appearance" >/dev/null 2>&1; then
+      echo "→ simulator-lock：已復原 ${udid} appearance=${ui_orig_appearance}" >&2
+    else
+      echo "⚠ simulator-lock：復原 ${udid} appearance=${ui_orig_appearance} 失敗——模擬器可能停留在 light，請手動檢查（xcrun simctl ui ${udid} appearance ${ui_orig_appearance}）" >&2
+    fi
+  fi
 }
 
 release() { restore_sim_ui; if read_holder && [ "$h_pid" = "$$" ]; then rm -rf "$lock"; fi; }

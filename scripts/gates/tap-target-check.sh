@@ -21,7 +21,11 @@
 #
 # 字級固定一般字級（非 AX 放大字級）：`app.launchEnvironment["UIPreferredContentSizeCategoryName"]
 # = "UICTContentSizeCategoryL"`（`TapTargetMeasurement.launch`）——#148 R1 F2：放大字級下
-# 內容本身就會 ≥44pt，量了無意義。
+# 內容本身就會 ≥44pt，量了無意義。「一般字級」＝ launch environment 覆寫的 large（`UICTContentSizeCategoryL`），
+# 這支 gate 不吃模擬器系統設定的 `simctl ui content_size`（launch environment 對這個 process 優先）；
+# `scripts/ops/simulator-lock.sh` 的 `--udid` 選項會把系統設定調成同一個值（large）——目前兩者互不相干（本 gate
+# 不靠 simulator-lock 提供的系統設定），但字面上要保持一致，避免日後量測方式改用系統設定時靜默偏移（merge-review
+# R1 fd783f6c F5）。動這裡的字級常數前，先看 simulator-lock.sh 對應的註解。
 #
 # 用法：tap-target-check.sh <UDID> <scheme>
 # exit：0＝所有量測畫面的 Button／tappable 元件皆 ≥44×44pt；1＝有違規（或其他測試/編譯失敗，
@@ -74,14 +78,17 @@ violations=$(grep 'TAP-TARGET-FAIL:' "$log" || true)
 # LS-207（16e6b7f9）：TAP-TARGET-FAIL 只在點擊目標違規時出現；同一輪 UITests 若另有不相關的紅測試（LS-167 R3 起：
 # iOS 26.2 sheet 縮放讓一支對齊測試同時紅），舊版摘要只擷取 TAP-TARGET-FAIL、把它吞掉，直到高度違規修好第二個紅
 # 測試才露出，多燒一輪 CI。這裡另抓 xcodebuild 逐一列印的「Test Case '-[Target.Class testMethod]' failed」行，
-# 獨立列出「本輪其他失敗測試」——不論是否已有 TAP-TARGET-FAIL 都列，讓所有紅測試一次看到。
+# 獨立列出「本輪所有失敗測試」——不論是否已有 TAP-TARGET-FAIL 都列，讓所有紅測試一次看到。
+# LS-207 R2（merge-review R1 fd783f6c I1）：這份清單含**全部**失敗的測試方法，觸發 TAP-TARGET-FAIL 的那支自己
+# 也會出現在裡面（它本來就是失敗的測試）——標題原本寫「其他…無關」不精確，這裡不刻意濾掉它，簡單、一次看清楚
+# 這輪所有紅測試比「排除自己」更不容易漏東西。
 other_failed=$(grep -oE "Test Case '-\[[^]']+\]' failed" "$log" | sort -u || true)
 
 if [ -n "$violations" ]; then
   echo "✗ tap-target-check：以下元件 <44×44pt（一般字級 content_size large 量測，長輩硬約束 ≥44pt）：" >&2
   printf '%s\n' "$violations" | sed 's/^/    /' >&2
   if [ -n "$other_failed" ]; then
-    echo "本輪其他失敗測試（與點擊目標違規無關，一併列出避免被吞——LS-167 事故）：" >&2
+    echo "本輪所有失敗測試（含觸發上面 TAP-TARGET-FAIL 的那支自己，一併列出避免被吞——LS-167 事故）：" >&2
     printf '%s\n' "$other_failed" | sed 's/^/    /' >&2
   fi
   exit 1
@@ -89,7 +96,7 @@ fi
 
 echo "✗ tap-target-check：xcodebuild test 失敗，但輸出裡沒有 TAP-TARGET-FAIL 標記——不是點擊目標違規，可能是編譯或其他測試失敗。" >&2
 if [ -n "$other_failed" ]; then
-  echo "本輪其他失敗測試：" >&2
+  echo "本輪所有失敗測試：" >&2
   printf '%s\n' "$other_failed" | sed 's/^/    /' >&2
 fi
 echo "log 尾段：" >&2

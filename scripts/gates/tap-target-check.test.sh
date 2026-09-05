@@ -136,7 +136,7 @@ expect 1 '⑧ 失敗但無 TAP-TARGET-FAIL 標記 → 仍 exit 1、印 log 尾�
 out=$(run fail_with_violation_and_other_test UDID SCHEME); got=$?
 expect 1 '⑩ 高度違規＋不相關紅測試 → 兩者都在摘要' "$got" "$out" \
   'TAP-TARGET-FAIL: 登出 frame=34.0x20.3pt' \
-  '本輪其他失敗測試' \
+  '本輪所有失敗測試' \
   "Test Case '-[LittleSproutUITests.UploadQueueAlignmentTests testM1Alignment]' failed"
 
 # ⑨ LS-158：QA e2e（LittleSproutUITests/QA/QASmokeTests）需要本機容器，CI 的這支 gate 不得跑到它。
