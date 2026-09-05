@@ -50,7 +50,8 @@ final class SettingsViewIPadTests: XCTestCase {
     ///
     /// LS-192：`ProfileEditView` 從 LS-188 的 `ContentUnavailableView` 佔位換成正式內容，原本
     /// 斷言的「編輯顯示名稱與頭像尚未推出，敬請期待。」文字已經不存在——sentinel 改用新畫面的
-    /// 標題（同 `TapTargetGateScreenName.profileEdit` 的既有 sentinel 選擇）。
+    /// 標題（同 `TapTargetGateScreenName.profileEdit` 的既有 sentinel 選擇）。R2
+    /// （merge-review R1 M6）：標題訂正為稿面實際文字「個人資料」。
     func testProfileSectionEntryPushesAndBackReturns() {
         let app = TapTargetMeasurement.launch(.settingsRegular)
         TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
@@ -58,7 +59,7 @@ final class SettingsViewIPadTests: XCTestCase {
         assertPushThenBackReturnsToList(
             app: app,
             entry: app.buttons[QAAccessibilityID.settingsProfileRow],
-            pushedSentinel: app.staticTexts["顯示名稱與頭像"]
+            pushedSentinel: app.staticTexts["個人資料"]
         )
     }
 

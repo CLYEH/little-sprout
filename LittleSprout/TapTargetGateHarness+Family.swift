@@ -23,21 +23,27 @@ extension TapTargetGateHarness {
         }
     }
 
-    /// LS-192：`seedOwnerUserIDForPreview`／`seedMembersForPreview` 同步佈置「呼叫者是這個
-    /// 家庭的 owner，且家庭還有另一位成員」——這個狀態下每一列成員的「…」選單（轉移 Owner
-    /// 身份／移除成員）才會渲染，是這個畫面唯一需要 seed 才有代表性的互動元件（同
-    /// `.albumsPopulatedState` 需要 seed 假相簿才能量到卡片的既有理由）；「退出家庭」鈕不受
-    /// seed 影響，任何狀態都會渲染。
+    /// R2（merge-review R1 M8）：`seedOwnerUserIDForPreview` 用
+    /// `PreviewFamilySamples.selfUserID`——這個固定值也是 `PreviewFamilyAPIClient.listMembers`
+    /// 預設回傳樣本的「自己」`userID`（見該檔文件註解），兩邊對上之後 `myRole` 才能解析成
+    /// `.owner`，每一列成員的動作選單（轉移家庭管理者／移出成員）才會渲染，是這個畫面唯一
+    /// 需要 seed 才有代表性的互動元件（同 `.albumsPopulatedState` 需要 seed 假相簿才能量到
+    /// 卡片的既有理由）；「退出家庭」鈕不受 seed 影響，任何狀態都會渲染。額外同步呼叫
+    /// `seedMembersForPreview` 佈置跟 `listMembers` 預設樣本同樣形狀（僅 `userID` 不同）的
+    /// 內容，避免量測發生在 `.task` 的 async `refreshMembers()` 完成之前的短暫空清單窗口
+    /// （同 `.albumsPopulatedState` 用同步 seed 避開 async 時序窗口的既有慣例）；`.task`
+    /// 完成後兩者內容等價，不影響量測結果。
     @MainActor
     @ViewBuilder
     static var familyMembersHost: some View {
         let store = FamilyStore.preview(withFamily: Family(
             id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
         ))
-        let myID = UUID()
-        store.seedOwnerUserIDForPreview(myID)
+        store.seedOwnerUserIDForPreview(PreviewFamilySamples.selfUserID)
         store.seedMembersForPreview([
-            FamilyMember(userID: myID, role: .owner, displayName: "陳美玲", avatarURL: nil),
+            FamilyMember(
+                userID: PreviewFamilySamples.selfUserID, role: .owner, displayName: "陳美玲", avatarURL: nil
+            ),
             FamilyMember(userID: UUID(), role: .member, displayName: "陳阿公", avatarURL: nil)
         ])
         return NavigationStack {

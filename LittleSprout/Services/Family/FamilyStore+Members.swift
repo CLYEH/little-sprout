@@ -23,16 +23,31 @@ extension FamilyStore {
     #endif
 
     /// `FamilyMembersView` 進場查詢；03-iPad／AX3 共用同一份資料，不需要另外的變體。
+    ///
+    /// R2（merge-review R1 m7，PLAUSIBLE）：await 前後核對 `myFamily?.id`，同
+    /// `FamilyStore.refreshQuota()` 既有理由——這段 RTT 期間若換了家庭（退出家庭後
+    /// `leaveFamily()` 已把 `myFamily` 歸零，或切帳號後 `syncOwner()` 整份 `reset()`），這裡
+    /// 查到的結果已經過期，直接丟棄、不覆寫，避免上一個家庭的成員清單寫進下一個家庭的
+    /// `members`。
     @discardableResult
     func refreshMembers() async -> [FamilyMember] {
         guard !membersState.isSubmitting else { return members }
         guard let familyID = myFamily?.id else { return members }
         membersState = .submitting
         do {
-            members = try await apiClient.listMembers(familyID: familyID)
+            let result = try await apiClient.listMembers(familyID: familyID)
+            guard myFamily?.id == familyID else {
+                membersState = .idle
+                return members
+            }
+            members = result
             membersState = .success
             await refreshAvatarSignedURLs()
         } catch {
+            guard myFamily?.id == familyID else {
+                membersState = .idle
+                return members
+            }
             membersState = .failure(AppError.map(error))
         }
         return members

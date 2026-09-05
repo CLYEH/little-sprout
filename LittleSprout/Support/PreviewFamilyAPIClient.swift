@@ -4,6 +4,14 @@ import Foundation
 /// 只給 SwiftUI `#Preview` 用的假 `FamilyAPIClient`——不打真網路、不需要
 /// `Config/Secrets.xcconfig`（同 `PreviewAuthService` 的角色，見該檔）。生產路徑一律用
 /// `SupabaseFamilyAPIClient`。
+/// LS-192 R2（merge-review R1 M8）：`PreviewFamilyAPIClient.listMembers` 預設樣本的「自己」
+/// `userID` 固定值——不是 `private`：`TapTargetGateHarness+Family.swift`（另一個檔案）需要
+/// 用同一個 id 呼叫 `FamilyStore.seedOwnerUserIDForPreview`，讓 `myRole` 解析成
+/// `.owner`，才能讓成員列的動作選單在 harness 裡渲染，見該檔文件註解。
+enum PreviewFamilySamples {
+    static let selfUserID = UUID(uuidString: "00000000-0000-4000-8000-000000000001")!
+}
+
 private final class PreviewFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
     func createFamily(name: String) async throws -> Family {
         Family(id: UUID(), name: name, createdBy: UUID(), createdAt: Date(), requireApproval: true)
@@ -44,10 +52,25 @@ private final class PreviewFamilyAPIClient: FamilyAPIClient, @unchecked Sendable
 
     func myJoinRequest() async throws -> MyJoinRequest? { nil }
 
-    /// LS-192：預設回傳兩位樣本成員（一位 owner——即「自己」，一位 member）——`FamilyMembersView`
-    /// 的 `#Preview` 需要看得到列表本身，需要「唯一 owner」樣本的呼叫端改用 `FamilyStore
-    /// .seedMembersForPreview(_:)`（同步覆寫，同 `seedMyFamilyForPreview` 的既有作法）。
-    func listMembers(familyID: UUID) async throws -> [FamilyMember] { [] }
+    /// R2（merge-review R1 M8／m4）：R1 文件註解宣稱「預設回傳兩位樣本成員」但實作回 `[]`，
+    /// 導致 `FamilyMembersView.task` 的 `refreshMembers()` 蓋掉 harness／`#Preview` 用
+    /// `seedMembersForPreview` 佈置的樣本，量到／看到的都是空清單（截圖 `LS-192-review-
+    /// shot-03-light.png` 實測）。這裡讓實作對齊文件宣稱：預設回傳「自己（家庭管理者，`userID`
+    /// 固定為 `PreviewFamilySamples.selfUserID`）＋一位一般成員」兩位樣本，呼叫端
+    /// （`TapTargetGateHarness.familyMembersHost`）用 `seedOwnerUserIDForPreview
+    /// (PreviewFamilySamples.selfUserID)` 對上同一個 id，才能讓「我是家庭管理者」視角的
+    /// chevron 動作選單一開畫面就渲染。需要「唯一家庭管理者」等其他樣本的呼叫端改用
+    /// `FamilyStore.seedMembersForPreview(_:)`（同步覆寫，同 `seedMyFamilyForPreview` 的既有
+    /// 作法）——這支 async fetch 完成後仍會覆寫回預設值，只有本票目前唯一需要非預設樣本的
+    /// 呼叫端（單元測試）改用 `StubFamilyAPIClient`，不受影響。
+    func listMembers(familyID: UUID) async throws -> [FamilyMember] {
+        [
+            FamilyMember(
+                userID: PreviewFamilySamples.selfUserID, role: .owner, displayName: "陳美玲", avatarURL: nil
+            ),
+            FamilyMember(userID: UUID(), role: .member, displayName: "陳阿公", avatarURL: nil)
+        ]
+    }
 
     func removeMember(familyID: UUID, userID: UUID) async throws {}
 

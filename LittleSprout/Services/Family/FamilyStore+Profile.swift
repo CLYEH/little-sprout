@@ -14,15 +14,30 @@ extension FamilyStore {
 
     /// 02 進場查詢自己的 profile；成功後順便重簽頭像 URL（跟 03 家庭成員清單共用同一份
     /// `avatarSignedURLs` 快取，見該屬性文件註解）。
+    ///
+    /// R2（merge-review R1 m7，PLAUSIBLE）：await 前後核對 `ownerUserID`，同
+    /// `FamilyStore.refreshQuota()` 既有理由——這段 RTT 期間若 `syncOwner()` 把 store 換成
+    /// 別的使用者（切帳號，或退出家庭後 `reset()`），這裡查到的結果已經過期，直接丟棄、
+    /// 不覆寫，避免上一個使用者的顯示名稱寫進下一個使用者的 `myProfile`。
     @discardableResult
     func refreshProfile() async -> Profile? {
         guard !profileState.isSubmitting else { return myProfile }
+        guard let requestOwnerID = ownerUserID else { return myProfile }
         profileState = .submitting
         do {
-            myProfile = try await apiClient.fetchMyProfile()
+            let result = try await apiClient.fetchMyProfile()
+            guard ownerUserID == requestOwnerID else {
+                profileState = .idle
+                return myProfile
+            }
+            myProfile = result
             profileState = .success
             await refreshAvatarSignedURLs()
         } catch {
+            guard ownerUserID == requestOwnerID else {
+                profileState = .idle
+                return myProfile
+            }
             profileState = .failure(AppError.map(error))
         }
         return myProfile

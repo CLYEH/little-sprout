@@ -154,7 +154,8 @@ enum TapTargetGateScreenName: String {
         // `.preview()`／harness 固定淺色（未強制 `.preferredColorScheme`）的既有假設一致；
         // 不用字標圖片（`Image`，不是 staticText）當 sentinel。
         case .welcome: return .staticText("給家人的私密相簿")
-        case .profileEdit: return .staticText("顯示名稱與頭像")
+        // R2（merge-review R1 M6）：02 稿標題是「個人資料」，R1 誤寫成「顯示名稱與頭像」。
+        case .profileEdit: return .staticText("個人資料")
         case .familyMembers: return .staticText("家庭成員")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")

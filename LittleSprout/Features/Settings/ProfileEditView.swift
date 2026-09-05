@@ -3,10 +3,16 @@ import SwiftUI
 import UIKit
 
 /// LS-152 / 02 顯示名稱與頭像編輯（`design/littlesprout.pen` `MohS1`，依 LS-152 稿實作）：
-/// 頭像沖印卡（方形縮圖，重用 LS-169 上傳基礎設施，見 `ChildAvatarUploadService
+/// 頭像欄（88×88 圓形，重用 LS-169 上傳基礎設施，見 `ChildAvatarUploadService
 /// .uploadProfileAvatar` 文件註解）＋顯示名稱欄（1~50 字，對齊 `profiles
 /// .profiles_display_name_check`）＋「儲存變更」主鈕。版式沿用 `EditChildView`（09b）的
 /// 元件與提交流程慣例——同一套「頭像欄＋文字欄＋主鈕」骨架，這裡沒有生日欄與刪除動作。
+///
+/// R2（merge-review R1 M5）：頭像欄改直接重用 `EditChildAvatarFieldContent`（88×88 圓形＋
+/// 28×28 相機 Edit Badge），不是 R1 自建的 140×140 方形沖印卡——稿 `MohS1/GceuY`（Avatar
+/// Preview）＋ Notes 尺寸族清單都明寫「02 編輯頁沿用 LS-47 09b 的 88×88（Avatar Preview，
+/// 未變動）」，R1 判斷「這裡要的是編輯態＋方形組合」是誤讀稿面；`EditChildAvatarFieldContent`
+/// 本來就是同一種「編輯態、可能已有既有照片」情境，直接重用不需要另建元件。
 ///
 /// 儲存後即時更新：`displayName`／頭像都直接寫回 `FamilyStore.myProfile`，設定頁「個人」列
 /// （`ProfileSummaryRow`）讀的是同一份狀態，下一次重繪自然顯示新值，不需要額外的回呼或
@@ -69,10 +75,12 @@ struct ProfileEditView: View {
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
-            Text("顯示名稱與頭像")
+            // R2（merge-review R1 M6）：稿標題「個人資料」，R1 誤寫成「顯示名稱與頭像」
+            // （那是設定頁「個人」列的固定副標文案，不是這一頁的標題）。
+            Text("個人資料")
                 .appFont(.display, weight: .bold)
                 .foregroundStyle(Color.lsTextPrimary)
-            Text("家人在家庭成員列表會看到這個名字和照片。")
+            Text("編輯你的顯示名稱與頭像，家人都會看到。")
                 .appFont(.body)
                 .foregroundStyle(Color.lsTextSecondary)
         }
@@ -81,7 +89,7 @@ struct ProfileEditView: View {
     private var avatarField: some View {
         VStack(spacing: AppSpacing.label) {
             PhotosPicker(selection: $pickedAvatarItem, matching: .images) {
-                ProfileAvatarEditCard(
+                EditChildAvatarFieldContent(
                     name: displayName,
                     avatarURL: familyStore.avatarDisplayURL(rawValue: familyStore.myProfile?.avatarURL),
                     pickedImage: pickedAvatarPreview
@@ -108,7 +116,7 @@ struct ProfileEditView: View {
     @ViewBuilder
     private var avatarLoadingOverlay: some View {
         if isLoadingAvatar {
-            Color.black.opacity(0.25)
+            Circle().fill(Color.black.opacity(0.25))
             ProgressView().tint(.white)
         }
     }
@@ -135,7 +143,9 @@ struct ProfileEditView: View {
         if isSubmitting { return "送出期間先不能修改。" }
         if showsEmptyNameMessage { return "還沒填名字。在上面打上名字，再按一次。" }
         if case .failure(let error) = familyStore.updateDisplayNameState { return error.userFacingMessage }
-        return "家人在家庭成員列表會看到這個名字。"
+        // R2（merge-review R1 M6）：稿欄位 help「家人在時間軸與相簿裡會看到這個名字。」，
+        // R1 誤寫成「家庭成員列表」。
+        return "家人在時間軸與相簿裡會看到這個名字。"
     }
 
     private var isNameError: Bool {
@@ -213,122 +223,6 @@ struct ProfileEditView: View {
             pickedAvatarPreview = nil
             avatarLoadErrorMessage = message
         }
-    }
-}
-
-/// 02 頭像欄內容——沖印卡方形縮圖（`PhotoCornerOverlay` 四角托，同 `AvatarPrintCard` 的既有
-/// 母題）＋相機 Edit Badge（同 `EditChildAvatarFieldContent` 的既有慣例）。跟兩者都不完全
-/// 相同，另建一份：`AvatarPrintCard`（建檔，無既有照片，永遠是空白占位）與
-/// `EditChildAvatarFieldContent`（編輯，但圓形頭像）都不是這裡要的「編輯態＋方形」組合，
-/// 同檔案既有慣例是每個畫面各自一份小型元件，不跨畫面共用（見 `EditChildAvatarFieldContent`
-/// 文件註解）。
-private struct ProfileAvatarEditCard: View {
-    let name: String
-    var avatarURL: URL?
-    var pickedImage: UIImage?
-
-    private let cardSize: CGFloat = 140
-    private let cornerSize: CGFloat = 26
-
-    /// LS-67 R3 F24 同款四角染料池——見 `AvatarPrintCard` 文件註解，這裡沿用同一組示意透明度
-    /// （這個元件跟 `AvatarPrintCard` 一樣是「沖印卡」母題的另一個實例，透明度數字沒有理由
-    /// 重新調過）。
-    private static let mountPoolOpacity = PrintPhotoCard.MountPoolOpacity(
-        topLeading: 0.429, topTrailing: 0.275, bottomLeading: 0.367, bottomTrailing: 0.245
-    )
-
-    var body: some View {
-        VStack(spacing: AppSpacing.label) {
-            ZStack(alignment: .bottomTrailing) {
-                photoCard
-                editBadge
-            }
-            Text("換張照片")
-                .appFont(.note, weight: .semibold)
-                .foregroundStyle(Color.lsTextSecondary)
-        }
-        .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("我的頭像，點一下可以換照片")
-    }
-
-    private var photoCard: some View {
-        photoWrap
-            .frame(width: cardSize, height: cardSize)
-            .clipped()
-            .padding(AppSpacing.printEdge)
-            .background(mountPoolGlow.clipped())
-            .background(Color.lsPrintPaper)
-            .overlay(PhotoCornerOverlay(size: cornerSize))
-    }
-
-    @ViewBuilder
-    private var photoWrap: some View {
-        if let pickedImage {
-            Image(uiImage: pickedImage).resizable().scaledToFill()
-        } else if let avatarURL {
-            AsyncImage(url: avatarURL) { phase in
-                if let image = phase.image {
-                    image.resizable().scaledToFill()
-                } else {
-                    initialsPlaceholder
-                }
-            }
-        } else {
-            initialsPlaceholder
-        }
-    }
-
-    private var initialsPlaceholder: some View {
-        ZStack {
-            Color.lsSurface2
-            Text(ChildAvatarInitial.initial(for: name))
-                .font(.system(size: cardSize * 0.35, weight: .bold))
-                .foregroundStyle(Color.lsTextSecondary)
-        }
-    }
-
-    private var editBadge: some View {
-        Circle()
-            .fill(Color.lsSurface)
-            .frame(width: 32, height: 32)
-            .overlay(Circle().strokeBorder(Color.lsControlLine, lineWidth: 1.5))
-            .overlay(
-                Image(systemName: "camera")
-                    .appIconFrame(.small)
-                    .foregroundStyle(Color.lsTextPrimary)
-            )
-            .offset(x: 4, y: 4)
-    }
-
-    private var mountPoolGlow: some View {
-        GeometryReader { proxy in
-            let diameter = cornerSize * 6
-            ZStack {
-                glow(diameter: diameter, opacity: Self.mountPoolOpacity.topLeading)
-                    .position(x: 0, y: 0)
-                glow(diameter: diameter, opacity: Self.mountPoolOpacity.topTrailing)
-                    .position(x: proxy.size.width, y: 0)
-                glow(diameter: diameter, opacity: Self.mountPoolOpacity.bottomLeading)
-                    .position(x: 0, y: proxy.size.height)
-                glow(diameter: diameter, opacity: Self.mountPoolOpacity.bottomTrailing)
-                    .position(x: proxy.size.width, y: proxy.size.height)
-            }
-        }
-    }
-
-    private func glow(diameter: CGFloat, opacity: Double) -> some View {
-        Circle()
-            .fill(
-                RadialGradient(
-                    colors: [Color.lsMountPool.opacity(opacity), Color.lsMountPoolFade],
-                    center: .center,
-                    startRadius: 0,
-                    endRadius: diameter / 2
-                )
-            )
-            .frame(width: diameter, height: diameter)
-            .allowsHitTesting(false)
     }
 }
 
