@@ -315,6 +315,37 @@ u16=$(id_of "$out16")
 if [ "$u16" = EXISTING-114 ]; then echo "✓ ⑯ 既有專屬機 runtime＝釘住版 → 沿用"; else echo "✗ ⑯ 應沿用 EXISTING-114，實得 ${u16}" >&2; cat "$work/err16" >&2; fail=1; fi
 if [ ! -s "$work/err16" ]; then echo "✓ ⑯ runtime 相符時不印警告"; else echo "✗ ⑯ runtime 相符卻印了警告" >&2; cat "$work/err16" >&2; fail=1; fi
 
+
+# ---- ⑰～⑱（LS-205 R2；merge-review R1 M2）：LS-176 同票重用要跟 create_dedicated() 用同一個
+#      「有效目標 runtime」（`target_os`），不能各自各算——舊版 `find_udid_same_ticket()` 硬編
+#      `header_os`，一旦釘住版在本機生效（`target_os` 變成 `pinned_os` 且 ≠ `header_os`），既有
+#      「用釘住版建出來的同票機」永遠不會被這裡看到，會誤判成「沒有可重用」而再建一台（LS-107
+#      的舊坑回來）。
+
+# ⑰（M2 具體重現）：釘住版本機可用（26.5，≠ header_os 26.0）、既有同票機（不同機型，LS-176 fuzzy
+#    match）已經坐在釘住版分節 → 必須被重用，不得再建第二台
+db17="$work/db17"
+printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\nLS-115-iPhoneAir\tEXISTING-115\t26.5\n' > "$db17"
+mkdir -p "$work/wt/LS-115"
+printf '26.5\n' > "$work/wt/LS-115/.ios-runtime"
+out17=$(STUB_DB="$db17" STUB_RUNTIMES=26.0,26.5 run_in "$work/wt/LS-115" 2>"$work/err17")
+u17=$(id_of "$out17")
+if [ "$u17" = EXISTING-115 ]; then echo "✓ ⑰ 釘住版生效時，坐在釘住版分節的既有同票機被正確重用（M2）"; else echo "✗ ⑰ 應重用 EXISTING-115，實得 ${u17}（M2 回歸：另建了第二台？）" >&2; cat "$work/err17" >&2; fail=1; fi
+if [ "$(printf '%s\n' "$(cat "$db17")" | wc -l | tr -d ' ')" = 2 ]; then echo "✓ ⑰ 沒有另建第二台（db 仍兩筆）"; else echo "✗ ⑰ db 筆數變了，另建了機器" >&2; cat "$db17" >&2; fail=1; fi
+has '⑰ stderr 說明重用了哪一台、runtime 字串是釘住版 26.5（不是 header_os 26.0）' "$(cat "$work/err17")" '重用同票既有專屬機「LS-115-iPhoneAir」（同 runtime iOS 26.5，不另建 LS-115-iPhone17Pro；LS-176）'
+
+# ⑱（對照，fail-open 分支）：釘住版本機不可用（只有 26.0）、既有同票機坐在 header_os 分節（26.0）
+#    → target_os 退回 header_os，同 LS-176 舊行為仍正確重用（證明 M2 的共用解析在「退回」分支
+#    也走得通，不是只在 pin 生效時才對）
+db18="$work/db18"
+printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\nLS-116-iPhoneAir\tEXISTING-116\t26.0\n' > "$db18"
+mkdir -p "$work/wt/LS-116"
+printf '26.2\n' > "$work/wt/LS-116/.ios-runtime"
+out18=$(STUB_DB="$db18" run_in "$work/wt/LS-116" 2>"$work/err18")
+u18=$(id_of "$out18")
+if [ "$u18" = EXISTING-116 ]; then echo "✓ ⑱ 釘住版不可用（fail-open 退回 header_os）時，既有同票機仍被正確重用"; else echo "✗ ⑱ 應重用 EXISTING-116，實得 ${u18}" >&2; cat "$work/err18" >&2; fail=1; fi
+has '⑱ stderr 重用訊息 runtime 字串是退回後的 header_os 26.0（不是打不到的釘住版 26.2）' "$(cat "$work/err18")" '重用同票既有專屬機「LS-116-iPhoneAir」（同 runtime iOS 26.0，不另建 LS-116-iPhone17Pro；LS-176）'
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ detect-simulator／simulator-lock 自測通過"
 fi

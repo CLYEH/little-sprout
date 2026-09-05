@@ -78,6 +78,17 @@ branch=$(git -C "$toplevel" symbolic-ref --short -q HEAD 2>/dev/null || true)
 pinned_os=
 [ -f "${toplevel}/.ios-runtime" ] && pinned_os=$(tr -d '[:space:]' < "${toplevel}/.ios-runtime")
 
+# ---- LS-205 R2（merge-review R1 M2）：「有效目標 runtime」只在這裡算一次，find_udid_same_ticket()
+#      與 create_dedicated() 共用同一個值——原本兩處各自各算（前者比 header_os、後者建在 pinned_os），
+#      一旦釘住版在本機生效，用它建出來的機器就落在 target_os≠header_os 的分節，下一次呼叫的「同票
+#      重用」判斷（比 header_os）永遠看不到那台既有機，同票就會不斷堆出新機（LS-107 的舊坑、LS-176
+#      要防的正是這個）。優先 pinned_os，本機真的裝得到（`simctl list runtimes` 命中）才採用；沒有
+#      釘住或本機沒裝該版就退回 header_os（原 LS-83 行為，fail-open）。
+target_os="$header_os"
+if [ -n "$pinned_os" ] && xcrun simctl list runtimes 2>/dev/null | grep -q "^iOS ${pinned_os} "; then
+  target_os="$pinned_os"
+fi
+
 os_of_udid() {   # $1＝UDID；印出該裝置所在的 OS 分節標題（找不到印空字串）
   xcrun simctl list devices available 2>/dev/null | awk -v u="$1" '
     /^-- iOS / { os = $0; sub(/^-- iOS /, "", os); sub(/ --$/, "", os); next }
@@ -126,12 +137,14 @@ find_udid_by_name() {   # $1＝精確裝置名；印第一個相符「可用」�
   '
 }
 
-find_udid_same_ticket() {   # LS-176：同票（名稱 `<票號>-` 開頭）、同 iOS runtime 分節（header_os）的第一台可用裝置，印 "name\tudid"
+find_udid_same_ticket() {   # LS-176：同票（名稱 `<票號>-` 開頭）、同「有效目標 runtime」（`target_os`，
+  # LS-205 R2 起與 create_dedicated() 共用同一個解析結果——見上方定義，不再各自各算）分節的第一台可用
+  # 裝置，印 "name\tudid"
   # 同票專屬機的機型可能跟現在「清單第一台原廠機」不同（原廠機被刪／重建、Xcode 升級換了預設機型後 name 就變了），
   # 舊版只認精確名稱 `<票號>-<機型無空白>`，找不到就再建一台——LS-107 因此堆到 4 台（LS-96 池項 7c9fe5bd (c)）。
   # 單元測試不挑機型，同 runtime 的既有專屬機直接重用；**不同 runtime 的不重用**（舊 runtime 可能跑不了目前的
   # deployment target），那一種仍走 create_dedicated。同 find_udid_by_name 只看「可用」裝置。
-  xcrun simctl list devices available 2>/dev/null | awk -v pfx="${ticket}-" -v os="$header_os" '
+  xcrun simctl list devices available 2>/dev/null | awk -v pfx="${ticket}-" -v os="$target_os" '
     /^-- iOS / { cur = $0; sub(/^-- iOS /, "", cur); sub(/ --$/, "", cur); next }
     cur == os && /^[ \t]+[^ \t]/ {
       line = $0
@@ -149,27 +162,18 @@ find_udid_same_ticket() {   # LS-176：同票（名稱 `<票號>-` 開頭）、�
 }
 
 create_dedicated() {   # 成功印新 UDID、exit 0；失敗印訊息到 stderr、回 1（呼叫端退回共用）
-  local devicetype_id runtime_id created target_os avail
+  local devicetype_id runtime_id created avail
   devicetype_id=$(xcrun simctl list devicetypes 2>/dev/null | grep -F "${name} (" \
     | sed -E 's/.*\(([^()]+)\)[[:space:]]*$/\1/' | head -1)
-  # LS-205：優先建在釘住版（`.ios-runtime`）——找不到本機該版 runtime 就 fail-open，
-  # 印 ⚠ 並退回 header_os（原 LS-83 行為），不擋這次建機。
-  target_os="$header_os"
-  runtime_id=
-  if [ -n "$pinned_os" ]; then
-    runtime_id=$(xcrun simctl list runtimes 2>/dev/null | grep -m1 "^iOS ${pinned_os} " \
-      | sed -E 's/.* - (com\.apple\.[^[:space:]]+)[[:space:]]*$/\1/')
-    if [ -n "$runtime_id" ]; then
-      target_os="$pinned_os"
-    else
-      avail=$(xcrun simctl list runtimes 2>/dev/null | awk '/^iOS /{print $2}' | paste -sd '、' -)
-      echo "⚠ detect-simulator：本機無 iOS ${pinned_os} runtime（有：${avail:-無}），改用 iOS ${header_os}；CI 為 iOS ${pinned_os}，tap-target／版面量測可能不一致" >&2
-    fi
+  # LS-205 R2：建在共用的 `target_os`（上方已算好——優先釘住版，本機沒裝該版時已退回 header_os）；
+  # `target_os != pinned_os` 代表「有釘住但本機裝不到」，這裡才印一次 fail-open 警告，不重算一次
+  # runtime 是否命中（避免對 M2 的共用解析結果各吹各的號）。
+  if [ -n "$pinned_os" ] && [ "$target_os" != "$pinned_os" ]; then
+    avail=$(xcrun simctl list runtimes 2>/dev/null | awk '/^iOS /{print $2}' | paste -sd '、' -)
+    echo "⚠ detect-simulator：本機無 iOS ${pinned_os} runtime（有：${avail:-無}），改用 iOS ${target_os}；CI 為 iOS ${pinned_os}，tap-target／版面量測可能不一致" >&2
   fi
-  if [ -z "$runtime_id" ]; then
-    runtime_id=$(xcrun simctl list runtimes 2>/dev/null | grep -m1 "^iOS ${target_os} " \
-      | sed -E 's/.* - (com\.apple\.[^[:space:]]+)[[:space:]]*$/\1/')
-  fi
+  runtime_id=$(xcrun simctl list runtimes 2>/dev/null | grep -m1 "^iOS ${target_os} " \
+    | sed -E 's/.* - (com\.apple\.[^[:space:]]+)[[:space:]]*$/\1/')
   if [ -z "$devicetype_id" ] || [ -z "$runtime_id" ]; then
     echo "⚠ detect-simulator：找不到「${name}」的 devicetype／「iOS ${target_os}」的 runtime identifier，無法建立專屬模擬器" >&2
     return 1
@@ -196,7 +200,7 @@ else
       reuse=$(find_udid_same_ticket)
       if [ -n "$reuse" ]; then
         udid=$(printf '%s' "$reuse" | cut -f2)
-        echo "→ detect-simulator：重用同票既有專屬機「$(printf '%s' "$reuse" | cut -f1)」（同 runtime iOS ${header_os}，不另建 ${dedicated_name}；LS-176）" >&2
+        echo "→ detect-simulator：重用同票既有專屬機「$(printf '%s' "$reuse" | cut -f1)」（同 runtime iOS ${target_os}，不另建 ${dedicated_name}；LS-176）" >&2
         warn_runtime_mismatch "$udid" "$(printf '%s' "$reuse" | cut -f1)"   # LS-205
       else
         udid=$(create_dedicated) || udid=
