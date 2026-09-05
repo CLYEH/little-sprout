@@ -105,6 +105,17 @@ query($after: String, $teamKey: String!) {
 }
 """
 
+# LS-187：patrol.sh 專屬模擬器段（--linear）問「這些票號哪些已 Done／Canceled」——只查 number in [...]，一頁 250 足夠
+# （一輪巡檢的 LS-<n>-* 專屬機票號數遠小於此）；state.type completed／canceled 才回。patrol.sh 自己仍不碰 token，
+# 走 patrol-linear.sh --closed 進來（同一支 gql()：token 只走 curl -K - stdin）。
+CLOSED_BY_NUMBER_QUERY = """
+query($teamKey: String!, $numbers: [Float!]) {
+  issues(first: 250, filter: { team: { key: { eq: $teamKey } }, number: { in: $numbers }, state: { type: { in: ["completed", "canceled"] } } }) {
+    nodes { identifier state { name type } }
+  }
+}
+"""
+
 # LS-144：LS-96 待辦池 comments（分頁 100）——harness lane 開票來源。同 pr-body-check.sh --verify 的查法。
 POOL_COMMENTS_QUERY = """
 query($id: String!, $after: String) {
@@ -1023,6 +1034,18 @@ def format_human(report, brief=False):
     return "\n".join(lines)
 
 
+def closed_tickets(token, team_key, numbers):
+    """LS-187：回 [(identifier, state.name)]，只含 state.type completed／canceled 的票；查詢失敗由 gql() fail loud。"""
+    data = gql(token, CLOSED_BY_NUMBER_QUERY, {"teamKey": team_key, "numbers": numbers})
+    out = []
+    for issue in ((data.get("issues") or {}).get("nodes") or []):
+        state = issue.get("state") or {}
+        if state.get("type") in ("completed", "canceled"):
+            out.append((issue.get("identifier", ""), state.get("name", "")))
+    out.sort(key=lambda pair: ticket_number(pair[0]) or 0)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(add_help=True)
     ap.add_argument("--root", required=True)
@@ -1030,12 +1053,23 @@ def main():
     ap.add_argument("--team-id", required=True)
     ap.add_argument("--mode", choices=["human", "brief", "json"], default="human")
     ap.add_argument("--sim-lines-file", default=None)
+    # LS-187：逗號分隔的票號數字（如 "165,167"）——只印已 Done／Canceled 者，每行「LS-<n>\t<state.name>」，不跑整份報表。
+    ap.add_argument("--closed", default=None)
     args = ap.parse_args()
 
     token = os.environ.get("LINEAR_API_KEY", "")
     if not token:
         sys.stderr.write("✗ patrol-linear：LINEAR_API_KEY 未設定（patrol-linear.sh 應該已經擋在這之前）\n")
         sys.exit(1)
+
+    if args.closed is not None:
+        if not re.fullmatch(r"[0-9]+(,[0-9]+)*", args.closed):
+            sys.stderr.write("✗ patrol-linear：--closed 須為逗號分隔的票號數字（得到「%s」）\n" % args.closed)
+            sys.exit(2)
+        numbers = sorted({int(n) for n in args.closed.split(",")})
+        for identifier, state_name in closed_tickets(token, args.team_key, numbers):
+            print("%s\t%s" % (identifier, state_name))
+        sys.exit(0)
 
     sim_lines = []
     if args.sim_lines_file and os.path.isfile(args.sim_lines_file):

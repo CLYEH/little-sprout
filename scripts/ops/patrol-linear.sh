@@ -10,14 +10,17 @@
 # patrol.sh（同一份已測過的 xcrun/simctl 邏輯，不重造輪子）：呼叫 patrol.sh --brief --no-pr
 # --no-fetch，抓「[Booted 模擬器 …]」開頭的旗標行轉交 python 排版。
 #
-# 用法：patrol-linear.sh [--json|--brief] [--repo <path>]
+# 用法：patrol-linear.sh [--json|--brief|--closed <n,n,…>] [--repo <path>]
 #   （預設）human 模式，印五段：狀態對照／cycle 對帳／lane 補位＋候補＋動作清單／開票結構／Booted 模擬器
 #   --brief  只印動作清單（hook／cron 摘要用）
 #   --json   單一 JSON 物件給程式讀
+#   --closed <n,n,…>  （LS-187）只回答「這些票號哪些已 Done／Canceled」：每行「LS-<n>\t<state.name>」、無者印空，
+#            不跑整份報表、**不回頭呼叫 patrol.sh**（patrol.sh --linear 的專屬模擬器段從這裡進來，回頭呼叫會遞迴）。
+#            exit 0＝查過；3＝缺 LINEAR_API_KEY 略過（呼叫端退回只用 worktree 判定）；2＝票號格式錯；1＝查詢失敗。
 #   --repo   指定 repo（任一 worktree 路徑皆可；預設取腳本所在 repo，ROOT 解到主 checkout）
 #
 # .env 只認 key 名、source 注入、不印不寫檔（docs/COLLABORATION.md §6／§7 H2）。缺
-# LINEAR_API_KEY（.env 未設或本身缺檔）→ 印「略過（無 LINEAR_API_KEY）」、exit 0，不炸——這是
+# LINEAR_API_KEY（.env 未設或本身缺檔）→ 印「略過（無 LINEAR_API_KEY）」、exit 0（--closed 為 exit 3），不炸——這是
 # 已知盲區（token 缺時退回人工，見票文與 §4-b 對照表新增列）。
 #
 # 自測：scripts/ops/patrol-linear.test.sh（PATH 前置假 curl 回固定 GraphQL JSON fixture，不打真
@@ -25,16 +28,20 @@
 # 驗證的是自測腳本（餵假 token＋假 curl）。
 set -uo pipefail
 
-MODE=human; REPO=
+MODE=human; REPO=; CLOSED_NUMS=
 while [ $# -gt 0 ]; do
   case "$1" in
     --brief) MODE=brief ;;
     --json) MODE=json ;;
+    --closed)
+      [ -n "${2:-}" ] || { echo "✗ patrol-linear：--closed 缺值" >&2; exit 2; }
+      case "$2" in *[!0-9,]*|,*|*,|*,,*|'') echo "✗ patrol-linear：--closed 須為逗號分隔的票號數字（得到「$2」）" >&2; exit 2 ;; esac
+      MODE=closed; CLOSED_NUMS=$2; shift ;;
     --repo)
       [ -n "${2:-}" ] || { echo "✗ patrol-linear：--repo 缺值" >&2; exit 2; }
       REPO=$2; shift ;;
     -h|--help)
-      echo "用法：patrol-linear.sh [--json|--brief] [--repo <path>]（說明見檔頭）"; exit 0 ;;
+      echo "用法：patrol-linear.sh [--json|--brief|--closed <n,n,…>] [--repo <path>]（說明見檔頭）"; exit 0 ;;
     *) echo "✗ patrol-linear：未知參數 $1" >&2; exit 2 ;;
   esac
   shift
@@ -59,6 +66,7 @@ fi
 if [ -z "${LINEAR_API_KEY:-}" ]; then
   case "$MODE" in
     json) echo '{"skipped":true,"reason":"no LINEAR_API_KEY"}' ;;
+    closed) echo "巡檢（Linear 半段）：--closed 略過（無 LINEAR_API_KEY）——${ROOT}/.env 補上後才會查票狀態" >&2; exit 3 ;;
     *) echo "巡檢（Linear 半段）：略過（無 LINEAR_API_KEY）——${ROOT}/.env 補上後才會打 GraphQL，見 docs/COLLABORATION.md §7" ;;
   esac
   exit 0
@@ -66,6 +74,15 @@ fi
 
 command -v python3 >/dev/null 2>&1 || { echo "✗ patrol-linear：需要 python3" >&2; exit 1; }
 command -v curl >/dev/null 2>&1 || { echo "✗ patrol-linear：需要 curl" >&2; exit 1; }
+
+# ---- --closed（LS-187）：只查票狀態就走，不碰 patrol.sh（它正是呼叫端，回頭呼叫會遞迴）----
+if [ "$MODE" = closed ]; then
+  export LINEAR_API_KEY
+  python3 "${here}/patrol_linear.py" \
+    --root "$ROOT" --team-key LS --team-id 020782d9-b525-46e1-8805-965cff30d7d2 \
+    --closed "$CLOSED_NUMS"
+  exit $?
+fi
 
 # ---- Booted 模擬器段沿用 patrol.sh：抓 --brief 輸出裡「[Booted 模擬器 …]」開頭的旗標行 ----
 sim_lines_file=$(mktemp "${TMPDIR:-/tmp}/patrol-linear-sim.XXXXXX") || { echo "✗ patrol-linear：mktemp 失敗" >&2; exit 2; }

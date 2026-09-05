@@ -4,12 +4,19 @@ import SwiftUI
 /// LS-47/10c 共用元件；LS-125 R5 改多選）。目前唯一呼叫端是 `DiaryEditorView`——相簿發佈流程
 /// 若之後也要用同一份規格，直接重用本檔即可，不需要另外出一份設計稿（元件本身就是共用的）。
 ///
+/// LS-165：`CreateAlbumView`（新增相簿 sheet）是第二個呼叫端，比照這則文件註解的既有指示直接
+/// 重用本檔，但「這篇日記」的字面文案對相簿情境不成立——`title`／`subtitle` 因此開放覆寫
+/// （預設值＝原本寫死的日記文案，`DiaryEditorView` 呼叫端不需要跟著改），版面／互動邏輯完全
+/// 不變，只是文字改成可帶入的參數。
+///
 /// 「不指定」與任何寶貝互斥：`selectedChildIDs` 空集合＝不指定；非空＝已指定那幾個寶貝。這裡
 /// 不另外維護一顆「是否不指定」的旗標，避免跟集合狀態失去同步（`DiaryComposerStore` 同一個
 /// 判斷式，見該檔 `isUnspecifiedChild`）。
 struct AttributionSheet: View {
     let childrenStore: ChildrenStore
     @Binding var selectedChildIDs: Set<UUID>
+    var title = "這篇日記是哪個寶貝的？"
+    var subtitle = "之後隨時可以再改，也可以不指定。"
 
     @Environment(\.dismiss) private var dismiss
 
@@ -36,10 +43,10 @@ struct AttributionSheet: View {
 
     private var headSection: some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
-            Text("這篇日記是哪個寶貝的？")
+            Text(title)
                 .appFont(.lead, weight: .bold)
                 .foregroundStyle(Color.lsTextPrimary)
-            Text("之後隨時可以再改，也可以不指定。")
+            Text(subtitle)
                 .appFont(.body)
                 .foregroundStyle(Color.lsTextSecondary)
         }

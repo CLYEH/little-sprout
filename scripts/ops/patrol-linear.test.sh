@@ -339,6 +339,38 @@ check_fail_mode 'curl 非 0 exit（連線失敗）' exit7 'curl 失敗'
 check_fail_mode '回應不是合法 JSON' badjson '不是合法 JSON'
 check_fail_mode 'R1 F5：合法 JSON 但缺 data 物件（{"data":null}）' nulldata '缺少可用的 data 物件'
 
+# ---- ⑥b --closed（LS-187：patrol.sh 專屬模擬器段問「這些票號哪些已 Done／Canceled」）：獨立假 curl 回 number in [...] 查詢的
+#        fixture（LS-90 Done／LS-3 In Progress——後者伺服器端本該被 state filter 濾掉，這裡故意回來驗 python 仍只印
+#        completed／canceled）；stdout 每行「LS-<n>\t<state.name>」；token 不進 argv；body 帶排序去重後的票號；只打一次 curl；
+#        無 key → exit 3、stdout 空；票號格式錯／空值 → exit 2。（不回頭呼叫 patrol.sh 這點靠 patrol.test.sh ㉓ 的 --linear
+#        路徑整條跑通來守：若遞迴，那裡的假身呼叫次數就不會是 1。）----
+mkdir -p "$work/bin_closed"
+cat > "$work/bin_closed/curl" <<'EOF'
+#!/bin/bash
+printf '%s\n' "$*" >> "${CURL_STUB_LOG:?}"
+cat >/dev/null
+data=""
+while [ $# -gt 0 ]; do case "$1" in --data) data=$2; shift ;; esac; shift; done
+case "$data" in
+  *'number: { in: $numbers }'*) echo '{"data":{"issues":{"nodes":[{"identifier":"LS-90","state":{"name":"Done","type":"completed"}},{"identifier":"LS-3","state":{"name":"In Progress","type":"started"}},{"identifier":"LS-7","state":{"name":"Canceled","type":"canceled"}}]}}}' ;;
+  *) echo '{"errors":[{"message":"stub curl：--closed 不該打別的查詢"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_closed/curl"
+: > "$CURL_STUB_LOG"
+out_closed="$(PATH="$work/bin_closed:$PATH" bash "$plsh" --closed 90,3,90,7 --repo "$repo" 2>"$work/stderr_closed.log")"; rc=$?
+if [ "$rc" -eq 0 ]; then echo "✓ ⑥b --closed exit 0"; else echo "✗ ⑥b --closed 應 exit 0（實得 ${rc}）" >&2; sed 's/^/    /' "$work/stderr_closed.log" >&2; fail=1; fi
+if [ "$out_closed" = "$(printf 'LS-7\tCanceled\nLS-90\tDone')" ]; then echo "✓ ⑥b stdout 只含 completed／canceled、每行 LS-<n>\\t<state.name>、依票號排序"; else echo "✗ ⑥b stdout 不符：$(printf '%s' "$out_closed" | od -c | head -3)" >&2; fail=1; fi
+n_curl=$(grep -c . "$CURL_STUB_LOG" 2>/dev/null || true); [ "${n_curl:-0}" -eq 1 ] && echo "✓ ⑥b 只打一次 curl（批次）" || { echo "✗ ⑥b 應只打一次 curl（實得 ${n_curl:-0}）" >&2; fail=1; }
+grep -qF '"numbers": [3, 7, 90]' "$CURL_STUB_LOG" && echo "✓ ⑥b body 帶排序去重後的票號 [3, 7, 90]" || { echo "✗ ⑥b body 應帶 [3, 7, 90]：$(cat "$CURL_STUB_LOG")" >&2; fail=1; }
+grep -qF 'test-token-not-real' "$CURL_STUB_LOG" && { echo "✗ ⑥b token 出現在 curl argv" >&2; fail=1; } || echo "✓ ⑥b token 不進 curl argv"
+out_closed_nokey="$(bash "$plsh" --closed 90 --repo "$repo_no_token" 2>"$work/stderr_closed_nokey.log")"; rc=$?
+if [ "$rc" -eq 3 ] && [ -z "$out_closed_nokey" ] && grep -qF '略過（無 LINEAR_API_KEY）' "$work/stderr_closed_nokey.log"; then echo "✓ ⑥b 無 key → exit 3、stdout 空、stderr 說略過"; else echo "✗ ⑥b 無 key 應 exit 3 且 stdout 空（實得 rc=${rc}、stdout=${out_closed_nokey}）" >&2; fail=1; fi
+out_closed_bad="$(bash "$plsh" --closed '90,abc' --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 2 ] && printf '%s' "$out_closed_bad" | grep -qF '票號數字'; then echo "✓ ⑥b 票號格式錯 → exit 2"; else echo "✗ ⑥b 票號格式錯應 exit 2（實得 ${rc}）" >&2; fail=1; fi
+out_closed_empty="$(bash "$plsh" --closed '' --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 2 ]; then echo "✓ ⑥b --closed 空值 → exit 2"; else echo "✗ ⑥b --closed 空值應 exit 2（實得 ${rc}）" >&2; fail=1; fi
+
 # ---- ⑦ R1 F5：cycle 對帳 (d)（剩餘時間 <24h）——用執行當下算出的動態時間戳，不寫死日期，
 #        避免測試在特定日期之後失效；獨立 repo／fixture，不與 ② 的固定 2099 endsAt 互相干擾 ----
 repo_d="$work/repo_d"

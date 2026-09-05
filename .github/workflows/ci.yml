@@ -161,7 +161,7 @@ jobs:
       # LS-95 merge-review R1 B2：tap-target-check.test.sh 原本只有腳本本體、沒有接進這裡——
       # COLLABORATION §7 宣稱「自測掛 CI rules job」但實際沒掛，兩條刻意寫的 mutation-style
       # 負控（多違規要全點名、失敗無標記不能誤判成通過）從未在 CI 執行過。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／main-checkout-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／main-checkout-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry）
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -192,10 +192,12 @@ jobs:
           bash scripts/gates/design-evidence-check.test.sh || rc=1
           # LS-168：Notes 板節點 id 存在性 gate 自測（合成 repo：活 id／死 id／沿革標記三案＋mutation）
           bash scripts/gates/design-notes-check.test.sh || rc=1
-          # LS-122：四支溢出掃描的正典腳本純函數自測（node，合成節點樹；Pen 不在 CI 也能驗演算法）；LS-168 加第五支
-          # text_occlusion 與 tree_hash（含 python design_tree_hash.py 交叉一致案，runner 需 python3——ubuntu-latest 內建）
+          # LS-122：六支溢出掃描的正典腳本純函數自測（node，合成節點樹；Pen 不在 CI 也能驗演算法）；LS-168 加第五支
+          # text_occlusion 與 tree_hash（含 python design_tree_hash.py 交叉一致案，runner 需 python3——ubuntu-latest 內建）；LS-185 加第六支 board_clip
           node scripts/design/overflow-scan.test.js || rc=1
           bash scripts/gates/design-asset-size-check.test.sh || rc=1
+          # LS-186：db job 的 db reset 包裝（54322 port 綁定競態才重試一次；假 supabase／sleep 驗呼叫序列與 exit code，不碰容器）
+          bash scripts/ci/db-reset-retry.test.sh || rc=1
           bash scripts/hooks/pretool.test.sh || rc=1
           # LS-154：主 checkout 禁寫 hook（W1–W5 正負樣本＋開關＋fail-closed＋mutation；臨時 repo fixture）
           bash scripts/hooks/main-checkout-guard.test.sh || rc=1
@@ -391,8 +393,8 @@ jobs:
       # 溢出掃描本身要 Pen app 的版面引擎才算得出絕對座標，CI 沒有 Pen、驗不了掃描過程本身——只驗收據的
       # 機械可查項：head_sha 是不是這個 PR 自己對這份 .pen 的其中一次 commit（不是等於 PR 最終 head sha——
       # 一個 commit 無法把自己最終的 sha 寫進自己的內容裡，見 design-evidence-check.sh 檔頭說明）、TOTAL_NODES
-      # 與這裡的落地檔節點數一致、FLAGGED 每筆有分類、四支掃描皆有輸出且 corner_anchor.mismatch=0（LS-122：兄弟交集／
-      # 橫列溢出／跨 parent 碰撞／角托錨點，正典腳本 scripts/design/overflow-scan.js；mismatch 只算收據 boards 內、boards
+      # 與這裡的落地檔節點數一致、FLAGGED 每筆有分類、六支掃描皆有輸出且 corner_anchor.mismatch=0（LS-122：兄弟交集／
+      # 橫列溢出／跨 parent 碰撞／角托錨點；LS-168 文字遮蔽、LS-185 板裁切，正典腳本 scripts/design/overflow-scan.js；mismatch 只算收據 boards 內、boards
       # 須覆蓋本 PR 對 .pen 頂層節點有變更的板；早於 gate 落地的既有收據沿用兩支）。
       # 限 feature|fix|hotfix head（同 LS-10／LS-50 的票號來源限制——promote／back-merge 沒有本票）。
       # LS-127：這裡 checkout 的是 refs/pull/N/merge（PR head＋base tip 的雙親合併 commit），以 HEAD 為終點時
@@ -521,9 +523,12 @@ jobs:
         if: steps.detect.outputs.skip == 'false'
         run: supabase db start
 
+      # LS-186：reset 重建 db 容器時 runner docker 對 54322 舊綁定偶爾未釋放 →「address already in use」（LS-184 run 33934840343，
+      # rerun 即綠、純 flake）。抽成 scripts/ci/db-reset-retry.sh：失敗且輸出含該字串才 stop --no-backup → sleep 10 → db start →
+      # 重試一次；其他錯誤原樣紅、不重試（自測 db-reset-retry.test.sh 掛 rules job）。step 名稱不變。
       - name: supabase db reset（套用 supabase/migrations）
         if: steps.detect.outputs.skip == 'false'
-        run: supabase db reset
+        run: bash scripts/ci/db-reset-retry.sh
 
       # LS-41（PR #58 review 主修）：docs/API.md ↔ migrations 對帳，改用套用完
       # migrations 的活資料庫 pg_catalog 當權威來源（--catalog 模式），不是重新剖析

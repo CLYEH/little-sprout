@@ -408,6 +408,18 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# LS-196：purge-storage／push-dispatch 只接受 service 憑證（apikey 對
+# SUPABASE_SECRET_KEYS，或過渡期 legacy service_role bearer），不是給使用者
+# JWT 呼叫的端點——關掉平台層 verify_jwt，改在各自 index.ts 用
+# `_shared/keys.ts` 的 isAuthorizedServiceCall() 在程式內驗（見兩支函式
+# index.ts 檔頭「呼叫方式」）。delete-account 驗證的是使用者自己的 access
+# token，維持平台預設 verify_jwt（不覆寫）。
+[functions.purge-storage]
+verify_jwt = false
+
+[functions.push-dispatch]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

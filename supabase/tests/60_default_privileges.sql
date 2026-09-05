@@ -479,7 +479,9 @@ declare
     'public.unblock_user(uuid, uuid)',
     'public.remove_content_as_owner(text, uuid)',
     -- LS-143
-    'public.delete_my_account()'
+    'public.delete_my_account()',
+    -- LS-197
+    'public.accept_eula(text)'
   ];
   v_invoker_rpcs text[] := array[
     'public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)',
