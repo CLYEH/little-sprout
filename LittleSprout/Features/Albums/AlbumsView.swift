@@ -106,8 +106,8 @@ struct AlbumsView: View {
 
     @ViewBuilder
     private func contentBody(columns: Int) -> some View {
-        if albumsStore.albums.isEmpty, albumsStore.refreshState != .submitting {
-            emptyState
+        if albumsStore.albums.isEmpty {
+            emptyOrLoadingState
         } else if columns > 1 {
             VStack(alignment: .leading, spacing: AppSpacing.block) {
                 grid(columns: columns)
@@ -118,6 +118,41 @@ struct AlbumsView: View {
                 list
                 loadMoreTrigger
             }
+        }
+    }
+
+    /// 同 `TimelineView.emptyOrLoadingState`（該檔文件註解 merge-review R1 m1 教訓，這裡是
+    /// R2 修法）：第一頁載入中／失敗／真的沒有相簿三態，不能共用同一個空狀態文案——離線或
+    /// RPC 500 會被誤呈現成「還沒有相簿」，且沒有重試入口。
+    @ViewBuilder
+    private var emptyOrLoadingState: some View {
+        switch albumsStore.refreshState {
+        case .submitting:
+            ProgressView()
+                .frame(maxWidth: .infinity)
+        case .failure(let error):
+            VStack(spacing: AppSpacing.item) {
+                HStack(spacing: AppSpacing.tight) {
+                    Image(systemName: "exclamationmark.circle").appIconFrame(.small)
+                    Text(error.userFacingMessage).appFont(.note)
+                }
+                .foregroundStyle(Color.lsTextPrimary)
+                Button {
+                    Task {
+                        guard let familyID = familyStore.myFamily?.id else { return }
+                        await albumsStore.refresh(familyID: familyID)
+                    }
+                } label: {
+                    Text("重新載入")
+                        .appFont(.body, weight: .semibold)
+                        .padding(.vertical, AppSpacing.item)
+                        .padding(.horizontal, AppSpacing.item)
+                        .contentShape(Rectangle())
+                }
+            }
+            .frame(maxWidth: .infinity)
+        case .idle, .success:
+            emptyState
         }
     }
 
@@ -192,10 +227,19 @@ struct AlbumsView: View {
         .accessibilityElement(children: .combine)
     }
 
+    /// merge-review R1 N1：原本只有一個 `Rectangle` 子節點，`VStack` 因此沒有實際堆疊作用
+    /// （少一列），跟真正的 `AlbumSummaryCardView.printCard`（照片＋Caption 兩行）結構不一致
+    /// ——補一行留白 Caption（`.foregroundStyle(.clear)` 保留高度但不顯示文字，同零寶貝卡
+    /// 「保留高度」的既有慣例，見 `AlbumSignatureFormatter` 文件註解），`VStack` 現在有兩個
+    /// 子節點，堆疊才有意義。
     private var blankPrint: some View {
-        VStack(spacing: 7) {
+        VStack(alignment: .leading, spacing: 7) {
             Rectangle().fill(Color.lsSurface2).frame(height: 184)
+            Text(" ")
+                .appNumericFont(.body, weight: .semibold)
+                .foregroundStyle(.clear)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, AppSpacing.printEdge)
         .padding(.horizontal, AppSpacing.printEdge)
         .padding(.bottom, AppSpacing.printEdgeBottom)

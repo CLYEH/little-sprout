@@ -33,6 +33,13 @@ final class AlbumsStore {
     private var familyID: UUID?
     /// 世代計數器：理由與守門邏輯同 `TimelineStore.generation` 文件註解，這裡不重複。
     private var generation = 0
+    /// `createAlbum` 專用世代計數器（merge-review R1 m2）——`createAlbumState` 是獨立於
+    /// `albums`／`refreshState`／`loadMoreState` 的另一份 UI 回饋狀態（服務「新增相簿」
+    /// sheet 本身），不能共用上面那顆：兩次重疊的 `createAlbum` 呼叫（理論上 sheet 的送出鈕
+    /// 在 `isSubmitting` 時已 `.disabled`，這裡是第二道防線，同 `TimelineStore` 一貫「不只靠
+    /// UI 擋、狀態機本身也要能擋」的做法）應該讓較舊的一次晚到時不覆蓋較新一次已經寫好的
+    /// 結果。
+    private var createAlbumGeneration = 0
 
     init(apiClient: AlbumsAPIClient) {
         self.apiClient = apiClient
@@ -103,18 +110,39 @@ final class AlbumsStore {
     /// 依 `created_at desc` 排序，新相簿必定是第一筆，重查一次比自己手動 `insert(at: 0)`
     /// 再另外查一次封面／署名組裝簡單，且能保證跟 `refresh()` 走同一條組裝路徑、不會有兩份
     /// 邏輯之後各自漂移）。
+    ///
+    /// merge-review R1 M2：`createAlbum`（INSERT）與 `setAlbumChildren`（RPC）是兩個獨立
+    /// 網路呼叫，不在同一個資料庫交易裡——第一步成功、第二步失敗時，若什麼都不做，會留下一本
+    /// 「建立成功但寶貝標記半途而廢」的相簿，卻仍完整出現在列表上（使用者以為送出失敗，實際
+    /// 上相簿已經建立），是資料完整性缺口。修法：第二步失敗時呼叫 `setAlbumDeleted(deleted:
+    /// true)` 軟刪剛建立的這一本（補償動作，`try?` 吞掉補償本身的失敗——不能讓「補償失敗」
+    /// 蓋掉原本要回報給使用者的錯誤，補償只是盡力而為，不是這次呼叫成敗的一部分），再把
+    /// 「設定寶貝標記」失敗的原始錯誤回報給使用者；因為回傳 `false`，`CreateAlbumView.submit()`
+    /// 不會 `dismiss()`，sheet 留在畫面上但使用者看到的錯誤訊息與「這本相簿其實已經半殘留在
+    /// 資料庫」的事實一致（軟刪後不會出現在列表，不是孤兒）。
     @discardableResult
     func createAlbum(familyID: UUID, title: String, childIDs: [UUID]) async -> Bool {
+        createAlbumGeneration += 1
+        let myGeneration = createAlbumGeneration
         createAlbumState = .submitting
         do {
             let created = try await apiClient.createAlbum(familyID: familyID, title: title)
             if !childIDs.isEmpty {
-                try await apiClient.setAlbumChildren(albumID: created.id, childIDs: childIDs)
+                do {
+                    try await apiClient.setAlbumChildren(albumID: created.id, childIDs: childIDs)
+                } catch {
+                    try? await apiClient.setAlbumDeleted(albumID: created.id, deleted: true)
+                    guard myGeneration == createAlbumGeneration else { return false }
+                    createAlbumState = .failure(AppError.map(error))
+                    return false
+                }
             }
+            guard myGeneration == createAlbumGeneration else { return false }
             createAlbumState = .success
             await refresh(familyID: familyID)
             return true
         } catch {
+            guard myGeneration == createAlbumGeneration else { return false }
             createAlbumState = .failure(AppError.map(error))
             return false
         }
@@ -133,6 +161,7 @@ final class AlbumsStore {
         createAlbumState = .idle
         familyID = nil
         generation += 1
+        createAlbumGeneration += 1
     }
 
     #if DEBUG
