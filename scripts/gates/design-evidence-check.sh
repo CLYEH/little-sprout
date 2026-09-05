@@ -44,6 +44,15 @@
 #     缺失）不算「檔案不存在」、不放行（fail closed）。盲區：tree_hash 只證明「收據對應這份 .pen 的**節點樹**」（`children`
 #     全樹；頂層 `variables`／`themes`／`fileToken` 不在雜湊內——Pencil `Get` 只走節點樹，掃描後只改 design token 再落地
 #     gate 看不到，R1 N4），不證明五支數字算對。
+#   - **LS-185：第六支＋scan_scope**——收據另須含 `scans.board_clip`（可見葉節點伸出有 `clip:true` 的 root frame 被裁：LS-120 R2
+#     六個 spacer 把 Card Diary／Load More 推出板外、LS-177 R2 Header Row 移到 y=−770 捲離畫面；**flagged 必為空**、不接受白名單
+#     ——即使帶 classification 也紅；刻意出血請包進與板同尺寸的 clip 容器，`document_flagged` 的他票板用固定字面
+#     `intentional_bleed`）與頂層 `scan_scope`（`boards`＝快照限縮到 SCAN_BOARDS 子樹／`document`＝全稿，只接受這兩個字面——
+#     LS-120 R3／R4 逐板繞過逾時後 `document_*` 塌縮成 boards 值、LS-177 `cross_parent_collision` 限縮 17 板，收據語意只靠
+#     scan_note 自述，VR MJ-9／MN-5）；每支可帶同值 `scope`（若在也只接受這兩值）。**舊收據放行條件同 LS-168、不用時間切**
+#     （cutoff＝`head_sha` tree 的正典腳本含 SIXTH_MARKER `scanBoardClip`；in-flight 設計分支 LS-177 要等 main→development
+#     back-merge 才拿得到新腳本）：不含 → 缺 `board_clip`／`scan_scope` 放行並印一行（欄位若在仍驗）；輪次最高的收據另看 PR head
+#     tree（同 R1 N1）。
 # 掃描「有沒有真的跑對」（演算法本身正確性）不是這支腳本能驗的——那需要 Pen 的版面引擎，只能靠
 # visual-reviewer 用同方法重掃比對（見 .claude/agents/visual-reviewer.md）。
 #
@@ -70,6 +79,7 @@
 # {
 #   "ticket": "LS-67", "round": 2, "head_sha": "<40 hex，本 PR 落地這份 .pen 的其中一次 commit>",
 #   "total_nodes": 87, "tree_hash": "<16 hex，SUMMARY 印的值（LS-168）>",
+#   "scan_scope": "document"  ←（LS-185）boards|document；每支物件可帶同值 "scope"
 #   "scans": {
 #     "sibling_intersection": {"flagged": [{"node_a": "...", "node_b": "...", "classification": "..."}]},
 #     "row_overflow": {"flagged": [{"node": "...", "classification": "..."}]},
@@ -77,7 +87,8 @@
 #     "corner_anchor": {"boards": ["<root frame id>", ...], "containers": 91, "points": 728, "mismatch": 0, "flagged": [],
 #                       "document_containers": 130, "document_points": 1040, "document_mismatch": 43, "document_flagged": [...],
 #                       "unresolved": [{"container": "...", "classification": "..."}]},
-#     "text_occlusion": {"flagged": [], "document_flagged": [...]}
+#     "text_occlusion": {"flagged": [], "document_flagged": [...]},
+#     "board_clip": {"flagged": [], "document_flagged": [{"board": "...", "node": "...", "side": "bottom", "overflow_px": 123, "classification": "intentional_bleed"}]}
 #   }
 # }
 #
@@ -220,12 +231,15 @@ FOUR = ("sibling_intersection", "row_overflow", "cross_parent_collision", "corne
 # 另看 PR head 的 tree（R1 N1，見檔頭）
 FIFTH_SCRIPT = "scripts/design/overflow-scan.js"
 FIFTH_MARKER = "scanTextOcclusion"
+# LS-185：第六支 board_clip＋scan_scope 的 cutoff——同一支腳本含 SIXTH_MARKER 才要求（放行條件與第五支同形，見檔頭）
+SIXTH_MARKER = "scanBoardClip"
+SCAN_SCOPES = ("boards", "document")
 sys.path.insert(0, os.path.dirname(os.path.abspath(landing_script)))
 import design_tree_hash  # noqa: E402
 
 
-def has_fifth(rev):
-    """rev 的 tree 裡正典腳本是否含第五支：True／False（檔案不存在或無標記）；git 本身失敗回 None（呼叫端 fail closed）。"""
+def has_marker(rev, marker):
+    """rev 的 tree 裡正典腳本是否含 marker：True／False（檔案不存在或無標記）；git 本身失敗回 None（呼叫端 fail closed）。"""
     ls = subprocess.run(["git", "ls-tree", rev, "--", FIFTH_SCRIPT], capture_output=True)
     if ls.returncode != 0:
         return None
@@ -234,7 +248,11 @@ def has_fifth(rev):
     show = subprocess.run(["git", "show", f"{rev}:{FIFTH_SCRIPT}"], capture_output=True)
     if show.returncode != 0:
         return None
-    return FIFTH_MARKER.encode("utf-8") in show.stdout
+    return marker.encode("utf-8") in show.stdout
+
+
+def has_fifth(rev):
+    return has_marker(rev, FIFTH_MARKER)
 
 def top_level(blob):
     """.pen 快照的頂層節點 {id: 正規化 JSON}（board／元件定義都在這一層）；解析失敗回 None。"""
@@ -268,6 +286,8 @@ head_roots = None
 want_hash = None
 fifth = False
 fifth_at_sha = False
+sixth = False
+sixth_at_sha = False
 
 if not isinstance(sha, str) or sha not in pen_commits:
     errs.append(
@@ -291,12 +311,15 @@ else:
             errs.append(f"無法對 {sha[:7]}:{pen_relpath} 快照算 tree_hash（{type(e).__name__}: {e}）")
         fifth_at_sha = has_fifth(sha)
         fifth_at_head = has_fifth(head) if is_latest else False
-        if fifth_at_sha is None or fifth_at_head is None:
+        sixth_at_sha = has_marker(sha, SIXTH_MARKER)
+        sixth_at_head = has_marker(head, SIXTH_MARKER) if is_latest else False
+        if fifth_at_sha is None or fifth_at_head is None or sixth_at_sha is None or sixth_at_head is None:
             errs.append(
-                f"無法判定 {FIFTH_SCRIPT} 在 {sha[:7]}／PR head 的 tree 裡是否含第五支（git ls-tree／show 失敗，淺 clone 或物件缺失）"
+                f"無法判定 {FIFTH_SCRIPT} 在 {sha[:7]}／PR head 的 tree 裡是否含第五／六支（git ls-tree／show 失敗，淺 clone 或物件缺失）"
                 "——不能靠猜放行舊收據（fail closed）"
             )
         fifth = bool(fifth_at_sha) or (is_latest and bool(fifth_at_head))
+        sixth = bool(sixth_at_sha) or (is_latest and bool(sixth_at_head))
         tmp_path = None
         try:
             with tempfile.NamedTemporaryFile(suffix=".pen", delete=False) as tf:
@@ -434,6 +457,36 @@ elif tx["flagged"]:
         "——文字被覆蓋層蓋住不接受白名單，把整列移出膠囊／動作帶或改覆蓋層版面後重跑（LS-168；VR R1 BL-2／BL-3 同 class）"
     )
 
+# LS-185：第六支 board_clip（flagged 必為空）與 scan_scope（boards|document）。新欄位只對「正典腳本已含第六支」的收據要求
+# （head_sha tree；輪次最高另看 PR head tree），舊收據缺欄位放行並印一行，欄位若在仍驗。
+scan_scope = d.get("scan_scope")
+bc = scans.get("board_clip") if isinstance(scans, dict) else None
+if sixth and not sixth_at_sha and (bc is None or scan_scope is None):
+    errs.append(
+        f"本 PR 輪次最高的收據：head_sha={sha[:7]} 落地時正典腳本尚無第六支，但 PR head 的 tree 已含第六支（新腳本已併入本分支）"
+        "——最新輪次的 .pen 內容＝工作區，用現行 scripts/design/overflow-scan.js 對它重跑一次，把 scan_scope 與 scans.board_clip 補進這份收據（LS-185）"
+    )
+if scan_scope is None and not sixth:
+    pass
+elif scan_scope is None:
+    errs.append(f"缺 scan_scope——收據必須標明快照範圍：{'|'.join(SCAN_SCOPES)}（boards＝限縮到 SCAN_BOARDS 子樹、document＝全稿；抄 SUMMARY 的 scan_scope，LS-185）")
+elif scan_scope not in SCAN_SCOPES:
+    errs.append(f"scan_scope 只接受 {'|'.join(SCAN_SCOPES)}（收據={scan_scope!r}）——document_* 是全稿還是限縮板的數字必須用這兩個字面標明（LS-185）")
+if isinstance(scans, dict):
+    for key, scan in scans.items():
+        if isinstance(scan, dict) and "scope" in scan and scan.get("scope") not in SCAN_SCOPES:
+            errs.append(f"scans.{key}.scope 只接受 {'|'.join(SCAN_SCOPES)}（收據={scan.get('scope')!r}，LS-185）")
+if bc is None and not sixth:
+    pass
+elif not isinstance(bc, dict) or not isinstance(bc.get("flagged"), list):
+    errs.append("scans.board_clip 缺失或缺 flagged 陣列——第六支板裁切掃描（可見葉節點伸出有 clip 的 root frame）必須有輸出（LS-185）")
+elif bc["flagged"]:
+    heads = ", ".join(f"{i.get('node')}@{i.get('board')}:{i.get('side')}" for i in bc["flagged"][:5] if isinstance(i, dict))
+    errs.append(
+        f"scans.board_clip.flagged 必須為空（收據 {len(bc['flagged'])} 筆：{heads}）"
+        "——內容被板裁掉不接受白名單（帶 classification 也一樣）：把被推出板外的內容收回板內，刻意出血請包進與板同尺寸的 clip:true 容器後重跑（LS-185；LS-120 R2 spacer／LS-177 R2 Header Row 同 class）"
+    )
+
 if errs:
     print(f"✗ design-evidence gate：{p} 未通過：", file=sys.stderr)
     for e in errs:
@@ -448,6 +501,11 @@ if fifth:
 elif receipt_hash is None or tx is None:
     also = "、PR head 的亦無" if is_latest else ""
     print(f"（{p}：head_sha={sha_disp} 快照的 {FIFTH_SCRIPT} 尚無第五支{also}，LS-168 新欄位 tree_hash／text_occlusion 不要求——舊收據放行）")
+if sixth:
+    schema += f"、board_clip.flagged 為空、scan_scope={scan_scope}"
+elif bc is None or scan_scope is None:
+    also = "、PR head 的亦無" if is_latest else ""
+    print(f"（{p}：head_sha={sha_disp} 快照的 {FIFTH_SCRIPT} 尚無第六支{also}，LS-185 新欄位 board_clip／scan_scope 不要求——舊收據放行）")
 print(f"✓ design-evidence gate 通過：{p}（head_sha={sha_disp}{tag}，total_nodes={want_nodes}，{schema}）")
 PY
   then
