@@ -21,6 +21,20 @@ final class StorageUsageFormattingTests: XCTestCase {
         XCTAssertEqual(StorageUsageView.gbString(0), "0 GB")
     }
 
+    // MARK: - compactUsageSummary（merge-review R1 m1：01 設定頁「儲存空間」列摘要）
+
+    func testCompactUsageSummary_matchesDesignSample() {
+        // 稿面 t5wI4 `Row · 儲存空間`（`AlJ6V`）覆寫 `n1hzsr.content = "2.1／5 GB"`——已用量
+        // 數字不重複「GB」單位，只有上限那個數字帶單位。
+        let quota = FamilyQuota(usedBytes: 2_254_857_830, quotaBytes: 5_368_709_120)
+        XCTAssertEqual(StorageUsageView.compactUsageSummary(quota), "2.1／5 GB")
+    }
+
+    func testCompactUsageSummary_wholeNumberUsed_omitsDecimalPoint() {
+        let quota = FamilyQuota(usedBytes: 5_368_709_120, quotaBytes: 5_368_709_120)
+        XCTAssertEqual(StorageUsageView.compactUsageSummary(quota), "5／5 GB")
+    }
+
     // MARK: - filledChipCount
 
     func testFilledChipCount_42Percent_matchesDesignSample() {

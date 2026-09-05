@@ -30,7 +30,9 @@ struct SettingsView: View {
     /// Regular（iPad）左側五區導覽選取——同 `AuthenticatedRootView` 的既有理由（selection
     /// 存在容器層而非各自子視圖），這裡範圍縮小到「這個畫面內的五區」，跟 app 層的
     /// `AppSection` selection 是兩層不同的導覽狀態，互不相干。
-    @State private var regularSelection: SettingsSection = .profile
+    /// 不標 `private`：`SettingsView+Sidebar.swift`（跨檔案 extension）需要讀寫它，見該檔
+    /// 文件註解。
+    @State var regularSelection: SettingsSection = .profile
 
     var body: some View {
         Group {
@@ -49,6 +51,16 @@ struct SettingsView: View {
             guard let familyID = familyStore.myFamily?.id else { return }
             guard childrenStore.myRole == nil else { return }
             await childrenStore.refresh(familyID: familyID)
+        }
+        // merge-review R1 m1：「儲存空間」列的「2.1／5 GB」摘要（`storageRowValue`）需要
+        // `familyStore.quota` 有值——跟上面的角色補查同一個理由：09 頁自己也有 `.task` 會查
+        // 一次，但使用者可能還沒點進 09 頁就想在 root 看到這個數字。`quota == nil` 才查一次，
+        // 不重打——已經查過（不論是這裡還是 09 頁查到的）就沿用，兩處共用同一份
+        // `FamilyStore.quota`。
+        .task(id: familyStore.myFamily?.id) {
+            guard familyStore.myFamily?.id != nil else { return }
+            guard familyStore.quota == nil else { return }
+            await familyStore.refreshQuota()
         }
         .alert(
             "登出失敗",
@@ -104,48 +116,47 @@ struct SettingsView: View {
     // MARK: - Regular（iPad，`B2DckT`）
     //
     // 稿面 `B2DckT` 畫的是「設定」自己的 sidebar＋detail 兩欄，但 app 層在 regular 寬度已經有
-    // 一層 `SectionSplitView`（`RootView.swift`：時間軸／相簿／寶貝／設定四個 tab 的 sidebar）
-    // ——`SettingsView` 本身是那層 detail 欄裡的內容，不是整個畫面。這裡在自己的內容區域內
-    // 再開一層五區 `NavigationSplitView`，還原稿面「選一區、右邊出現對應內容」的操作方式；
-    // 兩層 sidebar 疊起來的實際可用寬度比稿面單獨畫的 834pt 版心窄，是本票已知的稿面↔既有
-    // 導覽架構落差，記入 handoff「未完成」——不動 `RootView` 的既有四分頁架構（那是本票範圍
-    // 之外的改動）。
+    // 一層 `SectionSplitView`（`RootView.swift`：時間軸／相簿／寶貝／設定四個 tab 的 sidebar，
+    // 整個 `SettingsView` 是那層 detail 欄裡、包在它 `NavigationStack` 內的內容，不是整個
+    // 畫面）。兩層 sidebar 疊起來的實際可用寬度比稿面單獨畫的 834pt 版心窄，是本票已知的稿面
+    // ↔既有導覽架構落差，記入 handoff「未完成」——不動 `RootView` 的既有四分頁架構（那是本票
+    // 範圍之外的改動）。
+    //
+    // merge-review R1 B1（blocker）：這裡原本用內層 `NavigationSplitView` 疊在外層
+    // `NavigationStack` 裡還原稿面兩欄樣貌，實測整個 `SettingsView` 子樹（含 base 上原本
+    // 可用的「邀請家人」）在 iPad 上全部按不動——`NavigationSplitView` 的 detail 欄有自己一套
+    // 導覽狀態管理，疊在別人的 `NavigationStack` 裡會讓兩層互相搶奪 push 的目的地，`NavigationLink`
+    // 找到的「最近的導覽容器」變得不可預期。orchestrator 裁定採 reviewer 修法 2：拿掉內層
+    // `NavigationSplitView`，改用普通 `HStack` 自己畫兩欄（sidebar 是一排 `Button`，不是
+    // `List(selection:)`），視覺上維持稿面兩欄樣貌，但不再引入第二層「導覽容器」語意。
+    //
+    // push 走哪裡（二選一，這裡選②）：
+    // ① 讓 detail 欄的 `NavigationLink` 直接摔到外層 `SectionSplitView` 的 `NavigationStack`——
+    //    寫法最簡單（拿掉這裡所有 `NavigationStack`／`.id` 即可），但 push 出去會把整個兩欄
+    //    畫面（含 sidebar）一起蓋掉，回到「單欄」的體驗，跟稿面「sidebar 常駐、只有右側變化」
+    //    的兩欄設計意圖不符，等於在 iPad 上放棄兩欄。
+    // ② detail 欄自帶一個獨立 `NavigationStack`（本檔採用）：sidebar 永遠可見，push 只發生在
+    //    右側欄——這才是稿面兩欄／Apple 內建設定類 app 在 iPad 上的慣例行為。代價是要記得在
+    //    切換 sidebar 選取時重置這個內層 stack（見下方 `.id(regularSelection)`），否則切到另一
+    //    區時右側會卡在前一區 push 出去的畫面。這正是 `SectionSplitView` 檔頭「已知債」註解
+    //    點名、但四個頂層 tab 目前都還沒有 push destination、因此還沒人真的需要處理的那個情境
+    //    ——`SettingsView` 是第一個有 push destination 的 detail 內容，這裡先把它解掉。
     private var regularBody: some View {
-        NavigationSplitView {
-            List(SettingsSection.allCases, selection: sidebarSelection) { section in
-                sidebarRow(section)
+        HStack(spacing: 0) {
+            sidebar
+                .frame(width: 280)
+            Divider()
+            NavigationStack {
+                ScrollView {
+                    sectionContent(for: regularSelection)
+                        .padding(AppSpacing.screenPad)
+                }
+                .background(Color.lsBackground)
+                .navigationTitle(regularSelection.title)
+                .navigationBarTitleDisplayMode(.inline)
             }
-            .navigationTitle("設定")
-        } detail: {
-            ScrollView {
-                sectionContent(for: regularSelection)
-                    .padding(AppSpacing.screenPad)
-            }
-            .background(Color.lsBackground)
-            .navigationTitle(regularSelection.title)
+            .id(regularSelection)
         }
-    }
-
-    /// `List` 的單選 API 只接受 optional binding；取消選取（nil）時保持原區塊，同
-    /// `SectionSplitView.sidebarSelection` 的既有寫法。
-    private var sidebarSelection: Binding<SettingsSection?> {
-        Binding(get: { regularSelection }, set: { regularSelection = $0 ?? regularSelection })
-    }
-
-    /// 稿面 `B2DckT` Nav Item：選中＝`$print-paper` 底、`$print-ink` icon／文字；未選中＝
-    /// 透明底、`$text-secondary` icon、`$text-primary` 文字。
-    private func sidebarRow(_ section: SettingsSection) -> some View {
-        let isSelected = section == regularSelection
-        return HStack(spacing: AppSpacing.group) {
-            Image(systemName: section.icon)
-                .appIconFrame(.medium)
-                .foregroundStyle(isSelected ? Color.lsPrintInk : Color.lsTextSecondary)
-            Text(section.title)
-                .appFont(.body)
-                .foregroundStyle(isSelected ? Color.lsPrintInk : Color.lsTextPrimary)
-        }
-        .padding(.vertical, AppSpacing.tight)
-        .listRowBackground(isSelected ? Color.lsPrintPaper : Color.clear)
     }
 
     @ViewBuilder
@@ -256,8 +267,14 @@ struct SettingsView: View {
             NavigationLink {
                 StorageUsageView(familyStore: familyStore)
             } label: {
-                SettingsRowView(icon: "internaldrive", label: "儲存空間")
+                SettingsRowView(
+                    icon: "internaldrive", label: "儲存空間",
+                    value: familyStore.quota.map(StorageUsageView.compactUsageSummary)
+                )
             }
+            // merge-review R1 m1：label 會隨 `quota` 是否載入完成而變，同 `settingsInviteRow`
+            // 的既有理由改用 identifier。
+            .accessibilityIdentifier(QAAccessibilityID.settingsStorageRow)
         }
     }
 

@@ -16,6 +16,12 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.settings)
     }
 
+    /// merge-review R1 B1：iPad（regular 寬度）自繪 sidebar 是這次新增的可點元件（`Button`
+    /// 包住的 `sidebarRow`），跟 compact 版面的列走的是不同版面路徑，需要單獨量測。
+    func testSettingsViewRegular() {
+        assertAllTappablesMeetMinimum(.settingsRegular)
+    }
+
     /// merge-review R1 M5：改註冊進 harness，取代原本 `tap-target-exemptions.txt` 的具名排除。
     func testDiaryEditorView() {
         assertAllTappablesMeetMinimum(.diaryEditor)

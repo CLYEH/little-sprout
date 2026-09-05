@@ -46,11 +46,23 @@ final class SettingsViewTests: XCTestCase {
     func testTappingStorageRowNavigatesToStorageUsageView() {
         let app = TapTargetMeasurement.launch(.settings)
         TapTargetMeasurement.assertScreenRendered(.settings, in: app)
-        app.buttons["儲存空間"].tap()
+        app.buttons[QAAccessibilityID.settingsStorageRow].tap()
         XCTAssertTrue(app.navigationBars["儲存空間"].waitForExistence(timeout: 5), "應該導覽到 09 儲存空間頁")
         XCTAssertTrue(
             app.staticTexts["照片與影片會佔用空間，日記文字不會。"].waitForExistence(timeout: 5),
             "儲存空間頁應該顯示底部說明文字"
+        )
+    }
+
+    /// merge-review R1 m1：root 的「儲存空間」列本身要帶用量摘要（稿面「2.1／5 GB」），
+    /// 不是只有點進去的 09 頁才看得到數字。`SettingsView` 的 `.task` 是 async 補查，
+    /// `waitForExistence` 讓斷言等它跑完。
+    func testStorageRowShowsUsageSummaryOnceQuotaLoads() {
+        let app = TapTargetMeasurement.launch(.settings)
+        TapTargetMeasurement.assertScreenRendered(.settings, in: app)
+        XCTAssertTrue(
+            app.staticTexts["2.1／5 GB"].waitForExistence(timeout: 5),
+            "「儲存空間」列應該顯示 PreviewFamilyAPIClient 樣本值「2.1／5 GB」的用量摘要"
         )
     }
 
@@ -94,14 +106,23 @@ final class SettingsViewTests: XCTestCase {
         assertVerticallyCentered(groupMinY: groupMinY, groupMaxY: groupMaxY, rowFrame: row.frame, rowLabel: "個人")
     }
 
+    /// merge-review R1 m2：容差原本是 1.0pt——單行列（「邀請家人」）icon 22pt 與文字 ~20.3pt
+    /// 的最大天然偏移量本來就 <1pt，這條斷言在「拿掉置中」的 mutation（`HStack` 改
+    /// `alignment: .top`）下量到 −0.83pt 仍然吃得下、測不出退化（reviewer 實測 mutation：
+    /// 多行「個人」列會紅，單行「邀請家人」列不會紅，剛好是使用者意見點名的那一種列沒被
+    /// 守住）。兩條 baseline 實測都 <0.0001pt，收到 0.5pt 沒有 flake 風險，且會讓上述
+    /// mutation 兩條都紅。
+    private static let centeringToleranceInPoints: CGFloat = 0.5
+
     private func assertVerticallyCentered(
         groupMinY: CGFloat, groupMaxY: CGFloat, rowFrame: CGRect, rowLabel: String,
         file: StaticString = #filePath, line: UInt = #line
     ) {
         let groupMidY = (groupMinY + groupMaxY) / 2
         XCTAssertEqual(
-            groupMidY, rowFrame.midY, accuracy: 1.0,
-            "「\(rowLabel)」列文字（群組）中線 \(groupMidY) 與列高中線 \(rowFrame.midY) 差超過 1pt",
+            groupMidY, rowFrame.midY, accuracy: Self.centeringToleranceInPoints,
+            "「\(rowLabel)」列文字（群組）中線 \(groupMidY) 與列高中線 \(rowFrame.midY) 差超過"
+                + " \(Self.centeringToleranceInPoints)pt",
             file: file, line: line
         )
     }

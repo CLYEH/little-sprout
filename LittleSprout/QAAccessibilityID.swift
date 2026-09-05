@@ -34,4 +34,8 @@ enum QAAccessibilityID {
     /// LS-188：01 設定頁「邀請家人」列——垂直置中 UITest 的單行列樣本（跟上面的「個人」列一起
     /// 覆蓋單行／多行副標兩種情境，使用者 2026-09-05 意見）。
     static let settingsInviteRow = "qa.settings.inviteRow"
+    /// LS-188 merge-review R1 m1：01 設定頁「儲存空間」列——`value:` 接上用量摘要後 label 會
+    /// 隨 `FamilyStore.quota` 是否載入完成而變（「儲存空間」／「儲存空間、2.1／5 GB」），不
+    /// 適合再用固定字串比對，改用 identifier。
+    static let settingsStorageRow = "qa.settings.storageRow"
 }

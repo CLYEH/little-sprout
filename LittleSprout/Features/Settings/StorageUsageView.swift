@@ -144,10 +144,17 @@ struct StorageUsageView: View {
                 .appFont(.body)
                 .foregroundStyle(Color.lsTextSecondary)
                 .multilineTextAlignment(.center)
-            Button("重試") {
+            // merge-review R1 m3：純文字 Button 天然高度只貼著文字本身（同 LS-17 QA1 的既有
+            // 教訓，見 `SettingsRowView` 文件註解）——加 `.frame(minHeight: 44)`＋
+            // `.contentShape(Rectangle())` 撐住長輩硬約束的點擊目標，不靠外層 padding。
+            Button {
                 Task { await familyStore.refreshQuota() }
+            } label: {
+                Text("重試")
+                    .appFont(.body, weight: .semibold)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
             }
-            .appFont(.body, weight: .semibold)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, AppSpacing.block)
@@ -165,11 +172,25 @@ struct StorageUsageView: View {
     /// 用語，不在這裡另創「GiB」字樣造成與稿面不一致。整數 GB 不顯示小數點（稿面「／ 5 GB」
     /// 不是「／ 5.0 GB」）。
     static func gbString(_ bytes: Int64) -> String {
+        "\(gbNumberString(bytes)) GB"
+    }
+
+    /// `gbString` 拿掉「 GB」單位字尾的版本——`compactUsageSummary` 組「2.1／5 GB」這種兩個
+    /// 數字共用一個字尾單位的格式時需要單獨的數字字串，見該函式文件註解。
+    private static func gbNumberString(_ bytes: Int64) -> String {
         let gigabytes = Double(bytes) / 1_073_741_824
         if gigabytes.truncatingRemainder(dividingBy: 1) == 0 {
-            return String(format: "%.0f GB", gigabytes)
+            return String(format: "%.0f", gigabytes)
         }
-        return String(format: "%.1f GB", gigabytes)
+        return String(format: "%.1f", gigabytes)
+    }
+
+    /// merge-review R1 m1：01 設定頁「儲存空間」列的用量摘要——稿面 `t5wI4` `Row · 儲存空間`
+    /// （`AlJ6V`）覆寫 `n1hzsr.content = "2.1／5 GB"`：已用量的數字不重複「GB」單位，只有
+    /// 上限那個數字帶單位。跟 09 頁本身「2.1 GB 已使用 ／ 5 GB」兩段各自帶單位的格式不同，
+    /// 是這顆列自己的緊湊格式，不能直接借用 `gbString` 兩次拼接。
+    static func compactUsageSummary(_ quota: FamilyQuota) -> String {
+        "\(gbNumberString(quota.usedBytes))／\(gbString(quota.quotaBytes))"
     }
 }
 
