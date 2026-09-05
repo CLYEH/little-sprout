@@ -93281,7 +93281,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "【R3 訂正，取代 R1 段】cmp/Card Album：Imprint Row 改 layout:vertical，Caption 下方為單一 wQVzs Signature Line 文字節點（R2 起取代原本 Who Group/Age Group/Multi Caption 三節點設計）。單一寶貝：content=\"{暱稱} · {年齡}\"；多寶貝（≥2）：用「、」串接多組「暱稱 · 年齡」；零寶貝：Signature enabled:true、content:\" \"（單一半形空白），署名列保留空高度但不顯示任何文字（brand 十條 #10「空欄位卡不塌縮」；R5 BL-3 訂正——R4 曾讓 iPhone 三張零寶貝卡 enabled:false 塌縮成232高，與 iPad VvT91 的263高 enabled:true 空白列互相矛盾，兩套規格只有一套對；本輪統一為「保留高度」，iPhone puHZ5/Xldkz/Wl90J 三板的卡3（R7edNW／T3SwvP／mdabp，皆「海邊戲水」）改 263 高，corner y 同步 242，與 iPad VvT91 一致）。零寶貝卡讀者靠「這張卡的署名列是空白」本身辨識，不靠卡片整體高度變矮辨識——高度變矮曾經是本票唯一的零寶貝訊號，R5 起不再是。年齡片語（如「2 歲 3 個月」）內部空白一律用 NBSP（U+00A0）連接、「個」「月」之間再插入 WORD JOINER（U+2060），防止 Dynamic Type／AX3 折行把年齡單位拆成孤字（BL-B R3 修復）。姓名與年齡之間的「 · 」刻意維持一般可斷空白（U+0020）——若也用 NBSP 包住會把姓名最後一字一併鎖進同一個不可斷區塊，AX3 實測會產生「小」單字孤兒，已排除，勿在下一輪重新套用。 MJ-6（R5）：AX3 署名一律一行一人，不因單一寶貝就把姓名與年齡拆成兩行——IjWOp 卡2（pNPuF，多寶貝）已證明「小安 2 歲 3 個月」在 w=329 放得下一整行；ONEs5／i3jpIq（單一寶貝）原本用顯式 \\n 把姓名與年齡拆成兩行是 R3 遺留的保守處理，R5 拿掉 \\n 統一成一行，兩卡各變矮 58pt，corner y 同步重算（424／366）。 INFO-N2（R7）：AX3 署名文法與上述「{暱稱} · {年齡}」公式故意不同——AX3 省略「 · 」分隔號（ONEs5/i3jpIq＝「小安 2 歲 3 個⁠月」，姓名年齡之間僅一般空白）；多寶貝改用顯式換行（\\n）分隔每個人，不用「、」串接（pNPuF＝「小安 2 歲 3 個⁠月\\n小明 8 個⁠月」）——這是 R4 MJ-6 處方裡就這樣寫的既有規則，本輪把它從隱含慣例補成明文規則，避免下一輪被誤判成不一致而「修正」回帶「 ·」／「、」的版本。",
+              "content": "【R3 訂正，取代 R1 段】cmp/Card Album：Imprint Row 改 layout:vertical，Caption 下方為單一 wQVzs Signature Line 文字節點（R2 起取代原本 Who Group/Age Group/Multi Caption 三節點設計）。單一寶貝：content=\"{暱稱} · {年齡}\"；多寶貝（≥2）：用「、」串接多組「暱稱 · 年齡」；零寶貝：Signature enabled:true、content:\" \"（單一半形空白），署名列保留空高度但不顯示任何文字（brand 十條 #10「空欄位卡不塌縮」；R5 BL-3 訂正——R4 曾讓 iPhone 三張零寶貝卡 enabled:false 塌縮成232高，與 iPad VvT91 的263高 enabled:true 空白列互相矛盾，兩套規格只有一套對；本輪統一為「保留高度」，iPhone puHZ5/Xldkz/Wl90J 三板的卡3（R7edNW／T3SwvP／mdabp，皆「海邊戲水」）改 263 高，corner y 同步 242，與 iPad VvT91 一致）。零寶貝卡讀者靠「這張卡的署名列是空白」本身辨識，不靠卡片整體高度變矮辨識——高度變矮曾經是本票唯一的零寶貝訊號，R5 起不再是。年齡片語（如「2 歲 3 個月」）內部空白一律用 NBSP（U+00A0）連接、「個」「月」之間再插入 WORD JOINER（U+2060），防止 Dynamic Type／AX3 折行把年齡單位拆成孤字（BL-B R3 修復）。姓名與年齡之間的「 · 」刻意維持一般可斷空白（U+0020）——若也用 NBSP 包住會把姓名最後一字一併鎖進同一個不可斷區塊，AX3 實測會產生「小」單字孤兒，已排除，勿在下一輪重新套用。 MJ-6（R5）：AX3 署名一律一行一人，不因單一寶貝就把姓名與年齡拆成兩行——IjWOp 卡2（pNPuF，多寶貝）已證明「小安 2 歲 3 個月」在 w=329 放得下一整行；ONEs5／i3jpIq（單一寶貝）原本用顯式 \\n 把姓名與年齡拆成兩行是 R3 遺留的保守處理，R5 拿掉 \\n 統一成一行，兩卡各變矮 58pt，corner y 同步重算（424／366）。 INFO-N2（R7）：AX3 署名文法與上述「{暱稱} · {年齡}」公式故意不同——AX3 省略「 · 」分隔號（ONEs5/i3jpIq＝「小安 2 歲 3 個⁠月」，姓名年齡之間僅一般空白）；多寶貝改用顯式換行（\\n）分隔每個人，不用「、」串接（pNPuF＝「小安 2 歲 3 個⁠月\\n小明 8 個⁠月」）——這是 R4 MJ-6 處方裡就這樣寫的既有規則，本輪把它從隱含慣例補成明文規則，避免下一輪被誤判成不一致而「修正」回帶「 ·」／「、」的版本。 【LS-194 R2 訂正】上述 INFO-N2「AX3 省略『 · 』分隔號」一句已被推翻——LS-165 merge-review R1 comment 931f074e N2 裁定「實作對、稿面錯」，AX3 三處（ONEs5／i3jpIq／pNPuF 的 wQVzs）已於 LS-194 R1 補回「 · 」分隔號、R2 再把年齡片語內部空白由誤用的一般空白改回本段規定的 NBSP（加「 · 」後文字變長，AX3 40pt 下用一般空白會折在數字後產生「3／個月」孤字，改 NBSP 後折在「 · ／2 歲 3 個月」）。INFO-N2 這句「省略『 · 』」現在只是歷史記錄，下一輪勿再依其字面套用；最新修法細節見本板（kHDk4）第 59–60 塊（R5 修訂重點段＋stamp: LS-194 的沿革項）。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -93719,7 +93719,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "MJ-9（靈魂修復，R4 全面訂正——R3 版本已被 R4 推翻，數字不再準確，見下）：cmp/Card Album 的「這本相簿有多厚」現在只有一套訊號——Fan Ghost 片數本身承載分級，卡底 Stack Sheet（疊紙）三片全部永久停用（元件層 o5O1GD／Qjdzx／mTljh 預設 enabled:false）。規則：1–9 張→1 片 Fan Ghost／10–49 張→2 片／50+ 張→3 片（新增第三片 Fan Ghost 3，y −18 rotation −6 x72 w150（R5 MJ-1 訂正：原 −24 使 50+ 張卡與上一張卡淨空 0，僅移動 Fan Ghost 3，Fan Ghost／Fan Ghost 2 維持原值 −18／−11 不動——三個 tier 的「上一張卡最低可見底↔下一張卡最高可見裝飾頂」現在全部是 6，見下），畫在最底層，三片 z-order＝[Ghost3,Ghost1,Ghost2,Photo Print]，全部在 Photo Print 之前）。LS-142 本票 24 張相簿卡依此規則設定；他票既有 6 處 legacy instance（qd5ej／K3Q7ZT／MFpwo／PhZQS／TmqFZ／u01Pc——R7 訂正：原 tvVkT／ECLEc 因移除 N4 死覆寫 mTljh 走 Replace() 產生新 id，PhZQS／TmqFZ 即為同一組 go7f9／lKoZG 板上的 Card Album 1 instance，非新增節點）與 2 處 Blank Print（ZHzy5／E9XH3Y）維持 Fan Ghost 全部 enabled:false（沿用元件預設，不受本次規則影響）——但這 6 處 legacy instance 的 Stack Sheet 1/2（o5O1GD／Qjdzx）本來就在畫面上可見（未覆寫、吃元件舊預設 enabled:true），R4 把元件預設改 false 後已個別补上 enabled:true 覆寫，逐一核對零回歸。iPad 2 欄卡片較窄，三片 Ghost 皆按卡寬比例縮放（R7 訂正，取代 MJ-5 改稿後未跟上的舊值：比例 254.5/345≈0.7377）：Ghost1 w121.8 x66.4／Ghost2 w103.3 x79.7／Ghost3 w110.7 x53.1，y／rotation 與 iPhone 相同——R5 MJ-5（e2b0836 gap 16→24＋80b3ebd 欄寬 258.5→254.5、ghost 同步縮放）當時未回頭訂正本段，是 BL-2 同型缺陷（Notes 落後最後一次改稿）在 R7 的復發；cross_parent_collision 的 Fan Ghost 2×Corner TR 6 筆歸零已實測驗證。 卡間可見淨空（具名值）＝6：五張 14 家族板（puHZ5／Xldkz／Wl90J／IjWOp／X9PfG）三個 tier（1 片／2 片／3 片）逐板逐界重測，gap＝下一張卡最高可見裝飾頂（enabled 中最小 y 的 Fan Ghost）－上一張卡底，全部 20 組界線讀值皆為 6，零離群（R5 MJ-1）。",
+              "content": "MJ-9（靈魂修復，R4 全面訂正——R3 版本已被 R4 推翻，數字不再準確，見下）：cmp/Card Album 的「這本相簿有多厚」現在只有一套訊號——Fan Ghost 片數本身承載分級，卡底 Stack Sheet（疊紙）三片全部永久停用（元件層 o5O1GD／Qjdzx／mTljh 預設 enabled:false）。規則：1–9 張→1 片 Fan Ghost／10–49 張→2 片／50+ 張→3 片（新增第三片 Fan Ghost 3，y −18 rotation −6 x72 w150（R5 MJ-1 訂正：原 −24 使 50+ 張卡與上一張卡淨空 0，僅移動 Fan Ghost 3，Fan Ghost／Fan Ghost 2 維持原值 −18／−11 不動——三個 tier 的「上一張卡最低可見底↔下一張卡最高可見裝飾頂」現在全部是 6，見下），畫在最底層，三片 z-order＝[Ghost3,Ghost1,Ghost2,Photo Print]，全部在 Photo Print 之前）。LS-142 本票 24 張相簿卡依此規則設定；他票既有 6 處 legacy instance（qd5ej／K3Q7ZT／MFpwo／PhZQS／TmqFZ／u01Pc——R7 訂正：原 tvVkT／ECLEc 因移除 N4 死覆寫 mTljh 走 Replace() 產生新 id，PhZQS／TmqFZ 即為同一組 go7f9／lKoZG 板上的 Card Album 1 instance，非新增節點）與 2 處 Blank Print（ZHzy5／E9XH3Y）維持 Fan Ghost 全部 enabled:false（沿用元件預設，不受本次規則影響）——但這 6 處 legacy instance 的 Stack Sheet 1/2（o5O1GD／Qjdzx）本來就在畫面上可見（未覆寫、吃元件舊預設 enabled:true），R4 把元件預設改 false 後已個別补上 enabled:true 覆寫，逐一核對零回歸。iPad 2 欄卡片較窄，三片 Ghost 皆按卡寬比例縮放（R7 訂正，取代 MJ-5 改稿後未跟上的舊值：比例 254.5/345≈0.7377）：Ghost1 w121.8 x66.4／Ghost2 w103.3 x79.7／Ghost3 w110.7 x53.1，y／rotation 與 iPhone 相同——R5 MJ-5（2e0b836 gap 16→24＋80b3ebd 欄寬 258.5→254.5、ghost 同步縮放）當時未回頭訂正本段，是 BL-2 同型缺陷（Notes 落後最後一次改稿）在 R7 的復發；cross_parent_collision 的 Fan Ghost 2×Corner TR 6 筆歸零已實測驗證。 卡間可見淨空（具名值）＝6：五張 14 家族板（puHZ5／Xldkz／Wl90J／IjWOp／X9PfG）三個 tier（1 片／2 片／3 片）逐板逐界重測，gap＝下一張卡最高可見裝飾頂（enabled 中最小 y 的 Fan Ghost）－上一張卡底，全部 20 組界線讀值皆為 6，零離群（R5 MJ-1）。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -93935,7 +93935,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "MJ-6：iPad 相簿列表改 2 欄卡片網格（R7 訂正：254.5pt/欄，((533−24)/2)，欄間距 $sp-block 24；原 258.5pt/((533−16)/2) 是 MJ-5（R5 e2b0836 改 gap 16→24＋80b3ebd 同步縮欄寬 258.5→254.5）之前的舊值，Notes 沒跟上，取代單欄 345pt 卡片＋188pt 死空間）；iPad 相簿詳情改 3 欄瀑布流＋Content Pane clip:true，讓照片牆自然向下長、在板底被裁掉（比照 iPhone 板做法），取代固定 6 張留白收尾。",
+              "content": "MJ-6：iPad 相簿列表改 2 欄卡片網格（R7 訂正：254.5pt/欄，((533−24)/2)，欄間距 $sp-block 24；原 258.5pt/((533−16)/2) 是 MJ-5（R5 2e0b836 改 gap 16→24＋80b3ebd 同步縮欄寬 258.5→254.5）之前的舊值，Notes 沒跟上，取代單欄 345pt 卡片＋188pt 死空間）；iPad 相簿詳情改 3 欄瀑布流＋Content Pane clip:true，讓照片牆自然向下長、在板底被裁掉（比照 iPhone 板做法），取代固定 6 張留白收尾。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -94880,6 +94880,42 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "u3LTCg",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "KXMqg",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-194",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "qZpeo",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "【LS-194，2026-09-05】使用者核可裁決：merge-review R2 N6 sha 錯字已訂正（zGp4y／EBlnw：e2b0836→2e0b836）。MN-N6（puHZ5 卡 1/2 封面語意偏弱）與 MN-N7（X9PfG「生日派對」與「阿公阿嬤家過年」共圖）依 LS-142 最終核可 comment dc9da6f3「依稿面定案」——不換圖、不改封面語意，本票未做任何幾何或圖片變更，僅留痕。另：LS-165 merge-review R1 931f074e N2 指出 IjWOp（A11y / 14 相簿 AX3）三張卡的 wQVzs 署名漏了「·」分隔號、與本 Notes epDnW「姓名與年齡之間的『 · 』刻意維持一般可斷空白」不符，本票已補上（ONEs5／i3jpIq／pNPuF 三處，僅加「·」分隔號本身，其餘既有的一般空白間距寫法未動）；epDnW 內 INFO-N2（R7）「AX3 省略『 · 』」一段與此訂正衝突，以本次 merge-review 裁決與使用者 2026-09-05 意見為準，INFO-N2 該句視為已被推翻，勿依其字面在下一輪改回無「·」版本。MN-N4／MN-N5 已於 LS-142 R7 完成，不在本票範圍，未重做。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
         }
       ]
     },
@@ -95673,6 +95709,7 @@
           "type": "frame",
           "id": "jZVRr",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -95761,7 +95798,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 2 歲 3 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -95772,10 +95809,10 @@
                       "y": 445
                     },
                     "mlORb": {
-                      "y": 424
+                      "y": 482
                     },
                     "atAkU": {
-                      "y": 424
+                      "y": 482
                     },
                     "mTljh": {
                       "enabled": false,
@@ -95811,7 +95848,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 2 歲 3 個⁠月\n小明 8 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月\n小明 · 8 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -95822,10 +95859,10 @@
                       "y": 503
                     },
                     "mlORb": {
-                      "y": 424
+                      "y": 482
                     },
                     "atAkU": {
-                      "y": 424
+                      "y": 482
                     },
                     "mTljh": {
                       "enabled": false,
@@ -95861,7 +95898,7 @@
                     },
                     "wQVzs": {
                       "enabled": true,
-                      "content": "小安 2 歲 3 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月"
                     },
                     "Qjdzx": {
                       "enabled": false,
@@ -95872,10 +95909,10 @@
                       "y": 445
                     },
                     "mlORb": {
-                      "y": 366
+                      "y": 424
                     },
                     "atAkU": {
-                      "y": 366
+                      "y": 424
                     },
                     "mTljh": {
                       "enabled": false,
@@ -115008,6 +115045,7 @@
           "type": "frame",
           "id": "FD9qU",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -115238,8 +115276,15 @@
                             "vQWWw": {
                               "icon": "user-round-plus"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "邀請家人"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -115261,8 +115306,15 @@
                             "vQWWw": {
                               "icon": "door-open"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "退出家庭"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         }
@@ -115317,8 +115369,15 @@
                             "vQWWw": {
                               "icon": "user-x"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "封鎖名單"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -115420,8 +115479,15 @@
                             "vQWWw": {
                               "icon": "file-text"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "使用條款"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -115443,8 +115509,15 @@
                             "vQWWw": {
                               "icon": "shield"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "隱私權政策"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         }
@@ -115498,8 +115571,15 @@
                             "vQWWw": {
                               "icon": "log-out"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "登出"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             },
                             "mW0Ox": {
                               "enabled": false
@@ -115525,9 +115605,16 @@
                               "icon": "trash-2",
                               "fill": "$danger"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "刪除帳號",
                               "fill": "$danger"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             },
                             "mW0Ox": {
                               "fill": "$text-secondary",
@@ -115642,6 +115729,7 @@
           "type": "frame",
           "id": "azJjI",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -115872,8 +115960,15 @@
                             "vQWWw": {
                               "icon": "user-round-plus"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "邀請家人"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -115895,8 +115990,15 @@
                             "vQWWw": {
                               "icon": "door-open"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "退出家庭"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         }
@@ -115951,8 +116053,15 @@
                             "vQWWw": {
                               "icon": "user-x"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "封鎖名單"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -116054,8 +116163,15 @@
                             "vQWWw": {
                               "icon": "file-text"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "使用條款"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -116077,8 +116193,15 @@
                             "vQWWw": {
                               "icon": "shield"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "隱私權政策"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         }
@@ -116132,8 +116255,15 @@
                             "vQWWw": {
                               "icon": "log-out"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "登出"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             },
                             "mW0Ox": {
                               "enabled": false
@@ -116159,9 +116289,16 @@
                               "icon": "trash-2",
                               "fill": "$danger"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "刪除帳號",
                               "fill": "$danger"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             },
                             "mW0Ox": {
                               "fill": "$text-secondary",
@@ -116276,6 +116413,7 @@
           "type": "frame",
           "id": "z3Lone",
           "name": "Body",
+          "clip": true,
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
@@ -116506,8 +116644,15 @@
                             "vQWWw": {
                               "icon": "user-round-plus"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "邀請家人"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -116529,8 +116674,15 @@
                             "vQWWw": {
                               "icon": "door-open"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "退出家庭"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         }
@@ -116585,8 +116737,15 @@
                             "vQWWw": {
                               "icon": "user-x"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "封鎖名單"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -116688,8 +116847,15 @@
                             "vQWWw": {
                               "icon": "file-text"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "使用條款"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -116711,8 +116877,15 @@
                             "vQWWw": {
                               "icon": "shield"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "隱私權政策"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         }
@@ -116766,8 +116939,15 @@
                             "vQWWw": {
                               "icon": "log-out"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "登出"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             },
                             "mW0Ox": {
                               "enabled": false
@@ -116793,9 +116973,16 @@
                               "icon": "trash-2",
                               "fill": "$danger"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "刪除帳號",
                               "fill": "$danger"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             },
                             "mW0Ox": {
                               "fill": "$text-secondary",
@@ -126704,6 +126891,42 @@
               "fontWeight": "normal"
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "EBhtU",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "wNwrC",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-194",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Ndshq",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "【LS-194，2026-09-05】使用者核可意見（comment 186dc2bc）：01 設定頁（t5wI4／深色 Rx5mP／AX3 z9tytH）家庭區塊 7 個無副標列（邀請家人／退出家庭／封鎖名單／使用條款／隱私權政策／登出／刪除帳號）文字群偏上、未與 icon 置中，已修正——cmp/Settings Row 的 Value 節點（n1hzsr）於這 7 個實例逐一 enabled:false，TextStack（bn1eA）鎖定原本 fit_content 高度（light/dark=56、ax3=122，literal 數字非改 token）並加 justifyContent:center；家庭成員／檢舉紀錄／儲存空間三個有真實副標的列（n1hzsr 原本就 enabled:true）不受影響、未動。列高（75／141）與 $sp-tight／$sp-group／$ctl-pad-tap／$inset-card 四個間距 token 數值皆未變動。iPad（B2DckT）為 NavigationSplitView，Detail Pane 預設顯示「個人」而非「家庭」列表，該板不存在此問題，未改動。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
         }
       ]
     },
@@ -134827,7 +135050,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1300,
+      "height": 1380,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -134949,6 +135172,9 @@
                       "descendants": {
                         "tOvM3": {
                           "content": "Email 地址"
+                        },
+                        "v6YiYR": {
+                          "height": 140
                         },
                         "iu3Q8": {
                           "content": "yourname@example.com"
@@ -136708,6 +136934,68 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "oLLjW",
+          "name": "N R4 修訂重點（LS-194，使用者 2026-09-05 核可意見）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "DsK7o",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R4 修訂重點（LS-194，使用者 2026-09-05 核可意見）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "qNSSl",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "I0unu",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-194",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "fiqfu",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【LS-194，2026-09-05】使用者核可意見（comment a5814969）：P1 帳號密碼登入 AX3 大字級跑版，已修正——AX3 預設態 vgvFY 與錯誤態 LkrrS 的 Email Field Box（v6YiYR）沿用元件預設 height:60、未跟進 Password Field 既有的 height:140 override，導致 40pt 下 email placeholder 換行 2 行後被裁切（ctx.problems: partially clipped）；已比照 Password Field 加上 height:140，並因內容增高 80pt 同步將板高 +80（vgvFY 1300→1380、LkrrS 1474→1554）以避免 Body 的 justifyContent:space_between 把 Footer 推擠重疊。LS-163 R2 MJ-4「錯誤行＋求助行同時顯示」結構未變動。iPad（l4ShP）非 AX3、寬度足夠不換行，已掃描確認無 clipping，未改動。注意：核可頁使用者原話提到的節點 id 與實際不同——O1XC2Z 實為非 AX3 預設尺寸板（852，MJ-4 目標板），真正 AX3 板是 vgvFY（預設態）與 LkrrS（錯誤態），執行前已於 Pen 現況核對過。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -137383,7 +137671,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1474,
+      "height": 1554,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -137508,7 +137796,8 @@
                         },
                         "v6YiYR": {
                           "stroke": "$danger",
-                          "strokeWidth": 2
+                          "strokeWidth": 2,
+                          "height": 140
                         },
                         "iu3Q8": {
                           "content": "yourname@example.com"

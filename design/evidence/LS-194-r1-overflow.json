@@ -1,0 +1,80 @@
+{
+  "ticket": "LS-194",
+  "round": 1,
+  "head_sha": "fd7a3cd58739377137961b9e798d09153d88ea8a",
+  "total_nodes": 9460,
+  "tree_hash": "58cdcd771ef99f38",
+  "scan_scope": "boards",
+  "scans": {
+    "sibling_intersection": {
+      "flagged": [
+        {"node_a": "ONEs5/s8eO3j", "node_b": "ONEs5/DjW91", "classification": "Photo Wrap × Corner TL——沖印品母題角托 corner-out 5pt 既有重疊（motifs.md），非本輪引入；同類 3 例（ONEs5/pNPuF/i3jpIq）"},
+        {"node_a": "ONEs5/s8eO3j", "node_b": "ONEs5/JgUK8", "classification": "Photo Wrap × Corner TR——同上母題重疊，非本輪引入；同類 3 例"},
+        {"node_a": "ONEs5/IXmLN", "node_b": "ONEs5/mlORb", "classification": "Imprint Row × Corner BL——沖印品母題角托 corner-out 5pt 既有重疊，非本輪引入；同類 3 例"},
+        {"node_a": "ONEs5/IXmLN", "node_b": "ONEs5/atAkU", "classification": "Imprint Row × Corner BR——同上母題重疊，非本輪引入；同類 3 例"},
+        {"node_a": "ONEs5/DjW91/sD5Ma", "node_b": "ONEs5/DjW91/DhOiK", "classification": "cmp/Photo Corner 元件內部 Corner Shape × Corner Edge（同一角托的形狀與邊框兩個 path 圖層本就疊在一起），全專案共用元件既有結構，非本輪引入；同類 3 例（Corner TL）"},
+        {"node_a": "ONEs5/JgUK8/sD5Ma", "node_b": "ONEs5/JgUK8/DhOiK", "classification": "同上 Corner Shape × Corner Edge 既有結構；同類 3 例（Corner TR）"},
+        {"node_a": "ONEs5/mlORb/sD5Ma", "node_b": "ONEs5/mlORb/DhOiK", "classification": "同上 Corner Shape × Corner Edge 既有結構；同類 3 例（Corner BL）"},
+        {"node_a": "ONEs5/atAkU/sD5Ma", "node_b": "ONEs5/atAkU/DhOiK", "classification": "同上 Corner Shape × Corner Edge 既有結構；同類 3 例（Corner BR）"},
+        {"node_a": "lE7FJ/MN0WF", "node_b": "lE7FJ/R1lbwf", "classification": "cmp/Profile Print 的 Photo × Mount TL——Icon/Print 元件既有角托 corner-out 重疊，非本輪引入；同類 3 例"},
+        {"node_a": "lE7FJ/MN0WF", "node_b": "lE7FJ/S4O4r8", "classification": "Photo × Mount BR——同上，非本輪引入；同類 3 例"},
+        {"node_a": "lE7FJ/R1lbwf/sD5Ma", "node_b": "lE7FJ/R1lbwf/DhOiK", "classification": "cmp/Photo Corner 元件內部 Corner Shape × Corner Edge（Mount TL 變體），既有結構；同類 3 例"},
+        {"node_a": "lE7FJ/S4O4r8/sD5Ma", "node_b": "lE7FJ/S4O4r8/DhOiK", "classification": "同上（Mount BR 變體），既有結構；同類 3 例"},
+        {"node_a": "jZVRr", "node_b": "RxQis", "classification": "IjWOp 板 Body × Tab Bar——Tab Bar 為浮動於內容之上的固定元件，刻意疊圖層製造懸浮視覺效果，本輪只對 Body 加 clip:true 屬性、未動版面座標關係，非本輪引入；同型亦見 t5wI4/Rx5mP/z9tytH（各 1 例，見下）"},
+        {"node_a": "ONEs5/UTLcl", "node_b": "ONEs5/KGh0U", "classification": "cmp/Card Album 內 Fan Ghost × Fan Ghost 2（相簿厚度堆疊效果的既有扇形疊圖層），元件既有結構，非本輪引入"},
+        {"node_a": "ONEs5/UTLcl", "node_b": "ONEs5/r6cYjT", "classification": "Fan Ghost × Photo Print，同上既有扇形堆疊結構，非本輪引入"},
+        {"node_a": "ONEs5/KGh0U", "node_b": "ONEs5/r6cYjT", "classification": "Fan Ghost 2 × Photo Print，同上既有扇形堆疊結構，非本輪引入"},
+        {"node_a": "pNPuF/UTLcl", "node_b": "pNPuF/KGh0U", "classification": "Fan Ghost × Fan Ghost 2（Card Album 2），同上既有扇形堆疊結構，非本輪引入"},
+        {"node_a": "pNPuF/UTLcl", "node_b": "pNPuF/r6cYjT", "classification": "Fan Ghost × Photo Print（Card Album 2），同上，非本輪引入"},
+        {"node_a": "pNPuF/KGh0U", "node_b": "pNPuF/r6cYjT", "classification": "Fan Ghost 2 × Photo Print（Card Album 2），同上，非本輪引入"},
+        {"node_a": "i3jpIq/FjOA8", "node_b": "i3jpIq/UTLcl", "classification": "Fan Ghost 3 × Fan Ghost（Card Album 3，三片疊紙分級），同上既有扇形堆疊結構，非本輪引入"},
+        {"node_a": "i3jpIq/FjOA8", "node_b": "i3jpIq/KGh0U", "classification": "Fan Ghost 3 × Fan Ghost 2（Card Album 3），同上，非本輪引入"},
+        {"node_a": "i3jpIq/FjOA8", "node_b": "i3jpIq/r6cYjT", "classification": "Fan Ghost 3 × Photo Print（Card Album 3），同上，非本輪引入"},
+        {"node_a": "i3jpIq/UTLcl", "node_b": "i3jpIq/KGh0U", "classification": "Fan Ghost × Fan Ghost 2（Card Album 3），同上，非本輪引入"},
+        {"node_a": "i3jpIq/UTLcl", "node_b": "i3jpIq/r6cYjT", "classification": "Fan Ghost × Photo Print（Card Album 3），同上，非本輪引入"},
+        {"node_a": "i3jpIq/KGh0U", "node_b": "i3jpIq/r6cYjT", "classification": "Fan Ghost 2 × Photo Print（Card Album 3），同上，非本輪引入"},
+        {"node_a": "FD9qU", "node_b": "ykj25", "classification": "t5wI4（LS-152 / 01 設定）Body × Tab Bar——與 jZVRr×RxQis 同型既有浮動元件疊圖層，本輪只對 Body 加 clip:true、未動版面座標，非本輪引入"},
+        {"node_a": "azJjI", "node_b": "dXvs2", "classification": "Rx5mP（LS-152 / 01 設定 · 深色）Body × Tab Bar，同上既有疊圖層，非本輪引入"},
+        {"node_a": "z3Lone", "node_b": "RDXui", "classification": "z9tytH（A11y / 01 設定 AX3）Body × Tab Bar，同上既有疊圖層，非本輪引入"}
+      ]
+    },
+    "row_overflow": {
+      "flagged": [
+        {"node": "ONEs5/JgUK8", "classification": "Photo Print :: Corner TR 右緣溢出 5pt——角托 corner-out 5pt 母題設計意圖（tokens.md corner-out=5），非本輪引入；同類 3 例（ONEs5/pNPuF/i3jpIq）"},
+        {"node": "ONEs5/atAkU", "classification": "Photo Print :: Corner BR 右緣溢出 5pt，同上母題設計意圖，非本輪引入；同類 3 例"},
+        {"node": "lE7FJ/S4O4r8", "classification": "Print :: Mount BR 右緣溢出 3.8pt——cmp/Profile Print 的角托 corner-out 慣例（不同尺寸角托比例略小於標準 5pt），既有結構非本輪引入；同類 3 例"}
+      ]
+    },
+    "cross_parent_collision": {
+      "flagged": [
+        {"node_a": "T4FpQ", "node_b": "ONEs5/DjW91", "classification": "IjWOp 板 Spacer Section × Corner TL——多張相簿卡並列時角托 corner-out 自然覆蓋緊鄰卡片間留白 spacer 的既有版面慣例（同型態亦見 LS-142 其他相簿板如 puHZ5/Xldkz/T4FpQ 系列），非本輪引入"},
+        {"node_a": "T4FpQ", "node_b": "ONEs5/JgUK8", "classification": "Spacer Section × Corner TR，同上既有版面慣例，非本輪引入"}
+      ]
+    },
+    "corner_anchor": {
+      "boards": ["t5wI4", "Rx5mP", "z9tytH", "vgvFY", "LkrrS", "IjWOp", "kHDk4", "b3nzDp", "N1aeiU"],
+      "containers": 3,
+      "points": 24,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 3,
+      "document_points": 24,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "unresolved": []
+    },
+    "text_occlusion": {
+      "flagged": [],
+      "document_flagged": []
+    },
+    "board_clip": {
+      "flagged": [],
+      "document_flagged": []
+    }
+  },
+  "scan_note": "SCAN_SCOPE=boards（LS-185）：快照限縮到 SCAN_BOARDS 9 個 root 子樹（1143 節點）再跑六支，本收據所有 flagged／document_* 皆為此限縮值，非全稿數字。本輪 Pencil 端因大稿（9460 節點）分兩趟唯讀 execute 跑（SCAN_HASH_ONLY 一趟、SCAN_SKIP_HASH 一趟），中間無任何寫入；tree_hash 抄 SCAN_HASH_ONLY 那趟印出的值。corner_anchor 原始 mismatch=6（IjWOp 三卡 Corner BL/BR，因署名補「·」使文字換行增高 58pt 但角托 y 未同步）與 board_clip 原始 flagged=92（t5wI4/Rx5mP/z9tytH/IjWOp 的 Body 缺 clip:true，捲動內容以 root 邊界誤判溢出）皆已於落地前修正，此收據反映修正後的乾淨狀態；修正前的中間掃描結果見 commit fd7a3cd58739377137961b9e798d09153d88ea8a 的說明與本輪 handoff。",
+  "summary_lines": [
+    "SUMMARY-HASH total_nodes=9460 tree_hash=58cdcd771ef99f38",
+    "SUMMARY total_nodes=9460 scanned_nodes=1143 scan_scope=boards sibling_intersection=52 row_overflow=9 cross_parent_collision=2(bleed-only) text_occlusion=0/0 board_clip=0/0 corner_anchor=3/24/0 document=3/24/0 unresolved=0 boards=[\"t5wI4\",\"Rx5mP\",\"z9tytH\",\"vgvFY\",\"LkrrS\",\"IjWOp\",\"kHDk4\",\"b3nzDp\",\"N1aeiU\"] tree_hash=skipped"
+  ]
+}
