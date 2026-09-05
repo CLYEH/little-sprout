@@ -197,7 +197,7 @@ ok("compactLines：每支掃描一段分類彙整（同名對歸一類、附代�
   assert.ok(/SCAN cross_parent_collision flagged=4 classes=\d+ scope=document document_count=4/.test(text));
   assert.ok(text.includes("  1× C1 :: Corner TR e.g. C1/Corner TR (+5)"));
   // B11 的 unresolved 不在 boards 內 → in-scope 0、document 1（LS-202 unresolved 同 mismatch 限 boards）
-  assert.ok(text.includes('SCAN corner_anchor boards=["B5"] containers/points/mismatch=1/8/2 document=7/56/4 unresolved=0/1 scope=document document_count=4'), text);
+  assert.ok(text.includes('SCAN corner_anchor boards=["B5"] containers/points/mismatch=1/8/2 document=7/56/4 ref_hits=32 unresolved=0/1 scope=document document_count=4'), text);
   assert.ok(text.includes("  MISMATCH C3(C3) Corner BL y exp=157 act=149 paper=C3 board=LS-99 / 05 示範板"));
   assert.ok(!text.includes("  UNRESOLVED STAGE11(STAGE11)"), "B11 不在 boards 內：不逐筆列 UNRESOLVED");
   assert.ok(text.includes("  DOCUMENT-UNRESOLVED 1× board B11(B11) e.g. container STAGE11"), text);
@@ -334,41 +334,80 @@ ok("(d) LS-202 document_count：只設 boards（不限縮）時六支 document_c
   assert.deepStrictEqual([shrunk.corner_anchor.document_count, shrunk.sibling_intersection.document_count], [2, 0]);
 });
 
-ok("LS-202 原始碼斷言：Pencil 端快照帶 ref: n.ref（角托 ref 判準靠它；漏帶時靠名稱備援、Mount 看不到）；SUMMARY 後印 cornerWarnings 的 WARNING 行", () => {
+ok("LS-207 原始碼斷言：Pencil 端建 resolveInstances:false 的 ref 對照表（refMap）並在展開版快照榫接回 n.id → ref（resolveInstances:true 展開後的節點本身不再是 type:\"ref\"，LS-201 VR R2／R3 實測，光看 n.ref 會永遠是 undefined）；SUMMARY 後印 cornerWarnings 的 WARNING 行", () => {
   const src = require("fs").readFileSync(path.join(__dirname, "overflow-scan.js"), "utf8");
-  assert.ok(/snap\.push\(\{[^}]*\bref:\s*n\.ref\b/.test(src), "Pencil 端快照必須帶 ref: n.ref");
+  assert.ok(/Get\(\(n\) => \{\s*if \(n\.type === "ref" && n\.ref != null\) refMap\[n\.id\] = n\.ref;/.test(src), "Pencil 端必須另跑一次 resolveInstances:false 建 refMap（LS-207）");
+  assert.ok(/\{ resolveInstances: false \}/.test(src), "refMap 那次走訪必須是 resolveInstances:false");
+  assert.ok(/const ref = n\.ref != null \? n\.ref : refMap\[n\.id\];/.test(src), "展開版走訪必須用 id 查 refMap 榫接回 ref（n.ref 優先、查不到才退回對照表）");
+  assert.ok(/snap\.push\(\{[^}]*\bref\b/.test(src), "Pencil 端快照必須帶 ref 欄位");
   const a = src.indexOf('"SUMMARY total_nodes="');
   const b = src.indexOf("for (const block of compactLines(out)) Print(block)");
   assert.ok(a > 0 && b > a, "找不到 SUMMARY 到 compactLines 的視窗");
+  assert.ok(/ref_hits=" \+ s\.corner_anchor\.ref_hits/.test(src.slice(a, b)), "SUMMARY 必須印 ref_hits（LS-207 哨兵）");
   assert.ok(/for \(const w of cornerWarnings\(s\.corner_anchor\)\) Print\("WARNING " \+ w\)/.test(src.slice(a, b)), "SUMMARY 之後必須 Print cornerWarnings（R2 minor-1：歸零要看得見）");
 });
 
-ok("(d) LS-202 R2 歸零警示：document_containers=0 → compactLines corner 段印「第四支停擺」⚠；boards 內 0 而 document 非零 → 只印 containers=0 提示（LS-133 形狀）；正常 → 無 ⚠", () => {
+ok("(d) LS-202 R2 歸零警示：document_containers=0 → compactLines corner 段印「第四支停擺」⚠；boards 內 0 而 document 非零 → 只印 containers=0 提示（LS-133 形狀）；正常 → 無 ⚠。LS-207：[B,G,C1,C2] 完全沒有角托節點（ref／名稱都沒有）→ ref_hits 也是 0、多印一行 ref_hits 哨兵", () => {
   const { cornerWarnings } = require(path.join(__dirname, "overflow-scan.js"));
   const dead = compactLines(scanAll([B, G, C1, C2])).join("\n");
   assert.ok(dead.includes("  ⚠ corner_anchor document_containers=0：整份快照沒有任何角托容器——第四支停擺"), dead);
-  assert.strictEqual(cornerWarnings(scanAll([B, G, C1, C2]).scans.corner_anchor).length, 1);
+  assert.ok(dead.includes("  ⚠ corner_anchor ref_hits=0："), dead);
+  const deadWarnings = cornerWarnings(scanAll([B, G, C1, C2]).scans.corner_anchor);
+  assert.strictEqual(deadWarnings.length, 2, "ref_hits=0 與 document_containers=0 兩個哨兵都要印（LS-207）");
+  assert.ok(deadWarnings.some((w) => w.startsWith("⚠ corner_anchor ref_hits=0：")), deadWarnings);
+  assert.ok(deadWarnings.some((w) => w.includes("第四支停擺")), deadWarnings);
+  // nodes 全稿本身有大量 ref 判準命中（C() 預設 ref:PHOTO_CORNER_ID），boards=["B2"] 只是 corner_anchor 的 in-scope 篩選、
+  // 不限縮實際掃描的節點集合（scanScope 仍是預設 document）——ref_hits 算在全稿上，不受這個 boards 篩選影響，故仍 >0。
   const noPrints = compactLines(scanAll(nodes, { boards: ["B2"] })).join("\n");
   assert.ok(noPrints.includes("  ⚠ corner_anchor containers=0：boards 內沒有角托容器（document=7）"), noPrints);
   assert.ok(!noPrints.includes("第四支停擺"));
+  assert.ok(!noPrints.includes("ref_hits=0"), "全稿 ref_hits 非 0，不該印 ref_hits 哨兵");
   const fine = compactLines(scanAll(nodes, { boards: ["B5"] })).join("\n");
   assert.ok(!fine.includes("⚠ corner_anchor"), fine);
   assert.deepStrictEqual(cornerWarnings(scanAll(nodes).scans.corner_anchor), []);
 });
 
-ok("(d) LS-202 R3 歸零警示依 scope 分流：scanScope=boards 限縮到沒有印品的板 → document_containers=0 只印「限縮快照內沒有角托容器」提示、不印「第四支停擺」；scope=document 全稿為 0 仍印停擺", () => {
+ok("(d) LS-202 R3 歸零警示依 scope 分流：scanScope=boards 限縮到沒有印品的板 → document_containers=0 只印「限縮快照內沒有角托容器」提示、不印「第四支停擺」；scope=document 全稿為 0 仍印停擺。LS-207：B2 板本身沒有任何角托節點，限縮後的快照 ref_hits 也是 0", () => {
   const { cornerWarnings } = require(path.join(__dirname, "overflow-scan.js"));
   const b = scanAll(nodes, { scanScope: "boards", boards: ["B2"] });
-  assert.deepStrictEqual([b.scans.corner_anchor.scope, b.scans.corner_anchor.document_containers, b.scans.corner_anchor.containers], ["boards", 0, 0]);
+  assert.deepStrictEqual([b.scans.corner_anchor.scope, b.scans.corner_anchor.document_containers, b.scans.corner_anchor.containers, b.scans.corner_anchor.ref_hits], ["boards", 0, 0, 0]);
   const w = cornerWarnings(b.scans.corner_anchor);
-  assert.strictEqual(w.length, 1, "限縮模式仍要提示一行（不是靜默）");
-  assert.ok(w[0].startsWith("⚠ corner_anchor document_containers=0（scope=boards）：限縮快照內沒有角托容器") && !w[0].includes("第四支停擺") && !w[0].includes("不得交"), w[0]);
+  assert.strictEqual(w.length, 2, "限縮模式仍要兩行提示（ref_hits=0 ＋ 限縮快照沒有角托容器，不是靜默）");
+  assert.ok(w.some((x) => x.startsWith("⚠ corner_anchor ref_hits=0：")), w);
+  assert.ok(w.some((x) => x.startsWith("⚠ corner_anchor document_containers=0（scope=boards）：限縮快照內沒有角托容器") && !x.includes("第四支停擺") && !x.includes("不得交")), w);
   const text = compactLines(b).join("\n");
   assert.ok(text.includes("  ⚠ corner_anchor document_containers=0（scope=boards）") && !text.includes("第四支停擺"), text);
   const d = scanAll([B, G, C1, C2]).scans.corner_anchor;
   assert.strictEqual(d.scope, "document");
-  assert.ok(cornerWarnings(d)[0].includes("第四支停擺"), "document 全稿歸零仍是停擺");
-  assert.ok(cornerWarnings(Object.assign({}, d, { scope: undefined }))[0].includes("第四支停擺"), "直接呼叫 scanCornerAnchor（無 scope 標籤）視同 document");
+  assert.ok(cornerWarnings(d).some((x) => x.includes("第四支停擺")), "document 全稿歸零仍是停擺");
+  assert.ok(cornerWarnings(Object.assign({}, d, { scope: undefined })).some((x) => x.includes("第四支停擺")), "直接呼叫 scanCornerAnchor（無 scope 標籤）視同 document");
+});
+
+ok("(d) LS-207 ref_hits：獨立計數，跟 document_containers 分開哨兵——ref 命中但全部落在 unresolved（document_containers 仍 0）時 ref_hits 非 0、不印 ref_hits=0 那行；ref 完全沒命中但名稱備援撐住 document_containers 非零時，ref_hits=0 那行仍要印（判準本身是壞的，只是被名稱備援蓋住）", () => {
+  const { cornerWarnings } = require(path.join(__dirname, "overflow-scan.js"));
+  // Mount TL/BR：ref 命中（isCorner 為真）但因為紙面對不上而 unresolved——document_containers=0，ref_hits 應為 2（非 0）
+  const mountOnly = scanCornerAnchor(mountNodes);
+  assert.deepStrictEqual([mountOnly.document_containers, mountOnly.ref_hits], [0, 2]);
+  assert.deepStrictEqual(cornerWarnings(Object.assign({ scope: "document" }, mountOnly)), ["⚠ corner_anchor document_containers=0：整份快照沒有任何角托容器——第四支停擺（Pencil 快照沒讀到 ref、名稱備援 Corner TL/… 也沒命中），這份收據不得交，先查快照欄位（LS-202 R2）"], "ref_hits 非 0，不印 ref_hits=0 哨兵");
+  // 純名稱備援（無 ref）：document_containers 非零，但 ref_hits 仍是 0——判準本身沒接上，只是被名稱備援蓋住
+  const paper = N("PN2", "MA", 20200, 500, 100, 178);
+  const nameOnly = corners("PN2", "PN2", paper).map((c) => Object.assign({}, c, { type: "frame", ref: undefined }));
+  const r = scanCornerAnchor([MA, paper, ...nameOnly]);
+  assert.deepStrictEqual([r.containers, r.ref_hits], [1, 0]);
+  const rw = cornerWarnings(Object.assign({ scope: "document" }, r));
+  assert.ok(rw.some((x) => x.startsWith("⚠ corner_anchor ref_hits=0：")), rw);
+  assert.ok(!rw.some((x) => x.includes("第四支停擺")), "document_containers 非零，不印停擺那行");
+});
+
+ok("(d) LS-207 Mount TL/BR 群分類：找不到吻合紙面時 unresolved 附 classification: 'mount_pair'（不是未知失敗）；一般 Corner 群 unresolved 不受影響（無 classification 欄位）", () => {
+  const r = scanCornerAnchor(mountNodes);
+  assert.strictEqual(r.unresolved.length, 1);
+  assert.strictEqual(r.unresolved[0].classification, "mount_pair");
+  assert.ok(r.unresolved[0].reason.includes("Mount 群"), r.unresolved[0].reason);
+  const three = [N("ICON2", null, 0, 0, 60, 60), C("ICON2/Corner TL", "ICON2", -5, -5, 26, "Corner TL"), C("ICON2/Corner TR", "ICON2", 39, -5, 26, "Corner TR"), C("ICON2/Corner BR", "ICON2", 39, 39, 26, "Corner BR")];
+  const rr = scanCornerAnchor(three);
+  assert.strictEqual(rr.unresolved.length, 1);
+  assert.strictEqual(rr.unresolved[0].classification, undefined, "一般 Corner 群（非 Mount 命名）不得被誤標 mount_pair");
 });
 
 function r2(v) {

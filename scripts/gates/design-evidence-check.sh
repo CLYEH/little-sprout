@@ -66,6 +66,12 @@
 #     那是正常收據。`scan_scope=boards` 限縮快照可能真的沒有印品，不判。**R3 minor-1**：同一 cutoff 下 `document_containers` **必填**
 #     （非負整數；R2 只在鍵存在時判，省略此鍵就繞過了）——corner_anchor 必填鍵＝`boards`／`containers`／`points`／`mismatch`／
 #     `document_containers`／`document_mismatch`／`unresolved`，與 ui-designer.md 收據模板同步；cutoff 之前的收據（development 42 份）不受影響。
+#   - **LS-207（ref 判準真正生效）**：正典腳本的角托 ref 判準原本假設 `resolveInstances:true` 展開後的實例根節點仍是
+#     `type:"ref"`，實測不成立（LS-201 VR R2／R3），改用一次 `resolveInstances:false` 對照表把 `id → ref` 榫接回展開版
+#     快照——`corner_anchor.ref_hits`＝獨立哨兵（ref 判準命中的節點數，不管最終有沒有成一個合法容器）。同一 cutoff 手續
+#     （新增 REF_HITS_MARKER `ref_hits`）：`scan_scope=document` 而 `ref_hits == 0` 即紅——即使 `document_containers` 非零
+#     （名稱備援撐住）也一樣紅，因為那代表 ref 判準本身完全沒接上、`cmp/Profile Print`／App icon 的 `Mount TL/BR` 這類
+#     非 Corner 命名的角托看不到；`scan_scope=boards` 限縮快照可能真的沒有 ref 命中，不判。`ref_hits` 必填、非負整數。
 # 掃描「有沒有真的跑對」（演算法本身正確性）不是這支腳本能驗的——那需要 Pen 的版面引擎，只能靠
 # visual-reviewer 用同方法重掃比對（見 .claude/agents/visual-reviewer.md）。
 #
@@ -248,6 +254,8 @@ FIFTH_MARKER = "scanTextOcclusion"
 SIXTH_MARKER = "scanBoardClip"
 # LS-202：六支各帶 scope／document_count 的 cutoff——同一支腳本含 PERSCAN_MARKER 才要求（同形）
 PERSCAN_MARKER = "document_count"
+# LS-207：corner_anchor.ref_hits（ref 判準本身的哨兵）的 cutoff——同一支腳本含 REF_HITS_MARKER 才要求（同形）
+REF_HITS_MARKER = "ref_hits"
 SIX = FOUR + ("text_occlusion", "board_clip")
 SCAN_SCOPES = ("boards", "document")
 sys.path.insert(0, os.path.dirname(os.path.abspath(landing_script)))
@@ -306,6 +314,8 @@ sixth = False
 sixth_at_sha = False
 perscan = False
 perscan_at_sha = False
+refhits_marker = False
+refhits_marker_at_sha = False
 
 if not isinstance(sha, str) or sha not in pen_commits:
     errs.append(
@@ -333,14 +343,17 @@ else:
         sixth_at_head = has_marker(head, SIXTH_MARKER) if is_latest else False
         perscan_at_sha = has_marker(sha, PERSCAN_MARKER)
         perscan_at_head = has_marker(head, PERSCAN_MARKER) if is_latest else False
-        if None in (fifth_at_sha, fifth_at_head, sixth_at_sha, sixth_at_head, perscan_at_sha, perscan_at_head):
+        refhits_marker_at_sha = has_marker(sha, REF_HITS_MARKER)
+        refhits_marker_at_head = has_marker(head, REF_HITS_MARKER) if is_latest else False
+        if None in (fifth_at_sha, fifth_at_head, sixth_at_sha, sixth_at_head, perscan_at_sha, perscan_at_head, refhits_marker_at_sha, refhits_marker_at_head):
             errs.append(
-                f"無法判定 {FIFTH_SCRIPT} 在 {sha[:7]}／PR head 的 tree 裡是否含第五／六支／per-scan 欄位（git ls-tree／show 失敗，淺 clone 或物件缺失）"
+                f"無法判定 {FIFTH_SCRIPT} 在 {sha[:7]}／PR head 的 tree 裡是否含第五／六支／per-scan／ref_hits 欄位（git ls-tree／show 失敗，淺 clone 或物件缺失）"
                 "——不能靠猜放行舊收據（fail closed）"
             )
         fifth = bool(fifth_at_sha) or (is_latest and bool(fifth_at_head))
         sixth = bool(sixth_at_sha) or (is_latest and bool(sixth_at_head))
         perscan = bool(perscan_at_sha) or (is_latest and bool(perscan_at_head))
+        refhits_marker = bool(refhits_marker_at_sha) or (is_latest and bool(refhits_marker_at_head))
         tmp_path = None
         try:
             with tempfile.NamedTemporaryFile(suffix=".pen", delete=False) as tf:
@@ -546,6 +559,22 @@ if perscan and isinstance(scans, dict):
                 "scans.corner_anchor.document_containers 為 0 而 scan_scope=document——整份快照沒有任何角托容器＝第四支靜默停擺"
                 "（Pencil 快照沒讀到 ref、名稱備援 Corner TL/… 也沒命中；development 現稿應在 220–261 級），不是「這輪沒有錯位」，查快照欄位後重跑"
                 "（LS-202 R2 minor-1；boards 內沒有印品只會讓 containers=0、document_containers 仍 >0，那是正常的）"
+            )
+    # LS-207：ref_hits（ref 判準本身的哨兵，跟 document_containers 分開判——名稱備援可能讓 document_containers 非零，但
+    # ref_hits 仍是 0 代表 ref 判準完全沒接上）。只對「正典腳本已含 REF_HITS_MARKER」的收據要求（同 perscan 的 cutoff 手續），
+    # 舊收據（沒有這個欄位）放行。
+    if refhits_marker and isinstance(ca_scan, dict):
+        rhits = ca_scan.get("ref_hits")
+        if isinstance(rhits, bool) or not isinstance(rhits, int) or rhits < 0:
+            errs.append(
+                f"scans.corner_anchor.ref_hits 必填且須為非負整數（收據={rhits!r}）——LS-207 起用它判 ref 判準本身有沒有接上，省略此鍵不得繞過；"
+                "抄 SUMMARY 的 ref_hits=<n>（正典腳本已含此欄位）"
+            )
+        elif scan_scope != "boards" and rhits == 0:
+            errs.append(
+                "scans.corner_anchor.ref_hits 為 0 而 scan_scope=document——ref 判準沒有命中任何節點（快照沒有 ref 欄位、或 "
+                "resolveInstances:false 對照表沒建成／沒套上），即使 document_containers 非零也只是名稱備援撐住，Mount TL/BR "
+                "這類非 Corner 命名的角托看不到（LS-207）；boards 限縮快照可能真的沒有 ref 命中，不判"
             )
 
 if errs:
