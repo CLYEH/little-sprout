@@ -1,0 +1,152 @@
+{
+  "ticket": "LS-177",
+  "round": 4,
+  "head_sha": "148456eb82a27d7faf16f60ca0c675540597a6f2",
+  "total_nodes": 9449,
+  "tree_hash": "83135d98039633da",
+  "scan_scope": "document",
+  "scans": {
+    "sibling_intersection": {
+      "document_count": 2024,
+      "in_scope_count": 144,
+      "root_count": 17,
+      "flagged": [
+        {
+          "node_a": "R0UbU/R1lbwf/sD5Ma",
+          "node_b": "R0UbU/R1lbwf/DhOiK",
+          "classification": "同類 56 例：Corner Shape × Corner Edge，cmp/Photo Corner 元件內部固定重疊（沖印品母題慣例），分布於留言 sheet／按讚名單／設定頁等 12 板，非本輪引入"
+        },
+        {
+          "node_a": "R0UbU/MN0WF",
+          "node_b": "R0UbU/R1lbwf",
+          "classification": "同類 48 例：Photo × Mount TL/BR，cmp/Print 元件內部固定重疊（corner-out 慣例），分布同上"
+        },
+        {
+          "node_a": "ZPLDq",
+          "node_b": "aSlCA",
+          "classification": "同類 27 例：Status Bar (Backdrop) / Scrim / Sheet Wrap / Card Wrap / Dialog Wrap 三層滿版 z-order（modal 疊層設計慣例），分布於 9 個 sheet／dialog 板"
+        },
+        {
+          "node_a": "zzXNT",
+          "node_b": "EnaX4",
+          "classification": "同類 9 例：Hero Print × Notification Preview 與 Hero Photo × Corner TL/BR，推播權限前置說明頁 3 板（j7WwV/ckgMp/KyxGc）Hero Print 角托裝飾與相鄰元素接觸，corner-out 慣例"
+        },
+        {
+          "node_a": "qXm4l",
+          "node_b": "m42e0Q",
+          "classification": "同類 2 例：Body × Tab Bar，設定頁 2 板（y7KAW/y66AzT）浮動 Tab Bar 疊在 Body 上，既有設計慣例"
+        },
+        {
+          "node_a": "HwcGv",
+          "node_b": "U650Io",
+          "classification": "同類 2 例：Empty Page × Corner TL/BR，TnxXE 空狀態沖印品角托裝飾，corner-out 慣例"
+        }
+      ]
+    },
+    "row_overflow": {
+      "document_count": 558,
+      "in_scope_count": 100,
+      "flagged": [
+        {
+          "node": "R0UbU/R1lbwf/sD5Ma",
+          "classification": "同類 36 例：Corner Shape 右緣超出 Corner Edge 容器（corner-out 5pt 慣例），cmp/Photo Corner 元件內部，非本輪引入"
+        },
+        {
+          "node": "R0UbU/R1lbwf/DhOiK",
+          "classification": "同類 36 例：Corner Edge 右緣超出 cmp/Photo Corner 容器，corner-out 慣例"
+        },
+        {
+          "node": "R0UbU/S4O4r8",
+          "classification": "同類 24 例：Mount BR 右緣超出 cmp/Print 容器，corner-out 慣例"
+        },
+        {
+          "node": "C1f3W",
+          "classification": "同類 4 例：頂層 Corner BR 裝飾右緣超出 Hero Print 容器，推播權限前置說明頁 3 板 corner-out 慣例，+1 例來自設定頁 Photo Print"
+        }
+      ]
+    },
+    "cross_parent_collision": {
+      "in_scope_count": 149,
+      "flagged": [
+        {
+          "node_a": "aSlCA",
+          "node_b": "R0UbU/R1lbwf/sD5Ma",
+          "classification": "同類 128 例：Scrim/Photo × Corner Shape/Corner Edge，留言 sheet 系列四板（FiBvh 32／f10d1D 32／wY7f8 32／GZ3pb 32）Print 角托 corner-out 伸出觸及同板 Scrim／Photo 兄弟節點，cmp/Photo Corner 慣例延伸為跨 parent 交集，非本輪引入"
+        },
+        {
+          "node_a": "avrsF",
+          "node_b": "l3ekZq/R1lbwf/sD5Ma",
+          "classification": "同類 8 例：同上 @ dHSyh（留言 sheet 錯誤態，內容較少故角托組數較少）"
+        },
+        {
+          "node_a": "W2ECnN",
+          "node_b": "N6CYtr/R1lbwf/sD5Ma",
+          "classification": "同類 8 例：同上 @ TnxXE（留言 sheet 空狀態）"
+        },
+        {
+          "node_a": "W2ECnN",
+          "node_b": "U650Io",
+          "classification": "同類 2 例：Scrim × Corner TL/BR @ TnxXE，空狀態沖印品（Empty Print）角托與 Scrim 跨 parent 交集，corner-out 慣例"
+        },
+        {
+          "node_a": "C1f3W",
+          "node_b": "EnaX4",
+          "classification": "同類 3 例：Corner BR × Notification Preview @ 推播權限前置說明頁 3 板（j7WwV/ckgMp/KyxGc），Hero Print 角托裝飾與通知預覽卡片相鄰，corner-out 慣例延伸；VR R3 重掃引用的 146 例（FiBvh 32/f10d1D 32/wY7f8 32/GZ3pb 32/dHSyh 8/TnxXE 10）未列此 3 例，R4 重跑 SUMMARY 補上，149＝146＋3"
+        }
+      ]
+    },
+    "corner_anchor": {
+      "boards": [
+        "IgqGF",
+        "VZ0wV",
+        "Qzz3r",
+        "FiBvh",
+        "f10d1D",
+        "SHbqU",
+        "dHSyh",
+        "wY7f8",
+        "TnxXE",
+        "DUyg3",
+        "GZ3pb",
+        "j7WwV",
+        "ckgMp",
+        "KyxGc",
+        "FeqWk",
+        "y7KAW",
+        "y66AzT",
+        "EclPC"
+      ],
+      "containers": 4,
+      "points": 16,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 220,
+      "document_points": 1744,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "unresolved": []
+    },
+    "text_occlusion": {
+      "flagged": [],
+      "document_flagged": [
+        {
+          "node": "WitwS/d41MUZ",
+          "overlay": "Egn9A",
+          "classification": "同類 9 例：他票既有債務（LS-21 時間軸 Photo C 底部文字被浮動 Tab Bar 部分遮蔽，含 A11y／Stress 衍生板），非 LS-177 引入，不影響本票範圍"
+        }
+      ]
+    },
+    "board_clip": {
+      "flagged": [],
+      "document_flagged": [
+        {
+          "board": "e7G3Lk",
+          "node": "xkvz1",
+          "side": "right",
+          "overflow_px": 93,
+          "classification": "同類 332 例：他票既有債務，分布於 26 板（LS-152 設定頁系列 33+34 例、LS-142 相簿系列 33+33 例、LS-21 時間軸系列 20+20+14+14 例、Stress 相簿/時間軸系列 34+14 例、LS-21 日記編輯器系列小計 8 例等），皆為連結文字／底線右緣伸出板界的既有版面問題，非 LS-177 引入，不影響本票範圍"
+        }
+      ]
+    }
+  }
+}

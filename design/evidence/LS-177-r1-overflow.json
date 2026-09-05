@@ -1,0 +1,61 @@
+{
+  "ticket": "LS-177",
+  "round": 1,
+  "head_sha": "fdd5617414a998855b12cca6e58e10fc74dc7639",
+  "total_nodes": 9416,
+  "tree_hash": "01ed2a473acf4ddd",
+  "scans": {
+    "sibling_intersection": {
+      "flagged": [
+        {
+          "node_a": "ZPLDq",
+          "node_b": "aSlCA",
+          "classification": "Status Bar (Backdrop)／Scrim／Sheet(或 Card/Dialog) Wrap 三層滿版 z-order 疊放，本票 8 個 modal 型畫面（留言 sheet 4 態＋iPad＋操作表＋按讚名單＋系統對話框示意）皆為故意設計的疊層順序，非版面錯誤（同類 24 例：8 板 × 3 對）"
+        },
+        {
+          "node_a": "qXm4l",
+          "node_b": "m42e0Q",
+          "classification": "捲動內容 Body 概念上延伸至底部 Tab Bar 之下（Body 有 clip:true，視覺上不會真正重疊），沿用既有 LS-152 t5wI4 的既定結構，非本票新增（同類 2 例：y7KAW／y66AzT 各 1）"
+        },
+        {
+          "node_a": "FW1X8/MN0WF",
+          "node_b": "FW1X8/R1lbwf",
+          "classification": "cmp/Profile Print 既有元件內部角托與相片邊緣的既定重疊母題（Photo×Mount、Corner Shape×Corner Edge），y7KAW／y66AzT 沿用 t5wI4 原有內容未修改，屬既有元件既有狀態（同類 8 例：2 板 × 4 對）"
+        }
+      ]
+    },
+    "row_overflow": {
+      "flagged": [
+        {
+          "node": "FW1X8/S4O4r8",
+          "classification": "cmp/Profile Print 既有元件的 Mount BR 相對 Print 容器右緣溢出 3.8pt，沿用 t5wI4 原有內容未修改，屬既有元件既有狀態、非本票引入（同類 2 例：y7KAW／y66AzT 各 1）"
+        }
+      ]
+    },
+    "cross_parent_collision": {
+      "flagged": []
+    },
+    "corner_anchor": {
+      "boards": ["IgqGF","VZ0wV","Qzz3r","FiBvh","f10d1D","SHbqU","dHSyh","wY7f8","DUyg3","GZ3pb","j7WwV","ckgMp","KyxGc","FeqWk","y7KAW","y66AzT","EclPC"],
+      "containers": 0,
+      "points": 0,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 216,
+      "document_points": 1728,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "unresolved": []
+    },
+    "text_occlusion": {
+      "flagged": [],
+      "document_flagged": [
+        {
+          "node": "(various, 9 例)",
+          "overlay": "(various)",
+          "classification": "全稿既有其他票板的文字遮蔽，均在 SCAN_BOARDS 範圍外，非本票新增，供參考不擋（既有債務另開票處理）"
+        }
+      ]
+    }
+  }
+}
