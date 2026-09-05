@@ -1,5 +1,6 @@
 -- LS-200（LS-20 後端）— album_summaries：security invoker view，供相簿 tab 列表
--- 一次讀取 visible_media_count／latest_thumb_path／cover_thumb_path。
+-- 一次讀取 visible_media_count／latest_media_id／latest_thumb_path／
+-- latest_storage_path／cover_thumb_path／cover_storage_path。
 --
 -- 背景（LS-165 merge-review R2 `fdcb3602` m3，R3 實測）：iOS 相簿列表原本用
 -- PostgREST 內嵌 aggregate `album_media(count)` 取張數——那數的是 `album_media`
@@ -36,6 +37,15 @@
 -- 是防禦性寫法——之後若有人把子查詢改成帶 GROUP BY 的形狀（可能回傳 0 列），
 -- 不會因此讓整本相簿從 view 裡消失。
 --
+-- R2（merge-review R1 N2，裁定併入本票——view 尚未進正式站，現在補免再開一支
+-- migration）：多帶 `latest_media_id`／`latest_storage_path`／`cover_storage_path`
+-- 三欄。理由：`docs/API.md` §6 既有的簽名策略是「`thumb_path` 為 NULL 時（既有
+-- 資料、縮圖產生失敗的過渡列）退回 `storage_path` 簽名 URL」——iOS 端要落實這個
+-- 退回規則，需要同時拿得到 thumb 與原圖兩種路徑，只給 `*_thumb_path` 會讓退回
+-- 判斷做不下去。`latest_media_id` 一併附上，供呼叫端需要時反查該筆 media 的其他
+-- 欄位（例如 `duration_seconds`，若最新一張是影片）。三欄沿用同一組
+-- `array_agg(... order by ...)[1]`／cover 的 LEFT JOIN 邏輯，可見性判準不變。
+--
 -- 索引核對（不需要新增索引，EXPLAIN 證據見 supabase/tests/107_album_summaries.sql
 -- 第 6 段與本機執行後留存的 supabase/tests/evidence/album_summaries_explain.txt，
 -- 該目錄 gitignore、CI 以 artifact 留存，比照 LS-6 RLS plan 證據的既有慣例）：
@@ -67,13 +77,18 @@ as
 select
   a.*,
   coalesce(v.visible_media_count, 0) as visible_media_count,
+  v.latest_media_id,
   v.latest_thumb_path,
-  cm.thumb_path as cover_thumb_path
+  v.latest_storage_path,
+  cm.thumb_path as cover_thumb_path,
+  cm.storage_path as cover_storage_path
 from public.albums a
 left join lateral (
   select
     count(*) as visible_media_count,
-    (array_agg(m.thumb_path order by m.created_at desc, m.id desc))[1] as latest_thumb_path
+    (array_agg(m.id order by m.created_at desc, m.id desc))[1] as latest_media_id,
+    (array_agg(m.thumb_path order by m.created_at desc, m.id desc))[1] as latest_thumb_path,
+    (array_agg(m.storage_path order by m.created_at desc, m.id desc))[1] as latest_storage_path
   from public.album_media am
   join public.media m on m.id = am.media_id
   where am.album_id = a.id
@@ -82,10 +97,17 @@ left join public.media cm on cm.id = a.cover_media_id;
 
 comment on view public.album_summaries is
   'LS-200：相簿摘要（security_invoker=true）——visible_media_count／
-  latest_thumb_path／cover_thumb_path 只算呼叫者依 RLS 看得到的 media
-  （albums_select／album_media_select／media_select 逐使用者生效，跨家庭隔離、
-  軟刪過濾、上傳者例外皆沿用既有 policy，view 本身不重複判準）。取代 client 端
-  `album_media(count)` 內嵌 aggregate 的連結列計數口徑（LS-165 R2），見
-  docs/API.md §3「albums / diaries」。';
+  latest_media_id／latest_thumb_path／latest_storage_path／cover_thumb_path／
+  cover_storage_path 只算呼叫者依 RLS 看得到的 media（albums_select／
+  album_media_select／media_select 逐使用者生效，跨家庭隔離、軟刪過濾、上傳者
+  例外皆沿用既有 policy，view 本身不重複判準）。取代 client 端 `album_media(count)`
+  內嵌 aggregate 的連結列計數口徑（LS-165 R2），見 docs/API.md §3
+  「albums / diaries」。`*_storage_path` 兩欄是 `*_thumb_path` 為 NULL 時
+  （既有資料、縮圖產生失敗的過渡列）的退回來源，見 docs/API.md §6 既有的
+  簽名策略。**注意：本 view 的欄位集合於 `CREATE VIEW` 當下由 `albums.*`
+  展開凍結——之後對 `albums` 的 `ADD COLUMN` 不會自動出現在這裡，需要用同一份
+  `CREATE OR REPLACE VIEW` 文字重建才會補上新欄位（PostgreSQL 對 view 的 `*`
+  展開語意，不是動態解析），見 `supabase/tests/107_album_summaries.sql` 的
+  結構斷言（albums 欄位集合 ⊆ album_summaries）。';
 
 grant select on public.album_summaries to authenticated;
