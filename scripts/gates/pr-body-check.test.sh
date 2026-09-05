@@ -4,8 +4,10 @@
 # 模板形狀「## Ticket／空行／LS-<n>」被誤擋、缺檔／非工作分支時靜默放行、或失敗輸出丟掉「CI 不會自動重跑」止血指示，這裡會紅。
 # LS-140：LS-96／入池／待辦池 行缺 comment id、「已修」行缺 SHA 若放行（拿掉規則 (a)／(b) 即紅）、--verify 反查退化
 #   （id 不在 LS-96／SHA 不在 PR 內卻綠、分頁只讀第一頁、token 進 curl argv、curl／GraphQL 失敗靜默放行）這裡也會紅。
-# LS-186（⑦）：「已修」SHA 候選只認緊鄰者——拿掉緊鄰限制（退回「行內任一 hex」）時 LS-185 回歸案（標題行 comment id＋「皆已修」）
-#   會被當成有 SHA 而綠、--verify 又把 comment id 報成「不在 PR commits 內」，這裡會紅；紅時 stdout 最後一行不是 ✗ 也會紅。
+# LS-186（⑦）：「已修」SHA 候選只認同一行「已修」之後的第一個 hex——退回「行內任一 hex」時 LS-185 回歸案（標題行 comment id 在「皆已修」
+#   之前）會被當成有 SHA 而綠、--verify 又把 comment id 報成「不在 PR commits 內」；改成「之後全部 hex 任一」時「第一個是 comment id、
+#   真 SHA 在其後」會綠——這裡都會紅；紅時 stdout 最後一行不是 ✗ 也會紅。R2（merge-review R1 minor-1）自「緊鄰」放寬：冒號／
+#   `（commit `sha`）`／逗號句／表格別欄四種 repo 常見形狀為正樣本。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -112,7 +114,7 @@ expect 1 '⑤b 41 位 hex 超過 SHA 長度不算' '沒有 commit SHA' "${H}- m1
 expect 1 '⑤b 「已修正」含「已修」子字串也要 SHA' '沒有 commit SHA' "${H}- R2 已修正（M2）"$'\n' --branch "$B"
 expect 1 '⑤b 引用他票的「LS-138 已修」也會中（全 body 掃取捨）' '改寫措辭' "${H}不做：Swift 程式碼（LS-138 已修）"$'\n' --branch "$B"
 expect 0 '⑤ 同一行同時寫 SHA 與 comment id' '「已修」行 1 條皆帶 SHA' "${H}- m3：已修 \`7c2ff80\`；殘餘記入 LS-96 \`c2ee062d\`"$'\n' --branch "$B"
-expect 0 '⑤ 表格列（單行）帶 SHA：**已修** `sha` 粗體緊鄰（LS-186 起 SHA 須緊跟「已修」，舊「| `sha` |」別欄形狀見 ⑦）' '皆帶 SHA' "${H}| m1 | minor | **已修** \`5727b65\`：補一句 |"$'\n' --branch "$B"
+expect 0 '⑤ 表格列（單行）帶 SHA：SHA 在別欄、仍在「已修」之後（LS-186 R2 恢復為綠）' '皆帶 SHA' "${H}| m1 | minor | **已修**：補一句 | \`5727b65\` |"$'\n' --branch "$B"
 expect 0 '⑤ CRLF 行尾不影響 token 抽取' '皆帶 SHA' "${H}- m1：已修 \`7c2ff80\`"$'\r\n' --branch "$B"
 expect 1 '⑤ 多處違規一次全點名（不只報第一條）' '第 5 行' "${H}- 已修——沒 SHA"$'\n'"- 記入 LS-96 沒 id"$'\n' --branch "$B"
 expect 1 '⑤ 檔頭段紅時仍先報檔頭、不跑申報掃描' '沒有本票票號 LS-63' $'Ticket: LS-56\n\n- 已修——沒 SHA\n' --branch "$B"
@@ -216,7 +218,7 @@ CURL_FAIL_MODE=exit vexpect 2 '⑥f curl 非 0 → exit 2（fail closed）' 'cur
 CURL_FAIL_MODE=badjson vexpect 2 '⑥f 回應非 JSON → exit 2' '不是合法 JSON' 'test-token-not-real' "$both"
 CURL_FAIL_MODE=gqlerror vexpect 2 '⑥f GraphQL errors（如 401）→ exit 2' 'Authentication required' 'test-token-not-real' "$both"
 
-# ⑦ LS-186：「已修」SHA 候選只認緊鄰者（「已修」之後只隔空白／反引號／*／左括號的第一個 token），--verify 另須為 commit object；
+# ⑦ LS-186：「已修」SHA 候選只認同一行「已修」之後的第一個 7–40 hex token（R2；R1 曾要求緊鄰），--verify 另須為 commit object；
 #   紅時最後一行在 stdout 印 ✗。來源：LS-185 PR body 標題行「## R2（merge-review R1 `d87d4334` … 皆已修）」的 review comment id
 #   被當 SHA 反查、CI 紅兩次；實作者本機 `| tail -1` 吃掉 exit code 沒發現。d87d4334 在臨時 repo $V 內不是任何 object。
 # absent <名稱> <輸出不得含> <body> [<checker 參數…>]：只驗輸出不含該字串（exit code 由對應的 expect 驗）。
@@ -236,10 +238,14 @@ expect 1 '⑦ LS-185 回歸（格式）：標題行含 comment id＋「皆已修
 absent '⑦ LS-185 回歸（格式）：行內的 comment id 不被列為 SHA 候選' '候選：d87d4334' "${H}${LS185_RED}"$'\n' --branch "$B"
 expect 0 '⑦ 已修 `<sha>`（comment `<id>`）→ 綠（LS-185 修正後的寫法）' '「已修」行 1 條皆帶 SHA' "${H}## R2：merge-review R1 APPROVE 帶 2 minor，已修 \`73fa7e1\`（review comment \`d87d4334\`）"$'\n' --branch "$B"
 expect 0 '⑦ 已修（<sha>）：全形左括號可隔' '皆帶 SHA' "${H}- m1：已修（7c2ff80）"$'\n' --branch "$B"
-expect 1 '⑦ 已修：`<sha>`（冒號隔開）不算緊鄰 → 紅' '沒有 commit SHA 緊鄰' "${H}- m1：已修：\`7c2ff80\`"$'\n' --branch "$B"
-expect 1 '⑦ SHA 在別欄（LS-140 舊表格列形狀 **已修**：補一句 | `sha` |）→ 紅' '沒有 commit SHA 緊鄰' "${H}| m1 | minor | **已修**：補一句 | \`5727b65\` |"$'\n' --branch "$B"
-expect 1 '⑦ 已修 x<sha>y：截出的 hex 不算獨立 token' '沒有 commit SHA 緊鄰' "${H}- m1：已修 x7c2ff80y"$'\n' --branch "$B"
-expect 0 '⑦ 一行兩個「已修」各取各的緊鄰候選' '「已修」行 1 條皆帶 SHA' "${H}- m1 已修 \`7c2ff80\`；m2 已修 \`5727b65\`"$'\n' --branch "$B"
+expect 0 '⑦ 已修：`<sha>`（冒號隔開，PR #256 形狀）→ 綠（R2：不再要求緊鄰）' '皆帶 SHA' "${H}- m1：已修：\`7c2ff80\`"$'\n' --branch "$B"
+expect 0 '⑦ **已修**（commit `<sha>`）（PR #286 形狀：括號後先寫 commit）→ 綠' '皆帶 SHA' "${H}- m1：**已修**（commit \`7bed50a\`）"$'\n' --branch "$B"
+expect 0 '⑦ 已修，…。commit `<sha>`。（PR #270 形狀：句尾才給 SHA）→ 綠' '皆帶 SHA' "${H}- m1：已修，改用 label closure 取代 delegate。commit \`d2df2ef\`。"$'\n' --branch "$B"
+expect 0 '⑦ 表格別欄 | 已修：… | `<sha>` |（PR #251／#254 形狀）→ 綠' '皆帶 SHA' "${H}| m2 | minor | 已修：補一句 | \`5727b65\` |"$'\n' --branch "$B"
+expect 1 '⑦ `<sha>` 已修：hex 在「已修」之前不算' '沒有 commit SHA' "${H}- m1：\`7c2ff80\` 已修"$'\n' --branch "$B"
+expect 1 '⑦ 已修 x<sha>y：截出的 hex 不算獨立 token' '沒有 commit SHA' "${H}- m1：已修 x7c2ff80y"$'\n' --branch "$B"
+expect 0 '⑦ 已修（<8 hex>）：格式模式分不出 comment id 與短 SHA → 綠（--verify 才紅，見下）' '皆帶 SHA' "${H}- minor-1 已修（d87d4334）"$'\n' --branch "$B"
+expect 0 '⑦ 一行兩個「已修」：只看第一個「已修」之後的第一個 hex' '「已修」行 1 條皆帶 SHA' "${H}- m1 已修 \`7c2ff80\`；m2 已修 \`5727b65\`"$'\n' --branch "$B"
 # 紅時最後一行在 stdout（不是 stderr）印 ✗：模擬 LS-185 的 `| tail -1` 用法——只接 stdout 也要看得到 ✗；三條 exit 1 出口都驗
 last_stdout() { printf '%s' "$1" > "$work/body"; bash "$check" --branch "$B" "$work/body" 2>/dev/null | tail -n 1; }
 last="$(last_stdout "${H}${LS185_RED}"$'\n')"
@@ -253,8 +259,8 @@ case "$last" in '✓ '*) echo '✓ ⑦ 綠時 stdout 最後一行是 ✓（不�
 # --verify：緊鄰候選須為 commit object（臨時 repo $V）
 vexpect 1 '⑦ --verify LS-185 回歸：「皆已修」無 SHA → 紅、訊息是「需附 commit SHA」' '已修行需附 commit SHA 於『已修』之後' '' "${H}${LS185_RED}"$'\n'
 vexpect 0 '⑦ --verify 已修 `<PR 內 sha>`（review comment `d87d4334`）→ 綠' "SHA ${sha_in} 在 PR commits 內" '' "${H}## R2：merge-review R1 APPROVE 帶 2 minor，已修 \`${sha_in}\`（review comment \`d87d4334\`）"$'\n'
-vexpect 1 '⑦ --verify 已修（<comment id>）：緊鄰但不是 commit object → 紅「不是本 repo 的 commit」＋「需附 commit SHA」' '不是本 repo 的 commit（候選：d87d4334）' '' "${H}- minor-1 已修（d87d4334）"$'\n'
-vexpect 1 '⑦ --verify 緊鄰候選是 comment id、真 SHA 在後面不緊鄰 → 仍紅（不再「行內任一 hex 即過」）' '不是本 repo 的 commit（候選：d87d4334）' '' "${H}- 已修（d87d4334）見 \`${sha_in}\`"$'\n'
+vexpect 1 '⑦ --verify 已修（<comment id>）：「已修」後第一個 hex 不是 commit object → 紅「不是本 repo 的 commit」＋「需附 commit SHA」' '不是本 repo 的 commit（候選：d87d4334）' '' "${H}- minor-1 已修（d87d4334）"$'\n'
+vexpect 1 '⑦ --verify 「已修」後第一個 hex 是 comment id、真 SHA 在其後 → 仍紅（只看第一個，不是「之後任一 hex 即過」）' '不是本 repo 的 commit（候選：d87d4334）' '' "${H}- 已修（comment \`d87d4334\`，commit \`${sha_in}\`）"$'\n'
 printf '%s' "${H}- minor-1 已修（d87d4334）"$'\n' > "$work/vbody"
 out="$(run_v '' --verify "$work/vbody")"
 if printf '%s' "$out" | grep -qF '不在 PR commits 內'; then
@@ -264,6 +270,6 @@ else
 fi
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ pr-body-check 自測通過（84 組樣本）"
+  echo "✓ pr-body-check 自測通過（88 組樣本）"
 fi
 exit "$fail"
