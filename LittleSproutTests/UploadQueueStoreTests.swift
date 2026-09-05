@@ -6,6 +6,8 @@ import XCTest
 /// LS-167：`UploadQueueStore` 的並發上限、重試、狀態轉換——需要 `StubMediaUploadService`
 /// 與可控 gate 才能測到「同時飛行中的請求數」，跟純函式的 `UploadQueueModelsTests` 分開檔案
 /// （同 `DiaryComposerStorePublishTests`／`DiaryComposerStorePublishRetryTests` 的拆檔慣例）。
+/// 各輪 review 追加的防禦性／邊界情境測試在 `UploadQueueStoreDefensiveTests`（merge-review
+/// R4：加完後這裡超過 SwiftLint `type_body_length` 上限才拆出去，理由同上）。
 @MainActor
 final class UploadQueueStoreTests: XCTestCase {
     private let familyID = UUID(uuidString: "22222222-2222-2222-2222-222222222222")!
@@ -197,121 +199,5 @@ final class UploadQueueStoreTests: XCTestCase {
 
         gateB.continuation.finish()
         await waitUntil { store.remainingCount == 0 }
-    }
-
-    // MARK: - merge-review R2 F1：重複 id 不覆寫 in-flight 項目
-
-    func test_enqueue_duplicateID_doesNotOverwriteInFlightEntry() {
-        let mediaService = StubMediaUploadService()
-        var tick = 0
-        let store = UploadQueueStore(
-            familyID: familyID, mediaUploadService: mediaService, maxConcurrentUploads: 1,
-            now: {
-                tick += 1
-                return Date(timeIntervalSince1970: TimeInterval(tick))
-            }
-        )
-        let id = UUID()
-
-        store.enqueue([makeUpload(tag: "first", id: id)])
-        let firstEnqueuedAt = store.rows.first?.enqueuedAt
-        store.enqueue([makeUpload(tag: "duplicate", id: id)])
-
-        XCTAssertEqual(store.rows.count, 1, "重複 id 不該新增第二筆")
-        XCTAssertEqual(store.rows.map(\.id), [id], "order 不該出現重複 id")
-        XCTAssertEqual(
-            store.rows.first?.enqueuedAt, firstEnqueuedAt,
-            "第二次 enqueue 用同一個 id 不該覆寫第一筆的 enqueuedAt（用時間戳證明整筆沒被換掉，" +
-            "不是只湊巧 id 一樣）"
-        )
-    }
-
-    // MARK: - merge-review R2 F3：完成／不可重試失敗後釋放 payload
-
-    func test_completedItem_releasesPayload() async {
-        let mediaService = StubMediaUploadService()
-        let store = UploadQueueStore(familyID: familyID, mediaUploadService: mediaService, maxConcurrentUploads: 1)
-        let upload = makeUpload(tag: "release-me")
-
-        store.enqueue([upload])
-        await waitUntil { store.remainingCount == 0 }
-
-        XCTAssertNil(store.debugPayload(upload.id), "完成後應該釋放 payload，只留縮圖與 metadata")
-    }
-
-    func test_nonRetryableFailure_releasesPayload() async {
-        let mediaService = StubMediaUploadService()
-        mediaService.setUploadPhotoHandler { _, _, _, _ in
-            throw AppError.rejected(message: "額度已滿", code: LSErrorCode.storageQuotaExceeded.rawValue)
-        }
-        let store = UploadQueueStore(familyID: familyID, mediaUploadService: mediaService)
-        let upload = makeUpload(tag: "quota")
-
-        store.enqueue([upload])
-        await waitUntil { store.sections.contains { $0.kind == .failed } }
-
-        XCTAssertNil(store.debugPayload(upload.id), "LS002 不可重試——失敗定案後也該釋放 payload")
-    }
-
-    func test_retryableFailure_keepsPayload() async {
-        let mediaService = StubMediaUploadService()
-        mediaService.setUploadPhotoHandler { _, _, _, _ in throw AppError.network(message: "offline") }
-        let store = UploadQueueStore(familyID: familyID, mediaUploadService: mediaService)
-        let upload = makeUpload(tag: "network")
-
-        store.enqueue([upload])
-        await waitUntil { store.sections.contains { $0.kind == .failed } }
-
-        XCTAssertNotNil(store.debugPayload(upload.id), "可重試的失敗必須留著 payload，retry 才有東西可送")
-    }
-
-    // MARK: - merge-review R2 F5：failedCount
-
-    func test_failedCount_countsAllFailuresIncludingQuota() async {
-        let mediaService = StubMediaUploadService()
-        mediaService.setUploadPhotoHandler { _, data, _, _ in
-            let tag = String(bytes: data, encoding: .utf8)!
-            if tag == "quota" {
-                throw AppError.rejected(message: "額度已滿", code: LSErrorCode.storageQuotaExceeded.rawValue)
-            }
-            throw AppError.network(message: "offline")
-        }
-        let store = UploadQueueStore(familyID: familyID, mediaUploadService: mediaService, maxConcurrentUploads: 2)
-
-        store.enqueue([makeUpload(tag: "quota"), makeUpload(tag: "network")])
-        await waitUntil { store.failedCount == 2 }
-
-        XCTAssertEqual(store.failedCount, 2, "failedCount 含 LS002，不是只算可重試的")
-        XCTAssertEqual(store.retryableFailedCount, 1, "retryableFailedCount 仍舊只算可重試的")
-    }
-
-    // MARK: - merge-review R3 i1：payload 遺失時不該永遠卡在 .waiting
-
-    func test_start_missingPayloadWhileWaiting_failsInsteadOfHangingForever() async {
-        let mediaService = StubMediaUploadService()
-        let gate = AsyncStream<Void>.makeStream()
-        mediaService.setUploadPhotoHandler { _, _, _, _ in
-            var iterator = gate.stream.makeAsyncIterator()
-            _ = await iterator.next()
-            return UUID()
-        }
-        let store = UploadQueueStore(familyID: familyID, mediaUploadService: mediaService, maxConcurrentUploads: 1)
-        let blocking = makeUpload(tag: "blocking")
-        let broken = makeUpload(tag: "broken")
-
-        store.enqueue([blocking, broken])
-        XCTAssertEqual(store.waitingCount, 1, "並發上限 1：第二筆應該卡在等候中")
-
-        // 人為打破「.waiting 一定有 payload」的不變量——正常流程走不到這裡，見
-        // `debugForcePayloadNil` 文件註解。
-        store.debugForcePayloadNil(broken.id)
-
-        gate.continuation.finish()
-        await waitUntil { store.waitingCount == 0 }
-
-        guard case .failed(let reason) = store.rows.first(where: { $0.id == broken.id })?.state else {
-            return XCTFail("payload 遺失時不該永遠卡在 .waiting，應該翻成失敗")
-        }
-        XCTAssertEqual(reason, .server)
     }
 }

@@ -105,6 +105,16 @@ enum TapTargetGateHarness {
         }
     }
 
+    /// LS-167：從 `hostView(for:)` 的 switch 本體抽出（同其他 case 的理由——本票新增
+    /// `.uploadQueueSheet` case 把 switch 本體推過 SwiftLint `function_body_length` 上限，
+    /// 抽掉這個既有 case 的內容還給界限內，行為完全不變）。merge-review R4 I-b：這段
+    /// LS-167 的抽出理由先前合併衝突時被誤刪，只留下面 LS-165 的部分——還原回兩票各自的
+    /// 抽出理由都保留。
+    ///
+    /// LS-165：拆成獨立 computed var（`.settings` 這個既有 case，LS-165 新增兩個新 case 後
+    /// `hostView` switch 本體再度超過 SwiftLint `function_body_length` 上限，理由同其餘
+    /// `*Host` computed var 的既有作法）。
+    ///
     /// merge-review R1 M1(b)：「邀請家人」列只在 `familyStore.myFamily != nil` 才渲染
     /// （LS-107）——`.preview(withFamily:)` 同步餵一個家庭狀態，那顆列才會被量到（見
     /// `FamilyStore.seedMyFamilyForPreview`／`PreviewFamilyAPIClient.swift`）。

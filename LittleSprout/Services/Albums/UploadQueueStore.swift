@@ -166,6 +166,16 @@ final class UploadQueueStore {
 
     private func start(_ id: UUID) {
         guard var entry = entries[id] else { return }
+        // merge-review R3 N1：`advance()` 目前只把 `.waiting` 的 id 傳進來，正常呼叫路徑下
+        // 走不到「對非 `.waiting` 項目呼叫 `start`」這個分支；但 `start` 本身在這道 guard
+        // 之前沒有重新核對狀態，若未來有呼叫端（或這支函式本身的邏輯）不小心對同一個 id
+        // 重複呼叫（例如同一輪 `advance()` 的 `waitingIDs` 快照裡意外出現重複 id、或日後
+        // 改寫成別的觸發路徑），會把一筆已經在 `.uploading`／`.completed`／`.failed` 的項目
+        // 重新打成 `.uploading` 並多開一個 `Task`，兩個 `Task` 完成時都會呼叫
+        // `finish(id:)`，造成重複上傳或狀態被後到的那個覆寫。這裡補一道不信任呼叫端的防禦
+        // guard，讓 `start` 對非 `.waiting` 的項目直接 no-op——見
+        // `test_advance_concurrentCompletions_neverDoubleStartsSameItem`。
+        guard case .waiting = entry.state else { return }
         // `payload` 為 `nil` 只會發生在完成或不可重試失敗之後（見 `Entry.payload` 文件
         // 註解）——這兩種狀態都不會再被 `advance()` 選中（不是 `.waiting`），理論上走不到
         // 這裡。merge-review R3 i1：R2 版本這裡是靜默 `return`——萬一這個不變量哪天被打破

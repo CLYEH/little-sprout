@@ -59,14 +59,15 @@ struct UploadQueueSheetView: View {
 
     /// `ap80H`／`Sxq8Z`：自畫 grabber，取代系統 `.presentationDragIndicator`（見檔頭「Grabber
     /// 改自畫」段）。純 `Shape`＋`accessibilityHidden`，`tap-target-check.sh` 不會量到它。
-    /// merge-review R3 m1／m2：顏色對稿是 `$border`（不是 `$control-line`）；`g3fRwP` 的
-    /// grabber 區域本身高 16pt（5pt Capsule 在其中垂直置中），上緣留白（padding-top）是 24
-    /// （`$sp-block`），不是 8。
+    /// merge-review R3 m1／m2：顏色對稿是 `$border`（不是 `$control-line`）；上緣留白
+    /// （padding-top）是 24（`$sp-block`），不是 8。merge-review R4 N2：R3 這裡原本還宣稱
+    /// 「`g3fRwP` 的 grabber 區域本身高 16pt」並疊了一個 `.frame(height: 16)`——這個 16pt
+    /// 數字沒有對稿覆核過（本票期間 Pen 不可讀，見票文「設計稿讀法」限制），拿掉該行，只留
+    /// 已經覆核過的 5pt Capsule 本身高度，避免留著一個沒查證過的宣稱誤導下一輪。
     private var grabber: some View {
         Capsule()
             .fill(Color.lsBorder)
             .frame(width: 36, height: 5)
-            .frame(height: 16)
             .padding(.top, AppSpacing.block)
             .accessibilityHidden(true)
     }
@@ -153,14 +154,12 @@ struct UploadQueueSheetView: View {
                 Image(systemName: "arrow.clockwise").appIconFrame(.medium)
                 Text("重試這 \(store.retryableFailedCount) 張").appNumericFont(.body, weight: .bold)
             }
-            .frame(maxWidth: .infinity, minHeight: 45)
+            .frame(maxWidth: .infinity, minHeight: 48)
             .padding(.vertical, AppSpacing.controlPaddingMedium)
-            // merge-review R5：見 `UploadQueueRowView.swift` 檔頭「merge-review R5」段——
-            // `.contentShape([.interaction, .accessibility], Rectangle())` 才會讓
-            // `XCUITest` 讀到的 accessibility frame 真的等於這個矩形，不是只設
-            // `.interaction`（`.contentShape(Rectangle())` 的預設行為）。這顆鈕目前的
-            // padding＋內容高度從未被 CI 抓到過，這裡一併補上是防禦性一致處理，不是修既有
-            // 違規。
+            // merge-review R5：見 `UploadQueueRowView.swift` 檔頭「merge-review R5（真正的
+            // 根因）」段——CI 的 iOS 26.2+ 模擬器對 `.sheet` 內容套用 ≈0.9602 縮放，
+            // `minHeight` 要 48 才能在縮放後仍 ≥44。這顆鈕目前的 padding＋內容高度從未被 CI
+            // 抓到過，這裡一併補上是防禦性一致處理，不是修既有違規。
             .contentShape([.interaction, .accessibility], Rectangle())
         }
         .foregroundStyle(Color.lsTextPrimary)
@@ -203,14 +202,12 @@ struct UploadQueueSheetView: View {
         Button {
             dismiss()
         } label: {
-            // merge-review R5：見 `UploadQueueRowView.swift` 檔頭「merge-review R5」段——
-            // 真正根因是 `.contentShape(Rectangle())` 預設只設 `.interaction` 這個 content
-            // shape kind，CI 的 Xcode／iOS 版本組合下 accessibility frame（`XCUITest`
-            // `element.frame` 讀的正是這個）不會連帶採用 layout frame，仍貼著文字天然大小
-            // 算。明確指定 `[.interaction, .accessibility]` 兩個 kind 都用這個矩形。
+            // merge-review R5：見 `UploadQueueRowView.swift` 檔頭「merge-review R5（真正的
+            // 根因）」段——CI 的 iOS 26.2+ 模擬器對 `.sheet` 內容整體套用 ≈0.9602 縮放，
+            // `minHeight: 45` 落地後量到 43.2pt，改 48（48 × 0.9602 ≈ 46.09）才安全過關。
             Text("在背景繼續，關閉視窗")
                 .appFont(.body, weight: .medium)
-                .frame(maxWidth: .infinity, minHeight: 45)
+                .frame(maxWidth: .infinity, minHeight: 48)
                 .contentShape([.interaction, .accessibility], Rectangle())
         }
         .foregroundStyle(Color.lsTextPrimary)

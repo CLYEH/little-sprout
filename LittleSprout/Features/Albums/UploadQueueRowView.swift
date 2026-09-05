@@ -8,18 +8,18 @@ import SwiftUI
 /// 真正會觸發動作的按鈕。視覺行高會比稿面截圖實測值高，這是刻意的取捨（規則衝突時遵守
 /// #7，見 PR body「與稿差異」段），不是遺漏。
 ///
-/// **merge-review R5（真正的根因）**：R4 猜測是字體行高參與 `.frame(minHeight:)` 的計算，
-/// 改用 `Color.clear` 高度錨點疊 `ZStack`（純幾何、不含文字）——本機量到 45pt，push 後 CI
-/// 仍量到跟 R2/R3 一模一樣的 43.2pt（三個數字到小數點後一位完全相同，跨兩份結構完全不同的
-/// 實作），證明問題根本不在「用什麼幾何湊出 45pt 的 layout frame」。真正原因：
-/// `.contentShape(Rectangle())` 預設只設定 `.interaction`（觸控命中）這個 content shape
-/// kind，`XCUITest` 的 `element.frame` 讀的是 **accessibility** frame——本機這台 Xcode／
-/// iOS 版本剛好讓 accessibility frame 也一併採用 layout frame（意外地「連帶生效」），CI 的
-/// 版本組合則沒有這個連帶效應，accessibility frame 仍然貼著文字內容本身的天然大小算，跟
-/// 外層疊了多少層透明 `Color.clear` 完全無關。改用
-/// `.contentShape([.interaction, .accessibility], Rectangle())`——SwiftUI 讓你為不同用途
-/// 分別指定 content shape，這裡明確兩個 kind 都設，不依賴任何隱含的連帶關係，不涉及字體
-/// 度量，也不需要額外疊 `ZStack`。
+/// **merge-review R5（真正的根因，reviewer `876f150d` 找到）**：R4 曾猜是字體行高／
+/// accessibility content shape kind 造成落差，改了兩輪程式碼但 CI 量到的數字（43.2）逐位
+/// 不變——因為問題根本不在程式碼幾何，而是**執行環境**：CI 用的模擬器是 iOS 26.2+，這個
+/// 版本起系統會對 `.sheet` 呈現的內容整體套用 ≈0.9602 的縮放（`minHeight: 45` 實測落地
+/// 43.209pt，`x: 24` 落地 23.04pt，等比例縮小；本機的 `LS-167-iPhone17Pro` 是 iOS 26.0，
+/// 沒有這個縮放，所以本機測到的數字永遠是「原始」值、永遠綠）。門檻換算：
+/// 44 / 0.9602 ≈ 45.83，所以請求的 `minHeight` 必須 > 45.83 才能在縮放後仍 ≥44——45 不夠
+/// （45 × 0.9602 ≈ 43.2，正是 CI 回報的數字），改成 **48**（48 × 0.9602 ≈ 46.09，留有
+/// 安全邊界）。`.contentShape([.interaction, .accessibility], Rectangle())` 保留（明確
+/// 指定兩個 content shape kind 仍是更嚴謹的寫法，即使不是這次落差的成因）。已在共用機
+/// `iPhone 17 Pro`（iOS 26.5，`4F0E9058-AA1F-4DCA-B94C-4C37B06F87F7`）逐位重現 CI 數字後
+/// 驗證這個修法確實讓 gate 轉綠。
 struct UploadQueueRowView: View {
     let row: UploadQueueRow
     let thumbnail: UIImage?
@@ -123,15 +123,14 @@ struct UploadQueueRowView: View {
             .foregroundStyle(Color.lsDanger)
             if reason.showsQuotaLink {
                 // `hD3dH`：LS002 用「查看儲存空間」連結取代「重試」出路。merge-review R5：
-                // `.frame(minHeight:)` 建立 layout frame，`.contentShape([.interaction,
-                // .accessibility], Rectangle())` 明確把「觸控命中」與「accessibility／
-                // XCUITest 讀到的 frame」兩個 content shape kind 都釘成這個矩形——只設
-                // `.interaction`（`.contentShape(Rectangle())` 的預設行為）在某些 Xcode／
-                // iOS 版本組合下不會連帶影響 accessibility frame，見檔頭「merge-review R5」
-                // 段的完整診斷。
+                // `minHeight: 48`（不是 44/45）是為了扛住 CI 的 iOS 26.2+ 模擬器對 `.sheet`
+                // 內容套用的 ≈0.9602 縮放（48 × 0.9602 ≈ 46.09 > 44），見檔頭「merge-review
+                // R5（真正的根因）」段完整診斷；`.contentShape([.interaction, .accessibility],
+                // Rectangle())` 明確把「觸控命中」與「accessibility／XCUITest 讀到的 frame」
+                // 兩個 content shape kind 都釘成這個矩形。
                 Button(action: onViewStorage) {
                     Text("查看儲存空間").appFont(.note).underline()
-                        .frame(minHeight: 45, alignment: .leading)
+                        .frame(minHeight: 48, alignment: .leading)
                         .contentShape([.interaction, .accessibility], Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -142,7 +141,7 @@ struct UploadQueueRowView: View {
                         Image(systemName: "arrow.clockwise").appIconFrame(.small)
                         Text("重試").appFont(.note)
                     }
-                    .frame(minHeight: 45, alignment: .leading)
+                    .frame(minHeight: 48, alignment: .leading)
                     .contentShape([.interaction, .accessibility], Rectangle())
                 }
                 .buttonStyle(.plain)
