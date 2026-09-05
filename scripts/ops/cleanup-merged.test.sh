@@ -743,5 +743,28 @@ has   '⑳ --all → 附屬資源不套用' "$out20a" '未指名 LS-<n>，附屬
 hasnt '⑳ --all → 不列任何 delete 專屬模擬器' "$out20a" 'delete 專屬模擬器'
 rm -rf "$lock930"
 
+# ---- ㉑ LS-187 孤兒附屬資源：票 worktree 早已清（git worktree list 連記錄都沒有）、只剩專屬模擬器＋DerivedData——巡檢殘機
+#        動作行 `→ cleanup-merged.sh --apply LS-<n>` 指到這裡，(e) 段必須照清（FILTER_WT_PATHS 空 → e_left=0 路徑），
+#        不得因「(a) 段沒命中任何 worktree」跳過；dry-run 先列零副作用；鄰近票號 LS-9400 不動。
+#        mutation：(e) 段改成「本次真的移除過 worktree 才動附屬資源」→ 這裡紅 ----
+printf 'LS-940-iPhone17Pro\tSIM-940\tShutdown\nLS-9400-iPhone17Pro\tSIM-9400\tShutdown\nmain-iPhone17Pro\tSIM-MAIN\tShutdown\n' > "$SIM_STUB_DB"; : > "$SIM_STUB_LOG"
+mk_dd ggg "/x/.claude/worktrees/LS-940/LittleSprout.xcodeproj"
+mk_dd hhh "/x/.claude/worktrees/LS-9400/LittleSprout.xcodeproj"
+git -C "$e/repo" worktree list --porcelain | grep -q 'LS-940' && { echo "✗ ㉑ 前提不成立：repo 不該有 LS-940 的 worktree 記錄" >&2; fail=1; } || echo "✓ ㉑ 前提成立：LS-940 無任何 worktree 記錄"
+out21d="$(bash "$cleanup" --dry-run --repo "$e/repo" LS-940 2>&1)"; rc21d=$?
+rc_is '㉑ 孤兒 dry-run exit 0' 0 "$rc21d" "$out21d"
+has   '㉑ 孤兒 dry-run 列 delete SIM-940' "$out21d" '[dry-run] delete 專屬模擬器 LS-940-iPhone17Pro（SIM-940）'
+has   '㉑ 孤兒 dry-run 列刪 DerivedData ggg（路徑元件 LS-940）' "$out21d" '[dry-run] 刪除 DerivedData LittleSprout-ggg'
+hasnt '㉑ 孤兒 dry-run 不印「仍有 worktree 留在磁碟」' "$out21d" '仍有'
+hasnt '㉑ 鄰近票號 LS-9400 不動（dry-run）' "$out21d" 'SIM-9400'
+if grep -qE 'shutdown|delete' "$SIM_STUB_LOG"; then echo "✗ ㉑ dry-run 不該呼叫 simctl shutdown／delete" >&2; cat "$SIM_STUB_LOG" >&2; fail=1; else echo "✓ ㉑ dry-run 未呼叫 simctl shutdown／delete"; fi
+[ -d "$LS_DERIVED_DATA_ROOT/LittleSprout-ggg" ] && echo "✓ ㉑ dry-run 未刪 DerivedData ggg" || { echo "✗ ㉑ dry-run 刪了 DerivedData ggg" >&2; fail=1; }
+out21="$(bash "$cleanup" --apply --repo "$e/repo" LS-940 2>&1)"; rc21=$?
+rc_is '㉑ 孤兒 apply exit 0' 0 "$rc21" "$out21"
+grep -q 'simctl delete SIM-940$' "$SIM_STUB_LOG" && echo "✓ ㉑ 孤兒專屬機 SIM-940 已 delete" || { echo "✗ ㉑ SIM-940 未 delete" >&2; cat "$SIM_STUB_LOG" >&2; fail=1; }
+if grep -qF 'SIM-9400' "$SIM_STUB_DB" && grep -qF 'SIM-MAIN' "$SIM_STUB_DB" && ! grep -qF 'SIM-940'$'\t' "$SIM_STUB_DB"; then echo "✓ ㉑ db 只少了 SIM-940（LS-9400／main-* 仍在）"; else echo "✗ ㉑ db 內容不符" >&2; cat "$SIM_STUB_DB" >&2; fail=1; fi
+if [ ! -d "$LS_DERIVED_DATA_ROOT/LittleSprout-ggg" ] && [ -d "$LS_DERIVED_DATA_ROOT/LittleSprout-hhh" ]; then echo "✓ ㉑ DerivedData ggg 已刪、hhh（LS-9400）仍在"; else echo "✗ ㉑ DerivedData ggg／hhh 狀態不符" >&2; fail=1; fi
+has   '㉑ 摘要含專屬模擬器 1／DerivedData 1' "$out21" '專屬模擬器 1／DerivedData 1'
+
 if [ "$fail" -eq 0 ]; then echo "✓ cleanup-merged.test.sh 全綠"; else echo "✗ cleanup-merged.test.sh 有失敗" >&2; fi
 exit "$fail"
