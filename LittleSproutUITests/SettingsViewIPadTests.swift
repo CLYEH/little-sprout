@@ -118,4 +118,23 @@ final class SettingsViewIPadTests: XCTestCase {
         XCTAssertTrue(app.buttons["隱私權政策"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.navigationBars.buttons["BackButton"].exists, "Link 開系統瀏覽器，不應該在 app 內產生返回鈕")
     }
+
+    /// merge-review R2 M2：iPad sidebar 選中列在亮色模式下曾經跟未選中列長得一模一樣（`surface`
+    /// ／`print-paper` 亮色同值把背景差異吃掉）。這裡用 accessibility `.isSelected` trait 當
+    /// 機械可測的訊號（同 `SectionTabBarTests` 既有慣例）——trait 由 `sidebarRow` 的
+    /// `isSelected` 條件式套用，跟驅動邊框／陰影／粗體視覺樣式的是同一個變數，拿掉 M2 補上的
+    /// 選中樣式那段程式碼會連帶讓這個 trait 消失，mutation 測得到。
+    func testSidebarSelectionIsAccessibleAndDistinguishable() {
+        let app = TapTargetMeasurement.launch(.settingsRegular)
+        TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
+
+        XCTAssertTrue(app.buttons["個人"].isSelected, "預設應該選中「個人」")
+        for label in ["家庭", "內容與安全", "法律", "帳號"] {
+            XCTAssertFalse(app.buttons[label].isSelected, "「\(label)」預設不應該是選中狀態")
+        }
+
+        app.buttons["家庭"].tap()
+        XCTAssertTrue(app.buttons["家庭"].isSelected, "點擊後「家庭」應該變成選中狀態")
+        XCTAssertFalse(app.buttons["個人"].isSelected, "點擊「家庭」後「個人」應該變回未選中")
+    }
 }

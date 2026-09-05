@@ -8,6 +8,8 @@ import SwiftUI
 extension TapTargetGateHarness {
     /// LS-188：同 `settingsHost`，但把角色釘死在 `.member`（`ChildrenStore
     /// .seedRoleForPreview`）——`TapTargetGateScreenName.settingsMemberRole` 文件註解。
+    /// merge-review R2 informational 5：同 `settingsHost` 同一個理由，釘死 compact，不依賴
+    /// 執行裝置的實際 idiom。
     @MainActor
     @ViewBuilder
     static var settingsMemberRoleHost: some View {
@@ -24,6 +26,7 @@ extension TapTargetGateHarness {
                 albumsStore: .preview()
             )
         }
+        .environment(\.horizontalSizeClass, .compact)
     }
 
     /// merge-review R1 B1：iPad（regular 寬度）互動回歸——`.environment(\.horizontalSizeClass,

@@ -130,32 +130,32 @@ struct SettingsView: View {
     // `NavigationSplitView`，改用普通 `HStack` 自己畫兩欄（sidebar 是一排 `Button`，不是
     // `List(selection:)`），視覺上維持稿面兩欄樣貌，但不再引入第二層「導覽容器」語意。
     //
-    // push 走哪裡（二選一，這裡選②）：
-    // ① 讓 detail 欄的 `NavigationLink` 直接摔到外層 `SectionSplitView` 的 `NavigationStack`——
-    //    寫法最簡單（拿掉這裡所有 `NavigationStack`／`.id` 即可），但 push 出去會把整個兩欄
-    //    畫面（含 sidebar）一起蓋掉，回到「單欄」的體驗，跟稿面「sidebar 常駐、只有右側變化」
-    //    的兩欄設計意圖不符，等於在 iPad 上放棄兩欄。
-    // ② detail 欄自帶一個獨立 `NavigationStack`（本檔採用）：sidebar 永遠可見，push 只發生在
-    //    右側欄——這才是稿面兩欄／Apple 內建設定類 app 在 iPad 上的慣例行為。代價是要記得在
-    //    切換 sidebar 選取時重置這個內層 stack（見下方 `.id(regularSelection)`），否則切到另一
-    //    區時右側會卡在前一區 push 出去的畫面。這正是 `SectionSplitView` 檔頭「已知債」註解
-    //    點名、但四個頂層 tab 目前都還沒有 push destination、因此還沒人真的需要處理的那個情境
-    //    ——`SettingsView` 是第一個有 push destination 的 detail 內容，這裡先把它解掉。
+    // merge-review R2 informational 1（訂正 R2 的錯誤記載）：R2 這裡原本寫「detail 欄自帶
+    // 一個獨立 `NavigationStack`，sidebar 永遠可見、push 只發生在右側欄」——實測（截圖＋
+    // XCUITest tree）並非如此：`NavigationLink` 仍然摔到最外層的 `NavigationStack`（app 層
+    // 是 `SectionSplitView`、測試 harness 是 `settingsRegularHost` 自己包的那層），push 後
+    // sidebar 跟著消失、整個畫面被目的地畫面蓋掉——跟 compact 版面「push 蓋掉全螢幕」是同一
+    // 種行為，不是文件曾經宣稱的「只有右欄變化」。R2 加的 `NavigationStack`／`.id
+    // (regularSelection)` 因此形同虛設（從未真的攔到任何 push、也就沒有「切區時重置內層
+    // push 堆疊」這件事要做），已經拿掉；`.navigationTitle` 直接掛在 detail 內容本身，
+    // 使用哪一層 `NavigationStack` 顯示都一樣正確地隨 `regularSelection` 更新。
+    //
+    // 這代表 iPad（regular）上目前的實際行為＝跟 compact 相同的「push 蓋全螢幕」，不是稿面
+    // `B2DckT` 暗示的「sidebar 常駐、只有右側變化」——這是已知限制，記入 handoff；真的要做到
+    // 後者需要 sidebar／detail 兩欄各自的導覽狀態互不干擾（例如兩欄各自綁定不同的
+    // `NavigationPath`），是比這張票的範圍更大的導覽層改動，留給下一張真的需要它的票。
     private var regularBody: some View {
         HStack(spacing: 0) {
             sidebar
                 .frame(width: 280)
             Divider()
-            NavigationStack {
-                ScrollView {
-                    sectionContent(for: regularSelection)
-                        .padding(AppSpacing.screenPad)
-                }
-                .background(Color.lsBackground)
-                .navigationTitle(regularSelection.title)
-                .navigationBarTitleDisplayMode(.inline)
+            ScrollView {
+                sectionContent(for: regularSelection)
+                    .padding(AppSpacing.screenPad)
             }
-            .id(regularSelection)
+            .background(Color.lsBackground)
+            .navigationTitle(regularSelection.title)
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 

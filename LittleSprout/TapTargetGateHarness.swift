@@ -100,6 +100,15 @@ enum TapTargetGateHarness {
     /// `FamilyStore.seedMyFamilyForPreview`／`PreviewFamilyAPIClient.swift`）。拆成獨立
     /// computed var（LS-165 新增兩個 case 後，`hostView` switch 本體超過 SwiftLint
     /// `function_body_length` 上限，理由同其餘 `*Host` computed var 的既有作法）。
+    ///
+    /// merge-review R2 informational 5：`.environment(\.horizontalSizeClass, .compact)`——
+    /// 這個 host 原本沒有強制 size class，在 iPad 機型的模擬器上跑 `TapTargetGateTests
+    /// .testSettingsView` 會因為預設 `horizontalSizeClass == .regular` 而渲染
+    /// `SettingsView.regularBody`（sentinel「登出」只在 compact 版面或切到「帳號」後的
+    /// regular 版面才看得到，預設選取是「個人」）導致測試紅。CI 固定跑 iPhone 不受影響，但
+    /// 本機在 iPad 模擬器上重跑這條 gate 會誤判。同 `sectionTabViewHost`／
+    /// `settingsRegularHost` 既有的既有作法，明確釘死 size class，不依賴執行裝置的實際
+    /// idiom——這個 host 本來就是測 compact 版面，理應固定。
     @MainActor
     @ViewBuilder
     private static var settingsHost: some View {
@@ -114,6 +123,7 @@ enum TapTargetGateHarness {
                 albumsStore: .preview()
             )
         }
+        .environment(\.horizontalSizeClass, .compact)
     }
 
     /// merge-review R1 M5：初始態不需要任何 seeding——`PreviewDiaryAPIClient`／

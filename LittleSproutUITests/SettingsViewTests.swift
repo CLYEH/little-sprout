@@ -108,21 +108,29 @@ final class SettingsViewTests: XCTestCase {
 
     /// merge-review R1 m2：容差原本是 1.0pt——單行列（「邀請家人」）icon 22pt 與文字 ~20.3pt
     /// 的最大天然偏移量本來就 <1pt，這條斷言在「拿掉置中」的 mutation（`HStack` 改
-    /// `alignment: .top`）下量到 −0.83pt 仍然吃得下、測不出退化（reviewer 實測 mutation：
-    /// 多行「個人」列會紅，單行「邀請家人」列不會紅，剛好是使用者意見點名的那一種列沒被
-    /// 守住）。兩條 baseline 實測都 <0.0001pt，收到 0.5pt 沒有 flake 風險，且會讓上述
-    /// mutation 兩條都紅。
+    /// `alignment: .top`）下量到 −0.83pt 仍然吃得下、測不出退化。收到 0.5pt 後 R2 重新跑
+    /// mutation 兩條都紅（邀請家人 −0.667pt、個人 −7.33pt），但 reviewer R2 informational 3
+    /// 指出偵測邊際仍薄：0.5pt 門檻對 0.667pt 的 mutation 只留 0.167pt 餘裕，icon token／
+    /// 字級稍微一動可能又測不出來。
+    ///
+    /// R3 改良：斷言改成「文字群組上緣到列頂的距離＝文字群組下緣到列底的距離」（`topGap` ＝
+    /// `bottomGap`），數學上等於 `groupMidY`／`rowMidY` 差的兩倍（`topGap − bottomGap
+    /// = 2 × (groupMidY − rowMidY)`）——量測的是同一份像素資料，門檻不變（仍是
+    /// `centeringToleranceInPoints`），但訊號放大一倍：baseline 仍 ~0pt，mutation 訊號從
+    /// 0.667pt 放大到 1.33pt，對 0.5pt 門檻的餘裕從 0.167pt 拉開到 0.83pt，不必真的調鬆門檻
+    /// 就解決「邊際太薄」的問題。
     private static let centeringToleranceInPoints: CGFloat = 0.5
 
     private func assertVerticallyCentered(
         groupMinY: CGFloat, groupMaxY: CGFloat, rowFrame: CGRect, rowLabel: String,
         file: StaticString = #filePath, line: UInt = #line
     ) {
-        let groupMidY = (groupMinY + groupMaxY) / 2
+        let topGap = groupMinY - rowFrame.minY
+        let bottomGap = rowFrame.maxY - groupMaxY
         XCTAssertEqual(
-            groupMidY, rowFrame.midY, accuracy: Self.centeringToleranceInPoints,
-            "「\(rowLabel)」列文字（群組）中線 \(groupMidY) 與列高中線 \(rowFrame.midY) 差超過"
-                + " \(Self.centeringToleranceInPoints)pt",
+            topGap, bottomGap, accuracy: Self.centeringToleranceInPoints,
+            "「\(rowLabel)」列文字（群組）上緣留白 \(topGap) 與下緣留白 \(bottomGap) 差超過"
+                + " \(Self.centeringToleranceInPoints)pt——不是置中在列高正中央",
             file: file, line: line
         )
     }
