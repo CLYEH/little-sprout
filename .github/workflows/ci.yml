@@ -776,3 +776,76 @@ jobs:
           fi
           dest=$(bash scripts/gates/detect-simulator.sh)
           bash scripts/gates/tap-target-check.sh "$(printf '%s' "$dest" | sed -n 's/.*id=//p')" LittleSprout
+
+  # LS-209（LS-96 池項 00b9c9ef）：`*IPadTests`（如 SettingsViewIPadTests）與 TapTargetGateTests 的
+  # 「Regular」具名案在 CI 的 `ci` job 上永遠不會執行——`ci` job 只用 iPhone 機型，這些測試驗的是 iPad
+  # （regular 寬度）互動回歸，本質上要在 iPad 形狀的模擬器上跑才有意義。獨立成一個 job（不是 `ci` job
+  # 裡加一步）：required check 對「這條路徑有沒有守住」是獨立、可單獨重跑的訊號；同一個 runner 上兩種
+  # 機型輪流跑也會拉長 `ci` job 關鍵路徑。
+  ci-ipad:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: xcode-select（讀 .xcode-version 單一來源，同 ci job，LS-106）
+        run: |
+          pin="$(tr -d '[:space:]' < .xcode-version)"
+          dev="/Applications/Xcode_${pin}.app/Contents/Developer"
+          [ -d "$dev" ] || { echo "::error::.xcode-version 指定的 Xcode_${pin} 不在此 runner image；可用：$(ls -d /Applications/Xcode*.app 2>/dev/null | tr '\n' ' ')"; exit 1; }
+          sudo xcode-select -s "$dev"
+          xcodebuild -version
+
+      - name: iPad 回歸測試（LS-209：機型 iPad Air 11-inch (M3)，測試清單由 scripts/gates/list-ipad-tests.sh 自動產生）
+        run: |
+          if ! ls -d ./*.xcodeproj >/dev/null 2>&1 && ! ls -d ./*.xcworkspace >/dev/null 2>&1; then
+            echo "::warning::尚未建立 Xcode 專案，略過（Phase 0-1 完成後生效）"
+            exit 0
+          fi
+          # 觸發判定沿用「點擊目標 gate」同一支 ui-test-trigger.sh（同一份 diff 集合：LittleSprout/**/*.swift
+          # 或 LittleSproutUITests/**）——省下非 UI 票（純 supabase/／docs/／scripts/）在每個 PR 都付一次
+          # 開機模擬器的成本；push 事件（promote.sh 晉升）無條件跑，當晉升前的最後一道伺服器端兜底。
+          if [ -n "${GITHUB_BASE_REF:-}" ]; then
+            git fetch --quiet origin "$GITHUB_BASE_REF" 2>/dev/null || true
+            rc=0; bash scripts/gates/ui-test-trigger.sh --base "origin/$GITHUB_BASE_REF" || rc=$?
+            if [ "$rc" -eq 3 ]; then echo "→ ci-ipad：略過（同 ci job 點擊目標 gate 判定：本 PR 無 LittleSprout/**/*.swift 或 LittleSproutUITests/** 變更；push 事件會無條件跑）"; exit 0; fi
+            if [ "$rc" -ne 0 ]; then echo "::warning::ui-test-trigger.sh exit ${rc}（非 0／3），無法證明可略過，保守照跑"; fi
+          fi
+          # LS-205：`.ios-runtime` 單一來源，同 ci job 的 fail-closed 讀法。
+          [ -f .ios-runtime ] || { echo "::error::缺 .ios-runtime（模擬器 runtime 單一來源，LS-205）"; exit 1; }
+          ios_runtime_pin="$(tr -d '[:space:]' < .ios-runtime)"
+          # UDID 一律抓標準 8-4-4-4-12 十六進位格式，不能用「取最外層括號內容」——機型名本身就帶括號
+          # （「iPad Air 11-inch (M3)」），naive 取括號會把 "M3" 誤判成 UDID（push-gate.sh 自測 ㊴ 抓到同一個坑）。
+          ipad_udid=$(xcrun simctl list devices available 2>/dev/null | awk -v pin="$ios_runtime_pin" '
+            /^-- iOS / { os=$0; sub(/^-- iOS /,"",os); sub(/ --$/,"",os); next }
+            /iPad Air 11-inch \(M3\)/ {
+              if (os != pin) next
+              line=$0
+              if (match(line, /[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/)) {
+                print substr(line, RSTART, RLENGTH); exit
+              }
+            }
+          ')
+          if [ -z "$ipad_udid" ]; then
+            echo "::error::找不到 iOS ${ios_runtime_pin} 的「iPad Air 11-inch (M3)」模擬器——runner image 可能沒有這個機型／版本，或 runtime 已升版（比照 LS-205 i4：請評估更新 .ios-runtime，或改用 runner 目前實際提供的 iPad 機型）"
+            exit 1
+          fi
+          echo "simulator: iPad Air 11-inch (M3) ${ipad_udid} iOS ${ios_runtime_pin}（pinned ${ios_runtime_pin}）"
+          # LS-96 池項 00b9c9ef：測試清單一律 grep 自動產生，不手寫死名單；清單為空就是這個 job 存在的
+          # 理由整個落空——list-ipad-tests.sh 對此 fail loud（exit 1），這裡原樣傳遞、不吞掉。
+          list=$(bash scripts/gates/list-ipad-tests.sh) || {
+            echo "::error::list-ipad-tests.sh 找不到任何 *IPadTests／Regular 測試——清單為空，ci-ipad job 必須紅（防止靜默跳過，LS-96 池項 00b9c9ef）"
+            exit 1
+          }
+          echo "以下測試將實跑："
+          printf '%s\n' "$list"
+          only_args=()
+          while IFS= read -r t; do [ -n "$t" ] && only_args+=("-only-testing:${t}"); done <<< "$list"
+          xcodebuild test \
+            -scheme LittleSprout \
+            -destination "platform=iOS Simulator,id=${ipad_udid}" \
+            "${only_args[@]}" \
+            -parallel-testing-enabled NO \
+            CODE_SIGNING_ALLOWED=NO

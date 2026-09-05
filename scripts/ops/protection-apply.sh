@@ -58,7 +58,7 @@ summary() {  # 一行摘要：require_pr／checks／enforce_admins／force_push�
 # context／app_id 與 before 相同（與 request 同源、不硬寫五個——development 的 required checks 日後增減不會讓 verify 誤報，R3 F3）
 # ＋require PR 仍開（其餘欄位本腳本不動）
 CHECKS_OK='(.required_status_checks.strict | not)
-    and ([.required_status_checks.checks[].context] | sort == ["ci","db","lint","merge-review","rules"])
+    and ([.required_status_checks.checks[].context] | sort == ["ci","ci-ipad","db","lint","merge-review","rules"])
     and ([.required_status_checks.checks[] | select(.context != "merge-review") | .app_id] | all(. == 15368))
     and ([.required_status_checks.checks[] | select(.context == "merge-review") | .app_id] | all(. == null or . == -1))'
 verify() {  # 回讀是否等於目標狀態
@@ -89,6 +89,7 @@ CHECKS_JSON='{
     "strict": false,
     "checks": [
       {"context": "ci",           "app_id": 15368},
+      {"context": "ci-ipad",      "app_id": 15368},
       {"context": "db",           "app_id": 15368},
       {"context": "lint",         "app_id": 15368},
       {"context": "rules",        "app_id": 15368},

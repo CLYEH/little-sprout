@@ -123,6 +123,9 @@ for a in "$@"; do
   case "$a" in
     -resolvePackageDependencies) exit 0 ;;
     test)
+      # LS-209：TEST_LOG 設定時記一整行參數，供 ㊴ 斷言「iPad 測試那次呼叫」的 -destination／-only-testing
+      # 是否正確（本 repo 一次 push 會有兩次 test 呼叫：主 unit tests＋觸發時的 iPad 回歸，用這行區分兩者）。
+      if [ -n "${TEST_LOG:-}" ]; then printf '%s\n' "$*" >> "$TEST_LOG"; fi
       # LS-199：STUB_TEST_SCRIPT 設定時改跑該腳本（看門狗自測：掛住／印 crash 樣式／寫假 session log），其 exit code 即測試結果
       if [ -n "${STUB_TEST_SCRIPT:-}" ]; then bash "$STUB_TEST_SCRIPT"; exit $?; fi
       exit "${STUB_TEST_RC:-0}" ;;
@@ -148,6 +151,15 @@ cat > "$R/scripts/gates/error-codes-check.sh" <<'STUB'
 exit 0
 STUB
 chmod +x "$R/scripts/gates/error-codes-check.sh"
+
+# LS-209：list-ipad-tests.sh 假身——合成 repo 沒有真的 LittleSproutUITests 原始碼可掃。預設「找不到任何
+# 案例」（exit 1、無輸出，同真腳本清單為空時的行為），讓①～㊳這些不關心 iPad 觸發區塊的既有案例維持
+# push-gate.sh 新增的那段完全不生效（`ipad_list` 為空，整段跳過）；㊴ 自己再換成會印出清單的假身。
+cat > "$R/scripts/gates/list-ipad-tests.sh" <<'STUB'
+#!/bin/bash
+exit 1
+STUB
+chmod +x "$R/scripts/gates/list-ipad-tests.sh"
 
 db="$work/devices.db"
 printf '%s\t%s\n%s\t%s\n%s\t%s\n' \
@@ -1281,6 +1293,98 @@ else
   fail=1
 fi
 rm -rf "$SIMULATOR_LOCK_DIR"
+
+# ---- ㊴（LS-209）：push-gate.sh 本機 best-effort 補跑一次 iPad 回歸測試——diff 檔名含 IPad／Regular
+#        或改到某個 *IPadTests 類別對應的 SUT 才觸發；本機找不到「iPad Air 11-inch (M3)」→ ⚠ fail-open、
+#        不擋 push；list-ipad-tests.sh 假身固定回 `LittleSproutUITests/FooIPadTests`（SUT 猜測名＝Foo）。
+g checkout -q -b feature/LS-209-ipad-trigger origin/development
+printf '99.9\n' > "$R/.xcode-version"
+cat > "$R/scripts/gates/list-ipad-tests.sh" <<'STUB'
+#!/bin/bash
+printf 'LittleSproutUITests/FooIPadTests\n'
+exit 0
+STUB
+chmod +x "$R/scripts/gates/list-ipad-tests.sh"
+ipad_udid=$(printf 'ABCDEF01-2345-6789-ABCD-%012d' "$$")   # 真的 UDID 一律是 8-4-4-4-12 十六進位格式；不能用非此形狀的假名（見下方 ㊴(a) 抓到的 bug）
+printf '%s\t%s\n' "iPad Air 11-inch (M3)" "$ipad_udid" >> "$db"
+test_log34="$work/test-log-34.txt"
+
+# (a) diff 檔名含 IPad → 觸發，xcodebuild 有被叫去跑 iPad destination＋-only-testing:LittleSproutUITests/FooIPadTests
+mkdir -p "$R/LittleSproutUITests"
+echo 'struct Dummy {}' > "$R/LittleSproutUITests/SomethingIPadTests.swift"
+g add LittleSproutUITests/SomethingIPadTests.swift; g commit -qm 'test: LS-209 demo ipad filename diff'
+: > "$test_log34"
+out34a=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log34")
+if grep -qF "id=${ipad_udid}" "$test_log34" && grep -qF 'LittleSproutUITests/FooIPadTests' "$test_log34"; then
+  echo "✓ ㊴(a) diff 檔名含 IPad → 本機 iPad 測試被呼叫（正確 destination＋-only-testing）"
+else
+  echo "✗ ㊴(a) diff 含 IPad 檔名卻沒有正確呼叫本機 iPad 測試" >&2
+  printf '%s\n' "$out34a" | sed 's/^/    /' >&2; cat "$test_log34" | sed 's/^/    log: /' >&2
+  fail=1
+fi
+
+# (b) diff 只碰 SUT（Foo.swift，list-ipad-tests.sh 假身回的 FooIPadTests 去掉字尾；刻意放在 Services/ 而非
+#     Features/，避免混進既有的點擊目標 gate 觸發、汙染本案例只想驗的東西）→ 同樣觸發
+g checkout -q -b feature/LS-209-ipad-sut origin/development
+printf '99.9\n' > "$R/.xcode-version"
+mkdir -p "$R/LittleSprout/Services"
+echo 'struct Foo {}' > "$R/LittleSprout/Services/Foo.swift"
+g add LittleSprout/Services/Foo.swift; g commit -qm 'feat: LS-209 demo ipad sut diff'
+: > "$test_log34"
+out34b=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log34")
+if grep -qF "id=${ipad_udid}" "$test_log34"; then
+  echo "✓ ㊴(b) diff 只碰 SUT（Foo.swift，非 IPad／Regular 檔名）→ 仍觸發本機 iPad 測試（SUT 猜測命中）"
+else
+  echo "✗ ㊴(b) diff 碰 SUT 卻沒有觸發本機 iPad 測試" >&2
+  printf '%s\n' "$out34b" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# (c) diff 只碰無關檔案（Services/）→ 不觸發
+g checkout -q -b feature/LS-209-ipad-unrelated origin/development
+printf '99.9\n' > "$R/.xcode-version"
+mkdir -p "$R/LittleSprout/Services"
+echo 'struct Bar {}' > "$R/LittleSprout/Services/Bar.swift"
+g add LittleSprout/Services/Bar.swift; g commit -qm 'feat: LS-209 demo ipad unrelated diff'
+: > "$test_log34"
+out34c=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log34")
+if grep -qF "id=${ipad_udid}" "$test_log34"; then
+  echo "✗ ㊴(c) diff 只碰無關檔案卻仍觸發本機 iPad 測試（觸發條件過寬）" >&2
+  printf '%s\n' "$out34c" | sed 's/^/    /' >&2; fail=1
+else
+  echo "✓ ㊴(c) diff 只碰無關檔案（Services/）→ 不觸發本機 iPad 測試"
+fi
+
+# (d) 觸發但本機找不到「iPad Air 11-inch (M3)」→ ⚠ fail-open、不擋 push（暫時把它從 $db 移除）
+g checkout -q feature/LS-209-ipad-trigger
+grep -vF "iPad Air 11-inch (M3)" "$db" > "$db.tmp" && mv "$db.tmp" "$db"
+: > "$test_log34"
+out34d=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log34")
+rc34d=$?
+if [ "$rc34d" -eq 0 ] && ! grep -qF 'iPad' "$test_log34" && printf '%s' "$out34d" | grep -qF '⚠ push gate：本機找不到「iPad Air 11-inch (M3)」'; then
+  echo "✓ ㊴(d) 本機沒有 iPad 模擬器 → 印 ⚠ fail-open、不呼叫 xcodebuild、整體仍 exit 0（不擋 push）"
+else
+  echo "✗ ㊴(d) 本機無 iPad 模擬器時應 fail-open（實得 exit ${rc34d}）" >&2
+  printf '%s\n' "$out34d" | sed 's/^/    /' >&2
+  fail=1
+fi
+printf '%s\t%s\n' "iPad Air 11-inch (M3)" "$ipad_udid" >> "$db"   # 還原，避免影響本節之後（若有）的案例
+
+# mutation：拿掉整段 iPad best-effort 區塊（awk 用 list-ipad-tests.sh 呼叫行到下一個 fi 的字面邊界不穩，
+# 改用「拿掉 ipad_trigger 判定」這個精準單行 mutation：把觸發條件恆假）→ (a) 的正樣本必須變綠（不再呼叫）
+mut_noipad="$work/push-gate.no-ipad-trigger.sh"
+sed 's/if \[ "\$ipad_trigger" -eq 1 \]; then/if false; then/' "$gate_src" > "$mut_noipad"
+if grep -q 'if false; then' "$mut_noipad"; then echo "✓ ㊴ mutant 確實已改判準（ipad_trigger 恆假）"; else echo "✗ ㊴ mutant 改判準失敗（負控本身無效）" >&2; fail=1; fi
+cp "$mut_noipad" "$R/scripts/gates/push-gate.sh"
+g checkout -q feature/LS-209-ipad-trigger
+: > "$test_log34"
+out34m=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log34")
+if grep -qF 'iPad' "$test_log34"; then
+  echo "✗ ㊴ mutant 應該不再呼叫本機 iPad 測試（實得有呼叫）" >&2; printf '%s\n' "$out34m" | sed 's/^/    /' >&2; fail=1
+else
+  echo "✓ ㊴ mutant：拿掉 ipad_trigger 判定後，(a) 的正樣本消失（判定確實是原因）"
+fi
+cp "$gate_src" "$R/scripts/gates/push-gate.sh"   # 還原成真的 push-gate.sh，收工
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ push-gate 模擬器自測通過"

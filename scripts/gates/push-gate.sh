@@ -608,6 +608,48 @@ PY
           bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
             bash "$(git rev-parse --show-toplevel)/scripts/gates/tap-target-check.sh" "$sim_udid" "$XCODE_SCHEME"
         fi
+
+        # LS-209：iPad（regular 寬度）回歸的正式把關是 CI 的 ci-ipad job（票文範圍 3；本機通常沒有 CI 同版
+        # runtime／機型，跑不出可信結果）。這裡只是 best-effort 補跑：diff 檔名含 IPad／Regular，或改到某個
+        # `*IPadTests` 類別對應的 SUT（用 list-ipad-tests.sh 產生的整類別清單去掉 `IPadTests` 字尾猜檔名，如
+        # `SettingsViewIPadTests` → `SettingsView.swift`）才觸發；本機找不到「iPad Air 11-inch (M3)」模擬器
+        # 或 CI 同版 runtime（`.ios-runtime`）就印 ⚠ fail-open、不擋 push（同 LS-205 對 runtime 缺版的處理
+        # 精神——這裡不是正確性紅線，正確性交給 CI required check `ci-ipad`）。
+        ipad_list=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/list-ipad-tests.sh" 2>/dev/null) || ipad_list=
+        if [ -n "$ipad_list" ]; then
+          ipad_sut_re=$(printf '%s\n' "$ipad_list" | awk -F/ 'NF==2{b=$2; sub(/IPadTests$/,"",b); if (b!="") print b}' | sed 's/[.[\*^$/]/\\&/g' | paste -sd'|' -)
+          ipad_trigger=0
+          printf '%s\n' "$tap_target_diff" | grep -qE '(IPad|Regular)' && ipad_trigger=1
+          if [ "$ipad_trigger" -eq 0 ] && [ -n "$ipad_sut_re" ] && printf '%s\n' "$tap_target_diff" | grep -qE "(^|/)(${ipad_sut_re})\\.swift$"; then
+            ipad_trigger=1
+          fi
+          if [ "$ipad_trigger" -eq 1 ]; then
+            echo "→ push gate：diff 含 IPad／Regular 或其 SUT，嘗試本機跑一次 iPad 回歸測試（LS-209，best-effort；CI ci-ipad job 為正式把關）…"
+            ios_runtime_pin=
+            [ -f .ios-runtime ] && ios_runtime_pin=$(tr -d '[:space:]' < .ios-runtime)
+            # UDID 一律抓標準 8-4-4-4-12 十六進位格式，不能用「取最外層括號內容」——機型名本身就帶括號
+            # （「iPad Air 11-inch (M3)」），naive 取括號會把 "M3" 誤判成 UDID（自測 ㊴ 抓到）。
+            ipad_udid=$(xcrun simctl list devices available 2>/dev/null | awk -v pin="$ios_runtime_pin" '
+              /^-- iOS / { os=$0; sub(/^-- iOS /,"",os); sub(/ --$/,"",os); next }
+              /iPad Air 11-inch \(M3\)/ {
+                if (pin != "" && os != pin) next
+                line=$0
+                if (match(line, /[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/)) {
+                  print substr(line, RSTART, RLENGTH); exit
+                }
+              }
+            ')
+            if [ -z "$ipad_udid" ]; then
+              echo "⚠ push gate：本機找不到「iPad Air 11-inch (M3)」模擬器${ios_runtime_pin:+（iOS ${ios_runtime_pin}）}，略過本機 iPad 測試（fail-open，同 LS-205 runtime 缺版處理；CI ci-ipad job 為正式把關）"
+            else
+              ipad_only_args=()
+              while IFS= read -r t; do [ -n "$t" ] && ipad_only_args+=("-only-testing:${t}"); done <<< "$ipad_list"
+              bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
+                xcodebuild test -scheme "$XCODE_SCHEME" -destination "platform=iOS Simulator,id=${ipad_udid}" \
+                "${ipad_only_args[@]}" -parallel-testing-enabled NO -quiet
+            fi
+          fi
+        fi
       fi
       ;;
   esac
