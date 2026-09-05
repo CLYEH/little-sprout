@@ -404,6 +404,44 @@ if [ "$design_wt" -eq 1 ]; then
   fi
 fi
 
+# ---- Pen 開錯檔偵測（實作票，LS-209）：Pen 目前開著的文件若落在某票的 worktree（`.claude/worktrees/LS-<n>/`）
+#      且該票 lane 不是 design → 印 ⚠「Pen 開錯檔（實作票 LS-<n>）」——LS-188／LS-192 fork 動 Pen 越權編輯／把
+#      Pen 切到實作票 worktree 的事後偵測（規則本身在 ios-dev.md 硬規則與 agent-tools-check.sh 的 tools: 白名單
+#      擋，但那擋不住 orchestrator 派的 fork／general-purpose 子 agent 自帶完整工具集——這裡是巡檢層的第二道網）。
+#      獨立於上面的「Pencil 連線」段（那段只在 design 分支 worktree 在飛時才跑，抓不到「根本沒有設計票、但 Pen
+#      卻被實作票 agent 打開」這個情境——這正是本段存在的理由）。PATROL_PEN_PGREP 可覆寫供自測餵假身（獨立於
+#      上面 push-gate 偵測用的 PATROL_PGREP，避免互相污染）：先用 pgrep 確認 Pen 行程真的在跑（便宜）才呼叫
+#      pen-open.sh --status（貴——會起 pen CLI 走 IPC），Pen 沒開就不查、不印任何東西。lane 查詢走既有管道
+#      patrol-linear.sh --lane（LS-96 池項 cf3707fa 指定「用既有的 Linear 查詢管道」）：查不到（無
+#      LINEAR_API_KEY／查詢失敗）印 `?`、不擋（fail-open）——只有明確查到「不是 lane:design」（含查無此票／
+#      無 lane 標籤）才 add_flag。
+# PEN_WRONG_LINE 宣告特意放在下面的 LS209-PEN-WRONG 標記區塊之外——區塊本身是自測 mutation 拿掉驗證用（見
+# patrol.test.sh ㉖），變數宣告若跟著被拿掉，`set -u` 下游任何 `[ -n "$PEN_WRONG_LINE" ]` 讀取都會炸「unbound
+# variable」，這會讓 mutation 測到的是「腳本壞掉」而不是「這段偵測邏輯確實是負樣本變綠的原因」。
+PEN_WRONG_LINE=
+# LS209-PEN-WRONG-START
+PEN_PGREP_BIN=${PATROL_PEN_PGREP:-pgrep}
+if command -v "$PEN_PGREP_BIN" >/dev/null 2>&1 && "$PEN_PGREP_BIN" -f 'Pen\.app/Contents/MacOS/Pen$' >/dev/null 2>&1; then
+  posh="${PATROL_PEN_OPEN_SH:-${here}/pen-open.sh}"
+  pen_path=
+  [ -x "$posh" ] && pen_path=$(bash "$posh" --status 2>/dev/null)
+  pen_wt_ticket=$(printf '%s' "${pen_path:-}" | grep -oE '\.claude/worktrees/LS-[0-9]+' | grep -oE 'LS-[0-9]+' | head -1)
+  if [ -n "$pen_wt_ticket" ]; then
+    plsh_lane="${PATROL_LINEAR_SH:-${here}/patrol-linear.sh}"
+    pen_lane=; lane_rc=1
+    if [ -x "$plsh_lane" ]; then
+      pen_lane=$(bash "$plsh_lane" --lane "${pen_wt_ticket#LS-}" --repo "$ROOT" 2>/dev/null); lane_rc=$?
+    fi
+    if [ "$lane_rc" -ne 0 ]; then
+      PEN_WRONG_LINE="Pen：目前開在 ${pen_wt_ticket} worktree，lane ?（查詢失敗，不擋）"
+    elif [ "$pen_lane" != "lane:design" ]; then
+      PEN_WRONG_LINE="⚠ Pen 開錯檔（實作票 ${pen_wt_ticket}）"
+      add_flag "[Pen] 開錯檔（實作票 ${pen_wt_ticket}；lane=${pen_lane:-無}，非 lane:design——不得在實作票 worktree 開 Pen，見 ios-dev.md 硬規則）"
+    fi
+  fi
+fi
+# LS209-PEN-WRONG-END
+
 # ---- 專屬模擬器（LS-83／LS-187）：detect-simulator.sh 建的 <票號>-<機型無空白> 用完不刪，由這段事後抓。
 #      第一層（LS-187；使用者 2026-09-05 指出 4 台 Done 票殘機——Done 後 7 天內、皆 Shutdown——巡檢 20+ 輪沒抓）：每台
 #      LS-<n>-* 看「票」——該票 worktree 已不在磁碟（git worktree list 沒有任何一筆「目錄存在且 basename 或分支整字含
@@ -728,6 +766,7 @@ case "$MODE" in
     case "$lock_line" in free) ;; *) echo "Supabase lock：${lock_line}" ;; esac
     [ -n "$lock_queue_flag" ] && echo "Supabase lock：${lock_queue_flag}——持有者「${hold_label}」剩餘 ${lock_hold_remain_min} 分"
     [ "$pencil_ran" -eq 1 ] && printf '%s\n' "$PENCIL_LINE"
+    [ -n "$PEN_WRONG_LINE" ] && printf '%s\n' "$PEN_WRONG_LINE"
     if [ -n "$FLAGS" ]; then printf '%s' "$FLAGS"; else echo "巡檢：無異常（git／PR 面；Linear 對照仍需 list_issues）"; fi
     ;;
   *)
@@ -754,6 +793,8 @@ case "$MODE" in
       printf '%s\n' "$PENCIL_LINE" | sed 's/^/  /'
       [ "$pencil_rc" -ne 0 ] && echo "  → 設計票派工前先請使用者在 Claude Code 執行 /mcp 重連 pencil，重連後再派（LS-180）"
     else echo "  （無 design 分支 worktree，略過探針）"; fi
+    echo "== Pen 開錯檔偵測（LS-209；Pen 目前文件若落在非 design lane 的票 worktree → ⚠，查不到 lane 印 ?、不擋）"
+    if [ -n "$PEN_WRONG_LINE" ]; then echo "  ${PEN_WRONG_LINE}"; else echo "  （Pen 未開，或未開在任何票 worktree，或該票 lane 為 design）"; fi
     echo "== 專屬模擬器（scripts/gates/detect-simulator.sh 建的 <票號>-<機型>；LS-83／LS-187：票 worktree 已不在或已 Done／Canceled ⚠→cleanup-merged；其餘 >7 天未用只列不刪；Booted 不列刪；LS-205：runtime 與 .ios-runtime 不一致標 ⚠ runtime，獨立計數、不計入待清、不自動重建，merge-review R1 M1）"
     if [ -n "$SIM_LINES" ]; then printf '%s' "$SIM_LINES"; else echo "  （無 xcrun，或無殘機／逾期的專屬模擬器）"; fi
     if [ -n "${sim_rows:-}" ]; then

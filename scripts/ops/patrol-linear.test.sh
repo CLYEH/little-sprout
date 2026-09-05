@@ -371,6 +371,46 @@ if [ "$rc" -eq 2 ] && printf '%s' "$out_closed_bad" | grep -qF '票號數字'; t
 out_closed_empty="$(bash "$plsh" --closed '' --repo "$repo" 2>&1)"; rc=$?
 if [ "$rc" -eq 2 ]; then echo "✓ ⑥b --closed 空值 → exit 2"; else echo "✗ ⑥b --closed 空值應 exit 2（實得 ${rc}）" >&2; fail=1; fi
 
+# ---- ⑥c --lane（LS-209：patrol.sh「Pen 開錯檔（實作票）」偵測問「這張票目前是哪個 lane」）：獨立假 curl 回
+#        number: { eq: $number } 查詢的 fixture；stdout 恰一行（lane 名或空字串）；無 key → exit 3、stdout 空；
+#        票號格式錯／空值／逗號分隔（--lane 只收單一票號，不像 --closed）→ exit 2 ----
+mkdir -p "$work/bin_lane"
+cat > "$work/bin_lane/curl" <<'EOF'
+#!/bin/bash
+printf '%s\n' "$*" >> "${CURL_STUB_LOG:?}"
+cat >/dev/null
+data=""
+while [ $# -gt 0 ]; do case "$1" in --data) data=$2; shift ;; esac; shift; done
+case "$data" in
+  *'number: { eq: $number }'*)
+    case "$data" in
+      *'"number": 188.0'*) echo '{"data":{"issues":{"nodes":[{"identifier":"LS-188","labels":{"nodes":[{"name":"lane:backend"},{"name":"size:M"}]}}]}}}' ;;
+      *'"number": 46.0'*) echo '{"data":{"issues":{"nodes":[{"identifier":"LS-46","labels":{"nodes":[{"name":"lane:design"}]}}]}}}' ;;
+      *'"number": 999999.0'*) echo '{"data":{"issues":{"nodes":[]}}}' ;;
+      *) echo '{"data":{"issues":{"nodes":[{"identifier":"LS-X","labels":{"nodes":[]}}]}}}' ;;
+    esac ;;
+  *) echo '{"errors":[{"message":"stub curl：--lane 不該打別的查詢"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_lane/curl"
+: > "$CURL_STUB_LOG"
+out_lane="$(PATH="$work/bin_lane:$PATH" bash "$plsh" --lane 188 --repo "$repo" 2>"$work/stderr_lane.log")"; rc=$?
+if [ "$rc" -eq 0 ] && [ "$out_lane" = "lane:backend" ]; then echo "✓ ⑥c --lane 188 → exit 0、印 lane:backend"; else echo "✗ ⑥c --lane 188 應 exit 0 印 lane:backend（實得 rc=${rc}、out=${out_lane}）" >&2; sed 's/^/    /' "$work/stderr_lane.log" >&2; fail=1; fi
+out_lane_design="$(PATH="$work/bin_lane:$PATH" bash "$plsh" --lane 46 --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ] && [ "$out_lane_design" = "lane:design" ]; then echo "✓ ⑥c --lane 46 → 印 lane:design（正常設計票，不該被巡檢標記）"; else echo "✗ ⑥c --lane 46 應印 lane:design（實得 ${out_lane_design}）" >&2; fail=1; fi
+out_lane_none="$(PATH="$work/bin_lane:$PATH" bash "$plsh" --lane 999999 --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ] && [ -z "$out_lane_none" ]; then echo "✓ ⑥c 查無此票 → exit 0、印空行（呼叫端當「非 design」處理，不是查詢失敗）"; else echo "✗ ⑥c 查無此票應 exit 0 印空（實得 rc=${rc}、out=${out_lane_none}）" >&2; fail=1; fi
+n_curl_lane=$(grep -c . "$CURL_STUB_LOG" 2>/dev/null || true); [ "${n_curl_lane:-0}" -eq 3 ] && echo "✓ ⑥c 每次呼叫各打一次 curl" || { echo "✗ ⑥c curl 呼叫次數不符（實得 ${n_curl_lane:-0}）" >&2; fail=1; }
+grep -qF 'test-token-not-real' "$CURL_STUB_LOG" && { echo "✗ ⑥c token 出現在 curl argv" >&2; fail=1; } || echo "✓ ⑥c token 不進 curl argv"
+out_lane_nokey="$(bash "$plsh" --lane 188 --repo "$repo_no_token" 2>"$work/stderr_lane_nokey.log")"; rc=$?
+if [ "$rc" -eq 3 ] && [ -z "$out_lane_nokey" ] && grep -qF '略過（無 LINEAR_API_KEY）' "$work/stderr_lane_nokey.log"; then echo "✓ ⑥c 無 key → exit 3、stdout 空、stderr 說略過"; else echo "✗ ⑥c 無 key 應 exit 3（實得 rc=${rc}）" >&2; fail=1; fi
+out_lane_bad="$(bash "$plsh" --lane 188,3 --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 2 ] && printf '%s' "$out_lane_bad" | grep -qF '單一票號數字'; then echo "✓ ⑥c 逗號分隔（多票號）→ exit 2（--lane 只收單一票號）"; else echo "✗ ⑥c 多票號應 exit 2（實得 ${rc}）" >&2; fail=1; fi
+out_lane_bad2="$(bash "$plsh" --lane abc --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 2 ] && printf '%s' "$out_lane_bad2" | grep -qF '單一票號數字'; then echo "✓ ⑥c 非數字 → exit 2"; else echo "✗ ⑥c 非數字應 exit 2（實得 ${rc}）" >&2; fail=1; fi
+out_lane_empty="$(bash "$plsh" --lane '' --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 2 ]; then echo "✓ ⑥c --lane 空值 → exit 2"; else echo "✗ ⑥c --lane 空值應 exit 2（實得 ${rc}）" >&2; fail=1; fi
+
 # ---- ⑦ R1 F5：cycle 對帳 (d)（剩餘時間 <24h）——用執行當下算出的動態時間戳，不寫死日期，
 #        避免測試在特定日期之後失效；獨立 repo／fixture，不與 ② 的固定 2099 endsAt 互相干擾 ----
 repo_d="$work/repo_d"
