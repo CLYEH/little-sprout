@@ -547,6 +547,7 @@ function scanAll(nodes, opts) {
     const ids = resolveBoards(opts && opts.boards, nodes.filter((n) => n.parent == null));
     if (!ids.length) throw new Error("overflow-scan：scanScope=boards 需要非空 boards（Pencil 端在 snippet 第一行加 SCAN_BOARDS=[...]），否則限縮範圍是空的");
     scanned = restrictToBoards(nodes, ids);
+    if (!scanned.length) throw new Error("overflow-scan：scanScope=boards 但 boards " + JSON.stringify(ids) + " 沒有對應到任何 root——限縮後快照為空，不得默默印全零收據");
   }
   const idx = buildIndex(scanned);
   const tag = (o) => Object.assign({ scope }, o);
