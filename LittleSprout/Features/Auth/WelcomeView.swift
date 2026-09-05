@@ -17,6 +17,10 @@ struct WelcomeView: View {
     @State private var isSigningInWithGoogle = false
     @State private var googleErrorMessage: String?
     @State private var currentAppleNonce: String?
+    // LS-191：歡迎頁法務連結改開 in-app sheet（取代原本跳出系統瀏覽器）——非 private：
+    // `WelcomeView+Legal.swift` 的 `legalLinkOpenURLAction` 需要寫入這個狀態，同
+    // `path`（`WelcomeView+PasswordSignIn.swift`）的既有作法。
+    @State var presentedLegalDocument: LegalDocumentKind?
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
@@ -72,6 +76,10 @@ struct WelcomeView: View {
         } message: { message in
             Text(message)
         }
+        .sheet(item: $presentedLegalDocument) { kind in
+            LegalDocumentSheet(kind: kind)
+        }
+        .environment(\.openURL, legalLinkOpenURLAction)
     }
 
     // MARK: - Layouts
@@ -227,55 +235,8 @@ struct WelcomeView: View {
 
     // `passwordSignInLink`：見 `WelcomeView+PasswordSignIn.swift`（LS-164，拆到另一個檔案
     // 避免這個檔案超過 SwiftLint file_length 上限）。
-
-    /// 法務／狀態行是一個 38pt 固定高度插槽（進場條件⑥）：`.meta`(13pt) 的法務行與
-    /// `.note`(17pt) 的狀態句行高不同，沒有這個插槽 01→01b 切換會把上方按鈕整體推移。用
-    /// `minHeight` 而不是 `height`——AX3 下兩者都會換行超過 38pt，此時插槽要能跟著長高，
-    /// 不能裁切（spec 明記 AX3「legal wraps to 64pt, no slot」）。
-    private var legalOrStatusSlot: some View {
-        Group {
-            // R1 review F1：任一登入方式在跑都要有回饋（原本只有 Apple 有）——Google 面板
-            // 關閉、PKCE code exchange 仍在跑的那幾秒，原本會三顆鈕全灰卻零提示，長輩會
-            // 誤以為沒反應而改按別顆，造成兩條登入流程並行。
-            if let statusMessage = authButtonsState.statusMessage {
-                Text(statusMessage)
-                    .appFont(.note)
-                    .foregroundStyle(Color.lsTextPrimary)
-            } else {
-                // 法務行在一般字級下一行放得下、AX3 放不下（稿面量測 462+33pt vs 345pt 容器
-                // 寬）：`ViewThatFits` 先試單行，放不下才落到會自動換行的第二個候選（進場條件⑧，
-                // 不照抄 .pen 稿面的固定四段式節點排版，因為那不會自動換行）。
-                ViewThatFits(in: .horizontal) {
-                    Text(legalAttributedString)
-                        .appFont(.meta)
-                        .fixedSize(horizontal: true, vertical: false)
-                    Text(legalAttributedString)
-                        .appFont(.meta)
-                }
-            }
-        }
-        .frame(minHeight: 38, alignment: .leading)
-    }
-
-    private var legalAttributedString: AttributedString {
-        var intro = AttributedString("登入即表示你同意")
-        intro.foregroundColor = .lsTextSecondary
-
-        var terms = AttributedString("《使用條款》")
-        terms.foregroundColor = .lsTextPrimary
-        terms.underlineStyle = .single
-        terms.link = URL(string: "https://littlesprout.app/legal/terms")
-
-        var and = AttributedString("與")
-        and.foregroundColor = .lsTextSecondary
-
-        var privacy = AttributedString("《隱私權政策》")
-        privacy.foregroundColor = .lsTextPrimary
-        privacy.underlineStyle = .single
-        privacy.link = URL(string: "https://littlesprout.app/legal/privacy")
-
-        return intro + terms + and + privacy
-    }
+    // `legalOrStatusSlot`／`legalAttributedString`／`legalLinkOpenURLAction`：見
+    // `WelcomeView+Legal.swift`（LS-191，同一個拆檔理由）。
 
     // MARK: - Sign in with Apple
 

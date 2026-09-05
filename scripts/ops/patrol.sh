@@ -22,7 +22,8 @@
 # 停滯判定（§4-b 三型態；stale＝上面的分鐘數）：
 #   PR       CONFLICTING／UNSTABLE／BEHIND／CHANGES_REQUESTED 立即標；CLEAN 且 APPROVED 立即標「可併」；
 #            其餘 CLEAN／BLOCKED 超過 stale 沒更新標 ⏳（草稿不標）
-#   分支     有 commit 但分支從未 push；領先 remote 且最後 commit 超過 stale（push gate 卡？）；
+#   分支     有 commit 但分支從未 push、最後 commit 超過 PATROL_PUSH_GRACE_MIN（預設 30 分，> push-gate 看門狗 25 分，LS-207 R2）
+#            且真的 pgrep 不到該 worktree 下的 push-gate.sh 行程；領先 remote 且最後 commit 超過 stale（push gate 卡？）；
 #            落後 remote（別處 push 過）；已 push、無 open PR、最後 commit 超過 stale
 #   工作區   有未提交變更（不含 untracked）且最後改動超過 stale；worktree 建好超過 stale 仍 0 commit 無變更（尚未開工）；
 #            分支已併入 base（自 merge-base 0 commit、但分支 reflog 有過 commit）而 worktree 未移除（§2：合併完成後移除）
@@ -92,6 +93,32 @@ case "$FETCH_TIMEOUT" in ''|*[!0-9]*) echo "✗ patrol：PATROL_FETCH_TIMEOUT �
 # 沒有 hook 預算）25 秒——低水位時 Devices 通常正是最肥的那個，cron 這一路要印得出真數字才有處置依據。
 DISK_MIN_GB=${PATROL_DISK_MIN_GB:-20}
 case "$DISK_MIN_GB" in ''|*[!0-9]*) echo "✗ patrol：PATROL_DISK_MIN_GB 須為整數 GB（得到「${DISK_MIN_GB}」）" >&2; exit 2 ;; esac
+# LS-207（a7b0f49e）：本地有 commit、遠端無同名分支——「領先 remote」旗標要求 remote 分支存在（`-n "$r"`），
+# 漏抓「從未 push 過」這種連 remote 分支都不存在的情況（LS-191 當晚：長命令背景化沒人回頭看，`git push` 究竟
+# 跑了沒、卡了沒都不知道）。給寬限期（比 STALE 短——push 該很快發生，不必等到 45 分鐘的一般停滯門檻）：未超過
+# 只印 info（可能還在跑 push gate），超過才標 ⚠。
+# LS-207 R2（merge-review R1 fd783f6c F6）：預設從 20 分調到 30 分——push-gate.sh 的 unit tests 看門狗
+# （PUSH_GATE_XCODEBUILD_TIMEOUT_MIN，預設 25 分，LS-199）比舊寬限期長，健康但慢的 push 會在第 21～25 分鐘
+# 之間被誤標；30 分確保「看門狗還沒判定逾時」的情況下寬限期一定還沒到。另外文案原本宣稱「無 push 行程」但
+# 其實從沒偵測過任何行程，判準只是「最後一個 commit 已經過了 N 分鐘」——現在真的用 pgrep 掃 push-gate.sh 行程、
+# 再用 lsof 核對其 cwd 是否落在這個 worktree 之下，行程真的在跑就不標（pgrep／lsof 不可用時保守 fail-open：
+# 當作沒在跑，退回只看時間，不因為偵測工具缺失而永遠不標）。
+PUSH_GRACE_MIN=${PATROL_PUSH_GRACE_MIN:-30}
+case "$PUSH_GRACE_MIN" in ''|*[!0-9]*) echo "✗ patrol：PATROL_PUSH_GRACE_MIN 須為整數分鐘（得到「${PUSH_GRACE_MIN}」）" >&2; exit 2 ;; esac
+# LS-207 R2（F6）：$1＝worktree 絕對路徑；0＝該 worktree 目前真的有 push-gate.sh 在跑（不誤標）、1＝沒有（或偵測
+# 不了）。PATROL_PGREP／PATROL_LSOF 可覆寫供自測餵假身，不碰真的系統行程表。
+PGREP_BIN=${PATROL_PGREP:-pgrep}
+LSOF_BIN=${PATROL_LSOF:-lsof}
+push_gate_running_for() {
+  local w=$1 pid cwd
+  command -v "$PGREP_BIN" >/dev/null 2>&1 || return 1
+  command -v "$LSOF_BIN" >/dev/null 2>&1 || return 1
+  for pid in $("$PGREP_BIN" -f 'push-gate\.sh' 2>/dev/null); do
+    cwd=$("$LSOF_BIN" -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1)
+    case "$cwd" in "$w"|"$w"/*) return 0 ;; esac
+  done
+  return 1
+}
 DU_TIMEOUT=${PATROL_DU_TIMEOUT:-}
 if [ -z "$DU_TIMEOUT" ]; then if [ "$MODE" = brief ]; then DU_TIMEOUT=8; else DU_TIMEOUT=25; fi; fi
 case "$DU_TIMEOUT" in ''|*[!0-9]*) echo "✗ patrol：PATROL_DU_TIMEOUT 須為整數秒（得到「${DU_TIMEOUT}」）" >&2; exit 2 ;; esac
@@ -253,7 +280,13 @@ process_wt() {
 
   # 判定（§4-b 分支／工作區停滯）
   if [ -z "$r" ] && [ "$since" != "?" ] && [ "$since" -gt 0 ]; then
-    flag="⚠ 分支未 push（${since} commit 只在本機）"
+    if [ "${lm:-0}" -ge "$PUSH_GRACE_MIN" ] && ! push_gate_running_for "$w"; then
+      flag="⚠ 分支未 push（${since} commit 只在本機，最後 commit ${lm}m 前，>${PUSH_GRACE_MIN}分未偵測到 push-gate.sh 行程，LS-207）"
+    elif [ "${lm:-0}" -ge "$PUSH_GRACE_MIN" ]; then
+      info="${since} commit 尚未 push（${lm:-0}m 前，push-gate.sh 仍在跑）"
+    else
+      info="${since} commit 尚未 push（${lm:-0}m 前，可能還在跑 push gate）"
+    fi
   elif [ -n "$r" ] && [ "$ahead" != "?" ] && [ "$ahead" -gt 0 ]; then
     if [ "${lm:-0}" -ge "$STALE" ]; then flag="⚠ 領先 remote ${ahead} commit 已 ${lm}m 未 push（push gate 卡？）"
     else info="領先 remote ${ahead}（${lm:-0}m 前，可能還在跑 push gate）"; fi
@@ -308,12 +341,48 @@ else
   lock_line="（無 ${here}/supabase-lock.sh）"
 fi
 # LS-159：QA 持有（hold）時另讀 holder 檔的 label／到期 epoch 給 --json；human／--brief 那一行由 --status 自帶「持有中（label，剩餘 n 分）」
-hold_label=; hold_expires=
+hold_label=; hold_expires=; lock_path=
 if [ -f "$here/supabase-lock.sh" ]; then
   lock_path=$(bash "$here/supabase-lock.sh" --path 2>/dev/null)
   if [ -n "$lock_path" ] && [ -f "$lock_path/holder" ]; then
     hold_label=$(sed -n 's/^cmd=hold://p' "$lock_path/holder" 2>/dev/null | head -1)
     [ -n "$hold_label" ] && hold_expires=$(sed -n 's/^expires_at=//p' "$lock_path/holder" 2>/dev/null | head -1)
+  fi
+fi
+# LS-207（ca35c579）：排隊可見化——supabase-lock.sh --hold 排隊時在 `<lock 路徑>.waiters/` 寫 `<票號>-<pid>-<起始>`
+# 空檔（取得或放棄即刪）。這裡數等待者與最久等待分鐘；持有者是 hold（有 hold_expires）且剩餘 >10 分、又有
+# 等待者時印 ⚠ 排隊——LS-164／202 QA 在 --hold 內阻塞近 100 分鐘、orchestrator 只看到「無產出」才知道要查。
+lock_waiters=0; lock_waiters_max_min=0; lock_queue_flag=; lock_hold_remain_min=
+if [ -n "$lock_path" ] && [ -d "${lock_path}.waiters" ]; then
+  now_epoch=$(date +%s)
+  for wf in "${lock_path}.waiters"/*; do
+    [ -f "$wf" ] || continue
+    # LS-207 R2（merge-review R1 fd783f6c F3）：holder 那路有 is_stale＋reclaim＋tomb，waiter 這路原本完全沒有——
+    # SIGKILL／crash（INT/TERM/HUP 才有 trap 清）留下的殘留檔會被永遠算進「排隊中」，讓 ⚠ 排隊／`lock_waiters`
+    # 變成常駐假警報。檔名已帶 pid，這裡用 kill -0 驗活；不活就回收（rm，不計入排隊數）；解析不出 pid 的檔名
+    # （不該發生，但寧可誤報也不亂刪）原樣計入、不動它。
+    wpid=$(basename "$wf" | sed -E 's/^(.*)-([0-9]+)-([0-9]+)$/\2/')
+    case "$wpid" in
+      ''|*[!0-9]*) ;;
+      *) if ! kill -0 "$wpid" 2>/dev/null; then rm -f "$wf" 2>/dev/null; continue; fi ;;
+    esac
+    lock_waiters=$((lock_waiters + 1))
+    wstarted=$(basename "$wf" | sed -E 's/^(.*)-([0-9]+)-([0-9]+)$/\3/')
+    case "$wstarted" in
+      ''|*[!0-9]*) ;;
+      *) wm=$(( (now_epoch - wstarted + 59) / 60 )); [ "$wm" -gt "$lock_waiters_max_min" ] && lock_waiters_max_min=$wm ;;
+    esac
+  done
+  if [ "$lock_waiters" -gt 0 ]; then
+    case "${hold_expires:-}" in
+      ''|*[!0-9]*) ;;
+      *) lock_hold_remain_min=$(( (hold_expires - now_epoch + 59) / 60 )); [ "$lock_hold_remain_min" -lt 0 ] && lock_hold_remain_min=0
+         if [ "$lock_hold_remain_min" -gt 10 ]; then
+           lock_queue_flag="⚠ 排隊 ${lock_waiters}（最久 ${lock_waiters_max_min} 分）"
+           add_flag "[Supabase lock] ${lock_queue_flag}——持有者「${hold_label}」剩餘 ${lock_hold_remain_min} 分，該檢查是否卡住（LS-207）"
+         fi
+         ;;
+    esac
   fi
 fi
 
@@ -643,12 +712,12 @@ fi
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"lock_waiters":%s,"lock_waiters_max_minutes":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
-      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$(json_num "$sim_rt_mismatch")" "$J_BOOT" "$(json_num "$boot_flagged")" \
+      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$(json_num "$lock_waiters")" "$(json_num "$lock_waiters_max_min")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$(json_num "$sim_rt_mismatch")" "$J_BOOT" "$(json_num "$boot_flagged")" \
       "$(json_num "$disk_avail_gb")" "$DISK_MIN_GB" "$(json_num "$disk_devices_gb")" "$(json_num "$disk_derived_gb")" "$disk_dedicated" "$(json_str "$disk_flag")" \
       "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" "$J_FLAGS"
     ;;
@@ -657,6 +726,7 @@ case "$MODE" in
     echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev} · 專屬模擬器待清 ${sim_flagged}（殘機 ${sim_orphans}） · runtime 不一致 ${sim_rt_mismatch}${sim_rt_note} · Booted 異常 ${boot_flagged} · 磁碟可用 ${disk_avail_gb:-?} GB"
     [ -n "$fetch_warn" ] && echo "${fetch_warn}"
     case "$lock_line" in free) ;; *) echo "Supabase lock：${lock_line}" ;; esac
+    [ -n "$lock_queue_flag" ] && echo "Supabase lock：${lock_queue_flag}——持有者「${hold_label}」剩餘 ${lock_hold_remain_min} 分"
     [ "$pencil_ran" -eq 1 ] && printf '%s\n' "$PENCIL_LINE"
     if [ -n "$FLAGS" ]; then printf '%s' "$FLAGS"; else echo "巡檢：無異常（git／PR 面；Linear 對照仍需 list_issues）"; fi
     ;;
@@ -676,8 +746,9 @@ case "$MODE" in
     echo "  hooksPath=${hooks_path:-（未設定）}  ${hooks_flag:-ok}"
     echo "== worktree（local vs remote／未 push／dirty 停滯；base＝hotfix→origin/main、其餘→origin/development）"
     if [ -n "$WT_LINES" ]; then printf '%s' "$WT_LINES"; else echo "  （無）"; fi
-    echo "== Supabase lock（本機容器序列化，scripts/ops/supabase-lock.sh；LS-70；⚠ tomb＝上次回收異常的殘留）"
+    echo "== Supabase lock（本機容器序列化，scripts/ops/supabase-lock.sh；LS-70；⚠ tomb＝上次回收異常的殘留；持有者剩餘 >10 分且有等待者才會另印排隊提示，LS-207）"
     printf '%s\n' "$lock_line" | sed 's/^/  /'
+    [ -n "$lock_queue_flag" ] && echo "  ${lock_queue_flag}——持有者「${hold_label}」剩餘 ${lock_hold_remain_min} 分"
     echo "== Pencil 連線（LS-180；有 design 分支 worktree 時探：行程／目前路徑／MCP socket；✗ 先請使用者 /mcp 重連 pencil 再派設計票）"
     if [ "$pencil_ran" -eq 1 ]; then
       printf '%s\n' "$PENCIL_LINE" | sed 's/^/  /'

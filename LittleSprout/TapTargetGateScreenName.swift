@@ -91,6 +91,12 @@ enum TapTargetGateScreenName: String {
     // 免登入即可建構，同 `createChild`／`createAlbum` 的既有理由），Email／密碼欄與登入鈕
     // 一開畫面就有代表性。
     case passwordSignIn = "PasswordSignInView"
+    // LS-191：法務文件 in-app 檢視 sheet——初始態（載入後）不需要任何 seed 資料，`kind:
+    // .termsOfService` 固定讀 bundled markdown，Head 標題／Footer 關閉鈕一開畫面就有代表性。
+    case legalDocumentSheet = "LegalDocumentSheet"
+    // R4（merge-review R3 889164c6 F1）：強制走 iPad 自適應內距分支＋320pt 窄容器，
+    // 不需要真的是 iPad 裝置——在 iPhone 專屬機上就能重現／釘住 wiring 缺陷。
+    case legalDocumentNarrowContainer = "LegalDocumentNarrowContainer"
     // LS-164：`WelcomeView` 本身仍留在 `tap-target-exemptions.txt`（Apple 官方
     // `SignInWithAppleButton` 量測意義有限，理由未變）——這個 case **不**用來做逐元件 tap
     // target 量測（`TapTargetGateTests.swift` 沒有對應 test method），純粹借用「launch
@@ -150,6 +156,9 @@ enum TapTargetGateScreenName: String {
         // 常態樣本沒有失敗群，用永遠會渲染的標題文字當 sentinel。
         case .uploadQueueSheetNormal: return .staticText("正在新增照片")
         case .passwordSignIn: return .staticText("帳號密碼登入")
+        // Doc Title——`LegalDocumentSheet` 載入完成後必定渲染，不依賴檔案實際內容。
+        case .legalDocumentSheet: return .staticText("使用條款")
+        case .legalDocumentNarrowContainer: return .staticText("使用條款")
         // 「給家人的私密相簿」只在淺色模式渲染（見 `WelcomeView.headSection`），跟
         // `.preview()`／harness 固定淺色（未強制 `.preferredColorScheme`）的既有假設一致；
         // 不用字標圖片（`Image`，不是 staticText）當 sentinel。

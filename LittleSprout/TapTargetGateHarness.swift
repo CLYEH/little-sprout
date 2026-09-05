@@ -64,6 +64,8 @@ enum TapTargetGateHarness {
         case .welcome: welcomeHost
         case .profileEdit: profileEditHost
         case .familyMembers: familyMembersHost
+        case .legalDocumentSheet: legalDocumentSheetHost
+        case .legalDocumentNarrowContainer: legalDocumentNarrowContainerHost
         case .selfTestTooSmall:
             selfTestTooSmallHost
         case .selfTestGood:
