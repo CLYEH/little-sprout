@@ -65,7 +65,7 @@
 #     不以 in-scope `containers` 判——LS-133 r1–r3／LS-177 r1 的 boards 本來就沒有印品（`containers=0`、`document_containers` 216），
 #     那是正常收據。`scan_scope=boards` 限縮快照可能真的沒有印品，不判。**R3 minor-1**：同一 cutoff 下 `document_containers` **必填**
 #     （非負整數；R2 只在鍵存在時判，省略此鍵就繞過了）——corner_anchor 必填鍵＝`boards`／`containers`／`points`／`mismatch`／
-#     `document_containers`／`document_mismatch`／`unresolved`，與 ui-designer.md 收據模板同步；cutoff 之前的收據（development 43 份）不受影響。
+#     `document_containers`／`document_mismatch`／`unresolved`，與 ui-designer.md 收據模板同步；cutoff 之前的收據（development 42 份）不受影響。
 # 掃描「有沒有真的跑對」（演算法本身正確性）不是這支腳本能驗的——那需要 Pen 的版面引擎，只能靠
 # visual-reviewer 用同方法重掃比對（見 .claude/agents/visual-reviewer.md）。
 #
