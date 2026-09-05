@@ -51,7 +51,9 @@
 #      worktree 路徑下、或路徑元件為 `LS-<n>`／`LS-<n>-*`——後者涵蓋 worktree 記錄已 prune 的殘留與
 #      `LS-<n>-*` 命名的 scratchpad 副本；word-boundary：LS-17 不中 LS-174）。前提：本次執行後該票已無 worktree
 #      留在磁碟（全部已移除／本就不存在／dry-run 下判定將移除）——worktree 被略過（dirty／太新／未併入／
-#      Pen 開著／cwd 保護）代表可能還有人在用，附屬資源一律不動並印原因。--all 不套用（沒有票號就沒有前綴
+#      Pen 開著／cwd 保護）代表可能還有人在用，附屬資源一律不動並印原因。worktree 早已清、連 git worktree 記錄都
+#      沒有的「孤兒」（只剩專屬機／DerivedData——巡檢殘機動作行 `→ cleanup-merged.sh --apply LS-<n>` 指到這裡，LS-187）
+#      同樣走這條：沒有 worktree 命中就沒有東西擋，(e) 段照清（自測 ㉑）。--all 不套用（沒有票號就沒有前綴
 #      可比）。無 xcrun（CI／非 macOS）只跳過模擬器段。模擬器與 DerivedData 都是可再生的快取（detect-simulator.sh
 #      下次會重建、xcodebuild 會重編），刪錯的代價是一次重建，不是資料遺失；自測用 PATH 前置的 stub xcrun＋
 #      LS_DERIVED_DATA_ROOT 假目錄，不碰真機。
