@@ -139,8 +139,14 @@ struct LegalDocumentSheet: View {
             .background(Color.lsSurface)
     }
 
+    /// merge-review R1 F4（PLAUSIBLE，`807855dc`）：改用 `LazyVStack`——ToS 111／隱私 156 個
+    /// block 用 eager `VStack` 會在 sheet 開場一次建構＋量測全部 `Text`；只在可視範圍內按需
+    /// 具現化，同 `TimelineView`／`AlbumsView` 對長列表的既有慣例（Rule 10）。粗略量測（重複
+    /// 冷啟動含 app launch 開銷，雜訊大、量不出純 VStack 建構成本的乾淨數字）沒有找到決定性
+    /// 訊號，但這是一個字的改動、零行為差異（Head／Footer 不在 ScrollView 內，不受影響），
+    /// 照 reviewer 建議直接採用，不需要用「沒實測到變慢」當理由續用 eager 版本。
     private func blockList(_ blocks: [LegalMarkdownBlock]) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.block) {
+        LazyVStack(alignment: .leading, spacing: AppSpacing.block) {
             ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
                 blockView(block)
             }
