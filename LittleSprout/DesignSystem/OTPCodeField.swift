@@ -41,6 +41,8 @@ struct OTPCodeField: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("驗證碼輸入，共 \(cellCount) 位數字")
         .accessibilityValue(code.isEmpty ? "尚未輸入" : code.map(String.init).joined(separator: " "))
+        // LS-158：QA e2e 點這一列叫出鍵盤後 `typeText` 進隱形 `TextField`（它本身 accessibilityHidden）。
+        .accessibilityIdentifier(QAAccessibilityID.otpCodeField)
     }
 
     private func cell(at index: Int) -> some View {

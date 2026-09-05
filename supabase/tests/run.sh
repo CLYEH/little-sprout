@@ -488,8 +488,33 @@ race_case3 "情況2（唯一成員家庭）vs 情況3 media：U1 自己在飛上
   delete_account_case2_vs_media_s1.sql delete_account_case2_vs_media_s2.sql \
   delete_account_case2_vs_media_verify.sql
 
+# LS-172 R2（merge-reviewer i5，情境一）：兩個真正並行的 claim_notification_events()
+# 呼叫，claim 到的事件集合交集必須是空集合。FOR UPDATE SKIP LOCKED 是 claim-based
+# queue 的標準寫法，這裡把它從「單元測試裡的邏輯推論」提升成常駐、可重跑的併發
+# regression test。
+race_case "兩個並行 claim_notification_events() 呼叫：claim 到的事件集合完全不重疊" \
+  push_dispatch_claim_race_setup.sql push_dispatch_claim_race_s1.sql \
+  push_dispatch_claim_race_s2.sql push_dispatch_claim_race_verify.sql
+
+# LS-172 R2（merge-reviewer i5，情境二）：claim_notification_events() 標記 sent_at
+# 之後，同一目標的新事件（透過真正的 create_comment() RPC 觸發既有 LS-58 trigger
+# record_notification_event()）不該混進已 claim 的列，而是正確開新列——保護這個
+# 不變量的其實是兩支函式 occurred_at 條件的互補性（`< 5min-ago` vs `>= 5min-ago`），
+# 不是鎖（本機實測修正，見 push_dispatch_claim_vs_record_s2_comment.sql 檔頭），
+# 這裡仍用真正並行的兩個 session 驗證最終狀態在此前提下依然正確。
+race_case "claim_notification_events 跟 record_notification_event 併發：同一目標的新事件不會混進已 claim 的列" \
+  push_dispatch_claim_vs_record_setup.sql push_dispatch_claim_vs_record_s1_claim.sql \
+  push_dispatch_claim_vs_record_s2_comment.sql push_dispatch_claim_vs_record_verify.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
+-- LS-96 池項 8519d8a4 第 3 條（LS-172 merge-review R2-i3）：兩支併發情境的
+-- setup 各自建立一張 ls172_*_capture 測試輔助表（setup 開頭有 drop table if
+-- exists，重跑安全），但這裡原本只刪家庭與使用者，沒有把表本身丟掉——suite
+-- 跑完後這兩張表會留在 public schema，殘留給其他 agent／後續測試（QA `23af6837`
+-- 已實測複驗過這個缺口）。
+drop table if exists public.ls172_claim_race_capture, public.ls172_claim_vs_record_capture;
+
 delete from public.families where id in (
   'fd000000-0000-4000-8000-000000000001',
   'fe000000-0000-4000-8000-000000000001',
@@ -509,7 +534,9 @@ delete from public.families where id in (
   'e8000000-0000-4000-8000-000000000001',
   'e8000000-0000-4000-8000-000000000002',
   'ed000000-0000-4000-8000-000000000001',
-  'ed000000-0000-4000-8000-000000000002'
+  'ed000000-0000-4000-8000-000000000002',
+  'c2000000-0000-4000-8000-000000000001',
+  'c2000000-0000-4000-8000-000000000002'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -543,7 +570,11 @@ delete from auth.users where id in (
   'a3000000-0000-4000-8000-000000000001',
   'a2000000-0000-4000-8000-000000000001',
   'a1000000-0000-4000-8000-000000000001',
-  'b9000000-0000-4000-8000-000000000001'
+  'b9000000-0000-4000-8000-000000000001',
+  'c1000000-0000-4000-8000-000000000001',
+  'c1000000-0000-4000-8000-000000000002',
+  'c1000000-0000-4000-8000-000000000011',
+  'c1000000-0000-4000-8000-000000000012'
 );
 SQL
 run_sql "$cleanup" > /dev/null

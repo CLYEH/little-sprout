@@ -97,6 +97,28 @@ find_udid_by_name() {   # $1＝精確裝置名；印第一個相符「可用」�
   '
 }
 
+find_udid_same_ticket() {   # LS-176：同票（名稱 `<票號>-` 開頭）、同 iOS runtime 分節（header_os）的第一台可用裝置，印 "name\tudid"
+  # 同票專屬機的機型可能跟現在「清單第一台原廠機」不同（原廠機被刪／重建、Xcode 升級換了預設機型後 name 就變了），
+  # 舊版只認精確名稱 `<票號>-<機型無空白>`，找不到就再建一台——LS-107 因此堆到 4 台（LS-96 池項 7c9fe5bd (c)）。
+  # 單元測試不挑機型，同 runtime 的既有專屬機直接重用；**不同 runtime 的不重用**（舊 runtime 可能跑不了目前的
+  # deployment target），那一種仍走 create_dedicated。同 find_udid_by_name 只看「可用」裝置。
+  xcrun simctl list devices available 2>/dev/null | awk -v pfx="${ticket}-" -v os="$header_os" '
+    /^-- iOS / { cur = $0; sub(/^-- iOS /, "", cur); sub(/ --$/, "", cur); next }
+    cur == os && /^[ \t]+[^ \t]/ {
+      line = $0
+      nm = line
+      sub(/^[ \t]*/, "", nm)
+      sub(/ *\(.*/, "", nm)
+      if (index(nm, pfx) != 1) next
+      udid = line
+      sub(/^[^(]*\(/, "", udid)
+      sub(/\).*/, "", udid)
+      printf "%s\t%s\n", nm, udid
+      exit
+    }
+  '
+}
+
 create_dedicated() {   # 成功印新 UDID、exit 0；失敗印訊息到 stderr、回 1（呼叫端退回共用）
   local devicetype_id runtime_id created
   devicetype_id=$(xcrun simctl list devicetypes 2>/dev/null | grep -F "${name} (" \
@@ -123,7 +145,14 @@ else
   if [ "${DETECT_SIMULATOR_SHARED:-0}" != 1 ]; then
     udid=$(find_udid_by_name "$dedicated_name")
     if [ -z "$udid" ]; then
-      udid=$(create_dedicated) || udid=
+      # LS-176：精確名稱找不到 → 先重用同票、同 runtime 的既有專屬機（不論機型），都沒有才建新的
+      reuse=$(find_udid_same_ticket)
+      if [ -n "$reuse" ]; then
+        udid=$(printf '%s' "$reuse" | cut -f2)
+        echo "→ detect-simulator：重用同票既有專屬機「$(printf '%s' "$reuse" | cut -f1)」（同 runtime iOS ${header_os}，不另建 ${dedicated_name}；LS-176）" >&2
+      else
+        udid=$(create_dedicated) || udid=
+      fi
     fi
   fi
   [ -n "$udid" ] || udid=$shared_udid   # 找不到／建立失敗／強制共用：直接回共用第一台，序列化交給呼叫端

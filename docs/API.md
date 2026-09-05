@@ -27,6 +27,7 @@
 8. [多寶貝約束（children 一對多）](#8-多寶貝約束children-一對多)
 9. [機械對帳清單（gate 讀取，勿手動改格式）](#9-機械對帳清單gate-讀取勿手動改格式)
 10. [Edge Functions](#10-edge-functions)
+11. [營運操作手冊](#11-營運操作手冊)
 
 ---
 
@@ -61,7 +62,8 @@
 | 表 | 讀 | 新增 | 修改 | 刪除 | 備註 |
 |---|---|---|---|---|---|
 | `profiles` | 同家庭成員互看 | 由 `auth.users` insert trigger 自動建立；INSERT grant／`profiles_insert` policy 仍在（未被 revoke，LS-107 `ensureProfileExists` 的冪等 upsert 靠它），client 慣例上不直接 insert，若呼叫則是 upsert 冪等（`ON CONFLICT DO NOTHING`） | 僅自己 | ❌ 無 delete policy | 帳號刪除走 Auth 側 cascade |
-| `families` | 我所屬的家庭 | 任何登入者（自建家庭） | `name`／`require_approval` 兩欄，owner-only | ❌ 無 delete policy | `storage_quota_bytes`／`storage_used_bytes` 兩個額度欄位永遠唯讀——不論身分，client 都改不動（只有 `media` 表的 trigger 與 `service_role` 能寫） |
+| `families` | 我所屬的家庭 | 任何登入者（自建家庭），但 (a) 呼叫者已被停權，或 (b) `app_settings.registrations_open = false` 時一律拒絕（`LS052`／`LS054`，LS-179，見 §11） | `name`／`require_approval` 兩欄，owner-only | ❌ 無 delete policy | `storage_quota_bytes`／`storage_used_bytes` 兩個額度欄位永遠唯讀——不論身分，client 都改不動（只有 `media` 表的 trigger 與表擁有者能寫）。`suspended_at`（LS-179）：**client 讀得到**（停權事實本來就會從 `LS052`／`LS053` 揭露），但改不動，只有表擁有者（postgres，Dashboard／`db query --linked`）能寫；停權原因不在這張表上，見 §11 與 `private.suspension_notes` |
+| `app_settings`（LS-179） | 🔒 完全不可讀（`authenticated` 無 grant、無 policy） | 🔒 唯讀（只有表擁有者能寫，見 §11） | 🔒 唯讀 | 🔒 唯讀 | 全域營運開關（目前只有 `registrations_open`），只透過 `private.registrations_open()`（`SECURITY DEFINER`）供其他函式讀，client 不會直接碰到這張表，見 §11 |
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子；**不分角色、不分軟刪與否**——owner／member／viewer 都讀得到全部列，含已軟刪的（`deleted_at`／`deleted_by` 對所有人都是可見的唯讀旗標，R1 I3/I4） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | 🔒 **無 DELETE 路徑**（R1 I5：直接硬刪會繞過 30 天保護，policy 與 grant 兩層都關，連 owner 也沒有） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原（重複軟刪 no-op，不刷新時鐘，見 §4），超過拿 `LS043`；已軟刪的孩子不能再被指定為新內容的標記（`LS044`，LS-121 起守門搬到 `diary_children`／`album_children` 連結表的 `BEFORE INSERT` trigger）；既有標記不隨軟刪連動，見 §8 |
@@ -173,6 +175,21 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
   （LS-151 R2 收斂範圍，merge-review R1 i1，`20260903115014_delete_account_edge_support.sql`）
   ——Edge Function 與 `finalize_account_deletion()` 只需要讀這兩欄判斷是否放行，
   沒有寫入需求，也不需要整表 SELECT。
+- `suspended_at`（LS-179，PLAN §10-B）：**client 讀得到、改不動**——`authenticated`
+  對 `profiles` 是表級 SELECT grant（見上方），新欄位自動被涵蓋，停權事實本來就
+  會從每一次操作失敗的 `LS052` 揭露，這裡讀得到不算額外資訊洩漏；UPDATE 沒有
+  這一欄的 grant，只有表擁有者（postgres，Dashboard／`db query --linked`）能寫。
+  非 `NULL` 時，這個使用者對「所有」家庭資料的讀寫與既有 RPC 入口一律拒絕
+  （`LS052`），但**自己的 `profiles` 列不受影響**——他仍然看得到、改得動自己的
+  `display_name`／`avatar_url`（範圍決策，理由見 migration
+  `20260904212530_suspension_and_registrations.sql` 第 3 段）。**停權原因**
+  （稽核用）**不放在這張表上**——`authenticated` 是表級 SELECT，任何欄位都會
+  被自動涵蓋，稽核原因（可能含第三方個資）不能讓被停權者自己讀得到；原因存在
+  `private.suspension_notes`（只有表擁有者，postgres；`service_role` 若日後
+  需要須另外 grant——目前零 grant，同 `service_role` 對 `app_settings`／
+  `profiles`／`families` 的既有慣例，R2，merge-review R1 MAJOR-1，n3 訂正）。
+  停權操作方式見
+  §11。
 
 ### `families`
 - `storage_quota_bytes`／`storage_used_bytes`：**唯讀**，client 完全看不到自己能改的欄位
@@ -184,7 +201,17 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
 - **建立家庭**：`insert into families (name, created_by)`，`created_by` 必須是自己
   （`auth.uid()`）。DB trigger 會自動把建立者寫成第一位 owner——不需要，也不能，額外自己
   `insert` 一列 `family_members`。這條路徑對任何登入者開放（PLAN §9-C5：陌生人下載
-  app 後必須能自建家庭）。
+  app 後必須能自建家庭），但會被下面兩個旗標擋下（LS-179）：呼叫者已被停權
+  （`LS052`）或 `app_settings.registrations_open = false`（`LS054`，PLAN §10-A(3)）。
+  **只擋這條自建路徑**——憑邀請碼加入既有家庭（`request_join`／`approve_join`）
+  完全不碰 `families` 表，不受 `registrations_open` 影響。
+- `suspended_at`（LS-179，PLAN §10-B）：client 讀得到、改不動，理由同
+  `profiles.suspended_at`。非 `NULL` 時，這個家庭的全部成員（不分角色，**含
+  建立者本人**——R2 merge-review m2 訂正：`families_select` 的 `created_by`
+  分支原本漏了這個判斷，建立者即使本人未被個別停權，家庭停權後仍能透過那個
+  分支看到 1 列）對這個家庭的資料一律拒絕讀寫（`LS053`）；成員對「其他」家庭
+  不受影響。停權原因不放在這張表上，同樣存在 `private.suspension_notes`。
+  停權操作方式見 §11。
 
 ### `family_members`
 - 加入家庭的唯一路徑是 `request_join` RPC（見 §4／§7），owner 審核走 `approve_join`；
@@ -583,16 +610,20 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   出現**；只有 `p_child_id = NULL`（查全部）時才看得到。
 
 ### `notification_events`
-- **推播彙總佇列的資料面（LS-58），只做資料層，不含發送**——發送邏輯（挑出待送事件、
-  決定通知對象、呼叫 APNs）是 LS-22 的 Edge Function 範圍，不在這份 API 契約內。
-  記在這裡是給 LS-22 開發時查表結構與彙總規則用，**iOS client 完全不會呼叫這張表**
-  （沒有任何 grant，見下）。
-- 來源：`comments`／`reactions`／`diaries`／`albums` 四張表各自的 `AFTER INSERT`
-  trigger，只在**新增**時觸發（留言/按讚的收回、日記/相簿的編輯或軟刪都不通知）。
-- 欄位：`kind`（`comment`/`reaction`/`diary`/`album`）＋`target_type`／`target_id`
-  （`comment`／`reaction` 指向被留言／被按讚的目標；`diary`／`album` 指向內容自己）＋
-  `actor_id`（最近一次觸發者）＋`event_count`（彙總筆數）＋`occurred_at`（最近一次
-  事件時間）＋`sent_at`（`NULL`＝待送，由 Edge Function／`service_role` 標記已送出）。
+- **推播彙總佇列**——資料面（LS-58：來源 trigger、彙總視窗、合併鍵）與發送面（LS-172：
+  `sent_at` 由誰、何時、以什麼語意寫入）合記在這裡，**iOS client 完全不會呼叫這張表**
+  （沒有任何 grant，見下）。發送邏輯本體（決定通知對象、組文案、呼叫 APNs）是 Edge
+  Function `push-dispatch`（見 §10），這裡只記它與這張表的資料面契約。
+- 來源：`comments`／`reactions`／`diaries`／`albums`／`media`（LS-175）五張表各自的
+  `AFTER INSERT` trigger，只在**新增**時觸發（留言/按讚的收回、日記/相簿/照片的
+  編輯或軟刪都不通知）。
+- 欄位：`kind`（`comment`/`reaction`/`diary`/`album`/`report`/`media`）＋
+  `target_type`／`target_id`（`comment`／`reaction` 指向被留言／被按讚的目標；
+  `diary`／`album` 指向內容自己；`media`（LS-175）指向**整個家庭**——
+  `target_type='family'`／`target_id=family_id`，理由見下方「`media` 來源
+  （LS-175）」）＋`actor_id`（最近一次觸發者）＋`event_count`（彙總筆數）＋
+  `occurred_at`（最近一次事件時間）＋`sent_at`（`NULL`＝待送，由 Edge Function／
+  `service_role` 標記已送出）。
 - **彙總策略**：同一 `family_id`＋`kind`＋`target_type`＋`target_id` 在 **5 分鐘滾動
   視窗**內的多次事件合併成同一筆（`event_count` 累加、`occurred_at` 更新成最新一次、
   `actor_id` 換成最新觸發者）——只要事件間隔小於 5 分鐘就持續延伸同一筆，不是從第一次
@@ -603,6 +634,26 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   （例如被踢出的前成員手上還記得的舊 id）的事件合併成一列，通知因此被算進錯的家庭。
   `create_comment`／`toggle_reaction`（§4）已經在寫入前擋掉「target 存在但屬於別家」
   （`LS026`），合併鍵含 `family_id` 是第二道防線。
+- **`media` 來源（LS-175，`private.notify_media_created()`，
+  `20260904170933_media_notification_events.sql`）——`kind='media'`，
+  `target_type='family'`／`target_id=family_id`，不是所屬相簿／日記**：這不是
+  簡化，是結構性事實——`media` 表沒有 `album_id`／`diary_id` 欄位（一張照片是否
+  掛進相簿／日記，是透過 `album_media`／`diary_media` 這兩張連結表**另一次、
+  之後才發生**的寫入，見 `LittleSprout/Services/Diary/MediaUploadService.swift`
+  的 `insertMediaRow` 與 `SupabaseDiaryAPIClient.attachMedia`——先 insert
+  `media` 列的請求跟後續 attach 進 `diary_media` 的請求是兩個分開的 HTTP round
+  trip，不是同一個交易）。`album_media`／`diary_media` 的複合外鍵要求 `media`
+  列必須先存在，所以 `media` 表自己的 `AFTER INSERT` trigger 在觸發當下，這批
+  照片究竟會不會、會掛進哪個相簿／日記，這個資訊在資料庫裡根本還不存在——對
+  這兩張連結表做 JOIN 只會查到 0 列，是恆假的死邏輯，這裡不寫。副作用（刻意
+  接受）：`kind='album'`（相簿**建立**本身）與 `kind='media'`（**上傳**照片，
+  不論最終有沒有掛進相簿）是兩個獨立、不會互相合併的事件——同一個使用者動作
+  若是「建立相簿並同時塞照片進去」，會收到兩則通知，不是一則。`event_count`
+  累加**張數**（`private.notify_media_created()` 是 statement-level trigger，
+  先用 transition table 按 `family_id` 分組再呼叫
+  `private.record_notification_event()`，同其餘四張來源表的既有慣例）；只在
+  `deleted_at is null` 時計入（軟刪／還原不通知；INSERT 當下 `deleted_at` 就已
+  非 NULL 的防禦性邊界也排除在外，見 migration 檔頭）。
 - **權限：成員完全讀不到**——沒有 RLS policy（`enable row level security` 但零 policy），
   也沒有任何 table grant 給 `authenticated`／`anon`；PostgREST 會在到達 RLS 之前就先被
   grant 層擋下（`42501`）。`service_role`（LS-22 的 Edge Function 用）明確 grant 了
@@ -613,7 +664,25 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `20260822120300_harden_default_privileges.sql` §2 對 sequences 的既有作法）。
   `INSERT`／`DELETE` 都沒有給 `service_role`——寫入只走 trigger，刪除留給日後的
   retention 策略決定（目前沒有任何清理路徑，已送出的列會一直留著，見該 migration
-  檔尾備註）。
+  檔尾備註）。**LS-172 起，`service_role` 對這張表的既有 `SELECT`／`UPDATE` grant
+  在實務上不再被直接使用**——`push-dispatch` 改透過下面兩支 SECURITY DEFINER RPC
+  （`claim_notification_events`／`notification_recipients`，皆以 postgres 身分執行，
+  不受這張表的 grant 影響）存取，既有 grant 予以保留（無害，不是本票 scope）。
+- **`sent_at`（LS-172）**：`NULL`＝待送；由 `public.claim_notification_events()`
+  （service_role-only SECURITY DEFINER RPC，見 §4）標記——語意是**先 claim 再送**：
+  這支函式在同一句 SQL 內把符合「`sent_at IS NULL` 且視窗已穩定（`occurred_at <
+  now() - interval '5 minutes'`）」的列標記 `sent_at = now()` 並回傳，`push-dispatch`
+  Edge Function 之後才真的呼叫 APNs。**`sent_at` 被標記即視為已處理，即使後續呼叫
+  APNs 失敗，也不會回滾這個標記**——這是刻意的取捨：寧可某一則通知漏送，也不要因為
+  重送而讓同一個人對同一件事收到兩次推播（`comments`/`reactions` 等內容本身的重複
+  提交已經有各自的冪等機制，但「推播」這個動作沒有——使用者感知到的是「又被通知了
+  一次」，沒有天然的去重依據）。若之後要改成「送出失敗才重試」，需要在
+  `notification_events` 或另一張表新增獨立的送出結果欄位，不能只看 `sent_at`
+  （否則會需要能表達「已 claim 但送出失敗，可重新 claim」這個第三種狀態，目前的
+  二元 `NULL`／非 `NULL` 表達不了）——這是已知的、留給未來的擴充點，不在本票範圍。
+  併發安全：`claim_notification_events()` 用 `FOR UPDATE SKIP LOCKED`（不是既有
+  `record_notification_event()` 那種 `pg_advisory_xact_lock`）——多個幾乎同時的
+  claim 呼叫（例如排程重疊）會各自選到不重疊的列，不會有兩個呼叫都 claim 到同一列。
 
 ### `content_reports` / `blocked_users`
 - `content_reports`：任何家庭成員都能送出檢舉（`reporter_id` 必須是自己）；owner 只能
@@ -1276,8 +1345,19 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **錯誤碼**：無自訂碼；未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 
-### `delete_my_account() -> void`（LS-143；media 軟刪見 LS-155）
-- **誰能呼叫**：任何已登入使用者。無參數。
+### `delete_my_account() -> void`（LS-143；media 軟刪見 LS-155；停權豁免見 LS-179）
+- **誰能呼叫**：**任何已登入使用者，包含被停權的使用者、以及被停權家庭裡的成員**
+  （LS-179 R2，App Store Guideline 5.1.1(v)／PLAN §9-A2：app 內帳號刪除是硬規定，
+  不能因為帳號或所屬家庭被停權就失效——這正是被停權的人最可能需要的出路）。
+  無參數。函式內部第一步呼叫 `private.enforce_deletion_bypass()`，設一個交易級
+  （`is_local=true`）GUC 讓下面所有寫入略過停權檢查；`pg_catalog.set_config`
+  不在 PostgREST 曝露的 schema（`supabase/config.toml` 的
+  `[api] schemas = ["public", "graphql_public"]`）裡，client 沒有任何路徑能自己
+  設這個值，且它的作用範圍就是這一次呼叫的交易本身，見
+  `private.deletion_bypass_active()` 的函式註解與
+  `supabase/tests/105_suspension_and_registrations.sql` 場景 10／11（n1 訂正：
+  場景 8 是 `suspension_notes`、場景 9 是 `content_reports`，跟 `delete_my_
+  account()` 無關）。
 - **用途**：app 內刪除帳號的**資料面**入口（PLAN §9-A2／App Store Guideline
   5.1.1(v)）。逐一檢查呼叫者所屬的每個家庭，依角色分三種結果：
   1. **是某家庭的唯一 owner、且該家庭還有其他成員** → 整個呼叫被拒絕，`LS050`，
@@ -1499,6 +1579,9 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS045` | 不是相簿建立者本人，或雖是建立者但已不是該家庭 owner/member，無法設定寶貝標記 | `set_album_children`（LS-121） |
 | `LS050` | 你是家庭的唯一 owner，且家庭還有其他成員，須先轉移 owner 身份才能刪除帳號——`DETAIL` 帶 JSON 陣列列出全部需要轉移的家庭（`[{"family_id","family_name"}, ...]`），見 §4 `delete_my_account` | `delete_my_account`（LS-143） |
 | `LS051` | 帳號已請求刪除（`deletion_requested_at` 非 `NULL`），過渡期間不能再建立新資料——沒有輸入可換，只能等 Edge Function `delete-account` 完成刪除 | `families`／`family_members`／`media`／`diaries`／`albums`／`children`／`comments` 的 `BEFORE INSERT` trigger（`private.enforce_account_not_deletion_requested()`，LS-151），涵蓋直接 `.insert()` 與 `create_child`／`create_diary_entry`／`create_comment`／`approve_join`／建立新家庭自動寫入 owner 等 RPC 路徑，見 §2「過渡期擋寫」 |
+| `LS052` | 這個帳號已被暫停使用，請聯絡我們 | `profiles.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時：(a) `private.enforce_not_suspended()`——掛在 `family_members`／`invites`／`children`／`media`／`albums`／`album_media`／`diaries`／`diary_media`／`diary_children`／`album_children`／`comments`／`reactions`／`content_reports`／`blocked_users`／`join_requests` 十五張表的 `BEFORE INSERT/UPDATE/DELETE`，涵蓋直接 `.insert()`/`.update()`/`.delete()` 與全部 `SECURITY DEFINER` RPC（trigger 不受 `SECURITY DEFINER` 影響——**`delete_my_account()` 是唯一的例外**，R2 見 §4，永遠豁免這個檢查）；(b) `private.enforce_caller_not_suspended_for_families()`——`families` 的 `BEFORE INSERT`（自建新家庭）；(c) `list_join_requests`／`get_my_join_request`／`list_comments` 三支唯讀 `SECURITY DEFINER` RPC 各自的明確檢查（這三支沒有寫入、又繞過 RLS 讀，前兩種機制都碰不到）。**讀取（SELECT）與 Storage 簽名上傳**：透過 `private.family_ids()`／`owned_family_ids()`／`contributor_family_ids()`／`uploadable_family_ids()` 四支集合函式收斂，停權者這四個集合皆為空，對應的 `_select` policy 與 `storage.objects` 四條 policy 靜默回 0 列／`42501`，不會有 `LS052`（RLS 違反沒有自訂碼這條路）；`content_reports_select`／`join_requests_select`／`families_select` 的「自己那一支」分支（R2 訂正，見 §3）也已補上同一組排除 |
+| `LS053` | 這個家庭已被暫停使用，請聯絡我們 | `families.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時，觸發路徑同 `LS052` 的 (a)／(c)（家庭停權只影響該家庭本身的資料，成員對其他家庭不受影響，`delete_my_account()` 同樣豁免，見 §4）；讀取與 Storage 同樣經四支集合函式收斂成 0 列／`42501` |
+| `LS054` | 目前暫停開放新註冊，請稍後再試 | `private.enforce_registrations_open()`——`families` 的 `BEFORE INSERT`（自建新家庭），`app_settings.registrations_open = false` 時觸發（PLAN §10-A(3)，LS-179）。**只擋自建新家庭**：憑邀請碼加入既有家庭（`request_join`／`approve_join`）不碰 `families` 表，不受影響 |
 | `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下／`family_id` 不可變 trigger 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE、`children` INSERT/UPDATE/DELETE——`children` 的 `DELETE` 自 R1 I5 起也收斂，連 owner 都拿這個碼）會拿到的標準碼；也是 `diaries`／`albums`／`comments`（`private.enforce_deletion_attribution()`，LS-57）與 `children`（`private.enforce_children_family_immutable()`，LS-66，LS-57 R2／I1 對齊後改用裸 `42501`，不再是原本 LS-66 定案時的專屬碼）的 `family_id` 不可變 trigger 統一 raise 的碼；`albums` 直接 `.update()` 竄改 `deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起也在欄位級 grant 被收回，同樣回這個碼（見 §2/§3）——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字，trigger 主動 raise 的則帶自訂中文訊息，但 SQLSTATE 一樣是 `42501`。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
 
 **沒有被上面任何一支 RPC 包住、可能直接從 PostgREST 冒出來的標準 Postgres 錯誤碼**
@@ -1544,7 +1627,11 @@ PR #95 review F1）訂正：這裡原本誤寫成跟 `LS041`–`LS043` 一起歸
 不同：一個是直接對 `family_members` 做會導致 0 owner 的操作，一個是呼叫
 `delete_my_account()`）。`LS051`（LS-151 補齊，歸層 `rejected`——帳號已請求刪除，
 過渡期間的寫入一律拒絕，沒有輸入可換、也沒有使用者能自己做的「別的事」，只能等
-Edge Function 完成刪除）。三層（`validationRetryable`／`retryableSystem`／
+Edge Function 完成刪除）。`LS052`／`LS053`／`LS054`（LS-179 補齊，歸層皆
+`rejected`——三者都是狀態層級的拒絕，沒有輸入可換：`LS052`／`LS053`（帳號／家庭
+被停權）只能等 Dashboard 解除；`LS054`（暫停開放新註冊）只能等關閉的旗標重新
+打開，跟 `LS051`（過渡期擋寫）同一組「純狀態拒絕、沒有使用者能自己做的別的事」
+的理由）。三層（`validationRetryable`／`retryableSystem`／
 `rejected`）歸類由 `LittleSproutTests/AppErrorTests.swift` 的列舉測試逐碼釘住。
 **尚缺碼：無**。之後每新增一個自訂碼，本表與 `LSErrorCode` 必須同 PR 更新，否則
 `error-codes-check` 會紅（任一邊多都算；gate 只認本節表格列的 `` `LSnnn` `` 首欄，散文提及不計）。
@@ -2039,6 +2126,7 @@ schema 或本文要修，不是 gate 要調。
 <!-- API-CONTRACT:RPC
 approve_join(uuid)
 block_user(uuid, uuid)
+claim_notification_events(integer)
 create_child(uuid, text, date, text)
 create_comment(uuid, text, uuid, text)
 create_diary_entry(uuid, uuid[], text, date)
@@ -2052,6 +2140,7 @@ get_reaction_counts(uuid, text, uuid[])
 list_children(uuid)
 list_comments(uuid, text, uuid, timestamptz, uuid, integer)
 list_join_requests()
+notification_recipients(uuid[])
 purge_storage_queue_mark_failed(uuid[], text)
 register_device_token(text, text)
 reject_join(uuid)
@@ -2075,6 +2164,7 @@ withdraw_join(uuid)
 album_children
 album_media
 albums
+app_settings
 blocked_users
 children
 comments
@@ -2253,3 +2343,400 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   Apple 撤銷真的生效，且需搭配上述「保存 provider token」的後續票）；
   `SUPABASE_URL`／`SUPABASE_ANON_KEY`／`SUPABASE_SERVICE_ROLE_KEY` 由 Supabase
   平台在每個 Edge Function 執行環境自動注入，不需要另外設定。
+
+### `push-dispatch`（LS-172，LS-22 後端子票）
+
+推播發送——消化 `notification_events` 待送佇列（§3；LS-58 資料面），彙總成一則則
+長輩可讀的中文文案，呼叫 APNs。**只做後端**：不含 iOS 端 APNs 授權／
+`register_device_token` 呼叫／通知設定 UI（LS-22 UI 子票）、不含 APNs 正式金鑰與
+正式站部署（待 LS-8）、不含重試佇列／死信、不含 Email 摘要。
+
+- **路徑**：`POST {SUPABASE_URL}/functions/v1/push-dispatch`。其他 HTTP method 一律
+  `405`（同 `delete-account`／`purge-storage` 既有慣例）。
+- **鑑權**：比照 `purge-storage`（不是 `delete-account` 的使用者 JWT 模式）——直接
+  比對 `Authorization: Bearer <token>` 是否**等於** `SUPABASE_SERVICE_ROLE_KEY` 本身，
+  不是「JWT 合法即可」（anon key 也是合法 JWT）。這支端點設計給排程呼叫，不是給
+  app client 用的公開端點。**常數時間比對（LS-172 R2，merge-reviewer i4）**：
+  `handler.ts` 的 `timingSafeEqual()` 不論兩個字串是否等長、哪個位置先出現差異，
+  都逐位元組跑完整輪比較才判斷，耗時只跟兩個字串的最大長度有關——原本的 `!==`
+  是逐字元短路比較，理論上可被拿來做 timing attack 猜出正確的 service_role key。
+- **呼叫時機**：設計給排程（`pg_cron`＋`pg_net`，或 Supabase 原生 Scheduled Edge
+  Function）定期呼叫。**本票只記載下方「排程（未建立）」的部署清單，不實際建立**
+  ——同 `purge-storage`（LS-153）的既有先例，目前**沒有任何東西會觸發**這支函式，
+  接排程由 orchestrator 依 LS-78 授權狀態後續處理。
+- **處理流程**（R2 依 merge-reviewer m1 改成批次＋有上限併發＋時間預算，見下方
+  「批次取件、併發送出與時間預算」段的完整取捨）：
+  1. 非 `POST` → `405`。
+  2. bearer 不等於 `SUPABASE_SERVICE_ROLE_KEY` → `401`。
+  3. `SUPABASE_URL`／`SUPABASE_SERVICE_ROLE_KEY` 未設定（部署設定缺失）→ `500`
+     （fail loud，同既有 EF 慣例；這兩個變數由 Supabase 平台自動注入，缺失代表
+     部署本身有問題）。
+  4. 迴圈：**開始每一批之前**先檢查時間預算（見下方段落），預算將盡就停止（不再
+     claim 新批次，`stopped_early: true`）；否則呼叫 `claim_notification_events()`
+     （每輪 `p_limit=50`）取待送事件，直到回傳空批次或達安全上限
+     `MAX_BATCHES=20`（20 × 50 = 1000 筆／次 invocation，比照 `purge-storage`
+     的分段 dequeue 寫法）。
+  5. 一次呼叫 `notification_recipients(p_event_ids)`（批次版，傳整批剛 claim 到的
+     event id 陣列）取得這整批事件的對象＋其 device token 展開列，依 `event_id`
+     分組，逐事件用下方「文案彙總矩陣」組出**一則**訊息（批次上傳只發一則彙總，
+     不展開成多則——呼應 `docs/PLAN.md` 推播段「批次上傳 50 張照片要合併成一則」的
+     取捨），展開成一份 token×文案的送出工作清單，用有上限的併發（預設 8）送出。
+  6. APNs 回報 `410 Unregistered` 或 `400 BadDeviceToken` → 刪除該筆
+     `device_tokens`（見下方「失效 token 處理」）。APNs 回報 `403
+     ExpiredProviderToken` → 重簽 JWT 後重試一次（見下方 ApnsProvider 段）。其他
+     錯誤只記 `console.log`，不重試、不刪 token。
+  7. 回應（`200`，或部分失敗時仍 `200`——沒有部分成功／失敗的 HTTP 狀態碼區分，
+     呼叫端看 body 裡的計數）：
+     ```json
+     {"claimed": 12, "recipients": 18, "sent": 16, "failed": 1, "tokens_removed": 1, "stopped_early": false}
+     ```
+     未預期例外 → `500`，body 固定文案 `{"error": "push_dispatch_failed"}`，原始
+     錯誤只進 `console.error`（同 `delete-account` 既有慣例，不外洩資料庫內部訊息）。
+
+- **`public.claim_notification_events(p_limit integer default 50) -> table(id uuid,
+  family_id uuid, kind notification_kind, target_type content_target_type,
+  target_id uuid, actor_id uuid, actor_display_name text, event_count integer,
+  occurred_at timestamptz)`**（`20260904095205_push_dispatch.sql`）：
+  service_role-only、`SECURITY DEFINER`。**票文字面寫的是 `private.
+  claim_notification_events`，落地時改放 `public` schema**——這不是隨意偏離：
+  `supabase/config.toml` 的 `[api] schemas = ["public", "graphql_public"]` 只把
+  這兩個 schema 掛上 `/rest/v1/` 端點，`private` schema 完全不可見，Edge Function
+  用 `supabase-js` 的 `.rpc()` 呼叫 `private.` 函式會直接拿到「函式不存在」；既有的
+  `private.purge_expired()`／`private.record_notification_event()` 能留在
+  `private`，是因為呼叫方分別是 `pg_cron`（直接 SQL）與同一交易內的 trigger，都不
+  經過 PostgREST。授權邊界不靠 schema 名字，靠 GRANT／REVOKE（同
+  `finalize_account_deletion`／`purge_storage_queue_mark_failed` 的既有形狀：
+  `public` schema、但 `authenticated`／`anon` 皆無 `EXECUTE`，只有 `service_role`
+  可執行，見 `supabase/tests/60_default_privileges.sql` §8 白名單）。
+  - **語意（先 claim 再送，冪等鎖）**：`sent_at IS NULL AND occurred_at < now() -
+    interval '5 minutes'`（5 分鐘滾動視窗已穩定，見 §3）才會被選中；同一句 SQL
+    內用 `UPDATE ... FROM (SELECT ... FOR UPDATE SKIP LOCKED) ... RETURNING`
+    標記 `sent_at = now()` 並回傳——`FOR UPDATE SKIP LOCKED` 保證多個並發呼叫互不
+    重疊。**「漏送不重送」的取捨完整說明見 §3 `notification_events` 的
+    `sent_at` 段**：這裡標記之後即使 `push-dispatch` 之後送出失敗，也不會回滾，
+    寧可漏送不重送。
+  - `actor_display_name` 已在 SQL 端 `COALESCE(display_name, '家人')` 算好——
+    `actor_id` 為 `NULL`（觸發者帳號之後被硬刪，`notification_events.actor_id`
+    的 FK 是 `on delete set null`）時 fallback「家人」；`profiles.display_name`
+    依既有 schema 保證非空（見 §3 `profiles`），這個 fallback 只在 `actor_id`
+    本身是 `NULL` 時才會用到。
+  - `p_limit` 夾在 `[1, 500]`（`least(greatest(coalesce(p_limit, 50), 1), 500)`，
+    同 `list_comments` 既有夾定慣例）。
+
+- **`public.notification_recipients(p_event_ids uuid[]) -> table(event_id uuid,
+  user_id uuid, token text, platform device_platform)`**（同一支 migration；
+  **批次簽章（merge-reviewer LS-172 R2 m1）**——`push-dispatch` 一次要處理一整批
+  claimed 事件，這支函式直接吃一批 `p_event_ids`、回傳列多帶 `event_id` 供呼叫端
+  把收件人分回各自所屬的事件，不是逐事件各打一次（不必要的 round trip）。這支
+  migration 檔在本 PR 落地前從未併入任何分支、也從未部署到任何環境，函式因此從
+  一開始就直接定義成這個最終的批次形狀，不透過「先建單一事件版本、後續再
+  `DROP FUNCTION` 改簽章」的兩階段寫法——那樣會被 `migration-breaking-check.sh`
+  判成 DESTRUCTIVE（需要人工核可），但這支函式的簽章根本沒有任何外部依賴需要
+  相容，兩階段寫法只是徒增一次不必要的核可步驟）：
+  service_role-only、`SECURITY DEFINER`，同上理由放 `public` schema。回傳每個
+  event_id 所屬家庭成員 × 其 `device_tokens` 的展開列（一人多裝置會有多列，
+  `push-dispatch` 逐列即逐 token 發送），扣除：
+  - **actor 本人**——自己觸發的事件不通知自己。
+  - **封鎖了 actor 的成員**——`blocked_users` 是單向、限同家庭
+    （`(family_id, blocker_id, blocked_id)`，見 §3「`content_reports` /
+    `blocked_users`」）：`blocker_id = 該成員, blocked_id = actor_id, family_id =
+    該事件的家庭` 存在即排除。
+  - **沒有任何 `device_tokens` 的成員**——用 `JOIN`（非 `LEFT JOIN`）天生排除。
+  `actor_id` 為 `NULL` 時，「排除 actor 本人」與「排除封鎖 actor 的成員」這兩條
+  規則天生都不會誤傷任何人（`NULL` 既不等於任何 `user_id`，也不會被任何
+  `blocked_id` 條件命中）。`p_event_ids` 為 `NULL` 或空陣列、或某個 event_id
+  不存在、或某個事件的 family_id 沒有任何符合條件的成員時，該 event_id 對應的
+  列數就是 0（`= any('{}')`／`= any(NULL)` 天生不成立），不報錯（同
+  `get_my_join_request()` 既有的「0 列＝空結果」慣例）。
+
+- **批次取件、併發送出與時間預算（LS-172 R2，merge-reviewer m1）**：
+  `handler.ts` 的 `runDispatch()` 迴圈——每一輪：批次 claim（`batchLimit=50`）
+  → 一次批次呼叫 `notification_recipients()` 取整批對象 → 依 `deps.concurrency`
+  （預設 8）有上限併發送出。
+  - **時間預算與「不能已 claim 但沒送」這條不變量**：時間預算（`deps.
+    timeBudgetMs`，`index.ts` 設 60 秒——**這是刻意保守的猜測值，不是任何
+    Supabase／Deno Deploy 官方文件證實過的執行時間上限**，本票沒有查證到權威
+    數字，選一個明顯遠低於典型 serverless 逾時的值當安全邊際）只在**開始下一批
+    之前**檢查；一旦一批事件被 claim（`sent_at` 已標記），這批**一定會完整跑
+    完**，不會半途中止——這是結構性保證，不是估算。時間預算耗盡時停止 claim
+    新批次，回應帶 `stopped_early: true`。
+  - **為什麼選這個設計、不是動態依剩餘時間縮小 claim 批次大小**：reviewer 原本的
+    描述是「把 claim 的批次大小縮到時間預算內確定送得完」，字面上更接近「依剩餘
+    時間動態估算下一批能 claim 幾筆」（自適應調整）。這裡選了更簡單的版本
+    ——固定的保守批次大小＋批次間檢查——因為它已經用結構性保證（不是機率估算）
+    滿足了 reviewer 真正在意的不變量，而自適應版本需要額外的校準邏輯（冷啟動沒有
+    歷史數據可用）、複雜度明顯更高，換來的好處只是「單一批次的耗時更貼近預算」，
+    對這個不變量本身沒有增益。
+  - **殘餘風險與其在這個產品規模下可接受的理由**：固定批次大小沒有消除「單一批次
+    本身耗時異常久」的風險（例如某個家庭成員數特別多，扇出的收件人特別多，讓
+    這一批的併發送出耗時遠超預期）——`docs/PLAN.md` 的產品定位是**私密家庭相簿**，
+    網域模型天生是小規模（一個家庭，不是企業級大量收件人的廣播系統），這個殘餘
+    風險在現階段的實際邊界下可以忽略。**若日後產品假設改變**（例如支援多家庭
+    批次廣播、或家庭規模上限大幅提高），這裡的設計前提需要重新評估，屆時應考慮
+    改用批次大小依剩餘時間動態估算的版本。
+
+- **文案彙總矩陣**（繁中、長輩可讀；`supabase/functions/push-dispatch/handler.ts`
+  的 `buildMessageBody()`，依 `kind × event_count × target_type` 生成，目標標籤
+  `diary→日記／album→相簿／media→照片／comment→留言`；`family` 標籤存在只是讓
+  `Record<ContentTargetType, string>` 保持窮舉，`kind='media'` 的訊息不透過
+  標籤組字，見下）：
+
+  | kind | event_count = 1 | event_count > 1 |
+  |---|---|---|
+  | `comment` | 「{actor}在你的{標籤}留言」（例：「阿嬤在你的日記留言」） | 「你的{標籤}收到了 {N} 則新留言」 |
+  | `reaction` | 「{actor}喜歡了你的{標籤}」 | 「{N} 個人喜歡了你的{標籤}」（例：「3 個人喜歡了你的照片」） |
+  | `diary` | 「{actor}寫了一篇日記」 | 「{actor}新增了 {N} 篇日記」（防禦性分支，見下） |
+  | `album` | 「{actor}新增了相簿」 | 「{actor}新增了 {N} 本相簿」（防禦性分支，見下） |
+  | `media`（LS-175） | 「{actor}新增了一張照片」 | 「{actor}新增了 {N} 張照片」（例：「爸爸新增了 50 張照片」，票文原始範例） |
+  | `report`（LS-175 R2，merge-review R1 m2） | 「你的{標籤}收到一則檢舉」 | 「你的{標籤}收到了 {N} 則檢舉」 |
+
+  `actor` 取 `claim_notification_events()` 已 `COALESCE` 過的
+  `actor_display_name`（`NULL` fallback「家人」）——**`report` 是唯一沒有用到
+  `actor` 的分支**：`report_content()`（LS-149）寫入的 `actor_id` 是檢舉人，不是
+  被檢舉內容的作者，沿用 `comment`／`reaction` 那種「{actor} 對你的 xxx 做了
+  什麼」句型會讓收件人誤以為檢舉人在跟自己互動；`target_type` 用被檢舉內容原本
+  的類型（`album`／`media`／`diary`／`comment`），`TARGET_LABEL` 可以直接沿用。
+  這是**中性 fallback**，不是產品定案文案——`report` 事件從 LS-149 落地起就會
+  寫進 `notification_events`，但 `push-dispatch`（LS-172）當時的型別守門
+  （`isNotificationKind`／`isContentTargetType`）沒有涵蓋它，若被 claim 到會讓
+  **整批**（不只 report 那幾筆）被判定失敗、SQL 面卻已標記 `sent_at`＝永久漏送
+  （LS-96 池項 `841d97da`，merge-review R1 於 PR #284 覆核成立並裁定本票直接
+  補）；本票只補到「不再整批漏送」，是否要推播、推播給誰（例如只給 owner）
+  是後續的產品決定。
+
+  **已知、刻意的規格分歧（票文字面 vs. 實際可用資料，`album`／`diary` 兩個既有
+  kind，LS-172 落地時的記錄）**：票文給的範例把 `album` kind 對應到「爸爸新增了
+  50 張照片」，但 `album` kind 只在**建立相簿本身**時觸發
+  （`private.notify_album_created()`，見
+  `20260825020000_comments_reactions_notifications.sql` §3），`target_id` 是每本
+  相簿自己的 id——不同相簿天生無法合併（合併鍵含 `target_id`），`event_count`
+  對這個 kind 在目前的 trigger 設計下**恆為 1**。這裡不虛構一個資料庫給不出來的
+  數字，`album` 訊息改成不帶張數；`event_count > 1` 是防禦性分支（今天的 trigger
+  設計下不會發生，日後若 schema 演進出「批次建立多本相簿合併通知」的需求，這個
+  分支已經存在）。`diary` kind 同理。
+
+  **LS-175 起，「批次上傳 50 張照片合併成一則」這個票文原始範例已經有真正的
+  `kind='media'` 事件可用**（`media` 表自己的 `AFTER INSERT` trigger，見 §3
+  「`media` 來源（LS-175）」）——`target_type` 恆為 `'family'`，不是所屬相簿／
+  日記（結構性理由同上：`media` 表沒有 album_id／diary_id，trigger 觸發當下
+  這批照片會不會、會掛進哪個相簿／日記這個資訊還不存在），所以
+  `buildMessageBody()` 的 `media` 分支不使用 `TARGET_LABEL` 組出「在你的 xxx」
+  這種子句，訊息本身就是完整句子。
+
+- **失效 token 處理**（APNs 回 `410 Unregistered` 或 `400 BadDeviceToken`）：
+  `push-dispatch` 直接 `DELETE FROM device_tokens WHERE token = $1`（`service_role`
+  的欄位級 `SELECT (token)` ＋整表 `DELETE` grant，見
+  `20260904095205_push_dispatch.sql` 檔頭第 4 段——**本機實測踩出的洞**：純
+  `GRANT DELETE` 不夠，PostgreSQL 對帶 `WHERE` 條件的 `DELETE` 要求呼叫者對
+  `WHERE` 子句引用到的欄位也要有 `SELECT` 權限，否則撞
+  `permission denied for table device_tokens`）。其他錯誤（`BadTopic`／
+  `TopicDisallowed` 等，`403 ExpiredProviderToken` 除外——見下方 ApnsProvider
+  段的重簽重試）只記 log，不刪 token、不重試——那些是設定或憑證問題，不是
+  「這支裝置不會再收到通知」。
+  - **DELETE 真的刪到東西 vs. 該列本來就不存在（LS-172 R2，merge-reviewer
+    i2）**：`index.ts` 的 `removeDeviceToken()` 在 `.delete()` 後接
+    `.select("token")`——要求 PostgREST 用 `Prefer: return=representation`
+    回傳實際被刪掉的列，藉此分辨「真的刪到東西」（回傳陣列長度 > 0）跟「該列
+    本來就不存在」（DELETE 本身仍然成功，只是沒有列被刪，不是錯誤）。只請求
+    `token` 這一欄，對齊上面欄位級 `select (token)` 的 grant——`.select()`
+    預設的 `*` 會要求整表 SELECT 權限，撞 permission denied。
+  - **`tokensRemoved` 計數只在真的刪到列時才累加、同一 token 同批次去重
+    （LS-172 R2，merge-reviewer m2）**：`handler.ts` 的 `runDispatch` 用一個
+    `Set<string>` 記錄本次 invocation 內已經處理過的 token——同一個 token 若是
+    兩個不同事件的共同收件人（同一支裝置對兩篇日記都是收件人，剛好都判定失效），
+    只會被 `DELETE` 一次、只計數一次。去重的「先佔位再 await」寫法（`Set.add()`
+    緊接在 `Set.has()` 檢查之後、中間沒有任何 `await`）是有上限併發下避免同一個
+    token 被兩個並發中的 job 都判定成「還沒刪過」而重複計數的關鍵——check-then-set
+    在 JS 單執行緒下是原子的。
+
+- **`ApnsProvider` 介面與五個 secrets**
+  （`supabase/functions/push-dispatch/apns.ts`）：token-based auth（ES256 JWT，
+  Web Crypto `crypto.subtle` 簽章，不需要額外套件）＋ HTTP/2（Deno 的 `fetch` 對
+  HTTPS 端點自動協商 h2；APNs 的 HTTP/1.1 端點已於 2021 年除役，只接受
+  HTTP/2）。需要以 `supabase secrets set` 設定五個 EF secrets：
+  `APNS_TEAM_ID`／`APNS_KEY_ID`／`APNS_P8`（`.p8` 私鑰全文，PEM 格式，含
+  `BEGIN`/`END` 行）／`APNS_BUNDLE_ID`／`APNS_ENV`（`"production"`；其他值皆視為
+  sandbox，`https://api.sandbox.push.apple.com`——sandbox 是安全預設，不會因為
+  忘記設定而誤打正式站）。**缺任一個立即在建構時丟出例外（fail loud，不送）**——
+  在模組層級（`index.ts`）呼叫，isolate 冷啟動就會直接失敗，不會等到收到請求才
+  發現、更不會悄悄降級成「不送」。
+  - **JWT 過期處理（LS-172 R2，merge-reviewer M1）**：JWT 在同一個 provider
+    實例內重複使用，不是每次 `send()` 都重簽（Apple 建議同一把 token 在效期內
+    ——最長 1 小時——重複使用）。`index.ts` 把 `apnsProvider` 建在**模組層級**，
+    同一個 isolate 存活期間的所有請求共用同一個實例，isolate 保持溫熱可以遠遠
+    超過 1 小時——原本的實作誤以為「下一次 invocation 是全新的 provider 實例，
+    天然過期」，這個假設與 index.ts 的實際建構方式矛盾，過期後每次 `send()` 都
+    會收到 APNs `403 ExpiredProviderToken`，而 `push-dispatch` 是「先 claim 再
+    送、送失敗不回滾」的語意（見上），代表過期後會是**永久漏送、無告警**。
+    修法兩層：(a) 記錄簽發時間，超過 45 分鐘（保守值，留在 Apple 1 小時上限之前）
+    就重簽；(b) 保底：即使 45 分鐘的估計不準，收到 `403 ExpiredProviderToken`
+    時當場重簽一次並重試一次（不是無限重試，其他錯誤不觸發這個重試）。
+- **`StubApnsProvider`**（`handler.ts`）：本機／CI 用，只記錄呼叫的
+  `token`/`title`/`body`，不打真正的 APNs；可注入 `responder` callback 依 token
+  回傳任意結果（含模擬 410，供測試驗證失效 token 清除路徑）。由環境變數
+  `PUSH_DISPATCH_PROVIDER`（**非 secret**，純環境開關）選擇：明確設成 `"stub"`
+  才用它；未設定或設成 `"apns"` 一律走真正的 APNs——「本機／CI 用 stub」必須是
+  明確選擇，不是缺 APNs secrets 時的自動降級（那樣會讓「忘記設定正式 secrets」的
+  部署錯誤被靜默吞掉）。
+  - **`PUSH_DISPATCH_STUB_RESPONSE`（LS-96 池項 `531a0975`，非 secret，本機／CI
+    測試開關，只在 `PUSH_DISPATCH_PROVIDER=stub` 時有意義）**：原本
+    `StubApnsProvider()` 的 responder 只能在 deno 單元測試裡直接 construct
+    `new StubApnsProvider(responder)` 才能注入 410／BadDeviceToken，`supabase
+    functions serve` 起的真實 HTTP 端點沒有任何機制能讓 Stub E2E 驗到
+    `tokens_removed`／`device_tokens` 刪列這條路徑（原本只能改用「打真正
+    PostgREST DELETE」的等價驗證繞過去）。設成 `"410"` 時，`StubApnsProvider`
+    對每一次 `send()` 呼叫都回傳失效 token（`invalidToken:true`），
+    `runDispatch` 因此會真的呼叫 `removeDeviceToken()`。解析在
+    `handler.ts` 的 `parseStubResponse`——**fail loud**：設了但不是 `"410"`
+    就丟例外，不悄悄退回預設的 `ok:true`。未設定＝維持原本一律 `ok:true` 的
+    行為。正式站部署不設定這個變數（只在 `PUSH_DISPATCH_PROVIDER=stub` 才有
+    意義，正式站本來就不會設 `PUSH_DISPATCH_PROVIDER`）。
+- **排程（未建立，僅記載部署清單）**：`pg_cron` 每分鐘一次呼叫 `pg_net.http_post`
+  打本函式，`Authorization` header 的 `service_role` key 由 `vault` 讀取（不寫死
+  在 migration 裡）——同 `purge-storage`（§6「自動清除」執行機制段）的既有排程
+  形狀，差別只在頻率（`purge-storage` 每日一次，`push-dispatch` 需要更即時，故
+  每分鐘一次）。**本票不執行這段部署**，接排程由 orchestrator 依 LS-78 授權狀態
+  決定時機。
+- **本機測試**：
+  - `supabase/functions/push-dispatch/{handler,apns}.test.ts`（Deno 內建
+    `Deno.test`，注入 fake deps／fake `fetch`／`StubApnsProvider`，不需要跑
+    `supabase functions serve`，不連線任何真正的服務）——`deno test`，共 48 案
+    （R2 新增：時間預算 stoppedEarly、有上限併發、tokensRemoved 去重與
+    deleted-flag、批次 getRecipients、bearer 長度不同分支、45 分鐘齡期重簽、
+    403 ExpiredProviderToken 重簽重試一次）。`apns.test.ts` 用
+    `crypto.subtle.generateKey` 產生一把測試用 P-256 金鑰對（不是任何真實 Apple
+    憑證），驗證 `buildRealApnsProvider` 簽出的 JWT 能被對應公鑰
+    `crypto.subtle.verify` 驗證通過——不是只檢查字串形狀。
+  - `supabase/tests/103_push_dispatch.sql`：`claim_notification_events()`／
+    `notification_recipients()` 的 SQL 面驗收（claim 兩次不重疊、封鎖對象排除、
+    無 token 成員略過、跨家庭隔離、`actor_id` 為 `NULL` 時不誤傷任何人、批次呼叫
+    的 `event_id` 分組正確、`device_tokens` 授權邊界）。
+  - **`supabase/tests/concurrency/push_dispatch_claim_race_*.sql`／
+    `push_dispatch_claim_vs_record_*.sql`（LS-172 R2，merge-reviewer i5）**：
+    比照既有 `race_case` 機制（`supabase/tests/run.sh`）的常駐、可重跑併發
+    regression test，不是手動驗一次就結案：
+    1. 兩個真正並行的 `claim_notification_events()` 呼叫（各 `p_limit=5`、10 筆
+       待送事件）——claim 到的事件集合交集必須是空集合（`FOR UPDATE SKIP
+       LOCKED` 保證不重疊）。
+    2. `claim_notification_events()` 跟既有 LS-58 trigger
+       `record_notification_event()`（5 分鐘視窗彙總）幾乎同時碰同一個目標——
+       S1 claim 走一筆已穩定的舊事件並壓住交易，S2 用真正的 `create_comment()`
+       RPC（跟 production 呼叫路徑一致）對同一目標建立新留言；驗證 claim 標記
+       `sent_at` 之後，新留言不會誤合併進已 claim 的舊列，而是正確開新列。
+       **本機實測修正**：原本預期這裡是靠「`SELECT ... FOR UPDATE` 被鎖卡住、
+       解鎖後 EvalPlanQual 重新檢查 WHERE 子句」保護，實測發現不成立——
+       `claim_notification_events()` 的候選條件（`occurred_at < now()-5min`）
+       跟 `record_notification_event()` 的合併條件（`occurred_at >= now()-5min`）
+       對同一個 `now()` 求值是嚴格互補、零重疊的，`record` 的 SELECT 在掃描階段
+       就已經被 occurred_at 排除掉這一列，從未嘗試對它取鎖，因此不會被 claim
+       卡住。真正保護這個不變量的是 occurred_at 過濾本身，`sent_at is null`
+       只在 5 分鐘視窗內才有意義（詳細分析見
+       `push_dispatch_claim_vs_record_s2_comment.sql` 檔頭）。測試本身仍然用
+       真正並行的兩個 session 驗證最終狀態正確，不是改回序列測試。
+  - **本機 Stub 端到端**（票驗收條件要求的手動驗證，見票 handoff）：灌 3 個家庭
+    成員（其中 1 人封鎖 actor）＋一筆已穩定的批次事件，用
+    `PUSH_DISPATCH_PROVIDER=stub` 呼叫本函式（`supabase functions serve`）——
+    只對 1 位非封鎖成員發 1 則彙總；claim 後重跑同一批呼叫 0 則。**LS-182**：
+    另外加 `PUSH_DISPATCH_STUB_RESPONSE=410` 可以在同一個 Stub E2E 流程注入
+    410，觀察 `tokens_removed` 與 `device_tokens` 實際刪列（見上方
+    `PUSH_DISPATCH_STUB_RESPONSE` 說明）。
+- **已知限制**：真正的 APNs 呼叫（`buildRealApnsProvider` 的 HTTP 送出本身）沒有
+  對真正的 Apple 伺服器做過端到端驗證——需要 LS-8（Apple Developer Program 付費
+  帳號）到位、拿到真正的 `.p8` 金鑰後才能在真機驗證，同 `delete-account`
+  Apple／Google 撤銷的既有先例。JWT 的簽章正確性（ES256、header/payload 形狀）
+  已用測試金鑰對驗證過（見上方 `apns.test.ts`），未驗證的只是「Apple 伺服器
+  真的接受這把 JWT」這一步。
+- **部署**（正式站，orchestrator 依 LS-78 授權狀態執行，不在本票落地範圍）：
+  ```
+  supabase functions deploy push-dispatch --project-ref mzkkkzbiejgvhwjyiokf
+  supabase secrets set APNS_TEAM_ID=... APNS_KEY_ID=... APNS_BUNDLE_ID=... APNS_ENV=production
+  supabase secrets set APNS_P8="$(cat AuthKey_XXXXXXXXXX.p8)"
+  ```
+  `SUPABASE_URL`／`SUPABASE_SERVICE_ROLE_KEY` 由 Supabase 平台自動注入，不需要
+  另外設定；`PUSH_DISPATCH_PROVIDER` 正式站不設定（預設值 `"apns"` 即為正確
+  行為）。
+
+---
+
+## 11. 營運操作手冊
+
+LS-179（PLAN §10-A(3)／§10-B）：以下全部是**表擁有者**（Dashboard SQL Editor／
+`supabase db query --linked`，兩者皆以 `postgres` 身分執行——`service_role` 目前
+對這幾張表沒有 INSERT/UPDATE/SELECT 的 table grant，`BYPASSRLS` 只繞過 RLS、
+不等於有 table privilege，R2 merge-review m4 實測 catalog 確認；若之後有
+Edge Function 需要直接寫入，須另外明確 `grant ... to service_role`）手動下的
+SQL，**改欄位當下立即生效，不需要改任何程式碼或重新部署**。實作見
+`supabase/migrations/20260904212530_suspension_and_registrations.sql`；三者
+共用的判斷 helper（`private.caller_is_active()`／`private.family_is_active(uuid)`／
+`private.registrations_open()`）只讀對應旗標，不做任何額外邏輯。
+
+**停權原因存在 `private.suspension_notes`（R2，MAJOR-1），不在 `profiles`／
+`families` 上**——那兩張表對 `authenticated` 是表級 SELECT，任何欄位都會被
+自動涵蓋，稽核原因不能放在那裡；`private` schema 對 `authenticated`／`anon`
+只有 `usage`，沒有任何表格級 grant，這張表因此只有表擁有者讀寫得到。
+
+### 停權一位使用者
+
+```sql
+update public.profiles set suspended_at = now() where id = '<user_id>';
+insert into private.suspension_notes (subject_type, subject_id, reason)
+values ('user', '<user_id>', '寫下原因（稽核用，client 讀不到）')
+on conflict (subject_type, subject_id) do update set reason = excluded.reason, created_at = now();
+```
+
+生效範圍：這個使用者對「所有」家庭資料（不限於他目前所屬的家庭）的 RLS 讀寫、
+Storage 讀寫上傳、既有 RPC 入口一律拒絕（`LS052`）；不影響其他使用者。他自己的
+`profiles` 列（顯示名稱／頭像）與已核發、尚未過期的簽名 URL 不受影響（簽名 URL
+本就短效，見 §6，本票不做撤銷）。**`delete_my_account()` 不受影響**（R2，
+MAJOR-2）——被停權的使用者仍然能在 app 內刪除自己的帳號，這是 App Store
+Guideline 5.1.1(v) 的硬規定，見 §4。
+
+**解除停權**：
+
+```sql
+update public.profiles set suspended_at = null where id = '<user_id>';
+delete from private.suspension_notes where subject_type = 'user' and subject_id = '<user_id>';
+```
+
+### 停權整個家庭
+
+```sql
+update public.families set suspended_at = now() where id = '<family_id>';
+insert into private.suspension_notes (subject_type, subject_id, reason)
+values ('family', '<family_id>', '寫下原因')
+on conflict (subject_type, subject_id) do update set reason = excluded.reason, created_at = now();
+```
+
+生效範圍：這個家庭的全部成員（不分 owner／member／viewer，**含建立者本人**——
+R2 訂正，見 §3 `families` 的 `suspended_at` 說明）對這個家庭的資料一律拒絕
+讀寫（`LS053`）；成員若還屬於其他（未停權的）家庭，對那些家庭不受影響
+（Phase 3 多家庭前置）。**該家庭裡任何成員的 `delete_my_account()` 依然可用**
+（R2，MAJOR-2）。
+
+**解除**：
+```sql
+update public.families set suspended_at = null where id = '<family_id>';
+delete from private.suspension_notes where subject_type = 'family' and subject_id = '<family_id>';
+```
+
+### 關閉／重新開放新註冊
+
+```sql
+update public.app_settings set registrations_open = false, updated_at = now() where id = true;
+```
+
+生效範圍：**只擋自建新家庭**這一步（`LS054`）——既有使用者登入、既有家庭憑邀請
+碼加入完全不受影響（PLAN §10-A(3) 的取捨：本票只做「關掉」，不做「候補名單」）。
+Auth 端（Apple／Google／Email 註冊）也不受影響，避免與登入流程打架。
+`delete_my_account()` 不受影響（自建家庭與刪帳號是兩條互不相干的路徑）。
+
+**重新開放**：`update public.app_settings set registrations_open = true, updated_at = now() where id = true;`
+
+### 查目前狀態
+
+```sql
+select id, suspended_at from public.profiles where suspended_at is not null;
+select id, name, suspended_at from public.families where suspended_at is not null;
+select * from private.suspension_notes;
+select registrations_open from public.app_settings where id = true;
+```

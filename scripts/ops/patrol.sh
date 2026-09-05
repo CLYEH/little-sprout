@@ -85,6 +85,15 @@ add_flag() { FLAGS="${FLAGS}${1}"$'\n'; J_FLAGS="${J_FLAGS:+${J_FLAGS},}$(json_s
 # 所有背景子程序的 fd 都接 /dev/null——殘留的 sleep／ssh 若還握著本程序的 stdout，呼叫端的 $() 會等到它們結束才收到 EOF。
 FETCH_TIMEOUT=${PATROL_FETCH_TIMEOUT:-10}
 case "$FETCH_TIMEOUT" in ''|*[!0-9]*) echo "✗ patrol：PATROL_FETCH_TIMEOUT 須為整數秒（得到「${FETCH_TIMEOUT}」）" >&2; exit 2 ;; esac
+# LS-176 磁碟水位：可用 <PATROL_DISK_MIN_GB（預設 20）GB 標 ⚠；Devices／DerivedData 體積只在標 ⚠ 時才 du（Devices 64 GB
+# 本機實測 du 要 18 秒，不能每輪 cron／每次 SessionStart hook（30s 上限）都付），且掛看門狗 PATROL_DU_TIMEOUT——逾時體積印
+# 「?」不炸。預設依模式：--brief（SessionStart hook 用，30s 上限還要扣掉 fetch 看門狗 10s）8 秒；human／--json（cron 與人工，
+# 沒有 hook 預算）25 秒——低水位時 Devices 通常正是最肥的那個，cron 這一路要印得出真數字才有處置依據。
+DISK_MIN_GB=${PATROL_DISK_MIN_GB:-20}
+case "$DISK_MIN_GB" in ''|*[!0-9]*) echo "✗ patrol：PATROL_DISK_MIN_GB 須為整數 GB（得到「${DISK_MIN_GB}」）" >&2; exit 2 ;; esac
+DU_TIMEOUT=${PATROL_DU_TIMEOUT:-}
+if [ -z "$DU_TIMEOUT" ]; then if [ "$MODE" = brief ]; then DU_TIMEOUT=8; else DU_TIMEOUT=25; fi; fi
+case "$DU_TIMEOUT" in ''|*[!0-9]*) echo "✗ patrol：PATROL_DU_TIMEOUT 須為整數秒（得到「${DU_TIMEOUT}」）" >&2; exit 2 ;; esac
 fetch_with_timeout() {  # exit 0＝成功；124＝逾時；其他＝fetch 本身失敗
   (
     GIT_TERMINAL_PROMPT=0 git -C "$ROOT" fetch -q origin >/dev/null 2>&1 &
@@ -193,7 +202,7 @@ done
 [ -n "$hooks_flag" ] && add_flag "[hooks] ${hooks_flag}"
 
 # ---- worktree ----
-wt_total=0; wt_flagged=0; WT_LINES=; J_WTS=
+wt_total=0; wt_flagged=0; WT_LINES=; J_WTS=; design_wt=0
 process_wt() {
   local w=$1 b=$2 det=$3
   local name l r= ahead=0 behind=0 base mb since=0 had=0 lc lm= dirty=0 dmax=0 dm= wt_ts wm= pr= flag= info= f t commit_txt dirty_txt merged=false wt_ticket=
@@ -211,6 +220,8 @@ process_wt() {
     J_WTS="${J_WTS:+${J_WTS},}{\"path\":$(json_str "$w"),\"name\":$(json_str "$name"),\"branch\":$(json_str "$b"),\"missing\":true,\"local\":null,\"remote\":null,\"ahead\":null,\"behind_remote\":null,\"commits_since_base\":null,\"merged_into_base\":null,\"last_commit_minutes\":null,\"dirty\":null,\"dirty_minutes\":null,\"worktree_minutes\":null,\"pr\":null,\"flag\":$(json_str "$flag")}"
     return
   fi
+  # LS-180：分支名含 design（設計票慣例 feature/LS-<n>-…-design）＝設計票在飛 → 下方 Pencil 連線探針段才跑
+  case "$b" in *design*|*Design*) design_wt=1 ;; esac
   l=$(git -C "$ROOT" rev-parse --short "$b" 2>/dev/null || echo '?')
   r=$(git -C "$ROOT" rev-parse --short -q --verify "refs/remotes/origin/${b}" 2>/dev/null || true)
   if [ -n "$r" ]; then ahead=$(count "origin/${b}..${b}"); behind=$(count "${b}..origin/${b}"); fi
@@ -294,6 +305,24 @@ if [ -f "$here/supabase-lock.sh" ]; then
   if [ -n "$lock_path" ] && [ -f "$lock_path/holder" ]; then
     hold_label=$(sed -n 's/^cmd=hold://p' "$lock_path/holder" 2>/dev/null | head -1)
     [ -n "$hold_label" ] && hold_expires=$(sed -n 's/^expires_at=//p' "$lock_path/holder" 2>/dev/null | head -1)
+  fi
+fi
+
+# ---- Pencil 連線（LS-180）：有 design 分支 worktree（設計票在飛）時跑 scripts/ops/pen-status.sh——Pen 行程／目前路徑／
+#      MCP socket 探針一行；探針非 0（Pen 沒開／路徑讀不到／mcp-server 與 Pen 之間沒有 socket 連線）就 add_flag，指示
+#      orchestrator 派設計票前先請使用者在 Claude Code 執行 /mcp 重連 pencil。沒有 design worktree 不呼叫（探針會打
+#      pen CLI，不必每輪付）。PATROL_PEN_STATUS_SH 可換假身（自測用，避免碰真的 Pen）。
+PENCIL_LINE=; pencil_rc=0; pencil_ran=0
+if [ "$design_wt" -eq 1 ]; then
+  pencil_ran=1
+  pssh="${PATROL_PEN_STATUS_SH:-${here}/pen-status.sh}"
+  if [ -f "$pssh" ]; then
+    PENCIL_LINE=$(bash "$pssh" 2>&1); pencil_rc=$?
+  else
+    PENCIL_LINE="Pencil：探針腳本不存在（${pssh}）"; pencil_rc=2
+  fi
+  if [ "$pencil_rc" -ne 0 ]; then
+    add_flag "[Pencil] ${PENCIL_LINE} → 設計票派工前先請使用者在 Claude Code 執行 /mcp 重連 pencil，重連後再派（LS-180）"
   fi
 fi
 
@@ -398,6 +427,48 @@ $boot_nonexempt
 EOF
 fi
 
+# ---- 磁碟水位（LS-176；LS-96 池項 7c9fe5bd／0e75271d：Devices 146 GB／77 台＋每 worktree 一份 DerivedData 兩次把磁碟
+#      填滿、Docker VM 弄掛）：df 可用 <DISK_MIN_GB GB 印 ⚠ 並列 CoreSimulator/Devices／DerivedData 體積（du，看門狗）與
+#      LS-* 專屬模擬器台數（從上面同一份 sim_rows 算，不再多打一次 xcrun）；處置指到 cleanup-merged.sh --apply LS-<n>
+#      （LS-176 起連刪該票專屬機＋DerivedData）。df 讀不到就整段只印「略過」（同 xcrun 缺席的 fail-soft）；兩個目錄可用
+#      PATROL_SIM_DEVICES_DIR／PATROL_DERIVED_DATA_DIR 覆寫（自測餵小假目錄，不對真的 ~/Library 跑 du）。
+disk_avail_gb=; disk_flag=; disk_devices_gb=; disk_derived_gb=; disk_dedicated=0
+sim_devices_dir="${PATROL_SIM_DEVICES_DIR:-$HOME/Library/Developer/CoreSimulator/Devices}"
+derived_data_dir="${PATROL_DERIVED_DATA_DIR:-$HOME/Library/Developer/Xcode/DerivedData}"
+disk_avail_kb=$(df -Pk "$HOME" 2>/dev/null | awk 'NR == 2 { print $4 }')
+case "$disk_avail_kb" in ''|*[!0-9]*) ;; *) disk_avail_gb=$((disk_avail_kb / 1048576)) ;; esac
+if [ -n "${sim_rows:-}" ]; then
+  disk_dedicated=$(printf '%s\n' "$sim_rows" | awk -F'\t' '$1 ~ /^LS-[0-9]+-/ { n++ } END { print n + 0 }')
+fi
+du_with_timeout() {  # $@＝路徑；stdout 印 du -sk 各路徑一行（<KB>\t<路徑>）；exit 124＝逾時（背景 du 被 kill，同 fetch_with_timeout）
+  (
+    du -sk "$@" 2>/dev/null &
+    dpid=$!
+    ( sleep "$DU_TIMEOUT"; kill "$dpid" 2>/dev/null ) >/dev/null 2>&1 &
+    wpid=$!
+    wait "$dpid"; rc=$?
+    kill "$wpid" 2>/dev/null
+    [ "$rc" -eq 143 ] && exit 124
+    exit "$rc"
+  ) 2>/dev/null
+}
+size_gb_of() {  # $1＝路徑；從 $du_out 取該路徑的整數 GB，取不到（目錄不存在／du 逾時）印 ?
+  local kb
+  kb=$(printf '%s\n' "${du_out:-}" | awk -F'\t' -v p="$1" '$2 == p { print $1; exit }')
+  case "$kb" in ''|*[!0-9]*) printf '?' ;; *) printf '%s' $((kb / 1048576)) ;; esac
+}
+if [ -n "$disk_avail_gb" ] && [ "$disk_avail_gb" -lt "$DISK_MIN_GB" ]; then
+  set --   # 位置參數早已被上面的參數迴圈 shift 光，這裡借來當「存在的目錄清單」（bash 3.2，不用陣列）
+  [ -d "$sim_devices_dir" ] && set -- "$@" "$sim_devices_dir"
+  [ -d "$derived_data_dir" ] && set -- "$@" "$derived_data_dir"
+  du_out=; du_rc=0
+  if [ $# -gt 0 ]; then du_out=$(du_with_timeout "$@"); du_rc=$?; fi
+  disk_devices_gb=$(size_gb_of "$sim_devices_dir"); disk_derived_gb=$(size_gb_of "$derived_data_dir")
+  du_note=; [ "$du_rc" -eq 124 ] && du_note="（du >${DU_TIMEOUT}s 逾時，體積為 ?）"
+  disk_flag="⚠ 磁碟可用 ${disk_avail_gb} GB < ${DISK_MIN_GB} GB：CoreSimulator/Devices ${disk_devices_gb} GB、DerivedData ${disk_derived_gb} GB、LS-* 專屬模擬器 ${disk_dedicated} 台${du_note} → 對 Done 票跑 bash scripts/ops/cleanup-merged.sh --apply LS-<n>（LS-176 起連刪該票專屬機＋DerivedData）"
+  add_flag "[磁碟] ${disk_flag}"
+fi
+
 # ---- --linear（LS-103）：先把 patrol-linear.sh 跑完，rc 才能影響下面的「異常」判定 ----
 # R1 F6：不可讓 patrol-linear.sh 非 0 exit 被吞掉——舊版放在輸出區塊「之後」才呼叫，brief 模式的
 # 「巡檢：無異常」摘要行早就印完，Linear 段失敗（PAT 過期／curl 錯誤）在 stdout 完全看不到、只有
@@ -428,17 +499,20 @@ fi
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"stale_simulators":[%s],"booted_simulators":[%s],"booted_flagged":%s,"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"stale_simulators":[%s],"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
-      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$J_SIM" "$J_BOOT" "$(json_num "$boot_flagged")" "$J_FLAGS"
+      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$J_SIM" "$J_BOOT" "$(json_num "$boot_flagged")" \
+      "$(json_num "$disk_avail_gb")" "$DISK_MIN_GB" "$(json_num "$disk_devices_gb")" "$(json_num "$disk_derived_gb")" "$disk_dedicated" "$(json_str "$disk_flag")" \
+      "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" "$J_FLAGS"
     ;;
   brief)
-    echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev} · 專屬模擬器逾期 ${sim_flagged} · Booted 異常 ${boot_flagged}"
+    echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev} · 專屬模擬器逾期 ${sim_flagged} · Booted 異常 ${boot_flagged} · 磁碟可用 ${disk_avail_gb:-?} GB"
     [ -n "$fetch_warn" ] && echo "${fetch_warn}"
     case "$lock_line" in free) ;; *) echo "Supabase lock：${lock_line}" ;; esac
+    [ "$pencil_ran" -eq 1 ] && printf '%s\n' "$PENCIL_LINE"
     if [ -n "$FLAGS" ]; then printf '%s' "$FLAGS"; else echo "巡檢：無異常（git／PR 面；Linear 對照仍需 list_issues）"; fi
     ;;
   *)
@@ -459,10 +533,19 @@ case "$MODE" in
     if [ -n "$WT_LINES" ]; then printf '%s' "$WT_LINES"; else echo "  （無）"; fi
     echo "== Supabase lock（本機容器序列化，scripts/ops/supabase-lock.sh；LS-70；⚠ tomb＝上次回收異常的殘留）"
     printf '%s\n' "$lock_line" | sed 's/^/  /'
+    echo "== Pencil 連線（LS-180；有 design 分支 worktree 時探：行程／目前路徑／MCP socket；✗ 先請使用者 /mcp 重連 pencil 再派設計票）"
+    if [ "$pencil_ran" -eq 1 ]; then
+      printf '%s\n' "$PENCIL_LINE" | sed 's/^/  /'
+      [ "$pencil_rc" -ne 0 ] && echo "  → 設計票派工前先請使用者在 Claude Code 執行 /mcp 重連 pencil，重連後再派（LS-180）"
+    else echo "  （無 design 分支 worktree，略過探針）"; fi
     echo "== 專屬模擬器（scripts/gates/detect-simulator.sh 建的 <票號>-<機型>；LS-83；>7 天未用只列不刪）"
     if [ -n "$SIM_LINES" ]; then printf '%s' "$SIM_LINES"; else echo "  （無 xcrun 或無 >7 天未用的專屬模擬器）"; fi
     echo "== Booted 模擬器（LS-100；demo-* 豁免；>1 台非豁免同時 Booted＝用完沒關）"
     if [ -n "$BOOT_LINES" ]; then printf '%s' "$BOOT_LINES"; else echo "  （無異常；Booted ${boot_total} 台，非 demo-* ${nonexempt_boot_count} 台）"; fi
+    echo "== 磁碟水位（LS-176；可用 <${DISK_MIN_GB} GB 標 ⚠ 並列 Devices／DerivedData 體積；PATROL_DISK_MIN_GB 可調）"
+    if [ -n "$disk_flag" ]; then echo "  ${disk_flag}"
+    elif [ -n "$disk_avail_gb" ]; then echo "  可用 ${disk_avail_gb} GB，LS-* 專屬模擬器 ${disk_dedicated} 台  ok"
+    else echo "  （df 讀不到可用空間，略過）"; fi
     echo "== Linear（需 orchestrator 用 MCP 對照：Ready 無人接／In Progress 無 worktree／QA 但 test 未含）"
     echo "  → list_issues state in (Ready, In Progress, In Review, QA)，對照上表 worktree／PR"
     ;;

@@ -98,11 +98,32 @@ set_ps_pen_files() {
 }
 clear_ps_pen_files() { : > "$PEN_STUB_PS_OUTPUT"; }
 
-# stub `pen`：只認 `interactive --app desktop`（忽略餵進去的 stdin 內容），依 $PEN_STUB_STATE 決定輸出——
-#   PATH:<path> → 印 get_app_state 格式的那一行；HANG → sleep 5（測 ATTEMPT_TIMEOUT 看門狗）；其他 → 模擬讀不到
+# stub `pen`：只認 `interactive --app desktop`，讀 stdin 分兩路——
+#   餵進來的是 `execute(`（LS-180 tree_hash 回讀）：依 $PEN_STUB_HASH 控制檔決定輸出：HASH:<16 hex> → 印
+#     `SUMMARY-HASH total_nodes=… tree_hash=<hex>`；HANG → sleep 5（測 PEN_OPEN_HASH_TIMEOUT 看門狗）；其他／空 →
+#     模擬 Pencil `InternalError: interrupted`（無 SUMMARY-HASH）。每次呼叫把 $PEN_STUB_EXEC_COUNT 加一（驗「預設模式
+#     不回讀雜湊」）。
+#   其他（get_app_state）：依 $PEN_STUB_STATE——PATH:<path> → 印 get_app_state 格式的那一行；HANG → sleep 5（測
+#     ATTEMPT_TIMEOUT 看門狗）；其他 → 模擬讀不到
+export PEN_STUB_HASH="${work}/hash"
+export PEN_STUB_EXEC_COUNT="${work}/exec.count"
 cat > "${bin}/pen" <<'STUB'
 #!/bin/bash
 if [ "$1" != interactive ]; then exit 1; fi
+input="$(cat)"
+case "$input" in
+  *execute\(*)
+    n=$(( $(cat "${PEN_STUB_EXEC_COUNT:?}" 2>/dev/null || echo 0) + 1 ))
+    printf '%s' "$n" > "${PEN_STUB_EXEC_COUNT}"
+    hc="$(cat "${PEN_STUB_HASH:?}" 2>/dev/null || true)"
+    case "$hc" in
+      HASH:*) printf 'SUMMARY-HASH total_nodes=1 tree_hash=%s\n' "${hc#HASH:}" ;;
+      HANG) sleep 5 ;;
+      *) echo "Error: InternalError: interrupted" ;;
+    esac
+    exit 0
+    ;;
+esac
 content="$(cat "${PEN_STUB_STATE:?}" 2>/dev/null || true)"
 case "$content" in
   PATH:*)
@@ -122,12 +143,19 @@ chmod +x "${bin}/pen"
 export PATH="${bin}:${PATH}"
 export PEN_OPEN_TIMEOUT=2 PEN_OPEN_ATTEMPT_TIMEOUT=1 PEN_OPEN_POLL_INTERVAL=1
 export PEN_OPEN_QUIT_TIMEOUT=3 PEN_OPEN_QUIT_GRACE=1
+export PEN_OPEN_HASH_TIMEOUT=2 PEN_OPEN_HASH_ATTEMPTS=1
 export PEN_BACKUP_DIR="${work}/backup"
 mkdir -p "$PEN_BACKUP_DIR"
 
 set_state() { printf '%s' "$1" > "$PEN_STUB_STATE"; }
+set_hash() { printf '%s' "$1" > "$PEN_STUB_HASH"; }
 open_calls() { wc -l < "$PEN_STUB_OPEN_LOG" | tr -d ' '; }
-reset_open_tracking() { : > "$PEN_STUB_OPEN_LOG"; rm -f "$PEN_STUB_OPEN_COUNT"; unset PEN_STUB_OPEN_SUCCEED_AT; }
+exec_calls() { cat "$PEN_STUB_EXEC_COUNT" 2>/dev/null || echo 0; }
+reset_open_tracking() { : > "$PEN_STUB_OPEN_LOG"; rm -f "$PEN_STUB_OPEN_COUNT" "$PEN_STUB_EXEC_COUNT"; unset PEN_STUB_OPEN_SUCCEED_AT; }
+# 磁碟端 tree_hash（與 pen-open.sh 用同一支 design_tree_hash.py 算），LS-180 案例拿它餵 stub 當「Pencil 端相符」的值。
+WT_HASH="$(python3 "${root}/scripts/gates/design_tree_hash.py" "$want")"
+# 預設讓 --force-reload 的雜湊回讀「不相符」（沿用 LS-118 案例的清場語意）；⑮ 各案自己覆寫。
+set_hash 'HASH:ffffffffffffffff'
 
 # start_fake_pen：起一支真的背景 sleep 當「假 Pen 主行程」，pid 寫進 $PEN_STUB_PID_FILE 給 pgrep stub 讀。
 # fake_pen_alive：該行程是否還活著（kill -0，不 stub，因為這是測試自己起的真行程）。
@@ -236,18 +264,25 @@ else
   bad "一致案例應 exit 0（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 
-# ---- 不一致（殘留路徑推出的 worktree 根不存在——R3 起 $want 自己也在候選清單裡，先給它安全 backup，
-#      讓失敗原因單純歸給不存在的 other，不被 $want 缺 backup 混淆）----
+# ---- ⑭a LS-176（LS-96 池項 56eeaee0）：Pen 目前是「已被 cleanup-merged.sh 移除的 worktree」的路徑（推出的 root
+#      與 .pen 都不在磁碟上）→ 無檔即無未落地變更可失，視為已捨棄，照常清場切檔成功（LS-176 之前判「不存在→
+#      無法確認安全」而拒絕、exit 1，LS-152／LS-163 清理後每張後續設計票的 pen-read 都被擋）。$want 自己也在候選
+#      清單裡，先給它安全 backup，讓「安全」的判定單純來自不存在的 other；訊息仍須含兩邊路徑 ----
 other="${work}/wt-other/design/littlesprout.pen"
-wt_backup_safe
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe
 set_state "PATH:${other}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=1
 out="$(run "$wt" 2>&1)"; got=$?
-if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF "${want}" && printf '%s' "$out" | grep -qF "${other}" \
-  && printf '%s' "$out" | grep -qF "${work}/wt-other」不存在" && printf '%s' "$out" | grep -qF '不自動 quit'; then
-  ok '不一致：Pen 目前是別的檔（推出的 worktree 根不存在）→ exit 1，訊息含兩邊路徑，不清場'
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "${want}" && printf '%s' "$out" | grep -qF "${other}" \
+  && printf '%s' "$out" | grep -qF "舊路徑不存在，視為已捨棄：${other}" \
+  && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" && ! fake_pen_alive; then
+  ok '⑭a LS-176 舊路徑不存在：Pen 目前是已刪 worktree 的檔 → 視為已捨棄，清場切檔成功，訊息含兩邊路徑'
 else
-  bad "不一致案例應 exit 1 且印兩邊路徑（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+  bad "⑭a 應 exit 0 且清場切檔成功（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+clear_fake_pen
 rm -f "${PEN_BACKUP_DIR}/$(printf '%s' "file://${want}" | shasum | awk '{print $1}')"
 
 # ---- Pen 未開／讀不到（開檔模式） ----
@@ -318,8 +353,9 @@ start_fake_pen
 export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=1
 out="$(run "$wt" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
-  && printf '%s' "$out" | grep -qF '已確認' && ! fake_pen_alive; then
-  ok '⑪a 殘留＋安全：osascript 優雅退出成功 → 重開切換成功，假行程真的結束'
+  && printf '%s' "$out" | grep -qF '已確認' && ! fake_pen_alive \
+  && printf '%s' "$out" | grep -qF 'Pencil MCP 需重連：請在 Claude Code 執行 /mcp 重連 pencil'; then
+  ok '⑪a 殘留＋安全：osascript 優雅退出成功 → 重開切換成功，假行程真的結束，且印「需重連」（LS-180）'
 else
   bad "⑪a 應 exit 0 且假行程結束（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
@@ -473,26 +509,29 @@ clear_fake_pen; clear_ps_pen_files
 
 # ---- LS-118：--force-reload ----
 
-# ⑬a 目前已一致＋安全，仍強制清場重開（不信任舊 renderer 可能停在磁碟更新前的舊快照）——驗證新增的
-#     「不因已一致就早退」邏輯，且清場前後仍照既有安全判定把關、重開後才真正算成功。
-reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe
+# ⑬a 目前已一致＋安全，但 Pencil 端 tree_hash 與磁碟不符（renderer 停在磁碟更新前的舊快照）→ 清場重開——
+#     驗證「不因已一致就早退」邏輯，且清場前後仍照既有安全判定把關、重開後才真正算成功。LS-180 起這條路徑
+#     只在雜湊不符時走（相符不殺見 ⑮a），且結束主行程後必印「需重連」。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe; set_hash 'HASH:ffffffffffffffff'
 set_state "PATH:${want}"
 start_fake_pen
 export PEN_STUB_OSASCRIPT_KILLS=1
 out="$(run "$wt" --force-reload 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF -- '--force-reload' \
+  && printf '%s' "$out" | grep -qF 'tree_hash 不一致' \
   && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
-  && ! fake_pen_alive && [ "$(open_calls)" -eq 2 ]; then
-  ok '⑬a --force-reload：目前已一致仍強制清場重開，假行程真的被換掉（LS-118）'
+  && printf '%s' "$out" | grep -qF 'Pencil MCP 需重連' \
+  && ! fake_pen_alive && [ "$(open_calls)" -eq 2 ] && [ "$(exec_calls)" -eq 1 ]; then
+  ok '⑬a --force-reload：已一致但雜湊不符 → 清場重開，假行程真的被換掉，印「需重連」（LS-118／LS-180）'
 else
   bad "⑬a 應 exit 0 且真的清場重開（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 unset PEN_STUB_OSASCRIPT_KILLS
 clear_fake_pen
 
-# ⑬b 目前已一致，但目標自己的 renderer 有未落地變更——即使已經 active，--force-reload 仍不能為了保
+# ⑬b 目前已一致，雜湊不符，且目標自己的 renderer 有未落地變更——即使已經 active，--force-reload 仍不能為了保
 #     新鮮度而默默丟掉真實變更，fail closed 拒絕清場。
-reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_unsafe
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_unsafe; set_hash 'HASH:ffffffffffffffff'
 set_state "PATH:${want}"
 start_fake_pen
 out="$(run "$wt" --force-reload 2>&1)"; got=$?
@@ -509,11 +548,11 @@ clear_fake_pen
 
 # ⑬c F1 正案例：--force-reload 且 pgrep 找不到 Pen 主行程（樣式不符／改名／pgrep 缺失，Pen 其實還在跑）
 #     → 不能假裝清場過，fail closed exit 2（不像修前那樣印 ✓ 並 exit 0，但沒真的換 renderer）。
-reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe; set_hash 'HASH:ffffffffffffffff'
 set_state "PATH:${want}"
 out="$(run "$wt" --force-reload 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF -- '--force-reload 但找不到 Pen 主行程'; then
-  ok '⑬c --force-reload：pgrep 找不到主行程 → fail closed exit 2，不假裝清場過（LS-118 R1 F1）'
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '但找不到 Pen 主行程'; then
+  ok '⑬c --force-reload：雜湊不符且 pgrep 找不到主行程 → fail closed exit 2，不假裝清場過（LS-118 R1 F1）'
 else
   bad "⑬c 應 exit 2（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
@@ -525,8 +564,9 @@ set_state "PATH:${want2}"
 export PEN_STUB_OPEN_SUCCEED_AT=2
 out="$(run "$wt" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '跳過清場步驟，直接嘗試重開' \
-  && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}"; then
-  ok '⑬d 預設模式 pgrep 找不到主行程：跳過清場、直接重開，不受 --force-reload 新規則影響（LS-118 R1 F1 對照）'
+  && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
+  && ! printf '%s' "$out" | grep -qF 'Pencil MCP 需重連'; then
+  ok '⑬d 預設模式 pgrep 找不到主行程：跳過清場、直接重開，不受 --force-reload 新規則影響，沒殺行程就不印「需重連」（LS-118 R1 F1 對照）'
 else
   bad "⑬d 應 exit 0（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
@@ -564,6 +604,140 @@ else
 fi
 clear_fake_pen
 wtQ_reset_clean
+
+# ---- ⑭b LS-176 對照：舊路徑「存在」且有未落地變更（wt2 的 backup 與磁碟檔結構不同）→ 仍照舊擋：不 quit、
+#      不第二次 open、exit 1，且絕不印「視為已捨棄」（⑭a 的放行只能來自「磁碟上沒有這個檔」，不得擴大到
+#      「檔在但無法判定」；mutation：check_root_safe 的 -e 改成 -d root、或把不存在與無法判定又混在一起 → 紅）----
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt2_backup_unsafe; wt_backup_safe
+set_state "PATH:${want2}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '不自動 quit' && ! printf '%s' "$out" | grep -qF '視為已捨棄' \
+  && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑭b LS-176 對照：舊路徑存在且 dirty → 仍拒絕清場，exit 1，不印「視為已捨棄」'
+else
+  bad "⑭b 應 exit 1 且不清場（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT
+clear_fake_pen
+
+# ---- ⑮ LS-180：--force-reload 先比 tree_hash、相符不殺；--kill 明示清場；預設模式不回讀雜湊 ----
+
+# ⑮a 已一致＋Pencil 端雜湊＝磁碟 → exit 0、不 kill（假行程仍活）、只 open 一次、印「未清場」、不印「需重連」。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe; set_hash "HASH:${WT_HASH}"
+set_state "PATH:${want}"
+start_fake_pen
+out="$(run "$wt" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "tree_hash=${WT_HASH} 與磁碟一致" \
+  && printf '%s' "$out" | grep -qF '未清場' && ! printf '%s' "$out" | grep -qF 'Pencil MCP 需重連' \
+  && fake_pen_alive && [ "$(open_calls)" -eq 1 ] && [ "$(exec_calls)" -eq 1 ]; then
+  ok '⑮a --force-reload：已一致且 tree_hash 相符 → exit 0 不 kill、不重開、不印「需重連」（LS-180）'
+else
+  bad "⑮a 應 exit 0 且不 kill（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)，execute 次數＝$(exec_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# ⑮b 已一致＋雜湊不符＋目標 dirty（真實未落地編輯）→ 不 kill、exit 1（不相符也不能為了新鮮度丟掉真編輯）。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_unsafe; set_hash 'HASH:0123456789abcdef'
+set_state "PATH:${want}"
+start_fake_pen
+out="$(run "$wt" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF 'tree_hash 不一致' && printf '%s' "$out" | grep -qF '不自動 quit' \
+  && ! printf '%s' "$out" | grep -qF 'Pencil MCP 需重連' && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑮b --force-reload：雜湊不符但目標有未落地變更 → 不安全不 kill，exit 1，不印「需重連」（LS-180）'
+else
+  bad "⑮b 應 exit 1 且不 kill（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# ⑮c 已一致但 Pencil 端雜湊讀不到（execute 中斷／無 SUMMARY-HASH）→ 不 kill、exit 3、stdout 印期望值與複算指引。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe; set_hash 'ERROR'
+set_state "PATH:${want}"
+start_fake_pen
+out="$(run "$wt" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 3 ] && printf '%s' "$out" | grep -qF "期望值 tree_hash=${WT_HASH}" \
+  && printf '%s' "$out" | grep -qF 'SCAN_HASH_ONLY' && printf '%s' "$out" | grep -qF -- '--kill' \
+  && ! printf '%s' "$out" | grep -qF 'Pencil MCP 需重連' \
+  && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑮c --force-reload：雜湊讀不到 → 不 kill、exit 3、印期望值與 agent 複算指引（LS-180）'
+else
+  bad "⑮c 應 exit 3 且不 kill（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# ⑮d 雜湊回讀掛住 → PEN_OPEN_HASH_TIMEOUT 看門狗收工，仍是 exit 3、不 kill，整支腳本不卡死。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe; set_hash 'HANG'
+set_state "PATH:${want}"
+start_fake_pen
+t0=$SECONDS
+out="$(PEN_OPEN_HASH_TIMEOUT=1 run "$wt" --force-reload 2>&1)"; got=$?
+elapsed=$((SECONDS - t0))
+if [ "$got" -eq 3 ] && [ "$elapsed" -le 5 ] && fake_pen_alive; then
+  ok "⑮d --force-reload：雜湊回讀掛住 → 看門狗 ${elapsed}s 內收工，exit 3 不 kill（LS-180）"
+else
+  bad "⑮d 應在數秒內 exit 3 且不 kill（實得 ${got}，耗時 ${elapsed}s，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# ⑮e --kill：已一致且雜湊其實相符，仍不比對、直接安全判定＋清場重開，印「需重連」；execute 一次都不呼叫。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe; set_hash "HASH:${WT_HASH}"
+set_state "PATH:${want}"
+start_fake_pen
+export PEN_STUB_OSASCRIPT_KILLS=1
+out="$(run "$wt" --kill 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF -- '--kill' \
+  && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
+  && printf '%s' "$out" | grep -qF 'Pencil MCP 需重連：請在 Claude Code 執行 /mcp 重連 pencil' \
+  && ! fake_pen_alive && [ "$(open_calls)" -eq 2 ] && [ "$(exec_calls)" -eq 0 ]; then
+  ok '⑮e --kill：不比雜湊、一律清場重開、印「需重連」，execute 零次（LS-180）'
+else
+  bad "⑮e 應 exit 0 且清場重開（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)，execute 次數＝$(exec_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OSASCRIPT_KILLS
+clear_fake_pen
+
+# ⑮f --kill 且目標 dirty → 仍 fail closed exit 1，不 kill（--kill 只是跳過雜湊比對，不跳過安全判定）。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_unsafe
+set_state "PATH:${want}"
+start_fake_pen
+out="$(run "$wt" --kill 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '不自動 quit' && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑮f --kill：目標有未落地變更 → 仍拒絕清場 exit 1（--kill 不跳過安全判定，LS-180）'
+else
+  bad "⑮f 應 exit 1 且不 kill（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# ⑮g 預設模式（不帶旗標）已一致 → 照舊 exit 0，且 execute 零次（雜湊回讀只屬 --force-reload）。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; set_hash 'ERROR'
+set_state "PATH:${want}"
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && [ "$(exec_calls)" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'tree_hash'; then
+  ok '⑮g 預設模式已一致 → exit 0、不回讀雜湊（execute 零次）（LS-180）'
+else
+  bad "⑮g 應 exit 0 且 execute 零次（實得 ${got}，execute 次數＝$(exec_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑮h 旗標互斥／未知旗標：--kill 與 --force-reload 同給、或拼錯 → 用法錯誤 exit 2。
+out="$(run "$wt" --force-reload --kill 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '用法'; then ok '⑮h --force-reload 與 --kill 同給 → exit 2'; else bad "⑮h 應 exit 2（實得 ${got}）"; fi
+out="$(run "$wt" --kil 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '用法'; then ok '⑮h 拼錯旗標 → exit 2'; else bad "⑮h 拼錯旗標應 exit 2（實得 ${got}）"; fi
+
+# ⑮i 磁碟 .pen 壞 JSON → --force-reload 算不出磁碟雜湊 → exit 2 fail closed，不 kill、不回讀。
+wtBad="${work}/wt-bad"; mkdir -p "${wtBad}/design"; printf '%s' '{not json' > "${wtBad}/design/littlesprout.pen"
+wantBad="$(cd "${wtBad}/design" && pwd -P)/littlesprout.pen"
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; set_hash "HASH:${WT_HASH}"
+set_state "PATH:${wantBad}"
+start_fake_pen
+out="$(run "$wtBad" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '算不出磁碟 tree_hash' && fake_pen_alive && [ "$(exec_calls)" -eq 0 ]; then
+  ok '⑮i --force-reload：磁碟 .pen 壞掉算不出雜湊 → exit 2 fail closed，不 kill 不回讀（LS-180）'
+else
+  bad "⑮i 應 exit 2（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，execute 次數＝$(exec_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-open-check 自測失敗" >&2

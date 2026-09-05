@@ -22,7 +22,7 @@ enum SupabaseClientFactory {
     static let emitLocalSessionAsInitialSession = true
 
     static func makeClient() -> SupabaseClient {
-        let url = AppConfig.supabaseURL
+        let url = qaOverride?.url ?? AppConfig.supabaseURL
         // 只在 Debug/Test build 生效（Release build 中 assert 會被編譯器移除）：忘記建立
         // Config/Secrets.xcconfig 時，Base.xcconfig 的安全佔位值仍能讓 app 編譯、啟動，但打
         // 出去的每個請求都注定失敗，而且失敗訊息離「忘記設定本機 xcconfig」很遠、不好查。
@@ -40,11 +40,28 @@ enum SupabaseClientFactory {
         )
         return SupabaseClient(
             supabaseURL: url,
-            supabaseKey: AppConfig.supabaseAnonKey,
+            supabaseKey: qaOverride?.anonKey ?? AppConfig.supabaseAnonKey,
             options: SupabaseClientOptions(
                 auth: .init(emitLocalSessionAsInitialSession: emitLocalSessionAsInitialSession)
             )
         )
+    }
+
+    /// LS-158：QA 端到端情境測試（`LittleSproutUITests/QA/QASmokeTests`）把 app 指向本機 Supabase
+    /// 容器的唯一接線點——`scripts/ops/qa-e2e.sh` 從 `supabase status` 讀 API URL／anon key，經
+    /// `TEST_RUNNER_` 環境變數交給 UI test runner，再由 `XCUIApplication.launchEnvironment` 注入
+    /// 被測 app（同 `LS_TAP_TARGET_GATE_SCREEN` 的通道）。只在 DEBUG 生效：Release 這個屬性恆為
+    /// nil，正式版讀不到、也改不了後端位址。兩個值必須同時存在且合法才覆寫——只給一半＝設定錯，
+    /// 照 `AppConfig` 走、讓上面的 assert 或後端錯誤大聲失敗，不做半套。
+    private static var qaOverride: (url: URL, anonKey: String)? {
+        #if DEBUG
+        let env = ProcessInfo.processInfo.environment
+        guard let rawURL = env["LS_QA_API_URL"], let url = URL(string: rawURL), url.host != nil,
+              let anonKey = env["LS_QA_ANON_KEY"], !anonKey.isEmpty else { return nil }
+        return (url, anonKey)
+        #else
+        return nil
+        #endif
     }
 
     /// Xcode／`xcodebuild test` 執行 XCTest bundle 時一律會設這個環境變數——業界慣用的偵測法，

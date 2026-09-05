@@ -12,13 +12,28 @@ import XCTest
 /// 層級可靠驗證的邊界。
 @MainActor
 final class CreateChildAvatarFieldUITests: XCTestCase {
+    /// LS-174：`waitForExistence` 只保證元素進了 accessibility tree，不保證它「當下這一刻」
+    /// 已經 `isHittable`——CI runner 偶爾在兩者之間還有一次佈局／動畫尚未穩定，同一個 SHA
+    /// 在 LS-158 PR #281 attempt 1 紅、rerun 綠（純 runner 時序，不是程式碼問題）。改成對
+    /// `isHittable` 本身掛 `expectation(for:evaluatedWith:)` 輪詢等待，並額外釘住 frame 高度
+    /// ≥44pt（`TapTargetMeasurement.minSide`，與 `TapTargetGateTests` 同一把尺）——後者是
+    /// 佈局穩定後就不會抖動的幾何量測，用來在 `isHittable` 這個較脆的訊號之外多一道不受
+    /// runner 時序影響的證據。
     func test_avatarField_existsAndIsHittable() {
         let app = TapTargetMeasurement.launch(.createChild)
         TapTargetMeasurement.assertScreenRendered(.createChild, in: app)
 
         let avatarField = app.buttons["新增寶貝照片，目前尚未選擇"]
-
         XCTAssertTrue(avatarField.waitForExistence(timeout: 10), "頭像欄應該是一個可點的按鈕")
-        XCTAssertTrue(avatarField.isHittable, "頭像欄的點擊區域應該是可命中的，不是視覺佔位")
+
+        let isHittablePredicate = NSPredicate(format: "isHittable == true")
+        let hittableExpectation = expectation(for: isHittablePredicate, evaluatedWith: avatarField)
+        wait(for: [hittableExpectation], timeout: 10)
+
+        let frame = avatarField.frame
+        XCTAssertGreaterThanOrEqual(
+            frame.height, TapTargetMeasurement.minSide,
+            "頭像欄的點擊區域高度應該 ≥\(Int(TapTargetMeasurement.minSide))pt，不是視覺佔位"
+        )
     }
 }

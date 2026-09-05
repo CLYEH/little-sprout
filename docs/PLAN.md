@@ -56,7 +56,7 @@
 | 帳號 | Supabase Auth（Sign in with Apple 為主 — App Store 規定有第三方登入就必須提供；Email OTP 給長輩備用） |
 | 資料庫 | Postgres + **Row Level Security**：權限規則直接寫在資料庫層，「不是這個 family 的成員就查不到資料」由 DB 保證，不靠 app 端判斷 |
 | 檔案儲存 | Supabase Storage（**S3 相容介面**），私有 bucket + 簽名 URL，照片影片不會有公開網址 |
-| 推播 | Edge Function 觸發 APNs；裝置 token 存 `device_tokens` 表。**必須彙總**：批次上傳 50 張照片要合併成一則「爸爸新增了 50 張照片」，逐張發通知會讓家人第一天就關掉通知權限 |
+| 推播 | Edge Function 觸發 APNs；裝置 token 存 `device_tokens` 表。**必須彙總**：批次上傳 50 張照片要合併成一則「爸爸新增了 50 張照片」，逐張發通知會讓家人第一天就關掉通知權限（發送側 Edge Function `push-dispatch` 已於 LS-172 落地，留言／愛心／日記／相簿四種事件皆已彙總；`media` 表的 `AFTER INSERT` trigger 已於 LS-175 落地，批次上傳照片彙總成一則「{actor}新增了 {N} 張照片」——target 是整個家庭而不是所屬相簿，因為 `media` 沒有 album_id/diary_id、掛進相簿是另一次之後才發生的寫入，見 `docs/API.md` §3「`media` 來源（LS-175）」與 §10 push-dispatch 段） |
 
 ### 為什麼這樣選（對應你的三個條件）
 
@@ -251,6 +251,7 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 1. **每家庭儲存額度**（`families.storage_quota_bytes`，預設值取一個你能吸收的數字，例如 2–5GB）。超額擋下上傳並清楚提示。這是硬防線。
 2. **Supabase 用量告警**：設定接近方案上限時通知，別靠月結帳單才發現。
 3.（備案）**註冊開關**：留一個能快速把新註冊關掉或改為候補的旗標。真的爆量時這是唯一能立刻止血的手段。
+   **已落地（LS-179）**：`app_settings.registrations_open`（取「關掉」，不做候補名單），Dashboard 改欄位即生效，操作方式見 `docs/API.md` §11。
 
 額度設多少可以之後調，但**機制要在上架前就在**。上架後才加額度限制，等於要對既有使用者收回已經給出去的東西。
 
@@ -260,6 +261,7 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 
 - **檢舉要進到你看得到的地方**，不能只通知該家庭的 Owner —— 被檢舉的很可能就是 Owner 本人。需要一個你自己能看的檢舉列表（Supabase Dashboard 手動看就夠，不必做後台）。
 - **要有停權能力**：能停掉特定使用者或整個家庭，不需要改程式碼。
+  **已落地（LS-179）**：`profiles.suspended_at`／`families.suspended_at`，RLS＋RPC 全面拒絕＋client 錯誤碼（`LS052`／`LS053`），Dashboard 改欄位即生效，操作方式見 `docs/API.md` §11。
 - **ToS 要寫清楚**你保留移除內容與終止帳號的權利，以及內容歸屬與刪除方式。
 - 這是一個**託管陌生人上傳之兒童照片**的服務，風險性質與「只有自己家人」完全不同。相關的法遵與通報義務因地區而異，在真的開放公開註冊前值得確認一次；至少要具備移除內容、保留必要記錄、以及能配合處理的能力。
 

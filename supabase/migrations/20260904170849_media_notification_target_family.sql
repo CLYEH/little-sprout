@@ -1,0 +1,45 @@
+-- LS-175（LS-22 後端切片）——content_target_type 新增 'family' 值。
+--
+-- 獨立成自己的檔案／自己的交易，不與下一支 migration 合併：PostgreSQL 對
+-- ALTER TYPE ... ADD VALUE 有限制——新增的列舉值要嘛在同一個交易內完全不被
+-- 「需要排序位置」的操作使用（比較、當實際值儲存／轉型），要嘛等這個交易 commit
+-- 之後才能用；在同一個交易裡新增又使用會直接噴 `unsafe use of new value` 錯誤。
+-- 下一支 migration 會定義一支 trigger 函式，函式本體裡會把常數 'family' 轉型成
+-- public.content_target_type 傳給 private.record_notification_event()——同
+-- `20260903091313_notification_kind_report.sql` 檔頭的既有理由，拆成兩個各自
+-- 獨立 commit 的 migration 是這個問題最常見、安全邊際最大的標準解法。
+--
+-- 為什麼需要新值（merge-reviewer LS-172 R1 i1 → LS-175）：`media` 表本身沒有
+-- album_id／diary_id 欄位（`init_schema.sql`「media 只負責檔案本身，不知道自己
+-- 掛在哪個相簿／日記」），一張照片是否掛進相簿／日記是透過 album_media／
+-- diary_media 這兩張連結表**另外一次、之後才發生**的寫入（見
+-- `LittleSprout/Services/Diary/MediaUploadService.swift` 的 `insertMediaRow`
+-- 與 `SupabaseDiaryAPIClient.attachMedia`——先 insert media 列的請求，跟後續
+-- attach 進 diary_media 的請求是兩個分開的 HTTP round trip，不是同一個交易）。
+-- 這是結構性事實，不是本票能改的實作細節：`album_media`／`diary_media` 的複合
+-- 外鍵（`references public.media (family_id, id)`）要求 media 列必須先存在，
+-- 所以 `media` 表自己的 AFTER INSERT trigger **在任何情況下都不可能**在觸發當下
+-- 看到這批照片將來會掛進哪個相簿／日記——不是「目前還沒接上」，是「這張表的
+-- INSERT 這個時間點，這個資訊本來就還不存在」。
+--
+-- 因此本票不對 `media` 的 AFTER INSERT trigger 做 album_media／diary_media 的
+-- JOIN 查詢（那永遠只會查到 0 列，是一段看起來有作用、實際上恆假的死邏輯）——
+-- 所有 media 新增一律歸屬整個家庭（`target_type='family'`／`target_id=family_id`），
+-- 這正是票文本身列出的「純上傳無歸屬」分支，只是依上述結構性理由，它是**唯一**
+-- 會發生的分支，不是邊界情況。`content_target_type` 目前的四個值（album/media/
+-- diary/comment）都指向「某一則具體內容」，沒有一個能誠實表達「這個通知的目標
+-- 是整個家庭」，借用既有的 'media' 值把 target_id 填成 family_id 語意上是錯的
+-- （之後任何人讀到 target_type='media' 都會合理預期 target_id 是一筆 media.id）
+-- ——加一個新值誠實表達，比省一支 migration 檔案更重要。
+--
+-- 已知、可接受的旁效應：`create_comment`／`toggle_reaction`／`report_content`
+-- 三支 RPC 的 `p_target_type` 參數目前用 `::public.content_target_type` 轉型，
+-- 轉型成功後才呼叫 `private.target_family_id()`——該函式的 `case p_target_type
+-- when 'album' … when 'comment' then … end case`（無 ELSE）在收到 'family' 時
+-- 會落到「沒有任何分支命中」，PL/pgSQL 對沒有 ELSE 的 CASE 語句會拋
+-- `CASE_NOT_FOUND`。這代表「呼叫端傳 target_type='family' 給這三支 RPC」的失敗
+-- 方式從「乾淨的列舉轉型錯誤 22P02」變成「內部 CASE_NOT_FOUND」——兩者都是失敗
+-- （對 'family' 這種目標留言／按讚／檢舉本來就沒有意義），只是錯誤訊息的形狀不同，
+-- 不是新增的能力或安全性退步。這三支 RPC 不在本票範圍內，這裡不順手加 ELSE 分支
+-- （surgical changes）。
+alter type public.content_target_type add value 'family';

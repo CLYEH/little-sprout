@@ -47,10 +47,17 @@ trap 'rm -f "$log"' EXIT
 #    刻意不帶 `-quiet`：那個旗標會把 xcodebuild 的輸出收斂成「Failing tests: <方法名>」的
 #    精簡摘要，連 `TAP-TARGET-FAIL:` 這種來自 `XCTFail` 訊息本體的文字都一起被吞掉（實測
 #    重現：帶 `-quiet` 時，故意造出的違規只印得出方法名，抓不到下面要 grep 的標記）。
+#    LS-158：`LittleSproutUITests/QA/QASmokeTests`（QA 端到端情境）需要本機 Supabase 容器＋Mailpit，沒環境變數
+#    一律 XCTFail（刻意不 XCTSkip），CI 的這支 gate 不得跑到它。`-only-testing` 對 `-skip-testing` 有優先權
+#    （man xcodebuild：「-only-testing has precedence over -skip-testing」，實測 `-only-testing:LittleSproutUITests
+#    -skip-testing:LittleSproutUITests/QASmokeTests` 仍會跑 QA），所以改成純 `-skip-testing` 組合：跳過 unit test
+#    target（維持只跑 UI 測試）＋跳過 QASmokeTests——效果等於原本的整個 UITests target 減去 QA 情境。
+#    tap-target-check.test.sh ⑨ 釘住這組旗標。
 if xcodebuild test \
   -scheme "$scheme" \
   -destination "platform=iOS Simulator,id=${udid}" \
-  -only-testing:LittleSproutUITests \
+  -skip-testing:LittleSproutTests \
+  -skip-testing:LittleSproutUITests/QASmokeTests \
   -parallel-testing-enabled NO \
   > "$log" 2>&1; then
   # merge-review R1 M1：不印「所有量測畫面」這種聽起來像全域覆蓋的措辭——目前只有

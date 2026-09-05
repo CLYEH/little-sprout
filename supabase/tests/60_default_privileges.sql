@@ -87,7 +87,15 @@ declare
     -- get_family_timeline（security invoker）呼叫，同一個理由——沒有這支 EXECUTE，
     -- 呼叫者封鎖過人時整條時間軸查詢會直接噴權限錯。
     'private.blocked_pairs()',
-    'private.feed_item_actor_id(public.feed_kind,uuid)'
+    'private.feed_item_actor_id(public.feed_kind,uuid)',
+    -- LS-179：families_select／content_reports_select／join_requests_select
+    -- 三條 policy（R2 merge-review m1／m2 補齊後三條都會用到）直接呼叫
+    -- private.caller_is_active()／private.family_is_active(uuid)（policy 以
+    -- authenticated 身分求值，同其餘集合函式的理由）。registrations_open()
+    -- 只從 enforce_registrations_open() trigger 內部呼叫（以 postgres 身分
+    -- 執行），不需要登記在這裡。
+    'private.caller_is_active()',
+    'private.family_is_active(uuid)'
   ];
   v_exceptions text[] := array[]::text[];  -- 目前無例外；若新增，必須附理由註解
   v_allow_oids oid[];
@@ -407,11 +415,17 @@ $$;
 --     （authenticated 可執行、anon／PUBLIC 不可），但**不**驗「必須是 SECURITY
 --     DEFINER」——這支函式刻意是 invoker（依賴 feed_items 既有的 RLS 做隔離，不需要
 --     繞過 RLS），硬套 definer 檢查只會逼著它去符合一個不該套用在它身上的規則。
---   - v_service_role_rpcs（LS-151 R2／LS-153 R3，併入 development 時 union）：
+--   - v_service_role_rpcs（LS-151 R2／LS-153 R3，併入 development 時 union；
+--     LS-172 追加 claim_notification_events／notification_recipients）：
 --     SECURITY DEFINER 但**不對 authenticated 開放**、只給 service_role 執行的
 --     public RPC——finalize_account_deletion（LS-151，Edge Function delete-account
---     用 service_role 呼叫）與 purge_storage_queue_mark_failed（LS-153，
---     purge-storage Edge Function 用），皆非前端直接呼叫的 API 邊界。授權方向與
+--     用 service_role 呼叫）、purge_storage_queue_mark_failed（LS-153，
+--     purge-storage Edge Function 用）、claim_notification_events／
+--     notification_recipients（LS-172，push-dispatch Edge Function 用；票文字面
+--     寫 `private.` 前綴，落地時改放 public schema——理由見
+--     `20260904095205_push_dispatch.sql` 檔頭第 1 段：`private` schema 不在
+--     `supabase/config.toml` 的 `[api] schemas` 內，Edge Function 用
+--     `supabase-js` 的 `.rpc()` 完全叫不到），皆非前端直接呼叫的 API 邊界。授權方向與
 --     另外兩組相反：authenticated／anon／PUBLIC 都必須「不可執行」，service_role
 --     必須「可執行」；definer／search_path 收斂的檢查與 v_definer_rpcs 相同。
 --
@@ -482,7 +496,9 @@ declare
   -- 反過來：authenticated／anon 皆無 EXECUTE，只有 service_role 有。按函式名字母
   -- 順序排列。
   v_service_role_rpcs text[] := array[
+    'public.claim_notification_events(integer)',  -- LS-172：push-dispatch 用
     'public.finalize_account_deletion(uuid)',  -- LS-151：delete-account 用
+    'public.notification_recipients(uuid[])',  -- LS-172：push-dispatch 用（R2 改批次簽章，見 migration 檔頭第 2 段）
     'public.purge_storage_queue_mark_failed(uuid[], text)'  -- LS-153：purge-storage 用
   ];
   v_whitelist oid[];
@@ -606,6 +622,13 @@ $$;
 --   （新增 private 函式若也要走這條例外，必須先來這裡登記並寫明理由。）
 --   private.is_avatar_object_path(text)：LS-169 R2，同上一條理由，逐字一樣的形狀
 --   （純 regex、掛在 media_bucket_update／media_bucket_delete 的 WITH CHECK／USING 上）。
+--   private.deletion_bypass_active()：LS-179 R2（MAJOR-2），只讀一個交易級 GUC
+--   （`current_setting`），不碰任何資料庫物件，沒有 search_path 挾持的面，同
+--   is_media_object_path 的理由。
+--   private.enforce_deletion_bypass()：LS-179 R2，只呼叫 `set_config` 設同一個
+--   GUC，一樣不碰任何資料庫物件；只被 SECURITY DEFINER 的 delete_my_account()
+--   呼叫（以 postgres 身分執行，物件擁有者恆有權限，不需要靠自己是 definer 才能
+--   運作），是否收 search_path 對它的正確性沒有影響。
 -- ---------------------------------------------------------------------------
 do $$
 declare
@@ -613,7 +636,9 @@ declare
   -- 這句 cast 會直接噴出含簽名的錯誤，不會無聲漂移。
   v_exceptions text[] := array[
     'private.is_media_object_path(text)',
-    'private.is_avatar_object_path(text)'
+    'private.is_avatar_object_path(text)',
+    'private.deletion_bypass_active()',
+    'private.enforce_deletion_bypass()'
   ];
   v_exc_oids oid[];
   v_leaky text;
