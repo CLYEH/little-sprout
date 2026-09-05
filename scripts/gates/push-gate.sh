@@ -420,8 +420,15 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
     # `pgrep -P "$1"` 的鏈路在半路就斷了，從根重新遞迴永遠到不了斷鏈之後才出生的新孫行程。改成對
     # **目前已知的每一個 pid**（不只根）各自再問一次 `pgrep -P`——這些 pid 在第一輪就已經藉由明確點名
     # `kill -TERM` 收過訊號，即使斷鏈也不影響「直接查它自己的子行程」這件事。
+    # merge-review R1 m2（PLAUSIBLE）：這裡查的是「TERM 之後最多 3 秒」的舊 pid，理論上其中已經死透
+    # 的那些若被 OS 回收給無關行程，`wd_descendants` 會查到那個無關行程的子孫、混進 KILL 名單。先
+    # `kill -0` 確認還活著才查它的子孫——死透的 pid 本來就不會再有「我們自己的」子孫，跳過它不影響
+    # 正確性，還順便避開這個 TOCTOU。沒有進一步比對 `ps -o lstart`（行程起始時間）核對身分：macOS pid
+    # 空間近 10 萬、這裡的視窗只有 `kill -0` 那一行到 `wd_descendants` 實際查詢完成之間（同一次迴圈
+    # 迭代內，微秒等級），比 reviewer 指出的原本 3 秒視窗又窄了幾個數量級，額外複雜度（存活時間需要
+    # 在第一輪 TERM 前就先記錄、KILL 前再比對）換來的邊際效益不成比例。
     more=
-    for p in $wd_killed_pids; do more="$more $(wd_descendants "$p")"; done
+    for p in $wd_killed_pids; do kill -0 "$p" 2>/dev/null && more="$more $(wd_descendants "$p")"; done
     wd_killed_pids="$wd_killed_pids $more"
     kill -KILL $wd_killed_pids 2>/dev/null || true
   }
