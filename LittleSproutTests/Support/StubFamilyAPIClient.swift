@@ -21,9 +21,29 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
     /// 「還沒回來」的窗口，才能造出 `FamilyStore.refreshQuota()` await 前後核對要測的時序
     /// （`Task.sleep` 或 `AsyncStream` 皆可，由呼叫端的 handler 自行決定）。
     typealias FetchQuotaHandler = @Sendable (UUID) async throws -> FamilyQuota
+    // LS-192
+    typealias ListMembersHandler = @Sendable (UUID) async throws -> [FamilyMember]
+    typealias RemoveMemberHandler = @Sendable (UUID, UUID) async throws -> Void
+    typealias TransferOwnershipHandler = @Sendable (UUID, UUID) async throws -> TransferOwnershipResult
+    typealias FetchMyProfileHandler = @Sendable () async throws -> Profile
+    typealias UpdateDisplayNameHandler = @Sendable (String) async throws -> Profile
+    typealias UpdateAvatarPathHandler = @Sendable (String) async throws -> Profile
+    typealias SignedAvatarURLsHandler = @Sendable ([String]) async throws -> [String: URL]
 
     enum StubError: Error {
         case unconfigured
+    }
+
+    /// LS-192：`removeMember`／`transferOwnership` 的呼叫參數紀錄，同 `CreateInviteCall` 的
+    /// 既有理由（SwiftLint `large_tuple` 擋裸 tuple）。
+    struct RemoveMemberCall: Equatable {
+        let familyID: UUID
+        let userID: UUID
+    }
+
+    struct TransferOwnershipCall: Equatable {
+        let familyID: UUID
+        let toUserID: UUID
     }
 
     /// SwiftLint `large_tuple`（>2 members）擋掉裸 tuple 記錄呼叫參數，改用具名 struct。
@@ -53,6 +73,18 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
         var listJoinRequestsHandler: ListJoinRequestsHandler = { [] }
         var myJoinRequestHandler: MyJoinRequestHandler = { nil }
         var fetchQuotaHandler: FetchQuotaHandler = { _ in throw StubError.unconfigured }
+        // LS-192
+        var listMembersHandler: ListMembersHandler = { _ in [] }
+        var removeMemberHandler: RemoveMemberHandler = { _, _ in throw StubError.unconfigured }
+        var removeMemberCalls: [RemoveMemberCall] = []
+        var transferOwnershipHandler: TransferOwnershipHandler = { _, _ in throw StubError.unconfigured }
+        var transferOwnershipCalls: [TransferOwnershipCall] = []
+        var fetchMyProfileHandler: FetchMyProfileHandler = { throw StubError.unconfigured }
+        var updateDisplayNameHandler: UpdateDisplayNameHandler = { _ in throw StubError.unconfigured }
+        var updateDisplayNameCalls: [String] = []
+        var updateAvatarPathHandler: UpdateAvatarPathHandler = { _ in throw StubError.unconfigured }
+        var updateAvatarPathCalls: [String] = []
+        var signedAvatarURLsHandler: SignedAvatarURLsHandler = { _ in [:] }
     }
 
     private let box = OSAllocatedUnfairLock(initialState: Box())
@@ -79,6 +111,22 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
 
     var withdrawJoinCalls: [UUID] {
         box.withLock { $0.withdrawJoinCalls }
+    }
+
+    var removeMemberCalls: [RemoveMemberCall] {
+        box.withLock { $0.removeMemberCalls }
+    }
+
+    var transferOwnershipCalls: [TransferOwnershipCall] {
+        box.withLock { $0.transferOwnershipCalls }
+    }
+
+    var updateDisplayNameCalls: [String] {
+        box.withLock { $0.updateDisplayNameCalls }
+    }
+
+    var updateAvatarPathCalls: [String] {
+        box.withLock { $0.updateAvatarPathCalls }
     }
 
     func setCreateFamilyHandler(_ handler: @escaping CreateFamilyHandler) {
@@ -127,6 +175,34 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
 
     func setFetchQuotaHandler(_ handler: @escaping FetchQuotaHandler) {
         box.withLock { $0.fetchQuotaHandler = handler }
+    }
+
+    func setListMembersHandler(_ handler: @escaping ListMembersHandler) {
+        box.withLock { $0.listMembersHandler = handler }
+    }
+
+    func setRemoveMemberHandler(_ handler: @escaping RemoveMemberHandler) {
+        box.withLock { $0.removeMemberHandler = handler }
+    }
+
+    func setTransferOwnershipHandler(_ handler: @escaping TransferOwnershipHandler) {
+        box.withLock { $0.transferOwnershipHandler = handler }
+    }
+
+    func setFetchMyProfileHandler(_ handler: @escaping FetchMyProfileHandler) {
+        box.withLock { $0.fetchMyProfileHandler = handler }
+    }
+
+    func setUpdateDisplayNameHandler(_ handler: @escaping UpdateDisplayNameHandler) {
+        box.withLock { $0.updateDisplayNameHandler = handler }
+    }
+
+    func setUpdateAvatarPathHandler(_ handler: @escaping UpdateAvatarPathHandler) {
+        box.withLock { $0.updateAvatarPathHandler = handler }
+    }
+
+    func setSignedAvatarURLsHandler(_ handler: @escaping SignedAvatarURLsHandler) {
+        box.withLock { $0.signedAvatarURLsHandler = handler }
     }
 
     func createFamily(name: String) async throws -> Family {
@@ -201,5 +277,44 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
     func myJoinRequest() async throws -> MyJoinRequest? {
         let handler = box.withLock { $0.myJoinRequestHandler }
         return try await handler()
+    }
+
+    func listMembers(familyID: UUID) async throws -> [FamilyMember] {
+        let handler = box.withLock { $0.listMembersHandler }
+        return try await handler(familyID)
+    }
+
+    func removeMember(familyID: UUID, userID: UUID) async throws {
+        box.withLock { $0.removeMemberCalls.append(RemoveMemberCall(familyID: familyID, userID: userID)) }
+        let handler = box.withLock { $0.removeMemberHandler }
+        try await handler(familyID, userID)
+    }
+
+    func transferOwnership(familyID: UUID, toUserID: UUID) async throws -> TransferOwnershipResult {
+        box.withLock { $0.transferOwnershipCalls.append(TransferOwnershipCall(familyID: familyID, toUserID: toUserID)) }
+        let handler = box.withLock { $0.transferOwnershipHandler }
+        return try await handler(familyID, toUserID)
+    }
+
+    func fetchMyProfile() async throws -> Profile {
+        let handler = box.withLock { $0.fetchMyProfileHandler }
+        return try await handler()
+    }
+
+    func updateDisplayName(_ name: String) async throws -> Profile {
+        box.withLock { $0.updateDisplayNameCalls.append(name) }
+        let handler = box.withLock { $0.updateDisplayNameHandler }
+        return try await handler(name)
+    }
+
+    func updateAvatarPath(_ path: String) async throws -> Profile {
+        box.withLock { $0.updateAvatarPathCalls.append(path) }
+        let handler = box.withLock { $0.updateAvatarPathHandler }
+        return try await handler(path)
+    }
+
+    func signedAvatarURLs(forPaths paths: [String]) async throws -> [String: URL] {
+        let handler = box.withLock { $0.signedAvatarURLsHandler }
+        return try await handler(paths)
     }
 }

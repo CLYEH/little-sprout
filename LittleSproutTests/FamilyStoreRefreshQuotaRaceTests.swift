@@ -40,7 +40,7 @@ final class FamilyStoreRefreshQuotaRaceTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
 
         let (gate, gateContinuation) = AsyncStream<Void>.makeStream()
@@ -71,7 +71,7 @@ final class FamilyStoreRefreshQuotaRaceTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
 
         let (gate, gateContinuation) = AsyncStream<Void>.makeStream()

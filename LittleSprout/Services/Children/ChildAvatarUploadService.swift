@@ -73,3 +73,24 @@ final class SupabaseChildAvatarUploadService: ChildAvatarUploadService {
         "\(familyID.uuidString.lowercased())/avatars/\(childID.uuidString.lowercased()).jpg"
     }
 }
+
+extension ChildAvatarUploadService {
+    /// LS-192：個人頭像（`profiles.avatar_url`）重用本服務——Storage 路徑形狀
+    /// （`{family_id}/avatars/{uuid}.jpg`）與寫入權限（`is_media_object_path`／
+    /// `is_avatar_object_path`，見 `20260904060700_avatar_object_path.sql`／
+    /// `20260904081435_avatar_family_write_policy.sql`）完全不看這個 UUID 是孩子還是使用者，
+    /// 這裡只是把呼叫者自己的 `userID` 當成路徑最後一段，不需要另開一支 service 或新 migration。
+    ///
+    /// 已知取捨（記入 LS-192 handoff 風險欄，不在本票範圍內收斂）：UPDATE／DELETE 的
+    /// 「家庭共用」分支（`is_avatar_object_path` + `contributor_family_ids()`）原本是為了讓
+    /// 「孩子頭像是家庭共有物」這個語意設計的——同一個分支套用在個人頭像上，代表同家庭任何
+    /// 有上傳權的成員理論上都能直接呼叫 Storage API 覆寫另一位成員這個路徑的檔案內容（不是
+    /// 透過 `profiles.avatar_url` 這個欄位——那一欄仍受 `profiles_update` 的
+    /// `id = auth.uid()` 保護，其他人改不動）。這需要一支新的、只認「路徑最後一段＝
+    /// `auth.uid()`」的 Storage policy 分支才能收斂，屬於後端變更，不在這張 iOS 票的範圍內；
+    /// 對照既有「孩子頭像」本來就是設計上的家庭共有物，這裡是刻意接受同一個既有風險等級，
+    /// 不是本票新引入的破口。
+    func uploadProfileAvatar(familyID: UUID, userID: UUID, imageData: Data) async throws -> String {
+        try await uploadAvatar(familyID: familyID, childID: userID, imageData: imageData)
+    }
+}

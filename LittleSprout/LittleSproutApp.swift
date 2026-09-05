@@ -31,7 +31,14 @@ struct LittleSproutApp: App {
     init() {
         let client = SupabaseClientFactory.makeClient()
         _authStore = State(initialValue: AuthStore(authService: SupabaseAuthService(client: client)))
-        _familyStore = State(initialValue: FamilyStore(apiClient: SupabaseFamilyAPIClient(client: client)))
+        _familyStore = State(initialValue: FamilyStore(
+            apiClient: SupabaseFamilyAPIClient(client: client),
+            // LS-192：個人頭像重用 LS-169 的服務（見 `ChildAvatarUploadService
+            // .uploadProfileAvatar` 文件註解）——輕量、無狀態，跟下面 `childrenStore` 各自持有
+            // 一份互不影響（同 `SupabaseFamilyAPIClient`／`SupabaseChildAPIClient` 各自對同一個
+            // `client` 建一份 wrapper 的既有慣例）。
+            avatarUploadService: SupabaseChildAvatarUploadService(client: client)
+        ))
         _childrenStore = State(initialValue: ChildrenStore(
             apiClient: SupabaseChildAPIClient(client: client),
             avatarUploadService: SupabaseChildAvatarUploadService(client: client)

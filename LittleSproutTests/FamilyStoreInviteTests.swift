@@ -38,7 +38,7 @@ final class FamilyStoreInviteTests: XCTestCase {
         stub.setFetchMyFamilyHandler { currentFamily.withLock { $0 } }
         let record = makeInviteRecord(code: "AAAA11")
         stub.setCreateInviteHandler { _, _, _, _ in record }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         _ = await store.syncOwner(to: userA)
         _ = await store.createInvite(role: .member)
@@ -63,7 +63,7 @@ final class FamilyStoreInviteTests: XCTestCase {
             callCount.withLock { $0 += 1 }
             return family
         }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.syncOwner(to: userA)
         XCTAssertEqual(store.myFamily, family)
 
@@ -84,7 +84,7 @@ final class FamilyStoreInviteTests: XCTestCase {
             callCount.withLock { $0 += 1 }
             return family
         }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         _ = await store.syncOwner(to: userA)
         _ = await store.syncOwner(to: userA)
@@ -98,7 +98,7 @@ final class FamilyStoreInviteTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
         let record = makeInviteRecord()
         stub.setCreateInviteHandler { _, _, _, _ in record }
@@ -122,7 +122,7 @@ final class FamilyStoreInviteTests: XCTestCase {
             XCTFail("沒有家庭時不該呼叫 createInvite")
             throw StubFamilyAPIClient.StubError.unconfigured
         }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let code = await store.createInvite(role: .member)
 
@@ -140,7 +140,7 @@ final class FamilyStoreInviteTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
         stub.setCreateInviteHandler { _, _, _, _ in
             throw AppError.retryableSystem(message: "請再試一次", code: "LS016")
@@ -158,7 +158,7 @@ final class FamilyStoreInviteTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
         let oldRecord = makeInviteRecord(code: "OLD001")
         stub.setCreateInviteHandler { _, _, _, _ in oldRecord }
@@ -184,7 +184,7 @@ final class FamilyStoreInviteTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
         let oldRecord = makeInviteRecord(code: "OLD001")
         stub.setCreateInviteHandler { _, _, _, _ in oldRecord }
@@ -210,7 +210,7 @@ final class FamilyStoreInviteTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
         let record = makeInviteRecord(code: "EXIST1", usedCount: 2)
         stub.setFetchLatestActiveInviteHandler { _ in record }
@@ -227,7 +227,7 @@ final class FamilyStoreInviteTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
         stub.setFetchLatestActiveInviteHandler { _ in nil }
 
@@ -241,7 +241,7 @@ final class FamilyStoreInviteTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
         stub.setCreateInviteHandler { _, _, _, _ in throw AppError.network(message: "offline") }
         _ = await store.createInvite(role: .member)

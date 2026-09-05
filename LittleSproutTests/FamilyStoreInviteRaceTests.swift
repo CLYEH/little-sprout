@@ -37,7 +37,7 @@ final class FamilyStoreInviteRaceTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
         stub.setFetchLatestActiveInviteHandler { _ in throw AppError.network(message: "offline") }
 
@@ -68,7 +68,7 @@ final class FamilyStoreInviteRaceTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
 
         let createCallCount = OSAllocatedUnfairLock(initialState: 0)
@@ -110,7 +110,7 @@ final class FamilyStoreInviteRaceTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
 
         let lookupCallCount = OSAllocatedUnfairLock(initialState: 0)
@@ -159,7 +159,7 @@ final class FamilyStoreInviteRaceTests: XCTestCase {
         let userB = UUID()
         let currentFamily = OSAllocatedUnfairLock<Family?>(initialState: familyA)
         stub.setFetchMyFamilyHandler { currentFamily.withLock { $0 } }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.syncOwner(to: userA)
 
         let (gate, gateContinuation) = AsyncStream<Void>.makeStream()

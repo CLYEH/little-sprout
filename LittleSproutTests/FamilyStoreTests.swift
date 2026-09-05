@@ -19,7 +19,7 @@ final class FamilyStoreTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let result = await store.refreshMyFamily()
 
@@ -32,7 +32,7 @@ final class FamilyStoreTests: XCTestCase {
         // 全新帳號、還沒建立或加入任何家庭：nil 是合法結果，不是錯誤（§9-C5 三岔路情境）。
         let stub = StubFamilyAPIClient()
         stub.setFetchMyFamilyHandler { nil }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let result = await store.refreshMyFamily()
 
@@ -44,7 +44,7 @@ final class FamilyStoreTests: XCTestCase {
     func test_refreshMyFamily_networkFailure_setsFailureStateWithoutTouchingMyFamily() async {
         let stub = StubFamilyAPIClient()
         stub.setFetchMyFamilyHandler { throw AppError.network(message: "offline") }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let result = await store.refreshMyFamily()
 
@@ -66,7 +66,7 @@ final class FamilyStoreTests: XCTestCase {
             _ = await iterator.next()
             return family
         }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let firstCallTask = Task { await store.refreshMyFamily() }
         var guardIterations = 0
@@ -97,7 +97,7 @@ final class FamilyStoreTests: XCTestCase {
             XCTAssertEqual(name, "葉家")
             return family
         }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let succeeded = await store.createFamily(name: "葉家")
 
@@ -112,7 +112,7 @@ final class FamilyStoreTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily(name: "葉家")
         stub.setCreateFamilyHandler { _ in family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         _ = await store.createFamily(name: "葉家")
 
@@ -122,7 +122,7 @@ final class FamilyStoreTests: XCTestCase {
     func test_createFamily_failure_doesNotSetShowsChildOnboarding() async {
         let stub = StubFamilyAPIClient()
         stub.setCreateFamilyHandler { _ in throw AppError.rejected(message: "沒有權限", code: "42501") }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         _ = await store.createFamily(name: "葉家")
 
@@ -133,7 +133,7 @@ final class FamilyStoreTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily(name: "葉家")
         stub.setCreateFamilyHandler { _ in family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.createFamily(name: "葉家")
         XCTAssertTrue(store.showsChildOnboarding)
 
@@ -146,7 +146,7 @@ final class FamilyStoreTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily(name: "葉家")
         stub.setCreateFamilyHandler { _ in family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.createFamily(name: "葉家")
         XCTAssertTrue(store.showsChildOnboarding)
 
@@ -160,7 +160,7 @@ final class FamilyStoreTests: XCTestCase {
         // `SupabaseFamilyAPIClient` 已經歸好層的錯誤存進 `createFamilyState`，不能自己再猜。
         let stub = StubFamilyAPIClient()
         stub.setCreateFamilyHandler { _ in throw AppError.rejected(message: "沒有權限", code: "42501") }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let succeeded = await store.createFamily(name: "葉家")
 
@@ -185,7 +185,7 @@ final class FamilyStoreTests: XCTestCase {
             _ = await iterator.next() // 卡住，直到測試呼叫 gateContinuation.finish() 才放行
             return family
         }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let firstCallTask = Task { await store.createFamily(name: "葉家") }
         // 讓第一次呼叫先把狀態切成 .submitting，才具代表性地驗證第二次呼叫會被擋下。
@@ -223,7 +223,7 @@ final class FamilyStoreTests: XCTestCase {
     func test_resetCreateFamilyState_clearsFailure() async {
         let stub = StubFamilyAPIClient()
         stub.setCreateFamilyHandler { _ in throw AppError.network(message: "offline") }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.createFamily(name: "葉家")
         guard case .failure = store.createFamilyState else {
             return XCTFail("前置條件失敗：預期先進入 .failure")
@@ -238,7 +238,7 @@ final class FamilyStoreTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily(name: "葉家")
         stub.setCreateFamilyHandler { _ in family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.createFamily(name: "葉家")
         XCTAssertEqual(store.createFamilyState, .success, "前置條件失敗：預期先進入 .success")
 
