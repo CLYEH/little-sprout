@@ -59,6 +59,8 @@ enum TapTargetGateHarness {
             sectionTabViewWithDiaryHost
         case .diaryCardVideoBadges:
             diaryCardVideoBadgesHost
+        case .passwordSignIn: passwordSignInHost
+        case .welcome: welcomeHost
         case .selfTestTooSmall:
             // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
             // accessibility／hit-test frame 實測仍貼著文字本身的天然大小，不會被外層 `.frame`
@@ -140,6 +142,22 @@ enum TapTargetGateHarness {
         NavigationStack {
             CreateChildView(childrenStore: .preview())
         }
+    }
+
+    /// LS-164：初始態（空欄位）不需要任何 seed 資料，同 `createChildHost` 的既有理由。
+    @MainActor
+    @ViewBuilder
+    private static var passwordSignInHost: some View {
+        NavigationStack {
+            PasswordSignInView(authStore: .preview()) {}
+        }
+    }
+
+    /// LS-164：見 `TapTargetGateScreenName.welcome` 文件註解——這個 host 純粹借用「launch
+    /// environment 指定畫面」通道給 `PasswordSignInUITests` 用，不掛進 `TapTargetGateTests`。
+    @MainActor
+    private static var welcomeHost: WelcomeView {
+        WelcomeView(authStore: .preview())
     }
 
     /// `.preview()` 三個 store 皆空狀態（無家庭／無寶貝／無 feed），`ChildFilterBar`
