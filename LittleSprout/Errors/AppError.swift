@@ -102,6 +102,12 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     // = false` 時，自建新家庭一律拒絕（憑邀請碼加入既有家庭不受影響）。同
     // LS052/LS053 一樣是純狀態拒絕，見下方 tier。
     case registrationsClosed = "LS054"
+    // LS055（LS-197，accept_eula）：p_version 與 app_settings.eula_version 目前
+    // 值不相等——多半是呼叫端讀到的版本已經過期（條款版本已更新）。跟
+    // LS052/LS053/LS054 同一組理由歸 rejected：呼叫端沒有「打錯字重打」這種
+    // 輸入可換，需要先重新抓一次目前版本、重新顯示條款內容，才是正確的下一步
+    // 動作，不是原地拿同一個 p_version 重試。
+    case eulaVersionMismatch = "LS055"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -124,7 +130,7 @@ enum LSErrorCode: String, CaseIterable, Sendable {
              .childNotFoundOrDeleted, .childNotEditableByCaller, .childRestoreWindowExpired,
              .albumChildrenNotEditableByCaller, .ownerMustTransferBeforeAccountDeletion,
              .accountDeletionInProgress, .accountSuspended, .familySuspended,
-             .registrationsClosed:
+             .registrationsClosed, .eulaVersionMismatch:
             // 以下碼為 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
@@ -176,6 +182,10 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // Dashboard 解除，同 accountDeletionInProgress 一樣是純狀態拒絕。
             // registrationsClosed（LS054，LS-179，PLAN §10-A(3)）：目前暫停開放
             // 新註冊，只擋自建新家庭這一步，沒有輸入可換，只能等旗標重新打開。
+            // eulaVersionMismatch（LS055，LS-197）：呼叫端送的 p_version 已經
+            // 過期，跟上面幾碼同一組「純狀態拒絕」——沒有「換個字重打」這種輸入
+            // 可換，正確動作是重新抓目前版本、重新顯示條款，不是原地重試同一個
+            // 呼叫。
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:
             // 碼本身是「輸入」——打錯字換一個、或請 owner 給一支新的碼，都是同一個 UI 動作
