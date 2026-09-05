@@ -141593,7 +141593,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1648,
+      "height": 1776,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -141673,9 +141673,8 @@
                       "id": "cVZWo",
                       "name": "Signature Row",
                       "width": "fill_container",
+                      "layout": "vertical",
                       "gap": "$sp-tight",
-                      "justifyContent": "end",
-                      "alignItems": "center",
                       "children": [
                         {
                           "type": "frame",
@@ -141883,9 +141882,8 @@
                       "id": "yACOo",
                       "name": "Signature Row",
                       "width": "fill_container",
+                      "layout": "vertical",
                       "gap": "$sp-tight",
-                      "justifyContent": "end",
-                      "alignItems": "center",
                       "children": [
                         {
                           "type": "frame",
@@ -143275,7 +143273,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1265,
+      "height": 1454,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -143319,7 +143317,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1265,
+          "height": 1454,
           "fill": "$paper-shadow"
         },
         {
@@ -143330,7 +143328,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 1265,
+          "height": 1454,
           "layout": "vertical",
           "justifyContent": "end",
           "children": [
