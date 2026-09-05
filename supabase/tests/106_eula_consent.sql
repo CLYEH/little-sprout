@@ -221,9 +221,15 @@ rollback;
 -- 處理方式），用一張暫存表在兩次呼叫之間傳遞第一次的時間戳；收尾另外把寫入的
 -- 資料復原，不留殘留給後續測試檔。
 -- ---------------------------------------------------------------------------
-update public.app_settings set eula_version = 'v-test-1', updated_at = now() where id = true;
+-- LS-204（LS-197 R2 i3 `2acb1d3b`）：先把目前的 eula_version 存進暫存表，
+-- 再覆寫成測試用的固定字串——收尾寫回這裡存的值，不是硬寫某個字面常數（見
+-- 檔尾清理段落的說明）。
+create temporary table ls197_idempotent_probe (orig_eula_version text, t timestamptz);
 
-create temporary table ls197_idempotent_probe (t timestamptz);
+insert into ls197_idempotent_probe (orig_eula_version)
+select eula_version from public.app_settings where id = true;
+
+update public.app_settings set eula_version = 'v-test-1', updated_at = now() where id = true;
 
 do $$
 begin
@@ -236,10 +242,12 @@ begin
   reset role;
 
   -- 存進暫存表要以 postgres 身分（temp table 是 postgres 建的，authenticated
-  -- 沒有 grant）——先 reset role 再寫，不是漏切角色。
-  insert into ls197_idempotent_probe (t)
-  select eula_accepted_at from public.profiles
-   where id = 'a0000000-0000-4000-8000-000000000001';
+  -- 沒有 grant）——先 reset role 再寫，不是漏切角色。這一列在上面已經插入
+  -- （帶著 orig_eula_version），這裡用 update 補上 t，不能再 insert 一列，
+  -- 否則下面 `limit 1` 讀哪一列會失去保證。
+  update ls197_idempotent_probe
+     set t = (select eula_accepted_at from public.profiles
+               where id = 'a0000000-0000-4000-8000-000000000001');
 end;
 $$;
 
@@ -264,6 +272,16 @@ declare
   v_version text;
 begin
   select t into v_first from ls197_idempotent_probe limit 1;
+  -- LS-204 R2（merge-review `a2e9cd1b` I2）：`select ... into` 在 0 列命中或
+  -- `t` 本身為 NULL 時不會報錯，`v_first` 會靜默維持 NULL——下面
+  -- `v_second <= v_first` 的三值邏輯結果也會是 NULL，`if NULL then` 視為
+  -- false、不會 raise，等於這條冪等斷言整個被跳過卻看起來像通過。今天不可達
+  -- （這一列在上面已經由本場景自己 insert＋update，probe 表不可能是空的），
+  -- 補這句擋住「今天不可達」以外的未來壞法（例如有人把上面的 insert 改成
+  -- 條件式寫入）。
+  if v_first is null then
+    raise exception 'FAIL：讀不到冪等測試的第一次時間戳（ls197_idempotent_probe 空表或 t 為 NULL），下面的比較會被 NULL 悄悄放行';
+  end if;
   select eula_accepted_version, eula_accepted_at into v_version, v_second
     from public.profiles where id = 'a0000000-0000-4000-8000-000000000001';
 
@@ -278,8 +296,6 @@ begin
 end;
 $$;
 
-drop table ls197_idempotent_probe;
-
 -- 清理：上面全部是真的 COMMIT（不是 begin/rollback——沒有交易可 rollback，
 -- R2 merge-review R1 m1 修正：先前這裡誤留了一句無對應 begin 的 rollback，
 -- psql 會印 `WARNING:  there is no transaction in progress` 且完全沒有復原
@@ -287,13 +303,19 @@ drop table ls197_idempotent_probe;
 -- 105_suspension_and_registrations.sql 場景 11 收尾的既有慣例）。
 update public.profiles set eula_accepted_version = null, eula_accepted_at = null
  where id = 'a0000000-0000-4000-8000-000000000001';
--- 還原成 migration 的 DEFAULT 字面值本身，不是「讀回某個變數」——這支測試檔
--- 只在 `supabase db reset` 之後的本機開發庫跑，每次都是從 migrations 重新
--- 套用出來的全新狀態，這裡的字面值與
--- `20260905051320_eula_consent.sql` 的 `add column eula_version text not
--- null default '2026-09-05-draft'` 綁在一起，兩邊同步改動即可，不需要額外
--- 用暫存表在場景 6 開頭讀回目前值。
-update public.app_settings set eula_version = '2026-09-05-draft', updated_at = now() where id = true;
+-- LS-204（LS-197 R2 i3 `2acb1d3b`）：還原成場景開頭讀到的值（存在
+-- ls197_idempotent_probe），不是硬寫某個字面常數——原本這裡硬寫
+-- `20260905051320_eula_consent.sql` 的 DEFAULT 字面值 `'2026-09-05-draft'`，
+-- 兩邊靠「同步改動」這種人工約定綁在一起，日後改 DEFAULT 忘了同步改這裡就會
+-- 靜默殘留一個跟 migration 現況不符的 eula_version，且不會有任何測試失敗
+-- 提醒。改讀暫存表之後，不論 DEFAULT 是什麼，這裡永遠還原成「這支測試實際
+-- 觀察到的、場景開始之前那個值」，兩邊自動保持一致。
+update public.app_settings
+   set eula_version = (select orig_eula_version from ls197_idempotent_probe limit 1),
+       updated_at = now()
+ where id = true;
+
+drop table ls197_idempotent_probe;
 
 -- ---------------------------------------------------------------------------
 -- 場景 7（額外，非票面六案，回歸保護）：停權者仍可呼叫 accept_eula()——同意
