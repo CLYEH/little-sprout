@@ -627,11 +627,14 @@ PY
             echo "→ push gate：diff 含 IPad／Regular 或其 SUT，嘗試本機跑一次 iPad 回歸測試（LS-209，best-effort；CI ci-ipad job 為正式把關）…"
             ios_runtime_pin=
             [ -f .ios-runtime ] && ios_runtime_pin=$(tr -d '[:space:]' < .ios-runtime)
-            # UDID 一律抓標準 8-4-4-4-12 十六進位格式，不能用「取最外層括號內容」——機型名本身就帶括號
-            # （「iPad Air 11-inch (M3)」），naive 取括號會把 "M3" 誤判成 UDID（自測 ㊴ 抓到）。
+            # merge-review R1 m3：literal 機型名「iPad Air 11-inch (M3)」比對在本機（唯一開發機）覆蓋率是 0——
+            # 本機既有的 iPad 專屬機一律是 qa-* 前綴＋機型 slug（去空白／括號，如 `qa-test-iPadAir11M3`），
+            # 沒有任何一台叫原生機型名。改成「literal 機型名」或「名稱含 slug」兩者皆可命中，同一台機器兩種
+            # 命名都認得到，覆蓋現有 qa-* 慣例；UDID 一律抓標準 8-4-4-4-12 十六進位格式，不能用「取最外層括號
+            # 內容」——機型名本身就帶括號，naive 取括號會把 "M3" 誤判成 UDID（自測 ㊴ 抓到）。
             ipad_udid=$(xcrun simctl list devices available 2>/dev/null | awk -v pin="$ios_runtime_pin" '
               /^-- iOS / { os=$0; sub(/^-- iOS /,"",os); sub(/ --$/,"",os); next }
-              /iPad Air 11-inch \(M3\)/ {
+              /iPad Air 11-inch \(M3\)|iPadAir11M3/ {
                 if (pin != "" && os != pin) next
                 line=$0
                 if (match(line, /[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/)) {
@@ -640,13 +643,19 @@ PY
               }
             ')
             if [ -z "$ipad_udid" ]; then
-              echo "⚠ push gate：本機找不到「iPad Air 11-inch (M3)」模擬器${ios_runtime_pin:+（iOS ${ios_runtime_pin}）}，略過本機 iPad 測試（fail-open，同 LS-205 runtime 缺版處理；CI ci-ipad job 為正式把關）"
+              echo "⚠ push gate：本機找不到「iPad Air 11-inch (M3)」（或名稱含 iPadAir11M3 的專屬機）模擬器${ios_runtime_pin:+（iOS ${ios_runtime_pin}）}，略過本機 iPad 測試（fail-open，同 LS-205 runtime 缺版處理；CI ci-ipad job 為正式把關）"
             else
               ipad_only_args=()
               while IFS= read -r t; do [ -n "$t" ] && ipad_only_args+=("-only-testing:${t}"); done <<< "$ipad_list"
-              bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
-                xcodebuild test -scheme "$XCODE_SCHEME" -destination "platform=iOS Simulator,id=${ipad_udid}" \
-                "${ipad_only_args[@]}" -parallel-testing-enabled NO -quiet
+              # merge-review R1 m2：本機 UI test 掛住／宿主 crash 是本 repo 有前科的失敗模式（LS-197／LS-199）；
+              # unit tests 那段已包進 wd_run 看門狗（:588），這段 iPad best-effort 原本沒包，一旦踩到就無限卡在
+              # git push、沒有摘要也沒有自動釋放鎖。包一層即可，函式化才能當 wd_run 的參數。
+              run_ipad_best_effort() {
+                bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
+                  xcodebuild test -scheme "$XCODE_SCHEME" -destination "platform=iOS Simulator,id=${ipad_udid}" \
+                  "${ipad_only_args[@]}" -parallel-testing-enabled NO -quiet
+              }
+              wd_run run_ipad_best_effort
             fi
           fi
         fi

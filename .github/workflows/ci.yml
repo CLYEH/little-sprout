@@ -192,6 +192,9 @@ jobs:
           bash scripts/gates/brand-skill-check.test.sh || rc=1
           bash scripts/gates/push-ref-check.test.sh || rc=1
           bash scripts/gates/agent-tools-check.test.sh || rc=1
+          # LS-209 merge-review R1 M1：漏掛這支的話，日後有人把 list-ipad-tests.sh 的判準或「清單為空
+          # exit 1」改壞，CI 仍全綠——ci-ipad job 依賴的正是這個 exit code（見該 job 定義）。
+          bash scripts/gates/list-ipad-tests.test.sh || rc=1
           bash scripts/gates/detect-simulator.test.sh || rc=1
           bash scripts/gates/push-gate.test.sh || rc=1
           bash scripts/gates/tap-target-check.test.sh || rc=1
@@ -804,35 +807,63 @@ jobs:
             echo "::warning::尚未建立 Xcode 專案，略過（Phase 0-1 完成後生效）"
             exit 0
           fi
-          # 觸發判定沿用「點擊目標 gate」同一支 ui-test-trigger.sh（同一份 diff 集合：LittleSprout/**/*.swift
-          # 或 LittleSproutUITests/**）——省下非 UI 票（純 supabase/／docs/／scripts/）在每個 PR 都付一次
-          # 開機模擬器的成本；push 事件（promote.sh 晉升）無條件跑，當晉升前的最後一道伺服器端兜底。
+          # 觸發判定：(a) 沿用「點擊目標 gate」同一支 ui-test-trigger.sh（LittleSprout/**/*.swift 或
+          # LittleSproutUITests/**），省下非 UI 票（純 supabase/／docs/ 等）的模擬器開機成本；(b)
+          # merge-review R1 B1：光靠 (a) 會讓「改 iPad job 機制本身」的 PR 永遠走略過路徑，第一次真正
+          # 執行要等到晉升 push 或下一張碰 LittleSprout/**/*.swift 的 PR，已經是 required check 之後才
+          # 發現任何一環（xcodebuild 找專案／iPad 機型與 runtime／UI test runner 附著）不成立就整條產線
+          # 卡死——加一條獨立判定：diff 觸及會影響這個 job 本身行為的檔（本 job 定義、測試清單產生腳本、
+          # 共用的觸發判定腳本、runtime 釘住檔、Xcode 專案定義）也要跑，不論 (a) 是否命中。push 事件
+          # （promote.sh 晉升）兩條都不看、無條件跑，當晉升前的最後一道伺服器端兜底。
           if [ -n "${GITHUB_BASE_REF:-}" ]; then
             git fetch --quiet origin "$GITHUB_BASE_REF" 2>/dev/null || true
             rc=0; bash scripts/gates/ui-test-trigger.sh --base "origin/$GITHUB_BASE_REF" || rc=$?
-            if [ "$rc" -eq 3 ]; then echo "→ ci-ipad：略過（同 ci job 點擊目標 gate 判定：本 PR 無 LittleSprout/**/*.swift 或 LittleSproutUITests/** 變更；push 事件會無條件跑）"; exit 0; fi
-            if [ "$rc" -ne 0 ]; then echo "::warning::ui-test-trigger.sh exit ${rc}（非 0／3），無法證明可略過，保守照跑"; fi
+            ipad_job_diff=$(git -c core.quotePath=false diff --name-only --no-renames "origin/$GITHUB_BASE_REF"...HEAD 2>/dev/null || true)
+            ipad_job_hit=$(printf '%s\n' "$ipad_job_diff" | grep -E -m1 '^(\.github/workflows/ci\.yml|scripts/gates/list-ipad-tests\.sh|scripts/gates/ui-test-trigger\.sh|\.ios-runtime|project\.yml)$' || true)
+            if [ "$rc" -eq 3 ] && [ -z "$ipad_job_hit" ]; then
+              echo "→ ci-ipad：略過（同 ci job 點擊目標 gate 判定：本 PR 無 LittleSprout/**/*.swift 或 LittleSproutUITests/** 變更，也未動 iPad job 機制本身；push 事件會無條件跑）"
+              exit 0
+            fi
+            if [ -n "$ipad_job_hit" ] && [ "$rc" -eq 3 ]; then
+              echo "→ ci-ipad：要跑——diff 觸及 iPad job 機制本身的檔「${ipad_job_hit}」（即使一般 UI 觸發判定略過，改動這類檔案也要驗證，merge-review R1 B1）"
+            fi
+            if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then echo "::warning::ui-test-trigger.sh exit ${rc}（非 0／3），無法證明可略過，保守照跑"; fi
           fi
-          # LS-205：`.ios-runtime` 單一來源，同 ci job 的 fail-closed 讀法。
+          # LS-205：`.ios-runtime` 單一來源，同 ci job 的讀法。
           [ -f .ios-runtime ] || { echo "::error::缺 .ios-runtime（模擬器 runtime 單一來源，LS-205）"; exit 1; }
           ios_runtime_pin="$(tr -d '[:space:]' < .ios-runtime)"
           # UDID 一律抓標準 8-4-4-4-12 十六進位格式，不能用「取最外層括號內容」——機型名本身就帶括號
           # （「iPad Air 11-inch (M3)」），naive 取括號會把 "M3" 誤判成 UDID（push-gate.sh 自測 ㊴ 抓到同一個坑）。
-          ipad_udid=$(xcrun simctl list devices available 2>/dev/null | awk -v pin="$ios_runtime_pin" '
-            /^-- iOS / { os=$0; sub(/^-- iOS /,"",os); sub(/ --$/,"",os); next }
-            /iPad Air 11-inch \(M3\)/ {
-              if (os != pin) next
-              line=$0
-              if (match(line, /[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/)) {
-                print substr(line, RSTART, RLENGTH); exit
+          find_ipad_udid() {  # $1＝runtime 過濾（空字串＝不過濾）；印 "<udid>\t<os>"，找不到印空字串
+            xcrun simctl list devices available 2>/dev/null | awk -v pin="$1" '
+              /^-- iOS / { os=$0; sub(/^-- iOS /,"",os); sub(/ --$/,"",os); next }
+              /iPad Air 11-inch \(M3\)/ {
+                if (pin != "" && os != pin) next
+                line=$0
+                if (match(line, /[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/)) {
+                  print substr(line, RSTART, RLENGTH) "\t" os; exit
+                }
               }
-            }
-          ')
-          if [ -z "$ipad_udid" ]; then
-            echo "::error::找不到 iOS ${ios_runtime_pin} 的「iPad Air 11-inch (M3)」模擬器——runner image 可能沒有這個機型／版本，或 runtime 已升版（比照 LS-205 i4：請評估更新 .ios-runtime，或改用 runner 目前實際提供的 iPad 機型）"
-            exit 1
+            '
+          }
+          # merge-review R1 M4：對 runtime 不一致 fail-closed 與 ci job（Build & Test 步驟）對同一情境的既有
+          # 裁決（LS-205 i4）相反——那裡只印 ::warning:: 不擋，理由是「runner image 升版是排程性事件，不該
+          # 錯誤地怪到當次 PR 頭上」。這裡改成同款兩段式：先找釘住版，找不到才退回「任何 runtime 的這個機型」
+          # 並印 warning；真的連機型都不存在（runner image 沒有這個 iPad 機型）才 error。
+          found="$(find_ipad_udid "$ios_runtime_pin")"
+          if [ -z "$found" ]; then
+            found="$(find_ipad_udid "")"
+            if [ -n "$found" ]; then
+              found_os=$(printf '%s' "$found" | cut -f2)
+              echo "::warning::CI runner 上找不到 iOS ${ios_runtime_pin} 的「iPad Air 11-inch (M3)」，改用 iOS ${found_os}（同一機型的其他 runtime）——runner image 的 runtime 可能已經升級，請評估更新 .ios-runtime（同 ci job LS-205 i4 既有裁決，不 fail-closed）"
+            else
+              echo "::error::找不到任何 runtime 的「iPad Air 11-inch (M3)」模擬器——runner image 可能沒有這個機型，請改用 runner 目前實際提供的 iPad 機型"
+              exit 1
+            fi
           fi
-          echo "simulator: iPad Air 11-inch (M3) ${ipad_udid} iOS ${ios_runtime_pin}（pinned ${ios_runtime_pin}）"
+          ipad_udid=$(printf '%s' "$found" | cut -f1)
+          ipad_os=$(printf '%s' "$found" | cut -f2)
+          echo "simulator: iPad Air 11-inch (M3) ${ipad_udid} iOS ${ipad_os}（pinned ${ios_runtime_pin}）"
           # LS-96 池項 00b9c9ef：測試清單一律 grep 自動產生，不手寫死名單；清單為空就是這個 job 存在的
           # 理由整個落空——list-ipad-tests.sh 對此 fail loud（exit 1），這裡原樣傳遞、不吞掉。
           list=$(bash scripts/gates/list-ipad-tests.sh) || {

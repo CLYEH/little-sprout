@@ -1370,6 +1370,40 @@ else
 fi
 printf '%s\t%s\n' "iPad Air 11-inch (M3)" "$ipad_udid" >> "$db"   # 還原，避免影響本節之後（若有）的案例
 
+# (e)（merge-review R1 m3）：本機唯一開發機的既有 iPad 專屬機一律是 qa-* 前綴＋機型 slug（如
+#     `qa-test-iPadAir11M3`），不叫原生機型名「iPad Air 11-inch (M3)」——literal-only 比對在本機
+#     實務覆蓋率是 0。這裡把 $db 換成只有 slug 命名的機器（無 literal 機型名），驗證新的「literal 或
+#     slug 皆可命中」判準真的把它找出來。
+grep -vF "iPad Air 11-inch (M3)" "$db" > "$db.tmp" && mv "$db.tmp" "$db"
+qa_ipad_udid="ABCDEF01-2345-6789-ABCD-999900000000"
+printf '%s\t%s\n' "qa-test-iPadAir11M3" "$qa_ipad_udid" >> "$db"
+: > "$test_log34"
+out34e=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log34")
+if grep -qF "id=${qa_ipad_udid}" "$test_log34"; then
+  echo "✓ ㊴(e) 本機專屬機叫 qa-test-iPadAir11M3（不叫原生機型名）→ slug 判準命中、正確呼叫本機 iPad 測試（merge-review R1 m3）"
+else
+  echo "✗ ㊴(e) 應該用 slug 命中 qa-test-iPadAir11M3（實得未呼叫或呼叫到錯的 UDID）" >&2
+  printf '%s\n' "$out34e" | sed 's/^/    /' >&2; cat "$test_log34" | sed 's/^/    log: /' >&2
+  fail=1
+fi
+grep -vF "qa-test-iPadAir11M3" "$db" > "$db.tmp" && mv "$db.tmp" "$db"
+printf '%s\t%s\n' "iPad Air 11-inch (M3)" "$ipad_udid" >> "$db"   # 還原
+
+# merge-review R1 m2：iPad best-effort 這段本輪起也包進 wd_run 看門狗（同 unit tests 那段）——沒包之前
+# UI test 掛住／宿主 crash 會無限卡在 git push。驗法：wd_run 每次被呼叫都會印「unit tests 看門狗啟用」
+# 這行（同一支共用函式、訊息文字不分是包 unit tests 還是 iPad best-effort），(a) 觸發時應該看到兩次
+# （一次包 run_unit_tests、一次包 run_ipad_best_effort），不是只有一次。
+: > "$test_log34"
+out34f=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log34")
+n_wd=$(printf '%s\n' "$out34f" | grep -c '看門狗啟用')
+if [ "$n_wd" -eq 2 ]; then
+  echo "✓ ㊴(m2) iPad best-effort 已包進 wd_run 看門狗——「看門狗啟用」印兩次（unit tests＋iPad best-effort 各一次）"
+else
+  echo "✗ ㊴(m2) 應該看到兩次「看門狗啟用」（unit tests＋iPad best-effort），實得 ${n_wd} 次" >&2
+  printf '%s\n' "$out34f" | sed 's/^/    /' >&2
+  fail=1
+fi
+
 # mutation：拿掉整段 iPad best-effort 區塊（awk 用 list-ipad-tests.sh 呼叫行到下一個 fi 的字面邊界不穩，
 # 改用「拿掉 ipad_trigger 判定」這個精準單行 mutation：把觸發條件恆假）→ (a) 的正樣本必須變綠（不再呼叫）
 mut_noipad="$work/push-gate.no-ipad-trigger.sh"
