@@ -64,6 +64,10 @@ enum TapTargetGateHarness {
         case .welcome: welcomeHost
         case .legalDocumentSheet: legalDocumentSheetHost
         case .legalDocumentNarrowContainer: legalDocumentNarrowContainerHost
+        case .eulaConsent: eulaConsentHost
+        case .deleteDiaryConfirmation: deleteDiaryConfirmationHost
+        case .deleteCommentConfirmation: deleteCommentConfirmationHost
+        case .eulaConsentToTimelineFlow: eulaConsentToTimelineHost
         case .selfTestTooSmall:
             selfTestTooSmallHost
         case .selfTestGood:
