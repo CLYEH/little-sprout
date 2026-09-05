@@ -98,8 +98,15 @@ final class UploadQueueStore {
 
     // MARK: - 佇列操作
 
+    /// merge-review R2 F1：同一個 id 已經在 `entries`（等候／上傳中／失敗／完成，任何狀態都
+    /// 算）時整筆跳過，不覆寫——沒有這道 guard，呼叫端不慎把同一批（例如使用者對同一次選圖
+    /// 手滑連按兩次「加入照片」）重複傳進來時，會用新的 `Entry`（新的 payload、新的
+    /// `enqueuedAt`）蓋掉舊的，若舊的正在飛行中（`.uploading`），飛行中的 `Task` 完成時回頭
+    /// 呼叫 `finish(id:)` 改的其實是「新蓋上去的那筆」的狀態——對不上真正完成的是哪一次
+    /// upload，且 `order` 會多出一個重複的 id（`rows`／`sections` 因此重複列出同一張縮圖）。
     func enqueue(_ uploads: [PendingUpload]) {
         for upload in uploads {
+            guard entries[upload.id] == nil else { continue }
             entries[upload.id] = Entry(upload: upload, enqueuedAt: now(), state: .waiting)
             order.append(upload.id)
         }

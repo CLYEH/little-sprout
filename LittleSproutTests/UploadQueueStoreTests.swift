@@ -10,9 +10,9 @@ import XCTest
 final class UploadQueueStoreTests: XCTestCase {
     private let familyID = UUID(uuidString: "22222222-2222-2222-2222-222222222222")!
 
-    private func makeUpload(tag: String) -> PendingUpload {
+    private func makeUpload(tag: String, id: UUID = UUID()) -> PendingUpload {
         PendingUpload(
-            kind: .photo(data: Data(tag.utf8), fileExtension: "jpg"), thumbnail: nil,
+            id: id, kind: .photo(data: Data(tag.utf8), fileExtension: "jpg"), thumbnail: nil,
             pixelSize: PixelSize(width: 4, height: 3)
         )
     }
@@ -197,5 +197,32 @@ final class UploadQueueStoreTests: XCTestCase {
 
         gateB.continuation.finish()
         await waitUntil { store.remainingCount == 0 }
+    }
+
+    // MARK: - merge-review R2 F1：重複 id 不覆寫 in-flight 項目
+
+    func test_enqueue_duplicateID_doesNotOverwriteInFlightEntry() {
+        let mediaService = StubMediaUploadService()
+        var tick = 0
+        let store = UploadQueueStore(
+            familyID: familyID, mediaUploadService: mediaService, maxConcurrentUploads: 1,
+            now: {
+                tick += 1
+                return Date(timeIntervalSince1970: TimeInterval(tick))
+            }
+        )
+        let id = UUID()
+
+        store.enqueue([makeUpload(tag: "first", id: id)])
+        let firstEnqueuedAt = store.rows.first?.enqueuedAt
+        store.enqueue([makeUpload(tag: "duplicate", id: id)])
+
+        XCTAssertEqual(store.rows.count, 1, "重複 id 不該新增第二筆")
+        XCTAssertEqual(store.rows.map(\.id), [id], "order 不該出現重複 id")
+        XCTAssertEqual(
+            store.rows.first?.enqueuedAt, firstEnqueuedAt,
+            "第二次 enqueue 用同一個 id 不該覆寫第一筆的 enqueuedAt（用時間戳證明整筆沒被換掉，" +
+            "不是只湊巧 id 一樣）"
+        )
     }
 }
