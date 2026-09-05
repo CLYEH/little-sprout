@@ -23,9 +23,8 @@ import UIKit
 ///
 /// **iPad**：稿面 `uQeV8` 用置中卡片而非滿版 sheet，理由是 SwiftUI `.sheet()` 在 regular
 /// width、未強制 `presentationDetents` 時的原生行為就是置中浮動 form sheet（系統行為，不是
-/// 設計選擇——Notes `NzCXK`）。用 `.frame(width: 520)` 固定內容寬度（Notes `W0Umr`：R3 定案
-/// 520＋內距 87.5，內容欄 345），讓 sheet 依內容尺寸置中呈現，不設 Grabber（置中卡片沒有下滑
-/// 手勢慣例）。
+/// 設計選擇——Notes `NzCXK`）。內容寬度上限 520（Notes `W0Umr`：R3 定案 520＋內距 87.5，內容欄
+/// 345），讓 sheet 依內容尺寸置中呈現，不設 Grabber（置中卡片沒有下滑手勢慣例）。
 ///
 /// **判斷用裝置 idiom，不用 `horizontalSizeClass`**（merge-review R1 `807855dc` F1）：R1 曾用
 /// `@Environment(\.horizontalSizeClass) == .regular` 判斷，但**實測** `.sheet()` 的 form
@@ -35,6 +34,22 @@ import UIKit
 /// 仍有 Grabber）。改用 `UIDevice.current.userInterfaceIdiom == .pad`：量裝置本身，跟
 /// presentation context 無關，且不需要更動 `LegalDocumentSheet(kind:)` 這個票文指定的 API
 /// 形狀（呼叫端不用多傳一個 size class 參數）。
+///
+/// **系統 sheet 底色**（merge-review R2 `8305338b` M1）：只把 `Color.lsSurface` 鋪在 520pt
+/// 內容上不夠——iPad 的系統 form sheet 本身還有約 580pt 寬、內容置中後左右各露出約 30pt 的
+/// 系統預設底色（實測是平坦硬邊 `(243,245,242)`，比紙色更亮更綠，不是陰影或圓角造成的視覺
+/// 誤差）。加 `.presentationBackground(Color.lsSurface)` 讓整張 form sheet 都是紙色，520
+/// 內容置中其上，才真的等於稿面 `uQeV8` 那張整片粉卡。
+///
+/// **窄容器不裁字**（merge-review R2 `8305338b` M2）：專案是 universal
+/// （`TARGETED_DEVICE_FAMILY "1,2"`）且未設 `UIRequiresFullScreen`，iPad Slide Over／分割
+/// 視窗（呈現容器可窄至 ≈320pt）是可達狀態，此時 idiom 仍是 `.pad`。原本 `.frame(width: 520)`
+/// 對呈現容器「要求」固定寬度而非「至多」，容器比 520 窄時內容會被容器邊界裁掉（例如標題
+/// 「使用條款」被裁成「用條款」）。改用 `.frame(maxWidth: 520)`（容器比 520 寬時封頂在
+/// 520，比 520 窄時允許收縮，永遠不會比容器本身更寬）；內距改用
+/// `iPadHorizontalPadding`，靠 `.background(GeometryReader)` 量測卡片實際渲染寬度後動態夾在
+/// `[24, 87.5]` 之間（純函式見 `Self.iPadCardAdaptivePadding`，回歸測試見
+/// `LegalDocumentSheetLayoutTests`）——容器越窄，內距越小，內容永遠不超出容器邊界。
 struct LegalDocumentSheet: View {
     let kind: LegalDocumentKind
 
@@ -42,6 +57,9 @@ struct LegalDocumentSheet: View {
 
     @State private var document: LegalMarkdownDocument?
     @State private var failedToLoad = false
+    /// R2 M2：`iPadCardWidth`（一般全螢幕情境下的卡寬）當測到真正寬度之前的預設值，避免
+    /// 第一次 layout pass 因為還沒量到寬度而算出錯誤內距。
+    @State private var iPadMeasuredWidth: CGFloat = 520
 
     /// `$fs-body`(17) × lineHeight 1.7（Notes `PpgKA`）換算成 SwiftUI `.lineSpacing`
     /// （額外行距，不是行高倍率）：17 × (1.7 − 1) ≈ 12。
@@ -49,22 +67,54 @@ struct LegalDocumentSheet: View {
     /// R3 定案（Notes `W0Umr`）：520 寬卡片 − 內距 87.5×2 ＝ 345 內容欄，與 iPhone
     /// （`AppSpacing.screenPad` 24×2 於 393pt 裝置寬）算出的內容欄一致。
     private let iPadCardWidth: CGFloat = 520
-    private let iPadCardPadding: CGFloat = 87.5
+    private let iPadCardMaxPadding: CGFloat = 87.5
+    private let iPadCardMinContentWidth: CGFloat = 345
 
     private var isPadIdiom: Bool {
         UIDevice.current.userInterfaceIdiom == .pad
+    }
+
+    /// R2 M2：容器寬度→內距的純函式，方便脫離 View 直接單元測試（見
+    /// `LegalDocumentSheetLayoutTests`）。容器 ≥ 520 時內距封頂在 `maxPadding`（87.5）；
+    /// 容器 < `minContentWidth + minPadding×2`（393）時內距降到 `minPadding`（24）下限，
+    /// 內容欄跟著收縮但保證至少留有這道最小呼吸間距，兩種情況下內容寬度都不會超出容器本身
+    /// （數學上不可能裁字：`content = containerWidth - 2×padding`，`padding` 一律 ≥ 0 且由
+    /// `max(minPadding, ...)` 保底，因此 `content ≤ containerWidth` 恆成立）。
+    static func iPadCardAdaptivePadding(
+        containerWidth: CGFloat, maxPadding: CGFloat, minContentWidth: CGFloat, minPadding: CGFloat
+    ) -> CGFloat {
+        let computed = (containerWidth - minContentWidth) / 2
+        return min(maxPadding, max(minPadding, computed))
+    }
+
+    private var iPadHorizontalPadding: CGFloat {
+        Self.iPadCardAdaptivePadding(
+            containerWidth: iPadMeasuredWidth,
+            maxPadding: iPadCardMaxPadding,
+            minContentWidth: iPadCardMinContentWidth,
+            minPadding: AppSpacing.screenPad
+        )
     }
 
     var body: some View {
         Group {
             if let document {
                 if isPadIdiom {
-                    layout(for: document, horizontalPadding: iPadCardPadding, showsGrabber: false)
-                        .frame(width: iPadCardWidth)
+                    layout(for: document, horizontalPadding: iPadHorizontalPadding, showsGrabber: false)
+                        .frame(maxWidth: iPadCardWidth)
+                        .background(
+                            GeometryReader { proxy in
+                                Color.clear
+                                    .preference(key: LegalDocumentSheetWidthKey.self, value: proxy.size.width)
+                            }
+                        )
+                        .onPreferenceChange(LegalDocumentSheetWidthKey.self) { iPadMeasuredWidth = $0 }
                         // R1 F1：iPad 分支不畫自畫 Grabber（`showsGrabber: false` 已涵蓋），
                         // 這裡額外明確隱藏系統拖曳把手——置中卡片沒有下滑手勢慣例，防止任何
                         // 系統預設行為意外冒出把手（reviewer 明確要求，雙重保險不嫌多）。
                         .presentationDragIndicator(.hidden)
+                        // R2 M1：見上方文件註解「系統 sheet 底色」。
+                        .presentationBackground(Color.lsSurface)
                 } else {
                     layout(for: document, horizontalPadding: AppSpacing.screenPad, showsGrabber: true)
                 }
@@ -200,6 +250,17 @@ struct LegalDocumentSheet: View {
         .padding(AppSpacing.screenPad)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.lsSurface)
+    }
+}
+
+/// R2 M2：`.background(GeometryReader)` 讀寬度不影響外層 layout 的標準寫法——`.background`
+/// 依前景（`layout(...).frame(maxWidth:)`）已解出的大小塞入背景，GeometryReader 本身不會
+/// 要求父層改給更大的空間，因此不影響 form sheet 依內容高度自動置中／調整大小的既有行為
+/// （F1 靠的就是這個自動行為，見上方 struct 文件註解）。
+private struct LegalDocumentSheetWidthKey: PreferenceKey {
+    static let defaultValue: CGFloat = 520
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 
