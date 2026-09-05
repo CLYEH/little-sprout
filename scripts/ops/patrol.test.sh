@@ -1091,6 +1091,30 @@ out26f="$(PATROL_PEN_OPEN_SH="$fake_pen_open_wrong" PATROL_LINEAR_SH="$fake_plsh
 hasnt '㉖(default) Pen 沒開（本檔頭預設假身）→ 完全靜默' "$out26f" '⚠ Pen 開錯檔'
 if [ -s "$work/lane-calls.log" ]; then echo "✗ ㉖(default) Pen 沒開時不該呼叫 patrol-linear.sh --lane（省成本）：$(cat "$work/lane-calls.log")" >&2; fail=1; else echo "✓ ㉖(default) Pen 沒開時完全不呼叫 lane 查詢（省 CLI／API 成本）"; fi
 
+# ---- ㉖(g)（merge-review R1 m4，效能）：design_wt=1（本檔存在 feature/LS-9-flow-design worktree，
+#      見上方 ㉒ 建立）時，Pencil 連線段已經探過一次 Pen 路徑——這裡驗證「開錯檔偵測」直接沿用 PENCIL_LINE
+#      解析出的路徑，完全不再呼叫 pen-open.sh --status 第二次（省下的正是這次可省的 IPC，poll_once 單次
+#      上限 8s）；同時確認偵測本身沒有因為改走這條路徑而失效（仍正確找出非 design 票、印 ⚠）----
+fake_ps_wrong="$work/fake-pen-status-wrong.sh"
+printf '#!/bin/bash\necho "Pencil：行程 ✓（pid 1） · 路徑 %s/.claude/worktrees/LS-777/design/littlesprout.pen · MCP 探針 ✓（mcp-server 1 支皆有 unix socket 連到 Pen pid 1）"\nexit 0\n' "$repo" > "$fake_ps_wrong"
+chmod +x "$fake_ps_wrong"
+fake_pen_open_log="$work/fake-pen-open-logcall.sh"
+cat > "$fake_pen_open_log" <<'EOF'
+#!/bin/bash
+printf 'called %s\n' "$*" >> "${PEN_OPEN_CALL_LOG:?}"
+echo "/should-not-be-used/design/littlesprout.pen"
+exit 0
+EOF
+chmod +x "$fake_pen_open_log"
+: > "$work/pen-open-call.log"
+out26g="$(PATROL_PEN_STATUS_SH="$fake_ps_wrong" PATROL_PEN_OPEN_SH="$fake_pen_open_log" PEN_OPEN_CALL_LOG="$work/pen-open-call.log" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:backend' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉖(g) 沿用 PENCIL_LINE 路徑仍正確偵測非 design 票 → ⚠' "$out26g" '⚠ Pen 開錯檔（實作票 LS-777）'
+if [ -s "$work/pen-open-call.log" ]; then
+  echo "✗ ㉖(g) 不應再呼叫 pen-open.sh --status（PENCIL_LINE 已有可用路徑）：$(cat "$work/pen-open-call.log")" >&2; fail=1
+else
+  echo "✓ ㉖(g) 沿用 PENCIL_LINE 解析出的路徑，完全不再呼叫 pen-open.sh --status（省下第二次 IPC，merge-review R1 m4）"
+fi
+
 # mutation：拿掉 LS209-PEN-WRONG 整段 → 上面 ㉖(a) 的負樣本必須變綠（不印 ⚠、不掛 flag），證明紅是這段造成的
 mut_penwrong="$work/patrol.no-pen-wrong.sh"
 awk 'index($0, "LS209-PEN-WRONG-START") > 0 { skip = 1 } skip != 1 { print } index($0, "LS209-PEN-WRONG-END") > 0 { skip = 0 }' "$patrol" > "$mut_penwrong"

@@ -420,24 +420,36 @@ fi
 # variable」，這會讓 mutation 測到的是「腳本壞掉」而不是「這段偵測邏輯確實是負樣本變綠的原因」。
 PEN_WRONG_LINE=
 # LS209-PEN-WRONG-START
+# merge-review R1 m4（效能）：design_wt=1 時上面的 Pencil 連線段已經探過一次 Pen 目前路徑（PENCIL_LINE 裡的
+# 「路徑 …」欄位），這裡若又獨立呼叫 pen-open.sh --status 就是第二次 pen CLI IPC（poll_once 單次上限 8s）——
+# 直接沿用解析出來的值，省下這次可省的 IPC；只有 PENCIL_LINE 沒有可用路徑（沒跑過、查詢失敗、Pen 沒開）
+# 時才退回原本「pgrep 確認在跑才呼叫 pen-open.sh」的路徑。
+pen_path=
+if [ "$pencil_ran" -eq 1 ]; then
+  cand=$(printf '%s' "$PENCIL_LINE" | sed -n 's/.* · 路徑 \([^·]*\)· .*/\1/p')
+  cand=${cand% }
+  case "$cand" in
+    ''|'✗'*|'—'*) ;;
+    *) pen_path=$cand ;;
+  esac
+fi
 PEN_PGREP_BIN=${PATROL_PEN_PGREP:-pgrep}
-if command -v "$PEN_PGREP_BIN" >/dev/null 2>&1 && "$PEN_PGREP_BIN" -f 'Pen\.app/Contents/MacOS/Pen$' >/dev/null 2>&1; then
+if [ -z "$pen_path" ] && command -v "$PEN_PGREP_BIN" >/dev/null 2>&1 && "$PEN_PGREP_BIN" -f 'Pen\.app/Contents/MacOS/Pen$' >/dev/null 2>&1; then
   posh="${PATROL_PEN_OPEN_SH:-${here}/pen-open.sh}"
-  pen_path=
   [ -x "$posh" ] && pen_path=$(bash "$posh" --status 2>/dev/null)
-  pen_wt_ticket=$(printf '%s' "${pen_path:-}" | grep -oE '\.claude/worktrees/LS-[0-9]+' | grep -oE 'LS-[0-9]+' | head -1)
-  if [ -n "$pen_wt_ticket" ]; then
-    plsh_lane="${PATROL_LINEAR_SH:-${here}/patrol-linear.sh}"
-    pen_lane=; lane_rc=1
-    if [ -x "$plsh_lane" ]; then
-      pen_lane=$(bash "$plsh_lane" --lane "${pen_wt_ticket#LS-}" --repo "$ROOT" 2>/dev/null); lane_rc=$?
-    fi
-    if [ "$lane_rc" -ne 0 ]; then
-      PEN_WRONG_LINE="Pen：目前開在 ${pen_wt_ticket} worktree，lane ?（查詢失敗，不擋）"
-    elif [ "$pen_lane" != "lane:design" ]; then
-      PEN_WRONG_LINE="⚠ Pen 開錯檔（實作票 ${pen_wt_ticket}）"
-      add_flag "[Pen] 開錯檔（實作票 ${pen_wt_ticket}；lane=${pen_lane:-無}，非 lane:design——不得在實作票 worktree 開 Pen，見 ios-dev.md 硬規則）"
-    fi
+fi
+pen_wt_ticket=$(printf '%s' "${pen_path:-}" | grep -oE '\.claude/worktrees/LS-[0-9]+' | grep -oE 'LS-[0-9]+' | head -1)
+if [ -n "$pen_wt_ticket" ]; then
+  plsh_lane="${PATROL_LINEAR_SH:-${here}/patrol-linear.sh}"
+  pen_lane=; lane_rc=1
+  if [ -x "$plsh_lane" ]; then
+    pen_lane=$(bash "$plsh_lane" --lane "${pen_wt_ticket#LS-}" --repo "$ROOT" 2>/dev/null); lane_rc=$?
+  fi
+  if [ "$lane_rc" -ne 0 ]; then
+    PEN_WRONG_LINE="Pen：目前開在 ${pen_wt_ticket} worktree，lane ?（查詢失敗，不擋）"
+  elif [ "$pen_lane" != "lane:design" ]; then
+    PEN_WRONG_LINE="⚠ Pen 開錯檔（實作票 ${pen_wt_ticket}）"
+    add_flag "[Pen] 開錯檔（實作票 ${pen_wt_ticket}；lane=${pen_lane:-無}，非 lane:design——不得在實作票 worktree 開 Pen，見 ios-dev.md 硬規則）"
   fi
 fi
 # LS209-PEN-WRONG-END
