@@ -11,13 +11,21 @@
 #
 # 觸發條件與 design-evidence-check 相同：.pen 有變更的 PR 才跑（CI rules job「.pen Notes 節點 id gate」step）。
 #
+# LS-202 署名年齡片語 NBSP（LS-96 池項 ed90c6ab）：同一支順便驗 `cmp/Card Album`／`cmp/Card Diary` 的署名文字（元件定義內的 text
+# ＋全稿實例的 descendants content 覆寫）裡 `歲`／`個月` 前的空白只准 U+00A0／U+2060／換行——含 U+0020 即命中，印節點（或實例 id／
+# override 鍵）與 codepoint 序列。--base 增量：命中所在的頂層節點在 merge-base→head 有變更才算違規（紅），未觸碰的板列「（舊債）」
+# 警告不擋（LS-201 未併前 development 現況：X9PfG HIdMW／HLXo3 fZ3KF 與 cmp/Card Diary 定義 zk1yE／x7k2o6，皆為他票舊債）。
+#
 # 盲區（明寫）：(1) 從未存在過的 id（打字錯）與同一 commit 內建又刪的 id 不在候選集、抓不到；(2) 只驗 id 存在，不驗
 # Notes 裡的數字（板高／欄寬）是否與稿相符——dbdbbaba 第二級〔量:節點.屬性〕標記另評；(3) 沿革標記是子句級字面比對，
 # 子句內剛好含「舊」「曾」等字的活指標會被放行（誤放行方向，不誤擋）——merge-review R1 N3 實測 development 4 塊 Notes 板 768 次活 id
-# 引用有 195（25.4%）所在子句已含標記（`→` 60／`原` 76 最大宗）；`→` 已收窄為緊鄰箭頭左側，其餘字面標記維持。
+# 引用有 195（25.4%）所在子句已含標記（`→` 60／`原` 76 最大宗）；`→` 已收窄為緊鄰箭頭左側，其餘字面標記維持；(4) NBSP 檢查只看
+# 兩個卡片元件（legacy 板的非元件 Age Text、Notes 散文不在範圍）、只看單位**前**的空白（「2 歲 3 個月」中 歲 與 3 之間不驗）、
+# 只擋 U+0020（U+3000 全形空白或完全無空白不擋）；「觸碰的板」用頂層 JSON 是否變更判定——動 `cmp/Card Diary` 定義就得順手修掉
+# 定義內的 U+0020，動某板就得修掉該板實例的覆寫。
 #
 # 用法：design-notes-check.sh <path.pen> --base <ref> [--head-sha <sha>]
-# exit：0＝無缺失；1＝有缺失；2＝參數／git 錯誤（fail closed）。自測：design-notes-check.test.sh（CI rules job）。
+# exit：0＝無缺失且無 NBSP 違規；1＝有缺失或 NBSP 違規；2＝參數／git 錯誤（fail closed）。自測：design-notes-check.test.sh（CI rules job）。
 set -uo pipefail
 
 self_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

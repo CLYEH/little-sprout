@@ -12,6 +12,8 @@
 #   ⑪ 「舊→新」只放行箭頭左側：兩側都死時左側 Xk9f2 印沿革、右側 Zq7Lm 紅（右側是現行 id、必須存在）
 #   ⑧ --head-sha 指定 PR head（CI merge ref 情境，同 LS-127）→ 依該 head 判定；解析不到／缺值 → exit 2
 #   ⑨ 參數 fail closed：缺 --base／找不到 .pen／非 git 目錄 → exit 2
+#   ⑫～⑯ LS-202 署名年齡片語 NBSP：觸碰板全 NBSP／WJ／換行 → 綠＋未觸碰板既有 U+0020 列（舊債）；觸碰板 U+0020 → 紅列板／實例／override／
+#   codepoint；混用 U+0020+U+00A0 → 紅；觸碰舊板沒修 → 轉違規紅；元件定義內 U+0020 → 紅（節點 id）。mutation：拿掉 NBSP 檢查 → ⑬ 綠
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -124,6 +126,54 @@ expect 2 '⑨ 缺 --base → exit 2' '缺 --base' '' design/littlesprout.pen
 expect 2 '⑨ 找不到 .pen → exit 2' '找不到' '' design/nope.pen --base "$base_ref"
 out="$(cd "$work" && bash "$check" "$R/design/littlesprout.pen" --base "$base_ref" 2>&1)"; got=$?
 if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '不在 git 目錄內'; then echo "✓ ⑨ 非 git 目錄 → exit 2"; else echo "✗ ⑨ 非 git 目錄（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+
+# ───── LS-202：署名年齡片語 NBSP（cmp/Card Album／cmp/Card Diary 的署名文字，歲／個月 前空白只准 U+00A0／U+2060／換行） ─────
+# 合成 cmp/Card Album（reusable，Signature Line text wQVzs）＋兩塊板各一個實例（descendants 覆寫 wQVzs content）。JSON 內用 \u 轉義寫
+# 空白，讓 codepoint 一眼可辨。base2：定義正確、CARDB 實例正確、OLDB 實例含 U+0020（別票舊債）。
+card() { printf '{"type":"frame","id":"bhroo","name":"cmp/Card Album","reusable":true,"children":[{"type":"text","id":"wQVzs","name":"Signature Line","content":"%s"}]}' "$1"; }
+inst() { printf '{"type":"ref","id":"%s","ref":"bhroo","name":"Card Album","descendants":{"wQVzs":{"content":"%s"}}}' "$1" "$2"; }
+OKSIG='小安 · 2 歲 3 個⁠月'
+ROW='{"type":"frame","id":"Xk9f2","name":"Row"}'
+# pen202 <card content> <CARDB 覆寫> <OLDB 板名> <OLDB 覆寫>
+pen202() { pen "$(board Ab12C '01 板' "$ROW")" "$(notes T1 '列 Xk9f2 高 44')" "$(card "$1")" "$(board CARDB '卡片板' "$(inst HIdMW "$2")")" "$(board OLDB "$3" "$(inst OLDi1 "$4")")"; }
+g checkout -q -b ls202-base "$base_ref"
+pen202 "$OKSIG" '小明 · 8 個⁠月' '舊板' '小明 · 8 個⁠月'
+commit_pen 'design(pen): LS-202 base（OLDB 帶別票舊債）'
+base2_ref="$(g rev-parse HEAD)"
+
+# ⑫ 正確：本 PR 改 CARDB 覆寫（WJ／換行也允許）→ 綠；OLDB 未觸碰、既有 U+0020 只列（舊債）
+g checkout -q -b pr-nbsp-ok "$base2_ref"
+pen202 "$OKSIG" '小安 · 2⁠歲 3\n個⁠月' '舊板' '小明 · 8 個⁠月'
+commit_pen 'design(pen): LS-202 r1 改卡片板署名（NBSP／WJ／換行）'
+expect 0 '⑫ 觸碰板的署名空白全為 U+00A0／U+2060／換行 → 綠；未觸碰板的既有 U+0020 列（舊債）不擋' '署名 NBSP 違規 0（舊債 1）' '✗ 署名 NBSP' design/littlesprout.pen --base "$base2_ref"
+out="$(cd "$R" && bash "$check" design/littlesprout.pen --base "$base2_ref" 2>&1)"
+if printf '%s' "$out" | grep -qF '（舊債）署名 NBSP：板 OLDB（舊板）／實例 OLDi1 override wQVzs：「小明 · 8 個⁠月」個⁠月 前 U+0020'; then echo "✓ ⑫ 舊債行點名板／實例／override／codepoint"; else echo "✗ ⑫ 舊債行格式" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+
+# ⑬ U+0020：本 PR 把 CARDB 覆寫寫成一般空白 → 紅，印板／實例／override／codepoint
+g checkout -q -b pr-nbsp-space "$base2_ref"
+pen202 "$OKSIG" '小明 · 8 個⁠月' '舊板' '小明 · 8 個⁠月'
+commit_pen 'design(pen): LS-202 r1 卡片板署名用了 U+0020'
+expect 1 '⑬ 觸碰板的署名 個月 前為 U+0020 → 紅，列板／實例／override／codepoint' '✗ 署名 NBSP：板 CARDB（卡片板）／實例 HIdMW override wQVzs：「小明 · 8 個⁠月」個⁠月 前 U+0020' '' design/littlesprout.pen --base "$base2_ref"
+expect 1 '⑬-b 摘要：違規 1（舊債 1）——OLDB 仍只算舊債' '署名 NBSP 違規 1（舊債 1）' '✗ 署名 NBSP：板 OLDB' design/littlesprout.pen --base "$base2_ref"
+
+# ⑭ 混合：U+0020 與 U+00A0 同在一段空白序列 → 紅，codepoint 序列列全
+g checkout -q -b pr-nbsp-mixed "$base2_ref"
+pen202 "$OKSIG" '小安 · 2  歲' '舊板' '小明 · 8 個⁠月'
+commit_pen 'design(pen): LS-202 r1 署名空白混用'
+expect 1 '⑭ 空白序列混用 U+0020＋U+00A0 → 紅，序列逐字印' '歲 前 U+0020+U+00A0' '' design/littlesprout.pen --base "$base2_ref"
+
+# ⑮ 觸碰舊板（改板名）但沒修它的 U+0020 → 該板轉為違規、紅（觸碰即嚴格）
+g checkout -q -b pr-nbsp-touch-old "$base2_ref"
+pen202 "$OKSIG" '小明 · 8 個⁠月' '舊板 · 改版' '小明 · 8 個⁠月'
+commit_pen 'design(pen): LS-202 r1 動了舊板卻沒修署名'
+expect 1 '⑮ 本 PR 觸碰 OLDB（頂層 JSON 變更）→ 它的既有 U+0020 轉為違規、紅' '✗ 署名 NBSP：板 OLDB（舊板 · 改版）／實例 OLDi1 override wQVzs' '（舊債）' design/littlesprout.pen --base "$base2_ref"
+
+# ⑯ 元件定義本身：改 cmp/Card Album 的 Signature Line 成 U+0020 → 紅，owner 為「節點 wQVzs」
+g checkout -q -b pr-nbsp-def "$base2_ref"
+pen202 '小安 · 2 歲 3 個月' '小明 · 8 個⁠月' '舊板' '小明 · 8 個⁠月'
+commit_pen 'design(pen): LS-202 r1 元件定義署名用了 U+0020'
+expect 1 '⑯ 觸碰 cmp/Card Album 定義、其 Signature Line 用 U+0020 → 紅（節點 wQVzs、歲 與 個月 各一筆）' '✗ 署名 NBSP：板 bhroo（cmp/Card Album）／節點 wQVzs：「小安 · 2 歲 3 個月」歲 前 U+0020' '' design/littlesprout.pen --base "$base2_ref"
+expect 1 '⑯-b 同一定義的 個月 也各報一筆' '／節點 wQVzs：「小安 · 2 歲 3 個月」個月 前 U+0020' '' design/littlesprout.pen --base "$base2_ref"
 
 if [ "$fail" -eq 0 ]; then
   echo "design-notes-check.test.sh：全數通過"
