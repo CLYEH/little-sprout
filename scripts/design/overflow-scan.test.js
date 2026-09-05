@@ -1,5 +1,5 @@
 // scripts/design/overflow-scan.js 的自測（LS-122）。CI rules job 自測 step 跑 `node scripts/design/overflow-scan.test.js`。
-// 純函數對合成節點樹（絕對座標）驗四支掃描的語意；每條斷言都對應一個 LS-119 R5 抓到的盲區、既有語意、或 merge-review R1
+// 純函數對合成節點樹（絕對座標）驗各支掃描的語意（支數以 overflow-scan.js 檔頭為準）；每條斷言都對應一個 LS-119 R5 抓到的盲區、既有語意、或 merge-review R1
 // 的反例（B1 40pt 角托、B2 角托與紙面是兄弟／板層角托、MJ-2 祖先刻意接縫 1pt 底下的真碰撞），斷言的是**精確的命中集合**
 // （不是「至少有一筆」）——演算法退化（少比一支、祖先後代沒排除、disabled 沒傳遞、Corner BR 漏掉、跨 parent 去重吃掉溢出
 // 類、角托尺寸寫死、紙面誤取父節點）任一種都會讓集合改變而紅。
