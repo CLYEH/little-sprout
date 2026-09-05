@@ -152,6 +152,12 @@ final class StubFamilyAPIClient: FamilyAPIClient, @unchecked Sendable {
 
     func setRequireApproval(familyID: UUID, requireApproval: Bool) async throws { throw StubError.unconfigured }
 
+    /// LS-188：目前沒有任何 `FamilyStore.refreshQuota()` 測試需要自訂這支的行為（見
+    /// `FamilyQuotaTests`／`StorageUsageFormattingTests` 直接測純函式，不經過這個 stub），
+    /// 同 `updateFamilyName`／`setRequireApproval` 的既有作法先給一個最小、未配置即拋錯的
+    /// 實作，滿足 protocol 相容。
+    func fetchQuota(familyID: UUID) async throws -> FamilyQuota { throw StubError.unconfigured }
+
     func requestJoin(code: String) async throws -> JoinRequestOutcome {
         box.withLock { $0.requestJoinCalls.append(code) }
         let handler = box.withLock { $0.requestJoinHandler }

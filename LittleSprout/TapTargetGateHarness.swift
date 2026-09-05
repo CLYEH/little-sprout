@@ -39,8 +39,8 @@ enum TapTargetGateHarness {
                 // （見 `OTPVerificationView.init` 文件註解），不必真的等 60 秒冷卻。
                 OTPVerificationView(email: "grandma@example.com", authStore: .preview(), cooldownSeconds: 0) {}
             }
-        case .settings:
-            settingsHost
+        case .settings: settingsHost
+        case .settingsMemberRole: settingsMemberRoleHost
         case .diaryEditor:
             diaryEditorHost
         case .createChild:
@@ -109,6 +109,26 @@ enum TapTargetGateHarness {
                     id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
                 )),
                 childrenStore: .preview(),
+                timelineStore: .preview(),
+                albumsStore: .preview()
+            )
+        }
+    }
+
+    /// LS-188：同 `settingsHost`，但把角色釘死在 `.member`（`ChildrenStore
+    /// .seedRoleForPreview`）——`TapTargetGateScreenName.settingsMemberRole` 文件註解。
+    @MainActor
+    @ViewBuilder
+    private static var settingsMemberRoleHost: some View {
+        let childrenStore = ChildrenStore.preview()
+        childrenStore.seedRoleForPreview(.member)
+        return NavigationStack {
+            SettingsView(
+                authStore: .preview(),
+                familyStore: .preview(withFamily: Family(
+                    id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
+                )),
+                childrenStore: childrenStore,
                 timelineStore: .preview(),
                 albumsStore: .preview()
             )

@@ -181,6 +181,8 @@ final class FamilyStore {
         createFamilyState = .idle
         createInviteState = .idle
         lookupInviteState = .idle
+        quota = nil
+        quotaState = .idle
         showsChildOnboarding = false
         resetJoinRequestsState()
     }
@@ -330,6 +332,23 @@ final class FamilyStore {
             lookupInviteState = .failure(AppError.map(error))
         }
         return latestInvite
+    }
+
+    /// LS-188：09／09b 儲存空間頁的用量查詢——同其餘動作的 in-flight guard 慣例，沒有家庭
+    /// （理論上不會在 `SettingsView` 這條路徑發生，見 `SettingsView` 文件註解）就直接回傳
+    /// 目前值，不呼叫後端。
+    @discardableResult
+    func refreshQuota() async -> FamilyQuota? {
+        guard !quotaState.isSubmitting else { return quota }
+        guard let familyID = myFamily?.id else { return nil }
+        quotaState = .submitting
+        do {
+            quota = try await apiClient.fetchQuota(familyID: familyID)
+            quotaState = .success
+        } catch {
+            quotaState = .failure(AppError.map(error))
+        }
+        return quota
     }
 
     /// `refreshLatestInvite` 的 await 前後核對——見該方法文件註解第 2 點。`familyID` 不同代表
