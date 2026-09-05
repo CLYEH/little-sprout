@@ -1,5 +1,6 @@
 // LS-122：設計收工溢出掃描——正典腳本（取代 ui-designer／visual-reviewer 每輪臨場手寫的 JS）；四支（LS-122）→ 第五支
-// text_occlusion（LS-168）→ 第六支 board_clip＋收據 scan_scope＋cross_parent_collision 候選過濾（LS-185）。
+// text_occlusion（LS-168）→ 第六支 board_clip＋收據 scan_scope＋cross_parent_collision 候選過濾（LS-185）→ corner_anchor 角托
+// 候選改 `ref → cmp/Photo Corner` 判準＋六支各帶 `scope`／`document_count`（LS-202）。
 //
 // 為什麼要正典化：LS-119 R5 的兩個 BLOCKER（角托縮進紙面 148 點錯位、相鄰格角托跨 parent 重疊 80 筆）與
 // MJ-6（instance descendants 才 enable 的影片徽章被裁）都是既有兩支掃描結構上抓不到的類別；橫列溢出收據 115 vs
@@ -15,7 +16,7 @@
 //      路徑）、算絕對座標、跑六支掃描，`Print`：一行 SUMMARY ＋ 每支掃描一段**分類彙整**（同名對／同容器歸一類：
 //      `<n>× <name_a> × <name_b> @ <parent> e.g. <idA>×<idB>`，corner_anchor 的 in-scope 錯位與 unresolved 逐筆、
 //      document 錯位按板計數）——真實稿的完整 JSON 有 26 萬字元、超過 MCP 回應上限（R6 實跑），所以預設不印；要完整
-//      陣列時設 `SCAN_VERBOSE = true`（每支掃描一個 Print，仍可能被轉存成檔案）。`total_nodes` 用**未展開 instance**
+//      陣列時設 `SCAN_VERBOSE = true`（每支掃描一個 Print，仍可能被轉存成檔案；另逐容器印 `CORNERS <容器> n=<角托數>`，LS-202）。`total_nodes` 用**未展開 instance**
 //      的走訪計數（與 design-landing-check.sh --print-nodes／pen-land.sh 同一語意），`scanned_nodes` 才是展開後實際掃過
 //      的節點數。設計端依彙整段寫 `design/evidence/<票號>-r<n>-overflow.json`：每類一筆代表（e.g. 的 id）＋
 //      `classification`（含「同類 N 例」），補 `ticket`／`round`／`head_sha`，`tree_hash` 抄 SUMMARY 的值（LS-168；見
@@ -45,7 +46,12 @@
 //       命中 BLEED_RE：Corner／Badge／Dragging Photo／Drop Target／Insert Line／Stack Sheet——LS-119 R6 實跑 386 筆多是
 //       Spacer × Corner Shape、Feed × Home Indicator Area 這類不可見排版框），`SCAN_CROSS_ALL = true`（node：opts.crossAll）
 //       才全報。白名單以 classification 記錄。
-//   (d) corner_anchor：每個直接子節點含 `Corner TL/TR/BL/BR` 的節點是一個「容器」（角托的父）。角托咬住的**紙面**不一定是
+//   (d) corner_anchor：角托候選＝`type:"ref"` 且 `ref` 解析到 `cmp/Photo Corner` 的實例（LS-202；元件 id 集合＝字面
+//       PHOTO_CORNER_ID `GEBcf` ∪ 快照 roots 裡名稱為 `cmp/Photo Corner` 的元件定義——元件重建換 id 時名稱是備援；`SCAN_SCOPE=boards`
+//       限縮快照沒有元件定義根時就只剩字面 id）。名稱只供方位（`/\b(TL|TR|BL|BR)\b/`，`Corner TL`／`Mount BR` 都認得；無方位進 `unresolved`），
+//       **不再是候選判準**——LS-122～LS-198 靠 `Corner TL/…` 名稱辨識，`cmp/Profile Print`／App icon 的 `Mount TL/BR` 以 ref 存在卻
+//       永遠看不到（LS-194 VR：實測 corner-out 3.8pt 屬盲區，LS-96 `0617b9ae`）；名稱像角托但不是 ref 的節點不算。每個直接子節點
+//       含角托候選的節點是一個「容器」（角托的父）。角托咬住的**紙面**不一定是
 //       父：現行稿有三種結構——角托是紙面的子（`Photo Wrap`）、角托與紙面 `Print` 是兄弟（`Print Stage`）、角托直接掛在
 //       板上而紙面是兄弟 `Print`（iPad 板）。因此紙面由候選（父＋同 parent 的兄弟）中挑「與四顆角托期望位置吻合軸數最多」
 //       者（吻合軸數 ≥ 一半才算找到；找不到列 `unresolved`，不計 mismatch、收據需給分類）。期望位置＝角托外緣壓過紙緣
@@ -53,8 +59,10 @@
 //         TL=(P.x−5, P.y−5)、TR=(P.x+P.w−cw+5, P.y−5)、BL=(P.x−5, P.y+P.h−ch+5)、BR=(P.x+P.w−cw+5, P.y+P.h−ch+5)
 //       其中 cw／ch 是該顆角托**實測**寬高（merge-review R1 B1：不得假設 26——iPad 版有 40×40）。每顆角托 x／y 各一個斷言，
 //       `points`＝斷言數，`mismatch`＝失敗數，允差 TOL。**範圍（orchestrator 裁定 a106f940）**：`mismatch`／`flagged`／
-//       `containers`／`points` 只算 `boards`（本票觸碰的板，SCAN_BOARDS）內的容器；全稿數字另列 `document_*` 供參考、
-//       不擋 gate（他票舊債另開 chore）。角托錯位不接受白名單，收據 gate 要求 mismatch == 0（design-evidence-check.sh）。
+//       `containers`／`points`／`unresolved` 只算 `boards`（本票觸碰的板，SCAN_BOARDS）內的容器；全稿數字另列 `document_*`
+//       （含 `document_unresolved`，LS-202——ref 判準把 41 個他票 `Mount` 容器帶進視野，若 `unresolved` 仍全稿計，每張後續收據都得替
+//       它們逐筆分類）供參考、不擋 gate（他票舊債另開 chore）。角托錯位不接受白名單，收據 gate 要求 mismatch == 0
+//       （design-evidence-check.sh）。`container_corners` 逐容器列角托數（SCAN_VERBOSE 印 `CORNERS` 行）。
 //   (e) text_occlusion（LS-168，第五支）：同一板內任一 `type:"text"` 節點，與名稱命中 OVERLAY_RE（Action Bar／Tab Bar／
 //       Capsule／Footer／Toast／Banner；Pencil 端 `SCAN_OVERLAY_RE = "…"` 或 node `opts.overlayRe` 可覆寫）、**非其祖先**、且
 //       **繪製順序在它之後**（快照陣列順序＝pre-order＝繪製順序，後者蓋前者：同一容器內較後的兄弟、或較後兄弟的子樹）
@@ -87,7 +95,10 @@
 //       撤回旋轉盲點），任何一支都不得再套旋轉公式。
 //   scan_scope（LS-185）：SUMMARY 與 `scanAll` 輸出頂層 `scan_scope`＝`document`（預設，全稿快照）或 `boards`（Pencil 端
 //       `SCAN_SCOPE = "boards"`／node `opts.scanScope`：快照先限縮到 SCAN_BOARDS 的子樹再跑六支，沒有 SCAN_BOARDS 會 throw），
-//       每支輸出各帶同值 `scope`。目的是讓收據分得清 `document_*`／各支 flagged 是全稿數字還是限縮板的數字——LS-120 R3／R4 逐板
+//       每支輸出各帶同值 `scope` 與 `document_count`（LS-202：該支在**整份快照**裡的命中數——有 `document_flagged` 的三支取其長度、
+//       其餘三支取 `flagged` 長度；只設 SCAN_BOARDS 不限縮時就是全稿數，`scope=boards` 時是限縮值，收據照抄、由 `scope` 說明——
+//       LS-177 R1／R2 `cross_parent_collision` 限縮 17 板時收據沒有任何欄位說明全稿數，LS-96 `ba1ec045`；design-evidence-check.sh
+//       驗六支皆有這兩個欄位）。目的是讓收據分得清 `document_*`／各支 flagged 是全稿數字還是限縮板的數字——LS-120 R3／R4 逐板
 //       `Get(boardId)` 繞過逾時後 `corner_anchor.document_*` 塌縮成 boards 值、LS-177 R1／R2 `cross_parent_collision` 限縮 17 板，
 //       收據語意都靠 scan_note 文字自述（VR MJ-9／MN-5；LS-96 `83694378`）。設計端在 `boards` 模式下 `document_*` 就是限縮值，
 //       收據照印、不得改標成 `document`。
@@ -119,7 +130,10 @@
 const AREA_MIN = 4;
 const TOL = 0.5;
 const CORNER_OUT = 5;
-const CORNER_RE = /\bCorner (TL|TR|BL|BR)\b/;
+// LS-202：角托＝ref 指向 cmp/Photo Corner 的實例（id 為主、名稱備援）；名稱只供方位
+const PHOTO_CORNER_ID = "GEBcf";
+const PHOTO_CORNER_NAME = "cmp/Photo Corner";
+const CORNER_VARIANT_RE = /\b(TL|TR|BL|BR)\b/;
 const BLEED_RE = /Corner|Badge|Dragging Photo|Drop Target|Insert Line|Stack Sheet/i;
 const OVERLAY_RE = /Action Bar|Tab Bar|Capsule|Footer|Toast|Banner/;
 // 第六支的可見葉節點型別（.pen 實測型別集：frame／text／ref／icon／rectangle／note／path／ellipse；frame 只有帶 image fill 才算）
@@ -285,18 +299,31 @@ function resolveBoards(list, roots) {
   return out;
 }
 
+// LS-202：角托元件 id 集合＝字面 GEBcf ∪ 快照 roots 裡名為 cmp/Photo Corner 的元件定義（元件重建換 id 時的名稱備援）；
+// 限縮快照沒有元件定義根時就只剩字面 id
+function cornerComponentIds(roots) {
+  const ids = [PHOTO_CORNER_ID];
+  for (const r of roots || []) if (r.name === PHOTO_CORNER_NAME && !ids.includes(r.id)) ids.push(r.id);
+  return ids;
+}
+
 function scanCornerAnchor(nodes, idx, opts) {
   const { byId, liveNodes, kids, chain, roots } = idx || buildIndex(nodes);
   const boards = resolveBoards(opts && opts.boards, roots);
   const scoped = boards.length > 0;
+  const cornerIds = cornerComponentIds(roots);
+  const isCorner = (n) => n.type === "ref" && cornerIds.includes(n.ref);
   const groups = new Map();
   for (const n of liveNodes) {
-    const m = CORNER_RE.exec(n.name || "");
-    if (!m || n.parent == null || !byId.get(n.parent)) continue;
+    if (!isCorner(n) || n.parent == null || !byId.get(n.parent)) continue;
+    const m = CORNER_VARIANT_RE.exec(n.name || "");
     if (!groups.has(n.parent)) groups.set(n.parent, []);
-    groups.get(n.parent).push({ node: n, variant: m[1] });
+    groups.get(n.parent).push({ node: n, variant: m ? m[1] : null });
   }
-  const out = { boards, containers: 0, points: 0, mismatch: 0, flagged: [], document_containers: 0, document_points: 0, document_mismatch: 0, document_flagged: [], unresolved: [] };
+  const out = {
+    boards, containers: 0, points: 0, mismatch: 0, flagged: [], unresolved: [],
+    document_containers: 0, document_points: 0, document_mismatch: 0, document_flagged: [], document_unresolved: [], container_corners: [],
+  };
   for (const [pid, corners] of groups) {
     const p = byId.get(pid);
     const c = chain.get(pid);
@@ -304,12 +331,23 @@ function scanCornerAnchor(nodes, idx, opts) {
     const boardName = byId.get(board).name;
     const inScope = !scoped || boards.includes(board);
     const base = { container: pid, container_name: p.name, board, board_name: boardName, corners: corners.map((k) => k.node.id) };
+    out.container_corners.push({ container: pid, container_name: p.name, board, board_name: boardName, n: corners.length, in_scope: inScope });
+    const unresolved = (extra) => {
+      const entry = Object.assign({}, base, extra);
+      out.document_unresolved.push(entry);
+      if (inScope) out.unresolved.push(entry);
+    };
+    const noVariant = corners.filter((k) => !k.variant);
+    if (noVariant.length) {
+      unresolved({ reason: "角托名稱無方位 TL/TR/BL/BR：" + noVariant.map((k) => k.node.name || k.node.id).join("、") });
+      continue;
+    }
     if (corners.length !== 4 && corners.length !== 2) {
-      out.unresolved.push(Object.assign({}, base, { reason: "角托數 " + corners.length + "（規則①四角托／②兩對角）" }));
+      unresolved({ reason: "角托數 " + corners.length + "（規則①四角托／②兩對角）" });
       continue;
     }
     const totalAxes = corners.length * 2;
-    const candidates = [p].concat((kids.get(pid) || []).filter((s) => !CORNER_RE.test(s.name || "") && s.w > 0 && s.h > 0));
+    const candidates = [p].concat((kids.get(pid) || []).filter((s) => !isCorner(s) && s.w > 0 && s.h > 0));
     let best = null;
     for (const cand of candidates) {
       let score = 0;
@@ -321,11 +359,11 @@ function scanCornerAnchor(nodes, idx, opts) {
       if (!best || score > best.score) best = { cand, score };
     }
     if (!best || best.score * 2 < totalAxes) {
-      out.unresolved.push(Object.assign({}, base, {
+      unresolved({
         reason: "找不到吻合的紙面（父或兄弟）",
         best_candidate: best ? best.cand.id : null, best_candidate_name: best ? best.cand.name : null,
         best_score: best ? best.score : 0, total_axes: totalAxes,
-      }));
+      });
       continue;
     }
     out.document_containers++;
@@ -556,7 +594,8 @@ function scanAll(nodes, opts) {
     if (!scanned.length) throw new Error("overflow-scan：scanScope=boards 但 boards " + JSON.stringify(ids) + " 沒有對應到任何 root——限縮後快照為空，不得默默印全零收據");
   }
   const idx = buildIndex(scanned);
-  const tag = (o) => Object.assign({ scope }, o);
+  // LS-202：每支帶 scope＋document_count（該支在整份快照裡的命中數；scope=boards 時是限縮值）
+  const tag = (o) => Object.assign({ scope, document_count: (o.document_flagged || o.flagged).length }, o);
   return {
     scanned_nodes: scanned.length,
     scan_scope: scope,
@@ -582,30 +621,33 @@ function compactLines(out) {
     }
     return [...m.entries()].sort((p, q) => q[1].n - p[1].n);
   };
+  // LS-202：每段標頭尾綴 scope／document_count（收據每支照抄這兩個欄位）
+  const tail = (o) => " scope=" + o.scope + " document_count=" + o.document_count;
   const blocks = [];
   for (const key of ["sibling_intersection", "cross_parent_collision"]) {
     const items = s[key].flagged;
     const rows = agg(items, (f) => f.name_a + " × " + f.name_b + " @ " + (key === "sibling_intersection" ? f.parent_name : f.board_name), (f) => f.node_a + "×" + f.node_b);
-    blocks.push(["SCAN " + key + " flagged=" + items.length + " classes=" + rows.length].concat(rows.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex)).join("\n"));
+    blocks.push(["SCAN " + key + " flagged=" + items.length + " classes=" + rows.length + tail(s[key])].concat(rows.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex)).join("\n"));
   }
   const ro = agg(s.row_overflow.flagged, (f) => f.parent_name + " :: " + f.name, (f) => f.node + " (+" + f.overflow + ")");
-  blocks.push(["SCAN row_overflow flagged=" + s.row_overflow.flagged.length + " classes=" + ro.length].concat(ro.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex)).join("\n"));
+  blocks.push(["SCAN row_overflow flagged=" + s.row_overflow.flagged.length + " classes=" + ro.length + tail(s.row_overflow)].concat(ro.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex)).join("\n"));
   const ca = s.corner_anchor;
   const lines = ["SCAN corner_anchor boards=" + JSON.stringify(ca.boards) + " containers/points/mismatch=" + ca.containers + "/" + ca.points + "/" + ca.mismatch +
-    " document=" + ca.document_containers + "/" + ca.document_points + "/" + ca.document_mismatch + " unresolved=" + ca.unresolved.length];
+    " document=" + ca.document_containers + "/" + ca.document_points + "/" + ca.document_mismatch + " unresolved=" + ca.unresolved.length + "/" + ca.document_unresolved.length + tail(ca)];
   for (const f of ca.flagged) lines.push("  MISMATCH " + f.container_name + "(" + f.container + ") " + f.corner_name + " " + f.axis + " exp=" + f.expected + " act=" + f.actual + " paper=" + f.paper_name + " board=" + f.board_name);
   for (const u of ca.unresolved) lines.push("  UNRESOLVED " + u.container_name + "(" + u.container + ") " + u.reason + (u.best_candidate_name ? " best=" + u.best_candidate_name + " " + u.best_score + "/" + u.total_axes : "") + " board=" + u.board_name);
   for (const [k, v] of agg(ca.document_flagged, (f) => f.board_name + "(" + f.board + ")", (f) => f.container)) lines.push("  DOCUMENT " + v.n + "× board " + k + " e.g. container " + v.ex);
+  for (const [k, v] of agg(ca.document_unresolved.filter((u) => !ca.unresolved.includes(u)), (u) => u.board_name + "(" + u.board + ")", (u) => u.container)) lines.push("  DOCUMENT-UNRESOLVED " + v.n + "× board " + k + " e.g. container " + v.ex);
   blocks.push(lines.join("\n"));
   const tx = s.text_occlusion;
   const to = agg(tx.flagged, (f) => f.name + " × " + f.overlay_name + " @ " + f.board_name + "(" + f.board + ")", (f) => f.node + "×" + f.overlay);
-  const tl = ["SCAN text_occlusion boards=" + JSON.stringify(tx.boards) + " flagged=" + tx.flagged.length + " classes=" + to.length + " document=" + tx.document_flagged.length]
+  const tl = ["SCAN text_occlusion boards=" + JSON.stringify(tx.boards) + " flagged=" + tx.flagged.length + " classes=" + to.length + " document=" + tx.document_flagged.length + tail(tx)]
     .concat(to.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex));
   for (const [k, v] of agg(tx.document_flagged.filter((f) => !tx.flagged.includes(f)), (f) => f.board_name + "(" + f.board + ")", (f) => f.node + "×" + f.overlay)) tl.push("  DOCUMENT " + v.n + "× board " + k + " e.g. " + v.ex);
   blocks.push(tl.join("\n"));
   const bc = s.board_clip;
   const bcRows = agg(bc.flagged, (f) => f.name + " " + f.side + " @ " + f.board_name + "(" + f.board + ")", (f) => f.node + " (+" + f.overflow_px + ")");
-  const bl = ["SCAN board_clip boards=" + JSON.stringify(bc.boards) + " flagged=" + bc.flagged.length + " classes=" + bcRows.length + " document=" + bc.document_flagged.length]
+  const bl = ["SCAN board_clip boards=" + JSON.stringify(bc.boards) + " flagged=" + bc.flagged.length + " classes=" + bcRows.length + " document=" + bc.document_flagged.length + tail(bc)]
     .concat(bcRows.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex));
   for (const [k, v] of agg(bc.document_flagged.filter((f) => !bc.flagged.includes(f)), (f) => f.board_name + "(" + f.board + ")", (f) => f.node + " " + f.side + " (+" + f.overflow_px + ")")) bl.push("  DOCUMENT " + v.n + "× board " + k + " e.g. " + v.ex);
   blocks.push(bl.join("\n"));
@@ -646,7 +688,8 @@ if (typeof Get === "function" && typeof Print === "function") {
     const b = c.bounds;
     const a = { x: pa.x + b.x, y: pa.y + b.y };
     abs[n.id] = a;
-    snap.push({ id: n.id, name: n.name || "", parent: pid, type: n.type || "", enabled: n.enabled !== false, clip: n.clip === true, image: hasImageFill(n.fill), x: a.x, y: a.y, w: b.width, h: b.height });
+    // LS-202：快照帶 ref（corner_anchor 以 ref → cmp/Photo Corner 判角托；漏帶就一顆角托都看不到、containers 全零）
+    snap.push({ id: n.id, name: n.name || "", parent: pid, type: n.type || "", ref: n.ref, enabled: n.enabled !== false, clip: n.clip === true, image: hasImageFill(n.fill), x: a.x, y: a.y, w: b.width, h: b.height });
   }, { resolveInstances: true });
   const out = scanAll(snap, { boards: scope, crossAll, overlayRe, scanScope });
   out.total_nodes = total;
@@ -662,14 +705,15 @@ if (typeof Get === "function" && typeof Print === "function") {
       " board_clip=" + s.board_clip.flagged.length + "/" + s.board_clip.document_flagged.length +
       " corner_anchor=" + s.corner_anchor.containers + "/" + s.corner_anchor.points + "/" + s.corner_anchor.mismatch +
       " document=" + s.corner_anchor.document_containers + "/" + s.corner_anchor.document_points + "/" + s.corner_anchor.document_mismatch +
-      " unresolved=" + s.corner_anchor.unresolved.length + " boards=" + JSON.stringify(s.corner_anchor.boards) +
+      " unresolved=" + s.corner_anchor.unresolved.length + "/" + s.corner_anchor.document_unresolved.length + " boards=" + JSON.stringify(s.corner_anchor.boards) +
       " tree_hash=" + treeHashHex
   );
   for (const block of compactLines(out)) Print(block);
+  if (verbose) for (const cc of s.corner_anchor.container_corners) Print("CORNERS " + cc.container_name + "(" + cc.container + ") n=" + cc.n + (cc.in_scope ? "" : " (document)") + " board=" + cc.board_name + "(" + cc.board + ")");
   if (verbose) for (const key of Object.keys(s)) Print("JSON " + key + " " + JSON.stringify(s[key]));
   }
 } else if (typeof module === "object" && module && module.exports) {
-  module.exports = { AREA_MIN, TOL, CORNER_OUT, CORNER_RE, BLEED_RE, OVERLAY_RE, LEAF_TYPE_RE, SCAN_SCOPES, hasImageFill, buildIndex, overlapArea, contains, cornerExpected, compactLines, pairEntry, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanBoardClip, restrictToBoards, scanAll, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
+  module.exports = { AREA_MIN, TOL, CORNER_OUT, PHOTO_CORNER_ID, PHOTO_CORNER_NAME, CORNER_VARIANT_RE, BLEED_RE, OVERLAY_RE, LEAF_TYPE_RE, SCAN_SCOPES, hasImageFill, buildIndex, overlapArea, contains, cornerExpected, cornerComponentIds, compactLines, pairEntry, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanBoardClip, restrictToBoards, scanAll, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
 } else {
   throw new Error("overflow-scan：既不是 Pencil execute（無 Get／Print）也不是 node module 環境，無處輸出");
 }

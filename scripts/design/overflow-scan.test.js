@@ -6,10 +6,14 @@
 "use strict";
 const assert = require("assert");
 const path = require("path");
-const { scanAll, scanCornerAnchor, scanTextOcclusion, scanBoardClip, buildIndex, compactLines, canon, canonNode, fnv1a64, hex64, treeHash, treeHashLines } = require(path.join(__dirname, "overflow-scan.js"));
+const { scanAll, scanCornerAnchor, scanTextOcclusion, scanBoardClip, buildIndex, compactLines, canon, canonNode, fnv1a64, hex64, treeHash, treeHashLines, PHOTO_CORNER_ID } = require(path.join(__dirname, "overflow-scan.js"));
 
 function N(id, parent, x, y, w, h, extra) {
   return Object.assign({ id, name: id, parent, type: "frame", enabled: true, x, y, w, h }, extra || {});
+}
+// LS-202：角托＝ref → cmp/Photo Corner（GEBcf）的實例；名稱只供方位。C() 造一顆角托 ref（真實稿 736 顆全是這個形狀）
+function C(id, parent, x, y, s, name, extra) {
+  return N(id, parent, x, y, s, s, Object.assign({ name, type: "ref", ref: PHOTO_CORNER_ID }, extra || {}));
 }
 // corners(prefix, parentId, paper, size, opts)：依 corner-out 5 規則放四顆角托（絕對座標），paper 為角托咬住的紙面 AABB
 function corners(prefix, parentId, paper, size, opts) {
@@ -19,10 +23,10 @@ function corners(prefix, parentId, paper, size, opts) {
   const s = size || 26;
   const L = paper.x - 5, T = paper.y - 5, R = paper.x + paper.w - s + 5, B = paper.y + paper.h - s + 5;
   return [
-    N(prefix + "/Corner TL", parentId, L, T, s, s, { name: "Corner TL", enabled: on }),
-    N(prefix + "/Corner TR", parentId, R, T, s, s, { name: "Corner TR", enabled: on }),
-    N(prefix + "/Corner BL", parentId, L, B + dy, s, s, { name: "Corner BL", enabled: on }),
-    N(prefix + "/Corner BR", parentId, R, B + dy, s, s, { name: "Corner BR", enabled: on }),
+    C(prefix + "/Corner TL", parentId, L, T, s, "Corner TL", { enabled: on }),
+    C(prefix + "/Corner TR", parentId, R, T, s, "Corner TR", { enabled: on }),
+    C(prefix + "/Corner BL", parentId, L, B + dy, s, "Corner BL", { enabled: on }),
+    C(prefix + "/Corner BR", parentId, R, B + dy, s, "Corner BR", { enabled: on }),
   ];
 }
 function pairs(flagged) {
@@ -85,7 +89,7 @@ const PRINT10 = N("PRINT10", "B10", 8040, 273, 420, 582);
 const B11 = N("B11", null, 9000, 0, 500, 400);
 const STAGE11 = N("STAGE11", "B11", 9000, 0, 393, 292);
 const PRINT11 = N("PRINT11", "STAGE11", 9016, 5, 361, 230);
-const LOST = ["TL", "TR", "BL", "BR"].map((v, i) => N("STAGE11/Corner " + v, "STAGE11", 9020 + i * 40, 250, 26, 26, { name: "Corner " + v }));
+const LOST = ["TL", "TR", "BL", "BR"].map((v, i) => C("STAGE11/Corner " + v, "STAGE11", 9020 + i * 40, 250, 26, "Corner " + v));
 // 板 B14：非易出血類別的跨 parent 碰撞（Feed 溢出 Column 撞到兄弟 Home Indicator Area）——預設過濾、SCAN_CROSS_ALL 才報
 const B14 = N("B14", null, 11000, 0, 400, 400);
 const COL14 = N("COL14", "B14", 11000, 0, 400, 300, { name: "Column" });
@@ -120,11 +124,15 @@ function ok(name, fn) {
   console.log("✓ " + name);
 }
 
-ok("輸出形狀：六支鍵齊全、corner_anchor 計數為整數、scanned_nodes 為輸入節點數", () => {
+ok("輸出形狀：六支鍵齊全、corner_anchor 計數為整數、scanned_nodes 為輸入節點數；每支帶 scope 與非負整數 document_count（LS-202）", () => {
   assert.deepStrictEqual(Object.keys(s).sort(), ["board_clip", "corner_anchor", "cross_parent_collision", "row_overflow", "sibling_intersection", "text_occlusion"]);
   for (const k of ["containers", "points", "mismatch", "document_containers", "document_points", "document_mismatch"]) assert.ok(Number.isInteger(s.corner_anchor[k]), k);
-  assert.ok(Array.isArray(s.corner_anchor.boards) && Array.isArray(s.corner_anchor.unresolved));
+  assert.ok(Array.isArray(s.corner_anchor.boards) && Array.isArray(s.corner_anchor.unresolved) && Array.isArray(s.corner_anchor.document_unresolved) && Array.isArray(s.corner_anchor.container_corners));
   assert.strictEqual(out.scanned_nodes, nodes.length);
+  for (const k of Object.keys(s)) {
+    assert.strictEqual(s[k].scope, "document", k);
+    assert.ok(Number.isInteger(s[k].document_count) && s[k].document_count >= 0, k + ".document_count");
+  }
 });
 
 ok("buildIndex：disabled 子樹傳遞（D／DC／DC 的角托不參與）；節點 id 重複一律 throw（不靜默覆蓋）", () => {
@@ -178,18 +186,27 @@ ok("(c) MJ-2 A3：BAND 下移 1pt（祖先兄弟不交集）時同一缺陷同�
   assert.deepStrictEqual(pairs(r.cross_parent_collision.flagged), [P("BADGE7", "BAND7")]);
 });
 
-ok("compactLines：每支掃描一段分類彙整（同名對歸一類、附代表 id），corner_anchor 段列 in-scope 錯位／unresolved／document 按板計數", () => {
+ok("compactLines：每支掃描一段分類彙整（同名對歸一類、附代表 id），corner_anchor 段列 in-scope 錯位／unresolved／document 按板計數；六段標頭尾綴 scope／document_count（LS-202）", () => {
   const text = compactLines(scanAll(nodes, { boards: ["B5"] })).join("\n");
-  assert.ok(text.includes("SCAN sibling_intersection flagged=11 classes="));
+  assert.ok(text.includes("SCAN sibling_intersection flagged=11 classes=11 scope=document document_count=11"), text.split("\n")[0]);
   assert.ok(text.includes("  4× PRINT9 × Corner TL @ STAGE9 e.g. PRINT9×STAGE9/Corner TL") === false, "同名對才歸一類：四顆角托名字不同，各自一類");
   assert.ok(text.includes("  1× PRINT9 × Corner TL @ STAGE9 e.g. PRINT9×STAGE9/Corner TL"));
   assert.ok(text.includes("  1× Corner TR × Corner TL @ B e.g. C1/Corner TR×C2/Corner TL"));
   assert.ok(text.includes("SCAN row_overflow flagged=11 classes="));
+  assert.ok(/SCAN row_overflow flagged=11 classes=\d+ scope=document document_count=11/.test(text));
+  assert.ok(/SCAN cross_parent_collision flagged=4 classes=\d+ scope=document document_count=4/.test(text));
   assert.ok(text.includes("  1× C1 :: Corner TR e.g. C1/Corner TR (+5)"));
-  assert.ok(text.includes('SCAN corner_anchor boards=["B5"] containers/points/mismatch=1/8/2 document=7/56/4 unresolved=1'));
+  // B11 的 unresolved 不在 boards 內 → in-scope 0、document 1（LS-202 unresolved 同 mismatch 限 boards）
+  assert.ok(text.includes('SCAN corner_anchor boards=["B5"] containers/points/mismatch=1/8/2 document=7/56/4 unresolved=0/1 scope=document document_count=4'), text);
   assert.ok(text.includes("  MISMATCH C3(C3) Corner BL y exp=157 act=149 paper=C3 board=LS-99 / 05 示範板"));
-  assert.ok(text.includes("  UNRESOLVED STAGE11(STAGE11) 找不到吻合的紙面（父或兄弟） best="));
+  assert.ok(!text.includes("  UNRESOLVED STAGE11(STAGE11)"), "B11 不在 boards 內：不逐筆列 UNRESOLVED");
+  assert.ok(text.includes("  DOCUMENT-UNRESOLVED 1× board B11(B11) e.g. container STAGE11"), text);
   assert.ok(text.includes("  DOCUMENT 2× board LS-17 / 01 舊板(B13) e.g. container C4"));
+  assert.ok(/SCAN text_occlusion boards=\["B5"\] flagged=0 classes=0 document=0 scope=document document_count=0/.test(text));
+  assert.ok(/SCAN board_clip boards=\["B5"\] flagged=0 classes=0 document=0 scope=document document_count=0/.test(text));
+  const all = compactLines(scanAll(nodes)).join("\n");
+  assert.ok(all.includes("  UNRESOLVED STAGE11(STAGE11) 找不到吻合的紙面（父或兄弟） best="), "空 boards＝全稿：B11 逐筆列 UNRESOLVED");
+  assert.ok(all.includes("unresolved=1/1 "), all);
 });
 
 ok("(d) 角托錨點（全稿）：7 個容器解析到紙面、每容器 8 個斷言＝56 點；C3（−8）與 C4（+3）各 BL.y／BR.y 錯位 → document_mismatch 4；B11 進 unresolved；DC 不算", () => {
@@ -201,7 +218,9 @@ ok("(d) 角托錨點（全稿）：7 個容器解析到紙面、每容器 8 個�
     assert.deepStrictEqual([f.paper, f.axis, f.expected, f.actual], ["C3", "y", 157, 149]);
   }
   assert.deepStrictEqual(ca.unresolved.map((u) => u.container), ["STAGE11"]);
+  assert.deepStrictEqual(ca.document_unresolved.map((u) => u.container), ["STAGE11"]);
   assert.strictEqual(ca.unresolved[0].best_score * 2 < ca.unresolved[0].total_axes, true);
+  assert.deepStrictEqual(ca.container_corners.map((c) => c.container + ":" + c.n).sort(), ["C1:4", "C2:4", "C3:4", "C4:4", "PW8:4", "STAGE11:4", "STAGE9:4", "B10:4"].sort(), "container_corners 逐容器列角托數（DC 在 disabled 子樹、不列）");
 });
 
 ok("(d) B1：40×40 角托以自身實測寬高推期望（PW8＝Cxqc2 實數 385／535）→ 0 mismatch；若角托被搬到 26pt 假設的 399／549 反而錯位 4 點", () => {
@@ -233,6 +252,10 @@ ok("(d) 範圍（a106f940）：boards=['B5'] → mismatch 只算 B5（2），doc
   assert.deepStrictEqual(ids(r.document_flagged, "container"), ["C3", "C3", "C4", "C4"]);
   const byName = scanAll(nodes, { boards: ["LS-17 / 01 舊板", "nope"] }).scans.corner_anchor;
   assert.deepStrictEqual([byName.boards, byName.mismatch, byName.document_mismatch], [["B13", "nope"], 2, 4]);
+  // LS-202：unresolved 同 mismatch 限 boards——B11 的 STAGE11 在 boards=['B5'] 時只進 document_unresolved
+  assert.deepStrictEqual([r.unresolved.map((u) => u.container), r.document_unresolved.map((u) => u.container)], [[], ["STAGE11"]]);
+  const b11 = scanAll(nodes, { boards: ["B11"] }).scans.corner_anchor;
+  assert.deepStrictEqual([b11.unresolved.map((u) => u.container), b11.document_unresolved.map((u) => u.container), b11.containers], [["STAGE11"], ["STAGE11"], 0]);
 });
 
 ok("(d) 允差：0.5 內不算錯位、0.5 外算；兩對角容器（App icon ≤60pt）點數 4；沒有角托的樹 containers=0", () => {
@@ -240,12 +263,77 @@ ok("(d) 允差：0.5 內不算錯位、0.5 外算；兩對角容器（App icon �
   const off = scanCornerAnchor([B5, C3, ...corners("C3", "C3", C3, 26, { blbrDy: 0.6 })]);
   assert.deepStrictEqual([off.points, off.mismatch], [8, 2]);
   const icon = N("ICON", null, 0, 0, 60, 60);
-  const two = [icon, N("ICON/Corner TL", "ICON", -5, -5, 26, 26, { name: "Corner TL" }), N("ICON/Corner BR", "ICON", 39, 39, 26, 26, { name: "Corner BR" })];
+  const two = [icon, C("ICON/Corner TL", "ICON", -5, -5, 26, "Corner TL"), C("ICON/Corner BR", "ICON", 39, 39, 26, "Corner BR")];
   const r = scanCornerAnchor(two);
   assert.deepStrictEqual([r.containers, r.points, r.mismatch, r.unresolved.length], [1, 4, 0, 0]);
   assert.deepStrictEqual(scanCornerAnchor([B, G]).containers, 0);
-  const three = [icon, ...two.slice(1), N("ICON/Corner TR", "ICON", 39, -5, 26, 26, { name: "Corner TR" })];
+  const three = [icon, ...two.slice(1), C("ICON/Corner TR", "ICON", 39, -5, 26, "Corner TR")];
   assert.deepStrictEqual([scanCornerAnchor(three).containers, scanCornerAnchor(three).unresolved.length], [0, 1], "角托數 3 → unresolved");
+});
+
+// ───── LS-202 角托判準＝ref → cmp/Photo Corner（LS-96 0617b9ae：cmp/Profile Print 的 Mount TL/BR 名稱不是 Corner …，名稱判準永遠看不到） ─────
+// 板 MA（cmp/Profile Print OePXK／lOPO7 實數）：Print 60×60、Photo (7.5,7.5,45,45)、Mount TL (−3.8,−3.8) 16.4、Mount BR (47.4,47.4) 16.4
+// ——corner-out 3.8 而非 5：兩顆四軸全偏 1.2 > TOL，任何候選都 0/4 → unresolved（best=Print）；修成 corner-out 5（−5／48.6）→ 解析到 Print、4 點 0 錯位
+const MA = N("MA", null, 20000, 0, 393, 852, { name: "LS-152 / 01 設定" });
+const MAPRINT = N("MAPRINT", "MA", 20024, 100, 60, 60, { name: "Print" });
+const MAPHOTO = N("MAPHOTO", "MAPRINT", 20031.5, 107.5, 45, 45, { name: "Photo", image: true });
+const MATL = C("MAPRINT/Mount TL", "MAPRINT", 20024 - 3.8, 100 - 3.8, 16.4, "Mount TL");
+const MABR = C("MAPRINT/Mount BR", "MAPRINT", 20024 + 47.4, 100 + 47.4, 16.4, "Mount BR");
+const mountNodes = [MA, MAPRINT, MAPHOTO, MATL, MABR];
+
+ok("(d) LS-202 Mount TL/BR：ref → GEBcf 但名稱不是 Corner … 的兩顆角托被算成一個兩對角容器——實數 corner-out 3.8 → unresolved（best=Print 0/4，不計 mismatch）；修成 corner-out 5 → containers 1／points 4／mismatch 0；名稱判準（退回舊實作）這個容器完全不存在", () => {
+  const r = scanCornerAnchor(mountNodes);
+  assert.deepStrictEqual([r.containers, r.points, r.mismatch, r.unresolved.length, r.document_unresolved.length], [0, 0, 0, 1, 1]);
+  assert.deepStrictEqual([r.unresolved[0].container, r.unresolved[0].best_candidate, r.unresolved[0].best_score, r.unresolved[0].total_axes, r.unresolved[0].corners], ["MAPRINT", "MAPRINT", 0, 4, ["MAPRINT/Mount TL", "MAPRINT/Mount BR"]]);
+  assert.deepStrictEqual(r.container_corners, [{ container: "MAPRINT", container_name: "Print", board: "MA", board_name: "LS-152 / 01 設定", n: 2, in_scope: true }]);
+  const fixed = [MA, MAPRINT, MAPHOTO, C("MAPRINT/Mount TL", "MAPRINT", 20024 - 5, 100 - 5, 16.4, "Mount TL"), C("MAPRINT/Mount BR", "MAPRINT", 20024 + 48.6, 100 + 48.6, 16.4, "Mount BR")];
+  const f = scanCornerAnchor(fixed);
+  assert.deepStrictEqual([f.containers, f.points, f.mismatch, f.unresolved.length], [1, 4, 0, 0]);
+  // 只差 y 偏 1（TOL 外）→ 解析到 Print（x 軸 2/4 吻合＝一半）、mismatch 2、期望值來自 Print
+  const offY = [MA, MAPRINT, MAPHOTO, C("MAPRINT/Mount TL", "MAPRINT", 20024 - 5, 100 - 4, 16.4, "Mount TL"), C("MAPRINT/Mount BR", "MAPRINT", 20024 + 48.6, 100 + 49.6, 16.4, "Mount BR")];
+  const o = scanCornerAnchor(offY);
+  assert.deepStrictEqual([o.containers, o.points, o.mismatch, o.flagged.map((x) => x.paper + ":" + x.axis)], [1, 4, 2, ["MAPRINT:y", "MAPRINT:y"]]);
+});
+
+ok("(d) LS-202 名稱像角托但不是 ref → cmp/Photo Corner 的節點不算：四個名為 Corner TL/TR/BL/BR 的 frame、或 ref 指向別的元件，容器數 0、unresolved 0；ref 指向 id 不同但名為 cmp/Photo Corner 的元件定義（名稱備援）照算；快照沒有元件定義根時退回字面 GEBcf", () => {
+  const paper = N("PN", "MA", 20100, 300, 100, 178);
+  const framey = corners("PN", "PN", paper).map((c) => Object.assign({}, c, { type: "frame", ref: undefined }));
+  assert.deepStrictEqual(scanCornerAnchor([MA, paper, ...framey]).container_corners, []);
+  const otherRef = corners("PN", "PN", paper).map((c) => Object.assign({}, c, { ref: "bhroo" }));
+  const ro = scanCornerAnchor([MA, paper, ...otherRef]);
+  assert.deepStrictEqual([ro.containers, ro.unresolved.length, ro.container_corners.length], [0, 0, 0]);
+  const CMP = N("NEWID", null, 30000, 0, 26, 26, { name: "cmp/Photo Corner" });
+  const byNameRef = corners("PN", "PN", paper).map((c) => Object.assign({}, c, { ref: "NEWID" }));
+  const rn = scanCornerAnchor([CMP, MA, paper, ...byNameRef]);
+  assert.deepStrictEqual([rn.containers, rn.points, rn.mismatch], [1, 8, 0], "元件重建換 id、名稱仍是 cmp/Photo Corner → 照算");
+  const rn2 = scanCornerAnchor([MA, paper, ...byNameRef]);
+  assert.deepStrictEqual(rn2.containers, 0, "快照沒有那個元件定義根、ref 又不是 GEBcf → 不算");
+  const rn3 = scanCornerAnchor([CMP, MA, paper, ...corners("PN", "PN", paper)]);
+  assert.deepStrictEqual(rn3.containers, 1, "有名稱備援根時字面 GEBcf 仍算（id 為主）");
+  const noVar = [MA, paper, ...corners("PN", "PN", paper).map((c, i) => (i === 0 ? Object.assign({}, c, { name: "Mount" }) : c))];
+  const nv = scanCornerAnchor(noVar);
+  assert.deepStrictEqual([nv.containers, nv.unresolved.length], [0, 1]);
+  assert.ok(/角托名稱無方位/.test(nv.unresolved[0].reason) && nv.unresolved[0].reason.includes("Mount"), nv.unresolved[0].reason);
+});
+
+ok("(d) LS-202 document_count：只設 boards（不限縮）時六支 document_count 與全稿跑逐支相同、限 boards 的三支 flagged ≤ document_count；scanScope=boards 限縮後 document_count 為限縮值、scope=boards", () => {
+  const full = scanAll(nodes).scans;
+  const part = scanAll(nodes, { boards: ["B5"] }).scans;
+  for (const k of Object.keys(full)) {
+    assert.strictEqual(part[k].document_count, full[k].document_count, k);
+    assert.strictEqual(full[k].document_count, (full[k].document_flagged || full[k].flagged).length, k + " 取自 document_flagged／flagged 長度");
+    assert.ok(part[k].flagged.length <= part[k].document_count, k);
+  }
+  assert.deepStrictEqual([part.corner_anchor.flagged.length, part.corner_anchor.document_count], [2, 4]);
+  assert.deepStrictEqual([full.sibling_intersection.document_count, full.row_overflow.document_count, full.cross_parent_collision.document_count], [11, 11, 4]);
+  const shrunk = scanAll(nodes, { scanScope: "boards", boards: ["B5"] }).scans;
+  for (const k of Object.keys(shrunk)) assert.strictEqual(shrunk[k].scope, "boards", k);
+  assert.deepStrictEqual([shrunk.corner_anchor.document_count, shrunk.sibling_intersection.document_count], [2, 0]);
+});
+
+ok("LS-202 原始碼斷言：Pencil 端快照帶 ref: n.ref（角托判準靠它，漏帶則 corner_anchor 一顆都看不到）", () => {
+  const src = require("fs").readFileSync(path.join(__dirname, "overflow-scan.js"), "utf8");
+  assert.ok(/snap\.push\(\{[^}]*\bref:\s*n\.ref\b/.test(src), "Pencil 端快照必須帶 ref: n.ref");
 });
 
 function r2(v) {
