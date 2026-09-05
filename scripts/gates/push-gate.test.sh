@@ -73,6 +73,9 @@ mkdir -p "$R/Fake.xcodeproj"
 # 內容與下面 xcodebuild 假身的 STUB_XCODE_VERSION 預設值一致（99.9），讓①～⑨這些不關心 1b 的
 # 案例維持「版本一致，略過對齊」路徑，不需要為了 1b 額外調整。
 printf '99.9\n' > "$R/.xcode-version"
+# LS-205：`.ios-runtime` 是同款 fail-closed 單一來源（比照上面 `.xcode-version` 的 I3 理由）——
+# 從一開始就要有這個檔，不然完全跟本檔案模擬器 shutdown 行為無關的案例也會在這裡就先擋下。
+printf '26.0\n' > "$R/.ios-runtime"
 
 # ---- detect-simulator.sh 假身：直接回傳 FAKE_DEST_UDID 指定的 UDID（預設本 worktree 專屬機），
 #      隔離測試 push-gate.sh 自己的 dedicated／shared／demo 判斷與 shutdown 邏輯 ----
@@ -186,6 +189,15 @@ if grep -qF "shutdown ${ded_udid}" "$SHUTDOWN_LOG"; then
   echo "✓ ① 專屬機、xcodebuild test 成功 → xcrun simctl shutdown 有被呼叫"
 else
   echo "✗ ① 專屬機、xcodebuild test 成功但沒有關模擬器" >&2
+  printf '%s\n' "$out1" | sed 's/^/    /' >&2
+  fail=1
+fi
+# LS-205：unit tests 前印出「simulator: <name> <udid> iOS <實際版>（pinned <釘住版>）」可見化那一行
+# （合成 repo 的 stub xcrun 只有單一 OS 分節 26.0，`.ios-runtime` 也設 26.0，兩者相符）。
+if printf '%s' "$out1" | grep -qE "simulator: main-iPhone17Pro ${ded_udid} iOS 26\.0（pinned 26\.0）"; then
+  echo "✓ ① 印出「simulator: <name> <udid> iOS <ver>（pinned <ver>）」（LS-205）"
+else
+  echo "✗ ① 沒有印出模擬器 runtime 可見化那一行（LS-205）" >&2
   printf '%s\n' "$out1" | sed 's/^/    /' >&2
   fail=1
 fi
@@ -367,6 +379,7 @@ mk_race_repo() {
   # LS-106：1b 步要求 .xcode-version 存在；版本與 racebin 的 stub xcodebuild -version 預設值相同，
   # 讓這組時序重現案例的 1b 判定一致、直接略過，不干擾本案例要驗的東西（見下方 racebin/xcodebuild）。
   printf '99.9\n' > "$d/.xcode-version"
+  printf '26.0\n' > "$d/.ios-runtime"   # LS-205：同款單一來源，fail-closed
 }
 mk_race_repo "$race_root/A"
 mk_race_repo "$race_root/B"
@@ -465,6 +478,7 @@ printf 'PBX-COMMITTED\n' > "$xg_root/LittleSprout.xcodeproj/project.pbxproj"
 # R1 F1：committed 版本也要有 xcscheme，才能驗「pbxproj 相同、xcscheme 不同」這個舊版漏放的案例（⑪）。
 printf 'SCHEME-COMMITTED\n' > "$xg_root/LittleSprout.xcodeproj/xcshareddata/xcschemes/LittleSprout.xcscheme"
 printf '99.9\n' > "$xg_root/.xcode-version"
+printf '26.0\n' > "$xg_root/.ios-runtime"   # LS-205：同款單一來源，fail-closed
 mkdir -p "$work/xgbin"
 # 假身 xcodegen：不真的解析 project.yml，`generate` 直接把 $STUB_XCODEGEN_OUTPUT／$STUB_XCODEGEN_SCHEME
 # 的內容寫成 project.pbxproj／xcscheme——本組案例要驗的是 push-gate.sh 對 generate 結果與 commit 版本的
@@ -858,6 +872,7 @@ git -C "$hf2_root" init -q -b main
 gh2_() { git -C "$hf2_root" -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
 echo a > "$hf2_root/f.txt"; gh2_ add -A; gh2_ commit -qm 'chore: LS-0 seed'
 printf '99.9\n' > "$hf2_root/.xcode-version"
+printf '26.0\n' > "$hf2_root/.ios-runtime"   # LS-205：同款單一來源，fail-closed
 cp "$gate_src" "$hf2_root/scripts/gates/push-gate.sh"
 cp "${root}/scripts/gates/push-ref-check.sh" "$hf2_root/scripts/gates/push-ref-check.sh"
 cp "${root}/scripts/ops/simulator-lock.sh" "$hf2_root/scripts/ops/simulator-lock.sh"

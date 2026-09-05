@@ -274,6 +274,16 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
     fi
   fi
 
+  # LS-205：`.ios-runtime` 是本機與 CI 共用的模擬器 runtime 單一來源（比照 `.xcode-version`
+  # 同款 fail-closed——缺檔代表下面「印出 pinned 版本」這件事本身就做不到，CI 的對應步驟
+  # 也讀不到，寧可本機先擋）。detect-simulator.sh 自己另外讀這個檔決定建機／既有機比對的
+  # fail-open 邏輯（見該腳本），這裡只用來組出下面的可見化那一行。
+  if [ ! -f .ios-runtime ]; then
+    echo "✗ push gate：缺 .ios-runtime，CI 會紅（ci job 對應步驟讀不到單一來源；LS-205）。" >&2
+    exit 1
+  fi
+  ios_runtime_pin="$(tr -d '[:space:]' < .ios-runtime)"
+
   dest=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/detect-simulator.sh") || {
     echo "✗ push gate：模擬器偵測失敗。" >&2
     exit 1
@@ -305,20 +315,26 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
   # I2：鎖目錄路徑可用 SIMULATOR_LOCK_DIR 覆寫（自測用；預設仍是 /tmp/simulator-lock-<udid>），讓多份
   # push-gate.test.sh 併行時各自用 mktemp -d 出來的路徑，不會互刪對方的鎖目錄。
   sim_lock_dir="${SIMULATOR_LOCK_DIR:-/tmp/simulator-lock-${sim_udid}}"
+  # LS-205：名稱與所在 OS 分節一次查出來——下面「可見化」那行與 KEEP_SIMULATOR 判斷（原本各自
+  # 查一次 sim_name）共用同一次 xcrun 呼叫，移到 KEEP_SIMULATOR 判斷之前變成無條件執行。
+  sim_info=$(xcrun simctl list devices available 2>/dev/null | awk -v u="$sim_udid" '
+    /^-- iOS / { os = $0; sub(/^-- iOS /, "", os); sub(/ --$/, "", os); next }
+    { line = $0
+      udid = line
+      sub(/^[^(]*\(/, "", udid)
+      sub(/\).*/, "", udid)
+      if (udid != u) next
+      nm = line
+      sub(/^[ \t]*/, "", nm)
+      sub(/ *\(.*/, "", nm)
+      printf "%s\t%s", nm, os
+      exit
+    }
+  ')
+  sim_name=$(printf '%s' "$sim_info" | cut -f1)
+  sim_ios_ver=$(printf '%s' "$sim_info" | cut -f2)
+  echo "→ push gate：simulator: ${sim_name:-?} ${sim_udid} iOS ${sim_ios_ver:-?}（pinned ${ios_runtime_pin}）"
   if [ "${KEEP_SIMULATOR:-0}" != 1 ]; then
-    sim_name=$(xcrun simctl list devices available 2>/dev/null | awk -v u="$sim_udid" '
-      { line = $0
-        udid = line
-        sub(/^[^(]*\(/, "", udid)
-        sub(/\).*/, "", udid)
-        if (udid != u) next
-        nm = line
-        sub(/^[ \t]*/, "", nm)
-        sub(/ *\(.*/, "", nm)
-        print nm
-        exit
-      }
-    ')
     if [[ "$sim_name" =~ ^(LS-[0-9]+|main)- ]]; then
       shutdown_dedicated_simulator() {
         if [ -d "$sim_lock_dir" ]; then

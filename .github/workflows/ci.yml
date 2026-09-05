@@ -648,6 +648,28 @@ jobs:
             exit 0
           fi
           dest=$(bash scripts/gates/detect-simulator.sh)
+          # LS-205：`.ios-runtime` 是本機 push-gate 與這裡共用的模擬器 runtime 單一來源，同款
+          # fail-closed（比照上面 xcode-select 步驟對 .xcode-version 的讀法）；xcodebuild 前印出
+          # 實際選到的模擬器名稱／UDID／iOS 版本與釘住版，供人比對「本機綠 CI 紅」是否為 runtime 差異
+          # （LS-96 池項 f728958a，來源 LS-167 merge-review R4 I-a）。
+          [ -f .ios-runtime ] || { echo "::error::缺 .ios-runtime（模擬器 runtime 單一來源，LS-205）"; exit 1; }
+          ios_runtime_pin="$(tr -d '[:space:]' < .ios-runtime)"
+          sim_udid=$(printf '%s' "$dest" | sed -n 's/.*id=//p')
+          sim_info=$(xcrun simctl list devices available 2>/dev/null | awk -v u="$sim_udid" '
+            /^-- iOS / { os = $0; sub(/^-- iOS /, "", os); sub(/ --$/, "", os); next }
+            { line = $0
+              udid = line
+              sub(/^[^(]*\(/, "", udid)
+              sub(/\).*/, "", udid)
+              if (udid != u) next
+              nm = line
+              sub(/^[ \t]*/, "", nm)
+              sub(/ *\(.*/, "", nm)
+              printf "%s\t%s", nm, os
+              exit
+            }
+          ')
+          echo "simulator: $(printf '%s' "$sim_info" | cut -f1) ${sim_udid} iOS $(printf '%s' "$sim_info" | cut -f2)（pinned ${ios_runtime_pin}）"
           # LS-54 N8：測試序列執行——MockURLProtocol 的 handler 是全域 static，平行測試會
           # 互相汙染。scheme（project.yml）已明寫 parallelizable: false，這裡再明確帶旗標，
           # 不把正確性押在 scheme 預設值上。

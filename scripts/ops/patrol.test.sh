@@ -445,6 +445,45 @@ out14b="$(SIMCTL_LIST_JSON= STUB_XCRUN_FAIL=1 PATH="$work/bin:$PATH" bash "$patr
 rc_is '⑭ xcrun 本身失敗（非 macOS／查詢出錯）→ 仍 exit 0，不當異常炸掉' 0 "$rc" "$out14b"
 hasnt '⑭ xcrun 失敗時不誤列任何裝置' "$out14b" 'xcrun simctl delete'
 
+# ---- ⑭b（LS-205）：`.ios-runtime` 釘住版與裝置實際 runtime 不一致 → 獨立標「⚠ runtime」＋掛 add_flag，
+#        跟第一層／第二層清理判斷互不影響（票 worktree 還在、剛用過，兩層都不會標，只有這裡的新訊號會標）；
+#        相符的那台不印任何東西（迴歸防呆）。另建一張票（LS-201）的 worktree，避免動到 ⑭ 對 LS-83／90／95／97
+#        既有斷言依賴的裝置清單；`rm -f` 還原，讓後面案例維持「無 .ios-runtime」的既有假設（pinned_os 為空、
+#        本檢查整段跳過）。
+for n in 201; do wt -b "feature/LS-${n}-runtime" "$wts/LS-${n}" origin/development; done
+printf '26.5\n' > "$repo/.ios-runtime"
+rt_json=$(cat <<JSON
+{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-0" : [
+      {
+        "lastBootedAt" : "${now_iso}",
+        "dataPath" : "\/tmp\/unused-rtmismatch\/data",
+        "udid" : "SIM-RT-MISMATCH",
+        "state" : "Shutdown",
+        "name" : "LS-201-iPhone17Pro"
+      }
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-5" : [
+      {
+        "lastBootedAt" : "${now_iso}",
+        "dataPath" : "\/tmp\/unused-rtmatch\/data",
+        "udid" : "SIM-RT-MATCH",
+        "state" : "Shutdown",
+        "name" : "LS-201-iPhoneAir"
+      }
+    ]
+  }
+}
+JSON
+)
+outRT="$(SIMCTL_LIST_JSON="$rt_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑭b runtime 不符釘住版標「⚠ runtime」' "$outRT" '⚠ runtime LS-201-iPhone17Pro（SIM-RT-MISMATCH）iOS 26.0 ≠ 釘住版 iOS 26.5'
+hasnt '⑭b runtime 相符的那台不標' "$outRT" 'LS-201-iPhoneAir（SIM-RT-MATCH）iOS'
+briefRT="$(SIMCTL_LIST_JSON="$rt_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '⑭b --brief 也帶 runtime 不一致 flag' "$briefRT" '[專屬模擬器 LS-201-iPhone17Pro] runtime iOS 26.0 與釘住版 iOS 26.5 不一致'
+rm -f "$repo/.ios-runtime"
+
 # ---- ⑮ Booted 模擬器（LS-100）：demo-* 豁免；>1 台非豁免同時 Booted → 逐台 ⚠ 並印 shutdown 指令；
 #        --brief／--json 都看得到。直接用 SIMCTL_LIST_JSON 餵合成 JSON（不必偽裝整支 xcrun）——
 #        patrol.sh 讀 sim_raw 時「SIMCTL_LIST_JSON 有設就用它，沒設才真的呼叫 xcrun」。----

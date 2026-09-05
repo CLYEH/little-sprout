@@ -372,8 +372,20 @@ closed_state_of() { printf '%s\n' "${SIM_CLOSED:-}" | awk -F'\t' -v t="$1" '$1 =
 # LS-100：可注入 SIMCTL_LIST_JSON 直接餵合成 JSON（patrol.test.sh 用）；未設就照常呼叫真的 xcrun。
 sim_raw="${SIMCTL_LIST_JSON:-$(xcrun simctl list devices -j 2>/dev/null)}" || sim_raw=
 if [ -n "$sim_raw" ]; then
+  # LS-205：`simctl list devices -j` 把裝置依 runtime 分組（頂層 key＝
+  # `"com.apple.CoreSimulator.SimRuntime.iOS-26-5"`，不是逐台裝置的欄位）——多加一條規則抓這個 key、
+  # 換算成人類看的版本號（同 detect-simulator.sh 的 iOS-26-5 → 26.5 換算），掛在 rt（第六欄）跟著
+  # 該分組底下每一台裝置一起印出；換組才更新，同組多台裝置沿用同一個 rt，不用每次都重算。
   sim_rows=$(printf '%s\n' "$sim_raw" | awk '
     { t = $0; sub(/^[ \t]*/, "", t); sub(/[ \t]*$/, "", t) }
+    t ~ /^"com\.apple\.CoreSimulator\.SimRuntime\./ {
+      rt = t
+      sub(/^"/, "", rt); sub(/".*/, "", rt)
+      sub(/^.*SimRuntime\.iOS-/, "", rt)
+      gsub(/-/, ".", rt)
+      cur_rt = rt
+      next
+    }
     t == "{" { name=""; udid=""; last=""; dpath=""; state=""; next }
     t ~ /^"name"[ \t]*:/        { v=t; sub(/^"name"[ \t]*:[ \t]*"/, "", v); sub(/",?$/, "", v); name=v; next }
     t ~ /^"udid"[ \t]*:/        { v=t; sub(/^"udid"[ \t]*:[ \t]*"/, "", v); sub(/",?$/, "", v); udid=v; next }
@@ -386,9 +398,9 @@ if [ -n "$sim_raw" ]; then
       if (name != "" && udid != "") {
         # tab 是 bash `read` 永遠視為「IFS 空白」的字元、連續 tab 會被當一個分隔符壓縮、空欄位會被吞掉
         # （即使 IFS 只設成單一 tab 也一樣，LS-100 加 state 這個新尾欄時實測踩到：dpath 缺欄位留空、
-        # 後面的 state 就被吞掉、往前遞補到 dpath 的位置）——lastBootedAt／dataPath／state 缺欄位一律
+        # 後面的 state 就被吞掉、往前遞補到 dpath 的位置）——lastBootedAt／dataPath／state／rt 缺欄位一律
         # 改印 "-" 佔位，不留空欄位。
-        printf "%s\t%s\t%s\t%s\t%s\n", name, udid, (last == "" ? "-" : last), (dpath == "" ? "-" : dpath), (state == "" ? "-" : state)
+        printf "%s\t%s\t%s\t%s\t%s\t%s\n", name, udid, (last == "" ? "-" : last), (dpath == "" ? "-" : dpath), (state == "" ? "-" : state), (cur_rt == "" ? "-" : cur_rt)
         name=""; udid=""; last=""; dpath=""; state=""
       }
     }
@@ -396,7 +408,7 @@ if [ -n "$sim_raw" ]; then
   # ---- Booted 模擬器（LS-100）：任何時候不該有 >1 台非 demo-* 的模擬器同時 Booted（用完忘記關）；
   #      demo-* 開頭的名稱豁免（demo worktree 的持久機，見 docs/COLLABORATION.md）。共用上面同一份
   #      sim_rows（同一次 xcrun 呼叫），不再多打一次。
-  while IFS=$'\t' read -r boot_name boot_udid _boot_last _boot_dpath boot_state; do
+  while IFS=$'\t' read -r boot_name boot_udid _boot_last _boot_dpath boot_state _boot_rt; do
     [ -n "$boot_name" ] || continue
     [ "$boot_state" = Booted ] || continue
     boot_total=$((boot_total + 1))
@@ -414,7 +426,7 @@ EOF
   # LS-187 第一層前置：票 worktree 仍在的 LS-<n> 收成一串票號，--linear 時一次問 patrol-linear.sh --closed 哪些已結案
   # （worktree 已不在的不必問，直接是殘機）。
   sim_query_nums=; SIM_CLOSED=
-  while IFS=$'\t' read -r sim_name _ _ _ _; do
+  while IFS=$'\t' read -r sim_name _ _ _ _ _; do
     case "$sim_name" in LS-[0-9]*-*) ;; *) continue ;; esac
     sim_t=${sim_name#LS-}; sim_t=${sim_t%%-*}
     ticket_has_worktree "LS-${sim_t}" || continue
@@ -434,7 +446,12 @@ EOF
       esac
     fi
   fi
-  while IFS=$'\t' read -r sim_name sim_udid sim_last sim_dpath sim_state; do
+  # LS-205：`.ios-runtime` 釘住版——專屬機（LS-<n>-*／main-*）runtime 跟這個不一樣就標 ⚠ runtime，
+  # 獨立於下面第一層／第二層清理判斷之外（機器可能完全「健康」——票還在飛、7 天內用過——但釘的 runtime
+  # 早就跟 CI 不一樣了，既有兩層清理邏輯看不到這個訊號）。缺這個檔就整段跳過，不當異常（過渡期／自測沿用）。
+  sim_pinned_os=
+  [ -f "${ROOT}/.ios-runtime" ] && sim_pinned_os=$(tr -d '[:space:]' < "${ROOT}/.ios-runtime")
+  while IFS=$'\t' read -r sim_name sim_udid sim_last sim_dpath sim_state sim_rt; do
     [ -n "$sim_name" ] || continue
     sim_ticket=
     case "$sim_name" in
@@ -443,6 +460,11 @@ EOF
       demo-*|qa-*) continue ;;  # demo 常駐機（LS-100 豁免）／qa 驗收機：不是這段管轄
       *) sim_default=$((sim_default + 1)); continue ;;   # Xcode 預設機：只計數，不列入清理（修剪需使用者裁定）
     esac
+    if [ -n "$sim_pinned_os" ] && [ -n "$sim_rt" ] && [ "$sim_rt" != - ] && [ "$sim_rt" != "$sim_pinned_os" ]; then
+      sim_flagged=$((sim_flagged + 1))
+      SIM_LINES="${SIM_LINES}  ⚠ runtime ${sim_name}（${sim_udid}）iOS ${sim_rt} ≠ 釘住版 iOS ${sim_pinned_os}"$'\n'
+      add_flag "[專屬模擬器 ${sim_name}] runtime iOS ${sim_rt} 與釘住版 iOS ${sim_pinned_os} 不一致（不自動重建，見 .ios-runtime）"
+    fi
     if [ -n "$sim_ticket" ]; then
       sim_why=; sim_reason=
       if ! ticket_has_worktree "$sim_ticket"; then
@@ -656,7 +678,7 @@ case "$MODE" in
       printf '%s\n' "$PENCIL_LINE" | sed 's/^/  /'
       [ "$pencil_rc" -ne 0 ] && echo "  → 設計票派工前先請使用者在 Claude Code 執行 /mcp 重連 pencil，重連後再派（LS-180）"
     else echo "  （無 design 分支 worktree，略過探針）"; fi
-    echo "== 專屬模擬器（scripts/gates/detect-simulator.sh 建的 <票號>-<機型>；LS-83／LS-187：票 worktree 已不在或已 Done／Canceled ⚠→cleanup-merged；其餘 >7 天未用只列不刪；Booted 不列刪）"
+    echo "== 專屬模擬器（scripts/gates/detect-simulator.sh 建的 <票號>-<機型>；LS-83／LS-187：票 worktree 已不在或已 Done／Canceled ⚠→cleanup-merged；其餘 >7 天未用只列不刪；Booted 不列刪；LS-205：runtime 與 .ios-runtime 不一致標 ⚠ runtime，不自動重建）"
     if [ -n "$SIM_LINES" ]; then printf '%s' "$SIM_LINES"; else echo "  （無 xcrun，或無殘機／逾期的專屬模擬器）"; fi
     if [ -n "${sim_rows:-}" ]; then
       echo "  Xcode 預設模擬器 ${sim_default} 台（未列入清理；修剪需使用者裁定） · CoreSimulator/Devices ${disk_devices_gb:-?} GB（${devices_du_src:-無資料}）${sim_linear_note:+ · ${sim_linear_note}}"
