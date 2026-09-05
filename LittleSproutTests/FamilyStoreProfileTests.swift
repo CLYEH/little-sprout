@@ -28,12 +28,26 @@ final class FamilyStoreProfileTests: XCTestCase {
         Profile(id: myID, displayName: displayName, avatarURL: avatarURL)
     }
 
+    /// R2（merge-review R1 m7 修正引入的前置條件）：`refreshProfile()` 現在會先核對
+    /// `ownerUserID`（見該方法文件註解），沒有先 `syncOwner` 就直接呼叫會因為 `ownerUserID`
+    /// 是 nil 而提早回傳。`ownerUserID` 是 `private(set)`，只能透過 `syncOwner(to:)`
+    /// （會連帶呼叫 `fetchMyFamily`）設定，同 `FamilyStoreMembersTests` 已有的既有作法。
+    private func syncOwner(_ testStore: TestStore) async {
+        let familyID = self.familyID
+        let myID = self.myID
+        testStore.stub.setFetchMyFamilyHandler {
+            Family(id: familyID, name: "陳家", createdBy: myID, createdAt: Date(), requireApproval: true)
+        }
+        await testStore.store.syncOwner(to: myID)
+    }
+
     // MARK: - refreshProfile
 
     func test_refreshProfile_success_populatesMyProfile() async {
         let context = makeStore()
         let store = context.store
         let stub = context.stub
+        await syncOwner(context)
         let profile = makeProfile()
         stub.setFetchMyProfileHandler { profile }
 
@@ -48,6 +62,7 @@ final class FamilyStoreProfileTests: XCTestCase {
         let context = makeStore()
         let store = context.store
         let stub = context.stub
+        await syncOwner(context)
         stub.setFetchMyProfileHandler { throw AppError.server(message: "boom", code: nil) }
 
         _ = await store.refreshProfile()
@@ -56,6 +71,19 @@ final class FamilyStoreProfileTests: XCTestCase {
             return XCTFail("查詢失敗應該落 .failure，讓 ProfileEditView 顯示錯誤")
         }
         XCTAssertNil(store.myProfile)
+    }
+
+    func test_refreshProfile_noOwnerUserID_doesNothing() async {
+        // R2（merge-review R1 m7）：沒有 syncOwner 過（`ownerUserID == nil`）時，`refreshProfile`
+        // 直接回傳現有值、不呼叫後端——理論上不會在正式路徑發生（`AuthenticatedGate` 保證進
+        // `ProfileEditView` 之前一定 syncOwner 過），這裡釘住這個防禦分支本身。
+        let context = makeStore()
+        context.stub.setFetchMyProfileHandler { XCTFail("不該呼叫到後端"); throw AppError.server(message: "", code: nil) }
+
+        let result = await context.store.refreshProfile()
+
+        XCTAssertNil(result)
+        XCTAssertEqual(context.store.profileState, .idle)
     }
 
     // MARK: - updateDisplayName

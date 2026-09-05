@@ -220,4 +220,43 @@ final class FamilyStoreMembersTests: XCTestCase {
 
         XCTAssertFalse(store.mustTransferOwnershipBeforeLeaving, "不是 owner 的成員退出不受這個不變量限制")
     }
+
+    // MARK: - B1（merge-review R1 blocker）：獨自建立家庭者退出——client 端預判 03d，
+    // 伺服器撞 LS001，UI 必須用 03e 文案接住，不是泛用「無法完成這個操作」。
+
+    /// 重現 B1 實測情境逐字：使用者自己建了家庭、還沒邀請任何人——`members` 只有自己一列
+    /// （owner），`mustTransferOwnershipBeforeLeaving` 判斷不需要轉移（03d），但真的送出
+    /// `DELETE family_members` 會撞既有的 `private.enforce_family_has_owner()`（LS001，
+    /// 家庭剩 0 owner）。
+    func test_leaveFamily_soleOwnerSoleMember_serverRejectsLS001_messageReusesOwnerTransferText() async {
+        let (store, stub) = makeStore()
+        let family = self.family
+        stub.setFetchMyFamilyHandler { family }
+        await store.syncOwner(to: myID)
+        store.seedMembersForPreview([makeMember(id: myID, role: .owner, name: "陳美玲")])
+        stub.setRemoveMemberHandler { _, _ in
+            throw AppError.rejected(
+                message: "家庭必須至少保留一位 owner（請先指派新 owner，再移除或降級原 owner）",
+                code: LSErrorCode.familyMustHaveOwner.rawValue
+            )
+        }
+
+        // client 端預判：不需要先轉移（會顯示 03d，不是 03e）——這正是 B1 的死路起點。
+        XCTAssertFalse(store.mustTransferOwnershipBeforeLeaving)
+
+        let success = await store.leaveFamily()
+
+        XCTAssertFalse(success)
+        XCTAssertNotNil(store.myFamily, "伺服器拒絕時不該提前把 myFamily 歸零")
+        guard case .failure(let error) = store.memberActionState else {
+            return XCTFail("退出失敗應該落 .failure")
+        }
+        // B1 核心斷言：不是泛用的「無法完成這個操作」，而是 LS-152 Notes 錯誤文案表指定、
+        // 跟 03e 相同的那一句。
+        XCTAssertEqual(
+            error.familyMemberActionMessage, "需要先轉移家庭管理者身分",
+            "LeaveFamilyConfirmSheet／MustTransferOwnershipFirstView 都用這句話接住 LS001，" +
+            "不落回 error.userFacingMessage 的泛用訊息"
+        )
+    }
 }
