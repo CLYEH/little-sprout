@@ -72,6 +72,9 @@
 #     （新增 REF_HITS_MARKER `ref_hits`）：`scan_scope=document` 而 `ref_hits == 0` 即紅——即使 `document_containers` 非零
 #     （名稱備援撐住）也一樣紅，因為那代表 ref 判準本身完全沒接上、`cmp/Profile Print`／App icon 的 `Mount TL/BR` 這類
 #     非 Corner 命名的角托看不到；`scan_scope=boards` 限縮快照可能真的沒有 ref 命中，不判。`ref_hits` 必填、非負整數。
+#     **R2（merge-review R1 fd783f6c F7）**：`ref_hits` 只計實例層（排除 `cmp/` 定義子樹內部的 ref 節點）——定義子樹的
+#     節點在兩次走訪 id 都是原生 id，一定 join 得上，天真地數「任何 ref 命中」會被它撐起來、蓋掉板上實例真正沒接上這件
+#     事；正典腳本另外多印 `ref_hits_defs`（純供人工核對，本 gate 不驗、收據可以沒有這個鍵）。
 # 掃描「有沒有真的跑對」（演算法本身正確性）不是這支腳本能驗的——那需要 Pen 的版面引擎，只能靠
 # visual-reviewer 用同方法重掃比對（見 .claude/agents/visual-reviewer.md）。
 #
@@ -560,11 +563,18 @@ if perscan and isinstance(scans, dict):
                 "（Pencil 快照沒讀到 ref、名稱備援 Corner TL/… 也沒命中；development 現稿應在 220–261 級），不是「這輪沒有錯位」，查快照欄位後重跑"
                 "（LS-202 R2 minor-1；boards 內沒有印品只會讓 containers=0、document_containers 仍 >0，那是正常的）"
             )
-    # LS-207：ref_hits（ref 判準本身的哨兵，跟 document_containers 分開判——名稱備援可能讓 document_containers 非零，但
-    # ref_hits 仍是 0 代表 ref 判準完全沒接上）。只對「正典腳本已含 REF_HITS_MARKER」的收據要求（同 perscan 的 cutoff 手續），
-    # 舊收據（沒有這個欄位）放行。
-    if refhits_marker and isinstance(ca_scan, dict):
-        rhits = ca_scan.get("ref_hits")
+
+# LS-207：ref_hits（ref 判準本身的哨兵，跟 document_containers 分開判——名稱備援可能讓 document_containers 非零，但
+# ref_hits 仍是 0 代表 ref 判準完全沒接上）。只對「正典腳本已含 REF_HITS_MARKER」的收據要求（同 perscan 的 cutoff 手續），
+# 舊收據（沒有這個欄位）放行。
+# R2（merge-review R1 fd783f6c I4）：獨立成自己的頂層 if（不再巢狀在 `if perscan and isinstance(scans, dict):` 裡面）——
+# 原本兩個 cutoff（PERSCAN_MARKER／REF_HITS_MARKER）各自獨立判定，卻讓 ref_hits 的檢查隱含依賴 perscan 那個 if 區塊，
+# 日後若 perscan 那段被搬動或整個拿掉，ref_hits 檢查會跟著靜默失效而不會有任何測試發現（兩個 marker 目前總是同時
+# 出現，測試 fixture 也總是兩個一起給，不會露出這個耦合）。這裡重新取一次 ca_scan，不依賴上面 perscan 區塊算好的值。
+if refhits_marker and isinstance(scans, dict):
+    ca_scan2 = scans.get("corner_anchor")
+    if isinstance(ca_scan2, dict):
+        rhits = ca_scan2.get("ref_hits")
         if isinstance(rhits, bool) or not isinstance(rhits, int) or rhits < 0:
             errs.append(
                 f"scans.corner_anchor.ref_hits 必填且須為非負整數（收據={rhits!r}）——LS-207 起用它判 ref 判準本身有沒有接上，省略此鍵不得繞過；"

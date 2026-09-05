@@ -340,10 +340,25 @@ function scanCornerAnchor(nodes, idx, opts) {
   // 區塊用 resolveInstances:false 對照表回填，見檔尾）提供，這裡不管來源。名稱備援（R2 minor-1）保證 ref 讀不到時最壞退回
   // LS-122 的名稱判準，而不是 containers=0 全綠。
   const isCorner = (n) => (n.ref != null && cornerIds.includes(n.ref)) || CORNER_NAME_RE.test(n.name || "");
-  // ref_hits（LS-207）：ref 判準本身的哨兵——獨立於後面的容器／紙面比對，只數「有多少活節點的 ref 解析到角托元件 id」。
-  // ===0 代表 ref 判準完全沒接上（快照沒有 ref 欄位，或對照表沒建成）；即使如此，名稱備援仍可能讓 document_containers
-  // 非零（development 現稿名稱判準本身就有 220 個），所以兩個哨兵要分開看。
-  const refHits = liveNodes.filter((n) => n.ref != null && cornerIds.includes(n.ref)).length;
+  // ref_hits（LS-207；R2 修 merge-review R1 fd783f6c F7）：ref 判準本身的哨兵——獨立於後面的容器／紙面比對，只數
+  // 「有多少活節點的 ref 解析到角托元件 id」。===0 代表 ref 判準完全沒接上（快照沒有 ref 欄位，或對照表沒建成）；
+  // 即使如此，名稱備援仍可能讓 document_containers 非零（development 現稿名稱判準本身就有 220 個），所以兩個
+  // 哨兵要分開看。**只計實例層（排除 cmp/ 定義子樹）**：component 定義子樹（頂層 root 名稱以 `cmp/` 開頭）在
+  // resolveInstances:false／true 兩次走訪的節點 id 都是原生 id，定義內部若剛好也有 ref 節點一定 join 得上、
+  // 會把 ref_hits 撐成非零——但真正要接住的盲區是**板上的實例**（如 41 個 Mount 容器）的展開版複合 id
+  // （instanceId/childId）對不上 refMap 的原生 id 鍵，這種情況下 ref_hits_instances 才會誠實地維持 0；純用
+  // 「有沒有任何 ref 命中」當哨兵會被定義子樹的命中蓋掉、看不出實例層真的接上了沒。ref_hits_defs 另外輸出、
+  // 純供人工核對用，不影響 gate 判定。
+  let refHitsInstances = 0, refHitsDefs = 0;
+  for (const n of liveNodes) {
+    if (n.ref == null || !cornerIds.includes(n.ref)) continue;
+    const c = chain.get(n.id);
+    const rootId = c && c.length ? c[c.length - 1] : null;
+    const root = rootId != null ? byId.get(rootId) : null;
+    if (root && typeof root.name === "string" && root.name.indexOf("cmp/") === 0) refHitsDefs++;
+    else refHitsInstances++;
+  }
+  const refHits = refHitsInstances;
   const groups = new Map();
   for (const n of liveNodes) {
     if (!isCorner(n) || n.parent == null || !byId.get(n.parent)) continue;
@@ -352,7 +367,7 @@ function scanCornerAnchor(nodes, idx, opts) {
     groups.get(n.parent).push({ node: n, variant: m ? m[1] : null });
   }
   const out = {
-    boards, containers: 0, points: 0, mismatch: 0, flagged: [], unresolved: [], ref_hits: refHits,
+    boards, containers: 0, points: 0, mismatch: 0, flagged: [], unresolved: [], ref_hits: refHits, ref_hits_defs: refHitsDefs,
     document_containers: 0, document_points: 0, document_mismatch: 0, document_flagged: [], document_unresolved: [], container_corners: [],
   };
   for (const [pid, corners] of groups) {
@@ -692,7 +707,7 @@ function compactLines(out) {
   blocks.push(["SCAN row_overflow flagged=" + s.row_overflow.flagged.length + " classes=" + ro.length + tail(s.row_overflow)].concat(ro.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex)).join("\n"));
   const ca = s.corner_anchor;
   const lines = ["SCAN corner_anchor boards=" + JSON.stringify(ca.boards) + " containers/points/mismatch=" + ca.containers + "/" + ca.points + "/" + ca.mismatch +
-    " document=" + ca.document_containers + "/" + ca.document_points + "/" + ca.document_mismatch + " ref_hits=" + ca.ref_hits + " unresolved=" + ca.unresolved.length + "/" + ca.document_unresolved.length + tail(ca)];
+    " document=" + ca.document_containers + "/" + ca.document_points + "/" + ca.document_mismatch + " ref_hits=" + ca.ref_hits + "(defs=" + ca.ref_hits_defs + ")" + " unresolved=" + ca.unresolved.length + "/" + ca.document_unresolved.length + tail(ca)];
   for (const f of ca.flagged) lines.push("  MISMATCH " + f.container_name + "(" + f.container + ") " + f.corner_name + " " + f.axis + " exp=" + f.expected + " act=" + f.actual + " paper=" + f.paper_name + " board=" + f.board_name);
   for (const u of ca.unresolved) lines.push("  UNRESOLVED " + u.container_name + "(" + u.container + ") " + u.reason + (u.best_candidate_name ? " best=" + u.best_candidate_name + " " + u.best_score + "/" + u.total_axes : "") + " board=" + u.board_name);
   for (const [k, v] of agg(ca.document_flagged, (f) => f.board_name + "(" + f.board + ")", (f) => f.container)) lines.push("  DOCUMENT " + v.n + "× board " + k + " e.g. container " + v.ex);
@@ -776,7 +791,7 @@ if (typeof Get === "function" && typeof Print === "function") {
       " board_clip=" + s.board_clip.flagged.length + "/" + s.board_clip.document_flagged.length +
       " corner_anchor=" + s.corner_anchor.containers + "/" + s.corner_anchor.points + "/" + s.corner_anchor.mismatch +
       " document=" + s.corner_anchor.document_containers + "/" + s.corner_anchor.document_points + "/" + s.corner_anchor.document_mismatch +
-      " ref_hits=" + s.corner_anchor.ref_hits +
+      " ref_hits=" + s.corner_anchor.ref_hits + "(defs=" + s.corner_anchor.ref_hits_defs + ")" +
       " unresolved=" + s.corner_anchor.unresolved.length + "/" + s.corner_anchor.document_unresolved.length + " boards=" + JSON.stringify(s.corner_anchor.boards) +
       " tree_hash=" + treeHashHex
   );

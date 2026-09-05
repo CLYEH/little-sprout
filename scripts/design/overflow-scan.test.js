@@ -197,7 +197,7 @@ ok("compactLines：每支掃描一段分類彙整（同名對歸一類、附代�
   assert.ok(/SCAN cross_parent_collision flagged=4 classes=\d+ scope=document document_count=4/.test(text));
   assert.ok(text.includes("  1× C1 :: Corner TR e.g. C1/Corner TR (+5)"));
   // B11 的 unresolved 不在 boards 內 → in-scope 0、document 1（LS-202 unresolved 同 mismatch 限 boards）
-  assert.ok(text.includes('SCAN corner_anchor boards=["B5"] containers/points/mismatch=1/8/2 document=7/56/4 ref_hits=32 unresolved=0/1 scope=document document_count=4'), text);
+  assert.ok(text.includes('SCAN corner_anchor boards=["B5"] containers/points/mismatch=1/8/2 document=7/56/4 ref_hits=32(defs=0) unresolved=0/1 scope=document document_count=4'), text);
   assert.ok(text.includes("  MISMATCH C3(C3) Corner BL y exp=157 act=149 paper=C3 board=LS-99 / 05 示範板"));
   assert.ok(!text.includes("  UNRESOLVED STAGE11(STAGE11)"), "B11 不在 boards 內：不逐筆列 UNRESOLVED");
   assert.ok(text.includes("  DOCUMENT-UNRESOLVED 1× board B11(B11) e.g. container STAGE11"), text);
@@ -408,6 +408,26 @@ ok("(d) LS-207 Mount TL/BR 群分類：找不到吻合紙面時 unresolved 附 c
   const rr = scanCornerAnchor(three);
   assert.strictEqual(rr.unresolved.length, 1);
   assert.strictEqual(rr.unresolved[0].classification, undefined, "一般 Corner 群（非 Mount 命名）不得被誤標 mount_pair");
+});
+
+ok("(d) LS-207 R2（merge-review R1 fd783f6c F7，PLAUSIBLE）：ref_hits 只計實例層（board 上的 ref 節點），排除 cmp/ 定義子樹內部的 ref 節點——定義子樹的節點在 resolveInstances:false／true 兩次走訪 id 都是原生 id，一定 join 得上，只用「有沒有任何 ref 命中」當哨兵會被它撐起來、蓋掉板上實例真正沒接上這件事；ref_hits_defs 另外輸出供人工核對", () => {
+  const { cornerWarnings } = require(path.join(__dirname, "overflow-scan.js"));
+  const cmpRoot = N("CMPROOT", null, 0, 0, 100, 100, { name: "cmp/Weird Corner Def" });
+  const defInnerRef = C("CMPROOT/Corner TL", "CMPROOT", -5, -5, 26, "Corner TL");
+  const board2 = N("BOARD2", null, 500, 0, 200, 200, { name: "LS-207 F7 board" });
+  const boardRef = C("BOARD2/Corner TL", "BOARD2", 495, -5, 26, "Corner TL");
+  // 板上有一顆、定義子樹內部也有一顆 → ref_hits（實例層）只算板上那顆，ref_hits_defs 算定義子樹那顆
+  const both = scanCornerAnchor([cmpRoot, defInnerRef, board2, boardRef]);
+  assert.deepStrictEqual([both.ref_hits, both.ref_hits_defs], [1, 1]);
+  // 只有定義子樹內部有 ref、板上完全沒有（模擬「實例層 join 失敗、只剩定義本身撐著」的真實盲區）→
+  // ref_hits（實例層）必須是 0，即使天真地數「任何 ref 命中」會誤以為判準有接上（=1）
+  const defOnly = scanCornerAnchor([cmpRoot, defInnerRef]);
+  assert.deepStrictEqual([defOnly.ref_hits, defOnly.ref_hits_defs], [0, 1]);
+  const naiveAnyRefHit = 1; // 對照組：舊版「liveNodes.filter(ref 命中).length」會算出 1，誤判判準已接上
+  assert.notStrictEqual(defOnly.ref_hits, naiveAnyRefHit, "ref_hits 不得被定義子樹內部的 ref 撐起來");
+  // ref_hits=0（即使 scope 標成 document）該印 ref_hits=0 的哨兵警告——證明這個案例真的會被 design-evidence-check 抓到
+  const tagged = scanAll([cmpRoot, defInnerRef]).scans.corner_anchor;
+  assert.ok(cornerWarnings(tagged).some((w) => w.startsWith("⚠ corner_anchor ref_hits=0：")), cornerWarnings(tagged));
 });
 
 function r2(v) {
