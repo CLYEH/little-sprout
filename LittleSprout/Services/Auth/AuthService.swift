@@ -73,6 +73,17 @@ protocol AuthService: Sendable {
         launchFlow: @MainActor @Sendable (_ url: URL) async throws -> URL
     ) async throws -> AuthSession
 
+    /// 用 Email／密碼登入（LS-164：審核帳號用，方案 B——只有 admin API 建立的指定帳號能用，
+    /// app 內沒有任何密碼註冊入口，`enable_signup` 是否為 true 與這條路徑無關）。
+    /// 對應 Supabase `client.auth.signIn(email:password:)`。
+    ///
+    /// - Important: 帳密錯誤時 Supabase 回傳 400／`invalid_credentials`，`AppError.map` 會把它
+    ///   歸進 `.validationRetryable`（一般 400 分流）；呼叫端（`PasswordSignInModel`）把
+    ///   `.validationRetryable` 一律當「帳號或密碼錯誤」顯示同一句文案，不指名是哪一個錯——
+    ///   這支協定不需要另外辨識帳密錯誤與其他 400，映射邏輯留在呼叫端。
+    @discardableResult
+    func signInWithPassword(email: String, password: String) async throws -> AuthSession
+
     /// 寄送 Email OTP 到指定信箱。
     func sendEmailOTP(email: String) async throws
 

@@ -100,6 +100,17 @@ final class SupabaseAuthService: AuthService {
         }
     }
 
+    /// 見 `AuthService.signInWithPassword` 協定文件（LS-164）。
+    @discardableResult
+    func signInWithPassword(email: String, password: String) async throws -> AuthSession {
+        do {
+            let session = try await client.auth.signIn(email: email, password: password)
+            return updateCache(session: session)
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
     func sendEmailOTP(email: String) async throws {
         do {
             try await client.auth.signInWithOTP(email: email)

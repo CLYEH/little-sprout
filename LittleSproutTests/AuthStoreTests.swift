@@ -132,6 +132,41 @@ final class AuthStoreTests: XCTestCase {
         XCTAssertNil(store.session)
     }
 
+    // MARK: - signInWithPassword（LS-164：審核帳號用，方案 B）
+
+    func test_signInWithPassword_success_updatesSession() async throws {
+        let stub = StubAuthService()
+        let expected = AuthSession(userID: userID, email: "reviewer@example.com", expiresAt: .distantFuture)
+        stub.setSignInWithPasswordHandler { _, _ in expected }
+        let store = AuthStore(authService: stub)
+        XCTAssertNil(store.session)
+
+        try await store.signInWithPassword(email: "reviewer@example.com", password: "correct-horse-battery-staple")
+
+        XCTAssertEqual(store.session, expected)
+        XCTAssertTrue(store.isAuthenticated())
+    }
+
+    func test_signInWithPassword_failure_propagatesAppErrorWithoutUpdatingSession() async {
+        let stub = StubAuthService()
+        stub.setSignInWithPasswordHandler { _, _ in
+            throw AppError.validationRetryable(message: "Invalid login credentials", code: "invalid_credentials")
+        }
+        let store = AuthStore(authService: stub)
+
+        do {
+            try await store.signInWithPassword(email: "reviewer@example.com", password: "wrong")
+            XCTFail("失敗時必須把錯誤往上拋，不能吞掉")
+        } catch {
+            XCTAssertEqual(
+                AppError.map(error),
+                .validationRetryable(message: "Invalid login credentials", code: "invalid_credentials")
+            )
+        }
+
+        XCTAssertNil(store.session)
+    }
+
     func test_verifyEmailOTP_success_updatesSession() async throws {
         let stub = StubAuthService()
         let expected = AuthSession(userID: userID, email: "grandma@example.com", expiresAt: .distantFuture)
