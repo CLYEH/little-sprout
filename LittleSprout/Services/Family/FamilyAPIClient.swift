@@ -26,6 +26,19 @@ import Foundation
 ///   - `withdrawJoin`         → RPC `withdraw_join(p_request_id)`
 ///   - `listJoinRequests`     → RPC `list_join_requests()`
 ///   - `myJoinRequest`        → RPC `get_my_join_request()`
+///   - `listMembers`          → SELECT `public.family_members` join `public.profiles`
+///                              （PostgREST FK 內嵌，LS-192）
+///   - `removeMember`         → DELETE `public.family_members`（owner 移除他人＝03b，
+///                              自行退出＝03d／03e，同一條路徑，LS-192）
+///   - `transferOwnership`    → RPC `transfer_ownership(p_family_id, p_to_user_id)`（LS-206，
+///                              LS-192 / 03c）
+///   - `fetchMyProfile`       → SELECT `public.profiles`（LS-192 / 02，自己這一列）
+///   - `updateDisplayName`    → UPDATE `public.profiles` (display_name)（LS-192 / 02）
+///   - `updateAvatarPath`     → UPDATE `public.profiles` (avatar_url)（LS-192 / 02，見
+///                              `ProfileAvatarPath` 文件註解）
+///   - `signedAvatarURLs`     → Storage `media` bucket `createSignedURLs`（LS-192，同
+///                              `ChildAPIClient.signedAvatarURLs` 的既有實作，故意不共用——見
+///                              `SupabaseChildAPIClient.signedAvatarURLs` 文件註解）
 ///
 /// 錯誤一律映射為 `AppError`（見該檔），不直接往外拋 PostgREST 的 error 型別。
 protocol FamilyAPIClient: Sendable {
@@ -78,4 +91,37 @@ protocol FamilyAPIClient: Sendable {
     /// 呼叫者自己最相關的一筆申請（有 pending 一定回 pending；否則回最近一筆已處理的；
     /// 從未申請過回 nil）。
     func myJoinRequest() async throws -> MyJoinRequest?
+
+    /// LS-192：03 家庭成員清單——owner／member／viewer 皆可查詢（`family_members_select`
+    /// 只收斂到「自己所屬的家庭」，不限角色）。依 `FamilyRole.sortRank` 排序（owner 優先），
+    /// 同排名再依顯示名稱排序，避免每次重查順序跳動。
+    func listMembers(familyID: UUID) async throws -> [FamilyMember]
+
+    /// 移除成員（owner 對他人，03b）或自行退出（`userID` 傳呼叫者自己，03d／03e）——同一條
+    /// `DELETE family_members` 路徑，RLS（`family_members_delete`）本身區分兩種呼叫者身份；
+    /// 唯一 owner 且家庭還有其他成員時，DB trigger 回 `LS057`（LS-206）。
+    func removeMember(familyID: UUID, userID: UUID) async throws
+
+    /// 轉移 owner 身份（03c）——`transfer_ownership` RPC（LS-206），同一交易升對方、降自己。
+    func transferOwnership(familyID: UUID, toUserID: UUID) async throws -> TransferOwnershipResult
+
+    /// LS-192 / 02：呼叫者自己的 `profiles` 列。`profiles_select` 一定放行自己
+    /// （`peer_profile_ids()` 包含自己），理論上不會是 0 列。
+    func fetchMyProfile() async throws -> Profile
+
+    /// PUT 語意整欄替換 `display_name`（`profiles_update` 只放行 `id = auth.uid()`，見
+    /// docs/API.md §3）；`name` 的長度／空白規則由呼叫端（`ProfileEditView`）先驗，DB
+    /// check 約束（1~50 字，去頭尾空白後）是最後一道防線。回傳更新後的列，供呼叫端直接
+    /// 覆寫本地狀態，不必另外重查一次。
+    func updateDisplayName(_ name: String) async throws -> Profile
+
+    /// 寫入自行上傳頭像的 Storage 路徑（見 `ProfileAvatarPath` 文件註解）——呼叫前應已經
+    /// 用 `ChildAvatarUploadService.uploadProfileAvatar` 把檔案傳上去，這裡只負責把路徑
+    /// 寫進 `profiles.avatar_url`。回傳更新後的列。
+    func updateAvatarPath(_ path: String) async throws -> Profile
+
+    /// 把一批 `profiles.avatar_url`（僅限 Storage 路徑，`ProfileAvatarPath.isStoragePath`
+    /// 為 true 的那些——外部 OAuth 網址不需要簽名，呼叫端不應該把它們傳進來）換成短效簽名
+    /// URL。單一路徑簽名失敗略過、不讓整批失敗，同 `ChildAPIClient.signedAvatarURLs` 既有慣例。
+    func signedAvatarURLs(forPaths paths: [String]) async throws -> [String: URL]
 }

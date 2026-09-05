@@ -3,7 +3,15 @@ import Supabase
 
 /// `FamilyAPIClient` 的 Supabase 實作。方法 ↔ RPC 對照見協定檔的文件註解。
 final class SupabaseFamilyAPIClient: FamilyAPIClient {
-    private let client: SupabaseClient
+    // 不是 `private`：`SupabaseFamilyAPIClient+Profile.swift`（另一個檔案的 extension，LS-192
+    // 家庭成員／個人 profile 方法，拆出去理由是主檔逼近 SwiftLint `file_length`／
+    // `type_body_length` 上限）需要用它們打 REST／RPC／Storage 呼叫；Swift 的 `private` 存取
+    // 層級只到「同檔案」，跨檔案 extension 碰不到，退而求其次用預設的 internal（同
+    // `FamilyStore.apiClient` 的既有取捨，見該屬性文件註解）。
+    let client: SupabaseClient
+    /// LS-192：同 `SupabaseChildAPIClient` 的既有值——頭像沒有理由用不同的過期時間。
+    static let signedURLExpirySeconds = 3600
+    static let avatarBucket = "media"
 
     init(client: SupabaseClient) {
         self.client = client
@@ -269,6 +277,7 @@ final class SupabaseFamilyAPIClient: FamilyAPIClient {
             throw AppError.map(error)
         }
     }
+
 }
 
 // MARK: - Wire payloads

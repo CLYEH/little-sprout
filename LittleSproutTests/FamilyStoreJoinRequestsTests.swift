@@ -34,7 +34,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
         let requestID = self.requestID
         let familyID = self.familyID
         stub.setRequestJoinHandler { _ in .pending(requestID: requestID, familyID: familyID) }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let outcome = await store.requestJoin(code: "K7M2FD")
 
@@ -52,7 +52,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
         stub.setRequestJoinHandler { _ in .joined(familyID: familyID) }
         let family = Family(id: familyID, name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: false)
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let outcome = await store.requestJoin(code: "K7M2FD")
 
@@ -64,7 +64,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let error = AppError.validationRetryable(message: "邀請碼不存在", code: LSErrorCode.inviteCodeNotFound.rawValue)
         stub.setRequestJoinHandler { _ in throw error }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let outcome = await store.requestJoin(code: "WRONGCODE")
 
@@ -84,7 +84,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
             _ = await iterator.next()
             return .pending(requestID: requestID, familyID: familyID)
         }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let firstCallTask = Task { await store.requestJoin(code: "K7M2FD") }
         var guardIterations = 0
@@ -109,7 +109,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
     func test_resetRequestJoinState_clearsFailureOnly() async {
         let stub = StubFamilyAPIClient()
         stub.setRequestJoinHandler { _ in throw AppError.network(message: "offline") }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.requestJoin(code: "K7M2FD")
         guard case .failure = store.requestJoinState else {
             return XCTFail("前置條件失敗：預期先進入 .failure")
@@ -129,7 +129,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
             status: .pending, createdAt: Date(), resolvedAt: nil
         )
         stub.setMyJoinRequestHandler { request }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let result = await store.refreshMyJoinRequest()
 
@@ -149,7 +149,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
             if shouldFail.withLock({ $0 }) { throw AppError.network(message: "offline") }
             return request
         }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.refreshMyJoinRequest()
         XCTAssertEqual(store.myJoinRequest, request, "前置條件失敗：預期先查到這筆申請")
 
@@ -165,7 +165,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
     func test_withdrawJoinRequest_success_setsSuccessState() async {
         let stub = StubFamilyAPIClient()
         stub.setWithdrawJoinHandler { _ in }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let succeeded = await store.withdrawJoinRequest(requestID: requestID)
 
@@ -178,7 +178,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let error = AppError.rejected(message: "申請已被處理", code: LSErrorCode.requestNotFoundOrProcessed.rawValue)
         stub.setWithdrawJoinHandler { _ in throw error }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let succeeded = await store.withdrawJoinRequest(requestID: requestID)
 
@@ -192,7 +192,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let request = makePendingRequest()
         stub.setListJoinRequestsHandler { [request] }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let result = await store.refreshPendingJoinRequests()
 
@@ -208,7 +208,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
         let request = makePendingRequest()
         stub.setListJoinRequestsHandler { [request] }
         stub.setApproveJoinHandler { _ in }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.refreshPendingJoinRequests()
 
         let succeeded = await store.approveJoinRequest(request.requestID)
@@ -227,7 +227,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
         stub.setListJoinRequestsHandler { [request] }
         let error = AppError.rejected(message: "申請已被處理", code: LSErrorCode.requestNotFoundOrProcessed.rawValue)
         stub.setRejectJoinHandler { _ in throw error }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.refreshPendingJoinRequests()
 
         let succeeded = await store.rejectJoinRequest(request.requestID)
@@ -249,7 +249,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
             _ = await iterator.next()
         }
         stub.setRejectJoinHandler { _ in }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.refreshPendingJoinRequests()
 
         let approveTask = Task { await store.approveJoinRequest(requestA.requestID) }
@@ -279,7 +279,7 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
         stub.setRequestJoinHandler { _ in throw AppError.network(message: "offline") }
         let request = makePendingRequest()
         stub.setListJoinRequestsHandler { [request] }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         _ = await store.requestJoin(code: "K7M2FD")
         _ = await store.refreshPendingJoinRequests()
         XCTAssertFalse(store.pendingJoinRequests.isEmpty, "前置條件失敗")

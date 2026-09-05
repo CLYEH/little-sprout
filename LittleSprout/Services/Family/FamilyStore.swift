@@ -16,46 +16,6 @@ enum FamilyOperationState: Equatable {
     }
 }
 
-/// 已產生的邀請碼——R1 F2/F4 訂正：`create_invite` RPC 只回傳 `code`，但 `id`／`usedCount`
-/// 現在一律從 `invites` 表反查回來（`FamilyAPIClient.createInvite` 文件註解），不再是「呼叫端
-/// 自己組出來、剛產生完必為 0」的假值。`id` 是撤銷（`revokeInvite`）需要的鍵；`usedCount` 是
-/// F4「還可用 N 次」要用真實剩餘量，兩者都不能只靠呼叫端自己組。
-struct GeneratedInvite: Equatable, Sendable {
-    let id: UUID
-    let code: String
-    let role: FamilyRole
-    let expiresAt: Date
-    let maxUses: Int
-    let usedCount: Int
-
-    init(id: UUID, code: String, role: FamilyRole, expiresAt: Date, maxUses: Int, usedCount: Int) {
-        self.id = id
-        self.code = code
-        self.role = role
-        self.expiresAt = expiresAt
-        self.maxUses = maxUses
-        self.usedCount = usedCount
-    }
-
-    init(record: InviteRecord) {
-        self.init(
-            id: record.id,
-            code: record.code,
-            role: record.role,
-            expiresAt: record.expiresAt,
-            maxUses: record.maxUses,
-            usedCount: record.usedCount
-        )
-    }
-
-    /// 07 Pill「還可用 N 次」要顯示的值——R1 F4：過去這裡曾經直接顯示 `maxUses`，
-    /// 永遠不會反映真的用掉幾次。`max(0, ...)`：`usedCount` 理論上不會大於 `maxUses`
-    /// （DB `invites_uses_within_max` CHECK 約束），這裡只是防禦性地不顯示負數。
-    var remainingUses: Int {
-        max(0, maxUses - usedCount)
-    }
-}
-
 /// 把 `FamilyAPIClient` 包成 `@Observable`，讓三岔路／建立家庭／邀請家人三個畫面能直接讀
 /// 狀態驅動重繪（同 `AuthStore` 之於 `AuthService` 的角色，見該檔文件）。
 ///
@@ -111,6 +71,34 @@ final class FamilyStore {
     var joinRequestActionError: AppError?
     var processingJoinRequestIDs: Set<UUID> = []
 
+    // LS-192 家庭成員管理（清單／移除／轉移 Owner／退出，方法拆去
+    // `FamilyStore+Members.swift`，理由同 `FamilyStore+JoinRequests.swift` 檔頭註解）——狀態
+    // 宣告在這裡（Swift extension 不能加 stored property）。不是 `private(set)`：理由同上方
+    // `apiClient`。
+    var membersState: FamilyOperationState = .idle
+    var members: [FamilyMember] = []
+    /// 移除／轉移／退出三個動作共用同一份狀態——`FamilyMembersView` 的三張確認 sheet
+    /// 互斥展示（一次只會有一個在飛），不需要像 `processingJoinRequestIDs` 那樣逐列追蹤。
+    var memberActionState: FamilyOperationState = .idle
+
+    // LS-192 個人顯示名稱與頭像（02，方法拆去 `FamilyStore+Profile.swift`）——狀態宣告在這裡，
+    // 理由同上方 `members`。`avatarUploadService` 重用 LS-169 的服務（見 `ChildAvatarUploadService
+    // .uploadProfileAvatar` 文件註解），不是 `private`：`FamilyStore+Profile.swift` 需要讀它。
+    let avatarUploadService: ChildAvatarUploadService
+    var myProfile: Profile?
+    var profileState: FamilyOperationState = .idle
+    var updateDisplayNameState: FamilyOperationState = .idle
+    var updateAvatarState: FamilyOperationState = .idle
+    /// `Profile.avatarURL`／`FamilyMember.avatarURL`（僅 Storage 路徑那些，見
+    /// `ProfileAvatarPath.isStoragePath`）→ 短效簽名 URL，同 `ChildrenStore.avatarSignedURLs`
+    /// 的角色。外部 OAuth 網址不進這個字典，直接由 `avatarDisplayURL(rawValue:)` 原樣回傳。
+    var avatarSignedURLs: [String: URL] = [:]
+    /// 同 `ChildrenStore.avatarCacheBust`（LS-174）——這個 client 這次 session 自己剛上傳的
+    /// 路徑才需要疊加查詢參數防中介層快取，見該屬性文件註解，理由逐位相同。
+    var avatarCacheBust: [String: TimeInterval] = [:]
+    /// 同 `ChildrenStore.avatarSignedURLsGeneration`——批次重簽的請求世代守門。
+    var avatarSignedURLsGeneration = 0
+
     /// 目前這份狀態是查給哪個使用者看的——R1 F1：`FamilyStore` 是 app 層單例、隨 app 存活，
     /// 單純登出不會重置它。`syncOwner(to:)` 拿它跟 `AuthenticatedGate` 傳進來的
     /// `authStore.session?.userID` 比對，不同就代表換人了（已登入狀態下切換帳號），必須整份
@@ -123,8 +111,9 @@ final class FamilyStore {
     static let defaultInviteValidityDays = 7
     static let defaultInviteMaxUses = 5
 
-    init(apiClient: FamilyAPIClient) {
+    init(apiClient: FamilyAPIClient, avatarUploadService: ChildAvatarUploadService) {
         self.apiClient = apiClient
+        self.avatarUploadService = avatarUploadService
     }
 
     #if DEBUG
@@ -146,6 +135,15 @@ final class FamilyStore {
     /// 特定樣本，沒有時序窗口。
     func seedQuotaForPreview(_ quota: FamilyQuota) {
         self.quota = quota
+    }
+
+    /// LS-192：同 `seedMyFamilyForPreview` 的角色——`ownerUserID` 是 `private(set)`（同檔案
+    /// 才能寫），一般只透過 `syncOwner(to:)`（async）設定；`#Preview`／`TapTargetGateHarness`
+    /// 需要同步、確定性地佈置「呼叫者是這個家庭的哪一位成員」（決定 `myRole`／
+    /// `mustTransferOwnershipBeforeLeaving` 等依 `ownerUserID` 判斷的計算屬性），不需要真的
+    /// 走一次 async 登入流程。
+    func seedOwnerUserIDForPreview(_ userID: UUID) {
+        ownerUserID = userID
     }
     #endif
 
@@ -185,6 +183,16 @@ final class FamilyStore {
         quotaState = .idle
         showsChildOnboarding = false
         resetJoinRequestsState()
+        members = []
+        membersState = .idle
+        memberActionState = .idle
+        myProfile = nil
+        profileState = .idle
+        updateDisplayNameState = .idle
+        updateAvatarState = .idle
+        avatarSignedURLs = [:]
+        avatarCacheBust = [:]
+        avatarSignedURLsGeneration = 0
     }
 
     /// 查詢呼叫者目前所屬的家庭；`RootView` 在「已登入」但還不確定有沒有家庭時呼叫一次。
@@ -229,6 +237,14 @@ final class FamilyStore {
     /// 觸發 binding 的 `set` 分支）時呼叫，把旗標寫回 `false`。
     func dismissChildOnboarding() {
         showsChildOnboarding = false
+    }
+
+    /// LS-192：`FamilyStore+Members.swift` 的 `leaveFamily()` 退出成功後呼叫——`myFamily` 是
+    /// `private(set)`（同檔案才能寫，見屬性宣告文件註解），另一個檔案的 extension 寫不到，
+    /// 這裡開一個窄的寫入口，只給「退出家庭成功」這一種情境用。寫回 `nil` 後 root routing
+    /// （`AuthenticatedGate`）下一次重繪會自然切回三岔路（LS-18），不需要任何手動導航。
+    func clearMyFamilyAfterLeaving() {
+        myFamily = nil
     }
 
     /// 重新導航回這個畫面時，把上一次失敗的殘影清掉——`createFamilyState` 是 store 層的狀態、

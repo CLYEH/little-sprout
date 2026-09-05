@@ -62,6 +62,19 @@ struct SettingsView: View {
             guard familyStore.quota == nil else { return }
             await familyStore.refreshQuota()
         }
+        // LS-192：「個人」列改讀真正的 `profiles.display_name`（見 `displayName` 文件註解）；
+        // 同 `isOwner`／`quota` 補查的既有理由——直接從別的分頁導覽到設定頁的使用者可能還沒查過。
+        .task(id: familyStore.ownerUserID) {
+            guard familyStore.ownerUserID != nil else { return }
+            guard familyStore.myProfile == nil else { return }
+            await familyStore.refreshProfile()
+        }
+        // LS-192：「家庭成員」列的「N 位」摘要——同上，補查一次，不重打已經查過的。
+        .task(id: familyStore.myFamily?.id) {
+            guard familyStore.myFamily?.id != nil else { return }
+            guard familyStore.members.isEmpty else { return }
+            await familyStore.refreshMembers()
+        }
         .alert(
             "登出失敗",
             isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }),
@@ -182,7 +195,9 @@ struct SettingsView: View {
     private var profileSection: some View {
         SettingsSectionBlock(title: "個人") {
             NavigationLink {
-                ProfileEditView()
+                if let familyID = familyStore.myFamily?.id {
+                    ProfileEditView(familyStore: familyStore, familyID: familyID)
+                }
             } label: {
                 ProfileSummaryRow(displayName: displayName)
             }
@@ -192,26 +207,30 @@ struct SettingsView: View {
         }
     }
 
-    /// LS-188：`profiles.display_name` 沒有任何既有讀取路徑（該表目前只在建立家庭時被寫入一次
-    /// ，見 `SupabaseFamilyAPIClient.ensureProfileExists`），新增一支「讀自己 profile」的
-    /// client／RPC 屬於 02 顯示名稱編輯頁（LS-152 另票）的範圍，不是這張 root 票要做的事
-    /// （本票的後端範圍限定在既有 `get_family_quota`，見票文環境段）。這裡先用登入 email
-    /// 本地部分當顯示名稱（同 `ensureProfileExists` 建立 profiles 列時的預設值推導邏輯），
-    /// 02 頁落地後這裡應該改讀真正的 `profiles.display_name`——記入 handoff「未完成」。
+    /// LS-192：改讀真正的 `profiles.display_name`（`FamilyStore.myProfile`，`.task(id:
+    /// familyStore.ownerUserID)` 進場補查一次，見上方）——`myProfile` 還沒查回來之前，沿用
+    /// LS-188 原本的 email 本地部分當佔位，避免這一列在查詢完成前顯示空白。
     private var displayName: String {
-        EmailDisplayName.derive(fromEmail: authStore.session?.email) ?? "我"
+        familyStore.myProfile?.displayName ?? EmailDisplayName.derive(fromEmail: authStore.session?.email) ?? "我"
     }
 
     // MARK: - 家庭
 
     private var familySection: some View {
         SettingsSectionBlock(title: "家庭") {
-            // LS-188：稿面「家庭成員」列的「N 位」摘要需要新的成員清單/計數查詢——同「個人」
-            // 列的理由，屬於 LS-24（家庭成員管理）票的範圍，不在這張 root 票新增後端呼叫。
             NavigationLink {
-                FamilyMembersView()
+                FamilyMembersView(
+                    familyStore: familyStore, childrenStore: childrenStore,
+                    timelineStore: timelineStore, albumsStore: albumsStore
+                )
             } label: {
-                SettingsRowView(icon: "person.2.fill", label: "家庭成員")
+                // LS-192：`familyStore.members` 由本畫面的 `.task(id:)` 補查（見上方），還沒
+                // 查回來時 `value` 是 nil，`SettingsRowView` 不顯示副標——同「儲存空間」列
+                // 「查詢中不顯示摘要」的既有慣例。
+                SettingsRowView(
+                    icon: "person.2.fill", label: "家庭成員",
+                    value: familyStore.members.isEmpty ? nil : "\(familyStore.members.count) 位"
+                )
             }
             SettingsRowDivider()
             // LS-107：07 邀請家人本身有 LS-46 核可的設計稿，這顆列只是導航入口，沿用既有
@@ -225,7 +244,10 @@ struct SettingsView: View {
             .accessibilityIdentifier(QAAccessibilityID.settingsInviteRow)
             SettingsRowDivider()
             NavigationLink {
-                FamilyMembersView()
+                FamilyMembersView(
+                    familyStore: familyStore, childrenStore: childrenStore,
+                    timelineStore: timelineStore, albumsStore: albumsStore
+                )
             } label: {
                 SettingsRowView(icon: "door.left.hand.open", label: "退出家庭")
             }
