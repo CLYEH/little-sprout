@@ -19,11 +19,24 @@ struct AlbumsCursor: Equatable, Sendable {
 /// id,title,album_media(count)` 回 `[{"count":n}]`，見 `SupabaseAlbumsAPIClient.fetchAlbums`
 /// 文件註解的完整查詢字串）：
 ///   - `photoCount` 來自內嵌 `album_media(count)`（PostgREST aggregate，一個元素的陣列）。
+///     merge-review R2 m3：這個數字數的是 `album_media` 連結列本身，包含使用者透過 RLS
+///     看不到的 media（已軟刪、非自己上傳；或 LS-155 刪帳號後 `uploaded_by` 被清成
+///     `NULL`）——本機實測過幾種「inner join 後計數」的 select 寫法（`album_media(media!
+///     inner(id),count)`／`album_media!inner(media!inner(count))` 等），要嘛拿到
+///     `42803`（count 與其他欄位混用要求 GROUP BY），要嘛拿到的是「每個 album_media 各自
+///     一個 count」而不是單一總數，PostgREST 目前的 embed+aggregate 語法組合做不到「只數
+///     inner join 命中的列」這種依賴巢狀可見性的計數。維持連結列計數（跟被裁定前的 R1 行為
+///     一致），口徑差異記錄在這裡與 docs/API.md `albums` 段，未來若要精確排除不可見照片需要
+///     後端另開一個 view 或 RPC。
 ///   - `latestMediaThumbPath`／`latestMediaStoragePath` 來自內嵌別名 `latest:album_media(
-///     media(thumb_path, storage_path, created_at))`，依 `media(created_at)` 排序（不是
+///     media!inner(thumb_path, storage_path, created_at))`，依 `media(created_at)` 排序（不是
 ///     `album_media` 自己的欄位——那張連結表沒有 `created_at`，只有 `album_id`／`media_id`／
 ///     `family_id`／`sort_order`）取最新一筆，供 M3 封面 fallback 用（`cover_media_id` 未
-///     指定時退回這裡）；一本相簿沒有任何照片時這個陣列是空的，兩個欄位皆為 `nil`。
+///     指定時退回這裡）；一本相簿沒有任何「看得見」的照片時（不論是真的 0 張，還是唯一的
+///     照片被 RLS 濾掉）這個陣列是空的，兩個欄位皆為 `nil`——`media!inner` 保證看不見的
+///     media 不會混進來（merge-review R2 B1，見 `SupabaseAlbumsAPIClient.listSelect`
+///     文件註解的完整踩雷記錄），`LatestAlbumMediaEntry.media` 仍宣告成 optional 當第二層
+///     防守，不只依賴這一個查詢寫法保證解碼不會失敗。
 struct AlbumListingRow: Decodable, Sendable, Equatable, Identifiable {
     let id: UUID
     let title: String
@@ -50,8 +63,12 @@ struct AlbumListingRow: Decodable, Sendable, Equatable, Identifiable {
         let counts = try container.decode([AlbumMediaCountEntry].self, forKey: .albumMedia)
         photoCount = counts.first?.count ?? 0
         let latestEntries = try container.decodeIfPresent([LatestAlbumMediaEntry].self, forKey: .latest) ?? []
-        latestMediaThumbPath = latestEntries.first?.media.thumbPath
-        latestMediaStoragePath = latestEntries.first?.media.storagePath
+        // merge-review R2 B1 第二層防守：`media!inner` 已經在 SQL 層排除看不見的候選，理論上
+        // 不會再出現 `{"media": null}`，但這裡仍用 `compactMap` 過濾、不假設查詢寫法永遠正確
+        // ——寧可退回占位圖，不要因為單一連結列的巢狀 `media` 意外是 `null` 就讓整頁 throw。
+        let visibleMedia = latestEntries.compactMap(\.media).first
+        latestMediaThumbPath = visibleMedia?.thumbPath
+        latestMediaStoragePath = visibleMedia?.storagePath
     }
 
     /// 供測試／`.preview()` 假資料組建——`init(from:)` 服務真正的 PostgREST 回應形狀
@@ -77,9 +94,12 @@ private struct AlbumMediaCountEntry: Decodable {
     let count: Int
 }
 
-/// `AlbumListingRow.init(from:)` 解 `latest:album_media(media(...))` 內嵌陣列的單一元素形狀。
+/// `AlbumListingRow.init(from:)` 解 `latest:album_media(media!inner(...))` 內嵌陣列的單一
+/// 元素形狀。`media` 宣告成 optional——merge-review R2 B1：`media!inner` 已經在 SQL 層排除
+/// 看不見的候選，理論上不會再收到 `{"media": null}`，這裡是不依賴單一查詢寫法的第二層防守
+/// （真的收到 `null` 時 `AlbumListingRow.init(from:)` 用 `compactMap` 濾掉，不會整頁 throw）。
 private struct LatestAlbumMediaEntry: Decodable {
-    let media: LatestAlbumMedia
+    let media: LatestAlbumMedia?
 }
 
 private struct LatestAlbumMedia: Decodable {

@@ -84,6 +84,40 @@ final class AlbumsContentAssemblerTests: XCTestCase {
         XCTAssertEqual(result.first?.cover, URL(string: "https://example.com/signed-thumb.jpg"))
     }
 
+    /// merge-review R2 N7：`cover_media_id` 有指定，但該 media 列使用者透過 RLS 讀不到
+    /// （已軟刪、非自己上傳，或 LS-155 刪帳號後 `uploaded_by` 被清空）——`fetchMedia` 對這個
+    /// id 就是查不到任何列（不是拋錯，是回傳的陣列裡沒有這一筆，同 RLS「比對不上就是查無此列」
+    /// 的既有語意）。這時應該退回內嵌查詢已經算好的最新一筆「看得見」的縮圖，不是顯示占位圖
+    /// 放棄——`cover_media_id` 讀不到只代表「這個特定指定失效」，不代表「這本相簿沒有任何看
+    /// 得見的照片」，兩者是不同的失敗態，只有兩者都成立才該顯示占位圖。
+    func test_coverMediaId_pointsToInvisibleMedia_fallsBackToEmbeddedLatestMediaThumbPath() async throws {
+        let albumID = UUID()
+        let unreadableCoverID = UUID()
+        let rows = [
+            AlbumListingRow(
+                id: albumID, title: "相簿", coverMediaId: unreadableCoverID, createdAt: Date(),
+                latestMediaThumbPath: "f/latest-visible-thumb.jpg", latestMediaStoragePath: "f/latest-visible.jpg"
+            )
+        ]
+        let stub = StubAlbumsAPIClient()
+        stub.setFetchMediaHandler { ids in
+            XCTAssertEqual(ids, [unreadableCoverID])
+            // RLS 濾掉了這一列——回傳空陣列，不是拋錯。
+            return []
+        }
+        stub.setSignedURLsHandler { paths in
+            XCTAssertEqual(
+                paths, ["f/latest-visible-thumb.jpg"],
+                "cover_media_id 讀不到時應該簽 fallback 的縮圖路徑，不是放棄顯示占位圖"
+            )
+            return ["f/latest-visible-thumb.jpg": URL(string: "https://example.com/latest-visible-thumb.jpg")!]
+        }
+
+        let result = try await AlbumsContentAssembler.assemble(rows: rows, apiClient: stub)
+
+        XCTAssertEqual(result.first?.cover, URL(string: "https://example.com/latest-visible-thumb.jpg"))
+    }
+
     /// merge-review R1 M3（票文 Scope 1 原意，本票補上）：`cover_media_id` 未指定時，退回
     /// `AlbumListingRow` 內嵌查詢已經算好的「最新一筆 album_media」縮圖路徑——不再呼叫
     /// `fetchMedia`（那支只服務 `cover_media_id` 顯式指定的情況），也不用另外查 `album_media`。

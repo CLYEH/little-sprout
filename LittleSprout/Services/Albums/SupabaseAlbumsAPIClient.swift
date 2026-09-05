@@ -10,8 +10,9 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
 
     /// 張數（PostgREST aggregate，本機已實測 `db-aggregates-enabled` 可用）＋封面 fallback
     /// 一次內嵌查出（merge-review R1 M1）：
-    ///   - `album_media(count)` → `AlbumListingRow.photoCount`（見該型別文件註解）。
-    ///   - `latest:album_media(media(...))`，靠下方 `.order(referencedTable: "latest")`／
+    ///   - `album_media(count)` → `AlbumListingRow.photoCount`（見該型別文件註解——R2 review
+    ///     R3 B1／m3 附帶記錄：這個計數包含使用者看不到的 media 連結列，見下）。
+    ///   - `latest:album_media(media!inner(...))`，靠下方 `.order(referencedTable: "latest")`／
     ///     `.limit(referencedTable: "latest")` 依 `media(created_at)` 取最新一筆
     ///     → `AlbumListingRow.latestMediaThumbPath`／`latestMediaStoragePath`。
     /// 兩個內嵌都叫 `album_media` 但用不同別名（`latest:`）——PostgREST 對同一張表嵌兩次時，
@@ -20,9 +21,25 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
     /// 清單裡（即使組裝端用不到這個值）——只用來排序、不選進 select 會拿到 `42703`
     /// column does not exist（本機實測撞過，PostgREST 排序時似乎是對 select 出來的欄位做
     /// 二次查找，不是任意可存取欄位都能直接拿來排序）。
+    ///
+    /// merge-review R2 B1（blocker）：`latest` 內嵌原本用 `media(...)`（LEFT JOIN 語意）——
+    /// 當這本相簿裡有任一 `album_media` 連結指到使用者透過 RLS 看不到的 media 列（該列已
+    /// 軟刪、且不是自己上傳的；或 LS-155 刪帳號後 `uploaded_by` 被 FK `on delete set null`
+    /// 清成 `NULL`，兩種情況都落在 `media_select` policy「上傳者自己例外」以外），PostgREST
+    /// 對那一列的巢狀 `media` 回傳 `null`（不是整列消失），且 `media(created_at)` 排序對
+    /// `null` 視同缺值——若這個看不見的連結恰好被 `limit 1` 選中（本機實測：單一 album_media
+    /// 連結、且該連結是看不見的這種最小情境必定選中它，因為 `latest` 沒有其他候選可比較），
+    /// `latest` 就會是 `[{"media": null}]`，解碼直接失敗（見 `AlbumListingRow` 文件註解）。
+    /// 改用 `media!inner(...)`（INNER JOIN 語意——PostgREST inner 提示會在 SQL 層把「join 不到
+    /// 看得見的列」直接濾掉這個 `album_media` 候選，不會产生 `{"media": null}` 這種殘影）：
+    /// 本機用 Supabase CLI 容器造「唯一一張相片被軟刪＋uploaded_by 清空」的相簿實測，`latest`
+    /// 正確變成 `[]`（相簿沒有任何看得見的照片，封面走 M3 fallback 的「兩者皆無」分支，顯示
+    /// 占位圖）；`{"media": null}` 的殘影已經在 SQL 層排除，不需要靠 iOS 端補救——但
+    /// `LatestAlbumMediaEntry.media`／`AlbumListingRow` 仍把它宣告成 optional（見下）當第二層
+    /// 防守，不只依賴這一個查詢寫法保證正確性。
     private static let listSelect =
         "id,title,cover_media_id,created_at,album_media(count)," +
-        "latest:album_media(media(thumb_path,storage_path,created_at))"
+        "latest:album_media(media!inner(thumb_path,storage_path,created_at))"
 
     private let client: SupabaseClient
 

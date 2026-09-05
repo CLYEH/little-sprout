@@ -64,8 +64,10 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
             let query = (request.url?.query ?? "").removingPercentEncoding ?? ""
             XCTAssertTrue(query.contains("album_media(count)"), "應該內嵌 count aggregate，實際 query：\(query)")
             XCTAssertTrue(
-                query.contains("latest:album_media(media(thumb_path,storage_path,created_at))"),
-                "應該用別名 latest 內嵌最新一筆 album_media，實際 query：\(query)"
+                query.contains("latest:album_media(media!inner(thumb_path,storage_path,created_at))"),
+                "應該用別名 latest 內嵌最新一筆 album_media，且對 media 用 !inner（merge-review R2 " +
+                    "B1：LEFT JOIN 語意在使用者看不到最新一筆時會產生 {\"media\": null} 解碼失敗），" +
+                    "實際 query：\(query)"
             )
             XCTAssertTrue(
                 query.contains("latest.order=media(created_at).desc"),
@@ -99,6 +101,31 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
         XCTAssertNil(rows[0].coverMediaId)
         XCTAssertEqual(rows[0].photoCount, 0)
         XCTAssertNil(rows[0].latestMediaThumbPath)
+        XCTAssertNil(rows[0].latestMediaStoragePath)
+    }
+
+    /// merge-review R2 B1（blocker）迴歸測試——本機用 Supabase CLI 容器造「唯一一筆
+    /// album_media 連結指到已軟刪＋`uploaded_by` 被清空的 media」重現過的真實回應形狀：
+    /// `latest` 陣列非空，但內含元素的 `media` 是 `null`（`media!inner` 修好之後這個形狀在
+    /// 正式查詢裡不會再出現，但 `AlbumListingRow.init(from:)` 仍要能安全解碼這個形狀——
+    /// 不只依賴查詢寫法保證正確性，見該型別文件註解「第二層防守」）。
+    func test_fetchAlbums_decodesLatestEntryWithNullMedia_withoutThrowing() async throws {
+        let client = TestSupabaseClient.make { [albumID] _ in
+            MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+            [{
+              "id": "\(albumID.uuidString)", "title": "只有看不到的相片", "cover_media_id": null,
+              "created_at": "2026-09-04T10:00:00Z", "album_media": [{"count": 1}],
+              "latest": [{"media": null}]
+            }]
+            """.utf8))
+        }
+        let apiClient = SupabaseAlbumsAPIClient(client: client)
+
+        let rows = try await apiClient.fetchAlbums(familyID: familyID, cursor: nil, limit: 20)
+
+        XCTAssertEqual(rows.count, 1, "不應該因為 {\"media\": null} 讓整頁解碼失敗")
+        XCTAssertEqual(rows[0].photoCount, 1, "連結列計數不受影響（merge-review R2 m3：口徑包含看不見的連結）")
+        XCTAssertNil(rows[0].latestMediaThumbPath, "看不見的 media 不該被當成封面 fallback 來源")
         XCTAssertNil(rows[0].latestMediaStoragePath)
     }
 
