@@ -25,7 +25,7 @@
 | 段 | 角托 | 誰 |
 |---|---|---|
 | ① 四角托＝這是一張沖印品 | 4 | 使用者會收藏、會再看第二次的東西。全 app 只有**家人的照片**：01／01b／01c／01-iPad／04／04-iPad／A11y-04／07a 範例沖印品。現稿（main）四顆共 175 處（`Print Cell`×134、`Print Stage`×16、`Photo Print`×10…），維持現狀 |
-| ② 對角兩顆＝App icon＋LS-177 起新畫的沖印品 | 2 對角 | App icon 實機尺寸（≤60pt，四顆會糊成一圈邊）；**LS-177 起新畫的沖印品用對角兩顆**（例：Hero Print `zzXNT` 200×155、Empty Print `K1yE6j` 120×120；LS-177 VR R3 MN-2）。既有四顆（`Print Cell` 等 175 處）維持現狀，是否統一另票對帳（LS-96 `6d433e65` 舊債票）。對角保留「被裱住」的剪影，且對角正好是窗光最強與最弱的兩端。`cmp/Card Diary`／`cmp/Profile Print` 是零角托（③），不是本段的例 |
+| ② 對角兩顆＝App icon、`cmp/Profile Print`＋LS-177 起新畫的沖印品 | 2 對角 | App icon 實機尺寸（≤60pt，四顆會糊成一圈邊）；**`cmp/Profile Print`（`OePXK`）現稿就是對角兩顆**（`/Print/Mount TL` `R1lbwf`／`/Print/Mount BR` `S4O4r8` → `cmp/Photo Corner` `GEBcf`；main 上唯一非 App icon 的既有例）；**LS-177 起新畫的沖印品用對角兩顆**（例：Hero Print `zzXNT` 200×155、Empty Print `K1yE6j` 120×120；LS-177 VR R3 MN-2）。既有四顆（`Print Cell` 等 175 處）維持現狀，是否統一另票對帳（LS-96 `a442c747` 角托實況池項）。對角保留「被裱住」的剪影，且對角正好是窗光最強與最弱的兩端。`cmp/Card Diary` 是零角托（③），不是本段的例 |
 | ③ 零角托＝不是沖印品 | 0 | 一次性表單、橫幅、設定列、印在卡片上的照片。**邀請碼卡／邀請碼輸入卡**：會過期、有次數上限、用完就作廢——會過期的東西不是收藏品。撤角托時連四顆染料池一起撤：沒有角托的紙沒有池 |
 
 - 角托一律壓過紙緣 `corner-out` 5pt（iPhone／iPad／深色紙條接縫皆守；01 家族 corner y＝print y−5）。**LS-81 對帳中**：`aw57e` 實測 TL 3pt／BL·BR 10pt 與 5pt 慣例不一致，以 LS-81 結論為準。
