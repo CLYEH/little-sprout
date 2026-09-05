@@ -141,6 +141,22 @@ final class FamilyStore {
         myFamily = family
     }
 
+    /// LS-190：`TapTargetGateHarness.eulaConsentToTimelineHost` 用——多帶一個 `ownerUserID`，
+    /// 讓 `AuthenticatedGate` 的 `.task(id: authStore.session?.userID)` 觸發 `syncOwner(to:)`
+    /// 時能透過 `guard userID != ownerUserID else { return myFamily }` 短路，不會把這裡剛種好
+    /// 的 `myFamily` 又被 `reset()`＋重新 `fetchMyFamily()`（`PreviewFamilyAPIClient` 固定回傳
+    /// `nil`）洗掉。既有 `seedMyFamilyForPreview(_:)` 呼叫端（`.preview(withFamily:)`）本來就
+    /// 不會經過 `AuthenticatedGate`（直接建構 `AuthenticatedRootView`），不需要這個參數，維持
+    /// 不變、不受影響。
+    func seedMyFamilyForPreview(_ family: Family, ownerUserID: UUID) {
+        myFamily = family
+        self.ownerUserID = ownerUserID
+        // `syncOwner(to:)` 短路時不會呼叫 `refreshMyFamily()`（那支才會把 `lookupState` 設成
+        // `.success`），這裡直接補上，否則 `AuthenticatedGate.familyGate` 的 switch 會停在
+        // `.idle` 分支（「正在確認你的家庭…」）永遠不會前進到 `AuthenticatedRootView`。
+        lookupState = .success
+    }
+
     /// LS-188：同 `seedMyFamilyForPreview` 的角色——讓 `#Preview`／`TapTargetGateHarness`／
     /// UITest harness 不必真的走一次 async `refreshQuota()` 就能同步佈置「已滿」（09b）等
     /// 特定樣本，沒有時序窗口。
