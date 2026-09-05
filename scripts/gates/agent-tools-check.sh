@@ -109,7 +109,9 @@ qa|用 \`simctl ui\` 改過字級／外觀的 handoff 必列已復原|LS-207：s
 merge-reviewer|用 \`simctl ui\` 改過字級／外觀的 handoff 必列已復原|LS-207：simulator-lock.sh 取鎖會自動改字級／外觀並於釋放時復原，手動改過或復原失敗要在 handoff／verdict 寫明
 qa|content_size／appearance 改成 large|LS-207 R3：定義文字須同步程式碼實際數值（large，不是 R2 之前的 medium）
 merge-reviewer|content_size／appearance 改成 large|LS-207 R3：定義文字須同步程式碼實際數值（large，不是 R2 之前的 medium）
-ios-dev|不得派 fork／subagent 改動任何檔案|LS-209：實作票不得動 Pen（mcp__pencil__*／pen-open.sh／pen-read.sh）、不得派會寫檔的 fork／subagent，平行只用 Explore 唯讀"
+ios-dev|不得派 fork／subagent 改動任何檔案|LS-209：實作票不得動 Pen（mcp__pencil__*／pen-open.sh／pen-read.sh）、不得派會寫檔的 fork／subagent，平行只用 Explore 唯讀
+ios-dev|改了什麼一行 → 哪條測試紅 → 斷言訊息原文|LS-209：handoff「已驗證」欄每支 mutation 必列三段，crash／build fail 不算紅（LS-188 R3：mutation 稱轉紅、reviewer 重放發現是 app crash）
+merge-reviewer|handoff 申報的 mutation 一律自己重放，對不上列 major|LS-209：不採信實作者「mutation 已轉紅」的申報，照著申報重放核對測試與斷言訊息是否對得上"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，

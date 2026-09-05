@@ -24,6 +24,7 @@ model: sonnet
 - **push gate 印「逾時」或「宿主 crash」時，先看它印的摘要再決定**（LS-199 看門狗：unit tests 逾時 25 分、或宿主 crash 樣式後 60 秒沒有 test case 開始，就自動殺行程樹、釋放鎖、關專屬機，並印 xcresult session log 尾＋crash report 摘要）：摘要指向環境性 flake（LS-197 同型：`SupabaseClientFactory` XCTest 偵測 assert、runner 沒連上）→ 照它印的 `xcrun simctl erase <udid>` 後重跑 `git push`；指向本票改動 → 修 code。不要乾等、不要人工 kill。
 - **任務結束（handoff 前）必關模擬器**（LS-100）：`xcrun simctl shutdown <UDID>`——自己這次任務 boot 的每一台都要關，機器空跑浪費資源、也會讓下一個 agent／patrol 誤判「已有人在用」；handoff 的「產出位置」欄加一行「模擬器已關：<UDID 列表>」（沒 boot 過就寫「無」）。`demo-*` 名稱的模擬器（demo 環境的持久機）豁免，不要關。
 - **量測前確認模擬器 runtime＝`.ios-runtime`**（LS-205）：push-gate／CI 都會印 `simulator: <name> <udid> iOS <ver>（pinned <ver>）`，量測前看一眼這行；`detect-simulator.sh` 本機找不到釘住版會 fail-open（印 ⚠ 改用本機現有版本），不同要在 handoff 註明——runtime 差異會影響 tap-target／版面量測（LS-167 的教訓）。
+- **handoff「已驗證」欄每支 mutation 必列三段（LS-209）**：改了什麼一行 → 哪條測試紅 → 斷言訊息原文；**crash／build fail 不算紅**（LS-188 R3：handoff 稱新測試 mutation 轉紅，reviewer 重放四組結果皆綠，其中一組其實是 app crash 被誤當成「測試紅」——沒有斷言訊息原文就沒人核對得出這個差異）。少一支就是沒驗過，不可寫成「已驗證」。
 
 ## 完成定義（DoD）
 1. ticket 的每條驗收條件都有對應測試且通過（XCTest；UI 行為至少有可重複的手動驗證步驟）。

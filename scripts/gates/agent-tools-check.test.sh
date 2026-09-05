@@ -68,8 +68,12 @@ DBCHAN='DB 測試 handoff 必附通道：抄 run.sh 印出的連線方式那一�
 SHEETUI='iOS 26.2+ sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48。'
 # LS-209：ios-dev 正文另須含「不得派 fork／subagent 改動任何檔案」（禁動 Pen、禁派會寫檔的 subagent）
 NOFORK='不得派 fork／subagent 改動任何檔案。'
-IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK}"
-MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI}"
+# LS-209：ios-dev 正文另須含 mutation 三段式（改了什麼一行 → 哪條測試紅 → 斷言訊息原文）；merge-reviewer
+# 正文另須含「handoff 申報的 mutation 一律自己重放，對不上列 major」
+MUTPLAY='每支 mutation 必列三段：改了什麼一行 → 哪條測試紅 → 斷言訊息原文。'
+REPLAYRULE='handoff 申報的 mutation 一律自己重放，對不上列 major。'
+IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY}"
+MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE}"
 # LS-209：ios-dev 新增 tools: 白名單（移除 mcp__pencil__*）——取代舊的 `NONE`（無 tools: 行＝繼承全部工具，其中
 # 必然含 pencil，會被新的「禁止工具」規則擋下）。RULES 表對 ios-dev 無必要工具要求，這裡隨便給一組乾淨清單即可。
 IOS_TOOLS="Bash, Read, Edit, Write, Grep, Glob, Agent"
@@ -123,7 +127,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（26 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 26 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（28 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 28 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -293,6 +297,27 @@ if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '隱含含有禁止工具
   ok '⑮ mutant：清空 FORBIDDEN_RULES 後「無 tools: 行」的負樣本也變綠（同一條規則造成兩種樣本的紅）'
 else
   echo "✗ ⑮ mutant 應 exit 0 且不印「隱含含有禁止工具」（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ⑯ LS-209：ios-dev 正文須含 mutation 三段式句；merge-reviewer 正文須含「handoff 申報的 mutation 一律
+#        自己重放，對不上列 major」----
+reset; expect 0 '⑯ ios-dev 正文含 mutation 三段式句 → 印「正文含」' 'ios-dev.md：正文含「改了什麼一行 → 哪條測試紅 → 斷言訊息原文」'
+reset; expect 0 '⑯ merge-reviewer 正文含「一律自己重放」句 → 印「正文含」' 'merge-reviewer.md：正文含「handoff 申報的 mutation 一律自己重放，對不上列 major」'
+reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK}"; expect 1 '⑯ ios-dev 缺 mutation 三段式句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「改了什麼一行 → 哪條測試紅 → 斷言訊息原文」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI}"; expect 1 '⑯ merge-reviewer 缺重放句 → exit 1' 'merge-reviewer.md：正文缺「handoff 申報的 mutation 一律自己重放，對不上列 major」'
+reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '斷言訊息原文'; then
+  ok '⑯ mutant：拿掉規則後「缺 mutation 三段式句」的負樣本變綠'
+else
+  echo "✗ ⑯ mutant（mutation 三段式）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '一律自己重放'; then
+  ok '⑯ mutant：拿掉規則後「缺重放句」的負樣本變綠'
+else
+  echo "✗ ⑯ mutant（重放句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過
