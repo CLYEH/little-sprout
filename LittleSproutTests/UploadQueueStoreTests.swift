@@ -264,4 +264,24 @@ final class UploadQueueStoreTests: XCTestCase {
 
         XCTAssertNotNil(store.debugPayload(upload.id), "可重試的失敗必須留著 payload，retry 才有東西可送")
     }
+
+    // MARK: - merge-review R2 F5：failedCount
+
+    func test_failedCount_countsAllFailuresIncludingQuota() async {
+        let mediaService = StubMediaUploadService()
+        mediaService.setUploadPhotoHandler { _, data, _, _ in
+            let tag = String(bytes: data, encoding: .utf8)!
+            if tag == "quota" {
+                throw AppError.rejected(message: "額度已滿", code: LSErrorCode.storageQuotaExceeded.rawValue)
+            }
+            throw AppError.network(message: "offline")
+        }
+        let store = UploadQueueStore(familyID: familyID, mediaUploadService: mediaService, maxConcurrentUploads: 2)
+
+        store.enqueue([makeUpload(tag: "quota"), makeUpload(tag: "network")])
+        await waitUntil { store.failedCount == 2 }
+
+        XCTAssertEqual(store.failedCount, 2, "failedCount 含 LS002，不是只算可重試的")
+        XCTAssertEqual(store.retryableFailedCount, 1, "retryableFailedCount 仍舊只算可重試的")
+    }
 }

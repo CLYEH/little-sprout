@@ -72,11 +72,14 @@ struct UploadQueueSheetView: View {
     private var summarySection: some View {
         VStack(alignment: .leading, spacing: AppSpacing.block) {
             VStack(alignment: .leading, spacing: AppSpacing.label) {
-                Text("正在新增照片").appFont(.lead, weight: .bold).foregroundStyle(Color.lsTextPrimary)
+                Text("正在新增照片")
+                    .appFont(.lead, weight: .bold).foregroundStyle(Color.lsTextPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
                 VStack(alignment: .leading, spacing: AppSpacing.tight) {
                     Text("還有 \(store.remainingCount) 張還沒完成")
                         .appNumericFont(.body, weight: .bold)
                         .foregroundStyle(Color.lsTextPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
                     if !breakdownText.isEmpty {
                         // merge-review R2 F2 實測發現：加入續傳橫幅後，AX3 下 summarySection
                         // 的合計高度可能逼近固定 sheet 高度上限，VStack 會把「彈性最低」的
@@ -94,7 +97,10 @@ struct UploadQueueSheetView: View {
             if store.resumedFromInterruption {
                 resumeBanner
             }
-            if store.retryableFailedCount > 0 {
+            // merge-review R2 F5：失敗數 > 1 才顯示批次列——單一失敗時那一列自己的「重試」
+            // 鈕就夠了，疊一條只重試同一張的批次列沒有意義；`retryableFailedCount > 0` 仍要
+            // 保留，避免「兩筆失敗但都是 LS002」顯示一顆「重試這 0 張」的空按鈕。
+            if store.failedCount > 1 && store.retryableFailedCount > 0 {
                 retryAllButton
             }
         }
@@ -151,7 +157,9 @@ struct UploadQueueSheetView: View {
         VStack(alignment: .leading, spacing: AppSpacing.block) {
             ForEach(store.sections) { section in
                 VStack(alignment: .leading, spacing: AppSpacing.item) {
-                    Text(section.title).appFont(.body, weight: .bold).foregroundStyle(Color.lsTextPrimary)
+                    // merge-review R2 F5：對稿——群標題是 `$text-secondary`，不是
+                    // `$text-primary`（群標題是分類語意，列內容才是主要閱讀對象）。
+                    Text(section.title).appFont(.body, weight: .bold).foregroundStyle(Color.lsTextSecondary)
                     ForEach(section.rows) { row in
                         UploadQueueRowView(
                             row: row, thumbnail: store.thumbnail(for: row.id),

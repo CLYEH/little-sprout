@@ -16,7 +16,8 @@ struct UploadQueueRowView: View {
     let onRetry: () -> Void
     let onViewStorage: () -> Void
 
-    private static let thumbnailSize: CGFloat = 48
+    // merge-review R2 F5：對稿——縮圖 64pt，不是 48pt。
+    private static let thumbnailSize: CGFloat = 64
 
     var body: some View {
         HStack(alignment: .top, spacing: AppSpacing.label) {
@@ -106,7 +107,8 @@ struct UploadQueueRowView: View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
             HStack(alignment: .top, spacing: AppSpacing.tight) {
                 Image(systemName: "exclamationmark.circle.fill").appIconFrame(.small)
-                Text(reason.title).appFont(.note)
+                // merge-review R2 F5：對稿——失敗文案字重是 semibold（600），不是 regular。
+                Text(reason.title).appFont(.note, weight: .semibold)
             }
             .foregroundStyle(Color.lsDanger)
             if reason.showsQuotaLink {

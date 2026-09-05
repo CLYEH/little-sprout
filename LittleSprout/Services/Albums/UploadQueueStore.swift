@@ -100,6 +100,13 @@ final class UploadQueueStore {
         }
     }
 
+    /// 失敗列總數（含 LS002）——merge-review R2 F5：「全部重試」列只在失敗數 > 1 時顯示
+    /// （單一失敗一列自己的重試鈕就夠了，不需要再疊一條批次列），見 `UploadQueueSheetView
+    /// .retryAllButton` 呼叫端。
+    var failedCount: Int {
+        count { if case .failed = $0 { true } else { false } }
+    }
+
     private func count(where predicate: (UploadItemState) -> Bool) -> Int {
         entries.values.reduce(0) { predicate($1.state) ? $0 + 1 : $0 }
     }
