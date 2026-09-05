@@ -79,6 +79,17 @@ final class ChildrenStore {
     /// owner／member 皆可新增／編輯孩子檔案（LS-66）；viewer 不行。
     var canManageChildren: Bool { myRole == .owner || myRole == .member }
 
+    #if DEBUG
+    /// 只給 `TapTargetGateHarness`／UITest harness 用：同步把 `myRole` 設成給定值，不需要真的
+    /// 走一次 async `refresh(familyID:)`（同 `FamilyStore.seedMyFamilyForPreview` 的既有理由）。
+    /// LS-188：`SettingsView`「檢舉紀錄」列依 `isOwner` 決定要不要顯示，測試需要能確定性地
+    /// 控制角色——`PreviewChildAPIClient.fetchMyRole` 固定回傳 `.owner`，不加這支就測不出
+    /// 「member 看不到」的分支。
+    func seedRoleForPreview(_ role: FamilyRole) {
+        myRole = role
+    }
+    #endif
+
     /// 這個孩子的頭像簽名 URL；沒有 `avatarURL`、或簽名還沒回來／失敗時回傳 nil——呼叫端
     /// （`ChildAvatarView`）用 nil 顯示縮寫。有 `avatarCacheBust` 記錄時疊加成查詢參數
     /// （見該屬性文件註解）；`URLComponents` 組不出來時（理論上不會，signed URL 恆是合法

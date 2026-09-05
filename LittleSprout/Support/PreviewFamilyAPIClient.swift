@@ -23,6 +23,13 @@ private final class PreviewFamilyAPIClient: FamilyAPIClient, @unchecked Sendable
 
     func revokeInvite(id: UUID) async throws {}
 
+    /// LS-188：預設回傳「還有空間」的樣本值（2.1／5 GB，跟 09 板核可稿同一組示意數字）——
+    /// 需要「已滿」樣本（09b／`TapTargetGateHarness`）的呼叫端改呼叫
+    /// `FamilyStore.seedQuotaForPreview(_:)`（同步覆寫，同 `seedMyFamilyForPreview` 的既有作法）。
+    func fetchQuota(familyID: UUID) async throws -> FamilyQuota {
+        FamilyQuota(usedBytes: 2_254_857_830, quotaBytes: 5_368_709_120)
+    }
+
     func requestJoin(code: String) async throws -> JoinRequestOutcome {
         .joined(familyID: UUID())
     }

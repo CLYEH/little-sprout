@@ -24,3 +24,10 @@ MasonryPhotoWallView：需要多張假照片資料才有代表性，且互動（
 UploadQueueRowView：非獨立入口，由外層 UploadQueueSheetView（已註冊 TapTargetGateScreenName.uploadQueueSheet）渲染時一併涵蓋其「重試」「查看儲存空間」按鈕的量測，不另掛 harness case（LS-167）
 AlbumDetailView：LS-166 尚未實作的最小佔位（ContentUnavailableView，無互動元件），追蹤於 LS-96，待該票補正式內容後再評估
 AlbumSummaryCardView：純顯示元件（導覽由外層 AlbumsView 的 NavigationLink 負責，該處已走 tap-target-check 涵蓋的互動路徑），追蹤於 LS-96
+SettingsRowView：純顯示元件（導覽由外層 SettingsView 的 NavigationLink／Button／Link 負責，該處已走 tap-target-check 涵蓋的互動路徑——SettingsView 已在 TapTargetGateScreenName 註冊，見該檔 .settings case），追蹤於 LS-96
+StorageUsageView：預設（載入中／有值）兩態純顯示無互動元件；失敗態多一顆「重試」鈕（已給 minHeight 44）但 `PreviewFamilyAPIClient.fetchQuota` 恆成功、harness 目前造不出失敗態讓 tap-target-check 量到它，追蹤於 LS-96（merge-review R1 m3），待有可控 stub 後移除本行
+ProfileEditView：LS-152「02」頁尚未實作的最小佔位（ContentUnavailableView，無互動元件），追蹤於 LS-96，待該票補正式內容後再評估
+FamilyMembersView：LS-24 尚未實作的最小佔位（ContentUnavailableView，無互動元件），追蹤於 LS-96，待該票補正式內容後再評估
+DeleteAccountFlowView：LS-24 尚未實作的最小佔位（ContentUnavailableView，無互動元件），追蹤於 LS-96，待該票補正式內容後再評估
+BlockListView：LS-23 尚未實作的最小佔位（ContentUnavailableView，無互動元件），追蹤於 LS-96，待該票補正式內容後再評估
+ReportInboxView：LS-23 尚未實作的最小佔位（ContentUnavailableView，無互動元件），追蹤於 LS-96，待該票補正式內容後再評估

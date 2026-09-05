@@ -15,6 +15,16 @@
 enum TapTargetGateScreenName: String {
     case otpVerification = "OTPVerificationView"
     case settings = "SettingsView"
+    // LS-188：`.settings` 這個既有 case（`familyStore.preview(withFamily:)`＋
+    // `childrenStore: .preview()`）現在會經由 `SettingsView` 新增的 `.task` 補查角色，落到
+    // `PreviewChildAPIClient.fetchMyRole` 固定回傳的 `.owner`——五區＋「檢舉紀錄」（Owner
+    // 限定列）都蓋得到。這個變體額外把角色釘死在 `.member`（`ChildrenStore
+    // .seedRoleForPreview`），讓 `SettingsViewTests` 能斷言「檢舉紀錄」列在 member 視角
+    // 不會出現，不只測 owner 那一半。
+    case settingsMemberRole = "SettingsViewMemberRole"
+    // LS-188 merge-review R1 B1：iPad（regular 寬度）互動回歸專用——見
+    // `TapTargetGateHarness.settingsRegularHost` 文件註解。
+    case settingsRegular = "SettingsViewRegular"
     // merge-review R1 M5：`DiaryEditorView` 原本具名排除在 tap-target-exemptions.txt，理由
     // 「多步驟表單流程」不成立——初始態不需要任何 seeding（`PreviewDiaryAPIClient`／
     // `PreviewMediaUploadService` 已經是 `#Preview` 在用的假 client，`ChildrenStore.preview()`
@@ -105,6 +115,11 @@ enum TapTargetGateScreenName: String {
         switch self {
         case .otpVerification: return .staticText("輸入驗證碼")
         case .settings: return .button("登出")
+        // 同 `.settings`：「登出」列不受角色影響，一定會渲染。
+        case .settingsMemberRole: return .button("登出")
+        // 預設選取＝個人（`SettingsView.regularSelection` 初值），detail 欄的「個人」段落
+        // 標題一定會渲染，不依賴任何 seed 資料。
+        case .settingsRegular: return .staticText("個人")
         case .diaryEditor: return .staticText("寫日記")
         case .createChild: return .staticText("幫寶貝建立檔案")
         case .timelineDefaultState: return .button("新增回憶")
