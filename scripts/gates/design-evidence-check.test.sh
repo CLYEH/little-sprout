@@ -22,6 +22,11 @@
 # LS-168：㉖～㉛-b 驗 tree_hash／第五支／舊收據放行（LS-171：㉖ 的合成 .pen 含帶 geometry 的 path，㉖-b 以 geometry 省略成 "..." 的雜湊紅）；㉜～㉝（merge-review R1 N1）驗「輪次最高的收據另看 PR head tree」——.pen 最後一次
 # 落地時 tree 尚無第五支、之後分支才併入新腳本（不碰 .pen）→ 最新收據缺兩欄位紅（㉜；修前印「舊收據放行」綠）、同 head_sha 用新腳本
 # 重跑補齊即綠（㉜-b）、舊輪次 r5 不受 PR head 影響仍放行（㉝）。
+#
+# LS-185：㉞～㊶ 驗第六支 board_clip＋scan_scope——六支齊全＋scan_scope=document 綠（㉞）／scan_scope=boards 綠（㉞-b）／缺 board_clip 紅
+# （㉟）／scan_scope 非法紅（㊱）／board_clip.flagged 非空紅、帶 classification intentional_bleed 也紅（㊲）／缺 scan_scope 紅（㊳）／舊收據
+# （head_sha tree 只有第五支）缺兩欄位綠＋放行行（㊴）、同形但 scan_scope 非法仍紅（㊴-b）／最新收據 head_sha tree 無第六支但 PR head 已有
+# 紅（㊵）、同 head_sha 補齊綠（㊵-b）／每支 scope 非法紅（㊶）。cutoff 同 LS-168 用腳本標記（scanBoardClip）不用時間，見 gate 檔頭。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -650,6 +655,132 @@ write_receipt5 "$R/design/evidence/LS-67-r6-overflow.json" "$sha33b" "$(hash_of 
 g add design/evidence/LS-67-r6-overflow.json
 g commit -qm 'design(evidence): LS-67 r6 收據（五支＋tree_hash）'
 expect 0 '㉝ 舊輪次 r5（head_sha tree 無第五支、缺欄位）＋最新 r6 五支齊全 → 兩份皆綠、r5 印放行行' 'LS-67-r5-overflow.json：head_sha=' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ───── LS-185：第六支 board_clip＋scan_scope ─────
+# 新欄位只對「head_sha 快照（或最新輪次的 PR head）tree 裡正典腳本含 scanBoardClip」的收據要求；land6 依 <script> 放入只含第五支或
+# 五＋六支標記的腳本副本。write_receipt6 以 write_receipt5 的五支＋tree_hash 為底，加 scan_scope／board_clip 變體。
+land6() {
+  # land6 <branch> <script: fifth|sixth>：落地 4 節點 .pen＋帶對應標記的腳本副本；回傳落地 sha
+  g checkout -q -b "$1" "$base_ref"
+  printf '%s\n' "$pen4" > "$R/design/littlesprout.pen"
+  g add design/littlesprout.pen
+  mkdir -p "$R/scripts/design"
+  if [ "$2" = sixth ]; then
+    printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\nfunction scanBoardClip() {}\n' > "$R/scripts/design/overflow-scan.js"
+  else
+    printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\n' > "$R/scripts/design/overflow-scan.js"
+  fi
+  g add scripts/design/overflow-scan.js
+  g commit -qm 'design(pen): LS-67 落地（LS-185 樣本）'
+  g rev-parse HEAD
+}
+add_script6() {
+  printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\nfunction scanBoardClip() {}\n' > "$R/scripts/design/overflow-scan.js"
+  g add scripts/design/overflow-scan.js
+  g commit -qm 'chore: 併入含第六支的正典腳本（不碰 .pen）'
+}
+write_receipt6() {
+  # write_receipt6 <path> <head_sha> <tree_hash> <mode: ok|boards|nobc|badscope|bcflag|noscope|legacy5|badscanscope>
+  local path=$1 sha=$2 hash=$3 mode=$4 scope_field=',"scan_scope":"document"' bc_field=',"board_clip":{"flagged":[],"document_flagged":[]}' tx_scope=''
+  case "$mode" in
+    boards)       scope_field=',"scan_scope":"boards"' ;;
+    nobc)         bc_field='' ;;
+    badscope)     scope_field=',"scan_scope":"board"' ;;
+    bcflag)       bc_field=',"board_clip":{"flagged":[{"board":"d","node":"b","side":"bottom","overflow_px":123,"classification":"intentional_bleed"}],"document_flagged":[]}' ;;
+    noscope)      scope_field='' ;;
+    legacy5)      scope_field=''; bc_field='' ;;
+    badscanscope) tx_scope='"scope":"全稿",' ;;
+  esac
+  mkdir -p "$(dirname "$path")"
+  printf '%s\n' '{"ticket":"LS-67","round":6,"head_sha":"'"$sha"'","total_nodes":4,"tree_hash":"'"$hash"'"'"$scope_field"',' \
+    ' "scans":{"sibling_intersection":{"flagged":[]},"row_overflow":{"flagged":[]},' \
+    '  "cross_parent_collision":{"flagged":[]},' \
+    '  "corner_anchor":{"boards":["d"],"containers":1,"points":8,"mismatch":0,"document_mismatch":0,"flagged":[],"unresolved":[]},' \
+    '  "text_occlusion":{'"$tx_scope"'"flagged":[],"document_flagged":[]}'"$bc_field"'}}' > "$path"
+}
+
+# ㉞ 六支齊全＋scan_scope=document → 綠，訊息含 board_clip／scan_scope
+sha34="$(land6 pr-sixth-ok sixth)"
+write_receipt6 "$R/design/evidence/LS-67-r6-overflow.json" "$sha34" "$(hash_of "$sha34")" ok
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（六支＋scan_scope）'
+expect 0 '㉞ 六支齊全、scan_scope=document、board_clip.flagged 空 → 綠' 'board_clip.flagged 為空、scan_scope=document' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㉞-b scan_scope=boards（限縮模式如實標示）→ 綠
+write_receipt6 "$R/design/evidence/LS-67-r6-overflow.json" "$sha34" "$(hash_of "$sha34")" boards
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（scan_scope=boards）'
+expect 0 '㉞-b scan_scope=boards → 綠（限縮模式合法，只要如實標示）' 'scan_scope=boards' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㉟ 新 schema 缺 board_clip → 紅
+sha35="$(land6 pr-no-bc sixth)"
+write_receipt6 "$R/design/evidence/LS-67-r6-overflow.json" "$sha35" "$(hash_of "$sha35")" nobc
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（缺 board_clip）'
+expect 1 '㉟ 新 schema 缺 scans.board_clip → 紅' 'scans.board_clip 缺失' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㊱ scan_scope 非法值 → 紅
+sha36="$(land6 pr-bad-scope sixth)"
+write_receipt6 "$R/design/evidence/LS-67-r6-overflow.json" "$sha36" "$(hash_of "$sha36")" badscope
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（scan_scope 非法）'
+expect 1 '㊱ scan_scope 非法值 → 紅' "scan_scope 只接受 boards|document（收據='board'）" \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㊲ board_clip.flagged 非空（帶 classification intentional_bleed 也一樣）→ 紅
+sha37="$(land6 pr-bc-flagged sixth)"
+write_receipt6 "$R/design/evidence/LS-67-r6-overflow.json" "$sha37" "$(hash_of "$sha37")" bcflag
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（board_clip 有 1 筆）'
+expect 1 '㊲ board_clip.flagged 非空（classification=intentional_bleed 不放行）→ 紅' 'board_clip.flagged 必須為空（收據 1 筆：b@d:bottom）' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㊳ 新 schema 缺 scan_scope → 紅
+sha38="$(land6 pr-no-scope sixth)"
+write_receipt6 "$R/design/evidence/LS-67-r6-overflow.json" "$sha38" "$(hash_of "$sha38")" noscope
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（缺 scan_scope）'
+expect 1 '㊳ 新 schema 缺 scan_scope → 紅' '缺 scan_scope' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㊴ 舊收據：head_sha tree 的腳本只有第五支（＝in-flight 設計分支／LS-177 r1／r2 形狀），五支＋tree_hash、無 scan_scope／board_clip → 綠＋放行行
+sha39="$(land6 pr-legacy-sixth fifth)"
+write_receipt6 "$R/design/evidence/LS-67-r6-overflow.json" "$sha39" "$(hash_of "$sha39")" legacy5
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（五支 schema，無第六支欄位）'
+expect 0 '㊴ head_sha tree 只有第五支、缺 board_clip／scan_scope → 綠並印放行行（cutoff 前）' 'LS-185 新欄位 board_clip／scan_scope 不要求' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊴-b 同一舊收據但 scan_scope 填了非法值 → 仍紅（欄位若在就驗）
+write_receipt6 "$R/design/evidence/LS-67-r6-overflow.json" "$sha39" "$(hash_of "$sha39")" badscope
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（舊 schema 但 scan_scope 非法）'
+expect 1 '㊴-b 舊收據但 scan_scope 欄位在且非法 → 仍紅（欄位在就驗）' 'scan_scope 只接受' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㊵ N1 同形：.pen 最後一次落地時 tree 只有第五支；之後分支併入含第六支的腳本（不碰 .pen）→ 最新收據缺兩欄位 → 紅
+sha40="$(land6 pr-late-sixth fifth)"
+write_receipt6 "$R/design/evidence/LS-67-r6-overflow.json" "$sha40" "$(hash_of "$sha40")" legacy5
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（五支 schema）'
+add_script6
+expect 1 '㊵ 最新收據 head_sha tree 無第六支、但 PR head tree 已有 → 紅' 'PR head 的 tree 已含第六支' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊵-b 同 head_sha 用新腳本重跑補齊 scan_scope／board_clip → 綠
+write_receipt6 "$R/design/evidence/LS-67-r6-overflow.json" "$sha40" "$(hash_of "$sha40")" ok
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（新腳本重跑補 scan_scope／board_clip）'
+expect 0 '㊵-b 同一 head_sha 補齊 scan_scope／board_clip → 綠' 'board_clip.flagged 為空、scan_scope=document' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ㊶ 每支的 scope 非法 → 紅
+sha41="$(land6 pr-bad-scanscope sixth)"
+write_receipt6 "$R/design/evidence/LS-67-r6-overflow.json" "$sha41" "$(hash_of "$sha41")" badscanscope
+g add design/evidence/LS-67-r6-overflow.json
+g commit -qm 'design(evidence): LS-67 r6 收據（text_occlusion.scope 非法）'
+expect 1 '㊶ scans.text_occlusion.scope 非法 → 紅' "scans.text_occlusion.scope 只接受 boards|document（收據='全稿'" \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
 
 if [ "$fail" -eq 0 ]; then
