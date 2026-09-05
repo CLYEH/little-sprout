@@ -629,6 +629,39 @@ if [ ! -d "$waiters_dir" ] || [ -z "$(ls -A "$waiters_dir" 2>/dev/null)" ]; then
 
 out="$(cd "$wtA" && bash "$lock_sh" --release 2>&1)"; rc_is '㉜–㉟ 收尾：釋放 A（wtA）' 0 "$?" "$out"
 gone '㉜–㉟ 收尾：釋放後 lock 消失'
+
+# ---- ㉟-a LS-207 R2（merge-review R1 fd783f6c F2）：出貨預設本身必須滿足 long_wait < timeout，否則等待迴圈
+#        先在 timeout 判 exit 124、20 分鐘那行永遠印不到（R1 的 1200 > 900 正是這個死碼，且是預設值本身壞、不是
+#        自測覆寫成的特例）——原始碼斷言，不靠真的等 600 秒或動系統時鐘 ----
+default_timeout=$(sed -nE 's/^timeout=\$\{SUPABASE_LOCK_TIMEOUT:-([0-9]+)\}$/\1/p' "$lock_sh")
+default_long_wait=$(sed -nE 's/^long_wait=\$\{SUPABASE_LOCK_HOLD_LONG_WAIT:-([0-9]+)\}$/\1/p' "$lock_sh")
+if [ -n "$default_timeout" ] && [ -n "$default_long_wait" ] && [ "$default_long_wait" -lt "$default_timeout" ]; then
+  echo "✓ ㉟-a 出貨預設 long_wait（${default_long_wait}s）< timeout（${default_timeout}s）——20 分鐘提示在預設值下真的到得了"
+else
+  echo "✗ ㉟-a 出貨預設 long_wait（${default_long_wait:-讀不到}）未小於 timeout（${default_timeout:-讀不到}）——提示行是死碼" >&2; fail=1
+fi
+
+# ---- ㉟-b LS-207 R2：long_wait ≥ timeout 時 clamp 成 timeout 一半並印警告（不靜默）；clamp 後的值真的生效——
+#        另一個等待者在 clamp 後的秒數就看得到續等提示，而不是要等到原本給的 long_wait ----
+out35b="$(cd "$wtA" && bash "$lock_sh" --hold 'LS-0 clamp' --max-minutes 1 2>&1)"; rc_is '㉟-b 前提：A --hold' 0 "$?" "$out35b"
+berr35b="$(cd "$wtB" && SUPABASE_LOCK_TIMEOUT=3 SUPABASE_LOCK_HOLD_LONG_WAIT=10 bash "$lock_sh" --hold 'LS-0 clamp 等待者' --max-minutes 1 2>&1)"; rc=$?
+rc_is '㉟-b clamp：B 逾時放棄' 124 "$rc" "$berr35b"
+has   '㉟-b clamp：印出警告（long_wait ≥ timeout、clamp 成一半）' "$berr35b" 'SUPABASE_LOCK_HOLD_LONG_WAIT（10s）≥ timeout（3s）——續等提示到不了，已 clamp 成 1s'
+has   '㉟-b clamp：clamp 後的值真的生效——3s 逾時內看得到續等提示（不是等原本的 10s）' "$berr35b" '已排隊超過'
+out="$(cd "$wtA" && bash "$lock_sh" --release 2>&1)"; rc_is '㉟-b 收尾：釋放 A（wtA）' 0 "$?" "$out"
+gone '㉟-b 收尾：釋放後 lock 消失'
+
+# mutation：把預設 long_wait 改回 R1 的 1200（>timeout 900）→ ㉟-a 的原始碼斷言必須變紅，證明它真的在驗這個關係
+mut_lw="$work/supabase-lock.long-wait-1200.sh"
+sed -E 's/^long_wait=\$\{SUPABASE_LOCK_HOLD_LONG_WAIT:-[0-9]+\}$/long_wait=\${SUPABASE_LOCK_HOLD_LONG_WAIT:-1200}/' "$lock_sh" > "$mut_lw"
+if grep -q 'long_wait=${SUPABASE_LOCK_HOLD_LONG_WAIT:-1200}' "$mut_lw"; then echo "✓ ㉟-a mutant 已把預設改回 1200"; else echo "✗ ㉟-a mutant 替換失敗（負控本身無效）" >&2; fail=1; fi
+mut_default_long_wait=$(sed -nE 's/^long_wait=\$\{SUPABASE_LOCK_HOLD_LONG_WAIT:-([0-9]+)\}$/\1/p' "$mut_lw")
+if [ -n "$mut_default_long_wait" ] && [ -n "$default_timeout" ] && [ "$mut_default_long_wait" -lt "$default_timeout" ]; then
+  echo "✗ ㉟-a mutant：改回 1200 後斷言仍判過（負控本身無鑑別力）" >&2; fail=1
+else
+  echo "✓ ㉟-a mutant：改回 1200 後同一份斷言邏輯會判定失敗（1200 不小於 900），證明 ㉟-a 真的在驗這個關係"
+fi
+
 unset SUPABASE_LOCK_HOLD_TICK
 
 if [ "$fail" -eq 0 ]; then

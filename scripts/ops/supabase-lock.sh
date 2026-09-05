@@ -14,7 +14,7 @@
 # 環境變數：SUPABASE_LOCK_TIMEOUT 等待逾時秒（預設 900＝15 分鐘）；SUPABASE_LOCK_POLL 輪詢秒（預設 1，可小數，下限 0.2）；
 #   SUPABASE_LOCK_DIR lock 目錄（預設 /tmp/supabase-lock-<project_id>；自測用）；
 #   SUPABASE_LOCK_HOLD_TICK 守門心跳秒（預設 5，下限 0.2；自測用）；SUPABASE_LOCK_HOLD_SECONDS 覆寫 hold 到期秒數（自測用，取代 --max-minutes）；
-#   SUPABASE_LOCK_HOLD_LONG_WAIT `--hold` 排隊逾此秒數才印一行續等提示（預設 1200＝20 分；自測用，見下）；
+#   SUPABASE_LOCK_HOLD_LONG_WAIT `--hold` 排隊逾此秒數才印一行續等提示（預設 600＝10 分，須小於 timeout；自測用，見下）；
 #   LS_LOCK_ALLOW_MAIN=1 明示放行主 checkout 的 --hold（LS-184；只給 orchestrator，agent 不得設）。
 #
 # 機制（macOS 沒有 flock、內建 bash 3.2；macOS／Linux 皆可跑）：
@@ -72,7 +72,7 @@
 #     的 stdout 要等下一輪 tool round 才收得到）。`--hold` 確定要等（第一次 mkdir 失敗）時在 `<lock>.waiters/` 寫一個空檔，
 #     檔名 `<票號>-<pid>-<起始 epoch>`（票號取自 label 裡第一個 `LS-<n>`，抓不到就 `unknown`）；取得或放棄（逾時）都刪掉。
 #     `patrol.sh` 讀這個目錄列出等待者與最久等待分鐘，持有者剩餘 >10 分且有等待者就印 `⚠ 排隊`。寫不進去（磁碟滿／目錄
-#     衝突）不影響取鎖本身，只是看不到可視化。等待逾 `SUPABASE_LOCK_HOLD_LONG_WAIT`（預設 1200s＝20 分）秒再印一行到
+#     衝突）不影響取鎖本身，只是看不到可視化。等待逾 `SUPABASE_LOCK_HOLD_LONG_WAIT`（預設 600s＝10 分，R2 起小於 timeout 900s 才印得出來）秒再印一行到
 #     stderr 續等（一次性；既有 30 秒心跳持續印但容易被一堆輸出蓋掉）。只在 `--hold` 排隊時做——命令型 `-- <cmd>` 排隊
 #     不寫（沒有票號可標，且命令型持有本身就有 SUPABASE_LOCK_TIMEOUT 15 分鐘會先逾時）。
 # 已知限制：
@@ -102,7 +102,7 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 timeout=${SUPABASE_LOCK_TIMEOUT:-900}
 poll=${SUPABASE_LOCK_POLL:-1}
 hold_tick=${SUPABASE_LOCK_HOLD_TICK:-5}
-long_wait=${SUPABASE_LOCK_HOLD_LONG_WAIT:-1200}
+long_wait=${SUPABASE_LOCK_HOLD_LONG_WAIT:-600}
 mode=run; hold_label=; max_minutes=30
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -128,6 +128,14 @@ while [ $# -gt 0 ]; do
 done
 case "$timeout" in ''|*[!0-9]*) echo "✗ supabase-lock：timeout 須為整數秒（得到「${timeout}」）" >&2; exit 2 ;; esac
 case "$long_wait" in ''|*[!0-9]*) echo "✗ supabase-lock：SUPABASE_LOCK_HOLD_LONG_WAIT 須為整數秒（得到「${long_wait}」）" >&2; exit 2 ;; esac
+# LS-207 R2（fd783f6c F2）：long_wait 必須小於 timeout，否則等待迴圈先在 timeout 判 exit 124、20 分鐘那行永遠印不出來
+# （R1 出貨預設 1200 > 900 正是這個死碼——不是自測覆寫成的特例，是預設值本身就不可達）。不成立就 clamp 成
+# timeout 的一半並印警告，不靜默——clamp 而非 exit 2：這只是「提示印不出來」，不影響取鎖本身，不必 fail closed。
+if [ "$long_wait" -ge "$timeout" ]; then
+  clamped=$(( timeout / 2 ))
+  echo "⚠ supabase-lock：SUPABASE_LOCK_HOLD_LONG_WAIT（${long_wait}s）≥ timeout（${timeout}s）——續等提示到不了，已 clamp 成 ${clamped}s（timeout 的一半，LS-207 R2）" >&2
+  long_wait=$clamped
+fi
 case "$poll" in ''|.|*[!0-9.]*|*.*.*) echo "✗ supabase-lock：SUPABASE_LOCK_POLL 須為數字秒（得到「${poll}」）" >&2; exit 2 ;; esac
 # PR #122 R1 i4：0 會變 busy-spin 最長 15 分鐘——下限 0.2 秒
 awk -v p="$poll" 'BEGIN { exit !(p + 0 >= 0.2) }' || { echo "✗ supabase-lock：SUPABASE_LOCK_POLL 下限 0.2 秒（得到「${poll}」）" >&2; exit 2; }
@@ -416,7 +424,9 @@ while ! mkdir "$lock" 2>/dev/null; do
   # LS-207（ca35c579 (2)）：等待逾 20 分再多印一次到 stderr——LS-164／202 QA 在 --hold 內阻塞近 100 分鐘，
   # orchestrator 隔了很久才看得到下一輪 tool round；一次性的提示比每 30 秒重複的「等待中」更容易被注意到。
   if [ "$mode" = hold ] && [ "$long_wait_announced" -eq 0 ] && [ "$waited" -ge "$long_wait" ]; then
-    echo "⚠ supabase-lock：--hold 已排隊超過 $(( long_wait / 60 )) 分鐘仍未取得（持有者：$(holder_line)）——繼續等，逾時上限 ${timeout}s" >&2
+    # LS-207 R2（fd783f6c F2 附帶）：無條件進位（同 mins_left() 的 (r+59)/60 手法）——整數除法在秒級覆寫
+    # （自測、或未來調小 long_wait）下會把「剛過 1 分鐘」印成「0 分鐘」，訊息退化成沒有意義的數字。
+    echo "⚠ supabase-lock：--hold 已排隊超過 $(( (long_wait + 59) / 60 )) 分鐘仍未取得（持有者：$(holder_line)）——繼續等，逾時上限 ${timeout}s" >&2
     long_wait_announced=1
   fi
   sleep "$poll"
