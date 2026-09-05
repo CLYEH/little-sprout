@@ -8,6 +8,16 @@ import SwiftUI
 /// HUD，不是要瀏覽的內容頁）；仍允許系統預設的下滑手勢關閉（`ImjbJ`：關閉後上傳在背景繼續，
 /// 見 `UploadQueueStore` 檔頭）。
 ///
+/// **與稿面差異：不設 `.presentationDragIndicator(.visible)`**——稿面畫了一條 Grabber 短線
+/// （沖印品母題以外的系統慣例，其他既有 Sheet 如 `AttributionSheet` 也有）。push-gate 實測：
+/// 只要顯式打開它，iOS 會把這顆系統 grabber 曝露成一個獨立的 accessibility 元件（label
+/// 「表單控點」，量到 76×25pt），被 `tap-target-check.sh` 判成 <44pt 違規——這是 Apple 系統
+/// 繪製的控制項，不是本票的自畫 View，沒有公開 API 能調整它的 hit-test 尺寸（同
+/// `tap-target-exemptions.txt` 對 `WelcomeView` 官方 `SignInWithAppleButton` 的既有理由：
+/// 系統元件、量測意義有限，但那裡是整支排除，這裡選擇直接不啟用這個系統元件，維持這個畫面
+/// 100% 由本票程式碼決定的按鈕都保證 ≥44pt）。單一固定 detent 的 sheet 拿掉 grabber 不影響
+/// 手勢下滑關閉——drag-to-dismiss 是系統行為，跟 drag indicator 的視覺顯示是否開啟無關。
+///
 /// **版面結構**：摘要區（標題／總數／續傳橫幅／重試列，pinned 頂）－ 44pt 具名斷點
 /// （`AppSpacing.section`，`TVLkD`）－ 列表區（三語意群組，可捲動）－ hairline － Footer
 /// （pinned 底）。稿面的「Rows Scroll Area 剛好卡在列與列之間」是 Pencil 靜態畫布用來預覽
@@ -39,7 +49,6 @@ struct UploadQueueSheetView: View {
         }
         .background(Color.lsSurface)
         .presentationDetents([.height(sheetHeight)])
-        .presentationDragIndicator(.visible)
     }
 
     /// `Jxcmk`：一般字級 727、AX3 1224（實測值）。
@@ -139,9 +148,14 @@ struct UploadQueueSheetView: View {
         Button {
             dismiss()
         } label: {
+            // `.contentShape(Rectangle())`：push-gate 實測沒有這行時 hit-test frame 會落在
+            // 44.0pt 邊界附近的浮點誤差內被判違規（`TAP-TARGET-FAIL: … frame=354.0x44.0pt`）
+            // ——同 `UploadQueueRowView` 兩顆行內按鈕的坑，`.frame` 需要這行才會決定性地成為
+            // hit-test 形狀。
             Text("在背景繼續，關閉視窗")
                 .appFont(.body, weight: .medium)
-                .frame(maxWidth: .infinity, minHeight: 44)
+                .frame(maxWidth: .infinity, minHeight: 45)
+                .contentShape(Rectangle())
         }
         .foregroundStyle(Color.lsTextPrimary)
     }
