@@ -20,6 +20,7 @@ declare
   v_grandma uuid := 'd1000000-0000-4000-8000-000000000002'; -- 阿嬤（封鎖爸爸）
   v_mom     uuid := 'd1000000-0000-4000-8000-000000000003'; -- 媽媽（兩支裝置，無封鎖）
   v_owner_b uuid := 'd1000000-0000-4000-8000-000000000004'; -- 隔壁家 owner
+  v_viewer  uuid := 'd1000000-0000-4000-8000-000000000006'; -- LS-195：家庭 A viewer（4d 段才加入家庭）
   v_family_a uuid := 'd2000000-0000-4000-8000-000000000001';
   v_family_b uuid := 'd2000000-0000-4000-8000-000000000002';
   v_event_stable  uuid := 'd3000000-0000-4000-8000-000000000001'; -- 該被 claim
@@ -253,6 +254,78 @@ begin
     raise exception 'FAIL：v_event_media 應該已被第 1 段的 claim_notification_events 呼叫標記 sent_at，且 kind/target_type/target_id/event_count 四欄原樣保留，實際符合條件的筆數 %', v_n;
   end if;
   raise notice 'ok 4c：kind=media／target_type=family 事件不需要 notification_recipients() 任何額外分支，對象判定正確（爸爸/阿嬤收到、媽媽本人排除）；claim_notification_events 正確 round-trip 新列舉值';
+
+  -- -------------------------------------------------------------------------
+  -- 4d.（LS-195）kind='report' 只通知家庭 owner，不廣播給其餘成員／viewer；其餘
+  --     kind 不受影響。這裡才把 viewer（v_viewer）加入家庭 A——刻意晚於前面
+  --     1～4c 段所有依賴「家庭 A 只有 owner_a／grandma／mom 三人」的既有計數斷言
+  --     （procedural DO 區塊依序執行，viewer 加入前那些 SELECT 早就跑完，不受影響）。
+  -- -------------------------------------------------------------------------
+  declare
+    v_event_report       uuid := 'd3000000-0000-4000-8000-000000000005'; -- kind=report，actor=阿嬤（member）
+    v_event_report_owner uuid := 'd3000000-0000-4000-8000-000000000006'; -- kind=report，actor=爸爸自己（owner 自報）
+    v_event_album        uuid := 'd3000000-0000-4000-8000-000000000007'; -- 對照組：非 report kind，驗 viewer 仍在全員名單
+  begin
+    set local role postgres;
+    insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+    values (v_viewer, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls195-viewer@ls172.test', now(), now(), '{}', '{}');
+    update public.profiles set display_name = 'LS195 viewer' where id = v_viewer;
+    insert into public.family_members (family_id, user_id, role) values (v_family_a, v_viewer, 'viewer');
+    insert into public.device_tokens (token, user_id, platform) values ('ls195-tok-viewer', v_viewer, 'ios');
+
+    insert into public.notification_events (id, family_id, kind, target_type, target_id, actor_id, event_count, occurred_at)
+    values
+      (v_event_report, v_family_a, 'report', 'diary', 'd4000000-0000-4000-8000-000000000001',
+       v_grandma, 1, now() - interval '10 minutes'),
+      (v_event_report_owner, v_family_a, 'report', 'diary', 'd4000000-0000-4000-8000-000000000001',
+       v_owner_a, 1, now() - interval '10 minutes'),
+      (v_event_album, v_family_a, 'album', 'album', 'd4000000-0000-4000-8000-000000000005',
+       null, 1, now() - interval '10 minutes');
+
+    set local role service_role;
+
+    -- report、actor=阿嬤：只有爸爸（owner）該收到；媽媽（member）、viewer、阿嬤本人都不該收到
+    select count(*) into v_n from public.notification_recipients(array[v_event_report]);
+    if v_n <> 1 then
+      raise exception 'FAIL：report 事件的收件人應該恰好 1 筆（爸爸，owner），實際 %', v_n;
+    end if;
+    select count(*) into v_n from public.notification_recipients(array[v_event_report]) where user_id = v_owner_a;
+    if v_n <> 1 then
+      raise exception 'FAIL：爸爸（owner）應該收到 report 事件通知';
+    end if;
+    select count(*) into v_n from public.notification_recipients(array[v_event_report]) where user_id = v_mom;
+    if v_n <> 0 then
+      raise exception 'FAIL：媽媽（member，非 owner）不該收到 report 事件通知';
+    end if;
+    select count(*) into v_n from public.notification_recipients(array[v_event_report]) where user_id = v_viewer;
+    if v_n <> 0 then
+      raise exception 'FAIL：viewer 不該收到 report 事件通知';
+    end if;
+    select count(*) into v_n from public.notification_recipients(array[v_event_report]) where user_id = v_grandma;
+    if v_n <> 0 then
+      raise exception 'FAIL：阿嬤是這則 report 的 actor 本人，不該收到自己的通知';
+    end if;
+
+    -- report、actor=爸爸自己（owner 自報）：家裡唯一的 owner 就是 actor 本人 → 0 列
+    select count(*) into v_n from public.notification_recipients(array[v_event_report_owner]);
+    if v_n <> 0 then
+      raise exception 'FAIL：owner 自己是 report 的 actor 時，收件人應為 0 筆，實際 %', v_n;
+    end if;
+
+    -- 對照組：非 report kind（album，actor=NULL）不受這次收窄影響——爸爸(1)/阿嬤(1)/
+    -- 媽媽(2)/viewer(1) 共 5 支裝置，viewer 加入家庭之後一樣在全員名單裡
+    select count(*) into v_n from public.notification_recipients(array[v_event_album]);
+    if v_n <> 5 then
+      raise exception 'FAIL：非 report kind 不該被本票的新條件影響，應回全家庭 5 支裝置（爸爸1/阿嬤1/媽媽2/viewer1），實際 %', v_n;
+    end if;
+    select count(*) into v_n from public.notification_recipients(array[v_event_album]) where user_id = v_viewer;
+    if v_n <> 1 then
+      raise exception 'FAIL：viewer 應該照樣收到非 report kind 的通知（本票只收窄 report，不影響其他 kind）';
+    end if;
+
+    reset role;
+  end;
+  raise notice 'ok 4d：kind=report 只留 family_members.role=owner（LS-195）——member／viewer／actor 本人皆排除，owner 自報時 0 列；非 report kind 不受影響、viewer 仍在全員名單';
 
   -- -------------------------------------------------------------------------
   -- 5. 無裝置 token 的成員自動略過（用一個全新、沒有任何 device_tokens 的成員驗證）。

@@ -2442,6 +2442,17 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
     `blocked_users`」）：`blocker_id = 該成員, blocked_id = actor_id, family_id =
     該事件的家庭` 存在即排除。
   - **沒有任何 `device_tokens` 的成員**——用 `JOIN`（非 `LEFT JOIN`）天生排除。
+  - **`kind='report'` 時，只留 `family_members.role = 'owner'`**（LS-195，使用者
+    2026-09-05 裁決「檢舉事件的推播通知只有 Owner」，銷 LS-96 池項
+    `12e20e0c`）：其餘四種 kind（`comment`／`reaction`／`diary`／`album`／
+    `media`）不受影響，仍廣播給全家庭成員（扣上述幾條既有排除條件）。這條規則
+    跟 §10-B「檢舉內容本身只有 owner 讀得到」（`content_reports_select`
+    policy）對齊——`notification_events` 這張表本身對 `authenticated` 沒有任何
+    RLS policy 也沒有任何 table grant（見上方「`notification_events`」段），
+    `claim_notification_events`／`notification_recipients` 兩支 RPC 也都只對
+    `service_role` 開放 `EXECUTE`（無 `authenticated` grant），所以檢舉事件的
+    列本來就不會透過任何既有讀取面外洩給非 owner 成員，本票不需要另外收緊
+    RLS／grant。
   `actor_id` 為 `NULL` 時，「排除 actor 本人」與「排除封鎖 actor 的成員」這兩條
   規則天生都不會誤傷任何人（`NULL` 既不等於任何 `user_id`，也不會被任何
   `blocked_id` 條件命中）。`p_event_ids` 為 `NULL` 或空陣列、或某個 event_id
@@ -2502,7 +2513,8 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   **整批**（不只 report 那幾筆）被判定失敗、SQL 面卻已標記 `sent_at`＝永久漏送
   （LS-96 池項 `841d97da`，merge-review R1 於 PR #284 覆核成立並裁定本票直接
   補）；本票只補到「不再整批漏送」，是否要推播、推播給誰（例如只給 owner）
-  是後續的產品決定。
+  是後續的產品決定——**已由 LS-195 定案：只給 owner**，見上方
+  `notification_recipients` 段的 `kind='report'` 收件人規則。
 
   **已知、刻意的規格分歧（票文字面 vs. 實際可用資料，`album`／`diary` 兩個既有
   kind，LS-172 落地時的記錄）**：票文給的範例把 `album` kind 對應到「爸爸新增了
