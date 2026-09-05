@@ -119,7 +119,10 @@ fi
 for a in "$@"; do
   case "$a" in
     -resolvePackageDependencies) exit 0 ;;
-    test) exit "${STUB_TEST_RC:-0}" ;;
+    test)
+      # LS-199：STUB_TEST_SCRIPT 設定時改跑該腳本（看門狗自測：掛住／印 crash 樣式／寫假 session log），其 exit code 即測試結果
+      if [ -n "${STUB_TEST_SCRIPT:-}" ]; then bash "$STUB_TEST_SCRIPT"; exit $?; fi
+      exit "${STUB_TEST_RC:-0}" ;;
     build) printf '%s\n' "$*" >> "${BUILD_LOG:-/dev/null}"; exit "${STUB_BUILD_RC:-0}" ;;
   esac
 done
@@ -169,8 +172,10 @@ run_gate() {
   # R1：XCODE_APPS_DIR 預設指到一個不存在的目錄，讓 1b 的 pin 目錄查找在每個案例裡都是「找不到」
   # 起跳、且不受這台跑測試的機器實際裝了什麼 Xcode 影響（否則本機若剛好有 /Applications/Xcode_99.9.app
   # 這種巧合，測試結果會跟著本機環境漂移）；⑬ 用 "$@" 覆寫成真的有 Xcode_<pin>.app 的 stub 目錄。
+  # LS-199：GITHUB_ACTIONS 清空——CI rules job 跑本檔時它是 true，push-gate.sh 會跳過看門狗直接前景執行，
+  # ㉘～㉛ 的掛住假身就會真的掛到永遠；本機開發機才是看門狗的生產路徑，自測一律走它（㉞ 另外驗 true 時不啟用）。
   ( cd "$R" && env FAKE_DEST_UDID="$ded_udid" PATH="$work/bin:$PATH" \
-      XCODE_APPS_DIR="$work/no-such-apps" "$@" \
+      XCODE_APPS_DIR="$work/no-such-apps" GITHUB_ACTIONS= "$@" \
       bash scripts/gates/push-gate.sh </dev/null 2>&1 )
 }
 
@@ -927,6 +932,176 @@ else
   echo "✗ ㉗ error-codes-check.sh／merge-conflict-check.sh 沒有都排在 xcodebuild test 之前——LS-65 的便宜檢查前移順序被回退了" >&2
   fail=1
 fi
+
+# ---- ㉘～㉟（LS-199）：unit tests 看門狗——逾時／宿主 crash 早期偵測／收尾一致（殺整棵行程樹、回收鎖、關專屬機）。
+#        來源 LS-197 R2 push：測試宿主 app 啟動即 crash 後 xcodebuild 0% CPU 掛 28 分鐘。stub xcodebuild 的 test
+#        分支改跑 $work/wd-test-script.sh（行為由 WD_* 環境變數控制，見該檔檔頭）；HOME 換成 $work/wd-home，
+#        裡面放一個 WorkspacePath 指向 $R/Fake.xcodeproj 的假 DerivedData（本 worktree）＋一個指向別處的假
+#        DerivedData（別的 worktree，㉝ 驗 scoping）＋一份假 LittleSprout-*.ips（兩行 JSON，形狀照真檔）。
+#        逾時用 PUSH_GATE_XCODEBUILD_TIMEOUT_SEC 秒級覆寫、grace 用 PUSH_GATE_CRASH_GRACE_SEC。
+#        mutation 鑑別力（PR 記錄）：拿掉 wd_run 迴圈裡的 crash 樣式掃描 → ㉚／㉛ 改走逾時路徑、印「逾時」而非
+#        「宿主 crash」→ 紅；拿掉 info.plist 的 WorkspacePath 比對 → ㉝ 把別票的 crash 當自己的中止 → 紅 ----
+g checkout -q -b feature/LS-199-watchdog origin/development
+printf '99.9\n' > "$R/.xcode-version"
+mkdir -p "$R/LittleSprout/Services"; echo 'struct Watchdog {}' > "$R/LittleSprout/Services/Watchdog.swift"
+g add LittleSprout/Services/Watchdog.swift; g commit -qm 'feat: LS-199 demo swift for watchdog cases'
+wd_home="$work/wd-home"
+wd_home_empty="$work/wd-home-empty"
+wd_dd="$wd_home/Library/Developer/Xcode/DerivedData"
+wd_R_phys="$(cd "$R" && pwd -P)"   # push-gate.sh 用 pwd -P 比對 WorkspacePath；macOS 的 mktemp 路徑經過 /var → /private/var 符號連結
+mkdir -p "$wd_dd/LittleSprout-thisworktree" "$wd_dd/LittleSprout-otherworktree" "$wd_home/Library/Logs/DiagnosticReports" "$wd_home_empty"
+printf '<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0"><dict><key>WorkspacePath</key><string>%s/Fake.xcodeproj</string></dict></plist>\n' "$wd_R_phys" > "$wd_dd/LittleSprout-thisworktree/info.plist"
+printf '<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0"><dict><key>WorkspacePath</key><string>%s/LittleSprout.xcodeproj</string></dict></plist>\n' "$work/some-other-worktree" > "$wd_dd/LittleSprout-otherworktree/info.plist"
+# Staging 底下真實路徑含空白（「Test Scheme Action」），照抄以驗路徑處理
+wd_staging_rel="Logs/Test/Test-LittleSprout-2026.09.05_14-38-00-+0800.xcresult/Staging/1_Test/Diagnostics/LittleSproutTests-AAAA-Configuration-Test Scheme Action-Iteration-1/LittleSproutTests-BBBB/Session-LittleSproutTests-2026-09-05_143800-abc123.log"
+wd_session_this="$wd_dd/LittleSprout-thisworktree/$wd_staging_rel"
+wd_session_other="$wd_dd/LittleSprout-otherworktree/$wd_staging_rel"
+wd_ips="$wd_home/Library/Logs/DiagnosticReports/LittleSprout-2026-09-05-143904.ips"
+cat > "$wd_ips" <<'IPS'
+{"app_name":"LittleSprout","timestamp":"2026-09-05 14:39:04.00 +0800","app_version":"0.1.0","bug_type":"309","name":"LittleSprout"}
+{"exception":{"type":"EXC_BREAKPOINT","signal":"SIGTRAP","codes":"0x0000000000000001, 0x00000001970f7c94"},"termination":{"namespace":"SIGNAL","code":5,"indicator":"Trace/BPT trap: 5"},"faultingThread":0,"threads":[{"frames":[{"symbol":"_assertionFailure(_:_:file:line:flags:)","imageIndex":1},{"symbol":"static SupabaseClientFactory.makeClient()","sourceFile":"SupabaseClientFactory.swift","sourceLine":36,"imageIndex":0},{"symbol":"LittleSproutApp.init()","sourceFile":"LittleSproutApp.swift","sourceLine":32,"imageIndex":0},{"symbol":"FOURTH_FRAME_MUST_NOT_PRINT","imageIndex":0}]}],"usedImages":[{"name":"LittleSprout.debug.dylib"},{"name":"libswiftCore.dylib"}]}
+IPS
+# 假 session log 內容（printf %b 展開 \n）：健康版沒有 crash 樣式也沒有 test case；crash 版照 LS-197 實際 log
+wd_ok_session="15:07:01.000 xcodebuild[1:1] Beginning test session LittleSproutTests-X\\nWD-SESSION-TAIL-MARKER"
+wd_crash_session="15:07:01.000 xcodebuild[1:1] Beginning test session LittleSproutTests-X\\n15:07:02.000 xcodebuild[1:1] Handling Crash: LittleSprout at <external symbol>\\n15:07:02.001 xcodebuild[1:1] Dropping test runner session call because the test runner hasn't connected yet\\nWD-SESSION-TAIL-MARKER"
+cat > "$work/wd-test-script.sh" <<'STUB'
+#!/bin/bash
+# LS-199 看門狗自測用的 xcodebuild test 假身行為（由 $work/bin/xcodebuild 的 test 分支呼叫）：
+#   WD_SESSION_FILE／WD_SESSION_CONTENT  開跑就寫一份假 Staging Session log（模擬 Xcode 測試進行中寫 log；mtime 自然晚於看門狗啟動）
+#   WD_STDOUT                            先印一行（模擬 xcodebuild 自己印的 crash 樣式）
+#   WD_TOUCH                             touch 這個檔（讓假 .ips 晚於看門狗啟動）
+#   WD_THEN_SLEEP／WD_THEN_STDOUT        隔 N 秒（預設 1）再印一行（模擬 test case 開始／單純耗時）
+#   WD_TAIL_SLEEP                        印完再活 N 秒才結束——看門狗每秒輪詢一次，假身若在第一次輪詢前就結束，
+#                                        輪詢連一次都不會掃到（㉜ 併行跑三份自測時曾因此假紅）
+#   WD_HANG                              掛住：背景 sleep 120、把「自己 pid 與 sleep pid」寫進 WD_PID_FILE 供斷言整棵行程樹被殺；
+#                                        沒設就正常結束 exit 0
+if [ -n "${WD_SESSION_FILE:-}" ]; then
+  mkdir -p "$(dirname "$WD_SESSION_FILE")"
+  printf '%b\n' "${WD_SESSION_CONTENT:-}" > "$WD_SESSION_FILE"
+fi
+if [ -n "${WD_TOUCH:-}" ]; then touch "$WD_TOUCH"; fi
+if [ -n "${WD_STDOUT:-}" ]; then printf '%s\n' "$WD_STDOUT"; fi
+if [ -n "${WD_THEN_STDOUT:-}" ]; then
+  sleep "${WD_THEN_SLEEP:-1}"
+  printf '%s\n' "$WD_THEN_STDOUT"
+fi
+if [ -n "${WD_TAIL_SLEEP:-}" ]; then sleep "$WD_TAIL_SLEEP"; fi
+if [ -n "${WD_HANG:-}" ]; then
+  sleep 120 &
+  printf '%s %s\n' "$$" "$!" > "${WD_PID_FILE:?WD_PID_FILE 未設定}"
+  wait
+fi
+exit 0
+STUB
+chmod +x "$work/wd-test-script.sh"
+wd_pids_dead() {   # $1＝WD_PID_FILE；兩個 pid 都不存在才 0
+  local a b
+  read -r a b < "$1" || return 1
+  [ -n "$a" ] && [ -n "$b" ] || return 1
+  ! kill -0 "$a" 2>/dev/null && ! kill -0 "$b" 2>/dev/null
+}
+# 收尾斷言共用：exit 124、專屬機有 shutdown、鎖目錄不在、行程樹全死、elapsed 上限
+wd_assert_aborted() {   # $1＝案號 $2＝rc $3＝elapsed $4＝elapsed 上限 $5＝pid file $6＝輸出
+  if [ "$2" -eq 124 ]; then echo "✓ ${1} 看門狗中止 → exit 124"; else echo "✗ ${1} 看門狗中止應 exit 124（實得 ${2}）" >&2; printf '%s\n' "$6" | sed 's/^/    /' >&2; fail=1; fi
+  if grep -qF "shutdown ${ded_udid}" "$SHUTDOWN_LOG"; then echo "✓ ${1} 中止後專屬機仍被 shutdown（EXIT trap 沿既有收尾）"; else echo "✗ ${1} 中止後沒有 shutdown 專屬機" >&2; printf '%s\n' "$6" | sed 's/^/    /' >&2; fail=1; fi
+  if [ ! -d "$SIMULATOR_LOCK_DIR" ]; then echo "✓ ${1} 中止後 simulator-lock 已釋放"; else echo "✗ ${1} 中止後 simulator-lock 目錄仍在：$(cat "$SIMULATOR_LOCK_DIR/holder" 2>/dev/null | tr '\n' ' ')" >&2; fail=1; fi
+  if wd_pids_dead "$5"; then echo "✓ ${1} 整棵行程樹已殺（假身 bash 與其 sleep 子行程皆不存在）"; else echo "✗ ${1} 行程樹沒殺乾淨：$(cat "$5" 2>/dev/null)" >&2; fail=1; fi
+  if [ "$3" -le "$4" ]; then echo "✓ ${1} 耗時 ${3}s（上限 ${4}s）"; else echo "✗ ${1} 耗時 ${3}s 超過上限 ${4}s——看門狗沒有及時中止" >&2; fail=1; fi
+}
+
+# ㉘ 逾時（3 秒）：假身掛住、本 worktree 有 session log、.ips 剛被 touch → 印「逾時」＋session log 尾（含標記行與路徑）
+#    ＋crash report 摘要（exception／faultingThread 前三幀，第四幀不印；不帶「早於」註記）＋erase 建議；收尾一致
+: > "$SHUTDOWN_LOG"
+wd_pidfile28="$work/wd28.pid"; rm -f "$wd_pidfile28"
+t28=$(date +%s)
+out28=$(run_gate HOME="$wd_home" STUB_TEST_SCRIPT="$work/wd-test-script.sh" PUSH_GATE_XCODEBUILD_TIMEOUT_SEC=3 \
+  WD_HANG=1 WD_PID_FILE="$wd_pidfile28" WD_SESSION_FILE="$wd_session_this" WD_SESSION_CONTENT="$wd_ok_session" WD_TOUCH="$wd_ips"); rc28=$?
+el28=$(( $(date +%s) - t28 ))
+if printf '%s' "$out28" | grep -qF 'unit tests 逾時'; then echo "✓ ㉘ 印出「逾時」"; else echo "✗ ㉘ 未印出「逾時」" >&2; printf '%s\n' "$out28" | sed 's/^/    /' >&2; fail=1; fi
+if printf '%s' "$out28" | grep -qF 'WD-SESSION-TAIL-MARKER' && printf '%s' "$out28" | grep -qF 'Session-LittleSproutTests-2026-09-05_143800-abc123.log'; then
+  echo "✓ ㉘ 印出本 worktree 的 xcresult session log 路徑與尾行（含空白路徑）"
+else echo "✗ ㉘ 沒有印出 session log 尾／路徑" >&2; printf '%s\n' "$out28" | sed 's/^/    /' >&2; fail=1; fi
+if printf '%s' "$out28" | grep -qF 'EXC_BREAKPOINT' && printf '%s' "$out28" | grep -qF 'SupabaseClientFactory.swift:36' && ! printf '%s' "$out28" | grep -qF 'FOURTH_FRAME_MUST_NOT_PRINT'; then
+  echo "✓ ㉘ crash report 摘要：exception 型別＋faultingThread 前三幀（第四幀不印）"
+else echo "✗ ㉘ crash report 摘要不完整或印了第四幀" >&2; printf '%s\n' "$out28" | sed 's/^/    /' >&2; fail=1; fi
+if printf '%s' "$out28" | grep -qF '最新 crash report：' && ! printf '%s' "$out28" | grep -qF '早於本次看門狗啟動'; then
+  echo "✓ ㉘ .ips 晚於看門狗啟動 → 不帶「早於」註記"
+else echo "✗ ㉘ .ips 剛被 touch 卻帶了「早於」註記（或沒印路徑）" >&2; fail=1; fi
+if printf '%s' "$out28" | grep -qF "xcrun simctl erase ${ded_udid}"; then echo "✓ ㉘ 印出環境性 flake 建議（erase 本次 UDID 後重跑）"; else echo "✗ ㉘ 未印出 erase 建議" >&2; fail=1; fi
+wd_assert_aborted "㉘" "$rc28" "$el28" 25 "$wd_pidfile28" "$out28"
+
+# ㉙ 逾時、但 HOME 底下沒有 DerivedData 也沒有 .ips → 兩處都明說「找不到」，其餘收尾一致
+: > "$SHUTDOWN_LOG"
+wd_pidfile29="$work/wd29.pid"; rm -f "$wd_pidfile29"
+t29=$(date +%s)
+out29=$(run_gate HOME="$wd_home_empty" STUB_TEST_SCRIPT="$work/wd-test-script.sh" PUSH_GATE_XCODEBUILD_TIMEOUT_SEC=3 \
+  WD_HANG=1 WD_PID_FILE="$wd_pidfile29"); rc29=$?
+el29=$(( $(date +%s) - t29 ))
+if printf '%s' "$out29" | grep -qF '找不到本次的 xcresult session log' && printf '%s' "$out29" | grep -qF '找不到 crash report'; then
+  echo "✓ ㉙ 無 session log／無 .ips → 兩處都印「找不到」"
+else echo "✗ ㉙ 缺診斷來源時沒有明說找不到" >&2; printf '%s\n' "$out29" | sed 's/^/    /' >&2; fail=1; fi
+wd_assert_aborted "㉙" "$rc29" "$el29" 25 "$wd_pidfile29" "$out29"
+
+# ㉚ 宿主 crash 早期偵測——LS-197 形狀：xcodebuild -quiet 什麼都不印、crash 樣式只在 session log；grace 1 秒、
+#    逾時 30 秒 → 應在遠早於逾時前以「宿主 crash」中止（mutation：拿掉樣式掃描 → 走逾時、印「逾時」→ 紅）
+: > "$SHUTDOWN_LOG"
+wd_pidfile30="$work/wd30.pid"; rm -f "$wd_pidfile30"
+t30=$(date +%s)
+out30=$(run_gate HOME="$wd_home" STUB_TEST_SCRIPT="$work/wd-test-script.sh" PUSH_GATE_XCODEBUILD_TIMEOUT_SEC=30 PUSH_GATE_CRASH_GRACE_SEC=1 \
+  WD_HANG=1 WD_PID_FILE="$wd_pidfile30" WD_SESSION_FILE="$wd_session_this" WD_SESSION_CONTENT="$wd_crash_session"); rc30=$?
+el30=$(( $(date +%s) - t30 ))
+if printf '%s' "$out30" | grep -qF 'unit tests 宿主 crash' && ! printf '%s' "$out30" | grep -qF 'unit tests 逾時'; then
+  echo "✓ ㉚ session log 出現 crash 樣式、grace 內無 test case → 以「宿主 crash」中止（不是等到逾時）"
+else echo "✗ ㉚ 沒有走宿主 crash 路徑（走了逾時或沒中止）" >&2; printf '%s\n' "$out30" | sed 's/^/    /' >&2; fail=1; fi
+if printf '%s' "$out30" | grep -qF '早於本次看門狗啟動'; then echo "✓ ㉚ .ips 早於本次啟動 → 帶「早於」註記"; else echo "✗ ㉚ 舊 .ips 沒有帶「早於」註記" >&2; fail=1; fi
+wd_assert_aborted "㉚" "$rc30" "$el30" 15 "$wd_pidfile30" "$out30"
+
+# ㉛ 宿主 crash 樣式出現在 xcodebuild 自己的輸出（`Early unexpected exit`）、本 worktree 沒有新的 session log
+#    （上一案留下的檔早於本次看門狗啟動，須被 -newer 排除 → 印「找不到」）→ 同樣以「宿主 crash」中止
+: > "$SHUTDOWN_LOG"
+wd_pidfile31="$work/wd31.pid"; rm -f "$wd_pidfile31"
+t31=$(date +%s)
+out31=$(run_gate HOME="$wd_home" STUB_TEST_SCRIPT="$work/wd-test-script.sh" PUSH_GATE_XCODEBUILD_TIMEOUT_SEC=30 PUSH_GATE_CRASH_GRACE_SEC=1 \
+  WD_HANG=1 WD_PID_FILE="$wd_pidfile31" WD_STDOUT='Early unexpected exit, operation never finished bootstrapping - no restart will be attempted'); rc31=$?
+el31=$(( $(date +%s) - t31 ))
+if printf '%s' "$out31" | grep -qF 'unit tests 宿主 crash' && ! printf '%s' "$out31" | grep -qF 'unit tests 逾時'; then
+  echo "✓ ㉛ xcodebuild 輸出出現 crash 樣式 → 以「宿主 crash」中止"
+else echo "✗ ㉛ stdout 的 crash 樣式沒有觸發早期偵測" >&2; printf '%s\n' "$out31" | sed 's/^/    /' >&2; fail=1; fi
+if printf '%s' "$out31" | grep -qF '找不到本次的 xcresult session log'; then echo "✓ ㉛ 早於本次啟動的舊 session log 被排除（印「找不到」）"; else echo "✗ ㉛ 拿了早於本次啟動的舊 session log" >&2; printf '%s\n' "$out31" | sed 's/^/    /' >&2; fail=1; fi
+wd_assert_aborted "㉛" "$rc31" "$el31" 15 "$wd_pidfile31" "$out31"
+
+# ㉜ 假警報：crash 樣式之後 1 秒就有 `Test Case '-[` 開始（grace 3 秒），再活 3 秒讓輪詢看得到兩個階段 → 取消判定、
+#    跑完正常結束（exit 0、正常路徑 shutdown）
+: > "$SHUTDOWN_LOG"
+out32=$(run_gate HOME="$wd_home" STUB_TEST_SCRIPT="$work/wd-test-script.sh" PUSH_GATE_XCODEBUILD_TIMEOUT_SEC=30 PUSH_GATE_CRASH_GRACE_SEC=3 \
+  WD_STDOUT='Handling Crash: LittleSprout at <external symbol>' WD_THEN_SLEEP=1 WD_THEN_STDOUT="Test Case '-[LittleSproutTests.FooTests testBar]' started." WD_TAIL_SLEEP=3); rc32=$?
+if [ "$rc32" -eq 0 ] && printf '%s' "$out32" | grep -qF '取消宿主 crash 判定' && ! printf '%s' "$out32" | grep -qF '已中止'; then
+  echo "✓ ㉜ crash 樣式後 grace 內看到 test case 開始 → 取消判定、正常結束（exit 0）"
+else echo "✗ ㉜ 假警報沒有被取消（exit ${rc32}）" >&2; printf '%s\n' "$out32" | sed 's/^/    /' >&2; fail=1; fi
+if grep -qF "shutdown ${ded_udid}" "$SHUTDOWN_LOG"; then echo "✓ ㉜ 正常路徑仍關專屬機"; else echo "✗ ㉜ 正常路徑沒關專屬機" >&2; fail=1; fi
+
+# ㉝ scoping：crash 樣式只在「別的 worktree」的 DerivedData session log（WorkspacePath 指向別處），本 worktree 的
+#    run 還在跑（假身耗時 3 秒 > grace 1 秒）→ 不得被當成自己的 crash 中止（mutation：拿掉 WorkspacePath 比對 → 紅）
+: > "$SHUTDOWN_LOG"
+out33=$(run_gate HOME="$wd_home" STUB_TEST_SCRIPT="$work/wd-test-script.sh" PUSH_GATE_XCODEBUILD_TIMEOUT_SEC=30 PUSH_GATE_CRASH_GRACE_SEC=1 \
+  WD_SESSION_FILE="$wd_session_other" WD_SESSION_CONTENT="$wd_crash_session" WD_THEN_SLEEP=3 WD_THEN_STDOUT='done'); rc33=$?
+if [ "$rc33" -eq 0 ] && ! printf '%s' "$out33" | grep -qF '出現宿主 crash 樣式' && ! printf '%s' "$out33" | grep -qF '已中止'; then
+  echo "✓ ㉝ 別的 worktree 的 crash session log 不觸發本 worktree 的看門狗（只認 WorkspacePath 落在本 repo 的 DerivedData）"
+else echo "✗ ㉝ 別票的 crash 被當成自己的（exit ${rc33}）——scoping 失效會殺掉健康的 run" >&2; printf '%s\n' "$out33" | sed 's/^/    /' >&2; fail=1; fi
+
+# ㉞ CI（GITHUB_ACTIONS=true）不啟用看門狗；本機（清空）啟用並印一行說明
+out34a=$(run_gate STUB_TEST_RC=0 GITHUB_ACTIONS=true)
+out34b=$(run_gate STUB_TEST_RC=0)
+if ! printf '%s' "$out34a" | grep -qF '看門狗啟用' && printf '%s' "$out34b" | grep -qF '看門狗啟用'; then
+  echo "✓ ㉞ GITHUB_ACTIONS=true 不啟用看門狗；本機啟用並印出逾時／grace 設定"
+else echo "✗ ㉞ 看門狗啟用條件不對（CI 應不啟用、本機應啟用）" >&2; printf '%s\n' "$out34a" | sed 's/^/    [CI] /' >&2; printf '%s\n' "$out34b" | sed 's/^/    [local] /' >&2; fail=1; fi
+
+# ㉟ 逾時／grace 環境變數不是正整數 → fail loud（不靜默退回預設，也不會算出 0 秒立刻逾時）
+out35=$(run_gate STUB_TEST_RC=0 PUSH_GATE_XCODEBUILD_TIMEOUT_MIN=abc); rc35=$?
+out35b=$(run_gate STUB_TEST_RC=0 PUSH_GATE_CRASH_GRACE_SEC=0); rc35b=$?
+if [ "$rc35" -ne 0 ] && printf '%s' "$out35" | grep -qF '須為正整數' && [ "$rc35b" -ne 0 ] && printf '%s' "$out35b" | grep -qF '須為正整數'; then
+  echo "✓ ㉟ 逾時分鐘數非數字／grace 為 0 → 擋下並指出變數"
+else echo "✗ ㉟ 非法的看門狗設定沒有被擋（exit ${rc35}／${rc35b}）" >&2; printf '%s\n' "$out35" | sed 's/^/    /' >&2; fail=1; fi
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ push-gate 模擬器自測通過"
