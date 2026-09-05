@@ -495,7 +495,10 @@ if errs:
 
 sha_disp = sha[:7] if isinstance(sha, str) else sha
 tag = "（本輪最新）" if is_latest else ""
-schema = "兩支掃描皆有輸出（gate 落地前的既有收據，舊 schema）" if legacy else "四支掃描皆有輸出、corner_anchor.mismatch=0、boards 覆蓋本 PR 觸碰的板"
+# LS-198：支數不寫死——依本收據實際要求的層數算（LS-122 四＋LS-168 第五＋LS-185 第六），全部支數以 scripts/design/overflow-scan.js 檔頭為準
+n_scans = len(required) + (1 if fifth else 0) + (1 if sixth else 0)
+n_zh = {4: "四", 5: "五", 6: "六"}.get(n_scans, str(n_scans))   # legacy（兩支）走下面的舊 schema 字串，這裡不得 KeyError
+schema = "兩支掃描皆有輸出（gate 落地前的既有收據，舊 schema）" if legacy else f"{n_zh}支掃描皆有輸出（支數以 {FIFTH_SCRIPT} 檔頭為準）、corner_anchor.mismatch=0、boards 覆蓋本 PR 觸碰的板"
 if fifth:
     schema += "、tree_hash 對應 head_sha 快照、text_occlusion.flagged 為空"
 elif receipt_hash is None or tx is None:
