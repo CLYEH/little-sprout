@@ -16,19 +16,13 @@
 
 begin;
 
--- 5 萬列假照片（postgres 身分，繞過 RLS）。整個檔案跑在一個交易裡，結束 rollback，不留殘料。
-insert into public.media
-  (family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, created_at)
-select
-  'fc000000-0000-4000-8000-000000000001',
-  'fc000000-0000-4000-8000-000000000001/2026/'
-    || lpad((1 + (i % 12))::text, 2, '0') || '/perf-' || i || '.jpg',
-  'photo', 1024,
-  now() - (i * interval '1 minute'),
-  3024, 4032,
-  'c0000000-0000-4000-8000-000000000001',
-  now() - (i * interval '1 minute')
-from generate_series(1, 50000) i;
+-- 5 萬列假照片（postgres 身分，繞過 RLS）。整個檔案跑在一個交易裡，結束 rollback，
+-- 不留殘料。LS-204（LS-200 R1 i3 `ca99c6ae`）：這個 insert 與
+-- 107_album_summaries.sql §6 原本各自維護一份幾乎一樣的 50000 列 fixture，抽成
+-- 共用原始碼（見 fixtures/media_family_perf_noise.sql 檔頭說明）——共用的是
+-- 同一份 SQL 文字，不是同一次執行：這裡仍在本檔自己的交易內 include、自己
+-- insert、自己 rollback，執行次數與交易邊界都不變。
+\ir fixtures/media_family_perf_noise.sql
 
 -- LS-33：join_requests 也要有夠多的列，第 4 條查詢的 loops 判準才有意義
 -- （空表上「所有節點 loops=1」是恆真句，證明不了 policy 沒有被逐列重算）。

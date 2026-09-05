@@ -547,15 +547,12 @@ begin;
 -- 直接選它，測不出「表大了會怎樣」；灌到 5 萬+ 列後 EXPLAIN 才有鑑別力
 -- （本機實測：只有 1200 列時規劃器選 Hash Join＋Seq Scan on media；加了 5 萬列
 -- 背景雜訊之後规劃器改選 Nested Loop＋Index Scan using media_pkey）。
-insert into public.media
-  (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, created_at)
-select
-  ('3d000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid,
-  'fc000000-0000-4000-8000-000000000001',
-  'fc000000-0000-4000-8000-000000000001/2026/' || lpad((1 + (i % 12))::text, 2, '0') || '/noise-' || i || '.jpg',
-  'photo', 1024, now() - (i * interval '1 minute'), 800, 600,
-  'c0000000-0000-4000-8000-000000000001', now() - (i * interval '1 minute')
-  from generate_series(1, 50000) i;
+-- LS-204（LS-200 R1 i3 `ca99c6ae`）：這份 insert 與
+-- 50_rls_plan_no_percall_subquery.sql 原本各自維護一份幾乎一樣的 50000 列
+-- fixture，抽成共用原始碼（見 fixtures/media_family_perf_noise.sql 檔頭說明）——
+-- 共用的是同一份 SQL 文字，不是同一次執行：這裡仍在本檔第 6 段自己的交易內
+-- include、自己 insert，執行次數與交易邊界都不變。
+\ir fixtures/media_family_perf_noise.sql
 
 -- 50 本相簿、1200 張已連結 media（每本 24 張，1200 / 50）
 insert into public.media
