@@ -39,6 +39,20 @@ targets:
     platform: iOS
     sources:
       - path: LittleSprout
+      # LS-191：法務文件 in-app 檢視 sheet 直接讀 bundle 內的 markdown 當內容來源——
+      # `docs/legal/` 是唯一真相（README／EULA 附加條款不在畫面內使用，不需要一併塞進
+      # bundle），這裡明確列兩個檔案（而不是整個 `docs/legal` 資料夾）避免以後有人在該
+      # 資料夾加新檔案時被靜默一併塞進 app bundle。XcodeGen 沒有獨立的 target 層級
+      # `resources:` key——`buildPhase: resources` 才是讓這兩個檔案落進 Copy Bundle
+      # Resources（而不是被當成原始碼或單純的專案參照）的正確寫法，`type: file` 明確聲明
+      # 它們是單一檔案（非資料夾參照）。`xcodegen generate` 後 `Bundle.main.url(
+      # forResource:withExtension:)` 讀得到（unqualified，不含子目錄路徑）。
+      - path: docs/legal/terms-of-service.md
+        type: file
+        buildPhase: resources
+      - path: docs/legal/privacy-policy.md
+        type: file
+        buildPhase: resources
     # LS-49：Debug/Release 共用同一份 xcconfig。Base.xcconfig 本身有安全佔位值，
     # 只在本機存在 Config/Secrets.xcconfig（gitignored）時才會被覆蓋成真實 Supabase 專案值
     # （見該檔內 #include? 說明）——CI 與新 clone 的機器不需要它就能 build/test。
