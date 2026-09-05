@@ -1,4 +1,5 @@
-// LS-122：設計收工溢出掃描——四支掃描的正典腳本（取代 ui-designer／visual-reviewer 每輪臨場手寫的 JS）。
+// LS-122：設計收工溢出掃描——正典腳本（取代 ui-designer／visual-reviewer 每輪臨場手寫的 JS）；四支（LS-122）→ 第五支
+// text_occlusion（LS-168）→ 第六支 board_clip＋收據 scan_scope＋cross_parent_collision 候選過濾（LS-185）。
 //
 // 為什麼要正典化：LS-119 R5 的兩個 BLOCKER（角托縮進紙面 148 點錯位、相鄰格角托跨 parent 重疊 80 筆）與
 // MJ-6（instance descendants 才 enable 的影片徽章被裁）都是既有兩支掃描結構上抓不到的類別；橫列溢出收據 115 vs
@@ -20,15 +21,18 @@
 //      `classification`（含「同類 N 例」），補 `ticket`／`round`／`head_sha`，`tree_hash` 抄 SUMMARY 的值（LS-168；見
 //      ui-designer.md）。`SCAN_OVERLAY_RE = "Action Bar|…"`（字串）覆寫第五支的覆蓋層名稱，`SCAN_HASH_DEBUG = "<id>"` 印
 //      該節點的雜湊行。`SCAN_HASH_ONLY = true` 只跑雜湊走訪、印 `SUMMARY-HASH total_nodes=… tree_hash=…`；`SCAN_SKIP_HASH = true`
-//      跑五支不算雜湊（SUMMARY 印 `tree_hash=skipped`；兩旗標同時設會 throw）——8000 節點級的稿一次 execute 跑完雜湊＋五支會 `InternalError:
+//      跑六支不算雜湊（SUMMARY 印 `tree_hash=skipped`；兩旗標同時設會 throw）——8000 節點級的稿一次 execute 跑完雜湊＋六支會 `InternalError:
 //      interrupted`（LS-152 VR R3 實測），拆成同一稿態、中間無任何寫入的連續兩次唯讀 execute，收據 `tree_hash` 抄第一次（LS-171）。
-//   2. node：`require` 本檔取得純函數（`scanAll` 與五支 `scan*`、`treeHash`／`treeHashLines`／`canonNode`），
+//      `SCAN_SCOPE = "boards"`（LS-185）把快照限縮到 SCAN_BOARDS 子樹再跑六支，SUMMARY 與收據 `scan_scope` 如實標 `boards`（預設
+//      `document`＝全稿；見下方 scan_scope 段）。
+//   2. node：`require` 本檔取得純函數（`scanAll` 與六支 `scan*`、`treeHash`／`treeHashLines`／`canonNode`），
 //      `scripts/design/overflow-scan.test.js` 用合成節點樹驗演算法、並以 python 交叉驗 tree_hash 同值；CI rules job 的自測
 //      step 跑它。掃描核心不碰 Pencil API，Pen 不在時也能驗。注意：.pen JSON 只存 root／absolute 節點的 x／y，layout 子節點
-//      的絕對座標要 Pencil 版面引擎才算得出——離線 node 能驗的是演算法與 tree_hash，不是真實稿的五支數字。
+//      的絕對座標要 Pencil 版面引擎才算得出——離線 node 能驗的是演算法與 tree_hash，不是真實稿的六支數字。
 //
 // 節點快照格式（純函數的唯一輸入）：陣列，父先於子（top-down，陣列順序＝繪製順序，第五支據此判 z-order），每筆：
-//   {id, name, parent (父 id；頂層為 null), type, enabled (布林), clip (布林，第五支用), x, y, w, h}  —— x/y/w/h 為**絕對座標** AABB。
+//   {id, name, parent (父 id；頂層為 null), type, enabled (布林), clip (布林，第五／六支用), image (布林，fill 含 image——第六支
+//   把它當可見葉節點；.pen 沒有 image 型別，照片是帶 image fill 的 frame／rectangle), x, y, w, h}  —— x/y/w/h 為**絕對座標** AABB。
 // 語意（皆先做 disabled 子樹傳遞：`enabled:false` 的節點與其全部後代不參與任何一支）：
 //   (a) sibling_intersection：同一父節點下兩兩 AABB 交集面積 > AREA_MIN（含畫布 root 層兩板相鄰，既有語意）。
 //   (b) row_overflow：子節點右緣超出父節點右緣 > TOL（既有語意；逐子節點檢查、不在容器第一筆命中就停，Corner TR／BR
@@ -63,6 +67,35 @@
 //       `scans.text_occlusion.flagged` 必為空（design-evidence-check.sh）。Scrim／Sheet 不在預設 OVERLAY_RE：modal 層蓋住底稿
 //       是刻意的 z-order（VR R1 就是先扣掉這類才得到真實遮蔽 3 筆；含進去時每張 sheet 板的 Status Bar 時間都會被報），要看
 //       全貌自行覆寫 `SCAN_OVERLAY_RE`。
+//   (f) board_clip（LS-185，第六支）：root frame 有 `clip:true` 的板（真實稿 153 張畫面板都是；`cmp/*` 元件定義根不 clip、不掃），
+//       其後代**可見葉節點**（沒有 live 子節點，且 type 為 text／icon／path／rectangle／ellipse，或快照 `image:true`——照片是帶
+//       image fill 的 frame／rectangle）的矩形超出 root 邊界 > TOL（0.5，沿 row_overflow 的邊緣允差；不用 text_occlusion 的面積
+//       > 0，那對邊緣裁切會把版面捨入的 0.01pt 也報）即報 `{board, node, overflow_px, side}`——side 取四邊中溢出最大者
+//       （top／left／bottom／right），overflow_px 為該邊的量。葉節點矩形先 ∩ root **以下**的 `clip:true` 祖先（同第五支的可見
+//       矩形慣例）：被中間 clip 容器整個裁掉的內容是捲動模擬（LS-177 R2 `y7KAW` Content `clip:true`＋`height:1213`、LS-142 上傳
+//       佇列 List），不是被板裁掉、不報；只報真的會伸到板緣外的可見內容。名稱命中 OVERLAY_RE 的節點及其子樹不算（固定覆蓋層
+//       本身伸出板外是常態；root 自己的名字不參與比對）。LS-120 R2 六個 spacer 把 `Card Diary 1`／`Load More` 推出板外被 clip、
+//       LS-177 R2 「Header Row 移到 y=−770 捲離畫面」都是四支＋第五支結構上抓不到、reviewer 用板矩形對葉節點才抓到的類別
+//       （LS-96 池項 83392d32）。**範圍同 corner_anchor**：`flagged` 只算 `boards` 內、全稿另列 `document_flagged`；收據
+//       `scans.board_clip.flagged` 必為空（design-evidence-check.sh；不接受白名單——刻意出血請把元素包進與板同尺寸的 `clip:true`
+//       容器，結構上宣告裁切意圖），`document_flagged` 每筆給 classification，刻意出血的他票板用固定字面 `intentional_bleed`。
+//       **不做旋轉換算**：`ctx.bounds` 對旋轉節點回的已是旋轉後包絡框（LS-120 R4／R5 覆核到 0.01pt，LS-96 `4d8ce8dd`／`596d3bca`
+//       撤回旋轉盲點），任何一支都不得再套旋轉公式。
+//   scan_scope（LS-185）：SUMMARY 與 `scanAll` 輸出頂層 `scan_scope`＝`document`（預設，全稿快照）或 `boards`（Pencil 端
+//       `SCAN_SCOPE = "boards"`／node `opts.scanScope`：快照先限縮到 SCAN_BOARDS 的子樹再跑六支，沒有 SCAN_BOARDS 會 throw），
+//       每支輸出各帶同值 `scope`。目的是讓收據分得清 `document_*`／各支 flagged 是全稿數字還是限縮板的數字——LS-120 R3／R4 逐板
+//       `Get(boardId)` 繞過逾時後 `corner_anchor.document_*` 塌縮成 boards 值、LS-177 R1／R2 `cross_parent_collision` 限縮 17 板，
+//       收據語意都靠 scan_note 文字自述（VR MJ-9／MN-5；LS-96 `83694378`）。設計端在 `boards` 模式下 `document_*` 就是限縮值，
+//       收據照印、不得改標成 `document`。
+//   大稿分段跑法（LS-185 記錄；LS-177 R1 handoff bcfa06d5、LS-120 R6 `767eb2cb`）：9416 節點級的稿單次 execute 連雜湊帶六支
+//       會 `InternalError: interrupted`，且**間歇發生**（同一 snippet 原樣重送第二次常成功）——跟 snippet 內 O(n²) 配對的絕對
+//       大小與 O(n·depth) 陣列累加寫法相關，不是節點數門檻。實跑可用的手法：①雜湊拆段——`SCAN_HASH_ONLY` 一趟仍逾時時，
+//       依 Get 走訪 index 把全樹切成 9 段（前 4 段各 1500 節點、中 4 段各 750、末段 416），每段一次唯讀 execute 算 FNV-1a 64
+//       局部和（同 `addLimbs`），shell 端 python 對 9 個局部和 mod 2^64 相加，結果與 `design_tree_hash.py` 單次全稿逐位元相同
+//       （`01ed2a473acf4ddd`）；重算時先用一次便宜的 index 查詢確認改動節點落在哪段，只重算那幾段。②六支分函式——
+//       sibling_intersection＋row_overflow 一趟、corner_anchor＋text_occlusion＋board_clip 一趟、cross_parent_collision 單獨一趟
+//       （本票起已先過濾 BLEED_RE 候選再配對候選×其餘，配對數由 n²/2 降到 |候選|·n，結果集逐位元不變），仍逾時就
+//       `SCAN_SCOPE = "boards"` 限縮並在收據如實標 `scope`。所有趟次都必須是同一稿態、中間無任何寫入（LS-168「單次掃描」定義）。
 //   tree_hash（LS-168，收據新鮮度）：未展開 instance 的全樹（與 total_nodes 同一次走訪）每節點一行
 //       `<父 id>\t<index>\t<canon(node 去掉 children)>`（canon＝鍵排序、無空白 JSON、數字用 JS Number#toString），每行 UTF-8
 //       做 FNV-1a 64 後逐行相加 mod 2^64（順序無關、不用排序），印在 SUMMARY 與收據 `tree_hash`（16 碼 hex）。
@@ -76,7 +109,8 @@
 //       盲區：只證明「收據對應這份 .pen 的節點樹」（`children` 全樹；頂層 `variables`／`themes`／`fileToken` 不在雜湊內——
 //       Pencil `Get` 只走節點樹，掃描後只改 design token 再落地看不到，merge-review R1 N4），不證明五支數字算對（那要 CI 跑 Pencil）。
 // 輸出每筆都帶 name／parent 等欄位方便分類；design-evidence-check.sh 只驗 node／node_a／node_b／classification、
-// corner_anchor 的整數計數與 boards、text_occlusion.flagged 為空、tree_hash，多出的欄位不影響 gate。
+// corner_anchor 的整數計數與 boards、text_occlusion.flagged 與 board_clip.flagged 為空、scan_scope 合法、tree_hash，多出的欄位
+// 不影響 gate。
 
 const AREA_MIN = 4;
 const TOL = 0.5;
@@ -84,6 +118,18 @@ const CORNER_OUT = 5;
 const CORNER_RE = /\bCorner (TL|TR|BL|BR)\b/;
 const BLEED_RE = /Corner|Badge|Dragging Photo|Drop Target|Insert Line|Stack Sheet/i;
 const OVERLAY_RE = /Action Bar|Tab Bar|Capsule|Footer|Toast|Banner/;
+// 第六支的可見葉節點型別（.pen 實測型別集：frame／text／ref／icon／rectangle／note／path／ellipse；frame 只有帶 image fill 才算）
+const LEAF_TYPE_RE = /^(text|icon|path|rectangle|ellipse)$/;
+const SCAN_SCOPES = ["document", "boards"];
+
+function hasImageFill(fill) {
+  const one = (f) => !!f && typeof f === "object" && f.type === "image" && f.enabled !== false;
+  return Array.isArray(fill) ? fill.some(one) : one(fill);
+}
+
+function resolveOverlayRe(opts) {
+  return opts && opts.overlayRe ? (opts.overlayRe instanceof RegExp ? opts.overlayRe : new RegExp(String(opts.overlayRe))) : OVERLAY_RE;
+}
 
 function r2(v) {
   return Math.round(v * 100) / 100;
@@ -188,18 +234,31 @@ function scanCrossParentCollision(nodes, idx, opts) {
   const flagged = [];
   for (const [board, arr] of boards) {
     const boardName = byId.get(board).name;
+    // LS-185（LS-96 32754383）：預設只報「任一側命中 BLEED_RE」的對，所以先把候選挑出來，只配對候選×其餘、不再全配對後才過濾
+    // ——配對數 n²/2 → |候選|·n（真實稿 15359 個展開節點裡候選是少數）。走訪順序仍是 (i, j) 字典序、a＝arr[i]、b＝arr[j]，
+    // 輸出與全配對版逐位元相同（overflow-scan.test.js 以舊實作對跑）；`crossAll` 時人人都是候選＝原本的全配對。
+    const cand = [];
+    const isCand = new Array(arr.length);
     for (let i = 0; i < arr.length; i++) {
-      const a = arr[i];
-      const ca = chain.get(a.id);
-      for (let j = i + 1; j < arr.length; j++) {
-        const b = arr[j];
-        if (a.parent === b.parent) continue;
-        if (overlapArea(a, b) <= AREA_MIN) continue;
-        if (!all && !BLEED_RE.test(a.name || "") && !BLEED_RE.test(b.name || "")) continue;
-        const cb = chain.get(b.id);
-        if (ca.includes(b.id) || cb.includes(a.id)) continue;
-        if (coveredByParent(a, b, cb) || coveredByParent(b, a, ca)) continue;
-        flagged.push(pairEntry(a, b, { parent_a: a.parent, parent_b: b.parent, board, board_name: boardName }));
+      isCand[i] = all || BLEED_RE.test(arr[i].name || "");
+      if (isCand[i]) cand.push(i);
+    }
+    const check = (i, j) => {
+      const a = arr[i], b = arr[j];
+      if (a.parent === b.parent) return;
+      if (overlapArea(a, b) <= AREA_MIN) return;
+      const ca = chain.get(a.id), cb = chain.get(b.id);
+      if (ca.includes(b.id) || cb.includes(a.id)) return;
+      if (coveredByParent(a, b, cb) || coveredByParent(b, a, ca)) return;
+      flagged.push(pairEntry(a, b, { parent_a: a.parent, parent_b: b.parent, board, board_name: boardName }));
+    };
+    let ci = 0;
+    for (let i = 0; i < arr.length; i++) {
+      while (ci < cand.length && cand[ci] <= i) ci++;
+      if (isCand[i]) {
+        for (let j = i + 1; j < arr.length; j++) check(i, j);
+      } else {
+        for (let k = ci; k < cand.length; k++) check(i, cand[k]);
       }
     }
   }
@@ -293,7 +352,7 @@ function scanCornerAnchor(nodes, idx, opts) {
 
 function scanTextOcclusion(nodes, idx, opts) {
   const { byId, liveNodes, chain, roots } = idx || buildIndex(nodes);
-  const re = opts && opts.overlayRe ? (opts.overlayRe instanceof RegExp ? opts.overlayRe : new RegExp(String(opts.overlayRe))) : OVERLAY_RE;
+  const re = resolveOverlayRe(opts);
   const boards = resolveBoards(opts && opts.boards, roots);
   const scoped = boards.length > 0;
   const order = new Map();
@@ -348,6 +407,55 @@ function scanTextOcclusion(nodes, idx, opts) {
     }
   }
   return out;
+}
+
+// (f) LS-185 第六支：可見葉節點伸出有 clip 的 root frame 邊界（語意見檔頭）
+function scanBoardClip(nodes, idx, opts) {
+  const { byId, liveNodes, kids, chain, roots } = idx || buildIndex(nodes);
+  const re = resolveOverlayRe(opts);
+  const boards = resolveBoards(opts && opts.boards, roots);
+  const scoped = boards.length > 0;
+  const out = { boards, flagged: [], document_flagged: [] };
+  for (const n of liveNodes) {
+    if (n.parent == null) continue;
+    if ((kids.get(n.id) || []).length) continue;
+    if (!(LEAF_TYPE_RE.test(n.type || "") || n.image === true)) continue;
+    const c = chain.get(n.id);
+    const root = byId.get(c[c.length - 1]);
+    if (root.clip !== true) continue;
+    // 名稱命中 OVERLAY_RE 的節點及其子樹不算（root 自己的名字不比對——板名含 Banner 不該讓整板免掃）
+    if (c.slice(0, -1).some((id) => re.test(byId.get(id).name || ""))) continue;
+    // 可見矩形：∩ root 以下的 clip:true 祖先——被中間 clip 容器整個裁掉的是捲動模擬，不是被板裁掉
+    let r = { x: n.x, y: n.y, w: n.w, h: n.h };
+    for (const aid of c.slice(1, -1)) {
+      const a = byId.get(aid);
+      if (!a || a.clip !== true) continue;
+      const x1 = Math.max(r.x, a.x), y1 = Math.max(r.y, a.y);
+      const x2 = Math.min(r.x + r.w, a.x + a.w), y2 = Math.min(r.y + r.h, a.y + a.h);
+      r = { x: x1, y: y1, w: Math.max(0, x2 - x1), h: Math.max(0, y2 - y1) };
+    }
+    if (!(r.w > 0 && r.h > 0)) continue;
+    const over = { top: root.y - r.y, left: root.x - r.x, bottom: r.y + r.h - (root.y + root.h), right: r.x + r.w - (root.x + root.w) };
+    let side = null, max = TOL;
+    for (const s of ["top", "left", "bottom", "right"]) if (over[s] > max) { max = over[s]; side = s; }
+    if (!side) continue;
+    const entry = { board: root.id, board_name: root.name, node: n.id, name: n.name, parent: n.parent, type: n.type, overflow_px: r2(max), side };
+    out.document_flagged.push(entry);
+    if (!scoped || boards.includes(root.id)) out.flagged.push(entry);
+  }
+  return out;
+}
+
+// scan_scope=boards：把快照限縮到 boards 子樹（root id 由 resolveBoards 解好）再跑六支
+function restrictToBoards(nodes, boardIds) {
+  const keep = new Set(boardIds);
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const rootOf = (n) => {
+    let cur = n;
+    while (cur && cur.parent != null && byId.has(cur.parent)) cur = byId.get(cur.parent);
+    return cur ? cur.id : null;
+  };
+  return nodes.filter((n) => keep.has(rootOf(n)));
 }
 
 // ---- tree_hash：canon／FNV-1a 64（無 BigInt，16 位元 limb）／逐行相加。與 scripts/gates/design_tree_hash.py 同規格 ----
@@ -432,15 +540,26 @@ function treeHashLines(doc) {
 }
 
 function scanAll(nodes, opts) {
-  const idx = buildIndex(nodes);
+  const scope = opts && opts.scanScope != null ? String(opts.scanScope) : "document";
+  if (!SCAN_SCOPES.includes(scope)) throw new Error("overflow-scan：scanScope 只接受 " + SCAN_SCOPES.join("|") + "（收到 " + JSON.stringify(scope) + "）");
+  let scanned = nodes;
+  if (scope === "boards") {
+    const ids = resolveBoards(opts && opts.boards, nodes.filter((n) => n.parent == null));
+    if (!ids.length) throw new Error("overflow-scan：scanScope=boards 需要非空 boards（Pencil 端在 snippet 第一行加 SCAN_BOARDS=[...]），否則限縮範圍是空的");
+    scanned = restrictToBoards(nodes, ids);
+  }
+  const idx = buildIndex(scanned);
+  const tag = (o) => Object.assign({ scope }, o);
   return {
-    scanned_nodes: nodes.length,
+    scanned_nodes: scanned.length,
+    scan_scope: scope,
     scans: {
-      sibling_intersection: scanSiblingIntersection(nodes, idx),
-      row_overflow: scanRowOverflow(nodes, idx),
-      cross_parent_collision: scanCrossParentCollision(nodes, idx, opts),
-      corner_anchor: scanCornerAnchor(nodes, idx, opts),
-      text_occlusion: scanTextOcclusion(nodes, idx, opts),
+      sibling_intersection: tag(scanSiblingIntersection(scanned, idx)),
+      row_overflow: tag(scanRowOverflow(scanned, idx)),
+      cross_parent_collision: tag(scanCrossParentCollision(scanned, idx, opts)),
+      corner_anchor: tag(scanCornerAnchor(scanned, idx, opts)),
+      text_occlusion: tag(scanTextOcclusion(scanned, idx, opts)),
+      board_clip: tag(scanBoardClip(scanned, idx, opts)),
     },
   };
 }
@@ -477,6 +596,12 @@ function compactLines(out) {
     .concat(to.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex));
   for (const [k, v] of agg(tx.document_flagged.filter((f) => !tx.flagged.includes(f)), (f) => f.board_name + "(" + f.board + ")", (f) => f.node + "×" + f.overlay)) tl.push("  DOCUMENT " + v.n + "× board " + k + " e.g. " + v.ex);
   blocks.push(tl.join("\n"));
+  const bc = s.board_clip;
+  const bcRows = agg(bc.flagged, (f) => f.name + " " + f.side + " @ " + f.board_name + "(" + f.board + ")", (f) => f.node + " (+" + f.overflow_px + ")");
+  const bl = ["SCAN board_clip boards=" + JSON.stringify(bc.boards) + " flagged=" + bc.flagged.length + " classes=" + bcRows.length + " document=" + bc.document_flagged.length]
+    .concat(bcRows.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex));
+  for (const [k, v] of agg(bc.document_flagged.filter((f) => !bc.flagged.includes(f)), (f) => f.board_name + "(" + f.board + ")", (f) => f.node + " " + f.side + " (+" + f.overflow_px + ")")) bl.push("  DOCUMENT " + v.n + "× board " + k + " e.g. " + v.ex);
+  blocks.push(bl.join("\n"));
   return blocks;
 }
 
@@ -488,6 +613,7 @@ if (typeof Get === "function" && typeof Print === "function") {
   const hashDebug = typeof SCAN_HASH_DEBUG !== "undefined" && SCAN_HASH_DEBUG ? String(SCAN_HASH_DEBUG) : "";
   const hashOnly = typeof SCAN_HASH_ONLY !== "undefined" && SCAN_HASH_ONLY === true;
   const skipHash = typeof SCAN_SKIP_HASH !== "undefined" && SCAN_SKIP_HASH === true;
+  const scanScope = typeof SCAN_SCOPE !== "undefined" && SCAN_SCOPE ? String(SCAN_SCOPE) : "document";
   if (hashOnly && skipHash) throw new Error("overflow-scan：SCAN_HASH_ONLY 與 SCAN_SKIP_HASH 互斥——第一次只設 SCAN_HASH_ONLY（雜湊），第二次只設 SCAN_SKIP_HASH（五支）；同時設會既不算雜湊也不跑五支（LS-171 R1 N4）");
   let total = 0;
   const hashAcc = [0, 0, 0, 0];
@@ -513,19 +639,20 @@ if (typeof Get === "function" && typeof Print === "function") {
     const b = c.bounds;
     const a = { x: pa.x + b.x, y: pa.y + b.y };
     abs[n.id] = a;
-    snap.push({ id: n.id, name: n.name || "", parent: pid, type: n.type || "", enabled: n.enabled !== false, clip: n.clip === true, x: a.x, y: a.y, w: b.width, h: b.height });
+    snap.push({ id: n.id, name: n.name || "", parent: pid, type: n.type || "", enabled: n.enabled !== false, clip: n.clip === true, image: hasImageFill(n.fill), x: a.x, y: a.y, w: b.width, h: b.height });
   }, { resolveInstances: true });
-  const out = scanAll(snap, { boards: scope, crossAll, overlayRe });
+  const out = scanAll(snap, { boards: scope, crossAll, overlayRe, scanScope });
   out.total_nodes = total;
   out.tree_hash = treeHashHex;
   const s = out.scans;
   if (scope.length === 0) Print("WARNING SCAN_BOARDS 未設定：corner_anchor 以全稿計 mismatch，收據 gate 會因 boards 為空而紅——在本 snippet 第一行加 SCAN_BOARDS=[...] 再重跑（跨 execute 的全域不保留）");
   Print(
-    "SUMMARY total_nodes=" + total + " scanned_nodes=" + out.scanned_nodes +
+    "SUMMARY total_nodes=" + total + " scanned_nodes=" + out.scanned_nodes + " scan_scope=" + out.scan_scope +
       " sibling_intersection=" + s.sibling_intersection.flagged.length +
       " row_overflow=" + s.row_overflow.flagged.length +
       " cross_parent_collision=" + s.cross_parent_collision.flagged.length + (crossAll ? "(all)" : "(bleed-only)") +
       " text_occlusion=" + s.text_occlusion.flagged.length + "/" + s.text_occlusion.document_flagged.length + (overlayRe ? "(custom-re)" : "") +
+      " board_clip=" + s.board_clip.flagged.length + "/" + s.board_clip.document_flagged.length +
       " corner_anchor=" + s.corner_anchor.containers + "/" + s.corner_anchor.points + "/" + s.corner_anchor.mismatch +
       " document=" + s.corner_anchor.document_containers + "/" + s.corner_anchor.document_points + "/" + s.corner_anchor.document_mismatch +
       " unresolved=" + s.corner_anchor.unresolved.length + " boards=" + JSON.stringify(s.corner_anchor.boards) +
@@ -535,7 +662,7 @@ if (typeof Get === "function" && typeof Print === "function") {
   if (verbose) for (const key of Object.keys(s)) Print("JSON " + key + " " + JSON.stringify(s[key]));
   }
 } else if (typeof module === "object" && module && module.exports) {
-  module.exports = { AREA_MIN, TOL, CORNER_OUT, CORNER_RE, BLEED_RE, OVERLAY_RE, buildIndex, overlapArea, contains, cornerExpected, compactLines, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanAll, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
+  module.exports = { AREA_MIN, TOL, CORNER_OUT, CORNER_RE, BLEED_RE, OVERLAY_RE, LEAF_TYPE_RE, SCAN_SCOPES, hasImageFill, buildIndex, overlapArea, contains, cornerExpected, compactLines, pairEntry, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanBoardClip, restrictToBoards, scanAll, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
 } else {
   throw new Error("overflow-scan：既不是 Pencil execute（無 Get／Print）也不是 node module 環境，無處輸出");
 }

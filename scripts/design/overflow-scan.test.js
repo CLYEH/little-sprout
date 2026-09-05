@@ -120,8 +120,8 @@ function ok(name, fn) {
   console.log("✓ " + name);
 }
 
-ok("輸出形狀：五支鍵齊全、corner_anchor 計數為整數、scanned_nodes 為輸入節點數", () => {
-  assert.deepStrictEqual(Object.keys(s).sort(), ["corner_anchor", "cross_parent_collision", "row_overflow", "sibling_intersection", "text_occlusion"]);
+ok("輸出形狀：六支鍵齊全、corner_anchor 計數為整數、scanned_nodes 為輸入節點數", () => {
+  assert.deepStrictEqual(Object.keys(s).sort(), ["board_clip", "corner_anchor", "cross_parent_collision", "row_overflow", "sibling_intersection", "text_occlusion"]);
   for (const k of ["containers", "points", "mismatch", "document_containers", "document_points", "document_mismatch"]) assert.ok(Number.isInteger(s.corner_anchor[k]), k);
   assert.ok(Array.isArray(s.corner_anchor.boards) && Array.isArray(s.corner_anchor.unresolved));
   assert.strictEqual(out.scanned_nodes, nodes.length);
