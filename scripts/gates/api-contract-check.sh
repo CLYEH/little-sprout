@@ -61,13 +61,15 @@ if [ "${1:-}" = "--catalog" ]; then
      order by 1;
   " > "${tmp}/rpcs.txt"
 
-  # relkind 'r'=一般表、'p'=分區母表；不含 view/sequence/index，比 information_schema
-  # 更直接（同一顆 pg_catalog，跟上面 RPC 查詢一致的查法）。
+  # relkind 'r'=一般表、'p'=分區母表、'v'=view（LS-205：納入第一支 view album_summaries，一樣是
+  # PostgREST 讀得到的 API 表面，落在對帳網外會漏掉 schema drift；LS-96 池項 ca99c6ae i1）；不含
+  # sequence／index／materialized view（'m'，本專案未使用），比 information_schema 更直接（同一顆
+  # pg_catalog，跟上面 RPC 查詢一致的查法）。
   psql "${SUPABASE_DB_URL}" -v ON_ERROR_STOP=1 --no-psqlrc -qtA -c "
     select c.relname
       from pg_class c
       join pg_namespace n on n.oid = c.relnamespace
-     where n.nspname = 'public' and c.relkind in ('r', 'p')
+     where n.nspname = 'public' and c.relkind in ('r', 'p', 'v')
      order by 1;
   " > "${tmp}/tables.txt"
 
