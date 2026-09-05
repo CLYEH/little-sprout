@@ -13,7 +13,8 @@
 #   supabase-lock.sh --release                     釋放自己的 hold（持有者判定見下）：kill 守門＋刪 lock，印持有時長；非持有者 exit 2
 # 環境變數：SUPABASE_LOCK_TIMEOUT 等待逾時秒（預設 900＝15 分鐘）；SUPABASE_LOCK_POLL 輪詢秒（預設 1，可小數，下限 0.2）；
 #   SUPABASE_LOCK_DIR lock 目錄（預設 /tmp/supabase-lock-<project_id>；自測用）；
-#   SUPABASE_LOCK_HOLD_TICK 守門心跳秒（預設 5，下限 0.2；自測用）；SUPABASE_LOCK_HOLD_SECONDS 覆寫 hold 到期秒數（自測用，取代 --max-minutes）。
+#   SUPABASE_LOCK_HOLD_TICK 守門心跳秒（預設 5，下限 0.2；自測用）；SUPABASE_LOCK_HOLD_SECONDS 覆寫 hold 到期秒數（自測用，取代 --max-minutes）；
+#   LS_LOCK_ALLOW_MAIN=1 明示放行主 checkout 的 --hold（LS-184；只給 orchestrator，agent 不得設）。
 #
 # 機制（macOS 沒有 flock、內建 bash 3.2；macOS／Linux 皆可跑）：
 #   - lock＝一個目錄：`mkdir` 在兩平台都是原子的，成功＝取得。目錄內 holder 檔記 pid／started／host／worktree／
@@ -46,6 +47,13 @@
 #     `worktree` 與本程序 cwd 的 worktree 相同。label 不得含換行、≤80 字（逐字寫進 holder 檔；R1 N3）。守門 pid 本身不可能是任何呼叫者的
 #     祖先（主程序退出後守門已被 reparent），所以不能只沿用 `--held` 的祖先判定；agent 的 Bash 工具每次呼叫都是新 shell、
 #     owner 早已退出，實務上靠 worktree 那一條——QA 只在自己的 worktree 操作。
+#   - `--hold` 在主 checkout 一律拒（exit 2，LS-184）：worktree 腿讓「同一 worktree 的任何程序」都算持有者，主 checkout 的 hold 會讓
+#     orchestrator／merge-reviewer 全部直通；而 agent 的 Bash 工具在 run_in_background／timeout 背景化後 ambient cwd 會重設回主
+#     checkout，`--hold` 以 cwd 推導 worktree 就把持有者記成主 checkout（LS-175／LS-179 QA 三次，LS-96 `8fcc81c5`）。判定同
+#     qa-e2e.sh（LS-158 N1）：`git rev-parse --git-dir`＝`--git-common-dir` 即主 checkout（linked worktree 的 git-dir 在
+#     .git/worktrees/<名>）；不在 git repo 內（自測的合成目錄）不算。拒絕訊息給「cd <worktree> && … --hold」同一命令鏈的指引。
+#     `--` 包裝模式不受此限：命令型 holder 不給任何人 worktree 腿（hold_owner_ok／PreToolUse H3b 只認 cmd=hold:*），且 CI db job
+#     的 run.sh 自包 wrapper 就是在主 checkout 跑。
 #   - hold 期間持有者自己的 `-- supabase db reset`／`run.sh` 走重入直接執行（PreToolUse H3 只認 wrapper 字面或 holder pid
 #     是祖先，裸跑仍被擋、包了 wrapper 就要能直接過——否則 QA 會卡在自己的 hold 上）；其他 worktree 照常排隊、沿用
 #     SUPABASE_LOCK_TIMEOUT（15 分鐘）——hold 上限 30 分鐘大於等待逾時是刻意的：等待者逾時 fail loud 印出持有者 label，
@@ -71,7 +79,8 @@
 #     `--status`／巡檢列出殘留 tomb（R2 F2），被搬走的持有者接著 holder 寫入失敗、走 m1 的 exit 2；目標是第三者剛
 #     mkdir、holder 尚未落地的**空**目錄→POSIX 允許 rename 取代空目錄，第三者的 holder 會寫進搬回的目錄——需要三個
 #     程序在同一毫秒內交錯，機率極低；屆時後 mv 的 holder 生效、另一個 release 時 pid 不符不會誤刪，但兩者可能同時執行。
-# exit：命令的 exit code；124＝等待逾時；2＝參數／環境／holder 寫入錯誤／--release 非持有者；--release 時 1＝沒有 hold 可釋放（可能已到期）；
+# exit：命令的 exit code；124＝等待逾時；2＝參數／環境／holder 寫入錯誤／--release 非持有者／--hold 在主 checkout（LS-184，LS_LOCK_ALLOW_MAIN=1 放行）；
+#   --release 時 1＝沒有 hold 可釋放（可能已到期）；
 #   --hold 時 3＝已持有（本程序已在 lock 內、或自己 worktree 的 hold 仍活著）——呼叫端（qa-e2e.sh，LS-158 R1 N2）判這個碼沿用、
 #   收工不代釋放，不比對人類訊息。
 
@@ -203,6 +212,18 @@ case "$mode" in
      wt=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
      br=$(git symbolic-ref --short -q HEAD 2>/dev/null || echo '-') ;;
 esac
+
+# LS-184：--hold 在主 checkout 直接拒（理由見檔頭「hold 在主 checkout 一律拒」）。git-dir＝git-common-dir 即主 checkout（同 qa-e2e.sh
+# LS-158 N1）；不在 git repo 內 git-dir 為空、不算。LS_LOCK_ALLOW_MAIN=1 是 orchestrator 的明示放行——放行後回到「主 checkout 程序直通」
+# 的既有盲區（COLLABORATION §7）。放在參數驗證之後、重入判定與取鎖之前：主 checkout 連「已持有」都不該回 3。
+if [ "$mode" = hold ] && [ "${LS_LOCK_ALLOW_MAIN:-}" != 1 ]; then
+  git_dir=$(git rev-parse --path-format=absolute --git-dir 2>/dev/null)
+  common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+  if [ -n "$git_dir" ] && [ "$git_dir" = "$common_dir" ]; then
+    echo "✗ supabase-lock：這是主 checkout（${wt}）——不得在這裡 --hold：hold 的持有者判定看 worktree，主 checkout 的 hold 會讓 orchestrator／merge-reviewer 全部直通。請在票 worktree 內、與 cd 同一條命令鏈執行：cd <worktree> && bash scripts/ops/supabase-lock.sh --hold \"${hold_label}\" --max-minutes ${max_minutes}（Bash 工具背景化後 cwd 會重設回主 checkout，cd 另起一條命令會再次記錯；LS-184）。orchestrator 明示放行：LS_LOCK_ALLOW_MAIN=1" >&2
+    exit 2
+  fi
+fi
 
 is_stale() {   # 0＝這把鎖是死的（pid 不存在、或建好 30s 仍沒 holder）
   if read_holder; then

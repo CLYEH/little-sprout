@@ -10,6 +10,8 @@
 # 到期自動釋放／守門被 -9 走既有死鎖回收——退化這裡會紅；心跳與到期用 SUPABASE_LOCK_HOLD_TICK／SUPABASE_LOCK_HOLD_SECONDS 縮成秒級。
 # PR #265 R1（㉗–㉙）：守門死後 --release 與等待者回收競爭不得刪第三者新鎖（N1，ps shim 放大窗口）／owner 已死（pid 重用形狀）別的
 # worktree 不得通過（N2，ps shim 把活著的 owner 報成不存在）／label 含換行或過長在碰 lock 前就 exit 2（N3）。
+# LS-184（㉛）：--hold 在主 checkout（git-dir＝git-common-dir）直接 exit 2＋「cd <worktree> && … --hold」指引、不留 lock／linked worktree 照常／
+# LS_LOCK_ALLOW_MAIN=1 明示放行（=0 不算）／`--` 包裝模式在主 checkout 不受此限——夾具用 `git init` 空 repo 與手搭的 linked worktree，不 commit。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -382,7 +384,8 @@ gone  '㉒ 命令結束後釋放'
 out="$(L --release 2>&1)"; rc_is '㉒ free 時 --release → exit 1（提示可能已到期）' 1 "$?" "$out"
 has   '㉒ free 時訊息提示可能已到期' "$out" '可能已到期'
 # owner 是祖先、worktree 不同：本自測程序直接 --hold（owner＝本程序、worktree＝repo），從 wtB --release → 允許
-bash "$lock_sh" --hold 'LS-0 祖先' > "$work/anc.out" 2>&1; rc_is '㉒ 前提：本程序直接 --hold' 0 "$?" "$(cat "$work/anc.out")"
+# LS_LOCK_ALLOW_MAIN=1：本自測在 CI／主 checkout 執行時 cwd 就是主 checkout，LS-184 起會被拒——這一組驗的是 owner 祖先腿，明示放行（拒絕本身由 ㉛ 驗）
+LS_LOCK_ALLOW_MAIN=1 bash "$lock_sh" --hold 'LS-0 祖先' > "$work/anc.out" 2>&1; rc_is '㉒ 前提：本程序直接 --hold' 0 "$?" "$(cat "$work/anc.out")"
 gpid=$(hpid)
 has   '㉒ 前提：holder owner＝本自測程序' "$(cat "$SUPABASE_LOCK_DIR/holder" 2>/dev/null)" "owner=$$"
 out="$(cd "$wtB" && bash "$lock_sh" --release 2>&1)"; rc=$?
@@ -543,6 +546,47 @@ if [ "${n_after:-0}" -eq "${n_before:-0}" ]; then echo "✓ ㉚ 重入不另記�
 out="$(cd "$wtA" && bash "$lock_sh" --release 2>&1)"; rc_is '㉚ --release exit 0' 0 "$?" "$out"
 has   '㉚ log 記 hold 釋放（label＋持有時長）' "$(cat "$hold_log" 2>/dev/null)" 'hold「LS-0 回溯」釋放（持有 0 分'
 gone  '㉚ 釋放後 lock 消失'
+
+# ---- ㉛ LS-184：--hold 在主 checkout 直接拒（exit 2＋「cd <worktree> && … --hold」指引、不留 lock）；linked worktree 照常；LS_LOCK_ALLOW_MAIN=1 明示放行；
+#        `--` 包裝模式在主 checkout 不受此限 ----
+# 夾具不 commit：`git init` 的空 repo 已是主 checkout（git-dir＝git-common-dir）；linked worktree 用 `.git` 檔＋`.git/worktrees/<名>/{HEAD,commondir,gitdir}`
+# 手搭（`git worktree add` 需要 HEAD 有 commit，commit 又要 user.name／hooks——夾具不該依賴那些）。兩者都在 mktemp 內、與真 repo 無關。
+fx="$work/fx"; mkdir -p "$fx"
+git init -q "$fx/mainrepo" >/dev/null 2>&1
+mkdir -p "$fx/mainrepo/.git/worktrees/wt1" "$fx/wt1"
+printf 'ref: refs/heads/wt1\n' > "$fx/mainrepo/.git/worktrees/wt1/HEAD"
+printf '../..\n' > "$fx/mainrepo/.git/worktrees/wt1/commondir"
+printf '%s/.git\n' "$fx/wt1" > "$fx/mainrepo/.git/worktrees/wt1/gitdir"
+printf 'gitdir: %s/.git/worktrees/wt1\n' "$fx/mainrepo" > "$fx/wt1/.git"
+gd=$(cd "$fx/mainrepo" && git rev-parse --path-format=absolute --git-dir 2>/dev/null); cdir=$(cd "$fx/mainrepo" && git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+if [ -n "$gd" ] && [ "$gd" = "$cdir" ]; then echo "✓ ㉛ 前提：夾具 mainrepo 是主 checkout（git-dir＝git-common-dir）"; else echo "✗ ㉛ 前提：夾具 mainrepo 不是主 checkout（git-dir=${gd} common=${cdir}）" >&2; fail=1; fi
+has   '㉛ 前提：夾具 wt1 是 linked worktree（git-dir 在 .git/worktrees/）' "$(cd "$fx/wt1" && git rev-parse --path-format=absolute --git-dir 2>/dev/null)" '/.git/worktrees/wt1'
+out="$(cd "$fx/mainrepo" && bash "$lock_sh" --hold 'LS-0 主 checkout' --max-minutes 5 2>&1)"; rc=$?
+rc_is '㉛ 主 checkout --hold → exit 2' 2 "$rc" "$out"
+has   '㉛ 拒絕訊息點名主 checkout' "$out" '主 checkout'
+has   '㉛ 拒絕訊息給 cd <worktree> && … --hold 同一命令鏈的指引' "$out" 'cd <worktree> && bash scripts/ops/supabase-lock.sh --hold'
+has   '㉛ 指引帶回原 label 與 --max-minutes' "$out" '--hold "LS-0 主 checkout" --max-minutes 5'
+has   '㉛ 拒絕訊息提示 LS_LOCK_ALLOW_MAIN=1' "$out" 'LS_LOCK_ALLOW_MAIN=1'
+gone  '㉛ 主 checkout 被拒沒留下 lock'
+out="$(cd "$fx/mainrepo" && LS_LOCK_ALLOW_MAIN=0 bash "$lock_sh" --hold 'LS-0 主 checkout' 2>&1)"; rc_is '㉛ LS_LOCK_ALLOW_MAIN=0 不算放行 → 仍 exit 2' 2 "$?" "$out"
+gone  '㉛ =0 被拒沒留下 lock'
+out="$(cd "$fx/wt1" && bash "$lock_sh" --hold 'LS-0 worktree' --max-minutes 1 2>&1)"; rc=$?
+rc_is '㉛ linked worktree --hold → exit 0' 0 "$rc" "$out"
+has   '㉛ holder worktree＝該 worktree 頂層' "$(cat "$SUPABASE_LOCK_DIR/holder" 2>/dev/null)" "worktree=$(cd "$fx/wt1" && pwd -P)"
+out="$(cd "$fx/wt1" && bash "$lock_sh" --release 2>&1)"; rc_is '㉛ worktree --release → exit 0' 0 "$?" "$out"
+gone  '㉛ 釋放後 lock 消失'
+out="$(cd "$fx/mainrepo" && LS_LOCK_ALLOW_MAIN=1 bash "$lock_sh" --hold 'LS-0 放行' --max-minutes 1 2>&1)"; rc=$?
+rc_is '㉛ LS_LOCK_ALLOW_MAIN=1 主 checkout --hold 放行 → exit 0' 0 "$rc" "$out"
+has   '㉛ 放行時 holder worktree＝主 checkout' "$(cat "$SUPABASE_LOCK_DIR/holder" 2>/dev/null)" "worktree=$(cd "$fx/mainrepo" && pwd -P)"
+out="$(cd "$fx/mainrepo" && bash "$lock_sh" --release 2>&1)"; rc_is '㉛ 放行的 hold 由同一主 checkout --release → exit 0（--release 不在 LS-184 範圍、不擋）' 0 "$?" "$out"
+gone  '㉛ 放行的 hold 釋放後 lock 消失'
+# `--` 包裝模式不受此限（LS-184 判斷：命令型 holder 不給任何人 worktree 腿——hold_owner_ok／PreToolUse H3b 只認 cmd=hold:*；CI db job 的
+# run.sh 自包 wrapper 就是在主 checkout 跑）——這裡釘住；日後要改成同樣拒絕就改這一組
+out="$(cd "$fx/mainrepo" && bash "$lock_sh" -- sh -c 'echo main-run' 2>&1)"; rc=$?
+rc_is '㉛ 主 checkout 的 -- 包裝模式照常 exit 0' 0 "$rc" "$out"
+has   '㉛ -- 包裝命令執行' "$out" 'main-run'
+gone  '㉛ -- 包裝結束後釋放'
+rm -rf "$fx"
 unset SUPABASE_LOCK_HOLD_TICK
 
 if [ "$fail" -eq 0 ]; then

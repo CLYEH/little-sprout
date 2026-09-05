@@ -75,7 +75,10 @@ r"""LS-104 R3：pretool.sh 的 Bash 命令評估引擎（取代 R1 版本的 bas
     echo／printf／READ_VERBS——那些只印字、不碰 DB）有 token 以 `postgres://`／`postgresql://`
     起頭（允許 `VAR=`／`--db-url=` 前綴）且含 `:54322`；(d) `supabase` 段有相鄰的
     `functions serve`／`db query`／`db dump`／`migration up` 且同段沒有 `--linked` token
-    （`--linked` 打正式站、不是本機容器）。命令位置認不得的段落走同型的整段字面比對。
+    （`--linked` 打正式站、不是本機容器）；(e) LS-184（LS-96 池項 b4cb1e29＝LS-183 handoff 判斷項）：
+    `supabase` 段有 exact token `stop`／`start`（涵蓋 `supabase db start`）——起停共用容器會打斷 lock
+    持有者的 reset／測試；stop／start 只有本機語意，不受 `--linked` 豁免（`supabase status` 不命中）。
+    命令位置認不得的段落走同型的整段字面比對。
     命中後的放行順序：整條命令有 `supabase-lock.sh … --` 包裝字面 → H3 既有重入判定（holder
     pid 是祖先）→ **H3b 專屬的持有者 worktree 判定**（沿用 supabase-lock.sh `hold_owner_ok`
     的 worktree 腿：holder 是 `--hold`（`cmd=hold:*`）、守門 pid 活著、holder 的 `worktree=`
@@ -177,7 +180,12 @@ FB_SUPABASE_LOCAL_RE = re.compile(
     r"(?:^|[^A-Za-z0-9_./-])supabase[ \t]+(?:functions[ \t]+serve|db[ \t]+query|db[ \t]+dump|migration[ \t]+up)(?:[^A-Za-z0-9_-]|$)"
 )
 FB_LINKED_RE = re.compile(r"(?:^|[ \t])--linked(?:[ \t=]|$)")
-H3B_WHAT_FALLBACK = "本機 Supabase 容器操作（docker exec／psql 54322／supabase 本機子命令，命令位置認不得、退回整段字面比對）"
+# LS-184：起停本機容器（`supabase stop`／`supabase start`／`supabase db start`）——exact token，`status` 不命中；不受 --linked 豁免
+H3B_SUPABASE_LIFECYCLE = {"stop", "start"}
+FB_SUPABASE_LIFECYCLE_RE = re.compile(
+    r"(?:^|[^A-Za-z0-9_./-])supabase[ \t]+(?:db[ \t]+)?(?:stop|start)(?:[^A-Za-z0-9_-]|$)"
+)
+H3B_WHAT_FALLBACK ="本機 Supabase 容器操作（docker exec／psql 54322／supabase 本機子命令，命令位置認不得、退回整段字面比對）"
 # R2（probe a18）：`alias` 字面以命令位置出現在任何一段，代表這條命令有定義別名的意圖——見
 # evaluate() 對 ALIAS_DEFINED_RE 的用法。要求 alias 前面是分段邊界（行首／`;`／`&&`／`||`／
 # `&`／`|`／換行）或字串開頭，避免「alias」出現在無關字串裡誤觸發（雖然誤觸發只是多跑一次
@@ -624,6 +632,7 @@ def check_precise(cmd, tokens):
     # H3b（LS-183）：docker exec 目標容器／psql 54322／連線字串／supabase 本機子命令（見檔頭）
     docker_exec = docker_target = docker_readonly = False
     psql_local = connstr_local = supa_local = supa_linked = False
+    supa_lifecycle = False   # LS-184：supabase stop／start／db start
     expect_redir = False
     prevtok = ""
     awaiting_c_payload = False
@@ -713,6 +722,8 @@ def check_precise(cmd, tokens):
                 supa_linked = True
             if (prevtok, text) in H3B_SUPABASE_LOCAL_PAIRS:
                 supa_local = True
+            if text in H3B_SUPABASE_LIFECYCLE:
+                supa_lifecycle = True
 
         # R3 F1／R4（見 SHELLC_SHELLS 定義處說明）：cmd（命令位置）已經是 bash/sh/zsh/dash/ksh
         # 才會進到這個函式；不再要求 `-c` 緊接在 shell 名稱後面——`-e -c`／`-o pipefail -c`／
@@ -748,6 +759,8 @@ def check_precise(cmd, tokens):
         return ("H3B_TRIGGER", "psql／連線字串打本機 54322")
     if supa_local and not supa_linked:
         return ("H3B_TRIGGER", "supabase functions serve／db query／db dump／migration up 未帶 --linked（本機容器）")
+    if supa_lifecycle:
+        return ("H3B_TRIGGER", "supabase stop／start（起停共用的本機容器，會打斷 lock 持有者的 reset／測試，LS-184）")
 
     return ("OK", None)
 
@@ -780,6 +793,8 @@ def check_fallback(raw):
     if FB_PSQL_54322_RE.search(raw) or FB_CONNSTR_RE.search(raw):
         return "H3B_TRIGGER"
     if FB_SUPABASE_LOCAL_RE.search(raw) and not FB_LINKED_RE.search(raw):
+        return "H3B_TRIGGER"
+    if FB_SUPABASE_LIFECYCLE_RE.search(raw):   # LS-184：stop／start 不受 --linked 豁免
         return "H3B_TRIGGER"
 
     return None
