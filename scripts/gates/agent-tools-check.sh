@@ -60,11 +60,16 @@ ios-dev|"
 # LS-180 裁決：設計票期間 Pen 停在票檔——ui-designer 收工不切回主 checkout（切回會把票檔留在背景視窗，下一輪 VR 只能清場）；
 # ui-designer.md 步驟 5 的「收工 Pen 停在票檔」被刪或改回「切回主 checkout」即紅（只驗新句在，「切回」字樣本身不擋——
 # 步驟 5 需要用它說明為什麼不切）。
+# LS-183：ios-dev／merge-reviewer／qa 正文須含「本機容器操作同樣要在 lock 內」（docker exec 進 supabase_*／psql 54322／
+# supabase functions serve 等同樣要包 wrapper 或在自己 --hold 的 worktree 內——PreToolUse H3b 是機械層，這句是前饋；被刪即紅）。
 BODY_RULES=
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold
 merge-reviewer|supabase-lock.sh --hold
 qa|supabase-lock.sh --hold
+ios-dev|本機容器操作同樣要在 lock 內
+merge-reviewer|本機容器操作同樣要在 lock 內
+qa|本機容器操作同樣要在 lock 內
 qa|qa-e2e.sh
 ui-designer|--kill 只在 orchestrator 明示時
 ui-designer|收工 Pen 停在票檔

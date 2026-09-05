@@ -485,6 +485,114 @@ expect 'R5F1-e 對照：csh -c 包 benign payload 不誤擋（allow）' 0 \
 expect 'R5F1-f 對照：csh 呼叫純腳本不受影響（allow，OK 兜底沒有變成逢 csh 必擋）' 0 \
   "$(bash_json 'csh scripts/hooks/pretool.test.sh')"
 
+# ============================================================
+# LS-183 H3b：繞過 supabase-lock.sh 直接打本機容器的其他路徑（來源 LS-96 池項 e381f653 第 1 項＝
+# LS-143 QA 直接 docker exec 撞上 LS-149 mid-reset）。四類正樣本各 ≥3（含命令位置認不得的退回、
+# bash -c 遞迴、多行第二行）、負樣本：包裝過／持有者 worktree（沿 hold_owner_ok 的 worktree 腿：
+# holder cmd=hold:*、pid 活著、worktree 與呼叫端目前目錄所在 worktree 頂層相同）／--linked／唯讀例外／
+# heredoc 與 echo 內字面（LS-104 只在命令位置比對）。持有者判定用假 lock 目錄（SUPABASE_LOCK_DIR）＋假
+# worktree（含 .git 檔）＋ hook JSON 的 cwd（bash_json_cwd），不碰真 lock；holder pid 用 1（活著、但
+# 不是任何人的祖先——是 ancestor 就會走 H3 既有重入放行，測不到 worktree 腿）。
+# ============================================================
+bash_json_cwd() { printf '{"tool_name":"Bash","cwd":"%s","tool_input":{"command":"%s"}}' "$1" "$2"; }
+h3b_work=$(mktemp -d)
+mkdir -p "$h3b_work/wt/sub" "$h3b_work/other"
+: > "$h3b_work/wt/.git"
+h3b_lock="$h3b_work/lock"; mkdir -p "$h3b_lock"
+h3b_wt=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$h3b_work/wt")
+printf 'pid=1\nworktree=%s\ncmd=hold:LS-183 test\n' "$h3b_wt" > "$h3b_lock/holder"
+
+# ---- 正樣本 (a) docker exec 進 supabase_* 容器 ----
+expect 'H3b-a① docker exec -it supabase_db_… psql（deny）' 2 \
+  "$(bash_json 'docker exec -it supabase_db_little-sprout psql -U postgres -c \"select 1\"')"
+expect 'H3b-a② docker compose exec supabase-db（deny，連字號前綴）' 2 \
+  "$(bash_json 'docker compose exec supabase-db psql -U postgres')"
+expect 'H3b-a③ pg_isready 藏在 bash -c 引號 payload 內（deny，唯讀例外只認 exact token）' 2 \
+  "$(bash_json 'docker exec -i supabase_db_little-sprout bash -c \"pg_isready; psql -U postgres -c x\"')"
+expect 'H3b-a④ 括號黏連 (docker exec …)（deny，命令位置認不得→退回整段字面比對）' 2 \
+  "$(bash_json '(docker exec supabase_db_x psql -U postgres)')"
+expect 'H3b-a⑤ bash -c 包住 docker exec（deny，遞迴）' 2 \
+  "$(bash_json 'bash -c \"docker exec supabase_db_x psql -U postgres\"')"
+expect 'H3b-a⑥ 多行：docker exec 在第二行（deny）' 2 \
+  "$(bash_json 'echo prep\ndocker exec supabase_db_x psql -U postgres')"
+# ---- 正樣本 (b) psql／連線字串打 54322 ----
+expect 'H3b-b① psql -h 127.0.0.1 -p 54322（deny）' 2 "$(bash_json 'psql -h 127.0.0.1 -p 54322 -U postgres -c \"select 1\"')"
+expect 'H3b-b② psql 連線字串 localhost:54322（deny；樣本不帶密碼——pre-commit secrets 掃描會擋 user:pass@host 形狀）' 2 \
+  "$(bash_json 'psql postgresql://postgres@localhost:54322/postgres')"
+expect 'H3b-b③ PGPASSWORD=… psql --port=54322（deny，賦值前綴不影響命令位置）' 2 \
+  "$(bash_json 'PGPASSWORD=postgres psql -h localhost --port=54322 -U postgres')"
+expect 'H3b-b④ pg_dump 連線字串 :54322（deny，連線字串不限 psql）' 2 \
+  "$(bash_json 'pg_dump postgresql://postgres@127.0.0.1:54322/postgres -f x.sql')"
+expect 'H3b-b⑤ DATABASE_URL=postgres://…:54322 node（deny，VAR= 前綴的連線字串）' 2 \
+  "$(bash_json 'DATABASE_URL=postgres://postgres@127.0.0.1:54322/postgres node x.js')"
+expect 'H3b-b⑥ for … do psql -p 54322（deny，shell 關鍵字開頭→退回整段字面比對）' 2 \
+  "$(bash_json 'for i in 1; do psql -p 54322; done')"
+# ---- 正樣本 (c) supabase 本機子命令無 --linked ----
+expect 'H3b-c① supabase functions serve（deny）' 2 "$(bash_json 'supabase functions serve')"
+expect 'H3b-c② supabase db query（deny）' 2 "$(bash_json 'supabase db query \"select 1\"')"
+expect 'H3b-c③ supabase db dump（deny）' 2 "$(bash_json 'supabase db dump -f x.sql')"
+expect 'H3b-c④ supabase migration up（deny）' 2 "$(bash_json 'supabase migration up')"
+expect 'H3b-c⑤ supabase db query --db-url 打 54322（deny，--db-url 非 --linked、連線字串亦命中）' 2 \
+  "$(bash_json 'supabase db query --db-url postgresql://postgres@127.0.0.1:54322/postgres \"select 1\"')"
+# ---- 負樣本：包裝過 ----
+expect 'H3b-n① supabase-lock.sh -- docker exec …（allow，包裝字面）' 0 \
+  "$(bash_json 'bash scripts/ops/supabase-lock.sh -- docker exec -i supabase_db_little-sprout psql -U postgres -c \"select 1\"')"
+expect 'H3b-n② supabase-lock.sh -- supabase functions serve（allow）' 0 \
+  "$(bash_json 'bash scripts/ops/supabase-lock.sh -- supabase functions serve')"
+expect 'H3b-n③ supabase-lock.sh --timeout 30 -- psql -p 54322（allow）' 0 \
+  "$(bash_json 'bash scripts/ops/supabase-lock.sh --timeout 30 -- psql -h 127.0.0.1 -p 54322 -U postgres')"
+# ---- 負樣本：持有者 worktree（hook JSON cwd 在 holder 的 worktree 內，或命令 cd 進去）----
+expect 'H3b-h① cwd＝holder worktree 根（allow，worktree 腿）' 0 \
+  "$(bash_json_cwd "$h3b_work/wt" 'docker exec -i supabase_db_little-sprout psql -U postgres -c \"select 1\"')" SUPABASE_LOCK_DIR="$h3b_lock"
+expect 'H3b-h② cwd＝holder worktree 子目錄（allow，比對的是 worktree 頂層）' 0 \
+  "$(bash_json_cwd "$h3b_work/wt/sub" 'psql -h 127.0.0.1 -p 54322 -U postgres')" SUPABASE_LOCK_DIR="$h3b_lock"
+expect 'H3b-h③ cd <holder worktree> && docker exec（allow，沿命令追蹤 cd）' 0 \
+  "$(bash_json_cwd "$h3b_work/other" "cd $h3b_work/wt && docker exec supabase_db_x psql -U postgres")" SUPABASE_LOCK_DIR="$h3b_lock"
+expect 'H3b-h④ 對照：cwd 在別的目錄（deny，同一把 hold）' 2 \
+  "$(bash_json_cwd "$h3b_work/other" 'docker exec -i supabase_db_little-sprout psql -U postgres')" SUPABASE_LOCK_DIR="$h3b_lock"
+expect 'H3b-h⑤ 對照：cd 目的地含變數（deny，目的地判不出→不視為持有者 worktree）' 2 \
+  "$(bash_json_cwd "$h3b_work/wt" 'cd \"\$WT\" && docker exec supabase_db_x psql -U postgres')" SUPABASE_LOCK_DIR="$h3b_lock"
+expect 'H3b-h⑥ 對照：cd 離開 holder worktree 後再打（deny）' 2 \
+  "$(bash_json_cwd "$h3b_work/wt" "cd $h3b_work/other && psql -p 54322")" SUPABASE_LOCK_DIR="$h3b_lock"
+expect 'H3b-h⑦ 對照：持有者 worktree 不豁免 H3 的 supabase db reset 裸跑（deny，H3 只認包裝或 pid 祖先）' 2 \
+  "$(bash_json_cwd "$h3b_work/wt" 'supabase db reset')" SUPABASE_LOCK_DIR="$h3b_lock"
+printf 'pid=1\nworktree=%s\ncmd=bash\n' "$h3b_wt" > "$h3b_lock/holder"
+expect 'H3b-h⑧ 對照：holder 是命令型（cmd 非 hold:*）→ worktree 腿不適用（deny，同 hold_owner_ok）' 2 \
+  "$(bash_json_cwd "$h3b_work/wt" 'docker exec supabase_db_x psql -U postgres')" SUPABASE_LOCK_DIR="$h3b_lock"
+# 死 pid：開一個子 shell 印自己的 pid 後退出——命令替換回來時它已結束（不用 `sleep & kill`：kill 與 exec 競速時
+# sleep 可能沒被殺到，wait 會卡住整份自測——本票自測首版實測卡在 sleep 300）
+h3b_dead=$(sh -c 'echo $$')
+printf 'pid=%s\nworktree=%s\ncmd=hold:LS-183 test\n' "$h3b_dead" "$h3b_wt" > "$h3b_lock/holder"
+expect 'H3b-h⑨ 對照：守門 pid 已死（deny，stale hold 不豁免）' 2 \
+  "$(bash_json_cwd "$h3b_work/wt" 'docker exec supabase_db_x psql -U postgres')" SUPABASE_LOCK_DIR="$h3b_lock"
+printf 'pid=%s\n' "$$" > "$h3b_lock/holder"
+expect 'H3b-h⑩ H3 既有重入（holder pid 是祖先）對 H3b 同樣放行（allow，不另立一套）' 0 \
+  "$(bash_json_cwd "$h3b_work/other" 'docker exec supabase_db_x psql -U postgres')" SUPABASE_LOCK_DIR="$h3b_lock"
+rm -rf "$h3b_work"
+# ---- 負樣本：--linked（正式站，不是本機容器）----
+expect 'H3b-l① supabase db query --linked（allow）' 0 "$(bash_json 'supabase db query --linked \"select 1\"')"
+expect 'H3b-l② supabase migration up --linked（allow）' 0 "$(bash_json 'supabase migration up --linked')"
+expect 'H3b-l③ supabase db dump --linked（allow）' 0 "$(bash_json 'supabase db dump --linked -f x.sql')"
+# ---- 負樣本：唯讀例外 ----
+expect 'H3b-r① docker ps（allow）' 0 "$(bash_json 'docker ps')"
+expect 'H3b-r② docker logs supabase_db_…（allow）' 0 "$(bash_json 'docker logs supabase_db_little-sprout')"
+expect 'H3b-r③ docker inspect supabase_db_…（allow）' 0 "$(bash_json 'docker inspect supabase_db_little-sprout')"
+expect 'H3b-r④ docker exec supabase_db_… pg_isready（allow，唯讀例外）' 0 \
+  "$(bash_json 'docker exec supabase_db_little-sprout pg_isready -U postgres')"
+expect 'H3b-r⑤ supabase status（allow）' 0 "$(bash_json 'supabase status')"
+expect 'H3b-r⑥ supabase-lock.sh --status（allow）' 0 "$(bash_json 'bash scripts/ops/supabase-lock.sh --status')"
+expect 'H3b-r⑦ (docker ps) 退回字面比對也不誤擋（allow）' 0 "$(bash_json '(docker ps)')"
+# ---- 負樣本：字面在 heredoc／echo／grep 引數（LS-104 只在命令位置比對）----
+expect 'H3b-t① heredoc 內文含 docker exec supabase_db_… psql -p 54322（allow）' 0 \
+  "$(bash_json "cat <<'EOF' > docs/NOTES.md\nH3b：docker exec supabase_db_x psql -p 54322 要包 lock\nEOF")"
+expect 'H3b-t② echo 引號內字面（allow）' 0 \
+  "$(bash_json "echo 'H3b：docker exec supabase_db_x psql -p 54322 要包 lock'")"
+expect 'H3b-t③ grep -rn 本機連線字串（allow，讀取動詞的引數不是打 DB）' 0 \
+  "$(bash_json "grep -rn 'postgresql://127.0.0.1:54322' supabase/")"
+expect 'H3b-t④ git commit -m 提到 psql 54322（allow）' 0 "$(bash_json "git commit -m 'docs: psql 54322 must be wrapped'")"
+expect 'H3b-t⑤ psql 打別的 port（allow，只認 54322）' 0 "$(bash_json 'psql -h 127.0.0.1 -p 5432 -U postgres')"
+expect 'H3b-t⑥ psql 連線字串打遠端（allow）' 0 "$(bash_json 'psql postgresql://u@db.example.supabase.co:5432/postgres')"
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ pretool.sh 自測通過"
 fi
