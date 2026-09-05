@@ -10,6 +10,9 @@
 #   --branch  分支名，預設當前分支（CI 的 checkout 是 detached merge ref，必須傳 $HEAD）。不符
 #             (feature|fix|hotfix)/LS-<n>-<slug> 即 exit 2——promote／back-merge 的 head 是保護分支，沒有本票可比。
 #   --verify  反查申報（LS-140，見下）：CI rules job 帶；本機 `source .env` 後亦可（不帶 key 只驗格式＋git）。
+#   本機驗 body 一律用 CI 的完整形式 `pr-body-check.sh <f> --branch <分支> --verify`，**勿接管線（`| tail -1`），以 exit code
+#   分支**——管線會吃掉 exit code、`| tail` 只看 stdout 也看不到 stderr 的 ✗（LS-185 兩次把紅 body 推上 PR：一次 `| tail -1`、
+#   一次不帶 `--verify` 只驗了格式）。紅時最後一行一律在 stdout 印 `✗ pr-body-check：未通過…`，接了 `| tail -1` 也看得到（LS-186）。
 #
 # 檔頭段：從檔頭到第一個「內容段落」結束為止——開頭的空白行與 Markdown 標題行（`#` 開頭）不算內容、但一併
 #   納入；第一個非空白非標題行起算內容段落，遇下一個空白行結束。這樣 PR 模板的「## Ticket／空行／LS-<n>」
@@ -21,17 +24,24 @@
 # LS-140 申報可驗證（來源 LS-96 池項 9f348e36／fd2fe81e：LS-125 R2 handoff 申報「記入 LS-96」四條實際一則沒寫、
 #   R3 申報「已修」但 commit 裡沒有該變更，都靠 merge-reviewer 逐條到 LS-96 查實才抓到）。檔頭段之外再對全 body 逐行掃：
 #   (a) 含 `LS-96`（整字）／「入池」／「待辦池」的行必須帶 ≥8 位小寫 hex 的 comment id（獨立英數 token；UUID 首段即可）；
-#   (b) 含「已修」的行必須帶 7–40 位小寫 hex 的 commit SHA。
+#   (b) 含「已修」的行必須帶 7–40 位小寫 hex 的 commit SHA，且只認**同一行「已修」之後的第一個 hex token**：「已修 `7c2ff80`」
+#       「**已修**（commit `7c2ff80`）」「已修：`7c2ff80`」「已修，改用 X。commit `7c2ff80`。」「| 已修：… | `7c2ff80` |」都算；
+#       「…`d87d4334` …皆已修」不算（hex 在「已修」之前）；「已修（comment `d87d4334`，commit `7c2ff80`）」--verify 紅（第一個
+#       hex 是 comment id）——「已修」之前的 hex 與第一個之後的 hex 都不是候選（LS-186：LS-185 PR body 標題行的 review comment id
+#       被當 SHA 反查、CI 紅兩次；R1 版「緊鄰」會擋掉 repo 歷史 28% 的申報寫法，merge-review R1 minor-1 改採此規則。comment id
+#       請寫在 SHA 之後）。
 #   刻意全 body 掃、不辨「處置語境」（判語境太脆）：引用而非申報的行（「LS-138 已修」「不另立 LS-96 池項」）會誤中，
-#   由 agent 改寫措辭避開字樣或補 id；同一行多個 hex token 時任一可驗即過（一行同時寫 SHA 與 comment id 是常態）。
+#   由 agent 改寫措辭避開字樣或補 id；LS-96 行多個 hex token 時任一可驗即過、「已修」行只看第一個「已修」之後的第一個 hex。
 #   --verify 反查：(a) 用 LINEAR_API_KEY 打 Linear GraphQL 列出 LS-96 全部 comment id（分頁）做前綴比對——`comment(id:)`
 #   只吃完整 UUID、不吃 agent 慣寫的 8 位前綴（2026-09-03 實測回「Entity not found: Comment」）；(b) 候選 SHA 須
 #   `git cat-file -e <sha>^{commit}` 且 `git merge-base --is-ancestor <sha> HEAD`（CI 的 HEAD 是 PR merge ref，PR commits
-#   皆為祖先；已在 base 上的 commit 也是祖先——盲區，COLLABORATION §7）。無 LINEAR_API_KEY → 印「反查略過」只驗格式＋git
+#   皆為祖先；已在 base 上的 commit 也是祖先——盲區，COLLABORATION §7）；「已修」之後的第一個 hex 不是 commit object（comment id
+#   形狀、打錯的 SHA）→ 紅「已修行需附 commit SHA 於『已修』之後」，是 commit 但非祖先 → 紅「不在 PR commits 內」（LS-186）。
+#   無 LINEAR_API_KEY → 印「反查略過」只驗格式＋git
 #   （CI 需 secrets.LINEAR_API_KEY）；curl／GraphQL 失敗 exit 2（fail closed）。token 只走 curl `-K -`（stdin config）不進
 #   argv（同 patrol_linear.py R1 F3）。
 # exit 0＝全過；1＝違規（空 body、模板未填、票號不在檔頭段、檔頭段是他票、LS-96 行缺 comment id、「已修」行缺 SHA、
-#   --verify 反查不到）；2＝參數／分支／環境錯誤（fail closed）。
+#   --verify 反查不到；最後一行 stdout 必為 `✗ pr-body-check：未通過…`）；2＝參數／分支／環境錯誤（fail closed）。
 # 紅了之後：改 PR body 不會讓 CI 自動重跑（on: pull_request 不含 edited；gh run rerun 重放舊 payload），要 close/reopen PR
 #   或再 push 一個 commit——失敗輸出會提示（PR #93 review F1；LS-37 在 DESTRUCTIVE-APPROVED 踩過同坑，COLLABORATION §6）。
 set -uo pipefail
@@ -75,11 +85,17 @@ while IFS= read -r line || [ -n "$line" ]; do
 done < "$file"
 
 rerun_hint="  修好 body 後 CI 不會自動重跑（pull_request 觸發不含 edited；gh run rerun 也只重放舊 body）——請 close/reopen PR 或再 push 一個 commit（LS-37 實測，COLLABORATION §6）。"
+# 所有違規出口共用（LS-186）：止血指示到 stderr 之後，最後一行到 stdout 印 ✗——`| tail -1` 只看得到 stdout，上面的 ✗ 全在 stderr，
+# LS-185 就是這樣把紅 body 當綠推上 PR 的。exit code 仍是唯一正式判據。
+red_exit() {
+  echo "$rerun_hint" >&2
+  echo "✗ pr-body-check：未通過（exit 1）——原因見上方 ✗ 各行；請以 exit code 分支，勿接 | tail"
+  exit 1
+}
 
 if [ -z "$head_text" ]; then
   echo "✗ pr-body-check：PR body 是空的（或只有空白）——檔頭段必須含本票票號 ${ticket}。" >&2
-  echo "$rerun_hint" >&2
-  exit 1
+  red_exit
 fi
 
 if ! printf '%s' "$head_text" | grep -qE "(^|[^A-Za-z0-9])${ticket}([^0-9]|$)"; then
@@ -91,8 +107,7 @@ if ! printf '%s' "$head_text" | grep -qE "(^|[^A-Za-z0-9])${ticket}([^0-9]|$)"; 
   else
     echo "  檔頭段沒有任何 LS-<n>：PR 模板的「LS-」還沒填，或票號寫在更下面——請在檔頭段（Ticket 行）寫 ${ticket}。" >&2
   fi
-  echo "$rerun_hint" >&2
-  exit 1
+  red_exit
 fi
 echo "✓ PR body 檔頭段含本票票號 ${ticket}"
 
@@ -102,6 +117,15 @@ pool=LS-96
 # 永不落在 [0-9A-Za-z]，token 邊界因此穩定；反引號／括號／連字號都是邊界，UUID 首段、`sha` 皆可抽出。
 hex_tokens() {
   printf '%s' "$1" | LC_ALL=C grep -oE '[0-9A-Za-z]+' | LC_ALL=C grep -E "^[0-9a-f]{$2,$3}\$" | paste -s -d, -
+}
+# 「已修」的 SHA 候選（LS-186）：同一行第一個「已修」之後、第一個為 7–40 位小寫 hex 的獨立英數 token（token 規則同 hex_tokens：
+# `x9f348e36y` 不算、`commit`／`：`／`，` 這類非 hex token 跳過）；「已修」之前的 hex（LS-185 標題行的 comment id）與之後的
+# 第二個起都不算。`${1#*已修}` 是位元組字面比對，C／UTF-8 locale 皆穩。R1 版要求緊鄰（只隔空白／反引號／*／左括號）會擋掉
+# repo 歷史 28% 的申報寫法（merge-review R1 minor-1 實測 60 個 PR），R2 改為此規則。
+fix_shas() {
+  local rest=${1#*已修}
+  [ "$rest" != "$1" ] || return 0
+  hex_tokens "$rest" 7 40 | cut -d, -f1
 }
 n=0; bad_a=0; bad_b=0; pool_claims=; fix_claims=
 while IFS= read -r line || [ -n "$line" ]; do
@@ -122,9 +146,9 @@ while IFS= read -r line || [ -n "$line" ]; do
   fi
   case "$line" in
     *已修*)
-      shas=$(hex_tokens "$line" 7 40)
+      shas=$(fix_shas "$line")
       if [ -z "$shas" ]; then
-        echo "✗ pr-body-check：第 ${n} 行含「已修」，但沒有 commit SHA（7–40 位 hex）：" >&2
+        echo "✗ pr-body-check：第 ${n} 行含「已修」，但『已修』之後沒有 commit SHA（7–40 位小寫 hex 的獨立 token；「已修」之前的 hex 不算）：" >&2
         echo "    | ${line}" >&2
         bad_b=1
       else
@@ -136,12 +160,11 @@ if [ "$bad_a" -eq 1 ]; then
   echo "  記入 ${pool} 必附 comment id：先 mcp__linear__save_comment 寫進 ${pool} 取得 id，再把 id（前 8 位以上）寫在同一行，如「記入 ${pool} \`9f348e36\`」；沒有 id 的「記入」視為沒寫。" >&2
 fi
 if [ "$bad_b" -eq 1 ]; then
-  echo "  每條「已修」必附 commit SHA（＋檔案:行號）寫在同一行，如「已修 \`7c2ff80\` \`Foo.swift:12\`」；沒有 SHA 的「已修」視為未修。" >&2
+  echo "  已修行需附 commit SHA 於『已修』之後：每條「已修」必附 commit SHA（＋檔案:行號）寫在同一行、SHA 是「已修」之後的第一個 hex token，如「已修 \`7c2ff80\` \`Foo.swift:12\`」「**已修**（commit \`7c2ff80\`）」；comment id 寫在 SHA 之後（「已修 \`7c2ff80\`（comment \`d87d4334\`）」）；沒有 SHA 的「已修」視為未修（LS-140／LS-186）。" >&2
 fi
 if [ "$bad_a" -eq 1 ] || [ "$bad_b" -eq 1 ]; then
   echo "  全 body 逐行掃、不辨語境：此行若只是引用而非本 PR 的申報（如「LS-138 已修」「不另立 ${pool} 池項」），請改寫措辭避開字樣（LS-140，COLLABORATION §3／§7）。" >&2
-  echo "$rerun_hint" >&2
-  exit 1
+  red_exit
 fi
 n_pool=$(printf '%s' "$pool_claims" | grep -c .)
 n_fix=$(printf '%s' "$fix_claims" | grep -c .)
@@ -150,16 +173,23 @@ if [ "$verify" -eq 0 ]; then
   exit 0
 fi
 
-# ---- --verify (b)：候選 SHA 至少一個存在且為 HEAD 祖先（需在 repo 內執行）----
+# ---- --verify (b)：「已修」之後的第一個 hex 候選須是 commit object 且為 HEAD 祖先（需在 repo 內執行）----
+# 兩種紅分開講（LS-186）：候選不是 commit object（Linear comment id 形狀、打錯的 SHA）→「需附 commit SHA 於『已修』之後」；
+# 是 commit 但不是 HEAD 祖先（他分支、未 push）→「不在 PR commits 內」。LS-185 當時兩者混成一句，實作者照著找不存在的 commit。
 fail=0
 while read -r ln toks; do
   [ -n "$ln" ] || continue
-  ok=
+  ok=; is_commit=
   for t in $(printf '%s' "$toks" | tr , ' '); do
-    if git cat-file -e "${t}^{commit}" 2>/dev/null && git merge-base --is-ancestor "$t" HEAD 2>/dev/null; then ok=$t; break; fi
+    git cat-file -e "${t}^{commit}" 2>/dev/null || continue
+    is_commit=$t
+    if git merge-base --is-ancestor "$t" HEAD 2>/dev/null; then ok=$t; break; fi
   done
   if [ -n "$ok" ]; then
     echo "✓ 第 ${ln} 行「已修」SHA ${ok} 在 PR commits 內"
+  elif [ -z "$is_commit" ]; then
+    echo "✗ pr-body-check：第 ${ln} 行「已修」之後的第一個 hex token 不是本 repo 的 commit（候選：${toks}）——已修行需附 commit SHA 於『已修』之後，且 SHA 要寫在 comment id 之前；Linear comment id／issue uuid 片段、未 push 或他 repo 的 SHA 都不算（LS-186）。" >&2
+    fail=1
   else
     echo "✗ pr-body-check：第 ${ln} 行「已修」的 SHA 不在 PR commits 內（候選：${toks}）——須 git cat-file -e <sha> 且 git merge-base --is-ancestor <sha> HEAD 皆成立（需在 repo 內執行）；請確認 SHA 抄自本分支的 commit、且已 push。" >&2
     fail=1
@@ -250,8 +280,7 @@ PY
 fi
 
 if [ "$fail" -eq 1 ]; then
-  echo "$rerun_hint" >&2
-  exit 1
+  red_exit
 fi
 echo "✓ 申報反查：${pool} 行 ${n_pool} 條、「已修」行 ${n_fix} 條"
 exit 0

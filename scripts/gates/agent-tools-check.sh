@@ -66,9 +66,13 @@ ios-dev|"
 # agent 的 Bash 工具在 run_in_background／timeout 背景化後 cwd 會重設回主 checkout，`cd` 與 `--hold` 分兩條命令就把持有者記成主 checkout
 # （LS-175／LS-179 QA 三次，LS-96 `8fcc81c5`）；`supabase-lock.sh --hold` 自 LS-184 起在主 checkout 直接 exit 2 是機械層，這句是前饋；
 # 被改回裸 `--hold` 即紅（舊字樣 `supabase-lock.sh --hold` 仍在不救）。
+# LS-186：ios-dev 正文的 PR body 驗證句固定為 CI 的完整旗標 `pr-body-check.sh <f> --branch <分支> --verify`——LS-185 實作者本機不帶
+# `--verify` 只驗了格式、另一次 `| tail -1` 吃掉 exit code，兩次把紅 body 推上 PR、CI rules 紅兩次；被改回裸 `pr-body-check.sh <f>` 即紅。
+# 只釘 ios-dev（唯一會開 PR 的 agent 定義）；general-purpose 派工只有 prompt 到得了（COLLABORATION §3 五條之 2／§4-b）。
 BODY_RULES=
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold
+ios-dev|pr-body-check.sh <f> --branch <分支> --verify
 merge-reviewer|supabase-lock.sh --hold
 qa|supabase-lock.sh --hold
 ios-dev|本機容器操作同樣要在 lock 內
