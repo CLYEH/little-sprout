@@ -113,4 +113,62 @@ final class UploadQueueSheetUITests: XCTestCase {
             "時間戳應該接在縮圖（64pt）＋間距（8pt）之後，不是被置中或間距跑掉"
         )
     }
+
+    /// QA delta `788791f6` FAIL：直接開 Pen 量了兩塊獨立板 `rTEGf`／`Q7HrnF`，grabber→標題
+    /// 間距皆為 30pt——merge-review R4 N2 當時猜「16pt band」沒有稿面依據而拿掉，其實猜錯了
+    /// （見 `UploadQueueSheetView.grabber` 文件註解「grabber→標題間距」段）。修法是在
+    /// grabber 補回 `AppSpacing.tight`（6pt），讓 grabber 底→標題頂＝
+    /// `AppSpacing.block`(24)＋`AppSpacing.tight`(6)＝**30**，與 `rTEGf`／`Q7HrnF` 吻合。
+    ///
+    /// grabber 本身 `.accessibilityHidden(true)`（正確的 VoiceOver 行為——它是純裝飾，不該被
+    /// 唸出來），XCUITest 查不到它的 frame，所以這裡不直接量 grabber，改量「footer 與標題的
+    /// 垂直距離」：`UploadQueueSheetView` 用固定 `.presentationDetents([.height(727)])`，
+    /// footer 又是 VStack 最後一個固定高度子項、上面的 `ScrollView` 會吃掉所有剩餘空間——
+    /// 不管 `rowsSection` 內容多高，footer 距離 sheet 頂的絕對位置都是常數，不受列內容影響。
+    /// 也因此 `footer.frame.minY - title.frame.minY` 這個差值只跟「grabber＋summarySection
+    /// 頂部這塊固定佈局」的高度有關，是個可以事先量出來、與縮放係數乘積成正比的常數
+    /// （`C + (y-C)*s` 對兩個點作差時 `C` 抵消，只剩 `(y2-y1)*s`，跟 R6 那套「參照法」是同一個
+    /// 數學原理，只是用在垂直方向）。拆成兩段：`unscaledBaselineAboveGrabberFix`（跟這次
+    /// grabber 修法無關的部分：footer 自己的位置、rowsSection／hairline 等）＋
+    /// `unscaledGrabberToTitleGap`（這次要驗證的 30，寫成 `24 + 6` 讓對應關係一眼看出來，
+    /// 不是埋在一個大常數裡）——兩者都是在專屬機 iOS 26.0（scale≈1，無縮放）上用臨時探針
+    /// 量到的實測值，不是手算推導。mutation（拿掉 grabber 的 `.padding(.bottom,
+    /// AppSpacing.tight)`）證實：兩台機器上量到的差值都精確位移了 `6 * scale`，見 fix
+    /// commit 說明。
+    ///
+    /// 2026-09-06 發現（QA delta `788791f6` 之後、這條測試落地前）：共用模擬器（非本票專屬機）
+    /// 曾被前一個 agent 的 AX3 截圖工作把系統層 `content_size` 留在
+    /// `accessibility-extra-large`（`xcrun simctl ui <udid> content_size` 讀到），沒有復原。
+    /// 這是系統層設定，會蓋過 app 這邊 launch environment 設的
+    /// `UIPreferredContentSizeCategoryName`——不是本票程式碼或本測試的 bug，但污染時標題
+    /// 整體放大約 1.85 倍（高度從 ~26pt 變 ~49pt），跟這裡要驗證的環境縮放係數（≈0.96，環境
+    /// 對 sheet 整體縮小）方向相反、量級也差了一個數量級，會把下面的絕對間距斷言帶偏、看起來
+    /// 像本票的迴歸。開測先做一次污染檢查，偵測到就 `XCTSkip`（誠實承認這次跑的環境不乾淨，
+    /// 不宣稱任何斷言結果），不是放行。
+    func test_uploadQueueSheetNormal_grabberToTitleSpacingIsThirtyPoints() throws {
+        let app = TapTargetMeasurement.launch(.uploadQueueSheetNormal)
+        TapTargetMeasurement.assertScreenRendered(.uploadQueueSheetNormal, in: app)
+
+        let footer = app.buttons["在背景繼續，關閉視窗"]
+        XCTAssertTrue(footer.waitForExistence(timeout: 10))
+        let title = app.staticTexts["正在新增照片"]
+        XCTAssertTrue(title.waitForExistence(timeout: 10))
+
+        let scale = footer.frame.height / 48
+        let expectedUnscaledTitleHeight: CGFloat = 26.33 // 專屬機 iOS 26.0 實測（正常字級單行）
+        try XCTSkipIf(
+            title.frame.height > expectedUnscaledTitleHeight * scale * 1.2,
+            "模擬器系統層 content size 疑似被留在放大字級（標題量到 \(title.frame.height)pt，" +
+            "預期 ≤\(expectedUnscaledTitleHeight * scale * 1.2)pt）——" +
+            "`xcrun simctl ui <udid> content_size medium` 重設後再跑，不是本測試或程式碼的問題"
+        )
+
+        let unscaledBaselineAboveGrabberFix: CGFloat = 573.9502809715449
+        let unscaledGrabberToTitleGap: CGFloat = 24 + 6 // AppSpacing.block + AppSpacing.tight
+        XCTAssertEqual(
+            footer.frame.minY - title.frame.minY,
+            (unscaledBaselineAboveGrabberFix + unscaledGrabberToTitleGap) * scale, accuracy: 1,
+            "grabber→標題間距應為 30pt（`rTEGf`／`Q7HrnF` 實測值），不是拿掉 16pt band 後的 24pt"
+        )
+    }
 }
