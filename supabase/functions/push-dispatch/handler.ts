@@ -507,7 +507,7 @@ export async function handleRequest(
     // 皆未注入），不是「當作沒有事件可處理」悄悄回 200（同 purge-storage／
     // delete-account 既有先例）。
     return jsonResponse(500, {
-      error: "SUPABASE_SERVICE_ROLE_KEY 未設定",
+      error: "SUPABASE_SECRET_KEYS／SUPABASE_SERVICE_ROLE_KEY 皆未設定",
     });
   }
 

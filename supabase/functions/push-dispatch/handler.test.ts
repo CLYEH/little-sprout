@@ -756,7 +756,10 @@ Deno.test("handleRequest：authEnv 兩把金鑰皆未設定（部署設定缺失
   const res = await handleRequest(req("POST", "Bearer anything"), deps);
   assertEquals(res.status, 500);
   const body = await res.json();
-  assertEquals(body.error, "SUPABASE_SERVICE_ROLE_KEY 未設定");
+  assertEquals(
+    body.error,
+    "SUPABASE_SECRET_KEYS／SUPABASE_SERVICE_ROLE_KEY 皆未設定",
+  );
 });
 
 Deno.test("handleRequest：Authorization／apikey 皆缺失 → 401", async () => {
@@ -774,6 +777,14 @@ Deno.test("handleRequest：bearer 不等於 service_role key（例如帶 anon ke
 
 Deno.test("handleRequest：bearer 長度與 service_role key 不同 → 401（LS-172 R2 i4：常數時間比對的長度分支也要正確判否）", async () => {
   const res = await handleRequest(req("POST", "Bearer short"), makeDeps());
+  assertEquals(res.status, 401);
+});
+
+Deno.test("handleRequest：bearer 為 service_role key 的前綴（不是完整值）→ 401（merge-review R1 F1 同型負樣本：釘住精確相等，不是 startsWith）", async () => {
+  const res = await handleRequest(
+    req("POST", "Bearer service-role-sec"),
+    makeDeps(),
+  );
   assertEquals(res.status, 401);
 });
 
