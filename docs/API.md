@@ -231,6 +231,27 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
 - `family_members.can_upload`：預設 `true`（member 預設可上傳）。owner 才有的欄位。
 - 移除成員／自行退出都走 `DELETE`。**最後一位 owner 無法被移除或降級**——DB trigger
   （`private.enforce_family_has_owner`）會擋下並回傳 `LS001`；要先把另一人升為 owner。
+- **唯一 owner、家庭仍有其他成員時退出／被移除 → `LS057`（LS-206）**：新增的
+  `private.enforce_ownership_transfer_before_leave`（`BEFORE DELETE` row-level
+  trigger）比上面那條既有的 `LS001`（`AFTER STATEMENT` trigger）先觸發，專門攔
+  「role='owner'、該家庭無其他 owner、但仍有其他成員」這個情境，給出比 `LS001`
+  更明確的訊息與 `DETAIL`（`{"family_id","family_name"}`，供 client 導向轉移
+  owner 的畫面）。`LS001` 仍在、範圍仍然更廣（涵蓋 UPDATE 降級、以及本條件以外
+  會導致 0 owner 的情況），只是這個特定情境會先被 `LS057` 攔下。**唯一 owner
+  兼唯一成員**直接對 `family_members` 下一句 `DELETE`（不經過 `delete_my_
+  account()`、不刪 `families` 本身）**仍被既有 `LS001` 擋下**——這是刻意的
+  設計，不是遺漏：這個狀態轉換與 `delete_my_account()` 兩位共同 owner 併發
+  刪帳號時「後動者必須被 `LS001` 擋下強迫重試」的既有安全網
+  （`supabase/tests/concurrency/delete_account_race_*.sql`，LS-143）是同一個
+  資料庫狀態轉換，無法在 trigger 層級用呼叫者身份區分，完整推演見
+  `supabase/migrations/20260905132350_family_ownership_guard.sql` 檔頭「刻意
+  不做的事」。要離開唯一成員的獨居家，正確路徑一律是 `delete_my_account()`
+  （見 §4，本來就會正確 cascade 掉整個家庭）。
+- **轉移 owner 身份請呼叫 `transfer_ownership` RPC（見 §4，LS-206）**，不要用
+  兩次直接 `UPDATE role`（非原子，且無法與同時退出／另一筆轉移排隊）。上面
+  「Owner 只能改 role」那條直接 `UPDATE` 路徑本身**沒有被收回**，但只保留給
+  **單向升格**（例如再加開一位共同 owner，不涉及自己降級的場景）；任何會把
+  自己從 owner 降級、同時把別人升成 owner 的操作，一律走 `transfer_ownership`。
 
 ### `invites`
 - 產碼只能呼叫 `create_invite` RPC；**沒有 UPDATE 路徑**，撤銷邀請碼＝`DELETE`
@@ -1609,6 +1630,31 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   提交窗口內在飛上傳留下的孤兒列（merge-review R1 m2，見下方「過渡狀態」段落
   與 §「Edge Functions」）。
 
+### `transfer_ownership(p_family_id uuid, p_to_user_id uuid) -> table(from_user_id uuid, from_role family_role, to_user_id uuid, to_role family_role)`（LS-206）
+- **用途**：原子轉移 owner 身份——同一交易內把 `p_to_user_id` 升為 `owner`、
+  呼叫者自己降為 `member`，取代「owner 對 `family_members.role` 兩次直接
+  `UPDATE`」（升對方、降自己）這種非原子做法。回傳轉移後雙方的新角色對。
+- **誰能呼叫**：呼叫者須為 `p_family_id` 這個家庭**目前**的 owner，否則
+  `LS058`；`p_to_user_id` 須為該家庭**目前**的成員（`owner`／`member`／
+  `viewer` 皆可），否則 `LS059`；`p_to_user_id` 不能等於呼叫者自己，否則
+  `LS060`。三個檢查都是「鎖住兩列之後」的新鮮讀取（見下方併發），不是呼叫前
+  的過期快照。
+- **既有直接 `UPDATE role` 路徑不受影響**：`family_members_update` policy
+  （LS-6／LS-33）仍然保留，但只給**單向升格**用（例如再加開一位共同 owner，
+  不涉及自己降級）；任何「轉移」語意（自己降級、同時升別人）一律走本 RPC。
+- **併發**：內部先用兩句各自的 `perform ... for update`（固定
+  `least/greatest(caller, p_to_user_id)` 排出全域一致的 user_id 遞增序，不是
+  單一句帶 `order by` 的 `for update`——`ORDER BY` 只保證輸出順序，不保證取鎖
+  順序）鎖住呼叫者與對象兩列，鎖定之後才讀 `role` 做上述三項檢查，避免
+  「檢查通過、UPDATE 送出前，對方已被移除或呼叫者已被另一筆轉移降級」的
+  TOCTOU。兩筆併發呼叫（不論參數如何交錯）依同一個 user_id 遞增序排隊，不會
+  互為死鎖；後排的那筆解鎖後用全新查詢重新讀到呼叫者已非 owner，正確拿到
+  `LS058`，不會讓兩個人都被錯誤地扶正成 owner（`supabase/tests/108_family_
+  ownership_guard.sql` 情境 10 用序列化等價證明覆蓋；migration 檔頭記錄了
+  手動跑過的真實兩連線併發驗證結果）。
+- **錯誤碼**：未登入 `42501`；呼叫者不是該家庭目前的 owner `LS058`；對方不是
+  該家庭目前的成員 `LS059`；對方＝呼叫者自己 `LS060`。
+
 ### `accept_eula(p_version text) -> void`（LS-197，PLAN §6 第 7 項／§10-B）
 - **誰能呼叫**：任何已登入使用者，**包含被停權的使用者、以及被停權家庭裡的
   成員**——同意條款不是內容寫入，函式寫入的 `profiles` 沒有掛
@@ -1681,6 +1727,10 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS054` | 目前暫停開放新註冊，請稍後再試 | `private.enforce_registrations_open()`——`families` 的 `BEFORE INSERT`（自建新家庭），`app_settings.registrations_open = false` 時觸發（PLAN §10-A(3)，LS-179）。**只擋自建新家庭**：憑邀請碼加入既有家庭（`request_join`／`approve_join`）不碰 `families` 表，不受影響 |
 | `LS055` | 條款版本已更新，請重新閱讀 | `accept_eula(p_version)`——`p_version` 與呼叫當下的 `app_settings.eula_version` 不相符時觸發（LS-197，PLAN §6 第 7 項／§10-B）。呼叫端多半是讀到的版本已經過期，該重新抓一次目前版本、重新顯示條款內容 |
 | `LS056` | 帳號資料異常，請聯絡我們 | `accept_eula(p_version)`（LS-197 R2，merge-review R1 m2）——寫入 `profiles.eula_accepted_version`／`eula_accepted_at` 的 `UPDATE` 命中 0 列時觸發，代表 `auth.uid()` 沒有對應的 `profiles` 列。理論上不該發生（LS-110 的 `auth.users` insert trigger 保證每個帳號都有一列 `profiles`），出現代表資料不一致，fail loud 而不是靜默 no-op |
+| `LS057` | 你是這個家庭的唯一 owner，且家庭還有其他成員，須先把 owner 身份轉移給其他成員才能退出或被移除——`DETAIL` 帶 `{"family_id","family_name"}` | `family_members` 的 `BEFORE DELETE`（`private.enforce_ownership_transfer_before_leave`，LS-206）——自行退出或被 owner 移除皆同；唯一 owner 兼唯一成員的情況不觸發這個碼（仍走既有 `LS001`，見 §3 `family_members` 與 §4 `transfer_ownership`） |
+| `LS058` | 你不是這個家庭目前的 owner，無法轉移 owner 身份 | `transfer_ownership`（LS-206） |
+| `LS059` | 對方不是這個家庭目前的成員，無法把 owner 身份轉移給他 | `transfer_ownership`（LS-206） |
+| `LS060` | 不能把 owner 身份轉移給自己 | `transfer_ownership`（LS-206） |
 | `42501` | 未登入，或權限不足（不是該家 owner／不是申請人本人／不是作者本人／作者已離開家庭／不是該家任一角色成員／直接寫入被 grant 擋下／`family_id` 不可變 trigger 擋下） | 所有 RPC 皆可能；也是**任何直接對 RPC-only 表寫入**（如 `family_members` INSERT、`invites` INSERT/UPDATE、`join_requests` 任何寫入、`diaries` INSERT/UPDATE、`comments` INSERT/UPDATE、`reactions` INSERT/DELETE、`children` INSERT/UPDATE/DELETE——`children` 的 `DELETE` 自 R1 I5 起也收斂，連 owner 都拿這個碼）會拿到的標準碼；也是 `diaries`／`albums`／`comments`（`private.enforce_deletion_attribution()`，LS-57）與 `children`（`private.enforce_children_family_immutable()`，LS-66，LS-57 R2／I1 對齊後改用裸 `42501`，不再是原本 LS-66 定案時的專屬碼）的 `family_id` 不可變 trigger 統一 raise 的碼；`albums` 直接 `.update()` 竄改 `deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起也在欄位級 grant 被收回，同樣回這個碼（見 §2/§3）——PostgREST 對 grant 被收回的操作回這個碼，訊息只會是通用的 permission denied，不會有自訂文字，trigger 主動 raise 的則帶自訂中文訊息，但 SQLSTATE 一樣是 `42501`。**例外**：owner 對別人的 `albums` 直接 `.update()` 內容欄位**不會**拿到這個碼，是靜默影響 0 列，見 §2「寫入路徑小結」的例外說明（`comments` 自 LS-58 起不再適用這條例外，直接 `.update()` 一律 `42501`） |
 
 **沒有被上面任何一支 RPC 包住、可能直接從 PostgREST 冒出來的標準 Postgres 錯誤碼**
@@ -1735,7 +1785,14 @@ Edge Function 完成刪除）。`LS052`／`LS053`／`LS054`（LS-179 補齊，�
 目前版本、重新顯示條款，不是原地拿同一個 `p_version` 重試，跟 `LS052`–`LS054`
 同一組「純狀態拒絕」理由）。`LS056`（LS-197 R2 補齊，歸層 `rejected`——
 `auth.uid()` 沒有對應的 `profiles` 列，理論上不該發生，沒有輸入可換、也不是
-使用者能自己解決的狀態，只能聯絡我們排查）。三層（`validationRetryable`／`retryableSystem`／
+使用者能自己解決的狀態，只能聯絡我們排查）。`LS057`（LS-206 補齊，歸層
+`rejected`——你是唯一 owner 且家庭還有其他成員，沒有輸入可換，必須先做別的事
+（轉移 owner 身份），跟 `familyMustHaveOwner`（`LS001`）／
+`ownerMustTransferBeforeAccountDeletion`（`LS050`）同一組理由，只是觸發路徑
+不同）。`LS058`／`LS059`／`LS060`（LS-206 補齊，歸層皆 `rejected`——
+`transfer_ownership` 的三個授權檢查：不是 owner、對方不是成員、對方是自己，
+皆沒有「換個輸入重試同一組參數就會成功」這種語意，呼叫端該做的是重新讀取
+成員清單／自己的角色，不是原地重試）。三層（`validationRetryable`／`retryableSystem`／
 `rejected`）歸類由 `LittleSproutTests/AppErrorTests.swift` 的列舉測試逐碼釘住。
 **尚缺碼：無**。之後每新增一個自訂碼，本表與 `LSErrorCode` 必須同 PR 更新，否則
 `error-codes-check` 會紅（任一邊多都算；gate 只認本節表格列的 `` `LSnnn` `` 首欄，散文提及不計）。
@@ -2302,6 +2359,7 @@ set_child_deleted(uuid, boolean)
 set_comment_deleted(uuid, boolean)
 set_diary_deleted(uuid, boolean)
 toggle_reaction(uuid, text, uuid)
+transfer_ownership(uuid, uuid)
 unblock_user(uuid, uuid)
 update_child(uuid, text, date, text)
 update_comment(uuid, text)
