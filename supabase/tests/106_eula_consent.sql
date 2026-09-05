@@ -272,6 +272,16 @@ declare
   v_version text;
 begin
   select t into v_first from ls197_idempotent_probe limit 1;
+  -- LS-204 R2（merge-review `a2e9cd1b` I2）：`select ... into` 在 0 列命中或
+  -- `t` 本身為 NULL 時不會報錯，`v_first` 會靜默維持 NULL——下面
+  -- `v_second <= v_first` 的三值邏輯結果也會是 NULL，`if NULL then` 視為
+  -- false、不會 raise，等於這條冪等斷言整個被跳過卻看起來像通過。今天不可達
+  -- （這一列在上面已經由本場景自己 insert＋update，probe 表不可能是空的），
+  -- 補這句擋住「今天不可達」以外的未來壞法（例如有人把上面的 insert 改成
+  -- 條件式寫入）。
+  if v_first is null then
+    raise exception 'FAIL：讀不到冪等測試的第一次時間戳（ls197_idempotent_probe 空表或 t 為 NULL），下面的比較會被 NULL 悄悄放行';
+  end if;
   select eula_accepted_version, eula_accepted_at into v_version, v_second
     from public.profiles where id = 'a0000000-0000-4000-8000-000000000001';
 

@@ -547,12 +547,14 @@ begin;
 -- 直接選它，測不出「表大了會怎樣」；灌到 5 萬+ 列後 EXPLAIN 才有鑑別力
 -- （本機實測：只有 1200 列時規劃器選 Hash Join＋Seq Scan on media；加了 5 萬列
 -- 背景雜訊之後规劃器改選 Nested Loop＋Index Scan using media_pkey）。
--- LS-204（LS-200 R1 i3 `ca99c6ae`）：這份 insert 與
+-- LS-204（LS-200 R1 i3 `ca99c6ae`；R2 merge-review B1 修正）：這份 insert 與
 -- 50_rls_plan_no_percall_subquery.sql 原本各自維護一份幾乎一樣的 50000 列
--- fixture，抽成共用原始碼（見 fixtures/media_family_perf_noise.sql 檔頭說明）——
--- 共用的是同一份 SQL 文字，不是同一次執行：這裡仍在本檔第 6 段自己的交易內
--- include、自己 insert，執行次數與交易邊界都不變。
-\ir fixtures/media_family_perf_noise.sql
+-- fixture，抽成 00_fixtures.sql 建立的共用函式
+-- `private.ls204_seed_media_perf_noise()`（見該函式定義旁的檔頭說明——R1 原本
+-- 抽成獨立檔案用 psql `\ir` include，在 run.sh 的 docker-exec 連線管道下找不到
+-- 檔案，已改用純 SQL 函式呼叫，三種連線管道天生一致）。函式呼叫仍在本檔第 6
+-- 段自己的交易內執行，執行次數與交易邊界都不變。
+select private.ls204_seed_media_perf_noise();
 
 -- 50 本相簿、1200 張已連結 media（每本 24 張，1200 / 50）
 insert into public.media
@@ -625,33 +627,16 @@ set local role authenticated;
 -- deleted_at is null`，20260822120000_init_schema.sql 既有的 partial index）
 -- 語意對得上。
 --
--- LS-204（LS-200 R2 i-A `37d45fd1`）：「述詞對得上」不等於「規劃器穩定選用
--- 它」——這裡如實記下本檔 fixture 規模的實測結果，避免下一個人以為下面的
--- EXPLAIN 斷言已經驗證了 albums_family_created_idx 的 top-N 用法。本檔的
--- fixture 是 50 本相簿（family fc 底下 albums 總列數也就 50 上下，不像 media
--- 表另外灌了 5 萬列背景雜訊撐大規模）；LS-204 對這個規模實測兩次（各自重新
--- `supabase db reset`），拿到兩種不同的 plan：一次選
--- `Index Scan using albums_cover_idx`（單純拿來做 family_id 等值查找，不是
--- 拿來排序），50 列全數掃出、LATERAL 聚合子查詢對每一列各跑一次
--- （`loops=50`），最後整批 heapsort 取前 20 筆；另一次選
--- `Index Scan using albums_family_created_idx`＋`Incremental Sort`，LATERAL
--- 只跑 21 次（`loops=21`＝limit 20＋1），是沿索引順序邊走邊算、湊滿就提早停
--- 的真正 top-N 剪枝路徑。兩條候選 plan 在這個規模下成本估計非常接近——
--- media 51200 列的 ANALYZE 用的是抽樣統計（列數遠超過
--- default_statistics_target 的取樣門檻），兩次 reset 各自抽到的樣本本身就有
--- 統計上的隨機差異，足以讓兩個成本相近的候選 plan 誰便宜誰貴之間翻面，不是
--- 這份 fixture 或這條查詢寫法本身有問題。這正是為什麼下面的機械斷言不釘
--- albums 這一段的 index 選擇或 loops 數：釘死在特定 plan 形狀上的斷言，在這
--- 個規模下天生就會不定期變紅（flaky），不是「驗證一次就永遠成立」的性質。
--- 要讓規劃器穩定改選 `albums_family_created_idx`＋Incremental Sort 那條路徑，
--- 需要相簿數量大到讓兩條候選路徑的成本差距拉開、不再是誤差範圍內的平手——
--- 本機另外實測約 3000 本相簿的規模才會穩定切過去，這裡沒有把 fixture 灌到
--- 那個規模。下面兩條斷言的鑑別力範圍僅止於「media／album_media 不出現
--- Seq Scan」與「不出現逐列 correlated SubPlan」，這兩件事在上述兩種 plan
--- 形狀下都成立（見 mutation：把 view 的 LATERAL 改成兩個獨立的逐列
--- correlated 子查詢，下面判準 2 會抓到——LS-204 已實際套用此突變重跑
--- 驗證）；albums 表本身在這個規模下選哪個 index，不在本段驗證範圍內，也不該
--- 被當成穩定行為。
+-- LS-204（LS-200 R2 i-A `37d45fd1`；R2 merge-review `a2e9cd1b` I1 修正）：
+-- 「述詞對得上」不等於「規劃器一定選用它」——albums 這一段最終走
+-- `albums_cover_idx` 還是 `albums_family_created_idx`＋`Incremental Sort`，
+-- 是規劃器依當下 ANALYZE 收集到的統計資訊（media 51200 列走的是抽樣統計）
+-- 做的成本估計，屬於查詢規劃器的內部決策，不是這份 fixture 或這條查詢寫法
+-- 保證釘死的行為。下面兩條機械斷言的鑑別力範圍僅止於「media／album_media
+-- 不出現 Seq Scan」與「不出現非 hashed 的逐列 correlated SubPlan」，這兩件事
+-- 在 albums 選哪一條候選 plan 下都成立（見 mutation：把 view 的 LATERAL 改成
+-- 兩個獨立的逐列 correlated 子查詢，下面判準 2 會抓到——LS-204 已實際套用此
+-- 突變重跑驗證）；albums 表本身這一段選哪個 index，不在本段驗證範圍內。
 do $$
 declare
   v_line text;
