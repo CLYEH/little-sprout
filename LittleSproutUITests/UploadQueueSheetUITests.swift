@@ -35,4 +35,13 @@ final class UploadQueueSheetUITests: XCTestCase {
 
         XCTAssertTrue(app.buttons["在背景繼續，關閉視窗"].waitForExistence(timeout: 10))
     }
+
+    /// merge-review R2 F2：`previewSample()` 現在固定把 `resumedFromInterruption` 設
+    /// `true`（見該檔文件註解），續傳橫幅才有機會在 preview／UITest／QA 截圖裡被看到。
+    func test_uploadQueueSheet_showsResumeBanner() {
+        let app = TapTargetMeasurement.launch(.uploadQueueSheet)
+        TapTargetMeasurement.assertScreenRendered(.uploadQueueSheet, in: app)
+
+        XCTAssertTrue(app.staticTexts["已接續先前中斷的上傳。"].waitForExistence(timeout: 10))
+    }
 }

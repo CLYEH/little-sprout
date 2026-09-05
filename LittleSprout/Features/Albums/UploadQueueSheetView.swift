@@ -67,7 +67,16 @@ struct UploadQueueSheetView: View {
                         .appNumericFont(.body, weight: .bold)
                         .foregroundStyle(Color.lsTextPrimary)
                     if !breakdownText.isEmpty {
-                        Text(breakdownText).appNumericFont(.note).foregroundStyle(Color.lsTextSecondary)
+                        // merge-review R2 F2 實測發現：加入續傳橫幅後，AX3 下 summarySection
+                        // 的合計高度可能逼近固定 sheet 高度上限，VStack 會把「彈性最低」的
+                        // Text 往下壓縮——沒有 `.fixedSize` 時這行會被截斷成「1 張等候上傳、
+                        // 1 張…」，把「上傳中」吃掉。`.fixedSize(horizontal: false, vertical:
+                        // true)` 強制這個 Text 用完整換行後的高度，把被壓縮的空間讓給設計上
+                        // 本來就該可捲動、可以被壓縮的 `ScrollView`（`rowsSection`），不是讓
+                        // 給不該被截斷的狀態文字。
+                        Text(breakdownText)
+                            .appNumericFont(.note).foregroundStyle(Color.lsTextSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
@@ -91,9 +100,12 @@ struct UploadQueueSheetView: View {
     }
 
     private var resumeBanner: some View {
-        HStack(spacing: AppSpacing.label) {
+        // `alignment: .top`＋`.fixedSize`：同 `breakdownText` 踩到的同一個坑——AX3 沒有這兩個
+        // 修飾詞時這句會被壓縮成「已接續先前中…」，且沒有 `.top` 對齊的話 icon 會卡在多行文字
+        // 正中央，不是跟第一行文字對齊。
+        HStack(alignment: .top, spacing: AppSpacing.label) {
             Image(systemName: "arrow.counterclockwise").appIconFrame(.medium)
-            Text("已接續先前中斷的上傳。").appFont(.note)
+            Text("已接續先前中斷的上傳。").appFont(.note).fixedSize(horizontal: false, vertical: true)
         }
         .foregroundStyle(Color.lsTextSecondary)
         .padding(.horizontal, AppSpacing.item)
@@ -187,6 +199,10 @@ extension UploadQueueStore {
     /// 兩種上傳中列，對應 `design/littlesprout.pen` `Q7HrnF`／`g8Q2W`「全部狀態展開」參考板。
     static func previewSample() -> UploadQueueStore {
         let store = UploadQueueStore(familyID: UUID(), mediaUploadService: PreviewMediaUploadService())
+        // merge-review R2 F2：續傳橫幅在稿面上是真實會出現的狀態，但沒有任何一組樣本把它
+        // 設成 `true` 過——preview／DEBUG harness／QA 截圖因此永遠看不到它，等於這條路徑
+        // 沒有人真的驗過長什麼樣子。這裡固定開啟，讓它跟其他三群狀態一樣「看得到」。
+        store.resumedFromInterruption = true
         let now = Date()
         func upload() -> PendingUpload {
             PendingUpload(
