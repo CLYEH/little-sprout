@@ -82,6 +82,21 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.passwordSignIn)
     }
 
+    /// LS-192：02 顯示名稱與頭像編輯——改註冊進 harness，取代原本 `tap-target-exemptions.txt`
+    /// 的具名排除（同 `testCreateChildView` 的既有理由）。
+    func testProfileEditView() {
+        assertAllTappablesMeetMinimum(.profileEdit)
+    }
+
+    /// LS-192：03 家庭成員——同上，換掉原本的具名排除。`TapTargetGateHarness.familyMembersHost`
+    /// 用 `seedOwnerUserIDForPreview`／`seedMembersForPreview` 同步佈置「呼叫者是 owner、
+    /// 家庭還有另一位成員」，讓每一列的「…」選單（轉移 Owner 身份／移除成員）跟「退出家庭」
+    /// 鈕一起被這裡量到，不需要留給 QA 模擬器另外覆蓋這個維度（實際的兩帳號流程驗證——真的
+    /// 點下去轉移／移除／退出——仍由 QA 兩帳號實測負責，見票文驗收）。
+    func testFamilyMembersView() {
+        assertAllTappablesMeetMinimum(.familyMembers)
+    }
+
     /// 任一元件 <44pt 就用 `XCTFail` 記一筆——逐一累計，不是遇到第一個違規就提前結束，讓
     /// `tap-target-check.sh` 能一次點名所有違規者（LS-17 QA1 就是同一畫面上不只一顆違規）。
     /// merge-review R1 B1：先斷言畫面真的渲染出來，harness 靜默失效不會被誤判成「這個畫面
