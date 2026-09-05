@@ -53,6 +53,12 @@
 #     （cutoff＝`head_sha` tree 的正典腳本含 SIXTH_MARKER `scanBoardClip`；in-flight 設計分支 LS-177 要等 main→development
 #     back-merge 才拿得到新腳本）：不含 → 缺 `board_clip`／`scan_scope` 放行並印一行（欄位若在仍驗）；輪次最高的收據另看 PR head
 #     tree（同 R1 N1）。
+#   - **LS-202：六支各帶 `scope`＋`document_count`**——每支物件必須有 `scope`（`boards|document`，同頂層 `scan_scope`）與
+#     `document_count`（非負整數：該支在整份快照裡的命中數，`scope=boards` 時為限縮值；正典腳本 SCAN 段標頭印 `scope=… document_count=…`）。
+#     LS-177 R1／R2 `cross_parent_collision` 限縮 17 板時收據沒有任何欄位說明全稿數（LS-96 `ba1ec045`）。**舊收據放行條件同 LS-168／
+#     LS-185**：cutoff＝`head_sha` tree 的正典腳本含 PERSCAN_MARKER `document_count`（LS-194 r2 等既有收據不含 → 缺欄位放行並印一行；
+#     `scope` 若在仍只接受兩字面）；輪次最高的收據另看 PR head tree（同 R1 N1）。不驗 `document_count` 與 flagged 長度的關係——
+#     收據 flagged 是「每類一筆代表」的彙整，本來就不等長。
 # 掃描「有沒有真的跑對」（演算法本身正確性）不是這支腳本能驗的——那需要 Pen 的版面引擎，只能靠
 # visual-reviewer 用同方法重掃比對（見 .claude/agents/visual-reviewer.md）。
 #
@@ -89,7 +95,7 @@
 #                       "unresolved": [{"container": "...", "classification": "..."}]},
 #     "text_occlusion": {"flagged": [], "document_flagged": [...]},
 #     "board_clip": {"flagged": [], "document_flagged": [{"board": "...", "node": "...", "side": "bottom", "overflow_px": 123, "classification": "intentional_bleed"}]}
-#   }
+#   }   ←（LS-202）六支物件各帶 "scope": "document"（同 scan_scope）與 "document_count": <非負整數>
 # }
 #
 # 用法：design-evidence-check.sh <path.pen> --ticket <LS-n> --base <ref> [--head-sha <sha>]
@@ -233,6 +239,9 @@ FIFTH_SCRIPT = "scripts/design/overflow-scan.js"
 FIFTH_MARKER = "scanTextOcclusion"
 # LS-185：第六支 board_clip＋scan_scope 的 cutoff——同一支腳本含 SIXTH_MARKER 才要求（放行條件與第五支同形，見檔頭）
 SIXTH_MARKER = "scanBoardClip"
+# LS-202：六支各帶 scope／document_count 的 cutoff——同一支腳本含 PERSCAN_MARKER 才要求（同形）
+PERSCAN_MARKER = "document_count"
+SIX = FOUR + ("text_occlusion", "board_clip")
 SCAN_SCOPES = ("boards", "document")
 sys.path.insert(0, os.path.dirname(os.path.abspath(landing_script)))
 import design_tree_hash  # noqa: E402
@@ -288,6 +297,8 @@ fifth = False
 fifth_at_sha = False
 sixth = False
 sixth_at_sha = False
+perscan = False
+perscan_at_sha = False
 
 if not isinstance(sha, str) or sha not in pen_commits:
     errs.append(
@@ -313,13 +324,16 @@ else:
         fifth_at_head = has_fifth(head) if is_latest else False
         sixth_at_sha = has_marker(sha, SIXTH_MARKER)
         sixth_at_head = has_marker(head, SIXTH_MARKER) if is_latest else False
-        if fifth_at_sha is None or fifth_at_head is None or sixth_at_sha is None or sixth_at_head is None:
+        perscan_at_sha = has_marker(sha, PERSCAN_MARKER)
+        perscan_at_head = has_marker(head, PERSCAN_MARKER) if is_latest else False
+        if None in (fifth_at_sha, fifth_at_head, sixth_at_sha, sixth_at_head, perscan_at_sha, perscan_at_head):
             errs.append(
-                f"無法判定 {FIFTH_SCRIPT} 在 {sha[:7]}／PR head 的 tree 裡是否含第五／六支（git ls-tree／show 失敗，淺 clone 或物件缺失）"
+                f"無法判定 {FIFTH_SCRIPT} 在 {sha[:7]}／PR head 的 tree 裡是否含第五／六支／per-scan 欄位（git ls-tree／show 失敗，淺 clone 或物件缺失）"
                 "——不能靠猜放行舊收據（fail closed）"
             )
         fifth = bool(fifth_at_sha) or (is_latest and bool(fifth_at_head))
         sixth = bool(sixth_at_sha) or (is_latest and bool(sixth_at_head))
+        perscan = bool(perscan_at_sha) or (is_latest and bool(perscan_at_head))
         tmp_path = None
         try:
             with tempfile.NamedTemporaryFile(suffix=".pen", delete=False) as tf:
@@ -487,6 +501,29 @@ elif bc["flagged"]:
         "——內容被板裁掉不接受白名單（帶 classification 也一樣）：把被推出板外的內容收回板內，刻意出血請包進與板同尺寸的 clip:true 容器後重跑（LS-185；LS-120 R2 spacer／LS-177 R2 Header Row 同 class）"
     )
 
+# LS-202：六支各帶 scope（boards|document）與 document_count（非負整數）。只對「正典腳本已含 PERSCAN_MARKER」的收據要求
+# （head_sha tree；輪次最高另看 PR head tree），舊收據缺欄位放行並印一行；scope 若在仍由上面的通用迴圈驗兩字面。
+def lacks_perscan():
+    if not isinstance(scans, dict):
+        return False
+    return any(isinstance(scans.get(k), dict) and ("scope" not in scans[k] or "document_count" not in scans[k]) for k in SIX)
+
+if perscan and not perscan_at_sha and lacks_perscan():
+    errs.append(
+        f"本 PR 輪次最高的收據：head_sha={sha[:7]} 落地時正典腳本尚無 per-scan scope／document_count，但 PR head 的 tree 已含（新腳本已併入本分支）"
+        "——最新輪次的 .pen 內容＝工作區，用現行 scripts/design/overflow-scan.js 對它重跑一次，把每支的 scope 與 document_count 補進這份收據（LS-202）"
+    )
+if perscan and isinstance(scans, dict):
+    for key in SIX:
+        scan = scans.get(key)
+        if not isinstance(scan, dict):
+            continue  # 缺支由上面的 required／第五／六支檢查報
+        if "scope" not in scan:
+            errs.append(f"scans.{key} 缺 scope——六支各自標明快照範圍 {'|'.join(SCAN_SCOPES)}（抄正典腳本 SCAN 段標頭的 scope=，LS-202）")
+        dc = scan.get("document_count")
+        if isinstance(dc, bool) or not isinstance(dc, int) or dc < 0:
+            errs.append(f"scans.{key}.document_count 必須是非負整數（收據={dc!r}）——該支在整份快照裡的命中數，抄 SCAN 段標頭的 document_count=（LS-202；scope=boards 時為限縮值）")
+
 if errs:
     print(f"✗ design-evidence gate：{p} 未通過：", file=sys.stderr)
     for e in errs:
@@ -509,6 +546,11 @@ if sixth:
 elif bc is None or scan_scope is None:
     also = "、PR head 的亦無" if is_latest else ""
     print(f"（{p}：head_sha={sha_disp} 快照的 {FIFTH_SCRIPT} 尚無第六支{also}，LS-185 新欄位 board_clip／scan_scope 不要求——舊收據放行）")
+if perscan:
+    schema += "、六支各帶 scope／document_count"
+elif lacks_perscan():
+    also = "、PR head 的亦無" if is_latest else ""
+    print(f"（{p}：head_sha={sha_disp} 快照的 {FIFTH_SCRIPT} 尚無 per-scan scope／document_count{also}，LS-202 新欄位不要求——舊收據放行）")
 print(f"✓ design-evidence gate 通過：{p}（head_sha={sha_disp}{tag}，total_nodes={want_nodes}，{schema}）")
 PY
   then
