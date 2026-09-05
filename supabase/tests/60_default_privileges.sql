@@ -481,7 +481,9 @@ declare
     -- LS-143
     'public.delete_my_account()',
     -- LS-197
-    'public.accept_eula(text)'
+    'public.accept_eula(text)',
+    -- LS-206
+    'public.transfer_ownership(uuid, uuid)'
   ];
   v_invoker_rpcs text[] := array[
     'public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)',
