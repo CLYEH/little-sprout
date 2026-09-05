@@ -140,6 +140,13 @@ case "\${CURL_FAIL_MODE:-}" in
   exit) echo 'stub curl: connection refused' >&2; exit 7 ;;
   badjson) echo 'not json'; exit 0 ;;
   gqlerror) echo '{"errors":[{"message":"Authentication required"}],"data":null}'; exit 0 ;;
+  timeout) echo 'stub curl: (28) Operation timed out after 25000 milliseconds' >&2; exit 28 ;;
+  timeout_once)
+    cf="\${CURL_STUB_COUNT_FILE:?}"
+    n=\$(( \$(cat "\$cf" 2>/dev/null || echo 0) + 1 ))
+    printf '%s' "\$n" > "\$cf"
+    if [ "\$n" -eq 1 ]; then echo 'stub curl: (28) Operation timed out after 25000 milliseconds' >&2; exit 28; fi
+    ;;
 esac
 data=""
 while [ \$# -gt 0 ]; do
@@ -219,6 +226,16 @@ vexpect 1 '⑥e 同行多 token 但沒有一個是 PR 內的 commit → 紅' '�
 CURL_FAIL_MODE=exit vexpect 2 '⑥f curl 非 0 → exit 2（fail closed）' 'curl 失敗（exit 7）' 'test-token-not-real' "$both"
 CURL_FAIL_MODE=badjson vexpect 2 '⑥f 回應非 JSON → exit 2' '不是合法 JSON' 'test-token-not-real' "$both"
 CURL_FAIL_MODE=gqlerror vexpect 2 '⑥f GraphQL errors（如 401）→ exit 2' 'Authentication required' 'test-token-not-real' "$both"
+
+# ⑥g LS-207（7902dc20）：Linear curl 逾時／連不上先重試（退避可覆寫成極短秒數跑自測，不真的等 5/15/30s）才 fail-closed。
+export PR_BODY_CHECK_LINEAR_BACKOFF='0.01,0.01,0.01'
+export CURL_STUB_COUNT_FILE="$work/curl_count"
+: > "$CURL_STUB_COUNT_FILE"
+CURL_FAIL_MODE=timeout_once vexpect 0 '⑥g 首次逾時、第二次成功 → 綠' '9f348e36 存在' 'test-token-not-real' "${H}- i1：記入 LS-96 \`9f348e36\`"$'\n'
+if [ "$(cat "$CURL_STUB_COUNT_FILE" 2>/dev/null)" -ge 2 ] 2>/dev/null; then echo "✓ ⑥g curl 確實被重試（呼叫 $(cat "$CURL_STUB_COUNT_FILE") 次）"; else echo "✗ ⑥g curl 呼叫次數異常（$(cat "$CURL_STUB_COUNT_FILE" 2>/dev/null)）——應至少重試一次" >&2; fail=1; fi
+: > "$CURL_STUB_COUNT_FILE"
+CURL_FAIL_MODE=timeout vexpect 2 '⑥g 三次皆逾時 → 紅（fail closed），訊息含「非 body 問題」' '非 body 問題' 'test-token-not-real' "${H}- i1：記入 LS-96 \`9f348e36\`"$'\n'
+unset PR_BODY_CHECK_LINEAR_BACKOFF CURL_STUB_COUNT_FILE
 
 # ⑦ LS-186：「已修」SHA 候選只認同一行「已修」之後的第一個 7–40 hex token（R2；R1 曾要求緊鄰），--verify 另須為 commit object；
 #   紅時最後一行在 stdout 印 ✗。來源：LS-185 PR body 標題行「## R2（merge-review R1 `d87d4334` … 皆已修）」的 review comment id

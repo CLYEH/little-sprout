@@ -43,6 +43,10 @@
 #   的 commit」時補「檔名／行號裡的數字也算 hex token，把 SHA 放『已修』後第一個」（殘餘誤紅多是 migration 檔名排在 SHA 之前）。
 #   （CI 需 secrets.LINEAR_API_KEY）；curl／GraphQL 失敗 exit 2（fail closed）。token 只走 curl `-K -`（stdin config）不進
 #   argv（同 patrol_linear.py R1 F3）。
+#   LS-207（7902dc20）：curl 連線層失敗（逾時／連不上）先重試 3 次（退避 5／15／30s，PR_BODY_CHECK_LINEAR_BACKOFF 可覆寫供自測）
+#   才 fail closed，訊息「Linear 不可達（重試 N 次仍逾時／連不上），非 body 問題」——單次 Linear API 間歇性逾時不該讓 agent／
+#   reviewer 誤以為是 PR body 本身有問題。JSON 格式錯／GraphQL errors／回應不是本票 issue 這類「有回應但內容不對」不重試
+#   （不是連線問題，重試也不會變好），維持原本立即 die。
 # exit 0＝全過；1＝違規（空 body、模板未填、票號不在檔頭段、檔頭段是他票、LS-96 行缺 comment id、「已修」行缺 SHA、
 #   --verify 反查不到；最後一行 stdout 必為 `✗ pr-body-check：未通過…`）；2＝參數／分支／環境錯誤（fail closed）。
 # 紅了之後：改 PR body 不會讓 CI 自動重跑（on: pull_request 不含 edited；gh run rerun 重放舊 payload），要 close/reopen PR
@@ -220,7 +224,7 @@ if [ -n "$pool_claims" ]; then
     trap 'rm -rf "$work"' EXIT
     # 只讀（GraphQL query）、分頁到底、一行一個 id 到 $work/ids；任何失敗 exit 2（fail closed）。
     python3 - "$pool" > "$work/ids" <<'PY'
-import json, os, subprocess, sys
+import json, os, subprocess, sys, time
 
 pool = sys.argv[1]
 token = os.environ.get("LINEAR_API_KEY", "")
@@ -228,26 +232,55 @@ url = "https://api.linear.app/graphql"
 query = ("query($id: String!, $after: String) { issue(id: $id) { identifier "
          "comments(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes { id } } } }")
 
+# LS-207（7902dc20）：2026-09-05 22:13～22:40 Linear API 間歇逾時，curl 25s --max-time 逾時就 fail-closed，讓
+# #322／#305／#321 各多等一輪——單次逾時不該立刻判「body 有問題」。重試 3 次（退避 5／15／30s；三次皆逾時／連不上
+# 才 fail closed）；訊息標明「非 body 問題」，agent／reviewer 看到就知道要 rerun 而不是去查 PR body。JSON 格式錯／
+# GraphQL errors／回應非本票 issue 這類「有回應但內容不對」不算連線問題，不重試（重試也不會變好）。
+# 退避秒數可用 PR_BODY_CHECK_LINEAR_BACKOFF（逗號分隔）覆寫，自測用極短延遲跑到底、不真的等 50 秒。
+_backoff_raw = os.environ.get("PR_BODY_CHECK_LINEAR_BACKOFF", "5,15,30")
+try:
+    LINEAR_BACKOFF = [float(x) for x in _backoff_raw.split(",") if x.strip() != ""]
+except ValueError:
+    LINEAR_BACKOFF = [5.0, 15.0, 30.0]
+
 
 def die(msg):
     sys.stderr.write("✗ pr-body-check：%s——fail closed\n" % msg)
     sys.exit(2)
 
 
+def curl_call(argv, input_str):
+    """單次呼叫：回傳 (ok, proc, err)。連線層失敗（例外／非 0 exit，即逾時／連不上的形狀）不在這裡 die，交呼叫端重試。"""
+    try:
+        proc = subprocess.run(argv, input=input_str, capture_output=True, text=True, timeout=30)
+    except Exception as exc:  # noqa: BLE001 - 印出來讓人判斷
+        return False, None, "curl 呼叫失敗（%s）" % exc
+    if proc.returncode != 0:
+        return False, proc, "curl 失敗（exit %d）：%s" % (proc.returncode, proc.stderr.strip()[:300])
+    return True, proc, None
+
+
+def curl_with_retry(argv, input_str):
+    err = None
+    attempts = len(LINEAR_BACKOFF) + 1
+    for i in range(attempts):
+        ok, proc, err = curl_call(argv, input_str)
+        if ok:
+            return proc
+        if i < len(LINEAR_BACKOFF):
+            time.sleep(LINEAR_BACKOFF[i])
+    die("Linear 不可達（重試 %d 次仍逾時／連不上），非 body 問題：%s" % (len(LINEAR_BACKOFF), err))
+
+
 after = None
 while True:
     body = json.dumps({"query": query, "variables": {"id": pool, "after": after}})
     # token 只走 stdin config（-K -），不進 argv（patrol_linear.py R1 F3：ps 讀得到 argv）
-    try:
-        proc = subprocess.run(
-            ["curl", "-sS", "--max-time", "25", "-X", "POST", url,
-             "-H", "Content-Type: application/json", "--data", body, "-K", "-"],
-            input='header = "Authorization: %s"\n' % token, capture_output=True, text=True, timeout=30,
-        )
-    except Exception as exc:  # noqa: BLE001 - 印出來讓人判斷
-        die("curl 呼叫失敗（%s）" % exc)
-    if proc.returncode != 0:
-        die("curl 失敗（exit %d）：%s" % (proc.returncode, proc.stderr.strip()[:300]))
+    proc = curl_with_retry(
+        ["curl", "-sS", "--max-time", "25", "-X", "POST", url,
+         "-H", "Content-Type: application/json", "--data", body, "-K", "-"],
+        'header = "Authorization: %s"\n' % token,
+    )
     try:
         data = json.loads(proc.stdout)
     except ValueError:
