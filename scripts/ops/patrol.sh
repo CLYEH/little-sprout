@@ -22,7 +22,8 @@
 # 停滯判定（§4-b 三型態；stale＝上面的分鐘數）：
 #   PR       CONFLICTING／UNSTABLE／BEHIND／CHANGES_REQUESTED 立即標；CLEAN 且 APPROVED 立即標「可併」；
 #            其餘 CLEAN／BLOCKED 超過 stale 沒更新標 ⏳（草稿不標）
-#   分支     有 commit 但分支從未 push、最後 commit 超過 PATROL_PUSH_GRACE_MIN（預設 20 分，LS-207）；領先 remote 且最後 commit 超過 stale（push gate 卡？）；
+#   分支     有 commit 但分支從未 push、最後 commit 超過 PATROL_PUSH_GRACE_MIN（預設 30 分，> push-gate 看門狗 25 分，LS-207 R2）
+#            且真的 pgrep 不到該 worktree 下的 push-gate.sh 行程；領先 remote 且最後 commit 超過 stale（push gate 卡？）；
 #            落後 remote（別處 push 過）；已 push、無 open PR、最後 commit 超過 stale
 #   工作區   有未提交變更（不含 untracked）且最後改動超過 stale；worktree 建好超過 stale 仍 0 commit 無變更（尚未開工）；
 #            分支已併入 base（自 merge-base 0 commit、但分支 reflog 有過 commit）而 worktree 未移除（§2：合併完成後移除）
@@ -94,10 +95,30 @@ DISK_MIN_GB=${PATROL_DISK_MIN_GB:-20}
 case "$DISK_MIN_GB" in ''|*[!0-9]*) echo "✗ patrol：PATROL_DISK_MIN_GB 須為整數 GB（得到「${DISK_MIN_GB}」）" >&2; exit 2 ;; esac
 # LS-207（a7b0f49e）：本地有 commit、遠端無同名分支——「領先 remote」旗標要求 remote 分支存在（`-n "$r"`），
 # 漏抓「從未 push 過」這種連 remote 分支都不存在的情況（LS-191 當晚：長命令背景化沒人回頭看，`git push` 究竟
-# 跑了沒、卡了沒都不知道）。給 20 分鐘寬限（比 STALE 短——push 該很快發生，不必等到 45 分鐘的一般停滯門檻）：
-# 未超過只印 info（可能還在跑 push gate），超過才標 ⚠。
-PUSH_GRACE_MIN=${PATROL_PUSH_GRACE_MIN:-20}
+# 跑了沒、卡了沒都不知道）。給寬限期（比 STALE 短——push 該很快發生，不必等到 45 分鐘的一般停滯門檻）：未超過
+# 只印 info（可能還在跑 push gate），超過才標 ⚠。
+# LS-207 R2（merge-review R1 fd783f6c F6）：預設從 20 分調到 30 分——push-gate.sh 的 unit tests 看門狗
+# （PUSH_GATE_XCODEBUILD_TIMEOUT_MIN，預設 25 分，LS-199）比舊寬限期長，健康但慢的 push 會在第 21～25 分鐘
+# 之間被誤標；30 分確保「看門狗還沒判定逾時」的情況下寬限期一定還沒到。另外文案原本宣稱「無 push 行程」但
+# 其實從沒偵測過任何行程，判準只是「最後一個 commit 已經過了 N 分鐘」——現在真的用 pgrep 掃 push-gate.sh 行程、
+# 再用 lsof 核對其 cwd 是否落在這個 worktree 之下，行程真的在跑就不標（pgrep／lsof 不可用時保守 fail-open：
+# 當作沒在跑，退回只看時間，不因為偵測工具缺失而永遠不標）。
+PUSH_GRACE_MIN=${PATROL_PUSH_GRACE_MIN:-30}
 case "$PUSH_GRACE_MIN" in ''|*[!0-9]*) echo "✗ patrol：PATROL_PUSH_GRACE_MIN 須為整數分鐘（得到「${PUSH_GRACE_MIN}」）" >&2; exit 2 ;; esac
+# LS-207 R2（F6）：$1＝worktree 絕對路徑；0＝該 worktree 目前真的有 push-gate.sh 在跑（不誤標）、1＝沒有（或偵測
+# 不了）。PATROL_PGREP／PATROL_LSOF 可覆寫供自測餵假身，不碰真的系統行程表。
+PGREP_BIN=${PATROL_PGREP:-pgrep}
+LSOF_BIN=${PATROL_LSOF:-lsof}
+push_gate_running_for() {
+  local w=$1 pid cwd
+  command -v "$PGREP_BIN" >/dev/null 2>&1 || return 1
+  command -v "$LSOF_BIN" >/dev/null 2>&1 || return 1
+  for pid in $("$PGREP_BIN" -f 'push-gate\.sh' 2>/dev/null); do
+    cwd=$("$LSOF_BIN" -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1)
+    case "$cwd" in "$w"|"$w"/*) return 0 ;; esac
+  done
+  return 1
+}
 DU_TIMEOUT=${PATROL_DU_TIMEOUT:-}
 if [ -z "$DU_TIMEOUT" ]; then if [ "$MODE" = brief ]; then DU_TIMEOUT=8; else DU_TIMEOUT=25; fi; fi
 case "$DU_TIMEOUT" in ''|*[!0-9]*) echo "✗ patrol：PATROL_DU_TIMEOUT 須為整數秒（得到「${DU_TIMEOUT}」）" >&2; exit 2 ;; esac
@@ -259,8 +280,10 @@ process_wt() {
 
   # 判定（§4-b 分支／工作區停滯）
   if [ -z "$r" ] && [ "$since" != "?" ] && [ "$since" -gt 0 ]; then
-    if [ "${lm:-0}" -ge "$PUSH_GRACE_MIN" ]; then
-      flag="⚠ 分支未 push（${since} commit 只在本機，最後 commit ${lm}m 前，>${PUSH_GRACE_MIN}分無 push 行程，LS-207）"
+    if [ "${lm:-0}" -ge "$PUSH_GRACE_MIN" ] && ! push_gate_running_for "$w"; then
+      flag="⚠ 分支未 push（${since} commit 只在本機，最後 commit ${lm}m 前，>${PUSH_GRACE_MIN}分未偵測到 push-gate.sh 行程，LS-207）"
+    elif [ "${lm:-0}" -ge "$PUSH_GRACE_MIN" ]; then
+      info="${since} commit 尚未 push（${lm:-0}m 前，push-gate.sh 仍在跑）"
     else
       info="${since} commit 尚未 push（${lm:-0}m 前，可能還在跑 push gate）"
     fi
@@ -334,6 +357,15 @@ if [ -n "$lock_path" ] && [ -d "${lock_path}.waiters" ]; then
   now_epoch=$(date +%s)
   for wf in "${lock_path}.waiters"/*; do
     [ -f "$wf" ] || continue
+    # LS-207 R2（merge-review R1 fd783f6c F3）：holder 那路有 is_stale＋reclaim＋tomb，waiter 這路原本完全沒有——
+    # SIGKILL／crash（INT/TERM/HUP 才有 trap 清）留下的殘留檔會被永遠算進「排隊中」，讓 ⚠ 排隊／`lock_waiters`
+    # 變成常駐假警報。檔名已帶 pid，這裡用 kill -0 驗活；不活就回收（rm，不計入排隊數）；解析不出 pid 的檔名
+    # （不該發生，但寧可誤報也不亂刪）原樣計入、不動它。
+    wpid=$(basename "$wf" | sed -E 's/^(.*)-([0-9]+)-([0-9]+)$/\2/')
+    case "$wpid" in
+      ''|*[!0-9]*) ;;
+      *) if ! kill -0 "$wpid" 2>/dev/null; then rm -f "$wf" 2>/dev/null; continue; fi ;;
+    esac
     lock_waiters=$((lock_waiters + 1))
     wstarted=$(basename "$wf" | sed -E 's/^(.*)-([0-9]+)-([0-9]+)$/\3/')
     case "$wstarted" in

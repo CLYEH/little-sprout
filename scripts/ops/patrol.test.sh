@@ -363,8 +363,8 @@ jq_ok '⑪-c 無等待者 → --json lock_waiters=0' "$(bash "$patrol" --repo "$
 mkdir -p "${SUPABASE_LOCK_DIR}.waiters"
 now_e=$(date +%s)
 # 起始秒數故意避開整分邊界（ceil((now-started)/60) 在邊界上差 1 秒就跳一分鐘，710／170 各留 10s 緩衝）
-: > "${SUPABASE_LOCK_DIR}.waiters/LS-20-11111-$(( now_e - 710 ))"   # 等了 12 分（660< 710 ≤720）
-: > "${SUPABASE_LOCK_DIR}.waiters/LS-21-22222-$(( now_e - 170 ))"   # 等了 3 分（120< 170 ≤180）
+: > "${SUPABASE_LOCK_DIR}.waiters/LS-20-$$-$(( now_e - 710 ))"   # 等了 12 分（660< 710 ≤720）；pid 用本測試程序自己的（LS-207 R2：kill -0 要驗得到活）
+: > "${SUPABASE_LOCK_DIR}.waiters/LS-21-$$-$(( now_e - 170 ))"   # 等了 3 分（120< 170 ≤180）
 out11c="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 has   '⑪-c 有 2 個等待者、持有者剩餘 >10 分 → 印 ⚠ 排隊 2（最久 12 分）' "$out11c" '⚠ 排隊 2（最久 12 分）'
 has   '⑪-c ⚠ 排隊行含持有者 label 與剩餘分鐘' "$out11c" '持有者「LS-9 排隊測試」剩餘'
@@ -379,9 +379,61 @@ hasnt '⑪-c 持有者剩餘 10 分（未超過門檻）→ 不印 ⚠ 排隊' "
 rm -rf "${SUPABASE_LOCK_DIR}.waiters"
 # 命令型持有（無 expires_at）即使殘留 waiters/ 也不印——沒有「剩餘分鐘」可比
 mkdir -p "${SUPABASE_LOCK_DIR}.waiters"
-: > "${SUPABASE_LOCK_DIR}.waiters/LS-22-33333-$(( $(date +%s) - 60 ))"
+: > "${SUPABASE_LOCK_DIR}.waiters/LS-22-$$-$(( $(date +%s) - 60 ))"
 printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=%s\nbranch=feature/LS-9-holder\ncmd=supabase db reset\n' "$$" "$(date +%s)" "$(hostname)" "$wts/LS-9" > "$SUPABASE_LOCK_DIR/holder"
 hasnt '⑪-c 命令型持有（無到期時間）→ 不印 ⚠ 排隊' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)" '⚠ 排隊'
+rm -rf "$SUPABASE_LOCK_DIR" "${SUPABASE_LOCK_DIR}.waiters"
+
+# ---- ⑪-d LS-207 R2（merge-review R1 fd783f6c F3）：waiter 檔的 pid 已死（SIGKILL／crash 殘留，INT/TERM/HUP
+#        才有 trap 清）→ 讀取時用 kill -0 驗活、不活就回收（不計入排隊數、檔案真的被刪掉，不是常駐假警報）；
+#        pid 還活著的 waiter 不受影響、照常計入 ----
+mkdir -p "$SUPABASE_LOCK_DIR"
+exp11d=$(( $(date +%s) + 900 ))
+printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=%s\nbranch=test\ncmd=hold:LS-9 F3 測試\nowner=%s\nexpires_at=%s\nheartbeat=%s\n' "$$" "$(date +%s)" "$(hostname)" "$wts/LS-9" "$$" "$exp11d" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder"
+mkdir -p "${SUPABASE_LOCK_DIR}.waiters"
+sh -c 'exit 0' & dead_pid=$!; wait "$dead_pid" 2>/dev/null   # 讓出一個保證已死的 pid（不靠猜測 999999，避免 pid 重用巧合）
+dead_wf="${SUPABASE_LOCK_DIR}.waiters/LS-30-${dead_pid}-$(( $(date +%s) - 300 ))"
+: > "$dead_wf"
+sleep 30 & live_pid=$!
+live_wf="${SUPABASE_LOCK_DIR}.waiters/LS-31-${live_pid}-$(( $(date +%s) - 710 ))"
+: > "$live_wf"
+out11d="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑪-d 活 pid 的 waiter 仍計入（⚠ 排隊 1，不是 2）' "$out11d" '⚠ 排隊 1（最久 12 分）'
+if [ -e "$dead_wf" ]; then echo "✗ ⑪-d 死 pid 的 waiter 檔應被回收、卻還在" >&2; fail=1; else echo "✓ ⑪-d 死 pid 的 waiter 檔已被回收（kill -0 驗活後刪除）"; fi
+if [ -e "$live_wf" ]; then echo "✓ ⑪-d 活 pid 的 waiter 檔沒被誤刪"; else echo "✗ ⑪-d 活 pid 的 waiter 檔被誤刪" >&2; fail=1; fi
+kill "$live_pid" 2>/dev/null; wait "$live_pid" 2>/dev/null
+rm -rf "$SUPABASE_LOCK_DIR" "${SUPABASE_LOCK_DIR}.waiters"
+# mutation：拿掉 kill -0 回收判定 → 死 pid 的 waiter 檔應該不再被刪、⚠ 排隊 應該變成 2（兩個都被算進去）
+# patrol.sh 用 $(dirname "${BASH_SOURCE[0]}") 找同目錄的 supabase-lock.sh（--status 讀 lock）——mutant 檔案
+# 若獨自放在 $work 下、旁邊沒有 supabase-lock.sh，會印「（無 …/supabase-lock.sh）」整段查無此鎖，蓋掉真正要
+# 驗的排隊行為。放進專屬子目錄並複製一份真正的 supabase-lock.sh 進去。
+mut_dir="$work/patrol-mutant-f3"; mkdir -p "$mut_dir"
+cp "${root}/scripts/ops/supabase-lock.sh" "$mut_dir/supabase-lock.sh"
+mut_f3="$mut_dir/patrol.sh"
+python3 - "$patrol" "$mut_f3" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = '''    wpid=$(basename "$wf" | sed -E 's/^(.*)-([0-9]+)-([0-9]+)$/\\2/')
+    case "$wpid" in
+      ''|*[!0-9]*) ;;
+      *) if ! kill -0 "$wpid" 2>/dev/null; then rm -f "$wf" 2>/dev/null; continue; fi ;;
+    esac
+'''
+assert old in src, "找不到 F3 回收判定區塊，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, ""))
+PY
+mkdir -p "$SUPABASE_LOCK_DIR"
+printf 'pid=%s\nstarted=%s\nhost=%s\nworktree=%s\nbranch=test\ncmd=hold:LS-9 F3 mutant\nowner=%s\nexpires_at=%s\nheartbeat=%s\n' "$$" "$(date +%s)" "$(hostname)" "$wts/LS-9" "$$" "$(( $(date +%s) + 900 ))" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder"
+mkdir -p "${SUPABASE_LOCK_DIR}.waiters"
+sh -c 'exit 0' & dead_pid2=$!; wait "$dead_pid2" 2>/dev/null
+dead_wf2="${SUPABASE_LOCK_DIR}.waiters/LS-32-${dead_pid2}-$(( $(date +%s) - 290 ))"   # 290s（非整分邊界，留 10s 緩衝，同 ⑪-c 的手法）
+: > "$dead_wf2"
+out_mut="$(bash "$mut_f3" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+if printf '%s' "$out_mut" | grep -qF '⚠ 排隊 1（最久 5 分）' && [ -e "$dead_wf2" ]; then
+  echo "✓ ⑪-d mutant：拿掉回收判定後死 pid 的 waiter 檔不再被清、照常計入排隊數（證明 F3 修法確實是原因）"
+else
+  echo "✗ ⑪-d mutant 應仍計入死 pid waiter 且檔案還在（負控本身可能無效）" >&2; printf '%s\n' "$out_mut" | sed 's/^/    /' >&2; fail=1
+fi
 rm -rf "$SUPABASE_LOCK_DIR" "${SUPABASE_LOCK_DIR}.waiters"
 
 # ---- ⑭ 專屬模擬器 >7 天未用（LS-83；LS-187 起為第二層）：xcrun 假身回固定 JSON，驗 lastBootedAt／目錄 mtime 兩種判定、
@@ -927,37 +979,67 @@ rc_is '㉓-b exit 0' 0 "$rc" "$out23g"
 has   '㉓-b 記錄在、目錄已刪 → LS-77 判殘機 ⚠＋動作行' "$out23g" '⚠ LS-77-iPhone17Pro（GONE-77）票 LS-77 的 worktree 已不在（殘機） → bash scripts/ops/cleanup-merged.sh --apply LS-77'
 hasnt '㉓-b 對照：LS-3（目錄在）不 ⚠' "$out23g" '⚠ LS-3-iPhone17Pro'
 
-# ---- ㉔ LS-207（a7b0f49e）：本地有 commit、無 remote 分支——20 分鐘寬限（PATROL_PUSH_GRACE_MIN）：
-#        未超過只印 info（可能還在跑 push gate），超過才標 ⚠；「領先 remote」旗標（既有）不受影響 ----
+# 假 pgrep／lsof（LS-207 R2 F6）：不碰真的系統行程表。fake-pgrep 只回 $FAKE_PGREP_PIDS（空白分隔，忽略實際參數）；
+# fake-lsof 只回 $FAKE_LSOF_CWD 當成查到的 pid 的 cwd（-Fn 格式：p<pid> 一行、n<路徑> 一行）。
+cat > "$work/fake-pgrep" <<'EOS'
+#!/bin/bash
+for p in ${FAKE_PGREP_PIDS:-}; do echo "$p"; done
+EOS
+chmod +x "$work/fake-pgrep"
+cat > "$work/fake-lsof" <<'EOS'
+#!/bin/bash
+echo "p$3"
+echo "n${FAKE_LSOF_CWD:-/nonexistent}"
+EOS
+chmod +x "$work/fake-lsof"
+export PATROL_PGREP="$work/fake-pgrep" PATROL_LSOF="$work/fake-lsof"
+
+# ---- ㉔ LS-207 R2（merge-review R1 fd783f6c F6）：本地有 commit、無 remote 分支——30 分鐘寬限
+#        （PATROL_PUSH_GRACE_MIN，> push-gate 看門狗 25 分）：超過寬限、pgrep 找不到該 worktree 的
+#        push-gate.sh 行程 → 標 ⚠；「領先 remote」旗標（既有）不受影響 ----
 wt -b feature/LS-901-nopush "$wts/LS-901" origin/development
 echo x > "$wts/LS-901/x.txt"; g -C "$wts/LS-901" add -A
-old_t=$(date -u -v-25M +%Y%m%d%H%M.%S 2>/dev/null || date -u -d '25 minutes ago' +%Y%m%d%H%M.%S)
-GIT_COMMITTER_DATE="$(date -u -v-25M '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date -u -d '25 minutes ago' '+%Y-%m-%d %H:%M:%S')" \
-  g -C "$wts/LS-901" commit -qm 'feat: LS-901 x' --date="$(date -u -v-25M '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date -u -d '25 minutes ago' '+%Y-%m-%d %H:%M:%S')"
-out24="$(PATROL_PUSH_GRACE_MIN=20 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+commit_ts_31m=$(date -v-31M '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date -d '31 minutes ago' '+%Y-%m-%d %H:%M:%S')   # 本地時區字串（不加 -u）：git --date 沒有時區後綴時當本地時間解讀，加 -u 會讓字串內容是 UTC 卻被當本地時間，差一個時區（LS-207 R2 實測踩到：511m 而非 31m）
+GIT_COMMITTER_DATE="$commit_ts_31m" g -C "$wts/LS-901" commit -qm 'feat: LS-901 x' --date="$commit_ts_31m"
+out24="$(FAKE_PGREP_PIDS= PATROL_PUSH_GRACE_MIN=30 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 l201=$(row "$out24" 'feature/LS-901-nopush')
-has   '㉔ 最後 commit 25 分前、寬限 20 分 → 標 ⚠ 分支未 push（含寬限分鐘與 LS-207）' "$l201" '>20分無 push 行程，LS-207'
-jq_ok '㉔ --json 同案 flag 含「未 push」' "$(PATROL_PUSH_GRACE_MIN=20 bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)" '.worktrees[] | select(.branch=="feature/LS-901-nopush") | (.flag | test("未 push"))'
+has   '㉔ 最後 commit 31 分前、寬限 30 分、無行程 → 標 ⚠ 分支未 push（含寬限分鐘與 LS-207）' "$l201" '>30分未偵測到 push-gate.sh 行程，LS-207'
+jq_ok '㉔ --json 同案 flag 含「未 push」' "$(FAKE_PGREP_PIDS= PATROL_PUSH_GRACE_MIN=30 bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)" '.worktrees[] | select(.branch=="feature/LS-901-nopush") | (.flag | test("未 push"))'
+
+# ---- ㉔-b 同一分支、同一逾期 commit，但 pgrep 找到一個 push-gate.sh 行程且 cwd 落在這個 worktree 之下 →
+#        即使已過寬限期也不標 ⚠、改印 info（行程真的還在跑，不是誤判）----
+out24b="$(FAKE_PGREP_PIDS=54321 FAKE_LSOF_CWD="$(cd "$wts/LS-901" && pwd -P)" PATROL_PUSH_GRACE_MIN=30 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"   # pwd -P：git worktree list 回報的是解析過 symlink 的路徑（macOS /var→/private/var），FAKE_LSOF_CWD 要對得上
+l201b=$(row "$out24b" 'feature/LS-901-nopush')
+hasnt '㉔-b 偵測到該 worktree 的 push-gate.sh 行程 → 不標 ⚠（即使已過寬限期）' "$l201b" '⚠ 分支未 push'
+has   '㉔-b 改印 info：push-gate.sh 仍在跑' "$l201b" 'push-gate.sh 仍在跑'
+
+# ---- ㉔-c 同一逾期 commit，pgrep 找到行程但 cwd 是別的 worktree（沒有 scope 到位）→ 仍標 ⚠（不誤放行）----
+out24c="$(FAKE_PGREP_PIDS=54322 FAKE_LSOF_CWD="$(cd "$wts/LS-3" && pwd -P)" PATROL_PUSH_GRACE_MIN=30 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+l201c=$(row "$out24c" 'feature/LS-901-nopush')
+has   '㉔-c 行程 cwd 是別的 worktree → 不算數、仍標 ⚠' "$l201c" '⚠ 分支未 push'
 git -C "$repo" worktree remove --force "$wts/LS-901" >/dev/null 2>&1
 g -C "$repo" branch -D feature/LS-901-nopush >/dev/null 2>&1
 
+# ---- ㉕ 最後 commit 剛剛、寬限 30 分未到 → 不標 ⚠（只是還沒到寬限期，與有沒有 push-gate.sh 行程無關）----
 wt -b feature/LS-902-recent "$wts/LS-902" origin/development
 echo y > "$wts/LS-902/y.txt"; g -C "$wts/LS-902" add -A; g -C "$wts/LS-902" commit -qm 'feat: LS-902 y'
-out25="$(PATROL_PUSH_GRACE_MIN=20 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+out25="$(FAKE_PGREP_PIDS= PATROL_PUSH_GRACE_MIN=30 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 l202=$(row "$out25" 'feature/LS-902-recent')
-hasnt '㉕ 最後 commit 剛剛、寬限 20 分未到 → 不標 ⚠（只是還沒到寬限期）' "$l202" '⚠ 分支未 push'
+hasnt '㉕ 最後 commit 剛剛、寬限 30 分未到 → 不標 ⚠（只是還沒到寬限期）' "$l202" '⚠ 分支未 push'
 has   '㉕ 寬限期內印 info：可能還在跑 push gate' "$l202" '可能還在跑 push gate'
 git -C "$repo" worktree remove --force "$wts/LS-902" >/dev/null 2>&1
 g -C "$repo" branch -D feature/LS-902-recent >/dev/null 2>&1
 
-# mutation：拿掉寬限判定（改回無條件立即標 ⚠）→ ㉕ 的「未到寬限期不標」負樣本必須變紅，證明寬限期是這條規則造成的
+# mutation A：拿掉寬限＋pgrep 判定（改回無條件立即標 ⚠）→ ㉕ 的「未到寬限期不標」負樣本必須變紅
 mut_pg="$work/patrol.no-push-grace.sh"
 python3 - "$patrol" "$mut_pg" <<'PY'
 import sys
 src = open(sys.argv[1], encoding="utf-8").read()
 old = '''  if [ -z "$r" ] && [ "$since" != "?" ] && [ "$since" -gt 0 ]; then
-    if [ "${lm:-0}" -ge "$PUSH_GRACE_MIN" ]; then
-      flag="⚠ 分支未 push（${since} commit 只在本機，最後 commit ${lm}m 前，>${PUSH_GRACE_MIN}分無 push 行程，LS-207）"
+    if [ "${lm:-0}" -ge "$PUSH_GRACE_MIN" ] && ! push_gate_running_for "$w"; then
+      flag="⚠ 分支未 push（${since} commit 只在本機，最後 commit ${lm}m 前，>${PUSH_GRACE_MIN}分未偵測到 push-gate.sh 行程，LS-207）"
+    elif [ "${lm:-0}" -ge "$PUSH_GRACE_MIN" ]; then
+      info="${since} commit 尚未 push（${lm:-0}m 前，push-gate.sh 仍在跑）"
     else
       info="${since} commit 尚未 push（${lm:-0}m 前，可能還在跑 push gate）"
     fi
@@ -970,13 +1052,41 @@ open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
 PY
 wt -b feature/LS-903-recent2 "$wts/LS-903" origin/development
 echo z > "$wts/LS-903/z.txt"; g -C "$wts/LS-903" add -A; g -C "$wts/LS-903" commit -qm 'feat: LS-903 z'
-out26="$(PATROL_PUSH_GRACE_MIN=20 bash "$mut_pg" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+out26="$(FAKE_PGREP_PIDS= PATROL_PUSH_GRACE_MIN=30 bash "$mut_pg" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 l203=$(row "$out26" 'feature/LS-903-recent2')
 if printf '%s' "$l203" | grep -qF '⚠ 分支未 push'; then
   echo '✓ ㉕ mutant：拿掉寬限判定後「剛 commit 就標 ⚠」的負樣本變紅（證明寬限期是這條規則造成的）'
 else
   echo "✗ ㉕ mutant 應標 ⚠（未套寬限期），實際仍未標——mutation 本身可能沒生效" >&2; printf '%s\n' "$l203" | sed 's/^/    /' >&2; fail=1
 fi
+git -C "$repo" worktree remove --force "$wts/LS-903" >/dev/null 2>&1
+g -C "$repo" branch -D feature/LS-903-recent2 >/dev/null 2>&1
+
+# mutation B：只拿掉 `&& ! push_gate_running_for "$w"` 這半（寬限判定還在，但不再排除真的在跑的行程）→
+# ㉔-b「偵測到行程不標」的負樣本必須變紅，證明 pgrep／lsof 探測真的是這行為的原因
+mut_pg2="$work/patrol.no-pgrep-check.sh"
+python3 - "$patrol" "$mut_pg2" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = 'if [ "${lm:-0}" -ge "$PUSH_GRACE_MIN" ] && ! push_gate_running_for "$w"; then'
+new = 'if [ "${lm:-0}" -ge "$PUSH_GRACE_MIN" ]; then'
+assert src.count(old) == 1, "找不到 pgrep 判定條件，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
+PY
+wt -b feature/LS-904-running "$wts/LS-904" origin/development
+echo w > "$wts/LS-904/w.txt"; g -C "$wts/LS-904" add -A
+commit_ts_31m_b=$(date -v-31M '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date -d '31 minutes ago' '+%Y-%m-%d %H:%M:%S')
+GIT_COMMITTER_DATE="$commit_ts_31m_b" g -C "$wts/LS-904" commit -qm 'feat: LS-904 w' --date="$commit_ts_31m_b"
+out27="$(FAKE_PGREP_PIDS=54323 FAKE_LSOF_CWD="$(cd "$wts/LS-904" && pwd -P)" PATROL_PUSH_GRACE_MIN=30 bash "$mut_pg2" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+l204=$(row "$out27" 'feature/LS-904-running')
+if printf '%s' "$l204" | grep -qF '⚠ 分支未 push'; then
+  echo '✓ ㉔-b mutant：拿掉 pgrep 排除判定後，即使行程真的在跑也會被標 ⚠（證明 push_gate_running_for 真的是原因）'
+else
+  echo "✗ ㉔-b mutant 應該標 ⚠（拿掉排除判定），實際沒標——mutation 本身可能無效" >&2; printf '%s\n' "$l204" | sed 's/^/    /' >&2; fail=1
+fi
+git -C "$repo" worktree remove --force "$wts/LS-904" >/dev/null 2>&1
+g -C "$repo" branch -D feature/LS-904-running >/dev/null 2>&1
+unset PATROL_PGREP PATROL_LSOF
 git -C "$repo" worktree remove --force "$wts/LS-903" >/dev/null 2>&1
 g -C "$repo" branch -D feature/LS-903-recent2 >/dev/null 2>&1
 
