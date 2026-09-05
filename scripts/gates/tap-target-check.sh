@@ -70,12 +70,28 @@ if xcodebuild test \
 fi
 
 violations=$(grep 'TAP-TARGET-FAIL:' "$log" || true)
+
+# LS-207（16e6b7f9）：TAP-TARGET-FAIL 只在點擊目標違規時出現；同一輪 UITests 若另有不相關的紅測試（LS-167 R3 起：
+# iOS 26.2 sheet 縮放讓一支對齊測試同時紅），舊版摘要只擷取 TAP-TARGET-FAIL、把它吞掉，直到高度違規修好第二個紅
+# 測試才露出，多燒一輪 CI。這裡另抓 xcodebuild 逐一列印的「Test Case '-[Target.Class testMethod]' failed」行，
+# 獨立列出「本輪其他失敗測試」——不論是否已有 TAP-TARGET-FAIL 都列，讓所有紅測試一次看到。
+other_failed=$(grep -oE "Test Case '-\[[^]']+\]' failed" "$log" | sort -u || true)
+
 if [ -n "$violations" ]; then
   echo "✗ tap-target-check：以下元件 <44×44pt（一般字級 content_size large 量測，長輩硬約束 ≥44pt）：" >&2
   printf '%s\n' "$violations" | sed 's/^/    /' >&2
+  if [ -n "$other_failed" ]; then
+    echo "本輪其他失敗測試（與點擊目標違規無關，一併列出避免被吞——LS-167 事故）：" >&2
+    printf '%s\n' "$other_failed" | sed 's/^/    /' >&2
+  fi
   exit 1
 fi
 
-echo "✗ tap-target-check：xcodebuild test 失敗，但輸出裡沒有 TAP-TARGET-FAIL 標記——不是點擊目標違規，可能是編譯或其他測試失敗。log 尾段：" >&2
+echo "✗ tap-target-check：xcodebuild test 失敗，但輸出裡沒有 TAP-TARGET-FAIL 標記——不是點擊目標違規，可能是編譯或其他測試失敗。" >&2
+if [ -n "$other_failed" ]; then
+  echo "本輪其他失敗測試：" >&2
+  printf '%s\n' "$other_failed" | sed 's/^/    /' >&2
+fi
+echo "log 尾段：" >&2
 tail -n 60 "$log" >&2
 exit 1

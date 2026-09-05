@@ -52,6 +52,15 @@ case "${FAKE_XCODEBUILD_MODE:-pass}" in
     echo "** TEST FAILED **"
     exit 65
     ;;
+  fail_with_violation_and_other_test)
+    echo "Test Suite 'TapTargetGateTests' started."
+    echo "/repo/LittleSproutUITests/TapTargetGateTests.swift:24: error: -[LittleSproutUITests.TapTargetGateTests testSettingsView] : failed - TAP-TARGET-FAIL: 登出 frame=34.0x20.3pt（需 ≥44×44pt）"
+    echo "Test Case '-[LittleSproutUITests.TapTargetGateTests testSettingsView]' failed (1.0 seconds)."
+    echo "/repo/LittleSproutUITests/UploadQueueAlignmentTests.swift:80: error: -[LittleSproutUITests.UploadQueueAlignmentTests testM1Alignment] : failed - XCTAssertEqual failed: (\"31.04\") is not equal to (\"24.0\")"
+    echo "Test Case '-[LittleSproutUITests.UploadQueueAlignmentTests testM1Alignment]' failed (0.5 seconds)."
+    echo "** TEST FAILED **"
+    exit 65
+    ;;
 esac
 STUB
 chmod +x "$bin/xcodebuild"
@@ -121,6 +130,14 @@ expect 1 '⑦ 2 個違規都要點名（不是只印第一個）' "$got" "$out" 
 out=$(run fail_no_violation UDID SCHEME); got=$?
 expect 1 '⑧ 失敗但無 TAP-TARGET-FAIL 標記 → 仍 exit 1、印 log 尾段' "$got" "$out" \
   '不是點擊目標違規' 'Build input files cannot be found'
+
+# ⑩ LS-207（16e6b7f9）：高度違規＋另一支不相關的紅測試同時存在 → 兩者都要在摘要（舊版只擷取 TAP-TARGET-FAIL，
+#    LS-167 自 R3 起每次 CI 其實紅在兩處、直到高度修好第二處才露出，多燒一輪）
+out=$(run fail_with_violation_and_other_test UDID SCHEME); got=$?
+expect 1 '⑩ 高度違規＋不相關紅測試 → 兩者都在摘要' "$got" "$out" \
+  'TAP-TARGET-FAIL: 登出 frame=34.0x20.3pt' \
+  '本輪其他失敗測試' \
+  "Test Case '-[LittleSproutUITests.UploadQueueAlignmentTests testM1Alignment]' failed"
 
 # ⑨ LS-158：QA e2e（LittleSproutUITests/QA/QASmokeTests）需要本機容器，CI 的這支 gate 不得跑到它。
 #    `-only-testing` 對 `-skip-testing` 有優先權（man xcodebuild），所以必須是純 -skip-testing 組合：
