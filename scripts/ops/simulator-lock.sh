@@ -155,6 +155,9 @@ apply_one_ui_key() {
       echo "⚠ simulator-lock：讀不到 ${udid} 目前 ${key}（查詢失敗或回應 unknown／unsupported）——不調整、不復原" >&2
       return 0 ;;
   esac
+  # LS-207 merge-review R2（b907173c N4）：現值已經是目標值（模擬器本來就在 large／light，常態）就短路——
+  # 不必多下一次寫入與釋放時的復原，也不印「已將…改為…」「已復原…」這兩行雜訊。
+  [ "$orig" = "$want" ] && return 0
   if xcrun simctl ui "$udid" "$key" "$want" >/dev/null 2>&1; then
     case "$key" in
       content_size) ui_orig_content_size=$orig; ui_content_changed=1 ;;

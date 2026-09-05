@@ -1214,8 +1214,6 @@ fi
 git -C "$repo" worktree remove --force "$wts/LS-904" >/dev/null 2>&1
 g -C "$repo" branch -D feature/LS-904-running >/dev/null 2>&1
 unset PATROL_PGREP PATROL_LSOF
-git -C "$repo" worktree remove --force "$wts/LS-903" >/dev/null 2>&1
-g -C "$repo" branch -D feature/LS-903-recent2 >/dev/null 2>&1
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
