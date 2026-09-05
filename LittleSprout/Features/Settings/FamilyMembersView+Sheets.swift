@@ -163,11 +163,10 @@ struct TransferOwnershipSheet: View {
     }
 }
 
-/// 03d：退出家庭確認（非唯一 owner，或唯一成員）——client 端已經判斷過不需要先轉移
-/// （`FamilyStore.mustTransferOwnershipBeforeLeaving == false`），伺服器 `LS057`／`LS001`
-/// 仍是最終裁決（極端併發窗口，或唯一 owner 兼唯一成員被誤判，見
-/// `FamilyMembersView.startLeaveFlow` 文件註解），失敗時用 `AppError
-/// .familyMemberActionMessage` 顯示對應文案（B1），不強行當作成功。
+/// 03d：退出家庭確認（非唯一 owner，或家庭另有共同 owner）——client 端已經判斷過不需要先
+/// 轉移（`FamilyStore.leaveFlowCase == .leave`），伺服器 `LS057` 仍是最終裁決（極端併發窗口，
+/// 例如共同 owner 幾乎同時退出，見 `FamilyMembersView.startLeaveFlow` 文件註解），失敗時用
+/// `AppError.familyMemberActionMessage` 顯示對應文案（B1），不強行當作成功。
 struct LeaveFamilyConfirmSheet: View {
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
@@ -254,100 +253,9 @@ struct LeaveFamilyConfirmSheet: View {
     }
 }
 
-/// 03e：唯一家庭管理者且家庭還有其他成員——R2（merge-review R1 M2）改成 push 整頁（稿
-/// `sF5oA` 是 Nav Back 頁面，不是 sheet；R1 誤用 `.sheet`）。Families Card 只列當事人自己這
-/// 一個家庭（Phase 1 單一家庭 MVP，稿本身也只畫一列），列尾「前往轉移」導向成員列表（本票
-/// 沒有另外的「選轉移對象」畫面，pop 回 `FamilyMembersView` 讓使用者從成員列點 chevron 選人，
-/// 那裡就有轉移入口）。
-///
-/// 已知簡化（記入 handoff）：稿 Footer「返回設定」按鈕語意是回到設定頁根畫面（跳過中間的
-/// `FamilyMembersView`），但這支畫面目前掛在 `FamilyMembersView` 的
-/// `.navigationDestination` 底下、共用同一個外層 `NavigationStack`，`dismiss()` 只會 pop
-/// 一層回到 `FamilyMembersView`（使用者再按一次系統返回鈕才會回到設定頁）——要做到「一次跳
-/// 兩層」需要把整個 Settings 導覽改成 `NavigationPath` 綁定的程式化導覽，範圍超出本輪 R2
-/// 修正，按鈕文字仍照稿寫「返回設定」，行為上是後退一層。
-struct MustTransferOwnershipFirstView: View {
-    let familyName: String
-    /// 稿 `sF5oA` 副標「家裡還有 3 位家人」——排除自己之後的其他成員數，由呼叫端
-    /// （`FamilyMembersView`）算好傳入。
-    let otherMembersCount: Int
-
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                headerSection
-                familiesCard
-                    .padding(.top, AppSpacing.section)
-                Spacer(minLength: AppSpacing.item)
-                footer
-                    .padding(.top, AppSpacing.block)
-            }
-            .padding(.horizontal, AppSpacing.screenPad)
-            .padding(.top, AppSpacing.item)
-            .padding(.bottom, AppSpacing.block)
-        }
-        .appBackground()
-        .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private var headerSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.label) {
-            Text("需要先轉移家庭管理者身分")
-                .appFont(.display, weight: .bold)
-                .foregroundStyle(Color.lsTextPrimary)
-            Text(
-                "你是「\(familyName)」唯一的家庭管理者，家裡還有 \(otherMembersCount) 位家人。" +
-                "退出之前，請先把家庭管理者身分交給其中一位。"
-            )
-            .appFont(.body)
-            .foregroundStyle(Color.lsTextSecondary)
-        }
-    }
-
-    /// 稿 `Q4LlM`（Families Card）只有一列（Phase 1 單一家庭 MVP）：icon＋家名＋「前往轉移」＋
-    /// chevron，點擊 pop 回成員列表（見本型別文件註解）。
-    private var familiesCard: some View {
-        SettingsCard {
-            Button {
-                dismiss()
-            } label: {
-                HStack(spacing: AppSpacing.group) {
-                    Image(systemName: "person.2.fill")
-                        .appIconFrame(.medium)
-                        .foregroundStyle(Color.lsTextSecondary)
-                    Text(familyName)
-                        .appFont(.body, weight: .semibold)
-                        .foregroundStyle(Color.lsTextPrimary)
-                    Spacer(minLength: AppSpacing.group)
-                    Text("前往轉移")
-                        .appFont(.note)
-                        .foregroundStyle(Color.lsTextSecondary)
-                    Image(systemName: "chevron.right")
-                        .appIconFrame(.small)
-                        .foregroundStyle(Color.lsTextSecondary)
-                }
-                .padding(AppSpacing.insetCard)
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
-            }
-        }
-    }
-
-    private var footer: some View {
-        Button {
-            dismiss()
-        } label: {
-            Text("返回設定")
-                .appFont(.body, weight: .semibold)
-                .foregroundStyle(Color.lsTextPrimary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, AppSpacing.controlPaddingMedium)
-                .frame(minHeight: 48)
-        }
-    }
-}
+// R3（merge-review R2 M-A）：03e push 頁（`MustTransferOwnershipFirstView`）搬到獨立檔案
+// `FamilyMembersView+LeavePrecheck.swift`——理由同本檔檔頭「拆成獨立檔案」註解，新增
+// `.soleMember` 變體後這裡逼近 SwiftLint `file_length` 上限。
 
 #if DEBUG
 #Preview("03b 移除成員") {
@@ -381,9 +289,4 @@ struct MustTransferOwnershipFirstView: View {
     }
 }
 
-#Preview("03e 需先轉移") {
-    NavigationStack {
-        MustTransferOwnershipFirstView(familyName: "陳家", otherMembersCount: 3)
-    }
-}
 #endif

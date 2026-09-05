@@ -131,16 +131,25 @@ extension FamilyStore {
         return success
     }
 
-    /// 03d／03e 分流的 client 端預判——伺服器 `LS057` 為準（見 `AppError` 文件註解），這裡只是
-    /// 「按下退出前」就能直接顯示哪張確認稿，不需要先送一次註定失敗的請求才知道。判斷式對齊
-    /// `private.enforce_ownership_transfer_before_leave()`（`supabase/migrations/
-    /// 20260905132350_family_ownership_guard.sql`）：呼叫者是 owner、家庭裡沒有其他 owner、
-    /// 但還有其他成員 → 必須先轉移（03e）；其餘情況（包含唯一成員自己）→ 一般退出確認（03d）。
-    var mustTransferOwnershipBeforeLeaving: Bool {
-        guard let userID = ownerUserID else { return false }
-        guard let myself = members.first(where: { $0.userID == userID }), myself.role == .owner else { return false }
+    /// 03d／03e／03e 單人變體分流的 client 端預判——伺服器 `LS057`／`LS001` 為準（見
+    /// `AppError` 文件註解），這裡只是「按下退出前」就能直接顯示哪張確認稿，不需要先送一次
+    /// 請求才知道。
+    ///
+    /// R3（merge-review R2 M-A）：從 `Bool` 改成三態 `LeaveFlowCase`——R2 之前「唯一 owner
+    /// 兼唯一成員」被誤判成「不需要轉移」（`false`）而落到 03d，實際送出必然撞 `LS001`；現在
+    /// 對應到獨立的 `.soleMember` 分支，`FamilyMembersView.startLeaveFlow()` 不會再對這個
+    /// 狀態送出任何 DELETE 請求。純判斷邏輯抽成
+    /// `resolveLeaveFlowCase(isOwner:otherMembersCount:hasOtherOwner:)`
+    /// （`FamilyMemberActionVisibility.swift`），這裡只負責從 `members`／`ownerUserID` 取出
+    /// 三個輸入值。
+    var leaveFlowCase: LeaveFlowCase {
+        guard let userID = ownerUserID else { return .leave }
+        guard let myself = members.first(where: { $0.userID == userID }) else { return .leave }
         let others = members.filter { $0.userID != userID }
-        guard !others.isEmpty else { return false }
-        return !others.contains { $0.role == .owner }
+        return resolveLeaveFlowCase(
+            isOwner: myself.role == .owner,
+            otherMembersCount: others.count,
+            hasOtherOwner: others.contains { $0.role == .owner }
+        )
     }
 }

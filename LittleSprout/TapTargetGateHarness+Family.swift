@@ -10,16 +10,22 @@ extension TapTargetGateHarness {
     /// LS-192：初始態（未載入完成前）已有代表性——頭像沖印卡（`PhotosPicker` 觸發鈕）／
     /// 顯示名稱欄／儲存變更鈕／取消鈕四顆可點元件一開畫面就存在，不依賴 `.task` 非同步查詢
     /// `myProfile` 是否完成，同 `createChildHost` 的既有理由。
+    ///
+    /// R3（merge-review R2 N1）：`refreshProfile()` 的 m7 世代守門（R2 新增）在
+    /// `ownerUserID == nil` 時直接 return，這裡原本沒有 seed，`.task` 的查詢因此整支被跳過，
+    /// 渲染出來的是空白 placeholder（頭像圈內無縮寫、姓名欄空白）——tap-target gate 沒失效
+    /// （三顆鈕不依賴 profile 內容），但視覺驗收與 `#Preview` 失真。補 `seedOwnerUserIDForPreview`
+    /// 讓 `.task` 真的查回 `PreviewFamilyAPIClient.fetchMyProfile()` 的樣本值，同
+    /// `familyMembersHost` 的既有修法（M8）。
     @MainActor
     @ViewBuilder
     static var profileEditHost: some View {
-        NavigationStack {
-            ProfileEditView(
-                familyStore: .preview(withFamily: Family(
-                    id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
-                )),
-                familyID: UUID()
-            )
+        let store = FamilyStore.preview(withFamily: Family(
+            id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
+        ))
+        store.seedOwnerUserIDForPreview(PreviewFamilySamples.selfUserID)
+        return NavigationStack {
+            ProfileEditView(familyStore: store, familyID: UUID())
         }
     }
 

@@ -3,9 +3,8 @@ import SwiftUI
 /// LS-152 / 03 家庭成員（`design/littlesprout.pen` `hVAq3`，AX3 長名字壓測 `gjCoe`，
 /// iPad `yJvj7`）：成員清單（`cmp/Role Pill` 角色徽章、Owner 標示）＋ Owner 動作（每列尾端
 /// chevron，轉移家庭管理者＝03c、移除成員＝03b，皆走確認 sheet）＋「退出家庭」入口
-/// （03d／03e，依 `FamilyStore.mustTransferOwnershipBeforeLeaving` client 端預判分流，
-/// 伺服器 `LS057`／`LS001` 為最終裁決，見該屬性與 `AppError.familyMemberActionMessage`
-/// 文件註解）。
+/// （03d／03e／03e 單人變體，依 `FamilyStore.leaveFlowCase` client 端預判三態分流，伺服器
+/// `LS057`／`LS001` 為最終裁決，見該屬性與 `AppError.familyMemberActionMessage` 文件註解）。
 ///
 /// R2（merge-review R1 m2）：每列動作入口原本用「…」`Menu`，稿三板一律列尾 `chevron-right`
 /// （22×22）——這裡改用 chevron 圖示但仍掛 `Menu` 觸發（不是直接導覽到單一畫面）：稿面沒有
@@ -29,7 +28,10 @@ struct FamilyMembersView: View {
     @State private var removeTarget: FamilyMember?
     @State private var transferTarget: FamilyMember?
     @State private var showsLeaveConfirmation = false
-    @State private var showsMustTransferFirst = false
+    // R3（merge-review R2 M-A）：合併原本的 `showsMustTransferFirst: Bool` 成 item-based
+    // 狀態——03e 現在有兩種內容（`.mustTransferFirst`／`.soleMember`），用同一顆
+    // `navigationDestination(item:)` 依內容分流，不需要兩顆各自的 Bool。
+    @State private var leavePrecheckContent: MustTransferOwnershipFirstView.Content?
 
     private var myUserID: UUID? { familyStore.ownerUserID }
     private var myRole: FamilyRole? { familyStore.myRole }
@@ -67,12 +69,10 @@ struct FamilyMembersView: View {
         }
         // R2（merge-review R1 M2）：03e 稿是 push 整頁（Nav Back，無 Tab Bar），不是 sheet
         // ——`MustTransferOwnershipFirstSheet` 已改名為 `MustTransferOwnershipFirstView` 並改用
-        // `navigationDestination`。
-        .navigationDestination(isPresented: $showsMustTransferFirst) {
-            MustTransferOwnershipFirstView(
-                familyName: familyStore.myFamily?.name ?? "",
-                otherMembersCount: otherMembersCount
-            )
+        // `navigationDestination`。R3：改成 `item:` 版本，依 `leaveFlowCase` 的兩種「需要提示」
+        // 內容（`.mustTransferFirst`／`.soleMember`）分流到同一支畫面的不同文案。
+        .navigationDestination(item: $leavePrecheckContent) { content in
+            MustTransferOwnershipFirstView(familyName: familyStore.myFamily?.name ?? "", content: content)
         }
     }
 
@@ -142,15 +142,20 @@ struct FamilyMembersView: View {
         }
     }
 
-    /// 03d／03e 分流入口——client 端預判，見 `FamilyStore.mustTransferOwnershipBeforeLeaving`
+    /// 03d／03e／03e 單人變體三態分流入口——client 端預判，見 `FamilyStore.leaveFlowCase`
     /// 文件註解；伺服器 `LS057`／`LS001` 才是最終裁決，`LeaveFamilyConfirmSheet` 送出後若仍
-    /// 撞到（極端併發窗口，例如共同 owner 幾乎同時退出，或唯一 owner 兼唯一成員被 03d 誤判），
-    /// 用 `AppError.familyMemberActionMessage` 顯示對應文案，不會誤判成功（B1）。
+    /// 撞到（極端併發窗口，例如共同 owner 幾乎同時退出），用 `AppError
+    /// .familyMemberActionMessage` 顯示對應文案，不會誤判成功（B1）。R3（merge-review R2
+    /// M-A）：`.soleMember` 這個分支完全不進入 `showsLeaveConfirmation`／`leaveFamily()`，
+    /// 不會再對「唯一 owner 兼唯一成員」送出任何 DELETE 請求。
     private func startLeaveFlow() {
-        if familyStore.mustTransferOwnershipBeforeLeaving {
-            showsMustTransferFirst = true
-        } else {
+        switch familyStore.leaveFlowCase {
+        case .leave:
             showsLeaveConfirmation = true
+        case .mustTransferFirst:
+            leavePrecheckContent = .mustTransferFirst(otherMembersCount: otherMembersCount)
+        case .soleMember:
+            leavePrecheckContent = .soleMember
         }
     }
 }

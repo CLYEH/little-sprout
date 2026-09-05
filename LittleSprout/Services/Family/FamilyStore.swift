@@ -140,7 +140,7 @@ final class FamilyStore {
     /// LS-192：同 `seedMyFamilyForPreview` 的角色——`ownerUserID` 是 `private(set)`（同檔案
     /// 才能寫），一般只透過 `syncOwner(to:)`（async）設定；`#Preview`／`TapTargetGateHarness`
     /// 需要同步、確定性地佈置「呼叫者是這個家庭的哪一位成員」（決定 `myRole`／
-    /// `mustTransferOwnershipBeforeLeaving` 等依 `ownerUserID` 判斷的計算屬性），不需要真的
+    /// `leaveFlowCase` 等依 `ownerUserID` 判斷的計算屬性），不需要真的
     /// 走一次 async 登入流程。
     func seedOwnerUserIDForPreview(_ userID: UUID) {
         ownerUserID = userID
