@@ -445,8 +445,11 @@ out14b="$(SIMCTL_LIST_JSON= STUB_XCRUN_FAIL=1 PATH="$work/bin:$PATH" bash "$patr
 rc_is '⑭ xcrun 本身失敗（非 macOS／查詢出錯）→ 仍 exit 0，不當異常炸掉' 0 "$rc" "$out14b"
 hasnt '⑭ xcrun 失敗時不誤列任何裝置' "$out14b" 'xcrun simctl delete'
 
-# ---- ⑭b（LS-205）：`.ios-runtime` 釘住版與裝置實際 runtime 不一致 → 獨立標「⚠ runtime」＋掛 add_flag，
-#        跟第一層／第二層清理判斷互不影響（票 worktree 還在、剛用過，兩層都不會標，只有這裡的新訊號會標）；
+# ---- ⑭b（LS-205；merge-review R1 M1 訂正）：`.ios-runtime` 釘住版與裝置實際 runtime 不一致 →
+#        獨立標「⚠ runtime」細項＋獨立計數 `sim_rt_mismatch`，跟第一層／第二層清理判斷互不影響（票
+#        worktree 還在、剛用過，兩層都不會標，只有這裡的新訊號會標）——**不進 `sim_flagged`（「待清」
+#        語意）、不叫 `add_flag`（`--brief`「巡檢：無異常」與 flag 清單都靠它，併入後本機幾乎必然
+#        runtime ≠ 釘住版，若算進去「無異常」會永久消失、且無法行動：本機沒有那個 runtime 就是沒有）。
 #        相符的那台不印任何東西（迴歸防呆）。另建一張票（LS-201）的 worktree，避免動到 ⑭ 對 LS-83／90／95／97
 #        既有斷言依賴的裝置清單；`rm -f` 還原，讓後面案例維持「無 .ios-runtime」的既有假設（pinned_os 為空、
 #        本檢查整段跳過）。
@@ -478,10 +481,37 @@ rt_json=$(cat <<JSON
 JSON
 )
 outRT="$(SIMCTL_LIST_JSON="$rt_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
-has   '⑭b runtime 不符釘住版標「⚠ runtime」' "$outRT" '⚠ runtime LS-201-iPhone17Pro（SIM-RT-MISMATCH）iOS 26.0 ≠ 釘住版 iOS 26.5'
+has   '⑭b runtime 不符釘住版標「⚠ runtime」細項（提示不擋，不計入待清）' "$outRT" '⚠ runtime LS-201-iPhone17Pro（SIM-RT-MISMATCH）iOS 26.0 ≠ 釘住版 iOS 26.5（提示不擋，不計入待清）'
 hasnt '⑭b runtime 相符的那台不標' "$outRT" 'LS-201-iPhoneAir（SIM-RT-MATCH）iOS'
 briefRT="$(SIMCTL_LIST_JSON="$rt_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
-has   '⑭b --brief 也帶 runtime 不一致 flag' "$briefRT" '[專屬模擬器 LS-201-iPhone17Pro] runtime iOS 26.0 與釘住版 iOS 26.5 不一致'
+has   '⑭b（M1 訂正）--brief 表頭獨立顯示「runtime 不一致 1」（釘住版字樣）' "$briefRT" '· runtime 不一致 1（釘住 iOS 26.5，提示不擋） ·'
+hasnt '⑭b（M1 訂正）runtime 不一致不進 add_flag／flag 清單（不是「[專屬模擬器 …] runtime …」這種 flag 行）' "$briefRT" '[專屬模擬器 LS-201-iPhone17Pro] runtime'
+has   '⑭b（M1 訂正）--brief 表頭「專屬模擬器待清」不受 runtime 不一致影響，仍是 0' "$briefRT" '專屬模擬器待清 0（殘機 0）'
+
+# ---- ⑭c（merge-review R1 M1 具體重現案例）：同一台機器**同時**是「殘機」（無 worktree）又「runtime
+#        不一致」——修法之前這台會被算兩次（`sim_flagged` 待清數 2）；修法之後只有「殘機」那個真正
+#        可行動的原因算進待清，runtime 不一致獨立計數，兩者互不重複疊加。
+db14c='{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-0" : [
+      {
+        "lastBootedAt" : "'"${OLD}"'",
+        "dataPath" : "\/tmp\/unused-ls9999\/data",
+        "udid" : "SIM-LS9999",
+        "state" : "Shutdown",
+        "name" : "LS-9999-iPhone17Pro"
+      }
+    ]
+  }
+}'
+printf '26.2\n' > "$repo/.ios-runtime"
+out14c="$(SIMCTL_LIST_JSON="$db14c" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑭c 殘機那條原因照常列（可行動，計入待清）' "$out14c" 'LS-9999-iPhone17Pro（SIM-LS9999）票 LS-9999 的 worktree 已不在（殘機） → bash scripts/ops/cleanup-merged.sh --apply LS-9999'
+has   '⑭c runtime 不一致細項也照常列（不可行動，獨立於待清）' "$out14c" '⚠ runtime LS-9999-iPhone17Pro（SIM-LS9999）iOS 26.0 ≠ 釘住版 iOS 26.2（提示不擋，不計入待清）'
+brief14c="$(SIMCTL_LIST_JSON="$db14c" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '⑭c（M1 具體重現）同一台機器不被算成 2——待清仍是 1（不是 2），runtime 不一致獨立顯示 1' "$brief14c" '專屬模擬器待清 1（殘機 1） · runtime 不一致 1（釘住 iOS 26.2，提示不擋）'
+has   '⑭c 殘機仍照常掛 add_flag（真正可行動的原因不受影響）' "$brief14c" '[專屬模擬器 LS-9999-iPhone17Pro] 票 LS-9999 的 worktree 已不在（殘機） → bash scripts/ops/cleanup-merged.sh --apply LS-9999'
+hasnt '⑭c runtime 不一致本身仍不進 flag 清單' "$brief14c" '[專屬模擬器 LS-9999-iPhone17Pro] runtime'
 rm -f "$repo/.ios-runtime"
 
 # ---- ⑮ Booted 模擬器（LS-100）：demo-* 豁免；>1 台非豁免同時 Booted → 逐台 ⚠ 並印 shutdown 指令；

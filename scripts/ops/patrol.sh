@@ -349,7 +349,7 @@ fi
 #      無 xcrun（非 macOS、或這次 simctl 查詢本身失敗）就整段跳過，不當成異常（PR/worktree 段的 fail-soft 同款）。
 #      simctl list devices -j 不用 jq 解析（patrol.sh 一貫不依賴 jq，只有測試驗證用它）：純文字 pretty-print
 #      每個裝置物件一行一個 key，用 awk 以「單行 {／}」為物件邊界的簡易狀態機取五個欄位。
-SIM_LINES=; J_SIM=; J_ORPHAN=; sim_flagged=0; sim_orphans=0; sim_default=0; sim_linear_note=
+SIM_LINES=; J_SIM=; J_ORPHAN=; sim_flagged=0; sim_orphans=0; sim_default=0; sim_linear_note=; sim_rt_mismatch=0; sim_pinned_os=
 BOOT_LINES=; J_BOOT=; boot_total=0; boot_flagged=0; boot_nonexempt=
 plsh="${PATROL_LINEAR_SH:-${here}/patrol-linear.sh}"   # 可覆寫供自測餵假身（R1 F6；LS-187 --closed 也走這支）
 WT_HAS_MEMO=   # LS-198（LS-187 R1 info-2）：ticket_has_worktree 一輪內每票只掃一次 WT_INDEX——每筆「\n<票號>\t<0|1>」，前置收票號與逐台判定各叫一次，30 台 LS-* 省約 1.2s
@@ -461,9 +461,13 @@ EOF
       *) sim_default=$((sim_default + 1)); continue ;;   # Xcode 預設機：只計數，不列入清理（修剪需使用者裁定）
     esac
     if [ -n "$sim_pinned_os" ] && [ -n "$sim_rt" ] && [ "$sim_rt" != - ] && [ "$sim_rt" != "$sim_pinned_os" ]; then
-      sim_flagged=$((sim_flagged + 1))
-      SIM_LINES="${SIM_LINES}  ⚠ runtime ${sim_name}（${sim_udid}）iOS ${sim_rt} ≠ 釘住版 iOS ${sim_pinned_os}"$'\n'
-      add_flag "[專屬模擬器 ${sim_name}] runtime iOS ${sim_rt} 與釘住版 iOS ${sim_pinned_os} 不一致（不自動重建，見 .ios-runtime）"
+      # merge-review R1 M1：這一類不進 `sim_flagged`（「待清」語意——LS-83／LS-187 既有兩層清理判斷
+      # 用的計數器，`patrol.test.sh` ⑭ 明文斷言那個數字）、也不叫 `add_flag`（`add_flag` 同時餵
+      # `--brief`「巡檢：無異常」的判定與 flag 清單——併入後本機受管機幾乎必然 ≠ 釘住版，會讓「無異常」
+      # 永久消失、且不可行動：本機沒有那個 runtime 就是沒有，不會因為巡檢再吐一次而改變）。獨立計數
+      # `sim_rt_mismatch`，只進 `SIM_LINES`（一律印出的細項）與下面的彙總數字，不影響「有無異常」。
+      sim_rt_mismatch=$((sim_rt_mismatch + 1))
+      SIM_LINES="${SIM_LINES}  ⚠ runtime ${sim_name}（${sim_udid}）iOS ${sim_rt} ≠ 釘住版 iOS ${sim_pinned_os}（提示不擋，不計入待清）"$'\n'
     fi
     if [ -n "$sim_ticket" ]; then
       sim_why=; sim_reason=
@@ -639,17 +643,18 @@ fi
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
-      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$J_BOOT" "$(json_num "$boot_flagged")" \
+      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$(json_num "$sim_rt_mismatch")" "$J_BOOT" "$(json_num "$boot_flagged")" \
       "$(json_num "$disk_avail_gb")" "$DISK_MIN_GB" "$(json_num "$disk_devices_gb")" "$(json_num "$disk_derived_gb")" "$disk_dedicated" "$(json_str "$disk_flag")" \
       "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" "$J_FLAGS"
     ;;
   brief)
-    echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev} · 專屬模擬器待清 ${sim_flagged}（殘機 ${sim_orphans}） · Booted 異常 ${boot_flagged} · 磁碟可用 ${disk_avail_gb:-?} GB"
+    sim_rt_note=; [ "$sim_rt_mismatch" -gt 0 ] && sim_rt_note="（釘住 iOS ${sim_pinned_os}，提示不擋）"
+    echo "巡檢 ${stamp}（stale ≥${STALE}m）：PR ${pr_total}／異常 ${pr_flagged}${pr_skip:+（略過：${pr_skip}）} · worktree ${wt_total}／異常 ${wt_flagged} · 主 checkout ${mc_branch}（落後 origin/main ${mc_behind}） · dev←main ${dev_main} test←main ${test_main} test←dev ${test_dev} · 專屬模擬器待清 ${sim_flagged}（殘機 ${sim_orphans}） · runtime 不一致 ${sim_rt_mismatch}${sim_rt_note} · Booted 異常 ${boot_flagged} · 磁碟可用 ${disk_avail_gb:-?} GB"
     [ -n "$fetch_warn" ] && echo "${fetch_warn}"
     case "$lock_line" in free) ;; *) echo "Supabase lock：${lock_line}" ;; esac
     [ "$pencil_ran" -eq 1 ] && printf '%s\n' "$PENCIL_LINE"
@@ -678,10 +683,11 @@ case "$MODE" in
       printf '%s\n' "$PENCIL_LINE" | sed 's/^/  /'
       [ "$pencil_rc" -ne 0 ] && echo "  → 設計票派工前先請使用者在 Claude Code 執行 /mcp 重連 pencil，重連後再派（LS-180）"
     else echo "  （無 design 分支 worktree，略過探針）"; fi
-    echo "== 專屬模擬器（scripts/gates/detect-simulator.sh 建的 <票號>-<機型>；LS-83／LS-187：票 worktree 已不在或已 Done／Canceled ⚠→cleanup-merged；其餘 >7 天未用只列不刪；Booted 不列刪；LS-205：runtime 與 .ios-runtime 不一致標 ⚠ runtime，不自動重建）"
+    echo "== 專屬模擬器（scripts/gates/detect-simulator.sh 建的 <票號>-<機型>；LS-83／LS-187：票 worktree 已不在或已 Done／Canceled ⚠→cleanup-merged；其餘 >7 天未用只列不刪；Booted 不列刪；LS-205：runtime 與 .ios-runtime 不一致標 ⚠ runtime，獨立計數、不計入待清、不自動重建，merge-review R1 M1）"
     if [ -n "$SIM_LINES" ]; then printf '%s' "$SIM_LINES"; else echo "  （無 xcrun，或無殘機／逾期的專屬模擬器）"; fi
     if [ -n "${sim_rows:-}" ]; then
-      echo "  Xcode 預設模擬器 ${sim_default} 台（未列入清理；修剪需使用者裁定） · CoreSimulator/Devices ${disk_devices_gb:-?} GB（${devices_du_src:-無資料}）${sim_linear_note:+ · ${sim_linear_note}}"
+      sim_rt_note=; [ "$sim_rt_mismatch" -gt 0 ] && sim_rt_note="（釘住 iOS ${sim_pinned_os}，提示不擋）"
+      echo "  Xcode 預設模擬器 ${sim_default} 台（未列入清理；修剪需使用者裁定） · runtime 不一致 ${sim_rt_mismatch}${sim_rt_note} · CoreSimulator/Devices ${disk_devices_gb:-?} GB（${devices_du_src:-無資料}）${sim_linear_note:+ · ${sim_linear_note}}"
     fi
     echo "== Booted 模擬器（LS-100；demo-* 豁免；>1 台非豁免同時 Booted＝用完沒關）"
     if [ -n "$BOOT_LINES" ]; then printf '%s' "$BOOT_LINES"; else echo "  （無異常；Booted ${boot_total} 台，非 demo-* ${nonexempt_boot_count} 台）"; fi
