@@ -1,0 +1,98 @@
+{
+  "ticket": "LS-177",
+  "round": 3,
+  "head_sha": "d1590fb78c0a6b94ada58de2203c73bed31a4faa",
+  "total_nodes": 9449,
+  "tree_hash": "a33bf0339123d365",
+  "scan_scope": "document",
+  "scans": {
+    "sibling_intersection": {
+      "document_count": 2007,
+      "flagged": [
+        {
+          "node_a": "ZPLDq",
+          "node_b": "aSlCA",
+          "classification": "Status Bar (Backdrop)／Scrim／Sheet(或 Card/Dialog) Wrap 三層滿版 z-order 疊放，9 個 modal 型畫面（留言 sheet 4 態＋空狀態＋iPad＋操作表＋按讚名單＋系統對話框示意）皆為故意設計的疊層順序，非版面錯誤（同類 27 例：9 板 × 3 對，R2/R3 皆一致）"
+        },
+        {
+          "node_a": "R0UbU/MN0WF",
+          "node_b": "R0UbU/R1lbwf",
+          "classification": "cmp/Profile Print instance 內部既定重疊母題（Photo×Mount TL/BR、Corner Shape×Corner Edge），本票 21 個頭像沖印品（MJ-1）＋1 個空白沖印品（MJ-5）共用元件既有設計，非版面錯誤（同類 92 例：FiBvh/f10d1D/SHbqU/wY7f8/GZ3pb 各 16、dHSyh 4、TnxXE 8）"
+        },
+        {
+          "node_a": "zzXNT",
+          "node_b": "EnaX4",
+          "classification": "Hero Print（j7WwV/ckgMp/KyxGc 推播前置頁）內部既定結構：Hero Photo×Corner TL/BR 為角托 corner-out 設計、Hero Print×Notification Preview 為 MJ-4 刻意出血重疊（通知卡壓在照片右下角），皆非版面錯誤（同類 15 例：3 板 × 5 對）"
+        },
+        {
+          "node_a": "qXm4l",
+          "node_b": "m42e0Q",
+          "classification": "y7KAW/y66AzT 沿用 LS-152 t5wI4 既有結構（Body×Tab Bar 捲動概念性延伸、Profile Print 家庭合照內部角托重疊），未被本票修改，屬既有設計（同類 10 例：2 板 × 5 對）"
+        }
+      ]
+    },
+    "row_overflow": {
+      "document_count": 558,
+      "flagged": [
+        {
+          "node": "R0UbU/S4O4r8",
+          "classification": "cmp/Photo Corner 角托 corner-out 母題——角托刻意壓過紙緣（Mount/Corner Shape/Corner Edge、Hero Print/Empty Print 角托相對其容器溢出），已由 corner_anchor 掃描逐一驗證 mismatch=0（吻合 corner-out 5pt 公式），非版面錯誤（同類 100 例：18x Corner Shape/Corner Edge x Mount TL、18x x Mount BR 各二、24x Mount BR/Print、3x Corner BR/Hero Print、1x Corner BR/Empty Print）"
+        }
+      ]
+    },
+    "cross_parent_collision": {
+      "document_count": 307,
+      "flagged": [
+        {
+          "node_a": "aSlCA",
+          "node_b": "R0UbU/R1lbwf/sD5Ma",
+          "classification": "本票新增：留言 sheet／空狀態板的全螢幕 Scrim（modal 背景層，z-order 在 Sheet 之下）與 Profile Print 頭像角托 bounding box 巧合重疊——Scrim 視覺上完全被 Sheet 內容遮蓋，角托不會透出，非可見版面錯誤（同類 146 例：FiBvh 144、TnxXE 2）"
+        },
+        {
+          "node_a": "C1f3W",
+          "node_b": "EnaX4",
+          "classification": "本票刻意出血：j7WwV/ckgMp/KyxGc 通知預覽卡壓在 Hero Print 右下角（MJ-4 設計意圖，VR R1 復驗已預告「屬刻意出血，收據 classification 註明」）（同類 3 例：3 板各 1）"
+        },
+        {
+          "node_a": "GeJ1J",
+          "node_b": "aY7S5",
+          "classification": "他票既有舊債，非本票引入（同類 158 例、39 個名稱對，涵蓋 LS-17/18/21/47/142/A11y/Stress 等既有板的角托與 Spacer/Tab Bar/Dragging Photo 疊放模式；orchestrator 裁定 a106f940 範圍外，另開 chore）"
+        }
+      ]
+    },
+    "corner_anchor": {
+      "boards": ["IgqGF","VZ0wV","Qzz3r","FiBvh","f10d1D","SHbqU","dHSyh","wY7f8","TnxXE","DUyg3","GZ3pb","j7WwV","ckgMp","KyxGc","FeqWk","y7KAW","y66AzT","EclPC"],
+      "containers": 4,
+      "points": 16,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 220,
+      "document_points": 1744,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "unresolved": []
+    },
+    "text_occlusion": {
+      "flagged": [],
+      "document_flagged": [
+        {
+          "node": "WitwS/d41MUZ",
+          "overlay": "Egn9A",
+          "classification": "他票既有舊債，非本票引入（同類 9 例，涵蓋 LS-21 時間軸／Stress 時間軸與相簿／A11y 相簿等既有板的 feed 文字捲到浮動 Tab Bar 底下，屬滾動態常態，不擋本票）"
+        }
+      ]
+    },
+    "board_clip": {
+      "flagged": [],
+      "document_flagged": [
+        {
+          "board": "A11y / 01 歡迎登入 · Dynamic Type AX3（body 40pt）",
+          "node": "xkvz1",
+          "side": "right",
+          "overflow_px": 93,
+          "classification": "他票既有舊債，非本票引入（同類 333 例，涵蓋全稿既有板既有的角托 corner-out 與版面裁切慣例；LS-185 board_clip 為全新第六支，全稿舊債本輪才首次被機械檢出，orchestrator 裁定 a106f940 範圍外，另開 chore；本票 18 板本輪首次啟用即發現並修正 2 處真實 bug——SHbqU 板高不足導致 Sheet 內容溢出板頂、Qzz3r Signature Row 寬度不足導致 Who Group 溢出板左緣，皆已修正落地，scope flagged 現為 0）"
+        }
+      ]
+    }
+  }
+}
