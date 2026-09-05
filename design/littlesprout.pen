@@ -38230,7 +38230,7 @@
       "type": "frame",
       "id": "hKSu1",
       "x": 2300,
-      "y": 16887,
+      "y": 17304,
       "name": "A11y / 06 輸入邀請碼 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -38683,7 +38683,7 @@
       "type": "frame",
       "id": "P27HS",
       "x": 2300,
-      "y": 18264,
+      "y": 18681,
       "name": "LS-47 / 08 幫寶貝建檔",
       "clip": true,
       "width": 393,
@@ -53929,7 +53929,6 @@
               "id": "dTdm3",
               "name": "Feed",
               "width": "fill_container",
-              "height": 494,
               "layout": "vertical",
               "gap": "$sp-section",
               "children": [
@@ -54931,7 +54930,6 @@
               "id": "aNcaB",
               "name": "Feed",
               "width": "fill_container",
-              "height": 494,
               "layout": "vertical",
               "gap": "$sp-section",
               "children": [
@@ -55408,7 +55406,6 @@
               "id": "riVZU",
               "name": "Feed",
               "width": "fill_container",
-              "height": 494,
               "layout": "vertical",
               "gap": "$sp-section",
               "children": [
@@ -56383,7 +56380,6 @@
               "id": "LJJLP",
               "name": "Feed",
               "width": "fill_container",
-              "height": 978,
               "layout": "vertical",
               "gap": "$sp-section",
               "children": [
@@ -66717,7 +66713,6 @@
               "id": "Z83pG",
               "name": "Feed",
               "width": "fill_container",
-              "height": 494,
               "layout": "vertical",
               "gap": "$sp-section",
               "children": [
@@ -95998,7 +95993,6 @@
               "id": "GF3Nx",
               "name": "Album List",
               "width": "fill_container",
-              "height": 1075,
               "layout": "vertical",
               "gap": "$sp-block",
               "children": [
@@ -97066,7 +97060,6 @@
               "id": "w6y7I",
               "name": "Album List",
               "width": "fill_container",
-              "height": 575,
               "layout": "vertical",
               "gap": "$sp-block",
               "children": [
