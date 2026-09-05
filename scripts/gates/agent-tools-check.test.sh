@@ -4,6 +4,8 @@
 # 當 frontmatter、放過缺檔／未閉合 frontmatter／空值、多個違規只列第一條、或非目錄假綠，這裡會紅。樣本數由 ok() 計數。
 # LS-170（⑤）：正文必含字樣——ios-dev／merge-reviewer 正文缺 `supabase-lock.sh --hold` 即紅；字樣只在 frontmatter 不算；只有
 # `--release` 不算；CRLF 可；加 mutation 負控（awk 拿掉 LS170-BODY-RULES 區塊後同一份負樣本須變綠，且先驗 mutant 確實不含區塊）。
+# LS-184（⑩）：三份的 `--hold` 寫法須為 `cd <worktree> && bash scripts/ops/supabase-lock.sh --hold` 同一命令鏈——裸 `--hold` 句（舊字樣仍在）即紅；
+# 同一 mutant 下負樣本變綠。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -34,7 +36,9 @@ expect() {
 
 LINEAR3="mcp__linear__get_issue, mcp__linear__list_comments, mcp__linear__save_comment"
 # LS-170：ios-dev／merge-reviewer 的正文必含字樣（真 .md 的寫法是整段規約，這裡只要字樣在正文即可）
-HOLD='互動式驗證前 `bash scripts/ops/supabase-lock.sh --hold "LS-<n> dev E2E"`，收工 `--release`。'
+# LS-184：`--hold` 與 `cd <worktree>` 同一命令鏈才算；BARE_HOLD 是 LS-184 之前的裸寫法（⑩ 的負樣本）
+HOLD='互動式驗證前 `cd <worktree> && bash scripts/ops/supabase-lock.sh --hold "LS-<n> dev E2E"`，收工 `--release`。'
+BARE_HOLD='互動式驗證前 `bash scripts/ops/supabase-lock.sh --hold "LS-<n> dev E2E"`，收工 `--release`。'
 # LS-183：ios-dev／merge-reviewer／qa 正文另須含「本機容器操作同樣要在 lock 內」（docker exec／psql／functions serve 的 H3b 規約句）；
 # 合法的三份樣本 hold 句＋H3b 句都要有
 H3B='`docker exec`／`psql`／`supabase functions serve` 等本機容器操作同樣要在 lock 內（PreToolUse H3b）。'
@@ -96,7 +100,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（10 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 10 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（13 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 13 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -116,6 +120,12 @@ reset; mk ios-dev NONE "$HOLD"; expect 1 '⑨ LS-183：ios-dev 只有 hold 句�
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$HOLD"; expect 1 '⑨ LS-183：merge-reviewer 缺 H3b 句 → exit 1' 'merge-reviewer.md：正文缺「本機容器操作同樣要在 lock 內」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${HOLD} ${E2E}"; expect 1 '⑨ LS-183：qa 有 hold＋e2e、缺 H3b 句 → exit 1，工具齊全不救' 'qa.md：正文缺「本機容器操作同樣要在 lock 內」' '' 'qa.md：tools: 缺'
 reset; mk ios-dev NONE "${HOLD} 只寫 docker exec 而沒有那句規約不算"; expect 1 '⑨ LS-183：只有 docker exec 字面、無「同樣要在 lock 內」→ 紅' 'ios-dev.md：正文缺「本機容器操作同樣要在 lock 內」'
+# LS-184：三份正文的 `--hold` 寫法須為 `cd <worktree> && bash scripts/ops/supabase-lock.sh --hold` 同一命令鏈——裸 `--hold` 句（舊字樣 `supabase-lock.sh --hold` 仍在）即紅；三份都驗；工具齊全不救
+reset; expect 0 '⑩ LS-184：三份正文含 cd <worktree> && … --hold 同鏈句 → 印「正文含」' 'ios-dev.md：正文含「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」' 'qa.md：正文含「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」'
+reset; mk ios-dev NONE "${BARE_HOLD} ${H3B}"; expect 1 '⑩ LS-184：ios-dev 只有裸 --hold（無 cd 同鏈）→ exit 1，舊字樣仍在不救' 'ios-dev.md：正文缺「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${BARE_HOLD} ${H3B}"; expect 1 '⑩ LS-184：merge-reviewer 裸 --hold → exit 1' 'merge-reviewer.md：正文缺「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${BARE_HOLD} ${H3B} ${E2E}"; expect 1 '⑩ LS-184：qa 裸 --hold → exit 1，工具齊全不救' 'qa.md：正文缺「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」' '' 'qa.md：tools: 缺'
+reset; mk ios-dev NONE "先 cd <worktree>，另一條命令再 bash scripts/ops/supabase-lock.sh --hold 不算同鏈。${H3B}"; expect 1 '⑩ LS-184：cd 與 --hold 不在同一命令鏈（沒有 &&）→ 紅' 'ios-dev.md：正文缺「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」'
 reset; expect 0 '⑤ merge-reviewer／qa 也印「正文含」' 'merge-reviewer.md：正文含「supabase-lock.sh --hold」' 'qa.md：正文含「supabase-lock.sh --hold」'
 reset; mk ios-dev NONE; expect 1 '⑤ ios-dev 正文缺字樣 → exit 1' 'ios-dev.md：正文缺「supabase-lock.sh --hold」' '' '✓ agent-tools gate 通過'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}"; expect 1 '⑤ merge-reviewer 正文缺字樣 → exit 1' 'merge-reviewer.md：正文缺「supabase-lock.sh --hold」'
@@ -148,6 +158,14 @@ if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '本機容器操作同樣
   ok '⑨ mutant：拿掉規則後「只有 hold 句」的負樣本變綠（H3b 行確實是原因）'
 else
   echo "✗ ⑨ mutant 應 exit 0 且不印 H3b 字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+# LS-184 負控：同一個 mutant 下，上面 ⑩「裸 --hold（無 cd 同鏈）」的負樣本也必須變綠——證明 ⑩ 的紅來自規則表的 LS-184 行
+reset; mk ios-dev NONE "${BARE_HOLD} ${H3B}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'cd <worktree> &&'; then
+  ok '⑩ mutant：拿掉規則後「裸 --hold」的負樣本變綠（LS-184 行確實是原因）'
+else
+  echo "✗ ⑩ mutant 應 exit 0 且不印 cd <worktree> && 字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過
 mut3="$work/agent-tools-check.body-not-subset.sh"
