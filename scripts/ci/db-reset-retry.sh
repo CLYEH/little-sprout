@@ -13,10 +13,20 @@
 #   剛把 db 起好，無條件先 stop 會讓每一次 reset 都紅在「not running」（非 port 錯誤、不會走重試），等於把 db job 打死；stop 只放在
 #   重試路徑清失敗殘留。sleep 10／只重試一次／其他錯誤不重試皆照票文。
 # 用法：bash scripts/ci/db-reset-retry.sh（cwd＝repo root，與 ci.yml 其他步驟相同；step 名稱不變）。自測 db-reset-retry.test.sh 以
-#   PATH 前置的假 `supabase`／`sleep` 驗呼叫序列與 exit code，不碰真容器。**本機不要裸跑這支**——本機容器一律經
-#   `scripts/ops/supabase-lock.sh -- <命令>`（COLLABORATION §6 LS-70；PreToolUse H3／H3b 也會擋）。
-# exit：0＝reset 成功（首次或重試）；非 0＝reset／db start 的原 exit code；2＝mktemp 失敗。
+#   PATH 前置的假 `supabase`／`sleep` 驗呼叫序列與 exit code，不碰真容器。
+# CI-only 守門（merge-review R1 major-1）：非 CI（`GITHUB_ACTIONS=true`／`CI=true` 都沒有）且未設 `LS_DB_RESET_RETRY_ALLOW_LOCAL=1`
+#   → 在碰任何 supabase 之前 exit 2。PreToolUse H3／H3b **只看命令列文字**、看不到腳本內部的 `supabase db reset`／`stop --no-backup`
+#   （reviewer 實測 `bash scripts/ci/db-reset-retry.sh` 是 ALLOW）——本機裸跑會是 LS-70 的裸 reset，撞上競態時重試路徑更會把共用
+#   本機容器的 volume 連同別人 hold 中的資料清掉。本機容器一律 `bash scripts/ops/supabase-lock.sh -- supabase db reset`
+#   （COLLABORATION §6 LS-70）；自測以覆寫變數放行。
+# exit：0＝reset 成功（首次或重試）；非 0＝reset／db start 的原 exit code；2＝非 CI 環境守門／mktemp 失敗。
 set -uo pipefail
+
+# CI-only 守門（見檔頭）：GitHub Actions 兩個變數都會設，ci.yml 不必改；本機自測以外的用途須明示 LS_DB_RESET_RETRY_ALLOW_LOCAL=1
+if [ "${GITHUB_ACTIONS:-}" != true ] && [ "${CI:-}" != true ] && [ "${LS_DB_RESET_RETRY_ALLOW_LOCAL:-}" != 1 ]; then
+  echo "✗ db-reset-retry：只給 CI runner（重試路徑會 supabase stop --no-backup 清掉共用本機容器的 volume）；本機請用 bash scripts/ops/supabase-lock.sh -- supabase db reset（明示放行：LS_DB_RESET_RETRY_ALLOW_LOCAL=1；LS-186）" >&2
+  exit 2
+fi
 
 PORT_RACE='address already in use'
 

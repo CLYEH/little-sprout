@@ -3,6 +3,8 @@
 # 每次呼叫的參數追加到 $FAKE_LOG、依 $FAKE_MODE 與「第幾次 db reset」決定輸出與 exit code；假 sleep 只記錄不等待。
 # 「前饋必有反饋」對這支也適用：port 競態不重試、其他錯誤也重試、重試兩次以上、stop 失敗連帶紅、原錯誤訊息被吞、exit code 被
 # 改寫、重試前沒有 stop → sleep → db start 的序列，這裡會紅。
+# merge-review R1 major-1（⓪）：CI-only 守門——非 CI 且無 LS_DB_RESET_RETRY_ALLOW_LOCAL=1 → exit 2 且完全不呼叫 supabase；直接 `bash "$script"`
+#   的樣本一律帶覆寫變數並清掉 CI 變數（本機與 CI 跑出同一結果）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -56,10 +58,21 @@ chmod +x "$work/bin/supabase" "$work/bin/sleep"
 export PATH="$work/bin:$PATH"
 export FAKE_LOG="$work/calls.log"
 
-# run <FAKE_MODE>：清 log、跑腳本；輸出到 $work/out、exit code 到 $rc
-run() { export FAKE_MODE=$1; : > "$FAKE_LOG"; bash "$script" > "$work/out" 2>&1; rc=$?; }
+# run <FAKE_MODE>：清 log、跑腳本（覆寫變數放行守門、CI 變數清空）；輸出到 $work/out、exit code 到 $rc
+run() { export FAKE_MODE=$1; : > "$FAKE_LOG"; LS_DB_RESET_RETRY_ALLOW_LOCAL=1 GITHUB_ACTIONS= CI= bash "$script" > "$work/out" 2>&1; rc=$?; }
 seq_is() { [ "$(paste -s -d '|' "$FAKE_LOG")" = "$1" ]; }
 out_has() { grep -qF -- "$1" "$work/out"; }
+
+# ⓪ CI-only 守門（merge-review R1 major-1）：GITHUB_ACTIONS／CI／覆寫變數都沒有 → exit 2、完全不呼叫 supabase；任一成立即放行；覆寫只認 =1
+guard() { export FAKE_MODE=ok; : > "$FAKE_LOG"; env "$@" bash "$script" > "$work/out" 2>&1; rc=$?; }
+guard GITHUB_ACTIONS= CI= LS_DB_RESET_RETRY_ALLOW_LOCAL=
+if [ "$rc" -eq 2 ] && [ ! -s "$FAKE_LOG" ] && out_has 'supabase-lock.sh -- supabase db reset'; then ok '⓪ 非 CI 且無覆寫 → exit 2、未呼叫任何 supabase、指向 supabase-lock.sh 包裝'; else bad "⓪ 非 CI 應 exit 2 且不呼叫 supabase（實得 exit ${rc}）"; fi
+guard GITHUB_ACTIONS= CI= LS_DB_RESET_RETRY_ALLOW_LOCAL=0
+if [ "$rc" -eq 2 ] && [ ! -s "$FAKE_LOG" ]; then ok '⓪ 覆寫變數 =0 不算放行'; else bad "⓪ 覆寫 =0 應仍 exit 2（實得 exit ${rc}）"; fi
+guard GITHUB_ACTIONS=true CI= LS_DB_RESET_RETRY_ALLOW_LOCAL=
+if [ "$rc" -eq 0 ] && seq_is 'db reset'; then ok '⓪ GITHUB_ACTIONS=true 放行（ci.yml 不必改）'; else bad "⓪ GITHUB_ACTIONS=true 應放行（實得 exit ${rc}）"; fi
+guard GITHUB_ACTIONS= CI=true LS_DB_RESET_RETRY_ALLOW_LOCAL=
+if [ "$rc" -eq 0 ] && seq_is 'db reset'; then ok '⓪ CI=true 放行'; else bad "⓪ CI=true 應放行（實得 exit ${rc}）"; fi
 
 # ① 首次就成功：只呼叫一次、不 stop／sleep／start
 run ok
