@@ -268,12 +268,15 @@ jobs:
       # commit 仍在；同票多個未開工只查一次 Linear、查詢失敗提示。mutation：pen_guard 移回重驗之後／未開工重驗
       # 退回只看 dirty／Pen 讀不到一律放行 → 對應樣本紅。
       # LS-207（8af1c2bc）：同上——if: always() 讓 ops 腳本自測不因前面步驟（如 pr-body-check）紅而被 skip。
-      - name: Ops 腳本自測（patrol／session-start／supabase-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／patrol-linear／cleanup-merged，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86）
+      - name: Ops 腳本自測（patrol／session-start／supabase-lock／simulator-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／patrol-linear／cleanup-merged，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86／LS-207）
         if: always()
         run: |
           rc=0
           bash scripts/ops/patrol.test.sh || rc=1
           bash scripts/ops/supabase-lock.test.sh || rc=1
+          # LS-207（c18ef27f）：--udid 字級／外觀自動調整＋復原；push-gate.test.sh 另外覆蓋核心互斥／逾時邏輯（把
+          # 真正的 simulator-lock.sh 複製進合成 repo），這裡只補新參數
+          bash scripts/ops/simulator-lock.test.sh || rc=1
           bash scripts/ops/promote.test.sh || rc=1
           bash scripts/ops/post-status.test.sh || rc=1
           bash scripts/ops/pen-open.test.sh || rc=1

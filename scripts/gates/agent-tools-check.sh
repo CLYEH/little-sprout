@@ -74,6 +74,8 @@ ios-dev|"
 # 可點元件 minHeight ≥48」（LS-167／16e6b7f9：sheet 內容 ≈0.96 縮放，絕對座標與貼著 44pt 下限的高度會跌破，那句被刪即紅）。
 # LS-207（a7b0f49e）：ios-dev／qa／merge-reviewer 正文須含「等長命令一律前景 Bash 帶 timeout」——git push／xcodebuild／run.sh
 # 這類長命令背景化後結果只在通知裡、沒人 Read 就等於沒驗過（LS-191 當晚背景 push 沒人回頭看輸出），那句被刪即紅。
+# LS-207（c18ef27f）：qa／merge-reviewer 正文須含「用 simctl ui 改過字級／外觀的 handoff 必列已復原」——simulator-lock.sh
+# --udid 會自動調整並復原，但手動跑過或復原失敗時 handoff／verdict 要講清楚，那句被刪即紅。
 BODY_RULES=
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold
@@ -96,7 +98,9 @@ ios-dev|sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight �
 merge-reviewer|sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48
 ios-dev|等長命令一律前景 Bash 帶 timeout
 qa|等長命令一律前景 Bash 帶 timeout
-merge-reviewer|等長命令一律前景 Bash 帶 timeout"
+merge-reviewer|等長命令一律前景 Bash 帶 timeout
+qa|用 \`simctl ui\` 改過字級／外觀的 handoff 必列已復原
+merge-reviewer|用 \`simctl ui\` 改過字級／外觀的 handoff 必列已復原"
 # LS170-BODY-RULES-END
 
 hits=""; n=0

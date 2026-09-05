@@ -7,16 +7,25 @@
 # 自己），其餘沿用同一套邏輯。已知限制同 supabase-lock.sh 檔頭注解（pid 重用、持有者被 SIGKILL 而子命令仍在跑），
 # 不重複贅述。
 #
-# 用法：simulator-lock.sh --dir <路徑> [--timeout <秒>] -- <命令…>
-# 環境變數：SIMULATOR_LOCK_POLL 輪詢秒（預設 1，下限 0.2，同 supabase-lock.sh 理由：0 會 busy-spin）
+# 用法：simulator-lock.sh --dir <路徑> [--timeout <秒>] [--udid <udid>] -- <命令…>
+# 環境變數：SIMULATOR_LOCK_POLL 輪詢秒（預設 1，下限 0.2，同 supabase-lock.sh 理由：0 會 busy-spin）；
+#   SIMLOCK_KEEP_UI=1 跳過下方 --udid 的字級／外觀調整（見下）
 # exit：命令的 exit code；124＝等待逾時；2＝參數／holder 寫入錯誤
+#
+# LS-207（c18ef27f）：`--udid <udid>`（選填，呼叫端明確傳入，不從 --dir 路徑猜——自測與非標準 --dir 覆寫
+# 不會被誤觸）：取得鎖、跑命令前用 `xcrun simctl ui <udid> content_size` / `appearance`（無參數＝查詢）先讀出
+# 目前值存起來，再設成 `content_size medium`／`appearance light`（QA／merge-reviewer 多步驟操作要看得清楚且
+# 一致的畫面，不受呼叫端當下字級／外觀影響）；命令結束、釋放鎖之前用存起來的原值復原（查詢失敗就不設也不
+# 復原，印警告，不擋鎖本身——這是體驗改善，不是硬 gate）。`SIMLOCK_KEEP_UI=1` 整段跳過（含查詢），給不希望
+# 動到模擬器 UI 狀態的呼叫端。
 set -uo pipefail
 
-usage() { echo "用法：simulator-lock.sh --dir <路徑> [--timeout <秒>] -- <命令…>" >&2; }
+usage() { echo "用法：simulator-lock.sh --dir <路徑> [--timeout <秒>] [--udid <udid>] -- <命令…>" >&2; }
 
 timeout=900
 poll=${SIMULATOR_LOCK_POLL:-1}
 lock=
+udid=
 while [ $# -gt 0 ]; do
   case "$1" in
     --dir)
@@ -25,6 +34,9 @@ while [ $# -gt 0 ]; do
     --timeout)
       [ -n "${2:-}" ] || { echo "✗ simulator-lock：--timeout 缺值" >&2; exit 2; }
       timeout=$2; shift 2 ;;
+    --udid)
+      [ -n "${2:-}" ] || { echo "✗ simulator-lock：--udid 缺值" >&2; exit 2; }
+      udid=$2; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     --) shift; break ;;
     -*) echo "✗ simulator-lock：未知參數 $1" >&2; usage; exit 2 ;;
@@ -117,12 +129,39 @@ if ! printf 'pid=%s\nstarted=%s\n' "$$" "$(date +%s)" > "$lock/holder.$$.tmp" 2>
   exit 2
 fi
 
-release() { if read_holder && [ "$h_pid" = "$$" ]; then rm -rf "$lock"; fi; }
+# LS-207（c18ef27f）：--udid 給了才動；SIMLOCK_KEEP_UI=1 整段跳過。查不到目前值就不設也不復原（寧可不動，
+# 不留下復原不了的殘留）；設定失敗只印警告、不擋命令執行——這是體驗改善，不是硬 gate。
+ui_changed=0; ui_orig_content_size=; ui_orig_appearance=
+apply_sim_ui() {
+  [ -n "$udid" ] || return 0
+  [ "${SIMLOCK_KEEP_UI:-}" = 1 ] && return 0
+  ui_orig_content_size=$(xcrun simctl ui "$udid" content_size 2>/dev/null) || ui_orig_content_size=
+  ui_orig_appearance=$(xcrun simctl ui "$udid" appearance 2>/dev/null) || ui_orig_appearance=
+  if [ -z "$ui_orig_content_size" ] || [ -z "$ui_orig_appearance" ]; then
+    echo "⚠ simulator-lock：讀不到目前字級／外觀（xcrun simctl ui ${udid} content_size／appearance 查詢失敗）——不調整、不復原" >&2
+    return 0
+  fi
+  if xcrun simctl ui "$udid" content_size medium >/dev/null 2>&1 && xcrun simctl ui "$udid" appearance light >/dev/null 2>&1; then
+    ui_changed=1
+    echo "→ simulator-lock：已將 ${udid} 字級／外觀改為 content_size=medium appearance=light（原值 content_size=${ui_orig_content_size} appearance=${ui_orig_appearance}，釋放時復原）" >&2
+  else
+    echo "⚠ simulator-lock：設定字級／外觀失敗（xcrun simctl ui ${udid} …）——不擋鎖，照跑命令" >&2
+  fi
+}
+restore_sim_ui() {
+  [ "$ui_changed" -eq 1 ] || return 0
+  xcrun simctl ui "$udid" content_size "$ui_orig_content_size" >/dev/null 2>&1
+  xcrun simctl ui "$udid" appearance "$ui_orig_appearance" >/dev/null 2>&1
+  echo "→ simulator-lock：已復原 ${udid} 字級／外觀（content_size=${ui_orig_content_size} appearance=${ui_orig_appearance}）" >&2
+}
+
+release() { restore_sim_ui; if read_holder && [ "$h_pid" = "$$" ]; then rm -rf "$lock"; fi; }
 trap release EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 trap 'exit 129' HUP
 [ "$announced" -eq 1 ] && echo "→ simulator-lock：取得 lock（等了 $(( $(date +%s) - started ))s）" >&2
+apply_sim_ui
 
 "$@"
 rc=$?

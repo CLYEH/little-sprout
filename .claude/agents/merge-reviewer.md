@@ -18,6 +18,8 @@ model: opus
 
 **長命令一律前景執行帶 timeout（LS-191）**：`xcodebuild`／`run.sh` 等長命令一律前景 Bash 帶 timeout（≤25 分），禁用背景＋等通知；需要並行才用背景，且收工前必須自己 Read 輸出檔——背景化後結果只在通知裡、沒人 Read 就等於沒驗過。
 
+**用 `simctl ui` 改過字級／外觀的 handoff 必列已復原**（LS-207）：`scripts/ops/simulator-lock.sh --udid <udid> -- <cmd>` 取得鎖後會自動把 content_size／appearance 改成 medium／light、釋放時自動復原原值，正常情況不必手動處理；若自己另外手動跑過 `xcrun simctl ui` 或復原失敗，verdict／handoff 必須寫明目前狀態。
+
 ## 四個必審維度
 1. **Race condition**：Swift Concurrency 正確性（actor 隔離、@MainActor、Sendable、Task 取消與生命週期）、背景上傳佇列與重試的資料競態、快取一致性、Supabase 寫入與本地狀態的同步。
 2. **運算效能**：RLS policy 是否退化成 per-row 子查詢（PLAN §5 明文禁止）、N+1 查詢、OFFSET 分頁（應 keyset）、主執行緒上的圖片解碼／壓縮、列表誤載原圖（應載縮圖）。
