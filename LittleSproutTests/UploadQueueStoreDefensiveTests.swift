@@ -151,8 +151,12 @@ final class UploadQueueStoreDefensiveTests: XCTestCase {
         XCTAssertEqual(reason, .server)
     }
 
-    // MARK: - merge-review R3 N1：advance／finish 連續觸發不該重複啟動同一筆
+    // MARK: - 併發完成時遞補次序正確（不宣稱釘住 N1——見下一個測試）
 
+    /// merge-reviewer `e36410f7` 指出：這支測試四筆都帶正常 payload，走不到 `start(_:)`
+    /// 的 fail-loop 分支，結構上不可能產生巢狀 `advance()`，因此拿掉 R3 N1 那道 guard 這支
+    /// 測試仍然全綠、20 次迭代也全過——它不是 N1 的迴歸防護，只是驗證「兩把幾乎同時放行時
+    /// 遞補次序正確、每筆仍只被 start 一次」這件事本身（這件事本身是對的，繼續保留）。
     func test_advance_concurrentCompletions_neverDoubleStartsSameItem() async {
         let mediaService = StubMediaUploadService()
         let gates = (0..<4).map { _ in AsyncStream<Void>.makeStream() }
@@ -179,6 +183,39 @@ final class UploadQueueStoreDefensiveTests: XCTestCase {
         XCTAssertEqual(
             mediaService.uploadPhotoCalls.count, 4,
             "四筆各自只該被 start／上傳一次；重複啟動會讓呼叫次數超過張數"
+        )
+    }
+
+    // MARK: - merge-review R3 N1（真正的迴歸防護，merge-reviewer `e36410f7` 提供）
+
+    /// 真正逼出巢狀 `advance()` 的路徑：`retryAllRetryable()` 一次把多筆從 `.failed` 設回
+    /// `.waiting` 後只呼叫一次 `advance()`；其中一筆用 `debugForcePayloadNil` 打破
+    /// 「`.waiting` 一定有 payload」的不變量，讓 `start(_:)` 走進 fail-loop 分支、同步呼叫
+    /// `finish()` 再巢狀呼叫 `advance()`——外層 `advance()` 迴圈手上的 `waitingIDs` 快照沒
+    /// 跟著更新，會對已經被巢狀 `advance()` 啟動過的筆再呼叫一次 `start`，造成重複上傳。
+    ///
+    /// 拿掉 `start(_:)` 那道 `guard case .waiting` 後實測：`uploadPhotoCalls.count` 從
+    /// 正確的 5（初始 3 ＋ 重試 2）變成 7（b、c 各被多送一次）——與 merge-reviewer 附的
+    /// 修法逐位相符。
+    func test_retryAll_withBrokenPayload_neverDoubleStartsOthers() async {
+        let mediaService = StubMediaUploadService()
+        mediaService.setUploadPhotoHandler { _, _, _, _ in throw AppError.network(message: "offline") }
+        let store = UploadQueueStore(familyID: familyID, mediaUploadService: mediaService, maxConcurrentUploads: 3)
+        let uploadA = makeUpload(tag: "a")
+        let uploadB = makeUpload(tag: "b")
+        let uploadC = makeUpload(tag: "c")
+
+        store.enqueue([uploadA, uploadB, uploadC])
+        await waitUntil { store.failedCount == 3 }
+
+        // 人為打破不變量——正常流程走不到這裡，見 `debugForcePayloadNil` 文件註解。
+        store.debugForcePayloadNil(uploadA.id)
+        store.retryAllRetryable()
+        await waitUntil { store.failedCount == 3 && mediaService.uploadPhotoCalls.count >= 5 }
+
+        XCTAssertEqual(
+            mediaService.uploadPhotoCalls.count, 5,
+            "初始 3 ＋ 重試 2（b、c 各一次）；guard 失效時 b、c 會各被多送一次，變成 7"
         )
     }
 }

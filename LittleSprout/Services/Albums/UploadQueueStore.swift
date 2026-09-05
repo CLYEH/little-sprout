@@ -166,15 +166,18 @@ final class UploadQueueStore {
 
     private func start(_ id: UUID) {
         guard var entry = entries[id] else { return }
-        // merge-review R3 N1：`advance()` 目前只把 `.waiting` 的 id 傳進來，正常呼叫路徑下
-        // 走不到「對非 `.waiting` 項目呼叫 `start`」這個分支；但 `start` 本身在這道 guard
-        // 之前沒有重新核對狀態，若未來有呼叫端（或這支函式本身的邏輯）不小心對同一個 id
-        // 重複呼叫（例如同一輪 `advance()` 的 `waitingIDs` 快照裡意外出現重複 id、或日後
-        // 改寫成別的觸發路徑），會把一筆已經在 `.uploading`／`.completed`／`.failed` 的項目
-        // 重新打成 `.uploading` 並多開一個 `Task`，兩個 `Task` 完成時都會呼叫
-        // `finish(id:)`，造成重複上傳或狀態被後到的那個覆寫。這裡補一道不信任呼叫端的防禦
-        // guard，讓 `start` 對非 `.waiting` 的項目直接 no-op——見
-        // `test_advance_concurrentCompletions_neverDoubleStartsSameItem`。
+        // merge-review R3 N1（真正的觸發機制，由 merge-reviewer `e36410f7` 找到）：
+        // `advance()` 的 `waitingIDs` 是進迴圈前拍的一次性快照。當快照裡排在前面的某筆
+        // 因為 `payload == nil` 走進下面的 fail-loop 分支，`finish()` 會**同步、巢狀地**
+        // 再呼叫一次 `advance()`——這個巢狀呼叫用的是「當下」狀態，會把快照裡排在後面、
+        // 原本還 `.waiting` 的筆正確地 start 一次。問題是外層迴圈手上那份快照沒有跟著
+        // 更新，繼續往後跑到同一個 id 時**還會再呼叫一次 `start`**，把已經是 `.uploading`
+        // 的項目重新打成 `.uploading` 並多開一個 `Task`——同一筆被送出兩次。這裡補一道
+        // 不信任快照的防禦 guard，讓 `start` 對非 `.waiting` 的項目直接 no-op——見
+        // `test_retryAll_withBrokenPayload_neverDoubleStartsOthers`（用
+        // `retryAllRetryable()` 一次把多筆設回 `.waiting` 再觸發單一 `advance()`，並用
+        // `debugForcePayloadNil` 讓其中一筆走進下面的 fail-loop 分支，逼出上述巢狀呼叫；
+        // 拿掉這道 guard 該測試會從 5 次上傳呼叫變成 7 次，見該測試檔案）。
         guard case .waiting = entry.state else { return }
         // `payload` 為 `nil` 只會發生在完成或不可重試失敗之後（見 `Entry.payload` 文件
         // 註解）——這兩種狀態都不會再被 `advance()` 選中（不是 `.waiting`），理論上走不到

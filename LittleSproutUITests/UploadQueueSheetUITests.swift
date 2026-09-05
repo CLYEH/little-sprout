@@ -87,17 +87,29 @@ final class UploadQueueSheetUITests: XCTestCase {
 
         // 列內容：縮圖（`UploadQueueRowView.thumbnailSize` 64pt）＋`AppSpacing.label`（8pt）
         // 之後才是時間戳文字起點——同一個 HStack 裡兩個 x 有真正的物理距離（72pt），不像上面
-        // 兩個「理論上該相等」的比較天生免疫縮放：距離本身也會被同一個係數等比例縮放
-        // （72 × 0.9602 ≈ 69.1），所以容差故意比上面寬（4pt，不是 1pt）——這不是放寬抓 bug
-        // 的門檻，一個真的迴歸（例如縮圖尺寸或間距改掉）落差會是幾十 pt 等級，不會卡在這個
-        // 邊界上。時間戳文案含當下時鐘時間（`UploadQueueTimestampFormat`「今天 HH:mm」），
-        // 用前綴比對而非精確字串。
+        // 兩個「理論上該相等」的比較天生免疫縮放：距離本身也會被同一個環境縮放係數等比例
+        // 縮小（例如 iOS 26.2+ CI 的 ≈0.9602：72 × 0.9602 ≈ 69.1）。
+        //
+        // merge-review R6（reviewer `e36410f7` I-2）：R5 版本用固定 `+ 72` 搭配 4pt 容差吸收
+        // 這個縮放誤差，餘裕只剩 1.13pt——係數只要偏離 0.9602 一點就會假紅，跟這輪修掉的
+        // 絕對常數 24 是同一類病，只是換了個位置。改成直接從已知幾何反推「當下這次執行」的
+        // 實際縮放係數，不假設任何特定數字：footer 的 `Text` 是 `.frame(minHeight: 48)`，
+        // 單行文字下 SwiftUI 會精確算出這個高度（R4／R5 已實測驗證過是精確值，不是留有餘裕的
+        // 下限近似），所以 `footer.frame.height / 48` 就是當下環境的縮放係數。算出係數後
+        // 容差可以收緊回 1pt（只剩子像素捨入誤差）。
+        let scale = footer.frame.height / 48
+
+        // merge-review R6（reviewer `e36410f7` I-3）：原本用 `BEGINSWITH "今天 "` 精確比對，
+        // 若 UITest 剛好在本地時間 00:00:00–00:01:00 之間啟動，`previewNormalSample()` 播種
+        // 的「幾十秒前」時間戳會跨過午夜被格式化成「昨天 HH:mm」，導致這個 predicate 找不到
+        // 元素而假紅（機率極低但會長得像版面迴歸、很難查）。改用不依賴日期字首的 regex——
+        // 只認「結尾是 HH:mm」這個所有三種格式（今天／昨天／M/d）共有的形狀，不假設是哪一種。
         let timestamp = app.staticTexts.matching(
-            NSPredicate(format: "label BEGINSWITH %@", "今天 ")
+            NSPredicate(format: "label MATCHES %@", ".*\\d{2}:\\d{2}$")
         ).firstMatch
         XCTAssertTrue(timestamp.waitForExistence(timeout: 10))
         XCTAssertEqual(
-            timestamp.frame.minX, referenceX + 64 + 8, accuracy: 4,
+            timestamp.frame.minX, referenceX + 72 * scale, accuracy: 1,
             "時間戳應該接在縮圖（64pt）＋間距（8pt）之後，不是被置中或間距跑掉"
         )
     }
