@@ -400,7 +400,7 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
   wd_pid=
   wd_descendants() { local c; for c in $(pgrep -P "$1" 2>/dev/null); do printf '%s ' "$c"; wd_descendants "$c"; done; }
   wd_kill_tree() {   # $1＝根 pid；設 wd_killed_pids（含根）；回傳時整棵樹已 TERM、殘留已 KILL
-    local p alive i
+    local p alive i more
     wd_killed_pids="$1 $(wd_descendants "$1")"
     kill -TERM $wd_killed_pids 2>/dev/null || true
     for i in 1 2 3 4 5 6; do
@@ -409,13 +409,28 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
       [ "$alive" -eq 0 ] && break
       sleep 0.5
     done
+    # LS-205（LS-96 池項 37a390d0 (3)）：TERM 之後、KILL 之前重新收集一次子孫——上面等待的 0～3 秒內，
+    # 還沒死透的行程仍可能繼續 fork 新的子孫（例如收到 TERM 後才開始跑清理流程、清理過程中又起了一個
+    # helper 行程），只用「送出 TERM 前那一刻」收集到的舊清單去 KILL 會漏殺這些晚生的子孫。
+    # 只從根（$1）重走一次不夠：中間層沒接 trap 的行程（例如這裡的 xcodebuild 假身）一收到 TERM 就
+    # 立刻死透，讓底下還活著、真的接了 trap 的行程（例如測試腳本本身）失去父行程、被 launchd 收養——
+    # `pgrep -P "$1"` 的鏈路在半路就斷了，從根重新遞迴永遠到不了斷鏈之後才出生的新孫行程。改成對
+    # **目前已知的每一個 pid**（不只根）各自再問一次 `pgrep -P`——這些 pid 在第一輪就已經藉由明確點名
+    # `kill -TERM` 收過訊號，即使斷鏈也不影響「直接查它自己的子行程」這件事。
+    more=
+    for p in $wd_killed_pids; do more="$more $(wd_descendants "$p")"; done
+    wd_killed_pids="$wd_killed_pids $more"
     kill -KILL $wd_killed_pids 2>/dev/null || true
   }
   wd_session_logs() {   # 本 worktree 專案的 DerivedData 內、晚於看門狗啟動的 Staging Session-*.log，每行一個
     local d
     for d in "$HOME"/Library/Developer/Xcode/DerivedData/*/; do
       [ -f "${d}info.plist" ] || continue
-      grep -qF "<string>${wd_repo_root}/" "${d}info.plist" 2>/dev/null || continue
+      # LS-205（LS-96 池項 37a390d0 (1)）：改用 -qE 精確比對「WorkspacePath 落在本 repo 根之下的
+      # .xcodeproj／.xcworkspace」，不是純字首 -qF——原本的字首比對從**主 checkout**跑 push gate
+      # 時，會把「主 checkout 路徑」當成所有 worktree 路徑的字首命中（worktree 慣例上放在主 checkout
+      # 底下的 .claude/worktrees/ 內），所有 worktree 的 DerivedData session log 都會被誤判成自己的。
+      grep -qE "<string>${wd_repo_root}/[^/<]*\.xc(odeproj|workspace)<" "${d}info.plist" 2>/dev/null || continue
       # `|| true`：Logs/Test 在第一個測試 session 開始前還不存在，find 非 0 會讓 set -e 把這個掃描子殼整個結束
       find "${d}Logs/Test" -path '*.xcresult/Staging/*' -name 'Session-*.log' -newer "$wd_stamp" 2>/dev/null || true
     done

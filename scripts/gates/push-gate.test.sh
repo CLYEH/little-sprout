@@ -182,6 +182,14 @@ run_gate() {
       bash scripts/gates/push-gate.sh </dev/null 2>&1 )
 }
 
+# run_gate_keep_lock：同 run_gate，但不清空 SIMULATOR_LOCK_DIR（㊲ 專用——驗證「別人持有、非本次看門狗
+# 殺掉的子孫」那把鎖不會被誤收，呼叫前得先自己把鎖布置好，run_gate 開頭的 rm -rf 會把它清掉）。
+run_gate_keep_lock() {
+  ( cd "$R" && env FAKE_DEST_UDID="$ded_udid" PATH="$work/bin:$PATH" \
+      XCODE_APPS_DIR="$work/no-such-apps" GITHUB_ACTIONS= "$@" \
+      bash scripts/gates/push-gate.sh </dev/null 2>&1 )
+}
+
 # ---- ① 本 worktree 專屬機、測試成功（STUB_TEST_RC=0）→ 仍要關模擬器 ----
 : > "$SHUTDOWN_LOG"
 out1=$(run_gate STUB_TEST_RC=0)
@@ -990,6 +998,10 @@ cat > "$work/wd-test-script.sh" <<'STUB'
 #                                        輪詢連一次都不會掃到（㉜ 併行跑三份自測時曾因此假紅）
 #   WD_HANG                              掛住：背景 sleep 120、把「自己 pid 與 sleep pid」寫進 WD_PID_FILE 供斷言整棵行程樹被殺；
 #                                        沒設就正常結束 exit 0
+#   WD_LATE_SPAWN（LS-205，隨 WD_HANG 一起用）  收到 TERM 才 fork 一個新的孫行程（模擬「清理中又起
+#                                        helper 行程」）、自己再多活 10 秒（比 wd_kill_tree 的 TERM→KILL
+#                                        等待窗最多 3 秒長，確保 KILL 送出時這個晚生的孫行程仍在）——
+#                                        新孫行程 pid 寫進這個路徑指到的檔案。
 if [ -n "${WD_SESSION_FILE:-}" ]; then
   mkdir -p "$(dirname "$WD_SESSION_FILE")"
   printf '%b\n' "${WD_SESSION_CONTENT:-}" > "$WD_SESSION_FILE"
@@ -1002,6 +1014,9 @@ if [ -n "${WD_THEN_STDOUT:-}" ]; then
 fi
 if [ -n "${WD_TAIL_SLEEP:-}" ]; then sleep "$WD_TAIL_SLEEP"; fi
 if [ -n "${WD_HANG:-}" ]; then
+  if [ -n "${WD_LATE_SPAWN:-}" ]; then
+    trap 'sleep 120 & echo $! > "$WD_LATE_SPAWN"; sleep 10; exit 143' TERM
+  fi
   sleep 120 &
   printf '%s %s\n' "$$" "$!" > "${WD_PID_FILE:?WD_PID_FILE 未設定}"
   wait
@@ -1117,6 +1132,63 @@ out35b=$(run_gate STUB_TEST_RC=0 PUSH_GATE_CRASH_GRACE_SEC=0); rc35b=$?
 if [ "$rc35" -ne 0 ] && printf '%s' "$out35" | grep -qF '須為正整數' && [ "$rc35b" -ne 0 ] && printf '%s' "$out35b" | grep -qF '須為正整數'; then
   echo "✓ ㉟ 逾時分鐘數非數字／grace 為 0 → 擋下並指出變數"
 else echo "✗ ㉟ 非法的看門狗設定沒有被擋（exit ${rc35}／${rc35b}）" >&2; printf '%s\n' "$out35" | sed 's/^/    /' >&2; fail=1; fi
+
+
+# ㊱（LS-205，LS-96 池項 37a390d0 (3)）：TERM 之後才 fork 的晚生孫行程也要被殺乾淨——wd-test-script.sh
+# 在 WD_LATE_SPAWN 時收到 TERM 才 fork 一個新的 `sleep 120`、自己再多活 10 秒（比 wd_kill_tree 的
+# TERM→KILL 等待窗最多 3 秒長，逾時後的 alive-check 迴圈會跑滿全部 6 次才進 KILL），這個晚生孫行程若
+# 只用「送 TERM 前那份舊清單」去 KILL 就不會被殺到（mutation：拿掉 KILL 前重新收集子孫那行 → 紅）。
+: > "$SHUTDOWN_LOG"
+wd_pidfile36="$work/wd36.pid"; rm -f "$wd_pidfile36"
+wd_late36="$work/wd36.late"; rm -f "$wd_late36"
+t36=$(date +%s)
+out36=$(run_gate HOME="$wd_home" STUB_TEST_SCRIPT="$work/wd-test-script.sh" PUSH_GATE_XCODEBUILD_TIMEOUT_SEC=3 \
+  WD_HANG=1 WD_LATE_SPAWN="$wd_late36" WD_PID_FILE="$wd_pidfile36"); rc36=$?
+el36=$(( $(date +%s) - t36 ))
+wd_assert_aborted "㊱" "$rc36" "$el36" 25 "$wd_pidfile36" "$out36"
+late_pid36=$(cat "$wd_late36" 2>/dev/null)
+if [ -z "$late_pid36" ]; then
+  echo "✗ ㊱ 沒讀到晚生孫行程的 pid（${wd_late36} 是空的？自測本身沒運作）" >&2
+  printf '%s\n' "$out36" | sed 's/^/    /' >&2
+  fail=1
+else
+  # kill -KILL 是非同步訊號，行程不會瞬間消失——輪詢至多 3 秒
+  for _ in 1 2 3 4 5 6 7 8 9 10; do kill -0 "$late_pid36" 2>/dev/null || break; sleep 0.3; done
+  if ! kill -0 "$late_pid36" 2>/dev/null; then
+    echo "✓ ㊱ TERM 之後才 fork 的晚生孫行程（pid ${late_pid36}）被 KILL 前重新收集抓到、殺乾淨"
+  else
+    echo "✗ ㊱ 晚生孫行程（pid ${late_pid36}）沒被殺乾淨——KILL 前沒有重新收集子孫" >&2
+    kill -KILL "$late_pid36" 2>/dev/null   # 測試自己收尾，不留一顆 sleep 120 在背景
+    fail=1
+  fi
+fi
+
+# ㊲（LS-205，LS-96 池項 37a390d0 (2)）：sim_lock_dir 若是被「非本次看門狗殺掉的行程」持有（例如巧合
+#    搶到同一顆 UDID、正在跑 xcodebuild test 的另一支呼叫），逾時中止時這把「別人的」鎖必須原封不動
+#    留著，不能因為看門狗自己中止了就順手 rm -rf（mutation：拿掉「holder 必須是被殺子孫」那段判斷、
+#    只要 sim_lock_dir/holder 存在就一律回收 → 紅）。背景先用真正的 simulator-lock.sh 抓住
+#    $SIMULATOR_LOCK_DIR（非本次 push-gate.sh 行程樹的子孫，是本檔案自己開的獨立行程）、放夠久，
+#    讓 push-gate.sh 那次 xcodebuild test 呼叫在鎖外面排隊等到逾時；run_gate_keep_lock 不會在起跑前
+#    清空這把鎖。
+: > "$SHUTDOWN_LOG"
+rm -rf "$SIMULATOR_LOCK_DIR"
+bash "$work/simulator-lock.sh.real" --dir "$SIMULATOR_LOCK_DIR" -- sleep 10 &
+foreign_pid37=$!
+sleep 0.5   # 讓背景鎖先落地（holder 檔寫好）
+foreign_holder_before=$(cat "$SIMULATOR_LOCK_DIR/holder" 2>/dev/null)
+# STUB_TEST_SCRIPT／WD_HANG 不必帶——鎖被別人占走，push-gate.sh 這次的 xcodebuild test 呼叫從頭到尾
+# 卡在等鎖那一步，根本沒機會執行到 xcodebuild（也就沒機會跑到 wd-test-script.sh）。
+out37=$(run_gate_keep_lock HOME="$wd_home" PUSH_GATE_XCODEBUILD_TIMEOUT_SEC=3); rc37=$?
+if [ "$rc37" -eq 124 ]; then echo "✓ ㊲ 看門狗中止 → exit 124（等鎖等到逾時，xcodebuild 從未真的跑起來）"; else echo "✗ ㊲ 應 exit 124（實得 ${rc37}）" >&2; printf '%s\n' "$out37" | sed 's/^/    /' >&2; fail=1; fi
+if [ -d "$SIMULATOR_LOCK_DIR" ] && [ "$(cat "$SIMULATOR_LOCK_DIR/holder" 2>/dev/null)" = "$foreign_holder_before" ]; then
+  echo "✓ ㊲ 別人持有、非本次看門狗子孫的鎖原封不動留著（holder 未變）"
+else
+  echo "✗ ㊲ 別人的鎖被誤收了（中止後 ${SIMULATOR_LOCK_DIR} 消失或 holder 變了）" >&2
+  printf '%s\n' "$out37" | sed 's/^/    /' >&2
+  fail=1
+fi
+kill "$foreign_pid37" 2>/dev/null; wait "$foreign_pid37" 2>/dev/null
+rm -rf "$SIMULATOR_LOCK_DIR"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ push-gate 模擬器自測通過"
