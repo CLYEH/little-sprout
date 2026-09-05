@@ -68,6 +68,49 @@ export function isContentTargetType(v: unknown): v is ContentTargetType {
     v === "family";
 }
 
+/**
+ * `claim_notification_events()` 的原始回傳列（`Record<string, unknown>`，
+ * supabase-js RPC 回傳不帶型別）轉成 `ClaimedEvent[]` 的行轉換——LS-96 池項
+ * `a6f28382` 第 2 條（LS-175 merge-review R1-i2，R2 只搬了型別守門一半）：
+ * 原本連同 `isNotificationKind`／`isContentTargetType` 一起留在 `index.ts`，
+ * 因為 `index.ts` 在模組層級呼叫 `Deno.serve()`，這段行轉換邏輯（含「未知 kind
+ * 整批視為失敗」這個 fail-loud 分支）從落地起就沒有任何測試覆蓋。搬到這裡之後
+ * `index.ts` 的 `claimEvents` 只剩「呼叫 RPC → 把結果餵給這支純函式」的接線，
+ * 行為與搬遷前逐字等價（純粹把同一段程式碼移動位置，沒有改寫任何一行判斷式）。
+ */
+export function mapClaimedEventRows(
+  rows: Array<Record<string, unknown>>,
+): { events: ClaimedEvent[]; error?: string } {
+  const events: ClaimedEvent[] = [];
+  for (const row of rows) {
+    if (
+      !isNotificationKind(row.kind) || !isContentTargetType(row.target_type)
+    ) {
+      // fail loud：schema 回傳了非預期的 enum 值，代表資料庫與這支函式的假設
+      // 已經不同步——略過這一列並不安全（會用錯的文案發錯的訊息），直接算成
+      // 這次 claimEvents 呼叫失敗，交給上層 log／中止這一輪迴圈。
+      return {
+        events: [],
+        error: `claim_notification_events 回傳未知的 kind／target_type：${
+          JSON.stringify(row)
+        }`,
+      };
+    }
+    events.push({
+      id: String(row.id),
+      familyId: String(row.family_id),
+      kind: row.kind,
+      targetType: row.target_type,
+      targetId: String(row.target_id),
+      actorId: row.actor_id === null ? null : String(row.actor_id),
+      actorDisplayName: String(row.actor_display_name),
+      eventCount: Number(row.event_count),
+      occurredAt: String(row.occurred_at),
+    });
+  }
+  return { events };
+}
+
 export interface ClaimedEvent {
   id: string;
   familyId: string;
@@ -219,6 +262,39 @@ export function buildMessageBody(
 // ---------------------------------------------------------------------------
 
 export type StubApnsResponder = (token: string) => ApnsOutcome;
+
+// LS-96 池項 `531a0975`（LS-172 QA `23af6837`）：`StubApnsProvider()` 原本只能
+// 靠 deno 單元測試直接 construct `new StubApnsProvider(responder)` 才能注入
+// 410／BadDeviceToken——`supabase functions serve` 起的真實 HTTP 端點沒有任何
+// 環境變數／機制能觸發失效 token 分支，Stub E2E 因此只能改用「真正 PostgREST
+// DELETE」等價驗證，驗不到 `runDispatch` 真正呼叫 `removeDeviceToken` 這條路徑。
+// 這支函式讀取 `PUSH_DISPATCH_STUB_RESPONSE` 環境變數，把它轉成
+// `index.ts` 可以直接餵給 `new StubApnsProvider(...)` 的 responder；放在這裡
+// （純函式、無副作用）而不是 index.ts，理由同 `isNotificationKind` 等——
+// `index.ts` 在模組層級呼叫 `Deno.serve()`，這支函式若留在那裡就無法被
+// `handler.test.ts` 直接測到。
+//
+// 目前只支援 `"410"`（模擬 APNs 410 Unregistered，`ApnsOutcome.invalidToken`
+// 分支——`removeDeviceToken()` 會被呼叫、`tokens_removed` 會累加）。**fail
+// loud**：設了但值不認得就直接丟例外，不悄悄退回預設的 `ok:true`——那樣會讓
+// 打錯字的環境變數看起來像「一切正常」，卻其實根本沒有注入到任何東西。
+export function parseStubResponse(
+  value: string | undefined,
+): StubApnsResponder | undefined {
+  if (value === undefined || value === "") return undefined;
+  if (value === "410") {
+    return () => ({
+      ok: false,
+      invalidToken: true,
+      error: "APNs 410 Unregistered（PUSH_DISPATCH_STUB_RESPONSE 注入）",
+    });
+  }
+  throw new Error(
+    `PUSH_DISPATCH_STUB_RESPONSE 不支援的值：${
+      JSON.stringify(value)
+    }（目前只支援 "410"）`,
+  );
+}
 
 export class StubApnsProvider implements ApnsProvider {
   readonly calls: { token: string; title: string; body: string }[] = [];

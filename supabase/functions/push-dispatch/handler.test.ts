@@ -5,7 +5,7 @@
 // 跑法：`deno test supabase/functions/push-dispatch/`（不需要 --allow-net，這裡的
 // 每一個依賴都是 fake，不會真的發出網路請求）。
 
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals, assertThrows } from "jsr:@std/assert@1";
 import {
   type ApnsOutcome,
   type ApnsProvider,
@@ -17,6 +17,8 @@ import {
   handleRequest,
   isContentTargetType,
   isNotificationKind,
+  mapClaimedEventRows,
+  parseStubResponse,
   runDispatch,
   StubApnsProvider,
 } from "./handler.ts";
@@ -227,6 +229,128 @@ Deno.test("isContentTargetType：認得 content_target_type 目前全部 5 個 e
   }
   assertEquals(isContentTargetType("unknown-type"), false);
   assertEquals(isContentTargetType(undefined), false);
+});
+
+// ---------------------------------------------------------------------------
+// 1b2. mapClaimedEventRows（LS-96 池項 `a6f28382` 第 2 條，LS-175 merge-review
+// R1-i2）：claim_notification_events() 原始回傳列 → ClaimedEvent[] 的行轉換，
+// 從 index.ts 搬過來的純函式——行為逐字等價，只是換位置讓它測得到。
+// ---------------------------------------------------------------------------
+
+Deno.test("mapClaimedEventRows：正常列 → 型別轉換與欄位對應正確（字串化 id／數值化 event_count）", () => {
+  const result = mapClaimedEventRows([{
+    id: "11111111-1111-1111-1111-111111111111",
+    family_id: "22222222-2222-2222-2222-222222222222",
+    kind: "diary",
+    target_type: "diary",
+    target_id: "33333333-3333-3333-3333-333333333333",
+    actor_id: "44444444-4444-4444-4444-444444444444",
+    actor_display_name: "媽媽",
+    event_count: 3,
+    occurred_at: "2026-09-04T00:00:00Z",
+  }]);
+  assertEquals(result.error, undefined);
+  assertEquals(result.events, [{
+    id: "11111111-1111-1111-1111-111111111111",
+    familyId: "22222222-2222-2222-2222-222222222222",
+    kind: "diary",
+    targetType: "diary",
+    targetId: "33333333-3333-3333-3333-333333333333",
+    actorId: "44444444-4444-4444-4444-444444444444",
+    actorDisplayName: "媽媽",
+    eventCount: 3,
+    occurredAt: "2026-09-04T00:00:00Z",
+  }]);
+});
+
+Deno.test('mapClaimedEventRows：actor_id 為 null（例如合併事件的 actor 帳號已被硬刪）→ actorId:null，不是字串 "null"', () => {
+  const result = mapClaimedEventRows([{
+    id: "1",
+    family_id: "2",
+    kind: "album",
+    target_type: "album",
+    target_id: "3",
+    actor_id: null,
+    actor_display_name: "家人",
+    event_count: 1,
+    occurred_at: "2026-09-04T00:00:00Z",
+  }]);
+  assertEquals(result.events[0].actorId, null);
+});
+
+Deno.test("mapClaimedEventRows：未知 kind（或 null）→ fail loud，整批（不只該列）視為失敗，events 空陣列（同既有 claimEvents 語意）", () => {
+  const result = mapClaimedEventRows([
+    {
+      id: "1",
+      family_id: "2",
+      kind: "diary",
+      target_type: "diary",
+      target_id: "3",
+      actor_id: null,
+      actor_display_name: "家人",
+      event_count: 1,
+      occurred_at: "x",
+    },
+    {
+      id: "4",
+      family_id: "5",
+      kind: null,
+      target_type: "diary",
+      target_id: "6",
+      actor_id: null,
+      actor_display_name: "家人",
+      event_count: 1,
+      occurred_at: "y",
+    },
+  ]);
+  assertEquals(result.events, []);
+  assertEquals(result.error?.includes("未知的 kind／target_type"), true);
+});
+
+Deno.test('mapClaimedEventRows：缺欄位（row.id 是 undefined）→ 既有的寬鬆轉換 String(undefined)="undefined"（純函式化的手術式搬移，不修這個既有行為，行為逐字等價）', () => {
+  const result = mapClaimedEventRows([{
+    family_id: "2",
+    kind: "diary",
+    target_type: "diary",
+    target_id: "3",
+    actor_id: null,
+    actor_display_name: "家人",
+    event_count: 1,
+    occurred_at: "x",
+  }]);
+  assertEquals(result.events[0].id, "undefined");
+});
+
+// ---------------------------------------------------------------------------
+// 1c. parseStubResponse（LS-96 池項 `531a0975`，LS-172 QA `23af6837`）：
+// PUSH_DISPATCH_STUB_RESPONSE 環境變數 → StubApnsResponder，供 index.ts 在
+// `functions serve` 下也能注入 410／BadDeviceToken 做 Stub E2E。
+// ---------------------------------------------------------------------------
+
+Deno.test("parseStubResponse：未設定（undefined）→ undefined，StubApnsProvider 維持預設一律 ok:true", () => {
+  assertEquals(parseStubResponse(undefined), undefined);
+});
+
+Deno.test("parseStubResponse：空字串（同未設定）→ undefined", () => {
+  assertEquals(parseStubResponse(""), undefined);
+});
+
+Deno.test('parseStubResponse："410" → responder 回傳 invalidToken:true（模擬 APNs 410 Unregistered）', () => {
+  const responder = parseStubResponse("410");
+  assertEquals(typeof responder, "function");
+  assertEquals(responder!("any-token"), {
+    ok: false,
+    invalidToken: true,
+    error: "APNs 410 Unregistered（PUSH_DISPATCH_STUB_RESPONSE 注入）",
+  });
+});
+
+Deno.test("parseStubResponse：不認得的值 → fail loud 丟例外，不悄悄退回預設 ok:true", () => {
+  assertThrows(
+    () => parseStubResponse("999"),
+    Error,
+    "PUSH_DISPATCH_STUB_RESPONSE 不支援的值",
+  );
 });
 
 // ---------------------------------------------------------------------------

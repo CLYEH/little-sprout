@@ -185,8 +185,10 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
   `20260904212530_suspension_and_registrations.sql` 第 3 段）。**停權原因**
   （稽核用）**不放在這張表上**——`authenticated` 是表級 SELECT，任何欄位都會
   被自動涵蓋，稽核原因（可能含第三方個資）不能讓被停權者自己讀得到；原因存在
-  `private.suspension_notes`（只有表擁有者／`service_role` 讀寫得到，R2，
-  merge-review R1 MAJOR-1）。停權操作方式見
+  `private.suspension_notes`（只有表擁有者，postgres；`service_role` 若日後
+  需要須另外 grant——目前零 grant，同 `service_role` 對 `app_settings`／
+  `profiles`／`families` 的既有慣例，R2，merge-review R1 MAJOR-1，n3 訂正）。
+  停權操作方式見
   §11。
 
 ### `families`
@@ -1353,7 +1355,9 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `[api] schemas = ["public", "graphql_public"]`）裡，client 沒有任何路徑能自己
   設這個值，且它的作用範圍就是這一次呼叫的交易本身，見
   `private.deletion_bypass_active()` 的函式註解與
-  `supabase/tests/105_suspension_and_registrations.sql` 場景 8／9。
+  `supabase/tests/105_suspension_and_registrations.sql` 場景 10／11（n1 訂正：
+  場景 8 是 `suspension_notes`、場景 9 是 `content_reports`，跟 `delete_my_
+  account()` 無關）。
 - **用途**：app 內刪除帳號的**資料面**入口（PLAN §9-A2／App Store Guideline
   5.1.1(v)）。逐一檢查呼叫者所屬的每個家庭，依角色分三種結果：
   1. **是某家庭的唯一 owner、且該家庭還有其他成員** → 整個呼叫被拒絕，`LS050`，
@@ -2574,6 +2578,19 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   才用它；未設定或設成 `"apns"` 一律走真正的 APNs——「本機／CI 用 stub」必須是
   明確選擇，不是缺 APNs secrets 時的自動降級（那樣會讓「忘記設定正式 secrets」的
   部署錯誤被靜默吞掉）。
+  - **`PUSH_DISPATCH_STUB_RESPONSE`（LS-96 池項 `531a0975`，非 secret，本機／CI
+    測試開關，只在 `PUSH_DISPATCH_PROVIDER=stub` 時有意義）**：原本
+    `StubApnsProvider()` 的 responder 只能在 deno 單元測試裡直接 construct
+    `new StubApnsProvider(responder)` 才能注入 410／BadDeviceToken，`supabase
+    functions serve` 起的真實 HTTP 端點沒有任何機制能讓 Stub E2E 驗到
+    `tokens_removed`／`device_tokens` 刪列這條路徑（原本只能改用「打真正
+    PostgREST DELETE」的等價驗證繞過去）。設成 `"410"` 時，`StubApnsProvider`
+    對每一次 `send()` 呼叫都回傳失效 token（`invalidToken:true`），
+    `runDispatch` 因此會真的呼叫 `removeDeviceToken()`。解析在
+    `handler.ts` 的 `parseStubResponse`——**fail loud**：設了但不是 `"410"`
+    就丟例外，不悄悄退回預設的 `ok:true`。未設定＝維持原本一律 `ok:true` 的
+    行為。正式站部署不設定這個變數（只在 `PUSH_DISPATCH_PROVIDER=stub` 才有
+    意義，正式站本來就不會設 `PUSH_DISPATCH_PROVIDER`）。
 - **排程（未建立，僅記載部署清單）**：`pg_cron` 每分鐘一次呼叫 `pg_net.http_post`
   打本函式，`Authorization` header 的 `service_role` key 由 `vault` 讀取（不寫死
   在 migration 裡）——同 `purge-storage`（§6「自動清除」執行機制段）的既有排程
@@ -2619,7 +2636,10 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   - **本機 Stub 端到端**（票驗收條件要求的手動驗證，見票 handoff）：灌 3 個家庭
     成員（其中 1 人封鎖 actor）＋一筆已穩定的批次事件，用
     `PUSH_DISPATCH_PROVIDER=stub` 呼叫本函式（`supabase functions serve`）——
-    只對 1 位非封鎖成員發 1 則彙總；claim 後重跑同一批呼叫 0 則。
+    只對 1 位非封鎖成員發 1 則彙總；claim 後重跑同一批呼叫 0 則。**LS-182**：
+    另外加 `PUSH_DISPATCH_STUB_RESPONSE=410` 可以在同一個 Stub E2E 流程注入
+    410，觀察 `tokens_removed` 與 `device_tokens` 實際刪列（見上方
+    `PUSH_DISPATCH_STUB_RESPONSE` 說明）。
 - **已知限制**：真正的 APNs 呼叫（`buildRealApnsProvider` 的 HTTP 送出本身）沒有
   對真正的 Apple 伺服器做過端到端驗證——需要 LS-8（Apple Developer Program 付費
   帳號）到位、拿到真正的 `.p8` 金鑰後才能在真機驗證，同 `delete-account`
