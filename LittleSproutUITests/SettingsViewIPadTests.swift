@@ -12,15 +12,23 @@ final class SettingsViewIPadTests: XCTestCase {
     /// push 後系統返回鈕的 identifier 恆為 `"BackButton"`（label 會沿用上一頁的
     /// `.navigationTitle`，因區塊而異）——同 `SectionTabBarPushRegressionTests` 的既有理由，
     /// 不用 label 字串比對以免跟畫面上其他文字撞名。
+    /// merge-review R4 informational 1：`pushedSentinel` 的等待時間原本跟 `entry`／`backButton`
+    /// 共用同一個 5 秒——`testFamilySectionInviteRowRegressionPushesAndBackReturns` 實測 1/6
+    /// 會 flake，可疑點是 `InviteFamilyView.onAppear` 觸發的 `refreshLatestInvite()` 這段
+    /// async 查詢（即使 `.preview()` stub 立即回傳，仍要走一次 Task 排程＋畫面重新渲染），跟
+    /// 其他純同步渲染的目的地畫面（`編輯顯示名稱與頭像尚未推出`／`刪除帳號流程尚未推出`等靜態
+    /// 文字）不同調。加一個獨立、預設值不變的 `pushedSentinelTimeout` 參數，只有邀請家人這條
+    /// 測試傳長一點的值，其餘呼叫點行為不變。
     private func assertPushThenBackReturnsToList(
         app: XCUIApplication, entry: XCUIElement, pushedSentinel: XCUIElement,
+        pushedSentinelTimeout: TimeInterval = 5,
         file: StaticString = #filePath, line: UInt = #line
     ) {
         XCTAssertTrue(entry.waitForExistence(timeout: 5), "入口列應該存在才能開始這個情境", file: file, line: line)
         entry.tap()
 
         XCTAssertTrue(
-            pushedSentinel.waitForExistence(timeout: 5),
+            pushedSentinel.waitForExistence(timeout: pushedSentinelTimeout),
             "點入口後應該已經 push 到目的地畫面——iPad 上曾經整個按不動（R1 B1）",
             file: file, line: line
         )
@@ -69,7 +77,10 @@ final class SettingsViewIPadTests: XCTestCase {
             // `InviteFamilyView` 用 `.preview()` FamilyStore（`fetchLatestActiveInvite` 回
             // nil）進場會顯示「產生邀請碼」的空狀態按鈕——這顆按鈕是這個畫面在這個 harness
             // 組合下唯一保證存在、不受競速時序影響的文字。
-            pushedSentinel: app.buttons["產生邀請碼"]
+            pushedSentinel: app.buttons["產生邀請碼"],
+            // informational 1：這顆按鈕要等 `onAppear` 觸發的 `refreshLatestInvite()` 跑完
+            // 才會出現，比其他目的地畫面多一段 async 排程，5 秒在系統忙碌時偶爾不夠。
+            pushedSentinelTimeout: 10
         )
     }
 
@@ -119,22 +130,30 @@ final class SettingsViewIPadTests: XCTestCase {
         XCTAssertFalse(app.navigationBars.buttons["BackButton"].exists, "Link 開系統瀏覽器，不應該在 app 內產生返回鈕")
     }
 
-    /// merge-review R2 M2：iPad sidebar 選中列在亮色模式下曾經跟未選中列長得一模一樣（`surface`
-    /// ／`print-paper` 亮色同值把背景差異吃掉）。這裡用 accessibility `.isSelected` trait 當
-    /// 機械可測的訊號（同 `SectionTabBarTests` 既有慣例）——trait 由 `sidebarRow` 的
-    /// `isSelected` 條件式套用，跟驅動邊框／陰影／粗體視覺樣式的是同一個變數，拿掉 M2 補上的
-    /// 選中樣式那段程式碼會連帶讓這個 trait 消失，mutation 測得到。
+    /// merge-review R3 M3（major）：R3 版本用 `XCUIElement.isSelected` 當訊號，reviewer 四組
+    /// mutation 證明這個讀值跟驅動視覺的 `isSelected` 變數完全無關（拿掉 trait 那行測到的其實
+    /// 是 app crash，不是斷言鑑別力；trait 全拿掉／全部套用／視覺修法整個中性化，`isSelected`
+    /// 讀值都不受影響，測試依然全綠）——`.isSelected` 在這個 SwiftUI ForEach+Button 組合下不
+    /// 忠實反映 `.accessibilityAddTraits(.isSelected)`。
+    ///
+    /// R4 修法：選中態改用 `.accessibilityValue("已選取")`（`SettingsView+Sidebar.sidebarRow`）
+    /// ——這是獨立於 trait 的另一個 accessibility 通道，`XCUIElement.value` 忠實反映它。這裡改
+    /// 斷言「五列裡恰好一列的 value 是『已選取』，且切換 sidebar 後這個訊號跟著移動」，不再依賴
+    /// `.isSelected`。純視覺樣式（邊框／陰影／背景色／字重）本身另由 `SettingsSidebarRowStyleTests`
+    /// 這個純函式單元測試釘住（見該檔文件註解）——這條 UITest 對「視覺修法被中性化但 value 標記
+    /// 還在」這種 mutation 不會轉紅是預期行為，責任分工在單元測試層。
     func testSidebarSelectionIsAccessibleAndDistinguishable() {
         let app = TapTargetMeasurement.launch(.settingsRegular)
         TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
 
-        XCTAssertTrue(app.buttons["個人"].isSelected, "預設應該選中「個人」")
-        for label in ["家庭", "內容與安全", "法律", "帳號"] {
-            XCTAssertFalse(app.buttons[label].isSelected, "「\(label)」預設不應該是選中狀態")
+        let labels = ["個人", "家庭", "內容與安全", "法律", "帳號"]
+        func selectedLabels() -> [String] {
+            labels.filter { (app.buttons[$0].value as? String) == "已選取" }
         }
 
+        XCTAssertEqual(selectedLabels(), ["個人"], "預設應該恰好一列帶「已選取」訊號，且是「個人」")
+
         app.buttons["家庭"].tap()
-        XCTAssertTrue(app.buttons["家庭"].isSelected, "點擊後「家庭」應該變成選中狀態")
-        XCTAssertFalse(app.buttons["個人"].isSelected, "點擊「家庭」後「個人」應該變回未選中")
+        XCTAssertEqual(selectedLabels(), ["家庭"], "點擊「家庭」後「已選取」訊號應該恰好移到「家庭」，其餘四列都不再帶")
     }
 }
