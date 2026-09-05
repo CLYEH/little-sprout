@@ -155,6 +155,12 @@ struct UploadQueueSheetView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingMedium)
+            // merge-review R4：目前的 padding＋內容高度在本機／CI 都還沒撞到 44pt 邊界（實測
+            // 遠高於門檻），但既然同檔另外三顆鈕已經證明「純靠 padding＋字體度量湊高度」在
+            // 不同 Xcode／iOS 版本上不可靠，這裡一併補上同一個不依賴字體度量的下限保證，
+            // 不要等下次 CI 又在另一個版本組合上炸。
+            .minimumTapTargetHeight()
+            .contentShape(Rectangle())
         }
         .foregroundStyle(Color.lsTextPrimary)
         .background(Color.lsAccentSoft, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
@@ -196,13 +202,14 @@ struct UploadQueueSheetView: View {
         Button {
             dismiss()
         } label: {
-            // `.contentShape(Rectangle())`：push-gate 實測沒有這行時 hit-test frame 會落在
-            // 44.0pt 邊界附近的浮點誤差內被判違規（`TAP-TARGET-FAIL: … frame=354.0x44.0pt`）
-            // ——同 `UploadQueueRowView` 兩顆行內按鈕的坑，`.frame` 需要這行才會決定性地成為
-            // hit-test 形狀。
+            // merge-review R4：`.frame(minHeight:)` 在 CI runner（不同 Xcode／iOS SDK）量到
+            // 43.2pt，本機量到 45pt——同一份程式碼在不同系統字體 metrics 下有落差。改用
+            // `minimumTapTargetHeight`（純幾何 `Color.clear` 高度錨點，見
+            // `UploadQueueRowView.swift` 檔頭「merge-review R4」段），不依賴字體行高。
             Text("在背景繼續，關閉視窗")
                 .appFont(.body, weight: .medium)
-                .frame(maxWidth: .infinity, minHeight: 45)
+                .frame(maxWidth: .infinity)
+                .minimumTapTargetHeight()
                 .contentShape(Rectangle())
         }
         .foregroundStyle(Color.lsTextPrimary)

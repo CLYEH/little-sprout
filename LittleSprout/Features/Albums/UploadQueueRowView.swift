@@ -5,11 +5,16 @@ import SwiftUI
 /// **點擊目標**：「重試」／「查看儲存空間」在稿面上是行內小字（比對稿截圖，視覺高度遠小於
 /// 44pt），但 `little-sprout-brand` skill 十條不可協商 #7（長輩硬約束，點擊 ≥44pt）沒有給
 /// 「這顆看起來很小」的例外——`Pill` 那種唯讀展示元件才有明講的豁免（`BF6Cf`），這兩顆是
-/// 真正會觸發動作的按鈕。兩者都套 `.frame(minHeight: 45)`（不是剛好 44——push-gate 實測
-/// `minHeight: 44` 配 `.contentShape(Rectangle())` 量出來的 hit-test frame 高度打印成
-/// `44.0` 卻仍判定 `< 44`，猜測是子像素／scale factor 四捨五入產生的邊界值，留 1pt 安全
-/// 邊界避免卡在浮點誤差上），視覺行高會比稿面截圖實測值高，這是刻意的取捨（規則衝突時遵守
+/// 真正會觸發動作的按鈕。視覺行高會比稿面截圖實測值高，這是刻意的取捨（規則衝突時遵守
 /// #7，見 PR body「與稿差異」段），不是遺漏。
+///
+/// **merge-review R4**：R2/R3 用 `.frame(minHeight: 45)` 在本機量得 45pt，但 CI runner
+/// （不同 Xcode／iOS SDK 組合）量到 43.2pt——`.frame(minHeight:)` 的實際生效高度會被文字
+/// 內容的行高／基準線度量參與計算，同一份程式碼在不同系統字體 metrics 下可能有 <2pt 落差。
+/// 改用 `minimumTapTargetHeight(_:alignment:)`：疊一個完全不含文字／圖示、單純
+/// `Color.clear.frame(height:)` 的高度錨點進同一個 `ZStack`，靠 `ZStack` 的聯集尺寸規則
+/// （最終尺寸＝各子項尺寸的聯集）保證整體至少這麼高——這個下限的計算是純幾何常數，不涉及
+/// 任何字體度量，理論上跨 Xcode／iOS 版本一致。
 struct UploadQueueRowView: View {
     let row: UploadQueueRow
     let thumbnail: UIImage?
@@ -119,7 +124,7 @@ struct UploadQueueRowView: View {
                 // 才會真的決定 hit-test 形狀。
                 Button(action: onViewStorage) {
                     Text("查看儲存空間").appFont(.note).underline()
-                        .frame(minHeight: 45, alignment: .leading)
+                        .minimumTapTargetHeight(alignment: .leading)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -130,12 +135,31 @@ struct UploadQueueRowView: View {
                         Image(systemName: "arrow.clockwise").appIconFrame(.small)
                         Text("重試").appFont(.note)
                     }
-                    .frame(minHeight: 45, alignment: .leading)
+                    .minimumTapTargetHeight(alignment: .leading)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Color.lsTextSecondary)
             }
+        }
+    }
+}
+
+/// merge-review R4：見 `UploadQueueRowView` 檔頭「merge-review R4」段——用純幾何的
+/// `Color.clear` 高度錨點取代 `.frame(minHeight:)`，不依賴任何字體度量。`UploadQueueSheetView`
+/// 的 footer／批次重試鈕也共用這個 helper（同一個 module，`internal` 存取層級即可，不必
+/// 複製貼上兩份）。
+extension View {
+    func minimumTapTargetHeight(_ height: CGFloat = 45, alignment: Alignment = .center) -> some View {
+        ZStack(alignment: alignment) {
+            // `width: 0`：R4 第一版漏寫寬度，`Color` 沒有自然的「理想寬度」，`.frame(height:)`
+            // 單獨出現時會貪心吃下父層願意提出的任何寬度——本機重跑撞見「查看儲存空間」／
+            // 「重試」寬度從 101/58pt 暴衝到 282pt（撐滿整列可用寬度）。這裡只要一個「高度
+            // 錨點」，寬度釘死 0，讓 ZStack 的寬度聯集完全交給 `self`（真正的內容）決定。
+            // 高度用 45（不是 44）：拿掉字體度量依賴後理論上不會再有 CI/本機落差，但 ZStack
+            // 聯集運算仍可能有極小的子像素捨入，多留 1pt 安全邊界。
+            Color.clear.frame(width: 0, height: height)
+            self
         }
     }
 }
