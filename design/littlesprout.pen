@@ -115238,8 +115238,15 @@
                             "vQWWw": {
                               "icon": "user-round-plus"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "邀請家人"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -115261,8 +115268,15 @@
                             "vQWWw": {
                               "icon": "door-open"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "退出家庭"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         }
@@ -115317,8 +115331,15 @@
                             "vQWWw": {
                               "icon": "user-x"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "封鎖名單"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -115420,8 +115441,15 @@
                             "vQWWw": {
                               "icon": "file-text"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "使用條款"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -115443,8 +115471,15 @@
                             "vQWWw": {
                               "icon": "shield"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "隱私權政策"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         }
@@ -115498,8 +115533,15 @@
                             "vQWWw": {
                               "icon": "log-out"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "登出"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             },
                             "mW0Ox": {
                               "enabled": false
@@ -115525,9 +115567,16 @@
                               "icon": "trash-2",
                               "fill": "$danger"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "刪除帳號",
                               "fill": "$danger"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             },
                             "mW0Ox": {
                               "fill": "$text-secondary",
@@ -115872,8 +115921,15 @@
                             "vQWWw": {
                               "icon": "user-round-plus"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "邀請家人"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -115895,8 +115951,15 @@
                             "vQWWw": {
                               "icon": "door-open"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "退出家庭"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         }
@@ -115951,8 +116014,15 @@
                             "vQWWw": {
                               "icon": "user-x"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "封鎖名單"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -116054,8 +116124,15 @@
                             "vQWWw": {
                               "icon": "file-text"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "使用條款"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -116077,8 +116154,15 @@
                             "vQWWw": {
                               "icon": "shield"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "隱私權政策"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         }
@@ -116132,8 +116216,15 @@
                             "vQWWw": {
                               "icon": "log-out"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "登出"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             },
                             "mW0Ox": {
                               "enabled": false
@@ -116159,9 +116250,16 @@
                               "icon": "trash-2",
                               "fill": "$danger"
                             },
+                            "bn1eA": {
+                              "height": 56,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "刪除帳號",
                               "fill": "$danger"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             },
                             "mW0Ox": {
                               "fill": "$text-secondary",
@@ -116506,8 +116604,15 @@
                             "vQWWw": {
                               "icon": "user-round-plus"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "邀請家人"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -116529,8 +116634,15 @@
                             "vQWWw": {
                               "icon": "door-open"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "退出家庭"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         }
@@ -116585,8 +116697,15 @@
                             "vQWWw": {
                               "icon": "user-x"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "封鎖名單"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -116688,8 +116807,15 @@
                             "vQWWw": {
                               "icon": "file-text"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "使用條款"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         },
@@ -116711,8 +116837,15 @@
                             "vQWWw": {
                               "icon": "shield"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "隱私權政策"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             }
                           }
                         }
@@ -116766,8 +116899,15 @@
                             "vQWWw": {
                               "icon": "log-out"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "登出"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             },
                             "mW0Ox": {
                               "enabled": false
@@ -116793,9 +116933,16 @@
                               "icon": "trash-2",
                               "fill": "$danger"
                             },
+                            "bn1eA": {
+                              "height": 122,
+                              "justifyContent": "center"
+                            },
                             "iOlfc": {
                               "content": "刪除帳號",
                               "fill": "$danger"
+                            },
+                            "n1hzsr": {
+                              "enabled": false
                             },
                             "mW0Ox": {
                               "fill": "$text-secondary",
@@ -134827,7 +134974,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1300,
+      "height": 1380,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -134949,6 +135096,9 @@
                       "descendants": {
                         "tOvM3": {
                           "content": "Email 地址"
+                        },
+                        "v6YiYR": {
+                          "height": 140
                         },
                         "iu3Q8": {
                           "content": "yourname@example.com"
@@ -137383,7 +137533,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1474,
+      "height": 1554,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -137508,7 +137658,8 @@
                         },
                         "v6YiYR": {
                           "stroke": "$danger",
-                          "strokeWidth": 2
+                          "strokeWidth": 2,
+                          "height": 140
                         },
                         "iu3Q8": {
                           "content": "yourname@example.com"
