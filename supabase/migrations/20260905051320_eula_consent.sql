@@ -41,6 +41,11 @@
 -- `notification_recipients()` 既有慣例）：`p_version` 是呼叫端傳入的參數，NULL
 -- 時 `<>` 的三值邏輯結果是 NULL、不會落進 IF 判斷，`is distinct from` 才能正確
 -- 把「沒給版本」也判成不相符。
+--
+-- 新錯誤碼 `LS056`（R2，merge-review R1 m2）：`accept_eula()` 內部寫
+-- `profiles` 的 UPDATE 命中 0 列時觸發——理論上不該發生（LS-110 保證每個
+-- auth.uid() 都有一列 profiles，函式前面也已擋掉未登入），fail loud 而不是
+-- 靜默 no-op，避免呼叫端誤以為同意已經記錄成功。
 -- ---------------------------------------------------------------------------
 
 alter table public.app_settings
@@ -83,7 +88,7 @@ comment on column public.profiles.eula_accepted_version is
   值。NULL＝從未同意過。authenticated 對 profiles 的 UPDATE grant 早在 LS-143
   （20260903084231_delete_account.sql）就已收斂成只開 display_name／avatar_url
   兩欄，這一欄不在那個允許清單內，天生擋掉直接 .update()，只能透過
-  accept_eula() 寫入——不需要另外下 REVOKE（同 suspended_at／
+  accept_eula() 寫入——不需要另外收回權限（同 suspended_at／
   deletion_requested_at 的既有機制）。讀取沿用 profiles 既有的表級 SELECT
   grant，新欄位自動被涵蓋。';
 
@@ -117,6 +122,16 @@ begin
      set eula_accepted_version = p_version,
          eula_accepted_at = now()
    where id = v_uid;
+
+  -- R2（merge-review R1 m2）：正常情況下這句 UPDATE 一定命中一列——LS-110 的
+  -- auth.users AFTER INSERT trigger（private.handle_new_auth_user()）保證每個
+  -- auth.uid() 都有一列 profiles，本函式前面也已經擋掉 v_uid is null。0 列
+  -- 只會出現在資料不一致的異常狀態（例如帳號正在被刪除流程處理到一半），不是
+  -- 使用者能靠換輸入或重試解決的情況，明確 fail loud 而不是靜默 no-op——
+  -- 靜默的話呼叫端會誤以為同意已經記錄成功。
+  if not found then
+    raise exception '帳號資料異常，請聯絡我們' using errcode = 'LS056';
+  end if;
 end;
 $$;
 
@@ -130,4 +145,6 @@ comment on function public.accept_eula(text) is
   profiles_update policy，也不掛 private.enforce_not_suspended()（那支 trigger
   沒有掛在 profiles 上，見本檔檔頭第 3 點）——停權中的使用者仍能呼叫，同意
   條款不是內容寫入，理由同 delete_my_account() 對停權的豁免（PLAN §10-B）。
-  冪等：同版本重複呼叫不報錯，eula_accepted_at 更新為最新一次。';
+  冪等：同版本重複呼叫不報錯，eula_accepted_at 更新為最新一次。R2（merge-review
+  R1 m2）：UPDATE 命中 0 列（auth.uid() 沒有對應的 profiles 列，理論上不該發生
+  ——LS-110 保證每個帳號都有一列）回 LS056，不靜默 no-op。';

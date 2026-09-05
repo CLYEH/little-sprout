@@ -108,6 +108,10 @@ enum LSErrorCode: String, CaseIterable, Sendable {
     // 輸入可換，需要先重新抓一次目前版本、重新顯示條款內容，才是正確的下一步
     // 動作，不是原地拿同一個 p_version 重試。
     case eulaVersionMismatch = "LS055"
+    // LS056（LS-197 R2，accept_eula）：auth.uid() 沒有對應的 profiles 列——
+    // 理論上不該發生（LS-110 保證每個帳號都有一列 profiles），出現代表資料
+    // 不一致，不是使用者能自己解決的狀態，見下方 tier。
+    case accountProfileMissing = "LS056"
 
     enum Tier: Equatable {
         case validationRetryable
@@ -130,7 +134,7 @@ enum LSErrorCode: String, CaseIterable, Sendable {
              .childNotFoundOrDeleted, .childNotEditableByCaller, .childRestoreWindowExpired,
              .albumChildrenNotEditableByCaller, .ownerMustTransferBeforeAccountDeletion,
              .accountDeletionInProgress, .accountSuspended, .familySuspended,
-             .registrationsClosed, .eulaVersionMismatch:
+             .registrationsClosed, .eulaVersionMismatch, .accountProfileMissing:
             // 以下碼為 review 明確指定的案例：已是成員／已有待審／申請已處理，
             // 重試同一個 request_join／approve_join 呼叫永遠不會成功。
             // familyMustHaveOwner／storageQuotaExceeded 同理：都需要先做別的事
@@ -185,7 +189,9 @@ enum LSErrorCode: String, CaseIterable, Sendable {
             // eulaVersionMismatch（LS055，LS-197）：呼叫端送的 p_version 已經
             // 過期，跟上面幾碼同一組「純狀態拒絕」——沒有「換個字重打」這種輸入
             // 可換，正確動作是重新抓目前版本、重新顯示條款，不是原地重試同一個
-            // 呼叫。
+            // 呼叫。accountProfileMissing（LS056，LS-197 R2）：auth.uid() 沒有
+            // 對應的 profiles 列，理論上不該發生，沒有輸入可換、也不是使用者
+            // 能自己解決的狀態，只能聯絡支援排查。
             return .rejected
         case .inviteCodeNotFound, .inviteCodeExpired, .inviteCodeExhausted:
             // 碼本身是「輸入」——打錯字換一個、或請 owner 給一支新的碼，都是同一個 UI 動作
