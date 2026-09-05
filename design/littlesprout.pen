@@ -35392,17 +35392,6 @@
                                   "height": 1
                                 }
                               ]
-                            },
-                            {
-                              "type": "text",
-                              "id": "XtNLC",
-                              "name": "Legal Seg",
-                              "fill": "$text-secondary",
-                              "content": "與",
-                              "lineHeight": 1.5,
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-meta",
-                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -35413,6 +35402,17 @@
                           "gap": 4,
                           "alignItems": "center",
                           "children": [
+                            {
+                              "type": "text",
+                              "id": "XtNLC",
+                              "name": "Legal Seg",
+                              "fill": "$text-secondary",
+                              "content": "與",
+                              "lineHeight": 1.5,
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "normal"
+                            },
                             {
                               "type": "frame",
                               "id": "XTCyT",
@@ -35491,7 +35491,7 @@
       "name": "設計註記 · Legal 連結 AX3 溢出（LS-46 R3）",
       "width": 360,
       "height": 0,
-      "content": "【LS-46 R3】《使用條款》《隱私權政策》拆成獨立連結節點（$text-primary＋手繪底線矩形，underline 屬性在 Pencil 會被靜默丟棄，見下）後，這一行在預設字級單行置中都正常；但 AX3（body 40pt）下四段式排列（前綴／連結1／「與」／連結2）總寬遠超 345pt 容器——pen.dev 的 frame 是單軸 flex、不支援同一行內文字換行（textGrowth 只有整個 text 節點自己會換行，無法讓「一串並排的獨立文字節點」像瀏覽器 inline 元素那樣自動折行），所以四段只能整排溢出，本板可實測到「partially clipped」。這是設計工具本身的表達力限制，不是產品限制：SwiftUI 用 Text 內插或 AttributedString／Link 就能讓連結詞組隨內文自然換行，ios-dev 照文案語意實作即可，不需要複製這個四段式結構。"
+      "content": "【LS-46 R3】《使用條款》《隱私權政策》拆成獨立連結節點（$text-primary＋手繪底線矩形，underline 屬性在 Pencil 會被靜默丟棄，見下）後，這一行在預設字級單行置中都正常；但 AX3（body 40pt）下四段式排列（前綴／連結1／「與」／連結2）總寬遠超 345pt 容器——pen.dev 的 frame 是單軸 flex、不支援同一行內文字換行（textGrowth 只有整個 text 節點自己會換行，無法讓「一串並排的獨立文字節點」像瀏覽器 inline 元素那樣自動折行），所以四段只能整排溢出，本板可實測到「partially clipped」。這是設計工具本身的表達力限制，不是產品限制：SwiftUI 用 Text 內插或 AttributedString／Link 就能讓連結詞組隨內文自然換行，ios-dev 照文案語意實作即可，不需要複製這個四段式結構。 【LS-201 R2 訂正】上述「四段只能整排溢出、本板可實測到 partially clipped」的狀態已改變：board_clip 規則（LS-185 第六支）收緊後，e7G3Lk／aEb17 已把這四段手動拆成 3 行 frame（新增節點 Legal Row 2／Legal Row 3）——「登入即表示你同意」單獨一行、「《使用條款》」單獨一行、「與《隱私權政策》」單獨一行（「與」放在第 3 行行首，不是掛在第 2 行行尾當孤字），board_clip／文字裁切現皆為 0，不再是 partially clipped。但這**不是**「稿面已解決 Pencil 表達力限制」——3 行拆分本身仍是單軸 flex 沒有 inline 換行能力下的靜態近似，只在本稿這個特定組合（AX3 body 40pt、容器寬 345pt）量出來的斷行點才成立；ios-dev 實作**不應該**照抄這個固定 3 行的節點結構，應該用 SwiftUI 的 Text 內插／AttributedString／Link 讓整段文字依實際螢幕寬度與字級動態換行——這樣不論 Dynamic Type 字級變化或未來文案變長，都不需要像本稿一樣重新手動決定斷行點。"
     },
     {
       "type": "frame",
@@ -133723,17 +133723,6 @@
                                   "height": 1
                                 }
                               ]
-                            },
-                            {
-                              "type": "text",
-                              "id": "mxtQS",
-                              "name": "Legal Seg",
-                              "fill": "$text-secondary",
-                              "content": "與",
-                              "lineHeight": 1.5,
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-meta",
-                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -133744,6 +133733,17 @@
                           "gap": 4,
                           "alignItems": "center",
                           "children": [
+                            {
+                              "type": "text",
+                              "id": "mxtQS",
+                              "name": "Legal Seg",
+                              "fill": "$text-secondary",
+                              "content": "與",
+                              "lineHeight": 1.5,
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "normal"
+                            },
                             {
                               "type": "frame",
                               "id": "VNn0Z",
