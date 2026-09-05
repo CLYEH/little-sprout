@@ -1451,9 +1451,11 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
      **不執行任何寫入**（不會只處理一部分家庭）。錯誤的 `DETAIL` 欄位帶一個 JSON
      陣列，列出**全部**需要先轉移 owner 身份的家庭：
      `[{"family_id": "...", "family_name": "..."}, ...]`（依 `family_name` 排序）。
-     轉移本身走既有路徑——owner 對 `family_members.role` 的直接 `UPDATE`（見 §3
-     `family_members`），本 RPC 不提供另一支轉移用的 RPC。使用者轉移完所有列出的
-     家庭之後，重新呼叫本 RPC 即可繼續。
+     轉移請呼叫 `transfer_ownership`（見 §4，LS-206）；直接 `UPDATE role` 只
+     保留給單向升格（例如再加開一位共同 owner，不涉及自己降級），不要拿它做
+     轉移用的兩次 `UPDATE`——那條路徑非原子，見 §3 `family_members`／§4
+     `transfer_ownership` 的併發說明。使用者轉移完所有列出的家庭之後，重新
+     呼叫本 RPC 即可繼續。
   2. **是某家庭的唯一成員**（因此也必然是唯一 owner——不可能同時符合情況 1 的
      條件）→ **整個家庭連同底下資料一併刪除**（`DELETE FROM families`
      cascade：`albums`／`diaries`／`media`／`album_media`／`diary_media`／
@@ -1536,7 +1538,15 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `private.enforce_family_has_owner()` 的 `LS001`（LS-143 merge-review R1 i1
   指出的原始風險）。
 - **錯誤碼**：未登入 `42501`；唯一 owner 且家庭還有其他成員 `LS050`（見上方
-  `DETAIL` 契約）。
+  `DETAIL` 契約）；**`LS057`（LS-206，merge-review R1 m3 補充文件）**——情況 3
+  一般離開路徑的 `DELETE FROM family_members` 若在極端併發窗口下（例如同一
+  家庭另一位共同 owner 幾乎同時也在離開／刪帳號）意外讓呼叫者在這句 DELETE
+  執行的當下已變成唯一 owner、但家庭仍有其他成員，會被 LS-206 新增的
+  `private.enforce_ownership_transfer_before_leave()` 攔下（整個
+  `delete_my_account()` 呼叫回滾，不會有部分寫入），回 `LS057` 而不是舊有的
+  `LS001`——終態一樣安全，重試時情況 1 的守門查詢會用新快照正確判斷並改回
+  `LS050`。`finalize_account_deletion()`（service_role 路徑）同樣可能撞到，
+  見 §5 `LS057` 列。
 - **併發（LS-155 R3 全面重寫；R1→R2→R3 三輪，每輪都是「證明少算一個入口」被
   merge-review 抓到，這次逐入口列出，不再籠統斷言）**：情況 1 的守門查詢刻意不
   額外加鎖，唯讀，不算入口。**情況 2／3 自 R3 起合併成單一 `family_id` 遞增序
@@ -1727,7 +1737,7 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS054` | 目前暫停開放新註冊，請稍後再試 | `private.enforce_registrations_open()`——`families` 的 `BEFORE INSERT`（自建新家庭），`app_settings.registrations_open = false` 時觸發（PLAN §10-A(3)，LS-179）。**只擋自建新家庭**：憑邀請碼加入既有家庭（`request_join`／`approve_join`）不碰 `families` 表，不受影響 |
 | `LS055` | 條款版本已更新，請重新閱讀 | `accept_eula(p_version)`——`p_version` 與呼叫當下的 `app_settings.eula_version` 不相符時觸發（LS-197，PLAN §6 第 7 項／§10-B）。呼叫端多半是讀到的版本已經過期，該重新抓一次目前版本、重新顯示條款內容 |
 | `LS056` | 帳號資料異常，請聯絡我們 | `accept_eula(p_version)`（LS-197 R2，merge-review R1 m2）——寫入 `profiles.eula_accepted_version`／`eula_accepted_at` 的 `UPDATE` 命中 0 列時觸發，代表 `auth.uid()` 沒有對應的 `profiles` 列。理論上不該發生（LS-110 的 `auth.users` insert trigger 保證每個帳號都有一列 `profiles`），出現代表資料不一致，fail loud 而不是靜默 no-op |
-| `LS057` | 你是這個家庭的唯一 owner，且家庭還有其他成員，須先把 owner 身份轉移給其他成員才能退出或被移除——`DETAIL` 帶 `{"family_id","family_name"}` | `family_members` 的 `BEFORE DELETE`（`private.enforce_ownership_transfer_before_leave`，LS-206）——自行退出或被 owner 移除皆同；唯一 owner 兼唯一成員的情況不觸發這個碼（仍走既有 `LS001`，見 §3 `family_members` 與 §4 `transfer_ownership`） |
+| `LS057` | 你是這個家庭的唯一 owner，且家庭還有其他成員，須先把 owner 身份轉移給其他成員才能退出或被移除——`DETAIL` 帶 `{"family_id","family_name"}` | `family_members` 的 `BEFORE DELETE`（`private.enforce_ownership_transfer_before_leave`，LS-206）——直接對 `family_members` 的 DELETE（自行退出或被 owner 移除皆同）會觸發；**`delete_my_account()`／`finalize_account_deletion()` 內部的 `DELETE FROM family_members` 在併發窗口下也可能觸發**（例如同一家庭另一位共同 owner 幾乎同時離開，讓呼叫者恰好變成唯一 owner，見 §4 `delete_my_account` 錯誤碼段），此時整個呼叫回滾、重試會改拿 `LS050`；唯一 owner 兼唯一成員的情況不觸發這個碼（仍走既有 `LS001`，見 §3 `family_members` 與 §4 `transfer_ownership`） |
 | `LS058` | 你不是這個家庭目前的 owner，無法轉移 owner 身份 | `transfer_ownership`（LS-206） |
 | `LS059` | 對方不是這個家庭目前的成員，無法把 owner 身份轉移給他 | `transfer_ownership`（LS-206） |
 | `LS060` | 不能把 owner 身份轉移給自己 | `transfer_ownership`（LS-206） |
