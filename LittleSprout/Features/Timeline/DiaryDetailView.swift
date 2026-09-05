@@ -9,6 +9,8 @@ struct DiaryDetailView: View {
     let diaryID: UUID
     let timelineStore: TimelineStore
     let childrenStore: ChildrenStore
+    /// LS-190：刪除日記確認（10）用——見 `deleteEntryPoint` 文件註解。
+    let diaryAPIClient: DiaryAPIClient
 
     @State private var photos: [MediaContent] = []
     @State private var loadState: TimelineOperationState = .idle
@@ -22,7 +24,10 @@ struct DiaryDetailView: View {
     /// 錯誤語彙（icon＋`Text(error.userFacingMessage)`），不是新設計；下次成功播放或再次
     /// 嘗試時清掉，不會一直卡在畫面上。
     @State private var videoPrepareError: AppError?
+    /// LS-190：見 `deleteEntryPoint` 文件註解。
+    @State private var showsDeleteConfirmation = false
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.dismiss) private var dismiss
 
     private var entry: TimelineEntry? {
         timelineStore.entries.first { $0.kind == .diary && $0.refId == diaryID }
@@ -68,6 +73,17 @@ struct DiaryDetailView: View {
         .fullScreenCover(item: $playingVideo) { video in
             VideoPlayerScreen(url: video.url).ignoresSafeArea()
         }
+        .sheet(isPresented: $showsDeleteConfirmation) {
+            if let diaryContent {
+                DiaryDeleteConfirmationSheet(
+                    diaryID: diaryID, diaryBody: diaryContent.body, diaryAPIClient: diaryAPIClient,
+                    onDeleted: {
+                        timelineStore.removeDiaryEntryLocally(diaryID: diaryID)
+                        dismiss()
+                    }
+                )
+            }
+        }
     }
 
     // MARK: - Compact (iPhone)
@@ -76,6 +92,7 @@ struct DiaryDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.block) {
                 header(content)
+                deleteEntryPoint
                 bodyText(content)
                 photoWallSection
                 commentsPlaceholder
@@ -111,6 +128,7 @@ struct DiaryDetailView: View {
 
                 VStack(alignment: .leading, spacing: AppSpacing.block) {
                     header(content)
+                    deleteEntryPoint
                     bodyText(content)
                     commentsPlaceholder
                 }
@@ -121,6 +139,27 @@ struct DiaryDetailView: View {
     }
 
     // MARK: - 共用區塊
+
+    /// LS-190：刪除日記（10）最小可達入口——票文「入口由內容操作表票（LS-189）接」，該票
+    /// 尚未實作（`DiaryDetailView` 目前沒有任何操作選單），本票依派工指示補一個最小、真的可用
+    /// 的入口，供 UITest 走完整流程；LS-189 落地後可以直接把這顆換成操作表裡的一列，呼叫的
+    /// `DiaryDeleteConfirmationSheet` 不需要改。不檢查「是不是作者／owner」——伺服器端
+    /// `set_diary_deleted` 本來就會擋非授權呼叫（`42501`），這裡失敗時 `DeleteConfirmationSheet`
+    /// 會顯示錯誤訊息，不會誤導使用者以為刪除成功。
+    private var deleteEntryPoint: some View {
+        Button(action: showDeleteConfirmation) {
+            HStack(spacing: AppSpacing.label) {
+                Image(systemName: "trash").appIconFrame(.medium)
+                Text("刪除日記").appFont(.body, weight: .semibold)
+            }
+            .foregroundStyle(Color.lsDanger)
+            .frame(minHeight: 48)
+        }
+    }
+
+    private func showDeleteConfirmation() {
+        showsDeleteConfirmation = true
+    }
 
     private func header(_ content: DiaryContent) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
