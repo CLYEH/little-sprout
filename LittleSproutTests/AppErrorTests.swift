@@ -225,7 +225,9 @@ final class AppErrorTests: XCTestCase {
             .familySuspended,
             // LS054（LS-179，PLAN §10-A(3) 註冊開關）：目前暫停開放新註冊，只擋
             // 自建新家庭這一步，沒有輸入可換，只能等旗標重新打開。
-            .registrationsClosed
+            // LS055（LS-197，accept_eula）：呼叫端送的版本已經過期，同上面幾碼
+            // 一樣沒有輸入可換，正確動作是重新抓目前版本、重新顯示條款。
+            .registrationsClosed, .eulaVersionMismatch
             // LS040（childFamilyImmutable）已於 LS-57 I1 撤碼，family_id 不可變改用裸
             // 42501（同 diaries／albums／comments），不再是 LSErrorCode 的一個 case。
         ]
