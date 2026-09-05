@@ -26,7 +26,10 @@ jobs:
   # head_ref 為空、自然不跑；純檔案比對與自測 step 兩種事件都跑。
   rules:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # LS-207 R2（fd783f6c F1）：10 分鐘上限太緊——實測本 job 已跑到 370s（step 9／13 兩支自測），pr-body-check
+    # 的 Linear 反查逾時重試（fd783f6c 修成跨分頁共用預算後）最壞再加 ~150s，370+150=520s 已逼近舊上限
+    # 600s；15 分鐘（900s）留出實際餘裕，不必每次 Linear 稍慢就整個 job 被 timeout 取消。
+    timeout-minutes: 15
     # LS-123：核可標記改認使用者本人的 PR comment——approval-comment-check.sh 以 gh api 讀 issue comments，
     # GITHUB_TOKEN 要有 issues／pull-requests 的讀權（repo 預設 token 是受限模式時只有 contents: read，讀 comment
     # 會 403「Resource not accessible by integration」）；其餘一律唯讀，本 job 沒有任何寫入。
@@ -161,10 +164,13 @@ jobs:
       # LS-95 merge-review R1 B2：tap-target-check.test.sh 原本只有腳本本體、沒有接進這裡——
       # COLLABORATION §7 宣稱「自測掛 CI rules job」但實際沒掛，兩條刻意寫的 mutation-style
       # 負控（多違規要全點名、失敗無標記不能誤判成通過）從未在 CI 執行過。
-      # LS-207（8af1c2bc）：`if: always()`——前面的「PR body 檔頭段」步驟若因 Linear 反查逾時等原因紅，這支自測步驟預設會被
+      # LS-207（8af1c2bc）：前面的「PR body 檔頭段」步驟若因 Linear 反查逾時等原因紅，這支自測步驟預設會被
       # GitHub Actions 整支 skip（步驟預設只在前面全綠時跑），gate 自己的自測反而在 CI 從未執行過、只靠 reviewer 本機補。
+      # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
+      # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
+      # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
       - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／push-gate／pretool／main-checkout-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry）
-        if: always()
+        if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
           # 就中止，後面的根本沒跑、結果看不到，修好一支再推一次才知道下一支紅不紅。
@@ -267,9 +273,10 @@ jobs:
       # 探 Pen 期間注入 commit（pen stub PEN_STUB_COMMIT_IN，未開工＋旗標／已併入乾淨兩路徑）→重驗抓到拒刪、
       # commit 仍在；同票多個未開工只查一次 Linear、查詢失敗提示。mutation：pen_guard 移回重驗之後／未開工重驗
       # 退回只看 dirty／Pen 讀不到一律放行 → 對應樣本紅。
-      # LS-207（8af1c2bc）：同上——if: always() 讓 ops 腳本自測不因前面步驟（如 pr-body-check）紅而被 skip。
+      # LS-207（8af1c2bc）：同上——不因前面步驟（如 pr-body-check）紅而被 skip。R2（fd783f6c I2）：用 !cancelled()
+      # 不用 always()，job 被取消（撞 timeout-minutes）時不必再硬跑一輪。
       - name: Ops 腳本自測（patrol／session-start／supabase-lock／simulator-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／patrol-linear／cleanup-merged，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86／LS-207）
-        if: always()
+        if: ${{ !cancelled() }}
         run: |
           rc=0
           bash scripts/ops/patrol.test.sh || rc=1

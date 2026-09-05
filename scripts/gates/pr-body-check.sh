@@ -237,10 +237,20 @@ query = ("query($id: String!, $after: String) { issue(id: $id) { identifier "
 # 才 fail closed）；訊息標明「非 body 問題」，agent／reviewer 看到就知道要 rerun 而不是去查 PR body。JSON 格式錯／
 # GraphQL errors／回應非本票 issue 這類「有回應但內容不對」不算連線問題，不重試（重試也不會變好）。
 # 退避秒數可用 PR_BODY_CHECK_LINEAR_BACKOFF（逗號分隔）覆寫，自測用極短延遲跑到底、不真的等 50 秒。
+# LS-207 R2（merge-review R1 fd783f6c F1）：重試預算是**跨分頁共用**的單一計數器，不是每頁各一份——LS-96
+# 現有 >250 則 comment、`comments(first: 100)` 需 ≥3 頁，若每頁各自重試 3 次（退避 5/15/30s＋每次 curl 最多
+# 25s），3 頁最壞可達 3×150s＝450s，會把 CI `rules` job（370s 已逼近 timeout-minutes 上限）直接 timeout 取消，
+# 連帶讓剛加的 `if: always()` 兩支自測也跑不到。retries_used 是所有頁共用的全域計數器：不論在哪一頁失敗，
+# 消耗的都是同一份 3 次額度，總退避時間固定 ≤ sum(LINEAR_BACKOFF)（預設 50s），不會隨頁數疊加。
 _backoff_raw = os.environ.get("PR_BODY_CHECK_LINEAR_BACKOFF", "5,15,30")
 try:
     LINEAR_BACKOFF = [float(x) for x in _backoff_raw.split(",") if x.strip() != ""]
 except ValueError:
+    LINEAR_BACKOFF = [5.0, 15.0, 30.0]
+# LS-207 R2（merge-review R1 fd783f6c I6）：PR_BODY_CHECK_LINEAR_BACKOFF="" 這種只有空白／全被濾掉的輸入會讓
+# LINEAR_BACKOFF 變空陣列——len(LINEAR_BACKOFF)==0 時重試預算等於 0 次，die() 訊息會印出無意義的「重試 0 次仍
+# 逾時」；只有自測會刻意覆寫這個變數（真正呼叫端從不設），退回預設值比讓重試名額悄悄歸零更安全。
+if not LINEAR_BACKOFF:
     LINEAR_BACKOFF = [5.0, 15.0, 30.0]
 
 
@@ -260,16 +270,20 @@ def curl_call(argv, input_str):
     return True, proc, None
 
 
+# LS-207 R2（fd783f6c F1）：跨分頁共用的重試計數器（不是每頁各一份）——list 包一層才能在函式呼叫間變動。
+retries_used = [0]
+
+
 def curl_with_retry(argv, input_str):
     err = None
-    attempts = len(LINEAR_BACKOFF) + 1
-    for i in range(attempts):
+    while True:
         ok, proc, err = curl_call(argv, input_str)
         if ok:
             return proc
-        if i < len(LINEAR_BACKOFF):
-            time.sleep(LINEAR_BACKOFF[i])
-    die("Linear 不可達（重試 %d 次仍逾時／連不上），非 body 問題：%s" % (len(LINEAR_BACKOFF), err))
+        if retries_used[0] >= len(LINEAR_BACKOFF):
+            die("Linear 不可達（跨分頁共用重試預算已用完，累計重試 %d 次仍逾時／連不上），非 body 問題：%s" % (len(LINEAR_BACKOFF), err))
+        time.sleep(LINEAR_BACKOFF[retries_used[0]])
+        retries_used[0] += 1
 
 
 after = None
