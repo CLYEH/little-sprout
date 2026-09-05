@@ -35,6 +35,11 @@ export PATROL_DISK_MIN_GB=0
 # 一律指到假身（㉒ 自己再換成受控的假身），不碰本機真正的 Pen。
 export PATROL_PEN_STATUS_SH="$work/fake-pen-status.sh"
 printf '#!/bin/bash\necho "Pencil：（自測假身）"\nexit 0\n' > "$PATROL_PEN_STATUS_SH"
+# LS-187：專屬模擬器段每輪都量 CoreSimulator/Devices 體積（du 快取）——自測一律指到小假目錄與自己的快取檔，不對真的
+# ~/Library 跑 du（本機實測 18 秒）、不碰 /tmp 的真快取；LINEAR_API_KEY 一開始 unset（㉓ 的 --linear 案例用假身，不打真 API）。
+mkdir -p "$work/fake-devices-default"
+export PATROL_SIM_DEVICES_DIR="$work/fake-devices-default" PATROL_DU_CACHE="$work/du-cache"
+unset LINEAR_API_KEY
 
 # 臨時 repo 與本機全域／系統 git 設定隔離：自測結果不能因人而異
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
@@ -344,9 +349,12 @@ has   '⑪-b hold → --brief 含 持有中' "$(bash "$patrol" --repo "$repo" --
 jq_ok '⑪-b --json hold_label／hold_expires_at 來自 holder 檔' "$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)" ".hold_label == \"LS-9 QA 冒煙\" and .hold_expires_at == ${exp11}"
 rm -rf "$SUPABASE_LOCK_DIR"
 
-# ---- ⑭ 專屬模擬器 >7 天未用（LS-83）：xcrun 假身回固定 JSON，驗 lastBootedAt／目錄 mtime 兩種判定、
+# ---- ⑭ 專屬模擬器 >7 天未用（LS-83；LS-187 起為第二層）：xcrun 假身回固定 JSON，驗 lastBootedAt／目錄 mtime 兩種判定、
 #        名稱不符 <票號>-<機型> 樣式（非 detect-simulator.sh 所建）不管、只列不刪＋印 simctl delete 指令、
 #        --brief／--json 都看得到；xcrun 本身失敗（非 macOS／查詢出錯）fail-soft 不當異常炸掉 ----
+# LS-187：第一層先看「票 worktree 還在不在」——這裡的 LS-83／90／95／97 都要有 worktree，才輪得到第二層的 >7 天判定
+# （否則全被判成殘機、動作行變 cleanup-merged，⑭ 就測不到 -gt 7 門檻）；殘機案例在 ㉓。
+for n in 83 90 95 97; do wt -b "feature/LS-${n}-sim" "$wts/LS-${n}" origin/development; done
 mkdir -p "$work/bin" "$work/simdevs/SIM-OLDDIR/data"
 touch -t "$OLD_T" "$work/simdevs/SIM-OLDDIR"   # 無 lastBootedAt 的裝置：靠這個目錄的 mtime 判老
 now_iso=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -429,7 +437,7 @@ lastold_count=$(printf '%s' "$out14" | grep -c 'LS-95-iPhoneAir（SIM-LASTOLD）
 if [ "$lastold_count" -eq 1 ]; then echo "✓ ⑭ 檔尾裝置（最後一筆）只列一次，不被收尾大括號重複印出"; else echo "✗ ⑭ 檔尾裝置列了 ${lastold_count} 次（應為 1）" >&2; fail=1; fi
 brief14="$(SIMCTL_LIST_JSON= PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '⑭ --brief 也看得到（掛 add_flag）' "$brief14" '[專屬模擬器 LS-90-iPhoneAir]'
-has   '⑭ --brief 表頭「專屬模擬器逾期」數＝4（sim_flagged 有被讀，LS-83 R2 m2）' "$brief14" '專屬模擬器逾期 4'
+has   '⑭ --brief 表頭「專屬模擬器待清」數＝4、殘機 0（sim_flagged 有被讀，LS-83 R2 m2；LS-187 改名）' "$brief14" '專屬模擬器待清 4（殘機 0）'
 json14="$(SIMCTL_LIST_JSON= PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
 jq_ok '⑭ --json：stale_simulators 只含四筆老裝置（SIM-OLD／SIM-OLDDIR／SIM-LASTOLD／SIM-10D），不含 SIM-FRESH（未超過門檻不列入）' "$json14" \
   '([.stale_simulators[].udid] | sort) == (["SIM-10D","SIM-LASTOLD","SIM-OLD","SIM-OLDDIR"] | sort)'
@@ -636,7 +644,8 @@ has   '㉑ 高於門檻仍印一行可用量與台數  ok' "$out21b" 'LS-* 專�
 brief21b="$(SIMCTL_LIST_JSON="$disk_json" PATROL_DISK_MIN_GB=0 bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 hasnt '㉑ 高於門檻 --brief 無 [磁碟]' "$brief21b" '[磁碟]'
 json21b="$(SIMCTL_LIST_JSON="$disk_json" PATROL_DISK_MIN_GB=0 bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
-jq_ok '㉑ 高於門檻 --json：disk.flag 空、devices_gb null（沒跑 du）、flags 無 [磁碟]' "$json21b" '.disk.flag == "" and .disk.devices_gb == null and ([.flags[] | select(startswith("[磁碟]"))] | length == 0)'
+# LS-187：devices_gb 改為每輪都有（專屬模擬器段末尾要印，走 du 快取）；「沒跑水位段 du」改看 derived_data_gb 仍 null
+jq_ok '㉑ 高於門檻 --json：disk.flag 空、derived_data_gb null（沒跑水位段 du）、devices_gb 數字（LS-187 每輪都有）、flags 無 [磁碟]' "$json21b" '.disk.flag == "" and .disk.derived_data_gb == null and (.disk.devices_gb | type == "number") and ([.flags[] | select(startswith("[磁碟]"))] | length == 0)'
 out21c="$(PATROL_DISK_MIN_GB=abc bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc_is '㉑ PATROL_DISK_MIN_GB 非整數 → exit 2' 2 "$?" "$out21c"
 
 # ---- ㉒ Pencil 連線探針（LS-180）：只在有 design 分支 worktree 時跑 pen-status.sh；探針非 0 → [Pencil] flag（human／
@@ -671,6 +680,103 @@ out22c="$(PATROL_PEN_STATUS_SH="$work/does-not-exist.sh" bash "$patrol" --repo "
 has   '㉒ 探針腳本不存在 → 段內說明並指示重連' "$out22c" 'Pencil：探針腳本不存在'
 brief22c="$(PATROL_PEN_STATUS_SH="$work/does-not-exist.sh" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '㉒ 探針腳本不存在 → --brief 標 [Pencil]' "$brief22c" '[Pencil] Pencil：探針腳本不存在'
+
+# ---- ㉓ 專屬模擬器第一層（LS-187；使用者 2026-09-05 指出 4 台 Done 票殘機——Done 後 7 天內、皆 Shutdown——巡檢 20+ 輪沒抓）：
+#        (a) LS-999 Shutdown、剛用過、票 worktree 不在 → ⚠＋動作行 `→ bash scripts/ops/cleanup-merged.sh --apply LS-999`
+#        （human／--brief flag／--json orphan_simulators）；(b) LS-3 同樣剛用過但 worktree 在（In Progress）→ 不 ⚠；
+#        (c) LS-998 Booted、worktree 不在 → 不列刪、不進 flag（LS-100 規則），只印 ⓘ；main-*／demo-*／qa-* 不進第一層；
+#        段末印「Xcode 預設模擬器 m 台」（名稱非 LS-/main-/demo-/qa- 開頭）＋ Devices 體積；--linear 時 worktree 仍在的票
+#        走 patrol-linear.sh --closed 查狀態（假身）：回 Done → ⚠（worktree 仍在）；假身 exit 3（無 key）→ 只用 worktree 判定
+#        並在段末註明；不帶 --linear → 註明「未查」。du 快取：human 量一次寫快取、下一輪沿用；--brief 不量。
+#        mutation：第一層拿掉（回到只看 >7 天）→ (a) 紅；Booted 也列刪 → (c) 紅；worktree 判定退化成子字串（LS-3 對 LS-30）
+#        → 另設 LS-30 殘機、有 LS-3 worktree 卻不 ⚠ 就紅 ----
+# patrol.sh 的 awk 解析器認 simctl 的 pretty-print（一行一個 key）——fixture 必須同形，不能把一台寫成一行
+sim_dev() {  # $1=udid $2=state $3=name [$4=lastBootedAt，省略＝無此欄]
+  printf '      {\n'
+  [ -n "${4:-}" ] && printf '        "lastBootedAt" : "%s",\n' "$4"
+  printf '        "udid" : "%s",\n        "state" : "%s",\n        "name" : "%s"\n      }' "$1" "$2" "$3"
+}
+orphan_json="{
+  \"devices\" : {
+    \"com.apple.CoreSimulator.SimRuntime.iOS-26-0\" : [
+$(sim_dev ORPH-999 Shutdown LS-999-iPhone17Pro "$now_iso"),
+$(sim_dev ORPH-30 Shutdown LS-30-iPhone17Pro "$now_iso"),
+$(sim_dev LIVE-3 Shutdown LS-3-iPhone17Pro "$now_iso"),
+$(sim_dev BOOT-998 Booted LS-998-iPhone17Pro "$now_iso"),
+$(sim_dev MAIN-1 Shutdown main-iPhone17Pro "$now_iso"),
+$(sim_dev DEMO-1 Shutdown demo-iPhone17Pro "$now_iso"),
+$(sim_dev QA-1 Shutdown qa-LS98-iPhone17ProMax "$now_iso"),
+$(sim_dev DEF-1 Shutdown 'iPhone 17 Pro' "$now_iso"),
+$(sim_dev DEF-2 Shutdown 'iPad Pro 13-inch (M4)')
+    ]
+  }
+}"
+rm -f "$PATROL_DU_CACHE"
+out23="$(SIMCTL_LIST_JSON="$orphan_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
+rc_is '㉓ 有殘機仍 exit 0（異常在輸出）' 0 "$rc" "$out23"
+has   '㉓ (a) Done 票殘機 LS-999（worktree 不在）→ ⚠' "$out23" '⚠ LS-999-iPhone17Pro（ORPH-999）票 LS-999 的 worktree 已不在（殘機）'
+has   '㉓ (a) 動作行指到 cleanup-merged.sh --apply LS-999' "$out23" '→ bash scripts/ops/cleanup-merged.sh --apply LS-999'
+has   '㉓ LS-30 殘機（LS-3 的 worktree 不能整字命中 LS-30）→ ⚠' "$out23" 'cleanup-merged.sh --apply LS-30'
+if printf '%s\n' "$out23" | grep -qE -- '--apply LS-3$'; then echo "✗ ㉓ (b) LS-3 worktree 在（In Progress）不該有動作行" >&2; printf '%s\n' "$out23" | sed 's/^/    /' >&2; fail=1; else echo "✓ ㉓ (b) LS-3 worktree 在 → 無動作行"; fi
+hasnt '㉓ (b) LS-3 不進任何 ⚠ 行' "$out23" '⚠ LS-3-iPhone17Pro'
+hasnt '㉓ (c) Booted 殘機 LS-998 不列刪（LS-100）' "$out23" 'cleanup-merged.sh --apply LS-998'
+hasnt '㉓ (c) Booted 殘機不印 simctl delete' "$out23" 'simctl delete BOOT-998'
+has   '㉓ (c) Booted 殘機印 ⓘ 說明' "$out23" 'ⓘ LS-998-iPhone17Pro（BOOT-998）票 LS-998 的 worktree 已不在（殘機），但 Booted 不列刪'
+hasnt '㉓ main-* 不進第一層（沒有票）' "$out23" '--apply main'
+hasnt '㉓ demo-*／qa-* 不進第一層' "$out23" 'DEMO-1'
+hasnt '㉓ qa-* 不進第一層' "$out23" 'QA-1'
+has   '㉓ 段末印 Xcode 預設模擬器 2 台（iPhone 17 Pro／iPad Pro；LS-/main-/demo-/qa- 不算）' "$out23" 'Xcode 預設模擬器 2 台（未列入清理；修剪需使用者裁定）'
+has   '㉓ 段末印 CoreSimulator/Devices 體積（假目錄 0 GB，剛量）' "$out23" 'CoreSimulator/Devices 0 GB（du 剛量）'
+has   '㉓ 不帶 --linear → 段末註明票狀態未查' "$out23" '票狀態未查（未帶 --linear），只用 worktree 判定'
+[ -f "$PATROL_DU_CACHE" ] && grep -qF "$PATROL_SIM_DEVICES_DIR" "$PATROL_DU_CACHE" && echo "✓ ㉓ human 量完寫入 du 快取（含路徑）" || { echo "✗ ㉓ du 快取未寫入或缺路徑" >&2; fail=1; }
+out23b="$(SIMCTL_LIST_JSON="$orphan_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉓ 下一輪沿用 du 快取（不重量）' "$out23b" 'CoreSimulator/Devices 0 GB（du 快取 '
+brief23="$(SIMCTL_LIST_JSON="$orphan_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㉓ --brief 帶殘機 flag（掛 add_flag）' "$brief23" '[專屬模擬器 LS-999-iPhone17Pro] 票 LS-999 的 worktree 已不在（殘機） → bash scripts/ops/cleanup-merged.sh --apply LS-999'
+has   '㉓ --brief 表頭台數：待清 2（殘機 2）' "$brief23" '專屬模擬器待清 2（殘機 2）'
+hasnt '㉓ --brief 不標 LS-3' "$brief23" '[專屬模擬器 LS-3-'
+hasnt '㉓ --brief 不標 Booted 殘機 LS-998' "$brief23" '[專屬模擬器 LS-998'
+hasnt '㉓ --brief 不印段末台數／體積行（只帶旗標行）' "$brief23" 'Xcode 預設模擬器'
+rm -f "$PATROL_DU_CACHE"
+brief23b="$(SIMCTL_LIST_JSON="$orphan_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+[ -f "$PATROL_DU_CACHE" ] && { echo "✗ ㉓ --brief 無快取時不該去量 Devices（hook 30s 預算）" >&2; fail=1; } || echo "✓ ㉓ --brief 無快取不量 Devices、不寫快取"
+json23="$(SIMCTL_LIST_JSON="$orphan_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '㉓ --json：orphan_simulators 恰兩筆（LS-999／LS-30，reason no_worktree、state Shutdown）、default_simulators 2、stale_simulators 空、flags 兩筆 [專屬模擬器' "$json23" \
+  '([.orphan_simulators[] | .ticket] | sort) == ["LS-30", "LS-999"] and (.orphan_simulators | all(.reason == "no_worktree" and .state == "Shutdown")) and .default_simulators == 2 and (.stale_simulators | length == 0) and ([.flags[] | select(startswith("[專屬模擬器"))] | length == 2)'
+# --linear：worktree 仍在的票（LS-3）走 patrol-linear.sh --closed；假身依 CLOSED_STUB 回「LS-3<TAB>Done」／exit 3／exit 1
+fake_closed="$work/bin/fake-patrol-linear-closed.sh"
+cat > "$fake_closed" <<'EOF'
+#!/bin/bash
+# 假身：--closed <nums> 記 argv 到 CLOSED_STUB_LOG、依 CLOSED_STUB 回應；其他模式（human／brief 段）印一行、exit 0
+printf '%s\n' "$*" >> "${CLOSED_STUB_LOG:-/dev/null}"
+case " $* " in
+  *" --closed "*)
+    case "${CLOSED_STUB:-}" in
+      done) printf 'LS-3\tDone\n'; exit 0 ;;
+      nokey) echo "略過（無 LINEAR_API_KEY）" >&2; exit 3 ;;
+      fail) echo "炸" >&2; exit 1 ;;
+      *) exit 0 ;;
+    esac ;;
+  *) echo "巡檢（Linear 半段）：（假身）"; exit 0 ;;
+esac
+EOF
+chmod +x "$fake_closed"
+: > "$work/closed.log"
+out23l="$(SIMCTL_LIST_JSON="$orphan_json" PATROL_LINEAR_SH="$fake_closed" CLOSED_STUB=done CLOSED_STUB_LOG="$work/closed.log" bash "$patrol" --repo "$repo" --no-pr --no-fetch --linear "$STALE" 2>&1)"
+has   '㉓ --linear：LS-3 worktree 在但 Linear 回 Done → ⚠（worktree 仍在）＋動作行' "$out23l" '⚠ LS-3-iPhone17Pro（LIVE-3）票 LS-3 已 Done（worktree 仍在） → bash scripts/ops/cleanup-merged.sh --apply LS-3'
+has   '㉓ --linear：段末註明已查 Linear' "$out23l" '票狀態已查 Linear（LS-3）'
+grep -qE -- '--closed 3( |$)' "$work/closed.log" && echo "✓ ㉓ --linear 只問 worktree 仍在的票（--closed 3；999／30／998 不問）" || { echo "✗ ㉓ --closed 應只帶 3（實得：$(cat "$work/closed.log"))" >&2; fail=1; }
+n_closed=$(grep -c -- '--closed' "$work/closed.log" 2>/dev/null || true); [ "${n_closed:-0}" -eq 1 ] && echo "✓ ㉓ --closed 只呼叫一次（批次）" || { echo "✗ ㉓ --closed 應只呼叫一次（實得 ${n_closed:-0}）" >&2; fail=1; }
+brief23l="$(SIMCTL_LIST_JSON="$orphan_json" PATROL_LINEAR_SH="$fake_closed" CLOSED_STUB=done bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief --linear "$STALE" 2>&1)"
+has   '㉓ --linear --brief 也帶 Done 票 flag' "$brief23l" '[專屬模擬器 LS-3-iPhone17Pro] 票 LS-3 已 Done（worktree 仍在）'
+out23n="$(SIMCTL_LIST_JSON="$orphan_json" PATROL_LINEAR_SH="$fake_closed" CLOSED_STUB=nokey bash "$patrol" --repo "$repo" --no-pr --no-fetch --linear "$STALE" 2>&1)"
+hasnt '㉓ --linear 無 key（假身 exit 3）→ LS-3 不 ⚠' "$out23n" '⚠ LS-3-iPhone17Pro'
+has   '㉓ --linear 無 key → 段末註明只用 worktree 判定' "$out23n" '無 LINEAR_API_KEY，票狀態未查、只用 worktree 判定'
+has   '㉓ --linear 無 key → 殘機 LS-999 照樣 ⚠' "$out23n" 'cleanup-merged.sh --apply LS-999'
+out23f="$(SIMCTL_LIST_JSON="$orphan_json" PATROL_LINEAR_SH="$fake_closed" CLOSED_STUB=fail bash "$patrol" --repo "$repo" --no-pr --no-fetch --linear "$STALE" 2>&1)"; rc=$?
+rc_is '㉓ --linear 查詢失敗（假身 exit 1）仍 exit 0' 0 "$rc" "$out23f"
+has   '㉓ --linear 查詢失敗 → 段末註明失敗、只用 worktree 判定' "$out23f" 'Linear 票狀態查詢失敗（patrol-linear.sh --closed exit 1），只用 worktree 判定'
+hasnt '㉓ --linear 查詢失敗 → LS-3 不 ⚠' "$out23f" '⚠ LS-3-iPhone17Pro'
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
