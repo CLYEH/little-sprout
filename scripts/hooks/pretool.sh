@@ -28,7 +28,9 @@
 #               `psql` 且任一 token 含 54322；任一段（命令位置非 echo／printf／讀取動詞）有 token 以
 #               `postgres(ql)://` 起頭（允許 `VAR=`／`--db-url=` 前綴）且含 `:54322`；命令位置為
 #               `supabase` 且有相鄰 `functions serve`／`db query`／`db dump`／`migration up` 且同段無
-#               `--linked`。命中後：整條命令有 `supabase-lock.sh -- ` 包裹字面 → 放行；H3 重入判定
+#               `--linked`；命令位置為 `supabase` 且有 exact token `stop`／`start`（涵蓋 `db start`；起停共用
+#               容器會打斷 lock 持有者，不受 `--linked` 豁免，`status` 不命中——LS-184）。命中後：整條命令有
+#               `supabase-lock.sh -- ` 包裹字面 → 放行；H3 重入判定
 #               為真 → 放行；holder 是 `--hold`（`cmd=hold:*`）、守門 pid 活著、holder `worktree=` 與
 #               呼叫端目前目錄（hook JSON `cwd` 起算、沿命令追蹤 `cd`／`pushd`）所在 worktree 頂層
 #               相同 → 放行；否則 deny，訊息指向 `supabase-lock.sh -- <cmd>` 或 `--hold`。

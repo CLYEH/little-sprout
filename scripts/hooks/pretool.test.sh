@@ -7,6 +7,7 @@
 # macOS 預裝的 sibling shell 仍 fail open，`zsh -c "supabase db reset"` 正是 LS-70
 # 事故的路徑；R5 補 merge-reviewer R4 blocker，comment cd011475（F1-residual-2）：
 # 同型的洞在 csh/tcsh 身上依然存在，補完後 macOS 預裝 -c shell 為封閉集合）。
+# LS-184：H3b 觸發清單加 `supabase stop`／`start`／`db start`（起停共用容器打斷 lock 持有者）——末段 H3b-s 10 組。
 # CI rules job 每個 PR 都跑。
 # 「前饋必有反饋」對 gate 本身也適用：H1–H3 若退化（字面比對變寬鬆、fail-closed
 # 漏接）這裡會紅。R1 抓到的洞（多行 command 只看第一行、grep 異常當沒命中放行、.env／run.sh
@@ -592,6 +593,33 @@ expect 'H3b-t③ grep -rn 本機連線字串（allow，讀取動詞的引數不�
 expect 'H3b-t④ git commit -m 提到 psql 54322（allow）' 0 "$(bash_json "git commit -m 'docs: psql 54322 must be wrapped'")"
 expect 'H3b-t⑤ psql 打別的 port（allow，只認 54322）' 0 "$(bash_json 'psql -h 127.0.0.1 -p 5432 -U postgres')"
 expect 'H3b-t⑥ psql 連線字串打遠端（allow）' 0 "$(bash_json 'psql postgresql://u@db.example.supabase.co:5432/postgres')"
+
+# ============================================================
+# LS-184 H3b 追加：`supabase stop`／`start`／`db start`（起停共用容器會打斷 lock 持有者的 reset／測試；來源 LS-96 池項
+# b4cb1e29＝LS-183 handoff 判斷項）。未包裝且非持有者 deny（含 bash -c 遞迴、括號黏連退回字面比對）；包裝過／持有者
+# worktree allow；`supabase status` 與 echo 引號內字面照舊放行。持有者夾具同上一段（假 lock 目錄＋假 worktree＋hook JSON
+# cwd；holder pid 1 活著但不是祖先）。mutation：拿掉引擎的 lifecycle 觸發（精確 `supa_lifecycle` 回傳＋字面
+# `FB_SUPABASE_LIFECYCLE_RE`）→ 下面 6 條 deny 樣本變紅、4 條 allow 不動（LS-184 handoff 記錄）。
+# ============================================================
+ls184_work=$(mktemp -d)
+mkdir -p "$ls184_work/wt" "$ls184_work/other"; : > "$ls184_work/wt/.git"
+ls184_lock="$ls184_work/lock"; mkdir -p "$ls184_lock"
+printf 'pid=1\nworktree=%s\ncmd=hold:LS-184 test\n' "$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$ls184_work/wt")" > "$ls184_lock/holder"
+expect 'H3b-s① supabase stop（deny）' 2 "$(bash_json 'supabase stop')"
+expect 'H3b-s② supabase start -x studio（deny）' 2 "$(bash_json 'supabase start -x studio')"
+expect 'H3b-s③ supabase db start（deny）' 2 "$(bash_json 'supabase db start')"
+expect 'H3b-s④ bash -c 包 stop && start 未經 wrapper（deny，qa.md 重建容器句的裸跑形狀，遞迴）' 2 \
+  "$(bash_json 'bash -c \"supabase stop && supabase start\"')"
+expect 'H3b-s⑤ (supabase stop) 括號黏連→退回整段字面比對（deny）' 2 "$(bash_json '(supabase stop)')"
+expect 'H3b-s⑥ 對照：cwd 在別的目錄、同一把 hold（deny）' 2 \
+  "$(bash_json_cwd "$ls184_work/other" 'supabase start')" SUPABASE_LOCK_DIR="$ls184_lock"
+expect 'H3b-s⑦ 包裝 supabase-lock.sh -- bash -c "supabase stop && supabase start"（allow，qa.md 原句）' 0 \
+  "$(bash_json 'bash scripts/ops/supabase-lock.sh -- bash -c \"supabase stop && supabase start\"')"
+expect 'H3b-s⑧ cwd＝holder worktree 內 supabase stop（allow，持有者 worktree 腿）' 0 \
+  "$(bash_json_cwd "$ls184_work/wt" 'supabase stop')" SUPABASE_LOCK_DIR="$ls184_lock"
+expect 'H3b-s⑨ supabase status -o env（allow，status 不是 start）' 0 "$(bash_json 'supabase status -o env')"
+expect 'H3b-s⑩ echo 引號內字面 supabase stop（allow）' 0 "$(bash_json "echo 'H3b：supabase stop 要包 lock'")"
+rm -rf "$ls184_work"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ pretool.sh 自測通過"
