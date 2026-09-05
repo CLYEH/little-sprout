@@ -34,7 +34,11 @@ final class LegalDocumentSheetLayoutTests: XCTestCase {
         XCTAssertEqual(result, 24, "320pt 容器應降到內距下限 24（reviewer R2 807855dc M2 建議值）")
         let content = 320 - 2 * result
         XCTAssertEqual(content, 272)
-        XCTAssertLessThanOrEqual(content + 2 * result, 320, "內容＋內距不得超出容器寬度本身——這是不裁字的根本保證")
+        // merge-review R3 N1（`889164c6`）：`content + 2×result` 代回 `content` 的定義後恆等於
+        // 320，不論 `result` 是什麼都成立，測不出真正的業務邏輯——改成直接斷言
+        // `2×內距 ≤ 容器寬`（等價於「內容欄不得為負」），這條才會隨 `iPadCardAdaptivePadding`
+        // 的實際輸出改變而變動。
+        XCTAssertLessThanOrEqual(2 * result, 320, "2×內距不得超出容器寬度——這是不裁字的根本保證")
     }
 
     /// 邊界值：393（＝ 345 內容欄 ＋ 24×2 下限內距）——剛好是「內距開始從 87.5 往下降」的
@@ -50,16 +54,23 @@ final class LegalDocumentSheetLayoutTests: XCTestCase {
     }
 
     /// 核心不變量（property-based 精神）：對任意合理容器寬度，回傳的內距永遠落在
-    /// `[minPadding, maxPadding]` 之間，且「內容欄＋左右內距」永遠不超過容器本身——這才是
-    /// M2「不裁字」真正要保證的性質，不是只釘幾個特定數字。
+    /// `[minPadding, maxPadding]` 之間，且「內容欄（＝ `width - 2×padding`）」永遠不是負數
+    /// ——這才是 M2「不裁字」真正要保證的性質，不是只釘幾個特定數字。
+    ///
+    /// merge-review R3 N1（`889164c6`）：原本這裡還有兩條 `(width - 2*result) + 2*result`
+    /// 代回原式後恆等於 `width` 的斷言，不論 `iPadCardAdaptivePadding` 回傳什麼都成立、抓不到
+    /// 任何邏輯錯誤（mutation 下限改 0 或上限改 100 都不會讓那兩條變紅），已移除；下面
+    /// `2 * result <= width` 才是真的會隨業務邏輯改變而變動的斷言。**下界前提**（誠實記錄，
+    /// 不誇稱「數學上任何寬度都不可能裁字」）：這條在 `width < 2 × minPadding`（48pt）時會
+    /// 失敗——`max(minPadding, computed)` 的下限保底本身就會讓內距之和超過一個小於 48pt 的
+    /// 容器寬。實務上不會有 48pt 的 sheet／裝置寬，這裡的測試範圍（280–700）刻意避開這個
+    /// 不切實際的區間，不代表函式對任意輸入都成立。
     func test_paddingAlwaysWithinBounds_contentNeverExceedsContainer() {
         for width in stride(from: CGFloat(280), through: 700, by: 5) {
             let result = padding(for: width)
             XCTAssertGreaterThanOrEqual(result, minPadding, "width=\(width)")
             XCTAssertLessThanOrEqual(result, maxPadding, "width=\(width)")
-            let totalConsumed = (width - 2 * result) + 2 * result
-            XCTAssertEqual(totalConsumed, width, accuracy: 0.001, "width=\(width)")
-            XCTAssertLessThanOrEqual(totalConsumed, width + 0.001, "內容不得超出容器：width=\(width)")
+            XCTAssertLessThanOrEqual(2 * result, width, "內容欄不得為負數：width=\(width)")
         }
     }
 

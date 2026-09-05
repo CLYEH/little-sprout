@@ -71,4 +71,26 @@ final class LegalDocumentSheetUITests: XCTestCase {
         // （merge-review R1 `807855dc` 建議值）。
         XCTAssertEqual(closeButton.frame.width, 345, accuracy: 4)
     }
+
+    /// merge-review R3 F1（`889164c6`）迴歸測試：320pt 窄容器 proxy（`debugForcedPadCardWidth:
+    /// 320`，見 `LegalDocumentSheet` 文件註解）下，內距必須降到下限 24、內容欄變寬到
+    /// ≈272pt——不是 R3 那個「`LegalDocumentSheetWidthKey` 的 `defaultValue`＋`reduce` 讓
+    /// 量到的真寬被 520 蓋掉」的死碼狀態（那個狀態下不論容器多窄，內距永遠算成 87.5、內容欄
+    /// 卡在 320−175＝145）。**不需要 iPad 裝置，在任何模擬器（含 push-gate／CI 常態用的
+    /// iPhone 專屬機）都會實跑，不是 skip**——這正是 R3 review 指出「既有 iPad 專屬測試在
+    /// 全螢幕下量到的真寬剛好等於預設值，測不出這個缺陷」的補完：這支測試用
+    /// `debugForcedPadCardWidth` 強制走 iPad 分支＋鎖住一個「預設值不等於真值」的容器寬度，
+    /// wiring 一旦壞掉就一定測得出來。
+    func testLegalDocumentSheet_narrowContainerProxy320_widensContentAndShrinksPadding() {
+        let app = TapTargetMeasurement.launch(.legalDocumentNarrowContainer)
+        TapTargetMeasurement.assertScreenRendered(.legalDocumentNarrowContainer, in: app)
+
+        let closeButton = app.buttons["關閉"]
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 5))
+        // 320（容器寬）－ 24×2（內距下限）＝ 272；±4pt 容許量測誤差（R4 實測精準命中
+        // 272.0pt，無需容許誤差也會過，見 handoff）。R3 的死碼狀態會量到 320−87.5×2＝145，
+        // 遠低於 272−4＝268 的下界，兩種狀態的數字差距遠大於量測誤差，足以區分「wiring
+        // 生效」與「wiring 死碼」。
+        XCTAssertEqual(closeButton.frame.width, 272, accuracy: 4, "內距應降到下限 24、內容欄應是 ≈272，不是死碼狀態的 145")
+    }
 }

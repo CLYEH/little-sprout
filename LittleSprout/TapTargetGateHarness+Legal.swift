@@ -16,5 +16,18 @@ extension TapTargetGateHarness {
                 LegalDocumentSheet(kind: .termsOfService)
             }
     }
+
+    /// R4（merge-review R3 `889164c6` F1）：`debugForcedPadCardWidth: 320` 強制走 iPad
+    /// 自適應內距分支＋把卡寬鎖在 320pt——不需要真的是 iPad 裝置就能重現／釘住「量到的寬度
+    /// 被 `PreferenceKey` 預設值蓋掉」這個 wiring 缺陷，**在 iPhone 專屬機上就能跑**（同
+    /// reviewer 建議）。`UploadQueueSheetView` 常駐 sheet 的既有作法。
+    @MainActor
+    @ViewBuilder
+    static var legalDocumentNarrowContainerHost: some View {
+        Color.lsBackground
+            .sheet(isPresented: .constant(true)) {
+                LegalDocumentSheet(kind: .termsOfService, debugForcedPadCardWidth: 320)
+            }
+    }
 }
 #endif
