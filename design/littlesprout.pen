@@ -142073,7 +142073,7 @@
       "type": "frame",
       "id": "FiBvh",
       "x": -3367,
-      "y": 69406,
+      "y": 69748,
       "name": "LS-177 / 留言 sheet (iPhone)",
       "clip": true,
       "width": 393,
@@ -142668,7 +142668,7 @@
       "type": "frame",
       "id": "f10d1D",
       "x": -3367,
-      "y": 70338,
+      "y": 70680,
       "name": "LS-177 / 留言 sheet · 深色",
       "theme": {
         "mode": "dark"
@@ -143266,7 +143266,7 @@
       "type": "frame",
       "id": "SHbqU",
       "x": -3367,
-      "y": 71270,
+      "y": 71612,
       "name": "A11y / 留言 sheet · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -143871,7 +143871,7 @@
       "type": "frame",
       "id": "dHSyh",
       "x": -3367,
-      "y": 72615,
+      "y": 73146,
       "name": "LS-177 / 留言 sheet · 錯誤態（網路）",
       "clip": true,
       "width": 393,
@@ -144186,7 +144186,7 @@
       "type": "frame",
       "id": "wY7f8",
       "x": -3367,
-      "y": 73547,
+      "y": 75010,
       "name": "LS-177 / 留言 sheet (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -144770,7 +144770,7 @@
       "type": "frame",
       "id": "DUyg3",
       "x": -3367,
-      "y": 74821,
+      "y": 76284,
       "name": "LS-177 / 留言操作表 · Owner 移除留言",
       "clip": true,
       "width": 393,
@@ -144949,7 +144949,7 @@
       "type": "frame",
       "id": "GZ3pb",
       "x": -3367,
-      "y": 75753,
+      "y": 77216,
       "name": "LS-177 / 按讚名單（點計數開啟）",
       "clip": true,
       "width": 393,
@@ -145294,7 +145294,7 @@
       "type": "frame",
       "id": "j7WwV",
       "x": -3367,
-      "y": 76685,
+      "y": 78148,
       "name": "LS-177 / 推播權限前置說明頁 (iPhone)",
       "clip": true,
       "width": 393,
@@ -145620,7 +145620,7 @@
       "type": "frame",
       "id": "ckgMp",
       "x": -3367,
-      "y": 77617,
+      "y": 79080,
       "name": "LS-177 / 推播權限前置說明頁 · 深色",
       "theme": {
         "mode": "dark"
@@ -145949,7 +145949,7 @@
       "type": "frame",
       "id": "KyxGc",
       "x": -3367,
-      "y": 78549,
+      "y": 80012,
       "name": "A11y / 推播權限前置說明頁 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -146277,7 +146277,7 @@
       "type": "frame",
       "id": "FeqWk",
       "x": -3367,
-      "y": 80083,
+      "y": 81546,
       "name": "LS-177 / iOS 系統通知權限對話框（示意）",
       "clip": true,
       "width": 393,
@@ -146467,7 +146467,7 @@
       "type": "frame",
       "id": "y7KAW",
       "x": -3367,
-      "y": 81015,
+      "y": 82478,
       "name": "LS-177 / 設定 · 內容與安全加「推播通知」列 (iPhone，已捲至內容與安全)",
       "clip": true,
       "width": 393,
@@ -146537,7 +146537,7 @@
                   "y": -500,
                   "name": "Scroll Column",
                   "width": 345,
-                  "height": "fit_content(0)",
+                  "height": 2083,
                   "layout": "vertical",
                   "children": [
                     {
@@ -146798,13 +146798,6 @@
                               ]
                             }
                           ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "ZfAQX",
-                          "name": "Tab Bar Clearance",
-                          "width": "fill_container",
-                          "height": 151
                         },
                         {
                           "type": "frame",
@@ -147130,6 +147123,13 @@
                         },
                         {
                           "type": "frame",
+                          "id": "ZfAQX",
+                          "name": "Tab Bar Clearance",
+                          "width": "fill_container",
+                          "height": 151
+                        },
+                        {
+                          "type": "frame",
                           "id": "SjjUq",
                           "name": "Scroll Bottom Inset",
                           "width": "fill_container",
@@ -147189,7 +147189,7 @@
       "type": "frame",
       "id": "y66AzT",
       "x": -3367,
-      "y": 81947,
+      "y": 83410,
       "name": "LS-177 / 設定 · 內容與安全加「推播通知」列 · 深色（已捲至內容與安全）",
       "theme": {
         "mode": "dark"
@@ -147262,7 +147262,7 @@
                   "y": -500,
                   "name": "Scroll Column",
                   "width": 345,
-                  "height": "fit_content(0)",
+                  "height": 2083,
                   "layout": "vertical",
                   "children": [
                     {
@@ -147523,13 +147523,6 @@
                               ]
                             }
                           ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "q70vAB",
-                          "name": "Tab Bar Clearance",
-                          "width": "fill_container",
-                          "height": 151
                         },
                         {
                           "type": "frame",
@@ -147855,6 +147848,13 @@
                         },
                         {
                           "type": "frame",
+                          "id": "q70vAB",
+                          "name": "Tab Bar Clearance",
+                          "width": "fill_container",
+                          "height": 151
+                        },
+                        {
+                          "type": "frame",
                           "id": "ZaZXy",
                           "name": "Scroll Bottom Inset",
                           "width": "fill_container",
@@ -147914,7 +147914,7 @@
       "type": "frame",
       "id": "EclPC",
       "x": -3367,
-      "y": 82919,
+      "y": 84342,
       "name": "LS-177 / 實作註記 · Handoff Notes (ios-dev)",
       "width": 900,
       "fill": "$print-paper",
@@ -148729,7 +148729,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "**MJ-6 設定頁取景修正**：`y7KAW`／`y66AzT` 沿用 `t5wI4` 的頂部捲動切片手法，但新增的 `DVEow`「推播通知」列原本落在裁切線下方（0% 可見）——`t5wI4` 的頂部切片對「展示整個設定頁」是對的，對「展示一列」是錯的取景。\n\n**R3 改版（LS-185 `board_clip` 第六支上線後修正結構性錯誤）**：R2 的做法是把 `Content` 本身設 `clip:true` 並用 `layoutPosition:absolute` 位移，掛在**無 clip** 的 `Body` 底下——`Content` 自身的宣告尺寸（`y=-671, height=1213`）遠遠伸出板頂（約 600pt），`board_clip` 一上線就會把 Header Row／個人／家庭段的葉節點全部判定溢出板界（即使視覺上因為 `Content` 自己的 clip 而看不見，掃描仍照 root 邊界判定，見 `overflow-scan.js` 檔頭 LS-177 R2 案例引註）。\n\n正確做法（merge-review R1 minor-1 指出的通用模式）：**板尺寸的 clip 視窗＋內層不裁切的長欄**。改法：新增 `Scroll Viewport`（`NZXXW`／`D2ABlJ`），`clip:true`，作為 `Body` 的**正常流**子節點（不再用絕對定位重複表達縮排，同時解掉 VR NEW-5 指出的 Body padding 與絕對定位縮排重複表達問題）；高度精確等於「Body 頂端到固定 `Tab Bar` 頂緣」的距離（684px，兩板皆同）——**刻意讓 viewport 邊界與 Tab Bar 頂緣重合，任何捲動位置下 viewport 渲染的內容都不可能觸及 Tab Bar 的像素範圍**，這是比反覆調整捲動偏移量更穩固的解法。內層 `Scroll Column`（`o6kD98`／`aalTJ`）**不裁切**，把 Header Row 與原本的 `Content` 合併回連續正常流（`Header Row` 不再需要單獨追蹤位移，一次到位），整個 Column 只用**一個** `y` 位移（-500）模擬捲動——「家庭」段尾端露出約 63px、`Tab Bar Clearance` 完整帶過、「內容與安全」整段（含推播通知列與 Toggle）完整落在可視範圍內，「法律」段第一列（使用條款）只露出上緣一小截即被 viewport 邊界裁掉（不觸及 Tab Bar）。板名補「（已捲至內容與安全）」。`t5wI4` 本身未被觸碰（byte-identical，另見收據）。",
+                  "content": "**MJ-6 設定頁取景修正**：`y7KAW`／`y66AzT` 沿用 `t5wI4` 的頂部捲動切片手法，但新增的 `DVEow`「推播通知」列原本落在裁切線下方（0% 可見）——`t5wI4` 的頂部切片對「展示整個設定頁」是對的，對「展示一列」是錯的取景。\n\n**R3 改版（LS-185 `board_clip` 第六支上線後修正結構性錯誤）**：R2 的做法是把 `Content` 本身設 `clip:true` 並用 `layoutPosition:absolute` 位移，掛在**無 clip** 的 `Body` 底下——`Content` 自身的宣告尺寸（`y=-671, height=1213`）遠遠伸出板頂（約 600pt），`board_clip` 一上線就會把 Header Row／個人／家庭段的葉節點全部判定溢出板界（即使視覺上因為 `Content` 自己的 clip 而看不見，掃描仍照 root 邊界判定，見 `overflow-scan.js` 檔頭 LS-177 R2 案例引註）。\n\n正確做法（merge-review R1 minor-1 指出的通用模式）：**板尺寸的 clip 視窗＋內層不裁切的長欄**。改法：新增 `Scroll Viewport`（`NZXXW`／`D2ABlJ`），`clip:true`，作為 `Body` 的**正常流**子節點（不再用絕對定位重複表達縮排，同時解掉 VR NEW-5 指出的 Body padding 與絕對定位縮排重複表達問題）；高度精確等於「Body 頂端到固定 `Tab Bar` 頂緣」的距離（684px，兩板皆同）——**刻意讓 viewport 邊界與 Tab Bar 頂緣重合，任何捲動位置下 viewport 渲染的內容都不可能觸及 Tab Bar 的像素範圍**，這是比反覆調整捲動偏移量更穩固的解法。內層 `Scroll Column`（`o6kD98`／`aalTJ`）**不裁切**，把 Header Row 與原本的 `Content` 合併回連續正常流（`Header Row` 不再需要單獨追蹤位移，一次到位），整個 Column 只用**一個** `y` 位移（-500）模擬捲動——「家庭」段尾端露出約 63px、`Tab Bar Clearance` 完整帶過、「內容與安全」整段（含推播通知列與 Toggle）完整落在可視範圍內，「法律」段第一列（使用條款）只露出上緣一小截即被 viewport 邊界裁掉（不觸及 Tab Bar）。板名補「（已捲至內容與安全）」。`t5wI4` 本身未被觸碰（byte-identical，另見收據）。\n\n**R4 訂正（MJ-3）**：R3 把 `ZfAQX`/`q70vAB`（`Tab Bar Clearance`，高 151）插在 `Dbc4l`「家庭」與「內容與安全」兩段之間（`Get` 實測 rel y=496~647），而非放在整份清單最後——`Tab Bar Clearance` 的作用是讓捲到最底時最後一段不被浮動 `Tab Bar` 擋住，只該出現在清單尾端，不該卡在中段。此定位錯誤讓它剛好落入固定捲動視窗（可視範圍 417~1101，Content 局部座標）中段，畫面呈現「24pt 正常間距＋151pt 空帶＋24pt 正常間距＝199pt」的空洞，此前的敘述誤把這個空洞寫成「完整帶過」的正常現象，並非如此——這是一個真實的可視缺陷。\n\n修法：用 `Move(\"ZfAQX\",\"Dbc4l\",5)`／`Move(\"q70vAB\",\"b1znIV\",5)` 把它挪到「帳號」段之後、`Scroll Bottom Inset`之前（清單尾端，語意正確的位置），不改動 `Scroll Column` 的 −500 位移量。重排後可視範圍 417~1101 內的實際內容改為：「家庭」段尾端露出約 55px（`xTINX` rel 218~472，與視窗交集 417~472）→「內容與安全」整段完整可見（`Xb1W7` rel 496~826，含「推播通知」列）→「法律」整段完整可見（`vWXnB` rel 850~1028）→ 視窗在「帳號」段（`iiLLZ` rel 1052~1274）開頭 49px 處截止，尚未露出任何可讀列內容，畫面乾淨無空帶（見 R4 截圖）。相鄰段距全數維持 24pt 節奏不變（`O5b7T`/`xTINX`/`Xb1W7`/`vWXnB`/`iiLLZ`/`ZfAQX`/`SjjUq` 七段兩兩間距皆 24pt，`Get` 逐段核對）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -148993,7 +148993,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "**R2 改版**：Interaction Row 熱區規格改為可復算的字面值——每顆按鈕拆成 `Like Toggle`（icon 22pt＋文字標籤，`padding:11` 全向，44＝22+11×2，兩軸皆達標，量法：`Get` bounds 兩軸；`IgqGF`/`VZ0wV` 實測 w=84~118 h=47）與 `Count Zone`（純計數，固定 `width:44,height:44`，不靠 padding 疊出來，量法同上，實測 44×44）。AX3（`Qzz3r`）icon 覆寫 32×32，`Like Toggle` 實測 140×80，`Count Zone` 仍固定 44×44。R1 舊版「44×~52」的數字曾與 `padding[1]=0` 矛盾、不可復算，R2 已用上述可復算公式取代。",
+                  "content": "**R4 訂正**：此節點原文停留在 R2 期，R3 改版後未同步更新，與稿內現況互打，其中「AX3 Count Zone 仍固定 44×44」一句最危險——會誤導 ios-dev 做回 R2 NEW-2 已修復的缺陷。完整規格沿革見 `a1wjoE`「R2／R3 改版」段，此處僅列現況＋節點 id 對照（`Get` 實測，`resolveInstances:true`）：\n\n標準態 `Like Toggle`（`IgqGF/R782aG`、`IgqGF/vnbON`、`VZ0wV/ghlvN`、`VZ0wV/ScAzD`）兩態皆固定 **118×47**（R3 前兩態曾因文字字數不同呈 84~118 不等寬，該問題已修復，非現況）。標準態 `Count Zone`（`IgqGF/VGZ8L`、`IgqGF/DlLxv`、`VZ0wV/kZpGl`、`VZ0wV/MTpQa`）固定 **44×44**（未變）。AX3（`Qzz3r`）`Like Toggle`（`V6rrC6`、`zly38`）固定 **220×80**（非 140×80）；AX3 `Count Zone`（`h3bdOM`、`U8pwO`）**56×80**（R3 因 `$fs-note` 在 ax3 主題下行高≈48pt 超過舊 44 容器高度而改高，並非仍固定 44×44）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -149137,7 +149137,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "板高（規格值族「單畫面總高」）：`IgqGF`/`VZ0wV` 852（裝置高度）；`Qzz3r`（AX3）1434（內容驅動）；`FiBvh`/`f10d1D`/`dHSyh`/`DUyg3`/`GZ3pb` 皆 852；`TnxXE`（留言 sheet 空狀態，R2 新增）852（Copy 自 `FiBvh`，同板高）；`SHbqU`（AX3）1265；`wY7f8`（iPad）1194；`j7WwV`/`ckgMp` 852；`KyxGc`（AX3）1454；`FeqWk` 852；`y7KAW`/`y66AzT` 852（沿用 LS-152 原板高；R2 MJ-6 改 `Content` 為 `layoutPosition:absolute` 模擬向下捲動 −422px，板高本身不變，只是視窗內顯示的捲動位置不同）。",
+                  "content": "板高（規格值族「單畫面總高」；R4 更新板序與 y 座標，見下方位移說明，高度值本身除 Qzz3r／SHbqU 外皆未變）：`IgqGF`/`VZ0wV` 852（裝置高度）；`Qzz3r`（AX3）**1776**（R3 內容驅動長高，取代舊值 1434）；`FiBvh`/`f10d1D`/`dHSyh`/`DUyg3`/`GZ3pb` 皆 852；`TnxXE`（留言 sheet 空狀態，R2 新增）852；`SHbqU`（AX3）**1454**（R3 內容驅動長高，取代舊值 1265）；`wY7f8`（iPad）1194；`j7WwV`/`ckgMp` 852；`KyxGc`（AX3）1454；`FeqWk` 852；`y7KAW`/`y66AzT` 852。\n\n**R4 訂正**：R3 只拉高 `Qzz3r`／`SHbqU` 板高、未連動調整後續板 y 座標，造成 root 層三處相撞（`Qzz3r`×`FiBvh`、`SHbqU`×`dHSyh`、`EclPC`×`TnxXE`，計入 `sibling_intersection` in-scope 147 例中的 3 例）。R4 從 `FiBvh` 起依「前板底＋80pt」重新排列全部後續板（`FiBvh`／`f10d1D`／`SHbqU`／`dHSyh`／`TnxXE`／`wY7f8`／`DUyg3`／`GZ3pb`／`j7WwV`／`ckgMp`／`KyxGc`／`FeqWk`／`y7KAW`／`y66AzT`／`EclPC`），並把原本孤懸在 `EclPC`（Notes）板腳印內的 `TnxXE` 移回「留言 sheet」板群、插在 `dHSyh` 與 `wY7f8` 之間（語意分組更合理，不再是附加在 Notes 板之後的孤兒板）。R4 後 in-scope 降回 144 例。\n\n`y7KAW`/`y66AzT`（「已捲至內容與安全」）的取景架構——`Scroll Viewport`＋`Scroll Column` −500 位移、`ZfAQX`/`q70vAB`（Tab Bar Clearance）板序修正——完整說明見 `mZew6`，不重複列於此。R2 期「`Content` 用 `layoutPosition:absolute` 位移 −422px」的舊架構描述已於 R3 淘汰改用上述新架構，本節點原文未同步移除，R4 一併訂正刪除。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -149361,7 +149361,7 @@
       "type": "frame",
       "id": "TnxXE",
       "x": -3367,
-      "y": 88031,
+      "y": 74078,
       "name": "LS-177 / 留言 sheet · 空狀態 (iPhone)",
       "clip": true,
       "width": 393,
