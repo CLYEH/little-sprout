@@ -8,15 +8,15 @@ import SwiftUI
 /// HUD，不是要瀏覽的內容頁）；仍允許系統預設的下滑手勢關閉（`ImjbJ`：關閉後上傳在背景繼續，
 /// 見 `UploadQueueStore` 檔頭）。
 ///
-/// **與稿面差異：不設 `.presentationDragIndicator(.visible)`**——稿面畫了一條 Grabber 短線
-/// （沖印品母題以外的系統慣例，其他既有 Sheet 如 `AttributionSheet` 也有）。push-gate 實測：
-/// 只要顯式打開它，iOS 會把這顆系統 grabber 曝露成一個獨立的 accessibility 元件（label
-/// 「表單控點」，量到 76×25pt），被 `tap-target-check.sh` 判成 <44pt 違規——這是 Apple 系統
-/// 繪製的控制項，不是本票的自畫 View，沒有公開 API 能調整它的 hit-test 尺寸（同
-/// `tap-target-exemptions.txt` 對 `WelcomeView` 官方 `SignInWithAppleButton` 的既有理由：
-/// 系統元件、量測意義有限，但那裡是整支排除，這裡選擇直接不啟用這個系統元件，維持這個畫面
-/// 100% 由本票程式碼決定的按鈕都保證 ≥44pt）。單一固定 detent 的 sheet 拿掉 grabber 不影響
-/// 手勢下滑關閉——drag-to-dismiss 是系統行為，跟 drag indicator 的視覺顯示是否開啟無關。
+/// **Grabber 改自畫（merge-review R2 F4）**：`.presentationDragIndicator(.visible)` 這個
+/// 系統元件一旦啟用，iOS 會把它曝露成一個獨立的 accessibility 元件（label「表單控點」，量到
+/// 76×25pt），被 `tap-target-check.sh` 判成 <44pt 違規——這是 Apple 系統繪製的控制項，沒有
+/// 公開 API 能調整它的 hit-test 尺寸。改用稿面 `ap80H`／`Sxq8Z` 規格的自畫
+/// `Capsule`（36×5pt，`$control-line`，`.accessibilityHidden(true)`）取代：純 `Shape`
+/// 沒有任何內建 UIKit accessibility 語意，不會被量成按鈕，同時視覺上完全對齊稿面。單一固定
+/// detent 的 sheet 不需要「拖曳切換 detent」的語意，這顆 grabber 純粹是視覺沖印品母題以外的
+/// 系統慣例延續，不影響手勢下滑關閉（drag-to-dismiss 是系統行為，跟畫不畫得出視覺 grabber
+/// 無關）。
 ///
 /// **版面結構**：摘要區（標題／總數／續傳橫幅／重試列，pinned 頂）－ 44pt 具名斷點
 /// （`AppSpacing.section`，`TVLkD`）－ 列表區（三語意群組，可捲動）－ hairline － Footer
@@ -33,6 +33,7 @@ struct UploadQueueSheetView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            grabber
             summarySection
                 .padding(.horizontal, AppSpacing.screenPad)
                 .padding(.top, AppSpacing.block)
@@ -54,6 +55,16 @@ struct UploadQueueSheetView: View {
     /// `Jxcmk`：一般字級 727、AX3 1224（實測值）。
     private var sheetHeight: CGFloat {
         dynamicTypeSize.isAccessibilitySize ? 1224 : 727
+    }
+
+    /// `ap80H`／`Sxq8Z`：自畫 grabber，取代系統 `.presentationDragIndicator`（見檔頭「Grabber
+    /// 改自畫」段）。純 `Shape`＋`accessibilityHidden`，`tap-target-check.sh` 不會量到它。
+    private var grabber: some View {
+        Capsule()
+            .fill(Color.lsControlLine)
+            .frame(width: 36, height: 5)
+            .padding(.top, AppSpacing.label)
+            .accessibilityHidden(true)
     }
 
     // MARK: - 摘要區
