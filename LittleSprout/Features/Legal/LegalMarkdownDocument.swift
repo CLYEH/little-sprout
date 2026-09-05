@@ -7,7 +7,10 @@ import Foundation
 enum LegalMarkdownBlock: Equatable {
     case heading(AttributedString)
     case paragraph(AttributedString)
-    case listItem(AttributedString)
+    /// `marker`：無序清單固定 `"•"`；有序清單保留原文字面編號（例如 `"1."`）——merge-review
+    /// R1 F1（`807855dc`）：條款交叉引用（如 ToS 6.1「尤其是第 6.1 條第 1 款」）依賴清單編號，
+    /// 原本一律丟給 `•` 會讓讀者在 App 內看不到「第 1 款」對應哪一列。
+    case listItem(AttributedString, marker: String)
     case tableRow(AttributedString, isHeader: Bool)
 }
 
@@ -127,14 +130,14 @@ struct LegalMarkdownDocument: Equatable {
                 blocks.append(.paragraph(inlineAttributed(quoted)))
                 continue
             }
-            if let item = orderedListItemText(line) {
+            if let (marker, text) = orderedListItemText(line) {
                 flushParagraph()
-                blocks.append(.listItem(inlineAttributed(item)))
+                blocks.append(.listItem(inlineAttributed(text), marker: marker))
                 continue
             }
             if line.hasPrefix("- ") || line.hasPrefix("* ") {
                 flushParagraph()
-                blocks.append(.listItem(inlineAttributed(String(line.dropFirst(2)))))
+                blocks.append(.listItem(inlineAttributed(String(line.dropFirst(2))), marker: "•"))
                 continue
             }
             if line.hasPrefix("|") {
@@ -167,9 +170,11 @@ struct LegalMarkdownDocument: Equatable {
         return String(line[line.index(after: index)...]).trimmingCharacters(in: .whitespaces)
     }
 
-    /// `1. 文字` → "文字"；刻意跟條款編號「1.1 文字」區分——後者數字後面接的是另一個數字
-    /// 而非空白，不會落入這個判斷（見 LittleSproutTests 的兩則對照案例）。
-    private static func orderedListItemText(_ line: String) -> String? {
+    /// `1. 文字` → `(marker: "1.", text: "文字")`；刻意跟條款編號「1.1 文字」區分——後者數字
+    /// 後面接的是另一個數字而非空白，不會落入這個判斷（見 LittleSproutTests 的兩則對照案例）。
+    /// **保留 `marker` 原字面**（merge-review R1 F1，`807855dc`）：法務文本的交叉引用（例如
+    /// ToS「尤其是第 6.1 條第 1 款」）依賴清單編號，只給文字、丟掉編號會讓讀者對不到「第幾款」。
+    private static func orderedListItemText(_ line: String) -> (marker: String, text: String)? {
         var index = line.startIndex
         var sawDigit = false
         while index < line.endIndex, line[index].isNumber {
@@ -177,9 +182,11 @@ struct LegalMarkdownDocument: Equatable {
             index = line.index(after: index)
         }
         guard sawDigit, index < line.endIndex, line[index] == "." else { return nil }
+        let marker = String(line[line.startIndex...index])
         index = line.index(after: index)
         guard index < line.endIndex, line[index] == " " else { return nil }
-        return String(line[line.index(after: index)...]).trimmingCharacters(in: .whitespaces)
+        let text = String(line[line.index(after: index)...]).trimmingCharacters(in: .whitespaces)
+        return (marker, text)
     }
 
     /// `|---|:--:|` 這種只由 `-`／`:`／`|`／空白組成的表格分隔列，本身不是資料、跳過不渲染。

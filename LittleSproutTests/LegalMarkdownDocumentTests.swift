@@ -79,6 +79,11 @@ final class LegalMarkdownDocumentTests: XCTestCase {
         XCTAssertEqual(plainText(blocks[2]), "6.2 另一段條款編號。")
         XCTAssertEqual(plainText(blocks[3]), "第一個清單項目")
         XCTAssertEqual(plainText(blocks[4]), "第二個清單項目")
+        // merge-review R1 F1（`807855dc`）：有序清單編號原本整個被丟掉（只留 `•`），法務
+        // 交叉引用（如「尤其是第 6.1 條第 1 款」）在 App 內因此對不到是第幾款。這裡釘住
+        // marker 原字面必須是 "1."／"2."，不是 unordered 清單共用的 "•"。
+        XCTAssertEqual(marker(blocks[3]), "1.")
+        XCTAssertEqual(marker(blocks[4]), "2.")
     }
 
     func test_unorderedListSyntax_becomesListItems() {
@@ -87,6 +92,19 @@ final class LegalMarkdownDocumentTests: XCTestCase {
         XCTAssertEqual(kinds, ["paragraph", "listItem", "listItem"])
         XCTAssertEqual(plainText(blocks[1]), "只把邀請碼交給您信任的人；")
         XCTAssertEqual(plainText(blocks[2]), "發現邀請碼外流時，立即撤銷。")
+        XCTAssertEqual(marker(blocks[1]), "•")
+        XCTAssertEqual(marker(blocks[2]), "•")
+    }
+
+    /// 真實回歸案例（merge-review R1 F1）：ToS §6.1 的「涉及兒童或少年性剝削…」是清單第 1 款，
+    /// §13 引用它時寫「尤其是第 6.1 條第 1 款」——這裡直接對 bundled 全文釘住第 1 款的 marker
+    /// 必須是 "1."，不能被剝成 "•"（否則使用者在 App 內完全看不出哪一款是「第 1 款」）。
+    func test_realFile_termsOfService_section6_1_firstItem_keepsNumericMarker() throws {
+        let document = try XCTUnwrap(LegalMarkdownDocument.loadBundled(.termsOfService))
+        let firstProhibitedItem = try XCTUnwrap(document.blocks.first { block in
+            plainText(block).hasPrefix("涉及兒童或少年性剝削")
+        })
+        XCTAssertEqual(marker(firstProhibitedItem), "1.")
     }
 
     func test_tableRows_firstRowIsHeader_separatorRowSkipped() {
@@ -160,9 +178,15 @@ final class LegalMarkdownDocumentTests: XCTestCase {
 
     private func plainText(_ block: LegalMarkdownBlock) -> String {
         switch block {
-        case .heading(let text), .paragraph(let text), .listItem(let text): String(text.characters)
+        case .heading(let text), .paragraph(let text): String(text.characters)
+        case .listItem(let text, _): String(text.characters)
         case .tableRow(let text, _): String(text.characters)
         }
+    }
+
+    private func marker(_ block: LegalMarkdownBlock) -> String? {
+        if case .listItem(_, let marker) = block { return marker }
+        return nil
     }
 
     private func blockKindLabel(_ block: LegalMarkdownBlock) -> String {

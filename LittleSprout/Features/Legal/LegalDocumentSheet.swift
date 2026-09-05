@@ -155,11 +155,15 @@ struct LegalDocumentSheet: View {
             Text(text)
                 .appFont(.lead, weight: .bold)
                 .foregroundStyle(Color.lsTextPrimary)
+                // merge-review R1 F3：25／24 個節標題是全 app 最長純文字畫面的唯一導覽線索，
+                // 補 heading trait 讓 VoiceOver 轉輪能跳段（同 TimelineView／AlbumsView 既有
+                // 慣例）。
+                .accessibilityAddTraits(.isHeader)
         case .paragraph(let text):
             bodyText(text)
-        case .listItem(let text):
+        case .listItem(let text, let marker):
             HStack(alignment: .top, spacing: AppSpacing.label) {
-                Text("•").appFont(.body).foregroundStyle(Color.lsTextPrimary)
+                Text(marker).appFont(.body).foregroundStyle(Color.lsTextPrimary)
                 bodyText(text)
             }
         case .tableRow(let text, let isHeader):
