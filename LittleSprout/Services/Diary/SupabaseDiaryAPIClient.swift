@@ -71,6 +71,15 @@ final class SupabaseDiaryAPIClient: DiaryAPIClient {
             throw AppError.map(error)
         }
     }
+
+    func setDiaryDeleted(diaryID: UUID, deleted: Bool) async throws {
+        do {
+            let params = SetDiaryDeletedParams(diaryID: diaryID, deleted: deleted)
+            try await client.rpc("set_diary_deleted", params: params).execute()
+        } catch {
+            throw AppError.map(error)
+        }
+    }
 }
 
 // MARK: - Wire payloads
@@ -100,6 +109,16 @@ private struct UpdateDiaryEntryParams: Encodable {
         case body = "p_body"
         case entryDate = "p_entry_date"
         case childIDs = "p_child_ids"
+    }
+}
+
+private struct SetDiaryDeletedParams: Encodable {
+    let diaryID: UUID
+    let deleted: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case diaryID = "p_diary_id"
+        case deleted = "p_deleted"
     }
 }
 

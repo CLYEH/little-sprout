@@ -176,6 +176,15 @@ final class TimelineStore {
         return signed[storagePath]
     }
 
+    /// LS-190：刪除日記（`set_diary_deleted(p_deleted: true)`）成功後，呼叫端
+    /// （`DiaryDetailView`）本地移除這篇，不等下一次 `refresh()` 才把它從時間軸拿掉——RPC
+    /// 呼叫與陣列更新分開兩步，因為 `TimelineStore` 本身不持有 `DiaryAPIClient`（那支協定屬於
+    /// 「建立／編輯日記」的職責邊界，見 `LittleSproutApp` 的 store 佈線），呼叫端自己呼叫 RPC
+    /// 成功後再叫這支方法同步本地狀態。
+    func removeDiaryEntryLocally(diaryID: UUID) {
+        entries.removeAll { $0.kind == .diary && $0.refId == diaryID }
+    }
+
     /// 登出時歸零——同 `ChildrenStore.reset()`／`FamilyStore.reset()` 的角色（merge-review
     /// R1 M5：接上 `SettingsView.signOut()`，見該檔）。世代號一併遞增：任何還在飛、屬於
     /// 上一個帳號的 `refresh`／`loadMore` 呼叫回來時，世代號檢查會讓它們視為過期而作廢，
