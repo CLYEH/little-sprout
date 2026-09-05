@@ -46543,6 +46543,68 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "C0F2e",
+          "name": "N LS-201 沿革",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "hl29i",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-201 沿革",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "AsL5F",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Ysn5T",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-201",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "PFkNG",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-201：全稿舊債清倉。本票 Stress/10（3 個寶貝＋超長名字，`LCpNO`）因與本 Notes 板（auto-height）root 重疊被下移至 y=35795，僅涉及看板座標，未改 LS-47 任何畫面內容。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -50347,7 +50409,7 @@
       "type": "frame",
       "id": "LCpNO",
       "x": 6917,
-      "y": 35795,
+      "y": 35949,
       "name": "Stress / 10 · 3 個寶貝＋超長名字",
       "clip": true,
       "width": 393,
@@ -63324,7 +63386,7 @@
       "type": "frame",
       "id": "MjRcr",
       "x": 14629,
-      "y": 35558,
+      "y": 35739,
       "name": "LS-21 / 13-iPad 日記詳情 (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -64508,7 +64570,7 @@
       "type": "frame",
       "id": "cqgkc",
       "x": 15563,
-      "y": 35558,
+      "y": 35739,
       "name": "A11y / 13 日記詳情 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -70290,6 +70352,68 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "PZjjn",
+          "name": "N LS-201 沿革",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "nfzxZ",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-201 沿革",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "KN0P1",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "UMpTq",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-201",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "lyu44",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-201：全稿舊債清倉。時間軸 5 板（11／11c／11 深色／A11y AX3／Stress 單一寶貝 filter）Feed 補明確 height＋clip:true 修正 board_clip；日記編輯器 10 板（12／12b–12g／A11y／Stress／深色）Photo Strip 補 clip:true 收窄橫向照片挑選 peek 邊界（畫面像素前後對照無變化，僅改由容器自身宣告裁切）；Card Diary／Album 署名「姓名 · 年齡」姓名與「·」之間補 WORD JOINER（U+2060）避免 AX3 折行時「·」孤立於行尾（全稿 29 個 Signature Line 實例，含本 ticket 多筆時間軸卡片）。皆未改文字內容或新增畫面。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -70297,7 +70421,7 @@
       "type": "frame",
       "id": "f1wVw",
       "x": 15399,
-      "y": 34572,
+      "y": 34753,
       "name": "LS-21 / 12e 日記編輯器 · 照片排序（拖曳中）",
       "clip": true,
       "width": 393,
@@ -70999,7 +71123,7 @@
       "type": "frame",
       "id": "bs8aE",
       "x": 16036,
-      "y": 34572,
+      "y": 34753,
       "name": "A11y / 12e 日記編輯器 · 照片排序（拖曳中）· Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -71706,7 +71830,7 @@
       "type": "frame",
       "id": "IH80C",
       "x": 16509,
-      "y": 34572,
+      "y": 34753,
       "name": "Stress / 13 日記詳情 · 20 張照片壓測",
       "clip": true,
       "width": 393,
@@ -127004,6 +127128,68 @@
               "fontWeight": "normal"
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "L4zhTj",
+          "name": "N LS-201 沿革",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "mQFeh",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-201 沿革",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "D5Fmj",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "zJ7VJ",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-201",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "SY9jz",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-201：全稿舊債清倉。本 Notes 板（auto-height）與上方 `dHnPl`（A11y 刪除帳號 AX3）root 重疊，本板下移至 y=24365；檢舉收件匣 2 板（07／A11y AX3）Body 補 clip:true 修正 board_clip（內容超出板高原本靠 root 緣 clip 頂住，現由 Body 自身宣告裁切視窗，畫面像素不變）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -137094,6 +137280,68 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "QmRHA",
+          "name": "N LS-201 沿革",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "KmoPv",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-201 沿革",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "GJocD",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "z1rZB",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-201",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "gYn1U",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-201：全稿舊債清倉。P1 帳號密碼登入家族多板（P1／P1b–e／AX3／iPad）因上游板高度調整級聯下移（依 80pt 板距重排，root 重疊 0 對）；AX3 板 01e（`aEb17`）法務連結單行放不下版寬，改為 3 行呈現＋板高 1160→1260，未改文字內容或連結文案。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -138135,7 +138383,7 @@
       "type": "frame",
       "id": "EzJCV",
       "x": -3367,
-      "y": 53510,
+      "y": 53705,
       "name": "LS legal / 文件檢視 (iPhone)",
       "clip": true,
       "width": 393,
@@ -138457,7 +138705,7 @@
       "type": "frame",
       "id": "O631mm",
       "x": -3367,
-      "y": 54442,
+      "y": 54637,
       "name": "LS legal / 文件檢視 · 深色",
       "theme": {
         "mode": "dark"
@@ -138782,7 +139030,7 @@
       "type": "frame",
       "id": "E27nKz",
       "x": -3367,
-      "y": 55374,
+      "y": 55569,
       "name": "A11y / 文件檢視 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -139107,7 +139355,7 @@
       "type": "frame",
       "id": "uQeV8",
       "x": -3367,
-      "y": 58254,
+      "y": 58449,
       "name": "LS legal / 文件檢視 (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -139398,7 +139646,7 @@
       "type": "frame",
       "id": "pLLXi",
       "x": -3367,
-      "y": 59528,
+      "y": 59723,
       "name": "LS-133 / 實作註記 · Handoff Notes (ios-dev)",
       "width": 900,
       "fill": "$print-paper",
@@ -140716,6 +140964,68 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "Zj48z",
+          "name": "N LS-201 沿革",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "AnKF1",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-201 沿革",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "bQJVe",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "T6IMI",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-201",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "s5etl",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-201：全稿舊債清倉。本 Notes 板（auto-height）與上方 `uQeV8`（LS legal 文件檢視 iPad）root 重疊，本板下移至 y=59528，下游 `k6Rlt`（A11y 已捲到底 AX3）連動下移，僅涉及看板座標，未改文件檢視內容。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -140723,7 +141033,7 @@
       "type": "frame",
       "id": "k6Rlt",
       "x": -3367,
-      "y": 66249,
+      "y": 66598,
       "name": "A11y / 文件檢視 · 已捲到底 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -141000,7 +141310,7 @@
       "type": "frame",
       "id": "IgqGF",
       "x": -3367,
-      "y": 68301,
+      "y": 68650,
       "name": "LS-177 / 互動列規格 · Diary 卡片 (iPhone)",
       "clip": true,
       "width": 393,
@@ -141485,7 +141795,7 @@
       "type": "frame",
       "id": "VZ0wV",
       "x": -3367,
-      "y": 69233,
+      "y": 69582,
       "name": "LS-177 / 互動列規格 · Diary 卡片 · 深色",
       "theme": {
         "mode": "dark"
@@ -141973,7 +142283,7 @@
       "type": "frame",
       "id": "Qzz3r",
       "x": -3367,
-      "y": 70165,
+      "y": 70514,
       "name": "A11y / 互動列規格 · Diary 卡片 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -142460,7 +142770,7 @@
       "type": "frame",
       "id": "FiBvh",
       "x": -3367,
-      "y": 72021,
+      "y": 72370,
       "name": "LS-177 / 留言 sheet (iPhone)",
       "clip": true,
       "width": 393,
@@ -143055,7 +143365,7 @@
       "type": "frame",
       "id": "f10d1D",
       "x": -3367,
-      "y": 72953,
+      "y": 73302,
       "name": "LS-177 / 留言 sheet · 深色",
       "theme": {
         "mode": "dark"
@@ -143653,7 +143963,7 @@
       "type": "frame",
       "id": "SHbqU",
       "x": -3367,
-      "y": 73885,
+      "y": 74234,
       "name": "A11y / 留言 sheet · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -144258,7 +144568,7 @@
       "type": "frame",
       "id": "dHSyh",
       "x": -3367,
-      "y": 75419,
+      "y": 75768,
       "name": "LS-177 / 留言 sheet · 錯誤態（網路）",
       "clip": true,
       "width": 393,
@@ -144573,7 +144883,7 @@
       "type": "frame",
       "id": "wY7f8",
       "x": -3367,
-      "y": 77283,
+      "y": 77632,
       "name": "LS-177 / 留言 sheet (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -145157,7 +145467,7 @@
       "type": "frame",
       "id": "DUyg3",
       "x": -3367,
-      "y": 78557,
+      "y": 78906,
       "name": "LS-177 / 留言操作表 · Owner 移除留言",
       "clip": true,
       "width": 393,
@@ -145336,7 +145646,7 @@
       "type": "frame",
       "id": "GZ3pb",
       "x": -3367,
-      "y": 79489,
+      "y": 79838,
       "name": "LS-177 / 按讚名單（點計數開啟）",
       "clip": true,
       "width": 393,
@@ -145681,7 +145991,7 @@
       "type": "frame",
       "id": "j7WwV",
       "x": -3367,
-      "y": 80421,
+      "y": 80770,
       "name": "LS-177 / 推播權限前置說明頁 (iPhone)",
       "clip": true,
       "width": 393,
@@ -146007,7 +146317,7 @@
       "type": "frame",
       "id": "ckgMp",
       "x": -3367,
-      "y": 81353,
+      "y": 81702,
       "name": "LS-177 / 推播權限前置說明頁 · 深色",
       "theme": {
         "mode": "dark"
@@ -146336,7 +146646,7 @@
       "type": "frame",
       "id": "KyxGc",
       "x": -3367,
-      "y": 82285,
+      "y": 82634,
       "name": "A11y / 推播權限前置說明頁 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -146664,7 +146974,7 @@
       "type": "frame",
       "id": "FeqWk",
       "x": -3367,
-      "y": 83819,
+      "y": 84168,
       "name": "LS-177 / iOS 系統通知權限對話框（示意）",
       "clip": true,
       "width": 393,
@@ -146854,7 +147164,7 @@
       "type": "frame",
       "id": "y7KAW",
       "x": -3367,
-      "y": 84751,
+      "y": 85100,
       "name": "LS-177 / 設定 · 內容與安全加「推播通知」列 (iPhone，已捲至內容與安全)",
       "clip": true,
       "width": 393,
@@ -147625,7 +147935,7 @@
       "type": "frame",
       "id": "y66AzT",
       "x": -3367,
-      "y": 85683,
+      "y": 86032,
       "name": "LS-177 / 設定 · 內容與安全加「推播通知」列 · 深色（已捲至內容與安全）",
       "theme": {
         "mode": "dark"
@@ -148399,7 +148709,7 @@
       "type": "frame",
       "id": "EclPC",
       "x": -3367,
-      "y": 86615,
+      "y": 86964,
       "name": "LS-177 / 實作註記 · Handoff Notes (ios-dev)",
       "width": 900,
       "fill": "$print-paper",
@@ -149839,6 +150149,68 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "ck2x6",
+          "name": "N LS-201 沿革",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "wMKpN",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-201 沿革",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "ftFlO",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "t8p5z",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-201",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "bDyDn",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-201：全稿舊債清倉。`k6Rlt`（A11y 文件檢視已捲到底 AX3）root 重疊修正後，LS-177 全家族 18 板（互動列規格／留言 sheet／推播權限／設定加推播列／本 Notes 板）依 80pt 板距級聯下移，root 座標平移、畫面內容不變；設定板 `y7KAW`／`y66AzT` 各 7 列（邀請家人／退出家庭／封鎖名單／使用條款／隱私權政策／登出／刪除帳號）補上 LS-194 已定案的列文字垂直置中做法（Value 隱藏＋TextStack 置中），統一深淺兩版列版面。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -149846,7 +150218,7 @@
       "type": "frame",
       "id": "TnxXE",
       "x": -3367,
-      "y": 76351,
+      "y": 76700,
       "name": "LS-177 / 留言 sheet · 空狀態 (iPhone)",
       "clip": true,
       "width": 393,
