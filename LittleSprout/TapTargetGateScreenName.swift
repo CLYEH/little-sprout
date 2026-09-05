@@ -67,6 +67,16 @@ enum TapTargetGateScreenName: String {
     /// 讀不出像素——這正是本輪 FAIL 的根因，見該測試檔文件註解）。沿用這裡而不是另開一套
     /// 平行機制：兩個 target 之間本來就只有這一條「XCUITest 指定畫面」通道。
     case diaryCardVideoBadges = "DiaryCardVideoBadges"
+    // LS-167：上傳佇列 sheet（`design/littlesprout.pen` `LS-142 / 16 上傳佇列`）——相簿詳情
+    // 的「加入照片」入口留給 LS-166（尚未實作），這裡借同一招掛一個代表性樣本（三群、LS002
+    // 置頂、有／無進度百分比的上傳中列都在），讓這個新元件在有真正入口之前就能被機械 gate
+    // 與 UITest 覆蓋，不必等 LS-166。
+    case uploadQueueSheet = "UploadQueueSheetView"
+    // merge-review R3 M1：`previewSample()` 一次展示所有狀態，`summarySection` 裡永遠有
+    // 續傳橫幅或重試列撐滿寬度，測不出「完全沒有撐寬元件時整塊被置中」這個回歸（reviewer
+    // 在生產常態下量到群標題 x=119.3，應為 24）。這個 case 掛 `previewNormalSample()`（無
+    // 失敗、無續傳橫幅、`uploading` 不帶百分比），專門讓機械 gate／UITest 覆蓋這個常態。
+    case uploadQueueSheetNormal = "UploadQueueSheetViewNormal"
     // LS-164：帳號密碼登入畫面（審核帳號用）——初始態不需要任何 seed 資料（`.preview()`
     // 免登入即可建構，同 `createChild`／`createAlbum` 的既有理由），Email／密碼欄與登入鈕
     // 一開畫面就有代表性。
@@ -111,6 +121,10 @@ enum TapTargetGateScreenName: String {
         // 同 `.sectionTabView`：headerRow「時間軸」不受 seed 資料影響，一定會渲染。
         case .sectionTabViewWithDiary: return .staticText("時間軸")
         case .diaryCardVideoBadges: return .staticText("影片 12:34")
+        // 樣本固定含至少一列失敗（見 `UploadQueueStore.previewSample`），群標題必定渲染。
+        case .uploadQueueSheet: return .staticText("沒有成功")
+        // 常態樣本沒有失敗群，用永遠會渲染的標題文字當 sentinel。
+        case .uploadQueueSheetNormal: return .staticText("正在新增照片")
         case .passwordSignIn: return .staticText("帳號密碼登入")
         // 「給家人的私密相簿」只在淺色模式渲染（見 `WelcomeView.headSection`），跟
         // `.preview()`／harness 固定淺色（未強制 `.preferredColorScheme`）的既有假設一致；
