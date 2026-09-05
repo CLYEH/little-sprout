@@ -60,15 +60,25 @@ struct UploadQueueSheetView: View {
     /// `ap80H`／`Sxq8Z`：自畫 grabber，取代系統 `.presentationDragIndicator`（見檔頭「Grabber
     /// 改自畫」段）。純 `Shape`＋`accessibilityHidden`，`tap-target-check.sh` 不會量到它。
     /// merge-review R3 m1／m2：顏色對稿是 `$border`（不是 `$control-line`）；上緣留白
-    /// （padding-top）是 24（`$sp-block`），不是 8。merge-review R4 N2：R3 這裡原本還宣稱
-    /// 「`g3fRwP` 的 grabber 區域本身高 16pt」並疊了一個 `.frame(height: 16)`——這個 16pt
-    /// 數字沒有對稿覆核過（本票期間 Pen 不可讀，見票文「設計稿讀法」限制），拿掉該行，只留
-    /// 已經覆核過的 5pt Capsule 本身高度，避免留著一個沒查證過的宣稱誤導下一輪。
+    /// （padding-top）是 24（`$sp-block`），不是 8。
+    ///
+    /// **grabber→標題間距（fix/LS-167-grabber-spacing，QA delta `788791f6` FAIL 後訂正）**：
+    /// R4 N2 當時猜「`g3fRwP` 的 grabber 區域本身高 16pt」沒有對稿覆核過（本票期間 Pen
+    /// 不可讀），拿掉了那個 16pt band，把 grabber→標題間距從原本的 ~30 改成 24。QA 這輪
+    /// **直接開 Pen 量了兩塊獨立板 `rTEGf`／`Q7HrnF`，皆為 30pt**——R4 N2 拿掉的那個間距其實
+    /// 是對的，R4 當時的懷疑（沒有 Pen 存取權，只能用節點結構猜）錯怪了它。這裡補回等效的
+    /// 6pt（`AppSpacing.tight`／`$sp-tight`，對應稿面「Head 自身 `padding-top`」那段）：
+    /// 24（grabber 上緣留白）＋5（capsule 高）＋6（這裡補的）＋24（summarySection 自己的
+    /// `padding-top`）之後，capsule 下緣到標題的可視間距回到 30，與 `rTEGf`／`Q7HrnF` 兩塊板
+    /// 的實測值一致。見 `UploadQueueSheetUITests
+    /// .test_uploadQueueSheetNormal_grabberToTitleSpacingIsThirtyPoints`（相對量法，沿用
+    /// footer 反推縮放係數那套，不用查證過的絕對常數）。
     private var grabber: some View {
         Capsule()
             .fill(Color.lsBorder)
             .frame(width: 36, height: 5)
             .padding(.top, AppSpacing.block)
+            .padding(.bottom, AppSpacing.tight)
             .accessibilityHidden(true)
     }
 
