@@ -44,6 +44,10 @@ import re
 import subprocess
 import sys
 
+# LS-202：本模組若再 import 同目錄模組，不得在 scripts/gates/ 留 __pycache__（worktree dirty、cleanup 需 --force，LS-96 c4c10429）；
+# 自己被 import 時的 .pyc 由 .gitignore `__pycache__/` 兜底（模組內的旗標擋不住「被別人 import」那一次）
+sys.dont_write_bytecode = True
+
 ID_TOKEN_RE = re.compile(r"(?<![A-Za-z0-9])[A-Za-z0-9]{5,6}(?![A-Za-z0-9])")
 NOTES_NAME_RE = re.compile(r"實作註記|Handoff Notes")
 CLAUSE_SPLIT_RE = re.compile(r"[。；;\n，,]")
