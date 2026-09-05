@@ -59,11 +59,15 @@ struct UploadQueueSheetView: View {
 
     /// `ap80H`／`Sxq8Z`：自畫 grabber，取代系統 `.presentationDragIndicator`（見檔頭「Grabber
     /// 改自畫」段）。純 `Shape`＋`accessibilityHidden`，`tap-target-check.sh` 不會量到它。
+    /// merge-review R3 m1／m2：顏色對稿是 `$border`（不是 `$control-line`）；`g3fRwP` 的
+    /// grabber 區域本身高 16pt（5pt Capsule 在其中垂直置中），上緣留白（padding-top）是 24
+    /// （`$sp-block`），不是 8。
     private var grabber: some View {
         Capsule()
-            .fill(Color.lsControlLine)
+            .fill(Color.lsBorder)
             .frame(width: 36, height: 5)
-            .padding(.top, AppSpacing.label)
+            .frame(height: 16)
+            .padding(.top, AppSpacing.block)
             .accessibilityHidden(true)
     }
 
@@ -104,6 +108,15 @@ struct UploadQueueSheetView: View {
                 retryAllButton
             }
         }
+        // merge-review R3 M1（major）：生產常態（無失敗、無續傳橫幅）下這個 VStack 裡完全
+        // 沒有任何會撐寬到滿版的子元件（`retryAllButton`／`resumeBanner` 平常靠自己的
+        // `.frame(maxWidth: .infinity)` 撐寬，但這兩個常態下都不會渲染）——`body` 最外層的
+        // `VStack(spacing: 0)` 沒有指定 `alignment`（預設 `.center`，`grabber` 需要維持水平
+        // 置中，不能整個外層改成 `.leading`），這個 VStack 因此會用自己最窄子項的寬度當
+        // 整體寬度，被外層置中，reviewer 實測群標題 x 跑到 119.3（應為 24）。強制這裡
+        // `.frame(maxWidth: .infinity, alignment: .leading)`，不依賴「裡面剛好有東西撐滿」
+        // 這個易碎的隱性前提。
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// 「N 張等候上傳、M 張上傳中」——零的那半不出現（`design/littlesprout.pen` 稿面只示範
@@ -169,6 +182,10 @@ struct UploadQueueSheetView: View {
                 }
             }
         }
+        // merge-review R3 M1：同 `summarySection` 的坑——常態下（例如只有一個群、列內容本身
+        // 不夠寬）這個 VStack 會被外層預設 `.center` 對齊的 `body` VStack 水平置中，不是貼齊
+        // `screenPad`。理由與修法同上，見該處註解。
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Footer
@@ -237,6 +254,30 @@ extension UploadQueueStore {
             .init(upload(), enqueuedAt: now.addingTimeInterval(-2 * 60), state: .uploading(progress: 0.42)),
             .init(upload(), enqueuedAt: now.addingTimeInterval(-3 * 60), state: .completed),
             .init(upload(), enqueuedAt: now.addingTimeInterval(-3.5 * 60), state: .completed)
+        ])
+        return store
+    }
+
+    /// merge-review R3 M1：生產「常態」樣本——沒有任何失敗（不觸發 `retryAllButton`）、沒有
+    /// 續傳橫幅（`resumedFromInterruption` 維持預設 `false`）、`uploading` 也不帶百分比。
+    /// `previewSample()` 為了一次展示所有狀態，`summarySection` 裡永遠至少有一個會撐滿寬度
+    /// 的子元件（續傳橫幅或重試列），因此測不出「完全沒有撐寬元件時整塊被置中」這個 bug
+    /// （reviewer 在生產常態下量到群標題 x=119.3，應為 24）。這個樣本刻意最小、最平常，
+    /// 專門用來釘住這個回歸。
+    static func previewNormalSample() -> UploadQueueStore {
+        let store = UploadQueueStore(familyID: UUID(), mediaUploadService: PreviewMediaUploadService())
+        let now = Date()
+        func upload() -> PendingUpload {
+            PendingUpload(
+                kind: .photo(data: Data(), fileExtension: "jpg"), thumbnail: nil,
+                pixelSize: PixelSize(width: 4, height: 3)
+            )
+        }
+        store.seedForPreview([
+            .init(upload(), enqueuedAt: now.addingTimeInterval(-60), state: .waiting),
+            .init(upload(), enqueuedAt: now.addingTimeInterval(-30), state: .uploading(progress: nil)),
+            .init(upload(), enqueuedAt: now.addingTimeInterval(-180), state: .completed),
+            .init(upload(), enqueuedAt: now.addingTimeInterval(-200), state: .completed)
         ])
         return store
     }

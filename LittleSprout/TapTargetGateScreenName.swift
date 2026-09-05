@@ -54,6 +54,11 @@ enum TapTargetGateScreenName: String {
     // 置頂、有／無進度百分比的上傳中列都在），讓這個新元件在有真正入口之前就能被機械 gate
     // 與 UITest 覆蓋，不必等 LS-166。
     case uploadQueueSheet = "UploadQueueSheetView"
+    // merge-review R3 M1：`previewSample()` 一次展示所有狀態，`summarySection` 裡永遠有
+    // 續傳橫幅或重試列撐滿寬度，測不出「完全沒有撐寬元件時整塊被置中」這個回歸（reviewer
+    // 在生產常態下量到群標題 x=119.3，應為 24）。這個 case 掛 `previewNormalSample()`（無
+    // 失敗、無續傳橫幅、`uploading` 不帶百分比），專門讓機械 gate／UITest 覆蓋這個常態。
+    case uploadQueueSheetNormal = "UploadQueueSheetViewNormal"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -83,6 +88,8 @@ enum TapTargetGateScreenName: String {
         case .diaryCardVideoBadges: return .staticText("影片 12:34")
         // 樣本固定含至少一列失敗（見 `UploadQueueStore.previewSample`），群標題必定渲染。
         case .uploadQueueSheet: return .staticText("沒有成功")
+        // 常態樣本沒有失敗群，用永遠會渲染的標題文字當 sentinel。
+        case .uploadQueueSheetNormal: return .staticText("正在新增照片")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

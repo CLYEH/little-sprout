@@ -44,4 +44,22 @@ final class UploadQueueSheetUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["已接續先前中斷的上傳。"].waitForExistence(timeout: 10))
     }
+
+    /// merge-review R3 M1（major）：生產常態（無失敗、無續傳橫幅）下 `summarySection`／
+    /// `rowsSection` 沒有任何撐寬子元件時曾被外層預設 `.center` 的 `body` VStack 水平置中——
+    /// reviewer 實測群標題 x=119.3，應為 24（`AppSpacing.screenPad`）。用
+    /// `.uploadQueueSheetNormal`（見 `UploadQueueStore.previewNormalSample()`）釘住兩處都
+    /// 貼齊左緣。
+    func test_uploadQueueSheetNormal_leftAlignsSummaryAndRows() {
+        let app = TapTargetMeasurement.launch(.uploadQueueSheetNormal)
+        TapTargetMeasurement.assertScreenRendered(.uploadQueueSheetNormal, in: app)
+
+        let title = app.staticTexts["正在新增照片"]
+        XCTAssertTrue(title.waitForExistence(timeout: 10))
+        XCTAssertEqual(title.frame.minX, 24, accuracy: 1, "標題應該貼齊 screenPad(24)，不是被置中")
+
+        let groupTitle = app.staticTexts["正在進行"]
+        XCTAssertTrue(groupTitle.waitForExistence(timeout: 10))
+        XCTAssertEqual(groupTitle.frame.minX, 24, accuracy: 1, "群標題應該貼齊 screenPad(24)，不是被置中")
+    }
 }

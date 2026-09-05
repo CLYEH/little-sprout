@@ -55,6 +55,8 @@ enum TapTargetGateHarness {
             diaryCardVideoBadgesHost
         case .uploadQueueSheet:
             uploadQueueSheetHost
+        case .uploadQueueSheetNormal:
+            uploadQueueSheetNormalHost
         case .selfTestTooSmall:
             // `.frame()` 直接接在 `Button(_:action:)` 後面不可靠：純文字、預設樣式的按鈕，
             // accessibility／hit-test frame 實測仍貼著文字本身的天然大小，不會被外層 `.frame`
@@ -345,6 +347,17 @@ enum TapTargetGateHarness {
         Color.lsBackground
             .sheet(isPresented: .constant(true)) {
                 UploadQueueSheetView(store: .previewSample())
+            }
+    }
+
+    /// merge-review R3 M1：生產「常態」樣本（無失敗、無續傳橫幅）——見
+    /// `UploadQueueStore.previewNormalSample()` 文件註解。
+    @MainActor
+    @ViewBuilder
+    private static var uploadQueueSheetNormalHost: some View {
+        Color.lsBackground
+            .sheet(isPresented: .constant(true)) {
+                UploadQueueSheetView(store: .previewNormalSample())
             }
     }
 

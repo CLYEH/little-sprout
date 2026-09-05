@@ -284,4 +284,34 @@ final class UploadQueueStoreTests: XCTestCase {
         XCTAssertEqual(store.failedCount, 2, "failedCount 含 LS002，不是只算可重試的")
         XCTAssertEqual(store.retryableFailedCount, 1, "retryableFailedCount 仍舊只算可重試的")
     }
+
+    // MARK: - merge-review R3 i1：payload 遺失時不該永遠卡在 .waiting
+
+    func test_start_missingPayloadWhileWaiting_failsInsteadOfHangingForever() async {
+        let mediaService = StubMediaUploadService()
+        let gate = AsyncStream<Void>.makeStream()
+        mediaService.setUploadPhotoHandler { _, _, _, _ in
+            var iterator = gate.stream.makeAsyncIterator()
+            _ = await iterator.next()
+            return UUID()
+        }
+        let store = UploadQueueStore(familyID: familyID, mediaUploadService: mediaService, maxConcurrentUploads: 1)
+        let blocking = makeUpload(tag: "blocking")
+        let broken = makeUpload(tag: "broken")
+
+        store.enqueue([blocking, broken])
+        XCTAssertEqual(store.waitingCount, 1, "並發上限 1：第二筆應該卡在等候中")
+
+        // 人為打破「.waiting 一定有 payload」的不變量——正常流程走不到這裡，見
+        // `debugForcePayloadNil` 文件註解。
+        store.debugForcePayloadNil(broken.id)
+
+        gate.continuation.finish()
+        await waitUntil { store.waitingCount == 0 }
+
+        guard case .failed(let reason) = store.rows.first(where: { $0.id == broken.id })?.state else {
+            return XCTFail("payload 遺失時不該永遠卡在 .waiting，應該翻成失敗")
+        }
+        XCTAssertEqual(reason, .server)
+    }
 }

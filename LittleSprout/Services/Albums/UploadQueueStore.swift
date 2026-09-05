@@ -165,10 +165,19 @@ final class UploadQueueStore {
     }
 
     private func start(_ id: UUID) {
+        guard var entry = entries[id] else { return }
         // `payload` 為 `nil` 只會發生在完成或不可重試失敗之後（見 `Entry.payload` 文件
-        // 註解）——這兩種狀態都不會再被 `advance()` 選中（不是 `.waiting`），這裡的
-        // `guard let payload` 是防禦性的最後一道線，不是預期會走到的分支。
-        guard var entry = entries[id], let payload = entry.payload else { return }
+        // 註解）——這兩種狀態都不會再被 `advance()` 選中（不是 `.waiting`），理論上走不到
+        // 這裡。merge-review R3 i1：R2 版本這裡是靜默 `return`——萬一這個不變量哪天被打破
+        // （`.waiting` 卻沒有 payload），這一筆會永遠卡在「等候上傳」，沒有任何錯誤、沒有
+        // 前進，使用者跟 QA 都看不出哪裡壞了。改成翻成失敗（Rule 11 fail loud）：至少畫面上
+        // 看得到「伺服器忙碌，請稍後再試」，不是無限期的沉默等候。`.server` 是可重試分類，
+        // 使用者按「重試」會立刻再次撞進這個分支、再次失敗——不是真的能恢復，但比永遠卡住
+        // 誠實，且不會造成無窮迴圈（每次重試都是使用者主動觸發的一次性動作）。
+        guard let payload = entry.payload else {
+            finish(id, state: .failed(.server))
+            return
+        }
         entry.state = .uploading(progress: nil)
         let pixelSize = entry.pixelSize
         entries[id] = entry
@@ -246,6 +255,13 @@ final class UploadQueueStore {
     /// （merge-review R2 F3）。
     func debugPayload(_ id: UUID) -> PendingUpload.Kind? {
         entries[id]?.payload
+    }
+
+    /// 測試用途：強制清空某筆的 payload，人為打破「`.waiting` 一定有 payload」這個不變量
+    /// （merge-review R3 i1）——正常流程走不到這個狀態，只能用這個鉤子模擬，驗證
+    /// `start(_:)` 撞到這個不變量被打破時會翻成失敗，不是永遠卡住。
+    func debugForcePayloadNil(_ id: UUID) {
+        entries[id]?.payload = nil
     }
     #endif
 }
