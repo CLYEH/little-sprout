@@ -173,9 +173,9 @@ final class FamilyStoreMembersTests: XCTestCase {
         XCTAssertNotNil(store.myFamily, "伺服器拒絕時不該提前把 myFamily 歸零，維持在 03e 畫面上")
     }
 
-    // MARK: - mustTransferOwnershipBeforeLeaving（03d／03e client 端預判）
+    // MARK: - leaveFlowCase（03d／03e／03e 單人變體 client 端預判，R3 merge-review R2 M-A）
 
-    func test_mustTransferOwnershipBeforeLeaving_soleOwnerWithOtherMembers_true() async {
+    func test_leaveFlowCase_soleOwnerWithOtherMembers_mustTransferFirst() async {
         let (store, stub) = makeStore()
         let family = self.family
         stub.setFetchMyFamilyHandler { family }
@@ -184,10 +184,10 @@ final class FamilyStoreMembersTests: XCTestCase {
             makeMember(id: myID, role: .owner, name: "陳美玲"), makeMember(id: otherID, role: .member, name: "陳阿公")
         ])
 
-        XCTAssertTrue(store.mustTransferOwnershipBeforeLeaving)
+        XCTAssertEqual(store.leaveFlowCase, .mustTransferFirst)
     }
 
-    func test_mustTransferOwnershipBeforeLeaving_coOwnerExists_false() async {
+    func test_leaveFlowCase_coOwnerExists_leave() async {
         let (store, stub) = makeStore()
         let family = self.family
         stub.setFetchMyFamilyHandler { family }
@@ -196,20 +196,23 @@ final class FamilyStoreMembersTests: XCTestCase {
             makeMember(id: myID, role: .owner, name: "陳美玲"), makeMember(id: otherID, role: .owner, name: "陳爸爸")
         ])
 
-        XCTAssertFalse(store.mustTransferOwnershipBeforeLeaving, "還有另一位 owner，退出不會讓家庭懸空")
+        XCTAssertEqual(store.leaveFlowCase, .leave, "還有另一位 owner，退出不會讓家庭懸空")
     }
 
-    func test_mustTransferOwnershipBeforeLeaving_soleOwnerSoleMember_false() async {
+    func test_leaveFlowCase_soleOwnerSoleMember_soleMember() async {
         let (store, stub) = makeStore()
         let family = self.family
         stub.setFetchMyFamilyHandler { family }
         await store.syncOwner(to: myID)
         store.seedMembersForPreview([makeMember(id: myID, role: .owner, name: "陳美玲")])
 
-        XCTAssertFalse(store.mustTransferOwnershipBeforeLeaving, "唯一成員退出等同刪家庭，走 delete_my_account，不需要先轉移")
+        // R3（merge-review R2 M-A）：R2 之前這裡斷言 `false`（誤落到 03d，實際送出必撞
+        // LS001）——現在獨立成 `.soleMember`，`FamilyMembersView.startLeaveFlow()` 對這個
+        // 狀態改顯示「無法退出家庭」提示，不會再送出任何 DELETE 請求。
+        XCTAssertEqual(store.leaveFlowCase, .soleMember, "唯一 owner 兼唯一成員——退出無意義，改導向刪除帳號")
     }
 
-    func test_mustTransferOwnershipBeforeLeaving_notOwner_false() async {
+    func test_leaveFlowCase_notOwner_leave() async {
         let (store, stub) = makeStore()
         let family = self.family
         stub.setFetchMyFamilyHandler { family }
@@ -218,16 +221,19 @@ final class FamilyStoreMembersTests: XCTestCase {
             makeMember(id: myID, role: .member, name: "陳美玲"), makeMember(id: otherID, role: .owner, name: "陳爸爸")
         ])
 
-        XCTAssertFalse(store.mustTransferOwnershipBeforeLeaving, "不是 owner 的成員退出不受這個不變量限制")
+        XCTAssertEqual(store.leaveFlowCase, .leave, "不是 owner 的成員退出不受這個不變量限制")
     }
 
-    // MARK: - B1（merge-review R1 blocker）：獨自建立家庭者退出——client 端預判 03d，
-    // 伺服器撞 LS001，UI 必須用 03e 文案接住，不是泛用「無法完成這個操作」。
+    // MARK: - B1（merge-review R1 blocker）：獨自建立家庭者退出——UI 端已經在 R3 用
+    // `leaveFlowCase == .soleMember` 擋下、不再送出 DELETE（見上）；這裡保留 `leaveFamily()`
+    // 直接呼叫的防禦性回歸測試——萬一日後有呼叫路徑繞過 `startLeaveFlow()` 的分流（例如深連結
+    // 或未來的批次操作）直接呼叫這支 store 方法，伺服器 LS001 仍必須映射成 03e 同一句文案，
+    // 不能落回泛用「無法完成這個操作」。
 
     /// 重現 B1 實測情境逐字：使用者自己建了家庭、還沒邀請任何人——`members` 只有自己一列
-    /// （owner），`mustTransferOwnershipBeforeLeaving` 判斷不需要轉移（03d），但真的送出
-    /// `DELETE family_members` 會撞既有的 `private.enforce_family_has_owner()`（LS001，
-    /// 家庭剩 0 owner）。
+    /// （owner），`leaveFlowCase` 判斷是 `.soleMember`（R3 之後 UI 不會再送出這個請求），但
+    /// 直接呼叫 `store.leaveFamily()`（繞過 UI 分流）仍會撞既有的
+    /// `private.enforce_family_has_owner()`（LS001，家庭剩 0 owner）。
     func test_leaveFamily_soleOwnerSoleMember_serverRejectsLS001_messageReusesOwnerTransferText() async {
         let (store, stub) = makeStore()
         let family = self.family
@@ -241,8 +247,9 @@ final class FamilyStoreMembersTests: XCTestCase {
             )
         }
 
-        // client 端預判：不需要先轉移（會顯示 03d，不是 03e）——這正是 B1 的死路起點。
-        XCTAssertFalse(store.mustTransferOwnershipBeforeLeaving)
+        // R3：client 端預判是 `.soleMember`——`startLeaveFlow()` 不會再走到這裡，這支測試繞過
+        // UI 直接呼叫 store 方法，驗證伺服器端防線本身仍然正確（防禦性回歸，不是死路起點）。
+        XCTAssertEqual(store.leaveFlowCase, .soleMember)
 
         let success = await store.leaveFamily()
 

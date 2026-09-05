@@ -115,4 +115,38 @@ final class FamilyMemberActionVisibilityTests: XCTestCase {
     func test_familyMemberActionMessage_networkError_returnsNil() {
         XCTAssertNil(AppError.network(message: "offline").familyMemberActionMessage)
     }
+
+    // MARK: - resolveLeaveFlowCase（R3 merge-review R2 M-A：三態純函式）
+
+    func test_resolveLeaveFlowCase_notOwner_leave() {
+        XCTAssertEqual(
+            resolveLeaveFlowCase(isOwner: false, otherMembersCount: 3, hasOtherOwner: false), .leave,
+            "不是 owner 的成員退出不受這個不變量限制，一律走一般退出確認"
+        )
+    }
+
+    func test_resolveLeaveFlowCase_ownerWithOtherMembersNoOtherOwner_mustTransferFirst() {
+        XCTAssertEqual(
+            resolveLeaveFlowCase(isOwner: true, otherMembersCount: 3, hasOtherOwner: false), .mustTransferFirst,
+            "唯一 owner、家庭還有其他成員——退出前必須先轉移，否則會撞 LS057"
+        )
+    }
+
+    func test_resolveLeaveFlowCase_ownerWithOtherOwner_leave() {
+        XCTAssertEqual(
+            resolveLeaveFlowCase(isOwner: true, otherMembersCount: 1, hasOtherOwner: true), .leave,
+            "還有另一位 owner，退出不會讓家庭懸空"
+        )
+    }
+
+    func test_resolveLeaveFlowCase_ownerSoleMember_soleMember() {
+        // M-A 核心案例：R2 之前這個輸入組合誤落到 `.leave`（03d），實際送出必然撞 LS001。
+        // 本測試的 mutation 實測紀錄（把 `guard otherMembersCount > 0 else { return .soleMember }`
+        // 誤判成「有其他成員」）見 PR body／handoff「Mutation」段——這裡不留模擬版本，實測時
+        // 直接改生產碼跑一次、貼斷言原文、再還原。
+        XCTAssertEqual(
+            resolveLeaveFlowCase(isOwner: true, otherMembersCount: 0, hasOtherOwner: false), .soleMember,
+            "唯一 owner 兼唯一成員——退出無意義，改導向刪除帳號，不是重試一次注定失敗的退出"
+        )
+    }
 }
