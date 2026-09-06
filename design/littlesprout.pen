@@ -88832,7 +88832,9 @@
               "type": "frame",
               "id": "GaYB6",
               "name": "Feed",
+              "clip": true,
               "width": "fill_container",
+              "height": 992,
               "layout": "vertical",
               "gap": "$sp-section",
               "children": [
@@ -123353,7 +123355,7 @@
       "name": "LS-152 / 08 EULA 同意頁",
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 912,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -123468,6 +123470,7 @@
                       "type": "frame",
                       "id": "LaIZs",
                       "name": "Card Head",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
@@ -123486,6 +123489,8 @@
                           "id": "WeWvD",
                           "name": "Label",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "對冒犯性內容零容忍",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
@@ -152379,6 +152384,7 @@
                       "type": "frame",
                       "id": "i7vE9",
                       "name": "Card Head",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
@@ -152397,6 +152403,8 @@
                           "id": "U6Zy0l",
                           "name": "Label",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "對冒犯性內容零容忍",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
@@ -152666,7 +152674,7 @@
       "name": "LS-152 / 08b EULA 同意頁 · 首次登入",
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 940,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -152781,6 +152789,7 @@
                       "type": "frame",
                       "id": "Fe4AH",
                       "name": "Card Head",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
@@ -152799,6 +152808,8 @@
                           "id": "P6Yg7",
                           "name": "Label",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "對冒犯性內容零容忍",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
@@ -153064,7 +153075,7 @@
       "type": "frame",
       "id": "RC7bN",
       "x": 22795,
-      "y": 24049,
+      "y": 24137,
       "name": "A11y / 08b EULA 同意頁 · 首次登入 · Dynamic Type AX3",
       "theme": {
         "size": "ax3"
@@ -153186,6 +153197,7 @@
                       "type": "frame",
                       "id": "GRQEu",
                       "name": "Card Head",
+                      "width": "fill_container",
                       "gap": "$sp-label",
                       "alignItems": "center",
                       "children": [
@@ -153204,6 +153216,8 @@
                           "id": "gBOIV",
                           "name": "Label",
                           "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "對冒犯性內容零容忍",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
