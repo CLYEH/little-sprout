@@ -9,7 +9,7 @@ extension TapTargetGateHarness {
     /// 同步灌好狀態（同 `FamilyStore.preview(withFamily:)` 的既有作法）。
     @MainActor
     static var eulaConsentHost: some View {
-        EULAConsentView(eulaStore: .preview(shouldPresent: true), userID: UUID(), onDisagree: {})
+        EULAConsentView(eulaStore: .preview(shouldPresent: true), onDisagree: {})
     }
 
     /// `DiaryDeleteConfirmationSheet` 沒有免登入即可到達的產品入口（`DiaryDetailView` 需要
@@ -71,8 +71,9 @@ extension TapTargetGateHarness {
         )
         return AuthenticatedGate(
             authStore: authStore, familyStore: familyStore, childrenStore: .preview(), timelineStore: .preview(),
-            albumsStore: .preview(), eulaStore: .preview(shouldPresent: true), diaryAPIClient: PreviewDiaryAPIClient(),
-            mediaUploadService: PreviewMediaUploadService(), pendingInviteCode: .constant(nil)
+            albumsStore: .preview(), eulaStore: .preview(shouldPresent: true, judgedUserID: userID),
+            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
+            pendingInviteCode: .constant(nil)
         )
         .environment(\.horizontalSizeClass, .compact)
     }

@@ -67,6 +67,8 @@ struct AuthenticatedRootView: View {
     let childrenStore: ChildrenStore
     let timelineStore: TimelineStore
     let albumsStore: AlbumsStore
+    /// LS-190 R2（merge-review R1 B2(a)）：轉手往下傳到 `SettingsView`，登出時歸零。
+    let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
 
@@ -78,14 +80,14 @@ struct AuthenticatedRootView: View {
             if horizontalSizeClass == .regular {
                 SectionSplitView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
-                    timelineStore: timelineStore, albumsStore: albumsStore, diaryAPIClient: diaryAPIClient,
-                    mediaUploadService: mediaUploadService, selection: $selection
+                    timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
+                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService, selection: $selection
                 )
             } else {
                 SectionTabView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
-                    timelineStore: timelineStore, albumsStore: albumsStore, diaryAPIClient: diaryAPIClient,
-                    mediaUploadService: mediaUploadService, selection: $selection
+                    timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
+                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService, selection: $selection
                 )
             }
         }
@@ -135,6 +137,7 @@ private struct SectionTabView: View {
     let childrenStore: ChildrenStore
     let timelineStore: TimelineStore
     let albumsStore: AlbumsStore
+    let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
     @Binding var selection: AppSection
@@ -146,7 +149,7 @@ private struct SectionTabView: View {
                     SectionContentView(
                         section: section, authStore: authStore, familyStore: familyStore,
                         childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-                        diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
+                        eulaStore: eulaStore, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
                     )
                     // LS-136 實測發現（R1）：掛在外層 `TabView` 的 `.toolbar(.hidden, for: .tabBar)`
                     // 只隱藏視覺渲染，底下的原生 `UITabBarItem` 仍留在 accessibility tree 裡、
@@ -182,6 +185,7 @@ private struct SectionSplitView: View {
     let childrenStore: ChildrenStore
     let timelineStore: TimelineStore
     let albumsStore: AlbumsStore
+    let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
     @Binding var selection: AppSection
@@ -199,7 +203,7 @@ private struct SectionSplitView: View {
                 SectionContentView(
                     section: selection, authStore: authStore, familyStore: familyStore,
                     childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
+                    eulaStore: eulaStore, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
                 )
             }
         }
@@ -224,6 +228,7 @@ struct SectionContentView: View {
     let childrenStore: ChildrenStore
     let timelineStore: TimelineStore
     let albumsStore: AlbumsStore
+    let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
 
@@ -246,7 +251,7 @@ struct SectionContentView: View {
         case .settings:
             SettingsView(
                 authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
-                timelineStore: timelineStore, albumsStore: albumsStore
+                timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore
             )
         }
     }
@@ -256,7 +261,7 @@ struct SectionContentView: View {
 #Preview("Compact") {
     AuthenticatedRootView(
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
-        albumsStore: .preview(), diaryAPIClient: PreviewDiaryAPIClient(),
+        albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), diaryAPIClient: PreviewDiaryAPIClient(),
         mediaUploadService: PreviewMediaUploadService()
     )
     .environment(\.horizontalSizeClass, .compact)
@@ -265,7 +270,7 @@ struct SectionContentView: View {
 #Preview("Regular") {
     AuthenticatedRootView(
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
-        albumsStore: .preview(), diaryAPIClient: PreviewDiaryAPIClient(),
+        albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), diaryAPIClient: PreviewDiaryAPIClient(),
         mediaUploadService: PreviewMediaUploadService()
     )
     .environment(\.horizontalSizeClass, .regular)

@@ -23,6 +23,11 @@ struct SettingsView: View {
     /// LS-165：跟 `timelineStore` 同理，登出時歸零——相簿 tab 首頁隨 app 存活，不清掉的話
     /// 下一位在同一台裝置登入的使用者會先看到上一個家庭殘留的相簿列表。
     let albumsStore: AlbumsStore
+    /// LS-190 R2（merge-review R1 B2(a)）：跟上面幾個 store 同理，登出時歸零——`EULAStore`
+    /// 隨 app 存活，不清掉的話同機換帳號的新使用者會沿用上一位使用者的 `shouldPresent`，
+    /// 繞過 EULA 閘門（`AuthenticatedGate.disagreeAndSignOut()` 那條路徑已經有這行，這裡補上
+    /// 一般登出路徑，兩條路徑都要歸零）。
+    let eulaStore: EULAStore
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var isSigningOut = false
@@ -335,6 +340,8 @@ struct SettingsView: View {
                 timelineStore.reset()
                 // LS-165：見上方 `albumsStore` 屬性文件註解。
                 albumsStore.reset()
+                // LS-190 R2：見上方 `eulaStore` 屬性文件註解。
+                eulaStore.reset()
             } catch {
                 errorMessage = AppError.map(error).userFacingMessage
             }
@@ -351,7 +358,7 @@ struct SettingsView: View {
                 id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
             childrenStore: .preview(), timelineStore: .preview(),
-            albumsStore: .preview()
+            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false)
         )
     }
 }
@@ -364,7 +371,7 @@ struct SettingsView: View {
                 id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
             childrenStore: .preview(), timelineStore: .preview(),
-            albumsStore: .preview()
+            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false)
         )
     }
     .environment(\.horizontalSizeClass, .regular)

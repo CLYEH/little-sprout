@@ -54,6 +54,11 @@ struct AuthenticatedGate: View {
                 ProgressView()
             }
         }
+        // LS-190 R2 informational-5（merge-review R1）：這兩支 `.task(id:)` 刻意併行送出，
+        // 不因為 EULA 尚未確認就延後家庭查詢的網路往返——`eulaGate` 已經確保使用者在 EULA
+        // 未知／需要顯示期間看不到任何家庭內容（把關在畫面層，不是在「要不要發請求」這一層），
+        // `shouldPresent == false` 時家庭查詢多半早已跑完，同意後幾乎無感切換。裁定維持現狀
+        // ：效能取捨，不是遺漏。
         .task(id: authStore.session?.userID) {
             guard let userID = authStore.session?.userID else { return }
             await eulaStore.checkStatus(userID: userID)
@@ -63,18 +68,24 @@ struct AuthenticatedGate: View {
         }
     }
 
+    /// LS-190 R2（merge-review R1 B2(b)）：判斷順序改成先看「這組結果是不是屬於 `userID`
+    /// 這位目前登入者」——`eulaStore.isKnown(for:)` 把 `.submitting` 與換帳號後
+    /// `judgedUserID` 還沒更新這兩種情況都視為「未知」，一律先擋在 loading，不會沿用上一位
+    /// 使用者殘留的 `shouldPresent == false` 誤放行到家庭查詢。`.failure` 只在屬於目前
+    /// `userID` 時才顯示重試（同一個原因：換帳號瞬間可能還看得到上一位使用者失敗的殘留
+    /// `checkState`，那個失敗不該被當成「這位使用者」的失敗）。
     @ViewBuilder
     private func eulaGate(userID: UUID) -> some View {
-        if case .failure(let error) = eulaStore.checkState {
+        if case .failure(let error) = eulaStore.checkState, eulaStore.judgedUserID == userID {
             // 重用 `FamilyLookupFailedView`（純泛型「訊息＋重試鈕」畫面，見該檔）——同一種
             // 網路失敗兜底樣式，不需要另外造一份幾乎一樣的畫面。
             FamilyLookupFailedView(message: error.userFacingMessage) {
                 Task { await eulaStore.checkStatus(userID: userID) }
             }
-        } else if eulaStore.shouldPresent == nil {
+        } else if !eulaStore.isKnown(for: userID) {
             ProgressView("正在確認條款狀態…")
         } else if eulaStore.shouldPresent == true {
-            EULAConsentView(eulaStore: eulaStore, userID: userID, onDisagree: disagreeAndSignOut)
+            EULAConsentView(eulaStore: eulaStore, onDisagree: disagreeAndSignOut)
         } else {
             familyGate
         }
@@ -93,8 +104,8 @@ struct AuthenticatedGate: View {
             if familyStore.myFamily != nil {
                 AuthenticatedRootView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
-                    timelineStore: timelineStore, albumsStore: albumsStore, diaryAPIClient: diaryAPIClient,
-                    mediaUploadService: mediaUploadService
+                    timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
+                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
                 )
             } else {
                 ForkView(authStore: authStore, familyStore: familyStore, pendingInviteCode: $pendingInviteCode)

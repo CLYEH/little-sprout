@@ -18,10 +18,16 @@ import SwiftUI
 /// 不同意出口」列在 R2 INFO、未列入 VR 必做清單，稿面 `z042Yg`／`rh2Q1` 只畫了「我已閱讀並
 /// 同意」這一顆實心鈕，沒有畫拒絕動作）——票文明文要求「不同意 → 登出回歡迎頁」是功能性需求，
 /// 借用本設計系統既有的 `cmp/Button Text` 純文字次要動作語彙（同「取消」／「之後再說」的視覺
-/// 家族）補上，不是自創新視覺語言。已在 handoff 風險欄註記，供設計事後補稿覆核。
+/// 家族）補上，不是自創新視覺語言。**merge-review R1 裁定不退修**（`minHeight: 48` 達標、
+/// 票文明文要求、視覺合理），排入 LS-208 補這一顆的稿面變體，不擋本票併入。
+///
+/// **首次登入時仍顯示「使用條款更新」／「我們更新了《使用條款》」**（merge-review R1 m4，
+/// PLAUSIBLE，裁定不修）：逐字對稿 `z042Yg`（`p1Y1H4`／`hSVAP`）完全相符——稿面只畫了「版本
+/// 更新」這個情境，LS-152 Notes 沒有把「首次登入」的文案變體列進 VR 必做清單。對第一次註冊、
+/// 從未見過任何條款的使用者而言這句話字面上不精確，但這是**稿的缺口**、不是本票實作偏離稿面
+/// ——排入 LS-208 範圍 7（08 首次登入變體），本票不越權自己另外設計一套文案。
 struct EULAConsentView: View {
     let eulaStore: EULAStore
-    let userID: UUID
     /// 「不同意」的收尾——登出＋清空各 store 本地狀態，由持有那些 store 的呼叫端
     /// （`RootView.AuthenticatedGate`）實作，本畫面不直接依賴 `FamilyStore`／`ChildrenStore`／
     /// `TimelineStore`／`AlbumsStore`。`async throws`：登出失敗（少見，例如網路問題）時本畫面
@@ -166,7 +172,7 @@ struct EULAConsentView: View {
     }
 
     private func agreeTapped() {
-        Task { await eulaStore.accept(userID: userID) }
+        Task { await eulaStore.accept() }
     }
 
     private func disagreeTapped() {
@@ -218,6 +224,6 @@ private extension EULAConsentView {
 
 #if DEBUG
 #Preview("首次登入") {
-    EULAConsentView(eulaStore: .preview(shouldPresent: true), userID: UUID(), onDisagree: {})
+    EULAConsentView(eulaStore: .preview(shouldPresent: true), onDisagree: {})
 }
 #endif

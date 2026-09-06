@@ -14,12 +14,19 @@ final class StubEULAAPIClient: EULAAPIClient, @unchecked Sendable {
         var fetchAcceptedVersionHandler: FetchAcceptedVersionHandler = { _ in nil }
         var acceptEULAHandler: AcceptEULAHandler = { _ in }
         var acceptEULACalls: [String] = []
+        /// LS-190 R2 m1：`EULAStoreTests` 用來斷言「`guard !isSubmitting` 真的擋掉了重複呼叫」
+        /// ——沒有這個計數器測不出「guard 生效」跟「handler 本身很快回來」的差別。
+        var fetchCurrentVersionCallCount = 0
     }
 
     private let box = OSAllocatedUnfairLock(initialState: Box())
 
     var acceptEULACalls: [String] {
         box.withLock { $0.acceptEULACalls }
+    }
+
+    var fetchCurrentVersionCallCount: Int {
+        box.withLock { $0.fetchCurrentVersionCallCount }
     }
 
     func setFetchCurrentVersionHandler(_ handler: @escaping FetchCurrentVersionHandler) {
@@ -35,6 +42,7 @@ final class StubEULAAPIClient: EULAAPIClient, @unchecked Sendable {
     }
 
     func fetchCurrentVersion() async throws -> String {
+        box.withLock { $0.fetchCurrentVersionCallCount += 1 }
         let handler = box.withLock { $0.fetchCurrentVersionHandler }
         return try await handler()
     }
