@@ -27162,6 +27162,193 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "KI61A",
+          "name": "Sec ⑧ 壓印小字 — $text-secondary on $print-paper 深色（LS-208 範圍 4）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            44,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "TNidB",
+              "name": "SH",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "MNdGx",
+                  "name": "T",
+                  "fill": "$text-primary",
+                  "content": "⑧ 壓印小字 Imprint — $text-secondary on $print-paper 深色提案（LS-208 範圍 4）",
+                  "fontFamily": "$font",
+                  "fontSize": 22,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "vCp8T",
+                  "name": "S",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-96 comment 0617b9ae (3)：深色板壓印小字（$text-secondary on dark paper）對比偏低，量 WCAG 對比後決定是否調整 token。全稿逐節點核對（96 筆 Imprint Caption／Lab Imprint 實例）：目前全部一致使用 $print-ink-secondary，沒有任何節點誤用 $text-secondary 於印刷紙面情境——本項是針對「這兩個 token 搭配起來對比多低」的預防性量測，不是修既有缺陷。裁決：不調整 $text-secondary 數值（它是全稿 139 處 app 介面次要文字對 $bg／$surface 情境校準的通用 token，9.41:1／7.91:1 皆達 AAA，調整會牽動這 139 處既有正確用法）；改為在此明文記錄禁用guardrail：印刷紙面（$print-paper）情境的次要墨色一律使用 $print-ink-secondary，不得使用 $text-secondary。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VBNgU",
+              "name": "Row 1",
+              "width": "fill_container",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "J3O4XU",
+                  "name": "Cell Before",
+                  "width": 616,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ca3fw",
+                      "name": "h",
+                      "fill": "$text-primary",
+                      "content": "❌ Before（若誤用 $text-secondary，禁用示範）",
+                      "fontFamily": "$font",
+                      "fontSize": 17,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "s7aMB6",
+                      "name": "Swatch",
+                      "theme": {
+                        "mode": "dark"
+                      },
+                      "width": "fill_container",
+                      "fill": "$print-paper",
+                      "cornerRadius": "$radius-md",
+                      "padding": 24,
+                      "justifyContent": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "zlyKR",
+                          "name": "Sample",
+                          "fill": "$text-secondary",
+                          "content": "2 歲 3 個⁠月",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "xkepQ",
+                      "name": "m",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "$text-secondary #D3AEB2 對 $print-paper（深）#E8D9D4 ＝ 1.46:1 ✗（遠低於 WCAG AA 4.5:1）——若被誤用於印刷紙面上的次要文字會近乎不可讀。",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Mv61K",
+                  "name": "Cell After",
+                  "width": 616,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "N0AoFY",
+                      "name": "h",
+                      "fill": "$text-primary",
+                      "content": "✓ After（既有正確用法，全稿 96 處一致）",
+                      "fontFamily": "$font",
+                      "fontSize": 17,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Tgzsx",
+                      "name": "Swatch",
+                      "theme": {
+                        "mode": "dark"
+                      },
+                      "width": "fill_container",
+                      "fill": "$print-paper",
+                      "cornerRadius": "$radius-md",
+                      "padding": 24,
+                      "justifyContent": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "cKvkS",
+                          "name": "Sample",
+                          "fill": "$print-ink-secondary",
+                          "content": "2 歲 3 個⁠月",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "q7thj",
+                      "name": "m",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "$print-ink-secondary #553040 對 $print-paper（深）#E8D9D4 ＝ 8.13:1 ✓（達 WCAG AAA）——紙上墨色不隨深色模式反轉（brand 十條 #2），全稿 Imprint Caption／Lab Imprint 皆已如此。",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "u5ltp",
+              "name": "Verdict",
+              "fill": "$text-secondary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "結論：≥4.5:1 一支（$print-ink-secondary，8.13）、<4.5:1 一支（$text-secondary，1.46，屬預防性量測非既有缺陷）。不調整 $text-secondary 數值；guardrail 記錄於此，供下一輪設計／實作核對。本項就此結案。",
+              "lineHeight": 1.5,
+              "fontFamily": "$font",
+              "fontSize": 13,
+              "fontWeight": "700"
+            }
+          ]
         }
       ]
     },
