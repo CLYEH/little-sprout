@@ -41,4 +41,7 @@ enum QAAccessibilityID {
     /// LS-193：04e 最終確認的「輸入『刪除帳號』」欄——沒有固定 label（同 `LabeledTextField`
     /// 慣例，見 `DeleteAccountFlowView+FinalConfirm.swift`），改用 identifier。
     static let deleteAccountConfirmField = "qa.deleteAccount.confirmField"
+    /// LS-217：01 設定頁「推播通知」列——`value`（「開啟」／「關閉」）隨
+    /// `UNAuthorizationStatus` 而變，同 `settingsStorageRow` 的既有理由改用 identifier。
+    static let settingsPushRow = "qa.settings.pushRow"
 }

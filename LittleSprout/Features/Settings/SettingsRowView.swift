@@ -19,6 +19,11 @@ struct SettingsRowView: View {
     var value: String?
     var isDestructive: Bool = false
     var showsChevron: Bool = true
+    /// LS-217：「推播通知」列用——非 nil 時最右側改畫純視覺 Toggle pill（稿面 `y7KAW`
+    /// `DVEow` 的 `qsxOM`／`szlHS`：51×31 track＋27×27 knob），取代 chevron；不吃互動——
+    /// `SettingsView` 外層 `Button` 才是整列熱區（Notes `UU5Rm`：「點擊區＝整列，Toggle 只是
+    /// 視覺」），這裡只負責畫出跟 `value` 一致的開／關視覺。
+    var toggleIsOn: Bool?
 
     var body: some View {
         HStack(spacing: AppSpacing.group) {
@@ -36,10 +41,12 @@ struct SettingsRowView: View {
                 }
             }
             Spacer(minLength: AppSpacing.group)
-            // 稿面「刪除帳號」列：icon／label 是 `$danger`，chevron 仍是 `$text-secondary`
-            // （`bZhuV` descendant `mW0Ox` 的覆寫值）——chevron 顏色刻意不跟 `isDestructive`
-            // 連動。
-            if showsChevron {
+            if let toggleIsOn {
+                PushToggleVisual(isOn: toggleIsOn)
+            } else if showsChevron {
+                // 稿面「刪除帳號」列：icon／label 是 `$danger`，chevron 仍是 `$text-secondary`
+                // （`bZhuV` descendant `mW0Ox` 的覆寫值）——chevron 顏色刻意不跟 `isDestructive`
+                // 連動。
                 Image(systemName: "chevron.right")
                     .appIconFrame(.small)
                     .foregroundStyle(Color.lsTextSecondary)
@@ -78,6 +85,29 @@ struct SettingsRowDivider: View {
         Rectangle()
             .fill(Color.lsBorder)
             .frame(height: 1)
+    }
+}
+
+/// LS-217：純視覺 Toggle pill（稿面 `y7KAW` `DVEow` 的 `qsxOM`／`szlHS`：51×31 track、
+/// 27×27 knob、2pt inset，`on` 態 `$accent`）——`SettingsRowView` 用，不接手勢（見該檔
+/// `toggleIsOn` 文件註解）。`off` 態稿面未畫（該板只示範已開啟的樣子），沿用既有
+/// `SecondaryButton`／`cmp/Button Secondary` 已在用的 `$control-line` 當中性關閉色。knob
+/// 白色為系統 `UISwitch`／SwiftUI `Toggle` 的標準慣例，同稿面 `szlHS` 的字面 `#FFFFFF`
+/// （不掛 theme，兩個模式的實體開關按鈕本來就都是白色）。
+private struct PushToggleVisual: View {
+    let isOn: Bool
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 15.5)
+            .fill(isOn ? Color.lsAccent : Color.lsControlLine)
+            .frame(width: 51, height: 31)
+            .overlay(alignment: isOn ? .trailing : .leading) {
+                Circle()
+                    .fill(Color.white)
+                    .padding(2)
+                    .shadow(color: .black.opacity(0.25), radius: 3, x: 0, y: 1)
+            }
+            .accessibilityHidden(true)
     }
 }
 
