@@ -34,6 +34,16 @@
         ]
       },
       {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/hooks/background-bash-guard.sh\" || exit 2",
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "mcp__linear__save_issue",
         "hooks": [
           {
