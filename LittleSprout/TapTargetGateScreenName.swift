@@ -100,10 +100,11 @@ enum TapTargetGateScreenName: String {
     // LS-190：EULA 同意頁——`EULAStore.preview(shouldPresent: true)` 同步灌狀態，不需要真的
     // 打網路即有代表性（同 `.legalDocumentSheet` 的既有理由）。
     case eulaConsent = "EULAConsentView"
-    // LS-190：刪除日記確認 sheet——`DiaryDetailView` 目前仍在 `tap-target-exemptions.txt`
-    // （需要完整日記＋附照資料才有代表性，本票未解除），這裡直接掛
-    // `DiaryDeleteConfirmationSheet` 本體，同 `uploadQueueSheetHost` 的既有作法：沒有免登入
-    // 即可到達的產品入口時，用常駐 `.sheet(isPresented: .constant(true))` 把 sheet 頂出來。
+    // LS-190 R2（merge-review R1 M1）：刪除日記確認 sheet——`DiaryDetailView` 沒有稿面內容
+    // 操作表列（稿 `vzYXz` 沒有這一列），入口與作者／owner 判斷留給 LS-189，這裡直接掛
+    // `DiaryDeleteConfirmationSheet` 本體，用 `TapTargetGateHarness.DismissableSheetHost`
+    // （真的 `@State` 綁定，不是 `.constant(true)`——見該檔文件註解，R2 informational-2
+    // 訂正舊註解的錯誤描述）把 sheet 頂出來。
     case deleteDiaryConfirmation = "DeleteDiaryConfirmation"
     // LS-190：刪除留言確認 sheet——留言 UI 本體（LS-22）／內容操作表（LS-189）皆尚未實作，
     // 這是目前唯一能觸達 `CommentDeleteConfirmationSheet` 的入口，同上一個 case 的理由。

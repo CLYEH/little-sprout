@@ -66,10 +66,7 @@ struct TimelineView: View {
         .navigationDestination(for: TimelineRoute.self) { route in
             switch route {
             case .diaryDetail(let diaryID):
-                DiaryDetailView(
-                    diaryID: diaryID, timelineStore: timelineStore, childrenStore: childrenStore,
-                    diaryAPIClient: diaryAPIClient
-                )
+                DiaryDetailView(diaryID: diaryID, timelineStore: timelineStore, childrenStore: childrenStore)
             }
         }
         .navigationDestination(isPresented: $showsDiaryEditor) {
