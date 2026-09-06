@@ -13,4 +13,8 @@ enum FamilyOnboardingRoute: Hashable {
     /// client 時間（近似 `join_requests.created_at`，供「送出時間」顯示，不必等第一次輪詢
     /// 回來才有值）。
     case joinWaiting(requestID: UUID, familyID: UUID, familyName: String, submittedAt: Date)
+    /// LS-193 merge-review R1 M2：停權（`LS052`）或註冊關閉（`LS054`）使用者卡在三岔路——
+    /// 「我有邀請碼」／「我要自己建立家庭」兩顆卡片都會被同一組錯誤碼擋下，這是唯一能讓他們
+    /// 走到 `DeleteAccountFlowView` 的入口，見 `ForkView.suspendedFooter` 文件註解。
+    case deleteAccount
 }
