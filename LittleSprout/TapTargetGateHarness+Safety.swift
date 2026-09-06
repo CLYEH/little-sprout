@@ -6,21 +6,25 @@ import SwiftUI
 /// `TapTargetGateHarness+Settings.swift`／`+Albums.swift` 從主檔拆分的既有先例（該檔已經很
 /// 接近 SwiftLint `file_length` 上限）。
 extension TapTargetGateHarness {
-    /// `hostView(for:)` 對這八個新 case 的分派——見該函式呼叫端註解（`function_body_length`
+    /// `hostView(for:)` 對這十二個新 case 的分派——見該函式呼叫端註解（`function_body_length`
     /// 上限）。純粹的「畫面名稱 → View」1:1 dispatch，跟主檔那支 switch 同一種形狀。
     @MainActor
     @ViewBuilder
+    // swiftlint:disable:next cyclomatic_complexity
     static func safetyHostView(for screen: TapTargetGateScreenName) -> some View {
         switch screen {
         case .contentActionsSheet: contentActionsSheetHost
         case .reportReasonSheet: reportReasonSheetHost
+        case .reportReasonSheetTargetGone: reportReasonSheetTargetGoneHost
         case .blockConfirmSheet: blockConfirmSheetHost
         case .ownerRemoveContentConfirmSheet: ownerRemoveContentConfirmSheetHost
         case .blockList: blockListHost
         case .reportInbox: reportInboxHost
         case .reportInboxEmpty: reportInboxEmptyHost
+        case .reportInboxResolveError: reportInboxResolveErrorHost
         case .diaryDetail: diaryDetailHost
         case .diaryDetailOwnContent: diaryDetailOwnContentHost
+        case .diaryDetailRoleNotReady: diaryDetailRoleNotReadyHost
         default:
             // 不會發生——呼叫端（`hostView(for:)`）只在 screen 屬於這八個 case 之一時才會
             // 轉呼叫這支函式；這裡仍需要窮舉分支讓編譯器接受，`fatalError` 讓誤用立刻爆炸
@@ -51,6 +55,21 @@ extension TapTargetGateHarness {
             ReportReasonSheet(
                 familyName: "陳家", familyID: UUID(), targetType: .comment, targetID: UUID(),
                 safetyAPIClient: PreviewSafetyAPIClient()
+            )
+        }
+    }
+
+    /// 05b LS026（target 跨家庭）變體——`reportContentError` 種一個 LS026，見
+    /// `TapTargetGateScreenName.reportReasonSheetTargetGone` 文件註解（LS-189 R2，merge-review
+    /// R1 B4）。
+    @MainActor
+    static var reportReasonSheetTargetGoneHost: some View {
+        DismissableSheetHost {
+            ReportReasonSheet(
+                familyName: "陳家", familyID: UUID(), targetType: .comment, targetID: UUID(),
+                safetyAPIClient: PreviewSafetyAPIClient(
+                    reportContentError: .rejected(message: "target belongs to another family", code: "LS026")
+                )
             )
         }
     }
@@ -92,7 +111,8 @@ extension TapTargetGateHarness {
                 familyStore: familyStore,
                 safetyAPIClient: PreviewSafetyAPIClient(
                     blockedUsers: [BlockedUserRecord(blockedID: blockedID, createdAt: Date())]
-                )
+                ),
+                timelineStore: .preview()
             )
         }
     }
@@ -130,6 +150,36 @@ extension TapTargetGateHarness {
                     id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
                 )),
                 safetyAPIClient: PreviewSafetyAPIClient()
+            )
+        }
+    }
+
+    /// 07 檢舉收件匣·「這則沒問題」失敗——`markResolvedError` 種一個 42501，見
+    /// `TapTargetGateScreenName.reportInboxResolveError` 文件註解（LS-189 R2，merge-review
+    /// R1 B1）。
+    @MainActor
+    static var reportInboxResolveErrorHost: some View {
+        let familyStore = FamilyStore.preview(withFamily: Family(
+            id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
+        ))
+        let reporterID = UUID()
+        familyStore.seedMembersForPreview([
+            FamilyMember(userID: reporterID, role: .member, displayName: "李阿嬤", avatarURL: nil)
+        ])
+        let report = ContentReportRecord(
+            id: UUID(), targetType: .comment, targetID: UUID(), reporterID: reporterID, reason: "spam",
+            status: "pending", createdAt: Date()
+        )
+        return NavigationStack {
+            ReportInboxView(
+                familyStore: familyStore,
+                safetyAPIClient: PreviewSafetyAPIClient(
+                    pendingReports: [report], reportSnippet: "「這張照片真的很醜」",
+                    // 同 `SupabaseSafetyAPIClient.markReportResolved` 真實會丟出的「0 列受影響」
+                    // 情境（`userFacingMessage` 對 `.rejected` 一律回通用文案，不看這裡的
+                    // `message`／`code`，見 `AppError.swift`）。
+                    markResolvedError: .rejected(message: "沒有權限處理這則檢舉，或這則檢舉已經被處理", code: "no_rows_updated")
+                )
             )
         }
     }
@@ -195,6 +245,37 @@ extension TapTargetGateHarness {
             DiaryDetailView(
                 diaryID: diaryID, timelineStore: timelineStore, childrenStore: childrenStore,
                 familyStore: familyStore, safetyAPIClient: PreviewSafetyAPIClient(authorID: viewerUserID),
+                diaryAPIClient: PreviewDiaryAPIClient()
+            )
+        }
+    }
+
+    /// 同 `diaryDetailHost`，但**不**呼叫 `seedRoleForPreview`——`childrenStore.myRole` 維持
+    /// `ChildrenStore.preview()` 預設的 nil，驗證「更多操作」在這個狀態下正確變成 disabled
+    /// （LS-189 R2，merge-review R1 m2，見 `DiaryDetailView+ContentActions.isContentActionsReady`
+    /// 文件註解）。
+    @MainActor
+    static var diaryDetailRoleNotReadyHost: some View {
+        let diaryID = UUID()
+        let viewerUserID = UUID()
+        let familyStore = FamilyStore.preview()
+        familyStore.seedMyFamilyForPreview(
+            Family(id: UUID(), name: "陳家", createdBy: viewerUserID, createdAt: Date(), requireApproval: true),
+            ownerUserID: viewerUserID
+        )
+        let timelineStore = TimelineStore.preview()
+        timelineStore.seedForPreview(entries: [
+            TimelineEntry(
+                kind: .diary, refId: diaryID, occurredAt: Date(), childIds: [],
+                content: .diary(DiaryContent(
+                    body: "今天在溜滑梯上玩得好開心。", entryDate: Date(), previewPhotos: [], totalPhotoCount: 0
+                ))
+            )
+        ])
+        return NavigationStack {
+            DiaryDetailView(
+                diaryID: diaryID, timelineStore: timelineStore, childrenStore: ChildrenStore.preview(),
+                familyStore: familyStore, safetyAPIClient: PreviewSafetyAPIClient(authorID: UUID()),
                 diaryAPIClient: PreviewDiaryAPIClient()
             )
         }

@@ -93,6 +93,52 @@ final class ContentActionsUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["已送出，家庭管理者會處理"].waitForExistence(timeout: 3), "取消不應該送出檢舉")
     }
 
+    // MARK: - 「更多操作」在 store 未就緒時應該是 disabled，不是靜默 no-op（LS-189 R2，
+    // merge-review R1 m2）
+
+    /// Mutation guard：若把 `isContentActionsReady` 改回只看 `diaryContent == nil`，這支測試
+    /// 會紅（按鈕會是 enabled）。
+    func testDiaryDetail_moreButton_disabledWhenRoleNotReady() {
+        let app = TapTargetMeasurement.launch(.diaryDetailRoleNotReady)
+        TapTargetMeasurement.assertScreenRendered(.diaryDetailRoleNotReady, in: app)
+
+        let moreButton = app.buttons["更多操作"]
+        XCTAssertTrue(moreButton.waitForExistence(timeout: 5))
+        XCTAssertFalse(
+            moreButton.isEnabled, "childrenStore.myRole 還沒到齊時「更多操作」應該是 disabled，不是可點但沒反應"
+        )
+    }
+
+    // MARK: - 05b：送出後拿到 LS026（跨家庭）——改顯示專屬文案＋單一「關閉」（LS-189 R2，
+    // merge-review R1 B4）
+
+    func testReportReasonSheet_targetGone_showsDedicatedMessageAndSingleCloseButton() {
+        let app = TapTargetMeasurement.launch(.reportReasonSheetTargetGone)
+        TapTargetMeasurement.assertScreenRendered(.reportReasonSheetTargetGone, in: app)
+
+        let reasonRow = app.buttons["騷擾、霸凌或恐嚇"]
+        XCTAssertTrue(reasonRow.waitForExistence(timeout: 5))
+        reasonRow.tap()
+        let submitButton = app.buttons["送出"]
+        XCTAssertTrue(submitButton.isEnabled)
+        submitButton.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["這則內容已經不存在了，無法檢舉。"].waitForExistence(timeout: 5),
+            "LS026 應該顯示專屬文案，不是通用的「無法完成這個操作。」"
+        )
+        XCTAssertFalse(app.buttons["送出"].exists, "目標已經不存在，重試不會成功，不該再讓使用者看到「送出」鈕")
+        XCTAssertFalse(app.buttons["取消"].exists, "應該換成單一「關閉」，不是「送出」＋「取消」兩顆")
+        let closeButton = app.buttons["關閉"]
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 5))
+        closeButton.tap()
+
+        XCTAssertFalse(
+            app.staticTexts["這則內容已經不存在了，無法檢舉。"].waitForExistence(timeout: 3),
+            "按下關閉後 sheet 應該收起"
+        )
+    }
+
     // MARK: - 05 → 05d：封鎖
 
     func testDiaryDetail_blockFlow_confirmDismissesSheet() {
@@ -206,6 +252,33 @@ final class ContentActionsUITests: XCTestCase {
         XCTAssertTrue(
             app.staticTexts["目前沒有需要處理的檢舉。有人送出檢舉時，會出現在這裡。"].waitForExistence(timeout: 5),
             "唯一一則處理完之後應該落回空狀態"
+        )
+    }
+
+    // MARK: - 07 檢舉收件匣——「這則沒問題」失敗時錯誤訊息要顯示（LS-189 R2，merge-review R1 B1）
+
+    /// Mutation guard：若把 `ReportInboxView.markNoIssue` 改回舊寫法（`actionError: AppError?`
+    /// 跟 `resolvingReportID` 綁在一起、`defer { resolvingReportID = nil }` 蓋掉判斷條件），
+    /// 卡片仍會留著（這個斷言不受影響），但錯誤文字永遠不會出現——這支測試會紅。
+    func testReportInboxView_noIssue_failure_showsErrorMessage_cardStaysInList() {
+        let app = TapTargetMeasurement.launch(.reportInboxResolveError)
+        TapTargetMeasurement.assertScreenRendered(.reportInboxResolveError, in: app)
+
+        XCTAssertTrue(app.staticTexts["「這張照片真的很醜」"].waitForExistence(timeout: 5))
+        let noIssueButton = app.buttons["這則沒問題"]
+        XCTAssertTrue(noIssueButton.waitForExistence(timeout: 5))
+        noIssueButton.tap()
+
+        // `ReportInboxView` 這裡沿用 `AppError.userFacingMessage` 的全域兜底文案（`.rejected`
+        // 一律「無法完成這個操作。」，不看 `code`／`message` 關聯值，同 `AppError.swift` 既有
+        // 設計）——本測試釘住的是「有沒有顯示」，不是「顯示哪一句」。
+        XCTAssertTrue(
+            app.staticTexts["無法完成這個操作。"].waitForExistence(timeout: 5),
+            "失敗時應該顯示錯誤訊息，不是靜默恢復成沒事發生過"
+        )
+        XCTAssertTrue(
+            app.staticTexts["「這張照片真的很醜」"].exists,
+            "失敗不應該把卡片從清單移除——內容其實還在 pending"
         )
     }
 }

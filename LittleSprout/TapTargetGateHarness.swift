@@ -64,9 +64,10 @@ enum TapTargetGateHarness {
         case .welcome: welcomeHost
         case .profileEdit: profileEditHost
         case .familyMembers: familyMembersHost
-        case .contentActionsSheet, .reportReasonSheet, .blockConfirmSheet, .ownerRemoveContentConfirmSheet,
-             .blockList, .reportInbox, .reportInboxEmpty, .diaryDetail, .diaryDetailOwnContent:
-            // LS-189：八個新 case 的分派抽到 `safetyHostView(for:)`（見
+        case .contentActionsSheet, .reportReasonSheet, .reportReasonSheetTargetGone, .blockConfirmSheet,
+             .ownerRemoveContentConfirmSheet, .blockList, .reportInbox, .reportInboxEmpty,
+             .reportInboxResolveError, .diaryDetail, .diaryDetailOwnContent, .diaryDetailRoleNotReady:
+            // LS-189：十二個新 case 的分派抽到 `safetyHostView(for:)`（見
             // `TapTargetGateHarness+Safety.swift`）——直接列在這裡會讓這支函式再度超過
             // SwiftLint `function_body_length` 上限（同其餘 `*Host` computed var 抽檔的既有
             // 理由，這裡多加一層 `default`-style 分派而不是抽 computed var，因為要分派的是

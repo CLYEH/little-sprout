@@ -135,6 +135,10 @@ enum TapTargetGateScreenName: String {
     case contentActionsSheet = "ContentActionsSheet"
     // LS-189：檢舉原因（05b）——六個原因列＋送出／取消鈕。
     case reportReasonSheet = "ReportReasonSheet"
+    // LS-189 R2（merge-review R1 B4）：檢舉送出後拿到 LS026（target 存在但屬於別的家庭）——
+    // 「這則內容已經不存在了」專屬文案＋單一「關閉」變體，見 `ReportReasonSheet.isTargetGone`
+    // 文件註解。同 `.reportInboxResolveError` 的既有理由，不用來做逐元件 tap target 量測。
+    case reportReasonSheetTargetGone = "ReportReasonSheetTargetGone"
     // LS-189：封鎖確認（05d）。
     case blockConfirmSheet = "BlockConfirmSheet"
     // LS-189：Owner 移除內容確認（05e）。
@@ -147,6 +151,13 @@ enum TapTargetGateScreenName: String {
     // LS-189：檢舉收件匣·沒有待處理（07b 空狀態）——變體，不是獨立檔案，不需要另外具名排除
     // （同 `.settingsMemberRole`／`.uploadQueueSheetNormal` 等既有變體 case 的先例）。
     case reportInboxEmpty = "ReportInboxViewEmpty"
+    // LS-189 R2（merge-review R1 B1）：「這則沒問題」失敗變體——`PreviewSafetyAPIClient
+    // .markResolvedError` 種一個 42501，讓 `markReportResolved` 一定 throw，驗證錯誤訊息正確
+    // 顯示（原本的 bug：`resolvingReportID` 跟 `actionError` 綁在一起，`defer` 同步清掉判斷
+    // 條件，錯誤字永遠不會出現，見 `ReportInboxView.swift` 文件註解）。不用來做逐元件 tap
+    // target 量測（同 `.welcome`／`.eulaConsentToTimelineFlow` 等既有先例），純粹借用「launch
+    // environment 指定畫面」這條通道跑功能回歸。
+    case reportInboxResolveError = "ReportInboxViewResolveError"
     // LS-189：`DiaryDetailView` 導覽列「⋯」內容操作表入口——從最小佔位換成正式內容（帶一篇
     // 日記＋作者身分），取代原本「需要 TimelineStore 帶一篇日記與附照資料才有代表性」的具名
     // 排除，同 `.blockList`／`.reportInbox` 的既有理由。
@@ -156,6 +167,11 @@ enum TapTargetGateScreenName: String {
     // 用來覆蓋「操作表『刪除』→ 既有 `DiaryDeleteConfirmationSheet`」這條分流（同 `.diaryDetail`
     // 的既有理由，不是獨立檔案，不需要另外具名排除）。
     case diaryDetailOwnContent = "DiaryDetailViewOwnContent"
+    // LS-189 R2（merge-review R1 m2）：`childrenStore.myRole` 還沒到齊（未呼叫
+    // `seedRoleForPreview`，`ChildrenStore.preview()` 預設 nil）——驗證「更多操作」在這個狀態
+    // 下是 disabled，不是可點但按下去沒反應。同 `.reportInboxResolveError` 的既有理由，不用來
+    // 做逐元件 tap target 量測（disabled 按鈕本來就不該被量測熱區）。
+    case diaryDetailRoleNotReady = "DiaryDetailViewRoleNotReady"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -220,15 +236,18 @@ enum TapTargetGateScreenName: String {
         // Head Title——`WgbNc` 示範態固定顯示的內容預覽文字。
         case .contentActionsSheet: return .staticText("「今天在溜滑梯上玩得好開心。」")
         case .reportReasonSheet: return .button("送出")
+        case .reportReasonSheetTargetGone: return .button("送出")
         case .blockConfirmSheet: return .button("封鎖這位成員")
         case .ownerRemoveContentConfirmSheet: return .button("移除這則內容")
         case .blockList: return .staticText("封鎖名單")
         case .reportInbox: return .staticText("檢舉")
         case .reportInboxEmpty: return .staticText("檢舉")
+        case .reportInboxResolveError: return .staticText("檢舉")
         // `contentActionsButton` 的 accessibility label——一開畫面（日記內容已載入）就會渲染，
         // 不依賴使用者先點開操作表。
         case .diaryDetail: return .button("更多操作")
         case .diaryDetailOwnContent: return .button("更多操作")
+        case .diaryDetailRoleNotReady: return .button("更多操作")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")
