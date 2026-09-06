@@ -9,14 +9,24 @@ final class SettingsContentSafetyCompositionTests: XCTestCase {
     func testOwner_includesReportInboxBetweenBlockListAndStorage() {
         XCTAssertEqual(
             SettingsContentSafetyComposition.rows(isOwner: true),
-            [.blockList, .reportInbox, .storage]
+            [.blockList, .reportInbox, .storage, .push]
         )
     }
 
     func testMember_excludesReportInbox() {
         XCTAssertEqual(
             SettingsContentSafetyComposition.rows(isOwner: false),
-            [.blockList, .storage]
+            [.blockList, .storage, .push]
         )
+    }
+
+    // MARK: - LS-217：「推播通知」列固定排在清單最後
+
+    func testOwner_pushRowIsLast() {
+        XCTAssertEqual(SettingsContentSafetyComposition.rows(isOwner: true).last, .push)
+    }
+
+    func testMember_pushRowIsLast() {
+        XCTAssertEqual(SettingsContentSafetyComposition.rows(isOwner: false).last, .push)
     }
 }

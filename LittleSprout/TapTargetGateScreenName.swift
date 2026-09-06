@@ -188,6 +188,15 @@ enum TapTargetGateScreenName: String {
     // 下是 disabled，不是可點但按下去沒反應。同 `.reportInboxResolveError` 的既有理由，不用來
     // 做逐元件 tap target 量測（disabled 按鈕本來就不該被量測熱區）。
     case diaryDetailRoleNotReady = "DiaryDetailViewRoleNotReady"
+    // LS-217：推播權限前置說明頁——初始態（`PushNotificationStore.preview()` 預設
+    // `.notDetermined`）不需要任何 seed 資料即有代表性，同 `.createChild` 等既有先例。
+    case pushPreprompt = "PushPrepromptView"
+    // LS-217：設定頁「推播通知」列——`.denied`／`.authorized` 兩個變體，不是獨立檔案（同
+    // `.settingsMemberRole`／`.uploadQueueSheetNormal` 等既有變體 case 的先例），用來覆蓋
+    // `.settings`（預設 `.notDetermined`）之外的另外兩種授權狀態，讓三態文案與點擊行為都能被
+    // UITest／tap-target-check 覆蓋。
+    case settingsPushDenied = "SettingsViewPushDenied"
+    case settingsPushAuthorized = "SettingsViewPushAuthorized"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -271,6 +280,10 @@ enum TapTargetGateScreenName: String {
         case .diaryDetail: return .button("更多操作")
         case .diaryDetailOwnContent: return .button("更多操作")
         case .diaryDetailRoleNotReady: return .button("更多操作")
+        case .pushPreprompt: return .button("開啟通知")
+        // 同 `.settings`：「登出」列不受推播授權狀態影響，一定會渲染。
+        case .settingsPushDenied: return .button("登出")
+        case .settingsPushAuthorized: return .button("登出")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")
