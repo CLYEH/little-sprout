@@ -368,22 +368,43 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   常見的終局路徑，重試機制其實幫不上忙。**殘留物是什麼、目前沒有任何機制回收**：走到這條
   路徑時 Storage PUT 與 `insertMediaRow` 都已成功、只有後面的 `softDeleteMedia` 失敗，殘留
   的是一列 **`deleted_at IS NULL` 的活 `media` 列**——不是③那種「`media` 列從未成功
-  `insert`」的孤兒，也不會被下方 `996220e9`（掃 `storage.objects` 找不到對應 `media` 列的
-  物件）那支未來排程掃到（那支掃描依定義只找「列不存在」的情況，這裡列存在）；全 repo 對
-  `media` 的讀取只有 `SupabaseTimelineAPIClient.fetchMedia(ids:)`／
-  `SupabaseAlbumsAPIClient.fetchMedia(ids:)` 兩處、皆帶明確 id（來自
-  `diary_media`／`album_media`），沒有任何「列出家庭所有 media」的查詢——這種列在 UI 上完全
-  看不見、使用者刪不掉，會永久佔用 `families.storage_used_bytes` 額度。真正能接住它的是另一
-  支查詢（`media` 列存在、`deleted_at IS NULL`、從未被任何 `diary_media`／`album_media`
-  引用、且建立超過寬限期），已記入待辦池（LS-96 comment `c2050d43`），與 `996220e9` 是兩支
-  不同的查詢，不能靠同一段邏輯順帶解決；③**Storage 有物件、但從未成功 `insert`
-  對應 `media` 列的孤兒**（例如上傳當下 App 被殺、`insertMediaRow` 的 client 端 best-effort
-  清理沒有機會執行）——本機容器實測重現（PUT 一個物件到 `media` bucket、不 insert `media`
-  列，`private.purge_expired()` 執行後 `purge_storage_queue` 未收到這筆，物件仍留在
-  `storage.objects`）確認**目前沒有任何排程掃描這個方向**：`private.purge_expired()`／
-  `purge-storage` Edge Function（LS-153）只處理「`media` 列被硬刪之後」的 Storage 清理佇列
-  （見下方 `media` 軟刪／硬刪表格列），不會反向掃描 `storage.objects` 找不到 `media` 列的
-  物件；全表批次掃描屬 LS-212「不做：跨家庭批次工具」明文排除範圍，若要補上見待辦池。
+  `insert`」的孤兒，也不會被下方 `private.soft_delete_unreferenced_media()`（LS-213②，見下方
+  「自動清除」）之外的③排程掃到；全 repo 對 `media` 的讀取只有
+  `SupabaseTimelineAPIClient.fetchMedia(ids:)`／`SupabaseAlbumsAPIClient.fetchMedia(ids:)`
+  兩處、皆帶明確 id（來自 `diary_media`／`album_media`），沒有任何「列出家庭所有 media」的
+  查詢——這種列在 UI 上完全看不見、使用者刪不掉，會永久佔用 `families.storage_used_bytes`
+  額度。**LS-213 起已補上這個方向**：`private.soft_delete_unreferenced_media(p_grace default
+  '24 hours', p_now default now())`（獨立 pg_cron job `ls213-soft-delete-unreferenced-media-daily`，
+  19:30 UTC）掃「`media` 列存在、`deleted_at IS NULL`、從未被任何 `diary_media`／
+  `album_media` 引用、且 `created_at` 超過寬限期」的列，設 `deleted_at` 走既有軟刪＋30 天
+  purge 流程，額度由既有 `media_storage_sync()` trigger 回落——與③（下段）是**兩支不同的
+  查詢**，一支查「`media` 列存在但未被引用」，一支查「`media` 列根本不存在」，不能靠同一段
+  邏輯順帶解決，來源見 LS-96 comment `c2050d43`（LS-212 merge-review R3 `8d1e57bc` 查實）；
+  ③**Storage 有物件、但從未成功 `insert` 對應 `media` 列的孤兒**（例如上傳當下 App 被殺、
+  `insertMediaRow` 的 client 端 best-effort 清理沒有機會執行）——本機容器實測重現（PUT 一個
+  物件到 `media` bucket、不 insert `media` 列，`private.purge_expired()` 執行後
+  `purge_storage_queue` 未收到這筆，物件仍留在 `storage.objects`）確認 LS-153 落地時**沒有
+  任何排程掃描這個方向**：`private.purge_expired()`／`purge-storage` Edge Function（LS-153）
+  當時只處理「`media` 列被硬刪之後」的 Storage 清理佇列（見下方 `media` 軟刪／硬刪表格
+  列），不會反向掃描 `storage.objects` 找不到 `media` 列的物件；全表批次掃描屬 LS-212
+  「不做：跨家庭批次工具」明文排除範圍。**LS-213 起已補上、R2 修過掃描本身的兩個問題**：
+  `purge-storage` Edge Function 在既有的佇列消化迴圈**之後**（R2：原本在之前，掃描慢會拖延
+  既有硬刪路徑的清除工作，見下方「自動清除」小節），逐家庭前綴分頁掃描 `media` bucket
+  （`{family_id}/{yyyy}/{mm}/{file}` 三層資料夾，跳過 `avatars/` 子路徑，`storage.list()` 皆
+  用 `offset` 續頁涵蓋超過一頁的資料夾）反查 `public.media.storage_path`／`thumb_path`（改用
+  RPC `public.purge_storage_unknown_media_paths()`，R2：原本用 GET `.in()` 查詢字串，候選路徑
+  一多會撞 HTTP 414），找不到對應列、且物件 `created_at` 超過寬限期（24 小時）的路徑透過
+  `public.purge_storage_queue_enqueue_orphans()` RPC 排入既有 `purge_storage_queue`（
+  `media_id` 為 NULL，且該 RPC 會驗證路徑落在呼叫端聲稱的家庭前綴下且形狀合規，R2 補），交給
+  下一次 invocation 的既有消化迴圈刪除——沿用既有的 attempts／退避／死信與 confirmed-delete
+  核對，不重新實作刪除路徑，也不影響額度（這批物件從未計入 `families.storage_used_bytes`，
+  走佇列刪除不會觸發 `media` 表的 trigger，沒有重複扣款的可能）。每次 invocation 的候選數
+  （R2：不是看過的檔案數）上限見 `purge-storage/index.ts` 的 `ORPHAN_SCAN_BATCH_SIZE`；家庭
+  前綴走 round-robin、續掃進度持久化在 `public.orphan_scan_cursor`（R2，避免排序在前的家庭
+  永遠掃完前面就用掉整個預算，讓後面的家庭餓死），回應 JSON 的 `orphanScanCompleted`／
+  `orphanScanCursor` 讓「這次掃完一整輪」與「這個 bucket 真的沒有孤兒」在觀測上可以區分。沒有
+  自動化測試（見下方「自動清除」小節對這支 Edge Function 既有的已知限制說明，本次以
+  `supabase functions serve` 手動 e2e 驗證，同既有慣例）。
 - **影片時長（`duration_seconds`，LS-134）**：nullable，`CHECK`（有值時必須 `> 0`，
   `media_duration_seconds_positive`）。`type = 'photo'` 時應留 `NULL`；
   `type = 'video'` 時由上傳端以 `AVAsset.load(.duration)` 量測寫入——**若影片經過
@@ -2232,6 +2253,29 @@ LS-132 對外文字上線前的硬前置（R2 review informational i4）。
 筆數、失敗表數與原因）；每張表的清除各自獨立錯誤處理，一張表失敗不影響其他表照常
 清除，WHERE 條件冪等，失敗的表下次排程自然重試，不需要額外的重試佇列。
 
+**LS-213 補完的兩個孤兒方向**（見上方 §3「`media`」的完整說明，這裡只記排程與驗證
+現況）：
+- `private.soft_delete_unreferenced_media(p_grace default '24 hours', p_now
+  default now())`——獨立 pg_cron job `ls213-soft-delete-unreferenced-media-daily`
+  （19:30 UTC，`purge_expired` 之後 30 分鐘），與 `purge_expired()` 各自獨立、互不
+  依賴。`supabase/tests/109_soft_delete_unreferenced_media.sql` 覆蓋三案矩陣（未
+  引用超期／未引用未超期／已引用）＋24 小時邊界＋額度回落＋冪等重跑＋預設寬限期
+  迴歸。
+- `purge-storage` Edge Function 的 `scanOrphanStorageObjects()`——沿用上一段
+  「目前沒有任何東西會觸發這支 Edge Function」的既有部署缺口（正式站排程接線由
+  orchestrator 依 LS-78 狀態決定，不在本票落地範圍）；已知限制同上一段：本機
+  `supabase functions serve --no-verify-jwt` 手動 e2e 驗證，沒有寫成
+  `supabase/tests/` 底下的自動化測試（repo 沒有 Deno/Edge Function 測試治具，
+  同 LS-153 既有限制）。**R2（merge-review R1 80d7242c）**：掃描改為逐家庭前綴
+  round-robin，續掃進度持久化在 `public.orphan_scan_cursor`（家庭數多、單一家庭
+  候選數大時，保證每次 invocation 都往前推進，不會被排序在前的家庭永遠佔住候選
+  預算）；反查改用 `public.purge_storage_unknown_media_paths()` RPC（避免候選路徑
+  一多撞 HTTP 414）；掃描呼叫點移到既有佇列消化迴圈之後（避免拖延既有硬刪路徑的
+  清除工作）；`public.purge_storage_queue_enqueue_orphans()` 補上路徑前綴與形狀
+  驗證。`supabase/tests/109_soft_delete_unreferenced_media.sql` 新增第 3／4 段
+  對這兩支反查／入列 RPC 的 DB 測試（含 30 天救援窗內已軟刪 media 不誤判為孤兒
+  的正向不變量）。
+
 ---
 
 ## 7. 邀請／加入／核准狀態機
@@ -2399,7 +2443,9 @@ list_children(uuid)
 list_comments(uuid, text, uuid, timestamptz, uuid, integer)
 list_join_requests()
 notification_recipients(uuid[])
+purge_storage_queue_enqueue_orphans(text, uuid, text[])
 purge_storage_queue_mark_failed(uuid[], text)
+purge_storage_unknown_media_paths(text[])
 register_device_token(text, text)
 reject_join(uuid)
 remove_content_as_owner(text, uuid)
@@ -2441,6 +2487,7 @@ invites
 join_requests
 media
 notification_events
+orphan_scan_cursor
 profiles
 purge_storage_queue
 reactions
@@ -2771,26 +2818,43 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
 
   | kind | event_count = 1 | event_count > 1 |
   |---|---|---|
-  | `comment` | 「{actor}在你的{標籤}留言」（例：「阿嬤在你的日記留言」） | 「你的{標籤}收到了 {N} 則新留言」 |
-  | `reaction` | 「{actor}喜歡了你的{標籤}」 | 「{N} 個人喜歡了你的{標籤}」（例：「3 個人喜歡了你的照片」） |
-  | `diary` | 「{actor}寫了一篇日記」 | 「{actor}新增了 {N} 篇日記」（防禦性分支，見下） |
-  | `album` | 「{actor}新增了相簿」 | 「{actor}新增了 {N} 本相簿」（防禦性分支，見下） |
-  | `media`（LS-175） | 「{actor}新增了一張照片」 | 「{actor}新增了 {N} 張照片」（例：「爸爸新增了 50 張照片」，票文原始範例） |
-  | `report`（LS-175 R2，merge-review R1 m2） | 「你的{標籤}收到一則檢舉」 | 「你的{標籤}收到了 {N} 則檢舉」 |
+  | `comment`（LS-219 依 LS-177 矩陣定案） | 「{actor}在你的{標籤}留言了」（例：「阿嬤在你的日記留言了」） | 「你的{標籤}收到了 {N} 則新留言」（LS-219 R2 M1：不指名、不宣稱人數，只引用 event_count） |
+  | `reaction`（LS-219 依 LS-177 矩陣定案） | 「{actor}按了愛心」（不含目標標籤） | 「你的{標籤}收到了 {N} 個愛心」（LS-219 R2 M1，同上） |
+  | `diary`（LS-219 依 LS-177 矩陣定案） | 「{actor}新增了一則日記」 | 「家人新增了 {N} 則日記」（防禦性分支，見下；LS-219 R2 M1：無法確認多筆事件是否同一人，改用固定文字「家人」，不沿用 actor） |
+  | `album`（LS-219 依 LS-177 矩陣定案，量詞補「一本」） | 「{actor}新增了一本相簿」 | 「家人新增了 {N} 本相簿」（防禦性分支，見下；LS-219 R2 M1，同上） |
+  | `media`（LS-175） | 「{actor}新增了一張照片」 | 「{actor}新增了 {N} 張照片」（例：「爸爸新增了 50 張照片」，票文原始範例；未受 LS-219 R2 M1 影響——`media` 的 `event_count` 本來就只用來組數字，從未宣稱人數） |
+  | `report`（LS-175 R2 落地，LS-219 依 LS-189 0905 補註／LS-195 R1 N1 改為定案文案） | 「家庭裡有一{量詞}{標籤}被檢舉，請前往處理」（量詞依 target_type：張／本／則，LS-219 R2 m1） | 「家庭裡有 {N} {量詞}{標籤}被檢舉，請前往處理」 |
+
+  **LS-219 R2（merge-review R1 M1）多則文案的鐵律**：`event_count` 是合併後的
+  事件筆數，不是去重後的人數——`claim_notification_events()`／
+  `notification_recipients()` 都沒有「這批事件實際上有幾個不同的人觸發」這個
+  訊號（`actor_display_name` 只是 COALESCE 過的「最新一次觸發者」單一姓名）。
+  R1 初版 `comment`／`reaction` 的多則文案曾寫成「{actor}等 {N} 人…」，把
+  `event_count` 誤當成人數，是「文案宣稱資料給不出來的東西」；R2 改回不宣稱
+  人數的句型，`diary`／`album` 的防禦性多則分支也一併改用固定文字「家人」（不
+  沿用 actor，因為無法確認合併的多筆事件是否同一人觸發）。distinct actor 計數
+  已記入 LS-96 池，另票評估——本票不動 SQL、不加欄位。**與 LS-177 稿 Notes
+  矩陣的多則例句不同：稿面例句假設有人數計數，實作以事件數為準（LS-219 R1
+  M1）**。
 
   `actor` 取 `claim_notification_events()` 已 `COALESCE` 過的
-  `actor_display_name`（`NULL` fallback「家人」）——**`report` 是唯一沒有用到
-  `actor` 的分支**：`report_content()`（LS-149）寫入的 `actor_id` 是檢舉人，不是
-  被檢舉內容的作者，沿用 `comment`／`reaction` 那種「{actor} 對你的 xxx 做了
-  什麼」句型會讓收件人誤以為檢舉人在跟自己互動；`target_type` 用被檢舉內容原本
-  的類型（`album`／`media`／`diary`／`comment`），`TARGET_LABEL` 可以直接沿用。
-  這是**中性 fallback**，不是產品定案文案——`report` 事件從 LS-149 落地起就會
-  寫進 `notification_events`，但 `push-dispatch`（LS-172）當時的型別守門
+  `actor_display_name`（`NULL` fallback「家人」）——`report` 完全不用到
+  `actor`（連 event_count=1 也不用）；`diary`／`album` 的防禦性多則分支
+  （event_count>1，見上）也不使用 actor，改用固定文字「家人」，但兩者
+  event_count=1 的單則形式仍使用 actor。`report_content()`（LS-149）寫入的
+  `actor_id` 是檢舉人，不是被檢舉內容的作者，沿用 `comment`／`reaction` 那種
+  「{actor} 對你的 xxx 做了什麼」句型會讓收件人誤以為檢舉人在跟自己互動；
+  `target_type` 用被檢舉內容原本的類型（`album`／`media`／`diary`／
+  `comment`），量詞依類型不同（張／本／則，`REPORT_TARGET_LABEL`，LS-219 R2
+  m1），不能沿用 `TARGET_LABEL` 配單一固定量詞。
+  這段文案**原是 LS-175 落地時的中性 fallback**——`report` 事件從 LS-149 落地起
+  就會寫進 `notification_events`，但 `push-dispatch`（LS-172）當時的型別守門
   （`isNotificationKind`／`isContentTargetType`）沒有涵蓋它，若被 claim 到會讓
   **整批**（不只 report 那幾筆）被判定失敗、SQL 面卻已標記 `sent_at`＝永久漏送
   （LS-96 池項 `841d97da`，merge-review R1 於 PR #284 覆核成立並裁定本票直接
-  補）；本票只補到「不再整批漏送」，是否要推播、推播給誰（例如只給 owner）
-  是後續的產品決定——**已由 LS-195 定案：只給 owner**，見上方
+  補）；當時只補到「不再整批漏送」，文案是否要重寫留給後續票。**LS-219 依
+  LS-189 0905 補註（LS-195 R1 N1：「只推給 owner」之後原文語意錯）改為產品
+  定案文案**，收件人只給 owner 已由 LS-195 定案，見上方
   `notification_recipients` 段的 `kind='report'` 收件人規則。
 
   **已知、刻意的規格分歧（票文字面 vs. 實際可用資料，`album`／`diary` 兩個既有
