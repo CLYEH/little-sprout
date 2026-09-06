@@ -269,35 +269,34 @@ async function scanOrphanStorageObjects(
           if (row.thumb_path) knownPaths.add(row.thumb_path);
         }
 
-        const orphanRows: {
-          bucket_id: string;
-          object_path: string;
-          family_id: string;
-          media_id: null;
-        }[] = candidatePaths
-          .filter((path) => !knownPaths.has(path))
-          .map((path) => ({
-            bucket_id: "media",
-            object_path: path,
-            family_id: familyId,
-            media_id: null,
-          }));
+        const orphanPaths = candidatePaths.filter((path) =>
+          !knownPaths.has(path)
+        );
+        if (orphanPaths.length === 0) continue monthLoop;
 
-        if (orphanRows.length === 0) continue monthLoop;
-
-        const { error: upsertError } = await supabase.from(
-          "purge_storage_queue",
-        ).upsert(orphanRows, {
-          onConflict: "bucket_id,object_path",
-          ignoreDuplicates: true,
-        });
-        if (upsertError) {
+        // service_role 對 purge_storage_queue 只有 select／delete（既有設計，見
+        // migration 第 2 段），沒有 insert——透過 SECURITY DEFINER 函式表達「這批
+        // 路徑（同一家庭）需要排入清除佇列」，不是直接 upsert 這張表（LS-213 範圍
+        // 2 動工時 supabase functions serve 實測重現 permission denied，見
+        // supabase/migrations/20260906050606_soft_delete_unreferenced_media.sql
+        // 第 1c 段）。
+        const { data: enqueuedCount, error: rpcError } = await supabase.rpc(
+          "purge_storage_queue_enqueue_orphans",
+          {
+            p_bucket_id: "media",
+            p_family_id: familyId,
+            p_object_paths: orphanPaths,
+          },
+        );
+        if (rpcError) {
           warnings.push(
-            `orphan scan：寫入 purge_storage_queue 失敗（${monthPath}）：${upsertError.message}`,
+            `orphan scan：寫入 purge_storage_queue 失敗（${monthPath}）：${rpcError.message}`,
           );
           continue monthLoop;
         }
-        enqueued += orphanRows.length;
+        enqueued += typeof enqueuedCount === "number"
+          ? enqueuedCount
+          : orphanPaths.length;
       }
     }
   }
