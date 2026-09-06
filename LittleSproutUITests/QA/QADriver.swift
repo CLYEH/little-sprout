@@ -284,20 +284,15 @@ final class QADriver {
     /// 日記卡→詳情（內文＋照片牆）→返回→相簿分頁→時間軸分頁。
     func browseDetailAndAlbums() throws {
         let card = try require(diaryCards.firstMatch, "時間軸日記卡", timeout: 20)
-        // LS-220 實測踩到：`publish` 情境會在同一天留下影片＋照片＋日記三張卡，日記卡常常排到最後、
-        // 高度也夠高，卡片幾何中心會落在畫面最底的浮動 Tab Bar 範圍內——XCUITest 回報這張卡
-        // `isHittable == true`（accessibility 判定不知道有另一塊浮動 UI 疊在同個座標上），直接
-        // `.tap()`＝點中心點，實測連兩次 100% 變成點到蓋在上面的「寶貝」分頁鈕（臨時加診斷附件量得
-        // card.frame＝(18.7, 690.3, 365.0, 225.3)、tabBarFrame＝(112, 782, 88, 52)，中心 y=803
-        // 剛好落在 782–834 這段）。merge-review R2 m3：不用寫死的 dy 0.15 常數（換一種卡片高度／
-        // 版型就可能又落回 Tab Bar，或明明沒問題卻無謂改點非中心處），改成算出來的安全 y——卡片
-        // 中心會落進 Tab Bar 範圍（`tabBar.minY` 往上留 24pt 緩衝）才往上移，否則照樣點中心，
-        // 且永遠不會移到卡片頂端以上（`cardFrame.minY` 往下留 8pt 緩衝）。用 `withOffset` 直接點
-        // 算出來的絕對座標（不透過 `card` 自己的 normalized offset，卡片與 Tab Bar 是兩個不同
-        // 元素、兩者的 frame 都已經是同一個座標系）。點擊前把算出來的座標與 Tab Bar frame 存成
-        // xcresult 附件，下次排查同款誤點不用再臨時加診斷程式碼。
+        // LS-220 實測踩到：`publish` 留下的影片＋照片＋日記三張卡讓日記卡排到最後，卡片幾何中心會落在
+        // 浮動 Tab Bar 範圍內，`isHittable == true` 但 `.tap()` 誤點成「寶貝」分頁鈕（card.frame＝
+        // (18.7, 690.3, 365.0, 225.3)、tabBarFrame＝(112, 782, 88, 52)，中心 y=803 落在 782–834）。
+        // merge-review R2 m3：改成算出來的安全 y——卡片中心落進 Tab Bar 範圍（留 24pt 緩衝）才往上移，
+        // 且不會移到卡片頂端以上（留 8pt 緩衝）；`withOffset` 直接點算出來的絕對座標。點擊前把座標與
+        // Tab Bar frame 存成 xcresult 附件，下次排查同款誤點不用再臨時加診斷程式碼。
         let cardFrame = card.frame
-        let tabBarFrame = app.buttons["相簿"].frame
+        // merge-review R2 n4：讀 `.frame` 前先 `require`，同函式後面 `app.buttons["相簿"]` 的既有慣例。
+        let tabBarFrame = try require(app.buttons["相簿"], "Tab Bar「相簿」（讀 frame 算避開浮動 Tab Bar 的點擊 y）").frame
         let tapY = max(cardFrame.minY + 8, min(cardFrame.midY, tabBarFrame.minY - 24))
         attachText(
             "card.frame=\(cardFrame) tabBar.frame=\(tabBarFrame) tapPoint=(\(cardFrame.midX), \(tapY))",
@@ -352,9 +347,9 @@ extension QADriver {
         return landed
     }
 
-    /// LS-220 merge-review R2 m2：`AppError.userFacingMessage` 的通用文案（見 `Errors/AppError.swift`
-    /// `.network`／`.rejected`／`.unknown`／`.server`／`.timeout` 五個分支），撈到也沒有排障價值
-    /// （不指名是哪個畫面），排除掉不佔 `limit` 名額。
+    /// `AppError.userFacingMessage` 的通用文案（見 `Errors/AppError.swift` 五個分支）。merge-review
+    /// R2 n1：原本整個排除，但 `FamilyLookupFailedView`（`eulaGate`／`familyGate` 失敗態）畫面上
+    /// 就只有這句話——整個排除會讓 `closestScreenTitles` 吐空字串，改成最後一級補位、不丟掉。
     private static let genericErrorBoilerplate: Set<String> = [
         "網路連線有問題，請檢查網路連線後再試一次。",
         "這個操作沒有成功，請確認內容後再試一次。",
@@ -363,29 +358,29 @@ extension QADriver {
         "伺服器發生問題，請稍後再試一次。"
     ]
 
-    /// 失敗訊息用：畫面上最像「標題」的幾行字，讓「卡在哪個畫面」不用開 xcresult 附件也能猜個
-    /// 大概（LS-220：EULA 頁與「session 沒建立」的逾時訊息曾經一模一樣，排障繞了遠路）。
-    ///
-    /// 優先序：① `navigationBars` 的 staticTexts（系統導覽列標題，最直接）；② 全畫面 staticTexts
-    /// 裡字級最大的幾個（用 `frame.height` 當代理——XCUITest 沒有暴露字級 API；本 app 的自畫大標題
-    /// 固定 `.appFont(.display)` 34pt，一般內文／註記都是 17pt，同一畫面差距夠大不會混淆）；③ 其餘
-    /// staticTexts 依畫面樹順序補到上限。EULA 這類自畫標題（不在 navigationBars 裡）原本只取
-    /// 畫面樹前幾個時，常常先撈到釘底動作列的連結／按鈕文字，真正的標題「使用條款更新」反而排到
-    /// 後面（merge-review R2 m2 實測抓到）——改成字級優先才會穩定排到前面。過濾已知 loading（「正在
-    /// …」開頭）與通用錯誤樣板字，這兩種不算「標題」。
+    /// 失敗訊息用：畫面上最像「標題」的幾行字（LS-220：EULA 頁與「session 沒建立」的逾時訊息曾經
+    /// 一模一樣，排障繞了遠路）。優先序：① `navigationBars` 的 staticTexts；② 一般 staticTexts 裡
+    /// 文字區塊最高的幾個（`frame.height` 是排版後的區塊高度、不是字級——merge-review R2 n2：實測
+    /// EULA 頁標題與兩行內文同高，這只是粗略排序，非可靠字級偵測）；③ 其餘依畫面樹順序補到上限；
+    /// ④ loading（「正在…」開頭）與通用錯誤樣板字降到最後一級補位（merge-review R2 n1：整個排除
+    /// 會讓 `FamilyLookupFailedView` 這類畫面吐空字串，降到最後一級才能兼顧「優先真標題」與「保證
+    /// 輸出不為空」）。
     private func closestScreenTitles(limit: Int = 6) -> String {
-        func isMeaningful(_ label: String) -> Bool {
-            !label.isEmpty && !label.hasPrefix("正在") && !Self.genericErrorBoilerplate.contains(label)
+        func isBoilerplate(_ label: String) -> Bool {
+            label.hasPrefix("正在") || Self.genericErrorBoilerplate.contains(label)
         }
         let navTitles = app.navigationBars.staticTexts.allElementsBoundByIndex
-            .map(\.label).filter(isMeaningful)
-        let onScreenTexts = app.staticTexts.allElementsBoundByIndex.filter { isMeaningful($0.label) }
-        let byHeadingSize = onScreenTexts.sorted { $0.frame.height > $1.frame.height }.map(\.label)
-        let byDocumentOrder = onScreenTexts.map(\.label)
+            .map(\.label).filter { !$0.isEmpty }
+        let onScreenTexts = app.staticTexts.allElementsBoundByIndex.filter { !$0.label.isEmpty }
+        let normalTexts = onScreenTexts.filter { !isBoilerplate($0.label) }
+        let boilerplateTexts = onScreenTexts.filter { isBoilerplate($0.label) }
+        let byHeadingSize = normalTexts.sorted { $0.frame.height > $1.frame.height }.map(\.label)
+        let byDocumentOrder = normalTexts.map(\.label)
+        let boilerplateFallback = boilerplateTexts.map(\.label)
 
         var seen = Set<String>()
         var picked: [String] = []
-        for label in navTitles + byHeadingSize + byDocumentOrder where picked.count < limit {
+        for label in navTitles + byHeadingSize + byDocumentOrder + boilerplateFallback where picked.count < limit {
             guard seen.insert(label).inserted else { continue }
             picked.append(label)
         }
