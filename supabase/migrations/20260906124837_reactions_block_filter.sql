@@ -20,9 +20,12 @@
 -- 查詢（跟 get_family_timeline 當初 per-row 函式呼叫踩雷、事後改用 v_has_blocks 分支
 -- 的情況不同——這裡從一開始就是「先查一次候選封鎖名單，再對已經被索引縮小的候選集合
 -- 做 anti join」的形狀，見 supabase/tests/109_reactions_block_filter.sql 的 EXPLAIN 段）。
--- `get_reaction_counts` 是 `language sql`／非 SECURITY DEFINER，符合 Postgres inline
--- 條件，EXPLAIN 對呼叫本身可以直接看到內層 plan（不像 SECURITY DEFINER 或 plpgsql
--- 函式那樣是不透明的 Function Scan 黑盒）。
+-- `get_reaction_counts` 帶 `set search_path = ''`（本專案每支函式的既有慣例）——
+-- 有 SET 子句的函式一律被 Postgres 排除在 inline 條件之外（不分 invoker／definer、
+-- 不分 sql／plpgsql），所以 EXPLAIN 對呼叫本身只會看到一個不透明的
+-- `Function Scan on get_reaction_counts` 節點，看不進內層 plan——跟下面第 34-44 行
+-- 的既有事實一致。`supabase/tests/111_reactions_block_filter.sql` 的效能證據段因此
+-- 改成對真正的 RPC 呼叫量 buffers（merge-review R1 M1 裁定，不手抄函式本體副本）。
 --
 -- `reacted_by_me` 刻意不受影響：述詞只排除「呼叫者已封鎖的人的反應」，呼叫者自己的
 -- `user_id = auth.uid()` 一定不會被自己的封鎖名單排除（`blocked_users_not_self` 約束
