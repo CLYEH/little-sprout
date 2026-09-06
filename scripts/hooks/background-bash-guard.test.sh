@@ -20,6 +20,10 @@ bash_json() { printf '{"tool_name":"Bash","tool_input":{"command":"%s"}}' "$1"; 
 bash_json_rb() { printf '{"tool_name":"Bash","tool_input":{"command":"%s","run_in_background":%s}}' "$1" "$2"; }
 # bash_json_agent <agent_type json 值(含引號或裸值)> <command> <true|false>
 bash_json_agent() { printf '{"tool_name":"Bash","agent_type":%s,"tool_input":{"command":"%s","run_in_background":%s}}' "$1" "$2" "$3"; }
+# bash_json_agent_norb <agent_type json 值> <command>：tool_input 完全沒有 run_in_background 鍵
+# （真實最常見形狀——一般前景 Bash 呼叫的 tool_input 本來就不會帶這個鍵；R2 merge-review N8：
+# ①c 原本誤用跟 ①c2 完全相同的 payload，兩組其實測的是同一件事，鍵缺席這個形狀反而沒被測到）
+bash_json_agent_norb() { printf '{"tool_name":"Bash","agent_type":%s,"tool_input":{"command":"%s"}}' "$1" "$2"; }
 
 # expect <label> <want_exit> <payload>：allow（want=0）驗無 stdout；deny（want=2）驗 stdout 含 deny JSON。
 expect() {
@@ -49,8 +53,8 @@ expect() {
 # ============================================================
 expect '①a 主 session（無 agent_type）背景 promote.sh（allow）' 0 \
   "$(bash_json_rb 'bash scripts/ops/promote.sh development test' true)"
-expect '①c ios-dev 前景 git push（run_in_background 缺席，allow）' 0 \
-  "$(bash_json_agent '"ios-dev"' 'git push -u origin HEAD' false)"
+expect '①c ios-dev 前景 git push（tool_input 完全沒有 run_in_background 鍵，allow）' 0 \
+  "$(bash_json_agent_norb '"ios-dev"' 'git push -u origin HEAD')"
 expect '①c2 ios-dev 前景 git push（run_in_background:false 明寫，allow）' 0 \
   "$(bash_json_agent '"ios-dev"' 'git push -u origin HEAD' false)"
 
@@ -84,6 +88,17 @@ expect '①d3 tail -f … & 後接 push-gate 字面（allow）' 0 \
   "$(bash_json 'tail -f /tmp/log.txt & bash scripts/gates/push-gate.sh')"
 expect '①d4 caffeinate & 後接 .test.sh 字面（allow）' 0 \
   "$(bash_json 'caffeinate & bash scripts/hooks/foo.test.sh')"
+
+# ①e R2（merge-review N1，minor）：引號內的 `&`（URL query string、`sed` 取代字面）不是背景化運算子
+# ——reviewer 實測樣本（非假設），修前皆誤 deny，修後應 allow。
+expect '①e1 curl URL query string 內的 &（雙引號，allow）' 0 \
+  "$(bash_json 'for i in 1 2 3; do curl -s \"https://abc.supabase.co/functions/v1/f?a=1&b=2\"; sleep 5; done')"
+expect '①e2 curl URL query string ＋ pipe while（雙引號，allow）' 0 \
+  "$(bash_json 'curl -s \"https://abc.supabase.co/a?b=1&c=2\" | while read -r l; do echo \"$l\"; done')"
+expect '①e3 gh api query string ＋ until sleep（雙引號，allow）' 0 \
+  "$(bash_json 'until gh api \"repos/o/r/actions/runs?branch=main&per_page=1\" | grep -q supabase; do sleep 20; done')"
+expect '①e4 sed 取代字面的 &（單引號）＋真正的 run.sh／sleep（allow，keyword 存在也不誤擋）' 0 \
+  "$(bash_json "sed -i '' 's/foo/&bar/' x.sh; bash supabase/tests/run.sh; sleep 1")"
 
 # ============================================================
 # ② 負樣本
@@ -256,6 +271,40 @@ else
   fi
 fi
 rm -rf "$mut2"
+
+# ============================================================
+# ⑦ R2（merge-review N1）mutation：拿掉引號感知遮蔽（改回直接對原始字面判斷）→ ①e 四組正樣本
+# 必須翻紅（deny）——證明 allow 是 _mask_quoted 造成的，不是巧合。
+# ============================================================
+mut3=$(mktemp -d)
+cp "$guard" "$engine_py" "${root}/scripts/hooks/pretool_engine.py" "$mut3/"
+anchor_mask='unquoted = _mask_quoted(stripped)'
+if ! grep -qF "$anchor_mask" "$engine_py"; then
+  bad "⑦ mutation 錨點（引號感知遮蔽呼叫點）不在 background_bash_guard.py，mutation 測試無法成立：${anchor_mask}"
+else
+  sed "s/$(printf '%s' "$anchor_mask" | sed 's/[.[\*^$]/\\&/g')/unquoted = stripped/" "$engine_py" > "$mut3/background_bash_guard.py"
+  if ! diff -q "$engine_py" "$mut3/background_bash_guard.py" >/dev/null 2>&1; then
+    all_flipped=1
+    for payload in \
+      "$(bash_json 'for i in 1 2 3; do curl -s \"https://abc.supabase.co/functions/v1/f?a=1&b=2\"; sleep 5; done')" \
+      "$(bash_json 'curl -s \"https://abc.supabase.co/a?b=1&c=2\" | while read -r l; do echo \"$l\"; done')" \
+      "$(bash_json 'until gh api \"repos/o/r/actions/runs?branch=main&per_page=1\" | grep -q supabase; do sleep 20; done')" \
+      "$(bash_json "sed -i '' 's/foo/&bar/' x.sh; bash supabase/tests/run.sh; sleep 1")"
+    do
+      out=$(printf '%s' "$payload" | "$bash_bin" "$mut3/background-bash-guard.sh" 2>/dev/null); got=$?
+      if [ "$got" -ne 2 ] || ! case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+        all_flipped=0
+        bad "⑦ mutant 應把「①e」正樣本翻成 deny（實得 exit ${got}：${out}）——判斷不是靠 _mask_quoted？"
+      fi
+    done
+    if [ "$all_flipped" -eq 1 ]; then
+      ok '⑦ mutant：拿掉引號感知遮蔽後，①e 四組正樣本全部變成 deny（原本的 allow 確由 _mask_quoted 造成）'
+    fi
+  else
+    bad '⑦ mutant 與原始檔完全相同（sed 未命中，mutation 測試本身無效）'
+  fi
+fi
+rm -rf "$mut3"
 
 rm -rf "$work"
 trap - EXIT

@@ -18,8 +18,11 @@ set -u
 RESPONDED=
 COLL_REF="docs/COLLABORATION.md §3"
 
-# ---- 建 deny JSON（reason 只放本檔案自己寫的靜態文字／python 引擎回傳的固定格式訊息，不帶未經
-# 檢查的使用者輸入，故不需跑時逸出——同 pretool.sh 的既有慣例）----
+# ---- 建 deny JSON（reason 是本檔案自己寫的靜態文字，或 python 引擎回傳的固定格式訊息——R2
+# merge-review N6，informational，已修此註解：規則 (a) 的 reason 會內插 hook JSON 的 `agent_type`
+# 值，不是純靜態文字；該值只可能是 Claude Code 自己填的 subagent 定義名稱（六個固定字串之一），不是
+# 使用者可控輸入，故仍不逸出——若未來允許任意字串進 `agent_type`、且該字串含 `"`，這裡產生的 JSON
+# 才會壞掉，exit code 仍是 2、deny 依然生效，只是 stdout 那行 JSON 格式不合法）----
 json_deny() {
   printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"%s"}}' "$1"
 }
