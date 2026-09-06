@@ -97,7 +97,7 @@ struct FinalDeleteConfirmView: View {
         FinalDeleteConfirmView(model: DeleteAccountFlowModel(
             accountAPIClient: PreviewAccountAPIClient(), familyStore: .preview(), authStore: .preview(),
             childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
-            eulaStore: .preview(shouldPresent: false)
+            eulaStore: .preview(shouldPresent: false), resumer: .preview()
         ))
     }
 }

@@ -215,7 +215,7 @@ enum TapTargetGateHarness {
             childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
             eulaStore: .preview(shouldPresent: false),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
-            accountAPIClient: PreviewAccountAPIClient()
+            accountAPIClient: PreviewAccountAPIClient(), resumer: .preview()
         )
         .environment(\.horizontalSizeClass, .compact)
     }
@@ -257,7 +257,7 @@ enum TapTargetGateHarness {
             childrenStore: .preview(), timelineStore: timelineStore, albumsStore: .preview(),
             eulaStore: .preview(shouldPresent: false),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
-            accountAPIClient: PreviewAccountAPIClient()
+            accountAPIClient: PreviewAccountAPIClient(), resumer: .preview()
         )
         .environment(\.horizontalSizeClass, .compact)
     }

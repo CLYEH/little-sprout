@@ -36,18 +36,26 @@ extension ForkView {
     // MARK: - 停權／註冊關閉／刪除進行中出口（merge-review R1 M2／M3）
 
     /// 兩種互斥成因、兩種鈕組合：
-    /// - `FamilyStore.accountDeletionInProgressError`（`LS051`，M3）——`delete_my_account()`
-    ///   RPC 在**另一台裝置**或**這台裝置重灌過 app**（本機 `PendingAccountDeletion` 旗標不在）
+    /// - `LS051`（M3）——`delete_my_account()` RPC 在**另一台裝置**或**這台裝置重灌過 app**
     ///   已經成功，只是 Edge Function 沒打完；鈕是「重試刪除」（語意：續傳，不是重新開始）。
     /// - `FamilyStore.suspendedOrRegistrationClosedError`（`LS052`／`LS054`，M2）——鈕是
     ///   「刪除帳號」（語意：從頭開始走三分流）。
-    /// 兩者不會同時為真（同一組 `createFamilyState`／`requestJoinState` 錯誤碼只會是其中一種），
-    /// 這裡用 `if let ... else if let ...` 而不是各自獨立渲染，避免萬一真的同時為真時疊出兩組
-    /// 文案。排成一列而非疊放，呼應「登出」跟另一顆是兩個平行的出路，不是一主一次。
+    /// 兩者不會同時為真，這裡用 `if let ... else if ...` 而不是各自獨立渲染，避免萬一真的同時
+    /// 為真時疊出兩組文案。排成一列而非疊放，呼應「登出」跟另一顆是兩個平行的出路，不是一主一次。
+    ///
+    /// **merge-review R2 m1 訂正**：LS051 這條的顯示條件改成「`PendingAccountDeletion
+    /// .isPending`（本機續傳旗標）或這次嘗試剛好收到的 `accountDeletionInProgressError`」，
+    /// 不再單獨依賴後者——R2 版只看 `familyStore.accountDeletionInProgressError`（`createFamilyState`
+    /// ／`requestJoinState` 的暫態），`CreateFamilyView.resetCreateFamilyState()`（畫面重新進場
+    /// 時清空上一次失敗的殘影）一清就讓這顆出口消失，使用者必須重新走一次「輸入名稱→送出→
+    /// 吃一次 LS051」才看得到「重試刪除」。訂正後：`.onChange(of:)`（`ForkView.body`）在**第一次**
+    /// 收到 `LS051` 的當下就呼叫 `PendingAccountDeletion.markPending(userID:)`——這裡不用等到
+    /// 使用者按下「重試刪除」才落地旗標，出口因此變成持久的（活過 `resetCreateFamilyState()`、
+    /// 活過下一次冷啟動——`AuthenticatedGate` 會在下次登入直接偵測到並自動導頁，見該檔）。
     @ViewBuilder
     var suspendedFooter: some View {
-        if let error = familyStore.accountDeletionInProgressError {
-            suspendedFooterBody(message: error.userFacingMessage) {
+        if isAccountDeletionPending {
+            suspendedFooterBody(message: accountDeletionPendingMessage) {
                 retryDeletionButton
             }
         } else if let error = familyStore.suspendedOrRegistrationClosedError {
@@ -55,6 +63,19 @@ extension ForkView {
                 deleteAccountButton
             }
         }
+    }
+
+    private var isAccountDeletionPending: Bool {
+        if familyStore.accountDeletionInProgressError != nil { return true }
+        guard let userID = authStore.session?.userID else { return false }
+        return PendingAccountDeletion.isPending(userID: userID)
+    }
+
+    /// 本機旗標存在、但這次沒有剛好觸發一次新的 `LS051`（例如冷啟動後、還沒點過建立家庭／
+    /// 輸入邀請碼）時，沒有活的 `AppError` 可以讀 `userFacingMessage`——退回固定文案。
+    private var accountDeletionPendingMessage: String {
+        familyStore.accountDeletionInProgressError?.userFacingMessage
+            ?? "你的帳號正在刪除程序中，尚未完成——請繼續刪除，或先登出稍後再試。"
     }
 
     @ViewBuilder

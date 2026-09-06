@@ -30,6 +30,10 @@ struct SettingsView: View {
     /// LS-190 R2（merge-review R1 B2(a)）：同上，登出時歸零——不清掉會讓同機換帳號的新使用者
     /// 沿用上一位的 `EULAStore.shouldPresent`、繞過 EULA 閘門。
     let eulaStore: EULAStore
+    /// merge-review R2 B2：`DeleteAccountFlowView`／`DeleteAccountFlowModel` 續傳呼叫的唯一
+    /// 擁有者，見 `PendingAccountDeletionResumer` 文件註解；`SettingsView+Account.swift` 轉手
+    /// 往下傳。
+    let resumer: PendingAccountDeletionResumer
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     /// merge-review R2 B3：`signOut()` 拆去 `SettingsView+SignOut.swift`（理由同
@@ -333,30 +337,7 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - 帳號
-
-    private var accountSection: some View {
-        SettingsSectionBlock(title: "帳號") {
-            // LS-17 QA1：`SettingsRowView` 的 `.frame(minHeight: 44)` 已經滿足長輩硬約束
-            // ≥44pt 點擊目標，不需要再另外加不可見 padding（舊版占位頁的作法，見這支檔案的
-            // git 歷史）。
-            Button(action: signOut) {
-                SettingsRowView(icon: "rectangle.portrait.and.arrow.right", label: "登出", showsChevron: false)
-            }
-            .disabled(isSigningOut)
-            SettingsRowDivider()
-            // LS-193：接上真正的刪除帳號流程，取代 LS-188 佔位。
-            NavigationLink {
-                DeleteAccountFlowView(
-                    accountAPIClient: accountAPIClient, authStore: authStore, familyStore: familyStore,
-                    childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-                    eulaStore: eulaStore
-                )
-            } label: {
-                SettingsRowView(icon: "trash", label: "刪除帳號", isDestructive: true)
-            }
-        }
-    }
+    // MARK: - 帳號（`accountSection`，拆到 `SettingsView+Account.swift`——見該檔文件註解）
 }
 
 #if DEBUG
@@ -369,7 +350,7 @@ struct SettingsView: View {
             )),
             childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
             timelineStore: .preview(),
-            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false)
+            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), resumer: .preview()
         )
     }
 }
@@ -383,7 +364,7 @@ struct SettingsView: View {
             )),
             childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
             timelineStore: .preview(),
-            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false)
+            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), resumer: .preview()
         )
     }
     .environment(\.horizontalSizeClass, .regular)

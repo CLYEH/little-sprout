@@ -192,7 +192,7 @@ struct DeletionFailedView: View {
     DeletionCompletedView(model: DeleteAccountFlowModel(
         accountAPIClient: PreviewAccountAPIClient(), familyStore: .preview(), authStore: .preview(),
         childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
-        eulaStore: .preview(shouldPresent: false)
+        eulaStore: .preview(shouldPresent: false), resumer: .preview()
     ))
 }
 
@@ -200,7 +200,7 @@ struct DeletionFailedView: View {
     DeletionFailedView(model: DeleteAccountFlowModel(
         accountAPIClient: PreviewAccountAPIClient(), familyStore: .preview(), authStore: .preview(),
         childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
-        eulaStore: .preview(shouldPresent: false)
+        eulaStore: .preview(shouldPresent: false), resumer: .preview()
     ))
 }
 #endif

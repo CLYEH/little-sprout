@@ -29,6 +29,11 @@ struct LittleSproutApp: App {
     /// LS-193：`SettingsView`→`DeleteAccountFlowView` 用，同 `diaryAPIClient`／
     /// `mediaUploadService` 的既有角色分工（不隨 app 存活的無狀態 client）。
     let accountAPIClient: AccountAPIClient
+    /// merge-review R2 B2：`PendingAccountDeletionResumer` 是「續傳呼叫」的唯一擁有者，
+    /// 需要跨 `AuthenticatedGate`（登入完成／回前景觸發）與多個 `DeleteAccountFlowView`
+    /// 實例（畫面呈現）共用同一份、持續追蹤 `state` 變化——同 `familyStore`／`eulaStore`
+    /// 等既有 app 層 store 的角色，`@State` 讓它隨 app 存活、不會每次重繪都重建。
+    @State private var resumer: PendingAccountDeletionResumer
     /// LS-108：`littlesprout://invite/<code>` deep link（LS-39 已註冊 scheme）冷／熱啟動皆走
     /// `.onOpenURL`——寫進這裡，`ForkView` 是唯一消費者（見該檔文件）。這一層只負責接住 URL、
     /// 解析出碼，不判斷「現在該不該導頁」，那是 `ForkView` 才知道的事（是否已登入、是否已有
@@ -56,6 +61,7 @@ struct LittleSproutApp: App {
         diaryAPIClient = SupabaseDiaryAPIClient(client: client)
         mediaUploadService = SupabaseMediaUploadService(client: client)
         accountAPIClient = SupabaseAccountAPIClient(client: client)
+        _resumer = State(initialValue: PendingAccountDeletionResumer(accountAPIClient: accountAPIClient))
     }
 
     var body: some Scene {
@@ -88,6 +94,7 @@ struct LittleSproutApp: App {
             diaryAPIClient: diaryAPIClient,
             mediaUploadService: mediaUploadService,
             accountAPIClient: accountAPIClient,
+            resumer: resumer,
             pendingInviteCode: $pendingInviteCode
         )
         .onOpenURL { url in

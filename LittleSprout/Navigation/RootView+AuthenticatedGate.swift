@@ -43,6 +43,10 @@ struct AuthenticatedGate: View {
     let mediaUploadService: MediaUploadService
     /// LS-193：轉手往下傳到 `AuthenticatedRootView`→`SettingsView`→`DeleteAccountFlowView`。
     let accountAPIClient: AccountAPIClient
+    /// merge-review R2 B2／m1：`delete_my_account()` 續傳的唯一擁有者——這裡是「登入完成」
+    /// 這個觸發點（見 `PendingAccountDeletionResumer` 文件註解），`DeleteAccountFlowView`
+    /// 自己的 `.task` 是另一個觸發點（畫面進場）。
+    let resumer: PendingAccountDeletionResumer
     @Binding var pendingInviteCode: String?
 
     var body: some View {
@@ -68,6 +72,14 @@ struct AuthenticatedGate: View {
         .task(id: authStore.session?.userID) {
             await familyStore.syncOwner(to: authStore.session?.userID)
         }
+        // merge-review R2 B2／m1：登入完成（含回前景後 `authStore.session?.userID` 沒變但
+        // 這支 `.task(id:)` 重新掛載，例如整個 view identity 因為 scenePhase 變化重建）就
+        // 主動檢查一次本機續傳旗標——`resumeIfPending` 本身是 no-op-if-not-pending＋跨呼叫端
+        // 去重，重複呼叫沒有副作用。
+        .task(id: authStore.session?.userID) {
+            guard let userID = authStore.session?.userID else { return }
+            resumer.resumeIfPending(userID: userID)
+        }
     }
 
     /// LS-190 R2（merge-review R1 B2(b)）：判斷順序改成先看「這組結果是不是屬於 `userID`
@@ -88,6 +100,16 @@ struct AuthenticatedGate: View {
             ProgressView("正在確認條款狀態…")
         } else if eulaStore.shouldPresent == true {
             EULAConsentView(eulaStore: eulaStore, onDisagree: disagreeAndSignOut)
+        } else if PendingAccountDeletion.isPending(userID: userID) {
+            // merge-review R2 m1：本機續傳旗標存在時直接導 `DeleteAccountFlowView`，不必等
+            // 使用者自己在 `ForkView`「重試刪除」或 `SettingsView`「刪除帳號」手動點進去——
+            // 「啟動／登入後自動恢復」要真的成立，這裡是唯一會在正常已登入路徑上攔下來的地方
+            // （不論 `familyStore.myFamily` 有沒有值都攔，兩種情境都可能有續傳中的旗標）。
+            DeleteAccountFlowView(
+                accountAPIClient: accountAPIClient, authStore: authStore, familyStore: familyStore,
+                childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
+                eulaStore: eulaStore, resumer: resumer
+            )
         } else {
             familyGate
         }
@@ -108,13 +130,13 @@ struct AuthenticatedGate: View {
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
                     diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
-                    accountAPIClient: accountAPIClient
+                    accountAPIClient: accountAPIClient, resumer: resumer
                 )
             } else {
                 ForkView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
-                    accountAPIClient: accountAPIClient, pendingInviteCode: $pendingInviteCode
+                    accountAPIClient: accountAPIClient, resumer: resumer, pendingInviteCode: $pendingInviteCode
                 )
             }
         }

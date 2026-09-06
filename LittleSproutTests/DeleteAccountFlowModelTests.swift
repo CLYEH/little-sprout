@@ -34,6 +34,11 @@ final class DeleteAccountFlowModelTests: XCTestCase {
         let timelineStore: TimelineStore
         let albumsStore: AlbumsStore
         let eulaStore: EULAStore
+        /// merge-review R2 B2：`DeleteAccountFlowModel.init` 不再自己觸發續傳（見該檔文件
+        /// 註解），測試需要另外呼叫 `model.resumeIfNeeded()`（模擬 `DeleteAccountFlowView
+        /// .task` 的角色）才能真的跑到 `resumer` 的 `Task`——見
+        /// `DeleteAccountFlowModelResumeTests.swift`。
+        let resumer: PendingAccountDeletionResumer
     }
 
     /// 預設佈置成「一般成員」（`.leave`）——大多數狀態機測試不在乎進場分流，只在乎
@@ -62,15 +67,16 @@ final class DeleteAccountFlowModelTests: XCTestCase {
         let timelineStore = TimelineStore.preview()
         let albumsStore = AlbumsStore.preview()
         let eulaStore = EULAStore.preview(shouldPresent: false, judgedUserID: myID)
+        let resumer = PendingAccountDeletionResumer(accountAPIClient: accountAPIClient)
         let model = DeleteAccountFlowModel(
             accountAPIClient: accountAPIClient, familyStore: familyStore, authStore: authStore,
             childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-            eulaStore: eulaStore
+            eulaStore: eulaStore, resumer: resumer
         )
         return Fixture(
             model: model, familyStore: familyStore, authStore: authStore,
             childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-            eulaStore: eulaStore
+            eulaStore: eulaStore, resumer: resumer
         )
     }
 
@@ -139,7 +145,7 @@ final class DeleteAccountFlowModelTests: XCTestCase {
             accountAPIClient: StubAccountAPIClient(), familyStore: familyStore,
             authStore: AuthStore(authService: StubAuthService()),
             childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
-            eulaStore: .preview(shouldPresent: false)
+            eulaStore: .preview(shouldPresent: false), resumer: .preview()
         )
 
         guard case .membersLoadFailed(let error) = model.classification else {
@@ -148,20 +154,22 @@ final class DeleteAccountFlowModelTests: XCTestCase {
         XCTAssertEqual(error, .network(message: "offline"))
     }
 
-    /// M2：`myFamily == nil`（`ForkView`「刪除帳號」入口——多半是停權使用者，RLS 把家庭收斂成
-    /// 0 列）必須直接是 `.generalMember`，不能卡在 `.pending`——`refreshMembers()` 需要
-    /// `myFamily?.id` 才會真的打 API，沒有家庭就永遠沒有機會「載完」，卡在 `.pending` 等於
-    /// 使用者永遠到不了 04e。
-    func test_classification_noFamily_generalMember() {
+    /// M2／merge-review R2 m2：`myFamily == nil`（`ForkView`「刪除帳號」入口——多半是停權
+    /// 使用者，RLS 把家庭收斂成 0 列）必須是確定的分流，不能卡在 `.pending`——`refreshMembers()`
+    /// 需要 `myFamily?.id` 才會真的打 API，沒有家庭就永遠沒有機會「載完」，卡在 `.pending`
+    /// 等於使用者永遠到不了 04e。**R2 訂正**：不是 `.generalMember`（那樣 04a 會講一句 client
+    /// 端無法確認的話「其他家人不受影響」）——改成 `.soleMember`，沿用 04d 既有的「往最壞情況
+    /// 說」警示文案，不新增設計板，見 `DeleteAccountFlowModel.classification` 文件註解。
+    func test_classification_noFamily_soleMember() {
         let familyStore = FamilyStore.preview()
         let authStore = AuthStore(authService: StubAuthService())
         let model = DeleteAccountFlowModel(
             accountAPIClient: StubAccountAPIClient(), familyStore: familyStore, authStore: authStore,
             childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
-            eulaStore: .preview(shouldPresent: false)
+            eulaStore: .preview(shouldPresent: false), resumer: .preview()
         )
         XCTAssertNil(familyStore.myFamily, "前置：這個 fixture 刻意不建家庭")
-        XCTAssertEqual(model.classification, .generalMember)
+        XCTAssertEqual(model.classification, .soleMember)
     }
 
     // MARK: - proceedToFinalConfirm／cancelFinalConfirm

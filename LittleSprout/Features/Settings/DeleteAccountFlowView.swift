@@ -28,7 +28,8 @@ struct DeleteAccountFlowView: View {
         childrenStore: ChildrenStore,
         timelineStore: TimelineStore,
         albumsStore: AlbumsStore,
-        eulaStore: EULAStore
+        eulaStore: EULAStore,
+        resumer: PendingAccountDeletionResumer
     ) {
         self.childrenStore = childrenStore
         self.timelineStore = timelineStore
@@ -36,7 +37,7 @@ struct DeleteAccountFlowView: View {
         _model = State(initialValue: DeleteAccountFlowModel(
             accountAPIClient: accountAPIClient, familyStore: familyStore, authStore: authStore,
             childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-            eulaStore: eulaStore
+            eulaStore: eulaStore, resumer: resumer
         ))
     }
 
@@ -52,6 +53,13 @@ struct DeleteAccountFlowView: View {
             .task(id: model.familyStore.myFamily?.id) {
                 guard model.familyStore.myFamily?.id != nil, model.familyStore.members.isEmpty else { return }
                 await model.familyStore.refreshMembers()
+            }
+            // merge-review R2 B2：續傳呼叫（`finalizeAccountDeletion()`）搬出 `DeleteAccountFlowModel
+            // .init`，改在畫面進場時觸發——`.task`（無 `id:`）只在這個 view identity 第一次出現時
+            // 跑一次，`PendingAccountDeletionResumer.resumeIfPending(userID:)` 本身也有跨呼叫端的
+            // in-flight 去重，兩層保護疊在一起，不會因為這支 view 重繪就重打 EF。
+            .task {
+                model.resumeIfNeeded()
             }
     }
 
@@ -348,7 +356,7 @@ struct SoleMemberDeleteWarningView: View {
                 id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
             childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
-            eulaStore: .preview(shouldPresent: false)
+            eulaStore: .preview(shouldPresent: false), resumer: .preview()
         )
     }
 }

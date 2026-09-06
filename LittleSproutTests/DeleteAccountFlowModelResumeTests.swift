@@ -1,12 +1,19 @@
 import Foundation
 @testable import LittleSprout
+import os
 import XCTest
 
-/// LS-193 merge-review R1 M3：`delete_my_account()` RPC 已成功、Edge Function 沒打完（app
-/// 被殺掉／失敗）之後的續傳——`PendingAccountDeletion` 本機旗標存在時，`DeleteAccountFlowModel
-/// .init` 必須直接跳過三分流／04e，續傳到 04f 重打 EF。跟 `DeleteAccountFlowModelTests` 是同一
-/// 個測試對象，拆成獨立檔案同 `DeleteAccountFlowModelRaceTests.swift` 的既有理由——共用該檔的
-/// `makeModel(...)`／`waitUntil(...)` 測試工廠方法，額外需要一個「有 session」的 `authStub`。
+/// LS-193 merge-review R1 M3／R2 B2：`delete_my_account()` RPC 已成功、Edge Function 沒打完
+/// （app 被殺掉／失敗）之後的續傳。跟 `DeleteAccountFlowModelTests` 是同一個測試對象，拆成獨立
+/// 檔案同 `DeleteAccountFlowModelRaceTests.swift` 的既有理由——共用該檔的 `makeModel(...)`／
+/// `waitUntil(...)` 測試工廠方法，額外需要一個「有 session」的 `authStub`。
+///
+/// **merge-review R2 B2 訂正**：`DeleteAccountFlowModel.init` 不再自己打 EF（見該檔文件
+/// 註解）——這裡的測試因此明確呼叫 `model.resumeIfNeeded()` 模擬 `DeleteAccountFlowView.task`
+/// 的角色，才能真的觸發 `PendingAccountDeletionResumer` 的 `Task`。`step` 在
+/// `resumeIfNeeded()` 呼叫之前就已經同步反映本機旗標（見 `test
+/// _step_pendingFlagSet_synchronouslyShowsInProgressBeforeResuming`），但不會有任何網路呼叫
+/// 發生，直到真的呼叫 `resumeIfNeeded()`。
 extension DeleteAccountFlowModelTests {
     /// 每支測試結束都清掉 `myID` 的旗標——`UserDefaults.standard` 是全域單例，不清會讓其他
     /// 用到同一個 `myID` 常數的測試（`DeleteAccountFlowModelTests` 主檔）誤讀到殘留狀態。
@@ -18,22 +25,27 @@ extension DeleteAccountFlowModelTests {
         return makeModel(accountAPIClient: accountAPIClient, authStub: StubAuthService(currentSession: session))
     }
 
-    func test_init_pendingFlagSet_immediatelyEntersInProgress_synchronously() {
+    /// **merge-review R2 B2 核心釘樁**：本機旗標存在時，`step` 必須在 `resumeIfNeeded()` 被
+    /// 呼叫**之前**就已經同步顯示 `.inProgress`（純讀 `UserDefaults`，不是網路 I/O，見
+    /// `DeleteAccountFlowModel.step` 文件註解），但這個時候還沒有任何網路呼叫真的發生——
+    /// `finalizeCallCount` 必須是 0。這證明「畫面不閃到三分流」與「init 不做 I/O」兩件事同時
+    /// 成立，不是互斥的。
+    func test_step_pendingFlagSet_synchronouslyShowsInProgress_withoutNetworkCall() {
         defer { PendingAccountDeletion.clear(userID: myID) }
-        let fixture = makeResumableFixture()
+        let stub = StubAccountAPIClient()
+        let fixture = makeResumableFixture(accountAPIClient: stub)
 
-        // 不 await 任何東西——`step` 必須在 `init` 回傳的當下就已經是 `.inProgress`（見該屬性
-        // 賦值處文件註解：不能等 `Task` 排程到才設，否則會有一格畫面閃到三分流）。
         XCTAssertEqual(fixture.model.step, .inProgress)
-        XCTAssertTrue(fixture.model.deletionRequested, "旗標存在代表 RPC 上次已經成功，不該重打")
+        XCTAssertEqual(stub.finalizeCallCount, 0, "還沒呼叫 resumeIfNeeded()，不該有任何網路呼叫")
     }
 
-    func test_init_pendingFlagSet_doesNotCallDeleteMyAccountAgain_onlyFinalize() async {
+    func test_resumeIfNeeded_pendingFlagSet_doesNotCallDeleteMyAccountAgain_onlyFinalize() async {
         defer { PendingAccountDeletion.clear(userID: myID) }
         let stub = StubAccountAPIClient()
         stub.setFinalizeHandler {}
         let fixture = makeResumableFixture(accountAPIClient: stub)
 
+        fixture.model.resumeIfNeeded()
         let met = await waitUntil { fixture.model.step == .completed }
         XCTAssertTrue(met, "等待續傳完成逾時（1 秒）")
 
@@ -41,12 +53,13 @@ extension DeleteAccountFlowModelTests {
         XCTAssertEqual(stub.finalizeCallCount, 1)
     }
 
-    func test_init_pendingFlagSet_finalizeSucceeds_clearsPendingFlag() async {
+    func test_resumeIfNeeded_pendingFlagSet_finalizeSucceeds_clearsPendingFlag() async {
         defer { PendingAccountDeletion.clear(userID: myID) }
         let stub = StubAccountAPIClient()
         stub.setFinalizeHandler {}
         let fixture = makeResumableFixture(accountAPIClient: stub)
 
+        fixture.model.resumeIfNeeded()
         let met = await waitUntil { fixture.model.step == .completed }
         XCTAssertTrue(met, "等待續傳完成逾時（1 秒）")
 
@@ -56,12 +69,13 @@ extension DeleteAccountFlowModelTests {
         )
     }
 
-    func test_init_pendingFlagSet_finalizeFails_movesToFailed_flagStaysPending() async {
+    func test_resumeIfNeeded_pendingFlagSet_finalizeFails_movesToFailed_flagStaysPending() async {
         defer { PendingAccountDeletion.clear(userID: myID) }
         let stub = StubAccountAPIClient()
         stub.setFinalizeHandler { throw AppError.server(message: "ef down", code: nil) }
         let fixture = makeResumableFixture(accountAPIClient: stub)
 
+        fixture.model.resumeIfNeeded()
         let met = await waitUntil {
             if case .failed = fixture.model.step { return true }
             return false
@@ -72,6 +86,37 @@ extension DeleteAccountFlowModelTests {
             PendingAccountDeletion.isPending(userID: myID),
             "EF 還沒成功，旗標必須留著，下次啟動才能再續傳"
         )
+    }
+
+    /// **merge-review R2 B2**：續傳失敗後 04h「重試」（`confirmDeletion()`）必須走
+    /// `resumer.retry(userID:)`，不是 `performDeletion()`——這個 model 實例的 `deletionRequested`
+    /// 對續傳情境毫無意義（一律是 `false`），若誤走 `performDeletion()` 會重打已經成功過的
+    /// `deleteMyAccount()` RPC。
+    func test_confirmDeletion_afterResumeFails_retriesViaResumer_notPerformDeletion() async {
+        defer { PendingAccountDeletion.clear(userID: myID) }
+        let stub = StubAccountAPIClient()
+        let finalizeShouldFail = OSAllocatedUnfairLock(initialState: true)
+        stub.setFinalizeHandler {
+            if finalizeShouldFail.withLock({ $0 }) {
+                throw AppError.server(message: "ef down", code: nil)
+            }
+        }
+        let fixture = makeResumableFixture(accountAPIClient: stub)
+
+        fixture.model.resumeIfNeeded()
+        let firstAttemptFailed = await waitUntil {
+            if case .failed = fixture.model.step { return true }
+            return false
+        }
+        XCTAssertTrue(firstAttemptFailed, "等待第一次續傳失敗逾時（1 秒）")
+
+        finalizeShouldFail.withLock { $0 = false }
+        fixture.model.confirmDeletion()
+        let met = await waitUntil { fixture.model.step == .completed }
+        XCTAssertTrue(met, "等待重試完成逾時（1 秒）")
+
+        XCTAssertEqual(stub.deleteMyAccountCallCount, 0, "續傳情境下 RPC 早就成功過，重試不該呼叫它")
+        XCTAssertEqual(stub.finalizeCallCount, 2)
     }
 
     /// `performDeletion()` 這一側：一般（非續傳）路徑 RPC 成功的當下就該落地旗標——不是等到

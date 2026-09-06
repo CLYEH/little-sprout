@@ -65,7 +65,7 @@ extension TapTargetGateHarness {
         DeleteAccountFlowModel(
             accountAPIClient: PreviewAccountAPIClient(), familyStore: familyStore, authStore: .preview(),
             childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
-            eulaStore: .preview(shouldPresent: false)
+            eulaStore: .preview(shouldPresent: false), resumer: .preview()
         )
     }
 
@@ -77,7 +77,7 @@ extension TapTargetGateHarness {
             DeleteAccountFlowView(
                 accountAPIClient: PreviewAccountAPIClient(), authStore: .preview(), familyStore: familyStore,
                 childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
-                eulaStore: .preview(shouldPresent: false)
+                eulaStore: .preview(shouldPresent: false), resumer: .preview()
             )
         }
     }
@@ -90,7 +90,7 @@ extension TapTargetGateHarness {
             DeleteAccountFlowView(
                 accountAPIClient: PreviewAccountAPIClient(), authStore: .preview(), familyStore: familyStore,
                 childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
-                eulaStore: .preview(shouldPresent: false)
+                eulaStore: .preview(shouldPresent: false), resumer: .preview()
             )
         }
     }
@@ -103,7 +103,7 @@ extension TapTargetGateHarness {
             DeleteAccountFlowView(
                 accountAPIClient: PreviewAccountAPIClient(), authStore: .preview(), familyStore: familyStore,
                 childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
-                eulaStore: .preview(shouldPresent: false)
+                eulaStore: .preview(shouldPresent: false), resumer: .preview()
             )
         }
     }

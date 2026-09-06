@@ -25,6 +25,8 @@ struct ForkView: View {
     let albumsStore: AlbumsStore
     let eulaStore: EULAStore
     let accountAPIClient: AccountAPIClient
+    /// merge-review R2 B2：轉手往下傳到 `.deleteAccount` route 的 `DeleteAccountFlowView`。
+    let resumer: PendingAccountDeletionResumer
     /// LS-108 deep link：`littlesprout://invite/<code>`（LS-39 已註冊 scheme）冷／熱啟動皆帶碼
     /// 進 06 並預填。`LittleSproutApp` 用 `.onOpenURL` 寫入這個 binding，這裡消費（讀到就清空，
     /// 避免同一個碼被重複導頁）。
@@ -71,7 +73,7 @@ struct ForkView: View {
                     DeleteAccountFlowView(
                         accountAPIClient: accountAPIClient, authStore: authStore, familyStore: familyStore,
                         childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-                        eulaStore: eulaStore
+                        eulaStore: eulaStore, resumer: resumer
                     )
                 }
             }
@@ -90,6 +92,14 @@ struct ForkView: View {
         .task {
             guard path.isEmpty, pendingInviteCode == nil else { return }
             await navigateToJoinFlowIfPending()
+        }
+        // merge-review R2 m1：第一次真的收到 `LS051`（帳號刪除進行中）就立刻把本機續傳旗標
+        // 落地——不等使用者按下「重試刪除」，見 `suspendedFooter` 文件註解。用 `.onChange`
+        // 而不是在 `suspendedFooter` 這個 `@ViewBuilder` 裡放副作用：view body 求值不該有
+        // 副作用，`.onChange` 才是 SwiftUI 慣用的「狀態變化時執行一次性動作」寫法。
+        .onChange(of: familyStore.accountDeletionInProgressError) { _, newValue in
+            guard newValue != nil, let userID = authStore.session?.userID else { return }
+            PendingAccountDeletion.markPending(userID: userID)
         }
     }
 
@@ -295,7 +305,7 @@ struct ForkView: View {
     ForkView(
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), eulaStore: .preview(shouldPresent: false),
-        accountAPIClient: PreviewAccountAPIClient(), pendingInviteCode: .constant(nil)
+        accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(), pendingInviteCode: .constant(nil)
     )
 }
 
@@ -303,7 +313,7 @@ struct ForkView: View {
     ForkView(
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), eulaStore: .preview(shouldPresent: false),
-        accountAPIClient: PreviewAccountAPIClient(), pendingInviteCode: .constant(nil)
+        accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(), pendingInviteCode: .constant(nil)
     )
     .environment(\.horizontalSizeClass, .regular)
 }
@@ -312,7 +322,7 @@ struct ForkView: View {
     ForkView(
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), eulaStore: .preview(shouldPresent: false),
-        accountAPIClient: PreviewAccountAPIClient(), pendingInviteCode: .constant(nil)
+        accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(), pendingInviteCode: .constant(nil)
     )
     .dynamicTypeSize(.accessibility3)
 }

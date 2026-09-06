@@ -9,8 +9,15 @@ import Foundation
 ///
 /// **只存布林、以 `userID` 分 key**（不是單一全域旗標）：同一台裝置理論上不會有兩個帳號
 /// 同時處於這個狀態，但用 `userID` 分 key 比較不會在「使用者其實還沒真的按過刪除、只是
-/// `UserDefaults` 殘留上一位使用者的旗標」這種邊界情況下誤觸發——`clear(userID:)` 在完成
-/// （04g）或使用者登出時都會呼叫，正常路徑不會累積殘留。
+/// `UserDefaults` 殘留上一位使用者的旗標」這種邊界情況下誤觸發。
+///
+/// **merge-review R2 i2 訂正**：`clear(userID:)` 只在 EF 真的成功那一刻呼叫（見
+/// `PendingAccountDeletionResumer.resumeIfPending(userID:)`）——**登出不清**（`ForkView
+/// .signOutTapped`／`SettingsView.signOut`／`DeleteAccountFlowModel.finishAndReturnToWelcome`
+/// 都不會呼叫這支）：這個旗標跟帳號本身綁定，不是跟本機 session 綁定；使用者登出後換另一個
+/// 帳號登入、或同一個帳號在另一台裝置登入，都應該仍然看得到「這個帳號還在半刪除狀態」並自動
+/// 續傳，不能因為中途登出一次就忘記。舊版註解宣稱「登出時都會呼叫」跟實作不符，這裡訂正為
+/// 實際行為。
 ///
 /// **用 `UserDefaults` 而非 Keychain**：這個旗標本身不是敏感資訊（不含任何帳號內容，只是
 /// 「這個 userID 曾經按過刪除」的布林值），跟隨 app 解除安裝一起消失是可接受的行為
