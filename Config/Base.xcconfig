@@ -20,4 +20,18 @@
 SUPABASE_URL = https:$()/$()/placeholder.supabase.co
 SUPABASE_ANON_KEY = placeholder-anon-key-not-a-real-secret
 
+// LS-217：`aps-environment` entitlement 只能在 provisioning 真的開了 Push capability 時簽入
+// ——LS-8（Apple Developer Program）未完成前，實機／個人 team 簽這個 entitlement 會直接建置
+// 失敗。預設關（`PUSH_ENTITLEMENT = NO`）：`CODE_SIGN_ENTITLEMENTS` 這時展開成
+// `CODE_SIGN_ENTITLEMENTS_NO`（空字串），完全不引用 `LittleSprout.entitlements`，CI／模擬器／
+// 沒有 `Secrets.xcconfig` 的新機器都不受影響。LS-8 後想開：在（gitignored 的）
+// `Secrets.xcconfig` 加一行 `PUSH_ENTITLEMENT = YES`——因為 `#include?` 在下面、後面的定義
+// 覆蓋前面的同名 key（xcconfig 的變數是建置時展開，不是逐行覆蓋，覆蓋順序看的是「最後一次
+// 賦值」，見 `LittleSprout.entitlements` 文件註解），`CODE_SIGN_ENTITLEMENTS` 就會展開成
+// `CODE_SIGN_ENTITLEMENTS_YES`，正式引用該檔。
+PUSH_ENTITLEMENT = NO
+CODE_SIGN_ENTITLEMENTS_NO =
+CODE_SIGN_ENTITLEMENTS_YES = LittleSprout/LittleSprout.entitlements
+CODE_SIGN_ENTITLEMENTS = $(CODE_SIGN_ENTITLEMENTS_$(PUSH_ENTITLEMENT))
+
 #include? "Secrets.xcconfig"

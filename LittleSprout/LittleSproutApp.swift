@@ -37,6 +37,13 @@ struct LittleSproutApp: App {
     /// LS-189：內容操作表（檢舉／封鎖／Owner 移除）用的 client——不是 `@State`，同
     /// `diaryAPIClient` 的既有理由（不可變的純 service 物件，本身不 Observable）。
     let safetyAPIClient: SafetyAPIClient
+    /// LS-217：推播權限與裝置 token 註冊——跟 `familyStore` 同理隨 app 存活，見
+    /// `PushNotificationStore` 文件註解。
+    @State private var pushNotificationStore: PushNotificationStore
+    /// LS-217：`UIApplicationDelegateAdaptor` 橋接（見 `AppDelegate` 文件註解）——收
+    /// `didRegisterForRemoteNotificationsWithDeviceToken` 這類 UIKit-only 回呼，SwiftUI `App`
+    /// 沒有原生管道能收到。
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate: AppDelegate
     /// LS-108：`littlesprout://invite/<code>` deep link（LS-39 已註冊 scheme）冷／熱啟動皆走
     /// `.onOpenURL`——寫進這裡，`ForkView` 是唯一消費者（見該檔文件）。這一層只負責接住 URL、
     /// 解析出碼，不判斷「現在該不該導頁」，那是 `ForkView` 才知道的事（是否已登入、是否已有
@@ -70,6 +77,16 @@ struct LittleSproutApp: App {
         accountAPIClient = SupabaseAccountAPIClient(client: client)
         _resumer = State(initialValue: PendingAccountDeletionResumer(accountAPIClient: accountAPIClient))
         safetyAPIClient = SupabaseSafetyAPIClient(client: client)
+        let pushNotificationStore = PushNotificationStore(
+            authorizationService: SystemPushAuthorizationService(),
+            deviceTokenAPIClient: SupabasePushDeviceTokenAPIClient(client: client)
+        )
+        _pushNotificationStore = State(initialValue: pushNotificationStore)
+        // `UIApplicationDelegateAdaptor` 的 `appDelegate` 在這裡已經可以安全讀寫（見
+        // `AppDelegate` 文件註解）——把兩個 store 原樣指派過去，AppDelegate 收到 UIKit
+        // 回呼時才讀得到「當下」的登入者與 push store。
+        appDelegate.authStore = authStore
+        appDelegate.pushNotificationStore = pushNotificationStore
     }
 
     var body: some Scene {
@@ -104,6 +121,7 @@ struct LittleSproutApp: App {
             accountAPIClient: accountAPIClient,
             resumer: resumer,
             safetyAPIClient: safetyAPIClient,
+            pushNotificationStore: pushNotificationStore,
             pendingInviteCode: $pendingInviteCode
         )
         .onOpenURL { url in
