@@ -123581,6 +123581,22 @@
                       "content": "我已閱讀並同意"
                     }
                   }
+                },
+                {
+                  "id": "uyQcn",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Disagree Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "不同意，登出"
+                    }
+                  }
                 }
               ]
             }
@@ -127551,6 +127567,78 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "dMebO",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "R6Gh0T",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-208",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Y7Va56",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-190 merge-review R1 comment a4ffee31 m4：08 EULA 同意頁只有『使用條款更新』一種文案，首次登入（acceptedVersion==nil）顯示也不合語境（票文範圍 1 明寫這張畫面同時服務首次登入與版本更新兩種情境）。本票新增文案變體：JzyIv（LS-152 / 08b EULA 同意頁 · 首次登入）——Title 改『開始使用前，請詳閱使用條款』、Subtitle 改『在繼續使用萌芽日記之前，請看一下最重要的一段。』（拿掉『我們更新了《使用條款》』這句「更新」框架），零容忍摘要卡片內容完全不變；AX3 見 RC7bN。實作對應：EULAConsentView 依 acceptedVersion==nil 分流 Title／Subtitle 兩組字串，Zero Tolerance Card 與按鈕列共用同一份 View。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "tAxjc",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "xOeeo",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-208",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "gMWNP",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-190 R1 comment a4ffee31（informational，未列 blocker）與稿面缺口：08 板原本沒有『不同意』出口。本票在 z042Yg（基準板，已改為含此鈕）＋ JzyIv（首次登入變體）Action Bar 的 Agree Button 下方補上 Disagree Button（cmp/Button Text，descendants breqI enabled:false／hIhVd content『不同意，登出』），語彙同『先不要，返回設定』等既有 cmp/Button Text 用法——中性文字色、非 $danger（品牌十條 #1「danger 不做主鍵」），minHeight 48 由元件本身保證。與現行實作 EULAConsentView 的『不同意，登出』文字鈕定案一致（merge-reviewer 已裁定不退修，本票補稿面）。AX3 板 rh2Q1 整板重建為 Oic2v（board height 2681→2760，Action Bar 279pt 含新按鈕，Spacer 176pt 無裁切）；JzyIv 的 AX3 RC7bN 同步新建（height 2760，Spacer 166pt 無裁切）。舊 id rh2Q1 已於本輪刪除重建，現行 id 為 Oic2v。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         }
@@ -128481,401 +128569,6 @@
         {
           "type": "frame",
           "id": "Q5cmj",
-          "name": "Home Indicator Area",
-          "width": "fill_container",
-          "height": 34,
-          "justifyContent": "center",
-          "alignItems": "center"
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "rh2Q1",
-      "x": 17624,
-      "y": 23117,
-      "name": "A11y / 08 EULA 同意頁 · Dynamic Type AX3",
-      "theme": {
-        "size": "ax3"
-      },
-      "clip": true,
-      "width": 393,
-      "height": 2681,
-      "fill": {
-        "type": "gradient",
-        "gradientType": "radial",
-        "enabled": true,
-        "rotation": 0,
-        "size": {
-          "width": 1.6997455470737914,
-          "height": 1.3497652582159625
-        },
-        "colors": [
-          {
-            "color": "$bg-lit",
-            "position": 0
-          },
-          {
-            "color": "$bg",
-            "position": 1
-          }
-        ],
-        "center": {
-          "x": 0.13994910941475827,
-          "y": 0.01995305164319249
-        }
-      },
-      "cornerRadius": 44,
-      "layout": "vertical",
-      "children": [
-        {
-          "id": "wwTvP",
-          "type": "ref",
-          "ref": "OeXop",
-          "name": "Status Bar",
-          "width": "fill_container"
-        },
-        {
-          "type": "frame",
-          "id": "OwhFv",
-          "name": "Body",
-          "width": "fill_container",
-          "height": 2275,
-          "layout": "vertical",
-          "padding": [
-            24,
-            "$screen-pad",
-            0,
-            "$screen-pad"
-          ],
-          "children": [
-            {
-              "type": "frame",
-              "id": "zEvYr",
-              "name": "Header",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-label",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "reoU2",
-                  "name": "Title",
-                  "fill": "$text-primary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "使用條款更新",
-                  "lineHeight": 1.25,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-display",
-                  "fontWeight": "700"
-                },
-                {
-                  "type": "text",
-                  "id": "rCqJa",
-                  "name": "Subtitle",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "我們更新了《使用條款》。在繼續使用萌芽日記之前，請看一下最重要的一段。",
-                  "lineHeight": 1.6,
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-body",
-                  "fontWeight": "normal"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "PGAo5",
-              "name": "Card Wrap",
-              "width": "fill_container",
-              "layout": "vertical",
-              "padding": [
-                "$sp-section",
-                0,
-                0,
-                0
-              ],
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "vQAOx",
-                  "name": "Zero Tolerance Card",
-                  "width": "fill_container",
-                  "fill": "$surface",
-                  "cornerRadius": "$radius-lg",
-                  "stroke": "$border",
-                  "strokeWidth": 1,
-                  "layout": "vertical",
-                  "gap": "$sp-block",
-                  "padding": "$inset-card",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "P7zIS",
-                      "name": "Card Head",
-                      "width": "fill_container",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "A8fwj",
-                          "name": "Icon",
-                          "width": 22,
-                          "height": 22,
-                          "icon": "shield-alert",
-                          "library": "lucide",
-                          "fill": "$text-primary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "e4Uqrv",
-                          "name": "Label",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "對冒犯性內容零容忍",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "700"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "E12jLC",
-                      "name": "Point",
-                      "width": "fill_container",
-                      "gap": "$sp-group",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "yY7ns",
-                          "name": "Dot",
-                          "width": 6,
-                          "height": 6,
-                          "icon": "circle",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "yxuV8",
-                          "name": "Text",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "色情、暴力、騷擾、歧視、侵害他人隱私的內容一律禁止；情節重大者會永久停權，涉及未成年人安全的內容會依法通報。",
-                          "lineHeight": 1.55,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "FOaJh",
-                      "name": "Point",
-                      "width": "fill_container",
-                      "gap": "$sp-group",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "TQBP6",
-                          "name": "Dot",
-                          "width": 6,
-                          "height": 6,
-                          "icon": "circle",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "gqXIv",
-                          "name": "Text",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "任何家庭成員都能在 App 內檢舉，我們與家庭管理者都會處理，並在收到後 24 小時內採取行動。",
-                          "lineHeight": 1.55,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "X0l8OV",
-                      "name": "Point",
-                      "width": "fill_container",
-                      "gap": "$sp-group",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "FtpR6",
-                          "name": "Dot",
-                          "width": 6,
-                          "height": 6,
-                          "icon": "circle",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "wxWTS",
-                          "name": "Text",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "你可以封鎖任何成員；對方不會收到通知，也不會受到任何影響。",
-                          "lineHeight": 1.55,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "YHm8F",
-                      "name": "Point",
-                      "width": "fill_container",
-                      "gap": "$sp-group",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "Cmkwc",
-                          "name": "Dot",
-                          "width": 6,
-                          "height": 6,
-                          "icon": "circle",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "W6lr9R",
-                          "name": "Text",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "家庭管理者可以移除違規內容、移除成員，並處理家庭內的檢舉。",
-                          "lineHeight": 1.55,
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "nrqqV",
-              "name": "Spacer",
-              "width": "fill_container",
-              "height": 8
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "LLD8z",
-          "name": "Action Bar",
-          "width": "fill_container",
-          "stroke": "#00000000",
-          "strokeAlignment": "inner",
-          "layout": "vertical",
-          "children": [
-            {
-              "type": "rectangle",
-              "id": "ruAPF",
-              "name": "Hairline",
-              "fill": "$border",
-              "width": "fill_container",
-              "height": 1
-            },
-            {
-              "type": "frame",
-              "id": "V0w17",
-              "name": "Button Wrap",
-              "width": "fill_container",
-              "fill": "$surface",
-              "layout": "vertical",
-              "gap": "$sp-label",
-              "padding": [
-                "$sp-item",
-                "$screen-pad"
-              ],
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "e6VbF",
-                  "name": "Link Wrap",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "s3HCMd",
-                      "name": "Legal Link",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": 1,
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "SwMap",
-                          "name": "Label",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "查看完整《使用條款》與《隱私權政策》",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "rectangle",
-                          "id": "LcINJ",
-                          "name": "Underline",
-                          "fill": "$text-primary",
-                          "width": "fill_container",
-                          "height": 1
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "id": "i9XLc",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Agree Button",
-                  "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "check"
-                    },
-                    "w7CUP": {
-                      "content": "我已閱讀並同意"
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "wXPnP",
           "name": "Home Indicator Area",
           "width": "fill_container",
           "height": 34,
@@ -152418,6 +152111,1218 @@
         {
           "type": "frame",
           "id": "QLqC5",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Oic2v",
+      "x": 17624,
+      "y": 23117,
+      "name": "A11y / 08 EULA 同意頁 · Dynamic Type AX3",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 2760,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "OYtUf",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "ejpEE",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            24,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "d58Ed0",
+              "name": "Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Ck0JR",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "使用條款更新",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "cYr7U",
+                  "name": "Subtitle",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "我們更新了《使用條款》。在繼續使用萌芽日記之前，請看一下最重要的一段。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "kYKEu",
+              "name": "Card Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "eylYm",
+                  "name": "Zero Tolerance Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "i7vE9",
+                      "name": "Card Head",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "XvnI0",
+                          "name": "Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "shield-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "U6Zy0l",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "對冒犯性內容零容忍",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WNiS1",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "OxUXO",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "RpN4p",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "色情、暴力、騷擾、歧視、侵害他人隱私的內容一律禁止；情節重大者會永久停權，涉及未成年人安全的內容會依法通報。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wKkiF",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "N7mlTt",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "hLv36",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "任何家庭成員都能在 App 內檢舉，我們與家庭管理者都會處理，並在收到後 24 小時內採取行動。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "K0ACU",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "aGyQB",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "b7Rqe",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "你可以封鎖任何成員；對方不會收到通知，也不會受到任何影響。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SmTg8",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "yUwZH",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "L2mhL",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "家庭管理者可以移除違規內容、移除成員，並處理家庭內的檢舉。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "iYGzN",
+              "name": "Spacer",
+              "width": "fill_container",
+              "height": "fill_container"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "joGaA",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "stroke": "#00000000",
+          "strokeAlignment": "inner",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "i2fUq",
+              "name": "Hairline",
+              "fill": "$border",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "p03Bn",
+              "name": "Button Wrap",
+              "width": "fill_container",
+              "fill": "$surface",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "bqRyI",
+                  "name": "Link Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "QQOCI",
+                      "name": "Legal Link",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "msIdy",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "查看完整《使用條款》與《隱私權政策》",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "oRufM",
+                          "name": "Underline",
+                          "fill": "$text-primary",
+                          "width": 238,
+                          "height": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "Y8KQ0i",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Agree Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "check"
+                    },
+                    "w7CUP": {
+                      "content": "我已閱讀並同意"
+                    }
+                  }
+                },
+                {
+                  "id": "Z6aUp2",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Disagree Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "不同意，登出"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "c8NboP",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "JzyIv",
+      "x": 22795,
+      "y": 23117,
+      "name": "LS-152 / 08b EULA 同意頁 · 首次登入",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "JIxjx",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "N81yn",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            24,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "IKJDQ",
+              "name": "Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "o36vcK",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "開始使用前，請詳閱使用條款",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "wZfes",
+                  "name": "Subtitle",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "在繼續使用萌芽日記之前，請看一下最重要的一段。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "dMV8L",
+              "name": "Card Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "crs3V",
+                  "name": "Zero Tolerance Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Fe4AH",
+                      "name": "Card Head",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "Echti",
+                          "name": "Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "shield-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "P6Yg7",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "對冒犯性內容零容忍",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "D2jwdX",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "uODiR",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "VBGna",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "色情、暴力、騷擾、歧視、侵害他人隱私的內容一律禁止；情節重大者會永久停權，涉及未成年人安全的內容會依法通報。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SgqVw",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "X59KB",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "UyoBS",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "任何家庭成員都能在 App 內檢舉，我們與家庭管理者都會處理，並在收到後 24 小時內採取行動。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "qcaXQ",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "wpdB2",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "GYNEW",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "你可以封鎖任何成員；對方不會收到通知，也不會受到任何影響。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ITRg9",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "kPXUz",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "H5MZX",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "家庭管理者可以移除違規內容、移除成員，並處理家庭內的檢舉。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "AAMKS",
+              "name": "Spacer",
+              "width": "fill_container",
+              "height": "fill_container"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "f9my9c",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "stroke": "#00000000",
+          "strokeAlignment": "inner",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "uRFds",
+              "name": "Hairline",
+              "fill": "$border",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "orZtZ",
+              "name": "Button Wrap",
+              "width": "fill_container",
+              "fill": "$surface",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "pXnRT",
+                  "name": "Link Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "LueB3",
+                      "name": "Legal Link",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "VOwDM",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "查看完整《使用條款》與《隱私權政策》",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "n6plrf",
+                          "name": "Underline",
+                          "fill": "$text-primary",
+                          "width": 238,
+                          "height": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "h9cYQ",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Agree Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "check"
+                    },
+                    "w7CUP": {
+                      "content": "我已閱讀並同意"
+                    }
+                  }
+                },
+                {
+                  "id": "ozEFV",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Disagree Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "不同意，登出"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "G0dKb",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "RC7bN",
+      "x": 22795,
+      "y": 24049,
+      "name": "A11y / 08b EULA 同意頁 · 首次登入 · Dynamic Type AX3",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 2760,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "miM4X",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "sEExs",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            24,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Shhq2",
+              "name": "Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "nQ8un",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "開始使用前，請詳閱使用條款",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "rNuLt",
+                  "name": "Subtitle",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "在繼續使用萌芽日記之前，請看一下最重要的一段。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "hFf9S",
+              "name": "Card Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "padding": [
+                "$sp-section",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "baNbO",
+                  "name": "Zero Tolerance Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "GRQEu",
+                      "name": "Card Head",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "p6Nfl",
+                          "name": "Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "shield-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "gBOIV",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "對冒犯性內容零容忍",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "xHCpf",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "O47cRW",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "TWP5I",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "色情、暴力、騷擾、歧視、侵害他人隱私的內容一律禁止；情節重大者會永久停權，涉及未成年人安全的內容會依法通報。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "M160Q",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "Oohcl",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "eyJT3",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "任何家庭成員都能在 App 內檢舉，我們與家庭管理者都會處理，並在收到後 24 小時內採取行動。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nU0gJ",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "P8194",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "iFpKu",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "你可以封鎖任何成員；對方不會收到通知，也不會受到任何影響。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mO863",
+                      "name": "Point",
+                      "width": "fill_container",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "x92mQ",
+                          "name": "Dot",
+                          "width": 6,
+                          "height": 6,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ULGYe",
+                          "name": "Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "家庭管理者可以移除違規內容、移除成員，並處理家庭內的檢舉。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "yN6tT",
+              "name": "Spacer",
+              "width": "fill_container",
+              "height": "fill_container"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "M4Ep3",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "stroke": "#00000000",
+          "strokeAlignment": "inner",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "mj2ZK",
+              "name": "Hairline",
+              "fill": "$border",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "RbkVB",
+              "name": "Button Wrap",
+              "width": "fill_container",
+              "fill": "$surface",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "BpHdM",
+                  "name": "Link Wrap",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "V2hzB",
+                      "name": "Legal Link",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "EZ7eG",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "查看完整《使用條款》與《隱私權政策》",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "NUyDw",
+                          "name": "Underline",
+                          "fill": "$text-primary",
+                          "width": 238,
+                          "height": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "XUbdY",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Agree Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "check"
+                    },
+                    "w7CUP": {
+                      "content": "我已閱讀並同意"
+                    }
+                  }
+                },
+                {
+                  "id": "lU7Kr",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Disagree Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "不同意，登出"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "i6P53Q",
           "name": "Home Indicator Area",
           "width": "fill_container",
           "height": 34,
