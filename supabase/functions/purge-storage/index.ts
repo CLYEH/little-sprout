@@ -82,7 +82,7 @@
 // 呼叫這支函式）由 orchestrator 依 LS-78 授權狀態決定，不在本票落地範圍——見
 // migration 檔頭「規格分歧與取捨 c)」。
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { isAuthorizedServiceCall, resolveSecretKey } from "../_shared/keys.ts";
 
 const BATCH_SIZE = 200; // 每批讀取／刪除的筆數，對齊 Storage remove() API 一次呼叫的合理批次大小。
@@ -90,11 +90,49 @@ const MAX_BATCHES = 20; // 安全上限（20 × 200 = 4000 筆／次 invocation�
 const MAX_ATTEMPTS = 5; // 超過這個重試次數視為死信，SELECT 不再選到（停放，見上方 R3 說明）。
 const DELETE_CHUNK_SIZE = 50; // dequeue 時 .in() 帶的 id 數上限（i3），避免 URL 過長。
 
+// LS-213 範圍 2（來源 LS-96 comment 996220e9，本機容器實測確認：PUT 一個物件到
+// media bucket、刻意不 insert media 列，purge_expired() 執行後 purge_storage_queue
+// 未收到這筆，物件仍原封不動留在 storage.objects——purge_expired()／既有的
+// purge_storage_queue 消化邏輯只處理「media 列被硬刪之後」的方向，不會反向掃描
+// storage.objects 找「從未有對應 media 列」的物件）：
+//   ORPHAN_SCAN_BATCH_SIZE：每次 invocation 最多「考慮」（含形狀不符、寬限期內、
+//     已有對應列）的物件數上限，避免家庭／物件量體異常大時單次執行時間失控——與
+//     上面既有的 BATCH_SIZE／MAX_BATCHES 是同一種安全上限精神，只是這裡的成本
+//     主要來自 storage.list() 的分層呼叫次數，不是佇列列數。
+//   ORPHAN_GRACE_MS：與 private.soft_delete_unreferenced_media() 的預設寬限期
+//     （'24 hours'，見 supabase/migrations/20260906050606_soft_delete_unreferenced_media.sql
+//     與 docs/API.md §6）同一個 24 小時——避免正常上傳流程中「Storage PUT 剛
+//     完成、insert media 列還沒來得及跑」的物件被誤判為孤兒。兩處常數各自獨立
+//     維護（一個是 SQL interval 常值、一個是 Edge Function 的毫秒常數），改動時
+//     必須同步兩處與 docs/API.md 的說明。
+const ORPHAN_SCAN_BATCH_SIZE = 500;
+const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
+
+// 比照 supabase/migrations/20260904060700_avatar_object_path.sql 的
+// private.is_media_object_path()（原檔／縮圖那一支形狀，不含 avatars/ 分支——
+// 頭像路徑在下面掃描時直接跳過那個資料夾，不會走到這支 regex）。
+const MEDIA_OBJECT_PATH_RE =
+  /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/(\d{4})\/(0[1-9]|1[0-2])\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:_thumb)?\.(?:jpg|jpeg|png|heic|heif|mp4|mov)$/;
+
 interface QueueRow {
   id: string;
   bucket_id: string;
   object_path: string;
 }
+
+interface MediaPathRow {
+  storage_path: string | null;
+  thumb_path: string | null;
+}
+
+// 直接用官方的 SupabaseClient 型別（未帶 Database 泛型，同 createClient() 在本檔
+// 沒有生成型別可用時的既有用法），不手刻一份對照 storage／postgrest 型別的最小
+// 介面——那份介面容易漏掉真正型別的欄位（例如 FileObject 的 id 在資料夾項目上是
+// null）而在 `deno check` 才被抓到。`ReturnType<typeof createClient>` 看似更精確，
+// 但因為 createClient 本身是多載泛型函式，不帶呼叫引數推導出來的型別與呼叫端
+// `createClient(url, key)` 實際解析到的多載不是同一個，反而在 deno check 炸出
+// 兩者不相容——直接用未帶泛型的 SupabaseClient（等同全部型別參數走預設值）最穩。
+type AdminClient = SupabaseClient;
 
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -102,6 +140,169 @@ function chunk<T>(items: T[], size: number): T[][] {
     out.push(items.slice(i, i + size));
   }
   return out;
+}
+
+// LS-213 範圍 2：分頁掃 media bucket（{family_id}/{yyyy}/{mm}/{file} 三層資料夾）
+// 找出「Storage 有物件、但 public.media 完全沒有列引用它（不論 storage_path 或
+// thumb_path）」且建立時間超過寬限期的物件，寫進 public.purge_storage_queue
+// （media_id 留 NULL——這批物件從來就沒有對應的 media 列，不像既有的硬刪路徑
+// 那樣附得上 media_id）。**只寫入佇列，不在這裡自己呼叫 storage.remove()**：
+// 這批新 enqueue 的列會被下面既有的 while 迴圈（同一次 invocation）當成一般
+// 佇列列處理，重用已經測過、有 attempts／退避／死信與 confirmed-delete 核對的
+// 既有消化邏輯，不重新實作一套刪除路徑（DRY，且不重複「額度」顧慮——這批物件
+// 從來沒有 media 列，families.storage_used_bytes 從未把它們算進去，透過
+// purge_storage_queue 走既有路徑刪除也完全不會觸發 media 表的
+// AFTER DELETE/UPDATE trigger，沒有重複扣款的可能）。
+// upsert(..., ignoreDuplicates: true) 天生冪等：同一個物件路徑下次掃到、若還沒
+// 被消化，`on conflict (bucket_id, object_path) do nothing`（既有 unique
+// constraint）會讓這次呼叫悄悄跳過，不會報錯也不會產生重複列。
+async function scanOrphanStorageObjects(
+  supabase: AdminClient,
+  warnings: string[],
+): Promise<number> {
+  const cutoffMs = Date.now() - ORPHAN_GRACE_MS;
+  let considered = 0;
+  let enqueued = 0;
+  const bucket = supabase.storage.from("media");
+
+  const { data: familyEntries, error: familyErr } = await bucket.list("", {
+    limit: 1000,
+  });
+  if (familyErr) {
+    warnings.push(
+      `orphan scan：列出 media bucket 根目錄失敗：${familyErr.message}`,
+    );
+    return 0;
+  }
+
+  familyLoop: for (const familyEntry of familyEntries ?? []) {
+    if (considered >= ORPHAN_SCAN_BATCH_SIZE) break familyLoop;
+    if (familyEntry.id !== null) continue; // bucket 頂層不該有檔案，只認資料夾（家庭前綴）。
+    const familyId = familyEntry.name;
+
+    const { data: yearEntries, error: yearErr } = await bucket.list(familyId, {
+      limit: 1000,
+    });
+    if (yearErr) {
+      warnings.push(`orphan scan：列出 ${familyId}/ 失敗：${yearErr.message}`);
+      continue familyLoop;
+    }
+
+    yearLoop: for (const yearEntry of yearEntries ?? []) {
+      if (considered >= ORPHAN_SCAN_BATCH_SIZE) break familyLoop;
+      if (yearEntry.id !== null) continue yearLoop; // 檔案，不是資料夾。
+      if (yearEntry.name === "avatars") continue yearLoop; // 頭像路徑不寫 media 表，排除（票文範圍 2）。
+
+      const yearPath = `${familyId}/${yearEntry.name}`;
+      const { data: monthEntries, error: monthErr } = await bucket.list(
+        yearPath,
+        { limit: 1000 },
+      );
+      if (monthErr) {
+        warnings.push(
+          `orphan scan：列出 ${yearPath}/ 失敗：${monthErr.message}`,
+        );
+        continue yearLoop;
+      }
+
+      monthLoop: for (const monthEntry of monthEntries ?? []) {
+        if (considered >= ORPHAN_SCAN_BATCH_SIZE) break familyLoop;
+        if (monthEntry.id !== null) continue monthLoop;
+
+        const monthPath = `${yearPath}/${monthEntry.name}`;
+        const { data: fileEntries, error: fileErr } = await bucket.list(
+          monthPath,
+          { limit: 1000 },
+        );
+        if (fileErr) {
+          warnings.push(
+            `orphan scan：列出 ${monthPath}/ 失敗：${fileErr.message}`,
+          );
+          continue monthLoop;
+        }
+
+        const candidatePaths: string[] = [];
+        for (const fileEntry of fileEntries ?? []) {
+          if (considered >= ORPHAN_SCAN_BATCH_SIZE) break;
+          if (fileEntry.id === null) continue; // 巢狀資料夾，不合法形狀，跳過。
+          considered++;
+
+          const path = `${monthPath}/${fileEntry.name}`;
+          if (!MEDIA_OBJECT_PATH_RE.test(path)) continue; // 不是本規約認得的物件形狀。
+          const createdAtMs = fileEntry.created_at
+            ? Date.parse(fileEntry.created_at)
+            : NaN;
+          if (!Number.isFinite(createdAtMs) || createdAtMs > cutoffMs) continue; // 還在寬限期內。
+          candidatePaths.push(path);
+        }
+
+        if (candidatePaths.length === 0) continue monthLoop;
+
+        // 對照 public.media：這批路徑裡哪些已經是某一列的 storage_path 或
+        // thumb_path——分兩支查詢（storage_path、thumb_path 各查一次）而不是拼一句
+        // OR filter，避免物件路徑進到 PostgREST filter 字串時的逃逸／引號問題。
+        const [byStorage, byThumb] = await Promise.all([
+          supabase.from("media").select("storage_path, thumb_path").in(
+            "storage_path",
+            candidatePaths,
+          )
+            .returns<MediaPathRow[]>(),
+          supabase.from("media").select("storage_path, thumb_path").in(
+            "thumb_path",
+            candidatePaths,
+          )
+            .returns<MediaPathRow[]>(),
+        ]);
+        if (byStorage.error || byThumb.error) {
+          warnings.push(
+            `orphan scan：對照 media 表失敗（${monthPath}）：${
+              (byStorage.error ?? byThumb.error)!.message
+            }`,
+          );
+          continue monthLoop;
+        }
+        const knownPaths = new Set<string>();
+        for (
+          const row of [...(byStorage.data ?? []), ...(byThumb.data ?? [])]
+        ) {
+          if (row.storage_path) knownPaths.add(row.storage_path);
+          if (row.thumb_path) knownPaths.add(row.thumb_path);
+        }
+
+        const orphanRows: {
+          bucket_id: string;
+          object_path: string;
+          family_id: string;
+          media_id: null;
+        }[] = candidatePaths
+          .filter((path) => !knownPaths.has(path))
+          .map((path) => ({
+            bucket_id: "media",
+            object_path: path,
+            family_id: familyId,
+            media_id: null,
+          }));
+
+        if (orphanRows.length === 0) continue monthLoop;
+
+        const { error: upsertError } = await supabase.from(
+          "purge_storage_queue",
+        ).upsert(orphanRows, {
+          onConflict: "bucket_id,object_path",
+          ignoreDuplicates: true,
+        });
+        if (upsertError) {
+          warnings.push(
+            `orphan scan：寫入 purge_storage_queue 失敗（${monthPath}）：${upsertError.message}`,
+          );
+          continue monthLoop;
+        }
+        enqueued += orphanRows.length;
+      }
+    }
+  }
+
+  return enqueued;
 }
 
 Deno.serve(async (req: Request) => {
@@ -136,6 +337,11 @@ Deno.serve(async (req: Request) => {
   const failures: { object_path: string; error: string }[] = [];
   const warnings: string[] = [];
   let batches = 0;
+
+  // LS-213 範圍 2：先掃一次 Storage 找「從未有對應 media 列」的孤兒物件、寫進
+  // purge_storage_queue，再讓下面既有的 while 迴圈把它們（連同既有硬刪路徑產生的
+  // 佇列列）一起消化掉，同一次 invocation 內完成 enqueue＋刪除，不必等下一次排程。
+  const orphanEnqueued = await scanOrphanStorageObjects(supabase, warnings);
 
   // 記錄「這次 invocation 已經確認過存在／不存在」的 bucket，避免同一個 bucket
   // 在同一次 invocation 裡被 getBucket() 反覆確認（多個批次、同一個 bucket 常見，
@@ -306,7 +512,9 @@ Deno.serve(async (req: Request) => {
     .from("purge_storage_queue")
     .select("id", { count: "exact", head: true })
     .gte("attempts", MAX_ATTEMPTS);
-  console.log(`purge-storage: parked=${parked ?? 0}`);
+  console.log(
+    `purge-storage: parked=${parked ?? 0} orphanEnqueued=${orphanEnqueued}`,
+  );
 
   return new Response(
     JSON.stringify({
@@ -315,6 +523,7 @@ Deno.serve(async (req: Request) => {
       failures,
       warnings,
       parked: parked ?? 0,
+      orphanEnqueued,
     }),
     {
       status: failures.length > 0 || warnings.length > 0 ? 207 : 200,
