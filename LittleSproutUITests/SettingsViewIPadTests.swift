@@ -122,17 +122,45 @@ final class SettingsViewIPadTests: XCTestCase {
         )
     }
 
-    /// 「法律」兩列是 `Link`（開系統瀏覽器），不是 app 內 push——沒有返回鈕可驗，這裡只驗證
-    /// sidebar 切換本身正常運作、兩列都看得到（不誤用「push＋返回」判準套在不會 push 的列上）。
-    func testLegalSectionSwitchesWithoutPush() {
+    /// LS-210：「法律」兩列原本是 `Link`（開系統瀏覽器，不是 app 內 push，沒有返回鈕可驗，只驗證
+    /// sidebar 切換與兩列存在）——改開 in-app `LegalDocumentSheet` 後，這裡改驗證「點列會開啟
+    /// 對應的 sheet、關閉後回到列表」，iPad regular 佈局下 `.sheet()` 是置中 form sheet
+    /// （`LegalDocumentSheet` 文件註解「iPad」段），與 iPhone compact 共用同一個
+    /// `.sheet(item:)` 綁定（`SettingsView.body`），沒有另外的 iPad 專屬分支需要覆蓋。
+    ///
+    /// **不能只用 doc title staticText 存在／不存在判斷**（`SettingsViewTests` 實測踩到的同一個
+    /// 坑，兩層問題，見該檔文件註解）：(1) `SettingsRowView` 的列 label 本身就是一字不差的
+    /// 「使用條款」`Text`，且 SwiftUI `.sheet()` 呈現時底下畫面的 accessibility 元件並不會
+    /// 被隱藏——關閉後列重新可見會讓同一個查詢誤判成「還沒關掉」，改用「關閉」鈕本身的存在與否
+    /// （這顆鈕只在 sheet 裡出現）；(2) 同一個「底下的列全程留在 tree 裡」的事實也讓單純判斷
+    /// 「Doc Title 存在」測不出「開錯文件」——改用數量比對（列＋Doc Title 各一個＝2；只剩列
+    /// 本身＝1，代表開錯文件）。
+    func testLegalSectionRowsOpenAndCloseLegalDocumentSheet() {
         let app = TapTargetMeasurement.launch(.settingsRegular)
         TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
 
         app.buttons["法律"].tap()
+        let termsRow = app.buttons["使用條款"]
+        XCTAssertTrue(termsRow.waitForExistence(timeout: 5), "切到「法律」後應該看得到「使用條款」列")
+        termsRow.tap()
 
-        XCTAssertTrue(app.buttons["使用條款"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["隱私權政策"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.navigationBars.buttons["BackButton"].exists, "Link 開系統瀏覽器，不應該在 app 內產生返回鈕")
+        let closeButton = app.buttons["關閉"]
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 5), "點擊「使用條款」列應開啟 LegalDocumentSheet（Footer「關閉」鈕可見）")
+        XCTAssertEqual(
+            app.staticTexts.matching(NSPredicate(format: "label == %@", "使用條款")).count, 2,
+            "應同時看到「使用條款」列與 Doc Title 兩個「使用條款」文字元件——只剩 1 個代表開錯文件"
+        )
+        closeButton.tap()
+        XCTAssertFalse(closeButton.waitForExistence(timeout: 3), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）")
+
+        let privacyRow = app.buttons["隱私權政策"]
+        XCTAssertTrue(privacyRow.waitForExistence(timeout: 5), "關閉後應回到「法律」列表，看得到「隱私權政策」列")
+        privacyRow.tap()
+        XCTAssertTrue(app.buttons["關閉"].waitForExistence(timeout: 5), "點擊「隱私權政策」列應開啟 LegalDocumentSheet（Footer「關閉」鈕可見）")
+        XCTAssertEqual(
+            app.staticTexts.matching(NSPredicate(format: "label == %@", "隱私權政策")).count, 2,
+            "應同時看到「隱私權政策」列與 Doc Title 兩個「隱私權政策」文字元件——只剩 1 個代表開錯文件（不是誤開使用條款）"
+        )
     }
 
     /// merge-review R3 M3（major）：R3 版本用 `XCUIElement.isSelected` 當訊號，reviewer 四組
