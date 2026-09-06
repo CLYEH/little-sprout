@@ -42,6 +42,12 @@ struct DeleteConfirmationSheet: View {
     let headTitle: String
     let bodyText: String
     let confirmLabel: String
+    /// LS-189：封鎖確認（`BlockConfirmSheet`，稿 `EXgzz`，icon `user-x`→`person.fill.xmark`）與
+    /// Owner 移除內容確認（`OwnerRemoveContentConfirmSheet`，稿 `WIyj9`，icon
+    /// `trash-2`→`trash`）重用這支通用確認卡，只有 icon 跟原本的「刪除」不同——預設值
+    /// `"trash"` 讓既有兩個呼叫端（`DiaryDeleteConfirmationSheet`／`CommentDeleteConfirmationSheet`）
+    /// 完全不用改。
+    var confirmIcon: String = "trash"
     /// 呼叫實際 RPC；不在這裡處理「成功之後」的畫面收尾（本地移除、pop 上一層…）——那些交給
     /// `onSuccess`，且保證在這個 sheet 自己的 `dismiss()` 之後才呼叫（LS-190 R2 m3，見下）。
     let confirmAction: () async throws -> Void
@@ -107,7 +113,7 @@ struct DeleteConfirmationSheet: View {
                 if isSubmitting {
                     ProgressView().tint(Color.lsDanger)
                 } else {
-                    Image(systemName: "trash").appIconFrame(.medium)
+                    Image(systemName: confirmIcon).appIconFrame(.medium)
                 }
                 Text(confirmLabel).appFont(.body, weight: .bold)
             }
