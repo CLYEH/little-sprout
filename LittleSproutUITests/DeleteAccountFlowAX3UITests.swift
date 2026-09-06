@@ -1,9 +1,9 @@
 import XCTest
 
 /// LS-193：04a／04d／04e 刪除帳號流程 AX3 動態字級——共用 `TapTargetMeasurement.launch(_:
-/// contentSizeCategory:)`（LS-190 R2 已修正成 `launchArguments`，見該檔文件註解：
-/// `launchEnvironment["UIPreferredContentSizeCategoryName"]` 對 XCUITest 目標 app 不生效，
-/// AX5 下量到跟未設定相同的 40.67pt；改用 `launchArguments` 才真的放大到 69.33pt）。
+/// contentSizeCategory:)`。AX 字級一律走 `launchArguments`（LS-211；LS-190 R2 已修正該共用
+/// helper，見該檔文件註解——啟動參數傳遞方式選錯會讓 app 其實一直跑在標準字級，斷言只是恰好
+/// 在標準字級下也成立，AX5 情境下量到的高度會跟完全沒設定時一樣，改對通道才真的放大）。
 ///
 /// 每一支測試都先驗證「字級真的放大」（比較同一個 sentinel 文字節點在一般字級與 AX3 下的
 /// frame 高度，量到明顯差異才代表字級真的生效），再驗證按鈕 hit-test 仍 ≥44pt——沒有這道
