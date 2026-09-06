@@ -57,6 +57,14 @@ struct DeleteConfirmationSheet: View {
     /// 且資料一被本地移除，`.sheet` 內容的 `if let` 分支可能立刻變空、`presentationDetents`
     /// 跟著消失。改成「這裡先 `dismiss()` 關掉自己，再呼叫 `onSuccess`」，順序反過來。
     var onSuccess: () -> Void = {}
+    /// LS-189 R2（merge-review R1 B4）：`BlockConfirmSheet`／`UnblockConfirmSheet`／
+    /// `OwnerRemoveContentConfirmSheet` 重用這支通用確認卡，但下方預設的 `userFacingMessage(for:)`
+    /// 是為「刪除」量身寫的文案（42501→「你沒有權限刪除這項內容。」）——封鎖／解除封鎖的
+    /// 42501 實際語意是「你已經不是這個家庭的成員」（`docs/API.md` §4 `block_user`），畫面卻說
+    /// 「沒有權限刪除」，動詞完全錯。非 nil 時整支取代預設映射（不是疊加），呼叫端各自依自己
+    /// 的動作語意給對應文案；nil（預設）維持既有兩個「刪除」呼叫端
+    /// （`DiaryDeleteConfirmationSheet`／`CommentDeleteConfirmationSheet`）完全不用改。
+    var errorCopy: ((AppError) -> String)?
 
     @Environment(\.dismiss) private var dismiss
     @State private var isSubmitting = false
@@ -153,6 +161,7 @@ struct DeleteConfirmationSheet: View {
     /// 訊息刻意不寫死「日記」或「留言」——這支 sheet 兩種內容共用，交給呼叫端的
     /// `headTitle`／`bodyText` 已經講清楚是哪一種。
     private func userFacingMessage(for error: AppError) -> String {
+        if let errorCopy { return errorCopy(error) }
         guard case .rejected(_, let code) = error else { return error.userFacingMessage }
         switch code {
         case "42501":

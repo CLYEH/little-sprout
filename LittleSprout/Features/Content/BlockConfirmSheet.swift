@@ -7,9 +7,11 @@ import SwiftUI
 ///
 /// 錯誤碼（`42501`／`23514`）依 LS-152 Notes `VAij1`／`lzod8`——這兩種情況本來就該被「入口依身分
 /// 隱藏」擋住（`contentActions(for:...)` 不會對自己顯示封鎖列、`ContentActionsSheet` 也不會讓
-/// 未成年身分走到這裡），真的發生時沿用 `DeleteConfirmationSheet` 內建的
-/// `error.userFacingMessage` 全域兜底文案，不另開專屬錯誤畫面（Notes 原文：「沿用既有全域錯誤
-/// toast/alert 慣例」）。
+/// 未成年身分走到這裡），真的發生時原本沿用 `DeleteConfirmationSheet` 內建的
+/// `error.userFacingMessage` 全域兜底文案；**42501 改用專屬文案**（LS-189 R2，merge-review
+/// R1 B4）——`DeleteConfirmationSheet` 預設的 42501 映射是「你沒有權限刪除這項內容。」，但
+/// `block_user` 的 42501 實際語意是「呼叫者已經不是該家庭成員」（`docs/API.md` §4），畫面說
+/// 「沒有權限刪除」動詞完全錯；其餘碼（`23514` 等）仍沿用全域兜底文案，不逐一列舉。
 struct BlockConfirmSheet: View {
     let familyID: UUID
     let familyName: String
@@ -30,7 +32,11 @@ struct BlockConfirmSheet: View {
             confirmLabel: "封鎖這位成員",
             confirmIcon: "person.fill.xmark",
             confirmAction: { try await safetyAPIClient.blockUser(familyID: familyID, blockedID: blockedID) },
-            onSuccess: onBlocked
+            onSuccess: onBlocked,
+            errorCopy: { error in
+                guard case .rejected(_, let code) = error, code == "42501" else { return error.userFacingMessage }
+                return "你沒有權限封鎖這位成員。"
+            }
         )
     }
 }

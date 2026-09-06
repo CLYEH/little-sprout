@@ -8,6 +8,11 @@ import SwiftUI
 /// `docs/API.md` §4 `remove_content_as_owner`：「移除成功後，這則內容全部 `status='pending'`
 /// 的檢舉一併標記 `resolved`」——從檢舉收件匣呼叫這張卡不需要另外呼叫
 /// `SafetyAPIClient.markReportResolved`，RPC 內部已經處理。
+///
+/// **42501 專屬文案**（LS-189 R2，merge-review R1 B4）：同 `BlockConfirmSheet` 的既有理由，
+/// `DeleteConfirmationSheet` 預設 42501 映射寫死「刪除」，但這裡的動作是「移除」——
+/// `remove_content_as_owner` 的 42501 統一代表「找不到內容或不是它所屬家庭的 owner」（`docs/API.md`
+/// §4），不分區這兩種情況。
 struct OwnerRemoveContentConfirmSheet: View {
     let familyName: String
     let targetType: ContentTargetType
@@ -25,7 +30,11 @@ struct OwnerRemoveContentConfirmSheet: View {
             confirmAction: {
                 try await safetyAPIClient.removeContentAsOwner(targetType: targetType, targetID: targetID)
             },
-            onSuccess: onRemoved
+            onSuccess: onRemoved,
+            errorCopy: { error in
+                guard case .rejected(_, let code) = error, code == "42501" else { return error.userFacingMessage }
+                return "你沒有權限移除這項內容，或這項內容已經不存在。"
+            }
         )
     }
 }

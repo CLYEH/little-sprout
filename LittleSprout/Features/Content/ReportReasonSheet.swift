@@ -35,10 +35,18 @@ struct ReportReasonSheet: View {
             }
             .clipped()
             VStack(spacing: AppSpacing.group) {
-                submitButton
-                cancelButton
-                if let error {
-                    errorRow(error)
+                if isTargetGone {
+                    // LS-189 R2（merge-review R1 B4）：目標已經跨家庭／不存在（LS026）——重試不
+                    // 會成功，不該再讓使用者面對「送出」鈕，改成單一「關閉」（見 `isTargetGone`
+                    // 文件註解）。
+                    errorRow(Self.targetGoneMessage)
+                    closeButton
+                } else {
+                    submitButton
+                    cancelButton
+                    if let error {
+                        errorRow(error.userFacingMessage)
+                    }
                 }
             }
             .padding(.horizontal, AppSpacing.screenPad)
@@ -129,10 +137,32 @@ struct ReportReasonSheet: View {
         .disabled(isSubmitting)
     }
 
-    private func errorRow(_ error: AppError) -> some View {
+    private var closeButton: some View {
+        Button {
+            dismiss()
+        } label: {
+            Text("關閉")
+                .appFont(.body, weight: .semibold)
+                .foregroundStyle(Color.lsTextPrimary)
+                .frame(maxWidth: .infinity, minHeight: 48)
+        }
+    }
+
+    /// LS-189 R2（merge-review R1 B4）：`report_content` 的 LS026——target 存在但屬於別的家庭
+    /// （`docs/API.md` §4），對使用者來說最直觀的說法就是「這則內容不在了」，不需要解釋跨家庭
+    /// 這個內部概念。`error.userFacingMessage` 對 `.rejected` 一律是通用的「無法完成這個操作。」
+    /// （見 `AppError.swift`），沒有這支專屬映射的話使用者看不出「為什麼」，也看不出「不用再試」。
+    private var isTargetGone: Bool {
+        guard let error, case .rejected(_, let code) = error else { return false }
+        return code == LSErrorCode.targetFamilyMismatch.rawValue
+    }
+
+    private static let targetGoneMessage = "這則內容已經不存在了，無法檢舉。"
+
+    private func errorRow(_ message: String) -> some View {
         HStack(spacing: AppSpacing.tight) {
             Image(systemName: "exclamationmark.circle").appIconFrame(.small)
-            Text(error.userFacingMessage).appFont(.note)
+            Text(message).appFont(.note)
         }
         .foregroundStyle(Color.lsDanger)
         .frame(maxWidth: .infinity, alignment: .leading)

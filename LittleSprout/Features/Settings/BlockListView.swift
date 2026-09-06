@@ -10,6 +10,10 @@ import SwiftUI
 struct BlockListView: View {
     let familyStore: FamilyStore
     let safetyAPIClient: SafetyAPIClient
+    /// LS-189 R2（merge-review R1 B2）：解除封鎖成功後重抓時間軸，讓對方的內容重新出現——
+    /// 同 `DiaryDetailView+ContentActions.memberBlocked()` 的既有理由，這裡是反方向（解除
+    /// 而不是封鎖），見 `unblockTarget` 的 `onSuccess` 呼叫端。
+    let timelineStore: TimelineStore
 
     @State private var loadState: TimelineOperationState = .idle
     @State private var blockedUsers: [BlockedUserRecord] = []
@@ -34,7 +38,10 @@ struct BlockListView: View {
             UnblockConfirmSheet(
                 familyID: familyStore.myFamily?.id ?? UUID(), memberName: displayName(for: target.blockedID),
                 blockedID: target.blockedID, safetyAPIClient: safetyAPIClient,
-                onUnblocked: { blockedUsers.removeAll { $0.blockedID == target.blockedID } }
+                onUnblocked: {
+                    blockedUsers.removeAll { $0.blockedID == target.blockedID }
+                    Task { await timelineStore.refreshWithCurrentFilter() }
+                }
             )
         }
     }
@@ -166,7 +173,13 @@ private struct UnblockConfirmSheet: View {
             confirmLabel: "解除封鎖",
             confirmIcon: "person.crop.circle.badge.checkmark",
             confirmAction: { try await safetyAPIClient.unblockUser(familyID: familyID, blockedID: blockedID) },
-            onSuccess: onUnblocked
+            onSuccess: onUnblocked,
+            // LS-189 R2（merge-review R1 B4）：同 `BlockConfirmSheet` 的既有理由——42501 實際
+            // 語意是「已經不是該家庭成員」，不是「沒有權限刪除」。
+            errorCopy: { error in
+                guard case .rejected(_, let code) = error, code == "42501" else { return error.userFacingMessage }
+                return "你沒有權限解除封鎖。"
+            }
         )
     }
 }
@@ -174,7 +187,7 @@ private struct UnblockConfirmSheet: View {
 #if DEBUG
 #Preview {
     NavigationStack {
-        BlockListView(familyStore: .preview(), safetyAPIClient: PreviewSafetyAPIClient())
+        BlockListView(familyStore: .preview(), safetyAPIClient: PreviewSafetyAPIClient(), timelineStore: .preview())
     }
 }
 #endif
