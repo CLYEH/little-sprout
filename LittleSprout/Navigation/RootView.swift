@@ -30,6 +30,9 @@ struct RootView: View {
     /// LS-189：轉手往下傳到 `TimelineView`／`SettingsView`（內容操作表：檢舉／封鎖／Owner 移除
     /// ／封鎖名單／檢舉收件匣），這裡不直接使用。
     let safetyAPIClient: SafetyAPIClient
+    /// LS-217：轉手往下傳到 `AuthenticatedGate`；也用在下方「回前景重讀推播授權狀態」
+    /// （票文範圍 2）。
+    let pushNotificationStore: PushNotificationStore
     /// LS-108 deep link：見 `ForkView` 文件註解，這裡只是原樣轉手往下傳。
     @Binding var pendingInviteCode: String?
 
@@ -50,6 +53,7 @@ struct RootView: View {
                     accountAPIClient: accountAPIClient,
                     resumer: resumer,
                     safetyAPIClient: safetyAPIClient,
+                    pushNotificationStore: pushNotificationStore,
                     pendingInviteCode: $pendingInviteCode
                 )
             } else {
@@ -59,6 +63,11 @@ struct RootView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 authStore.refreshSnapshot()
+                // LS-217 票文範圍 2：「每次 App 進前景重讀狀態」——沒有登入者時沒有東西可重讀
+                // （token 送出需要 `userID`），跳過。
+                if let userID = authStore.session?.userID {
+                    Task { await pushNotificationStore.refreshOnForeground(userID: userID) }
+                }
             }
         }
     }
@@ -86,6 +95,9 @@ struct AuthenticatedRootView: View {
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
     let safetyAPIClient: SafetyAPIClient
+    /// LS-217：轉手往下傳到 `SettingsView`；也用在下方「登入後首次進時間軸」前置頁
+    /// （票文範圍 1）。
+    let pushNotificationStore: PushNotificationStore
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selection: AppSection = .timeline
@@ -98,7 +110,7 @@ struct AuthenticatedRootView: View {
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
                     diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
                     accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
-                    selection: $selection
+                    pushNotificationStore: pushNotificationStore, selection: $selection
                 )
             } else {
                 SectionTabView(
@@ -106,7 +118,7 @@ struct AuthenticatedRootView: View {
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
                     diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
                     accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
-                    selection: $selection
+                    pushNotificationStore: pushNotificationStore, selection: $selection
                 )
             }
         }
@@ -122,6 +134,28 @@ struct AuthenticatedRootView: View {
         )) {
             NavigationStack {
                 CreateChildView(childrenStore: childrenStore)
+            }
+        }
+        // LS-217 票文範圍 1：登入後首次進時間軸顯示一次——`pushNotificationStore.showsPreprompt`
+        // 已經把「`.notDetermined` 且沒看過」這個判斷做完，這裡只負責綁定（同上面
+        // `showsChildOnboarding` 的既有分工）。`AuthenticatedRootView` 預設分頁就是時間軸
+        // （`selection` 初值），符合票文「登入後首次進時間軸」的字面時機。
+        .task(id: authStore.session?.userID) {
+            guard let userID = authStore.session?.userID else { return }
+            await pushNotificationStore.refreshForEnteringApp(userID: userID)
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { pushNotificationStore.showsPreprompt },
+            set: { isPresented in
+                if !isPresented, let userID = authStore.session?.userID {
+                    pushNotificationStore.dismissPreprompt(userID: userID)
+                }
+            }
+        )) {
+            PushPrepromptView(pushNotificationStore: pushNotificationStore) {
+                if let userID = authStore.session?.userID {
+                    pushNotificationStore.dismissPreprompt(userID: userID)
+                }
             }
         }
     }
@@ -162,6 +196,7 @@ private struct SectionTabView: View {
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
     let safetyAPIClient: SafetyAPIClient
+    let pushNotificationStore: PushNotificationStore
     @Binding var selection: AppSection
 
     var body: some View {
@@ -172,7 +207,8 @@ private struct SectionTabView: View {
                         section: section, authStore: authStore, familyStore: familyStore,
                         childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
                         eulaStore: eulaStore, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
-                        accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient
+                        accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
+                        pushNotificationStore: pushNotificationStore
                     )
                     // LS-136 實測發現（R1）：掛在外層 `TabView` 的 `.toolbar(.hidden, for: .tabBar)`
                     // 只隱藏視覺渲染，底下的原生 `UITabBarItem` 仍留在 accessibility tree 裡、
@@ -214,6 +250,7 @@ private struct SectionSplitView: View {
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
     let safetyAPIClient: SafetyAPIClient
+    let pushNotificationStore: PushNotificationStore
     @Binding var selection: AppSection
 
     var body: some View {
@@ -230,7 +267,8 @@ private struct SectionSplitView: View {
                     section: selection, authStore: authStore, familyStore: familyStore,
                     childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
                     eulaStore: eulaStore, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
-                    accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient
+                    accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
+                    pushNotificationStore: pushNotificationStore
                 )
             }
         }
@@ -261,6 +299,7 @@ struct SectionContentView: View {
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
     let safetyAPIClient: SafetyAPIClient
+    let pushNotificationStore: PushNotificationStore
 
     var body: some View {
         content
@@ -283,7 +322,8 @@ struct SectionContentView: View {
             SettingsView(
                 authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                 accountAPIClient: accountAPIClient, timelineStore: timelineStore, albumsStore: albumsStore,
-                eulaStore: eulaStore, resumer: resumer, safetyAPIClient: safetyAPIClient
+                eulaStore: eulaStore, resumer: resumer, safetyAPIClient: safetyAPIClient,
+                pushNotificationStore: pushNotificationStore
             )
         }
     }
@@ -295,7 +335,7 @@ struct SectionContentView: View {
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), diaryAPIClient: PreviewDiaryAPIClient(),
         mediaUploadService: PreviewMediaUploadService(), accountAPIClient: PreviewAccountAPIClient(),
-        resumer: .preview(), safetyAPIClient: PreviewSafetyAPIClient()
+        resumer: .preview(), safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
     )
     .environment(\.horizontalSizeClass, .compact)
 }
@@ -305,7 +345,7 @@ struct SectionContentView: View {
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), diaryAPIClient: PreviewDiaryAPIClient(),
         mediaUploadService: PreviewMediaUploadService(), accountAPIClient: PreviewAccountAPIClient(),
-        resumer: .preview(), safetyAPIClient: PreviewSafetyAPIClient()
+        resumer: .preview(), safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
     )
     .environment(\.horizontalSizeClass, .regular)
 }
