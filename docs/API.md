@@ -387,16 +387,24 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   任何排程掃描這個方向**：`private.purge_expired()`／`purge-storage` Edge Function（LS-153）
   當時只處理「`media` 列被硬刪之後」的 Storage 清理佇列（見下方 `media` 軟刪／硬刪表格
   列），不會反向掃描 `storage.objects` 找不到 `media` 列的物件；全表批次掃描屬 LS-212
-  「不做：跨家庭批次工具」明文排除範圍。**LS-213 起已補上**：`purge-storage` Edge Function
-  在既有的佇列消化迴圈之前，加一段分頁掃描 `media` bucket（`{family_id}/{yyyy}/{mm}/{file}`
-  三層資料夾，跳過 `avatars/` 子路徑）反查 `public.media.storage_path`／`thumb_path`，找不到
-  對應列、且物件 `created_at` 超過寬限期（24 小時）的路徑排入既有 `purge_storage_queue`（
-  `media_id` 為 NULL），交給同一個 invocation 的既有消化迴圈刪除——沿用既有的
-  attempts／退避／死信與 confirmed-delete 核對，不重新實作刪除路徑，也不影響額度（這批物件
-  從未計入 `families.storage_used_bytes`，走佇列刪除不會觸發 `media` 表的
-  trigger，沒有重複扣款的可能）。每次 invocation 的物件數上限見 `purge-storage/index.ts` 的
-  `ORPHAN_SCAN_BATCH_SIZE`；沒有自動化測試（見下方「自動清除」小節對這支 Edge Function 既有
-  的已知限制說明，本次以 `supabase functions serve` 手動 e2e 驗證，同既有慣例）。
+  「不做：跨家庭批次工具」明文排除範圍。**LS-213 起已補上、R2 修過掃描本身的兩個問題**：
+  `purge-storage` Edge Function 在既有的佇列消化迴圈**之後**（R2：原本在之前，掃描慢會拖延
+  既有硬刪路徑的清除工作，見下方「自動清除」小節），逐家庭前綴分頁掃描 `media` bucket
+  （`{family_id}/{yyyy}/{mm}/{file}` 三層資料夾，跳過 `avatars/` 子路徑，`storage.list()` 皆
+  用 `offset` 續頁涵蓋超過一頁的資料夾）反查 `public.media.storage_path`／`thumb_path`（改用
+  RPC `public.purge_storage_unknown_media_paths()`，R2：原本用 GET `.in()` 查詢字串，候選路徑
+  一多會撞 HTTP 414），找不到對應列、且物件 `created_at` 超過寬限期（24 小時）的路徑透過
+  `public.purge_storage_queue_enqueue_orphans()` RPC 排入既有 `purge_storage_queue`（
+  `media_id` 為 NULL，且該 RPC 會驗證路徑落在呼叫端聲稱的家庭前綴下且形狀合規，R2 補），交給
+  下一次 invocation 的既有消化迴圈刪除——沿用既有的 attempts／退避／死信與 confirmed-delete
+  核對，不重新實作刪除路徑，也不影響額度（這批物件從未計入 `families.storage_used_bytes`，
+  走佇列刪除不會觸發 `media` 表的 trigger，沒有重複扣款的可能）。每次 invocation 的候選數
+  （R2：不是看過的檔案數）上限見 `purge-storage/index.ts` 的 `ORPHAN_SCAN_BATCH_SIZE`；家庭
+  前綴走 round-robin、續掃進度持久化在 `public.orphan_scan_cursor`（R2，避免排序在前的家庭
+  永遠掃完前面就用掉整個預算，讓後面的家庭餓死），回應 JSON 的 `orphanScanCompleted`／
+  `orphanScanCursor` 讓「這次掃完一整輪」與「這個 bucket 真的沒有孤兒」在觀測上可以區分。沒有
+  自動化測試（見下方「自動清除」小節對這支 Edge Function 既有的已知限制說明，本次以
+  `supabase functions serve` 手動 e2e 驗證，同既有慣例）。
 - **影片時長（`duration_seconds`，LS-134）**：nullable，`CHECK`（有值時必須 `> 0`，
   `media_duration_seconds_positive`）。`type = 'photo'` 時應留 `NULL`；
   `type = 'video'` 時由上傳端以 `AVAsset.load(.duration)` 量測寫入——**若影片經過
@@ -2258,7 +2266,15 @@ LS-132 對外文字上線前的硬前置（R2 review informational i4）。
   orchestrator 依 LS-78 狀態決定，不在本票落地範圍）；已知限制同上一段：本機
   `supabase functions serve --no-verify-jwt` 手動 e2e 驗證，沒有寫成
   `supabase/tests/` 底下的自動化測試（repo 沒有 Deno/Edge Function 測試治具，
-  同 LS-153 既有限制）。
+  同 LS-153 既有限制）。**R2（merge-review R1 80d7242c）**：掃描改為逐家庭前綴
+  round-robin，續掃進度持久化在 `public.orphan_scan_cursor`（家庭數多、單一家庭
+  候選數大時，保證每次 invocation 都往前推進，不會被排序在前的家庭永遠佔住候選
+  預算）；反查改用 `public.purge_storage_unknown_media_paths()` RPC（避免候選路徑
+  一多撞 HTTP 414）；掃描呼叫點移到既有佇列消化迴圈之後（避免拖延既有硬刪路徑的
+  清除工作）；`public.purge_storage_queue_enqueue_orphans()` 補上路徑前綴與形狀
+  驗證。`supabase/tests/109_soft_delete_unreferenced_media.sql` 新增第 3／4 段
+  對這兩支反查／入列 RPC 的 DB 測試（含 30 天救援窗內已軟刪 media 不誤判為孤兒
+  的正向不變量）。
 
 ---
 
@@ -2429,6 +2445,7 @@ list_join_requests()
 notification_recipients(uuid[])
 purge_storage_queue_enqueue_orphans(text, uuid, text[])
 purge_storage_queue_mark_failed(uuid[], text)
+purge_storage_unknown_media_paths(text[])
 register_device_token(text, text)
 reject_join(uuid)
 remove_content_as_owner(text, uuid)
@@ -2470,6 +2487,7 @@ invites
 join_requests
 media
 notification_events
+orphan_scan_cursor
 profiles
 purge_storage_queue
 reactions
