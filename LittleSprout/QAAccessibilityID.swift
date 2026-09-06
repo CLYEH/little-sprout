@@ -38,6 +38,9 @@ enum QAAccessibilityID {
     /// 隨 `FamilyStore.quota` 是否載入完成而變（「儲存空間」／「儲存空間、2.1／5 GB」），不
     /// 適合再用固定字串比對，改用 identifier。
     static let settingsStorageRow = "qa.settings.storageRow"
+    /// LS-193：04e 最終確認的「輸入『刪除帳號』」欄——沒有固定 label（同 `LabeledTextField`
+    /// 慣例，見 `DeleteAccountFlowView+FinalConfirm.swift`），改用 identifier。
+    static let deleteAccountConfirmField = "qa.deleteAccount.confirmField"
     /// LS-216：時間軸卡片互動列（`InteractionRow`）三顆按鈕的 identifier——三種卡片
     /// （diary／album／media）在同一頁可能同時顯示相同文字（例如都還沒有人留言時都是
     /// 「留言，0 則」），靠 label 分不出「這是哪張卡的按鈕」，改用依 `kind` 區分的

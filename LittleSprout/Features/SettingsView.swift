@@ -16,6 +16,10 @@ struct SettingsView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    /// LS-193：刪除帳號流程（`DeleteAccountFlowView`）呼叫 `delete_my_account()`／Edge
+    /// Function `delete-account` 用——同 `diaryAPIClient`／`mediaUploadService` 的既有角色分工
+    /// （不隨 app 存活的無狀態 client，`LittleSproutApp` 建一次原樣往下傳）。
+    let accountAPIClient: AccountAPIClient
     /// LS-126 merge-review R1 M5：登出時歸零，同 `familyStore`／`childrenStore` 的理由——
     /// `TimelineStore` 隨 app 存活，不清掉的話，下一位在同一台裝置登入的使用者會先看到
     /// 上一個家庭殘留的時間軸（簽名 URL 1 小時內仍可讀，見該 store `reset()` 文件註解）。
@@ -26,6 +30,10 @@ struct SettingsView: View {
     /// LS-190 R2（merge-review R1 B2(a)）：同上，登出時歸零——不清掉會讓同機換帳號的新使用者
     /// 沿用上一位的 `EULAStore.shouldPresent`、繞過 EULA 閘門。
     let eulaStore: EULAStore
+    /// merge-review R2 B2：`DeleteAccountFlowView`／`DeleteAccountFlowModel` 續傳呼叫的唯一
+    /// 擁有者，見 `PendingAccountDeletionResumer` 文件註解；`SettingsView+Account.swift` 轉手
+    /// 往下傳。
+    let resumer: PendingAccountDeletionResumer
     /// LS-189：轉手往下傳到 `BlockListView`／`ReportInboxView`（封鎖名單／檢舉收件匣，取代
     /// LS-188 的最小佔位），這裡不直接使用。
     let safetyAPIClient: SafetyAPIClient
@@ -332,25 +340,7 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - 帳號
-
-    private var accountSection: some View {
-        SettingsSectionBlock(title: "帳號") {
-            // LS-17 QA1：`SettingsRowView` 的 `.frame(minHeight: 44)` 已經滿足長輩硬約束
-            // ≥44pt 點擊目標，不需要再另外加不可見 padding（舊版占位頁的作法，見這支檔案的
-            // git 歷史）。
-            Button(action: signOut) {
-                SettingsRowView(icon: "rectangle.portrait.and.arrow.right", label: "登出", showsChevron: false)
-            }
-            .disabled(isSigningOut)
-            SettingsRowDivider()
-            NavigationLink {
-                DeleteAccountFlowView()
-            } label: {
-                SettingsRowView(icon: "trash", label: "刪除帳號", isDestructive: true)
-            }
-        }
-    }
+    // MARK: - 帳號（`accountSection`，拆到 `SettingsView+Account.swift`——見該檔文件註解）
 }
 
 #if DEBUG
@@ -361,8 +351,9 @@ struct SettingsView: View {
             familyStore: .preview(withFamily: Family(
                 id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
-            childrenStore: .preview(), timelineStore: .preview(),
-            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false),
+            childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
+            timelineStore: .preview(),
+            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), resumer: .preview(),
             safetyAPIClient: PreviewSafetyAPIClient()
         )
     }
@@ -375,8 +366,9 @@ struct SettingsView: View {
             familyStore: .preview(withFamily: Family(
                 id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
-            childrenStore: .preview(), timelineStore: .preview(),
-            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false),
+            childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
+            timelineStore: .preview(),
+            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), resumer: .preview(),
             safetyAPIClient: PreviewSafetyAPIClient()
         )
     }

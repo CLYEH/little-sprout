@@ -26,6 +26,14 @@ struct LittleSproutApp: App {
     /// 負責，不需要在這裡另外包一層 store。
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
+    /// LS-193：`SettingsView`→`DeleteAccountFlowView` 用，同 `diaryAPIClient`／
+    /// `mediaUploadService` 的既有角色分工（不隨 app 存活的無狀態 client）。
+    let accountAPIClient: AccountAPIClient
+    /// merge-review R2 B2：`PendingAccountDeletionResumer` 是「續傳呼叫」的唯一擁有者，
+    /// 需要跨 `AuthenticatedGate`（登入完成／回前景觸發）與多個 `DeleteAccountFlowView`
+    /// 實例（畫面呈現）共用同一份、持續追蹤 `state` 變化——同 `familyStore`／`eulaStore`
+    /// 等既有 app 層 store 的角色，`@State` 讓它隨 app 存活、不會每次重繪都重建。
+    @State private var resumer: PendingAccountDeletionResumer
     /// LS-189：內容操作表（檢舉／封鎖／Owner 移除）用的 client——不是 `@State`，同
     /// `diaryAPIClient` 的既有理由（不可變的純 service 物件，本身不 Observable）。
     let safetyAPIClient: SafetyAPIClient
@@ -59,6 +67,8 @@ struct LittleSproutApp: App {
         _eulaStore = State(initialValue: EULAStore(apiClient: SupabaseEULAAPIClient(client: client)))
         diaryAPIClient = SupabaseDiaryAPIClient(client: client)
         mediaUploadService = SupabaseMediaUploadService(client: client)
+        accountAPIClient = SupabaseAccountAPIClient(client: client)
+        _resumer = State(initialValue: PendingAccountDeletionResumer(accountAPIClient: accountAPIClient))
         safetyAPIClient = SupabaseSafetyAPIClient(client: client)
     }
 
@@ -91,6 +101,8 @@ struct LittleSproutApp: App {
             eulaStore: eulaStore,
             diaryAPIClient: diaryAPIClient,
             mediaUploadService: mediaUploadService,
+            accountAPIClient: accountAPIClient,
+            resumer: resumer,
             safetyAPIClient: safetyAPIClient,
             pendingInviteCode: $pendingInviteCode
         )

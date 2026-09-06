@@ -7,15 +7,38 @@ import SwiftUI
 /// 版式依 `design/littlesprout.pen` frame `RxXvq`（iPhone）／`RHhJ1`（iPad）：LS-46 R11
 /// 進場條件①「04 三岔路：主次已反轉，含照片的主大卡整張可點；『我要自己建立家庭』是底部一條
 /// 列」（LS-18 comment `31d6e4e1` 未列出，但 Handoff Notes「N LS-18 家庭」i0 段有記載）。
+///
+/// **LS-193 merge-review R1 M2**：`childrenStore`／`timelineStore`／`albumsStore`／`eulaStore`／
+/// `accountAPIClient` 五個新參數只給 `suspendedFooter`（停權／註冊關閉出口）用，非本票原本範圍
+/// 但 orchestrator 裁決納入本票——票文範圍 3「停權者亦可走完」原本假設停權者能查到
+/// `myFamily` 進入正常路徑，實測發現 RLS 把停權者的家庭收斂成 0 列，root routing 導去這裡，
+/// 而這裡原本只有「建立家庭」「輸入邀請碼」兩顆卡片、兩顆都會被同一組錯誤碼（`LS052`／
+/// `LS054`）擋下，沒有登出、沒有刪除帳號入口——後端 `delete_my_account()` 已經為停權者做的
+/// `LS-179` R2 豁免在 client 端被整條封死。稿面沒有這個變體（`design/littlesprout.pen` 沒有
+/// 對應板），已記入 LS-208 補板；這裡的視覺沿用既有語彙（`cmp/Button Text`，同
+/// `EULAConsentView.disagreeButton`「不同意，登出」），不是自創版式。
 struct ForkView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
+    let childrenStore: ChildrenStore
+    let timelineStore: TimelineStore
+    let albumsStore: AlbumsStore
+    let eulaStore: EULAStore
+    let accountAPIClient: AccountAPIClient
+    /// merge-review R2 B2：轉手往下傳到 `.deleteAccount` route 的 `DeleteAccountFlowView`。
+    let resumer: PendingAccountDeletionResumer
     /// LS-108 deep link：`littlesprout://invite/<code>`（LS-39 已註冊 scheme）冷／熱啟動皆帶碼
     /// 進 06 並預填。`LittleSproutApp` 用 `.onOpenURL` 寫入這個 binding，這裡消費（讀到就清空，
     /// 避免同一個碼被重複導頁）。
     @Binding var pendingInviteCode: String?
 
-    @State private var path: [FamilyOnboardingRoute] = []
+    // 不是 `private`（`isSigningOut`／`signOutErrorMessage` 亦然）：`ForkView+SuspendedFooter
+    // .swift`（跨檔案 extension，見該檔文件註解——`ForkView.swift` 加完 M2／M3 的停權出口後
+    // 逼近 SwiftLint `file_length`／`type_body_length` 上限，同 `SettingsView+SignOut.swift`
+    // 從 `SettingsView.swift` 拆分的既有先例）需要讀寫這三個 `@State`。
+    @State var path: [FamilyOnboardingRoute] = []
+    @State var isSigningOut = false
+    @State var signOutErrorMessage: String?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
@@ -46,6 +69,12 @@ struct ForkView: View {
                         familyName: familyName,
                         submittedAt: submittedAt
                     )
+                case .deleteAccount:
+                    DeleteAccountFlowView(
+                        accountAPIClient: accountAPIClient, authStore: authStore, familyStore: familyStore,
+                        childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
+                        eulaStore: eulaStore, resumer: resumer
+                    )
                 }
             }
         }
@@ -63,6 +92,14 @@ struct ForkView: View {
         .task {
             guard path.isEmpty, pendingInviteCode == nil else { return }
             await navigateToJoinFlowIfPending()
+        }
+        // merge-review R2 m1：第一次真的收到 `LS051`（帳號刪除進行中）就立刻把本機續傳旗標
+        // 落地——不等使用者按下「重試刪除」，見 `suspendedFooter` 文件註解。用 `.onChange`
+        // 而不是在 `suspendedFooter` 這個 `@ViewBuilder` 裡放副作用：view body 求值不該有
+        // 副作用，`.onChange` 才是 SwiftUI 慣用的「狀態變化時執行一次性動作」寫法。
+        .onChange(of: familyStore.accountDeletionInProgressError) { _, newValue in
+            guard newValue != nil, let userID = authStore.session?.userID else { return }
+            PendingAccountDeletion.markPending(userID: userID)
         }
     }
 
@@ -107,6 +144,8 @@ struct ForkView: View {
             joinCard
                 .padding(.top, AppSpacing.block)
             footerSection
+                .padding(.top, AppSpacing.item)
+            suspendedFooter
                 .padding(.top, AppSpacing.item)
         }
         .padding(.horizontal, AppSpacing.screenPad)
@@ -225,6 +264,8 @@ struct ForkView: View {
                     .padding(.top, AppSpacing.section)
                 footerSection
                     .padding(.top, AppSpacing.block)
+                suspendedFooter
+                    .padding(.top, AppSpacing.item)
             }
             .frame(width: 294)
         }
@@ -261,16 +302,28 @@ struct ForkView: View {
 
 #if DEBUG
 #Preview("iPhone") {
-    ForkView(authStore: .preview(), familyStore: .preview(), pendingInviteCode: .constant(nil))
+    ForkView(
+        authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
+        albumsStore: .preview(), eulaStore: .preview(shouldPresent: false),
+        accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(), pendingInviteCode: .constant(nil)
+    )
 }
 
 #Preview("iPad") {
-    ForkView(authStore: .preview(), familyStore: .preview(), pendingInviteCode: .constant(nil))
-        .environment(\.horizontalSizeClass, .regular)
+    ForkView(
+        authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
+        albumsStore: .preview(), eulaStore: .preview(shouldPresent: false),
+        accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(), pendingInviteCode: .constant(nil)
+    )
+    .environment(\.horizontalSizeClass, .regular)
 }
 
 #Preview("AX3") {
-    ForkView(authStore: .preview(), familyStore: .preview(), pendingInviteCode: .constant(nil))
-        .dynamicTypeSize(.accessibility3)
+    ForkView(
+        authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
+        albumsStore: .preview(), eulaStore: .preview(shouldPresent: false),
+        accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(), pendingInviteCode: .constant(nil)
+    )
+    .dynamicTypeSize(.accessibility3)
 }
 #endif

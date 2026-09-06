@@ -97,6 +97,33 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.familyMembers)
     }
 
+    /// LS-193：刪除帳號流程——04a／04b／04d 三分流各自的可點元件（≥48pt，本票 sheet／push 內
+    /// 元件統一給的緩衝值，見 `DeleteAccountDangerButton` 等共用元件文件註解）；04e／04g／04h
+    /// 三態直接掛對應子畫面測；04f 無互動元件不需要量測。
+    func testDeleteAccountFlowViewGeneralMember() {
+        assertAllTappablesMeetMinimum(.deleteAccountGeneralMember)
+    }
+
+    func testDeleteAccountFlowViewMustTransfer() {
+        assertAllTappablesMeetMinimum(.deleteAccountMustTransfer)
+    }
+
+    func testDeleteAccountFlowViewSoleMember() {
+        assertAllTappablesMeetMinimum(.deleteAccountSoleMember)
+    }
+
+    func testDeleteAccountFlowViewFinalConfirm() {
+        assertAllTappablesMeetMinimum(.deleteAccountFinalConfirm)
+    }
+
+    func testDeleteAccountFlowViewCompleted() {
+        assertAllTappablesMeetMinimum(.deleteAccountCompleted)
+    }
+
+    func testDeleteAccountFlowViewFailed() {
+        assertAllTappablesMeetMinimum(.deleteAccountFailed)
+    }
+
     /// LS-191：法務文件檢視 sheet——Footer 關閉鈕（釘底）是唯一可點元件，固定顯示
     /// 《使用條款》即有代表性。
     func testLegalDocumentSheet() {

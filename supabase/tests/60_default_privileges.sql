@@ -511,9 +511,11 @@ declare
     'public.claim_notification_events(integer)',  -- LS-172：push-dispatch 用
     'public.finalize_account_deletion(uuid)',  -- LS-151：delete-account 用
     'public.notification_recipients(uuid[])',  -- LS-172：push-dispatch 用（R2 改批次簽章，見 migration 檔頭第 2 段）
-    'public.purge_storage_queue_enqueue_orphans(text, uuid, text[])',  -- LS-213：purge-storage 用
+    'public.purge_storage_classify_orphan_paths(text[])',  -- LS-222：purge-storage 用（收口 LS-213 R2 N3）
+    'public.purge_storage_queue_enqueue_orphans(text, uuid, text[])',  -- LS-213：舊簽名，index.ts 已改呼叫 _v2，保留不刪（見 migration 檔頭）
+    'public.purge_storage_queue_enqueue_orphans_v2(text, uuid, text[])',  -- LS-222：purge-storage 用（收口 LS-213 R2 N3，回傳加 dropped）
     'public.purge_storage_queue_mark_failed(uuid[], text)',  -- LS-153：purge-storage 用
-    'public.purge_storage_unknown_media_paths(text[])'  -- LS-213 R2：purge-storage 用
+    'public.purge_storage_unknown_media_paths(text[])'  -- LS-213 R2：舊簽名，仍被 purge_storage_classify_orphan_paths() 內部呼叫，保留不刪
   ];
   v_whitelist oid[];
   v_unknown text;

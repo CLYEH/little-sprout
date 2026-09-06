@@ -73,6 +73,7 @@ extension TapTargetGateHarness {
             authStore: authStore, familyStore: familyStore, childrenStore: .preview(), timelineStore: .preview(),
             albumsStore: .preview(), eulaStore: .preview(shouldPresent: true, judgedUserID: userID),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
+            accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
             safetyAPIClient: PreviewSafetyAPIClient(), pendingInviteCode: .constant(nil)
         )
         .environment(\.horizontalSizeClass, .compact)
