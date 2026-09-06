@@ -33,9 +33,9 @@ enum VideoTrimmer {
         guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPreset1920x1080) else {
             throw TrimmerError.exportSessionUnavailable
         }
-        let outputURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension("mp4")
+        // LS-212：寫進 `MediaDraftTempStorage` 專屬子目錄，同 `TransferableVideoFile
+        // .importing` 的理由（見該檔文件註解）——App 啟動時才能安全地整批清掉孤兒暫存檔。
+        let outputURL = try MediaDraftTempStorage.newFileURL(extension: "mp4")
         exportSession.outputURL = outputURL
         exportSession.outputFileType = .mp4
         exportSession.timeRange = CMTimeRange(

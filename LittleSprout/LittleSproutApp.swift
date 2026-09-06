@@ -33,6 +33,10 @@ struct LittleSproutApp: App {
     @State private var pendingInviteCode: String?
 
     init() {
+        // LS-212：App 啟動時清掉上一個行程留下的日記編輯器影片暫存檔孤兒——
+        // `DiaryComposerStore` 不跨重啟持久化，這個目錄裡的任何殘留在這個時間點都必定是
+        // 孤兒（見 `MediaDraftTempStorage` 文件註解）。呼叫時機早於任何畫面／新草稿寫入。
+        MediaDraftTempStorage.purgeStaleFiles()
         let client = SupabaseClientFactory.makeClient()
         _authStore = State(initialValue: AuthStore(authService: SupabaseAuthService(client: client)))
         _familyStore = State(initialValue: FamilyStore(
