@@ -184,6 +184,12 @@ struct DiaryEditorView: View {
 
     private var cancelButton: some View {
         Button {
+            // LS-212：放棄編輯器前 best-effort 清掉已上傳孤兒 media／本機影片暫存檔（見
+            // `DiaryComposerStore.discardDraft()`）。`Task` 持有 `store` 的強參照，dismiss
+            // 之後這支 Task 仍會跑完，不受 View 消失影響（同 `UploadQueueStore` 檔頭
+            // 「Task 的生命週期跟著 store 實例走」的既有慣例）；不 `await` 是因為清理是背景
+            // 衛生工作，不該讓使用者等網路請求才能關閉畫面。
+            Task { await store.discardDraft() }
             dismiss()
         } label: {
             HStack(spacing: 2) {

@@ -138,11 +138,46 @@ final class DiaryComposerStore {
     func isSelected(_ id: UUID) -> Bool { selectedPhotoIDs.contains(id) }
 
     /// 「移除所選 N 張」——N=0 時 UI 層整個節點不出現（見 `DiaryPhotosSection`），這裡不用
-    /// 額外防呆：空集合呼叫這支方法本來就是安全的 no-op。
-    func removeSelected() {
+    /// 額外防呆：空集合呼叫這支方法本來就是安全的 no-op。**LS-212**：改成 `async`——移除的
+    /// 草稿若已經上傳過（`uploadedMediaByDraftID` 有記錄）要主動軟刪對應 `media` 列，影片
+    /// 草稿的本機暫存檔也要清掉，兩者都是網路／檔案系統操作（見 `cleanupRemovedDrafts`，依
+    /// LS-96 `d8634a08` R4 補充）。呼叫端（`removeSelectedButton`）在 `publishState
+    /// .isInFlight` 時本來就 `.disabled`，跟 `uploadAllMedia()` 不會有同時搶 `photos`／
+    /// `uploadedMediaByDraftID` 的競態。
+    func removeSelected() async {
         guard !selectedPhotoIDs.isEmpty else { return }
+        let removed = photos.filter { selectedPhotoIDs.contains($0.id) }
         photos.removeAll { selectedPhotoIDs.contains($0.id) }
         selectedPhotoIDs.removeAll()
+        await cleanupRemovedDrafts(removed)
+    }
+
+    /// 使用者按「取消」整個放棄編輯器（未成功發佈）時呼叫——同 `removeSelected` 的清理，範圍
+    /// 是佇列裡目前還留著的**每一張**，不只是被選取的那些（LS-212）。成功發佈後不清——那些
+    /// `media` 列已經合法 attach，不是孤兒。呼叫端（`cancelButton`）同樣在
+    /// `publishState.isInFlight` 時 `.disabled`，理由同上。
+    func discardDraft() async {
+        guard publishState != .success else { return }
+        await cleanupRemovedDrafts(photos)
+    }
+
+    /// 草稿被移除（`removeSelected`）或整個編輯器被放棄（`discardDraft`）時的收尾：影片草稿
+    /// 清掉本機暫存檔（`TransferableVideoFile` 複製檔／`VideoTrimmer` 裁切輸出，見
+    /// `MediaDraftTempStorage`）；已經上傳成功過的草稿（`uploadedMediaByDraftID` 有記錄）
+    /// 主動軟刪對應 `media` 列——不論它當下有沒有被 `attachMedia` 掛上（LS-96 `d8634a08`
+    /// R4 補充：`attachMedia` 的 merge-duplicates upsert 只 `INSERT`／`UPDATE`、不
+    /// `DELETE`，若上一輪其實已經 commit、只是回應遺失，不主動處理這一列就會永遠留在已發佈
+    /// 的日記裡）。best-effort：`try?` 吞掉失敗，清不掉是背景衛生問題，不阻斷任何 UI 流程
+    /// （同 `MediaUploadService.cleanupOrphans` 既有取捨）。
+    private func cleanupRemovedDrafts(_ removed: [DiaryPhotoDraft]) async {
+        for draft in removed {
+            if case .video(let fileURL, _, _) = draft.kind {
+                try? FileManager.default.removeItem(at: fileURL)
+            }
+        }
+        let orphanMediaIDs = removed.compactMap { uploadedMediaByDraftID.removeValue(forKey: $0.id) }
+        guard !orphanMediaIDs.isEmpty else { return }
+        try? await mediaUploadService.softDeleteMedia(mediaIDs: orphanMediaIDs)
     }
 
     // MARK: - 排序（12e：長按拖曳；VoiceOver 對等路徑見 `v0tLp` R6）
