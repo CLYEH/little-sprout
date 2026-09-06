@@ -131,6 +131,68 @@ final class DiaryComposerStoreDraftCleanupTests: XCTestCase {
         )
     }
 
+    // MARK: - softDeleteMedia 失敗時保留重試（LS-212 R2，merge-review R1 m1）
+
+    /// 最常見的失敗成因（斷線）跟觸發清理的動作往往同時發生：第一次 `removeSelected()` 撞到
+    /// `softDeleteMedia` 失敗，這批 id 不該被丟掉——下一次呼叫（這裡用再移除一張草稿觸發）要
+    /// 把上一輪失敗的 id 併進這次的批次一起重送。
+    func test_removeSelected_softDeleteFails_retriesOnNextRemoveSelectedCall() async {
+        let mediaService = StubMediaUploadService()
+        let mediaIDA = UUID()
+        let mediaIDB = UUID()
+        mediaService.setUploadPhotoHandler { _, data, _, _ in
+            String(data: data, encoding: .utf8) == "a" ? mediaIDA : mediaIDB
+        }
+        let store = makeStore(diaryAPIClient: makeAlwaysFailingAttachClient(), mediaUploadService: mediaService)
+        store.body = "內容"
+        addPhoto(store, tag: "a")
+        addPhoto(store, tag: "b")
+        let publishResult = await store.publish()
+        XCTAssertFalse(publishResult, "測試前置：attachMedia 恆失敗，publish() 應該失敗但兩張照片都已經上傳成功")
+
+        mediaService.setSoftDeleteMediaHandler { _ in throw AppError.network(message: "offline") }
+        let draftAID = store.photos[0].id
+        store.toggleSelection(draftAID)
+        await store.removeSelected()
+        XCTAssertEqual(mediaService.softDeleteMediaCalls.count, 1, "第一次嘗試（失敗）也該真的打過一次")
+        XCTAssertEqual(Set(mediaService.softDeleteMediaCalls[0].mediaIDs), [mediaIDA])
+
+        mediaService.setSoftDeleteMediaHandler { _ in }
+        let draftBID = store.photos[0].id
+        store.toggleSelection(draftBID)
+        await store.removeSelected()
+
+        XCTAssertEqual(mediaService.softDeleteMediaCalls.count, 2, "第二次呼叫應該再打一次（這次成功）")
+        XCTAssertEqual(
+            Set(mediaService.softDeleteMediaCalls[1].mediaIDs), [mediaIDA, mediaIDB],
+            "第二次呼叫應該把第一次失敗、還留著的 id 併進這次的批次一起重送，不能只送新的那一張"
+        )
+    }
+
+    /// 同上，但第二次重試的觸發點換成 `discardDraft()`（使用者移除一張失敗後、乾脆整個放棄
+    /// 編輯器）——同一份 pending 集合不論下一次呼叫是哪一支方法都要被併入。
+    func test_removeSelected_softDeleteFails_retriesOnSubsequentDiscardDraft() async {
+        let mediaService = StubMediaUploadService()
+        let uploadedMediaID = UUID()
+        mediaService.setUploadPhotoHandler { _, _, _, _ in uploadedMediaID }
+        let store = makeStore(diaryAPIClient: makeAlwaysFailingAttachClient(), mediaUploadService: mediaService)
+        store.body = "內容"
+        addPhoto(store, tag: "a")
+        let publishResult = await store.publish()
+        XCTAssertFalse(publishResult, "測試前置：attachMedia 恆失敗，publish() 應該失敗但照片已經上傳成功")
+
+        mediaService.setSoftDeleteMediaHandler { _ in throw AppError.network(message: "offline") }
+        store.toggleSelection(store.photos[0].id)
+        await store.removeSelected()
+        XCTAssertEqual(mediaService.softDeleteMediaCalls.count, 1)
+
+        mediaService.setSoftDeleteMediaHandler { _ in }
+        await store.discardDraft()
+
+        XCTAssertEqual(mediaService.softDeleteMediaCalls.count, 2, "discardDraft() 也該把上一次失敗、還留著的 id 一併重送")
+        XCTAssertEqual(mediaService.softDeleteMediaCalls[1].mediaIDs, [uploadedMediaID])
+    }
+
     func test_discardDraft_videoDraft_deletesLocalTempFileEvenWithoutUpload() async throws {
         let store = makeStore()
         let tempURL = try MediaDraftTempStorage.newFileURL(extension: "mp4")

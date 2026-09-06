@@ -41,6 +41,18 @@ struct DiaryEditorView: View {
         self.childrenStore = childrenStore
     }
 
+    #if DEBUG
+    /// LS-212 R2（merge-review R1 M1）：測試專用注入點——`DiaryEditorViewLifecycleTests` 需要在
+    /// 呼叫 `publish()`（讓 `store.uploadedMediaByDraftID` 先有孤兒 media）之後才把同一個
+    /// `store` 交給 view host，一般生產路徑（`TimelineView`／`TapTargetGateHarness`）沒有這個
+    /// 需求，繼續用上面那支建構子；同 `UploadQueueStore.PreviewSeed`／`seedForPreview` 只給
+    /// `#Preview`／測試用的既有慣例。
+    init(store: DiaryComposerStore, childrenStore: ChildrenStore) {
+        _store = State(initialValue: store)
+        self.childrenStore = childrenStore
+    }
+    #endif
+
     var body: some View {
         @Bindable var store = store
         ScrollableFillView {
@@ -72,6 +84,18 @@ struct DiaryEditorView: View {
             let itemsToLoad = newItems
             pickerSelection = []
             Task { await loadPicked(itemsToLoad) }
+        }
+        // LS-212 R2（merge-review R1 M1）：畫面消失（不論是 `cancelButton` 觸發的 `dismiss()`、
+        // 互動式返回手勢／邊緣滑走、還是發佈成功後的 `dismiss()`）一律經過這裡——比只掛在
+        // `cancelButton` 更完整，因為 push 進來的畫面即使
+        // `.navigationBarBackButtonHidden(true)` 隱藏了系統返回鈕，互動式滑走手勢依然有效、
+        // 不會經過 `cancelButton` 的 action。`discardDraft()` 本身的 `guard publishState !=
+        // .success` 會擋住「發佈成功後 dismiss」這條路徑，不會誤刪已經合法 attach 的
+        // media（見該方法文件註解）。`Task` 持有 `store` 的強參照，view 消失後這支 Task 仍會
+        // 跑完，不受 View 生命週期影響（同 `UploadQueueStore` 檔頭既有慣例）；不 `await` 是
+        // 因為清理是背景衛生工作，不該讓 `.onDisappear` 阻塞畫面轉場。
+        .onDisappear {
+            Task { await store.discardDraft() }
         }
     }
 
@@ -184,12 +208,11 @@ struct DiaryEditorView: View {
 
     private var cancelButton: some View {
         Button {
-            // LS-212：放棄編輯器前 best-effort 清掉已上傳孤兒 media／本機影片暫存檔（見
-            // `DiaryComposerStore.discardDraft()`）。`Task` 持有 `store` 的強參照，dismiss
-            // 之後這支 Task 仍會跑完，不受 View 消失影響（同 `UploadQueueStore` 檔頭
-            // 「Task 的生命週期跟著 store 實例走」的既有慣例）；不 `await` 是因為清理是背景
-            // 衛生工作，不該讓使用者等網路請求才能關閉畫面。
-            Task { await store.discardDraft() }
+            // LS-212 R2（merge-review R1 M1）：清理已經改掛在 `body` 的 `.onDisappear`（見該
+            // modifier 文件註解）——這裡只需要觸發 dismiss，不必另外呼叫
+            // `store.discardDraft()`。改掛的理由：`DiaryEditorView` 是 push 進來的畫面，
+            // `.navigationBarBackButtonHidden(true)` 只隱藏了系統返回鈕，互動式返回手勢
+            // （邊緣滑走）仍然有效——只掛在這顆按鈕上會讓滑走離開的路徑完全漏接清理。
             dismiss()
         } label: {
             HStack(spacing: 2) {

@@ -69,6 +69,13 @@ final class DiaryComposerStore {
     /// （merge-review R1 M2）。用草稿 id 對應（不是陣列 index）：使用者可能在失敗後、重試前
     /// 編輯佇列（移除某張），這樣做仍能正確地「這張傳過了就不用再傳，那張沒傳過的繼續傳」。
     private var uploadedMediaByDraftID: [UUID: UUID] = [:]
+    /// `cleanupRemovedDrafts` 呼叫 `softDeleteMedia` 失敗時暫存的 media id（LS-212 R2，
+    /// merge-review R1 m1）——最常見的失敗原因（斷線）跟觸發清理的原因往往是同一個，草稿的
+    /// `uploadedMediaByDraftID` 記錄已經在同一次呼叫裡被拿走，若直接丟掉這批 id 就永遠沒有
+    /// 重試機會。留在這裡，下一次 `cleanupRemovedDrafts`（不論是再移除一張、還是最終
+    /// `discardDraft()`）會把它們併入這次的批次一起重送；同一個 store 存活期間內失敗會持續
+    /// 累積，成功後清空。
+    private var pendingOrphanMediaIDs: Set<UUID> = []
 
     init(familyID: UUID, diaryAPIClient: DiaryAPIClient, mediaUploadService: MediaUploadService) {
         self.familyID = familyID
@@ -167,17 +174,29 @@ final class DiaryComposerStore {
     /// 主動軟刪對應 `media` 列——不論它當下有沒有被 `attachMedia` 掛上（LS-96 `d8634a08`
     /// R4 補充：`attachMedia` 的 merge-duplicates upsert 只 `INSERT`／`UPDATE`、不
     /// `DELETE`，若上一輪其實已經 commit、只是回應遺失，不主動處理這一列就會永遠留在已發佈
-    /// 的日記裡）。best-effort：`try?` 吞掉失敗，清不掉是背景衛生問題，不阻斷任何 UI 流程
-    /// （同 `MediaUploadService.cleanupOrphans` 既有取捨）。
+    /// 的日記裡）。
+    ///
+    /// **LS-212 R2（merge-review R1 m1）**：`softDeleteMedia` 失敗時把這批 id 移進
+    /// `pendingOrphanMediaIDs`、留到下一次呼叫重試，不是直接丟掉——最常見的失敗成因（斷線）
+    /// 跟「使用者接著移除草稿」這個觸發清理的動作往往同時發生，原本在 `await` **之前**就
+    /// `removeValue` 掉、又用 `try?` 吞錯的寫法，會讓最可能觸發本修法的情境剛好是它幾乎必定
+    /// 無效的情境。best-effort 的定位不變：這裡仍不會把錯誤往外拋、不阻斷任何 UI 流程，只是
+    /// 「失敗至少留下重試的資料」而不是「連再試一次的機會都沒有」。
     private func cleanupRemovedDrafts(_ removed: [DiaryPhotoDraft]) async {
         for draft in removed {
             if case .video(let fileURL, _, _) = draft.kind {
                 try? FileManager.default.removeItem(at: fileURL)
             }
         }
-        let orphanMediaIDs = removed.compactMap { uploadedMediaByDraftID.removeValue(forKey: $0.id) }
-        guard !orphanMediaIDs.isEmpty else { return }
-        try? await mediaUploadService.softDeleteMedia(mediaIDs: orphanMediaIDs)
+        let newOrphanMediaIDs = removed.compactMap { uploadedMediaByDraftID.removeValue(forKey: $0.id) }
+        let candidateMediaIDs = pendingOrphanMediaIDs.union(newOrphanMediaIDs)
+        guard !candidateMediaIDs.isEmpty else { return }
+        do {
+            try await mediaUploadService.softDeleteMedia(mediaIDs: Array(candidateMediaIDs))
+            pendingOrphanMediaIDs.removeAll()
+        } catch {
+            pendingOrphanMediaIDs = candidateMediaIDs
+        }
     }
 
     // MARK: - 排序（12e：長按拖曳；VoiceOver 對等路徑見 `v0tLp` R6）
