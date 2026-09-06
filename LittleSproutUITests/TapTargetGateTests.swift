@@ -126,6 +126,43 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.deleteCommentConfirmation)
     }
 
+    /// LS-189：內容操作表（05）——三個動作列＋取消鈕（皆 `minHeight: 48`，見
+    /// `ContentActionsSheet` 文件註解的 iOS 26.2+ sheet 縮放緩衝）。
+    func testContentActionsSheet() {
+        assertAllTappablesMeetMinimum(.contentActionsSheet)
+    }
+
+    /// LS-189：檢舉原因（05b）——六個原因列＋送出／取消兩顆按鈕。
+    func testReportReasonSheet() {
+        assertAllTappablesMeetMinimum(.reportReasonSheet)
+    }
+
+    /// LS-189：封鎖確認（05d）——重用 `DeleteConfirmationSheet` 通用版式。
+    func testBlockConfirmSheet() {
+        assertAllTappablesMeetMinimum(.blockConfirmSheet)
+    }
+
+    /// LS-189：Owner 移除內容確認（05e）——同上。
+    func testOwnerRemoveContentConfirmSheet() {
+        assertAllTappablesMeetMinimum(.ownerRemoveContentConfirmSheet)
+    }
+
+    /// LS-189：封鎖名單（06）——列上的「解除封鎖」鈕。
+    func testBlockListView() {
+        assertAllTappablesMeetMinimum(.blockList)
+    }
+
+    /// LS-189：檢舉收件匣（07）——每張卡「查看內容」／「這則沒問題」／「移除內容」三顆按鈕。
+    func testReportInboxView() {
+        assertAllTappablesMeetMinimum(.reportInbox)
+    }
+
+    /// LS-189：`DiaryDetailView` 導覽列「⋯」內容操作表入口——取代原本的具名排除（見
+    /// `TapTargetGateHarness.diaryDetailHost` 文件註解）。
+    func testDiaryDetailView() {
+        assertAllTappablesMeetMinimum(.diaryDetail)
+    }
+
     /// 任一元件 <44pt 就用 `XCTFail` 記一筆——逐一累計，不是遇到第一個違規就提前結束，讓
     /// `tap-target-check.sh` 能一次點名所有違規者（LS-17 QA1 就是同一畫面上不只一顆違規）。
     /// merge-review R1 B1：先斷言畫面真的渲染出來，harness 靜默失效不會被誤判成「這個畫面
