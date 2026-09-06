@@ -87,7 +87,6 @@
 		30C42A1A4B913993F2F76730 /* privacy-policy.md in Resources */ = {isa = PBXBuildFile; fileRef = 267EACE4E1129F9AEA336AB0 /* privacy-policy.md */; };
 		30E6D71BFB6C6946819AA123 /* SupabaseAccountAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A0ED71C407A29B4944732E /* SupabaseAccountAPIClient.swift */; };
 		31A49F9904E6C7D2143C5CA4 /* QADriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1EFC1792C4BB1EA62606E2 /* QADriver.swift */; };
-		70564C1CAD1B85640E279B7B /* PushNotificationStoreRegistrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E163F48DF658A15A7C742A /* PushNotificationStoreRegistrationTests.swift */; };
 		31F7E61AFC2E73BA85D322BD /* PushNotificationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAB640AAAE61BC9D1CAAF2EE /* PushNotificationStoreTests.swift */; };
 		32463742EC96BA86452232E8 /* UploadQueueModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2196009D552953032393977 /* UploadQueueModels.swift */; };
 		32824AF2CC5F64CE44CBB595 /* AppSectionUniquenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */; };
@@ -206,6 +205,7 @@
 		7F08F478DF8A0C469FDD0E57 /* DiaryComposerStoreDraftCleanupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C80FBB4835B68D0EE95FD6 /* DiaryComposerStoreDraftCleanupTests.swift */; };
 		7F4B5EC36F95C02CCF5A14E0 /* StubChildAvatarUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA51041D6190DA7BB8F683D0 /* StubChildAvatarUploadService.swift */; };
 		7F7EFA8CFB0323AAA5344BA6 /* LegalDocumentKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9F5D419E50A0CC051AAFE4 /* LegalDocumentKind.swift */; };
+		7F8E845A38B45C8D778EF745 /* PushNotificationStoreRegistrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB59B9D30E351F20B3ECF494 /* PushNotificationStoreRegistrationTests.swift */; };
 		807A732C47F2294FA3A3CA7C /* EULAConsentUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF78305F7D375B0D04B208D8 /* EULAConsentUITests.swift */; };
 		820A2BB33CFAAF811A730B05 /* DeleteAccountFlowView+FinalConfirm.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0BE694592A794309EA4A89C /* DeleteAccountFlowView+FinalConfirm.swift */; };
 		838BEA28E6C05A825D649B22 /* SupabaseFamilyAPIClientJoinTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */; };
@@ -685,6 +685,7 @@
 		AA1EFC1792C4BB1EA62606E2 /* QADriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QADriver.swift; sourceTree = "<group>"; };
 		AA736FBC40A77EA45DCD9D90 /* PendingAccountDeletionResumerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingAccountDeletionResumerTests.swift; sourceTree = "<group>"; };
 		AAE2BD7F1D83D2C316B63293 /* MediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaUploadService.swift; sourceTree = "<group>"; };
+		AB59B9D30E351F20B3ECF494 /* PushNotificationStoreRegistrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationStoreRegistrationTests.swift; sourceTree = "<group>"; };
 		AC1EF5E70745F2D0DCAA3405 /* ChildAgeFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildAgeFormatterTests.swift; sourceTree = "<group>"; };
 		AD69D0A2456BC4F954E29446 /* InviteCodeParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeParserTests.swift; sourceTree = "<group>"; };
 		ADDE4EEF33482FCA3ABB0819 /* TimelineAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineAPIClient.swift; sourceTree = "<group>"; };
@@ -711,7 +712,6 @@
 		BA735777F488630AE931D68B /* SettingsView+SignOut.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SettingsView+SignOut.swift"; sourceTree = "<group>"; };
 		BA9BCE3B67830009105F917D /* FamilyStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreTests.swift; sourceTree = "<group>"; };
 		BAB640AAAE61BC9D1CAAF2EE /* PushNotificationStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationStoreTests.swift; sourceTree = "<group>"; };
-		D2E163F48DF658A15A7C742A /* PushNotificationStoreRegistrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationStoreRegistrationTests.swift; sourceTree = "<group>"; };
 		BB03234039D326BAF0DA3B08 /* WelcomeView+Legal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WelcomeView+Legal.swift"; sourceTree = "<group>"; };
 		BBC5A903489F554F9E012A50 /* FamilyStore+Invite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FamilyStore+Invite.swift"; sourceTree = "<group>"; };
 		BC7448E56867EED60566A8F0 /* FamilyStoreInviteRaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreInviteRaceTests.swift; sourceTree = "<group>"; };
@@ -1050,7 +1050,7 @@
 				AA736FBC40A77EA45DCD9D90 /* PendingAccountDeletionResumerTests.swift */,
 				891013E5A75CD7CC488037D0 /* PendingAccountDeletionTests.swift */,
 				0ED4F4FC901701044230BA42 /* PickedItemLoaderTests.swift */,
-				D2E163F48DF658A15A7C742A /* PushNotificationStoreRegistrationTests.swift */,
+				AB59B9D30E351F20B3ECF494 /* PushNotificationStoreRegistrationTests.swift */,
 				BAB640AAAE61BC9D1CAAF2EE /* PushNotificationStoreTests.swift */,
 				68CC5B8416F7028D1103B61C /* PushPrepromptPolicyTests.swift */,
 				0DD82679EDD789F70A8A8999 /* ReportInboxAssemblerTests.swift */,
@@ -1983,7 +1983,7 @@
 				3A97FE1AF8ADB0D3FD7B39F2 /* PendingAccountDeletionResumerTests.swift in Sources */,
 				03097B461382E3D453B7B548 /* PendingAccountDeletionTests.swift in Sources */,
 				F3549AB9A9912E8CFBAF3B2D /* PickedItemLoaderTests.swift in Sources */,
-				70564C1CAD1B85640E279B7B /* PushNotificationStoreRegistrationTests.swift in Sources */,
+				7F8E845A38B45C8D778EF745 /* PushNotificationStoreRegistrationTests.swift in Sources */,
 				31F7E61AFC2E73BA85D322BD /* PushNotificationStoreTests.swift in Sources */,
 				57EBF6862351A27816C83A1A /* PushPrepromptPolicyTests.swift in Sources */,
 				F13AD1A73B09DDC419EAC93B /* ReportInboxAssemblerTests.swift in Sources */,
