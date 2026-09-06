@@ -5,10 +5,22 @@ import SwiftUI
 ///
 /// 只帶 `diaryID`：內文從 `timelineStore.entries` 依 id 查目前最新的一筆（同 `ChildrenRoute`
 /// 的理由，見該檔文件註解），避免推入時捕捉到的舊資料在使用者停留期間過期。
+///
+/// LS-189：導覽列右上角「⋯」內容操作表入口（`design/littlesprout.pen` `WgbNc`，票文範圍 1）
+/// ——`DiaryDeleteConfirmationSheet`（LS-190）曾經在這裡常駐插一顆「刪除日記」列，因為不判斷
+/// 作者／家庭管理者身分被 merge-review 收回（見該檔文件註解）；這裡正式接回，入口與身分判斷
+/// 都由 `DiaryDetailView+ContentActions.swift` 負責（見該檔）。
 struct DiaryDetailView: View {
     let diaryID: UUID
     let timelineStore: TimelineStore
     let childrenStore: ChildrenStore
+    /// LS-189：內容操作表需要「我是誰」「我是不是家庭管理者」「這篇日記是誰的」——
+    /// `familyStore.ownerUserID`（其實是「我自己」的 user id，非家庭 owner 的 id，見該屬性
+    /// 文件註解）／`familyStore.myFamily?.id`／`familyStore.members`（解析作者顯示名稱）。
+    let familyStore: FamilyStore
+    let safetyAPIClient: SafetyAPIClient
+    /// LS-189：內容操作表「刪除」→ `DiaryDeleteConfirmationSheet`（LS-190）需要的既有 client。
+    let diaryAPIClient: DiaryAPIClient
 
     @State private var photos: [MediaContent] = []
     @State private var loadState: TimelineOperationState = .idle
@@ -22,13 +34,25 @@ struct DiaryDetailView: View {
     /// 錯誤語彙（icon＋`Text(error.userFacingMessage)`），不是新設計；下次成功播放或再次
     /// 嘗試時清掉，不會一直卡在畫面上。
     @State private var videoPrepareError: AppError?
+    // LS-189：內容操作表整條流程的狀態，見 `DiaryDetailView+ContentActions.swift`——不標
+    // `private`：跨檔案 extension 存取不到（同 `SettingsView.regularSelection` 既有理由）。
+    @State var isResolvingContentActions = false
+    @State var contentActionsContext: DiaryContentActionsContext?
+    @State var reportFlowTarget: ContentActionTarget?
+    @State var showsReportSent = false
+    @State var blockConfirmContext: DiaryBlockConfirmContext?
+    @State var removeConfirmTarget: ContentActionTarget?
+    @State var showsDeleteConfirmation = false
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.dismiss) var dismiss
 
-    private var entry: TimelineEntry? {
+    // LS-189：不標 `private`——`DiaryDetailView+ContentActions.swift`（跨檔案 extension）需要
+    // 讀取目前這篇日記的內文才能組出操作表的 headline（同 `regularSelection` 既有理由）。
+    var entry: TimelineEntry? {
         timelineStore.entries.first { $0.kind == .diary && $0.refId == diaryID }
     }
 
-    private var diaryContent: DiaryContent? {
+    var diaryContent: DiaryContent? {
         guard case .diary(let content) = entry?.content else { return nil }
         return content
     }
@@ -56,6 +80,13 @@ struct DiaryDetailView: View {
         // 模式——推入 tab 的畫面沒有隱藏 Tab Bar，稿面 `vzYXz` 完全沒有 Tab Bar 節點。iPad
         // 走 NavigationSplitView 的 detail pane，本來就沒有 Tab Bar 概念，這裡加上不影響。
         .toolbar(.hidden, for: .tabBar)
+        // LS-189：內容操作表入口按鈕見 `header(_:)`（不是 `.toolbar`——nav bar bar button item
+        // 的熱區不受內層 padding/frame 影響，`DiaryDetailView+ContentActions.swift` 文件註解
+        // 有實測記錄；改成一般內容區塊的按鈕才能穩定撐到 ≥44×44pt）。整條流程的 `.sheet` 鏈掛在
+        // `.overlay`（不可見的 `EmptyView`）上，不是內容本身——`.sheet` 掛在樹上哪個節點不影響
+        // 呈現，這樣可以把整串 `.sheet` 鏈搬到另一個檔案而不必重新拆 `body` 本體（同業界常見的
+        // 「用 overlay 集中多個 sheet modifier」寫法）。
+        .overlay(contentActionsSheetHost)
         .task(id: diaryID) {
             loadState = .submitting
             do {
@@ -123,13 +154,17 @@ struct DiaryDetailView: View {
     // MARK: - 共用區塊
 
     private func header(_ content: DiaryContent) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.label) {
-            Text(BirthdayFormat.displayString(from: content.entryDate))
-                .appFont(.meta, weight: .semibold)
-                .foregroundStyle(Color.lsTextSecondary)
-            if !taggedChildren.isEmpty {
-                Text(MultiChildCaptionFormatter.attributed(children: taggedChildren, asOf: content.entryDate))
+        HStack(alignment: .top, spacing: AppSpacing.group) {
+            VStack(alignment: .leading, spacing: AppSpacing.label) {
+                Text(BirthdayFormat.displayString(from: content.entryDate))
+                    .appFont(.meta, weight: .semibold)
+                    .foregroundStyle(Color.lsTextSecondary)
+                if !taggedChildren.isEmpty {
+                    Text(MultiChildCaptionFormatter.attributed(children: taggedChildren, asOf: content.entryDate))
+                }
             }
+            Spacer(minLength: AppSpacing.group)
+            contentActionsButton
         }
     }
 
@@ -218,14 +253,23 @@ struct DiaryDetailView: View {
 
     @ViewBuilder
     private var missingOrLoadingState: some View {
-        if loadState.isSubmitting || entry == nil {
-            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else {
+        // LS-189：`entry == nil` 原本無條件併進「還在載入」分支，會被 `loadState.isSubmitting
+        // || entry == nil` 這個 `||` 永遠短路成 true——`entry` 從有變 nil（Owner 移除／自己
+        // 刪除，見 `DiaryDetailView+ContentActions.swift` 的 `contentRemoved()` 呼叫
+        // `timelineStore.removeDiaryEntryLocally`）之後，畫面會卡在無限轉圈，而不是顯示「找不到
+        // 這篇日記」（UITest `testDiaryDetail_removeAsOwnerFlow_removesEntryLocally` 實測抓到）。
+        // 改成：只有「這支 `.task(id: diaryID)` 從未跑過任何一輪」（`loadState == .idle`，涵蓋
+        // 首次進場、`entry` 可能因為時序還沒同步的邊界情況）才視為「還在載入」；一旦跑過至少一輪
+        // （`.submitting`／`.success`／`.failure` 皆是），`entry == nil` 就是「這篇日記真的不在
+        // `timelineStore.entries` 裡了」，該顯示「找不到」而不是繼續轉圈。
+        if entry == nil && loadState != .idle {
             ContentUnavailableView(
                 "找不到這篇日記",
                 systemImage: "questionmark.circle",
                 description: Text("這篇日記可能已經被移除。")
             )
+        } else {
+            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }
