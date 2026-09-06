@@ -78,6 +78,10 @@ done
 # `pr-body-check.sh <f> --branch <分支> --verify` 呼叫就能反查、不必先手動 export。只 grep 這一個
 # key 名、不 source 整份 .env（.env 可能含其他敏感值，不該被本腳本間接讀出）；只取值進環境變數，
 # 不印值。多行同 key 取最後一行（shell 慣例：後面的覆蓋前面的）。
+# 已知限制（merge-review R1 N5，記錄不修——現況實測無影響，見該 comment）：`cut -d= -f2-` 不處理
+# `LINEAR_API_KEY="…"` 這種帶引號包值的寫法、也不剝 CRLF——引號字元／`\r` 會原樣帶進 token，若
+# `.env` 真的這樣寫，curl `-K -` 拿到的 Authorization header 值會帶多餘字元而反查失敗（fail closed，
+# 不是靜默通過）。本 repo 的 `.env` 實測是純 `KEY=value`（無引號、LF），未觸發過這個限制。
 if [ -z "${LINEAR_API_KEY:-}" ]; then
   env_file="$(git rev-parse --show-toplevel 2>/dev/null)/.env"
   if [ -f "$env_file" ]; then

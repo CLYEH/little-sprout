@@ -86,6 +86,16 @@ enum TapTargetMeasurement {
 EOF
 expect 0 '① allowlist 命中（TapTargetMeasurement.swift）→ 印 informational、仍過（LS-190 併主前過渡期）' '允許期限內' "$r"
 
+# ==== ①n（R2，merge-review R1 N4）：--root 帶尾斜線時 allowlist 整字比對仍要生效 ====
+out_slash="$(bash "$check" --root "${r}/" 2>&1)"; got_slash=$?
+if [ "$got_slash" -eq 0 ] && printf '%s' "$out_slash" | grep -qF '允許期限內'; then
+  echo "✓ ①n --root 帶尾斜線 → allowlist 仍正確命中，不誤紅"
+else
+  echo "✗ ①n --root 帶尾斜線應仍過、印「允許期限內」（實得 exit ${got_slash}）" >&2
+  printf '%s\n' "$out_slash" | sed 's/^/    /' >&2
+  fail=1
+fi
+
 # ==== ② 負樣本（≥3）====
 r=$(mkroot)
 cat > "$r/LittleSproutUITests/BadTests.swift" <<'EOF'
@@ -174,6 +184,14 @@ if [ "$got" -eq 0 ]; then
 else
   echo "✗ ④ mutant 未如預期翻轉（實得 exit ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
+
+# ⑤（R2，merge-review R1 N4）：刻意不做「拿掉 root=${root%/} 這行」的反向 mutation——實測過（debug
+# 手動追蹤 ui_dir／grep 命中路徑／relfile 三個中間值），BSD grep（本機 macOS）對 `--root` 帶雙斜線的
+# 目錄引數，回報的比對路徑會原樣保留同一份雙斜線，`relfile=${file#"${root}"/}` 的剝除樣式因此仍然
+# 對得上（兩邊的雙斜線來自同一個 $root、彼此一致，不會互相抵觸）——本機無法重現 reviewer 描述的
+# 「整字比對失效」。保留 `root=${root%/}` 這行是防禦性正規化（消除任何 grep 實作對連續斜線處理不一致
+# 的可能性，不假設特定 grep 行為），①n 已驗證修正後的程式碼對帶尾斜線的 --root 正確運作；沒有加
+# 反向 mutation 是誠實揭露，不是漏做——勉強做一個在本機必然不會翻轉的 mutation 反而是自欺。
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ ax-launch-check 自測通過"

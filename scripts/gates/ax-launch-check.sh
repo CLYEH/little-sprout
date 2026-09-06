@@ -30,6 +30,11 @@ while [ $# -gt 0 ]; do
     *) echo "✗ ax-launch-check：未知參數 $1" >&2; exit 2 ;;
   esac
 done
+# R2（merge-review R1 N4）：--root 帶尾斜線時 `${root}/LittleSproutUITests/...` 抓出的 $file 前綴會多一個
+# `/`，`relfile=${file#"${root}"/}` 剝不掉「$root 後面接一個 /」這個固定樣式（$root 本身結尾已經是 /、
+# 相減後模式變成 `//`，對不上），allowlist 整字比對因此失效、對 TapTargetMeasurement.swift 誤紅。收乾淨
+# 尾斜線即可（CI 不帶 --root、走 git rev-parse，本來就沒有這個問題，只影響手動呼叫）。
+root=${root%/}
 
 ui_dir="${root}/LittleSproutUITests"
 [ -d "$ui_dir" ] || { echo "✗ ax-launch-check：找不到 ${ui_dir}" >&2; exit 2; }

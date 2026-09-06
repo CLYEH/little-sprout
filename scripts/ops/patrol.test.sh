@@ -39,11 +39,6 @@ export PATROL_PUSH_GRACE_MIN=0
 # 一律指到假身（㉒ 自己再換成受控的假身），不碰本機真正的 Pen。
 export PATROL_PEN_STATUS_SH="$work/fake-pen-status.sh"
 printf '#!/bin/bash\necho "Pencil：（自測假身）"\nexit 0\n' > "$PATROL_PEN_STATUS_SH"
-# LS-209：「Pen 開錯檔（實作票）」偵測段用獨立的 PATROL_PEN_PGREP（與上面／㉔ 用的 PATROL_PGREP 分開，避免互相
-# 污染）——本機真的可能有 Pen.app 在跑（開發機常態），不隔離的話這裡新增的段落會被本機當下 Pen 狀態污染，讓既有
-# 斷言（不關心 Pen 的那些）偶發紅。預設「Pen 沒開」（exit 1）；㉖ 自己再覆寫成「有開」。
-export PATROL_PEN_PGREP="$work/fake-pen-pgrep-off.sh"
-printf '#!/bin/bash\nexit 1\n' > "$PATROL_PEN_PGREP"
 # LS-187：專屬模擬器段每輪都量 CoreSimulator/Devices 體積（du 快取）——自測一律指到小假目錄與自己的快取檔，不對真的
 # ~/Library 跑 du（本機實測 18 秒）、不碰 /tmp 的真快取；LINEAR_API_KEY 一開始 unset（㉓ 的 --linear 案例用假身，不打真 API）。
 mkdir -p "$work/fake-devices-default"
