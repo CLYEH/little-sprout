@@ -111,6 +111,18 @@ final class AuthStore {
         session = nil
     }
 
+    /// LS-193：帳號刪除完成（04g）後強制清掉本地 session——底層帳號在 Edge Function
+    /// `delete-account` 那一步已經被刪除，這裡再呼叫一般的 `signOut()` 有可能因為 GoTrue 端
+    /// 找不到對應使用者而失敗（見該端點冪等語意，`docs/API.md` §10）；但無論這次登出的網路
+    /// 呼叫成功與否，帳號確實已經不存在，本地 `session` 都必須清除——不能讓使用者卡在「按了
+    /// 『回到登入畫面』卻沒有反應」（`signOut()` 若拋錯，`session` 不會被寫成 nil，root
+    /// routing 就不會離開已登入畫面樹）。因此這裡吞掉 `signOut()` 的錯誤，只保證 `session`
+    /// 最終被寫成 nil。
+    func forceSignOutLocally() async {
+        try? await authService.signOut()
+        session = nil
+    }
+
     func refreshSnapshot() {
         session = authService.currentSession
     }

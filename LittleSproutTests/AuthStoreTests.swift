@@ -213,6 +213,36 @@ final class AuthStoreTests: XCTestCase {
         XCTAssertTrue(store.isAuthenticated())
     }
 
+    // MARK: - forceSignOutLocally（LS-193：04g 帳號刪除完成後強制清 session）
+
+    func test_forceSignOutLocally_success_clearsSession() async {
+        let session = AuthSession(userID: userID, email: "a@example.com", expiresAt: .distantFuture)
+        let stub = StubAuthService(currentSession: session)
+        let store = AuthStore(authService: stub)
+        XCTAssertNotNil(store.session)
+
+        await store.forceSignOutLocally()
+
+        XCTAssertNil(store.session)
+    }
+
+    /// 核心行為（跟 `signOut()` 刻意不同）：底層帳號在 Edge Function `delete-account` 那一步
+    /// 已經被刪除，`authService.signOut()` 這次網路呼叫可能因為 GoTrue 端找不到對應使用者而
+    /// 失敗——即使如此，`session` 仍必須被清成 `nil`，不能讓使用者卡在「按了『回到登入畫面』
+    /// 卻沒有反應」（`signOut()` 在同樣情境下的行為是保留 session，兩者对比見上面
+    /// `test_signOut_failure_doesNotClearSessionAndPropagatesError`）。
+    func test_forceSignOutLocally_signOutThrows_stillClearsSessionAndDoesNotThrow() async {
+        let session = AuthSession(userID: userID, email: "a@example.com", expiresAt: .distantFuture)
+        let stub = StubAuthService(currentSession: session)
+        stub.setSignOutHandler { throw AppError.rejected(message: "user not found", code: "401") }
+        let store = AuthStore(authService: stub)
+        XCTAssertNotNil(store.session)
+
+        await store.forceSignOutLocally()
+
+        XCTAssertNil(store.session, "signOut() 拋錯也必須清掉 session，帳號實際上已經被刪除")
+    }
+
     func test_refreshSnapshot_picksUpBackgroundChange() {
         // 模擬「這個 store 沒有主動呼叫、但背景已經改變 session」（例如 SDK 的
         // autoRefreshToken 計時器）——RootView 在 scenePhase 轉 active 時呼叫這個方法補撿。
