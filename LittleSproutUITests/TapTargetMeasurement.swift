@@ -14,14 +14,22 @@ enum TapTargetMeasurement {
 
     /// LS-190 R2（merge-review R1 B1）：帶指定字級啟動——`DeleteConfirmationSheetAX3UITests`
     /// 需要在 AX3（`accessibility-extra-large`）下斷言確認文案完整可達，這支 gate 原本只有
-    /// 一般字級這個固定通道。沿用同一個 launch environment 鍵（`UIPreferredContentSizeCategoryName`），
-    /// 只是把值變成參數——既有呼叫端（`launch(_:)`）行為不變。字級常數見
+    /// 一般字級這個固定通道。既有呼叫端（`launch(_:)`）行為不變。字級常數見
     /// `UIContentSizeCategory`：AX1–AX5 依序是 `UICTContentSizeCategoryAccessibilityM／L／
     /// XL／XXL／XXXL`，AX3＝`...AccessibilityXL`。
+    ///
+    /// **LS-190 R2 追加修正（merge-review R1 comment `24fc12db` i3）**：原本用
+    /// `app.launchEnvironment["UIPreferredContentSizeCategoryName"]` 設字級——這個鍵是 UIKit
+    /// 啟動時讀 `NSUserDefaults`（`NSArgumentDomain`）才會生效的鍵，只設 process 環境變數不會被
+    /// UIKit 讀到，等於完全沒效果（reviewer 實測：probe 量「設定」標題高度，設 AX5 環境變數跟
+    /// 完全不設是同一個值 40.67pt；改成 `launchArguments` 的 `-KEY VALUE` 命令列參數形式才會
+    /// 真的放大到 69.33pt）。改用 `launchArguments`：`XCUIApplication.launch()` 會把它們原樣
+    /// 傳給啟動的行程，UIKit 在啟動時直接讀命令列參數寫入 `NSArgumentDomain`，這是系統
+    /// 支援命令列覆寫使用者設定的既有機制，不需要 app 自己的程式碼配合解析。
     static func launch(_ screen: TapTargetGateScreenName, contentSizeCategory: String) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["LS_TAP_TARGET_GATE_SCREEN"] = screen.rawValue
-        app.launchEnvironment["UIPreferredContentSizeCategoryName"] = contentSizeCategory
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", contentSizeCategory]
         app.launch()
         return app
     }
