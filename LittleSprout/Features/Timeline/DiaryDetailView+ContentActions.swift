@@ -34,8 +34,19 @@ extension DiaryDetailView {
             .frame(width: 48, height: 48)
             .contentShape(Rectangle())
         }
-        .disabled(diaryContent == nil || isResolvingContentActions)
+        .disabled(!isContentActionsReady || isResolvingContentActions)
         .accessibilityLabel("更多操作")
+    }
+
+    /// 「更多操作」是否可以按——`openContentActions()` guard 條件的鏡像（LS-189 R2，
+    /// merge-review R1 m2）：原本 `.disabled` 只看 `diaryContent == nil`，
+    /// `familyStore.myFamily?.id`／`familyStore.ownerUserID`／`childrenStore.myRole` 任一還沒
+    /// 填好時按鈕是可點但按下去完全沒反應（沒有轉圈、沒有訊息）——例如冷啟動直接進時間軸點開
+    /// 日記、`ChildrenStore.refresh` 還沒回來（`myRole` 仍是 nil）。改成跟 guard 條件對齊，讓
+    /// 「還不能用」在視覺上表達出來，不是靜默 no-op。
+    private var isContentActionsReady: Bool {
+        diaryContent != nil && familyStore.myFamily?.id != nil
+            && familyStore.ownerUserID != nil && childrenStore.myRole != nil
     }
 
     /// 不可見的 `EmptyView`，掛整條流程的 `.sheet` 鏈——`.sheet` 掛在樹上哪個節點不影響呈現
@@ -60,7 +71,8 @@ extension DiaryDetailView {
             .sheet(item: $blockConfirmContext) { context in
                 BlockConfirmSheet(
                     familyID: context.familyID, familyName: familyStore.myFamily?.name ?? "",
-                    blockedID: context.memberID, memberName: context.memberName, safetyAPIClient: safetyAPIClient
+                    blockedID: context.memberID, memberName: context.memberName, safetyAPIClient: safetyAPIClient,
+                    onBlocked: memberBlocked
                 )
             }
             .sheet(item: $removeConfirmTarget) { target in
@@ -121,6 +133,17 @@ extension DiaryDetailView {
     /// 那個「呼叫端負責本地移除與導覽收尾」）。
     private func contentRemoved() {
         timelineStore.removeDiaryEntryLocally(diaryID: diaryID)
+        dismiss()
+    }
+
+    /// 封鎖成功後收尾（LS-189 R2，merge-review R1 B2）：`BlockConfirmSheet.onBlocked` 原本沒接
+    /// 任何東西，畫面會停在被封鎖成員的這篇日記全文，時間軸要使用者自己手動下拉才會把對方內容
+    /// 濾掉——票文範圍 2「封鎖後對方內容即時消失」沒有真的落地。時間軸重抓
+    /// （`TimelineStore.refreshWithCurrentFilter`，有世代號守門，見該檔文件註解，重疊呼叫安全）
+    /// ＋回上一頁：這篇日記是被封鎖成員寫的，留在畫面上不合理，同 `contentRemoved()` 的收尾
+    /// 語意（雖然這裡內容本身沒有被移除，只是被封鎖濾掉）。
+    private func memberBlocked() {
+        Task { await timelineStore.refreshWithCurrentFilter() }
         dismiss()
     }
 }

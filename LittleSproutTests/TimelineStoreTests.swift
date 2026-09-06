@@ -66,6 +66,39 @@ final class TimelineStoreTests: XCTestCase {
         XCTAssertNil(stub.fetchPointersCalls.last?.cursor, "第一頁不應帶游標")
     }
 
+    // MARK: - refreshWithCurrentFilter（LS-189 R2，merge-review R1 B2：封鎖／解除封鎖觸發重抓）
+
+    /// 還沒 `refresh` 過（`familyID` 是 nil）——no-op，不該發任何請求。
+    func test_refreshWithCurrentFilter_beforeAnyRefresh_isNoOp() async {
+        let stub = StubTimelineAPIClient()
+        stub.setFetchPointersHandler { _, _, _, _ in
+            XCTFail("還沒 refresh 過不該發任何請求")
+            return []
+        }
+        let store = TimelineStore(apiClient: stub)
+
+        let success = await store.refreshWithCurrentFilter()
+
+        XCTAssertFalse(success)
+    }
+
+    /// 沿用上一次 `refresh(familyID:childID:)` 記下的篩選條件——`DiaryDetailView`／
+    /// `BlockListView` 封鎖／解除封鎖成功後呼叫這支，不需要知道 `ChildFilterBar` 目前選了
+    /// 哪個孩子。
+    func test_refreshWithCurrentFilter_reusesLastFamilyAndChildID() async {
+        let stub = StubTimelineAPIClient()
+        stub.setFetchPointersHandler { _, _, _, _ in [] }
+        let store = TimelineStore(apiClient: stub)
+        await store.refresh(familyID: familyID, childID: childID)
+
+        let success = await store.refreshWithCurrentFilter()
+
+        XCTAssertTrue(success)
+        XCTAssertEqual(stub.fetchPointersCalls.count, 2, "第二次呼叫應該真的又發了一次請求（重抓）")
+        XCTAssertEqual(stub.fetchPointersCalls.last?.familyID, familyID)
+        XCTAssertEqual(stub.fetchPointersCalls.last?.childID, childID)
+    }
+
     func test_loadMore_usesLastEntryAsCursor_andAppends() async {
         let stub = StubTimelineAPIClient()
         let firstPageID = UUID()

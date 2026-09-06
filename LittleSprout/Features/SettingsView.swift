@@ -289,7 +289,7 @@ struct SettingsView: View {
         switch row {
         case .blockList:
             NavigationLink {
-                BlockListView(familyStore: familyStore, safetyAPIClient: safetyAPIClient)
+                BlockListView(familyStore: familyStore, safetyAPIClient: safetyAPIClient, timelineStore: timelineStore)
             } label: {
                 SettingsRowView(icon: "person.fill.xmark", label: "封鎖名單")
             }
