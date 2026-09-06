@@ -233,7 +233,10 @@ extension DiaryEditorView {
 
     private var removeSelectedButton: some View {
         Button {
-            store.removeSelected()
+            // LS-212：`removeSelected()` 改成 `async`（要 best-effort 軟刪已上傳孤兒
+            // media／清本機暫存檔），Button action 不能是 async，包一層 `Task`——同
+            // `DiaryEditorView+ActionBar.swift.submit()` 的既有慣例。
+            Task { await store.removeSelected() }
         } label: {
             HStack(spacing: AppSpacing.label) {
                 Image(systemName: "trash")

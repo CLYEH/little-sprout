@@ -1,6 +1,5 @@
 import Foundation
 @testable import LittleSprout
-import Supabase
 import XCTest
 
 /// `SupabaseDiaryAPIClient` 對 `create_diary_entry`／`update_diary_entry` 兩支 RPC 與

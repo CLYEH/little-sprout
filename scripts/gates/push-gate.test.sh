@@ -1370,23 +1370,58 @@ else
 fi
 printf '%s\t%s\n' "iPad Air 11-inch (M3)" "$ipad_udid" >> "$db"   # 還原，避免影響本節之後（若有）的案例
 
-# (e)（merge-review R1 m3）：本機唯一開發機的既有 iPad 專屬機一律是 qa-* 前綴＋機型 slug（如
-#     `qa-test-iPadAir11M3`），不叫原生機型名「iPad Air 11-inch (M3)」——literal-only 比對在本機
-#     實務覆蓋率是 0。這裡把 $db 換成只有 slug 命名的機器（無 literal 機型名），驗證新的「literal 或
-#     slug 皆可命中」判準真的把它找出來。
+# (e)（LS-211 I-a，來源 LS-96 池項 edbc460c；取代 merge-review R1 m3 舊案）：本機共用／demo 常駐機
+#     若剛好叫 qa-*-iPadAir11M3／demo-*-iPadAir11M3 這類 slug 名稱，不算本票（或主 checkout）專屬
+#     機——不該被這段 best-effort 拉去跑，會跟其他 agent／QA 手上正在用的機器互踩。$db 只有這種
+#     共用機命名時應該 fail-open（找不到專屬機），而不是誤判命中。
 grep -vF "iPad Air 11-inch (M3)" "$db" > "$db.tmp" && mv "$db.tmp" "$db"
 qa_ipad_udid="ABCDEF01-2345-6789-ABCD-999900000000"
 printf '%s\t%s\n' "qa-test-iPadAir11M3" "$qa_ipad_udid" >> "$db"
 : > "$test_log34"
 out34e=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log34")
 if grep -qF "id=${qa_ipad_udid}" "$test_log34"; then
-  echo "✓ ㊴(e) 本機專屬機叫 qa-test-iPadAir11M3（不叫原生機型名）→ slug 判準命中、正確呼叫本機 iPad 測試（merge-review R1 m3）"
-else
-  echo "✗ ㊴(e) 應該用 slug 命中 qa-test-iPadAir11M3（實得未呼叫或呼叫到錯的 UDID）" >&2
+  echo "✗ ㊴(e) qa-test-iPadAir11M3 是共用／demo 常駐機命名，不該被命中（實得被呼叫）——I-a 排除失效" >&2
   printf '%s\n' "$out34e" | sed 's/^/    /' >&2; cat "$test_log34" | sed 's/^/    log: /' >&2
   fail=1
+elif printf '%s' "$out34e" | grep -qF '本機找不到「iPad Air 11-inch (M3)」'; then
+  echo "✓ ㊴(e) LS-211 I-a：本機唯一機是 qa-test-iPadAir11M3（共用機命名）→ 正確排除、fail-open"
+else
+  echo "✗ ㊴(e) 應該 fail-open 印找不到訊息（實得未呼叫但訊息不對）" >&2
+  printf '%s\n' "$out34e" | sed 's/^/    /' >&2; fail=1
 fi
+
+# (e2)（LS-211 I-a）：本票（分支 feature/LS-209-ipad-trigger → 票號 LS-209）專屬機命名
+# `LS-209-iPadAir11M3`（同 :349 iPhone 專屬機判定的同一套慣例）應該被命中。
+ticket_ipad_udid="ABCDEF01-2345-6789-ABCD-999900000001"
+printf '%s\t%s\n' "LS-209-iPadAir11M3" "$ticket_ipad_udid" >> "$db"
+: > "$test_log34"
+out34e2=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log34")
+if grep -qF "id=${ticket_ipad_udid}" "$test_log34"; then
+  echo "✓ ㊴(e2) LS-211 I-a：本票專屬機叫 LS-209-iPadAir11M3 → 正確命中、呼叫本機 iPad 測試"
+else
+  echo "✗ ㊴(e2) 應該命中本票專屬機 LS-209-iPadAir11M3（實得未呼叫或呼叫到錯的 UDID）" >&2
+  printf '%s\n' "$out34e2" | sed 's/^/    /' >&2; cat "$test_log34" | sed 's/^/    log: /' >&2
+  fail=1
+fi
+# (e3) mutation（LS-211 I-a）：拿掉排除判準（強制 next 恆不觸發）→ qa-test-iPadAir11M3 這台共用機
+# 命名的負樣本應該改判「有被呼叫」，證明 (e) 的 fail-open 是這段排除判準造成的。
+mut_ia="$work/push-gate.no-ipad-exclude.sh"
+sed 's/if (!is_default && !is_ticket && !is_main) next/if (0) next/' "$gate_src" > "$mut_ia"
+if grep -q 'if (0) next' "$mut_ia"; then echo "✓ ㊴(e3) mutant 確實已拿掉排除判準"; else echo "✗ ㊴(e3) mutant 改判準失敗（負控本身無效）" >&2; fail=1; fi
+grep -vF "iPad Air 11-inch (M3)" "$db" > "$db.tmp" && mv "$db.tmp" "$db"
+printf '%s\t%s\n' "qa-test-iPadAir11M3" "$qa_ipad_udid" >> "$db"
+cp "$mut_ia" "$R/scripts/gates/push-gate.sh"
+: > "$test_log34"
+out34e3=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log34")
+if grep -qF "id=${qa_ipad_udid}" "$test_log34"; then
+  echo "✓ ㊴(e3) mutant（拿掉排除判準）：qa-test-iPadAir11M3 改判有被呼叫——確認排除判準是 (e) fail-open 的原因"
+else
+  echo "✗ ㊴(e3) mutant 應該呼叫到 qa-test-iPadAir11M3（實得未呼叫）" >&2
+  printf '%s\n' "$out34e3" | sed 's/^/    /' >&2; fail=1
+fi
+cp "$gate_src" "$R/scripts/gates/push-gate.sh"   # 還原成真的 push-gate.sh
 grep -vF "qa-test-iPadAir11M3" "$db" > "$db.tmp" && mv "$db.tmp" "$db"
+grep -vF "LS-209-iPadAir11M3" "$db" > "$db.tmp" && mv "$db.tmp" "$db"
 printf '%s\t%s\n' "iPad Air 11-inch (M3)" "$ipad_udid" >> "$db"   # 還原
 
 # merge-review R1 m2：iPad best-effort 這段本輪起也包進 wd_run 看門狗（同 unit tests 那段）——沒包之前

@@ -24,14 +24,23 @@ protocol MediaUploadService: Sendable {
     /// 上傳一支影片；`fileURL` 是本機暫存檔（呼叫端若先用 `VideoTrimmer` 裁切壓縮過，這裡
     /// 傳裁切後的暫存檔路徑）。回傳新建 `media` 列的 id。
     func uploadVideo(familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize) async throws -> UUID
+
+    /// 軟刪一批已上傳成功、但草稿被移出佇列／編輯器整個被取消而不再需要的 `media` 列（LS-212，
+    /// 依 LS-96 `d8634a08` R4 補充；完整理由見 `MediaUploadService+SoftDelete.swift`）。呼叫端
+    /// best-effort：清不掉不阻斷任何 UI 流程。空陣列是合法 no-op，不打任何網路請求。
+    func softDeleteMedia(mediaIDs: [UUID]) async throws
 }
 
 final class SupabaseMediaUploadService: MediaUploadService {
-    private let client: SupabaseClient
+    // LS-212：`client`／`now` 從 `private` 改成預設（internal）存取層級——`softDeleteMedia`
+    // 拆到 `MediaUploadService+SoftDelete.swift`（同 `MediaUploadService+Duration.swift` 檔頭
+    // 「拆檔理由：SwiftLint file_length」的既有慣例）需要讀這兩個欄位，Swift 的 `private` 以
+    // 檔案為界，跨檔案的 extension 存取不到；範圍仍只在本 module 內，不對外公開。
+    let client: SupabaseClient
     /// merge-review R1 m1：原檔與縮圖路徑必須共用同一個時間點，見 `uploadPhoto`／`uploadVideo`
     /// 「一次上傳只讀一次 `now()`」的呼叫方式；預設 `Date.init`，測試可注入固定／可控 clock
     /// 釘住「兩條路徑真的共用同一次讀值」（`SupabaseMediaUploadServiceThumbnailTests`）。
-    private let now: @Sendable () -> Date
+    let now: @Sendable () -> Date
     /// LS-135：影片時長量測的實際動作抽成可注入閉包，預設 `AVURLAsset(url:).load(.duration)`
     /// ——同 `TimelineStore.durationLoader` 的理由（見該檔文件註解），讓測試能斷言「量測
     /// 失敗時 `duration_seconds` 留 NULL、不阻斷上傳」而不必準備一支真的可解碼的影片檔。

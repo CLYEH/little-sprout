@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 /// LS-188：01 設定頁「內容與安全」區塊的列組成——依角色決定「檢舉紀錄」列在不在（稿面：

@@ -1,5 +1,3 @@
-import Foundation
-
 /// App 的四個頂層導航區塊。
 ///
 /// 這是導航 selection 的**單一來源**：compact 的 `TabView` 與 regular 的
