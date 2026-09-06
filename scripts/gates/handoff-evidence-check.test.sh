@@ -8,6 +8,7 @@ set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 check="${root}/scripts/gates/handoff-evidence-check.sh"
+py="${root}/scripts/gates/handoff_evidence_check.py"
 fail=0
 
 work="$(mktemp -d)"
@@ -17,7 +18,7 @@ trap 'rm -rf "$work"' EXIT
 #      LittleSprout 原始碼（真原始碼會隨其他票變動，讓自測結果漂移）。----
 R="$work/repo"
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
-mkdir -p "$R/Fixture"
+mkdir -p "$R/Fixture" "$R/FixtureTests"
 git -C "$R" init -q -b main
 cat > "$R/Fixture/FooTests.swift" <<'EOF'
 import XCTest
@@ -27,6 +28,60 @@ final class FooTests: XCTestCase {
     }
 }
 EOF
+# R2（merge-review R1 F1-1）：檔名與內部宣告型別不同名的檔案（真實案例 TimelineStoreVideoTests.swift
+# 內部其實是 `extension TimelineStoreTests`）——這裡故意讓檔名 FixtureExtTests.swift 內部宣告的是
+# `extension FooTests`，驗「檔名存在即算」（規則 2）獨立於「宣告存在即算」（規則 1）成立。
+cat > "$R/Fixture/FixtureExtTests.swift" <<'EOF'
+import XCTest
+extension FooTests {
+    func testExtra() {
+        XCTAssertTrue(true)
+    }
+}
+EOF
+# R2（merge-review R1 F1-1）：目錄名（測試 target 名，如 LittleSproutTests）存在即算（規則 3）。
+printf 'import XCTest\n' > "$R/FixtureTests/Placeholder.swift"
+
+# R2（merge-review R1 N7）：兩個真實樣本（④a／④b）改對這份合成 fixture 跑，不再對真 LittleSprout
+# repo 跑——耦合 8 個生產符號（SettingsViewIPadTests／TapTargetGateTests 等）會讓「日後任何一個改名」
+# 就在無關 PR 上把 rules job 拉紅，訊息又難定位回 handoff-evidence-check。這裡建的是這兩份 comment
+# 原文實際引用到的全部測試名稱／檔案的最小 stub（值與行為不重要，只要「存在」這件事成立）。
+mkdir -p "$R/RealSampleFixture"
+cat > "$R/RealSampleFixture/LegalDocumentSheetUITests.swift" <<'EOF'
+import XCTest
+final class LegalDocumentSheetUITests: XCTestCase {
+    func testLegalDocumentSheet() {}
+    func testLegalDocumentNarrowContainer() {}
+}
+EOF
+cat > "$R/RealSampleFixture/LegalMarkdownDocumentTests.swift" <<'EOF'
+import XCTest
+final class LegalMarkdownDocumentTests: XCTestCase {}
+EOF
+cat > "$R/RealSampleFixture/LegalDocumentSheetLayoutTests.swift" <<'EOF'
+import XCTest
+final class LegalDocumentSheetLayoutTests: XCTestCase {}
+EOF
+cat > "$R/RealSampleFixture/SettingsViewIPadTests.swift" <<'EOF'
+import XCTest
+final class SettingsViewIPadTests: XCTestCase {
+    func testProfileSectionEntryPushesAndBackReturns() {}
+    func testSidebarSelectionIsAccessibleAndDistinguishable() {}
+}
+EOF
+cat > "$R/RealSampleFixture/TapTargetGateTests.swift" <<'EOF'
+import XCTest
+final class TapTargetGateTests: XCTestCase {
+    func testSettingsView() {}
+    func testTimelineViewDefaultState() {}
+    func testUploadQueueSheetView() {}
+}
+EOF
+cat > "$R/RealSampleFixture/SettingsViewTests.swift" <<'EOF'
+import XCTest
+final class SettingsViewTests: XCTestCase {}
+EOF
+
 git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false add -A
 git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q -m 'chore(harness): LS-211 fixture'
 
@@ -81,6 +136,49 @@ expect 0 '①f 命令證據 bash scripts/…' '' \
 - 條件 1：`bash scripts/ops/foo.sh` 輸出正常
 '
 
+expect 0 '①g（R2，F3）merge-review verdict 骨架：標題含「查實」（如「逐條查實」）也算段落起點' '' \
+'## Findings
+
+問題描述在這裡，不算逐項證據段。
+
+## 逐條查實
+
+1. **範圍 1** ✓：`bash scripts/gates/foo.test.sh` 17 組全綠（實跑 exit 0）。
+2. **範圍 2** ✓：`FooTests` 全綠，另見 `gh run view --job 123 --log` 核對 CI。
+'
+
+expect 0 '①h（R2，F1）.test.sh／gh run view／.xcresult 算證據' '' \
+'## 已驗證
+- 條件 1：`bash scripts/gates/foo.test.sh` 全綠
+- 條件 2：`gh run view --job 123 --log` 核對
+- 條件 3：`result.xcresult` 檔內測試皆通過
+'
+
+expect 0 '①i（R2，F1）檔名存在即算——檔內宣告型別與檔名不同名（真實案例：extension 檔）' '' \
+'## 已驗證
+- 條件 1：`FixtureExtTests` 全綠（見 Fixture/FixtureExtTests.swift，檔內實為 `extension FooTests`）
+'
+
+expect 0 '①j（R2，F1）目錄名（測試 target 名）→ 測試名存在性驗證通過' '' \
+'## 已驗證
+- 條件 1：`xcodebuild test -only-testing:FixtureTests` 全綠
+'
+
+expect 0 '①k（R2，F1）glob 形狀（緊鄰 *）不驗存在性——正確的「找不到這個東西」陳述' '' \
+'## 已驗證
+- 條件 1：本 feature 沒有獨立 `*NoSuchIPadTests` 類別，`FooTests` 已涵蓋
+'
+
+expect 0 '①l（R2，F1）同句含否定詞「沒有」不驗存在性——即使沒有 * 字面' '' \
+'## 已驗證
+- 條件 1：這裡沒有 NoSuchWeirdTests 這個類別，改用 `FooTests` 驗證
+'
+
+expect 0 '①m（R2，F1）mutation 語境的假名不驗存在性（ios-dev「每支 mutation 必列三段」硬規則不受影響）' '' \
+'## 已驗證
+- 條件 1：拿掉某條檢查 → mutation 樣本 `BogusMutationOnlyTests` 改判過，斷言原文：`✓ mutant → 紅`
+'
+
 # ==== ② 負樣本（≥4）====
 expect 1 '②a 列項缺任何證據（無測試名／路徑／命令）' '缺『怎麼驗』證據' \
 '## 已驗證
@@ -132,8 +230,10 @@ fi
 
 # ==== ④ 兩個真實樣本（LS-211 票文驗收條件）====
 # 直接在本檔內嵌真實 comment 原文（存 handoff-evidence-check.test.sh 才不怕暫存檔被平行 agent 覆寫）。
-# 這裡對真的 LittleSprout repo（root）跑，不是合成 fixture——因為要驗的正是這些測試類別在真 repo 內
-# 是否存在（LegalDocumentSheetUITests／SettingsViewIPadTests 等，皆已確認存在於 origin/main）。
+# R2（merge-review R1 N7）：對上面的 $R 合成 fixture 跑，不對真 LittleSprout repo 跑——真原始碼的
+# 8 個生產符號（LegalDocumentSheetUITests／SettingsViewIPadTests 等）任何一個未來被改名，都會讓
+# rules job 在無關 PR 上轉紅、訊息難定位回這支檔案；fixture 內已建好這兩份 comment 原文引用到的
+# 全部測試名稱／檔案的最小 stub（見上方 RealSampleFixture），行為與真實情況一致，只是不耦合真檔名。
 cat > "$work/ls191-c541cd06.md" <<'REALSAMPLE1'
 **QA 裁決（09-06 06:20）— PASS**
 
@@ -156,68 +256,120 @@ Base：`test` tip `6a5db27`（＝`origin/test`，PR #326 併入）；worktree `q
 7. **回歸** ✓：`tap-target-check.sh 5F59FF04… LittleSprout` exit 0（全部已註冊畫面 ≥44×44pt，含 `TapTargetGateTests.testLegalDocumentSheet`／`testLegalDocumentNarrowContainer` 皆綠，legal 相關兩個 case rawValue 不以「View」結尾不進摘要文字但確有跑到且通過，同 R1 handoff 已知瑣事）；`SettingsViewTests` 7/7 全綠；diff/migration/.pen 檢查如上。
 
 **未驗與原因（⊘）**
-- **Pencil MCP 逐板像素比對未執行**：`bash scripts/ops/pen-read.sh` 對 qa-test worktree 回 **exit 1（fail-closed）**——工具可用性缺口，非程式碼缺陷。
+- **Pencil MCP 逐板像素比對未執行**：`bash scripts/ops/pen-read.sh` 對 qa-test worktree 回 **exit 1（fail-closed）**——主 checkout `/Users/clyeh/little-sprout` 與另一 worktree `LS-192` 目前開著的 `.pen` 與磁碟版本有結構性差異（48 節點刪除／8 新增／上百筆 y／descendants 變更），方向不明，安全判定拒絕清場；QA 白名單不含清場權限，未強行 `--kill` 或 `pen-land`。以此判定不得對可能陳舊的文件做 Pencil MCP 視覺驗收，改以（a）4 輪 merge-review 已對 Notes 數字（520/87.5/345/24/272/無 grabber）逐一核對、與（b）本輪我自己在這個確切 test-tip build 上的獨立像素量測（見第 5 條，數字精確吻合）作為設計符合度證據。此為工具可用性缺口，非程式碼缺陷，建議 orchestrator 之後視需要另行安排 Pencil MCP 對板複驗。
 
 **風險**：無。無 migration、無執行期並發變更、無 breaking API 變更。
+
+**已關模擬器**：`5F59FF04-D2C6-413D-B31A-AFD39B257FB3`（qa-test-iPhone17Pro）、`F72DBCD1-9CBE-4903-AE6E-241064C391E1`（qa-test-iPadAir11M3，本輪新建）——皆已 `simctl shutdown`；`LS-192-iPhone17Pro` 為其他 agent 所有，未動。iPhone 專屬機 `content_size`/`appearance` 已於收工前復原為 `large`/`light`（本輪唯一手動變更過的機台）；iPad 專屬機全程未變更（`unknown`/`unknown`＝新機預設）。
+
+**runtime 註記**：兩台專屬機皆 iOS 26.0（`.ios-runtime` 釘 26.2，本機無該 runtime 可用；`detect-simulator.sh` fail-open 印警告）——量測皆為 view frame 幾何與像素邊界偵測，餘裕遠高於門檻（footer ≥48pt 門檻 vs 實測 53–80pt），不受此差異影響。
+
+證據：`/private/tmp/claude-501/-Users-clyeh-little-sprout/e6972486-fec6-43c0-b8f4-28b43b01a5a0/scratchpad/LS-191-qa-*.{log,png}`（iphone-tests.log／ipad-tests.log／ipad-settingstests.log／settingsviewtests.log／tap-target-check.log／iphone-light.png／iphone-dark.png／ax3-*.png／ipad-full.png／ipad-check.png）。
 REALSAMPLE1
 
-out_real1="$(bash "$check" "$work/ls191-c541cd06.md" --repo "$root" 2>&1)"; rc_real1=$?
-if [ "$rc_real1" -eq 1 ]; then
-  echo "✓ ④a 真實樣本 LS-191 QA comment c541cd06 → exit 1（應紅，項 3「iPhone 標準字級」無測試名／路徑／命令證據）"
+out_real1="$(bash "$check" "$work/ls191-c541cd06.md" --repo "$R" 2>&1)"; rc_real1=$?
+# R2（merge-review R1 F2）：不只斷 rc==1——斷「哪一行、什麼原因」的具體 finding 訊息原文，且斷言
+# 「只有這一條」（不再誤判第 15 行「沒有獨立 `*IPadTests` 類別」這句正確的否定陳述，R1 F1(b)）。
+if [ "$rc_real1" -eq 1 ] \
+   && printf '%s' "$out_real1" | grep -qF '✗ handoff-evidence-check：第 11 行起的列項缺『怎麼驗』證據' \
+   && ! printf '%s' "$out_real1" | grep -qF 'IPadTests'; then
+  echo "✓ ④a 真實樣本 LS-191 QA comment c541cd06 → exit 1，斷言訊息原文確實是「第 11 行起的列項缺『怎麼驗』證據」（項 3「iPhone 標準字級」），且不再誤判第 15 行 IPadTests 否定句（R1 F1(b) 已修）"
 else
-  echo "✗ ④a 真實樣本 c541cd06 應紅（期望 exit 1，實得 ${rc_real1}）" >&2
+  echo "✗ ④a 真實樣本 c541cd06 應紅在第 11 行、且不含 IPadTests 誤判（期望 exit 1，實得 ${rc_real1}）" >&2
   printf '%s\n' "$out_real1" | sed 's/^/    /' >&2
   fail=1
 fi
 
+# ==== ④a-mut（R2，merge-review R1 F2）：反向 mutation——has_evidence() 恆真 → 上面 ④a 的判斷依據必須
+#        真的翻轉（原本紅在「缺證據」，恆真後那條红必須消失），證明④a 斷的是真的規則，不是巧合撐出來
+#        （F2 原話：拿掉 has_evidence 整條規則，舊版④a 只斷 rc==1，仍然「通過」，因為另一條誤判撐住了
+#        exit 1；R1 F1 修好誤判後，這裡必須驗證新版④a 真的會因為規則被拿掉而發現不對）====
+mut_he="$work/handoff_evidence_check.has-evidence-true.py"
+awk '
+  index($0, "# HANDOFF-MISSING-EVIDENCE-CHECK") > 0 { print "        missing_evidence = False  # HANDOFF-MISSING-EVIDENCE-CHECK"; next }
+  { print }
+' "$py" > "$mut_he"
+if grep -qF 'missing_evidence = False  # HANDOFF-MISSING-EVIDENCE-CHECK' "$mut_he"; then
+  echo "✓ ④a-mut：確認已把 has_evidence() 的判斷結果恆改為 False（等同恆真通過）"
+  out_he="$(python3 "$mut_he" "$work/ls191-c541cd06.md" --repo "$R" 2>&1)"; rc_he=$?
+  if [ "$rc_he" -eq 0 ]; then
+    echo "✓ ④a-mut（拿掉 has_evidence 規則）：c541cd06 樣本改判 exit 0（原第 11 行的紅消失）——證明④a 斷的『第 11 行缺證據』訊息確實是 has_evidence() 這條規則造成的，不是巧合"
+  else
+    echo "✗ ④a-mut 未如預期翻轉為 exit 0（實得 exit ${rc_he}，代表還有其他規則在撐住紅、④a 仍可能零鑑別力）" >&2
+    printf '%s\n' "$out_he" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ④a-mut：找不到 HANDOFF-MISSING-EVIDENCE-CHECK 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# R2（merge-review R1 N7）：改用完整逐字原文（58 行），不再是節錄版（原 R1 只內嵌 44 行）——
+# 「直接在本檔內嵌真實 comment 原文」這句話現在名符其實；reviewer 已用完整原文重跑過驗證行為一致
+# （exit 0，行號 12/16/20/24/28/34/40 與 handoff 引用相符，此處因改回完整原文行號會不同，故下面
+# 只斷言 exit code，不斷特定行號）。
 cat > "$work/ls192-88fb24bc.md" <<'REALSAMPLE2'
 **QA（09-06 08:51）**：**PASS**。test tip `b5f87b9`（＝origin/test，checkout 於 `.claude/worktrees/qa-test`）。逐條獨立重驗（未照抄 merge-review 結論，兩帳號／多家庭真後端 E2E＋backend 查表核對），證據存 `/private/tmp/claude-501/-Users-clyeh-little-sprout/e6972486-fec6-43c0-b8f4-28b43b01a5a0/scratchpad/LS-192-qa-*.png`。
 
 ## 自動測試
 
 - `xcodebuild test -only-testing:LittleSproutTests`（`qa-test-iPhone17Pro` 5F59FF04，iOS 26.0）→ **723 tests, 0 failures**，`** TEST SUCCEEDED **`。
+- `xcodebuild test -only-testing:LittleSproutUITests/TapTargetGateTests -only-testing:LittleSproutUITests/FamilyMembersLeaveFlowUITests` → **19 tests, 0 failures**（含 `testFamilyMembersView`／`testProfileEditView`／兩支新 `FamilyMembersLeaveFlowUITests` 全綠）。log：`LS-192-qa-uitests-iphone.log`。
+- `xcodebuild test -only-testing:LittleSproutUITests/SettingsViewIPadTests`（`qa-test-iPadAir11M3` F72DBCD1，iOS 26.0）→ **6 tests, 0 failures**。log：`LS-192-qa-uitests-ipad.log`。
+- `git diff 6a5db27..b5f87b9 --stat`：34 檔，**無 migration、無 `design/*.pen` 變更**。
 
 ## 逐條驗收
 
 **1. 02 編輯顯示名稱與頭像 —— ✓**
-怎麼驗：登入 `ls192-owner2` → 設定 →「個人資料」。改名「陳二號」→「陳二號改名」儲存後：設定頁「個人」列即時顯示新名（`LS-192-qa-02-namechange-settings.png`）。AX3（長名字「李王美麗美惠子」）不破版（`LS-192-qa-02-ax3.png`）。深色一張（`LS-192-qa-02-dark.png`）版面正常。
+怎麼驗：登入 `ls192-owner2` → 設定 →「個人資料」。對稿：標題「個人資料」、副標「編輯你的顯示名稱與頭像，家人都會看到。」、88×88 圓形頭像＋28×28 相機 badge＋「換張照片」、help 文案「家人在時間軸與相簿裡會看到這個名字。」——與 `design/littlesprout.pen` `MohS1` 節點文字逐字核對相符。改名「陳二號」→「陳二號改名」儲存後：設定頁「個人」列即時顯示新名（`LS-192-qa-02-namechange-settings.png`）、家庭成員列同步更新（`LS-192-qa-03-*` 系列）；backend `profiles.display_name` 查表核對一致。頭像：`simctl addmedia` 餵圖 → PhotosPicker 選圖 → 儲存後 Storage 路徑 `{family_id}/avatars/{user_id}.jpg` 正確落地（backend 查表核對），ProfileEditView 與家庭成員列即時顯示新圖。AX3（長名字「李王美麗美惠子」）不破版（`LS-192-qa-02-ax3.png`）。深色一張（`LS-192-qa-02-dark.png`）版面正常。
 证据：`LS-192-qa-02-profile-light.png`／`-02-dark.png`／`-02-ax3.png`／`-02-namechange-settings.png`。
 
 **2. 03 家庭成員管理 —— ✓**
-怎麼驗：owner／member 分別登入查看列表。iPad：`SettingsViewIPadTests` 6 支自動測試綠（含 `testProfileSectionEntryPushesAndBackReturns`／`testSidebarSelectionIsAccessibleAndDistinguishable`）。
+怎麼驗：owner（`ls192-owner`/`owner2`/`owner3`）與 member（`ls192-member2`）分別登入查看列表。Owner 視角：全部成員＋Role Pill（`crown`＝「家庭管理者」、`person`＝「一般成員」）皆正確渲染（非純文字，有 capsule 容器＋icon）、自己列無 chevron／動作按鈕、他人列有 44×44 動作按鈕（`陳一成員的動作`）觸發 Menu（「轉移家庭管理者」「移出成員」，紅字危險動作）。Member 視角（`LS-192-qa-03-member-view.png`）：兩列皆無 chevron／動作入口，僅「退出家庭」可用——差異符合預期。AX3 長名字壓測（`李王美麗美惠子`）：名字與 Role Pill 正確換行、無截斷無溢出、列高隨字級增高（`LS-192-qa-03-ax3-longname.png`）。iPad：`SettingsViewIPadTests` 6 支自動測試綠（含 `testProfileSectionEntryPushesAndBackReturns`／`testSidebarSelectionIsAccessibleAndDistinguishable`），互動式截圖因 mobile-mcp WDA 對這台 iPad 模擬器連線逾時（`timed out waiting for WebDriverAgent to be ready`，非本票程式問題）未能取得，僅有靜態 launch 截圖（`LS-192-qa-ipad-launch2.png`，welcome 頁面版式正常）；**已知未解 iPad split 版式（`yJvj7`）維持 LS-188 既有殼、記 LS-96 `5956c39c`**——依 orchestrator 09-06 06:37 裁決與 R3 查實，QA 確認現況可用、非本輪 FAIL 項，供使用者知悉。
 证据：`LS-192-qa-03-owner-view.png`／`-03-member-view.png`／`-03-dark.png`／`-03-ax3-longname.png`／`-ipad-launch2.png`。
 
 **3. 03b 移除成員確認 —— ✓**
-怎麼驗：owner1 對 member1 執行移出。backend 查表核對確實少一列。
+怎麼驗：owner1 對 member1 執行移出。確認 sheet 文案逐字對稿：「要把「陳一成員」移出「陳家A」嗎？」／「移出後，他將無法再看到這個家庭的相片、影片與日記。他自己上傳的內容會保留在家庭裡，除非你另外刪除。」（含關鍵句「內容會保留」，M6 修正項）。確認後：列表即時少一列（1 位家人）、backend `family_members` 查表核對確實少一列（`{"user_id":"...","role":"owner"}` 僅剩 owner）。
 证据：`LS-192-qa-03b-remove-confirm.png`／`-03-after-remove.png`。
 
 **4. 03c 轉移家庭管理者 —— ✓**
-怎麼驗：owner3 對 member3 執行轉移。backend 查表核對角色互換。
+怎麼驗：owner3 對 member3 執行轉移。確認 sheet 文案逐字對稿：「要把家庭管理者身分交給「陳三成員」嗎？」／「轉移後，陳三成員可以管理家庭成員與內容、處理檢舉；你會變成一般成員，仍能繼續使用這個家庭、看到所有照片與日記。」。確認後：列表**即時**對調兩人 Role Pill 並重排（新 owner 排到最前），原 owner 出現「退出家庭」可用（無 chevron，非管理者視角）；backend `family_members` 查表核對角色互換（`d76ecf0a`→owner、`f151ee44`→member）。
 证据：`LS-192-qa-03c-transfer-confirm.png`／`-03-after-transfer.png`。
 
 **5. 退出家庭三態（真後端、雙帳號＋多帳號）—— ✓（三態全驗）**
-- (a) 一般成員退出：確認後成功回三岔路頁（`LS-192-qa-post-leave-threefork.png`）。
+- (a) 一般成員退出：member2（從未當過 owner）與轉移後的 owner3（現為 member）分別執行 03d → 文案逐字對稿「要退出「陳家X」嗎？」／「退出後，你將無法再看到這個家庭的相片、影片與日記，除非有人重新邀請你。你自己上傳的內容會保留在家庭裡。」→ 確認後成功回三岔路頁（LS-18，`LS-192-qa-post-leave-threefork.png`）；backend 查表核對 `family_members` 少一列。
+- (b) 管理者且有其他成員：owner3（家庭 C，member3 仍在）點「退出家庭」→ 03e mustTransferFirst 變體，文案逐字對稿「需要先轉移家庭管理者身分」／「你是「陳家C」唯一的家庭管理者，家裡還有 1 位家人。退出之前，請先把家庭管理者身分交給其中一位。」＋「前往轉移」導回家庭成員列表（可從那裡的動作選單完成轉移，已於 4. 實測完成整個轉移動作）。
+- (c) 管理者獨自一人：owner1（family A，先移除 member1 後只剩自己）點「退出家庭」→ **03e 單人變體**，文案**逐字一致**（含全形箭頭與兩組直角引號）：「目前家庭只有你一位成員，無法退出家庭。若要離開，請至「帳號」→「刪除帳號」。」；無 Families Card／無「前往轉移」，只有「返回設定」；**無網路請求**——`docker logs supabase_kong_little-sprout --since 2m` 核對，點擊「退出家庭」前後**無任何** `DELETE /rest/v1/family_members` 或其他請求打進來（前一次 DELETE 是 03b 移除成員的請求，時間戳早於本次點擊）。**已知未解**：「返回設定」只 pop 一層回「家庭成員」（非 Settings 根），記 LS-96 `ee768c94`——已實測確認行為與描述一致，不算 FAIL。
 证据：`LS-192-qa-03d-leave-confirm.png`／`-03e-musttransfer.png`／`-03e-solemember.png`／`-post-leave-threefork.png`。
 
 **6. 錯誤路徑 —— ✓（部分經真後端觸發，部分經 code review 確認映射）**
-- LS057（owner 有其他成員時嘗試退出）：獨立以 HTTP DELETE 重現，並在 UI 上實際點擊觸發同一路徑。
-- LS058／LS059／LS060（非 owner 轉移／目標非成員／轉給自己）：`FamilyMemberActionVisibility.swift:89-100` code review 確認 `familyMemberActionMessage` 對五碼皆有專屬文案。
-- 斷網情境（"不卡 spinner"）：**⊘ 未實機驗證**——改以 code review 確認：`FamilyStore+Members.swift` 四個動作皆 `guard !isSubmitting` → `.submitting` → `try/catch`。
+- LS057（owner 有其他成員時嘗試退出）：獨立以 HTTP DELETE 重現（`{"code":"LS057",...}`），並在 UI 上實際點擊觸發同一路徑，確認文案分流正確（見 5-b）。
+- LS001（唯一 owner 唯一成員直接 DELETE）：獨立建一次性帳號用 HTTP 重現仍回 LS001（`家庭 ... 必須至少保留一位 owner`），但**已確認 UI 層 `.soleMember` 分支根本不會送出這個請求**（見 5-c 的 kong log 核對）——LS001 對這條路徑而言已是防禦性、不可觸發的分支，與 R3 handoff 一致。
+- LS058／LS059／LS060（非 owner 轉移／目標非成員／轉給自己）：`FamilyMemberActionVisibility.swift:89-100` code review 確認 `familyMemberActionMessage` 對五碼皆有專屬文案（非 R1 的泛用句「無法完成這個操作」），與 API.md §4 契約碼一致；未逐一用真併發觸發（需要精準時序賽跑），採程式碼審查＋既有 mutation testing（R2/R3 已用 mutation 證明分流邏輯真的被測試覆蓋）作為驗證依據。
+- 斷網情境（"不卡 spinner"）：**⊘ 未實機驗證**——本機環境無法乾淨模擬網路中斷（會影響共用 Supabase 容器其他使用者）。改以 code review 確認：`FamilyStore+Members.swift` 四個動作（`removeMember`／`transferOwnership`／`updateDisplayName`／`updateAvatar`）皆 `guard !isSubmitting` → `.submitting` → `try/catch` → 失敗必落 `.failure(AppError.map(error))`，沒有任何路徑會停在 `.submitting` 不轉換；此為靜態程式碼保證，非動態網路中斷實測，如實記錄不算 PASS 的完整證據。
 
 **7. 回歸 —— ✓**
-- `git diff 6a5db27..b5f87b9 --stat`：34 檔皆屬 LS-192 範圍，無 migration、無 `.pen`。
-- `TapTargetGateTests` 全量 17 支（含既有 `testSettingsView`／`testTimelineViewDefaultState`／`testUploadQueueSheetView` 等既有畫面）0 failures。
+- `git diff 6a5db27..b5f87b9 --stat`：34 檔皆屬 LS-192 範圍（`Features/Settings/*`／`Services/Family/*`／測試／pbxproj／`tap-target-exemptions.txt`），無 migration、無 `.pen`。
+- LS-188 設定頁其他區（封鎖名單／檢舉紀錄／儲存空間／使用條款／隱私權政策／登出／刪除帳號）於多次導覽中維持正常渲染，無破版；`SettingsView.swift` 的 diff 只碰 `profileSection`／`familySection`（新增 `.task(id:)` 補查與傳參數），法律區塊程式碼未變動。
+- `TapTargetGateTests` 全量 17 支（含既有 `testSettingsView`／`testTimelineViewDefaultState`／`testUploadQueueSheetView` 等既有畫面）0 failures，證明本票沒有波及既有畫面的 tap-target。
 
 ## 未驗與原因
 
-- iPad 互動式截圖：mobile-mcp 對 `qa-test-iPadAir11M3` WDA 連線逾時，改採自動測試（6/6 綠）。
+- iPad 互動式截圖（`FamilyMembersView`／03b-e）：mobile-mcp 對 `qa-test-iPadAir11M3` WDA 連線逾時，改採自動測試（6/6 綠）＋靜態 launch 截圖佐證版式無破版。
+- LS058／LS059／LS060 真併發觸發：需要精準時序賽跑（兩個 client 同時操作），本輪以 code review＋既有 mutation coverage 替代。
+- 斷網 spinner：本機共用環境無法安全模擬，以 code review（`isSubmitting`／`catch` 狀態機）替代，記為 ⊘。
+
+以上兩項⊘不影響 PASS 裁決——皆非本票新增風險，且已有等效證據（自動測試／程式碼審查）佐證正確性；已知未解的 03e 返回層級與 iPad split 版式兩項也已在 merge-review R3／orchestrator 裁決中記入 LS-96，QA 重驗結果與申報一致。
 
 ## 環境
 
-- 模擬器已關：`5F59FF04-D2C6-413D-B31A-AFD39B257FB3`（qa-test-iPhone17Pro）。
+- 模擬器已關：`5F59FF04-D2C6-413D-B31A-AFD39B257FB3`（qa-test-iPhone17Pro）、`F72DBCD1-9CBE-4903-AE6E-241064C391E1`（qa-test-iPadAir11M3）。
+- lock 已釋放：「LS-192 QA 冒煙」（持有 37 分 57 秒）。
+- 測試資料已清乾淨（6 帳號＋1 一次性帳號、4 個測試家庭，`delete from families where name like '陳家%'` + `delete from auth.users where email like 'ls192-%@ls.test'`，皆在 `supabase-lock.sh --` 內執行）。
+- Pen 路徑：本票無 `.pen` 變更，僅離線讀 `design/littlesprout.pen`（明文 JSON）核對節點 `MohS1`／`hVAq3`／`gjCoe`／`yJvj7`／`yMNOt`／`p8GUvZ`／`ANIpL`／`sF5oA` 文字內容，未使用 Pencil MCP。
 REALSAMPLE2
 
-out_real2="$(bash "$check" "$work/ls192-88fb24bc.md" --repo "$root" 2>&1)"; rc_real2=$?
+out_real2="$(bash "$check" "$work/ls192-88fb24bc.md" --repo "$R" 2>&1)"; rc_real2=$?
 if [ "$rc_real2" -eq 0 ]; then
   echo "✓ ④b 真實樣本 LS-192 QA comment 88fb24bc → exit 0（應綠，逐項皆有 .png／測試名／.swift 引用證據）"
 else
@@ -229,15 +381,17 @@ fi
 # ==== ⑤ mutation 負控：拿掉「測試名存在」檢查 → 假測試名樣本改判綠，證明紅是這條檢查造成的 ====
 py="${root}/scripts/gates/handoff_evidence_check.py"
 mutant="$work/handoff_evidence_check.mutant.py"
-if sed 's/bad_names = \[n for n in test_name_candidates(block) if not test_name_exists(repo, n)\]  # HANDOFF-BADNAMES-CHECK/bad_names = []  # HANDOFF-BADNAMES-CHECK/' "$py" > "$mutant" \
-   && grep -q 'bad_names = \[\]  # HANDOFF-BADNAMES-CHECK' "$mutant"; then
+if awk '
+  index($0, "# HANDOFF-BADNAMES-CHECK") > 0 { print "        bad_names = []  # HANDOFF-BADNAMES-CHECK"; next }
+  { print }
+' "$py" > "$mutant" && grep -q 'bad_names = \[\]  # HANDOFF-BADNAMES-CHECK' "$mutant"; then
   bogus_body='## 已驗證
 - 條件 1：`BogusTests` 全綠
 '
   printf '%s' "$bogus_body" > "$work/bogus.md"
   out_mut="$(python3 "$mutant" "$work/bogus.md" --repo "$R" 2>&1)"; rc_mut=$?
   if [ "$rc_mut" -eq 0 ]; then
-    echo "✓ ⑤ mutant（拿掉『測試名存在』檢查）：假測試名 BogusTests 樣本改判綠——證明②b 的紅是這條檢查造成的"
+    echo "✓ ⑤ mutant（拿掉『測試名存在』檢查）：假測試名樣本改判綠——證明②b 的紅是這條檢查造成的"
   else
     echo "✗ ⑤ mutant 未如預期翻轉（實得 exit ${rc_mut}）" >&2
     printf '%s\n' "$out_mut" | sed 's/^/    /' >&2
@@ -245,6 +399,58 @@ if sed 's/bad_names = \[n for n in test_name_candidates(block) if not test_name_
   fi
 else
   echo "✗ ⑤ mutate：找不到 HANDOFF-BADNAMES-CHECK 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑥（R2，F1）mutation 負控：拿掉 glob／否定詞／mutation 語境的跳過判準（skip 恆 False）→
+#        ①k／①l／①m 的正樣本必須改判紅，證明「跳過驗存在性」是這幾個判準造成的 ====
+mut_skip="$work/handoff_evidence_check.no-skip.py"
+awk '
+  index($0, "# HANDOFF-SKIP-CHECK") > 0 { print "        skip = False  # HANDOFF-SKIP-CHECK"; next }
+  { print }
+' "$py" > "$mut_skip"
+if grep -qF 'skip = False  # HANDOFF-SKIP-CHECK' "$mut_skip"; then
+  echo "✓ ⑥ mutate：確認已把 glob／否定詞／mutation 語境判準恆改為 False（等於一律不跳過驗存在性）"
+  glob_body='## 已驗證
+- 條件 1：本 feature 沒有獨立 `*NoSuchIPadTests` 類別，`FooTests` 已涵蓋
+'
+  printf '%s' "$glob_body" > "$work/glob.md"
+  out_glob="$(python3 "$mut_skip" "$work/glob.md" --repo "$R" 2>&1)"; rc_glob=$?
+  if [ "$rc_glob" -eq 1 ] && printf '%s' "$out_glob" | grep -qF 'NoSuchIPadTests'; then
+    echo "✓ ⑥ mutant（拿掉 glob 跳過）：①k 的正樣本改判紅（NoSuchIPadTests 被當成引用驗存在）——證明 glob 判準是原因"
+  else
+    echo "✗ ⑥ mutant（glob）未如預期翻轉（實得 exit ${rc_glob}）" >&2
+    printf '%s\n' "$out_glob" | sed 's/^/    /' >&2
+    fail=1
+  fi
+
+  neg_body='## 已驗證
+- 條件 1：這裡沒有 NoSuchWeirdTests 這個類別，改用 `FooTests` 驗證
+'
+  printf '%s' "$neg_body" > "$work/neg.md"
+  out_neg="$(python3 "$mut_skip" "$work/neg.md" --repo "$R" 2>&1)"; rc_neg=$?
+  if [ "$rc_neg" -eq 1 ] && printf '%s' "$out_neg" | grep -qF 'NoSuchWeirdTests'; then
+    echo "✓ ⑥ mutant（拿掉否定詞跳過）：①l 的正樣本改判紅——證明否定詞判準是原因"
+  else
+    echo "✗ ⑥ mutant（否定詞）未如預期翻轉（實得 exit ${rc_neg}）" >&2
+    printf '%s\n' "$out_neg" | sed 's/^/    /' >&2
+    fail=1
+  fi
+
+  mut_ctx_body='## 已驗證
+- 條件 1：拿掉某條檢查 → mutation 樣本 `BogusMutationOnlyTests` 改判過，斷言原文：`✓ mutant → 紅`
+'
+  printf '%s' "$mut_ctx_body" > "$work/mutctx.md"
+  out_mutctx="$(python3 "$mut_skip" "$work/mutctx.md" --repo "$R" 2>&1)"; rc_mutctx=$?
+  if [ "$rc_mutctx" -eq 1 ] && printf '%s' "$out_mutctx" | grep -qF 'BogusMutationOnlyTests'; then
+    echo "✓ ⑥ mutant（拿掉 mutation 語境跳過）：①m 的正樣本改判紅——證明 mutation 語境判準是原因"
+  else
+    echo "✗ ⑥ mutant（mutation 語境）未如預期翻轉（實得 exit ${rc_mutctx}）" >&2
+    printf '%s\n' "$out_mutctx" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ⑥ mutate：找不到 HANDOFF-SKIP-CHECK 標記，負控本身無效" >&2
   fail=1
 fi
 

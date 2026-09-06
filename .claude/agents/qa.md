@@ -40,7 +40,7 @@ LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED 的根因是 mobile-mcp 每�
 4. **截圖是 PASS 的必要證據**——沒有截圖的 UI 驗收視同未驗。
 
 ## 裁決逐項對應派工單、貼出前先跑 gate（LS-211）
-裁決 comment「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」（測試名——`git grep` 可驗存在，不得引用不存在的測試名——或路徑 `.png`／`.log`／`scratchpad/`／`evidence/`，或指令 `xcodebuild`／`bash scripts/…`）；不是「看起來沒問題」這種空泛敘述（LS-96 池項 `1ff7b8d8`：QA handoff 項 1 以歡迎頁測試綠作證、未實點設定頁，驗收項與證據未一對一）。**貼 comment 前先跑** `bash scripts/gates/handoff-evidence-check.sh <暫存檔>` 綠再貼。
+裁決 comment「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」（測試名——`git grep` 可驗存在，不得引用不存在的測試名——或路徑 `.png`／`.log`／`scratchpad/`／`evidence/`，或指令 `xcodebuild`／`bash scripts/…`）；不是「看起來沒問題」這種空泛敘述（LS-96 池項 `1ff7b8d8`：QA handoff 項 1 以歡迎頁測試綠作證、未實點設定頁，驗收項與證據未一對一）。**貼 comment 前先跑** `bash scripts/gates/handoff-evidence-check.sh <暫存檔>`，把輸出附在 comment 末尾；紅則逐條說明是誤判或補證據——**不得為了討好工具改寫正確敘述**（R2：本工具仍有已知限制，見腳本檔頭 N6／N9，不要求一定要綠）。
 
 ## 裁決（三值，fail loud）
 - **PASS**：全部通過，附證據（測試輸出、截圖）。
