@@ -14,6 +14,13 @@ fail=0
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
+# R3（merge-review R2 i5）：印精確的「n 組樣本」總結——之前是手數（申報「37 組」，實跑其實是 30
+# 條 ✓），跟其他自測檔（如 agent-tools-check.test.sh 的 `ok()` 計數器）比起來會漂移。這裡不改寫每個
+# 既有 `echo "✓ …"` 呼叫點，改用 `tee` 把全部 stdout 另存一份，收工時對這份存檔數 `^✓` 開頭的行數
+# ——不管前面加了幾組新樣本、少了幾組，這行永遠是實跑當下的真實數字。
+count_log="$work/counts.log"
+exec > >(tee "$count_log")
+
 # ---- 合成 fixture repo：--repo 指到這裡，git grep 驗「測試名存在」用固定、可控的內容，不依賴真
 #      LittleSprout 原始碼（真原始碼會隨其他票變動，讓自測結果漂移）。----
 R="$work/repo"
@@ -80,6 +87,17 @@ EOF
 cat > "$R/RealSampleFixture/SettingsViewTests.swift" <<'EOF'
 import XCTest
 final class SettingsViewTests: XCTestCase {}
+EOF
+
+# R3（merge-review R2 i2）：.test.sh 內嵌的假型別宣告——存在性驗證須把這種自測 fixture 排除，
+# 否則任何寫在 heredoc 裡的假名都會被 git grep 判定「存在」。必須在 `git add -A` 之前建立，否則
+# 這個檔案根本沒進 git index，`git grep`／`git ls-files` 本來就看不到它，②h 那組樣本會因為錯誤的
+# 理由通過（檔案沒追蹤，不是排除規則生效）。
+cat > "$R/Fixture/fake.test.sh" <<'EOF'
+#!/bin/bash
+cat <<'INNER'
+final class ExcludedFixtureOnlyTests: XCTestCase {}
+INNER
 EOF
 
 git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false add -A
@@ -179,6 +197,33 @@ expect 0 '①m（R2，F1）mutation 語境的假名不驗存在性（ios-dev「�
 - 條件 1：拿掉某條檢查 → mutation 樣本 `BogusMutationOnlyTests` 改判過，斷言原文：`✓ mutant → 紅`
 '
 
+expect 0 '①n（R3，m3）PATH_RE 認 .py/.sh/.md/.yml/.json 路徑為證據' '' \
+'## 已驗證
+- 條件 1：核對過 `handoff_evidence_check.py:191` 的實作
+- 條件 2：核對過 `docs/COLLABORATION.md:323` 的敘述
+- 條件 3：核對過 `.github/workflows/ci.yml:172` 的名稱表
+- 條件 4：核對過 `some/config.json` 的內容
+- 條件 5：核對過 `scripts/ops/promote.sh:8` 這行敘述（純檔名參照，不靠 xcodebuild／bash scripts/ 命令字面）
+'
+
+expect 0 '①o（R3，m4）verdict 圈號編號形狀（**① 標題**：…，無句點）不再 exit 2' '' \
+'## 逐條查實
+
+**① 範圍 1**：`FooTests` 全綠。
+
+**② 範圍 2**：`bash scripts/gates/foo.test.sh` 全綠。
+'
+
+expect 0 '①p（R3，m4）全形數字編號（１.）也算列項起點' '' \
+'## 已驗證
+１. `FooTests` 全綠。
+'
+
+expect 0 '①q（R3，i3）否定詞在候選之後也跳過存在性（`FooBarTests` 這個類別不存在）' '' \
+'## 已驗證
+- 條件 1：`FooBarTests` 這個類別不存在，改用 `FooTests` 驗證
+'
+
 # ==== ② 負樣本（≥4）====
 expect 1 '②a 列項缺任何證據（無測試名／路徑／命令）' '缺『怎麼驗』證據' \
 '## 已驗證
@@ -204,6 +249,22 @@ expect 1 '②d 兩項一好一壞：只點名壞的那項行號' '`BogusTests`' 
 expect 2 '②e 段落內沒有任何列項（只有段落標題）→ fail closed（exit 2）' '沒有任何列項' \
 '## 已驗證
 純文字說明，沒有 - 或數字列點。
+'
+
+expect 1 '②f（R3，m1）mutation 語境縮小到候選所在那一行——同一列項內、不同行的假名仍須通過存在性驗證' '`BogusUnrelatedTests`' \
+'## 已驗證
+1. 條件 1：拿掉某條檢查 → mutation 樣本 `BogusMutationOnlyTests` 改判過，斷言原文：`✓ mutant → 紅`
+   另外這裡也核對過 `BogusUnrelatedTests` 全綠（這個假名不該被連坐放行）。
+'
+
+expect 1 '②g（R3，i1）候選是既有檔名的後綴而非整字相等 → 不算存在（PadTests 不是 SettingsViewIPadTests.swift 的 basename）' '`PadTests`' \
+'## 已驗證
+- 條件 1：`PadTests` 全綠（實際檔名是 SettingsViewIPadTests.swift，PadTests 只是後綴、不是整字檔名）
+'
+
+expect 1 '②h（R3，i2）只出現在 .test.sh fixture heredoc 裡的假型別不算存在（排除自測 fixture 檔）' '`ExcludedFixtureOnlyTests`' \
+'## 已驗證
+- 條件 1：`ExcludedFixtureOnlyTests` 全綠
 '
 
 # ==== ③ --help／參數 ====
@@ -454,7 +515,130 @@ else
   fail=1
 fi
 
+# ==== ⑦（R3，m4）mutation：NUMBERED_ITEM_RE 退回只認 ASCII 數字＋句點 → ①o（圈號）與 ①p（全形數字）
+#        的正樣本必須改判 exit 2（找不到列項），證明是這行放寬的規則造成的 ====
+mut_num="$work/handoff_evidence_check.ascii-only-numbered.py"
+awk '
+  index($0, "# HANDOFF-NUMBERED-ITEM") > 0 { print "NUMBERED_ITEM_RE = re.compile(r\"^\\*{0,2}[0-9]+\\.\\s+\")  # HANDOFF-NUMBERED-ITEM"; next }
+  { print }
+' "$py" > "$mut_num"
+if grep -qF 'NUMBERED_ITEM_RE = re.compile(r"^\*{0,2}[0-9]+\.\s+")  # HANDOFF-NUMBERED-ITEM' "$mut_num"; then
+  echo "✓ ⑦ mutate：確認已把 NUMBERED_ITEM_RE 退回只認 ASCII 數字＋句點"
+  printf '%s' '## 逐條查實
+
+**① 範圍 1**：`FooTests` 全綠。
+' > "$work/circled.md"
+  out_circled="$(python3 "$mut_num" "$work/circled.md" --repo "$R" 2>&1)"; rc_circled=$?
+  if [ "$rc_circled" -eq 2 ]; then
+    echo "✓ ⑦ mutant（退回 ASCII-only）：①o 的圈號樣本改判 exit 2（找不到列項）——證明圈號規則是原因"
+  else
+    echo "✗ ⑦ mutant 未如預期翻轉為 exit 2（實得 exit ${rc_circled}）" >&2
+    printf '%s\n' "$out_circled" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ⑦ mutate：找不到 HANDOFF-NUMBERED-ITEM 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑧（R3，m3）mutation：PATH_RE 拿掉新補的 .py/.sh/.md/.yml/.json → ①n 的正樣本必須改判紅 ====
+mut_path="$work/handoff_evidence_check.no-new-path-ext.py"
+awk '
+  index($0, "# HANDOFF-EVIDENCE-PATH") > 0 { print "PATH_RE = re.compile(r\"\\.png|\\.log|\\.test\\.sh|scratchpad/|evidence/|\\.swift\\b\")  # HANDOFF-EVIDENCE-PATH"; next }
+  { print }
+' "$py" > "$mut_path"
+if grep -qF 'PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|scratchpad/|evidence/|\.swift\b")  # HANDOFF-EVIDENCE-PATH' "$mut_path"; then
+  echo "✓ ⑧ mutate：確認已把 PATH_RE 拿掉 .py/.sh/.md/.yml/.json"
+  printf '%s' '## 已驗證
+- 條件 1：核對過 `docs/COLLABORATION.md:323` 的敘述
+' > "$work/pathext.md"
+  out_pathext="$(python3 "$mut_path" "$work/pathext.md" --repo "$R" 2>&1)"; rc_pathext=$?
+  if [ "$rc_pathext" -eq 1 ] && printf '%s' "$out_pathext" | grep -qF '缺『怎麼驗』證據'; then
+    echo "✓ ⑧ mutant（拿掉新路徑副檔名）：①n 型樣本改判紅——證明是這幾個副檔名在放行"
+  else
+    echo "✗ ⑧ mutant 未如預期翻轉（實得 exit ${rc_pathext}）" >&2
+    printf '%s\n' "$out_pathext" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ⑧ mutate：找不到 HANDOFF-EVIDENCE-PATH 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑨（R3，i1）mutation：basename 整字相等退回「後綴即算」→ ②g 的負樣本（PadTests）必須改判過 ====
+mut_suffix="$work/handoff_evidence_check.suffix-match.py"
+awk '
+  index($0, "# HANDOFF-BASENAME-EQ") > 0 { print "        if relpath.split(\"/\")[-1].endswith(target):  # HANDOFF-BASENAME-EQ"; next }
+  { print }
+' "$py" > "$mut_suffix"
+if grep -qF 'if relpath.split("/")[-1].endswith(target):  # HANDOFF-BASENAME-EQ' "$mut_suffix"; then
+  echo "✓ ⑨ mutate：確認已把 basename 整字相等退回「後綴即算」"
+  printf '%s' '## 已驗證
+- 條件 1：`PadTests` 全綠
+' > "$work/padtests.md"
+  out_padtests="$(python3 "$mut_suffix" "$work/padtests.md" --repo "$R" 2>&1)"; rc_padtests=$?
+  if [ "$rc_padtests" -eq 0 ]; then
+    echo "✓ ⑨ mutant（basename 退回後綴比對）：②g 的負樣本（PadTests）改判過——證明整字相等判準是原因"
+  else
+    echo "✗ ⑨ mutant 未如預期翻轉（實得 exit ${rc_padtests}）" >&2
+    printf '%s\n' "$out_padtests" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ⑨ mutate：找不到 HANDOFF-BASENAME-EQ 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑩（R3，i2）mutation：拿掉 .test.sh／.test.js 排除 → ②h 的負樣本（ExcludedFixtureOnlyTests）必須改判過 ====
+mut_noexclude="$work/handoff_evidence_check.no-grep-exclude.py"
+awk '
+  index($0, "# HANDOFF-GREP-EXCLUDE") > 0 { print "        proc = subprocess.run([\"git\", \"-C\", repo, \"grep\", \"-q\", \"-P\", pattern], capture_output=True)  # HANDOFF-GREP-EXCLUDE"; next }
+  { print }
+' "$py" > "$mut_noexclude"
+if grep -qF 'proc = subprocess.run(["git", "-C", repo, "grep", "-q", "-P", pattern], capture_output=True)  # HANDOFF-GREP-EXCLUDE' "$mut_noexclude"; then
+  echo "✓ ⑩ mutate：確認已拿掉 .test.sh／.test.js 排除"
+  printf '%s' '## 已驗證
+- 條件 1：`ExcludedFixtureOnlyTests` 全綠
+' > "$work/excluded.md"
+  out_excluded="$(python3 "$mut_noexclude" "$work/excluded.md" --repo "$R" 2>&1)"; rc_excluded=$?
+  if [ "$rc_excluded" -eq 0 ]; then
+    echo "✓ ⑩ mutant（拿掉 .test.sh 排除）：②h 的負樣本（ExcludedFixtureOnlyTests）改判過——證明排除規則是原因"
+  else
+    echo "✗ ⑩ mutant 未如預期翻轉（實得 exit ${rc_excluded}）" >&2
+    printf '%s\n' "$out_excluded" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ⑩ mutate：找不到 HANDOFF-GREP-EXCLUDE 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑪（R3，i3）mutation：否定詞子句退回只看候選之前 → ①q 的正樣本（否定詞在候選之後）必須改判紅 ====
+mut_negafter="$work/handoff_evidence_check.negation-before-only.py"
+awk '
+  index($0, "# HANDOFF-NEGATION-AFTER") > 0 { print "    clause_end = start  # HANDOFF-NEGATION-AFTER"; next }
+  { print }
+' "$py" > "$mut_negafter"
+if grep -qF 'clause_end = start  # HANDOFF-NEGATION-AFTER' "$mut_negafter"; then
+  echo "✓ ⑪ mutate：確認已把否定詞子句退回只看候選之前"
+  printf '%s' '## 已驗證
+- 條件 1：`FooBarTests` 這個類別不存在，改用 `FooTests` 驗證
+' > "$work/negafter.md"
+  out_negafter="$(python3 "$mut_negafter" "$work/negafter.md" --repo "$R" 2>&1)"; rc_negafter=$?
+  if [ "$rc_negafter" -eq 1 ] && printf '%s' "$out_negafter" | grep -qF 'FooBarTests'; then
+    echo "✓ ⑪ mutant（否定詞只看之前）：①q 的正樣本改判紅（FooBarTests 被當成引用）——證明「候選之後」判準是原因"
+  else
+    echo "✗ ⑪ mutant 未如預期翻轉（實得 exit ${rc_negafter}）" >&2
+    printf '%s\n' "$out_negafter" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ⑪ mutate：找不到 HANDOFF-NEGATION-AFTER 標記，負控本身無效" >&2
+  fail=1
+fi
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ handoff-evidence-check 自測通過"
+  n=$(grep -c '^✓' "$count_log")
+  echo "✓ handoff-evidence-check 自測通過（${n} 組樣本）"
 fi
 exit "$fail"
