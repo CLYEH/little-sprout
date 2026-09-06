@@ -30,6 +30,18 @@
 -- 但呼叫者自己的列從來不會被過濾掉。
 --
 -- `toggle_reaction` 寫入路徑不動（票文範圍：只補讀取兩處）。
+--
+-- 實測發現（mutation 驗證時發現，記在這裡避免下一個改這支函式的人誤解）：
+-- `get_reaction_counts` 是 security invoker（LS-58 既有裁量），`FROM public.reactions r`
+-- 這一行本身就會受呼叫者身分的 `reactions_select` RLS 約束——也就是說，只要
+-- `reactions_select` policy 有這個 NOT EXISTS，即使把 RPC 本體這裡的 NOT EXISTS
+-- 拿掉，計數仍然會被正確過濾（RLS 已經先把看不到的列擋在 `r` 之外）。RPC 本體這裡
+-- 的述詞因此對「security invoker」這支函式來說是防禦性重複（policy 才是真正生效的
+-- 那一層），不是漏了就會壞掉的必要條件。保留它的理由：(a) 跟 albums_select／
+-- comments_select／list_comments／get_family_timeline 的既有模式一致，讀者不需要
+-- 記得「這支剛好是 invoker，邏輯在 RLS」這個例外；(b) 自我文件化——函式簽章旁邊就能
+-- 看到完整的過濾條件，不必跳去看 policy 定義；(c) 如果日後 `reactions_select` 被
+-- 改壞（例如又是一次 policy 重建漏了述詞），這裡仍是第二道防線。
 
 create or replace function public.get_reaction_counts(
   p_family_id uuid,
