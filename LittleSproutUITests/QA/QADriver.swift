@@ -120,7 +120,10 @@ final class QADriver {
     /// 原本只認時間軸／三岔路兩種，帳號未同意 EULA 時 30 秒逾時訊息和「session 沒建立」長得一模
     /// 一樣，把排障導去 Keychain／後端方向，見 LS-190 comment `15121d91`）。
     func assertLandedAfterLogin() throws {
-        let landed = try waitForAny(landingCandidates, "登入落點", timeout: 30, failureNote: "session 沒建立、或家庭查詢卡住")
+        let landed = try waitForAny(
+            landingCandidates, "登入落點", timeout: 30,
+            failureNote: "session 沒建立、或家庭查詢卡住", hierarchyReason: "login-landing"
+        )
         guard landed != "EULA 同意頁" else {
             snap("eula-consent")
             try require(eulaAgreeButton, "EULA 同意頁「我已閱讀並同意」").tap()
@@ -128,46 +131,15 @@ final class QADriver {
                 [(timelineHeading, "時間軸"), (forkGreeting, "三岔路")],
                 "同意 EULA 後的登入落點",
                 timeout: 30,
-                failureNote: "同意紀錄可能沒寫入成功，或家庭查詢卡住"
+                failureNote: "同意紀錄可能沒寫入成功，或家庭查詢卡住",
+                // LS-220 merge-review R2 i5：跟上面那次呼叫用不同 reason，兩次卡住的 hierarchy
+                // 附件在 xcresult 裡才分得出來是「登入後從沒到過落點」還是「點了同意卻上不去」。
+                hierarchyReason: "login-eula"
             )
             snap("landed-eula-accepted")
             return
         }
         snap(landed == "時間軸" ? "landed-timeline" : "landed-fork")
-    }
-
-    private var landingCandidates: [(element: XCUIElement, name: String)] {
-        [(timelineHeading, "時間軸"), (forkGreeting, "三岔路"), (eulaHeading, "EULA 同意頁")]
-    }
-
-    /// `waitForAny` 包一層：等不到就附 a11y 階層＋截圖＋「畫面上最像的標題」（前幾個
-    /// staticTexts 的 label）再 `XCTFail`，訊息點名等的是哪些候選（不會再跟別的逾時訊息長得
-    /// 一樣，LS-220）。
-    private func waitForAny(
-        _ candidates: [(element: XCUIElement, name: String)],
-        _ what: String,
-        timeout: TimeInterval,
-        failureNote: String
-    ) throws -> String {
-        let landed = waitForAny(candidates, timeout: timeout)
-        guard let landed else {
-            attachHierarchy(reason: "login-landing")
-            snap("fail-landing")
-            let candidateNames = candidates.map(\.name).joined(separator: "／")
-            XCTFail(
-                "\(what)：\(Int(timeout)) 秒內\(candidateNames)都沒出現（\(failureNote)）"
-                    + "——目前畫面最像的標題：\(closestScreenTitles())"
-            )
-            throw QAFailure.screen(what)
-        }
-        return landed
-    }
-
-    /// 失敗訊息用：畫面上前幾個 staticTexts 的 label，讓「卡在哪個畫面」不用開 xcresult 附件
-    /// 也能猜個大概（LS-220：EULA 頁與「session 沒建立」的逾時訊息曾經一模一樣，排障繞了遠路）。
-    private func closestScreenTitles(limit: Int = 3) -> String {
-        let texts = app.staticTexts.allElementsBoundByIndex.prefix(limit).map(\.label).filter { !$0.isEmpty }
-        return texts.isEmpty ? "（畫面上沒有文字元素）" : texts.joined(separator: "、")
     }
 
     /// `qa-e2e.sh` 跑前已 `keychain reset`，正常會從歡迎頁開始走一次 OTP 登入；仍容忍「已登入」（例如
@@ -317,9 +289,21 @@ final class QADriver {
         // `isHittable == true`（accessibility 判定不知道有另一塊浮動 UI 疊在同個座標上），直接
         // `.tap()`＝點中心點，實測連兩次 100% 變成點到蓋在上面的「寶貝」分頁鈕（臨時加診斷附件量得
         // card.frame＝(18.7, 690.3, 365.0, 225.3)、tabBarFrame＝(112, 782, 88, 52)，中心 y=803
-        // 剛好落在 782–834 這段）。改點卡片「上緣」（y 偏移 15%）：卡片頂端一定還在 Tab Bar 之上，
-        // 整張卡是同一個 NavigationLink（LS-158 慣例），點哪裡都會導覽，不需要真的完整可見再點。
-        card.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
+        // 剛好落在 782–834 這段）。merge-review R2 m3：不用寫死的 dy 0.15 常數（換一種卡片高度／
+        // 版型就可能又落回 Tab Bar，或明明沒問題卻無謂改點非中心處），改成算出來的安全 y——卡片
+        // 中心會落進 Tab Bar 範圍（`tabBar.minY` 往上留 24pt 緩衝）才往上移，否則照樣點中心，
+        // 且永遠不會移到卡片頂端以上（`cardFrame.minY` 往下留 8pt 緩衝）。用 `withOffset` 直接點
+        // 算出來的絕對座標（不透過 `card` 自己的 normalized offset，卡片與 Tab Bar 是兩個不同
+        // 元素、兩者的 frame 都已經是同一個座標系）。點擊前把算出來的座標與 Tab Bar frame 存成
+        // xcresult 附件，下次排查同款誤點不用再臨時加診斷程式碼。
+        let cardFrame = card.frame
+        let tabBarFrame = app.buttons["相簿"].frame
+        let tapY = max(cardFrame.minY + 8, min(cardFrame.midY, tabBarFrame.minY - 24))
+        attachText(
+            "card.frame=\(cardFrame) tabBar.frame=\(tabBarFrame) tapPoint=(\(cardFrame.midX), \(tapY))",
+            name: "diary-card-tap-coordinates"
+        )
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: cardFrame.midX, dy: tapY)).tap()
         try require(app.staticTexts[QAAccessibilityID.diaryDetailBody], "日記詳情內文", timeout: 20)
         // 照片牆是非同步簽名＋下載——有附照的日記等它畫出來再截（純文字日記本來就沒有，等 10 秒放行）。
         _ = app.images.firstMatch.waitForExistence(timeout: 10)
@@ -332,5 +316,79 @@ final class QADriver {
         try require(app.buttons["時間軸"], "Tab Bar「時間軸」").tap()
         try require(timelineHeading, "回到時間軸", timeout: 15)
         snap("timeline-again")
+    }
+}
+
+// MARK: - 登入落點失敗診斷（LS-220；獨立成 extension 避免主 class body 超過 SwiftLint type_body_length；
+// 全是 `private`，Swift 對同檔案內同型別的 extension 視同可見，行為不變）
+
+extension QADriver {
+    private var landingCandidates: [(element: XCUIElement, name: String)] {
+        [(timelineHeading, "時間軸"), (forkGreeting, "三岔路"), (eulaHeading, "EULA 同意頁")]
+    }
+
+    /// `waitForAny` 包一層：等不到就附 a11y 階層＋截圖＋「畫面上最像的標題」（前幾個
+    /// staticTexts 的 label）再 `XCTFail`，訊息點名等的是哪些候選（不會再跟別的逾時訊息長得
+    /// 一樣，LS-220）。`hierarchyReason` 由呼叫端給——同一支 helper 被登入前後兩個不同判斷點
+    /// 共用，reason 若寫死會讓兩種卡住方式在 xcresult 裡長得一樣（merge-review R2 i5）。
+    private func waitForAny(
+        _ candidates: [(element: XCUIElement, name: String)],
+        _ what: String,
+        timeout: TimeInterval,
+        failureNote: String,
+        hierarchyReason: String
+    ) throws -> String {
+        let landed = waitForAny(candidates, timeout: timeout)
+        guard let landed else {
+            attachHierarchy(reason: hierarchyReason)
+            snap("fail-landing")
+            let candidateNames = candidates.map(\.name).joined(separator: "／")
+            XCTFail(
+                "\(what)：\(Int(timeout)) 秒內\(candidateNames)都沒出現（\(failureNote)）"
+                    + "——目前畫面最像的標題：\(closestScreenTitles())"
+            )
+            throw QAFailure.screen(what)
+        }
+        return landed
+    }
+
+    /// LS-220 merge-review R2 m2：`AppError.userFacingMessage` 的通用文案（見 `Errors/AppError.swift`
+    /// `.network`／`.rejected`／`.unknown`／`.server`／`.timeout` 五個分支），撈到也沒有排障價值
+    /// （不指名是哪個畫面），排除掉不佔 `limit` 名額。
+    private static let genericErrorBoilerplate: Set<String> = [
+        "網路連線有問題，請檢查網路連線後再試一次。",
+        "這個操作沒有成功，請確認內容後再試一次。",
+        "請再試一次。",
+        "無法完成這個操作。",
+        "伺服器發生問題，請稍後再試一次。"
+    ]
+
+    /// 失敗訊息用：畫面上最像「標題」的幾行字，讓「卡在哪個畫面」不用開 xcresult 附件也能猜個
+    /// 大概（LS-220：EULA 頁與「session 沒建立」的逾時訊息曾經一模一樣，排障繞了遠路）。
+    ///
+    /// 優先序：① `navigationBars` 的 staticTexts（系統導覽列標題，最直接）；② 全畫面 staticTexts
+    /// 裡字級最大的幾個（用 `frame.height` 當代理——XCUITest 沒有暴露字級 API；本 app 的自畫大標題
+    /// 固定 `.appFont(.display)` 34pt，一般內文／註記都是 17pt，同一畫面差距夠大不會混淆）；③ 其餘
+    /// staticTexts 依畫面樹順序補到上限。EULA 這類自畫標題（不在 navigationBars 裡）原本只取
+    /// 畫面樹前幾個時，常常先撈到釘底動作列的連結／按鈕文字，真正的標題「使用條款更新」反而排到
+    /// 後面（merge-review R2 m2 實測抓到）——改成字級優先才會穩定排到前面。過濾已知 loading（「正在
+    /// …」開頭）與通用錯誤樣板字，這兩種不算「標題」。
+    private func closestScreenTitles(limit: Int = 6) -> String {
+        func isMeaningful(_ label: String) -> Bool {
+            !label.isEmpty && !label.hasPrefix("正在") && !Self.genericErrorBoilerplate.contains(label)
+        }
+        let navTitles = app.navigationBars.staticTexts.allElementsBoundByIndex
+            .map(\.label).filter(isMeaningful)
+        let onScreenTexts = app.staticTexts.allElementsBoundByIndex.filter { isMeaningful($0.label) }
+        let byHeadingSize = onScreenTexts.sorted { $0.frame.height > $1.frame.height }.map(\.label)
+        let byDocumentOrder = onScreenTexts.map(\.label)
+
+        var seen = Set<String>()
+        var picked: [String] = []
+        for label in navTitles + byHeadingSize + byDocumentOrder where picked.count < limit {
+            guard seen.insert(label).inserted else { continue }
+            picked.append(label)
+        }
+        return picked.isEmpty ? "（畫面上沒有文字元素）" : picked.joined(separator: "、")
     }
 }
