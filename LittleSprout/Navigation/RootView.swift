@@ -27,6 +27,9 @@ struct RootView: View {
     /// merge-review R2 B2：`PendingAccountDeletionResumer`，原樣轉手往下傳到
     /// `AuthenticatedGate`（登入完成／回前景觸發續傳）。
     let resumer: PendingAccountDeletionResumer
+    /// LS-189：轉手往下傳到 `TimelineView`／`SettingsView`（內容操作表：檢舉／封鎖／Owner 移除
+    /// ／封鎖名單／檢舉收件匣），這裡不直接使用。
+    let safetyAPIClient: SafetyAPIClient
     /// LS-108 deep link：見 `ForkView` 文件註解，這裡只是原樣轉手往下傳。
     @Binding var pendingInviteCode: String?
 
@@ -46,6 +49,7 @@ struct RootView: View {
                     mediaUploadService: mediaUploadService,
                     accountAPIClient: accountAPIClient,
                     resumer: resumer,
+                    safetyAPIClient: safetyAPIClient,
                     pendingInviteCode: $pendingInviteCode
                 )
             } else {
@@ -81,6 +85,7 @@ struct AuthenticatedRootView: View {
     let mediaUploadService: MediaUploadService
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
+    let safetyAPIClient: SafetyAPIClient
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selection: AppSection = .timeline
@@ -92,14 +97,16 @@ struct AuthenticatedRootView: View {
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
                     diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
-                    accountAPIClient: accountAPIClient, resumer: resumer, selection: $selection
+                    accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
+                    selection: $selection
                 )
             } else {
                 SectionTabView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
                     diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
-                    accountAPIClient: accountAPIClient, resumer: resumer, selection: $selection
+                    accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
+                    selection: $selection
                 )
             }
         }
@@ -154,6 +161,7 @@ private struct SectionTabView: View {
     let mediaUploadService: MediaUploadService
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
+    let safetyAPIClient: SafetyAPIClient
     @Binding var selection: AppSection
 
     var body: some View {
@@ -164,7 +172,7 @@ private struct SectionTabView: View {
                         section: section, authStore: authStore, familyStore: familyStore,
                         childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
                         eulaStore: eulaStore, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
-                        accountAPIClient: accountAPIClient, resumer: resumer
+                        accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient
                     )
                     // LS-136 實測發現（R1）：掛在外層 `TabView` 的 `.toolbar(.hidden, for: .tabBar)`
                     // 只隱藏視覺渲染，底下的原生 `UITabBarItem` 仍留在 accessibility tree 裡、
@@ -205,6 +213,7 @@ private struct SectionSplitView: View {
     let mediaUploadService: MediaUploadService
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
+    let safetyAPIClient: SafetyAPIClient
     @Binding var selection: AppSection
 
     var body: some View {
@@ -221,7 +230,7 @@ private struct SectionSplitView: View {
                     section: selection, authStore: authStore, familyStore: familyStore,
                     childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
                     eulaStore: eulaStore, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
-                    accountAPIClient: accountAPIClient, resumer: resumer
+                    accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient
                 )
             }
         }
@@ -251,6 +260,7 @@ struct SectionContentView: View {
     let mediaUploadService: MediaUploadService
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
+    let safetyAPIClient: SafetyAPIClient
 
     var body: some View {
         content
@@ -263,7 +273,8 @@ struct SectionContentView: View {
         case .timeline:
             TimelineView(
                 familyStore: familyStore, childrenStore: childrenStore, timelineStore: timelineStore,
-                diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
+                diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
+                safetyAPIClient: safetyAPIClient
             )
         case .albums:
             AlbumsView(familyStore: familyStore, childrenStore: childrenStore, albumsStore: albumsStore)
@@ -272,7 +283,7 @@ struct SectionContentView: View {
             SettingsView(
                 authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                 accountAPIClient: accountAPIClient, timelineStore: timelineStore, albumsStore: albumsStore,
-                eulaStore: eulaStore, resumer: resumer
+                eulaStore: eulaStore, resumer: resumer, safetyAPIClient: safetyAPIClient
             )
         }
     }
@@ -284,7 +295,7 @@ struct SectionContentView: View {
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), diaryAPIClient: PreviewDiaryAPIClient(),
         mediaUploadService: PreviewMediaUploadService(), accountAPIClient: PreviewAccountAPIClient(),
-        resumer: .preview()
+        resumer: .preview(), safetyAPIClient: PreviewSafetyAPIClient()
     )
     .environment(\.horizontalSizeClass, .compact)
 }
@@ -294,7 +305,7 @@ struct SectionContentView: View {
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), diaryAPIClient: PreviewDiaryAPIClient(),
         mediaUploadService: PreviewMediaUploadService(), accountAPIClient: PreviewAccountAPIClient(),
-        resumer: .preview()
+        resumer: .preview(), safetyAPIClient: PreviewSafetyAPIClient()
     )
     .environment(\.horizontalSizeClass, .regular)
 }

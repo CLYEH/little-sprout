@@ -73,7 +73,8 @@ extension TapTargetGateHarness {
             authStore: authStore, familyStore: familyStore, childrenStore: .preview(), timelineStore: .preview(),
             albumsStore: .preview(), eulaStore: .preview(shouldPresent: true, judgedUserID: userID),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
-            accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(), pendingInviteCode: .constant(nil)
+            accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
+            safetyAPIClient: PreviewSafetyAPIClient(), pendingInviteCode: .constant(nil)
         )
         .environment(\.horizontalSizeClass, .compact)
     }
@@ -82,7 +83,10 @@ extension TapTargetGateHarness {
 /// 見 `TapTargetGateHarness.deleteDiaryConfirmationHost` 文件註解——用真的 `@State` 而非
 /// `.constant(true)`，讓 sheet 的「確認」／「取消」按下 `dismiss()` 之後真的消失（不會像
 /// `.constant` 綁定那樣被無視），UITest 才能斷言得到「sheet 已關閉」這件事。
-private struct DismissableSheetHost<SheetContent: View>: View {
+///
+/// LS-189：不標 `private`——`TapTargetGateHarness+Safety.swift`（跨檔案 extension）需要重用
+/// 同一個 host，不重造一份幾乎一樣的型別。
+struct DismissableSheetHost<SheetContent: View>: View {
     @State private var isPresented = true
     let sheetContent: () -> SheetContent
 

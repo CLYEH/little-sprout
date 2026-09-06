@@ -11,11 +11,6 @@ private final class PreviewEULAAPIClient: EULAAPIClient, @unchecked Sendable {
 }
 
 extension EULAStore {
-    @MainActor
-    static func preview() -> EULAStore {
-        EULAStore(apiClient: PreviewEULAAPIClient())
-    }
-
     /// `TapTargetGateHarness.eulaConsentHost` 用：同步把 `shouldPresent`／`currentVersion`
     /// 灌好，不經過 async `checkStatus`，跟 `FamilyStore.seedMyFamilyForPreview` 同樣的理由
     /// ——harness 需要免登入、無時序窗口就能直接渲染出畫面。`judgedUserID`（LS-190 R2）：

@@ -15,6 +15,9 @@ struct TimelineView: View {
     let timelineStore: TimelineStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
+    /// LS-189：轉手往下傳到 `DiaryDetailView`（內容操作表：檢舉／封鎖／Owner 移除／刪除），
+    /// 這裡不直接使用。
+    let safetyAPIClient: SafetyAPIClient
 
     @State private var selectedChildID: UUID?
     @State private var showsDiaryEditor = false
@@ -66,7 +69,10 @@ struct TimelineView: View {
         .navigationDestination(for: TimelineRoute.self) { route in
             switch route {
             case .diaryDetail(let diaryID):
-                DiaryDetailView(diaryID: diaryID, timelineStore: timelineStore, childrenStore: childrenStore)
+                DiaryDetailView(
+                    diaryID: diaryID, timelineStore: timelineStore, childrenStore: childrenStore,
+                    familyStore: familyStore, safetyAPIClient: safetyAPIClient, diaryAPIClient: diaryAPIClient
+                )
             }
         }
         .navigationDestination(isPresented: $showsDiaryEditor) {
@@ -371,7 +377,8 @@ struct TimelineView: View {
     NavigationStack {
         TimelineView(
             familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
-            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
+            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
+            safetyAPIClient: PreviewSafetyAPIClient()
         )
     }
 }

@@ -34,6 +34,9 @@ struct SettingsView: View {
     /// 擁有者，見 `PendingAccountDeletionResumer` 文件註解；`SettingsView+Account.swift` 轉手
     /// 往下傳。
     let resumer: PendingAccountDeletionResumer
+    /// LS-189：轉手往下傳到 `BlockListView`／`ReportInboxView`（封鎖名單／檢舉收件匣，取代
+    /// LS-188 的最小佔位），這裡不直接使用。
+    let safetyAPIClient: SafetyAPIClient
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     /// merge-review R2 B3：`signOut()` 拆去 `SettingsView+SignOut.swift`（理由同
@@ -294,13 +297,13 @@ struct SettingsView: View {
         switch row {
         case .blockList:
             NavigationLink {
-                BlockListView()
+                BlockListView(familyStore: familyStore, safetyAPIClient: safetyAPIClient, timelineStore: timelineStore)
             } label: {
                 SettingsRowView(icon: "person.fill.xmark", label: "封鎖名單")
             }
         case .reportInbox:
             NavigationLink {
-                ReportInboxView()
+                ReportInboxView(familyStore: familyStore, safetyAPIClient: safetyAPIClient)
             } label: {
                 SettingsRowView(icon: "flag.fill", label: "檢舉紀錄")
             }
@@ -350,7 +353,8 @@ struct SettingsView: View {
             )),
             childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
             timelineStore: .preview(),
-            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), resumer: .preview()
+            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), resumer: .preview(),
+            safetyAPIClient: PreviewSafetyAPIClient()
         )
     }
 }
@@ -364,7 +368,8 @@ struct SettingsView: View {
             )),
             childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
             timelineStore: .preview(),
-            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), resumer: .preview()
+            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), resumer: .preview(),
+            safetyAPIClient: PreviewSafetyAPIClient()
         )
     }
     .environment(\.horizontalSizeClass, .regular)

@@ -47,6 +47,7 @@ struct AuthenticatedGate: View {
     /// 這個觸發點（見 `PendingAccountDeletionResumer` 文件註解），`DeleteAccountFlowView`
     /// 自己的 `.task` 是另一個觸發點（畫面進場）。
     let resumer: PendingAccountDeletionResumer
+    let safetyAPIClient: SafetyAPIClient
     @Binding var pendingInviteCode: String?
 
     var body: some View {
@@ -130,7 +131,7 @@ struct AuthenticatedGate: View {
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
                     diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
-                    accountAPIClient: accountAPIClient, resumer: resumer
+                    accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient
                 )
             } else {
                 ForkView(

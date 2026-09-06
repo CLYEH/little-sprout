@@ -34,6 +34,9 @@ struct LittleSproutApp: App {
     /// 實例（畫面呈現）共用同一份、持續追蹤 `state` 變化——同 `familyStore`／`eulaStore`
     /// 等既有 app 層 store 的角色，`@State` 讓它隨 app 存活、不會每次重繪都重建。
     @State private var resumer: PendingAccountDeletionResumer
+    /// LS-189：內容操作表（檢舉／封鎖／Owner 移除）用的 client——不是 `@State`，同
+    /// `diaryAPIClient` 的既有理由（不可變的純 service 物件，本身不 Observable）。
+    let safetyAPIClient: SafetyAPIClient
     /// LS-108：`littlesprout://invite/<code>` deep link（LS-39 已註冊 scheme）冷／熱啟動皆走
     /// `.onOpenURL`——寫進這裡，`ForkView` 是唯一消費者（見該檔文件）。這一層只負責接住 URL、
     /// 解析出碼，不判斷「現在該不該導頁」，那是 `ForkView` 才知道的事（是否已登入、是否已有
@@ -66,6 +69,7 @@ struct LittleSproutApp: App {
         mediaUploadService = SupabaseMediaUploadService(client: client)
         accountAPIClient = SupabaseAccountAPIClient(client: client)
         _resumer = State(initialValue: PendingAccountDeletionResumer(accountAPIClient: accountAPIClient))
+        safetyAPIClient = SupabaseSafetyAPIClient(client: client)
     }
 
     var body: some Scene {
@@ -99,6 +103,7 @@ struct LittleSproutApp: App {
             mediaUploadService: mediaUploadService,
             accountAPIClient: accountAPIClient,
             resumer: resumer,
+            safetyAPIClient: safetyAPIClient,
             pendingInviteCode: $pendingInviteCode
         )
         .onOpenURL { url in
