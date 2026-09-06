@@ -62,7 +62,9 @@
       ]
     },
     "corner_anchor": {
-      "boards": ["yec61", "HLXo3", "qtCd7", "N1aeiU", "FEuAL", "iBYUK", "XhwG6", "b3nzDp", "dxPvP", "i6uiB4", "z042Yg", "Oic2v", "JzyIv", "RC7bN", "jftM0", "UOWte", "VDO0S", "L6iIQ0", "Z8Q4R"],
+      "boards": ["yec61", "HLXo3", "qtCd7", "kHDk4", "N1aeiU", "FEuAL", "iBYUK", "XhwG6", "b3nzDp", "dxPvP", "i6uiB4", "z042Yg", "Oic2v", "JzyIv", "RC7bN", "jftM0", "UOWte", "VDO0S", "L6iIQ0", "Z8Q4R"],
+      "scope": "document",
+      "document_count": 0,
       "containers": 6,
       "points": 48,
       "mismatch": 0,
@@ -79,19 +81,19 @@
       ]
     },
     "text_occlusion": {
-      "boards": ["yec61", "HLXo3", "qtCd7", "N1aeiU", "FEuAL", "iBYUK", "XhwG6", "b3nzDp", "dxPvP", "i6uiB4", "z042Yg", "Oic2v", "JzyIv", "RC7bN", "jftM0", "UOWte", "VDO0S", "L6iIQ0", "Z8Q4R"],
+      "boards": ["yec61", "HLXo3", "qtCd7", "kHDk4", "N1aeiU", "FEuAL", "iBYUK", "XhwG6", "b3nzDp", "dxPvP", "i6uiB4", "z042Yg", "Oic2v", "JzyIv", "RC7bN", "jftM0", "UOWte", "VDO0S", "L6iIQ0", "Z8Q4R"],
       "scope": "document",
       "document_count": 0,
       "flagged": [],
       "document_flagged": []
     },
     "board_clip": {
-      "boards": ["yec61", "HLXo3", "qtCd7", "N1aeiU", "FEuAL", "iBYUK", "XhwG6", "b3nzDp", "dxPvP", "i6uiB4", "z042Yg", "Oic2v", "JzyIv", "RC7bN", "jftM0", "UOWte", "VDO0S", "L6iIQ0", "Z8Q4R"],
+      "boards": ["yec61", "HLXo3", "qtCd7", "kHDk4", "N1aeiU", "FEuAL", "iBYUK", "XhwG6", "b3nzDp", "dxPvP", "i6uiB4", "z042Yg", "Oic2v", "JzyIv", "RC7bN", "jftM0", "UOWte", "VDO0S", "L6iIQ0", "Z8Q4R"],
       "scope": "document",
       "document_count": 0,
       "flagged": [],
       "document_flagged": []
     }
   },
-  "scan_note": "R1 收工前六支掃描（正典腳本 scripts/design/overflow-scan.js，scan_scope=document，SCAN_BOARDS 涵蓋本輪觸碰的 19 個頂層節點/元件定義）。修正過程中發現並修復 3 處新碰撞（詳見 head_sha 前一支 commit 訊息）：HLXo3 Feed 缺 clip 導致簽名文字伸入 Tab Bar（補 clip:true + 收緊高度至 992）；z042Yg/JzyIv 新增 Disagree Button 後 Action Bar 增高擠壓零容忍卡文字（板高各自 852→912／852→940）；Oic2v/RC7bN 的 Card Head Label 在 AX3 大字級下未換行伸出板緣 41pt（改 fixed-width+fill_container 換行，同步修正 z042Yg/JzyIv 對應節點）；並修正因 JzyIv 加高導致與 RC7bN 產生的 root 層重疊（RC7bN y 下移 80pt）。sibling_intersection／row_overflow／cross_parent_collision 三支的 flagged 為代表性分類彙整（每類一筆代表＋「同類 N 例」，N 加總與 SUMMARY 逐項核對相符：2071／560／321），絕大多數屬品牌既定母題（角托 corner-out、Fan Ghost 堆疊、Sheet 遮罩 z-order、Spacer 版面佔位）既有重疊，非本票新增缺陷；corner_anchor／text_occlusion／board_clip 三項硬性指標於本票 boards 範圍內皆為 0（mismatch=0、flagged=[]）。SUMMARY 原文：SUMMARY total_nodes=9879 scanned_nodes=15951 scan_scope=document sibling_intersection=2071 row_overflow=560 cross_parent_collision=321(bleed-only) text_occlusion=0/0 board_clip=0/0 corner_anchor=6/48/0 document=225/1784/0 ref_hits=746(defs=10) unresolved=3/14 tree_hash=245c0476a10c760e"
+  "scan_note": "R1 收工前六支掃描（正典腳本 scripts/design/overflow-scan.js，scan_scope=document，SCAN_BOARDS 涵蓋本輪觸碰的 20 個頂層節點/元件定義，含 kHDk4／LS-142 Handoff Notes——scope 2/5 補的 epDnW 節點所在板，首版收據漏列後已補齊重跑）。修正過程中發現並修復 3 處新碰撞（詳見 head_sha 前一支 commit 訊息）：HLXo3 Feed 缺 clip 導致簽名文字伸入 Tab Bar（補 clip:true + 收緊高度至 992）；z042Yg/JzyIv 新增 Disagree Button 後 Action Bar 增高擠壓零容忍卡文字（板高各自 852→912／852→940）；Oic2v/RC7bN 的 Card Head Label 在 AX3 大字級下未換行伸出板緣 41pt（改 fixed-width+fill_container 換行，同步修正 z042Yg/JzyIv 對應節點）；並修正因 JzyIv 加高導致與 RC7bN 產生的 root 層重疊（RC7bN y 下移 80pt）。sibling_intersection／row_overflow／cross_parent_collision 三支的 flagged 為代表性分類彙整（每類一筆代表＋「同類 N 例」，N 加總與 SUMMARY 逐項核對相符：2071／560／321），絕大多數屬品牌既定母題（角托 corner-out、Fan Ghost 堆疊、Sheet 遮罩 z-order、Spacer 版面佔位）既有重疊，非本票新增缺陷；corner_anchor／text_occlusion／board_clip 三項硬性指標於本票 boards 範圍內皆為 0（mismatch=0、flagged=[]）。SUMMARY 原文：SUMMARY total_nodes=9879 scanned_nodes=15951 scan_scope=document sibling_intersection=2071 row_overflow=560 cross_parent_collision=321(bleed-only) text_occlusion=0/0 board_clip=0/0 corner_anchor=6/48/0 document=225/1784/0 ref_hits=746(defs=10) unresolved=3/14 tree_hash=245c0476a10c760e"
 }
