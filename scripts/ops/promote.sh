@@ -29,7 +29,10 @@
 # 自測：scripts/ops/promote.test.sh（合成 repo＋stub gh，掛 CI rules job）。規約：docs/COLLABORATION.md §2、§7。
 set -uo pipefail
 
-REQUIRED_CHECKS="ci db lint rules"
+# LS-209 merge-review R1 M3：required checks 清單須與 protection-apply.sh 的分支保護設定同步——加 ci-ipad
+# 之前這裡漏了它，套用保護後某次 ci-ipad 紅時本腳本仍印「四項全綠」照樣拒絕 push（server-side 仍安全），
+# 但把可診斷的紅換成了要人自己去猜的泛用訊息。成功訊息改讀這個變數、不再硬寫四個名字。
+REQUIRED_CHECKS="ci ci-ipad db lint rules"
 CHECKS_APP_ID=15368   # GitHub Actions；分支保護的 required checks 也限這個 app（scripts/ops/protection-apply.sh）
 # commit status（LS-87）：merge-review 兩個方向都要（分支保護亦列為 required check）；qa 只在 test→main（release 前提＝QA PASS）
 
@@ -128,6 +131,6 @@ if ! PROMOTE_VIA_SCRIPT=1 git push origin "${from_sha}:refs/heads/${to}"; then
 fi
 
 # (f)
-echo "✓ 已晉升 ${to} → ${from_sha}（${ahead} commit；check ci／db／lint／rules 全綠；status ${REQUIRED_STATUSES// /／} success）"
+echo "✓ 已晉升 ${to} → ${from_sha}（${ahead} commit；check ${REQUIRED_CHECKS// /／} 全綠；status ${REQUIRED_STATUSES// /／} success）"
 if [ "$to" = main ]; then echo "  → release：打 tag vX.Y.Z（docs/COLLABORATION.md §6）"; fi
 exit 0

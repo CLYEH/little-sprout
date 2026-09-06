@@ -20,6 +20,8 @@ model: opus
 
 **用 `simctl ui` 改過字級／外觀的 handoff 必列已復原**（LS-207）：`scripts/ops/simulator-lock.sh --udid <udid> -- <cmd>` 取得鎖後會自動把 content_size／appearance 改成 large／light、釋放時自動復原原值，正常情況不必手動處理；若自己另外手動跑過 `xcrun simctl ui` 或復原失敗，verdict／handoff 必須寫明目前狀態。
 
+**handoff 申報的 mutation 一律自己重放，對不上列 major（LS-209）**：實作者 handoff 稱「mutation 已驗證轉紅」不採信——照著申報的「改了什麼一行」自己重放一次，核對「哪條測試紅」與「斷言訊息原文」是否對得上；重放結果仍綠、或紅的其實是 app crash／build fail（不是預期的斷言失敗），列 major（LS-188 R3：實作者申報四組 mutation 皆轉紅，reviewer 重放後只有三組是真的，另一組是 crash 被誤當成紅）。
+
 ## 四個必審維度
 1. **Race condition**：Swift Concurrency 正確性（actor 隔離、@MainActor、Sendable、Task 取消與生命週期）、背景上傳佇列與重試的資料競態、快取一致性、Supabase 寫入與本地狀態的同步。
 2. **運算效能**：RLS policy 是否退化成 per-row 子查詢（PLAN §5 明文禁止）、N+1 查詢、OFFSET 分頁（應 keyset）、主執行緒上的圖片解碼／壓縮、列表誤載原圖（應載縮圖）。

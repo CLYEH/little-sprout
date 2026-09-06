@@ -116,6 +116,16 @@ query($teamKey: String!, $numbers: [Float!]) {
 }
 """
 
+# LS-209：patrol.sh「Pen 開錯檔（實作票）」偵測——只查單一票號目前的 lane 標籤，不管狀態（in-flight 的實作票
+# 也要查得到）。first:1 足夠（number 是唯一鍵）。
+LANE_BY_NUMBER_QUERY = """
+query($teamKey: String!, $number: Float!) {
+  issues(first: 1, filter: { team: { key: { eq: $teamKey } }, number: { eq: $number } }) {
+    nodes { identifier labels { nodes { name } } }
+  }
+}
+"""
+
 # LS-144：LS-96 待辦池 comments（分頁 100）——harness lane 開票來源。同 pr-body-check.sh --verify 的查法。
 POOL_COMMENTS_QUERY = """
 query($id: String!, $after: String) {
@@ -1046,6 +1056,17 @@ def closed_tickets(token, team_key, numbers):
     return out
 
 
+def lane_of_number(token, team_key, number):
+    """LS-209：查單一票號目前的 lane 標籤（lane_of() 認得的四種之一）；查無此票或無 lane 標籤回傳空字串
+    （呼叫端 patrol.sh 對空字串一律當「非 lane:design」處理，不是「查不到」——查詢本身成功、只是票沒掛 lane 標籤，
+    這仍然代表「不是 design」，該標記；查詢失敗才是「查不到」，由 gql() fail loud、呼叫端看 exit code）。"""
+    data = gql(token, LANE_BY_NUMBER_QUERY, {"teamKey": team_key, "number": float(number)})
+    nodes = (data.get("issues") or {}).get("nodes") or []
+    if not nodes:
+        return ""
+    return lane_of(nodes[0])
+
+
 def main():
     ap = argparse.ArgumentParser(add_help=True)
     ap.add_argument("--root", required=True)
@@ -1055,12 +1076,21 @@ def main():
     ap.add_argument("--sim-lines-file", default=None)
     # LS-187：逗號分隔的票號數字（如 "165,167"）——只印已 Done／Canceled 者，每行「LS-<n>\t<state.name>」，不跑整份報表。
     ap.add_argument("--closed", default=None)
+    # LS-209：單一票號數字——印該票目前的 lane 標籤（可能是空字串，代表沒掛 lane 標籤）；不跑整份報表。
+    ap.add_argument("--lane", default=None)
     args = ap.parse_args()
 
     token = os.environ.get("LINEAR_API_KEY", "")
     if not token:
         sys.stderr.write("✗ patrol-linear：LINEAR_API_KEY 未設定（patrol-linear.sh 應該已經擋在這之前）\n")
         sys.exit(1)
+
+    if args.lane is not None:
+        if not re.fullmatch(r"[0-9]+", args.lane):
+            sys.stderr.write("✗ patrol-linear：--lane 須為單一票號數字（得到「%s」）\n" % args.lane)
+            sys.exit(2)
+        print(lane_of_number(token, args.team_key, int(args.lane)))
+        sys.exit(0)
 
     if args.closed is not None:
         if not re.fullmatch(r"[0-9]+(,[0-9]+)*", args.closed):

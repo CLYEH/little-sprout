@@ -39,16 +39,17 @@ fi
 # 規則表：<agent>|<必要工具（空白分隔）>——加規約時在這裡加一行（前饋必有反饋）
 # LS-91：qa 補釘 mcp__pencil__execute——qa.md 視覺驗收唯讀截圖靠它（get_app_state 對路徑後以 execute 的
 # TakeScreenshot／Get 取圖），先前規則表只釘了 get_app_state，漏了實際取圖要用的工具。
-# ios-dev 沒有 tools: 行（繼承全部工具），這裡仍列一行（必要工具留空）：確保「無 tools: 行＝放行」這條路徑
-# 有樣本覆蓋，不只是隱含行為。
 # LS-157：dead-code-sweeper 補 save_comment——巡檢結果改由 sweeper 直貼票（此前缺該工具、orchestrator 一日代貼三次）。
+# LS-209 merge-review R1 M2：ios-dev 自本票起有顯式 tools: 白名單（見上方 FORBIDDEN_RULES 段），這裡不能再留空——
+# 空必要工具清單會讓「tools: 含必要工具（）」這種空括號訊息看起來像沒在驗；「無 tools: 行＝放行」這條路徑改由
+# agent-tools-check.test.sh 的合成 fixture（ui-designer／visual-reviewer 仍無 tools: 行）覆蓋，不需要 ios-dev 陪測。
 LINEAR3="mcp__linear__get_issue mcp__linear__list_comments mcp__linear__save_comment"
 RULES="merge-reviewer|Bash ${LINEAR3}
 qa|Bash ${LINEAR3} mcp__pencil__get_app_state mcp__pencil__execute
 dead-code-sweeper|Bash ${LINEAR3}
 ui-designer|mcp__pencil__execute
 visual-reviewer|mcp__pencil__execute
-ios-dev|"
+ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
 
 # 正文必含字樣規則表（LS-170）：<agent>|<字樣>——規約段落被刪即紅。先給空值、再由標記區塊填入：自測的 mutation 負控用 awk 整段
 # 拿掉標記區塊（留下空表）驗「拿掉規則後負樣本變綠」，證明紅是這條規則造成的（同 linear-issue-check.test.sh 慣例）。
@@ -79,47 +80,47 @@ ios-dev|"
 # LS-207 R3（merge-review R2 b907173c N1）：上一條只釘句子本身、不釘實際數值——R2 把 simulator-lock.sh 的目標值從 medium
 # 改成 large（F5），但 qa.md／merge-reviewer.md 定義文字沒有同步改，兩處仍寫 medium，與程式碼矛盾卻沒有任何 gate 抓到。
 # 另立一條只驗數值的規則（`content_size／appearance 改成 large`）：定義文字被改回 medium（即使句子本身還在）即紅。
+# LS-209（範圍 5，LS-96 池項 c2bb8763）：每條規則現在是三欄 `<agent>|<字樣>|<提示>`——舊版第三欄固定接死「LS-170：
+# 互動式本機驗證先 hold 的規約段被刪或未寫」，規則表從 2 條長到 25+ 條後，對 `content_size` 這類完全無關 LS-170 的
+# 新規則會誤導排查方向。提示欄各自講各自的來源票號與規約，缺漏訊息（見檔尾）印這一欄、不再固定尾巴。
 BODY_RULES=
 # LS170-BODY-RULES-START
-BODY_RULES="ios-dev|supabase-lock.sh --hold
-ios-dev|pr-body-check.sh <f> --branch <分支> --verify
-merge-reviewer|supabase-lock.sh --hold
-qa|supabase-lock.sh --hold
-ios-dev|本機容器操作同樣要在 lock 內
-merge-reviewer|本機容器操作同樣要在 lock 內
-qa|本機容器操作同樣要在 lock 內
-ios-dev|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold
-merge-reviewer|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold
-qa|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold
-qa|qa-e2e.sh
-ui-designer|--kill 只在 orchestrator 明示時
-ui-designer|收工 Pen 停在票檔
-visual-reviewer|--kill 只在 orchestrator 明示時
-ios-dev|DB 測試 handoff 必附通道
-merge-reviewer|DB 測試 handoff 必附通道
-ios-dev|sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48
-merge-reviewer|sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48
-ios-dev|等長命令一律前景 Bash 帶 timeout
-qa|等長命令一律前景 Bash 帶 timeout
-merge-reviewer|等長命令一律前景 Bash 帶 timeout
-qa|用 \`simctl ui\` 改過字級／外觀的 handoff 必列已復原
-merge-reviewer|用 \`simctl ui\` 改過字級／外觀的 handoff 必列已復原
-qa|content_size／appearance 改成 large
-merge-reviewer|content_size／appearance 改成 large"
+BODY_RULES="ios-dev|supabase-lock.sh --hold|LS-170：互動式本機驗證（模擬器對本機容器的多步驟操作）前先 supabase-lock.sh --hold，收工 --release
+ios-dev|pr-body-check.sh <f> --branch <分支> --verify|LS-186：gh pr create/edit 前先用完整旗標跑 pr-body-check.sh 並直接看 exit code
+merge-reviewer|supabase-lock.sh --hold|LS-170：互動式本機驗證前先 supabase-lock.sh --hold，收工 --release
+qa|supabase-lock.sh --hold|LS-170：互動式本機驗證前先 supabase-lock.sh --hold，收工 --release
+ios-dev|本機容器操作同樣要在 lock 內|LS-183：docker exec／psql／supabase functions serve 等本機容器操作同樣要在 lock 內
+merge-reviewer|本機容器操作同樣要在 lock 內|LS-183：docker exec／psql／supabase functions serve 等本機容器操作同樣要在 lock 內
+qa|本機容器操作同樣要在 lock 內|LS-183：docker exec／psql／supabase functions serve 等本機容器操作同樣要在 lock 內
+ios-dev|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd 與 --hold 須同一條命令鏈，避免背景化後 cwd 重設回主 checkout
+merge-reviewer|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd 與 --hold 須同一條命令鏈，避免背景化後 cwd 重設回主 checkout
+qa|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd 與 --hold 須同一條命令鏈，避免背景化後 cwd 重設回主 checkout
+qa|qa-e2e.sh|LS-158：多步驟驗收（登入／發佈／瀏覽）優先 qa-e2e.sh 端到端驅動，mobile-mcp 降為輔助
+ui-designer|--kill 只在 orchestrator 明示時|LS-180：切檔一律不殺 Pen 行程，--kill／--force-reload 只在 orchestrator 明示時使用
+ui-designer|收工 Pen 停在票檔|LS-180：設計票期間 Pen 停在票檔，收工不切回主 checkout
+visual-reviewer|--kill 只在 orchestrator 明示時|LS-180：切檔一律不殺 Pen 行程，--kill／--force-reload 只在 orchestrator 明示時使用
+ios-dev|DB 測試 handoff 必附通道|LS-204：handoff 的「已驗證」欄必抄 run.sh 印出的「→ 連線方式：<通道>」那一行
+merge-reviewer|DB 測試 handoff 必附通道|LS-204：實作者 handoff 沒抄連線通道就先問清楚再採信結果
+ios-dev|sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48|LS-167：iOS 26.2+ sheet 內容套 ≈0.96 縮放，絕對座標與貼著 44pt 下限的高度會跌破
+merge-reviewer|sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48|LS-167：審 UITest 看到絕對座標或無緩衝的點擊高度要列 finding
+ios-dev|等長命令一律前景 Bash 帶 timeout|LS-191：git push／xcodebuild／run.sh 等長命令背景化後沒人回頭看輸出，一律前景帶 timeout
+qa|等長命令一律前景 Bash 帶 timeout|LS-191：長命令背景化後沒人回頭看輸出，一律前景帶 timeout
+merge-reviewer|等長命令一律前景 Bash 帶 timeout|LS-191：長命令背景化後沒人回頭看輸出，一律前景帶 timeout
+qa|用 \`simctl ui\` 改過字級／外觀的 handoff 必列已復原|LS-207：simulator-lock.sh 取鎖會自動改字級／外觀並於釋放時復原，手動改過或復原失敗要在 handoff／verdict 寫明
+merge-reviewer|用 \`simctl ui\` 改過字級／外觀的 handoff 必列已復原|LS-207：simulator-lock.sh 取鎖會自動改字級／外觀並於釋放時復原，手動改過或復原失敗要在 handoff／verdict 寫明
+qa|content_size／appearance 改成 large|LS-207 R3：定義文字須同步程式碼實際數值（large，不是 R2 之前的 medium）
+merge-reviewer|content_size／appearance 改成 large|LS-207 R3：定義文字須同步程式碼實際數值（large，不是 R2 之前的 medium）
+ios-dev|不得派 fork／subagent 改動任何檔案|LS-209：實作票不得動 Pen（mcp__pencil__*／pen-open.sh／pen-read.sh）、不得派會寫檔的 fork／subagent，平行只用 Explore 唯讀
+ios-dev|改了什麼一行 → 哪條測試紅 → 斷言訊息原文|LS-209：handoff「已驗證」欄每支 mutation 必列三段，crash／build fail 不算紅（LS-188 R3：mutation 稱轉紅、reviewer 重放發現是 app crash）
+merge-reviewer|handoff 申報的 mutation 一律自己重放，對不上列 major|LS-209：不採信實作者「mutation 已轉紅」的申報，照著申報重放核對測試與斷言訊息是否對得上"
 # LS170-BODY-RULES-END
 
-hits=""; n=0
-while IFS='|' read -r agent required; do
-  [ -n "$agent" ] || continue
-  n=$((n + 1))
-  f="${dir}/${agent}.md"
-  if [ ! -r "$f" ]; then
-    hits+="    ${agent}.md：不存在或不可讀"$'\n'
-    continue
-  fi
-  # frontmatter（純 bash 3.2 逐行；`|| [ -n "$line" ]` 讓末行無換行也讀得到）：只看第一個 --- 到第二個 --- 之間的 tools:，
-  # 正文提到的「tools:」不算
-  first=1; in_fm=0; closed=0; has_tools=0; tools_line=
+# frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，
+# 避免各自重寫一份漂移）。純 bash 3.2 逐行；`|| [ -n "$line" ]` 讓末行無換行也讀得到——只看第一個 --- 到第二個 ---
+# 之間的 tools:，正文提到的「tools:」不算。設全域變數 RT_OK（frontmatter 閉合與否）、RT_HAS_TOOLS、RT_TOOLS_LINE。
+read_tools() {
+  local f=$1 first=1 in_fm=0 closed=0 line
+  RT_OK=0; RT_HAS_TOOLS=0; RT_TOOLS_LINE=
   while IFS= read -r line || [ -n "$line" ]; do
     line=${line%$'\r'}
     if [ "$first" -eq 1 ]; then
@@ -130,20 +131,33 @@ while IFS='|' read -r agent required; do
     if [ "$in_fm" -eq 1 ]; then
       if [ "$line" = "---" ]; then closed=1; break; fi
       case "$line" in
-        tools:*) has_tools=1; tools_line=${line#tools:} ;;
+        tools:*) RT_HAS_TOOLS=1; RT_TOOLS_LINE=${line#tools:} ;;
       esac
     fi
   done < "$f"
-  if [ "$in_fm" -ne 1 ] || [ "$closed" -ne 1 ]; then
+  [ "$in_fm" -eq 1 ] && [ "$closed" -eq 1 ] && RT_OK=1
+}
+
+hits=""; n=0
+while IFS='|' read -r agent required; do
+  [ -n "$agent" ] || continue
+  n=$((n + 1))
+  f="${dir}/${agent}.md"
+  if [ ! -r "$f" ]; then
+    hits+="    ${agent}.md：不存在或不可讀"$'\n'
+    continue
+  fi
+  read_tools "$f"
+  if [ "$RT_OK" -ne 1 ]; then
     hits+="    ${agent}.md：frontmatter 缺失或未閉合（第一行須 ---、其後須再有一行 ---）"$'\n'
     continue
   fi
-  if [ "$has_tools" -eq 0 ]; then
+  if [ "$RT_HAS_TOOLS" -eq 0 ]; then
     echo "  ${agent}.md：無 tools: 行（繼承全部工具）→ 放行"
     continue
   fi
   # 逗號→空白、壓成單一空白、前後各補一格：整字比對用 *" <tool> "*
-  toks=" $(printf '%s' "$tools_line" | tr ',' ' ' | tr -s '[:space:]' ' ') "
+  toks=" $(printf '%s' "$RT_TOOLS_LINE" | tr ',' ' ' | tr -s '[:space:]' ' ') "
   case "$toks" in
     *[![:space:]]*) ;;
     *) hits+="    ${agent}.md：tools: 值為空（YAML 多行清單不支援——請寫成同一行逗號分隔）"$'\n'; continue ;;
@@ -164,6 +178,32 @@ done <<RULES_EOF
 $RULES
 RULES_EOF
 
+# 禁止工具（LS-209）：<agent>|<禁止字首>——tools: 白名單裡任何工具名以該字首開頭即違規（如 mcp__pencil__execute／
+# mcp__pencil__get_app_state 都命中字首 mcp__pencil__）。沒有 tools: 行＝繼承全部工具，必然隱含禁止的工具，同樣違規
+# （不是「放行」）——LS-188／LS-192：ios-dev 實作票 agent 用 Pencil MCP 越權切檔／編輯他票，規則寫在派工 prompt 沒有
+# gate，這裡把「ios-dev 不得碰 Pencil MCP」做成機械擋。與上面 RULES（必要工具）互相獨立的檢查，各自 continue 不影響對方。
+FORBIDDEN_RULES="ios-dev|mcp__pencil__"
+fn=0
+while IFS='|' read -r agent forbid; do
+  [ -n "$agent" ] || continue
+  fn=$((fn + 1))
+  f="${dir}/${agent}.md"
+  [ -r "$f" ] || continue  # 缺檔已由上面的 RULES 迴圈列過，這裡不重複
+  read_tools "$f"
+  [ "$RT_OK" -eq 1 ] || continue  # frontmatter 問題已由上面列過
+  if [ "$RT_HAS_TOOLS" -eq 0 ]; then
+    hits+="    ${agent}.md：無 tools: 行（繼承全部工具）——隱含含有禁止工具「${forbid}*」，須新增 tools: 白名單並排除它"$'\n'
+    continue
+  fi
+  toks=" $(printf '%s' "$RT_TOOLS_LINE" | tr ',' ' ' | tr -s '[:space:]' ' ') "
+  case "$toks" in
+    *" ${forbid}"*) hits+="    ${agent}.md：tools: 含被禁工具（字首「${forbid}」）"$'\n' ;;
+    *) echo "  ${agent}.md：tools: 不含被禁工具（字首「${forbid}」）" ;;
+  esac
+done <<FORBID_EOF
+$FORBIDDEN_RULES
+FORBID_EOF
+
 # 正文必含字樣（LS-170）：正文＝第二個 --- 之後（CR 一併剝除）；缺檔已由上表列出，這裡略過不重複；frontmatter 未閉合時正文為空、
 # 會多列一條「正文缺」（上表已列未閉合，兩條都是真的）。
 # R1 I-3：「缺檔略過不重複」依賴 BODY_RULES 的 agent ⊆ 工具表——不成立時缺檔會靜默跳過整條規則。先斷言，不成立＝兩表沒同步、exit 2。
@@ -177,7 +217,7 @@ done <<BODY_EOF
 $BODY_RULES
 BODY_EOF
 m=0
-while IFS='|' read -r agent literal; do
+while IFS='|' read -r agent literal hint; do
   [ -n "$agent" ] || continue
   m=$((m + 1))
   f="${dir}/${agent}.md"
@@ -186,16 +226,16 @@ while IFS='|' read -r agent literal; do
   if printf '%s' "$body" | grep -qF -- "$literal"; then
     echo "  ${agent}.md：正文含「${literal}」"
   else
-    hits+="    ${agent}.md：正文缺「${literal}」（LS-170：互動式本機驗證先 hold 的規約段被刪或未寫；frontmatter 內出現不算）"$'\n'
+    hits+="    ${agent}.md：正文缺「${literal}」（${hint:-規約段被刪或未寫}；frontmatter 內出現不算）"$'\n'
   fi
 done <<BODY_EOF
 $BODY_RULES
 BODY_EOF
 
 if [ -n "$hits" ]; then
-  echo "✗ agent-tools gate：agent 定義的 tools: 白名單缺必要工具、正文缺必含字樣（或檔案／frontmatter 有問題）：" >&2
+  echo "✗ agent-tools gate：agent 定義的 tools: 白名單缺必要工具／含被禁工具、正文缺必含字樣（或檔案／frontmatter 有問題）：" >&2
   printf '%s' "$hits" >&2
-  echo "  少了工具的規約會靜默不可執行（qa／merge-reviewer 少 Bash → 貼不了 status；qa 少 pencil → 開不了設計稿）。修 .claude/agents/<agent>.md 的 tools: 行（整字、逗號分隔）；沒有 tools: 行＝繼承全部工具。正文缺字樣＝該規約段被刪（LS-170：互動式本機驗證先 supabase-lock.sh --hold），補回正文。" >&2
+  echo "  少了工具的規約會靜默不可執行（qa／merge-reviewer 少 Bash → 貼不了 status；qa 少 pencil → 開不了設計稿）；含被禁工具的規約會被繞過（ios-dev 不得碰 Pencil MCP）。修 .claude/agents/<agent>.md 的 tools: 行（整字、逗號分隔）；沒有 tools: 行＝繼承全部工具（對有禁止工具規則的 agent 一樣算違規）。正文缺字樣＝該規約段被刪，見上方每條各自的提示，補回正文。" >&2
   exit 1
 fi
 echo "✓ agent-tools gate 通過（${n} 份 agent 定義；正文必含字樣 ${m} 條）"
