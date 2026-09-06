@@ -420,10 +420,14 @@ $$;
 --     SECURITY DEFINER 但**不對 authenticated 開放**、只給 service_role 執行的
 --     public RPC——finalize_account_deletion（LS-151，Edge Function delete-account
 --     用 service_role 呼叫）、purge_storage_queue_mark_failed／
---     purge_storage_queue_enqueue_orphans（LS-153／LS-213，purge-storage Edge
---     Function 用；enqueue_orphans 是 LS-213 範圍 2 補的——service_role 對
---     purge_storage_queue 原本只有 select／delete，沒有 insert，見
---     20260906050606_soft_delete_unreferenced_media.sql 第 1c 段）、
+--     purge_storage_queue_enqueue_orphans／purge_storage_unknown_media_paths
+--     （LS-153／LS-213，purge-storage Edge Function 用；enqueue_orphans 是
+--     LS-213 範圍 2 補的——service_role 對 purge_storage_queue 原本只有
+--     select／delete，沒有 insert，見
+--     20260906050606_soft_delete_unreferenced_media.sql 第 1c 段；
+--     unknown_media_paths 是 LS-213 R2（merge-review R1 F2）補的——把反查
+--     media.storage_path／thumb_path 從 GET .in() 查詢改成 RPC，避免候選路徑
+--     一多撞 HTTP 414，見同檔第 1e 段）、
 --     claim_notification_events／notification_recipients（LS-172，
 --     push-dispatch Edge Function 用；票文字面
 --     寫 `private.` 前綴，落地時改放 public schema——理由見
@@ -508,7 +512,8 @@ declare
     'public.finalize_account_deletion(uuid)',  -- LS-151：delete-account 用
     'public.notification_recipients(uuid[])',  -- LS-172：push-dispatch 用（R2 改批次簽章，見 migration 檔頭第 2 段）
     'public.purge_storage_queue_enqueue_orphans(text, uuid, text[])',  -- LS-213：purge-storage 用
-    'public.purge_storage_queue_mark_failed(uuid[], text)'  -- LS-153：purge-storage 用
+    'public.purge_storage_queue_mark_failed(uuid[], text)',  -- LS-153：purge-storage 用
+    'public.purge_storage_unknown_media_paths(text[])'  -- LS-213 R2：purge-storage 用
   ];
   v_whitelist oid[];
   v_unknown text;

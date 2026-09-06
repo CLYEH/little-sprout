@@ -12,8 +12,45 @@
 --
 -- 每段用 begin…rollback 包住，所有時間邊界以 `v_now := clock_timestamp()` 這種
 -- 區塊內自建的基準點推算 `created_at`，不寫死日曆日期。
+--
+-- R2（merge-review R1 comment 80d7242c，PR #339 head c0cc2d9）：
+-- F5（minor）新增第 0 段——service_role 對 media 兩欄 grant 的正向對照，比照
+-- LS-151 `92_delete_account_edge_guard.sql` 的既有慣例，防止日後誤收／誤放寬。
+-- F6（minor，實測）：第 1／2 段原本斷言
+-- `private.soft_delete_unreferenced_media()` 的**全域**回傳值，本機容器是所有
+-- worktree 共用的，另一顆 worktree 留下一列未引用的過期 media 就會讓斷言誤判成
+-- 本測試自己的 fixture 出錯——改成本測試家庭範圍內的計數斷言，全域回傳值只印
+-- NOTICE 供參考。新增第 3／4 段：`purge_storage_unknown_media_paths()`（含
+-- reviewer 已驗證的正向不變量——30 天救援窗內已軟刪 media 不誤判為孤兒）與
+-- `purge_storage_queue_enqueue_orphans()` 的路徑驗證（F4）。
 
 \set ON_ERROR_STOP on
+
+-- ===========================================================================
+-- 0.（F5）正向對照：service_role 對 public.media 只有欄位級 SELECT
+-- （storage_path、thumb_path），沒有整表 SELECT、沒有 UPDATE——比照 LS-151
+-- `92_delete_account_edge_guard.sql` 第 0 段的既有慣例。
+-- ===========================================================================
+do $$
+begin
+  if not has_column_privilege('service_role', 'public.media', 'storage_path', 'select') then
+    raise exception 'FAIL：service_role 沒有 media.storage_path 的 SELECT grant——purge-storage 的 purge_storage_unknown_media_paths() 讀不到這一欄';
+  end if;
+  if not has_column_privilege('service_role', 'public.media', 'thumb_path', 'select') then
+    raise exception 'FAIL：service_role 沒有 media.thumb_path 的 SELECT grant——purge-storage 的 purge_storage_unknown_media_paths() 讀不到這一欄';
+  end if;
+  if has_column_privilege('service_role', 'public.media', 'byte_size', 'select') then
+    raise exception 'FAIL：service_role 竟然對 media.byte_size 有 SELECT grant（收斂範圍以外的欄位不該開放）';
+  end if;
+  if has_table_privilege('service_role', 'public.media', 'select') then
+    raise exception 'FAIL：service_role 竟然有 media 的整表 SELECT grant（本票只該開 storage_path／thumb_path 兩欄，見 migration 1b 段）';
+  end if;
+  if has_table_privilege('service_role', 'public.media', 'update') then
+    raise exception 'FAIL：service_role 竟然有 media 的 UPDATE grant（本票不需要 service_role 寫 media，見 migration 1b 段）';
+  end if;
+  raise notice 'ok：service_role 對 media 只有欄位級 SELECT（storage_path、thumb_path），沒有整表 SELECT，沒有 UPDATE';
+end;
+$$;
 
 -- ===========================================================================
 -- 1. 三案矩陣＋額度回落＋邊界（含 24 小時邊界不算超過，語意對齊 purge_expired
@@ -80,10 +117,17 @@ begin
   end if;
 
   select private.soft_delete_unreferenced_media(interval '24 hours', v_now) into v_result;
-  raise notice 'soft_delete_unreferenced_media 回傳：%', v_result;
+  raise notice 'soft_delete_unreferenced_media 回傳：%（全域值，本機容器共用，僅供參考——F6：下面斷言改用本測試家庭範圍內的計數）', v_result;
 
-  if v_result <> 1 then
-    raise exception 'FAIL：這次呼叫應該只軟刪 1 筆（v_media_orphan_old），實際回傳 %', v_result;
+  -- F6：不能斷言全域回傳值——本機容器是所有 worktree 共用的，別的 worktree
+  -- 留下的未引用過期 media 列也會被這次呼叫一起軟刪，讓全域回傳值 > 1，
+  -- 跟本測試 fixture 本身是否正確無關。改成本測試家庭範圍內的計數。
+  -- 排除 v_media_already_deleted：那一列插入時就已經是 deleted_at 非 NULL（案 f
+  -- 的既有狀態，不是這次呼叫造成的），計數時要扣掉，否則本家庭的基準值就不是 0。
+  select count(*) into v_n from public.media
+   where family_id = v_family and deleted_at is not null and id <> v_media_already_deleted;
+  if v_n <> 1 then
+    raise exception 'FAIL：這次呼叫應該只在本測試家庭內軟刪 1 筆（v_media_orphan_old），實際本家庭（不含案 f 既有的已軟刪列）有 % 筆 deleted_at 非 NULL', v_n;
   end if;
 
   -- a) 未引用、超過寬限期 → 軟刪
@@ -134,8 +178,14 @@ begin
   -- 冪等重跑：同一個 p_now 再呼叫一次，不該有第二筆被軟刪（v_media_orphan_old
   -- 這次的 deleted_at 已非 NULL，主查詢的 WHERE 條件本身就排除它）。
   select private.soft_delete_unreferenced_media(interval '24 hours', v_now) into v_result;
-  if v_result <> 0 then
-    raise exception 'FAIL：冪等重跑不該再軟刪任何列，實際回傳 %', v_result;
+  raise notice 'soft_delete_unreferenced_media 冪等重跑回傳：%（全域值，僅供參考）', v_result;
+
+  -- F6：同上，改斷言本測試家庭範圍內的軟刪列數維持不變（仍是 1，不含案 f 既有
+  -- 的已軟刪列），不看全域回傳值。
+  select count(*) into v_n from public.media
+   where family_id = v_family and deleted_at is not null and id <> v_media_already_deleted;
+  if v_n <> 1 then
+    raise exception 'FAIL：冪等重跑後本測試家庭（不含案 f 既有的已軟刪列）的軟刪列數不該改變，實際 %（預期仍是 1）', v_n;
   end if;
   select storage_used_bytes into v_n from public.families where id = v_family;
   if v_n <> v_quota_after then
@@ -179,9 +229,9 @@ begin
 
   -- 不傳 p_grace，只傳 p_now——驗證預設值本身（'24 hours'），不是呼叫端自己選的參數。
   select private.soft_delete_unreferenced_media(p_now => v_now) into v_result;
-  if v_result <> 1 then
-    raise exception 'FAIL：預設 24 小時寬限期下應該只軟刪 v_media_just_over 這 1 筆，實際回傳 %', v_result;
-  end if;
+  -- F6：不斷言全域回傳值（本機容器共用），下面兩條 id 範圍的斷言天生免疫容器
+  -- 共用噪音（只看這兩個特定 id 的狀態），已經足夠驗證預設寬限期行為正確。
+  raise notice 'soft_delete_unreferenced_media 回傳：%（全域值，僅供參考）', v_result;
 
   select count(*) into v_n from public.media where id = v_media_just_over and deleted_at is not null;
   if v_n <> 1 then
@@ -194,6 +244,109 @@ begin
   end if;
 
   raise notice 'ok：預設寬限期（24 小時）迴歸測試通過';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 3.（LS-213 R2，merge-review R1 F2）public.purge_storage_unknown_media_paths
+--    (p_paths) 行為驗證，含 reviewer 已驗證的正向不變量：30 天救援窗內已軟刪的
+--    media（原圖＋縮圖）仍視為「有對應列」，不會被誤判為孤兒物件。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_owner uuid := 'dc200000-0000-4000-8000-000000000001';
+  v_family uuid := 'dc200000-0000-4000-8000-000000000002';
+  v_media_active uuid := 'dc200000-0000-4000-8000-000000000010';
+  v_media_soft_deleted uuid := 'dc200000-0000-4000-8000-000000000011';
+  v_path_active text;
+  v_path_soft_deleted text;
+  v_thumb_soft_deleted text;
+  v_path_unknown text := 'dc200000-0000-4000-8000-000000000002/2026/07/dc200000-0000-4000-8000-0000000000ff.jpg';
+  v_result text[];
+begin
+  set local role postgres;
+
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+  values (v_owner, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls213-c@ls213.test', now(), now(), '{}', '{}');
+  insert into public.profiles (id, display_name) values (v_owner, 'LS213 unknown_media_paths 測試')
+    on conflict (id) do update set display_name = excluded.display_name;
+  insert into public.families (id, name, created_by) values (v_family, 'LS213 unknown_media_paths 測試家', v_owner);
+
+  v_path_active := v_family::text || '/2026/07/' || v_media_active::text || '.jpg';
+  v_path_soft_deleted := v_family::text || '/2026/07/' || v_media_soft_deleted::text || '.jpg';
+  v_thumb_soft_deleted := v_family::text || '/2026/07/' || v_media_soft_deleted::text || '_thumb.jpg';
+
+  insert into public.media (id, family_id, storage_path, thumb_path, thumb_width, thumb_height, type, byte_size, taken_at, width, height, uploaded_by, deleted_at) values
+    (v_media_active, v_family, v_path_active, null, null, null, 'photo', 100, now(), 10, 10, v_owner, null),
+    -- 3 天前軟刪，仍在 30 天救援窗內——正向不變量：原圖與縮圖都不該被判定為孤兒。
+    (v_media_soft_deleted, v_family, v_path_soft_deleted, v_thumb_soft_deleted, 5, 5, 'photo', 200, now(), 10, 10, v_owner, now() - interval '3 days');
+
+  select public.purge_storage_unknown_media_paths(
+    array[v_path_active, v_path_soft_deleted, v_thumb_soft_deleted, v_path_unknown]
+  ) into v_result;
+
+  if v_result <> array[v_path_unknown] then
+    raise exception 'FAIL：purge_storage_unknown_media_paths 應該只回傳真正查不到列的路徑（%），實際 %', v_path_unknown, v_result;
+  end if;
+
+  raise notice 'ok：purge_storage_unknown_media_paths 正確排除活列與 30 天救援窗內已軟刪列（原圖＋縮圖），只回傳真正未知的路徑 %', v_result;
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 4.（LS-213 R2，merge-review R1 F4）public.purge_storage_queue_enqueue_orphans
+--    路徑驗證：不符 p_family_id 前綴、或不符合 private.is_media_object_path()
+--    形狀的路徑一律丟掉，不寫入佇列。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_family uuid := 'dc300000-0000-4000-8000-000000000001';
+  v_other_family uuid := 'dc300000-0000-4000-8000-000000000099';
+  v_media_id uuid := 'dc300000-0000-4000-8000-000000000010';
+  v_valid_path text;
+  v_wrong_prefix_path text;
+  v_bad_shape_path text;
+  v_n int;
+  v_result int;
+begin
+  set local role postgres;
+
+  v_valid_path := v_family::text || '/2026/07/' || v_media_id::text || '.jpg';
+  v_wrong_prefix_path := v_other_family::text || '/2026/07/' || v_media_id::text || '.jpg';
+  v_bad_shape_path := v_family::text || '/not-a-valid-media-path.txt';
+
+  select public.purge_storage_queue_enqueue_orphans(
+    'media', v_family, array[v_valid_path, v_wrong_prefix_path, v_bad_shape_path]
+  ) into v_result;
+
+  if v_result <> 1 then
+    raise exception 'FAIL：三條路徑裡只有 1 條合法（前綴符合 p_family_id 且形狀合規），應該只排入 1 筆，實際回傳 %', v_result;
+  end if;
+
+  select count(*) into v_n from public.purge_storage_queue where object_path = v_valid_path;
+  if v_n <> 1 then
+    raise exception 'FAIL：合法路徑 % 應該已排入佇列', v_valid_path;
+  end if;
+
+  select count(*) into v_n from public.purge_storage_queue where object_path = v_wrong_prefix_path;
+  if v_n <> 0 then
+    raise exception 'FAIL：家庭前綴不符的路徑 % 不該被排入佇列', v_wrong_prefix_path;
+  end if;
+
+  select count(*) into v_n from public.purge_storage_queue where object_path = v_bad_shape_path;
+  if v_n <> 0 then
+    raise exception 'FAIL：形狀不合規的路徑 % 不該被排入佇列', v_bad_shape_path;
+  end if;
+
+  raise notice 'ok：purge_storage_queue_enqueue_orphans 正確丟棄家庭前綴不符與形狀不合規的路徑，只排入合法的那一筆';
 end;
 $$;
 
