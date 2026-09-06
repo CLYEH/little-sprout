@@ -79,6 +79,10 @@ final class QADriver {
         app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "歡迎，")).firstMatch
     }
     var diaryCards: XCUIElementQuery { app.buttons.matching(identifier: QAAccessibilityID.timelineDiaryCard) }
+    /// LS-220：`EULAConsentView` 沒有 accessibilityIdentifier（`EULAConsentUITests` 也是用明碼
+    /// title 斷言），標題與按鈕都用可見文字比對——文案改了這裡要跟著改，同 driver 其餘元素慣例。
+    var eulaHeading: XCUIElement { app.staticTexts["使用條款更新"].firstMatch }
+    var eulaAgreeButton: XCUIElement { app.buttons["我已閱讀並同意"] }
 
     // MARK: - 登入
 
@@ -110,16 +114,60 @@ final class QADriver {
         }
     }
 
-    /// 登入後的落點：有家庭→時間軸；沒家庭→三岔路（`ForkView`「歡迎，…」）。兩個都不是＝失敗。
+    /// 登入後的落點：有家庭→時間軸；沒家庭→三岔路（`ForkView`「歡迎，…」）；尚未同意目前版本
+    /// EULA（LS-190，新帳號或被別的 worktree `db reset` 洗掉同意紀錄的舊帳號）→「使用條款更新」
+    /// 頁——命中就點「我已閱讀並同意」，再等一次時間軸／三岔路。三種落點都不是＝失敗（LS-220：
+    /// 原本只認時間軸／三岔路兩種，帳號未同意 EULA 時 30 秒逾時訊息和「session 沒建立」長得一模
+    /// 一樣，把排障導去 Keychain／後端方向，見 LS-190 comment `15121d91`）。
     func assertLandedAfterLogin() throws {
-        let landed = waitForAny([(timelineHeading, "時間軸"), (forkGreeting, "三岔路")], timeout: 30)
+        let landed = try waitForAny(landingCandidates, "登入落點", timeout: 30, failureNote: "session 沒建立、或家庭查詢卡住")
+        guard landed != "EULA 同意頁" else {
+            snap("eula-consent")
+            try require(eulaAgreeButton, "EULA 同意頁「我已閱讀並同意」").tap()
+            _ = try waitForAny(
+                [(timelineHeading, "時間軸"), (forkGreeting, "三岔路")],
+                "同意 EULA 後的登入落點",
+                timeout: 30,
+                failureNote: "同意紀錄可能沒寫入成功，或家庭查詢卡住"
+            )
+            snap("landed-eula-accepted")
+            return
+        }
+        snap(landed == "時間軸" ? "landed-timeline" : "landed-fork")
+    }
+
+    private var landingCandidates: [(element: XCUIElement, name: String)] {
+        [(timelineHeading, "時間軸"), (forkGreeting, "三岔路"), (eulaHeading, "EULA 同意頁")]
+    }
+
+    /// `waitForAny` 包一層：等不到就附 a11y 階層＋截圖＋「畫面上最像的標題」（前幾個
+    /// staticTexts 的 label）再 `XCTFail`，訊息點名等的是哪些候選（不會再跟別的逾時訊息長得
+    /// 一樣，LS-220）。
+    private func waitForAny(
+        _ candidates: [(element: XCUIElement, name: String)],
+        _ what: String,
+        timeout: TimeInterval,
+        failureNote: String
+    ) throws -> String {
+        let landed = waitForAny(candidates, timeout: timeout)
         guard let landed else {
             attachHierarchy(reason: "login-landing")
             snap("fail-landing")
-            XCTFail("登入後 30 秒內既沒到時間軸也沒到三岔路（session 沒建立、或家庭查詢卡住）")
-            throw QAFailure.screen("登入落點")
+            let candidateNames = candidates.map(\.name).joined(separator: "／")
+            XCTFail(
+                "\(what)：\(Int(timeout)) 秒內\(candidateNames)都沒出現（\(failureNote)）"
+                    + "——目前畫面最像的標題：\(closestScreenTitles())"
+            )
+            throw QAFailure.screen(what)
         }
-        snap(landed == "時間軸" ? "landed-timeline" : "landed-fork")
+        return landed
+    }
+
+    /// 失敗訊息用：畫面上前幾個 staticTexts 的 label，讓「卡在哪個畫面」不用開 xcresult 附件
+    /// 也能猜個大概（LS-220：EULA 頁與「session 沒建立」的逾時訊息曾經一模一樣，排障繞了遠路）。
+    private func closestScreenTitles(limit: Int = 3) -> String {
+        let texts = app.staticTexts.allElementsBoundByIndex.prefix(limit).map(\.label).filter { !$0.isEmpty }
+        return texts.isEmpty ? "（畫面上沒有文字元素）" : texts.joined(separator: "、")
     }
 
     /// `qa-e2e.sh` 跑前已 `keychain reset`，正常會從歡迎頁開始走一次 OTP 登入；仍容忍「已登入」（例如
@@ -263,7 +311,15 @@ final class QADriver {
 
     /// 日記卡→詳情（內文＋照片牆）→返回→相簿分頁→時間軸分頁。
     func browseDetailAndAlbums() throws {
-        try require(diaryCards.firstMatch, "時間軸日記卡", timeout: 20).tap()
+        let card = try require(diaryCards.firstMatch, "時間軸日記卡", timeout: 20)
+        // LS-220 實測踩到：`publish` 情境會在同一天留下影片＋照片＋日記三張卡，日記卡常常排到最後、
+        // 高度也夠高，卡片幾何中心會落在畫面最底的浮動 Tab Bar 範圍內——XCUITest 回報這張卡
+        // `isHittable == true`（accessibility 判定不知道有另一塊浮動 UI 疊在同個座標上），直接
+        // `.tap()`＝點中心點，實測連兩次 100% 變成點到蓋在上面的「寶貝」分頁鈕（臨時加診斷附件量得
+        // card.frame＝(18.7, 690.3, 365.0, 225.3)、tabBarFrame＝(112, 782, 88, 52)，中心 y=803
+        // 剛好落在 782–834 這段）。改點卡片「上緣」（y 偏移 15%）：卡片頂端一定還在 Tab Bar 之上，
+        // 整張卡是同一個 NavigationLink（LS-158 慣例），點哪裡都會導覽，不需要真的完整可見再點。
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
         try require(app.staticTexts[QAAccessibilityID.diaryDetailBody], "日記詳情內文", timeout: 20)
         // 照片牆是非同步簽名＋下載——有附照的日記等它畫出來再截（純文字日記本來就沒有，等 10 秒放行）。
         _ = app.images.firstMatch.waitForExistence(timeout: 10)
