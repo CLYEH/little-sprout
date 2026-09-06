@@ -51,6 +51,8 @@ if [ "$1" = simctl ] && [ "$2" = ui ]; then
       queryfail) exit 1 ;;
       unknown) echo "unknown"; exit 0 ;;
       unsupported) echo "unsupported"; exit 0 ;;
+      # LS-207 merge-review R2（b907173c N4）：現值已經等於目標值（模擬器本來就在 large／light，常態）
+      same) case "$key" in content_size) echo "large" ;; appearance) echo "light" ;; esac; exit 0 ;;
     esac
     case "$key" in
       content_size) echo "extraLarge" ;;
@@ -96,6 +98,17 @@ rc_is '③ SIMLOCK_KEEP_UI=1 → exit 0' 0 "$rc" "$out3"
 has   '③ 命令有執行' "$out3" 'ran3'
 hasnt '③ 不印已調整' "$out3" '已將'
 if [ -s "$XCRUN_LOG" ]; then echo "✗ ③ SIMLOCK_KEEP_UI=1 不應呼叫 xcrun（連查詢都不該）" >&2; cat "$XCRUN_LOG" >&2; fail=1; else echo "✓ ③ SIMLOCK_KEEP_UI=1 整段跳過、不呼叫 xcrun"; fi
+
+# ---- ③b（LS-207 merge-review R2 b907173c N4）：現值已經等於目標值（模擬器本來就在 large／light）→ 短路，
+#        只查詢、不設定、不印「已將…改為…」、不印「已復原…」（沒改過的東西不用復原）----
+out3b="$(run "$work/l3b" same --udid UDID-3B -- echo ran3b)"; rc=$?
+rc_is '③b exit 0' 0 "$rc" "$out3b"
+has   '③b 命令有執行' "$out3b" 'ran3b'
+hasnt '③b 現值已是目標值 → 不印已調整' "$out3b" '已將'
+hasnt '③b 不印已復原（沒改過不用復原）' "$out3b" '已復原'
+log3b="$(cat "$XCRUN_LOG")"
+want3b=$'query UDID-3B content_size\nquery UDID-3B appearance'
+if [ "$log3b" = "$want3b" ]; then echo "✓ ③b xcrun 只查詢兩次、完全不呼叫 set（短路生效，省掉多餘寫入）"; else echo "✗ ③b xcrun 呼叫不對（應只查詢、不設定）" >&2; echo "    實得：" >&2; printf '%s\n' "$log3b" | sed 's/^/      /' >&2; fail=1; fi
 
 # ---- ④ 查詢失敗（兩個 key 都查不到）→ 都不設定、都不復原、各印一次警告、命令照跑（不擋鎖） ----
 out4="$(run "$work/l4" queryfail --udid UDID-4 -- echo ran4)"; rc=$?
@@ -231,6 +244,9 @@ old = '''apply_one_ui_key() {
       echo "⚠ simulator-lock：讀不到 ${udid} 目前 ${key}（查詢失敗或回應 unknown／unsupported）——不調整、不復原" >&2
       return 0 ;;
   esac
+  # LS-207 merge-review R2（b907173c N4）：現值已經是目標值（模擬器本來就在 large／light，常態）就短路——
+  # 不必多下一次寫入與釋放時的復原，也不印「已將…改為…」「已復原…」這兩行雜訊。
+  [ "$orig" = "$want" ] && return 0
   if xcrun simctl ui "$udid" "$key" "$want" >/dev/null 2>&1; then
     case "$key" in
       content_size) ui_orig_content_size=$orig; ui_content_changed=1 ;;

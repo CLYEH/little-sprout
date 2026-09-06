@@ -1,6 +1,5 @@
 import Foundation
 @testable import LittleSprout
-import os
 import XCTest
 
 /// merge-review R1 M1：`refreshQuota()` 原本少了 `refreshLatestInvite` 那套「await 前後核對」
@@ -40,7 +39,7 @@ final class FamilyStoreRefreshQuotaRaceTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
 
         let (gate, gateContinuation) = AsyncStream<Void>.makeStream()
@@ -71,7 +70,7 @@ final class FamilyStoreRefreshQuotaRaceTests: XCTestCase {
         let stub = StubFamilyAPIClient()
         let family = makeFamily()
         stub.setFetchMyFamilyHandler { family }
-        let store = FamilyStore(apiClient: stub)
+        let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
         await store.refreshMyFamily()
 
         let (gate, gateContinuation) = AsyncStream<Void>.makeStream()

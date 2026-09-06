@@ -131,7 +131,10 @@ case "$long_wait" in ''|*[!0-9]*) echo "✗ supabase-lock：SUPABASE_LOCK_HOLD_L
 # LS-207 R2（fd783f6c F2）：long_wait 必須小於 timeout，否則等待迴圈先在 timeout 判 exit 124、20 分鐘那行永遠印不出來
 # （R1 出貨預設 1200 > 900 正是這個死碼——不是自測覆寫成的特例，是預設值本身就不可達）。不成立就 clamp 成
 # timeout 的一半並印警告，不靜默——clamp 而非 exit 2：這只是「提示印不出來」，不影響取鎖本身，不必 fail closed。
-if [ "$long_wait" -ge "$timeout" ]; then
+# LS-207 merge-review R2（b907173c N3）：long_wait 只有 `--hold` 模式會用到（見下方 `[ "$mode" = hold ]` 那行讀取），
+# 命令模式（`-- <cmd>`）根本不讀它，卻仍會在短 timeout 時印一行「已 clamp」警告造成雜訊——加 `[ "$mode" = hold ]`
+# 前置條件，只有真的會用到 long_wait 的模式才判斷要不要 clamp。
+if [ "$mode" = hold ] && [ "$long_wait" -ge "$timeout" ]; then
   clamped=$(( timeout / 2 ))
   echo "⚠ supabase-lock：SUPABASE_LOCK_HOLD_LONG_WAIT（${long_wait}s）≥ timeout（${timeout}s）——續等提示到不了，已 clamp 成 ${clamped}s（timeout 的一半，LS-207 R2）" >&2
   long_wait=$clamped

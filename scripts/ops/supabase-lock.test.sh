@@ -289,7 +289,10 @@ mkdir "$SUPABASE_LOCK_DIR"
 printf 'pid=%s\nstarted=%s\nhost=h\nworktree=/dead\nbranch=b\ncmd=c\n' "$dead" "$(date +%s)" > "$SUPABASE_LOCK_DIR/holder"
 PATH="$shim:$PATH" bash "$lock_sh" --timeout 3 -- sh -c 'echo B-took-lock' > "$work/f3.out" 2> "$work/f3.err" &
 b=$!
-sleep 0.5                                   # B 已把死鎖搬到 tomb、卡在 shim 的 sleep
+# LS-207 merge-review R2（b907173c N2）：固定 sleep 0.5 等 B 把死鎖搬到 tomb、卡在 shim 的 sleep——機器忙時
+# 0.5 秒不夠（reviewer 實測 8 次跑出現 1 次紅）。改成輪詢 tomb 目錄出現，最多等 5 秒（同檔 ㉓ 已有這種
+# 「輪詢直到出現／逾上限」寫法可參考），比固定 sleep 更快也更穩：tomb 一出現就立刻往下走，不必多等。
+i=0; while [ -z "$(ls -d "$SUPABASE_LOCK_DIR".stale.* 2>/dev/null | head -1)" ] && [ "$i" -lt 25 ]; do sleep 0.2; i=$((i + 1)); done
 tomb=$(ls -d "$SUPABASE_LOCK_DIR".stale.* 2>/dev/null | head -1)
 if [ -n "$tomb" ]; then echo "✓ ⑲ 前提：tomb 已建立"; else echo "✗ ⑲ 前提：找不到 tomb" >&2; fail=1; tomb="$SUPABASE_LOCK_DIR.stale.none"; fi
 other=$(sh -c 'echo $$')
