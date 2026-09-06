@@ -208,6 +208,20 @@ const TARGET_LABEL: Record<ContentTargetType, string> = {
   family: "家庭",
 };
 
+// LS-219 R2（merge-review R1 m1）：report 文案的量詞依 target_type 不同（張／本／
+// 則），跟 TARGET_LABEL 那種「純名詞、量詞另外在句子裡手動決定」的用法不同——
+// 這裡直接把「量詞＋名詞」一起收進對照表，只有 report 分支用。
+const REPORT_TARGET_LABEL: Record<ContentTargetType, string> = {
+  diary: "則日記",
+  album: "本相簿",
+  media: "張照片",
+  comment: "則留言",
+  // report_content()（LS-149）只作用在 album/media/diary/comment 這幾種既有
+  // 內容，target_type 不會是 "family"——同 TARGET_LABEL.family，只為滿足
+  // Record<ContentTargetType, string> 窮舉，沒有分支會實際讀到它。
+  family: "個項目",
+};
+
 // **已知、刻意的規格分歧（票文字面 vs. 實際可用資料，見 migration 檔頭第 2 段的
 // 同類記錄方式）**：票文給的範例把 `album` kind 對應到「爸爸新增了 50 張照片」，
 // 但 `notification_events` 的 `album` kind 只在**建立相簿本身**時觸發
@@ -231,24 +245,38 @@ export function buildMessageBody(
   const label = TARGET_LABEL[targetType];
   switch (kind) {
     // LS-219：依 LS-177 Handoff Notes「通知彙總文案矩陣」（`EclPC`，使用者核可
-    // 版本）改字——單則帶 actor 名字＋「了」；多則從「你的{標籤}收到了 N 則…」
-    // 改成「{actor}等 N 人…」句型，仍點名（最近一位）actor，不是匿名彙總。
+    // 版本）改字——單則帶 actor 名字＋「了」。
+    //
+    // **LS-219 R2（merge-review R1 M1）多則文案的鐵律：只能引用 event_count；
+    // 任何『N 人』字樣都禁止，除非資料層提供 distinct actor 計數。**
+    // `event_count` 是合併後的事件筆數，`actorDisplayName` 只是（COALESCE 過
+    // 的）「最新一次觸發者」單一姓名——`claim_notification_events()`／
+    // `notification_recipients()` 都沒有「這批事件實際上有幾個不同的人觸發」
+    // 這個訊號，R1 初版「{actor}等 N 人…」把 event_count 誤當成人數，是
+    // 「文案宣稱資料給不出來的東西」（同檔頭 album／diary 分歧記錄的同一類
+    // 錯誤）。distinct actor 計數已記入 LS-96 池，另票評估；本票不動 SQL、
+    // 不加欄位。
     case "comment":
       return eventCount <= 1
         ? `${actorDisplayName}在你的${label}留言了`
-        : `${actorDisplayName}等 ${eventCount} 人留言了`;
+        : `你的${label}收到了 ${eventCount} 則新留言`;
     case "reaction":
       return eventCount <= 1
         ? `${actorDisplayName}按了愛心`
-        : `${actorDisplayName}等 ${eventCount} 人按了愛心`;
+        : `你的${label}收到了 ${eventCount} 個愛心`;
     case "diary":
+      // event_count>1 是防禦性分支（今天的 trigger 設計下不會發生，見下方
+      // 規格分歧記錄）；即使發生，也無法確認合併進來的多筆事件是不是同一人
+      // 觸發（沒有 distinct actor 計數），不能沿用 actorDisplayName（可能只是
+      // 其中一筆的最新觸發者卻誤導成「唯一」觸發者）——改用「家人」，同
+      // actor_id 為 NULL 時的既有 fallback 文字。
       return eventCount <= 1
         ? `${actorDisplayName}新增了一則日記`
-        : `${actorDisplayName}新增了 ${eventCount} 則日記`;
+        : `家人新增了 ${eventCount} 則日記`;
     case "album":
       return eventCount <= 1
         ? `${actorDisplayName}新增了一本相簿`
-        : `${actorDisplayName}新增了 ${eventCount} 本相簿`;
+        : `家人新增了 ${eventCount} 本相簿`;
     // LS-175：批次上傳彙總——票文明定範例 event_count=50 →「新增了 50 張照片」。
     // event_count<=1 用「一張」而不是阿拉伯數字 1（同 diary／album 的既有風格：
     // 單一動作用自然語句，不是「新增了 1 張照片」這種生硬的數字）。target_type
@@ -266,12 +294,16 @@ export function buildMessageBody(
     // 不是被檢舉內容的作者，直接套用 comment/reaction 那種「{actor} 對你的
     // xxx 做了什麼」句型會誤導收件人以為檢舉人在跟自己互動）；target_type 是
     // 被檢舉內容原本的類型（album/media/diary/comment，見 `report_content()`
-    // 傳入 `record_notification_event` 的 `r.target_type`），`TARGET_LABEL`
-    // 在這裡可以直接沿用。
+    // 傳入 `record_notification_event` 的 `r.target_type`）。**LS-219 R2
+    // （merge-review R1 m1）**：量詞依 target_type 不同（一張照片／一本相簿／
+    // 一則日記／一則留言），不能沿用 `TARGET_LABEL` 配單一固定量詞「一則」——
+    // 改用上面的 `REPORT_TARGET_LABEL`（量詞＋名詞已經合在一起）。
     case "report":
       return eventCount <= 1
-        ? `家庭裡有一則${label}被檢舉，請前往處理`
-        : `家庭裡有 ${eventCount} 則${label}被檢舉，請前往處理`;
+        ? `家庭裡有一${REPORT_TARGET_LABEL[targetType]}被檢舉，請前往處理`
+        : `家庭裡有 ${eventCount} ${
+          REPORT_TARGET_LABEL[targetType]
+        }被檢舉，請前往處理`;
   }
 }
 
