@@ -157,6 +157,7 @@
 		69B5EF4869EB3BE9144F0B4C /* MediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE2BD7F1D83D2C316B63293 /* MediaUploadService.swift */; };
 		6AB6E1BF7C0D28EC4C5C74E9 /* AlbumCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 524D9602B81A34EF7565AC3C /* AlbumCardView.swift */; };
 		6B047AD54D66A273C432CC0F /* DeleteConfirmationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F97BDDD344600BC1DFCF3BC /* DeleteConfirmationUITests.swift */; };
+		6B3117EB1911BB872DA62AC4 /* ReportInboxAssembler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23FABDDFED802022946EB16 /* ReportInboxAssembler.swift */; };
 		6B5B2506E29C7F8F412E9CB3 /* SupabaseAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514F93B80A8AD4C99FE4654C /* SupabaseAuthService.swift */; };
 		6C8CA80EC5E94AE6E8210E1E /* VideoDurationFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F673CF81F2B07BA41EDDA93 /* VideoDurationFormat.swift */; };
 		6D1909A6EB8AF61C4AD0EF39 /* AlbumSignatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3125FFF130EA4599D70FFD /* AlbumSignatureFormatter.swift */; };
@@ -318,6 +319,7 @@
 		E772320BB13188A0A3532E7D /* FamilyMembersLeaveFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3E469D46F901CC4530B24A /* FamilyMembersLeaveFlowUITests.swift */; };
 		E780FC18B0D21CFFEF8888CA /* MediaUploadService+Duration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDCB1C873A0DB57A3165E54 /* MediaUploadService+Duration.swift */; };
 		E7E06A6041F5574C55CFD1DF /* JoinCodePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6A0CCB93FDADE5B2C126BC /* JoinCodePhase.swift */; };
+		E81F61310A9AC807D33BEE1C /* SupabaseSafetyAPIClientReportSnippetsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC942E894CB769D576316163 /* SupabaseSafetyAPIClientReportSnippetsTests.swift */; };
 		E96D464C2FD698F14A9B2604 /* ColorTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8702562330091E614920D1 /* ColorTokens.swift */; };
 		E9D2117BDEB489D4DE815852 /* AuthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 722D8ED2CA2CA763DF21AAB7 /* AuthStore.swift */; };
 		EA02BBCB3ABFE824CCE98FE0 /* AlbumsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8690746BE35135DCFCAED8AC /* AlbumsView.swift */; };
@@ -327,6 +329,7 @@
 		EB9C272DC720C2345B620849 /* UploadQueueStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3426D48B93D0809933E05622 /* UploadQueueStoreTests.swift */; };
 		EC02D246C2D6898E7F55215E /* EditChildView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CE3353D44311219CE17B533 /* EditChildView.swift */; };
 		EC24364AE168AD94B8795267 /* VideoDurationFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610553A99DBEBF3A5A73E479 /* VideoDurationFormatTests.swift */; };
+		F13AD1A73B09DDC419EAC93B /* ReportInboxAssemblerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD82679EDD789F70A8A8999 /* ReportInboxAssemblerTests.swift */; };
 		F20F691FBACD89A57DFE187C /* ChildrenStoreAvatarListRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C8D00E975B4DE5DC111D3D /* ChildrenStoreAvatarListRefreshTests.swift */; };
 		F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */; };
 		F346107C7C4ED65779715E73 /* JoinCodePhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604B48C433197767C7EAA5D6 /* JoinCodePhaseTests.swift */; };
@@ -385,6 +388,7 @@
 		0B87EFC5D19454F29DAAFE38 /* TapTargetGateHarness+Content.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Content.swift"; sourceTree = "<group>"; };
 		0C0777CD557C2FE037CDA135 /* PreviewFamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewFamilyAPIClient.swift; sourceTree = "<group>"; };
 		0C27A476B9FC174AD3BAB3E9 /* VideoDurationBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDurationBadge.swift; sourceTree = "<group>"; };
+		0DD82679EDD789F70A8A8999 /* ReportInboxAssemblerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportInboxAssemblerTests.swift; sourceTree = "<group>"; };
 		0DE21E4A220A9C7AF7F79450 /* JoinWaitingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinWaitingView.swift; sourceTree = "<group>"; };
 		0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFixture.swift; sourceTree = "<group>"; };
 		0E8702562330091E614920D1 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
@@ -615,6 +619,7 @@
 		B07A1CE61F80D184428D957F /* AlbumsContentAssemblerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsContentAssemblerTests.swift; sourceTree = "<group>"; };
 		B132DF653BFCE2A50058F737 /* EULAStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EULAStoreTests.swift; sourceTree = "<group>"; };
 		B13A37E8CC8794D85456D566 /* DiaryDateFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDateFormatTests.swift; sourceTree = "<group>"; };
+		B23FABDDFED802022946EB16 /* ReportInboxAssembler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportInboxAssembler.swift; sourceTree = "<group>"; };
 		B24956A0B458F559DEA9A97B /* SettingsRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRowView.swift; sourceTree = "<group>"; };
 		B2584887C616FAF64E990665 /* FamilyStoreProfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreProfileTests.swift; sourceTree = "<group>"; };
 		B29793798CE839C104E800B1 /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
@@ -653,6 +658,7 @@
 		CA263D0058EB232AD178E89C /* SupabaseDiaryAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseDiaryAPIClientTests.swift; sourceTree = "<group>"; };
 		CAB7169FDB024249D8521D64 /* SupabaseTimelineAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseTimelineAPIClientTests.swift; sourceTree = "<group>"; };
 		CC5F8D449697BFDB9DE0B329 /* PasswordSignInUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordSignInUITests.swift; sourceTree = "<group>"; };
+		CC942E894CB769D576316163 /* SupabaseSafetyAPIClientReportSnippetsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseSafetyAPIClientReportSnippetsTests.swift; sourceTree = "<group>"; };
 		CD76AEE5E1F4B202EEFA9A92 /* terms-of-service.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "terms-of-service.md"; sourceTree = "<group>"; };
 		CDF2E3B68B1BEFFC8A90A2AF /* EULAConsentPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EULAConsentPolicyTests.swift; sourceTree = "<group>"; };
 		CF78305F7D375B0D04B208D8 /* EULAConsentUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EULAConsentUITests.swift; sourceTree = "<group>"; };
@@ -940,6 +946,7 @@
 				28F1472213F03BCFC33624F8 /* OTPVerificationModelVerifyRateLimitTests.swift */,
 				1AACC2AC996982C86D79D3E7 /* PasswordSignInModelTests.swift */,
 				0ED4F4FC901701044230BA42 /* PickedItemLoaderTests.swift */,
+				0DD82679EDD789F70A8A8999 /* ReportInboxAssemblerTests.swift */,
 				1676990AFF88042719C8300B /* SafetyModelsTests.swift */,
 				775F76A6FD49940CFBE1EE85 /* SettingsContentSafetyCompositionTests.swift */,
 				42EC894F62DC55A74654ED99 /* SettingsIconsTests.swift */,
@@ -962,6 +969,7 @@
 				87CB2AF4E34834F3279C2367 /* SupabaseMediaUploadServiceDurationTests.swift */,
 				1316439F5231DB2C470519A8 /* SupabaseMediaUploadServiceTests.swift */,
 				06B08E2AF6C54AAD3D290BA2 /* SupabaseMediaUploadServiceThumbnailTests.swift */,
+				CC942E894CB769D576316163 /* SupabaseSafetyAPIClientReportSnippetsTests.swift */,
 				8D538922363578E9E2B88FCC /* SupabaseSafetyAPIClientTests.swift */,
 				CAB7169FDB024249D8521D64 /* SupabaseTimelineAPIClientTests.swift */,
 				EA808B45C621641B99EC528B /* TimelineContentAssemblerTests.swift */,
@@ -1248,6 +1256,7 @@
 				0E964E54E8EEC6170EC3E8F3 /* FamilyMembersView+LeavePrecheck.swift */,
 				A730792B37FCBC07486A4363 /* FamilyMembersView+Sheets.swift */,
 				E01951470E7861A632283E1A /* ProfileEditView.swift */,
+				B23FABDDFED802022946EB16 /* ReportInboxAssembler.swift */,
 				F56EF256D3B9E2D1400A5F1E /* ReportInboxView.swift */,
 				2BD3CBB68CBE0464929AEABA /* SettingsModels.swift */,
 				B24956A0B458F559DEA9A97B /* SettingsRowView.swift */,
@@ -1616,6 +1625,7 @@
 				4915FC7996D1C5E5ED31B250 /* PrintPhotoCard.swift in Sources */,
 				D2D031850A6315F0D1C90D70 /* ProfileEditView.swift in Sources */,
 				D7AF310D8E59B65753432F56 /* QAAccessibilityID.swift in Sources */,
+				6B3117EB1911BB872DA62AC4 /* ReportInboxAssembler.swift in Sources */,
 				A9B20464836A95F97E2F3826 /* ReportInboxView.swift in Sources */,
 				2B920F64717E55C651681122 /* ReportReasonSheet.swift in Sources */,
 				A40BC159C4D7C8900BAB405F /* ReportSentSheet.swift in Sources */,
@@ -1779,6 +1789,7 @@
 				C49D2DD7EC2EF00A346703EB /* OTPVerificationModelVerifyRateLimitTests.swift in Sources */,
 				566E0E8625A62CE39062EA13 /* PasswordSignInModelTests.swift in Sources */,
 				F3549AB9A9912E8CFBAF3B2D /* PickedItemLoaderTests.swift in Sources */,
+				F13AD1A73B09DDC419EAC93B /* ReportInboxAssemblerTests.swift in Sources */,
 				5006E2F67FD5072CA07B41F3 /* SafetyModelsTests.swift in Sources */,
 				5526B3A33052BAFCF2286C04 /* SessionFixture.swift in Sources */,
 				AD4CBDFADEEAE93EDBDFE000 /* SettingsContentSafetyCompositionTests.swift in Sources */,
@@ -1812,6 +1823,7 @@
 				992B474F641BD90228CA9C62 /* SupabaseMediaUploadServiceDurationTests.swift in Sources */,
 				506E4EBE1704397A0F6CBFCF /* SupabaseMediaUploadServiceTests.swift in Sources */,
 				856028BA2632449FEDA2CBF6 /* SupabaseMediaUploadServiceThumbnailTests.swift in Sources */,
+				E81F61310A9AC807D33BEE1C /* SupabaseSafetyAPIClientReportSnippetsTests.swift in Sources */,
 				6552BD52456E5000CB0BBB5E /* SupabaseSafetyAPIClientTests.swift in Sources */,
 				0997FB71931083A645DA5C8D /* SupabaseTimelineAPIClientTests.swift in Sources */,
 				FDE17BE504613C437ADC4F9C /* TestSupabaseClient.swift in Sources */,
