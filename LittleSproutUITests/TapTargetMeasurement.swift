@@ -72,7 +72,17 @@ enum TapTargetMeasurement {
         var found: [String] = []
         for element in elements {
             let frame = element.frame
-            guard frame.width < minSide || frame.height < minSide else { continue }
+            // LS-217 實測踩到：`SettingsView` 加一列（推播通知）之後，清單裡跟它完全無關的
+            // 「刪除帳號」列從乾淨的 `44.0` 變成 `43.999999999999886`——量到的是 SwiftUI
+            // auto-layout 對一長串非整數高度列（本畫面多個 `$fs-note` 副標列的自然高度是
+            // 1/3pt 循環小數，見上面幾列 `65.666...`/`99.999...`）逐一疊加座標時，浮點數
+            // 誤差在鏈條夠長時累積出的雜訊，不是這顆按鈕真的縮小了——同一輪 `git stash` 對照
+            // 量測（改動前後兩份 dump）確認前後的 x/y/width 分毫不差，只有這個 height 差了
+            // `1.14e-13`pt，遠低於任何裝置能渲染出的差異。原本的嚴格 `<` 比較沒有給浮點誤差
+            // 留任何餘裕，這張畫面的列數只會隨著票數增加持續往上疊、遲早都會有下一票踩中同一顆
+            // 雷；`tolerance` 只吸收這種量級的雜訊，任何真的變小（哪怕只小 0.01pt）依然會被抓到。
+            let tolerance: CGFloat = 0.001
+            guard frame.width < minSide - tolerance || frame.height < minSide - tolerance else { continue }
             let label = element.label.isEmpty ? "(無 label)" : element.label
             found.append(
                 "TAP-TARGET-FAIL: \(label) frame=\(format(frame.width))x\(format(frame.height))pt"
