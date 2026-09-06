@@ -75,6 +75,17 @@ final class DiaryComposerStore {
     /// 重試機會。留在這裡，下一次 `cleanupRemovedDrafts`（不論是再移除一張、還是最終
     /// `discardDraft()`）會把它們併入這次的批次一起重送；同一個 store 存活期間內失敗會持續
     /// 累積，成功後清空。
+    ///
+    /// **已知限制（LS-212 R3，merge-review R2 i9，非阻擋項但須明記）**：這是**記憶體內**狀態，
+    /// 掛在畫面等級的 `DiaryComposerStore` 上——App 被殺／重啟會全部遺失；更關鍵的是
+    /// `discardDraft()` 本來就是這個 store 生命週期的**最後一次**呼叫，若那次呼叫本身失敗
+    /// （例如離線狀態下使用者放棄編輯器），存進來的 pending 會隨 store 一起消失，沒有下一次
+    /// 呼叫能撿回來——「離線 → 直接放棄編輯器」這條最常見的終局路徑，這個重試機制其實幫不上
+    /// 忙。這個限制是刻意接受、不在本票修：要接住需要把待清 id 持久化（`UserDefaults`／本機
+    /// DB）並在下次啟動時對帳，屬於 LS-167「上傳引擎本身」等級的工作，超出 LS-212 範圍；漏掉
+    /// 的後果（孤兒 `media` 列繼續佔 `families.storage_used_bytes` 額度）與 LS-96 池項
+    /// `996220e9`（後端排程反向掃描 `storage.objects` 找孤兒物件）是同一類問題，理論上未來那張
+    /// 後端票落地後會被一併掃到、清掉——這裡先明記限制，不假裝重試機制涵蓋了這條路徑。
     private var pendingOrphanMediaIDs: Set<UUID> = []
 
     init(familyID: UUID, diaryAPIClient: DiaryAPIClient, mediaUploadService: MediaUploadService) {

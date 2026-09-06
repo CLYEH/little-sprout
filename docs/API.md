@@ -360,7 +360,12 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   整批清掉專屬子目錄（見該檔文件註解）；②**已上傳成功、之後被移出佇列或編輯器被整個取消的
   `media` 列**（不論當下有沒有被 `attachMedia` 掛上，見上方 R4 補充）——
   `DiaryComposerStore.removeSelected()`／`discardDraft()` 呼叫
-  `MediaUploadService.softDeleteMedia()` 主動軟刪；③**Storage 有物件、但從未成功 `insert`
+  `MediaUploadService.softDeleteMedia()` 主動軟刪。**已知限制（LS-212 R3，merge-review R2
+  i9）**：失敗時保留待重試的批次（`pendingOrphanMediaIDs`）是記憶體內狀態，App 被殺／重啟即
+  遺失；`discardDraft()` 又是這個 store 生命週期的最後一次呼叫，若那次呼叫本身失敗（例如
+  離線狀態下直接放棄編輯器），存進來的重試資料隨 store 一起消失，沒有下一次呼叫能撿回——
+  「離線→直接放棄編輯器」這條最常見的終局路徑，重試機制其實幫不上忙，會退化成③的孤兒
+  Storage 物件（下一段）；③**Storage 有物件、但從未成功 `insert`
   對應 `media` 列的孤兒**（例如上傳當下 App 被殺、`insertMediaRow` 的 client 端 best-effort
   清理沒有機會執行）——本機容器實測重現（PUT 一個物件到 `media` bucket、不 insert `media`
   列，`private.purge_expired()` 執行後 `purge_storage_queue` 未收到這筆，物件仍留在
