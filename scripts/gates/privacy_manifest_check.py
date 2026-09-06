@@ -4,8 +4,13 @@
 四種模式，各自獨立判定＋各自印 ✓/✗ 開頭的診斷行、以 exit code 回報：
   manifest <PrivacyInfo.xcprivacy 路徑>
       合法 XML plist；頂層 dict 含 NSPrivacyTracking（布林）；NSPrivacyAccessedAPITypes
-      至少一項，且每項的 NSPrivacyAccessedAPIType 是非空字串、
-      NSPrivacyAccessedAPITypeReasons 是非空陣列且每個理由碼皆非空字串。
+      至少一項，且每項的 NSPrivacyAccessedAPIType 是非空字串、屬於 Apple 已公布的 API 分類
+      （VALID_API_CATEGORIES），NSPrivacyAccessedAPITypeReasons 是非空陣列、每個理由碼皆非空
+      字串且屬於該分類已公布的合法理由碼（LS-211：漏小數點如 `C6171`、類別／理由碼錯配、
+      `TotallyBogusCategory` 這類虛構值一律判紅，不再只驗非空字串）。NSPrivacyCollectedDataTypes
+      若有宣告，每項的 NSPrivacyCollectedDataType 須屬於 Apple 已公布清單、
+      NSPrivacyCollectedDataTypePurposes 每個 purpose 須屬於已公布清單、
+      NSPrivacyCollectedDataTypeLinked／Tracking 若存在須為布林。
   infoplist <Info.plist 路徑>
       三個用途字串鍵（NSPhotoLibraryUsageDescription／NSPhotoLibraryAddUsageDescription／
       NSCameraUsageDescription）——只驗「存在的那幾個」：trim 後非空、Unicode 字元數
@@ -33,6 +38,69 @@ DESCRIPTION_KEYS = (
     "NSPhotoLibraryAddUsageDescription",
     "NSCameraUsageDescription",
 )
+
+# LS-211（來源 LS-96 池項 88586051／LS-145 review 095e6769 N1）：Apple 已公布的 required-reason API
+# 分類與各分類合法理由碼、NSPrivacyCollectedDataType、NSPrivacyCollectedDataTypePurposes 枚舉值——
+# 記錄於腳本常數，非法值（漏小數點如 `C6171`、類別／理由碼錯配、`TotallyBogusCategory` 這類虛構值）
+# 判紅，而不是像先前那樣只驗「非空字串」就放行。
+# 來源：Apple Developer 文件「Describing use of required reason API」與「Describing data use in
+# privacy manifests」（developer.apple.com/documentation/bundleresources/privacy_manifest_files）。
+# 記錄日期：2026-09-06（LS-211）。Apple 未提供機器可讀版本號／變更紀錄，這份清單需要日後對照官方
+# 文件是否新增項目時手動更新（若之後 Apple 增列分類／理由碼，這裡的白名單會需要跟著補）。
+VALID_API_CATEGORIES = {
+    "NSPrivacyAccessedAPICategoryFileTimestamp": {"DDA9.1", "C617.1", "3B52.1", "0A2A.1"},
+    "NSPrivacyAccessedAPICategorySystemBootTime": {"35F9.1", "8FFB.1", "3D61.1"},
+    "NSPrivacyAccessedAPICategoryDiskSpace": {"E174.1", "85F4.1", "7D9E.1", "B728.1"},
+    "NSPrivacyAccessedAPICategoryActiveKeyboards": {"3EC4.1", "54BD.1"},
+    "NSPrivacyAccessedAPICategoryUserDefaults": {"CA92.1", "1C8F.1", "AC6B.1", "C56D.1"},
+}
+
+VALID_COLLECTED_DATA_TYPES = {
+    "NSPrivacyCollectedDataTypeName",
+    "NSPrivacyCollectedDataTypeEmailAddress",
+    "NSPrivacyCollectedDataTypePhoneNumber",
+    "NSPrivacyCollectedDataTypePhysicalAddress",
+    "NSPrivacyCollectedDataTypeOtherUserContactInfo",
+    "NSPrivacyCollectedDataTypeHealth",
+    "NSPrivacyCollectedDataTypeFitness",
+    "NSPrivacyCollectedDataTypePaymentInfo",
+    "NSPrivacyCollectedDataTypeCreditInfo",
+    "NSPrivacyCollectedDataTypeOtherFinancialInfo",
+    "NSPrivacyCollectedDataTypePreciseLocation",
+    "NSPrivacyCollectedDataTypeCoarseLocation",
+    "NSPrivacyCollectedDataTypeSensitiveInfo",
+    "NSPrivacyCollectedDataTypeContacts",
+    "NSPrivacyCollectedDataTypeEmailsOrTextMessages",
+    "NSPrivacyCollectedDataTypePhotosorVideos",
+    "NSPrivacyCollectedDataTypeAudioData",
+    "NSPrivacyCollectedDataTypeGameplayContent",
+    "NSPrivacyCollectedDataTypeCustomerSupport",
+    "NSPrivacyCollectedDataTypeOtherUserContent",
+    "NSPrivacyCollectedDataTypeBrowsingHistory",
+    "NSPrivacyCollectedDataTypeSearchHistory",
+    "NSPrivacyCollectedDataTypeUserID",
+    "NSPrivacyCollectedDataTypeDeviceID",
+    "NSPrivacyCollectedDataTypePurchaseHistory",
+    "NSPrivacyCollectedDataTypeProductInteraction",
+    "NSPrivacyCollectedDataTypeAdvertisingData",
+    "NSPrivacyCollectedDataTypeOtherUsageData",
+    "NSPrivacyCollectedDataTypeCrashData",
+    "NSPrivacyCollectedDataTypePerformanceData",
+    "NSPrivacyCollectedDataTypeOtherDiagnosticData",
+    "NSPrivacyCollectedDataTypeEnvironmentScanning",
+    "NSPrivacyCollectedDataTypeHands",
+    "NSPrivacyCollectedDataTypeHead",
+    "NSPrivacyCollectedDataTypeOtherDataTypes",
+}
+
+VALID_COLLECTED_DATA_PURPOSES = {
+    "NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising",
+    "NSPrivacyCollectedDataTypePurposeDeveloperAdvertising",
+    "NSPrivacyCollectedDataTypePurposeAnalytics",
+    "NSPrivacyCollectedDataTypePurposeProductPersonalization",
+    "NSPrivacyCollectedDataTypePurposeAppFunctionality",
+    "NSPrivacyCollectedDataTypePurposeOther",
+}
 # 模板片語黑名單：大小寫不敏感子字串比對（Chinese 詞語不受大小寫影響，僅英文詞語需要）。
 # LS-145 票文舉例「此 App」「需要存取」「Your app」「uses the camera」；另補幾個常見 AI
 # 生成的空泛套話，供未來鍵補充。
@@ -196,6 +264,13 @@ def cmd_manifest(path):
                 )
                 ok = False
                 api_type = "?"
+            elif api_type not in VALID_API_CATEGORIES:  # PRIVACY-APITYPE-ENUM
+                print(
+                    "✗ privacy_manifest_check：NSPrivacyAccessedAPITypes[%d] 的型別 %s 不在 Apple 已公布的 API 分類清單內"
+                    % (i, api_type),
+                    file=sys.stderr,
+                )
+                ok = False
             reasons = item.get("NSPrivacyAccessedAPITypeReasons")
             if not isinstance(reasons, list) or len(reasons) == 0:  # PRIVACY-REASON-NONEMPTY
                 print(
@@ -204,6 +279,7 @@ def cmd_manifest(path):
                 )
                 ok = False
                 continue
+            valid_reasons = VALID_API_CATEGORIES.get(api_type)
             for j, reason in enumerate(reasons):
                 if not isinstance(reason, str) or not reason.strip():
                     print(
@@ -211,8 +287,76 @@ def cmd_manifest(path):
                         file=sys.stderr,
                     )
                     ok = False
+                elif valid_reasons is not None and reason not in valid_reasons:  # PRIVACY-REASON-ENUM
+                    print(
+                        "✗ privacy_manifest_check：%s 的理由碼 %s 不在該分類已公布清單內（合法值：%s）"
+                        % (api_type, reason, ", ".join(sorted(valid_reasons))),
+                        file=sys.stderr,
+                    )
+                    ok = False
                 else:
                     print("✓ %s 理由碼 %s" % (api_type, reason))
+
+    collected_types = data.get("NSPrivacyCollectedDataTypes")
+    if collected_types is None:
+        print("（NSPrivacyCollectedDataTypes 未宣告——是否該宣告由呼叫端判斷）")
+    elif not isinstance(collected_types, list) or len(collected_types) == 0:  # PRIVACY-COLLECTED-NONEMPTY
+        print("✗ privacy_manifest_check：NSPrivacyCollectedDataTypes 宣告了但不是非空陣列", file=sys.stderr)
+        ok = False
+    else:
+        for i, item in enumerate(collected_types):
+            if not isinstance(item, dict):
+                print("✗ privacy_manifest_check：NSPrivacyCollectedDataTypes[%d] 不是 dict" % i, file=sys.stderr)
+                ok = False
+                continue
+            data_type = item.get("NSPrivacyCollectedDataType")
+            if not isinstance(data_type, str) or not data_type.strip():
+                print(
+                    "✗ privacy_manifest_check：NSPrivacyCollectedDataTypes[%d] 的 NSPrivacyCollectedDataType 缺漏或空字串"
+                    % i,
+                    file=sys.stderr,
+                )
+                ok = False
+                data_type = "?"
+            elif data_type not in VALID_COLLECTED_DATA_TYPES:  # PRIVACY-COLLECTED-TYPE-ENUM
+                print(
+                    "✗ privacy_manifest_check：NSPrivacyCollectedDataTypes[%d] 的型別 %s 不在 Apple 已公布清單內"
+                    % (i, data_type),
+                    file=sys.stderr,
+                )
+                ok = False
+            else:
+                print("✓ 收集資料型別 %s" % data_type)
+            for bool_key in ("NSPrivacyCollectedDataTypeLinked", "NSPrivacyCollectedDataTypeTracking"):
+                if bool_key in item and not isinstance(item[bool_key], bool):
+                    print(
+                        "✗ privacy_manifest_check：%s 的 %s 不是布林（實得 %r）" % (data_type, bool_key, item[bool_key]),
+                        file=sys.stderr,
+                    )
+                    ok = False
+            purposes = item.get("NSPrivacyCollectedDataTypePurposes")
+            if not isinstance(purposes, list) or len(purposes) == 0:  # PRIVACY-PURPOSES-NONEMPTY
+                print(
+                    "✗ privacy_manifest_check：%s 的 NSPrivacyCollectedDataTypePurposes 缺漏或是空陣列" % data_type,
+                    file=sys.stderr,
+                )
+                ok = False
+                continue
+            for j, purpose in enumerate(purposes):
+                if not isinstance(purpose, str) or not purpose.strip():
+                    print(
+                        "✗ privacy_manifest_check：%s 的第 %d 個 purpose 是空字串" % (data_type, j),
+                        file=sys.stderr,
+                    )
+                    ok = False
+                elif purpose not in VALID_COLLECTED_DATA_PURPOSES:  # PRIVACY-PURPOSE-ENUM
+                    print(
+                        "✗ privacy_manifest_check：%s 的 purpose %s 不在 Apple 已公布清單內" % (data_type, purpose),
+                        file=sys.stderr,
+                    )
+                    ok = False
+                else:
+                    print("✓ %s purpose %s" % (data_type, purpose))
     sys.exit(0 if ok else 1)
 
 

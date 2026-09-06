@@ -21,11 +21,18 @@
 #
 # 字級固定一般字級（非 AX 放大字級）：`app.launchEnvironment["UIPreferredContentSizeCategoryName"]
 # = "UICTContentSizeCategoryL"`（`TapTargetMeasurement.launch`）——#148 R1 F2：放大字級下
-# 內容本身就會 ≥44pt，量了無意義。「一般字級」＝ launch environment 覆寫的 large（`UICTContentSizeCategoryL`），
-# 這支 gate 不吃模擬器系統設定的 `simctl ui content_size`（launch environment 對這個 process 優先）；
-# `scripts/ops/simulator-lock.sh` 的 `--udid` 選項會把系統設定調成同一個值（large）——目前兩者互不相干（本 gate
-# 不靠 simulator-lock 提供的系統設定），但字面上要保持一致，避免日後量測方式改用系統設定時靜默偏移（merge-review
-# R1 fd783f6c F5）。動這裡的字級常數前，先看 simulator-lock.sh 對應的註解。
+# 內容本身就會 ≥44pt，量了無意義。
+# 訂正（LS-211，來源 LS-210 merge-review R1 `24fc12db` i3）：本段原敘述「launch environment 對這個
+# process 優先」不準確——reviewer 實測 `app.launchEnvironment["UIPreferredContentSizeCategoryName"]`
+# 對 XCUITest **目標 app（被啟動的那支）不生效**（設定頁標題高度：env 通道量到 AX5＝40.67pt，與完全
+# 未設定時相同；改用 `launchArguments`（`-UIPreferredContentSizeCategoryName <UICTContentSizeCategory…>`）
+# 通道量到 AX5＝69.33pt——真的放大了）。`TapTargetMeasurement.launch` 目前仍是這個不生效的 env 寫法
+# （LS-190 PR #331 已在 development 分支改用 launchArguments＋放大前置斷言，尚未併主；`ax-launch-check.sh`
+# 的過渡期 allowlist 見該腳本檔頭）——這支 gate 過去量到的「一般字級」數字，實際上是模擬器**當下的系統
+# `content_size` 設定**（多半剛好是標準字級，例如 `simulator-lock.sh --udid` 會把它調成 large）在起作用，
+# 不是這行 env 設定的效果；不能假設 env 這行會覆寫模擬器系統設定，量測結果會隨模擬器系統字級設定漂移。
+# `scripts/ops/simulator-lock.sh` 的 `--udid` 選項會把系統設定調成 large——這支 gate 目前量到的字級數字
+# 實際上就是仰賴這個系統設定，而非上面那行 env（動這裡的字級常數前，先看 simulator-lock.sh 對應的註解）。
 #
 # 用法：tap-target-check.sh <UDID> <scheme>
 # exit：0＝所有量測畫面的 Button／tappable 元件皆 ≥44×44pt；1＝有違規（或其他測試/編譯失敗，

@@ -112,7 +112,14 @@ qa|content_size／appearance 改成 large|LS-207 R3：定義文字須同步程�
 merge-reviewer|content_size／appearance 改成 large|LS-207 R3：定義文字須同步程式碼實際數值（large，不是 R2 之前的 medium）
 ios-dev|不得派 fork／subagent 改動任何檔案|LS-209：實作票不得動 Pen（mcp__pencil__*／pen-open.sh／pen-read.sh）、不得派會寫檔的 fork／subagent，平行只用 Explore 唯讀
 ios-dev|改了什麼一行 → 哪條測試紅 → 斷言訊息原文|LS-209：handoff「已驗證」欄每支 mutation 必列三段，crash／build fail 不算紅（LS-188 R3：mutation 稱轉紅、reviewer 重放發現是 app crash）
-merge-reviewer|handoff 申報的 mutation 一律自己重放，對不上列 major|LS-209：不採信實作者「mutation 已轉紅」的申報，照著申報重放核對測試與斷言訊息是否對得上"
+merge-reviewer|handoff 申報的 mutation 一律自己重放，對不上列 major|LS-209：不採信實作者「mutation 已轉紅」的申報，照著申報重放核對測試與斷言訊息是否對得上
+ios-dev|「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」|LS-211：handoff「已驗證」每一列項須對應驗收條件／範圍編號，並附測試名（可 git grep 驗存在）或路徑或指令（LS-96 池項 1ff7b8d8：驗收項與證據未一對一）
+qa|「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」|LS-211：裁決 comment 每一列項須對應驗收條件／範圍編號，並附測試名或路徑或指令
+merge-reviewer|「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」|LS-211：verdict／finding 引用的實作者 handoff 每一列項須對應驗收條件／範圍編號，並附測試名或路徑或指令
+qa|bash scripts/gates/handoff-evidence-check.sh <暫存檔>|LS-211：貼 comment 前先跑 handoff-evidence-check.sh，附輸出
+merge-reviewer|bash scripts/gates/handoff-evidence-check.sh <暫存檔>|LS-211：貼 comment 前先跑 handoff-evidence-check.sh，附輸出
+qa|紅則逐條說明是誤判或補證據|LS-211 R2（merge-review R1 F3）：不要求一定要綠，紅時逐條交代誤判或補證據，不得為了討好工具改寫正確敘述
+merge-reviewer|紅則逐條說明是誤判或補證據|LS-211 R2（merge-review R1 F3）：不要求一定要綠，紅時逐條交代誤判或補證據，不得為了討好工具改寫正確敘述"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，

@@ -22,6 +22,8 @@ model: opus
 
 **handoff 申報的 mutation 一律自己重放，對不上列 major（LS-209）**：實作者 handoff 稱「mutation 已驗證轉紅」不採信——照著申報的「改了什麼一行」自己重放一次，核對「哪條測試紅」與「斷言訊息原文」是否對得上；重放結果仍綠、或紅的其實是 app crash／build fail（不是預期的斷言失敗），列 major（LS-188 R3：實作者申報四組 mutation 皆轉紅，reviewer 重放後只有三組是真的，另一組是 crash 被誤當成紅）。
 
+**verdict comment 逐項對應派工單、貼出前先跑 gate（LS-211）**：verdict／finding 引用的實作者 handoff「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」（測試名——`git grep` 可驗存在（含 struct/enum/extension 宣告、同名檔案、同名目錄；緊鄰 `*` 的萬用字元、同句否定詞「沒有／無／不存在／未」、同行 mutation 語境三種寫法不驗存在性，見 `handoff_evidence_check.py` 檔頭）——或路徑 `.png`／`.log`／`.test.sh`／`scratchpad/`／`evidence/`／`.swift`／`.py`／`.sh`／`.md`／`.yml`／`.json`，或指令 `xcodebuild`／`bash scripts/…`／`gh run view`／`.xcresult`），沒有就列 finding；**貼 comment 前先跑** `bash scripts/gates/handoff-evidence-check.sh <暫存檔>`，把輸出附在 comment 末尾；紅則逐條說明是誤判或補證據——**不得為了討好工具改寫正確敘述**（本工具仍有已知限制，見腳本檔頭 N6／N9，不要求一定要綠）。
+
 ## 四個必審維度
 1. **Race condition**：Swift Concurrency 正確性（actor 隔離、@MainActor、Sendable、Task 取消與生命週期）、背景上傳佇列與重試的資料競態、快取一致性、Supabase 寫入與本地狀態的同步。
 2. **運算效能**：RLS policy 是否退化成 per-row 子查詢（PLAN §5 明文禁止）、N+1 查詢、OFFSET 分頁（應 keyset）、主執行緒上的圖片解碼／壓縮、列表誤載原圖（應載縮圖）。

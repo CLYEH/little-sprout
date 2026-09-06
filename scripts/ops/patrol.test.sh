@@ -39,11 +39,6 @@ export PATROL_PUSH_GRACE_MIN=0
 # 一律指到假身（㉒ 自己再換成受控的假身），不碰本機真正的 Pen。
 export PATROL_PEN_STATUS_SH="$work/fake-pen-status.sh"
 printf '#!/bin/bash\necho "Pencil：（自測假身）"\nexit 0\n' > "$PATROL_PEN_STATUS_SH"
-# LS-209：「Pen 開錯檔（實作票）」偵測段用獨立的 PATROL_PEN_PGREP（與上面／㉔ 用的 PATROL_PGREP 分開，避免互相
-# 污染）——本機真的可能有 Pen.app 在跑（開發機常態），不隔離的話這裡新增的段落會被本機當下 Pen 狀態污染，讓既有
-# 斷言（不關心 Pen 的那些）偶發紅。預設「Pen 沒開」（exit 1）；㉖ 自己再覆寫成「有開」。
-export PATROL_PEN_PGREP="$work/fake-pen-pgrep-off.sh"
-printf '#!/bin/bash\nexit 1\n' > "$PATROL_PEN_PGREP"
 # LS-187：專屬模擬器段每輪都量 CoreSimulator/Devices 體積（du 快取）——自測一律指到小假目錄與自己的快取檔，不對真的
 # ~/Library 跑 du（本機實測 18 秒）、不碰 /tmp 的真快取；LINEAR_API_KEY 一開始 unset（㉓ 的 --linear 案例用假身，不打真 API）。
 mkdir -p "$work/fake-devices-default"
@@ -1017,31 +1012,40 @@ rc_is '㉓-b exit 0' 0 "$rc" "$out23g"
 has   '㉓-b 記錄在、目錄已刪 → LS-77 判殘機 ⚠＋動作行' "$out23g" '⚠ LS-77-iPhone17Pro（GONE-77）票 LS-77 的 worktree 已不在（殘機） → bash scripts/ops/cleanup-merged.sh --apply LS-77'
 hasnt '㉓-b 對照：LS-3（目錄在）不 ⚠' "$out23g" '⚠ LS-3-iPhone17Pro'
 
-# ---- ㉖ LS-209：Pen 開錯檔偵測（實作票）——Pen「行程在跑」用獨立的 PATROL_PEN_PGREP 假身（本檔頭已預設「沒開」，
-#        這裡覆寫成「有開」）；`pen-open.sh --status` 用 PATROL_PEN_OPEN_SH 假身回一個固定路徑；lane 查詢用
-#        PATROL_LINEAR_SH 假身回應 `--lane <n>`。(a) 路徑落在非 design 票 worktree → ⚠＋flag；(b) 路徑落在
-#        lane:design 票 worktree → 完全靜默（不印、不 flag，這是正常設計票工作流）；(c) lane 查詢失敗（exit 非 0，
-#        模擬無 LINEAR_API_KEY）→ 印「lane ?」、不 flag（fail-open）；(d) 路徑不在任何票 worktree（如主 checkout）
-#        → 完全靜默；(e) Pen 沒開（預設假身）→ 完全靜默，且不呼叫 pen-open.sh／patrol-linear.sh（省成本）----
-fake_pen_pgrep_on="$work/fake-pen-pgrep-on.sh"
-printf '#!/bin/bash\nexit 0\n' > "$fake_pen_pgrep_on"; chmod +x "$fake_pen_pgrep_on"
-
-mk_fake_pen_open() {  # $1=輸出檔路徑 $2=要印的路徑（空字串＝讀不到，exit 非 0）
-  if [ -z "$2" ]; then
-    printf '#!/bin/bash\nexit 2\n' > "$1"
-  else
-    printf '#!/bin/bash\necho %s\n' "$(printf '%q' "$2")" > "$1"
-  fi
+# ---- ㉖ LS-209（自 LS-211 I-c 起改讀 `pen-status.sh --path` 的機器可讀輸出，不再自己 sed 解析
+#        PENCIL_LINE 的中文組合字串——見 patrol.sh LS209-PEN-WRONG 區塊註解）：Pen 開錯檔偵測（實作票）。
+#        用 PATROL_PEN_STATUS_SH 假身模擬 `pen-status.sh --path`（回一個固定路徑，或空輸出＋exit 1）；
+#        lane 查詢用 PATROL_LINEAR_SH 假身回應 `--lane <n>`。(a) 路徑落在非 design 票 worktree → ⚠＋flag；
+#        (b) 路徑落在 lane:design 票 worktree → 完全靜默（不印、不 flag，這是正常設計票工作流）；(c) lane
+#        查詢失敗（exit 非 0，模擬無 LINEAR_API_KEY）→ 印「lane ?」、不 flag（fail-open）；(d) 路徑不在任何票
+#        worktree（如主 checkout）→ 完全靜默；(e) --path 空輸出＋exit 1（Pen 沒開／讀不到）→ 完全靜默；
+#        (f) 用本檔頭的預設假身（session-wide，不特別覆寫）→ 完全靜默、不呼叫 lane 查詢（省成本）----
+# mk_fake_pen_status <輸出檔路徑> <要印的路徑（空字串＝讀不到）>：路徑值寫進 <輸出檔路徑>.path 側檔，
+# 假身腳本讀側檔內容——避開路徑字串（含空白／特殊字元）直接內嵌進腳本原始碼的跳脫問題。
+mk_fake_pen_status() {
+  printf '%s' "$2" > "$1.path"
+  cat > "$1" <<EOF
+#!/bin/bash
+p="\$(cat '$1.path')"
+if [ -z "\$p" ]; then
+  if [ "\${1:-}" = --path ]; then exit 1; fi
+  echo "Pencil：行程 ✗（Pen 沒開）"
+  exit 1
+fi
+if [ "\${1:-}" = --path ]; then printf '%s\n' "\$p"; exit 0; fi
+echo "Pencil：行程 ✓（pid 1） · 路徑 \$p · MCP 探針 ✓（mcp-server 1 支皆有 unix socket 連到 Pen pid 1）"
+exit 0
+EOF
   chmod +x "$1"
 }
-fake_pen_open_wrong="$work/fake-pen-open-wrong.sh"
-mk_fake_pen_open "$fake_pen_open_wrong" "${repo}/.claude/worktrees/LS-777/design/littlesprout.pen"
-fake_pen_open_design="$work/fake-pen-open-design.sh"
-mk_fake_pen_open "$fake_pen_open_design" "${repo}/.claude/worktrees/LS-778/design/littlesprout.pen"
-fake_pen_open_outside="$work/fake-pen-open-outside.sh"
-mk_fake_pen_open "$fake_pen_open_outside" "${repo}/design/littlesprout.pen"
-fake_pen_open_unreadable="$work/fake-pen-open-unreadable.sh"
-mk_fake_pen_open "$fake_pen_open_unreadable" ""
+fake_ps_wrong="$work/fake-pen-status-wrong.sh"
+mk_fake_pen_status "$fake_ps_wrong" "${repo}/.claude/worktrees/LS-777/design/littlesprout.pen"
+fake_ps_design="$work/fake-pen-status-design.sh"
+mk_fake_pen_status "$fake_ps_design" "${repo}/.claude/worktrees/LS-778/design/littlesprout.pen"
+fake_ps_outside="$work/fake-pen-status-outside.sh"
+mk_fake_pen_status "$fake_ps_outside" "${repo}/design/littlesprout.pen"
+fake_ps_unreadable="$work/fake-pen-status-unreadable.sh"
+mk_fake_pen_status "$fake_ps_unreadable" ""
 
 # 假 patrol-linear.sh：--lane <n> 依 LANE_STUB／LANE_STUB_RC 回應，其他呼叫（既有測試沿用 PATROL_LINEAR_SH 時）一律 exit 0 印一行
 fake_plsh_lane="$work/fake-patrol-linear-lane.sh"
@@ -1059,61 +1063,37 @@ esac
 EOF
 chmod +x "$fake_plsh_lane"
 
-out26a="$(PATROL_PEN_PGREP="$fake_pen_pgrep_on" PATROL_PEN_OPEN_SH="$fake_pen_open_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:backend' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
+out26a="$(PATROL_PEN_STATUS_SH="$fake_ps_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:backend' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
 rc_is '㉖(a) 非 design 票 worktree 仍 exit 0（異常在輸出）' 0 "$rc" "$out26a"
 has   '㉖(a) human 有「Pen 開錯檔偵測」段並印 ⚠' "$out26a" '⚠ Pen 開錯檔（實作票 LS-777）'
-brief26a="$(PATROL_PEN_PGREP="$fake_pen_pgrep_on" PATROL_PEN_OPEN_SH="$fake_pen_open_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:backend' bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+brief26a="$(PATROL_PEN_STATUS_SH="$fake_ps_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:backend' bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '㉖(a) --brief 印 ⚠ 行' "$brief26a" '⚠ Pen 開錯檔（實作票 LS-777）'
 has   '㉖(a) --brief 掛 [Pen] flag（lane 帶進訊息）' "$brief26a" '[Pen] 開錯檔（實作票 LS-777；lane=lane:backend，非 lane:design'
 
-out26b="$(PATROL_PEN_PGREP="$fake_pen_pgrep_on" PATROL_PEN_OPEN_SH="$fake_pen_open_design" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:design' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+out26b="$(PATROL_PEN_STATUS_SH="$fake_ps_design" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:design' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 hasnt '㉖(b) lane:design 票 worktree → 不印 ⚠（正常設計票工作流）' "$out26b" '⚠ Pen 開錯檔'
 has   '㉖(b) 段落印「未開在任何票 worktree…」的靜默訊息' "$out26b" '（Pen 未開，或未開在任何票 worktree，或該票 lane 為 design）'
-brief26b="$(PATROL_PEN_PGREP="$fake_pen_pgrep_on" PATROL_PEN_OPEN_SH="$fake_pen_open_design" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:design' bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+brief26b="$(PATROL_PEN_STATUS_SH="$fake_ps_design" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:design' bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 hasnt '㉖(b) --brief 不印任何 Pen 行、不掛 flag' "$brief26b" '[Pen]'
 
-out26c="$(PATROL_PEN_PGREP="$fake_pen_pgrep_on" PATROL_PEN_OPEN_SH="$fake_pen_open_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB_RC=3 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+out26c="$(PATROL_PEN_STATUS_SH="$fake_ps_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB_RC=3 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 hasnt '㉖(c) lane 查詢失敗（exit 3，模擬無 LINEAR_API_KEY）→ 不印 ⚠、不擋（fail-open）' "$out26c" '⚠ Pen 開錯檔'
 has   '㉖(c) 印「lane ?（查詢失敗，不擋）」' "$out26c" 'Pen：目前開在 LS-777 worktree，lane ?（查詢失敗，不擋）'
-brief26c="$(PATROL_PEN_PGREP="$fake_pen_pgrep_on" PATROL_PEN_OPEN_SH="$fake_pen_open_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB_RC=3 bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+brief26c="$(PATROL_PEN_STATUS_SH="$fake_ps_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB_RC=3 bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '㉖(c) --brief 印「lane ?」但不掛 [Pen] flag' "$brief26c" 'lane ?（查詢失敗，不擋）'
 hasnt '㉖(c) --brief 不掛 flag' "$brief26c" '[Pen]'
 
-out26d="$(PATROL_PEN_PGREP="$fake_pen_pgrep_on" PATROL_PEN_OPEN_SH="$fake_pen_open_outside" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+out26d="$(PATROL_PEN_STATUS_SH="$fake_ps_outside" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 hasnt '㉖(d) 路徑不在任何票 worktree（如主 checkout）→ 完全靜默' "$out26d" '⚠ Pen 開錯檔'
 hasnt '㉖(d) 也不印「lane ?」（根本沒進入查詢）' "$out26d" 'lane ?'
 
-out26e="$(PATROL_PEN_PGREP="$fake_pen_pgrep_on" PATROL_PEN_OPEN_SH="$fake_pen_open_unreadable" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
-hasnt '㉖(e) pen-open.sh --status 讀不到路徑（exit 非 0）→ 完全靜默' "$out26e" '⚠ Pen 開錯檔'
+out26e="$(PATROL_PEN_STATUS_SH="$fake_ps_unreadable" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㉖(e) pen-status.sh --path 空輸出＋exit 1（Pen 沒開／讀不到）→ 完全靜默' "$out26e" '⚠ Pen 開錯檔'
 
 : > "$work/lane-calls.log"
-out26f="$(PATROL_PEN_OPEN_SH="$fake_pen_open_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB_LOG="$work/lane-calls.log" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
-hasnt '㉖(default) Pen 沒開（本檔頭預設假身）→ 完全靜默' "$out26f" '⚠ Pen 開錯檔'
-if [ -s "$work/lane-calls.log" ]; then echo "✗ ㉖(default) Pen 沒開時不該呼叫 patrol-linear.sh --lane（省成本）：$(cat "$work/lane-calls.log")" >&2; fail=1; else echo "✓ ㉖(default) Pen 沒開時完全不呼叫 lane 查詢（省 CLI／API 成本）"; fi
-
-# ---- ㉖(g)（merge-review R1 m4，效能）：design_wt=1（本檔存在 feature/LS-9-flow-design worktree，
-#      見上方 ㉒ 建立）時，Pencil 連線段已經探過一次 Pen 路徑——這裡驗證「開錯檔偵測」直接沿用 PENCIL_LINE
-#      解析出的路徑，完全不再呼叫 pen-open.sh --status 第二次（省下的正是這次可省的 IPC，poll_once 單次
-#      上限 8s）；同時確認偵測本身沒有因為改走這條路徑而失效（仍正確找出非 design 票、印 ⚠）----
-fake_ps_wrong="$work/fake-pen-status-wrong.sh"
-printf '#!/bin/bash\necho "Pencil：行程 ✓（pid 1） · 路徑 %s/.claude/worktrees/LS-777/design/littlesprout.pen · MCP 探針 ✓（mcp-server 1 支皆有 unix socket 連到 Pen pid 1）"\nexit 0\n' "$repo" > "$fake_ps_wrong"
-chmod +x "$fake_ps_wrong"
-fake_pen_open_log="$work/fake-pen-open-logcall.sh"
-cat > "$fake_pen_open_log" <<'EOF'
-#!/bin/bash
-printf 'called %s\n' "$*" >> "${PEN_OPEN_CALL_LOG:?}"
-echo "/should-not-be-used/design/littlesprout.pen"
-exit 0
-EOF
-chmod +x "$fake_pen_open_log"
-: > "$work/pen-open-call.log"
-out26g="$(PATROL_PEN_STATUS_SH="$fake_ps_wrong" PATROL_PEN_OPEN_SH="$fake_pen_open_log" PEN_OPEN_CALL_LOG="$work/pen-open-call.log" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:backend' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
-has   '㉖(g) 沿用 PENCIL_LINE 路徑仍正確偵測非 design 票 → ⚠' "$out26g" '⚠ Pen 開錯檔（實作票 LS-777）'
-if [ -s "$work/pen-open-call.log" ]; then
-  echo "✗ ㉖(g) 不應再呼叫 pen-open.sh --status（PENCIL_LINE 已有可用路徑）：$(cat "$work/pen-open-call.log")" >&2; fail=1
-else
-  echo "✓ ㉖(g) 沿用 PENCIL_LINE 解析出的路徑，完全不再呼叫 pen-open.sh --status（省下第二次 IPC，merge-review R1 m4）"
-fi
+out26f="$(PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB_LOG="$work/lane-calls.log" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㉖(default) 本檔頭預設假身（無可用路徑）→ 完全靜默' "$out26f" '⚠ Pen 開錯檔'
+if [ -s "$work/lane-calls.log" ]; then echo "✗ ㉖(default) 無可用路徑時不該呼叫 patrol-linear.sh --lane（省成本）：$(cat "$work/lane-calls.log")" >&2; fail=1; else echo "✓ ㉖(default) 無可用路徑時完全不呼叫 lane 查詢（省 CLI／API 成本）"; fi
 
 # mutation：拿掉 LS209-PEN-WRONG 整段 → 上面 ㉖(a) 的負樣本必須變綠（不印 ⚠、不掛 flag），證明紅是這段造成的
 mut_penwrong="$work/patrol.no-pen-wrong.sh"
@@ -1123,7 +1103,7 @@ if grep -q 'LS209-PEN-WRONG-START' "$mut_penwrong" || grep -qF 'add_flag "[Pen] 
 else
   echo '✓ ㉖ mutant 確實已拿掉 Pen 開錯檔偵測段'
 fi
-out26m="$(PATROL_PEN_PGREP="$fake_pen_pgrep_on" PATROL_PEN_OPEN_SH="$fake_pen_open_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:backend' bash "$mut_penwrong" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
+out26m="$(PATROL_PEN_STATUS_SH="$fake_ps_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:backend' bash "$mut_penwrong" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
 if [ "$rc" -eq 0 ] && ! printf '%s' "$out26m" | grep -qF '⚠ Pen 開錯檔'; then
   echo '✓ ㉖ mutant：拿掉偵測段後，同一份「非 design 票」負樣本變綠（Pen 開錯檔偵測段確實是原因）'
 else
