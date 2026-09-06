@@ -70421,6 +70421,104 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "s6vzd8",
+          "name": "N LS-208 沿革",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "O0LI6A",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-208 沿革",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "y70NL",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "G9WP1y",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-208",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Djv58",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-208 範圍 1 裁決（末張卡裝飾件完全隱藏殘留）：沿用 LS-201 VR R3 comment 1d0b97c2 的量測定義（葉節點沿 clip:true 祖先鏈逐層相交後的可見矩形；可見區為空＝完全隱藏）重新量測全稿，時間軸 5 板（yXSht/11、a67Na/11c、V4Ktak/11 深色、lKoZG/A11y AX3、A33la/Stress 單一寶貝 filter，即 LS-201 沿革列出的同 5 板）Feed 內最後一張 Card Diary 的四顆角托（cmp/Photo Corner 系角托：Corner TL/TR/BL/BR）逐板 4 顆＝20 筆完全落在 Feed 的 clip:true 邊界（LS-201 已補）之外，與 LS-201 R3 記錄的 17 筆量級相符（差異屬兩次獨立量測範圍與捨入取捨、非結構性出入）。節點清單：MYxf1/DjW91,JgUK8,mlORb,atAkU（11）；zfSO1/同名 4 顆（11c）；bOKfx/同名 4 顆（11 深色）；uvL4p/同名 4 顆（A11y AX3）；Z9Xuy/同名 4 顆（Stress 單一寶貝 filter）。成因：這是「捲動列表最後一張卡只露出頂緣一小截、暗示可繼續往下滑」既有版面節奏的必然結果——Card 本身元件結構完整（沿用同一套角托組件，非獨立殘留裝飾），只因該卡幾乎整張落在 Tab Bar 前緣淨空以下而被 Feed 裁切。裁決：接受為既定視覺，不統一加板高 87pt。理由：(a) 加 87pt 需連動這 5 板（含 2 張 A11y／Stress 衍生板）的後續版面重排與重新驗收，投入與風險不成比例於本票「小債清倉」範疇；(b) 角托完全不可見時對使用者觀感無差異（下一張卡片完整可見時角托本就正常顯示）；(c) 角托座標本輪未變動，對 corner_anchor 掃描 mismatch 無新增（不退步）。此為終局裁決，之後遇到同一批節點不需再重新量測討論。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "fjfhX",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "sBBxj",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-208",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "xv1gb",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "額外發現（本票範圍外，記入 LS-96 待辦池）：同一量測方法在 LS-142 相簿家族 5 板（puHZ5/14、Xldkz/14 深色、i3jpIq 所在的 IjWOp/A11y、Wl90J/Stress 超長相簿名＋單張相片，共 11 個相簿格：R7edNW、H51J8u、eDQhR、T3SwvP、z2xL1、zEGWX、i3jpIq、QSnUF、mdabp、AwHwn、L3zYk）額外量到 49 筆完全隱藏的角托／Fan Ghost 節點，皆被同板同格內較後繪製的不透明「Corner Shape」節點完全蓋住（非 clip 造成、是 z-order 覆蓋——與範圍 1 的「末張卡」成因不同類）。這批節點與相簿格是否曾經歷角托方案改版（新增 Corner Shape 取代舊 4 件式角托＋Fan Ghost）有關，屬獨立、範圍更大的殘留清查，不在本票（LS-208）範圍內，建議另立池項調查是否可安全刪除。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
