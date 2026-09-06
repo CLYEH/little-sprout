@@ -101,6 +101,7 @@
 		4095733E802A0A772A5F047D /* OTPVerificationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E25074609E9AF1D1EC50AD1E /* OTPVerificationModel.swift */; };
 		41F32D3B2C6BA0F84DAEEA49 /* DiaryComposerStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4731B4832AABBF59324EDBC8 /* DiaryComposerStoreTests.swift */; };
 		42714D8DFF10852534591190 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 3A53E62BFF6A8E95027C112E /* Supabase */; };
+		445CCD7D25B4D867E0CFB4E9 /* FamilyStore+Invite.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC5A903489F554F9E012A50 /* FamilyStore+Invite.swift */; };
 		4779DBBACB425B20189D11F6 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = B29793798CE839C104E800B1 /* Spacing.swift */; };
 		47F024E1268E315400D0BC8A /* SupabaseFamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6994C01308D56E827DA85A61 /* SupabaseFamilyAPIClient.swift */; };
 		4915FC7996D1C5E5ED31B250 /* PrintPhotoCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1FE65622DA3D1DE00028F27 /* PrintPhotoCard.swift */; };
@@ -260,6 +261,7 @@
 		CCBD3BF36B2ADF0FDDF37424 /* ChildrenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FCCD7822AD9EF5695A8FAFB /* ChildrenStore.swift */; };
 		CCBD8777C2CA27A78CAFA495 /* FamilyStoreJoinRequestsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086B33CB190B330C4C1D8455 /* FamilyStoreJoinRequestsTests.swift */; };
 		CD759E5CAF9723A921102789 /* FamilyMemberActionVisibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57716F1201E8A0FC450FD158 /* FamilyMemberActionVisibilityTests.swift */; };
+		CE1101E4B1866FBF537223E4 /* SettingsView+SignOut.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA735777F488630AE931D68B /* SettingsView+SignOut.swift */; };
 		CE4341264EF8292AA7138953 /* InviteCodeFieldTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71B810AF479E06C95BAFE863 /* InviteCodeFieldTests.swift */; };
 		D0CBE882E4F270D9D1E98EA6 /* DeleteAccountFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03ECD2ECF46482E7BE076F73 /* DeleteAccountFlowView.swift */; };
 		D21331BAC819121267E6EBB0 /* JoinWaitingPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4552E5CBB92202CE2D569612 /* JoinWaitingPhase.swift */; };
@@ -581,8 +583,10 @@
 		B7011C61D613644C595C9208 /* LittleSproutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LittleSproutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B953E2D0F652452A92AA6639 /* FamilyMemberActionVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberActionVisibility.swift; sourceTree = "<group>"; };
 		B9AEBD63E7E59131E2B285E4 /* JoinWaitingPhaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinWaitingPhaseTests.swift; sourceTree = "<group>"; };
+		BA735777F488630AE931D68B /* SettingsView+SignOut.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SettingsView+SignOut.swift"; sourceTree = "<group>"; };
 		BA9BCE3B67830009105F917D /* FamilyStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreTests.swift; sourceTree = "<group>"; };
 		BB03234039D326BAF0DA3B08 /* WelcomeView+Legal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WelcomeView+Legal.swift"; sourceTree = "<group>"; };
+		BBC5A903489F554F9E012A50 /* FamilyStore+Invite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FamilyStore+Invite.swift"; sourceTree = "<group>"; };
 		BC7448E56867EED60566A8F0 /* FamilyStoreInviteRaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreInviteRaceTests.swift; sourceTree = "<group>"; };
 		BCF885D756104B3EBAAD6DB2 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		BD57976BACB0CB191D6B1ADB /* TapTargetGateHarness+UploadQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+UploadQueue.swift"; sourceTree = "<group>"; };
@@ -682,6 +686,7 @@
 				B953E2D0F652452A92AA6639 /* FamilyMemberActionVisibility.swift */,
 				EEF4B6F33EBC80A3AA56E8FC /* FamilyModels.swift */,
 				FBF2B62443AA0559B13A0839 /* FamilyStore.swift */,
+				BBC5A903489F554F9E012A50 /* FamilyStore+Invite.swift */,
 				38B23739E7B0F9748A7D2119 /* FamilyStore+JoinRequests.swift */,
 				FA7D4ADEA9A9CFF7F25BE611 /* FamilyStore+Members.swift */,
 				390EEB53434F953F97F06400 /* FamilyStore+Profile.swift */,
@@ -1180,6 +1185,7 @@
 				B24956A0B458F559DEA9A97B /* SettingsRowView.swift */,
 				B5C569AB8BA23817265C5402 /* SettingsView+Profile.swift */,
 				069E688841B40CFFC7D7A689 /* SettingsView+Sidebar.swift */,
+				BA735777F488630AE931D68B /* SettingsView+SignOut.swift */,
 				A7E27393FD410CD5BA282DCB /* StorageUsageView.swift */,
 			);
 			path = Settings;
@@ -1473,6 +1479,7 @@
 				99A93FDBF24FBDC9ADA617A8 /* FamilyMembersView.swift in Sources */,
 				6F71D1FB09D499364D5D1E32 /* FamilyModels.swift in Sources */,
 				E0C5C84DB8D301115260A23A /* FamilyOnboardingRoute.swift in Sources */,
+				445CCD7D25B4D867E0CFB4E9 /* FamilyStore+Invite.swift in Sources */,
 				012FB97A0E8E2CA0FE8AD7D2 /* FamilyStore+JoinRequests.swift in Sources */,
 				50766378E2506C48A8E12A27 /* FamilyStore+Members.swift in Sources */,
 				2A361A6F4D86F663714281E2 /* FamilyStore+Profile.swift in Sources */,
@@ -1530,6 +1537,7 @@
 				3CF008F18A802F26417FE3D2 /* SettingsRowView.swift in Sources */,
 				D34A9C68A1E7558AC7FA664B /* SettingsView+Profile.swift in Sources */,
 				36A6AB2697A55FA8B1A33AD1 /* SettingsView+Sidebar.swift in Sources */,
+				CE1101E4B1866FBF537223E4 /* SettingsView+SignOut.swift in Sources */,
 				38FACDC15B0DA2AF7A373639 /* SettingsView.swift in Sources */,
 				4779DBBACB425B20189D11F6 /* Spacing.swift in Sources */,
 				6EE2A93FEB8E5BE8F763F3C1 /* StorageUsageView.swift in Sources */,

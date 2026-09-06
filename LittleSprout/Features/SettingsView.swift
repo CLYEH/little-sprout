@@ -23,14 +23,16 @@ struct SettingsView: View {
     /// LS-165：跟 `timelineStore` 同理，登出時歸零——相簿 tab 首頁隨 app 存活，不清掉的話
     /// 下一位在同一台裝置登入的使用者會先看到上一個家庭殘留的相簿列表。
     let albumsStore: AlbumsStore
-    /// LS-190 R2（merge-review R1 B2(a)）：跟上面幾個 store 同理，登出時歸零——`EULAStore`
-    /// 隨 app 存活，不清掉會讓同機換帳號的新使用者沿用上一位的 `shouldPresent`、繞過 EULA
-    /// 閘門（`AuthenticatedGate.disagreeAndSignOut()` 已有這行，這裡補上一般登出路徑）。
+    /// LS-190 R2（merge-review R1 B2(a)）：同上，登出時歸零——不清掉會讓同機換帳號的新使用者
+    /// 沿用上一位的 `EULAStore.shouldPresent`、繞過 EULA 閘門。
     let eulaStore: EULAStore
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @State private var isSigningOut = false
-    @State private var errorMessage: String?
+    /// merge-review R2 B3：`signOut()` 拆去 `SettingsView+SignOut.swift`（理由同
+    /// `SettingsView+Sidebar.swift`／`SettingsView+Profile.swift` 既有先例）。不標 `private`：
+    /// 跨檔案 extension 存取不到（同 `regularSelection` 屬性宣告處的既有理由）。
+    @State var isSigningOut = false
+    @State var errorMessage: String?
     /// Regular（iPad）左側五區導覽選取——同 `AuthenticatedRootView` 的既有理由（selection
     /// 存在容器層而非各自子視圖），這裡範圍縮小到「這個畫面內的五區」，跟 app 層的
     /// `AppSection` selection 是兩層不同的導覽狀態，互不相干。
@@ -343,34 +345,6 @@ struct SettingsView: View {
                 DeleteAccountFlowView()
             } label: {
                 SettingsRowView(icon: "trash", label: "刪除帳號", isDestructive: true)
-            }
-        }
-    }
-
-    private func signOut() {
-        guard !isSigningOut else { return }
-        isSigningOut = true
-        Task {
-            defer { isSigningOut = false }
-            do {
-                try await authStore.signOut()
-                // R2 N5：`AuthenticatedGate`（含它的 `.task(id:)`）在登出當下整個從畫面樹被
-                // 移除，只會被取消、不會以 nil 重跑一次——`FamilyStore.reset()` 因此需要一個
-                // 真的會被呼叫到的入口，這裡是登出成功後唯一一個。沒有這行，`myFamily`／
-                // `latestInvite` 會在記憶體裡留到下一位使用者登入前（見 `FamilyStore.reset()`
-                // 文件註解／`syncOwner` 對「同一人重登入不重查」以外情境的假設）。
-                familyStore.reset()
-                // LS-113：`ChildrenStore` 隨 app 存活，同 `FamilyStore` 的理由——登出不清掉
-                // 的話，下一位在同一台裝置登入的使用者會沿用上一位的孩子清單。
-                childrenStore.reset()
-                // LS-126 merge-review R1 M5：見上方 `timelineStore` 屬性文件註解。
-                timelineStore.reset()
-                // LS-165：見上方 `albumsStore` 屬性文件註解。
-                albumsStore.reset()
-                // LS-190 R2：見上方 `eulaStore` 屬性文件註解。
-                eulaStore.reset()
-            } catch {
-                errorMessage = AppError.map(error).userFacingMessage
             }
         }
     }
