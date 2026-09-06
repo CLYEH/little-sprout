@@ -50,15 +50,46 @@ final class DeleteAccountFlowModel {
         self.timelineStore = timelineStore
         self.albumsStore = albumsStore
         self.eulaStore = eulaStore
+        // merge-review R1 M3：`delete_my_account()` RPC 上次已經成功、只是 Edge Function
+        // 沒打完（app 被系統回收／使用者關掉，或這是續傳到 `AuthenticatedGate`／`ForkView`
+        // 那條路徑，見 `PendingAccountDeletion` 文件註解）——這個 model 一建構就直接續傳，
+        // 不讓使用者先看到三分流或 04e。`step = .inProgress` 這裡同步賦值（不是等
+        // `performDeletion()` 裡那行非同步才設）：`Task { }` 排程到真的執行之間有極短的
+        // 空窗，若不在這裡先設，空窗期間 `content` 會依 `step == nil` 短暫算一次
+        // `classification`，畫面可能閃一格三分流才跳到 04f。
+        if let userID = authStore.session?.userID, PendingAccountDeletion.isPending(userID: userID) {
+            deletionRequested = true
+            step = .inProgress
+            Task { await performDeletion() }
+        }
     }
 
     /// 04a／04b／04d 三分流——即時讀 `familyStore` 現況，見 `DeleteAccountClassification`
     /// 文件註解。`serverPendingTransferFamilies` 有值時（LS050 過）優先覆寫 04b 顯示的清單。
+    ///
+    /// **merge-review R1 M2**：`myFamily == nil` 時（`ForkView`「刪除帳號」入口——多半是停權
+    /// 使用者，`family_ids()` 等集合函式把他的家庭在 RLS 層收斂成 0 列，`LS052`／`LS054`）
+    /// 直接短路成 `.generalMember`，不呼叫 `classifyDeleteAccountFlow`：那支函式在
+    /// `members`／`ownerUserID` 沒有機會載入時只會回 `.pending`，而這裡永遠沒有機會載入
+    /// （`FamilyStore.refreshMembers()` 需要 `myFamily?.id` 才會真的打 API，見該方法），會卡死
+    /// 在「還在載入」。`.generalMember` 是最誠實的簡化：client 端 RLS 本來就看不到這個帳號的
+    /// 家庭全貌（唯一 owner／唯一成員這些細節對使用者不可見），`delete_my_account()` RPC 本身
+    /// 對停權者有 LS-179 R2 的豁免、清理邏輯完全在伺服器端正確執行，跟 client 顯示哪張分流稿
+    /// 無關；04a 畫面本身已經用 `familyName.isEmpty` 優雅降級成「你會離開這個家庭」（不假造
+    /// 家庭名稱），見 `GeneralMemberDeleteAccountView.infoList` 文件註解。
     var classification: DeleteAccountClassification {
         if let serverPendingTransferFamilies {
             return .mustTransferOwnership(families: serverPendingTransferFamilies)
         }
-        return classifyDeleteAccountFlow(for: familyStore.leaveFlowCase, myFamily: familyStore.myFamily)
+        guard familyStore.myFamily != nil else {
+            return .generalMember
+        }
+        return classifyDeleteAccountFlow(
+            membersState: familyStore.membersState,
+            ownerUserID: familyStore.ownerUserID,
+            members: familyStore.members,
+            myFamily: familyStore.myFamily
+        )
     }
 
     /// 04a／04d「繼續刪除帳號」／「我了解，繼續刪除」按下——進 04e。`origin` 由呼叫端
@@ -98,6 +129,15 @@ final class DeleteAccountFlowModel {
                 case .success:
                     deletionRequested = true
                     serverPendingTransferFamilies = nil
+                    // merge-review R1 M3：RPC 這一步已經不可逆——落地本機續傳旗標，app 這裡
+                    // 之後如果被殺掉／EF 失敗，下次啟動 `AuthenticatedGate` 才知道要直接續傳
+                    // （見 `PendingAccountDeletion`／本 model `init` 的對應檢查）。
+                    // merge-review R1 M3：RPC 這一步已經不可逆——落地本機續傳旗標，app 這裡
+                    // 之後如果被殺掉／EF 失敗，下次啟動 `AuthenticatedGate` 才知道要直接續傳
+                    // （見 `PendingAccountDeletion`／本 model `init` 的對應檢查）。
+                    if let userID = authStore.session?.userID {
+                        PendingAccountDeletion.markPending(userID: userID)
+                    }
                 case .mustTransferOwnership(let families):
                     serverPendingTransferFamilies = families
                     step = nil // 退回三分流，`classification` 用上面剛存的伺服器清單顯示 04b。
@@ -114,6 +154,11 @@ final class DeleteAccountFlowModel {
         do {
             try await accountAPIClient.finalizeAccountDeletion()
             step = .completed
+            // 完成了，續傳旗標的任務結束——`auth.users` 這個 userID 的列已經被 EF 刪除，
+            // UUID 不會重複使用，理論上用不到了，這裡清掉純粹是不留垃圾。
+            if let userID = authStore.session?.userID {
+                PendingAccountDeletion.clear(userID: userID)
+            }
         } catch {
             step = .failed(AppError.map(error))
         }

@@ -50,6 +50,57 @@ private struct StatusTextBlock: View {
     }
 }
 
+// MARK: - 三分流防禦態（merge-review R1 M1，無對應設計稿）
+
+/// `DeleteAccountClassification.pending`——`familyStore.members` 尚未載回時顯示，取代 R1 版
+/// 直接代打 `.generalMember` 的錯誤行為（見 `DeleteAccountStep.swift` 文件註解）。沒有對應
+/// 設計稿：比照 `RootView+AuthenticatedGate.swift` 的 `FamilyLookupFailedView` 既有先例，這是
+/// 純技術性防禦畫面，不套用沖印品母題。「繼續刪除帳號」鈕沿用 04a 的 `DeleteAccountDangerButton`
+/// 但 `.disabled(true)`——分流結果還沒確定之前不能讓使用者往下走到 04e（`.pending` 這個狀態
+/// 一旦解出來，`content` 會自動換到 04a／04b／04d 之一，不需要這裡的鈕真的能按）。
+struct DeleteAccountMembersPendingView: View {
+    var body: some View {
+        VStack(spacing: AppSpacing.block) {
+            Spacer()
+            ProgressView()
+            Text("正在確認你的家庭狀態…")
+                .appFont(.body)
+                .foregroundStyle(Color.lsTextSecondary)
+                .multilineTextAlignment(.center)
+            Spacer()
+            DeleteAccountDangerButton(icon: "arrow.right", label: "繼續刪除帳號", action: {})
+                .disabled(true)
+        }
+        .padding(.horizontal, AppSpacing.screenPad)
+        .padding(.bottom, AppSpacing.block)
+    }
+}
+
+/// `DeleteAccountClassification.membersLoadFailed`——`familyStore.membersState == .failure`
+/// 時顯示。沒有對應設計稿：沿用 04h（`soWA9`）的 `StatusBadgeIcon`／`StatusTextBlock`／
+/// `DeleteAccountAccentButton`「重試」語彙，不是重新設計一張新畫面。「重試」呼叫
+/// `familyStore.refreshMembers()`（重新查成員清單），不是 `model.confirmDeletion()`
+/// （04h 的重試是重打 RPC／Edge Function）——視覺語彙相同、語意不同。
+struct DeleteAccountMembersLoadFailedView: View {
+    let error: AppError
+    let retry: () -> Void
+
+    var body: some View {
+        VStack(spacing: AppSpacing.block) {
+            Spacer()
+            StatusBadgeIcon(
+                backgroundColor: Color.lsSurface2, iconColor: Color.lsDanger,
+                systemImage: "exclamationmark.circle.fill"
+            )
+            StatusTextBlock(title: "無法確認你的家庭狀態", note: error.userFacingMessage)
+            Spacer()
+            DeleteAccountAccentButton(icon: "arrow.counterclockwise", label: "重試", action: retry)
+        }
+        .padding(.horizontal, AppSpacing.screenPad)
+        .padding(.bottom, AppSpacing.block)
+    }
+}
+
 // MARK: - 04f 進行中（`vrqoe`）
 
 struct DeletionInProgressView: View {

@@ -7,9 +7,10 @@ import SwiftUI
 /// `DeleteAccountFlowView+Status.swift`（04f／04g／04h），04a／04d 留在這裡（兩者版式最單純，
 /// 檔案不會逼近 SwiftLint `file_length` 上限）。
 ///
-/// 三分流（04a／04b／04d）重用 LS-192 `FamilyStore.leaveFlowCase`（`resolveLeaveFlowCase`
-/// 「本人角色＋家庭成員數」判斷），不再另外寫一套判定——即時讀 `model.classification`，見
-/// `DeleteAccountClassification` 文件註解。
+/// 三分流（04a／04b／04d）重用 LS-192 `resolveLeaveFlowCase`「本人角色＋家庭成員數」判斷本體，
+/// 不再另外寫一套判定——即時讀 `model.classification`，見 `DeleteAccountClassification`
+/// 文件註解（含 merge-review R1 M1 訂正：`members` 尚未載回／載入失敗時顯式停在
+/// `.pending`／`.membersLoadFailed`，絕不代打成 `.generalMember`）。
 ///
 /// 04f／04g／04h 無系統導覽列（`DeleteAccountStep.showsNavigationBar`）；三分流與 04e 維持
 /// 系統預設導覽列（含自動返回鈕）。
@@ -69,6 +70,12 @@ struct DeleteAccountFlowView: View {
             }
         } else {
             switch model.classification {
+            case .pending:
+                DeleteAccountMembersPendingView()
+            case .membersLoadFailed(let error):
+                DeleteAccountMembersLoadFailedView(error: error) {
+                    Task { await model.familyStore.refreshMembers() }
+                }
             case .generalMember:
                 GeneralMemberDeleteAccountView(familyName: model.familyStore.myFamily?.name ?? "", model: model)
             case .mustTransferOwnership(let families):

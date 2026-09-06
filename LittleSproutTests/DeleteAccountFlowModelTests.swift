@@ -38,15 +38,22 @@ final class DeleteAccountFlowModelTests: XCTestCase {
 
     /// 預設佈置成「一般成員」（`.leave`）——大多數狀態機測試不在乎進場分流，只在乎
     /// `confirmDeletion()`／`recheckAfterTransfer()` 之後的行為，這裡給一個確定性的起點。
+    ///
+    /// `seedOwnerUserID`（merge-review R1 M1 新增，預設 `true` 維持既有呼叫端不變）：`false`
+    /// 時不呼叫 `seedOwnerUserIDForPreview`，模擬 `syncOwner(to:)` 還沒跑完／`FamilyStore
+    /// .reset()` 之後的「還不知道自己是誰」時序窗口，見 `test_classification_ownerUserIDNotYetSynced_pending`。
     func makeModel(
         accountAPIClient: AccountAPIClient = StubAccountAPIClient(),
         family: Family? = nil,
         members: [FamilyMember] = [],
+        seedOwnerUserID: Bool = true,
         authStub: StubAuthService = StubAuthService()
     ) -> Fixture {
         let resolvedFamily = family ?? self.family
         let familyStore = FamilyStore.preview(withFamily: resolvedFamily)
-        familyStore.seedOwnerUserIDForPreview(myID)
+        if seedOwnerUserID {
+            familyStore.seedOwnerUserIDForPreview(myID)
+        }
         if !members.isEmpty {
             familyStore.seedMembersForPreview(members)
         }
@@ -89,6 +96,72 @@ final class DeleteAccountFlowModelTests: XCTestCase {
     func test_classification_soleMember() {
         let fixture = makeModel(members: [makeMember(id: myID, role: .owner)])
         XCTAssertEqual(fixture.model.classification, .soleMember)
+    }
+
+    /// **merge-review R1 M1 迴歸測試——複現 reviewer 的 PROBE 情境**：`myFamily` 有值、
+    /// `ownerUserID` 有值、`members` 還沒載回（`SettingsView` 的 `.task` 補查還在飛，或使用者
+    /// 在回應到達前就點了「刪除帳號」）。R1 版這裡會回 `.generalMember`（PROBE-RESULT
+    /// `before=generalMember`），使用者按「繼續刪除帳號」後 `step` 換成 `.finalConfirm`，
+    /// `content` 從此只看 `step` 不再看 `classification`——即使 `members` 稍後真的載回來變成
+    /// `soleMember`，畫面也回不去 04d 了。訂正後必須是 `.pending`，讓 UI 停在載入態、不能往下
+    /// 走到 04e（`GeneralMemberDeleteAccountView`／`SoleMemberDeleteWarningView` 才有
+    /// 「繼續刪除帳號」鈕，`.pending` 畫面的鈕是 `.disabled(true)`，見
+    /// `DeleteAccountMembersPendingView`）。
+    func test_classification_membersNotYetLoaded_pending_notGeneralMember() {
+        let fixture = makeModel(members: [])
+        XCTAssertEqual(
+            fixture.model.classification, .pending,
+            "members 還沒載回時絕對不能是 .generalMember——04d 唯一成員警告沒有伺服器兜底"
+        )
+    }
+
+    /// `ownerUserID` 也還沒同步（`syncOwner(to:)` 尚未跑完）的更早時序窗口，同樣必須 `.pending`。
+    func test_classification_ownerUserIDNotYetSynced_pending() {
+        let fixture = makeModel(members: [], seedOwnerUserID: false)
+        XCTAssertEqual(fixture.model.classification, .pending)
+    }
+
+    /// `membersState == .failure`（`SettingsView` 補查一次失敗）——顯示可重試錯誤，不是三分流
+    /// 之一，也不是 `.pending`（沒有理由讓使用者一直等一個不會自己好的狀態）。`FamilyStore
+    /// .preview(withFamily:)` 底層固定用 `PreviewFamilyAPIClient`（`listMembers` 永遠成功），
+    /// 這裡改用 `StubFamilyAPIClient` 直接建構 `FamilyStore`（同 `FamilyStoreTests` 既有慣例）
+    /// 才能真的模擬一次失敗的查詢。
+    func test_classification_membersLoadFailed_showsRetryableError() async {
+        let family = self.family
+        let stub = StubFamilyAPIClient()
+        stub.setFetchMyFamilyHandler { family }
+        stub.setListMembersHandler { _ in throw AppError.network(message: "offline") }
+        let familyStore = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
+        _ = await familyStore.syncOwner(to: myID)
+        _ = await familyStore.refreshMembers()
+
+        let model = DeleteAccountFlowModel(
+            accountAPIClient: StubAccountAPIClient(), familyStore: familyStore,
+            authStore: AuthStore(authService: StubAuthService()),
+            childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+            eulaStore: .preview(shouldPresent: false)
+        )
+
+        guard case .membersLoadFailed(let error) = model.classification else {
+            return XCTFail("預期 .membersLoadFailed，實際 \(model.classification)")
+        }
+        XCTAssertEqual(error, .network(message: "offline"))
+    }
+
+    /// M2：`myFamily == nil`（`ForkView`「刪除帳號」入口——多半是停權使用者，RLS 把家庭收斂成
+    /// 0 列）必須直接是 `.generalMember`，不能卡在 `.pending`——`refreshMembers()` 需要
+    /// `myFamily?.id` 才會真的打 API，沒有家庭就永遠沒有機會「載完」，卡在 `.pending` 等於
+    /// 使用者永遠到不了 04e。
+    func test_classification_noFamily_generalMember() {
+        let familyStore = FamilyStore.preview()
+        let authStore = AuthStore(authService: StubAuthService())
+        let model = DeleteAccountFlowModel(
+            accountAPIClient: StubAccountAPIClient(), familyStore: familyStore, authStore: authStore,
+            childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+            eulaStore: .preview(shouldPresent: false)
+        )
+        XCTAssertNil(familyStore.myFamily, "前置：這個 fixture 刻意不建家庭")
+        XCTAssertEqual(model.classification, .generalMember)
     }
 
     // MARK: - proceedToFinalConfirm／cancelFinalConfirm
