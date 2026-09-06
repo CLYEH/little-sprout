@@ -339,18 +339,23 @@ final class TimelineStoreTests: XCTestCase {
 /// handler 可以卡在「還在 in-flight」直到測試主動放行——用 actor 包住
 /// `CheckedContinuation`，不用 `AsyncStream.AsyncIterator`（那是 mutating struct，跨
 /// suspension point 呼叫其 async 方法在 Swift 6 嚴格併發下另有麻煩）。
+///
+/// merge-review R2 m5（`EULAStoreTests.swift` 同名 helper 一併處理）：`continuation` 原本是
+/// 單一變數，只能存一個等待者——若這支檔案未來也需要用 mutation 重放驗證某個 guard，第二個
+/// 呼叫進來會直接覆蓋掉第一個尚未被喚醒的 continuation，造成掛住而不是乾淨落紅。改成佇列
+/// （`[CheckedContinuation]`），`open()` 時全部一起 resume。
 private actor AsyncGate {
-    private var continuation: CheckedContinuation<Void, Never>?
+    private var continuations: [CheckedContinuation<Void, Never>] = []
     private var isOpen = false
 
     func wait() async {
         if isOpen { return }
-        await withCheckedContinuation { continuation = $0 }
+        await withCheckedContinuation { continuations.append($0) }
     }
 
     func open() {
         isOpen = true
-        continuation?.resume()
-        continuation = nil
+        continuations.forEach { $0.resume() }
+        continuations.removeAll()
     }
 }

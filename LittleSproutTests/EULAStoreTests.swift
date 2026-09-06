@@ -4,19 +4,26 @@ import XCTest
 /// 單次開關的非同步閘門——讓 stub handler 可以卡在「還在 in-flight」直到測試主動放行，測
 /// `guard !isSubmitting` 與換帳號時序需要能精準控制 await 的時間點。同
 /// `TimelineStoreTests.swift` 的 `AsyncGate` 寫法（actor 包 `CheckedContinuation`）。
+///
+/// merge-review R2 m5：`continuation` 原本是單一變數，只能存一個等待者——guard mutation
+/// （重放拿掉 `checkStatus` 的 `guard !checkState.isSubmitting`）會讓第二個呼叫也走到這裡，
+/// 第二次 `wait()` 進來會直接覆蓋掉第一個尚未被喚醒的 `continuation`，第一個呼叫者永遠等不到
+/// `open()`、整支測試掛住而不是乾淨落紅。改成佇列（`[CheckedContinuation]`），`open()` 時
+/// 全部一起 resume——guard 被拿掉時兩個呼叫都能正常完成，讓斷言（呼叫次數）自己去抓錯，而不是
+/// 被這支 test-only 工具本身的限制掩蓋。
 private actor AsyncGate {
-    private var continuation: CheckedContinuation<Void, Never>?
+    private var continuations: [CheckedContinuation<Void, Never>] = []
     private var isOpen = false
 
     func wait() async {
         if isOpen { return }
-        await withCheckedContinuation { continuation = $0 }
+        await withCheckedContinuation { continuations.append($0) }
     }
 
     func open() {
         isOpen = true
-        continuation?.resume()
-        continuation = nil
+        continuations.forEach { $0.resume() }
+        continuations.removeAll()
     }
 }
 
@@ -109,6 +116,13 @@ final class EULAStoreTests: XCTestCase {
     /// 任務同一輪 runloop——用迴圈等到 `checkState` 真的翻成 `.submitting`（那一行在
     /// `async let` 之前同步執行，比子任務排程更早），而不是猜一次 `Task.yield()` 夠不夠，
     /// 避免測試本身時序不穩。呼叫次數改在兩個任務都確定完成之後才驗，不在競態視窗中間看。
+    ///
+    /// merge-review R2 m5：第二次呼叫包在自己的 `Task`（`task2`）裡，不直接 `await`——
+    /// `guard` 被 mutation 拿掉時，第二次呼叫也會需要 `gate.open()` 才能完成；若直接
+    /// `await store.checkStatus(...)` inline，測試自己的執行流程會卡住（要先跑完這行才能往下
+    /// 跑到 `gate.open()` 那行，但這行本身要等 `gate.open()` 才能跑完——結構性互相依賴，
+    /// 不是 `AsyncGate` 是否支援多個等待者的問題）。包成 `Task` 之後，`gate.open()` 這行
+    /// 不需要等第二次呼叫先完成就能執行，兩支 task 才都會真的結束。
     func test_checkStatus_whileSubmitting_secondCallDoesNotRefetch() async {
         let stub = StubEULAAPIClient()
         let gate = AsyncGate()
@@ -125,10 +139,11 @@ final class EULAStoreTests: XCTestCase {
         }
 
         // 第二次呼叫應該被 guard 立刻擋掉、不再送一次網路請求（也不會卡在 gate 上）。
-        await store.checkStatus(userID: userID)
+        let task2 = Task { await store.checkStatus(userID: userID) }
 
         await gate.open()
         await task1.value
+        await task2.value
 
         XCTAssertEqual(stub.fetchCurrentVersionCallCount, 1, "guard !checkState.isSubmitting 應該擋掉同一輪內的重複呼叫")
     }
@@ -156,6 +171,11 @@ final class EULAStoreTests: XCTestCase {
     /// 已經翻成 `.submitting`（MainActor 這側）不代表 `append` 已經在另一側跑完。同
     /// `test_checkStatus_whileSubmitting_secondCallDoesNotRefetch` 的理由，呼叫次數改在
     /// gate 打開、`task1` 確定完成之後才驗，不在競態視窗中間看。
+    ///
+    /// merge-review R2 m5：第二次呼叫同上改包在 `task2` 裡、不直接 `await`——理由同
+    /// `test_checkStatus_whileSubmitting_secondCallDoesNotRefetch` 文件註解（guard 被拿掉時
+    /// 直接 inline await 會讓測試自己的執行流程卡死）。回傳值（是否被 guard 擋掉）改成
+    /// `await task2.value` 之後才驗，語意不變。
     func test_accept_whileSubmitting_secondCallDoesNotResend() async {
         let stub = StubEULAAPIClient()
         stub.setFetchCurrentVersionHandler { "2026-09-05-draft" }
@@ -170,12 +190,13 @@ final class EULAStoreTests: XCTestCase {
             await Task.yield()
         }
 
-        let secondResult = await store.accept()
-        XCTAssertFalse(secondResult, "guard !acceptState.isSubmitting 應該擋掉同一輪內的重複呼叫")
+        let task2 = Task { await store.accept() }
 
         await gate.open()
         await task1.value
+        let secondResult = await task2.value
 
+        XCTAssertFalse(secondResult, "guard !acceptState.isSubmitting 應該擋掉同一輪內的重複呼叫")
         XCTAssertEqual(stub.acceptEULACalls.count, 1)
     }
 
