@@ -514,6 +514,7 @@ Deno.serve(async (req: Request) => {
     `purge-storage: parked=${
       parked ?? 0
     } orphanEnqueued=${orphanScan.enqueued} orphanDropped=${orphanScan.dropped} ` +
+      `orphanInvalid=${orphanScan.invalidCount} ` +
       `orphanScanCompleted=${orphanScan.scanCompleted} orphanScanCursor=${
         orphanScan.cursor ?? "null"
       }`,
@@ -531,6 +532,13 @@ Deno.serve(async (req: Request) => {
       // 丟棄的候選路徑數——過去這些路徑會被靜默丟棄、完全無法觀測，見
       // orphan_scan.ts 與新 migration 的說明。
       orphanDropped: orphanScan.dropped,
+      // LS-223（F1，收口 LS-222 merge-review comment f64a788e）：形狀不合規路徑改
+      // 為計數＋前 5 筆樣本回報，取代過去無上限塞進 warnings 字串的寫法——count
+      // 是真實筆數，sample 只是供人工判讀的前幾筆範例，不代表全部。
+      orphanInvalid: {
+        count: orphanScan.invalidCount,
+        sample: orphanScan.invalidSample,
+      },
       // R2（merge-review R1 F1 c）：讓「還沒掃完一輪」與「這個 bucket 真的沒有
       // 孤兒」在回應裡可以區分——scanCompleted=false 時 cursor 非 null，代表下次
       // invocation 會從這裡續掃，不是「已經確認整個 bucket 都乾淨」。
