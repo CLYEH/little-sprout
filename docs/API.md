@@ -368,22 +368,35 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   常見的終局路徑，重試機制其實幫不上忙。**殘留物是什麼、目前沒有任何機制回收**：走到這條
   路徑時 Storage PUT 與 `insertMediaRow` 都已成功、只有後面的 `softDeleteMedia` 失敗，殘留
   的是一列 **`deleted_at IS NULL` 的活 `media` 列**——不是③那種「`media` 列從未成功
-  `insert`」的孤兒，也不會被下方 `996220e9`（掃 `storage.objects` 找不到對應 `media` 列的
-  物件）那支未來排程掃到（那支掃描依定義只找「列不存在」的情況，這裡列存在）；全 repo 對
-  `media` 的讀取只有 `SupabaseTimelineAPIClient.fetchMedia(ids:)`／
-  `SupabaseAlbumsAPIClient.fetchMedia(ids:)` 兩處、皆帶明確 id（來自
-  `diary_media`／`album_media`），沒有任何「列出家庭所有 media」的查詢——這種列在 UI 上完全
-  看不見、使用者刪不掉，會永久佔用 `families.storage_used_bytes` 額度。真正能接住它的是另一
-  支查詢（`media` 列存在、`deleted_at IS NULL`、從未被任何 `diary_media`／`album_media`
-  引用、且建立超過寬限期），已記入待辦池（LS-96 comment `c2050d43`），與 `996220e9` 是兩支
-  不同的查詢，不能靠同一段邏輯順帶解決；③**Storage 有物件、但從未成功 `insert`
-  對應 `media` 列的孤兒**（例如上傳當下 App 被殺、`insertMediaRow` 的 client 端 best-effort
-  清理沒有機會執行）——本機容器實測重現（PUT 一個物件到 `media` bucket、不 insert `media`
-  列，`private.purge_expired()` 執行後 `purge_storage_queue` 未收到這筆，物件仍留在
-  `storage.objects`）確認**目前沒有任何排程掃描這個方向**：`private.purge_expired()`／
-  `purge-storage` Edge Function（LS-153）只處理「`media` 列被硬刪之後」的 Storage 清理佇列
-  （見下方 `media` 軟刪／硬刪表格列），不會反向掃描 `storage.objects` 找不到 `media` 列的
-  物件；全表批次掃描屬 LS-212「不做：跨家庭批次工具」明文排除範圍，若要補上見待辦池。
+  `insert`」的孤兒，也不會被下方 `private.soft_delete_unreferenced_media()`（LS-213②，見下方
+  「自動清除」）之外的③排程掃到；全 repo 對 `media` 的讀取只有
+  `SupabaseTimelineAPIClient.fetchMedia(ids:)`／`SupabaseAlbumsAPIClient.fetchMedia(ids:)`
+  兩處、皆帶明確 id（來自 `diary_media`／`album_media`），沒有任何「列出家庭所有 media」的
+  查詢——這種列在 UI 上完全看不見、使用者刪不掉，會永久佔用 `families.storage_used_bytes`
+  額度。**LS-213 起已補上這個方向**：`private.soft_delete_unreferenced_media(p_grace default
+  '24 hours', p_now default now())`（獨立 pg_cron job `ls213-soft-delete-unreferenced-media-daily`，
+  19:30 UTC）掃「`media` 列存在、`deleted_at IS NULL`、從未被任何 `diary_media`／
+  `album_media` 引用、且 `created_at` 超過寬限期」的列，設 `deleted_at` 走既有軟刪＋30 天
+  purge 流程，額度由既有 `media_storage_sync()` trigger 回落——與③（下段）是**兩支不同的
+  查詢**，一支查「`media` 列存在但未被引用」，一支查「`media` 列根本不存在」，不能靠同一段
+  邏輯順帶解決，來源見 LS-96 comment `c2050d43`（LS-212 merge-review R3 `8d1e57bc` 查實）；
+  ③**Storage 有物件、但從未成功 `insert` 對應 `media` 列的孤兒**（例如上傳當下 App 被殺、
+  `insertMediaRow` 的 client 端 best-effort 清理沒有機會執行）——本機容器實測重現（PUT 一個
+  物件到 `media` bucket、不 insert `media` 列，`private.purge_expired()` 執行後
+  `purge_storage_queue` 未收到這筆，物件仍留在 `storage.objects`）確認 LS-153 落地時**沒有
+  任何排程掃描這個方向**：`private.purge_expired()`／`purge-storage` Edge Function（LS-153）
+  當時只處理「`media` 列被硬刪之後」的 Storage 清理佇列（見下方 `media` 軟刪／硬刪表格
+  列），不會反向掃描 `storage.objects` 找不到 `media` 列的物件；全表批次掃描屬 LS-212
+  「不做：跨家庭批次工具」明文排除範圍。**LS-213 起已補上**：`purge-storage` Edge Function
+  在既有的佇列消化迴圈之前，加一段分頁掃描 `media` bucket（`{family_id}/{yyyy}/{mm}/{file}`
+  三層資料夾，跳過 `avatars/` 子路徑）反查 `public.media.storage_path`／`thumb_path`，找不到
+  對應列、且物件 `created_at` 超過寬限期（24 小時）的路徑排入既有 `purge_storage_queue`（
+  `media_id` 為 NULL），交給同一個 invocation 的既有消化迴圈刪除——沿用既有的
+  attempts／退避／死信與 confirmed-delete 核對，不重新實作刪除路徑，也不影響額度（這批物件
+  從未計入 `families.storage_used_bytes`，走佇列刪除不會觸發 `media` 表的
+  trigger，沒有重複扣款的可能）。每次 invocation 的物件數上限見 `purge-storage/index.ts` 的
+  `ORPHAN_SCAN_BATCH_SIZE`；沒有自動化測試（見下方「自動清除」小節對這支 Edge Function 既有
+  的已知限制說明，本次以 `supabase functions serve` 手動 e2e 驗證，同既有慣例）。
 - **影片時長（`duration_seconds`，LS-134）**：nullable，`CHECK`（有值時必須 `> 0`，
   `media_duration_seconds_positive`）。`type = 'photo'` 時應留 `NULL`；
   `type = 'video'` 時由上傳端以 `AVAsset.load(.duration)` 量測寫入——**若影片經過
@@ -2231,6 +2244,21 @@ LS-132 對外文字上線前的硬前置（R2 review informational i4）。
 （執行時間、六張表各自清除筆數——`comments`／`reactions` 是累加值——Storage 佇列
 筆數、失敗表數與原因）；每張表的清除各自獨立錯誤處理，一張表失敗不影響其他表照常
 清除，WHERE 條件冪等，失敗的表下次排程自然重試，不需要額外的重試佇列。
+
+**LS-213 補完的兩個孤兒方向**（見上方 §3「`media`」的完整說明，這裡只記排程與驗證
+現況）：
+- `private.soft_delete_unreferenced_media(p_grace default '24 hours', p_now
+  default now())`——獨立 pg_cron job `ls213-soft-delete-unreferenced-media-daily`
+  （19:30 UTC，`purge_expired` 之後 30 分鐘），與 `purge_expired()` 各自獨立、互不
+  依賴。`supabase/tests/109_soft_delete_unreferenced_media.sql` 覆蓋三案矩陣（未
+  引用超期／未引用未超期／已引用）＋24 小時邊界＋額度回落＋冪等重跑＋預設寬限期
+  迴歸。
+- `purge-storage` Edge Function 的 `scanOrphanStorageObjects()`——沿用上一段
+  「目前沒有任何東西會觸發這支 Edge Function」的既有部署缺口（正式站排程接線由
+  orchestrator 依 LS-78 狀態決定，不在本票落地範圍）；已知限制同上一段：本機
+  `supabase functions serve --no-verify-jwt` 手動 e2e 驗證，沒有寫成
+  `supabase/tests/` 底下的自動化測試（repo 沒有 Deno/Edge Function 測試治具，
+  同 LS-153 既有限制）。
 
 ---
 
