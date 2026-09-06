@@ -127491,6 +127491,68 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "KoZ7a",
+          "name": "N LS-208 沿革",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "wjVLf",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-208 沿革",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "hbA5l",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "o0duuT",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-208",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "eHZ0H",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-192 merge-review R2 comment af82ed61 M-A、orchestrator 裁決 comment 11c8286e：startLeaveFlow（FamilyStore+Members）三路判定——(1) 非管理者（一般成員）→ 03d 退出家庭 · 確認（ANIpL，直接退出）；(2) 家庭管理者且家庭有其他成員 → 03e 退出家庭 · 需先轉移 Owner（sF5oA，先轉移才能退出）；(3) 家庭管理者且家庭只有自己一人（新增分支）→ 本票新板 dxPvP『03e2 退出家庭 · 家庭管理者為唯一成員（無法轉移）』：伺服器 LS057／LS001 對唯一管理者一律擋退出，單人家庭沒有可轉移對象，文案「無法退出家庭。目前家庭只有你一位成員，無法退出家庭。若要離開，請至「帳號」→「刪除帳號」。」（唯一合法出口是 LS-193 刪除帳號流程，會連同解散家庭）；沿用 03e 版面骨架但移除轉移卡片（Card Wrap／Families Card），Footer 只留「返回設定」（qe9yS 元件，enabled:false 隱藏 icon）、不送 DELETE、不再觸發 LS001。AX3 見 i6uiB4（board height 1300，theme.size=ax3，內容未裁切）。實作對應：FamilyStore+Members 的三態判定函式需新增第三分支（family.members.count === 1 && role === .owner），對應 View 需能顯示這塊新文案並隱藏轉移入口。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -152034,6 +152096,333 @@
               "height": 5
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "dxPvP",
+      "x": 21849,
+      "y": 23117,
+      "name": "LS-152 / 03e2 退出家庭 · 家庭管理者為唯一成員（無法轉移）",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "L1Ert",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "XwtRb",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "Y9B40",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "HyUJG",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "U3g5n",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Tutlg",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "無法退出家庭",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "SgNBK",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "目前家庭只有你一位成員，無法退出家庭。若要離開，請至「帳號」→「刪除帳號」。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "maJ2R",
+              "name": "Spacer",
+              "width": "fill_container",
+              "height": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "htk0H",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "id": "a56FXI",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Back Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "返回設定"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "fppKF",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "i6uiB4",
+      "x": 22322,
+      "y": 23117,
+      "name": "A11y / 03e2 退出家庭 · 唯一成員 · Dynamic Type AX3",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1300,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "rx9xZ",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "cOOMU",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "fkDYY",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "I8GbxQ",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "HRhko",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "s90b02",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "無法退出家庭",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "SlboL",
+                      "name": "Subtitle",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "目前家庭只有你一位成員，無法退出家庭。若要離開，請至「帳號」→「刪除帳號」。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "C8qhwq",
+              "name": "Spacer",
+              "width": "fill_container",
+              "height": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "Y6VGC7",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "id": "Jcz4t",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Back Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "返回設定"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "QLqC5",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center"
         }
       ]
     }
