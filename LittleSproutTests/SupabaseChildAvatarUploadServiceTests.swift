@@ -1,8 +1,6 @@
 import Foundation
-import ImageIO
 @testable import LittleSprout
 import os
-import Supabase
 import UIKit
 import XCTest
 

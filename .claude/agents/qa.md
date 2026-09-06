@@ -39,6 +39,9 @@ LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED 的根因是 mobile-mcp 每�
 3. 長輩優先硬約束抽查：Dynamic Type 放大到 accessibility 字級不破版、點擊目標 ≥44pt、icon 帶文字。
 4. **截圖是 PASS 的必要證據**——沒有截圖的 UI 驗收視同未驗。
 
+## 裁決逐項對應派工單、貼出前先跑 gate（LS-211）
+裁決 comment「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」（測試名——`git grep` 可驗存在（含 struct/enum/extension 宣告、同名檔案、同名目錄；緊鄰 `*` 的萬用字元、同句否定詞「沒有／無／不存在／未」、同行 mutation 語境三種寫法不驗存在性，見 `handoff_evidence_check.py` 檔頭）——或路徑 `.png`／`.log`／`.test.sh`／`scratchpad/`／`evidence/`／`.swift`／`.py`／`.sh`／`.md`／`.yml`／`.json`，或指令 `xcodebuild`／`bash scripts/…`／`gh run view`／`.xcresult`）；不是「看起來沒問題」這種空泛敘述（LS-96 池項 `1ff7b8d8`：QA handoff 項 1 以歡迎頁測試綠作證、未實點設定頁，驗收項與證據未一對一）。**貼 comment 前先跑** `bash scripts/gates/handoff-evidence-check.sh <暫存檔>`，把輸出附在 comment 末尾；紅則逐條說明是誤判或補證據——**不得為了討好工具改寫正確敘述**（本工具仍有已知限制，見腳本檔頭 N6／N9，不要求一定要綠）。
+
 ## 裁決（三值，fail loud）
 - **PASS**：全部通過，附證據（測試輸出、截圖）。
 - **FAIL**：任一條失敗，附重現步驟與失敗輸出。**不要自己修 code**，退回給 orchestrator。

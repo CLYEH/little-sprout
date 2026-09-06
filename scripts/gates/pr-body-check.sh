@@ -37,7 +37,10 @@
 #   `git cat-file -e <sha>^{commit}` 且 `git merge-base --is-ancestor <sha> HEAD`（CI 的 HEAD 是 PR merge ref，PR commits
 #   皆為祖先；已在 base 上的 commit 也是祖先——盲區，COLLABORATION §7）；「已修」之後的第一個 hex 不是 commit object（comment id
 #   形狀、打錯的 SHA）→ 紅「已修行需附 commit SHA 於『已修』之後」，是 commit 但非祖先 → 紅「不在 PR commits 內」（LS-186）。
-#   無 LINEAR_API_KEY → 印「反查略過」只驗格式＋git
+#   無 LINEAR_API_KEY → 印「反查略過」只驗格式＋git；另外逐行印 `⚠ 未反查（無 LINEAR_API_KEY）：第 n 行
+#   候選 <hex>`（LS-211，來源 LS-96 池項 df12be2e），讓 agent／orchestrator 看得見哪些行只驗了格式、靠
+#   CI 裁；exit 不變。本機沒 export LINEAR_API_KEY 但 repo 根有 .env 時，腳本自己（不經呼叫端 Bash 命令
+#   文字）grep `^LINEAR_API_KEY=` 這一個 key 名取值使用，不 source 整份 .env、不印值。
 #   LS-198（LS-186 R2 info-1／2）：格式模式分不出短 SHA 與純數字 token（CI run id、migration 檔名前綴 20260904212530 都是 7–40 位
 #   [0-9a-f]）——不帶 --verify 時對純數字候選印一行 ⚠ 警告、exit 不變（裁判仍是 --verify 的 git cat-file）；--verify 紅「不是本 repo
 #   的 commit」時補「檔名／行號裡的數字也算 hex token，把 SHA 放『已修』後第一個」（殘餘誤紅多是 migration 檔名排在 SHA 之前）。
@@ -69,6 +72,26 @@ done
 [ -n "$file" ] || { echo "✗ pr-body-check：缺 PR body 檔（gh pr create/edit 用的 --body-file）" >&2; exit 2; }
 [ -r "$file" ] || { echo "✗ pr-body-check：讀不到 ${file}。" >&2; exit 2; }
 [ -n "$branch" ] || branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
+
+# LS-211（df12be2e）：本機沒有 LINEAR_API_KEY 環境變數時，腳本自己（不經呼叫端的 Bash 命令文字）
+# 從 repo 根 .env 讀取這一個 key 名，讓 agent 本機直接照 COLLABORATION §3 的完整旗標
+# `pr-body-check.sh <f> --branch <分支> --verify` 呼叫就能反查、不必先手動 export。只 grep 這一個
+# key 名、不 source 整份 .env（.env 可能含其他敏感值，不該被本腳本間接讀出）；只取值進環境變數，
+# 不印值。多行同 key 取最後一行（shell 慣例：後面的覆蓋前面的）。
+# 已知限制（merge-review R1 N5，記錄不修——現況實測無影響，見該 comment）：`cut -d= -f2-` 不處理
+# `LINEAR_API_KEY="…"` 這種帶引號包值的寫法、也不剝 CRLF——引號字元／`\r` 會原樣帶進 token，若
+# `.env` 真的這樣寫，curl `-K -` 拿到的 Authorization header 值會帶多餘字元而反查失敗（fail closed，
+# 不是靜默通過）。本 repo 的 `.env` 實測是純 `KEY=value`（無引號、LF），未觸發過這個限制。
+if [ -z "${LINEAR_API_KEY:-}" ]; then
+  env_file="$(git rev-parse --show-toplevel 2>/dev/null)/.env"
+  if [ -f "$env_file" ]; then
+    env_key=$(grep -E '^LINEAR_API_KEY=' "$env_file" 2>/dev/null | tail -n1 | cut -d= -f2-)
+    if [ -n "$env_key" ]; then
+      LINEAR_API_KEY=$env_key
+      export LINEAR_API_KEY
+    fi
+  fi
+fi
 
 ticket=$(printf '%s' "$branch" | sed -nE 's#^(feature|fix|hotfix)/(LS-[1-9][0-9]*)-[a-z0-9][a-z0-9-]*$#\2#p')
 if [ -z "$ticket" ]; then
@@ -214,6 +237,12 @@ done <<< "$fix_claims"
 if [ -n "$pool_claims" ]; then
   if [ -z "${LINEAR_API_KEY:-}" ]; then
     echo "pr-body-check：反查略過（無 LINEAR_API_KEY）——${pool} comment id ${n_pool} 條只驗了格式；本機 source .env 後、CI 設 secrets.LINEAR_API_KEY 才會反查（LS-140）"
+    # LS-211（df12be2e）：逐行點名哪些候選靠 CI 裁——本機無 key 時只印一句總結，agent／orchestrator
+    # 看不出「到底是哪幾行、哪個 hex」只驗了格式；exit 不變（仍是 --verify 反查略過，非違規）。
+    while read -r ln toks; do
+      [ -n "$ln" ] || continue
+      echo "⚠ 未反查（無 LINEAR_API_KEY）：第 ${ln} 行候選 ${toks}"
+    done <<< "$pool_claims"
     if [ "${GITHUB_ACTIONS:-}" = true ]; then
       echo "::warning::pr-body-check：反查略過（無 LINEAR_API_KEY）——${pool} comment id 只驗了格式，請補 repo secret LINEAR_API_KEY（LS-140）"
     fi

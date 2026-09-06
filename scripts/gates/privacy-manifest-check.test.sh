@@ -162,6 +162,193 @@ expect 1 '② manifest 某項的 reasons 是空陣列 → 紅' 'NSPrivacyAccesse
 r=$(mkroot); write_manifest "$r" 'not a plist at all'; write_infoplist "$r" "$good_infoplist"
 expect 1 '② manifest 不是合法 plist → 紅（fail closed，非靜默放行）' '不是合法 plist' "$r"
 
+# ==== ②b LS-211：枚舉值合法性（NSPrivacyAccessedAPIType／理由碼／NSPrivacyCollectedDataType／
+#      NSPrivacyCollectedDataTypePurposes 對照 Apple 已公布清單）====
+good_collected='
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePhotosorVideos</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+	</array>'
+
+r=$(mkroot); write_manifest "$r" "${plist_head}
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>${good_collected}
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>"; write_infoplist "$r" "$good_infoplist"
+expect 0 '②b 合法 NSPrivacyCollectedDataTypes（型別＋purpose 皆在清單內）→ 過' '全過' "$r"
+
+r=$(mkroot); write_manifest "$r" "${plist_head}
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>TotallyBogusCategory</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>"; write_infoplist "$r" "$good_infoplist"
+expect 1 '②b 虛構 API 分類 TotallyBogusCategory → 紅' '不在 Apple 已公布的 API 分類清單內' "$r"
+
+r=$(mkroot); write_manifest "$r" "${plist_head}
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C6171</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>"; write_infoplist "$r" "$good_infoplist"
+expect 1 '②b 理由碼漏小數點 C6171（非 C617.1）→ 紅' '不在該分類已公布清單內' "$r"
+
+r=$(mkroot); write_manifest "$r" "${plist_head}
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>E174.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>"; write_infoplist "$r" "$good_infoplist"
+expect 1 '②b 理由碼類別錯配（E174.1 屬 DiskSpace、掛在 FileTimestamp 下）→ 紅' '不在該分類已公布清單內' "$r"
+
+r=$(mkroot); write_manifest "$r" "${plist_head}
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>TotallyBogusDataType</string>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>"; write_infoplist "$r" "$good_infoplist"
+expect 1 '②b 虛構 NSPrivacyCollectedDataType TotallyBogusDataType → 紅' '不在 Apple 已公布清單內' "$r"
+
+r=$(mkroot); write_manifest "$r" "${plist_head}
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePhotosorVideos</string>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>TotallyBogusPurpose</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>"; write_infoplist "$r" "$good_infoplist"
+expect 1 '②b 虛構 purpose TotallyBogusPurpose → 紅' '不在 Apple 已公布清單內' "$r"
+
+r=$(mkroot); write_manifest "$r" "${plist_head}
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePhotosorVideos</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<string>true</string>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>"; write_infoplist "$r" "$good_infoplist"
+expect 1 '②b NSPrivacyCollectedDataTypeLinked 是字串（型別不符，非布林）→ 紅' '不是布林' "$r"
+
 # ==== ③ 負樣本（用途字串／黑名單，≥3）====
 r=$(mkroot); write_manifest "$r" "$good_manifest"
 write_infoplist "$r" "${plist_head}
@@ -359,6 +546,132 @@ if mutate 'PRIVACY-REASON-NONEMPTY' '            if False:  # PRIVACY-REASON-NON
   if [ "$got" -eq 0 ]; then echo "✓ ⑥e mutant（拿掉 reasons 非空比對）：空 reasons 樣本改判過──證明非空比對是這裡在擋"; else echo "✗ ⑥e mutant 未如預期翻轉（實得 exit ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 else
   echo "✗ ⑥e mutate：找不到 PRIVACY-REASON-NONEMPTY 標記，負控本身無效" >&2; fail=1
+fi
+
+# ⑥f（LS-211）：拿掉 API 分類枚舉比對（PRIVACY-APITYPE-ENUM）→ 虛構分類也會被當成過
+if mutate 'PRIVACY-APITYPE-ENUM' '            if False:  # PRIVACY-APITYPE-ENUM'; then
+  tmp_mf="$work/bogus-category.xcprivacy"
+  printf '%s' "${plist_head}
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>TotallyBogusCategory</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>" > "$tmp_mf"
+  out="$(python3 "$work/mutant.py" manifest "$tmp_mf" 2>&1)"; got=$?
+  if [ "$got" -eq 0 ]; then echo "✓ ⑥f mutant（拿掉 API 分類枚舉比對）：虛構分類樣本改判過──證明枚舉比對是這裡在擋"; else echo "✗ ⑥f mutant 未如預期翻轉（實得 exit ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+else
+  echo "✗ ⑥f mutate：找不到 PRIVACY-APITYPE-ENUM 標記，負控本身無效" >&2; fail=1
+fi
+
+# ⑥g（LS-211）：拿掉理由碼枚舉比對（PRIVACY-REASON-ENUM）→ 類別／理由碼錯配也會被當成過
+if mutate 'PRIVACY-REASON-ENUM' '                if False:  # PRIVACY-REASON-ENUM'; then
+  tmp_mf="$work/mismatched-reason.xcprivacy"
+  printf '%s' "${plist_head}
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>E174.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>" > "$tmp_mf"
+  out="$(python3 "$work/mutant.py" manifest "$tmp_mf" 2>&1)"; got=$?
+  if [ "$got" -eq 0 ]; then echo "✓ ⑥g mutant（拿掉理由碼枚舉比對）：類別／理由碼錯配樣本改判過──證明枚舉比對是這裡在擋"; else echo "✗ ⑥g mutant 未如預期翻轉（實得 exit ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+else
+  echo "✗ ⑥g mutate：找不到 PRIVACY-REASON-ENUM 標記，負控本身無效" >&2; fail=1
+fi
+
+# ⑥h（LS-211）：拿掉 NSPrivacyCollectedDataType 枚舉比對（PRIVACY-COLLECTED-TYPE-ENUM）→ 虛構型別也會被當成過
+if mutate 'PRIVACY-COLLECTED-TYPE-ENUM' '            if False:  # PRIVACY-COLLECTED-TYPE-ENUM'; then
+  tmp_mf="$work/bogus-datatype.xcprivacy"
+  printf '%s' "${plist_head}
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>TotallyBogusDataType</string>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>" > "$tmp_mf"
+  out="$(python3 "$work/mutant.py" manifest "$tmp_mf" 2>&1)"; got=$?
+  if [ "$got" -eq 0 ]; then echo "✓ ⑥h mutant（拿掉 collected data type 枚舉比對）：虛構型別樣本改判過──證明枚舉比對是這裡在擋"; else echo "✗ ⑥h mutant 未如預期翻轉（實得 exit ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+else
+  echo "✗ ⑥h mutate：找不到 PRIVACY-COLLECTED-TYPE-ENUM 標記，負控本身無效" >&2; fail=1
+fi
+
+# ⑥i（LS-211）：拿掉 purpose 枚舉比對（PRIVACY-PURPOSE-ENUM）→ 虛構 purpose 也會被當成過
+if mutate 'PRIVACY-PURPOSE-ENUM' '                if False:  # PRIVACY-PURPOSE-ENUM'; then
+  tmp_mf="$work/bogus-purpose.xcprivacy"
+  printf '%s' "${plist_head}
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePhotosorVideos</string>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>TotallyBogusPurpose</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>" > "$tmp_mf"
+  out="$(python3 "$work/mutant.py" manifest "$tmp_mf" 2>&1)"; got=$?
+  if [ "$got" -eq 0 ]; then echo "✓ ⑥i mutant（拿掉 purpose 枚舉比對）：虛構 purpose 樣本改判過──證明枚舉比對是這裡在擋"; else echo "✗ ⑥i mutant 未如預期翻轉（實得 exit ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+else
+  echo "✗ ⑥i mutate：找不到 PRIVACY-PURPOSE-ENUM 標記，負控本身無效" >&2; fail=1
 fi
 
 if [ "$fail" -eq 0 ]; then

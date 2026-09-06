@@ -632,11 +632,22 @@ PY
             # 沒有任何一台叫原生機型名。改成「literal 機型名」或「名稱含 slug」兩者皆可命中，同一台機器兩種
             # 命名都認得到，覆蓋現有 qa-* 慣例；UDID 一律抓標準 8-4-4-4-12 十六進位格式，不能用「取最外層括號
             # 內容」——機型名本身就帶括號，naive 取括號會把 "M3" 誤判成 UDID（自測 ㊴ 抓到）。
-            ipad_udid=$(xcrun simctl list devices available 2>/dev/null | awk -v pin="$ios_runtime_pin" '
+            # LS-211 I-a（來源 LS-96 池項 edbc460c）：slug 比對原本對「含 iPadAir11M3」不分青紅皂白全收，
+            # 會命中 qa-*／demo-* 這類共用／demo 常駐機（今日只是被 runtime pin 意外擋掉，PLAUSIBLE）——
+            # 這些不是本票（或主 checkout）的專屬機，被這段 best-effort 拉去跑一次 xcodebuild test 有跟其他
+            # agent／QA 手上正在用的機器互踩的風險。改用與 :349 iPhone 專屬機判定同一套慣例：只認「未改名的
+            # 預設機型名」（新建但沒改過名字的模擬器，line 直接以 literal 機型名開頭）或「本票／主 checkout
+            # 專屬機命名」（`<票號>-`／`main-` 開頭），qa-*／demo-* 等其他前綴一律不算。
+            ipad_ticket=$(printf '%s' "$tap_target_branch" | sed -nE 's#^(feature|fix|hotfix)/(LS-[1-9][0-9]*)-.*#\2#p')
+            ipad_udid=$(xcrun simctl list devices available 2>/dev/null | awk -v pin="$ios_runtime_pin" -v ticket="$ipad_ticket" '
               /^-- iOS / { os=$0; sub(/^-- iOS /,"",os); sub(/ --$/,"",os); next }
               /iPad Air 11-inch \(M3\)|iPadAir11M3/ {
-                if (pin != "" && os != pin) next
                 line=$0
+                is_default = (line ~ /^[ \t]*iPad Air 11-inch \(M3\) \(/)
+                is_ticket = (ticket != "" && line ~ ("^[ \t]*" ticket "-"))
+                is_main = (line ~ /^[ \t]*main-/)
+                if (!is_default && !is_ticket && !is_main) next
+                if (pin != "" && os != pin) next
                 if (match(line, /[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/)) {
                   print substr(line, RSTART, RLENGTH); exit
                 }

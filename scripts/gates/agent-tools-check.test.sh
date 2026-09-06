@@ -47,6 +47,14 @@ H3B='`docker exec`／`psql`／`supabase functions serve` 等本機容器操作�
 # LS-207（a7b0f49e）：ios-dev／qa／merge-reviewer 正文另須含這句（三份都要，併進 LOCK_BODY）
 TIMEOUT_RULE='git push／xcodebuild／run.sh 等長命令一律前景 Bash 帶 timeout（≤25 分），禁用背景＋等通知。'
 LOCK_BODY="${HOLD} ${H3B} ${TIMEOUT_RULE}"
+# LS-211：三份正文另須含「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」；qa／merge-reviewer 另須含
+# 「貼 comment 前先跑 handoff-evidence-check.sh」的命令句（ios-dev 不要求，因為 ios-dev 不貼裁決 comment）。
+EVIDENCE_ITEM='「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」（測試名或路徑）。'
+# R2（merge-review R1 F3）：措辭改為「跑過並附輸出；紅則逐條說明是誤判或補證據」——不要求一定要綠，
+# 避免 agent 為了討好工具改寫正確敘述。拆兩個變數才能各自獨立缺席（⑱ 要測「只有命令句缺說明句」）。
+EVIDENCE_RUN_CMD='貼 comment 前先跑 `bash scripts/gates/handoff-evidence-check.sh <暫存檔>`，把輸出附在 comment 末尾；'
+EVIDENCE_RUN_EXPLAIN='紅則逐條說明是誤判或補證據，不得為了討好工具改寫正確敘述。'
+EVIDENCE_RUN="${EVIDENCE_RUN_CMD}${EVIDENCE_RUN_EXPLAIN}"
 # LS-158：qa 正文另須含 `qa-e2e.sh`（多步驟驗收優先端到端驅動）；合法的 qa 樣本三句都要有
 E2E='多步驟驗收優先 `bash scripts/ops/qa-e2e.sh <login|publish|browse>`。'
 # LS-207（c18ef27f）：qa／merge-reviewer 正文另須含這句（ios-dev 不要求，不併進 LOCK_BODY／IOS_BODY）
@@ -54,7 +62,7 @@ E2E='多步驟驗收優先 `bash scripts/ops/qa-e2e.sh <login|publish|browse>`�
 # R2 之前的舊數值（regression 樣本），句子仍在但值錯，用來證明新規則只釘數值、不是重複釘句子。
 SIMCTLUI='用 `simctl ui` 改過字級／外觀的 handoff 必列已復原（會自動把 content_size／appearance 改成 large／light）。'
 SIMCTLUI_MEDIUM='用 `simctl ui` 改過字級／外觀的 handoff 必列已復原（會自動把 content_size／appearance 改成 medium／light）。'
-QA_BODY="${LOCK_BODY} ${E2E} ${SIMCTLUI}"
+QA_BODY="${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN}"
 # LS-180：ui-designer／visual-reviewer 正文須含「--kill 只在 orchestrator 明示時」（切檔不殺行程的規約句）
 KILL='切檔一律不殺行程；`pen-open.sh` 的 --force-reload／--kill 只在 orchestrator 明示時使用，用後必回報「需重連」。'
 # LS-180 裁決：ui-designer 正文另須含「收工 Pen 停在票檔」（不切回主 checkout）；合法的 ui-designer 樣本兩句都要有
@@ -72,8 +80,8 @@ NOFORK='不得派 fork／subagent 改動任何檔案。'
 # 正文另須含「handoff 申報的 mutation 一律自己重放，對不上列 major」
 MUTPLAY='每支 mutation 必列三段：改了什麼一行 → 哪條測試紅 → 斷言訊息原文。'
 REPLAYRULE='handoff 申報的 mutation 一律自己重放，對不上列 major。'
-IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY}"
-MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE}"
+IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM}"
+MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN}"
 # LS-209：ios-dev 新增 tools: 白名單（移除 mcp__pencil__*）——取代舊的 `NONE`（無 tools: 行＝繼承全部工具，其中
 # 必然含 pencil，會被新的「禁止工具」規則擋下）。merge-review R1 M2：RULES 表現在對 ios-dev 有必要工具要求
 # （Bash／Read／Edit／Write／Grep／Glob／Agent／三支 Linear 工具），這裡的乾淨清單須包含全部才能當合法基準。
@@ -132,7 +140,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（28 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 28 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（35 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 35 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -323,6 +331,42 @@ if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '一律自己重放'; the
   ok '⑯ mutant：拿掉規則後「缺重放句」的負樣本變綠'
 else
   echo "✗ ⑯ mutant（重放句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ⑰ LS-211：三份正文須含「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」；qa／merge-reviewer
+#        另須含「貼 comment 前先跑 handoff-evidence-check.sh」的命令句（ios-dev 不要求，不貼裁決 comment）----
+reset; expect 0 '⑰ 三份正文含逐項對應句 → 印「正文含」' 'ios-dev.md：正文含「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」' 'qa.md：正文含「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」'
+reset; expect 0 '⑰ qa／merge-reviewer 正文含 handoff-evidence-check.sh 命令句 → 印「正文含」' 'qa.md：正文含「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」' 'merge-reviewer.md：正文含「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」'
+reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY}"; expect 1 '⑰ ios-dev 缺逐項對應句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI}"; expect 1 '⑰ qa 缺逐項對應句與 handoff-evidence-check.sh 句 → exit 1' 'qa.md：正文缺「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」' 'qa.md：正文缺「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM}"; expect 1 '⑰ merge-reviewer 有逐項對應句但缺 handoff-evidence-check.sh 命令句 → exit 1' 'merge-reviewer.md：正文缺「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」' '' 'merge-reviewer.md：正文缺「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」'
+reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '逐項對應派工單'; then
+  ok '⑰ mutant：拿掉規則後「缺逐項對應句」的負樣本變綠'
+else
+  echo "✗ ⑰ mutant（逐項對應句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'handoff-evidence-check.sh'; then
+  ok '⑰ mutant：拿掉規則後「缺 handoff-evidence-check.sh 命令句」的負樣本變綠'
+else
+  echo "✗ ⑰ mutant（handoff-evidence-check.sh 命令句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ⑱ LS-211 R2（merge-review R1 F3）：qa／merge-reviewer 正文須含「紅則逐條說明是誤判或補證據」
+#        ——措辭從「綠再貼」改為「跑過並附輸出；紅則逐條說明是誤判或補證據」，不讓 agent 為了討好工具
+#        改寫正確敘述；ios-dev 不要求（不貼裁決 comment）----
+reset; expect 0 '⑱ qa／merge-reviewer 正文含「紅則逐條說明是誤判或補證據」→ 印「正文含」' 'qa.md：正文含「紅則逐條說明是誤判或補證據」' 'merge-reviewer.md：正文含「紅則逐條說明是誤判或補證據」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN_CMD}"; expect 1 '⑱ qa 只有 handoff-evidence-check.sh 命令句、缺「紅則逐條說明」→ exit 1' 'qa.md：正文缺「紅則逐條說明是誤判或補證據」' '' 'qa.md：正文缺「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN_CMD}"; expect 1 '⑱ merge-reviewer 只有 handoff-evidence-check.sh 命令句、缺「紅則逐條說明」→ exit 1' 'merge-reviewer.md：正文缺「紅則逐條說明是誤判或補證據」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN_CMD}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '紅則逐條說明'; then
+  ok '⑱ mutant：拿掉規則後「缺紅則逐條說明句」的負樣本變綠'
+else
+  echo "✗ ⑱ mutant（紅則逐條說明句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過
