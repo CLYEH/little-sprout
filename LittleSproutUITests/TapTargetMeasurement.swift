@@ -18,7 +18,7 @@ enum TapTargetMeasurement {
     /// `UIContentSizeCategory`：AX1–AX5 依序是 `UICTContentSizeCategoryAccessibilityM／L／
     /// XL／XXL／XXXL`，AX3＝`...AccessibilityXL`。
     ///
-    /// **LS-190 R2 追加修正（merge-review R1 comment `24fc12db` i3）**：原本用
+    /// **LS-190 R2 追加修正（LS-210 merge-review R1 comment `24fc12db` i3）**：原本用
     /// `app.launchEnvironment["UIPreferredContentSizeCategoryName"]` 設字級——這個鍵是 UIKit
     /// 啟動時讀 `NSUserDefaults`（`NSArgumentDomain`）才會生效的鍵，只設 process 環境變數不會被
     /// UIKit 讀到，等於完全沒效果（reviewer 實測：probe 量「設定」標題高度，設 AX5 環境變數跟

@@ -5,6 +5,18 @@ import XCTest
 /// （捲動後 `exists && isHittable`），兩顆按鈕不得重疊——`tap-target-check.sh`／
 /// `TapTargetMeasurement.launch` 一律用一般字級（`UICTContentSizeCategoryL`），這個缺陷本來
 /// 對它是隱形的，靠這支測試補一個放大字級的機械釘樁。
+///
+/// **LS-190 R3（merge-review R2 M2 major）**：R2 版的三道斷言全部抓不到 R1 那個缺陷——
+/// reviewer 把 sheet 改回 R1 的缺陷結構（`ScrollView` 換回 `Group`、`.presentationDetents(
+/// [.medium, .large])` 換回 `.presentationDetents([.height(420)])`）重跑，兩案仍然全綠：
+/// (1) `staticTexts[完整字串].exists`——SwiftUI `Text` 就算視覺上被截斷，a11y label 仍是完整
+/// 字串，永遠 `true`；(2) `isHittable`——元素只要有一部分在螢幕上就是 `true`，截斷版也是
+/// `true`；(3) `> baseline × 1.3`——截斷版的比值是 1.448，正確版是 4.34，`1.3` 這個門檻同時
+/// 放行兩者，只證明「字級有放大」，不證明「內文行數沒被吃掉」。這裡改成兩件事都做：門檻拉高到
+/// `3.0`（見 `assertBodyTextNotTruncated` 文件註解）＋額外斷言「畫面上真的有一個可捲動的
+/// `ScrollView`」（截斷版把 `ScrollView` 換成 `Group`，這個元素直接消失，是比高度倍數更直接
+/// 的結構性訊號，不受量測誤差影響）。`swipeUp()` 也從「只做一次」改成迴圈捲到底（AX5 需要多次
+/// 才能捲到 IN-1 整句，見 `scrollUntilHittable` 文件註解）。
 @MainActor
 final class DeleteConfirmationAX3UITests: XCTestCase {
     private static let ax3 = "UICTContentSizeCategoryAccessibilityXL"
@@ -26,10 +38,9 @@ final class DeleteConfirmationAX3UITests: XCTestCase {
             bodyText.waitForExistence(timeout: 10),
             "IN-1 那句「這個動作目前無法在 App 內復原」必須存在於畫面樹，不能被截斷消失（merge-review R1 B1）"
         )
-        assertContentSizeActuallyScaled(bodyText.frame.height, baselineHeight: baselineHeight)
-        if !bodyText.isHittable {
-            app.swipeUp()
-        }
+        assertScrollViewExists(in: app)
+        assertBodyTextNotTruncated(bodyText.frame.height, baselineHeight: baselineHeight)
+        scrollUntilHittable(bodyText, in: app)
         XCTAssertTrue(bodyText.isHittable, "捲動後應該能看到／點到完整內文（含 IN-1 那句），不是被 sheet 高度裁掉")
 
         assertButtonsReachableAndDoNotOverlap(in: app, confirmLabel: "刪除這篇日記")
@@ -48,21 +59,18 @@ final class DeleteConfirmationAX3UITests: XCTestCase {
             bodyText.waitForExistence(timeout: 10),
             "IN-1 那句「這個動作目前無法在 App 內復原」必須存在於畫面樹，不能被截斷消失（merge-review R1 B1）"
         )
-        assertContentSizeActuallyScaled(bodyText.frame.height, baselineHeight: baselineHeight)
-        if !bodyText.isHittable {
-            app.swipeUp()
-        }
+        assertScrollViewExists(in: app)
+        assertBodyTextNotTruncated(bodyText.frame.height, baselineHeight: baselineHeight)
+        scrollUntilHittable(bodyText, in: app)
         XCTAssertTrue(bodyText.isHittable, "捲動後應該能看到／點到完整內文（含 IN-1 那句），不是被 sheet 高度裁掉")
 
         assertButtonsReachableAndDoNotOverlap(in: app, confirmLabel: "刪除這則留言")
     }
 
-    /// merge-review R1 comment `24fc12db` i3：`launchArguments`／`launchEnvironment` 哪個真的
-    /// 生效不是靠讀程式碼能確定的事（UIKit 內部行為），這支測試本身必須先證明「這次真的是在放大
-    /// 字級下跑」，不能只靠沒有斷言失敗就當作字級有生效——起獨立一次 app 啟動量同一段文字在一般
-    /// 字級（`UICTContentSizeCategoryL`）下的高度當基準，AX3 應該明顯更高（`.appFont(.note)`
-    /// 這種本文字級在 AX3 下的縮放係數遠大於 1.3，這裡用 1.3 當保守下限，容許量測誤差但仍能
-    /// 抓到「其實完全沒放大」的情況）。
+    /// LS-210 merge-review R1 comment `24fc12db` i3：`launchArguments`／`launchEnvironment`
+    /// 哪個真的生效不是靠讀程式碼能確定的事（UIKit 內部行為），這支測試本身必須先證明「這次真的
+    /// 是在放大字級下跑」——起獨立一次 app 啟動量同一段文字在一般字級（`UICTContentSizeCategoryL`）
+    /// 下的高度當基準。
     private func measureBodyTextHeight(
         _ screen: TapTargetGateScreenName, contentSizeCategory: String, bodyText: String
     ) -> CGFloat {
@@ -75,13 +83,50 @@ final class DeleteConfirmationAX3UITests: XCTestCase {
         return height
     }
 
-    private func assertContentSizeActuallyScaled(_ ax3Height: CGFloat, baselineHeight: CGFloat) {
-        XCTAssertGreaterThan(
-            ax3Height, baselineHeight * 1.3,
-            "AX3 內文高度（\(ax3Height)pt）應該明顯大於一般字級基準（\(baselineHeight)pt）的 1.3 倍——" +
-            "沒放大代表 launchArguments 設定字級沒有生效（merge-review R1 comment 24fc12db i3），" +
-            "這支測試本身就是假綠，不是本票驗收條件真的通過"
+    /// merge-review R2 M2：畫面上必須真的有一個可捲動的 `ScrollView`（`DeleteConfirmationSheet
+    /// .body` 的內文放在 `ScrollView` 裡，見該檔文件註解）——R1 的缺陷結構把它換成 `Group`，
+    /// 這個元素會直接從畫面樹消失。這是比下面的高度倍數更直接的結構性訊號：`Group` 版即使內文
+    /// 因為被固定高度的容器裁切、量出比一般字級「高一點」的 frame（reviewer 實測比值 1.448），
+    /// 依然沒有一個真正的 `ScrollView`。
+    private func assertScrollViewExists(in app: XCUIApplication) {
+        XCTAssertTrue(
+            app.scrollViews.firstMatch.waitForExistence(timeout: 5),
+            "畫面上找不到可捲動的 ScrollView——內文可能被裝在固定高度的容器（例如 Group＋" +
+            "`.presentationDetents([.height(_)])`）裡，超出高度的內容會被裁掉而不是可以捲動看到"
         )
+    }
+
+    /// merge-review R2 M2：R2 版門檻（`baseline × 1.3`）測的是「字級有沒有放大」，不是這支測試
+    /// 真正要保證的「內文行數有沒有被吃掉」——reviewer 把 sheet 改回 R1 的缺陷結構（`Group`＋
+    /// 固定 `.height(420)`，內文因此被裁成 1～2 行）重跑，量到的比值是 1.448，仍然通過
+    /// `> 1.3`；同一次改動下，正確版（`ScrollView`，內文完整 4～5 行）量到的比值是 4.34。兩者
+    /// 中間有一段清楚的空檔，這裡把門檻拉到 `3.0`——量到 `≤ 3.0` 代表内文很可能被裁成只剩一兩
+    /// 行，不是「字級不夠大」的問題。
+    private func assertBodyTextNotTruncated(_ ax3Height: CGFloat, baselineHeight: CGFloat) {
+        XCTAssertGreaterThan(
+            ax3Height, baselineHeight * 3.0,
+            "AX3 內文高度（\(ax3Height)pt）應該大於一般字級基準（\(baselineHeight)pt）的 3 倍——" +
+            "這個倍數驗證的是「內文行數沒有被吃掉」（完整內文在 AX3 下應該是 4～5 行），不是" +
+            "「字級有沒有放大」（截斷成 1～2 行的版本也會比基準高，但量到的倍數落在 3.0 以下，" +
+            "merge-review R2 M2 major）"
+        )
+    }
+
+    /// merge-review R2 M2 附帶事項：`swipeUp()` 只做一次在 AX5 下不夠——reviewer 實測「捲到
+    /// IN-1 整句可見」在 AX5 需要三次才夠。改成迴圈捲到 `isHittable` 或連續捲動兩次高度都沒有
+    /// 變化（判定捲到底，避免卡在螢幕上其實沒有更多內容可捲時無限迴圈）。上限 6 次純粹是安全
+    /// 帽，正常情況下 AX5 三次、AX3 通常不需要捲動就會用到。
+    private func scrollUntilHittable(_ element: XCUIElement, in app: XCUIApplication) {
+        var previousMinY: CGFloat?
+        for _ in 0..<6 {
+            if element.isHittable { return }
+            let minY = element.frame.minY
+            if let previousMinY, previousMinY == minY {
+                return
+            }
+            previousMinY = minY
+            app.swipeUp()
+        }
     }
 
     /// 「兩顆鈕不重疊」（merge-review R1 B1 驗收要求）——按鈕釘在 `ScrollView` 之外（見
