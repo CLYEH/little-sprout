@@ -407,7 +407,13 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   前綴與形狀的防禦性重驗），交給下一次 invocation 的既有消化迴圈刪除——沿用既有的
   attempts／退避／死信與 confirmed-delete 核對，不重新實作刪除路徑，也不影響額度（這批物件
   從未計入 `families.storage_used_bytes`，走佇列刪除不會觸發 `media` 表的 trigger，沒有重複
-  扣款的可能）。每次 invocation 的候選數（過了寬限期的物件數，不是看過的檔案數）上限見
+  扣款的可能）。**現況（LS-223 訂正）**：上述「兩支舊函式」裡，`purge_storage_queue_
+  enqueue_orphans()`（單整數簽名）已**零呼叫端**（`index.ts` 全面改呼叫 `_v2`，只剩
+  `supabase/tests/109_…sql` §4 對它自己的既有測試仍在呼叫）——**deprecated，LS-222 起由
+  `_v2` 取代；移除待 DESTRUCTIVE 核可票**，本票不 DROP。另一支
+  `purge_storage_unknown_media_paths()` 則**不是**死碼——仍被上面
+  `purge_storage_classify_orphan_paths()` 內部呼叫，只是不再由 `index.ts` 直接呼叫，維持
+  既有（非 deprecated）狀態。每次 invocation 的候選數（過了寬限期的物件數，不是看過的檔案數）上限見
   `purge-storage/orphan_scan.ts` 的 `batchSize` 參數（由 `index.ts` 的 `ORPHAN_SCAN_BATCH_SIZE`
   傳入）；家庭前綴走 round-robin、續掃進度持久化在 `public.orphan_scan_cursor`（避免排序在前
   的家庭永遠掃完前面就用掉整個預算，讓後面的家庭餓死）——**LS-222（收口 N2）游標分段寫回**：
@@ -2162,8 +2168,11 @@ secret（存新式 `sb_secret_…` default key），與 LS-153 既有的
 前務必先確認 `ls153_purge_storage_secret_key` 已建立（`select 1 from
 vault.decrypted_secrets where name = 'ls153_purge_storage_secret_key'`），
 否則子查詢回 `NULL`、`jsonb_build_object('apikey', NULL)` 產出
-`{"apikey": null}`，症狀與本票要修的 401 一模一樣。舊的
-`ls153_purge_storage_service_role` 待 cron job 切換完成、煙測通過後再刪除：
+`{"apikey": null}`，症狀與本票要修的 401 一模一樣。**現況（LS-223 訂正）**：舊的
+`ls153_purge_storage_service_role`（legacy service_role JWT）已於 2026-09-06 cron
+job 切換到新式 `sb_secret_…` 標頭並煙測通過後刪除——正式站 `vault` 目前只剩
+`ls153_purge_storage_secret_key` 這一個 secret，下方範例即是切換後實際使用的
+標頭：
 ```sql
 select net.http_post(
   url := '<SUPABASE_URL>/functions/v1/purge-storage',
@@ -2254,12 +2263,12 @@ Deno/Edge Function 的測試治具，e2e 驗證腳本留在票的 handoff／scra
 `CREATE EXTENSION` 會直接失敗，migration 把這個情況吞掉只留 NOTICE，不擋
 migration chain（本機開發映像實測 pg_cron 1.6.4 可用）；正式站部署（`db push`＋
 Edge Function 部署＋排程確認）依 LS-78 授權狀態由 orchestrator 處理，不在本票
-範圍。**目前沒有任何東西會觸發這支 Edge Function**（無 `pg_cron`、無 Scheduled
-Function 註冊——`pg_cron` 只排了 `purge_expired()`，見上方 migration 第 6 段）：
-正式站需要另外接排程（`pg_cron`＋`pg_net`，或 Supabase 原生的 Scheduled Edge
-Function），由 orchestrator 依 LS-78 部署狀態決定時機與方式，不在本票落地範圍
-——EF 觸發機制沒接上之前，Storage 物件端對端實際上一個都不會被刪，這是
-LS-132 對外文字上線前的硬前置（R2 review informational i4）。
+範圍。**現況（LS-223 訂正）**：正式站 cron job 2 `ls153-purge-storage-daily`
+已於 2026-09-06 接上（`pg_cron`＋`pg_net`，`apikey` 讀取
+`ls153_purge_storage_secret_key`，同上方範例），煙測回應 HTTP 200——這支 Edge
+Function 現在會被每日排程觸發（排程本身不在 migration 裡，是 orchestrator 依
+LS-78 授權狀態直接在正式站 `vault`／`cron.schedule()` 建立，見上方「pg_cron＋
+pg_net 呼叫範本」小節）。
 
 **索引建立方式（R3，F5-informational (b)）**：本 migration 六張 partial index
 （見「0. 效能索引」）用 `create index`（非 `concurrently`）——migration 在單一
@@ -2457,6 +2466,14 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
 為權威來源；本機 push-gate 的文字解析模式是 best-effort（已知限制見
 `scripts/gates/api_contract_check.py` 檔頭）。兩者不一致時一律以 CI 為準——本機綠、CI 紅就是
 schema 或本文要修，不是 gate 要調。
+
+**deprecated 標記不寫進下面的機械清單**（LS-223 訂正）：`api-contract-check.sh` 要求這個區塊
+逐字等於 schema 抽出的簽章清單，不接受任何附註文字——下面清單裡的
+`purge_storage_queue_enqueue_orphans(text, uuid, text[])` 是**單整數回傳的舊簽名，已
+deprecated（LS-222 起由 `purge_storage_queue_enqueue_orphans_v2` 取代，零呼叫端，只剩
+`supabase/tests/109_…sql` §4 自測仍呼叫；不 DROP，移除待 DESTRUCTIVE 核可票，見 §3
+「media」小節與 `60_default_privileges.sql` 對應註解）**——函式仍存在於 schema，因此仍須留在
+這個清單裡供 gate 對帳，deprecated 狀態只記錄在這行散文與上述兩處。
 
 <!-- API-CONTRACT:RPC
 accept_eula(text)
