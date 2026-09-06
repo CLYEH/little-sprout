@@ -10,6 +10,12 @@
 //     送進 enqueueOrphans，也不會靜默消失。
 //   - N2：游標在每個家庭前綴掃完後就寫回一次（不是整趟掃描結束才寫一次）；
 //     候選預算用完時仍然寫回已完整處理的那個家庭，下次從那裡續掃。
+//
+// LS-223（收口 LS-222 merge-review comment f64a788e 的 F1／F2）：
+//   - F2：候選預算（considered）不被形狀不合規的路徑吃掉——classify 之後才扣掉
+//     invalidPaths.length。
+//   - F1：不合規路徑改為計數（invalidCount）＋前 5 筆樣本（invalidSample），
+//     不再無上限把整組路徑 join 進 warning 字串。
 
 import { assertEquals } from "jsr:@std/assert@1";
 import {
@@ -90,7 +96,13 @@ Deno.test("scanFamilyOrphans：形狀不合規的落差樣本（_thumb.png）計
   const warnings: string[] = [];
   const result = await scanFamilyOrphans(deps, familyId, CUTOFF_MS, warnings);
 
-  assertEquals(result, { considered: 2, enqueued: 1, dropped: 1 });
+  assertEquals(result, {
+    considered: 1,
+    enqueued: 1,
+    dropped: 1,
+    invalidCount: 1,
+    invalidSample: [badThumbPath],
+  });
   assertEquals(enqueueCalls, [{ familyId, paths: [orphanPath] }]);
   assertEquals(
     warnings.some((w) => w.includes(badThumbPath)),
@@ -145,7 +157,13 @@ Deno.test("scanFamilyOrphans：enqueueOrphans 自己防禦性重驗丟棄的筆�
 
   const result = await scanFamilyOrphans(deps, familyId, CUTOFF_MS, []);
 
-  assertEquals(result, { considered: 2, enqueued: 1, dropped: 1 });
+  assertEquals(result, {
+    considered: 2,
+    enqueued: 1,
+    dropped: 1,
+    invalidCount: 0,
+    invalidSample: [],
+  });
 });
 
 Deno.test("scanFamilyOrphans：還在寬限期內的物件不計入候選，不會呼叫 classifyPaths／enqueueOrphans", async () => {
@@ -174,7 +192,13 @@ Deno.test("scanFamilyOrphans：還在寬限期內的物件不計入候選，不�
   };
 
   const result = await scanFamilyOrphans(deps, familyId, CUTOFF_MS, []);
-  assertEquals(result, { considered: 0, enqueued: 0, dropped: 0 });
+  assertEquals(result, {
+    considered: 0,
+    enqueued: 0,
+    dropped: 0,
+    invalidCount: 0,
+    invalidSample: [],
+  });
 });
 
 Deno.test("scanFamilyOrphans：avatars 子資料夾整個跳過，不會被當成 year 資料夾遞迴列出", async () => {
@@ -208,7 +232,13 @@ Deno.test("scanFamilyOrphans：avatars 子資料夾整個跳過，不會被當�
   };
 
   const result = await scanFamilyOrphans(deps, familyId, CUTOFF_MS, []);
-  assertEquals(result, { considered: 0, enqueued: 0, dropped: 0 });
+  assertEquals(result, {
+    considered: 0,
+    enqueued: 0,
+    dropped: 0,
+    invalidCount: 0,
+    invalidSample: [],
+  });
   assertEquals(avatarsListed, false, "avatars 資料夾不該被遞迴列出");
 });
 
@@ -279,6 +309,8 @@ Deno.test("scanOrphanStorageObjects：游標在每個家庭前綴掃完後就寫
     dropped: 0,
     scanCompleted: true,
     cursor: null,
+    invalidCount: 0,
+    invalidSample: [],
   });
 });
 
@@ -319,6 +351,8 @@ Deno.test("scanOrphanStorageObjects：候選預算用完時停在已完整處理
     dropped: 0,
     scanCompleted: false,
     cursor: "a",
+    invalidCount: 0,
+    invalidSample: [],
   });
 });
 
@@ -340,4 +374,119 @@ Deno.test("scanOrphanStorageObjects：round-robin 從游標之後的家庭開始
   assertEquals(writeCursorCalls, ["c", "a", null]);
   assertEquals(result.scanCompleted, true);
   assertEquals(result.cursor, null);
+});
+
+// ---------------------------------------------------------------------------
+// LS-223 —— F2：候選預算不被形狀不合規的路徑吃掉／F1：不合規路徑改計數＋樣本
+// ---------------------------------------------------------------------------
+
+Deno.test("scanOrphanStorageObjects：候選預算不被形狀不合規的路徑吃掉（F2：considered 在 classify 之後才扣掉 invalidPaths）", async () => {
+  const validName = "valid.jpg";
+  const invalidNames = [
+    "bad1_thumb.png",
+    "bad2_thumb.png",
+    "bad3_thumb.png",
+    "bad4_thumb.png",
+  ];
+  const tree = buildFamilyTree({
+    a: [
+      { name: validName, createdAt: PAST_GRACE },
+      ...invalidNames.map((name) => ({ name, createdAt: PAST_GRACE })),
+    ],
+    b: [],
+    c: [],
+  });
+  const validPath = `a/2026/07/${validName}`;
+  const invalidPaths = invalidNames.map((name) => `a/2026/07/${name}`);
+
+  const { deps, writeCursorCalls } = makeDeps(tree, {
+    classifyPaths: (paths) => {
+      if (paths.includes(validPath)) {
+        return Promise.resolve({
+          ok: true,
+          result: { orphanPaths: [validPath], invalidPaths },
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        result: { orphanPaths: [], invalidPaths: [] },
+      });
+    },
+    enqueueOrphans: (_familyId, paths) =>
+      Promise.resolve({
+        ok: true,
+        result: { enqueued: paths.length, dropped: 0 },
+      }),
+  });
+
+  // batchSize=2：家庭 a 有 5 個過寬限期候選（1 合規＋4 不合規）。修法前
+  // considered 在 classify 之前就定值＝5，>= batchSize(2) 會讓 round-robin
+  // 在處理完 a 之後就停下、不再繼續掃 b／c。修法後 considered 只計「過寬限期
+  // 且形狀合規」的候選（=1），應該可以繼續繞完整圈。
+  const result = await scanOrphanStorageObjects(deps, CUTOFF_MS, 2, []);
+
+  assertEquals(
+    writeCursorCalls,
+    ["a", "b", null],
+    "considered 不該把 4 個形狀不合規的路徑算進候選預算，應該能繼續繞完 b／c",
+  );
+  assertEquals(result.scanCompleted, true);
+  assertEquals(result.cursor, null);
+  assertEquals(result.enqueued, 1);
+  assertEquals(result.invalidCount, 4);
+});
+
+Deno.test("scanFamilyOrphans：不合規路徑數量超過 5 筆時，只回報前 5 筆樣本，計數仍是真實筆數（F1：計數＋樣本回報，不再無上限 join 整份清單）", async () => {
+  const familyId = "fam-5";
+  const invalidNames = Array.from({ length: 7 }, (_, i) => `bad-${i}.png`);
+  const invalidPaths = invalidNames.map((name) =>
+    `${familyId}/2026/07/${name}`
+  );
+
+  const deps: OrphanScanDeps = {
+    listPaged: (path) => {
+      if (path === familyId) {
+        return Promise.resolve([{ id: null, name: "2026" }]);
+      }
+      if (path === `${familyId}/2026`) {
+        return Promise.resolve([{ id: null, name: "07" }]);
+      }
+      if (path === `${familyId}/2026/07`) {
+        return Promise.resolve(
+          invalidNames.map((name, i) => ({
+            id: `f${i}`,
+            name,
+            created_at: PAST_GRACE,
+          })) satisfies StorageEntry[],
+        );
+      }
+      return Promise.resolve([]);
+    },
+    classifyPaths: () =>
+      Promise.resolve({ ok: true, result: { orphanPaths: [], invalidPaths } }),
+    enqueueOrphans: unreachable("orphanPaths 是空的，不該呼叫 enqueueOrphans"),
+    readCursor: () => Promise.resolve(null),
+    writeCursor: () => Promise.resolve(),
+  };
+
+  const warnings: string[] = [];
+  const result = await scanFamilyOrphans(deps, familyId, CUTOFF_MS, warnings);
+
+  assertEquals(
+    result.invalidCount,
+    7,
+    "計數必須是真實筆數，不能被樣本上限蓋掉",
+  );
+  assertEquals(result.invalidSample, invalidPaths.slice(0, 5), "樣本最多 5 筆");
+  assertEquals(result.considered, 0, "7 筆全部不合規，扣掉後合規候選為 0");
+  assertEquals(
+    warnings.some((w) => w.includes(invalidPaths[6])),
+    false,
+    "warning 不該把第 6 筆之後的路徑塞進字串（F1 修法：計數＋樣本，不是無上限 join）",
+  );
+  assertEquals(
+    warnings.some((w) => w.includes("7 個路徑形狀不合規")),
+    true,
+    "warning 仍要保留真實計數",
+  );
 });

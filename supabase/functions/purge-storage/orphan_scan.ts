@@ -32,6 +32,16 @@
 // storage.list()／supabase.rpc() 的實際型別——真正的實作（wiring 到 Storage
 // bucket／postgrest RPC）由 index.ts 的 buildOrphanScanDeps() 提供，deno test
 // 用 fake Deps 完全不連線任何真正的 Supabase 專案。
+//
+// LS-223（收口 LS-222 merge-review comment f64a788e 的 F1／F2）：
+//   F2（候選預算）：considered 過去在 classifyPaths() 之前就定值（＝所有過寬限期
+//     物件），形狀不合規的候選會吃掉 round-robin 的候選預算——現在 classify 之後
+//     才計算 considered，扣掉 invalidPaths.length，只計「過寬限期且形狀合規」的
+//     候選。
+//   F1（不合規路徑回報）：warnings／回應 JSON 不再把整組不合規路徑無上限 join 成
+//     一條字串（同一批不合規物件每一輪都會重複出現，長度隨數量線性成長無上限）
+//     ——改成 invalidCount（真實計數）＋invalidSample（最多 5 筆樣本），由
+//     index.ts 組成回應的 orphanInvalid 欄位。
 
 export interface StorageEntry {
   id: string | null;
@@ -82,6 +92,10 @@ export interface FamilyOrphanResult {
   considered: number;
   enqueued: number;
   dropped: number;
+  // LS-223（F1）：這個家庭這一輪貢獻的「形狀不合規」計數與前 5 筆樣本——見
+  // scanFamilyOrphans 內的說明。
+  invalidCount: number;
+  invalidSample: string[];
 }
 
 export interface OrphanScanResult {
@@ -89,6 +103,10 @@ export interface OrphanScanResult {
   dropped: number;
   scanCompleted: boolean;
   cursor: string | null;
+  // LS-223（F1）：整次 invocation（可能橫跨多個家庭）累計的「形狀不合規」計數與
+  // 前 5 筆樣本，供 index.ts 塞進回應 JSON 的 orphanInvalid 欄位。
+  invalidCount: number;
+  invalidSample: string[];
 }
 
 // 一次處理完一個家庭前綴的所有 year/month/file（原子單位，不在家庭內部中途停下
@@ -104,7 +122,15 @@ export async function scanFamilyOrphans(
   warnings: string[],
 ): Promise<FamilyOrphanResult> {
   const yearEntries = await deps.listPaged(familyId, `${familyId}/`, warnings);
-  if (yearEntries === null) return { considered: 0, enqueued: 0, dropped: 0 };
+  if (yearEntries === null) {
+    return {
+      considered: 0,
+      enqueued: 0,
+      dropped: 0,
+      invalidCount: 0,
+      invalidSample: [],
+    };
+  }
 
   // N3：不再用本地 regex 篩形狀——這裡只收集「過了寬限期」的候選路徑，形狀合法
   // 性完全交給下面的 deps.classifyPaths()（唯一判準 private.is_media_object_path()）。
@@ -146,33 +172,64 @@ export async function scanFamilyOrphans(
   }
 
   if (pastGraceCandidates.length === 0) {
-    return { considered: 0, enqueued: 0, dropped: 0 };
+    return {
+      considered: 0,
+      enqueued: 0,
+      dropped: 0,
+      invalidCount: 0,
+      invalidSample: [],
+    };
   }
-  const considered = pastGraceCandidates.length;
 
   const classified = await deps.classifyPaths(pastGraceCandidates);
   if (!classified.ok) {
     warnings.push(
       `orphan scan：路徑分類失敗（${familyId}）：${classified.error}`,
     );
-    return { considered, enqueued: 0, dropped: 0 };
+    // classify 本身失敗，無法區分合規／不合規——維持舊行為，把整批過寬限期候選
+    // 都算進 considered（沒有 invalidPaths 可扣）。
+    return {
+      considered: pastGraceCandidates.length,
+      enqueued: 0,
+      dropped: 0,
+      invalidCount: 0,
+      invalidSample: [],
+    };
   }
 
   const { orphanPaths, invalidPaths } = classified.result;
+  // LS-223（F2，收口 LS-222 merge-review comment f64a788e）：候選預算只該計「過寬
+  // 限期且形狀合規」的候選——形狀不合規的路徑本來就不會被排入清除佇列，不該吃掉
+  // round-robin 的 500 元候選預算（否則單一家庭大量不合規物件會讓其它家庭要多繞
+  // 好幾輪才輪到，見 orphan_scan.ts 檔頭與 scanOrphanStorageObjects 的
+  // batchSize 用法）。classify 之後才知道 invalidPaths，因此扣除動作必須在這裡
+  // （classify 之前的候選數只是「過寬限期」，不能拿來當 considered）。
+  const considered = pastGraceCandidates.length - invalidPaths.length;
   let dropped = invalidPaths.length;
-  // N3：形狀不合規的路徑不再靜默消失——這裡明確計入 dropped 並發 warning，讓
-  // EF 回應／log 都看得到，不是只在候選階段被排除、外觀上跟「本來就沒有孤兒」
-  // 一樣。
+  // LS-223（F1，收口同一則 merge-review）：不合規路徑改為「計數＋前 5 筆樣本」，
+  // 不再把整組路徑無上限地 join 進一條字串——同一批不合規物件會在每一輪重複出現
+  // （形狀問題不會自己消失），舊寫法讓 warning／回應 JSON 的長度隨不合規物件數
+  // 線性成長且無上限。真實筆數仍完整寫進 invalidCount／warning 文字，只有列出的
+  // 路徑清單截斷。
+  const invalidSample = invalidPaths.slice(0, 5);
   if (invalidPaths.length > 0) {
+    const omitted = invalidPaths.length - invalidSample.length;
+    const suffix = omitted > 0 ? `（另 ${omitted} 筆略）` : "";
     warnings.push(
       `orphan scan：${invalidPaths.length} 個路徑形狀不合規（不符 ` +
         `private.is_media_object_path()），已從候選中丟棄，不會被排入清除` +
-        `佇列（${familyId}）：${invalidPaths.join(", ")}`,
+        `佇列（${familyId}）：${invalidSample.join(", ")}${suffix}`,
     );
   }
 
   if (orphanPaths.length === 0) {
-    return { considered, enqueued: 0, dropped };
+    return {
+      considered,
+      enqueued: 0,
+      dropped,
+      invalidCount: invalidPaths.length,
+      invalidSample,
+    };
   }
 
   const enqueueResult = await deps.enqueueOrphans(familyId, orphanPaths);
@@ -180,7 +237,13 @@ export async function scanFamilyOrphans(
     warnings.push(
       `orphan scan：寫入 purge_storage_queue 失敗（${familyId}）：${enqueueResult.error}`,
     );
-    return { considered, enqueued: 0, dropped };
+    return {
+      considered,
+      enqueued: 0,
+      dropped,
+      invalidCount: invalidPaths.length,
+      invalidSample,
+    };
   }
 
   // 防禦性重驗（enqueueOrphans 底層 RPC 對前綴／形狀再驗一次）多丟棄的筆數也算
@@ -192,6 +255,8 @@ export async function scanFamilyOrphans(
     considered,
     enqueued: enqueueResult.result.enqueued,
     dropped,
+    invalidCount: invalidPaths.length,
+    invalidSample,
   };
 }
 
@@ -227,6 +292,8 @@ export async function scanOrphanStorageObjects(
       dropped: 0,
       scanCompleted: false,
       cursor: resumeAfter,
+      invalidCount: 0,
+      invalidSample: [],
     };
   }
 
@@ -237,7 +304,14 @@ export async function scanOrphanStorageObjects(
 
   if (familyIds.length === 0) {
     await deps.writeCursor(null, warnings);
-    return { enqueued: 0, dropped: 0, scanCompleted: true, cursor: null };
+    return {
+      enqueued: 0,
+      dropped: 0,
+      scanCompleted: true,
+      cursor: null,
+      invalidCount: 0,
+      invalidSample: [],
+    };
   }
 
   // round-robin：從游標之後的第一個家庭開始（storage.list() 預設
@@ -253,6 +327,8 @@ export async function scanOrphanStorageObjects(
   let considered = 0;
   let enqueued = 0;
   let dropped = 0;
+  let invalidCount = 0;
+  let invalidSample: string[] = [];
   let scanCompleted = false;
   let cursor: string | null = resumeAfter;
 
@@ -262,6 +338,12 @@ export async function scanOrphanStorageObjects(
     considered += result.considered;
     enqueued += result.enqueued;
     dropped += result.dropped;
+    invalidCount += result.invalidCount;
+    // LS-223（F1）：整次 invocation 的樣本一樣封頂 5 筆（跨家庭累計），不是每個
+    // 家庭各自 5 筆疊加。
+    if (invalidSample.length < 5) {
+      invalidSample = invalidSample.concat(result.invalidSample).slice(0, 5);
+    }
 
     const isLastVisit = visited + 1 >= familyIds.length;
     cursor = isLastVisit ? null : familyId; // 繞完一整圈：下一輪從頭開始，游標歸零。
@@ -277,5 +359,12 @@ export async function scanOrphanStorageObjects(
     }
   }
 
-  return { enqueued, dropped, scanCompleted, cursor };
+  return {
+    enqueued,
+    dropped,
+    scanCompleted,
+    cursor,
+    invalidCount,
+    invalidSample,
+  };
 }
