@@ -85,6 +85,7 @@
 		38CA95B73E034159909A0F90 /* EmailSignInModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A890D7141A740E1F67B93BD7 /* EmailSignInModel.swift */; };
 		38FACDC15B0DA2AF7A373639 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8351A5DED54BE71EBD0A9161 /* SettingsView.swift */; };
 		39D4FEB1C8077F6F5E099C78 /* LegalMarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 624688AFC3955A62AA8C6193 /* LegalMarkdownDocument.swift */; };
+		3B8B050311C2E7D8ABC66A97 /* SupabaseMediaSoftDeleteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4765EF6D4F14332FC2ED3B3B /* SupabaseMediaSoftDeleteTests.swift */; };
 		3C4525B513B5947A8F801211 /* TapTargetGateHarness+Albums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 548C97E596BB9FBC3C8CA3FD /* TapTargetGateHarness+Albums.swift */; };
 		3CF008F18A802F26417FE3D2 /* SettingsRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24956A0B458F559DEA9A97B /* SettingsRowView.swift */; };
 		3DE6FD3FBE226113DC1CCC57 /* VideoPlayerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1905C686E265375F2E30D04 /* VideoPlayerScreen.swift */; };
@@ -105,6 +106,7 @@
 		4CF7E19D52171C546E2EAAAB /* JoinWaitingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE21E4A220A9C7AF7F79450 /* JoinWaitingView.swift */; };
 		4DAC292C1F7A6F7721709114 /* AppBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A53A1F6D147A58F55F72D3F /* AppBackground.swift */; };
 		4FBA0B132FA839140B2E7FB4 /* SupabaseClientFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E69B95CA3E637FEF6DFCCB /* SupabaseClientFactoryTests.swift */; };
+		504526865C4E36877D62D018 /* MediaDraftTempStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E42EA52EA5C7F06F992E88B /* MediaDraftTempStorageTests.swift */; };
 		506E4EBE1704397A0F6CBFCF /* SupabaseMediaUploadServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1316439F5231DB2C470519A8 /* SupabaseMediaUploadServiceTests.swift */; };
 		50766378E2506C48A8E12A27 /* FamilyStore+Members.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7D4ADEA9A9CFF7F25BE611 /* FamilyStore+Members.swift */; };
 		5082D3510D50899E250FFFA0 /* TimelineContentAssemblerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA808B45C621641B99EC528B /* TimelineContentAssemblerTests.swift */; };
@@ -156,6 +158,7 @@
 		7C07BF69FAFB75E77DA11249 /* TimelineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F8DC307DA209CD5559A0E6 /* TimelineStore.swift */; };
 		7C64D41B5C041B3BFA66B7A8 /* EmailFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D71D805DBF9E7B36AF16BE8 /* EmailFormatTests.swift */; };
 		7DA98586E59FA617D07C323D /* SupabaseFamilyAPIClientInviteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64087AB29C1A51AC86834868 /* SupabaseFamilyAPIClientInviteTests.swift */; };
+		7F08F478DF8A0C469FDD0E57 /* DiaryComposerStoreDraftCleanupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C80FBB4835B68D0EE95FD6 /* DiaryComposerStoreDraftCleanupTests.swift */; };
 		7F4B5EC36F95C02CCF5A14E0 /* StubChildAvatarUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA51041D6190DA7BB8F683D0 /* StubChildAvatarUploadService.swift */; };
 		7F7EFA8CFB0323AAA5344BA6 /* LegalDocumentKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9F5D419E50A0CC051AAFE4 /* LegalDocumentKind.swift */; };
 		838BEA28E6C05A825D649B22 /* SupabaseFamilyAPIClientJoinTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */; };
@@ -182,6 +185,7 @@
 		99D437E4814A1F6FDCE8C47D /* FamilyMembersView+LeavePrecheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E964E54E8EEC6170EC3E8F3 /* FamilyMembersView+LeavePrecheck.swift */; };
 		9A5A75B38AA0EF48464780C6 /* PasswordSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1372077B4B9352E17F4770 /* PasswordSignInView.swift */; };
 		9A7D2E907F863BA4912D5745 /* OTPVerificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C8A6A59E9D7E1205CC9E65 /* OTPVerificationView.swift */; };
+		9B182287DA20BCEAB63F63B5 /* MediaDraftTempStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AB8D7283EF71E96A85701B /* MediaDraftTempStorage.swift */; };
 		9BB090E59FEDC90C7BD801AE /* MasonryLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406CB9884861695DA9690318 /* MasonryLayoutTests.swift */; };
 		9BF2965CF886A8C6DD81755A /* AuthButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14AB4F80381DABD0E6FE12B0 /* AuthButtons.swift */; };
 		9C01D3DD6268BF3514B4643A /* TimelineDayGroupingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D500E43E6BE915800BDC015C /* TimelineDayGroupingTests.swift */; };
@@ -248,6 +252,7 @@
 		D7AF310D8E59B65753432F56 /* QAAccessibilityID.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4B8B83A763BF11381A8A48B /* QAAccessibilityID.swift */; };
 		D9EE7594166B78E579AD8906 /* EmailDisplayName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA1A981D344175704EF6810 /* EmailDisplayName.swift */; };
 		DB2A761CDF5BC8B9BD02ECBB /* SupabaseDiaryAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037FF26C7AE60735F31B632A /* SupabaseDiaryAPIClient.swift */; };
+		DC91BBC79099683797403EF7 /* MediaUploadService+SoftDelete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DDCBCF8F78227507C46D737 /* MediaUploadService+SoftDelete.swift */; };
 		DDB9CE8D278C585C84B4555D /* TapTargetGateHarness+Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8062CC76198B9E7F3BFCD3C /* TapTargetGateHarness+Settings.swift */; };
 		DDBF77E8E686704D89F1ABA1 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F28DE483C3DA54A9672BFDFF /* Supabase */; };
 		DE90F17665F93D3121EF7293 /* ChildAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9A9FE13E73169C65E5A03F /* ChildAvatarView.swift */; };
@@ -342,6 +347,7 @@
 		14AB4F80381DABD0E6FE12B0 /* AuthButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthButtons.swift; sourceTree = "<group>"; };
 		14C3B6A37517D958F06E5C25 /* UploadQueueModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueModelsTests.swift; sourceTree = "<group>"; };
 		1607F0D7FCD5EB97C60556C4 /* SupabaseTimelineAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseTimelineAPIClient.swift; sourceTree = "<group>"; };
+		16AB8D7283EF71E96A85701B /* MediaDraftTempStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDraftTempStorage.swift; sourceTree = "<group>"; };
 		16F94CB4C84E1E0211A97014 /* TimelineRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineRoute.swift; sourceTree = "<group>"; };
 		17ADF30BD9D82AA5300EFF5B /* DiaryCardVideoBadgeGeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryCardVideoBadgeGeometryTests.swift; sourceTree = "<group>"; };
 		17B6EDB33CABFA69510857AF /* InviteCodeField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeField.swift; sourceTree = "<group>"; };
@@ -368,6 +374,7 @@
 		2C5C1334809B861267881A3E /* SectionTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionTabBar.swift; sourceTree = "<group>"; };
 		2D45C2CD0AC1D735E5576ABB /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		2D71D805DBF9E7B36AF16BE8 /* EmailFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailFormatTests.swift; sourceTree = "<group>"; };
+		2E42EA52EA5C7F06F992E88B /* MediaDraftTempStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDraftTempStorageTests.swift; sourceTree = "<group>"; };
 		2E62ED61585669EC87D192B4 /* EditChildAvatarFieldContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditChildAvatarFieldContent.swift; sourceTree = "<group>"; };
 		2F0C86CE0B5169169D1EA0D3 /* qa-video.mp4 */ = {isa = PBXFileReference; path = "qa-video.mp4"; sourceTree = "<group>"; };
 		33A580FB25AD23E59B1A979C /* ChildrenStoreAvatarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenStoreAvatarTests.swift; sourceTree = "<group>"; };
@@ -392,6 +399,7 @@
 		3B8D21791AED29E6FE1DB083 /* AlbumsAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsAPIClient.swift; sourceTree = "<group>"; };
 		3D953E0A9EB753A52A71CFC7 /* SectionTabBarPushRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionTabBarPushRegressionTests.swift; sourceTree = "<group>"; };
 		3D9B81015EBB68F05A715D7F /* InvitePhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvitePhase.swift; sourceTree = "<group>"; };
+		3DDCBCF8F78227507C46D737 /* MediaUploadService+SoftDelete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MediaUploadService+SoftDelete.swift"; sourceTree = "<group>"; };
 		3E7946776E289C18F37C9B35 /* AvatarImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarImageProcessor.swift; sourceTree = "<group>"; };
 		3FB6E1E2FDB82CD665A7E7ED /* AlbumsContentAssembler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsContentAssembler.swift; sourceTree = "<group>"; };
 		3FCCD7822AD9EF5695A8FAFB /* ChildrenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenStore.swift; sourceTree = "<group>"; };
@@ -405,6 +413,7 @@
 		468EF1C61FA7C2B35E756487 /* TestSupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupabaseClient.swift; sourceTree = "<group>"; };
 		46DA9003B46883C47C678BA1 /* CreateChildAvatarFieldUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateChildAvatarFieldUITests.swift; sourceTree = "<group>"; };
 		4731B4832AABBF59324EDBC8 /* DiaryComposerStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStoreTests.swift; sourceTree = "<group>"; };
+		4765EF6D4F14332FC2ED3B3B /* SupabaseMediaSoftDeleteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseMediaSoftDeleteTests.swift; sourceTree = "<group>"; };
 		47FFB8F471134452A808BD4E /* InviteFamilyView+ActionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "InviteFamilyView+ActionBar.swift"; sourceTree = "<group>"; };
 		48C785FE3D7CCF80C7870997 /* EmailDisplayNameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailDisplayNameTests.swift; sourceTree = "<group>"; };
 		4A53A1F6D147A58F55F72D3F /* AppBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBackground.swift; sourceTree = "<group>"; };
@@ -507,6 +516,7 @@
 		9EE645E81A3F0EF6450F481F /* DiaryEditorView+Photos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DiaryEditorView+Photos.swift"; sourceTree = "<group>"; };
 		9EF007B83B380D669226125D /* AlbumDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailView.swift; sourceTree = "<group>"; };
 		A1905C686E265375F2E30D04 /* VideoPlayerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerScreen.swift; sourceTree = "<group>"; };
+		A1C80FBB4835B68D0EE95FD6 /* DiaryComposerStoreDraftCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStoreDraftCleanupTests.swift; sourceTree = "<group>"; };
 		A1FE65622DA3D1DE00028F27 /* PrintPhotoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintPhotoCard.swift; sourceTree = "<group>"; };
 		A50E6303411CD369F8AFC507 /* FamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyAPIClient.swift; sourceTree = "<group>"; };
 		A5718C2E6D09354F5950BEA5 /* ChildrenRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenRoute.swift; sourceTree = "<group>"; };
@@ -784,6 +794,7 @@
 				33A580FB25AD23E59B1A979C /* ChildrenStoreAvatarTests.swift */,
 				6C7E229440047D04B81BCE30 /* ChildrenStoreTests.swift */,
 				EC531A82AD0092B3665DA94F /* DiaryCardVideoBadgeTests.swift */,
+				A1C80FBB4835B68D0EE95FD6 /* DiaryComposerStoreDraftCleanupTests.swift */,
 				715344039FD455DD3BD4E744 /* DiaryComposerStorePublishRetryTests.swift */,
 				451694C23C0044D0DCDD0356 /* DiaryComposerStorePublishTests.swift */,
 				4731B4832AABBF59324EDBC8 /* DiaryComposerStoreTests.swift */,
@@ -813,6 +824,7 @@
 				7D8E6D658192216FDCE4EA85 /* LegalDocumentSheetLayoutTests.swift */,
 				01518BAA679CF14F5113257E /* LegalMarkdownDocumentTests.swift */,
 				406CB9884861695DA9690318 /* MasonryLayoutTests.swift */,
+				2E42EA52EA5C7F06F992E88B /* MediaDraftTempStorageTests.swift */,
 				0507B2F97DF5468321E35CF3 /* MultiChildCaptionFormatterTests.swift */,
 				A5C9C0FFAC9911BA268EBA27 /* OTPVerificationModelLockoutTests.swift */,
 				E466449A44696816AA484F94 /* OTPVerificationModelRateLimitTests.swift */,
@@ -834,6 +846,7 @@
 				DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */,
 				1CFC8787191D904A091D87BB /* SupabaseFamilyAPIClientProfileTests.swift */,
 				94B90F66016EC2C905347224 /* SupabaseFamilyAPIClientTests.swift */,
+				4765EF6D4F14332FC2ED3B3B /* SupabaseMediaSoftDeleteTests.swift */,
 				265ECDE8A6FEEB9D93E92AE4 /* SupabaseMediaUploadServiceCleanupTests.swift */,
 				87CB2AF4E34834F3279C2367 /* SupabaseMediaUploadServiceDurationTests.swift */,
 				1316439F5231DB2C470519A8 /* SupabaseMediaUploadServiceTests.swift */,
@@ -977,8 +990,10 @@
 				4F7EE078AA3B0599ECA5A505 /* DiaryComposerModels.swift */,
 				72BAB19B1C35B0F183EE2699 /* DiaryComposerStore.swift */,
 				44CF5C61ADF3E932C1795C96 /* DiaryPhotoReorderMath.swift */,
+				16AB8D7283EF71E96A85701B /* MediaDraftTempStorage.swift */,
 				AAE2BD7F1D83D2C316B63293 /* MediaUploadService.swift */,
 				0EDCB1C873A0DB57A3165E54 /* MediaUploadService+Duration.swift */,
+				3DDCBCF8F78227507C46D737 /* MediaUploadService+SoftDelete.swift */,
 				673C41FF62F64795F7752D25 /* PickedItemLoader.swift */,
 				037FF26C7AE60735F31B632A /* SupabaseDiaryAPIClient.swift */,
 				40E13DE0D017682C31FBABE1 /* VideoTrimmer.swift */,
@@ -1387,7 +1402,9 @@
 				F90747ADA6446C8F7FA27137 /* LittleSproutApp.swift in Sources */,
 				ABFCA2E9F71A13308E8FF2EE /* MasonryLayout.swift in Sources */,
 				CB8CF24ABEB5FA5604FB027C /* MasonryPhotoWallView.swift in Sources */,
+				9B182287DA20BCEAB63F63B5 /* MediaDraftTempStorage.swift in Sources */,
 				E780FC18B0D21CFFEF8888CA /* MediaUploadService+Duration.swift in Sources */,
+				DC91BBC79099683797403EF7 /* MediaUploadService+SoftDelete.swift in Sources */,
 				69B5EF4869EB3BE9144F0B4C /* MediaUploadService.swift in Sources */,
 				98115AAF04CC10B3E194D066 /* MultiChildCaptionFormatter.swift in Sources */,
 				2D03B61ACA5DD6A649155EDC /* OTPCodeField.swift in Sources */,
@@ -1509,6 +1526,7 @@
 				B0D70EB20B4074F89886D5B5 /* ChildrenStoreAvatarTests.swift in Sources */,
 				0373CF2DC8FA481EBC64CFF3 /* ChildrenStoreTests.swift in Sources */,
 				79E33F2B40465C6912BDC6D6 /* DiaryCardVideoBadgeTests.swift in Sources */,
+				7F08F478DF8A0C469FDD0E57 /* DiaryComposerStoreDraftCleanupTests.swift in Sources */,
 				AE349DC5C77A050FEB6B3158 /* DiaryComposerStorePublishRetryTests.swift in Sources */,
 				65C40F1D88260A5EE89C8AAF /* DiaryComposerStorePublishTests.swift in Sources */,
 				41F32D3B2C6BA0F84DAEEA49 /* DiaryComposerStoreTests.swift in Sources */,
@@ -1539,6 +1557,7 @@
 				AD2482F08334232B51CE8912 /* LegalDocumentSheetLayoutTests.swift in Sources */,
 				C95AB29553DF8C462D11C361 /* LegalMarkdownDocumentTests.swift in Sources */,
 				9BB090E59FEDC90C7BD801AE /* MasonryLayoutTests.swift in Sources */,
+				504526865C4E36877D62D018 /* MediaDraftTempStorageTests.swift in Sources */,
 				87E501CF0FB428B9FB3A0DCF /* MockURLProtocol.swift in Sources */,
 				A9DD648DEC1C15C2232BA6D8 /* MultiChildCaptionFormatterTests.swift in Sources */,
 				E5D68ECAE74FF9EBBC782E5D /* OTPVerificationModelLockoutTests.swift in Sources */,
@@ -1570,6 +1589,7 @@
 				838BEA28E6C05A825D649B22 /* SupabaseFamilyAPIClientJoinTests.swift in Sources */,
 				362CE45092746F10A364D13C /* SupabaseFamilyAPIClientProfileTests.swift in Sources */,
 				15E53C663EE9CEDBF1E4FCCE /* SupabaseFamilyAPIClientTests.swift in Sources */,
+				3B8B050311C2E7D8ABC66A97 /* SupabaseMediaSoftDeleteTests.swift in Sources */,
 				E70D35B49C52CB73CBA0BCFA /* SupabaseMediaUploadServiceCleanupTests.swift in Sources */,
 				992B474F641BD90228CA9C62 /* SupabaseMediaUploadServiceDurationTests.swift in Sources */,
 				506E4EBE1704397A0F6CBFCF /* SupabaseMediaUploadServiceTests.swift in Sources */,
