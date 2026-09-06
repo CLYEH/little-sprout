@@ -4,10 +4,11 @@ import XCTest
 /// （家庭區塊列文字要在列高內垂直置中，本票直接落地——見 `SettingsRowView` 文件註解）。
 ///
 /// 共用 `TapTargetGateHarness`（`.settings`／`.settingsMemberRole`，見
-/// `TapTargetGateScreenName.swift`）：`familyStore.preview(withFamily:)` 帶一個測試家庭，
-/// `.settings` 的 `childrenStore` 角色由 `SettingsView` 新增的 `.task` 非同步補查（落到
-/// `PreviewChildAPIClient.fetchMyRole` 固定回傳的 `.owner`），`.settingsMemberRole` 同步
-/// seed 成 `.member`。
+/// `TapTargetGateScreenName.swift`）：`settingsFamilyStore(withFamily:)`（merge-review R1 M1
+/// 訂正後新增，見 `TapTargetGateHarness+Settings.swift`）帶一個測試家庭＋同步 seed
+/// `ownerUserID`／`members`（自己 `.member`，另一位 `.owner`），`.settings` 的 `childrenStore`
+/// 角色由 `SettingsView` 新增的 `.task` 非同步補查（落到 `PreviewChildAPIClient.fetchMyRole`
+/// 固定回傳的 `.owner`），`.settingsMemberRole` 同步 seed 成 `.member`。
 @MainActor
 final class SettingsViewTests: XCTestCase {
     // MARK: - 五區存在
@@ -152,10 +153,12 @@ final class SettingsViewTests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 5))
         let subtitle = app.staticTexts["編輯顯示名稱與頭像"]
         XCTAssertTrue(subtitle.waitForExistence(timeout: 5))
-        // `authStore.session` 在 harness 裡是 nil（`PreviewAuthService.currentSession` 預設
-        // 值），`SettingsView.displayName` 因此落到 `"我"` 這個 fallback（見該屬性文件註解）
-        // ——不是猜測，是目前這個 harness 組合下唯一會發生的字面值。
-        let name = app.staticTexts["我"]
+        // merge-review R1 M1 訂正後：`.settings` harness（`settingsFamilyStore(withFamily:)`）
+        // 同步 seed 了 `ownerUserID`，`SettingsView` 的 `.task(id: familyStore.ownerUserID)`
+        // 因此會補查 `myProfile`（`PreviewFamilyAPIClient.fetchMyProfile()` 固定回傳
+        // `displayName: "陳美玲"`）——`displayName` 優先用 `myProfile?.displayName`，不再落到
+        // `"我"` 這個 fallback（見該屬性文件註解）。
+        let name = app.staticTexts["陳美玲"]
         XCTAssertTrue(name.waitForExistence(timeout: 5))
 
         let groupMinY = min(name.frame.minY, subtitle.frame.minY)

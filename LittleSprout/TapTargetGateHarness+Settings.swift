@@ -6,6 +6,27 @@ import SwiftUI
 /// `TapTargetGateHarness+Albums.swift` 從主檔拆分的既有先例（見該檔文件註解）。不標 `private`
 /// （跨檔案 extension 存取不到），改用預設（internal）存取層級。
 extension TapTargetGateHarness {
+    /// LS-193 merge-review R1 M1：`.preview(withFamily:)` 只餵 `myFamily`，不餵
+    /// `ownerUserID`／`members`——production 路徑（`AuthenticatedGate.syncOwner(to:)`）保證
+    /// 使用者進到 `SettingsView` 之前 `ownerUserID` 一定有值，這三支 host 過去靠 R1 版
+    /// `DeleteAccountClassification` 對「`ownerUserID` 是 nil」的處置剛好是 `.generalMember`
+    /// 而蒙混過去；M1 訂正後這個輸入組合改回 `.pending`（正確行為，見 `DeleteAccountStep
+    /// .swift` 文件註解），這三支 host 因此需要同步補齊 `ownerUserID`／`members`——同
+    /// `TapTargetGateHarness+DeleteAccount.swift` 的 `generalMemberFamilyStore()` 既有作法，
+    /// 避免依賴 `PreviewFamilyAPIClient.listMembers()` 那組 async 才會拿到、且第二位成員
+    /// `userID` 每次呼叫都不同的樣本。
+    @MainActor
+    private static func settingsFamilyStore(withFamily family: Family) -> FamilyStore {
+        let familyStore = FamilyStore.preview(withFamily: family)
+        let myID = UUID()
+        familyStore.seedOwnerUserIDForPreview(myID)
+        familyStore.seedMembersForPreview([
+            FamilyMember(userID: myID, role: .member, displayName: "測試成員", avatarURL: nil),
+            FamilyMember(userID: UUID(), role: .owner, displayName: "陳美玲", avatarURL: nil)
+        ])
+        return familyStore
+    }
+
     /// merge LS-165／LS-167／LS-188：`hostView(for:)` switch 本體疊了多張票的新 case 後反覆
     /// 超過 SwiftLint `function_body_length` 上限，抽出這個既有 case 的內容還給界限內，行為
     /// 完全不變（同其餘 `*Host` computed var 的既有作法）。merge-review R1 M1(b)：「邀請家人」
@@ -27,7 +48,7 @@ extension TapTargetGateHarness {
         NavigationStack {
             SettingsView(
                 authStore: .preview(),
-                familyStore: .preview(withFamily: Family(
+                familyStore: settingsFamilyStore(withFamily: Family(
                     id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
                 )),
                 childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
@@ -51,7 +72,7 @@ extension TapTargetGateHarness {
         return NavigationStack {
             SettingsView(
                 authStore: .preview(),
-                familyStore: .preview(withFamily: Family(
+                familyStore: settingsFamilyStore(withFamily: Family(
                     id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
                 )),
                 childrenStore: childrenStore, accountAPIClient: PreviewAccountAPIClient(),
@@ -72,7 +93,7 @@ extension TapTargetGateHarness {
         NavigationStack {
             SettingsView(
                 authStore: .preview(),
-                familyStore: .preview(withFamily: Family(
+                familyStore: settingsFamilyStore(withFamily: Family(
                     id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
                 )),
                 childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),

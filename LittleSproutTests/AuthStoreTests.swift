@@ -229,7 +229,7 @@ final class AuthStoreTests: XCTestCase {
     /// 核心行為（跟 `signOut()` 刻意不同）：底層帳號在 Edge Function `delete-account` 那一步
     /// 已經被刪除，`authService.signOut()` 這次網路呼叫可能因為 GoTrue 端找不到對應使用者而
     /// 失敗——即使如此，`session` 仍必須被清成 `nil`，不能讓使用者卡在「按了『回到登入畫面』
-    /// 卻沒有反應」（`signOut()` 在同樣情境下的行為是保留 session，兩者对比見上面
+    /// 卻沒有反應」（`signOut()` 在同樣情境下的行為是保留 session，兩者對比見上面
     /// `test_signOut_failure_doesNotClearSessionAndPropagatesError`）。
     func test_forceSignOutLocally_signOutThrows_stillClearsSessionAndDoesNotThrow() async {
         let session = AuthSession(userID: userID, email: "a@example.com", expiresAt: .distantFuture)

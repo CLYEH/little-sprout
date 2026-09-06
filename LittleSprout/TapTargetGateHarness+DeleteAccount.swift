@@ -4,8 +4,10 @@ import SwiftUI
 /// LS-193：刪除帳號流程（04a／04b／04d／04e／04g／04h）harness host，從
 /// `TapTargetGateHarness.swift` 拆出獨立檔案——同 `TapTargetGateHarness+Legal.swift`／
 /// `+UploadQueue.swift` 的既有先例（那支檔案疊上新 case 後會超過 SwiftLint `file_length`
-/// 上限）。04f 進行中沒有任何互動元件（純顯示＋`ProgressView`），不需要量測，因此不掛
-/// case（同 `DiaryDetailView` 一類純顯示畫面的既有慣例）。
+/// 上限）。04f 進行中沒有任何互動元件（純顯示＋`ProgressView`），不需要量測，因此沒有對應的
+/// tap-target UITest（同 `DiaryDetailView` 一類純顯示畫面的既有慣例）——`hostView(for:)` 分派
+/// 與 `TapTargetGateScreenName` 註冊仍然都有（截圖對稿／registry-check 用），見下方
+/// `deleteAccountInProgressHost` 文件註解。
 ///
 /// 三分流（04a／04b／04d）各自需要不同的 `FamilyStore` 種子資料（見 `DeleteAccountStep
 /// .initialDeleteAccountStep(for:myFamily:)` 文件註解），透過 `seedOwnerUserIDForPreview`／
@@ -106,10 +108,13 @@ extension TapTargetGateHarness {
         }
     }
 
-    /// 04f 進行中——純顯示（`ProgressView`＋文字，無互動元件），不進 `TapTargetGateScreenName`
-    /// 註冊表（同 `DayDividerView` 一類純顯示畫面的既有慣例：`TapTargetMeasurement.violations`
-    /// 要求至少 1 個 Button／tappable 元件才不算「0 個元件＝0 個違規」的假陽性，這張板本來就
-    /// 沒有）——這裡只提供給截圖對稿用，不掛 `hostView(for:)` 分派。
+    /// 04f 進行中——純顯示（`ProgressView`＋文字，無互動元件）。**merge-review R1 i2 訂正**：
+    /// 這裡跟 `TapTargetGateScreenName.deleteAccountInProgress`／`TapTargetGateHarness
+    /// .hostView(for:)` 的 `.deleteAccountInProgress` case 都確實有掛（截圖對稿與
+    /// registry-check 都需要），舊註解說「不進註冊表」「不掛 `hostView(for:)` 分派」是錯的；
+    /// 真正沒有的是**對應的 tap-target UITest**——`TapTargetMeasurement.violations` 要求至少
+    /// 1 個 Button／tappable 元件才不算「0 個元件＝0 個違規」的假陽性，這張板本來就沒有互動
+    /// 元件，同 `DayDividerView` 一類純顯示畫面的既有慣例，不寫這支測試。
     @MainActor
     @ViewBuilder
     static var deleteAccountInProgressHost: some View {
