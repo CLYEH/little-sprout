@@ -114,6 +114,19 @@ final class TimelineStore {
         }
     }
 
+    /// LS-189 R2（merge-review R1 B2）：封鎖／解除封鎖從別的畫面（`DiaryDetailView`／
+    /// `BlockListView`）觸發的重抓——沿用上一次 `refresh(familyID:childID:)` 記下的篩選條件
+    /// （`familyID`／`childID`，跟 `loadMore` 讀的是同一組私有屬性），呼叫端不需要知道
+    /// `ChildFilterBar` 目前選了哪個孩子。`familyID` 為 nil（例如還沒 `refresh` 過）時是
+    /// no-op（同 `loadMore` 對 `familyID` 缺失的既有處理）——`block_user`／`unblock_user` 生效
+    /// 範圍是 `get_family_timeline`／留言／相簿三處查詢（`docs/API.md` §4），這裡只負責讓
+    /// client 端已經拿到的快取跟上，不是後端要求的動作。
+    @discardableResult
+    func refreshWithCurrentFilter() async -> Bool {
+        guard let familyID else { return false }
+        return await refresh(familyID: familyID, childID: childID)
+    }
+
     /// 捲到底載入下一頁——沿用 `refresh` 記下的 `familyID`／`childID`，游標取自目前最後一筆
     /// （`get_family_timeline` 回傳序＝`(occurred_at desc, ref_id desc)`，最後一筆就是最舊的
     /// 那一筆）。世代號與「出發當下的尾端身分」都在呼叫當下記錄（都不遞增，只有 `refresh`

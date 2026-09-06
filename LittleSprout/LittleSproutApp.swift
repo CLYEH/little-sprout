@@ -26,6 +26,9 @@ struct LittleSproutApp: App {
     /// 負責，不需要在這裡另外包一層 store。
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
+    /// LS-189：內容操作表（檢舉／封鎖／Owner 移除）用的 client——不是 `@State`，同
+    /// `diaryAPIClient` 的既有理由（不可變的純 service 物件，本身不 Observable）。
+    let safetyAPIClient: SafetyAPIClient
     /// LS-108：`littlesprout://invite/<code>` deep link（LS-39 已註冊 scheme）冷／熱啟動皆走
     /// `.onOpenURL`——寫進這裡，`ForkView` 是唯一消費者（見該檔文件）。這一層只負責接住 URL、
     /// 解析出碼，不判斷「現在該不該導頁」，那是 `ForkView` 才知道的事（是否已登入、是否已有
@@ -56,6 +59,7 @@ struct LittleSproutApp: App {
         _eulaStore = State(initialValue: EULAStore(apiClient: SupabaseEULAAPIClient(client: client)))
         diaryAPIClient = SupabaseDiaryAPIClient(client: client)
         mediaUploadService = SupabaseMediaUploadService(client: client)
+        safetyAPIClient = SupabaseSafetyAPIClient(client: client)
     }
 
     var body: some Scene {
@@ -87,6 +91,7 @@ struct LittleSproutApp: App {
             eulaStore: eulaStore,
             diaryAPIClient: diaryAPIClient,
             mediaUploadService: mediaUploadService,
+            safetyAPIClient: safetyAPIClient,
             pendingInviteCode: $pendingInviteCode
         )
         .onOpenURL { url in
