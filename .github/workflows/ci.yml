@@ -169,7 +169,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／list-ipad-tests／push-gate／pretool／main-checkout-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／list-ipad-tests／pick-ipad-runtime／push-gate／pretool／main-checkout-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -195,6 +195,7 @@ jobs:
           # LS-209 merge-review R1 M1：漏掛這支的話，日後有人把 list-ipad-tests.sh 的判準或「清單為空
           # exit 1」改壞，CI 仍全綠——ci-ipad job 依賴的正是這個 exit code（見該 job 定義）。
           bash scripts/gates/list-ipad-tests.test.sh || rc=1
+          bash scripts/gates/pick-ipad-runtime.test.sh || rc=1
           bash scripts/gates/detect-simulator.test.sh || rc=1
           bash scripts/gates/push-gate.test.sh || rc=1
           bash scripts/gates/tap-target-check.test.sh || rc=1
@@ -834,37 +835,23 @@ jobs:
           # LS-205：`.ios-runtime` 單一來源，同 ci job 的讀法。
           [ -f .ios-runtime ] || { echo "::error::缺 .ios-runtime（模擬器 runtime 單一來源，LS-205）"; exit 1; }
           ios_runtime_pin="$(tr -d '[:space:]' < .ios-runtime)"
-          # UDID 一律抓標準 8-4-4-4-12 十六進位格式，不能用「取最外層括號內容」——機型名本身就帶括號
-          # （「iPad Air 11-inch (M3)」），naive 取括號會把 "M3" 誤判成 UDID（push-gate.sh 自測 ㊴ 抓到同一個坑）。
-          find_ipad_udid() {  # $1＝runtime 過濾（空字串＝不過濾）；印 "<udid>\t<os>"，找不到印空字串
-            xcrun simctl list devices available 2>/dev/null | awk -v pin="$1" '
-              /^-- iOS / { os=$0; sub(/^-- iOS /,"",os); sub(/ --$/,"",os); next }
-              /iPad Air 11-inch \(M3\)/ {
-                if (pin != "" && os != pin) next
-                line=$0
-                if (match(line, /[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/)) {
-                  print substr(line, RSTART, RLENGTH) "\t" os; exit
-                }
-              }
-            '
-          }
-          # merge-review R1 M4：對 runtime 不一致 fail-closed 與 ci job（Build & Test 步驟）對同一情境的既有
-          # 裁決（LS-205 i4）相反——那裡只印 ::warning:: 不擋，理由是「runner image 升版是排程性事件，不該
-          # 錯誤地怪到當次 PR 頭上」。這裡改成同款兩段式：先找釘住版，找不到才退回「任何 runtime 的這個機型」
-          # 並印 warning；真的連機型都不存在（runner image 沒有這個 iPad 機型）才 error。
-          found="$(find_ipad_udid "$ios_runtime_pin")"
+          # LS-211 I-b（來源 LS-96 池項 edbc460c）：找不到釘住版時的 fallback 改用
+          # scripts/gates/pick-ipad-runtime.sh——舊版 `find_ipad_udid ""` 直接抓「第一個找到的」，
+          # 實務上等於永遠退回最舊的 runtime（`.ios-runtime` 釘 26.2、runner 只有 17.0/18.0/26.0 時
+          # 會選到 17.0，比選任一新版本都離釘住版更遠）；新腳本優先選 >= 釘住版裡最接近的一個，
+          # 完全沒有更新版本時才退回所有可用版本裡最新的一個。merge-review R1 M4 既有裁決不變：
+          # 對 runtime 不一致只印 ::warning:: 不擋（runner image 升版是排程性事件，不該讓當次 PR 紅）；
+          # 真的連機型都不存在（runner image 沒有這個 iPad 機型，腳本空輸出）才 error。
+          found="$(xcrun simctl list devices available 2>/dev/null | bash scripts/gates/pick-ipad-runtime.sh "$ios_runtime_pin")"
           if [ -z "$found" ]; then
-            found="$(find_ipad_udid "")"
-            if [ -n "$found" ]; then
-              found_os=$(printf '%s' "$found" | cut -f2)
-              echo "::warning::CI runner 上找不到 iOS ${ios_runtime_pin} 的「iPad Air 11-inch (M3)」，改用 iOS ${found_os}（同一機型的其他 runtime）——runner image 的 runtime 可能已經升級，請評估更新 .ios-runtime（同 ci job LS-205 i4 既有裁決，不 fail-closed）"
-            else
-              echo "::error::找不到任何 runtime 的「iPad Air 11-inch (M3)」模擬器——runner image 可能沒有這個機型，請改用 runner 目前實際提供的 iPad 機型"
-              exit 1
-            fi
+            echo "::error::找不到任何 runtime 的「iPad Air 11-inch (M3)」模擬器——runner image 可能沒有這個機型，請改用 runner 目前實際提供的 iPad 機型"
+            exit 1
           fi
           ipad_udid=$(printf '%s' "$found" | cut -f1)
           ipad_os=$(printf '%s' "$found" | cut -f2)
+          if [ "$ipad_os" != "$ios_runtime_pin" ]; then
+            echo "::warning::CI runner 上找不到 iOS ${ios_runtime_pin} 的「iPad Air 11-inch (M3)」，改用 iOS ${ipad_os}（同一機型、選擇 >= 釘住版最接近的版本；沒有更新版本才退回目前可用的最新版，scripts/gates/pick-ipad-runtime.sh，LS-211 I-b）——runner image 的 runtime 可能已經升級或落後，請評估更新 .ios-runtime（同 ci job LS-205 i4 既有裁決，不 fail-closed）"
+          fi
           echo "simulator: iPad Air 11-inch (M3) ${ipad_udid} iOS ${ipad_os}（pinned ${ios_runtime_pin}）"
           # LS-96 池項 00b9c9ef：測試清單一律 grep 自動產生，不手寫死名單；清單為空就是這個 job 存在的
           # 理由整個落空——list-ipad-tests.sh 對此 fail loud（exit 1），這裡原樣傳遞、不吞掉。

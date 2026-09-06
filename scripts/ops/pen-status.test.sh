@@ -159,6 +159,38 @@ fi
 out="$(run extra 2>&1)"; got=$?
 if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '用法'; then ok '⑩ 帶參數 → exit 2'; else bad "⑩ 應 exit 2（實得 ${got}）"; fi
 
+# ---- ⑪（LS-211 I-c，來源 LS-96 池項 edbc460c）：--path 機器可讀輸出——只印路徑一行，供 patrol.sh 讀取 ----
+reset; set_pen 3185; set_mcp 24097; pen_lsof_connected; mcp_lsof_connected 24097; set_state "PATH:${want}"
+out="$(run --path 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && [ "$out" = "$want" ]; then
+  ok '⑪a --path：Pen 開著且路徑讀得到 → 只印路徑一行、exit 0'
+else
+  bad "⑪a 應輸出「${want}」exit 0（實得「${out}」exit ${got}）"
+fi
+
+reset; set_mcp 24097; mcp_lsof_connected 24097; set_state "PATH:${want}"
+out="$(run --path 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && [ -z "$out" ]; then
+  ok '⑪b --path：Pen 沒開 → 不印任何東西、exit 1'
+else
+  bad "⑪b 應空輸出 exit 1（實得「${out}」exit ${got}）"
+fi
+
+reset; set_pen 3185; set_mcp 24097; pen_lsof_connected; mcp_lsof_connected 24097; set_state EMPTY
+out="$(run --path 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && [ -z "$out" ]; then
+  ok '⑪c --path：Pen 開著但 pen CLI 讀不到路徑 → 不印任何東西、exit 1'
+else
+  bad "⑪c 應空輸出 exit 1（實得「${out}」exit ${got}）"
+fi
+
+out="$(run --path extra 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '用法'; then
+  ok '⑪d --path 帶多餘參數 → exit 2'
+else
+  bad "⑪d 應 exit 2（實得 ${got}）"
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-status 自測失敗" >&2
   exit 1

@@ -15,14 +15,34 @@
 #      不會把斷線判成 ✓——第一次重連後請對照一次，格式不符改本檔的 sed 樣式即可。
 #
 # 用法：pen-status.sh   （無參數；PEN_STATUS_LSOF_BIN 可換 lsof 路徑，自測用來模擬缺 lsof）
+#       pen-status.sh --path   （LS-211 I-c，來源 LS-96 池項 edbc460c：只印目前開檔絕對路徑，機器
+#       可讀，供 patrol.sh「Pen 開錯檔」偵測讀取——不必再自己解析上面那行組合字串的字面格式，改措辭
+#       就不會靜默退回舊路徑、fail-open）
 # 輸出：一行 `Pencil：行程 ✓（pid N）／✗ · 路徑 <path>／✗（…） · MCP 探針 ✓／✗／不可測（…）` 到 stdout
+#       （--path：只印路徑一行；讀不到則不印任何東西，exit 1）
 # Exit：0＝行程 ✓、路徑讀得到、MCP ✓ 或不可測；1＝任一 ✗（斷線／Pen 沒開／路徑讀不到）；2＝用法錯誤
 # 自測：scripts/ops/pen-status.test.sh（stub pgrep／lsof／pen，不碰真的 Pen；掛 CI rules job）。
 set -uo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ $# -ne 0 ]; then
-  echo "用法：pen-status.sh（無參數）" >&2
+path_only=0
+if [ $# -eq 1 ] && [ "$1" = "--path" ]; then
+  path_only=1
+elif [ $# -ne 0 ]; then
+  echo "用法：pen-status.sh [--path]" >&2
   exit 2
+fi
+
+if [ "$path_only" -eq 1 ]; then
+  pen_pid=$(pgrep -f 'Pen\.app/Contents/MacOS/Pen$' 2>/dev/null | head -1)
+  if [ -z "$pen_pid" ]; then
+    exit 1
+  fi
+  path=$(bash "${script_dir}/pen-open.sh" --status 2>/dev/null)
+  if [ -z "$path" ]; then
+    exit 1
+  fi
+  printf '%s\n' "$path"
+  exit 0
 fi
 
 PEN_PROC_RE='Pen\.app/Contents/MacOS/Pen$'
