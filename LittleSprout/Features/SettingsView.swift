@@ -26,6 +26,9 @@ struct SettingsView: View {
     /// LS-190 R2（merge-review R1 B2(a)）：同上，登出時歸零——不清掉會讓同機換帳號的新使用者
     /// 沿用上一位的 `EULAStore.shouldPresent`、繞過 EULA 閘門。
     let eulaStore: EULAStore
+    /// LS-189：轉手往下傳到 `BlockListView`／`ReportInboxView`（封鎖名單／檢舉收件匣，取代
+    /// LS-188 的最小佔位），這裡不直接使用。
+    let safetyAPIClient: SafetyAPIClient
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     /// merge-review R2 B3：`signOut()` 拆去 `SettingsView+SignOut.swift`（理由同
@@ -286,13 +289,13 @@ struct SettingsView: View {
         switch row {
         case .blockList:
             NavigationLink {
-                BlockListView()
+                BlockListView(familyStore: familyStore, safetyAPIClient: safetyAPIClient)
             } label: {
                 SettingsRowView(icon: "person.fill.xmark", label: "封鎖名單")
             }
         case .reportInbox:
             NavigationLink {
-                ReportInboxView()
+                ReportInboxView(familyStore: familyStore, safetyAPIClient: safetyAPIClient)
             } label: {
                 SettingsRowView(icon: "flag.fill", label: "檢舉紀錄")
             }
@@ -359,7 +362,8 @@ struct SettingsView: View {
                 id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
             childrenStore: .preview(), timelineStore: .preview(),
-            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false)
+            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false),
+            safetyAPIClient: PreviewSafetyAPIClient()
         )
     }
 }
@@ -372,7 +376,8 @@ struct SettingsView: View {
                 id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
             childrenStore: .preview(), timelineStore: .preview(),
-            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false)
+            albumsStore: .preview(), eulaStore: .preview(shouldPresent: false),
+            safetyAPIClient: PreviewSafetyAPIClient()
         )
     }
     .environment(\.horizontalSizeClass, .regular)
