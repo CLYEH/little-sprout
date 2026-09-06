@@ -8,8 +8,6 @@ final class StubDiaryAPIClient: DiaryAPIClient, @unchecked Sendable {
     typealias CreateHandler = @Sendable (UUID, String, Date, [UUID]) async throws -> UUID
     typealias UpdateHandler = @Sendable (UUID, String, Date, [UUID]) async throws -> Void
     typealias AttachMediaHandler = @Sendable (UUID, UUID, [UUID]) async throws -> Void
-    /// LS-190：`setDiaryDeleted`。
-    typealias SetDeletedHandler = @Sendable (UUID, Bool) async throws -> Void
 
     enum StubError: Error {
         case unconfigured
@@ -28,11 +26,6 @@ final class StubDiaryAPIClient: DiaryAPIClient, @unchecked Sendable {
         let mediaIDs: [UUID]
     }
 
-    struct SetDeletedCall: Equatable {
-        let diaryID: UUID
-        let deleted: Bool
-    }
-
     /// merge-review R2 N1：`updateDiaryEntry` 先前是全專案唯一沒有呼叫端的方法，這裡補上
     /// 呼叫紀錄，才有辦法在測試裡斷言「重試時內容變了，有沒有把新內容送上去」。
     struct UpdateCall: Equatable {
@@ -49,8 +42,6 @@ final class StubDiaryAPIClient: DiaryAPIClient, @unchecked Sendable {
         var createCalls: [CreateCall] = []
         var updateCalls: [UpdateCall] = []
         var attachMediaCalls: [AttachMediaCall] = []
-        var setDeletedHandler: SetDeletedHandler = { _, _ in }
-        var setDeletedCalls: [SetDeletedCall] = []
     }
 
     private let box = OSAllocatedUnfairLock(initialState: Box())
@@ -58,7 +49,6 @@ final class StubDiaryAPIClient: DiaryAPIClient, @unchecked Sendable {
     var createCalls: [CreateCall] { box.withLock { $0.createCalls } }
     var updateCalls: [UpdateCall] { box.withLock { $0.updateCalls } }
     var attachMediaCalls: [AttachMediaCall] { box.withLock { $0.attachMediaCalls } }
-    var setDeletedCalls: [SetDeletedCall] { box.withLock { $0.setDeletedCalls } }
 
     func setCreateHandler(_ handler: @escaping CreateHandler) {
         box.withLock { $0.createHandler = handler }
@@ -70,10 +60,6 @@ final class StubDiaryAPIClient: DiaryAPIClient, @unchecked Sendable {
 
     func setAttachMediaHandler(_ handler: @escaping AttachMediaHandler) {
         box.withLock { $0.attachMediaHandler = handler }
-    }
-
-    func setSetDeletedHandler(_ handler: @escaping SetDeletedHandler) {
-        box.withLock { $0.setDeletedHandler = handler }
     }
 
     func createDiaryEntry(familyID: UUID, body: String, entryDate: Date, childIDs: [UUID]) async throws -> UUID {
@@ -97,10 +83,9 @@ final class StubDiaryAPIClient: DiaryAPIClient, @unchecked Sendable {
         try await handler(diaryID, familyID, mediaIDs)
     }
 
-    func setDiaryDeleted(diaryID: UUID, deleted: Bool) async throws {
-        let call = SetDeletedCall(diaryID: diaryID, deleted: deleted)
-        box.withLock { $0.setDeletedCalls.append(call) }
-        let handler = box.withLock { $0.setDeletedHandler }
-        try await handler(diaryID, deleted)
-    }
+    /// LS-189：`DiaryComposerStore` 系列測試不需要覆蓋這支（本檔既有存在理由，見檔頭文件
+    /// 註解）——刪除日記的互動路徑由 `DeleteConfirmationUITests` 系列 UITest 走
+    /// `PreviewDiaryAPIClient`（harness 假 client）覆蓋，這裡維持最小 no-op 實作滿足
+    /// `DiaryAPIClient` 協定即可，不預先造沒有呼叫端的 handler／calls 紀錄（Rule 2）。
+    func setDiaryDeleted(diaryID: UUID, deleted: Bool) async throws {}
 }
