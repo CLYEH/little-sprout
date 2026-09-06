@@ -235,8 +235,16 @@ for h in commit-msg pre-commit pre-push; do
 done
 # ---- 螢幕鎖定（LS-220：鎖定會讓模擬器 Keychain SecItem* 回 -34018，QA e2e 逾時訊息與 session 沒建立長得
 # 一模一樣，見 docs/COLLABORATION.md §4-b 排障順序 (b)；ioreg 查不到該鍵＝未鎖定，不視為錯誤）----
+# LS-220 merge-review R2 M1：`CGSSessionScreenIsLocked` 這鍵實際印在 `IOConsoleUsers` 這個內嵌 dict
+# 裡（本機實測 `ioreg -n Root -d1 | grep -o 'IOConsoleUsers[^)]*'`，未鎖定時整個 dict 是逗號分隔、
+# `=` 兩側無空白的緊湊格式，例如 `{"kCGSSessionOnConsoleKey"=Yes,...,"kCGSSessionUserIDKey"=501}`；
+# 鎖定時同一個 dict 會多一個逗號分隔項 `"CGSSessionScreenIsLocked"=Yes`，同樣無空白）——R1 誤植成
+# Root 頂層、`=` 兩側各一個空白的形狀（`"CGSSessionScreenIsLocked" = Yes`），對真機輸出永遠比對不到、
+# 永遠不會觸發。改成鍵名比對、`=` 兩側空白可有可無（`grep -Eq` 容忍兩種寫法，防未來 ioreg 版本或
+# `-a`／人類可讀格式差異）。`ioreg -c IOConsoleUsers` 實測不是這個屬性所在的類別名，會印出整棵樹、
+# 抓不到目標，維持用 `ioreg -n Root -d1` 這個既有來源。
 screen_lock_flag=
-if ioreg -n Root -d1 2>/dev/null | grep -q 'CGSSessionScreenIsLocked" = Yes'; then
+if ioreg -n Root -d1 2>/dev/null | grep -Eq 'CGSSessionScreenIsLocked"[[:space:]]*=[[:space:]]*Yes'; then
   screen_lock_flag="⚠ 主機螢幕鎖定中——模擬器 Keychain 會回 -34018，QA e2e／互動式驗證卡住前先請使用者解鎖（§4-b 排障順序 (b)）"
 fi
 [ -n "$screen_lock_flag" ] && add_flag "[screen-lock] ${screen_lock_flag}"

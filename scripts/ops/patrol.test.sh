@@ -1221,13 +1221,23 @@ unset PATROL_PGREP PATROL_LSOF
 
 # ---- ㉗ 螢幕鎖定偵測（LS-220：鎖定會讓模擬器 Keychain 回 -34018，長得像 QA e2e 逾時失敗，見 §4-b 排障順序）----
 # 真的 ioreg 讀主機當下狀態不可控（CI／開發機當下是否鎖定與本測試無關），一律用 PATH stub 蓋掉，同 ⑭ 對 xcrun 的作法。
+# LS-220 merge-review R2 M1：stub 形狀改成本機實測的真機巢狀 compact 格式（`ioreg -n Root -d1 |
+# grep -o 'IOConsoleUsers[^)]*'` 實跑原文，使用者名稱／UUID 已改成無意義佔位字串）——
+# `"IOConsoleUsers" = ({"kCGSSessionOnConsoleKey"=Yes,"kSCSecuritySessionID"=100023,
+# "kCGSSessionSystemSafeBoot"=No,"kCGSessionLoginDoneKey"=Yes,"kCGSSessionIDKey"=257,
+# "kCGSSessionUserNameKey"="testuser","kCGSSessionGroupIDKey"=20,
+# "CGSSessionUniqueSessionUUID"="00000000-0000-0000-0000-000000000000",
+# "kCGSessionLongUserNameKey"="Test User","kCGSSessionAuditIDKey"=100023,
+# "kCGSSessionLoginwindowSafeLogin"=No,"kCGSSessionUserIDKey"=501})`——鎖定時同一個 dict 多一個
+# 逗號分隔項 `"CGSSessionScreenIsLocked"=Yes`（`=` 兩側無空白，鍵名照樣加引號），R1 的 stub 誤用
+# Root 頂層、`=` 兩側各一空白的形狀，對真機輸出永遠比對不到（見下方 mutation 負控）。
 cat > "$work/bin/ioreg" <<'STUB'
 #!/bin/bash
+console_users='{"kCGSSessionOnConsoleKey"=Yes,"kSCSecuritySessionID"=100023,"kCGSSessionSystemSafeBoot"=No,"kCGSessionLoginDoneKey"=Yes,"kCGSSessionIDKey"=257,"kCGSSessionUserNameKey"="testuser","kCGSSessionGroupIDKey"=20,"CGSSessionUniqueSessionUUID"="00000000-0000-0000-0000-000000000000","kCGSessionLongUserNameKey"="Test User","kCGSSessionAuditIDKey"=100023,"kCGSSessionLoginwindowSafeLogin"=No,"kCGSSessionUserIDKey"=501'
 if [ "${FAKE_IOREG_LOCKED:-0}" = 1 ]; then
-  printf '+-o Root  <class IORegistryEntry, id 0x100000100>\n    "CGSSessionScreenIsLocked" = Yes\n'
-else
-  printf '+-o Root  <class IORegistryEntry, id 0x100000100>\n    "SomeOtherKey" = No\n'
+  console_users="${console_users},\"CGSSessionScreenIsLocked\"=Yes"
 fi
+printf '+-o Root  <class IORegistryEntry, id 0x100000100, retain 35>\n    {\n      "IOConsoleUsers" = (%s})\n    }\n' "$console_users"
 STUB
 chmod +x "$work/bin/ioreg"
 
@@ -1252,7 +1262,8 @@ mut_lock="$work/patrol.no-screen-lock-check.sh"
 python3 - "$patrol" "$mut_lock" <<'PY'
 import sys
 src = open(sys.argv[1], encoding="utf-8").read()
-old = 'if ioreg -n Root -d1 2>/dev/null | grep -q \'CGSSessionScreenIsLocked" = Yes\'; then'
+old = ("if ioreg -n Root -d1 2>/dev/null | "
+       "grep -Eq 'CGSSessionScreenIsLocked\"[[:space:]]*=[[:space:]]*Yes'; then")
 new = 'if false; then'
 assert src.count(old) == 1, "找不到螢幕鎖定偵測條件，mutation 樣板需同步"
 open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
@@ -1263,6 +1274,28 @@ if [ "$lock_section_m" = "  ok" ]; then
   echo '✓ ㉗ mutant：拿掉偵測後鎖定中的正樣本變成 ok（證明 ⚠ 是這條規則造成的）'
 else
   echo "✗ ㉗ mutant 應變成 ok（偵測已拿掉），實得「${lock_section_m}」——mutation 本身可能無效" >&2; fail=1
+fi
+
+# mutation 負控（LS-220 merge-review R2 M1）：把比對字串改回 R1 的舊形狀（Root 頂層、`=` 兩側各一
+# 空白、非 -E 精確字串比對）→ 對本測試檔真機 compact 格式（`=` 兩側無空白）的鎖定樣本必須比對不到、
+# 變成 ok——證明 R1 那版對真機輸出「永遠不會觸發」的裁定成立，R2 改用 -Eq 容忍空白可有可無才是真的
+# 修到。
+mut_lock_old="$work/patrol.old-screen-lock-pattern.sh"
+python3 - "$patrol" "$mut_lock_old" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = ("if ioreg -n Root -d1 2>/dev/null | "
+       "grep -Eq 'CGSSessionScreenIsLocked\"[[:space:]]*=[[:space:]]*Yes'; then")
+new = 'if ioreg -n Root -d1 2>/dev/null | grep -q \'CGSSessionScreenIsLocked" = Yes\'; then'
+assert src.count(old) == 1, "找不到螢幕鎖定偵測條件，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
+PY
+out27ml="$(FAKE_IOREG_LOCKED=1 PATH="$work/bin:$PATH" bash "$mut_lock_old" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+lock_section_ml=$(printf '%s\n' "$out27ml" | awk '/== 螢幕鎖定/{found=1; next} found{print; exit}')
+if [ "$lock_section_ml" = "  ok" ]; then
+  echo '✓ ㉗ mutant（R1 舊形狀）：對真機 compact 格式比對不到、變成 ok（證明 R1 的寫法對真機輸出確實抓不到，R2 -Eq 容忍空白才是真的修到）'
+else
+  echo "✗ ㉗ mutant（R1 舊形狀）應變成 ok（比對不到鎖定），實得「${lock_section_ml}」——負控本身可能無效" >&2; fail=1
 fi
 
 if [ "$fail" -eq 0 ]; then
