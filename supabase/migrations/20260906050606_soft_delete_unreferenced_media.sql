@@ -118,7 +118,7 @@ comment on function private.soft_delete_unreferenced_media(interval, timestamptz
   ' 既有軟刪＋30 天 purge 流程，額度由 private.media_storage_sync() 既有 trigger'
   ' 回落。p_now 預設 now()，測試注入固定值驗證寬限期邊界。security definer，只'
   ' service_role／pg_cron 可呼叫，authenticated 沒有 EXECUTE（天生零授權，見'
-  ' harden_default_privileges.sql，這裡的 REVOKE 只補 public／anon 兩個角色）。';
+  ' harden_default_privileges.sql，這裡的收回動作只補了 public／anon 兩個角色）。';
 
 -- ---------------------------------------------------------------------------
 -- 2. pg_cron 排程（獨立 job，fail-soft，沿用 20260903110908_purge_expired.sql
