@@ -2,17 +2,48 @@ import Foundation
 @testable import LittleSprout
 import XCTest
 
-/// merge-review R1（PR #352 comment `a208172b`）M1／m2／i5 的回歸測試——`PushNotificationStore
-/// Tests.swift` 加完這批之後超過 SwiftLint `type_body_length`（250 行），拆成獨立檔案純粹是為了
-/// 過 gate（同 `FamilyStoreInviteRaceTests.swift` 的既有拆檔理由），兩者共用同一份
+/// merge-review R1（PR #352 comment `a208172b`）M1／m1／m2／i5 的回歸測試——`PushNotification
+/// StoreTests.swift` 加完這批之後超過 SwiftLint `type_body_length`（250 行），拆成獨立檔案純粹
+/// 是為了過 gate（同 `FamilyStoreInviteRaceTests.swift` 的既有拆檔理由），兩者共用同一份
 /// `StubPushAuthorizationService`／`StubPushDeviceTokenAPIClient`／`AsyncGate`。
 ///
 /// 主題是「`registerForRemoteNotifications()` 什麼時候會被呼叫」——`PushNotificationStoreTests`
 /// 那邊測的是 `submitTokenIfNeeded` 的去重／重試邏輯本身，這裡測的是三個觸發點
 /// （`refreshForEnteringApp`／`refreshOnForeground`／`requestAuthorizationAndRegister`）
-/// 有沒有真的在該觸發的時機呼叫協定方法。
+/// 有沒有真的在該觸發的時機呼叫協定方法，加上 m1 的併發去重回歸測試。
 @MainActor
 final class PushNotificationStoreRegistrationTests: XCTestCase {
+    // MARK: - m1：submitTokenIfNeeded 併發去重
+
+    /// `AppDelegate` 每次 `didRegisterForRemoteNotificationsWithDeviceToken` 都開一個新 `Task`
+    /// ——連續兩次回呼在去重 guard 通過後、`markSubmitted` 之前互相追上時，修法前會各自把
+    /// RPC 都送出去。用 `gate.waitForWaiters(count:)` 當同步點（同 `EULAStoreTests` 既有模式，
+    /// 見該檔）：第一次呼叫真的卡進 RPC 的 in-flight 區段之後，才讓第二次呼叫進場。
+    func testSubmitTokenIfNeeded_concurrentCallsSameTokenAndUser_onlyRegistersOnce() async {
+        let userID = UUID()
+        defer { PushDeviceTokenSubmissionRecord.reset(userID: userID) }
+        let deviceTokenClient = StubPushDeviceTokenAPIClient()
+        let gate = AsyncGate()
+        deviceTokenClient.setRegisterHandler { _, _ in await gate.wait() }
+        let store = PushNotificationStore(
+            authorizationService: StubPushAuthorizationService(), deviceTokenAPIClient: deviceTokenClient
+        )
+
+        let task1 = Task { await store.submitTokenIfNeeded("concurrent-token", userID: userID) }
+        await gate.waitForWaiters(count: 1)
+
+        // 第二次呼叫應該被 in-flight guard 立刻擋掉，不再送一次 RPC（也不會卡在 gate 上）。
+        let task2 = Task { await store.submitTokenIfNeeded("concurrent-token", userID: userID) }
+
+        await gate.open()
+        await task1.value
+        await task2.value
+
+        XCTAssertEqual(
+            deviceTokenClient.registerCallCount, 1, "同一個 (userID, tokenHex) 併發呼叫只該送一次 RPC"
+        )
+    }
+
     // MARK: - M1：refreshForEnteringApp 冷啟動／換帳號必須重新註冊
 
     /// merge-review R1 M1（失敗情境 a）：冷啟動只跑 `refreshForEnteringApp`，`onChange(of:

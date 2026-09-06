@@ -11,6 +11,12 @@ import UserNotifications
 final class PushNotificationStore {
     private let authorizationService: PushAuthorizationService
     private let deviceTokenAPIClient: PushDeviceTokenAPIClient
+    /// merge-review R1 m1：`submitTokenIfNeeded` 的去重 guard（`UserDefaults`）跨一個 `await`，
+    /// `AppDelegate` 每次 `didRegisterForRemoteNotificationsWithDeviceToken` 都開新 `Task`——
+    /// 連續兩次回呼會在 guard 通過後、`markSubmitted` 之前互相追上，重複打 RPC。這裡記錄「正在
+    /// 送出中」的 (userID, tokenHex) 組合；store 是 `@MainActor`，插入與檢查之間沒有 `await`，
+    /// 是原子的。
+    private var inFlightSubmissions: Set<String> = []
 
     private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
     /// `AuthenticatedRootView` 的 `.fullScreenCover(isPresented:)` 綁這個——同
@@ -101,12 +107,20 @@ final class PushNotificationStore {
     /// `didRegister` 內部才需要的 `Task` 包裝（見該方法）。
     func submitTokenIfNeeded(_ tokenHex: String, userID: UUID) async {
         guard PushDeviceTokenSubmissionRecord.lastSubmittedTokenHex(userID: userID) != tokenHex else { return }
+        let key = Self.submissionKey(userID: userID, tokenHex: tokenHex)
+        guard !inFlightSubmissions.contains(key) else { return }
+        inFlightSubmissions.insert(key)
+        defer { inFlightSubmissions.remove(key) }
         do {
             try await deviceTokenAPIClient.registerDeviceToken(token: tokenHex, platform: "ios")
             PushDeviceTokenSubmissionRecord.markSubmitted(tokenHex, userID: userID)
         } catch {
             didFailToRegister(error: error)
         }
+    }
+
+    private static func submissionKey(userID: UUID, tokenHex: String) -> String {
+        "\(userID.uuidString)|\(tokenHex)"
     }
 
     static func hexString(from data: Data) -> String {
