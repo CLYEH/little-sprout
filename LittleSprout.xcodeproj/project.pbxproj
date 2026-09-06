@@ -280,6 +280,7 @@
 		BC3FB92A8F2F032CC1F8797B /* StubFamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CC227F2B168D39029462E5 /* StubFamilyAPIClient.swift */; };
 		BCCC6A1B7C284C355C6509FF /* DeleteAccountFlowModelResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6B2DBBC978E2E01973D4FE /* DeleteAccountFlowModelResumeTests.swift */; };
 		BD4020CA11182D2B89955653 /* DiaryDurationFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B30A3E8C7388E178BD32E /* DiaryDurationFormat.swift */; };
+		BD41888F467081226405ED53 /* TimelineModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 947DF9E9DBEDFFD993312829 /* TimelineModelsTests.swift */; };
 		BEF3B2012A0964248A8D983B /* AppleSignInButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A80BDD3D72B37E3451EAC03 /* AppleSignInButton.swift */; };
 		BF0DA22255D22BCE9AAEC439 /* DiaryDateFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B13A37E8CC8794D85456D566 /* DiaryDateFormatTests.swift */; };
 		BF464AAE722DF3886B500846 /* SectionTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5C1334809B861267881A3E /* SectionTabBar.swift */; };
@@ -624,6 +625,7 @@
 		92ED03903EDAE73BC50EC0C8 /* StubAccountAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubAccountAPIClient.swift; sourceTree = "<group>"; };
 		93A0ED71C407A29B4944732E /* SupabaseAccountAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAccountAPIClient.swift; sourceTree = "<group>"; };
 		942E474356C1903582E00247 /* PreviewAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewAuthService.swift; sourceTree = "<group>"; };
+		947DF9E9DBEDFFD993312829 /* TimelineModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineModelsTests.swift; sourceTree = "<group>"; };
 		94B90F66016EC2C905347224 /* SupabaseFamilyAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClientTests.swift; sourceTree = "<group>"; };
 		95B92F29867CB3855772E654 /* AuthRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthRoute.swift; sourceTree = "<group>"; };
 		95BEB4DA6A1BCCFD8355575E /* AuthSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSession.swift; sourceTree = "<group>"; };
@@ -1044,6 +1046,7 @@
 				EA808B45C621641B99EC528B /* TimelineContentAssemblerTests.swift */,
 				9B2FD827FA0B9B18B244A1DC /* TimelineContentAssemblerThumbPathTests.swift */,
 				D500E43E6BE915800BDC015C /* TimelineDayGroupingTests.swift */,
+				947DF9E9DBEDFFD993312829 /* TimelineModelsTests.swift */,
 				BDC172B024E0A7F8F373D603 /* TimelineStoreDeleteDiaryTests.swift */,
 				4B64D96ADE299BAA5D4FE329 /* TimelineStoreReactionTests.swift */,
 				74C5672CE61BE2296C5EA787 /* TimelineStoreTests.swift */,
@@ -1953,6 +1956,7 @@
 				5082D3510D50899E250FFFA0 /* TimelineContentAssemblerTests.swift in Sources */,
 				AFA4F86684A41CC8BA208560 /* TimelineContentAssemblerThumbPathTests.swift in Sources */,
 				9C01D3DD6268BF3514B4643A /* TimelineDayGroupingTests.swift in Sources */,
+				BD41888F467081226405ED53 /* TimelineModelsTests.swift in Sources */,
 				6231319895327822C90C4541 /* TimelineStoreDeleteDiaryTests.swift in Sources */,
 				A32CCA725D57371D04861B00 /* TimelineStoreReactionTests.swift in Sources */,
 				206A1B32B7EF93F3805932C5 /* TimelineStoreTests.swift in Sources */,

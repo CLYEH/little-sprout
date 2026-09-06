@@ -43,11 +43,6 @@ struct InteractionRow: View {
     private var heartIconSize: CGFloat { isAX3 ? 32 : 22 }
     private var likeToggleSize: CGSize { isAX3 ? CGSize(width: 220, height: 80) : CGSize(width: 118, height: 47) }
     private var countZoneSize: CGSize { isAX3 ? CGSize(width: 56, height: 80) : CGSize(width: 44, height: 44) }
-    /// 硬規則「可點元件 minHeight ≥48」：`countZoneSize.height` 標準態 44pt 貼齊硬約束下限，
-    /// 模擬器實測（`tap-target-check.sh`）量到 43.7pt（次像素捨入，同既有 `loadMoreTrigger`
-    /// 文件註解點名的同類餘裕不足案例）——熱區另外拉高到 ≥48pt，只影響看不見的點擊區，不改變
-    /// `Count Zone` 本身沒有背景色塊、純文字置中的視覺（AX3 80pt 已遠高於下限，不受影響）。
-    private var countZoneHitHeight: CGFloat { max(countZoneSize.height, 48) }
 
     var body: some View {
         Group {
@@ -115,6 +110,14 @@ struct InteractionRow: View {
 
     /// 獨立熱區——與 `Like Toggle` 分離（票文 scope 1）：點擊開按讚名單，計數 0 時不開
     /// （票文 scope 3）。
+    ///
+    /// LS-216 R2（merge-review R1 minor m1，取代 R1 版的 `countZoneHitHeight` 計算屬性）：
+    /// 標準態視覺尺寸 `countZoneSize`（44×44）貼齊硬約束下限，模擬器實測（`tap-target-
+    /// check.sh`）量到 43.7pt（次像素捨入，同既有 `loadMoreTrigger` 文件註解點名的同類餘裕
+    /// 不足案例）——第二層 `.frame(minWidth: 48, minHeight: 48)` 只在視覺尺寸小於 48 時才
+    /// 撐大熱區（標準態 44→48），AX3（56×80）已經遠高於下限、`minWidth`／`minHeight` 對它是
+    /// no-op，不受影響；只影響看不見的點擊區，不改變 `Count Zone` 本身沒有背景色塊、純文字
+    /// 置中的視覺。
     private var countZone: some View {
         Button {
             guard reaction.count > 0 else { return }
@@ -124,7 +127,7 @@ struct InteractionRow: View {
                 .appFont(.note, weight: reaction.reactedByMe ? .bold : .semibold)
                 .foregroundStyle(reaction.reactedByMe ? Color.lsAccent : Color.lsPrintInkSecondary)
                 .frame(width: countZoneSize.width, height: countZoneSize.height)
-                .frame(height: countZoneHitHeight)
+                .frame(minWidth: 48, minHeight: 48)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

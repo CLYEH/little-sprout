@@ -35,7 +35,13 @@ struct AlbumCardView: View {
     }
 }
 
+#if DEBUG
+// LS-216 R2（merge-review R1 B1）：`timelineStore: .preview()` 是 DEBUG-only 工廠方法
+// （`PreviewTimelineAPIClient.swift` 整支圍 `#if DEBUG`）——本檔原本的 `#Preview` 沒有圍欄
+// （改前只用 `AlbumContent(...)`，不需要），本票加 `timelineStore` 參數後若不補圍欄，
+// Release 組態會因為 `.preview()` 不存在而編譯失敗。同 `DiaryCardView.swift` 既有寫法。
 #Preview {
     AlbumCardView(content: AlbumContent(title: "2026 夏天的海邊", cover: nil), timelineStore: .preview(), refId: UUID())
         .padding()
 }
+#endif

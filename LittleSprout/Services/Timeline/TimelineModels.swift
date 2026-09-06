@@ -279,11 +279,23 @@ struct ReactorRow: Decodable, Sendable, Equatable, Identifiable {
         case displayName = "display_name"
     }
 
+    /// LS-216 R2（merge-review R1 M3）：`profiles` 巢狀 embed 改成可選解碼——按讚者退出家庭
+    /// 後，`profiles_select`（`security invoker`，`peer_profile_ids()` 只認「目前」同家庭的
+    /// 人）會把那一列濾掉，PostgREST 的 embed 對「有外鍵、但關聯列被 RLS 擋下」回傳
+    /// `"profiles": null`（不是整列消失，`reactions` 本身那一列還在）。原本 `nestedContainer`
+    /// 對 null 值會拋錯，讓整份 `[ReactorRow]` 解碼失敗、按讚名單整個開不出來——只因為其中
+    /// 一位按讚者離開了家庭，不成比例。改用 `try?` 吞掉「拿不到巢狀容器」或「拿不到
+    /// display_name」兩種情況，顯示名稱退回「家人」（純資訊性列表，仍能看到「有 N 人按讚」，
+    /// 只是其中一位顯示為通用稱呼，不影響功能）。
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         userID = try container.decode(UUID.self, forKey: .userID)
-        let profile = try container.nestedContainer(keyedBy: ProfileCodingKeys.self, forKey: .profile)
-        displayName = try profile.decode(String.self, forKey: .displayName)
+        if let profile = try? container.nestedContainer(keyedBy: ProfileCodingKeys.self, forKey: .profile),
+           let name = try? profile.decode(String.self, forKey: .displayName) {
+            displayName = name
+        } else {
+            displayName = "家人"
+        }
     }
 
     init(userID: UUID, displayName: String) {

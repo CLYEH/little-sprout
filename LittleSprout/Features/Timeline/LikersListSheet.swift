@@ -22,8 +22,12 @@ struct LikersListSheet: View {
     @State private var isLoading = true
     @State private var loadError: AppError?
 
+    /// LS-216 R2（merge-review R1 minor m2）：載入失敗時不能再顯示「N 人按了愛心」（`reactors`
+    /// 在失敗路徑維持初始空陣列，會誤讀成「查到 0 個按讚者」，跟「根本沒查到」是完全不同的
+    /// 兩件事）——失敗時標題改「無法載入名單」，計數改留給 `content` 的重試區塊。
     private var headline: String {
-        "\(isLoading ? likeCount : reactors.count) 人按了愛心"
+        guard loadError == nil else { return "無法載入名單" }
+        return "\(isLoading ? likeCount : reactors.count) 人按了愛心"
     }
 
     var body: some View {
@@ -58,10 +62,25 @@ struct LikersListSheet: View {
             ProgressView()
                 .frame(maxWidth: .infinity)
         } else if let loadError {
-            Text(loadError.userFacingMessage)
-                .appFont(.note)
-                .foregroundStyle(Color.lsTextSecondary)
-                .frame(maxWidth: .infinity)
+            // LS-216 R2（merge-review R1 minor m2）：補「重試」——同 `TimelineView
+            // .loadMoreTrigger`／`emptyOrLoadingState` 既有的「錯誤訊息＋可點重新載入」語彙，
+            // label closure 加 padding＋`contentShape`（不是裸 `Button(_:action:)`），命中區
+            // 才會撐大過 44pt（同檔既有的「LS-158」按鈕慣例）。
+            VStack(spacing: AppSpacing.item) {
+                Text(loadError.userFacingMessage)
+                    .appFont(.note)
+                    .foregroundStyle(Color.lsTextSecondary)
+                Button {
+                    Task { await load() }
+                } label: {
+                    Text("重試")
+                        .appFont(.body, weight: .semibold)
+                        .padding(.vertical, AppSpacing.item)
+                        .padding(.horizontal, AppSpacing.item)
+                        .contentShape(Rectangle())
+                }
+            }
+            .frame(maxWidth: .infinity)
         } else {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.block) {
@@ -86,13 +105,17 @@ struct LikersListSheet: View {
     }
 
     private func load() async {
+        // LS-216 R2：重試會再呼叫這支——`isLoading`／`loadError` 要重置，不然重試按鈕點下去
+        // 畫面會維持在舊的錯誤態，直到請求真的回來才切換（見 `content` 的 `ProgressView`
+        // 分支，靠 `isLoading` 判斷要不要顯示轉圈）。
+        isLoading = true
+        loadError = nil
         guard let familyID = timelineStore.familyID else {
             isLoading = false
             return
         }
         do {
             reactors = try await timelineStore.reactors(kind: kind, refId: refId, familyID: familyID)
-            loadError = nil
         } catch {
             loadError = AppError.map(error)
         }

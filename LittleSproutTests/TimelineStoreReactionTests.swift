@@ -65,6 +65,53 @@ final class TimelineStoreReactionTests: XCTestCase {
         XCTAssertEqual(store.reactionState(forKey: TimelineEntry.id(kind: .diary, refId: refId)), .zero)
     }
 
+    /// LS-216 R2（merge-review R1 M1）：`refresh` 先寫 `entries`／`refreshState = .success`
+    /// 才 `await loadReactionCounts`——這代表 `loadReactionCounts` 是在這支 `refresh` 呼叫
+    /// 「還沒返回」的期間才跑，若飛行途中又有更新的 `refresh`（世代號前進），這批遲到的計數
+    /// 不能覆寫新世代已經寫好的 `reactionStates`。同 `TimelineStoreTests
+    /// .test_refresh_secondCallWithDifferentChildID_winsOverStaleInFlightCall` 既有的
+    /// `AsyncGate` 卡住＋世代競態驗證寫法——這裡用 `familyID` 而非 `childID` 分辨兩次呼叫
+    /// （`get_reaction_counts` 的參數不含 `childID`，用它分辨會兩次都卡在同一個 gate）。
+    func test_refresh_staleReactionCountsFromSupersededRefresh_areDiscarded() async {
+        let stub = StubTimelineAPIClient()
+        let staleFamilyID = UUID()
+        let freshFamilyID = UUID()
+        let diaryID = UUID()
+        stub.setFetchPointersHandler { _, _, _, _ in
+            [TimelineFeedPointer(kind: .diary, refId: diaryID, occurredAt: Date(), childIds: [])]
+        }
+        let gate = AsyncGate()
+        stub.setReactionCountsHandler { queriedFamilyID, _, targetIDs in
+            if queriedFamilyID == staleFamilyID {
+                await gate.wait()
+                // 舊世代的計數——沒有世代檢查的話，這批遲到的資料會覆寫新世代已經寫好的值。
+                return targetIDs.map { ReactionCountRow(targetID: $0, reactionCount: 99, reactedByMe: true) }
+            }
+            return targetIDs.map { ReactionCountRow(targetID: $0, reactionCount: 1, reactedByMe: false) }
+        }
+        let store = TimelineStore(apiClient: stub)
+
+        let staleCall = Task { await store.refresh(familyID: staleFamilyID, childID: nil) }
+        await gate.waitForWaiters(count: 1)
+
+        let freshSucceeded = await store.refresh(familyID: freshFamilyID, childID: nil)
+        XCTAssertTrue(freshSucceeded)
+        XCTAssertEqual(
+            store.reactionState(forKey: TimelineEntry.id(kind: .diary, refId: diaryID)),
+            ReactionState(count: 1, reactedByMe: false),
+            "新世代 refresh 自己的計數應該先寫好"
+        )
+
+        await gate.open()
+        _ = await staleCall.value
+
+        XCTAssertEqual(
+            store.reactionState(forKey: TimelineEntry.id(kind: .diary, refId: diaryID)),
+            ReactionState(count: 1, reactedByMe: false),
+            "舊世代遲到的計數（count 99）不能覆寫新世代已經寫好的值"
+        )
+    }
+
     // MARK: - toggleReaction：樂觀更新／失敗回滾（票文 scope 2）
 
     func test_toggleReaction_fromUnliked_optimisticallyLikesAndConfirms() async throws {

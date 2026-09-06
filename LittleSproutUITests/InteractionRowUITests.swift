@@ -139,6 +139,53 @@ final class InteractionRowUITests: XCTestCase {
         assertNoOverlap(buttons)
     }
 
+    /// LS-216 R2（merge-review R1 minor m3）：不只驗證「彼此不重疊」，直接量 AX3 兩個固定
+    /// 尺寸節點的實際 frame——`Like Toggle` 220×80、`Count Zone` 56×80（見 `InteractionRow
+    /// .likeToggleSize`／`.countZoneSize` 文件）。`accuracy: 1` 容忍模擬器次像素捨入（同
+    /// `TimelineStore` R2 Count Zone 43.7pt 那類既有誤差量級），不是放寬到看不出回歸。
+    func testInteractionRow_ax3_fixedSizesMatchSpec() {
+        let app = TapTargetMeasurement.launch(.timelineInteractionRow, contentSizeCategory: Self.ax3)
+        TapTargetMeasurement.assertScreenRendered(.timelineInteractionRow, in: app)
+
+        let diaryLikeToggle = app.buttons[QAAccessibilityID.interactionRowElement(kind: "diary", element: "likeToggle")]
+        XCTAssertTrue(diaryLikeToggle.waitForExistence(timeout: 10))
+        XCTAssertEqual(diaryLikeToggle.frame.width, 220, accuracy: 1, "AX3 Like Toggle 寬應固定 220pt")
+        XCTAssertEqual(diaryLikeToggle.frame.height, 80, accuracy: 1, "AX3 Like Toggle 高應固定 80pt")
+
+        let diaryCountZone = app.buttons[QAAccessibilityID.interactionRowElement(kind: "diary", element: "countZone")]
+        XCTAssertTrue(diaryCountZone.waitForExistence(timeout: 10))
+        XCTAssertEqual(diaryCountZone.frame.width, 56, accuracy: 1, "AX3 Count Zone 寬應固定 56pt")
+        XCTAssertEqual(diaryCountZone.frame.height, 80, accuracy: 1, "AX3 Count Zone 高應固定 80pt")
+    }
+
+    /// LS-216 R2（merge-review R1 minor m4）：`InteractionRow` 的三顆按鈕巢狀在
+    /// `qa.timeline.diaryCard`（`TimelineView.cardView` 的 `NavigationLink`，LS-158 既有 QA
+    /// e2e 通道）可點範圍內——確認這層巢狀沒有讓 identifier 查詢命中多個元素，也沒有讓
+    /// 「點卡片本體（非互動列按鈕）」的既有導覽路徑失效。
+    ///
+    /// 這裡刻意**不**用 `.tap()`（預設打在整個 `qa.timeline.diaryCard` 元素的幾何中心）——
+    /// 這份 harness fixture 的日記內文只有一行、無附照（見 `seededInteractionRowTimelineStore`），
+    /// 卡片整體高度大半被 `InteractionRow` 占走，幾何中心點實測會落在 `Like Toggle`／
+    /// `Comment Button` 的可點範圍內，`.tap()` 打中的其實是按鈕，不是卡片本體——這忠實反映
+    /// 「使用者真的點在按鈕上」的物理行為（按鈕確實佔了那塊畫面），並非導覽路徑失效，只是
+    /// 這支測試原本假設的「打中心＝打卡片本體」在這份短內文 fixture 上不成立。改用
+    /// `.coordinate(withNormalizedOffset:)` 打卡片**頂端**（`.combine` 純顯示內容那一段，
+    /// `InteractionRow` 固定在卡片最下方，見 `DiaryCardView.body`），才是「點卡片本體」該打
+    /// 的位置。
+    func testDiaryCardIdentifier_stillFindableAndNavigates() {
+        let app = TapTargetMeasurement.launch(.timelineInteractionRow)
+        TapTargetMeasurement.assertScreenRendered(.timelineInteractionRow, in: app)
+
+        let diaryCards = app.buttons.matching(identifier: QAAccessibilityID.timelineDiaryCard)
+        XCTAssertEqual(diaryCards.count, 1, "同一頁只有一張日記卡，qa.timeline.diaryCard 應該剛好命中一個元素")
+        let diaryCard = diaryCards.firstMatch
+        XCTAssertTrue(diaryCard.waitForExistence(timeout: 10))
+
+        diaryCard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+
+        XCTAssertFalse(app.staticTexts["時間軸"].exists, "點擊日記卡本體（非互動列按鈕）應該正常導覽離開時間軸")
+    }
+
     // MARK: - Helpers（同 `ContentActionsAX3UITests` 既有寫法，不同 target 無法共用 private 方法）
 
     private func scrollUntilAllHittable(_ elements: [XCUIElement], in app: XCUIApplication, maxAttempts: Int = 6) {

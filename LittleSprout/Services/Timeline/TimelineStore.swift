@@ -47,11 +47,9 @@ final class TimelineStore {
     /// 「計數同步來自互動列」，見 LS-218 票文依賴段）。
     private(set) var commentCounts: [String: Int] = [:]
 
-    /// LS-216（改動）：原本是純 `private`（只給 `refreshWithCurrentFilter()` 內部沿用上一次
-    /// `refresh` 記下的篩選條件用）——`InteractionRow` 需要目前的 `familyID` 才能呼叫
-    /// `toggleReaction`／`reactors`，改成 `private(set)` 讓它能直接讀，不必再往下多穿一層
-    /// `familyID` 參數（`DiaryCardView`／`AlbumCardView`／`PhotoCardView` 三個呼叫端都不需要
-    /// 另外持有 `familyID`）。
+    /// LS-216（改動）：原本是純 `private`（只給 `refreshWithCurrentFilter()` 內部沿用）——
+    /// `InteractionRow` 需要目前的 `familyID` 才能呼叫 `toggleReaction`／`reactors`，改成
+    /// `private(set)` 讓它能直接讀，不必往下多穿一層參數。
     private(set) var familyID: UUID?
     private var childID: UUID?
     private var loadingDurations: Set<UUID> = []
@@ -115,10 +113,13 @@ final class TimelineStore {
             guard myGeneration == generation else { return false }
             entries = newEntries
             hasMorePages = pointers.count == Self.pageSize
-            // LS-216：內容組好之後批次補愛心計數——不擋在 `refreshState = .success` 之前也
-            // 不影響它（見 `loadReactionCounts` 文件註解：失敗只讓愛心維持 0，不讓整頁失敗）。
-            await loadReactionCounts(for: newEntries, familyID: familyID)
             refreshState = .success
+            // LS-216 R2（merge-review R1 M1）：計數載入**不**擋在 `refreshState = .success`
+            // 之前——`refreshState` 代表「畫面內容本身」是否就緒，愛心是次要資訊，不該讓使用者
+            // 多等一輪網路請求才看到時間軸；`@Observable` 賦值當下就通知觀察者，這裡 `await`
+            // 只是延後這支 `async` 函式自己返回的時間點，不延後畫面更新，見 `loadReactionCounts`
+            // 文件註解。
+            await loadReactionCounts(for: newEntries, familyID: familyID, expectedGeneration: myGeneration)
             return true
         } catch {
             guard myGeneration == generation else { return false }
@@ -175,10 +176,11 @@ final class TimelineStore {
             }
             entries.append(contentsOf: newEntries)
             hasMorePages = pointers.count == Self.pageSize
-            // LS-216：只補新追加這批的愛心計數，已經在 `entries` 裡的舊資料不重查（同
-            // `refresh` 的既有理由，見 `loadReactionCounts` 文件註解）。
-            await loadReactionCounts(for: newEntries, familyID: familyID)
             loadMoreState = .success
+            // LS-216 R2（merge-review R1 M1）：同 `refresh` 的既有理由——只補新追加這批的
+            // 愛心計數（已經在 `entries` 裡的舊資料不重查），且不擋在 `loadMoreState = .success`
+            // 之前，見 `loadReactionCounts` 文件註解。
+            await loadReactionCounts(for: newEntries, familyID: familyID, expectedGeneration: myGeneration)
             return true
         } catch {
             guard myGeneration == generation, entries.last?.id == baseTailID else {
@@ -278,23 +280,43 @@ final class TimelineStore {
         try await apiClient.reactors(familyID: familyID, targetType: kind.rawValue, targetID: refId)
     }
 
-    /// LS-216：一頁（或 `loadMore` 新追加的一段）內容組好之後，依 `kind` 分組批次呼叫
-    /// `get_reaction_counts`——同一頁最多 3 次呼叫（一種 kind 一次），不是逐卡呼叫（見
-    /// `TimelineAPIClient.reactionCounts` 文件註解）。單一 kind 的計數查詢失敗不影響其餘
-    /// kind、也不影響已經組裝好的內容本身顯示——愛心是次要資訊，失敗時該 kind 的所有
-    /// target 維持 `.zero`（使用者仍可以點愛心，下次 `refresh`／`loadMore` 會再試一次），
-    /// 同 `loadVideoDuration` 失敗時靜默降級的既有哲學。
-    private func loadReactionCounts(for newEntries: [TimelineEntry], familyID: UUID) async {
+    /// LS-216 R2（merge-review R1 M1／M2）：一頁（或 `loadMore` 新追加的一段）內容組好之後，
+    /// 依 `kind` 分組批次呼叫 `get_reaction_counts`——同一頁最多 3 次呼叫（一種 kind 一次，見
+    /// `TimelineAPIClient.reactionCounts` 文件註解），三種 kind 用 `withTaskGroup` 平行發出
+    /// （同 `TimelineContentAssembler.fetchContentMaps` 既有理由：序列 await 沒必要拉長總等待
+    /// 時間），結果收集齊後**一次**寫回 `reactionStates`。
+    ///
+    /// **呼叫端 `await` 這支，但不擋使用者看到內容**：`@Observable` 屬性在賦值當下就通知觀察者
+    /// （不必等外層 `async` 函式整個返回）——呼叫端（`refresh`／`loadMore`）已經在呼叫這支
+    /// 之前就把 `entries`／`refreshState`／`loadMoreState` 寫成 `.success`，畫面此刻已經能顯示
+    /// 時間軸本身；這支仍在跑的期間，愛心一律顯示 `reactionStates` 尚未覆寫前的預設 `.zero`。
+    /// 寫回前重驗 `expectedGeneration == generation`：若飛行期間又有更新的 `refresh`（世代號
+    /// 已前進），`entries` 已換過基底，這批結果安靜丟棄，不覆蓋新世代可能已更新的值。單一
+    /// kind 查詢失敗（`try?`）不影響其餘 kind，缺席一律 `.zero`（下次會再試）。
+    private func loadReactionCounts(for newEntries: [TimelineEntry], familyID: UUID, expectedGeneration: Int) async {
         let idsByKind = Dictionary(grouping: newEntries, by: \.kind).mapValues { $0.map(\.refId) }
-        for (kind, targetIDs) in idsByKind {
-            guard !targetIDs.isEmpty else { continue }
-            guard let rows = try? await apiClient.reactionCounts(
-                familyID: familyID, targetType: kind.rawValue, targetIDs: targetIDs
-            ) else { continue }
-            for row in rows {
-                reactionStates[TimelineEntry.id(kind: kind, refId: row.targetID)] =
-                    ReactionState(count: row.reactionCount, reactedByMe: row.reactedByMe)
+        guard !idsByKind.isEmpty else { return }
+        let apiClient = self.apiClient
+        var merged: [String: ReactionState] = [:]
+        await withTaskGroup(of: (FeedKind, [ReactionCountRow]).self) { group in
+            for (kind, targetIDs) in idsByKind {
+                group.addTask {
+                    let rows = (try? await apiClient.reactionCounts(
+                        familyID: familyID, targetType: kind.rawValue, targetIDs: targetIDs
+                    )) ?? []
+                    return (kind, rows)
+                }
             }
+            for await (kind, rows) in group {
+                for row in rows {
+                    merged[TimelineEntry.id(kind: kind, refId: row.targetID)] =
+                        ReactionState(count: row.reactionCount, reactedByMe: row.reactedByMe)
+                }
+            }
+        }
+        guard expectedGeneration == generation else { return }
+        for (key, state) in merged {
+            reactionStates[key] = state
         }
     }
 
