@@ -37,6 +37,8 @@ struct SettingsView: View {
     /// 不標 `private`：`SettingsView+Sidebar.swift`（跨檔案 extension）需要讀寫它，見該檔
     /// 文件註解。
     @State var regularSelection: SettingsSection = .profile
+    /// LS-210：法律區兩列改開 in-app sheet，同 `WelcomeView.presentedLegalDocument`（LS-191）寫法。
+    @State private var presentedLegalDocument: LegalDocumentKind?
 
     var body: some View {
         Group {
@@ -87,6 +89,9 @@ struct SettingsView: View {
             Button("好", role: .cancel) {}
         } message: { message in
             Text(message)
+        }
+        .sheet(item: $presentedLegalDocument) { kind in
+            LegalDocumentSheet(kind: kind)
         }
     }
 
@@ -308,14 +313,15 @@ struct SettingsView: View {
 
     private var legalSection: some View {
         SettingsSectionBlock(title: "法律") {
-            // 待辦（LS-133 核可後）：改開 in-app sheet，不再跳出系統瀏覽器。這裡先沿用
-            // `WelcomeView.legalAttributedString` 既有的兩個網址（票文範圍 1：「法律入口沿用
-            // 既有開啟方式」）。
-            Link(destination: URL(string: "https://littlesprout.app/legal/terms")!) {
+            Button {
+                presentedLegalDocument = .termsOfService
+            } label: {
                 SettingsRowView(icon: "doc.text", label: "使用條款")
             }
             SettingsRowDivider()
-            Link(destination: URL(string: "https://littlesprout.app/legal/privacy")!) {
+            Button {
+                presentedLegalDocument = .privacyPolicy
+            } label: {
                 SettingsRowView(icon: "shield", label: "隱私權政策")
             }
         }
