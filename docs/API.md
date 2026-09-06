@@ -2818,26 +2818,43 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
 
   | kind | event_count = 1 | event_count > 1 |
   |---|---|---|
-  | `comment` | 「{actor}在你的{標籤}留言」（例：「阿嬤在你的日記留言」） | 「你的{標籤}收到了 {N} 則新留言」 |
-  | `reaction` | 「{actor}喜歡了你的{標籤}」 | 「{N} 個人喜歡了你的{標籤}」（例：「3 個人喜歡了你的照片」） |
-  | `diary` | 「{actor}寫了一篇日記」 | 「{actor}新增了 {N} 篇日記」（防禦性分支，見下） |
-  | `album` | 「{actor}新增了相簿」 | 「{actor}新增了 {N} 本相簿」（防禦性分支，見下） |
-  | `media`（LS-175） | 「{actor}新增了一張照片」 | 「{actor}新增了 {N} 張照片」（例：「爸爸新增了 50 張照片」，票文原始範例） |
-  | `report`（LS-175 R2，merge-review R1 m2） | 「你的{標籤}收到一則檢舉」 | 「你的{標籤}收到了 {N} 則檢舉」 |
+  | `comment`（LS-219 依 LS-177 矩陣定案） | 「{actor}在你的{標籤}留言了」（例：「阿嬤在你的日記留言了」） | 「你的{標籤}收到了 {N} 則新留言」（LS-219 R2 M1：不指名、不宣稱人數，只引用 event_count） |
+  | `reaction`（LS-219 依 LS-177 矩陣定案） | 「{actor}按了愛心」（不含目標標籤） | 「你的{標籤}收到了 {N} 個愛心」（LS-219 R2 M1，同上） |
+  | `diary`（LS-219 依 LS-177 矩陣定案） | 「{actor}新增了一則日記」 | 「家人新增了 {N} 則日記」（防禦性分支，見下；LS-219 R2 M1：無法確認多筆事件是否同一人，改用固定文字「家人」，不沿用 actor） |
+  | `album`（LS-219 依 LS-177 矩陣定案，量詞補「一本」） | 「{actor}新增了一本相簿」 | 「家人新增了 {N} 本相簿」（防禦性分支，見下；LS-219 R2 M1，同上） |
+  | `media`（LS-175） | 「{actor}新增了一張照片」 | 「{actor}新增了 {N} 張照片」（例：「爸爸新增了 50 張照片」，票文原始範例；未受 LS-219 R2 M1 影響——`media` 的 `event_count` 本來就只用來組數字，從未宣稱人數） |
+  | `report`（LS-175 R2 落地，LS-219 依 LS-189 0905 補註／LS-195 R1 N1 改為定案文案） | 「家庭裡有一{量詞}{標籤}被檢舉，請前往處理」（量詞依 target_type：張／本／則，LS-219 R2 m1） | 「家庭裡有 {N} {量詞}{標籤}被檢舉，請前往處理」 |
+
+  **LS-219 R2（merge-review R1 M1）多則文案的鐵律**：`event_count` 是合併後的
+  事件筆數，不是去重後的人數——`claim_notification_events()`／
+  `notification_recipients()` 都沒有「這批事件實際上有幾個不同的人觸發」這個
+  訊號（`actor_display_name` 只是 COALESCE 過的「最新一次觸發者」單一姓名）。
+  R1 初版 `comment`／`reaction` 的多則文案曾寫成「{actor}等 {N} 人…」，把
+  `event_count` 誤當成人數，是「文案宣稱資料給不出來的東西」；R2 改回不宣稱
+  人數的句型，`diary`／`album` 的防禦性多則分支也一併改用固定文字「家人」（不
+  沿用 actor，因為無法確認合併的多筆事件是否同一人觸發）。distinct actor 計數
+  已記入 LS-96 池，另票評估——本票不動 SQL、不加欄位。**與 LS-177 稿 Notes
+  矩陣的多則例句不同：稿面例句假設有人數計數，實作以事件數為準（LS-219 R1
+  M1）**。
 
   `actor` 取 `claim_notification_events()` 已 `COALESCE` 過的
-  `actor_display_name`（`NULL` fallback「家人」）——**`report` 是唯一沒有用到
-  `actor` 的分支**：`report_content()`（LS-149）寫入的 `actor_id` 是檢舉人，不是
-  被檢舉內容的作者，沿用 `comment`／`reaction` 那種「{actor} 對你的 xxx 做了
-  什麼」句型會讓收件人誤以為檢舉人在跟自己互動；`target_type` 用被檢舉內容原本
-  的類型（`album`／`media`／`diary`／`comment`），`TARGET_LABEL` 可以直接沿用。
-  這是**中性 fallback**，不是產品定案文案——`report` 事件從 LS-149 落地起就會
-  寫進 `notification_events`，但 `push-dispatch`（LS-172）當時的型別守門
+  `actor_display_name`（`NULL` fallback「家人」）——`report` 完全不用到
+  `actor`（連 event_count=1 也不用）；`diary`／`album` 的防禦性多則分支
+  （event_count>1，見上）也不使用 actor，改用固定文字「家人」，但兩者
+  event_count=1 的單則形式仍使用 actor。`report_content()`（LS-149）寫入的
+  `actor_id` 是檢舉人，不是被檢舉內容的作者，沿用 `comment`／`reaction` 那種
+  「{actor} 對你的 xxx 做了什麼」句型會讓收件人誤以為檢舉人在跟自己互動；
+  `target_type` 用被檢舉內容原本的類型（`album`／`media`／`diary`／
+  `comment`），量詞依類型不同（張／本／則，`REPORT_TARGET_LABEL`，LS-219 R2
+  m1），不能沿用 `TARGET_LABEL` 配單一固定量詞。
+  這段文案**原是 LS-175 落地時的中性 fallback**——`report` 事件從 LS-149 落地起
+  就會寫進 `notification_events`，但 `push-dispatch`（LS-172）當時的型別守門
   （`isNotificationKind`／`isContentTargetType`）沒有涵蓋它，若被 claim 到會讓
   **整批**（不只 report 那幾筆）被判定失敗、SQL 面卻已標記 `sent_at`＝永久漏送
   （LS-96 池項 `841d97da`，merge-review R1 於 PR #284 覆核成立並裁定本票直接
-  補）；本票只補到「不再整批漏送」，是否要推播、推播給誰（例如只給 owner）
-  是後續的產品決定——**已由 LS-195 定案：只給 owner**，見上方
+  補）；當時只補到「不再整批漏送」，文案是否要重寫留給後續票。**LS-219 依
+  LS-189 0905 補註（LS-195 R1 N1：「只推給 owner」之後原文語意錯）改為產品
+  定案文案**，收件人只給 owner 已由 LS-195 定案，見上方
   `notification_recipients` 段的 `kind='report'` 收件人規則。
 
   **已知、刻意的規格分歧（票文字面 vs. 實際可用資料，`album`／`diary` 兩個既有

@@ -105,63 +105,69 @@ function req(
 // 1. 文案彙總矩陣（票文明定的三個範例逐字對照，其餘組合驗證分支邏輯）
 // ---------------------------------------------------------------------------
 
-Deno.test("buildMessageBody：diary，event_count=1 → 「媽媽寫了一篇日記」（票文範例逐字對照）", () => {
+Deno.test("buildMessageBody：diary，event_count=1 → 「媽媽新增了一則日記」（LS-219／LS-177 矩陣逐字對照）", () => {
   assertEquals(
     buildMessageBody("diary", 1, "diary", "媽媽"),
-    "媽媽寫了一篇日記",
+    "媽媽新增了一則日記",
   );
 });
 
-Deno.test("buildMessageBody：comment，target_type=diary → 「阿嬤在你的日記留言」（票文範例逐字對照）", () => {
+Deno.test("buildMessageBody：comment，target_type=diary → 「阿嬤在你的日記留言了」（LS-219／LS-177 矩陣逐字對照）", () => {
   assertEquals(
     buildMessageBody("comment", 1, "diary", "阿嬤"),
-    "阿嬤在你的日記留言",
+    "阿嬤在你的日記留言了",
   );
 });
 
-Deno.test("buildMessageBody：reaction，target_type=media，event_count=3 → 「3 個人喜歡了你的照片」（票文範例逐字對照）", () => {
-  assertEquals(
-    buildMessageBody("reaction", 3, "media", "隨便誰"),
-    "3 個人喜歡了你的照片",
-  );
+Deno.test("buildMessageBody：reaction，target_type=media，event_count=3 → 「你的照片收到了 3 個愛心」（LS-219 R2 M1：不宣稱人數，只引用 event_count）", () => {
+  const body = buildMessageBody("reaction", 3, "media", "隨便誰");
+  assertEquals(body, "你的照片收到了 3 個愛心");
+  // 即使這 3 筆事件其實是同一人（「隨便誰」）連續按的，資料層也沒有 distinct
+  // actor 計數可用——文案不得出現「N 人」這種暗示「N 個不同的人」的字樣
+  // （merge-review R1 M1）。
+  assertEquals(/\d\s*人/.test(body), false, "多則文案不得出現『N 人』字樣");
 });
 
-Deno.test("buildMessageBody：reaction，event_count=1 → 帶 actor 名字，不是「1 個人」", () => {
+Deno.test("buildMessageBody：reaction，event_count=1 → 帶 actor 名字、不含目標標籤（LS-219／LS-177 矩陣）", () => {
   assertEquals(
     buildMessageBody("reaction", 1, "album", "爸爸"),
-    "爸爸喜歡了你的相簿",
+    "爸爸按了愛心",
   );
 });
 
-Deno.test("buildMessageBody：comment，event_count>1 → 不指名單一 actor（可能是多人留言）", () => {
+Deno.test("buildMessageBody：comment，event_count>1 → 「你的{label}收到了 N 則新留言」，不指名單一 actor、不宣稱人數（LS-219 R2 M1）", () => {
+  const body = buildMessageBody("comment", 5, "album", "任何人");
+  assertEquals(body, "你的相簿收到了 5 則新留言");
+  // 即使這 5 筆事件其實是同一人（「任何人」）連續留言的，資料層也沒有 distinct
+  // actor 計數可用——文案不得出現「N 人」這種暗示「N 個不同的人」的字樣。
+  assertEquals(/\d\s*人/.test(body), false, "多則文案不得出現『N 人』字樣");
+});
+
+Deno.test("buildMessageBody：album，event_count=1 → 不虛構照片張數，量詞補「一本」（LS-219／LS-177 矩陣）", () => {
   assertEquals(
-    buildMessageBody("comment", 5, "album", "任何人"),
-    "你的相簿收到了 5 則新留言",
+    buildMessageBody("album", 1, "album", "爸爸"),
+    "爸爸新增了一本相簿",
   );
 });
 
-Deno.test("buildMessageBody：album，event_count=1 → 不虛構照片張數（見 handler.ts 檔頭的規格分歧記錄）", () => {
-  assertEquals(buildMessageBody("album", 1, "album", "爸爸"), "爸爸新增了相簿");
+Deno.test("buildMessageBody：album，event_count>1（防禦性分支，今天的 trigger 設計下不會發生）→ 帶「本」不帶「張」，改用「家人」不沿用 actorDisplayName（LS-219 R2 M1）", () => {
+  const body = buildMessageBody("album", 2, "album", "爸爸");
+  assertEquals(body, "家人新增了 2 本相簿");
+  // 無法確認合併進來的 2 筆事件是不是同一人（「爸爸」）觸發——不能沿用
+  // actorDisplayName，也不得出現「N 人」字樣。
+  assertEquals(/\d\s*人/.test(body), false, "多則文案不得出現『N 人』字樣");
 });
 
-Deno.test("buildMessageBody：album，event_count>1（防禦性分支，今天的 trigger 設計下不會發生）→ 帶「本」不帶「張」", () => {
-  assertEquals(
-    buildMessageBody("album", 2, "album", "爸爸"),
-    "爸爸新增了 2 本相簿",
-  );
-});
-
-Deno.test("buildMessageBody：diary，event_count>1（防禦性分支）", () => {
-  assertEquals(
-    buildMessageBody("diary", 2, "diary", "媽媽"),
-    "媽媽新增了 2 篇日記",
-  );
+Deno.test("buildMessageBody：diary，event_count>1（防禦性分支）→ 量詞「則」與單則一致，改用「家人」不沿用 actorDisplayName（LS-219 R2 M1）", () => {
+  const body = buildMessageBody("diary", 2, "diary", "媽媽");
+  assertEquals(body, "家人新增了 2 則日記");
+  assertEquals(/\d\s*人/.test(body), false, "多則文案不得出現『N 人』字樣");
 });
 
 Deno.test("buildMessageBody：comment，target_type=comment（回覆留言）", () => {
   assertEquals(
     buildMessageBody("comment", 1, "comment", "阿公"),
-    "阿公在你的留言留言",
+    "阿公在你的留言留言了",
   );
 });
 
@@ -187,19 +193,34 @@ Deno.test("buildMessageBody：media，event_count=2 → 帶阿拉伯數字（跟
   );
 });
 
-// LS-175 R2（merge-review R1 m2）：report（中性 fallback，不用 actor 名字——
-// 檢舉人不是「對你的 xxx 做了什麼」的那個 actor 語意）。
-Deno.test("buildMessageBody：report，event_count=1，target_type=album → 「你的相簿收到一則檢舉」", () => {
+// LS-175 落地時是中性 fallback；LS-219 依 LS-189 0905 補註（LS-195 R1 N1）改為
+// 產品定案文案，仍不用 actor 名字——檢舉人不是「對你的 xxx 做了什麼」的那個
+// actor 語意。LS-219 R2（merge-review R1 m1）：量詞依 target_type 不同（張／
+// 本／則），逐一覆蓋 REPORT_TARGET_LABEL 四個 key，不只測 album／media 兩個。
+Deno.test("buildMessageBody：report，event_count=1，target_type=album → 「家庭裡有一本相簿被檢舉，請前往處理」（LS-219 R2 定案文案，量詞「本」）", () => {
   assertEquals(
     buildMessageBody("report", 1, "album", "任何人"),
-    "你的相簿收到一則檢舉",
+    "家庭裡有一本相簿被檢舉，請前往處理",
   );
 });
 
-Deno.test("buildMessageBody：report，event_count=3，target_type=media → 「你的照片收到了 3 則檢舉」", () => {
+Deno.test("buildMessageBody：report，event_count=3，target_type=media → 「家庭裡有 3 張照片被檢舉，請前往處理」（LS-219 R2 定案文案，量詞「張」）", () => {
+  const body = buildMessageBody("report", 3, "media", "任何人");
+  assertEquals(body, "家庭裡有 3 張照片被檢舉，請前往處理");
+  assertEquals(/\d\s*人/.test(body), false, "多則文案不得出現『N 人』字樣");
+});
+
+Deno.test("buildMessageBody：report，event_count=1，target_type=diary → 「家庭裡有一則日記被檢舉，請前往處理」（LS-219 R2，量詞「則」）", () => {
   assertEquals(
-    buildMessageBody("report", 3, "media", "任何人"),
-    "你的照片收到了 3 則檢舉",
+    buildMessageBody("report", 1, "diary", "任何人"),
+    "家庭裡有一則日記被檢舉，請前往處理",
+  );
+});
+
+Deno.test("buildMessageBody：report，event_count=1，target_type=comment → 「家庭裡有一則留言被檢舉，請前往處理」（LS-219 R2，量詞「則」）", () => {
+  assertEquals(
+    buildMessageBody("report", 1, "comment", "任何人"),
+    "家庭裡有一則留言被檢舉，請前往處理",
   );
 });
 
@@ -416,10 +437,10 @@ Deno.test("runDispatch：一個事件、兩個收件人，皆送出成功 → se
   assertEquals(summary.failed, 0);
   assertEquals(summary.tokensRemoved, 0);
   assertEquals(getRecipientsCallCount, 1); // 一整批（這裡只有一個事件）只查一次對象，不逐事件 round trip
-  // 批次只發一則彙總：兩個收件人拿到的文案完全相同（同一則 5 個人喜歡了你的照片），
-  // 不是被展開成 5 則各自獨立的訊息。
+  // 批次只發一則彙總：兩個收件人拿到的文案完全相同（同一則 你的照片收到了 5 個
+  // 愛心，LS-219 R2 M1：不宣稱人數），不是被展開成 5 則各自獨立的訊息。
   assertEquals(provider.calls.length, 2);
-  assertEquals(provider.calls[0].body, "5 個人喜歡了你的照片");
+  assertEquals(provider.calls[0].body, "你的照片收到了 5 個愛心");
   assertEquals(provider.calls[1].body, provider.calls[0].body);
   assertEquals(provider.calls[0].title, APP_TITLE);
 });
