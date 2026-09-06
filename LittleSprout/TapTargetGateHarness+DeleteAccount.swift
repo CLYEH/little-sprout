@@ -25,6 +25,21 @@ extension TapTargetGateHarness {
         Family(id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true)
     }
 
+    /// merge-review R3 n1 訂正：`performDeletion()` 改呼叫 `resumer.finalize(userID:)`，需要
+    /// `authStore.session != nil` 才能真的走到 EF 那一步（見該方法 `guard let userID =
+    /// authStore.session?.userID`）——`.preview()` 預設沒有 session（同
+    /// `PreviewAuthService.currentSession` 預設 nil），這裡的 `userID` 跟各分流 `FamilyStore`
+    /// 種子的 `ownerUserID` 是否同一個值不影響這支測試的目的（只是要有非 nil session），刻意
+    /// 各自獨立、不共用同一個變數，避免耦合出跟本票無關的假設。
+    @MainActor
+    private static func sessionedAuthStore() -> AuthStore {
+        let authStore = AuthStore.preview()
+        authStore.seedSessionForPreview(
+            AuthSession(userID: UUID(), email: "delete-account-harness@example.com", expiresAt: .distantFuture)
+        )
+        return authStore
+    }
+
     @MainActor
     private static func generalMemberFamilyStore() -> FamilyStore {
         let familyStore = FamilyStore.preview(withFamily: makeFamily())
@@ -63,7 +78,7 @@ extension TapTargetGateHarness {
     @MainActor
     private static func makeModel(familyStore: FamilyStore) -> DeleteAccountFlowModel {
         DeleteAccountFlowModel(
-            accountAPIClient: PreviewAccountAPIClient(), familyStore: familyStore, authStore: .preview(),
+            accountAPIClient: PreviewAccountAPIClient(), familyStore: familyStore, authStore: sessionedAuthStore(),
             childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
             eulaStore: .preview(shouldPresent: false), resumer: .preview()
         )
@@ -75,7 +90,7 @@ extension TapTargetGateHarness {
         let familyStore = generalMemberFamilyStore()
         NavigationStack {
             DeleteAccountFlowView(
-                accountAPIClient: PreviewAccountAPIClient(), authStore: .preview(), familyStore: familyStore,
+                accountAPIClient: PreviewAccountAPIClient(), authStore: sessionedAuthStore(), familyStore: familyStore,
                 childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
                 eulaStore: .preview(shouldPresent: false), resumer: .preview()
             )
@@ -88,7 +103,7 @@ extension TapTargetGateHarness {
         let familyStore = mustTransferFamilyStore()
         NavigationStack {
             DeleteAccountFlowView(
-                accountAPIClient: PreviewAccountAPIClient(), authStore: .preview(), familyStore: familyStore,
+                accountAPIClient: PreviewAccountAPIClient(), authStore: sessionedAuthStore(), familyStore: familyStore,
                 childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
                 eulaStore: .preview(shouldPresent: false), resumer: .preview()
             )
@@ -101,25 +116,27 @@ extension TapTargetGateHarness {
         let familyStore = soleMemberFamilyStore()
         NavigationStack {
             DeleteAccountFlowView(
-                accountAPIClient: PreviewAccountAPIClient(), authStore: .preview(), familyStore: familyStore,
+                accountAPIClient: PreviewAccountAPIClient(), authStore: sessionedAuthStore(), familyStore: familyStore,
                 childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
                 eulaStore: .preview(shouldPresent: false), resumer: .preview()
             )
         }
     }
 
-    /// 04f 進行中——純顯示（`ProgressView`＋文字，無互動元件）。**merge-review R1 i2 訂正**：
-    /// 這裡跟 `TapTargetGateScreenName.deleteAccountInProgress`／`TapTargetGateHarness
-    /// .hostView(for:)` 的 `.deleteAccountInProgress` case 都確實有掛（截圖對稿與
-    /// registry-check 都需要），舊註解說「不進註冊表」「不掛 `hostView(for:)` 分派」是錯的；
-    /// 真正沒有的是**對應的 tap-target UITest**——`TapTargetMeasurement.violations` 要求至少
-    /// 1 個 Button／tappable 元件才不算「0 個元件＝0 個違規」的假陽性，這張板本來就沒有互動
-    /// 元件，同 `DayDividerView` 一類純顯示畫面的既有慣例，不寫這支測試。
+    /// 04f 進行中。**merge-review R1 i2 訂正**：這裡跟 `TapTargetGateScreenName
+    /// .deleteAccountInProgress`／`TapTargetGateHarness.hostView(for:)` 的
+    /// `.deleteAccountInProgress` case 都確實有掛（截圖對稿與 registry-check 都需要），舊註解說
+    /// 「不進註冊表」「不掛 `hostView(for:)` 分派」是錯的。**merge-review R3 n2／R4 訂正**：
+    /// 這裡不再是「無互動元件」——`DeletionInProgressView` 加了「登出」文字鈕（見該檔文件
+    /// 註解），但仍然沒有寫對應的 tap-target UITest（沒有明確指示要求、且既有 04h「登出」
+    /// UITest 已經覆蓋同一顆共用元件 `DeleteAccountTextButton` 的 `minHeight: 48`），這裡只
+    /// 提供 host 給截圖對稿與 registry-check 用。
     @MainActor
     @ViewBuilder
     static var deleteAccountInProgressHost: some View {
+        let model = makeModel(familyStore: .preview(withFamily: makeFamily()))
         NavigationStack {
-            DeletionInProgressView()
+            DeletionInProgressView(model: model)
         }
     }
 

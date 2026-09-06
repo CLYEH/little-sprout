@@ -79,4 +79,26 @@ final class DeleteAccountFlowUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["帳號已刪除"].waitForExistence(timeout: 10), "PreviewAccountAPIClient 固定成功，應該落在 04g")
     }
+
+    /// merge-review R3 n2／R4 裁決：旗標存在期間 `AuthenticatedGate` 會把 04f／04h 當成整個
+    /// 已登入畫面（見 `RootView+AuthenticatedGate.swift`），R2 為 M2／M3 才加的 `ForkView`
+    /// 「登出」出口在這段期間到不了——04h 補一顆「登出」文字鈕，這裡驗證它存在且可點。
+    /// `.deleteAccountFailed` 直接掛 `DeletionFailedView`（同 `.deleteAccountFinalConfirm`
+    /// 既有先例，見型別文件註解——只適合測「這張畫面本身的行為」，不測跨畫面的路由轉場）。
+    func testFailedState_signOutButton_existsAndIsTappable() {
+        let app = TapTargetMeasurement.launch(.deleteAccountFailed)
+        TapTargetMeasurement.assertScreenRendered(.deleteAccountFailed, in: app)
+
+        let signOutButton = app.buttons["登出"]
+        XCTAssertTrue(signOutButton.waitForExistence(timeout: 5), "04h 應該要有「登出」出口")
+        XCTAssertTrue(signOutButton.isHittable, "「登出」鈕應該可點（minHeight 48）")
+
+        signOutButton.tap()
+
+        // `finishAndReturnToWelcome()` 呼叫 `forceSignOutLocally()`（`PreviewAuthService` 立即
+        // 成功）——這個 host 是獨立掛 `DeletionFailedView`，不經過 `AuthenticatedGate` 完整樹，
+        // 驗證的是「按下去不會卡住／不會崩潰」，不是完整的登出後導頁（那需要走
+        // `AuthenticatedGate`，超出這支 host 的範圍）。
+        XCTAssertEqual(app.state, .runningForeground, "登出不該讓 app 崩潰或卡死")
+    }
 }

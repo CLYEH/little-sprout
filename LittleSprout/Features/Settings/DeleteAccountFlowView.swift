@@ -70,7 +70,7 @@ struct DeleteAccountFlowView: View {
             case .finalConfirm:
                 FinalDeleteConfirmView(model: model)
             case .inProgress:
-                DeletionInProgressView()
+                DeletionInProgressView(model: model)
             case .completed:
                 DeletionCompletedView(model: model)
             case .failed:
@@ -139,14 +139,24 @@ struct DeleteAccountDangerButton: View {
 struct DeleteAccountTextButton: View {
     let label: String
     let action: () -> Void
+    /// merge-review R4 n2：04f／04h 的「登出」出口需要反映 `finishAndReturnToWelcome()` 進行中
+    /// （同 `ForkView.signOutButton` 的既有作法），預設 `false` 不影響既有呼叫端（04a／04d
+    /// 「先不要」／「返回設定」從未傳過這個參數）。
+    var isLoading = false
 
     var body: some View {
         Button(action: action) {
-            Text(label)
-                .appFont(.body, weight: .semibold)
-                .foregroundStyle(Color.lsTextPrimary)
-                .frame(maxWidth: .infinity, minHeight: 48)
+            HStack(spacing: AppSpacing.tight) {
+                if isLoading {
+                    ProgressView()
+                }
+                Text(label)
+                    .appFont(.body, weight: .semibold)
+                    .foregroundStyle(Color.lsTextPrimary)
+            }
+            .frame(maxWidth: .infinity, minHeight: 48)
         }
+        .disabled(isLoading)
     }
 }
 

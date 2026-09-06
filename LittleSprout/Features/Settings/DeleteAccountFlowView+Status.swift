@@ -104,6 +104,8 @@ struct DeleteAccountMembersLoadFailedView: View {
 // MARK: - 04f 進行中（`vrqoe`）
 
 struct DeletionInProgressView: View {
+    let model: DeleteAccountFlowModel
+
     var body: some View {
         VStack(spacing: AppSpacing.block) {
             Spacer()
@@ -113,8 +115,23 @@ struct DeletionInProgressView: View {
                 note: "請不要關閉 App，這可能需要幾秒鐘。完成前請留在這個畫面。"
             )
             Spacer()
+            // merge-review R3 n2／R4 裁決：`AuthenticatedGate` 在旗標存在期間會把 04f／04h 當成
+            // 整個已登入畫面（不在一般的 tab／Settings 導覽堆疊內），R2 為 M2／M3 才加的
+            // `ForkView`「登出」出口因此在續傳中這段期間到不了。補一顆「登出」（沿
+            // `ForkView.signOutButton`／`EULAConsentView.disagreeButton` 的 `cmp/Button Text`
+            // 語彙）——`finishAndReturnToWelcome()` 本來就不碰 `PendingAccountDeletion` 旗標
+            // （見該方法與 `PendingAccountDeletion` 文件註解），登出後旗標原封不動，下次登入
+            // `AuthenticatedGate`／`resumer` 會自動接著續傳，不會遺失。EF 仍在 `resumer` 這個
+            // app 層單例上背景繼續跑，不受本機登出影響。稿面沒有這個變體（LS-208 範圍 8 已
+            // 記錄），不等稿落地。
+            DeleteAccountTextButton(label: "登出", action: signOutTapped, isLoading: model.isFinishing)
         }
         .padding(.horizontal, AppSpacing.screenPad)
+        .padding(.bottom, AppSpacing.block)
+    }
+
+    private func signOutTapped() {
+        Task { await model.finishAndReturnToWelcome() }
     }
 }
 
@@ -170,6 +187,9 @@ struct DeletionFailedView: View {
                     isLoading: model.isProcessing
                 )
                 DeleteAccountTextButton(label: "聯絡我們", action: { showsContactSheet = true })
+                // merge-review R3 n2／R4 裁決：見 `DeletionInProgressView` 文件註解——同一個
+                // 出口缺口，04h 是 EF 持續失敗時使用者唯一可能長時間停留的畫面，更需要這顆鈕。
+                DeleteAccountTextButton(label: "登出", action: signOutTapped, isLoading: model.isFinishing)
             }
         }
         .padding(.horizontal, AppSpacing.screenPad)
@@ -181,11 +201,19 @@ struct DeletionFailedView: View {
             LegalDocumentSheet(kind: .privacyPolicy)
         }
     }
+
+    private func signOutTapped() {
+        Task { await model.finishAndReturnToWelcome() }
+    }
 }
 
 #if DEBUG
 #Preview("04f 進行中") {
-    DeletionInProgressView()
+    DeletionInProgressView(model: DeleteAccountFlowModel(
+        accountAPIClient: PreviewAccountAPIClient(), familyStore: .preview(), authStore: .preview(),
+        childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+        eulaStore: .preview(shouldPresent: false), resumer: .preview()
+    ))
 }
 
 #Preview("04g 完成") {
