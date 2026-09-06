@@ -33,6 +33,9 @@
 -- 正確計數。兩支舊函式（`purge_storage_unknown_media_paths`／
 -- `purge_storage_queue_enqueue_orphans`）維持不動，第 3／4 段的既有測試繼續驗證
 -- 它們自己的行為沒有被本票動到（見新 migration 檔頭「為什麼是新函式名」的說明）。
+-- 第 7 段（來源 LS-96 comment c601ccd0）：orphan_scan_cursor 專屬 grant／RLS
+-- 正向對照——這張表是唯一由 EF 直接經 PostgREST 讀寫的新表，60_default_privileges.sql
+-- 第 1 段的通掃只驗證機制本身，這裡補實際 grant 狀態的專屬斷言。
 
 \set ON_ERROR_STOP on
 
@@ -486,3 +489,56 @@ end;
 $$;
 
 rollback;
+
+-- ===========================================================================
+-- 7.（LS-222，來源 LS-96 comment c601ccd0）public.orphan_scan_cursor 的專屬
+--    grant／RLS 正向對照——這張表是唯一由 purge-storage Edge Function 直接經
+--    PostgREST 讀寫（不經 SECURITY DEFINER RPC 包裝）的新表（LS-213 R2 建立），
+--    本票（LS-222）觸碰它的分段寫回，`60_default_privileges.sql` 第 1 段的
+--    default privileges 通掃只驗證「任何新表對 anon/authenticated 天生零權限」
+--    這個機制本身，不是對 orphan_scan_cursor 實際 grant 狀態的專屬斷言——比照
+--    第 0 段（F5）對 media 的既有慣例，這裡直接對這張表補正向對照。
+-- ===========================================================================
+do $$
+begin
+  if not has_table_privilege('service_role', 'public.orphan_scan_cursor', 'select') then
+    raise exception 'FAIL：service_role 沒有 orphan_scan_cursor 的 SELECT grant——purge-storage 的續掃游標讀取會炸';
+  end if;
+  if not has_table_privilege('service_role', 'public.orphan_scan_cursor', 'insert') then
+    raise exception 'FAIL：service_role 沒有 orphan_scan_cursor 的 INSERT grant——第一次寫入游標（該表還是空的）會炸';
+  end if;
+  if not has_table_privilege('service_role', 'public.orphan_scan_cursor', 'update') then
+    raise exception 'FAIL：service_role 沒有 orphan_scan_cursor 的 UPDATE grant——第二次起的續掃游標 upsert 會炸';
+  end if;
+  if has_table_privilege('service_role', 'public.orphan_scan_cursor', 'delete') then
+    raise exception 'FAIL：service_role 竟然有 orphan_scan_cursor 的 DELETE grant（migration 只 grant select, insert, update，見 1d 段既有設計——游標列只會被 upsert 歸零，不會被刪除）';
+  end if;
+
+  if has_table_privilege('anon', 'public.orphan_scan_cursor', 'select') then
+    raise exception 'FAIL：anon 竟然可以讀 orphan_scan_cursor（這張表只給 purge-storage 的 service_role 用，不是任何登入者看得到的資料）';
+  end if;
+  if has_table_privilege('anon', 'public.orphan_scan_cursor', 'insert') then
+    raise exception 'FAIL：anon 竟然可以寫 orphan_scan_cursor';
+  end if;
+  if has_table_privilege('authenticated', 'public.orphan_scan_cursor', 'select') then
+    raise exception 'FAIL：authenticated 竟然可以讀 orphan_scan_cursor（這張表跟任何使用者身分無關，純粹是 Edge Function 自己跨 invocation 的狀態）';
+  end if;
+  if has_table_privilege('authenticated', 'public.orphan_scan_cursor', 'insert') then
+    raise exception 'FAIL：authenticated 竟然可以寫 orphan_scan_cursor';
+  end if;
+  if has_table_privilege('authenticated', 'public.orphan_scan_cursor', 'update') then
+    raise exception 'FAIL：authenticated 竟然可以更新 orphan_scan_cursor';
+  end if;
+
+  if not exists (
+    select 1 from pg_class where oid = 'public.orphan_scan_cursor'::regclass and relrowsecurity
+  ) then
+    raise exception 'FAIL：orphan_scan_cursor 沒有啟用 RLS（migration 1d 段 alter table ... enable row level security）';
+  end if;
+  if exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'orphan_scan_cursor') then
+    raise exception 'FAIL：orphan_scan_cursor 竟然有 policy（設計是 RLS enabled＋無 policy，靠 grant 本身把 anon/authenticated 擋在外面，見 migration 1d 段既有說明）';
+  end if;
+
+  raise notice 'ok：orphan_scan_cursor 只對 service_role 開 select/insert/update（無 delete），anon／authenticated 皆零權限，RLS enabled 且無 policy';
+end;
+$$;
