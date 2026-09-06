@@ -16,6 +16,10 @@ struct LittleSproutApp: App {
     // LS-165：跟 `timelineStore` 同理，隨 app 存活——相簿 tab 首頁的 keyset 分頁狀態若每次
     // 重繪都重建會遺失，切分頁再切回來會整頁重新從第一頁載入。
     @State private var albumsStore: AlbumsStore
+    // LS-190：跟 `familyStore` 同理，隨 app 存活——`RootView.AuthenticatedGate` 依它的
+    // `shouldPresent` 判斷要不要擋在 EULA 同意頁，若每次重繪都重建會遺失剛檢查完的結果、
+    // 每次都重新問一次伺服器。
+    @State private var eulaStore: EULAStore
     /// LS-125：日記編輯器（`DiaryEditorView`）用的 client——不是 `@State`：兩者都是不可變的
     /// 純 service 物件（同 `familyStore` 內部包的 `SupabaseFamilyAPIClient`），本身不 Observable
     /// 也不需要跨重繪保留可變狀態，草稿狀態的持久性由 `DiaryComposerStore`（畫面等級，見該檔）
@@ -45,6 +49,7 @@ struct LittleSproutApp: App {
         ))
         _timelineStore = State(initialValue: TimelineStore(apiClient: SupabaseTimelineAPIClient(client: client)))
         _albumsStore = State(initialValue: AlbumsStore(apiClient: SupabaseAlbumsAPIClient(client: client)))
+        _eulaStore = State(initialValue: EULAStore(apiClient: SupabaseEULAAPIClient(client: client)))
         diaryAPIClient = SupabaseDiaryAPIClient(client: client)
         mediaUploadService = SupabaseMediaUploadService(client: client)
     }
@@ -75,6 +80,7 @@ struct LittleSproutApp: App {
             childrenStore: childrenStore,
             timelineStore: timelineStore,
             albumsStore: albumsStore,
+            eulaStore: eulaStore,
             diaryAPIClient: diaryAPIClient,
             mediaUploadService: mediaUploadService,
             pendingInviteCode: $pendingInviteCode

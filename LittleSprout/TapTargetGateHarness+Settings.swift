@@ -32,7 +32,8 @@ extension TapTargetGateHarness {
                 )),
                 childrenStore: .preview(),
                 timelineStore: .preview(),
-                albumsStore: .preview()
+                albumsStore: .preview(),
+                eulaStore: .preview(shouldPresent: false)
             )
         }
         .environment(\.horizontalSizeClass, .compact)
@@ -55,7 +56,8 @@ extension TapTargetGateHarness {
                 )),
                 childrenStore: childrenStore,
                 timelineStore: .preview(),
-                albumsStore: .preview()
+                albumsStore: .preview(),
+                eulaStore: .preview(shouldPresent: false)
             )
         }
         .environment(\.horizontalSizeClass, .compact)
@@ -75,7 +77,8 @@ extension TapTargetGateHarness {
                 )),
                 childrenStore: .preview(),
                 timelineStore: .preview(),
-                albumsStore: .preview()
+                albumsStore: .preview(),
+                eulaStore: .preview(shouldPresent: false)
             )
         }
         .environment(\.horizontalSizeClass, .regular)

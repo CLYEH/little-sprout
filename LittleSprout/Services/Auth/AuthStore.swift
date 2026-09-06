@@ -114,4 +114,15 @@ final class AuthStore {
     func refreshSnapshot() {
         session = authService.currentSession
     }
+
+    #if DEBUG
+    /// LS-190：`TapTargetGateHarness.eulaConsentToTimelineHost` 用——同步灌一個 session，不經過
+    /// 任何登入方法即可讓 `RootView.AuthenticatedGate` 判定「已登入」——同
+    /// `TimelineStore.seedForPreview` 的角色與理由（見該檔）。`PreviewAuthService.currentSession`
+    /// 預設是 `nil`（沒有任何登入方法會被 harness 呼叫），沒有這支方法 `AuthenticatedGate`
+    /// 永遠停在「session 為 nil」的防禦分支。整支 `#if DEBUG` 圍住，Release build 不會編到。
+    func seedSessionForPreview(_ session: AuthSession) {
+        self.session = session
+    }
+    #endif
 }

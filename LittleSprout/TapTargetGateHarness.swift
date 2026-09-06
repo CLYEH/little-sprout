@@ -66,6 +66,10 @@ enum TapTargetGateHarness {
         case .familyMembers: familyMembersHost
         case .legalDocumentSheet: legalDocumentSheetHost
         case .legalDocumentNarrowContainer: legalDocumentNarrowContainerHost
+        case .eulaConsent: eulaConsentHost
+        case .deleteDiaryConfirmation: deleteDiaryConfirmationHost
+        case .deleteCommentConfirmation: deleteCommentConfirmationHost
+        case .eulaConsentToTimelineFlow: eulaConsentToTimelineHost
         case .selfTestTooSmall:
             selfTestTooSmallHost
         case .selfTestGood:
@@ -202,6 +206,7 @@ enum TapTargetGateHarness {
                 id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
             childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+            eulaStore: .preview(shouldPresent: false),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
         )
         .environment(\.horizontalSizeClass, .compact)
@@ -242,6 +247,7 @@ enum TapTargetGateHarness {
         AuthenticatedRootView(
             authStore: .preview(), familyStore: .preview(),
             childrenStore: .preview(), timelineStore: timelineStore, albumsStore: .preview(),
+            eulaStore: .preview(shouldPresent: false),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
         )
         .environment(\.horizontalSizeClass, .compact)

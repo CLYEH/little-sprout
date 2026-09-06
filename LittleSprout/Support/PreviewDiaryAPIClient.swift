@@ -11,6 +11,8 @@ final class PreviewDiaryAPIClient: DiaryAPIClient, @unchecked Sendable {
     func updateDiaryEntry(diaryID: UUID, body: String, entryDate: Date, childIDs: [UUID]) async throws {}
 
     func attachMedia(diaryID: UUID, familyID: UUID, mediaIDs: [UUID]) async throws {}
+
+    func setDiaryDeleted(diaryID: UUID, deleted: Bool) async throws {}
 }
 
 /// 只給 SwiftUI `#Preview` 用的假 `MediaUploadService`——不打真網路。

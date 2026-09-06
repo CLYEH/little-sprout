@@ -109,6 +109,23 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.legalDocumentNarrowContainer)
     }
 
+    /// LS-190：EULA 同意頁——「我已閱讀並同意」／「不同意，登出」／零容忍卡內的法務連結
+    /// （連結是 `XCUIElementTypeLink`，不算進 `.buttons`，不受本 gate 涵蓋，見
+    /// `TapTargetMeasurement.violations` 文件註解）三顆按鈕都要 ≥44pt。
+    func testEULAConsentView() {
+        assertAllTappablesMeetMinimum(.eulaConsent)
+    }
+
+    /// LS-190：刪除日記確認 sheet——「刪除這篇日記」（危險色外框）與「取消」兩顆按鈕。
+    func testDeleteDiaryConfirmation() {
+        assertAllTappablesMeetMinimum(.deleteDiaryConfirmation)
+    }
+
+    /// LS-190：刪除留言確認 sheet——同上，文案不同。
+    func testDeleteCommentConfirmation() {
+        assertAllTappablesMeetMinimum(.deleteCommentConfirmation)
+    }
+
     /// 任一元件 <44pt 就用 `XCTFail` 記一筆——逐一累計，不是遇到第一個違規就提前結束，讓
     /// `tap-target-check.sh` 能一次點名所有違規者（LS-17 QA1 就是同一畫面上不只一顆違規）。
     /// merge-review R1 B1：先斷言畫面真的渲染出來，harness 靜默失效不會被誤判成「這個畫面
