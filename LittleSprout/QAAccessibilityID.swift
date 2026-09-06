@@ -38,4 +38,7 @@ enum QAAccessibilityID {
     /// 隨 `FamilyStore.quota` 是否載入完成而變（「儲存空間」／「儲存空間、2.1／5 GB」），不
     /// 適合再用固定字串比對，改用 identifier。
     static let settingsStorageRow = "qa.settings.storageRow"
+    /// LS-193：04e 最終確認的「輸入『刪除帳號』」欄——沒有固定 label（同 `LabeledTextField`
+    /// 慣例，見 `DeleteAccountFlowView+FinalConfirm.swift`），改用 identifier。
+    static let deleteAccountConfirmField = "qa.deleteAccount.confirmField"
 }

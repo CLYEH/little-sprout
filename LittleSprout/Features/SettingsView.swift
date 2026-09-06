@@ -16,6 +16,10 @@ struct SettingsView: View {
     let authStore: AuthStore
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    /// LS-193：刪除帳號流程（`DeleteAccountFlowView`）呼叫 `delete_my_account()`／Edge
+    /// Function `delete-account` 用——同 `diaryAPIClient`／`mediaUploadService` 的既有角色分工
+    /// （不隨 app 存活的無狀態 client，`LittleSproutApp` 建一次原樣往下傳）。
+    let accountAPIClient: AccountAPIClient
     /// LS-126 merge-review R1 M5：登出時歸零，同 `familyStore`／`childrenStore` 的理由——
     /// `TimelineStore` 隨 app 存活，不清掉的話，下一位在同一台裝置登入的使用者會先看到
     /// 上一個家庭殘留的時間軸（簽名 URL 1 小時內仍可讀，見該 store `reset()` 文件註解）。
@@ -25,8 +29,10 @@ struct SettingsView: View {
     let albumsStore: AlbumsStore
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @State private var isSigningOut = false
-    @State private var errorMessage: String?
+    /// LS-193：不標 `private`——`SettingsView+Account.swift`（跨檔案 extension，`accountSection`
+    /// ／`signOut()` 拆出去理由見該檔文件註解）需要讀寫，同 `regularSelection` 的既有作法。
+    @State var isSigningOut = false
+    @State var errorMessage: String?
     /// Regular（iPad）左側五區導覽選取——同 `AuthenticatedRootView` 的既有理由（selection
     /// 存在容器層而非各自子視圖），這裡範圍縮小到「這個畫面內的五區」，跟 app 層的
     /// `AppSection` selection 是兩層不同的導覽狀態，互不相干。
@@ -323,51 +329,6 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - 帳號
-
-    private var accountSection: some View {
-        SettingsSectionBlock(title: "帳號") {
-            // LS-17 QA1：`SettingsRowView` 的 `.frame(minHeight: 44)` 已經滿足長輩硬約束
-            // ≥44pt 點擊目標，不需要再另外加不可見 padding（舊版占位頁的作法，見這支檔案的
-            // git 歷史）。
-            Button(action: signOut) {
-                SettingsRowView(icon: "rectangle.portrait.and.arrow.right", label: "登出", showsChevron: false)
-            }
-            .disabled(isSigningOut)
-            SettingsRowDivider()
-            NavigationLink {
-                DeleteAccountFlowView()
-            } label: {
-                SettingsRowView(icon: "trash", label: "刪除帳號", isDestructive: true)
-            }
-        }
-    }
-
-    private func signOut() {
-        guard !isSigningOut else { return }
-        isSigningOut = true
-        Task {
-            defer { isSigningOut = false }
-            do {
-                try await authStore.signOut()
-                // R2 N5：`AuthenticatedGate`（含它的 `.task(id:)`）在登出當下整個從畫面樹被
-                // 移除，只會被取消、不會以 nil 重跑一次——`FamilyStore.reset()` 因此需要一個
-                // 真的會被呼叫到的入口，這裡是登出成功後唯一一個。沒有這行，`myFamily`／
-                // `latestInvite` 會在記憶體裡留到下一位使用者登入前（見 `FamilyStore.reset()`
-                // 文件註解／`syncOwner` 對「同一人重登入不重查」以外情境的假設）。
-                familyStore.reset()
-                // LS-113：`ChildrenStore` 隨 app 存活，同 `FamilyStore` 的理由——登出不清掉
-                // 的話，下一位在同一台裝置登入的使用者會沿用上一位的孩子清單。
-                childrenStore.reset()
-                // LS-126 merge-review R1 M5：見上方 `timelineStore` 屬性文件註解。
-                timelineStore.reset()
-                // LS-165：見上方 `albumsStore` 屬性文件註解。
-                albumsStore.reset()
-            } catch {
-                errorMessage = AppError.map(error).userFacingMessage
-            }
-        }
-    }
 }
 
 #if DEBUG
@@ -378,7 +339,8 @@ struct SettingsView: View {
             familyStore: .preview(withFamily: Family(
                 id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
-            childrenStore: .preview(), timelineStore: .preview(),
+            childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
+            timelineStore: .preview(),
             albumsStore: .preview()
         )
     }
@@ -391,7 +353,8 @@ struct SettingsView: View {
             familyStore: .preview(withFamily: Family(
                 id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
-            childrenStore: .preview(), timelineStore: .preview(),
+            childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
+            timelineStore: .preview(),
             albumsStore: .preview()
         )
     }

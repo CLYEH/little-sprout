@@ -18,6 +18,9 @@ struct RootView: View {
     /// `LittleSproutApp` 文件註解——不是 `@State`，這裡也只是單純轉手）。
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
+    /// LS-193：`SettingsView`→`DeleteAccountFlowView` 用，同 `diaryAPIClient`／
+    /// `mediaUploadService` 的既有角色分工（不隨 app 存活的無狀態 client，原樣轉手往下傳）。
+    let accountAPIClient: AccountAPIClient
     /// LS-108 deep link：見 `ForkView` 文件註解，這裡只是原樣轉手往下傳。
     @Binding var pendingInviteCode: String?
 
@@ -34,6 +37,7 @@ struct RootView: View {
                     albumsStore: albumsStore,
                     diaryAPIClient: diaryAPIClient,
                     mediaUploadService: mediaUploadService,
+                    accountAPIClient: accountAPIClient,
                     pendingInviteCode: $pendingInviteCode
                 )
             } else {
@@ -76,6 +80,7 @@ private struct AuthenticatedGate: View {
     let albumsStore: AlbumsStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
+    let accountAPIClient: AccountAPIClient
     @Binding var pendingInviteCode: String?
 
     var body: some View {
@@ -92,7 +97,7 @@ private struct AuthenticatedGate: View {
                     AuthenticatedRootView(
                         authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                         timelineStore: timelineStore, albumsStore: albumsStore, diaryAPIClient: diaryAPIClient,
-                        mediaUploadService: mediaUploadService
+                        mediaUploadService: mediaUploadService, accountAPIClient: accountAPIClient
                     )
                 } else {
                     ForkView(authStore: authStore, familyStore: familyStore, pendingInviteCode: $pendingInviteCode)
@@ -136,6 +141,7 @@ struct AuthenticatedRootView: View {
     let albumsStore: AlbumsStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
+    let accountAPIClient: AccountAPIClient
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selection: AppSection = .timeline
@@ -146,13 +152,13 @@ struct AuthenticatedRootView: View {
                 SectionSplitView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                     timelineStore: timelineStore, albumsStore: albumsStore, diaryAPIClient: diaryAPIClient,
-                    mediaUploadService: mediaUploadService, selection: $selection
+                    mediaUploadService: mediaUploadService, accountAPIClient: accountAPIClient, selection: $selection
                 )
             } else {
                 SectionTabView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                     timelineStore: timelineStore, albumsStore: albumsStore, diaryAPIClient: diaryAPIClient,
-                    mediaUploadService: mediaUploadService, selection: $selection
+                    mediaUploadService: mediaUploadService, accountAPIClient: accountAPIClient, selection: $selection
                 )
             }
         }
@@ -204,6 +210,7 @@ private struct SectionTabView: View {
     let albumsStore: AlbumsStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
+    let accountAPIClient: AccountAPIClient
     @Binding var selection: AppSection
 
     var body: some View {
@@ -213,7 +220,8 @@ private struct SectionTabView: View {
                     SectionContentView(
                         section: section, authStore: authStore, familyStore: familyStore,
                         childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-                        diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
+                        diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
+                        accountAPIClient: accountAPIClient
                     )
                     // LS-136 實測發現（R1）：掛在外層 `TabView` 的 `.toolbar(.hidden, for: .tabBar)`
                     // 只隱藏視覺渲染，底下的原生 `UITabBarItem` 仍留在 accessibility tree 裡、
@@ -251,6 +259,7 @@ private struct SectionSplitView: View {
     let albumsStore: AlbumsStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
+    let accountAPIClient: AccountAPIClient
     @Binding var selection: AppSection
 
     var body: some View {
@@ -266,7 +275,8 @@ private struct SectionSplitView: View {
                 SectionContentView(
                     section: selection, authStore: authStore, familyStore: familyStore,
                     childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
+                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
+                    accountAPIClient: accountAPIClient
                 )
             }
         }
@@ -293,6 +303,7 @@ struct SectionContentView: View {
     let albumsStore: AlbumsStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
+    let accountAPIClient: AccountAPIClient
 
     var body: some View {
         content
@@ -313,7 +324,7 @@ struct SectionContentView: View {
         case .settings:
             SettingsView(
                 authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
-                timelineStore: timelineStore, albumsStore: albumsStore
+                accountAPIClient: accountAPIClient, timelineStore: timelineStore, albumsStore: albumsStore
             )
         }
     }
@@ -324,7 +335,7 @@ struct SectionContentView: View {
     AuthenticatedRootView(
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), diaryAPIClient: PreviewDiaryAPIClient(),
-        mediaUploadService: PreviewMediaUploadService()
+        mediaUploadService: PreviewMediaUploadService(), accountAPIClient: PreviewAccountAPIClient()
     )
     .environment(\.horizontalSizeClass, .compact)
 }
@@ -333,7 +344,7 @@ struct SectionContentView: View {
     AuthenticatedRootView(
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), diaryAPIClient: PreviewDiaryAPIClient(),
-        mediaUploadService: PreviewMediaUploadService()
+        mediaUploadService: PreviewMediaUploadService(), accountAPIClient: PreviewAccountAPIClient()
     )
     .environment(\.horizontalSizeClass, .regular)
 }

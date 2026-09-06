@@ -22,6 +22,9 @@ struct LittleSproutApp: App {
     /// 負責，不需要在這裡另外包一層 store。
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
+    /// LS-193：`SettingsView`→`DeleteAccountFlowView` 用，同 `diaryAPIClient`／
+    /// `mediaUploadService` 的既有角色分工（不隨 app 存活的無狀態 client）。
+    let accountAPIClient: AccountAPIClient
     /// LS-108：`littlesprout://invite/<code>` deep link（LS-39 已註冊 scheme）冷／熱啟動皆走
     /// `.onOpenURL`——寫進這裡，`ForkView` 是唯一消費者（見該檔文件）。這一層只負責接住 URL、
     /// 解析出碼，不判斷「現在該不該導頁」，那是 `ForkView` 才知道的事（是否已登入、是否已有
@@ -47,6 +50,7 @@ struct LittleSproutApp: App {
         _albumsStore = State(initialValue: AlbumsStore(apiClient: SupabaseAlbumsAPIClient(client: client)))
         diaryAPIClient = SupabaseDiaryAPIClient(client: client)
         mediaUploadService = SupabaseMediaUploadService(client: client)
+        accountAPIClient = SupabaseAccountAPIClient(client: client)
     }
 
     var body: some Scene {
@@ -77,6 +81,7 @@ struct LittleSproutApp: App {
             albumsStore: albumsStore,
             diaryAPIClient: diaryAPIClient,
             mediaUploadService: mediaUploadService,
+            accountAPIClient: accountAPIClient,
             pendingInviteCode: $pendingInviteCode
         )
         .onOpenURL { url in
