@@ -147,4 +147,41 @@ extension DeleteAccountFlowModelTests {
 
         gateContinuation.finish()
     }
+
+    /// **merge-review R3 n1 核心釘樁**：手動流程（04e 送出後）的 EF 呼叫在飛時，若這個
+    /// `userID` 剛好也被自動續傳路徑（`AuthenticatedGate`／`ForkView` 的
+    /// `resumer.resumeIfPending`）觸發到，兩者必須共用同一個 `Task`——`finalizeAccountDeletion()`
+    /// 只會被呼叫一次。這正是 `PendingAccountDeletionResumer`「唯一擁有者」這句型別文件宣稱
+    /// 要成立的地方；R3 版 `performDeletion()` 仍直接呼叫 `accountAPIClient
+    /// .finalizeAccountDeletion()`，沒有登記進 `resumer` 的去重，這支測試在那個版本下會失敗
+    /// （見 PR body mutation 記錄）。
+    func test_manualFlowFinalizeInFlight_gateTriggersAutoResume_onlyCallsFinalizeOnce() async {
+        let session = AuthSession(userID: myID, email: "a@example.com", expiresAt: .distantFuture)
+        defer { PendingAccountDeletion.clear(userID: myID) }
+        let stub = StubAccountAPIClient()
+        stub.setDeleteMyAccountHandler { .success }
+        let (gate, gateContinuation) = AsyncStream<Void>.makeStream()
+        stub.setFinalizeHandler {
+            var iterator = gate.makeAsyncIterator()
+            _ = await iterator.next() // 卡住 EF，確保下面的「自動續傳」是在手動流程還在飛時觸發
+        }
+        let fixture = makeModel(
+            accountAPIClient: stub, members: [makeMember(id: myID, role: .member)],
+            authStub: StubAuthService(currentSession: session)
+        )
+
+        fixture.model.confirmDeletion() // 手動流程：04e 送出 → RPC 成功 → 正要打 EF（卡在 gate）
+        let rpcDone = await waitUntil { fixture.model.deletionRequested }
+        XCTAssertTrue(rpcDone, "等待 RPC 完成逾時（1 秒）")
+
+        // 模擬「AuthenticatedGate 剛好在這個窗口重算 body，偵測到旗標存在，觸發自動續傳」——
+        // 同一個 resumer 實例（`fixture.resumer`，跟 model 建構時共用同一份），同一個 userID。
+        fixture.resumer.resumeIfPending(userID: myID)
+
+        gateContinuation.finish()
+        let met = await waitUntil { fixture.model.step == .completed }
+        XCTAssertTrue(met, "等待流程完成逾時（1 秒）")
+
+        XCTAssertEqual(stub.finalizeCallCount, 1, "手動流程與自動續傳撞在一起時，EF 只該被呼叫一次")
+    }
 }

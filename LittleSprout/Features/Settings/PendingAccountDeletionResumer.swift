@@ -12,10 +12,19 @@ import Observation
 ///
 /// 訂正後：這支物件是 app 存活期間唯一一份（`LittleSproutApp` 建一次、隨 `RootView` 往下傳，
 /// 同 `accountAPIClient`／`FamilyStore` 等既有 app 層物件的角色），`resumeIfPending(userID:)`
-/// 用 `inFlightUserIDs` 去重——不論從 `AuthenticatedGate`（登入完成／回前景）、
+/// 用 `inFlightTasks` 去重——不論從 `AuthenticatedGate`（登入完成／回前景）、
 /// `DeleteAccountFlowView`（`.task` 進場）還是 `ForkView`（「重試刪除」按下）哪個入口呼叫，
 /// 同一個 `userID` 同時只會有一個真正在飛的 `finalizeAccountDeletion()` 呼叫。
 /// `DeleteAccountFlowModel.init` 因此不再做任何 I/O，只讀 `state` 決定要顯示什麼（見該檔）。
+///
+/// **merge-review R3 n1 訂正**：R3 版「唯一擁有者」不成立——`DeleteAccountFlowModel
+/// .performDeletion()`（04e 送出後的一般流程）仍直接呼叫 `accountAPIClient
+/// .finalizeAccountDeletion()`，沒有登記進這支物件的去重集合，跟 `resumeIfPending` 的自動續傳
+/// 路徑互不知道對方。新增 `finalize(userID:)` 給一般流程呼叫——內部改用「task coalescing」
+/// （`inFlightTasks: [UUID: Task<Void, Never>]`，不是單純的 `Set<UUID>`）：不論呼叫端是
+/// `resumeIfPending`（fire-and-forget）還是 `finalize`（呼叫端要 await 結果），同一個 `userID`
+/// 只會有一個真正執行 `finalizeAccountDeletion()` 的 `Task`，晚到的呼叫直接 `await` 同一個
+/// `Task` 的完成，不會發起第二個併發呼叫。
 @MainActor
 @Observable
 final class PendingAccountDeletionResumer {
@@ -28,14 +37,15 @@ final class PendingAccountDeletionResumer {
 
     private let accountAPIClient: AccountAPIClient
     private(set) var state: State = .idle
-    private var inFlightUserIDs: Set<UUID> = []
+    private var inFlightTasks: [UUID: Task<Void, Never>] = [:]
 
     init(accountAPIClient: AccountAPIClient) {
         self.accountAPIClient = accountAPIClient
     }
 
-    /// 見型別文件註解——`PendingAccountDeletion.isPending(userID:)` 為 false（沒有旗標）或
-    /// 這個 `userID` 已經有一個呼叫在飛時都是 no-op，可以放心從多個入口重複呼叫。
+    /// 見型別文件註解——`PendingAccountDeletion.isPending(userID:)` 為 false（沒有旗標）時是
+    /// no-op；旗標存在時發起（或搭上既有的）續傳 `Task`，fire-and-forget，呼叫端讀 `state`
+    /// 得知結果，不需要 `await` 這支方法本身。
     ///
     /// 旗標不存在時把 `state` 收斂回 `.idle`：`state` 是這個單例橫跨整個 app 生命週期的欄位，
     /// 不會在使用者登出時自動歸零（`PendingAccountDeletion` 本身也刻意不因為登出而清旗標，見
@@ -47,11 +57,36 @@ final class PendingAccountDeletionResumer {
             state = .idle
             return
         }
-        guard !inFlightUserIDs.contains(userID) else { return }
-        inFlightUserIDs.insert(userID)
+        _ = task(for: userID)
+    }
+
+    /// 04h「重試」在續傳情境下呼叫——語意上等同再叫一次 `resumeIfPending`，獨立命名只是讓
+    /// `DeleteAccountFlowModel` 呼叫端讀起來對應「使用者主動重試」而非「系統自動偵測」。
+    func retry(userID: UUID) {
+        resumeIfPending(userID: userID)
+    }
+
+    /// **merge-review R3 n1**：一般流程（`DeleteAccountFlowModel.performDeletion()`，04e 送出
+    /// 後 RPC 成功、緊接著要打 EF）呼叫這支，取代直接呼叫 `accountAPIClient
+    /// .finalizeAccountDeletion()`——跟 `resumeIfPending`／`retry` 共用同一組 `inFlightTasks`
+    /// 去重／task coalescing：若這個 `userID` 已經有一個 `Task` 在飛（不論是 gate 觸發的自動
+    /// 續傳，還是另一次呼叫），這裡直接 `await` 那個既有 `Task`，不會發起第二個併發呼叫。
+    /// 呼叫端 `await` 這支方法回傳後讀 `state`（`.completed`／`.failed`）決定自己的
+    /// `manualStep`，這支方法本身不 `throws`——結果永遠反映在 `state` 上，跟自動續傳路徑用
+    /// 同一個資料來源，行為一致。
+    func finalize(userID: UUID) async {
+        await task(for: userID).value
+    }
+
+    /// 見型別文件註解——已經在飛的 `Task` 直接回傳同一個實例（呼叫端各自 `await` 它），沒有的
+    /// 話才真的建立一個新的並登記。
+    private func task(for userID: UUID) -> Task<Void, Never> {
+        if let existing = inFlightTasks[userID] {
+            return existing
+        }
         state = .inProgress
-        Task {
-            defer { inFlightUserIDs.remove(userID) }
+        let task = Task {
+            defer { inFlightTasks[userID] = nil }
             do {
                 try await accountAPIClient.finalizeAccountDeletion()
                 PendingAccountDeletion.clear(userID: userID)
@@ -60,12 +95,8 @@ final class PendingAccountDeletionResumer {
                 state = .failed(AppError.map(error))
             }
         }
-    }
-
-    /// 04h「重試」在續傳情境下呼叫——語意上等同再叫一次 `resumeIfPending`，獨立命名只是讓
-    /// `DeleteAccountFlowModel` 呼叫端讀起來對應「使用者主動重試」而非「系統自動偵測」。
-    func retry(userID: UUID) {
-        resumeIfPending(userID: userID)
+        inFlightTasks[userID] = task
+        return task
     }
 
     #if DEBUG

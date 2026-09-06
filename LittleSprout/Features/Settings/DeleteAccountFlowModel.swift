@@ -197,16 +197,27 @@ final class DeleteAccountFlowModel {
         // docs/API.md §4／§10：deleteMyAccount() 回傳成功後必須立即呼叫 Edge Function，中間
         // 不得允許使用者做任何操作——`step` 已經在上面轉成 `.inProgress`，這裡沒有任何 await
         // 前的分支會把控制權交還給使用者可互動的畫面。
-        do {
-            try await accountAPIClient.finalizeAccountDeletion()
+        //
+        // **merge-review R3 n1 訂正**：不再直接呼叫 `accountAPIClient.finalizeAccountDeletion()`
+        // ——那樣「唯一擁有者」的宣稱不成立，這條一般流程的 EF 呼叫跟 `resumer.resumeIfPending`
+        // 的自動續傳路徑各自有一份 in-flight guard、互不知道對方（見 `PendingAccountDeletionResumer`
+        // 文件註解的具體失敗情境）。改呼叫 `resumer.finalize(userID:)`——跟自動續傳共用同一組
+        // task coalescing，`clear`／`state` 都由 resumer 統一管理，這裡只負責把結果投影成
+        // `manualStep`。
+        guard let userID = authStore.session?.userID else {
+            manualStep = .failed(AppError.server(message: "找不到登入中的使用者，無法確認刪除是否完成", code: nil))
+            return
+        }
+        await resumer.finalize(userID: userID)
+        switch resumer.state {
+        case .completed:
             manualStep = .completed
-            // 完成了，續傳旗標的任務結束——`auth.users` 這個 userID 的列已經被 EF 刪除，
-            // UUID 不會重複使用，理論上用不到了，這裡清掉純粹是不留垃圾。
-            if let userID = authStore.session?.userID {
-                PendingAccountDeletion.clear(userID: userID)
-            }
-        } catch {
-            manualStep = .failed(AppError.map(error))
+        case .failed(let error):
+            manualStep = .failed(error)
+        case .idle, .inProgress:
+            // 理論上不會發生：`resumer.finalize(userID:)` 回傳前一定已經把 `state` 收斂成
+            // `.completed` 或 `.failed`（見該方法實作），這裡純防禦。
+            manualStep = .failed(AppError.server(message: "續傳狀態異常，請重試", code: nil))
         }
     }
 

@@ -47,12 +47,21 @@ final class DeleteAccountFlowModelTests: XCTestCase {
     /// `seedOwnerUserID`（merge-review R1 M1 新增，預設 `true` 維持既有呼叫端不變）：`false`
     /// 時不呼叫 `seedOwnerUserIDForPreview`，模擬 `syncOwner(to:)` 還沒跑完／`FamilyStore
     /// .reset()` 之後的「還不知道自己是誰」時序窗口，見 `test_classification_ownerUserIDNotYetSynced_pending`。
+    ///
+    /// `authStub` 預設值（merge-review R3 n1 訂正）：帶著 `myID` 這個 session——
+    /// `performDeletion()` 改呼叫 `resumer.finalize(userID:)` 之後，需要 `authStore.session
+    /// != nil` 才能真的走到 EF 那一步（見該方法 `guard let userID = authStore.session?.userID`）；
+    /// 預設參數不能讀 `self.myID`（default 值在沒有 `self` 的情境求值），這裡直接寫字面值，跟
+    /// `myID` 保持同一個 UUID。
     func makeModel(
         accountAPIClient: AccountAPIClient = StubAccountAPIClient(),
         family: Family? = nil,
         members: [FamilyMember] = [],
         seedOwnerUserID: Bool = true,
-        authStub: StubAuthService = StubAuthService()
+        authStub: StubAuthService = StubAuthService(currentSession: AuthSession(
+            userID: UUID(uuidString: "88888888-8888-8888-8888-888888888888")!,
+            email: "a@example.com", expiresAt: .distantFuture
+        ))
     ) -> Fixture {
         let resolvedFamily = family ?? self.family
         let familyStore = FamilyStore.preview(withFamily: resolvedFamily)
