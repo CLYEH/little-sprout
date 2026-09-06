@@ -1,31 +1,9 @@
 @testable import LittleSprout
 import XCTest
 
-/// 單次開關的非同步閘門——讓 stub handler 可以卡在「還在 in-flight」直到測試主動放行，測
-/// `guard !isSubmitting` 與換帳號時序需要能精準控制 await 的時間點。同
-/// `TimelineStoreTests.swift` 的 `AsyncGate` 寫法（actor 包 `CheckedContinuation`）。
-///
-/// merge-review R2 m5：`continuation` 原本是單一變數，只能存一個等待者——guard mutation
-/// （重放拿掉 `checkStatus` 的 `guard !checkState.isSubmitting`）會讓第二個呼叫也走到這裡，
-/// 第二次 `wait()` 進來會直接覆蓋掉第一個尚未被喚醒的 `continuation`，第一個呼叫者永遠等不到
-/// `open()`、整支測試掛住而不是乾淨落紅。改成佇列（`[CheckedContinuation]`），`open()` 時
-/// 全部一起 resume——guard 被拿掉時兩個呼叫都能正常完成，讓斷言（呼叫次數）自己去抓錯，而不是
-/// 被這支 test-only 工具本身的限制掩蓋。
-private actor AsyncGate {
-    private var continuations: [CheckedContinuation<Void, Never>] = []
-    private var isOpen = false
-
-    func wait() async {
-        if isOpen { return }
-        await withCheckedContinuation { continuations.append($0) }
-    }
-
-    func open() {
-        isOpen = true
-        continuations.forEach { $0.resume() }
-        continuations.removeAll()
-    }
-}
+// `AsyncGate`（讓 stub handler 可以卡在「還在 in-flight」直到測試主動放行，測
+// `guard !isSubmitting` 與換帳號時序需要能精準控制 await 的時間點）LS-214 起搬到
+// `LittleSproutTests/Support/AsyncGate.swift` 與 `TimelineStoreTests.swift` 共用，見該檔。
 
 @MainActor
 final class EULAStoreTests: XCTestCase {
