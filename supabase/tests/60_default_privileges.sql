@@ -639,12 +639,25 @@ $$;
 --   private.is_avatar_object_path(text)：LS-169 R2，同上一條理由，逐字一樣的形狀
 --   （純 regex、掛在 media_bucket_update／media_bucket_delete 的 WITH CHECK／USING 上）。
 --   private.deletion_bypass_active()：LS-179 R2（MAJOR-2），只讀一個交易級 GUC
---   （`current_setting`），不碰任何資料庫物件，沒有 search_path 挾持的面，同
---   is_media_object_path 的理由。
+--   （`current_setting`），不碰任何資料庫物件，沒有 search_path 挾持的面——
+--   **這支仍在例外清單內，但例外的範圍已縮小**（LS-224）：它留在這裡只是因為
+--   不是 SECURITY DEFINER（不需要是——唯一呼叫處 `private.enforce_not_suspended()`
+--   是 trigger，以表擁有者身分執行），不是因為沒有 search_path，已加
+--   `set search_path = ''`（見 `20260906123430_advisors_hardening_search_path.sql`）。
+--   注意：它的唯一呼叫處是 plpgsql 的 `if` 判斷式，但 plpgsql 語境**同樣會
+--   inline**——加 SET 一樣會關掉 inline、多一層 fmgr 開銷（merge-review R1
+--   `4365d9af` 實測：每次呼叫約 +1.1 µs），跟「加了完全沒有代價」不是同一件
+--   事；只是呼叫端 `private.enforce_not_suspended()` 是 for-each-row trigger，
+--   同一個 trigger 內已有查表成本比這 ~1 µs 貴上好幾個數量級，代價落在雜訊
+--   裡才划算，跟 is_media_object_path 那種「加了會付出對規劃器可見的 inline
+--   代價」在量級上是不同情況，但兩者都不是零代價，不要混為一談。
 --   private.enforce_deletion_bypass()：LS-179 R2，只呼叫 `set_config` 設同一個
 --   GUC，一樣不碰任何資料庫物件；只被 SECURITY DEFINER 的 delete_my_account()
 --   呼叫（以 postgres 身分執行，物件擁有者恆有權限，不需要靠自己是 definer 才能
---   運作），是否收 search_path 對它的正確性沒有影響。
+--   運作）。同上一條（LS-224）：唯一呼叫處是 `delete_my_account()` 內的 `perform`
+--   陳述式，一樣是 plpgsql 語境、一樣會被 inline、加 SET 一樣有量級 ~1 µs 的
+--   代價（同上引用的實測），已加 `set search_path = ''`——仍在例外清單內純粹
+--   因為不是 definer，不是因為缺 search_path。
 -- ---------------------------------------------------------------------------
 do $$
 declare
