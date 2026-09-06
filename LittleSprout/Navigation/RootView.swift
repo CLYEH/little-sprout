@@ -14,6 +14,9 @@ struct RootView: View {
     /// LS-165：相簿 tab 首頁，跟 `timelineStore` 同理隨 app 存活——見 `LittleSproutApp` 文件
     /// 註解。
     let albumsStore: AlbumsStore
+    /// LS-190：EULA 同意頁狀態，跟 `familyStore` 同理隨 app 存活——見 `LittleSproutApp` 文件
+    /// 註解。
+    let eulaStore: EULAStore
     /// LS-125：`DiaryEditorView` 用的 client，原樣轉手往下傳到 `TimelineView`（見
     /// `LittleSproutApp` 文件註解——不是 `@State`，這裡也只是單純轉手）。
     let diaryAPIClient: DiaryAPIClient
@@ -32,6 +35,7 @@ struct RootView: View {
                     childrenStore: childrenStore,
                     timelineStore: timelineStore,
                     albumsStore: albumsStore,
+                    eulaStore: eulaStore,
                     diaryAPIClient: diaryAPIClient,
                     mediaUploadService: mediaUploadService,
                     pendingInviteCode: $pendingInviteCode
@@ -48,81 +52,10 @@ struct RootView: View {
     }
 }
 
-/// LS-107：已登入之後，先確定「有沒有家庭」才知道要進三岔路（`ForkView`）還是主畫面
-/// （`AuthenticatedRootView`）——`familyStore.myFamily` 是這個判斷的唯一依據，建立家庭
-/// 成功後它會被直接設成新家庭，這裡下一次重繪就自動切到主畫面，不需要任何手動導航
-/// （見 `FamilyStore` 文件註解／LS-18 comment `1fce1645`）。
-///
-/// 查詢失敗時刻意不當成「沒有家庭」處理：那樣會讓已經有家庭、只是網路暫時失敗的使用者被
-/// 誤導進三岔路、看起來像能重新建立一個家庭。
-///
-/// R1 F1：`.task(id: authStore.session?.userID)`——不是單純的 `.task { if lookupState ==
-/// .idle { ... } }`。`familyStore` 隨 app 存活，登出不會重置它；若只看 `lookupState`，
-/// 第二位在同一台裝置登入的使用者會因為 store 裡還殘留第一位的 `.success` 狀態而被整個
-/// 跳過查詢，直接沿用第一位的家庭與邀請碼。這裡改成每次 user id 變動都呼叫
-/// `familyStore.syncOwner(to:)`——id 不同就先歸零再視情況重查，見該方法文件註解。
-///
-/// R2 N5 訂正：「登出」不是這支 `.task(id:)` 處理的——`AuthenticatedGate` 本身（連同這個
-/// `.task`）會在 `authStore.isAuthenticated()` 變 false 的當下整個被 `RootView.body` 移出畫面
-/// 樹，`.task(id:)` 只會被**取消**，不會再以 `id: nil` 重新啟動一次；`syncOwner(to: nil)`
-/// 因此在這條路徑上永遠不會被呼叫到。登出時真正負責歸零 `FamilyStore` 的是
-/// `SettingsView.signOut()` 成功後直接呼叫的 `familyStore.reset()`——兩個入口分工：這裡管
-/// 「已登入狀態下換人／首次登入」，登出清理是另一條路徑。
-private struct AuthenticatedGate: View {
-    let authStore: AuthStore
-    let familyStore: FamilyStore
-    let childrenStore: ChildrenStore
-    let timelineStore: TimelineStore
-    let albumsStore: AlbumsStore
-    let diaryAPIClient: DiaryAPIClient
-    let mediaUploadService: MediaUploadService
-    @Binding var pendingInviteCode: String?
-
-    var body: some View {
-        Group {
-            switch familyStore.lookupState {
-            case .idle, .submitting:
-                ProgressView("正在確認你的家庭…")
-            case .failure(let error):
-                FamilyLookupFailedView(message: error.userFacingMessage) {
-                    Task { await familyStore.refreshMyFamily() }
-                }
-            case .success:
-                if familyStore.myFamily != nil {
-                    AuthenticatedRootView(
-                        authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
-                        timelineStore: timelineStore, albumsStore: albumsStore, diaryAPIClient: diaryAPIClient,
-                        mediaUploadService: mediaUploadService
-                    )
-                } else {
-                    ForkView(authStore: authStore, familyStore: familyStore, pendingInviteCode: $pendingInviteCode)
-                }
-            }
-        }
-        .task(id: authStore.session?.userID) {
-            await familyStore.syncOwner(to: authStore.session?.userID)
-        }
-    }
-}
-
-/// 查詢「我的家庭」失敗（多半是網路）時的重試畫面——沒有對應的 .pen 設計稿：這是一個純技術性
-/// 的錯誤兜底，不是產品要求的畫面，維持最簡單的系統風格文字＋按鈕，不套用沖印品母題。
-private struct FamilyLookupFailedView: View {
-    let message: String
-    let retry: () -> Void
-
-    var body: some View {
-        VStack(spacing: AppSpacing.item) {
-            Text(message)
-                .appFont(.body)
-                .foregroundStyle(Color.lsTextSecondary)
-                .multilineTextAlignment(.center)
-            Button("重試", action: retry)
-                .appFont(.body, weight: .semibold)
-        }
-        .padding(AppSpacing.screenPad)
-    }
-}
+// `AuthenticatedGate`（EULA／家庭查詢把關）與 `FamilyLookupFailedView` 抽到
+// `RootView+AuthenticatedGate.swift`（LS-190：本檔疊上 EULA 閘門邏輯後超過 SwiftLint
+// `file_length` 上限，同 `WelcomeView+Legal.swift`／`TapTargetGateHarness+Content.swift` 的
+// 既有拆檔理由）。
 
 /// 依 horizontal size class 切換版面的已登入根視圖。
 ///
@@ -134,6 +67,8 @@ struct AuthenticatedRootView: View {
     let childrenStore: ChildrenStore
     let timelineStore: TimelineStore
     let albumsStore: AlbumsStore
+    /// LS-190 R2（merge-review R1 B2(a)）：轉手往下傳到 `SettingsView`，登出時歸零。
+    let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
 
@@ -145,14 +80,14 @@ struct AuthenticatedRootView: View {
             if horizontalSizeClass == .regular {
                 SectionSplitView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
-                    timelineStore: timelineStore, albumsStore: albumsStore, diaryAPIClient: diaryAPIClient,
-                    mediaUploadService: mediaUploadService, selection: $selection
+                    timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
+                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService, selection: $selection
                 )
             } else {
                 SectionTabView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
-                    timelineStore: timelineStore, albumsStore: albumsStore, diaryAPIClient: diaryAPIClient,
-                    mediaUploadService: mediaUploadService, selection: $selection
+                    timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
+                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService, selection: $selection
                 )
             }
         }
@@ -202,6 +137,7 @@ private struct SectionTabView: View {
     let childrenStore: ChildrenStore
     let timelineStore: TimelineStore
     let albumsStore: AlbumsStore
+    let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
     @Binding var selection: AppSection
@@ -213,7 +149,7 @@ private struct SectionTabView: View {
                     SectionContentView(
                         section: section, authStore: authStore, familyStore: familyStore,
                         childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-                        diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
+                        eulaStore: eulaStore, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
                     )
                     // LS-136 實測發現（R1）：掛在外層 `TabView` 的 `.toolbar(.hidden, for: .tabBar)`
                     // 只隱藏視覺渲染，底下的原生 `UITabBarItem` 仍留在 accessibility tree 裡、
@@ -249,6 +185,7 @@ private struct SectionSplitView: View {
     let childrenStore: ChildrenStore
     let timelineStore: TimelineStore
     let albumsStore: AlbumsStore
+    let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
     @Binding var selection: AppSection
@@ -266,7 +203,7 @@ private struct SectionSplitView: View {
                 SectionContentView(
                     section: selection, authStore: authStore, familyStore: familyStore,
                     childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
+                    eulaStore: eulaStore, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
                 )
             }
         }
@@ -291,6 +228,7 @@ struct SectionContentView: View {
     let childrenStore: ChildrenStore
     let timelineStore: TimelineStore
     let albumsStore: AlbumsStore
+    let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
 
@@ -313,7 +251,7 @@ struct SectionContentView: View {
         case .settings:
             SettingsView(
                 authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
-                timelineStore: timelineStore, albumsStore: albumsStore
+                timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore
             )
         }
     }
@@ -323,7 +261,7 @@ struct SectionContentView: View {
 #Preview("Compact") {
     AuthenticatedRootView(
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
-        albumsStore: .preview(), diaryAPIClient: PreviewDiaryAPIClient(),
+        albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), diaryAPIClient: PreviewDiaryAPIClient(),
         mediaUploadService: PreviewMediaUploadService()
     )
     .environment(\.horizontalSizeClass, .compact)
@@ -332,7 +270,7 @@ struct SectionContentView: View {
 #Preview("Regular") {
     AuthenticatedRootView(
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
-        albumsStore: .preview(), diaryAPIClient: PreviewDiaryAPIClient(),
+        albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), diaryAPIClient: PreviewDiaryAPIClient(),
         mediaUploadService: PreviewMediaUploadService()
     )
     .environment(\.horizontalSizeClass, .regular)

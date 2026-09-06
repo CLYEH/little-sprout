@@ -7,6 +7,7 @@ import Foundation
 ///   - `updateDiaryEntry` → RPC `update_diary_entry(p_diary_id, p_body, p_entry_date, p_child_ids)`
 ///   - `attachMedia`      → INSERT `public.diary_media`（owner／member 皆可直接寫，見 §2
 ///                          `diary_media` 列；非 RPC，因為這張表沒有收斂成 RPC-only）
+///   - `setDiaryDeleted`  → RPC `set_diary_deleted(p_diary_id, p_deleted)`（LS-190）
 ///
 /// 錯誤一律映射為 `AppError`（見該檔），不直接往外拋 PostgREST 的 error 型別。
 protocol DiaryAPIClient: Sendable {
@@ -24,4 +25,10 @@ protocol DiaryAPIClient: Sendable {
     /// 把已上傳的 `media` 列依陣列順序掛到一篇日記底下（`sort_order` = 陣列 index）。
     /// `mediaIDs` 為空時是合法的 no-op（沒有照片的純文字日記）。
     func attachMedia(diaryID: UUID, familyID: UUID, mediaIDs: [UUID]) async throws
+
+    /// 軟刪（`deleted: true`）／還原（`deleted: false`）。作者本人（仍是該家庭成員即可，
+    /// 角色不拘）或該家庭 owner 皆可呼叫；見 `docs/API.md` §4 `set_diary_deleted`。LS-190：
+    /// 刪除日記確認（10）成功後呼叫端（`DiaryDetailView`）另外呼叫
+    /// `TimelineStore.removeDiaryEntryLocally` 本地移除這篇，不等下一次 `refresh()`。
+    func setDiaryDeleted(diaryID: UUID, deleted: Bool) async throws
 }
