@@ -70,6 +70,7 @@ enum TapTargetGateHarness {
         case .deleteAccountFinalConfirm: deleteAccountFinalConfirmHost
         case .deleteAccountCompleted: deleteAccountCompletedHost
         case .deleteAccountFailed: deleteAccountFailedHost
+        case .deleteAccountInProgress: deleteAccountInProgressHost
         case .legalDocumentSheet: legalDocumentSheetHost
         case .legalDocumentNarrowContainer: legalDocumentNarrowContainerHost
         case .selfTestTooSmall:

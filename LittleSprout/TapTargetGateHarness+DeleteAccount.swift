@@ -102,6 +102,18 @@ extension TapTargetGateHarness {
         }
     }
 
+    /// 04f 進行中——純顯示（`ProgressView`＋文字，無互動元件），不進 `TapTargetGateScreenName`
+    /// 註冊表（同 `DayDividerView` 一類純顯示畫面的既有慣例：`TapTargetMeasurement.violations`
+    /// 要求至少 1 個 Button／tappable 元件才不算「0 個元件＝0 個違規」的假陽性，這張板本來就
+    /// 沒有）——這裡只提供給截圖對稿用，不掛 `hostView(for:)` 分派。
+    @MainActor
+    @ViewBuilder
+    static var deleteAccountInProgressHost: some View {
+        NavigationStack {
+            DeletionInProgressView()
+        }
+    }
+
     @MainActor
     @ViewBuilder
     static var deleteAccountFinalConfirmHost: some View {

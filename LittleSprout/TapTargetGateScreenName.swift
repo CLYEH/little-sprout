@@ -121,6 +121,11 @@ enum TapTargetGateScreenName: String {
     case deleteAccountMustTransfer = "DeleteAccountFlowViewMustTransfer"
     case deleteAccountSoleMember = "DeleteAccountFlowViewSoleMember"
     case deleteAccountFinalConfirm = "DeleteAccountFlowViewFinalConfirm"
+    /// 04f 進行中——純顯示、無互動元件，不進 `TapTargetGateTests`（見
+    /// `TapTargetGateHarness+DeleteAccount.swift` `deleteAccountInProgressHost` 文件註解），
+    /// 借這條既有「launch environment 指定畫面」通道純粹是為了截圖對稿（同 `.diaryCardVideoBadges`
+    /// 的既有先例：不是點擊目標測試，只是借用同一套機制）。
+    case deleteAccountInProgress = "DeleteAccountFlowViewInProgress"
     case deleteAccountCompleted = "DeleteAccountFlowViewCompleted"
     case deleteAccountFailed = "DeleteAccountFlowViewFailed"
 
@@ -183,6 +188,7 @@ enum TapTargetGateScreenName: String {
         case .deleteAccountFinalConfirm: return .staticText("最後確認")
         case .deleteAccountCompleted: return .staticText("帳號已刪除")
         case .deleteAccountFailed: return .staticText("刪除過程中發生問題")
+        case .deleteAccountInProgress: return .staticText("正在刪除你的帳號…")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")
