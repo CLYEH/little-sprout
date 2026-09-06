@@ -30457,6 +30457,140 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "nQ0TV",
+          "name": "N LS-208 沿革",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "YlDs5",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-208 沿革",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "TU7oY",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "lWNE0",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-208",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Zrp3M",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-193 merge-review R1 comment b6b282e5 M2／R2 comment 269dc976 覆核、orchestrator 裁決 comment e6170d58：ForkView（LS-18 三岔路，RxXvq）在停權（LS052／LS054）與帳號刪除處理中（LS051）狀態下只有兩顆被 API 擋住的鈕，沒有登出、沒有刪除帳號入口——本票補兩塊新板：",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vWeGY",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "LzCAQ",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-208",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "mwv65",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "① UOWte（LS-18 / 04b 首次進入 · 帳號已停權）：沿用 RxXvq 版面，「輸入邀請碼」Card Action 與「我要自己建立家庭」Row 改暗化語彙（fill $accent／$on-accent／$text-primary → $surface-2／$text-secondary，同 AuthButtons.swift isDimmed 語彙）；Header 下方插入 Notice Row（$danger 邊框，circle-alert icon，文字『這個帳號已被暫停使用，請聯絡我們。』——LS052 API.md §5 原文，LS054 情境文字動態替換為『目前暫停開放新註冊，請稍後再試』，兩者共用同一個 Notice Row 版位）；Footer Note 改『帳號被停權期間，無法建立或加入家庭。』；Footer 補兩顆 cmp/Button Text（依序『登出』『刪除帳號』，breqI 皆 enabled:false 無 icon，minHeight 48 由元件保證）。板高 852→1060（新增內容需要的空間，Body 964pt 足夠容納 Top 709pt＋Footer 229pt，無裁切）。AX3 見 VDO0S（board height 1950）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "u7lwm",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "g9jnx",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-208",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "EUFuw",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "② L6iIQ0（LS-18 / 04c 首次進入 · 帳號刪除處理中）：同版面骨架，Title 改『帳號刪除處理中』，Notice Row 文字改『你的帳號刪除尚未完成，請重試一次。』，Footer Note 改『帳號刪除完成前，無法建立或加入家庭。』，Footer 兩顆文字鈕依序『重試刪除』『登出』（對應 M3 修法：偵測 deletion_requested_at 非 NULL 或收到 LS051 時導向此態，按『重試刪除』重打 delete-account Edge Function）。AX3 見 Z8Q4R（board height 1950）。兩板皆未新造 token，沿用既有 cmp/Button Text／$surface-2／$danger 語彙。實作對應：ForkView 依 FamilyStore.suspendedOrRegistrationClosedError（LS052／LS054）與 PendingAccountDeletion.isPending（LS051）三態各自導向對應板面；兩板互斥、同一時間只會出現一種。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -153328,6 +153462,2604 @@
           "height": 34,
           "justifyContent": "center",
           "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "UOWte",
+      "x": 920,
+      "y": 4874,
+      "name": "LS-18 / 04b 首次進入 · 帳號已停權",
+      "clip": true,
+      "width": 393,
+      "height": 1060,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "kKezR",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "P8gZ0A",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            "$sp-block",
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "mo8ri",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "MdlRm",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "D8OOL",
+                      "name": "Greeting",
+                      "fill": "$text-primary",
+                      "content": "歡迎，淑芬",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "a8KLc",
+                      "name": "Intro",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "萌芽日記以「家庭」為單位。多數人是家人邀請進來的——先看看你有沒有邀請碼。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "h4obHH",
+                  "name": "Notice Row",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$danger",
+                  "strokeWidth": 1.5,
+                  "gap": "$sp-label",
+                  "padding": "$inset-card",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "VLykx",
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$danger"
+                    },
+                    {
+                      "type": "text",
+                      "id": "G9TZe",
+                      "name": "Text",
+                      "fill": "$danger",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "這個帳號已被暫停使用，請聯絡我們。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "l67bZ",
+                  "name": "Card Join Family",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "X9WPJL",
+                      "name": "Print Stage Spacer",
+                      "width": "fill_container",
+                      "height": 273
+                    },
+                    {
+                      "type": "frame",
+                      "id": "z1XQZ6",
+                      "layoutPosition": "absolute",
+                      "x": -24,
+                      "y": 0,
+                      "name": "Print Stage",
+                      "width": 393,
+                      "padding": [
+                        "$sp-label",
+                        "$sp-label",
+                        10,
+                        "$sp-label"
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "HFLVD",
+                          "name": "Print",
+                          "width": 361,
+                          "height": 255,
+                          "fill": [
+                            "$print-paper",
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.494,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 0,
+                                "y": 0
+                              }
+                            },
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.288,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 1,
+                                "y": 0
+                              }
+                            },
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.36,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 0,
+                                "y": 1
+                              }
+                            },
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.236,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 1,
+                                "y": 1
+                              }
+                            }
+                          ],
+                          "stroke": "$paper-edge",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "outer",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 3
+                            },
+                            "blur": 12
+                          },
+                          "layout": "vertical",
+                          "gap": 7,
+                          "padding": [
+                            "$print-edge",
+                            "$print-edge",
+                            "$print-edge-bottom",
+                            "$print-edge"
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "X7hD3Z",
+                              "name": "Photo Wrap",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 200,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "F9Y7QF",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Hero Photo",
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "join-parents.png",
+                                    "mode": "fill"
+                                  },
+                                  "width": 345,
+                                  "height": 200
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "RzRno",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Night Dim",
+                                  "fill": "$photo-dim",
+                                  "width": 345,
+                                  "height": 200
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "T8jut",
+                              "name": "Imprint Row",
+                              "width": "fill_container",
+                              "justifyContent": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "U3j92s",
+                                  "name": "Imprint Mark (blank)",
+                                  "width": 200,
+                                  "height": 32
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "C36e1",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": 3,
+                          "y": 3,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "la3G3",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 348,
+                          "y": 3,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "d5E81n",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": 3,
+                          "y": 242,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "dPQna",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 348,
+                          "y": 242,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Crag3",
+                      "name": "Card Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "BUqCE",
+                          "name": "Join Title",
+                          "fill": "$text-primary",
+                          "content": "我有邀請碼",
+                          "lineHeight": 1.3,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "vTvWG",
+                          "name": "Join Desc",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "家人給你 6 位邀請碼（英文數字混合）或邀請連結時，用這個送出加入申請。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "oMGV5",
+                      "name": "Card Action",
+                      "width": "fill_container",
+                      "fill": "$surface-2",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$ctl-pad-cta",
+                        20
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "GA0q1",
+                          "name": "Action Label",
+                          "fill": "$text-secondary",
+                          "content": "輸入邀請碼",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "W1ZOT",
+                          "name": "Action Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "arrow-right",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "oq639",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "PYY6A",
+                  "name": "Rule",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "ONOoe",
+                  "name": "Create Family Row",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-md",
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "eNqg8",
+                      "name": "Left",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "VV7aa",
+                          "name": "Create Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "house",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "KepTg",
+                          "name": "Create Label",
+                          "fill": "$text-secondary",
+                          "content": "我要自己建立家庭",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "qNVVt",
+                      "name": "Chevron",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "q6CXE",
+                  "name": "Footer Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "帳號被停權期間，無法建立或加入家庭。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-meta",
+                  "fontWeight": "normal"
+                },
+                {
+                  "id": "eAwea",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Sign Out Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "登出"
+                    }
+                  }
+                },
+                {
+                  "id": "n95L0q",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Delete Account Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "刪除帳號"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ERln0",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "R7viAv",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "VDO0S",
+      "x": 920,
+      "y": 6014,
+      "name": "A11y / 04b 首次進入 · 帳號已停權 · Dynamic Type AX3",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1950,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "uv7GL",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "c94TNp",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            "$sp-block",
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "O7qiQ",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ID0ya",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "lCdOt",
+                      "name": "Greeting",
+                      "fill": "$text-primary",
+                      "content": "歡迎，淑芬",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fllA3",
+                      "name": "Intro",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "萌芽日記以「家庭」為單位。多數人是家人邀請進來的——先看看你有沒有邀請碼。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "A03lSs",
+                  "name": "Notice Row",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$danger",
+                  "strokeWidth": 1.5,
+                  "gap": "$sp-label",
+                  "padding": "$inset-card",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "tnMAO",
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$danger"
+                    },
+                    {
+                      "type": "text",
+                      "id": "r7jrH",
+                      "name": "Text",
+                      "fill": "$danger",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "這個帳號已被暫停使用，請聯絡我們。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "BJa1A",
+                  "name": "Card Join Family",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "NIbT0",
+                      "name": "Print Stage Spacer",
+                      "width": "fill_container",
+                      "height": 273
+                    },
+                    {
+                      "type": "frame",
+                      "id": "MyCbJ",
+                      "layoutPosition": "absolute",
+                      "x": -24,
+                      "y": 0,
+                      "name": "Print Stage",
+                      "width": 393,
+                      "padding": [
+                        "$sp-label",
+                        "$sp-label",
+                        10,
+                        "$sp-label"
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "l6XeWy",
+                          "name": "Print",
+                          "width": 361,
+                          "height": 255,
+                          "fill": [
+                            "$print-paper",
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.494,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 0,
+                                "y": 0
+                              }
+                            },
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.288,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 1,
+                                "y": 0
+                              }
+                            },
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.36,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 0,
+                                "y": 1
+                              }
+                            },
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.236,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 1,
+                                "y": 1
+                              }
+                            }
+                          ],
+                          "stroke": "$paper-edge",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "outer",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 3
+                            },
+                            "blur": 12
+                          },
+                          "layout": "vertical",
+                          "gap": 7,
+                          "padding": [
+                            "$print-edge",
+                            "$print-edge",
+                            "$print-edge-bottom",
+                            "$print-edge"
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "guwyw",
+                              "name": "Photo Wrap",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 200,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "N7P6gV",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Hero Photo",
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "join-parents.png",
+                                    "mode": "fill"
+                                  },
+                                  "width": 345,
+                                  "height": 200
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "RRny1",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Night Dim",
+                                  "fill": "$photo-dim",
+                                  "width": 345,
+                                  "height": 200
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "g5Mw9",
+                              "name": "Imprint Row",
+                              "width": "fill_container",
+                              "justifyContent": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "VY3HI",
+                                  "name": "Imprint Mark (blank)",
+                                  "width": 200,
+                                  "height": 32
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "n87ZN",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": 3,
+                          "y": 3,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "srQTf",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 348,
+                          "y": 3,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "Avciy",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": 3,
+                          "y": 242,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "S9v6Z1",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 348,
+                          "y": 242,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "C6ZqJ",
+                      "name": "Card Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "XCYlR",
+                          "name": "Join Title",
+                          "fill": "$text-primary",
+                          "content": "我有邀請碼",
+                          "lineHeight": 1.3,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ffmTw",
+                          "name": "Join Desc",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "家人給你 6 位邀請碼（英文數字混合）或邀請連結時，用這個送出加入申請。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "P5WnWd",
+                      "name": "Card Action",
+                      "width": "fill_container",
+                      "fill": "$surface-2",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$ctl-pad-cta",
+                        20
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "DpLj8",
+                          "name": "Action Label",
+                          "fill": "$text-secondary",
+                          "content": "輸入邀請碼",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "P84ue1",
+                          "name": "Action Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "arrow-right",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "oO00H",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "v5jH5b",
+                  "name": "Rule",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "aBxVn",
+                  "name": "Create Family Row",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-md",
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "KhdcJ",
+                      "name": "Left",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "WrKo8",
+                          "name": "Create Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "house",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "D3YRPA",
+                          "name": "Create Label",
+                          "fill": "$text-secondary",
+                          "content": "我要自己建立家庭",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "rNjIR",
+                      "name": "Chevron",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "Oeyuy",
+                  "name": "Footer Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "帳號被停權期間，無法建立或加入家庭。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-meta",
+                  "fontWeight": "normal"
+                },
+                {
+                  "id": "QNeDh",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Sign Out Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "登出"
+                    }
+                  }
+                },
+                {
+                  "id": "o9Rky",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Delete Account Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "刪除帳號"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "YLv1J",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "PD8bN",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "L6iIQ0",
+      "x": 920,
+      "y": 8044,
+      "name": "LS-18 / 04c 首次進入 · 帳號刪除處理中",
+      "clip": true,
+      "width": 393,
+      "height": 1060,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "cBXXy",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "IfP5Z",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            "$sp-block",
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "PySQO",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "vQ21Z",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "VeJbg",
+                      "name": "Greeting",
+                      "fill": "$text-primary",
+                      "content": "歡迎，淑芬",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "D5YHrJ",
+                      "name": "Intro",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "萌芽日記以「家庭」為單位。多數人是家人邀請進來的——先看看你有沒有邀請碼。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "N2rr49",
+                  "name": "Notice Row",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$danger",
+                  "strokeWidth": 1.5,
+                  "gap": "$sp-label",
+                  "padding": "$inset-card",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Z5e0B",
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$danger"
+                    },
+                    {
+                      "type": "text",
+                      "id": "a6OBh",
+                      "name": "Text",
+                      "fill": "$danger",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "你的帳號刪除尚未完成，請重試一次。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "NoW6Z",
+                  "name": "Card Join Family",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Q5PEhp",
+                      "name": "Print Stage Spacer",
+                      "width": "fill_container",
+                      "height": 273
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZFbwH",
+                      "layoutPosition": "absolute",
+                      "x": -24,
+                      "y": 0,
+                      "name": "Print Stage",
+                      "width": 393,
+                      "padding": [
+                        "$sp-label",
+                        "$sp-label",
+                        10,
+                        "$sp-label"
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "OubIj",
+                          "name": "Print",
+                          "width": 361,
+                          "height": 255,
+                          "fill": [
+                            "$print-paper",
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.494,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 0,
+                                "y": 0
+                              }
+                            },
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.288,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 1,
+                                "y": 0
+                              }
+                            },
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.36,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 0,
+                                "y": 1
+                              }
+                            },
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.236,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 1,
+                                "y": 1
+                              }
+                            }
+                          ],
+                          "stroke": "$paper-edge",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "outer",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 3
+                            },
+                            "blur": 12
+                          },
+                          "layout": "vertical",
+                          "gap": 7,
+                          "padding": [
+                            "$print-edge",
+                            "$print-edge",
+                            "$print-edge-bottom",
+                            "$print-edge"
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "yNM6o",
+                              "name": "Photo Wrap",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 200,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "sqxB6",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Hero Photo",
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "join-parents.png",
+                                    "mode": "fill"
+                                  },
+                                  "width": 345,
+                                  "height": 200
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "zxzQT",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Night Dim",
+                                  "fill": "$photo-dim",
+                                  "width": 345,
+                                  "height": 200
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "W61xA",
+                              "name": "Imprint Row",
+                              "width": "fill_container",
+                              "justifyContent": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "BTJjz",
+                                  "name": "Imprint Mark (blank)",
+                                  "width": 200,
+                                  "height": 32
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "Vt7Dl",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": 3,
+                          "y": 3,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "DOxVF",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 348,
+                          "y": 3,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "I0qst",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": 3,
+                          "y": 242,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "hxWiZ",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 348,
+                          "y": 242,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Ri7Jz",
+                      "name": "Card Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "nUEek",
+                          "name": "Join Title",
+                          "fill": "$text-primary",
+                          "content": "我有邀請碼",
+                          "lineHeight": 1.3,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "aLtyP",
+                          "name": "Join Desc",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "家人給你 6 位邀請碼（英文數字混合）或邀請連結時，用這個送出加入申請。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wBpjq",
+                      "name": "Card Action",
+                      "width": "fill_container",
+                      "fill": "$surface-2",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$ctl-pad-cta",
+                        20
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "LcMUu",
+                          "name": "Action Label",
+                          "fill": "$text-secondary",
+                          "content": "輸入邀請碼",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "H3E2ih",
+                          "name": "Action Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "arrow-right",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "e0zOy",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "s0lT6",
+                  "name": "Rule",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "A6bc8",
+                  "name": "Create Family Row",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-md",
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "VtWuH",
+                      "name": "Left",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "OpJRQ",
+                          "name": "Create Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "house",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "NtFoq",
+                          "name": "Create Label",
+                          "fill": "$text-secondary",
+                          "content": "我要自己建立家庭",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "lqySE",
+                      "name": "Chevron",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "qBdcW",
+                  "name": "Footer Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "帳號刪除完成前，無法建立或加入家庭。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-meta",
+                  "fontWeight": "normal"
+                },
+                {
+                  "id": "AJFlL",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Delete Account Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "重試刪除"
+                    }
+                  }
+                },
+                {
+                  "id": "Pklnt",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Sign Out Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "登出"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Q4S9t6",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "m7PD0G",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Z8Q4R",
+      "x": 920,
+      "y": 9184,
+      "name": "A11y / 04c 首次進入 · 帳號刪除處理中 · Dynamic Type AX3",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1950,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "FYugN",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "ZJ3h1",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            "$sp-block",
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Buqz4",
+              "name": "Top",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "sIs3f",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ZuvLE",
+                      "name": "Greeting",
+                      "fill": "$text-primary",
+                      "content": "歡迎，淑芬",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "jCrCp",
+                      "name": "Intro",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "萌芽日記以「家庭」為單位。多數人是家人邀請進來的——先看看你有沒有邀請碼。",
+                      "lineHeight": 1.6,
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Z9eFhq",
+                  "name": "Notice Row",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$danger",
+                  "strokeWidth": 1.5,
+                  "gap": "$sp-label",
+                  "padding": "$inset-card",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "O8Fsny",
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$danger"
+                    },
+                    {
+                      "type": "text",
+                      "id": "aCp8t",
+                      "name": "Text",
+                      "fill": "$danger",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "你的帳號刪除尚未完成，請重試一次。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Tqb4S",
+                  "name": "Card Join Family",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "xAt7f",
+                      "name": "Print Stage Spacer",
+                      "width": "fill_container",
+                      "height": 273
+                    },
+                    {
+                      "type": "frame",
+                      "id": "QnHDa",
+                      "layoutPosition": "absolute",
+                      "x": -24,
+                      "y": 0,
+                      "name": "Print Stage",
+                      "width": 393,
+                      "padding": [
+                        "$sp-label",
+                        "$sp-label",
+                        10,
+                        "$sp-label"
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "GCW14",
+                          "name": "Print",
+                          "width": 361,
+                          "height": 255,
+                          "fill": [
+                            "$print-paper",
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.494,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 0,
+                                "y": 0
+                              }
+                            },
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.288,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 1,
+                                "y": 0
+                              }
+                            },
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.36,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 0,
+                                "y": 1
+                              }
+                            },
+                            {
+                              "type": "gradient",
+                              "gradientType": "radial",
+                              "enabled": true,
+                              "opacity": 0.236,
+                              "rotation": 0,
+                              "size": {
+                                "width": 0.43213296398891965,
+                                "height": 0.4642857142857143
+                              },
+                              "colors": [
+                                {
+                                  "color": "$mount-pool",
+                                  "position": 0
+                                },
+                                {
+                                  "color": "$mount-pool-0",
+                                  "position": 1
+                                }
+                              ],
+                              "center": {
+                                "x": 1,
+                                "y": 1
+                              }
+                            }
+                          ],
+                          "stroke": "$paper-edge",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "outer",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 0,
+                              "y": 3
+                            },
+                            "blur": 12
+                          },
+                          "layout": "vertical",
+                          "gap": 7,
+                          "padding": [
+                            "$print-edge",
+                            "$print-edge",
+                            "$print-edge-bottom",
+                            "$print-edge"
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "TrQZP",
+                              "name": "Photo Wrap",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 200,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "Vn8vG",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Hero Photo",
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "join-parents.png",
+                                    "mode": "fill"
+                                  },
+                                  "width": 345,
+                                  "height": 200
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "M2iGX",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Night Dim",
+                                  "fill": "$photo-dim",
+                                  "width": 345,
+                                  "height": 200
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "XCe0c",
+                              "name": "Imprint Row",
+                              "width": "fill_container",
+                              "justifyContent": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "k6L9s",
+                                  "name": "Imprint Mark (blank)",
+                                  "width": 200,
+                                  "height": 32
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "zqiDn",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": 3,
+                          "y": 3,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "c6KzD3",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 348,
+                          "y": 3,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "uTWx2",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": 3,
+                          "y": 242,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "Nc6Y2",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 348,
+                          "y": 242,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "aDcaj",
+                      "name": "Card Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "y9CBKK",
+                          "name": "Join Title",
+                          "fill": "$text-primary",
+                          "content": "我有邀請碼",
+                          "lineHeight": 1.3,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "s2lBL",
+                          "name": "Join Desc",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "家人給你 6 位邀請碼（英文數字混合）或邀請連結時，用這個送出加入申請。",
+                          "lineHeight": 1.55,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "s90lfq",
+                      "name": "Card Action",
+                      "width": "fill_container",
+                      "fill": "$surface-2",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$ctl-pad-cta",
+                        20
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Y4Vfas",
+                          "name": "Action Label",
+                          "fill": "$text-secondary",
+                          "content": "輸入邀請碼",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "bHzbK",
+                          "name": "Action Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "arrow-right",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "oW2cC",
+              "name": "Footer",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": [
+                0,
+                0,
+                "$sp-item",
+                0
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "ex6LJ",
+                  "name": "Rule",
+                  "fill": "$border",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "lYH3W",
+                  "name": "Create Family Row",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$ctl-pad-md",
+                    0
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "tKHhd",
+                      "name": "Left",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "P31Btd",
+                          "name": "Create Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "house",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "sQsPG",
+                          "name": "Create Label",
+                          "fill": "$text-secondary",
+                          "content": "我要自己建立家庭",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "HS3rY",
+                      "name": "Chevron",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "UI8GS",
+                  "name": "Footer Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "帳號刪除完成前，無法建立或加入家庭。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-meta",
+                  "fontWeight": "normal"
+                },
+                {
+                  "id": "k5Kzq",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Delete Account Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "重試刪除"
+                    }
+                  }
+                },
+                {
+                  "id": "LaTkv",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Sign Out Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "breqI": {
+                      "enabled": false
+                    },
+                    "hIhVd": {
+                      "content": "登出"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "esjOD",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "Y9FsX",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
         }
       ]
     }
