@@ -162,13 +162,35 @@ reset role;
 rollback;
 
 -- ===========================================================================
--- 2. EXPLAIN 證據：述詞走索引，不因反應數量退化成全表掃描
+-- 2. 效能證據：對真正的 RPC 呼叫量測，不手抄函式本體副本
 --
--- 沿用 50_rls_plan_no_percall_subquery.sql 既有 get_reaction_counts 效能段落同一組
--- 量級（250 個 target、20 個反應者、5000 筆反應，reactions_target_idx 先把候選集合
--- 縮到查詢帶的 20 個 target），另建專屬 F 家不干擾其他測試檔的資料。額外加一筆
--- blocked_users，讓 blocked_pairs 的 NOT EXISTS 不是空探查（0 筆封鎖時規劃器可能
--- 選擇不同的 plan 形狀）。
+-- merge-review R1 M1（LS-225 R2 修正）：原本這裡把 get_reaction_counts 的函式本體
+-- SQL 抄一份成 v_stmt、EXPLAIN 的是這份副本，不是 RPC 本身——reviewer 實測拿掉
+-- migration 函式本體的 `and r.target_id = any (p_target_ids)` 後，這裡連同其餘三個
+-- 測試檔全部維持全綠，但真實 RPC 已經退化成掃整個家庭的 reactions（同一份 5000
+-- 筆反應／250 target 資料集：rows 20→251、shared hit 1075→5289）。這正是本 repo
+-- 已經裁決過一次要根除的模式（見 50_rls_plan_no_percall_subquery.sql:358-381，
+-- LS-121 R2 N1：「拿掉手抄 SQL 副本探針，一律透過真正呼叫函式本身來量測…從根本上
+-- 排除副本與本體不同步這個問題類別」）。
+--
+-- 改法（兩條斷言，對應 R1 M1 建議的 (a)＋(b)）：
+--   (a) 對真正的 RPC 呼叫（不是副本）`explain (analyze, buffers)`，斷言 buffers
+--       低於門檻——這支函式帶 `set search_path = ''`，Postgres inline 條件排除有
+--       SET 子句的函式（不分 invoker／definer），EXPLAIN 對呼叫本身只看得到不透明
+--       的 `Function Scan on get_reaction_counts` 節點、看不進內層 Index Cond 字面
+--       （跟 get_family_timeline 當初接受的取捨一樣，見 50_ 同一段落 N1 說明）；
+--       但 buffers 會穿透這層不透明——reviewer 已實測退化與正常兩種情況的數量級
+--       差距（1075 vs 5289），buffers 判別力足夠。
+--   (b) `pg_get_functiondef()` 結構性斷言：函式本體原文必須同時含
+--       `target_id = any(p_target_ids)` 與 `blocked_pairs`——純文字檢查，不依賴
+--       資料量或 planner 選擇，跟 (a) 互補（(a) 抓「掃描量變大」這一種退化；(b) 抓
+--       「函式本體被改寫但巧合維持住相近 buffers」這種理論上可能、但 (a) 抓不到的
+--       drift）。
+--
+-- 資料量沿用 50_rls_plan_no_percall_subquery.sql 既有 get_reaction_counts 效能段落
+-- 同一組量級（250 個 target、20 個反應者、5000 筆反應），另建專屬 F 家不干擾其他
+-- 測試檔的資料。額外加一筆 blocked_users，讓 blocked_pairs 的 NOT EXISTS 不是空
+-- 探查（0 筆封鎖時規劃器可能選擇不同的 plan 形狀）。
 -- ===========================================================================
 begin;
 do $$
@@ -180,6 +202,13 @@ declare
   v_line text;
   v_plan text := '';
   v_stmt text;
+  v_hit bigint;
+  v_read bigint;
+  v_buffers bigint;
+  v_funcdef text;
+  -- reviewer 實測正常 1075、退化（拿掉 target_id 篩選）5289；門檻取中間值，兩邊都
+  -- 留有數量級內的餘裕（正常側餘裕 ~1.9x、退化側超標 ~2.6x）。
+  c_buffer_budget constant bigint := 2500;
 begin
   reset role;
   set local role postgres;
@@ -230,46 +259,44 @@ begin
     raise exception 'FAIL：EXPLAIN 證據資料集下 get_reaction_counts 應濾掉被封鎖者、回傳 19，實際 %', v_n;
   end if;
 
-  -- 直接 EXPLAIN `select * from get_reaction_counts(...)` 看不到任何有意義的東西——
-  -- 這支函式帶 `set search_path = ''`（本專案每支函式的既有慣例），Postgres 的 SQL
-  -- 函式 inline 條件明確排除「有 SET 子句」的函式（不論 invoker／definer），實測
-  -- （scratchpad 手動探查）證實 EXPLAIN 只會看到一個不透明的
-  -- `Function Scan on get_reaction_counts` 節點，看不進函式內部真正執行的查詢——
-  -- 跟這份檔案裡 `private.feed_item_actor_id()`／get_family_timeline 的既有教訓
-  -- 同一種限制。改成把函式本體的 SQL 原文直接拿出來、以同一個已登入身分當作一般
-  -- SELECT 執行（不透過函式呼叫），RLS（reactions_select 也會疊加同一組
-  -- blocked_pairs 述詞）與 planner 都正常運作，能看到真正的存取路徑；這段 SQL
-  -- 與 20260906124837_reactions_block_filter.sql 裡 get_reaction_counts 的函式本體
-  -- 逐字一致（只是拿掉外層函式定義），任一邊改了另一邊沒跟著改，這裡的 EXPLAIN
-  -- 就不再代表真實情況。
+  -- (a) 對真正的 RPC 呼叫量 buffers（不是副本）——mutation：拿掉 migration 函式
+  -- 本體的 `and r.target_id = any (p_target_ids)` 會讓這裡的 buffers 從 ~1075
+  -- 跳到 ~5289，超過門檻變紅。
   v_stmt := format(
-    $sql$select r.target_id,
-       count(*)::bigint as reaction_count,
-       bool_or(r.user_id = (select auth.uid())) as reacted_by_me
-  from public.reactions r
- where r.family_id = %L::uuid
-   and r.target_type = %L::public.content_target_type
-   and r.target_id = any (%L::uuid[])
-   and not exists (
-     select 1 from private.blocked_pairs() bp
-      where bp.family_id = r.family_id
-        and bp.blocked_id = r.user_id
-   )
- group by r.target_id$sql$,
+    'select * from public.get_reaction_counts(%L::uuid, %L, %L::uuid[])',
     v_family, 'media', v_targets[1:20]
   );
-  for v_line in execute 'explain (costs off) ' || v_stmt loop
+  for v_line in execute 'explain (analyze, buffers) ' || v_stmt loop
     v_plan := v_plan || v_line || E'\n';
   end loop;
 
-  if v_plan !~ 'reactions_target_idx' then
-    raise exception E'FAIL 效能：get_reaction_counts 本體查詢沒有走 reactions_target_idx（mutation：拿掉 WHERE 的 family_id/target_type/target_id 篩選會導致這裡紅）\n%', v_plan;
-  end if;
-  if v_plan ~* 'seq scan on (public\.)?reactions\b' then
-    raise exception E'FAIL 效能：get_reaction_counts 本體查詢對 reactions 做了 Seq Scan，述詞沒有走索引\n%', v_plan;
+  select coalesce(sum((x[1])::bigint), 0) into v_hit
+    from regexp_matches(v_plan, 'shared hit=([0-9]+)', 'g') as x;
+  select coalesce(sum((x[1])::bigint), 0) into v_read
+    from regexp_matches(v_plan, E'read=([0-9]+)', 'g') as x;
+  v_buffers := v_hit + v_read;
+
+  if v_buffers > c_buffer_budget then
+    raise exception E'FAIL 效能：get_reaction_counts（真 RPC，非副本）buffers=%（hit=% read=%，門檻 %）—— 疑似 target_id 篩選遺失，掃描量與整個家庭的反應數成正比而不是與查詢帶的 20 個 target 成正比\n%',
+      v_buffers, v_hit, v_read, c_buffer_budget, v_plan;
   end if;
 
-  raise notice E'ok：EXPLAIN 證據（5000 筆反應／250 target／1 筆封鎖，函式本體原文直接執行）——reactions 走 reactions_target_idx、未 Seq Scan\n%', v_plan;
+  raise notice 'ok 效能：get_reaction_counts（真 RPC，非副本）—— buffers=%（hit=% read=%，門檻 %）', v_buffers, v_hit, v_read, c_buffer_budget;
+
+  -- (b) 結構性斷言：函式本體原文必須同時含 target_id 篩選與 blocked_pairs 述詞。
+  select pg_get_functiondef(p.oid) into v_funcdef
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.proname = 'get_reaction_counts';
+
+  if v_funcdef !~ 'target_id\s*=\s*any\s*\(\s*p_target_ids\s*\)' then
+    raise exception E'FAIL 結構：get_reaction_counts 函式本體遺失 target_id = any(p_target_ids) 篩選\n%', v_funcdef;
+  end if;
+  if v_funcdef !~ 'blocked_pairs' then
+    raise exception E'FAIL 結構：get_reaction_counts 函式本體遺失 blocked_pairs 封鎖過濾\n%', v_funcdef;
+  end if;
+
+  raise notice 'ok 結構：get_reaction_counts 函式本體同時含 target_id = any(p_target_ids) 與 blocked_pairs';
 end;
 $$;
 reset role;
