@@ -43,6 +43,11 @@ struct InteractionRow: View {
     private var heartIconSize: CGFloat { isAX3 ? 32 : 22 }
     private var likeToggleSize: CGSize { isAX3 ? CGSize(width: 220, height: 80) : CGSize(width: 118, height: 47) }
     private var countZoneSize: CGSize { isAX3 ? CGSize(width: 56, height: 80) : CGSize(width: 44, height: 44) }
+    /// 硬規則「可點元件 minHeight ≥48」：`countZoneSize.height` 標準態 44pt 貼齊硬約束下限，
+    /// 模擬器實測（`tap-target-check.sh`）量到 43.7pt（次像素捨入，同既有 `loadMoreTrigger`
+    /// 文件註解點名的同類餘裕不足案例）——熱區另外拉高到 ≥48pt，只影響看不見的點擊區，不改變
+    /// `Count Zone` 本身沒有背景色塊、純文字置中的視覺（AX3 80pt 已遠高於下限，不受影響）。
+    private var countZoneHitHeight: CGFloat { max(countZoneSize.height, 48) }
 
     var body: some View {
         Group {
@@ -119,6 +124,7 @@ struct InteractionRow: View {
                 .appFont(.note, weight: reaction.reactedByMe ? .bold : .semibold)
                 .foregroundStyle(reaction.reactedByMe ? Color.lsAccent : Color.lsPrintInkSecondary)
                 .frame(width: countZoneSize.width, height: countZoneSize.height)
+                .frame(height: countZoneHitHeight)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
