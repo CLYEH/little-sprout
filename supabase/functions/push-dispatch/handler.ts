@@ -217,7 +217,8 @@ const TARGET_LABEL: Record<ContentTargetType, string> = {
 // `event_count` 對這個 kind 在目前的 trigger 設計下恆為 1，且完全沒有「這本相簿
 // 裡有幾張照片」這個訊號（上傳照片進相簿走 `media`／`album_media`，LS-58 沒有幫
 // 這兩張表建立任何 trigger）。這裡不虛構一個資料庫給不出來的數字，`album` 訊息
-// 改成不帶張數的「新增了相簿」；`event_count > 1`（今天的 trigger 設計下不會發生，
+// 改成不帶張數的「新增了一本相簿」（LS-219 依 LS-177 文案矩陣定案，量詞從缺補上
+// 「一本」）；`event_count > 1`（今天的 trigger 設計下不會發生，
 // 防禦性保留）才帶數字，且單位是「本」不是「張」。`diary` kind 同理（`target_id`
 // 也是日記自己的 id，`event_count` 同樣恆為 1）。這個決定記在這裡、PR body、
 // 也記進 docs/API.md 的 push-dispatch 段，不是靜默偏離票文。
@@ -229,21 +230,24 @@ export function buildMessageBody(
 ): string {
   const label = TARGET_LABEL[targetType];
   switch (kind) {
+    // LS-219：依 LS-177 Handoff Notes「通知彙總文案矩陣」（`EclPC`，使用者核可
+    // 版本）改字——單則帶 actor 名字＋「了」；多則從「你的{標籤}收到了 N 則…」
+    // 改成「{actor}等 N 人…」句型，仍點名（最近一位）actor，不是匿名彙總。
     case "comment":
       return eventCount <= 1
-        ? `${actorDisplayName}在你的${label}留言`
-        : `你的${label}收到了 ${eventCount} 則新留言`;
+        ? `${actorDisplayName}在你的${label}留言了`
+        : `${actorDisplayName}等 ${eventCount} 人留言了`;
     case "reaction":
       return eventCount <= 1
-        ? `${actorDisplayName}喜歡了你的${label}`
-        : `${eventCount} 個人喜歡了你的${label}`;
+        ? `${actorDisplayName}按了愛心`
+        : `${actorDisplayName}等 ${eventCount} 人按了愛心`;
     case "diary":
       return eventCount <= 1
-        ? `${actorDisplayName}寫了一篇日記`
-        : `${actorDisplayName}新增了 ${eventCount} 篇日記`;
+        ? `${actorDisplayName}新增了一則日記`
+        : `${actorDisplayName}新增了 ${eventCount} 則日記`;
     case "album":
       return eventCount <= 1
-        ? `${actorDisplayName}新增了相簿`
+        ? `${actorDisplayName}新增了一本相簿`
         : `${actorDisplayName}新增了 ${eventCount} 本相簿`;
     // LS-175：批次上傳彙總——票文明定範例 event_count=50 →「新增了 50 張照片」。
     // event_count<=1 用「一張」而不是阿拉伯數字 1（同 diary／album 的既有風格：
@@ -254,19 +258,20 @@ export function buildMessageBody(
       return eventCount <= 1
         ? `${actorDisplayName}新增了一張照片`
         : `${actorDisplayName}新增了 ${eventCount} 張照片`;
-    // LS-175（merge-review R1 m2）：中性 fallback，不是產品定案文案——目的只是
-    // 「report 事件不再讓整批 claim 靜默漏送」（見上方 union 的說明），不是把
-    // 檢舉通知的完整產品體驗做完。不用 actor 名字（`report_content()` 的
-    // actor 是檢舉人，不是被檢舉內容的作者，直接套用 comment/reaction 那種
-    // 「{actor} 對你的 xxx 做了什麼」句型會誤導收件人以為檢舉人在跟自己互動）；
-    // target_type 是被檢舉內容原本的類型（album/media/diary/comment，見
-    // `report_content()` 傳入 `record_notification_event` 的 `r.target_type`），
-    // `TARGET_LABEL` 在這裡可以直接沿用。是否要推播、要推播給誰（例如只給
-    // owner，不是全家庭）是產品決定，留給後續票，這裡不擴大範圍。
+    // LS-175（merge-review R1 m2）落地時是中性 fallback，只求「report 事件不再
+    // 讓整批 claim 靜默漏送」（見上方 union 的說明）。LS-219 依 LS-189 0905 補註
+    // （LS-195 R1 N1）改為產品定案文案：「只推給 owner」之後原「你的{標籤}收到
+    // 一則檢舉」語意錯（被檢舉內容多半不是 owner 的），改成「家庭裡有…被檢舉，
+    // 請前往處理」。仍不用 actor 名字（`report_content()` 的 actor 是檢舉人，
+    // 不是被檢舉內容的作者，直接套用 comment/reaction 那種「{actor} 對你的
+    // xxx 做了什麼」句型會誤導收件人以為檢舉人在跟自己互動）；target_type 是
+    // 被檢舉內容原本的類型（album/media/diary/comment，見 `report_content()`
+    // 傳入 `record_notification_event` 的 `r.target_type`），`TARGET_LABEL`
+    // 在這裡可以直接沿用。
     case "report":
       return eventCount <= 1
-        ? `你的${label}收到一則檢舉`
-        : `你的${label}收到了 ${eventCount} 則檢舉`;
+        ? `家庭裡有一則${label}被檢舉，請前往處理`
+        : `家庭裡有 ${eventCount} 則${label}被檢舉，請前往處理`;
   }
 }
 

@@ -105,43 +105,46 @@ function req(
 // 1. 文案彙總矩陣（票文明定的三個範例逐字對照，其餘組合驗證分支邏輯）
 // ---------------------------------------------------------------------------
 
-Deno.test("buildMessageBody：diary，event_count=1 → 「媽媽寫了一篇日記」（票文範例逐字對照）", () => {
+Deno.test("buildMessageBody：diary，event_count=1 → 「媽媽新增了一則日記」（LS-219／LS-177 矩陣逐字對照）", () => {
   assertEquals(
     buildMessageBody("diary", 1, "diary", "媽媽"),
-    "媽媽寫了一篇日記",
+    "媽媽新增了一則日記",
   );
 });
 
-Deno.test("buildMessageBody：comment，target_type=diary → 「阿嬤在你的日記留言」（票文範例逐字對照）", () => {
+Deno.test("buildMessageBody：comment，target_type=diary → 「阿嬤在你的日記留言了」（LS-219／LS-177 矩陣逐字對照）", () => {
   assertEquals(
     buildMessageBody("comment", 1, "diary", "阿嬤"),
-    "阿嬤在你的日記留言",
+    "阿嬤在你的日記留言了",
   );
 });
 
-Deno.test("buildMessageBody：reaction，target_type=media，event_count=3 → 「3 個人喜歡了你的照片」（票文範例逐字對照）", () => {
+Deno.test("buildMessageBody：reaction，target_type=media，event_count=3 → 「隨便誰等 3 人按了愛心」（LS-219／LS-177 矩陣逐字對照）", () => {
   assertEquals(
     buildMessageBody("reaction", 3, "media", "隨便誰"),
-    "3 個人喜歡了你的照片",
+    "隨便誰等 3 人按了愛心",
   );
 });
 
-Deno.test("buildMessageBody：reaction，event_count=1 → 帶 actor 名字，不是「1 個人」", () => {
+Deno.test("buildMessageBody：reaction，event_count=1 → 帶 actor 名字、不含目標標籤（LS-219／LS-177 矩陣）", () => {
   assertEquals(
     buildMessageBody("reaction", 1, "album", "爸爸"),
-    "爸爸喜歡了你的相簿",
+    "爸爸按了愛心",
   );
 });
 
-Deno.test("buildMessageBody：comment，event_count>1 → 不指名單一 actor（可能是多人留言）", () => {
+Deno.test("buildMessageBody：comment，event_count>1 → 帶最近一位 actor 名字＋「等 N 人」（LS-219／LS-177 矩陣，不再是匿名彙總句型）", () => {
   assertEquals(
     buildMessageBody("comment", 5, "album", "任何人"),
-    "你的相簿收到了 5 則新留言",
+    "任何人等 5 人留言了",
   );
 });
 
-Deno.test("buildMessageBody：album，event_count=1 → 不虛構照片張數（見 handler.ts 檔頭的規格分歧記錄）", () => {
-  assertEquals(buildMessageBody("album", 1, "album", "爸爸"), "爸爸新增了相簿");
+Deno.test("buildMessageBody：album，event_count=1 → 不虛構照片張數，量詞補「一本」（LS-219／LS-177 矩陣）", () => {
+  assertEquals(
+    buildMessageBody("album", 1, "album", "爸爸"),
+    "爸爸新增了一本相簿",
+  );
 });
 
 Deno.test("buildMessageBody：album，event_count>1（防禦性分支，今天的 trigger 設計下不會發生）→ 帶「本」不帶「張」", () => {
@@ -151,17 +154,17 @@ Deno.test("buildMessageBody：album，event_count>1（防禦性分支，今天�
   );
 });
 
-Deno.test("buildMessageBody：diary，event_count>1（防禦性分支）", () => {
+Deno.test("buildMessageBody：diary，event_count>1（防禦性分支）→ 量詞「則」與單則一致（LS-219：不與 album 的「本」混用，避免同一 kind 內量詞不一致）", () => {
   assertEquals(
     buildMessageBody("diary", 2, "diary", "媽媽"),
-    "媽媽新增了 2 篇日記",
+    "媽媽新增了 2 則日記",
   );
 });
 
 Deno.test("buildMessageBody：comment，target_type=comment（回覆留言）", () => {
   assertEquals(
     buildMessageBody("comment", 1, "comment", "阿公"),
-    "阿公在你的留言留言",
+    "阿公在你的留言留言了",
   );
 });
 
@@ -187,19 +190,20 @@ Deno.test("buildMessageBody：media，event_count=2 → 帶阿拉伯數字（跟
   );
 });
 
-// LS-175 R2（merge-review R1 m2）：report（中性 fallback，不用 actor 名字——
-// 檢舉人不是「對你的 xxx 做了什麼」的那個 actor 語意）。
-Deno.test("buildMessageBody：report，event_count=1，target_type=album → 「你的相簿收到一則檢舉」", () => {
+// LS-175 落地時是中性 fallback；LS-219 依 LS-189 0905 補註（LS-195 R1 N1）改為
+// 產品定案文案，仍不用 actor 名字——檢舉人不是「對你的 xxx 做了什麼」的那個
+// actor 語意。
+Deno.test("buildMessageBody：report，event_count=1，target_type=album → 「家庭裡有一則相簿被檢舉，請前往處理」（LS-219 定案文案）", () => {
   assertEquals(
     buildMessageBody("report", 1, "album", "任何人"),
-    "你的相簿收到一則檢舉",
+    "家庭裡有一則相簿被檢舉，請前往處理",
   );
 });
 
-Deno.test("buildMessageBody：report，event_count=3，target_type=media → 「你的照片收到了 3 則檢舉」", () => {
+Deno.test("buildMessageBody：report，event_count=3，target_type=media → 「家庭裡有 3 則照片被檢舉，請前往處理」（LS-219 定案文案）", () => {
   assertEquals(
     buildMessageBody("report", 3, "media", "任何人"),
-    "你的照片收到了 3 則檢舉",
+    "家庭裡有 3 則照片被檢舉，請前往處理",
   );
 });
 
@@ -416,10 +420,10 @@ Deno.test("runDispatch：一個事件、兩個收件人，皆送出成功 → se
   assertEquals(summary.failed, 0);
   assertEquals(summary.tokensRemoved, 0);
   assertEquals(getRecipientsCallCount, 1); // 一整批（這裡只有一個事件）只查一次對象，不逐事件 round trip
-  // 批次只發一則彙總：兩個收件人拿到的文案完全相同（同一則 5 個人喜歡了你的照片），
+  // 批次只發一則彙總：兩個收件人拿到的文案完全相同（同一則 媽媽等 5 人按了愛心），
   // 不是被展開成 5 則各自獨立的訊息。
   assertEquals(provider.calls.length, 2);
-  assertEquals(provider.calls[0].body, "5 個人喜歡了你的照片");
+  assertEquals(provider.calls[0].body, "媽媽等 5 人按了愛心");
   assertEquals(provider.calls[1].body, provider.calls[0].body);
   assertEquals(provider.calls[0].title, APP_TITLE);
 });
