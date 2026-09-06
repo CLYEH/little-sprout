@@ -1219,6 +1219,52 @@ git -C "$repo" worktree remove --force "$wts/LS-904" >/dev/null 2>&1
 g -C "$repo" branch -D feature/LS-904-running >/dev/null 2>&1
 unset PATROL_PGREP PATROL_LSOF
 
+# ---- ㉗ 螢幕鎖定偵測（LS-220：鎖定會讓模擬器 Keychain 回 -34018，長得像 QA e2e 逾時失敗，見 §4-b 排障順序）----
+# 真的 ioreg 讀主機當下狀態不可控（CI／開發機當下是否鎖定與本測試無關），一律用 PATH stub 蓋掉，同 ⑭ 對 xcrun 的作法。
+cat > "$work/bin/ioreg" <<'STUB'
+#!/bin/bash
+if [ "${FAKE_IOREG_LOCKED:-0}" = 1 ]; then
+  printf '+-o Root  <class IORegistryEntry, id 0x100000100>\n    "CGSSessionScreenIsLocked" = Yes\n'
+else
+  printf '+-o Root  <class IORegistryEntry, id 0x100000100>\n    "SomeOtherKey" = No\n'
+fi
+STUB
+chmod +x "$work/bin/ioreg"
+
+out27u="$(FAKE_IOREG_LOCKED=0 PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+lock_section_u=$(printf '%s\n' "$out27u" | awk '/== 螢幕鎖定/{found=1; next} found{print; exit}')
+[ "$lock_section_u" = "  ok" ] && echo '✓ ㉗ 未鎖定 → 螢幕鎖定段印 ok' || { echo "✗ ㉗ 未鎖定應印「  ok」，實得「${lock_section_u}」" >&2; fail=1; }
+hasnt '㉗ 未鎖定 → 不進 [screen-lock] 旗標' "$out27u" '[screen-lock]'
+
+out27l="$(FAKE_IOREG_LOCKED=1 PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+lock_section_l=$(printf '%s\n' "$out27l" | awk '/== 螢幕鎖定/{found=1; next} found{print; exit}')
+has '㉗ 鎖定中 → 螢幕鎖定段標 ⚠ 並提示 §4-b 排障順序' "$lock_section_l" '⚠ 主機螢幕鎖定中'
+has '㉗ 鎖定中 → -34018 說明字樣' "$lock_section_l" '-34018'
+
+brief27="$(FAKE_IOREG_LOCKED=1 PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has '㉗ --brief 也印 [screen-lock]' "$brief27" '[screen-lock] ⚠ 主機螢幕鎖定中'
+
+json27="$(FAKE_IOREG_LOCKED=1 PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '㉗ --json：flags 含一筆 [screen-lock]' "$json27" '([.flags[] | select(startswith("[screen-lock]"))] | length == 1)'
+
+# mutation：拿掉 ioreg 偵測（改成永遠空字串）→ 鎖定中的正樣本必須不再標，證明這條規則是偵測的原因
+mut_lock="$work/patrol.no-screen-lock-check.sh"
+python3 - "$patrol" "$mut_lock" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = 'if ioreg -n Root -d1 2>/dev/null | grep -q \'CGSSessionScreenIsLocked" = Yes\'; then'
+new = 'if false; then'
+assert src.count(old) == 1, "找不到螢幕鎖定偵測條件，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
+PY
+out27m="$(FAKE_IOREG_LOCKED=1 PATH="$work/bin:$PATH" bash "$mut_lock" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+lock_section_m=$(printf '%s\n' "$out27m" | awk '/== 螢幕鎖定/{found=1; next} found{print; exit}')
+if [ "$lock_section_m" = "  ok" ]; then
+  echo '✓ ㉗ mutant：拿掉偵測後鎖定中的正樣本變成 ok（證明 ⚠ 是這條規則造成的）'
+else
+  echo "✗ ㉗ mutant 應變成 ok（偵測已拿掉），實得「${lock_section_m}」——mutation 本身可能無效" >&2; fail=1
+fi
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
 fi
