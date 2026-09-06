@@ -17,7 +17,13 @@ struct ReportInboxView: View {
     @State private var viewedItem: ReportCardItem?
     @State private var removeTarget: ContentActionTarget?
     @State private var resolvingReportID: UUID?
-    @State private var actionError: AppError?
+    /// LS-189 R2（merge-review R1 B1）：鍵是 `item.id`，不是單一值——原本 `actionError: AppError?`
+    /// 跟 `resolvingReportID` 綁在一起判斷要不要顯示（`:107` 舊寫法 `resolvingReportID == item.id`），
+    /// 但 `markNoIssue` 的 `defer { resolvingReportID = nil }` 在 catch 之後、同一個 MainActor
+    /// 同步區塊裡執行，兩者之間沒有 await 懸置點——SwiftUI 只會渲染一次，渲染當下
+    /// `resolvingReportID` 已經是 nil，錯誤列的條件永遠是 false，使用者完全看不到任何失敗訊息
+    /// （見 `markNoIssue` 文件註解）。改成以 `item.id` 為鍵獨立保存，跟「是否正在處理中」解耦。
+    @State private var actionErrors: [UUID: AppError] = [:]
 
     var body: some View {
         ScrollView {
@@ -101,10 +107,10 @@ struct ReportInboxView: View {
                 .foregroundStyle(Color.lsTextPrimary)
                 .lineLimit(2)
             Pill(icon: "flag.fill", text: item.reasonDisplayLabel)
-            Text("由 \(item.reporterName) 檢舉・\(JoinRequestTimeFormatter.format(item.report.createdAt))")
+            Text("由 \(reporterName(for: item.report)) 檢舉・\(JoinRequestTimeFormatter.format(item.report.createdAt))")
                 .appFont(.meta)
                 .foregroundStyle(Color.lsTextSecondary)
-            if let actionError, resolvingReportID == item.id {
+            if let actionError = actionErrors[item.id] {
                 Text(actionError.userFacingMessage).appFont(.note).foregroundStyle(Color.lsDanger)
             }
             viewButton(item)
@@ -182,19 +188,28 @@ struct ReportInboxView: View {
     }
 
     /// 「這則沒問題」——直接把檢舉標成已處理（`docs/API.md` §3：owner-only、只能改成
-    /// `resolved`），不移除內容本身。
+    /// `resolved`），不移除內容本身。失敗時把錯誤記在 `actionErrors[item.id]`（跟
+    /// `resolvingReportID` 解耦，見該屬性文件註解），不是塞進會被 `defer` 同步清掉的單值。
     private func markNoIssue(_ item: ReportCardItem) {
         resolvingReportID = item.id
-        actionError = nil
+        actionErrors[item.id] = nil
         Task {
             defer { resolvingReportID = nil }
             do {
                 try await safetyAPIClient.markReportResolved(reportID: item.report.id)
                 items.removeAll { $0.id == item.id }
+                actionErrors[item.id] = nil
             } catch {
-                actionError = AppError.map(error)
+                actionErrors[item.id] = AppError.map(error)
             }
         }
+    }
+
+    /// 檢舉人顯示名稱——render 當下查 `familyStore.members`（同 `BlockListView.displayName(for:)`
+    /// 既有寫法，LS-189 R2 m4）：不在 `assembleItems` 組 item 的當下就把名字凍成字串，避免
+    /// `familyStore.members` 還沒到齊時卡成「一位家人」、之後到齊也不會補正。
+    private func reporterName(for report: ContentReportRecord) -> String {
+        report.reporterID.flatMap { id in familyStore.members.first { $0.userID == id }?.displayName } ?? "一位家人"
     }
 
     private func load() async {
@@ -202,35 +217,19 @@ struct ReportInboxView: View {
         loadState = .submitting
         do {
             let reports = try await safetyAPIClient.listPendingReports(familyID: familyID)
-            items = try await assembleItems(reports)
+            items = await ReportInboxAssembler.assembleItems(reports, safetyAPIClient: safetyAPIClient)
             loadState = .success
         } catch {
             loadState = .failure(AppError.map(error))
         }
     }
-
-    /// 逐筆解析檢舉人顯示名稱（`familyStore.members` 本地查表）與內容預覽（`fetchReportSnippet`
-    /// ——`media` 沒有文字內容，回傳 nil 時顯示通用標籤；其餘型別若查不到（內容已被硬刪，理論
-    /// 上不會發生，軟刪列仍在）顯示「這則內容已經被移除」）。
-    private func assembleItems(_ reports: [ContentReportRecord]) async throws -> [ReportCardItem] {
-        var result: [ReportCardItem] = []
-        for report in reports {
-            let reporterName = report.reporterID
-                .flatMap { id in familyStore.members.first { $0.userID == id }?.displayName } ?? "一位家人"
-            let fetchedSnippet = try? await safetyAPIClient.fetchReportSnippet(
-                targetType: report.targetType, targetID: report.targetID
-            )
-            let snippet = fetchedSnippet ?? (report.targetType == .media ? "一張照片或影片" : "這則內容已經被移除")
-            result.append(ReportCardItem(report: report, reporterName: reporterName, snippet: snippet))
-        }
-        return result
-    }
 }
 
-/// 07 檢舉卡片組好的顯示資料——把 `ContentReportRecord` 加上解析出來的檢舉人名稱與內容預覽。
+/// 07 檢舉卡片組好的顯示資料——把 `ContentReportRecord` 加上解析出來的內容預覽（`ReportInboxAssembler`
+/// 批次查出來的）。檢舉人顯示名稱**不**放在這裡（LS-189 R2 m4，見 `ReportInboxView.reporterName(for:)`
+/// 文件註解）——那個要在 render 當下查 `familyStore.members`，不能組 item 時就凍結。
 struct ReportCardItem: Identifiable, Equatable {
     let report: ContentReportRecord
-    let reporterName: String
     let snippet: String
 
     var id: UUID { report.id }

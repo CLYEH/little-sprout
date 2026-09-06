@@ -14,8 +14,10 @@ import Foundation
 ///   - `listPendingReports` → 直接讀 `content_reports`（RLS：owner 讀得到自家全部；§3）
 ///   - `markReportResolved` → 直接 `UPDATE content_reports SET status = 'resolved'`
 ///     （§3：「僅 status 欄，owner-only，且只能改成 resolved」，不是 RPC）
-///   - `fetchReportSnippet` → 直接讀對應表的內容欄位（`diaries.body`／`comments.body`／
-///     `albums.title`；`media` 沒有文字內容，回傳 nil）
+///   - `fetchReportSnippets` → 直接讀對應表的內容欄位（`diaries.body`／`comments.body`／
+///     `albums.title`；`media` 沒有文字內容，回傳空字典），依 `targetType` 一次 `.in(...)`
+///     批次查（LS-189 R2，merge-review R1 m1：`ReportInboxView.assembleItems` 原本逐筆序列
+///     await 造成 N+1，收件匣愈長載入愈慢；改成依型別分組、每種型別最多一次往返）
 ///
 /// 錯誤一律映射為 `AppError`，不直接往外拋 PostgREST 的 error 型別（同 `CommentAPIClient` 既有
 /// 慣例）。
@@ -34,5 +36,7 @@ protocol SafetyAPIClient: Sendable {
     /// 這支方法不重複做角色檢查。
     func listPendingReports(familyID: UUID) async throws -> [ContentReportRecord]
     func markReportResolved(reportID: UUID) async throws
-    func fetchReportSnippet(targetType: ContentTargetType, targetID: UUID) async throws -> String?
+    /// 批次查——回傳 `[targetID: 內容文字]`；查不到的 id 不會出現在字典裡（呼叫端依此判斷
+    /// 兜底文案），`targetType == .media` 一律回傳空字典（見上方文件註解）。
+    func fetchReportSnippets(targetType: ContentTargetType, targetIDs: [UUID]) async throws -> [UUID: String]
 }

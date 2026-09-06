@@ -74,6 +74,8 @@ final class SupabaseSafetyAPIClient: SafetyAPIClient {
         }
     }
 
+    /// LS-189 R2（merge-review R1 m1）：`.limit(50)` 上限——封鎖名單／收件匣本來就不該無限長，
+    /// 超過 50 筆屬罕見情境，分頁留待後續票（收件匣／封鎖名單皆同理，見下）。
     func listBlockedUsers(familyID: UUID) async throws -> [BlockedUserRecord] {
         do {
             let response: PostgrestResponse<[BlockedUserRecord]> = try await client
@@ -81,6 +83,7 @@ final class SupabaseSafetyAPIClient: SafetyAPIClient {
                 .select("blocked_id, created_at")
                 .eq("family_id", value: familyID)
                 .order("created_at", ascending: false)
+                .limit(50)
                 .execute()
             return response.value
         } catch {
@@ -88,6 +91,7 @@ final class SupabaseSafetyAPIClient: SafetyAPIClient {
         }
     }
 
+    /// `.limit(50)`——見上方 `listBlockedUsers` 文件註解，同理。
     func listPendingReports(familyID: UUID) async throws -> [ContentReportRecord] {
         do {
             let response: PostgrestResponse<[ContentReportRecord]> = try await client
@@ -96,6 +100,7 @@ final class SupabaseSafetyAPIClient: SafetyAPIClient {
                 .eq("family_id", value: familyID)
                 .eq("status", value: "pending")
                 .order("created_at", ascending: false)
+                .limit(50)
                 .execute()
             return response.value
         } catch {
@@ -123,25 +128,29 @@ final class SupabaseSafetyAPIClient: SafetyAPIClient {
         }
     }
 
-    func fetchReportSnippet(targetType: ContentTargetType, targetID: UUID) async throws -> String? {
+    /// LS-189 R2（merge-review R1 m1）：依 `targetType` 一次 `.in("id", values:)` 批次查，取代
+    /// 原本呼叫端逐筆序列 await 的 N+1。`targetIDs` 為空直接回傳空字典（同既有 `fetchDiaries`
+    /// 等既有慣例，見 `SupabaseTimelineAPIClient`），不多打一次不必要的請求。
+    func fetchReportSnippets(targetType: ContentTargetType, targetIDs: [UUID]) async throws -> [UUID: String] {
+        guard !targetIDs.isEmpty else { return [:] }
         do {
             switch targetType {
             case .diary:
-                let response: PostgrestResponse<[BodyRow]> = try await client
-                    .from("diaries").select("body").eq("id", value: targetID).execute()
-                return response.value.first?.body
+                let response: PostgrestResponse<[IDBodyRow]> = try await client
+                    .from("diaries").select("id, body").in("id", values: targetIDs).execute()
+                return Dictionary(uniqueKeysWithValues: response.value.map { ($0.id, $0.body) })
             case .comment:
-                let response: PostgrestResponse<[BodyRow]> = try await client
-                    .from("comments").select("body").eq("id", value: targetID).execute()
-                return response.value.first?.body
+                let response: PostgrestResponse<[IDBodyRow]> = try await client
+                    .from("comments").select("id, body").in("id", values: targetIDs).execute()
+                return Dictionary(uniqueKeysWithValues: response.value.map { ($0.id, $0.body) })
             case .album:
-                let response: PostgrestResponse<[TitleRow]> = try await client
-                    .from("albums").select("title").eq("id", value: targetID).execute()
-                return response.value.first?.title
+                let response: PostgrestResponse<[IDTitleRow]> = try await client
+                    .from("albums").select("id, title").in("id", values: targetIDs).execute()
+                return Dictionary(uniqueKeysWithValues: response.value.map { ($0.id, $0.title) })
             case .media:
                 // media 沒有文字內容欄位——呼叫端（`ReportInboxView`）依 `targetType` 顯示通用
                 // 標籤（「一張照片或影片」），不需要額外一支查詢。
-                return nil
+                return [:]
             }
         } catch {
             throw AppError.map(error)
@@ -164,11 +173,13 @@ private struct UploadedByRow: Decodable {
     enum CodingKeys: String, CodingKey { case uploadedBy = "uploaded_by" }
 }
 
-private struct BodyRow: Decodable {
+private struct IDBodyRow: Decodable {
+    let id: UUID
     let body: String
 }
 
-private struct TitleRow: Decodable {
+private struct IDTitleRow: Decodable {
+    let id: UUID
     let title: String
 }
 

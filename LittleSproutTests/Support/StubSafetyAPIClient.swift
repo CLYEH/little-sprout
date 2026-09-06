@@ -27,11 +27,18 @@ final class StubSafetyAPIClient: SafetyAPIClient, @unchecked Sendable {
         let targetID: UUID
     }
 
+    /// LS-189 R2（merge-review R1 m1／B3）：批次查呼叫紀錄——`ReportInboxAssemblerTests` 用它
+    /// 斷言「N 筆檢舉、K 種型別」只觸發 K 次呼叫（不是逐筆 N 次），釘住 N+1 修正。
+    struct SnippetsCall: Equatable {
+        let targetType: ContentTargetType
+        let targetIDs: [UUID]
+    }
+
     private struct Box {
         var authorID: UUID?
         var blockedUsers: [BlockedUserRecord] = []
         var pendingReports: [ContentReportRecord] = []
-        var reportSnippet: String?
+        var snippetsByType: [ContentTargetType: [UUID: String]] = [:]
         var reportHandler: ReportHandler = { _, _, _, _ in }
         var blockHandler: BlockHandler = { _, _ in }
         var unblockHandler: BlockHandler = { _, _ in }
@@ -42,17 +49,18 @@ final class StubSafetyAPIClient: SafetyAPIClient, @unchecked Sendable {
         var unblockCalls: [BlockCall] = []
         var removeCalls: [RemoveCall] = []
         var resolveCalls: [UUID] = []
+        var snippetsCalls: [SnippetsCall] = []
     }
 
     private let box: OSAllocatedUnfairLock<Box>
 
     init(
         authorID: UUID? = nil, blockedUsers: [BlockedUserRecord] = [],
-        pendingReports: [ContentReportRecord] = [], reportSnippet: String? = nil
+        pendingReports: [ContentReportRecord] = [], snippetsByType: [ContentTargetType: [UUID: String]] = [:]
     ) {
         box = OSAllocatedUnfairLock(initialState: Box(
             authorID: authorID, blockedUsers: blockedUsers, pendingReports: pendingReports,
-            reportSnippet: reportSnippet
+            snippetsByType: snippetsByType
         ))
     }
 
@@ -61,6 +69,7 @@ final class StubSafetyAPIClient: SafetyAPIClient, @unchecked Sendable {
     var unblockCalls: [BlockCall] { box.withLock { $0.unblockCalls } }
     var removeCalls: [RemoveCall] { box.withLock { $0.removeCalls } }
     var resolveCalls: [UUID] { box.withLock { $0.resolveCalls } }
+    var snippetsCalls: [SnippetsCall] { box.withLock { $0.snippetsCalls } }
 
     func setReportHandler(_ handler: @escaping ReportHandler) {
         box.withLock { $0.reportHandler = handler }
@@ -125,7 +134,8 @@ final class StubSafetyAPIClient: SafetyAPIClient, @unchecked Sendable {
         try await handler(reportID)
     }
 
-    func fetchReportSnippet(targetType: ContentTargetType, targetID: UUID) async throws -> String? {
-        box.withLock { $0.reportSnippet }
+    func fetchReportSnippets(targetType: ContentTargetType, targetIDs: [UUID]) async throws -> [UUID: String] {
+        box.withLock { $0.snippetsCalls.append(SnippetsCall(targetType: targetType, targetIDs: targetIDs)) }
+        return box.withLock { $0.snippetsByType[targetType] ?? [:] }
     }
 }

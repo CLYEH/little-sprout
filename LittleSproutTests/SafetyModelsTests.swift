@@ -62,7 +62,7 @@ final class SafetyModelsTests: XCTestCase {
             id: UUID(), targetType: .comment, targetID: UUID(), reporterID: UUID(),
             reason: "harassment", status: "pending", createdAt: Date()
         )
-        let item = ReportCardItem(report: record, reporterName: "李阿嬤", snippet: "測試內容")
+        let item = ReportCardItem(report: record, snippet: "測試內容")
         XCTAssertEqual(item.reasonDisplayLabel, "騷擾、霸凌或恐嚇")
     }
 
@@ -73,7 +73,7 @@ final class SafetyModelsTests: XCTestCase {
             id: UUID(), targetType: .comment, targetID: UUID(), reporterID: UUID(),
             reason: "some_legacy_free_text", status: "pending", createdAt: Date()
         )
-        let item = ReportCardItem(report: record, reporterName: "李阿嬤", snippet: "測試內容")
+        let item = ReportCardItem(report: record, snippet: "測試內容")
         XCTAssertEqual(item.reasonDisplayLabel, "some_legacy_free_text")
     }
 }

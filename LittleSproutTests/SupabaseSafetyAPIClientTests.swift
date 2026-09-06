@@ -4,7 +4,7 @@ import XCTest
 
 /// `SupabaseSafetyAPIClient` 對五個查詢面（`fetchContentAuthor`／`reportContent`／
 /// `blockUser`／`unblockUser`／`removeContentAsOwner`／`listBlockedUsers`／
-/// `listPendingReports`／`markReportResolved`／`fetchReportSnippet`）的編碼與錯誤映射。用
+/// `listPendingReports`／`markReportResolved`／`fetchReportSnippets`）的編碼與錯誤映射。用
 /// `MockURLProtocol` 攔截請求（不打真網路），同 `SupabaseCommentAPIClientTests`／
 /// `SupabaseFamilyAPIClientProfileTests` 的既有模式。
 final class SupabaseSafetyAPIClientTests: XCTestCase {
@@ -205,6 +205,9 @@ final class SupabaseSafetyAPIClientTests: XCTestCase {
             XCTAssertEqual(request.url?.path, "/rest/v1/blocked_users")
             let query = request.url?.query ?? ""
             XCTAssertTrue(query.contains("family_id=eq.\(familyID.uuidString)"), query)
+            // LS-189 R2（merge-review R1 m1）：封鎖名單不該無限長，見 `SupabaseSafetyAPIClient
+            // .listBlockedUsers` 文件註解。
+            XCTAssertTrue(query.contains("limit=50"), query)
             return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
             [{"blocked_id":"\(blockedID.uuidString)","created_at":"2026-09-01T00:00:00Z"}]
             """.utf8))
@@ -221,6 +224,9 @@ final class SupabaseSafetyAPIClientTests: XCTestCase {
             let query = request.url?.query ?? ""
             XCTAssertTrue(query.contains("family_id=eq.\(familyID.uuidString)"), query)
             XCTAssertTrue(query.contains("status=eq.pending"), query)
+            // LS-189 R2（merge-review R1 m1）：收件匣不該無限長，見 `SupabaseSafetyAPIClient
+            // .listPendingReports` 文件註解。
+            XCTAssertTrue(query.contains("limit=50"), query)
             return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
             [{"id":"\(reportID.uuidString)","target_type":"comment","target_id":"\(targetID.uuidString)",
               "reporter_id":"\(authorID.uuidString)","reason":"spam","status":"pending",
@@ -276,44 +282,4 @@ final class SupabaseSafetyAPIClientTests: XCTestCase {
         }
     }
 
-    // MARK: - fetchReportSnippet
-
-    func test_fetchReportSnippet_diary_returnsBody() async throws {
-        let client = TestSupabaseClient.make { [targetID] request in
-            XCTAssertEqual(request.url?.path, "/rest/v1/diaries")
-            let query = request.url?.query ?? ""
-            XCTAssertTrue(query.contains("select=body"), query)
-            XCTAssertTrue(query.contains("id=eq.\(targetID.uuidString)"), query)
-            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
-            [{"body":"今天在溜滑梯上玩得好開心。"}]
-            """.utf8))
-        }
-        let apiClient = SupabaseSafetyAPIClient(client: client)
-
-        let snippet = try await apiClient.fetchReportSnippet(targetType: .diary, targetID: targetID)
-        XCTAssertEqual(snippet, "今天在溜滑梯上玩得好開心。")
-    }
-
-    /// `media` 沒有文字內容欄位——不應該發任何網路請求，直接回 nil。
-    func test_fetchReportSnippet_media_returnsNilWithoutNetworkCall() async throws {
-        let client = TestSupabaseClient.make { _ in
-            XCTFail("media 型別不該發任何網路請求")
-            return MockURLProtocol.StubResponse(statusCode: 500, body: Data())
-        }
-        let apiClient = SupabaseSafetyAPIClient(client: client)
-
-        let snippet = try await apiClient.fetchReportSnippet(targetType: .media, targetID: targetID)
-        XCTAssertNil(snippet)
-    }
-
-    func test_fetchReportSnippet_targetGone_returnsNil() async throws {
-        // 內容已被硬刪（理論上不會發生，軟刪列仍在）——0 列不是錯誤，呼叫端顯示兜底文案。
-        let client = TestSupabaseClient.make { _ in
-            MockURLProtocol.StubResponse(statusCode: 200, body: Data("[]".utf8))
-        }
-        let apiClient = SupabaseSafetyAPIClient(client: client)
-
-        let snippet = try await apiClient.fetchReportSnippet(targetType: .comment, targetID: targetID)
-        XCTAssertNil(snippet)
-    }
 }
