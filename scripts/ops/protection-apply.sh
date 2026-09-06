@@ -1,7 +1,7 @@
 #!/bin/bash
 # 分支保護套用（LS-85 G1／LS-87 G1）：test／main 改成「required status checks＋禁 force push／刪除＋enforce_admins」、關閉 require PR——
 # 晉升改 fast-forward push（scripts/ops/promote.sh）後，PR 只剩 feature→development 與 hotfix→main；每個進到 test／main 的 SHA
-# 仍須四個 check（ci／db／lint／rules）全綠才推得上去（server-side：沒有綠 check 的 SHA 被 GH006 拒收）。
+# 仍須五個 check（ci／ci-ipad／db／lint／rules，LS-209 加 ci-ipad）全綠才推得上去（server-side：沒有綠 check 的 SHA 被 GH006 拒收）。
 # LS-87：required checks 再加 commit status context `merge-review`（merge-reviewer 以 scripts/ops/post-status.sh 用 gh 使用者 token 貼，
 # 不是 GitHub Actions → app_id -1＝任何來源皆可；GitHub required status checks 可混用 check-run 與 status context）——沒有
 # merge-review success 的 head 併不進 development／main（gh pr merge 被拒）、沒有的 SHA 推不上 test／main（GH006）；head 再 push

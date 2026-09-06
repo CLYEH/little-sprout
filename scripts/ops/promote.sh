@@ -5,7 +5,9 @@
 # merge-reviewer 不動（本來就只審 feature／fix／hotfix PR）；gate 不減、換位置：
 #   server-side：test／main 的 required status checks 對推上去的 SHA 生效（沒有綠 check 的 SHA 推不上去，GH006；
 #               scripts/ops/protection-apply.sh）
-#   client-side：本腳本驗 FF＋四個 check；push-gate（scripts/gates/push-ref-check.sh）擋繞過本腳本的 test／main 推送；
+#   client-side：本腳本驗 FF＋`$REQUIRED_CHECKS`（目前五個：ci／ci-ipad／db／lint／rules，LS-209 加 ci-ipad；
+#               改動 required check 集合時只需改該變數，這段敘述不會跟著自動更新，請一併訂正）；
+#               push-gate（scripts/gates/push-ref-check.sh）擋繞過本腳本的 test／main 推送；
 #               漂移由 scripts/ops/patrol.sh 偵測。
 #
 # 用法：promote.sh <from> <to>       只接受 development test ／ test main；在 repo 內任一目錄執行
@@ -13,7 +15,8 @@
 #       (b) 方向
 #       (c) FF：origin/<to> 須為 origin/<from> 的祖先，否則拒絕並指示先 back-merge
 #       (d) origin/<from> 的 SHA 在 GitHub 的 check-runs：只認 GitHub Actions（app id 15368，與分支保護 required checks 限 app
-#           一致——別的 app 貼同名 check 不算，PR #141 R1 F5）的 ci／db／lint／rules，各取最新一筆（id 最大；同一 SHA 推到 test
+#           一致——別的 app 貼同名 check 不算，PR #141 R1 F5）的 `$REQUIRED_CHECKS`（ci／ci-ipad／db／lint／rules，LS-209
+#           加 ci-ipad），各取最新一筆（id 最大；同一 SHA 推到 test
 #           後會再跑一輪，與 GitHub 分支保護「看最新一筆」一致），status completed 且 conclusion success 才放行；缺／skipped／
 #           failure／in_progress 皆拒絕並印出是哪一個
 #       (d′) 同一 SHA 的 commit status（LS-87；`gh api …/commits/<sha>/status` combined status，每個 context 只回最新一筆）：
