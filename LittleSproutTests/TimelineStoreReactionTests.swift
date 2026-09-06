@@ -1,5 +1,6 @@
 import Foundation
 @testable import LittleSprout
+import os
 import XCTest
 
 /// LS-216：`TimelineStore` 愛心反應（`reactionStates`）三支行為——批次計數合併（一頁最多 3 次
@@ -109,6 +110,49 @@ final class TimelineStoreReactionTests: XCTestCase {
             store.reactionState(forKey: TimelineEntry.id(kind: .diary, refId: diaryID)),
             ReactionState(count: 1, reactedByMe: false),
             "舊世代遲到的計數（count 99）不能覆寫新世代已經寫好的值"
+        )
+    }
+
+    /// R3（merge-review R2 minor-1）：某 target 的愛心數掉到 0 時，`get_reaction_counts` 不會
+    /// 再回傳該列（伺服器省略＝0，同 `get_reaction_counts` 既有慣例，見上面
+    /// `test_refresh_loadsReactionCounts_batchedPerKind_notPerCard` media 那段的斷言）——但
+    /// 這不是「這次沒查到新資料所以維持原狀」，而是「這次請求範圍內的 target 明確查到 0
+    /// 筆」，`reactionStates` 必須跟著歸零，不能保留上一輪的舊值，否則家人收回讚之後，其他人
+    /// 的卡片會一直卡在舊的數字，直到 app 重啟（`reactionStates` 只在 `reset()` 才會清空）。
+    func test_refresh_targetMissingFromSecondReactionCountsResponse_resetsToZero() async {
+        let stub = StubTimelineAPIClient()
+        let refId = UUID()
+        stub.setFetchPointersHandler { _, _, _, _ in
+            [TimelineFeedPointer(kind: .diary, refId: refId, occurredAt: Date(), childIds: [])]
+        }
+        let callCount = OSAllocatedUnfairLock(initialState: 0)
+        stub.setReactionCountsHandler { _, _, targetIDs in
+            let thisCall = callCount.withLock { count -> Int in
+                count += 1
+                return count
+            }
+            if thisCall == 1 {
+                return targetIDs.map { ReactionCountRow(targetID: $0, reactionCount: 1, reactedByMe: false) }
+            }
+            // 第二次刷新：家人收回了唯一一個讚，伺服器不再回傳這個 target 的列。
+            return []
+        }
+        let store = TimelineStore(apiClient: stub)
+
+        await store.refresh(familyID: familyID, childID: nil)
+        XCTAssertEqual(
+            store.reactionState(forKey: TimelineEntry.id(kind: .diary, refId: refId)),
+            ReactionState(count: 1, reactedByMe: false),
+            "第一次刷新：伺服器回報 1 個讚"
+        )
+
+        await store.refresh(familyID: familyID, childID: nil)
+
+        XCTAssertEqual(
+            store.reactionState(forKey: TimelineEntry.id(kind: .diary, refId: refId)),
+            .zero,
+            "第二次刷新伺服器省略了這個 target（＝目前 0 個讚），必須把舊的 count 1 蓋掉，"
+                + "不能誤判成「這次沒新資料所以維持原狀」而一直停在 1"
         )
     }
 

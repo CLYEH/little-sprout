@@ -315,8 +315,10 @@ final class TimelineStore {
             }
         }
         guard expectedGeneration == generation else { return }
-        for (key, state) in merged {
-            reactionStates[key] = state
+        // R3（merge-review R2 minor-1）：缺席一律 `.zero`——只寫 `merged` 有的 key 會讓掉到 0 筆的 target 卡住舊數字。
+        for (kind, targetID) in idsByKind.flatMap({ kind, ids in ids.map { (kind, $0) } }) {
+            let key = TimelineEntry.id(kind: kind, refId: targetID)
+            reactionStates[key] = merged[key] ?? .zero
         }
     }
 
