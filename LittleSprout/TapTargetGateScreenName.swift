@@ -112,6 +112,17 @@ enum TapTargetGateScreenName: String {
     // 佈置一位 owner（自己）＋一位 member，量測 Owner 視角「…」選單與「退出家庭」鈕；member
     // 視角（看不到「…」選單）留給 QA 模擬器實測（票文驗收要求的截圖對稿已覆蓋）。
     case familyMembers = "FamilyMembersView"
+    // LS-193：刪除帳號流程——`DeleteAccountFlowView` 從 LS-188 的最小佔位（`Content
+    // UnavailableView`）換成正式內容，取代 `tap-target-exemptions.txt` 原本的具名排除。三分流
+    // （04a／04b／04d）各用不同的 `FamilyStore` 種子資料同步佈置（見
+    // `TapTargetGateHarness+DeleteAccount.swift`），04e／04g／04h 直接掛對應子畫面；04f 無互動
+    // 元件不需要量測。
+    case deleteAccountGeneralMember = "DeleteAccountFlowView"
+    case deleteAccountMustTransfer = "DeleteAccountFlowViewMustTransfer"
+    case deleteAccountSoleMember = "DeleteAccountFlowViewSoleMember"
+    case deleteAccountFinalConfirm = "DeleteAccountFlowViewFinalConfirm"
+    case deleteAccountCompleted = "DeleteAccountFlowViewCompleted"
+    case deleteAccountFailed = "DeleteAccountFlowViewFailed"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -166,6 +177,12 @@ enum TapTargetGateScreenName: String {
         // R2（merge-review R1 M6）：02 稿標題是「個人資料」，R1 誤寫成「顯示名稱與頭像」。
         case .profileEdit: return .staticText("個人資料")
         case .familyMembers: return .staticText("家庭成員")
+        case .deleteAccountGeneralMember: return .staticText("刪除帳號")
+        case .deleteAccountMustTransfer: return .staticText("需要先轉移家庭管理者身分")
+        case .deleteAccountSoleMember: return .staticText("你是這個家庭唯一的成員")
+        case .deleteAccountFinalConfirm: return .staticText("最後確認")
+        case .deleteAccountCompleted: return .staticText("帳號已刪除")
+        case .deleteAccountFailed: return .staticText("刪除過程中發生問題")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

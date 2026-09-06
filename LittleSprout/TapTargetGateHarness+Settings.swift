@@ -30,7 +30,7 @@ extension TapTargetGateHarness {
                 familyStore: .preview(withFamily: Family(
                     id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
                 )),
-                childrenStore: .preview(),
+                childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
                 timelineStore: .preview(),
                 albumsStore: .preview()
             )
@@ -53,7 +53,7 @@ extension TapTargetGateHarness {
                 familyStore: .preview(withFamily: Family(
                     id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
                 )),
-                childrenStore: childrenStore,
+                childrenStore: childrenStore, accountAPIClient: PreviewAccountAPIClient(),
                 timelineStore: .preview(),
                 albumsStore: .preview()
             )
@@ -73,7 +73,7 @@ extension TapTargetGateHarness {
                 familyStore: .preview(withFamily: Family(
                     id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
                 )),
-                childrenStore: .preview(),
+                childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
                 timelineStore: .preview(),
                 albumsStore: .preview()
             )

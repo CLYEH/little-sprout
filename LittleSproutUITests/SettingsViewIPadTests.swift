@@ -108,6 +108,10 @@ final class SettingsViewIPadTests: XCTestCase {
     }
 
     /// reviewer 原始複現三支之一：「切到『帳號』→ 點『刪除帳號』→ 沒有 push」。
+    /// LS-193：`DeleteAccountFlowView` 從 LS-188 的最小佔位（`ContentUnavailableView`「刪除帳號
+    /// 流程尚未推出，敬請期待。」）換成正式內容——`pushedSentinel` 改認 04a 一般成員的說明副標
+    /// （`.settingsRegular` harness 沒有 seed `ownerUserID`，`FamilyStore.leaveFlowCase` 因此
+    /// 落在 `.leave`，見該屬性文件註解，一律進 04a，不會是 04b／04d）。
     func testAccountSectionDeleteRowPushesAndBackReturns() {
         let app = TapTargetMeasurement.launch(.settingsRegular)
         TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
@@ -118,7 +122,7 @@ final class SettingsViewIPadTests: XCTestCase {
         assertPushThenBackReturnsToList(
             app: app,
             entry: app.buttons["刪除帳號"],
-            pushedSentinel: app.staticTexts["刪除帳號流程尚未推出，敬請期待。"]
+            pushedSentinel: app.staticTexts["在你刪除帳號之前，請先看看接下來會發生什麼事。"]
         )
     }
 

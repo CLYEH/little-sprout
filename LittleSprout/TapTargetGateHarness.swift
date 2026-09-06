@@ -64,6 +64,12 @@ enum TapTargetGateHarness {
         case .welcome: welcomeHost
         case .profileEdit: profileEditHost
         case .familyMembers: familyMembersHost
+        case .deleteAccountGeneralMember: deleteAccountGeneralMemberHost
+        case .deleteAccountMustTransfer: deleteAccountMustTransferHost
+        case .deleteAccountSoleMember: deleteAccountSoleMemberHost
+        case .deleteAccountFinalConfirm: deleteAccountFinalConfirmHost
+        case .deleteAccountCompleted: deleteAccountCompletedHost
+        case .deleteAccountFailed: deleteAccountFailedHost
         case .legalDocumentSheet: legalDocumentSheetHost
         case .legalDocumentNarrowContainer: legalDocumentNarrowContainerHost
         case .selfTestTooSmall:
@@ -202,7 +208,8 @@ enum TapTargetGateHarness {
                 id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
             childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
-            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
+            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
+            accountAPIClient: PreviewAccountAPIClient()
         )
         .environment(\.horizontalSizeClass, .compact)
     }
@@ -242,7 +249,8 @@ enum TapTargetGateHarness {
         AuthenticatedRootView(
             authStore: .preview(), familyStore: .preview(),
             childrenStore: .preview(), timelineStore: timelineStore, albumsStore: .preview(),
-            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService()
+            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
+            accountAPIClient: PreviewAccountAPIClient()
         )
         .environment(\.horizontalSizeClass, .compact)
     }
