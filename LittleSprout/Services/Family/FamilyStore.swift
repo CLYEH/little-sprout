@@ -298,6 +298,15 @@ final class FamilyStore {
     /// 分開成兩個屬性（不是同一個 enum 的兩個 case）：呼叫端（`ForkView.suspendedFooter`）本來
     /// 就需要對這兩種成因顯示不同的鈕（「刪除帳號」vs.「重試刪除」），維持兩個獨立、各自命名
     /// 清楚的 `AppError?` 更直接，不需要多一層 enum 包裝。
+    ///
+    /// **merge-review R3 n5 警語**：`ForkView` 的 `.onChange(of: accountDeletionInProgressError)`
+    /// 一看到這個屬性非 nil 就會落地 `PendingAccountDeletion` 本機續傳旗標（見該檔文件
+    /// 註解）——這個推論成立的前提是 `createFamilyState`／`requestJoinState` **只反映「寫入
+    /// 呼叫者自己」的操作**（`createFamily(name:)`／`requestJoin(code:)` 目前確實如此，
+    /// API.md §2 的 `LS051` guard 查的是被寫入的人）。**若日後把「寫入別人」的失敗（例如
+    /// `approve_join` 撞到對方帳號的 `LS051`）也塞進這兩個 state，這裡的推論會破——會誤把
+    /// 別人帳號的刪除進行中狀態，標記成呼叫者自己的續傳旗標。**新增任何會寫入
+    /// `createFamilyState`／`requestJoinState` 的呼叫端之前，請先確認這個前提仍然成立。
     var accountDeletionInProgressError: AppError? {
         if case .failure(let error) = createFamilyState, Self.isAccountDeletionInProgress(error) {
             return error
