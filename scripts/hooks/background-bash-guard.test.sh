@@ -100,6 +100,39 @@ expect '①e3 gh api query string ＋ until sleep（雙引號，allow）' 0 \
 expect '①e4 sed 取代字面的 &（單引號）＋真正的 run.sh／sleep（allow，keyword 存在也不誤擋）' 0 \
   "$(bash_json "sed -i '' 's/foo/&bar/' x.sh; bash supabase/tests/run.sh; sleep 1")"
 
+# ①f R3（merge-review R2 comment 40ec7b65，M1，major）：①e 的遮蔽把「idiom＋keyword 整段包在
+# bash|sh -c／eval／$(...) 引數裡」的寫法也一起吃掉，規則 (b) 對這種包一層的寫法完全失效——必須
+# 遞迴回同一套判定。四類負樣本（deny）：(a) bash -c 雙引號、(b) sh -c 雙引號（另一支 shell）、
+# (c) 單引號版本（任一引號形式都要接住）、(d) keyword 本身被引號包住但 idiom 在頂層可見（不需要
+# 遞迴、純粹是「keyword 比對不該被遮蔽」那一半的修法）、(e) eval、(f) $(...) 命令替換。
+expect '①f1 bash -c 雙引號包住完整 idiom＋keyword（deny，遞迴進 -c 引數）' 2 \
+  "$(bash_json 'bash -c \"nohup bash supabase/tests/run.sh > /tmp/o.log 2>&1 & sleep 5\"')"
+expect '①f2 sh -c 雙引號（另一支 shell，deny）' 2 \
+  "$(bash_json 'sh -c \"xcodebuild test -scheme X & wait\"')"
+expect '①f3 bash -c 單引號（任一引號形式都要接住，deny）' 2 \
+  "$(bash_json "bash -c 'nohup bash supabase/tests/run.sh > /tmp/o.log 2>&1 & sleep 5'")"
+expect '①f4 keyword 本身被引號包住、idiom 在頂層可見（deny，keyword 比對用未遮蔽文字）' 2 \
+  "$(bash_json 'nohup bash \"supabase/tests/run.sh\" > /tmp/o.log 2>&1 &')"
+expect '①f5 eval 雙引號包住完整 idiom＋keyword（deny，遞迴進 eval 引數）' 2 \
+  "$(bash_json 'eval \"nohup bash supabase/tests/run.sh > /tmp/o.log 2>&1 & sleep 5\"')"
+expect '①f6 $(...) 命令替換內文含完整 idiom＋keyword（deny，遞迴進 cmdsub 內文）' 2 \
+  "$(bash_json 'x=$(nohup bash supabase/tests/run.sh > /tmp/o.log 2>&1 & sleep 5; echo done)')"
+# 對照：-c／eval／$(...) 包住的是純資料（不含 idiom＋keyword 組合）不誤擋
+expect '①f-對照 bash -c 包住無害內容（allow，遞迴沒有變成逢 -c 必擋）' 0 \
+  "$(bash_json 'bash -c \"echo hi\"')"
+expect '①f-對照 eval 包住無害內容（allow）' 0 \
+  "$(bash_json 'eval \"echo hi\"')"
+expect '①f-對照 $(...) 包住無害內容（allow）' 0 \
+  "$(bash_json 'x=$(echo hi)')"
+# 對照：R1／R2 的「真 & 仍 deny」控制樣本（reviewer R2 comment 40ec7b65 的 Q1/Q2/Q5，含 $(...)／反引號
+# 混雜引號但真正的 idiom 運算子在頂層可見，不需要遞迴也要 deny——確認 M1 修法沒有反過來弄壞這些）
+expect '①f-Q1 真 & 混雜引號字串、idiom 與 keyword 皆在頂層（deny）' 2 \
+  "$(bash_json 'echo \"a\" & echo \"b\"; bash supabase/tests/run.sh; sleep 1')"
+expect '①f-Q2 $(date) 後接真 &（deny，cmdsub 是無關內容、後面才是真 idiom）' 2 \
+  "$(bash_json 'echo $(date) & sleep 3; git push origin HEAD')"
+expect '①f-Q5 反引號後接真 &（deny）' 2 \
+  "$(bash_json 'echo `date` & sleep 2; bash scripts/gates/push-gate.sh')"
+
 # ============================================================
 # ② 負樣本
 # ============================================================
@@ -278,11 +311,11 @@ rm -rf "$mut2"
 # ============================================================
 mut3=$(mktemp -d)
 cp "$guard" "$engine_py" "${root}/scripts/hooks/pretool_engine.py" "$mut3/"
-anchor_mask='unquoted = _mask_quoted(stripped)'
+anchor_mask='idiom_text = _mask_allowlisted_bg(_mask_quoted(stripped))'
 if ! grep -qF "$anchor_mask" "$engine_py"; then
   bad "⑦ mutation 錨點（引號感知遮蔽呼叫點）不在 background_bash_guard.py，mutation 測試無法成立：${anchor_mask}"
 else
-  sed "s/$(printf '%s' "$anchor_mask" | sed 's/[.[\*^$]/\\&/g')/unquoted = stripped/" "$engine_py" > "$mut3/background_bash_guard.py"
+  sed "s/$(printf '%s' "$anchor_mask" | sed 's/[.[\*^$]/\\&/g')/idiom_text = _mask_allowlisted_bg(stripped)/" "$engine_py" > "$mut3/background_bash_guard.py"
   if ! diff -q "$engine_py" "$mut3/background_bash_guard.py" >/dev/null 2>&1; then
     all_flipped=1
     for payload in \
@@ -305,6 +338,50 @@ else
   fi
 fi
 rm -rf "$mut3"
+
+# ============================================================
+# ⑧ R3（merge-review R2 comment 40ec7b65，M1，major）mutation：拿掉遞迴（改回空清單）→ ①f1–①f3、
+# ①f5–①f6（bash -c／sh -c／eval／$(...) 包一層）必須翻紅（allow）——證明 deny 確由遞迴造成，不是
+# 巧合；①f4（keyword 被引號包住但 idiom 在頂層可見，不靠遞迴）維持 deny 不受影響，證明兩個修法
+# 是各自獨立的判斷路徑。
+# ============================================================
+mut4=$(mktemp -d)
+cp "$guard" "$engine_py" "${root}/scripts/hooks/pretool_engine.py" "$mut4/"
+anchor_recurse='for payload in _extract_recurse_payloads(stripped):'
+if ! grep -qF "$anchor_recurse" "$engine_py"; then
+  bad "⑧ mutation 錨點（遞迴呼叫點）不在 background_bash_guard.py，mutation 測試無法成立：${anchor_recurse}"
+else
+  sed "s/$(printf '%s' "$anchor_recurse" | sed 's/[.[\*^$]/\\&/g')/for payload in []:/" "$engine_py" > "$mut4/background_bash_guard.py"
+  if ! diff -q "$engine_py" "$mut4/background_bash_guard.py" >/dev/null 2>&1; then
+    all_flipped=1
+    for payload in \
+      "$(bash_json 'bash -c \"nohup bash supabase/tests/run.sh > /tmp/o.log 2>&1 & sleep 5\"')" \
+      "$(bash_json 'sh -c \"xcodebuild test -scheme X & wait\"')" \
+      "$(bash_json "bash -c 'nohup bash supabase/tests/run.sh > /tmp/o.log 2>&1 & sleep 5'")" \
+      "$(bash_json 'eval \"nohup bash supabase/tests/run.sh > /tmp/o.log 2>&1 & sleep 5\"')" \
+      "$(bash_json 'x=$(nohup bash supabase/tests/run.sh > /tmp/o.log 2>&1 & sleep 5; echo done)')"
+    do
+      out=$(printf '%s' "$payload" | "$bash_bin" "$mut4/background-bash-guard.sh" 2>/dev/null); got=$?
+      if [ "$got" -ne 0 ] || [ -n "$out" ]; then
+        all_flipped=0
+        bad "⑧ mutant 應把「①f」遞迴正樣本（-c／eval／\$(...)）翻成 allow（實得 exit ${got}：${out}）——deny 不是靠遞迴？"
+      fi
+    done
+    if [ "$all_flipped" -eq 1 ]; then
+      ok '⑧ mutant：拿掉遞迴後，①f1／①f2／①f3／①f5／①f6 五組正樣本全部變成 allow（原本的 deny 確由遞迴造成）'
+    fi
+    # 對照：①f4（keyword 被引號包住、idiom 在頂層可見）不靠遞迴，同一個 mutant 下必須維持 deny
+    out=$(printf '%s' "$(bash_json 'nohup bash \"supabase/tests/run.sh\" > /tmp/o.log 2>&1 &')" | "$bash_bin" "$mut4/background-bash-guard.sh" 2>/dev/null); got=$?
+    if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+      ok '⑧-對照 mutant：拿掉遞迴後，①f4（不靠遞迴的 keyword-in-quotes 修法）仍維持 deny——兩個修法互相獨立'
+    else
+      bad "⑧-對照 mutant 應仍 deny ①f4（實得 exit ${got}：${out}）——①f4 意外依賴了遞迴？"
+    fi
+  else
+    bad '⑧ mutant 與原始檔完全相同（sed 未命中，mutation 測試本身無效）'
+  fi
+fi
+rm -rf "$mut4"
 
 rm -rf "$work"
 trap - EXIT
