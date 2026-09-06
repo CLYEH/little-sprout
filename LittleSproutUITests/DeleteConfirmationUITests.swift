@@ -1,8 +1,10 @@
 import XCTest
 
 /// LS-190 票文驗收：「UITests（刪除留言確認流程）」＋刪除日記確認的對稱覆蓋（10／10b 共用
-/// `DeleteConfirmationSheet`，見該檔）。兩個 harness host 常駐 `.sheet(isPresented: .constant(true))`
-/// 頂出對應 sheet（同 `LegalDocumentSheetUITests` 對 `.legalDocumentSheet` 的既有測法）。
+/// `DeleteConfirmationSheet`，見該檔）。兩個 harness host 用
+/// `TapTargetGateHarness.DismissableSheetHost`（真的 `@State` 綁定，讓「確認／取消」按下
+/// `dismiss()` 之後 sheet 真的關閉，見該檔文件註解——R2 informational-2 訂正這裡舊註解誤寫成
+/// `.constant(true)`）常駐頂出對應 sheet。
 @MainActor
 final class DeleteConfirmationUITests: XCTestCase {
     /// 「刪除留言確認流程」——票文明文要求的 UITest 場景。留言 UI 本體（LS-22）／內容操作表

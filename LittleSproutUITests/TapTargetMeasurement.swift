@@ -9,9 +9,19 @@ enum TapTargetMeasurement {
     /// 啟動 app 到指定畫面（見 `TapTargetGateScreenName`／`TapTargetGateHarness`），固定一般
     /// 字級（非 AX 放大字級）——#148 R1 F2：放大字級下內容本身就會 ≥44pt，量了無意義。
     static func launch(_ screen: TapTargetGateScreenName) -> XCUIApplication {
+        launch(screen, contentSizeCategory: "UICTContentSizeCategoryL")
+    }
+
+    /// LS-190 R2（merge-review R1 B1）：帶指定字級啟動——`DeleteConfirmationSheetAX3UITests`
+    /// 需要在 AX3（`accessibility-extra-large`）下斷言確認文案完整可達，這支 gate 原本只有
+    /// 一般字級這個固定通道。沿用同一個 launch environment 鍵（`UIPreferredContentSizeCategoryName`），
+    /// 只是把值變成參數——既有呼叫端（`launch(_:)`）行為不變。字級常數見
+    /// `UIContentSizeCategory`：AX1–AX5 依序是 `UICTContentSizeCategoryAccessibilityM／L／
+    /// XL／XXL／XXXL`，AX3＝`...AccessibilityXL`。
+    static func launch(_ screen: TapTargetGateScreenName, contentSizeCategory: String) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["LS_TAP_TARGET_GATE_SCREEN"] = screen.rawValue
-        app.launchEnvironment["UIPreferredContentSizeCategoryName"] = "UICTContentSizeCategoryL"
+        app.launchEnvironment["UIPreferredContentSizeCategoryName"] = contentSizeCategory
         app.launch()
         return app
     }

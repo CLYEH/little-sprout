@@ -12,53 +12,59 @@ import SwiftUI
 /// accessibility 元件（label「表單控點」，量到 76×25pt）、判成 <44pt 違規；改用純
 /// `Shape`＋`.accessibilityHidden(true)`，drag-to-dismiss 手勢不受影響（系統行為）。
 ///
-/// **sheet 高度自我量測**：稿面把整份確認卡畫在一張全螢幕靜態畫布裡（`Scrim`＋`Sheet Wrap`
-/// 絕對定位貼齊畫布底部），這是 Pencil 用來模擬「sheet 貼底、上方露出遮罩」視覺效果的手法
-/// （同 `LegalDocumentSheet` iPad 置中卡片一節的既有裁決：靜態畫布結構不代表要在 SwiftUI
-/// 手刻一層 Scrim，而是用系統 `.sheet()` 表達，稿面只是沒有「原生 sheet」這個概念可畫）。內容
-/// 是固定結構（標題＋一段說明＋兩顆鈕），標題長度依呼叫端而定（日記變體會嵌入日記摘要，見
-/// `DiaryDeleteConfirmationCopy`）——用 `.background(GeometryReader)` 量測內容實際高度後餵給
-/// `.presentationDetents([.height(_:)])`，sheet 剛好貼合內容高度（含 Dynamic Type 放大後的
-/// 高度），不需要為每個字級／文案長度組合窮舉一個像素常數（同 `LegalDocumentSheet` 用
-/// `PreferenceKey` 量寬度的既有手法）。首幀用一個保守預設值渲染一次、量到真高後立刻更新——
-/// 同 `LegalDocumentSheet` iPad 內距首幀過渡的既有記錄方式：理論上存在一次過渡，未逐幀量測，
-/// 誠實記錄不誇稱保證不閃。
-///
-/// **可點元件 minHeight ≥48**（iOS 26.2+ sheet 內容套 ≈0.96 縮放，見票文硬規則）：兩顆按鈕的
-/// `.frame(minHeight: 52)` 皆掛在 Button label 內容本身（不是掛在外層容器）——同
-/// `CreateChildView.footer`「之後再說」鈕的既有先例：padding／frame 要掛在 label closure
-/// 內才會被計入按鈕本身的 hit-test frame，掛在外層會變成 LS-95 `selfTestPaddingOutsideButton`
-/// 那種「看起來有熱區、其實量不到」的漏網型。**實測誤差**：mobile-mcp（WDA）量到的
-/// `frame.height` 比 `.frame(minHeight:)` 宣告值穩定少 2pt（`minHeight: 48` 量到 46、
-/// `minHeight: 60` 量到 58）——不確定是 WDA 量測路徑本身的偏移還是別的原因，改成 52 留出
-/// 緩衝，確定不論用哪個工具量都 ≥48；權威 gate（`tap-target-check.sh`／`TapTargetGateTests`，
-/// XCUITest 原生 `element.frame`）在 `minHeight: 48` 時已經是 0 violation（≥44 達標），這裡
-/// 只是加大緩衝，不是修一個 gate 未通過的問題。
+/// **高度改用 `.medium`／`.large` 兩級 detent＋內部 `ScrollView`**（LS-190 R2，merge-review R1
+/// B1 blocker）：R1 版用 `GeometryReader` 在 `.background` 自我量測內容高度餵回
+/// `presentationDetents([.height(_:)])`，是循環相依——`GeometryReader` 量到的其實是「已經被
+/// 當下 detent 夾擠過」的高度（`measured = min(intrinsic, detent)`），`intrinsic > detent` 時
+/// 永遠等於當下 detent、每次只能 `+8` 慢爬，追不上放大字級真正需要的高度。reviewer 實測
+/// `extra-extra-extra-large`／`accessibility-extra-large`（AX3）／`accessibility-extra-
+/// extra-extra-large`（AX5）三個字級下確認文案（含 IN-1 那句「這個動作目前無法在 App 內
+/// 復原」）被截斷、按鈕擠在一起。改用系統原生的 `[.medium, .large]` 兩級 detent（不用任何自我
+/// 量測），標題與內文放進 `ScrollView`——一般字級下 `.medium` 已經放得下全部內容（不太需要
+/// 捲動）；字級放大到內容超出 `.medium` 高度時使用者可以捲動閱讀，或把 sheet 拉到 `.large`；
+/// `.presentationContentInteraction(.scrolls)` 讓在內容區起手的手勢優先觸發捲動而不是把整張
+/// sheet 往上拖（抓在 grabber／標題以外會拖動 sheet 本身，這是系統既有行為）。**兩顆按鈕與
+/// 錯誤列固定在 `ScrollView` 之外**（底部釘住，不隨內容捲動）：任何字級下都維持宣告的
+/// `minHeight`、絕不因為被 detent 夾擠而裁切熱區或跟內文擠在一起——R1 那個「WDA 量到的
+/// hit-test 比宣告值少 2pt」其實就是這個 bug 的症狀（sheet 被夾擠到剛好卡在按鈕邊緣），不是
+/// 量測工具的偏移，這裡拿掉當時繞症狀用的 `+8` 緩衝與 `minHeight: 52`，改回單純的
+/// `minHeight: 48`（LS-95 長輩硬約束 ≥44pt 再加一點緩衝）。
 struct DeleteConfirmationSheet: View {
     let headTitle: String
     let bodyText: String
     let confirmLabel: String
+    /// 呼叫實際 RPC；不在這裡處理「成功之後」的畫面收尾（本地移除、pop 上一層…）——那些交給
+    /// `onSuccess`，且保證在這個 sheet 自己的 `dismiss()` 之後才呼叫（LS-190 R2 m3，見下）。
     let confirmAction: () async throws -> Void
-
-    /// 見 `presentationDetents` 呼叫處的文件註解。
-    private static let sheetHeightSafetyMargin: CGFloat = 8
+    /// RPC 成功、sheet 已經開始關閉之後才呼叫（LS-190 R2 m3，merge-review R1）：R1 版是呼叫端
+    /// 的 `onDeleted` 閉包自己（例如 `DiaryDetailView`）先做本地移除＋`dismiss()`（pop 上一層）
+    /// ，這個 sheet 才輪到呼叫自己的 `dismiss()`——等於先拆掉 sheet 的 presenter 再關 sheet，
+    /// 且資料一被本地移除，`.sheet` 內容的 `if let` 分支可能立刻變空、`presentationDetents`
+    /// 跟著消失。改成「這裡先 `dismiss()` 關掉自己，再呼叫 `onSuccess`」，順序反過來。
+    var onSuccess: () -> Void = {}
 
     @Environment(\.dismiss) private var dismiss
     @State private var isSubmitting = false
     @State private var error: AppError?
-    @State private var measuredHeight: CGFloat = 420
 
     var body: some View {
-        VStack(spacing: AppSpacing.block) {
+        VStack(spacing: 0) {
             grabber
-            Text(headTitle)
-                .appFont(.lead, weight: .bold)
-                .foregroundStyle(Color.lsTextPrimary)
-                .multilineTextAlignment(.center)
+            ScrollView {
+                VStack(spacing: AppSpacing.block) {
+                    Text(headTitle)
+                        .appFont(.lead, weight: .bold)
+                        .foregroundStyle(Color.lsTextPrimary)
+                        .multilineTextAlignment(.center)
+                    Text(bodyText)
+                        .appFont(.note)
+                        .foregroundStyle(Color.lsTextPrimary)
+                }
+                .padding(.horizontal, AppSpacing.screenPad)
                 .padding(.top, AppSpacing.tight)
-            Text(bodyText)
-                .appFont(.note)
-                .foregroundStyle(Color.lsTextPrimary)
+                .padding(.bottom, AppSpacing.block)
+                .frame(maxWidth: .infinity)
+            }
             VStack(spacing: AppSpacing.group) {
                 confirmButton
                 cancelButton
@@ -66,33 +72,22 @@ struct DeleteConfirmationSheet: View {
                     errorRow(error)
                 }
             }
+            .padding(.horizontal, AppSpacing.screenPad)
+            .padding(.top, AppSpacing.group)
+            .padding(.bottom, AppSpacing.section)
         }
-        .padding(.top, AppSpacing.block)
-        .padding(.horizontal, AppSpacing.screenPad)
-        .padding(.bottom, AppSpacing.section)
-        .frame(maxWidth: .infinity)
         .background(Color.lsSurface)
-        .background(
-            GeometryReader { proxy in
-                Color.clear.preference(key: DeleteConfirmationSheetHeightKey.self, value: proxy.size.height)
-            }
-        )
-        .onPreferenceChange(DeleteConfirmationSheetHeightKey.self) { newHeight in
-            guard newHeight > 0 else { return }
-            measuredHeight = newHeight
-        }
-        // +sheetHeightSafetyMargin：實測發現 sheet 高度剛好貼合量到的內容高度時，最底部的
-        // 「取消」鈕會被裁掉幾個點的 hit-test 區（`GeometryReader` 量測與 `presentationDetents`
-        // 實際套用之間的取整落差，非本檔可控）——量到的高度只是「至少要這麼高」的下限，多留一點
-        // 緩衝比裁到最後一顆按鈕的熱區安全。
-        .presentationDetents([.height(measuredHeight + Self.sheetHeightSafetyMargin)])
+        .presentationDetents([.medium, .large])
         .presentationDragIndicator(.hidden)
+        .presentationContentInteraction(.scrolls)
     }
 
     private var grabber: some View {
         Capsule()
             .fill(Color.lsBorder)
             .frame(width: 36, height: 5)
+            .padding(.top, AppSpacing.block)
+            .padding(.bottom, AppSpacing.tight)
             .accessibilityHidden(true)
     }
 
@@ -107,7 +102,7 @@ struct DeleteConfirmationSheet: View {
                 Text(confirmLabel).appFont(.body, weight: .bold)
             }
             .foregroundStyle(Color.lsDanger)
-            .frame(maxWidth: .infinity, minHeight: 52)
+            .frame(maxWidth: .infinity, minHeight: 48)
             .overlay(
                 RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
                     .strokeBorder(Color.lsDanger, lineWidth: 1.5)
@@ -121,7 +116,7 @@ struct DeleteConfirmationSheet: View {
             Text("取消")
                 .appFont(.body, weight: .semibold)
                 .foregroundStyle(Color.lsTextPrimary)
-                .frame(maxWidth: .infinity, minHeight: 52)
+                .frame(maxWidth: .infinity, minHeight: 48)
         }
         .disabled(isSubmitting)
     }
@@ -129,11 +124,35 @@ struct DeleteConfirmationSheet: View {
     private func errorRow(_ error: AppError) -> some View {
         HStack(spacing: AppSpacing.tight) {
             Image(systemName: "exclamationmark.circle").appIconFrame(.small)
-            Text(error.userFacingMessage).appFont(.note)
+            Text(userFacingMessage(for: error)).appFont(.note)
         }
         .foregroundStyle(Color.lsDanger)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// LS-190 R2 m2（merge-review R1）：R1 版一律用 `error.userFacingMessage`（「無法完成這個
+    /// 操作。」），票文範圍 3 要求的「錯誤碼映射」EULA 那半邊做了（LS055／LS056）、這半邊沒做。
+    /// 三個可達碼依 `docs/API.md` §5 與 LS-152 Notes `B9jlgF`（LS027 講的是「別人已經移除這則
+    /// 內容」，跟 10/10b 自己的「無法在 App 內復原」文案鍵不共用，不能混用同一句話）給獨立文案；
+    /// 訊息刻意不寫死「日記」或「留言」——這支 sheet 兩種內容共用，交給呼叫端的
+    /// `headTitle`／`bodyText` 已經講清楚是哪一種。
+    private func userFacingMessage(for error: AppError) -> String {
+        guard case .rejected(_, let code) = error else { return error.userFacingMessage }
+        switch code {
+        case "42501":
+            return "你沒有權限刪除這項內容。"
+        case LSErrorCode.removedByOwnerNotRestorable.rawValue: // LS027
+            return "這項內容已經被家庭管理者移除，只有管理者能還原。"
+        case LSErrorCode.diaryNotFoundOrDeleted.rawValue, // LS020
+             LSErrorCode.commentNotFound.rawValue: // LS024
+            return "這項內容已經不存在，可能已經被刪除。"
+        default:
+            return error.userFacingMessage
+        }
+    }
+
+    /// LS-190 R2 m1（merge-review R1）：`guard !isSubmitting` 同 `EULAStore` 系列既有慣例，
+    /// 擋連點（VoiceOver 雙擊、Switch Control、自動化）在同一個 runloop 內排出兩個 `Task`。
     private func confirmTapped() {
         guard !isSubmitting else { return }
         isSubmitting = true
@@ -142,7 +161,10 @@ struct DeleteConfirmationSheet: View {
             defer { isSubmitting = false }
             do {
                 try await confirmAction()
+                // LS-190 R2 m3：先關自己這張 sheet，再讓呼叫端做本地移除／pop——見
+                // `onSuccess` 文件註解。
                 dismiss()
+                onSuccess()
             } catch {
                 self.error = AppError.map(error)
             }
@@ -151,16 +173,5 @@ struct DeleteConfirmationSheet: View {
 
     private func cancelTapped() {
         dismiss()
-    }
-}
-
-/// 同 `LegalDocumentSheet` 的 `LegalDocumentSheetWidthKey`：`defaultValue = 0`＋`reduce` 用
-/// `max`——沒有明確設這個 preference 的兄弟子樹貢獻 0，真正量到的 `GeometryReader` 永遠是唯一
-/// 非零貢獻者，不受樹狀走訪順序影響（見該檔文件註解的 R4 段，同一種 wiring 陷阱，這裡直接套用
-/// 已驗證過的解法）。
-private struct DeleteConfirmationSheetHeightKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
     }
 }

@@ -12,19 +12,18 @@ import SwiftUI
 struct CommentDeleteConfirmationSheet: View {
     let commentID: UUID
     let commentAPIClient: CommentAPIClient
-    /// 呼叫端負責本地移除這則留言與導覽收尾——`DeleteConfirmationSheet` 本身只負責呼叫 RPC
-    /// 與關閉自己這張 sheet（同 `DiaryDeleteConfirmationSheet` 的分工）。
-    let onDeleted: () -> Void
+    /// RPC 成功、sheet 已關閉之後呼叫——本地移除與導覽收尾由呼叫端負責，順序保證見
+    /// `DeleteConfirmationSheet.onSuccess` 文件註解（同 `DiaryDeleteConfirmationSheet` 的
+    /// 分工）。
+    var onDeleted: () -> Void = {}
 
     var body: some View {
         DeleteConfirmationSheet(
             headTitle: "要刪除這則留言嗎？",
             bodyText: "這則留言刪除後，家人就看不到了。這個動作目前無法在 App 內復原。",
             confirmLabel: "刪除這則留言",
-            confirmAction: {
-                try await commentAPIClient.setCommentDeleted(commentID: commentID, deleted: true)
-                onDeleted()
-            }
+            confirmAction: { try await commentAPIClient.setCommentDeleted(commentID: commentID, deleted: true) },
+            onSuccess: onDeleted
         )
     }
 }
