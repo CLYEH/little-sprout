@@ -209,6 +209,34 @@ if [ -s "$CURL_STUB_LOG" ]; then echo "✗ ⑥a 略過時不應呼叫 curl" >&2;
 vexpect 0 '⑥a 無 key 時 git 半段仍跑（SHA 在 PR 內）' "SHA ${sha_in} 在 PR commits 內" '' "$both"
 vexpect 1 '⑥a 無 key 時 git 半段仍擋（SHA 不存在——LS-186 起與「非祖先」分開講：不是 commit object）' '不是本 repo 的 commit（候選：abcdef1）' '' "${H}- m1：已修 \`abcdef1\`"$'\n'
 
+# ⑥a2（LS-211，來源 LS-96 池項 df12be2e）：無 key 時逐行點名哪些候選只驗了格式，不只印一句總結。
+# $both 的 LS-96 行是第 5 行（H 佔 1-3 行、m1 已修行第 4、i1 記入行第 5）。
+vexpect 0 '⑥a2 無 key：逐行印 ⚠ 未反查，第 5 行候選 9f348e36' '⚠ 未反查（無 LINEAR_API_KEY）：第 5 行候選 9f348e36' '' "$both"
+printf '%s' "${H}- m1：已修 \`${sha_in}\`"$'\n' > "$work/vbody"
+if run_v '' --verify "$work/vbody" 2>&1 | grep -qF '⚠ 未反查'; then
+  echo "✗ ⑥a2 沒有 LS-96 行卻印了 ⚠ 未反查（應該只在真的有池項候選行時才印）" >&2; fail=1
+else
+  echo "✓ ⑥a2 沒有 LS-96 行時確實不印 ⚠ 未反查"
+fi
+
+# ⑥a3（LS-211，來源 LS-96 池項 df12be2e）：repo 根有 .env 且含 LINEAR_API_KEY 時，本機不必手動 export
+# 也能反查——腳本自己讀（只取這一個 key 名，不印值）。key='' 模擬「本機沒 export」，用 $V/.env 提供值。
+printf 'OTHER_KEY=whatever\nLINEAR_API_KEY=test-token-not-real\n' > "$V/.env"
+: > "$CURL_STUB_LOG"
+vexpect 0 '⑥a3 無 export 但 repo 根有 .env → 自動讀取，真的反查（不是反查略過）' '9f348e36 存在' '' "$both"
+if grep -qF 'test-token-not-real' "$CURL_STUB_LOG"; then
+  echo "✗ ⑥a3 .env 讀出的 token 出現在 curl argv（不印值也不該外洩到 argv）" >&2; sed 's/^/    /' "$CURL_STUB_LOG" >&2; fail=1
+else
+  echo "✓ ⑥a3 .env 讀出的 token 沒有出現在 curl argv"
+fi
+printf '%s' "$both" > "$work/vbody"
+if run_v '' --verify "$work/vbody" 2>&1 | grep -qF '反查略過'; then
+  echo "✗ ⑥a3 有 .env 可用時不該還印「反查略過」" >&2; fail=1
+else
+  echo "✓ ⑥a3 有 .env 可用時確實不印「反查略過」"
+fi
+rm -f "$V/.env"
+
 : > "$CURL_STUB_LOG"
 vexpect 0 '⑥b 有 key：id 只在第 2 頁 → 綠（分頁到底）' '9f348e36 存在（9f348e36-82b6-4926-931b-5bfe1637e1f1）' 'test-token-not-real' "$both"
 if [ "$(grep -cF '"after": null' "$CURL_STUB_LOG")" -eq 1 ] && [ "$(grep -cF 'CURSOR1' "$CURL_STUB_LOG")" -eq 1 ]; then
@@ -330,7 +358,27 @@ expect 0 '⑧-a 已修 `20260904212530_x.sql` `<sha>`：格式模式仍綠、但
 absent '⑧-a 已修 `<sha>` `20260904212530_x.sql`（SHA 在前）→ 不印純數字警告' '是純數字' "${H}- m1：已修 \`7c2ff80\` \`20260904212530_suspension.sql\`"$'\n' --branch "$B"
 vexpect 1 '⑧-b --verify：migration 檔名前綴排在 SHA 之前 → 紅，deny 訊息指出檔名／行號裡的數字也算 hex token、把 SHA 放『已修』後第一個' '檔名／行號裡的數字也算 hex token' '' "${H}- m1：已修 \`20260904212530_suspension.sql\` \`${sha_in}\`"$'\n'
 
+# ⑨ mutation（LS-211）：拿掉逐行印 ⚠ 未反查 的迴圈 → ⑥a2 的正樣本必須消失，證明是這段迴圈在印。
+mut9="$work/pr-body-check.no-warn-loop.sh"
+awk '
+  /# LS-211（df12be2e）：逐行點名哪些候選靠 CI 裁/ { skip = 1 }
+  skip != 1 { print }
+  /done <<< "\$pool_claims"/ { if (skip == 1) skip = 0 }
+' "$check" > "$mut9"
+if grep -qF '第 ${ln} 行候選 ${toks}' "$mut9"; then
+  echo "✗ ⑨ mutate：迴圈仍在，負控本身無效" >&2; fail=1
+else
+  echo "✓ ⑨ mutate：確認迴圈已拿掉"
+  printf '%s' "$both" > "$work/vbody"
+  out9="$( (cd "$V" && LINEAR_API_KEY='' bash "$mut9" --branch "$B" --verify "$work/vbody" 2>&1) )"
+  if printf '%s' "$out9" | grep -qF '⚠ 未反查'; then
+    echo "✗ ⑨ mutant 仍印 ⚠ 未反查（實得有印）" >&2; printf '%s\n' "$out9" | sed 's/^/    /' >&2; fail=1
+  else
+    echo "✓ ⑨ mutant（拿掉逐行 ⚠ 未反查迴圈）：⑥a2 的正樣本消失——確認紅是這段迴圈造成的"
+  fi
+fi
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ pr-body-check 自測通過（91 組樣本）"
+  echo "✓ pr-body-check 自測通過（106 組樣本）"
 fi
 exit "$fail"
