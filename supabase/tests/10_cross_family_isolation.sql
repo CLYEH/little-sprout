@@ -104,9 +104,12 @@ begin
   -- fixtures 裡唯一一則留言（6a000000...001）正是 a3 發的。albums_select／comments_select
   -- 兩條 policy 自本票起疊加封鎖過濾，a1 查 comments 合法地變成 0 列，不是「policy 過度
   -- 封鎖」——下面另外用不是封鎖者的 a2（member）驗證 comments 本身沒有被過度封鎖。
+  -- LS-225：'reactions' 同理排除——A 家 fixtures 裡唯一一筆反應（7a000000...001）也是
+  -- a3 按的，reactions_select 自本票起疊加同一組封鎖過濾，a1 查 reactions 合法地變成
+  -- 0 列，下面併入 comments 的非封鎖者驗證區塊一起用 a2 驗證。
   foreach v_table in array array[
     'family_members', 'invites', 'children', 'media', 'albums', 'album_media',
-    'diaries', 'diary_media', 'reactions', 'feed_items',
+    'diaries', 'diary_media', 'feed_items',
     'content_reports', 'blocked_users',
     'diary_children', 'album_children', 'feed_item_children'
   ] loop
@@ -117,12 +120,13 @@ begin
     end if;
   end loop;
 
-  raise notice 'ok 正向對照：A 家 owner 在自家 16 張表都查得到資料（comments 另外用非封鎖者驗證，見下）';
+  raise notice 'ok 正向對照：A 家 owner 在自家 15 張表都查得到資料（comments／reactions 另外用非封鎖者驗證，見下）';
 end;
 $$;
 
--- comments 正向對照改用 a2（A 家 member，沒有封鎖任何人）：驗證 comments_select 加了封鎖
--- 過濾之後，非封鎖者仍看得到自家全部留言，不是整條 policy 被改壞成什麼都查不到。
+-- comments／reactions 正向對照改用 a2（A 家 member，沒有封鎖任何人）：驗證兩條 policy
+-- 加了封鎖過濾之後，非封鎖者仍看得到自家全部留言／反應，不是整條 policy 被改壞成
+-- 什麼都查不到。
 do $$
 declare
   v_n bigint;
@@ -135,8 +139,13 @@ begin
   if v_n = 0 then
     raise exception 'FAIL 正向對照：A 家 member（非封鎖者）在 public.comments 查不到自家資料（policy 過度封鎖）';
   end if;
-
   raise notice 'ok 正向對照：A 家 member（非封鎖者）在 public.comments 查得到自家資料（% 列）', v_n;
+
+  select count(*) into v_n from public.reactions where family_id = v_mine;
+  if v_n = 0 then
+    raise exception 'FAIL 正向對照：A 家 member（非封鎖者）在 public.reactions 查不到自家資料（policy 過度封鎖）';
+  end if;
+  raise notice 'ok 正向對照：A 家 member（非封鎖者）在 public.reactions 查得到自家資料（% 列）', v_n;
 end;
 $$;
 
