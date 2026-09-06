@@ -2,6 +2,14 @@
 # Push gate（pre-push）：目標 ref 分類（刪除／tag 早退；test／main 只准 promote.sh 的 FF 晉升）+ 全 repo lint +
 # API 契約／錯誤碼對帳 + migration 版本號撞號／分級 + unit tests（LS-65：秒級便宜檢查前移到 xcodebuild 之前執行）。
 # 規約見 docs/COLLABORATION.md §4。
+#
+# LS-209（push 韌性）：本 gate（尤其 unit tests 那步）常跑 8–10 分鐘，期間 SSH 連線閒置會被 GitHub 斷線——
+# `git push` 中途印兩次 `Connection closed by remote host`（exit 141）才成功（LS-191 R4 實測三次 push）。
+# `scripts/ops/session-start.sh` 已在每次 SessionStart 冪等設定 repo 層 `git config core.sshCommand
+# "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20"`（全 repo 共用單一 config，不需要對每個
+# worktree 分別設；不改使用者全域 `~/.gitconfig`）——正常情況下這裡不必再做什麼；忘記跑過 SessionStart
+# 的環境（如手動起的 shell）可手動補設同一行，或直接 `GIT_SSH_COMMAND="ssh -o ServerAliveInterval=30
+# -o ServerAliveCountMax=20" git push` 單次覆寫。
 set -euo pipefail
 
 # LS-73：pre-push hook 由 git 啟動時會 export GIT_DIR／GIT_WORK_TREE／GIT_INDEX_FILE（linked worktree 指向
@@ -599,6 +607,57 @@ PY
           echo "→ push gate：Swift diff 含 Features/ 或 DesignSystem/，執行 ≥44pt 點擊目標 gate（LS-95）…"
           bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
             bash "$(git rev-parse --show-toplevel)/scripts/gates/tap-target-check.sh" "$sim_udid" "$XCODE_SCHEME"
+        fi
+
+        # LS-209：iPad（regular 寬度）回歸的正式把關是 CI 的 ci-ipad job（票文範圍 3；本機通常沒有 CI 同版
+        # runtime／機型，跑不出可信結果）。這裡只是 best-effort 補跑：diff 檔名含 IPad／Regular，或改到某個
+        # `*IPadTests` 類別對應的 SUT（用 list-ipad-tests.sh 產生的整類別清單去掉 `IPadTests` 字尾猜檔名，如
+        # `SettingsViewIPadTests` → `SettingsView.swift`）才觸發；本機找不到「iPad Air 11-inch (M3)」模擬器
+        # 或 CI 同版 runtime（`.ios-runtime`）就印 ⚠ fail-open、不擋 push（同 LS-205 對 runtime 缺版的處理
+        # 精神——這裡不是正確性紅線，正確性交給 CI required check `ci-ipad`）。
+        ipad_list=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/list-ipad-tests.sh" 2>/dev/null) || ipad_list=
+        if [ -n "$ipad_list" ]; then
+          ipad_sut_re=$(printf '%s\n' "$ipad_list" | awk -F/ 'NF==2{b=$2; sub(/IPadTests$/,"",b); if (b!="") print b}' | sed 's/[.[\*^$/]/\\&/g' | paste -sd'|' -)
+          ipad_trigger=0
+          printf '%s\n' "$tap_target_diff" | grep -qE '(IPad|Regular)' && ipad_trigger=1
+          if [ "$ipad_trigger" -eq 0 ] && [ -n "$ipad_sut_re" ] && printf '%s\n' "$tap_target_diff" | grep -qE "(^|/)(${ipad_sut_re})\\.swift$"; then
+            ipad_trigger=1
+          fi
+          if [ "$ipad_trigger" -eq 1 ]; then
+            echo "→ push gate：diff 含 IPad／Regular 或其 SUT，嘗試本機跑一次 iPad 回歸測試（LS-209，best-effort；CI ci-ipad job 為正式把關）…"
+            ios_runtime_pin=
+            [ -f .ios-runtime ] && ios_runtime_pin=$(tr -d '[:space:]' < .ios-runtime)
+            # merge-review R1 m3：literal 機型名「iPad Air 11-inch (M3)」比對在本機（唯一開發機）覆蓋率是 0——
+            # 本機既有的 iPad 專屬機一律是 qa-* 前綴＋機型 slug（去空白／括號，如 `qa-test-iPadAir11M3`），
+            # 沒有任何一台叫原生機型名。改成「literal 機型名」或「名稱含 slug」兩者皆可命中，同一台機器兩種
+            # 命名都認得到，覆蓋現有 qa-* 慣例；UDID 一律抓標準 8-4-4-4-12 十六進位格式，不能用「取最外層括號
+            # 內容」——機型名本身就帶括號，naive 取括號會把 "M3" 誤判成 UDID（自測 ㊴ 抓到）。
+            ipad_udid=$(xcrun simctl list devices available 2>/dev/null | awk -v pin="$ios_runtime_pin" '
+              /^-- iOS / { os=$0; sub(/^-- iOS /,"",os); sub(/ --$/,"",os); next }
+              /iPad Air 11-inch \(M3\)|iPadAir11M3/ {
+                if (pin != "" && os != pin) next
+                line=$0
+                if (match(line, /[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/)) {
+                  print substr(line, RSTART, RLENGTH); exit
+                }
+              }
+            ')
+            if [ -z "$ipad_udid" ]; then
+              echo "⚠ push gate：本機找不到「iPad Air 11-inch (M3)」（或名稱含 iPadAir11M3 的專屬機）模擬器${ios_runtime_pin:+（iOS ${ios_runtime_pin}）}，略過本機 iPad 測試（fail-open，同 LS-205 runtime 缺版處理；CI ci-ipad job 為正式把關）"
+            else
+              ipad_only_args=()
+              while IFS= read -r t; do [ -n "$t" ] && ipad_only_args+=("-only-testing:${t}"); done <<< "$ipad_list"
+              # merge-review R1 m2：本機 UI test 掛住／宿主 crash 是本 repo 有前科的失敗模式（LS-197／LS-199）；
+              # unit tests 那段已包進 wd_run 看門狗（:588），這段 iPad best-effort 原本沒包，一旦踩到就無限卡在
+              # git push、沒有摘要也沒有自動釋放鎖。包一層即可，函式化才能當 wd_run 的參數。
+              run_ipad_best_effort() {
+                bash "$(git rev-parse --show-toplevel)/scripts/ops/simulator-lock.sh" --dir "$sim_lock_dir" -- \
+                  xcodebuild test -scheme "$XCODE_SCHEME" -destination "platform=iOS Simulator,id=${ipad_udid}" \
+                  "${ipad_only_args[@]}" -parallel-testing-enabled NO -quiet
+              }
+              wd_run run_ipad_best_effort
+            fi
+          fi
         fi
       fi
       ;;

@@ -255,6 +255,9 @@ if [ "$(printf '%s\n' "$log6g" | grep -c .)" -eq 4 ]; then echo "✓ ⑥g 三次
 CURL_FAIL_MODE=budget_cross_page vexpect 2 '⑥h page1 用光全部 3 次共用重試名額才成功、page2 第一次呼叫就撞上預算已用完 → 紅（若退回「每頁各自 3 次」會綠，不會來到這裡）' '跨分頁共用重試預算已用完' 'test-token-not-real' "${H}- i1：記入 LS-96 \`9f348e36\`"$'\n'
 log6h="$(cat "$CURL_STUB_LOG")"
 n6h=$(printf '%s\n' "$log6h" | grep -c .)
+# LS-207 merge-review R2（b907173c N6）：這個 case 的鑑別力來自下面「恰 5 次」這條斷言，不是上面 vexpect
+# 的訊息字串斷言——mutation（每頁各自重置預算）下 stub 在第 5 次之後仍會持續逾時、最後仍印出同一則
+# 「跨分頁共用重試預算已用完」訊息，訊息斷言本身測不出退化。下次要精簡這個 case 時，這條次數斷言不可省。
 if [ "$n6h" -eq 5 ]; then
   echo "✓ ⑥h 總共只呼叫 5 次（page1 用掉 4 次含 3 次重試才成功、page2 第 1 次呼叫後預算歸零直接 die，不會有第 6 次）"
 else
