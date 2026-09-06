@@ -51,12 +51,35 @@ enum PickedItemLoader {
 
     private static func loadPhoto(_ item: PhotosPickerItem, fileExtension: String) async -> LoadedItem? {
         guard let data = try? await item.loadTransferable(type: Data.self),
-              let image = UIImage(data: data), let cgImage = image.cgImage else { return nil }
+              let image = UIImage(data: data), let pixelSize = orientedPixelSize(of: image) else { return nil }
         return .photo(
-            data: data, fileExtension: fileExtension,
-            pixelSize: PixelSize(width: cgImage.width, height: cgImage.height),
+            data: data, fileExtension: fileExtension, pixelSize: pixelSize,
             previewImage: await downsizedThumbnail(for: image)
         )
+    }
+
+    /// EXIF 直拍照片（orientation 6／8）的**顯示方向**像素尺寸（LS-212，依 LS-96 `66770dd0`：
+    /// `UIImage(data:).cgImage.width/height` 讀到的是**儲存方向**——EXIF 旋轉只記在
+    /// `imageOrientation`，`cgImage` 本身是感光元件寫入時的原始（未旋轉）畫素矩陣。一張直拍
+    /// 照片可能是 `cgImage.width=4032, height=3024`（橫向儲存）但顯示（`imageOrientation ==
+    /// .right`／`.left`）其實是直向的 `3024×4032`。這裡的換算跟
+    /// `MediaUploadService.makePhotoPendingThumbnail` 用 `kCGImageSourceCreateThumbnailWithTransform:
+    /// true` 產生 `thumb_width`／`thumb_height` 的效果一致（那支已經是顯示方向，不需要修）——
+    /// `media.width/height` 改用這支函式算出來的值之後，兩組欄位才會是同一個方向，
+    /// `MediaContent.aspectRatio`（`TimelineModels.swift`）之類拿 `width`／`height` 算版面比例
+    /// 的呼叫端才不會用錯方向的數字。抽成獨立、不依賴 `PhotosPickerItem` 的純函式——同
+    /// `isSupportedExtension` 的既有理由（merge-review R2 n5）：`loadPhoto` 本身因為依賴真實
+    /// `PhotosPickerItem` 不可單元測試，這個換算邏輯抽出來才有辦法被覆蓋。
+    static func orientedPixelSize(of image: UIImage) -> PixelSize? {
+        guard let cgImage = image.cgImage else { return nil }
+        switch image.imageOrientation {
+        case .left, .leftMirrored, .right, .rightMirrored:
+            return PixelSize(width: cgImage.height, height: cgImage.width)
+        case .up, .upMirrored, .down, .downMirrored:
+            return PixelSize(width: cgImage.width, height: cgImage.height)
+        @unknown default:
+            return PixelSize(width: cgImage.width, height: cgImage.height)
+        }
     }
 
     private static func loadVideo(_ item: PhotosPickerItem, fileExtension: String) async -> LoadedItem? {
@@ -116,9 +139,9 @@ private struct TransferableVideoFile: Transferable {
             SentTransferredFile(file.url)
         } importing: { received in
             let ext = received.file.pathExtension.isEmpty ? "mov" : received.file.pathExtension
-            let destination = FileManager.default.temporaryDirectory
-                .appendingPathComponent(UUID().uuidString)
-                .appendingPathExtension(ext)
+            // LS-212：寫進 `MediaDraftTempStorage` 專屬子目錄（不是 `.temporaryDirectory` 根
+            // 目錄），才能在 App 啟動時安全地整批清掉孤兒暫存檔，見該檔文件註解。
+            let destination = try MediaDraftTempStorage.newFileURL(extension: ext)
             if FileManager.default.fileExists(atPath: destination.path) {
                 try FileManager.default.removeItem(at: destination)
             }
