@@ -262,6 +262,15 @@ struct DiaryDetailView: View {
         // 首次進場、`entry` 可能因為時序還沒同步的邊界情況）才視為「還在載入」；一旦跑過至少一輪
         // （`.submitting`／`.success`／`.failure` 皆是），`entry == nil` 就是「這篇日記真的不在
         // `timelineStore.entries` 裡了」，該顯示「找不到」而不是繼續轉圈。
+        //
+        // **隱性前提**（LS-189 R2，merge-review R1 m3，PLAUSIBLE）：`loadState` 是這支 view 自己
+        // 的照片載入狀態機（`loadDiaryPhotos`），跟 `entry`（來自 `timelineStore.entries`）本身
+        // 沒有因果關係——目前唯一入口是時間軸列表（進場時 `entry` 必非 nil），
+        // `TimelineStore.refresh` 是 `entries = newEntries` 原子替換（見該檔文件註解）不會有
+        // 中間空窗，所以現況下這個耦合不會被觸發。**但**日後若加 deep link／推播直接進日記
+        // 詳情（`entry` 尚未載入就進場、`.task` 先把 `loadState` 推離 `.idle`），會秒顯示「找不
+        // 到這篇日記」而不是轉圈——目前沒有可達路徑能寫出真的會失敗的回歸測試（reviewer 與
+        // 實作者皆確認），記入待辦池 LS-96，等真的有 deep link 入口落地時一併補測試。
         if entry == nil && loadState != .idle {
             ContentUnavailableView(
                 "找不到這篇日記",
