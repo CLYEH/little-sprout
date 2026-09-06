@@ -41,6 +41,7 @@ struct AuthenticatedGate: View {
     let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
+    let safetyAPIClient: SafetyAPIClient
     @Binding var pendingInviteCode: String?
 
     var body: some View {
@@ -105,7 +106,8 @@ struct AuthenticatedGate: View {
                 AuthenticatedRootView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
-                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService
+                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
+                    safetyAPIClient: safetyAPIClient
                 )
             } else {
                 ForkView(authStore: authStore, familyStore: familyStore, pendingInviteCode: $pendingInviteCode)
