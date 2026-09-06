@@ -111,7 +111,11 @@ struct AuthenticatedGate: View {
                     accountAPIClient: accountAPIClient
                 )
             } else {
-                ForkView(authStore: authStore, familyStore: familyStore, pendingInviteCode: $pendingInviteCode)
+                ForkView(
+                    authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
+                    timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
+                    accountAPIClient: accountAPIClient, pendingInviteCode: $pendingInviteCode
+                )
             }
         }
     }

@@ -267,6 +267,52 @@ final class FamilyStore {
         createFamilyState = .idle
     }
 
+    /// LS-193 merge-review R1 M2：`ForkView` 兩顆鈕（建立家庭／輸入邀請碼）都可能因為 `LS052`
+    /// （帳號被停權，`private.enforce_caller_not_suspended_for_families()`／
+    /// `private.enforce_not_suspended()`）或 `LS054`（`app_settings.registrations_open =
+    /// false`，只擋自建新家庭）而失敗——即時讀最近一次 `createFamilyState`／`requestJoinState`
+    /// 的錯誤碼，不快取成獨立旗標（同 `leaveFlowCase`／`DeleteAccountClassification` 的既有
+    /// 理由：資料一變 SwiftUI 自然重繪，不需要額外的「重新判定」機制）。`ForkView` 用它決定要
+    /// 不要顯示「登出」／「刪除帳號」文字鈕列——這兩顆鈕原本都會被同一組錯誤碼擋下，本身不是
+    /// 「已停權」的直接查詢結果，而是「上一次嘗試失敗的錯誤碼剛好是這兩種」的推論。
+    var suspendedOrRegistrationClosedError: AppError? {
+        if case .failure(let error) = createFamilyState, Self.isAccountOrRegistrationBlocked(error) {
+            return error
+        }
+        if case .failure(let error) = requestJoinState, Self.isAccountOrRegistrationBlocked(error) {
+            return error
+        }
+        return nil
+    }
+
+    private static func isAccountOrRegistrationBlocked(_ error: AppError) -> Bool {
+        guard case .rejected(_, let code) = error else { return false }
+        return code == LSErrorCode.accountSuspended.rawValue || code == LSErrorCode.registrationsClosed.rawValue
+    }
+
+    /// LS-193 merge-review R1 M3：`ForkView` 兩顆鈕也可能撞到 `LS051`（`delete_my_account()`
+    /// RPC 已成功、Edge Function `delete-account` 沒有完成——過渡期擋寫）：這是**另一台裝置**
+    /// 或**重灌過 app**（`PendingAccountDeletion` 本機旗標不在）但伺服器記得
+    /// `deletion_requested_at` 已設定的情境；同一台裝置沒重灌的話，`AuthenticatedGate` 會在
+    /// 更早的階段（本機旗標）就直接接手，走不到這裡。跟 `suspendedOrRegistrationClosedError`
+    /// 分開成兩個屬性（不是同一個 enum 的兩個 case）：呼叫端（`ForkView.suspendedFooter`）本來
+    /// 就需要對這兩種成因顯示不同的鈕（「刪除帳號」vs.「重試刪除」），維持兩個獨立、各自命名
+    /// 清楚的 `AppError?` 更直接，不需要多一層 enum 包裝。
+    var accountDeletionInProgressError: AppError? {
+        if case .failure(let error) = createFamilyState, Self.isAccountDeletionInProgress(error) {
+            return error
+        }
+        if case .failure(let error) = requestJoinState, Self.isAccountDeletionInProgress(error) {
+            return error
+        }
+        return nil
+    }
+
+    private static func isAccountDeletionInProgress(_ error: AppError) -> Bool {
+        guard case .rejected(_, let code) = error else { return false }
+        return code == LSErrorCode.accountDeletionInProgress.rawValue
+    }
+
     /// LS-188：09／09b 儲存空間頁的用量查詢——同其餘動作的 in-flight guard 慣例，沒有家庭
     /// （理論上不會在 `SettingsView` 這條路徑發生，見 `SettingsView` 文件註解）就直接回傳
     /// 目前值，不呼叫後端。
