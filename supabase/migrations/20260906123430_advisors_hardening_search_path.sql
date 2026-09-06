@@ -33,13 +33,23 @@
 --   `private.deletion_bypass_active()`／`private.enforce_deletion_bypass()`：
 --   **可以加，本票加上**。同樣是 `language sql`、`security invoker`、純讀寫
 --   一個 GUC（`current_setting`／`set_config`，皆 `pg_catalog` 內建函式），
---   一樣沒有 search_path 挾持的面；但這兩支的**唯一呼叫處**分別是
+--   一樣沒有 search_path 挾持的面；這兩支的**唯一呼叫處**分別是
 --   `private.enforce_not_suspended()`（trigger，`language plpgsql`）內的
 --   `if` 判斷式，與 `public.delete_my_account()`（`language plpgsql`）內的
---   `perform` 陳述式——都是從 **plpgsql** 呼叫，不是嵌在某條 SQL 查詢／RLS
---   policy 運算式裡。plpgsql 呼叫函式一律走真正的函式呼叫（fmgr），不會有
---   「規劃器 inline 進外層查詢」這件事可言，所以加 `set search_path = ''`
---   對這兩支沒有 inline 損失可言——關掉這個 WARN 是純收益，沒有對應代價。
+--   `perform` 陳述式——都是從 **plpgsql** 呼叫。
+--   **plpgsql 語境同樣會 inline**：plpgsql 裡的運算式（`if`／`perform` 等）
+--   一樣交給規劃器規劃，SQL 函式在其中照樣是 inlining 的候選，加
+--   `set search_path = ''` 一樣會把它從「規劃器內聯」退化成「不透明的函式
+--   呼叫」，多一層 fmgr 的 GUC 存還開銷——這兩支**不是**「plpgsql 呼叫不會
+--   inline、純收益沒有代價」（merge-review R1 `4365d9af` 實測：
+--   `explain verbose select private.deletion_bypass_active()` 加 SET 前後從
+--   展開的 `coalesce(current_setting(...), '')` 變成不透明函式呼叫，20 萬次
+--   迴圈 0.024 s → 0.24–0.26 s，每次呼叫約 +1.1 µs）。但這裡仍然值得加：
+--   唯一呼叫處 `private.enforce_not_suspended()` 是掛在 16 張表上的
+--   for-each-row trigger，同一個 trigger 內已有查表成本（比對 active／
+--   suspended 狀態）比這 ~1 µs 貴上好幾個數量級，這個代價落在雜訊裡；
+--   security definer／plpgsql 呼叫端固定收斂 search_path 的收益優先於這個
+--   量級的代價，所以這兩支仍補 SET，換掉一個 advisor WARN 划算。
 --
 -- 不改邏輯：兩支函式的本體逐字不動，只加 `set search_path = ''`（用
 -- `alter function`，不是 `create or replace function`——後者對已存在的函式
