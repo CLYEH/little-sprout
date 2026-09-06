@@ -29,6 +29,15 @@ import SwiftUI
 /// hit-test 比宣告值少 2pt」其實就是這個 bug 的症狀（sheet 被夾擠到剛好卡在按鈕邊緣），不是
 /// 量測工具的偏移，這裡拿掉當時繞症狀用的 `+8` 緩衝與 `minHeight: 52`，改回單純的
 /// `minHeight: 48`（LS-95 長輩硬約束 ≥44pt 再加一點緩衝）。
+///
+/// **`ScrollView` 補 `.clipped()`**（LS-190 R3，merge-review R2 m6 PLAUSIBLE）：AX5 捲動到
+/// 頂端只剩一行被截斷可見時，reviewer 回報那一行文字疊在 grabber 膠囊上、字看起來重影／模糊
+/// （`LS-190-r3-m6-scrolled-full.png`）。實測重現：`xcrun simctl io screenshot` 在捲動後、
+/// 靜止數秒仍看得到同樣的重影，不是捲動慣性動畫的暫態殘影。`ScrollView` 預設應該會把內容裁在
+/// 自己的邊界內，這裡加一個明確的 `.clipped()`（不依賴預設行為）後重現同一個位置，重影消失、
+/// 被截斷的那一行文字乾淨可讀（`LS-190-r3-m6-clipped-attempt.png`）——確切成因（`ScrollView`
+/// 在這個組合下預設裁切為何不夠）未進一步查證，但這個修法本身風險低（只是把隱含的裁切行為
+/// 明確化），且日記／留言兩個變體、AX3／AX5 皆已實測確認無回歸。
 struct DeleteConfirmationSheet: View {
     let headTitle: String
     let bodyText: String
@@ -65,6 +74,7 @@ struct DeleteConfirmationSheet: View {
                 .padding(.bottom, AppSpacing.block)
                 .frame(maxWidth: .infinity)
             }
+            .clipped()
             VStack(spacing: AppSpacing.group) {
                 confirmButton
                 cancelButton
