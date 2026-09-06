@@ -1,6 +1,5 @@
 import Foundation
 @testable import LittleSprout
-import Supabase
 import XCTest
 
 /// `SupabaseTimelineAPIClient` 對 `get_family_timeline` RPC 與 `diaries`／`diary_media`／

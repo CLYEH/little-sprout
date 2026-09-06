@@ -24,5 +24,7 @@ final class PreviewMediaUploadService: MediaUploadService, @unchecked Sendable {
     func uploadVideo(familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
         UUID()
     }
+
+    func softDeleteMedia(mediaIDs: [UUID]) async throws {}
 }
 #endif

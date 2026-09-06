@@ -1,7 +1,6 @@
 import Auth
 import Foundation
 @testable import LittleSprout
-import PostgREST
 import XCTest
 
 /// `AppError.map` 是 k2Mw4 四層錯誤文法在 client 端唯一的分類入口，這裡逐一釘住

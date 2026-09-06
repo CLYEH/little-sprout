@@ -41,6 +41,21 @@ struct DiaryEditorView: View {
         self.childrenStore = childrenStore
     }
 
+    #if DEBUG
+    /// LS-212 R3（merge-review R2 `695170ed`）：測試專用注入點——`DiaryEditorViewLifecycleTests`
+    /// 需要在呼叫 `publish()`（讓 `store.uploadedMediaByDraftID` 先有孤兒 media）之後才把同一個
+    /// `store` 交給 view host，才驗證得到 `.onDisappear` 觸發 `discardDraft()` 這條 defense-in-
+    /// depth 路徑（見 `body` 的 `.onDisappear` 文件註解）——這是可測性需求，不是因為生產路徑上
+    /// 有哪個入口會漏接清理（R1 `568044ab` 曾誤判「互動式滑走會漏接」，R2 `695170ed` 已實測
+    /// 訂正，見同一個 modifier 的文件註解）。一般生產路徑（`TimelineView`／
+    /// `TapTargetGateHarness`）沒有這個需求，繼續用上面那支建構子；同
+    /// `UploadQueueStore.PreviewSeed`／`seedForPreview` 只給 `#Preview`／測試用的既有慣例。
+    init(store: DiaryComposerStore, childrenStore: ChildrenStore) {
+        _store = State(initialValue: store)
+        self.childrenStore = childrenStore
+    }
+    #endif
+
     var body: some View {
         @Bindable var store = store
         ScrollableFillView {
@@ -72,6 +87,28 @@ struct DiaryEditorView: View {
             let itemsToLoad = newItems
             pickerSelection = []
             Task { await loadPicked(itemsToLoad) }
+        }
+        // LS-212 R3（merge-review R2 `695170ed` 訂正 R1 `568044ab` 的誤判）：R1 曾誤判「互動式
+        // 返回手勢（邊緣滑走）依然有效、會繞過 cancelButton」，本輪重新實測（真正的
+        // DiaryEditorView，四種滑動手勢逐一操作＋正向對照組）證實
+        // `.navigationBarBackButtonHidden(true)`＋`.toolbar(.hidden, for: .navigationBar)` 這支
+        // 畫面上**確實關掉了**互動式返回手勢（與 UIKit「隱藏 navigation bar 會連帶停用
+        // interactivePopGestureRecognizer」的既有行為一致）——`cancelButton`（連同發佈成功後的
+        // 自動 dismiss）本來就是這支畫面目前唯一的離開路徑，不會漏接。
+        //
+        // 仍然掛在這裡而不是只掛在 `cancelButton` 的理由是 **defense in depth**：「沒有互動式
+        // 滑走手勢」這件事繫於上面那兩個 modifier，未來若有人動了它們、或新增了其他能讓這支
+        // 畫面消失的路徑（例如祖先鏈 `AuthenticatedRootView` 的
+        // `.fullScreenCover(isPresented: familyStore.showsChildOnboarding)`——目前流程下不可能
+        // 與開著的編輯器同時出現，但這正是這道防線設計要接住的那種未來情境），掛在
+        // `.onDisappear` 的清理不會跟著默默失效，掛在單一按鈕上會。`discardDraft()` 本身的
+        // `guard publishState != .success` 會擋住「發佈成功後 dismiss」這條路徑，不會誤刪已經
+        // 合法 attach 的 media（見該方法文件註解）；已用計數器實測「記錄日期」／「寶貝歸屬」
+        // `.sheet` 與 `.photosPicker` 開關皆不誤觸發。`Task` 持有 `store` 的強參照，view 消失後
+        // 這支 Task 仍會跑完，不受 View 生命週期影響（同 `UploadQueueStore` 檔頭既有慣例）；不
+        // `await` 是因為清理是背景衛生工作，不該讓 `.onDisappear` 阻塞畫面轉場。
+        .onDisappear {
+            Task { await store.discardDraft() }
         }
     }
 
@@ -184,6 +221,14 @@ struct DiaryEditorView: View {
 
     private var cancelButton: some View {
         Button {
+            // LS-212 R3（merge-review R2 `695170ed` 訂正 R1 `568044ab` 的誤判）：清理已經改掛
+            // 在 `body` 的 `.onDisappear`（見該 modifier 文件註解）——這裡只需要觸發
+            // dismiss，不必另外呼叫 `store.discardDraft()`。R1 曾誤判這支畫面的互動式返回
+            // 手勢（邊緣滑走）仍然有效、會繞過這顆按鈕；R2 實測（真正的 DiaryEditorView，四種
+            // 滑動手勢皆推不掉，正向對照組確認手法有效）證實
+            // `.navigationBarBackButtonHidden(true)`＋`.toolbar(.hidden, for: .navigationBar)`
+            // 確實關掉了互動式返回手勢，這顆按鈕本來就是唯一離開路徑，不會漏接。改掛
+            // `.onDisappear` 純粹是 defense in depth，理由見該 modifier 文件註解。
             dismiss()
         } label: {
             HStack(spacing: 2) {

@@ -352,6 +352,38 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   自己要清掉，DB 不會幫你清。**縮圖產生失敗但原檔上傳成功時**：不阻斷整體上傳——
   `thumb_path`／`thumb_width`／`thumb_height` 三欄留空插入 `media` 列即可（過渡期
   退回原圖，語意與既有無縮圖的舊資料一致），不需要重試整個上傳。
+- **上傳中斷時的三種不一致收斂（LS-212，依 LS-96 `d8634a08`／`66770dd0` 原文）**：`docs/PLAN.md`
+  §5「離線對帳」定義的單一真相順序是「Storage 物件 → `media` 列 → 本機暫存清除」，client 端
+  目前的收斂手段：①**本機暫存無對應佇列項**（App 被殺時編輯器內尚未上傳的影片暫存檔）——
+  `DiaryComposerStore` 不跨 App 重啟持久化（每次開編輯器建立新實例），因此下一次啟動時這類
+  暫存檔必定是孤兒，`LittleSproutApp.init()` 呼叫 `MediaDraftTempStorage.purgeStaleFiles()`
+  整批清掉專屬子目錄（見該檔文件註解）；②**已上傳成功、之後被移出佇列或編輯器被整個取消的
+  `media` 列**（不論當下有沒有被 `attachMedia` 掛上，見上方 R4 補充）——
+  `DiaryComposerStore.removeSelected()`／`discardDraft()` 呼叫
+  `MediaUploadService.softDeleteMedia()` 主動軟刪。**已知限制（LS-212 R3 merge-review R2
+  i9；R4 訂正 merge-review R3 `8d1e57bc` M2-R3 指出的後備敘述錯誤）**：失敗時保留待重試的
+  批次（`pendingOrphanMediaIDs`）是記憶體內狀態，App 被殺／重啟即遺失；`discardDraft()` 又
+  是這個 store 生命週期的最後一次呼叫，若那次呼叫本身失敗（例如離線狀態下直接放棄編輯器），
+  存進來的重試資料隨 store 一起消失，沒有下一次呼叫能撿回——「離線→直接放棄編輯器」這條最
+  常見的終局路徑，重試機制其實幫不上忙。**殘留物是什麼、目前沒有任何機制回收**：走到這條
+  路徑時 Storage PUT 與 `insertMediaRow` 都已成功、只有後面的 `softDeleteMedia` 失敗，殘留
+  的是一列 **`deleted_at IS NULL` 的活 `media` 列**——不是③那種「`media` 列從未成功
+  `insert`」的孤兒，也不會被下方 `996220e9`（掃 `storage.objects` 找不到對應 `media` 列的
+  物件）那支未來排程掃到（那支掃描依定義只找「列不存在」的情況，這裡列存在）；全 repo 對
+  `media` 的讀取只有 `SupabaseTimelineAPIClient.fetchMedia(ids:)`／
+  `SupabaseAlbumsAPIClient.fetchMedia(ids:)` 兩處、皆帶明確 id（來自
+  `diary_media`／`album_media`），沒有任何「列出家庭所有 media」的查詢——這種列在 UI 上完全
+  看不見、使用者刪不掉，會永久佔用 `families.storage_used_bytes` 額度。真正能接住它的是另一
+  支查詢（`media` 列存在、`deleted_at IS NULL`、從未被任何 `diary_media`／`album_media`
+  引用、且建立超過寬限期），已記入待辦池（LS-96 comment `c2050d43`），與 `996220e9` 是兩支
+  不同的查詢，不能靠同一段邏輯順帶解決；③**Storage 有物件、但從未成功 `insert`
+  對應 `media` 列的孤兒**（例如上傳當下 App 被殺、`insertMediaRow` 的 client 端 best-effort
+  清理沒有機會執行）——本機容器實測重現（PUT 一個物件到 `media` bucket、不 insert `media`
+  列，`private.purge_expired()` 執行後 `purge_storage_queue` 未收到這筆，物件仍留在
+  `storage.objects`）確認**目前沒有任何排程掃描這個方向**：`private.purge_expired()`／
+  `purge-storage` Edge Function（LS-153）只處理「`media` 列被硬刪之後」的 Storage 清理佇列
+  （見下方 `media` 軟刪／硬刪表格列），不會反向掃描 `storage.objects` 找不到 `media` 列的
+  物件；全表批次掃描屬 LS-212「不做：跨家庭批次工具」明文排除範圍，若要補上見待辦池。
 - **影片時長（`duration_seconds`，LS-134）**：nullable，`CHECK`（有值時必須 `> 0`，
   `media_duration_seconds_positive`）。`type = 'photo'` 時應留 `NULL`；
   `type = 'video'` 時由上傳端以 `AVAsset.load(.duration)` 量測寫入——**若影片經過
@@ -371,6 +403,16 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   不是機械可驗證的資料庫不變量；日後若要補這條約束，需要先回填既有 video 列。
   **一旦隨 `INSERT` 寫入即不可再 `UPDATE`**（無欄位級 grant，同
   `storage_path`／`thumb_path`）。
+- **`width`／`height` 一律填顯示方向像素（LS-212，依 LS-96 `66770dd0` 原文修正）**：跟
+  `thumb_width`／`thumb_height` 同一個方向，不是感光元件寫入時的原始（未旋轉）畫素矩陣。
+  EXIF 直拍照片（orientation 6／8）若填成儲存方向，會跟顯示方向的縮圖尺寸互為轉置（例如
+  `width=4032,height=3024` 但 `thumb_width=384,thumb_height=512`），拿 `width`／`height`
+  算版面長寬比的呼叫端會把直拍照片當橫拍算，版面歪掉——`LittleSprout/Services/Diary/
+  PickedItemLoader.swift` 的 `orientedPixelSize(of:)` 是這個換算的單一來源（比照
+  `kCGImageSourceCreateThumbnailWithTransform: true` 的效果）。現行列表長寬比計算
+  （`MediaContent.aspectRatio`，LS-130）已經優先用 `thumb_width`／`thumb_height`，不受這個
+  欄位方向影響；`width`／`height` 本身仍是唯一沒有縮圖時的長寬比 fallback 來源，方向錯了
+  這個 fallback 就跟著錯。
 - `byte_size` 是 `families.storage_used_bytes` 額度計算的唯一依據（`media` 表的
   statement-level trigger 依 `byte_size` 加總），**不是**看 Storage 物件實際大小。
   這代表：如果 client 上傳到 Storage 的檔案大小與 `media.byte_size` 填的值不一致，

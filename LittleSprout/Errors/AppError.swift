@@ -1,6 +1,5 @@
 import Auth
 import Foundation
-import PostgREST
 
 /// App 層統一錯誤分類，對應設計稿 k2Mw4 四層錯誤文法（LS-38 定案；四層敘述見 LS-49 ticket
 /// scope 第 3 點／LS-38 comments）：

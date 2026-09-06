@@ -409,9 +409,10 @@ fi
 #      Pen 切到實作票 worktree 的事後偵測（規則本身在 ios-dev.md 硬規則與 agent-tools-check.sh 的 tools: 白名單
 #      擋，但那擋不住 orchestrator 派的 fork／general-purpose 子 agent 自帶完整工具集——這裡是巡檢層的第二道網）。
 #      獨立於上面的「Pencil 連線」段（那段只在 design 分支 worktree 在飛時才跑，抓不到「根本沒有設計票、但 Pen
-#      卻被實作票 agent 打開」這個情境——這正是本段存在的理由）。PATROL_PEN_PGREP 可覆寫供自測餵假身（獨立於
-#      上面 push-gate 偵測用的 PATROL_PGREP，避免互相污染）：先用 pgrep 確認 Pen 行程真的在跑（便宜）才呼叫
-#      pen-open.sh --status（貴——會起 pen CLI 走 IPC），Pen 沒開就不查、不印任何東西。lane 查詢走既有管道
+#      卻被實作票 agent 打開」這個情境——這正是本段存在的理由）。PATROL_PEN_STATUS_SH 可覆寫供自測餵假身（同上面
+#      「Pencil 連線」段共用同一個 override，假身自己決定怎麼回應 `--path`）：`pen-status.sh --path` 內部自己會先
+#      pgrep 確認 Pen 行程真的在跑（便宜）才呼叫 pen-open.sh --status（貴——會起 pen CLI 走 IPC），Pen 沒開就不查、
+#      空輸出＋exit 1。lane 查詢走既有管道
 #      patrol-linear.sh --lane（LS-96 池項 cf3707fa 指定「用既有的 Linear 查詢管道」）：查不到（無
 #      LINEAR_API_KEY／查詢失敗）印 `?`、不擋（fail-open）——只有明確查到「不是 lane:design」（含查無此票／
 #      無 lane 標籤）才 add_flag。
@@ -420,23 +421,18 @@ fi
 # variable」，這會讓 mutation 測到的是「腳本壞掉」而不是「這段偵測邏輯確實是負樣本變綠的原因」。
 PEN_WRONG_LINE=
 # LS209-PEN-WRONG-START
-# merge-review R1 m4（效能）：design_wt=1 時上面的 Pencil 連線段已經探過一次 Pen 目前路徑（PENCIL_LINE 裡的
-# 「路徑 …」欄位），這裡若又獨立呼叫 pen-open.sh --status 就是第二次 pen CLI IPC（poll_once 單次上限 8s）——
-# 直接沿用解析出來的值，省下這次可省的 IPC；只有 PENCIL_LINE 沒有可用路徑（沒跑過、查詢失敗、Pen 沒開）
-# 時才退回原本「pgrep 確認在跑才呼叫 pen-open.sh」的路徑。
+# LS-211 I-c（來源 LS-96 池項 edbc460c）：改讀 `pen-status.sh --path` 的機器可讀輸出，不再自己用 sed
+# 依 PENCIL_LINE 的中文組合字串字面格式（「… · 路徑 <path> · …」）截路徑——那段措辭只要改一個字就會
+# 靜默截不到值、退回舊路徑（pen_path 變空、這整段偵測 fail-open 不擋，卻沒有任何錯誤訊息），gate 自己
+# 也驗不出這種退化。`--path` 是 pen-status.sh 自己的正式輸出契約（讀不到就是空輸出＋exit 1），比對它
+# 的輸出格式改由 pen-status.sh 自己的自測負責，這裡不必再重寫一次解析邏輯。merge-review R1 m4 原本用
+# 「沿用 PENCIL_LINE 解析結果」省下 design_wt=1 時的第二次 pen CLI IPC；改為一律呼叫 `--path`（成本
+# 遠低於 pen-status.sh 全量檢查——不跑 mcp-server／lsof 交集，只多一次 pgrep＋pen-open.sh --status）
+# 換取不依賴字面格式的穩定性，接受 design_wt=1 時多一次 IPC 的代價。
+pssh2="${PATROL_PEN_STATUS_SH:-${here}/pen-status.sh}"
 pen_path=
-if [ "$pencil_ran" -eq 1 ]; then
-  cand=$(printf '%s' "$PENCIL_LINE" | sed -n 's/.* · 路徑 \([^·]*\)· .*/\1/p')
-  cand=${cand% }
-  case "$cand" in
-    ''|'✗'*|'—'*) ;;
-    *) pen_path=$cand ;;
-  esac
-fi
-PEN_PGREP_BIN=${PATROL_PEN_PGREP:-pgrep}
-if [ -z "$pen_path" ] && command -v "$PEN_PGREP_BIN" >/dev/null 2>&1 && "$PEN_PGREP_BIN" -f 'Pen\.app/Contents/MacOS/Pen$' >/dev/null 2>&1; then
-  posh="${PATROL_PEN_OPEN_SH:-${here}/pen-open.sh}"
-  [ -x "$posh" ] && pen_path=$(bash "$posh" --status 2>/dev/null)
+if [ -f "$pssh2" ]; then
+  pen_path=$(bash "$pssh2" --path 2>/dev/null)
 fi
 pen_wt_ticket=$(printf '%s' "${pen_path:-}" | grep -oE '\.claude/worktrees/LS-[0-9]+' | grep -oE 'LS-[0-9]+' | head -1)
 if [ -n "$pen_wt_ticket" ]; then

@@ -69,6 +69,36 @@ final class DiaryComposerStore {
     /// （merge-review R1 M2）。用草稿 id 對應（不是陣列 index）：使用者可能在失敗後、重試前
     /// 編輯佇列（移除某張），這樣做仍能正確地「這張傳過了就不用再傳，那張沒傳過的繼續傳」。
     private var uploadedMediaByDraftID: [UUID: UUID] = [:]
+    /// `cleanupRemovedDrafts` 呼叫 `softDeleteMedia` 失敗時暫存的 media id（LS-212 R2，
+    /// merge-review R1 m1）——最常見的失敗原因（斷線）跟觸發清理的原因往往是同一個，草稿的
+    /// `uploadedMediaByDraftID` 記錄已經在同一次呼叫裡被拿走，若直接丟掉這批 id 就永遠沒有
+    /// 重試機會。留在這裡，下一次 `cleanupRemovedDrafts`（不論是再移除一張、還是最終
+    /// `discardDraft()`）會把它們併入這次的批次一起重送；同一個 store 存活期間內失敗會持續
+    /// 累積，成功後清空。
+    ///
+    /// **已知限制（LS-212 R3，merge-review R2 i9；R4 訂正 merge-review R3 `8d1e57bc` M2-R3
+    /// 指出的後備敘述錯誤，非阻擋項但須明記）**：這是**記憶體內**狀態，掛在畫面等級的
+    /// `DiaryComposerStore` 上——App 被殺／重啟會全部遺失；更關鍵的是 `discardDraft()` 本來就
+    /// 是這個 store 生命週期的**最後一次**呼叫，若那次呼叫本身失敗（例如離線狀態下使用者放棄
+    /// 編輯器），存進來的 pending 會隨 store 一起消失，沒有下一次呼叫能撿回來——「離線 → 直接
+    /// 放棄編輯器」這條最常見的終局路徑，這個重試機制其實幫不上忙。這個限制是刻意接受、不在
+    /// 本票修：要接住需要把待清 id 持久化（`UserDefaults`／本機 DB）並在下次啟動時對帳，屬於
+    /// LS-167「上傳引擎本身」等級的工作，超出 LS-212 範圍。
+    ///
+    /// **殘留物是什麼、目前沒有任何機制回收（R4 訂正）**：走到這條路徑時 Storage PUT 與
+    /// `insertMediaRow` 都已成功（`media` 列存在、`families.storage_used_bytes` 已經加上去），
+    /// 只有後面的 `softDeleteMedia` 失敗——殘留的是一列 **`deleted_at IS NULL` 的活 `media`
+    /// 列**，**不是**孤兒 Storage 物件：既不符合「`media` 列從未成功 `insert`」（`docs/API.md`
+    /// §3 上傳中斷收斂段①③那種孤兒）的定義，也不會被 LS-96 池項 `996220e9`（掃
+    /// `storage.objects` 找不到對應 `media` 列的物件）那支未來的排程掃到——那支掃描依定義只找
+    /// 「列不存在」的物件，這裡列存在。全 repo 對 `media` 的讀取只有
+    /// `SupabaseTimelineAPIClient.fetchMedia(ids:)`／`SupabaseAlbumsAPIClient.fetchMedia(ids:)`
+    /// 兩處、皆帶明確 id（來自 `diary_media`／`album_media`），沒有任何「列出家庭所有 media」
+    /// 的查詢——這種列在 UI 上完全看不見，使用者不知道它存在也刪不掉，會永久佔用
+    /// `families.storage_used_bytes` 額度、不可回收。真正能接住它的是另一支查詢（`media` 列
+    /// 存在、`deleted_at IS NULL`、從未被任何 `diary_media`／`album_media` 引用、且建立超過
+    /// 寬限期），已記入待辦池（LS-96 comment `c2050d43`），與 `996220e9` 是兩支不同的查詢。
+    private var pendingOrphanMediaIDs: Set<UUID> = []
 
     init(familyID: UUID, diaryAPIClient: DiaryAPIClient, mediaUploadService: MediaUploadService) {
         self.familyID = familyID
@@ -138,11 +168,58 @@ final class DiaryComposerStore {
     func isSelected(_ id: UUID) -> Bool { selectedPhotoIDs.contains(id) }
 
     /// 「移除所選 N 張」——N=0 時 UI 層整個節點不出現（見 `DiaryPhotosSection`），這裡不用
-    /// 額外防呆：空集合呼叫這支方法本來就是安全的 no-op。
-    func removeSelected() {
+    /// 額外防呆：空集合呼叫這支方法本來就是安全的 no-op。**LS-212**：改成 `async`——移除的
+    /// 草稿若已經上傳過（`uploadedMediaByDraftID` 有記錄）要主動軟刪對應 `media` 列，影片
+    /// 草稿的本機暫存檔也要清掉，兩者都是網路／檔案系統操作（見 `cleanupRemovedDrafts`，依
+    /// LS-96 `d8634a08` R4 補充）。呼叫端（`removeSelectedButton`）在 `publishState
+    /// .isInFlight` 時本來就 `.disabled`，跟 `uploadAllMedia()` 不會有同時搶 `photos`／
+    /// `uploadedMediaByDraftID` 的競態。
+    func removeSelected() async {
         guard !selectedPhotoIDs.isEmpty else { return }
+        let removed = photos.filter { selectedPhotoIDs.contains($0.id) }
         photos.removeAll { selectedPhotoIDs.contains($0.id) }
         selectedPhotoIDs.removeAll()
+        await cleanupRemovedDrafts(removed)
+    }
+
+    /// 使用者按「取消」整個放棄編輯器（未成功發佈）時呼叫——同 `removeSelected` 的清理，範圍
+    /// 是佇列裡目前還留著的**每一張**，不只是被選取的那些（LS-212）。成功發佈後不清——那些
+    /// `media` 列已經合法 attach，不是孤兒。呼叫端（`cancelButton`）同樣在
+    /// `publishState.isInFlight` 時 `.disabled`，理由同上。
+    func discardDraft() async {
+        guard publishState != .success else { return }
+        await cleanupRemovedDrafts(photos)
+    }
+
+    /// 草稿被移除（`removeSelected`）或整個編輯器被放棄（`discardDraft`）時的收尾：影片草稿
+    /// 清掉本機暫存檔（`TransferableVideoFile` 複製檔／`VideoTrimmer` 裁切輸出，見
+    /// `MediaDraftTempStorage`）；已經上傳成功過的草稿（`uploadedMediaByDraftID` 有記錄）
+    /// 主動軟刪對應 `media` 列——不論它當下有沒有被 `attachMedia` 掛上（LS-96 `d8634a08`
+    /// R4 補充：`attachMedia` 的 merge-duplicates upsert 只 `INSERT`／`UPDATE`、不
+    /// `DELETE`，若上一輪其實已經 commit、只是回應遺失，不主動處理這一列就會永遠留在已發佈
+    /// 的日記裡）。
+    ///
+    /// **LS-212 R2（merge-review R1 m1）**：`softDeleteMedia` 失敗時把這批 id 移進
+    /// `pendingOrphanMediaIDs`、留到下一次呼叫重試，不是直接丟掉——最常見的失敗成因（斷線）
+    /// 跟「使用者接著移除草稿」這個觸發清理的動作往往同時發生，原本在 `await` **之前**就
+    /// `removeValue` 掉、又用 `try?` 吞錯的寫法，會讓最可能觸發本修法的情境剛好是它幾乎必定
+    /// 無效的情境。best-effort 的定位不變：這裡仍不會把錯誤往外拋、不阻斷任何 UI 流程，只是
+    /// 「失敗至少留下重試的資料」而不是「連再試一次的機會都沒有」。
+    private func cleanupRemovedDrafts(_ removed: [DiaryPhotoDraft]) async {
+        for draft in removed {
+            if case .video(let fileURL, _, _) = draft.kind {
+                try? FileManager.default.removeItem(at: fileURL)
+            }
+        }
+        let newOrphanMediaIDs = removed.compactMap { uploadedMediaByDraftID.removeValue(forKey: $0.id) }
+        let candidateMediaIDs = pendingOrphanMediaIDs.union(newOrphanMediaIDs)
+        guard !candidateMediaIDs.isEmpty else { return }
+        do {
+            try await mediaUploadService.softDeleteMedia(mediaIDs: Array(candidateMediaIDs))
+            pendingOrphanMediaIDs.removeAll()
+        } catch {
+            pendingOrphanMediaIDs = candidateMediaIDs
+        }
     }
 
     // MARK: - 排序（12e：長按拖曳；VoiceOver 對等路徑見 `v0tLp` R6）

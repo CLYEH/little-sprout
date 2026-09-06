@@ -1,5 +1,3 @@
-import Foundation
-
 /// `JoinCodeView`（06／06b／06c）依 `FamilyStore.requestJoinState` 決定顯示哪一態——過期
 /// （`LS011`）與次數用盡（`LS012`）各自有專屬文案與預寫訊息（票文 Scope 第 1 點「過期與次數
 /// 用盡兩種文案分開」），其餘錯誤（碼不存在、已是成員、已有待審申請…）落回一般錯誤列，不需要

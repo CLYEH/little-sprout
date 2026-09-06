@@ -81,7 +81,7 @@ final class DiaryComposerStoreTests: XCTestCase {
         XCTAssertTrue(store.selectedPhotoIDs.isEmpty)
     }
 
-    func test_removeSelected_removesOnlySelectedAndClearsSelection() {
+    func test_removeSelected_removesOnlySelectedAndClearsSelection() async {
         let store = makeStore()
         addPhoto(store, tag: "a")
         addPhoto(store, tag: "b")
@@ -90,16 +90,16 @@ final class DiaryComposerStoreTests: XCTestCase {
         store.toggleSelection(store.photos[0].id)
         store.toggleSelection(store.photos[2].id)
 
-        store.removeSelected()
+        await store.removeSelected()
 
         XCTAssertEqual(store.photos.map(\.id), [keepID])
         XCTAssertTrue(store.selectedPhotoIDs.isEmpty)
     }
 
-    func test_removeSelected_emptySelection_isNoOp() {
+    func test_removeSelected_emptySelection_isNoOp() async {
         let store = makeStore()
         addPhoto(store)
-        store.removeSelected()
+        await store.removeSelected()
         XCTAssertEqual(store.photos.count, 1)
     }
 

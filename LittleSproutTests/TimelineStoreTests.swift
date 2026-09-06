@@ -116,6 +116,14 @@ final class TimelineStoreTests: XCTestCase {
     /// M1 核心場景：`ChildFilterBar` 換到新的 `childID` 時，第一頁還在飛——舊做法
     /// （`guard !refreshState.isSubmitting`）會讓新呼叫被舊呼叫擋下、連 `childID` 都沒被
     /// 記錄；新做法必須讓新呼叫立刻生效，且舊呼叫遲到的結果（不論成功或失敗）都不能覆寫。
+    /// LS-214：第二次呼叫前的同步點必須等 stub handler 真的執行到卡住的那一行
+    /// （`gate.waitForWaiters(count: 1)`），不能只等 `store.refreshState == .submitting`——
+    /// 後者是 `@MainActor` 這側同步賦值，但 `apiClient.fetchTimelinePointers(...)` 是透過
+    /// `protocol: Sendable` existential 呼叫、`StubTimelineAPIClient` 是 plain class（非
+    /// actor），這一跳會讓 stub 內部 `box.append(call)` 落在併發 executor 上執行，跟
+    /// `refreshState` 賦值之間沒有 happens-before 保證，兩次獨立呼叫的 `box.append` 有機率以
+    /// 相反順序完成，讓下面斷言的 `stub.fetchPointersCalls.last` 隨機變成第一次呼叫的紀錄
+    /// （development c87e7b3 CI 隨機紅，見 `AsyncGate.swift` 文件註解）。
     func test_refresh_secondCallWithDifferentChildID_winsOverStaleInFlightCall() async {
         let stub = StubTimelineAPIClient()
         let gate = AsyncGate()
@@ -133,7 +141,7 @@ final class TimelineStoreTests: XCTestCase {
         let store = TimelineStore(apiClient: stub)
 
         let firstCall = Task { await store.refresh(familyID: familyID, childID: nil) }
-        while store.refreshState != .submitting { await Task.yield() }
+        await gate.waitForWaiters(count: 1)
 
         let newChildID = UUID()
         let secondSucceeded = await store.refresh(familyID: familyID, childID: newChildID)
@@ -333,29 +341,7 @@ final class TimelineStoreTests: XCTestCase {
     // `TimelineStoreVideoTests.swift`（extension，SwiftLint `type_body_length`／
     // `file_length` 拆檔，同 `OTPVerificationModelRateLimitTests.swift` 先例）。LS-190
     // removeDiaryEntryLocally 測試同理搬到 `TimelineStoreDeleteDiaryTests.swift`。
-}
-
-/// 單次開關的非同步閘門，讓 `test_refresh_whileAlreadySubmitting_secondCallIsIgnored` 的 stub
-/// handler 可以卡在「還在 in-flight」直到測試主動放行——用 actor 包住
-/// `CheckedContinuation`，不用 `AsyncStream.AsyncIterator`（那是 mutating struct，跨
-/// suspension point 呼叫其 async 方法在 Swift 6 嚴格併發下另有麻煩）。
-///
-/// merge-review R2 m5（`EULAStoreTests.swift` 同名 helper 一併處理）：`continuation` 原本是
-/// 單一變數，只能存一個等待者——若這支檔案未來也需要用 mutation 重放驗證某個 guard，第二個
-/// 呼叫進來會直接覆蓋掉第一個尚未被喚醒的 continuation，造成掛住而不是乾淨落紅。改成佇列
-/// （`[CheckedContinuation]`），`open()` 時全部一起 resume。
-private actor AsyncGate {
-    private var continuations: [CheckedContinuation<Void, Never>] = []
-    private var isOpen = false
-
-    func wait() async {
-        if isOpen { return }
-        await withCheckedContinuation { continuations.append($0) }
-    }
-
-    func open() {
-        isOpen = true
-        continuations.forEach { $0.resume() }
-        continuations.removeAll()
-    }
+    //
+    // `AsyncGate`（讓 stub handler 卡在「還在 in-flight」直到測試主動放行）LS-214 起搬到
+    // `LittleSproutTests/Support/AsyncGate.swift` 與 `EULAStoreTests.swift` 共用，見該檔。
 }
