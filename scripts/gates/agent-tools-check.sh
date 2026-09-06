@@ -83,6 +83,9 @@ ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
 # LS-209（範圍 5，LS-96 池項 c2bb8763）：每條規則現在是三欄 `<agent>|<字樣>|<提示>`——舊版第三欄固定接死「LS-170：
 # 互動式本機驗證先 hold 的規約段被刪或未寫」，規則表從 2 條長到 25+ 條後，對 `content_size` 這類完全無關 LS-170 的
 # 新規則會誤導排查方向。提示欄各自講各自的來源票號與規約，缺漏訊息（見檔尾）印這一欄、不再固定尾巴。
+# LS-215：ios-dev／qa／merge-reviewer 正文須含新 PreToolUse gate 名稱——「不使用背景 Bash」規約落地後仍三起
+# agent 停在等背景通知（LS-210／LS-190 R2／LS-193），升機械 gate；正文那句被刪即紅（gate 本身仍會擋，這裡驗的是
+# 前饋文字沒有跟程式碼脫鉤）。
 BODY_RULES=
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold|LS-170：互動式本機驗證（模擬器對本機容器的多步驟操作）前先 supabase-lock.sh --hold，收工 --release
@@ -116,6 +119,9 @@ merge-reviewer|handoff 申報的 mutation 一律自己重放，對不上列 majo
 ios-dev|「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」|LS-211：handoff「已驗證」每一列項須對應驗收條件／範圍編號，並附測試名（可 git grep 驗存在）或路徑或指令（LS-96 池項 1ff7b8d8：驗收項與證據未一對一）
 qa|「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」|LS-211：裁決 comment 每一列項須對應驗收條件／範圍編號，並附測試名或路徑或指令
 merge-reviewer|「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」|LS-211：verdict／finding 引用的實作者 handoff 每一列項須對應驗收條件／範圍編號，並附測試名或路徑或指令
+ios-dev|background-bash-guard.sh|LS-215：正文須引用新 PreToolUse gate 名稱，機械擋 run_in_background:true 與「背景化再等」命令文字慣用形狀
+qa|background-bash-guard.sh|LS-215：正文須引用新 PreToolUse gate 名稱，機械擋 run_in_background:true 與「背景化再等」命令文字慣用形狀
+merge-reviewer|background-bash-guard.sh|LS-215：正文須引用新 PreToolUse gate 名稱，機械擋 run_in_background:true 與「背景化再等」命令文字慣用形狀
 qa|bash scripts/gates/handoff-evidence-check.sh <暫存檔>|LS-211：貼 comment 前先跑 handoff-evidence-check.sh，附輸出
 merge-reviewer|bash scripts/gates/handoff-evidence-check.sh <暫存檔>|LS-211：貼 comment 前先跑 handoff-evidence-check.sh，附輸出
 qa|紅則逐條說明是誤判或補證據|LS-211 R2（merge-review R1 F3）：不要求一定要綠，紅時逐條交代誤判或補證據，不得為了討好工具改寫正確敘述
