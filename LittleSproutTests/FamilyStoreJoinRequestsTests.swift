@@ -72,37 +72,42 @@ final class FamilyStoreJoinRequestsTests: XCTestCase {
         XCTAssertEqual(store.requestJoinState, .failure(error))
     }
 
+    /// LS-221：第二次呼叫前的同步點必須等 stub handler 真的執行到卡住的那一行
+    /// （`gate.waitForWaiters(count: 1)`），不能只等 `store.requestJoinState == .submitting`
+    /// ——後者是 `@MainActor` 這側同步賦值（見 `FamilyStore.requestJoin` 的
+    /// `requestJoinState = .submitting`，發生在呼叫 `apiClient.requestJoin` 之前），但
+    /// `apiClient.requestJoin(...)` 是透過 `FamilyAPIClient` existential 呼叫、
+    /// `StubFamilyAPIClient` 是 plain class（非 actor），這一跳會讓 stub 內部
+    /// `box.withLock { $0.requestJoinCalls.append(code) }` 與 handler 裡的
+    /// `callCount.withLock { $0 += 1 }` 落在併發 executor 上執行，跟 `requestJoinState` 賦值
+    /// 之間沒有 happens-before 保證——poll 到 `.submitting` 只代表 guard 已經放行，不保證
+    /// handler 已經真的被排程執行，第二次呼叫可能落在 `callCount` 遞增之前完成比較，讓斷言
+    /// 隨機看到 `("0") != ("1")`（同 `AsyncGate.swift` 文件註解的 LS-214 案例，PR #339 CI 隨機
+    /// 紅）。改成等 `gate.waitForWaiters(count:)`：一旦回傳，代表 handler 已經執行到
+    /// `await gate.wait()` 那一行——而 `callCount` 遞增是同一次函式呼叫裡在它之前的同步步驟，
+    /// 才有真正的 program-order 保證。
     func test_requestJoin_whileSubmitting_ignoresDuplicateCall() async {
         let stub = StubFamilyAPIClient()
         let callCount = OSAllocatedUnfairLock(initialState: 0)
-        let (gate, gateContinuation) = AsyncStream<Void>.makeStream()
+        let gate = AsyncGate()
         let requestID = self.requestID
         let familyID = self.familyID
         stub.setRequestJoinHandler { _ in
             callCount.withLock { $0 += 1 }
-            var iterator = gate.makeAsyncIterator()
-            _ = await iterator.next()
+            await gate.wait()
             return .pending(requestID: requestID, familyID: familyID)
         }
         let store = FamilyStore(apiClient: stub, avatarUploadService: StubChildAvatarUploadService())
 
         let firstCallTask = Task { await store.requestJoin(code: "K7M2FD") }
-        var guardIterations = 0
-        while store.requestJoinState != .submitting {
-            guardIterations += 1
-            guard guardIterations < 200 else {
-                gateContinuation.finish()
-                return XCTFail("等待 requestJoinState 進入 .submitting 逾時")
-            }
-            try? await Task.sleep(nanoseconds: 5_000_000)
-        }
+        await gate.waitForWaiters(count: 1)
 
         let secondOutcome = await store.requestJoin(code: "K7M2FD")
 
         XCTAssertNil(secondOutcome, "送出中應該直接擋下第二次呼叫")
         XCTAssertEqual(callCount.withLock { $0 }, 1, "底層 API 只該被呼叫一次")
 
-        gateContinuation.finish()
+        await gate.open()
         _ = await firstCallTask.value
     }
 
