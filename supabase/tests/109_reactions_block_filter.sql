@@ -230,19 +230,46 @@ begin
     raise exception 'FAIL：EXPLAIN 證據資料集下 get_reaction_counts 應濾掉被封鎖者、回傳 19，實際 %', v_n;
   end if;
 
+  -- 直接 EXPLAIN `select * from get_reaction_counts(...)` 看不到任何有意義的東西——
+  -- 這支函式帶 `set search_path = ''`（本專案每支函式的既有慣例），Postgres 的 SQL
+  -- 函式 inline 條件明確排除「有 SET 子句」的函式（不論 invoker／definer），實測
+  -- （scratchpad 手動探查）證實 EXPLAIN 只會看到一個不透明的
+  -- `Function Scan on get_reaction_counts` 節點，看不進函式內部真正執行的查詢——
+  -- 跟這份檔案裡 `private.feed_item_actor_id()`／get_family_timeline 的既有教訓
+  -- 同一種限制。改成把函式本體的 SQL 原文直接拿出來、以同一個已登入身分當作一般
+  -- SELECT 執行（不透過函式呼叫），RLS（reactions_select 也會疊加同一組
+  -- blocked_pairs 述詞）與 planner 都正常運作，能看到真正的存取路徑；這段 SQL
+  -- 與 20260906124837_reactions_block_filter.sql 裡 get_reaction_counts 的函式本體
+  -- 逐字一致（只是拿掉外層函式定義），任一邊改了另一邊沒跟著改，這裡的 EXPLAIN
+  -- 就不再代表真實情況。
   v_stmt := format(
-    'select * from public.get_reaction_counts(%L::uuid, %L, %L::uuid[])',
+    $sql$select r.target_id,
+       count(*)::bigint as reaction_count,
+       bool_or(r.user_id = (select auth.uid())) as reacted_by_me
+  from public.reactions r
+ where r.family_id = %L::uuid
+   and r.target_type = %L::public.content_target_type
+   and r.target_id = any (%L::uuid[])
+   and not exists (
+     select 1 from private.blocked_pairs() bp
+      where bp.family_id = r.family_id
+        and bp.blocked_id = r.user_id
+   )
+ group by r.target_id$sql$,
     v_family, 'media', v_targets[1:20]
   );
   for v_line in execute 'explain (costs off) ' || v_stmt loop
     v_plan := v_plan || v_line || E'\n';
   end loop;
 
-  if v_plan ~* 'seq scan on (public\.)?reactions' then
-    raise exception E'FAIL 效能：get_reaction_counts 的 plan 對 reactions 做了 Seq Scan，述詞沒有走 reactions_target_idx\n%', v_plan;
+  if v_plan !~ 'reactions_target_idx' then
+    raise exception E'FAIL 效能：get_reaction_counts 本體查詢沒有走 reactions_target_idx（mutation：拿掉 WHERE 的 family_id/target_type/target_id 篩選會導致這裡紅）\n%', v_plan;
+  end if;
+  if v_plan ~* 'seq scan on (public\.)?reactions\b' then
+    raise exception E'FAIL 效能：get_reaction_counts 本體查詢對 reactions 做了 Seq Scan，述詞沒有走索引\n%', v_plan;
   end if;
 
-  raise notice E'ok：EXPLAIN 證據（5000 筆反應／250 target／1 筆封鎖）——reactions 未 Seq Scan\n%', v_plan;
+  raise notice E'ok：EXPLAIN 證據（5000 筆反應／250 target／1 筆封鎖，函式本體原文直接執行）——reactions 走 reactions_target_idx、未 Seq Scan\n%', v_plan;
 end;
 $$;
 reset role;
