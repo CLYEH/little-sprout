@@ -218,6 +218,8 @@ jobs:
           bash scripts/gates/privacy-manifest-check.test.sh || rc=1
           # LS-211：handoff「已驗證」逐項證據 gate 自測（正負樣本＋兩個真實 QA comment 樣本＋mutation）
           bash scripts/gates/handoff-evidence-check.test.sh || rc=1
+          # LS-211 範圍 7：AX 字級啟動參數 gate 自測（launchEnvironment 設 UIPreferredContentSizeCategoryName 不生效）
+          bash scripts/gates/ax-launch-check.test.sh || rc=1
           exit "$rc"
 
       # LS-30：品牌 skill 接線——前饋是 ui-designer／visual-reviewer 定義「開工先載入 little-sprout-brand」，載入動作
@@ -239,6 +241,14 @@ jobs:
       # 品牌 skill 接線／agent 工具白名單）。
       - name: Privacy Manifest／用途字串／出口合規旗標（privacy-manifest-check，LS-145）
         run: bash scripts/gates/privacy-manifest-check.sh
+
+      # LS-211 範圍 7（來源 LS-210 merge-review R1 `24fc12db` i3、LS-96 池項 `b63b274a` (a)）：
+      # `launchEnvironment["UIPreferredContentSizeCategoryName"]` 對 XCUITest 目標 app 實測不生效，
+      # 走這個通道設 AX 字級的 UITest 可能全是假綠。純檔案內容比對，所有 PR／push 皆跑。過渡期
+      # allowlist（`TapTargetMeasurement.swift`，見腳本檔頭）現況會通過；LS-190 併主換成 launchArguments
+      # 後應移除該 allowlist 項。
+      - name: AX 字級啟動參數 gate（ax-launch-check，LS-211）
+        run: bash scripts/gates/ax-launch-check.sh
 
       # LS-71：ops 腳本自測——patrol.sh（巡檢）用合成 repo（file:// 裸 origin＋七個 worktree）驗各停滯型態判定的
       # 正負樣本、--json 合法、gh 不可用不炸；session-start.sh（SessionStart hook）驗輸出合法 JSON 且 fail-soft、
