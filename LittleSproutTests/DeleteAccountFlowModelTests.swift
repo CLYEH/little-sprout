@@ -33,6 +33,7 @@ final class DeleteAccountFlowModelTests: XCTestCase {
         let childrenStore: ChildrenStore
         let timelineStore: TimelineStore
         let albumsStore: AlbumsStore
+        let eulaStore: EULAStore
     }
 
     /// 預設佈置成「一般成員」（`.leave`）——大多數狀態機測試不在乎進場分流，只在乎
@@ -53,13 +54,16 @@ final class DeleteAccountFlowModelTests: XCTestCase {
         let childrenStore = ChildrenStore.preview()
         let timelineStore = TimelineStore.preview()
         let albumsStore = AlbumsStore.preview()
+        let eulaStore = EULAStore.preview(shouldPresent: false, judgedUserID: myID)
         let model = DeleteAccountFlowModel(
             accountAPIClient: accountAPIClient, familyStore: familyStore, authStore: authStore,
-            childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore
+            childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
+            eulaStore: eulaStore
         )
         return Fixture(
             model: model, familyStore: familyStore, authStore: authStore,
-            childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore
+            childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
+            eulaStore: eulaStore
         )
     }
 

@@ -14,6 +14,10 @@ final class DeleteAccountFlowModel {
     private let childrenStore: ChildrenStore
     private let timelineStore: TimelineStore
     private let albumsStore: AlbumsStore
+    /// LS-193：merge 進 LS-190（EULA 同意流程）之後補上——同 `SettingsView.signOut()`／
+    /// `AuthenticatedGate.disagreeAndSignOut()` 既有理由，登出時必須歸零，不清掉會讓同機換
+    /// 帳號的下一位使用者沿用上一位的 `shouldPresent`、繞過 EULA 閘門。
+    private let eulaStore: EULAStore
 
     /// `nil`＝還在三分流（畫面讀 `classification` 決定顯示 04a／04b／04d）；非 nil＝已經往下走
     /// 到 04e／04f／04g／04h。
@@ -36,7 +40,8 @@ final class DeleteAccountFlowModel {
         authStore: AuthStore,
         childrenStore: ChildrenStore,
         timelineStore: TimelineStore,
-        albumsStore: AlbumsStore
+        albumsStore: AlbumsStore,
+        eulaStore: EULAStore
     ) {
         self.accountAPIClient = accountAPIClient
         self.familyStore = familyStore
@@ -44,6 +49,7 @@ final class DeleteAccountFlowModel {
         self.childrenStore = childrenStore
         self.timelineStore = timelineStore
         self.albumsStore = albumsStore
+        self.eulaStore = eulaStore
     }
 
     /// 04a／04b／04d 三分流——即時讀 `familyStore` 現況，見 `DeleteAccountClassification`
@@ -113,8 +119,8 @@ final class DeleteAccountFlowModel {
         }
     }
 
-    /// 04g「回到登入畫面」——清 stores＋登出（同 `SettingsView.signOut()` 既有清單；沒有
-    /// `EULAStore`：LS-190 尚未併入 development，見 handoff）。
+    /// 04g「回到登入畫面」——清 stores＋登出（同 `SettingsView.signOut()`／
+    /// `AuthenticatedGate.disagreeAndSignOut()` 既有清單，含 `EULAStore`）。
     func finishAndReturnToWelcome() async {
         guard !isFinishing else { return }
         isFinishing = true
@@ -124,5 +130,6 @@ final class DeleteAccountFlowModel {
         childrenStore.reset()
         timelineStore.reset()
         albumsStore.reset()
+        eulaStore.reset()
     }
 }

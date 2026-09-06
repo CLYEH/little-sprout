@@ -97,6 +97,24 @@ enum TapTargetGateScreenName: String {
     // R4（merge-review R3 889164c6 F1）：強制走 iPad 自適應內距分支＋320pt 窄容器，
     // 不需要真的是 iPad 裝置——在 iPhone 專屬機上就能重現／釘住 wiring 缺陷。
     case legalDocumentNarrowContainer = "LegalDocumentNarrowContainer"
+    // LS-190：EULA 同意頁——`EULAStore.preview(shouldPresent: true)` 同步灌狀態，不需要真的
+    // 打網路即有代表性（同 `.legalDocumentSheet` 的既有理由）。
+    case eulaConsent = "EULAConsentView"
+    // LS-190 R2（merge-review R1 M1）：刪除日記確認 sheet——`DiaryDetailView` 沒有稿面內容
+    // 操作表列（稿 `vzYXz` 沒有這一列），入口與作者／owner 判斷留給 LS-189，這裡直接掛
+    // `DiaryDeleteConfirmationSheet` 本體，用 `TapTargetGateHarness.DismissableSheetHost`
+    // （真的 `@State` 綁定，不是 `.constant(true)`——見該檔文件註解，R2 informational-2
+    // 訂正舊註解的錯誤描述）把 sheet 頂出來。
+    case deleteDiaryConfirmation = "DeleteDiaryConfirmation"
+    // LS-190：刪除留言確認 sheet——留言 UI 本體（LS-22）／內容操作表（LS-189）皆尚未實作，
+    // 這是目前唯一能觸達 `CommentDeleteConfirmationSheet` 的入口，同上一個 case 的理由。
+    case deleteCommentConfirmation = "DeleteCommentConfirmation"
+    // LS-190：票文驗收「首次登入 → EULA 出現 → 同意 → 進時間軸」——這個 case **不**用來做
+    // 逐元件 tap target 量測（`TapTargetGateTests.swift` 沒有對應 test method，同 `.welcome`／
+    // `.sectionTabViewWithDiary` 的既有先例），純粹借用「launch environment 指定畫面」這條既有
+    // 通道，讓 UITest 能直接啟動到「EULA 已出現、按下同意會換到主畫面」這個組裝狀態，不需要
+    // 真的登入。
+    case eulaConsentToTimelineFlow = "EULAConsentToTimelineFlow"
     // LS-164：`WelcomeView` 本身仍留在 `tap-target-exemptions.txt`（Apple 官方
     // `SignInWithAppleButton` 量測意義有限，理由未變）——這個 case **不**用來做逐元件 tap
     // target 量測（`TapTargetGateTests.swift` 沒有對應 test method），純粹借用「launch
@@ -175,6 +193,13 @@ enum TapTargetGateScreenName: String {
         // Doc Title——`LegalDocumentSheet` 載入完成後必定渲染，不依賴檔案實際內容。
         case .legalDocumentSheet: return .staticText("使用條款")
         case .legalDocumentNarrowContainer: return .staticText("使用條款")
+        // 標題「使用條款更新」——`EULAStore.preview(shouldPresent: true)` 一開畫面就渲染。
+        case .eulaConsent: return .staticText("使用條款更新")
+        // Confirm Label——`ULWgY`／`WQI5d`（危險色外框鈕）的文字，harness 固定顯示。
+        case .deleteDiaryConfirmation: return .button("刪除這篇日記")
+        case .deleteCommentConfirmation: return .button("刪除這則留言")
+        // 一開畫面 `eulaStore.shouldPresent` 已種為 true，EULA 標題必定先渲染。
+        case .eulaConsentToTimelineFlow: return .staticText("使用條款更新")
         // 「給家人的私密相簿」只在淺色模式渲染（見 `WelcomeView.headSection`），跟
         // `.preview()`／harness 固定淺色（未強制 `.preferredColorScheme`）的既有假設一致；
         // 不用字標圖片（`Image`，不是 staticText）當 sentinel。

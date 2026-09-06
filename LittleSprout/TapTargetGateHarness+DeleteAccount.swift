@@ -62,7 +62,8 @@ extension TapTargetGateHarness {
     private static func makeModel(familyStore: FamilyStore) -> DeleteAccountFlowModel {
         DeleteAccountFlowModel(
             accountAPIClient: PreviewAccountAPIClient(), familyStore: familyStore, authStore: .preview(),
-            childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview()
+            childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+            eulaStore: .preview(shouldPresent: false)
         )
     }
 
@@ -73,7 +74,8 @@ extension TapTargetGateHarness {
         NavigationStack {
             DeleteAccountFlowView(
                 accountAPIClient: PreviewAccountAPIClient(), authStore: .preview(), familyStore: familyStore,
-                childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview()
+                childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+                eulaStore: .preview(shouldPresent: false)
             )
         }
     }
@@ -85,7 +87,8 @@ extension TapTargetGateHarness {
         NavigationStack {
             DeleteAccountFlowView(
                 accountAPIClient: PreviewAccountAPIClient(), authStore: .preview(), familyStore: familyStore,
-                childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview()
+                childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+                eulaStore: .preview(shouldPresent: false)
             )
         }
     }
@@ -97,7 +100,8 @@ extension TapTargetGateHarness {
         NavigationStack {
             DeleteAccountFlowView(
                 accountAPIClient: PreviewAccountAPIClient(), authStore: .preview(), familyStore: familyStore,
-                childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview()
+                childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+                eulaStore: .preview(shouldPresent: false)
             )
         }
     }

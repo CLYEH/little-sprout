@@ -140,14 +140,16 @@ struct DeletionFailedView: View {
 #Preview("04g 完成") {
     DeletionCompletedView(model: DeleteAccountFlowModel(
         accountAPIClient: PreviewAccountAPIClient(), familyStore: .preview(), authStore: .preview(),
-        childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview()
+        childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+        eulaStore: .preview(shouldPresent: false)
     ))
 }
 
 #Preview("04h 失敗") {
     DeletionFailedView(model: DeleteAccountFlowModel(
         accountAPIClient: PreviewAccountAPIClient(), familyStore: .preview(), authStore: .preview(),
-        childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview()
+        childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+        eulaStore: .preview(shouldPresent: false)
     ))
 }
 #endif

@@ -174,6 +174,43 @@ final class SupabaseDiaryAPIClientTests: XCTestCase {
         try await apiClient.attachMedia(diaryID: diaryID, familyID: familyID, mediaIDs: [])
     }
 
+    // MARK: - setDiaryDeleted（LS-190）
+
+    func test_setDiaryDeleted_softDelete_sendsDiaryIDAndDeletedTrue() async throws {
+        let client = TestSupabaseClient.make { [diaryID] request in
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/set_diary_deleted")
+            let body = try XCTUnwrap(request.bodyData)
+            let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+            XCTAssertEqual(payload["p_diary_id"] as? String, diaryID.uuidString)
+            XCTAssertEqual(payload["p_deleted"] as? Bool, true)
+            return MockURLProtocol.StubResponse(statusCode: 204, body: Data())
+        }
+        let apiClient = SupabaseDiaryAPIClient(client: client)
+
+        try await apiClient.setDiaryDeleted(diaryID: diaryID, deleted: true)
+    }
+
+    func test_setDiaryDeleted_removedByOwnerNotRestorable_mapsToRejectedWithLS027() async {
+        let client = TestSupabaseClient.make { _ in
+            MockURLProtocol.StubResponse(statusCode: 400, body: Data("""
+            {"code":"LS027","message":"這篇日記／這本相簿／這則留言已被家庭管理者移除，只有管理者能還原"}
+            """.utf8))
+        }
+        let apiClient = SupabaseDiaryAPIClient(client: client)
+
+        do {
+            try await apiClient.setDiaryDeleted(diaryID: diaryID, deleted: true)
+            XCTFail("LS027 應該要 throw")
+        } catch let error as AppError {
+            guard case .rejected(_, let code) = error else {
+                return XCTFail("LS027 應映射為 .rejected，實際是 \(error)")
+            }
+            XCTAssertEqual(code, "LS027")
+        } catch {
+            XCTFail("應該 throw AppError，實際是 \(error)")
+        }
+    }
+
     // MARK: - Helpers
 
     private func utcDate(year: Int, month: Int, day: Int) -> Date {

@@ -88,6 +88,7 @@ extension DeleteAccountFlowModelTests {
         XCTAssertNotNil(fixture.childrenStore.myRole)
         XCTAssertFalse(fixture.timelineStore.entries.isEmpty)
         XCTAssertFalse(fixture.albumsStore.albums.isEmpty)
+        XCTAssertTrue(fixture.eulaStore.isKnown(for: myID), "前置：fixture 種好 judgedUserID＝myID")
 
         await fixture.model.finishAndReturnToWelcome()
 
@@ -96,6 +97,10 @@ extension DeleteAccountFlowModelTests {
         XCTAssertNil(fixture.childrenStore.myRole)
         XCTAssertTrue(fixture.timelineStore.entries.isEmpty)
         XCTAssertTrue(fixture.albumsStore.albums.isEmpty)
+        XCTAssertFalse(
+            fixture.eulaStore.isKnown(for: myID),
+            "eulaStore 也要歸零（同機換帳號不能沿用上一位使用者的 shouldPresent）"
+        )
     }
 
     private func makeTimelineEntry() -> TimelineEntry {

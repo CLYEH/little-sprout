@@ -26,14 +26,16 @@ struct DeleteAccountFlowView: View {
         familyStore: FamilyStore,
         childrenStore: ChildrenStore,
         timelineStore: TimelineStore,
-        albumsStore: AlbumsStore
+        albumsStore: AlbumsStore,
+        eulaStore: EULAStore
     ) {
         self.childrenStore = childrenStore
         self.timelineStore = timelineStore
         self.albumsStore = albumsStore
         _model = State(initialValue: DeleteAccountFlowModel(
             accountAPIClient: accountAPIClient, familyStore: familyStore, authStore: authStore,
-            childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore
+            childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
+            eulaStore: eulaStore
         ))
     }
 
@@ -338,7 +340,8 @@ struct SoleMemberDeleteWarningView: View {
             familyStore: .preview(withFamily: Family(
                 id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
             )),
-            childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview()
+            childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+            eulaStore: .preview(shouldPresent: false)
         )
     }
 }

@@ -103,7 +103,8 @@ struct MustTransferOwnershipBeforeDeletionView: View {
                 familyStore: .preview(withFamily: Family(
                     id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true
                 )),
-                authStore: .preview(), childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview()
+                authStore: .preview(), childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+                eulaStore: .preview(shouldPresent: false)
             ),
             familyStore: .preview(withFamily: Family(
                 id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true

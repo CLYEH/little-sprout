@@ -1,33 +1,11 @@
 import SwiftUI
 
-/// `SettingsView` 拆分出的「帳號」區（登出／刪除帳號）——`SettingsView.swift` 加完 LS-193
-/// `accountAPIClient` 佈線後逼近 SwiftLint `file_length` 上限（同 `SettingsView+Profile.swift`
-/// 檔頭「五區內容後超過上限」的既有理由）。`isSigningOut`／`errorMessage` 在主檔已改成非
-/// `private`（同 `regularSelection` 的既有作法），這裡才讀寫得到。
+/// `SettingsView` 的登出收尾，從 `SettingsView.swift` 拆出獨立檔案（merge-review R2 B3）——
+/// `SettingsView.swift` 與 `FamilyStore.swift` 同一天各自被兩張票（本票／LS-210）疊加壓到
+/// SwiftLint `file_length` 400 行上限，理由同 `SettingsView+Sidebar.swift`／
+/// `SettingsView+Profile.swift` 從主檔拆分的既有先例。純搬移，不改行為：`isSigningOut`／
+/// `errorMessage` 因此不再標 `private`（跨檔案 extension 存取不到，見兩個屬性宣告處）。
 extension SettingsView {
-    // MARK: - 帳號
-
-    var accountSection: some View {
-        SettingsSectionBlock(title: "帳號") {
-            // LS-17 QA1：`SettingsRowView` 的 `.frame(minHeight: 44)` 已經滿足長輩硬約束
-            // ≥44pt 點擊目標，不需要再另外加不可見 padding（舊版占位頁的作法，見這支檔案的
-            // git 歷史）。
-            Button(action: signOut) {
-                SettingsRowView(icon: "rectangle.portrait.and.arrow.right", label: "登出", showsChevron: false)
-            }
-            .disabled(isSigningOut)
-            SettingsRowDivider()
-            NavigationLink {
-                DeleteAccountFlowView(
-                    accountAPIClient: accountAPIClient, authStore: authStore, familyStore: familyStore,
-                    childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore
-                )
-            } label: {
-                SettingsRowView(icon: "trash", label: "刪除帳號", isDestructive: true)
-            }
-        }
-    }
-
     func signOut() {
         guard !isSigningOut else { return }
         isSigningOut = true
@@ -48,6 +26,8 @@ extension SettingsView {
                 timelineStore.reset()
                 // LS-165：見上方 `albumsStore` 屬性文件註解。
                 albumsStore.reset()
+                // LS-190 R2：見上方 `eulaStore` 屬性文件註解。
+                eulaStore.reset()
             } catch {
                 errorMessage = AppError.map(error).userFacingMessage
             }
