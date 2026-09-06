@@ -76,16 +76,28 @@ final class DiaryComposerStore {
     /// `discardDraft()`）會把它們併入這次的批次一起重送；同一個 store 存活期間內失敗會持續
     /// 累積，成功後清空。
     ///
-    /// **已知限制（LS-212 R3，merge-review R2 i9，非阻擋項但須明記）**：這是**記憶體內**狀態，
-    /// 掛在畫面等級的 `DiaryComposerStore` 上——App 被殺／重啟會全部遺失；更關鍵的是
-    /// `discardDraft()` 本來就是這個 store 生命週期的**最後一次**呼叫，若那次呼叫本身失敗
-    /// （例如離線狀態下使用者放棄編輯器），存進來的 pending 會隨 store 一起消失，沒有下一次
-    /// 呼叫能撿回來——「離線 → 直接放棄編輯器」這條最常見的終局路徑，這個重試機制其實幫不上
-    /// 忙。這個限制是刻意接受、不在本票修：要接住需要把待清 id 持久化（`UserDefaults`／本機
-    /// DB）並在下次啟動時對帳，屬於 LS-167「上傳引擎本身」等級的工作，超出 LS-212 範圍；漏掉
-    /// 的後果（孤兒 `media` 列繼續佔 `families.storage_used_bytes` 額度）與 LS-96 池項
-    /// `996220e9`（後端排程反向掃描 `storage.objects` 找孤兒物件）是同一類問題，理論上未來那張
-    /// 後端票落地後會被一併掃到、清掉——這裡先明記限制，不假裝重試機制涵蓋了這條路徑。
+    /// **已知限制（LS-212 R3，merge-review R2 i9；R4 訂正 merge-review R3 `8d1e57bc` M2-R3
+    /// 指出的後備敘述錯誤，非阻擋項但須明記）**：這是**記憶體內**狀態，掛在畫面等級的
+    /// `DiaryComposerStore` 上——App 被殺／重啟會全部遺失；更關鍵的是 `discardDraft()` 本來就
+    /// 是這個 store 生命週期的**最後一次**呼叫，若那次呼叫本身失敗（例如離線狀態下使用者放棄
+    /// 編輯器），存進來的 pending 會隨 store 一起消失，沒有下一次呼叫能撿回來——「離線 → 直接
+    /// 放棄編輯器」這條最常見的終局路徑，這個重試機制其實幫不上忙。這個限制是刻意接受、不在
+    /// 本票修：要接住需要把待清 id 持久化（`UserDefaults`／本機 DB）並在下次啟動時對帳，屬於
+    /// LS-167「上傳引擎本身」等級的工作，超出 LS-212 範圍。
+    ///
+    /// **殘留物是什麼、目前沒有任何機制回收（R4 訂正）**：走到這條路徑時 Storage PUT 與
+    /// `insertMediaRow` 都已成功（`media` 列存在、`families.storage_used_bytes` 已經加上去），
+    /// 只有後面的 `softDeleteMedia` 失敗——殘留的是一列 **`deleted_at IS NULL` 的活 `media`
+    /// 列**，**不是**孤兒 Storage 物件：既不符合「`media` 列從未成功 `insert`」（`docs/API.md`
+    /// §3 上傳中斷收斂段①③那種孤兒）的定義，也不會被 LS-96 池項 `996220e9`（掃
+    /// `storage.objects` 找不到對應 `media` 列的物件）那支未來的排程掃到——那支掃描依定義只找
+    /// 「列不存在」的物件，這裡列存在。全 repo 對 `media` 的讀取只有
+    /// `SupabaseTimelineAPIClient.fetchMedia(ids:)`／`SupabaseAlbumsAPIClient.fetchMedia(ids:)`
+    /// 兩處、皆帶明確 id（來自 `diary_media`／`album_media`），沒有任何「列出家庭所有 media」
+    /// 的查詢——這種列在 UI 上完全看不見，使用者不知道它存在也刪不掉，會永久佔用
+    /// `families.storage_used_bytes` 額度、不可回收。真正能接住它的是另一支查詢（`media` 列
+    /// 存在、`deleted_at IS NULL`、從未被任何 `diary_media`／`album_media` 引用、且建立超過
+    /// 寬限期），已記入待辦池（LS-96 comment `c2050d43`），與 `996220e9` 是兩支不同的查詢。
     private var pendingOrphanMediaIDs: Set<UUID> = []
 
     init(familyID: UUID, diaryAPIClient: DiaryAPIClient, mediaUploadService: MediaUploadService) {

@@ -43,7 +43,9 @@ final class DiaryEditorViewLifecycleTests: XCTestCase {
     /// 讓 view 出現、跑一小段 run loop（模擬畫面渲染穩定——這段用 UIKit／RunLoop 沒問題，是給
     /// view controller 走完 appearance transition 用的，跟上面「等 Task 執行」是不同機制），再
     /// 移除 `window.rootViewController` 模擬「畫面消失」——涵蓋取消鈕觸發的 `dismiss()`、成功
-    /// 發佈後的 `dismiss()`、與互動式滑走三種觸發方式共同的終點（view 從畫面上被移除）。
+    /// 發佈後的 `dismiss()`，以及未來任何會讓這支畫面消失的路徑（這支畫面目前沒有互動式返回
+    /// 手勢，見檔頭文件註解；這裡刻意不侷限於「已知的離開路徑」，因為 `.onDisappear` 本來就是
+    /// 防未來新增路徑用的，見 `DiaryEditorView.body` 的 `.onDisappear` 文件註解）。
     private func presentThenDismiss(_ view: DiaryEditorView) {
         let hosting = UIHostingController(rootView: view)
         let window = UIWindow(frame: UIScreen.main.bounds)
@@ -77,7 +79,7 @@ final class DiaryEditorViewLifecycleTests: XCTestCase {
 
         XCTAssertEqual(
             mediaService.softDeleteMediaCalls, [.init(mediaIDs: [uploadedMediaID])],
-            "畫面消失（取消鈕、成功發佈後 dismiss、或互動式滑走）都該經過 .onDisappear 觸發 discardDraft() 軟刪孤兒 media"
+            "畫面消失（取消鈕、成功發佈後 dismiss，或未來任何讓這支畫面消失的路徑）都該經過 .onDisappear 觸發 discardDraft() 軟刪孤兒 media"
         )
     }
 
