@@ -78,6 +78,7 @@
 		31A49F9904E6C7D2143C5CA4 /* QADriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1EFC1792C4BB1EA62606E2 /* QADriver.swift */; };
 		32463742EC96BA86452232E8 /* UploadQueueModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2196009D552953032393977 /* UploadQueueModels.swift */; };
 		32824AF2CC5F64CE44CBB595 /* AppSectionUniquenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */; };
+		33042804568C4C664DAE5E91 /* AsyncGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FC8388D99E9D7882AF0207 /* AsyncGate.swift */; };
 		3346C2CA6BA85BDA157C164F /* TapTargetGateHarness+Content.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B87EFC5D19454F29DAAFE38 /* TapTargetGateHarness+Content.swift */; };
 		336A7171428B83A957574DFF /* InMemoryAuthLocalStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96263CE935C656C186FDEC99 /* InMemoryAuthLocalStorage.swift */; };
 		34CA41320091E645AE354AA2 /* SupabaseClientFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1BE3C8BA19FA35C011C2A4 /* SupabaseClientFactory.swift */; };
@@ -393,6 +394,7 @@
 		1E1A187F8B4D813F1BCB0135 /* TimelineContentAssembler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineContentAssembler.swift; sourceTree = "<group>"; };
 		1EFD1FF4DE88B8A84B28A7C2 /* CommentAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentAPIClient.swift; sourceTree = "<group>"; };
 		1F8B30A3E8C7388E178BD32E /* DiaryDurationFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDurationFormat.swift; sourceTree = "<group>"; };
+		20FC8388D99E9D7882AF0207 /* AsyncGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncGate.swift; sourceTree = "<group>"; };
 		216769BEF4D15D89E66AF64B /* ScrollableFillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableFillView.swift; sourceTree = "<group>"; };
 		226B824755111DECCA1F2AEE /* EmailSignInModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInModelTests.swift; sourceTree = "<group>"; };
 		22BFD6279DC28E05BAC6A829 /* InviteCodeParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeParser.swift; sourceTree = "<group>"; };
@@ -803,6 +805,7 @@
 		459A0B1D845C2292804A8309 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				20FC8388D99E9D7882AF0207 /* AsyncGate.swift */,
 				96263CE935C656C186FDEC99 /* InMemoryAuthLocalStorage.swift */,
 				59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */,
 				0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */,
@@ -1645,6 +1648,7 @@
 				13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */,
 				32824AF2CC5F64CE44CBB595 /* AppSectionUniquenessTests.swift in Sources */,
 				76B16560EF93FFF134B8FDE7 /* AppleSignInNonceTests.swift in Sources */,
+				33042804568C4C664DAE5E91 /* AsyncGate.swift in Sources */,
 				25FCC21C16E35CFC9D838BBB /* AuthButtonsStateTests.swift in Sources */,
 				B9BDE1E1AD633D323BBC2B5D /* AuthStoreTests.swift in Sources */,
 				59F01B53DE6CBC0D7335A4D6 /* AvatarImageProcessorTests.swift in Sources */,
