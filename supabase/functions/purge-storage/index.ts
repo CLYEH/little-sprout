@@ -84,6 +84,11 @@
 
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { isAuthorizedServiceCall, resolveSecretKey } from "../_shared/keys.ts";
+import {
+  type OrphanScanDeps,
+  scanOrphanStorageObjects,
+  type StorageEntry,
+} from "./orphan_scan.ts";
 
 const BATCH_SIZE = 200; // 每批讀取／刪除的筆數，對齊 Storage remove() API 一次呼叫的合理批次大小。
 const MAX_BATCHES = 20; // 安全上限（20 × 200 = 4000 筆／次 invocation）：避免佇列量體異常大時單次執行時間失控。
@@ -95,11 +100,10 @@ const DELETE_CHUNK_SIZE = 50; // dequeue 時 .in() 帶的 id 數上限（i3）�
 // 未收到這筆，物件仍原封不動留在 storage.objects——purge_expired()／既有的
 // purge_storage_queue 消化邏輯只處理「media 列被硬刪之後」的方向，不會反向掃描
 // storage.objects 找「從未有對應 media 列」的物件）：
-//   ORPHAN_SCAN_BATCH_SIZE：每次 invocation 最多「候選」（R2 起：真正超過寬限期
-//     且形狀合規的物件，不是看過的檔案數，見下方 scanFamilyOrphans）數上限，
-//     避免單次 invocation 執行時間失控——與上面既有的 BATCH_SIZE／MAX_BATCHES
-//     是同一種安全上限精神，只是這裡的成本主要來自 storage.list() 的分層呼叫
-//     次數與 media 反查次數，不是佇列列數。
+//   ORPHAN_SCAN_BATCH_SIZE：每次 invocation 最多「候選」（過了寬限期的物件數，見
+//     orphan_scan.ts 的 scanFamilyOrphans）數上限，避免單次 invocation 執行時間
+//     失控——與上面既有的 BATCH_SIZE／MAX_BATCHES 是同一種安全上限精神，只是這裡
+//     的成本主要來自 storage.list() 的分層呼叫次數與 RPC 反查次數，不是佇列列數。
 //   ORPHAN_GRACE_MS：與 private.soft_delete_unreferenced_media() 的預設寬限期
 //     （'24 hours'，見 supabase/migrations/20260906050606_soft_delete_unreferenced_media.sql
 //     與 docs/API.md §6）同一個 24 小時——避免正常上傳流程中「Storage PUT 剛
@@ -107,39 +111,27 @@ const DELETE_CHUNK_SIZE = 50; // dequeue 時 .in() 帶的 id 數上限（i3）�
 //     維護（一個是 SQL interval 常值、一個是 Edge Function 的毫秒常數），改動時
 //     必須同步兩處與 docs/API.md 的說明。
 //   LIST_PAGE_SIZE：storage.list() 單頁上限，用 offset 續頁涵蓋超過一頁的資料夾
-//     （R2，merge-review R1 F3：原版本每層只查一頁，超過 1000 項的資料夾第
-//     1001 項之後永遠看不到）。
+//     （merge-review R1 F3：原版本每層只查一頁，超過 1000 項的資料夾第 1001 項
+//     之後永遠看不到）。
 //
-// R2（merge-review R1 comment 80d7242c，PR #339 head c0cc2d9，F1／F2／F3 三個
-// 問題重寫本節掃描邏輯，詳細背景見 supabase/migrations/
-// 20260906050606_soft_delete_unreferenced_media.sql 檔頭 R2 段與 1d／1e 段）：
-//   F1（major，實測重現餓死）：原本 `considered` 計「看過的檔案數」（含正常有
-//     對應列、還在寬限期內的物件），而且每次 invocation 都從 bucket 根目錄重頭
-//     走、沒有續掃游標——storage.list() 預設 sortBy=name asc，排序在前的家庭
-//     一旦累積夠多物件，預算就在那裡用完，後面所有家庭永遠掃不到，且回應外觀
-//     跟「沒有孤兒」無法區分。改法：(a) `considered` 只在確認「形狀合規＋超過
-//     寬限期」時才 +1（scanFamilyOrphans 裡）；(b) 持久化續掃游標
-//     （public.orphan_scan_cursor，見 migration 1d 段），家庭清單走 round-robin
-//     ——從游標之後開始、繞回開頭，直到繞完一整圈（scanCompleted=true）或候選
-//     預算用完，兩者先到就停，保證每次 invocation 都在往前推進，不會困在同一批
-//     家庭；(c) 回應與 log 明示 scanCompleted／cursor，不再跟「無孤兒」同外觀。
-//   F2（major，實測重現 HTTP 414）：原本用兩支 `.in()` GET 查詢反查
-//     candidatePaths（上限 500），90 條路徑就撞 URI 過長。改用
-//     public.purge_storage_unknown_media_paths() RPC（POST body 傳陣列，見
-//     migration 1e 段），一次反查一整個家庭的候選路徑，沒有 URL 長度上限。
-//   F3（minor）：(i) 四層 list() 都加 offset 續頁（listAllPaged）；(ii) 這支函式
-//     的呼叫點從佇列消化迴圈**之前**移到**之後**（見檔尾 Deno.serve），讓既有
-//     硬刪路徑產生的佇列優先消化，掃描慢不會拖延既有清除工作——新掃到的孤兒改成
-//     下一次 invocation 才被消化（一次 invocation 的延遲，換取既有佇列不被拖累）。
+// 孤兒掃描本體（round-robin＋持久化游標、候選路徑分類、入列）已抽到
+// ./orphan_scan.ts（LS-222，見該檔檔頭）——這裡只負責把真正的 Supabase 依賴
+// （Storage bucket／supabase.rpc()）組成 OrphanScanDeps 餵給它，維持這個檔案
+// 本身只管「怎麼把真正的服務接起來」，可測試的邏輯都留在 orphan_scan.ts。
+//
+// LS-222（收口 LS-213 R2 merge-review comment 0e4c0eed 的 N2／N3）：
+//   N3：這裡不再有本地的 MEDIA_OBJECT_PATH_RE——路徑形狀合法性只由
+//     private.is_media_object_path() 判定，透過下面 makeClassifyPaths() 呼叫新
+//     RPC public.purge_storage_classify_orphan_paths()；enqueue 改呼叫
+//     public.purge_storage_queue_enqueue_orphans_v2()（回傳 { enqueued, dropped }，
+//     舊版 purge_storage_queue_enqueue_orphans() 只回傳 enqueued、無法回報被丟棄
+//     的筆數，見新 migration 檔頭「為什麼是新函式名」）。
+//   N2：游標分段寫回的邏輯在 orphan_scan.ts 的 scanOrphanStorageObjects() 迴圈內
+//     （每個家庭前綴掃完就呼叫一次 writeCursor），這裡的 makeWriteCursor() 只是
+//     單純的 upsert 封裝，不知道呼叫頻率。
 const ORPHAN_SCAN_BATCH_SIZE = 500;
 const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
 const LIST_PAGE_SIZE = 1000;
-
-// 比照 supabase/migrations/20260904060700_avatar_object_path.sql 的
-// private.is_media_object_path()（原檔／縮圖那一支形狀，不含 avatars/ 分支——
-// 頭像路徑在下面掃描時直接跳過那個資料夾，不會走到這支 regex）。
-const MEDIA_OBJECT_PATH_RE =
-  /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/(\d{4})\/(0[1-9]|1[0-2])\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:_thumb)?\.(?:jpg|jpeg|png|heic|heif|mp4|mov)$/;
 
 interface QueueRow {
   id: string;
@@ -157,12 +149,6 @@ interface QueueRow {
 type AdminClient = SupabaseClient;
 type StorageBucket = ReturnType<AdminClient["storage"]["from"]>;
 
-interface StorageEntry {
-  id: string | null;
-  name: string;
-  created_at?: string | null;
-}
-
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < items.length; i += size) {
@@ -173,275 +159,138 @@ function chunk<T>(items: T[], size: number): T[][] {
 
 // R2 F3（i）：分頁走完一個路徑底下的所有項目，不假設一頁（1000 筆）就是全部。
 // 失敗時把原因塞進 warnings 並回傳 null（呼叫端據此跳過這個分支，不當成「這裡是
-// 空的」悄悄放行）。
-async function listAllPaged(
-  bucket: StorageBucket,
-  path: string,
-  warnings: string[],
-  label: string,
-): Promise<StorageEntry[] | null> {
-  const all: StorageEntry[] = [];
-  let offset = 0;
-  for (;;) {
-    const { data, error } = await bucket.list(path, {
-      limit: LIST_PAGE_SIZE,
-      offset,
-    });
-    if (error) {
-      warnings.push(`orphan scan：列出 ${label} 失敗：${error.message}`);
-      return null;
-    }
-    if (!data || data.length === 0) break;
-    all.push(...data);
-    if (data.length < LIST_PAGE_SIZE) break;
-    offset += LIST_PAGE_SIZE;
-  }
-  return all;
-}
-
-// R2 F1（b）：讀寫 public.orphan_scan_cursor（單列，bucket_id='media'）。讀取
-// 失敗 fail-open——從頭開始掃，頂多重複掃到已經掃過的家庭，不影響正確性，只
-// influence 這次 invocation 的公平性；寫入失敗只記 warning，不影響這次已經算好
-// 的 enqueued 結果（下次 invocation 的續掃點會退回上一個游標，最壞情況是多繞
-// 一點路，不會漏掃）。
-async function readScanCursor(
-  supabase: AdminClient,
-  warnings: string[],
-): Promise<string | null> {
-  const { data, error } = await supabase
-    .from("orphan_scan_cursor")
-    .select("last_family_id")
-    .eq("bucket_id", "media")
-    .maybeSingle();
-  if (error) {
-    warnings.push(`orphan scan：讀取續掃游標失敗：${error.message}`);
-    return null;
-  }
-  const row = data as { last_family_id: string | null } | null;
-  return row?.last_family_id ?? null;
-}
-
-async function writeScanCursor(
-  supabase: AdminClient,
-  lastFamilyId: string | null,
-  warnings: string[],
-): Promise<void> {
-  const { error } = await supabase
-    .from("orphan_scan_cursor")
-    .upsert(
-      {
-        bucket_id: "media",
-        last_family_id: lastFamilyId,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "bucket_id" },
-    );
-  if (error) {
-    warnings.push(`orphan scan：寫入續掃游標失敗：${error.message}`);
-  }
-}
-
-// R2：一次處理完一個家庭前綴的所有 year/month/file（原子單位，不在家庭內部中途
-// 停下——理由見上方 F1 說明：至少保證每次 invocation 對「這一個家庭」的候選數
-// 全部算完，round-robin 才有意義；若單一家庭的候選數就超過
-// ORPHAN_SCAN_BATCH_SIZE，這裡仍會把它處理完（軟上限，不是硬中斷），代價是那次
-// invocation 會比預算稍貴，換取「至少一個完整家庭前進」的簡單保證）。回傳這個
-// 家庭貢獻的候選數與新排入佇列數。
-async function scanFamilyOrphans(
-  bucket: StorageBucket,
-  supabase: AdminClient,
-  familyId: string,
-  cutoffMs: number,
-  warnings: string[],
-): Promise<{ considered: number; enqueued: number }> {
-  const yearEntries = await listAllPaged(
-    bucket,
-    familyId,
-    warnings,
-    `${familyId}/`,
-  );
-  if (yearEntries === null) return { considered: 0, enqueued: 0 };
-
-  let considered = 0;
-  const candidatePaths: string[] = [];
-
-  for (const yearEntry of yearEntries) {
-    if (yearEntry.id !== null) continue; // 檔案，不是資料夾。
-    if (yearEntry.name === "avatars") continue; // 頭像路徑不寫 media 表，排除（票文範圍 2）。
-
-    const yearPath = `${familyId}/${yearEntry.name}`;
-    const monthEntries = await listAllPaged(
-      bucket,
-      yearPath,
-      warnings,
-      `${yearPath}/`,
-    );
-    if (monthEntries === null) continue;
-
-    for (const monthEntry of monthEntries) {
-      if (monthEntry.id !== null) continue;
-
-      const monthPath = `${yearPath}/${monthEntry.name}`;
-      const fileEntries = await listAllPaged(
-        bucket,
-        monthPath,
-        warnings,
-        `${monthPath}/`,
-      );
-      if (fileEntries === null) continue;
-
-      for (const fileEntry of fileEntries) {
-        if (fileEntry.id === null) continue; // 巢狀資料夾，不合法形狀，跳過。
-        const path = `${monthPath}/${fileEntry.name}`;
-        if (!MEDIA_OBJECT_PATH_RE.test(path)) continue; // 不是本規約認得的物件形狀——R2 F1：不計入候選預算。
-        const createdAtMs = fileEntry.created_at
-          ? Date.parse(fileEntry.created_at)
-          : NaN;
-        if (!Number.isFinite(createdAtMs) || createdAtMs > cutoffMs) continue; // 還在寬限期內——R2 F1：不計入候選預算。
-        considered++; // R2 F1：預算只計「候選（形狀合規＋超過寬限期）」，不是看過的檔案數。
-        candidatePaths.push(path);
+// 空的」悄悄放行）。真正實作 OrphanScanDeps.listPaged 的介面（見 orphan_scan.ts）。
+function makeListPaged(bucket: StorageBucket): OrphanScanDeps["listPaged"] {
+  return async (
+    path: string,
+    label: string,
+    warnings: string[],
+  ): Promise<StorageEntry[] | null> => {
+    const all: StorageEntry[] = [];
+    let offset = 0;
+    for (;;) {
+      const { data, error } = await bucket.list(path, {
+        limit: LIST_PAGE_SIZE,
+        offset,
+      });
+      if (error) {
+        warnings.push(`orphan scan：列出 ${label} 失敗：${error.message}`);
+        return null;
       }
+      if (!data || data.length === 0) break;
+      all.push(...data);
+      if (data.length < LIST_PAGE_SIZE) break;
+      offset += LIST_PAGE_SIZE;
     }
-  }
-
-  if (candidatePaths.length === 0) return { considered, enqueued: 0 };
-
-  // R2 F2：一次 RPC 反查整個家庭的候選路徑，取代原本的 GET .in() 查詢字串（見
-  // migration 第 1e 段），沒有 URL 長度上限。
-  const { data: orphanPathsRaw, error: filterError } = await supabase.rpc(
-    "purge_storage_unknown_media_paths",
-    { p_paths: candidatePaths },
-  );
-  if (filterError) {
-    warnings.push(
-      `orphan scan：對照 media 表失敗（${familyId}）：${filterError.message}`,
-    );
-    return { considered, enqueued: 0 };
-  }
-  const orphanPaths = (orphanPathsRaw as string[] | null) ?? [];
-  if (orphanPaths.length === 0) return { considered, enqueued: 0 };
-
-  // service_role 對 purge_storage_queue 只有 select／delete（既有設計，見
-  // migration 第 2 段），沒有 insert——透過 SECURITY DEFINER 函式表達「這批
-  // 路徑（同一家庭）需要排入清除佇列」，不是直接 upsert 這張表（LS-213 範圍
-  // 2 動工時 supabase functions serve 實測重現 permission denied，見
-  // supabase/migrations/20260906050606_soft_delete_unreferenced_media.sql
-  // 第 1c 段）。
-  const { data: enqueuedCount, error: rpcError } = await supabase.rpc(
-    "purge_storage_queue_enqueue_orphans",
-    {
-      p_bucket_id: "media",
-      p_family_id: familyId,
-      p_object_paths: orphanPaths,
-    },
-  );
-  if (rpcError) {
-    warnings.push(
-      `orphan scan：寫入 purge_storage_queue 失敗（${familyId}）：${rpcError.message}`,
-    );
-    return { considered, enqueued: 0 };
-  }
-
-  return {
-    considered,
-    enqueued: typeof enqueuedCount === "number"
-      ? enqueuedCount
-      : orphanPaths.length,
+    return all;
   };
 }
 
-interface OrphanScanResult {
-  enqueued: number;
-  scanCompleted: boolean;
-  cursor: string | null;
+// 讀寫 public.orphan_scan_cursor（單列，bucket_id='media'）。讀取失敗
+// fail-open——從頭開始掃，頂多重複掃到已經掃過的家庭，不影響正確性，只 influence
+// 這次 invocation 的公平性；寫入失敗只記 warning，不影響這次已經算好的結果——下次
+// invocation 的續掃點會退回上一個游標，最壞情況是多繞一點路，不會漏掃。
+function makeReadCursor(supabase: AdminClient): OrphanScanDeps["readCursor"] {
+  return async (warnings: string[]): Promise<string | null> => {
+    const { data, error } = await supabase
+      .from("orphan_scan_cursor")
+      .select("last_family_id")
+      .eq("bucket_id", "media")
+      .maybeSingle();
+    if (error) {
+      warnings.push(`orphan scan：讀取續掃游標失敗：${error.message}`);
+      return null;
+    }
+    const row = data as { last_family_id: string | null } | null;
+    return row?.last_family_id ?? null;
+  };
 }
 
-// LS-213 範圍 2：分頁掃 media bucket（{family_id}/{yyyy}/{mm}/{file} 三層資料夾）
-// 找出「Storage 有物件、但 public.media 完全沒有列引用它（不論 storage_path 或
-// thumb_path）」且建立時間超過寬限期的物件，寫進 public.purge_storage_queue
-// （media_id 留 NULL——這批物件從來就沒有對應的 media 列，不像既有的硬刪路徑
-// 那樣附得上 media_id）。**只寫入佇列，不在這裡自己呼叫 storage.remove()**：
-// 新 enqueue 的列留給下一次 invocation 的既有消化迴圈處理（R2 起呼叫順序調整為
-// 「先消化既有佇列、後掃描」，見檔尾 Deno.serve 與上方 F3 說明），重用已經測過、
-// 有 attempts／退避／死信與 confirmed-delete 核對的既有消化邏輯，不重新實作一套
-// 刪除路徑（DRY，且不重複「額度」顧慮——這批物件從來沒有 media 列，
-// families.storage_used_bytes 從未把它們算進去，透過 purge_storage_queue 走既有
-// 路徑刪除也完全不會觸發 media 表的 AFTER DELETE/UPDATE trigger，沒有重複扣款的
-// 可能）。`purge_storage_queue_enqueue_orphans` 的 `on conflict do nothing`
-// 天生冪等，同一個物件路徑下次掃到、若還沒被消化，不會報錯也不會產生重複列。
-//
-// R2（merge-review R1 F1，家庭層級 round-robin＋持久化游標）：見上方常數區塊與
-// migration 1d 段的完整說明。回傳值含 scanCompleted／cursor，讓呼叫端／觀測面
-// 能區分「這次掃完一整圈」跟「還沒掃完就先返回」，不再跟「沒有孤兒」同外觀。
-async function scanOrphanStorageObjects(
+function makeWriteCursor(supabase: AdminClient): OrphanScanDeps["writeCursor"] {
+  return async (
+    lastFamilyId: string | null,
+    warnings: string[],
+  ): Promise<void> => {
+    const { error } = await supabase
+      .from("orphan_scan_cursor")
+      .upsert(
+        {
+          bucket_id: "media",
+          last_family_id: lastFamilyId,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "bucket_id" },
+      );
+    if (error) {
+      warnings.push(`orphan scan：寫入續掃游標失敗：${error.message}`);
+    }
+  };
+}
+
+// LS-222（N3）：呼叫 public.purge_storage_classify_orphan_paths() RPC，取代原本
+// 的本地 MEDIA_OBJECT_PATH_RE——路徑形狀合法性只由 SQL 端
+// private.is_media_object_path() 判定一次。這支 RPC 恆回傳 1 列
+// { orphan_paths, invalid_paths }（見 migration 說明），data 陣列長度不是 0 就是 1。
+function makeClassifyPaths(
   supabase: AdminClient,
-  warnings: string[],
-): Promise<OrphanScanResult> {
-  const cutoffMs = Date.now() - ORPHAN_GRACE_MS;
-  const bucket = supabase.storage.from("media");
-
-  const resumeAfter = await readScanCursor(supabase, warnings);
-
-  const familyEntries = await listAllPaged(
-    bucket,
-    "",
-    warnings,
-    "media bucket 根目錄",
-  );
-  if (familyEntries === null) {
-    return { enqueued: 0, scanCompleted: false, cursor: resumeAfter };
-  }
-
-  const familyIds = familyEntries
-    .filter((e) => e.id === null) // bucket 頂層不該有檔案，只認資料夾（家庭前綴）。
-    .map((e) => e.name)
-    .sort();
-
-  if (familyIds.length === 0) {
-    await writeScanCursor(supabase, null, warnings);
-    return { enqueued: 0, scanCompleted: true, cursor: null };
-  }
-
-  // round-robin：從游標之後的第一個家庭開始（storage.list() 預設
-  // sortBy=name asc 的字典序）；找不到比游標更大的（表示上次已經繞到最後）就
-  // 從頭開始。
-  let startIndex = 0;
-  if (resumeAfter !== null) {
-    const idx = familyIds.findIndex((f) => f > resumeAfter);
-    startIndex = idx === -1 ? 0 : idx;
-  }
-
-  let considered = 0;
-  let enqueued = 0;
-  let lastProcessed: string | null = null;
-  let scanCompleted = false;
-
-  for (let visited = 0; visited < familyIds.length; visited++) {
-    const familyId = familyIds[(startIndex + visited) % familyIds.length];
-    const result = await scanFamilyOrphans(
-      bucket,
-      supabase,
-      familyId,
-      cutoffMs,
-      warnings,
+): OrphanScanDeps["classifyPaths"] {
+  return async (paths: string[]) => {
+    const { data, error } = await supabase.rpc(
+      "purge_storage_classify_orphan_paths",
+      { p_paths: paths },
     );
-    considered += result.considered;
-    enqueued += result.enqueued;
-    lastProcessed = familyId;
+    if (error) return { ok: false, error: error.message };
+    const row = (data as
+      | { orphan_paths: string[] | null; invalid_paths: string[] | null }[]
+      | null)?.[0];
+    return {
+      ok: true,
+      result: {
+        orphanPaths: row?.orphan_paths ?? [],
+        invalidPaths: row?.invalid_paths ?? [],
+      },
+    };
+  };
+}
 
-    if (visited + 1 >= familyIds.length) {
-      scanCompleted = true; // 繞完一整圈：這次 invocation 內每個家庭都處理過一次。
-      break;
-    }
-    if (considered >= ORPHAN_SCAN_BATCH_SIZE) {
-      break; // 候選預算用完，停在這個已完整處理的家庭，下次從下一個家庭續掃。
-    }
-  }
+// LS-222（N3）：呼叫 public.purge_storage_queue_enqueue_orphans_v2() RPC，取代
+// 原本回傳單一 integer 的 purge_storage_queue_enqueue_orphans()——多回傳 dropped
+// （被這一層前綴／形狀防禦性重驗擋下的筆數），不再讓被丟棄的路徑靜默消失。
+// service_role 對 purge_storage_queue 只有 select／delete（既有設計），沒有
+// insert——透過這支 SECURITY DEFINER 函式表達「這批路徑（同一家庭）需要排入清除
+// 佇列」，不是直接 upsert 這張表（LS-213 範圍 2 動工時 supabase functions serve
+// 實測重現 permission denied，見 migration 說明）。
+function makeEnqueueOrphans(
+  supabase: AdminClient,
+): OrphanScanDeps["enqueueOrphans"] {
+  return async (familyId: string, paths: string[]) => {
+    const { data, error } = await supabase.rpc(
+      "purge_storage_queue_enqueue_orphans_v2",
+      { p_bucket_id: "media", p_family_id: familyId, p_object_paths: paths },
+    );
+    if (error) return { ok: false, error: error.message };
+    const row = (data as { enqueued: number; dropped: number }[] | null)?.[0];
+    return {
+      ok: true,
+      result: {
+        enqueued: row?.enqueued ?? 0,
+        dropped: row?.dropped ?? 0,
+      },
+    };
+  };
+}
 
-  const newCursor = scanCompleted ? null : lastProcessed;
-  await writeScanCursor(supabase, newCursor, warnings);
-
-  return { enqueued, scanCompleted, cursor: newCursor };
+function buildOrphanScanDeps(
+  supabase: AdminClient,
+  bucket: StorageBucket,
+): OrphanScanDeps {
+  return {
+    listPaged: makeListPaged(bucket),
+    classifyPaths: makeClassifyPaths(supabase),
+    enqueueOrphans: makeEnqueueOrphans(supabase),
+    readCursor: makeReadCursor(supabase),
+    writeCursor: makeWriteCursor(supabase),
+  };
 }
 
 Deno.serve(async (req: Request) => {
@@ -638,7 +487,16 @@ Deno.serve(async (req: Request) => {
   // 硬刪路徑（purge_expired() 硬刪 media 之後由 trigger 入列）產生的佇列列優先
   // 消化，掃描（storage.list() 分層呼叫，成本相對高）不會拖延既有清除工作。這次
   // 掃到的孤兒留給下一次 invocation 的迴圈消化（一次 invocation 的延遲）。
-  const orphanScan = await scanOrphanStorageObjects(supabase, warnings);
+  const orphanScanDeps = buildOrphanScanDeps(
+    supabase,
+    supabase.storage.from("media"),
+  );
+  const orphanScan = await scanOrphanStorageObjects(
+    orphanScanDeps,
+    Date.now() - ORPHAN_GRACE_MS,
+    ORPHAN_SCAN_BATCH_SIZE,
+    warnings,
+  );
 
   // R4（merge-review R3 minor 2，comment 04987043）：死信停放本身沒有任何觀測
   // 出口——停放之後 EF 回應永遠是 processed:0/failed:0 HTTP 200，跟「佇列本來
@@ -655,7 +513,7 @@ Deno.serve(async (req: Request) => {
   console.log(
     `purge-storage: parked=${
       parked ?? 0
-    } orphanEnqueued=${orphanScan.enqueued} ` +
+    } orphanEnqueued=${orphanScan.enqueued} orphanDropped=${orphanScan.dropped} ` +
       `orphanScanCompleted=${orphanScan.scanCompleted} orphanScanCursor=${
         orphanScan.cursor ?? "null"
       }`,
@@ -669,6 +527,10 @@ Deno.serve(async (req: Request) => {
       warnings,
       parked: parked ?? 0,
       orphanEnqueued: orphanScan.enqueued,
+      // LS-222（收口 LS-213 R2 merge-review N3）：形狀不合規或前綴不符而被
+      // 丟棄的候選路徑數——過去這些路徑會被靜默丟棄、完全無法觀測，見
+      // orphan_scan.ts 與新 migration 的說明。
+      orphanDropped: orphanScan.dropped,
       // R2（merge-review R1 F1 c）：讓「還沒掃完一輪」與「這個 bucket 真的沒有
       // 孤兒」在回應裡可以區分——scanCompleted=false 時 cursor 非 null，代表下次
       // invocation 會從這裡續掃，不是「已經確認整個 bucket 都乾淨」。

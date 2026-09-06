@@ -391,20 +391,41 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   `purge-storage` Edge Function 在既有的佇列消化迴圈**之後**（R2：原本在之前，掃描慢會拖延
   既有硬刪路徑的清除工作，見下方「自動清除」小節），逐家庭前綴分頁掃描 `media` bucket
   （`{family_id}/{yyyy}/{mm}/{file}` 三層資料夾，跳過 `avatars/` 子路徑，`storage.list()` 皆
-  用 `offset` 續頁涵蓋超過一頁的資料夾）反查 `public.media.storage_path`／`thumb_path`（改用
-  RPC `public.purge_storage_unknown_media_paths()`，R2：原本用 GET `.in()` 查詢字串，候選路徑
-  一多會撞 HTTP 414），找不到對應列、且物件 `created_at` 超過寬限期（24 小時）的路徑透過
-  `public.purge_storage_queue_enqueue_orphans()` RPC 排入既有 `purge_storage_queue`（
-  `media_id` 為 NULL，且該 RPC 會驗證路徑落在呼叫端聲稱的家庭前綴下且形狀合規，R2 補），交給
-  下一次 invocation 的既有消化迴圈刪除——沿用既有的 attempts／退避／死信與 confirmed-delete
-  核對，不重新實作刪除路徑，也不影響額度（這批物件從未計入 `families.storage_used_bytes`，
-  走佇列刪除不會觸發 `media` 表的 trigger，沒有重複扣款的可能）。每次 invocation 的候選數
-  （R2：不是看過的檔案數）上限見 `purge-storage/index.ts` 的 `ORPHAN_SCAN_BATCH_SIZE`；家庭
-  前綴走 round-robin、續掃進度持久化在 `public.orphan_scan_cursor`（R2，避免排序在前的家庭
-  永遠掃完前面就用掉整個預算，讓後面的家庭餓死），回應 JSON 的 `orphanScanCompleted`／
-  `orphanScanCursor` 讓「這次掃完一整輪」與「這個 bucket 真的沒有孤兒」在觀測上可以區分。沒有
-  自動化測試（見下方「自動清除」小節對這支 Edge Function 既有的已知限制說明，本次以
-  `supabase functions serve` 手動 e2e 驗證，同既有慣例）。
+  用 `offset` 續頁涵蓋超過一頁的資料夾）反查 `public.media.storage_path`／`thumb_path`。
+  **LS-222（收口 LS-213 R2 merge-review N3）路徑合法性單一來源**：`purge-storage/index.ts`
+  過去自帶一份 `MEDIA_OBJECT_PATH_RE`，跟 `private.is_media_object_path()`（唯一權威判準）
+  不等價（縮圖分支：TS 允許任何既有副檔名、SQL 只認 `.jpg`）——落差區間的物件（例如
+  `{uuid}_thumb.png`）會被每輪掃到又被靜默丟棄、無計數回報。改法：TS 端不再自帶 regex，候選
+  只用建立時間（寬限期）篩，形狀合法性交給新 RPC `public.purge_storage_classify_orphan_paths()`
+  （內部呼叫 `private.is_media_object_path()`，並組合既有 `purge_storage_unknown_media_paths()`
+  判斷是否有對應 `media` 列），一次回傳「真正孤兒」與「形狀不合規」兩個子集合；找不到對應列、
+  且物件 `created_at` 超過寬限期（24 小時）的合法形狀路徑透過新 RPC
+  `public.purge_storage_queue_enqueue_orphans_v2()`（回傳 `{ enqueued, dropped }`，取代原本
+  只回傳單一整數的 `purge_storage_queue_enqueue_orphans()`——Postgres 不允許
+  `create or replace function` 改變回傳型別，因此另立新函式名，兩支舊函式維持不動、不刪除，
+  見新 migration 檔頭）排入既有 `purge_storage_queue`（`media_id` 為 NULL，且該 RPC 仍保留
+  前綴與形狀的防禦性重驗），交給下一次 invocation 的既有消化迴圈刪除——沿用既有的
+  attempts／退避／死信與 confirmed-delete 核對，不重新實作刪除路徑，也不影響額度（這批物件
+  從未計入 `families.storage_used_bytes`，走佇列刪除不會觸發 `media` 表的 trigger，沒有重複
+  扣款的可能）。每次 invocation 的候選數（過了寬限期的物件數，不是看過的檔案數）上限見
+  `purge-storage/orphan_scan.ts` 的 `batchSize` 參數（由 `index.ts` 的 `ORPHAN_SCAN_BATCH_SIZE`
+  傳入）；家庭前綴走 round-robin、續掃進度持久化在 `public.orphan_scan_cursor`（避免排序在前
+  的家庭永遠掃完前面就用掉整個預算，讓後面的家庭餓死）——**LS-222（收口 N2）游標分段寫回**：
+  游標在**每個家庭前綴掃完後**就 upsert 一次（`scanOrphanStorageObjects()` 迴圈內，不是等整趟
+  掃描結束才寫一次），invocation 中途因 wall-clock 被中止時，下一次至少從最後寫回的那個家庭
+  續掃，不會歸零進度；並發兩次 invocation 對游標是 **last-writer-wins**——這不會造成漏掃：
+  游標的值永遠是「某個寫入者這次真的處理完的家庭」，resume 規則
+  （`familyIds.findIndex(f => f > resumeAfter)`）的起點只會落在某個已處理家庭的後繼，被覆寫
+  只可能讓游標往回退（下一輪多掃一點、不會跳過沒掃過的家庭），入列端 `on conflict do nothing`
+  天生冪等，重複掃到同一個物件不會產生重複列。回應 JSON 的 `orphanEnqueued`／`orphanDropped`
+  （LS-222 新增，被前綴或形狀防禦性重驗擋下的候選數，不再靜默消失）／`orphanScanCompleted`／
+  `orphanScanCursor` 讓「這次掃完一整輪」「有多少被丟棄」與「這個 bucket 真的沒有孤兒」在觀測
+  上可以區分。孤兒掃描本體（round-robin／游標／候選分類／入列）已抽到
+  `purge-storage/orphan_scan.ts`，用注入的 fake `OrphanScanDeps` 有 Deno 單元測試覆蓋
+  （含 `_thumb.png` 落差樣本計入 dropped、游標分段寫回、候選預算用完仍寫回已處理家庭三類案例，
+  `orphan_scan.test.ts`）；`index.ts` 本體（佇列消化、attempts／退避／死信）仍只有本機
+  `supabase functions serve` 手動 e2e 驗證，沒有自動化測試（同既有慣例，見下方「自動清除」
+  小節）。
 - **影片時長（`duration_seconds`，LS-134）**：nullable，`CHECK`（有值時必須 `> 0`，
   `media_duration_seconds_positive`）。`type = 'photo'` 時應留 `NULL`；
   `type = 'video'` 時由上傳端以 `AVAsset.load(.duration)` 量測寫入——**若影片經過
@@ -2261,12 +2282,14 @@ LS-132 對外文字上線前的硬前置（R2 review informational i4）。
   依賴。`supabase/tests/109_soft_delete_unreferenced_media.sql` 覆蓋三案矩陣（未
   引用超期／未引用未超期／已引用）＋24 小時邊界＋額度回落＋冪等重跑＋預設寬限期
   迴歸。
-- `purge-storage` Edge Function 的 `scanOrphanStorageObjects()`——沿用上一段
-  「目前沒有任何東西會觸發這支 Edge Function」的既有部署缺口（正式站排程接線由
-  orchestrator 依 LS-78 狀態決定，不在本票落地範圍）；已知限制同上一段：本機
-  `supabase functions serve --no-verify-jwt` 手動 e2e 驗證，沒有寫成
-  `supabase/tests/` 底下的自動化測試（repo 沒有 Deno/Edge Function 測試治具，
-  同 LS-153 既有限制）。**R2（merge-review R1 80d7242c）**：掃描改為逐家庭前綴
+- `purge-storage` Edge Function 的 `scanOrphanStorageObjects()`（LS-222 起抽到
+  `purge-storage/orphan_scan.ts`）——沿用上一段「目前沒有任何東西會觸發這支
+  Edge Function」的既有部署缺口（正式站排程接線由 orchestrator 依 LS-78 狀態
+  決定，不在本票落地範圍）；`index.ts` 佇列消化本體仍只有本機
+  `supabase functions serve --no-verify-jwt` 手動 e2e 驗證，沒有自動化測試；
+  `orphan_scan.ts` 的孤兒掃描邏輯（round-robin／游標／候選分類／入列）**LS-222
+  起有 Deno 單元測試覆蓋**（`orphan_scan.test.ts`，注入 fake `OrphanScanDeps`，
+  不連線任何真正的服務）。**R2（merge-review R1 80d7242c）**：掃描改為逐家庭前綴
   round-robin，續掃進度持久化在 `public.orphan_scan_cursor`（家庭數多、單一家庭
   候選數大時，保證每次 invocation 都往前推進，不會被排序在前的家庭永遠佔住候選
   預算）；反查改用 `public.purge_storage_unknown_media_paths()` RPC（避免候選路徑
@@ -2274,7 +2297,18 @@ LS-132 對外文字上線前的硬前置（R2 review informational i4）。
   清除工作）；`public.purge_storage_queue_enqueue_orphans()` 補上路徑前綴與形狀
   驗證。`supabase/tests/109_soft_delete_unreferenced_media.sql` 新增第 3／4 段
   對這兩支反查／入列 RPC 的 DB 測試（含 30 天救援窗內已軟刪 media 不誤判為孤兒
-  的正向不變量）。
+  的正向不變量）。**LS-222（收口 merge-review R2 0e4c0eed 的 N2／N3）**：
+  N3——TS 端不再自帶路徑 regex（過去跟 `private.is_media_object_path()` 不等價，
+  縮圖分支落差區間的物件會被靜默丟棄），改呼叫新 RPC
+  `public.purge_storage_classify_orphan_paths()` 判定形狀合法性並回傳
+  `invalid_paths`；入列改呼叫新 RPC `public.purge_storage_queue_enqueue_orphans_v2()`
+  （回傳 `{ enqueued, dropped }`，兩支舊 RPC 維持不動、不刪除，見新 migration
+  檔頭「為什麼是新函式名」）；EF 回應新增 `orphanDropped` 欄位。N2——游標改成
+  每個家庭前綴掃完就寫回一次（不是整趟掃描結束才寫一次），且並發語意明確為
+  last-writer-wins（不會漏掃，只會多繞）。`supabase/tests/109_…sql` 新增第 5／6
+  段驗證兩支新 RPC（含 `{uuid}_thumb.png` 落差樣本進 `invalid_paths` 的案例）；
+  `orphan_scan.test.ts` 新增游標分段寫回、候選預算用完仍寫回已處理家庭、
+  `_thumb.png` 落差樣本計入 dropped 三類 Deno 單元測試案例。
 
 ---
 
@@ -2443,7 +2477,9 @@ list_children(uuid)
 list_comments(uuid, text, uuid, timestamptz, uuid, integer)
 list_join_requests()
 notification_recipients(uuid[])
+purge_storage_classify_orphan_paths(text[])
 purge_storage_queue_enqueue_orphans(text, uuid, text[])
+purge_storage_queue_enqueue_orphans_v2(text, uuid, text[])
 purge_storage_queue_mark_failed(uuid[], text)
 purge_storage_unknown_media_paths(text[])
 register_device_token(text, text)

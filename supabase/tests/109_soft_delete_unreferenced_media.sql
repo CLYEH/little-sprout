@@ -23,6 +23,19 @@
 -- NOTICE 供參考。新增第 3／4 段：`purge_storage_unknown_media_paths()`（含
 -- reviewer 已驗證的正向不變量——30 天救援窗內已軟刪 media 不誤判為孤兒）與
 -- `purge_storage_queue_enqueue_orphans()` 的路徑驗證（F4）。
+--
+-- LS-222（收口 LS-213 R2 merge-review N3，comment 0e4c0eed）：新增第 5／6 段。
+-- N3 指出 index.ts 原本自帶的 MEDIA_OBJECT_PATH_RE 跟 private.is_media_object_path()
+-- 不等價（縮圖分支：TS 允許任何既有副檔名、SQL 只認 .jpg），落差區間的物件（例如
+-- {uuid}_thumb.png）會被靜默丟棄、無計數回報。第 5 段驗證新函式
+-- `purge_storage_classify_orphan_paths()` 正確把這類落差樣本分進 invalid_paths；
+-- 第 6 段驗證新函式 `purge_storage_queue_enqueue_orphans_v2()` 的 dropped 回傳值
+-- 正確計數。兩支舊函式（`purge_storage_unknown_media_paths`／
+-- `purge_storage_queue_enqueue_orphans`）維持不動，第 3／4 段的既有測試繼續驗證
+-- 它們自己的行為沒有被本票動到（見新 migration 檔頭「為什麼是新函式名」的說明）。
+-- 第 7 段（來源 LS-96 comment c601ccd0）：orphan_scan_cursor 專屬 grant／RLS
+-- 正向對照——這張表是唯一由 EF 直接經 PostgREST 讀寫的新表，60_default_privileges.sql
+-- 第 1 段的通掃只驗證機制本身，這裡補實際 grant 狀態的專屬斷言。
 
 \set ON_ERROR_STOP on
 
@@ -351,3 +364,181 @@ end;
 $$;
 
 rollback;
+
+-- ===========================================================================
+-- 5.（LS-222，收口 LS-213 R2 merge-review N3）public.purge_storage_classify_
+--    orphan_paths(p_paths) 行為驗證：形狀不合規的路徑（含票文點名的落差樣本
+--    {uuid}_thumb.png）進 invalid_paths，不會混進 orphan_paths；合法形狀裡真正
+--    沒有 media 列引用的才進 orphan_paths；30 天救援窗內已軟刪 media（原圖＋
+--    縮圖）的正向不變量繼續成立（內部組合既有
+--    purge_storage_unknown_media_paths()，同一份查詢，不重複實作）。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_owner uuid := 'dc400000-0000-4000-8000-000000000001';
+  v_family uuid := 'dc400000-0000-4000-8000-000000000002';
+  v_media_active uuid := 'dc400000-0000-4000-8000-000000000010';
+  v_media_soft_deleted uuid := 'dc400000-0000-4000-8000-000000000011';
+  v_path_active text;
+  v_path_soft_deleted text;
+  v_thumb_soft_deleted text;
+  v_path_unknown text := 'dc400000-0000-4000-8000-000000000002/2026/07/dc400000-0000-4000-8000-0000000000ff.jpg';
+  -- 落差樣本：LS-213 R2 merge-review N3 指出的具體案例——SQL 只認縮圖 .jpg，
+  -- 這個 .png 縮圖形狀完全不合規（不論有沒有對應 media 列都一樣），必須落進
+  -- invalid_paths，不能混進 orphan_paths。
+  v_path_bad_thumb text := 'dc400000-0000-4000-8000-000000000002/2026/07/dc400000-0000-4000-8000-0000000000ee_thumb.png';
+  v_orphan_paths text[];
+  v_invalid_paths text[];
+begin
+  set local role postgres;
+
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+  values (v_owner, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls222-classify@ls213.test', now(), now(), '{}', '{}');
+  insert into public.profiles (id, display_name) values (v_owner, 'LS222 classify_orphan_paths 測試')
+    on conflict (id) do update set display_name = excluded.display_name;
+  insert into public.families (id, name, created_by) values (v_family, 'LS222 classify_orphan_paths 測試家', v_owner);
+
+  v_path_active := v_family::text || '/2026/07/' || v_media_active::text || '.jpg';
+  v_path_soft_deleted := v_family::text || '/2026/07/' || v_media_soft_deleted::text || '.jpg';
+  v_thumb_soft_deleted := v_family::text || '/2026/07/' || v_media_soft_deleted::text || '_thumb.jpg';
+
+  insert into public.media (id, family_id, storage_path, thumb_path, thumb_width, thumb_height, type, byte_size, taken_at, width, height, uploaded_by, deleted_at) values
+    (v_media_active, v_family, v_path_active, null, null, null, 'photo', 100, now(), 10, 10, v_owner, null),
+    -- 3 天前軟刪，仍在 30 天救援窗內——正向不變量：原圖與縮圖都不該被判定為孤兒。
+    (v_media_soft_deleted, v_family, v_path_soft_deleted, v_thumb_soft_deleted, 5, 5, 'photo', 200, now(), 10, 10, v_owner, now() - interval '3 days');
+
+  select orphan_paths, invalid_paths
+    into v_orphan_paths, v_invalid_paths
+    from public.purge_storage_classify_orphan_paths(
+      array[v_path_active, v_path_soft_deleted, v_thumb_soft_deleted, v_path_unknown, v_path_bad_thumb]
+    );
+
+  if v_invalid_paths <> array[v_path_bad_thumb] then
+    raise exception 'FAIL：invalid_paths 應該只有落差樣本 %（.png 縮圖形狀不合規），實際 %', v_path_bad_thumb, v_invalid_paths;
+  end if;
+
+  if v_orphan_paths <> array[v_path_unknown] then
+    raise exception 'FAIL：orphan_paths 應該只有真正查不到列的路徑 %（不含形狀不合規的落差樣本、不含活列／救援窗內軟刪列），實際 %', v_path_unknown, v_orphan_paths;
+  end if;
+
+  raise notice 'ok：purge_storage_classify_orphan_paths 正確把 %（.png 縮圖）分進 invalid_paths、% 分進 orphan_paths，活列與 30 天救援窗內已軟刪列（原圖＋縮圖）皆未誤判', v_path_bad_thumb, v_path_unknown;
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 6.（LS-222，收口 LS-213 R2 merge-review N3）public.purge_storage_queue_
+--    enqueue_orphans_v2(p_bucket_id, p_family_id, p_object_paths) 行為驗證：
+--    與舊版 purge_storage_queue_enqueue_orphans() 同一組防禦性重驗（前綴＋形狀），
+--    差別是這支額外回傳 dropped——不合規的路徑不再靜默消失，呼叫端拿得到計數。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_family uuid := 'dc500000-0000-4000-8000-000000000001';
+  v_other_family uuid := 'dc500000-0000-4000-8000-000000000099';
+  v_media_id uuid := 'dc500000-0000-4000-8000-000000000010';
+  v_valid_path text;
+  v_wrong_prefix_path text;
+  v_bad_shape_path text;
+  v_n int;
+  v_enqueued int;
+  v_dropped int;
+begin
+  set local role postgres;
+
+  v_valid_path := v_family::text || '/2026/07/' || v_media_id::text || '.jpg';
+  v_wrong_prefix_path := v_other_family::text || '/2026/07/' || v_media_id::text || '.jpg';
+  v_bad_shape_path := v_family::text || '/not-a-valid-media-path.txt';
+
+  select enqueued, dropped
+    into v_enqueued, v_dropped
+    from public.purge_storage_queue_enqueue_orphans_v2(
+      'media', v_family, array[v_valid_path, v_wrong_prefix_path, v_bad_shape_path]
+    );
+
+  if v_enqueued <> 1 then
+    raise exception 'FAIL：三條路徑裡只有 1 條合法（前綴符合 p_family_id 且形狀合規），enqueued 應該是 1，實際 %', v_enqueued;
+  end if;
+
+  if v_dropped <> 2 then
+    raise exception 'FAIL：三條路徑裡有 2 條該被丟棄（家庭前綴不符一條、形狀不合規一條），dropped 應該是 2，實際 %（LS-222 要修的正是這個計數過去完全沒有回報）', v_dropped;
+  end if;
+
+  select count(*) into v_n from public.purge_storage_queue where object_path = v_valid_path;
+  if v_n <> 1 then
+    raise exception 'FAIL：合法路徑 % 應該已排入佇列', v_valid_path;
+  end if;
+
+  select count(*) into v_n from public.purge_storage_queue where object_path = v_wrong_prefix_path;
+  if v_n <> 0 then
+    raise exception 'FAIL：家庭前綴不符的路徑 % 不該被排入佇列', v_wrong_prefix_path;
+  end if;
+
+  select count(*) into v_n from public.purge_storage_queue where object_path = v_bad_shape_path;
+  if v_n <> 0 then
+    raise exception 'FAIL：形狀不合規的路徑 % 不該被排入佇列', v_bad_shape_path;
+  end if;
+
+  raise notice 'ok：purge_storage_queue_enqueue_orphans_v2 正確回報 enqueued=%／dropped=%，且實際排入佇列的內容與 v1 行為一致', v_enqueued, v_dropped;
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 7.（LS-222，來源 LS-96 comment c601ccd0）public.orphan_scan_cursor 的專屬
+--    grant／RLS 正向對照——這張表是唯一由 purge-storage Edge Function 直接經
+--    PostgREST 讀寫（不經 SECURITY DEFINER RPC 包裝）的新表（LS-213 R2 建立），
+--    本票（LS-222）觸碰它的分段寫回，`60_default_privileges.sql` 第 1 段的
+--    default privileges 通掃只驗證「任何新表對 anon/authenticated 天生零權限」
+--    這個機制本身，不是對 orphan_scan_cursor 實際 grant 狀態的專屬斷言——比照
+--    第 0 段（F5）對 media 的既有慣例，這裡直接對這張表補正向對照。
+-- ===========================================================================
+do $$
+begin
+  if not has_table_privilege('service_role', 'public.orphan_scan_cursor', 'select') then
+    raise exception 'FAIL：service_role 沒有 orphan_scan_cursor 的 SELECT grant——purge-storage 的續掃游標讀取會炸';
+  end if;
+  if not has_table_privilege('service_role', 'public.orphan_scan_cursor', 'insert') then
+    raise exception 'FAIL：service_role 沒有 orphan_scan_cursor 的 INSERT grant——第一次寫入游標（該表還是空的）會炸';
+  end if;
+  if not has_table_privilege('service_role', 'public.orphan_scan_cursor', 'update') then
+    raise exception 'FAIL：service_role 沒有 orphan_scan_cursor 的 UPDATE grant——第二次起的續掃游標 upsert 會炸';
+  end if;
+  if has_table_privilege('service_role', 'public.orphan_scan_cursor', 'delete') then
+    raise exception 'FAIL：service_role 竟然有 orphan_scan_cursor 的 DELETE grant（migration 只 grant select, insert, update，見 1d 段既有設計——游標列只會被 upsert 歸零，不會被刪除）';
+  end if;
+
+  if has_table_privilege('anon', 'public.orphan_scan_cursor', 'select') then
+    raise exception 'FAIL：anon 竟然可以讀 orphan_scan_cursor（這張表只給 purge-storage 的 service_role 用，不是任何登入者看得到的資料）';
+  end if;
+  if has_table_privilege('anon', 'public.orphan_scan_cursor', 'insert') then
+    raise exception 'FAIL：anon 竟然可以寫 orphan_scan_cursor';
+  end if;
+  if has_table_privilege('authenticated', 'public.orphan_scan_cursor', 'select') then
+    raise exception 'FAIL：authenticated 竟然可以讀 orphan_scan_cursor（這張表跟任何使用者身分無關，純粹是 Edge Function 自己跨 invocation 的狀態）';
+  end if;
+  if has_table_privilege('authenticated', 'public.orphan_scan_cursor', 'insert') then
+    raise exception 'FAIL：authenticated 竟然可以寫 orphan_scan_cursor';
+  end if;
+  if has_table_privilege('authenticated', 'public.orphan_scan_cursor', 'update') then
+    raise exception 'FAIL：authenticated 竟然可以更新 orphan_scan_cursor';
+  end if;
+
+  if not exists (
+    select 1 from pg_class where oid = 'public.orphan_scan_cursor'::regclass and relrowsecurity
+  ) then
+    raise exception 'FAIL：orphan_scan_cursor 沒有啟用 RLS（migration 1d 段 alter table ... enable row level security）';
+  end if;
+  if exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'orphan_scan_cursor') then
+    raise exception 'FAIL：orphan_scan_cursor 竟然有 policy（設計是 RLS enabled＋無 policy，靠 grant 本身把 anon/authenticated 擋在外面，見 migration 1d 段既有說明）';
+  end if;
+
+  raise notice 'ok：orphan_scan_cursor 只對 service_role 開 select/insert/update（無 delete），anon／authenticated 皆零權限，RLS enabled 且無 policy';
+end;
+$$;
