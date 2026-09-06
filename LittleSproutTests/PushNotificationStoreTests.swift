@@ -197,6 +197,7 @@ final class PushNotificationStoreTests: XCTestCase {
 
         XCTAssertFalse(granted)
         XCTAssertEqual(store.authorizationStatus, .denied)
+        XCTAssertEqual(authService.registerForRemoteNotificationsCallCount, 0, "被拒絕不該呼叫註冊")
     }
 
     /// 註冊失敗不擋 UI：`requestAuthorization()` 本身 throw（例如系統層級錯誤）不該讓呼叫端

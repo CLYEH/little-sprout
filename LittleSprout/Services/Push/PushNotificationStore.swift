@@ -1,6 +1,5 @@
 import Foundation
 import Observation
-import UIKit
 import UserNotifications
 
 /// 推播權限與裝置 token 註冊（LS-217）的 `@Observable` 狀態管理——同 `EULAStore` 之於
@@ -26,13 +25,25 @@ final class PushNotificationStore {
 
     /// `AuthenticatedRootView` 的 `.task(id: authStore.session?.userID)` 呼叫——查目前系統
     /// 授權狀態，並依 `PushPrepromptPolicy` 判斷「登入後首次進時間軸」是否該自動顯示前置頁
-    /// （票文範圍 1）。
+    /// （票文範圍 1）。這條路徑同時是冷啟動與「同一行程內換帳號」唯一會跑到的重新整理路徑
+    /// （`.task(id:)` 綁 `authStore.session?.userID`，換帳號會取消舊 task、開新的一次）——
+    /// merge-review R1 M1：已授權／provisional 時必須重新呼叫 `registerForRemoteNotifications()`
+    /// 讓系統再送一次裝置 token 回呼，否則 (a) token 輪替後永遠不會重送、(b) 換帳號後這支裝置
+    /// 會持續收到前一位使用者家庭的推播（`docs/API.md:767-770`）。去重邏輯仍在
+    /// `submitTokenIfNeeded` 那一層（依 userID 分 key，換帳號天然視為未送過），這裡只負責觸發。
     func refreshForEnteringApp(userID: UUID) async {
-        authorizationStatus = await authorizationService.currentAuthorizationStatus()
+        let status = await authorizationService.currentAuthorizationStatus()
+        // merge-review R1 m2：`.task(id:)` 換帳號時會取消舊 task，但
+        // `UNUserNotificationCenter.notificationSettings()` 不因取消提前返回——取消後回來的
+        // 這一份結果屬於「上一位使用者」查詢當下的狀態，寫入會覆蓋掉新使用者已經算好的判斷。
+        guard !Task.isCancelled else { return }
+        authorizationStatus = status
         showsPreprompt = PushPrepromptPolicy.shouldPresent(
-            authorizationStatus: authorizationStatus,
+            authorizationStatus: status,
             hasShownBefore: PushPrepromptDisplayRecord.hasShown(userID: userID)
         )
+        guard status == .authorized || status == .provisional else { return }
+        await authorizationService.registerForRemoteNotifications()
     }
 
     /// 每次 App 進前景重讀狀態（票文範圍 2）——不影響 `showsPreprompt`（前置頁只在「登入後
@@ -42,7 +53,7 @@ final class PushNotificationStore {
     func refreshOnForeground(userID: UUID) async {
         authorizationStatus = await authorizationService.currentAuthorizationStatus()
         guard authorizationStatus == .authorized else { return }
-        UIApplication.shared.registerForRemoteNotifications()
+        await authorizationService.registerForRemoteNotifications()
     }
 
     /// 前置頁關閉（不論是「開啟通知」或「稍後再說」）——標記這個使用者已經看過，
@@ -60,7 +71,7 @@ final class PushNotificationStore {
             let granted = try await authorizationService.requestAuthorization()
             authorizationStatus = granted ? .authorized : .denied
             if granted {
-                UIApplication.shared.registerForRemoteNotifications()
+                await authorizationService.registerForRemoteNotifications()
             }
             return granted
         } catch {

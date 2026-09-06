@@ -1,3 +1,4 @@
+import UIKit
 import UserNotifications
 
 /// LS-217：`UNUserNotificationCenter` 的協定包裝——單元測試不能真的觸發系統權限對話框
@@ -15,9 +16,17 @@ protocol PushAuthorizationService: Sendable {
     /// 允許。`design/littlesprout.pen` `FeqWk`（系統對話框示意）票文明講「不實作」——這裡呼叫的
     /// 就是系統原生對話框本身，app 不能、也不需要自己畫一份。
     func requestAuthorization() async throws -> Bool
+
+    /// merge-review R1 M1／i5：跟系統要（重）新取得 APNs 裝置 token
+    /// （`UIApplication.shared.registerForRemoteNotifications()`）。抽成協定方法而非讓
+    /// `PushNotificationStore` 直接呼叫 `UIApplication.shared`，是因為冷啟動／同行程換帳號
+    /// 這條路徑（`refreshForEnteringApp`）原本零測試覆蓋——沒有協定就無法用 Stub 釘住「這個
+    /// 時機有沒有真的觸發註冊」。不是真的有非同步等待，標 `async` 只是為了跟同協定其他方法
+    /// 一致，呼叫端統一用 `await`。
+    func registerForRemoteNotifications() async
 }
 
-/// 生產路徑：直接轉呼叫 `UNUserNotificationCenter.current()`。
+/// 生產路徑：直接轉呼叫 `UNUserNotificationCenter.current()` 與 `UIApplication.shared`。
 struct SystemPushAuthorizationService: PushAuthorizationService {
     func currentAuthorizationStatus() async -> UNAuthorizationStatus {
         await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
@@ -25,5 +34,11 @@ struct SystemPushAuthorizationService: PushAuthorizationService {
 
     func requestAuthorization() async throws -> Bool {
         try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
+    }
+
+    func registerForRemoteNotifications() async {
+        await MainActor.run {
+            UIApplication.shared.registerForRemoteNotifications()
+        }
     }
 }

@@ -10,6 +10,7 @@ private struct PreviewPushAuthorizationService: PushAuthorizationService {
 
     func currentAuthorizationStatus() async -> UNAuthorizationStatus { status }
     func requestAuthorization() async throws -> Bool { status == .authorized }
+    func registerForRemoteNotifications() async {}
 }
 
 /// 只給 SwiftUI `#Preview`／`TapTargetGateHarness` 用的假 `PushDeviceTokenAPIClient`——不打真
