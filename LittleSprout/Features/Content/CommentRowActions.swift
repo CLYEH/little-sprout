@@ -27,7 +27,9 @@ func commentRowActions(
     }
     if viewerRole == .owner {
         // `DUyg3`：Owner 對別人的留言只有單一 danger 列「移除這則留言」，不疊加檢舉／封鎖。
-        return [.removeAsOwner]
+        // 用 `.removeCommentAsOwner`（不是 `.removeAsOwner`）——顯示文案與後續導向的確認卡都
+        // 不同，見該 case 文件註解。
+        return [.removeCommentAsOwner]
     }
     var actions: [ContentAction] = [.report]
     if let authorID {

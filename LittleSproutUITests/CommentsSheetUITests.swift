@@ -71,4 +71,31 @@ final class CommentsSheetUITests: XCTestCase {
             "AX3 下留言內容仍應存在於畫面樹（可捲動觸達）"
         )
     }
+
+    /// `DUyg3`——Owner 對別人的留言點下去只看到單一「移除這則留言」danger 列（不含檢舉／封鎖）
+    /// ，選它導向的是既有 `CommentDeleteConfirmationSheet`（「要刪除這則留言嗎？」）而不是另開
+    /// 一張 `OwnerRemoveContentConfirmSheet`（「要移除這則內容嗎？」）——見
+    /// `ContentAction.removeCommentAsOwner` 文件註解「重要發現」。`commentsSheetHost` seed 的
+    /// 3 則留言 authorID 皆與 owner 的 `viewerUserID` 不同，任一則都適用。
+    func testOwnerTapsOthersComment_showsSingleRemoveRow_routesToCommentDeleteConfirmation() {
+        let app = TapTargetMeasurement.launch(.commentsSheet)
+        TapTargetMeasurement.assertScreenRendered(.commentsSheet, in: app)
+
+        let firstRow = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'qa.comments.row.'")).firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 10))
+        firstRow.tap()
+
+        let removeRow = app.buttons["移除這則留言"]
+        XCTAssertTrue(removeRow.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["檢舉這則內容"].exists, "DUyg3 稿面不含檢舉列")
+        XCTAssertFalse(app.staticTexts["封鎖"].exists, "DUyg3 稿面不含封鎖列")
+        removeRow.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["要刪除這則留言嗎？"].waitForExistence(timeout: 10),
+            "應該導向既有 CommentDeleteConfirmationSheet（LS-152 Qs7iE），不是另一張「要移除這則" +
+            "內容嗎？」確認卡"
+        )
+        XCTAssertTrue(app.buttons["刪除這則留言"].exists)
+    }
 }

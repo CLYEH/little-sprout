@@ -32,8 +32,9 @@ final class CommentRowActionsTests: XCTestCase {
             authorID: authorUserID, authorDisplayName: "陳志明", viewerRole: .owner, viewerUserID: viewerUserID
         )
         XCTAssertEqual(
-            actions, [.removeAsOwner],
-            "DUyg3 稿面只有一列「移除這則留言」——owner 對留言不應該同時看到檢舉／封鎖"
+            actions, [.removeCommentAsOwner],
+            "DUyg3 稿面只有一列「移除這則留言」——owner 對留言不應該同時看到檢舉／封鎖；用" +
+            "「.removeCommentAsOwner」而不是「.removeAsOwner」（後者是日記／照片專用的顯示文案）"
         )
     }
 
@@ -41,7 +42,7 @@ final class CommentRowActionsTests: XCTestCase {
         let actions = commentRowActions(
             authorID: nil, authorDisplayName: "這位成員", viewerRole: .owner, viewerUserID: viewerUserID
         )
-        XCTAssertEqual(actions, [.removeAsOwner])
+        XCTAssertEqual(actions, [.removeCommentAsOwner])
     }
 
     // MARK: - 一般成員對別人的留言 → 同 contentActions(for:...) 既有行為（檢舉＋封鎖，不含移除）
@@ -75,5 +76,17 @@ final class CommentRowActionsTests: XCTestCase {
         )
         XCTAssertFalse(actions.contains(.report))
         XCTAssertFalse(actions.contains(where: { if case .block = $0 { true } else { false } }))
+    }
+
+    // MARK: - ContentAction.removeCommentAsOwner 顯示屬性（同 ContentActionsTests
+    // .test_action_icon_labelAndDanger 既有慣例，這裡只測本票新增的 case）
+
+    func test_removeCommentAsOwner_iconLabelAndDanger() {
+        XCTAssertEqual(ContentAction.removeCommentAsOwner.icon, "trash")
+        XCTAssertEqual(
+            ContentAction.removeCommentAsOwner.label, "移除這則留言",
+            "DUyg3 稿面文案——跟 .removeAsOwner 的「移除這則內容」不同，不能共用同一個字串"
+        )
+        XCTAssertTrue(ContentAction.removeCommentAsOwner.isDanger)
     }
 }

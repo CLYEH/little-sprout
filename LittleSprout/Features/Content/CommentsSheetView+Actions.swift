@@ -11,9 +11,12 @@ import SwiftUI
 ///   - 檢舉 → `ReportReasonSheet`（LS-189 05b）→ `ReportSentSheet`（05c）
 ///   - 封鎖 → `BlockConfirmSheet`（05d）→ 成功後重新整理留言清單（票文範圍 6：被封鎖者留言
 ///     伺服器端已濾，重查一次讓清單跟上）
-///   - Owner 移除 → `OwnerRemoveContentConfirmSheet`（05e，`targetType: .comment`）→ 成功後
-///     本地移除＋同步計數
-///   - 作者刪除 → 既有 `CommentDeleteConfirmationSheet`（LS-190）→ 成功後本地移除＋同步計數
+///   - Owner 移除（`.removeCommentAsOwner`）／作者刪除（`.deleteOwn`）→ **同一張**既有
+///     `CommentDeleteConfirmationSheet`（LS-190，LS-152 `Qs7iE`）→ 成功後本地移除＋同步計數。
+///     不是 `OwnerRemoveContentConfirmSheet`（05e）——LS-177 Notes `QFvDu`「重要發現」：
+///     `DUyg3`（操作表）點「移除這則留言」導向的是 `Qs7iE`（既有二次確認），不是另開一張
+///     05e，因為 `set_comment_deleted` 本來就同時服務作者自刪與 owner 移除兩種呼叫者
+///     （`docs/API.md` §4），不像 `remove_content_as_owner` 是 owner 專用的另一支 RPC。
 ///
 /// 每一步都遵守 `DeleteConfirmationSheet` 定下的既有規約（LS-190 R2 m3）：sheet 自己先
 /// `dismiss()`，才呼叫成功回呼。
@@ -41,12 +44,6 @@ extension CommentsSheetView {
                     memberName: context.memberName, safetyAPIClient: safetyAPIClient, onBlocked: memberBlocked
                 )
             }
-            .sheet(item: $removeConfirmTarget) { target in
-                OwnerRemoveContentConfirmSheet(
-                    familyName: familyName, targetType: target.type, targetID: target.id,
-                    safetyAPIClient: safetyAPIClient, onRemoved: { commentRemoved(target.id) }
-                )
-            }
             .sheet(item: $deleteConfirmTarget) { target in
                 CommentDeleteConfirmationSheet(
                     commentID: target.commentID, commentAPIClient: commentAPIClient,
@@ -64,12 +61,13 @@ extension CommentsSheetView {
             )
         case .block(let memberID, let memberName):
             blockConfirmContext = CommentBlockConfirmContext(memberID: memberID, memberName: memberName)
-        case .removeAsOwner:
-            removeConfirmTarget = ContentActionTarget(
-                type: .comment, id: comment.id, familyID: familyID, headline: quotedHeadline(for: comment)
-            )
-        case .deleteOwn:
+        case .removeCommentAsOwner, .deleteOwn:
             deleteConfirmTarget = CommentDeleteTarget(commentID: comment.id)
+        case .removeAsOwner:
+            // 留言的 owner 移除一律走 `.removeCommentAsOwner`（見該 case 文件註解），
+            // `commentRowActions` 不會產生這個 case——這個分支理論上不可達，只是滿足
+            // `ContentAction` 窮舉 switch 的編譯要求。
+            break
         }
     }
 

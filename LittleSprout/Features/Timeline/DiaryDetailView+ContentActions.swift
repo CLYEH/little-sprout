@@ -125,6 +125,11 @@ extension DiaryDetailView {
             removeConfirmTarget = context.target
         case .deleteOwn:
             showsDeleteConfirmation = true
+        case .removeCommentAsOwner:
+            // LS-218：留言專屬 case，`contentActions(for:...)` 不會對日記產生它——這個分支
+            // 理論上不可達，只是滿足 `ContentAction` 窮舉 switch 的編譯要求（見該 case
+            // 文件註解，`Services/Safety/ContentActions.swift`）。
+            break
         }
     }
 

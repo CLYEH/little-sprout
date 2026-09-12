@@ -54,7 +54,6 @@ struct CommentsSheetView: View {
     @State var reportFlowTarget: ContentActionTarget?
     @State var showsReportSent = false
     @State var blockConfirmContext: CommentBlockConfirmContext?
-    @State var removeConfirmTarget: ContentActionTarget?
     @State var deleteConfirmTarget: CommentDeleteTarget?
 
     private static let iPadCardWidth: CGFloat = 520
