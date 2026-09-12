@@ -25,6 +25,14 @@ extension TapTargetGateHarness {
         commentsSheetHost(apiClient: NetworkFailingCommentAPIClient())
     }
 
+    /// merge-review R1 m3——`listComments` 成功回傳空清單（首載正常、輸入列可用），
+    /// `createComment` 固定拋 LS026（目標已刪），釘住「送出失敗撞到 LS026 時只呈現終態、不
+    /// 疊一層 alert」。
+    @MainActor
+    static var commentsSheetSendTargetGoneHost: some View {
+        commentsSheetHost(apiClient: SendTargetGoneCommentAPIClient())
+    }
+
     @MainActor
     private static func commentsSheetHost(apiClient: CommentAPIClient) -> some View {
         let userID = UUID()
@@ -95,6 +103,21 @@ private final class PopulatedCommentAPIClient: CommentAPIClient, @unchecked Send
 
     func createComment(familyID: UUID, targetType: String, targetID: UUID, body: String) async throws -> UUID {
         UUID()
+    }
+}
+
+/// 只給 `commentsSheetSendTargetGoneHost` 用（merge-review R1 m3）——`listComments` 回傳空
+/// 清單（讓輸入列一開始就可用），`createComment` 固定拋 `AppError.rejected` LS026，模擬「送出時
+/// 才發現目標已刪」。
+private final class SendTargetGoneCommentAPIClient: CommentAPIClient, @unchecked Sendable {
+    func setCommentDeleted(commentID: UUID, deleted: Bool) async throws {}
+
+    func listComments(
+        familyID: UUID, targetType: String, targetID: UUID, cursor: CommentsCursor?, limit: Int
+    ) async throws -> [CommentRecord] { [] }
+
+    func createComment(familyID: UUID, targetType: String, targetID: UUID, body: String) async throws -> UUID {
+        throw AppError.rejected(message: "target 已刪除", code: LSErrorCode.targetFamilyMismatch.rawValue)
     }
 }
 #endif

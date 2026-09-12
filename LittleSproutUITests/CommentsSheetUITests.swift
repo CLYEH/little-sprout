@@ -72,6 +72,36 @@ final class CommentsSheetUITests: XCTestCase {
         )
     }
 
+    /// merge-review R1 m3：送出留言撞到 LS026（目標已刪）時，先前實作會同時彈「留言送出失敗」
+    /// alert 又把整張 sheet 換成終態畫面——票文範圍 4 明確只要單一「關閉」鈕。這裡釘住修正後
+    /// 只呈現終態、不疊 alert。
+    func testSendTargetGone_showsOnlyTerminalState_noAlert() {
+        let app = TapTargetMeasurement.launch(.commentsSheetSendTargetGone)
+        TapTargetMeasurement.assertScreenRendered(.commentsSheetSendTargetGone, in: app)
+
+        let field = app.textFields[QAAccessibilityID.commentInputField]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("這則留言送不出去")
+
+        let sendButton = app.buttons[QAAccessibilityID.commentSendButton]
+        let sendEnabledExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isEnabled == true"), object: sendButton
+        )
+        XCTAssertEqual(XCTWaiter().wait(for: [sendEnabledExpectation], timeout: 5), .completed)
+        sendButton.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["找不到這則內容"].waitForExistence(timeout: 10),
+            "送出撞到 LS026 應該整張 sheet 換成終態"
+        )
+        XCTAssertTrue(app.buttons["關閉"].exists)
+        XCTAssertFalse(
+            app.alerts["留言送出失敗"].exists,
+            "終態畫面已經說明「找不到這則內容」，不該再疊一層 alert"
+        )
+    }
+
     /// `DUyg3`——Owner 對別人的留言點下去只看到單一「移除這則留言」danger 列（不含檢舉／封鎖）
     /// ，選它導向的是既有 `CommentDeleteConfirmationSheet`（「要刪除這則留言嗎？」）而不是另開
     /// 一張 `OwnerRemoveContentConfirmSheet`（「要移除這則內容嗎？」）——見

@@ -234,6 +234,10 @@ enum TapTargetGateScreenName: String {
     case commentsSheetEmpty = "CommentsSheetViewEmpty"
     // LS-218：網路錯誤態（`dHSyh`）——同上，不用來做逐元件 tap target 量測。
     case commentsSheetNetworkError = "CommentsSheetViewNetworkError"
+    // LS-218 merge-review R1 m3：送出留言時撞到 LS026（目標已刪）——同上，不用來做逐元件 tap
+    // target 量測，純粹借用「launch environment 指定畫面」通道釘住「只呈現終態、不疊 alert」
+    // 這個修正（`CommentsSheetUITests.testSendTargetGone_showsOnlyTerminalState_noAlert`）。
+    case commentsSheetSendTargetGone = "CommentsSheetViewSendTargetGone"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -333,6 +337,7 @@ enum TapTargetGateScreenName: String {
         case .commentsSheet: return .staticText("留言")
         case .commentsSheetEmpty: return .staticText("留言")
         case .commentsSheetNetworkError: return .staticText("留言")
+        case .commentsSheetSendTargetGone: return .staticText("留言")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

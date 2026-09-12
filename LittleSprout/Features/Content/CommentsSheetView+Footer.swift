@@ -50,7 +50,12 @@ extension CommentsSheetView {
             if success {
                 draft = ""
                 draftSendSucceededTick += 1
-            } else if case .failure(let error) = store.sendState {
+            } else if case .failure(let error) = store.sendState,
+                      !CommentsErrorPresentation.make(from: error).isTargetGone {
+                // merge-review R1 m3：LS026（目標已刪）已經由 `targetGoneError` 把整張 sheet
+                // 換成單一「關閉」鈕的終態（`CommentsSheetView.swift` targetGoneError／
+                // `+States.swift` targetGoneState）——這裡不能再疊一層 alert，否則使用者會同時
+                // 看到 alert 與終態畫面。只有非 LS026 的送出失敗（網路／其他錯誤）才彈 alert。
                 sendError = error
             }
         }
