@@ -3,10 +3,10 @@ import Foundation
 /// 相簿 tab 首頁（LS-165）的型別化 client 介面。
 ///
 /// 方法 ↔ RPC／資料表對照（供 `docs/API.md` 對帳）：
-///   - `fetchAlbums`        → SELECT `public.albums`（`family_id` 篩選＋`deleted_at is null`，
-///                            `created_at desc, id desc` 排序＋keyset 游標；內嵌
-///                            `album_media(count)` 與 `latest:album_media(media(...))`，
-///                            見 `AlbumListingRow` 文件註解與 `SupabaseAlbumsAPIClient.
+///   - `fetchAlbums`        → SELECT `public.album_summaries`（LS-200／LS-203，`family_id`
+///                            篩選＋`deleted_at is null`，`created_at desc, id desc` 排序＋
+///                            keyset 游標；張數／封面 fallback 由這支 security-invoker view
+///                            算好，見 `AlbumListingRow` 文件註解與 `SupabaseAlbumsAPIClient.
 ///                            fetchAlbums` 實作——沒有專屬的 `list_albums` RPC）
 ///   - `fetchAlbumChildren`   → SELECT `public.album_children`（`.in("album_id", ids)`）
 ///   - `fetchMedia`           → SELECT `public.media`（`.in("id", ids)`，重用
@@ -27,7 +27,8 @@ import Foundation
 /// 錯誤一律映射為 `AppError`，不直接往外拋 PostgREST 的 error 型別。
 protocol AlbumsAPIClient: Sendable {
     /// 一頁相簿（`family_id` 篩選、已軟刪除的不回傳）。`cursor` 為 nil＝第一頁。張數與封面
-    /// fallback 已內嵌在 `AlbumListingRow`，不需要另一支方法查 `album_media`。
+    /// fallback 已經是 `AlbumListingRow` 上的欄位（`album_summaries` view 算好），不需要另一支
+    /// 方法查 `album_media`。
     func fetchAlbums(familyID: UUID, cursor: AlbumsCursor?, limit: Int) async throws -> [AlbumListingRow]
 
     func fetchAlbumChildren(albumIds: [UUID]) async throws -> [AlbumChildLinkRow]

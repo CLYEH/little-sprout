@@ -9,106 +9,61 @@ struct AlbumsCursor: Equatable, Sendable {
     let id: UUID
 }
 
-/// `albums` 表可讀欄位子集，供相簿列表使用（`docs/API.md` §2 `albums` 列：直接 `.from()`
-/// 讀取，沒有專屬的 `list_albums` RPC）。比 `TimelineModels.AlbumRow` 多帶 `createdAt`——
-/// 那支只服務時間軸單筆相簿卡組裝，不需要分頁游標；這裡需要。
-///
-/// merge-review R1 M1：張數與封面 fallback 改成 PostgREST 內嵌查詢，不再整頁抓
-/// `album_media` 在 client 端數（`PGRST_DB_MAX_ROWS=1000` 會截斷、回傳順序不保證、白付
-/// payload）——本機已實測 `db-aggregates-enabled` 可用（`GET /rest/v1/albums?select=
-/// id,title,album_media(count)` 回 `[{"count":n}]`，見 `SupabaseAlbumsAPIClient.fetchAlbums`
-/// 文件註解的完整查詢字串）：
-///   - `photoCount` 來自內嵌 `album_media(count)`（PostgREST aggregate，一個元素的陣列）。
-///     merge-review R2 m3：這個數字數的是 `album_media` 連結列本身，包含使用者透過 RLS
-///     看不到的 media（已軟刪、非自己上傳；或 LS-155 刪帳號後 `uploaded_by` 被清成
-///     `NULL`）——本機實測過幾種「inner join 後計數」的 select 寫法（`album_media(media!
-///     inner(id),count)`／`album_media!inner(media!inner(count))` 等），要嘛拿到
-///     `42803`（count 與其他欄位混用要求 GROUP BY），要嘛拿到的是「每個 album_media 各自
-///     一個 count」而不是單一總數，PostgREST 目前的 embed+aggregate 語法組合做不到「只數
-///     inner join 命中的列」這種依賴巢狀可見性的計數。維持連結列計數（跟被裁定前的 R1 行為
-///     一致），口徑差異記錄在這裡與 docs/API.md `albums` 段，未來若要精確排除不可見照片需要
-///     後端另開一個 view 或 RPC。
-///   - `latestMediaThumbPath`／`latestMediaStoragePath` 來自內嵌別名 `latest:album_media(
-///     media!inner(thumb_path, storage_path, created_at))`，依 `media(created_at)` 排序（不是
-///     `album_media` 自己的欄位——那張連結表沒有 `created_at`，只有 `album_id`／`media_id`／
-///     `family_id`／`sort_order`）取最新一筆，供 M3 封面 fallback 用（`cover_media_id` 未
-///     指定時退回這裡）；一本相簿沒有任何「看得見」的照片時（不論是真的 0 張，還是唯一的
-///     照片被 RLS 濾掉）這個陣列是空的，兩個欄位皆為 `nil`——`media!inner` 保證看不見的
-///     media 不會混進來（merge-review R2 B1，見 `SupabaseAlbumsAPIClient.listSelect`
-///     文件註解的完整踩雷記錄），`LatestAlbumMediaEntry.media` 仍宣告成 optional 當第二層
-///     防守，不只依賴這一個查詢寫法保證解碼不會失敗。
+/// `album_summaries`（LS-200 security-invoker view）一列，供相簿列表使用——`docs/API.md`
+/// §3「albums / diaries」有完整欄位語意對照。LS-203 起改讀這支 view，不再用 PostgREST
+/// 內嵌 aggregate／embed 查詢在 client 端組裝（LS-165 R1–R3 遺留的口徑差異——
+/// `album_media(count)` 數的是連結列本身，不是「使用者看得見的照片數」——正是這支 view
+/// 存在的理由，見 `supabase/migrations/20260905074037_album_summaries_view.sql`）：
+///   - `photoCount` ← `visible_media_count`：view 已經套用呼叫者本人的 RLS
+///     （`security_invoker=true`）算好，只算看得到的 media，不含已軟刪或 LS-155 刪帳號後
+///     `uploaded_by` 被清成 `NULL` 的連結列。
+///   - `latestMediaId`／`latestMediaThumbPath`／`latestMediaStoragePath` ← view 依
+///     `created_at` 排序、可見範圍內最新一張的 media id／縮圖／原圖路徑；相簿沒有任何看得見
+///     的照片時三者皆 `nil`。`latestMediaId` 本票不消費，保留給 `AlbumSummary` 轉發供
+///     LS-166（相簿詳情）使用。
+///   - `coverThumbPath`／`coverStoragePath` ← view 用 `cover_media_id` 反查到的縮圖／原圖
+///     路徑，該媒體已軟刪／跨家庭／未指定封面時皆為 `nil`——不再需要另外解碼 `cover_media_id`
+///     （UUID）本身、也不需要 `AlbumsContentAssembler` 另外呼叫 `fetchMedia` 反查，view 已經
+///     把可見性判準與路徑一次算完。
 struct AlbumListingRow: Decodable, Sendable, Equatable, Identifiable {
     let id: UUID
     let title: String
-    let coverMediaId: UUID?
     let createdAt: Date
     let photoCount: Int
+    let latestMediaId: UUID?
     let latestMediaThumbPath: String?
     let latestMediaStoragePath: String?
+    let coverThumbPath: String?
+    let coverStoragePath: String?
 
     enum CodingKeys: String, CodingKey {
         case id, title
-        case coverMediaId = "cover_media_id"
         case createdAt = "created_at"
-        case albumMedia = "album_media"
-        case latest
+        case photoCount = "visible_media_count"
+        case latestMediaId = "latest_media_id"
+        case latestMediaThumbPath = "latest_thumb_path"
+        case latestMediaStoragePath = "latest_storage_path"
+        case coverThumbPath = "cover_thumb_path"
+        case coverStoragePath = "cover_storage_path"
     }
 
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        title = try container.decode(String.self, forKey: .title)
-        coverMediaId = try container.decodeIfPresent(UUID.self, forKey: .coverMediaId)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
-        let counts = try container.decode([AlbumMediaCountEntry].self, forKey: .albumMedia)
-        photoCount = counts.first?.count ?? 0
-        let latestEntries = try container.decodeIfPresent([LatestAlbumMediaEntry].self, forKey: .latest) ?? []
-        // merge-review R2 B1 第二層防守：`media!inner` 已經在 SQL 層排除看不見的候選，理論上
-        // 不會再出現 `{"media": null}`，但這裡仍用 `compactMap` 過濾、不假設查詢寫法永遠正確
-        // ——寧可退回占位圖，不要因為單一連結列的巢狀 `media` 意外是 `null` 就讓整頁 throw。
-        let visibleMedia = latestEntries.compactMap(\.media).first
-        latestMediaThumbPath = visibleMedia?.thumbPath
-        latestMediaStoragePath = visibleMedia?.storagePath
-    }
-
-    /// 供測試／`.preview()` 假資料組建——`init(from:)` 服務真正的 PostgREST 回應形狀
-    /// （巢狀陣列），呼叫端不會手動組那種結構。
+    /// 供測試／`.preview()` 假資料建構——view 回應是扁平欄位，`Decodable` 走合成的
+    /// `init(from:)`（不需要像 LS-165 內嵌形狀那樣自訂解碼邏輯），這支只是讓呼叫端不必每次
+    /// 都把六個彙總欄全部填滿。
     init(
-        id: UUID, title: String, coverMediaId: UUID?, createdAt: Date, photoCount: Int = 0,
-        latestMediaThumbPath: String? = nil, latestMediaStoragePath: String? = nil
+        id: UUID, title: String, createdAt: Date, photoCount: Int = 0, latestMediaId: UUID? = nil,
+        latestMediaThumbPath: String? = nil, latestMediaStoragePath: String? = nil,
+        coverThumbPath: String? = nil, coverStoragePath: String? = nil
     ) {
         self.id = id
         self.title = title
-        self.coverMediaId = coverMediaId
         self.createdAt = createdAt
         self.photoCount = photoCount
+        self.latestMediaId = latestMediaId
         self.latestMediaThumbPath = latestMediaThumbPath
         self.latestMediaStoragePath = latestMediaStoragePath
-    }
-}
-
-/// `AlbumListingRow.init(from:)` 解 `album_media(count)` 內嵌陣列的單一元素形狀——不能嵌在
-/// `AlbumListingRow` 裡面（跟 `LatestAlbumMediaEntry`／`LatestAlbumMedia` 加起來會超過
-/// SwiftLint 巢狀型別上限），改成檔案層級的 `private` 型別，範圍仍只在這個檔案內。
-private struct AlbumMediaCountEntry: Decodable {
-    let count: Int
-}
-
-/// `AlbumListingRow.init(from:)` 解 `latest:album_media(media!inner(...))` 內嵌陣列的單一
-/// 元素形狀。`media` 宣告成 optional——merge-review R2 B1：`media!inner` 已經在 SQL 層排除
-/// 看不見的候選，理論上不會再收到 `{"media": null}`，這裡是不依賴單一查詢寫法的第二層防守
-/// （真的收到 `null` 時 `AlbumListingRow.init(from:)` 用 `compactMap` 濾掉，不會整頁 throw）。
-private struct LatestAlbumMediaEntry: Decodable {
-    let media: LatestAlbumMedia?
-}
-
-private struct LatestAlbumMedia: Decodable {
-    let thumbPath: String?
-    let storagePath: String
-
-    enum CodingKeys: String, CodingKey {
-        case thumbPath = "thumb_path"
-        case storagePath = "storage_path"
+        self.coverThumbPath = coverThumbPath
+        self.coverStoragePath = coverStoragePath
     }
 }
 
@@ -165,13 +120,12 @@ struct AlbumSummary: Equatable, Sendable, Identifiable {
     let id: UUID
     let title: String
     let photoCount: Int
-    /// 封面已簽名 URL（merge-review R1 M3）：`cover_media_id` 有值時用它指到的 media 列；
-    /// 否則退回 `AlbumListingRow.latestMediaThumbPath`／`latestMediaStoragePath`（最新一筆
-    /// album_media，見該型別文件註解）；兩者皆無（相簿沒有任何照片）才是 `nil`，呼叫端顯示
-    /// 灰底占位圖。刻意只留簽名 URL、不是完整 `MediaContent`——相簿列表卡片只需要畫一張封面
-    /// 縮圖，不需要 `MediaContent` 服務照片牆用的 `type`／`width`／`height`／
-    /// `durationSeconds` 等欄位，fallback 分支也拿不到這些（`latest` 內嵌查詢只選了
-    /// `thumb_path`／`storage_path`），硬套 `MediaContent` 只會逼出假資料填欄位。
+    /// 封面已簽名 URL（LS-203：`AlbumListingRow` 四欄優先序 `coverThumbPath` →
+    /// `coverStoragePath` → `latestMediaThumbPath` → `latestMediaStoragePath`，見
+    /// `AlbumsContentAssembler.displayPath(for:)`）；四者皆無（相簿沒有任何看得見的照片）
+    /// 才是 `nil`，呼叫端顯示灰底占位圖。刻意只留簽名 URL、不是完整 `MediaContent`——相簿
+    /// 列表卡片只需要畫一張封面縮圖，不需要 `MediaContent` 服務照片牆用的
+    /// `type`／`width`／`height`／`durationSeconds` 等欄位，硬套只會逼出假資料填欄位。
     let cover: URL?
     /// 這本相簿標記的寶貝 id（`album_children`）——同 `TimelineFeedPointer.childIds` 的既有
     /// 慣例，組裝層只留 id，呼叫端（`AlbumsView`）依 `ChildrenStore.children` 原本順序（依
@@ -180,6 +134,26 @@ struct AlbumSummary: Equatable, Sendable, Identifiable {
     let childIds: [UUID]
     /// keyset 分頁游標用（`AlbumsStore.loadMore` 取 `entries.last`）。
     let createdAt: Date
+    /// `AlbumListingRow.latestMediaId` 原樣轉發（票文 Scope 2）——本票不消費，保留供
+    /// LS-166（相簿詳情）使用。
+    let latestMediaId: UUID?
+
+    /// 自訂記憶體初始化子（不是合成的 memberwise init）：`latestMediaId` 給預設值
+    /// `nil`——`let` 屬性若直接在宣告式給預設值，合成的 memberwise init 會把它排除在參數
+    /// 之外（無法從外部覆寫，實測驗證過），要維持「大多數既有呼叫端（previews／既有測試）
+    /// 不必逐一補這個參數，但 `AlbumsContentAssembler` 仍能傳入真正的值」，只能自己寫一個。
+    init(
+        id: UUID, title: String, photoCount: Int, cover: URL?, childIds: [UUID], createdAt: Date,
+        latestMediaId: UUID? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.photoCount = photoCount
+        self.cover = cover
+        self.childIds = childIds
+        self.createdAt = createdAt
+        self.latestMediaId = latestMediaId
+    }
 
     var thicknessTier: AlbumThicknessTier { AlbumThicknessTier(photoCount: photoCount) }
 }

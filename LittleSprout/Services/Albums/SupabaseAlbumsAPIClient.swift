@@ -8,38 +8,15 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
     private static let signedURLExpirySeconds = 3600
     private static let bucket = "media"
 
-    /// 張數（PostgREST aggregate，本機已實測 `db-aggregates-enabled` 可用）＋封面 fallback
-    /// 一次內嵌查出（merge-review R1 M1）：
-    ///   - `album_media(count)` → `AlbumListingRow.photoCount`（見該型別文件註解——R2 review
-    ///     R3 B1／m3 附帶記錄：這個計數包含使用者看不到的 media 連結列，見下）。
-    ///   - `latest:album_media(media!inner(...))`，靠下方 `.order(referencedTable: "latest")`／
-    ///     `.limit(referencedTable: "latest")` 依 `media(created_at)` 取最新一筆
-    ///     → `AlbumListingRow.latestMediaThumbPath`／`latestMediaStoragePath`。
-    /// 兩個內嵌都叫 `album_media` 但用不同別名（`latest:`）——PostgREST 對同一張表嵌兩次時，
-    /// 排序／筆數限制修飾詞（`?xxx.order=`／`?xxx.limit=`）要用別名而非表名當前綴，否則會拿到
-    /// `PGRST108`（本機實測撞過）。`media(created_at)` 必須同時出現在這個內嵌的 select 欄位
-    /// 清單裡（即使組裝端用不到這個值）——只用來排序、不選進 select 會拿到 `42703`
-    /// column does not exist（本機實測撞過，PostgREST 排序時似乎是對 select 出來的欄位做
-    /// 二次查找，不是任意可存取欄位都能直接拿來排序）。
-    ///
-    /// merge-review R2 B1（blocker）：`latest` 內嵌原本用 `media(...)`（LEFT JOIN 語意）——
-    /// 當這本相簿裡有任一 `album_media` 連結指到使用者透過 RLS 看不到的 media 列（該列已
-    /// 軟刪、且不是自己上傳的；或 LS-155 刪帳號後 `uploaded_by` 被 FK `on delete set null`
-    /// 清成 `NULL`，兩種情況都落在 `media_select` policy「上傳者自己例外」以外），PostgREST
-    /// 對那一列的巢狀 `media` 回傳 `null`（不是整列消失），且 `media(created_at)` 排序對
-    /// `null` 視同缺值——若這個看不見的連結恰好被 `limit 1` 選中（本機實測：單一 album_media
-    /// 連結、且該連結是看不見的這種最小情境必定選中它，因為 `latest` 沒有其他候選可比較），
-    /// `latest` 就會是 `[{"media": null}]`，解碼直接失敗（見 `AlbumListingRow` 文件註解）。
-    /// 改用 `media!inner(...)`（INNER JOIN 語意——PostgREST inner 提示會在 SQL 層把「join 不到
-    /// 看得見的列」直接濾掉這個 `album_media` 候選，不會产生 `{"media": null}` 這種殘影）：
-    /// 本機用 Supabase CLI 容器造「唯一一張相片被軟刪＋uploaded_by 清空」的相簿實測，`latest`
-    /// 正確變成 `[]`（相簿沒有任何看得見的照片，封面走 M3 fallback 的「兩者皆無」分支，顯示
-    /// 占位圖）；`{"media": null}` 的殘影已經在 SQL 層排除，不需要靠 iOS 端補救——但
-    /// `LatestAlbumMediaEntry.media`／`AlbumListingRow` 仍把它宣告成 optional（見下）當第二層
-    /// 防守，不只依賴這一個查詢寫法保證正確性。
+    /// `album_summaries`（LS-200 security-invoker view）欄位子集——LS-203 起改讀這支 view，
+    /// 不再用 PostgREST 內嵌 aggregate／embed 查詢在 client 端組裝（LS-165 R1–R3 遺留的
+    /// `album_media(count)` 連結列計數口徑差異、`latest:album_media(media!inner(...))`
+    /// 內嵌 null 安全等問題，`album_summaries` 已經在 SQL 層一次算完，見該 view 定義檔
+    /// `supabase/migrations/20260905074037_album_summaries_view.sql` 與 `AlbumListingRow`
+    /// 文件註解）。`view` 不可寫，`createAlbum` 的 INSERT 仍要走 `albums` 本身（見下）。
     private static let listSelect =
-        "id,title,cover_media_id,created_at,album_media(count)," +
-        "latest:album_media(media!inner(thumb_path,storage_path,created_at))"
+        "id,title,created_at,visible_media_count,latest_media_id,latest_thumb_path," +
+        "latest_storage_path,cover_thumb_path,cover_storage_path"
 
     private let client: SupabaseClient
 
@@ -50,7 +27,7 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
     func fetchAlbums(familyID: UUID, cursor: AlbumsCursor?, limit: Int) async throws -> [AlbumListingRow] {
         do {
             var query = client
-                .from("albums")
+                .from("album_summaries")
                 .select(Self.listSelect)
                 .eq("family_id", value: familyID)
                 .is("deleted_at", value: nil)
@@ -63,8 +40,6 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
                 )
             }
             let response: PostgrestResponse<[AlbumListingRow]> = try await query
-                .order("media(created_at)", ascending: false, referencedTable: "latest")
-                .limit(1, referencedTable: "latest")
                 .order("created_at", ascending: false)
                 .order("id", ascending: false)
                 .limit(limit)
