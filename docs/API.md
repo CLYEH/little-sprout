@@ -407,10 +407,11 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   前綴與形狀的防禦性重驗），交給下一次 invocation 的既有消化迴圈刪除——沿用既有的
   attempts／退避／死信與 confirmed-delete 核對，不重新實作刪除路徑，也不影響額度（這批物件
   從未計入 `families.storage_used_bytes`，走佇列刪除不會觸發 `media` 表的 trigger，沒有重複
-  扣款的可能）。**現況（LS-223 訂正）**：上述「兩支舊函式」裡，`purge_storage_queue_
-  enqueue_orphans()`（單整數簽名）已**零呼叫端**（`index.ts` 全面改呼叫 `_v2`，只剩
-  `supabase/tests/109_…sql` §4 對它自己的既有測試仍在呼叫）——**deprecated，LS-222 起由
-  `_v2` 取代；移除待 DESTRUCTIVE 核可票**，本票不 DROP。另一支
+  扣款的可能）。**現況（LS-227 訂正，2026-09-12）**：上述「兩支舊函式」裡，
+  `purge_storage_queue_enqueue_orphans()`（單整數簽名，v1）已由 LS-227 DESTRUCTIVE
+  migration 移除——LS-222 起零生產呼叫端（`index.ts` 全面改呼叫 `_v2`），LS-223
+  dead-code-sweeper（comment `3cbe31bb`）確認唯一呼叫端是 `supabase/tests/109_…sql`
+  §4 自測，該段測試已隨本次移除一併刪除；schema 現在只剩 `_v2` 這一個簽名。另一支
   `purge_storage_unknown_media_paths()` 則**不是**死碼——仍被上面
   `purge_storage_classify_orphan_paths()` 內部呼叫，只是不再由 `index.ts` 直接呼叫，維持
   既有（非 deprecated）狀態。每次 invocation 的候選數（過了寬限期的物件數，不是看過的檔案數）上限見
@@ -960,8 +961,9 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 `service_role`（Edge Function／cron）呼叫、不對 `authenticated` 開放的另一類（見
 `60_default_privileges.sql` §8 的 `v_service_role_rpcs`：`claim_notification_events`／
 `finalize_account_deletion`／`notification_recipients`／
-`purge_storage_classify_orphan_paths`／`purge_storage_queue_enqueue_orphans[_v2]`／
-`purge_storage_queue_mark_failed`／`purge_storage_unknown_media_paths`），這些不算在
+`purge_storage_classify_orphan_paths`／`purge_storage_queue_enqueue_orphans_v2`
+（LS-227 起 v1 已 DROP，只剩這一個簽名）／`purge_storage_queue_mark_failed`／
+`purge_storage_unknown_media_paths`），這些不算在
 上表的 28 支之內，也不是 advisors WARN 點名的對象（`authenticated` 對它們沒有
 `EXECUTE`）。另有 4 支 `SECURITY INVOKER` 的 public RPC（`get_family_timeline`／
 `get_reaction_counts`／`list_children`／`get_family_quota`，見
@@ -2554,13 +2556,13 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
 `scripts/gates/api_contract_check.py` 檔頭）。兩者不一致時一律以 CI 為準——本機綠、CI 紅就是
 schema 或本文要修，不是 gate 要調。
 
-**deprecated 標記不寫進下面的機械清單**（LS-223 訂正）：`api-contract-check.sh` 要求這個區塊
-逐字等於 schema 抽出的簽章清單，不接受任何附註文字——下面清單裡的
-`purge_storage_queue_enqueue_orphans(text, uuid, text[])` 是**單整數回傳的舊簽名，已
-deprecated（LS-222 起由 `purge_storage_queue_enqueue_orphans_v2` 取代，零呼叫端，只剩
-`supabase/tests/109_…sql` §4 自測仍呼叫；不 DROP，移除待 DESTRUCTIVE 核可票，見 §3
-「media」小節與 `60_default_privileges.sql` 對應註解）**——函式仍存在於 schema，因此仍須留在
-這個清單裡供 gate 對帳，deprecated 狀態只記錄在這行散文與上述兩處。
+**移除紀錄（LS-227，2026-09-12）**：`purge_storage_queue_enqueue_orphans(text, uuid,
+text[])`（單整數回傳的舊簽名，v1）曾在此清單標記 deprecated（LS-223 訂正）——LS-222 起
+零生產呼叫端（由 `purge_storage_queue_enqueue_orphans_v2` 取代），LS-223 sweeper（comment
+`3cbe31bb`）確認唯一呼叫端是 `supabase/tests/109_…sql` §4 自測；使用者
+DESTRUCTIVE-APPROVED 核可後，LS-227 已 `drop function` 移除，該自測段一併刪除，下面
+機械清單也已移除這一行——schema 現在只剩 `_v2` 這一個簽名，見 §3「media」小節與
+`60_default_privileges.sql` 對應註解。
 
 <!-- API-CONTRACT:RPC
 accept_eula(text)
@@ -2582,7 +2584,6 @@ list_comments(uuid, text, uuid, timestamptz, uuid, integer)
 list_join_requests()
 notification_recipients(uuid[])
 purge_storage_classify_orphan_paths(text[])
-purge_storage_queue_enqueue_orphans(text, uuid, text[])
 purge_storage_queue_enqueue_orphans_v2(text, uuid, text[])
 purge_storage_queue_mark_failed(uuid[], text)
 purge_storage_unknown_media_paths(text[])
