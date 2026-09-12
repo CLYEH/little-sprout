@@ -308,10 +308,16 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
   fi
   ios_runtime_pin="$(tr -d '[:space:]' < .ios-runtime)"
 
-  dest=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/detect-simulator.sh") || {
+  if dest=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/detect-simulator.sh"); then
+    :
+  else
+    ds_rc=$?
+    # LS-236：detect-simulator.sh 自己也會做一次殘留 xcodebuild 檢查（exit 2）；牠已經把 ⚠ 診斷印到
+    # stderr 了，這裡只需要原樣轉發 exit code，不要疊加一句無關的「模擬器偵測失敗」蓋過去。
+    [ "$ds_rc" = 2 ] && exit 2
     echo "✗ push gate：模擬器偵測失敗。" >&2
     exit 1
-  }
+  fi
   # LS-83 R2 F1：真正會併發撞台的是「執行 xcodebuild test」這一段，不是 detect-simulator.sh 印字那幾行
   # （R1 把鎖包在那裡等於沒鎖——鎖早釋放了，兩個 worktree 退回共用機時 xcodebuild 照樣同時打上去）。
   # 以 destination 帶的 UDID 為鍵包住整段 xcodebuild test：專屬機彼此 UDID 不同、鎖從不競爭；
@@ -339,6 +345,13 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
   # I2：鎖目錄路徑可用 SIMULATOR_LOCK_DIR 覆寫（自測用；預設仍是 /tmp/simulator-lock-<udid>），讓多份
   # push-gate.test.sh 併行時各自用 mktemp -d 出來的路徑，不會互刪對方的鎖目錄。
   sim_lock_dir="${SIMULATOR_LOCK_DIR:-/tmp/simulator-lock-${sim_udid}}"
+  # LS-236：開跑前偵測同一顆 UDID 是否有殘留 xcodebuild（Bash 工具 timeout 600000 截斷後的自動背景化
+  # 不會殺掉子行程，殘留會跟這裡即將執行的 xcodebuild test 搶同一台模擬器——LS-166 R2／LS-217 R4 兩起
+  # 事故）。帶 sim_lock_dir 讓它能分辨「另一個呼叫合法持有鎖、正在排隊／執行中」（放行，交給下面的
+  # simulator-lock.sh 自然序列化）與「真的沒有鎖保護的殘留」（exit 2 拒跑，`set -e` 下直接中止本腳本，
+  # 不進入下面的 shutdown trap 設定，避免誤關別人正在用的模擬器）。PUSH_GATE_ALLOW_STALE_XCODEBUILD=1
+  # 逃生口。detail 見 scripts/gates/stale-xcodebuild-check.sh 檔頭；自測見該腳本的 .test.sh。
+  bash "$(git rev-parse --show-toplevel)/scripts/gates/stale-xcodebuild-check.sh" "$sim_udid" "$sim_lock_dir"
   # LS-205：名稱與所在 OS 分節一次查出來——下面「可見化」那行與 KEEP_SIMULATOR 判斷（原本各自
   # 查一次 sim_name）共用同一次 xcrun 呼叫，移到 KEEP_SIMULATOR 判斷之前變成無條件執行。
   sim_info=$(xcrun simctl list devices available 2>/dev/null | awk -v u="$sim_udid" '
@@ -669,6 +682,10 @@ PY
             if [ -z "$ipad_udid" ]; then
               echo "⚠ push gate：本機找不到「iPad Air 11-inch (M3)」（或名稱含 iPadAir11M3 的專屬機）模擬器${ios_runtime_pin:+（iOS ${ios_runtime_pin}）}，略過本機 iPad 測試（fail-open，同 LS-205 runtime 缺版處理；CI ci-ipad job 為正式把關）"
             else
+              # LS-236：同一顆 UDID 的殘留 xcodebuild 防護，同上方 sim_udid 那段理由——iPad best-effort
+              # 測試用的是另一台專屬機（ipad_udid），一樣可能有截斷後的自動背景化殘留；這段沿用同一個
+              # sim_lock_dir（下面 run_ipad_best_effort 也是用它包 xcodebuild），合法持有中一樣放行。
+              bash "$(git rev-parse --show-toplevel)/scripts/gates/stale-xcodebuild-check.sh" "$ipad_udid" "$sim_lock_dir"
               ipad_only_args=()
               while IFS= read -r t; do [ -n "$t" ] && ipad_only_args+=("-only-testing:${t}"); done <<< "$ipad_list"
               # merge-review R1 m2：本機 UI test 掛住／宿主 crash 是本 repo 有前科的失敗模式（LS-197／LS-199）；
