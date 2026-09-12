@@ -301,14 +301,25 @@ fi
 # ---- 主 checkout（agent 定義與 harness 讀自這裡）----
 mc_branch=$(git -C "$ROOT" symbolic-ref --short -q HEAD 2>/dev/null || echo DETACHED)
 mc_behind=$(count HEAD..origin/main)
-mc_dirty=$(git -C "$ROOT" diff --name-only HEAD 2>/dev/null | wc -l | tr -d ' ')
+mc_dirty_files=$(git -C "$ROOT" diff --name-only HEAD 2>/dev/null)
+if [ -z "$mc_dirty_files" ]; then mc_dirty=0; else mc_dirty=$(printf '%s\n' "$mc_dirty_files" | wc -l | tr -d ' '); fi
 mc_flag=
 if [ "$mc_branch" != main ]; then
   mc_flag="⚠ 主 checkout 不在 main（${mc_branch}）——派工前切回 main 並 pull"
 elif [ "$mc_behind" != "?" ] && [ "$mc_behind" -gt 0 ]; then
   mc_flag="⚠ 主 checkout 落後 origin/main ${mc_behind} commit → 先 git pull --ff-only origin main 再派工（agent 定義讀自主 checkout）"
 fi
-if [ "$mc_dirty" -gt 0 ]; then mc_flag="${mc_flag:+${mc_flag}；}⚠ 主 checkout 有 ${mc_dirty} 個未提交變更（harness 改動也該在 hotfix worktree）"; fi
+if [ "$mc_dirty" -gt 0 ]; then
+  # LS-236（來源：LS-208 收尾事故，LS-96 池項 `797c7149`）：唯一 dirty 檔就是 design/littlesprout.pen 時，
+  # 十之八九是 `pen-open.sh <主 checkout> --kill` 清場重開時 Pen 把記憶體中另一份票檔內容寫回——給可執行的
+  # 還原指令，不要印泛用的「N 個未提交變更」警告（那句只會讓人聯想到「該開 hotfix worktree 補 commit」，
+  # 但這裡從來就不該有人手動編輯過主 checkout 的 .pen，正確處置是還原、不是落地）。
+  if [ "$mc_dirty" -eq 1 ] && [ "$mc_dirty_files" = "design/littlesprout.pen" ]; then
+    mc_flag="${mc_flag:+${mc_flag}；}⚠ 主 checkout design/littlesprout.pen 未提交（Pen 寫回 → bash scripts/ops/pen-open.sh --restore）"
+  else
+    mc_flag="${mc_flag:+${mc_flag}；}⚠ 主 checkout 有 ${mc_dirty} 個未提交變更（harness 改動也該在 hotfix worktree）"
+  fi
+fi
 [ -n "$mc_flag" ] && add_flag "[主 checkout] ${mc_flag}"
 
 # ---- gate hooks（LS-87 G5）：沒裝＝本機 gate 靜默不跑，只剩 CI；config 由所有 worktree 共用，看主 checkout ----

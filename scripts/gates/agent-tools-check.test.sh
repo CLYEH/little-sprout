@@ -64,7 +64,10 @@ SIMCTLUI='用 `simctl ui` 改過字級／外觀的 handoff 必列已復原（會
 SIMCTLUI_MEDIUM='用 `simctl ui` 改過字級／外觀的 handoff 必列已復原（會自動把 content_size／appearance 改成 medium／light）。'
 # LS-215：ios-dev／qa／merge-reviewer 正文另須引用新 PreToolUse gate 名稱
 BGGATE='PreToolUse `background-bash-guard.sh`（LS-215）機械擋 run_in_background:true 與背景化再等的命令文字慣用形狀。'
-QA_BODY="${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE}"
+# LS-236：三份正文另須含「不得依賴截斷後的自動背景化」（工具 timeout 600000 截斷後子行程不會被殺掉，
+# 殘留會與下一輪 xcodebuild 搶模擬器，stale-xcodebuild-check.sh 機械擋殘留）
+NOBGXC='xcodebuild 一律前景、Bash timeout 600000（工具上限）；預期超過 10 分鐘的測試以 -only-testing 分段跑；不得依賴截斷後的自動背景化。'
+QA_BODY="${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC}"
 # LS-180：ui-designer／visual-reviewer 正文須含「--kill 只在 orchestrator 明示時」（切檔不殺行程的規約句）
 KILL='切檔一律不殺行程；`pen-open.sh` 的 --force-reload／--kill 只在 orchestrator 明示時使用，用後必回報「需重連」。'
 # LS-180 裁決：ui-designer 正文另須含「收工 Pen 停在票檔」（不切回主 checkout）；合法的 ui-designer 樣本兩句都要有
@@ -84,8 +87,8 @@ MUTPLAY='每支 mutation 必列三段：改了什麼一行 → 哪條測試紅 �
 REPLAYRULE='handoff 申報的 mutation 一律自己重放，對不上列 major。'
 # LS-232：ios-dev 正文另須含「新增登入後全屏 gate 必同 PR 更新 QADriver」（qa-driver-gate-check 機械化）
 QAGATE='新增登入後全屏 gate 必同 PR 更新 QADriver（`qa-driver-gate-check` 會擋）。'
-IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE}"
-MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE}"
+IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC}"
+MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC}"
 # LS-209：ios-dev 新增 tools: 白名單（移除 mcp__pencil__*）——取代舊的 `NONE`（無 tools: 行＝繼承全部工具，其中
 # 必然含 pencil，會被新的「禁止工具」規則擋下）。merge-review R1 M2：RULES 表現在對 ios-dev 有必要工具要求
 # （Bash／Read／Edit／Write／Grep／Glob／Agent／三支 Linear 工具），這裡的乾淨清單須包含全部才能當合法基準。
@@ -144,7 +147,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（39 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 39 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（42 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 42 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -397,6 +400,20 @@ if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '新增登入後全屏 ga
   ok '⑳ mutant：拿掉規則後「缺新增全屏 gate 規約句」的負樣本變綠'
 else
   echo "✗ ⑳ mutant（新增全屏 gate 規約句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ㉑ LS-236：三份正文須含「不得依賴截斷後的自動背景化」（工具 timeout 600000 截斷後子行程不會被
+#        殺掉，殘留會與下一輪 xcodebuild 搶模擬器；來源 LS-166／LS-217，stale-xcodebuild-check.sh 機械擋殘留）----
+reset; expect 0 '㉑ 三份正文含不得依賴截斷後自動背景化句 → 印「正文含」' 'ios-dev.md：正文含「不得依賴截斷後的自動背景化」' 'qa.md：正文含「不得依賴截斷後的自動背景化」'
+reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE}"; expect 1 '㉑ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「不得依賴截斷後的自動背景化」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE}"; expect 1 '㉑ qa 缺該句 → exit 1' 'qa.md：正文缺「不得依賴截斷後的自動背景化」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE}"; expect 1 '㉑ merge-reviewer 缺該句 → exit 1' 'merge-reviewer.md：正文缺「不得依賴截斷後的自動背景化」'
+reset
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '不得依賴截斷後的自動背景化'; then
+  ok '㉑ mutant：拿掉規則後「缺不得依賴截斷後自動背景化句」的負樣本變綠'
+else
+  echo "✗ ㉑ mutant（不得依賴截斷後自動背景化句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過

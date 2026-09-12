@@ -346,6 +346,83 @@ u18=$(id_of "$out18")
 if [ "$u18" = EXISTING-116 ]; then echo "✓ ⑱ 釘住版不可用（fail-open 退回 header_os）時，既有同票機仍被正確重用"; else echo "✗ ⑱ 應重用 EXISTING-116，實得 ${u18}" >&2; cat "$work/err18" >&2; fail=1; fi
 has '⑱ stderr 重用訊息 runtime 字串是退回後的 header_os 26.0（不是打不到的釘住版 26.2）' "$(cat "$work/err18")" '重用同票既有專屬機「LS-116-iPhoneAir」（同 runtime iOS 26.0，不另建 LS-116-iPhone17Pro；LS-176）'
 
+# ⑲～㉒（LS-236）：detect-simulator.sh 回傳 UDID 前的殘留 xcodebuild 檢查（scripts/gates/stale-xcodebuild-check.sh
+#    的接線，不是它自己的邏輯——邏輯本身由 stale-xcodebuild-check.test.sh 專測）。stub `pgrep`（`-f` 走假身，其餘
+#    passthrough 給真的系統 pgrep）／`ps`（只在完整命中 `-o pid=,etime=,command= -p <pid>` 形狀時走假身），
+#    只在這幾組案例生效（其餘案例的 `run_in()` 不吃這兩個控制檔，預設無殘留、不受影響）。
+REAL_PGREP19="$(command -v pgrep)"
+REAL_PS19="$(command -v ps)"
+export STUB19_PGREP_OUT="$work/stub19-pgrep.out"
+: > "$STUB19_PGREP_OUT"
+cat > "$work/bin/pgrep" <<STUB
+#!/bin/bash
+if [ "\$1" = "-f" ]; then
+  [ -s "\${STUB19_PGREP_OUT:?}" ] && cat "\${STUB19_PGREP_OUT}"
+  exit 0
+fi
+exec "$REAL_PGREP19" "\$@"
+STUB
+chmod +x "$work/bin/pgrep"
+export STUB19_PS_DB="$work/stub19-ps.db"
+: > "$STUB19_PS_DB"
+cat > "$work/bin/ps" <<STUB
+#!/bin/bash
+if [ "\$1" = "-o" ] && [ "\$2" = "pid=,etime=,command=" ] && [ "\$3" = "-p" ]; then
+  target=\$4
+  db="\${STUB19_PS_DB:?}"
+  [ -f "\$db" ] || exit 1
+  while IFS=\$'\t' read -r pid etime cmd || [ -n "\$pid" ]; do
+    [ -n "\$pid" ] || continue
+    if [ "\$pid" = "\$target" ]; then printf '%5s %s %s\n' "\$pid" "\$etime" "\$cmd"; exit 0; fi
+  done < "\$db"
+  exit 1
+fi
+exec "$REAL_PS19" "\$@"
+STUB
+chmod +x "$work/bin/ps"
+
+# ⑲ 非 CI、退回共用第一台、該 UDID 有殘留 xcodebuild（無有效鎖）→ exit 非 0（detect-simulator.sh 自己
+#    fail-closed；用 `DETECT_SIMULATOR_SHARED=1` 讓它直接落在共用第一台，UDID 已知＝SHARED-UDID，可預先
+#    佈置殘留樣本）
+mkdir -p "$work/wt/LS-119"
+db19="$work/db19"; fresh_db "$db19"
+printf '5001\n' > "$STUB19_PGREP_OUT"
+printf '5001\t00:00:10\txcodebuild test -destination platform=iOS Simulator,id=SHARED-UDID\n' > "$STUB19_PS_DB"
+out19=$(STUB_DB="$db19" DETECT_SIMULATOR_SHARED=1 run_in "$work/wt/LS-119" 2>"$work/err19"); rc19=$?
+if [ "$rc19" -ne 0 ]; then echo "✓ ⑲ 該 UDID 有殘留 xcodebuild（無有效鎖）→ detect-simulator.sh 拒絕回傳（exit ${rc19}）"; else echo "✗ ⑲ 應非 0（實得 0，輸出：${out19}）" >&2; cat "$work/err19" >&2; fail=1; fi
+has '⑲ stderr 印出殘留警告' "$(cat "$work/err19")" '⚠ 殘留 xcodebuild'
+
+# ⑳ 對照：同一顆 UDID 沒有殘留 → 正常回傳（證明 ⑲ 是殘留造成的，不是 stub 佈置壞了整個路徑）
+: > "$STUB19_PGREP_OUT"; : > "$STUB19_PS_DB"
+out20=$(STUB_DB="$db19" DETECT_SIMULATOR_SHARED=1 run_in "$work/wt/LS-119" 2>"$work/err20"); rc20=$?
+is_dest_ok '⑳ 無殘留時正常回傳' "$out20"
+[ "$rc20" -eq 0 ] && echo "✓ ⑳ exit 0" || { echo "✗ ⑳ 應 exit 0（實得 ${rc20}）" >&2; fail=1; }
+
+# ㉑ CI=true 時完全不查（即使殘留樣本還留著）——GitHub Actions 每個 job 跑在獨立 VM，不需要這層檢查
+printf '5001\n' > "$STUB19_PGREP_OUT"
+printf '5001\t00:00:10\txcodebuild test -destination platform=iOS Simulator,id=SHARED-UDID\n' > "$STUB19_PS_DB"
+out21=$(STUB_DB="$db19" CI=true run_in "$work/wt/LS-119" 2>"$work/err21"); rc21=$?
+[ "$rc21" -eq 0 ] && echo "✓ ㉑ CI=true 時即使有殘留樣本仍正常回傳（不查）" || { echo "✗ ㉑ 應 exit 0（實得 ${rc21}）" >&2; cat "$work/err21" >&2; fail=1; }
+: > "$STUB19_PGREP_OUT"; : > "$STUB19_PS_DB"
+
+# ㉒ mutation：拿掉 detect-simulator.sh 呼叫 stale-xcodebuild-check.sh 那一行 → ⑲ 的紅樣本必須變綠
+mut19="$work/detect-simulator.no-stale-check.sh"
+sed '/stale-xcodebuild-check\.sh/d' "$detect" > "$mut19"
+if grep -qF 'stale-xcodebuild-check.sh' "$mut19"; then
+  echo "✗ ㉒ mutate：拿掉呼叫行失敗，負控本身無效" >&2; fail=1
+else
+  echo "✓ ㉒ mutate：確認已拿掉 stale-xcodebuild-check.sh 呼叫行"
+fi
+printf '5001\n' > "$STUB19_PGREP_OUT"
+printf '5001\t00:00:10\txcodebuild test -destination platform=iOS Simulator,id=SHARED-UDID\n' > "$STUB19_PS_DB"
+outm19=$(cd "$work/wt/LS-119" && STUB_DB="$db19" DETECT_SIMULATOR_SHARED=1 bash "$mut19" 2>/dev/null); rcm19=$?
+if [ "$rcm19" -eq 0 ]; then
+  echo "✓ ㉒ mutant（拿掉呼叫）：⑲的紅樣本改判成 exit 0——證明呼叫 stale-xcodebuild-check.sh 是這裡在擋"
+else
+  echo "✗ ㉒ mutant 未如預期翻轉（實得 exit ${rcm19}）" >&2; printf '%s\n' "$outm19" | sed 's/^/    /' >&2; fail=1
+fi
+: > "$STUB19_PGREP_OUT"; : > "$STUB19_PS_DB"
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ detect-simulator／simulator-lock 自測通過"
 fi

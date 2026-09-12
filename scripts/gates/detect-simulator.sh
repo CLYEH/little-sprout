@@ -209,6 +209,16 @@ else
     fi
   fi
   [ -n "$udid" ] || udid=$shared_udid   # 找不到／建立失敗／強制共用：直接回共用第一台，序列化交給呼叫端
+
+  # LS-236：回傳這顆 UDID 前確認沒有殘留的 xcodebuild 還在跑（同 push-gate.sh 對 sim_udid 那段理由；
+  # 保護直接呼叫本腳本、自己另外跑 xcodebuild 的呼叫端——如 CI workflow 之外未來可能新增的呼叫點——
+  # push-gate.sh 自己在拿到這裡回傳的 UDID 之後還會再做一次同款檢查，屬刻意的雙重防線，不衝突）。
+  # 帶上呼叫端接下來會用的鎖目錄（同 push-gate.sh 的預設慣例 `/tmp/simulator-lock-<udid>`，可用
+  # SIMULATOR_LOCK_DIR 覆寫，同一份環境變數兩邊共用同一個值）——命中的若是另一個持鎖中的合法呼叫
+  # （常見於退回共用第一台、多個 worktree 排隊的情境），放行、不誤判為殘留（同 test ⑧ 的重現理由）。
+  # CI（`CI=true`）分支不查：GitHub Actions 每個 job 跑在獨立 VM，沒有跨 job 殘留可言。
+  # `set -uo pipefail` 沒有 `-e`，非 0 需自己傳遞。
+  bash "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/stale-xcodebuild-check.sh" "$udid" "${SIMULATOR_LOCK_DIR:-/tmp/simulator-lock-${udid}}" || exit $?
 fi
 
 printf 'platform=iOS Simulator,id=%s\n' "$udid"
