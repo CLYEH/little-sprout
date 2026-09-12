@@ -134,7 +134,10 @@ final class ContentActionsUITests: XCTestCase {
         let submitEnabledExpectation = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "isEnabled == true"), object: submitButton
         )
-        XCTAssertEqual(XCTWaiter().wait(for: [submitEnabledExpectation], timeout: 5), .completed)
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [submitEnabledExpectation], timeout: 5), .completed,
+            "選了原因之後，送出鈕應該變成 enabled"
+        )
         submitButton.tap()
 
         XCTAssertTrue(
