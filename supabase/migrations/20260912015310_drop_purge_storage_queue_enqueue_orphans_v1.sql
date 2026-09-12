@@ -1,0 +1,59 @@
+-- LS-227 —— DESTRUCTIVE：移除 deprecated
+-- `public.purge_storage_queue_enqueue_orphans(text, uuid, text[])`（v1，
+-- returns integer）。
+--
+-- 為什麼是 DESTRUCTIVE：`drop function` 屬於
+-- `scripts/gates/migration-breaking-check.sh` 的 DESTRUCTIVE 分級，需要使用者
+-- 本人在 PR comment 留 `DESTRUCTIVE-APPROVED` 獨佔行（LS-123 gate）才能合併——
+-- 這是預期狀態，不設法迴避。
+--
+-- 零生產呼叫端證據：
+--   - LS-222（migration `20260906091007_purge_orphan_dropped_reporting.sql`
+--     檔頭）另立 `purge_storage_queue_enqueue_orphans_v2(text, uuid, text[])`
+--     取代這支函式——Postgres 不允許 `create or replace function` 改變既有
+--     函式的回傳型別（v1 是 `returns integer`，v2 要多回傳一個 `dropped`
+--     欄位、形狀變成 `returns table(enqueued integer, dropped integer)`），
+--     所以當時另立新函式名、v1 原樣保留待後續 DESTRUCTIVE 票處理。
+--     `supabase/functions/purge-storage/index.ts` 從 LS-222 起已全面改呼叫
+--     `_v2`，不再呼叫這支 v1。
+--   - LS-223 dead-code-sweeper（LS-222 comment `3cbe31bb-4ab8-4c3d-bbd9-
+--     609869afb37c` 逐條查實①）以 `grep -rn` 對全 repo `*.ts`／`*.sql`／`*.md`
+--     核實：v1 唯一實際呼叫點只剩 `supabase/tests/109_soft_delete_
+--     unreferenced_media.sql:339` 自測（第 4 段），生產程式碼零呼叫端；
+--     裁定「建議保留」（既知 deprecated 狀態，DROP 需另一張 DESTRUCTIVE 核可
+--     票），非本 feature 遺漏。
+--   - orchestrator 2026-09-06 裁定：保留至本票（LS-227），以 DESTRUCTIVE 流程
+--     移除。
+--
+-- 殘留 grant 查證（本票落地前查，見 handoff 附原文）：對 head `c5f07b9`（本票
+-- 分支起點）容器實際查詢
+-- `select p.oid::regprocedure::text, p.proacl from pg_proc p where
+--  p.pronamespace = 'public'::regnamespace and p.proname =
+--  'purge_storage_queue_enqueue_orphans'` 與
+-- `information_schema.routine_privileges`，結果只有 `postgres`（owner，隱含）
+-- 與 `service_role`（EXECUTE，來自 `20260822120300_harden_default_
+-- privileges.sql` 的 `alter default privileges grant execute on functions to
+-- service_role`，非本函式專屬 grant）——`anon`／`authenticated`／`PUBLIC` 皆
+-- 已在原建立 migration（`20260906050606_soft_delete_unreferenced_media.sql`
+-- 第 1c 段）被 `revoke ... from public, anon` 收回，沒有殘留可 revoke 的額外
+-- 授權。`drop function` 會連同這支函式僅剩的 ACL（`service_role` 的預設
+-- EXECUTE）一併移除，因此本次不需要、也沒有額外的 `revoke` 陳述式。
+--
+-- 不動的既有 migration：本票不修改
+-- `20260906050606_soft_delete_unreferenced_media.sql`（原建立）與
+-- `20260906091007_purge_orphan_dropped_reporting.sql`（v2 建立）——
+-- migration-immutable-check.sh 會擋，且歷史紀錄本身就是這支函式生命週期的
+-- 唯一來源，不應該被事後改寫。
+--
+-- 不做：`public.purge_storage_unknown_media_paths(text[])`——仍被
+-- `purge_storage_classify_orphan_paths()` 內部呼叫，不是死碼（LS-222 comment
+-- `3cbe31bb` 逐條查實②），本票不動。
+--
+-- 回滾（若需要）：重新執行
+-- `20260906050606_soft_delete_unreferenced_media.sql` 第 1c 段的原始
+-- `create or replace function public.purge_storage_queue_enqueue_orphans(...)`
+-- 陳述式（含 `revoke execute ... from public, anon` 與 `comment on
+-- function ...`），PR body 的回滾段已附完整原文。
+-- ---------------------------------------------------------------------------
+
+drop function public.purge_storage_queue_enqueue_orphans(text, uuid, text[]);
