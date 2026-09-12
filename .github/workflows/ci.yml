@@ -169,7 +169,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／pretool／main-checkout-guard／background-bash-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／pretool／main-checkout-guard／background-bash-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -223,6 +223,9 @@ jobs:
           bash scripts/gates/handoff-evidence-check.test.sh || rc=1
           # LS-211 範圍 7：AX 字級啟動參數 gate 自測（launchEnvironment 設 UIPreferredContentSizeCategoryName 不生效）
           bash scripts/gates/ax-launch-check.test.sh || rc=1
+          # LS-232：QADriver 全屏 gate 對帳自測（正負樣本＋mutation：拿掉 QA-GATE-HANDLED 標記轉紅＋
+          # 備援掃描 ⚠ 不轉紅＋多 gate 獨立判定＋參數 fail closed＋真 repo 驗證）
+          bash scripts/gates/qa-driver-gate-check.test.sh || rc=1
           exit "$rc"
 
       # LS-30：品牌 skill 接線——前饋是 ui-designer／visual-reviewer 定義「開工先載入 little-sprout-brand」，載入動作
@@ -252,6 +255,13 @@ jobs:
       # 後應移除該 allowlist 項。
       - name: AX 字級啟動參數 gate（ax-launch-check，LS-211）
         run: bash scripts/gates/ax-launch-check.sh
+
+      # LS-232（來源 LS-96 池項 `f2c2100f`(4)；兩起事故 LS-190 EULA、LS-217 推播前置頁）：
+      # RootView*.swift 的 `// QA-GATE:` 標記（登入後全屏 gate 清單）對帳 QADriver*.swift 的
+      # `// QA-GATE-HANDLED:` 標記（已處理清單），差集非空即紅——新增全屏 gate 沒同步更新
+      # QADriver 會讓 qa-e2e.sh browse／publish 對新帳號卡住。純檔案內容比對，所有 PR／push 皆跑。
+      - name: QADriver 全屏 gate 對帳（qa-driver-gate-check，LS-232）
+        run: bash scripts/gates/qa-driver-gate-check.sh
 
       # LS-71：ops 腳本自測——patrol.sh（巡檢）用合成 repo（file:// 裸 origin＋七個 worktree）驗各停滯型態判定的
       # 正負樣本、--json 合法、gh 不可用不炸；session-start.sh（SessionStart hook）驗輸出合法 JSON 且 fail-soft、

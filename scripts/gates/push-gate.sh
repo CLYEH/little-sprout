@@ -177,6 +177,19 @@ if [ -d LittleSprout/Features ]; then
   bash "$(git rev-parse --show-toplevel)/scripts/gates/tap-target-registry-check.sh"
 fi
 
+# 3c) QADriver 全屏 gate 對帳（LS-232）：RootView*.swift 的 `// QA-GATE:` 標記（登入後全屏 gate
+#     清單）對帳 QADriver*.swift 的 `// QA-GATE-HANDLED:` 標記（已處理清單），差集非空即紅——
+#     LS-190 EULA、LS-217 推播前置頁兩次事故都是新增全屏 gate 後 QADriver 沒同步更新，讓
+#     qa-e2e.sh browse／publish 對新帳號卡住。純文字掃描，不需要模擬器；同第 1 步 SwiftLint
+#     共用 skip_swift_steps 判斷（無 Swift 變更則跳過，CI 仍無條件全跑）。
+if [ -f LittleSprout/Navigation/RootView.swift ]; then
+  if [ "$skip_swift_steps" = 1 ]; then
+    echo "→ push gate：無 Swift 變更，跳過 QADriver 全屏 gate 對帳（CI 仍跑）"
+  else
+    bash "$(git rev-parse --show-toplevel)/scripts/gates/qa-driver-gate-check.sh"
+  fi
+fi
+
 # 4) 錯誤碼三方對帳（docs/API.md §5 ↔ LSErrorCode ↔ migrations errcode，LS-54／LS-56）：
 #    無條件跑——三個來源任一搬家就直接紅，逼著同 PR 更新這裡與 CI 的路徑，不靜默跳過。
 bash "$(git rev-parse --show-toplevel)/scripts/gates/error-codes-check.sh"
