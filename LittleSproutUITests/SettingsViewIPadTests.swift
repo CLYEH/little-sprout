@@ -25,6 +25,12 @@ final class SettingsViewIPadTests: XCTestCase {
         file: StaticString = #filePath, line: UInt = #line
     ) {
         XCTAssertTrue(entry.waitForExistence(timeout: 5), "入口列應該存在才能開始這個情境", file: file, line: line)
+        // LS-237 第 8 項（coordinator 追加，`testFamilySectionInviteRowRegressionPushesAndBackReturns`
+        // 09-12 run 34693191593 flake）：`waitForExistence` 只確認元素進了 accessibility
+        // tree，不保證這一刻真的可點——sidebar 切換到「家庭」的轉場動畫還沒完全穩定時
+        // `tap()` 可能落空（沒有真的 push），後續等 `pushedSentinel` 自然逾時。tap 前多等
+        // 一次「真的可點」當同步點。
+        XCTAssertTrue(waitForHittable(entry, timeout: 5), "入口列應該可點擊", file: file, line: line)
         entry.tap()
 
         XCTAssertTrue(
@@ -37,12 +43,34 @@ final class SettingsViewIPadTests: XCTestCase {
 
         backButton.tap()
 
+        // LS-237 第 8 項：先等目的地畫面的 sentinel 真的消失（`waitForNonExistence`——
+        // `.exists` 一次性快照在返回轉場動畫還沒跑完時可能誤判成「還在」），確定返回轉場已經
+        // 開始收尾，再等入口列重新出現；比原本「entry 先、pushedSentinel 用一次性快照」的
+        // 順序更貼近「返回」這個轉場動畫實際發生的先後。
         XCTAssertTrue(
-            entry.waitForExistence(timeout: 5),
+            waitForNonExistence(pushedSentinel, timeout: 10),
+            "返回後不該還看得到目的地畫面的內容", file: file, line: line
+        )
+        XCTAssertTrue(
+            entry.waitForExistence(timeout: 10),
             "返回後應該回到原本的清單、重新看到入口列本身",
             file: file, line: line
         )
-        XCTAssertFalse(pushedSentinel.exists, "返回後不該還看得到目的地畫面的內容")
+    }
+
+    /// `XCTNSPredicateExpectation` 是官方建議用來等 `XCUIElement` 屬性變化的寫法（同
+    /// `InteractionRowUITests.testLikeToggleTap_doesNotMoveCommentButton` 既有的「等 label
+    /// 變化」寫法）——XCTest 沒有內建 `waitForExistence` 的反向版本（等「停止存在」），這裡跟
+    /// `waitForHittable` 一起用同一套輪詢機制補上，比一次性 `.exists`／`.isHittable` 快照可靠
+    /// （LS-237 第 8 項）。
+    private func waitForNonExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 
     /// 預設選取＝個人（`SettingsView.regularSelection` 初值），不需要先點 sidebar。對應
@@ -158,7 +186,14 @@ final class SettingsViewIPadTests: XCTestCase {
             "應同時看到「使用條款」列與 Doc Title 兩個「使用條款」文字元件——只剩 1 個代表開錯文件"
         )
         closeButton.tap()
-        XCTAssertFalse(closeButton.waitForExistence(timeout: 3), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）")
+        // LS-237 第 8 項（coordinator 追加，09-13 run 34707282145 flake）：`XCTAssertFalse
+        // (closeButton.waitForExistence(timeout: 3), ...)` 用的是「等開始存在」的 API 驗證
+        // 「不存在」——tap 後 dismiss 動畫還沒跑完的那個瞬間，第一次輪詢就可能量到「還存在」，
+        // `waitForExistence` 因此立刻回傳 `true`（不會等滿 3 秒看它會不會消失），斷言就此
+        // 誤判失敗。改用真正等「停止存在」的 `waitForNonExistence`。
+        XCTAssertTrue(
+            waitForNonExistence(closeButton, timeout: 3), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）"
+        )
 
         let privacyRow = app.buttons["隱私權政策"]
         XCTAssertTrue(privacyRow.waitForExistence(timeout: 5), "關閉後應回到「法律」列表，看得到「隱私權政策」列")
