@@ -52,4 +52,11 @@ enum QAAccessibilityID {
     /// LS-217：01 設定頁「推播通知」列——`value`（「開啟」／「關閉」）隨
     /// `UNAuthorizationStatus` 而變，同 `settingsStorageRow` 的既有理由改用 identifier。
     static let settingsPushRow = "qa.settings.pushRow"
+    /// LS-217 QA R1 FAIL（Linear comment `e4863482`）修正：`PushPrepromptView` 的「稍後再說」
+    /// 按鈕——`QADriver.dismissPushPrepromptIfPresent()` 靠它判定登入後首次進時間軸的推播前置
+    /// 頁是否出現並點掉。文案本身穩定（不像 `settingsStorageRow` 那樣會隨狀態變），仍改用
+    /// identifier 而非明碼比對：`QADriver` 其餘畫面共用「新增回憶」「之後再說」這類明碼慣例
+    /// 是因為那些文案不會跟別的畫面撞名，但這裡刻意留一個機械可辨識、不受未來文案調整影響的
+    /// 錨點（同檔案既有慣例：只放「靠 label 找不穩」或需要穩定性保證的元件）。
+    static let pushPrepromptSkipButton = "qa.pushPreprompt.skipButton"
 }
