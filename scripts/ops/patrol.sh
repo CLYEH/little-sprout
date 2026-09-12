@@ -165,8 +165,12 @@ pr_check_flag() {  # $1=PR號 $2=head oid（40 hex） $3=base branch 名（不�
   # PR 的 updatedAt 年齡——09-12 #365 正是「PR 沒被互動更新、但 CI 剛開跑」的反例，用 updatedAt 會誤導
   # 成「CI 卡了 48 分」。同一次呼叫加 startedAt 欄位（不加呼叫）；只對 pending 的項目算「距今幾分」，取
   # 最早開始（＝elapsed 最大）的那個當代表；沒有任何 pending 項帶得到 startedAt 就印 ?。
+  # merge-review R2 delta m4：Go 零值 `0001-01-01T00:00:00Z`（commit status 未曾設過 started_at 時的預設
+  # 值，本 repo 真資料如 `gh pr checks 355` 的 merge-review 項）餵給 fromdateiso8601 會直接讓整條 -q
+  # 以 rc=1 中止（`// ""` 只擋 null／缺欄位，擋不了這個非空字串）——三分流因此整個退化成「查詢失敗」。
+  # 補一個字串前綴守門，視同缺值（印 ?）。
   rows=$(cd "$ROOT" && gh pr checks "$n" --json name,bucket,link,startedAt \
-    -q '.[] | [.name, .bucket, .link, (if .bucket == "pending" then ((.startedAt // "") as $s | if $s == "" then "" else (((now - ($s | fromdateiso8601)) / 60) | floor | tostring) end) else "" end)] | @tsv' 2>/dev/null); rc=$?
+    -q '.[] | [.name, .bucket, .link, (if .bucket == "pending" then ((.startedAt // "") as $s | if $s == "" or ($s | startswith("0001-01-01")) then "" else (((now - ($s | fromdateiso8601)) / 60) | floor | tostring) end) else "" end)] | @tsv' 2>/dev/null); rc=$?
   if [ "$rc" -ne 0 ]; then
     printf '⚠ %s 但 gh pr checks 查詢失敗（exit %s）→ 人工看 PR #%s 頁面' "$st" "$rc" "$n"
     return

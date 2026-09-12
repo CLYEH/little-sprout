@@ -1311,6 +1311,14 @@ fi
 #                                                                    （即真實 jq 運算式 `now - (startedAt|fromdateiso8601)`
 #                                                                    的結果，假 gh 直接 cat 檔案、不跑 jq，固定值才不會
 #                                                                    隨測試執行時間漂移），非 pending 或無 startedAt 留空）
+#                                                                  → 若改放 pr-checks-<n>.json（原始陣列，非 TSV），假
+#                                                                    gh 改為忠實模擬 gh 自己套用 -q 的行為：把 patrol.sh
+#                                                                    實際傳入的 -q 引數（即 pr_check_flag() 裡那條 jq
+#                                                                    運算式本尊）原封不動丟給真的 jq 執行（i4，merge-review
+#                                                                    R2 delta：假 gh 直接 cat 已算好的 TSV 完全繞過真 jq，
+#                                                                    運算式本身寫錯語法／語意也測不出來——m4 的 Go 零值
+#                                                                    `strptime` 崩潰就是這樣漏掉的）。兩種形態並存、
+#                                                                    .json 優先；既有 .tsv fixture 不必改。
 #   gh api repos/:owner/:repo/branches/<b>/protection/required_status_checks -q '.contexts[]'
 #                                                                  → protection-<b>.txt
 #   gh api repos/:owner/:repo/commits/<oid>/status -q '...'       → status-<oid>.txt（缺檔＝空字串，不當失敗）
@@ -1324,6 +1332,15 @@ if [ "\$1" = pr ] && [ "\$2" = list ]; then
 fi
 if [ "\$1" = pr ] && [ "\$2" = checks ]; then
   n="\$3"
+  if [ -f "\$dir/pr-checks-\${n}.json" ]; then
+    filter=""
+    while [ \$# -gt 0 ]; do
+      if [ "\$1" = "-q" ]; then filter="\$2"; break; fi
+      shift
+    done
+    jq -r "\$filter" "\$dir/pr-checks-\${n}.json"
+    exit \$?
+  fi
   if [ -f "\$dir/pr-checks-\${n}.tsv" ]; then cat "\$dir/pr-checks-\${n}.tsv"; exit 0; else exit 1; fi
 fi
 if [ "\$1" = api ]; then
@@ -1350,6 +1367,8 @@ oid902="deadbee$(printf '0%.0s' $(seq 1 33))"
 oid903="1234567$(printf '0%.0s' $(seq 1 33))"
 oid904="f00f00f$(printf '0%.0s' $(seq 1 33))"   # m1：fail＋pending 並存
 oid905="ab00000$(printf '0%.0s' $(seq 1 33))"   # m2 負控：pending 全無 startedAt → 印 ?m
+oid906="600d600d$(printf '0%.0s' $(seq 1 32))"  # i4：真 jq 通道，正常 startedAt
+oid907="0001000$(printf '0%.0s' $(seq 1 33))"   # i4／m4：真 jq 通道，Go 零值 startedAt
 cat > "$work/gh-fixtures/pr-list.tsv" <<TSV
 900	BLOCKED	-	48	feature/LS-900-pending	development	false	${oid900}	LS-900 demo pending（重放 #365：18:59 checks 有 pending）
 901	BLOCKED	-	48	feature/LS-901-missing	development	false	${oid901}	LS-901 demo missing-status（重放 #366：21:10 五項全 pass、無 pending、仍 BLOCKED）
@@ -1357,6 +1376,8 @@ cat > "$work/gh-fixtures/pr-list.tsv" <<TSV
 903	BLOCKED	-	5	feature/LS-903-fresh	development	false	${oid903}	LS-903 demo not-stale-yet
 904	BLOCKED	-	48	feature/LS-904-fail-and-pending	development	false	${oid904}	LS-904 demo fail 與 pending 並存（m1）
 905	BLOCKED	-	48	feature/LS-905-pending-no-started	development	false	${oid905}	LS-905 demo pending 缺 startedAt（m2 負控）
+906	BLOCKED	-	48	feature/LS-906-realjq-normal	development	false	${oid906}	LS-906 demo 真 jq 通道、正常時間（i4）
+907	BLOCKED	-	48	feature/LS-907-realjq-zerodate	development	false	${oid907}	LS-907 demo 真 jq 通道、Go 零值 startedAt（m4／i4）
 TSV
 cat > "$work/gh-fixtures/protection-development.txt" <<TXT
 ci
@@ -1404,6 +1425,31 @@ lint	pass	https://github.com/CLYEH/little-sprout/actions/runs/3001/job/1
 ci	pending	https://github.com/CLYEH/little-sprout/actions/runs/3001/job/2
 TSV
 
+# 906／907（i4，merge-review R2 delta：假 gh 直接 cat 已算好的 TSV 完全繞過真 jq，`now - (startedAt|
+# fromdateiso8601)` 這條本輪唯一新增的查詢邏輯從未真的被執行過——語法／語意寫錯，自測仍全綠）：改用
+# .json 原始陣列＋假 gh 對 -q 引數跑真的 jq（見上面假 gh 腳本），忠實驗證 patrol.sh 裡那條 jq 運算式本尊。
+# 906：兩項 pending 帶真實 ISO 時間（ci 17 分前、ci-ipad 5 分前，取代表值＝較早開始者 17）＋一項 pass
+# 帶 Go 零值 startedAt（重放 09-12 真實觀察：`gh pr checks 355／349` 的 merge-review 項就是這個值）——
+# 驗證 pass bucket 的零值不會被求值（jq if/then/else 短路，只有 bucket=="pending" 才會走到
+# fromdateiso8601 那支），不誤觸 m4 的崩潰。
+ci17_epoch=$(( $(date +%s) - 17 * 60 )); ci17_iso=$(date -u -r "$ci17_epoch" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d "@${ci17_epoch}" +%Y-%m-%dT%H:%M:%SZ)
+ipad5_epoch=$(( $(date +%s) - 5 * 60 )); ipad5_iso=$(date -u -r "$ipad5_epoch" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d "@${ipad5_epoch}" +%Y-%m-%dT%H:%M:%SZ)
+cat > "$work/gh-fixtures/pr-checks-906.json" <<JSON
+[
+  {"name":"merge-review","bucket":"pass","link":"https://linear.app/x","startedAt":"0001-01-01T00:00:00Z"},
+  {"name":"ci","bucket":"pending","link":"https://github.com/CLYEH/little-sprout/actions/runs/4001/job/1","startedAt":"${ci17_iso}"},
+  {"name":"ci-ipad","bucket":"pending","link":"https://github.com/CLYEH/little-sprout/actions/runs/4001/job/2","startedAt":"${ipad5_iso}"}
+]
+JSON
+# 907（m4 觸發條件本尊：merge-review 的 bucket 是 pending 且 startedAt 為 Go 零值——merge-review R2
+# delta 端到端重現用的正是這個組合，而非 355／349 實測到的 pass bucket 零值，因為只有 pending 才會
+# 真的求值 fromdateiso8601）。m4 修好後預期印 `?m`（缺值），不是查詢失敗。
+cat > "$work/gh-fixtures/pr-checks-907.json" <<JSON
+[
+  {"name":"merge-review","bucket":"pending","link":"https://linear.app/y","startedAt":"0001-01-01T00:00:00Z"}
+]
+JSON
+
 t0=$(date +%s)
 out28="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-fetch 10 2>&1)"; rc=$?
 t28=$(( $(date +%s) - t0 ))
@@ -1441,6 +1487,12 @@ has   '㉘ m1：併印「另 1 項跑中（lint）」，pending 資訊沒有整�
 hasnt '㉘ m1：不誤判成純 CI 跑中（fail 沒被吞）' "$l904" '⏳ CI 跑中'
 l905=$(row "$out28" 'feature/LS-905-pending-no-started')
 has   '㉘ m2 負控：pending 缺 startedAt → 印 ?m（不是 0 或空字串）' "$l905" 'CI 跑中 ?m（ci）'
+l906=$(row "$out28" 'feature/LS-906-realjq-normal')
+has   '㉘ i4：真 jq 通道，正常時間 → 取最早開始者（ci 17 分前 ＞ ci-ipad 5 分前）' "$l906" 'CI 跑中 17m（ci、ci-ipad）'
+hasnt '㉘ i4：pass bucket 的 Go 零值 startedAt 不觸發查詢失敗（if/then/else 短路，只有 pending 才求值）' "$l906" '查詢失敗'
+l907=$(row "$out28" 'feature/LS-907-realjq-zerodate')
+has   '㉘ m4（真 jq 通道）：pending 項 startedAt 是 Go 零值 → 視同缺值印 ?m，不再讓整條查詢中止' "$l907" 'CI 跑中 ?m（merge-review）'
+hasnt '㉘ m4：不再印查詢失敗' "$l907" '查詢失敗'
 brief28="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-fetch --brief 10 2>&1)"
 has   '㉘ --brief 同步分流：CI 跑中' "$brief28" '⏳ CI 跑中'
 has   '㉘ --brief 同步分流：缺必要 status' "$brief28" '缺必要 status'
@@ -1497,6 +1549,26 @@ out28m1="$(PATH="$work/bin:$PATH" bash "$mut_pr_m1" --repo "$repo" --no-fetch 10
 l904m=$(row "$out28m1" 'feature/LS-904-fail-and-pending')
 has   '㉘ mutant（m1）：pending 判斷搬到 fail 之前 → 904 的 fail 被吞、變回純「CI 跑中」（證明 fail 優先是這段程式碼造成的）' "$l904m" '⏳ CI 跑中'
 hasnt '㉘ mutant（m1）：check 紅／run id 資訊消失' "$l904m" 'check 紅'
+
+# mutation（m4，merge-review R2 delta）：拿掉 Go 零值守門（`or ($s | startswith("0001-01-01"))`），
+# 退回 R2 的舊寫法——907（pending 項 startedAt 為零值，真 jq 通道）應該從「?m」變回「查詢失敗」，證明
+# 守門正是這段程式碼造成的。用真 jq 的 906/907 fixture（不必額外建假身），因為假 gh 對這兩個 PR 是
+# 忠實執行 patrol.sh（或其 mutant）傳入的 -q 引數本尊，不需要另外同步 mutate 假身。
+mut_pr_m4="$work/patrol.no-zerodate-guard.sh"
+python3 - "$patrol" "$mut_pr_m4" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = 'if $s == "" or ($s | startswith("0001-01-01")) then ""'
+new = 'if $s == "" then ""'
+assert src.count(old) == 1, "找不到 Go 零值守門，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
+PY
+out28m4="$(PATH="$work/bin:$PATH" bash "$mut_pr_m4" --repo "$repo" --no-fetch 10 2>&1)"
+l907m=$(row "$out28m4" 'feature/LS-907-realjq-zerodate')
+has   '㉘ mutant（m4）：拿掉 Go 零值守門 → 907 從「?m」退回「查詢失敗」（證明守門是這段程式碼造成的）' "$l907m" '查詢失敗'
+hasnt '㉘ mutant（m4）：不再印出正確的 ?m 結果' "$l907m" 'CI 跑中 ?m'
+l906m4=$(row "$out28m4" 'feature/LS-906-realjq-normal')
+has   '㉘ mutant（m4）對照：906（沒有零值、只有正常時間＋pass 零值）不受影響仍正確' "$l906m4" 'CI 跑中 17m（ci、ci-ipad）'
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
