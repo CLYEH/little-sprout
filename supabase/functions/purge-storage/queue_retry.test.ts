@@ -52,8 +52,16 @@ Deno.test("readQueueWithRetry：第 1 次 Gateway Timeout、第 2 次成功 → 
   const result = await readQueueWithRetry(selectBatch, fakeSleep(sleepLog));
 
   assertEquals(result, { data: ["row-1"], error: null, attempts: 2 });
-  assertEquals(calls, 2, "應該只呼叫兩次 selectBatch（第 2 次就成功，不會有第 3 次）");
-  assertEquals(sleepLog, [1000], "只退避一次，時長是 QUEUE_READ_BACKOFF_MS[0]（1000ms）");
+  assertEquals(
+    calls,
+    2,
+    "應該只呼叫兩次 selectBatch（第 2 次就成功，不會有第 3 次）",
+  );
+  assertEquals(
+    sleepLog,
+    [1000],
+    "只退避一次，時長是 QUEUE_READ_BACKOFF_MS[0]（1000ms）",
+  );
 });
 
 Deno.test("readQueueWithRetry：連續 3 次都是 ETIMEDOUT → error 非 null、attempts=3，退避序列 1000ms→2000ms", async () => {
@@ -69,7 +77,9 @@ Deno.test("readQueueWithRetry：連續 3 次都是 ETIMEDOUT → error 非 null�
 
   const result = await readQueueWithRetry(selectBatch, fakeSleep(sleepLog));
 
-  assertEquals(result.error, { message: "讀取失敗：connect ETIMEDOUT（第 3 次）" });
+  assertEquals(result.error, {
+    message: "讀取失敗：connect ETIMEDOUT（第 3 次）",
+  });
   assertEquals(result.data, null);
   assertEquals(result.attempts, 3);
   assertEquals(calls, 3, "達到 MAX_ATTEMPTS(3) 後不再繼續呼叫 selectBatch");
@@ -152,7 +162,7 @@ Deno.test("isTransientQueueReadError：永久性錯誤（4xx／SQL 語法／權�
     'column "bogus_column" does not exist',
     "JWT expired",
     "invalid input syntax for type uuid",
-    "relation \"purge_storage_queue\" does not exist",
+    'relation "purge_storage_queue" does not exist',
     "PGRST116: The result contains 0 rows",
   ];
   for (const message of permanentSamples) {
