@@ -156950,12 +156950,11 @@
       "fill": "#EDD3D6",
       "layout": "vertical",
       "padding": [
-        110,
+        130,
         0,
         0,
         0
       ],
-      "justifyContent": "center",
       "alignItems": "center",
       "children": [
         {
@@ -157518,12 +157517,11 @@
       "fill": "#EDD3D6",
       "layout": "vertical",
       "padding": [
-        100,
+        130,
         0,
         0,
         0
       ],
-      "justifyContent": "center",
       "alignItems": "center",
       "children": [
         {
@@ -157938,7 +157936,7 @@
           "content": "只有家人看得到",
           "textAlign": "center",
           "fontFamily": "Noto Sans TC",
-          "fontSize": 130,
+          "fontSize": 156,
           "fontWeight": "700"
         },
         {
@@ -158289,12 +158287,11 @@
       "fill": "#EDD3D6",
       "layout": "vertical",
       "padding": [
-        130,
+        160,
         0,
         0,
         0
       ],
-      "justifyContent": "center",
       "alignItems": "center",
       "children": [
         {
@@ -158307,7 +158304,7 @@
           "content": "留言愛心，滿滿的愛",
           "textAlign": "center",
           "fontFamily": "Noto Sans TC",
-          "fontSize": 112,
+          "fontSize": 138,
           "fontWeight": "700"
         },
         {
@@ -158730,7 +158727,7 @@
           "content": "回憶好好收藏",
           "textAlign": "center",
           "fontFamily": "Noto Sans TC",
-          "fontSize": 157,
+          "fontSize": 156,
           "fontWeight": "700"
         },
         {
@@ -158771,7 +158768,7 @@
           "width": 1700,
           "content": "陪伴孩子每一步成長",
           "fontFamily": "Noto Sans TC",
-          "fontSize": 112,
+          "fontSize": 138,
           "fontWeight": "700"
         },
         {
@@ -158791,7 +158788,7 @@
           "width": 1700,
           "content": "為每個寶貝留下成長足跡",
           "fontFamily": "Noto Sans TC",
-          "fontSize": 68,
+          "fontSize": 88,
           "fontWeight": "500"
         },
         {
@@ -158864,12 +158861,11 @@
       "fill": "#EDD3D6",
       "layout": "vertical",
       "padding": [
-        120,
+        160,
         0,
         0,
         0
       ],
-      "justifyContent": "center",
       "alignItems": "center",
       "children": [
         {
@@ -158882,7 +158878,7 @@
           "content": "阿公阿嬤也能輕鬆使用",
           "textAlign": "center",
           "fontFamily": "Noto Sans TC",
-          "fontSize": 130,
+          "fontSize": 163,
           "fontWeight": "700"
         },
         {
@@ -158903,7 +158899,7 @@
           "content": "邀請家人一起加入",
           "textAlign": "center",
           "fontFamily": "Noto Sans TC",
-          "fontSize": 64,
+          "fontSize": 75,
           "fontWeight": "500"
         },
         {
