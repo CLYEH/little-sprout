@@ -124,6 +124,8 @@ final class QADriver {
             landingCandidates, "登入落點", timeout: 30,
             failureNote: "session 沒建立、或家庭查詢卡住", hierarchyReason: "login-landing"
         )
+        // QA-GATE-HANDLED: EULAConsentView（LS-232：對應 `RootView+AuthenticatedGate.swift` 的
+        // `// QA-GATE: EULAConsentView` 標記——這裡點「我已閱讀並同意」再等一次落點就是處理方式）。
         guard landed != "EULA 同意頁" else {
             snap("eula-consent")
             try require(eulaAgreeButton, "EULA 同意頁「我已閱讀並同意」").tap()
@@ -166,6 +168,8 @@ final class QADriver {
             try require(app.buttons["建立家庭"], "建立家庭").tap()
             // 等不到＝建立家庭被後端拒（截圖上會有紅字錯誤列；本票實測過：他票 reset 容器後舊 session 的
             // 使用者已不存在）或建檔頁沒彈出——訊息帶截圖，QA 直接看得出是環境還是 app。
+            // QA-GATE-HANDLED: CreateChildView（LS-232：對應 `RootView.swift` 的
+            // `// QA-GATE: CreateChildView` 標記——這裡點「之後再說」跳過就是處理方式）。
             try require(app.buttons["之後再說"], "寶貝建檔頁（可跳過）——建立家庭後應彈出", timeout: 30).tap()
         }
         try require(timelineHeading, "時間軸", timeout: 30)

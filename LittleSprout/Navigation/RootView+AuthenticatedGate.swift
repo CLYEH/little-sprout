@@ -100,6 +100,10 @@ struct AuthenticatedGate: View {
         } else if !eulaStore.isKnown(for: userID) {
             ProgressView("正在確認條款狀態…")
         } else if eulaStore.shouldPresent == true {
+            // QA-GATE: EULAConsentView（LS-232：登入後全屏 gate 清單的單一來源標記——這裡是條件式
+            // 整樹替換，不是 `.fullScreenCover`／`.sheet` 綁定，`scripts/gates/qa-driver-gate-check.sh`
+            // 的備援 modifier 掃描抓不到，只有這個標記能讓它被機械對帳到。QADriver 對應標記見
+            // `QADriver.swift` 的 `// QA-GATE-HANDLED: EULAConsentView`）。
             EULAConsentView(eulaStore: eulaStore, onDisagree: disagreeAndSignOut)
         } else if PendingAccountDeletion.isPending(userID: userID) {
             // merge-review R2 m1：本機續傳旗標存在時直接導 `DeleteAccountFlowView`，不必等
