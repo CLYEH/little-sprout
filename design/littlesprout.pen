@@ -156596,6 +156596,2358 @@
           "alignItems": "center"
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "ubnzq",
+      "x": 0,
+      "y": 0,
+      "name": "App Store / iPhone 6.9 / 01 時間軸",
+      "clip": true,
+      "width": 1320,
+      "height": 2868,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        130,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "pgrnV",
+          "name": "Wordmark",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "mengya-diary-crayon-v3.png",
+            "mode": "fit"
+          },
+          "width": 460,
+          "height": 219.35
+        },
+        {
+          "type": "frame",
+          "id": "SWeZE",
+          "name": "Spacer 36",
+          "width": 1,
+          "height": 36,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "H2hkKz",
+          "name": "Tagline",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": 1120,
+          "content": "只有家人看得到",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 88,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "YFE7D",
+          "name": "Spacer 20",
+          "width": 1,
+          "height": 20,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "ByMe1",
+          "name": "Subtitle",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": 1120,
+          "content": "私密相簿，安心記錄每一天",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 44,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "Y1Eyk",
+          "name": "Spacer 110",
+          "width": 1,
+          "height": 110,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "wgAYF",
+          "name": "Device Frame",
+          "width": 980,
+          "height": 2088.68,
+          "fill": "$text-primary",
+          "cornerRadius": 150,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 10,
+              "y": 20
+            },
+            "blur": 48
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "IIxpP",
+              "x": 16,
+              "y": 16,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 948,
+              "height": 2056.68,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/timeline-iphone.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 134,
+              "layout": "none"
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 17,
+              "id": "SpzRI",
+              "x": 430,
+              "y": 34,
+              "name": "Dynamic Island",
+              "fill": "$text-primary",
+              "width": 120,
+              "height": 34
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "TRCYy",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "WABb6",
+      "x": 1470,
+      "y": 0,
+      "name": "App Store / iPhone 6.9 / 02 日記詳情",
+      "clip": true,
+      "width": 1320,
+      "height": 2868,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        130,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "Ub51D",
+          "name": "Wordmark",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "mengya-diary-crayon-v3.png",
+            "mode": "fit"
+          },
+          "width": 460,
+          "height": 219.35
+        },
+        {
+          "type": "frame",
+          "id": "B53mHE",
+          "name": "Spacer 36",
+          "width": 1,
+          "height": 36,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "iWhHL",
+          "name": "Tagline",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": 1120,
+          "content": "留言按讚，滿滿的愛",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 88,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "FgdY5",
+          "name": "Spacer 20",
+          "width": 1,
+          "height": 20,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "IqOAs",
+          "name": "Subtitle",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": 1120,
+          "content": "家人的關心，就在留言裡",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 44,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "M0t9J",
+          "name": "Spacer 110",
+          "width": 1,
+          "height": 110,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "ahAwQ",
+          "name": "Device Frame",
+          "width": 980,
+          "height": 2088.68,
+          "fill": "$text-primary",
+          "cornerRadius": 150,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 10,
+              "y": 20
+            },
+            "blur": 48
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "JwAoq",
+              "x": 16,
+              "y": 16,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 948,
+              "height": 2056.68,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/diary-iphone.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 134,
+              "layout": "none"
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 17,
+              "id": "i6ReK6",
+              "x": 430,
+              "y": 34,
+              "name": "Dynamic Island",
+              "fill": "$text-primary",
+              "width": 120,
+              "height": 34
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "rbZ4y",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "V7jkR",
+      "x": 2940,
+      "y": 0,
+      "name": "App Store / iPhone 6.9 / 03 相簿詳情",
+      "clip": true,
+      "width": 1320,
+      "height": 2868,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        130,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "WTj25",
+          "name": "Wordmark",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "mengya-diary-crayon-v3.png",
+            "mode": "fit"
+          },
+          "width": 460,
+          "height": 219.35
+        },
+        {
+          "type": "frame",
+          "id": "T99ZlD",
+          "name": "Spacer 36",
+          "width": 1,
+          "height": 36,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "p5f0y",
+          "name": "Tagline",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": 1120,
+          "content": "回憶好好收藏",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 88,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "vphfo",
+          "name": "Spacer 20",
+          "width": 1,
+          "height": 20,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "uoWCh",
+          "name": "Subtitle",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": 1120,
+          "content": "每張照片都值得珍藏",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 44,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "HO75d",
+          "name": "Spacer 110",
+          "width": 1,
+          "height": 110,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "miNix",
+          "name": "Device Frame",
+          "width": 980,
+          "height": 2088.68,
+          "fill": "$text-primary",
+          "cornerRadius": 150,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 10,
+              "y": 20
+            },
+            "blur": 48
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "k70Tam",
+              "x": 16,
+              "y": 16,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 948,
+              "height": 2056.68,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/album-iphone.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 134,
+              "layout": "none"
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 17,
+              "id": "C1Hum",
+              "x": 430,
+              "y": 34,
+              "name": "Dynamic Island",
+              "fill": "$text-primary",
+              "width": 120,
+              "height": 34
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "H2ErmX",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "eZF7W",
+      "x": 4410,
+      "y": 0,
+      "name": "App Store / iPhone 6.9 / 04 寶貝",
+      "clip": true,
+      "width": 1320,
+      "height": 2868,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        130,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "RBiw8",
+          "name": "Wordmark",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "mengya-diary-crayon-v3.png",
+            "mode": "fit"
+          },
+          "width": 460,
+          "height": 219.35
+        },
+        {
+          "type": "frame",
+          "id": "DA5PU",
+          "name": "Spacer 36",
+          "width": 1,
+          "height": 36,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "c6mcwj",
+          "name": "Tagline",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": 1120,
+          "content": "陪伴孩子每一步成長",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 88,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "ZHLVx",
+          "name": "Spacer 20",
+          "width": 1,
+          "height": 20,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "y4Wif8",
+          "name": "Subtitle",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": 1120,
+          "content": "為每個寶貝留下成長足跡",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 44,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "pw8v0",
+          "name": "Spacer 110",
+          "width": 1,
+          "height": 110,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "YSx8o",
+          "name": "Device Frame",
+          "width": 980,
+          "height": 2088.68,
+          "fill": "$text-primary",
+          "cornerRadius": 150,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 10,
+              "y": 20
+            },
+            "blur": 48
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "UZgJm",
+              "x": 16,
+              "y": 16,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 948,
+              "height": 2056.68,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/child-iphone.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 134,
+              "layout": "none"
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 17,
+              "id": "W3DgF",
+              "x": 430,
+              "y": 34,
+              "name": "Dynamic Island",
+              "fill": "$text-primary",
+              "width": 120,
+              "height": 34
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "H9UZXB",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Da5UC",
+      "x": 5880,
+      "y": 0,
+      "name": "App Store / iPhone 6.9 / 05 邀請加入",
+      "clip": true,
+      "width": 1320,
+      "height": 2868,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        130,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "gfZRd",
+          "name": "Wordmark",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "mengya-diary-crayon-v3.png",
+            "mode": "fit"
+          },
+          "width": 460,
+          "height": 219.35
+        },
+        {
+          "type": "frame",
+          "id": "p7B2No",
+          "name": "Spacer 36",
+          "width": 1,
+          "height": 36,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "ip2nT",
+          "name": "Tagline",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": 1120,
+          "content": "邀請家人一起加入",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 88,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "Bx5K6",
+          "name": "Spacer 20",
+          "width": 1,
+          "height": 20,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "XQmXS",
+          "name": "Subtitle",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": 1120,
+          "content": "阿公阿嬤也能輕鬆使用",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 44,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "QSCR9",
+          "name": "Spacer 110",
+          "width": 1,
+          "height": 110,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "PG6zw",
+          "name": "Device Frame",
+          "width": 980,
+          "height": 2088.68,
+          "fill": "$text-primary",
+          "cornerRadius": 150,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 10,
+              "y": 20
+            },
+            "blur": 48
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "a1HUKb",
+              "x": 16,
+              "y": 16,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 948,
+              "height": 2056.68,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/invite-iphone.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 134,
+              "layout": "none"
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 17,
+              "id": "PQJ4k",
+              "x": 430,
+              "y": 34,
+              "name": "Dynamic Island",
+              "fill": "$text-primary",
+              "width": 120,
+              "height": 34
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "sSunQ",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "j9ogy",
+      "x": 0,
+      "y": 3018,
+      "name": "App Store / iPad 13 / 01 時間軸",
+      "clip": true,
+      "width": 2064,
+      "height": 2752,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        110,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "z7750",
+          "name": "Wordmark",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "mengya-diary-crayon-v3.png",
+            "mode": "fit"
+          },
+          "width": 520,
+          "height": 247.98
+        },
+        {
+          "type": "frame",
+          "id": "OdPk5",
+          "name": "Spacer 36",
+          "width": 1,
+          "height": 36,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "Zs34S",
+          "name": "Tagline",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": 1600,
+          "content": "只有家人看得到",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 96,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "Sl2ta",
+          "name": "Spacer 20",
+          "width": 1,
+          "height": 20,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "H782L",
+          "name": "Subtitle",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": 1600,
+          "content": "私密相簿，安心記錄每一天",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 48,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "bPChZ",
+          "name": "Spacer 100",
+          "width": 1,
+          "height": 100,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "uF2I2",
+          "name": "Device Frame",
+          "width": 1540,
+          "height": 2040,
+          "fill": "$text-primary",
+          "cornerRadius": 90,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 12,
+              "y": 24
+            },
+            "blur": 56
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "x2jTB",
+              "x": 20,
+              "y": 20,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 1500,
+              "height": 2000,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/timeline-ipad.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 70,
+              "layout": "none"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "S4nA8s",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "kyZWM",
+      "x": 2214,
+      "y": 3018,
+      "name": "App Store / iPad 13 / 02 日記詳情",
+      "clip": true,
+      "width": 2064,
+      "height": 2752,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        110,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "czRms",
+          "name": "Wordmark",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "mengya-diary-crayon-v3.png",
+            "mode": "fit"
+          },
+          "width": 520,
+          "height": 247.98
+        },
+        {
+          "type": "frame",
+          "id": "e63w8",
+          "name": "Spacer 36",
+          "width": 1,
+          "height": 36,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "R5jLBS",
+          "name": "Tagline",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": 1600,
+          "content": "留言按讚，滿滿的愛",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 96,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "BacTj",
+          "name": "Spacer 20",
+          "width": 1,
+          "height": 20,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "GOJjx",
+          "name": "Subtitle",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": 1600,
+          "content": "家人的關心，就在留言裡",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 48,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "yjUpm",
+          "name": "Spacer 100",
+          "width": 1,
+          "height": 100,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "OHOxz",
+          "name": "Device Frame",
+          "width": 1540,
+          "height": 2040,
+          "fill": "$text-primary",
+          "cornerRadius": 90,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 12,
+              "y": 24
+            },
+            "blur": 56
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "tHjZ3",
+              "x": 20,
+              "y": 20,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 1500,
+              "height": 2000,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/diary-ipad.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 70,
+              "layout": "none"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "PAw2s",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "OQ5pE",
+      "x": 4428,
+      "y": 3018,
+      "name": "App Store / iPad 13 / 03 相簿詳情",
+      "clip": true,
+      "width": 2064,
+      "height": 2752,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        110,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "A2XMrS",
+          "name": "Wordmark",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "mengya-diary-crayon-v3.png",
+            "mode": "fit"
+          },
+          "width": 520,
+          "height": 247.98
+        },
+        {
+          "type": "frame",
+          "id": "g9Cug",
+          "name": "Spacer 36",
+          "width": 1,
+          "height": 36,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "ndHf6",
+          "name": "Tagline",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": 1600,
+          "content": "回憶好好收藏",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 96,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "rcChY",
+          "name": "Spacer 20",
+          "width": 1,
+          "height": 20,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "h78y9",
+          "name": "Subtitle",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": 1600,
+          "content": "每張照片都值得珍藏",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 48,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "hEbW4",
+          "name": "Spacer 100",
+          "width": 1,
+          "height": 100,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "uGtpW",
+          "name": "Device Frame",
+          "width": 1540,
+          "height": 2040,
+          "fill": "$text-primary",
+          "cornerRadius": 90,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 12,
+              "y": 24
+            },
+            "blur": 56
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "C9iZF",
+              "x": 20,
+              "y": 20,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 1500,
+              "height": 2000,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/album-ipad.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 70,
+              "layout": "none"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "PA5Y7",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "LzWvn",
+      "x": 6642,
+      "y": 3018,
+      "name": "App Store / iPad 13 / 04 寶貝",
+      "clip": true,
+      "width": 2064,
+      "height": 2752,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        110,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "c3wzG",
+          "name": "Wordmark",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "mengya-diary-crayon-v3.png",
+            "mode": "fit"
+          },
+          "width": 520,
+          "height": 247.98
+        },
+        {
+          "type": "frame",
+          "id": "s2F7vY",
+          "name": "Spacer 36",
+          "width": 1,
+          "height": 36,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "Tk5PF",
+          "name": "Tagline",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": 1600,
+          "content": "陪伴孩子每一步成長",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 96,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "lDWrC",
+          "name": "Spacer 20",
+          "width": 1,
+          "height": 20,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "Y3XS2",
+          "name": "Subtitle",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": 1600,
+          "content": "為每個寶貝留下成長足跡",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 48,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "mq6te",
+          "name": "Spacer 100",
+          "width": 1,
+          "height": 100,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "xwe3B",
+          "name": "Device Frame",
+          "width": 1540,
+          "height": 2040,
+          "fill": "$text-primary",
+          "cornerRadius": 90,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 12,
+              "y": 24
+            },
+            "blur": 56
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "f0d4d",
+              "x": 20,
+              "y": 20,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 1500,
+              "height": 2000,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/child-ipad.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 70,
+              "layout": "none"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "rUwOy",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Q4CHk",
+      "x": 8856,
+      "y": 3018,
+      "name": "App Store / iPad 13 / 05 邀請加入",
+      "clip": true,
+      "width": 2064,
+      "height": 2752,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        110,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "Ti3Uw",
+          "name": "Wordmark",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "mengya-diary-crayon-v3.png",
+            "mode": "fit"
+          },
+          "width": 520,
+          "height": 247.98
+        },
+        {
+          "type": "frame",
+          "id": "jqME6",
+          "name": "Spacer 36",
+          "width": 1,
+          "height": 36,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "U2qMW",
+          "name": "Tagline",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": 1600,
+          "content": "邀請家人一起加入",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 96,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "b9njG",
+          "name": "Spacer 20",
+          "width": 1,
+          "height": 20,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "VCDP0",
+          "name": "Subtitle",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": 1600,
+          "content": "阿公阿嬤也能輕鬆使用",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 48,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "bGheM",
+          "name": "Spacer 100",
+          "width": 1,
+          "height": 100,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "m9XS2",
+          "name": "Device Frame",
+          "width": 1540,
+          "height": 2040,
+          "fill": "$text-primary",
+          "cornerRadius": 90,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "$paper-shadow",
+            "offset": {
+              "x": 12,
+              "y": 24
+            },
+            "blur": 56
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "rKGL0",
+              "x": 20,
+              "y": 20,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 1500,
+              "height": 2000,
+              "fill": [
+                "$print-paper",
+                {
+                  "type": "image",
+                  "enabled": true,
+                  "url": "appstore-slots/invite-iphone.jpg",
+                  "mode": "fit"
+                }
+              ],
+              "cornerRadius": 70,
+              "layout": "none"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "F1WBlt",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "lGDSg",
+      "x": 0,
+      "y": 5920,
+      "name": "Notes / LS-234 App Store",
+      "width": 900,
+      "fill": "$print-paper",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 44,
+      "children": [
+        {
+          "type": "text",
+          "id": "qIV8l",
+          "name": "NT",
+          "fill": "$print-ink",
+          "content": "LS-234 / App Store 截圖版型 · 實作註記",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 34,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "wR2uh",
+          "name": "NS",
+          "fill": "$print-ink-secondary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "iPhone 6.9\"（1320×2868）與 iPad 13\"（2064×2752）各 5 張；裝置框＋品牌標語＋截圖槽 slot/screenshot；LS-147 前置。R1 草稿，待 visual-reviewer ≥3 輪對抗迭代。",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "A8SIY",
+          "name": "N 10 板清單（root id 對照）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "AABj7",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "10 板清單（root id 對照）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "WGSr6",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Nvy3v",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "g5cTYG",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPhone 6.9\"：01 時間軸 root=ubnzq（來源 yXSht）／02 日記詳情 root=WABb6（來源 vzYXz，裁至頂部 852pt 可視區）／03 相簿詳情 root=V7jkR（來源 pVSXP，裁至 852pt）／04 寶貝 root=eZF7W（來源 gpSsR）／05 邀請加入 root=Da5UC（來源 kcGJa，裁至 852pt）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "H70lf",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "y685k",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "NPLEP",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPad 13\"：01 時間軸 root=j9ogy（來源 go7f9，裁至 1112pt）／02 日記詳情 root=kyZWM（來源 MjRcr，裁至 1112pt）／03 相簿詳情 root=OQ5pE（來源 rFiLJ，裁至 1112pt）／04 寶貝 root=LzWvn（來源 JbTfv，裁至 1112pt）／05 邀請加入 root=Q4CHk（見「已知限制」節：無 iPad 原生邀請家人設計，暫用 iPhone 版 kcGJa 截圖以 fit 模式置中於 13\" 槽內）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "lF1DF",
+          "name": "N 標語定稿表（繁中 ≤14 字＋副標 ≤20 字）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "YXkPm",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "標語定稿表（繁中 ≤14 字＋副標 ≤20 字）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "M8Xzp",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "REoJ8",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Zgn9h",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "01 時間軸 → 主題「私密家庭」：標語「只有家人看得到」（7 字）／副標「私密相簿，安心記錄每一天」。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "W7NSE",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CotXo",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "f7ZdPw",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "02 日記詳情 → 主題「留言愛心」：標語「留言按讚，滿滿的愛」（9 字）／副標「家人的關心，就在留言裡」。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "yS6zT",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "IPAiv",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "d52DYd",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "03 相簿詳情 → 主題「相簿」：標語「回憶好好收藏」（6 字）／副標「每張照片都值得珍藏」。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "LQg8c",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dxmaa",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "lIqD7",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "04 寶貝 → 主題「成長記錄」：標語「陪伴孩子每一步成長」（9 字）／副標「為每個寶貝留下成長足跡」。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "f3YgQI",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "YtLUv",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "UQ6No",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "05 邀請加入 → 主題「邀請家人」：標語「邀請家人一起加入」（8 字）／副標「阿公阿嬤也能輕鬆使用」——呼應長輩優先定位。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SK8e1",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Eu5f6",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "e9cqo",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "配對非票文字面順序：票文列出的畫面順序（時間軸／日記詳情／相簿詳情／寶貝／邀請加入）與標語主題順序（私密家庭／成長記錄／相簿／留言愛心／邀請家人）逐一對應時，02 會配到「成長記錄」、04 會配到「留言愛心」——但 02 日記詳情畫面本身就帶留言／按讚區（Comments Section），04 寶貝管理畫面談的是孩子檔案與照片累積，語意上更貼近「成長記錄」。本輪改依畫面實際內容配對五個主題（而非票文原始列表順序），是刻意的文案決策，非誤讀票文——若使用者核可期望嚴格照票文順序配對，請在核可意見註明，R2 可調整。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yJalV",
+          "name": "N 匯出步驟（Pen 匯出 PNG 1x）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "M9C6j",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "匯出步驟（Pen 匯出 PNG 1x）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "j2Ni0B",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Ggkby",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "MoYCo",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "最終上架用素材一律用 scale:1 匯出（板尺寸本身已等於目標像素——1320×2868／2064×2752，不可再乘 2x，否則會變成 2640×5736 等不合法尺寸）：對每個板呼叫 Export([<board id>], \"png\", \"<輸出目錄>\", {scale:1})，Pencil 匯出檔名固定為 <nodeId>.png，之後依板名手動重新命名成 ASC 上傳習慣的檔名（例如 iPhone-6.9-01-timeline.png）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "odmDb",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "LXas1",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "FTEyt",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "本 Notes 內用於槽預覽的九張 appstore-slots/*.jpg 是 scale:2 匯出後再壓縮成 ≤1024px JPEG（LS-74 素材尺寸政策），只給 Pencil 畫布內部預覽用，不是上架素材——正式上架素材是 LS-147 用模擬器直接擷取的原生解析度 PNG，取代槽內的預覽圖後，整板才用上述 1x 規則匯出。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "rQirY",
+          "name": "N 6.5\" 由 6.9\" 縮放的做法與目標尺寸",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "MeoZq",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "6.5\" 由 6.9\" 縮放的做法與目標尺寸",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "P8lSZ",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "I9HN90",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "P9Me2U",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Apple 現行 6.5\" 螢幕截圖規格＝1242×2688px（比例 0.4620），與本票 6.9\" 板比例 0.4603 幾乎一致（差 0.4%）。不要直接把 1320×2868 的 PNG 縮小貼上：字重與線寬在等比縮放後會失真、且 2868×(1242/1320)=2698 對不上 2688（10px 落差）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "KtLHX",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ZzlAW",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "IlEss",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "建議做法：直接另開一個 1242×2688 的 board，複用本票同一套版型參數（品牌底／wordmark／tagline／subtitle／裝置框結構原樣，只把 W/H／SLOT_W／BEZEL_* 等尺寸類數字依 1242 寬重新算一輪，做法同本 Notes「板清單」各板的算法），而不是縮放匯出的點陣圖——這是 LS-147 或後續票的工作，本票不做（票文範圍已排除）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ymgmH",
+          "name": "N 槽替換方法（LS-147 讀這裡）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "g7oUzU",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "槽替換方法（LS-147 讀這裡）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "yhpQy",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "c4bOi",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "o04lnJ",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "每板的裝置框（Device Frame）內都有一個名為 slot/screenshot 的 frame，目前 fill 是 {type:\"image\", url:\"appstore-slots/<占位檔>.jpg\", mode:\"fill\"}（iPad 05 邀請加入的槽額外多一層底色 $print-paper＋mode:\"fit\"，見下）。替換做法：①把模擬器擷取的原生解析度 PNG 放進 design/ 下（建議新資料夾 design/appstore-final/），②對該 slot 節點呼叫 Update(slotId, {fill:{type:\"image\", url:\"appstore-final/<新檔名>.png\", mode:\"fill\"}})，③讀回確認 fill 真的寫入（Update 對大部分屬性可靠，但務必 Get 複驗——見 agent 定義已知限制段）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "UjURn",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "niBLu",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "XN0Wi",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "10 個 slot id 對照：iPhone 01=IIxpP／02=JwAoq／03=k70Tam／04=UZgJm／05=a1HUKb；iPad 01=x2jTB／02=tHjZ3／03=C9iZF／04=f0d4d／05=rKGL0。iPad 05（rKGL0）的 fill 是陣列 [{type:\"color\",color:\"$print-paper\"},{type:\"image\",...,mode:\"fit\"}]——若屆時已有 iPad 原生邀請家人設計稿，直接把 fill 換回單一 image／mode:\"fill\"（跟其他 4 個 iPad 槽一致），不需保留 print-paper 底色與 fit 模式。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Qplp1",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "qiuSb",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "l6bYF",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "槽的尺寸與圓角（裝置框卡死，替換素材不要改動這些）：iPhone 槽 948×2056.68pt、圓角 134、外框 Device Frame 980×2088.68、圓角 150、bezel 邊框厚度 16；iPad 槽 1500×2000pt、圓角 70、外框 1540×2040、圓角 90、bezel 邊框厚度 20。這些是規格值、硬寫（width/height 不收 $variable，見 agent 定義已知限制）——若之後要統一調整，需要逐板同步改，本節作為之後要同步的清單。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "mh0kD",
+          "name": "N 每張對應的 LS-146 示範家庭資料狀態",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "j5uWBk",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "每張對應的 LS-146 示範家庭資料狀態",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "Iay6v",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Y6BnPQ",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "U0M4aR",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "本輪槽內預覽圖直接沿用各來源畫面板既有內建的示範資料（非另外接 LS-146 帳號）：時間軸／日記詳情＝小安（8月31日今天，公園盪鞦韆＋溜滑梯日記，含留言按讚）；相簿詳情＝「阿公阿嬤家過年」相簿、34 張相片、小安＋小軒共同標記；寶貝＝小安（2歲3個月）／小軒（6個月大）兩筆家庭成員；邀請家人＝範例邀請碼 K7M 2FD、8/29 到期、還可用 3 次。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "a3VuLe",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "mRnAL",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "RZTeg",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-147 正式擷取上架截圖時，應改用 LS-146 核准的審核用 demo 帳號資料（不得使用真實使用者姓名／照片），確保姓名、年齡、照片內容皆為合法示範內容且通過 App Review 的「示範帳號」要求；若 LS-146 的 demo 家庭姓名／孩子暱稱與本輪預覽不同（例如非「小安」「小軒」），最終截圖畫面內容會自然跟著 demo 帳號變動，本 Notes 記錄的只是 R1 設計稿內建示範資料的現況，不是最終上架內容的保證。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "b0k6S",
+          "name": "N 設計決策與已知限制",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "o9EqZ6",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "設計決策與已知限制",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "jEfcH",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "c8vjk",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "e8vso",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "品牌底＝全板 flat $bg，無漸層（票文明確要求「不用漸層 hero」，且窗光／角托染料池兩道既有允許漸層本輪刻意不用）；裝置框 bezel 用 $text-primary（暖墨黑，非通用科技灰／純黑）＋$paper-shadow 落影（光源左上、影在右下，沿用全 app 唯一光源慣例）；零角托（裝置框截圖預覽屬於「印在卡片上的照片」，母題角托三段規則③零角托類，不裱角托）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "RQ6dl",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "r3HnZf",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "JAYNg",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "截圖槽內容以「裁至一個裝置視窗高度」而非「整板文件高度」呈現：日記詳情／相簿詳情／邀請家人三個來源畫面板本身比一個裝置視窗高（974／1097／1189pt），因為它們是文件用途的完整可捲動內容示範；槽內預覽已裁至 iPhone 852pt／iPad 1112pt 可視區頂部（模擬「畫面剛開啟、尚未捲動」的真實擷取狀態），下方內容（如日記留言區其餘留言、邀請家人的破壞性動作區）不會出現在槽內，這是刻意行為、不是裁切失誤。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "C1Pnt",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "E7w5W",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "B2LsDs",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Dynamic Island（iPhone 專屬裝飾）疊在 slot/screenshot 上緣、與 slot 為同一個 Device Frame 下的手足節點，兩者刻意重疊（模擬螢幕鏡頭挖孔）——全樹掃描 sibling_intersection 會把這對標成 flagged，收據內已附 classification 說明為刻意裝飾重疊，非版面缺陷。iPad 板未加 Dynamic Island（iPad Pro 無此硬體特徵）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "y7OS4",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ocHrR",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ounCp",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "字級／間距為本張海報專屬的規格值（88/44pt 標語副標字級、36/20/110pt 間距等），刻意不對應 tokens.md 的 UI 字級節奏（fs-display 34 等）——App Store 行銷素材不是 app 內畫面，讀者距離與縮圖情境不同，套用 UI token 字級在此尺寸的畫布上會過小；這批數字只給本組 10 板使用，不是新 token，不需要同步進 Tokens 板。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
