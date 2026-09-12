@@ -1,0 +1,73 @@
+{
+  "ticket": "LS-234",
+  "round": 1,
+  "head_sha": "b91c1a42f8f5e1cd17311f50cdf4554e9be3dad3",
+  "total_nodes": 10084,
+  "tree_hash": "944c92b2e69a463e",
+  "scan_scope": "boards",
+  "scan_note": "分 13 批（SCAN_BATCH_ROOTS，每批 20 root、末批 2 root，覆蓋全稿 root [0,242)）跑正典腳本 scripts/design/overflow-scan.js，node --merge 合併。batch-01～11（root 0-219，本票未觸碰的既有 220 板）於修正前先跑一次；scanCornerAnchor 之外的掃描發現 10 個新板皆疊放於畫布原點（Replace() 未帶 x/y）與 Notes 副標行溢出容器 144pt 兩個真實版面缺陷後，只重跑受影響的 batch-12（root 220-239）與 batch-13（root 240-241，含本票全部 11 個新板：10 板＋Notes），root 0-219 內容未變不需重跑。13 批之間本票新板（root 231-241）與既有稿（root 0-230）互不相交，合併後 tree_hash 經 scripts/gates/design_tree_hash.py 對 head_sha 該版 .pen 複驗逐位元一致（944c92b2e69a463e）。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 5,
+      "result_hash": "c696f4e8892cdaf4",
+      "flagged": [
+        {
+          "node_a": "IIxpP",
+          "node_b": "SpzRI",
+          "name_a": "slot/screenshot",
+          "name_b": "Dynamic Island",
+          "parent": "wgAYF",
+          "parent_name": "Device Frame",
+          "class": "slot/screenshot × Dynamic Island @ Device Frame",
+          "count": 5,
+          "classification": "刻意設計效果：iPhone 裝置框的 Dynamic Island 裝飾（暗黑膠囊）疊在 slot/screenshot 截圖槽上緣，模擬螢幕鏡頭挖孔，兩者為同一 Device Frame 下的手足節點且刻意重疊（繪製順序上 Dynamic Island 在後、蓋在截圖上）；5 個 iPhone 6.9\" 板（01 時間軸／02 日記詳情／03 相簿詳情／04 寶貝／05 邀請加入）各一次，同類 5 例，非版面缺陷。iPad 板無此裝飾（iPad Pro 無 Dynamic Island 硬體特徵）。"
+        }
+      ]
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "f22a77f0573da9d4",
+      "flagged": []
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "f7e65b09040abbcd",
+      "flagged": []
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": ["ubnzq", "WABb6", "V7jkR", "eZF7W", "Da5UC", "j9ogy", "kyZWM", "OQ5pE", "LzWvn", "Q4CHk", "lGDSg"],
+      "containers": 0,
+      "points": 0,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 0,
+      "document_points": 0,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "ref_hits": 0,
+      "unresolved": [],
+      "result_hash": "35d1736314d70602"
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": ["ubnzq", "WABb6", "V7jkR", "eZF7W", "Da5UC", "j9ogy", "kyZWM", "OQ5pE", "LzWvn", "Q4CHk", "lGDSg"],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "aa70ea7e3bef0e82"
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": ["ubnzq", "WABb6", "V7jkR", "eZF7W", "Da5UC", "j9ogy", "kyZWM", "OQ5pE", "LzWvn", "Q4CHk", "lGDSg"],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "edbfecaff17d0000"
+    }
+  }
+}
