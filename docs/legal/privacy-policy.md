@@ -70,7 +70,7 @@
 
 | 資料 | 內容 | 說明 |
 |---|---|---|
-| 推播裝置代碼 | Apple 推播通知服務（APNs）核發給您裝置的代碼 | 僅於您允許本 App 發送通知後蒐集，用於通知您家庭內的新留言、愛心、日記與相簿。**本功能尚未啟用**；啟用前我們不會蒐集此項資料 |
+| 推播裝置代碼 | Apple 推播通知服務（APNs）核發給您裝置的代碼（device token） | 若您在 App 內允許通知，我們會向 Apple 取得您裝置的推播識別碼並儲存於伺服器，僅用於向您發送家庭動態通知（新留言、愛心、日記與相簿）；您可隨時在 iOS「設定」關閉本 App 的通知，關閉後我們不再使用該識別碼。**推播的發送功能分階段上線**：目前識別碼僅儲存，尚未實際發送任何推播。刪除帳號時一併刪除（見第 8 節） |
 | 通知事件 | 「誰、在什麼時候、對哪一則內容」做了會觸發通知的動作 | 系統內部彙總用，家庭成員無法直接查閱 |
 
 ### 2.6 安全與稽核紀錄
@@ -137,7 +137,7 @@
 |---|---|---|---|
 | Supabase, Inc. | 後端平台：資料庫、身分驗證、檔案儲存 | 第 2 節所有資料（含技術紀錄） | https://supabase.com/privacy |
 | Amazon Web Services（雪梨 ap-southeast-2） | Supabase 底層的雲端基礎設施 | 同上（以加密形式儲存） | https://aws.amazon.com/privacy/ |
-| Apple Inc. | Sign in with Apple；App Store 發行；推播通知（APNs，啟用後） | 登入時：Apple 帳號識別、電子郵件（或轉發信箱）、姓名；推播：裝置代碼 | https://www.apple.com/legal/privacy/ |
+| Apple Inc. | Sign in with Apple；App Store 發行；推播通知（APNs；識別碼已蒐集，發送功能分階段上線） | 登入時：Apple 帳號識別、電子郵件（或轉發信箱）、姓名；推播：裝置代碼 | https://www.apple.com/legal/privacy/ |
 | Google LLC | Google 帳號登入（OAuth） | 登入時：電子郵件、姓名、頭像網址 | https://policies.google.com/privacy |
 | Resend | 寄送 Email 登入驗證碼 | 電子郵件地址、驗證碼信件內容 | https://resend.com/legal/privacy-policy |
 
@@ -236,7 +236,7 @@
 | 使用者內容 User Content | 照片或影片、其他使用者內容（日記、留言、孩子姓名／生日） | App 功能 | §2.3、§2.4 |
 | 識別碼 Identifiers | 使用者 ID | App 功能 | §2.1 |
 | 診斷 Diagnostics | 其他診斷資料（服務供應商伺服器日誌） | App 功能 | §2.7 |
-| 裝置 ID Device ID | 推播裝置代碼 | App 功能 | §2.5（啟用推播後才申報） |
+| 裝置 ID Device ID | 推播裝置代碼（device token，與您的帳號連結） | App 功能 | §2.5 |
 
 **不蒐集**：位置、聯絡人、健康、財務、瀏覽紀錄、購買、使用資料（產品互動／廣告資料）、敏感資訊。
 
