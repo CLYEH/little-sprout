@@ -11,7 +11,8 @@ import SwiftUI
 /// 作者／家庭管理者身分被 merge-review 收回（見該檔文件註解）；這裡正式接回，入口與身分判斷
 /// 都由 `DiaryDetailView+ContentActions.swift` 負責（見該檔）。
 ///
-/// LS-241：原本 LS-126 預留的「留言功能即將推出」占位（`commentsPlaceholder`）換成 LS-216 的
+/// LS-241：原本 LS-126 預留的留言區占位文案（`commentsPlaceholder`，票文驗收要求全 repo
+/// 0 hit，這裡不重複引用原字面）換成 LS-216 的
 /// `InteractionRow`（同一顆元件、同一份 `timelineStore` 存的愛心／留言計數，跟時間軸卡片共用
 /// 一套數字，不是各自一套）；`onOpenComments` 開 LS-218 的 `CommentsSheetView`（同
 /// `TimelineView+Comments.swift` 的 `.sheet` 呈現規則，這裡沒有多個 kind／refId 需要區分，

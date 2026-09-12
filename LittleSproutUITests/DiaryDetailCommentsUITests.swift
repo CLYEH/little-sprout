@@ -1,8 +1,8 @@
 import XCTest
 
 /// LS-241 票文驗收：詳情頁點留言鈕開 sheet——日記詳情頁的互動列（LS-216 `InteractionRow`，
-/// 換掉 LS-126 的「留言功能即將推出」占位）`onOpenComments` 要真的開出 LS-218 的
-/// `CommentsSheetView`（同 `TimelineView` 的三種卡片共用一套 `.sheet` 呈現）。用既有
+/// 換掉 LS-126 的留言區占位文案，見 `DiaryDetailView` 文件註解）`onOpenComments` 要真的開出
+/// LS-218 的 `CommentsSheetView`（同 `TimelineView` 的三種卡片共用一套 `.sheet` 呈現）。用既有
 /// `TapTargetGateHarness.diaryDetailHost`（`.diaryDetail`，`ContentActionsUITests` 既有 host，
 /// 已種好 `familyStore.myFamily`，`InteractionRow.onOpenComments` 才不會因為
 /// `familyStore.myFamily?.id == nil` 開出空白 sheet），不必另開新 harness screen。
