@@ -4,11 +4,10 @@ import SwiftUI
 /// `DeleteConfirmationSheet` 的留言變體，組好文案＋呼叫
 /// `CommentAPIClient.setCommentDeleted(commentID:deleted:true)`。
 ///
-/// **目前沒有真實可達的產品入口**：留言 UI 本體（LS-22）與內容操作表（LS-189）都尚未實作
-/// （時間軸日記詳情頁的「留言」區目前只有一句「留言功能即將推出」佔位，見
-/// `DiaryDetailView.commentsPlaceholder`）——本票依票文提供這個可呼叫的 View／API，供 LS-22／
-/// LS-189 日後直接接上；`TapTargetGateHarness.deleteCommentConfirmationHost` 是唯一目前能
-/// 觸達它的入口，供 gate／UITest 覆蓋（見該檔文件註解與 handoff 風險欄）。
+/// 真實產品入口：`CommentsSheetView+Actions.swift` 留言列操作表的「刪除」（LS-218，日記詳情頁
+/// 與時間軸卡片皆共用同一顆 `CommentsSheetView`，見 `DiaryDetailView` 文件註解 LS-241）；
+/// `TapTargetGateHarness.deleteCommentConfirmationHost` 另外提供一個不依賴留言清單種子資料、
+/// gate／UITest 可直接覆蓋的固定入口。
 struct CommentDeleteConfirmationSheet: View {
     let commentID: UUID
     let commentAPIClient: CommentAPIClient

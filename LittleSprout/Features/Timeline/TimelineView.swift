@@ -79,7 +79,8 @@ struct TimelineView: View {
             case .diaryDetail(let diaryID):
                 DiaryDetailView(
                     diaryID: diaryID, timelineStore: timelineStore, childrenStore: childrenStore,
-                    familyStore: familyStore, safetyAPIClient: safetyAPIClient, diaryAPIClient: diaryAPIClient
+                    familyStore: familyStore, safetyAPIClient: safetyAPIClient, diaryAPIClient: diaryAPIClient,
+                    commentAPIClient: commentAPIClient
                 )
             }
         }
