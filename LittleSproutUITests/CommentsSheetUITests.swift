@@ -72,6 +72,28 @@ final class CommentsSheetUITests: XCTestCase {
         )
     }
 
+    /// merge-review R1 m4：`familyStore.ownerUserID` 還沒就緒時（同 `ContentActionsUITests.
+    /// testDiaryDetail_moreButton_disabledWhenRoleNotReady` 既有先例），留言列與送出鈕都應該
+    /// 是 disabled，不是可點但按下去沒反應的靜默 no-op。
+    ///
+    /// Mutation guard：若把 `isRowActionsReady`／`isSendReady` 拿掉、guard 條件退回原本的
+    /// 靜默 no-op，這支測試會紅（兩顆都會是 enabled）。
+    func testOwnerNotReady_rowAndSendButtonAreDisabled() {
+        let app = TapTargetMeasurement.launch(.commentsSheetOwnerNotReady)
+        TapTargetMeasurement.assertScreenRendered(.commentsSheetOwnerNotReady, in: app)
+
+        let firstRow = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'qa.comments.row.'")).firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 10))
+        XCTAssertFalse(firstRow.isEnabled, "ownerUserID 還沒就緒時留言列應該是 disabled")
+
+        let field = app.textFields[QAAccessibilityID.commentInputField]
+        XCTAssertTrue(field.exists)
+        field.tap()
+        field.typeText("這則留言送不出去")
+        let sendButton = app.buttons[QAAccessibilityID.commentSendButton]
+        XCTAssertFalse(sendButton.isEnabled, "ownerUserID 還沒就緒時送出鈕應該是 disabled，即使內容非空白")
+    }
+
     /// merge-review R1 m3：送出留言撞到 LS026（目標已刪）時，先前實作會同時彈「留言送出失敗」
     /// alert 又把整張 sheet 換成終態畫面——票文範圍 4 明確只要單一「關閉」鈕。這裡釘住修正後
     /// 只呈現終態、不疊 alert。

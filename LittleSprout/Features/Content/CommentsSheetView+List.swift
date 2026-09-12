@@ -79,6 +79,7 @@ extension CommentsSheetView {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled(!isRowActionsReady)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier(QAAccessibilityID.commentRow(id: comment.id.uuidString))
         .accessibilityHint("開啟這則留言的操作選項")

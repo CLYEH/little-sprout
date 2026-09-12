@@ -33,6 +33,26 @@ extension TapTargetGateHarness {
         commentsSheetHost(apiClient: SendTargetGoneCommentAPIClient())
     }
 
+    /// merge-review R1 m4——同 `diaryDetailRoleNotReadyHost` 既有先例（`familyStore.
+    /// ownerUserID` 保持 `nil`，只用不帶 `ownerUserID:` 的 `seedMyFamilyForPreview(_:)`
+    /// overload 種 `myFamily`）：驗證 `rowTapped(_:)`／`sendTapped()` guard 條件的鏡像
+    /// （`isRowActionsReady`／`isSendReady`）正確把留言列與送出鈕都變成 `.disabled`，不是
+    /// 冷啟動時可點但按下去沒反應的靜默 no-op。
+    @MainActor
+    static var commentsSheetOwnerNotReadyHost: some View {
+        let familyStore = FamilyStore.preview()
+        familyStore.seedMyFamilyForPreview(
+            Family(id: UUID(), name: "陳家", createdBy: UUID(), createdAt: Date(), requireApproval: true)
+        )
+        return DismissableSheetHost {
+            CommentsSheetView(
+                kind: .diary, refId: UUID(), familyID: familyStore.myFamily!.id, timelineStore: .preview(),
+                familyStore: familyStore, childrenStore: .preview(),
+                commentAPIClient: PopulatedCommentAPIClient(), safetyAPIClient: PreviewSafetyAPIClient()
+            )
+        }
+    }
+
     @MainActor
     private static func commentsSheetHost(apiClient: CommentAPIClient) -> some View {
         let userID = UUID()

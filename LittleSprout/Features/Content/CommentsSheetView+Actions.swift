@@ -83,6 +83,15 @@ extension CommentsSheetView {
         actionsContext = CommentActionsContext(comment: comment, actions: actions)
     }
 
+    /// 留言列是否可以按——`rowTapped(_:)` guard 條件的鏡像（merge-review R1 m4，同
+    /// `DiaryDetailView+ContentActions.isContentActionsReady` 既有先例）：冷啟動直接進時間軸
+    /// 開留言 sheet、`ChildrenStore.refresh()` 還沒回來（`myRole` 仍是 nil）時，原本點留言列
+    /// 完全沒反應（沒有操作表、沒有訊息）——`+List.swift` 的 `commentRow(_:)` 用這個屬性把
+    /// 「還不能用」在視覺上表達成 `.disabled`，不是靜默 no-op。
+    var isRowActionsReady: Bool {
+        familyStore.ownerUserID != nil && childrenStore.myRole != nil
+    }
+
     /// `ContentActionsSheet`／`OwnerRemoveContentConfirmSheet` 的 Head Title——同
     /// `DiaryDetailView.openContentActions()` 用 `DiaryDeleteConfirmationCopy.excerpt(from:)`
     /// 組引言的既有手法，這裡重用同一支通用截斷函式（留言與日記內文都是「一段文字」，截斷規則
