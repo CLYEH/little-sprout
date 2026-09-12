@@ -188,6 +188,14 @@ enum TapTargetGateScreenName: String {
     // 下是 disabled，不是可點但按下去沒反應。同 `.reportInboxResolveError` 的既有理由，不用來
     // 做逐元件 tap target 量測（disabled 按鈕本來就不該被量測熱區）。
     case diaryDetailRoleNotReady = "DiaryDetailViewRoleNotReady"
+    // LS-216：時間軸互動列（`InteractionRow`）——三種卡片（日記／相簿／照片）底部各有
+    // Like Toggle／Count Zone／Comment Button 三顆按鈕，共 9 顆。刻意不 seed `familyStore`
+    // （同 `sectionTabViewWithDiaryHost` 文件註解點名的既有陷阱：seed 了會讓 `TimelineView`
+    // 的 `.task` 真的打 `PreviewTimelineAPIClient.fetchTimelinePointers`，固定回傳 `[]`
+    // 蓋掉種好的 `timelineStore.entries`），改直接種 `timelineStore.familyID`（LS-216
+    // `seedForPreview(entries:familyID:)` 新參數）讓 `InteractionRow` 的按讚／按讚名單
+    // 呼叫有 `familyID` 可用。
+    case timelineInteractionRow = "TimelineViewInteractionRow"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -271,6 +279,7 @@ enum TapTargetGateScreenName: String {
         case .diaryDetail: return .button("更多操作")
         case .diaryDetailOwnContent: return .button("更多操作")
         case .diaryDetailRoleNotReady: return .button("更多操作")
+        case .timelineInteractionRow: return .staticText("時間軸")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

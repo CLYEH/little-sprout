@@ -22,7 +22,11 @@ final class TimelineStore {
     /// 不是隨意選的數字。
     static let pageSize = 20
 
-    private let apiClient: TimelineAPIClient
+    // LS-216 R4：不是 `private`——`TimelineStore+Reactions.swift`（另一個檔案的 extension）
+    // 需要用它打 toggle_reaction／get_reaction_counts 等 RPC；`private` 存取層級只到「同檔案」，
+    // 跨檔案 extension 碰不到，退而求其次用預設的 internal（同 `FamilyStore.apiClient` 既有
+    // 理由，見該檔）。
+    let apiClient: TimelineAPIClient
     /// R2-M1（merge-review `b7ecfbf4`）：`loadVideoDuration` 讀時長的實際動作抽成可注入的
     /// 閉包，預設是真正的 `AVURLAsset(url:).load(.duration)`——只有這樣測試才能斷言「同一個
     /// mediaID 兩次呼叫只真正嘗試載入一次」（`failedDurations` 擋第二次），不必真的打網路
@@ -37,10 +41,28 @@ final class TimelineStore {
     /// 向簽名 URL 指向的檔案讀 `AVURLAsset` 時長，讀過的結果快取在這裡，同一支影片不重複讀
     /// （見 `loadVideoDuration`）。
     private(set) var videoDurations: [UUID: TimeInterval] = [:]
+    /// LS-216：愛心反應狀態，鍵＝`TimelineEntry.id(kind:refId:)`。查成功但缺席的 target 視為
+    /// `.zero`；查詢失敗的 kind 保留舊值不寫回（R4，見 `loadReactionCounts` 的 `succeededKinds`）。
+    /// R4：不再是 `private(set)`——寫入方法拆去 `TimelineStore+Reactions.swift`，理由同上方
+    /// `apiClient` 的存取層級註解。
+    var reactionStates: [String: ReactionState] = [:]
+    /// LS-216 票文 scope 2：`get_family_timeline`／`list_comments` 都沒有回留言計數欄位
+    /// （已查 docs/API.md 確認，記入 handoff informational＋LS-96 池項）——這裡先恆為 0，
+    /// 留一個 `setCommentCount` 寫入口給 LS-218（留言 sheet 讀到真正筆數後同步回這裡，
+    /// 「計數同步來自互動列」，見 LS-218 票文依賴段）。R4：不再是 `private(set)`，理由同
+    /// `reactionStates`。
+    var commentCounts: [String: Int] = [:]
 
-    private var familyID: UUID?
+    /// LS-216（改動）：原本是純 `private`（只給 `refreshWithCurrentFilter()` 內部沿用）——
+    /// `InteractionRow` 需要目前的 `familyID` 才能呼叫 `toggleReaction`／`reactors`，改成
+    /// `private(set)` 讓它能直接讀，不必往下多穿一層參數。
+    private(set) var familyID: UUID?
     private var childID: UUID?
     private var loadingDurations: Set<UUID> = []
+    /// LS-216：`toggleReaction` in-flight 去重（連點忽略，見該方法文件註解）。R4：不再是純
+    /// `private`——`toggleReaction`／`loadReactionCounts` 拆去 `TimelineStore+Reactions.swift`
+    /// 後兩者都需要讀寫，理由同 `apiClient` 的存取層級註解。
+    var togglingReactionKeys: Set<String> = []
     /// R2-M1：讀取時長失敗過的 id——`loadVideoDuration` 原本失敗後什麼都不記，LS-130 讓
     /// 有縮圖的影片必定走進這條失敗路徑（`signedURL` 對它們是縮圖 JPEG，不是可解出時長的
     /// 影片檔），`.task(id:)` 隨卡片重建（例如捲出、捲回 `LazyVStack` 存活視窗）就會重跑，
@@ -67,8 +89,10 @@ final class TimelineStore {
     /// `entries` 後面（跳項／混篩選／重複 id）。修法：`loadMore` 額外釘住自己出發當下
     /// `entries` 的尾端身分（`baseTailID`），寫回前**世代號與尾端身分都要吻合**才算數——
     /// 光世代號吻合不夠，因為它答不出「entries 有沒有在我等待期間被別的呼叫整批換掉」
-    /// 這個問題，只有尾端身分能直接回答。
-    private var generation = 0
+    /// 這個問題，只有尾端身分能直接回答。R4：不再是 `private`——`loadReactionCounts` 拆去
+    /// `TimelineStore+Reactions.swift` 後需要讀它做世代守衛，理由同 `apiClient` 的存取層級
+    /// 註解。
+    var generation = 0
 
     init(
         apiClient: TimelineAPIClient,
@@ -100,6 +124,12 @@ final class TimelineStore {
             entries = newEntries
             hasMorePages = pointers.count == Self.pageSize
             refreshState = .success
+            // LS-216 R2（merge-review R1 M1）：計數載入**不**擋在 `refreshState = .success`
+            // 之前——`refreshState` 代表「畫面內容本身」是否就緒，愛心是次要資訊，不該讓使用者
+            // 多等一輪網路請求才看到時間軸；`@Observable` 賦值當下就通知觀察者，這裡 `await`
+            // 只是延後這支 `async` 函式自己返回的時間點，不延後畫面更新，見 `loadReactionCounts`
+            // 文件註解。
+            await loadReactionCounts(for: newEntries, familyID: familyID, expectedGeneration: myGeneration)
             return true
         } catch {
             guard myGeneration == generation else { return false }
@@ -157,6 +187,10 @@ final class TimelineStore {
             entries.append(contentsOf: newEntries)
             hasMorePages = pointers.count == Self.pageSize
             loadMoreState = .success
+            // LS-216 R2（merge-review R1 M1）：同 `refresh` 的既有理由——只補新追加這批的
+            // 愛心計數（已經在 `entries` 裡的舊資料不重查），且不擋在 `loadMoreState = .success`
+            // 之前，見 `loadReactionCounts` 文件註解。
+            await loadReactionCounts(for: newEntries, familyID: familyID, expectedGeneration: myGeneration)
             return true
         } catch {
             guard myGeneration == generation, entries.last?.id == baseTailID else {
@@ -210,6 +244,9 @@ final class TimelineStore {
         videoDurations = [:]
         loadingDurations = []
         failedDurations = []
+        reactionStates = [:]
+        commentCounts = [:]
+        togglingReactionKeys = []
         familyID = nil
         childID = nil
         generation += 1
@@ -221,9 +258,17 @@ final class TimelineStore {
     /// 需要時間軸上有一張可點的日記卡才能真的 push 進 `DiaryDetailView`，`PreviewTimelineAPIClient`
     /// 的 `fetchTimelinePointers` 固定回傳 `[]`，無法靠正常 `refresh()` 流程餵資料。整支 `#if DEBUG`
     /// 圍住，同 `seedMyFamilyForPreview` 的圍欄理由，Release build 不會編到。
+    ///
+    /// LS-216：新增 `familyID` 參數（有預設值，既有呼叫端不受影響）——`InteractionRow` 呼叫
+    /// `toggleReaction`／`reactors` 需要 `self.familyID` 非 nil，這條既有的 DEBUG-only 種子
+    /// 路徑（`TapTargetGateHarness+Safety.swift`／`TimelineStoreDeleteDiaryTests` 既有呼叫端）
+    /// 原本完全不碰 `familyID`，本票起若不補這個參數，任何用這條路徑種資料的互動列測試都會
+    /// 因為 `familyID == nil` 而讓 `InteractionRow` 的按讚鈕靜默失效（`guard let familyID`
+    /// 直接 return，見 `InteractionRow.toggleLike`）。
     @MainActor
-    func seedForPreview(entries: [TimelineEntry]) {
+    func seedForPreview(entries: [TimelineEntry], familyID: UUID = UUID()) {
         self.entries = entries
+        self.familyID = familyID
         refreshState = .success
         hasMorePages = false
     }

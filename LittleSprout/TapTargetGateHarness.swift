@@ -56,6 +56,7 @@ enum TapTargetGateHarness {
             sectionTabViewWithDiaryHost
         case .diaryCardVideoBadges:
             diaryCardVideoBadgesHost
+        case .timelineInteractionRow: interactionRowHost
         case .uploadQueueSheet:
             uploadQueueSheetHost
         case .uploadQueueSheetNormal:

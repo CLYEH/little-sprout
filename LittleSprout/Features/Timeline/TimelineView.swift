@@ -263,6 +263,7 @@ struct TimelineView: View {
             NavigationLink(value: TimelineRoute.diaryDetail(entry.refId)) {
                 DiaryCardView(
                     content: content, taggedChildren: taggedChildren(for: entry), timelineStore: timelineStore,
+                    refId: entry.refId,
                     previewRowWidth: max(0, cardOuterWidth(columns: columns) - 2 * AppSpacing.insetCard)
                 )
             }
@@ -270,7 +271,7 @@ struct TimelineView: View {
             // LS-158：QA e2e 用 identifier 找卡片（整張卡合併成一顆 button，label＝日記本文，會隨內容變）。
             .accessibilityIdentifier(QAAccessibilityID.timelineDiaryCard)
         case .album(let content):
-            AlbumCardView(content: content)
+            AlbumCardView(content: content, timelineStore: timelineStore, refId: entry.refId)
         case .media(let content):
             PhotoCardView(content: content, timelineStore: timelineStore)
         case nil:
