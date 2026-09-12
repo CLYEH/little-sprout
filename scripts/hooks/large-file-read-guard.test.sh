@@ -229,8 +229,8 @@ rm -rf "$mut"
 # ⑨b：拿掉 Bash 有界判斷（一律視為無界）→ ②a（tail -2，應 allow）翻成 deny
 mut2=$(mktemp -d)
 cp "$guard" "$engine_py" "${root}/scripts/hooks/pretool_engine.py" "$mut2/"
-anchor2=$(esc 'if not _stage_is_bounded(stages[-1]):')
-if ! grep -qF 'if not _stage_is_bounded(stages[-1]):' "$engine_py"; then
+anchor2=$(esc 'if not _chain_is_bounded(stages):')
+if ! grep -qF 'if not _chain_is_bounded(stages):' "$engine_py"; then
   bad "⑨b mutation 錨點（Bash 有界判斷）不在 large_file_read_guard.py"
 else
   sed "s/${anchor2}/if True:/" "$engine_py" > "$mut2/large_file_read_guard.py"
@@ -263,8 +263,8 @@ rm -rf "$mut3"
 # ⑨d：拿掉 Read 側 tasks/*.output 的 limit 上限判斷（一律放行）→ ③c（無 limit，應 deny）翻成 allow
 mut4=$(mktemp -d)
 cp "$guard" "$engine_py" "${root}/scripts/hooks/pretool_engine.py" "$mut4/"
-anchor4=$(esc 'if _valid_bounded_limit(ti.get("limit"), TASKS_OUTPUT_LIMIT_MAX):')
-if ! grep -qF 'if _valid_bounded_limit(ti.get("limit"), TASKS_OUTPUT_LIMIT_MAX):' "$engine_py"; then
+anchor4=$(esc 'if _valid_bounded_limit(limit_val, TASKS_OUTPUT_LIMIT_MAX):')
+if ! grep -qF 'if _valid_bounded_limit(limit_val, TASKS_OUTPUT_LIMIT_MAX):' "$engine_py"; then
   bad "⑨d mutation 錨點（tasks/*.output limit 上限）不在 large_file_read_guard.py"
 else
   sed "s/${anchor4}/if True:/" "$engine_py" > "$mut4/large_file_read_guard.py"
@@ -295,7 +295,79 @@ fi
 rm -rf "$mut5"
 
 # ============================================================
-# ⑩ settings.json 接線斷言（只加不刪：既有三條 PreToolUse 仍在）
+# ⑪ R3（merge-review R2 major＋m1）：chain 切分的兩個洞＋ls/stat 首段放行
+# ============================================================
+expect '⑪a fd 複製 2>&1 不再被當 chain 分隔（allow，agent-liveness-signal.md 樣板加 2>&1）' 0 \
+  "$(bash_json "tail -c 200000 ${tasks_output} 2>&1 | grep -oE \\\"a\\\" | tail -n 6")"
+expect '⑪b &> 重導向不再被當 chain 分隔、末段仍有界（allow）' 0 \
+  "$(bash_json "tail -n 6 ${tasks_output} &>/dev/null")"
+expect '⑪c &> 重導向但無界末段（deny，&> 本身不代表有界，只是不再被切錯 chain）' 2 \
+  "$(bash_json "cat ${tasks_output} &>/dev/null")"
+expect '⑪d 多行管線（行尾 | 換行）摺成單行後仍判有界（allow）' 0 \
+  "$(printf '{"tool_name":"Bash","tool_input":{"command":"tail -c 200000 %s |\\n  grep -oE \\"a\\" |\\n  tail -n 6"}}' "$tasks_output")"
+expect '⑪e ls -la | awk（不接 stat/ls，末段非白名單）現在也放行——ls 首段即有界，不限末段（m1）' 0 \
+  "$(bash_json "ls -la ${tasks_output} | awk '{print \$6,\$7,\$8}'")"
+expect '⑪f stat | cut（stat 首段即有界，不限末段，m1）' 0 \
+  "$(bash_json "stat ${tasks_output} | cut -c1-20")"
+expect '⑪g for 迴圈 do ls -la … | awk（真實流量樣本：naive ; 切段把 do 當 tokens[0]，
+  跳過前綴關鍵字後 ls 仍能被辨識，allow）' 0 \
+  "$(bash_json "for a in x y; do ls -la ${tasks_output} | awk '{print \$6}'; done")"
+expect '⑪h 對照：&& 仍照舊是 chain 分隔（deny，前段裸 cat 無界，&& 不受 fd 複製排除影響）' 2 \
+  "$(bash_json "cat ${tasks_output} && echo done")"
+
+# ⑪ mutation：拿掉 fd 複製排除 → ⑪a（2>&1 樣板）翻成 deny
+mut6=$(mktemp -d)
+cp "$guard" "$engine_py" "${root}/scripts/hooks/pretool_engine.py" "$mut6/"
+anchor6=$(esc 'CHAIN_SPLIT_RE = re.compile(r"&&|\|\||;|(?<![&>])&(?!&|>)|\n")')
+if ! grep -qF 'CHAIN_SPLIT_RE = re.compile(r"&&|\|\||;|(?<![&>])&(?!&|>)|\n")' "$engine_py"; then
+  bad "⑪ mutation 錨點（fd 複製排除）不在 large_file_read_guard.py"
+else
+  sed "s/${anchor6}/CHAIN_SPLIT_RE = re.compile(r\"&&|\\\\|\\\\||;|\&(?!\&)|\\\\n\")/" "$engine_py" > "$mut6/large_file_read_guard.py"
+  if ! diff -q "$engine_py" "$mut6/large_file_read_guard.py" >/dev/null 2>&1; then
+    expect '⑪ mutant：拿掉 fd 複製排除後，⑪a（2>&1 樣板）變成 deny（原本的 allow 確由該判斷造成）' 2 \
+      "$(bash_json "tail -c 200000 ${tasks_output} 2>&1 | grep -oE \\\"a\\\" | tail -n 6")" "$mut6/large-file-read-guard.sh"
+  else
+    bad '⑪ mutant 與原始檔完全相同（sed 未命中，mutation 測試本身無效）'
+  fi
+fi
+rm -rf "$mut6"
+
+# ⑫ mutation：拿掉多行管線摺疊 → ⑪d（多行管線）翻成 deny
+mut7=$(mktemp -d)
+cp "$guard" "$engine_py" "${root}/scripts/hooks/pretool_engine.py" "$mut7/"
+anchor7=$(esc 'stripped = _collapse_pipe_continuations(stripped)  # R3：多行管線先摺成單行')
+if ! grep -qF 'stripped = _collapse_pipe_continuations(stripped)  # R3：多行管線先摺成單行' "$engine_py"; then
+  bad "⑫ mutation 錨點（多行管線摺疊呼叫點）不在 large_file_read_guard.py"
+else
+  sed "s/${anchor7}/pass  # mutated/" "$engine_py" > "$mut7/large_file_read_guard.py"
+  if ! diff -q "$engine_py" "$mut7/large_file_read_guard.py" >/dev/null 2>&1; then
+    expect '⑫ mutant：拿掉多行管線摺疊後，⑪d（多行管線）變成 deny（原本的 allow 確由該判斷造成）' 2 \
+      "$(printf '{"tool_name":"Bash","tool_input":{"command":"tail -c 200000 %s |\\n  grep -oE \\"a\\" |\\n  tail -n 6"}}' "$tasks_output")" "$mut7/large-file-read-guard.sh"
+  else
+    bad '⑫ mutant 與原始檔完全相同（sed 未命中，mutation 測試本身無效）'
+  fi
+fi
+rm -rf "$mut7"
+
+# ⑬ mutation：拿掉 ls/stat 首段判斷（METADATA_ONLY_VERBS 檢查）→ ⑪e（ls|awk）翻成 deny
+mut8=$(mktemp -d)
+cp "$guard" "$engine_py" "${root}/scripts/hooks/pretool_engine.py" "$mut8/"
+anchor8=$(esc 'if any(_stage_command_position(s) in METADATA_ONLY_VERBS for s in stages):')
+if ! grep -qF 'if any(_stage_command_position(s) in METADATA_ONLY_VERBS for s in stages):' "$engine_py"; then
+  bad "⑬ mutation 錨點（ls/stat 首段判斷）不在 large_file_read_guard.py"
+else
+  sed "s/${anchor8}/if False:/" "$engine_py" > "$mut8/large_file_read_guard.py"
+  if ! diff -q "$engine_py" "$mut8/large_file_read_guard.py" >/dev/null 2>&1; then
+    expect '⑬ mutant：拿掉 ls/stat 首段判斷後，⑪e（ls|awk）變成 deny（原本的 allow 確由該判斷造成）' 2 \
+      "$(bash_json "ls -la ${tasks_output} | awk '{print \$6,\$7,\$8}'")" "$mut8/large-file-read-guard.sh"
+  else
+    bad '⑬ mutant 與原始檔完全相同（sed 未命中，mutation 測試本身無效）'
+  fi
+fi
+rm -rf "$mut8"
+
+# ============================================================
+# ⑭ settings.json 接線斷言（只加不刪：既有三條 PreToolUse 仍在）
 # ============================================================
 settings_json="${root}/.claude/settings.json"
 if [ -n "$real_jq" ]; then
@@ -312,21 +384,21 @@ for entry in d.get('hooks', {}).get('PreToolUse', []):
 " 2>/dev/null)
 fi
 if [ -n "$lf_cmd" ]; then
-  ok '⑩① settings.json 的 PreToolUse matcher=Bash|Read 有一條呼叫 large-file-read-guard.sh'
+  ok '⑭① settings.json 的 PreToolUse matcher=Bash|Read 有一條呼叫 large-file-read-guard.sh'
 else
-  bad '⑩① settings.json 找不到 matcher=Bash|Read 呼叫 large-file-read-guard.sh 的 PreToolUse command'
+  bad '⑭① settings.json 找不到 matcher=Bash|Read 呼叫 large-file-read-guard.sh 的 PreToolUse command'
 fi
 case "$lf_cmd" in
-  *'|| exit 2'*) ok '⑩② command 帶 || exit 2（wiring 層 fail-closed）' ;;
-  *) bad "⑩② command 沒有 || exit 2（實得：${lf_cmd}）" ;;
+  *'|| exit 2'*) ok '⑭② command 帶 || exit 2（wiring 層 fail-closed）' ;;
+  *) bad "⑭② command 沒有 || exit 2（實得：${lf_cmd}）" ;;
 esac
 if [ -n "$real_jq" ]; then
   old1=$("$real_jq" -r '.hooks.PreToolUse[] | select(.matcher == "Bash|Read|Grep") | .hooks[0].command' "$settings_json" 2>/dev/null)
   old2=$("$real_jq" -r '.hooks.PreToolUse[] | select(.matcher == "Bash|Write|Edit|MultiEdit|NotebookEdit") | .hooks[0].command' "$settings_json" 2>/dev/null)
   old3=$("$real_jq" -r '.hooks.PreToolUse[] | select(.matcher == "Bash") | .hooks[0].command' "$settings_json" 2>/dev/null)
-  case "$old1" in *pretool.sh*) ok '⑩③ 既有 Bash|Read|Grep（pretool.sh）條目仍在' ;; *) bad "⑩③ pretool.sh 條目消失（實得：${old1}）" ;; esac
-  case "$old2" in *main-checkout-guard.sh*) ok '⑩④ 既有 Bash|Write|Edit|MultiEdit|NotebookEdit（main-checkout-guard.sh）條目仍在' ;; *) bad "⑩④ main-checkout-guard.sh 條目消失（實得：${old2}）" ;; esac
-  case "$old3" in *background-bash-guard.sh*) ok '⑩⑤ 既有 Bash（background-bash-guard.sh）條目仍在' ;; *) bad "⑩⑤ background-bash-guard.sh 條目消失（實得：${old3}）" ;; esac
+  case "$old1" in *pretool.sh*) ok '⑭③ 既有 Bash|Read|Grep（pretool.sh）條目仍在' ;; *) bad "⑭③ pretool.sh 條目消失（實得：${old1}）" ;; esac
+  case "$old2" in *main-checkout-guard.sh*) ok '⑭④ 既有 Bash|Write|Edit|MultiEdit|NotebookEdit（main-checkout-guard.sh）條目仍在' ;; *) bad "⑭④ main-checkout-guard.sh 條目消失（實得：${old2}）" ;; esac
+  case "$old3" in *background-bash-guard.sh*) ok '⑭⑤ 既有 Bash（background-bash-guard.sh）條目仍在' ;; *) bad "⑭⑤ background-bash-guard.sh 條目消失（實得：${old3}）" ;; esac
 fi
 
 rm -rf "$work"
